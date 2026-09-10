@@ -30,7 +30,7 @@ impl Console {
         self.state.resize(width, height);
     }
 
-    /// `Std.Console.Write(value)` - print without newline.
+    /// `Std.Console.WriteText(value)` - print without newline.
     pub fn write(&mut self, value: &Value, location: SourceLocation) -> Result<(), StdError> {
         self.sync_terminal_size();
         let s = format!("{value}");

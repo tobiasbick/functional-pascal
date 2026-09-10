@@ -2,7 +2,7 @@
 
 unit Newton.Render;
 
-uses Std.Console, Std.Task, Std.Array, Std.Conv, Std.Math, Std.Str, Newton.Color;
+uses Std.Console, Std.Task, Std.Arrays, Std.Conv, Std.Math, Std.Str, Newton.Color;
 
 type
   Complex = record

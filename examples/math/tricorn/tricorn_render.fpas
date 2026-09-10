@@ -2,7 +2,7 @@
 
 unit Tricorn.Render;
 
-uses Std.Console, Std.Task, Std.Array, Std.Conv, Std.Math, Std.Str, Tricorn.Color;
+uses Std.Console, Std.Task, Std.Arrays, Std.Conv, Std.Math, Std.Str, Tricorn.Color;
 
 type
   Complex = record

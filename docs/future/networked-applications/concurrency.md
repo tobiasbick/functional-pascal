@@ -435,7 +435,7 @@ coverage and the completed full workspace verification after build-artifact clea
 
 ### 2026-09-06 — cancellable TCP/TLS writes
 
-- Added `Std.Net.WriteWithCancellation(Connection, Data, Token)` with the existing bounded byte
+- Added `Std.Net.SendBytesWithCancellation(Connection, Data, Token)` with the existing bounded byte
   input and integer progress result. A successful partial write wins over concurrent cancellation;
   callers retry only the unaccepted suffix. TLS acceptance does not imply peer delivery.
 - Cancellation and timeout before progress return distinct errors and leave the connection open.
@@ -454,7 +454,7 @@ coverage and the completed full workspace verification after build-artifact clea
 
 ### 2026-09-06 — cancellable TCP/TLS reads
 
-- Added `Std.Net.ReadWithCancellation(Connection, MaxBytes, Token)` without changing the language.
+- Added `Std.Net.ReceiveBytesWithCancellation(Connection, MaxBytes, Token)` without changing the language.
   Cancellation leaves the connection open and does not discard buffered TLS state.
 - Cancellation is checked while acquiring the connection lock and between non-blocking I/O
   attempts. The configured read timeout starts after lock acquisition and uses a monotonic deadline.

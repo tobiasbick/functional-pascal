@@ -1,6 +1,6 @@
 program T;
 
-uses Std.Array;
+uses Std.Arrays;
 
 function Identity(V: integer): integer;
 begin

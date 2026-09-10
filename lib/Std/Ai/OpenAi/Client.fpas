@@ -1,7 +1,7 @@
 // HTTP orchestration for OpenAI-compatible chat completions.
 unit Std.Ai.OpenAi.Client;
 
-uses Std.Ai.OpenAi.Json, Std.Ai.OpenAi.Types, Std.Array, Std.Conv, Std.Http, Std.Net.Utf8, Std.Str;
+uses Std.Ai.OpenAi.Json, Std.Ai.OpenAi.Types, Std.Arrays, Std.Conv, Std.Http, Std.Net.Utf8, Std.Str;
 
 // Appends the chat-completions path to a base API URL.
 //
@@ -35,7 +35,7 @@ begin
     return Error('OpenAI-compatible model name must not be empty')
   end;
 
-  if Std.Array.Length(Messages) = 0 then
+  if Std.Arrays.Length(Messages) = 0 then
   begin
     return Error('OpenAI-compatible chat requires at least one message')
   end;
@@ -48,7 +48,7 @@ begin
     begin
       if Value <> '' then
       begin
-        Std.Array.Push(Headers, Header.Create('Authorization', 'Bearer ' + Value))
+        Std.Arrays.Push(Headers, Header.Create('Authorization', 'Bearer ' + Value))
       end
     end;
     None:

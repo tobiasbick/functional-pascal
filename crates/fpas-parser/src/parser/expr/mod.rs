@@ -38,8 +38,9 @@ impl Parser {
         let start = self.current_span();
         let mut parts = Vec::new();
 
-        let (name, name_span) = if let Some(p) = self.try_consume_std_keyword_path_segment() {
-            p
+        let (name, name_span) = if self.check(&Token::SelfKw) {
+            let span = self.advance().span;
+            ("Self".to_owned(), span)
         } else {
             self.expect_ident()
                 .unwrap_or_else(|| self.error_ident(start))
@@ -49,7 +50,7 @@ impl Parser {
         loop {
             if self.eat(&Token::Dot) {
                 let (name, name_span) = self
-                    .expect_ident_after_dot()
+                    .expect_ident()
                     .unwrap_or_else(|| self.error_ident(self.current_span()));
                 parts.push(DesignatorPart::Ident(name, name_span));
             } else if self.check(&Token::LBracket) {

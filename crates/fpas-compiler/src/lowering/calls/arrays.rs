@@ -11,7 +11,7 @@ impl LoweringContext {
         span: fpas_lexer::Span,
     ) -> Result<ValueId, CompileError> {
         let [Expr::Designator(target), value] = arguments else {
-            return Err(unsupported(span, "Std.Array.Push arguments"));
+            return Err(unsupported(span, "Std.Arrays.Push arguments"));
         };
         let array_ty = self.mutable_array_target_type(target)?;
         let element_ty = match self.type_kind(array_ty) {
@@ -60,7 +60,7 @@ impl LoweringContext {
         span: fpas_lexer::Span,
     ) -> Result<ValueId, CompileError> {
         let [Expr::Designator(target)] = arguments else {
-            return Err(unsupported(span, "Std.Array.Pop argument"));
+            return Err(unsupported(span, "Std.Arrays.Pop argument"));
         };
         let array_ty = self.mutable_array_target_type(target)?;
         if let [DesignatorPart::Ident(name, _)] = target.parts.as_slice()

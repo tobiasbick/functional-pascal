@@ -181,7 +181,7 @@ pub(super) fn register_std_console_key_api(checker: &mut Checker) {
 
     let event_ty = type_registration::register_record_type(
         checker,
-        s::STD_CONSOLE_EVENT,
+        s::STD_CONSOLE_CONSOLE_EVENT,
         vec![
             ("kind".into(), event_kind_ty),
             ("key".into(), key_event_ty),
@@ -250,7 +250,7 @@ pub(super) fn register_std_console(checker: &mut Checker) {
     }
 
     define_proc_variadic(checker, s::STD_CONSOLE_WRITE_LN);
-    define_proc_variadic(checker, s::STD_CONSOLE_WRITE);
+    define_proc_variadic(checker, s::STD_CONSOLE_WRITE_TEXT);
     define_proc(checker, s::STD_CONSOLE_CLR_SCR, vec![]);
     define_proc(checker, s::STD_CONSOLE_CLR_EOL, vec![]);
     define_proc(
@@ -345,7 +345,7 @@ pub(super) fn register_std_console(checker: &mut Checker) {
     define_proc(checker, s::STD_CONSOLE_NO_SOUND, vec![]);
     define_proc(checker, s::STD_CONSOLE_ASSIGN_CRT, vec![]);
     define_func(checker, s::STD_CONSOLE_READ_LN, vec![], Ty::String);
-    define_func(checker, s::STD_CONSOLE_READ, vec![], Ty::String);
+    define_func(checker, s::STD_CONSOLE_READ_TEXT, vec![], Ty::String);
     define_func(checker, s::STD_CONSOLE_READ_KEY, vec![], Ty::String);
     define_func(checker, s::STD_CONSOLE_KEY_PRESSED, vec![], Ty::Boolean);
     define_proc(checker, s::STD_CONSOLE_ENABLE_RAW_MODE, vec![]);

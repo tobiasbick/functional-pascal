@@ -1,6 +1,6 @@
 program JsonBasics;
 
-uses Std.Console, Std.Json, Std.Dict, Std.Option, Std.Array, Std.Conv;
+uses Std.Console, Std.Json, Std.Dictionaries, Std.Options, Std.Arrays, Std.Conv;
 
 begin
   var Parsed: result of JsonValue, string := Parse('{"name":"Ada","scores":[10,20],"active":true}');
@@ -10,8 +10,8 @@ begin
       case Value of
         JsonValue.Object(Fields):
         begin
-          var NameValue: option of JsonValue := Std.Dict.Get(Fields, 'name');
-          var ScoresValue: option of JsonValue := Std.Dict.Get(Fields, 'scores');
+          var NameValue: option of JsonValue := Std.Dictionaries.Get(Fields, 'name');
+          var ScoresValue: option of JsonValue := Std.Dictionaries.Get(Fields, 'scores');
           case Unwrap(NameValue) of
             JsonValue.String(Name):
             begin
@@ -24,9 +24,9 @@ begin
           end;
 
           case Unwrap(ScoresValue) of
-            JsonValue.Array(Scores):
+            JsonValue.ArrayValue(Scores):
             begin
-              WriteLn('scores = ' + IntToStr(Std.Array.Length(Scores)))
+              WriteLn('scores = ' + IntToStr(Std.Arrays.Length(Scores)))
             end
             else
             begin

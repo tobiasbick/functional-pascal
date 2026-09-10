@@ -78,7 +78,7 @@ line_comment    = '//' { (* any character except CR or LF *) } ;
 (* A contiguous standalone comment block immediately before a       *)
 (* declaration is Markdown documentation; this is a tooling rule.    *)
 
-(* ---- Keywords (57, case-insensitive) --------------------------- *)
+(* ---- Keywords (63, case-insensitive) --------------------------- *)
 
 keyword         = 'program'   | 'unit'      | 'uses'      | 'const'
                 | 'var'       | 'mutable'   | 'function'  | 'procedure'
@@ -94,7 +94,9 @@ keyword         = 'program'   | 'unit'      | 'uses'      | 'const'
                 | 'ok'        | 'error'     | 'some'      | 'none'
                 | 'try'       | 'public'
                 | 'go'        | 'dict'      | 'with'      | 'static' | 'property'
-                | 'event'     | 'nil'       | 'channel' ;
+                | 'event'     | 'read'      | 'write'     | 'comparable'
+                | 'numeric'   | 'printable' | 'self'      | 'nil'
+                | 'channel' ;
 
 (* ---- Symbols --------------------------------------------------- *)
 
@@ -229,7 +231,19 @@ field_def           = identifier ':' type_expr [ ':=' expression ] ';' ;
 (* compiler substitutes the default automatically.  Fields without  *)
 (* a default must be supplied in every record literal.              *)
 
-record_method       = [ 'static' ] ( function_decl | procedure_decl ) ;
+record_method       = static_record_method | instance_record_method ;
+static_record_method = 'static' ( function_decl | procedure_decl ) ;
+instance_record_method = instance_function_decl | instance_procedure_decl ;
+instance_function_decl = instance_function_heading ';'
+                         { nested_decl } 'begin' statement_list 'end' ';' ;
+instance_function_heading = 'function' identifier [ type_params ]
+                            '(' [ instance_param_list ] ')' ':' type_expr ;
+instance_procedure_decl = instance_procedure_heading ';'
+                          { nested_decl } 'begin' statement_list 'end' ';' ;
+instance_procedure_heading = 'procedure' identifier [ type_params ]
+                             '(' [ instance_param_list ] ')' ;
+instance_param_list = instance_first_param { ';' param_group } ;
+instance_first_param = [ 'mutable' ] ( 'self' | identifier ) ':' type_expr ;
 
 (* Record member visibility is available only in unit files. The    *)
 (* modifier is written before each field, property, event, or routine; *)
@@ -247,8 +261,8 @@ record_method       = [ 'static' ] ( function_decl | procedure_decl ) ;
 (* function_decl / procedure_decl grammar.                           *)
 
 (* Computed properties are backed by instance accessors. `read` and  *)
-(* `write` are contextual (not reserved keywords). At least one      *)
-(* accessor is required. See docs/pascal/language/types/             *)
+(* `write` are reserved keywords. At least one accessor is required. *)
+(* See docs/pascal/language/types/                                   *)
 (* record-properties.md.                                             *)
 record_property     = 'property' identifier ':' type_expr
                       property_accessor { property_accessor } ';' ;
@@ -525,14 +539,11 @@ dict_literal        = '[' ( ':' ']'                                      (* empt
 (* -- Designator (variable, field, or indexed access) -- *)
 (* Index expression '[' expression ']' applies to: array (integer index),
    dict (key of matching type), and string (integer index → string).        *)
-(* path_segment allows keyword roots array/result/option/dict when       *)
-(* followed by '.' (parser extension for qualified type-like paths).       *)
-path_segment        = identifier
-                    | 'array' | 'result' | 'option' | 'dict' ;
-designator          = path_segment { '.' path_segment | '[' expression ']' } ;
+designator_root     = identifier | 'self' ;
+designator          = designator_root { '.' identifier | '[' expression ']' } ;
 
 (* -- Qualified identifier (for uses, types — no indexing) -- *)
-qualified_id        = path_segment { '.' path_segment } ;
+qualified_id        = identifier { '.' identifier } ;
 
 (* ================================================================ *)
 (* END OF GRAMMAR                                                   *)

@@ -120,7 +120,7 @@ if K = KeyKind.F1 then
 
 ### Type `Event` (record)
 
-Logical name: `Std.Console.Event`. Short: `Event` when `Std.Console` is imported.
+Logical name: `Std.Console.ConsoleEvent`. Short: `Event` when `Std.Console` is imported.
 
 Equivalent conceptual declaration:
 

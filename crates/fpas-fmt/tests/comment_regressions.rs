@@ -49,7 +49,7 @@ fn closure_comments_survive_expression_emission() {
 
 #[test]
 fn record_enum_and_routine_eol_comments_remain_on_member_lines() {
-    let source = "program T;\ntype Shape = enum\n  // leading member\n  Plain; // plain\n  Valued = 2; // valued\n  Circle(Radius: real); // payload\nend;\nCounter = record\n  Value: integer; // field\n  function Read(Self: Counter): integer;\n  begin\n    return Self.Value\n  end; // method\n  property Current: integer read Read; // property\n  event Changed: procedure() read ReadChanged write WriteChanged; // event\nend;\nfunction Top(): integer;\nbegin\n  return 1\nend; // top routine\nbegin\nend.";
+    let source = "program T;\ntype Shape = enum\n  // leading member\n  Plain; // plain\n  Valued = 2; // valued\n  Circle(Radius: real); // payload\nend;\nCounter = record\n  Value: integer; // field\n  function ReadValue(Self: Counter): integer;\n  begin\n    return Self.Value\n  end; // method\n  property Current: integer read ReadValue; // property\n  event Changed: procedure() read ReadChanged write WriteChanged; // event\nend;\nfunction Top(): integer;\nbegin\n  return 1\nend; // top routine\nbegin\nend.";
     let formatted = format_idempotently(source);
 
     for line in [
@@ -58,7 +58,7 @@ fn record_enum_and_routine_eol_comments_remain_on_member_lines() {
         "Circle(Radius: real); // payload",
         "Value: integer; // field",
         "end; // method",
-        "property Current: integer read Read; // property",
+        "property Current: integer read ReadValue; // property",
         "event Changed: procedure() read ReadChanged write WriteChanged; // event",
         "end; // top routine",
     ] {

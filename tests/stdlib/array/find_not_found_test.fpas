@@ -1,6 +1,6 @@
 program T;
 
-uses Std.Console, Std.Array, Std.Option;
+uses Std.Console, Std.Arrays, Std.Options;
 
 function IsGreaterThanTen(X: integer): boolean;
 begin

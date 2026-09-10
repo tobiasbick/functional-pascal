@@ -1,4 +1,4 @@
-//! Runtime implementations for `Std.Dict.*` intrinsics.
+//! Runtime implementations for `Std.Dictionaries.*` intrinsics.
 //!
 //! **Documentation:** `docs/pascal/std/collections/dict.md`
 

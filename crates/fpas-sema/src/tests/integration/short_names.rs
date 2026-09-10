@@ -109,7 +109,7 @@ fn ambiguous_length_error() {
     let errs = check_errors(
         "\
 program T;
-uses Std.Str, Std.Array;
+uses Std.Str, Std.Arrays;
 begin
   var L: integer := Length('hi')
 end.",
@@ -120,7 +120,7 @@ end.",
     );
     let h = errs[0].help.as_deref().unwrap_or("");
     assert!(
-        h.contains("Std.Str.Length") && h.contains("Std.Array.Length"),
+        h.contains("Std.Str.Length") && h.contains("Std.Arrays.Length"),
         "hint should list both candidates: {h}"
     );
 }
@@ -129,11 +129,11 @@ end.",
 fn ambiguous_length_hint_has_canonical_candidate_order() {
     let source = "\
 program T;
-uses Std.Str, Std.Array;
+uses Std.Str, Std.Arrays;
 begin
   var L: integer := Length('hi')
 end.";
-    let expected = "`Length` exists in multiple imported units: Std.Array.Length, Std.Str.Length. Use the fully qualified name to disambiguate.";
+    let expected = "`Length` exists in multiple imported units: Std.Arrays.Length, Std.Str.Length. Use the fully qualified name to disambiguate.";
 
     for _ in 0..64 {
         let errors = check_errors(source);
@@ -150,7 +150,7 @@ fn ambiguous_contains_error() {
     let errs = check_errors(
         "\
 program T;
-uses Std.Str, Std.Array;
+uses Std.Str, Std.Arrays;
 begin
   var B: boolean := Contains('hello', 'h')
 end.",
@@ -166,10 +166,10 @@ fn ambiguous_fallback_to_qualified() {
     check_ok(
         "\
 program T;
-uses Std.Str, Std.Array;
+uses Std.Str, Std.Arrays;
 begin
   var L: integer := Std.Str.Length('hi');
-  var L2: integer := Std.Array.Length([1, 2])
+  var L2: integer := Std.Arrays.Length([1, 2])
 end.",
     );
 }
@@ -196,13 +196,13 @@ program T;
 uses Std.Str;
 begin
   var A: array of integer := [1];
-  var L1: integer := Std.Array.Length(A);
+  var L1: integer := Std.Arrays.Length(A);
   var L2: integer := Length('hi')
 end.",
     );
     assert!(
         errs.iter().any(|e| e.message.contains("Ambiguous")),
-        "expected ambiguous `Length` after `Std.Array` was auto-loaded: {errs:#?}"
+        "expected ambiguous `Length` after `Std.Arrays` was auto-loaded: {errs:#?}"
     );
 }
 
@@ -214,7 +214,7 @@ program T;
 uses Std.Str;
 begin
   var A: array of integer := [1];
-  var L1: integer := Std.Array.Length(A);
+  var L1: integer := Std.Arrays.Length(A);
   var L2: integer := Std.Str.Length('hi')
 end.",
     );

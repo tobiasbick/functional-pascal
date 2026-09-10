@@ -171,7 +171,7 @@ impl Vm {
         }
     }
 
-    /// Queue one line for hosted `Read` and `ReadLn` calls.
+    /// Queue one line for hosted `ReadText` and `ReadLn` calls.
     pub fn push_readln_input(&mut self, line: &str) {
         self.hosted
             .text_input

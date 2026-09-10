@@ -1,6 +1,6 @@
 program ForExample;
 
-uses Std.Console, Std.Array;
+uses Std.Console, Std.Arrays;
 
 begin
   var Scores: array of integer := [12, 45, 3, 67, 29, 88, 51, 7, 93, 34];

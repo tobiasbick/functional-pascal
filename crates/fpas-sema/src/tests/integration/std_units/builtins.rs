@@ -76,10 +76,10 @@ fn std_array_push_requires_mutable_array() {
     let errs = check_errors(
         "\
 program T;
-uses Std.Array;
+uses Std.Arrays;
 begin
   var A: array of integer := [1];
-  Std.Array.Push(A, 2)
+  Std.Arrays.Push(A, 2)
 end.",
     );
     assert!(
@@ -93,9 +93,9 @@ fn std_dict_merge_requires_matching_rhs_dict_type() {
     let errs = check_errors(
         "\
 program T;
-uses Std.Dict;
+uses Std.Dictionaries;
 begin
-  var M: dict of integer to integer := Std.Dict.Merge([1: 10], ['x': true])
+  var M: dict of integer to integer := Std.Dictionaries.Merge([1: 10], ['x': true])
 end.",
     );
     assert!(
@@ -110,9 +110,9 @@ fn std_dict_merge_requires_dict_rhs() {
     let errs = check_errors(
         "\
 program T;
-uses Std.Dict;
+uses Std.Dictionaries;
 begin
-  var M: dict of integer to integer := Std.Dict.Merge([1: 10], 42)
+  var M: dict of integer to integer := Std.Dictionaries.Merge([1: 10], 42)
 end.",
     );
     assert!(
@@ -127,9 +127,9 @@ fn std_dict_get_requires_matching_key_type() {
     let errs = check_errors(
         "\
 program T;
-uses Std.Dict;
+uses Std.Dictionaries;
 begin
-  var V: Option of integer := Std.Dict.Get(['Alice': 1], 42)
+  var V: Option of integer := Std.Dictionaries.Get(['Alice': 1], 42)
 end.",
     );
     assert!(
@@ -144,13 +144,13 @@ fn std_array_find_requires_boolean_callback_result() {
     let errs = check_errors(
         "\
 program T;
-uses Std.Array;
+uses Std.Arrays;
 function WrongReturn(X: integer): integer;
 begin
   return X
 end;
 begin
-  var V: Option of integer := Std.Array.Find([1, 2, 3], WrongReturn)
+  var V: Option of integer := Std.Arrays.Find([1, 2, 3], WrongReturn)
 end.",
     );
     assert!(
@@ -165,13 +165,13 @@ fn std_array_for_each_requires_procedure_callback() {
     let errs = check_errors(
         "\
 program T;
-uses Std.Array;
+uses Std.Arrays;
 function NotAProcedure(X: integer): integer;
 begin
   return X
 end;
 begin
-  Std.Array.ForEach([1, 2, 3], NotAProcedure)
+  Std.Arrays.ForEach([1, 2, 3], NotAProcedure)
 end.",
     );
     assert!(

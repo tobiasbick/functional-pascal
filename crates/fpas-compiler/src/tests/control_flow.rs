@@ -9,7 +9,7 @@ fn for_in_array_and_dictionary_execute() {
     assert_succeeds(
         "\
 program RegisterForIn;
-uses Std.Console, Std.Conv, Std.Dict;
+uses Std.Console, Std.Conv, Std.Dictionaries;
 begin
   mutable var Sum: integer := 0;
   for Value: integer in [1, 2, 3] do Sum := Sum + Value;

@@ -2,7 +2,7 @@
 unit Std.Http.Server;
 
 uses
-  Std.Array, Std.Conv, Std.Http.BodyFraming, Std.Http.Fields, Std.Http.Headers, Std.Http.Io,
+  Std.Arrays, Std.Conv, Std.Http.BodyFraming, Std.Http.Fields, Std.Http.Headers, Std.Http.Io,
   Std.Http.Method, Std.Http.Types, Std.Http.Wire, Std.Net, Std.Net.Utf8, Std.Str;
 
 // Reads through the HTTP head terminator within a byte limit.
@@ -15,25 +15,25 @@ begin
   mutable var Bytes: array of integer := [];
   while Std.Http.Wire.FindSeparator(Bytes, 0) < 0 do
   begin
-    if Std.Array.Length(Bytes) >= Maximum then
+    if Std.Arrays.Length(Bytes) >= Maximum then
     begin
       return Error('HTTP request headers exceed MaxHeaderBytes')
     end;
-    mutable var ReadMaximum: integer := Maximum - Std.Array.Length(Bytes);
+    mutable var ReadMaximum: integer := Maximum - Std.Arrays.Length(Bytes);
     if ReadMaximum > 65536 then
     begin
       ReadMaximum := 65536
     end;
 
-    case Std.Net.Read(Connection, ReadMaximum) of
+    case Std.Net.ReceiveBytes(Connection, ReadMaximum) of
       Ok(Chunk):
       begin
-        if Std.Array.Length(Chunk) = 0 then
+        if Std.Arrays.Length(Chunk) = 0 then
         begin
           return Error('HTTP request is missing the header terminator')
         end;
 
-        Bytes := Std.Array.Concat(Bytes, Chunk)
+        Bytes := Std.Arrays.Concat(Bytes, Chunk)
       end;
       Error(Message):
       begin
@@ -52,7 +52,7 @@ end;
 function ParseRequestLine(Line: string): result of array of string, string;
 begin
   var Parts: array of string := Std.Str.Split(Line, ' ');
-  if Std.Array.Length(Parts) <> 3 then
+  if Std.Arrays.Length(Parts) <> 3 then
   begin
     return Error('HTTP request line must contain method, target, and version')
   end;
@@ -84,7 +84,7 @@ end;
 function HeaderCount(Headers: array of Header; Name: string): integer;
 begin
   mutable var Count: integer := 0;
-  for Index: integer := 0 to Std.Array.Length(Headers) - 1 do
+  for Index: integer := 0 to Std.Arrays.Length(Headers) - 1 do
   begin
     if Std.Http.Headers.IsName(Headers[Index].Name, Name) then
     begin
@@ -103,12 +103,12 @@ end;
 // - `Length`: Declared complete body length.
 function ReadBody(Connection: Std.Net.Connection; Initial: array of integer; Length: integer): result of array of integer, string;
 begin
-  mutable var InitialLength: integer := Std.Array.Length(Initial);
+  mutable var InitialLength: integer := Std.Arrays.Length(Initial);
   if Length < InitialLength then
   begin
     InitialLength := Length
   end;
-  mutable var Chunks: array of array of integer := [Std.Array.Slice(Initial, 0, InitialLength)];
+  mutable var Chunks: array of array of integer := [Std.Arrays.Slice(Initial, 0, InitialLength)];
   mutable var Received: integer := InitialLength;
   while Received < Length do
   begin
@@ -118,16 +118,16 @@ begin
       ReadMaximum := 1048576
     end;
 
-    case Std.Net.Read(Connection, ReadMaximum) of
+    case Std.Net.ReceiveBytes(Connection, ReadMaximum) of
       Ok(Chunk):
       begin
-        if Std.Array.Length(Chunk) = 0 then
+        if Std.Arrays.Length(Chunk) = 0 then
         begin
           return Error('HTTP request body is shorter than Content-Length')
         end;
 
-        Std.Array.Push(Chunks, Chunk);
-        Received := Received + Std.Array.Length(Chunk)
+        Std.Arrays.Push(Chunks, Chunk);
+        Received := Received + Std.Arrays.Length(Chunk)
       end;
       Error(Message):
       begin
@@ -168,7 +168,7 @@ begin
     end
   end;
   var Separator: integer := Std.Http.Wire.FindSeparator(Bytes, 0);
-  var HeadBytes: array of integer := Std.Array.Slice(Bytes, 0, Separator);
+  var HeadBytes: array of integer := Std.Arrays.Slice(Bytes, 0, Separator);
   mutable var HeadText: string := '';
   case Std.Net.Utf8.Decode(HeadBytes) of
     Ok(Value):
@@ -181,7 +181,7 @@ begin
     end
   end;
   var Lines: array of string := Std.Str.Split(HeadText, #13 + #10);
-  if Std.Array.Length(Lines) = 0 then
+  if Std.Arrays.Length(Lines) = 0 then
   begin
     return Error('HTTP request line is missing')
   end;
@@ -252,8 +252,8 @@ begin
   begin
     return Error('HTTP request body exceeds MaxBodyBytes')
   end;
-  var InitialBody: array of integer := Std.Array.Slice(Bytes, Separator + 4, (Std.Array.Length(Bytes) - Separator) -
-                                                                             4);
+  var InitialBody: array of integer := Std.Arrays.Slice(Bytes, Separator + 4, (Std.Arrays.Length(Bytes) - Separator) -
+                                                                              4);
   mutable var Body: array of integer := [];
   case ReadBody(Connection, InitialBody, BodyLength) of
     Ok(Value):
@@ -294,9 +294,9 @@ begin
   mutable var Head: string := (((('HTTP/1.1 ' + Std.Conv.IntToStr(ResponseValue.StatusCode)) + ' ') + ResponseValue.ReasonPhrase) + #13) +
                               #10;
   Head := ((Head + 'Connection: close') + #13) + #10;
-  Head := (((Head + 'Content-Length: ') + Std.Conv.IntToStr(Std.Array.Length(ResponseValue.Body))) + #13) +
+  Head := (((Head + 'Content-Length: ') + Std.Conv.IntToStr(Std.Arrays.Length(ResponseValue.Body))) + #13) +
           #10;
-  for Index: integer := 0 to Std.Array.Length(ResponseValue.Headers) - 1 do
+  for Index: integer := 0 to Std.Arrays.Length(ResponseValue.Headers) - 1 do
   begin
     var Field: Header := ResponseValue.Headers[Index];
     if (not Std.Http.Method.IsValidToken(Field.Name)) or
@@ -314,7 +314,7 @@ begin
   end;
 
   Head := (Head + #13) + #10;
-  return Ok(Std.Array.Concat(Std.Net.Utf8.Encode(Head), ResponseValue.Body))
+  return Ok(Std.Arrays.Concat(Std.Net.Utf8.Encode(Head), ResponseValue.Body))
 end;
 
 // Writes one complete HTTP/1.1 response without closing the connection.

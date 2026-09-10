@@ -27,7 +27,7 @@ impl Default for DebugExecutionLimits {
     }
 }
 
-/// One accepted debuggee input line queued for hosted `Read` / `ReadLn`.
+/// One accepted debuggee input line queued for hosted `ReadText` / `ReadLn`.
 ///
 /// **Documentation:** `docs/pascal/tools/debugger.md`
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

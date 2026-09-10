@@ -2,15 +2,15 @@
 
 ## Procedures
 
-### `procedure Write(...)`
+### `procedure WriteText(...)`
 
 - **Parameters:** zero or more values (variadic). Typical types: `string`, `string`, `integer`, `real`, `boolean`, and other printable runtime values supported by the implementation.
 - **Result:** none.
 - **Effect:** prints each argument in order **without** appending a newline and **without** inserting separators automatically.
 
 ```pascal
-Write('count=');
-Write(42);
+WriteText('count=');
+WriteText(42);
 WriteLn('')
 ```
 
@@ -18,7 +18,7 @@ WriteLn('')
 
 ### `procedure WriteLn(...)`
 
-- **Parameters:** zero or more values (same idea as `Write`).
+- **Parameters:** zero or more values (same idea as `WriteText`).
 - **Result:** none.
 - **Effect:** prints the arguments, then ends the current output line (newline semantics for captures and terminals).
 

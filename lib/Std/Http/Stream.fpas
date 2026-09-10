@@ -2,7 +2,7 @@
 unit Std.Http.Stream;
 
 uses
-  Std.Array, Std.Http.Stream.Types, Std.Http.Io, Std.Http.BodyFraming, Std.Http.Handles,
+  Std.Arrays, Std.Http.Stream.Types, Std.Http.Io, Std.Http.BodyFraming, Std.Http.Handles,
   Std.Http.Types, Std.Http.Wire, Std.Net, Std.Net.Utf8;
 
 // Reserves and stores one state in the hosted HTTP registry.
@@ -83,13 +83,13 @@ begin
   case Std.Http.Io.ReadResponseBytes(State.Connection, State.Maximum - State.BytesReceived) of
     Ok(Bytes):
     begin
-      if Std.Array.Length(Bytes) = 0 then
+      if Std.Arrays.Length(Bytes) = 0 then
       begin
         return Ok(false)
       end;
 
-      State.BytesReceived := State.BytesReceived + Std.Array.Length(Bytes);
-      State.Buffer := Std.Array.Concat(State.Buffer, Bytes);
+      State.BytesReceived := State.BytesReceived + Std.Arrays.Length(Bytes);
+      State.Buffer := Std.Arrays.Concat(State.Buffer, Bytes);
       StoreState(Index, State);
       return Ok(true)
     end;
@@ -108,7 +108,7 @@ end;
 // - `Count`: Required buffered byte count.
 function EnsureBytes(Index: integer; Count: integer): result of boolean, string;
 begin
-  while Std.Array.Length(LoadState(Index).Buffer) < Count do
+  while Std.Arrays.Length(LoadState(Index).Buffer) < Count do
   begin
     case ReadNetwork(Index) of
       Ok(ReadMore):
@@ -136,13 +136,13 @@ end;
 function TakeBuffer(Index: integer; Maximum: integer): array of integer;
 begin
   mutable var State: StreamState := LoadState(Index);
-  mutable var Count: integer := Std.Array.Length(State.Buffer);
+  mutable var Count: integer := Std.Arrays.Length(State.Buffer);
   if Maximum < Count then
   begin
     Count := Maximum
   end;
-  var Bytes: array of integer := Std.Array.Slice(State.Buffer, 0, Count);
-  State.Buffer := Std.Array.Slice(State.Buffer, Count, Std.Array.Length(State.Buffer) - Count);
+  var Bytes: array of integer := Std.Arrays.Slice(State.Buffer, 0, Count);
+  State.Buffer := Std.Arrays.Slice(State.Buffer, Count, Std.Arrays.Length(State.Buffer) - Count);
   StoreState(Index, State);
   return Bytes
 end;
@@ -160,7 +160,7 @@ begin
     return Ok([])
   end;
 
-  if Std.Array.Length(LoadState(Index).Buffer) = 0 then
+  if Std.Arrays.Length(LoadState(Index).Buffer) = 0 then
   begin
     case ReadNetwork(Index) of
       Ok(ReadMore):
@@ -184,7 +184,7 @@ begin
   end;
   var Bytes: array of integer := TakeBuffer(Index, Count);
   mutable var State: StreamState := LoadState(Index);
-  State.Remaining := State.Remaining - Std.Array.Length(Bytes);
+  State.Remaining := State.Remaining - Std.Arrays.Length(Bytes);
   StoreState(Index, State);
   if State.Remaining = 0 then
   begin
@@ -201,7 +201,7 @@ end;
 // - `Maximum`: Maximum decoded bytes to return.
 function ReadUntilClose(Index: integer; Maximum: integer): result of array of integer, string;
 begin
-  if Std.Array.Length(LoadState(Index).Buffer) = 0 then
+  if Std.Arrays.Length(LoadState(Index).Buffer) = 0 then
   begin
     case ReadNetwork(Index) of
       Ok(ReadMore):
@@ -249,9 +249,9 @@ begin
     LineEnd := Std.Http.Wire.FindLineEnd(LoadState(Index).Buffer, 0)
   end;
   mutable var State: StreamState := LoadState(Index);
-  var LineBytes: array of integer := Std.Array.Slice(State.Buffer, 0, LineEnd);
-  State.Buffer := Std.Array.Slice(State.Buffer, LineEnd + 2, (Std.Array.Length(State.Buffer) - LineEnd) -
-                                                             2);
+  var LineBytes: array of integer := Std.Arrays.Slice(State.Buffer, 0, LineEnd);
+  State.Buffer := Std.Arrays.Slice(State.Buffer, LineEnd + 2, (Std.Arrays.Length(State.Buffer) - LineEnd) -
+                                                              2);
   StoreState(Index, State);
   case Std.Net.Utf8.Decode(LineBytes) of
     Ok(Line):
@@ -276,7 +276,7 @@ begin
   begin
     if LoadState(Index).ChunkRemaining > 0 then
     begin
-      if Std.Array.Length(LoadState(Index).Buffer) = 0 then
+      if Std.Arrays.Length(LoadState(Index).Buffer) = 0 then
       begin
         case ReadNetwork(Index) of
           Ok(ReadMore):
@@ -300,7 +300,7 @@ begin
       end;
       var Bytes: array of integer := TakeBuffer(Index, Count);
       mutable var DataState: StreamState := LoadState(Index);
-      DataState.ChunkRemaining := DataState.ChunkRemaining - Std.Array.Length(Bytes);
+      DataState.ChunkRemaining := DataState.ChunkRemaining - Std.Arrays.Length(Bytes);
       if DataState.ChunkRemaining = 0 then
       begin
         DataState.NeedChunkTerminator := true
@@ -333,8 +333,8 @@ begin
         return Error('HTTP chunk is missing its trailing CRLF')
       end;
 
-      TerminatorState.Buffer := Std.Array.Slice(TerminatorState.Buffer, 2, Std.Array.Length(TerminatorState.Buffer) -
-                                                                           2);
+      TerminatorState.Buffer := Std.Arrays.Slice(TerminatorState.Buffer, 2, Std.Arrays.Length(TerminatorState.Buffer) -
+                                                                            2);
       TerminatorState.NeedChunkTerminator := false;
       StoreState(Index, TerminatorState)
     end;

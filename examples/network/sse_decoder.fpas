@@ -1,7 +1,7 @@
-// Decodes one Server-Sent Event split across arbitrary byte fragments.
+// Decodes one Server-Sent InputEvent split across arbitrary byte fragments.
 program NetworkSseDecoder;
 
-uses Std.Array, Std.Console, Std.Http, Std.Net.Utf8;
+uses Std.Arrays, Std.Console, Std.Http, Std.Net.Utf8;
 
 // Prints all complete events returned by one decoder operation.
 //
@@ -9,7 +9,7 @@ uses Std.Array, Std.Console, Std.Http, Std.Net.Utf8;
 // - `Events`: Complete SSE events to display.
 procedure PrintEvents(Events: array of SseEvent);
 begin
-  for Index: integer := 0 to Std.Array.Length(Events) - 1 do
+  for Index: integer := 0 to Std.Arrays.Length(Events) - 1 do
   begin
     WriteLn('event: ' + Events[Index].EventType);
     WriteLn('id: ' + Events[Index].Id);

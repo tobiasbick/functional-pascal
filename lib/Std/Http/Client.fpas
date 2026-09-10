@@ -2,7 +2,7 @@
 unit Std.Http.Client;
 
 uses
-  Std.Array, Std.Http.Head, Std.Http.Headers, Std.Http.Io, Std.Http.Redirect, Std.Http.Stream,
+  Std.Arrays, Std.Http.Head, Std.Http.Headers, Std.Http.Io, Std.Http.Redirect, Std.Http.Stream,
   Std.Http.Types, Std.Http.Wire, Std.Net, Std.Net.Uri;
 
 // Opens a TCP or verified TLS connection selected by URI scheme.
@@ -253,7 +253,7 @@ begin
         case Std.Http.Stream.ReadBody(StreamResponseValue.Body, 65536) of
           Ok(Bytes):
           begin
-            if Std.Array.Length(Bytes) = 0 then
+            if Std.Arrays.Length(Bytes) = 0 then
             begin
               return Ok(record
                 StatusCode := StreamResponseValue.StatusCode;
@@ -263,7 +263,7 @@ begin
               end)
             end;
 
-            Std.Array.Push(Chunks, Bytes)
+            Std.Arrays.Push(Chunks, Bytes)
           end;
           Error(Message):
           begin

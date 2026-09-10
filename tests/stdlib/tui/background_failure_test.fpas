@@ -1,6 +1,6 @@
 program TuiBackgroundFailureTest;
 
-uses Std.Result, Std.Task, Std.Test, Std.Tui;
+uses Std.Results, Std.Task, Std.Test, Std.Tui;
 
 type
   FailureModel = record

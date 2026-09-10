@@ -38,28 +38,7 @@ pub(crate) fn resolve(name: &str, first_argument: Option<&Ty>) -> Option<Intrins
         ),
         "Parse" => family!(member, Parse, ParseIntrinsic, [TryInt, TryReal, TryBool]),
         "Math" => resolve_math(member),
-        "Net" => family!(
-            member,
-            Net,
-            NetIntrinsic,
-            [
-                Connect,
-                ConnectTls,
-                ConnectWithCancellation,
-                ConnectTlsWithCancellation,
-                Listen,
-                ListenTls,
-                Accept,
-                AcceptWithCancellation,
-                CloseListener,
-                SetTimeout,
-                Read,
-                ReadWithCancellation,
-                Write,
-                WriteWithCancellation,
-                Close,
-            ]
-        ),
+        "Net" => resolve_net(member),
         "Http" => resolve_http(member),
         "Random" => family!(
             member,
@@ -67,8 +46,8 @@ pub(crate) fn resolve(name: &str, first_argument: Option<&Ty>) -> Option<Intrins
             RandomIntrinsic,
             [Random, RandomInt, Randomize]
         ),
-        "Array" => resolve_array(member),
-        "Dict" => family!(
+        "Arrays" => resolve_array(member),
+        "Dictionaries" => family!(
             member,
             Dict,
             DictIntrinsic,
@@ -130,13 +109,13 @@ pub(crate) fn resolve(name: &str, first_argument: Option<&Ty>) -> Option<Intrins
             ]
         ),
         "Json" => family!(member, Json, JsonIntrinsic, [Parse, Stringify]),
-        "Result" => family!(
+        "Results" => family!(
             member,
             Result,
             ResultIntrinsic,
             [Unwrap, UnwrapOr, IsOk, IsError, Map, AndThen, OrElse]
         ),
-        "Option" => family!(
+        "Options" => family!(
             member,
             Option,
             OptionIntrinsic,
@@ -210,15 +189,18 @@ fn resolve_http(member: &str) -> Option<Intrinsic> {
 }
 
 fn resolve_console(member: &str) -> Option<Intrinsic> {
+    match member {
+        "WriteText" => return Some(Intrinsic::Console(ConsoleIntrinsic::Write)),
+        "ReadText" => return Some(Intrinsic::Console(ConsoleIntrinsic::Read)),
+        _ => {}
+    }
     family!(
         member,
         Console,
         ConsoleIntrinsic,
         [
-            Write,
             WriteLn,
             ReadLn,
-            Read,
             ReadKey,
             KeyPressed,
             ReadKeyEvent,
@@ -287,6 +269,33 @@ fn resolve_console(member: &str) -> Option<Intrinsic> {
             ReleaseInteractiveTerminal,
         ]
     )
+}
+
+fn resolve_net(member: &str) -> Option<Intrinsic> {
+    match member {
+        "ReceiveBytes" => Some(Intrinsic::Net(NetIntrinsic::Read)),
+        "ReceiveBytesWithCancellation" => Some(Intrinsic::Net(NetIntrinsic::ReadWithCancellation)),
+        "SendBytes" => Some(Intrinsic::Net(NetIntrinsic::Write)),
+        "SendBytesWithCancellation" => Some(Intrinsic::Net(NetIntrinsic::WriteWithCancellation)),
+        _ => family!(
+            member,
+            Net,
+            NetIntrinsic,
+            [
+                Connect,
+                ConnectTls,
+                ConnectWithCancellation,
+                ConnectTlsWithCancellation,
+                Listen,
+                ListenTls,
+                Accept,
+                AcceptWithCancellation,
+                CloseListener,
+                SetTimeout,
+                Close,
+            ]
+        ),
+    }
 }
 
 fn resolve_str(member: &str) -> Option<Intrinsic> {
@@ -436,10 +445,24 @@ mod tests {
                 let (family, member) = debug
                     .split_once('(')
                     .expect("intrinsic debug form contains family and member");
-                (
-                    format!("Std.{family}.{}", member.trim_end_matches(')')),
-                    None,
-                )
+                let family = match family {
+                    "Array" => "Arrays",
+                    "Dict" => "Dictionaries",
+                    "Result" => "Results",
+                    "Option" => "Options",
+                    other => other,
+                };
+                let member = member.trim_end_matches(')');
+                let member = match (family, member) {
+                    ("Console", "Read") => "ReadText",
+                    ("Console", "Write") => "WriteText",
+                    ("Net", "Read") => "ReceiveBytes",
+                    ("Net", "ReadWithCancellation") => "ReceiveBytesWithCancellation",
+                    ("Net", "Write") => "SendBytes",
+                    ("Net", "WriteWithCancellation") => "SendBytesWithCancellation",
+                    (_, other) => other,
+                };
+                (format!("Std.{family}.{member}"), None)
             }
         }
     }

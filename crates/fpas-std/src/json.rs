@@ -59,7 +59,12 @@ fn json_to_fpas_at_depth(
             .map(|item| json_to_fpas_at_depth(call, item, depth + 1, location))
             .collect::<Result<Vec<_>, _>>()
             .and_then(|items| {
-                json_variant(call, "Array", vec![Value::Array(items.into())], location)
+                json_variant(
+                    call,
+                    "ArrayValue",
+                    vec![Value::Array(items.into())],
+                    location,
+                )
             }),
         JsonValue::Object(fields) => fields
             .into_iter()
@@ -198,7 +203,7 @@ fn fpas_to_json_at_depth(
                 location,
             )),
         },
-        "Array" => match expect_one_field("Array", fields, location)? {
+        "ArrayValue" => match expect_one_field("ArrayValue", fields, location)? {
             Value::Array(items) => items
                 .into_iter()
                 .map(|item| fpas_to_json_at_depth(item, location, depth + 1))
@@ -207,10 +212,10 @@ fn fpas_to_json_at_depth(
             other => Err(std_runtime_error(
                 RUNTIME_VM_OPERAND_TYPE_MISMATCH,
                 format!(
-                    "Std.Json.JsonValue.Array expects array, got {}",
+                    "Std.Json.JsonValue.ArrayValue expects array, got {}",
                     other.type_name()
                 ),
-                "Construct arrays with Std.Json.JsonValue.Array([Item1, Item2]).",
+                "Construct arrays with Std.Json.JsonValue.ArrayValue([Item1, Item2]).",
                 location,
             )),
         },
@@ -348,7 +353,7 @@ mod tests {
     #[test]
     fn fpas_to_json_accepts_container_at_depth_limit() {
         let value = test_variant(
-            "Array",
+            "ArrayValue",
             vec![Value::Array(vec![test_variant("Null", vec![])].into())],
         );
         assert!(fpas_to_json_at_depth(value, loc(), MAX_JSON_DEPTH - 1).is_ok());
@@ -357,7 +362,7 @@ mod tests {
     #[test]
     fn fpas_to_json_rejects_container_child_beyond_depth_limit() {
         let value = test_variant(
-            "Array",
+            "ArrayValue",
             vec![Value::Array(vec![test_variant("Null", vec![])].into())],
         );
         let err = fpas_to_json_at_depth(value, loc(), MAX_JSON_DEPTH)

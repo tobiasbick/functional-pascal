@@ -1,7 +1,7 @@
 // Immutable state and transcript formatting for the Local Chat application.
 unit LocalChat.Model;
 
-uses Std.Array, Std.Console, Std.Str, Std.Tui;
+uses Std.Arrays, Std.Console, Std.Str, Std.Tui;
 
 public type
   // Origin of one visible local chat entry.
@@ -164,7 +164,7 @@ end;
 // - `State`: Current application state containing entries and terminal dimensions.
 public function LocalChatTranscript(State: LocalChatModel): string;
 begin
-  if Std.Array.Length(State.Entries) = 0 then
+  if Std.Arrays.Length(State.Entries) = 0 then
   begin
     return ('No messages yet.' + Std.Str.Chr(10)) + 'Type below and press Enter.'
   end;
@@ -175,7 +175,7 @@ begin
   end;
   mutable var Transcript: string := '';
   var NewLine: string := Std.Str.Chr(10);
-  for Index: integer := 0 to Std.Array.Length(State.Entries) - 1 do
+  for Index: integer := 0 to Std.Arrays.Length(State.Entries) - 1 do
   begin
     if Transcript <> '' then
     begin
@@ -203,7 +203,7 @@ begin
   begin
     VisibleLines := 1
   end;
-  var LineCount: integer := Std.Array.Length(Std.Str.Split(Transcript, Std.Str.Chr(10)));
+  var LineCount: integer := Std.Arrays.Length(Std.Str.Split(Transcript, Std.Str.Chr(10)));
   mutable var OffsetY: integer := LineCount - VisibleLines;
   if OffsetY < 0 then
   begin

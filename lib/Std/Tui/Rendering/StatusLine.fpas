@@ -2,7 +2,7 @@
 unit Std.Tui.Rendering.StatusLine;
 
 uses
-  Std.Array, Std.Console, Std.Tui.Cells.Cell, Std.Tui.Cells.StyleRole, Std.Tui.Chrome.StatusItem,
+  Std.Arrays, Std.Console, Std.Tui.Cells.Cell, Std.Tui.Cells.StyleRole, Std.Tui.Chrome.StatusItem,
   Std.Tui.Geometry.Point, Std.Tui.Geometry.Rect, Std.Tui.Ids.ControlId, Std.Tui.Rendering.Canvas;
 
 function TuiStatusFocused(Focused: option of TuiControlId; Id: TuiControlId): boolean;
@@ -41,7 +41,7 @@ public procedure TuiPaintStatusLine(
 begin
   Canvas.FillRect(Bounds, TuiCell.Create(' ', TuiStyleRole.StatusNormal));
   mutable var X: integer := Bounds.X;
-  for Index: integer := 0 to Std.Array.Length(Items) - 1 do
+  for Index: integer := 0 to Std.Arrays.Length(Items) - 1 do
   begin
     if Index > 0 then
     begin

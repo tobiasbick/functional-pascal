@@ -1,7 +1,7 @@
 // Validated conversion between FPAS strings and UTF-8 byte arrays.
 unit Std.Net.Utf8;
 
-uses Std.Array, Std.Conv, Std.Str;
+uses Std.Arrays, Std.Conv, Std.Str;
 
 // Encodes one FPAS string as UTF-8 bytes.
 //
@@ -15,25 +15,25 @@ begin
     var CodePoint: integer := Std.Str.Ord(Std.Str.CharAt(Text, Index));
     if CodePoint <= 127 then
     begin
-      Std.Array.Push(Bytes, CodePoint)
+      Std.Arrays.Push(Bytes, CodePoint)
     end
     else if CodePoint <= 2047 then
     begin
-      Std.Array.Push(Bytes, 192 + CodePoint div 64);
-      Std.Array.Push(Bytes, 128 + CodePoint mod 64)
+      Std.Arrays.Push(Bytes, 192 + CodePoint div 64);
+      Std.Arrays.Push(Bytes, 128 + CodePoint mod 64)
     end
     else if CodePoint <= 65535 then
     begin
-      Std.Array.Push(Bytes, 224 + CodePoint div 4096);
-      Std.Array.Push(Bytes, 128 + (CodePoint div 64) mod 64);
-      Std.Array.Push(Bytes, 128 + CodePoint mod 64)
+      Std.Arrays.Push(Bytes, 224 + CodePoint div 4096);
+      Std.Arrays.Push(Bytes, 128 + (CodePoint div 64) mod 64);
+      Std.Arrays.Push(Bytes, 128 + CodePoint mod 64)
     end
     else
     begin
-      Std.Array.Push(Bytes, 240 + CodePoint div 262144);
-      Std.Array.Push(Bytes, 128 + (CodePoint div 4096) mod 64);
-      Std.Array.Push(Bytes, 128 + (CodePoint div 64) mod 64);
-      Std.Array.Push(Bytes, 128 + CodePoint mod 64)
+      Std.Arrays.Push(Bytes, 240 + CodePoint div 262144);
+      Std.Arrays.Push(Bytes, 128 + (CodePoint div 4096) mod 64);
+      Std.Arrays.Push(Bytes, 128 + (CodePoint div 64) mod 64);
+      Std.Arrays.Push(Bytes, 128 + CodePoint mod 64)
     end
   end;
 
@@ -67,7 +67,7 @@ public function Decode(Bytes: array of integer): result of string, string;
 begin
   mutable var Text: string := '';
   mutable var Index: integer := 0;
-  while Index < Std.Array.Length(Bytes) do
+  while Index < Std.Arrays.Length(Bytes) do
   begin
     var First: integer := Bytes[Index];
     if (First < 0) or (First > 255) then
@@ -98,7 +98,7 @@ begin
       return Invalid(Index, 'invalid leading byte')
     end;
 
-    if Index + Width > Std.Array.Length(Bytes) then
+    if Index + Width > Std.Arrays.Length(Bytes) then
     begin
       return Invalid(Index, 'truncated sequence')
     end;

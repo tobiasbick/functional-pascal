@@ -13,7 +13,7 @@ pub(super) fn check_length(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
         s::STD_ARRAY_LENGTH,
         1,
         args,
-        "Example: Std.Array.Length(A).",
+        "Example: Std.Arrays.Length(A).",
         span,
     ) {
         return Ty::Error;
@@ -34,7 +34,7 @@ pub(super) fn check_length(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
 }
 
 pub(super) fn check_sort_or_reverse(c: &mut Checker, name: &str, args: &[Expr], span: Span) -> Ty {
-    if !check_argument_count(c, name, 1, args, "Example: Std.Array.Sort(A).", span) {
+    if !check_argument_count(c, name, 1, args, "Example: Std.Arrays.Sort(A).", span) {
         return Ty::Error;
     }
 
@@ -58,7 +58,14 @@ pub(super) fn check_contains_or_index_of(
     args: &[Expr],
     span: Span,
 ) -> Ty {
-    if !check_argument_count(c, name, 2, args, "Example: Std.Array.Contains(A, V).", span) {
+    if !check_argument_count(
+        c,
+        name,
+        2,
+        args,
+        "Example: Std.Arrays.Contains(A, V).",
+        span,
+    ) {
         return Ty::Error;
     }
 
@@ -89,7 +96,7 @@ pub(super) fn check_slice(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
         s::STD_ARRAY_SLICE,
         3,
         args,
-        "Example: Std.Array.Slice(A, Start, Len).",
+        "Example: Std.Arrays.Slice(A, Start, Len).",
         span,
     ) {
         return Ty::Error;
@@ -121,7 +128,7 @@ pub(super) fn check_concat(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
         s::STD_ARRAY_CONCAT,
         2,
         args,
-        "Example: Std.Array.Concat(A, B).",
+        "Example: Std.Arrays.Concat(A, B).",
         span,
     ) {
         return Ty::Error;
@@ -168,7 +175,7 @@ pub(super) fn check_fill(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
         s::STD_ARRAY_FILL,
         2,
         args,
-        "Example: Std.Array.Fill(Value, Count).",
+        "Example: Std.Arrays.Fill(Value, Count).",
         span,
     ) {
         return Ty::Error;

@@ -1,7 +1,7 @@
 unit Std.Tui.Runtime.Application.Loop;
 
 uses
-  Std.Array, Std.Console, Std.Option, Std.Result, Std.Task, Std.Time, Std.Tui.Cells.Palette,
+  Std.Arrays, Std.Console, Std.Options, Std.Results, Std.Task, Std.Time, Std.Tui.Cells.Palette,
   Std.Tui.Elements.Element, Std.Tui.Runtime.Application.Background,
   Std.Tui.Runtime.Application.State, Std.Tui.Runtime.Cmd, Std.Tui.Runtime.ConsoleEvents,
   Std.Tui.Runtime.Frame, Std.Tui.Runtime.Input, Std.Tui.Runtime.Msg, Std.Tui.Runtime.Routing.Pointer,
@@ -109,17 +109,17 @@ begin
     end;
 
     TuiAppPushMessages(ApplicationId, TuiBackgroundReap(ApplicationId));
-    if (Std.Array.Length(TuiAppMessages[ApplicationId - 1]) = 0) and
-       (Std.Array.Length(TuiAppInputs[ApplicationId - 1]) > 0) then
+    if (Std.Arrays.Length(TuiAppMessages[ApplicationId - 1]) = 0) and
+       (Std.Arrays.Length(TuiAppInputs[ApplicationId - 1]) > 0) then
     begin
       TuiAppRouteInput(ApplicationId, TuiAppPopInput(ApplicationId));
-      if Std.Array.Length(TuiAppMessages[ApplicationId - 1]) = 0 then
+      if Std.Arrays.Length(TuiAppMessages[ApplicationId - 1]) = 0 then
       begin
         continue
       end
     end;
 
-    if Std.Array.Length(TuiAppMessages[ApplicationId - 1]) > 0 then
+    if Std.Arrays.Length(TuiAppMessages[ApplicationId - 1]) > 0 then
     begin
       Remaining := Remaining - 1;
       Model := TuiLoopApplyFramework(ApplicationId, Model, TuiAppPopMessage(ApplicationId), Update);
@@ -139,7 +139,7 @@ begin
     end
     else if BackgroundEnabled then
     begin
-      case Std.Result.Unwrap(TryReceive(Inbox)) of
+      case Std.Results.Unwrap(TryReceive(Inbox)) of
         Some(Message):
         begin
           Remaining := Remaining - 1;
@@ -228,7 +228,7 @@ begin
   while TuiAppOpen[ApplicationId - 1] do
   begin
     TuiAppPushMessages(ApplicationId, TuiBackgroundReap(ApplicationId));
-    if Std.Array.Length(TuiAppMessages[ApplicationId - 1]) > 0 then
+    if Std.Arrays.Length(TuiAppMessages[ApplicationId - 1]) > 0 then
     begin
       Model := TuiLoopApplyFramework(ApplicationId, Model, TuiAppPopMessage(ApplicationId), Update);
       if TuiLoopFinishUpdate(ApplicationId, Model, View, true) then
@@ -250,7 +250,7 @@ begin
       continue
     end;
 
-    if Std.Array.Length(TuiAppInputs[ApplicationId - 1]) > 0 then
+    if Std.Arrays.Length(TuiAppInputs[ApplicationId - 1]) > 0 then
     begin
       TuiAppRouteInput(ApplicationId, TuiAppPopInput(ApplicationId));
       continue
@@ -284,23 +284,23 @@ begin
       end);
       if PreferApplication then
       begin
-        Std.Array.Push(Cases, ApplicationCase);
-        Std.Array.Push(Cases, ConsoleCase)
+        Std.Arrays.Push(Cases, ApplicationCase);
+        Std.Arrays.Push(Cases, ConsoleCase)
       end
       else
       begin
-        Std.Array.Push(Cases, ConsoleCase);
-        Std.Array.Push(Cases, ApplicationCase)
+        Std.Arrays.Push(Cases, ConsoleCase);
+        Std.Arrays.Push(Cases, ApplicationCase)
       end
     end
     else
     begin
-      Std.Array.Push(Cases, ConsoleCase)
+      Std.Arrays.Push(Cases, ConsoleCase)
     end;
 
     if TuiBackgroundHasWork(ApplicationId) then
     begin
-      Std.Array.Push(Cases, TimerCase(50, procedure() begin end))
+      Std.Arrays.Push(Cases, TimerCase(50, procedure() begin end))
     end;
 
     Select(Cases);

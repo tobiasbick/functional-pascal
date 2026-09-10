@@ -1,6 +1,6 @@
 unit Julia.Compute;
 
-uses Std.Task, Std.Math, Std.Conv, Std.Array;
+uses Std.Task, Std.Math, Std.Conv, Std.Arrays;
 
 type
   Complex = record

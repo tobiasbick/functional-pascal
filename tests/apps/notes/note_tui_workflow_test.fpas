@@ -1,6 +1,6 @@
 program NoteTuiWorkflowTest;
 
-uses Notes.Model, Notes.Update, Notes.View, Std.Array, Std.Fs, Std.Str, Std.Test, Std.Tui;
+uses Notes.Model, Notes.Update, Notes.View, Std.Arrays, Std.Fs, Std.Str, Std.Test, Std.Tui;
 
 function ScreenContains(Snapshot: TuiSurfaceSnapshot; Text: string): boolean;
 begin
@@ -105,23 +105,23 @@ begin
   FocusApp.Close();
   var QuitCmd: TuiCmdOutput := TuiCmdOutput.Create();
   var CleanEscape: NotesModel := NotesUpdate(FocusModel, TuiMsg.QuitRequested, QuitCmd);
-  AssertTrue(QuitCmd.Read() = TuiCmd.NoCommand);
+  AssertTrue(QuitCmd.Command() = TuiCmd.NoCommand);
   AssertTrue(CleanEscape.Overlay = NotesOverlay.Closed);
   AssertEquals(FocusModel.Focus, CleanEscape.Focus);
   mutable var DirtyEscapeModel: NotesModel := FocusModel;
   DirtyEscapeModel.Dirty := true;
   var DirtyEscape: NotesModel := NotesUpdate(DirtyEscapeModel, TuiMsg.QuitRequested, QuitCmd);
-  AssertTrue(QuitCmd.Read() = TuiCmd.NoCommand);
+  AssertTrue(QuitCmd.Command() = TuiCmd.NoCommand);
   AssertTrue(DirtyEscape.Dirty);
   AssertTrue(DirtyEscape.Overlay = NotesOverlay.Closed);
   var CleanQuit: NotesModel := NotesUpdate(FocusModel, TuiMsg.Key(MakeAltKey('x')), QuitCmd);
-  AssertTrue(QuitCmd.Read() = TuiCmd.Quit);
+  AssertTrue(QuitCmd.Command() = TuiCmd.Quit);
   AssertTrue(CleanQuit.Overlay = NotesOverlay.Closed);
   mutable var DirtyModel: NotesModel := FocusModel;
   DirtyModel.Dirty := true;
   DirtyModel.Overlay := NotesOverlay.Help;
   var DirtyQuit: NotesModel := NotesUpdate(DirtyModel, TuiMsg.Key(MakeAltKey('X')), QuitCmd);
-  AssertTrue(QuitCmd.Read() = TuiCmd.NoCommand);
+  AssertTrue(QuitCmd.Command() = TuiCmd.NoCommand);
   AssertTrue(DirtyQuit.Overlay = NotesOverlay.QuitConfirmation);
   mutable var NoteValue: Note := NoteCreate('tui-workflow', 1700000000000);
   NoteValue.Title := 'A very long note title that must never resize the notes sidebar';

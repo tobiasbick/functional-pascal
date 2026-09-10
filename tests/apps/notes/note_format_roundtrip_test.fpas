@@ -1,6 +1,6 @@
 program NoteFormatRoundtripTest;
 
-uses Notes.Format, Notes.Model, Std.Array, Std.Str, Std.Test;
+uses Notes.Format, Notes.Model, Std.Arrays, Std.Str, Std.Test;
 
 begin
   var Source: Note := record
@@ -22,7 +22,7 @@ begin
       AssertEquals(Source.Title, Parsed.Title);
       AssertEquals(Source.CreatedMillis, Parsed.CreatedMillis);
       AssertEquals(Source.UpdatedMillis, Parsed.UpdatedMillis);
-      AssertEquals(2, Std.Array.Length(Parsed.Tags));
+      AssertEquals(2, Std.Arrays.Length(Parsed.Tags));
       AssertEquals('fpas', Parsed.Tags[0]);
       AssertEquals(true, Parsed.Pinned);
       AssertEquals(false, Parsed.Archived);

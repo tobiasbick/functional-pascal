@@ -1,9 +1,9 @@
 program T;
 
-uses Std.Console, Std.Dict, Std.Option;
+uses Std.Console, Std.Dictionaries, Std.Options;
 
 begin
   var D: dict of string to integer := [:];
-  var R: option of integer := Std.Dict.Get(D, 'X');
+  var R: option of integer := Std.Dictionaries.Get(D, 'X');
   WriteLn(IsNone(R))
 end.

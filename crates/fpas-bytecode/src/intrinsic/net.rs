@@ -15,9 +15,9 @@ pub enum NetIntrinsic {
     Connect = 518,
     /// `Std.Net.SetTimeout(Connection, TimeoutMillis)` - set read and write timeouts.
     SetTimeout = 519,
-    /// `Std.Net.Read(Connection, MaxBytes)` - read one byte chunk.
+    /// `Std.Net.ReceiveBytes(Connection, MaxBytes)` - receive one byte chunk.
     Read = 520,
-    /// `Std.Net.Write(Connection, Data)` - write one byte chunk.
+    /// `Std.Net.SendBytes(Connection, Data)` - send one byte chunk.
     Write = 521,
     /// `Std.Net.Close(Connection)` - close and invalidate one connection.
     Close = 522,
@@ -34,9 +34,9 @@ pub enum NetIntrinsic {
     ListenTls = 527,
     /// `Std.Net.AcceptWithCancellation(Listener, Token)` - accept until cancellation.
     AcceptWithCancellation = 536,
-    /// `Std.Net.ReadWithCancellation(Connection, MaxBytes, Token)` - read until cancellation.
+    /// `Std.Net.ReceiveBytesWithCancellation(Connection, MaxBytes, Token)` - read until cancellation.
     ReadWithCancellation = 547,
-    /// `Std.Net.WriteWithCancellation(Connection, Data, Token)` - write until cancellation.
+    /// `Std.Net.SendBytesWithCancellation(Connection, Data, Token)` - write until cancellation.
     WriteWithCancellation = 548,
     /// `Std.Net.ConnectWithCancellation(Host, Port, TimeoutMillis, Token)`.
     ConnectWithCancellation = 549,

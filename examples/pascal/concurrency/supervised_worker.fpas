@@ -1,6 +1,6 @@
 program SupervisedWorker;
 
-uses Std.Task, Std.Console, Std.Result;
+uses Std.Task, Std.Console, Std.Results;
 
 begin
   var Workers: TaskGroup := CreateTaskGroup();

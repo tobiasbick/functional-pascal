@@ -36,7 +36,7 @@ pub(super) fn register_std_json(checker: &mut Checker) {
             backing_value: None,
         },
         EnumVariantTy {
-            name: "Array".into(),
+            name: "ArrayValue".into(),
             fields: vec![("Items".into(), Ty::Array(Box::new(json_ref.clone())))],
             backing_value: None,
         },

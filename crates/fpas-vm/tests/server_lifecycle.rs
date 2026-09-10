@@ -26,7 +26,7 @@ fn vm(source: &str) -> Vm {
 #[test]
 fn embedding_does_not_implicitly_authorize_process_control() {
     vm(
-        "program Test; uses Std.Server, Std.Result, Std.Task, Std.Test; begin
+        "program Test; uses Std.Server, Std.Results, Std.Task, Std.Test; begin
       AssertTrue(IsError(CreateLifetime(10, true)));
       var Life: ServerLifetime := Unwrap(CreateLifetime(10, false));
       AssertTrue(IsError(ObserveSignals(Life)));
@@ -39,7 +39,7 @@ fn embedding_does_not_implicitly_authorize_process_control() {
 
 #[test]
 fn stop_rejects_new_group_work() {
-    let error = vm("program Test; uses Std.Server, Std.Result, Std.Task; begin
+    let error = vm("program Test; uses Std.Server, Std.Results, Std.Task; begin
       var Life: ServerLifetime := Unwrap(CreateLifetime(10, false));
       RequestStop(Life);
       StartTaskInGroup(GetWorkGroup(Life), function(Token: CancellationToken): boolean begin return true end)
@@ -53,7 +53,7 @@ fn stop_rejects_new_group_work() {
 
 #[test]
 fn returning_without_explicit_cleanup_reports_incomplete_shutdown() {
-    let error = vm("program Test; uses Std.Server, Std.Result; begin
+    let error = vm("program Test; uses Std.Server, Std.Results; begin
       Unwrap(CreateLifetime(0, false)) end.")
     .run()
     .unwrap_err();
@@ -164,7 +164,7 @@ fn server_lifecycle_child() {
         "RequestStop(Life); WriteLn('output')"
     };
     let source = format!(
-        "program Child; uses Std.Server, Std.Result, Std.Task, Std.Time, Std.Console, Std.Test;
+        "program Child; uses Std.Server, Std.Results, Std.Task, Std.Time, Std.Console, Std.Test;
         begin var Life: ServerLifetime := Unwrap(CreateLifetime(50, true)); {body} end."
     );
     let (program, errors) = fpas_parser::parse(&source);

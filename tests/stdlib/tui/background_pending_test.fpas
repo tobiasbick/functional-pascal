@@ -1,6 +1,6 @@
 program TuiBackgroundPendingTest;
 
-uses Std.Result, Std.Task, Std.Test, Std.Time, Std.Tui;
+uses Std.Results, Std.Task, Std.Test, Std.Time, Std.Tui;
 
 type
   PendingModel = record

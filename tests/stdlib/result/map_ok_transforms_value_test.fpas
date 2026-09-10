@@ -1,6 +1,6 @@
 program T;
 
-uses Std.Console, Std.Result, Std.Conv;
+uses Std.Console, Std.Results, Std.Conv;
 
 function DoubleToStr(V: integer): string;
 begin

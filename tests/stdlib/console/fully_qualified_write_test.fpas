@@ -3,6 +3,6 @@ program T;
 uses Std.Console;
 
 begin
-  Std.Console.Write('a');
+  Std.Console.WriteText('a');
   Std.Console.WriteLn()
 end.

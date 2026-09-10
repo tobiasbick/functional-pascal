@@ -2,7 +2,7 @@
 
 program ConsoleCellsBasics;
 
-uses Std.Console, Std.Option;
+uses Std.Console, Std.Options;
 
 begin
   var Bounds: Rect := record
@@ -38,7 +38,7 @@ begin
   case ReadBack of
     Some(Value):
     begin
-      WriteLn('Read back: ' + Value.glyph)
+      WriteLn('ReadText back: ' + Value.glyph)
     end;
     None:
     begin

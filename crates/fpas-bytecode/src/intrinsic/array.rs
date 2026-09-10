@@ -1,11 +1,11 @@
-//! `Std.Array` intrinsic discriminants.
+//! `Std.Arrays` intrinsic discriminants.
 //!
 //! **Documentation:** `docs/pascal/std/collections/array/README.md` (from the repository root).
 
 use num_enum::TryFromPrimitive;
 
 documented_intrinsic_enum! {
-/// Intrinsics for `Std.Array.*`.
+/// Intrinsics for `Std.Arrays.*`.
 ///
 /// **Documentation:** `docs/pascal/std/collections/array/README.md`
 #[derive(Debug, Clone, Copy, PartialEq, Eq, TryFromPrimitive)]
@@ -20,35 +20,35 @@ pub enum ArrayIntrinsic {
     Map = 86,
     Filter = 87,
     Reduce = 88,
-    /// `Std.Array.Concat(A, B)` — concatenate two arrays.
+    /// `Std.Arrays.Concat(A, B)` — concatenate two arrays.
     ///
     /// **Documentation:** `docs/pascal/std/collections/array/README.md`
     Concat = 234,
-    /// `Std.Array.Fill(Value, Count)` — create array of Count copies of Value.
+    /// `Std.Arrays.Fill(Value, Count)` — create array of Count copies of Value.
     ///
     /// **Documentation:** `docs/pascal/std/collections/array/README.md`
     Fill = 235,
-    /// `Std.Array.Find(Arr, Pred)` — first element matching predicate, or None.
+    /// `Std.Arrays.Find(Arr, Pred)` — first element matching predicate, or None.
     ///
     /// **Documentation:** `docs/pascal/std/collections/array/README.md`
     Find = 236,
-    /// `Std.Array.FindIndex(Arr, Pred)` — index of first match, or -1.
+    /// `Std.Arrays.FindIndex(Arr, Pred)` — index of first match, or -1.
     ///
     /// **Documentation:** `docs/pascal/std/collections/array/README.md`
     FindIndex = 237,
-    /// `Std.Array.Any(Arr, Pred)` — true if any element matches.
+    /// `Std.Arrays.Any(Arr, Pred)` — true if any element matches.
     ///
     /// **Documentation:** `docs/pascal/std/collections/array/README.md`
     Any = 238,
-    /// `Std.Array.All(Arr, Pred)` — true if all elements match.
+    /// `Std.Arrays.All(Arr, Pred)` — true if all elements match.
     ///
     /// **Documentation:** `docs/pascal/std/collections/array/README.md`
     All = 239,
-    /// `Std.Array.FlatMap(Arr, F)` — map then flatten.
+    /// `Std.Arrays.FlatMap(Arr, F)` — map then flatten.
     ///
     /// **Documentation:** `docs/pascal/std/collections/array/README.md`
     FlatMap = 240,
-    /// `Std.Array.ForEach(Arr, F)` — apply F to each element (returns unit).
+    /// `Std.Arrays.ForEach(Arr, F)` — apply F to each element (returns unit).
     ///
     /// **Documentation:** `docs/pascal/std/collections/array/README.md`
     ForEach = 241,

@@ -41,7 +41,7 @@ pub(super) fn register_std_toml(checker: &mut Checker) {
             backing_value: None,
         },
         EnumVariantTy {
-            name: "Array".into(),
+            name: "ArrayValue".into(),
             fields: vec![("Items".into(), Ty::Array(Box::new(toml_ref.clone())))],
             backing_value: None,
         },

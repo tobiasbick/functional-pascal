@@ -1,9 +1,9 @@
 program T;
 
-uses Std.Console, Std.Str, Std.Array;
+uses Std.Console, Std.Str, Std.Arrays;
 
 begin
   var Parts: array of string := Split('hello', ',');
-  WriteLn(Std.Array.Length(Parts));
+  WriteLn(Std.Arrays.Length(Parts));
   WriteLn(Parts[0])
 end.

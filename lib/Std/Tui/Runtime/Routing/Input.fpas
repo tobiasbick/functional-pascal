@@ -1,7 +1,8 @@
 unit Std.Tui.Runtime.Routing.Input;
 
 uses
-  Std.Array, Std.Console, Std.Str, Std.Tui.Chrome.Input, Std.Tui.Ids.ControlId, Std.Tui.Runtime.Msg;
+  Std.Arrays, Std.Console, Std.Str, Std.Tui.Chrome.Input, Std.Tui.Ids.ControlId,
+  Std.Tui.Runtime.Msg;
 
 function TuiInputPreviousWord(Text: string; Caret: integer): integer;
 begin
@@ -70,7 +71,7 @@ begin
     return -1
   end;
 
-  for Index: integer := Std.Array.Length(Input.History) - 1 downto 0 do
+  for Index: integer := Std.Arrays.Length(Input.History) - 1 downto 0 do
   begin
     if Input.History[Index] = Input.Text then
     begin
@@ -83,7 +84,7 @@ end;
 
 function TuiInputHistoryKey(Input: TuiInputSpec; Key: Std.Console.KeyEvent): option of TuiMsg;
 begin
-  if Std.Array.Length(Input.History) = 0 then
+  if Std.Arrays.Length(Input.History) = 0 then
   begin
     return None
   end;
@@ -92,7 +93,7 @@ begin
   begin
     if Index < 0 then
     begin
-      var Text: string := Input.History[Std.Array.Length(Input.History) - 1];
+      var Text: string := Input.History[Std.Arrays.Length(Input.History) - 1];
       return Some(TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Text, Std.Str.Length(Text)))
     end;
 
@@ -112,7 +113,7 @@ begin
       return Some(TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Input.Text, Input.Caret))
     end;
 
-    if Index < Std.Array.Length(Input.History) - 1 then
+    if Index < Std.Arrays.Length(Input.History) - 1 then
     begin
       var Text: string := Input.History[Index + 1];
       return Some(TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Text, Std.Str.Length(Text)))

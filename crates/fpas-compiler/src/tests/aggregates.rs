@@ -151,7 +151,7 @@ type
     Second: integer;
     Third: integer;
   end;
-function Read(Value: Result of integer, string): Result of integer, string;
+function ReadValue(Value: Result of integer, string): Result of integer, string;
 begin
   return Value
 end;
@@ -159,8 +159,8 @@ function Build(Second: Result of integer, string): Result of Triple, string;
 begin
   return Ok(record
     First := 1;
-    Second := try Read(Second);
-    Third := try Read(Ok(3));
+    Second := try ReadValue(Second);
+    Third := try ReadValue(Ok(3));
   end)
 end;
 begin

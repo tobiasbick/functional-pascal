@@ -66,7 +66,7 @@ fn hover_and_definition_follow_lexical_shadowing_and_ignore_non_identifiers() {
 var Value: integer := 1;
 
 // Reads a value with **local** shadowing.
-function Read(Value: integer): integer;
+function ReadValue(Value: integer): integer;
 begin
   var Other: integer := Value;
   return Other
@@ -75,7 +75,7 @@ end;
 begin
   // Value in a comment
   var Text: string := 'Value';
-  var Output: integer := Read(Value)
+  var Output: integer := ReadValue(Value)
 end.
 "#;
     let path = temp.write("local.fpas", source);
@@ -88,11 +88,17 @@ end.
     assert_eq!(definition.value.len(), 1);
     assert_eq!(definition.value[0].symbol.kind, SymbolKind::Parameter);
     let hover = service
-        .hover(&path, source.rfind("Read(Value").expect("function call"))
+        .hover(
+            &path,
+            source.rfind("ReadValue(Value").expect("function call"),
+        )
         .expect("hover query")
         .value
         .expect("function hover");
-    assert!(hover.contents.starts_with("function Read("), "{hover:?}");
+    assert!(
+        hover.contents.starts_with("function ReadValue("),
+        "{hover:?}"
+    );
     assert_eq!(
         hover.documentation.as_deref(),
         Some("Reads a value with **local** shadowing.")

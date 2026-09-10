@@ -141,9 +141,9 @@ end;
 // Empty array means EOF.
 //
 // Parameters:
-// - `Connection`: `Std.Net.Connection` input value used by `Read`.
-// - `MaxBytes`: `integer` input value used by `Read`.
-public function Read(Connection: Std.Net.Connection; MaxBytes: integer): result of array of integer, string;
+// - `Connection`: `Std.Net.Connection` input value used by `ReceiveBytes`.
+// - `MaxBytes`: `integer` input value used by `ReceiveBytes`.
+public function ReceiveBytes(Connection: Std.Net.Connection; MaxBytes: integer): result of array of integer, string;
 begin
   panic('Intrinsic API declaration')
 end;
@@ -151,14 +151,39 @@ end;
 // Reads a chunk or reports cancellation; leaves the connection open.
 //
 // Parameters:
-// - `Connection`: `Std.Net.Connection` input value used by `ReadWithCancellation`.
-// - `MaxBytes`: `integer` input value used by `ReadWithCancellation`.
-// - `Token`: `Std.Task.CancellationToken` input value used by `ReadWithCancellation`.
-public function ReadWithCancellation(
+// - `Connection`: `Std.Net.Connection` input value used by `ReceiveBytesWithCancellation`.
+// - `MaxBytes`: `integer` input value used by `ReceiveBytesWithCancellation`.
+// - `Token`: `Std.Task.CancellationToken` input value used by `ReceiveBytesWithCancellation`.
+public function ReceiveBytesWithCancellation(
   Connection: Std.Net.Connection;
   MaxBytes: integer;
   Token: Std.Task.CancellationToken
 ): result of array of integer, string;
+begin
+  panic('Intrinsic API declaration')
+end;
+
+// Returns bytes written; partial writes are possible.
+//
+// Parameters:
+// - `Connection`: `Std.Net.Connection` input value used by `SendBytes`.
+// - `Data`: `array of integer` input value used by `SendBytes`.
+public function SendBytes(Connection: Std.Net.Connection; Data: array of integer): result of integer, string;
+begin
+  panic('Intrinsic API declaration')
+end;
+
+// Returns accepted bytes or reports cancellation before progress.
+//
+// Parameters:
+// - `Connection`: `Std.Net.Connection` input value used by `SendBytesWithCancellation`.
+// - `Data`: `array of integer` input value used by `SendBytesWithCancellation`.
+// - `Token`: `Std.Task.CancellationToken` input value used by `SendBytesWithCancellation`.
+public function SendBytesWithCancellation(
+  Connection: Std.Net.Connection;
+  Data: array of integer;
+  Token: Std.Task.CancellationToken
+): result of integer, string;
 begin
   panic('Intrinsic API declaration')
 end;
@@ -169,31 +194,6 @@ end;
 // - `Connection`: `Std.Net.Connection` input value used by `SetTimeout`.
 // - `TimeoutMillis`: `integer` input value used by `SetTimeout`.
 public function SetTimeout(Connection: Std.Net.Connection; TimeoutMillis: integer): result of boolean, string;
-begin
-  panic('Intrinsic API declaration')
-end;
-
-// Returns bytes written; partial writes are possible.
-//
-// Parameters:
-// - `Connection`: `Std.Net.Connection` input value used by `Write`.
-// - `Data`: `array of integer` input value used by `Write`.
-public function Write(Connection: Std.Net.Connection; Data: array of integer): result of integer, string;
-begin
-  panic('Intrinsic API declaration')
-end;
-
-// Returns accepted bytes or reports cancellation before progress.
-//
-// Parameters:
-// - `Connection`: `Std.Net.Connection` input value used by `WriteWithCancellation`.
-// - `Data`: `array of integer` input value used by `WriteWithCancellation`.
-// - `Token`: `Std.Task.CancellationToken` input value used by `WriteWithCancellation`.
-public function WriteWithCancellation(
-  Connection: Std.Net.Connection;
-  Data: array of integer;
-  Token: Std.Task.CancellationToken
-): result of integer, string;
 begin
   panic('Intrinsic API declaration')
 end;

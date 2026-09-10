@@ -259,7 +259,7 @@ mod vm_only_guard_tests {
         )
         .expect_err("err");
         assert!(
-            err.message.contains("Std.Array.Map") && err.message.contains("owned by the VM"),
+            err.message.contains("Std.Arrays.Map") && err.message.contains("owned by the VM"),
             "message={}",
             err.message
         );

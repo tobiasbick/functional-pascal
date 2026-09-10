@@ -1,6 +1,6 @@
 program TuiResizeMessageTest;
 
-uses Std.Array, Std.Test, Std.Tui;
+uses Std.Arrays, Std.Test, Std.Tui;
 
 type
   ResizeModel = record
@@ -11,10 +11,10 @@ type
     HostHeightAtResize: integer;
   end;
 
-function PushEvent(State: ResizeModel; Event: string): ResizeModel;
+function PushEvent(State: ResizeModel; InputEvent: string): ResizeModel;
 begin
   return record
-    Events := Std.Array.Concat(State.Events, [Event]);
+    Events := Std.Arrays.Concat(State.Events, [InputEvent]);
     ResizeWidth := State.ResizeWidth;
     ResizeHeight := State.ResizeHeight;
     HostWidthAtResize := State.HostWidthAtResize;
@@ -53,7 +53,7 @@ begin
       begin
         var Snapshot: TuiSurfaceSnapshot := App.SurfaceSnapshot();
         return record
-          Events := Std.Array.Concat(State.Events, ['resize']);
+          Events := Std.Arrays.Concat(State.Events, ['resize']);
           ResizeWidth := Size.Width;
           ResizeHeight := Size.Height;
           HostWidthAtResize := Snapshot.Width;
@@ -68,7 +68,7 @@ begin
   end, function(State: ResizeModel): TuiElement begin
     return TuiElementBuilders.MakeLabel('resize')
   end, 3, 0);
-  AssertEquals(3, Std.Array.Length(Model.Events));
+  AssertEquals(3, Std.Arrays.Length(Model.Events));
   AssertEquals('tick-1', Model.Events[0]);
   AssertEquals('resize', Model.Events[1]);
   AssertEquals('tick-2', Model.Events[2]);

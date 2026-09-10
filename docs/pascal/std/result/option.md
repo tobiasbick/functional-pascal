@@ -1,10 +1,10 @@
-# `Std.Option`
+# `Std.Options`
 
 Helper functions for `Option of T` values. See [Error handling](../../language/error-handling/README.md) for the type itself, constructors (`Some`, `None`), the `try` operator, and `case` destructuring.
 
 ```pascal
 program Example;
-uses Std.Console, Std.Option;
+uses Std.Console, Std.Options;
 begin
   var O: Option of integer := Some(7);
   WriteLn(Unwrap(O))
@@ -14,9 +14,9 @@ end.
 
 ## Importing and names
 
-After `uses Std.Option;` use short names (`Unwrap`, `IsSome`, …) or qualified (`Std.Option.Unwrap`, …).
+After `uses Std.Options;` use short names (`Unwrap`, `IsSome`, …) or qualified (`Std.Options.Unwrap`, …).
 
-**Ambiguity with `Std.Result`:** the short names **`Unwrap`** and **`UnwrapOr`** clash with `Std.Result`. When both units are imported, qualify as `Std.Option.Unwrap(O)` vs `Std.Result.Unwrap(R)`.
+**Ambiguity with `Std.Results`:** the short names **`Unwrap`** and **`UnwrapOr`** clash with `Std.Results`. When both units are imported, qualify as `Std.Options.Unwrap(O)` vs `Std.Results.Unwrap(R)`.
 
 ---
 

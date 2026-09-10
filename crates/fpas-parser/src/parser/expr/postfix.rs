@@ -42,7 +42,7 @@ impl Parser {
                 let op_start = self.current_span();
                 self.advance();
                 let (name, _) = self
-                    .expect_ident_after_dot()
+                    .expect_ident()
                     .unwrap_or_else(|| self.error_ident(self.current_span()));
 
                 if self.check(&Token::LParen) {

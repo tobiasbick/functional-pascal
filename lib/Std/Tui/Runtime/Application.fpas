@@ -1,7 +1,7 @@
 unit Std.Tui.Runtime.Application;
 
 uses
-  Std.Array, Std.Console, Std.Option, Std.Result, Std.Task, Std.Tui.Cells.Palette,
+  Std.Arrays, Std.Console, Std.Options, Std.Results, Std.Task, Std.Tui.Cells.Palette,
   Std.Tui.Elements.Element, Std.Tui.Geometry.Size, Std.Tui.Rendering.Surface,
   Std.Tui.Runtime.Application.Background, Std.Tui.Runtime.Application.Loop,
   Std.Tui.Runtime.Application.State, Std.Tui.Runtime.Cmd, Std.Tui.Runtime.Input, Std.Tui.Runtime.Msg,

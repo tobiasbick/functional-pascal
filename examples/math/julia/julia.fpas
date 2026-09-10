@@ -2,7 +2,7 @@
 
 program JuliaShowcase;
 
-uses Std.Console, Std.Conv, Std.Math, Std.Option, Std.Str, Julia.Color, Julia.Render;
+uses Std.Console, Std.Conv, Std.Math, Std.Options, Std.Str, Julia.Color, Julia.Render;
 
 type
   ExplorerState = record
@@ -92,7 +92,7 @@ begin
     var TextLength: integer := Min(Std.Str.Length(Text), Width);
     if TextLength > 0 then
     begin
-      Write(Substring(Text, 0, TextLength))
+      WriteText(Substring(Text, 0, TextLength))
     end
   end
 end;
@@ -285,29 +285,29 @@ begin
   return false
 end;
 
-procedure HandleMouse(Event: Event);
+procedure HandleMouse(InputEvent: ConsoleEvent);
 begin
-  var InView: boolean := (((Event.mouse_x >= 1) and (Event.mouse_x <= RenderW)) and (Event.mouse_y >= 1)) and
-                         (Event.mouse_y <= RenderH);
-  if Event.mouse_action = MouseAction.ScrollUp then
+  var InView: boolean := (((InputEvent.mouse_x >= 1) and (InputEvent.mouse_x <= RenderW)) and (InputEvent.mouse_y >= 1)) and
+                         (InputEvent.mouse_y <= RenderH);
+  if InputEvent.mouse_action = MouseAction.ScrollUp then
   begin
     State.SpanY := Max(State.SpanY * 0.88, 0.000001);
     RequestRedraw()
   end
-  else if Event.mouse_action = MouseAction.ScrollDown then
+  else if InputEvent.mouse_action = MouseAction.ScrollDown then
   begin
     State.SpanY := Min(State.SpanY / 0.88, 3.5);
     RequestRedraw()
   end
-  else if InView and (Event.mouse_action = MouseAction.Down) then
+  else if InView and (InputEvent.mouse_action = MouseAction.Down) then
   begin
-    if Event.mouse_button = MouseButton.Left then
+    if InputEvent.mouse_button = MouseButton.Left then
     begin
-      State.CenterX := ViewportCX(State, RenderW, RenderH, Event.mouse_x);
-      State.CenterY := ViewportCY(State, RenderW, RenderH, Event.mouse_y);
+      State.CenterX := ViewportCX(State, RenderW, RenderH, InputEvent.mouse_x);
+      State.CenterY := ViewportCY(State, RenderW, RenderH, InputEvent.mouse_y);
       RequestRedraw()
     end
-    else if Event.mouse_button = MouseButton.Middle then
+    else if InputEvent.mouse_button = MouseButton.Middle then
     begin
       State := ExplorerState.Default();
       RequestRedraw()
@@ -327,7 +327,7 @@ begin
   end
 end;
 
-procedure HandleEvent(E: Event);
+procedure HandleEvent(E: ConsoleEvent);
 begin
   if E.kind = EventKind.Key then
   begin

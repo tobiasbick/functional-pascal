@@ -1,7 +1,7 @@
 // Bounded concurrent HTTP server-loop orchestration.
 unit Std.Http.ServerLoop;
 
-uses Std.Array, Std.Http.Server, Std.Http.Types, Std.Net, Std.Task;
+uses Std.Arrays, Std.Http.Server, Std.Http.Types, Std.Net, Std.Task;
 
 // Validates all server-loop limits before accepting a connection.
 //
@@ -160,12 +160,12 @@ begin
   while (Options.MaxRequests = 0) or (Accepted < Options.MaxRequests) do
   begin
     mutable var Tasks: array of task := [];
-    while HasCapacity(Options, Accepted, Std.Array.Length(Tasks)) do
+    while HasCapacity(Options, Accepted, Std.Arrays.Length(Tasks)) do
     begin
       case Std.Net.Accept(Listener) of
         Ok(Connection):
         begin
-          Std.Array.Push(Tasks, go ServeConnection(Connection, Options, Handler));
+          Std.Arrays.Push(Tasks, go ServeConnection(Connection, Options, Handler));
           Accepted := Accepted + 1
         end;
         Error(Message):

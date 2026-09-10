@@ -51,4 +51,4 @@ parameters. See [Record methods](../types/record-methods.md#bound-methods-as-val
 - [Function types](function-types.md)
 - [Capturing closures](closures.md)
 - [Record methods](../types/record-methods.md)
-- [`Std.Array`](../../std/collections/array/README.md) — `Map`, `Filter`, and other higher-order helpers
+- [`Std.Arrays`](../../std/collections/array/README.md) — `Map`, `Filter`, and other higher-order helpers

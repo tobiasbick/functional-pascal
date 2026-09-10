@@ -1,6 +1,6 @@
 # Using text and keyboard together
 
-- Use **`Read` / `ReadLn`** for typed input and pipes (line discipline).
+- Use **`ReadText` / `ReadLn`** for typed input and pipes (line discipline).
 - Use **`ReadKey` / `ReadKeyEvent`** for games or immediate key handling.
 - Use **`ReadEvent` / `PollEvent` / `ReadEventTimeout`** for TUI-style unified terminal events.
 - Do not mix live `ReadKey*` and `ReadEvent*` in one loop: a live key is delivered to only one consumer.
@@ -12,7 +12,7 @@
 uses Std.Console;
 
 begin
-  Write('Name: ');
+  WriteText('Name: ');
   var Name: string := ReadLn();
   WriteLn('Hello, ', Name);
 

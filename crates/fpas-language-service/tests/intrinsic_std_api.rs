@@ -76,17 +76,20 @@ fn intrinsic_std_completion_resolves_lazy_markdown_documentation() {
 
 #[test]
 fn intrinsic_std_completion_offers_the_required_unit_import() {
-    let source = "program IntrinsicImport;\n\nbegin\n  ReadText\nend.\n";
+    let source = "program IntrinsicImport;\n\nbegin\n  WriteTextAtomic\nend.\n";
     let (_temp, path, mut service) = intrinsic_std_fixture(source);
-    let offset = source.find("ReadText").expect("ReadText prefix") + "ReadText".len();
+    let offset = source
+        .find("WriteTextAtomic")
+        .expect("WriteTextAtomic prefix")
+        + "WriteTextAtomic".len();
 
     let candidate = service
         .completions(&path, offset)
         .expect("intrinsic auto import")
         .value
         .into_iter()
-        .find(|candidate| candidate.qualified_name == "Std.Fs.ReadText")
-        .expect("ReadText auto import");
+        .find(|candidate| candidate.qualified_name == "Std.Fs.WriteTextAtomic")
+        .expect("WriteTextAtomic auto import");
 
     assert_eq!(candidate.owner.as_deref(), Some("Std.Fs"));
     assert_eq!(
@@ -169,8 +172,8 @@ fn intrinsic_std_signature_help_uses_declared_parameters() {
 }
 
 #[test]
-fn intrinsic_std_keyword_enum_member_has_hover_and_definition() {
-    let source = "program IntrinsicEnum;\n\nuses Std.Json;\n\nbegin\n  var Value: JsonValue := JsonValue.Array([])\nend.\n";
+fn intrinsic_std_enum_member_has_hover_and_definition() {
+    let source = "program IntrinsicEnum;\n\nuses Std.Json;\n\nbegin\n  var Value: JsonValue := JsonValue.ArrayValue([])\nend.\n";
     let (_temp, path, mut service) = intrinsic_std_fixture(source);
     let offset = source.rfind("Array").expect("Array variant");
 
@@ -187,7 +190,7 @@ fn intrinsic_std_keyword_enum_member_has_hover_and_definition() {
     assert_eq!(
         hover.documentation.as_deref(),
         Some(
-            "`Array` enum member.\n\nParameters:\n- `Items`: Array elements stored in the constructed value."
+            "`ArrayValue` enum member.\n\nParameters:\n- `Items`: Array elements stored in the constructed value."
         )
     );
     assert_eq!(definitions.len(), 1, "{definitions:#?}");
@@ -199,8 +202,8 @@ fn intrinsic_std_keyword_enum_member_has_hover_and_definition() {
 }
 
 #[test]
-fn intrinsic_std_keyword_enum_constructor_has_signature_help() {
-    let source = "program IntrinsicEnumSignature;\n\nuses Std.Json;\n\nbegin\n  var Value: JsonValue := JsonValue.Array([])\nend.\n";
+fn intrinsic_std_enum_constructor_has_signature_help() {
+    let source = "program IntrinsicEnumSignature;\n\nuses Std.Json;\n\nbegin\n  var Value: JsonValue := JsonValue.ArrayValue([])\nend.\n";
     let (_temp, path, mut service) = intrinsic_std_fixture(source);
     let offset = source.find("[]").expect("Array argument") + 1;
 
@@ -237,7 +240,7 @@ fn intrinsic_std_keyword_enum_member_is_completed() {
     assert!(
         candidates
             .iter()
-            .any(|candidate| candidate.qualified_name == "Std.Json.JsonValue.Array"),
+            .any(|candidate| candidate.qualified_name == "Std.Json.JsonValue.ArrayValue"),
         "{candidates:#?}"
     );
 }

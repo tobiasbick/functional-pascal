@@ -4,7 +4,7 @@
 
 program TaskSpawnWaitBenchmark;
 
-uses Std.Args, Std.Array, Std.Console, Std.Conv, Std.Task, Std.Time;
+uses Std.Args, Std.Arrays, Std.Console, Std.Conv, Std.Task, Std.Time;
 
 const
   WarmupIterations: integer := 10;
@@ -19,11 +19,11 @@ begin
   mutable var Tasks: array of task := [];
   for Index: integer := 1 to Iterations do
   begin
-    Std.Array.Push(Tasks, go Worker(Index))
+    Std.Arrays.Push(Tasks, go Worker(Index))
   end;
 
   WaitAll(Tasks);
-  return Std.Array.Length(Tasks)
+  return Std.Arrays.Length(Tasks)
 end;
 
 begin

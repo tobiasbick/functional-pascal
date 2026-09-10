@@ -47,7 +47,8 @@ Rules:
   use `mutable` parameters.
 - Event names share the case-insensitive member namespace with fields, methods, static
   functions, and properties.
-- `read` and `write` are contextual words in the declaration.
+- `read` and `write` are reserved keywords and can only be used in their
+  dedicated syntax positions.
 - Type aliases expose events from the resolved record type.
 
 Events are not ordinary [record properties](record-properties.md): they are not readable

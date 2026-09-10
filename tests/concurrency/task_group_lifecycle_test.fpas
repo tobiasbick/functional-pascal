@@ -1,6 +1,6 @@
 program TaskGroupLifecycleTest;
 
-uses Std.Task, Std.Array, Std.Result, Std.Test;
+uses Std.Task, Std.Arrays, Std.Results, Std.Test;
 
 procedure VerifyClose(RequestFirst: boolean);
 begin

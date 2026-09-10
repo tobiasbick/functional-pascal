@@ -1,6 +1,6 @@
 program CellFrameTest;
 
-uses Std.Console, Std.Option, Std.Test;
+uses Std.Console, Std.Options, Std.Test;
 
 function MakeCell(Glyph: string; Foreground: Color; Background: Color): Cell;
 begin

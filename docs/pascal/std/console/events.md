@@ -32,7 +32,7 @@ runtime continues waiting with the remaining deadline instead of returning
 deadline reaches zero.
 
 ```pascal
-uses Std.Console, Std.Option;
+uses Std.Console, Std.Options;
 
 EnableRawMode();
 var MaybeEvent: Option of Event := ReadEventTimeout(100);
@@ -53,7 +53,7 @@ that no FPAS event is available, so a ready press following a release is
 returned by the same call.
 
 ```pascal
-uses Std.Console, Std.Option;
+uses Std.Console, Std.Options;
 
 EnableRawMode();
 var MaybeE: Option of Event := PollEvent();

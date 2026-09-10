@@ -1,6 +1,6 @@
 program JuliaRenderTest;
 
-uses Julia.Render, Julia.Compute, Julia.Color, Std.Task, Std.Array, Std.Result, Std.Test;
+uses Julia.Render, Julia.Compute, Julia.Color, Std.Task, Std.Arrays, Std.Results, Std.Test;
 
 begin
   var Job: RenderJob := StartRender(-1.0, 1.0, -1.0, 1.0, 7, 9, 32, PaletteKind.DeepOcean, -0.8, 0.156);

@@ -1,6 +1,6 @@
 program T;
 
-uses Std.Console, Std.Option;
+uses Std.Console, Std.Options;
 
 function AlwaysOk(V: integer): string;
 begin

@@ -1,6 +1,6 @@
 program TaskSpawnLoopWithArgumentTest;
 
-uses Std.Array, Std.Task, Std.Test;
+uses Std.Arrays, Std.Task, Std.Test;
 
 function Worker(Value: integer): integer;
 begin

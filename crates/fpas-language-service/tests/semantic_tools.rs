@@ -102,13 +102,13 @@ fn semantic_tokens_follow_shadowing_and_return_partial_malformed_results() {
 
 var Value: integer := 1;
 
-function Read(Value: integer): integer;
+function ReadValue(Value: integer): integer;
 begin
   return Value
 end;
 
 begin
-  var Broken: integer := Read(Value
+  var Broken: integer := ReadValue(Value
 end.
 "#;
     let path = temp.write("shadowing.fpas", source);

@@ -82,7 +82,7 @@ fn check_dict_contains_key(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
                 s::STD_DICT_CONTAINS_KEY,
                 args.len()
             ),
-            "Example: Std.Dict.ContainsKey(D, Key).",
+            "Example: Std.Dictionaries.ContainsKey(D, Key).",
             span,
         );
         return Ty::Error;
@@ -149,7 +149,7 @@ fn check_dict_remove(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
                 s::STD_DICT_REMOVE,
                 args.len()
             ),
-            "Example: Std.Dict.Remove(D, Key).",
+            "Example: Std.Dictionaries.Remove(D, Key).",
             span,
         );
         return Ty::Error;
@@ -179,7 +179,7 @@ fn check_dict_get(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
                 s::STD_DICT_GET,
                 args.len()
             ),
-            "Example: Std.Dict.Get(D, Key).",
+            "Example: Std.Dictionaries.Get(D, Key).",
             span,
         );
         return Ty::Error;
@@ -212,7 +212,7 @@ fn check_dict_merge(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
                 s::STD_DICT_MERGE,
                 args.len()
             ),
-            "Example: Std.Dict.Merge(D1, D2).",
+            "Example: Std.Dictionaries.Merge(D1, D2).",
             span,
         );
         return Ty::Error;
@@ -255,7 +255,7 @@ fn check_dict_merge(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
     Ty::Dict(Box::new(k1), Box::new(v1))
 }
 
-/// `Std.Dict.Map(D, F)` — `F: function(V): V2` → `dict of K to V2`.
+/// `Std.Dictionaries.Map(D, F)` — `F: function(V): V2` → `dict of K to V2`.
 fn check_dict_map(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
     if args.len() != 2 {
         c.error_with_code(
@@ -265,7 +265,7 @@ fn check_dict_map(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
                 s::STD_DICT_MAP,
                 args.len()
             ),
-            "Example: Std.Dict.Map(D, function(V: integer): integer begin return V * 2 end).",
+            "Example: Std.Dictionaries.Map(D, function(V: integer): integer begin return V * 2 end).",
             span,
         );
         return Ty::Error;
@@ -319,7 +319,7 @@ fn check_dict_map(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
     Ty::Dict(Box::new(k), Box::new(return_ty))
 }
 
-/// `Std.Dict.Filter(D, F)` — `F: function(K; V): boolean` → `dict of K to V`.
+/// `Std.Dictionaries.Filter(D, F)` — `F: function(K; V): boolean` → `dict of K to V`.
 fn check_dict_filter(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
     if args.len() != 2 {
         c.error_with_code(
@@ -329,7 +329,7 @@ fn check_dict_filter(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
                 s::STD_DICT_FILTER,
                 args.len()
             ),
-            "Example: Std.Dict.Filter(D, function(K: string; V: integer): boolean begin return V > 1 end).",
+            "Example: Std.Dictionaries.Filter(D, function(K: string; V: integer): boolean begin return V > 1 end).",
             span,
         );
         return Ty::Error;

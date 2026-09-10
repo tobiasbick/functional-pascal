@@ -1,6 +1,6 @@
 program CallbackSleepTest;
 
-uses Std.Array, Std.Task, Std.Test, Std.Time;
+uses Std.Arrays, Std.Task, Std.Test, Std.Time;
 
 function SleepAndDouble(Value: integer): integer;
 begin

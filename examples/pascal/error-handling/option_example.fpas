@@ -1,6 +1,6 @@
 program OptionExample;
 
-uses Std.Console, Std.Conv, Std.Array, Std.Option;
+uses Std.Console, Std.Conv, Std.Arrays, Std.Options;
 
 function FindFirst(Items: array of integer; Min: integer): option of integer;
 begin

@@ -1,6 +1,6 @@
 program T;
 
-uses Std.Console, Std.Dict;
+uses Std.Console, Std.Dictionaries;
 
 begin
   mutable var D: dict of string to integer := ['A': 1];
@@ -8,5 +8,5 @@ begin
   D['B'] := 3;
   WriteLn(D['A']);
   WriteLn(D['B']);
-  WriteLn(Std.Dict.Length(D))
+  WriteLn(Std.Dictionaries.Length(D))
 end.

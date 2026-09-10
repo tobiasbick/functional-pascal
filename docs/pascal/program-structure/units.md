@@ -68,11 +68,11 @@ When two or more imported units export the same short name, the short name becom
 
 ```pascal
 program Demo;
-uses Std.Str, Std.Array;           // Both units may export Length
+uses Std.Str, Std.Arrays;           // Both units may export Length
 begin
-  // Length('hi');   ← ERROR: ambiguous — exists in Std.Str and Std.Array
+  // Length('hi');   ← ERROR: ambiguous — exists in Std.Str and Std.Arrays
   var L1: integer := Std.Str.Length('hi');       // Qualified string Length
-  var L2: integer := Std.Array.Length([1, 2]);   // Qualified array Length
+  var L2: integer := Std.Arrays.Length([1, 2]);   // Qualified array Length
 end.
 ```
 

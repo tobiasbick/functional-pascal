@@ -44,7 +44,7 @@ fn references_find_cross_unit_uses_and_optionally_include_the_declaration() {
 #[test]
 fn references_preserve_lexical_shadowing() {
     let temp = TempDirectory::new("references-shadowing");
-    let source = "program Local;\n\nvar Value: integer := 1;\n\nfunction Read(Value: integer): integer;\nbegin\n  return Value\nend;\n\nbegin\n  var Result: integer := Value\nend.\n";
+    let source = "program Local;\n\nvar Value: integer := 1;\n\nfunction ReadValue(Value: integer): integer;\nbegin\n  return Value\nend;\n\nbegin\n  var Result: integer := Value\nend.\n";
     let path = temp.write("local.fpas", source);
     let mut service = LanguageService::new(WorkspaceContext::loose(temp.path()));
     let parameter_use = source.find("return Value").expect("parameter reference") + 7;

@@ -37,7 +37,7 @@ response precedes events caused by that request.
 | `launch` | initialized | optional `stop_on_entry` | starts or stops at entry |
 | `attach` | any | none | always rejected; capability `attach` is `false` |
 | `step_back`, `reverse_continue` | any | none | always rejected; capability `reverse_execution` is `false` |
-| `record` | initialized/stopped | none | starts capturing all-stop events and queued `Read`/`ReadLn` lines; does not resume; capability `recording_capture` is `true`; recordings stay in session memory |
+| `record` | initialized/stopped | none | starts capturing all-stop events and queued `ReadText`/`ReadLn` lines; does not resume; capability `recording_capture` is `true`; recordings stay in session memory |
 | `replay` | any | none | always rejected; capability `record_replay` is `false` |
 | `reload`, `image.replace` | initialized/stopped | none | rebuild the launch target and atomically install an `inactive_function_body` update; incompatible candidates fail before any image change |
 | `image.rollback` | initialized/stopped | none | atomically restore the single preceding live image as a new version |
@@ -53,8 +53,8 @@ response precedes events caused by that request.
 | `task.cancel` | stopped | `task_id` | cancel one live non-root task; retained waiters observe `F4016` on the next continue |
 | `task.create` | stopped | none | always rejected; capability `task_create` is `false` |
 | `task.restart` | stopped | optional `task_id` | always rejected; capability `task_restart` is `false` |
-| `io.input` | stopped | required `text` | queues one `Read`/`ReadLn` line; capability `live_input` is `true` |
-| `io.eof` | stopped | none | later `Read`/`ReadLn` observe end of input; later `io.input` fails |
+| `io.input` | stopped | required `text` | queues one `ReadText`/`ReadLn` line; capability `live_input` is `true` |
+| `io.eof` | stopped | none | later `ReadText`/`ReadLn` observe end of input; later `io.input` fails |
 | `io.cancel` | stopped | none | drops unread queued lines; the session byte quota is unchanged |
 | `stack` | stopped | optional `task_id`, `start`, `count` | bounded frames and resolved `task_id` |
 | `scopes` | stopped | `frame_id` | lexical scopes |
@@ -389,7 +389,7 @@ targets advertise `hot_reload` and `reload_rollback`; embedders without a rebuil
 provider advertise `hot_reload: false`. `reload_classify` is true.
 `recording_describe` and `recording_capture` are
 true; `recording_disk` is false. Initialized or stopped `record` starts
-capturing all-stop events and queued `Read`/`ReadLn` lines without resuming;
+capturing all-stop events and queued `ReadText`/`ReadLn` lines without resuming;
 `recording.describe` names versioned program identity, portable sources,
 whether capture is on, whether later events were dropped, the event ceiling,
 captured events, and `replayable: false`. While capturing, unsupported host
@@ -411,7 +411,7 @@ and is never used as a snapshot store. Initialized or stopped
 `task_threads` is true, `task_pause` is true, `task_cancel` is true,
 `task_create` and `task_restart` are false, and `non_stop` is false.
 `structured_output` is true. `live_input` is true: stopped-state `io.input`
-queues lines for hosted `Read`/`ReadLn`. `live_terminal` is false; there is no
+queues lines for hosted `ReadText`/`ReadLn`. `live_terminal` is false; there is no
 second console or PTY. `data_breakpoints` is true with
 `data_breakpoint_access` `write` and `change`. `data_breakpoints.replace`
 accepts identities from `location.describe`; `data_breakpoint.set` remains

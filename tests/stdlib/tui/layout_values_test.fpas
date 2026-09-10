@@ -1,6 +1,6 @@
 program TuiLayoutValuesTest;
 
-uses Std.Array, Std.Test, Std.Tui;
+uses Std.Arrays, Std.Test, Std.Tui;
 
 begin
   var Mixed: TuiSizePolicy := TuiSizePolicy.Create(TuiSizePolicyKind.Expanding, TuiSizePolicyKind.Fixed);
@@ -120,7 +120,7 @@ begin
     TuiElement.Row(Children, Spacing):
     begin
       AssertEquals(2, Spacing);
-      AssertEquals(2, Std.Array.Length(Children))
+      AssertEquals(2, Std.Arrays.Length(Children))
     end
     else
     begin
@@ -131,7 +131,7 @@ begin
   case Wrapped of
     TuiElement.Layout(WrappedSettings, WrappedChildren):
     begin
-      AssertEquals(1, Std.Array.Length(WrappedChildren));
+      AssertEquals(1, Std.Arrays.Length(WrappedChildren));
       AssertEquals(0, WrappedSettings.Stretch)
     end
     else

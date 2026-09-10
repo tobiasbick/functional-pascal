@@ -4,7 +4,7 @@ Structured parsing helpers for text input. `Std.Parse` is for callers that want 
 
 ```pascal
 program Example;
-uses Std.Console, Std.Parse, Std.Result;
+uses Std.Console, Std.Parse, Std.Results;
 begin
   var Parsed: Result of integer, string := TryInt('42');
   WriteLn(UnwrapOr(Parsed, 0))
@@ -63,7 +63,7 @@ WriteLn(UnwrapOr(R, true))                    // false
 
 ## Error handling
 
-`Try*` functions do not raise runtime parse errors. Inspect the result with `Std.Result.IsOk` / `Std.Result.IsError`, recover with `Std.Result.UnwrapOr`, or destructure the result with `case`.
+`Try*` functions do not raise runtime parse errors. Inspect the result with `Std.Results.IsOk` / `Std.Results.IsError`, recover with `Std.Results.UnwrapOr`, or destructure the result with `case`.
 
 ```pascal
 case TryInt(Input) of

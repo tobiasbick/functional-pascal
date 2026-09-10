@@ -1,4 +1,4 @@
-//! `Std.Array.*` intrinsic implementations (non-mutating; `Push`/`Pop` use dedicated VM opcodes).
+//! `Std.Arrays.*` intrinsic implementations (non-mutating; `Push`/`Pop` use dedicated VM opcodes).
 //!
 //! **Documentation:** `docs/pascal/std/collections/array/README.md` (from the repository root).
 //! **Maintenance:** Keep that Markdown file aligned with this file, `intrinsics.rs`,
@@ -56,7 +56,7 @@ pub(crate) fn run(
                     std_runtime_error(
                         RUNTIME_VM_OPERAND_TYPE_MISMATCH,
                         m,
-                        "Use arrays of comparable primitive values (integer, real, string, boolean) with Std.Array.Sort.",
+                        "Use arrays of comparable primitive values (integer, real, string, boolean) with Std.Arrays.Sort.",
                         location,
                     )
                 })?);
@@ -113,7 +113,7 @@ pub(crate) fn run(
         Intrinsic::Array(ArrayIntrinsic::Fill) => {
             let count = pop_int(pop_value(call, location)?, location)?;
             let value = pop_value(call, location)?;
-            let len = checked_collection_len(count, location, "Std.Array.Fill")?;
+            let len = checked_collection_len(count, location, "Std.Arrays.Fill")?;
             let arr: Vec<Value> = vec![value.clone(); len];
             call.push(Value::Array(arr.into()));
         }

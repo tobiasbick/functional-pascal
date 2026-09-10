@@ -91,7 +91,7 @@ end;
 mutable var Value: integer := 1;
 mutable var Pair: Holder := record Item := Value; end;
 
-function Read(Value: integer): integer;
+function ReadValue(Value: integer): integer;
 begin
   // Value is ignored
   var Text: string := 'Value';
@@ -267,7 +267,7 @@ fn selection_ranges_expand_from_identifier_through_statement_and_unit() {
     let temp = TempDirectory::new("selection-ranges");
     let source = r#"program Select;
 
-function Read(Value: integer): integer;
+function ReadValue(Value: integer): integer;
 begin
   if Value > 0 then
   begin
@@ -278,7 +278,7 @@ begin
 end;
 
 begin
-  var ResultValue: integer := Read(1)
+  var ResultValue: integer := ReadValue(1)
 end.
 "#;
     let path = temp.write("select.fpas", source);

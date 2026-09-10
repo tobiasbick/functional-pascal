@@ -1,6 +1,6 @@
 program T;
 
-uses Std.Console, Std.Array;
+uses Std.Console, Std.Arrays;
 
 function AddOne(X: integer): integer;
 begin

@@ -185,19 +185,6 @@ fn generic_method_missing_self_param_is_rejected() {
     );
 }
 
-#[test]
-fn generic_method_unknown_constraint_is_rejected() {
-    check_errors(
-        "program T;
-         type Box = record
-           Value: integer;
-           function Map<R: Nonexistent>(Self: Box; F: function(X: integer): R): R;
-           begin return F(Self.Value) end;
-         end;
-         begin end.",
-    );
-}
-
 // ---------------------------------------------------------------------------
 // Edge cases
 // ---------------------------------------------------------------------------

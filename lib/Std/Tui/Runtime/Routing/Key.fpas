@@ -1,7 +1,7 @@
 unit Std.Tui.Runtime.Routing.Key;
 
 uses
-  Std.Array, Std.Console, Std.Str, Std.Tui.Chrome.StatusItem, Std.Tui.Elements.Element,
+  Std.Arrays, Std.Console, Std.Str, Std.Tui.Chrome.StatusItem, Std.Tui.Elements.Element,
   Std.Tui.Geometry.Point, Std.Tui.Geometry.Size, Std.Tui.Ids.ControlId, Std.Tui.Layout.Frame,
   Std.Tui.Layout.Measure, Std.Tui.Layout.MeasureSpec, Std.Tui.Runtime.Msg,
   Std.Tui.Runtime.Routing.Button, Std.Tui.Runtime.Routing.Focus, Std.Tui.Runtime.Routing.Menu,
@@ -61,7 +61,7 @@ begin
     end
   end;
 
-  for ChildIndex: integer := 0 to Std.Array.Length(Descendants) - 1 do
+  for ChildIndex: integer := 0 to Std.Arrays.Length(Descendants) - 1 do
   begin
     Next := TuiRouteSubtreeEnd(Descendants[ChildIndex], Next)
   end;
@@ -116,7 +116,7 @@ begin
       begin
         return None
       end;
-      var Count: integer := Std.Array.Length(Items);
+      var Count: integer := Std.Arrays.Length(Items);
       if Count = 0 then
       begin
         return None
@@ -160,7 +160,7 @@ begin
     end;
     TuiElement.MenuBar(Items):
     begin
-      for ItemIndex: integer := 0 to Std.Array.Length(Items) - 1 do
+      for ItemIndex: integer := 0 to Std.Arrays.Length(Items) - 1 do
       begin
         if (Items[ItemIndex].Id.Value = Target.Value) and Items[ItemIndex].Enabled then
         begin
@@ -181,7 +181,7 @@ begin
     end;
     TuiElement.StatusLine(Items):
     begin
-      for ItemIndex: integer := 0 to Std.Array.Length(Items) - 1 do
+      for ItemIndex: integer := 0 to Std.Arrays.Length(Items) - 1 do
       begin
         case Items[ItemIndex] of
           TuiStatusItem.Command(Id, Text, Action, Enabled):
@@ -209,7 +209,7 @@ begin
       if Id.Value = Target.Value then
       begin
         mutable var Content: TuiSize := TuiSize.Create(0, 0);
-        if Std.Array.Length(Children) = 1 then
+        if Std.Arrays.Length(Children) = 1 then
         begin
           Content := TuiMeasure(Children[0], TuiMeasureSpec.Unbounded()).Preferred
         end;
@@ -303,7 +303,7 @@ begin
     end
   end;
   mutable var Next: integer := Index + 1;
-  for ChildIndex: integer := 0 to Std.Array.Length(Descendants) - 1 do
+  for ChildIndex: integer := 0 to Std.Arrays.Length(Descendants) - 1 do
   begin
     case TuiRouteTarget(Frame, Descendants[ChildIndex], Next, Target, Key) of
       Some(Msg):
@@ -355,7 +355,7 @@ begin
     end
   end;
   var Controls: array of TuiControlId := TuiFocusableControls(Root);
-  if Std.Array.Length(Controls) = 0 then
+  if Std.Arrays.Length(Controls) = 0 then
   begin
     return [TuiMsg.Key(Key)]
   end;
@@ -378,7 +378,7 @@ begin
   end
   else
   begin
-    Std.Array.Push(Routed, TuiMsg.FocusChanged(Previous, Some(Target)))
+    Std.Arrays.Push(Routed, TuiMsg.FocusChanged(Previous, Some(Target)))
   end;
 
   if Key.kind = Std.Console.KeyKind.Tab then
@@ -396,7 +396,7 @@ begin
       end
     end;
     mutable var NextIndex: integer := CurrentIndex + 1;
-    if NextIndex >= Std.Array.Length(Controls) then
+    if NextIndex >= Std.Arrays.Length(Controls) then
     begin
       NextIndex := 0
     end;
@@ -417,7 +417,7 @@ begin
   case TuiRouteTarget(Frame, Root, 0, Target, Key) of
     Some(Msg):
     begin
-      Std.Array.Push(Routed, Msg)
+      Std.Arrays.Push(Routed, Msg)
     end;
     None:
     begin
@@ -426,7 +426,7 @@ begin
         case TuiRouteDefaultButtonEnter(Root) of
           Some(Msg):
           begin
-            Std.Array.Push(Routed, Msg);
+            Std.Arrays.Push(Routed, Msg);
             return Routed
           end;
           None:
@@ -435,7 +435,7 @@ begin
         end
       end;
 
-      Std.Array.Push(Routed, TuiMsg.Key(Key))
+      Std.Arrays.Push(Routed, TuiMsg.Key(Key))
     end
   end;
 

@@ -1,4 +1,4 @@
-//! Shared callback-type validation helpers for higher-order `Std.Array` checks.
+//! Shared callback-type validation helpers for higher-order `Std.Arrays` checks.
 
 use crate::check::Checker;
 use crate::types::{FunctionTy, ProcedureTy, Ty};

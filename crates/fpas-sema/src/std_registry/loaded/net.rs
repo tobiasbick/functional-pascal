@@ -106,7 +106,7 @@ pub(super) fn register_std_net(checker: &mut Checker) {
     );
     define_func(
         checker,
-        s::STD_NET_READ,
+        s::STD_NET_RECEIVE,
         vec![
             p("Connection", connection.clone(), false),
             p("MaxBytes", Ty::Integer, false),
@@ -115,7 +115,7 @@ pub(super) fn register_std_net(checker: &mut Checker) {
     );
     define_func(
         checker,
-        s::STD_NET_READ_WITH_CANCELLATION,
+        s::STD_NET_RECEIVE_WITH_CANCELLATION,
         vec![
             p("Connection", connection.clone(), false),
             p("MaxBytes", Ty::Integer, false),
@@ -125,7 +125,7 @@ pub(super) fn register_std_net(checker: &mut Checker) {
     );
     define_func(
         checker,
-        s::STD_NET_WRITE,
+        s::STD_NET_SEND,
         vec![
             p("Connection", connection.clone(), false),
             p("Data", Ty::Array(Box::new(Ty::Integer)), false),
@@ -134,7 +134,7 @@ pub(super) fn register_std_net(checker: &mut Checker) {
     );
     define_func(
         checker,
-        s::STD_NET_WRITE_WITH_CANCELLATION,
+        s::STD_NET_SEND_WITH_CANCELLATION,
         vec![
             p("Connection", connection.clone(), false),
             p("Data", Ty::Array(Box::new(Ty::Integer)), false),

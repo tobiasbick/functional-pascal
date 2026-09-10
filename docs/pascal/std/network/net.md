@@ -8,7 +8,7 @@ uses Std.Net;
 case Connect('127.0.0.1', 8080, 5000) of
   Ok(Connection):
   begin
-    // Use Read, Write, SetTimeout, and Close.
+    // Use ReceiveBytes, SendBytes, SetTimeout, and Close.
   end;
   Error(Message): panic(Message)
 end
@@ -30,15 +30,15 @@ end
 | function | `AcceptWithCancellation(Listener; Token: Std.Task.CancellationToken): Result of Connection, string` | blocks until one client connects or cancellation is requested |
 | function | `CloseListener(Listener): Result of boolean, string` | invalidates the listener handle |
 | function | `SetTimeout(Connection; TimeoutMillis: integer): Result of boolean, string` | sets read/write timeout; zero disables it |
-| function | `Read(Connection; MaxBytes: integer): Result of array of integer, string` | empty array means EOF |
-| function | `ReadWithCancellation(Connection; MaxBytes: integer; Token: Std.Task.CancellationToken): Result of array of integer, string` | reads a chunk or reports cancellation; leaves the connection open |
-| function | `Write(Connection; Data: array of integer): Result of integer, string` | returns bytes written; partial writes are possible |
-| function | `WriteWithCancellation(Connection; Data: array of integer; Token: Std.Task.CancellationToken): Result of integer, string` | returns accepted bytes or reports cancellation before progress |
+| function | `ReceiveBytes(Connection; MaxBytes: integer): Result of array of integer, string` | empty array means EOF |
+| function | `ReceiveBytesWithCancellation(Connection; MaxBytes: integer; Token: Std.Task.CancellationToken): Result of array of integer, string` | reads a chunk or reports cancellation; leaves the connection open |
+| function | `SendBytes(Connection; Data: array of integer): Result of integer, string` | returns bytes written; partial writes are possible |
+| function | `SendBytesWithCancellation(Connection; Data: array of integer; Token: Std.Task.CancellationToken): Result of integer, string` | returns accepted bytes or reports cancellation before progress |
 | function | `Close(Connection): Result of boolean, string` | invalidates the handle |
 
 `ConnectTls` verifies the server certificate and requested hostname through the operating system's
 trust policy. It does not expose an insecure certificate bypass. The returned `Connection` uses the
-same `Read`, `Write`, `SetTimeout`, and `Close` functions as a plain TCP connection.
+same `ReceiveBytes`, `SendBytes`, `SetTimeout`, and `Close` functions as a plain TCP connection.
 
 The connect timeout bounds TCP establishment and, for `ConnectTls`, the TLS handshake. Call
 `SetTimeout` to configure subsequent byte reads and writes.
@@ -48,7 +48,7 @@ PEM private key, then binds the requested address. Its positive handshake timeou
 minutes. Client certificates and multiple certificates selected through SNI are not supported.
 
 `Accept` and `AcceptWithCancellation` return the same `Connection` type for TCP and TLS listeners,
-so `SetTimeout`, `Read`, `Write`, and `Close` apply to both. A TLS listener completes the handshake
+so `SetTimeout`, `ReceiveBytes`, `SendBytes`, and `Close` apply to both. A TLS listener completes the handshake
 before returning and discards failed or timed-out handshakes while waiting for a valid client.
 Listener handles are closed separately with `CloseListener`. Both accept functions and connection
 I/O block the VM worker that executes them.
@@ -58,12 +58,12 @@ connection is returned, the function returns `Error('Network accept cancelled')`
 listener open, so another task may accept from it later. `Accept` remains available when the caller
 does not need application-controlled cancellation.
 
-Byte values must be in `0..255`. A single `Read` or `Write` is limited to 1 MiB. Timeouts are limited
+Byte values must be in `0..255`. A single `ReceiveBytes` or `SendBytes` is limited to 1 MiB. Timeouts are limited
 to `300000` milliseconds; `Connect` and `ConnectTls` require a positive timeout. Client and listener
 ports must be in `1..65535`.
 
 Calls block their VM worker thread. Connections and listeners belong to one VM, are shared safely
-with its tasks, and are released when that VM ends. `Close` interrupts a blocked `Read` or `Write`
+with its tasks, and are released when that VM ends. `Close` interrupts a blocked `ReceiveBytes` or `SendBytes`
 on the connection, and `CloseListener` interrupts an active `Accept`, including a pending TLS
 handshake. VM cancellation interrupts established connection I/O and listener waits before joining
 task workers. The cancellation-aware connect variants also interrupt pending TCP attempts; OS
@@ -98,10 +98,10 @@ policy; cancellation does not bypass certificate or hostname verification.
   cancellation is observed at the same checkpoint as an OS error or expired budget, cancellation
   takes precedence. Successful connections initially have no read/write timeout; use `SetTimeout`.
 
-## `ReadWithCancellation`
+## `ReceiveBytesWithCancellation`
 
 Reads at most `MaxBytes` from an established TCP or TLS connection. The same byte-size limits and
-EOF representation as `Read` apply. Import `Std.Task` to create the cancellation source and token.
+EOF representation as `ReceiveBytes` apply. Import `Std.Task` to create the cancellation source and token.
 
 - Cancellation observed before a read attempt returns `Error('Network read cancelled')` without
   closing the connection. A token that is already cancelled does not consume available bytes.
@@ -114,10 +114,10 @@ EOF representation as `Read` apply. Import `Std.Task` to create the cancellation
   continue with a fresh token. Cancellation is polled at intervals of up to 10 ms between I/O
   attempts; OS scheduling can add latency. The call still occupies its VM worker.
 
-## `WriteWithCancellation`
+## `SendBytesWithCancellation`
 
 Writes one bounded chunk to an established TCP or TLS connection. Byte values and the 1 MiB limit
-are the same as for `Write`. Import `Std.Task` to create the cancellation source and token.
+are the same as for `SendBytes`. Import `Std.Task` to create the cancellation source and token.
 
 - `Ok(N)` means the first `N` bytes were accepted by the local transport. Partial writes are allowed;
   retry only the remaining suffix. The function does not loop to send the entire input.
@@ -132,12 +132,12 @@ are the same as for `Write`. Import `Std.Task` to create the cancellation source
   the peer. A later operation may advance buffered output even if that later call is cancelled
   before accepting its own input. Never resend a prefix already reported as accepted.
 - An empty input may return `Ok(0)`; a pre-cancelled token still returns cancellation. As with
-  `Write`, a zero count does not establish that the connection has closed.
+  `SendBytes`, a zero count does not establish that the connection has closed.
 
 Both cancellable I/O functions preserve socket timeout settings and normally restore blocking mode
 before returning. If restoring that mode fails, the connection is invalidated; a successful byte
 count or read result is still returned rather than losing progress information. Cancellation is
-polled between I/O attempts with the same 10 ms interval as `ReadWithCancellation`; the call occupies
+polled between I/O attempts with the same 10 ms interval as `ReceiveBytesWithCancellation`; the call occupies
 its VM worker.
 
 ## Implementation (contributors)

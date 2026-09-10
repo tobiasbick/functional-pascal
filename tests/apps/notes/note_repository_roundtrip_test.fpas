@@ -1,6 +1,6 @@
 program NoteRepositoryRoundtripTest;
 
-uses Notes.Model, Notes.Repository, Std.Array, Std.Test;
+uses Notes.Model, Notes.Repository, Std.Arrays, Std.Test;
 
 begin
   var Directory: string := ScratchDir() + '/notes';
@@ -21,8 +21,8 @@ begin
   case NotesLoadDirectory(Directory) of
     Ok(Loaded):
     begin
-      AssertEquals(1, Std.Array.Length(Loaded.Notes));
-      AssertEquals(0, Std.Array.Length(Loaded.Issues));
+      AssertEquals(1, Std.Arrays.Length(Loaded.Notes));
+      AssertEquals(0, Std.Arrays.Length(Loaded.Issues));
       AssertEquals(NoteValue.Id, Loaded.Notes[0].Id);
       AssertEquals(NoteValue.Title, Loaded.Notes[0].Title);
       AssertEquals(NoteValue.Body, Loaded.Notes[0].Body)

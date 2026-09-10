@@ -3,7 +3,7 @@
 use super::*;
 
 const SOURCE: &str = r#"program SelectionContinuation;
-uses Std.Task, Std.Time, Std.Result;
+uses Std.Task, Std.Time, Std.Results;
 function Produce(Q: channel of integer): integer;
 begin
   Sleep(2);

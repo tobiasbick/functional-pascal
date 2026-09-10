@@ -1,6 +1,6 @@
 unit Notes.Model;
 
-uses Std.Array, Std.Console, Std.Conv, Std.Str, Std.Tui;
+uses Std.Arrays, Std.Console, Std.Conv, Std.Str, Std.Tui;
 
 public type
   // One persisted `.note` document and its source path.
@@ -87,7 +87,7 @@ begin
   mutable var TitleCaret: integer := 0;
   mutable var TagsText: string := '';
   mutable var TagsCaret: integer := 0;
-  if Std.Array.Length(Loaded.Notes) > 0 then
+  if Std.Arrays.Length(Loaded.Notes) > 0 then
   begin
     Selected := 0;
     Focus := 3;
@@ -97,9 +97,9 @@ begin
     TagsCaret := Std.Str.Length(TagsText)
   end;
 
-  if Std.Array.Length(Loaded.Issues) > 0 then
+  if Std.Arrays.Length(Loaded.Issues) > 0 then
   begin
-    Status := IntToStr(Std.Array.Length(Loaded.Issues)) + ' invalid note file(s)'
+    Status := IntToStr(Std.Arrays.Length(Loaded.Issues)) + ' invalid note file(s)'
   end;
 
   return record
@@ -136,12 +136,12 @@ public function NoteTagsFromText(Text: string): array of string;
 begin
   mutable var Tags: array of string := [];
   var Parts: array of string := Std.Str.Split(Text, ',');
-  for Index: integer := 0 to Std.Array.Length(Parts) - 1 do
+  for Index: integer := 0 to Std.Arrays.Length(Parts) - 1 do
   begin
     var Tag: string := Std.Str.Trim(Parts[Index]);
-    if (Tag <> '') and (not Std.Array.Contains(Tags, Tag)) then
+    if (Tag <> '') and (not Std.Arrays.Contains(Tags, Tag)) then
     begin
-      Std.Array.Push(Tags, Tag)
+      Std.Arrays.Push(Tags, Tag)
     end
   end;
 
@@ -170,11 +170,11 @@ end;
 public function NotesFilteredIndices(Notes: array of Note; Search: string): array of integer;
 begin
   mutable var Indices: array of integer := [];
-  for Index: integer := 0 to Std.Array.Length(Notes) - 1 do
+  for Index: integer := 0 to Std.Arrays.Length(Notes) - 1 do
   begin
     if NoteMatches(Notes[Index], Search) then
     begin
-      Std.Array.Push(Indices, Index)
+      Std.Arrays.Push(Indices, Index)
     end
   end;
 
@@ -220,7 +220,7 @@ public function NotesListItems(Notes: array of Note; Search: string; MaximumWidt
 begin
   mutable var Items: array of string := [];
   var Indices: array of integer := NotesFilteredIndices(Notes, Search);
-  for Index: integer := 0 to Std.Array.Length(Indices) - 1 do
+  for Index: integer := 0 to Std.Arrays.Length(Indices) - 1 do
   begin
     var NoteValue: Note := Notes[Indices[Index]];
     mutable var Prefix: string := '  ';
@@ -234,7 +234,7 @@ begin
       Tags := '  ·  ' + Tags
     end;
 
-    Std.Array.Push(Items, ClipListText((Prefix + NoteValue.Title) + Tags, MaximumWidth))
+    Std.Arrays.Push(Items, ClipListText((Prefix + NoteValue.Title) + Tags, MaximumWidth))
   end;
 
   return Items

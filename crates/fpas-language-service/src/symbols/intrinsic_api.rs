@@ -142,9 +142,9 @@ mod tests {
     use super::DocumentSymbols;
 
     #[test]
-    fn editor_snapshot_adds_keyword_enum_member_from_registry_and_markdown() {
+    fn editor_snapshot_adds_missing_enum_member_from_registry_and_markdown() {
         let source = Arc::<str>::from(
-            "unit Std.Json;\n\npublic type\n  JsonValue = enum\n    // `Array` enum member.\n    // `Object` enum member.\n    Object(Fields: dict of string to JsonValue);\n  end;\n",
+            "unit Std.Json;\n\npublic type\n  JsonValue = enum\n    // `ArrayValue` enum member.\n    // `Object` enum member.\n    Object(Fields: dict of string to JsonValue);\n  end;\n",
         );
         let snapshot = DocumentSnapshot::parse(
             std::path::Path::new("Json.fpas"),
@@ -158,12 +158,12 @@ mod tests {
         let array = json_value
             .children
             .iter()
-            .find(|child| child.qualified_name == "Std.Json.JsonValue.Array")
+            .find(|child| child.qualified_name == "Std.Json.JsonValue.ArrayValue")
             .expect("Array registry declaration");
 
         assert_eq!(
             &snapshot.source()[array.selection_span.offset()..array.selection_span.end()],
-            "Array"
+            "ArrayValue"
         );
     }
 }

@@ -1,6 +1,7 @@
 unit Notes.Format;
 
-uses Notes.Model, Std.Array, Std.Conv, Std.Dict, Std.Option, Std.Result, Std.Str, Std.Toml;
+uses
+  Notes.Model, Std.Arrays, Std.Conv, Std.Dictionaries, Std.Options, Std.Results, Std.Str, Std.Toml;
 
 const
   NoteFormatVersion: integer := 1;
@@ -12,7 +13,7 @@ end;
 
 function FieldString(Fields: dict of string to TomlValue; Name: string): result of string, string;
 begin
-  case Std.Dict.Get(Fields, Name) of
+  case Std.Dictionaries.Get(Fields, Name) of
     Some(Value):
     begin
       case Value of
@@ -35,7 +36,7 @@ end;
 
 function FieldInteger(Fields: dict of string to TomlValue; Name: string): result of integer, string;
 begin
-  case Std.Dict.Get(Fields, Name) of
+  case Std.Dictionaries.Get(Fields, Name) of
     Some(Value):
     begin
       case Value of
@@ -58,7 +59,7 @@ end;
 
 function FieldBoolean(Fields: dict of string to TomlValue; Name: string): result of boolean, string;
 begin
-  case Std.Dict.Get(Fields, Name) of
+  case Std.Dictionaries.Get(Fields, Name) of
     Some(Value):
     begin
       case Value of
@@ -81,19 +82,19 @@ end;
 
 function FieldTags(Fields: dict of string to TomlValue): result of array of string, string;
 begin
-  case Std.Dict.Get(Fields, 'tags') of
+  case Std.Dictionaries.Get(Fields, 'tags') of
     Some(Value):
     begin
       case Value of
-        TomlValue.Array(Items):
+        TomlValue.ArrayValue(Items):
         begin
           mutable var Tags: array of string := [];
-          for Index: integer := 0 to Std.Array.Length(Items) - 1 do
+          for Index: integer := 0 to Std.Arrays.Length(Items) - 1 do
           begin
             case Items[Index] of
               TomlValue.String(Tag):
               begin
-                Std.Array.Push(Tags, Tag)
+                Std.Arrays.Push(Tags, Tag)
               end
               else
               begin
@@ -196,11 +197,11 @@ end;
 public function NoteStringify(NoteValue: Note): string;
 begin
   mutable var TagValues: array of TomlValue := [];
-  for Index: integer := 0 to Std.Array.Length(NoteValue.Tags) - 1 do
+  for Index: integer := 0 to Std.Arrays.Length(NoteValue.Tags) - 1 do
   begin
-    Std.Array.Push(TagValues, TomlValue.String(NoteValue.Tags[Index]))
+    Std.Arrays.Push(TagValues, TomlValue.String(NoteValue.Tags[Index]))
   end;
-  var Header: TomlValue := TomlValue.Table(['format': TomlValue.Integer(NoteFormatVersion), 'id': TomlValue.String(NoteValue.Id), 'title': TomlValue.String(NoteValue.Title), 'created_ms': TomlValue.Integer(NoteValue.CreatedMillis), 'updated_ms': TomlValue.Integer(NoteValue.UpdatedMillis), 'tags': TomlValue.Array(TagValues), 'pinned': TomlValue.Boolean(NoteValue.Pinned), 'archived': TomlValue.Boolean(NoteValue.Archived)]);
+  var Header: TomlValue := TomlValue.Table(['format': TomlValue.Integer(NoteFormatVersion), 'id': TomlValue.String(NoteValue.Id), 'title': TomlValue.String(NoteValue.Title), 'created_ms': TomlValue.Integer(NoteValue.CreatedMillis), 'updated_ms': TomlValue.Integer(NoteValue.UpdatedMillis), 'tags': TomlValue.ArrayValue(TagValues), 'pinned': TomlValue.Boolean(NoteValue.Pinned), 'archived': TomlValue.Boolean(NoteValue.Archived)]);
   var NewLine: string := Std.Str.Chr(10);
   return ((((('+++' + NewLine) + Std.Str.TrimRight(Std.Toml.Stringify(Header))) + NewLine) + '+++') + NewLine) +
          NoteValue.Body

@@ -1,7 +1,7 @@
 // Sends buffered and streaming HTTP requests to the local example server.
 program NetworkHttpClient;
 
-uses Std.Args, Std.Array, Std.Conv, Std.Console, Std.Http, Std.Net.Utf8;
+uses Std.Args, Std.Arrays, Std.Conv, Std.Console, Std.Http, Std.Net.Utf8;
 
 // Prints one buffered response after validating its UTF-8 body.
 //
@@ -54,13 +54,13 @@ begin
     case ReadStream(StreamValue, 5) of
       Ok(Part):
       begin
-        if Std.Array.Length(Part) = 0 then
+        if Std.Arrays.Length(Part) = 0 then
         begin
           Reading := false
         end
         else
         begin
-          Bytes := Std.Array.Concat(Bytes, Part)
+          Bytes := Std.Arrays.Concat(Bytes, Part)
         end
       end;
       Error(Message):

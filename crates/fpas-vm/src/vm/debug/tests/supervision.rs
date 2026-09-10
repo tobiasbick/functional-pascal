@@ -68,7 +68,7 @@ fn run_with_children(source: &str, expected_children: usize) {
 fn supervision_retries_a_panic_observed_when_a_parked_selection_resumes() {
     run_with_children(
         r#"program ResumeFailure;
-uses Std.Task, Std.Array, Std.Result, Std.Time;
+uses Std.Task, Std.Arrays, Std.Results, Std.Time;
 begin
   var Group: TaskGroup := CreateTaskGroup();
   var Attempts: channel of boolean := CreateChannel(2);
@@ -95,7 +95,7 @@ end."#,
 fn selection_producer_yields_to_its_waiting_consumer() {
     run_both(
         r#"program ProducerConsumer;
-uses Std.Task, Std.Result, Std.Array;
+uses Std.Task, Std.Results, Std.Arrays;
 begin
   var Group: TaskGroup := CreateTaskGroup();
   var Queue: channel of integer := CreateChannel(1);
@@ -128,7 +128,7 @@ fn supervision_and_channel_selection_drain_contending_workers_across_repeated_gr
 fn supervision_retries_keep_nested_children_in_the_original_group() {
     run_with_children(
         r#"program NestedAttempts;
-uses Std.Task, Std.Array, Std.Result, Std.Time;
+uses Std.Task, Std.Arrays, Std.Results, Std.Time;
 begin
   var G: TaskGroup := CreateTaskGroup();
   var Steps: channel of boolean := CreateChannel(2);
@@ -154,7 +154,7 @@ end."#,
 fn supervision_successful_procedure_does_not_use_retry_budget() {
     run_both(
         r#"program SuccessfulProcedure;
-uses Std.Task, Std.Array, Std.Result;
+uses Std.Task, Std.Arrays, Std.Results;
 begin
   var G: TaskGroup := CreateTaskGroup();
   var Attempts: channel of integer := CreateChannel(2);
@@ -173,7 +173,7 @@ end."#,
 fn supervision_successful_value_is_terminal_even_after_worker_requests_cancellation() {
     run_both(
         r#"program SuccessfulCancellation;
-uses Std.Task, Std.Array;
+uses Std.Task, Std.Arrays;
 begin
   var G: TaskGroup := CreateTaskGroup();
   var Child: task := StartSupervisedTask(G, function(Token: CancellationToken): integer
@@ -188,7 +188,7 @@ end."#,
 fn supervision_retries_errors_and_panics_then_delivers_one_successful_task() {
     run_both(
         r#"program RecoverWorker;
-uses Std.Task, Std.Array, Std.Result;
+uses Std.Task, Std.Arrays, Std.Results;
 begin
   var G: TaskGroup := CreateTaskGroup();
   var Steps: channel of integer := CreateChannel(3);
@@ -220,7 +220,7 @@ end."#,
 fn supervision_error_exhaustion_keeps_the_final_result_and_one_group_report() {
     run_both(
         r#"program ExhaustWorker;
-uses Std.Task, Std.Array, Std.Result;
+uses Std.Task, Std.Arrays, Std.Results;
 begin
   var G: TaskGroup := CreateTaskGroup();
   var Attempts: channel of integer := CreateChannel(3);
@@ -243,7 +243,7 @@ end."#,
 fn supervision_panic_exhaustion_is_contained_and_keeps_the_last_diagnostic() {
     run_both(
         r#"program ExhaustPanic;
-uses Std.Task, Std.Array, Std.Result;
+uses Std.Task, Std.Arrays, Std.Results;
 begin
   var G: TaskGroup := CreateTaskGroup();
   var Attempts: channel of integer := CreateChannel(1);
@@ -263,7 +263,7 @@ end."#,
 fn supervision_cancel_interrupts_a_long_backoff() {
     run_both(
         r#"program CancelBackoff;
-uses Std.Task, Std.Array, Std.Result;
+uses Std.Task, Std.Arrays, Std.Results;
 begin
   var G: TaskGroup := CreateTaskGroup();
   var Attempts: channel of boolean := CreateChannel(1);
@@ -284,7 +284,7 @@ end."#,
 fn supervision_does_not_retry_other_runtime_errors() {
     run_both(
         r#"program InvalidWorkerOperation;
-uses Std.Task, Std.Array, Std.Result;
+uses Std.Task, Std.Arrays, Std.Results;
 begin
   var G: TaskGroup := CreateTaskGroup();
   var Started: channel of boolean := CreateChannel(1);
@@ -303,7 +303,7 @@ end."#,
 fn supervision_zero_retry_limit_keeps_an_ordinary_cancelled_message_as_error() {
     run_both(
         r#"program NoRetries;
-uses Std.Task, Std.Array;
+uses Std.Task, Std.Arrays;
 begin
   var G: TaskGroup := CreateTaskGroup();
   var Child: task := StartSupervisedTask(G, function(Token: CancellationToken): result of integer, string

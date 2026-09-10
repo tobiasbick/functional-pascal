@@ -1,7 +1,7 @@
 // Case-insensitive HTTP field lookup and unsafe-text checks.
 unit Std.Http.Headers;
 
-uses Std.Array, Std.Http.Types, Std.Str;
+uses Std.Arrays, Std.Http.Types, Std.Str;
 
 // Compares two HTTP field names without case sensitivity.
 //
@@ -20,7 +20,7 @@ end;
 // - `Name`: Case-insensitive field name.
 public function Find(Headers: array of Header; Name: string): option of string;
 begin
-  for Index: integer := 0 to Std.Array.Length(Headers) - 1 do
+  for Index: integer := 0 to Std.Arrays.Length(Headers) - 1 do
   begin
     if IsName(Headers[Index].Name, Name) then
     begin

@@ -1,10 +1,10 @@
-# `Std.Array`
+# `Std.Arrays`
 
 Non-mutating array helpers (length, sort, search, slice, …) plus **in-place** `Push` and `Pop`. This page lists the **entire** surface of the unit.
 
 ```pascal
 program Example;
-uses Std.Console, Std.Array;
+uses Std.Console, Std.Arrays;
 begin
   var A: array of integer := [1, 2, 3];
   WriteLn(Length(A))
@@ -13,9 +13,9 @@ end.
 
 ## Importing and names
 
-After `uses Std.Array;` use short names (`Length`, `Sort`, …) or qualified (`Std.Array.Length`, …).
+After `uses Std.Arrays;` use short names (`Length`, `Sort`, …) or qualified (`Std.Arrays.Length`, …).
 
-**Ambiguity with `Std.Str`:** short names **`Length`**, **`Contains`**, and **`IndexOf`** clash. Qualify as `Std.Array.Length(A)` vs `Std.Str.Length(S)`, etc.
+**Ambiguity with `Std.Str`:** short names **`Length`**, **`Contains`**, and **`IndexOf`** clash. Qualify as `Std.Arrays.Length(A)` vs `Std.Str.Length(S)`, etc.
 
 ---
 

@@ -1,6 +1,7 @@
 unit Std.Tui.Chrome.MenuQuery;
 
-uses Std.Array, Std.Option, Std.Tui.Chrome.KeyGesture, Std.Tui.Chrome.MenuNode, Std.Tui.Ids.Action;
+uses
+  Std.Arrays, Std.Options, Std.Tui.Chrome.KeyGesture, Std.Tui.Chrome.MenuNode, Std.Tui.Ids.Action;
 
 // Returns a menu node's identity.
 //
@@ -185,7 +186,7 @@ end;
 // - `Id`: Identifier assigned to the created or selected value.
 public function TuiMenuFind(Nodes: array of TuiMenuNode; Id: TuiMenuNodeId): integer;
 begin
-  for Index: integer := 0 to Std.Array.Length(Nodes) - 1 do
+  for Index: integer := 0 to Std.Arrays.Length(Nodes) - 1 do
   begin
     if TuiMenuNodeIdOf(Nodes[Index]).Value = Id.Value then
     begin
@@ -240,7 +241,7 @@ end;
 // - `Parent`: Optional parent menu-node identifier.
 public function TuiMenuFirstSelectable(Nodes: array of TuiMenuNode; Parent: option of TuiMenuNodeId): option of TuiMenuNodeId;
 begin
-  for Index: integer := 0 to Std.Array.Length(Nodes) - 1 do
+  for Index: integer := 0 to Std.Arrays.Length(Nodes) - 1 do
   begin
     if TuiMenuHasParent(Nodes[Index], Parent) and TuiMenuNodeSelectable(Nodes[Index]) then
     begin
@@ -270,20 +271,20 @@ begin
   end;
   var Parent: option of TuiMenuNodeId := TuiMenuNodeParent(Nodes[CurrentIndex]);
   mutable var Siblings: array of TuiMenuNodeId := [];
-  for Index: integer := 0 to Std.Array.Length(Nodes) - 1 do
+  for Index: integer := 0 to Std.Arrays.Length(Nodes) - 1 do
   begin
     if TuiMenuHasParent(Nodes[Index], Parent) and TuiMenuNodeSelectable(Nodes[Index]) then
     begin
-      Std.Array.Push(Siblings, TuiMenuNodeIdOf(Nodes[Index]))
+      Std.Arrays.Push(Siblings, TuiMenuNodeIdOf(Nodes[Index]))
     end
   end;
 
-  if Std.Array.Length(Siblings) = 0 then
+  if Std.Arrays.Length(Siblings) = 0 then
   begin
     return None
   end;
   mutable var Position: integer := 0;
-  for Index: integer := 0 to Std.Array.Length(Siblings) - 1 do
+  for Index: integer := 0 to Std.Arrays.Length(Siblings) - 1 do
   begin
     if Siblings[Index].Value = Current.Value then
     begin
@@ -294,9 +295,9 @@ begin
   Position := Position + Direction;
   if Position < 0 then
   begin
-    Position := Std.Array.Length(Siblings) - 1
+    Position := Std.Arrays.Length(Siblings) - 1
   end
-  else if Position >= Std.Array.Length(Siblings) then
+  else if Position >= Std.Arrays.Length(Siblings) then
   begin
     Position := 0
   end;
@@ -312,7 +313,7 @@ end;
 public function TuiMenuRootOf(Nodes: array of TuiMenuNode; Id: TuiMenuNodeId): option of TuiMenuNodeId;
 begin
   mutable var Current: TuiMenuNodeId := Id;
-  mutable var Remaining: integer := Std.Array.Length(Nodes) + 1;
+  mutable var Remaining: integer := Std.Arrays.Length(Nodes) + 1;
   while Remaining > 0 do
   begin
     Remaining := Remaining - 1;

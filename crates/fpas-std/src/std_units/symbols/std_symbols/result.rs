@@ -1,4 +1,4 @@
-//! `Std.Result` symbol names and registry group.
+//! `Std.Results` symbol names and registry group.
 
 std_symbol!(STD_RESULT_UNWRAP = std_result!("Unwrap"));
 std_symbol!(STD_RESULT_UNWRAP_OR = std_result!("UnwrapOr"));

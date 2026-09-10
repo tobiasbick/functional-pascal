@@ -24,10 +24,11 @@ public type
     // Parameters:
     // - `Value`: Value consumed or returned by the operation.
     String(Value: string);
-    // `Array` enum member.
+    // `ArrayValue` enum member.
     //
     // Parameters:
     // - `Items`: Array elements stored in the constructed value.
+    ArrayValue(Items: array of Std.Json.JsonValue);
     // `Object` enum member.
     //
     // Parameters:

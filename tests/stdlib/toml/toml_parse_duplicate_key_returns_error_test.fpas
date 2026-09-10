@@ -1,6 +1,6 @@
 program TomlParseDuplicateKeyReturnsErrorTest;
 
-uses Std.Result, Std.Str, Std.Test, Std.Toml;
+uses Std.Results, Std.Str, Std.Test, Std.Toml;
 
 begin
   var Parsed: result of TomlValue, string := Parse(('name = ''one''' + Chr(10)) + 'name = ''two''');

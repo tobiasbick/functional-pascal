@@ -1,4 +1,4 @@
-//! `Std.Option` symbol names and registry group.
+//! `Std.Options` symbol names and registry group.
 
 std_symbol!(STD_OPTION_UNWRAP = std_option!("Unwrap"));
 std_symbol!(STD_OPTION_UNWRAP_OR = std_option!("UnwrapOr"));

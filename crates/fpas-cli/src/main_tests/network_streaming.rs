@@ -62,11 +62,11 @@ fn http_stream_decodes_fragmented_chunked_sse_response() {
         &format!(
             r#"program HttpStreamingRoundtrip;
 
-uses Std.Array, Std.Console, Std.Http;
+uses Std.Arrays, Std.Console, Std.Http;
 
 procedure PrintEvents(Events: array of SseEvent);
 begin
-  for Index: integer := 0 to Std.Array.Length(Events) - 1 do
+  for Index: integer := 0 to Std.Arrays.Length(Events) - 1 do
   begin
     WriteLn((Events[Index].EventType + ':') + Events[Index].Data)
   end
@@ -86,7 +86,7 @@ begin
             case ReadStream(ResponseValue.Body, 3) of
               Ok(Bytes):
               begin
-                if Std.Array.Length(Bytes) = 0 then
+                if Std.Arrays.Length(Bytes) = 0 then
                 begin
                   Reading := false
                 end
@@ -158,7 +158,7 @@ fn http_stream_rejects_truncated_content_length() {
         &format!(
             r#"program HttpStreamingTruncated;
 
-uses Std.Array, Std.Console, Std.Http, Std.Str;
+uses Std.Arrays, Std.Console, Std.Http, Std.Str;
 
 begin
   case OpenStream(Request.Get('http://127.0.0.1:{port}/truncated')) of
@@ -167,7 +167,7 @@ begin
       case ReadStream(ResponseValue.Body, 8) of
         Ok(Bytes):
         begin
-          if Std.Array.Length(Bytes) <> 3 then
+          if Std.Arrays.Length(Bytes) <> 3 then
           begin
             panic('unexpected first body fragment')
           end

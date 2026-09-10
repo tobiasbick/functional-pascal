@@ -1,8 +1,8 @@
 unit Std.Tui.Runtime.Routing.FocusNavigation;
 
 uses
-  Std.Array, Std.Console, Std.Tui.Chrome.StatusItem, Std.Tui.Elements.Element, Std.Tui.Ids.ControlId,
-  Std.Tui.Runtime.Msg, Std.Tui.Runtime.Routing.Focus;
+  Std.Arrays, Std.Console, Std.Tui.Chrome.StatusItem, Std.Tui.Elements.Element,
+  Std.Tui.Ids.ControlId, Std.Tui.Runtime.Msg, Std.Tui.Runtime.Routing.Focus;
 
 function TuiButtonFocusControls(Node: TuiElement): array of TuiControlId;
 begin
@@ -19,7 +19,7 @@ begin
     TuiElement.Desktop(Focused, Children):
     begin
       mutable var LastOverlay: integer := -1;
-      for Index: integer := 0 to Std.Array.Length(Children) - 1 do
+      for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
       begin
         case Children[Index] of
           TuiElement.Overlay(Title, OverlayChildren):
@@ -37,9 +37,9 @@ begin
         return TuiButtonFocusControls(Children[LastOverlay])
       end;
       mutable var Controls: array of TuiControlId := [];
-      for Index: integer := 0 to Std.Array.Length(Children) - 1 do
+      for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
       begin
-        Controls := Std.Array.Concat(Controls, TuiButtonFocusControls(Children[Index]))
+        Controls := Std.Arrays.Concat(Controls, TuiButtonFocusControls(Children[Index]))
       end;
 
       return Controls
@@ -47,9 +47,9 @@ begin
     TuiElement.Scroll(Id, Offset, ChangeAction, Children):
     begin
       mutable var Controls: array of TuiControlId := [];
-      for Index: integer := 0 to Std.Array.Length(Children) - 1 do
+      for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
       begin
-        Controls := Std.Array.Concat(Controls, TuiButtonFocusControls(Children[Index]))
+        Controls := Std.Arrays.Concat(Controls, TuiButtonFocusControls(Children[Index]))
       end;
 
       return Controls
@@ -57,9 +57,9 @@ begin
     TuiElement.Row(Children, Spacing):
     begin
       mutable var Controls: array of TuiControlId := [];
-      for Index: integer := 0 to Std.Array.Length(Children) - 1 do
+      for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
       begin
-        Controls := Std.Array.Concat(Controls, TuiButtonFocusControls(Children[Index]))
+        Controls := Std.Arrays.Concat(Controls, TuiButtonFocusControls(Children[Index]))
       end;
 
       return Controls
@@ -67,9 +67,9 @@ begin
     TuiElement.Column(Children, Spacing):
     begin
       mutable var Controls: array of TuiControlId := [];
-      for Index: integer := 0 to Std.Array.Length(Children) - 1 do
+      for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
       begin
-        Controls := Std.Array.Concat(Controls, TuiButtonFocusControls(Children[Index]))
+        Controls := Std.Arrays.Concat(Controls, TuiButtonFocusControls(Children[Index]))
       end;
 
       return Controls
@@ -77,9 +77,9 @@ begin
     TuiElement.Layout(Settings, Children):
     begin
       mutable var Controls: array of TuiControlId := [];
-      for Index: integer := 0 to Std.Array.Length(Children) - 1 do
+      for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
       begin
-        Controls := Std.Array.Concat(Controls, TuiButtonFocusControls(Children[Index]))
+        Controls := Std.Arrays.Concat(Controls, TuiButtonFocusControls(Children[Index]))
       end;
 
       return Controls
@@ -87,9 +87,9 @@ begin
     TuiElement.Panel(Title, Children):
     begin
       mutable var Controls: array of TuiControlId := [];
-      for Index: integer := 0 to Std.Array.Length(Children) - 1 do
+      for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
       begin
-        Controls := Std.Array.Concat(Controls, TuiButtonFocusControls(Children[Index]))
+        Controls := Std.Arrays.Concat(Controls, TuiButtonFocusControls(Children[Index]))
       end;
 
       return Controls
@@ -97,9 +97,9 @@ begin
     TuiElement.Overlay(Title, Children):
     begin
       mutable var Controls: array of TuiControlId := [];
-      for Index: integer := 0 to Std.Array.Length(Children) - 1 do
+      for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
       begin
-        Controls := Std.Array.Concat(Controls, TuiButtonFocusControls(Children[Index]))
+        Controls := Std.Arrays.Concat(Controls, TuiButtonFocusControls(Children[Index]))
       end;
 
       return Controls
@@ -141,7 +141,7 @@ begin
     return None
   end;
   var Controls: array of TuiControlId := TuiButtonFocusControls(Root);
-  if Std.Array.Length(Controls) = 0 then
+  if Std.Arrays.Length(Controls) = 0 then
   begin
     return None
   end;
@@ -164,9 +164,9 @@ begin
   mutable var NextIndex: integer := CurrentIndex + Direction;
   if NextIndex < 0 then
   begin
-    NextIndex := Std.Array.Length(Controls) - 1
+    NextIndex := Std.Arrays.Length(Controls) - 1
   end
-  else if NextIndex >= Std.Array.Length(Controls) then
+  else if NextIndex >= Std.Arrays.Length(Controls) then
   begin
     NextIndex := 0
   end;

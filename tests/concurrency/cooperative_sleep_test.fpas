@@ -1,6 +1,6 @@
 program CooperativeSleepTest;
 
-uses Std.Array, Std.Task, Std.Test, Std.Time;
+uses Std.Arrays, Std.Task, Std.Test, Std.Time;
 
 procedure Sleeper();
 begin

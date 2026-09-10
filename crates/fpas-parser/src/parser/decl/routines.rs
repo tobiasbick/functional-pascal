@@ -13,6 +13,7 @@ impl Parser {
     /// parsed components. Shared by top-level declarations and record methods.
     fn parse_function_header(
         &mut self,
+        allow_self_receiver: bool,
     ) -> (String, Vec<TypeParam>, Vec<FormalParam>, TypeExpr, Span) {
         let start = self.current_span();
         self.advance();
@@ -21,7 +22,7 @@ impl Parser {
             .unwrap_or_else(|| self.error_ident(start));
         let type_params = self.parse_type_params();
         self.expect(&Token::LParen);
-        let params = self.parse_formal_param_list();
+        let params = self.parse_formal_param_list(allow_self_receiver);
         self.expect(&Token::RParen);
         self.expect(&Token::Colon);
         let return_type = self.parse_type_expr();
@@ -32,7 +33,10 @@ impl Parser {
     /// Parse a procedure header: `procedure Name<T>(Params);`
     ///
     /// Consumes everything through the trailing semicolon.
-    fn parse_procedure_header(&mut self) -> (String, Vec<TypeParam>, Vec<FormalParam>, Span) {
+    fn parse_procedure_header(
+        &mut self,
+        allow_self_receiver: bool,
+    ) -> (String, Vec<TypeParam>, Vec<FormalParam>, Span) {
         let start = self.current_span();
         self.advance();
         let (name, _) = self
@@ -40,18 +44,37 @@ impl Parser {
             .unwrap_or_else(|| self.error_ident(start));
         let type_params = self.parse_type_params();
         self.expect(&Token::LParen);
-        let params = self.parse_formal_param_list();
+        let params = self.parse_formal_param_list(allow_self_receiver);
         self.expect(&Token::RParen);
         self.expect_semi();
         (name, type_params, params, start)
     }
 
     pub(super) fn parse_function_decl(&mut self, visibility: Visibility) -> FunctionDecl {
-        self.with_nesting(|parser| parser.parse_function_decl_inner(visibility))
+        self.parse_function_decl_with_receiver(visibility, false)
     }
 
-    fn parse_function_decl_inner(&mut self, visibility: Visibility) -> FunctionDecl {
-        let (name, type_params, params, return_type, start) = self.parse_function_header();
+    pub(super) fn parse_record_function_decl(&mut self, visibility: Visibility) -> FunctionDecl {
+        self.parse_function_decl_with_receiver(visibility, true)
+    }
+
+    fn parse_function_decl_with_receiver(
+        &mut self,
+        visibility: Visibility,
+        allow_self_receiver: bool,
+    ) -> FunctionDecl {
+        self.with_nesting(|parser| {
+            parser.parse_function_decl_inner(visibility, allow_self_receiver)
+        })
+    }
+
+    fn parse_function_decl_inner(
+        &mut self,
+        visibility: Visibility,
+        allow_self_receiver: bool,
+    ) -> FunctionDecl {
+        let (name, type_params, params, return_type, start) =
+            self.parse_function_header(allow_self_receiver);
         let body = self.parse_func_body();
         FunctionDecl {
             name,
@@ -65,11 +88,29 @@ impl Parser {
     }
 
     pub(super) fn parse_procedure_decl(&mut self, visibility: Visibility) -> ProcedureDecl {
-        self.with_nesting(|parser| parser.parse_procedure_decl_inner(visibility))
+        self.parse_procedure_decl_with_receiver(visibility, false)
     }
 
-    fn parse_procedure_decl_inner(&mut self, visibility: Visibility) -> ProcedureDecl {
-        let (name, type_params, params, start) = self.parse_procedure_header();
+    pub(super) fn parse_record_procedure_decl(&mut self, visibility: Visibility) -> ProcedureDecl {
+        self.parse_procedure_decl_with_receiver(visibility, true)
+    }
+
+    fn parse_procedure_decl_with_receiver(
+        &mut self,
+        visibility: Visibility,
+        allow_self_receiver: bool,
+    ) -> ProcedureDecl {
+        self.with_nesting(|parser| {
+            parser.parse_procedure_decl_inner(visibility, allow_self_receiver)
+        })
+    }
+
+    fn parse_procedure_decl_inner(
+        &mut self,
+        visibility: Visibility,
+        allow_self_receiver: bool,
+    ) -> ProcedureDecl {
+        let (name, type_params, params, start) = self.parse_procedure_header(allow_self_receiver);
         let body = self.parse_func_body();
         ProcedureDecl {
             name,
@@ -111,12 +152,15 @@ impl Parser {
         decls
     }
 
-    pub(in crate::parser) fn parse_formal_param_list(&mut self) -> Vec<FormalParam> {
+    pub(in crate::parser) fn parse_formal_param_list(
+        &mut self,
+        allow_self_receiver: bool,
+    ) -> Vec<FormalParam> {
         let mut params = Vec::new();
         if self.check(&Token::RParen) {
             return params;
         }
-        params.push(self.parse_formal_param());
+        params.push(self.parse_formal_param(allow_self_receiver));
         while self.eat(&Token::Semicolon) {
             if self.check(&Token::RParen) {
                 let span = self.current_span();
@@ -128,17 +172,21 @@ impl Parser {
                 );
                 break;
             }
-            params.push(self.parse_formal_param());
+            params.push(self.parse_formal_param(false));
         }
         params
     }
 
-    fn parse_formal_param(&mut self) -> FormalParam {
+    fn parse_formal_param(&mut self, allow_self_receiver: bool) -> FormalParam {
         let start = self.current_span();
         let mutable = self.eat(&Token::Mutable);
-        let (name, _) = self
-            .expect_ident()
-            .unwrap_or_else(|| self.error_ident(start));
+        let (name, _) = if allow_self_receiver && self.check(&Token::SelfKw) {
+            let span = self.advance().span;
+            ("Self".to_owned(), span)
+        } else {
+            self.expect_ident()
+                .unwrap_or_else(|| self.error_ident(start))
+        };
         self.expect(&Token::Colon);
         let type_expr = self.parse_type_expr();
         FormalParam {

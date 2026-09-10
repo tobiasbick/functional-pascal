@@ -5,7 +5,7 @@
 
 program TaskMemoryBenchmark;
 
-uses Std.Args, Std.Array, Std.Console, Std.Conv, Std.Task, Std.Time;
+uses Std.Args, Std.Arrays, Std.Console, Std.Conv, Std.Task, Std.Time;
 
 const
   SleepMillis: integer := 10000;

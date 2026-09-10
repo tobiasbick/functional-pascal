@@ -3,7 +3,8 @@
 unit Mandelbrot.Render;
 
 uses
-  Std.Array, Std.Conv, Std.Math, Std.Result, Std.Str, Std.Task, Std.Time, Std.Tui, Mandelbrot.Color;
+  Std.Arrays, Std.Conv, Std.Math, Std.Results, Std.Str, Std.Task, Std.Time, Std.Tui,
+  Mandelbrot.Color;
 
 public type
   Complex = record
@@ -142,7 +143,7 @@ begin
   for Px: integer := 0 to Width - 1 do
   begin
     var Cx: real := XMin + (Px / IntToReal(WidthRange)) * (XMax - XMin);
-    Std.Array.Push(Row, Iterate(Complex.Create(Cx, Cy), MaxIter))
+    Std.Arrays.Push(Row, Iterate(Complex.Create(Cx, Cy), MaxIter))
   end;
 
   return Row
@@ -180,7 +181,7 @@ begin
       return []
     end;
     var Cx: real := XMin + (Px / IntToReal(WidthRange)) * (XMax - XMin);
-    Std.Array.Push(Row, IterateCancellable(Complex.Create(Cx, Cy), MaxIter, HostToken, WorkerToken))
+    Std.Arrays.Push(Row, IterateCancellable(Complex.Create(Cx, Cy), MaxIter, HostToken, WorkerToken))
   end;
 
   if IsCancellationRequested(HostToken) or IsCancellationRequested(WorkerToken) then
@@ -216,7 +217,7 @@ begin
   mutable var Cells: array of TuiCell := [];
   for Sample: PixelSample in Samples do
   begin
-    Std.Array.Push(Cells, RenderCell(Sample, Palette))
+    Std.Arrays.Push(Cells, RenderCell(Sample, Palette))
   end;
 
   return Cells
@@ -264,7 +265,7 @@ begin
   for Py: integer := 0 to Height - 1 do
   begin
     var Row: array of TuiCell := RenderRowCells(Request, Py);
-    Cells := Std.Array.Concat(Cells, Row)
+    Cells := Std.Arrays.Concat(Cells, Row)
   end;
 
   return TuiCellGrid.Create(Width, Height, Cells)
@@ -286,12 +287,12 @@ begin
       break
     end;
 
-    Std.Array.Push(Tasks, StartTaskInGroup(Group, function(WorkerToken: CancellationToken): array of TuiCell begin
+    Std.Arrays.Push(Tasks, StartTaskInGroup(Group, function(WorkerToken: CancellationToken): array of TuiCell begin
       return RenderRowCellsCancellable(Request, Py, HostToken, WorkerToken)
     end))
   end;
   mutable var Cells: array of TuiCell := [];
-  for Py: integer := 0 to Std.Array.Length(Tasks) - 1 do
+  for Py: integer := 0 to Std.Arrays.Length(Tasks) - 1 do
   begin
     if IsError(WaitAnyWithCancellation([Tasks[Py]], HostToken)) then
     begin
@@ -303,7 +304,7 @@ begin
       break
     end;
 
-    Cells := Std.Array.Concat(Cells, Row);
+    Cells := Std.Arrays.Concat(Cells, Row);
     if Py = Request.Height - 1 then
     begin
       if IsError(SendWithCancellation(Inbox, record

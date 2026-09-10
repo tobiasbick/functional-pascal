@@ -19,7 +19,7 @@ fn std_console_read_readkey_keypressed() {
 program T;
 uses Std.Console;
 begin
-  var C: string := Std.Console.Read();
+  var C: string := Std.Console.ReadText();
   var K: string := Std.Console.ReadKey();
   var P: boolean := Std.Console.KeyPressed();
   var S: string := Std.Console.ReadLn();
@@ -77,7 +77,7 @@ program T;
 uses Std.Console;
 begin
   var Pending: boolean := EventPending();
-  var E: Std.Console.Event := ReadEvent();
+  var E: Std.Console.ConsoleEvent := ReadEvent();
   WriteLn(Pending);
   WriteLn(E.kind = Std.Console.EventKind.Resize);
   WriteLn(E.mouse_button = Std.Console.MouseButton.Left);

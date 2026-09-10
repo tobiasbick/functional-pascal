@@ -127,7 +127,7 @@ impl Worker {
                         return Err(self.aggregate_error_code(
                             RUNTIME_DICT_KEY_NOT_FOUND,
                             format!("Key `{key}` not found in dict"),
-                            "Use Std.Dict.ContainsKey to check before access.",
+                            "Use Std.Dictionaries.ContainsKey to check before access.",
                         ));
                     }
                 }

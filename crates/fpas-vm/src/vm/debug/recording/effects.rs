@@ -35,7 +35,7 @@ pub(crate) fn pending_unsupported_recording_effect(
             RUNTIME_RECORDING_UNSUPPORTED_EFFECT,
             format!("recording capture cannot execute {unit}"),
             Some(
-                "Capture records all-stop events and queued Read/ReadLn only. Continue without record, or avoid this host effect while capturing. Reverse execution stays unavailable."
+                "Capture records all-stop events and queued ReadText/ReadLn only. Continue without record, or avoid this host effect while capturing. Reverse execution stays unavailable."
                     .to_string(),
             ),
             span,

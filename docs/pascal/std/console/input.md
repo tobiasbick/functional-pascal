@@ -8,7 +8,7 @@ These share one **line-oriented** buffer: typed text and test “stdin” lines 
 
 - **Parameters:** none.
 - **Returns:** the next full line, **without** the line terminator.
-- **Buffer:** same stream as `Read()`.
+- **Buffer:** same stream as `ReadText()`.
 
 ```pascal
 var Line: string := ReadLn();
@@ -17,14 +17,14 @@ WriteLn(Line)
 
 ---
 
-### `function Read(): string`
+### `function ReadText(): string`
 
 - **Parameters:** none.
 - **Returns:** the next single character from the **current** line buffer (or the next line’s data as exposed by the runtime).
 - **Buffer:** same as `ReadLn()`.
 
 ```pascal
-var C: string := Read();
+var C: string := ReadText();
 WriteLn(C)
 ```
 

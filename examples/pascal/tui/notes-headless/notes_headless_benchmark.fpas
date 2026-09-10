@@ -5,7 +5,7 @@
 program NotesHeadlessBenchmark;
 
 uses
-  Notes.Model, Notes.Update, Notes.View, Std.Args, Std.Array, Std.Console, Std.Conv, Std.Time,
+  Notes.Model, Notes.Update, Notes.View, Std.Args, Std.Arrays, Std.Console, Std.Conv, Std.Time,
   Std.Tui;
 
 const
@@ -24,7 +24,7 @@ begin
     NoteValue.Pinned := (Index mod 7) = 0;
     NoteValue.Body := ((('This is a representative note body for frame ' + IntToStr(Index)) + '.') + Std.Str.Chr(10)) +
                       'It keeps the editor, list, metadata, and layout paths active.';
-    Std.Array.Push(Notes, NoteValue)
+    Std.Arrays.Push(Notes, NoteValue)
   end;
 
   return Notes
@@ -79,7 +79,7 @@ begin
     WriteLn('throughput: unavailable (elapsed time is 0 ms)')
   end;
 
-  WriteLn('notes rendered: ' + IntToStr(Std.Array.Length(Model.Notes)));
+  WriteLn('notes rendered: ' + IntToStr(Std.Arrays.Length(Model.Notes)));
   if (MaxMillis > 0) and (Elapsed > MaxMillis) then
   begin
     panic(((('Notes TUI benchmark regression: ' + IntToStr(Elapsed)) + ' ms exceeds limit ') + IntToStr(MaxMillis)) +

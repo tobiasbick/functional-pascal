@@ -1,7 +1,7 @@
 program LongUses;
 
 uses
-  Std.Console, Std.Conv, Std.Array, Std.Dict, Std.Option, Std.Result, Std.String,
+  Std.Console, Std.Conv, Std.Arrays, Std.Dictionaries, Std.Options, Std.Results, Std.String,
   MyApp.Very.Long.Namespace.One, MyApp.Very.Long.Namespace.Two;
 
 begin

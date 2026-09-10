@@ -229,7 +229,7 @@ public type
   RequestHandler = function(RequestValue: ServerRequest): ServerResponse;
   // One decoded Server-Sent Events message.
   SseEvent = record
-    // Event type, defaulting to `message` when omitted.
+    // InputEvent type, defaulting to `message` when omitted.
     public EventType: string;
     // Joined event data lines.
     public Data: string;

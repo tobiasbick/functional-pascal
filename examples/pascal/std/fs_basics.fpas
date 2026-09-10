@@ -2,7 +2,7 @@
 
 program FsBasics;
 
-uses Std.Console, Std.Fs, Std.Result;
+uses Std.Console, Std.Fs, Std.Results;
 
 const
   Scratch: string := '.temp-data';
@@ -23,7 +23,7 @@ begin
     end
   end;
 
-  case WriteText(DemoPath, 'hello from Std.Fs') of
+  case Std.Fs.WriteText(DemoPath, 'hello from Std.Fs') of
     Ok(_):
     begin
       WriteLn('write: ok')
@@ -34,7 +34,7 @@ begin
     end
   end;
 
-  case ReadText(DemoPath) of
+  case Std.Fs.ReadText(DemoPath) of
     Ok(Text):
     begin
       WriteLn('read: ', Text)

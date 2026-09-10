@@ -2,7 +2,7 @@
 program MandelbrotBenchmark;
 
 uses
-  Mandelbrot.Color, Mandelbrot.Render, Std.Args, Std.Array, Std.Console, Std.Conv, Std.Result,
+  Mandelbrot.Color, Mandelbrot.Render, Std.Args, Std.Arrays, Std.Console, Std.Conv, Std.Results,
   Std.Task, Std.Time, Std.Tui;
 
 function Update(Grid: TuiCellGrid; Msg: TuiMsg; Cmd: TuiCmdOutput): TuiCellGrid;
@@ -34,13 +34,13 @@ begin
   var Source: CancellationSource := CreateCancellationSource();
   var Worker: task := go RunBackgroundRender(Request, Inbox, GetCancellationToken(Source));
   var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(Width, Height));
-  mutable var Grid: TuiCellGrid := TuiCellGrid.Create(Width, Height, Std.Array.Fill(TuiCell.Styled(' ', TuiStyle.FromColors(TuiColor.FromRgb(0, 0, 0), TuiColor.FromRgb(0, 0, 0))), Width *
-                                                                                                                                                                                    Height));
+  mutable var Grid: TuiCellGrid := TuiCellGrid.Create(Width, Height, Std.Arrays.Fill(TuiCell.Styled(' ', TuiStyle.FromColors(TuiColor.FromRgb(0, 0, 0), TuiColor.FromRgb(0, 0, 0))), Width *
+                                                                                                                                                                                     Height));
   mutable var Count: integer := 0;
   while Count < Width * Height do
   begin
     var Message: MandelbrotRenderFrame := Unwrap(ReceiveWithTimeout(Inbox, 30000));
-    Count := Count + Std.Array.Length(Message.Cells);
+    Count := Count + Std.Arrays.Length(Message.Cells);
     if Paint then
     begin
       Grid := TuiCellGrid.Create(Width, Height, Message.Cells);

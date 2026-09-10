@@ -16,7 +16,7 @@ impl DebugSession {
         self.debuggee.state()
     }
 
-    /// Queue one line for hosted `Read` / `ReadLn` without touching protocol stdin.
+    /// Queue one line for hosted `ReadText` / `ReadLn` without touching protocol stdin.
     ///
     /// **Documentation:** `docs/pascal/tools/debugger.md`
     pub fn push_debuggee_input(

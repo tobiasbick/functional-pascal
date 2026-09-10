@@ -2,7 +2,7 @@
 
 program ParseBasics;
 
-uses Std.Console, Std.Parse, Std.Result, Std.Conv;
+uses Std.Console, Std.Parse, Std.Results, Std.Conv;
 
 begin
   case TryInt(' +1_024 ') of

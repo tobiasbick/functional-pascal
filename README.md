@@ -205,7 +205,7 @@ end.
 
 ```pascal
 program OptionExample;
-uses Std.Console, Std.Array;
+uses Std.Console, Std.Arrays;
 
 function FindFirst(Items: array of integer; Min: integer): Option of integer;
 begin

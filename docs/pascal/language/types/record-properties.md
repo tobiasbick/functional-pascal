@@ -50,8 +50,8 @@ Rules:
   value; neither may be declared `mutable`.
 - Property names share the case-insensitive member namespace with fields, methods,
   and static routines.
-- `read` and `write` are contextual words in the declaration, not reserved
-  keywords elsewhere.
+- `read` and `write` are reserved keywords and can only be used in their
+  dedicated syntax positions.
 - Type aliases expose properties from the resolved record type.
 
 ## Reading

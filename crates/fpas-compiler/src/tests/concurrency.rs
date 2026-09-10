@@ -11,7 +11,7 @@ fn task_spawn_with_arguments_keeps_loop_branch_addresses_aligned() {
     assert_succeeds(
         "\
 program RegisterTaskArgumentLoop;
-uses Std.Array, Std.Task;
+uses Std.Arrays, Std.Task;
 function Worker(Value: integer): integer;
 begin
   return Value + 1

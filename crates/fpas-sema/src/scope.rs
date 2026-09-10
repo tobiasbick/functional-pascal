@@ -34,7 +34,7 @@ pub enum SymbolKind {
     Param,
     Function,
     Procedure,
-    /// Polymorphic standard-library call (`Std.Math.Abs`, `Std.Array.Push`, …).
+    /// Polymorphic standard-library call (`Std.Math.Abs`, `Std.Arrays.Push`, …).
     BuiltinStd,
     Type,
     EnumMember,

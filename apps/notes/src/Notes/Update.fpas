@@ -1,7 +1,7 @@
 unit Notes.Update;
 
 uses
-  Notes.Model, Notes.Editing, Notes.Repository, Std.Array, Std.Console, Std.Conv, Std.Option,
+  Notes.Model, Notes.Editing, Notes.Repository, Std.Arrays, Std.Console, Std.Conv, Std.Options,
   Std.Str, Std.Time, Std.Tui;
 
 const
@@ -23,7 +23,7 @@ const
 
 function NoteIndexById(Notes: array of Note; Id: string): integer;
 begin
-  for Index: integer := 0 to Std.Array.Length(Notes) - 1 do
+  for Index: integer := 0 to Std.Arrays.Length(Notes) - 1 do
   begin
     if Notes[Index].Id = Id then
     begin
@@ -51,7 +51,7 @@ begin
   Next.Dirty := false;
   Next.BodyCaret := 0;
   Next.BodyOffset := TuiPoint.Create(0, 0);
-  if (Selected >= 0) and (Selected < Std.Array.Length(State.Notes)) then
+  if (Selected >= 0) and (Selected < Std.Arrays.Length(State.Notes)) then
   begin
     var NoteValue: Note := State.Notes[Selected];
     Next.TitleCaret := Std.Str.Length(NoteValue.Title);
@@ -101,7 +101,7 @@ end;
 function SelectedFilteredPosition(State: NotesModel): integer;
 begin
   var Indices: array of integer := NotesFilteredIndices(State.Notes, State.Search);
-  for Index: integer := 0 to Std.Array.Length(Indices) - 1 do
+  for Index: integer := 0 to Std.Arrays.Length(Indices) - 1 do
   begin
     if Indices[Index] = State.Selected then
     begin
@@ -115,7 +115,7 @@ end;
 function SelectFiltered(State: NotesModel; Position: integer): NotesModel;
 begin
   var Indices: array of integer := NotesFilteredIndices(State.Notes, State.Search);
-  if (Position < 0) or (Position >= Std.Array.Length(Indices)) then
+  if (Position < 0) or (Position >= Std.Arrays.Length(Indices)) then
   begin
     return State
   end;
@@ -145,7 +145,7 @@ begin
     Ok(Written):
     begin
       mutable var Notes: array of Note := Next.Notes;
-      Std.Array.Push(Notes, Draft);
+      Std.Arrays.Push(Notes, Draft);
       Next.Notes := Notes;
       Next := ResortSelected(Next, Draft.Id);
       Next := WithEditorFields(Next, Next.Selected);
@@ -182,7 +182,7 @@ end;
 function SelectFirstVisible(State: NotesModel): NotesModel;
 begin
   var Indices: array of integer := NotesFilteredIndices(State.Notes, State.Search);
-  if Std.Array.Length(Indices) = 0 then
+  if Std.Arrays.Length(Indices) = 0 then
   begin
     mutable var Empty: NotesModel := State;
     Empty.Selected := -1;

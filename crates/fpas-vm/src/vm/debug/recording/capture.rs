@@ -21,7 +21,7 @@ pub enum DebugRecordingEvent {
         /// Bytecode instruction address at the stop.
         instruction: u32,
     },
-    /// One line queued for hosted `Read` / `ReadLn` while capturing.
+    /// One line queued for hosted `ReadText` / `ReadLn` while capturing.
     Input {
         /// Exact queued text, without the stored newline.
         text: String,

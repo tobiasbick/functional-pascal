@@ -9,7 +9,7 @@ const LIFECYCLE: &str =
     include_str!("../../../../../../tests/concurrency/task_group_lifecycle_test.fpas");
 
 const SOURCE: &str = r#"program GroupFailures;
-uses Std.Task, Std.Time, Std.Array;
+uses Std.Task, Std.Time, Std.Arrays;
 function Ordinary(Token: CancellationToken): result of integer, string;
 begin
   Sleep(1);
@@ -158,7 +158,7 @@ fn task_group_exited_failure_cannot_be_resumed_or_force_returned() {
 #[test]
 fn task_group_debugger_cancellation_is_reported_as_cancelled() {
     let source = r#"program CancelOwnedChild;
-uses Std.Task, Std.Time, Std.Array;
+uses Std.Task, Std.Time, Std.Arrays;
 procedure Work(Token: CancellationToken); begin Sleep(1000) end;
 begin
   var G: TaskGroup := CreateTaskGroup();
@@ -180,7 +180,7 @@ end."#;
 #[test]
 fn task_group_child_close_is_rejected_and_collected_as_runtime_failure() {
     let source = r#"program ChildCannotClose;
-uses Std.Task, Std.Array;
+uses Std.Task, Std.Arrays;
 begin
   var G: TaskGroup := CreateTaskGroup();
   StartTaskInGroup(G, procedure(Token: CancellationToken) begin CloseTaskGroup(G) end);

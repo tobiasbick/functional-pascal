@@ -32,10 +32,11 @@ public type
     // Parameters:
     // - `Value`: Value consumed or returned by the operation.
     Datetime(Value: string);
-    // `Array` enum member.
+    // `ArrayValue` enum member.
     //
     // Parameters:
     // - `Items`: Array elements stored in the constructed value.
+    ArrayValue(Items: array of Std.Toml.TomlValue);
     // `Table` enum member.
     //
     // Parameters:

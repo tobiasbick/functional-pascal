@@ -145,7 +145,7 @@ fn higher_order_intrinsics_invoke_numeric_callbacks() {
     let execution = assert_succeeds(
         "\
 program RegisterCallbacks;
-uses Std.Array, Std.Test;
+uses Std.Arrays, Std.Test;
 
 function Double(Value: integer): integer;
 begin
@@ -153,8 +153,8 @@ begin
 end;
 
 begin
-  var Values: array of integer := Std.Array.Map([2, 3, 4], Double);
-  Std.Test.AssertEquals(3, Std.Array.Length(Values));
+  var Values: array of integer := Std.Arrays.Map([2, 3, 4], Double);
+  Std.Test.AssertEquals(3, Std.Arrays.Length(Values));
   Std.Test.AssertEquals(6, Values[1])
 end.",
     );
@@ -187,12 +187,12 @@ uses Std.Console, Std.Test;
 
 function SideEffect(): string;
 begin
-  Std.Console.Write('B');
+  Std.Console.WriteText('B');
   return 'C'
 end;
 
 begin
-  Std.Console.Write('A', SideEffect());
+  Std.Console.WriteText('A', SideEffect());
   Std.Console.WriteLn('D', 42, true);
   Std.Console.WriteLn();
   Std.Test.AssertScreenLine('ABCD42true', 1);

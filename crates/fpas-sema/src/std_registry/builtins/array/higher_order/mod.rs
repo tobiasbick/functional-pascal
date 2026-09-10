@@ -1,4 +1,4 @@
-//! Higher-order `Std.Array` semantic checks.
+//! Higher-order `Std.Arrays` semantic checks.
 //!
 //! **Documentation:** `docs/pascal/std/collections/array/README.md` (from the repository root).
 //!

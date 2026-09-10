@@ -1,7 +1,7 @@
 // JSON encoding and decoding for OpenAI-compatible chat completions.
 unit Std.Ai.OpenAi.Json;
 
-uses Std.Ai.OpenAi.Types, Std.Array, Std.Conv, Std.Dict, Std.Json, Std.Option;
+uses Std.Ai.OpenAi.Types, Std.Arrays, Std.Conv, Std.Dictionaries, Std.Json, Std.Options;
 
 // Encodes one non-streaming chat-completion request body.
 //
@@ -12,11 +12,11 @@ uses Std.Ai.OpenAi.Types, Std.Array, Std.Conv, Std.Dict, Std.Json, Std.Option;
 public function EncodeRequest(Model: string; Messages: array of ChatMessage; Options: ChatOptions): string;
 begin
   mutable var MessageValues: array of JsonValue := [];
-  for Index: integer := 0 to Std.Array.Length(Messages) - 1 do
+  for Index: integer := 0 to Std.Arrays.Length(Messages) - 1 do
   begin
-    Std.Array.Push(MessageValues, JsonValue.Object(['role': JsonValue.String(Messages[Index].Role), 'content': JsonValue.String(Messages[Index].Content)]))
+    Std.Arrays.Push(MessageValues, JsonValue.Object(['role': JsonValue.String(Messages[Index].Role), 'content': JsonValue.String(Messages[Index].Content)]))
   end;
-  mutable var Fields: dict of string to JsonValue := ['model': JsonValue.String(Model), 'messages': JsonValue.Array(MessageValues), 'stream': JsonValue.Bool(false)];
+  mutable var Fields: dict of string to JsonValue := ['model': JsonValue.String(Model), 'messages': JsonValue.ArrayValue(MessageValues), 'stream': JsonValue.Bool(false)];
   case Options.Temperature of
     Some(Value):
     begin
@@ -47,7 +47,7 @@ end;
 // - `Name`: Required field name.
 function RequiredField(Fields: dict of string to JsonValue; Name: string): result of JsonValue, string;
 begin
-  case Std.Dict.Get(Fields, Name) of
+  case Std.Dictionaries.Get(Fields, Name) of
     Some(Value):
     begin
       return Ok(Value)
@@ -75,9 +75,9 @@ begin
             Ok(ChoicesValue):
             begin
               case ChoicesValue of
-                JsonValue.Array(Choices):
+                JsonValue.ArrayValue(Choices):
                 begin
-                  if Std.Array.Length(Choices) = 0 then
+                  if Std.Arrays.Length(Choices) = 0 then
                   begin
                     return Error('OpenAI-compatible response contains no choices')
                   end;

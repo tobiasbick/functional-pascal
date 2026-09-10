@@ -106,7 +106,7 @@ fn completion_excludes_shadowed_and_private_declarations_and_adds_keywords() {
 
 var Value: string := 'global';
 
-function Read(Value: integer): integer;
+function ReadValue(Value: integer): integer;
 begin
   va
 end;

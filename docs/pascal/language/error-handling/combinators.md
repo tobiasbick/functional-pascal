@@ -1,9 +1,9 @@
 # Combinators
 
-`Std.Result` and `Std.Option` provide `Map`, `AndThen`, and `OrElse` for transforming and chaining values without manual `case` destructuring. See [`Std.Result`](../../std/result/result.md) and [`Std.Option`](../../std/result/option.md) for full API details.
+`Std.Results` and `Std.Options` provide `Map`, `AndThen`, and `OrElse` for transforming and chaining values without manual `case` destructuring. See [`Std.Results`](../../std/result/result.md) and [`Std.Options`](../../std/result/option.md) for full API details.
 
 ```pascal
-uses Std.Result, Std.Conv;
+uses Std.Results, Std.Conv;
 
 function DoubleToString(V: integer): string;
 begin
@@ -16,7 +16,7 @@ var M: Result of string, string := Map(R, DoubleToString);
 ```
 
 ```pascal
-uses Std.Option, Std.Conv;
+uses Std.Options, Std.Conv;
 
 function PositiveToString(V: integer): Option of string;
 begin

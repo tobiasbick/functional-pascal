@@ -31,8 +31,10 @@ events use the same rule.
 
 ## Instance methods
 
-The first parameter must be `Self` typed as the record. Callers use value dot
-notation; `Self` is passed implicitly.
+The first parameter must be the reserved word `Self`, typed as the record.
+`Self` is valid only in that receiver position and as the receiver expression
+inside an instance method. Callers use value dot notation; `Self` is passed
+implicitly.
 
 ```pascal
 type

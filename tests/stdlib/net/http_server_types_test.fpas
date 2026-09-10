@@ -1,7 +1,7 @@
 // Covers HTTP server response construction and mutable fields.
 program HttpServerTypesTest;
 
-uses Std.Array, Std.Http, Std.Net.Utf8, Std.Test;
+uses Std.Arrays, Std.Http, Std.Net.Utf8, Std.Test;
 
 begin
   mutable var ResponseValue: ServerResponse := ServerResponse.Create(201, 'Created');
@@ -9,6 +9,6 @@ begin
   ResponseValue.Body := Std.Net.Utf8.Encode('ok');
   AssertEquals(201, ResponseValue.StatusCode);
   AssertEquals('Created', ResponseValue.ReasonPhrase);
-  AssertEquals(1, Std.Array.Length(ResponseValue.Headers));
-  AssertEquals(2, Std.Array.Length(ResponseValue.Body))
+  AssertEquals(1, Std.Arrays.Length(ResponseValue.Headers));
+  AssertEquals(2, Std.Arrays.Length(ResponseValue.Body))
 end.

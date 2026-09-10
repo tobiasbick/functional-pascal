@@ -39,7 +39,7 @@ type TomlValue = enum
   Float(Value: real);
   Boolean(Value: boolean);
   Datetime(Value: string);
-  Array(Items: array of TomlValue);
+  ArrayValue(Items: array of TomlValue);
   Table(Fields: dict of string to TomlValue);
 end;
 ```

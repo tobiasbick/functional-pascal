@@ -173,11 +173,28 @@ impl Intrinsic {
                 | TestIntrinsic::AssertEqualsString
                 | TestIntrinsic::AssertEqualsReal,
             ) => "Std.Test.AssertEquals".to_string(),
+            Self::Console(ConsoleIntrinsic::Read) => "Std.Console.ReadText".to_string(),
+            Self::Console(ConsoleIntrinsic::Write) => "Std.Console.WriteText".to_string(),
+            Self::Net(NetIntrinsic::Read) => "Std.Net.ReceiveBytes".to_string(),
+            Self::Net(NetIntrinsic::ReadWithCancellation) => {
+                "Std.Net.ReceiveBytesWithCancellation".to_string()
+            }
+            Self::Net(NetIntrinsic::Write) => "Std.Net.SendBytes".to_string(),
+            Self::Net(NetIntrinsic::WriteWithCancellation) => {
+                "Std.Net.SendBytesWithCancellation".to_string()
+            }
             intrinsic => {
                 let debug = format!("{intrinsic:?}");
                 let (family, member) = debug
                     .split_once('(')
                     .expect("intrinsic debug representation has family and member");
+                let family = match family {
+                    "Array" => "Arrays",
+                    "Dict" => "Dictionaries",
+                    "Option" => "Options",
+                    "Result" => "Results",
+                    other => other,
+                };
                 format!("Std.{family}.{}", member.trim_end_matches(')'))
             }
         }

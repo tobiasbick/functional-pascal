@@ -30,7 +30,7 @@ impl ReadLnQueue {
             std_runtime_error(
                 RUNTIME_CONSOLE_INPUT_FAILURE,
                 "ReadLn: no input available (tests must push lines with Vm::push_readln_input)",
-                "Queue input with Vm::push_readln_input before calling Std.Console.Read/ReadLn in tests.",
+                "Queue input with Vm::push_readln_input before calling Std.Console.ReadText/ReadLn in tests.",
                 location,
             )
         })

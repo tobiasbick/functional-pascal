@@ -20,4 +20,4 @@ Type forms: [Result and Option types](../types/result-option-types.md). Pattern 
 
 ## See also
 
-- [`Std.Result`](../../std/result/result.md), [`Std.Option`](../../std/result/option.md)
+- [`Std.Results`](../../std/result/result.md), [`Std.Options`](../../std/result/option.md)

@@ -14,10 +14,10 @@ std_symbol!(STD_NET_ACCEPT = std_net!("Accept"));
 std_symbol!(STD_NET_ACCEPT_WITH_CANCELLATION = std_net!("AcceptWithCancellation"));
 std_symbol!(STD_NET_CLOSE_LISTENER = std_net!("CloseListener"));
 std_symbol!(STD_NET_SET_TIMEOUT = std_net!("SetTimeout"));
-std_symbol!(STD_NET_READ = std_net!("Read"));
-std_symbol!(STD_NET_READ_WITH_CANCELLATION = std_net!("ReadWithCancellation"));
-std_symbol!(STD_NET_WRITE = std_net!("Write"));
-std_symbol!(STD_NET_WRITE_WITH_CANCELLATION = std_net!("WriteWithCancellation"));
+std_symbol!(STD_NET_RECEIVE = std_net!("ReceiveBytes"));
+std_symbol!(STD_NET_RECEIVE_WITH_CANCELLATION = std_net!("ReceiveBytesWithCancellation"));
+std_symbol!(STD_NET_SEND = std_net!("SendBytes"));
+std_symbol!(STD_NET_SEND_WITH_CANCELLATION = std_net!("SendBytesWithCancellation"));
 std_symbol!(STD_NET_CLOSE = std_net!("Close"));
 
 pub(in crate::std_units) const STD_NET_SYMBOLS: &[&str] = &[
@@ -33,9 +33,9 @@ pub(in crate::std_units) const STD_NET_SYMBOLS: &[&str] = &[
     STD_NET_ACCEPT_WITH_CANCELLATION,
     STD_NET_CLOSE_LISTENER,
     STD_NET_SET_TIMEOUT,
-    STD_NET_READ,
-    STD_NET_READ_WITH_CANCELLATION,
-    STD_NET_WRITE,
-    STD_NET_WRITE_WITH_CANCELLATION,
+    STD_NET_RECEIVE,
+    STD_NET_RECEIVE_WITH_CANCELLATION,
+    STD_NET_SEND,
+    STD_NET_SEND_WITH_CANCELLATION,
     STD_NET_CLOSE,
 ];

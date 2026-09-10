@@ -1,6 +1,6 @@
 program TuiMenuBarPointerTest;
 
-uses Std.Array, Std.Str, Std.Test, Std.Tui;
+uses Std.Arrays, Std.Str, Std.Test, Std.Tui;
 
 type
   MenuModel = record
@@ -57,7 +57,7 @@ begin
     begin
       return record
         Focus := State.Focus;
-        Actions := Std.Array.Concat(State.Actions, [Action.Value]);
+        Actions := Std.Arrays.Concat(State.Actions, [Action.Value]);
       end
     end
     else
@@ -79,11 +79,11 @@ begin
   App.InjectPointerForTest(TuiPointerEvent.Create(TuiPointerAction.Down, TuiPointerButton.Left, OpenAt));
   Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 2, 0);
   AssertEquals(1, Model.Focus);
-  AssertEquals(1, Std.Array.Length(Model.Actions));
+  AssertEquals(1, Std.Arrays.Length(Model.Actions));
   AssertEquals(10, Model.Actions[0]);
   var SaveAt: TuiPoint := FindGlyph(App.SurfaceSnapshot(), 'Save');
   App.InjectPointerForTest(TuiPointerEvent.Create(TuiPointerAction.Down, TuiPointerButton.Left, SaveAt));
   Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 1, 0);
-  AssertEquals(1, Std.Array.Length(Model.Actions));
+  AssertEquals(1, Std.Arrays.Length(Model.Actions));
   App.Close()
 end.

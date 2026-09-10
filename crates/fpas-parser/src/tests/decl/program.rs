@@ -19,16 +19,16 @@ fn program_with_uses() {
 
 #[test]
 fn program_with_uses_std_array() {
-    let p = parse_ok("program T; uses Std.Array; begin end.");
+    let p = parse_ok("program T; uses Std.Arrays; begin end.");
     assert_eq!(p.uses.len(), 1);
-    assert_eq!(p.uses[0].parts, vec!["Std", "Array"]);
+    assert_eq!(p.uses[0].parts, vec!["Std", "Arrays"]);
 }
 
 #[test]
-fn program_with_uses_std_array_lowercase_unit_keyword() {
-    let p = parse_ok("program T; uses Std.array; begin end.");
+fn program_with_uses_std_arrays_case_insensitively() {
+    let p = parse_ok("program T; uses std.arrays; begin end.");
     assert_eq!(p.uses.len(), 1);
-    assert_eq!(p.uses[0].parts, vec!["Std", "Array"]);
+    assert_eq!(p.uses[0].parts, vec!["std", "arrays"]);
 }
 
 #[test]

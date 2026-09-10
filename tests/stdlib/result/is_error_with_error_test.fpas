@@ -1,6 +1,6 @@
 program T;
 
-uses Std.Console, Std.Result;
+uses Std.Console, Std.Results;
 
 begin
   var R: result of integer, string := Error('fail');

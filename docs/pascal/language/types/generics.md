@@ -69,6 +69,9 @@ Generics use type erasure. The VM operates on dynamic values, so no monomorphiza
 
 ## Constraints
 
+`Comparable`, `Numeric`, and `Printable` are reserved keywords. They are valid
+only after `:` in a generic type-parameter declaration.
+
 Type parameters can be constrained to require specific capabilities from the concrete type. Constraints are written after the parameter name, separated by a colon: `<T: Constraint>`.
 
 ### Built-in constraints

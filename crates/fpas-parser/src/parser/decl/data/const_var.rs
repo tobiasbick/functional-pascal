@@ -15,7 +15,7 @@ impl Parser {
                 self.current_span(),
             );
         }
-        while let Token::Ident(_) | Token::Event | Token::Property = self.current_token() {
+        while let Token::Ident(_) = self.current_token() {
             defs.push(Decl::Const(self.parse_const_def(visibility)));
         }
         defs
@@ -57,7 +57,7 @@ impl Parser {
                 self.current_span(),
             );
         }
-        while let Token::Ident(_) | Token::Event | Token::Property = self.current_token() {
+        while let Token::Ident(_) = self.current_token() {
             let var_def = self.parse_var_def(visibility);
             if mutable {
                 defs.push(Decl::MutableVar(var_def));
@@ -69,10 +69,7 @@ impl Parser {
     }
 
     fn at_declaration_name(&self) -> bool {
-        matches!(
-            self.current_token(),
-            Token::Ident(_) | Token::Event | Token::Property
-        )
+        matches!(self.current_token(), Token::Ident(_))
     }
 
     pub(in crate::parser) fn parse_typed_init_fields(

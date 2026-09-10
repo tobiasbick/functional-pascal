@@ -1,6 +1,6 @@
 unit Std.Tui.Layout.Frame;
 
-uses Std.Array, Std.Tui.Geometry.Rect;
+uses Std.Arrays, Std.Tui.Geometry.Rect;
 
 public type
   // One private arranged-frame entry for a preorder element visit.
@@ -18,7 +18,7 @@ mutable var
 
 function TuiFrameRequire(Slot: integer): integer;
 begin
-  if (Slot < 1) or (Slot > Std.Array.Length(TuiFrameEntries)) then
+  if (Slot < 1) or (Slot > Std.Arrays.Length(TuiFrameEntries)) then
   begin
     panic('Tui arranged frame handle is invalid')
   end;
@@ -36,9 +36,9 @@ public type
     public static function Create(): TuiArrangedFrame;
     begin
       mutable var Empty: array of TuiArrangedEntry := [];
-      TuiFrameEntries := Std.Array.Concat(TuiFrameEntries, [Empty]);
+      TuiFrameEntries := Std.Arrays.Concat(TuiFrameEntries, [Empty]);
       return record
-        Slot := Std.Array.Length(TuiFrameEntries);
+        Slot := Std.Arrays.Length(TuiFrameEntries);
       end
     end;
 
@@ -64,9 +64,9 @@ public type
     begin
       var Slot: integer := TuiFrameRequire(Self.Slot);
       mutable var Entries: array of TuiArrangedEntry := TuiFrameEntries[Slot - 1];
-      var Index: integer := Std.Array.Length(Entries);
+      var Index: integer := Std.Arrays.Length(Entries);
       TuiFrameEntries[Slot - 1] := [];
-      Std.Array.Push(Entries, record
+      Std.Arrays.Push(Entries, record
         ParentIndex := ParentIndex;
         Bounds := Bounds;
         Clip := Clip;
@@ -94,7 +94,7 @@ public type
     public function Count(Self: TuiArrangedFrame): integer;
     begin
       var Slot: integer := TuiFrameRequire(Self.Slot);
-      return Std.Array.Length(TuiFrameEntries[Slot - 1])
+      return Std.Arrays.Length(TuiFrameEntries[Slot - 1])
     end;
 
     // Returns one arranged entry by preorder index.
@@ -106,7 +106,7 @@ public type
     begin
       var Slot: integer := TuiFrameRequire(Self.Slot);
       var Entries: array of TuiArrangedEntry := TuiFrameEntries[Slot - 1];
-      if (Index < 0) or (Index >= Std.Array.Length(Entries)) then
+      if (Index < 0) or (Index >= Std.Arrays.Length(Entries)) then
       begin
         panic('Tui arranged frame index is out of range')
       end;

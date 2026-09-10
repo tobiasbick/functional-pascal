@@ -1,4 +1,4 @@
-//! Registration of `Std.Result` and `Std.Option` units.
+//! Registration of `Std.Results` and `Std.Options` units.
 //!
 //! **Documentation:** `docs/pascal/std/result/result.md` and `docs/pascal/std/result/option.md` (from the repository root).
 

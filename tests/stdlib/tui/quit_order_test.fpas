@@ -16,7 +16,7 @@ end;
 
 function UpdateQuit(State: QuitModel; Msg: TuiMsg; Cmd: TuiCmdOutput): QuitModel;
 begin
-  AssertTrue(Cmd.Read() = TuiCmd.NoCommand);
+  AssertTrue(Cmd.Command() = TuiCmd.NoCommand);
   case Msg of
     TuiMsg.MenuChanged(MenuSource, MenuAction, MenuState):
     begin

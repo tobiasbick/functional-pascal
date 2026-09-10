@@ -1,6 +1,6 @@
 program PushPreservesAliasTest;
 
-uses Std.Array, Std.Test;
+uses Std.Arrays, Std.Test;
 
 begin
   mutable var Updated: array of integer := [1];

@@ -1,11 +1,11 @@
-//! `Std.Dict` intrinsic discriminants.
+//! `Std.Dictionaries` intrinsic discriminants.
 //!
 //! **Documentation:** `docs/pascal/std/collections/dict.md` (from the repository root).
 
 use num_enum::TryFromPrimitive;
 
 documented_intrinsic_enum! {
-/// Intrinsics for `Std.Dict.*`.
+/// Intrinsics for `Std.Dictionaries.*`.
 ///
 /// **Documentation:** `docs/pascal/std/collections/dict.md`
 #[derive(Debug, Clone, Copy, PartialEq, Eq, TryFromPrimitive)]
@@ -25,11 +25,11 @@ pub enum DictIntrinsic {
     Get = 125,
     /// **Documentation:** `docs/pascal/std/collections/dict.md`
     Merge = 126,
-    /// `Std.Dict.Map(D, F)` — transform every value; `F: function(V): V2`.
+    /// `Std.Dictionaries.Map(D, F)` — transform every value; `F: function(V): V2`.
     ///
     /// **Documentation:** `docs/pascal/std/collections/dict.md`
     Map = 127,
-    /// `Std.Dict.Filter(D, F)` — keep entries where `F(K, V)` is true.
+    /// `Std.Dictionaries.Filter(D, F)` — keep entries where `F(K, V)` is true.
     ///
     /// **Documentation:** `docs/pascal/std/collections/dict.md`
     Filter = 128,

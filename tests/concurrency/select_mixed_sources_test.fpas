@@ -1,6 +1,6 @@
 program SelectMixedSourcesTest;
 
-uses Std.Task, Std.Result, Std.Test;
+uses Std.Task, Std.Results, Std.Test;
 
 begin
   var Numbers: channel of integer := CreateChannel(2);

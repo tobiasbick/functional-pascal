@@ -8,7 +8,7 @@
 - `dict of K to V` type constructor.
 - Dict literal syntax: `['key': value]`, `[:]`.
 - `for-in` over dict (key iteration).
-- `Std.Dict` unit (`Length`, `ContainsKey`, `Keys`, `Values`, `Remove`,
+- `Std.Dictionaries` unit (`Length`, `ContainsKey`, `Keys`, `Values`, `Remove`,
   `Get`, `Merge`, `Map`, `Filter`).
 - Keyword: `dict` (and `to` overload in type position).
 
@@ -16,7 +16,7 @@
 
 - No example uses dicts.
 - Named lookups can use `array of record` with search functions.
-- Removes 1 keyword, literal syntax, and the `Std.Dict` unit.
+- Removes 1 keyword, literal syntax, and the `Std.Dictionaries` unit.
 
 ## Arguments for keeping
 

@@ -28,7 +28,7 @@ fn public_applies_to_every_supported_declaration_kind() {
          public var State: integer := 2;
          public mutable var Counter: integer := 3;
          public type PublicId = integer;
-         public function Read(): integer; begin return Answer end;
+         public function ReadValue(): integer; begin return Answer end;
          public procedure Reset(); begin end;",
     );
 

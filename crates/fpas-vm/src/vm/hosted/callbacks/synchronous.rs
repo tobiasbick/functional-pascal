@@ -37,7 +37,7 @@ impl Worker {
         ) {
             return Ok(None);
         }
-        let values = self.array_argument(arguments.first(), "Std.Array callback")?;
+        let values = self.array_argument(arguments.first(), "Std.Arrays callback")?;
         let callback_index = usize::from(matches!(operation, Reduce)) + 1;
         let callback = arguments
             .get(callback_index)
@@ -62,7 +62,7 @@ impl Worker {
             Reduce => {
                 let mut accumulator = arguments
                     .get(1)
-                    .ok_or_else(|| self.arity_error("Std.Array.Reduce"))?
+                    .ok_or_else(|| self.arity_error("Std.Arrays.Reduce"))?
                     .clone();
                 for value in values {
                     let arguments = [accumulator, value.clone()];

@@ -1,6 +1,6 @@
 unit Std.Tui.Elements.MenuValidate;
 
-uses Std.Array, Std.Option, Std.Str, Std.Tui.Chrome.MenuNode, Std.Tui.Chrome.MenuQuery;
+uses Std.Arrays, Std.Options, Std.Str, Std.Tui.Chrome.MenuNode, Std.Tui.Chrome.MenuQuery;
 
 function TuiMenuSameOptionalId(Left: option of TuiMenuNodeId; Right: option of TuiMenuNodeId): boolean;
 begin
@@ -41,7 +41,7 @@ end;
 // - `State`: Controlled state used by the operation.
 public procedure TuiMenuValidate(Nodes: array of TuiMenuNode; State: TuiMenuState);
 begin
-  for Index: integer := 0 to Std.Array.Length(Nodes) - 1 do
+  for Index: integer := 0 to Std.Arrays.Length(Nodes) - 1 do
   begin
     var Id: TuiMenuNodeId := TuiMenuNodeIdOf(Nodes[Index]);
     for Previous: integer := 0 to Index - 1 do
@@ -80,7 +80,7 @@ begin
       end
     end;
     mutable var Current: TuiMenuNodeId := Id;
-    mutable var Remaining: integer := Std.Array.Length(Nodes);
+    mutable var Remaining: integer := Std.Arrays.Length(Nodes);
     while Remaining > 0 do
     begin
       Remaining := Remaining - 1;

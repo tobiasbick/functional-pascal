@@ -1,7 +1,7 @@
 // Sends one LF-delimited TCP request to the local echo server.
 program NetworkTcpEchoClient;
 
-uses Std.Args, Std.Array, Std.Conv, Std.Console, Std.Net, Std.Net.Utf8;
+uses Std.Args, Std.Arrays, Std.Conv, Std.Console, Std.Net, Std.Net.Utf8;
 
 // Writes every byte even when the transport reports a partial write.
 //
@@ -11,11 +11,11 @@ uses Std.Args, Std.Array, Std.Conv, Std.Console, Std.Net, Std.Net.Utf8;
 procedure WriteAll(ConnectionValue: Connection; Bytes: array of integer);
 begin
   mutable var Offset: integer := 0;
-  while Offset < Std.Array.Length(Bytes) do
+  while Offset < Std.Arrays.Length(Bytes) do
   begin
-    var Remaining: array of integer := Std.Array.Slice(Bytes, Offset, Std.Array.Length(Bytes) -
-                                                                      Offset);
-    case Std.Net.Write(ConnectionValue, Remaining) of
+    var Remaining: array of integer := Std.Arrays.Slice(Bytes, Offset, Std.Arrays.Length(Bytes) -
+                                                                       Offset);
+    case Std.Net.SendBytes(ConnectionValue, Remaining) of
       Ok(Count):
       begin
         if Count <= 0 then
@@ -43,16 +43,16 @@ begin
   mutable var Reading: boolean := true;
   while Reading do
   begin
-    case Std.Net.Read(ConnectionValue, 4096) of
+    case Std.Net.ReceiveBytes(ConnectionValue, 4096) of
       Ok(Part):
       begin
-        if Std.Array.Length(Part) = 0 then
+        if Std.Arrays.Length(Part) = 0 then
         begin
           Reading := false
         end
         else
         begin
-          Bytes := Std.Array.Concat(Bytes, Part)
+          Bytes := Std.Arrays.Concat(Bytes, Part)
         end
       end;
       Error(Message):

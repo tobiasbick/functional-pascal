@@ -1,7 +1,7 @@
 // Driven by the harness's local HTTP fixture; setup and compilation are not timed.
 program HttpBodyAccumulationBenchmark;
 
-uses Std.Args, Std.Array, Std.Console, Std.Conv, Std.Http, Std.Result, Std.Time;
+uses Std.Args, Std.Arrays, Std.Console, Std.Conv, Std.Http, Std.Results, Std.Time;
 
 begin
   if ParamCount() <> 3 then
@@ -18,8 +18,8 @@ begin
   var Started: integer := MonotonicMillis();
   for Iteration: integer := 1 to Iterations do
   begin
-    var ResponseValue: Response := Std.Result.Unwrap(Send(Request.Get(Url)));
-    if Std.Array.Length(ResponseValue.Body) <> Size * 128 then
+    var ResponseValue: Response := Std.Results.Unwrap(Send(Request.Get(Url)));
+    if Std.Arrays.Length(ResponseValue.Body) <> Size * 128 then
     begin
       panic('body length')
     end;

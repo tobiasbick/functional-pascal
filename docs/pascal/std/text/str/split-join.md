@@ -8,14 +8,14 @@ Splits `S` around each occurrence of `Delim`. Returns a new array of segments.
 
 ```pascal
 program SplitDemo;
-uses Std.Console, Std.Str, Std.Array;
+uses Std.Console, Std.Str, Std.Arrays;
 begin
   var Parts: array of string := Split('x,y', ',');
-  WriteLn(Std.Array.Length(Parts))
+  WriteLn(Std.Arrays.Length(Parts))
 end.
 ```
 
-(`Length` for arrays would be ambiguous with `Std.Str` also imported; qualify `Std.Array.Length` here.)
+(`Length` for arrays would be ambiguous with `Std.Str` also imported; qualify `Std.Arrays.Length` here.)
 
 ---
 

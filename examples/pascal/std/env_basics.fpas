@@ -2,7 +2,7 @@
 
 program EnvBasics;
 
-uses Std.Console, Std.Env, Std.Option;
+uses Std.Console, Std.Env, Std.Options;
 
 begin
   WriteLn('PATH set: ', Exists('PATH'));

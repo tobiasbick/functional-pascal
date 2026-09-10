@@ -4,7 +4,7 @@
 
 program VmArrayPushBenchmark;
 
-uses Std.Args, Std.Array, Std.Console, Std.Conv, Std.Time;
+uses Std.Args, Std.Arrays, Std.Console, Std.Conv, Std.Time;
 
 const
   WarmupIterations: integer := 100000;
@@ -14,10 +14,10 @@ begin
   mutable var Values: array of integer := [];
   for Index: integer := 1 to Iterations do
   begin
-    Std.Array.Push(Values, Index)
+    Std.Arrays.Push(Values, Index)
   end;
 
-  return Std.Array.Length(Values)
+  return Std.Arrays.Length(Values)
 end;
 
 begin

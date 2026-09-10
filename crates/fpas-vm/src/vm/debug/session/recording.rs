@@ -20,7 +20,7 @@ impl DebugSession {
         DebugRecordingEnvelope::from_executable(&self.executable)
     }
 
-    /// Start capturing all-stop and queued `Read`/`ReadLn` events.
+    /// Start capturing all-stop and queued `ReadText`/`ReadLn` events.
     ///
     /// Recording is off until this is called. The current stop is recorded once
     /// when capture starts. Reverse execution stays unsupported. Later resume

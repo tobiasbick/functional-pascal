@@ -35,4 +35,4 @@ Use `try` to propagate `Error(...)` and `None` automatically from functions that
 
 - [Error handling](../error-handling/README.md)
 - [Pattern matching](../pattern-matching/README.md)
-- [`Std.Result`](../../std/result/result.md), [`Std.Option`](../../std/result/option.md)
+- [`Std.Results`](../../std/result/result.md), [`Std.Options`](../../std/result/option.md)

@@ -6,7 +6,7 @@ use crate::error::{StdError, std_runtime_error};
 use fpas_bytecode::SourceLocation;
 use fpas_diagnostics::codes::RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS;
 
-/// Maximum number of elements allowed in one `Std.Array.Fill` or `Std.Str.RepeatStr` result.
+/// Maximum number of elements allowed in one `Std.Arrays.Fill` or `Std.Str.RepeatStr` result.
 pub(crate) const MAX_COLLECTION_LEN: i64 = 1_000_000;
 
 /// Maximum UTF-8 byte length accepted by `Std.Fs.ReadText`.

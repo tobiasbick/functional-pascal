@@ -1,6 +1,6 @@
 program UnicodeRegionTest;
 
-uses Std.Console, Std.Option, Std.Test;
+uses Std.Console, Std.Options, Std.Test;
 
 function CellWith(Glyph: string; Foreground: Color): Cell;
 begin

@@ -1,6 +1,6 @@
 program ServerListenerTest;
 
-uses Std.Server, Std.Net, Std.Task, Std.Result, Std.Test, Std.Array;
+uses Std.Server, Std.Net, Std.Task, Std.Results, Std.Test, Std.Arrays;
 
 function BindListener(): result of Std.Net.Listener, string;
 begin
@@ -26,9 +26,9 @@ begin
   AssertTrue(RequestStop(Life));
   AssertTrue(IsError(Accept(Listener)));
   AssertTrue(IsError(OwnListener(Life, Listener)));
-  AssertEquals(0, Std.Array.Length(CloseTaskGroup(GetWorkGroup(Life))));
+  AssertEquals(0, Std.Arrays.Length(CloseTaskGroup(GetWorkGroup(Life))));
   AssertTrue(Unwrap(FinishShutdown(Life)));
-  AssertEquals(0, Std.Array.Length(ShutdownErrors(Life)));
+  AssertEquals(0, Std.Arrays.Length(ShutdownErrors(Life)));
   RequestStop(Other);
   CloseTaskGroup(GetWorkGroup(Other));
   AssertTrue(Unwrap(FinishShutdown(Other)))

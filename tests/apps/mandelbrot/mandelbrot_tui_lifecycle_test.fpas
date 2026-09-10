@@ -1,7 +1,7 @@
 program MandelbrotTuiLifecycleTest;
 
 uses
-  Mandelbrot.App, Mandelbrot.Model, Mandelbrot.Render, Mandelbrot.View, Std.Array, Std.Result,
+  Mandelbrot.App, Mandelbrot.Model, Mandelbrot.Render, Mandelbrot.View, Std.Arrays, Std.Results,
   Std.Task, Std.Test, Std.Time, Std.Tui;
 
 function MakeLeftKey(): TuiKeyEvent;

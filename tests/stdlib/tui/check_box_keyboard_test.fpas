@@ -1,6 +1,6 @@
 program TuiCheckBoxKeyboardTest;
 
-uses Std.Array, Std.Test, Std.Tui;
+uses Std.Arrays, Std.Test, Std.Tui;
 
 type
   CheckModel = record
@@ -58,7 +58,7 @@ begin
       return record
         Focus := State.Focus;
         Checked := Checked;
-        Changes := Std.Array.Concat(State.Changes, [Checked]);
+        Changes := Std.Arrays.Concat(State.Changes, [Checked]);
       end
     end
     else
@@ -80,12 +80,12 @@ begin
   App.InjectKeyForTest(MakeKey(TuiKeyKind.Space, ''));
   Model := App.RunIterations(Model, UpdateCheck, ViewCheck, 1, 0);
   AssertTrue(Model.Checked);
-  AssertEquals(1, Std.Array.Length(Model.Changes));
+  AssertEquals(1, Std.Arrays.Length(Model.Changes));
   AssertTrue(Model.Changes[0]);
   App.InjectKeyForTest(MakeKey(TuiKeyKind.Enter, ''));
   Model := App.RunIterations(Model, UpdateCheck, ViewCheck, 1, 0);
   AssertFalse(Model.Checked);
-  AssertEquals(2, Std.Array.Length(Model.Changes));
+  AssertEquals(2, Std.Arrays.Length(Model.Changes));
   AssertFalse(Model.Changes[1]);
   App.Close()
 end.

@@ -96,7 +96,7 @@ case OpenStream(Request.Get('https://example.test/events')) of
     while Reading do
     begin
       case ReadStream(ResponseValue.Body, 4096) of
-        Ok(Bytes): Reading := Std.Array.Length(Bytes) <> 0;
+        Ok(Bytes): Reading := Std.Arrays.Length(Bytes) <> 0;
         Error(Message): panic(Message)
       end
     end

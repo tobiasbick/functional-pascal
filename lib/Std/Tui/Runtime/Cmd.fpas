@@ -1,6 +1,6 @@
 unit Std.Tui.Runtime.Cmd;
 
-uses Std.Array, Std.Option, Std.Tui.Cells.Palette, Std.Tui.Runtime.Application.Background;
+uses Std.Arrays, Std.Options, Std.Tui.Cells.Palette, Std.Tui.Runtime.Application.Background;
 
 public type
   // Runtime command returned by an application's Update function.
@@ -20,7 +20,7 @@ mutable var
 
 function TuiCmdOutputRequire(Slot: integer): integer;
 begin
-  if (Slot < 1) or (Slot > Std.Array.Length(TuiCommandValues)) then
+  if (Slot < 1) or (Slot > Std.Arrays.Length(TuiCommandValues)) then
   begin
     panic('Tui command output handle is invalid')
   end;
@@ -37,11 +37,11 @@ public type
     // Allocates one reusable command output.
     public static function Create(): TuiCmdOutput;
     begin
-      TuiCommandValues := Std.Array.Concat(TuiCommandValues, [TuiCmd.NoCommand]);
-      TuiCommandPalettes := Std.Array.Concat(TuiCommandPalettes, [None]);
-      TuiCommandBackground := Std.Array.Concat(TuiCommandBackground, [[]]);
+      TuiCommandValues := Std.Arrays.Concat(TuiCommandValues, [TuiCmd.NoCommand]);
+      TuiCommandPalettes := Std.Arrays.Concat(TuiCommandPalettes, [None]);
+      TuiCommandBackground := Std.Arrays.Concat(TuiCommandBackground, [[]]);
       return record
-        Slot := Std.Array.Length(TuiCommandValues);
+        Slot := Std.Arrays.Length(TuiCommandValues);
       end
     end;
 
@@ -66,7 +66,7 @@ public type
         panic('Tui background id must be positive')
       end;
       mutable var Commands: array of TuiBackgroundCommand := TuiCommandBackground[Slot - 1];
-      Std.Array.Push(Commands, TuiBackgroundCommand.Start(Id, Work));
+      Std.Arrays.Push(Commands, TuiBackgroundCommand.Start(Id, Work));
       TuiCommandBackground[Slot - 1] := Commands
     end;
 
@@ -79,7 +79,7 @@ public type
         panic('Tui subscription id must be positive')
       end;
       mutable var Commands: array of TuiBackgroundCommand := TuiCommandBackground[Slot - 1];
-      Std.Array.Push(Commands, TuiBackgroundCommand.ReplaceSubscription(Id, Work));
+      Std.Arrays.Push(Commands, TuiBackgroundCommand.ReplaceSubscription(Id, Work));
       TuiCommandBackground[Slot - 1] := Commands
     end;
 
@@ -92,7 +92,7 @@ public type
         panic('Tui subscription id must be positive')
       end;
       mutable var Commands: array of TuiBackgroundCommand := TuiCommandBackground[Slot - 1];
-      Std.Array.Push(Commands, TuiBackgroundCommand.CancelSubscription(Id));
+      Std.Arrays.Push(Commands, TuiBackgroundCommand.CancelSubscription(Id));
       TuiCommandBackground[Slot - 1] := Commands
     end;
 
@@ -124,7 +124,7 @@ public type
     //
     // Parameters:
     // - `Self`: Receiver value operated on by the method.
-    public function Read(Self: TuiCmdOutput): TuiCmd;
+    public function Command(Self: TuiCmdOutput): TuiCmd;
     begin
       var Slot: integer := TuiCmdOutputRequire(Self.Slot);
       return TuiCommandValues[Slot - 1]

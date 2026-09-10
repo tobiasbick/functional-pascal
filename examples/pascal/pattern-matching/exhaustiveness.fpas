@@ -1,6 +1,6 @@
 program ExhaustivenessExample;
 
-uses Std.Console, Std.Conv, Std.Array;
+uses Std.Console, Std.Conv, Std.Arrays;
 
 type
   // Every enum variant must have a case arm unless an else branch is present.

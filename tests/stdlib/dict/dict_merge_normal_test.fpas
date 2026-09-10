@@ -1,12 +1,12 @@
 program T;
 
-uses Std.Console, Std.Dict;
+uses Std.Console, Std.Dictionaries;
 
 begin
   var A: dict of string to integer := ['A': 1, 'B': 2];
   var B: dict of string to integer := ['C': 3];
-  var M: dict of string to integer := Std.Dict.Merge(A, B);
-  WriteLn(Std.Dict.Length(M));
+  var M: dict of string to integer := Std.Dictionaries.Merge(A, B);
+  WriteLn(Std.Dictionaries.Length(M));
   WriteLn(M['A']);
   WriteLn(M['C'])
 end.

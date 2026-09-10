@@ -63,7 +63,7 @@ Mark the current test as skipped and continue. Does not raise **F4023**. The `fp
 
 ### `procedure PushReadLn(Line: string)`
 
-Queue one input line for the next blocking `Std.Console.ReadLn` (or line-buffered `Read`). Call before `ReadLn` in native tests instead of a `*.script.toml` readln sidecar.
+Queue one input line for the next blocking `Std.Console.ReadLn` (or line-buffered `ReadText`). Call before `ReadLn` in native tests instead of a `*.script.toml` readln sidecar.
 
 ### `function ScratchDir(): string`
 

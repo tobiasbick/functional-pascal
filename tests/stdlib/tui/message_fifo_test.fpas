@@ -1,6 +1,6 @@
 program TuiMessageFifoTest;
 
-uses Std.Array, Std.Test, Std.Tui;
+uses Std.Arrays, Std.Test, Std.Tui;
 
 type
   FifoModel = record
@@ -20,10 +20,10 @@ begin
   end
 end;
 
-function PushEvent(State: FifoModel; Event: string; CmdWasNoCommand: boolean): FifoModel;
+function PushEvent(State: FifoModel; InputEvent: string; CmdWasNoCommand: boolean): FifoModel;
 begin
   return record
-    Events := Std.Array.Concat(State.Events, [Event]);
+    Events := Std.Arrays.Concat(State.Events, [InputEvent]);
     SeenCmdWasNoCommand := State.SeenCmdWasNoCommand and CmdWasNoCommand;
   end
 end;
@@ -39,7 +39,7 @@ end;
 
 function UpdateFifo(State: FifoModel; Msg: TuiMsg; Cmd: TuiCmdOutput): FifoModel;
 begin
-  var ResetOk: boolean := Cmd.Read() = TuiCmd.NoCommand;
+  var ResetOk: boolean := Cmd.Command() = TuiCmd.NoCommand;
   Cmd.Set(TuiCmd.NoCommand);
   case Msg of
     TuiMsg.Tick(Delta):
@@ -77,7 +77,7 @@ begin
   App.InjectKeyForTest(MakeKey(TuiKeyKind.Enter, ''));
   App.Inject(TuiMsg.Tick(2));
   Model := App.RunIterations(Model, UpdateFifo, ViewFifo, 3, 0);
-  AssertEquals(3, Std.Array.Length(Model.Events));
+  AssertEquals(3, Std.Arrays.Length(Model.Events));
   AssertEquals('tick', Model.Events[0]);
   AssertEquals('action', Model.Events[1]);
   AssertEquals('tick', Model.Events[2]);
@@ -85,10 +85,10 @@ begin
   App.InjectKeyForTest(MakeKey(TuiKeyKind.Tab, ''));
   App.Inject(TuiMsg.Tick(3));
   Model := App.RunIterations(Model, UpdateFifo, ViewFifo, 1, 0);
-  AssertEquals(4, Std.Array.Length(Model.Events));
+  AssertEquals(4, Std.Arrays.Length(Model.Events));
   AssertEquals('focus', Model.Events[3]);
   Model := App.RunIterations(Model, UpdateFifo, ViewFifo, 1, 0);
-  AssertEquals(5, Std.Array.Length(Model.Events));
+  AssertEquals(5, Std.Arrays.Length(Model.Events));
   AssertEquals('tick', Model.Events[4]);
   AssertTrue(Model.SeenCmdWasNoCommand);
   App.Close()

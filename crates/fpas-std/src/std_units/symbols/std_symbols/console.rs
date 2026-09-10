@@ -1,7 +1,7 @@
 //! `Std.Console` symbol names and registry group.
 
 std_symbol!(STD_CONSOLE_WRITE_LN = std_console!("WriteLn"));
-std_symbol!(STD_CONSOLE_WRITE = std_console!("Write"));
+std_symbol!(STD_CONSOLE_WRITE_TEXT = std_console!("WriteText"));
 std_symbol!(STD_CONSOLE_CLR_SCR = std_console!("ClrScr"));
 std_symbol!(STD_CONSOLE_CLR_EOL = std_console!("ClrEol"));
 std_symbol!(STD_CONSOLE_GOTO_XY = std_console!("GotoXY"));
@@ -31,7 +31,7 @@ std_symbol!(STD_CONSOLE_SOUND = std_console!("Sound"));
 std_symbol!(STD_CONSOLE_NO_SOUND = std_console!("NoSound"));
 std_symbol!(STD_CONSOLE_ASSIGN_CRT = std_console!("AssignCrt"));
 std_symbol!(STD_CONSOLE_READ_LN = std_console!("ReadLn"));
-std_symbol!(STD_CONSOLE_READ = std_console!("Read"));
+std_symbol!(STD_CONSOLE_READ_TEXT = std_console!("ReadText"));
 std_symbol!(STD_CONSOLE_READ_KEY = std_console!("ReadKey"));
 std_symbol!(STD_CONSOLE_KEY_PRESSED = std_console!("KeyPressed"));
 std_symbol!(STD_CONSOLE_READ_KEY_EVENT = std_console!("ReadKeyEvent"));
@@ -41,7 +41,7 @@ std_symbol!(STD_CONSOLE_READ_EVENT_TIMEOUT = std_console!("ReadEventTimeout"));
 std_symbol!(STD_CONSOLE_POLL_EVENT = std_console!("PollEvent"));
 std_symbol!(STD_CONSOLE_KEY_EVENT = std_console!("KeyEvent"));
 std_symbol!(STD_CONSOLE_KEY_KIND = std_console!("KeyKind"));
-std_symbol!(STD_CONSOLE_EVENT = std_console!("Event"));
+std_symbol!(STD_CONSOLE_CONSOLE_EVENT = std_console!("ConsoleEvent"));
 std_symbol!(STD_CONSOLE_EVENT_KIND = std_console!("EventKind"));
 std_symbol!(STD_CONSOLE_MOUSE_ACTION = std_console!("MouseAction"));
 std_symbol!(STD_CONSOLE_MOUSE_BUTTON = std_console!("MouseButton"));
@@ -130,7 +130,7 @@ pub const STD_CONSOLE_SPLIT_GRAPHEMES: &str = std_console!("SplitGraphemes");
 /// Symbols exported by the `Std.Console` unit.
 pub(in crate::std_units) const STD_CONSOLE_SYMBOLS: &[&str] = &[
     STD_CONSOLE_WRITE_LN,
-    STD_CONSOLE_WRITE,
+    STD_CONSOLE_WRITE_TEXT,
     STD_CONSOLE_CLR_SCR,
     STD_CONSOLE_CLR_EOL,
     STD_CONSOLE_GOTO_XY,
@@ -164,7 +164,7 @@ pub(in crate::std_units) const STD_CONSOLE_SYMBOLS: &[&str] = &[
     STD_CONSOLE_NO_SOUND,
     STD_CONSOLE_ASSIGN_CRT,
     STD_CONSOLE_READ_LN,
-    STD_CONSOLE_READ,
+    STD_CONSOLE_READ_TEXT,
     STD_CONSOLE_READ_KEY,
     STD_CONSOLE_KEY_PRESSED,
     STD_CONSOLE_READ_KEY_EVENT,
@@ -172,7 +172,7 @@ pub(in crate::std_units) const STD_CONSOLE_SYMBOLS: &[&str] = &[
     STD_CONSOLE_READ_EVENT,
     STD_CONSOLE_KEY_EVENT,
     STD_CONSOLE_KEY_KIND,
-    STD_CONSOLE_EVENT,
+    STD_CONSOLE_CONSOLE_EVENT,
     STD_CONSOLE_EVENT_KIND,
     STD_CONSOLE_MOUSE_ACTION,
     STD_CONSOLE_MOUSE_BUTTON,

@@ -1,7 +1,7 @@
 // Shared HTTP field validation and parsing.
 unit Std.Http.Fields;
 
-uses Std.Array, Std.Http.Method, Std.Http.Types, Std.Str;
+uses Std.Arrays, Std.Http.Method, Std.Http.Types, Std.Str;
 
 // Reports whether an HTTP field value contains only permitted text characters.
 //
@@ -30,7 +30,7 @@ public function Parse(Text: string; MessageKind: string): result of array of Hea
 begin
   var Lines: array of string := Std.Str.Split(Text, #13 + #10);
   mutable var Headers: array of Header := [];
-  for Index: integer := 1 to Std.Array.Length(Lines) - 1 do
+  for Index: integer := 1 to Std.Arrays.Length(Lines) - 1 do
   begin
     var Colon: integer := Std.Str.IndexOf(Lines[Index], ':');
     if Colon <= 0 then
@@ -50,7 +50,7 @@ begin
       return Error(('HTTP ' + MessageKind) + ' header contains an invalid control character')
     end;
 
-    Std.Array.Push(Headers, Header.Create(Name, Value))
+    Std.Arrays.Push(Headers, Header.Create(Name, Value))
   end;
 
   return Ok(Headers)

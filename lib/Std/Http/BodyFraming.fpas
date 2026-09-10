@@ -1,7 +1,7 @@
 // Strict HTTP message-body framing selection.
 unit Std.Http.BodyFraming;
 
-uses Std.Array, Std.Http.Headers, Std.Http.Types, Std.Parse, Std.Str;
+uses Std.Arrays, Std.Http.Headers, Std.Http.Types, Std.Parse, Std.Str;
 
 public type
   // Selected HTTP message-body framing mode and remaining fixed length.
@@ -22,7 +22,7 @@ begin
   mutable var TransferEncodingCount: integer := 0;
   mutable var ContentLength: integer := 0;
   mutable var ContentLengthCount: integer := 0;
-  for Index: integer := 0 to Std.Array.Length(Headers) - 1 do
+  for Index: integer := 0 to Std.Arrays.Length(Headers) - 1 do
   begin
     if Std.Http.Headers.IsName(Headers[Index].Name, 'Transfer-Encoding') then
     begin

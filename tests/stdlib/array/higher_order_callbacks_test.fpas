@@ -1,6 +1,6 @@
 program ArrayHigherOrderCallbacksTest;
 
-uses Std.Array, Std.Test;
+uses Std.Arrays, Std.Test;
 
 function Double(Value: integer): integer;
 begin

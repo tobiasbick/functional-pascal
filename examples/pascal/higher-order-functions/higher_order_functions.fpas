@@ -1,6 +1,6 @@
 program HigherOrderFunctionsExample;
 
-uses Std.Console, Std.Array;
+uses Std.Console, Std.Arrays;
 
 // First-class named functions
 
@@ -42,18 +42,18 @@ begin
   WriteLn('Op(7) = ', Op(7));
   var Nums: array of integer := [1, 2, 3, 4, 5];
   var Doubled: array of integer := Map(Nums, Double);
-  Write('Map double: ');
+  WriteText('Map double: ');
   for V: integer in Doubled do
   begin
-    Write(V, ' ')
+    WriteText(V, ' ')
   end;
 
   WriteLn('');
   var Big: array of integer := Filter(Nums, IsGreaterThanThree);
-  Write('Filter > 3: ');
+  WriteText('Filter > 3: ');
   for V: integer in Big do
   begin
-    Write(V, ' ')
+    WriteText(V, ' ')
   end;
 
   WriteLn('');
@@ -61,10 +61,10 @@ begin
   WriteLn('Reduce sum: ', Total);
   var Squared: array of integer := Map(Nums, Square);
   var LargeSquares: array of integer := Filter(Squared, IsGreaterThanTen);
-  Write('Squares > 10: ');
+  WriteText('Squares > 10: ');
   for V: integer in LargeSquares do
   begin
-    Write(V, ' ')
+    WriteText(V, ' ')
   end;
 
   WriteLn('')

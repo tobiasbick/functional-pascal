@@ -1,6 +1,6 @@
 program T;
 
-uses Std.Console, Std.Dict, Std.Conv;
+uses Std.Console, Std.Dictionaries, Std.Conv;
 
 begin
   var Outer: dict of string to integer := ['a': 1, 'b': 2];

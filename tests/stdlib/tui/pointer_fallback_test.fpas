@@ -1,6 +1,6 @@
 program TuiPointerFallbackTest;
 
-uses Std.Array, Std.Test, Std.Tui;
+uses Std.Arrays, Std.Test, Std.Tui;
 
 type
   PointerModel = record
@@ -11,10 +11,10 @@ type
     Button: TuiPointerButton;
   end;
 
-function PushEvent(State: PointerModel; Event: string): PointerModel;
+function PushEvent(State: PointerModel; InputEvent: string): PointerModel;
 begin
   return record
-    Events := Std.Array.Concat(State.Events, [Event]);
+    Events := Std.Arrays.Concat(State.Events, [InputEvent]);
     X := State.X;
     Y := State.Y;
     Action := State.Action;
@@ -48,14 +48,14 @@ begin
 
         return PushEvent(State, 'tick-2')
       end;
-      TuiMsg.Pointer(Event):
+      TuiMsg.Pointer(InputEvent):
       begin
         return record
-          Events := Std.Array.Concat(State.Events, ['pointer']);
-          X := Event.Position.X;
-          Y := Event.Position.Y;
-          Action := Event.Action;
-          Button := Event.Button;
+          Events := Std.Arrays.Concat(State.Events, ['pointer']);
+          X := InputEvent.Position.X;
+          Y := InputEvent.Position.Y;
+          Action := InputEvent.Action;
+          Button := InputEvent.Button;
         end
       end
       else
@@ -70,7 +70,7 @@ begin
                                                                                                                ])
                                                                         ])
   end, 3, 0);
-  AssertEquals(3, Std.Array.Length(Model.Events));
+  AssertEquals(3, Std.Arrays.Length(Model.Events));
   AssertEquals('tick-1', Model.Events[0]);
   AssertEquals('pointer', Model.Events[1]);
   AssertEquals('tick-2', Model.Events[2]);

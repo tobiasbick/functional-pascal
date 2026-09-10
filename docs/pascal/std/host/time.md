@@ -49,7 +49,7 @@ Requires `uses Std.Time;`.
 `go` task, the VM suspends that task in its cooperative timer queue and immediately releases the
 pool worker to run other ready tasks. After the deadline, the timer driver places the suspended task
 back on the shared ready queue. The same rule applies inside synchronous hosted callbacks such as
-`Std.Array.Map`: the VM retains the callback and collection-operation state as part of the owner task,
+`Std.Arrays.Map`: the VM retains the callback and collection-operation state as part of the owner task,
 suspends that owner, and resumes the callback without repeating completed elements.
 
 ---

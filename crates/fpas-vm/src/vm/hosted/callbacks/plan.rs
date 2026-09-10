@@ -72,7 +72,7 @@ fn array_operation(
         return Ok(None);
     }
     let values = worker
-        .array_argument(arguments.first(), "Std.Array callback")?
+        .array_argument(arguments.first(), "Std.Arrays callback")?
         .to_vec();
     let callback_index = usize::from(matches!(operation, Reduce)) + 1;
     let callback = arguments
@@ -87,7 +87,7 @@ fn array_operation(
             next: 0,
             accumulator: arguments
                 .get(1)
-                .ok_or_else(|| worker.arity_error("Std.Array.Reduce"))?
+                .ok_or_else(|| worker.arity_error("Std.Arrays.Reduce"))?
                 .clone(),
         },
         Find => CallbackOperation::ArrayFind(Cursor::new(values)),

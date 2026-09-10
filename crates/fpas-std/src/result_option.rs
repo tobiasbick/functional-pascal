@@ -1,4 +1,4 @@
-//! `Std.Result.*` and `Std.Option.*` intrinsic implementations.
+//! `Std.Results.*` and `Std.Options.*` intrinsic implementations.
 //!
 //! **Documentation:** `docs/pascal/std/result/result.md` and `docs/pascal/std/result/option.md` (from the repository root).
 
@@ -20,8 +20,8 @@ pub(crate) fn run(
                 Value::ResultError(e) => {
                     return Err(std_runtime_error(
                         RUNTIME_UNWRAP_FAILURE,
-                        format!("Called Std.Result.Unwrap on Error({e})"),
-                        "Check with Std.Result.IsOk before unwrapping, or use Std.Result.UnwrapOr.",
+                        format!("Called Std.Results.Unwrap on Error({e})"),
+                        "Check with Std.Results.IsOk before unwrapping, or use Std.Results.UnwrapOr.",
                         location,
                     ));
                 }
@@ -29,10 +29,10 @@ pub(crate) fn run(
                     return Err(std_runtime_error(
                         RUNTIME_UNWRAP_FAILURE,
                         format!(
-                            "Std.Result.Unwrap expects a Result value, got {}",
+                            "Std.Results.Unwrap expects a Result value, got {}",
                             val.type_name()
                         ),
-                        "Pass a Result value (Ok or Error) to Std.Result.Unwrap.",
+                        "Pass a Result value (Ok or Error) to Std.Results.Unwrap.",
                         location,
                     ));
                 }
@@ -48,10 +48,10 @@ pub(crate) fn run(
                     return Err(std_runtime_error(
                         RUNTIME_UNWRAP_FAILURE,
                         format!(
-                            "Std.Result.UnwrapOr expects a Result value, got {}",
+                            "Std.Results.UnwrapOr expects a Result value, got {}",
                             val.type_name()
                         ),
-                        "Pass a Result value (Ok or Error) as the first argument to Std.Result.UnwrapOr.",
+                        "Pass a Result value (Ok or Error) as the first argument to Std.Results.UnwrapOr.",
                         location,
                     ));
                 }
@@ -72,8 +72,8 @@ pub(crate) fn run(
                 Value::OptionNone => {
                     return Err(std_runtime_error(
                         RUNTIME_UNWRAP_FAILURE,
-                        "Called Std.Option.Unwrap on None",
-                        "Check with Std.Option.IsSome before unwrapping, or use Std.Option.UnwrapOr.",
+                        "Called Std.Options.Unwrap on None",
+                        "Check with Std.Options.IsSome before unwrapping, or use Std.Options.UnwrapOr.",
                         location,
                     ));
                 }
@@ -81,10 +81,10 @@ pub(crate) fn run(
                     return Err(std_runtime_error(
                         RUNTIME_UNWRAP_FAILURE,
                         format!(
-                            "Std.Option.Unwrap expects an Option value, got {}",
+                            "Std.Options.Unwrap expects an Option value, got {}",
                             val.type_name()
                         ),
-                        "Pass an Option value (Some or None) to Std.Option.Unwrap.",
+                        "Pass an Option value (Some or None) to Std.Options.Unwrap.",
                         location,
                     ));
                 }
@@ -100,10 +100,10 @@ pub(crate) fn run(
                     return Err(std_runtime_error(
                         RUNTIME_UNWRAP_FAILURE,
                         format!(
-                            "Std.Option.UnwrapOr expects an Option value, got {}",
+                            "Std.Options.UnwrapOr expects an Option value, got {}",
                             val.type_name()
                         ),
-                        "Pass an Option value (Some or None) as the first argument to Std.Option.UnwrapOr.",
+                        "Pass an Option value (Some or None) as the first argument to Std.Options.UnwrapOr.",
                         location,
                     ));
                 }

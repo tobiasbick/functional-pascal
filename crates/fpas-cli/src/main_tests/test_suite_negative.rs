@@ -70,7 +70,7 @@ fn array_index_out_of_bounds_is_runtime_error() {
 fn flat_map_rejects_scalar_mapper_result_is_compile_error() {
     run_file_expect_failure(
         "tests/stdlib/array/flat_map_rejects_scalar_mapper_result_compile_error.fpas",
-        Some("error[F2006]: `Std.Array.FlatMap` mapper must return an array"),
+        Some("error[F2006]: `Std.Arrays.FlatMap` mapper must return an array"),
     );
 }
 

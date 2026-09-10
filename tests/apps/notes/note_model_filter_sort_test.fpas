@@ -1,10 +1,10 @@
 program NoteModelFilterSortTest;
 
-uses Notes.Model, Notes.Repository, Std.Array, Std.Console, Std.Str, Std.Test;
+uses Notes.Model, Notes.Repository, Std.Arrays, Std.Console, Std.Str, Std.Test;
 
 begin
   var Tags: array of string := NoteTagsFromText(' FPAS, tui, FPAS, ');
-  AssertEquals(2, Std.Array.Length(Tags));
+  AssertEquals(2, Std.Arrays.Length(Tags));
   AssertEquals('FPAS', Tags[0]);
   AssertEquals('tui', Tags[1]);
   mutable var Older: Note := NoteCreate('older', 10);
@@ -27,7 +27,7 @@ begin
   AssertEquals('newer', Sorted[1].Id);
   Newer.Title := 'Terminal 👩‍💻 interface with a long title';
   var Items: array of string := NotesListItems([Newer], '', 14);
-  AssertEquals(1, Std.Array.Length(Items));
+  AssertEquals(1, Std.Arrays.Length(Items));
   AssertEquals(14, Std.Console.DisplayWidth(Items[0]));
   AssertTrue(Std.Str.Contains(Items[0], '👩‍💻'));
   AssertTrue(Std.Str.EndsWith(Items[0], '…'));

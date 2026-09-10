@@ -1,10 +1,10 @@
-# `Std.Dict`
+# `Std.Dictionaries`
 
 Operations on **dictionaries** (`dict of K to V`). Dictionaries are ordered key-value collections that preserve insertion order.
 
 ```pascal
 program Example;
-uses Std.Console, Std.Dict;
+uses Std.Console, Std.Dictionaries;
 begin
   var Ages: dict of string to integer := ['Alice': 30, 'Bob': 25];
   WriteLn(Length(Ages));
@@ -15,9 +15,9 @@ end.
 
 ## Importing and names
 
-After `uses Std.Dict;` use short names (`Length`, `ContainsKey`, …) or qualified (`Std.Dict.Length`, …).
+After `uses Std.Dictionaries;` use short names (`Length`, `ContainsKey`, …) or qualified (`Std.Dictionaries.Length`, …).
 
-**Ambiguity with `Std.Str` and `Std.Array`:** the short name **`Length`** clashes. Qualify as `Std.Dict.Length(D)` vs `Std.Array.Length(A)` vs `Std.Str.Length(S)`.
+**Ambiguity with `Std.Str` and `Std.Arrays`:** the short name **`Length`** clashes. Qualify as `Std.Dictionaries.Length(D)` vs `Std.Arrays.Length(A)` vs `Std.Str.Length(S)`.
 
 ---
 
@@ -51,8 +51,8 @@ Returns the number of key-value pairs in the dict.
 
 ```pascal
 var D: dict of string to integer := ['A': 1, 'B': 2];
-WriteLn(Std.Dict.Length(D));  // 2
-WriteLn(Std.Dict.Length([:]))  // 0
+WriteLn(Std.Dictionaries.Length(D));  // 2
+WriteLn(Std.Dictionaries.Length([:]))  // 0
 ```
 
 ### `ContainsKey`
@@ -65,8 +65,8 @@ Returns `true` if the dict contains the given key, `false` otherwise.
 
 ```pascal
 var D: dict of string to integer := ['Alice': 30];
-WriteLn(Std.Dict.ContainsKey(D, 'Alice'));    // true
-WriteLn(Std.Dict.ContainsKey(D, 'Bob'))       // false
+WriteLn(Std.Dictionaries.ContainsKey(D, 'Alice'));    // true
+WriteLn(Std.Dictionaries.ContainsKey(D, 'Bob'))       // false
 ```
 
 ### `Keys`
@@ -79,7 +79,7 @@ Returns an array of all keys in insertion order.
 
 ```pascal
 var D: dict of string to integer := ['Alice': 30, 'Bob': 25];
-WriteLn(Std.Dict.Keys(D))  // [Alice, Bob]
+WriteLn(Std.Dictionaries.Keys(D))  // [Alice, Bob]
 ```
 
 ### `Values`
@@ -92,7 +92,7 @@ Returns an array of all values in insertion order.
 
 ```pascal
 var D: dict of string to integer := ['Alice': 30, 'Bob': 25];
-WriteLn(Std.Dict.Values(D))  // [30, 25]
+WriteLn(Std.Dictionaries.Values(D))  // [30, 25]
 ```
 
 ### `Remove`
@@ -105,7 +105,7 @@ Returns a new dict without the given key. If the key does not exist, the origina
 
 ```pascal
 var D: dict of string to integer := ['A': 1, 'B': 2, 'C': 3];
-var D2: dict of string to integer := Std.Dict.Remove(D, 'B');
+var D2: dict of string to integer := Std.Dictionaries.Remove(D, 'B');
 WriteLn(D2)  // {A: 1, C: 3}
 ```
 
@@ -117,14 +117,14 @@ WriteLn(D2)  // {A: 1, C: 3}
 function Get(D: dict of K to V; Key: K): Option of V;
 ```
 
-Safe lookup. Returns `Some(value)` if the key exists, `None` otherwise. Requires `uses Std.Option` to pattern-match on the result.
+Safe lookup. Returns `Some(value)` if the key exists, `None` otherwise. Requires `uses Std.Options` to pattern-match on the result.
 
 ```pascal
-uses Std.Dict, Std.Option;
+uses Std.Dictionaries, Std.Options;
 
 var D: dict of string to integer := ['Alice': 30, 'Bob': 25];
-var Age: Option of integer := Std.Dict.Get(D, 'Alice');    // Some(30)
-var Missing: Option of integer := Std.Dict.Get(D, 'Eve');  // None
+var Age: Option of integer := Std.Dictionaries.Get(D, 'Alice');    // Some(30)
+var Missing: Option of integer := Std.Dictionaries.Get(D, 'Eve');  // None
 ```
 
 ---
@@ -140,7 +140,7 @@ Returns a new dict containing all entries from both `D1` and `D2`. When the same
 ```pascal
 var Base: dict of string to integer := ['A': 1, 'B': 2];
 var Over: dict of string to integer := ['B': 9, 'C': 3];
-var M: dict of string to integer := Std.Dict.Merge(Base, Over);
+var M: dict of string to integer := Std.Dictionaries.Merge(Base, Over);
 // {A: 1, B: 9, C: 3}
 ```
 
@@ -161,7 +161,7 @@ begin
 end;
 
 var Prices: dict of string to real := ['Apple': 1.0, 'Banana': 0.5];
-var Doubled: dict of string to real := Std.Dict.Map(Prices, DoublePrice);
+var Doubled: dict of string to real := Std.Dictionaries.Map(Prices, DoublePrice);
 WriteLn(Doubled)  // {Apple: 2.0, Banana: 1.0}
 ```
 
@@ -182,7 +182,7 @@ begin
 end;
 
 var Scores: dict of string to integer := ['Alice': 90, 'Bob': 55, 'Carol': 80];
-var Passing: dict of string to integer := Std.Dict.Filter(Scores, IsPassingScore);
+var Passing: dict of string to integer := Std.Dictionaries.Filter(Scores, IsPassingScore);
 WriteLn(Passing)  // {Alice: 90, Carol: 80}
 ```
 
@@ -206,7 +206,7 @@ M['A'] := 2;                          // update existing key
 M['B'] := 3                           // insert new key
 ```
 
-Accessing a non-existent key raises a runtime error. Use `Std.Dict.ContainsKey` to check first.
+Accessing a non-existent key raises a runtime error. Use `Std.Dictionaries.ContainsKey` to check first.
 
 The expression operator `Key in D` is shorthand for checking key membership and returns `boolean`.
 

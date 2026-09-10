@@ -1,6 +1,6 @@
 program JuliaCancelTest;
 
-uses Julia.Render, Julia.Compute, Julia.Color, Std.Task, Std.Array, Std.Result, Std.Test;
+uses Julia.Render, Julia.Compute, Julia.Color, Std.Task, Std.Arrays, Std.Results, Std.Test;
 
 begin
   for Attempt: integer := 1 to 10 do

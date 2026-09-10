@@ -183,7 +183,7 @@ mod tests {
     #[test]
     fn long_uses_clause_wraps() {
         let formatted = parse_and_format(
-            "program LongUses; uses Std.Console, Std.Conv, Std.Array, Std.Dict, Std.Option, Std.Result, Std.String, MyApp.Very.Long.Namespace.One, MyApp.Very.Long.Namespace.Two; begin WriteLn('ok') end.",
+            "program LongUses; uses Std.Console, Std.Conv, Std.Arrays, Std.Dictionaries, Std.Options, Std.Results, Std.String, MyApp.Very.Long.Namespace.One, MyApp.Very.Long.Namespace.Two; begin WriteLn('ok') end.",
         );
         assert!(formatted.contains("uses\n"));
         assert!(formatted.contains("MyApp.Very.Long.Namespace.Two"));

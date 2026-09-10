@@ -294,7 +294,7 @@ separate `case` arms. Leading comments stay attached to the following statement 
 
 ## Keywords and builtins
 
-Emit lowercase keywords: `program`, `unit`, `uses`, `begin`, `end`, `function`, `procedure`, `var`, `mutable`, `const`, `type`, `if`, `then`, `else`, `case`, `of`, `for`, `to`, `downto`, `in`, `do`, `while`, `repeat`, `until`, `return`, `panic`, `break`, `continue`, `and`, `or`, `not`, `xor`, `div`, `mod`, `shl`, `shr`, `public`, `record`, `enum`, `array`, `channel`, `dict`, `result`, `option`, `ok`, `error`, `some`, `none`, `try`, `go`, `with`, `true`, `false`.
+Emit lowercase keywords: `program`, `unit`, `uses`, `begin`, `end`, `function`, `procedure`, `var`, `mutable`, `const`, `type`, `if`, `then`, `else`, `case`, `of`, `for`, `to`, `downto`, `in`, `do`, `while`, `repeat`, `until`, `return`, `panic`, `break`, `continue`, `and`, `or`, `not`, `xor`, `div`, `mod`, `shl`, `shr`, `public`, `record`, `enum`, `array`, `channel`, `dict`, `result`, `option`, `ok`, `error`, `some`, `none`, `try`, `go`, `with`, `static`, `property`, `event`, `read`, `write`, `comparable`, `numeric`, `printable`, `self`, `nil`, `true`, `false`.
 
 Boolean and enum variant constructors in expressions: `Ok`, `Error`, `Some`, `None` (Pascal-style mixed case for std-like variants).
 
@@ -407,7 +407,7 @@ When the `uses` line exceeds 100 columns, break after commas:
 program LongUses;
 
 uses
-  Std.Console, Std.Conv, Std.Array, Std.Dict, Std.Option, Std.Result, Std.String,
+  Std.Console, Std.Conv, Std.Arrays, Std.Dictionaries, Std.Options, Std.Results, Std.String,
   MyApp.Very.Long.Namespace.One, MyApp.Very.Long.Namespace.Two;
 
 begin
@@ -493,7 +493,7 @@ The formatter **normalizes** valid input. These changes are deliberate (not bugs
 | User-placed blank lines | Only the fixed rules in [Blank lines](#blank-lines) |
 | `uses` on same line as header | Header blank line + `uses` on its own line |
 | Extra parentheses from parse tree | May differ where precedence makes them redundant |
-| `uses` unit name casing (`Std.array`) | Canonical qualified id spelling from the AST |
+| `uses` unit name casing (`Std.Arrays`) | Canonical qualified id spelling from the AST |
 
 ## Non-goals
 

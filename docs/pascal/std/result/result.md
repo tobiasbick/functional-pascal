@@ -1,10 +1,10 @@
-# `Std.Result`
+# `Std.Results`
 
 Helper functions for `Result of T, E` values. See [Error handling](../../language/error-handling/README.md) for the type itself, constructors (`Ok`, `Error`), the `try` operator, and `case` destructuring.
 
 ```pascal
 program Example;
-uses Std.Console, Std.Result;
+uses Std.Console, Std.Results;
 begin
   var R: Result of integer, string := Ok(42);
   WriteLn(Unwrap(R))
@@ -14,9 +14,9 @@ end.
 
 ## Importing and names
 
-After `uses Std.Result;` use short names (`Unwrap`, `IsOk`, …) or qualified (`Std.Result.Unwrap`, …).
+After `uses Std.Results;` use short names (`Unwrap`, `IsOk`, …) or qualified (`Std.Results.Unwrap`, …).
 
-**Ambiguity with `Std.Option`:** the short names **`Unwrap`** and **`UnwrapOr`** clash with `Std.Option`. When both units are imported, qualify as `Std.Result.Unwrap(R)` vs `Std.Option.Unwrap(O)`.
+**Ambiguity with `Std.Options`:** the short names **`Unwrap`** and **`UnwrapOr`** clash with `Std.Options`. When both units are imported, qualify as `Std.Results.Unwrap(R)` vs `Std.Options.Unwrap(O)`.
 
 ---
 

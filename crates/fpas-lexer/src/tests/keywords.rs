@@ -2,13 +2,13 @@ use super::toks;
 use crate::Token;
 
 #[test]
-fn all_57_keywords() {
+fn all_63_keywords() {
     let input = "program unit uses const var mutable function procedure begin end return \
                  if then else case of for to downto in in do while \
                  repeat until and or not xor div mod shl shr \
                  true false type record enum array channel panic break continue \
                  public result option ok error some none try \
-                 go dict with static property event nil";
+                 go dict with static property event read write comparable numeric printable self nil";
     let tokens = toks(input);
     assert_eq!(
         tokens,
@@ -70,6 +70,12 @@ fn all_57_keywords() {
             Token::Static,
             Token::Property,
             Token::Event,
+            Token::Read,
+            Token::Write,
+            Token::Comparable,
+            Token::Numeric,
+            Token::Printable,
+            Token::SelfKw,
             Token::Nil,
         ]
     );
@@ -107,6 +113,8 @@ fn case_insensitive_mixed() {
     assert_eq!(toks("tRuE"), vec![Token::True]);
     assert_eq!(toks("FaLsE"), vec![Token::False]);
     assert_eq!(toks("ReTuRn"), vec![Token::Return]);
+    assert_eq!(toks("SeLf"), vec![Token::SelfKw]);
+    assert_eq!(toks("CoMpArAbLe"), vec![Token::Comparable]);
 }
 
 #[test]

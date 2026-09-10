@@ -329,7 +329,7 @@ fn bytes(worker: &Worker, value: &Value) -> Result<Vec<u8>, VmError> {
             Value::Integer(value) => u8::try_from(*value).map_err(|_| {
                 worker.runtime_error(
                     RUNTIME_VM_OPERAND_TYPE_MISMATCH,
-                    format!("Std.Net.Write Data[{index}] must be in 0..=255, got {value}"),
+                    format!("Std.Net.SendBytes Data[{index}] must be in 0..=255, got {value}"),
                     "Pass a byte array whose integer elements are in 0..=255.",
                 )
             }),

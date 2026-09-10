@@ -1,6 +1,6 @@
 program T;
 
-uses Std.Console, Std.Option;
+uses Std.Console, Std.Options;
 
 function PositiveOk(V: integer): option of string;
 begin

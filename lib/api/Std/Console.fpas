@@ -80,8 +80,8 @@ public type
     // `Rgb` enum member.
     Rgb;
   end;
-  // Record.
-  Event = record
+  // Intrinsic `ConsoleEvent` data type.
+  ConsoleEvent = record
     public kind: Std.Console.EventKind;
     public key: Std.Console.KeyEvent;
     public mouse_action: Std.Console.MouseAction;
@@ -472,7 +472,7 @@ begin
 end;
 
 // Non-blocking check; queued events are available without raw mode.
-public function PollEvent(): option of Std.Console.Event;
+public function PollEvent(): option of Std.Console.ConsoleEvent;
 begin
   panic('Intrinsic API declaration')
 end;
@@ -494,14 +494,8 @@ begin
   panic('Intrinsic API declaration')
 end;
 
-// Same buffer as `ReadLn`.
-public function Read(): string;
-begin
-  panic('Intrinsic API declaration')
-end;
-
 // Unified terminal event for keyboard, mouse, resize, paste, and focus.
-public function ReadEvent(): Std.Console.Event;
+public function ReadEvent(): Std.Console.ConsoleEvent;
 begin
   panic('Intrinsic API declaration')
 end;
@@ -510,7 +504,7 @@ end;
 //
 // Parameters:
 // - `Milliseconds`: Non-negative duration in milliseconds.
-public function ReadEventTimeout(Milliseconds: integer): option of Std.Console.Event;
+public function ReadEventTimeout(Milliseconds: integer): option of Std.Console.ConsoleEvent;
 begin
   panic('Intrinsic API declaration')
 end;
@@ -529,6 +523,12 @@ end;
 
 // Line input.
 public function ReadLn(): string;
+begin
+  panic('Intrinsic API declaration')
+end;
+
+// Same buffer as `ReadLn`.
+public function ReadText(): string;
 begin
   panic('Intrinsic API declaration')
 end;
@@ -716,12 +716,6 @@ begin
   panic('Intrinsic API declaration')
 end;
 
-// Variadic.
-public procedure Write();
-begin
-  panic('Intrinsic API declaration')
-end;
-
 // Paint a cell array from left to right.
 //
 // Parameters:
@@ -735,6 +729,12 @@ end;
 
 // Variadic.
 public procedure WriteLn();
+begin
+  panic('Intrinsic API declaration')
+end;
+
+// Variadic.
+public procedure WriteText();
 begin
   panic('Intrinsic API declaration')
 end;

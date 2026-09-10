@@ -1,7 +1,7 @@
 //! Select and ordinary channel calls must cooperate even with a single pool worker.
 
 const PRODUCER: &str = r#"program ChannelCompatibility;
-uses Std.Task, Std.Result, Std.Array;
+uses Std.Task, Std.Results, Std.Arrays;
 begin
   var Group: TaskGroup := CreateTaskGroup();
   var Queue: channel of integer := CreateChannel(1);
@@ -41,7 +41,7 @@ fn timed_send_cooperates_with_a_select_consumer() {
 }
 
 const CONSUMER: &str = r#"program ReceiveCompatibility;
-uses Std.Task, Std.Result, Std.Array;
+uses Std.Task, Std.Results, Std.Arrays;
 begin
   var Group: TaskGroup := CreateTaskGroup();
   var Queue: channel of integer := CreateChannel(1);

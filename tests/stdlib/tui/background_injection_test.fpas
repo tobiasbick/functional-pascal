@@ -1,6 +1,6 @@
 program TuiBackgroundInjectionTest;
 
-uses Std.Array, Std.Result, Std.Task, Std.Test, Std.Tui;
+uses Std.Arrays, Std.Results, Std.Task, Std.Test, Std.Tui;
 
 type
   InjectionModel = record
@@ -28,7 +28,7 @@ end;
 function UpdateApplication(State: InjectionModel; Message: integer; Cmd: TuiCmdOutput): InjectionModel;
 begin
   return record
-    Values := Std.Array.Concat(State.Values, [Message]);
+    Values := Std.Arrays.Concat(State.Values, [Message]);
     Starts := State.Starts;
   end
 end;
@@ -49,7 +49,7 @@ begin
     Starts := 0;
   end, Inbox, UpdateFramework, UpdateApplication, View, 3, 0);
   AssertEquals(1, Model.Starts);
-  AssertEquals(2, Std.Array.Length(Model.Values));
+  AssertEquals(2, Std.Arrays.Length(Model.Values));
   AssertEquals(4, Model.Values[0]);
   AssertEquals(7, Model.Values[1]);
   App.CloseWithBackground(Inbox);

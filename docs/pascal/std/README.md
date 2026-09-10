@@ -76,10 +76,10 @@ Fullscreen code can batch explicit cells with `BeginFrame`, `WriteCells`, and `P
 ### Error handling helpers
 
 ```pascal
-uses Std.Result, Std.Option;
+uses Std.Results, Std.Options;
 
 var R: Result of integer, string := Ok(42);
-WriteLn(Std.Result.Unwrap(R));
+WriteLn(Std.Results.Unwrap(R));
 ```
 
 Language rules: [Error handling](../language/error-handling/README.md).

@@ -1,6 +1,6 @@
 unit Std.Tui.Chrome.CellGrid;
 
-uses Std.Array, Std.Tui.Cells.Cell;
+uses Std.Arrays, Std.Tui.Cells.Cell;
 
 public type
   // Immutable rectangular grid of concrete or theme-resolved terminal cells.
@@ -25,7 +25,7 @@ public type
         panic('Tui cell grid dimensions must be non-negative')
       end;
 
-      if Std.Array.Length(Cells) <> Width * Height then
+      if Std.Arrays.Length(Cells) <> Width * Height then
       begin
         panic('Tui cell grid length must equal width times height')
       end;

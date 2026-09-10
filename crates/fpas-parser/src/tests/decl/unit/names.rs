@@ -21,7 +21,7 @@ fn deeply_qualified_unit_name() {
 }
 
 #[test]
-fn unit_name_leading_std_unit_keyword_segment() {
-    let unit = parse_unit_ok("unit array.Plugin;");
-    assert_eq!(unit.name.parts, vec!["Array", "Plugin"]);
+fn keyword_cannot_be_a_unit_name_segment() {
+    let (_, errors) = parse_compilation_unit_with_errors("unit array.Plugin;");
+    assert!(!errors.is_empty());
 }

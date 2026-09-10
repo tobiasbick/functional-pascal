@@ -1,4 +1,4 @@
-//! `Std.Array` symbol names and registry group.
+//! `Std.Arrays` symbol names and registry group.
 
 std_symbol!(STD_ARRAY_LENGTH = std_array!("Length"));
 std_symbol!(STD_ARRAY_SORT = std_array!("Sort"));

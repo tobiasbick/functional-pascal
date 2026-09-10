@@ -1,7 +1,7 @@
 unit Std.Tui.Runtime.TerminalRenderer;
 
 uses
-  Std.Array, Std.Console, Std.Tui.Cells.Cell, Std.Tui.Cells.Color, Std.Tui.Cells.Palette,
+  Std.Arrays, Std.Console, Std.Tui.Cells.Cell, Std.Tui.Cells.Color, Std.Tui.Cells.Palette,
   Std.Tui.Cells.Style, Std.Tui.Rendering.Surface;
 
 function TuiColorToConsole(Color: TuiColor): Std.Console.Color;
@@ -47,7 +47,7 @@ begin
   mutable var Row: array of Std.Console.Cell := [];
   for Cell: TuiCell in Damage.Cells do
   begin
-    Std.Array.Push(Row, TuiCellToConsole(Cell, Palette))
+    Std.Arrays.Push(Row, TuiCellToConsole(Cell, Palette))
   end;
 
   return Row
@@ -64,7 +64,7 @@ end;
 public procedure TuiFlushSurface(Surface: TuiWorkingSurface; Palette: TuiPalette);
 begin
   var Damage: array of TuiSurfaceDamage := TuiSurfaceTakeTerminalDamage(Surface);
-  if Std.Array.Length(Damage) = 0 then
+  if Std.Arrays.Length(Damage) = 0 then
   begin
     return
   end;
@@ -73,7 +73,7 @@ begin
   for Item: TuiSurfaceDamage in Damage do
   begin
     var Row: array of Std.Console.Cell := TuiTerminalDamageRow(Item, Palette);
-    if Std.Array.Length(Row) > 0 then
+    if Std.Arrays.Length(Row) > 0 then
     begin
       WriteCells(Item.FirstX + 1, Item.Y + 1, Row)
     end

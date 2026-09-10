@@ -1,6 +1,6 @@
 program HttpParallelSseDecoderTest;
 
-uses Std.Array, Std.Conv, Std.Http, Std.Net.Utf8, Std.Task, Std.Test;
+uses Std.Arrays, Std.Conv, Std.Http, Std.Net.Utf8, Std.Task, Std.Test;
 
 function CreateDecoder(Index: integer): SseDecoder;
 begin

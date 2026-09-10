@@ -1,7 +1,7 @@
 // Incremental bounded Server-Sent Events decoding.
 unit Std.Http.Sse;
 
-uses Std.Array, Std.Http.Handles, Std.Http.Types, Std.Net.Utf8, Std.Str;
+uses Std.Arrays, Std.Http.Handles, Std.Http.Types, Std.Net.Utf8, Std.Str;
 
 type
   // Mutable parsing state retained for one decoder handle.
@@ -73,7 +73,7 @@ end;
 // - `Bytes`: Buffered bytes to scan from the beginning.
 function LineEnd(Bytes: array of integer; Final: boolean): array of integer;
 begin
-  for Index: integer := 0 to Std.Array.Length(Bytes) - 1 do
+  for Index: integer := 0 to Std.Arrays.Length(Bytes) - 1 do
   begin
     if Bytes[Index] = 10 then
     begin
@@ -82,7 +82,7 @@ begin
 
     if Bytes[Index] = 13 then
     begin
-      if Index + 1 >= Std.Array.Length(Bytes) then
+      if Index + 1 >= Std.Arrays.Length(Bytes) then
       begin
         if Final then
         begin
@@ -101,9 +101,9 @@ begin
     end
   end;
 
-  if Final and (Std.Array.Length(Bytes) > 0) then
+  if Final and (Std.Arrays.Length(Bytes) > 0) then
   begin
-    return [Std.Array.Length(Bytes), 0]
+    return [Std.Arrays.Length(Bytes), 0]
   end;
 
   return [-1, 0]
@@ -120,7 +120,7 @@ begin
       EventType := 'message'
     end;
 
-    Std.Array.Push(Events, record
+    Std.Arrays.Push(Events, record
       EventType := EventType;
       Data := Std.Str.Substring(State.Data, 0, Std.Str.Length(State.Data) - 1);
       Id := State.LastEventId;
@@ -140,15 +140,15 @@ begin
   mutable var EndValue: array of integer := LineEnd(State.Buffer, Final);
   while EndValue[0] >= 0 do
   begin
-    var LineBytes: array of integer := Std.Array.Slice(State.Buffer, 0, EndValue[0]);
+    var LineBytes: array of integer := Std.Arrays.Slice(State.Buffer, 0, EndValue[0]);
     State.EventBytes := (State.EventBytes + EndValue[0]) + EndValue[1];
     if State.EventBytes > State.Maximum then
     begin
       return Error('SSE event exceeds MaxEventBytes')
     end;
 
-    State.Buffer := Std.Array.Slice(State.Buffer, EndValue[0] + EndValue[1], (Std.Array.Length(State.Buffer) - EndValue[0]) -
-                                                                             EndValue[1]);
+    State.Buffer := Std.Arrays.Slice(State.Buffer, EndValue[0] + EndValue[1], (Std.Arrays.Length(State.Buffer) - EndValue[0]) -
+                                                                              EndValue[1]);
     case Std.Net.Utf8.Decode(LineBytes) of
       Ok(Line):
       begin
@@ -197,7 +197,7 @@ begin
     EndValue := LineEnd(State.Buffer, Final)
   end;
 
-  if State.EventBytes + Std.Array.Length(State.Buffer) > State.Maximum then
+  if State.EventBytes + Std.Arrays.Length(State.Buffer) > State.Maximum then
   begin
     return Error('SSE event exceeds MaxEventBytes')
   end;
@@ -257,7 +257,7 @@ begin
         return Error('SSE decoder is already finished')
       end;
 
-      State.Buffer := Std.Array.Concat(State.Buffer, Bytes);
+      State.Buffer := Std.Arrays.Concat(State.Buffer, Bytes);
       case Process(State, false) of
         Ok(Output):
         begin

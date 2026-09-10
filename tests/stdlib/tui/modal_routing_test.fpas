@@ -1,6 +1,6 @@
 program TuiModalRoutingTest;
 
-uses Std.Array, Std.Str, Std.Test, Std.Tui;
+uses Std.Arrays, Std.Str, Std.Test, Std.Tui;
 
 type
   ModalModel = record
@@ -92,7 +92,7 @@ begin
         return record
           Focus := 3;
           ConfirmOpen := true;
-          Actions := Std.Array.Concat(State.Actions, [Action.Value]);
+          Actions := Std.Arrays.Concat(State.Actions, [Action.Value]);
           PointerHits := State.PointerHits;
         end
       end;
@@ -100,7 +100,7 @@ begin
       return record
         Focus := 1;
         ConfirmOpen := false;
-        Actions := Std.Array.Concat(State.Actions, [Action.Value]);
+        Actions := Std.Arrays.Concat(State.Actions, [Action.Value]);
         PointerHits := State.PointerHits;
       end
     end;
@@ -147,7 +147,7 @@ begin
   App.InjectPointerForTest(MakePointer(TuiPointerAction.Down, SaveAt.X, SaveAt.Y));
   Model := App.RunIterations(Model, UpdateModal, ViewModal, 1, 0);
   AssertEquals(2, Model.PointerHits);
-  AssertEquals(1, Std.Array.Length(Model.Actions));
+  AssertEquals(1, Std.Arrays.Length(Model.Actions));
   AssertTrue(Model.ConfirmOpen);
   var YesAt: TuiPoint := FindGlyph(App.SurfaceSnapshot(), 'Yes');
   App.InjectPointerForTest(MakePointer(TuiPointerAction.Down, YesAt.X, YesAt.Y));
@@ -155,7 +155,7 @@ begin
   App.InjectPointerForTest(MakePointer(TuiPointerAction.Up, YesAt.X, YesAt.Y));
   Model := App.RunIterations(Model, UpdateModal, ViewModal, 1, 0);
   AssertFalse(Model.ConfirmOpen);
-  AssertEquals(2, Std.Array.Length(Model.Actions));
+  AssertEquals(2, Std.Arrays.Length(Model.Actions));
   AssertEquals(30, Model.Actions[1]);
   App.InjectKeyForTest(MakeKey(TuiKeyKind.Tab, ''));
   Model := App.RunIterations(Model, UpdateModal, ViewModal, 1, 0);

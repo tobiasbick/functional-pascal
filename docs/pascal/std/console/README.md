@@ -20,7 +20,7 @@ After `uses Std.Console;` you can call symbols in either form:
 | **Fully qualified** | `Std.Console.WriteLn('hi')` |
 | **Short** | `WriteLn('hi')` |
 
-Short names exist only for symbols that belong to a `uses`'d unit. If two imported units expose the **same** short name (for example `Length` from `Std.Str` and `Std.Array`), the compiler reports an **ambiguous** error at the use site; then use the full name (`Std.Str.Length`, `Std.Array.Length`).
+Short names exist only for symbols that belong to a `uses`'d unit. If two imported units expose the **same** short name (for example `Length` from `Std.Str` and `Std.Arrays`), the compiler reports an **ambiguous** error at the use site; then use the full name (`Std.Str.Length`, `Std.Arrays.Length`).
 
 Types follow the same idea: `KeyEvent` is the short form of `Std.Console.KeyEvent` when `Std.Console` is imported.
 
@@ -30,7 +30,7 @@ Everything below requires `uses Std.Console;`.
 
 | Kind | Name | Notes |
 |------|------|--------|
-| procedure | `Write(...)` | variadic |
+| procedure | `WriteText(...)` | variadic |
 | procedure | `WriteLn(...)` | variadic |
 | procedure | `ClrScr()` | clear only the active console window |
 | procedure | `ClrEol()` | clear from cursor to the right edge of the active window |
@@ -80,7 +80,7 @@ Everything below requires `uses Std.Console;`.
 | procedure | `NoSound()` | stop active tone state (no-op) |
 | procedure | `AssignCrt()` | enable CRT mode |
 | function | `ReadLn(): string` | line input |
-| function | `Read(): string` | same buffer as `ReadLn` |
+| function | `ReadText(): string` | same buffer as `ReadLn` |
 | function | `ReadKey(): string` | key-by-key, separate from `ReadKeyEvent` |
 | function | `KeyPressed(): boolean` | true if `ReadKey` or `ReadKeyEvent` has data waiting |
 | function | `ReadKeyEvent(): KeyEvent` | structured key + modifiers |
@@ -121,13 +121,13 @@ Extended color procedures (`TextColorRGB`, `TextBackgroundRGB`, `TextColor256`, 
 
 | Topic | Description |
 |-------|-------------|
-| [Output](output.md) | `Write`, `WriteLn` |
+| [Output](output.md) | `WriteText`, `WriteLn` |
 | [Screen control](screen.md) | Windows, cursor, scrolling |
 | [Cells and frames](cells-frames.md) | Retained cells, frame batching, bulk rows, saved regions |
 | [Screen utilities](screen-misc.md) | `Delay`, cursor visibility, `TextMode`, bell |
 | [Colors and attributes](colors.md) | CRT palette, RGB, 256-color |
 | [Types](types.md) | `KeyEvent`, `Event`, enums |
-| [Line input](input.md) | `ReadLn`, `Read` |
+| [Line input](input.md) | `ReadLn`, `ReadText` |
 | [Keyboard](keyboard.md) | `ReadKey`, `ReadKeyEvent`, `KeyPressed` |
 | [Terminal events](events.md) | `ReadEvent`, raw mode, alt screen |
 | [Using together](using-together.md) | Mixing line and key input |

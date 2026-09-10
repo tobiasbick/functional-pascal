@@ -1,7 +1,7 @@
 // Covers fragmented, final, bounded, and closed SSE decoder behavior.
 program HttpStreamingTest;
 
-uses Std.Array, Std.Http, Std.Net.Utf8, Std.Str, Std.Test;
+uses Std.Arrays, Std.Http, Std.Net.Utf8, Std.Str, Std.Test;
 
 begin
   case CreateSseDecoder(1024) of
@@ -11,7 +11,7 @@ begin
                                                 'data: hel')) of
         Ok(Events):
         begin
-          AssertEquals(0, Std.Array.Length(Events))
+          AssertEquals(0, Std.Arrays.Length(Events))
         end;
         Error(Message):
         begin
@@ -23,7 +23,7 @@ begin
                                                 #10)) of
         Ok(Events):
         begin
-          AssertEquals(1, Std.Array.Length(Events));
+          AssertEquals(1, Std.Arrays.Length(Events));
           AssertEquals('token', Events[0].EventType);
           AssertEquals(('hello' + #10) + 'world', Events[0].Data);
           AssertEquals('7', Events[0].Id)
@@ -37,7 +37,7 @@ begin
       case FeedSse(Decoder, Std.Net.Utf8.Encode((': keepalive' + #10) + 'data: final')) of
         Ok(Events):
         begin
-          AssertEquals(0, Std.Array.Length(Events))
+          AssertEquals(0, Std.Arrays.Length(Events))
         end;
         Error(Message):
         begin
@@ -48,7 +48,7 @@ begin
       case FinishSse(Decoder) of
         Ok(Events):
         begin
-          AssertEquals(1, Std.Array.Length(Events));
+          AssertEquals(1, Std.Arrays.Length(Events));
           AssertEquals('message', Events[0].EventType);
           AssertEquals('final', Events[0].Data);
           AssertEquals('7', Events[0].Id)

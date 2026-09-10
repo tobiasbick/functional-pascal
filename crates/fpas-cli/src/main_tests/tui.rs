@@ -78,7 +78,7 @@ end.
         r#"program FlushWideTransition;
 
 uses
-  Std.Console, Std.Option, Std.Test, Std.Tui, Std.Tui.Runtime.TerminalRenderer;
+  Std.Console, Std.Options, Std.Test, Std.Tui, Std.Tui.Runtime.TerminalRenderer;
 
 begin
   var Surface: TuiWorkingSurface := TuiWorkingSurface.Create(TuiSize.Create(4, 1));
@@ -86,8 +86,8 @@ begin
   TuiFlushSurface(Surface, TuiPalette.Default());
   Surface.PutGlyph(2, 0, 'X');
   TuiFlushSurface(Surface, TuiPalette.Default());
-  AssertEquals(' ', Std.Option.Unwrap(GetCell(2, 1)).glyph);
-  AssertEquals('X', Std.Option.Unwrap(GetCell(3, 1)).glyph)
+  AssertEquals(' ', Std.Options.Unwrap(GetCell(2, 1)).glyph);
+  AssertEquals('X', Std.Options.Unwrap(GetCell(3, 1)).glyph)
 end.
 "#,
     );
@@ -135,7 +135,7 @@ fn theme_switch_repaints_unchanged_terminal_cells() {
         &program,
         r#"program ThemeSwitch;
 
-uses Std.Console, Std.Option, Std.Test, Std.Tui;
+uses Std.Console, Std.Options, Std.Test, Std.Tui;
 
 function UpdateTheme(State: integer; Msg: TuiMsg; Cmd: TuiCmdOutput): integer;
 begin
@@ -274,7 +274,7 @@ fn interactive_background_message_wakes_idle_host_and_repaints() {
         &program,
         r#"program BackgroundWakeup;
 
-uses Std.Console, Std.Result, Std.Task, Std.Tui;
+uses Std.Console, Std.Results, Std.Task, Std.Tui;
 
 type
   Model = record

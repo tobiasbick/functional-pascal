@@ -62,7 +62,12 @@ fn toml_to_fpas_at_depth(
             .map(|item| toml_to_fpas_at_depth(call, item, depth + 1, location))
             .collect::<Result<Vec<_>, _>>()
             .and_then(|items| {
-                toml_variant(call, "Array", vec![Value::Array(items.into())], location)
+                toml_variant(
+                    call,
+                    "ArrayValue",
+                    vec![Value::Array(items.into())],
+                    location,
+                )
             }),
         TomlValue::Table(fields) => fields
             .into_iter()
@@ -172,13 +177,13 @@ fn fpas_to_toml_at_depth(
             }),
             other => variant_field_error("Datetime", "string", &other, location),
         },
-        "Array" => match expect_one_field("Array", fields, location)? {
+        "ArrayValue" => match expect_one_field("ArrayValue", fields, location)? {
             Value::Array(items) => items
                 .into_iter()
                 .map(|item| fpas_to_toml_at_depth(item, location, depth + 1))
                 .collect::<Result<Vec<_>, _>>()
                 .map(TomlValue::Array),
-            other => variant_field_error("Array", "array", &other, location),
+            other => variant_field_error("ArrayValue", "array", &other, location),
         },
         "Table" => match expect_one_field("Table", fields, location)? {
             Value::Dict(fields) => {
@@ -345,7 +350,7 @@ value = "ok"
     #[test]
     fn fpas_to_toml_accepts_container_at_depth_limit() {
         let value = test_variant(
-            "Array",
+            "ArrayValue",
             vec![Value::Array(
                 vec![test_variant("String", vec![Value::Str("ok".into())])].into(),
             )],
@@ -357,7 +362,7 @@ value = "ok"
     #[test]
     fn fpas_to_toml_rejects_container_child_beyond_depth_limit() {
         let value = test_variant(
-            "Array",
+            "ArrayValue",
             vec![Value::Array(
                 vec![test_variant("String", vec![Value::Str("too deep".into())])].into(),
             )],

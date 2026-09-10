@@ -1,6 +1,6 @@
 program TuiHierarchicalMenuTest;
 
-uses Std.Array, Std.Str, Std.Test, Std.Tui;
+uses Std.Arrays, Std.Str, Std.Test, Std.Tui;
 
 type
   MenuModel = record
@@ -105,7 +105,7 @@ begin
       return record
         Focus := State.Focus;
         Menu := State.Menu;
-        Actions := Std.Array.Concat(State.Actions, [Action.Value]);
+        Actions := Std.Arrays.Concat(State.Actions, [Action.Value]);
       end
     end
     else
@@ -140,12 +140,12 @@ begin
   Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 1, 0);
   App.InjectKeyForTest(MakeKey(TuiKeyKind.Enter, '', false, false));
   Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 2, 0);
-  AssertEquals(1, Std.Array.Length(Model.Actions));
+  AssertEquals(1, Std.Arrays.Length(Model.Actions));
   AssertEquals(10, Model.Actions[0]);
   AssertFalse(Model.Menu.Open);
   App.InjectKeyForTest(MakeKey(TuiKeyKind.Character, 'o', true, false));
   Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 2, 0);
-  AssertEquals(2, Std.Array.Length(Model.Actions));
+  AssertEquals(2, Std.Arrays.Length(Model.Actions));
   AssertEquals(10, Model.Actions[1]);
   App.InjectKeyForTest(MakeKey(TuiKeyKind.Character, 'o', false, true));
   Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 1, 0);
@@ -157,7 +157,7 @@ begin
   Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 1, 0);
   App.InjectKeyForTest(MakeKey(TuiKeyKind.Enter, '', false, false));
   Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 2, 0);
-  AssertEquals(3, Std.Array.Length(Model.Actions));
+  AssertEquals(3, Std.Arrays.Length(Model.Actions));
   AssertEquals(20, Model.Actions[2]);
   App.InjectKeyForTest(MakeKey(TuiKeyKind.F10, '', false, false));
   Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 1, 0);
@@ -175,16 +175,16 @@ begin
   AssertActive(Model.Menu, 6);
   AssertFalse(App.SurfaceSnapshot().CellAt(DarkAt.X + 6, DarkAt.Y).Glyph = '░');
   AssertFalse(App.SurfaceSnapshot().CellAt(DarkAt.X, DarkAt.Y + 2).Glyph = '░');
-  AssertEquals(3, Std.Array.Length(Model.Actions));
+  AssertEquals(3, Std.Arrays.Length(Model.Actions));
   App.InjectPointerForTest(TuiPointerEvent.Create(TuiPointerAction.Move, TuiPointerButton.NoButton, TuiPoint.Create(39, 9)));
   Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 1, 0);
   AssertTrue(Model.Menu.Open);
   AssertActive(Model.Menu, 6);
-  AssertEquals(3, Std.Array.Length(Model.Actions));
+  AssertEquals(3, Std.Arrays.Length(Model.Actions));
   App.InjectPointerForTest(TuiPointerEvent.Create(TuiPointerAction.Down, TuiPointerButton.Left, DarkAt));
   Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 2, 0);
   AssertFalse(Model.Menu.Open);
-  AssertEquals(4, Std.Array.Length(Model.Actions));
+  AssertEquals(4, Std.Arrays.Length(Model.Actions));
   AssertEquals(20, Model.Actions[3]);
   App.Close()
 end.

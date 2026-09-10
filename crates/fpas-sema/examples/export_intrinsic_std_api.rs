@@ -23,8 +23,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .and_then(Path::parent)
         .ok_or("fpas-sema must live below the repository root")?;
     let documentation = documentation_rows(&repository.join("docs/pascal/std"))?;
-    if !documentation.contains_key(&(String::from("Std.Array"), String::from("all"))) {
-        return Err("Std.Array.All documentation row is missing".into());
+    if !documentation.contains_key(&(String::from("Std.Arrays"), String::from("all"))) {
+        return Err("Std.Arrays.All documentation row is missing".into());
     }
     let output = repository.join("lib/api/Std");
     fs::create_dir_all(&output)?;

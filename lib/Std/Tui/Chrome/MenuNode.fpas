@@ -1,6 +1,6 @@
 unit Std.Tui.Chrome.MenuNode;
 
-uses Std.Option, Std.Tui.Chrome.KeyGesture, Std.Tui.Ids.Action;
+uses Std.Options, Std.Tui.Chrome.KeyGesture, Std.Tui.Ids.Action;
 
 public type
   // Positive identity of one node in a flat menu definition.

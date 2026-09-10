@@ -12,7 +12,7 @@ uses Std.Net, Std.Task, Std.Time;
 function ReadUntilCancelled(ConnectionValue: Std.Net.Connection;
   Token: Std.Task.CancellationToken): string;
 begin
-  case Std.Net.ReadWithCancellation(ConnectionValue, 1, Token) of
+  case Std.Net.ReceiveBytesWithCancellation(ConnectionValue, 1, Token) of
     Ok(Data): return 'received';
     Error(Message): return Message
   end

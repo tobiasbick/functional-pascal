@@ -1,12 +1,12 @@
 // Bounded byte transfers for HTTP transports.
 unit Std.Http.Io;
 
-uses Std.Array, Std.Net;
+uses Std.Arrays, Std.Net;
 
 // Materializes ordered response or request fragments as one byte array.
 public function JoinChunks(Chunks: array of array of integer): array of integer;
 begin
-  return Std.Array.FlatMap(Chunks, function(Chunk: array of integer): array of integer begin
+  return Std.Arrays.FlatMap(Chunks, function(Chunk: array of integer): array of integer begin
     return Chunk
   end)
 end;
@@ -29,10 +29,10 @@ begin
     Count := 1
   end;
 
-  case Std.Net.Read(Connection, Count) of
+  case Std.Net.ReceiveBytes(Connection, Count) of
     Ok(Bytes):
     begin
-      if Std.Array.Length(Bytes) > Available then
+      if Std.Arrays.Length(Bytes) > Available then
       begin
         return Error('HTTP response exceeds MaxResponseBytes')
       end;
@@ -54,15 +54,15 @@ end;
 public function WriteAll(Connection: Std.Net.Connection; Bytes: array of integer): result of boolean, string;
 begin
   mutable var Offset: integer := 0;
-  while Offset < Std.Array.Length(Bytes) do
+  while Offset < Std.Arrays.Length(Bytes) do
   begin
-    mutable var Count: integer := Std.Array.Length(Bytes) - Offset;
+    mutable var Count: integer := Std.Arrays.Length(Bytes) - Offset;
     if Count > 1048576 then
     begin
       Count := 1048576
     end;
-    var Remaining: array of integer := Std.Array.Slice(Bytes, Offset, Count);
-    case Std.Net.Write(Connection, Remaining) of
+    var Remaining: array of integer := Std.Arrays.Slice(Bytes, Offset, Count);
+    case Std.Net.SendBytes(Connection, Remaining) of
       Ok(Count):
       begin
         if Count <= 0 then

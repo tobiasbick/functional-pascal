@@ -39,7 +39,7 @@ pub struct CapturedOutput {
 
 /// Standard console I/O.
 ///
-/// Handles `Std.Console.Write` and `Std.Console.WriteLn`.
+/// Handles `Std.Console.WriteText` and `Std.Console.WriteLn`.
 /// Headless output is captured for test assertions. A console constructed
 /// with a writer streams output without retaining it.
 pub struct Console {

@@ -1,7 +1,7 @@
 unit Std.Tui.Rendering.Menu;
 
 uses
-  Std.Array, Std.Console, Std.Str, Std.Tui.Cells.Cell, Std.Tui.Cells.StyleRole,
+  Std.Arrays, Std.Console, Std.Str, Std.Tui.Cells.Cell, Std.Tui.Cells.StyleRole,
   Std.Tui.Chrome.MenuGeometry, Std.Tui.Chrome.MenuNode, Std.Tui.Chrome.MenuQuery,
   Std.Tui.Geometry.Point, Std.Tui.Geometry.Rect, Std.Tui.Rendering.Canvas;
 
@@ -74,7 +74,7 @@ begin
     end
   end;
   mutable var X: integer := Bounds.X;
-  for Index: integer := 0 to Std.Array.Length(Nodes) - 1 do
+  for Index: integer := 0 to Std.Arrays.Length(Nodes) - 1 do
   begin
     case TuiMenuNodeParent(Nodes[Index]) of
       Some(Parent):
@@ -176,7 +176,7 @@ begin
   Canvas.FillRect(Bounds, TuiCell.Create(' ', TuiStyleRole.MenuNormal));
   Canvas.DrawFrame(Bounds, TuiStyleRole.MenuNormal);
   mutable var Row: integer := 0;
-  for Index: integer := 0 to Std.Array.Length(Nodes) - 1 do
+  for Index: integer := 0 to Std.Arrays.Length(Nodes) - 1 do
   begin
     if TuiMenuHasParent(Nodes[Index], Some(Popup.Parent)) then
     begin
@@ -218,7 +218,7 @@ begin
   var TerminalBounds: TuiRect := TuiRect.Create(0, 0, Canvas.Surface.Size().Width, Canvas.Surface.Size()
                                                                                      .Height);
   var Popups: array of TuiMenuPopup := TuiMenuPopupGeometry(Nodes, State, BarBounds, TerminalBounds);
-  for Index: integer := 0 to Std.Array.Length(Popups) - 1 do
+  for Index: integer := 0 to Std.Arrays.Length(Popups) - 1 do
   begin
     TuiPaintMenuPopup(Canvas, Popups[Index], Nodes, State)
   end

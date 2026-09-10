@@ -1,6 +1,6 @@
 program TuiScrollKeyboardTest;
 
-uses Std.Array, Std.Test, Std.Tui;
+uses Std.Arrays, Std.Test, Std.Tui;
 
 type
   ScrollModel = record
@@ -44,7 +44,7 @@ begin
       AssertEquals(7, Action.Value);
       return record
         Offset := Offset;
-        Changes := Std.Array.Concat(State.Changes, [Offset.Y]);
+        Changes := Std.Arrays.Concat(State.Changes, [Offset.Y]);
       end
     end
     else
@@ -71,6 +71,6 @@ begin
   App.InjectKeyForTest(MakeKey(TuiKeyKind.Home));
   Model := App.RunIterations(Model, UpdateScroll, ViewScroll, 1, 0);
   AssertEquals(0, Model.Offset.Y);
-  AssertEquals(3, Std.Array.Length(Model.Changes));
+  AssertEquals(3, Std.Arrays.Length(Model.Changes));
   App.Close()
 end.

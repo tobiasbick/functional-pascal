@@ -1,12 +1,12 @@
 unit Std.Tui.Elements.Validate;
 
 uses
-  Std.Array, Std.Conv, Std.Str, Std.Tui.Chrome.StatusItem, Std.Tui.Elements.Element,
+  Std.Arrays, Std.Conv, Std.Str, Std.Tui.Chrome.StatusItem, Std.Tui.Elements.Element,
   Std.Tui.Elements.MenuValidate, Std.Tui.Ids.Action, Std.Tui.Ids.ControlId;
 
 function TuiElementControlSeen(Seen: array of integer; Value: integer): boolean;
 begin
-  for Index: integer := 0 to Std.Array.Length(Seen) - 1 do
+  for Index: integer := 0 to Std.Arrays.Length(Seen) - 1 do
   begin
     if Seen[Index] = Value then
     begin
@@ -90,7 +90,7 @@ begin
         panic('Tui button mnemonic must occur in its text')
       end;
 
-      Std.Array.Push(Seen, Button.Id.Value)
+      Std.Arrays.Push(Seen, Button.Id.Value)
     end;
     TuiElement.Input(Input):
     begin
@@ -101,7 +101,7 @@ begin
         panic('Tui input caret must be within its text')
       end;
 
-      Std.Array.Push(Seen, Input.Id.Value)
+      Std.Arrays.Push(Seen, Input.Id.Value)
     end;
     TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction):
     begin
@@ -117,19 +117,19 @@ begin
         panic('Tui text area offset must not be negative')
       end;
 
-      Std.Array.Push(Seen, Id.Value)
+      Std.Arrays.Push(Seen, Id.Value)
     end;
     TuiElement.CheckBox(Id, Text, Checked, ChangeAction):
     begin
       TuiElementValidateControl(Id);
       TuiElementValidateAction(ChangeAction);
-      Std.Array.Push(Seen, Id.Value)
+      Std.Arrays.Push(Seen, Id.Value)
     end;
     TuiElement.List(Id, Items, Selected, ChangeAction):
     begin
       TuiElementValidateControl(Id);
       TuiElementValidateAction(ChangeAction);
-      var Count: integer := Std.Array.Length(Items);
+      var Count: integer := Std.Arrays.Length(Items);
       if Count = 0 then
       begin
         if Selected <> -1 then
@@ -142,7 +142,7 @@ begin
         panic('Tui list selection must be within its items')
       end;
 
-      Std.Array.Push(Seen, Id.Value)
+      Std.Arrays.Push(Seen, Id.Value)
     end;
     TuiElement.Scroll(Id, Offset, ChangeAction, Children):
     begin
@@ -153,16 +153,16 @@ begin
         panic('Tui scroll offset must not be negative')
       end;
 
-      if Std.Array.Length(Children) <> 1 then
+      if Std.Arrays.Length(Children) <> 1 then
       begin
         panic('Tui scroll wrappers require exactly one child')
       end;
 
-      Std.Array.Push(Seen, Id.Value)
+      Std.Arrays.Push(Seen, Id.Value)
     end;
     TuiElement.MenuBar(Items):
     begin
-      for Index: integer := 0 to Std.Array.Length(Items) - 1 do
+      for Index: integer := 0 to Std.Arrays.Length(Items) - 1 do
       begin
         TuiElementValidateControl(Items[Index].Id);
         TuiElementValidateAction(Items[Index].Action);
@@ -172,7 +172,7 @@ begin
                 Std.Conv.IntToStr(Items[Index].Id.Value))
         end;
 
-        Std.Array.Push(Seen, Items[Index].Id.Value)
+        Std.Arrays.Push(Seen, Items[Index].Id.Value)
       end
     end;
     TuiElement.Menu(Id, Nodes, State, ChangeAction):
@@ -180,7 +180,7 @@ begin
       TuiElementValidateControl(Id);
       TuiElementValidateAction(ChangeAction);
       TuiMenuValidate(Nodes, State);
-      Std.Array.Push(Seen, Id.Value)
+      Std.Arrays.Push(Seen, Id.Value)
     end;
     TuiElement.Gauge(Gauge):
     begin
@@ -196,7 +196,7 @@ begin
     end;
     TuiElement.StatusLine(Items):
     begin
-      for Index: integer := 0 to Std.Array.Length(Items) - 1 do
+      for Index: integer := 0 to Std.Arrays.Length(Items) - 1 do
       begin
         case Items[Index] of
           TuiStatusItem.Command(Id, Text, Action, Enabled):
@@ -208,7 +208,7 @@ begin
               panic('Tui control id must be unique in one tree: ' + Std.Conv.IntToStr(Id.Value))
             end;
 
-            Std.Array.Push(Seen, Id.Value)
+            Std.Arrays.Push(Seen, Id.Value)
           end
           else
           begin
@@ -225,7 +225,7 @@ begin
     end;
     TuiElement.Layout(Settings, Children):
     begin
-      if Std.Array.Length(Children) <> 1 then
+      if Std.Arrays.Length(Children) <> 1 then
       begin
         panic('Tui layout wrappers require exactly one child')
       end
@@ -235,17 +235,17 @@ begin
     end
   end;
   var Children: array of TuiElement := TuiElementChildren(Node);
-  for ChildIndex: integer := 0 to Std.Array.Length(Children) - 1 do
+  for ChildIndex: integer := 0 to Std.Arrays.Length(Children) - 1 do
   begin
     var ChildIds: array of integer := TuiElementValidateAndCollect(Children[ChildIndex]);
-    for IdIndex: integer := 0 to Std.Array.Length(ChildIds) - 1 do
+    for IdIndex: integer := 0 to Std.Arrays.Length(ChildIds) - 1 do
     begin
       if TuiElementControlSeen(Seen, ChildIds[IdIndex]) then
       begin
         panic('Tui control id must be unique in one tree: ' + Std.Conv.IntToStr(ChildIds[IdIndex]))
       end;
 
-      Std.Array.Push(Seen, ChildIds[IdIndex])
+      Std.Arrays.Push(Seen, ChildIds[IdIndex])
     end
   end;
 

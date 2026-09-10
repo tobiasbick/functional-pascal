@@ -1,5 +1,25 @@
 use super::*;
 
+#[test]
+fn debugger_names_use_the_public_reserved_keyword_safe_api() {
+    assert_eq!(
+        Intrinsic::Array(ArrayIntrinsic::Map).debugger_name(),
+        "Std.Arrays.Map"
+    );
+    assert_eq!(
+        Intrinsic::Console(ConsoleIntrinsic::Read).debugger_name(),
+        "Std.Console.ReadText"
+    );
+    assert_eq!(
+        Intrinsic::Net(NetIntrinsic::WriteWithCancellation).debugger_name(),
+        "Std.Net.SendBytesWithCancellation"
+    );
+    assert_eq!(
+        Intrinsic::Result(ResultIntrinsic::Unwrap).debugger_name(),
+        "Std.Results.Unwrap"
+    );
+}
+
 /// All intrinsic variants — used by tests to verify completeness of `from_u16` coverage.
 const ALL_INTRINSICS: &[Intrinsic] = &[
     Intrinsic::Server(ServerIntrinsic::CreateLifetime),

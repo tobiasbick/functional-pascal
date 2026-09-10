@@ -1,6 +1,6 @@
 unit Std.Tui.Text.TextArea;
 
-uses Std.Array, Std.Console, Std.Str, Std.Tui.Geometry.Point, Std.Tui.Geometry.Size;
+uses Std.Arrays, Std.Console, Std.Str, Std.Tui.Geometry.Point, Std.Tui.Geometry.Size;
 
 public type
   // Logical and terminal-cell location of one controlled text-area caret.
@@ -21,7 +21,7 @@ public type
 // - `Text`: Text processed or displayed by the operation.
 public function TuiTextAreaLineCount(Text: string): integer;
 begin
-  return Std.Array.Length(Std.Str.Split(Text, Std.Str.Chr(10)))
+  return Std.Arrays.Length(Std.Str.Split(Text, Std.Str.Chr(10)))
 end;
 
 // Returns one zero-based logical line without its LF separator.
@@ -32,7 +32,7 @@ end;
 public function TuiTextAreaLineText(Text: string; Line: integer): string;
 begin
   var Lines: array of string := Std.Str.Split(Text, Std.Str.Chr(10));
-  if (Line < 0) or (Line >= Std.Array.Length(Lines)) then
+  if (Line < 0) or (Line >= Std.Arrays.Length(Lines)) then
   begin
     panic('Tui text area line must be within its text')
   end;
@@ -49,9 +49,9 @@ begin
     Target := 0
   end;
 
-  if Target >= Std.Array.Length(Lines) then
+  if Target >= Std.Arrays.Length(Lines) then
   begin
-    Target := Std.Array.Length(Lines) - 1
+    Target := Std.Arrays.Length(Lines) - 1
   end;
   mutable var Start: integer := 0;
   for Index: integer := 0 to Target - 1 do
@@ -75,7 +75,7 @@ begin
   end;
   var Lines: array of string := Std.Str.Split(Text, Std.Str.Chr(10));
   mutable var LineStart: integer := 0;
-  for Line: integer := 0 to Std.Array.Length(Lines) - 1 do
+  for Line: integer := 0 to Std.Arrays.Length(Lines) - 1 do
   begin
     var LineEnd: integer := LineStart + Std.Str.Length(Lines[Line]);
     if Caret <= LineEnd then
@@ -130,7 +130,7 @@ public function TuiTextAreaContentSize(Text: string): TuiSize;
 begin
   var Lines: array of string := Std.Str.Split(Text, Std.Str.Chr(10));
   mutable var Width: integer := 1;
-  for Index: integer := 0 to Std.Array.Length(Lines) - 1 do
+  for Index: integer := 0 to Std.Arrays.Length(Lines) - 1 do
   begin
     var LineWidth: integer := Std.Console.DisplayWidth(Lines[Index]);
     if LineWidth > Width then
@@ -139,7 +139,7 @@ begin
     end
   end;
 
-  return TuiSize.Create(Width, Std.Array.Length(Lines))
+  return TuiSize.Create(Width, Std.Arrays.Length(Lines))
 end;
 
 // Adjusts a non-negative model offset only as much as needed to reveal the caret.

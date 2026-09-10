@@ -43,7 +43,7 @@ fn run_modes(source: &str) {
 fn timed_group_close_returns_while_a_running_pool_worker_ignores_cancellation() {
     let (program, errors) = fpas_parser::parse(
         r#"program NonCooperativeWorker;
-uses Std.Task, Std.Result, Std.Option, Std.Array;
+uses Std.Task, Std.Results, Std.Options, Std.Arrays;
 begin
   var Group: TaskGroup := CreateTaskGroup();
   var Ready: channel of boolean := CreateChannel(1);
@@ -51,11 +51,11 @@ begin
   var Child: task := StartTaskInGroup(Group, function(Token: CancellationToken): integer
   begin
     Send(Ready, true);
-    while IsNone(Std.Result.Unwrap(TryReceive(Release))) do begin end;
+    while IsNone(Std.Results.Unwrap(TryReceive(Release))) do begin end;
     if not IsCancellationRequested(Token) then panic('cancellation was not retained');
     return 42
   end);
-  while IsNone(Std.Result.Unwrap(TryReceive(Ready))) do begin end;
+  while IsNone(Std.Results.Unwrap(TryReceive(Ready))) do begin end;
   if not IsError(CloseTaskGroupWithTimeout(Group, 2)) then panic('running worker was lost');
   Send(Release, true);
   if Wait(Child) <> 42 then panic('worker could not finish after timeout');
@@ -81,7 +81,7 @@ fn timed_group_close_retains_blocked_worker_until_a_later_successful_close() {
 fn child_timed_group_close_yields_to_its_waiting_parent() {
     run_modes(
         r#"program NestedClose;
-uses Std.Task, Std.Result, Std.Array;
+uses Std.Task, Std.Results, Std.Arrays;
 begin
   var Outer: TaskGroup := CreateTaskGroup();
   var Ready: channel of boolean := CreateChannel(1);

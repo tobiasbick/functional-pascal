@@ -13,7 +13,7 @@ pub(super) fn check_push(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
         s::STD_ARRAY_PUSH,
         2,
         args,
-        "Example: Std.Array.Push(Arr, Value). The array must be a `mutable var`.",
+        "Example: Std.Arrays.Push(Arr, Value). The array must be a `mutable var`.",
         span,
     ) {
         return Ty::Error;
@@ -26,7 +26,7 @@ pub(super) fn check_push(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
                 "`{}` first argument must be a simple mutable array variable",
                 s::STD_ARRAY_PUSH
             ),
-            "Use `mutable var N: array of T := [...]` then `Std.Array.Push(N, x)`.",
+            "Use `mutable var N: array of T := [...]` then `Std.Arrays.Push(N, x)`.",
             span,
         );
         c.check_expr(&args[1]);
@@ -54,7 +54,7 @@ pub(super) fn check_pop(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
         s::STD_ARRAY_POP,
         1,
         args,
-        "Example: Std.Array.Pop(Arr).",
+        "Example: Std.Arrays.Pop(Arr).",
         span,
     ) {
         return Ty::Error;
@@ -67,7 +67,7 @@ pub(super) fn check_pop(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
                 "`{}` argument must be a simple mutable array variable",
                 s::STD_ARRAY_POP
             ),
-            "Use `mutable var N: array of T := [...]` then `Std.Array.Pop(N)`.",
+            "Use `mutable var N: array of T := [...]` then `Std.Arrays.Pop(N)`.",
             span,
         );
         return Ty::Error;

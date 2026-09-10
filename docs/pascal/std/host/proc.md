@@ -87,8 +87,8 @@ Starts `Command` with `Args`, waits for the process to exit, and returns `Ok(exi
 
 ```pascal
 var Status: Result of integer, string := Run('fpas', ['--version']);
-if Std.Result.IsError(Status) then
-  WriteLn(Std.Result.UnwrapOr(Status, -1))
+if Std.Results.IsError(Status) then
+  WriteLn(Std.Results.UnwrapOr(Status, -1))
 ```
 
 If the process cannot be started, returns `Error(message)`. If the host reports that the process ended without an exit code, returns `Error('process terminated without an exit code')`.

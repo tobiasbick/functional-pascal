@@ -4,6 +4,7 @@ use crate::ParseDiagnostic;
 mod api;
 mod chained_comparison;
 mod diagnostics;
+mod keywords;
 mod nesting;
 mod recovery;
 mod statement_separators;

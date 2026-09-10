@@ -1,7 +1,7 @@
 // Redirect URL resolution, header filtering, and method rewriting.
 unit Std.Http.Redirect;
 
-uses Std.Array, Std.Conv, Std.Http.Headers, Std.Http.Types, Std.Net.Uri, Std.Str;
+uses Std.Arrays, Std.Conv, Std.Http.Headers, Std.Http.Types, Std.Net.Uri, Std.Str;
 
 // Formats a URI authority with a non-default port when required.
 //
@@ -79,7 +79,7 @@ begin
   end;
   var Parts: array of string := Std.Str.Split(Path, '/');
   mutable var Segments: array of string := [];
-  for Index: integer := 0 to Std.Array.Length(Parts) - 1 do
+  for Index: integer := 0 to Std.Arrays.Length(Parts) - 1 do
   begin
     if (Parts[Index] = '') or (Parts[Index] = '.') then
     begin
@@ -88,18 +88,18 @@ begin
 
     if Parts[Index] = '..' then
     begin
-      if Std.Array.Length(Segments) > 0 then
+      if Std.Arrays.Length(Segments) > 0 then
       begin
-        Segments := Std.Array.Slice(Segments, 0, Std.Array.Length(Segments) - 1)
+        Segments := Std.Arrays.Slice(Segments, 0, Std.Arrays.Length(Segments) - 1)
       end;
 
       continue
     end;
 
-    Std.Array.Push(Segments, Parts[Index])
+    Std.Arrays.Push(Segments, Parts[Index])
   end;
   mutable var Output: string := '/';
-  for Index: integer := 0 to Std.Array.Length(Segments) - 1 do
+  for Index: integer := 0 to Std.Arrays.Length(Segments) - 1 do
   begin
     if Index > 0 then
     begin
@@ -190,7 +190,7 @@ end;
 function FilterHeaders(Headers: array of Header; CrossOrigin: boolean; DropBody: boolean): array of Header;
 begin
   mutable var Output: array of Header := [];
-  for Index: integer := 0 to Std.Array.Length(Headers) - 1 do
+  for Index: integer := 0 to Std.Arrays.Length(Headers) - 1 do
   begin
     var Name: string := Headers[Index].Name;
     if CrossOrigin and
@@ -205,7 +205,7 @@ begin
       continue
     end;
 
-    Std.Array.Push(Output, Headers[Index])
+    Std.Arrays.Push(Output, Headers[Index])
   end;
 
   return Output

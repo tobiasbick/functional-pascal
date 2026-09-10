@@ -142,7 +142,7 @@
   <p>The unrelated <code>task_spawn_wait</code> row measured +7.3% and +5.2%; five direct repetitions ranged from 533 to 597 ms around the 537 ms baseline, and the workload does not enter synchronous callback execution. It is therefore recorded as scheduler noise rather than a causal regression. A preceding probe that resolved callback metadata once per higher-order operation was rolled back after two slower results of +1.7% and +3.6%.</p>
 
   <h2>Stage 5 capacity result — exact task-owned Map output</h2>
-  <p>A dedicated benchmark ran a 64-element <code>Std.Array.Map</code> repeatedly inside one spawned task, exercising the resumable callback state rather than the already optimized synchronous main-task path. The candidate initialized the result vector with the input length, avoiding geometric growth while preserving behavior.</p>
+  <p>A dedicated benchmark ran a 64-element <code>Std.Arrays.Map</code> repeatedly inside one spawned task, exercising the resumable callback state rather than the already optimized synchronous main-task path. The candidate initialized the result vector with the input length, avoiding geometric growth while preserving behavior.</p>
   <p>The first suite comparison measured 776→731 ms (−5.8%), but repeated 50,000-iteration medians measured 790.5→752.0 ms (−4.9%). A less noisy three-run reverse A/B at 200,000 iterations measured 3014→2983 ms (−1.0%). The longer result missed the 5% gate, so the constructor, its implementation test, the temporary benchmark, and its suite entry were all removed. No benchmark-history row was added for the rejected code.</p>
 
   <h2>Original design sketch</h2>

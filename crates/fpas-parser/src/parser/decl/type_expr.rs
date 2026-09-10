@@ -28,7 +28,7 @@ impl Parser {
                 let start = self.current_span();
                 self.advance();
                 self.expect(&Token::LParen);
-                let params = self.parse_formal_param_list();
+                let params = self.parse_formal_param_list(false);
                 self.expect(&Token::RParen);
                 self.expect(&Token::Colon);
                 let return_type = self.parse_type_expr();
@@ -42,7 +42,7 @@ impl Parser {
                 let start = self.current_span();
                 self.advance();
                 self.expect(&Token::LParen);
-                let params = self.parse_formal_param_list();
+                let params = self.parse_formal_param_list(false);
                 self.expect(&Token::RParen);
                 TypeExpr::ProcedureType {
                     params,
@@ -136,9 +136,26 @@ impl Parser {
             .expect_ident()
             .unwrap_or_else(|| self.error_ident(self.current_span()));
         let constraint = if self.eat(&Token::Colon) {
-            let (constraint_name, _) = self
-                .expect_ident()
-                .unwrap_or_else(|| self.error_ident(self.current_span()));
+            let constraint_name = match self.current_token() {
+                Token::Comparable => "Comparable",
+                Token::Numeric => "Numeric",
+                Token::Printable => "Printable",
+                _ => {
+                    let span = self.current_span();
+                    self.error_with_code(
+                        PARSE_EXPECTED_TOKEN,
+                        "Expected generic constraint `Comparable`, `Numeric`, or `Printable`",
+                        "Use one of the supported generic constraints.",
+                        span,
+                    );
+                    return crate::TypeParam {
+                        name,
+                        constraint: None,
+                    };
+                }
+            }
+            .to_owned();
+            self.advance();
             Some(constraint_name)
         } else {
             None

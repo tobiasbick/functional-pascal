@@ -50,7 +50,7 @@ var Total: integer := Reduce(Nums, 0, Sum);
 
 ## `function Find(A: array of T; F: function(X: T): boolean): Option of T`
 
-Returns the **first** element for which `F` returns `true`, wrapped in `Some`. Returns `None` if no element matches. Requires `uses Std.Option` to work with the result.
+Returns the **first** element for which `F` returns `true`, wrapped in `Some`. Returns `None` if no element matches. Requires `uses Std.Options` to work with the result.
 
 ```pascal
 function IsAboveThree(X: integer): boolean;
@@ -115,4 +115,4 @@ WriteLn(AllPos)  // true
 
 - [Array overview](README.md)
 - [Combine and iterate](combine.md)
-- [`Std.Option`](../../result/option.md)
+- [`Std.Options`](../../result/option.md)

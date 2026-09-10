@@ -1,7 +1,7 @@
 // Accepts one LF-delimited TCP request, echoes it, and exits.
 program NetworkTcpEchoServer;
 
-uses Std.Args, Std.Array, Std.Conv, Std.Console, Std.Net, Std.Net.Utf8;
+uses Std.Args, Std.Arrays, Std.Conv, Std.Console, Std.Net, Std.Net.Utf8;
 
 // Returns the first LF delimiter index or minus one.
 //
@@ -9,7 +9,7 @@ uses Std.Args, Std.Array, Std.Conv, Std.Console, Std.Net, Std.Net.Utf8;
 // - `Bytes`: Network bytes to inspect.
 function LineFeedIndex(Bytes: array of integer): integer;
 begin
-  for Index: integer := 0 to Std.Array.Length(Bytes) - 1 do
+  for Index: integer := 0 to Std.Arrays.Length(Bytes) - 1 do
   begin
     if Bytes[Index] = 10 then
     begin
@@ -30,15 +30,15 @@ begin
   mutable var LineEnd: integer := -1;
   while LineEnd < 0 do
   begin
-    case Std.Net.Read(ConnectionValue, 4096) of
+    case Std.Net.ReceiveBytes(ConnectionValue, 4096) of
       Ok(Part):
       begin
-        if Std.Array.Length(Part) = 0 then
+        if Std.Arrays.Length(Part) = 0 then
         begin
           panic('TCP connection closed before the LF delimiter')
         end;
 
-        Bytes := Std.Array.Concat(Bytes, Part);
+        Bytes := Std.Arrays.Concat(Bytes, Part);
         LineEnd := LineFeedIndex(Bytes)
       end;
       Error(Message):
@@ -48,11 +48,11 @@ begin
     end
   end;
 
-  if LineEnd + 1 <> Std.Array.Length(Bytes) then
+  if LineEnd + 1 <> Std.Arrays.Length(Bytes) then
   begin
     panic('TCP echo server accepts exactly one LF-delimited request per connection')
   end;
-  var TextBytes: array of integer := Std.Array.Slice(Bytes, 0, LineEnd);
+  var TextBytes: array of integer := Std.Arrays.Slice(Bytes, 0, LineEnd);
   case Std.Net.Utf8.Decode(TextBytes) of
     Ok(Text):
     begin
@@ -73,11 +73,11 @@ end;
 procedure WriteAll(ConnectionValue: Connection; Bytes: array of integer);
 begin
   mutable var Offset: integer := 0;
-  while Offset < Std.Array.Length(Bytes) do
+  while Offset < Std.Arrays.Length(Bytes) do
   begin
-    var Remaining: array of integer := Std.Array.Slice(Bytes, Offset, Std.Array.Length(Bytes) -
-                                                                      Offset);
-    case Std.Net.Write(ConnectionValue, Remaining) of
+    var Remaining: array of integer := Std.Arrays.Slice(Bytes, Offset, Std.Arrays.Length(Bytes) -
+                                                                       Offset);
+    case Std.Net.SendBytes(ConnectionValue, Remaining) of
       Ok(Count):
       begin
         if Count <= 0 then

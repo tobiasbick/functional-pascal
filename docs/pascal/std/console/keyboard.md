@@ -2,7 +2,7 @@
 
 ## Functions (keyboard)
 
-Keyboard input is **separate** from the `Read` / `ReadLn` buffer. Enabling raw or low-level keyboard mode is handled by the runtime when you call these.
+Keyboard input is **separate** from the `ReadText` / `ReadLn` buffer. Enabling raw or low-level keyboard mode is handled by the runtime when you call these.
 
 ### `function ReadKey(): string`
 

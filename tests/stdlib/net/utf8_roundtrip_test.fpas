@@ -1,12 +1,12 @@
 // Covers UTF-8 round trips and rejection of invalid continuation bytes.
 program Utf8RoundtripTest;
 
-uses Std.Array, Std.Net.Utf8, Std.Str, Std.Test;
+uses Std.Arrays, Std.Net.Utf8, Std.Str, Std.Test;
 
 begin
   var Text: string := 'Hello, Grüße 🌍';
   var Bytes: array of integer := Encode(Text);
-  AssertEquals(19, Std.Array.Length(Bytes));
+  AssertEquals(19, Std.Arrays.Length(Bytes));
   case Decode(Bytes) of
     Ok(Decoded):
     begin

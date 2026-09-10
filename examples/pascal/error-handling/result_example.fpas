@@ -1,6 +1,6 @@
 program ResultExample;
 
-uses Std.Console, Std.Conv, Std.Result;
+uses Std.Console, Std.Conv, Std.Results;
 
 function Divide(A: integer; B: integer): result of integer, string;
 begin

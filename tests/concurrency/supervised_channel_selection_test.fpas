@@ -1,6 +1,6 @@
 program SupervisedChannelSelectionTest;
 
-uses Std.Task, Std.Array, Std.Result, Std.Test;
+uses Std.Task, Std.Arrays, Std.Results, Std.Test;
 
 begin
   for Round: integer := 1 to 4 do

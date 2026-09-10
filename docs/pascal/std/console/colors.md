@@ -94,7 +94,7 @@ Additional text-mode constants:
 
 - **Parameters:** three integers `R`, `G`, `B` (0–255 each).
 - **Result:** none.
-- **Effect:** applies a 24-bit truecolor ANSI escape for the foreground / background. Takes effect immediately for subsequent `Write`/`WriteLn` calls.
+- **Effect:** applies a 24-bit truecolor ANSI escape for the foreground / background. Takes effect immediately for subsequent `WriteText`/`WriteLn` calls.
 - **State interaction:** does not change the packed value returned by `TextAttr()`. A later call to `TextColor`, `TextBackground`, `HighVideo`, `LowVideo`, `NormVideo`, or `SetTextAttr` overrides the RGB color.
 - **Errors:** runtime error if any channel is outside `0..255`.
 
@@ -112,7 +112,7 @@ WriteLn('truecolor text');
 
 - **Parameters:** one integer index (0–255).
 - **Result:** none.
-- **Effect:** applies a 256-color ANSI palette escape for the foreground / background. Takes effect immediately for subsequent `Write`/`WriteLn` calls.
+- **Effect:** applies a 256-color ANSI palette escape for the foreground / background. Takes effect immediately for subsequent `WriteText`/`WriteLn` calls.
 - **State interaction:** does not change the packed value returned by `TextAttr()`. A later call to `TextColor`, `TextBackground`, `HighVideo`, `LowVideo`, `NormVideo`, or `SetTextAttr` overrides the 256-color selection.
 - **Errors:** runtime error if the index is outside `0..255`.
 

@@ -3,7 +3,7 @@
 unit Mandelbrot.App;
 
 uses
-  Std.Array, Std.Console, Std.Conv, Std.Math, Std.Task, Std.Tui, Mandelbrot.Color, Mandelbrot.Model,
+  Std.Arrays, Std.Console, Std.Conv, Std.Math, Std.Task, Std.Tui, Mandelbrot.Color, Mandelbrot.Model,
   Mandelbrot.Render;
 
 const
@@ -264,7 +264,7 @@ public function UpdateMandelbrotFrame(
 begin
   Cmd.Set(TuiCmd.NoCommand);
   if (Message.Generation <> State.Generation) or
-     (Std.Array.Length(Message.Cells) <> State.Grid.Width * State.Grid.Height) then
+     (Std.Arrays.Length(Message.Cells) <> State.Grid.Width * State.Grid.Height) then
   begin
     return State
   end;

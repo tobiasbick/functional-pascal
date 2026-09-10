@@ -77,7 +77,7 @@ returns a persistable `dataId` only for executable globals (`g:<index>`) with
 `setDataBreakpoints` items forwards the same global identity and expression as
 JSONL. VS Code uses the standard variable data-breakpoint
 UI; the adapter does not add a second watchpoint command or an assign editor
-command. `fpas/record` starts capturing all-stop events and queued `Read`/`ReadLn`
+command. `fpas/record` starts capturing all-stop events and queued `ReadText`/`ReadLn`
 lines without resuming or enabling reverse playback. Capture stays in session
 memory, keeps at most 4,096 events, writes no recording files, and retains no
 recording snapshots. `fpas/recordingDescribe` names versioned program identity,

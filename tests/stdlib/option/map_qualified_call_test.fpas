@@ -1,6 +1,6 @@
 program T;
 
-uses Std.Console, Std.Option, Std.Conv;
+uses Std.Console, Std.Options, Std.Conv;
 
 function ToStr(V: integer): string;
 begin
@@ -9,6 +9,6 @@ end;
 
 begin
   var O: option of integer := Some(10);
-  var M: option of string := Std.Option.Map(O, ToStr);
+  var M: option of string := Std.Options.Map(O, ToStr);
   WriteLn(Unwrap(M))
 end.

@@ -1,6 +1,6 @@
 program ElementTreeTest;
 
-uses Std.Array, Std.Test, Std.Tui;
+uses Std.Arrays, Std.Test, Std.Tui;
 
 function ViewTree(Value: integer): TuiElement;
 begin
@@ -30,12 +30,12 @@ begin
   case Tree of
     TuiElement.Desktop(Focused, DesktopChildren):
     begin
-      AssertEquals(2, Std.Array.Length(DesktopChildren));
+      AssertEquals(2, Std.Arrays.Length(DesktopChildren));
       case DesktopChildren[0] of
         TuiElement.Panel(Title, PanelChildren):
         begin
           AssertEquals('Dashboard', Title);
-          AssertEquals(1, Std.Array.Length(PanelChildren))
+          AssertEquals(1, Std.Arrays.Length(PanelChildren))
         end
         else
         begin
@@ -47,7 +47,7 @@ begin
         TuiElement.Overlay(Title, OverlayChildren):
         begin
           AssertEquals('Confirm', Title);
-          AssertEquals(1, Std.Array.Length(OverlayChildren))
+          AssertEquals(1, Std.Arrays.Length(OverlayChildren))
         end
         else
         begin

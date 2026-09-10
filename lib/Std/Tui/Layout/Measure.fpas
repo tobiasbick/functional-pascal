@@ -1,11 +1,11 @@
 unit Std.Tui.Layout.Measure;
 
 uses
-  Std.Array, Std.Console, Std.Tui.Chrome.MenuItem, Std.Tui.Chrome.MenuNode, Std.Tui.Chrome.MenuQuery,
-  Std.Tui.Chrome.StatusItem, Std.Tui.Elements.Element, Std.Tui.Geometry.Size,
-  Std.Tui.Layout.LayoutSettings, Std.Tui.Layout.MeasureAxis, Std.Tui.Layout.MeasureResult,
-  Std.Tui.Layout.MeasureSpec, Std.Tui.Layout.SizePolicy, Std.Tui.Layout.Spacer,
-  Std.Tui.Text.TextArea;
+  Std.Arrays, Std.Console, Std.Tui.Chrome.MenuItem, Std.Tui.Chrome.MenuNode,
+  Std.Tui.Chrome.MenuQuery, Std.Tui.Chrome.StatusItem, Std.Tui.Elements.Element,
+  Std.Tui.Geometry.Size, Std.Tui.Layout.LayoutSettings, Std.Tui.Layout.MeasureAxis,
+  Std.Tui.Layout.MeasureResult, Std.Tui.Layout.MeasureSpec, Std.Tui.Layout.SizePolicy,
+  Std.Tui.Layout.Spacer, Std.Tui.Text.TextArea;
 
 public const
   // Sentinel maximum extent used by expanding layout measurements.
@@ -19,7 +19,7 @@ end;
 function TuiMeasureLeafMenu(Nodes: array of TuiMenuNode): TuiMeasureResult;
 begin
   mutable var Width: integer := 0;
-  for Index: integer := 0 to Std.Array.Length(Nodes) - 1 do
+  for Index: integer := 0 to Std.Arrays.Length(Nodes) - 1 do
   begin
     case TuiMenuNodeParent(Nodes[Index]) of
       Some(Parent):
@@ -61,11 +61,11 @@ end;
 function TuiMeasureLeafList(Items: array of string): TuiMeasureResult;
 begin
   mutable var Width: integer := 2;
-  for Index: integer := 0 to Std.Array.Length(Items) - 1 do
+  for Index: integer := 0 to Std.Arrays.Length(Items) - 1 do
   begin
     Width := TuiMeasureAxis.Max(Width, Std.Console.DisplayWidth(Items[Index]) + 2)
   end;
-  var Count: integer := Std.Array.Length(Items);
+  var Count: integer := Std.Arrays.Length(Items);
   var Height: integer := TuiMeasureAxis.Max(Count, 1);
   return TuiMeasureResult.Fixed(TuiSize.Create(Width, Height))
 end;
@@ -73,7 +73,7 @@ end;
 function TuiMeasureLeafMenuBar(Items: array of TuiMenuItem): TuiMeasureResult;
 begin
   mutable var Width: integer := 0;
-  for Index: integer := 0 to Std.Array.Length(Items) - 1 do
+  for Index: integer := 0 to Std.Arrays.Length(Items) - 1 do
   begin
     Width := (Width + Std.Console.DisplayWidth(Items[Index].Text)) + 2
   end;
@@ -84,7 +84,7 @@ end;
 function TuiMeasureLeafStatusLine(Items: array of TuiStatusItem): TuiMeasureResult;
 begin
   mutable var Width: integer := 0;
-  for Index: integer := 0 to Std.Array.Length(Items) - 1 do
+  for Index: integer := 0 to Std.Arrays.Length(Items) - 1 do
   begin
     if Index > 0 then
     begin
@@ -236,7 +236,7 @@ begin
     end;
     TuiElement.Scroll(Id, Offset, ChangeAction, Children):
     begin
-      if Std.Array.Length(Children) = 1 then
+      if Std.Arrays.Length(Children) = 1 then
       begin
         var Child: TuiMeasureResult := TuiMeasure(Children[0], TuiMeasureSpec.Unbounded());
         var Preferred: TuiSize := TuiSize.Create(TuiMeasureAxis.Max(1, Child.Preferred.Width), TuiMeasureAxis.Max(1, Child.Preferred.Height));
@@ -285,7 +285,7 @@ begin
       mutable var PreferredCross: integer := 0;
       mutable var MaximumCross: integer := 0;
       mutable var VisibleCount: integer := 0;
-      for Index: integer := 0 to Std.Array.Length(Children) - 1 do
+      for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
       begin
         if TuiMeasureChildParticipates(Children[Index]) then
         begin
@@ -318,7 +318,7 @@ begin
       mutable var PreferredCross: integer := 0;
       mutable var MaximumCross: integer := 0;
       mutable var VisibleCount: integer := 0;
-      for Index: integer := 0 to Std.Array.Length(Children) - 1 do
+      for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
       begin
         if TuiMeasureChildParticipates(Children[Index]) then
         begin
@@ -345,7 +345,7 @@ begin
     TuiElement.Layout(Settings, Children):
     begin
       mutable var Child: TuiMeasureResult := TuiMeasureResult.Fixed(TuiSize.Create(0, 0));
-      if (Std.Array.Length(Children) = 1) and TuiMeasureChildParticipates(Children[0]) then
+      if (Std.Arrays.Length(Children) = 1) and TuiMeasureChildParticipates(Children[0]) then
       begin
         Child := TuiMeasure(Children[0], Spec)
       end;
@@ -387,7 +387,7 @@ begin
       mutable var ContentMinH: integer := 0;
       mutable var ContentPrefH: integer := 0;
       mutable var ContentMaxH: integer := 0;
-      for Index: integer := 0 to Std.Array.Length(Children) - 1 do
+      for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
       begin
         if TuiMeasureChildParticipates(Children[Index]) then
         begin
@@ -418,7 +418,7 @@ begin
       mutable var MinimumHeight: integer := 0;
       mutable var PreferredHeight: integer := 0;
       mutable var MaximumHeight: integer := 0;
-      for Index: integer := 0 to Std.Array.Length(Children) - 1 do
+      for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
       begin
         if TuiMeasureChildParticipates(Children[Index]) then
         begin

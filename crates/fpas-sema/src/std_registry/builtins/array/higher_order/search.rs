@@ -1,4 +1,4 @@
-//! Higher-order `Std.Array` semantic checks: `Find`, `FindIndex`, `Any`, `All`, `ForEach`.
+//! Higher-order `Std.Arrays` semantic checks: `Find`, `FindIndex`, `Any`, `All`, `ForEach`.
 //!
 //! **Documentation:** `docs/pascal/std/collections/array/README.md` (from the repository root).
 
@@ -12,14 +12,14 @@ use fpas_std::std_symbols as s;
 use super::super::{array_elem_ty, check_argument_count};
 use super::callbacks::{expect_unary_function_callback, expect_unary_procedure_callback};
 
-/// `Std.Array.Find(Arr, Pred)` → `option of T` where `Pred: function(V: T): boolean`.
+/// `Std.Arrays.Find(Arr, Pred)` → `option of T` where `Pred: function(V: T): boolean`.
 pub(crate) fn check_find(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
     if !check_argument_count(
         c,
         s::STD_ARRAY_FIND,
         2,
         args,
-        "Example: Std.Array.Find(Arr, function(X: integer): boolean begin return X > 0 end).",
+        "Example: Std.Arrays.Find(Arr, function(X: integer): boolean begin return X > 0 end).",
         span,
     ) {
         return Ty::Error;
@@ -52,14 +52,14 @@ pub(crate) fn check_find(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
     Ty::Option(Box::new(elem_ty))
 }
 
-/// `Std.Array.FindIndex(Arr, Pred)` → `integer`.
+/// `Std.Arrays.FindIndex(Arr, Pred)` → `integer`.
 pub(crate) fn check_find_index(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
     if !check_argument_count(
         c,
         s::STD_ARRAY_FIND_INDEX,
         2,
         args,
-        "Example: Std.Array.FindIndex(Arr, function(X: integer): boolean begin return X > 0 end).",
+        "Example: Std.Arrays.FindIndex(Arr, function(X: integer): boolean begin return X > 0 end).",
         span,
     ) {
         return Ty::Error;
@@ -95,14 +95,14 @@ pub(crate) fn check_find_index(c: &mut Checker, args: &[Expr], span: Span) -> Ty
     Ty::Integer
 }
 
-/// `Std.Array.Any(Arr, Pred)` → `boolean`.
+/// `Std.Arrays.Any(Arr, Pred)` → `boolean`.
 pub(crate) fn check_any(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
     if !check_argument_count(
         c,
         s::STD_ARRAY_ANY,
         2,
         args,
-        "Example: Std.Array.Any(Arr, function(X: integer): boolean begin return X > 0 end).",
+        "Example: Std.Arrays.Any(Arr, function(X: integer): boolean begin return X > 0 end).",
         span,
     ) {
         return Ty::Error;
@@ -135,14 +135,14 @@ pub(crate) fn check_any(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
     Ty::Boolean
 }
 
-/// `Std.Array.All(Arr, Pred)` → `boolean`.
+/// `Std.Arrays.All(Arr, Pred)` → `boolean`.
 pub(crate) fn check_all(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
     if !check_argument_count(
         c,
         s::STD_ARRAY_ALL,
         2,
         args,
-        "Example: Std.Array.All(Arr, function(X: integer): boolean begin return X > 0 end).",
+        "Example: Std.Arrays.All(Arr, function(X: integer): boolean begin return X > 0 end).",
         span,
     ) {
         return Ty::Error;
@@ -175,14 +175,14 @@ pub(crate) fn check_all(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
     Ty::Boolean
 }
 
-/// `Std.Array.ForEach(Arr, F)` → `unit`.
+/// `Std.Arrays.ForEach(Arr, F)` → `unit`.
 pub(crate) fn check_for_each(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
     if !check_argument_count(
         c,
         s::STD_ARRAY_FOR_EACH,
         2,
         args,
-        "Example: Std.Array.ForEach(Arr, procedure(X: integer) begin ... end).",
+        "Example: Std.Arrays.ForEach(Arr, procedure(X: integer) begin ... end).",
         span,
     ) {
         return Ty::Error;

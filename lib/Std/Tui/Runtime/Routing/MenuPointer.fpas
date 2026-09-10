@@ -1,7 +1,7 @@
 unit Std.Tui.Runtime.Routing.MenuPointer;
 
 uses
-  Std.Array, Std.Console, Std.Tui.Chrome.MenuGeometry, Std.Tui.Chrome.MenuNode,
+  Std.Arrays, Std.Console, Std.Tui.Chrome.MenuGeometry, Std.Tui.Chrome.MenuNode,
   Std.Tui.Chrome.MenuQuery, Std.Tui.Elements.Element, Std.Tui.Geometry.Point, Std.Tui.Geometry.Rect,
   Std.Tui.Ids.Action, Std.Tui.Ids.ControlId, Std.Tui.Layout.Frame, Std.Tui.Runtime.Msg,
   Std.Tui.Runtime.Routing.Focus;
@@ -39,7 +39,7 @@ begin
       begin
         mutable var Menus: array of TuiPointerMenu := TuiPointerMenus;
         TuiPointerMenus := [];
-        Std.Array.Push(Menus, record
+        Std.Arrays.Push(Menus, record
           Id := Id;
           Nodes := Nodes;
           State := State;
@@ -52,7 +52,7 @@ begin
     TuiElement.Desktop(Focused, Children):
     begin
       mutable var ModalIndex: integer := -1;
-      for ChildIndex: integer := 0 to Std.Array.Length(Children) - 1 do
+      for ChildIndex: integer := 0 to Std.Arrays.Length(Children) - 1 do
       begin
         case Children[ChildIndex] of
           TuiElement.Overlay(Title, OverlayChildren):
@@ -65,7 +65,7 @@ begin
         end
       end;
 
-      for ChildIndex: integer := 0 to Std.Array.Length(Children) - 1 do
+      for ChildIndex: integer := 0 to Std.Arrays.Length(Children) - 1 do
       begin
         Next := TuiPointerMenuWalk(Frame, Children[ChildIndex], Next, AllowMenu and
                                                                       ((ModalIndex < 0) or (ModalIndex = ChildIndex)))
@@ -73,42 +73,42 @@ begin
     end;
     TuiElement.Scroll(Id, Offset, ChangeAction, Children):
     begin
-      for ChildIndex: integer := 0 to Std.Array.Length(Children) - 1 do
+      for ChildIndex: integer := 0 to Std.Arrays.Length(Children) - 1 do
       begin
         Next := TuiPointerMenuWalk(Frame, Children[ChildIndex], Next, AllowMenu)
       end
     end;
     TuiElement.Row(Children, Spacing):
     begin
-      for ChildIndex: integer := 0 to Std.Array.Length(Children) - 1 do
+      for ChildIndex: integer := 0 to Std.Arrays.Length(Children) - 1 do
       begin
         Next := TuiPointerMenuWalk(Frame, Children[ChildIndex], Next, AllowMenu)
       end
     end;
     TuiElement.Column(Children, Spacing):
     begin
-      for ChildIndex: integer := 0 to Std.Array.Length(Children) - 1 do
+      for ChildIndex: integer := 0 to Std.Arrays.Length(Children) - 1 do
       begin
         Next := TuiPointerMenuWalk(Frame, Children[ChildIndex], Next, AllowMenu)
       end
     end;
     TuiElement.Layout(Settings, Children):
     begin
-      for ChildIndex: integer := 0 to Std.Array.Length(Children) - 1 do
+      for ChildIndex: integer := 0 to Std.Arrays.Length(Children) - 1 do
       begin
         Next := TuiPointerMenuWalk(Frame, Children[ChildIndex], Next, AllowMenu)
       end
     end;
     TuiElement.Panel(Title, Children):
     begin
-      for ChildIndex: integer := 0 to Std.Array.Length(Children) - 1 do
+      for ChildIndex: integer := 0 to Std.Arrays.Length(Children) - 1 do
       begin
         Next := TuiPointerMenuWalk(Frame, Children[ChildIndex], Next, AllowMenu)
       end
     end;
     TuiElement.Overlay(Title, Children):
     begin
-      for ChildIndex: integer := 0 to Std.Array.Length(Children) - 1 do
+      for ChildIndex: integer := 0 to Std.Arrays.Length(Children) - 1 do
       begin
         Next := TuiPointerMenuWalk(Frame, Children[ChildIndex], Next, AllowMenu)
       end
@@ -162,7 +162,7 @@ begin
     return None
   end;
   mutable var X: integer := Menu.Bounds.X;
-  for Index: integer := 0 to Std.Array.Length(Menu.Nodes) - 1 do
+  for Index: integer := 0 to Std.Arrays.Length(Menu.Nodes) - 1 do
   begin
     case TuiMenuNodeParent(Menu.Nodes[Index]) of
       Some(Parent):
@@ -179,9 +179,9 @@ begin
             return Some(TuiPointerMenuHover(Menu, TuiMenuNodeIdOf(Menu.Nodes[Index])))
           end;
 
-          return Some(Std.Array.Concat(TuiPointerMenuFocus(Root, Menu), [
-                                                                          TuiMsg.MenuChanged(Menu.Id, Menu.ChangeAction, TuiMenuState.OpenAt(TuiMenuNodeIdOf(Menu.Nodes[Index])))
-                                                                        ]))
+          return Some(Std.Arrays.Concat(TuiPointerMenuFocus(Root, Menu), [
+                                                                           TuiMsg.MenuChanged(Menu.Id, Menu.ChangeAction, TuiMenuState.OpenAt(TuiMenuNodeIdOf(Menu.Nodes[Index])))
+                                                                         ]))
         end;
 
         X := X + Width
@@ -200,7 +200,7 @@ function TuiPointerMenuPopupHit(
 ): option of array of TuiMsg;
 begin
   var Popups: array of TuiMenuPopup := TuiMenuPopupGeometry(Menu.Nodes, Menu.State, Menu.Bounds, TerminalBounds);
-  for PopupIndex: integer := Std.Array.Length(Popups) - 1 downto 0 do
+  for PopupIndex: integer := Std.Arrays.Length(Popups) - 1 downto 0 do
   begin
     if Popups[PopupIndex].Bounds.Contains(Point) then
     begin
@@ -210,7 +210,7 @@ begin
         return Some([])
       end;
       mutable var ChildRow: integer := 0;
-      for Index: integer := 0 to Std.Array.Length(Menu.Nodes) - 1 do
+      for Index: integer := 0 to Std.Arrays.Length(Menu.Nodes) - 1 do
       begin
         if TuiMenuHasParent(Menu.Nodes[Index], Some(Popups[PopupIndex].Parent)) then
         begin
@@ -284,7 +284,7 @@ begin
     panic('Tui menu pointer routing did not consume the complete arranged frame')
   end;
 
-  if Std.Array.Length(TuiPointerMenus) = 0 then
+  if Std.Arrays.Length(TuiPointerMenus) = 0 then
   begin
     return None
   end;

@@ -1,6 +1,6 @@
 unit Notes.View;
 
-uses Notes.Model, Notes.Update, Std.Array, Std.Conv, Std.Option, Std.Str, Std.Tui;
+uses Notes.Model, Notes.Update, Std.Arrays, Std.Conv, Std.Options, Std.Str, Std.Tui;
 
 function Expanding(Child: TuiElement; Stretch: integer): TuiElement;
 begin
@@ -48,12 +48,12 @@ begin
     Dirty := '  ● unsaved'
   end;
 
-  if Std.Array.Length(State.Issues) > 0 then
+  if Std.Arrays.Length(State.Issues) > 0 then
   begin
-    Issues := ('  ·  ' + IntToStr(Std.Array.Length(State.Issues))) + ' invalid'
+    Issues := ('  ·  ' + IntToStr(Std.Arrays.Length(State.Issues))) + ' invalid'
   end;
 
-  return TuiElementBuilders.MakeRule(((((' NOTES  ·  ' + IntToStr(Std.Array.Length(NotesFilteredIndices(State.Notes, '')))) + ' active') + Issues) + Dirty) +
+  return TuiElementBuilders.MakeRule(((((' NOTES  ·  ' + IntToStr(Std.Arrays.Length(NotesFilteredIndices(State.Notes, '')))) + ' active') + Issues) + Dirty) +
                                      '  ·  Ctrl+K commands ')
 end;
 
@@ -79,7 +79,7 @@ end;
 
 function EditorPane(State: NotesModel): TuiElement;
 begin
-  if (State.Selected < 0) or (State.Selected >= Std.Array.Length(State.Notes)) then
+  if (State.Selected < 0) or (State.Selected >= Std.Arrays.Length(State.Notes)) then
   begin
     return EmptyEditor()
   end;
@@ -133,7 +133,8 @@ end;
 
 function CommandOverlay(State: NotesModel): TuiElement;
 begin
-  var HasNote: boolean := (State.Selected >= 0) and (State.Selected < Std.Array.Length(State.Notes));
+  var HasNote: boolean := (State.Selected >= 0) and
+                          (State.Selected < Std.Arrays.Length(State.Notes));
   mutable var Save: TuiElement := TuiElementBuilders.MakeDisabledButton(TuiControlId.Create(21), 'Save note', '', TuiAction.Create(11));
   mutable var Pin: TuiElement := TuiElementBuilders.MakeDisabledButton(TuiControlId.Create(22), 'Toggle pin', '', TuiAction.Create(12));
   mutable var Archive: TuiElement := TuiElementBuilders.MakeDisabledButton(TuiControlId.Create(23), 'Archive note', '', TuiAction.Create(13));
@@ -231,7 +232,7 @@ begin
       return 1
     end;
 
-    if (State.Selected >= 0) and (State.Selected < Std.Array.Length(State.Notes)) then
+    if (State.Selected >= 0) and (State.Selected < Std.Arrays.Length(State.Notes)) then
     begin
       if (State.Focus >= 3) and (State.Focus <= 5) then
       begin
@@ -248,13 +249,13 @@ begin
       return State.Focus
     end;
 
-    if ((State.Selected >= 0) and (State.Selected < Std.Array.Length(State.Notes))) and
+    if ((State.Selected >= 0) and (State.Selected < Std.Arrays.Length(State.Notes))) and
        ((State.Focus >= 3) and (State.Focus <= 5)) then
     begin
       return State.Focus
     end;
 
-    if (State.Selected >= 0) and (State.Selected < Std.Array.Length(State.Notes)) then
+    if (State.Selected >= 0) and (State.Selected < Std.Arrays.Length(State.Notes)) then
     begin
       return 5
     end
@@ -273,7 +274,7 @@ begin
         return State.Focus
       end;
 
-      if ((State.Selected >= 0) and (State.Selected < Std.Array.Length(State.Notes))) and
+      if ((State.Selected >= 0) and (State.Selected < Std.Arrays.Length(State.Notes))) and
          ((State.Focus >= 21) and (State.Focus <= 23)) then
       begin
         return State.Focus
@@ -322,7 +323,7 @@ begin
                                                ];
   if State.Overlay <> NotesOverlay.Closed then
   begin
-    Std.Array.Push(Children, Overlay(State))
+    Std.Arrays.Push(Children, Overlay(State))
   end;
 
   return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(OverlayFocus(State))), Children)

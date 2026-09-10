@@ -4,7 +4,7 @@
 
 program VmIntrinsicDispatchBenchmark;
 
-uses Std.Args, Std.Array, Std.Console, Std.Conv, Std.Dict, Std.Str, Std.Time;
+uses Std.Args, Std.Arrays, Std.Console, Std.Conv, Std.Dictionaries, Std.Str, Std.Time;
 
 const
   WarmupIterations: integer := 10000;
@@ -20,9 +20,9 @@ begin
   mutable var Total: integer := 0;
   for Index: integer := 1 to Iterations do
   begin
-    Total := Total + Std.Array.Length(Values);
+    Total := Total + Std.Arrays.Length(Values);
     Total := Total + Std.Str.Length(Text);
-    Total := Total + Std.Dict.Length(Entries)
+    Total := Total + Std.Dictionaries.Length(Entries)
   end;
 
   return Total

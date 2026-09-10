@@ -27,7 +27,7 @@ impl Worker {
 
     #[expect(
         clippy::too_many_arguments,
-        reason = "Console event records have a fixed field layout mirroring Std.Console.Event"
+        reason = "Console event records have a fixed field layout mirroring Std.Console.ConsoleEvent"
     )]
     fn console_event_record_fields(
         &self,
@@ -47,7 +47,7 @@ impl Worker {
         location: SourceLocation,
     ) -> Result<Value, VmError> {
         self.record_value(
-            "Std.Console.Event",
+            "Std.Console.ConsoleEvent",
             vec![
                 Value::Integer(kind as i64),
                 self.key_event_record(key, location)?,
@@ -67,7 +67,7 @@ impl Worker {
         )
     }
 
-    /// Builds one `Std.Console.Event` record from the runtime console event model.
+    /// Builds one `Std.Console.ConsoleEvent` record from the runtime console event model.
     pub(crate) fn console_event_record(
         &self,
         event: fpas_std::ConsoleEvent,

@@ -27,11 +27,11 @@ standard_unit_names! {
     STD_UNIT_MATH = "Std.Math";
     STD_UNIT_NET = "Std.Net";
     STD_UNIT_RANDOM = "Std.Random";
-    STD_UNIT_ARRAY = "Std.Array";
-    STD_UNIT_RESULT = "Std.Result";
-    STD_UNIT_OPTION = "Std.Option";
+    STD_UNIT_ARRAY = "Std.Arrays";
+    STD_UNIT_RESULT = "Std.Results";
+    STD_UNIT_OPTION = "Std.Options";
     STD_UNIT_TASK = "Std.Task";
-    STD_UNIT_DICT = "Std.Dict";
+    STD_UNIT_DICT = "Std.Dictionaries";
     STD_UNIT_JSON = "Std.Json";
     STD_UNIT_TOML = "Std.Toml";
     STD_UNIT_TUI = "Std.Tui";

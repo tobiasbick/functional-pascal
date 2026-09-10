@@ -23,7 +23,7 @@ documented_token_enum! {
 /// Lexical token produced by the Functional Pascal lexer.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Token {
-    // Keywords (57)
+    // Keywords (63)
     Program,
     Unit,
     Uses,
@@ -91,6 +91,18 @@ pub enum Token {
     ///
     /// **Documentation:** `docs/pascal/language/types/record-events.md`
     Event,
+    /// Introduces a readable property or event accessor.
+    Read,
+    /// Introduces a writable property or event accessor.
+    Write,
+    /// Restricts a generic type parameter to comparable types.
+    Comparable,
+    /// Restricts a generic type parameter to numeric types.
+    Numeric,
+    /// Restricts a generic type parameter to printable types.
+    Printable,
+    /// Names the receiver parameter and expression inside an instance record method.
+    SelfKw,
     /// Clears an event handler: `Button.OnClick := nil`.
     ///
     /// **Documentation:** `docs/pascal/language/types/record-events.md`

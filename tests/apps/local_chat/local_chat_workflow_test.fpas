@@ -2,7 +2,7 @@
 program LocalChatWorkflowTest;
 
 uses
-  LocalChat.Model, LocalChat.Theme, LocalChat.Update, LocalChat.View, Std.Option, Std.Str, Std.Test,
+  LocalChat.Model, LocalChat.Theme, LocalChat.Update, LocalChat.View, Std.Options, Std.Str, Std.Test,
   Std.Tui;
 
 // Reports whether any rendered row contains text.
@@ -63,6 +63,6 @@ begin
   AssertEquals(18, Model.Height);
   var Cmd: TuiCmdOutput := TuiCmdOutput.Create();
   LocalChatUpdate(Model, TuiMsg.Key(QuitKey()), Cmd);
-  AssertTrue(Cmd.Read() = TuiCmd.Quit);
+  AssertTrue(Cmd.Command() = TuiCmd.Quit);
   App.Close()
 end.

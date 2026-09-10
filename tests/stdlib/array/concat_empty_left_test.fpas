@@ -1,6 +1,6 @@
 program T;
 
-uses Std.Console, Std.Array;
+uses Std.Console, Std.Arrays;
 
 begin
   var C: array of integer := Concat([], [1, 2]);

@@ -14,10 +14,7 @@ impl Parser {
     ) -> Vec<Decl> {
         self.advance();
         let mut defs = Vec::new();
-        if !matches!(
-            self.current_token(),
-            Token::Ident(_) | Token::Event | Token::Property
-        ) {
+        if !matches!(self.current_token(), Token::Ident(_)) {
             self.error_with_code(
                 PARSE_EXPECTED_IDENTIFIER,
                 "Expected a type declaration after `type`",
@@ -25,7 +22,7 @@ impl Parser {
                 self.current_span(),
             );
         }
-        while let Token::Ident(_) | Token::Event | Token::Property = self.current_token() {
+        while let Token::Ident(_) = self.current_token() {
             defs.push(Decl::TypeDef(
                 self.parse_type_def(visibility, allow_member_visibility),
             ));

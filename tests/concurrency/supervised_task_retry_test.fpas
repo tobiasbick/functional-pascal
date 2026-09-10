@@ -1,6 +1,6 @@
 program SupervisedTaskRetryTest;
 
-uses Std.Task, Std.Array, Std.Result, Std.Test;
+uses Std.Task, Std.Arrays, Std.Results, Std.Test;
 
 begin
   var Group: TaskGroup := CreateTaskGroup();

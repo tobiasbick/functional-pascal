@@ -1,4 +1,4 @@
-//! `Std.Dict` symbol names and registry group.
+//! `Std.Dictionaries` symbol names and registry group.
 
 std_symbol!(STD_DICT_LENGTH = std_dict!("Length"));
 std_symbol!(STD_DICT_CONTAINS_KEY = std_dict!("ContainsKey"));

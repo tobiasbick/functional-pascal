@@ -19,7 +19,7 @@ end.
 
 After `uses Std.Json;` use short names (`JsonValue`, `Parse`, `Stringify`) or qualified names (`Std.Json.JsonValue`, `Std.Json.Parse`, `Std.Json.Stringify`).
 
-`JsonValue` is an enum. Use `JsonValue.String('text')`, `JsonValue.Array([...])`, and similar constructors for new JSON values.
+`JsonValue` is an enum. Use `JsonValue.String('text')`, `JsonValue.ArrayValue([...])`, and similar constructors for new JSON values.
 
 ---
 
@@ -39,7 +39,7 @@ type JsonValue = enum
   Bool(Value: boolean);
   Number(Value: real);
   String(Value: string);
-  Array(Items: array of JsonValue);
+  ArrayValue(Items: array of JsonValue);
   Object(Fields: dict of string to JsonValue);
 end;
 ```
@@ -75,7 +75,7 @@ function Stringify(Value: JsonValue): string;
 Serializes a `JsonValue` to compact JSON text.
 
 ```pascal
-var Value: JsonValue := JsonValue.Array([
+var Value: JsonValue := JsonValue.ArrayValue([
   JsonValue.Bool(true),
   JsonValue.Null,
   JsonValue.String('hi'),

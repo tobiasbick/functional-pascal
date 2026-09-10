@@ -13,7 +13,7 @@ pub const RUNTIME_AGGREGATE_TYPES: &[&str] = &[
     "Std.Toml.TomlValue",
     "Std.Proc.ProcessOutput",
     "Std.Console.KeyEvent",
-    "Std.Console.Event",
+    "Std.Console.ConsoleEvent",
     "Std.Console.Color",
     "Std.Console.Cell",
 ];

@@ -4,7 +4,7 @@
 
 program WrapperPayloadBenchmark;
 
-uses Std.Args, Std.Console, Std.Conv, Std.Option, Std.Result, Std.Time;
+uses Std.Args, Std.Console, Std.Conv, Std.Options, Std.Results, Std.Time;
 
 const
   WarmupIterations: integer := 100;
@@ -15,8 +15,8 @@ begin
   for Index: integer := 1 to Iterations do
   begin
     var ResultValue: result of integer, string := Ok(Index);
-    var OptionValue: option of integer := Some(Std.Result.Unwrap(ResultValue));
-    Total := Total + Std.Option.Unwrap(OptionValue)
+    var OptionValue: option of integer := Some(Std.Results.Unwrap(ResultValue));
+    Total := Total + Std.Options.Unwrap(OptionValue)
   end;
 
   return Total

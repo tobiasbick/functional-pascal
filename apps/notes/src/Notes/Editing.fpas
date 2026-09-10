@@ -1,7 +1,7 @@
 // Controlled text proposals and selection updates for Notes.
 unit Notes.Editing;
 
-uses Notes.Model, Std.Array, Std.Conv, Std.Tui;
+uses Notes.Model, Std.Arrays, Std.Conv, Std.Tui;
 
 const
   SearchChangedAction: integer := 1;
@@ -12,7 +12,7 @@ const
 // Reports whether the selection refers to an existing note.
 public function NotesHasSelection(State: NotesModel): boolean;
 begin
-  return (State.Selected >= 0) and (State.Selected < Std.Array.Length(State.Notes))
+  return (State.Selected >= 0) and (State.Selected < Std.Arrays.Length(State.Notes))
 end;
 
 // Replaces one note while preserving the remaining model state.
@@ -27,12 +27,12 @@ end;
 
 function SameTags(Left: array of string; Right: array of string): boolean;
 begin
-  if Std.Array.Length(Left) <> Std.Array.Length(Right) then
+  if Std.Arrays.Length(Left) <> Std.Arrays.Length(Right) then
   begin
     return false
   end;
 
-  for Index: integer := 0 to Std.Array.Length(Left) - 1 do
+  for Index: integer := 0 to Std.Arrays.Length(Left) - 1 do
   begin
     if Left[Index] <> Right[Index] then
     begin
@@ -51,7 +51,7 @@ begin
   begin
     Next.Search := Text;
     Next.SearchCaret := Caret;
-    Next.Status := IntToStr(Std.Array.Length(NotesFilteredIndices(Next.Notes, Text))) +
+    Next.Status := IntToStr(Std.Arrays.Length(NotesFilteredIndices(Next.Notes, Text))) +
                    ' matching note(s)';
     return Next
   end;

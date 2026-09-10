@@ -151,7 +151,7 @@ fn http_client_supports_standard_extension_and_head_methods() {
         &format!(
             r#"program HttpClientMethods;
 
-uses Std.Array, Std.Console, Std.Http, Std.Str;
+uses Std.Arrays, Std.Console, Std.Http, Std.Str;
 
 procedure Expect(RequestValue: Request; ExpectedBodyLength: integer);
 begin
@@ -163,7 +163,7 @@ begin
         panic('unexpected HTTP status')
       end;
 
-      if Std.Array.Length(ResponseValue.Body) <> ExpectedBodyLength then
+      if Std.Arrays.Length(ResponseValue.Body) <> ExpectedBodyLength then
       begin
         panic('unexpected HTTP body length')
       end

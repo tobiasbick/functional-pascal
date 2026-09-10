@@ -2,7 +2,7 @@
 
 program ArrayBasics;
 
-uses Std.Console, Std.Conv, Std.Array;
+uses Std.Console, Std.Conv, Std.Arrays;
 
 function IsEven(X: integer): boolean;
 begin

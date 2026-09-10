@@ -19,11 +19,13 @@ impl Parser {
             let visibility = self.parse_visibility(allow_member_visibility);
             match self.current_token() {
                 Token::Function => {
-                    methods.push(RecordMethod::Function(self.parse_function_decl(visibility)));
+                    methods.push(RecordMethod::Function(
+                        self.parse_record_function_decl(visibility),
+                    ));
                 }
                 Token::Procedure => {
                     methods.push(RecordMethod::Procedure(
-                        self.parse_procedure_decl(visibility),
+                        self.parse_record_procedure_decl(visibility),
                     ));
                 }
                 Token::Static => {
@@ -64,11 +66,9 @@ impl Parser {
 
         let mut read = None;
         let mut write = None;
-        while matches!(self.current_token(), Token::Ident(_)) {
-            let Some((accessor_kw, kw_span)) = self.expect_ident() else {
-                break;
-            };
-            if accessor_kw.eq_ignore_ascii_case("read") {
+        while matches!(self.current_token(), Token::Read | Token::Write) {
+            let kw_span = self.current_span();
+            if self.eat(&Token::Read) {
                 let (getter, _) = self
                     .expect_ident()
                     .unwrap_or_else(|| self.error_ident(kw_span));
@@ -82,7 +82,7 @@ impl Parser {
                 } else {
                     read = Some(getter);
                 }
-            } else if accessor_kw.eq_ignore_ascii_case("write") {
+            } else if self.eat(&Token::Write) {
                 let (setter, _) = self
                     .expect_ident()
                     .unwrap_or_else(|| self.error_ident(kw_span));
@@ -96,14 +96,6 @@ impl Parser {
                 } else {
                     write = Some(setter);
                 }
-            } else {
-                self.error_with_code(
-                    PARSE_EXPECTED_TOKEN,
-                    "Expected `read` or `write` in a property declaration",
-                    "Write `property Name: Type read Getter write Setter;`.",
-                    kw_span,
-                );
-                break;
             }
         }
 
@@ -141,11 +133,9 @@ impl Parser {
 
         let mut read = None;
         let mut write = None;
-        while matches!(self.current_token(), Token::Ident(_)) {
-            let Some((accessor_kw, kw_span)) = self.expect_ident() else {
-                break;
-            };
-            if accessor_kw.eq_ignore_ascii_case("read") {
+        while matches!(self.current_token(), Token::Read | Token::Write) {
+            let kw_span = self.current_span();
+            if self.eat(&Token::Read) {
                 let (getter, _) = self
                     .expect_ident()
                     .unwrap_or_else(|| self.error_ident(kw_span));
@@ -159,7 +149,7 @@ impl Parser {
                 } else {
                     read = Some(getter);
                 }
-            } else if accessor_kw.eq_ignore_ascii_case("write") {
+            } else if self.eat(&Token::Write) {
                 if read.is_none() && write.is_none() {
                     self.error_with_code(
                         PARSE_INVALID_EVENT_ACCESSOR_ORDER,
@@ -181,14 +171,6 @@ impl Parser {
                 } else {
                     write = Some(setter);
                 }
-            } else {
-                self.error_with_code(
-                    PARSE_EXPECTED_TOKEN,
-                    "Expected `read` or `write` in an event declaration",
-                    "Write `event Name: HandlerType read Getter write Setter;`.",
-                    kw_span,
-                );
-                break;
             }
         }
 

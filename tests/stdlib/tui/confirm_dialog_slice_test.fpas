@@ -185,7 +185,7 @@ begin
   end;
   var DirectCmd: TuiCmdOutput := TuiCmdOutput.Create();
   var DirectQuit: EditorModel := UpdateEditor(Initial, TuiMsg.QuitRequested, DirectCmd);
-  AssertTrue(DirectCmd.Read() = TuiCmd.Quit);
+  AssertTrue(DirectCmd.Command() = TuiCmd.Quit);
   AssertTrue(DirectQuit.Quit);
   mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(40, 12));
   App.InjectKeyForTest(MakeKey(TuiKeyKind.Character, 'A'));

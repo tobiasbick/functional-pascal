@@ -1,6 +1,6 @@
 program T;
 
-uses Std.Console, Std.Option, Std.Conv;
+uses Std.Console, Std.Options, Std.Conv;
 
 function TripleToStr(V: integer): string;
 begin

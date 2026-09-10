@@ -68,7 +68,7 @@ pub enum Ty {
     Boolean,
     /// UTF-8 string value.
     String,
-    /// Procedure / void result (e.g. `Std.Array.Push`).
+    /// Procedure / void result (e.g. `Std.Arrays.Push`).
     Unit,
     /// An array whose elements have the enclosed type.
     Array(Box<Ty>),

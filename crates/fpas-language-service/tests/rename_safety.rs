@@ -17,14 +17,14 @@ fn rename_rejects_an_inner_declaration_capturing_edited_global_uses() {
 
 var Source: integer := 1;
 
-function Read(): integer;
+function ReadValue(): integer;
 begin
   var Captured: integer := 2;
   return Source
 end;
 
 begin
-  var Result: integer := Read()
+  var Result: integer := ReadValue()
 end.
 "#;
     let path = temp.write("global.fpas", source);
@@ -52,14 +52,14 @@ fn rename_rejects_a_local_declaration_capturing_unedited_outer_uses() {
 
 var Outer: integer := 1;
 
-function Read(): integer;
+function ReadValue(): integer;
 begin
   var Local: integer := 2;
   return Local + Outer
 end;
 
 begin
-  var Result: integer := Read()
+  var Result: integer := ReadValue()
 end.
 "#;
     let path = temp.write("local.fpas", source);

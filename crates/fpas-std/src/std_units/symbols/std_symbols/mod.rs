@@ -65,17 +65,17 @@ macro_rules! std_random {
 }
 macro_rules! std_array {
     ($suffix:literal) => {
-        concat!("Std.Array.", $suffix)
+        concat!("Std.Arrays.", $suffix)
     };
 }
 macro_rules! std_result {
     ($suffix:literal) => {
-        concat!("Std.Result.", $suffix)
+        concat!("Std.Results.", $suffix)
     };
 }
 macro_rules! std_option {
     ($suffix:literal) => {
-        concat!("Std.Option.", $suffix)
+        concat!("Std.Options.", $suffix)
     };
 }
 macro_rules! std_task {
@@ -85,7 +85,7 @@ macro_rules! std_task {
 }
 macro_rules! std_dict {
     ($suffix:literal) => {
-        concat!("Std.Dict.", $suffix)
+        concat!("Std.Dictionaries.", $suffix)
     };
 }
 macro_rules! std_json {

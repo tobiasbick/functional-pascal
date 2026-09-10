@@ -9,12 +9,12 @@ begin
   mutable var Count: integer := 10;
   return function(): integer
   begin
-    var Read: function(Count: integer): integer :=
+    var Invoke: function(Count: integer): integer :=
       function(Count: integer): integer
       begin
         return Count
       end;
-    return Read(5)
+    return Invoke(5)
   end
 end;
 begin

@@ -48,13 +48,13 @@ fn close_delimited_response_limit_includes_exact_boundary_and_empty_body() {
         &format!(
             r#"
 program HttpExactLimit;
-uses Std.Array, Std.Http, Std.Result, Std.Test;
+uses Std.Arrays, Std.Http, Std.Results, Std.Test;
 function Fetch(RequestValue: Request; Streaming: boolean): result of integer, string;
 begin
   if not Streaming then
   begin
     var ResponseValue: Response := try Send(RequestValue);
-    return Ok(Std.Array.Length(ResponseValue.Body))
+    return Ok(Std.Arrays.Length(ResponseValue.Body))
   end;
   var ResponseValue: StreamResponse := try OpenStream(RequestValue);
   mutable var Count: integer := 0;
@@ -62,8 +62,8 @@ begin
   while Reading do
   begin
     var Bytes: array of integer := try ReadStream(ResponseValue.Body, 2);
-    Count := Count + Std.Array.Length(Bytes);
-    Reading := Std.Array.Length(Bytes) > 0
+    Count := Count + Std.Arrays.Length(Bytes);
+    Reading := Std.Arrays.Length(Bytes) > 0
   end;
   return Ok(Count)
 end;
@@ -78,8 +78,8 @@ begin
         RequestValue.MaxResponseBytes := {head_len} + BodyIndex * 3 + Delta;
         RequestValue.TimeoutMillis := 1000;
         var Received: result of integer, string := Fetch(RequestValue, Streaming);
-        AssertEquals(Delta >= 0, Std.Result.IsOk(Received));
-        if Delta >= 0 then AssertEquals(BodyIndex * 3, Std.Result.Unwrap(Received))
+        AssertEquals(Delta >= 0, Std.Results.IsOk(Received));
+        if Delta >= 0 then AssertEquals(BodyIndex * 3, Std.Results.Unwrap(Received))
       end
     end
   end

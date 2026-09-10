@@ -96,7 +96,7 @@ fn property_rejects_unknown_accessor_keyword() {
         errors
             .iter()
             .filter_map(ParseDiagnostic::as_parser_error)
-            .any(|e| { e.message.contains("Expected `read` or `write`") }),
+            .any(|e| { e.message.contains("Property must declare at least one") }),
         "{errors:#?}"
     );
 }

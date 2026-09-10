@@ -25,7 +25,7 @@ begin
 end.
 ```
 
-Use `Std.Array` for `Map`, `Filter`, `Reduce`, and other helpers — see [`Std.Array`](../../std/collections/array/README.md).
+Use `Std.Arrays` for `Map`, `Filter`, `Reduce`, and other helpers — see [`Std.Arrays`](../../std/collections/array/README.md).
 
 ## See also
 

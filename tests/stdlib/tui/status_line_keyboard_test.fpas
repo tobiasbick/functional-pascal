@@ -1,6 +1,6 @@
 program TuiStatusLineKeyboardTest;
 
-uses Std.Array, Std.Test, Std.Tui;
+uses Std.Arrays, Std.Test, Std.Tui;
 
 type
   StatusModel = record
@@ -55,7 +55,7 @@ begin
     begin
       return record
         Focus := State.Focus;
-        Actions := Std.Array.Concat(State.Actions, [Action.Value]);
+        Actions := Std.Arrays.Concat(State.Actions, [Action.Value]);
       end
     end
     else
@@ -75,7 +75,7 @@ begin
   Model := App.RunIterations(Model, UpdateStatus, ViewStatus, 0, 0);
   App.InjectKeyForTest(MakeKey(TuiKeyKind.Enter));
   Model := App.RunIterations(Model, UpdateStatus, ViewStatus, 1, 0);
-  AssertEquals(1, Std.Array.Length(Model.Actions));
+  AssertEquals(1, Std.Arrays.Length(Model.Actions));
   AssertEquals(30, Model.Actions[0]);
   App.InjectKeyForTest(MakeKey(TuiKeyKind.Tab));
   Model := App.RunIterations(Model, UpdateStatus, ViewStatus, 1, 0);

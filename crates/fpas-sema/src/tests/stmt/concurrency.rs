@@ -81,8 +81,8 @@ program T;
 uses Std.Net, Std.Task;
 procedure Invalid(ConnectionValue: Std.Net.Connection);
 begin
-  Std.Net.ReadWithCancellation(ConnectionValue, 1, Std.Task.CreateCancellationSource());
-  Std.Net.WriteWithCancellation(ConnectionValue, [1], Std.Task.CreateCancellationSource());
+  Std.Net.ReceiveBytesWithCancellation(ConnectionValue, 1, Std.Task.CreateCancellationSource());
+  Std.Net.SendBytesWithCancellation(ConnectionValue, [1], Std.Task.CreateCancellationSource());
   Std.Net.ConnectWithCancellation('unused.invalid', 1, 1000, Std.Task.CreateCancellationSource());
   Std.Net.ConnectTlsWithCancellation('unused.invalid', 1, 1000, Std.Task.CreateCancellationSource())
 end;

@@ -1,6 +1,6 @@
 program TomlParseArraysOfTablesAndEdgeValuesTest;
 
-uses Std.Array, Std.Dict, Std.Option, Std.Str, Std.Test, Std.Toml;
+uses Std.Arrays, Std.Dictionaries, Std.Options, Std.Str, Std.Test, Std.Toml;
 
 begin
   var Parsed: result of TomlValue, string := Parse(((((((((((((('empty = []' + Chr(10)) + 'special = nan') + Chr(10)) + 'point.x = 1') + Chr(10)) + 'point.y = 2') + Chr(10)) + '[[products]]') + Chr(10)) + 'name = ''Hammer''') + Chr(10)) + '[[products]]') + Chr(10)) +
@@ -11,10 +11,10 @@ begin
       case Value of
         TomlValue.Table(Fields):
         begin
-          case Std.Option.Unwrap(Std.Dict.Get(Fields, 'empty')) of
-            TomlValue.Array(Items):
+          case Std.Options.Unwrap(Std.Dictionaries.Get(Fields, 'empty')) of
+            TomlValue.ArrayValue(Items):
             begin
-              AssertEquals(0, Std.Array.Length(Items))
+              AssertEquals(0, Std.Arrays.Length(Items))
             end
             else
             begin
@@ -22,7 +22,7 @@ begin
             end
           end;
 
-          case Std.Option.Unwrap(Std.Dict.Get(Fields, 'special')) of
+          case Std.Options.Unwrap(Std.Dictionaries.Get(Fields, 'special')) of
             TomlValue.Float(Number):
             begin
               AssertTrue(Number <> Number)
@@ -33,10 +33,10 @@ begin
             end
           end;
 
-          case Std.Option.Unwrap(Std.Dict.Get(Fields, 'point')) of
+          case Std.Options.Unwrap(Std.Dictionaries.Get(Fields, 'point')) of
             TomlValue.Table(Point):
             begin
-              AssertEquals(2, Std.Dict.Length(Point))
+              AssertEquals(2, Std.Dictionaries.Length(Point))
             end
             else
             begin
@@ -44,14 +44,14 @@ begin
             end
           end;
 
-          case Std.Option.Unwrap(Std.Dict.Get(Fields, 'products')) of
-            TomlValue.Array(Products):
+          case Std.Options.Unwrap(Std.Dictionaries.Get(Fields, 'products')) of
+            TomlValue.ArrayValue(Products):
             begin
-              AssertEquals(2, Std.Array.Length(Products));
+              AssertEquals(2, Std.Arrays.Length(Products));
               case Products[0] of
                 TomlValue.Table(Product):
                 begin
-                  case Std.Option.Unwrap(Std.Dict.Get(Product, 'name')) of
+                  case Std.Options.Unwrap(Std.Dictionaries.Get(Product, 'name')) of
                     TomlValue.String(Name):
                     begin
                       AssertEquals('Hammer', Name)
@@ -71,7 +71,7 @@ begin
               case Products[1] of
                 TomlValue.Table(Product):
                 begin
-                  case Std.Option.Unwrap(Std.Dict.Get(Product, 'name')) of
+                  case Std.Options.Unwrap(Std.Dictionaries.Get(Product, 'name')) of
                     TomlValue.String(Name):
                     begin
                       AssertEquals('Nail', Name)

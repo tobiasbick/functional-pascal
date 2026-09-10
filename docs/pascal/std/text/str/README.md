@@ -14,7 +14,7 @@ end.
 
 After `uses Std.Str;` you may use **short** names (`Length`, `ToUpper`, …) or **qualified** names (`Std.Str.Length`, …).
 
-**Ambiguity:** if you also `uses Std.Array`, the short names **`Length`**, **`Contains`**, and **`IndexOf`** exist in both units. The compiler reports an **ambiguous** error unless you qualify, for example `Std.Str.Length(S)` vs `Std.Array.Length(A)`.
+**Ambiguity:** if you also `uses Std.Arrays`, the short names **`Length`**, **`Contains`**, and **`IndexOf`** exist in both units. The compiler reports an **ambiguous** error unless you qualify, for example `Std.Str.Length(S)` vs `Std.Arrays.Length(A)`.
 
 ## Quick reference
 

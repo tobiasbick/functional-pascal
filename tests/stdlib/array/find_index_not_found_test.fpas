@@ -1,6 +1,6 @@
 program T;
 
-uses Std.Console, Std.Array;
+uses Std.Console, Std.Arrays;
 
 function IsGreaterThanHundred(X: integer): boolean;
 begin

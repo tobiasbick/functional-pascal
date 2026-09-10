@@ -128,21 +128,17 @@ impl Parser {
     pub(crate) fn parse_qualified_id(&mut self) -> QualifiedId {
         let start = self.current_span();
         let mut parts = Vec::new();
-        if let Some((name, _)) = self.try_consume_std_keyword_path_segment() {
-            parts.push(name);
-        } else {
-            match self.expect_ident() {
-                Some((name, _)) => parts.push(name),
-                None => {
-                    if !self.at_end() && !self.is_qualified_id_recovery_boundary() {
-                        self.advance();
-                    }
-                    parts.push(super::ERROR_IDENT.to_owned());
+        match self.expect_ident() {
+            Some((name, _)) => parts.push(name),
+            None => {
+                if !self.at_end() && !self.is_qualified_id_recovery_boundary() {
+                    self.advance();
                 }
+                parts.push(super::ERROR_IDENT.to_owned());
             }
         }
         while self.eat(&Token::Dot) {
-            if let Some((name, _)) = self.expect_ident_after_dot() {
+            if let Some((name, _)) = self.expect_ident() {
                 parts.push(name);
             } else {
                 if !self.at_end() && !self.is_qualified_id_recovery_boundary() {

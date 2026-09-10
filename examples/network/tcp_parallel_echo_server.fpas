@@ -2,14 +2,14 @@
 program ParallelTcpEchoServer;
 
 uses
-  Std.Args, Std.Conv, Std.Array, Std.Console, Std.Net, Std.Task, Std.Result, Std.Time, Std.Server;
+  Std.Args, Std.Conv, Std.Arrays, Std.Console, Std.Net, Std.Task, Std.Results, Std.Time, Std.Server;
 
 function Echo(Client: Connection; Token: CancellationToken): result of boolean, string;
 begin
   var Configured: boolean := try SetTimeout(Client, 5000);
   while not IsCancellationRequested(Token) do
   begin
-    var Bytes: array of integer := try ReadWithCancellation(Client, 4096, Token);
+    var Bytes: array of integer := try ReceiveBytesWithCancellation(Client, 4096, Token);
     if Length(Bytes) = 0 then
     begin
       return Ok(true)
@@ -17,8 +17,8 @@ begin
     mutable var Offset: integer := 0;
     while Offset < Length(Bytes) do
     begin
-      var Count: integer := try WriteWithCancellation(Client, Slice(Bytes, Offset, Length(Bytes) -
-                                                                                   Offset), Token);
+      var Count: integer := try SendBytesWithCancellation(Client, Slice(Bytes, Offset, Length(Bytes) -
+                                                                                       Offset), Token);
       if Count <= 0 then
       begin
         return Error('TCP write made no progress')

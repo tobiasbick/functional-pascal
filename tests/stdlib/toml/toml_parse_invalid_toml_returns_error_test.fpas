@@ -1,6 +1,6 @@
 program TomlParseInvalidTomlReturnsErrorTest;
 
-uses Std.Result, Std.Test, Std.Toml;
+uses Std.Results, Std.Test, Std.Toml;
 
 begin
   var Parsed: result of TomlValue, string := Parse('answer = [1,');

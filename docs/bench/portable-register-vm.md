@@ -25,7 +25,7 @@ remaining hot paths:
 - one-argument calls use the argument's existing register without reserving an unused copy-window
   slot, and single-use producer results followed by a local write are allocated directly to that
   local register;
-- local `Std.Array.Push` lowering uses a verified internal `ArrayPush` operation that takes unique
+- local `Std.Arrays.Push` lowering uses a verified internal `ArrayPush` operation that takes unique
   storage when available and otherwise preserves array copy-on-write aliases;
 - index-only designator writes into global aggregates use a verified global-index-path instruction
   and mutate a uniquely owned root in place while preserving aliases, bounds checks, and error
@@ -38,7 +38,7 @@ remaining hot paths:
 - task-spawn block widths account for the complete argument window, preserving branch addresses in
   loops.
 
-`ArrayPush` is an internal IR and bytecode optimization. Source-visible `Std.Array.Push` behavior,
+`ArrayPush` is an internal IR and bytecode optimization. Source-visible `Std.Arrays.Push` behavior,
 including copy-on-write aliasing, is unchanged.
 
 ## Profile evidence

@@ -17,7 +17,7 @@ impl Parser {
         self.advance(); // function | procedure
 
         self.expect(&Token::LParen);
-        let params = self.parse_formal_param_list();
+        let params = self.parse_formal_param_list(false);
         self.expect(&Token::RParen);
 
         let return_type = if is_function {

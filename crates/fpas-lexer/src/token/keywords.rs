@@ -59,6 +59,12 @@ fn keyword_token(raw: &str) -> Option<Token> {
         s if s.eq_ignore_ascii_case("static") => Some(Token::Static),
         s if s.eq_ignore_ascii_case("property") => Some(Token::Property),
         s if s.eq_ignore_ascii_case("event") => Some(Token::Event),
+        s if s.eq_ignore_ascii_case("read") => Some(Token::Read),
+        s if s.eq_ignore_ascii_case("write") => Some(Token::Write),
+        s if s.eq_ignore_ascii_case("comparable") => Some(Token::Comparable),
+        s if s.eq_ignore_ascii_case("numeric") => Some(Token::Numeric),
+        s if s.eq_ignore_ascii_case("printable") => Some(Token::Printable),
+        s if s.eq_ignore_ascii_case("self") => Some(Token::SelfKw),
         s if s.eq_ignore_ascii_case("nil") => Some(Token::Nil),
         _ => None,
     }

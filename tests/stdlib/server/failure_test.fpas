@@ -1,6 +1,6 @@
 program ServerFailureTest;
 
-uses Std.Server, Std.Net, Std.Task, Std.Result, Std.Test, Std.Array;
+uses Std.Server, Std.Net, Std.Task, Std.Results, Std.Test, Std.Arrays;
 
 function BindListener(): result of Std.Net.Listener, string;
 begin
@@ -28,8 +28,8 @@ begin
   CloseListener(Listener);
   RequestStop(Life);
   var Failures: array of TaskFailure := CloseTaskGroup(Group);
-  AssertEquals(1, Std.Array.Length(Failures));
+  AssertEquals(1, Std.Arrays.Length(Failures));
   AssertEquals('session failed', Failures[0].Message);
-  AssertEquals(1, Std.Array.Length(ShutdownErrors(Life)));
+  AssertEquals(1, Std.Arrays.Length(ShutdownErrors(Life)));
   AssertTrue(Unwrap(FinishShutdown(Life)))
 end.

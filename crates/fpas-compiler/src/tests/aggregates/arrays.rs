@@ -4,7 +4,7 @@ use super::*;
 fn array_push_uses_direct_opcode_and_preserves_value_aliases() {
     let source = "\
 program RegisterArrayPush;
-uses Std.Array;
+uses Std.Arrays;
 begin
   mutable var A: array of integer := [1];
   var Original: array of integer := A;
@@ -30,7 +30,7 @@ end.";
 fn array_pop_uses_direct_opcode_and_preserves_value_aliases() {
     let source = r#"
 program RegisterArrayPop;
-uses Std.Array;
+uses Std.Arrays;
 mutable var Global: array of integer := [4, 5];
 begin
   mutable var A: array of integer := [1, 2];

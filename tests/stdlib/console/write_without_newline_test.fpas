@@ -3,7 +3,7 @@ program T;
 uses Std.Console;
 
 begin
-  Write('a');
-  Write('b');
+  WriteText('a');
+  WriteText('b');
   WriteLn()
 end.

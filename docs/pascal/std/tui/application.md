@@ -147,9 +147,10 @@ not assume that every application needs an animation timer.
 
 Keyboard, mouse, and positive resize events are normalized before routing;
 paste and focus events are ignored. Mouse coordinates become zero-based.
-Consecutive native resize events are coalesced to the latest dimensions before
-layout and painting, so keyboard input following a resize burst is not delayed
-by intermediate frames that do not reflect application state.
+Consecutive native resize events are coalesced to the latest dimensions after
+a 50 ms quiet period before layout and painting. A keyboard or mouse event ends
+the quiet period immediately; the latest resize is delivered first so input
+ordering is preserved. Intermediate resize frames are not painted.
 `Std.Console` owns raw mode, alternate-screen, input features, and cursor
 rollback for the interactive session.
 

@@ -16,17 +16,30 @@ export interface DapMessage {
 }
 
 export async function startSession(
-  configuration: vscode.DebugConfiguration
+  configuration: vscode.DebugConfiguration,
+  waitForActive = true
 ): Promise<vscode.DebugSession> {
-  const started = await vscode.debug.startDebugging(undefined, configuration);
-  assert.equal(started, true, `debug session ${configuration.name} starts`);
-  await waitFor(
-    () => vscode.debug.activeDebugSession?.name === configuration.name,
-    `active session ${configuration.name}`
-  );
-  const session = vscode.debug.activeDebugSession;
-  assert.ok(session, `debug session ${configuration.name} is active`);
-  return session;
+  let session: vscode.DebugSession | undefined;
+  const subscription = vscode.debug.onDidStartDebugSession((candidate) => {
+    if (candidate.type === configuration.type && candidate.name === configuration.name) {
+      session = candidate;
+    }
+  });
+  try {
+    const started = await vscode.debug.startDebugging(undefined, configuration);
+    assert.equal(started, true, `debug session ${configuration.name} starts`);
+    await waitFor(() => session !== undefined, `started session ${configuration.name}`);
+    assert.ok(session, `debug session ${configuration.name} was captured`);
+    if (waitForActive) {
+      await waitFor(
+        () => vscode.debug.activeDebugSession?.id === session?.id,
+        `active session ${configuration.name}`
+      );
+    }
+    return session;
+  } finally {
+    subscription.dispose();
+  }
 }
 
 export async function writeSource(

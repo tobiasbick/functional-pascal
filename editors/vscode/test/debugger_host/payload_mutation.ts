@@ -153,17 +153,24 @@ export async function verifyPayloadMutation(
       () => sent.slice(marker.sent).some((message) => message.event === "terminated"),
       "payload-mutation termination"
     );
-    const output = sent
+    const outputEvents = sent
       .slice(marker.sent)
-      .filter((message) => message.event === "output")
+      .filter((message) => message.event === "output");
+    const output = outputEvents
+      .filter((message) => message.body?.category === "stdout")
       .map((message) => String(message.body?.output ?? ""))
       .join("");
     assert.equal(
       output,
       "10\n20\n30\n40\n9\n",
       `continued debuggee observes payload writes: ${JSON.stringify(
-        sent.slice(marker.sent).filter((message) => message.event === "output")
+        outputEvents
       )}`
+    );
+    assert.deepEqual(
+      outputEvents.filter((message) => message.body?.category === "stderr"),
+      [],
+      `continued debuggee emits no debugger errors: ${JSON.stringify(outputEvents)}`
     );
     assert.ok(
       received.slice(marker.received).some((message) => message.command === "setVariable"),

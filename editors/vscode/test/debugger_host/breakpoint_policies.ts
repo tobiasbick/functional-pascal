@@ -112,7 +112,7 @@ async function verifyLogpoint(
     session = await startSession({
       type: "fpas", request: "launch", name: "FPAS non-stopping logpoint",
       program: sourcePath, cwd: workspaceRoot, stopOnEntry: false
-    });
+    }, false);
     await waitFor(
       () => sent.slice(marker.sent).some((message) => message.event === "terminated"),
       "logpoint session termination"

@@ -145,6 +145,9 @@ impl DebugEngine {
     pub(crate) fn execute(&mut self, request: DebugRequest) -> Vec<DebugRecord> {
         let command = request.command();
         if self.status == DebugStatus::Terminated {
+            if request.op == DebugOp::Disconnect {
+                return vec![ok(request.id, command.name(), ResponseBody::TerminatedAck)];
+            }
             return vec![event(DebugEvent::ProtocolError(
                 EngineFailure::terminated_session(),
             ))];

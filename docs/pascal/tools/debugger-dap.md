@@ -303,6 +303,10 @@ Stopped events identify the responsible thread and report
 disconnect. A filtered-out runtime failure follows the non-stopping failed-exit
 sequence above.
 
+After the adapter emits `terminated`, a later client `disconnect` request is
+accepted as an idempotent completion handshake. It receives a successful
+response without another `terminated` event or a debugger diagnostic.
+
 A source breakpoint binds to the first reachable sequence point at or after
 the requested line within the same declaration region. Unreachable lines stay
 unverified. Multiple logical breakpoints may share a sequence point while

@@ -1,6 +1,7 @@
 import path from "node:path";
 import { spawnSync } from "node:child_process";
-import { readdirSync, rmSync } from "node:fs";
+import { mkdtempSync, readdirSync, rmSync } from "node:fs";
+import os from "node:os";
 import { fileURLToPath } from "node:url";
 
 import { runTests as runExtensionTests } from "@vscode/test-electron";
@@ -46,12 +47,14 @@ export async function runTests() {
   runCommand("cargo", ["build", "-p", "fpas-lsp", "-p", "fpas-cli"]);
   runCommand(process.execPath, [path.join(extensionRoot, "scripts", "compile.mjs")]);
   cleanupTransientFixtures();
+  const userDataDirectory = mkdtempSync(path.join(os.tmpdir(), "fpas-vscode-test-"));
   try {
     await verifyManifest();
     await verifyContracts();
     await verifyPackaging();
     await verifyGrammar();
     await runExtensionTests({
+      version: "1.137.0",
       extensionDevelopmentPath: extensionRoot,
       extensionTestsPath: path.join(
         extensionRoot,
@@ -59,9 +62,11 @@ export async function runTests() {
         "test",
         "extension.test.js"
       ),
-      launchArgs: [fixtureRoot, "--disable-extensions", "--disable-workspace-trust"]
+      launchArgs: [fixtureRoot, "--disable-extensions", "--disable-workspace-trust",
+        `--user-data-dir=${userDataDirectory}`]
     });
   } finally {
+    rmSync(userDataDirectory, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
     cleanupTransientFixtures();
   }
 }

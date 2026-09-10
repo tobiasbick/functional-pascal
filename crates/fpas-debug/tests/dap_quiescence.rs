@@ -98,6 +98,29 @@ fn stopped_events_and_continue_are_session_wide() {
 }
 
 #[test]
+fn disconnect_after_natural_termination_is_idempotent() {
+    let mut adapter = dap_server();
+    let _ = adapter.handle(request(1, "initialize", json!({})));
+    let _ = adapter.handle(request(2, "launch", json!({"stopOnEntry":false})));
+    let _ = adapter.handle(request(3, "configurationDone", json!({})));
+
+    let terminated = adapter.wait();
+    assert!(
+        terminated
+            .iter()
+            .any(|event| event["event"] == "terminated"),
+        "{terminated:?}"
+    );
+
+    let disconnected = adapter.handle(request(4, "disconnect", json!({"restart":false})));
+    assert_eq!(disconnected.len(), 1, "{disconnected:?}");
+    assert_eq!(disconnected[0]["type"], "response", "{disconnected:?}");
+    assert_eq!(disconnected[0]["command"], "disconnect");
+    assert_eq!(disconnected[0]["request_seq"], 4);
+    assert_eq!(disconnected[0]["success"], true, "{disconnected:?}");
+}
+
+#[test]
 fn jsonl_task_ids_map_to_stable_dap_threads() {
     let mut jsonl = JsonlServer::new(target()).expect("JSONL server");
     let _ = jsonl.handle_line(&jsonl_request(1, "initialize", json!({"version":2})));

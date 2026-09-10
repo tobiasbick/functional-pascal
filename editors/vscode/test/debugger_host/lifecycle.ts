@@ -70,17 +70,23 @@ export async function verifyDebuggerLifecycle(
   let session: vscode.DebugSession | undefined;
 
   try {
-    const editor = await vscode.window.showTextDocument(
-      await vscode.workspace.openTextDocument(sourceUri)
-    );
     const breakpointLine = sourceLines.indexOf(
       "  return Value * Factorial(Value - 1)"
     );
-    editor.selection = new vscode.Selection(
-      breakpointLine,
-      2,
-      breakpointLine,
-      2
+    assert.ok(breakpointLine >= 0, "breakpoint source line exists");
+    const editor = await vscode.window.showTextDocument(
+      await vscode.workspace.openTextDocument(sourceUri),
+      {
+        preserveFocus: false,
+        preview: false,
+        selection: new vscode.Range(breakpointLine, 2, breakpointLine, 2)
+      }
+    );
+    await waitFor(
+      () => vscode.window.activeTextEditor === editor &&
+        editor.document.languageId === "fpas" &&
+        editor.selection.active.line === breakpointLine,
+      "active FPAS editor at the F9 breakpoint line"
     );
     await vscode.commands.executeCommand("editor.debug.action.toggleBreakpoint");
     await waitFor(
@@ -153,7 +159,10 @@ export async function verifyDebuggerLifecycle(
       sent.slice(marker.sent)
     );
   } finally {
-    if (breakpoint) vscode.debug.removeBreakpoints([breakpoint]);
+    vscode.debug.removeBreakpoints(vscode.debug.breakpoints.filter(
+      (candidate) => candidate instanceof vscode.SourceBreakpoint &&
+        candidate.location.uri.toString() === sourceUri.toString()
+    ));
     if (session) await vscode.debug.stopDebugging(session);
     await closeAndRemoveSource(sourcePath);
   }

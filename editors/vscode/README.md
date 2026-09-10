@@ -256,6 +256,14 @@ restarts it once, and shuts it down with the extension:
 npm test --prefix editors/vscode
 ```
 
+The runner pins VS Code 1.137.0 and creates a fresh user-data directory for each
+run, removing it after the Extension Host exits. Downloaded VS Code binaries
+remain cached. The F9 check opens the source with its breakpoint selection
+already applied before invoking the editor command.
+Debugger tests capture sessions through the start event and normally wait for
+their session to become active. The non-stopping logpoint test skips the active
+session wait because its program can finish before the UI selects the session.
+
 For daily use, record reproducible problems with the local
 [bug-report template](BUG_REPORT.md). The extension has no telemetry and sends
 nothing automatically.

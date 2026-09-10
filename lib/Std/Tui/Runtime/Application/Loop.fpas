@@ -1,9 +1,9 @@
 unit Std.Tui.Runtime.Application.Loop;
 
 uses
-  Std.Arrays, Std.Console, Std.Options, Std.Results, Std.Task, Std.Time, Std.Tui.Cells.Palette,
+  Std.Arrays, Std.Console, Std.Options, Std.Results, Std.Task, Std.Tui.Cells.Palette,
   Std.Tui.Elements.Element, Std.Tui.Runtime.Application.Background,
-  Std.Tui.Runtime.Application.State, Std.Tui.Runtime.Cmd, Std.Tui.Runtime.ConsoleEvents,
+  Std.Tui.Runtime.Application.ConsoleInput, Std.Tui.Runtime.Application.State, Std.Tui.Runtime.Cmd,
   Std.Tui.Runtime.Frame, Std.Tui.Runtime.Input, Std.Tui.Runtime.Msg, Std.Tui.Runtime.Routing.Pointer,
   Std.Tui.Runtime.TerminalRenderer;
 
@@ -175,30 +175,6 @@ begin
   end;
 
   return Model
-end;
-
-function TuiConsoleInputPump(Token: CancellationToken; Output: channel of TuiHostInput): result of boolean, string;
-begin
-  while not IsCancellationRequested(Token) do
-  begin
-    case TuiReadConsoleHostInputWithTimeout(50) of
-      Some(Input):
-      begin
-        if IsError(SendWithCancellation(Output, Input, Token)) then
-        begin
-          return Ok(true)
-        end
-      end;
-      None:
-      begin
-      end
-    end;
-
-    // Release the pool worker even when Console polling returns no event.
-    Sleep(0)
-  end;
-
-  return Ok(true)
 end;
 
 // Runs the interactive loop, selecting fairly between Console and application messages.

@@ -198,6 +198,74 @@ end.
 }
 
 #[test]
+fn interactive_host_debounces_resize_burst_after_quiet_period() {
+    let cwd = create_temp_dir("tui-resize-debounce");
+    let program = cwd.join("resize_debounce.fpas");
+    write_text(
+        &program,
+        r#"program ResizeDebounce;
+
+uses Std.Console, Std.Tui;
+
+type
+  Model = record
+    ResizeCount: integer;
+    Width: integer;
+    Height: integer;
+  end;
+
+function Update(State: Model; Msg: TuiMsg; Cmd: TuiCmdOutput): Model;
+begin
+  case Msg of
+    TuiMsg.Resize(Size):
+    begin
+      Cmd.Set(TuiCmd.Quit);
+      return record
+        ResizeCount := State.ResizeCount + 1;
+        Width := Size.Width;
+        Height := Size.Height;
+      end
+    end
+    else
+    begin
+      return State
+    end
+  end
+end;
+
+function View(State: Model): TuiElement;
+begin
+  return TuiElementBuilders.MakeLabel('resize')
+end;
+
+begin
+  var Final: Model := TuiApplication.Run(record
+    ResizeCount := 0;
+    Width := 0;
+    Height := 0;
+  end, Update, View);
+  WriteLn(Final.ResizeCount);
+  WriteLn(Final.Width);
+  WriteLn(Final.Height)
+end.
+"#,
+    );
+    let built =
+        crate::project_build::build_test_program_with_graph(&program, repo_tui_program_graph())
+            .expect("Tui resize-debounce regression program must build");
+    let mut vm = fpas_vm::Vm::new(built.executable);
+    vm.push_console_event(ConsoleEvent::resize(80, 24));
+    vm.push_console_event(ConsoleEvent::resize(100, 30));
+    vm.push_console_event(ConsoleEvent::resize(120, 40));
+
+    vm.run()
+        .expect("Tui resize-debounce regression program must run");
+    fs::remove_dir_all(&cwd).expect("temp directory must be removed");
+
+    assert_eq!(vm.output().lines, vec!["1", "120", "40"]);
+}
+
+#[test]
 fn interactive_host_does_not_emit_ticks_without_explicit_timer_input() {
     let cwd = create_temp_dir("tui-event-driven-idle");
     let program = cwd.join("event_driven_idle.fpas");

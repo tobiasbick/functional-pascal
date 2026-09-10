@@ -5,7 +5,10 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+import subprocess
 from pathlib import Path
+
+from dataset_rules import SOURCE_ROOTS, forbidden_reason
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -30,11 +33,34 @@ def fail(path: Path, line_number: int, message: str) -> None:
     raise SystemExit(f"{path.name}:{line_number}: {message}")
 
 
+def git_text(*args: str) -> str:
+    """Return UTF-8 text from a read-only Git command."""
+    return subprocess.run(
+        ["git", *args],
+        cwd=ROOT,
+        check=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        encoding="utf-8",
+    ).stdout
+
+
+def current_source_tree_ids(source_roots: list[str]) -> dict[str, str]:
+    """Return current Git tree identities for the declared dataset source roots."""
+    return {root: git_text("rev-parse", f"HEAD:{root}").strip() for root in source_roots}
+
+
 def validate() -> dict[str, int]:
     """Validate schema, FPAS identity, common syntax traps, and split isolation."""
     if not MANIFEST.is_file():
         raise SystemExit(f"missing dataset manifest: {MANIFEST.as_posix()}")
     manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
+    source_roots = manifest.get("source_roots")
+    if source_roots != list(SOURCE_ROOTS):
+        raise SystemExit("manifest source_roots do not match the generator")
+    if manifest.get("source_trees") != current_source_tree_ids(source_roots):
+        raise SystemExit("dataset source trees differ from HEAD; regenerate the dataset")
     counts: dict[str, int] = {}
     seen: dict[str, tuple[str, int]] = {}
     for split in SPLITS:
@@ -59,6 +85,8 @@ def validate() -> dict[str, int]:
             system, user, assistant = (item["content"] for item in messages)
             if "Functional Pascal" not in system or "Free Pascal" not in system or "Delphi" not in system:
                 fail(path, line_number, "system message must identify FPAS and reject other Pascal dialects")
+            if reason := forbidden_reason(assistant):
+                fail(path, line_number, reason)
             digest = hashlib.sha256(line.encode("utf-8")).hexdigest()
             if digest in seen:
                 previous_split, previous_line = seen[digest]
@@ -75,8 +103,10 @@ def validate() -> dict[str, int]:
 
     if counts != manifest.get("split_counts"):
         raise SystemExit("manifest split counts do not match generated JSONL files")
-    if manifest.get("curated_training_count", 0) < 8:
+    if manifest.get("curated_training_count", 0) < 10:
         raise SystemExit("dataset must retain the curated FPAS correction examples")
+    if "reserved-keywords" not in manifest.get("curated_training_ids", []):
+        raise SystemExit("dataset must retain the reserved-keywords correction example")
     return counts
 
 

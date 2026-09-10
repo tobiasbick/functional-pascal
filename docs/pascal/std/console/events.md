@@ -1,9 +1,9 @@
 # Terminal events
 
-### `function ReadEvent(): Event`
+### `function ReadEvent(): ConsoleEvent`
 
 - **Parameters:** none.
-- **Returns:** one `Event`.
+- **Returns:** one `ConsoleEvent`.
 - **Events:** `Key`, `Mouse`, `Resize`, `Paste`, `FocusGained`, `FocusLost`.
 
 `ReadEvent()` is intended as the low-level terminal event API for TUI-style code. Test injection uses a queue that is separate from the classic `ReadKey()` / `ReadKeyEvent()` APIs.
@@ -15,12 +15,12 @@ another event follows the burst, it remains next in FIFO order. Test-injected
 `ConsoleEvent` values retain their explicit queue order.
 
 ```pascal
-var E: Event := ReadEvent();
+var E: ConsoleEvent := ReadEvent();
 if E.kind = EventKind.Resize then
-  WriteLn(E.width, 'x', E.height);
+  WriteLn(E.width, 'x', E.height)
 ```
 
-### `function ReadEventTimeout(Milliseconds: integer): Option of Event`
+### `function ReadEventTimeout(Milliseconds: integer): Option of ConsoleEvent`
 
 - **Parameters:** `Milliseconds` — maximum time to wait in milliseconds (`0` = non-blocking poll).
 - **Returns:** `Some(E)` if an event arrived within the timeout; `None` otherwise.
@@ -35,14 +35,20 @@ deadline reaches zero.
 uses Std.Console, Std.Options;
 
 EnableRawMode();
-var MaybeEvent: Option of Event := ReadEventTimeout(100);
-match MaybeEvent with
-  | Some(E) => WriteLn(E.kind)
-  | None => WriteLn('timeout')
+var MaybeEvent: Option of ConsoleEvent := ReadEventTimeout(100);
+case MaybeEvent of
+  Some(E):
+  begin
+    WriteLn(E.kind)
+  end;
+  None:
+  begin
+    WriteLn('timeout')
+  end
 end
 ```
 
-### `function PollEvent(): Option of Event`
+### `function PollEvent(): Option of ConsoleEvent`
 
 - **Parameters:** none.
 - **Returns:** `Some(E)` if an event is already available; `None` if the queue is empty.
@@ -56,10 +62,16 @@ returned by the same call.
 uses Std.Console, Std.Options;
 
 EnableRawMode();
-var MaybeE: Option of Event := PollEvent();
-match MaybeE with
-  | Some(E) => WriteLn('got event')
-  | None => WriteLn('nothing pending')
+var MaybeE: Option of ConsoleEvent := PollEvent();
+case MaybeE of
+  Some(E):
+  begin
+    WriteLn('got event')
+  end;
+  None:
+  begin
+    WriteLn('nothing pending')
+  end
 end
 ```
 

@@ -9,11 +9,12 @@ import subprocess
 import tarfile
 from pathlib import Path
 
+from dataset_rules import SOURCE_ROOTS, forbidden_reason
+
 
 ROOT = Path(__file__).resolve().parents[2]
 OUTPUT = ROOT / "training" / "fpas"
 VERSION = "fpas-sft-v1"
-SOURCE_ROOTS = ("docs/pascal", "examples", "tests", "apps", "lib/Std")
 MAX_SOURCE_CHARS = 12_000
 SYSTEM_PROMPT = (
     "You are an expert assistant for Functional Pascal (FPAS), the distinct language "
@@ -136,6 +137,14 @@ end.""",
         "update callbacks modify application state; failures arrive as "
         "`TuiMsg.BackgroundFailed`.",
     ),
+    (
+        "reserved-keywords",
+        "May FPAS keywords such as Read, Write, Event, Array, Result, or Self be used as identifiers?",
+        "No. All FPAS keywords are fully reserved, case-insensitively, in every identifier "
+        "position. Choose descriptive alternatives such as `ReadText`, `WriteText`, "
+        "`ConsoleEvent`, `ArrayValue`, or `Receiver`. Current standard-library units include "
+        "`Std.Arrays`, `Std.Dictionaries`, `Std.Options`, and `Std.Results`.",
+    ),
 )
 
 
@@ -154,6 +163,11 @@ def git_output(*args: str) -> bytes:
 def git_text(*args: str) -> str:
     """Return UTF-8 text from a read-only Git command."""
     return git_output(*args).decode("utf-8")
+
+
+def source_tree_ids(commit: str) -> dict[str, str]:
+    """Return Git tree identities for every dataset source root."""
+    return {root: git_text("rev-parse", f"{commit}:{root}").strip() for root in SOURCE_ROOTS}
 
 
 def split_for(identity: str) -> str:
@@ -210,6 +224,9 @@ def source_files(commit: str) -> tuple[list[tuple[str, str]], list[dict[str, str
         content = raw_content.strip()
         if not content:
             continue
+        if reason := forbidden_reason(content):
+            excluded.append({"path": path, "reason": f"positive source contains {reason}"})
+            continue
         if len(content) > MAX_SOURCE_CHARS:
             excluded.append({"path": path, "reason": f"longer than {MAX_SOURCE_CHARS} characters"})
             continue
@@ -258,6 +275,7 @@ def main() -> None:
         "generator": "training/fpas/generate_dataset.py",
         "source_commit": source_commit,
         "source_roots": list(SOURCE_ROOTS),
+        "source_trees": source_tree_ids(source_commit),
         "maximum_source_characters": MAX_SOURCE_CHARS,
         "curated_training_count": len(CURATED_TRAINING),
         "curated_training_ids": [identity for identity, _, _ in CURATED_TRAINING],

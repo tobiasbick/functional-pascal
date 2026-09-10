@@ -118,14 +118,14 @@ if K = KeyKind.F1 then
 
 ---
 
-### Type `Event` (record)
+### Type `ConsoleEvent` (record)
 
-Logical name: `Std.Console.ConsoleEvent`. Short: `Event` when `Std.Console` is imported.
+Logical name: `Std.Console.ConsoleEvent`. Short: `ConsoleEvent` when `Std.Console` is imported.
 
 Equivalent conceptual declaration:
 
 ```pascal
-type Event = record
+type ConsoleEvent = record
   kind: EventKind;
   key: KeyEvent;
   mouse_action: MouseAction;
@@ -142,7 +142,7 @@ type Event = record
 end;
 ```
 
-`Event` is the low-level event container for later TUI-style code. Only the fields relevant to the current `kind` are populated:
+`ConsoleEvent` is the low-level event container for later TUI-style code. Only the fields relevant to the current `kind` are populated:
 
 - `Key`: `key` is filled, and the top-level modifier flags mirror `key`.
 - `Mouse`: `mouse_action`, `mouse_button`, `mouse_x`, `mouse_y`, and modifiers are filled.

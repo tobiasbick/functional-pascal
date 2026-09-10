@@ -16,7 +16,8 @@ functional style. They also cover common small-model errors: `.fpas` file names,
 - `generate_dataset.py` reads committed sources from `HEAD` and writes the
   deterministic splits. Uncommitted working-tree changes are never ingested.
 - `validate_dataset.py` checks the JSONL schema, FPAS identity, duplicate split
-  records, manifest counts, and common foreign-Pascal output patterns.
+  records, manifest counts, source-tree freshness, obsolete FPAS APIs, and
+  common foreign-Pascal output patterns.
 - `data/train.jsonl`, `data/validation.jsonl`, and `data/test.jsonl` are the only
   dataset split files. Regeneration replaces them; it does not create a v2 copy.
 - `manifests/dataset-v1.json` records the exact source commit, limits, curated
@@ -29,11 +30,13 @@ Regenerate the artifacts from the repository root:
 ```text
 python training/fpas/generate_dataset.py
 python training/fpas/validate_dataset.py
+python -m unittest discover -s training/fpas -p "test_*.py"
 ```
 
 The generator uses only committed files from `docs/pascal`, `examples`,
 `tests`, `apps`, and `lib/Std`. It excludes deliberate compile-error fixtures,
-manual failure demos, and individual sources longer than 12,000 characters.
+manual failure demos, positive sources containing known obsolete syntax or API
+spellings, and individual sources longer than 12,000 characters.
 This keeps invalid syntax and oversized whole-file completions out of positive
 instruction examples. The split is deterministic and based on each relative
 source path. The manifest's `source_commit` makes every generated snapshot

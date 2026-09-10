@@ -85,9 +85,9 @@ Everything below requires `uses Std.Console;`.
 | function | `KeyPressed(): boolean` | true if `ReadKey` or `ReadKeyEvent` has data waiting |
 | function | `ReadKeyEvent(): KeyEvent` | structured key + modifiers |
 | function | `EventPending(): boolean` | true if `ReadEvent()` has data waiting |
-| function | `ReadEvent(): Event` | unified terminal event for keyboard, mouse, resize, paste, and focus |
-| function | `ReadEventTimeout(Milliseconds: integer): Option of Event` | wait up to N ms for an event; raw mode is required only for live terminal input |
-| function | `PollEvent(): Option of Event` | non-blocking check; queued events are available without raw mode |
+| function | `ReadEvent(): ConsoleEvent` | unified terminal event for keyboard, mouse, resize, paste, and focus |
+| function | `ReadEventTimeout(Milliseconds: integer): Option of ConsoleEvent` | wait up to N ms for an event; raw mode is required only for live terminal input |
+| function | `PollEvent(): Option of ConsoleEvent` | non-blocking check; queued events are available without raw mode |
 | procedure | `EnableRawMode()` | explicitly enable terminal raw mode |
 | procedure | `DisableRawMode()` | explicitly disable terminal raw mode |
 | procedure | `EnterAltScreen()` | switch to the alternate terminal screen |
@@ -102,7 +102,7 @@ Everything below requires `uses Std.Console;`.
 | procedure | `ReleaseInteractiveTerminal()` | restore modes owned by acquire; idempotent |
 | type | `KeyEvent` | record |
 | type | `KeyKind` | enum |
-| type | `Event` | record |
+| type | `ConsoleEvent` | record |
 | type | `EventKind` | enum |
 | type | `MouseAction` | enum |
 | type | `MouseButton` | enum |
@@ -126,7 +126,7 @@ Extended color procedures (`TextColorRGB`, `TextBackgroundRGB`, `TextColor256`, 
 | [Cells and frames](cells-frames.md) | Retained cells, frame batching, bulk rows, saved regions |
 | [Screen utilities](screen-misc.md) | `Delay`, cursor visibility, `TextMode`, bell |
 | [Colors and attributes](colors.md) | CRT palette, RGB, 256-color |
-| [Types](types.md) | `KeyEvent`, `Event`, enums |
+| [Types](types.md) | `KeyEvent`, `ConsoleEvent`, enums |
 | [Line input](input.md) | `ReadLn`, `ReadText` |
 | [Keyboard](keyboard.md) | `ReadKey`, `ReadKeyEvent`, `KeyPressed` |
 | [Terminal events](events.md) | `ReadEvent`, raw mode, alt screen |

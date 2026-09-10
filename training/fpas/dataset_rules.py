@@ -46,6 +46,21 @@ FORBIDDEN_CONTENT = (
         re.compile(r"^\s*match\s+.+\s+with\s*$", re.IGNORECASE | re.MULTILINE),
         "foreign match-with syntax",
     ),
+    (
+        re.compile(
+            r"`(?:unit_decl|program_decl|const_decl|type_decl|generic_params|constraint|"
+            r"result_type|option_type|go_expr)`"
+        ),
+        "nonexistent grammar production reference",
+    ),
+    (
+        re.compile(r"\bintegers,\s*chars,\s*strings,\s*booleans\b", re.IGNORECASE),
+        "removed char type wording",
+    ),
+    (
+        re.compile(r"`string`,\s*`string`,\s*`#` codes", re.IGNORECASE),
+        "duplicate string primitive",
+    ),
 )
 
 

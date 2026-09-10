@@ -2,7 +2,7 @@
 
 Composite and built-in type forms: records, enums, arrays, dictionaries, aliases, and generic routines.
 
-Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`type_decl`, `type_expr`, `record_type`, `enum_type`).
+Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`type_block`, `type_def`, `type_expr`, `record_type`, `enum_type`).
 
 | Topic | Description |
 |-------|-------------|

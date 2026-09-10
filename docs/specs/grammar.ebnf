@@ -145,9 +145,11 @@ unit_heading        = 'unit' qualified_id ';' ;
 (* uses_clause: each qualified_id names a unit to import. All symbols of the unit are brought into
    scope under their short (unqualified) name. If two units export the same short name, the name is
    ambiguous and the compiler reports an error at the point of use (not at the uses site). The fully
-   qualified name always works as a fallback. The first segment `Std` is reserved for the
-   implementation-defined standard library. User-defined units (when supported) must not use `Std` as
-   the leading segment; only two-part standard names such as `Std.Console` are valid for `Std.*`. *)
+   qualified name always works as a fallback. User-defined project and library units may use qualified
+   names but must not use `Std` as their leading segment. Intrinsic standard-library units use
+   two-part names such as `Std.Console`. The trusted source-standard-library manifest may additionally
+   export multi-segment `Std.*` units such as `Std.Tools.Format`; applications may import only the
+   units exported by that manifest. Unknown or non-exported `Std.*` units are rejected. *)
 
 uses_clause         = 'uses' qualified_id { ',' qualified_id } ';' ;
 
@@ -413,7 +415,8 @@ for_stmt            = 'for' identifier ':' type_expr ':=' expression
 for_in_stmt         = 'for' identifier ':' type_expr 'in' expression
                       'do' statement ;
 
-(* 'in' is a keyword; used only in for-in loops.                    *)
+(* 'in' is a keyword used by for-in loops and as the membership    *)
+(* comparison operator described in section 4.                     *)
 
 (* The loop variable is declared inline and is immutable within     *)
 (* the loop body.                                                   *)

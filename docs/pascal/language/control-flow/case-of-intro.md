@@ -2,13 +2,13 @@
 
 The `case` expression may have any of the following types:
 
-- an ordinal type: `integer`, `boolean`, `string`, or an `enum`
+- an ordinal type: `integer`, `boolean`, or an `enum`
 - `string`
 - `Result of T, E` or `Option of T`
 
 Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`case_stmt`, `case_label`).
 
-Simple scalar matching (integers, chars, strings, booleans, simple enums) is shown below. Guard clauses (`label if cond:`), destructuring patterns (`Ok(x)`, `Error(e)`, `Some(x)`, `None`), data-carrying enum patterns, and exhaustiveness rules are documented in [Pattern matching](../pattern-matching/README.md) and [Error handling](../error-handling/README.md).
+Simple scalar matching (integers, strings including single-character strings, booleans, and simple enums) is shown below. Guard clauses (`label if cond:`), destructuring patterns (`Ok(x)`, `Error(e)`, `Some(x)`, `None`), data-carrying enum patterns, and exhaustiveness rules are documented in [Pattern matching](../pattern-matching/README.md) and [Error handling](../error-handling/README.md).
 
 ```pascal
 case Day of

@@ -2,7 +2,7 @@
 
 Structured error handling with `Result` and `Option` for expected failures, and `panic` for unrecoverable errors.
 
-Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`result_type`, `option_type`, `try` expression, `panic_stmt`, `destructure_label`).
+Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`type_expr` for `Result` and `Option`, `primary_atom` for `try`, `panic_stmt`, `destructure_label`).
 
 | Topic | Description |
 |-------|-------------|

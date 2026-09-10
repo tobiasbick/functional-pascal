@@ -2,7 +2,7 @@
 
 Launch a concurrent task with the `go` keyword.
 
-Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`go_expr`, `go_stmt`).
+Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`go_call`, `go_stmt`, and the `go` alternative in `primary_atom`).
 
 ## Expression form (handle retained)
 

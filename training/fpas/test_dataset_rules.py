@@ -31,6 +31,31 @@ class DatasetRulesTests(unittest.TestCase):
         """Generic ML-style match syntax is not valid FPAS."""
         self.assertIsNotNone(forbidden_reason("match MaybeValue with\n  | Some(X) => X"))
 
+    def test_rejects_nonexistent_grammar_production_references(self) -> None:
+        """Documentation must not teach names absent from the formal grammar."""
+        for production in (
+            "unit_decl",
+            "program_decl",
+            "const_decl",
+            "type_decl",
+            "generic_params",
+            "constraint",
+            "result_type",
+            "option_type",
+            "go_expr",
+        ):
+            with self.subTest(production=production):
+                self.assertIsNotNone(forbidden_reason(f"See `{production}` in grammar.ebnf."))
+
+    def test_rejects_removed_char_type_and_duplicate_string_primitive(self) -> None:
+        """The dataset must describe characters as strings and list primitives once."""
+        for content in (
+            "Scalar matching supports integers, chars, strings, booleans.",
+            "Types: `integer`, `real`, `boolean`, `string`, `string`, `#` codes.",
+        ):
+            with self.subTest(content=content):
+                self.assertIsNotNone(forbidden_reason(content))
+
     def test_accepts_current_names_and_case_syntax(self) -> None:
         """The current API names and FPAS case form remain valid positive data."""
         content = (

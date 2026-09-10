@@ -2,7 +2,7 @@
   "dataset": "fpas-sft-v1",
   "format": "huggingface-conversational-messages",
   "generator": "training/fpas/generate_dataset.py",
-  "source_commit": "2081714a6fe2cd0d23a1f87ef26a836aa22d423f",
+  "source_commit": "2612835f464a566cf606136d6dfd2023159fc5b8",
   "source_roots": [
     "docs/pascal",
     "examples",
@@ -31,12 +31,12 @@
     "tui-background-events",
     "reserved-keywords"
   ],
-  "source_count": 854,
-  "excluded_source_count": 28,
+  "source_count": 844,
+  "excluded_source_count": 38,
   "split_counts": {
-    "train": 739,
-    "validation": 82,
-    "test": 43
+    "train": 731,
+    "validation": 81,
+    "test": 42
   },
   "sources": [
     "apps/local-chat/src/LocalChat/Config.fpas",
@@ -59,10 +59,8 @@
     "docs/pascal/getting-started/keywords.md",
     "docs/pascal/getting-started/overview.md",
     "docs/pascal/language/README.md",
-    "docs/pascal/language/basics/README.md",
     "docs/pascal/language/basics/arrays-intro.md",
     "docs/pascal/language/basics/comments.md",
-    "docs/pascal/language/basics/constants.md",
     "docs/pascal/language/basics/local-variables.md",
     "docs/pascal/language/basics/number-literals.md",
     "docs/pascal/language/basics/operators.md",
@@ -70,17 +68,14 @@
     "docs/pascal/language/basics/variables.md",
     "docs/pascal/language/concurrency/README.md",
     "docs/pascal/language/concurrency/fork-join.md",
-    "docs/pascal/language/concurrency/go.md",
     "docs/pascal/language/concurrency/scheduling.md",
     "docs/pascal/language/concurrency/task-handles.md",
     "docs/pascal/language/control-flow/README.md",
     "docs/pascal/language/control-flow/break-continue.md",
-    "docs/pascal/language/control-flow/case-of-intro.md",
     "docs/pascal/language/control-flow/for-in.md",
     "docs/pascal/language/control-flow/for-loops.md",
     "docs/pascal/language/control-flow/if-then-else.md",
     "docs/pascal/language/control-flow/while-repeat.md",
-    "docs/pascal/language/error-handling/README.md",
     "docs/pascal/language/error-handling/combinators.md",
     "docs/pascal/language/error-handling/option.md",
     "docs/pascal/language/error-handling/panic.md",
@@ -92,7 +87,6 @@
     "docs/pascal/language/functions/early-return.md",
     "docs/pascal/language/functions/first-class.md",
     "docs/pascal/language/functions/function-types.md",
-    "docs/pascal/language/functions/generic-routines.md",
     "docs/pascal/language/functions/mutable-parameters.md",
     "docs/pascal/language/functions/nested.md",
     "docs/pascal/language/functions/parameters.md",
@@ -105,24 +99,20 @@
     "docs/pascal/language/pattern-matching/result-option-patterns.md",
     "docs/pascal/language/pattern-matching/scalar-labels.md",
     "docs/pascal/language/pattern-matching/syntax.md",
-    "docs/pascal/language/types/README.md",
     "docs/pascal/language/types/arrays.md",
     "docs/pascal/language/types/channels.md",
     "docs/pascal/language/types/dictionaries.md",
     "docs/pascal/language/types/enums.md",
-    "docs/pascal/language/types/generics.md",
     "docs/pascal/language/types/record-events.md",
     "docs/pascal/language/types/record-methods.md",
     "docs/pascal/language/types/record-properties.md",
     "docs/pascal/language/types/record-update.md",
     "docs/pascal/language/types/records.md",
     "docs/pascal/language/types/result-option-types.md",
-    "docs/pascal/language/types/type-aliases.md",
     "docs/pascal/program-structure/README.md",
     "docs/pascal/program-structure/compiled-programs.md",
     "docs/pascal/program-structure/initializing.md",
     "docs/pascal/program-structure/projects.md",
-    "docs/pascal/program-structure/units.md",
     "docs/pascal/program-structure/visibility.md",
     "docs/pascal/program-structure/workspaces.md",
     "docs/pascal/std/README.md",
@@ -904,8 +894,48 @@
       "reason": "longer than 12000 characters"
     },
     {
+      "path": "docs/pascal/language/basics/README.md",
+      "reason": "positive source contains duplicate string primitive"
+    },
+    {
+      "path": "docs/pascal/language/basics/constants.md",
+      "reason": "positive source contains nonexistent grammar production reference"
+    },
+    {
+      "path": "docs/pascal/language/concurrency/go.md",
+      "reason": "positive source contains nonexistent grammar production reference"
+    },
+    {
+      "path": "docs/pascal/language/control-flow/case-of-intro.md",
+      "reason": "positive source contains removed char type wording"
+    },
+    {
+      "path": "docs/pascal/language/error-handling/README.md",
+      "reason": "positive source contains nonexistent grammar production reference"
+    },
+    {
+      "path": "docs/pascal/language/functions/generic-routines.md",
+      "reason": "positive source contains nonexistent grammar production reference"
+    },
+    {
+      "path": "docs/pascal/language/types/README.md",
+      "reason": "positive source contains nonexistent grammar production reference"
+    },
+    {
+      "path": "docs/pascal/language/types/generics.md",
+      "reason": "positive source contains nonexistent grammar production reference"
+    },
+    {
+      "path": "docs/pascal/language/types/type-aliases.md",
+      "reason": "positive source contains nonexistent grammar production reference"
+    },
+    {
       "path": "docs/pascal/program-structure/cli.md",
       "reason": "longer than 12000 characters"
+    },
+    {
+      "path": "docs/pascal/program-structure/units.md",
+      "reason": "positive source contains nonexistent grammar production reference"
     },
     {
       "path": "docs/pascal/std/concurrency/task.md",

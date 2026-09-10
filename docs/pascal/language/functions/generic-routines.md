@@ -2,7 +2,7 @@
 
 Functions and procedures can declare type parameters in angle brackets after the name:
 
-Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`generic_params` on routines).
+Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`type_params` on `function_heading` and `procedure_heading`).
 
 ```pascal
 function Identity<T>(Value: T): T;

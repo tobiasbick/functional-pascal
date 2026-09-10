@@ -2,7 +2,7 @@
 
 Constants are declared with `const` and `:=`. Must have a value known at compile time:
 
-Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`const_decl`).
+Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`const_block`, `const_def`).
 
 ```pascal
 const

@@ -2,7 +2,7 @@
 
 Functions and procedures declare type parameters in angle brackets (`<T>`). Record methods may declare type parameters on the method itself.
 
-Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`generic_params`, `constraint`).
+Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`type_params`, `type_param`, `constraint_name`).
 
 ## Generic functions and procedures
 

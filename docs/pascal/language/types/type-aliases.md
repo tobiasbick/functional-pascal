@@ -2,7 +2,7 @@
 
 Create semantic names for existing types.
 
-Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`type_decl` — alias form).
+Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`type_def`, `type_expr` — alias form).
 
 ```pascal
 type

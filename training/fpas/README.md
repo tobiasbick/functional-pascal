@@ -16,8 +16,9 @@ functional style. They also cover common small-model errors: `.fpas` file names,
 - `generate_dataset.py` reads committed sources from `HEAD` and writes the
   deterministic splits. Uncommitted working-tree changes are never ingested.
 - `validate_dataset.py` checks the JSONL schema, FPAS identity, duplicate split
-  records, manifest counts, source-tree freshness, obsolete FPAS APIs, and
-  common foreign-Pascal output patterns.
+  records, manifest counts, source-tree freshness, obsolete FPAS APIs,
+  nonexistent grammar-production references, and common foreign-Pascal output
+  patterns.
 - `data/train.jsonl`, `data/validation.jsonl`, and `data/test.jsonl` are the only
   dataset split files. Regeneration replaces them; it does not create a v2 copy.
 - `manifests/dataset-v1.json` records the exact source commit, limits, curated

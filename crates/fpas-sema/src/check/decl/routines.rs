@@ -288,6 +288,12 @@ impl Checker {
 
         if let Some(existing) = self.scopes.lookup_mut(name) {
             *existing = symbol;
+            if self.scopes.scope_count() == 1 {
+                // Alias refresh must not remove a routine that replaced an imported builtin.
+                let canonical = crate::scope::canonical_symbol_name(name);
+                self.std_short_alias_keys.remove(&canonical);
+                self.short_builtin_redirect.remove(&canonical);
+            }
             return RoutineInstall::Installed;
         }
 

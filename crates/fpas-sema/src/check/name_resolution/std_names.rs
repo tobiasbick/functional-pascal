@@ -21,9 +21,20 @@ impl Checker {
         })
     }
 
-    /// Loads a `Std.*` unit on demand when code uses a fully qualified name without `uses`.
+    /// Resolves standard call names while preserving lexical shadowing of imported aliases.
+    ///
+    /// **Documentation:** `docs/pascal/program-structure/units.md`.
     pub(crate) fn builtin_std_dispatch_name(&self, name: &str) -> String {
         let canonical = canonical_symbol_name(name);
+        if !name.contains('.')
+            && !(self.std_short_alias_keys.contains(&canonical)
+                && self
+                    .scopes
+                    .lookup_with_scope(name)
+                    .is_some_and(|(scope, _)| scope == 0))
+        {
+            return name.to_string();
+        }
         if let Some(qualified) = self.short_builtin_redirect.get(&canonical) {
             return qualified.clone();
         }

@@ -1,5 +1,7 @@
 use super::assert_succeeds;
 
+mod std_shadowing;
+
 #[test]
 fn direct_function_call_executes() {
     assert_succeeds(

@@ -146,6 +146,17 @@ so a lock is never reclaimed merely because it is old. Reading an existing valid
 create a missing lock file, so a read-only source tree remains usable. If rebuilding is required,
 the command reports the source-adjacent file it could not publish.
 
+## Implementation (contributors)
+
+Standard-call dispatch in `crates/fpas-sema/src/check/name_resolution/std_names.rs`
+canonicalizes an unqualified name only when it resolves to the registered root-scope
+Std alias. A local callable with the same name retains its resolved target. When a
+routine replaces a builtin alias, routine declaration checking removes the alias
+bookkeeping so loading another Std unit cannot remove the local routine.
+
+Regression coverage is in `crates/fpas-sema/src/tests/expr/std_shadowing.rs` and
+`crates/fpas-compiler/src/tests/functions/std_shadowing.rs`.
+
 ## See also
 
 - [Visibility](visibility.md)

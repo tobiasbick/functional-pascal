@@ -2,7 +2,7 @@
 
 use std::collections::HashMap;
 use std::io;
-use std::net::TcpListener;
+use std::net::{SocketAddr, TcpListener};
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
@@ -12,6 +12,10 @@ use super::transport::Transport;
 
 const HANDLE_TAG: u64 = 0x4E4C_0000_0000_0000;
 const HANDLE_TAG_MASK: u64 = 0xFFFF_0000_0000_0000;
+
+#[cfg(test)]
+#[path = "listeners/address_tests.rs"]
+mod address_tests;
 
 /// Thread-safe TCP and TLS listeners owned by one VM.
 pub(in crate::vm::hosted) struct NetworkListeners {
@@ -52,11 +56,13 @@ impl NetworkListeners {
     }
 
     /// Bind a TCP listener and return its opaque runtime handle.
+    /// Port zero requests an OS-assigned port; see `docs/pascal/std/network/net.md`.
     pub(super) fn listen(&self, host: &str, port: i64) -> Result<u64, String> {
         self.bind(host, port, ListenerMode::Tcp)
     }
 
     /// Bind a TLS listener configured from PEM files.
+    /// Port zero requests an OS-assigned port; see `docs/pascal/std/network/net.md`.
     pub(super) fn listen_tls(
         &self,
         host: &str,
@@ -71,6 +77,15 @@ impl NetworkListeners {
             handshake_timeout_millis,
         )?;
         self.bind(host, port, ListenerMode::Tls(tls))
+    }
+
+    /// Return the bound address of an open TCP or TLS listener.
+    /// See `docs/pascal/std/network/net.md`.
+    pub(super) fn local_address(&self, handle: u64) -> Result<SocketAddr, String> {
+        self.listener(handle)?
+            .socket
+            .local_addr()
+            .map_err(|error| format!("Could not read network listener address: {error}"))
     }
 
     fn bind(&self, host: &str, port: i64, mode: ListenerMode) -> Result<u64, String> {
@@ -210,9 +225,7 @@ fn ensure_accept_active(
 
 fn listener_port(port: i64) -> Result<u16, String> {
     u16::try_from(port)
-        .ok()
-        .filter(|port| *port != 0)
-        .ok_or_else(|| format!("Network listener port must be in 1..=65535, got {port}"))
+        .map_err(|_| format!("Network listener port must be in 0..=65535, got {port}"))
 }
 
 fn validate_handle(handle: u64) -> Result<(), String> {

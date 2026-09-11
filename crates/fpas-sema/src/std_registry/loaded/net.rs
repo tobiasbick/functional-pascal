@@ -7,6 +7,7 @@ use crate::types::Ty;
 use fpas_std::std_symbols as s;
 
 /// Register the `Std.Net` functions made visible by `uses Std.Net`.
+/// See `docs/pascal/std/network/net.md`.
 pub(super) fn register_std_net(checker: &mut Checker) {
     let connection =
         type_registration::register_record_type(checker, s::STD_NET_CONNECTION, Vec::new());
@@ -18,6 +19,20 @@ pub(super) fn register_std_net(checker: &mut Checker) {
         Vec::new(),
     );
     let error = Box::new(Ty::String);
+    let address = type_registration::register_record_type(
+        checker,
+        s::STD_NET_NETWORK_ADDRESS,
+        vec![
+            ("Host".to_string(), Ty::String),
+            ("Port".to_string(), Ty::Integer),
+        ],
+    );
+    define_func(
+        checker,
+        s::STD_NET_LISTENER_LOCAL_ADDRESS,
+        vec![p("Listener", listener.clone(), false)],
+        Ty::Result(Box::new(address), error.clone()),
+    );
 
     for name in [
         s::STD_NET_CONNECT_WITH_CANCELLATION,

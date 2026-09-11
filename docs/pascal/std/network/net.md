@@ -20,6 +20,7 @@ end
 |------|------|-------|
 | type | `Connection` | opaque VM-owned TCP or TLS connection |
 | type | `Listener` | opaque VM-owned TCP or TLS listener |
+| type | `NetworkAddress` | record with `Host: string` and `Port: integer` |
 | function | `Connect(Host: string; Port: integer; TimeoutMillis: integer): Result of Connection, string` | resolves and connects |
 | function | `ConnectTls(Host: string; Port: integer; TimeoutMillis: integer): Result of Connection, string` | resolves, connects, and completes a verified TLS handshake |
 | function | `ConnectWithCancellation(Host: string; Port: integer; TimeoutMillis: integer; Token: Std.Task.CancellationToken): Result of Connection, string` | cancellable TCP attempts; OS DNS checked on return |
@@ -29,6 +30,7 @@ end
 | function | `Accept(Listener): Result of Connection, string` | blocks until one client connects |
 | function | `AcceptWithCancellation(Listener; Token: Std.Task.CancellationToken): Result of Connection, string` | blocks until one client connects or cancellation is requested |
 | function | `CloseListener(Listener): Result of boolean, string` | invalidates the listener handle |
+| function | `ListenerLocalAddress(Listener): Result of NetworkAddress, string` | returns the bound numeric IP address and port |
 | function | `SetTimeout(Connection; TimeoutMillis: integer): Result of boolean, string` | sets read/write timeout; zero disables it |
 | function | `ReceiveBytes(Connection; MaxBytes: integer): Result of array of integer, string` | empty array means EOF |
 | function | `ReceiveBytesWithCancellation(Connection; MaxBytes: integer; Token: Std.Task.CancellationToken): Result of array of integer, string` | reads a chunk or reports cancellation; leaves the connection open |
@@ -60,7 +62,8 @@ does not need application-controlled cancellation.
 
 Byte values must be in `0..255`. A single `ReceiveBytes` or `SendBytes` is limited to 1 MiB. Timeouts are limited
 to `300000` milliseconds; `Connect` and `ConnectTls` require a positive timeout. Client and listener
-ports must be in `1..65535`.
+ports differ: client ports must be in `1..65535`; listener ports accept `0..65535`.
+Port `0` asks the operating system to assign an available port while binding the listener.
 
 Calls block their VM worker thread. Connections and listeners belong to one VM, are shared safely
 with its tasks, and are released when that VM ends. `Close` interrupts a blocked `ReceiveBytes` or `SendBytes`
@@ -71,6 +74,30 @@ resolution and synchronous TLS verification have the limits described below.
 Closed handles cannot be reused.
 
 FPAS code runs with the host process's network permissions. `Std.Net` does not sandbox destinations.
+
+## `NetworkAddress` and `ListenerLocalAddress`
+
+`NetworkAddress` contains `Host: string` and `Port: integer`. For an open TCP or TLS
+listener, `ListenerLocalAddress` returns its actual bound numeric IP address and port.
+The port remains reserved by the listener; there is no separate probe-and-rebind step.
+An address queried after `CloseListener` returns `Error`.
+
+```pascal
+function InspectListener(): Result of NetworkAddress, string;
+begin
+  var Server: Listener := try Listen('127.0.0.1', 0);
+  var Address: NetworkAddress := try ListenerLocalAddress(Server);
+  // Address.Host is '127.0.0.1'; Address.Port is the assigned nonzero port.
+  var Closed: boolean := try CloseListener(Server);
+  return Ok(Address)
+end;
+```
+
+`ListenTls` supports the same port selection and address query after loading its TLS
+credentials. `Host` contains an IPv6 address without brackets when bound to IPv6.
+A wildcard binding returns `0.0.0.0` or `::`; this is the listening address, not an
+advertised address for remote clients. Callers must choose a reachable host when
+advertising a wildcard listener.
 
 ## `ConnectWithCancellation` and `ConnectTlsWithCancellation`
 

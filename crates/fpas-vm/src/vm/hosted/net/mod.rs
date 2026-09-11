@@ -1,5 +1,6 @@
 //! Hosted `Std.Net` intrinsic dispatch.
 
+mod arguments;
 mod connections;
 mod listeners;
 mod tls;
@@ -8,20 +9,19 @@ mod transport;
 pub(super) use connections::NetworkConnections;
 pub(super) use listeners::NetworkListeners;
 
+use arguments::{bytes, cancellation_token, connection, integer, listener, require_count, string};
 use fpas_bytecode::{Intrinsic, NetIntrinsic, SourceLocation, Value};
-use fpas_diagnostics::codes::{
-    RUNTIME_INTRINSIC_STACK_STATE_ERROR, RUNTIME_VM_OPERAND_TYPE_MISMATCH,
-};
 
 use super::super::VmError;
 use super::super::worker::Worker;
 
 impl Worker {
+    /// Execute hosted network operations described in `docs/pascal/std/network/net.md`.
     pub(super) fn execute_net_intrinsic(
         &self,
         intrinsic: Intrinsic,
         arguments: &[Value],
-        _location: SourceLocation,
+        location: SourceLocation,
     ) -> Result<Option<Option<Value>>, VmError> {
         let Intrinsic::Net(operation) = intrinsic else {
             return Ok(None);
@@ -107,6 +107,21 @@ impl Worker {
                         .listen_tls(host, port, certificate_path, private_key_path, timeout)
                         .map(Value::OpaqueHandle),
                 )
+            }
+            NetIntrinsic::ListenerLocalAddress => {
+                require_count(self, arguments, 1)?;
+                let handle = listener(self, &arguments[0])?;
+                match self.hosted.network_listeners.local_address(handle) {
+                    Ok(address) => Value::result_ok(self.record_value(
+                        "Std.Net.NetworkAddress",
+                        vec![
+                            Value::Str(address.ip().to_string().into()),
+                            Value::Integer(i64::from(address.port())),
+                        ],
+                        location,
+                    )?),
+                    Err(message) => result(Err(message)),
+                }
             }
             NetIntrinsic::Accept => {
                 require_count(self, arguments, 1)?;
@@ -257,94 +272,4 @@ fn result(value: Result<Value, String>) -> Value {
         Ok(value) => Value::result_ok(value),
         Err(message) => Value::result_error(Value::Str(message.into())),
     }
-}
-
-fn require_count(worker: &Worker, arguments: &[Value], expected: usize) -> Result<(), VmError> {
-    if arguments.len() == expected {
-        return Ok(());
-    }
-    Err(worker.runtime_error(
-        RUNTIME_INTRINSIC_STACK_STATE_ERROR,
-        format!(
-            "Std.Net intrinsic expected {expected} arguments, got {}",
-            arguments.len()
-        ),
-        "Check the compiler intrinsic signature and register argument count.",
-    ))
-}
-
-fn string<'a>(worker: &Worker, value: &'a Value, name: &str) -> Result<&'a str, VmError> {
-    match value {
-        Value::Str(value) => Ok(value),
-        actual => Err(type_error(worker, name, "string", actual)),
-    }
-}
-
-fn integer(worker: &Worker, value: &Value, name: &str) -> Result<i64, VmError> {
-    match value {
-        Value::Integer(value) => Ok(*value),
-        actual => Err(type_error(worker, name, "integer", actual)),
-    }
-}
-
-fn connection(worker: &Worker, value: &Value) -> Result<u64, VmError> {
-    match value {
-        Value::OpaqueHandle(handle) => Ok(*handle),
-        actual => Err(type_error(
-            worker,
-            "Connection",
-            "Std.Net.Connection",
-            actual,
-        )),
-    }
-}
-
-fn listener(worker: &Worker, value: &Value) -> Result<u64, VmError> {
-    match value {
-        Value::OpaqueHandle(handle) => Ok(*handle),
-        actual => Err(type_error(worker, "Listener", "Std.Net.Listener", actual)),
-    }
-}
-
-fn cancellation_token(worker: &Worker, value: &Value) -> Result<u64, VmError> {
-    match value {
-        Value::OpaqueHandle(handle) => Ok(*handle),
-        actual => Err(type_error(
-            worker,
-            "Token",
-            "Std.Task.CancellationToken",
-            actual,
-        )),
-    }
-}
-
-fn bytes(worker: &Worker, value: &Value) -> Result<Vec<u8>, VmError> {
-    let Value::Array(values) = value else {
-        return Err(type_error(worker, "Data", "array of integer", value));
-    };
-    values
-        .iter()
-        .enumerate()
-        .map(|(index, value)| match value {
-            Value::Integer(value) => u8::try_from(*value).map_err(|_| {
-                worker.runtime_error(
-                    RUNTIME_VM_OPERAND_TYPE_MISMATCH,
-                    format!("Std.Net.SendBytes Data[{index}] must be in 0..=255, got {value}"),
-                    "Pass a byte array whose integer elements are in 0..=255.",
-                )
-            }),
-            actual => Err(type_error(worker, "Data element", "integer", actual)),
-        })
-        .collect()
-}
-
-fn type_error(worker: &Worker, name: &str, expected: &str, actual: &Value) -> VmError {
-    worker.runtime_error(
-        RUNTIME_VM_OPERAND_TYPE_MISMATCH,
-        format!(
-            "Std.Net {name} expected {expected}, got {}",
-            actual.type_name()
-        ),
-        "Pass values matching the documented Std.Net function signature.",
-    )
 }

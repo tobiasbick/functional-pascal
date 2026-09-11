@@ -15,6 +15,11 @@ public type
     // Compiler-owned storage for this opaque handle.
     _IntrinsicHandle: integer;
   end;
+  // Record with `Host: string` and `Port: integer`.
+  NetworkAddress = record
+    public Host: string;
+    public Port: integer;
+  end;
 
 // Blocks until one client connects.
 //
@@ -134,6 +139,15 @@ public function ListenTls(
   PrivateKeyPath: string;
   HandshakeTimeoutMillis: integer
 ): result of Std.Net.Listener, string;
+begin
+  panic('Intrinsic API declaration')
+end;
+
+// Returns the bound numeric IP address and port.
+//
+// Parameters:
+// - `Listener`: `Std.Net.Listener` input value used by `ListenerLocalAddress`.
+public function ListenerLocalAddress(Listener: Std.Net.Listener): result of Std.Net.NetworkAddress, string;
 begin
   panic('Intrinsic API declaration')
 end;

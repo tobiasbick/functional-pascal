@@ -42,5 +42,7 @@ pub enum NetIntrinsic {
     ConnectWithCancellation = 549,
     /// `Std.Net.ConnectTlsWithCancellation(Host, Port, TimeoutMillis, Token)`.
     ConnectTlsWithCancellation = 550,
+    /// `Std.Net.ListenerLocalAddress(Listener)` - read the bound host and port.
+    ListenerLocalAddress = 566,
 }
 }

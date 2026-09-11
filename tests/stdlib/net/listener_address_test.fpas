@@ -1,0 +1,49 @@
+program ListenerAddressTest;
+
+uses Std.Net, Std.Test;
+
+function ExerciseListener(): result of boolean, string;
+begin
+  var First: Listener := try Listen('127.0.0.1', 0);
+  var Second: Listener := try Listen('127.0.0.1', 0);
+  var Address: NetworkAddress := try ListenerLocalAddress(First);
+  var Other: NetworkAddress := try ListenerLocalAddress(Second);
+  AssertEquals('127.0.0.1', Address.Host);
+  AssertTrue(Address.Port > 0);
+  AssertTrue(Address.Port <= 65535);
+  AssertTrue(Address.Port <> Other.Port);
+  var Client: Connection := try Connect(Address.Host, Address.Port, 2000);
+  var Peer: Connection := try Accept(First);
+  var Timed: boolean := try SetTimeout(Peer, 2000);
+  var Sent: integer := try SendBytes(Client, [42]);
+  var Received: array of integer := try ReceiveBytes(Peer, 1);
+  AssertEquals(1, Sent);
+  AssertEquals(42, Received[0]);
+  var ClientClosed: boolean := try Close(Client);
+  var PeerClosed: boolean := try Close(Peer);
+  var FirstClosed: boolean := try CloseListener(First);
+  var SecondClosed: boolean := try CloseListener(Second);
+  case ListenerLocalAddress(First) of
+    Ok(_):
+    begin
+      panic('Closed listener returned an address')
+    end;
+    Error(_):
+    begin
+    end
+  end;
+
+  return Ok(true)
+end;
+
+begin
+  case ExerciseListener() of
+    Ok(_):
+    begin
+    end;
+    Error(Message):
+    begin
+      panic(Message)
+    end
+  end
+end.

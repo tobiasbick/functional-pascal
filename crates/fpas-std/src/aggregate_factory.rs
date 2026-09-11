@@ -10,6 +10,7 @@ use crate::StdError;
 /// source-level aggregate instruction.
 pub const RUNTIME_AGGREGATE_TYPES: &[&str] = &[
     "Std.Json.JsonValue",
+    "Std.Net.NetworkAddress",
     "Std.Toml.TomlValue",
     "Std.Proc.ProcessOutput",
     "Std.Console.KeyEvent",

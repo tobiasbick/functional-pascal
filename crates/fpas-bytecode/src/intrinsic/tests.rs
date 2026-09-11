@@ -200,6 +200,7 @@ const ALL_INTRINSICS: &[Intrinsic] = &[
     Intrinsic::Net(NetIntrinsic::Accept),
     Intrinsic::Net(NetIntrinsic::CloseListener),
     Intrinsic::Net(NetIntrinsic::ListenTls),
+    Intrinsic::Net(NetIntrinsic::ListenerLocalAddress),
     Intrinsic::Net(NetIntrinsic::AcceptWithCancellation),
     Intrinsic::Net(NetIntrinsic::ReadWithCancellation),
     Intrinsic::Net(NetIntrinsic::WriteWithCancellation),

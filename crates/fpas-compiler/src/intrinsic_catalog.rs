@@ -291,6 +291,7 @@ fn resolve_net(member: &str) -> Option<Intrinsic> {
                 Accept,
                 AcceptWithCancellation,
                 CloseListener,
+                ListenerLocalAddress,
                 SetTimeout,
                 Close,
             ]

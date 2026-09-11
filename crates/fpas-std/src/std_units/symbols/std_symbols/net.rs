@@ -4,6 +4,9 @@
 pub const STD_NET_CONNECTION: &str = std_net!("Connection");
 /// Qualified name of the opaque `Std.Net.Listener` record.
 pub const STD_NET_LISTENER: &str = std_net!("Listener");
+/// Qualified name of the bound network address record.
+pub const STD_NET_NETWORK_ADDRESS: &str = std_net!("NetworkAddress");
+std_symbol!(STD_NET_LISTENER_LOCAL_ADDRESS = std_net!("ListenerLocalAddress"));
 std_symbol!(STD_NET_CONNECT = std_net!("Connect"));
 std_symbol!(STD_NET_CONNECT_TLS = std_net!("ConnectTls"));
 std_symbol!(STD_NET_CONNECT_WITH_CANCELLATION = std_net!("ConnectWithCancellation"));
@@ -23,6 +26,8 @@ std_symbol!(STD_NET_CLOSE = std_net!("Close"));
 pub(in crate::std_units) const STD_NET_SYMBOLS: &[&str] = &[
     STD_NET_CONNECTION,
     STD_NET_LISTENER,
+    STD_NET_NETWORK_ADDRESS,
+    STD_NET_LISTENER_LOCAL_ADDRESS,
     STD_NET_CONNECT,
     STD_NET_CONNECT_TLS,
     STD_NET_CONNECT_WITH_CANCELLATION,

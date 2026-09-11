@@ -16,6 +16,8 @@ pub(crate) struct LayoutIds {
     pub variants: Vec<Vec<Vec<Option<EnumVariantId>>>>,
 }
 
+/// Assigns canonical layout and variant IDs for independently compiled units.
+/// See `docs/pascal/program-structure/projects.md`.
 pub(super) fn assign(
     objects: &[&RelocatableObject],
     symbols: &SymbolTable,
@@ -77,8 +79,15 @@ pub(super) fn assign(
                 .collect::<Vec<_>>()
         })
         .collect::<Vec<_>>();
-    let mut canonical_variants = BTreeMap::new();
-    let mut next = 0;
+    // Use the same layout order as the emitted flat variant table, including coalesced copies.
+    let mut variant_bases = Vec::with_capacity(enum_order.len());
+    let mut next: usize = 0;
+    for &(object, local) in &enum_order {
+        variant_bases.push(next);
+        next = next
+            .checked_add(objects[object].enums[local].variants.len())
+            .ok_or(LinkError::Overflow("enum variant IDs"))?;
+    }
     for (object_index, object) in objects.iter().enumerate() {
         for (local, (enumeration, variant_ids)) in object
             .enums
@@ -86,22 +95,15 @@ pub(super) fn assign(
             .zip(&mut variants[object_index])
             .enumerate()
         {
-            let canonical = canonical_enum_name(objects, symbols, object_index, local);
+            let owner = enums[object_index][local].ok_or(LinkError::Overflow("enum owner"))?;
+            let base = variant_bases[usize::from(owner.get())];
             for (variant, target) in variant_ids
                 .iter_mut()
                 .enumerate()
                 .take(enumeration.variants.len())
             {
-                let key = (canonical.clone(), variant);
-                let id = if let Some(id) = canonical_variants.get(&key).copied() {
-                    id
-                } else {
-                    let id = EnumVariantId::try_from_index(next)
-                        .map_err(|_| LinkError::Overflow("enum variant IDs"))?;
-                    canonical_variants.insert(key, id);
-                    next += 1;
-                    id
-                };
+                let id = EnumVariantId::try_from_index(base + variant)
+                    .map_err(|_| LinkError::Overflow("enum variant IDs"))?;
                 *target = Some(id);
             }
         }

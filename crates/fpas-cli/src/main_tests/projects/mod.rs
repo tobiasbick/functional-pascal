@@ -5,6 +5,7 @@ mod build;
 mod check;
 mod dependencies;
 mod edge_cases;
+mod enum_variants;
 mod errors;
 mod exports;
 mod qualified;

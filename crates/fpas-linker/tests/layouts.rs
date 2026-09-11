@@ -6,6 +6,8 @@
 )]
 
 mod common;
+#[path = "layouts/variant_order.rs"]
+mod variant_order;
 
 use fpas_bytecode::{Instruction, Opcode};
 use fpas_linker::{LinkError, link_objects};

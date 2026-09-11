@@ -133,6 +133,7 @@ impl LoweringContext {
         )
     }
 
+    /// Preserves the base record and evaluated fields until the update.
     pub(in crate::lowering) fn lower_record_update(
         &mut self,
         base: &Expr,
@@ -144,14 +145,21 @@ impl LoweringContext {
             .record_layout_id(ty)
             .ok_or_else(|| unsupported(expression.span(), "record update layout"))?;
         let record = self.lower_expression(base)?;
+        let record = self.save_value(record);
         let fields = fields
             .iter()
             .map(|field| {
                 let (id, _) = self
                     .record_field(layout, &field.name)
                     .ok_or_else(|| unsupported(field.span, "record update field"))?;
-                Ok((id, self.lower_expression(&field.value)?))
+                let value = self.lower_expression(&field.value)?;
+                Ok((id, self.save_value(value)))
             })
+            .collect::<Result<Vec<_>, CompileError>>()?;
+        let record = self.restore_value(record, expression.span())?;
+        let fields = fields
+            .into_iter()
+            .map(|(id, value)| Ok((id, self.restore_value(value, expression.span())?)))
             .collect::<Result<Vec<_>, CompileError>>()?;
         self.emit_value(
             Operation::UpdateRecord {

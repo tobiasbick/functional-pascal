@@ -23,7 +23,9 @@ impl LoweringContext {
     ) -> Result<(), CompileError> {
         let counter_type = self.expression_ir_type(start)?;
         let start_value = self.lower_expression(start)?;
+        let start_value = self.save_value(start_value);
         let end_value = self.lower_expression(end)?;
+        let start_value = self.restore_value(start_value, span)?;
         self.begin_scope();
         let variable_local = self.declare_local(variable, counter_type, true, span)?;
         self.write_local(variable_local, start_value, span)?;

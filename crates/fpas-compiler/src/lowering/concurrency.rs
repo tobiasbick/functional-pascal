@@ -10,6 +10,7 @@ use crate::CompileError;
 use super::context::{LoweringContext, unsupported};
 
 impl LoweringContext {
+    /// Evaluates the task callable and arguments before spawning the task.
     pub(super) fn lower_go(
         &mut self,
         expression: &Expr,
@@ -52,10 +53,9 @@ impl LoweringContext {
             )?;
             (callee, callable.result)
         };
-        let arguments = args
-            .iter()
-            .map(|argument| self.lower_expression(argument))
-            .collect::<Result<Vec<_>, _>>()?;
+        let callee = self.save_value(callee);
+        let arguments = self.lower_expression_values(args, None, span)?;
+        let callee = self.restore_value(callee, span)?;
         self.record_call_arguments(arguments.len(), span)?;
         self.can_spawn_tasks = true;
         if retain_result {

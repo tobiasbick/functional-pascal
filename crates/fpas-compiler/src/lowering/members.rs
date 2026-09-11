@@ -49,6 +49,7 @@ impl LoweringContext {
             .map(|(value, _)| value)
     }
 
+    /// Retains the property receiver while evaluating the assigned value.
     pub(super) fn lower_property_write(
         &mut self,
         target: &Designator,
@@ -58,12 +59,15 @@ impl LoweringContext {
     ) -> Result<(), CompileError> {
         let (receiver, _) =
             self.lower_member_receiver(target, info.receiver_part_count, &info.receiver_reads)?;
+        let receiver = self.save_value(receiver);
         let value = self.lower_expression(value)?;
+        let receiver = self.restore_value(receiver, span)?;
         let callable = self.member_callable(&info.setter_name, target.span, "property setter")?;
         let _ = self.emit_member_call(&callable, vec![receiver, value], span)?;
         Ok(())
     }
 
+    /// Retains the event receiver while evaluating the assigned handler.
     pub(super) fn lower_event_write(
         &mut self,
         target: &Designator,
@@ -73,6 +77,7 @@ impl LoweringContext {
     ) -> Result<(), CompileError> {
         let (receiver, _) =
             self.lower_member_receiver(target, info.receiver_part_count, &info.receiver_reads)?;
+        let receiver = self.save_value(receiver);
         let callable = self.member_callable(&info.setter_name, target.span, "event setter")?;
         let option_ty = callable
             .parameters
@@ -85,6 +90,7 @@ impl LoweringContext {
             let value = self.lower_expression(value)?;
             self.emit_value(Operation::MakeSome(value), option_ty, span)?
         };
+        let receiver = self.restore_value(receiver, span)?;
         let _ = self.emit_member_call(&callable, vec![receiver, handler], span)?;
         Ok(())
     }
@@ -108,6 +114,7 @@ impl LoweringContext {
         self.emit_value(Operation::IsOptionSome(option), super::types::BOOLEAN, span)
     }
 
+    /// Retains the event handler and earlier arguments across continuations.
     pub(super) fn lower_event_raise(
         &mut self,
         designator: &Designator,
@@ -129,10 +136,9 @@ impl LoweringContext {
             _ => return Err(unsupported(span, "event getter result")),
         };
         let handler = self.emit_value(Operation::UnwrapSome(option), handler_ty, span)?;
-        let values = arguments
-            .iter()
-            .map(|argument| self.lower_expression(argument))
-            .collect::<Result<Vec<_>, _>>()?;
+        let handler = self.save_value(handler);
+        let values = self.lower_expression_values(arguments, None, span)?;
+        let handler = self.restore_value(handler, span)?;
         self.record_call_arguments(values.len(), span)?;
         let result = match self.type_kind(handler_ty) {
             Some(IrType::Function { result, .. }) => result,
@@ -148,6 +154,7 @@ impl LoweringContext {
         )
     }
 
+    /// Lowers a postfix member, retaining its receiver across argument evaluation.
     pub(super) fn lower_postfix_member(
         &mut self,
         value: ValueId,
@@ -190,12 +197,9 @@ impl LoweringContext {
                     return Err(unsupported(*span, "static postfix method"));
                 };
                 let callable = self.member_callable(&qualified_name, *span, "postfix method")?;
-                let mut values = vec![value];
-                values.extend(
-                    args.iter()
-                        .map(|argument| self.lower_expression(argument))
-                        .collect::<Result<Vec<_>, _>>()?,
-                );
+                let value = self.save_value(value);
+                let mut values = self.lower_expression_values(args, None, *span)?;
+                values.insert(0, self.restore_value(value, *span)?);
                 let result = self.emit_member_call(&callable, values, *span)?;
                 Ok(Some((result, callable.result)))
             }
@@ -222,6 +226,7 @@ impl LoweringContext {
         None
     }
 
+    /// Evaluates the method receiver and arguments in source order.
     pub(super) fn lower_method_call(
         &mut self,
         designator: &Designator,
@@ -231,21 +236,20 @@ impl LoweringContext {
         span: fpas_lexer::Span,
     ) -> Result<ValueId, CompileError> {
         let callable = self.member_callable(target.qualified_name(), span, "record method")?;
-        let mut values = Vec::new();
-        if let MethodCallTarget::Instance { receiver_reads, .. } = target {
+        let receiver = if let MethodCallTarget::Instance { receiver_reads, .. } = target {
             let (receiver, _) = self.lower_member_receiver(
                 designator,
                 designator.parts.len().saturating_sub(1),
                 receiver_reads,
             )?;
-            values.push(receiver);
+            Some(self.save_value(receiver))
+        } else {
+            None
+        };
+        let mut values = self.lower_expression_values(arguments, None, span)?;
+        if let Some(receiver) = receiver {
+            values.insert(0, self.restore_value(receiver, span)?);
         }
-        values.extend(
-            arguments
-                .iter()
-                .map(|argument| self.lower_expression(argument))
-                .collect::<Result<Vec<_>, _>>()?,
-        );
         self.record_call_arguments(values.len(), span)?;
         self.emit_value(
             Operation::CallDirect {

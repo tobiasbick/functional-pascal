@@ -8,19 +8,18 @@ use super::super::context::target;
 use super::super::context::{LoweringContext, unsupported};
 
 impl LoweringContext {
+    /// Lowers array elements in source order across expression continuations.
     pub(in crate::lowering) fn lower_array_literal(
         &mut self,
         values: &[Expr],
         expression: &Expr,
     ) -> Result<ValueId, CompileError> {
         let ty = self.expression_ir_type(expression)?;
-        let values = values
-            .iter()
-            .map(|value| self.lower_expression(value))
-            .collect::<Result<Vec<_>, _>>()?;
+        let values = self.lower_expression_values(values, None, expression.span())?;
         self.emit_value(Operation::MakeArray(values), ty, expression.span())
     }
 
+    /// Lowers array elements with the expected element type.
     pub(in crate::lowering) fn lower_array_literal_as(
         &mut self,
         values: &[Expr],
@@ -31,13 +30,11 @@ impl LoweringContext {
             Some(IrType::Array(element)) => element,
             _ => return Err(unsupported(span, "expected array type")),
         };
-        let values = values
-            .iter()
-            .map(|value| self.lower_expression_as(value, element_ty))
-            .collect::<Result<Vec<_>, _>>()?;
+        let values = self.lower_expression_values(values, Some(element_ty), span)?;
         self.emit_value(Operation::MakeArray(values), ty, span)
     }
 
+    /// Preserves evaluated keys and values until dictionary construction.
     pub(in crate::lowering) fn lower_dictionary_literal(
         &mut self,
         pairs: &[(Expr, Expr)],
@@ -46,7 +43,21 @@ impl LoweringContext {
         let ty = self.expression_ir_type(expression)?;
         let pairs = pairs
             .iter()
-            .map(|(key, value)| Ok((self.lower_expression(key)?, self.lower_expression(value)?)))
+            .map(|(key, value)| {
+                let key = self.lower_expression(key)?;
+                let key = self.save_value(key);
+                let value = self.lower_expression(value)?;
+                Ok((key, self.save_value(value)))
+            })
+            .collect::<Result<Vec<_>, CompileError>>()?;
+        let pairs = pairs
+            .into_iter()
+            .map(|(key, value)| {
+                Ok((
+                    self.restore_value(key, expression.span())?,
+                    self.restore_value(value, expression.span())?,
+                ))
+            })
             .collect::<Result<Vec<_>, CompileError>>()?;
         self.emit_value(Operation::MakeDictionary(pairs), ty, expression.span())
     }

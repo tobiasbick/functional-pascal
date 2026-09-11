@@ -134,12 +134,18 @@ impl LoweringContext {
             return Err(unsupported(span, "destructuring case label"));
         };
         let left = self.emit_value(Operation::ReadLocal(case_local), case_ir_ty, span)?;
+        let left = self.save_value(left);
         let start_value = self.lower_expression(start)?;
+        let left = self.restore_value(left, span)?;
         if let Some(end) = end {
             let ge = self.case_ordering(case_ty, false);
             let lower = self.emit_binary(ge, left, start_value, types::BOOLEAN, span)?;
+            let lower = self.save_value(lower);
             let upper_left = self.emit_value(Operation::ReadLocal(case_local), case_ir_ty, span)?;
+            let upper_left = self.save_value(upper_left);
             let end_value = self.lower_expression(end)?;
+            let upper_left = self.restore_value(upper_left, span)?;
+            let lower = self.restore_value(lower, span)?;
             let le = self.case_ordering(case_ty, true);
             let upper = self.emit_binary(le, upper_left, end_value, types::BOOLEAN, span)?;
             self.emit_binary(

@@ -10,6 +10,7 @@ use crate::CompileError;
 use super::context::{LoweringContext, unsupported};
 
 impl LoweringContext {
+    /// Lowers a resolved call while retaining its callee and earlier arguments.
     pub(super) fn lower_call(
         &mut self,
         designator: &Designator,
@@ -70,7 +71,9 @@ impl LoweringContext {
             } else {
                 self.read_global(name, designator.span)?
             };
+            let callee = self.save_value(callee);
             let values = self.lower_call_arguments(arguments, span)?;
+            let callee = self.restore_value(callee, span)?;
             self.emit_value(
                 Operation::CallValue {
                     callee,
@@ -259,10 +262,7 @@ impl LoweringContext {
         arguments: &[Expr],
         span: fpas_lexer::Span,
     ) -> Result<Vec<ValueId>, CompileError> {
-        let values = arguments
-            .iter()
-            .map(|argument| self.lower_expression(argument))
-            .collect::<Result<Vec<_>, _>>()?;
+        let values = self.lower_expression_values(arguments, None, span)?;
         self.record_call_arguments(values.len(), span)?;
         Ok(values)
     }

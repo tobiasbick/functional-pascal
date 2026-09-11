@@ -12,6 +12,7 @@ use super::context::{LoweringContext, unsupported};
 use super::types;
 
 impl LoweringContext {
+    /// Lowers an expression to a value available in its final continuation block.
     pub(super) fn lower_expression(&mut self, expression: &Expr) -> Result<ValueId, CompileError> {
         match expression {
             Expr::Integer(value, span) => self.emit_value(
@@ -271,7 +272,9 @@ impl LoweringContext {
             }
             BinaryOp::In => {
                 let value = self.lower_expression(left)?;
+                let value = self.save_value(value);
                 let collection = self.lower_expression(right)?;
+                let value = self.restore_value(value, span)?;
                 self.emit_value(
                     Operation::Contains { value, collection },
                     types::BOOLEAN,
@@ -318,7 +321,9 @@ impl LoweringContext {
         span: fpas_lexer::Span,
     ) -> Result<ValueId, CompileError> {
         let left_value = self.lower_expression(left)?;
+        let left_value = self.save_value(left_value);
         let right_value = self.lower_expression(right)?;
+        let left_value = self.restore_value(left_value, span)?;
         let left_lowered = self
             .lowered_value_type(left_value)
             .ok_or_else(|| unsupported(span, "missing lowered left operand type"))?;
@@ -376,7 +381,9 @@ impl LoweringContext {
     ) -> Result<(ValueId, ValueId), CompileError> {
         let left_value = self.lower_expression(left)?;
         let left_value = self.convert_integer_to_real(left_value, left_ty, span)?;
+        let left_value = self.save_value(left_value);
         let right_value = self.lower_expression(right)?;
+        let left_value = self.restore_value(left_value, span)?;
         let right_value = self.convert_integer_to_real(right_value, right_ty, span)?;
         Ok((left_value, right_value))
     }
@@ -410,7 +417,9 @@ impl LoweringContext {
         span: fpas_lexer::Span,
     ) -> Result<ValueId, CompileError> {
         let left = self.lower_expression(left)?;
+        let left = self.save_value(left);
         let right = self.lower_expression(right)?;
+        let left = self.restore_value(left, span)?;
         self.emit_binary(operation, left, right, result_ty, span)
     }
 

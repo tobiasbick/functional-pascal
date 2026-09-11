@@ -5,6 +5,7 @@ mod block_order;
 mod blocks;
 mod debug;
 mod descriptors;
+mod saved_values;
 
 #[cfg(test)]
 mod block_order_tests;

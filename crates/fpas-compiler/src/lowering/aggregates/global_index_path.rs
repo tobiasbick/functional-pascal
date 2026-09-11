@@ -26,13 +26,22 @@ impl LoweringContext {
         }
 
         let root = self.read_global(name, span)?;
+        let root = self.save_value(root);
+        let replacement = self.save_value(replacement);
         let mut indexes = Vec::with_capacity(parts.len());
         for part in parts {
             let DesignatorPart::Index(index, _) = part else {
                 return Ok(false);
             };
-            indexes.push(self.lower_expression(index)?);
+            let index = self.lower_expression(index)?;
+            indexes.push(self.save_value(index));
         }
+        let root = self.restore_value(root, span)?;
+        let replacement = self.restore_value(replacement, span)?;
+        let indexes = indexes
+            .into_iter()
+            .map(|index| self.restore_value(index, span))
+            .collect::<Result<Vec<_>, _>>()?;
         self.write_global_index_path(name, root, indexes, replacement, span)?;
         Ok(true)
     }

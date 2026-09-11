@@ -1,5 +1,7 @@
 use super::*;
 
+mod try_expressions;
+
 #[test]
 fn contextual_record_literals_expand_defaults_in_all_lowering_positions() {
     assert_succeeds(

@@ -10,6 +10,7 @@ use fpas_parser::{Designator, DesignatorPart, Expr, PostfixOperation};
 use super::super::context::{LoweringContext, unsupported};
 
 impl LoweringContext {
+    /// Writes a designator while preserving its evaluated replacement and path.
     pub(in crate::lowering) fn lower_designator_write(
         &mut self,
         designator: &Designator,
@@ -95,6 +96,7 @@ impl LoweringContext {
                 let (field, field_ty) = self
                     .record_field(layout, name)
                     .ok_or_else(|| unsupported(*part_span, "assignment field"))?;
+                let saved_aggregate = self.save_value(aggregate);
                 let value = if tail.is_empty() {
                     replacement
                 } else {
@@ -109,6 +111,7 @@ impl LoweringContext {
                     )?;
                     self.lower_path_update(child, field_ty, tail, replacement, span)?
                 };
+                let aggregate = self.restore_value(saved_aggregate, span)?;
                 self.emit_value(
                     Operation::UpdateRecord {
                         record: aggregate,
@@ -130,7 +133,13 @@ impl LoweringContext {
                         ));
                     }
                 };
+                let aggregate = self.save_value(aggregate);
+                let replacement = self.save_value(replacement);
                 let index = self.lower_expression(index)?;
+                let aggregate = self.restore_value(aggregate, span)?;
+                let replacement = self.restore_value(replacement, span)?;
+                let saved_aggregate = self.save_value(aggregate);
+                let saved_index = self.save_value(index);
                 let value = if tail.is_empty() {
                     replacement
                 } else {
@@ -144,6 +153,8 @@ impl LoweringContext {
                     )?;
                     self.lower_path_update(child, element_ty, tail, replacement, span)?
                 };
+                let aggregate = self.restore_value(saved_aggregate, span)?;
+                let index = self.restore_value(saved_index, span)?;
                 self.emit_value(
                     Operation::IndexSet {
                         collection: aggregate,
@@ -209,6 +220,7 @@ impl LoweringContext {
         Ok(value)
     }
 
+    /// Reads one field or index, preserving the collection across index evaluation.
     pub(in crate::lowering) fn lower_designator_part(
         &mut self,
         value: ValueId,
@@ -244,7 +256,9 @@ impl LoweringContext {
                     Some(IrType::String) => super::super::types::STRING,
                     _ => return Err(unsupported(*span, "indexing non-collection")),
                 };
+                let value = self.save_value(value);
                 let index = self.lower_expression(index)?;
+                let value = self.restore_value(value, *span)?;
                 let result = self.emit_value(
                     Operation::IndexGet {
                         collection: value,

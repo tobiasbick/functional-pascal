@@ -1,0 +1,118 @@
+unit Std.Tui.Rendering.Surface.Damage;
+
+uses Std.Arrays, Std.Options, Std.Tui.Cells.Cell, Std.Tui.Cells.Color, Std.Tui.Cells.Style;
+
+public type
+  // One changed horizontal range prepared for the internal terminal renderer.
+  TuiSurfaceDamage = record
+    // Zero-based vertical terminal-cell coordinate.
+    public Y: integer;
+    // First changed horizontal cell coordinate.
+    public FirstX: integer;
+    // Row-major terminal cells.
+    public Cells: array of TuiCell;
+  end;
+
+function TuiSurfaceColorEqual(Left: TuiColor; Right: TuiColor): boolean;
+begin
+  return ((((Left.Kind = Right.Kind) and (Left.Index = Right.Index)) and (Left.Red = Right.Red)) and (Left.Green = Right.Green)) and
+         (Left.Blue = Right.Blue)
+end;
+
+function TuiSurfaceStyleEqual(Left: TuiStyle; Right: TuiStyle): boolean;
+begin
+  return ((((TuiSurfaceColorEqual(Left.Foreground, Right.Foreground) and TuiSurfaceColorEqual(Left.Background, Right.Background)) and (Left.Bold = Right.Bold)) and (Left.Dim = Right.Dim)) and (Left.Underline = Right.Underline)) and
+         (Left.Inverse = Right.Inverse)
+end;
+
+function TuiSurfaceConcreteStyleEqual(Left: option of TuiStyle; Right: option of TuiStyle): boolean;
+begin
+  case Left of
+    Some(LeftStyle):
+    begin
+      case Right of
+        Some(RightStyle):
+        begin
+          return TuiSurfaceStyleEqual(LeftStyle, RightStyle)
+        end;
+        None:
+        begin
+          return false
+        end
+      end
+    end;
+    None:
+    begin
+      case Right of
+        Some(RightStyle):
+        begin
+          return false
+        end;
+        None:
+        begin
+          return true
+        end
+      end
+    end
+  end
+end;
+
+// Returns whether one working cell differs from its presented counterpart.
+//
+// Parameters:
+// - `CurrentCell`: Cell currently stored in the working surface.
+// - `CurrentContinuation`: Whether the current column continues a wide glyph.
+// - `PresentedCell`: Cell stored in the presented baseline.
+// - `PresentedContinuation`: Whether the presented column continues a wide glyph.
+public function TuiSurfaceCellChanged(
+  CurrentCell: TuiCell;
+  CurrentContinuation: boolean;
+  PresentedCell: TuiCell;
+  PresentedContinuation: boolean
+): boolean;
+begin
+  if CurrentContinuation <> PresentedContinuation then
+  begin
+    return true
+  end;
+
+  if CurrentContinuation then
+  begin
+    return false
+  end;
+
+  return ((CurrentCell.Glyph <> PresentedCell.Glyph) or (CurrentCell.Role <> PresentedCell.Role)) or
+         not TuiSurfaceConcreteStyleEqual(CurrentCell.ConcreteStyle, PresentedCell.ConcreteStyle)
+end;
+
+// Builds one terminal-damage range from a working-surface row.
+//
+// Parameters:
+// - `Cells`: Current cells in the row.
+// - `Continuations`: Wide-glyph continuation markers for the row.
+// - `Y`: Zero-based vertical terminal-cell coordinate.
+// - `FirstX`: First changed horizontal cell coordinate.
+// - `LastX`: Last changed horizontal cell coordinate.
+public function TuiSurfaceDamageForRange(
+  Cells: array of TuiCell;
+  Continuations: array of boolean;
+  Y: integer;
+  FirstX: integer;
+  LastX: integer
+): TuiSurfaceDamage;
+begin
+  mutable var ChangedCells: array of TuiCell := [];
+  for X: integer := FirstX to LastX do
+  begin
+    if not Continuations[X] then
+    begin
+      Std.Arrays.Push(ChangedCells, Cells[X])
+    end
+  end;
+
+  return record
+    Y := Y;
+    FirstX := FirstX;
+    Cells := ChangedCells;
+  end
+end;

@@ -1,8 +1,9 @@
 unit Std.Tui.Rendering.Surface;
 
 uses
-  Std.Arrays, Std.Options, Std.Str, Std.Tui.Cells.Cell, Std.Tui.Cells.Color, Std.Tui.Cells.Style,
-  Std.Tui.Cells.StyleRole, Std.Tui.Geometry.Point, Std.Tui.Geometry.Rect, Std.Tui.Geometry.Size;
+  Std.Arrays, Std.Options, Std.Tui.Cells.Cell, Std.Tui.Rendering.Surface.Row,
+  Std.Tui.Rendering.Surface.Damage, Std.Tui.Rendering.Surface.Snapshot, Std.Tui.Cells.StyleRole,
+  Std.Tui.Geometry.Point, Std.Tui.Geometry.Rect, Std.Tui.Geometry.Size;
 
 mutable var
   TuiSurfaceSizes: array of TuiSize := [];
@@ -13,15 +14,10 @@ mutable var
   TuiSurfacePresentedReady: array of boolean := [];
 
 public type
-  // One changed horizontal range prepared for the internal terminal renderer.
-  TuiSurfaceDamage = record
-    // Zero-based vertical terminal-cell coordinate.
-    public Y: integer;
-    // First changed horizontal cell coordinate.
-    public FirstX: integer;
-    // Row-major terminal cells.
-    public Cells: array of TuiCell;
-  end;
+  // One horizontal terminal damage range.
+  TuiSurfaceDamage = Std.Tui.Rendering.Surface.Damage.TuiSurfaceDamage;
+  // Immutable headless surface inspection value.
+  TuiSurfaceSnapshot = Std.Tui.Rendering.Surface.Snapshot.TuiSurfaceSnapshot;
 
 function TuiSurfaceBlank(): TuiCell;
 begin
@@ -93,130 +89,7 @@ begin
   end
 end;
 
-function TuiSurfaceColorEqual(Left: TuiColor; Right: TuiColor): boolean;
-begin
-  return ((((Left.Kind = Right.Kind) and (Left.Index = Right.Index)) and (Left.Red = Right.Red)) and (Left.Green = Right.Green)) and
-         (Left.Blue = Right.Blue)
-end;
-
-function TuiSurfaceStyleEqual(Left: TuiStyle; Right: TuiStyle): boolean;
-begin
-  return ((((TuiSurfaceColorEqual(Left.Foreground, Right.Foreground) and TuiSurfaceColorEqual(Left.Background, Right.Background)) and (Left.Bold = Right.Bold)) and (Left.Dim = Right.Dim)) and (Left.Underline = Right.Underline)) and
-         (Left.Inverse = Right.Inverse)
-end;
-
-function TuiSurfaceConcreteStyleEqual(Left: option of TuiStyle; Right: option of TuiStyle): boolean;
-begin
-  case Left of
-    Some(LeftStyle):
-    begin
-      case Right of
-        Some(RightStyle):
-        begin
-          return TuiSurfaceStyleEqual(LeftStyle, RightStyle)
-        end;
-        None:
-        begin
-          return false
-        end
-      end
-    end;
-    None:
-    begin
-      case Right of
-        Some(RightStyle):
-        begin
-          return false
-        end;
-        None:
-        begin
-          return true
-        end
-      end
-    end
-  end
-end;
-
-function TuiSurfaceCellChanged(SlotIndex: integer; Y: integer; X: integer): boolean;
-begin
-  if TuiSurfaceContinuations[SlotIndex][Y][X] <> TuiSurfacePresentedContinuations[SlotIndex][Y][X] then
-  begin
-    return true
-  end;
-
-  if TuiSurfaceContinuations[SlotIndex][Y][X] then
-  begin
-    return false
-  end;
-
-  return ((TuiSurfaceCells[SlotIndex][Y][X].Glyph <> TuiSurfacePresentedCells[SlotIndex][Y][X].Glyph) or (TuiSurfaceCells[SlotIndex][Y][X].Role <> TuiSurfacePresentedCells[SlotIndex][Y][X].Role)) or
-         not TuiSurfaceConcreteStyleEqual(TuiSurfaceCells[SlotIndex][Y][X].ConcreteStyle, TuiSurfacePresentedCells[SlotIndex][Y][X].ConcreteStyle)
-end;
-
-function TuiSurfaceDamageForRange(SlotIndex: integer; Y: integer; FirstX: integer; LastX: integer): TuiSurfaceDamage;
-begin
-  mutable var Cells: array of TuiCell := [];
-  for X: integer := FirstX to LastX do
-  begin
-    if not TuiSurfaceContinuations[SlotIndex][Y][X] then
-    begin
-      Std.Arrays.Push(Cells, TuiSurfaceCells[SlotIndex][Y][X])
-    end
-  end;
-
-  return record
-    Y := Y;
-    FirstX := FirstX;
-    Cells := Cells;
-  end
-end;
-
 public type
-  // Explicit immutable copy of the most recently painted headless surface.
-  TuiSurfaceSnapshot = record
-    // Width in terminal cells.
-    public Width: integer;
-    // Height in terminal cells.
-    public Height: integer;
-    // Row-major terminal cells.
-    public Cells: array of TuiCell;
-
-    // Returns one leading cell at a zero-based position.
-    //
-    // Parameters:
-    // - `Self`: Receiver value operated on by the method.
-    // - `X`: Zero-based horizontal terminal-cell coordinate.
-    // - `Y`: Zero-based vertical terminal-cell coordinate.
-    public function CellAt(Self: TuiSurfaceSnapshot; X: integer; Y: integer): TuiCell;
-    begin
-      if (((X < 0) or (X >= Self.Width)) or (Y < 0)) or (Y >= Self.Height) then
-      begin
-        panic('Tui snapshot position is outside the surface')
-      end;
-
-      return Self.Cells[(Y * Self.Width) + X]
-    end;
-
-    // Returns one complete row as text.
-    //
-    // Parameters:
-    // - `Self`: Receiver value operated on by the method.
-    // - `Y`: Zero-based vertical terminal-cell coordinate.
-    public function LineAt(Self: TuiSurfaceSnapshot; Y: integer): string;
-    begin
-      if (Y < 0) or (Y >= Self.Height) then
-      begin
-        panic('Tui snapshot row is outside the surface')
-      end;
-      mutable var Line: string := '';
-      for X: integer := 0 to Self.Width - 1 do
-      begin
-        Line := Line + Self.CellAt(X, Y).Glyph
-      end;
-
-      return Line
-    end;
-  end;
   // Host-owned mutable working surface handle.
   TuiWorkingSurface = record
     // Opaque backing-storage slot.
@@ -420,12 +293,17 @@ begin
     return
   end;
 
+  if Visible.IsEmpty() then
+  begin
+    return
+  end;
+  var Values: array of TuiCell := Std.Arrays.Fill(Cell, Visible.Width);
   for Y: integer := Visible.Y to Visible.Bottom() - 1 do
   begin
-    for X: integer := Visible.X to Visible.Right() - 1 do
-    begin
-      TuiSurfacePutCellAt(Slot - 1, Size, X, Y, Cell)
-    end
+    var Row: TuiSurfaceRow := TuiSurfaceWriteRow(TuiSurfaceCells[Slot - 1][Y], TuiSurfaceContinuations[Slot -
+                                                                                                       1][Y], Visible.X, Values);
+    TuiSurfaceCells[Slot - 1][Y] := Row.Cells;
+    TuiSurfaceContinuations[Slot - 1][Y] := Row.Continuations
   end
 end;
 
@@ -444,7 +322,11 @@ begin
     mutable var FirstX: integer := -1;
     for X: integer := 0 to Size.Width - 1 do
     begin
-      var Changed: boolean := not ComparePrevious or TuiSurfaceCellChanged(Slot - 1, Y, X);
+      var Changed: boolean := not ComparePrevious or
+                              TuiSurfaceCellChanged(TuiSurfaceCells[Slot - 1][Y][X], TuiSurfaceContinuations[Slot -
+                                                                                                             1][Y][X], TuiSurfacePresentedCells[Slot -
+                                                                                                                                                1][Y][X], TuiSurfacePresentedContinuations[Slot -
+                                                                                                                                                                                           1][Y][X]);
       if Changed then
       begin
         if FirstX < 0 then
@@ -457,14 +339,18 @@ begin
       end
       else if FirstX >= 0 then
       begin
-        Std.Arrays.Push(Damage, TuiSurfaceDamageForRange(Slot - 1, Y, FirstX, X - 1));
+        Std.Arrays.Push(Damage, TuiSurfaceDamageForRange(TuiSurfaceCells[Slot - 1][Y], TuiSurfaceContinuations[Slot -
+                                                                                                               1][Y], Y, FirstX, X -
+                                                                                                                                 1));
         FirstX := -1
       end
     end;
 
     if FirstX >= 0 then
     begin
-      Std.Arrays.Push(Damage, TuiSurfaceDamageForRange(Slot - 1, Y, FirstX, Size.Width - 1))
+      Std.Arrays.Push(Damage, TuiSurfaceDamageForRange(TuiSurfaceCells[Slot - 1][Y], TuiSurfaceContinuations[Slot -
+                                                                                                             1][Y], Y, FirstX, Size.Width -
+                                                                                                                               1))
     end
   end;
 
@@ -480,4 +366,45 @@ public procedure TuiSurfaceInvalidateTerminal(Surface: TuiWorkingSurface);
 begin
   var Slot: integer := TuiSurfaceRequire(Surface.Slot);
   TuiSurfacePresentedReady[Slot - 1] := false
+end;
+
+// Paints consecutive cells with surface clipping and wide-glyph repair.
+public procedure TuiSurfacePutCells(
+  Surface: TuiWorkingSurface;
+  Position: TuiPoint;
+  Cells: array of TuiCell
+);
+begin
+  if Std.Arrays.Length(Cells) = 0 then
+  begin
+    return
+  end;
+  var Slot: integer := TuiSurfaceRequire(Surface.Slot);
+  var Size: TuiSize := TuiSurfaceSizes[Slot - 1];
+  if (Position.Y < 0) or (Position.Y >= Size.Height) then
+  begin
+    return
+  end;
+  mutable var SourceX: integer := 0;
+  mutable var TargetX: integer := Position.X;
+  if TargetX < 0 then
+  begin
+    SourceX := - TargetX;
+    TargetX := 0
+  end;
+  mutable var Count: integer := Std.Arrays.Length(Cells) - SourceX;
+  if Count > Size.Width - TargetX then
+  begin
+    Count := Size.Width - TargetX
+  end;
+
+  if Count <= 0 then
+  begin
+    return
+  end;
+  var Values: array of TuiCell := Std.Arrays.Slice(Cells, SourceX, Count);
+  var Row: TuiSurfaceRow := TuiSurfaceWriteRow(TuiSurfaceCells[Slot - 1][Position.Y], TuiSurfaceContinuations[Slot -
+                                                                                                              1][Position.Y], TargetX, Values);
+  TuiSurfaceCells[Slot - 1][Position.Y] := Row.Cells;
+  TuiSurfaceContinuations[Slot - 1][Position.Y] := Row.Continuations
 end;

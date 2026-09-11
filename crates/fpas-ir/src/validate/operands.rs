@@ -2,6 +2,7 @@
 
 include!("operands/tables.rs");
 include!("operands/global_index_path.rs");
+include!("operands/local_index.rs");
 include!("operands/operations.rs");
 include!("operands/scalar.rs");
 include!("operands/calls.rs");

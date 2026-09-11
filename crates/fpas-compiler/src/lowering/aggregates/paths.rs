@@ -1,4 +1,7 @@
 //! Nested designator reads, writes, and postfix field or index access.
+//!
+//! Indexed writes retain the collection value semantics documented in
+//! `docs/pascal/std/collections/array/README.md`.
 
 use crate::CompileError;
 use fpas_ir::{IrType, Operation, TypeId, ValueId};
@@ -22,6 +25,26 @@ impl LoweringContext {
             } else {
                 self.write_global(name, replacement, span)
             };
+        }
+        if let (
+            Some(local),
+            [DesignatorPart::Index(index, _)],
+            Some(IrType::Array(_) | IrType::Dictionary { .. }),
+        ) = (
+            self.direct_local(name),
+            &designator.parts[1..],
+            self.root_type(name).and_then(|ty| self.type_kind(ty)),
+        ) && is_side_effect_free_index(index)
+        {
+            let index = self.lower_expression(index)?;
+            return self.emit_effect(
+                Operation::StoreLocalIndex {
+                    local,
+                    index,
+                    value: replacement,
+                },
+                span,
+            );
         }
         if !self.has_binding(name)
             && self.lower_global_index_path_write(
@@ -233,5 +256,22 @@ impl LoweringContext {
                 Ok((result, result_ty))
             }
         }
+    }
+}
+
+// Preserve root snapshot evaluation for indexes that can execute user code.
+fn is_side_effect_free_index(expression: &Expr) -> bool {
+    match expression {
+        Expr::Integer(..) | Expr::Real(..) | Expr::Str(..) | Expr::Bool(..) => true,
+        Expr::Designator(designator) => {
+            matches!(designator.parts.as_slice(), [DesignatorPart::Ident(..)])
+        }
+        Expr::UnaryOp { operand, .. } | Expr::Paren(operand, _) => {
+            is_side_effect_free_index(operand)
+        }
+        Expr::BinaryOp { left, right, .. } => {
+            is_side_effect_free_index(left) && is_side_effect_free_index(right)
+        }
+        _ => false,
     }
 }

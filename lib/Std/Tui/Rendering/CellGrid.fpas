@@ -2,7 +2,8 @@
 unit Std.Tui.Rendering.CellGrid;
 
 uses
-  Std.Tui.Chrome.CellGrid, Std.Tui.Geometry.Point, Std.Tui.Geometry.Rect, Std.Tui.Rendering.Canvas;
+  Std.Arrays, Std.Tui.Chrome.CellGrid, Std.Tui.Geometry.Point, Std.Tui.Geometry.Rect,
+  Std.Tui.Rendering.Canvas;
 
 // Paints the visible part of a row-major terminal cell grid.
 //
@@ -26,9 +27,7 @@ begin
 
   for Y: integer := 0 to Height - 1 do
   begin
-    for X: integer := 0 to Width - 1 do
-    begin
-      Canvas.PutCell(TuiPoint.Create(Bounds.X + X, Bounds.Y + Y), Grid.Cells[(Y * Grid.Width) + X])
-    end
+    TuiCanvasPutCells(Canvas, TuiPoint.Create(Bounds.X, Bounds.Y + Y), Std.Arrays.Slice(Grid.Cells, Y *
+                                                                                                    Grid.Width, Width))
   end
 end;

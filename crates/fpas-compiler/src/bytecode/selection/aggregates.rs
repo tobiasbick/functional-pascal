@@ -98,6 +98,16 @@ impl Selector<'_> {
                 self.allocation.value(*collection)?.get(),
                 self.allocation.value(*index)?.get(),
             )?],
+            Operation::StoreLocalIndex {
+                local,
+                index,
+                value,
+            } => vec![abc(
+                Opcode::IndexSet,
+                self.allocation.local(*local)?.get(),
+                self.allocation.value(*index)?.get(),
+                self.allocation.value(*value)?.get(),
+            )?],
             Operation::IndexSet {
                 collection,
                 index,

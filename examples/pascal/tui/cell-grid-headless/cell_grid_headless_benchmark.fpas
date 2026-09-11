@@ -1,0 +1,68 @@
+// Measures repeated painting of one prebuilt cell grid through the headless TUI host.
+program CellGridHeadlessBenchmark;
+
+uses Std.Args, Std.Arrays, Std.Console, Std.Conv, Std.Time, Std.Tui;
+
+const
+  GridWidth: integer := 98;
+  GridHeight: integer := 32;
+  WarmupIterations: integer := 5;
+
+function Update(Grid: TuiCellGrid; Msg: TuiMsg; Cmd: TuiCmdOutput): TuiCellGrid;
+begin
+  return Grid
+end;
+
+function View(Grid: TuiCellGrid): TuiElement;
+begin
+  return TuiElementBuilders.MakeCellGrid(Grid)
+end;
+
+function PaintOnce(App: TuiApplication; Grid: TuiCellGrid): TuiCellGrid;
+begin
+  return App.RunIterations(Grid, Update, View, 0, 0)
+end;
+
+begin
+  if ParamCount() <> 1 then
+  begin
+    panic('usage: cell_grid_headless_benchmark.fpas -- ITERATIONS')
+  end;
+  var Iterations: integer := StrToInt(ParamStr(0));
+  if Iterations < 1 then
+  begin
+    panic('ITERATIONS must be positive')
+  end;
+  var Style: TuiStyle := TuiStyle.FromColors(TuiColor.FromRgb(214, 218, 224), TuiColor.FromRgb(18, 22, 28));
+  var Cell: TuiCell := TuiCell.Styled('#', Style);
+  mutable var Grid: TuiCellGrid := TuiCellGrid.Create(GridWidth, GridHeight, Std.Arrays.Fill(Cell, GridWidth *
+                                                                                                   GridHeight));
+  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(GridWidth, GridHeight));
+  for Warmup: integer := 1 to WarmupIterations do
+  begin
+    Grid := PaintOnce(App, Grid)
+  end;
+  var Started: integer := MonotonicMillis();
+  for Iteration: integer := 1 to Iterations do
+  begin
+    Grid := PaintOnce(App, Grid)
+  end;
+  var Elapsed: integer := ElapsedMillis(Started);
+  var Snapshot: TuiSurfaceSnapshot := App.SurfaceSnapshot();
+  App.Close();
+  if ((Snapshot.Width <> GridWidth) or (Snapshot.Height <> GridHeight)) or
+     (Snapshot.CellAt(GridWidth - 1, GridHeight - 1).Glyph <> '#') then
+  begin
+    panic('cell grid headless benchmark snapshot mismatch')
+  end;
+
+  WriteLn(('elapsed: ' + IntToStr(Elapsed)) + ' ms');
+  if Elapsed > 0 then
+  begin
+    WriteLn(('throughput: ' + IntToStr((Iterations * 1000) div Elapsed)) + ' paints/s')
+  end
+  else
+  begin
+    WriteLn('throughput: unavailable (elapsed time is 0 ms)')
+  end
+end.

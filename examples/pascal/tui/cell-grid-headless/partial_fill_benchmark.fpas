@@ -1,0 +1,38 @@
+// Measures repeated clipped rectangle fills on a prebuilt working surface.
+program PartialFillBenchmark;
+
+uses Std.Args, Std.Console, Std.Conv, Std.Time, Std.Tui;
+
+begin
+  if ParamCount() <> 1 then
+  begin
+    panic('usage: partial_fill_benchmark.fpas -- ITERATIONS')
+  end;
+  var Iterations: integer := StrToInt(ParamStr(0));
+  if Iterations < 1 then
+  begin
+    panic('ITERATIONS must be positive')
+  end;
+  var Surface: TuiWorkingSurface := TuiWorkingSurface.Create(TuiSize.Create(98, 32));
+  var Canvas: TuiCanvas := TuiCanvas.Create(Surface, TuiRect.Create(0, 0, 98, 32));
+  var Bounds: TuiRect := TuiRect.Create(4, 3, 90, 26);
+  var Cell: TuiCell := TuiCell.Create('#', TuiStyleRole.Accent);
+  for Warmup: integer := 1 to 5 do
+  begin
+    Canvas.FillRect(Bounds, Cell)
+  end;
+  var Started: integer := MonotonicMillis();
+  for Iteration: integer := 1 to Iterations do
+  begin
+    Canvas.FillRect(Bounds, Cell)
+  end;
+  var Elapsed: integer := ElapsedMillis(Started);
+  var Snapshot: TuiSurfaceSnapshot := Surface.Snapshot();
+  if (((Snapshot.CellAt(4, 3).Glyph <> '#') or (Snapshot.CellAt(93, 28).Glyph <> '#')) or (Snapshot.CellAt(3, 3).Glyph <> ' ')) or
+     (Snapshot.CellAt(94, 28).Glyph <> ' ') then
+  begin
+    panic('partial fill snapshot mismatch')
+  end;
+
+  WriteLn(('elapsed: ' + IntToStr(Elapsed)) + ' ms')
+end.

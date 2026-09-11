@@ -1,8 +1,8 @@
 unit Std.Tui.Rendering.Canvas;
 
 uses
-  Std.Console, Std.Str, Std.Tui.Cells.Cell, Std.Tui.Cells.StyleRole, Std.Tui.Geometry.Point,
-  Std.Tui.Geometry.Rect, Std.Tui.Geometry.Size, Std.Tui.Rendering.Surface;
+  Std.Arrays, Std.Console, Std.Str, Std.Tui.Cells.Cell, Std.Tui.Cells.StyleRole,
+  Std.Tui.Geometry.Point, Std.Tui.Geometry.Rect, Std.Tui.Geometry.Size, Std.Tui.Rendering.Surface;
 
 public type
   // Private frame-scoped drawing capability over one working surface.
@@ -154,7 +154,6 @@ public type
         begin
           return
         end;
-
         var GlyphWidth: integer := Std.Console.DisplayWidth(Glyph);
         if GlyphWidth > 0 then
         begin
@@ -253,3 +252,37 @@ public type
       Self.PutCell(TuiPoint.Create(Bounds.Right() - 1, Bounds.Bottom() - 1), TuiCell.Create('╯', Role))
     end;
   end;
+
+// Paints consecutive cells in local coordinates with canvas clipping.
+public procedure TuiCanvasPutCells(Canvas: TuiCanvas; Position: TuiPoint; Cells: array of TuiCell);
+begin
+  if (Position.Y < Canvas.Clip.Y) or (Position.Y >= Canvas.Clip.Bottom()) then
+  begin
+    return
+  end;
+  mutable var SourceX: integer := 0;
+  mutable var TargetX: integer := Position.X;
+  if TargetX < Canvas.Clip.X then
+  begin
+    SourceX := Canvas.Clip.X - TargetX;
+    TargetX := Canvas.Clip.X
+  end;
+  mutable var Count: integer := Std.Arrays.Length(Cells) - SourceX;
+  if Count > Canvas.Clip.Right() - TargetX then
+  begin
+    Count := Canvas.Clip.Right() - TargetX
+  end;
+
+  if Count <= 0 then
+  begin
+    return
+  end;
+  mutable var Values: array of TuiCell := Std.Arrays.Slice(Cells, SourceX, Count);
+  if (TargetX + Count = Canvas.Clip.Right()) and (Values[Count - 1].Columns = 2) then
+  begin
+    Values[Count - 1] := TuiCell.Create(' ', TuiStyleRole.Normal)
+  end;
+
+  TuiSurfacePutCells(Canvas.Surface, TuiPoint.Create(Canvas.Origin.X + TargetX, Canvas.Origin.Y +
+                                                                                Position.Y), Values)
+end;

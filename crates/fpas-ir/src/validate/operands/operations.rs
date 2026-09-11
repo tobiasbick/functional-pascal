@@ -73,6 +73,21 @@ fn validate_operation(
         Operation::Const(constant) => {
             validate_constant(program, function, block, instruction, constant, result)
         }
+Operation::StoreLocalIndex {
+    local,
+    index,
+    value,
+} => validate_store_local_index(
+    program,
+    function,
+    block,
+    instruction,
+    *local,
+    *index,
+    *value,
+    all_values,
+    available,
+),
         Operation::ReadLocal(local) => {
             let local = function.local(*local).ok_or_else(|| {
                 unknown(function, block, instruction, EntityKind::Local, local.get())

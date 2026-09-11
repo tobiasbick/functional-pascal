@@ -554,3 +554,5 @@ fn rejects_negative_fixed_layout_width() {
         "stderr: {stderr}"
     );
 }
+
+mod row;

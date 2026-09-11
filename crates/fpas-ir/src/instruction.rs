@@ -217,6 +217,15 @@ pub enum Operation {
         /// Replacement value.
         value: ValueId,
     },
+    /// Replaces one indexed value directly in a mutable local collection.
+    StoreLocalIndex {
+        /// Mutable local array or dictionary updated by the operation.
+        local: LocalId,
+        /// Array index or dictionary key.
+        index: ValueId,
+        /// Replacement value.
+        value: ValueId,
+    },
     /// Tests array membership or dictionary-key membership.
     Contains {
         /// Searched element or key.

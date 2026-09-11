@@ -1,0 +1,38 @@
+program TuiCellGridPaintTest;
+
+uses Std.Options, Std.Test, Std.Tui;
+
+function ViewGrid(State: integer): TuiElement;
+begin
+  var Concrete: TuiStyle := TuiStyle.FromColors(TuiColor.FromRgb(1, 2, 3), TuiColor.FromRgb(4, 5, 6));
+  return TuiElementBuilders.MakeCellGrid(TuiCellGrid.Create(4, 2, [
+                                                                    TuiCell.Create('A', TuiStyleRole.Accent),
+                                                                    TuiCell.Styled('B', Concrete),
+                                                                    TuiCell.Create('C', TuiStyleRole.Title),
+                                                                    TuiCell.Create('D', TuiStyleRole.Normal),
+                                                                    TuiCell.Create('E', TuiStyleRole.Normal),
+                                                                    TuiCell.Create('F', TuiStyleRole.Normal),
+                                                                    TuiCell.Create('中', TuiStyleRole.Accent),
+                                                                    TuiCell.Create('H', TuiStyleRole.Normal)
+                                                                  ]))
+end;
+
+function UpdateGrid(State: integer; Msg: TuiMsg; Cmd: TuiCmdOutput): integer;
+begin
+  Cmd.Set(TuiCmd.NoCommand);
+  return State
+end;
+
+begin
+  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(3, 2));
+  App.RunIterations(0, UpdateGrid, ViewGrid, 0, 0);
+  var Snapshot: TuiSurfaceSnapshot := App.SurfaceSnapshot();
+  AssertEquals('A', Snapshot.CellAt(0, 0).Glyph);
+  AssertEquals('B', Snapshot.CellAt(1, 0).Glyph);
+  AssertEquals(2, Std.Options.Unwrap(Snapshot.CellAt(1, 0).ConcreteStyle).Foreground.Green);
+  AssertEquals('C', Snapshot.CellAt(2, 0).Glyph);
+  AssertEquals('E', Snapshot.CellAt(0, 1).Glyph);
+  AssertEquals('F', Snapshot.CellAt(1, 1).Glyph);
+  AssertEquals(' ', Snapshot.CellAt(2, 1).Glyph);
+  App.Close()
+end.

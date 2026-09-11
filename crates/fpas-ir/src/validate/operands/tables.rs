@@ -2,7 +2,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use crate::instruction::{TypeCategory, binary_categories, unary_categories};
 use crate::{
-    BasicBlock, BinaryOperation, BlockId, Constant, EnumLayoutId, Function, FunctionId, IrType,
+    BasicBlock, BinaryOperation, BlockId, Constant, EnumLayoutId, Function, FunctionId, IrType, LocalId,
     Operation, Program, RecordLayoutId, Terminator, TypeId, ValueDefinition, ValueId, checked_count,
 };
 

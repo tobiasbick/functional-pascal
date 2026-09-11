@@ -274,3 +274,24 @@ group = "review"
 driver = "http-body"
 args = ["40", "1024"]
 timeout_ms = 120000
+
+[[bench]]
+id = "local_index_write"
+group = "local-index"
+path = "examples/pascal/vm/local_index_write_benchmark.fpas"
+args = ["5000", "128"]
+timeout_ms = 120000
+
+[[bench]]
+id = "cell_grid_headless"
+group = "local-index"
+path = "examples/pascal/tui/cell-grid-headless/cell_grid_headless_benchmark.fpas"
+args = ["100"]
+timeout_ms = 120000
+
+[[bench]]
+id = "partial_surface_fill"
+group = "local-index"
+path = "examples/pascal/tui/cell-grid-headless/partial_fill_benchmark.fpas"
+args = ["100"]
+timeout_ms = 120000

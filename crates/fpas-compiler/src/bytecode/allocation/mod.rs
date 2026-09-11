@@ -257,6 +257,7 @@ fn operation_values(operation: &Operation) -> Vec<ValueId> {
             .flat_map(|(key, value)| [*key, *value])
             .collect(),
         Operation::IndexGet { collection, index } => vec![*collection, *index],
+        Operation::StoreLocalIndex { index, value, .. } => vec![*index, *value],
         Operation::IndexSet {
             collection,
             index,

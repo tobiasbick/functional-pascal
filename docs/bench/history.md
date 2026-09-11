@@ -14,6 +14,43 @@ cargo bench-fpas record "vm-only note" --group vm
 
 Newest entries are prepended below this header.
 
+## 2026-09-11 — Reuse row painting for partial surface fills
+
+The isolated partial-fill comparison measured 475 -> 167 ms (-64.8%). Reusing the
+row writer also improved the existing TUI workload from 3817 -> 3261 ms (-14.6%)
+and Notes from 8144 -> 6535 ms (-19.8%). Full-width shared-row fills are unchanged.
+
+- Group: `tui`
+- Suite: [`suite.toml`](suite.toml)
+
+| bench | elapsed_ms | throughput |
+|-------|------------|------------|
+| tui_headless | 3271 | throughput: 152 frames/s |
+| notes_headless | 6382 | throughput: 39 frames/s |
+
+## 2026-09-11 — Batch cell-grid rows and write local indexed collections in place
+
+Row painting alone measured 2337 -> 1010 ms (-56.8%). With that phase in place,
+the compiler effect reduced local writes from 298 -> 77 ms (median of 76/79/77)
+and grid painting from 1013 -> 254 ms (median of 255/254/252). Regression tests cover
+copy-on-write, index evaluation order, clipping, RGB styles, and wide glyphs.
+The corrected row boundary is the backing width, with canvas-edge clipping
+handled separately. No new opcode or production export was added.
+
+The full comparison showed no other slowdown above 10% except one dynamic-numeric
+sample (861 -> 1199 ms). Repeating the complete VM group measured 833 ms for that
+row, and every VM row stayed within the 10% threshold. The recorded tables below
+are independent after-state samples.
+
+- Group: `local-index`
+- Suite: [`suite.toml`](suite.toml)
+
+| bench | elapsed_ms | throughput |
+|-------|------------|------------|
+| local_index_write | 76 | throughput: 8421052 writes/s |
+| cell_grid_headless | 248 | throughput: 403 paints/s |
+| partial_surface_fill | 162 | - |
+
 ## 2026-09-08 — Restore Mandelbrot pool parallelism and responsive atomic image updates
 
 The saved four-worker Mandelbrot baseline took 3038 ms for rendering and 72942 ms

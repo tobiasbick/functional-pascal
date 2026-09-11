@@ -1,0 +1,64 @@
+program CellGridRowEquivalenceTest;
+
+uses Std.Arrays, Std.Options, Std.Test, Std.Tui, Std.Tui.Rendering.Canvas;
+
+procedure CompareRow(
+  Expected: TuiWorkingSurface;
+  Actual: TuiWorkingSurface;
+  StartX: integer;
+  ClipX: integer;
+  ClipWidth: integer;
+  OriginX: integer;
+  Cells: array of TuiCell
+);
+begin
+  Expected.Clear();
+  Actual.Clear();
+  var Wide: TuiCell := TuiCell.Create('中', TuiStyleRole.Accent);
+  Expected.PutCell(TuiPoint.Create(0, 0), Wide);
+  Expected.PutCell(TuiPoint.Create(3, 0), Wide);
+  Actual.PutCell(TuiPoint.Create(0, 0), Wide);
+  Actual.PutCell(TuiPoint.Create(3, 0), Wide);
+  var Clip: TuiRect := TuiRect.Create(ClipX, 0, ClipWidth, 1);
+  var Origin: TuiPoint := TuiPoint.Create(OriginX, 0);
+  var Reference: Std.Tui.TuiCanvas := Std.Tui.TuiCanvas.CreateLocal(Expected, Origin, Clip);
+  var Batch: Std.Tui.TuiCanvas := Std.Tui.TuiCanvas.CreateLocal(Actual, Origin, Clip);
+  for X: integer := 0 to Std.Arrays.Length(Cells) - 1 do
+  begin
+    Reference.PutCell(TuiPoint.Create(StartX + X, 0), Cells[X])
+  end;
+
+  TuiCanvasPutCells(Batch, TuiPoint.Create(StartX, 0), Cells);
+  TuiCanvasPutCells(Batch, TuiPoint.Create(StartX, 1), Cells);
+  for X: integer := 0 to 6 do
+  begin
+    var Point: TuiPoint := TuiPoint.Create(X, 0);
+    AssertTrue(Std.Options.IsNone(Expected.TryCellAt(Point)) =
+               Std.Options.IsNone(Actual.TryCellAt(Point)));
+    AssertEquals(Expected.Snapshot().CellAt(X, 0).Glyph, Actual.Snapshot().CellAt(X, 0).Glyph);
+    AssertTrue(Expected.Snapshot().CellAt(X, 0).Role = Actual.Snapshot().CellAt(X, 0).Role)
+  end
+end;
+
+begin
+  var Expected: TuiWorkingSurface := TuiWorkingSurface.Create(TuiSize.Create(7, 1));
+  var Actual: TuiWorkingSurface := TuiWorkingSurface.Create(TuiSize.Create(7, 1));
+  var Wide: TuiCell := TuiCell.Create('中', TuiStyleRole.Accent);
+  var Narrow: TuiCell := TuiCell.Create('X', TuiStyleRole.Title);
+  for StartX: integer := -2 to 8 do
+  begin
+    for ClipX: integer := 0 to 2 do
+    begin
+      for ClipWidth: integer := 0 to 7 do
+      begin
+        for OriginX: integer := -1 to 1 do
+        begin
+          CompareRow(Expected, Actual, StartX, ClipX, ClipWidth, OriginX, []);
+          CompareRow(Expected, Actual, StartX, ClipX, ClipWidth, OriginX, [Wide]);
+          CompareRow(Expected, Actual, StartX, ClipX, ClipWidth, OriginX, [Narrow, Wide]);
+          CompareRow(Expected, Actual, StartX, ClipX, ClipWidth, OriginX, [Wide, Narrow, Wide])
+        end
+      end
+    end
+  end
+end.

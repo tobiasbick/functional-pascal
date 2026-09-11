@@ -1,0 +1,50 @@
+unit Std.Tui.Rendering.Surface.Snapshot;
+
+uses Std.Tui.Cells.Cell;
+
+public type
+  // Explicit immutable copy of the most recently painted headless surface.
+  TuiSurfaceSnapshot = record
+    // Width in terminal cells.
+    public Width: integer;
+    // Height in terminal cells.
+    public Height: integer;
+    // Row-major terminal cells.
+    public Cells: array of TuiCell;
+
+    // Returns one leading cell at a zero-based position.
+    //
+    // Parameters:
+    // - `Self`: Receiver value operated on by the method.
+    // - `X`: Zero-based horizontal terminal-cell coordinate.
+    // - `Y`: Zero-based vertical terminal-cell coordinate.
+    public function CellAt(Self: TuiSurfaceSnapshot; X: integer; Y: integer): TuiCell;
+    begin
+      if (((X < 0) or (X >= Self.Width)) or (Y < 0)) or (Y >= Self.Height) then
+      begin
+        panic('Tui snapshot position is outside the surface')
+      end;
+
+      return Self.Cells[(Y * Self.Width) + X]
+    end;
+
+    // Returns one complete row as text.
+    //
+    // Parameters:
+    // - `Self`: Receiver value operated on by the method.
+    // - `Y`: Zero-based vertical terminal-cell coordinate.
+    public function LineAt(Self: TuiSurfaceSnapshot; Y: integer): string;
+    begin
+      if (Y < 0) or (Y >= Self.Height) then
+      begin
+        panic('Tui snapshot row is outside the surface')
+      end;
+      mutable var Line: string := '';
+      for X: integer := 0 to Self.Width - 1 do
+      begin
+        Line := Line + Self.CellAt(X, Y).Glyph
+      end;
+
+      return Line
+    end;
+  end;

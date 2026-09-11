@@ -1,0 +1,76 @@
+unit Std.Tui.Rendering.Surface.Row;
+
+uses Std.Arrays, Std.Tui.Cells.Cell, Std.Tui.Cells.StyleRole;
+
+public type
+  // Updated cell and continuation arrays for one working-surface row.
+  TuiSurfaceRow = record
+    // Leading cells and blanks for continuation columns.
+    public Cells: array of TuiCell;
+    // Whether each column continues a wide glyph from its left neighbor.
+    public Continuations: array of boolean;
+  end;
+
+// Writes consecutive cells into one row while preserving wide-glyph invariants.
+// The caller clips Values to the row and supplies matching continuation storage.
+// A trailing wide glyph may occupy the column following the supplied batch.
+public function TuiSurfaceWriteRow(
+  Cells: array of TuiCell;
+  Continuations: array of boolean;
+  FirstX: integer;
+  Values: array of TuiCell
+): TuiSurfaceRow;
+begin
+  mutable var NextCells: array of TuiCell := Cells;
+  mutable var NextContinuations: array of boolean := Continuations;
+  var Blank: TuiCell := TuiCell.Create(' ', TuiStyleRole.Normal);
+  var RightX: integer := Std.Arrays.Length(Cells);
+  for Offset: integer := 0 to Std.Arrays.Length(Values) - 1 do
+  begin
+    var X: integer := FirstX + Offset;
+    if NextContinuations[X] then
+    begin
+      NextCells[X - 1] := Blank;
+      NextContinuations[X] := false
+    end
+    else if NextCells[X].Columns = 2 then
+    begin
+      NextCells[X + 1] := Blank;
+      NextContinuations[X + 1] := false
+    end;
+
+    NextCells[X] := Blank;
+    var Value: TuiCell := Values[Offset];
+    if (Value.Columns = 2) and (X + 1 >= RightX) then
+    begin
+      continue
+    end;
+
+    if Value.Columns = 2 then
+    begin
+      if NextContinuations[X + 1] then
+      begin
+        NextCells[X] := Blank;
+        NextContinuations[X + 1] := false
+      end
+      else if NextCells[X + 1].Columns = 2 then
+      begin
+        NextCells[X + 2] := Blank;
+        NextContinuations[X + 2] := false
+      end;
+
+      NextCells[X + 1] := Blank
+    end;
+
+    NextCells[X] := Value;
+    if Value.Columns = 2 then
+    begin
+      NextContinuations[X + 1] := true
+    end
+  end;
+
+  return record
+    Cells := NextCells;
+    Continuations := NextContinuations;
+  end
+end;

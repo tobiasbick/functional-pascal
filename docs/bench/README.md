@@ -4,6 +4,14 @@ End-to-end performance measurements use Functional Pascal programs under `exampl
 
 The curated suite lives in [`suite.toml`](suite.toml). Run it with the `fpas-bench` harness (cargo alias `bench-fpas`).
 
+The `local-index` group measures direct local array writes, painting a prebuilt
+98-by-32 cell grid through the headless application, and partial working-surface
+rectangle fills. Input construction and warmup are outside the timers; checksums
+or surface snapshots validate the result. Use `cargo bench-fpas save before
+--group local-index` and `cargo bench-fpas compare before --group local-index`.
+The partial fill covers a 90-by-26 rectangle inside a 98-by-32 surface, so it
+exercises the clipped row path rather than the full-width shared-row shortcut.
+
 The `tooling` group measures native editor and compiler workloads in release harness child
 processes, with the same timeout, save, compare, and record handling. The
 `analysis_queries` workload parses one generated editor buffer, warms its semantic

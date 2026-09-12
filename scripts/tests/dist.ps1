@@ -9,6 +9,7 @@ $initialLocation = (Get-Location).Path
 
 function cargo {
     $global:fpasDistTestCargoCalls++
+    $global:fpasDistTestCargoArguments += ,(($args | ForEach-Object { "$_" }) -join ' ')
     $global:LASTEXITCODE = 0
     if ($global:fpasDistTestCargoCalls -eq $global:fpasDistTestFailCall) {
         $global:LASTEXITCODE = 42
@@ -22,7 +23,8 @@ try {
     foreach ($failure in @(1, 2, 0)) {
         $global:fpasDistTestFailCall = $failure
         $global:fpasDistTestCargoCalls = 0
-        foreach ($binary in @('fpas.exe', 'fpas-runner.exe')) {
+        $global:fpasDistTestCargoArguments = @()
+        foreach ($binary in @('fpas.exe', 'fpas-runner.exe', 'fpas-lsp.exe')) {
             Set-Content -LiteralPath (Join-Path $fixture "target/release/$binary") -Value 'new'
             Set-Content -LiteralPath (Join-Path $fixture "bin/$binary") -Value 'old'
         }
@@ -37,10 +39,13 @@ try {
         if ($failed -ne ($failure -ne 0)) { throw "Wrong failure outcome for Cargo call $failure" }
         $expectedCalls = if ($failure -eq 1) { 1 } else { 2 }
         if ($global:fpasDistTestCargoCalls -ne $expectedCalls) { throw 'Cargo continued after failure' }
+        if ($global:fpasDistTestCargoArguments[0] -ne 'build --release -p fpas-cli -p fpas-lsp') {
+            throw 'Release build does not include fpas-lsp'
+        }
         $reportedSuccess = [bool]($output -match '^Built:')
         if ($reportedSuccess -ne ($failure -eq 0)) { throw 'Incorrect success report' }
         $expectedBinary = if ($failure -eq 0) { 'new' } else { 'old' }
-        foreach ($binary in @('fpas.exe', 'fpas-runner.exe')) {
+        foreach ($binary in @('fpas.exe', 'fpas-runner.exe', 'fpas-lsp.exe')) {
             $actual = (Get-Content -Raw -LiteralPath (Join-Path $fixture "bin/$binary")).Trim()
             if ($actual -ne $expectedBinary) { throw "Incorrect published binary: $binary" }
         }

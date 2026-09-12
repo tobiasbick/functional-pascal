@@ -19,11 +19,11 @@ def check_distribution(shell: str, source: Path) -> None:
             commands.mkdir()
             (project / "bin").mkdir()
             (project / "dist.sh").write_text(script, encoding="utf-8", newline="\n")
-            for name in ("fpas", "fpas-runner"):
+            for name in ("fpas", "fpas-runner", "fpas-lsp"):
                 (release / name).write_text("new", encoding="utf-8")
                 (project / "bin" / name).write_text("old", encoding="utf-8")
             bodies = {
-                "cargo": '''printf '%s\\n' "$1" >> "$TEST_LOG"
+                "cargo": '''printf '%s\\n' "$*" >> "$TEST_LOG"
 test -d target/release || exit 43
 case "$TEST_FAILURE:$1" in build:build|stage:run) exit 42 ;; esac
 ''',
@@ -52,9 +52,14 @@ exec /bin/chmod "$@"
             assert (result.returncode == 0) == success, (failure, result.stdout, result.stderr)
             assert ("Built:" in result.stdout) == success, (failure, result.stdout)
             calls = log.read_text(encoding="utf-8").splitlines()
-            assert calls == (["build"] if failure == "build" else ["build", "run"]), calls
+            expected_calls = ["build --release -p fpas-cli -p fpas-lsp"]
+            if failure != "build":
+                expected_calls.append(
+                    "run --release -p fpas-build --example precompile_stdlib -- target/release/lib bin/lib"
+                )
+            assert calls == expected_calls, calls
             expected = "old" if failure in ("build", "stage", "copy") else "new"
-            for name in ("fpas", "fpas-runner"):
+            for name in ("fpas", "fpas-runner", "fpas-lsp"):
                 assert (project / "bin" / name).read_text(encoding="utf-8") == expected, failure
             assert not (root / "bin").exists(), "Distribution was written outside the project"
             print(f"PASS: {failure}")

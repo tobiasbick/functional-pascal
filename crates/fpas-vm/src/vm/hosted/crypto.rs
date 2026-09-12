@@ -63,7 +63,7 @@ fn random_integer(lo: i64, hi: i64) -> Result<Value, String> {
             "RandomInt lower bound {lo} must be <= upper bound {hi}"
         ));
     }
-    uniform_i64_with(lo, hi, || getrandom::u64())
+    uniform_i64_with(lo, hi, getrandom::u64)
         .map(Value::Integer)
         .map_err(|error| format!("Operating-system random source failed: {error}"))
 }

@@ -1,0 +1,20 @@
+program PathNormalizeRootsTest;
+
+uses Std.Path, Std.Test;
+
+begin
+  if Join(['a', 'b']) = 'a\b' then
+  begin
+    AssertEquals('D:\projects\demo', Normalize('D:\projects\demo'));
+    AssertEquals('D:\projects\demo', Normalize('D:/projects/demo'));
+    AssertEquals('D:\', Normalize('D:\demo\..'));
+    AssertEquals('D:\demo', Normalize('D:\..\demo'));
+    AssertEquals('D:demo', Normalize('D:projects\..\demo'));
+    AssertEquals('\demo', Normalize('\projects\..\demo'))
+  end
+  else
+  begin
+    AssertEquals('/projects/demo', Normalize('/projects/./demo'));
+    AssertEquals('/', Normalize('/demo/../..'))
+  end
+end.

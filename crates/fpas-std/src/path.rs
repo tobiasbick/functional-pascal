@@ -11,6 +11,10 @@ use crate::intrinsic_args::{
 use fpas_bytecode::{Intrinsic, PathIntrinsic, SourceLocation, Value};
 use std::path::{Component, MAIN_SEPARATOR, Path, PathBuf};
 
+#[cfg(test)]
+#[path = "path/normalize_tests.rs"]
+mod normalize_tests;
+
 /// Execute a `Std.Path` intrinsic and return `None` when another unit should handle it.
 pub(crate) fn run(
     intrinsic: Intrinsic,
@@ -108,7 +112,8 @@ fn normalize_path(path: &str) -> String {
     if let Some(prefix) = prefix {
         out.push(prefix);
     }
-    if has_root && out.components().count() == 0 {
+    // A drive prefix alone (D:) is relative; restore its root before adding normal components.
+    if has_root && !out.has_root() {
         out.push(MAIN_SEPARATOR.to_string());
     }
     for part in parts {

@@ -99,6 +99,17 @@ WriteLn(Extension('README'))            // ''
 
 Normalizes separators and collapses `.` and `..` components without touching the filesystem.
 
+Normalization preserves the path's root and prefix. On Windows, an absolute drive path
+keeps the separator after its drive letter; a drive-relative path stays drive-relative.
+Parent components cannot climb above a rooted path's root, including a Windows UNC share.
+
+```pascal
+// Windows examples:
+WriteLn(Normalize('D:/projects/demo'))       // D:\projects\demo
+WriteLn(Normalize('D:\projects\..\demo'))   // D:\demo
+WriteLn(Normalize('D:projects\..\demo'))     // D:demo (drive-relative)
+```
+
 ```pascal
 WriteLn(Normalize('a/b/../c'))
 WriteLn(BaseName(Normalize('dir/nested/../file.txt')))

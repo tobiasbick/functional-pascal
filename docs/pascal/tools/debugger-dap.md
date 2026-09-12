@@ -29,6 +29,13 @@ FPAS tasks. Per-task holds use custom requests `fpas/pauseTask` and
 pause into single-thread execution. It advertises `supportsRestartFrame: true` and
 `supportsGotoTargetsRequest: false`.
 
+When the editor requests an external FPAS terminal and initialized with
+`supportsRunInTerminalRequest: true`, launch sends the standard reverse DAP
+`runInTerminal` request with `kind: "external"`. Failure to advertise that
+client capability rejects the external launch. The terminal frontend carries
+program events over the existing `fpas/terminalInput` and
+`fpas/terminalOutput` contracts; protocol stdin and stdout remain DAP-only.
+
 Supported requests are `initialize`, `launch`, `setBreakpoints`,
 `setFunctionBreakpoints`, `setExceptionBreakpoints`, `dataBreakpointInfo`,
 `setDataBreakpoints`,

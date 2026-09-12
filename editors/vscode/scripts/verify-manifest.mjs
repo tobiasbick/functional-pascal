@@ -68,6 +68,17 @@ export async function verifyManifest() {
     description:
       "Absolute path to the installed fpas executable. When empty, the extension searches PATH."
   });
+  assert.deepEqual(configuration?.["functionalPascal.programTerminal"], {
+    type: "string",
+    enum: ["integratedTerminal", "externalTerminal"],
+    enumDescriptions: [
+      "Run interactive programs in a VS Code integrated terminal.",
+      "Run interactive programs in a separate operating-system terminal window."
+    ],
+    default: "integratedTerminal",
+    description:
+      "Default terminal for Run Project and F5. A launch.json console value overrides this setting for that debug configuration."
+  });
   assert.deepEqual(
     configuration?.["functionalPascal.testTimeoutSeconds"],
     {
@@ -138,10 +149,10 @@ export async function verifyManifest() {
             stopOnEntry: { type: "boolean", default: false },
             console: {
               type: "string",
-              enum: ["integratedTerminal", "debugConsole"],
+              enum: ["integratedTerminal", "externalTerminal", "debugConsole"],
               default: "integratedTerminal",
               description:
-                "Where program terminal I/O is shown. Use the integrated terminal for interactive and TUI programs."
+                "Where program terminal I/O is shown. When omitted, functionalPascal.programTerminal supplies the default."
             },
             sourceRoot: {
               type: "string",
@@ -157,8 +168,7 @@ export async function verifyManifest() {
           name: "Debug Functional Pascal",
           program: "${file}",
           cwd: "${workspaceFolder}",
-          stopOnEntry: false,
-          console: "integratedTerminal"
+          stopOnEntry: false
         }
       ]
     }

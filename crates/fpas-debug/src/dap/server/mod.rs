@@ -8,6 +8,7 @@ mod dictionary;
 mod dispatch;
 mod events;
 mod exceptions;
+mod external_terminal;
 mod forced_return;
 mod frame_restart;
 mod instruction;
@@ -47,6 +48,8 @@ pub struct DapServer {
     runtime_failed: bool,
     pending_core_requests: HashMap<u64, (u64, String)>,
     supports_invalidated_event: bool,
+    supports_run_in_terminal_request: bool,
+    pending_run_in_terminal_request: Option<(u64, u64)>,
     threads: ThreadMap,
 }
 
@@ -74,16 +77,21 @@ impl DapServer {
             runtime_failed: false,
             pending_core_requests: HashMap::new(),
             supports_invalidated_event: false,
+            supports_run_in_terminal_request: false,
+            pending_run_in_terminal_request: None,
             threads: ThreadMap::new(),
         })
     }
 
-    /// Handle one decoded DAP request and return ordered responses and events.
+    /// Handle one decoded DAP client message and return ordered responses and events.
     #[must_use]
-    pub fn handle(&mut self, request: Value) -> Vec<Value> {
-        let Some(object) = request.as_object() else {
+    pub fn handle(&mut self, message: Value) -> Vec<Value> {
+        let Some(object) = message.as_object() else {
             return vec![self.event("output", json!({"category":"stderr","output":"Malformed DAP request: expected an object.\n"}))];
         };
+        if object.get("type").and_then(Value::as_str) == Some("response") {
+            return self.handle_client_response(&message);
+        }
         let request_seq = object.get("seq").and_then(Value::as_u64).unwrap_or(0);
         let command = object
             .get("command")
@@ -141,6 +149,10 @@ impl DapServer {
     fn initialize(&mut self, request_seq: u64, arguments: &Value) -> Vec<Value> {
         self.supports_invalidated_event = arguments
             .get("supportsInvalidatedEvent")
+            .and_then(Value::as_bool)
+            .unwrap_or(false);
+        self.supports_run_in_terminal_request = arguments
+            .get("supportsRunInTerminalRequest")
             .and_then(Value::as_bool)
             .unwrap_or(false);
         let records = self

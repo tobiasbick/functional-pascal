@@ -27,6 +27,7 @@ export async function verifyProjectLaunchTargets(workspaceRoot: string): Promise
     {} as vscode.DebugConfiguration
   );
   assert.equal(mainConfiguration?.program, project);
+  assert.equal(mainConfiguration?.console, "integratedTerminal");
 
   const projectDocument = await vscode.workspace.openTextDocument(project);
   assert.equal(projectDocument.languageId, "fpas-project");
@@ -45,6 +46,15 @@ export async function verifyProjectLaunchTargets(workspaceRoot: string): Promise
     {} as vscode.DebugConfiguration
   );
   assert.equal(workspaceConfiguration?.program, workspace);
+
+  const explicitTerminal = await provider.resolveDebugConfiguration(undefined, {
+    type: "fpas",
+    request: "launch",
+    name: "External terminal override",
+    program: project,
+    console: "externalTerminal"
+  });
+  assert.equal(explicitTerminal?.console, "externalTerminal");
 
   await vscode.commands.executeCommand("workbench.action.closeAllEditors");
 }

@@ -38,6 +38,7 @@ export function verifyPackage(vsixPath = defaultVsixPath) {
     "extension/out/src/debugger/taskControlCommand.js",
     "extension/out/src/debugger/taskResultCommand.js",
     "extension/out/src/debugger/terminal/input.js",
+    "extension/out/src/debugger/terminal/externalClient.js",
     "extension/out/src/debugger/terminal/session.js",
     "extension/out/src/debugger/variantConstructionCommand.js",
     "extension/out/src/extension.js",

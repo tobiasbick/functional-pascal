@@ -4,6 +4,7 @@ import * as vscode from "vscode";
 
 import { ToolchainError, ToolchainResolver } from "../toolchain";
 import { offerToolchainRecovery } from "../toolchainSelection";
+import { configuredProgramTerminal } from "../programTerminal";
 import { operationArguments, runArguments } from "./arguments";
 import {
   parseWorkflowDiagnostics,
@@ -14,6 +15,7 @@ import type { ParsedWorkflowDiagnostic } from "./model";
 import { WorkflowProcessRunner } from "./processes";
 import { ProjectSelector } from "./project";
 import { WorkflowTesting } from "./testing";
+import { launchExternalProgram } from "./externalTerminal";
 
 /** Commands implemented by the project workflow. */
 export const WORKFLOW_COMMANDS = {
@@ -264,10 +266,21 @@ export class WorkflowController implements vscode.Disposable {
     }
     try {
       const cli = (await this.toolchain.resolve()).executable;
+      const args = runArguments(target.fsPath, programArguments);
+      if (configuredProgramTerminal(target) === "externalTerminal") {
+        this.status.text = "$(play) FPAS: Run";
+        const child = await launchExternalProgram(
+          cli,
+          args,
+          path.dirname(target.fsPath)
+        );
+        child.once("exit", () => void this.updateStatus());
+        return;
+      }
       const terminal = vscode.window.createTerminal({
         name: `FPAS: ${path.basename(target.fsPath)}`,
         shellPath: cli,
-        shellArgs: runArguments(target.fsPath, programArguments),
+        shellArgs: args,
         cwd: path.dirname(target.fsPath),
         isTransient: true
       });

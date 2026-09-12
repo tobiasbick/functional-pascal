@@ -34,7 +34,7 @@ export class DebugTerminalManager implements vscode.Disposable {
   }
 
   private start(session: vscode.DebugSession): void {
-    if (session.configuration.console === "debugConsole") return;
+    if (session.configuration.console !== "integratedTerminal") return;
     const pty = new DebugTerminalPseudoterminal(session);
     const target = path.basename(String(session.configuration.program));
     const terminal = vscode.window.createTerminal({ name: `FPAS: ${target}`, pty });

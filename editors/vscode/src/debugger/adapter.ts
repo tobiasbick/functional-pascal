@@ -6,6 +6,7 @@ import * as vscode from "vscode";
 
 import { ToolchainResolver } from "../toolchain";
 import { offerToolchainRecovery } from "../toolchainSelection";
+import { configuredProgramTerminal } from "../programTerminal";
 import { registerDictionaryCommands } from "./dictionaryCommands";
 import { registerForcedReturnCommand } from "./forcedReturnCommand";
 import { registerLiveReloadCommands } from "./liveReloadCommand";
@@ -16,6 +17,7 @@ import { registerTaskControlCommands } from "./taskControlCommand";
 import { registerTaskResultCommand } from "./taskResultCommand";
 import { registerVariantConstructionCommand } from "./variantConstructionCommand";
 import { debugTargetForDocument } from "./projectTarget";
+import { ExternalDebugTerminalManager } from "./terminal/external";
 import { DebugTerminalManager } from "./terminal/session";
 
 /** Register the Functional Pascal debug type without changing LSP ownership. */
@@ -23,13 +25,23 @@ export function registerDebugger(
   context: vscode.ExtensionContext,
   toolchain: ToolchainResolver
 ): void {
+  const externalTerminals = new ExternalDebugTerminalManager(
+    path.join(
+      context.extensionPath,
+      "out",
+      "src",
+      "debugger",
+      "terminal",
+      "externalClient.js"
+    )
+  );
   const provider = vscode.debug.registerDebugConfigurationProvider(
     "fpas",
     new FunctionalPascalDebugConfigurationProvider()
   );
   const factory = vscode.debug.registerDebugAdapterDescriptorFactory(
     "fpas",
-    new FunctionalPascalDebugAdapterFactory(toolchain)
+    new FunctionalPascalDebugAdapterFactory(toolchain, externalTerminals)
   );
   registerDictionaryCommands(context);
   registerForcedReturnCommand(context);
@@ -41,7 +53,7 @@ export function registerDebugger(
   registerTaskControlCommands(context);
   registerDebuggeeInputCommands(context);
   const terminals = new DebugTerminalManager();
-  context.subscriptions.push(provider, factory, terminals);
+  context.subscriptions.push(provider, factory, terminals, externalTerminals);
 }
 
 export class FunctionalPascalDebugConfigurationProvider
@@ -87,7 +99,7 @@ export class FunctionalPascalDebugConfigurationProvider
     }
     configuration.cwd ??= folder?.uri.fsPath ?? path.dirname(configuration.program);
     configuration.args ??= [];
-    configuration.console ??= "integratedTerminal";
+    configuration.console ??= configuredProgramTerminal(folder?.uri);
     return configuration;
   }
 }
@@ -95,13 +107,19 @@ export class FunctionalPascalDebugConfigurationProvider
 class FunctionalPascalDebugAdapterFactory
   implements vscode.DebugAdapterDescriptorFactory
 {
-  constructor(private readonly toolchain: ToolchainResolver) {}
+  constructor(
+    private readonly toolchain: ToolchainResolver,
+    private readonly externalTerminals: ExternalDebugTerminalManager
+  ) {}
 
   async createDebugAdapterDescriptor(
     session: vscode.DebugSession
   ): Promise<vscode.DebugAdapterDescriptor> {
     try {
       const toolchain = await this.toolchain.resolve();
+      if (session.configuration.console === "externalTerminal") {
+        await this.externalTerminals.prepare(session);
+      }
       return new vscode.DebugAdapterExecutable(
         toolchain.executable,
         debugAdapterArguments(session.configuration),

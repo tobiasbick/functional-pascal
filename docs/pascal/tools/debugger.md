@@ -25,12 +25,14 @@ hang on process stdin. EOF is a separate command.
 DAP clients may host an interactive terminal with `fpas/terminalInput` and the
 `fpas/terminalOutput` event. Terminal input accepts keys, mouse actions,
 resizes, paste, and focus changes while the session is initialized, running,
-or stopped. The VS Code extension connects these events to an integrated
-pseudoterminal, so `ReadKey`, `ReadKeyEvent`, `ReadEvent`, and `Std.Tui`
-programs remain interactive while debugging. TUI event handlers still run only
-as bytecode inside hosted intrinsics; stopped inspection does not dispatch
-pending terminal events until execution continues. Debug sessions never poll
-the debugger process terminal directly.
+or stopped. The VS Code extension connects these events either to an
+integrated pseudoterminal or to an external terminal frontend launched through
+DAP `runInTerminal`, so `ReadKey`, `ReadKeyEvent`, `ReadEvent`, and `Std.Tui`
+programs remain interactive while debugging. The external frontend connects
+to the extension through an authenticated loopback bridge; the debugger
+process still never reads program input from DAP stdin. TUI event handlers
+still run only as bytecode inside hosted intrinsics; stopped inspection does
+not dispatch pending terminal events until execution continues.
 
 The complete wire contracts are documented in [JSONL protocol V2](debugger-jsonl.md)
 and the [Debug Adapter Protocol contract](debugger-dap.md).
@@ -447,4 +449,7 @@ VS Code-compatible editors use the contributed `fpas` debug type. A minimal
 
 The Functional Pascal VS Code extension launches the debugger through its
 selected installed `fpas` executable. Source and project targets therefore use
-the source standard library adjacent to that same toolchain.
+the source standard library adjacent to that same toolchain. The
+`functionalPascal.programTerminal` setting supplies the default terminal;
+`"console": "integratedTerminal"`, `"externalTerminal"`, or `"debugConsole"`
+overrides it per launch configuration.

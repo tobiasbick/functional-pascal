@@ -11,7 +11,9 @@ out/src/standardLibraryPath.js
 out/src/cliPath.js
 out/src/toolchain.js
 out/src/toolchainSelection.js
+out/src/programTerminal.js
 out/src/workflow/**
+out/src/debugger/terminal/external.js
 cli/**
 server/**
 standard-library/**

@@ -17,7 +17,9 @@ import {
   parseWorkflowDiagnostics
 } from "../../src/workflow/diagnostics";
 import { parseProgramArguments } from "../../src/workflow/controller";
+import { externalTerminalInvocation } from "../../src/workflow/externalTerminal";
 import { parseToolchainEnvironment } from "../../src/toolchain";
+import { resolveProgramTerminal } from "../../src/programTerminal";
 import { WorkflowProcessRunner } from "../../src/workflow/processes";
 import { rememberedProject } from "../../src/workflow/project";
 
@@ -53,6 +55,21 @@ export async function verifyWorkflowUnits(): Promise<void> {
     "two words"
   ]);
   assert.throws(() => parseProgramArguments("[1]"), /array of strings/u);
+  assert.equal(resolveProgramTerminal(undefined), "integratedTerminal");
+  assert.equal(resolveProgramTerminal("externalTerminal"), "externalTerminal");
+  const windowsTerminal = externalTerminalInvocation(
+    "win32",
+    "C:\\FPAS\\fpas.exe",
+    ["run", target],
+    nativeRoot
+  );
+  assert.match(windowsTerminal.command, /cmd\.exe$/iu);
+  assert.deepEqual(windowsTerminal.args.slice(0, 5), ["/d", "/s", "/c", "start", ""]);
+  assert.equal(windowsTerminal.args.at(-2), "-EncodedCommand");
+  assert.deepEqual(
+    externalTerminalInvocation("linux", "/opt/fpas", ["run", target], "/work", "/usr/bin/xterm"),
+    { command: "/usr/bin/xterm", args: ["-e", "/opt/fpas", "run", target] }
+  );
 
   const candidates = ["C:\\work\\one.fpasprj", "C:\\work\\two.fpasprj"];
   assert.equal(

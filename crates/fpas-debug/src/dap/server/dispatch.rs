@@ -1,6 +1,6 @@
 //! DAP request routing onto typed debug engine operations.
 
-use serde_json::{Value, json};
+use serde_json::Value;
 
 use super::DapServer;
 use super::args;
@@ -15,13 +15,7 @@ impl DapServer {
     ) -> Vec<Value> {
         match command {
             "initialize" => self.initialize(request_seq, arguments),
-            "launch" => {
-                self.stop_on_entry = arguments
-                    .get("stopOnEntry")
-                    .and_then(Value::as_bool)
-                    .unwrap_or(false);
-                vec![self.success(request_seq, command, json!({}))]
-            }
+            "launch" => self.launch(request_seq, command, arguments),
             "attach" => vec![self.failure(
                 request_seq,
                 command,

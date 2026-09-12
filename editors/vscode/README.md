@@ -230,8 +230,12 @@ appears in the status bar. **Check Project**, **Build Project**, **Test
 Project**, **Format Project**, and **Check Project Formatting** run the selected
 CLI without a shell and publish compiler failures in Problems. **Cancel Active
 Operation** stops a running non-interactive command. **Run Project in Terminal**
-starts the normal interactive CLI in an editor terminal and accepts program
-arguments as a JSON string array.
+starts the normal interactive CLI and accepts program arguments as a JSON
+string array. `functionalPascal.programTerminal` chooses an integrated editor
+terminal or a separate operating-system terminal window. F5 uses the same
+default; an explicit `console` value in `launch.json` overrides it. External
+debug terminals retain the same keyboard, mouse, resize, paste, focus, and TUI
+event bridge as the integrated terminal.
 
 The Testing view discovers `*_test.fpas` files for the selected manifest and
 supports all, selected, filtered, and rerun requests. Outcomes distinguish

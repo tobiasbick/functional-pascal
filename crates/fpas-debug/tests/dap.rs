@@ -186,6 +186,72 @@ fn supported_lifecycle_and_unsupported_request_are_explicit() {
 }
 
 #[test]
+fn external_terminal_launch_uses_a_reverse_request() {
+    let mut adapter = server("program Main; begin end.");
+    let _ = adapter.handle(request(
+        1,
+        "initialize",
+        json!({"supportsRunInTerminalRequest":true}),
+    ));
+    let messages = adapter.handle(request(
+        2,
+        "launch",
+        json!({
+            "__fpasExternalTerminal": {
+                "title": "FPAS: Main",
+                "cwd": "workspace",
+                "args": ["editor", "externalClient.js", "--connect", "127.0.0.1:1234"],
+                "env": {"ELECTRON_RUN_AS_NODE": "1"}
+            }
+        }),
+    ));
+    assert_eq!(messages.len(), 1);
+    assert_eq!(messages[0]["type"], "request");
+    assert_eq!(messages[0]["command"], "runInTerminal");
+    assert_eq!(messages[0]["arguments"]["kind"], "external");
+    assert_eq!(messages[0]["arguments"]["args"][1], "externalClient.js");
+
+    let response = json!({
+        "seq": 3,
+        "type": "response",
+        "request_seq": messages[0]["seq"],
+        "success": true,
+        "command": "runInTerminal",
+        "body": {"processId": 42}
+    });
+    let launched = adapter.handle(response);
+    assert_eq!(launched.len(), 1);
+    assert_eq!(launched[0]["command"], "launch");
+    assert_eq!(launched[0]["success"], true);
+}
+
+#[test]
+fn external_terminal_launch_requires_client_support() {
+    let mut adapter = server("program Main; begin end.");
+    let _ = adapter.handle(request(1, "initialize", json!({})));
+    let messages = adapter.handle(request(
+        2,
+        "launch",
+        json!({
+            "__fpasExternalTerminal": {
+                "title": "FPAS: Main",
+                "cwd": "workspace",
+                "args": ["editor", "externalClient.js"],
+                "env": {"ELECTRON_RUN_AS_NODE": "1"}
+            }
+        }),
+    ));
+    assert_eq!(messages.len(), 1);
+    assert_eq!(messages[0]["command"], "launch");
+    assert_eq!(messages[0]["success"], false);
+    assert!(
+        messages[0]["message"]
+            .as_str()
+            .is_some_and(|message| message.contains("runInTerminal"))
+    );
+}
+
+#[test]
 fn disconnect_drops_an_input_that_stays_open() {
     let mut input = Vec::new();
     write_message(&mut input, &request(1, "initialize", json!({}))).expect("frame initialize");

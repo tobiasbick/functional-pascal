@@ -100,7 +100,8 @@ impl DapServer {
             .get("arguments")
             .cloned()
             .unwrap_or_else(|| json!({}));
-        let mut output = if self.core.is_evaluating() && !matches!(command, "cancel" | "disconnect")
+        let mut output = if self.core.is_evaluating()
+            && !matches!(command, "cancel" | "disconnect" | "fpas/terminalPoll")
         {
             self.wait()
         } else {
@@ -294,7 +295,7 @@ impl DapServer {
     }
 
     fn translate_core(&mut self, records: Vec<DebugRecord>) -> Vec<Value> {
-        let mut output = Vec::new();
+        let mut output = self.terminal_output_events();
         for record in records {
             match record {
                 DebugRecord::Response {
@@ -331,7 +332,19 @@ impl DapServer {
                 DebugRecord::Event(event) => output.extend(self.translate_event(event)),
             }
         }
+        output.extend(self.terminal_output_events());
         output
+    }
+
+    fn terminal_output_events(&mut self) -> Vec<Value> {
+        let bytes = self.core.take_terminal_output();
+        if bytes.is_empty() {
+            return Vec::new();
+        }
+        vec![self.event(
+            "fpas/terminalOutput",
+            json!({"output": String::from_utf8_lossy(&bytes)}),
+        )]
     }
 
     fn success(&mut self, request_seq: u64, command: &str, body: Value) -> Value {

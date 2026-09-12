@@ -1,7 +1,7 @@
 //! Isolated hosted-runtime state shared by one VM and its callbacks.
 
 use std::path::PathBuf;
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 
 use fpas_std::{Console, KeyInput, TextInput};
 
@@ -61,9 +61,9 @@ impl Worker {
 pub(super) struct HostedState {
     pub(in crate::vm) servers: server::ServerRegistry,
     pub program_args: Vec<String>,
-    pub console: Mutex<Console>,
-    pub text_input: Mutex<TextInput>,
-    pub key_input: Mutex<KeyInput>,
+    pub console: Arc<Mutex<Console>>,
+    pub text_input: Arc<Mutex<TextInput>>,
+    pub key_input: Arc<Mutex<KeyInput>>,
     pub(in crate::vm::hosted) network_connections: NetworkConnections,
     pub(in crate::vm::hosted) network_listeners: NetworkListeners,
     pub(in crate::vm::hosted) http_states: HttpStateRegistry,
@@ -78,9 +78,9 @@ impl HostedState {
         Self {
             servers: Default::default(),
             program_args,
-            console: Mutex::new(console),
-            text_input: Mutex::new(TextInput::new()),
-            key_input: Mutex::new(KeyInput::new()),
+            console: Arc::new(Mutex::new(console)),
+            text_input: Arc::new(Mutex::new(TextInput::new())),
+            key_input: Arc::new(Mutex::new(KeyInput::new())),
             network_connections: NetworkConnections::new(),
             network_listeners: NetworkListeners::new(),
             http_states: HttpStateRegistry::new(),
@@ -92,13 +92,18 @@ impl HostedState {
     }
 
     /// Hosted state that never reads process stdin or terminal events.
-    pub(super) fn for_debug(console: Console, program_args: Vec<String>) -> Self {
+    pub(super) fn for_debug(
+        console: Arc<Mutex<Console>>,
+        text_input: Arc<Mutex<TextInput>>,
+        key_input: Arc<Mutex<KeyInput>>,
+        program_args: Vec<String>,
+    ) -> Self {
         Self {
             servers: Default::default(),
             program_args,
-            console: Mutex::new(console),
-            text_input: Mutex::new(TextInput::without_os_stdin()),
-            key_input: Mutex::new(KeyInput::without_os_events()),
+            console,
+            text_input,
+            key_input,
             network_connections: NetworkConnections::new(),
             network_listeners: NetworkListeners::new(),
             http_states: HttpStateRegistry::new(),

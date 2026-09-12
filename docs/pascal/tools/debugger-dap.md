@@ -37,7 +37,7 @@ Supported requests are `initialize`, `launch`, `setBreakpoints`,
 `fpas/dictionaryRemove`, `fpas/dictionaryReplaceKey`, `fpas/arrayInsert`,
 `fpas/arrayRemove`, `fpas/stringReplaceCharacter`, `fpas/forceReturn`,
 `restartFrame`, `fpas/replaceTaskResult`, `fpas/pauseTask`, `fpas/resumeTask`, `fpas/cancelTask`, `fpas/createTask`, `fpas/restartTask`, `fpas/input`,
-`fpas/eof`, `fpas/cancelInput`, `fpas/variantDescribe`,
+`fpas/terminalInput`, `fpas/terminalPoll`, `fpas/eof`, `fpas/cancelInput`, `fpas/variantDescribe`,
 `fpas/variantConstruct`, `fpas/initializeStorage`, `fpas/locationDescribe`, `fpas/recordingDescribe`, `fpas/record`, `fpas/reloadClassify`, `fpas/reload`, `fpas/reloadRollback`, `cancel`, `continue`,
 `pause`, `next`, `stepIn`, `stepOut`, `source`, and `disconnect`. `goto` and
 `gotoTargets` fail with `instruction_change_unsupported`. `attach`,
@@ -50,6 +50,19 @@ monotonic `version`, and `rollbackAvailable`; a successful change emits
 rebuilds and names accepted classes `unchanged` and `inactive_function_body`
 and reports `applied: false` without replacing the compiled program.
 Other unsupported requests fail explicitly.
+
+`fpas/terminalInput` carries an `events` array with 1 through 256 terminal
+events. Supported `kind` values are `key`, `mouse`, `resize`, `paste`,
+`focusGained`, and `focusLost`. Key events carry `key`, optional one-character
+`text`, and optional `shift`, `ctrl`, `alt`, and `meta` flags. Mouse events
+carry `action`, `button`, one-based `x` and `y`, and the same modifier flags.
+Resize events carry positive `width` and `height`; paste events carry `text`.
+The request is accepted while initialized, running, or stopped and returns the
+accepted byte count for the request and session. Terminal bytes are emitted as
+`fpas/terminalOutput` events with an `output` string. This channel remains DAP
+framed and is distinct from stopped-state line input through `fpas/input`.
+`fpas/terminalPoll` has no arguments or state effect; terminal-owning clients
+use it to flush output while execution remains active.
 
 `threads` maps main task `0` to DAP thread `1` and assigns stable positive DAP
 IDs to spawned FPAS tasks. `stackTrace.threadId`, `next`, `stepIn`, and
@@ -289,14 +302,16 @@ reserved, duplicate, mixed, or excessive selections fail atomically.
   "program": "${workspaceFolder}/app.fpasprj",
   "cwd": "${workspaceFolder}",
   "args": [],
-  "stopOnEntry": false
+  "stopOnEntry": false,
+  "console": "integratedTerminal"
 }
 ```
 
 `program` accepts `.fpas`, a program project/workspace, or `.fpascp`.
 Compiled images additionally require `sourceRoot`. The adapter emits standard
 `initialized`, `thread`, `output`, `stopped`, `exited`, and `terminated`
-events. Spawned tasks emit one ordered thread-start and thread-exit event.
+events, plus `fpas/terminalOutput` for interactive terminal clients. Spawned
+tasks emit one ordered thread-start and thread-exit event.
 Stopped events identify the responsible thread and report
 `allThreadsStopped: true`. A selected runtime failure stops with reason
 `exception`, remains inspectable, and terminates on the next continue or

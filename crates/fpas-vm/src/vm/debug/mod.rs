@@ -38,7 +38,10 @@ pub use frame_restart::DebugFrameRestartResult;
 pub use inspection::{
     DebugFrame, DebugInspectionLimits, DebugScope, DebugScopeKind, DebugVariable, Paginated,
 };
-pub use io::DebuggeeChannelState;
+pub use io::{
+    DebugTerminalEvent, DebugTerminalHandle, DebugTerminalKeyEvent, DebugTerminalKeyKind,
+    DebugTerminalMouseAction, DebugTerminalMouseButton, DebuggeeChannelState,
+};
 pub use live_image::{LiveImageClassification, LiveImageReplaceResult, LiveImageUpdateClass};
 pub use location::{
     DebugDataLocation, DebugDataLocationIdentity, DebugDataLocationKind, DebugDataLocationLifetime,

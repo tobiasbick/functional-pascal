@@ -20,11 +20,17 @@ program output; output is delivered as structured events. Protocol stdin is
 never `ReadText`/`ReadLn` input. While the session is stopped, clients queue
 program lines through JSONL `io.input` or DAP `fpas/input`; continue then
 consumes those lines in order. An empty queue is a runtime input failure, not a
-hang on process stdin. EOF is a separate command. There is no integrated debug
-terminal, and `ReadKey` / TUI events are not this channel. TUI event handlers
-run only as bytecode inside hosted intrinsics. Stopped inspection does
-not dispatch pending OS or test events; those wait until continue. Debug
-sessions never poll the editor terminal for keys.
+hang on process stdin. EOF is a separate command.
+
+DAP clients may host an interactive terminal with `fpas/terminalInput` and the
+`fpas/terminalOutput` event. Terminal input accepts keys, mouse actions,
+resizes, paste, and focus changes while the session is initialized, running,
+or stopped. The VS Code extension connects these events to an integrated
+pseudoterminal, so `ReadKey`, `ReadKeyEvent`, `ReadEvent`, and `Std.Tui`
+programs remain interactive while debugging. TUI event handlers still run only
+as bytecode inside hosted intrinsics; stopped inspection does not dispatch
+pending terminal events until execution continues. Debug sessions never poll
+the debugger process terminal directly.
 
 The complete wire contracts are documented in [JSONL protocol V2](debugger-jsonl.md)
 and the [Debug Adapter Protocol contract](debugger-dap.md).
@@ -41,7 +47,8 @@ expression evaluation, conditional breakpoints, exact-hit conditions,
 non-stopping source logpoints, selectable runtime-failure stops, stopped-state variable mutation, explicit complete
 construction of enum, `Result`, and `Option` variants, forced return from a
 selected live frame or task entry, replacement of an unconsumed retained task
-result, selected-frame restart, queued program input for `ReadText`/`ReadLn`, output, and structured runtime failures. Execution is
+result, selected-frame restart, queued program input for `ReadText`/`ReadLn`,
+interactive DAP terminal events, output, and structured runtime failures. Execution is
 bounded by `--timeout`, `--instruction-limit`, and `--output-limit`. Queued
 program input is also bounded by the advertised `debuggee_input_bytes` limit
 (default 1,048,576). Programs

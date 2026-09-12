@@ -93,6 +93,9 @@ impl DebugEngine {
             DebugOp::IoInput { text } => self.push_debuggee_input(request_id, command, text),
             DebugOp::IoEof => self.signal_debuggee_eof(request_id, command),
             DebugOp::IoCancel => self.cancel_debuggee_input(request_id, command),
+            DebugOp::TerminalInput { events } => {
+                self.push_terminal_input(request_id, command, events)
+            }
             DebugOp::Stack {
                 start,
                 count,

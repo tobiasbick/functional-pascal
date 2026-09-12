@@ -33,6 +33,30 @@ begin
 end.
 "#;
 
+const TERMINAL_SOURCE: &str = r#"program TerminalInput;
+
+uses Std.Console;
+
+begin
+  AcquireInteractiveTerminal();
+  WriteLn('terminal-ready');
+  while not EventPending() do
+  begin
+  end;
+  var InputEvent: ConsoleEvent := ReadEvent();
+  WriteLn(InputEvent.key.ch);
+  if KeyPressed() then
+  begin
+    WriteLn('duplicate')
+  end
+  else
+  begin
+    WriteLn('clean')
+  end;
+  ReleaseInteractiveTerminal()
+end.
+"#;
+
 fn target(source: &'static str) -> PreparedDebugTarget {
     let (program, diagnostics) = fpas_parser::parse(source);
     assert!(diagnostics.is_empty(), "parse diagnostics: {diagnostics:?}");
@@ -50,6 +74,10 @@ fn server() -> DapServer {
 
 fn input_server() -> DapServer {
     DapServer::new(target(INPUT_SOURCE)).expect("DAP input server")
+}
+
+fn terminal_server() -> DapServer {
+    DapServer::new(target(TERMINAL_SOURCE)).expect("DAP terminal server")
 }
 
 fn request(seq: u64, command: &str, arguments: Value) -> Value {
@@ -116,6 +144,73 @@ fn program_output_is_a_framed_event_not_raw_protocol_bytes() {
         messages
             .iter()
             .any(|message| message["event"] == "terminated")
+    );
+}
+
+#[test]
+fn terminal_events_reach_a_running_tui_and_output_is_streamed() {
+    let mut adapter = terminal_server();
+    let _ = adapter.handle(request(1, "initialize", json!({})));
+    let _ = adapter.handle(request(2, "launch", json!({"stopOnEntry":false})));
+    let mut messages = adapter.handle(request(3, "configurationDone", json!({})));
+
+    let mut sequence = 4;
+    for _ in 0..1_000 {
+        let polled = adapter.handle(request(sequence, "fpas/terminalPoll", json!({})));
+        sequence += 1;
+        let received_terminal_output = polled
+            .iter()
+            .any(|message| message["event"] == "fpas/terminalOutput");
+        messages.extend(polled);
+        if received_terminal_output {
+            break;
+        }
+        std::thread::sleep(std::time::Duration::from_millis(1));
+    }
+    assert!(
+        messages
+            .iter()
+            .any(|message| message["event"] == "fpas/terminalOutput"),
+        "running terminal output was not pollable"
+    );
+
+    let accepted = adapter.handle(request(
+        sequence,
+        "fpas/terminalInput",
+        json!({"events":[{"kind":"key","key":"Character","text":"q"}]}),
+    ));
+    assert!(
+        accepted
+            .iter()
+            .any(|message| message["success"] == true && message["command"] == "fpas/terminalInput"),
+        "terminal input response: {accepted:?}"
+    );
+    messages.extend(accepted);
+    messages.extend(adapter.wait());
+
+    let terminal_output = messages
+        .iter()
+        .filter(|message| message["event"] == "fpas/terminalOutput")
+        .filter_map(|message| message["body"]["output"].as_str())
+        .collect::<String>();
+    assert!(
+        terminal_output.contains("\u{1b}[?1049h")
+            && terminal_output.contains("\u{1b}[?1049l")
+            && terminal_output.contains('q'),
+        "terminal stream contained {} bytes",
+        terminal_output.len()
+    );
+    let logical_output = messages
+        .iter()
+        .filter(|message| message["event"] == "output")
+        .filter_map(|message| message["body"]["output"].as_str())
+        .collect::<String>();
+    assert_eq!(logical_output, "terminal-ready\nq\nclean\n");
+    assert!(
+        messages
+            .iter()
+            .any(|message| message["event"] == "terminated"),
+        "{messages:?}"
     );
 }
 

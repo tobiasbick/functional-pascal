@@ -44,11 +44,13 @@ pub use debug::{
     DebugRecordingEvent, DebugRunResult, DebugScope, DebugScopeKind, DebugSession,
     DebugSessionError, DebugSessionState, DebugStop, DebugStopReason,
     DebugStorageInitializationResult, DebugStringMutationResult, DebugTask, DebugTaskEvent,
-    DebugTaskEventKind, DebugTaskResultReplacement, DebugTaskState, DebugTermination,
-    DebugUnaryOperation, DebugVariable, DebugVariantConstructionResult, DebugVariantDescription,
-    DebugVariantField, DebugVariantInfo, DebuggeeChannelState, DebuggeeInputResult,
-    FunctionBreakpoint, LiveImageClassification, LiveImageReplaceResult, LiveImageUpdateClass,
-    MAX_RECORDING_EVENTS, Paginated, RECORDING_ENVELOPE_VERSION, SourceBreakpoint, SourceLocation,
+    DebugTaskEventKind, DebugTaskResultReplacement, DebugTaskState, DebugTerminalEvent,
+    DebugTerminalHandle, DebugTerminalKeyEvent, DebugTerminalKeyKind, DebugTerminalMouseAction,
+    DebugTerminalMouseButton, DebugTermination, DebugUnaryOperation, DebugVariable,
+    DebugVariantConstructionResult, DebugVariantDescription, DebugVariantField, DebugVariantInfo,
+    DebuggeeChannelState, DebuggeeInputResult, FunctionBreakpoint, LiveImageClassification,
+    LiveImageReplaceResult, LiveImageUpdateClass, MAX_RECORDING_EVENTS, Paginated,
+    RECORDING_ENVELOPE_VERSION, SourceBreakpoint, SourceLocation,
 };
 pub use diagnostics::VmError;
 pub(crate) use diagnostics::runtime_error;

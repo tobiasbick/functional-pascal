@@ -48,6 +48,7 @@ pub(crate) enum ActorCompletion {
 
 pub(crate) struct SessionActor {
     state: ActorState,
+    terminal: fpas_vm::DebugTerminalHandle,
 }
 
 enum ActorState {
@@ -67,9 +68,22 @@ enum ActorState {
 
 impl SessionActor {
     pub(crate) fn new(session: DebugSession) -> Self {
+        let terminal = session.terminal_handle();
         Self {
             state: ActorState::Ready(Box::new(session)),
+            terminal,
         }
+    }
+
+    pub(crate) fn push_terminal_events(
+        &self,
+        events: &[fpas_vm::DebugTerminalEvent],
+    ) -> Result<fpas_vm::DebuggeeInputResult, DebugSessionError> {
+        self.terminal.push_events(events)
+    }
+
+    pub(crate) fn take_terminal_output(&self) -> Vec<u8> {
+        self.terminal.take_output()
     }
 
     pub(crate) fn session(&self) -> Option<&DebugSession> {

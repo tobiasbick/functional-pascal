@@ -5,6 +5,31 @@ use super::reply::{invalid_state, ok, session_error};
 use super::{DebugEngine, DebugStatus};
 
 impl DebugEngine {
+    pub(super) fn push_terminal_input(
+        &mut self,
+        request_id: u64,
+        command: &str,
+        events: Vec<fpas_vm::DebugTerminalEvent>,
+    ) -> Vec<DebugRecord> {
+        if !matches!(
+            self.status,
+            DebugStatus::Initialized | DebugStatus::Running | DebugStatus::Stopped
+        ) {
+            return vec![invalid_state(request_id, command, self.status)];
+        }
+        match self.actor.push_terminal_events(&events) {
+            Ok(result) => vec![ok(
+                request_id,
+                command,
+                ResponseBody::InputQueued {
+                    bytes: result.bytes,
+                    session_bytes: result.session_bytes,
+                },
+            )],
+            Err(error) => vec![session_error(request_id, command, error)],
+        }
+    }
+
     pub(super) fn push_debuggee_input(
         &mut self,
         request_id: u64,

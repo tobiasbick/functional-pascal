@@ -16,9 +16,12 @@ accessible unit provides the missing type or callable.
 The same VSIX bundles the host-native `fpas` CLI for project check, build, run,
 test, format, and format-check commands, Problems integration, and the Testing
 view.
-The extension also contributes the `fpas` debugger. Use **Run and Debug** with
-the generated **Debug Functional Pascal** configuration, or set `program` to a
-`.fpas`, program `.fpasprj`, `.fpasworkspace`, or `.fpascp` target. Compiled
+The extension also contributes the `fpas` debugger. Press **F5** with a
+`.fpas`, `.fpasprj`, or `.fpasworkspace` editor active. For a `.fpas` program
+main, zero-configuration launch discovers and debugs the owning `.fpasprj`, so
+its project dependencies are retained. Use **Run and Debug** with the generated
+**Debug Functional Pascal** configuration, or set `program` to a `.fpas`,
+program `.fpasprj`, `.fpasworkspace`, or `.fpascp` target. Compiled
 images additionally require `sourceRoot`. Set source breakpoints in an `.fpas`
 editor gutter or with **F9**. Breakpoints, stepping, stack frames, scopes,
 variables, read-only watches/hover/Debug Console evaluation, conditional
@@ -32,8 +35,11 @@ selected ordinary callee — including an older frame — with a validated resul
 and stays stopped in that frame's caller. The Run and Debug sidebar exposes the
 call stack, lexical scopes, locals, parameters, globals, and expandable
 aggregate values. Evaluated aggregates are also expandable until execution
-resumes. Program output, logpoint text, and structured runtime failures appear
-in the Debug Console. Log messages use
+resumes. Program terminal output appears in a dedicated integrated terminal by
+default. Keyboard, mouse, paste, focus, and resize events are forwarded to
+`Std.Console` and `Std.Tui` while the program is running. Set `console` to
+`debugConsole` to retain non-interactive output-only behavior. Logpoint text
+and structured runtime failures appear in the Debug Console. Log messages use
 `{expression}` interpolation and `{{`/`}}` for literal braces. Debugger-side
 calls may invoke deterministic functions, procedures, record methods,
 constructors, readable properties, visible closures, and pure `Std.*`
@@ -160,7 +166,8 @@ required.
 ## Verify
 
 Open a `.fpas` file and confirm the status bar identifies the language as
-**Functional Pascal**. Syntax highlighting works before the extension's
+**Functional Pascal**. `.fpasprj` and `.fpasworkspace` files are recognized as
+**Functional Pascal Project** and can be launched with **F5**. Syntax highlighting works before the extension's
 TypeScript entry point is activated.
 
 Introduce a syntax or type error and confirm the editor reports an `Fxxxx`

@@ -66,4 +66,11 @@ impl DebuggeeChannel {
         self.accepted_bytes = session_bytes;
         Ok(session_bytes)
     }
+
+    pub(in crate::vm::debug) fn accept_input(
+        &mut self,
+        bytes: usize,
+    ) -> Result<usize, DebugErrorKind> {
+        self.accept_line(bytes)
+    }
 }

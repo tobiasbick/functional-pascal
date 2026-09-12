@@ -81,6 +81,11 @@ export async function verifyManifest() {
       aliases: ["Functional Pascal", "fpas"],
       extensions: [".fpas"],
       configuration: "./language-configuration.json"
+    },
+    {
+      id: "fpas-project",
+      aliases: ["Functional Pascal Project"],
+      extensions: [".fpasprj", ".fpasworkspace"]
     }
   ]);
   assert.deepEqual(manifest.contributes?.grammars, [
@@ -105,7 +110,7 @@ export async function verifyManifest() {
     {
       type: "fpas",
       label: "Functional Pascal",
-      languages: ["fpas"],
+      languages: ["fpas", "fpas-project"],
       configurationAttributes: {
         launch: {
           required: ["program"],
@@ -124,6 +129,13 @@ export async function verifyManifest() {
               default: []
             },
             stopOnEntry: { type: "boolean", default: false },
+            console: {
+              type: "string",
+              enum: ["integratedTerminal", "debugConsole"],
+              default: "integratedTerminal",
+              description:
+                "Where program terminal I/O is shown. Use the integrated terminal for interactive and TUI programs."
+            },
             sourceRoot: {
               type: "string",
               description: "Required source root for .fpascp targets."
@@ -138,7 +150,8 @@ export async function verifyManifest() {
           name: "Debug Functional Pascal",
           program: "${file}",
           cwd: "${workspaceFolder}",
-          stopOnEntry: false
+          stopOnEntry: false,
+          console: "integratedTerminal"
         }
       ]
     }

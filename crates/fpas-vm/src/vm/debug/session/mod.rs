@@ -2,7 +2,7 @@
 
 use std::collections::BTreeMap;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{Arc, RwLock};
+use std::sync::{Arc, Mutex, RwLock};
 
 use fpas_bytecode::{InstructionAddress, Value, VerifiedExecutable};
 
@@ -11,7 +11,7 @@ use super::breakpoints::{
     FunctionBreakpoint, SourceBreakpoint,
 };
 use super::inspection::{DebugInspectionLimits, InspectionSnapshot};
-use super::io::DebuggeeChannel;
+use super::io::{DebugTerminalHandle, DebuggeeChannel};
 use super::recording::DebugRecordingLog;
 use super::tasks::DebugTaskRuntime;
 use super::types::{
@@ -92,7 +92,8 @@ pub struct DebugSession {
     inspections: BTreeMap<u64, InspectionSnapshot>,
     inspection_limits: DebugInspectionLimits,
     execution_limits: DebugExecutionLimits,
-    debuggee: DebuggeeChannel,
+    debuggee: Arc<Mutex<DebuggeeChannel>>,
+    terminal: DebugTerminalHandle,
     recording: DebugRecordingLog,
 }
 
@@ -195,7 +196,14 @@ impl DebugSession {
         let layouts = RuntimeLayouts::build(executable.executable(), InstructionAddress::new(0))
             .map(Arc::new)
             .map_err(runtime_initialization_error)?;
-        let hosted = Arc::new(HostedState::for_debug(fpas_std::Console::new(), arguments));
+        let debuggee = Arc::new(Mutex::new(DebuggeeChannel::new(
+            execution_limits.max_input_bytes,
+        )));
+        let (terminal, console, key_input) = DebugTerminalHandle::create(Arc::clone(&debuggee));
+        let text_input = Arc::new(Mutex::new(fpas_std::TextInput::without_os_stdin()));
+        let hosted = Arc::new(HostedState::for_debug(
+            console, text_input, key_input, arguments,
+        ));
         let scheduler = Arc::new(TaskScheduler::new());
         let worker = Worker::for_function_with_state(
             Arc::clone(&executable),
@@ -242,7 +250,8 @@ impl DebugSession {
             inspections,
             inspection_limits,
             execution_limits,
-            debuggee: DebuggeeChannel::new(execution_limits.max_input_bytes),
+            debuggee,
+            terminal,
             recording: DebugRecordingLog::default(),
         })
     }
@@ -288,6 +297,12 @@ impl DebugSession {
         DebugEvaluationCancelHandle {
             cancelled: Arc::clone(&self.evaluation_cancelled),
         }
+    }
+
+    /// Return a cloneable terminal bridge that remains usable while execution is active.
+    #[must_use]
+    pub fn terminal_handle(&self) -> DebugTerminalHandle {
+        self.terminal.clone()
     }
 
     fn require_stopped(&self, command: &'static str) -> Result<(), DebugSessionError> {

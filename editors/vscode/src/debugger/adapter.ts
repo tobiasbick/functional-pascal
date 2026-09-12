@@ -15,6 +15,8 @@ import { registerDebuggeeInputCommands } from "./inputCommand";
 import { registerTaskControlCommands } from "./taskControlCommand";
 import { registerTaskResultCommand } from "./taskResultCommand";
 import { registerVariantConstructionCommand } from "./variantConstructionCommand";
+import { debugTargetForDocument } from "./projectTarget";
+import { DebugTerminalManager } from "./terminal/session";
 
 /** Register the Functional Pascal debug type without changing LSP ownership. */
 export function registerDebugger(context: vscode.ExtensionContext): void {
@@ -35,28 +37,38 @@ export function registerDebugger(context: vscode.ExtensionContext): void {
   registerTaskResultCommand(context);
   registerTaskControlCommands(context);
   registerDebuggeeInputCommands(context);
-  context.subscriptions.push(provider, factory);
+  const terminals = new DebugTerminalManager();
+  context.subscriptions.push(provider, factory, terminals);
 }
 
-class FunctionalPascalDebugConfigurationProvider
+export class FunctionalPascalDebugConfigurationProvider
   implements vscode.DebugConfigurationProvider
 {
-  resolveDebugConfiguration(
+  async resolveDebugConfiguration(
     folder: vscode.WorkspaceFolder | undefined,
     configuration: vscode.DebugConfiguration
-  ): vscode.ProviderResult<vscode.DebugConfiguration> {
+  ): Promise<vscode.DebugConfiguration | undefined> {
     if (!configuration.type && !configuration.request && !configuration.name) {
       const editor = vscode.window.activeTextEditor;
-      if (editor?.document.languageId !== "fpas") {
+      let target: string | undefined;
+      try {
+        target = editor && (await debugTargetForDocument(editor.document));
+      } catch (error) {
         void vscode.window.showErrorMessage(
-          "Open a Functional Pascal program or provide `program` in launch.json."
+          error instanceof Error ? error.message : String(error)
+        );
+        return undefined;
+      }
+      if (target === undefined) {
+        void vscode.window.showErrorMessage(
+          "Open a Functional Pascal source, project, or workspace, or provide `program` in launch.json."
         );
         return undefined;
       }
       configuration.type = "fpas";
       configuration.request = "launch";
       configuration.name = "Debug Functional Pascal";
-      configuration.program = editor.document.uri.fsPath;
+      configuration.program = target;
       configuration.stopOnEntry = false;
     }
     const unsupported = unsupportedDebugRequestReason(configuration.request);
@@ -72,6 +84,7 @@ class FunctionalPascalDebugConfigurationProvider
     }
     configuration.cwd ??= folder?.uri.fsPath ?? path.dirname(configuration.program);
     configuration.args ??= [];
+    configuration.console ??= "integratedTerminal";
     return configuration;
   }
 }

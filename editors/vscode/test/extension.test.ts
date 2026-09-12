@@ -9,6 +9,7 @@ import { verifySemanticTools } from "./semantic_tools";
 import { verifyWorkflowHost } from "./workflow/host";
 import { verifyWorkflowUnits } from "./workflow/unit";
 import { verifyDebuggerHost } from "./debugger_host";
+import { verifyTerminalInputDecoder } from "./debugger/terminal_input";
 
 const EXTENSION_ID = "functional-pascal.functional-pascal";
 const SHOW_OUTPUT_COMMAND = "functionalPascal.showOutput";
@@ -19,6 +20,7 @@ const ACTIVATION_MESSAGE =
 
 /** Runs the extension-shell regression test in a real Extension Host. */
 export async function run(): Promise<void> {
+  verifyTerminalInputDecoder();
   await verifyWorkflowUnits();
   const extension =
     vscode.extensions.getExtension<FunctionalPascalExtensionApi>(EXTENSION_ID);

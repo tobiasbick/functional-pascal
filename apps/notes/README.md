@@ -22,6 +22,11 @@ fpas run apps/notes/notes.fpasprj -- ./my-notes
 The directory is created when its parent exists. Notes never scans outside the
 selected directory.
 
+In VS Code with the Functional Pascal extension, open either
+`apps/notes/src/notes.fpas` or `apps/notes/notes.fpasprj` and press **F5**. The
+source launch resolves the owning program project automatically, and Notes runs
+interactively in the debugger's integrated terminal.
+
 ## Interface
 
 Wide terminals show a searchable note list beside the editor:

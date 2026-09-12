@@ -75,7 +75,10 @@ impl DebugSession {
         self.runtime.cancel();
         self.state = DebugSessionState::Terminated;
         self.pause_requested.store(false, Ordering::Release);
-        self.debuggee.close();
+        self.debuggee
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .close();
         self.with_text_input(fpas_std::TextInput::clear_queued);
         self.invalidate_inspection();
     }
@@ -382,17 +385,7 @@ impl DebugSession {
     }
 
     fn output_byte_count(&self) -> usize {
-        let Some(worker) = self.runtime.worker(0) else {
-            return 0;
-        };
-        let output = worker
-            .hosted
-            .console
-            .lock()
-            .unwrap_or_else(|poisoned| poisoned.into_inner());
-        output.output().lines.iter().fold(0usize, |total, line| {
-            total.saturating_add(line.len()).saturating_add(1)
-        })
+        self.terminal.output_byte_count()
     }
 
     fn next_sequence_point(

@@ -140,6 +140,10 @@ impl DebugEngine {
         &self.sources
     }
 
+    pub(crate) fn take_terminal_output(&self) -> Vec<u8> {
+        self.actor.take_terminal_output()
+    }
+
     /// Execute one validated typed request.
     #[must_use]
     pub(crate) fn execute(&mut self, request: DebugRequest) -> Vec<DebugRecord> {

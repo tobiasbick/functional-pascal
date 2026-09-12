@@ -8,6 +8,7 @@ repository.workspace = true
 
 [dependencies]
 ctrlc = { version = "3.5.2", features = ["termination"] }
+crossterm.workspace = true
 fpas-bytecode = { path = "../fpas-bytecode" }
 fpas-diagnostics = { path = "../fpas-diagnostics" }
 fpas-std = { path = "../fpas-std" }

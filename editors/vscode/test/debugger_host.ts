@@ -32,6 +32,7 @@ import { verifyTaskLifecycle } from "./debugger_host/task_lifecycle";
 import { verifyDebuggerTransport } from "./debugger_host/transport";
 import { verifyDebuggerInput } from "./debugger_host/input";
 import { verifyVariableMutation } from "./debugger_host/variable_mutation";
+import { verifyProjectLaunchTargets } from "./debugger_host/project_launch";
 import type { DapMessage } from "./debugger_host/support";
 
 /** Exercise every user-visible VS Code debugger capability promised for V1. */
@@ -49,6 +50,7 @@ export async function verifyDebuggerHost(): Promise<void> {
   });
 
   try {
+    await verifyProjectLaunchTargets(workspaceRoot);
     await verifyDebuggerLifecycle(workspaceRoot, received, sent);
     await verifyPauseAndDisconnect(workspaceRoot, received, sent);
     await verifyRuntimeFailure(workspaceRoot, received, sent);

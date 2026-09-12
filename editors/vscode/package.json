@@ -31,6 +31,16 @@
           ".fpas"
         ],
         "configuration": "./language-configuration.json"
+      },
+      {
+        "id": "fpas-project",
+        "aliases": [
+          "Functional Pascal Project"
+        ],
+        "extensions": [
+          ".fpasprj",
+          ".fpasworkspace"
+        ]
       }
     ],
     "grammars": [
@@ -55,7 +65,7 @@
       {
         "type": "fpas",
         "label": "Functional Pascal",
-        "languages": ["fpas"],
+        "languages": ["fpas", "fpas-project"],
         "configurationAttributes": {
           "launch": {
             "required": ["program"],
@@ -64,6 +74,12 @@
               "cwd": { "type": "string", "description": "Debugger working directory." },
               "args": { "type": "array", "items": { "type": "string" }, "default": [] },
               "stopOnEntry": { "type": "boolean", "default": false },
+              "console": {
+                "type": "string",
+                "enum": ["integratedTerminal", "debugConsole"],
+                "default": "integratedTerminal",
+                "description": "Where program terminal I/O is shown. Use the integrated terminal for interactive and TUI programs."
+              },
               "sourceRoot": { "type": "string", "description": "Required source root for .fpascp targets." }
             }
           }
@@ -75,7 +91,8 @@
             "name": "Debug Functional Pascal",
             "program": "${file}",
             "cwd": "${workspaceFolder}",
-            "stopOnEntry": false
+            "stopOnEntry": false,
+            "console": "integratedTerminal"
           }
         ]
       }

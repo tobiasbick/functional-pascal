@@ -12,8 +12,11 @@ impl DebugSession {
     ///
     /// **Documentation:** `docs/pascal/tools/debugger.md`
     #[must_use]
-    pub const fn debuggee_channel_state(&self) -> DebuggeeChannelState {
-        self.debuggee.state()
+    pub fn debuggee_channel_state(&self) -> DebuggeeChannelState {
+        self.debuggee
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .state()
     }
 
     /// Queue one line for hosted `ReadText` / `ReadLn` without touching protocol stdin.
@@ -25,7 +28,12 @@ impl DebugSession {
     ) -> Result<DebuggeeInputResult, DebugSessionError> {
         self.require_stopped("io.input")?;
         let bytes = input.len().saturating_add(1);
-        match self.debuggee.accept_line(bytes) {
+        let accepted = self
+            .debuggee
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .accept_line(bytes);
+        match accepted {
             Ok(session_bytes) => {
                 self.with_text_input(|text| text.push_line(input));
                 self.capture_input(input);
@@ -43,7 +51,11 @@ impl DebugSession {
     /// **Documentation:** `docs/pascal/tools/debugger.md`
     pub fn signal_debuggee_eof(&mut self) -> Result<(), DebugSessionError> {
         self.require_stopped("io.eof")?;
-        self.debuggee.signal_eof().map_err(debuggee_input_error)?;
+        self.debuggee
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .signal_eof()
+            .map_err(debuggee_input_error)?;
         self.with_text_input(TextInput::close_input);
         Ok(())
     }
@@ -53,7 +65,13 @@ impl DebugSession {
     /// **Documentation:** `docs/pascal/tools/debugger.md`
     pub fn cancel_debuggee_input(&mut self) -> Result<(), DebugSessionError> {
         self.require_stopped("io.cancel")?;
-        if self.debuggee.state() != DebuggeeChannelState::Connected {
+        if self
+            .debuggee
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .state()
+            != DebuggeeChannelState::Connected
+        {
             return Err(debuggee_input_error(DebugErrorKind::InvalidState));
         }
         self.with_text_input(TextInput::clear_queued);

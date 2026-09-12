@@ -103,6 +103,13 @@ impl KeyInput {
         self.console_event_queue.push_back(ev);
     }
 
+    /// Queue one terminal-host event without polling the process terminal.
+    #[doc(hidden)]
+    pub fn push_host_event(&mut self, ev: Event) -> bool {
+        self.test_mode = true;
+        self.queue_live_event(ev)
+    }
+
     /// Queue a live-style event from test code.
     ///
     /// Identical to [`queue_live_event`] but additionally sets `test_mode = true`, so
@@ -110,8 +117,7 @@ impl KeyInput {
     /// return `false` instead of falling through to live terminal polling.
     #[cfg(test)]
     pub(crate) fn push_live_event(&mut self, ev: Event) -> bool {
-        self.test_mode = true;
-        self.queue_live_event(ev)
+        self.push_host_event(ev)
     }
 
     pub(crate) fn queue_live_event(&mut self, ev: Event) -> bool {

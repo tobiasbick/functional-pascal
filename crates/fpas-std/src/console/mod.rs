@@ -41,7 +41,7 @@ pub struct CapturedOutput {
 ///
 /// Handles `Std.Console.WriteText` and `Std.Console.WriteLn`.
 /// Headless output is captured for test assertions. A console constructed
-/// with a writer streams output without retaining it.
+/// with a writer streams output and may optionally retain logical lines.
 pub struct Console {
     captured: CapturedOutput,
     capture_mode: CaptureMode,
@@ -86,11 +86,20 @@ impl Console {
 
     /// Creates a console that streams output to `writer` without retaining it.
     pub fn with_writer(writer: Box<dyn Write + Send>) -> Self {
+        Self::with_writer_capture_mode(writer, CaptureMode::Disabled)
+    }
+
+    /// Creates a console that streams output and also retains logical lines for debugger events.
+    pub fn with_capturing_writer(writer: Box<dyn Write + Send>) -> Self {
+        Self::with_writer_capture_mode(writer, CaptureMode::Full)
+    }
+
+    fn with_writer_capture_mode(writer: Box<dyn Write + Send>, capture_mode: CaptureMode) -> Self {
         let (width, height) =
             crossterm::terminal::size().unwrap_or((DEFAULT_SCREEN_WIDTH, DEFAULT_SCREEN_HEIGHT));
         Self {
             captured: CapturedOutput::default(),
-            capture_mode: CaptureMode::Disabled,
+            capture_mode,
             capture_line_buf: String::new(),
             state: ConsoleState::new(width, height),
             writer: Some(writer),
@@ -103,7 +112,8 @@ impl Console {
 
     /// Access captured output from a headless console.
     ///
-    /// Streaming consoles return an empty capture.
+    /// [`Console::with_writer`] returns an empty capture; headless and debugger
+    /// capturing consoles retain completed logical lines.
     pub fn output(&self) -> &CapturedOutput {
         &self.captured
     }

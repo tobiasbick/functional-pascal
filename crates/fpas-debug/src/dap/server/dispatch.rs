@@ -140,6 +140,8 @@ impl DapServer {
             "fpas/input" => self.push_debuggee_input(request_seq, command, arguments),
             "fpas/eof" => self.signal_debuggee_eof(request_seq, command),
             "fpas/cancelInput" => self.cancel_debuggee_input(request_seq, command),
+            "fpas/terminalPoll" => self.poll_terminal(request_seq, command),
+            "fpas/terminalInput" => self.push_terminal_input(request_seq, command, arguments),
             "fpas/variantDescribe" => self.describe_variant(request_seq, command, arguments),
             "fpas/locationDescribe" => self.describe_location(request_seq, command, arguments),
             "fpas/recordingDescribe" => self.describe_recording(request_seq, command),

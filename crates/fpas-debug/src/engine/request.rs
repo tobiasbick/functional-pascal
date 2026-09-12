@@ -73,6 +73,9 @@ pub(crate) enum DebugOp {
     },
     IoEof,
     IoCancel,
+    TerminalInput {
+        events: Vec<fpas_vm::DebugTerminalEvent>,
+    },
     Stack {
         start: usize,
         count: usize,
@@ -236,6 +239,7 @@ impl DebugOp {
             Self::IoInput { .. } => DebugCommand::IoInput,
             Self::IoEof => DebugCommand::IoEof,
             Self::IoCancel => DebugCommand::IoCancel,
+            Self::TerminalInput { .. } => DebugCommand::TerminalInput,
             Self::Stack { .. } => DebugCommand::Stack,
             Self::Scopes { .. } => DebugCommand::Scopes,
             Self::Variables { .. } => DebugCommand::Variables,

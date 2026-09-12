@@ -166,6 +166,7 @@ pub const fn intrinsic_debug_effects(intrinsic: Intrinsic) -> DebugEffectSet {
         Intrinsic::Option(operation) => option_effects(operation),
         Intrinsic::Args(_) => DebugEffectSet::NONDETERMINISTIC,
         Intrinsic::Random(_) => DebugEffectSet::NONDETERMINISTIC,
+        Intrinsic::Crypto(_) => DebugEffectSet::HOST_IO.union(DebugEffectSet::NONDETERMINISTIC),
         Intrinsic::Env(_) => DebugEffectSet::HOST_IO.union(DebugEffectSet::NONDETERMINISTIC),
         Intrinsic::Fs(_) | Intrinsic::Console(_) | Intrinsic::Test(_) => DebugEffectSet::HOST_IO,
         Intrinsic::Proc(_) => DebugEffectSet::HOST_IO

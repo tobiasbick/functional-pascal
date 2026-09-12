@@ -43,6 +43,11 @@ macro_rules! std_conv {
         concat!("Std.Conv.", $suffix)
     };
 }
+macro_rules! std_crypto {
+    ($suffix:literal) => {
+        concat!("Std.Crypto.", $suffix)
+    };
+}
 macro_rules! std_parse {
     ($suffix:literal) => {
         concat!("Std.Parse.", $suffix)
@@ -115,6 +120,7 @@ mod args;
 mod array;
 mod console;
 mod conv;
+mod crypto;
 mod dict;
 mod env;
 mod fs;
@@ -138,6 +144,7 @@ pub use args::*;
 pub use array::*;
 pub use console::*;
 pub use conv::*;
+pub use crypto::*;
 pub use dict::*;
 pub use env::*;
 pub use fs::*;

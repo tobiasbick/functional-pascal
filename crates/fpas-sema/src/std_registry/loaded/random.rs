@@ -12,4 +12,9 @@ pub(super) fn register_std_random(checker: &mut Checker) {
         Ty::Integer,
     );
     define_proc(checker, s::STD_RANDOM_RANDOMIZE, vec![]);
+    define_proc(
+        checker,
+        s::STD_RANDOM_SET_SEED,
+        vec![p("Seed", Ty::Integer, false)],
+    );
 }

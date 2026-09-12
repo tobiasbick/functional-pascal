@@ -12,6 +12,9 @@ crossterm.workspace = true
 fpas-bytecode = { path = "../fpas-bytecode" }
 fpas-diagnostics = { path = "../fpas-diagnostics" }
 fpas-std = { path = "../fpas-std" }
+getrandom.workspace = true
+rand.workspace = true
+rand_chacha.workspace = true
 rustls.workspace = true
 rustls-platform-verifier.workspace = true
 socket2.workspace = true

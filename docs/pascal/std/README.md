@@ -51,6 +51,7 @@ intrinsic API or handbook change with
 | Text | [text/](text/README.md) | Str, Conv, Parse, Json, Toml |
 | Collections | [collections/](collections/README.md) | Array, Dict |
 | Numeric | [numeric/](numeric/README.md) | Math, Random |
+| Cryptography | [cryptography/](cryptography/README.md) | Operating-system random bytes and secure integers |
 | Result / Option | [result/](result/README.md) | Result, Option helpers |
 | Concurrency | [concurrency/](concurrency/README.md) | Task (bounded channels, cooperative cancellation, task waits, typed `Select` cases, task groups, supervision) |
 | Terminal UI | [tui/](tui/README.md) | MVU element trees, deterministic headless routing and snapshots |

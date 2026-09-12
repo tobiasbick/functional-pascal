@@ -47,6 +47,7 @@ const fn unsupported_recording_unit(intrinsic: Intrinsic) -> Option<&'static str
     match intrinsic {
         Intrinsic::Server(_) => Some("Std.Server"),
         Intrinsic::Random(_) => Some("Std.Random"),
+        Intrinsic::Crypto(_) => Some("Std.Crypto"),
         Intrinsic::Time(TimeIntrinsic::Sleep) => None,
         Intrinsic::Time(_) => Some("Std.Time"),
         Intrinsic::Fs(_) => Some("Std.Fs"),

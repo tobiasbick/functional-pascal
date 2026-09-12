@@ -12,8 +12,10 @@ mod args;
 pub(super) mod callbacks;
 mod console;
 mod console_args;
+mod crypto;
 mod http_handles;
 mod net;
+mod random;
 pub(in crate::vm) mod server;
 mod test_host;
 
@@ -38,6 +40,8 @@ impl Worker {
             Intrinsic::Console(_) => self.execute_console_intrinsic(intrinsic, arguments, location),
             Intrinsic::Net(_) => self.execute_net_intrinsic(intrinsic, arguments, location),
             Intrinsic::Http(_) => self.execute_http_state_intrinsic(intrinsic, arguments, location),
+            Intrinsic::Random(_) => self.execute_random_intrinsic(intrinsic, arguments, location),
+            Intrinsic::Crypto(_) => self.execute_crypto_intrinsic(intrinsic, arguments, location),
             Intrinsic::Test(_) => self.execute_test_host_intrinsic(intrinsic, arguments, location),
             _ => {
                 return Err(diagnostics::internal(
@@ -67,6 +71,7 @@ pub(super) struct HostedState {
     pub(in crate::vm::hosted) network_connections: NetworkConnections,
     pub(in crate::vm::hosted) network_listeners: NetworkListeners,
     pub(in crate::vm::hosted) http_states: HttpStateRegistry,
+    pub(in crate::vm::hosted) random: Mutex<random::state::RandomState>,
     pub(in crate::vm) cancellations: CancellationRegistry,
     pub(in crate::vm) channels: ChannelRegistry,
     pub(in crate::vm) cases: super::tasks::selection::CaseRegistry,
@@ -84,6 +89,7 @@ impl HostedState {
             network_connections: NetworkConnections::new(),
             network_listeners: NetworkListeners::new(),
             http_states: HttpStateRegistry::new(),
+            random: Mutex::new(random::state::RandomState::new()),
             cancellations: CancellationRegistry::new(),
             channels: ChannelRegistry::new(),
             cases: Default::default(),
@@ -107,6 +113,7 @@ impl HostedState {
             network_connections: NetworkConnections::new(),
             network_listeners: NetworkListeners::new(),
             http_states: HttpStateRegistry::new(),
+            random: Mutex::new(random::state::RandomState::new()),
             cancellations: CancellationRegistry::new(),
             channels: ChannelRegistry::new(),
             cases: Default::default(),

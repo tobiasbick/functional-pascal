@@ -5,6 +5,8 @@ program RandomBasics;
 uses Std.Console, Std.Conv, Std.Random;
 
 begin
+  SetSeed(42);
+  WriteLn('repeatable d6: ', IntToStr(RandomInt(1, 6)));
   Randomize();
   WriteLn('random real: ', RealToStr(Random()));
   WriteLn('d6: ', IntToStr(RandomInt(1, 6)))

@@ -5,7 +5,7 @@ Math and random number helpers.
 | Unit | Description |
 |------|-------------|
 | [`Std.Math`](math.md) | `Sqrt`, `Sin`, `Pow`, `Clamp`, … |
-| [`Std.Random`](random.md) | `Random`, `RandomInt`, `Randomize` |
+| [`Std.Random`](random.md) | Deterministic pseudo-random sequences with explicit or automatic seeding |
 
 ## See also
 

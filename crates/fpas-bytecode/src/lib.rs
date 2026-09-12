@@ -33,11 +33,11 @@ pub use instruction::{
     AbcOperands, AbxOperands, Instruction, InstructionError, InstructionForm, Opcode,
 };
 pub use intrinsic::{
-    ArgsIntrinsic, ArrayIntrinsic, ConsoleIntrinsic, ConvIntrinsic, DictIntrinsic, EnvIntrinsic,
-    FsIntrinsic, HttpIntrinsic, Intrinsic, IntrinsicOwner, JsonIntrinsic, MathIntrinsic,
-    NetIntrinsic, OptionIntrinsic, ParseIntrinsic, PathIntrinsic, ProcIntrinsic, RandomIntrinsic,
-    ResultIntrinsic, ServerIntrinsic, StrIntrinsic, TaskIntrinsic, TestIntrinsic, TimeIntrinsic,
-    TomlIntrinsic,
+    ArgsIntrinsic, ArrayIntrinsic, ConsoleIntrinsic, ConvIntrinsic, CryptoIntrinsic, DictIntrinsic,
+    EnvIntrinsic, FsIntrinsic, HttpIntrinsic, Intrinsic, IntrinsicOwner, JsonIntrinsic,
+    MathIntrinsic, NetIntrinsic, OptionIntrinsic, ParseIntrinsic, PathIntrinsic, ProcIntrinsic,
+    RandomIntrinsic, ResultIntrinsic, ServerIntrinsic, StrIntrinsic, TaskIntrinsic, TestIntrinsic,
+    TimeIntrinsic, TomlIntrinsic,
 };
 pub use metadata::{
     Constant, EnumLayout, EnumVariant, GlobalInfo, GlobalInitializer, RecordField, RecordLayout,

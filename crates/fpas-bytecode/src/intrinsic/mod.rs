@@ -28,6 +28,7 @@ pub mod args;
 pub mod array;
 pub mod console;
 pub mod conv;
+pub mod crypto;
 pub mod dict;
 pub mod env;
 mod execution;
@@ -53,6 +54,7 @@ pub use args::ArgsIntrinsic;
 pub use array::ArrayIntrinsic;
 pub use console::ConsoleIntrinsic;
 pub use conv::ConvIntrinsic;
+pub use crypto::CryptoIntrinsic;
 pub use dict::DictIntrinsic;
 pub use env::EnvIntrinsic;
 pub use execution::IntrinsicOwner;
@@ -89,6 +91,8 @@ pub enum Intrinsic {
     Str(StrIntrinsic),
     /// Scalar conversion operation.
     Conv(ConvIntrinsic),
+    /// Cryptographically secure operating-system randomness.
+    Crypto(CryptoIntrinsic),
     /// Fallible text-parsing operation.
     Parse(ParseIntrinsic),
     /// Mathematical operation.
@@ -229,6 +233,7 @@ intrinsic_wire_ops!(
     Console(ConsoleIntrinsic),
     Str(StrIntrinsic),
     Conv(ConvIntrinsic),
+    Crypto(CryptoIntrinsic),
     Parse(ParseIntrinsic),
     Math(MathIntrinsic),
     Net(NetIntrinsic),

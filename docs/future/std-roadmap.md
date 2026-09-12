@@ -24,12 +24,16 @@ Server lifetime ownership, signals, and explicit process-level escalation are im
 [`Std.Server`](../pascal/std/network/server.md). Additional resource adapters remain in
 [server lifecycle](networked-applications/server-lifecycle.md).
 
+Operating-system random bytes and secure integer sampling are implemented in
+[`Std.Crypto`](../pascal/std/cryptography/crypto.md). Password hashing, message authentication,
+and signatures remain in the [cryptography plan](networked-applications/cryptography.md).
+
 ## Later candidates
 
 These should wait until the runtime and capability model need them:
 
-- [`Std.Crypto`](networked-applications/cryptography.md) for secure randomness, password hashing,
-  message authentication, and signatures.
+- Additional [`Std.Crypto`](networked-applications/cryptography.md) operations for password
+  hashing, message authentication, and signatures.
 - [`Std.Sqlite`](networked-applications/sqlite.md) for embedded transactional storage.
 - [WebSocket client and server support](networked-applications/websocket.md).
 - [UDP sockets](networked-applications/udp.md) when a concrete datagram use case exists.

@@ -1,9 +1,9 @@
 //! Canonical `Std.*` call names to stable intrinsic wire identifiers.
 
 use fpas_bytecode::{
-    ArgsIntrinsic, ArrayIntrinsic, ConsoleIntrinsic, ConvIntrinsic, DictIntrinsic, EnvIntrinsic,
-    FsIntrinsic, HttpIntrinsic, Intrinsic, JsonIntrinsic, MathIntrinsic, NetIntrinsic,
-    OptionIntrinsic, ParseIntrinsic, PathIntrinsic, ProcIntrinsic, RandomIntrinsic,
+    ArgsIntrinsic, ArrayIntrinsic, ConsoleIntrinsic, ConvIntrinsic, CryptoIntrinsic, DictIntrinsic,
+    EnvIntrinsic, FsIntrinsic, HttpIntrinsic, Intrinsic, JsonIntrinsic, MathIntrinsic,
+    NetIntrinsic, OptionIntrinsic, ParseIntrinsic, PathIntrinsic, ProcIntrinsic, RandomIntrinsic,
     ResultIntrinsic, ServerIntrinsic, StrIntrinsic, TaskIntrinsic, TestIntrinsic, TimeIntrinsic,
     TomlIntrinsic,
 };
@@ -36,6 +36,7 @@ pub(crate) fn resolve(name: &str, first_argument: Option<&Ty>) -> Option<Intrins
                 IntToHex, HexToInt,
             ]
         ),
+        "Crypto" => family!(member, Crypto, CryptoIntrinsic, [RandomBytes, RandomInt]),
         "Parse" => family!(member, Parse, ParseIntrinsic, [TryInt, TryReal, TryBool]),
         "Math" => resolve_math(member),
         "Net" => resolve_net(member),
@@ -44,7 +45,7 @@ pub(crate) fn resolve(name: &str, first_argument: Option<&Ty>) -> Option<Intrins
             member,
             Random,
             RandomIntrinsic,
-            [Random, RandomInt, Randomize]
+            [Random, RandomInt, Randomize, SetSeed]
         ),
         "Arrays" => resolve_array(member),
         "Dictionaries" => family!(

@@ -23,5 +23,9 @@ pub enum RandomIntrinsic {
     ///
     /// **Documentation:** `docs/pascal/std/numeric/random.md`
     Randomize = 233,
+    /// `Std.Random.SetSeed(Seed)` - replace the VM-local deterministic seed.
+    ///
+    /// **Documentation:** `docs/pascal/std/numeric/random.md`
+    SetSeed = 610,
 }
 }

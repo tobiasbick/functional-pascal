@@ -1,0 +1,13 @@
+program RandomIntFullWidthTest;
+
+uses Std.Random, Std.Test;
+
+begin
+  SetSeed(42);
+  var Minimum: integer := -9223372036854775807 - 1;
+  var Value: integer := RandomInt(Minimum, 9223372036854775807);
+  AssertEquals(-6337836286886086126, Value);
+  SetSeed(42);
+  AssertEquals(Value, RandomInt(Minimum, 9223372036854775807));
+  AssertEquals(7, RandomInt(7, 7))
+end.

@@ -17,7 +17,6 @@ use crate::math;
 use crate::parse;
 use crate::path;
 use crate::proc;
-use crate::random;
 use crate::result_option;
 use crate::str;
 use crate::time;
@@ -46,7 +45,6 @@ fn dispatch_intrinsic(
         Intrinsic::Conv(_) => conv::run(intrinsic, call, location),
         Intrinsic::Parse(_) => parse::run(intrinsic, call, location),
         Intrinsic::Math(_) => math::run(intrinsic, call, location),
-        Intrinsic::Random(_) => random::run(intrinsic, call, location),
         Intrinsic::Array(_) => array::run(intrinsic, call, location),
         Intrinsic::Dict(_) => dict::run(intrinsic, call, location),
         Intrinsic::Env(_) => env::run(intrinsic, call, location),
@@ -65,6 +63,8 @@ fn dispatch_intrinsic(
         | Intrinsic::Console(_)
         | Intrinsic::Net(_)
         | Intrinsic::Http(_)
+        | Intrinsic::Random(_)
+        | Intrinsic::Crypto(_)
         | Intrinsic::Task(_) => {
             return Err(std_internal_error(
                 format!(

@@ -36,9 +36,13 @@ impl Intrinsic {
     #[must_use]
     pub const fn owner(self) -> IntrinsicOwner {
         match self {
-            Self::Server(_) | Self::Args(_) | Self::Console(_) | Self::Net(_) | Self::Http(_) => {
-                IntrinsicOwner::Hosted
-            }
+            Self::Server(_)
+            | Self::Args(_)
+            | Self::Console(_)
+            | Self::Net(_)
+            | Self::Http(_)
+            | Self::Random(_)
+            | Self::Crypto(_) => IntrinsicOwner::Hosted,
             Self::Test(
                 TestIntrinsic::AssertScreenLine
                 | TestIntrinsic::AssertScreenCell

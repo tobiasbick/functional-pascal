@@ -177,6 +177,9 @@ define_codes!(RUNTIME_ALLOCATED_CODES => {
 
     /// Recording capture hit a host effect that is not replayable.
     RUNTIME_RECORDING_UNSUPPORTED_EFFECT = 4024;
+
+    /// The operating system could not supply random bytes.
+    RUNTIME_RANDOM_SOURCE_FAILURE = 4025;
 });
 
 define_codes!(INTERNAL_ALLOCATED_CODES => {

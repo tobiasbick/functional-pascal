@@ -4,13 +4,13 @@ unit Std.Random;
 // Edit the Rust registry and `docs/pascal/std/`, then regenerate this editor declaration surface.
 // Runtime behavior is implemented by the compiler, VM, or Rust standard-library crate.
 
-// Pseudo-random `[0.0, 1.0)`.
+// Pseudo-random value in `[0.0, 1.0)`.
 public function Random(): real;
 begin
   panic('Intrinsic API declaration')
 end;
 
-// Random in `[Lo, Hi]`.
+// Unbiased pseudo-random value in inclusive `[Lo, Hi]`.
 //
 // Parameters:
 // - `Lo`: `integer` input value used by `RandomInt`.
@@ -20,8 +20,17 @@ begin
   panic('Intrinsic API declaration')
 end;
 
-// Seed initializer.
+// Replace the VM-local state with an operating-system seed.
 public procedure Randomize();
+begin
+  panic('Intrinsic API declaration')
+end;
+
+// Start a repeatable VM-local sequence.
+//
+// Parameters:
+// - `Seed`: `integer` input value used by `SetSeed`.
+public procedure SetSeed(Seed: integer);
 begin
   panic('Intrinsic API declaration')
 end;

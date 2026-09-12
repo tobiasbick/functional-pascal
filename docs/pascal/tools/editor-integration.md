@@ -32,7 +32,7 @@ reimplemented in TypeScript.
 
 ## Source debugging and variable editing
 
-The contributed `fpas` debug type launches the bundled CLI's DAP adapter.
+The contributed `fpas` debug type launches the selected installed CLI's DAP adapter.
 Attach configurations are rejected. Native disassembly and memory requests
 are unsupported.
 Source breakpoints can be set in an `.fpas` editor gutter or with **F9**.
@@ -176,33 +176,38 @@ npm ci --prefix editors/vscode
 npm run package --prefix editors/vscode
 ```
 
-The package command is non-interactive. It runs the extension tests, builds
-`fpas-lsp` in Cargo release mode, stages the current host binary together with
-the authoritative source-standard-library manifest and `.fpas` files, verifies
-the archive contents, and exercises the server extracted from the resulting
-VSIX. Derived `.fpascu` files are not packaged. The output is:
+The package command is non-interactive. It runs the extension tests, creates a
+platform-independent editor archive, and verifies that no compiler,
+language-server binary, source standard library, or derived artifact is
+packaged. The output is:
 
 ```text
-editors/vscode/dist/functional-pascal-<version>-<host-target>.vsix
+editors/vscode/dist/functional-pascal-<version>.vsix
 ```
 
 Install that file through **Extensions: Install from VSIX** in a compatible
-desktop editor. The VSIX is self-contained for the operating system and
-architecture where it was built. Users on another host build the same source
-there; the hobby project does not cross-compile, publish, or maintain a release
-matrix.
+desktop editor. Install an FPAS distribution separately and put `fpas` on
+`PATH`, or select its absolute path through the extension. The VSIX itself is
+platform-independent.
 
-For development, `npm test --prefix editors/vscode` builds the debug language
-server and runs the real VS Code Extension Host checks. More detail is in the
+For development, `npm test --prefix editors/vscode` builds the debug `fpas`
+toolchain, exposes it through the test Extension Host's `PATH`, and runs the
+real VS Code Extension Host checks. More detail is in the
 [extension README](../../../editors/vscode/README.md).
 
 ## Project workflows
 
-The extension bundles the host-native `fpas` CLI beside `fpas-lsp`; it never
-depends on a compiler from `PATH`. Before the first workflow operation it checks
-the CLI's stable `fpas --version` output. A missing or incompatible executable
-produces one actionable recovery message without stopping language-server
-features.
+The extension resolves one `fpas` executable. The machine-scoped
+`functionalPascal.executablePath` setting takes precedence; when it is empty,
+the extension searches `PATH`. **Functional Pascal: Select FPAS Executable**
+sets the explicit path. A missing or invalid toolchain offers both executable
+selection and the matching Settings page.
+
+Before starting editor features, the extension runs `fpas env --json` and
+validates the reported version and source standard-library manifest. It starts
+the language server with `fpas lsp`, project workflows with the same executable,
+and debugging with `fpas debug`. Compiler, language server, debugger, and
+standard library therefore cannot silently come from different installations.
 
 Use **Functional Pascal: Select Project or Workspace** to choose a
 `.fpasprj` or `.fpasworkspace`. A folder with one manifest selects it
@@ -214,7 +219,7 @@ command runs.
 The Command Palette provides **Check Project**, **Build Project**, **Test
 Project**, **Format Project**, **Check Project Formatting**, **Run Project in
 Terminal**, and **Cancel Active Operation**. Non-interactive commands invoke the
-bundled CLI without a shell, so paths and arguments containing spaces remain
+selected CLI without a shell, so paths and arguments containing spaces remain
 separate. Cancellation terminates the owned CLI process. Run uses an editor
 terminal because interactive console and TUI programs retain their
 normal host interaction; program arguments are entered as a JSON string array
@@ -268,10 +273,11 @@ the server. The VS Code extension uses this server-owned registration rather
 than installing duplicate watchers. Unsaved open buffers remain authoritative
 over disk changes.
 
-The VSIX supplies its bundled source standard library to every loaded project
-and loose document. Source-defined units such as `Std.Tui` therefore work even
-when the opened project is outside the Functional Pascal repository. Projects
-do not need to declare that implementation-owned library as a dependency, and
+The standard-library path reported by `fpas env --json` is supplied to every
+loaded project and loose document. Source-defined units such as `Std.Tui`
+therefore work when the opened project is outside the Functional Pascal
+repository while remaining version-aligned with the selected compiler.
+Projects do not declare that implementation-owned library as a dependency, and
 editor analysis does not write compiled-unit sidecars.
 
 ## Formatting
@@ -352,8 +358,8 @@ applied through an unsafe fallback.
 Program and unit names are excluded because a correct rename would also have to
 rename source files or manifests. Rename is rejected atomically when either the
 declaration or any resolved usage is outside the opened editor folder, so no
-workspace edit can cross that boundary. This includes a standard library
-bundled with an installed VSIX. Generated intrinsic declarations under
+workspace edit can cross that boundary. This includes the selected toolchain's
+installed standard library. Generated intrinsic declarations under
 `lib/api/Std/` are also read-only rename targets, even when the Functional
 Pascal repository itself is open.
 

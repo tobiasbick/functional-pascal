@@ -8,40 +8,39 @@ import {
   ServerOptions
 } from "vscode-languageclient/node";
 
-import { resolveServerPath } from "./serverPath";
-import { resolveStandardLibraryPath } from "./standardLibraryPath";
+import { ToolchainResolver } from "./toolchain";
 
 /** Owns exactly one Functional Pascal language-client process. */
 export class LanguageClientController {
   private client: LanguageClient | undefined;
-  private serverPath: string | undefined;
+  private executable: string | undefined;
 
   public constructor(
-    private readonly context: vscode.ExtensionContext,
+    private readonly toolchain: ToolchainResolver,
     private readonly outputChannel: vscode.LogOutputChannel
   ) {}
 
   /** Starts the language client unless it is already running. */
   public async start(): Promise<string> {
-    if (this.client !== undefined && this.serverPath !== undefined) {
-      return this.serverPath;
+    if (this.client !== undefined && this.executable !== undefined) {
+      return this.executable;
     }
 
-    const serverPath = resolveServerPath(this.context);
-    const standardLibraryPath = resolveStandardLibraryPath(this.context);
+    const toolchain = await this.toolchain.resolve();
     const workspaceDirectory = vscode.workspace.workspaceFolders?.find(
       (folder) => folder.uri.scheme === "file"
     )?.uri.fsPath;
     const serverOptions: ServerOptions = {
-      command: serverPath,
+      command: toolchain.executable,
+      args: ["lsp"],
       options: {
-        cwd: workspaceDirectory ?? path.dirname(serverPath)
+        cwd: workspaceDirectory ?? path.dirname(toolchain.executable)
       }
     };
     const clientOptions: LanguageClientOptions = {
       documentSelector: [{ scheme: "file", language: "fpas" }],
       initializationOptions: {
-        standardLibraryUri: vscode.Uri.file(standardLibraryPath).toString()
+        standardLibraryUri: vscode.Uri.file(toolchain.standardLibrary).toString()
       },
       outputChannel: this.outputChannel,
       revealOutputChannelOn: RevealOutputChannelOn.Never
@@ -60,18 +59,18 @@ export class LanguageClientController {
       throw error;
     }
     this.client = client;
-    this.serverPath = serverPath;
+    this.executable = toolchain.executable;
     this.outputChannel.appendLine(
-      `Functional Pascal language server started: ${serverPath}`
+      `Functional Pascal language server started: ${toolchain.executable} lsp`
     );
-    return serverPath;
+    return toolchain.executable;
   }
 
   /** Stops the current language client and waits for its child process to exit. */
   public async stop(): Promise<void> {
     const client = this.client;
     this.client = undefined;
-    this.serverPath = undefined;
+    this.executable = undefined;
     if (client === undefined) {
       return;
     }

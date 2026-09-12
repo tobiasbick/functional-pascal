@@ -100,6 +100,8 @@ pub(crate) enum HelpTopic {
     Build,
     Run,
     Debug,
+    Env,
+    Lsp,
     Check,
     Fmt,
     Test,
@@ -139,6 +141,10 @@ pub(crate) enum ResolvedCli {
     Check(CliConfig),
     Fmt(FmtCliConfig),
     Test(TestCliConfig),
+    /// Print the selected toolchain environment as JSON.
+    Environment,
+    /// Serve Language Server Protocol messages over standard I/O.
+    Lsp,
     Help(HelpTopic),
     Version,
 }

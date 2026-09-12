@@ -2,8 +2,9 @@
 
 This is the local editor extension for Functional Pascal. It provides `.fpas`
 language detection, TextMate syntax highlighting, comment and bracket
-configuration, indentation, and folding. Its bundled native `fpas-lsp` server
-provides parser and semantic diagnostics, canonical whole-document formatting,
+configuration, indentation, and folding. The selected installed toolchain's
+`fpas lsp` server provides parser and semantic diagnostics, canonical
+whole-document formatting,
 document symbols, hover, same- and cross-unit go to definition, find all
 references, workspace symbol search, document highlights, go to type
 definition, syntax-aware selection expansion, validated project-wide rename,
@@ -13,9 +14,9 @@ builds and tests the extension without a Marketplace. Compiler-backed semantic
 tokens distinguish resolved declarations and references, and an `F2001` or
 `F2003` diagnostic can offer a safe import quick fix when exactly one public,
 accessible unit provides the missing type or callable.
-The same VSIX bundles the host-native `fpas` CLI for project check, build, run,
-test, format, and format-check commands, Problems integration, and the Testing
-view.
+The extension resolves `fpas` from `functionalPascal.executablePath` or `PATH`
+for project check, build, run, test, format, and format-check commands, Problems
+integration, and the Testing view.
 The extension also contributes the `fpas` debugger. Press **F5** with a
 `.fpas`, `.fpasprj`, or `.fpasworkspace` editor active. For a `.fpas` program
 main, zero-configuration launch discovers and debugs the owning `.fpasprj`, so
@@ -26,8 +27,8 @@ images additionally require `sourceRoot`. Set source breakpoints in an `.fpas`
 editor gutter or with **F9**. Breakpoints, stepping, stack frames, scopes,
 variables, read-only watches/hover/Debug Console evaluation, conditional
 breakpoints, exact positive-integer hit conditions, non-stopping logpoints,
-and program output use the bundled CLI's DAP adapter; the
-adapter supplies the bundled source standard library automatically. The
+and program output use the selected CLI's DAP adapter and its adjacent source
+standard library. The
 language server remains responsible only for static editor features.
 Use the Debug toolbar for Continue, Pause, Step Into, Step Over, Step Out, and
 Stop. While stopped, **Functional Pascal: Debug: Force Return** completes the
@@ -144,20 +145,18 @@ Then build the VSIX:
 npm run package --prefix editors/vscode
 ```
 
-The command runs the extension tests, builds `fpas-lsp` and `fpas` in Cargo
-release mode, stages both current-host binaries plus the authoritative source-standard-library
-manifest and `.fpas` files, creates the target-labelled archive, and tests an
-external FPAS project through the server extracted from that archive. Derived
-`.fpascu` files are excluded. It produces:
+The command runs the extension tests, creates a platform-independent archive,
+and verifies that no compiler, language-server binary, or standard-library
+source is included. It produces:
 
 ```text
-editors/vscode/dist/functional-pascal-<version>-<host-target>.vsix
+editors/vscode/dist/functional-pascal-<version>.vsix
 ```
 
-For example, a Windows x64 host produces a `win32-x64` package and a Linux x64
-host produces a `linux-x64` package. There is no cross-compilation or release
-matrix; build the VSIX on each operating system and architecture where it will
-be used.
+Install an FPAS distribution containing `fpas`, `fpas-lsp`, `fpas-runner`, and
+`lib/` separately. Put its directory on `PATH`, or use **Functional Pascal:
+Select FPAS Executable**. The corresponding machine-scoped
+`functionalPascal.executablePath` setting overrides `PATH`.
 
 Install the resulting file through **Extensions: Install from VSIX** in a
 VS Code-compatible desktop editor. No registry login or publication is
@@ -177,7 +176,7 @@ uses the same formatter without an FPAS-specific setting.
 
 Open the Outline view to inspect FPAS declarations. A contiguous standalone `//` block immediately
 before a declaration is Markdown documentation; hover and resolved completion items display it.
-The packaged standard library also contains editor-only declarations for Rust-backed intrinsic
+The selected toolchain's standard library contains editor-only declarations for Rust-backed intrinsic
 `Std.*` units. They provide the same hover, completion, signature, and definition experience and
 open as ordinary read-only `.fpas` files without becoming part of program compilation.
 Hover a declaration or
@@ -220,14 +219,15 @@ manifest changes refresh affected analysis, references, and rename results
 without a language-server restart, while unsaved open buffers remain
 authoritative.
 
-The installed VSIX supplies its own source standard library to the server, so
-`Std.Tui` and the other source-defined `Std.*` units do not depend on a global
-compiler installation or a `lib/` directory in the opened project.
+The extension obtains the source standard-library directory from
+`fpas env --json`. `Std.Tui` and the other source-defined `Std.*` units
+therefore come from the same installed toolchain used for builds and debugging,
+not from the opened project or the VSIX.
 
 Select **Functional Pascal: Select Project or Workspace** before using project
 commands in a folder containing multiple manifests. The remembered selection
 appears in the status bar. **Check Project**, **Build Project**, **Test
-Project**, **Format Project**, and **Check Project Formatting** run the bundled
+Project**, **Format Project**, and **Check Project Formatting** run the selected
 CLI without a shell and publish compiler failures in Problems. **Cancel Active
 Operation** stops a running non-interactive command. **Run Project in Terminal**
 starts the normal interactive CLI in an editor terminal and accepts program
@@ -246,8 +246,9 @@ Run **Functional Pascal: Show Output** from the Command Palette. The
 Functional Pascal extension activated.
 ```
 
-The test command builds `target/debug/fpas-lsp[.exe]`, starts it from a real
-VS Code Extension Host, verifies diagnostics, formatting, document symbols,
+The test command builds `target/debug/fpas[.exe]`, adds that directory to the
+Extension Host's test-only `PATH`, and starts `fpas lsp` from a real VS Code
+Extension Host. It verifies diagnostics, formatting, document symbols,
 hover, cross-unit definition and type definition, workspace symbols, document
 highlights, references, rename, rich completion, signature help, snippets, and
 a safe auto-import, semantic tokens, an applied diagnostic quick fix, project

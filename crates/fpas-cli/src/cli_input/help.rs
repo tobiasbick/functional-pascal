@@ -13,6 +13,8 @@ Usage:
     fpas check [<path>]                  Type-check without running
     fpas test [<path>]                   Run `*_test.fpas` programs
     fpas fmt [<path>...]                 Format sources in place
+    fpas env --json                      Print installed toolchain paths
+    fpas lsp                             Serve LSP over standard I/O
 
 Options:
   -h, --help      Print this help
@@ -28,6 +30,7 @@ Examples:
   fpas check my-app.fpasprj
   fpas test --report json tests/
   fpas fmt --check --list
+  fpas env --json
 
 ";
 
@@ -260,6 +263,41 @@ Examples:
 
 ";
 
+const ENV_HELP: &str = "\
+Print the installed Functional Pascal toolchain as JSON.
+
+Usage:
+  fpas env --json
+
+The stable schema reports `schemaVersion`, `version`, the absolute `fpas`
+executable path, and the adjacent source standard-library directory.
+
+Options:
+  --json       Write the machine-readable report to stdout
+  -h, --help   Print this help
+
+Examples:
+  fpas env --json
+
+";
+
+const LSP_HELP: &str = "\
+Serve the Functional Pascal Language Server Protocol over standard I/O.
+
+Usage:
+  fpas lsp
+
+The command is intended for editor clients. It reads protocol messages from
+stdin, writes protocol messages to stdout, and writes logs to stderr.
+
+Options:
+  -h, --help   Print this help
+
+Examples:
+  fpas lsp
+
+";
+
 /// Returns stdout help text for a command or subcommand.
 pub(crate) const fn help_text(topic: HelpTopic) -> &'static str {
     match topic {
@@ -271,6 +309,8 @@ pub(crate) const fn help_text(topic: HelpTopic) -> &'static str {
         HelpTopic::Build => BUILD_HELP,
         HelpTopic::Run => RUN_HELP,
         HelpTopic::Debug => DEBUG_HELP,
+        HelpTopic::Env => ENV_HELP,
+        HelpTopic::Lsp => LSP_HELP,
         HelpTopic::Check => CHECK_HELP,
         HelpTopic::Fmt => FMT_HELP,
         HelpTopic::Test => TEST_HELP,

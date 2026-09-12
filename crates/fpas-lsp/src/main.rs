@@ -12,8 +12,7 @@
 
 use std::path::PathBuf;
 
-#[tokio::main]
-async fn main() {
+fn main() {
     tracing_subscriber::fmt()
         .with_ansi(false)
         .with_writer(std::io::stderr)
@@ -25,6 +24,9 @@ async fn main() {
         PathBuf::from(".")
     });
     tracing::info!("Functional Pascal language server starting");
-    fpas_lsp::serve_stdio(initial_root).await;
+    if let Err(error) = fpas_lsp::serve_stdio_blocking(initial_root) {
+        tracing::error!(%error, "language server failed");
+        std::process::exit(1);
+    }
     tracing::info!("Functional Pascal language server stopped");
 }

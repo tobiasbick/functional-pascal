@@ -3,88 +3,45 @@ import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
-import {
-  cliExecutableName,
-  resolveHostTarget,
-  serverExecutableName
-} from "./package/host.mjs";
-import { smokePackagedCli } from "./package/cli-smoke.mjs";
-import { clearStagedCli, stageCli } from "./package/stage-cli.mjs";
-import { smokePackagedServer } from "./package/lsp-smoke.mjs";
-import {
-  clearStagedServers,
-  stageServer
-} from "./package/stage-server.mjs";
-import {
-  clearStagedStandardLibrary,
-  stageStandardLibrary
-} from "./package/stage-standard-library.mjs";
 import { runTests } from "./run-tests.mjs";
 import { verifyPackage } from "./verify-package.mjs";
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const extensionRoot = path.resolve(scriptDirectory, "..");
-const repositoryRoot = path.resolve(extensionRoot, "..", "..");
 const distDirectory = path.join(extensionRoot, "dist");
 const manifest = JSON.parse(
   await readFile(path.join(extensionRoot, "package.json"), "utf8")
 );
-const hostTarget = resolveHostTarget(process.platform, process.arch);
-const executableName = serverExecutableName(process.platform);
-const cliName = cliExecutableName(process.platform);
 const outputPath = path.join(
   distDirectory,
-  `functional-pascal-${manifest.version}-${hostTarget}.vsix`
+  `functional-pascal-${manifest.version}.vsix`
 );
 
 function printHelp() {
   console.log(`Usage:
   npm run package --prefix editors/vscode
 
-Builds, tests, stages, packages, and verifies one host-native Functional Pascal VSIX.
+Builds, tests, packages, and verifies one platform-independent Functional Pascal VSIX.
+The installed extension resolves an FPAS toolchain from its executable setting or PATH.
 
 Output:
-  editors/vscode/dist/functional-pascal-<version>-<host-target>.vsix
+  editors/vscode/dist/functional-pascal-<version>.vsix
 
-The command is non-interactive, does not publish, and replaces stale staged targets.`);
+The command is non-interactive and does not publish.`);
 }
 
-function runCommand(command, args, cwd) {
+function runCommand(command, args) {
   const result = spawnSync(command, args, {
-    cwd,
+    cwd: extensionRoot,
     encoding: "utf8",
     stdio: "inherit"
   });
-
-  if (result.error) {
-    throw result.error;
-  }
+  if (result.error) throw result.error;
   if (result.status !== 0) {
     throw new Error(
       `Command failed with status ${result.status}: ${command} ${args.join(" ")}`
     );
   }
-}
-
-function cargoTargetDirectory() {
-  const result = spawnSync(
-    "cargo",
-    ["metadata", "--format-version", "1", "--no-deps"],
-    {
-      cwd: repositoryRoot,
-      encoding: "utf8",
-      windowsHide: true
-    }
-  );
-  if (result.error) {
-    throw result.error;
-  }
-  if (result.status !== 0) {
-    throw new Error(
-      `Cannot locate the Cargo target directory: ${result.stderr.trim()}`
-    );
-  }
-  return JSON.parse(result.stdout).target_directory;
 }
 
 const arguments_ = process.argv.slice(2);
@@ -98,45 +55,12 @@ if (arguments_.length > 0) {
   );
 }
 
-const relativeDist = path.relative(extensionRoot, distDirectory);
-if (relativeDist !== "dist") {
+if (path.relative(extensionRoot, distDirectory) !== "dist") {
   throw new Error(`Refusing to clean unexpected output directory: ${distDirectory}`);
 }
 await rm(distDirectory, { recursive: true, force: true });
 await mkdir(distDirectory, { recursive: true });
-await clearStagedServers(extensionRoot);
-await clearStagedCli(extensionRoot);
-await clearStagedStandardLibrary(extensionRoot);
 await runTests();
-runCommand(
-  "cargo",
-  ["build", "--release", "-p", "fpas-lsp", "-p", "fpas-cli"],
-  repositoryRoot
-);
-const targetDirectory = cargoTargetDirectory();
-const releaseServer = path.join(
-  targetDirectory,
-  "release",
-  executableName
-);
-await stageServer({
-  extensionRoot,
-  sourcePath: releaseServer,
-  hostTarget,
-  executableName,
-  platform: process.platform
-});
-await stageCli({
-  extensionRoot,
-  sourcePath: path.join(targetDirectory, "release", cliName),
-  hostTarget,
-  executableName: cliName,
-  platform: process.platform
-});
-await stageStandardLibrary({
-  extensionRoot,
-  sourceRoot: path.join(repositoryRoot, "lib")
-});
 
 const vsceScript = path.join(
   extensionRoot,
@@ -148,31 +72,14 @@ const vsceScript = path.join(
 runCommand(process.execPath, [
   vsceScript,
   "package",
-  "--target",
-  hostTarget,
-  "--ignore-other-target-folders",
   "--no-dependencies",
   "--out",
   outputPath
-], extensionRoot);
+]);
 
-verifyPackage(outputPath, { hostTarget, executableName });
-await smokePackagedServer({
-  vsixPath: outputPath,
-  hostTarget,
-  executableName,
-  platform: process.platform
-});
-smokePackagedCli({
-  vsixPath: outputPath,
-  hostTarget,
-  executableName: cliName,
-  platform: process.platform
-});
-
+verifyPackage(outputPath);
 const output = await stat(outputPath);
 if (!output.isFile() || output.size === 0) {
   throw new Error(`VSIX was not created: ${outputPath}`);
 }
-
-console.log(`Built and verified ${hostTarget} VSIX: ${outputPath}`);
+console.log(`Built and verified toolchain-independent VSIX: ${outputPath}`);

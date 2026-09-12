@@ -182,25 +182,29 @@
       ]
     },
     {
-      "path": "editors/vscode/src/serverPath.ts",
+      "path": "editors/vscode/src/cliPath.ts",
       "symbols": [
-        "resolveServerPath",
-        "resolveHostTarget",
+        "resolveCliPath",
+        "resolveCliCandidate",
         "vscode.env.remoteName"
+      ]
+    },
+    {
+      "path": "editors/vscode/src/toolchain.ts",
+      "symbols": [
+        "class ToolchainResolver",
+        "parseToolchainEnvironment",
+        "env",
+        "--json"
       ]
     }
   ],
-  "hostPolicy": {
-    "localTargets": [
-      "win32-x64",
-      "win32-arm64",
-      "linux-x64",
-      "linux-arm64",
-      "darwin-x64",
-      "darwin-arm64"
-    ],
-    "unsupportedTargetMessage": "Unsupported Functional Pascal VSIX host target: {platform}-{arch}. Build on Windows, Linux, or macOS using an x64 or arm64 host.",
+  "toolchainPolicy": {
+    "configuration": "functionalPascal.executablePath",
+    "fallback": "PATH",
+    "environmentCommand": ["env", "--json"],
+    "languageServerCommand": ["lsp"],
     "remoteHost": "unsupported",
-    "remoteHostMessage": "Functional Pascal language-server support is unavailable in remote extension hosts. Open the workspace in a local desktop editor; remote SSH, WSL, and container extension hosts are not supported by this hobby-project build."
+    "remoteHostMessage": "Functional Pascal tooling is unavailable in remote extension hosts. Install FPAS and the extension in the same local desktop environment."
   }
 }

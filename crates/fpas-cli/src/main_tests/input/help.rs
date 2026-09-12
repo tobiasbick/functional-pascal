@@ -36,6 +36,8 @@ fn run_cli_subcommand_help_is_focused_and_includes_examples() {
         ("check", "fpas check [--std-lib", "fpas test ["),
         ("fmt", "fpas fmt [<path>...]", "fpas test ["),
         ("test", "fpas test [--std-lib", "fpas fmt --stdout"),
+        ("env", "fpas env --json", "fpas test ["),
+        ("lsp", "fpas lsp", "fpas test ["),
     ] {
         let (exit_code, stdout, stderr) =
             run_cli_args_and_capture_output(&[String::from(command), String::from("--help")], &cwd);

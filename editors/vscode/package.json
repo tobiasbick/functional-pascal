@@ -109,6 +109,11 @@
         "category": "Functional Pascal"
       },
       {
+        "command": "functionalPascal.selectExecutable",
+        "title": "Select FPAS Executable",
+        "category": "Functional Pascal"
+      },
+      {
         "command": "functionalPascal.selectProject",
         "title": "Select Project or Workspace",
         "category": "Functional Pascal"
@@ -247,6 +252,12 @@
     "configuration": {
       "title": "Functional Pascal",
       "properties": {
+        "functionalPascal.executablePath": {
+          "type": "string",
+          "default": "",
+          "scope": "machine",
+          "description": "Absolute path to the installed fpas executable. When empty, the extension searches PATH."
+        },
         "functionalPascal.testTimeoutSeconds": {
           "type": "number",
           "minimum": 1,
@@ -261,7 +272,6 @@
     "test": "node scripts/run-tests.mjs",
     "verify:contracts": "node scripts/verify-contracts.mjs",
     "verify:grammar": "node scripts/verify-grammar.mjs",
-    "verify:packaging": "node scripts/verify-packaging.mjs",
     "package": "node scripts/package.mjs",
     "vscode:prepublish": "npm run compile"
   },

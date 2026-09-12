@@ -2,6 +2,13 @@ import * as vscode from "vscode";
 
 import { LanguageClientController } from "./languageClient";
 import { registerDebugger } from "./debugger/adapter";
+import { EXECUTABLE_PATH_SETTING } from "./cliPath";
+import { ToolchainResolver } from "./toolchain";
+import {
+  offerToolchainRecovery,
+  SELECT_EXECUTABLE_COMMAND,
+  selectExecutable
+} from "./toolchainSelection";
 import { WorkflowController, WORKFLOW_COMMANDS } from "./workflow/controller";
 import type { WorkflowTestStatus } from "./workflow/model";
 import type { ParsedWorkflowDiagnostic } from "./workflow/model";
@@ -9,7 +16,7 @@ import type { ParsedWorkflowDiagnostic } from "./workflow/model";
 /** Command that reveals the Functional Pascal output channel. */
 export const SHOW_OUTPUT_COMMAND = "functionalPascal.showOutput";
 
-/** Command that stops and starts the bundled language server. */
+/** Command that stops and starts the selected toolchain's language server. */
 export const RESTART_LANGUAGE_SERVER_COMMAND =
   "functionalPascal.restartLanguageServer";
 
@@ -57,9 +64,10 @@ export async function activate(
     log: true
   });
   outputChannel.appendLine(ACTIVATION_MESSAGE);
-  languageClient = new LanguageClientController(context, outputChannel);
-  const workflow = new WorkflowController(context, outputChannel);
-  registerDebugger(context);
+  const toolchain = new ToolchainResolver();
+  languageClient = new LanguageClientController(toolchain, outputChannel);
+  const workflow = new WorkflowController(context, outputChannel, toolchain);
+  registerDebugger(context, toolchain);
   const workflowApi = {
     commands: Object.values(WORKFLOW_COMMANDS),
     cliPath: () => workflow.cliPath(),
@@ -87,11 +95,36 @@ export async function activate(
           `Functional Pascal language server restart failed: ${errorMessage(error)}`
         );
         outputChannel.show(true);
+        void offerToolchainRecovery(error);
+      }
+    }
+  );
+  const selectToolchain = vscode.commands.registerCommand(
+    SELECT_EXECUTABLE_COMMAND,
+    selectExecutable
+  );
+  const configurationChanged = vscode.workspace.onDidChangeConfiguration(
+    async (event) => {
+      if (!event.affectsConfiguration(EXECUTABLE_PATH_SETTING)) return;
+      toolchain.invalidate();
+      try {
+        await languageClient?.restart();
+      } catch (error) {
+        outputChannel.appendLine(
+          `Functional Pascal toolchain change failed: ${errorMessage(error)}`
+        );
+        void offerToolchainRecovery(error);
       }
     }
   );
 
-  context.subscriptions.push(outputChannel, showOutput, restartLanguageServer);
+  context.subscriptions.push(
+    outputChannel,
+    showOutput,
+    restartLanguageServer,
+    selectToolchain,
+    configurationChanged
+  );
 
   try {
     const languageServerPath = await languageClient.start();
@@ -106,6 +139,7 @@ export async function activate(
     outputChannel.appendLine(
       `Functional Pascal language server did not start: ${message}`
     );
+    void offerToolchainRecovery(error);
     return {
       activationMessage: ACTIVATION_MESSAGE,
       languageServerStarted: false,

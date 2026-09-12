@@ -11,7 +11,7 @@ const FORMAT_COMMAND = "functionalPascal.formatProject";
 const FORMAT_CHECK_COMMAND = "functionalPascal.checkProjectFormatting";
 const RUN_COMMAND = "functionalPascal.runProject";
 
-/** Verifies project workflows against the real bundled-development CLI. */
+/** Verifies project workflows against the real PATH-resolved development CLI. */
 export async function verifyWorkflowHost(
   api: FunctionalPascalExtensionApi
 ): Promise<void> {

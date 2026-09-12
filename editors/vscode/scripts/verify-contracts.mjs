@@ -2,11 +2,6 @@ import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import {
-  resolveHostTarget,
-  supportedHostTargets
-} from "./package/host.mjs";
-
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const extensionRoot = path.resolve(scriptDirectory, "..");
 const repositoryRoot = path.resolve(extensionRoot, "..", "..");
@@ -43,23 +38,6 @@ function assertSameFiles(actual, expected) {
     JSON.stringify(actual) === JSON.stringify(expected),
     `Fixture index mismatch.\nExpected: ${expected.join(", ")}\nActual: ${actual.join(", ")}`
   );
-}
-
-function assertLocalExtensionHost(hostPolicy, remoteName) {
-  if (remoteName !== undefined) {
-    throw new Error(hostPolicy.remoteHostMessage);
-  }
-}
-
-function assertFailureMessage(action, expectedMessage) {
-  try {
-    action();
-  } catch (error) {
-    assert(error instanceof Error, "Contract failure must throw an Error");
-    assert(error.message === expectedMessage, `Unexpected contract error: ${error.message}`);
-    return;
-  }
-  throw new Error(`Contract action did not fail: ${expectedMessage}`);
 }
 
 /** Verifies the Phase 1 protocol contract and fixture inventory. */
@@ -129,54 +107,33 @@ export async function verifyContracts() {
       );
     }
   }
-  const serverPathSource = await readFile(
-    path.join(extensionRoot, "src", "serverPath.ts"),
+  const cliPathSource = await readFile(
+    path.join(extensionRoot, "src", "cliPath.ts"),
     "utf8"
   );
   assert(
-    /"target",\s*"debug"/u.test(serverPathSource) &&
-      /"server",/u.test(serverPathSource),
-    "Server lookup must retain explicit development and packaged paths"
+    cliPathSource.includes(contract.toolchainPolicy.configuration) &&
+      cliPathSource.includes("process.env.PATH"),
+    "Toolchain lookup must prefer the configured executable and otherwise search PATH"
+  );
+  const toolchainSource = await readFile(
+    path.join(extensionRoot, "src", "toolchain.ts"),
+    "utf8"
   );
   assert(
-    !/(?:process\.env\.PATH|execFile|spawnSync|which|where\.exe)/u.test(
-      serverPathSource
-    ),
-    "Server lookup must never search the system PATH"
+    toolchainSource.includes('execFileAsync(executable, ["env", "--json"]'),
+    "Toolchain validation must use the machine-readable environment command"
   );
 
   assert(
-    contract.hostPolicy.localTargets.length > 0,
-    "At least one local native host target must be contracted"
-  );
-  assertSameFiles(
-    supportedHostTargets(),
-    [...contract.hostPolicy.localTargets].sort()
+    contract.toolchainPolicy.fallback === "PATH" &&
+      contract.toolchainPolicy.languageServerCommand[0] === "lsp",
+    "The extension must use one installed toolchain for CLI and LSP"
   );
   assert(
-    contract.hostPolicy.unsupportedTargetMessage.includes("{platform}-{arch}")
-      && contract.hostPolicy.unsupportedTargetMessage.includes("Build on"),
-    "Unsupported host targets need an actionable build message"
-  );
-  assert(
-    contract.hostPolicy.remoteHost === "unsupported"
-      && contract.hostPolicy.remoteHostMessage.includes("Open the workspace"),
+    contract.toolchainPolicy.remoteHost === "unsupported"
+      && contract.toolchainPolicy.remoteHostMessage.includes("same local"),
     "Remote-host rejection needs an actionable local-workspace message"
-  );
-  assert(
-    resolveHostTarget("win32", "x64") === "win32-x64",
-    "A supported local host target must resolve unchanged"
-  );
-  assertLocalExtensionHost(contract.hostPolicy, undefined);
-  assertFailureMessage(
-    () => resolveHostTarget("freebsd", "riscv64"),
-    contract.hostPolicy.unsupportedTargetMessage
-      .replace("{platform}", "freebsd")
-      .replace("{arch}", "riscv64")
-  );
-  assertFailureMessage(
-    () => assertLocalExtensionHost(contract.hostPolicy, "ssh-remote"),
-    contract.hostPolicy.remoteHostMessage
   );
 
   const fixtureIndex = await readJson("test/fixtures/fixture-index.json");

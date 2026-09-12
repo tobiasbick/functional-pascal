@@ -27,6 +27,7 @@ export async function verifyManifest() {
     [
       "functionalPascal.showOutput",
       "functionalPascal.restartLanguageServer",
+      "functionalPascal.selectExecutable",
       "functionalPascal.selectProject",
       "functionalPascal.checkProject",
       "functionalPascal.buildProject",
@@ -59,10 +60,16 @@ export async function verifyManifest() {
   assert.ok(
     commands.every((value) => value.category === "Functional Pascal")
   );
+  const configuration = manifest.contributes?.configuration?.properties;
+  assert.deepEqual(configuration?.["functionalPascal.executablePath"], {
+    type: "string",
+    default: "",
+    scope: "machine",
+    description:
+      "Absolute path to the installed fpas executable. When empty, the extension searches PATH."
+  });
   assert.deepEqual(
-    manifest.contributes?.configuration?.properties?.[
-      "functionalPascal.testTimeoutSeconds"
-    ],
+    configuration?.["functionalPascal.testTimeoutSeconds"],
     {
       type: "number",
       minimum: 1,

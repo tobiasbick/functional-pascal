@@ -9,7 +9,6 @@ import { runTests as runExtensionTests } from "@vscode/test-electron";
 import { verifyContracts } from "./verify-contracts.mjs";
 import { verifyGrammar } from "./verify-grammar.mjs";
 import { verifyManifest } from "./verify-manifest.mjs";
-import { verifyPackaging } from "./verify-packaging.mjs";
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const extensionRoot = path.resolve(scriptDirectory, "..");
@@ -44,14 +43,13 @@ function runCommand(command, args) {
 
 /** Runs compilation, manifest checks, and extension-host tests. */
 export async function runTests() {
-  runCommand("cargo", ["build", "-p", "fpas-lsp", "-p", "fpas-cli"]);
+  runCommand("cargo", ["build", "-p", "fpas-cli"]);
   runCommand(process.execPath, [path.join(extensionRoot, "scripts", "compile.mjs")]);
   cleanupTransientFixtures();
   const userDataDirectory = mkdtempSync(path.join(os.tmpdir(), "fpas-vscode-test-"));
   try {
     await verifyManifest();
     await verifyContracts();
-    await verifyPackaging();
     await verifyGrammar();
     await runExtensionTests({
       version: "1.137.0",
@@ -63,7 +61,11 @@ export async function runTests() {
         "extension.test.js"
       ),
       launchArgs: [fixtureRoot, "--disable-extensions", "--disable-workspace-trust",
-        `--user-data-dir=${userDataDirectory}`]
+        `--user-data-dir=${userDataDirectory}`],
+      extensionTestsEnv: {
+        ...process.env,
+        PATH: `${path.resolve(extensionRoot, "..", "..", "target", "debug")}${path.delimiter}${process.env.PATH ?? ""}`
+      }
     });
   } finally {
     rmSync(userDataDirectory, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });

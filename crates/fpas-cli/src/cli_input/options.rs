@@ -71,6 +71,9 @@ pub(super) fn parse_options(mode: CliMode, cli_args: &[String]) -> Result<Parsed
                     CliMode::Test => "fpas test --std-lib ./lib tests/",
                     CliMode::Init => unreachable!("init has its own option parser"),
                     CliMode::Fmt => unreachable!("fmt does not accept --std-lib"),
+                    CliMode::Env | CliMode::Lsp => {
+                        unreachable!("toolchain commands bypass shared option parsing")
+                    }
                 };
                 let path = take_option_value(
                     cli_args,

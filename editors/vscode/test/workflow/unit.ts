@@ -1,14 +1,11 @@
 import assert from "node:assert/strict";
-import fs from "node:fs/promises";
-import os from "node:os";
 import path from "node:path";
 import process from "node:process";
 import * as vscode from "vscode";
 
 import {
-  cliCandidatePath,
   cliExecutableName,
-  resolveCliPath
+  resolveCliCandidate
 } from "../../src/cliPath";
 import {
   operationArguments,
@@ -20,10 +17,7 @@ import {
   parseWorkflowDiagnostics
 } from "../../src/workflow/diagnostics";
 import { parseProgramArguments } from "../../src/workflow/controller";
-import {
-  CliCompatibility,
-  parseCliVersion
-} from "../../src/workflow/cliCompatibility";
+import { parseToolchainEnvironment } from "../../src/toolchain";
 import { WorkflowProcessRunner } from "../../src/workflow/processes";
 import { rememberedProject } from "../../src/workflow/project";
 
@@ -31,22 +25,14 @@ import { rememberedProject } from "../../src/workflow/project";
 export async function verifyWorkflowUnits(): Promise<void> {
   const nativeRoot = path.parse(process.cwd()).root;
   const target = path.join(nativeRoot, "workspace with spaces", "demo.fpasprj");
-  const library = path.join(nativeRoot, "extension with spaces", "standard-library");
-  assert.deepEqual(operationArguments("check", target, library), [
-    "check",
-    "--std-lib",
-    library,
-    target
-  ]);
-  assert.deepEqual(operationArguments("formatCheck", target, library), [
+  assert.deepEqual(operationArguments("check", target), ["check", target]);
+  assert.deepEqual(operationArguments("formatCheck", target), [
     "fmt",
     "--check",
     target
   ]);
-  assert.deepEqual(testRunArguments(target, library, "one test", 3), [
+  assert.deepEqual(testRunArguments(target, "one test", 3), [
     "test",
-    "--std-lib",
-    library,
     "--report",
     "json",
     "--timeout",
@@ -55,10 +41,8 @@ export async function verifyWorkflowUnits(): Promise<void> {
     "one test",
     target
   ]);
-  assert.deepEqual(runArguments(target, library, ["one", "two words"]), [
+  assert.deepEqual(runArguments(target, ["one", "two words"]), [
     "run",
-    "--std-lib",
-    library,
     target,
     "--",
     "one",
@@ -124,30 +108,69 @@ export async function verifyWorkflowUnits(): Promise<void> {
 
   assert.equal(cliExecutableName("win32"), "fpas.exe");
   assert.equal(cliExecutableName("linux"), "fpas");
-  assert.equal(parseCliVersion("fpas 0.0.1\n"), "0.0.1");
-  assert.equal(parseCliVersion("unexpected"), undefined);
-  assert.match(
-    cliCandidatePath("C:\\extension", vscode.ExtensionMode.Production, "win32", "x64"),
-    /cli[\\/]win32-x64[\\/]fpas\.exe$/u
+  const configuredExecutable = path.join(nativeRoot, "FPAS", "fpas.exe");
+  assert.equal(
+    resolveCliCandidate(
+      configuredExecutable,
+      "",
+      "win32",
+      (candidate) => candidate === configuredExecutable
+    ),
+    path.normalize(configuredExecutable)
   );
-  const missingRoot = await fs.mkdtemp(path.join(os.tmpdir(), "fpas-cli-missing-"));
-  try {
-    assert.throws(
-      () =>
-        resolveCliPath({
-          extensionPath: path.join(missingRoot, "editors", "vscode"),
-          extensionMode: vscode.ExtensionMode.Development
-        } as vscode.ExtensionContext),
-      /cargo build -p fpas-cli/u
-    );
-  } finally {
-    await fs.rm(missingRoot, { recursive: true, force: true });
-  }
+  const pathDirectory = path.join(nativeRoot, "Tools", "FPAS");
+  assert.equal(
+    resolveCliCandidate("", pathDirectory, "win32", (candidate) =>
+      candidate === path.join(pathDirectory, "fpas.exe")
+    ),
+    path.join(pathDirectory, "fpas.exe")
+  );
+  assert.throws(
+    () => resolveCliCandidate("", "", "win32", () => false),
+    /was not found on PATH/u
+  );
+  assert.throws(
+    () => resolveCliCandidate("relative/fpas.exe", "", "win32", () => true),
+    /absolute path/u
+  );
+  assert.deepEqual(
+    parseToolchainEnvironment(
+      configuredExecutable,
+      JSON.stringify({
+        schemaVersion: 1,
+        version: "0.0.1",
+        executable: configuredExecutable,
+        standardLibrary: path.join(nativeRoot, "FPAS", "lib")
+      }),
+      () => true
+    ),
+    {
+      executable: configuredExecutable,
+      standardLibrary: path.join(nativeRoot, "FPAS", "lib"),
+      version: "0.0.1"
+    }
+  );
+  assert.throws(
+    () =>
+      parseToolchainEnvironment(
+        configuredExecutable,
+        JSON.stringify({
+          schemaVersion: 1,
+          version: "9.9.9",
+          executable: configuredExecutable,
+          standardLibrary: path.join(nativeRoot, "FPAS", "lib")
+        }),
+        () => true
+      ),
+    /Expected version 0\.0\.1, received 9\.9\.9/u
+  );
+  assert.throws(
+    () => parseToolchainEnvironment(configuredExecutable, "not JSON", () => true),
+    /invalid JSON/u
+  );
 
   const output = { append: () => undefined } as unknown as vscode.LogOutputChannel;
   const runner = new WorkflowProcessRunner(output);
-  const incompatible = new CliCompatibility(() => process.execPath, runner);
-  await assert.rejects(() => incompatible.resolve(), /CLI is incompatible/u);
   const cancellation = new vscode.CancellationTokenSource();
   const pending = runner.run(
     process.execPath,

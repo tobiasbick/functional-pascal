@@ -2,10 +2,9 @@ import path from "node:path";
 
 import * as vscode from "vscode";
 
-import { resolveCliPath } from "../cliPath";
-import { resolveStandardLibraryPath } from "../standardLibraryPath";
+import { ToolchainError, ToolchainResolver } from "../toolchain";
+import { offerToolchainRecovery } from "../toolchainSelection";
 import { operationArguments, runArguments } from "./arguments";
-import { CliCompatibility } from "./cliCompatibility";
 import {
   parseWorkflowDiagnostics,
   publishWorkflowDiagnostics
@@ -41,7 +40,6 @@ export class WorkflowController implements vscode.Disposable {
     50
   );
   private readonly testing: WorkflowTesting;
-  private readonly cli: CliCompatibility;
   private cancellation: vscode.CancellationTokenSource | undefined;
   private unavailableMessage: string | undefined;
   private lastResult:
@@ -54,19 +52,18 @@ export class WorkflowController implements vscode.Disposable {
 
   public constructor(
     private readonly context: vscode.ExtensionContext,
-    private readonly output: vscode.LogOutputChannel
+    private readonly output: vscode.LogOutputChannel,
+    private readonly toolchain: ToolchainResolver
   ) {
     this.selector = new ProjectSelector(context.workspaceState);
     this.runner = new WorkflowProcessRunner(output);
-    this.cli = new CliCompatibility(() => resolveCliPath(context), this.runner);
     this.status.command = WORKFLOW_COMMANDS.selectProject;
     this.status.tooltip = "Select the active Functional Pascal project";
     this.status.show();
     this.testing = new WorkflowTesting(
       this.selector,
       this.runner,
-      () => this.cli.resolve(),
-      () => resolveStandardLibraryPath(context),
+      async () => (await this.toolchain.resolve()).executable,
       async (stderr, cwd) => {
         await publishWorkflowDiagnostics(
           this.diagnostics,
@@ -91,7 +88,7 @@ export class WorkflowController implements vscode.Disposable {
 
   /** Returns the resolved CLI path for extension-host verification. */
   public cliPath(): string {
-    return resolveCliPath(this.context);
+    return this.toolchain.executablePath();
   }
 
   /** Selects one manifest explicitly and refreshes Testing API items. */
@@ -149,7 +146,7 @@ export class WorkflowController implements vscode.Disposable {
           }
           this.status.text = "$(sync~spin) FPAS: Test";
           try {
-            await this.cli.resolve();
+            await this.toolchain.resolve();
             await this.testing.discover();
             await this.testing.runFiles();
           } catch (error) {
@@ -185,12 +182,8 @@ export class WorkflowController implements vscode.Disposable {
       return;
     }
     let cli: string;
-    let standardLibrary = "";
     try {
-      cli = await this.cli.resolve();
-      if (operation !== "format" && operation !== "formatCheck") {
-        standardLibrary = resolveStandardLibraryPath(this.context);
-      }
+      cli = (await this.toolchain.resolve()).executable;
     } catch (error) {
       await this.reportUnavailable(error);
       return;
@@ -203,7 +196,7 @@ export class WorkflowController implements vscode.Disposable {
     this.status.text = `$(sync~spin) FPAS: ${label}`;
     this.status.tooltip = `${label}: ${target.fsPath}`;
     this.output.appendLine(
-      `\n> fpas ${operationArguments(operation, target.fsPath, standardLibrary)
+      `\n> fpas ${operationArguments(operation, target.fsPath)
         .map(renderArgument)
         .join(" ")}`
     );
@@ -212,7 +205,7 @@ export class WorkflowController implements vscode.Disposable {
     try {
       const result = await this.runner.run(
         cli,
-        operationArguments(operation, target.fsPath, standardLibrary),
+        operationArguments(operation, target.fsPath),
         cwd,
         cancellation.token
       );
@@ -270,12 +263,11 @@ export class WorkflowController implements vscode.Disposable {
       programArguments = parseProgramArguments(input);
     }
     try {
-      const cli = await this.cli.resolve();
-      const standardLibrary = resolveStandardLibraryPath(this.context);
+      const cli = (await this.toolchain.resolve()).executable;
       const terminal = vscode.window.createTerminal({
         name: `FPAS: ${path.basename(target.fsPath)}`,
         shellPath: cli,
-        shellArgs: runArguments(target.fsPath, standardLibrary, programArguments),
+        shellArgs: runArguments(target.fsPath, programArguments),
         cwd: path.dirname(target.fsPath),
         isTransient: true
       });
@@ -307,7 +299,11 @@ export class WorkflowController implements vscode.Disposable {
     this.output.show(true);
     if (this.unavailableMessage !== message) {
       this.unavailableMessage = message;
-      await vscode.window.showErrorMessage(message);
+      if (error instanceof ToolchainError) {
+        await offerToolchainRecovery(error);
+      } else {
+        await vscode.window.showErrorMessage(message);
+      }
     }
   }
 }

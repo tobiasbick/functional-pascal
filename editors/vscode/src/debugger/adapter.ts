@@ -4,8 +4,8 @@ import path from "node:path";
 
 import * as vscode from "vscode";
 
-import { resolveCliPath } from "../cliPath";
-import { resolveStandardLibraryPath } from "../standardLibraryPath";
+import { ToolchainResolver } from "../toolchain";
+import { offerToolchainRecovery } from "../toolchainSelection";
 import { registerDictionaryCommands } from "./dictionaryCommands";
 import { registerForcedReturnCommand } from "./forcedReturnCommand";
 import { registerLiveReloadCommands } from "./liveReloadCommand";
@@ -19,14 +19,17 @@ import { debugTargetForDocument } from "./projectTarget";
 import { DebugTerminalManager } from "./terminal/session";
 
 /** Register the Functional Pascal debug type without changing LSP ownership. */
-export function registerDebugger(context: vscode.ExtensionContext): void {
+export function registerDebugger(
+  context: vscode.ExtensionContext,
+  toolchain: ToolchainResolver
+): void {
   const provider = vscode.debug.registerDebugConfigurationProvider(
     "fpas",
     new FunctionalPascalDebugConfigurationProvider()
   );
   const factory = vscode.debug.registerDebugAdapterDescriptorFactory(
     "fpas",
-    new FunctionalPascalDebugAdapterFactory(context)
+    new FunctionalPascalDebugAdapterFactory(toolchain)
   );
   registerDictionaryCommands(context);
   registerForcedReturnCommand(context);
@@ -92,18 +95,22 @@ export class FunctionalPascalDebugConfigurationProvider
 class FunctionalPascalDebugAdapterFactory
   implements vscode.DebugAdapterDescriptorFactory
 {
-  constructor(private readonly context: vscode.ExtensionContext) {}
+  constructor(private readonly toolchain: ToolchainResolver) {}
 
-  createDebugAdapterDescriptor(
+  async createDebugAdapterDescriptor(
     session: vscode.DebugSession
-  ): vscode.ProviderResult<vscode.DebugAdapterDescriptor> {
-    const executable = resolveCliPath(this.context);
-    const standardLibrary = resolveStandardLibraryPath(this.context);
-    return new vscode.DebugAdapterExecutable(
-      executable,
-      debugAdapterArguments(session.configuration, standardLibrary),
-      { cwd: session.configuration.cwd }
-    );
+  ): Promise<vscode.DebugAdapterDescriptor> {
+    try {
+      const toolchain = await this.toolchain.resolve();
+      return new vscode.DebugAdapterExecutable(
+        toolchain.executable,
+        debugAdapterArguments(session.configuration),
+        { cwd: session.configuration.cwd }
+      );
+    } catch (error) {
+      void offerToolchainRecovery(error);
+      throw error;
+    }
   }
 }
 
@@ -117,13 +124,10 @@ export function unsupportedDebugRequestReason(request: unknown): string | undefi
 
 /** Build deterministic CLI arguments for one VS Code launch configuration. */
 export function debugAdapterArguments(
-  configuration: vscode.DebugConfiguration,
-  standardLibrary: string
+  configuration: vscode.DebugConfiguration
 ): string[] {
   const args = [
     "debug",
-    "--std-lib",
-    standardLibrary,
     String(configuration.program),
     "--protocol",
     "dap"

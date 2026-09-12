@@ -51,3 +51,16 @@ pub async fn serve_stdio(initial_root: PathBuf) {
     let (service, socket) = create_service(initial_root);
     Server::new(stdin, stdout, socket).serve(service).await;
 }
+
+/// Starts the standard-I/O language server and blocks until the client exits.
+///
+/// # Errors
+///
+/// Returns an error when the Tokio runtime cannot be created.
+pub fn serve_stdio_blocking(initial_root: PathBuf) -> std::io::Result<()> {
+    let runtime = tokio::runtime::Builder::new_multi_thread()
+        .enable_all()
+        .build()?;
+    runtime.block_on(serve_stdio(initial_root));
+    Ok(())
+}

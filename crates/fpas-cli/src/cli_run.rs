@@ -56,6 +56,10 @@ pub(crate) fn run_cli(
                 Err(exit_code) => exit_code,
             }
         }
+        ResolvedCli::Environment => {
+            crate::cli_environment::write_environment(stdout.as_mut(), stderr)
+        }
+        ResolvedCli::Lsp => crate::cli_lsp::run_language_server(cwd, stderr),
         ResolvedCli::Build(config) => {
             let library = match crate::standard_library::resolve_standard_library(
                 config.standard_library.as_deref(),

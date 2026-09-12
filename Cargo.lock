@@ -446,6 +446,7 @@ dependencies = [
  "fpas-diagnostics",
  "fpas-fmt",
  "fpas-lexer",
+ "fpas-lsp",
  "fpas-parser",
  "fpas-program",
  "fpas-project",

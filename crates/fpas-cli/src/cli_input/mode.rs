@@ -8,6 +8,8 @@ pub(super) enum CliMode {
     Build,
     Run,
     Debug,
+    Env,
+    Lsp,
     Check,
     Fmt,
     Test,
@@ -20,14 +22,31 @@ impl CliMode {
             Self::Build => HelpTopic::Build,
             Self::Run => HelpTopic::Run,
             Self::Debug => HelpTopic::Debug,
+            Self::Env => HelpTopic::Env,
+            Self::Lsp => HelpTopic::Lsp,
             Self::Check => HelpTopic::Check,
             Self::Fmt => HelpTopic::Fmt,
             Self::Test => HelpTopic::Test,
         }
     }
+
+    pub(super) const fn name(self) -> &'static str {
+        match self {
+            Self::Init => "init",
+            Self::Build => "build",
+            Self::Run => "run",
+            Self::Debug => "debug",
+            Self::Env => "env",
+            Self::Lsp => "lsp",
+            Self::Check => "check",
+            Self::Fmt => "fmt",
+            Self::Test => "test",
+        }
+    }
 }
 
-const SUBCOMMANDS: &str = "`init`, `build`, `run`, `debug`, `check`, `test`, or `fmt`";
+const SUBCOMMANDS: &str =
+    "`init`, `build`, `run`, `debug`, `check`, `test`, `fmt`, `env`, or `lsp`";
 
 pub(super) fn parse_cli_mode(cli_args: &[String]) -> Result<(CliMode, &[String]), String> {
     let Some(first) = cli_args.first() else {
@@ -42,6 +61,8 @@ pub(super) fn parse_cli_mode(cli_args: &[String]) -> Result<(CliMode, &[String])
         "test" => Ok((CliMode::Test, &cli_args[1..])),
         "run" => Ok((CliMode::Run, &cli_args[1..])),
         "debug" => Ok((CliMode::Debug, &cli_args[1..])),
+        "env" => Ok((CliMode::Env, &cli_args[1..])),
+        "lsp" => Ok((CliMode::Lsp, &cli_args[1..])),
         _ => Err(unexpected_cli_token_error(first)),
     }
 }
@@ -62,6 +83,14 @@ pub(super) fn usage_error(mode: CliMode) -> String {
         }
         CliMode::Debug => {
             "Usage: fpas debug [<file.fpas | file.fpasprj | file.fpasworkspace | file.fpascp>] --protocol <jsonl | dap> [-- <args>...]\n  help: `fpas debug --help` shows options and examples."
+                .to_string()
+        }
+        CliMode::Env => {
+            "Usage: fpas env --json\n  help: `fpas env --help` shows the machine-readable toolchain contract."
+                .to_string()
+        }
+        CliMode::Lsp => {
+            "Usage: fpas lsp\n  help: `fpas lsp --help` describes the standard-I/O server."
                 .to_string()
         }
         CliMode::Check => {

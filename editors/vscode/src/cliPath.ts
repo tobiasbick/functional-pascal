@@ -1,61 +1,81 @@
-import { statSync } from "node:fs";
+/** Installed Functional Pascal executable discovery. */
+
+import { accessSync, constants, statSync } from "node:fs";
 import path from "node:path";
 import process from "node:process";
 
 import * as vscode from "vscode";
 
-import { resolveHostTarget } from "./serverPath";
+/** Machine-scoped setting that overrides PATH-based toolchain discovery. */
+export const EXECUTABLE_PATH_SETTING = "functionalPascal.executablePath";
 
-/** Returns the native Functional Pascal CLI filename for one platform. */
+/** Native Functional Pascal CLI filename for one platform. */
 export function cliExecutableName(platform: NodeJS.Platform): string {
   return platform === "win32" ? "fpas.exe" : "fpas";
 }
 
-/** Returns the deterministic development or packaged CLI candidate. */
-export function cliCandidatePath(
-  extensionPath: string,
-  extensionMode: vscode.ExtensionMode,
-  platform: NodeJS.Platform,
-  architecture: string
-): string {
-  const executable = cliExecutableName(platform);
-  return extensionMode !== vscode.ExtensionMode.Production
-    ? path.resolve(extensionPath, "..", "..", "target", "debug", executable)
-    : path.join(
-        extensionPath,
-        "cli",
-        resolveHostTarget(platform, architecture),
-        executable
-      );
-}
-
-/** Finds the bundled CLI without consulting the system PATH. */
-export function resolveCliPath(context: vscode.ExtensionContext): string {
+/** Resolve the configured executable first and otherwise search PATH. */
+export function resolveCliPath(): string {
   if (vscode.env.remoteName !== undefined) {
     throw new Error(
-      "Functional Pascal project workflows require a local desktop extension host. Remote SSH, WSL, and container hosts are not supported by this hobby-project build."
+      "Functional Pascal tooling is unavailable in remote extension hosts. Install FPAS and the extension in the same local desktop environment."
     );
   }
-  const candidate = cliCandidatePath(
-    context.extensionPath,
-    context.extensionMode,
+  const configured = vscode.workspace
+    .getConfiguration("functionalPascal")
+    .get<string>("executablePath", "");
+  return resolveCliCandidate(
+    configured,
+    process.env.PATH ?? "",
     process.platform,
-    process.arch
+    isExecutableFile
   );
-  let isFile = false;
+}
+
+/** Resolve an explicit candidate or one executable from a supplied search path. */
+export function resolveCliCandidate(
+  configured: string,
+  searchPath: string,
+  platform: NodeJS.Platform,
+  isExecutable: (candidate: string) => boolean
+): string {
+  const selected = configured.trim();
+  if (selected.length > 0) {
+    if (!path.isAbsolute(selected)) {
+      throw new Error(
+        `Functional Pascal setting \`${EXECUTABLE_PATH_SETTING}\` must be an absolute path: ${selected}`
+      );
+    }
+    if (!isExecutable(selected)) {
+      throw new Error(`Configured Functional Pascal executable was not found: ${selected}`);
+    }
+    return path.normalize(selected);
+  }
+
+  const executable = cliExecutableName(platform);
+  for (const directory of searchPath.split(path.delimiter)) {
+    const normalized = unquote(directory.trim());
+    if (normalized.length === 0) continue;
+    const candidate = path.join(normalized, executable);
+    if (isExecutable(candidate)) return path.normalize(candidate);
+  }
+  throw new Error(
+    `Functional Pascal executable \`${executable}\` was not found on PATH. Set \`${EXECUTABLE_PATH_SETTING}\` to the installed executable.`
+  );
+}
+
+function isExecutableFile(candidate: string): boolean {
   try {
-    isFile = statSync(candidate).isFile();
+    if (!statSync(candidate).isFile()) return false;
+    accessSync(candidate, constants.X_OK);
+    return true;
   } catch {
-    isFile = false;
+    return false;
   }
-  if (!isFile) {
-    const recovery =
-      context.extensionMode === vscode.ExtensionMode.Production
-        ? "Rebuild the host-native VSIX and reinstall it."
-        : "Build it with `cargo build -p fpas-cli` and retry the command.";
-    throw new Error(
-      `Functional Pascal CLI was not found at ${candidate}. ${recovery}`
-    );
-  }
-  return candidate;
+}
+
+function unquote(value: string): string {
+  return value.startsWith('"') && value.endsWith('"')
+    ? value.slice(1, -1)
+    : value;
 }

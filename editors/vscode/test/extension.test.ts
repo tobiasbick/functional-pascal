@@ -33,7 +33,7 @@ export async function run(): Promise<void> {
   assert.equal(api.languageServerStarted, true, api.languageServerError);
   assert.equal(
     path.basename(api.languageServerPath ?? ""),
-    process.platform === "win32" ? "fpas-lsp.exe" : "fpas-lsp"
+    process.platform === "win32" ? "fpas.exe" : "fpas"
   );
 
   const commands = await vscode.commands.getCommands(true);

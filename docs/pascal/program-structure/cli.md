@@ -1,7 +1,8 @@
 # CLI
 
 The `fpas` command-line interface creates scaffolds, builds artifacts, discovers
-projects, type-checks, runs programs, and executes test bundles.
+projects, type-checks, runs programs, executes test bundles, and exposes the
+installed toolchain to editor clients.
 
 Standalone execution and bundled executables authorize the explicit process-lifecycle operations
 in [`Std.Server`](../std/network/server.md). Programs must still opt into signal observation and
@@ -42,6 +43,12 @@ the source debugger and in-process test hosts do not grant this authority automa
 - `fpas debug [<path>] --protocol <jsonl | dap>` — run a source, program
   project, workspace, or verified compiled image under the source debugger;
   see [Source debugger](../tools/debugger.md).
+- `fpas env --json` — print the installed toolchain contract. Schema version 1
+  reports the FPAS version, absolute executable path, and adjacent source
+  standard-library directory as JSON.
+- `fpas lsp` — serve the Functional Pascal Language Server Protocol over
+  standard input and output. Editor clients use this entry point so language
+  features come from the same toolchain as builds, runs, and debugging.
 - `fpas fmt [<path> ...]` — format source files, directories, projects, or
   workspaces. A program project includes its `project.main` source as well as
   unit sources. `--check` reports formatting drift without changing files;
@@ -51,7 +58,8 @@ the source debugger and in-process test hosts do not grant this authority automa
 - `fpas -h` / `fpas --help` — prints the short command overview to stdout and exits successfully.
 - `fpas init --help`, `fpas init <kind> --help`, `fpas build --help`,
   `fpas run --help`, `fpas check --help`,
-  `fpas test --help`, `fpas debug --help`, and `fpas fmt --help` — print focused command help with
+  `fpas test --help`, `fpas debug --help`, `fpas fmt --help`,
+  `fpas env --help`, and `fpas lsp --help` — print focused command help with
   valid examples and exit successfully.
 - `fpas -V` / `fpas --version` — prints the compiler version to stdout and exits successfully.
 - `fpas build --std-lib <directory> …`, `fpas run --std-lib <directory> …`,
@@ -78,7 +86,23 @@ fpas run --help
 fpas check --help
 fpas test --help
 fpas fmt --help
+fpas env --help
+fpas lsp --help
 ```
+
+## Installed toolchain discovery
+
+Editor integrations should resolve one `fpas` executable and query it with:
+
+```sh
+fpas env --json
+```
+
+The command is non-interactive and writes only the versioned JSON report to
+stdout. The reported standard-library directory belongs to that executable;
+clients should not independently combine a compiler, language server, and
+library from different installations. Start the matching language server with
+`fpas lsp`.
 
 ## Initializing a scaffold
 

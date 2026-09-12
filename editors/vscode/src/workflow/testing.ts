@@ -23,7 +23,6 @@ export class WorkflowTesting implements vscode.Disposable {
     private readonly selector: ProjectSelector,
     private readonly runner: WorkflowProcessRunner,
     private readonly resolveCli: () => Promise<string>,
-    private readonly resolveStandardLibrary: () => string,
     private readonly publishDiagnostics: (
       stderr: string,
       cwd: string
@@ -62,7 +61,7 @@ export class WorkflowTesting implements vscode.Disposable {
     try {
       result = await this.runner.run(
         await this.resolveCli(),
-        testListArguments(target.fsPath, this.resolveStandardLibrary()),
+        testListArguments(target.fsPath),
         cwd
       );
     } catch (error) {
@@ -169,7 +168,6 @@ export class WorkflowTesting implements vscode.Disposable {
           await this.resolveCli(),
           testRunArguments(
             target.fsPath,
-            this.resolveStandardLibrary(),
             file === undefined ? undefined : path.basename(file),
             vscode.workspace
               .getConfiguration("functionalPascal")

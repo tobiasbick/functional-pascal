@@ -9,7 +9,12 @@ out/src/languageClient.js
 out/src/serverPath.js
 out/src/standardLibraryPath.js
 out/src/cliPath.js
+out/src/toolchain.js
+out/src/toolchainSelection.js
 out/src/workflow/**
+cli/**
+server/**
+standard-library/**
 tsconfig.json
 package-lock.json
 dist/**

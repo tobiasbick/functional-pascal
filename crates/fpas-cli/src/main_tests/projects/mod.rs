@@ -8,6 +8,7 @@ mod edge_cases;
 mod enum_variants;
 mod errors;
 mod exports;
+mod generic_aliases;
 mod qualified;
 mod record_events;
 mod record_properties;

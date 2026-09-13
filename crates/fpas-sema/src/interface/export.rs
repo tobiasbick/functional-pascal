@@ -154,8 +154,13 @@ fn qualify_owned_type(
             qualify_callable(callable, unit_name, own_types);
         }
         Record(record) => {
+            // Transparent aliases retain their declaration owner, including event visibility.
+            // Documentation: docs/pascal/language/types/type-aliases.md
+            let owned = own_types.contains(&canonical_symbol_name(&record.name));
             record.name = qualify_owned_name(&record.name, unit_name, own_types);
-            record.owner_unit = Some(unit_name.to_string());
+            if owned {
+                record.owner_unit = Some(unit_name.to_string());
+            }
             for field in &mut record.fields {
                 qualify_owned_type(&mut field.ty, unit_name, own_types);
             }
@@ -181,7 +186,9 @@ fn qualify_owned_type(
                 qualify_owned_type(&mut event.handler, unit_name, own_types);
                 event.getter = qualify_member_name(&event.getter, unit_name, own_types);
                 event.setter = qualify_member_name(&event.setter, unit_name, own_types);
-                event.owner_unit = Some(unit_name.to_string());
+                if owned {
+                    event.owner_unit = Some(unit_name.to_string());
+                }
             }
         }
         Enum(enum_ty) => {

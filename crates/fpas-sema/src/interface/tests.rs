@@ -3,6 +3,7 @@ use fpas_unit::interface::{InterfaceType, SymbolKind};
 
 use super::analyze_unit;
 
+mod aliases;
 mod public_signatures;
 
 fn parse_unit(source: &str) -> fpas_parser::Unit {

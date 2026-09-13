@@ -1,6 +1,32 @@
 use super::check_errors;
 
 #[test]
+fn unwrap_rejects_non_containers_without_cascading_argument_errors() {
+    for namespace in ["Options", "Results"] {
+        for function in ["Unwrap", "UnwrapOr"] {
+            for argument in ["42", "MissingValue"] {
+                let fallback = if function == "UnwrapOr" { ", 0" } else { "" };
+                let errs = check_errors(&format!(
+                    "program T;
+uses Std.{namespace};
+begin
+  var N: integer := Std.{namespace}.{function}({argument}{fallback})
+end."
+                ));
+                assert_eq!(errs.len(), 1, "{errs:#?}");
+                if argument == "42" {
+                    assert_eq!(errs[0].code, fpas_diagnostics::codes::SEMA_TYPE_MISMATCH);
+                    assert!(errs[0].message.contains("first argument"), "{errs:#?}");
+                } else {
+                    assert!(errs[0].message.contains("MissingValue"), "{errs:#?}");
+                    assert_ne!(errs[0].code, fpas_diagnostics::codes::SEMA_TYPE_MISMATCH);
+                }
+            }
+        }
+    }
+}
+
+#[test]
 fn std_math_sqrt_wrong_arg_count() {
     let errs = check_errors(
         "\

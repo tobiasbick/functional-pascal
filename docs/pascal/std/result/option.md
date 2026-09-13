@@ -18,6 +18,8 @@ After `uses Std.Options;` use short names (`Unwrap`, `IsSome`, …) or qualified
 
 **Ambiguity with `Std.Results`:** the short names **`Unwrap`** and **`UnwrapOr`** clash with `Std.Results`. When both units are imported, qualify as `Std.Options.Unwrap(O)` vs `Std.Results.Unwrap(R)`.
 
+`Unwrap` and `UnwrapOr` require a `Option of T` as their first argument. Passing the wrong container type produces a compile-time type error (`F2006`); use `Std.Results` for the other container type.
+
 ---
 
 ## Quick reference

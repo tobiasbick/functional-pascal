@@ -15,5 +15,6 @@ mod record_properties;
 mod resolution;
 mod run;
 mod support;
+mod unwrap_diagnostics;
 mod warnings;
 mod workspace_run;

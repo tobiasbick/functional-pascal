@@ -9,6 +9,7 @@ use fpas_lexer::Span;
 use fpas_parser::Expr;
 use fpas_std::std_symbols as s;
 
+/// Checks specialized calls described in `docs/pascal/std/result/`.
 pub(super) fn check_result_option_builtin_std_call(
     c: &mut Checker,
     name: &str,
@@ -16,20 +17,26 @@ pub(super) fn check_result_option_builtin_std_call(
     span: Span,
 ) -> Option<Ty> {
     let ty = match name {
-        s::STD_RESULT_UNWRAP => check_one_arg(c, name, args, span, unwrap_result_ok),
-        s::STD_RESULT_UNWRAP_OR => {
-            check_two_args(c, name, args, span, |ty, _| unwrap_result_ok(ty))
-        }
+        s::STD_RESULT_UNWRAP => check_one_arg(c, name, args, span, |c, ty| {
+            unwrap_result_ok(c, name, ty, span)
+        }),
+        s::STD_RESULT_UNWRAP_OR => check_two_args(c, name, args, span, |c, ty, _| {
+            unwrap_result_ok(c, name, ty, span)
+        }),
         s::STD_RESULT_IS_OK | s::STD_RESULT_IS_ERR => {
-            check_one_arg(c, name, args, span, |_| Ty::Boolean)
+            check_one_arg(c, name, args, span, |_, _| Ty::Boolean)
         }
         s::STD_RESULT_MAP => check_result_map(c, args, span),
         s::STD_RESULT_AND_THEN => check_result_and_then(c, args, span),
         s::STD_RESULT_OR_ELSE => check_result_or_else(c, args, span),
-        s::STD_OPTION_UNWRAP => check_one_arg(c, name, args, span, unwrap_option),
-        s::STD_OPTION_UNWRAP_OR => check_two_args(c, name, args, span, |ty, _| unwrap_option(ty)),
+        s::STD_OPTION_UNWRAP => check_one_arg(c, name, args, span, |c, ty| {
+            unwrap_option(c, name, ty, span)
+        }),
+        s::STD_OPTION_UNWRAP_OR => check_two_args(c, name, args, span, |c, ty, _| {
+            unwrap_option(c, name, ty, span)
+        }),
         s::STD_OPTION_IS_SOME | s::STD_OPTION_IS_NONE => {
-            check_one_arg(c, name, args, span, |_| Ty::Boolean)
+            check_one_arg(c, name, args, span, |_, _| Ty::Boolean)
         }
         s::STD_OPTION_MAP => check_option_map(c, args, span),
         s::STD_OPTION_AND_THEN => check_option_and_then(c, args, span),
@@ -39,17 +46,35 @@ pub(super) fn check_result_option_builtin_std_call(
     Some(ty)
 }
 
-fn unwrap_result_ok(ty: Ty) -> Ty {
+fn unwrap_result_ok(c: &mut Checker, name: &str, ty: Ty, span: Span) -> Ty {
     match ty {
         Ty::Result(ok, _) => *ok,
-        _ => Ty::Error,
+        Ty::Error => Ty::Error,
+        _ => {
+            c.error_with_code(
+                SEMA_TYPE_MISMATCH,
+                format!("`{name}` first argument must be a Result"),
+                "Pass a `Result of T, E` value. For `Option of T`, use `Std.Options.Unwrap` or `Std.Options.UnwrapOr`.",
+                span,
+            );
+            Ty::Error
+        }
     }
 }
 
-fn unwrap_option(ty: Ty) -> Ty {
+fn unwrap_option(c: &mut Checker, name: &str, ty: Ty, span: Span) -> Ty {
     match ty {
         Ty::Option(inner) => *inner,
-        _ => Ty::Error,
+        Ty::Error => Ty::Error,
+        _ => {
+            c.error_with_code(
+                SEMA_TYPE_MISMATCH,
+                format!("`{name}` first argument must be an Option"),
+                "Pass an `Option of T` value. For `Result of T, E`, use `Std.Results.Unwrap` or `Std.Results.UnwrapOr`.",
+                span,
+            );
+            Ty::Error
+        }
     }
 }
 
@@ -58,7 +83,7 @@ fn check_one_arg(
     name: &str,
     args: &[Expr],
     span: Span,
-    derive: impl FnOnce(Ty) -> Ty,
+    derive: impl FnOnce(&mut Checker, Ty) -> Ty,
 ) -> Ty {
     if args.len() != 1 {
         c.error_with_code(
@@ -70,7 +95,7 @@ fn check_one_arg(
         return Ty::Error;
     }
     let ty = c.check_expr(&args[0]);
-    derive(ty)
+    derive(c, ty)
 }
 
 fn check_two_args(
@@ -78,7 +103,7 @@ fn check_two_args(
     name: &str,
     args: &[Expr],
     span: Span,
-    derive: impl FnOnce(Ty, Ty) -> Ty,
+    derive: impl FnOnce(&mut Checker, Ty, Ty) -> Ty,
 ) -> Ty {
     if args.len() != 2 {
         c.error_with_code(
@@ -91,7 +116,7 @@ fn check_two_args(
     }
     let ty1 = c.check_expr(&args[0]);
     let ty2 = c.check_expr(&args[1]);
-    derive(ty1, ty2)
+    derive(c, ty1, ty2)
 }
 
 /// `Std.Results.Map(R, F)` -> `Result of U, E` where `F: function(V: T): U`.

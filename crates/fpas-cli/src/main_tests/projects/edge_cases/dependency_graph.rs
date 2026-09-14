@@ -73,3 +73,89 @@ fn self_import_reports_cycle() {
         "expected cycle error, got: {stderr_output}"
     );
 }
+
+#[test]
+fn library_dependency_diamond_does_not_warn_about_shared_sources() {
+    let cwd = create_temp_dir("library-diamond-warning");
+    let workspace = cwd.join("suite.fpasworkspace");
+    write_text(
+        &workspace,
+        r#"[workspace]
+name = "diamond"
+members = ["common/lib.fpasprj", "left/lib.fpasprj", "right/lib.fpasprj", "app/app.fpasprj"]
+"#,
+    );
+    for (name, dependencies, body) in [
+        (
+            "common",
+            "",
+            "public function Value(): integer; begin return 1 end;",
+        ),
+        (
+            "left",
+            "workspace = [\"common\"]",
+            "uses Repro.common; public function LeftValue(): integer; begin return Value() end;",
+        ),
+        (
+            "right",
+            "workspace = [\"common\"]",
+            "uses Repro.common; public function RightValue(): integer; begin return Value() end;",
+        ),
+    ] {
+        write_text(
+            &cwd.join(name).join("lib.fpasprj"),
+            &format!(
+                r#"[project]
+name = "{name}"
+kind = "library"
+[sources]
+include = ["src/*.fpas"]
+[exports]
+units = ["Repro.{name}"]
+[dependencies]
+{dependencies}
+"#
+            ),
+        );
+        write_text(
+            &cwd.join(name).join("src/unit.fpas"),
+            &format!("unit Repro.{name}; {body}"),
+        );
+    }
+    let project = cwd.join("app/app.fpasprj");
+    write_text(
+        &project,
+        r#"[project]
+name = "app"
+kind = "program"
+main = "main.fpas"
+[sources]
+include = ["main.fpas"]
+[dependencies]
+workspace = ["left", "right"]
+"#,
+    );
+    write_text(
+        &cwd.join("app/main.fpas"),
+        "program App; uses Repro.left, Repro.right, Std.Console; begin WriteLn(LeftValue() + RightValue()) end.",
+    );
+    for (command, path) in [
+        ("check", &workspace),
+        ("check", &project),
+        ("run", &project),
+    ] {
+        let (code, stdout, stderr) = support::run_cli_args_and_capture_output(
+            &[command.to_string(), path.to_string_lossy().into_owned()],
+            &cwd,
+        );
+        assert_eq!(code, 0, "{command}: {stderr}");
+        assert!(
+            !stderr.contains("Duplicate source file"),
+            "{command}: {stderr}"
+        );
+        if command == "run" {
+            assert_eq!(stdout, "2\n");
+        }
+    }
+    fs::remove_dir_all(&cwd).expect("remove fixture");
+}

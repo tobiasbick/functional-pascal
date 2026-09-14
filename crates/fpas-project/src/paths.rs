@@ -125,19 +125,17 @@ pub(crate) fn canonical_project_path(path: &Path) -> PathBuf {
     canonical_or_original(path)
 }
 
-/// Appends `incoming` to `target`, ignoring duplicate source files with a warning.
-pub(super) fn merge_source_files(
-    target: &mut Vec<PathBuf>,
-    incoming: Vec<PathBuf>,
-    warnings: &mut Vec<String>,
-) {
+/// Merges validated project sources, silently reusing shared dependency files.
+pub(super) fn merge_source_files(target: &mut Vec<PathBuf>, incoming: Vec<PathBuf>) {
     let mut seen = target
         .iter()
         .map(|path| canonical_or_original(path.as_path()))
         .collect::<HashSet<_>>();
 
     for path in incoming {
-        insert_unique_source_file(path, target, &mut seen, warnings);
+        if seen.insert(canonical_or_original(&path)) {
+            target.push(path);
+        }
     }
 }
 

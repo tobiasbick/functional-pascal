@@ -157,7 +157,7 @@ Entries may be mixed freely. All **included** files must have the `.fpas` extens
 - The program file (`main`) is automatically excluded from the source list, even if matched by an include pattern.
 - If another source file contains a `program` declaration instead of `unit`, a warning is emitted and the file is skipped.
 - If an explicit path does not exist or an include pattern matches no files, the compiler emits an error.
-- If multiple entries resolve to the same file, a warning is emitted and the duplicate is ignored.
+- If multiple source include entries resolve to the same file, a warning is emitted and the duplicate is ignored. Shared transitive library sources in a dependency diamond are included once without a duplicate-source warning.
 - A physical source file belongs to exactly one project in a dependency graph. Project loading fails
   if a consumer and a library, or two different libraries, include the same file. This comparison
   resolves lexical path aliases and symbolic links. Keep the file in one project's `[sources]` and

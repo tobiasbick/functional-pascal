@@ -52,16 +52,12 @@ pub(super) fn load_project_with_dependencies(
             load_project_with_dependencies(&dependency_path, visiting, cache, parse_cache)?;
         ensure_library_dependency(&dependency_path, &dependency_loaded)?;
         merge_dependency_link_meta(&mut link_meta, &dependency_path, &dependency_loaded)?;
-        merge_source_files(
-            &mut source_files,
-            dependency_loaded.source_files,
-            &mut warnings,
-        );
+        merge_source_files(&mut source_files, dependency_loaded.source_files);
     }
 
     reject_own_source_overlap(path, &own.source_files, &link_meta)?;
     let own_source_paths = own.source_files.clone();
-    merge_source_files(&mut source_files, own.source_files, &mut warnings);
+    merge_source_files(&mut source_files, own.source_files);
     source_files = match own.kind {
         ProjectKind::Test => {
             validate_project_test_sources(source_files, &mut warnings, parse_cache)?

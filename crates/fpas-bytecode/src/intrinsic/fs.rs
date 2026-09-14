@@ -43,5 +43,9 @@ pub enum FsIntrinsic {
     ///
     /// **Documentation:** `docs/pascal/std/host/fs.md`
     WriteTextAtomic = 517,
+    /// `Std.Fs.DeleteFile(Path)` - remove one file entry.
+    ///
+    /// **Documentation:** `docs/pascal/std/host/fs.md`
+    DeleteFile = 567,
 }
 }

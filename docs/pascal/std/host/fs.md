@@ -26,9 +26,13 @@ Text reads and writes use UTF-8.
 
 ## Importing and names
 
-After `uses Std.Fs;` use **`ReadText`**, **`WriteText`**, **`WriteTextAtomic`**, **`Exists`**, **`IsFile`**, **`IsDir`**, **`CreateDir`**, **`Glob`**, or the fully qualified forms such as **`Std.Fs.ReadText`**.
+After `uses Std.Fs;` use **`ReadText`**, **`WriteText`**, **`WriteTextAtomic`**, **`DeleteFile`**, **`Exists`**, **`IsFile`**, **`IsDir`**, **`CreateDir`**, **`Glob`**, or the fully qualified forms such as **`Std.Fs.ReadText`**.
 
 ---
+
+## `DeleteFile(Path: string): result of boolean, string`
+
+Deletes one file entry and returns `Ok(true)`. Missing paths, directories, permission failures, and other OS errors return `Error(message)`. It does not recursively delete directories. On Windows and POSIX, a symbolic link is removed without deleting its target; directory links follow the platform file-removal rules and may be rejected. Open files can be unlinked on POSIX, while Windows may reject deletion when a handle does not permit delete sharing. Error messages come from the host OS.
 
 ## Quick reference
 
@@ -39,6 +43,7 @@ Requires `uses Std.Fs;`.
 | function | `ReadText(Path: string): Result of string, string` | reads UTF-8 text |
 | function | `WriteText(Path: string; Text: string): Result of boolean, string` | writes UTF-8 text, returns `Ok(true)` |
 | function | `WriteTextAtomic(Path: string; Text: string): Result of boolean, string` | publishes complete UTF-8 text through a same-directory temporary file |
+| function | `DeleteFile(Path: string): Result of boolean, string` | removes one file entry, returns `Ok(true)` |
 | function | `Exists(Path: string): boolean` | `true` when the path exists |
 | function | `IsFile(Path: string): boolean` | `true` for a regular file |
 | function | `IsDir(Path: string): boolean` | `true` for a directory |

@@ -49,6 +49,7 @@ const ALL_INTRINSICS: &[Intrinsic] = &[
     Intrinsic::Fs(FsIntrinsic::ReadText),
     Intrinsic::Fs(FsIntrinsic::WriteText),
     Intrinsic::Fs(FsIntrinsic::WriteTextAtomic),
+    Intrinsic::Fs(FsIntrinsic::DeleteFile),
     Intrinsic::Fs(FsIntrinsic::Exists),
     Intrinsic::Fs(FsIntrinsic::IsFile),
     Intrinsic::Fs(FsIntrinsic::IsDir),

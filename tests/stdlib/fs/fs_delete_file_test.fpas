@@ -1,0 +1,13 @@
+program FsDeleteFileTest;
+
+uses Std.Fs, Std.Results, Std.Test;
+
+begin
+  var Path: string := ScratchDir() + '/delete-file.txt';
+  AssertTrue(Std.Results.Unwrap(WriteTextAtomic(Path, 'obsolete')));
+  AssertTrue(Std.Results.Unwrap(DeleteFile(Path)));
+  AssertFalse(Exists(Path));
+  AssertTrue(Std.Results.IsError(DeleteFile(Path)));
+  AssertTrue(Std.Results.IsError(DeleteFile(ScratchDir())));
+  AssertTrue(IsDir(ScratchDir()))
+end.

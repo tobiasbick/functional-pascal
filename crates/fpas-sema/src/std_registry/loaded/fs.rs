@@ -25,6 +25,12 @@ pub(super) fn register_std_fs(checker: &mut Checker) {
     );
     define_func(
         checker,
+        s::STD_FS_DELETE_FILE,
+        vec![p("Path", Ty::String, false)],
+        Ty::Result(Box::new(Ty::Boolean), Box::new(Ty::String)),
+    );
+    define_func(
+        checker,
         s::STD_FS_EXISTS,
         vec![p("Path", Ty::String, false)],
         Ty::Boolean,

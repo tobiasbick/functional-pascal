@@ -13,6 +13,15 @@ begin
   panic('Intrinsic API declaration')
 end;
 
+// Removes one file entry, returns `Ok(true)`.
+//
+// Parameters:
+// - `Path`: File or directory path processed by the operation.
+public function DeleteFile(Path: string): result of boolean, string;
+begin
+  panic('Intrinsic API declaration')
+end;
+
 // `true` when the path exists.
 //
 // Parameters:

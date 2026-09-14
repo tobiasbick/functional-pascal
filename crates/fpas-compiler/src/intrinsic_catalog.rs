@@ -102,6 +102,7 @@ pub(crate) fn resolve(name: &str, first_argument: Option<&Ty>) -> Option<Intrins
                 ReadText,
                 WriteText,
                 WriteTextAtomic,
+                DeleteFile,
                 Exists,
                 IsFile,
                 IsDir,

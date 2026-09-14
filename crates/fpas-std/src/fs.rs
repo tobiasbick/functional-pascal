@@ -41,6 +41,10 @@ pub(crate) fn run(
                 &text,
             )));
         }
+        Intrinsic::Fs(FsIntrinsic::DeleteFile) => {
+            let path = pop_string(pop_value(call, location)?, location)?;
+            call.push(result_bool(fs::remove_file(path)));
+        }
         Intrinsic::Fs(FsIntrinsic::Exists) => {
             let path = pop_string(pop_value(call, location)?, location)?;
             call.push(Value::Boolean(Path::new(&path).exists()));

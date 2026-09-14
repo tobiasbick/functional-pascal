@@ -2,6 +2,8 @@
 //!
 //! **Documentation:** `docs/pascal/std/text/json.md`
 
+mod parse;
+
 use crate::error::{StdError, std_runtime_error};
 use crate::intrinsic_args::{IntrinsicCall, pop_string, pop_value};
 use crate::limits::MAX_JSON_DEPTH;
@@ -275,7 +277,7 @@ pub(crate) fn run(
     match intrinsic {
         Intrinsic::Json(JsonIntrinsic::Parse) => {
             let text = pop_string(pop_value(call, location)?, location)?;
-            match serde_json::from_str::<JsonValue>(&text).map_err(|err| err.to_string()) {
+            match parse::parse(&text).map_err(|err| err.to_string()) {
                 Ok(value) => match json_to_fpas(call, value, location) {
                     Ok(value) => call.push(Value::result_ok(value)),
                     Err(error) => call.push(Value::result_error(Value::Str(error.message.into()))),

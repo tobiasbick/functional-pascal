@@ -56,7 +56,9 @@ JSON `null` maps to `JsonValue.Null`. Objects use `dict of string to JsonValue`.
 function Parse(Text: string): Result of JsonValue, string;
 ```
 
-Parses JSON text. Valid JSON returns `Ok(JsonValue)`. Invalid JSON returns `Error(Message)` instead of aborting the program.
+Rejects duplicate object member names with `Error(Message)` identifying the name and its location. Names are compared after decoding escapes and are case-sensitive. Each object has its own name set, including objects nested in arrays.
+
+Parses JSON text. Accepted JSON returns `Ok(JsonValue)`. Invalid JSON returns `Error(Message)` instead of aborting the program.
 
 ```pascal
 var R: Result of JsonValue, string := Std.Json.Parse('[1, true, null]');

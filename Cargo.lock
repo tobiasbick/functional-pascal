@@ -608,6 +608,7 @@ dependencies = [
  "fpas-bytecode",
  "fpas-diagnostics",
  "glob",
+ "serde",
  "serde_json",
  "toml",
  "unicode-segmentation",

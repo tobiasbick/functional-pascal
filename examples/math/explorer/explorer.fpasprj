@@ -1,0 +1,7 @@
+[project]
+name = "fractal-explorer"
+kind = "library"
+[exports]
+units = ["Fractal.Camera", "Fractal.Explorer"]
+[sources]
+include = ["*.fpas"]

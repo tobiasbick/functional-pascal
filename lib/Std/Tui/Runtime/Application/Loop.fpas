@@ -109,17 +109,16 @@ begin
     end;
 
     TuiAppPushMessages(ApplicationId, TuiBackgroundReap(ApplicationId));
-    if (Std.Arrays.Length(TuiAppMessages[ApplicationId - 1]) = 0) and
-       (Std.Arrays.Length(TuiAppInputs[ApplicationId - 1]) > 0) then
+    if (TuiAppMessageCount(ApplicationId) = 0) and (TuiAppInputCount(ApplicationId) > 0) then
     begin
       TuiAppRouteInput(ApplicationId, TuiAppPopInput(ApplicationId));
-      if Std.Arrays.Length(TuiAppMessages[ApplicationId - 1]) = 0 then
+      if TuiAppMessageCount(ApplicationId) = 0 then
       begin
         continue
       end
     end;
 
-    if Std.Arrays.Length(TuiAppMessages[ApplicationId - 1]) > 0 then
+    if TuiAppMessageCount(ApplicationId) > 0 then
     begin
       Remaining := Remaining - 1;
       Model := TuiLoopApplyFramework(ApplicationId, Model, TuiAppPopMessage(ApplicationId), Update);
@@ -204,7 +203,7 @@ begin
   while TuiAppOpen[ApplicationId - 1] do
   begin
     TuiAppPushMessages(ApplicationId, TuiBackgroundReap(ApplicationId));
-    if Std.Arrays.Length(TuiAppMessages[ApplicationId - 1]) > 0 then
+    if TuiAppMessageCount(ApplicationId) > 0 then
     begin
       Model := TuiLoopApplyFramework(ApplicationId, Model, TuiAppPopMessage(ApplicationId), Update);
       if TuiLoopFinishUpdate(ApplicationId, Model, View, true) then
@@ -226,7 +225,7 @@ begin
       continue
     end;
 
-    if Std.Arrays.Length(TuiAppInputs[ApplicationId - 1]) > 0 then
+    if TuiAppInputCount(ApplicationId) > 0 then
     begin
       TuiAppRouteInput(ApplicationId, TuiAppPopInput(ApplicationId));
       continue

@@ -1,6 +1,6 @@
 unit Notes.Model;
 
-uses Std.Arrays, Std.Console, Std.Conv, Std.Str, Std.Tui;
+uses Notes.Actions, Std.Arrays, Std.Console, Std.Conv, Std.Str, Std.Tui;
 
 public type
   // One persisted `.note` document and its source path.
@@ -90,7 +90,7 @@ begin
   if Std.Arrays.Length(Loaded.Notes) > 0 then
   begin
     Selected := 0;
-    Focus := 3;
+    Focus := TitleControl;
     Pane := NotesPane.Editor;
     TitleCaret := Std.Str.Length(Loaded.Notes[0].Title);
     TagsText := Std.Str.Join(Loaded.Notes[0].Tags, ', ');

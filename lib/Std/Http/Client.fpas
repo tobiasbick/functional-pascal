@@ -47,35 +47,8 @@ end;
 // - `RequestValue`: Complete request and its transport limits.
 function OpenOnce(RequestValue: Request): result of StreamResponse, string;
 begin
-  mutable var UriValue: Uri := record
-    Scheme := '';
-    Host := '';
-    Port := 0;
-    Path := '';
-  end;
-
-  case Std.Net.Uri.Parse(RequestValue.Url) of
-    Ok(Value):
-    begin
-      UriValue := Value
-    end;
-    Error(Message):
-    begin
-      return Error(Message)
-    end
-  end;
-  mutable var Encoded: array of integer := [];
-  case Std.Http.Wire.EncodeRequest(RequestValue, UriValue) of
-    Ok(Value):
-    begin
-      Encoded := Value
-    end;
-    Error(Message):
-    begin
-      return Error(Message)
-    end
-  end;
-
+  var UriValue: Uri := try Std.Net.Uri.Parse(RequestValue.Url);
+  var Encoded: array of integer := try Std.Http.Wire.EncodeRequest(RequestValue, UriValue);
   case OpenConnection(UriValue, RequestValue.TimeoutMillis) of
     Ok(Connection):
     begin

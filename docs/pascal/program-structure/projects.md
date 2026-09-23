@@ -203,7 +203,7 @@ end.
 ```pascal
 unit MyApp.Math;
 
-function Add(A: integer; B: integer): integer;
+public function Add(A: integer; B: integer): integer;
 begin
   return A + B
 end;
@@ -243,7 +243,7 @@ include = ["src/**/*.fpas"]
 ```pascal
 unit Acme.Math;
 
-function Add(A: integer; B: integer): integer;
+public function Add(A: integer; B: integer): integer;
 begin
   return A + B
 end;

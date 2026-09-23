@@ -295,3 +295,129 @@ group = "local-index"
 path = "examples/pascal/tui/cell-grid-headless/partial_fill_benchmark.fpas"
 args = ["100"]
 timeout_ms = 120000
+
+[[bench]]
+id = "source_utf8_ascii_2048"
+group = "source-review"
+path = "examples/pascal/review/source_benchmark.fpasprj"
+args = ["utf8", "2048", "x"]
+timeout_ms = 120000
+
+[[bench]]
+id = "source_utf8_ascii_4096"
+group = "source-review"
+path = "examples/pascal/review/source_benchmark.fpasprj"
+args = ["utf8", "4096", "x"]
+timeout_ms = 120000
+
+[[bench]]
+id = "source_utf8_ascii_8192"
+group = "source-review"
+path = "examples/pascal/review/source_benchmark.fpasprj"
+args = ["utf8", "8192", "x"]
+timeout_ms = 120000
+
+[[bench]]
+id = "source_utf8_unicode_2048"
+group = "source-review"
+path = "examples/pascal/review/source_benchmark.fpasprj"
+args = ["utf8", "2048", "é中"]
+timeout_ms = 120000
+
+[[bench]]
+id = "source_utf8_unicode_4096"
+group = "source-review"
+path = "examples/pascal/review/source_benchmark.fpasprj"
+args = ["utf8", "4096", "é中"]
+timeout_ms = 120000
+
+[[bench]]
+id = "source_utf8_unicode_8192"
+group = "source-review"
+path = "examples/pascal/review/source_benchmark.fpasprj"
+args = ["utf8", "8192", "é中"]
+timeout_ms = 120000
+
+[[bench]]
+id = "source_notes_ascii_128"
+group = "source-review"
+path = "examples/pascal/review/source_benchmark.fpasprj"
+args = ["notes", "128", "x"]
+timeout_ms = 120000
+
+[[bench]]
+id = "source_notes_ascii_256"
+group = "source-review"
+path = "examples/pascal/review/source_benchmark.fpasprj"
+args = ["notes", "256", "x"]
+timeout_ms = 120000
+
+[[bench]]
+id = "source_notes_ascii_512"
+group = "source-review"
+path = "examples/pascal/review/source_benchmark.fpasprj"
+args = ["notes", "512", "x"]
+timeout_ms = 120000
+
+[[bench]]
+id = "source_queue_ascii_256"
+group = "source-review"
+path = "examples/pascal/review/source_benchmark.fpasprj"
+args = ["queue", "256", "x"]
+timeout_ms = 120000
+
+[[bench]]
+id = "source_queue_ascii_512"
+group = "source-review"
+path = "examples/pascal/review/source_benchmark.fpasprj"
+args = ["queue", "512", "x"]
+timeout_ms = 120000
+
+[[bench]]
+id = "source_queue_ascii_1024"
+group = "source-review"
+path = "examples/pascal/review/source_benchmark.fpasprj"
+args = ["queue", "1024", "x"]
+timeout_ms = 120000
+
+[[bench]]
+id = "source_navigation_long_512"
+group = "source-navigation"
+path = "examples/pascal/review/navigation_benchmark.fpas"
+args = ["512", "long"]
+timeout_ms = 120000
+
+[[bench]]
+id = "source_navigation_long_1024"
+group = "source-navigation"
+path = "examples/pascal/review/navigation_benchmark.fpas"
+args = ["1024", "long"]
+timeout_ms = 120000
+
+[[bench]]
+id = "source_navigation_long_2048"
+group = "source-navigation"
+path = "examples/pascal/review/navigation_benchmark.fpas"
+args = ["2048", "long"]
+timeout_ms = 120000
+
+[[bench]]
+id = "source_navigation_lines_512"
+group = "source-navigation"
+path = "examples/pascal/review/navigation_benchmark.fpas"
+args = ["512", "lines"]
+timeout_ms = 120000
+
+[[bench]]
+id = "source_navigation_lines_1024"
+group = "source-navigation"
+path = "examples/pascal/review/navigation_benchmark.fpas"
+args = ["1024", "lines"]
+timeout_ms = 120000
+
+[[bench]]
+id = "source_navigation_lines_2048"
+group = "source-navigation"
+path = "examples/pascal/review/navigation_benchmark.fpas"
+args = ["2048", "lines"]
+timeout_ms = 120000

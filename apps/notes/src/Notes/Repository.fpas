@@ -1,8 +1,8 @@
 unit Notes.Repository;
 
 uses
-  Notes.Format, Notes.Model, Std.Arrays, Std.Conv, Std.Fs, Std.Path, Std.Random, Std.Results,
-  Std.Str, Std.Time;
+  Notes.Ordering, Notes.Format, Notes.Model, Std.Arrays, Std.Conv, Std.Dictionaries, Std.Fs,
+  Std.Path, Std.Random, Std.Results, Std.Str, Std.Time;
 
 // Creates the notes directory or validates that it already exists.
 public function NotesEnsureDirectory(Directory: string): result of boolean, string;
@@ -31,42 +31,39 @@ begin
   return Std.Path.Join([Directory, NoteValue.Id + '.note'])
 end;
 
-function NoteComesBefore(Left: Note; Right: Note): boolean;
-begin
-  if Left.Pinned <> Right.Pinned then
-  begin
-    return Left.Pinned
-  end;
-
-  return Left.UpdatedMillis > Right.UpdatedMillis
-end;
-
-// Sorts pinned notes first and then by descending update timestamp.
+// Sorts pinned notes first, then by descending timestamp; ties keep input order.
 public function NotesSort(Notes: array of Note): array of Note;
 begin
-  mutable var Sorted: array of Note := Notes;
-  for Left: integer := 0 to Std.Arrays.Length(Sorted) - 1 do
+  return NotesOrdered(Notes)
+end;
+
+// Escapes only the literal directory; the final note-file pattern stays active.
+function NoteDirectoryPattern(Directory: string): string;
+begin
+  mutable var Parts: array of string := [];
+  for Index: integer := 0 to Std.Str.Length(Directory) - 1 do
   begin
-    for Right: integer := Left + 1 to Std.Arrays.Length(Sorted) - 1 do
+    var Character: string := Std.Str.CharAt(Directory, Index);
+    if (((Character = '[') or (Character = ']')) or (Character = '*')) or (Character = '?') then
     begin
-      if NoteComesBefore(Sorted[Right], Sorted[Left]) then
-      begin
-        var Previous: Note := Sorted[Left];
-        Sorted[Left] := Sorted[Right];
-        Sorted[Right] := Previous
-      end
+      Std.Arrays.Push(Parts, ('[' + Character) + ']')
+    end
+    else
+    begin
+      Std.Arrays.Push(Parts, Character)
     end
   end;
 
-  return Sorted
+  return Std.Path.Join([Std.Str.Join(Parts, ''), '*.note'])
 end;
 
 // Loads valid notes and preserves invalid files as visible issues.
 public function NotesLoadDirectory(Directory: string): result of NotesLoad, string;
 begin
   var DirectoryReady: boolean := try NotesEnsureDirectory(Directory);
-  var Paths: array of string := try Std.Fs.Glob(Std.Path.Join([Directory, '*.note']));
+  var Paths: array of string := try Std.Fs.Glob(NoteDirectoryPattern(Directory));
   mutable var Notes: array of Note := [];
+  mutable var IdCounts: dict of string to integer := [:];
   mutable var Issues: array of NoteIssue := [];
   for Index: integer := 0 to Std.Arrays.Length(Paths) - 1 do
   begin
@@ -79,7 +76,15 @@ begin
           begin
             mutable var Loaded: Note := NoteValue;
             Loaded.Path := Path;
-            Std.Arrays.Push(Notes, Loaded)
+            Std.Arrays.Push(Notes, Loaded);
+            if Std.Dictionaries.ContainsKey(IdCounts, Loaded.Id) then
+            begin
+              IdCounts[Loaded.Id] := IdCounts[Loaded.Id] + 1
+            end
+            else
+            begin
+              IdCounts[Loaded.Id] := 1
+            end
           end;
           Error(Message):
           begin
@@ -99,9 +104,24 @@ begin
       end
     end
   end;
+  mutable var Unique: array of Note := [];
+  for Loaded: Note in Notes do
+  begin
+    if IdCounts[Loaded.Id] > 1 then
+    begin
+      Std.Arrays.Push(Issues, record
+        Path := Loaded.Path;
+        Message := ('Duplicate note ID: ' + Loaded.Id) + '. Give each file a unique ID before editing.';
+      end)
+    end
+    else
+    begin
+      Std.Arrays.Push(Unique, Loaded)
+    end
+  end;
 
   return Ok(record
-    Notes := NotesSort(Notes);
+    Notes := NotesSort(Unique);
     Issues := Issues;
   end)
 end;

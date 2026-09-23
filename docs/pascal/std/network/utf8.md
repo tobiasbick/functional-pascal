@@ -1,6 +1,7 @@
 # `Std.Net.Utf8`
 
-Pure FPAS conversion between strings and byte arrays.
+Conversion between strings and UTF-8 byte arrays. Encoding uses one runtime pass over
+the string bytes; decoding validates scalars and joins the resulting text once.
 
 ## Quick reference
 
@@ -14,6 +15,8 @@ Pure FPAS conversion between strings and byte arrays.
 | Concern | Location |
 |---------|----------|
 | FPAS implementation | [`Utf8.fpas`](../../../../lib/Std/Net/Utf8.fpas) |
+| Bulk encoder | [`str/mod.rs`](../../../../crates/fpas-std/src/str/mod.rs), internal `EncodeBytes` intrinsic |
+| Boundary tests | [`utf8_boundaries_test.fpas`](../../../../tests/stdlib/net/utf8_boundaries_test.fpas) |
 | Regression tests | [`utf8_roundtrip_test.fpas`](../../../../tests/stdlib/net/utf8_roundtrip_test.fpas) |
 
 ## See also

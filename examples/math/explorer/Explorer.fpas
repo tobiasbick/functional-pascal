@@ -1,0 +1,339 @@
+// Shared terminal lifecycle and input handling for the fractal examples.
+unit Fractal.Explorer;
+
+uses Fractal.Camera, Std.Console, Std.Conv, Std.Math, Std.Options, Std.Str;
+
+function RenderWidth(): integer;
+begin
+  return Max(ScreenWidth(), 1)
+end;
+
+function RenderHeight(): integer;
+begin
+  return Max(ScreenHeight() - 3, 1)
+end;
+
+// 1-based cell in the render viewport → complex plane (same mapping as row iteration)
+
+function ViewportCX(State: ExplorerCamera; W: integer; H: integer; CellX: integer): real;
+begin
+  var Wr: integer := Max(W - 1, 1);
+  return State.XMin(W, H) +
+         (IntToReal(CellX - 1) / IntToReal(Wr)) * (State.XMax(W, H) - State.XMin(W, H))
+end;
+
+function ViewportCY(State: ExplorerCamera; W: integer; H: integer; CellY: integer): real;
+begin
+  var Hr: integer := Max(H - 1, 1);
+  return State.YMax() - (IntToReal(CellY - 1) / IntToReal(Hr)) * (State.YMax() - State.YMin())
+end;
+
+procedure WriteHudText(Text: string; Width: integer);
+begin
+  if Width > 0 then
+  begin
+    var TextLength: integer := Min(Std.Str.Length(Text), Width);
+    if TextLength > 0 then
+    begin
+      WriteText(Substring(Text, 0, TextLength))
+    end
+  end
+end;
+
+procedure DrawHud(
+  S: ExplorerCamera;
+  Width: integer;
+  Height: integer;
+  Title: string;
+  PaletteLabel: function(Value: integer): string
+);
+begin
+  Window(1, 1, ScreenWidth(), ScreenHeight());
+  var HudTop: integer := Max(ScreenHeight() - 2, 1);
+  Window(1, HudTop, ScreenWidth(), ScreenHeight());
+  NormVideo();
+  ClrScr();
+  GotoXY(1, 1);
+  TextColorRGB(255, 220, 120);
+  WriteHudText(Title, Width);
+  TextColorRGB(156, 204, 255);
+  WriteHudText('  tasks | units | records | truecolor | mouse | focus | paste', Max(Width -
+                                                                                    Std.Str.Length(Title), 0));
+  if ScreenHeight() >= 2 then
+  begin
+    GotoXY(1, 2);
+    NormVideo();
+    WriteHudText(Format('size=%dx%d  center=(%f, %f)  zoom=%f  iter=%d  palette=%s', Width, Height, S.CenterX, S.CenterY, S.Zoom, S.MaxIter, PaletteLabel(S.Palette)), Width)
+  end;
+
+  if ScreenHeight() >= 3 then
+  begin
+    GotoXY(1, 3);
+    NormVideo();
+    WriteHudText('click center  wheel zoom  M middle=reset  arrows  +/-  PgUp/Dn  1/2/3  R  Esc', Width)
+  end;
+
+  NormVideo();
+  Window(1, 1, Width, Height)
+end;
+
+mutable var
+  ResetCamera: ExplorerCamera := record
+    CenterX := 0.0;
+    CenterY := 0.0;
+    SpanY := 2.8;
+    MaxIter := 160;
+    Palette := 1;
+  end;
+  State: ExplorerCamera := ResetCamera;
+  RenderW: integer := 1;
+  RenderH: integer := 1;
+  NeedsRedraw: boolean := true;
+  Quit: boolean := false;
+
+procedure RequestRedraw();
+begin
+  NeedsRedraw := true
+end;
+
+procedure PaintFrame(
+  Title: string;
+  RenderFrame: procedure(
+  XMin: real;
+  XMax: real;
+  YMin: real;
+  YMax: real;
+  Width: integer;
+  Height: integer;
+  MaxIter: integer;
+  Palette: integer
+);
+  PaletteLabel: function(Value: integer): string
+);
+begin
+  RenderW := RenderWidth();
+  RenderH := RenderHeight();
+  BeginFrame();
+  FillRect(record
+    x := 1;
+    y := 1;
+    width := ScreenWidth();
+    height := ScreenHeight();
+  end, record
+    glyph := ' ';
+    foreground := RgbColor(0, 0, 0);
+    background := RgbColor(0, 0, 0);
+  end);
+  RenderFrame(State.XMin(RenderW, RenderH), State.XMax(RenderW, RenderH), State.YMin(), State.YMax(), RenderW, RenderH, State.MaxIter, State.Palette);
+  DrawHud(State, RenderW, RenderH, Title, PaletteLabel);
+  Present()
+end;
+
+function HandleKey(Key: KeyEvent): boolean;
+begin
+  var StepX: real := State.SpanX(RenderW, RenderH) * 0.14;
+  var StepY: real := State.SpanY * 0.14;
+  if Key.kind = KeyKind.Escape then
+  begin
+    Quit := true;
+    return true
+  end
+  else if Key.kind = KeyKind.Left then
+  begin
+    State.CenterX := State.CenterX - StepX;
+    RequestRedraw();
+    return true
+  end
+  else if Key.kind = KeyKind.Right then
+  begin
+    State.CenterX := State.CenterX + StepX;
+    RequestRedraw();
+    return true
+  end
+  else if Key.kind = KeyKind.Up then
+  begin
+    State.CenterY := State.CenterY + StepY;
+    RequestRedraw();
+    return true
+  end
+  else if Key.kind = KeyKind.Down then
+  begin
+    State.CenterY := State.CenterY - StepY;
+    RequestRedraw();
+    return true
+  end
+  else if Key.kind = KeyKind.PageUp then
+  begin
+    State.MaxIter := Min(State.MaxIter + 32, 2048);
+    RequestRedraw();
+    return true
+  end
+  else if Key.kind = KeyKind.PageDown then
+  begin
+    State.MaxIter := Max(State.MaxIter - 32, 32);
+    RequestRedraw();
+    return true
+  end
+  else if Key.kind = KeyKind.Character then
+  begin
+    case Key.ch of
+      '+', '=':
+      begin
+        State.SpanY := Max(State.SpanY * 0.82, 0.000001);
+        RequestRedraw();
+        return true
+      end;
+      '-':
+      begin
+        State.SpanY := Min(State.SpanY / 0.82, 4.0);
+        RequestRedraw();
+        return true
+      end;
+      '1':
+      begin
+        State.Palette := 1;
+        RequestRedraw();
+        return true
+      end;
+      '2':
+      begin
+        State.Palette := 2;
+        RequestRedraw();
+        return true
+      end;
+      '3':
+      begin
+        State.Palette := 3;
+        RequestRedraw();
+        return true
+      end;
+      'r', 'R':
+      begin
+        State := ResetCamera;
+        RequestRedraw();
+        return true
+      end
+    end
+  end;
+
+  return false
+end;
+
+procedure HandleMouse(InputEvent: ConsoleEvent);
+begin
+  var InView: boolean := (((InputEvent.mouse_x >= 1) and (InputEvent.mouse_x <= RenderW)) and (InputEvent.mouse_y >= 1)) and
+                         (InputEvent.mouse_y <= RenderH);
+  if InputEvent.mouse_action = MouseAction.ScrollUp then
+  begin
+    State.SpanY := Max(State.SpanY * 0.88, 0.000001);
+    RequestRedraw()
+  end
+  else if InputEvent.mouse_action = MouseAction.ScrollDown then
+  begin
+    State.SpanY := Min(State.SpanY / 0.88, 4.0);
+    RequestRedraw()
+  end
+  else if InView and (InputEvent.mouse_action = MouseAction.Down) then
+  begin
+    if InputEvent.mouse_button = MouseButton.Left then
+    begin
+      State.CenterX := ViewportCX(State, RenderW, RenderH, InputEvent.mouse_x);
+      State.CenterY := ViewportCY(State, RenderW, RenderH, InputEvent.mouse_y);
+      RequestRedraw()
+    end
+    else if InputEvent.mouse_button = MouseButton.Middle then
+    begin
+      State := ResetCamera;
+      RequestRedraw()
+    end
+  end
+end;
+
+procedure HandleResize(Width: integer; Height: integer);
+begin
+  var NewW: integer := Max(Width, 1);
+  var NewH: integer := Max(Height - 2, 1);
+  if (NewW <> RenderW) or (NewH <> RenderH) then
+  begin
+    RenderW := NewW;
+    RenderH := NewH;
+    RequestRedraw()
+  end
+end;
+
+procedure HandleEvent(E: ConsoleEvent);
+begin
+  if E.kind = EventKind.Key then
+  begin
+    HandleKey(E.key)
+  end
+  else if E.kind = EventKind.Mouse then
+  begin
+    HandleMouse(E)
+  end
+  else if E.kind = EventKind.Resize then
+  begin
+    HandleResize(E.width, E.height)
+  end
+end;
+
+procedure ShutdownTerminal();
+begin
+  CursorOn();
+  DisablePaste();
+  DisableFocus();
+  DisableMouse();
+  DisableRawMode();
+  LeaveAltScreen()
+end;
+
+// Runs one interactive explorer; renderer and palettes remain example-owned.
+public procedure RunExplorer(
+  Title: string;
+  Initial: ExplorerCamera;
+  RenderFrame: procedure(
+  XMin: real;
+  XMax: real;
+  YMin: real;
+  YMax: real;
+  Width: integer;
+  Height: integer;
+  MaxIter: integer;
+  Palette: integer
+);
+  PaletteLabel: function(Value: integer): string
+);
+begin
+  ResetCamera := Initial;
+  State := Initial;
+  Quit := false;
+  EnableRawMode();
+  EnterAltScreen();
+  EnableMouse();
+  EnableFocus();
+  EnablePaste();
+  CursorOff();
+  RenderW := RenderWidth();
+  RenderH := RenderHeight();
+  NeedsRedraw := true;
+  while not Quit do
+  begin
+    if NeedsRedraw then
+    begin
+      PaintFrame(Title, RenderFrame, PaletteLabel);
+      NeedsRedraw := false
+    end;
+
+    case ReadEventTimeout(16) of
+      Some(E):
+      begin
+        HandleEvent(E)
+      end;
+      None:
+      begin
+      end
+    end
+  end;
+
+  ShutdownTerminal()
+end;

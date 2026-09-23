@@ -4,6 +4,7 @@ mod bound_methods;
 mod build;
 mod check;
 mod dependencies;
+mod documented_examples;
 mod edge_cases;
 mod enum_variants;
 mod errors;

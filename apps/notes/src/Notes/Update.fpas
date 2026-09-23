@@ -1,25 +1,8 @@
 unit Notes.Update;
 
 uses
-  Notes.Model, Notes.Editing, Notes.Repository, Std.Arrays, Std.Console, Std.Conv, Std.Options,
-  Std.Str, Std.Time, Std.Tui;
-
-const
-  SearchControl: integer := 1;
-  ListControl: integer := 2;
-  TitleControl: integer := 3;
-  TagsControl: integer := 4;
-  BodyControl: integer := 5;
-  SelectionChangedAction: integer := 2;
-  NewNoteAction: integer := 10;
-  SaveNoteAction: integer := 11;
-  TogglePinAction: integer := 12;
-  ArchiveNoteAction: integer := 13;
-  CommandsAction: integer := 14;
-  HelpAction: integer := 15;
-  CloseOverlayAction: integer := 16;
-  SaveAndQuitAction: integer := 17;
-  DiscardAndQuitAction: integer := 18;
+  Notes.Actions, Notes.Model, Notes.Editing, Notes.Repository, Std.Arrays, Std.Console, Std.Conv,
+  Std.Options, Std.Str, Std.Time, Std.Tui;
 
 function NoteIndexById(Notes: array of Note; Id: string): integer;
 begin
@@ -86,6 +69,12 @@ begin
       Next := ResortSelected(Next, NoteValue.Id);
       Next.Dirty := false;
       Next.Status := 'Saved ' + NoteValue.Title;
+      if Next.Overlay = NotesOverlay.SaveFailure then
+      begin
+        Next.Overlay := NotesOverlay.Closed;
+        Next.ErrorMessage := ''
+      end;
+
       return Next
     end;
     Error(Message):

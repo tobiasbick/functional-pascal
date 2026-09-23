@@ -218,6 +218,18 @@ begin
   return Ok(Output)
 end;
 
+// Discards all retained input after an error and prevents further decoding.
+function FailedState(mutable State: DecoderState): DecoderState;
+begin
+  State.Buffer := [];
+  State.Data := '';
+  State.EventType := '';
+  State.LastEventId := '';
+  State.EventBytes := 0;
+  State.Finished := true;
+  return State
+end;
+
 // Creates an incremental decoder with a bounded event buffer.
 //
 // Parameters:
@@ -256,20 +268,46 @@ begin
       begin
         return Error('SSE decoder is already finished')
       end;
-
-      State.Buffer := Std.Arrays.Concat(State.Buffer, Bytes);
-      case Process(State, false) of
-        Ok(Output):
+      mutable var Events: array of SseEvent := [];
+      mutable var Offset: integer := 0;
+      while Offset < Std.Arrays.Length(Bytes) do
+      begin
+        var Available: integer := (State.Maximum - State.EventBytes) -
+                                  Std.Arrays.Length(State.Buffer);
+        mutable var Count: integer := Std.Arrays.Length(Bytes) - Offset;
+        if Count > 1024 then
         begin
-          StoreState(Index, Output.State);
-          return Ok(Output.Events)
+          Count := 1024
         end;
-        Error(Message):
+
+        // One lookahead byte lets Process resolve a trailing CR or reject overflow.
+        if Count > Available then
         begin
-          StoreState(Index, State);
-          return Error(Message)
-        end
-      end
+          Count := Available + 1
+        end;
+
+        State.Buffer := Std.Arrays.Concat(State.Buffer, Std.Arrays.Slice(Bytes, Offset, Count));
+        case Process(State, false) of
+          Ok(Output):
+          begin
+            State := Output.State;
+            for Item: SseEvent in Output.Events do
+            begin
+              Std.Arrays.Push(Events, Item)
+            end
+          end;
+          Error(Message):
+          begin
+            StoreState(Index, FailedState(State));
+            return Error(Message)
+          end
+        end;
+
+        Offset := Offset + Count
+      end;
+
+      StoreState(Index, State);
+      return Ok(Events)
     end;
     Error(Message):
     begin
@@ -301,6 +339,7 @@ begin
         end;
         Error(Message):
         begin
+          StoreState(Index, FailedState(State));
           return Error(Message)
         end
       end

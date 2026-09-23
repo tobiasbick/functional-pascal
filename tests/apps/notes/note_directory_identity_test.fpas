@@ -1,0 +1,61 @@
+program NoteDirectoryIdentityTest;
+
+uses
+  Notes.Model, Notes.Repository, Notes.Update, Std.Arrays, Std.Fs, Std.Path, Std.Results, Std.Str,
+  Std.Test, Std.Tui;
+
+procedure CheckDirectory(Name: string; Sibling: string);
+begin
+  var Root: string := ScratchDir();
+  var Directory: string := Std.Path.Join([Root, Name]);
+  var Adjacent: string := Std.Path.Join([Root, Sibling]);
+  AssertTrue(Unwrap(NotesEnsureDirectory(Directory)));
+  mutable var Outside: Note := NoteCreate('outside', 1);
+  Outside.Title := 'untouched';
+  AssertTrue(Unwrap(NotesSave(Adjacent, Outside)));
+  var Before: string := Unwrap(Std.Fs.ReadText(NoteFilePath(Adjacent, Outside)));
+  AssertEquals(0, Std.Arrays.Length(Unwrap(NotesLoadDirectory(Directory)).Notes));
+  mutable var Inside: Note := NoteCreate('inside', 2);
+  AssertTrue(Unwrap(NotesSave(Directory, Inside)));
+  var Loaded: NotesLoad := Unwrap(NotesLoadDirectory(Directory));
+  AssertEquals(1, Std.Arrays.Length(Loaded.Notes));
+  AssertEquals(Std.Str.Replace(NoteFilePath(Directory, Inside), '\', '/'), Std.Str.Replace(Loaded.Notes[0].Path, '\', '/'));
+  Inside := Loaded.Notes[0];
+  Inside.Title := 'edited';
+  AssertTrue(Unwrap(NotesSave(Directory, Inside)));
+  AssertEquals(Before, Unwrap(Std.Fs.ReadText(NoteFilePath(Adjacent, Outside))))
+end;
+
+begin
+  CheckDirectory('set[1]', 'set1');
+  CheckDirectory('space [open', 'space open');
+  var Directory: string := ScratchDir() + '/duplicates';
+  mutable var First: Note := NoteCreate('duplicate', 1);
+  First.Path := Directory + '/first.note';
+  First.Title := 'first';
+  mutable var Second: Note := First;
+  Second.Path := Directory + '/second.note';
+  Second.Title := 'second';
+  var Unique: Note := NoteCreate('unique', 3);
+  AssertTrue(Unwrap(NotesSave(Directory, First)));
+  AssertTrue(Unwrap(NotesSave(Directory, Second)));
+  AssertTrue(Unwrap(NotesSave(Directory, Unique)));
+  var FirstText: string := Unwrap(Std.Fs.ReadText(First.Path));
+  var SecondText: string := Unwrap(Std.Fs.ReadText(Second.Path));
+  var Loaded: NotesLoad := Unwrap(NotesLoadDirectory(Directory));
+  AssertEquals(1, Std.Arrays.Length(Loaded.Notes));
+  AssertEquals(2, Std.Arrays.Length(Loaded.Issues));
+  AssertEquals('unique', Loaded.Notes[0].Id);
+  AssertTrue((Loaded.Issues[0].Path = First.Path) or (Loaded.Issues[1].Path = First.Path));
+  AssertTrue((Loaded.Issues[0].Path = Second.Path) or (Loaded.Issues[1].Path = Second.Path));
+  mutable var State: NotesModel := NotesModelCreate(Directory, Loaded);
+  var Cmd: TuiCmdOutput := TuiCmdOutput.Create();
+  State := NotesUpdate(State, TuiMsgSelectionChanged(TuiControlId.Create(2), TuiAction.Create(2), 0), Cmd);
+  State.Dirty := true;
+  State := NotesPersistCurrent(State);
+  AssertFalse(State.Dirty);
+  State := NotesUpdate(State, TuiMsgAction(TuiControlId.Create(23), TuiAction.Create(13)), Cmd);
+  AssertEquals(-1, State.Selected);
+  AssertEquals(FirstText, Unwrap(Std.Fs.ReadText(First.Path)));
+  AssertEquals(SecondText, Unwrap(Std.Fs.ReadText(Second.Path)))
+end.

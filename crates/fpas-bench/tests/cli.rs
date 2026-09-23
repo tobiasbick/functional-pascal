@@ -134,7 +134,7 @@ fn help_exits_successfully_and_lists_every_group() -> Result<(), Box<dyn Error>>
             output.status.code(),
             stderr,
             stdout.contains(
-                "--group mandelbrot|vm|concurrency|tui|tooling|startup|review|local-index"
+                "--group mandelbrot|vm|concurrency|tui|tooling|startup|review|local-index|source-review|source-navigation"
             ),
             stdout.contains("Examples:")
         ),
@@ -156,7 +156,7 @@ fn unknown_group_lists_every_configured_group() -> Result<(), Box<dyn Error>> {
         (
             Some(1),
             String::new(),
-            "error: no benchmarks in group `missing` (known groups: mandelbrot, vm, concurrency, tui, tooling, startup, review, local-index)"
+            "error: no benchmarks in group `missing` (known groups: mandelbrot, vm, concurrency, tui, tooling, startup, review, local-index, source-review, source-navigation)"
                 .to_owned()
         )
     );

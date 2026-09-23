@@ -14,6 +14,40 @@ cargo bench-fpas record "vm-only note" --group vm
 
 Newest entries are prepended below this header.
 
+## 2026-09-23 — TextArea grapheme traversal with preserved scalar caret positions
+
+- Group: `source-navigation`
+- Suite: [`suite.toml`](suite.toml)
+
+| bench | elapsed_ms | throughput |
+|-------|------------|------------|
+| source_navigation_long_512 | 69 | - |
+| source_navigation_long_1024 | 133 | - |
+| source_navigation_long_2048 | 265 | - |
+| source_navigation_lines_512 | 15 | - |
+| source_navigation_lines_1024 | 25 | - |
+| source_navigation_lines_2048 | 44 | - |
+
+## 2026-09-23 — Bulk UTF-8 conversion, stable Notes sorting, and indexed TUI queues
+
+- Group: `source-review`
+- Suite: [`suite.toml`](suite.toml)
+
+| bench | elapsed_ms | throughput |
+|-------|------------|------------|
+| source_utf8_ascii_2048 | 16 | - |
+| source_utf8_ascii_4096 | 32 | - |
+| source_utf8_ascii_8192 | 64 | - |
+| source_utf8_unicode_2048 | 61 | - |
+| source_utf8_unicode_4096 | 127 | - |
+| source_utf8_unicode_8192 | 260 | - |
+| source_notes_ascii_128 | 6 | - |
+| source_notes_ascii_256 | 13 | - |
+| source_notes_ascii_512 | 30 | - |
+| source_queue_ascii_256 | 111 | - |
+| source_queue_ascii_512 | 223 | - |
+| source_queue_ascii_1024 | 445 | - |
+
 ## 2026-09-23 — Rust review project build changes
 
 - Group: `startup`

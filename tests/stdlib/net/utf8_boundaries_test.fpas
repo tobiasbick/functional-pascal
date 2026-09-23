@@ -1,0 +1,53 @@
+program Utf8BoundariesTest;
+
+uses Std.Net.Utf8, Std.Results, Std.Str, Std.Test;
+
+procedure Invalid(Bytes: array of integer);
+begin
+  case Std.Net.Utf8.Decode(Bytes) of
+    Ok(_):
+    begin
+      Fail('invalid encoding accepted')
+    end;
+    Error(_):
+    begin
+    end
+  end
+end;
+
+begin
+  for Text: string in [
+                        '',
+                        #0,
+                        #127,
+                        #128,
+                        Std.Str.Chr(2047),
+                        Std.Str.Chr(2048),
+                        Std.Str.Chr(55295),
+                        Std.Str.Chr(57344),
+                        Std.Str.Chr(65535),
+                        Std.Str.Chr(65536),
+                        Std.Str.Chr(1114111),
+                        'e' + Std.Str.Chr(769),
+                        Std.Str.RepeatStr('x' + Std.Str.Chr(769), 2048)
+                      ] do
+  begin
+    AssertEquals(Text, Unwrap(Std.Net.Utf8.Decode(Std.Net.Utf8.Encode(Text))))
+  end;
+
+  Invalid([-1]);
+  Invalid([256]);
+  Invalid([128]);
+  Invalid([192, 128]);
+  Invalid([193, 191]);
+  Invalid([194]);
+  Invalid([194, 0]);
+  Invalid([224, 128, 128]);
+  Invalid([237, 160, 128]);
+  Invalid([239, 191]);
+  Invalid([239, 191, 256]);
+  Invalid([240, 128, 128, 128]);
+  Invalid([240, 144, 128]);
+  Invalid([244, 144, 128, 128]);
+  Invalid([245, 128, 128, 128])
+end.

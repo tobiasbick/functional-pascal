@@ -1,0 +1,60 @@
+// Viewport geometry shared by the interactive fractal examples.
+unit Fractal.Camera;
+
+uses Std.Conv, Std.Math;
+
+public type
+  // Complex-plane viewport and renderer settings.
+  ExplorerCamera = record
+    // Horizontal center in the complex plane.
+    public CenterX: real;
+    // Vertical center in the complex plane.
+    public CenterY: real;
+    // Visible vertical span.
+    public SpanY: real;
+    // Maximum iterations per pixel.
+    public MaxIter: integer;
+    // Example palette number (1 through 3).
+    public Palette: integer;
+
+    // Horizontal span adjusted for terminal cell proportions.
+    public function SpanX(Self: ExplorerCamera; Width: integer; Height: integer): real;
+    begin
+      var SafeWidth: integer := Max(Width, 1);
+      var SafeHeight: integer := Max(Height, 1);
+      return (Self.SpanY * (IntToReal(SafeWidth) / IntToReal(SafeHeight))) * 0.5
+    end;
+
+    // Left viewport boundary.
+    public function XMin(Self: ExplorerCamera; Width: integer; Height: integer): real;
+    begin
+      return Self.CenterX - (Self.SpanX(Width, Height) * 0.5)
+    end;
+
+    // Right viewport boundary.
+    public function XMax(Self: ExplorerCamera; Width: integer; Height: integer): real;
+    begin
+      return Self.CenterX + (Self.SpanX(Width, Height) * 0.5)
+    end;
+
+    // Bottom viewport boundary.
+    public function YMin(Self: ExplorerCamera): real;
+    begin
+      return Self.CenterY - (Self.SpanY * 0.5)
+    end;
+
+    // Top viewport boundary.
+    public function YMax(Self: ExplorerCamera): real;
+    begin
+      return Self.CenterY + (Self.SpanY * 0.5)
+    end;
+
+    // Zoom relative to the initial vertical span.
+    public function GetZoom(Self: ExplorerCamera): real;
+    begin
+      return 2.8 / Self.SpanY
+    end;
+
+    // Current relative zoom factor.
+    public property Zoom: real read GetZoom;
+  end;

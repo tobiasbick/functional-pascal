@@ -1,0 +1,63 @@
+program UriStrictPortTest;
+
+uses Std.Net.Uri, Std.Test;
+
+procedure Rejected(Text: string);
+begin
+  case Std.Net.Uri.Parse(Text) of
+    Ok(_):
+    begin
+      Fail('accepted ' + Text)
+    end;
+    Error(_):
+    begin
+    end
+  end
+end;
+
+procedure Accepted(Text: string; Scheme: string; Port: integer);
+begin
+  case Std.Net.Uri.Parse(Text) of
+    Ok(Value):
+    begin
+      AssertEquals(Scheme, Value.Scheme);
+      AssertEquals(Port, Value.Port)
+    end;
+    Error(Message):
+    begin
+      Fail(Message)
+    end
+  end
+end;
+
+begin
+  for Scheme: string in ['ftp', 'file', 'ws'] do
+  begin
+    Rejected(Scheme + '://127.0.0.1');
+    Rejected(Scheme + '://127.0.0.1:80')
+  end;
+
+  for Port: string in [
+                        '',
+                        '+80',
+                        '-80',
+                        '8_0',
+                        '$50',
+                        '0x50',
+                        ' 80',
+                        '80 ',
+                        '0',
+                        '65536',
+                        '9223372036854775808'
+                      ] do
+  begin
+    Rejected('http://host:' + Port);
+    Rejected('https://[::1]:' + Port)
+  end;
+
+  Accepted('HTTP://host', 'http', 80);
+  Accepted('HTTPS://[::1]', 'https', 443);
+  Accepted('http://host:1', 'http', 1);
+  Accepted('https://[::1]:65535', 'https', 65535);
+  Accepted('http://host:00080', 'http', 80)
+end.

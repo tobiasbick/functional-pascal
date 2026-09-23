@@ -1,0 +1,32 @@
+// Strict decimal integers shared by HTTP framing and URI ports.
+unit Std.Net.Decimal;
+
+uses Std.Str;
+
+// Parses ASCII digits without signs, separators, whitespace, or overflow.
+// See docs/pascal/std/network/uri.md and docs/pascal/std/network/http.md.
+public function Parse(Text: string; Maximum: integer): result of integer, string;
+begin
+  if Text = '' then
+  begin
+    return Error('expected decimal digits')
+  end;
+  mutable var Value: integer := 0;
+  for Index: integer := 0 to Std.Str.Length(Text) - 1 do
+  begin
+    var Digit: integer := Std.Str.Ord(Std.Str.CharAt(Text, Index)) - 48;
+    if (Digit < 0) or (Digit > 9) then
+    begin
+      return Error('expected ASCII decimal digits')
+    end;
+
+    if (Value > Maximum div 10) or ((Value = Maximum div 10) and (Digit > Maximum mod 10)) then
+    begin
+      return Error('decimal value exceeds the supported range')
+    end;
+
+    Value := Value * 10 + Digit
+  end;
+
+  return Ok(Value)
+end;

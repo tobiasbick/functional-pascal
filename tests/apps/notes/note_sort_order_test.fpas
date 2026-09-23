@@ -1,0 +1,16 @@
+program NoteSortOrderTest;
+
+uses Notes.Model, Notes.Repository, Std.Test;
+
+begin
+  mutable var Pinned: Note := NoteCreate('pinned', 1);
+  Pinned.Pinned := true;
+  var First: Note := NoteCreate('first', 10);
+  var Second: Note := NoteCreate('second', 10);
+  var Newest: Note := NoteCreate('newest', 20);
+  var Sorted: array of Note := NotesSort([First, Newest, Pinned, Second]);
+  AssertEquals('pinned', Sorted[0].Id);
+  AssertEquals('newest', Sorted[1].Id);
+  AssertEquals('first', Sorted[2].Id);
+  AssertEquals('second', Sorted[3].Id)
+end.

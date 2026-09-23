@@ -7,6 +7,8 @@ uses
   Std.Tui.Runtime.Routing.Pointer, Std.Tui.Runtime.TerminalSession;
 
 public mutable var
+  TuiAppInputHead: array of integer := [];
+  TuiAppMessageHead: array of integer := [];
   TuiAppOpen: array of boolean := [];
   TuiAppInputs: array of array of TuiHostInput := [];
   TuiAppMessages: array of array of TuiMsg := [];
@@ -21,6 +23,8 @@ public mutable var
 // Opens application-owned state and returns its stable identifier.
 public function TuiAppOpenApplication(Size: TuiSize; Palette: TuiPalette; Interactive: boolean): integer;
 begin
+  Std.Arrays.Push(TuiAppInputHead, 0);
+  Std.Arrays.Push(TuiAppMessageHead, 0);
   TuiAppOpen := Std.Arrays.Concat(TuiAppOpen, [true]);
   TuiAppInputs := Std.Arrays.Concat(TuiAppInputs, [[]]);
   TuiAppMessages := Std.Arrays.Concat(TuiAppMessages, [[]]);
@@ -50,6 +54,8 @@ begin
   end;
   var BackgroundFailures: array of TuiMsg := TuiBackgroundCloseApplication(ApplicationId);
   TuiAppOpen[ApplicationId - 1] := false;
+  TuiAppInputHead[ApplicationId - 1] := 0;
+  TuiAppMessageHead[ApplicationId - 1] := 0;
   TuiAppInputs[ApplicationId - 1] := [];
   TuiAppMessages[ApplicationId - 1] := [];
   Std.Tui.Runtime.Routing.Pointer.TuiPointerRoutingClose(ApplicationId);
@@ -103,32 +109,80 @@ begin
   return ApplicationId
 end;
 
+// Returns the number of unread inputs for one application.
+public function TuiAppInputCount(ApplicationId: integer): integer;
+begin
+  return Std.Arrays.Length(TuiAppInputs[ApplicationId - 1]) - TuiAppInputHead[ApplicationId - 1]
+end;
+
+// Removes the next queued input, compacting only after at least half is consumed.
 public function TuiAppPopInput(ApplicationId: integer): TuiHostInput;
 begin
-  var Input: TuiHostInput := TuiAppInputs[ApplicationId - 1][0];
-  TuiAppInputs[ApplicationId - 1] := Std.Arrays.Slice(TuiAppInputs[ApplicationId - 1], 1, Std.Arrays.Length(TuiAppInputs[ApplicationId -
-                                                                                                                         1]) -
-                                                                                          1);
-  return Input
+  var Slot: integer := ApplicationId - 1;
+  var Head: integer := TuiAppInputHead[Slot];
+  var Item: TuiHostInput := TuiAppInputs[Slot][Head];
+  var Next: integer := Head + 1;
+  var Count: integer := Std.Arrays.Length(TuiAppInputs[Slot]);
+  if (Next = Count) or ((Next >= 64) and (Next >= Count div 2)) then
+  begin
+    TuiAppInputs[Slot] := Std.Arrays.Slice(TuiAppInputs[Slot], Next, Count - Next);
+    TuiAppInputHead[Slot] := 0
+  end
+  else
+  begin
+    TuiAppInputHead[Slot] := Next
+  end;
+
+  return Item
 end;
 
+// Returns the number of unread messages for one application.
+public function TuiAppMessageCount(ApplicationId: integer): integer;
+begin
+  return Std.Arrays.Length(TuiAppMessages[ApplicationId - 1]) - TuiAppMessageHead[ApplicationId - 1]
+end;
+
+// Removes the next queued message, compacting only after at least half is consumed.
 public function TuiAppPopMessage(ApplicationId: integer): TuiMsg;
 begin
-  var Msg: TuiMsg := TuiAppMessages[ApplicationId - 1][0];
-  TuiAppMessages[ApplicationId - 1] := Std.Arrays.Slice(TuiAppMessages[ApplicationId - 1], 1, Std.Arrays.Length(TuiAppMessages[ApplicationId -
-                                                                                                                               1]) -
-                                                                                              1);
-  return Msg
+  var Slot: integer := ApplicationId - 1;
+  var Head: integer := TuiAppMessageHead[Slot];
+  var Item: TuiMsg := TuiAppMessages[Slot][Head];
+  var Next: integer := Head + 1;
+  var Count: integer := Std.Arrays.Length(TuiAppMessages[Slot]);
+  if (Next = Count) or ((Next >= 64) and (Next >= Count div 2)) then
+  begin
+    TuiAppMessages[Slot] := Std.Arrays.Slice(TuiAppMessages[Slot], Next, Count - Next);
+    TuiAppMessageHead[Slot] := 0
+  end
+  else
+  begin
+    TuiAppMessageHead[Slot] := Next
+  end;
+
+  return Item
 end;
 
+// Enqueues messages in their original order.
 public procedure TuiAppPushMessages(ApplicationId: integer; Messages: array of TuiMsg);
 begin
-  TuiAppMessages[ApplicationId - 1] := Std.Arrays.Concat(TuiAppMessages[ApplicationId - 1], Messages)
+  mutable var Queue: array of TuiMsg := TuiAppMessages[ApplicationId - 1];
+  TuiAppMessages[ApplicationId - 1] := [];
+  for Item: TuiMsg in Messages do
+  begin
+    Std.Arrays.Push(Queue, Item)
+  end;
+
+  TuiAppMessages[ApplicationId - 1] := Queue
 end;
 
+// Enqueues one input for the application.
 public procedure TuiAppPushInput(ApplicationId: integer; Input: TuiHostInput);
 begin
-  TuiAppInputs[ApplicationId - 1] := Std.Arrays.Concat(TuiAppInputs[ApplicationId - 1], [Input])
+  mutable var Queue: array of TuiHostInput := TuiAppInputs[ApplicationId - 1];
+  TuiAppInputs[ApplicationId - 1] := [];
+  Std.Arrays.Push(Queue, Input);
+  TuiAppInputs[ApplicationId - 1] := Queue
 end;
 
 // Queues Started exactly once for a background-enabled host.

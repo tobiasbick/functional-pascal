@@ -1,3 +1,5 @@
+mod sse_state;
+
 use std::io::{Read, Write};
 use std::net::{TcpListener, TcpStream};
 use std::path::Path;

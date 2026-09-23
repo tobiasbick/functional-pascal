@@ -1,0 +1,68 @@
+program SseErrorStateTest;
+
+uses Std.Arrays, Std.Http, Std.Net.Utf8, Std.Results, Std.Str, Std.Test;
+
+procedure Terminal(Decoder: SseDecoder);
+begin
+  for Pass: integer := 1 to 3 do
+  begin
+    case FeedSse(Decoder, Std.Net.Utf8.Encode(('data: more' + #10) + #10)) of
+      Ok(_):
+      begin
+        Fail('feed after error')
+      end;
+      Error(Message):
+      begin
+        AssertTrue(Std.Str.Contains(Message, 'finished'))
+      end
+    end;
+
+    case FinishSse(Decoder) of
+      Ok(_):
+      begin
+        Fail('finish after error')
+      end;
+      Error(Message):
+      begin
+        AssertTrue(Std.Str.Contains(Message, 'finished'))
+      end
+    end
+  end
+end;
+
+begin
+  var Limited: SseDecoder := Unwrap(CreateSseDecoder(8));
+  case FeedSse(Limited, Std.Net.Utf8.Encode(Std.Str.RepeatStr('x', 100000))) of
+    Ok(_):
+    begin
+      Fail('oversized fragment')
+    end;
+    Error(_):
+    begin
+    end
+  end;
+
+  Terminal(Limited);
+  var Invalid: SseDecoder := Unwrap(CreateSseDecoder(16));
+  AssertEquals(0, Std.Arrays.Length(Unwrap(FeedSse(Invalid, [255]))));
+  case FinishSse(Invalid) of
+    Ok(_):
+    begin
+      Fail('invalid final UTF-8')
+    end;
+    Error(_):
+    begin
+    end
+  end;
+
+  Terminal(Invalid);
+  var Many: SseDecoder := Unwrap(CreateSseDecoder(9));
+  var Events: array of SseEvent := Unwrap(FeedSse(Many, Std.Net.Utf8.Encode(Std.Str.RepeatStr((('data:x' + #13) + #10) +
+                                                                                              #10, 500))));
+  AssertEquals(500, Std.Arrays.Length(Events));
+  AssertEquals('x', Events[499].Data);
+  var Split: SseDecoder := Unwrap(CreateSseDecoder(9));
+  AssertEquals(0, Std.Arrays.Length(Unwrap(FeedSse(Split, Std.Net.Utf8.Encode('data:x' + #13)))));
+  AssertEquals(1, Std.Arrays.Length(Unwrap(FeedSse(Split, [10, 10]))));
+  AssertEquals(0, Std.Arrays.Length(Unwrap(FinishSse(Split))))
+end.

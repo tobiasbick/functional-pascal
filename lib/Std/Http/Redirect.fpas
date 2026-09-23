@@ -79,36 +79,28 @@ begin
   end;
   var Parts: array of string := Std.Str.Split(Path, '/');
   mutable var Segments: array of string := [];
-  for Index: integer := 0 to Std.Arrays.Length(Parts) - 1 do
+  // The first empty segment belongs to the absolute root. All others are significant.
+  for Index: integer := 1 to Std.Arrays.Length(Parts) - 1 do
   begin
-    if (Parts[Index] = '') or (Parts[Index] = '.') then
-    begin
-      continue
-    end;
-
-    if Parts[Index] = '..' then
+    var Part: string := Parts[Index];
+    if Part = '..' then
     begin
       if Std.Arrays.Length(Segments) > 0 then
       begin
         Segments := Std.Arrays.Slice(Segments, 0, Std.Arrays.Length(Segments) - 1)
-      end;
-
-      continue
-    end;
-
-    Std.Arrays.Push(Segments, Parts[Index])
-  end;
-  mutable var Output: string := '/';
-  for Index: integer := 0 to Std.Arrays.Length(Segments) - 1 do
-  begin
-    if Index > 0 then
+      end
+    end
+    else if Part <> '.' then
     begin
-      Output := Output + '/'
+      Std.Arrays.Push(Segments, Part)
     end;
 
-    Output := Output + Segments[Index]
+    if ((Part = '.') or (Part = '..')) and (Index = Std.Arrays.Length(Parts) - 1) then
+    begin
+      Std.Arrays.Push(Segments, '')
+    end
   end;
-
+  var Output: string := '/' + Std.Str.Join(Segments, '/');
   return Output + Query
 end;
 
@@ -159,8 +151,13 @@ begin
   end;
 
   case Std.Net.Uri.Parse(Target) of
-    Ok(_):
+    Ok(Parsed):
     begin
+      if Std.Str.Contains(Reference, '://') or Std.Str.StartsWith(Reference, '//') then
+      begin
+        return Ok(Origin(Parsed) + NormalizePath(Parsed.Path))
+      end;
+
       return Ok(Target)
     end;
     Error(Message):

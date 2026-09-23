@@ -40,9 +40,8 @@ begin
   return Lines[Line]
 end;
 
-function TuiTextAreaLineStartAt(Text: string; Line: integer): integer;
+function TuiTextAreaLineStartAt(Lines: array of string; Line: integer): integer;
 begin
-  var Lines: array of string := Std.Str.Split(Text, Std.Str.Chr(10));
   mutable var Target: integer := Line;
   if Target < 0 then
   begin
@@ -108,18 +107,38 @@ begin
   begin
     TargetColumn := 0
   end;
-  var Start: integer := TuiTextAreaLineStartAt(Text, Line);
-  var LineText: string := TuiTextAreaLineText(Text, Line);
-  for Column: integer := 0 to Std.Str.Length(LineText) - 1 do
+  var Lines: array of string := Std.Str.Split(Text, Std.Str.Chr(10));
+  if (Line < 0) or (Line >= Std.Arrays.Length(Lines)) then
   begin
-    var Prefix: string := Std.Str.Substring(LineText, 0, Column + 1);
-    if Std.Console.DisplayWidth(Prefix) > TargetColumn then
+    panic('Tui text area line must be within its text')
+  end;
+  var Start: integer := TuiTextAreaLineStartAt(Lines, Line);
+  var LineText: string := Lines[Line];
+  mutable var Column: integer := 0;
+  mutable var Characters: integer := 0;
+  for Grapheme: string in Std.Console.SplitGraphemes(LineText) do
+  begin
+    var Width: integer := Std.Console.DisplayWidth(Grapheme);
+    // Console display width caps each cluster at two cells. Its final width may
+    // be narrower than a prefix (for example an emoji followed by VS15).
+    if Column + 2 > TargetColumn then
     begin
-      return Start + Column
-    end
+      // Preserve scalar-index positions inside the crossing cluster, including emoji selectors.
+      for Index: integer := 0 to Std.Str.Length(Grapheme) - 1 do
+      begin
+        if Column + Std.Console.DisplayWidth(Std.Str.Substring(Grapheme, 0, Index + 1)) >
+           TargetColumn then
+        begin
+          return (Start + Characters) + Index
+        end
+      end
+    end;
+
+    Column := Column + Width;
+    Characters := Characters + Std.Str.Length(Grapheme)
   end;
 
-  return Start + Std.Str.Length(LineText)
+  return Start + Characters
 end;
 
 // Returns minimum content size for all logical lines before viewport constraints.

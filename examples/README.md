@@ -276,9 +276,10 @@ fpas run examples/network/tcp_parallel_echo_server.fpas -- 18082 10000
 It echoes raw bytes as they arrive, without an `Echo:` prefix or line framing. Each of four workers
 accepts and owns one connection at a time, processes chunks of at most 4096 bytes, handles partial
 writes, and closes the connection even on an I/O error. Idle reads/writes have a five-second timeout.
-At lifetime expiry the owner cancels accept and connection I/O, tries a one-second group close,
-then retains and joins any unfinished workers before closing the listener. Active requests may be
-interrupted: this is a cancellation demo, not graceful draining or a hard process-exit guarantee.
+At lifetime expiry or a shutdown signal, the server lifetime cancels accept and connection I/O
+and closes its owned listener. The task group uses the remaining shutdown deadline. Orderly
+completion finishes the lifetime; if workers cannot stop in time, its armed watchdog escalates
+to process exit. Active requests may be interrupted: this demonstrates cancellation, not graceful draining.
 Hosted network calls occupy VM workers; actual parallelism also depends on the runtime pool.
 The original single-request TCP tutorial remains unchanged.
 

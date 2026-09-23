@@ -297,6 +297,14 @@ pub(crate) fn run(
                 .unwrap_or(-1);
             call.push(Value::Integer(idx));
         }
+        Intrinsic::Str(StrIntrinsic::Utf8Encode) => {
+            let text = expect_str(pop_value(call, location)?, location)?;
+            let bytes = text
+                .bytes()
+                .map(|byte| Value::Integer(i64::from(byte)))
+                .collect::<Vec<_>>();
+            call.push(Value::Array(bytes.into()));
+        }
         Intrinsic::Str(StrIntrinsic::Format) => {
             let arg_count = pop_int(pop_value(call, location)?, location)?;
             if arg_count < 0 {

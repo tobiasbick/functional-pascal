@@ -91,5 +91,8 @@ pub enum StrIntrinsic {
     ///
     /// **Documentation:** `docs/pascal/std/text/str/README.md`
     Format = 242,
+    /// Internal bulk UTF-8 encoder for `Std.Net.Utf8.EncodeBytes`.
+    /// See `docs/pascal/std/network/utf8.md`.
+    Utf8Encode = 568,
 }
 }

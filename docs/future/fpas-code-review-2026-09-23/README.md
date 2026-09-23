@@ -6,6 +6,11 @@ Scope: the Functional Pascal implementations in `lib/`, applications in `apps/`,
 
 No implementation or language specification was changed. Generated declarations in `lib/api/` were treated as intrinsic API declarations; their placeholder bodies are not implementation defects. The earlier [Rust review](../rust-code-review-2026-09-23/) remains separate.
 
+## Implementation follow-up
+
+See [implementation and verification](implementation.md) for the changes following this review.
+The findings and original verification below describe the reviewed commit.
+
 ## Reports
 
 - [Correctness](correctness.md): seven findings, including six reproduced through public APIs and one established by source inspection.

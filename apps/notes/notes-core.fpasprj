@@ -4,6 +4,7 @@ kind = "library"
 
 [exports]
 units = [
+  "Notes.Actions",
   "Notes.Format",
   "Notes.Model",
   "Notes.Repository",

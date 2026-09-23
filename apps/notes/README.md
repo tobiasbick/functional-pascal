@@ -20,7 +20,9 @@ fpas run apps/notes/notes.fpasprj -- ./my-notes
 ```
 
 The directory is created when its parent exists. Notes never scans outside the
-selected directory.
+selected directory, including when its name contains spaces or glob metacharacters.
+If multiple files contain the same note ID, all such files are listed as issues and excluded
+from editing until their IDs are made unique; their contents are left untouched.
 
 In VS Code with the Functional Pascal extension, open either
 `apps/notes/src/notes.fpas` or `apps/notes/notes.fpasprj` and press **F5**. The
@@ -60,7 +62,8 @@ flow.
 
 Moving the caret or scrolling the editor does not mark a clean note as modified
 or change its saved timestamp. Changes to the persisted title, tags, or body
-mark the note as unsaved.
+mark the note as unsaved. A successful retry after a save failure clears the error overlay
+and allows navigation and Save-and-quit again.
 
 ## Keyboard
 

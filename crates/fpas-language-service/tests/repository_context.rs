@@ -109,7 +109,7 @@ fn repository_references_find_notes_update_in_the_consuming_program() {
         .expect("NotesUpdate references")
         .value;
 
-    assert_eq!(references.len(), 31, "{references:?}");
+    assert_eq!(references.len(), 35, "{references:?}");
     assert!(
         references.iter().any(|reference| reference.path.ends_with(
             program
@@ -144,6 +144,19 @@ fn repository_references_find_notes_update_in_the_consuming_program() {
         5,
         "new navigation regression references"
     );
+    for fixture in [
+        "note_directory_identity_test.fpas",
+        "note_save_recovery_test.fpas",
+    ] {
+        assert_eq!(
+            references
+                .iter()
+                .filter(|reference| reference.path.ends_with(fixture))
+                .count(),
+            2,
+            "source review regression references in {fixture}"
+        );
+    }
     assert_eq!(
         references
             .iter()

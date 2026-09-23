@@ -146,6 +146,7 @@ impl Intrinsic {
     #[must_use]
     pub fn debugger_name(self) -> String {
         match self {
+            Self::Str(StrIntrinsic::Utf8Encode) => "Std.Net.Utf8.EncodeBytes".to_string(),
             Self::Str(StrIntrinsic::Repeat) => "Std.Str.RepeatStr".to_string(),
             Self::Http(HttpIntrinsic::ReserveBodyStreamState) => {
                 "Std.Http.Stream.ReserveState".to_string()

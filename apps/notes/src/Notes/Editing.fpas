@@ -1,13 +1,7 @@
 // Controlled text proposals and selection updates for Notes.
 unit Notes.Editing;
 
-uses Notes.Model, Std.Arrays, Std.Conv, Std.Tui;
-
-const
-  SearchChangedAction: integer := 1;
-  TitleChangedAction: integer := 3;
-  TagsChangedAction: integer := 4;
-  BodyChangedAction: integer := 5;
+uses Notes.Actions, Notes.Model, Std.Arrays, Std.Conv, Std.Tui;
 
 // Reports whether the selection refers to an existing note.
 public function NotesHasSelection(State: NotesModel): boolean;

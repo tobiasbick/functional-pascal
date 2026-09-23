@@ -1,7 +1,7 @@
 // Strict HTTP message-body framing selection.
 unit Std.Http.BodyFraming;
 
-uses Std.Arrays, Std.Http.Headers, Std.Http.Types, Std.Parse, Std.Str;
+uses Std.Arrays, Std.Http.Headers, Std.Http.Types, Std.Net.Decimal, Std.Str;
 
 public type
   // Selected HTTP message-body framing mode and remaining fixed length.
@@ -32,14 +32,9 @@ begin
 
     if Std.Http.Headers.IsName(Headers[Index].Name, 'Content-Length') then
     begin
-      case Std.Parse.TryInt(Headers[Index].Value) of
+      case Std.Net.Decimal.Parse(Headers[Index].Value, 9223372036854775807) of
         Ok(Length):
         begin
-          if Length < 0 then
-          begin
-            return Error('HTTP Content-Length must not be negative')
-          end;
-
           if (ContentLengthCount > 0) and (Length <> ContentLength) then
           begin
             return Error('HTTP message contains conflicting Content-Length headers')

@@ -3,41 +3,17 @@ unit Std.Net.Utf8;
 
 uses Std.Arrays, Std.Conv, Std.Str;
 
-// Encodes one FPAS string as UTF-8 bytes.
-//
-// Parameters:
-// - `Text`: String to encode.
+// Internal bulk codec implemented by the string runtime.
+function EncodeBytes(Text: string): array of integer;
+begin
+  panic('internal UTF-8 encode intrinsic was not lowered')
+end;
+
+// Encodes one FPAS string as UTF-8 bytes in one pass.
+// See docs/pascal/std/network/utf8.md.
 public function Encode(Text: string): array of integer;
 begin
-  mutable var Bytes: array of integer := [];
-  for Index: integer := 0 to Std.Str.Length(Text) - 1 do
-  begin
-    var CodePoint: integer := Std.Str.Ord(Std.Str.CharAt(Text, Index));
-    if CodePoint <= 127 then
-    begin
-      Std.Arrays.Push(Bytes, CodePoint)
-    end
-    else if CodePoint <= 2047 then
-    begin
-      Std.Arrays.Push(Bytes, 192 + CodePoint div 64);
-      Std.Arrays.Push(Bytes, 128 + CodePoint mod 64)
-    end
-    else if CodePoint <= 65535 then
-    begin
-      Std.Arrays.Push(Bytes, 224 + CodePoint div 4096);
-      Std.Arrays.Push(Bytes, 128 + (CodePoint div 64) mod 64);
-      Std.Arrays.Push(Bytes, 128 + CodePoint mod 64)
-    end
-    else
-    begin
-      Std.Arrays.Push(Bytes, 240 + CodePoint div 262144);
-      Std.Arrays.Push(Bytes, 128 + (CodePoint div 4096) mod 64);
-      Std.Arrays.Push(Bytes, 128 + (CodePoint div 64) mod 64);
-      Std.Arrays.Push(Bytes, 128 + CodePoint mod 64)
-    end
-  end;
-
-  return Bytes
+  return EncodeBytes(Text)
 end;
 
 // Builds a byte-indexed UTF-8 validation error.
@@ -65,7 +41,7 @@ end;
 // - `Bytes`: Integer byte values in `0..255`.
 public function Decode(Bytes: array of integer): result of string, string;
 begin
-  mutable var Text: string := '';
+  mutable var Parts: array of string := [];
   mutable var Index: integer := 0;
   while Index < Std.Arrays.Length(Bytes) do
   begin
@@ -145,9 +121,9 @@ begin
       end
     end;
 
-    Text := Text + Std.Str.Chr(CodePoint);
+    Std.Arrays.Push(Parts, Std.Str.Chr(CodePoint));
     Index := Index + Width
   end;
 
-  return Ok(Text)
+  return Ok(Std.Str.Join(Parts, ''))
 end;

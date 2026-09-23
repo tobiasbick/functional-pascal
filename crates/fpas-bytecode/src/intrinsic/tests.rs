@@ -156,6 +156,7 @@ const ALL_INTRINSICS: &[Intrinsic] = &[
     Intrinsic::Str(StrIntrinsic::TrimRight),
     Intrinsic::Str(StrIntrinsic::LastIndexOf),
     Intrinsic::Str(StrIntrinsic::Format),
+    Intrinsic::Str(StrIntrinsic::Utf8Encode),
     Intrinsic::Conv(ConvIntrinsic::IntToStr),
     Intrinsic::Conv(ConvIntrinsic::StrToInt),
     Intrinsic::Conv(ConvIntrinsic::RealToStr),

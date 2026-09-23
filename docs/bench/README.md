@@ -247,3 +247,19 @@ Benchmark process cleanup attempts to terminate the process group or job, then
 falls back to its wrapped child when tree termination fails. Reaping uses a
 two-second polling deadline; each captured pipe has its own two-second drain
 limit. Timeout errors retain termination, reaping, and both pipe errors together.
+
+## FPAS source-review workloads
+
+The `source-review` group measures UTF-8 roundtrips for ASCII and multibyte text,
+Notes sorting, and public headless TUI burst enqueue/drain at doubling sizes.
+The `source-navigation` group measures downward caret movement through long single
+lines and many short lines, including layout/rendering. Each row runs ten timed
+passes; input construction and CLI compilation are excluded. These are combined
+workloads, not isolated intrinsic timings. Compare the same IDs and arguments:
+
+```sh
+cargo bench-fpas save source-review-before --group source-review
+cargo bench-fpas compare source-review-before --group source-review
+cargo bench-fpas save source-navigation-before --group source-navigation
+cargo bench-fpas compare source-navigation-before --group source-navigation
+```

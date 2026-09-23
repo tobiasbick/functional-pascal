@@ -1,0 +1,49 @@
+program ApplicationQueueBurstTest;
+
+uses Std.Test, Std.Tui;
+
+function View(Value: integer): TuiElement;
+begin
+  return TuiElementBuilders.MakeEmpty()
+end;
+
+function Update(Value: integer; Msg: TuiMsg; Cmd: TuiCmdOutput): integer;
+begin
+  case Msg of
+    TuiMsg.Tick(Delta):
+    begin
+      AssertEquals(Value + 1, Delta);
+      return Delta
+    end
+    else
+    begin
+      return Value
+    end
+  end
+end;
+
+begin
+  var First: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(1, 1));
+  var Second: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(1, 1));
+  for I: integer := 1 to 300 do
+  begin
+    First.Inject(TuiMsg.Tick(I))
+  end;
+
+  Second.Inject(TuiMsg.Tick(1));
+  AssertEquals(100, First.RunIterations(0, Update, View, 100, 0));
+  for I: integer := 301 to 400 do
+  begin
+    First.Inject(TuiMsg.Tick(I))
+  end;
+
+  AssertEquals(1, Second.RunIterations(0, Update, View, 1, 0));
+  AssertEquals(400, First.RunIterations(100, Update, View, 300, 0));
+  AssertEquals(400, First.RunIterations(400, Update, View, 0, 0));
+  First.Inject(TuiMsg.Tick(401));
+  AssertEquals(401, First.RunIterations(400, Update, View, 1, 0));
+  First.Close();
+  Second.Inject(TuiMsg.Tick(2));
+  AssertEquals(2, Second.RunIterations(1, Update, View, 1, 0));
+  Second.Close()
+end.

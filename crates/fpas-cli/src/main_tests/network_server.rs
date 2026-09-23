@@ -5,6 +5,7 @@ use std::time::{Duration, Instant};
 
 use super::*;
 
+mod decimal_framing;
 mod https;
 mod listener_address;
 mod parallel_echo;

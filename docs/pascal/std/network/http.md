@@ -72,7 +72,8 @@ bodyless.
 
 The client follows `301`, `302`, `303`, `307`, and `308` when a `Location` header is present.
 Absolute, network-path, absolute-path, query-only, and relative references are resolved against the
-current URL. `303` changes every method except `HEAD` to `GET`; `301` and `302` change `POST` to
+current URL. Dot-segment removal preserves repeated and trailing slashes; query-only and
+fragment-only references retain the existing path. `303` changes every method except `HEAD` to `GET`; `301` and `302` change `POST` to
 `GET`; `307` and `308` preserve the method and body. A method change drops body representation
 headers. Redirects to another scheme, host, or port also drop `Authorization`,
 `Proxy-Authorization`, and `Cookie`.
@@ -110,7 +111,9 @@ either API, including informational responses, response headers, and chunk frami
 both `Transfer-Encoding` and `Content-Length`, conflicting `Content-Length` fields, repeated
 `Transfer-Encoding`, an unsupported transfer coding, or a chunk size outside the signed 64-bit
 integer range are rejected. `Send` is implemented by opening and draining the same streaming
-reader. A close-delimited response may end exactly at `MaxResponseBytes`; the reader
+reader. Request and response `Content-Length` values must contain only ASCII decimal digits
+and fit the nonnegative signed 64-bit range. Signs, radix prefixes, and separators are rejected.
+A close-delimited response may end exactly at `MaxResponseBytes`; the reader
 probes for EOF without accepting an additional body byte.
 
 ## Server-Sent Events
@@ -122,6 +125,11 @@ unknown fields. `MaxEventBytes` bounds buffered input for one event. `FinishSse`
 final event and rejects later input. Finalization adds no synthetic bytes to the event
 budget, including when the final line has no line ending. The `retry` field is currently ignored because reconnection is
 not part of this client.
+
+A decoding error from either `FeedSse` or `FinishSse` clears retained input, event fields, and
+the last event ID, and makes the decoder terminal. Later feed/finalize calls return a finished
+error. A large fragment containing many valid small events is accepted: processing uses bounded
+slices rather than retaining the entire fragment as pending input. Returned events and the caller's input array are outside the decoder's retained-input limit.
 
 Independent SSE decoders may be created and consumed by different tasks. Calls that mutate the same
 `SseDecoder` handle must remain serialized.

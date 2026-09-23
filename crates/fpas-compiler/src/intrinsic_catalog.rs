@@ -21,6 +21,9 @@ macro_rules! family {
 /// Resolve one semantically validated canonical standard-library call.
 #[must_use]
 pub(crate) fn resolve(name: &str, first_argument: Option<&Ty>) -> Option<Intrinsic> {
+    if name == "Std.Net.Utf8.EncodeBytes" {
+        return Some(Intrinsic::Str(StrIntrinsic::Utf8Encode));
+    }
     let remainder = name.strip_prefix("Std.")?;
     let (unit, member) = remainder.split_once('.')?;
     match unit {
@@ -406,6 +409,7 @@ mod tests {
 
     fn canonical_test_call(intrinsic: Intrinsic) -> (String, Option<Ty>) {
         match intrinsic {
+            Intrinsic::Str(StrIntrinsic::Utf8Encode) => ("Std.Net.Utf8.EncodeBytes".into(), None),
             Intrinsic::Str(StrIntrinsic::Repeat) => ("Std.Str.RepeatStr".into(), None),
             Intrinsic::Test(TestIntrinsic::AssertEqualsInteger) => {
                 ("Std.Test.AssertEquals".into(), Some(Ty::Integer))

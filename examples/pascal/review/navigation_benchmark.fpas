@@ -1,0 +1,86 @@
+program TextAreaNavigationBenchmark;
+
+uses Std.Args, Std.Conv, Std.Time, Std.Console, Std.Str, Std.Test, Std.Tui;
+
+type
+  TextAreaModel = record
+    Text: string;
+    Caret: integer;
+    Offset: TuiPoint;
+  end;
+
+function MakeKey(Kind: TuiKeyKind; Character: string): TuiKeyEvent;
+begin
+  return record
+    kind := Kind;
+    ch := Character;
+    shift := false;
+    ctrl := false;
+    alt := false;
+    meta := false;
+  end
+end;
+
+function ViewTextArea(State: TextAreaModel): TuiElement;
+begin
+  return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(1)), [
+                                                                        TuiElementBuilders.MakeTextArea(TuiControlId.Create(1), State.Text, State.Caret, State.Offset, TuiAction.Create(9))
+                                                                      ])
+end;
+
+function UpdateTextArea(State: TextAreaModel; Msg: TuiMsg; Cmd: TuiCmdOutput): TextAreaModel;
+begin
+  Cmd.Set(TuiCmd.NoCommand);
+  case Msg of
+    TuiMsg.TextAreaChanged(Source, Action, Text, Caret, Offset):
+    begin
+      AssertEquals(1, Source.Value);
+      AssertEquals(9, Action.Value);
+      return record
+        Text := Text;
+        Caret := Caret;
+        Offset := Offset;
+      end
+    end
+    else
+    begin
+      return State
+    end
+  end
+end;
+
+function Press(App: TuiApplication; State: TextAreaModel; Kind: TuiKeyKind; Character: string): TextAreaModel;
+begin
+  App.InjectKeyForTest(MakeKey(Kind, Character));
+  return App.RunIterations(State, UpdateTextArea, ViewTextArea, 1, 0)
+end;
+
+begin
+  var Size: integer := StrToInt(ParamStr(0));
+  var Mode: string := ParamStr(1);
+  mutable var Text: string := (Std.Str.RepeatStr('x', Size) + #10) + Std.Str.RepeatStr('x', Size);
+  mutable var Caret: integer := Size;
+  if Mode = 'lines' then
+  begin
+    Text := Std.Str.RepeatStr('short' + #10, Size);
+    Caret := Std.Str.Length(Text) - 7
+  end;
+  var Initial: TextAreaModel := record
+    Text := Text;
+    Caret := Caret;
+    Offset := TuiPoint.Create(0, 0);
+  end;
+  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(20, 4));
+  var Started: integer := MonotonicMillis();
+  for Pass: integer := 1 to 10 do
+  begin
+    var Moved: TextAreaModel := Press(App, Initial, TuiKeyKind.Down, '');
+    if Moved.Caret <= Caret then
+    begin
+      panic('caret did not move')
+    end
+  end;
+
+  WriteLn(('elapsed: ' + IntToStr(ElapsedMillis(Started))) + ' ms');
+  App.Close()
+end.

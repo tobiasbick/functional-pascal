@@ -1,350 +1,53 @@
-// Run as `fpas run burning_ship.fpasprj` (multi-unit project). Interactive; see examples/README.md.
-
+// Interactive renderer using the shared fractal explorer lifecycle.
 program BurningShipShowcase;
 
-uses Std.Console, Std.Conv, Std.Math, Std.Options, Std.Str, BurningShip.Color, BurningShip.Render;
+uses Fractal.Camera, Fractal.Explorer, BurningShip.Color, BurningShip.Render;
 
-type
-  ExplorerState = record
-    CenterX: real;
-    CenterY: real;
-    SpanY: real;
-    MaxIter: integer;
-    Palette: PaletteKind;
-
-    static function Default(): ExplorerState;
-    begin
-      return record
-        CenterX := -0.45;
-        CenterY := -0.55;
-        SpanY := 2.8;
-        MaxIter := 160;
-        Palette := PaletteKind.Ember;
-      end
-    end;
-
-    function SpanX(Self: ExplorerState; Width: integer; Height: integer): real;
-    begin
-      var SafeWidth: integer := Max(Width, 1);
-      var SafeHeight: integer := Max(Height, 1);
-      return (Self.SpanY * (IntToReal(SafeWidth) / IntToReal(SafeHeight))) * 0.5
-    end;
-
-    function XMin(Self: ExplorerState; Width: integer; Height: integer): real;
-    begin
-      return Self.CenterX - (Self.SpanX(Width, Height) * 0.5)
-    end;
-
-    function XMax(Self: ExplorerState; Width: integer; Height: integer): real;
-    begin
-      return Self.CenterX + (Self.SpanX(Width, Height) * 0.5)
-    end;
-
-    function YMin(Self: ExplorerState): real;
-    begin
-      return Self.CenterY - (Self.SpanY * 0.5)
-    end;
-
-    function YMax(Self: ExplorerState): real;
-    begin
-      return Self.CenterY + (Self.SpanY * 0.5)
-    end;
-
-    function GetZoom(Self: ExplorerState): real;
-    begin
-      return 2.8 / Self.SpanY
-    end;
-
-    property Zoom: real read GetZoom;
-  end;
-
-function RenderWidth(): integer;
+function Palette(Value: integer): PaletteKind;
 begin
-  return Max(ScreenWidth(), 1)
-end;
-
-function RenderHeight(): integer;
-begin
-  return Max(ScreenHeight() - 3, 1)
-end;
-
-// 1-based cell in the render viewport → complex plane (same mapping as row iteration)
-
-function ViewportCX(State: ExplorerState; W: integer; H: integer; CellX: integer): real;
-begin
-  var Wr: integer := Max(W - 1, 1);
-  return State.XMin(W, H) +
-         (IntToReal(CellX - 1) / IntToReal(Wr)) * (State.XMax(W, H) - State.XMin(W, H))
-end;
-
-function ViewportCY(State: ExplorerState; W: integer; H: integer; CellY: integer): real;
-begin
-  var Hr: integer := Max(H - 1, 1);
-  return State.YMax() - (IntToReal(CellY - 1) / IntToReal(Hr)) * (State.YMax() - State.YMin())
-end;
-
-procedure WriteHudText(Text: string; Width: integer);
-begin
-  if Width > 0 then
-  begin
-    var TextLength: integer := Min(Std.Str.Length(Text), Width);
-    if TextLength > 0 then
+  case Value of
+    1:
     begin
-      WriteText(Substring(Text, 0, TextLength))
+      return PaletteKind.DeepOcean
+    end;
+    2:
+    begin
+      return PaletteKind.Ember
+    end
+    else
+    begin
+      return PaletteKind.Aurora
     end
   end
 end;
 
-procedure DrawHud(S: ExplorerState; Width: integer; Height: integer);
+function Label(Value: integer): string;
 begin
-  Window(1, 1, ScreenWidth(), ScreenHeight());
-  var HudTop: integer := Max(ScreenHeight() - 2, 1);
-  Window(1, HudTop, ScreenWidth(), ScreenHeight());
-  NormVideo();
-  ClrScr();
-  GotoXY(1, 1);
-  TextColorRGB(255, 220, 120);
-  var Title: string := 'Functional Pascal Burning Ship';
-  WriteHudText(Title, Width);
-  TextColorRGB(156, 204, 255);
-  WriteHudText('  tasks | units | records | truecolor | mouse | focus | paste', Max(Width -
-                                                                                    Std.Str.Length(Title), 0));
-  if ScreenHeight() >= 2 then
-  begin
-    GotoXY(1, 2);
-    NormVideo();
-    WriteHudText(Format('size=%dx%d  center=(%f, %f)  zoom=%f  iter=%d  palette=%s', Width, Height, S.CenterX, S.CenterY, S.Zoom, S.MaxIter, PaletteName(S.Palette)), Width)
+  return PaletteName(Palette(Value))
+end;
+
+procedure Draw(
+  XMin: real;
+  XMax: real;
+  YMin: real;
+  YMax: real;
+  Width: integer;
+  Height: integer;
+  MaxIter: integer;
+  Value: integer
+);
+begin
+  Render(XMin, XMax, YMin, YMax, Width, Height, MaxIter, Palette(Value))
+end;
+
+begin
+  var Initial: ExplorerCamera := record
+    CenterX := -0.45;
+    CenterY := -0.55;
+    SpanY := 2.8;
+    MaxIter := 160;
+    Palette := 2;
   end;
 
-  if ScreenHeight() >= 3 then
-  begin
-    GotoXY(1, 3);
-    NormVideo();
-    WriteHudText('click center  wheel zoom  M middle=reset  arrows  +/-  PgUp/Dn  1/2/3  R  Esc', Width)
-  end;
-
-  NormVideo();
-  Window(1, 1, Width, Height)
-end;
-
-mutable var
-  State: ExplorerState := ExplorerState.Default();
-  RenderW: integer := 1;
-  RenderH: integer := 1;
-  NeedsRedraw: boolean := true;
-  Quit: boolean := false;
-
-procedure RequestRedraw();
-begin
-  NeedsRedraw := true
-end;
-
-procedure PaintFrame();
-begin
-  RenderW := RenderWidth();
-  RenderH := RenderHeight();
-  BeginFrame();
-  FillRect(record
-    x := 1;
-    y := 1;
-    width := ScreenWidth();
-    height := ScreenHeight();
-  end, record
-    glyph := ' ';
-    foreground := RgbColor(0, 0, 0);
-    background := RgbColor(0, 0, 0);
-  end);
-  Render(State.XMin(RenderW, RenderH), State.XMax(RenderW, RenderH), State.YMin(), State.YMax(), RenderW, RenderH, State.MaxIter, State.Palette);
-  DrawHud(State, RenderW, RenderH);
-  Present()
-end;
-
-function HandleKey(Key: KeyEvent): boolean;
-begin
-  var StepX: real := State.SpanX(RenderW, RenderH) * 0.14;
-  var StepY: real := State.SpanY * 0.14;
-  if Key.kind = KeyKind.Escape then
-  begin
-    Quit := true;
-    return true
-  end
-  else if Key.kind = KeyKind.Left then
-  begin
-    State.CenterX := State.CenterX - StepX;
-    RequestRedraw();
-    return true
-  end
-  else if Key.kind = KeyKind.Right then
-  begin
-    State.CenterX := State.CenterX + StepX;
-    RequestRedraw();
-    return true
-  end
-  else if Key.kind = KeyKind.Up then
-  begin
-    State.CenterY := State.CenterY + StepY;
-    RequestRedraw();
-    return true
-  end
-  else if Key.kind = KeyKind.Down then
-  begin
-    State.CenterY := State.CenterY - StepY;
-    RequestRedraw();
-    return true
-  end
-  else if Key.kind = KeyKind.PageUp then
-  begin
-    State.MaxIter := Min(State.MaxIter + 32, 2048);
-    RequestRedraw();
-    return true
-  end
-  else if Key.kind = KeyKind.PageDown then
-  begin
-    State.MaxIter := Max(State.MaxIter - 32, 32);
-    RequestRedraw();
-    return true
-  end
-  else if Key.kind = KeyKind.Character then
-  begin
-    case Key.ch of
-      '+', '=':
-      begin
-        State.SpanY := Max(State.SpanY * 0.82, 0.000001);
-        RequestRedraw();
-        return true
-      end;
-      '-':
-      begin
-        State.SpanY := Min(State.SpanY / 0.82, 4.0);
-        RequestRedraw();
-        return true
-      end;
-      '1':
-      begin
-        State.Palette := PaletteKind.DeepOcean;
-        RequestRedraw();
-        return true
-      end;
-      '2':
-      begin
-        State.Palette := PaletteKind.Ember;
-        RequestRedraw();
-        return true
-      end;
-      '3':
-      begin
-        State.Palette := PaletteKind.Aurora;
-        RequestRedraw();
-        return true
-      end;
-      'r', 'R':
-      begin
-        State := ExplorerState.Default();
-        RequestRedraw();
-        return true
-      end
-    end
-  end;
-
-  return false
-end;
-
-procedure HandleMouse(InputEvent: ConsoleEvent);
-begin
-  var InView: boolean := (((InputEvent.mouse_x >= 1) and (InputEvent.mouse_x <= RenderW)) and (InputEvent.mouse_y >= 1)) and
-                         (InputEvent.mouse_y <= RenderH);
-  if InputEvent.mouse_action = MouseAction.ScrollUp then
-  begin
-    State.SpanY := Max(State.SpanY * 0.88, 0.000001);
-    RequestRedraw()
-  end
-  else if InputEvent.mouse_action = MouseAction.ScrollDown then
-  begin
-    State.SpanY := Min(State.SpanY / 0.88, 4.0);
-    RequestRedraw()
-  end
-  else if InView and (InputEvent.mouse_action = MouseAction.Down) then
-  begin
-    if InputEvent.mouse_button = MouseButton.Left then
-    begin
-      State.CenterX := ViewportCX(State, RenderW, RenderH, InputEvent.mouse_x);
-      State.CenterY := ViewportCY(State, RenderW, RenderH, InputEvent.mouse_y);
-      RequestRedraw()
-    end
-    else if InputEvent.mouse_button = MouseButton.Middle then
-    begin
-      State := ExplorerState.Default();
-      RequestRedraw()
-    end
-  end
-end;
-
-procedure HandleResize(Width: integer; Height: integer);
-begin
-  var NewW: integer := Max(Width, 1);
-  var NewH: integer := Max(Height - 2, 1);
-  if (NewW <> RenderW) or (NewH <> RenderH) then
-  begin
-    RenderW := NewW;
-    RenderH := NewH;
-    RequestRedraw()
-  end
-end;
-
-procedure HandleEvent(E: ConsoleEvent);
-begin
-  if E.kind = EventKind.Key then
-  begin
-    HandleKey(E.key)
-  end
-  else if E.kind = EventKind.Mouse then
-  begin
-    HandleMouse(E)
-  end
-  else if E.kind = EventKind.Resize then
-  begin
-    HandleResize(E.width, E.height)
-  end
-end;
-
-procedure ShutdownTerminal();
-begin
-  CursorOn();
-  DisablePaste();
-  DisableFocus();
-  DisableMouse();
-  DisableRawMode();
-  LeaveAltScreen()
-end;
-
-begin
-  EnableRawMode();
-  EnterAltScreen();
-  EnableMouse();
-  EnableFocus();
-  EnablePaste();
-  CursorOff();
-  RenderW := RenderWidth();
-  RenderH := RenderHeight();
-  NeedsRedraw := true;
-  while not Quit do
-  begin
-    if NeedsRedraw then
-    begin
-      PaintFrame();
-      NeedsRedraw := false
-    end;
-
-    case ReadEventTimeout(16) of
-      Some(E):
-      begin
-        HandleEvent(E)
-      end;
-      None:
-      begin
-      end
-    end
-  end;
-
-  ShutdownTerminal()
+  RunExplorer('Functional Pascal Burning Ship', Initial, Draw, Label)
 end.

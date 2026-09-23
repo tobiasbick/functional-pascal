@@ -21,8 +21,9 @@ pub(super) fn decode_strings(
 ) -> Result<StringTable, FormatError> {
     check_count(section.tag, section.item_count, maximum)?;
     let mut reader = SectionReader::new(section.bytes, "string section");
+    reader.ensure_entries(section.item_count, 4, "string_length")?;
     let mut cumulative = 0_usize;
-    let mut values = Vec::with_capacity(section.item_count);
+    let mut values = Vec::new();
     for _ in 0..section.item_count {
         let length = reader.u32("string_length")? as usize;
         cumulative = cumulative
@@ -52,7 +53,8 @@ pub(super) fn decode_constants(section: DecodedSection<'_>) -> Result<Vec<Consta
         fpas_bytecode::limits::MAX_CONSTANTS,
     )?;
     let mut reader = SectionReader::new(section.bytes, "constant section");
-    let mut constants = Vec::with_capacity(section.item_count);
+    reader.ensure_entries(section.item_count, 1, "constant_tag")?;
+    let mut constants = Vec::new();
     for _ in 0..section.item_count {
         let tag = reader.u8("constant_tag")?;
         let constant = match tag {
@@ -85,6 +87,7 @@ pub(super) fn decode_sources(section: DecodedSection<'_>) -> Result<Vec<StringId
         fpas_bytecode::limits::MAX_SOURCE_PATHS,
     )?;
     let mut reader = SectionReader::new(section.bytes, "source path section");
+    reader.ensure_entries(section.item_count, 4, "source_path_string")?;
     let mut sources = Vec::with_capacity(section.item_count);
     for _ in 0..section.item_count {
         sources.push(StringId::new(reader.u32("source_path_string")?));
@@ -100,6 +103,7 @@ pub(super) fn decode_globals(section: DecodedSection<'_>) -> Result<Vec<GlobalIn
         fpas_bytecode::limits::MAX_GLOBALS,
     )?;
     let mut reader = SectionReader::new(section.bytes, "global section");
+    reader.ensure_entries(section.item_count, 10, "global_name")?;
     let mut globals = Vec::with_capacity(section.item_count);
     for _ in 0..section.item_count {
         globals.push(GlobalInfo {
@@ -131,11 +135,13 @@ pub(super) fn decode_records(
         fpas_bytecode::limits::MAX_RECORD_LAYOUTS,
     )?;
     let mut reader = SectionReader::new(section.bytes, "record section");
-    let mut records = Vec::with_capacity(section.item_count);
+    reader.ensure_entries(section.item_count, 16, "record_name")?;
+    let mut records = Vec::new();
     for _ in 0..section.item_count {
         let name = StringId::new(reader.u32("record_name")?);
         let count = reader.u32("record_field_count")? as usize;
         check_count(section.tag, count, fpas_bytecode::limits::MAX_LAYOUT_FIELDS)?;
+        reader.ensure_entries(count, 8, "record_field_name")?;
         let mut fields = Vec::with_capacity(count);
         for _ in 0..count {
             fields.push(RecordField {
@@ -149,6 +155,7 @@ pub(super) fn decode_records(
             property_count,
             fpas_bytecode::limits::MAX_LAYOUT_FIELDS,
         )?;
+        reader.ensure_entries(property_count, 8, "record_property_name")?;
         let mut properties = Vec::with_capacity(property_count);
         for _ in 0..property_count {
             properties.push(RecordProperty {
@@ -162,6 +169,7 @@ pub(super) fn decode_records(
             method_count,
             fpas_bytecode::limits::MAX_LAYOUT_FIELDS,
         )?;
+        reader.ensure_entries(method_count, 8, "record_method_name")?;
         let mut methods = Vec::with_capacity(method_count);
         for _ in 0..method_count {
             methods.push(fpas_bytecode::RecordMethod {
@@ -195,13 +203,15 @@ pub(super) fn decode_enums(
         variant_count,
         fpas_bytecode::limits::MAX_ENUM_VARIANTS,
     )?;
+    reader.ensure_entries(section.item_count, 4, "enum_name")?;
     let mut enums = Vec::with_capacity(section.item_count);
     for _ in 0..section.item_count {
         enums.push(EnumLayout {
             name: StringId::new(reader.u32("enum_name")?),
         });
     }
-    let mut variants = Vec::with_capacity(variant_count);
+    reader.ensure_entries(variant_count, 10, "enum_variant_owner")?;
+    let mut variants = Vec::new();
     for _ in 0..variant_count {
         let owner = EnumTypeId::new(reader.u16("enum_variant_owner")?);
         let name = StringId::new(reader.u32("enum_variant_name")?);
@@ -211,6 +221,7 @@ pub(super) fn decode_enums(
             field_count,
             fpas_bytecode::limits::MAX_LAYOUT_FIELDS,
         )?;
+        reader.ensure_entries(field_count, 8, "enum_variant_field_name")?;
         let mut fields = Vec::with_capacity(field_count);
         for _ in 0..field_count {
             fields.push(StringId::new(reader.u32("enum_variant_field_name")?));
@@ -239,7 +250,8 @@ pub(super) fn decode_functions(
         fpas_bytecode::limits::MAX_FUNCTIONS,
     )?;
     let mut reader = SectionReader::new(section.bytes, "function section");
-    let mut functions = Vec::with_capacity(section.item_count);
+    reader.ensure_entries(section.item_count, 20, "function_name")?;
+    let mut functions = Vec::new();
     let mut debug_counts = DebugCounts::default();
     for _ in 0..section.item_count {
         let name = StringId::new(reader.u32("function_name")?);
@@ -291,6 +303,7 @@ pub(super) fn decode_instructions(
         fpas_bytecode::limits::MAX_INSTRUCTIONS,
     )?;
     let mut reader = SectionReader::new(section.bytes, "instruction section");
+    reader.ensure_entries(section.item_count, 8, "instruction")?;
     let mut code = Vec::with_capacity(section.item_count);
     for _ in 0..section.item_count {
         code.push(Instruction::from_word(reader.u64("instruction")?));
@@ -308,6 +321,7 @@ pub(super) fn decode_source_runs(
         fpas_bytecode::limits::MAX_SOURCE_RUNS,
     )?;
     let mut reader = SectionReader::new(section.bytes, "source map section");
+    reader.ensure_entries(section.item_count, 16, "source_instruction")?;
     let mut runs = Vec::with_capacity(section.item_count);
     for _ in 0..section.item_count {
         runs.push(SourceRun {

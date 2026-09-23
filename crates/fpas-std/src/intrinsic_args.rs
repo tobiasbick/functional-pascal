@@ -10,8 +10,8 @@ use fpas_diagnostics::codes::{
 /// One intrinsic invocation over arguments stored in Pascal evaluation order.
 ///
 /// Arguments are decoded from right to left to preserve the established intrinsic convention
-/// without moving values out of register windows. Implementations clone only values they return or
-/// mutate.
+/// without moving values out of register windows. Decoders borrow or copy individual arguments
+/// according to the operation they perform.
 pub(crate) struct IntrinsicCall<'a> {
     arguments: &'a [Value],
     consumed: usize,

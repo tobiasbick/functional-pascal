@@ -11,6 +11,7 @@ blake3 = { workspace = true }
 fpas-bytecode = { path = "../fpas-bytecode" }
 
 [dev-dependencies]
+allocation-counter = { workspace = true }
 fpas-vm = { path = "../fpas-vm" }
 
 [lints]

@@ -3,7 +3,7 @@
 //! **Documentation:** `docs/pascal/std/text/parse.md` (from the repository root).
 
 use crate::error::StdError;
-use crate::intrinsic_args::{IntrinsicCall, pop_string, pop_value};
+use crate::intrinsic_args::{IntrinsicCall, expect_str, pop_value};
 use crate::numeric_text::{parse_bool_text, parse_pascal_integer, parse_pascal_real};
 use fpas_bytecode::{Intrinsic, ParseIntrinsic, SourceLocation, Value};
 
@@ -14,16 +14,16 @@ pub(crate) fn run(
 ) -> Result<Option<()>, StdError> {
     match intrinsic {
         Intrinsic::Parse(ParseIntrinsic::TryInt) => {
-            let text = pop_string(pop_value(call, location)?, location)?;
-            call.push(parse_int_result(&text));
+            let text = expect_str(pop_value(call, location)?, location)?;
+            call.push(parse_int_result(text));
         }
         Intrinsic::Parse(ParseIntrinsic::TryReal) => {
-            let text = pop_string(pop_value(call, location)?, location)?;
-            call.push(parse_real_result(&text));
+            let text = expect_str(pop_value(call, location)?, location)?;
+            call.push(parse_real_result(text));
         }
         Intrinsic::Parse(ParseIntrinsic::TryBool) => {
-            let text = pop_string(pop_value(call, location)?, location)?;
-            call.push(parse_bool_result(&text));
+            let text = expect_str(pop_value(call, location)?, location)?;
+            call.push(parse_bool_result(text));
         }
         _ => return Ok(None),
     }
@@ -103,3 +103,6 @@ mod tests {
         assert_eq!(stack, vec![Value::result_ok(Value::Boolean(true))]);
     }
 }
+
+#[cfg(test)]
+mod allocations;

@@ -43,9 +43,21 @@ impl Error for PathGlobError {
 
 /// Expands `pattern` relative to `root` without converting `root` to UTF-8.
 pub fn expand_path_glob(root: &Path, pattern: &str) -> Result<Vec<PathBuf>, PathGlobError> {
-    let resolved = root.join(pattern);
+    let pattern_path = Path::new(pattern);
+    let resolved = root.join(pattern_path);
     if let Some(pattern_text) = resolved.to_str() {
-        return glob(pattern_text)
+        let pattern_text = if pattern_path.is_absolute() {
+            pattern_text.to_owned()
+        } else {
+            let Some(root_text) = root.to_str() else {
+                return expand_below_non_utf8_root(root, pattern);
+            };
+            Path::new(&Pattern::escape(root_text))
+                .join(pattern_path)
+                .to_string_lossy()
+                .into_owned()
+        };
+        return glob(&pattern_text)
             .map_err(PathGlobError::InvalidPattern)?
             .collect::<Result<Vec<_>, _>>()
             .map_err(|error| PathGlobError::ReadPath {

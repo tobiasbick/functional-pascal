@@ -14,6 +14,30 @@ cargo bench-fpas record "vm-only note" --group vm
 
 Newest entries are prepended below this header.
 
+## 2026-09-23 — Rust review project build changes
+
+- Group: `startup`
+- Suite: [`suite.toml`](suite.toml)
+
+| bench | elapsed_ms | throughput |
+|-------|------------|------------|
+| project_build_cold | 3639 | - |
+| project_build_warm | 1274 | - |
+| unit_artifact_shared_types | 1 | - |
+| program_artifact_shared_types | 1 | - |
+
+The original review commit and this checkout were measured on the same drive.
+Repeated `project_build_warm` runs took 1505–1610 ms before and 1274–1442 ms
+after (medians 1593 and 1316 ms). `project_build_cold` varied widely in both
+directions, so it does not establish a change. The tooling group stayed within
+roughly 6% of the baseline; its workloads do not isolate source exclusions or
+register allocation.
+
+The follow-up [resource regressions](rust-review-resources.md) now measure
+exclusion scaling, allocator traffic, diagnostic disk I/O, warm-build interface
+copies, and successful parsing directly. These operation counts supplement the
+existing timings and do not add a new elapsed-time speedup claim.
+
 ## 2026-09-11 — Reuse row painting for partial surface fills
 
 The isolated partial-fill comparison measured 475 -> 167 ms (-64.8%). Reusing the

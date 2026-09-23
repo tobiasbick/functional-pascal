@@ -41,8 +41,8 @@ impl LoweringContext {
         let field_types = self
             .record_fields(layout)
             .ok_or_else(|| unsupported(expression.span(), "record fields"))?;
-        let mut staged = Vec::with_capacity(defaults.len());
-        for (name, default) in defaults {
+        let mut resolved = Vec::with_capacity(defaults.len());
+        for (name, default) in &defaults {
             let expression = provided
                 .get(&name.to_ascii_lowercase())
                 .copied()
@@ -50,26 +50,12 @@ impl LoweringContext {
                 .ok_or_else(|| unsupported(expression.span(), "missing record field"))?;
             let expected = field_types
                 .iter()
-                .find(|(field, _)| field.eq_ignore_ascii_case(&name))
+                .find(|(field, _)| field.eq_ignore_ascii_case(name))
                 .map(|(_, ty)| *ty)
                 .ok_or_else(|| unsupported(expression.span(), "record field type"))?;
-            let value = self.lower_expression_as(expression, expected)?;
-            let local = self.declare_hidden_local(expected, expression.span())?;
-            self.write_local(local, value, expression.span())?;
-            staged.push((local, expected, expression.span()));
+            resolved.push((expression, expected));
         }
-        let values = staged
-            .into_iter()
-            .map(|(local, ty, span)| self.emit_value(Operation::ReadLocal(local), ty, span))
-            .collect::<Result<Vec<_>, _>>()?;
-        self.emit_value(
-            Operation::MakeRecord {
-                layout,
-                fields: values,
-            },
-            ty,
-            expression.span(),
-        )
+        self.lower_resolved_record_fields(layout, ty, expression.span(), &resolved)
     }
 
     pub(in crate::lowering) fn lower_record_literal_as(
@@ -102,18 +88,32 @@ impl LoweringContext {
         let fields = self
             .record_fields(layout)
             .ok_or_else(|| unsupported(span, "expected record fields"))?;
-        let mut staged = Vec::with_capacity(fields.len());
-        for (name, field_ty) in fields {
+        let mut resolved = Vec::with_capacity(fields.len());
+        for (name, field_ty) in &fields {
             let expression = provided
                 .get(&name.to_ascii_lowercase())
                 .copied()
                 .or_else(|| {
                     defaults
                         .iter()
-                        .find(|(field, _)| field.eq_ignore_ascii_case(&name))
+                        .find(|(field, _)| field.eq_ignore_ascii_case(name))
                         .and_then(|(_, value)| value.as_ref())
                 })
                 .ok_or_else(|| unsupported(span, "missing record field"))?;
+            resolved.push((expression, *field_ty));
+        }
+        self.lower_resolved_record_fields(layout, ty, span, &resolved)
+    }
+
+    fn lower_resolved_record_fields(
+        &mut self,
+        layout: fpas_ir::RecordLayoutId,
+        ty: TypeId,
+        span: fpas_lexer::Span,
+        fields: &[(&Expr, TypeId)],
+    ) -> Result<ValueId, CompileError> {
+        let mut staged = Vec::with_capacity(fields.len());
+        for &(expression, field_ty) in fields {
             let value = self.lower_expression_as(expression, field_ty)?;
             let local = self.declare_hidden_local(field_ty, expression.span())?;
             self.write_local(local, value, expression.span())?;

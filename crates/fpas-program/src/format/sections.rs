@@ -3,6 +3,7 @@
 use super::{FormatError, check_limit, checked_u32};
 
 pub(super) const TAGS: [u16; 11] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+const _: () = assert!(TAGS.len() <= fpas_bytecode::limits::MAX_SECTIONS);
 const DIRECTORY_PREFIX_BYTES: usize = 4;
 const DIRECTORY_ENTRY_BYTES: usize = 16;
 
@@ -81,6 +82,7 @@ pub(super) fn encode(sections: Vec<EncodedSection>) -> Result<Vec<u8>, FormatErr
     Ok(output)
 }
 
+/// Decode the bounded section directory and validate contiguous payload ranges.
 pub(super) fn decode(payload: &[u8]) -> Result<Vec<DecodedSection<'_>>, FormatError> {
     check_limit(
         "payload",
@@ -93,13 +95,6 @@ pub(super) fn decode(payload: &[u8]) -> Result<Vec<DecodedSection<'_>>, FormatEr
         return Err(FormatError::SectionCount {
             actual: count,
             expected: TAGS.len(),
-        });
-    }
-    if count > fpas_bytecode::limits::MAX_SECTIONS {
-        return Err(FormatError::SectionItemCount {
-            tag: 0,
-            count,
-            maximum: fpas_bytecode::limits::MAX_SECTIONS,
         });
     }
     let flags = reader.u16("section_directory_flags")?;
@@ -131,8 +126,19 @@ pub(super) fn decode(payload: &[u8]) -> Result<Vec<DecodedSection<'_>>, FormatEr
         let offset = reader.u32("section_offset")? as usize;
         let length = reader.u32("section_length")? as usize;
         let item_count = reader.u32("section_item_count")? as usize;
-        let end = offset.checked_add(length);
-        if offset != expected_offset || end.is_none_or(|end| end > payload.len()) {
+        let Some(end) = offset
+            .checked_add(length)
+            .filter(|end| *end <= payload.len())
+        else {
+            return Err(FormatError::SectionRange {
+                tag,
+                offset,
+                expected_offset,
+                length,
+                payload: payload.len(),
+            });
+        };
+        if offset != expected_offset {
             return Err(FormatError::SectionRange {
                 tag,
                 offset,
@@ -141,7 +147,7 @@ pub(super) fn decode(payload: &[u8]) -> Result<Vec<DecodedSection<'_>>, FormatEr
                 payload: payload.len(),
             });
         }
-        expected_offset = end.unwrap_or(payload.len());
+        expected_offset = end;
         ranges.push((tag, offset, length, item_count));
     }
     if expected_offset != payload.len() {
@@ -210,6 +216,19 @@ impl<'a> SectionReader<'a> {
                 container: self.container,
                 count: remaining,
             });
+        }
+        Ok(())
+    }
+
+    /// Reject an entry count that cannot fit in the unread section bytes.
+    pub(super) fn ensure_entries(
+        &self,
+        count: usize,
+        minimum_bytes: usize,
+        field: &'static str,
+    ) -> Result<(), FormatError> {
+        if count > self.bytes.len().saturating_sub(self.position) / minimum_bytes {
+            return Err(FormatError::Truncated(field));
         }
         Ok(())
     }

@@ -32,6 +32,12 @@ pub(super) struct InterfaceRegistry {
     hashes: HashMap<String, Digest>,
 }
 
+#[cfg(test)]
+thread_local! {
+    /// Counts direct-interface clones on the build thread.
+    pub(super) static DIRECT_INTERFACE_COPIES: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+}
+
 impl InterfaceRegistry {
     pub(super) fn all(&self) -> &[UnitInterface] {
         &self.interfaces
@@ -55,12 +61,17 @@ impl InterfaceRegistry {
         dependencies
     }
 
+    /// Copies direct interfaces only for units that require compilation.
     pub(super) fn direct_interfaces(&self, uses: &[QualifiedId]) -> Vec<UnitInterface> {
         uses.iter()
             .filter_map(|used| {
                 self.positions
                     .get(&canonical_unit_name(used))
-                    .map(|position| self.interfaces[*position].clone())
+                    .map(|position| {
+                        #[cfg(test)]
+                        DIRECT_INTERFACE_COPIES.with(|count| count.set(count.get() + 1));
+                        self.interfaces[*position].clone()
+                    })
             })
             .collect()
     }

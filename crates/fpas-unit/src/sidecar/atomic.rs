@@ -1,27 +1,66 @@
 //! Coordinated same-directory sidecar replacement.
 
-use std::fs::{self, File, OpenOptions, TryLockError};
-use std::io::Write;
+use std::fs::{File, OpenOptions, TryLockError};
+use std::io::{self, Read, Seek, Write};
 use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{Duration, Instant};
+
+use atomic_write_file::AtomicWriteFile;
 
 use super::SidecarError;
 
 const LOCK_WAIT: Duration = Duration::from_secs(10);
 const LOCK_RETRY: Duration = Duration::from_millis(10);
 
+/// Validate staged unit bytes and replace the sidecar under its writer lock.
 pub(super) fn replace(path: &Path, bytes: &[u8]) -> Result<(), SidecarError> {
-    let _lock = acquire_lock(path, LockMode::Exclusive, LOCK_WAIT)?;
-    let temporary = unique_path(path, ".tmp");
-    let mut temporary_cleanup = FileCleanup::new(temporary.clone());
-    let backup = unique_path(path, ".bak");
+    replace_with(
+        path,
+        bytes,
+        |staging, bytes| staging.write_all(bytes),
+        AtomicWriteFile::commit,
+    )
+}
 
-    write_complete(&temporary, bytes)?;
-    validate_temporary(&temporary)?;
-    publish(path, &temporary, &backup)?;
-    temporary_cleanup.disarm();
-    Ok(())
+fn replace_with(
+    path: &Path,
+    bytes: &[u8],
+    stage: impl FnOnce(&mut AtomicWriteFile, &[u8]) -> io::Result<()>,
+    commit: impl FnOnce(AtomicWriteFile) -> io::Result<()>,
+) -> Result<(), SidecarError> {
+    let _lock = acquire_lock(path, LockMode::Exclusive, LOCK_WAIT)?;
+    let mut staging = AtomicWriteFile::options()
+        .read(true)
+        .open(path)
+        .map_err(|error| SidecarError::Io {
+            operation: "create temporary for",
+            path: path.to_path_buf(),
+            error,
+        })?;
+    stage(&mut staging, bytes).map_err(|error| SidecarError::Io {
+        operation: "write temporary for",
+        path: path.to_path_buf(),
+        error,
+    })?;
+    staging.rewind().map_err(|error| SidecarError::Io {
+        operation: "seek temporary for",
+        path: path.to_path_buf(),
+        error,
+    })?;
+    let mut staged_bytes = Vec::new();
+    staging
+        .read_to_end(&mut staged_bytes)
+        .map_err(|error| SidecarError::Io {
+            operation: "read temporary for",
+            path: path.to_path_buf(),
+            error,
+        })?;
+    crate::decode(&staged_bytes).map_err(SidecarError::Format)?;
+    commit(staging).map_err(|error| SidecarError::Io {
+        operation: "replace",
+        path: path.to_path_buf(),
+        error,
+    })
 }
 
 pub(super) fn acquire_read_lock(sidecar: &Path) -> Result<Option<LockGuard>, SidecarError> {
@@ -115,84 +154,6 @@ impl LockMode {
     }
 }
 
-fn write_complete(path: &Path, bytes: &[u8]) -> Result<(), SidecarError> {
-    let mut file = OpenOptions::new()
-        .write(true)
-        .create_new(true)
-        .open(path)
-        .map_err(|error| SidecarError::Io {
-            operation: "create temporary",
-            path: path.to_path_buf(),
-            error,
-        })?;
-    file.write_all(bytes).map_err(|error| SidecarError::Io {
-        operation: "write temporary",
-        path: path.to_path_buf(),
-        error,
-    })?;
-    file.sync_all().map_err(|error| SidecarError::Io {
-        operation: "flush temporary",
-        path: path.to_path_buf(),
-        error,
-    })
-}
-
-fn validate_temporary(path: &Path) -> Result<(), SidecarError> {
-    let bytes = fs::read(path).map_err(|error| SidecarError::Io {
-        operation: "read temporary",
-        path: path.to_path_buf(),
-        error,
-    })?;
-    crate::decode(&bytes)
-        .map(|_| ())
-        .map_err(SidecarError::Format)
-}
-
-#[cfg(not(windows))]
-fn publish(path: &Path, temporary: &Path, _backup: &Path) -> Result<(), SidecarError> {
-    fs::rename(temporary, path).map_err(|error| SidecarError::Io {
-        operation: "replace",
-        path: path.to_path_buf(),
-        error,
-    })
-}
-
-#[cfg(windows)]
-fn publish(path: &Path, temporary: &Path, backup: &Path) -> Result<(), SidecarError> {
-    let had_previous = path.exists();
-    if had_previous {
-        fs::rename(path, backup).map_err(|error| SidecarError::Io {
-            operation: "stage previous",
-            path: path.to_path_buf(),
-            error,
-        })?;
-    }
-    if let Err(error) = fs::rename(temporary, path) {
-        if had_previous {
-            let _ = fs::rename(backup, path);
-        }
-        return Err(SidecarError::Io {
-            operation: "replace",
-            path: path.to_path_buf(),
-            error,
-        });
-    }
-    if had_previous {
-        fs::remove_file(backup).map_err(|error| SidecarError::Io {
-            operation: "remove previous",
-            path: backup.to_path_buf(),
-            error,
-        })?;
-    }
-    Ok(())
-}
-
-fn unique_path(path: &Path, suffix: &str) -> PathBuf {
-    static NEXT: AtomicU64 = AtomicU64::new(1);
-    let id = NEXT.fetch_add(1, Ordering::Relaxed);
-    append_suffix(path, &format!(".{}.{}{suffix}", std::process::id(), id))
-}
-
 fn append_suffix(path: &Path, suffix: &str) -> PathBuf {
     let mut value = path.as_os_str().to_os_string();
     value.push(suffix);
@@ -203,28 +164,6 @@ pub(super) struct LockGuard {
     _file: File,
 }
 
-struct FileCleanup {
-    path: Option<PathBuf>,
-}
-
-impl FileCleanup {
-    fn new(path: PathBuf) -> Self {
-        Self { path: Some(path) }
-    }
-
-    fn disarm(&mut self) {
-        self.path = None;
-    }
-}
-
-impl Drop for FileCleanup {
-    fn drop(&mut self) {
-        if let Some(path) = self.path.take() {
-            let _ = fs::remove_file(path);
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     #![allow(
@@ -232,11 +171,89 @@ mod tests {
         reason = "filesystem lock fixtures use expect for compact setup"
     )]
 
-    use super::{LOCK_WAIT, LockMode, acquire_lock, acquire_read_lock, append_suffix};
+    use super::{
+        LOCK_WAIT, LockMode, acquire_lock, acquire_read_lock, append_suffix, replace_with,
+    };
+    use crate::{CompiledUnit, Digest, UnitIdentity};
+    use atomic_write_file::AtomicWriteFile;
     use std::fs;
+    use std::io::{self, Write};
     use std::sync::atomic::{AtomicU64, Ordering};
     use std::thread;
     use std::time::Duration;
+
+    fn encoded_unit() -> Vec<u8> {
+        let interface = vec![1, 2, 3];
+        let object = vec![4, 5, 6];
+        crate::encode(&CompiledUnit {
+            identity: UnitIdentity {
+                unit_name: "demo".to_string(),
+                source_hash: Digest::of(b"source"),
+                interface_hash: Digest::of(&interface),
+                object_hash: Digest::of(&object),
+                compiler_version: "test".to_string(),
+                bytecode_version: 1,
+                options_hash: Digest::of(b"options"),
+                dependencies: vec![],
+            },
+            interface,
+            object,
+        })
+        .expect("valid unit")
+    }
+
+    #[test]
+    fn failed_staging_and_commit_keep_previous_sidecar() {
+        static NEXT: AtomicU64 = AtomicU64::new(1);
+        let id = NEXT.fetch_add(1, Ordering::Relaxed);
+        let root =
+            std::env::temp_dir().join(format!("fpas-unit-publication-{}-{id}", std::process::id()));
+        fs::create_dir_all(&root).expect("fixture directory");
+        let sidecar = root.join("demo.fpascu");
+        fs::write(&sidecar, b"previous sidecar").expect("previous sidecar");
+        let bytes = encoded_unit();
+
+        let stage_error = replace_with(
+            &sidecar,
+            &bytes,
+            |_staging, _bytes| Err(io::Error::other("injected staging failure")),
+            AtomicWriteFile::commit,
+        )
+        .expect_err("staging must fail");
+        assert!(stage_error.to_string().contains("injected staging failure"));
+        assert_eq!(
+            fs::read(&sidecar).expect("previous sidecar"),
+            b"previous sidecar"
+        );
+
+        let commit_error = replace_with(
+            &sidecar,
+            &bytes,
+            |staging, bytes| staging.write_all(bytes),
+            |_staging| Err(io::Error::other("injected commit failure")),
+        )
+        .expect_err("commit must fail");
+        assert!(commit_error.to_string().contains("injected commit failure"));
+        assert_eq!(
+            fs::read(&sidecar).expect("previous sidecar"),
+            b"previous sidecar"
+        );
+        assert_eq!(
+            fs::read_dir(&root).expect("fixture directory").count(),
+            2,
+            "only the sidecar and lock may remain"
+        );
+
+        replace_with(
+            &sidecar,
+            &bytes,
+            |staging, bytes| staging.write_all(bytes),
+            AtomicWriteFile::commit,
+        )
+        .expect("commit must succeed");
+        assert_eq!(fs::read(&sidecar).expect("published sidecar"), bytes);
+        fs::remove_dir_all(root).ok();
+    }
 
     #[test]
     fn live_writer_held_beyond_ten_seconds_keeps_its_os_lock() {

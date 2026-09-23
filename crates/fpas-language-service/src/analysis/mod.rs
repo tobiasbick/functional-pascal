@@ -7,3 +7,6 @@ mod service;
 
 pub use document::{DiagnosticAnalysis, DocumentAnalysis, SemanticAnalysis};
 pub use service::LanguageService;
+
+#[cfg(test)]
+mod disk_reads;

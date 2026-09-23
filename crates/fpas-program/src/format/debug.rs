@@ -132,6 +132,7 @@ pub(super) fn decode(
         &mut totals.scopes,
         fpas_bytecode::limits::MAX_DEBUG_SCOPES,
     )?;
+    reader.ensure_entries(scope_count, 8, "debug_scope_id")?;
     let mut scopes = Vec::with_capacity(scope_count);
     for _ in 0..scope_count {
         let id = reader.u32("debug_scope_id")?;
@@ -148,7 +149,8 @@ pub(super) fn decode(
         &mut totals.bindings,
         fpas_bytecode::limits::MAX_DEBUG_BINDINGS,
     )?;
-    let mut bindings = Vec::with_capacity(binding_count);
+    reader.ensure_entries(binding_count, 24, "debug_binding_name")?;
+    let mut bindings = Vec::new();
     for _ in 0..binding_count {
         let name = StringId::new(reader.u32("debug_binding_name")?);
         let type_name = StringId::new(reader.u32("debug_binding_type_name")?);
@@ -206,6 +208,7 @@ pub(super) fn decode(
         &mut totals.sequence_points,
         fpas_bytecode::limits::MAX_DEBUG_SEQUENCE_POINTS,
     )?;
+    reader.ensure_entries(point_count, 20, "debug_sequence_instruction")?;
     let mut sequence_points = Vec::with_capacity(point_count);
     for _ in 0..point_count {
         sequence_points.push(SequencePoint {
@@ -231,6 +234,7 @@ pub(super) fn decode(
         &mut totals.capture_sources,
         fpas_bytecode::limits::MAX_CLOSURE_CAPTURES,
     )?;
+    reader.ensure_entries(source_count, 9, "debug_capture_binding")?;
     let mut capture_sources = Vec::with_capacity(source_count);
     for _ in 0..source_count {
         let binding = DebugBindingId::new(reader.u32("debug_capture_binding")?);

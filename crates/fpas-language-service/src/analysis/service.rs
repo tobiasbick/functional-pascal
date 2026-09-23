@@ -196,7 +196,9 @@ impl LanguageService {
         let target = self.documents.snapshot(path)?;
         let result = (|| {
             self.ensure_source_context(path)?;
-            if !self.is_editor_api_source(path)
+            // Syntax-only analysis skips project snapshots; diagnostics still report unreadable siblings.
+            if target.has_parse_errors()
+                && !self.is_editor_api_source(path)
                 && let Some(project) = self.analysis_project_for(path, target.compilation_unit())
             {
                 self.project_snapshots(&project)?;

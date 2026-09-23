@@ -92,6 +92,9 @@ pub(super) fn decode(bytes: &[u8]) -> Result<DecodedHeader<'_>, FormatError> {
         unit_count,
         fpas_bytecode::limits::MAX_LINKED_UNITS,
     )?;
+    if unit_count > reader.remaining() / 36 {
+        return Err(FormatError::Truncated("unit_name"));
+    }
     let mut units = Vec::with_capacity(unit_count);
     for _ in 0..unit_count {
         units.push(LinkedUnitIdentity {
@@ -105,6 +108,9 @@ pub(super) fn decode(bytes: &[u8]) -> Result<DecodedHeader<'_>, FormatError> {
         source_hash_count,
         fpas_bytecode::limits::MAX_SOURCE_PATHS,
     )?;
+    if source_hash_count > reader.remaining() / 32 {
+        return Err(FormatError::Truncated("source_hash"));
+    }
     let mut source_hashes = Vec::with_capacity(source_hash_count);
     for _ in 0..source_hash_count {
         source_hashes.push(reader.digest("source_hash")?);

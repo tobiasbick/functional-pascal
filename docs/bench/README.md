@@ -221,3 +221,29 @@ On Windows use `target/release/fpas.exe`. Optional second argument `MAX_MILLIS` 
 - [Benchmark history](history.md)
 - [Portable register VM acceptance](portable-register-vm.md)
 - [Examples README — Performance](../../examples/README.md#performance-benchmarks)
+
+## Rust review resource regressions
+
+The Rust review also has deterministic resource tests, separate from elapsed-time
+benchmarks. They count source-path canonicalizations, allocator requests, closed-source
+reads/bytes, and dependency-interface copies. Fixture construction is outside each
+measurement. These tests do not claim execution-time improvements.
+
+```sh
+cargo test -p fpas-project exclusion_canonicalizations -- --nocapture
+cargo test -p fpas-compiler allocation_traffic -- --nocapture
+cargo test -p fpas-language-service diagnostics_read_closed -- --nocapture
+cargo test -p fpas-build warm_many_import -- --nocapture
+cargo test -p fpas-std parsing_allocations -- --nocapture
+cargo test -p fpas-program --test decode_allocations -- --nocapture
+```
+
+Allocation counting is a development-only dependency and observes the current
+thread. Language-service read counters are shared by query forks and exist only
+in test builds. See the [review resource measurements](rust-review-resources.md)
+for fixture sizes, observed counts, and regression sensitivity.
+
+Benchmark process cleanup attempts to terminate the process group or job, then
+falls back to its wrapped child when tree termination fails. Reaping uses a
+two-second polling deadline; each captured pipe has its own two-second drain
+limit. Timeout errors retain termination, reaping, and both pipe errors together.

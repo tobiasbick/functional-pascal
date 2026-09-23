@@ -18,6 +18,9 @@ toml = { workspace = true }
 unicode-width = { workspace = true }
 unicode-segmentation = { workspace = true }
 
+[dev-dependencies]
+allocation-counter = { workspace = true }
+
 [lints]
 workspace = true
 

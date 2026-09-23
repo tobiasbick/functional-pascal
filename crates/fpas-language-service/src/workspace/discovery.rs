@@ -8,24 +8,54 @@ use super::path_containment;
 use super::{WorkspaceContext, WorkspaceIssue, WorkspaceKind};
 use crate::document::normalized_path;
 
-pub(super) fn discover_initial_context(input: &Path) -> WorkspaceContext {
-    let start = directory_for(input);
-    match discover_manifest(&start) {
-        Ok(Some(path)) if has_extension(&path, "fpasworkspace") => {
-            WorkspaceContext::load_workspace_manifest(&path)
+enum DiscoveryError {
+    Directory(WorkspaceIssue),
+    Metadata(WorkspaceIssue),
+}
+
+impl DiscoveryError {
+    fn into_issue(self) -> WorkspaceIssue {
+        match self {
+            Self::Directory(issue) | Self::Metadata(issue) => issue,
         }
-        Ok(Some(path)) => WorkspaceContext::load_project_manifest(&path),
-        Ok(None) => WorkspaceContext::loose(input),
-        Err(issue) => WorkspaceContext {
-            root: input.to_path_buf(),
-            manifest_path: None,
-            kind: WorkspaceKind::Unavailable,
-            projects: Vec::new(),
-            issues: vec![issue],
-        },
     }
 }
 
+/// Discover the nearest project that owns an initial source or return a loose context.
+pub(super) fn discover_initial_context(input: &Path) -> WorkspaceContext {
+    discover_initial_context_with(input, |directory| context_owning_source(directory, input))
+}
+
+fn discover_initial_context_with(
+    input: &Path,
+    inspect: impl Fn(&Path) -> Result<Option<WorkspaceContext>, DiscoveryError>,
+) -> WorkspaceContext {
+    let start = directory_for(input);
+    let mut directory = start.clone();
+    loop {
+        match inspect(&directory) {
+            Ok(Some(context)) => return context,
+            Ok(None) => {}
+            Err(DiscoveryError::Directory(_)) if input.is_file() && directory != start => {
+                return WorkspaceContext::loose(input);
+            }
+            Err(issue) => {
+                return WorkspaceContext {
+                    root: directory,
+                    manifest_path: None,
+                    kind: WorkspaceKind::Unavailable,
+                    projects: Vec::new(),
+                    issues: vec![issue.into_issue()],
+                };
+            }
+        }
+        if !directory.pop() {
+            return WorkspaceContext::loose(input);
+        }
+    }
+}
+
+/// Resolves ownership inside the session root, retaining manifest errors on later requests.
 pub(super) fn discover_source_context(
     root: &Path,
     source: &Path,
@@ -36,7 +66,9 @@ pub(super) fn discover_source_context(
     let mut directory = directory_for(&source);
 
     loop {
-        if let Some(context) = context_owning_source(&directory, &source)? {
+        if let Some(context) =
+            context_owning_source(&directory, &source).map_err(DiscoveryError::into_issue)?
+        {
             return Ok(Some(context));
         }
         if (bounded && path_containment::same(&directory, &root)) || !directory.pop() {
@@ -48,28 +80,31 @@ pub(super) fn discover_source_context(
 fn context_owning_source(
     directory: &Path,
     source: &Path,
-) -> Result<Option<WorkspaceContext>, WorkspaceIssue> {
+) -> Result<Option<WorkspaceContext>, DiscoveryError> {
     if !directory.is_dir() {
         return Ok(None);
     }
-    if let Some(workspace_path) =
-        discover_workspace_file(directory).map_err(|message| WorkspaceIssue {
+    let manifests = direct_project_manifests(directory)?;
+    if let Some(workspace_path) = discover_workspace_file(directory)
+        .map_err(|message| WorkspaceIssue {
             path: directory.to_path_buf(),
             message,
-        })?
+        })
+        .map_err(DiscoveryError::Metadata)?
     {
         let context = WorkspaceContext::load_workspace_manifest(&normalized_path(&workspace_path));
-        if let Some(result) = select_context(source, vec![context])? {
+        if let Some(result) =
+            select_context(source, vec![context]).map_err(DiscoveryError::Metadata)?
+        {
             return Ok(Some(result));
         }
     }
 
-    let manifests = direct_project_manifests(directory)?;
     let contexts = manifests
         .iter()
         .map(|manifest| WorkspaceContext::load_project_manifest(manifest))
         .collect::<Vec<_>>();
-    select_context(source, contexts)
+    select_context(source, contexts).map_err(DiscoveryError::Metadata)
 }
 
 fn select_context(
@@ -142,57 +177,20 @@ fn ambiguous_source_issue(source: &Path, manifests: &[&PathBuf]) -> WorkspaceIss
     }
 }
 
-fn discover_manifest(start: &Path) -> Result<Option<PathBuf>, WorkspaceIssue> {
-    let mut directory = start.to_path_buf();
-    loop {
-        match discover_workspace_file(&directory) {
-            Ok(Some(path)) => return Ok(Some(normalized_path(&path))),
-            Ok(None) => {}
-            Err(message) => {
-                return Err(WorkspaceIssue {
-                    path: directory,
-                    message,
-                });
-            }
-        }
-
-        let mut projects = direct_project_manifests(&directory)?;
-        match projects.len() {
-            0 => {}
-            1 => return Ok(projects.pop()),
-            _ => {
-                let names = projects
-                    .iter()
-                    .filter_map(|path| path.file_name())
-                    .map(|name| name.to_string_lossy())
-                    .collect::<Vec<_>>()
-                    .join(", ");
-                return Err(WorkspaceIssue {
-                    path: directory,
-                    message: format!(
-                        "Found multiple `.fpasprj` files while discovering editor context: {names}.\n  help: Open a source owned by the desired project or an explicit workspace manifest."
-                    ),
-                });
-            }
-        }
-
-        if !directory.pop() {
-            return Ok(None);
+fn direct_project_manifests(directory: &Path) -> Result<Vec<PathBuf>, DiscoveryError> {
+    let directory_error = |error| {
+        DiscoveryError::Directory(WorkspaceIssue {
+            path: directory.to_path_buf(),
+            message: format!("Cannot inspect editor workspace directory: {error}"),
+        })
+    };
+    let mut projects = Vec::new();
+    for entry in std::fs::read_dir(directory).map_err(directory_error)? {
+        let path = entry.map_err(directory_error)?.path();
+        if path.is_file() && has_extension(&path, "fpasprj") {
+            projects.push(normalized_path(&path));
         }
     }
-}
-
-fn direct_project_manifests(directory: &Path) -> Result<Vec<PathBuf>, WorkspaceIssue> {
-    let entries = std::fs::read_dir(directory).map_err(|error| WorkspaceIssue {
-        path: directory.to_path_buf(),
-        message: format!("Cannot inspect editor workspace directory: {error}"),
-    })?;
-    let mut projects = entries
-        .filter_map(Result::ok)
-        .map(|entry| entry.path())
-        .filter(|path| path.is_file() && has_extension(path, "fpasprj"))
-        .map(|path| normalized_path(&path))
-        .collect::<Vec<_>>();
     projects.sort();
     Ok(projects)
 }
@@ -261,5 +259,68 @@ mod tests {
             discovered.is_err(),
             "outside discovery must remain unbounded"
         );
+    }
+
+    #[test]
+    fn unreadable_ancestor_does_not_hide_readable_loose_source() {
+        let base = fixture("unreadable-ancestor");
+        let child = base.join("source");
+        std::fs::create_dir_all(&child).expect("source directory");
+        let source = child.join("loose.fpas");
+        std::fs::write(&source, "program Loose; begin end.").expect("source file");
+        let context = discover_initial_context_with(&source, |directory| {
+            if directory == child {
+                Ok(None)
+            } else {
+                Err(DiscoveryError::Directory(WorkspaceIssue {
+                    path: directory.to_path_buf(),
+                    message: "injected access denied".to_string(),
+                }))
+            }
+        });
+        assert_eq!(context.kind(), WorkspaceKind::Loose);
+        assert!(context.issues().is_empty());
+        std::fs::remove_dir_all(base).ok();
+    }
+
+    #[test]
+    fn nearest_manifest_is_selected_before_ancestor_failure() {
+        let base = fixture("nearest-manifest");
+        let child = base.join("source");
+        std::fs::create_dir_all(&child).expect("source directory");
+        let manifest = child.join("app.fpasprj");
+        std::fs::write(&manifest, "[project]\nname = \"app\"\nkind = \"program\"\nmain = \"main.fpas\"\n\n[sources]\ninclude = [\"main.fpas\"]\n")
+            .expect("project manifest");
+        let source = child.join("main.fpas");
+        std::fs::write(&source, "program App; begin end.").expect("project source");
+        let context = discover_initial_context_with(&source, |directory| {
+            if directory == child {
+                context_owning_source(directory, &source)
+            } else {
+                Err(DiscoveryError::Directory(WorkspaceIssue {
+                    path: directory.to_path_buf(),
+                    message: "injected access denied".to_string(),
+                }))
+            }
+        });
+        assert_eq!(context.kind(), WorkspaceKind::Project);
+        assert_eq!(context.manifest_path(), Some(manifest.as_path()));
+        std::fs::remove_dir_all(base).ok();
+    }
+
+    #[test]
+    fn unrelated_ancestor_project_does_not_own_loose_source() {
+        let base = fixture("unrelated-project");
+        let child = base.join("source");
+        std::fs::create_dir_all(&child).expect("source directory");
+        let source = child.join("loose.fpas");
+        std::fs::write(&source, "program Loose; begin end.").expect("loose source");
+        std::fs::write(base.join("other.fpas"), "unit Other;").expect("unrelated source");
+        std::fs::write(base.join("other.fpasprj"), "[project]\nname = \"other\"\nkind = \"library\"\n\n[sources]\ninclude = [\"other.fpas\"]\n")
+            .expect("unrelated project");
+
+        let context = discover_initial_context(&source);
+        assert_eq!(context.kind(), WorkspaceKind::Loose);
+        std::fs::remove_dir_all(base).ok();
     }
 }

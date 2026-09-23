@@ -20,9 +20,7 @@ pub(super) fn resolve_source_files(
         let excluded = expand_exclude_entries(exclude, root_dir)?;
         files.retain(|path| {
             let key = canonical_or_original(path.as_path());
-            !excluded
-                .iter()
-                .any(|excluded_path| canonical_or_original(excluded_path.as_path()) == key)
+            !excluded.contains(&key)
         });
     }
 
@@ -47,20 +45,16 @@ fn expand_include_entries(
     Ok((files, warnings))
 }
 
-fn expand_exclude_entries(entries: &[String], root_dir: &Path) -> Result<Vec<PathBuf>, String> {
-    let mut excluded = Vec::<PathBuf>::new();
+fn expand_exclude_entries(entries: &[String], root_dir: &Path) -> Result<HashSet<PathBuf>, String> {
     let mut seen = HashSet::<PathBuf>::new();
 
     for entry in entries {
         for matched in expand_source_pattern("sources.exclude", entry, root_dir, false)? {
-            let key = canonical_or_original(matched.as_path());
-            if seen.insert(key) {
-                excluded.push(matched);
-            }
+            seen.insert(canonical_or_original(matched.as_path()));
         }
     }
 
-    Ok(excluded)
+    Ok(seen)
 }
 
 fn expand_source_pattern(
@@ -244,7 +238,12 @@ pub(super) fn same_file(left: &Path, right: &Path) -> bool {
     left == right || canonical_or_original(left) == canonical_or_original(right)
 }
 
+#[cfg(test)]
+thread_local! { static CANONICALIZATIONS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) }; }
+
 fn canonical_or_original(path: &Path) -> PathBuf {
+    #[cfg(test)]
+    CANONICALIZATIONS.with(|count| count.set(count.get() + 1));
     fs::canonicalize(path)
         .or_else(|_| absolute(path))
         .unwrap_or_else(|_| path.to_path_buf())
@@ -321,3 +320,7 @@ mod tests {
         assert_eq!(result, Ok(vec![source]));
     }
 }
+
+#[cfg(test)]
+#[path = "paths/exclusion_scaling.rs"]
+mod exclusion_scaling;

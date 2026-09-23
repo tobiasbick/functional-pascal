@@ -136,6 +136,57 @@ fn non_overlapping_temporaries_reuse_registers() {
     );
 }
 
+#[test]
+fn many_fixed_locals_do_not_occupy_temporary_registers() {
+    let mut function = function_with(Vec::new());
+    function.locals = (0..512)
+        .map(|index| Local {
+            id: LocalId::new(index),
+            ty: TypeId::new(0),
+            mutable: true,
+            capture: None,
+        })
+        .collect();
+    for index in 0..256 {
+        let value = ValueDefinition {
+            id: ValueId::new(index),
+            ty: TypeId::new(0),
+        };
+        function.blocks[0].instructions.push(Instruction {
+            source: None,
+            result: Some(value),
+            operation: Operation::Const(Constant::Integer(index as i64)),
+        });
+    }
+    for index in 0..256 {
+        function.blocks[0].instructions.push(Instruction {
+            source: None,
+            result: None,
+            operation: Operation::StoreGlobal {
+                global: GlobalId::new(0),
+                value: ValueId::new(index),
+            },
+        });
+    }
+
+    let allocation = Allocation::build(&function).expect("allocate fixed locals and live values");
+    assert_eq!(
+        allocation
+            .value(ValueId::new(0))
+            .expect("first value")
+            .get(),
+        512
+    );
+    assert_eq!(
+        allocation
+            .value(ValueId::new(255))
+            .expect("last value")
+            .get(),
+        767
+    );
+    assert_eq!(allocation.register_count, 768);
+}
+
 fn function_with(instructions: Vec<Instruction>) -> Function {
     Function {
         id: FunctionId::new(0),
@@ -164,3 +215,5 @@ fn function_with(instructions: Vec<Instruction>) -> Function {
         can_spawn_tasks: false,
     }
 }
+
+mod scaling;

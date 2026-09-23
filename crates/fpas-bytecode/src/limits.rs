@@ -40,11 +40,11 @@ pub const MAX_REGISTERS_PER_FUNCTION: usize = 65_535;
 pub const MAX_CALL_ARGUMENTS: usize = 255;
 /// Maximum captures in the ABC auxiliary count used by closure construction.
 pub const MAX_CLOSURE_CAPTURES: usize = 255;
-/// Maximum linked units reserved for the later persistent executable codec.
+/// Maximum linked units encoded in one persistent program image.
 pub const MAX_LINKED_UNITS: usize = 1_000_000;
-/// Maximum bytes in an identity string reserved for the later persistent executable codec.
+/// Maximum bytes in one persistent program identity string.
 pub const MAX_IDENTITY_STRING_BYTES: usize = 1024 * 1024;
-/// Maximum sections reserved for the later persistent executable codec.
+/// Maximum sections in a persistent program payload.
 pub const MAX_SECTIONS: usize = 64;
-/// Maximum payload bytes reserved for the later persistent executable codec.
+/// Maximum bytes in a persistent program payload.
 pub const MAX_PAYLOAD_BYTES: usize = 512 * 1024 * 1024;

@@ -5,7 +5,7 @@
 //! `fpas-bytecode::Intrinsic`, `fpas-compiler`, and `fpas-sema` `std_registry.rs`.
 
 use crate::error::{StdError, std_runtime_error};
-use crate::intrinsic_args::{IntrinsicCall, pop_bool, pop_int, pop_real, pop_string, pop_value};
+use crate::intrinsic_args::{IntrinsicCall, expect_str, pop_bool, pop_int, pop_real, pop_value};
 use crate::limits::checked_collection_len;
 use crate::numeric_text::{parse_bool_text, parse_pascal_integer, parse_pascal_real};
 use fpas_bytecode::{ConvIntrinsic, Intrinsic, SourceLocation, Value};
@@ -22,8 +22,8 @@ pub(crate) fn run(
             call.push(Value::Str(format!("{n}").into()));
         }
         Intrinsic::Conv(ConvIntrinsic::StrToInt) => {
-            let s = pop_string(pop_value(call, location)?, location)?;
-            let n = parse_pascal_integer(&s).ok_or_else(|| {
+            let s = expect_str(pop_value(call, location)?, location)?;
+            let n = parse_pascal_integer(s).ok_or_else(|| {
                 std_runtime_error(
                     RUNTIME_CONVERSION_FAILURE,
                     format!("StrToInt: invalid integer `{s}`"),
@@ -38,8 +38,8 @@ pub(crate) fn run(
             call.push(Value::Str(format!("{r}").into()));
         }
         Intrinsic::Conv(ConvIntrinsic::StrToReal) => {
-            let s = pop_string(pop_value(call, location)?, location)?;
-            let r = parse_pascal_real(&s).ok_or_else(|| {
+            let s = expect_str(pop_value(call, location)?, location)?;
+            let r = parse_pascal_real(s).ok_or_else(|| {
                 std_runtime_error(
                     RUNTIME_CONVERSION_FAILURE,
                     format!("StrToReal: invalid real `{s}`"),
@@ -65,8 +65,8 @@ pub(crate) fn run(
             ));
         }
         Intrinsic::Conv(ConvIntrinsic::StrToBool) => {
-            let s = pop_string(pop_value(call, location)?, location)?;
-            let b = parse_bool_text(&s).ok_or_else(|| {
+            let s = expect_str(pop_value(call, location)?, location)?;
+            let b = parse_bool_text(s).ok_or_else(|| {
                 std_runtime_error(
                     RUNTIME_CONVERSION_FAILURE,
                     format!("StrToBool: invalid boolean `{s}`"),
@@ -98,7 +98,7 @@ pub(crate) fn run(
             call.push(Value::Str(formatted.into()));
         }
         Intrinsic::Conv(ConvIntrinsic::HexToInt) => {
-            let s = pop_string(pop_value(call, location)?, location)?;
+            let s = expect_str(pop_value(call, location)?, location)?;
             let trimmed = s.trim();
             let trimmed = trimmed
                 .strip_prefix("0x")

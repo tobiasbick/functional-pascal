@@ -139,7 +139,9 @@ the Unit's terminal `Halt` is removed, and applies the complete executable-bytec
 Malformed relocations, callable metadata, startup control flow, or opcode operands therefore fail
 during linking rather than being deferred to execution.
 
-Sidecars are written atomically in the source directory. Concurrent readers and writers use a
+Sidecars are staged and validated in the source directory, then replaced in one filesystem
+operation. A staging or replacement failure leaves the previous sidecar at its path. Concurrent
+readers and writers use a
 persistent `.fpascu.lock` coordination file when it exists. The file contains no unit data and is
 ignored by Git; operating-system lock ownership is released automatically if the compiler exits,
 so a lock is never reclaimed merely because it is old. Reading an existing valid sidecar does not

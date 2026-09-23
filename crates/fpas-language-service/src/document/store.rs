@@ -15,6 +15,8 @@ pub struct DocumentStore {
     open: HashMap<std::path::PathBuf, Arc<DocumentSnapshot>>,
     disk: Arc<Mutex<DiskSnapshots>>,
     next_snapshot_revision: Arc<AtomicU64>,
+    #[cfg(test)]
+    disk_reads: Arc<Mutex<(usize, usize)>>,
 }
 
 #[derive(Default)]
@@ -29,6 +31,8 @@ impl Default for DocumentStore {
             open: HashMap::new(),
             disk: Arc::new(Mutex::new(DiskSnapshots::default())),
             next_snapshot_revision: Arc::new(AtomicU64::new(0)),
+            #[cfg(test)]
+            disk_reads: Arc::default(),
         }
     }
 }
@@ -153,6 +157,15 @@ impl DocumentStore {
                 return Err(LanguageServiceError::source_read(&path, error));
             }
         };
+        #[cfg(test)]
+        {
+            let mut reads = self
+                .disk_reads
+                .lock()
+                .unwrap_or_else(std::sync::PoisonError::into_inner);
+            reads.0 += 1;
+            reads.1 += source.len();
+        }
         let mut disk = self
             .disk
             .lock()
@@ -173,6 +186,17 @@ impl DocumentStore {
         ));
         disk.values.insert(path, Arc::clone(&snapshot));
         Ok(snapshot)
+    }
+
+    #[cfg(test)]
+    /// Returns and resets successful disk read counts and bytes across query forks.
+    pub(crate) fn take_disk_reads(&self) -> (usize, usize) {
+        std::mem::take(
+            &mut *self
+                .disk_reads
+                .lock()
+                .unwrap_or_else(std::sync::PoisonError::into_inner),
+        )
     }
 
     fn next_snapshot_revision(&self, path: &Path) -> Result<u64, LanguageServiceError> {

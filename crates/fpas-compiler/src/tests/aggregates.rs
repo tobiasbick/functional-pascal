@@ -373,6 +373,32 @@ end.",
 }
 
 #[test]
+fn inferred_and_contextual_records_preserve_initializer_order() {
+    assert_succeeds(
+        r#"
+program RecordInitializerOrder;
+type Pair = record
+  First: integer;
+  Second: integer := 7;
+end;
+mutable var Calls: integer := 0;
+function Next(): integer;
+begin
+  Calls := Calls + 1;
+  return Calls
+end;
+begin
+  if (record First := Next(); Second := Next(); end).Second <> 2 then
+    panic('anonymous record initializer order');
+  var Typed: Pair := record First := Next(); end;
+  if (Typed.First <> 3) or (Typed.Second <> 7) or (Calls <> 3) then
+    panic('record initializer order')
+end.
+"#,
+    );
+}
+
+#[test]
 fn generic_routines_preserve_record_and_enum_values() {
     assert_succeeds(
         "\

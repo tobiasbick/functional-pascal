@@ -175,6 +175,44 @@ exclude = ["src/generated/**/*.fpas"]
 }
 
 #[test]
+fn project_globs_keep_bracketed_root_literal_with_decoy_sibling() {
+    for root_name in ["demo[1]", "demo[1"] {
+        let dir = temp_dir("literal-glob-root");
+        let root = dir.join(root_name);
+        let decoy = dir.join("demo1");
+        write(
+            &root.join("app.fpasprj"),
+            "[project]\nname = \"app\"\nkind = \"program\"\nmain = \"main.fpas\"\n\n[sources]\ninclude = [\"*.fpas\"]\nexclude = [\"ignored*.fpas\"]\n",
+        );
+        write(&root.join("main.fpas"), "program App; begin end.\n");
+        write(&root.join("live.fpas"), "unit Live;\n");
+        write(&root.join("ignored.fpas"), "unit Ignored;\n");
+        write(&decoy.join("decoy.fpas"), "unit Decoy;\n");
+
+        let loaded = load_project(&root.join("app.fpasprj")).expect("project should load");
+        assert_eq!(loaded.source_files, vec![root.join("live.fpas")]);
+        fs::remove_dir_all(&dir).ok();
+    }
+}
+
+#[cfg(windows)]
+#[test]
+fn source_exclusion_resolves_case_alias_once() {
+    let dir = temp_dir("exclude-case-alias");
+    let manifest = dir.join("app.fpasprj");
+    write(
+        &manifest,
+        "[project]\nname = \"app\"\nkind = \"program\"\nmain = \"main.fpas\"\n\n[sources]\ninclude = [\"*.fpas\"]\nexclude = [\"LIVE.FPAS\"]\n",
+    );
+    write(&dir.join("main.fpas"), "program App; begin end.\n");
+    write(&dir.join("live.fpas"), "unit Live;\n");
+
+    let loaded = load_project(&manifest).expect("project should load");
+    assert!(loaded.source_files.is_empty());
+    fs::remove_dir_all(dir).ok();
+}
+
+#[test]
 fn resolve_workspace_dependency_paths_finds_member_by_name() {
     let dir = temp_dir("workspace-dep");
     let workspace = dir.join("suite.fpasworkspace");

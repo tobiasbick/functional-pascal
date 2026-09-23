@@ -139,6 +139,7 @@ fn load_sidecar_with<T>(
 }
 
 /// Atomically publishes one validated `.fpascu` beside its source.
+/// See `docs/pascal/program-structure/units.md`.
 pub fn write_sidecar(source_path: &Path, unit: &CompiledUnit) -> Result<PathBuf, SidecarError> {
     let sidecar = sidecar_path(source_path);
     let bytes = crate::encode(unit).map_err(SidecarError::Format)?;

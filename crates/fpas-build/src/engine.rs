@@ -154,7 +154,6 @@ fn compile_units<Backend: UnitBackend>(
             ))
         })?;
         let dependencies = interfaces.direct_dependency_identities(node.direct_uses());
-        let direct_interfaces = interfaces.direct_interfaces(node.direct_uses());
         let source = UnitSourceSnapshot::read(node)?;
         let expected = ExpectedUnitIdentity {
             unit_name: unit_name.clone(),
@@ -177,6 +176,7 @@ fn compile_units<Backend: UnitBackend>(
             )
         } else {
             events.push(event(unit_name, BuildEventKind::Parsed));
+            let direct_interfaces = interfaces.direct_interfaces(node.direct_uses());
             let parsed = node
                 .parse_source_snapshot(source.bytes())
                 .map_err(BuildError::new)?;
@@ -315,3 +315,6 @@ fn format_diagnostic(
         fpas_diagnostics::render_without_path(diagnostic)
     }
 }
+
+#[cfg(test)]
+mod warm_reuse;

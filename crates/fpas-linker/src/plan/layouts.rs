@@ -35,11 +35,16 @@ pub(super) fn assign(
     let mut canonical_records = BTreeMap::new();
     let mut canonical_enums = BTreeMap::new();
     for (object_index, object) in objects.iter().enumerate() {
-        let mut local_records = (0..object.records.len()).collect::<Vec<_>>();
-        local_records
-            .sort_by_key(|index| canonical_record_name(objects, symbols, object_index, *index));
-        for local in local_records {
-            let canonical = canonical_record_name(objects, symbols, object_index, local);
+        let mut local_records = (0..object.records.len())
+            .map(|index| {
+                Ok((
+                    canonical_record_name(objects, symbols, object_index, index)?,
+                    index,
+                ))
+            })
+            .collect::<Result<Vec<_>, LinkError>>()?;
+        local_records.sort_by(|left, right| left.0.cmp(&right.0));
+        for (canonical, local) in local_records {
             let id = if let Some(id) = canonical_records.get(&canonical).copied() {
                 id
             } else {
@@ -52,11 +57,16 @@ pub(super) fn assign(
             records[object_index][local] = Some(id);
         }
 
-        let mut local_enums = (0..object.enums.len()).collect::<Vec<_>>();
-        local_enums
-            .sort_by_key(|index| canonical_enum_name(objects, symbols, object_index, *index));
-        for local in local_enums {
-            let canonical = canonical_enum_name(objects, symbols, object_index, local);
+        let mut local_enums = (0..object.enums.len())
+            .map(|index| {
+                Ok((
+                    canonical_enum_name(objects, symbols, object_index, index)?,
+                    index,
+                ))
+            })
+            .collect::<Result<Vec<_>, LinkError>>()?;
+        local_enums.sort_by(|left, right| left.0.cmp(&right.0));
+        for (canonical, local) in local_enums {
             let id = if let Some(id) = canonical_enums.get(&canonical).copied() {
                 id
             } else {
@@ -122,13 +132,15 @@ fn canonical_record_name(
     symbols: &SymbolTable,
     object: usize,
     local: usize,
-) -> String {
-    symbols.canonical_target_name(
+) -> Result<String, LinkError> {
+    Ok(symbols.canonical_target_name(
         objects,
         object,
-        DefinitionTarget::Record(u32::try_from(local).unwrap_or(u32::MAX)),
+        DefinitionTarget::Record(
+            u32::try_from(local).map_err(|_| LinkError::Overflow("record layout index"))?,
+        ),
         &objects[object].records[local].name,
-    )
+    ))
 }
 
 fn canonical_enum_name(
@@ -136,11 +148,13 @@ fn canonical_enum_name(
     symbols: &SymbolTable,
     object: usize,
     local: usize,
-) -> String {
-    symbols.canonical_target_name(
+) -> Result<String, LinkError> {
+    Ok(symbols.canonical_target_name(
         objects,
         object,
-        DefinitionTarget::Enum(u32::try_from(local).unwrap_or(u32::MAX)),
+        DefinitionTarget::Enum(
+            u32::try_from(local).map_err(|_| LinkError::Overflow("enum layout index"))?,
+        ),
         &objects[object].enums[local].name,
-    )
+    ))
 }

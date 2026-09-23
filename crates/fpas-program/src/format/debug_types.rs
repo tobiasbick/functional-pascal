@@ -104,7 +104,8 @@ pub(super) fn decode(section: DecodedSection<'_>) -> Result<Vec<DebugType>, Form
         fpas_bytecode::limits::MAX_DEBUG_TYPES,
     )?;
     let mut reader = SectionReader::new(section.bytes, "debug type section");
-    let mut types = Vec::with_capacity(section.item_count);
+    reader.ensure_entries(section.item_count, 1, "debug_type_tag")?;
+    let mut types = Vec::new();
     for _ in 0..section.item_count {
         let ty = match reader.u8("debug_type_tag")? {
             UNIT => DebugType::Unit,
@@ -130,6 +131,7 @@ pub(super) fn decode(section: DecodedSection<'_>) -> Result<Vec<DebugType>, Form
                     count,
                     fpas_bytecode::limits::MAX_LAYOUT_FIELDS,
                 )?;
+                reader.ensure_entries(count, 4, "debug_function_parameter_type")?;
                 let mut parameters = Vec::with_capacity(count);
                 for _ in 0..count {
                     parameters.push(read_id(&mut reader, "debug_function_parameter_type")?);

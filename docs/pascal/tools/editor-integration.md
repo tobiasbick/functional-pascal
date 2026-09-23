@@ -272,6 +272,11 @@ manifest remains a loose file, while overlapping direct owners produce an
 actionable ambiguity error. Open dependency units are analyzed with their own
 URI and source ranges.
 
+When loading a source directly, an unreadable ancestor directory does not hide
+a readable loose file. Errors in discovered project or workspace manifests,
+missing dependencies, and ambiguous source ownership remain visible. Explicitly
+selected manifests always report loading errors.
+
 After initialization, the language server dynamically registers recursive
 watchers for `.fpas`, `.fpasprj`, and `.fpasworkspace` files with compatible
 LSP clients. Create, change, rename, and delete notifications rebuild the

@@ -19,6 +19,42 @@ use fpas_unit::object::{
 use common::*;
 
 #[test]
+fn many_layouts_keep_canonical_name_order_with_unrelated_definitions() {
+    let mut library = unit(true);
+    for number in (0..64).rev() {
+        let name = format!("library.unit.record{number:03}");
+        let index = library.records.len() as u32;
+        library.records.push(fpas_unit::object::ObjectRecordLayout {
+            name: name.clone(),
+            fields: Vec::new(),
+            field_types: Vec::new(),
+            properties: Vec::new(),
+            methods: Vec::new(),
+        });
+        library.definitions.push(ObjectDefinition {
+            name,
+            target: DefinitionTarget::Record(index),
+            public: false,
+        });
+    }
+    library
+        .definitions
+        .sort_by(|left, right| left.name.cmp(&right.name));
+
+    let linked = link_objects(&[library], &program()).expect("many layouts must link");
+    let executable = linked.executable();
+    assert_eq!(executable.records.len(), 64);
+    assert_eq!(
+        executable.strings.get(executable.records[0].name),
+        Some("library.unit.record000")
+    );
+    assert_eq!(
+        executable.strings.get(executable.records[63].name),
+        Some("library.unit.record063")
+    );
+}
+
+#[test]
 fn matching_private_layout_copies_share_one_canonical_type_id() {
     let mut first = unit(true);
     first.records.push(fpas_unit::object::ObjectRecordLayout {

@@ -167,11 +167,6 @@ impl SymbolTable {
                 |definition| definition.name.clone(),
             )
     }
-
-    #[allow(dead_code, reason = "kept for deterministic symbol diagnostics")]
-    pub(super) fn definition_count(&self) -> usize {
-        self.definitions.len()
-    }
 }
 
 fn matching_layout_definition(

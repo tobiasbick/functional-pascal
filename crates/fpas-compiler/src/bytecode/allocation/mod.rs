@@ -55,6 +55,7 @@ impl Allocation {
         let last_uses = last_uses(function);
         let coalesced_writes = coalesced_local_writes(function);
         let mut active: Vec<(ValueId, usize, Register)> = Vec::new();
+        let mut occupied = BTreeSet::new();
         let mut position = 0_usize;
         let mut high_water = next_fixed;
         for block in &function.blocks {
@@ -64,7 +65,14 @@ impl Allocation {
                 ));
             }
             for instruction in &block.instructions {
-                active.retain(|(_, last_use, _)| *last_use >= position);
+                active.retain(|(_, last_use, register)| {
+                    if *last_use < position {
+                        occupied.remove(&register.get());
+                        false
+                    } else {
+                        true
+                    }
+                });
                 if let Some(result) = instruction.result {
                     let register = if let Some(local) = coalesced_writes.get(&result.id) {
                         locals.get(local).copied().ok_or_else(|| {
@@ -74,14 +82,10 @@ impl Allocation {
                             ))
                         })?
                     } else {
-                        let used: BTreeSet<u16> = active
-                            .iter()
-                            .map(|(_, _, register)| register.get())
-                            .chain(locals.values().map(|register| register.get()))
-                            .collect();
-                        let register = lowest_free(next_fixed, &used)?;
+                        let register = lowest_free(next_fixed, &occupied)?;
                         high_water = high_water.max(usize::from(register.get()) + 1);
                         let last_use = last_uses.get(&result.id).copied().unwrap_or(position);
+                        occupied.insert(register.get());
                         active.push((result.id, last_use, register));
                         register
                     };

@@ -17,6 +17,7 @@ fpas-std = { path = "../fpas-std" }
 fpas-unit = { path = "../fpas-unit" }
 
 [dev-dependencies]
+allocation-counter = { workspace = true }
 fpas-linker = { path = "../fpas-linker" }
 fpas-vm = { path = "../fpas-vm" }
 

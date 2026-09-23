@@ -6,7 +6,7 @@
 
 use crate::error::StdError;
 use crate::intrinsic_args::{
-    IntrinsicCall, pop_array, pop_string, pop_value, value_as_string_for_join,
+    IntrinsicCall, expect_str, pop_array, pop_value, value_as_string_for_join,
 };
 use fpas_bytecode::{Intrinsic, PathIntrinsic, SourceLocation, Value};
 use std::path::{Component, MAIN_SEPARATOR, Path, PathBuf};
@@ -32,20 +32,20 @@ pub(crate) fn run(
             call.push(Value::Str(buf.to_string_lossy().into_owned().into()));
         }
         Intrinsic::Path(PathIntrinsic::BaseName) => {
-            let path = pop_string(pop_value(call, location)?, location)?;
-            call.push(Value::Str(base_name(&path).into()));
+            let path = expect_str(pop_value(call, location)?, location)?;
+            call.push(Value::Str(base_name(path).into()));
         }
         Intrinsic::Path(PathIntrinsic::DirName) => {
-            let path = pop_string(pop_value(call, location)?, location)?;
-            call.push(Value::Str(dir_name(&path).into()));
+            let path = expect_str(pop_value(call, location)?, location)?;
+            call.push(Value::Str(dir_name(path).into()));
         }
         Intrinsic::Path(PathIntrinsic::Extension) => {
-            let path = pop_string(pop_value(call, location)?, location)?;
-            call.push(Value::Str(extension(&path).into()));
+            let path = expect_str(pop_value(call, location)?, location)?;
+            call.push(Value::Str(extension(path).into()));
         }
         Intrinsic::Path(PathIntrinsic::Normalize) => {
-            let path = pop_string(pop_value(call, location)?, location)?;
-            call.push(Value::Str(normalize_path(&path).into()));
+            let path = expect_str(pop_value(call, location)?, location)?;
+            call.push(Value::Str(normalize_path(path).into()));
         }
         _ => return Ok(None),
     }
@@ -178,22 +178,18 @@ mod tests {
     }
 
     #[test]
-    fn base_name_returns_empty_for_trailing_separator_on_unix() {
-        #[cfg(unix)]
-        {
-            let mut stack = vec![Value::Str("dir/nested/".into())];
-            run_path(PathIntrinsic::BaseName, &mut stack);
-            assert_eq!(stack, vec![Value::Str((String::new()).into())]);
-        }
+    fn base_name_returns_last_segment_for_trailing_separator() {
+        let mut stack = vec![Value::Str("dir/nested/".into())];
+        run_path(PathIntrinsic::BaseName, &mut stack);
+        assert_eq!(stack, vec![Value::Str("nested".into())]);
     }
 
     #[test]
-    fn base_name_returns_last_segment_for_trailing_separator_on_windows() {
-        #[cfg(windows)]
-        {
-            let mut stack = vec![Value::Str("dir/nested/".into())];
+    fn base_name_returns_empty_for_root_and_empty_input() {
+        for input in ["/", ""] {
+            let mut stack = vec![Value::Str(input.into())];
             run_path(PathIntrinsic::BaseName, &mut stack);
-            assert_eq!(stack, vec![Value::Str("nested".into())]);
+            assert_eq!(stack, vec![Value::Str(String::new().into())]);
         }
     }
 

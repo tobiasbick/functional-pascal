@@ -13,6 +13,7 @@ This review adds documents only. Extension sources, manifests, dependency versio
 - [Online documentation and local documentation comparison](documentation.md)
 - [npm versions and audit](npm-dependencies.md)
 - [Verification and reproduction evidence](verification.md)
+- [Implementation and follow-up verification](implementation.md)
 
 ## Findings
 

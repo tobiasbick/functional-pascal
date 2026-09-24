@@ -1,6 +1,8 @@
 /** Interactive forced-return command over the FPAS DAP adapter. */
 
 import * as vscode from "vscode";
+import { activeSelection, type DebugSelection } from "./commands/selection";
+import { promptExpression as prompt } from "./commands/expressionPrompt";
 
 /** Stable command identifier contributed by the Functional Pascal extension. */
 export const FORCE_RETURN_COMMAND = "functionalPascal.debug.forceReturn";
@@ -17,7 +19,7 @@ export function registerForcedReturnCommand(context: vscode.ExtensionContext): v
     vscode.commands.registerCommand(
       FORCE_RETURN_COMMAND,
       async (input?: ForcedReturnInput) => {
-        const selection = await activeSelection(input?.frameId);
+        const selection = await activeSelection(input?.frameId, "forcing a return");
         if (selection === undefined) return;
         try {
           if (input?.expression !== undefined) {
@@ -33,7 +35,7 @@ export function registerForcedReturnCommand(context: vscode.ExtensionContext): v
               );
               return;
             }
-            const expression = await prompt();
+            const expression = await prompt("Return expression", "0");
             if (expression === undefined) return;
             await request(selection, expression);
           }
@@ -47,39 +49,6 @@ export function registerForcedReturnCommand(context: vscode.ExtensionContext): v
   );
 }
 
-interface DebugSelection {
-  readonly session: vscode.DebugSession;
-  readonly frameId: number;
-}
-
-async function activeSelection(frameId?: number): Promise<DebugSelection | undefined> {
-  const session = vscode.debug.activeDebugSession;
-  if (session?.type !== "fpas") {
-    void vscode.window.showWarningMessage(
-      "Start and stop a Functional Pascal debug session before forcing a return."
-    );
-    return undefined;
-  }
-  if (frameId !== undefined) return { session, frameId };
-  const selection = vscode.debug.activeStackItem;
-  if (selection instanceof vscode.DebugStackFrame && selection.session === session) {
-    return { session, frameId: selection.frameId };
-  }
-  void vscode.window.showWarningMessage(
-    "Select a stopped Functional Pascal stack frame before forcing a return."
-  );
-  return undefined;
-}
-
-async function prompt(): Promise<string | undefined> {
-  return vscode.window.showInputBox({
-    prompt: "Return expression",
-    value: "0",
-    ignoreFocusOut: true,
-    validateInput: (input) =>
-      input.trim().length === 0 ? "Enter one FPAS expression." : undefined
-  });
-}
 
 async function request(
   selection: DebugSelection,

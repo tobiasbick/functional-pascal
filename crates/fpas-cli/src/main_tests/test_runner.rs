@@ -22,6 +22,7 @@ fn test_cli_runs_passing_tests_in_directory() {
             list_only: false,
             script_path: None,
             filter: None,
+            files: Vec::new(),
             report: None,
             timeout: None,
             jobs: 1,

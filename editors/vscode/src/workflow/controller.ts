@@ -142,7 +142,7 @@ export class WorkflowController implements vscode.Disposable {
       vscode.commands.registerCommand(
         WORKFLOW_COMMANDS.test,
         async (uri?: vscode.Uri) => {
-          const target = await this.selector.select(uri);
+          const target = await this.selector.resolve(uri);
           if (target === undefined) {
             return;
           }
@@ -179,7 +179,7 @@ export class WorkflowController implements vscode.Disposable {
     operation: WorkflowOperation,
     explicit?: vscode.Uri
   ): Promise<void> {
-    const target = await this.selector.select(explicit);
+    const target = await this.selector.resolve(explicit);
     if (target === undefined) {
       return;
     }
@@ -248,7 +248,7 @@ export class WorkflowController implements vscode.Disposable {
     target?: vscode.Uri;
     programArguments?: string[];
   }): Promise<void> {
-    const target = await this.selector.select(options?.target);
+    const target = await this.selector.resolve(options?.target);
     if (target === undefined) {
       return;
     }

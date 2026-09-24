@@ -91,7 +91,8 @@ export async function verifyManifest() {
 
   assert.equal(manifest.activationEvents, undefined);
   assert.deepEqual(manifest.extensionKind, ["ui"]);
-  assert.equal(manifest.dependencies?.["vscode-languageclient"], "10.1.0");
+  assert.equal(manifest.dependencies?.["vscode-languageclient"], "10.1.1");
+  assert.equal(manifest.dependencies?.["@iarna/toml"], "2.2.5");
 
   assert.deepEqual(manifest.contributes?.languages, [
     {

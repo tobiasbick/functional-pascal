@@ -32,77 +32,131 @@ export type TerminalInputEvent =
 const PASTE_START = "\u001b[200~";
 const PASTE_END = "\u001b[201~";
 
-/** Incrementally decode terminal input chunks into debugger terminal events. */
+/** Maximum retained paste or input fragment size in UTF-8 bytes. */
+export const MAX_TERMINAL_INPUT_BYTES = 1024 * 1024;
+const MAX_CONTROL_LENGTH = 128;
+
+/** Incrementally decodes a byte-stream's text without treating chunks as keys. */
 export class TerminalInputDecoder {
   private pending = "";
+  private paste: string[] | undefined;
+  private pasteBytes = 0;
 
-  /** Decode one input chunk while retaining incomplete control sequences. */
+  /** Emits a lone Escape after the transport's ambiguity deadline. */
+  flushEscape(): TerminalInputEvent[] {
+    if (this.pending !== "\u001b" || this.paste !== undefined) return [];
+    this.pending = "";
+    return [keyEvent("Escape")];
+  }
+
+  /** Whether the transport must schedule the lone-Escape deadline. */
+  get waitingForEscape(): boolean {
+    return this.pending === "\u001b" && this.paste === undefined;
+  }
+
+  /** Discards retained input when the transport closes or input exceeds its bound. */
+  reset(): void {
+    this.pending = "";
+    this.paste = undefined;
+    this.pasteBytes = 0;
+  }
+
+  /** Decodes complete sequences and retains only their incomplete suffix. */
   feed(data: string): TerminalInputEvent[] {
-    this.pending += data;
+    if (Buffer.byteLength(data, "utf8") > MAX_TERMINAL_INPUT_BYTES) {
+      this.reset();
+      throw new Error("Terminal input fragment exceeds the 1 MiB limit.");
+    }
+    const input = this.pending + data;
+    this.pending = "";
     const events: TerminalInputEvent[] = [];
-    while (this.pending.length > 0) {
-      if (!this.pending.startsWith("\u001b")) {
-        const character = [...this.pending][0];
-        this.pending = this.pending.slice(character.length);
-        events.push(characterEvent(character));
-        continue;
-      }
-      if (this.pending.startsWith(PASTE_START)) {
-        const end = this.pending.indexOf(PASTE_END, PASTE_START.length);
+    let cursor = 0;
+    while (cursor < input.length) {
+      if (this.paste !== undefined) {
+        const end = input.indexOf(PASTE_END, cursor);
         if (end < 0) {
+          // Only a possible delimiter prefix must survive into the next feed.
+          let keep = Math.min(PASTE_END.length - 1, input.length - cursor);
+          while (keep > 0 && !PASTE_END.startsWith(input.slice(input.length - keep))) keep -= 1;
+          this.appendPaste(input.slice(cursor, input.length - keep));
+          cursor = input.length - keep;
           break;
         }
-        events.push({
-          kind: "paste",
-          text: this.pending.slice(PASTE_START.length, end)
-        });
-        this.pending = this.pending.slice(end + PASTE_END.length);
+        this.appendPaste(input.slice(cursor, end));
+        events.push({ kind: "paste", text: this.paste.join("") });
+        this.paste = undefined;
+        this.pasteBytes = 0;
+        cursor = end + PASTE_END.length;
         continue;
       }
-      const focus = /^\u001b\[([IO])/u.exec(this.pending);
-      if (focus !== null) {
-        events.push({ kind: focus[1] === "I" ? "focusGained" : "focusLost" });
-        this.pending = this.pending.slice(focus[0].length);
+      if (input[cursor] !== "\u001b") {
+        const code = input.codePointAt(cursor)!;
+        if (code >= 0xd800 && code <= 0xdbff && cursor + 1 === input.length) break;
+        const character = String.fromCodePoint(code);
+        events.push(characterEvent(character));
+        cursor += character.length;
         continue;
       }
-      const mouse = /^\u001b\[<(\d+);(\d+);(\d+)([Mm])/u.exec(this.pending);
-      if (mouse !== null) {
-        events.push(mouseEvent(Number(mouse[1]), Number(mouse[2]), Number(mouse[3]), mouse[4]));
-        this.pending = this.pending.slice(mouse[0].length);
-        continue;
-      }
-      const csiKey = /^\u001b\[(?:(\d+)(?:;(\d+))?)?([A-DHFZ~])/u.exec(this.pending);
-      if (csiKey !== null) {
-        const event = csiKeyEvent(csiKey[1], csiKey[2], csiKey[3]);
-        if (event !== undefined) {
-          events.push(event);
-          this.pending = this.pending.slice(csiKey[0].length);
+      const rest = input.slice(cursor);
+      if (rest.length === 1) break;
+      if (rest[1] === "[" || rest[1] === "O") {
+        // CSI parameters/intermediates end at one final byte; unsupported finals are consumed.
+        const sequence = /^\u001b([\[O])([ -?]*)([@-~])/u.exec(rest);
+        if (sequence === null) {
+          if (rest.length > MAX_CONTROL_LENGTH) {
+            this.reset();
+            throw new Error("Terminal control sequence exceeds 128 characters.");
+          }
+          const invalid = /[^ -?]/u.exec(rest.slice(2));
+          if (invalid !== null) {
+            cursor += 2 + invalid.index;
+            continue;
+          }
+          break;
+        }
+        const [wire, prefix, parameters, final] = sequence;
+        cursor += wire.length;
+        if (wire.length > MAX_CONTROL_LENGTH) continue;
+        if (wire === PASTE_START) { this.paste = []; continue; }
+        if (prefix === "O") {
+          if (parameters === "" && "PQRS".includes(final)) events.push(keyEvent(`F${"PQRS".indexOf(final) + 1}`));
+          else if (parameters === "" && "ABCDHF".includes(final)) events.push(csiKeyEvent(undefined, undefined, final)!);
           continue;
         }
-      }
-      const ss3 = /^\u001bO([PQRS])/u.exec(this.pending);
-      if (ss3 !== null) {
-        events.push(keyEvent(`F${"PQRS".indexOf(ss3[1]) + 1}`));
-        this.pending = this.pending.slice(ss3[0].length);
-        continue;
-      }
-      if (this.pending === "\u001b" || this.pending === "\u001b[") {
-        if (this.pending === "\u001b[") {
-          break;
+        if (parameters === "" && (final === "I" || final === "O")) {
+          events.push({ kind: final === "I" ? "focusGained" : "focusLost" });
+          continue;
         }
-        events.push(keyEvent("Escape"));
-        this.pending = "";
+        const mouse = /^<(\d+);(\d+);(\d+)$/u.exec(parameters);
+        if (mouse !== null && (final === "M" || final === "m")) {
+          const values = mouse.slice(1).map(Number);
+          if (values.every(Number.isSafeInteger)) events.push(mouseEvent(values[0], values[1], values[2], final));
+          continue;
+        }
+        const key = /^(?:(\d+)(?:;(\d+))?)?$/u.exec(parameters);
+        if (key !== null) {
+          const event = csiKeyEvent(key[1], key[2], final);
+          if (event !== undefined) events.push(event);
+        }
         continue;
       }
-      const character = [...this.pending.slice(1)][0];
-      if (character !== "[") {
-        events.push(keyEvent("Character", character, { alt: true }));
-        this.pending = this.pending.slice(1 + character.length);
-        continue;
-      }
-      break;
+      const code = input.codePointAt(cursor + 1)!;
+      if (code >= 0xd800 && code <= 0xdbff && cursor + 2 === input.length) break;
+      const character = String.fromCodePoint(code);
+      events.push(keyEvent("Character", character, { alt: true }));
+      cursor += 1 + character.length;
     }
+    this.pending = input.slice(cursor);
     return events;
+  }
+
+  private appendPaste(text: string): void {
+    this.pasteBytes += Buffer.byteLength(text, "utf8");
+    if (this.pasteBytes > MAX_TERMINAL_INPUT_BYTES) {
+      this.reset();
+      throw new Error("Terminal paste exceeds the 1 MiB limit.");
+    }
+    if (text.length > 0) this.paste!.push(text);
   }
 }
 
@@ -183,10 +237,12 @@ function mouseEvent(code: number, x: number, y: number, suffix: string): Termina
   let action: string;
   if ((code & 64) !== 0) {
     action = ["ScrollUp", "ScrollDown", "ScrollLeft", "ScrollRight"][buttonCode];
-  } else if (suffix === "m" || buttonCode === 3) {
+  } else if (suffix === "m") {
     action = "Up";
   } else if ((code & 32) !== 0) {
     action = buttonCode === 3 ? "Move" : "Drag";
+  } else if (buttonCode === 3) {
+    action = "Up";
   } else {
     action = "Down";
   }

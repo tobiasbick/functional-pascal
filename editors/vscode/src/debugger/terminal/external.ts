@@ -7,8 +7,11 @@ import process from "node:process";
 import * as vscode from "vscode";
 
 import type { TerminalInputEvent } from "./input";
+import { TerminalInputQueue } from "./inputQueue";
 
 const MAX_WIRE_LINE_BYTES = 2 * 1024 * 1024;
+const MAX_OUTPUT_BYTES = 4 * 1024 * 1024;
+const AUTH_TIMEOUT_MS = 30_000;
 
 interface DapMessage {
   readonly type?: string;
@@ -75,8 +78,13 @@ export class ExternalDebugTerminalManager implements vscode.Disposable {
 class ExternalDebugTerminalSession {
   private readonly server = net.createServer((socket) => this.accept(socket));
   private readonly token = randomBytes(32).toString("hex");
-  private readonly pendingEvents: TerminalInputEvent[] = [];
-  private readonly pendingOutput: string[] = [];
+  private readonly inputQueue: TerminalInputQueue;
+  private readonly outbound: string[] = [];
+  private outboundBytes = 0;
+  private waitingForDrain = false;
+  private readonly authenticationDeadline = setTimeout(() => {
+    this.fail("External FPAS terminal did not authenticate within 30 seconds.");
+  }, AUTH_TIMEOUT_MS);
   private socket: net.Socket | undefined;
   private readyForInput = false;
   private authenticated = false;
@@ -86,7 +94,16 @@ class ExternalDebugTerminalSession {
   public constructor(
     private readonly session: vscode.DebugSession,
     private readonly clientPath: string
-  ) {}
+  ) {
+    this.inputQueue = new TerminalInputQueue(
+      events => session.customRequest("fpas/terminalInput", { events }),
+      error => {
+        this.send({ output: `\r\nTerminal input failed: ${String(error)}\r\n` });
+        void vscode.window.showErrorMessage(`Terminal input failed: ${String(error)}`);
+        void vscode.debug.stopDebugging(session);
+      }
+    );
+  }
 
   public async listen(): Promise<Record<string, unknown>> {
     await new Promise<void>((resolve, reject) => {
@@ -119,15 +136,11 @@ class ExternalDebugTerminalSession {
 
   public ready(): void {
     this.readyForInput = true;
-    this.flushEvents();
+    if (this.authenticated && this.readyForInput) this.inputQueue.start();
   }
 
   public write(output: string): void {
     if (this.finished) return;
-    if (!this.authenticated || this.socket === undefined) {
-      this.pendingOutput.push(output);
-      return;
-    }
     this.send({ output });
   }
 
@@ -139,12 +152,11 @@ class ExternalDebugTerminalSession {
   public finish(): void {
     if (this.finished) return;
     this.finished = true;
+    clearTimeout(this.authenticationDeadline);
     if (this.server.listening) this.server.close();
     this.send({ exitCode: this.exitCode, finished: true });
-    this.socket?.end();
-    this.socket = undefined;
-    this.pendingEvents.length = 0;
-    this.pendingOutput.length = 0;
+    this.flush();
+    this.inputQueue.dispose();
   }
 
   private accept(socket: net.Socket): void {
@@ -154,6 +166,13 @@ class ExternalDebugTerminalSession {
     }
     this.socket = socket;
     socket.setEncoding("utf8");
+    socket.on("drain", () => {
+      this.waitingForDrain = false;
+      this.flush();
+    });
+    socket.setTimeout(AUTH_TIMEOUT_MS, () => {
+      if (!this.authenticated) this.fail("External FPAS terminal authentication timed out.");
+    });
     let pending = "";
     socket.on("data", (chunk: string) => {
       pending += chunk;
@@ -192,9 +211,11 @@ class ExternalDebugTerminalSession {
         return;
       }
       this.authenticated = true;
+      clearTimeout(this.authenticationDeadline);
+      socket.setTimeout(0);
       this.server.close();
-      for (const output of this.pendingOutput.splice(0)) this.send({ output });
-      this.flushEvents();
+      this.flush();
+      if (this.authenticated && this.readyForInput) this.inputQueue.start();
       return;
     }
     if (message.closed === true) {
@@ -203,30 +224,42 @@ class ExternalDebugTerminalSession {
     }
     if (!Array.isArray(message.events)) return;
     const events = message.events as TerminalInputEvent[];
-    if (!this.readyForInput) {
-      this.pendingEvents.push(...events);
-      return;
-    }
-    this.sendEvents(events);
-  }
-
-  private flushEvents(): void {
-    if (!this.readyForInput || !this.authenticated || this.pendingEvents.length === 0) return;
-    this.sendEvents(this.pendingEvents.splice(0));
-  }
-
-  private sendEvents(events: readonly TerminalInputEvent[]): void {
-    if (events.length === 0) return;
-    void this.session.customRequest("fpas/terminalInput", { events }).then(
-      () => undefined,
-      (error: unknown) => {
-        this.send({ output: `\r\nTerminal input failed: ${String(error)}\r\n` });
-      }
-    );
+    this.inputQueue.push(events);
   }
 
   private send(message: Record<string, unknown>): void {
-    if (!this.authenticated || this.socket === undefined || this.socket.destroyed) return;
-    this.socket.write(`${JSON.stringify(message)}\n`);
+    if (this.finished && message.finished !== true) return;
+    const line = `${JSON.stringify(message)}\n`;
+    const bytes = Buffer.byteLength(line, "utf8");
+    if (bytes > MAX_WIRE_LINE_BYTES ||
+        this.outboundBytes + bytes + (this.socket?.writableLength ?? 0) > MAX_OUTPUT_BYTES) {
+      this.fail("External FPAS terminal output exceeds the 4 MiB buffer limit.");
+      return;
+    }
+    this.outbound.push(line);
+    this.outboundBytes += bytes;
+    this.flush();
+  }
+
+  private flush(): void {
+    const socket = this.socket;
+    if (!this.authenticated || socket === undefined || socket.destroyed || this.waitingForDrain) return;
+    while (this.outbound.length > 0) {
+      const line = this.outbound.shift()!;
+      this.outboundBytes -= Buffer.byteLength(line, "utf8");
+      if (!socket.write(line)) {
+        this.waitingForDrain = true;
+        break;
+      }
+    }
+    if (this.finished && this.outbound.length === 0) socket.end();
+  }
+
+  private fail(message: string): void {
+    if (this.finished) return;
+    this.exitCode = 1;
+    void vscode.window.showErrorMessage(message);
+    void vscode.debug.stopDebugging(this.session);
+    this.finish();
   }
 }

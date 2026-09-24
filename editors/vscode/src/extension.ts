@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import { projectIndex } from "./projects/index";
 
 import { LanguageClientController } from "./languageClient";
 import { registerDebugger } from "./debugger/adapter";
@@ -31,11 +32,11 @@ export const ACTIVATION_MESSAGE =
 export interface FunctionalPascalExtensionApi {
   /** Exact message written to the output channel during activation. */
   readonly activationMessage: string;
-  /** Whether the development language server completed its LSP handshake. */
+  /** Whether the selected language server completed its LSP handshake. */
   readonly languageServerStarted: boolean;
   /** Exact executable used for the running language server, when available. */
   readonly languageServerPath?: string;
-  /** Actionable startup failure when the development server did not start. */
+  /** Actionable startup failure when the selected server did not start. */
   readonly languageServerError?: string;
   /** Project-workflow surface used by real Extension Host regression tests. */
   readonly workflow: {
@@ -64,6 +65,7 @@ export async function activate(
     log: true
   });
   outputChannel.appendLine(ACTIVATION_MESSAGE);
+  context.subscriptions.push(projectIndex);
   const toolchain = new ToolchainResolver();
   languageClient = new LanguageClientController(toolchain, outputChannel);
   const workflow = new WorkflowController(context, outputChannel, toolchain);

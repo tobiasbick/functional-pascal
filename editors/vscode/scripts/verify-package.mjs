@@ -20,27 +20,13 @@ const defaultVsixPath = path.join(
 export function verifyPackage(vsixPath = defaultVsixPath) {
   const archive = new AdmZip(vsixPath);
   const entries = archive.getEntries().map((entry) => entry.entryName);
-  const entrySet = new Set(entries);
   const expectedEntries = [
     "[Content_Types].xml",
     "extension.vsixmanifest",
     "extension/BUG_REPORT.md",
     "extension/LICENSE.txt",
     "extension/language-configuration.json",
-    "extension/out/src/debugger/adapter.js",
-    "extension/out/src/debugger/dictionaryCommands.js",
-    "extension/out/src/debugger/forcedReturnCommand.js",
-    "extension/out/src/debugger/inputCommand.js",
-    "extension/out/src/debugger/liveReloadCommand.js",
-    "extension/out/src/debugger/projectTarget.js",
-    "extension/out/src/debugger/sequenceCommands.js",
-    "extension/out/src/debugger/storageInitializationCommand.js",
-    "extension/out/src/debugger/taskControlCommand.js",
-    "extension/out/src/debugger/taskResultCommand.js",
-    "extension/out/src/debugger/terminal/input.js",
     "extension/out/src/debugger/terminal/externalClient.js",
-    "extension/out/src/debugger/terminal/session.js",
-    "extension/out/src/debugger/variantConstructionCommand.js",
     "extension/out/src/extension.js",
     "extension/package.json",
     "extension/readme.md",
@@ -53,9 +39,6 @@ export function verifyPackage(vsixPath = defaultVsixPath) {
     "VSIX contains exactly the intended editor runtime files"
   );
 
-  for (const required of expectedEntries) {
-    assert.ok(entrySet.has(required), `VSIX contains ${required}`);
-  }
   const vsixManifest = archive.readAsText("extension.vsixmanifest");
   assert.doesNotMatch(
     vsixManifest,

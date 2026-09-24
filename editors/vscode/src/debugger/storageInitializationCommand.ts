@@ -1,6 +1,8 @@
 /** Interactive seeded initialization of a descendant below empty debugger storage. */
 
 import * as vscode from "vscode";
+import { activeSelection, type DebugSelection } from "./commands/selection";
+import { promptExpression as prompt } from "./commands/expressionPrompt";
 
 /** Stable command identifier contributed by the Functional Pascal extension. */
 export const INITIALIZE_STORAGE_COMMAND = "functionalPascal.debug.initializeStorage";
@@ -20,7 +22,7 @@ export function registerStorageInitializationCommand(context: vscode.ExtensionCo
     vscode.commands.registerCommand(
       INITIALIZE_STORAGE_COMMAND,
       async (input?: StorageInitializationInput) => {
-        const selection = await activeSelection(input?.frameId);
+        const selection = await activeSelection(input?.frameId, "initializing empty storage");
         if (selection === undefined) return;
         try {
           const target = input?.target ?? await prompt("Empty mutable descendant target", "State.Count");
@@ -51,38 +53,6 @@ export function registerStorageInitializationCommand(context: vscode.ExtensionCo
   );
 }
 
-interface DebugSelection {
-  readonly session: vscode.DebugSession;
-  readonly frameId: number;
-}
-
-async function activeSelection(frameId?: number): Promise<DebugSelection | undefined> {
-  const session = vscode.debug.activeDebugSession;
-  if (session?.type !== "fpas") {
-    void vscode.window.showWarningMessage(
-      "Start and stop a Functional Pascal debug session before initializing empty storage."
-    );
-    return undefined;
-  }
-  if (frameId !== undefined) return { session, frameId };
-  const selection = vscode.debug.activeStackItem;
-  if (selection instanceof vscode.DebugStackFrame && selection.session === session) {
-    return { session, frameId: selection.frameId };
-  }
-  void vscode.window.showWarningMessage(
-    "Select a stopped Functional Pascal stack frame before initializing empty storage."
-  );
-  return undefined;
-}
-
-async function prompt(label: string, value: string): Promise<string | undefined> {
-  return vscode.window.showInputBox({
-    prompt: label,
-    value,
-    ignoreFocusOut: true,
-    validateInput: (input) => input.trim().length === 0 ? "Enter one FPAS expression." : undefined
-  });
-}
 
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);

@@ -39,7 +39,7 @@ export async function verifyWorkflowUnits(): Promise<void> {
     "json",
     "--timeout",
     "3",
-    "--filter",
+    "--file",
     "one test",
     target
   ]);
@@ -203,4 +203,9 @@ export async function verifyWorkflowUnits(): Promise<void> {
   const pid = Number.parseInt(cancelled.stdout.trim(), 10);
   assert.ok(Number.isInteger(pid));
   assert.throws(() => process.kill(pid, 0));
+  await assert.rejects(
+    runner.run(process.execPath,
+      ["-e", "process.stdout.write('x'.repeat(17 * 1024 * 1024))"], process.cwd()),
+    /stdout capture exceeds 16 MiB/u
+  );
 }

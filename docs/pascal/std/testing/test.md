@@ -111,6 +111,7 @@ fpas run tests/runner/assert_basics_test.fpas
 fpas test tests/
 fpas test tests/suite.fpasprj
 fpas test --filter tui_escape
+fpas test --file tests/stdlib/tui/theme_switch_test.fpas tests/suite.fpasprj
 fpas test --report json
 fpas test --strict
 fpas test --timeout 30 tests/

@@ -65,22 +65,49 @@
       {
         "type": "fpas",
         "label": "Functional Pascal",
-        "languages": ["fpas", "fpas-project"],
+        "languages": [
+          "fpas",
+          "fpas-project"
+        ],
         "configurationAttributes": {
           "launch": {
-            "required": ["program"],
+            "required": [
+              "program"
+            ],
             "properties": {
-              "program": { "type": "string", "description": "FPAS source, program project, workspace, or compiled image." },
-              "cwd": { "type": "string", "description": "Debugger working directory." },
-              "args": { "type": "array", "items": { "type": "string" }, "default": [] },
-              "stopOnEntry": { "type": "boolean", "default": false },
+              "program": {
+                "type": "string",
+                "description": "FPAS source, program project, workspace, or compiled image."
+              },
+              "cwd": {
+                "type": "string",
+                "description": "Debugger working directory."
+              },
+              "args": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "default": []
+              },
+              "stopOnEntry": {
+                "type": "boolean",
+                "default": false
+              },
               "console": {
                 "type": "string",
-                "enum": ["integratedTerminal", "externalTerminal", "debugConsole"],
+                "enum": [
+                  "integratedTerminal",
+                  "externalTerminal",
+                  "debugConsole"
+                ],
                 "default": "integratedTerminal",
                 "description": "Where program terminal I/O is shown. When omitted, functionalPascal.programTerminal supplies the default."
               },
-              "sourceRoot": { "type": "string", "description": "Required source root for .fpascp targets." }
+              "sourceRoot": {
+                "type": "string",
+                "description": "Required source root for .fpascp targets."
+              }
             }
           }
         },
@@ -259,7 +286,10 @@
         },
         "functionalPascal.programTerminal": {
           "type": "string",
-          "enum": ["integratedTerminal", "externalTerminal"],
+          "enum": [
+            "integratedTerminal",
+            "externalTerminal"
+          ],
           "enumDescriptions": [
             "Run interactive programs in a VS Code integrated terminal.",
             "Run interactive programs in a separate operating-system terminal window."
@@ -279,22 +309,24 @@
   "scripts": {
     "compile": "node scripts/compile.mjs",
     "test": "node scripts/run-tests.mjs",
+    "test:restricted": "node scripts/run-tests.mjs --restricted",
     "verify:contracts": "node scripts/verify-contracts.mjs",
     "verify:grammar": "node scripts/verify-grammar.mjs",
     "package": "node scripts/package.mjs",
     "vscode:prepublish": "npm run compile"
   },
   "dependencies": {
-    "vscode-languageclient": "10.1.0"
+    "@iarna/toml": "2.2.5",
+    "vscode-languageclient": "10.1.1"
   },
   "devDependencies": {
     "@types/adm-zip": "0.5.8",
     "@types/node": "24.13.3",
     "@types/vscode": "1.91.0",
     "@vscode/test-electron": "3.1.0",
-    "@vscode/vsce": "3.9.2",
-    "adm-zip": "0.6.0",
-    "esbuild": "0.25.12",
+    "@vscode/vsce": "4.0.0",
+    "adm-zip": "0.6.1",
+    "esbuild": "0.28.2",
     "typescript": "7.0.2",
     "vscode-oniguruma": "2.0.1",
     "vscode-textmate": "9.3.2"

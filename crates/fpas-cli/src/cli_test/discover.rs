@@ -80,6 +80,40 @@ fn path_matches_filter(path: &Path, needle: &str) -> bool {
     path.to_string_lossy().to_lowercase().contains(needle)
 }
 
+/// Selects exact discovered files, preserving discovery order and project context.
+pub(super) fn select_test_paths(
+    paths: Vec<PathBuf>,
+    selected: &[PathBuf],
+    cwd: &Path,
+) -> Result<Vec<PathBuf>, String> {
+    let mut identities = std::collections::HashSet::new();
+    for selected_path in selected {
+        let path = normalize_path(selected_path, cwd);
+        let canonical = path.canonicalize().map_err(|error| {
+            format!(
+                "Cannot select test `{}`: {error}.\n  help: Use a path from `fpas test --list`.",
+                path.display()
+            )
+        })?;
+        identities.insert(canonical);
+    }
+    let mut output = Vec::new();
+    for path in paths {
+        if let Ok(identity) = path.canonicalize()
+            && identities.remove(&identity)
+        {
+            output.push(path);
+        }
+    }
+    if let Some(missing) = identities.iter().next() {
+        return Err(format!(
+            "Selected test `{}` is not in the discovered test set.\n  help: Use the owning project and a path from `fpas test --list`.",
+            missing.display()
+        ));
+    }
+    Ok(output)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

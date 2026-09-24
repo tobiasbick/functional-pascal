@@ -1,10 +1,10 @@
 import path from "node:path";
 
 import * as vscode from "vscode";
+import { pathIdentity } from "../projects/pathIdentity";
+import { ProjectIndex, projectIndex } from "../projects/index";
 
 const SELECTION_KEY = "functionalPascal.selectedProject";
-const EXCLUDE_GLOB =
-  "**/{.git,target,node_modules,.vscode-test,dist,out}/**";
 
 /** Returns a remembered candidate only when it still exists. */
 export function rememberedProject(
@@ -16,7 +16,7 @@ export function rememberedProject(
   }
   const normalized = path.normalize(remembered);
   return candidates.find(
-    (candidate) => path.normalize(candidate).toLocaleLowerCase() === normalized.toLocaleLowerCase()
+    (candidate) => pathIdentity(candidate) === pathIdentity(normalized)
   );
 }
 
@@ -24,18 +24,22 @@ export function rememberedProject(
 export class ProjectSelector implements vscode.Disposable {
   private readonly changed = new vscode.EventEmitter<vscode.Uri | undefined>();
 
-  public constructor(private readonly state: vscode.Memento) {}
+  public constructor(
+    private readonly state: vscode.Memento,
+    private readonly index: Pick<ProjectIndex, "candidates"> = projectIndex,
+    private readonly pick: (
+      items: readonly { label: string; description: string; uri: vscode.Uri }[],
+      options: { placeHolder: string }
+    ) => Thenable<{ uri: vscode.Uri } | undefined> = (items, options) =>
+      vscode.window.showQuickPick(items, options)
+  ) {}
 
   /** Fires after the selected manifest changes. */
   public readonly onDidChange = this.changed.event;
 
   /** Finds bounded project and workspace manifest candidates. */
   public async candidates(): Promise<vscode.Uri[]> {
-    const manifests = await vscode.workspace.findFiles(
-      "**/*.{fpasprj,fpasworkspace}",
-      EXCLUDE_GLOB
-    );
-    return manifests.sort((left, right) => left.fsPath.localeCompare(right.fsPath));
+    return [...await this.index.candidates()];
   }
 
   /** Returns the valid remembered target, or the sole unambiguous candidate. */
@@ -55,6 +59,11 @@ export class ProjectSelector implements vscode.Disposable {
     return undefined;
   }
 
+  /** Resolves ordinary operations without reopening an existing selection. */
+  public async resolve(explicit?: vscode.Uri): Promise<vscode.Uri | undefined> {
+    return explicit === undefined ? (await this.current()) ?? this.select() : this.select(explicit);
+  }
+
   /** Selects an explicit target or prompts when multiple manifests exist. */
   public async select(explicit?: vscode.Uri): Promise<vscode.Uri | undefined> {
     const candidates = await this.candidates();
@@ -62,25 +71,16 @@ export class ProjectSelector implements vscode.Disposable {
     if (selected !== undefined) {
       selected = candidates.find(
         (candidate) =>
-          path.normalize(candidate.fsPath).toLocaleLowerCase() ===
-          path.normalize(selected!.fsPath).toLocaleLowerCase()
+          pathIdentity(candidate.fsPath) === pathIdentity(selected!.fsPath)
       );
       if (selected === undefined) {
         throw new Error("The selected FPAS project or workspace is outside the opened folder.");
-      }
-    } else {
-      const remembered = rememberedProject(
-        candidates.map((candidate) => candidate.fsPath),
-        this.state.get<string>(SELECTION_KEY)
-      );
-      if (remembered !== undefined) {
-        return vscode.Uri.file(remembered);
       }
     }
     if (selected === undefined && candidates.length === 1) {
       [selected] = candidates;
     } else if (selected === undefined && candidates.length > 1) {
-      const picked = await vscode.window.showQuickPick(
+      const picked = await this.pick(
         candidates.map((uri) => ({
           label: path.basename(uri.fsPath),
           description: vscode.workspace.asRelativePath(uri, false),

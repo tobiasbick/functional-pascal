@@ -2,7 +2,9 @@ import path from "node:path";
 
 import * as vscode from "vscode";
 
-import { parseTestReport, parseWorkflowDiagnostics } from "./diagnostics";
+import { pathIdentity } from "../projects/pathIdentity";
+
+import { parseTestReport } from "./diagnostics";
 import { testListArguments, testRunArguments } from "./arguments";
 import type { WorkflowProcessResult, WorkflowTestStatus } from "./model";
 import { WorkflowProcessRunner } from "./processes";
@@ -10,10 +12,7 @@ import { ProjectSelector } from "./project";
 
 /** Testing API integration backed exclusively by `fpas test`. */
 export class WorkflowTesting implements vscode.Disposable {
-  private readonly controller = vscode.tests.createTestController(
-    "functionalPascalTests",
-    "Functional Pascal"
-  );
+  private readonly controller: vscode.TestController;
   private readonly itemsByPath = new Map<string, vscode.TestItem>();
   private readonly lastStatuses = new Map<string, WorkflowTestStatus>();
   private commandCancellation: vscode.CancellationTokenSource | undefined;
@@ -27,8 +26,10 @@ export class WorkflowTesting implements vscode.Disposable {
       stderr: string,
       cwd: string
     ) => Promise<void>,
-    private readonly setRunning: (running: boolean) => void
+    private readonly setRunning: (running: boolean) => void,
+    controllerId = "functionalPascalTests"
   ) {
+    this.controller = vscode.tests.createTestController(controllerId, "Functional Pascal");
     this.controller.refreshHandler = async () => {
       await this.discover();
     };
@@ -87,7 +88,7 @@ export class WorkflowTesting implements vscode.Disposable {
       );
       item.range = new vscode.Range(0, 0, 0, 0);
       root.children.add(item);
-      this.itemsByPath.set(normalized.toLocaleLowerCase(), item);
+      this.itemsByPath.set(pathIdentity(normalized), item);
     }
     return files;
   }
@@ -98,7 +99,7 @@ export class WorkflowTesting implements vscode.Disposable {
       await this.discover();
     }
     const include = files?.map((file) =>
-      this.itemsByPath.get(path.normalize(file).toLocaleLowerCase())
+      this.itemsByPath.get(pathIdentity(file))
     );
     const request = new vscode.TestRunRequest(
       include?.filter((item): item is vscode.TestItem => item !== undefined)
@@ -148,7 +149,7 @@ export class WorkflowTesting implements vscode.Disposable {
       run.enqueued(item);
     }
     const batches =
-      request.include === undefined
+      request.include === undefined && (request.exclude?.length ?? 0) === 0 && requested.length > 0
         ? [undefined]
         : requested.map((item) => item.uri?.fsPath);
     const cwd = path.dirname(target.fsPath);
@@ -168,7 +169,7 @@ export class WorkflowTesting implements vscode.Disposable {
           await this.resolveCli(),
           testRunArguments(
             target.fsPath,
-            file === undefined ? undefined : path.basename(file),
+            file,
             vscode.workspace
               .getConfiguration("functionalPascal")
               .get<number>("testTimeoutSeconds", 10)
@@ -189,7 +190,7 @@ export class WorkflowTesting implements vscode.Disposable {
           const absolute = path.isAbsolute(test.file)
             ? path.normalize(test.file)
             : path.resolve(cwd, test.file);
-          const item = this.itemsByPath.get(absolute.toLocaleLowerCase());
+          const item = this.itemsByPath.get(pathIdentity(absolute));
           if (item !== undefined) {
             this.record(run, item, test.status);
           }
@@ -219,17 +220,22 @@ export class WorkflowTesting implements vscode.Disposable {
   }
 
   private requestedItems(request: vscode.TestRunRequest): vscode.TestItem[] {
-    if (request.include === undefined) {
-      return [...this.itemsByPath.values()];
-    }
+    const excluded = new Set<string>();
+    const exclude = (item: vscode.TestItem): void => {
+      excluded.add(item.id);
+      item.children.forEach(exclude);
+    };
+    request.exclude?.forEach(exclude);
     const selected = new Set<vscode.TestItem>();
     const visit = (item: vscode.TestItem): void => {
-      if (item.uri?.fsPath.endsWith("_test.fpas") === true) {
+      if (excluded.has(item.id)) return;
+      if (item.uri !== undefined && this.itemsByPath.get(pathIdentity(item.uri.fsPath)) === item) {
         selected.add(item);
       }
       item.children.forEach(visit);
     };
-    request.include.forEach(visit);
+    if (request.include === undefined) this.controller.items.forEach(visit);
+    else request.include.forEach(visit);
     return [...selected];
   }
 

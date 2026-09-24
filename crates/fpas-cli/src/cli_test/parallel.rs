@@ -26,7 +26,6 @@ pub(super) struct PreparedTest {
 /// Buffered output from one test run, ordered by discovery index.
 pub(super) struct IndexedTestResult {
     pub index: usize,
-    pub display: String,
     pub outcome: TestOutcome,
     pub output: String,
 }
@@ -138,7 +137,6 @@ pub(super) fn not_run_result_for(index: usize, display: String) -> IndexedTestRe
         index,
         outcome: TestOutcome::NotRun,
         output: format!("  ---  {display} (not run, --fail-fast)\n"),
-        display,
     }
 }
 
@@ -160,7 +158,6 @@ fn collect_worker_result(
                 output: format!(
                     "  FAIL  {display}\n        test worker panicked unexpectedly.\n  help: Re-run under a debugger or report a compiler/runtime bug.\n"
                 ),
-                display,
                 outcome: TestOutcome::RuntimeError,
             }
         }
@@ -181,7 +178,6 @@ fn run_prepared_test(
     );
     IndexedTestResult {
         index: test.index,
-        display: test.display,
         outcome,
         output: String::from_utf8_lossy(&output_bytes).into_owned(),
     }

@@ -72,7 +72,7 @@ pub(super) fn run_tests_sequential(
             if let Some(message) = link_errors.remove(&index) {
                 let _ = writeln!(stderr, "  FAIL  {display}");
                 let _ = writeln!(stderr, "        {message}");
-                summary.record(&display, TestOutcome::CompileError);
+                summary.record(&path.to_string_lossy(), TestOutcome::CompileError);
                 if config.fail_fast {
                     record_not_run_tests(&mut summary, stderr, &paths[index + 1..]);
                     return finish_test_run(&config, &summary, stdout, stderr);
@@ -89,7 +89,7 @@ pub(super) fn run_tests_sequential(
             stderr,
             test.compiled.as_ref(),
         );
-        summary.record(&display, outcome);
+        summary.record(&path.to_string_lossy(), outcome);
         if config.fail_fast && outcome.is_failure() {
             record_not_run_tests(&mut summary, stderr, &paths[index + 1..]);
             return finish_test_run(&config, &summary, stdout, stderr);
@@ -125,7 +125,6 @@ pub(super) fn run_tests_parallel(
                 let output = format!("  FAIL  {display}\n        {message}\n");
                 preload_results.push(parallel::IndexedTestResult {
                     index,
-                    display,
                     outcome: TestOutcome::CompileError,
                     output,
                 });
@@ -159,7 +158,7 @@ pub(super) fn run_tests_parallel(
 
     for result in results {
         let _ = write!(stderr, "{}", result.output);
-        summary.record(&result.display, result.outcome);
+        summary.record(&paths[result.index].to_string_lossy(), result.outcome);
     }
 
     finish_test_run(&config, &summary, stdout, stderr)
@@ -169,6 +168,6 @@ fn record_not_run_tests(summary: &mut Summary, stderr: &mut dyn Write, paths: &[
     for path in paths {
         let display = test_display_path(path).into_owned();
         let _ = writeln!(stderr, "  ---  {display} (not run, --fail-fast)");
-        summary.record(&display, TestOutcome::NotRun);
+        summary.record(&path.to_string_lossy(), TestOutcome::NotRun);
     }
 }

@@ -30,8 +30,12 @@ if (typeCheck.status !== 0) {
 }
 
 await build({
-  entryPoints: [path.join(extensionRoot, "src", "extension.ts")],
-  outfile: path.join(extensionRoot, "out", "src", "extension.js"),
+  entryPoints: [
+    path.join(extensionRoot, "src", "extension.ts"),
+    path.join(extensionRoot, "src", "debugger", "terminal", "externalClient.ts")
+  ],
+  outbase: path.join(extensionRoot, "src"),
+  outdir: path.join(extensionRoot, "out", "src"),
   bundle: true,
   external: ["vscode"],
   format: "cjs",

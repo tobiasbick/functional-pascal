@@ -1,6 +1,8 @@
 /** Interactive complete-variant construction over the FPAS DAP adapter. */
 
 import * as vscode from "vscode";
+import { activeSelection, type DebugSelection } from "./commands/selection";
+import { promptExpression as prompt } from "./commands/expressionPrompt";
 
 /** Stable command identifier contributed by the Functional Pascal extension. */
 export const CONSTRUCT_VARIANT_COMMAND = "functionalPascal.debug.constructVariant";
@@ -35,7 +37,7 @@ export function registerVariantConstructionCommand(context: vscode.ExtensionCont
     vscode.commands.registerCommand(
       CONSTRUCT_VARIANT_COMMAND,
       async (input?: VariantConstructionInput) => {
-        const selection = await activeSelection(input?.frameId);
+        const selection = await activeSelection(input?.frameId, "constructing a variant");
         if (selection === undefined) return;
         try {
           const target = input?.target ?? await prompt("Mutable enum, Result, or Option target", "Selected");
@@ -78,30 +80,6 @@ export function registerVariantConstructionCommand(context: vscode.ExtensionCont
   );
 }
 
-interface DebugSelection {
-  readonly session: vscode.DebugSession;
-  readonly frameId: number;
-}
-
-async function activeSelection(frameId?: number): Promise<DebugSelection | undefined> {
-  const session = vscode.debug.activeDebugSession;
-  if (session?.type !== "fpas") {
-    void vscode.window.showWarningMessage(
-      "Start and stop a Functional Pascal debug session before constructing a variant."
-    );
-    return undefined;
-  }
-  if (frameId !== undefined) return { session, frameId };
-  const selection = vscode.debug.activeStackItem;
-  if (selection instanceof vscode.DebugStackFrame && selection.session === session) {
-    return { session, frameId: selection.frameId };
-  }
-  void vscode.window.showWarningMessage(
-    "Select a stopped Functional Pascal stack frame before constructing a variant."
-  );
-  return undefined;
-}
-
 async function pickVariant(variants: readonly VariantInfo[]): Promise<VariantInfo | undefined> {
   const picked = await vscode.window.showQuickPick(
     variants.map((variant) => ({
@@ -117,14 +95,6 @@ async function pickVariant(variants: readonly VariantInfo[]): Promise<VariantInf
   return picked?.variant;
 }
 
-async function prompt(label: string, value: string): Promise<string | undefined> {
-  return vscode.window.showInputBox({
-    prompt: label,
-    value,
-    ignoreFocusOut: true,
-    validateInput: (input) => input.trim().length === 0 ? "Enter one FPAS expression." : undefined
-  });
-}
 
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);

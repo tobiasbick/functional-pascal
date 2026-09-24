@@ -20,6 +20,7 @@ fn test_cli_rejects_unit_file_as_test_entry() {
             list_only: false,
             script_path: None,
             filter: None,
+            files: Vec::new(),
             report: None,
             timeout: None,
             jobs: 1,

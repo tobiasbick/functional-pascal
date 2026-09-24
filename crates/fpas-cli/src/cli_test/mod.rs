@@ -74,6 +74,16 @@ pub(crate) fn test_cli(
         return 2;
     }
 
+    if !config.files.is_empty() {
+        paths = match discover::select_test_paths(paths, &config.files, &config.cwd) {
+            Ok(paths) => paths,
+            Err(message) => {
+                let _ = writeln!(stderr, "{message}");
+                return 2;
+            }
+        };
+    }
+
     // List output is the command result and goes to stdout so it can be piped;
     // progress and summaries stay on stderr.
     if config.list_only {

@@ -124,6 +124,8 @@ pub(crate) struct TestCliConfig {
     pub list_only: bool,
     pub script_path: Option<PathBuf>,
     pub filter: Option<String>,
+    /// Exact discovered source paths selected with repeatable `--file`.
+    pub files: Vec<PathBuf>,
     pub report: Option<TestReportFormat>,
     pub timeout: Option<Duration>,
     pub jobs: usize,

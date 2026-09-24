@@ -17,6 +17,11 @@ accessible unit provides the missing type or callable.
 The extension resolves `fpas` from `functionalPascal.executablePath` or `PATH`
 for project check, build, run, test, format, and format-check commands, Problems
 integration, and the Testing view.
+The extension runs in the local desktop extension host and uses a locally
+installed FPAS toolchain. Remote workspaces (SSH, containers, and WSL opened
+through VS Code Remote) are unsupported; toolchain commands report that
+limitation. The extension does not declare support for Restricted Mode, so VS
+Code disables its executable tooling until the workspace is trusted.
 The extension also contributes the `fpas` debugger. Press **F5** with a
 `.fpas`, `.fpasprj`, or `.fpasworkspace` editor active. For a `.fpas` program
 main, zero-configuration launch discovers and debugs the owning `.fpasprj`, so
@@ -226,7 +231,8 @@ not from the opened project or the VSIX.
 
 Select **Functional Pascal: Select Project or Workspace** before using project
 commands in a folder containing multiple manifests. The remembered selection
-appears in the status bar. **Check Project**, **Build Project**, **Test
+appears in the status bar. Run the selection command again to switch projects.
+**Check Project**, **Build Project**, **Test
 Project**, **Format Project**, and **Check Project Formatting** run the selected
 CLI without a shell and publish compiler failures in Problems. **Cancel Active
 Operation** stops a running non-interactive command. **Run Project in Terminal**
@@ -238,10 +244,18 @@ debug terminals retain the same keyboard, mouse, resize, paste, focus, and TUI
 event bridge as the integrated terminal.
 
 The Testing view discovers `*_test.fpas` files for the selected manifest and
-supports all, selected, filtered, and rerun requests. Outcomes distinguish
+supports all, selected, filtered, excluded, and rerun requests. Selected files
+are passed to `fpas test --file` by exact path, so nested tests with the same
+basename retain separate results. Outcomes distinguish
 pass, assertion failure, skip, compile error, runtime error, and timeout. Set
 `functionalPascal.testTimeoutSeconds` to change the default 10-second per-test
 limit.
+
+CLI output captured for a workflow command is limited to 16 MiB per stream;
+an overlong report stops the command with an error instead of parsing partial
+JSON. Terminal input is limited to 1 MiB per paste and 4 MiB in its pending
+queue. The external terminal buffers at most 4 MiB of output awaiting its
+local socket; exceeding that limit stops the debug session with an error.
 
 Run **Functional Pascal: Show Output** from the Command Palette. The
 `Functional Pascal` output channel must contain:
@@ -270,7 +284,10 @@ npm test --prefix editors/vscode
 
 The runner pins VS Code 1.137.0 and creates a fresh user-data directory for each
 run, removing it after the Extension Host exits. Downloaded VS Code binaries
-remain cached. The F9 check opens the source with its breakpoint selection
+remain cached. Set `FPAS_VSCODE_TEST_VERSION=1.91.0` when running the test
+command to check the minimum declared editor version. Run
+`npm run test:restricted --prefix editors/vscode` to check that the extension
+stays inactive in an untrusted workspace. The F9 check opens the source with its breakpoint selection
 already applied before invoking the editor command.
 Debugger tests capture sessions through the start event and normally wait for
 their session to become active. The non-stopping logpoint test skips the active

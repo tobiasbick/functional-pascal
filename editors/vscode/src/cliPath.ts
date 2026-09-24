@@ -18,7 +18,7 @@ export function cliExecutableName(platform: NodeJS.Platform): string {
 export function resolveCliPath(): string {
   if (vscode.env.remoteName !== undefined) {
     throw new Error(
-      "Functional Pascal tooling is unavailable in remote extension hosts. Install FPAS and the extension in the same local desktop environment."
+      "Functional Pascal tooling does not support remote workspaces. Open a local folder with FPAS installed in the same desktop environment."
     );
   }
   const configured = vscode.workspace

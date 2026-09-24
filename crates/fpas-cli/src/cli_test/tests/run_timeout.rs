@@ -21,6 +21,7 @@ fn test_cli_timeout_aborts_infinite_loop() {
             list_only: false,
             script_path: None,
             filter: None,
+            files: Vec::new(),
             report: None,
             timeout: Some(Duration::from_secs(1)),
             jobs: 1,

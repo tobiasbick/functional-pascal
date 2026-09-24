@@ -15,6 +15,7 @@ pub(super) struct ParsedOptions {
     pub(super) list_only: bool,
     pub(super) script_path: Option<PathBuf>,
     pub(super) filter: Option<String>,
+    pub(super) files: Vec<PathBuf>,
     pub(super) report: Option<TestReportFormat>,
     pub(super) timeout: Option<Duration>,
     pub(super) jobs: Option<usize>,
@@ -40,6 +41,7 @@ pub(super) fn parse_options(mode: CliMode, cli_args: &[String]) -> Result<Parsed
         list_only: false,
         script_path: None,
         filter: None,
+        files: Vec::new(),
         report: None,
         timeout: None,
         jobs: None,
@@ -132,6 +134,15 @@ pub(super) fn parse_options(mode: CliMode, cli_args: &[String]) -> Result<Parsed
                 if options.script_path.replace(PathBuf::from(path)).is_some() {
                     return Err("Duplicate `--script` option.".to_string());
                 }
+            }
+            "--file" if mode == CliMode::Test => {
+                let file = take_option_value(
+                    cli_args,
+                    &mut index,
+                    "--file",
+                    "Missing test path after `--file`.\n  help: `fpas test --file tests/one_test.fpas suite.fpasprj`.",
+                )?;
+                options.files.push(PathBuf::from(file));
             }
             "--filter" if mode == CliMode::Test => {
                 let pattern = take_option_value(
@@ -298,6 +309,7 @@ fn is_known_option(value: &str) -> bool {
             | "--strict"
             | "--script"
             | "--filter"
+            | "--file"
             | "--report"
             | "--timeout"
             | "--jobs"

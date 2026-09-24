@@ -84,7 +84,7 @@ export async function verifyDebuggerInput(
     );
     const output = sent
       .slice(marker.sent)
-      .filter((message) => message.event === "output")
+      .filter((message) => message.event === "output" && message.body?.category === "stdout")
       .map((message) => String(message.body?.output ?? ""))
       .join("");
     assert.equal(output, "one\ntwo\n", `queued ReadLn output: ${JSON.stringify(output)}`);

@@ -30,18 +30,18 @@ export function testListArguments(
   return ["test", "--list", target];
 }
 
-/** Builds a complete or filtered machine-readable test invocation. */
+/** Builds a complete or exactly selected machine-readable test invocation. */
 export function testRunArguments(
   target: string,
-  filter?: string,
+  file?: string,
   timeoutSeconds?: number
 ): string[] {
   const args = operationArguments("test", target);
   if (timeoutSeconds !== undefined) {
     args.splice(args.length - 1, 0, "--timeout", String(timeoutSeconds));
   }
-  if (filter !== undefined) {
-    args.splice(args.length - 1, 0, "--filter", filter);
+  if (file !== undefined) {
+    args.splice(args.length - 1, 0, "--file", file);
   }
   return args;
 }

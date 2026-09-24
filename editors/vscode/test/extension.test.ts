@@ -8,8 +8,14 @@ import { verifyIntelliSense } from "./intellisense";
 import { verifySemanticTools } from "./semantic_tools";
 import { verifyWorkflowHost } from "./workflow/host";
 import { verifyWorkflowUnits } from "./workflow/unit";
+import { verifyProjectIndex } from "./workflow/project_index";
+import { verifyTestingRequests } from "./workflow/testing_requests";
+import { verifyLanguageClientLifecycle } from "./language_client_lifecycle";
+import { verifyCommandSelection } from "./debugger/command_selection";
+import { verifyExternalTerminalClient } from "./debugger/external_terminal_client";
 import { verifyDebuggerHost } from "./debugger_host";
 import { verifyTerminalInputDecoder } from "./debugger/terminal_input";
+import { verifyTerminalBoundaries } from "./debugger/terminal_boundaries";
 
 const EXTENSION_ID = "functional-pascal.functional-pascal";
 const SHOW_OUTPUT_COMMAND = "functionalPascal.showOutput";
@@ -21,7 +27,12 @@ const ACTIVATION_MESSAGE =
 /** Runs the extension-shell regression test in a real Extension Host. */
 export async function run(): Promise<void> {
   verifyTerminalInputDecoder();
+  await verifyTerminalBoundaries();
   await verifyWorkflowUnits();
+  await verifyProjectIndex();
+  await verifyTestingRequests();
+  await verifyLanguageClientLifecycle();
+  await verifyCommandSelection();
   const extension =
     vscode.extensions.getExtension<FunctionalPascalExtensionApi>(EXTENSION_ID);
 
@@ -30,6 +41,7 @@ export async function run(): Promise<void> {
   const api = await extension.activate();
   assert.equal(extension.isActive, true);
   assert.equal(api.activationMessage, ACTIVATION_MESSAGE);
+  await verifyExternalTerminalClient(extension.extensionPath);
   assert.equal(api.languageServerStarted, true, api.languageServerError);
   assert.equal(
     path.basename(api.languageServerPath ?? ""),

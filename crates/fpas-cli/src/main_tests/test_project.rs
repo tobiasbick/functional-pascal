@@ -1,5 +1,7 @@
 //! Integration tests for `fpas test` with test projects.
 
+mod exact_selection;
+
 use crate::cli_test::test_cli;
 use crate::test_support::{create_temp_dir, write_text};
 use crate::{CliInput, TestCliConfig};
@@ -30,6 +32,7 @@ fn test_cli_runs_tests_from_test_project_file() {
             list_only: false,
             script_path: None,
             filter: None,
+            files: Vec::new(),
             report: None,
             timeout: None,
             jobs: 1,
@@ -72,6 +75,7 @@ fn test_cli_runs_tests_from_workspace_test_member() {
             list_only: false,
             script_path: None,
             filter: None,
+            files: Vec::new(),
             report: None,
             timeout: None,
             jobs: 1,
@@ -113,6 +117,7 @@ fn test_cli_uses_manifest_script_override() {
             list_only: false,
             script_path: None,
             filter: Some("prompt".to_string()),
+            files: Vec::new(),
             report: None,
             timeout: None,
             jobs: 1,
@@ -154,6 +159,7 @@ fn test_cli_runs_setup_and_teardown_hooks() {
             list_only: false,
             script_path: None,
             filter: None,
+            files: Vec::new(),
             report: None,
             timeout: None,
             jobs: 1,
@@ -196,6 +202,7 @@ fn test_cli_fails_when_teardown_hook_fails() {
             list_only: false,
             script_path: None,
             filter: None,
+            files: Vec::new(),
             report: None,
             timeout: None,
             jobs: 1,
@@ -241,6 +248,7 @@ fn test_cli_timeout_aborts_hanging_setup_hook() {
             list_only: false,
             script_path: None,
             filter: None,
+            files: Vec::new(),
             report: None,
             timeout: Some(std::time::Duration::from_secs(1)),
             jobs: 1,

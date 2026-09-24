@@ -4,7 +4,8 @@ import path from "node:path";
 
 import * as vscode from "vscode";
 
-import { TerminalInputDecoder, type TerminalInputEvent } from "./input";
+import { TimedTerminalInput } from "./timedInput";
+import { TerminalInputQueue } from "./inputQueue";
 
 interface DapMessage {
   readonly type?: string;
@@ -67,8 +68,8 @@ export class DebugTerminalManager implements vscode.Disposable {
 class DebugTerminalPseudoterminal implements vscode.Pseudoterminal {
   private readonly writeEmitter = new vscode.EventEmitter<string>();
   private readonly closeEmitter = new vscode.EventEmitter<number | void>();
-  private readonly decoder = new TerminalInputDecoder();
-  private readonly pending: TerminalInputEvent[] = [];
+  private readonly decoder: TimedTerminalInput;
+  private readonly inputQueue: TerminalInputQueue;
   private terminal: vscode.Terminal | undefined;
   private connected = false;
   private finished = false;
@@ -76,7 +77,13 @@ class DebugTerminalPseudoterminal implements vscode.Pseudoterminal {
   private pollTimer: ReturnType<typeof setInterval> | undefined;
   private exitCode = 0;
 
-  public constructor(private readonly session: vscode.DebugSession) {}
+  public constructor(private readonly session: vscode.DebugSession) {
+    this.inputQueue = new TerminalInputQueue(
+      events => session.customRequest("fpas/terminalInput", { events }),
+      error => this.inputFailed(error)
+    );
+    this.decoder = new TimedTerminalInput(events => this.inputQueue.push(events), error => this.inputFailed(error));
+  }
 
   public readonly onDidWrite = this.writeEmitter.event;
   public readonly onDidClose = this.closeEmitter.event;
@@ -94,7 +101,7 @@ class DebugTerminalPseudoterminal implements vscode.Pseudoterminal {
   }
 
   public handleInput(data: string): void {
-    this.send(this.decoder.feed(data));
+    this.decoder.feed(data);
   }
 
   public setDimensions(dimensions: vscode.TerminalDimensions): void {
@@ -105,10 +112,7 @@ class DebugTerminalPseudoterminal implements vscode.Pseudoterminal {
     if (this.finished || this.connected) return;
     this.connected = true;
     this.pollTimer = setInterval(() => this.poll(), 30);
-    if (this.pending.length > 0) {
-      const events = this.pending.splice(0);
-      this.send(events);
-    }
+    this.inputQueue.start();
   }
 
   public write(output: string): void {
@@ -122,6 +126,8 @@ class DebugTerminalPseudoterminal implements vscode.Pseudoterminal {
   public finish(): void {
     if (this.finished) return;
     this.finished = true;
+    this.decoder.dispose();
+    this.inputQueue.dispose();
     this.connected = false;
     if (this.pollTimer !== undefined) clearInterval(this.pollTimer);
     this.pollTimer = undefined;
@@ -131,24 +137,14 @@ class DebugTerminalPseudoterminal implements vscode.Pseudoterminal {
   }
 
   private resize(dimensions: vscode.TerminalDimensions): void {
-    this.send([{ kind: "resize", width: dimensions.columns, height: dimensions.rows }]);
+    this.inputQueue.push([{ kind: "resize", width: dimensions.columns, height: dimensions.rows }]);
   }
 
-  private send(events: readonly TerminalInputEvent[]): void {
-    if (events.length === 0) return;
-    if (this.finished) return;
-    if (!this.connected) {
-      this.pending.push(...events);
-      return;
-    }
-    void this.session.customRequest("fpas/terminalInput", { events }).then(
-      () => undefined,
-      (error: unknown) => {
-        if (this.connected) {
-          this.writeEmitter.fire(`\r\nTerminal input failed: ${String(error)}\r\n`);
-        }
-      }
-    );
+  private inputFailed(error: unknown): void {
+    this.decoder.dispose();
+    this.inputQueue.dispose();
+    this.writeEmitter.fire(`\r\nTerminal input failed: ${String(error)}\r\n`);
+    void vscode.debug.stopDebugging(this.session);
   }
 
   private poll(): void {

@@ -253,6 +253,7 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
             list_only: options.list_only,
             script_path: options.script_path,
             filter: options.filter,
+            files: options.files,
             report: options.report,
             timeout: Some(options.timeout.unwrap_or(DEFAULT_TEST_TIMEOUT)),
             jobs: options.jobs.unwrap_or(1),

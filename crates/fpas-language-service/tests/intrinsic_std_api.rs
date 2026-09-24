@@ -123,6 +123,74 @@ fn intrinsic_std_definition_targets_the_editor_api_declaration() {
 }
 
 #[test]
+fn receiver_call_completion_filters_imported_collection_routines() {
+    let source = "program FluentCompletion;\nuses Std.Arrays, Std.Dictionaries;\nbegin\n  var Items: array of integer := [1];\n  var N: integer := Items.Len\nend.\n";
+    let (_temp, path, mut service) = intrinsic_std_fixture(source);
+    let offset = source.find("Items.Len").expect("receiver call") + "Items.Len".len();
+    let candidates = service
+        .completions(&path, offset)
+        .expect("receiver completion")
+        .value;
+    assert!(
+        candidates
+            .iter()
+            .any(|item| item.qualified_name == "Std.Arrays.Length"),
+        "{candidates:#?}"
+    );
+    assert!(
+        !candidates
+            .iter()
+            .any(|item| item.qualified_name == "Std.Dictionaries.Length"),
+        "{candidates:#?}"
+    );
+}
+
+#[test]
+fn receiver_completion_on_returned_and_parenthesized_arrays() {
+    let source = "program FluentResults;\nuses Std.Arrays;\nfunction MakeValues(): array of integer; begin return [1] end;\nbegin\n  var Items: array of integer := [2];\n  var A: integer := MakeValues().Len;\n  var B: integer := (Items).Len\nend.\n";
+    let (_temp, path, mut service) = intrinsic_std_fixture(source);
+    for needle in ["MakeValues().Len", "(Items).Len"] {
+        let offset = source.find(needle).expect("receiver") + needle.len();
+        let candidates = service
+            .completions(&path, offset)
+            .expect("receiver completion")
+            .value;
+        assert!(
+            candidates
+                .iter()
+                .any(|item| item.qualified_name == "Std.Arrays.Length"),
+            "{needle}: {candidates:#?}"
+        );
+    }
+}
+
+#[test]
+fn receiver_call_definition_and_signature_use_selected_array_routine() {
+    let source = "program FluentNavigation;\nuses Std.Arrays, Std.Dictionaries;\nbegin\n  var Items: array of integer := [1, 2];\n  var N: integer := Items.Slice(0, 1).Length()\nend.\n";
+    let (_temp, path, mut service) = intrinsic_std_fixture(source);
+    let offset = source.find("Length()").expect("fluent name");
+    let definitions = service
+        .definitions(&path, offset)
+        .expect("receiver definition")
+        .value;
+    assert_eq!(definitions.len(), 1, "{definitions:#?}");
+    assert_eq!(definitions[0].symbol.qualified_name, "Std.Arrays.Length");
+
+    let argument = source.find("Slice(0, 1)").expect("slice call") + "Slice(0, ".len();
+    let help = service
+        .signature_help(&path, argument)
+        .expect("receiver signature")
+        .value
+        .expect("signature");
+    assert_eq!(help.signature.parameters.len(), 2);
+    assert!(
+        help.signature.parameters[0].starts_with("Start:"),
+        "{help:#?}"
+    );
+    assert_eq!(help.active_parameter, Some(1));
+}
+
+#[test]
 fn intrinsic_std_editor_api_declarations_cannot_be_renamed() {
     let source =
         "program IntrinsicRename;\n\nuses Std.Fs;\n\nbegin\n  ReadText('notes.txt')\nend.\n";

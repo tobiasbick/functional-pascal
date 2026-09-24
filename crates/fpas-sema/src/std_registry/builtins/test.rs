@@ -13,7 +13,7 @@ use fpas_std::std_symbols as s;
 pub(super) fn check_test_builtin_std_call(
     c: &mut Checker,
     name: &str,
-    args: &[Expr],
+    args: &[&Expr],
     span: Span,
 ) -> Option<Ty> {
     if name != s::STD_TEST_ASSERT_EQUALS {

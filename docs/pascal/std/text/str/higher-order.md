@@ -2,7 +2,9 @@
 
 `Std.Str.Map`, `Filter`, and `Reduce` process a string eagerly, one Unicode scalar at a time from left to right. Each callback receives the current scalar as a one-scalar `string`. A scalar is not necessarily a user-perceived grapheme cluster: `e` followed by a combining accent invokes the callback twice. These functions do not enable `for ... in` iteration over strings.
 
-Import `Std.Str` and use qualified names when another imported unit exports `Map`, `Filter`, or `Reduce`.
+Import `Std.Str`. Qualified ordinary calls work when another imported unit
+exports `Map`, `Filter`, or `Reduce`; receiver calls such as
+`('a*b').Map(ReplaceStar)` use the string type to select `Std.Str.Map`.
 
 ## `Map(S: string; F: function(C: string): string): string`
 

@@ -89,6 +89,7 @@ pub(crate) struct FunctionInput<'a> {
     pub callables: BTreeMap<String, Callable>,
     pub closure_targets: HashMap<usize, ClosureTarget>,
     pub bound_method_targets: HashMap<usize, BoundMethodTarget>,
+    pub intrinsic_task_targets: HashMap<usize, BoundMethodTarget>,
     pub cell_names: BTreeSet<String>,
     pub type_table: types::TypeTable,
 }

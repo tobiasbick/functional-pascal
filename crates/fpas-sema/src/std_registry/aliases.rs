@@ -39,6 +39,16 @@ pub fn register_short_aliases(checker: &mut Checker) {
             }
             if let Some(sym) = checker.scopes.lookup(&qname) {
                 let sym = sym.clone();
+                let candidates = checker
+                    .imported_candidates
+                    .entry(canonical_symbol_name(short))
+                    .or_default();
+                if !candidates
+                    .iter()
+                    .any(|name| name.eq_ignore_ascii_case(&qname))
+                {
+                    candidates.push(qname.clone());
+                }
                 short_map
                     .entry(short.to_string())
                     .or_default()

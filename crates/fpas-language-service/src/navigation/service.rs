@@ -237,6 +237,12 @@ impl LanguageService {
         let target_index = documents
             .iter()
             .position(|document| document.path == target.path());
+        if let Some(index) = target_index
+            && let Ok(analysis) = self.analyze_document(path)
+            && analysis.snapshot().revision() == target.revision()
+        {
+            documents[index].analysis = Some(analysis);
+        }
         Ok(NavigationContext {
             snapshot: target,
             documents,

@@ -1,0 +1,53 @@
+program FluentCollectionTest;
+
+uses Std.Arrays, Std.Dictionaries, Std.Json, Std.Options, Std.Results, Std.Str, Std.Test;
+
+function IsEven(X: integer): boolean;
+begin
+  return X mod 2 = 0
+end;
+
+function Double(X: integer): integer;
+begin
+  return X * 2
+end;
+
+function Sum(Acc: integer; X: integer): integer;
+begin
+  return Acc + X
+end;
+
+function AddEntry(Acc: integer; Key: string; Value: integer): integer;
+begin
+  return Acc + Value
+end;
+
+function Upper(C: string): string;
+begin
+  return Std.Str.ToUpper(C)
+end;
+
+function MakeNumbers(): array of integer;
+begin
+  return [1, 2]
+end;
+
+function Apply(X: integer; Operation: function(Value: integer): integer): integer;
+begin
+  return X.Operation()
+end;
+
+begin
+  var Numbers: array of integer := [1, 2, 3, 4];
+  AssertEquals(12, Numbers.Filter(IsEven).Map(Double).Reduce(0, Sum));
+  AssertEquals(4, (2).Double());
+  var Scores: dict of string to integer := ['A': 2, 'B': 3];
+  AssertEquals(5, Scores.Reduce(0, AddEntry));
+  AssertTrue(Scores.Get('A').IsSome());
+  AssertEquals('AB', ('ab').Map(Upper));
+  AssertEquals(2, MakeNumbers().Length());
+  AssertTrue(Parse('1').IsOk());
+  var DoubleValue: function(X: integer): integer := Double;
+  AssertEquals(6, (3).DoubleValue());
+  AssertEquals(8, Apply(4, Double))
+end.

@@ -14,7 +14,7 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`primary_expr`,
 |--------|---------|
 | `.Field` | Record field access |
 | `[Index]` | Array, dictionary, or string index |
-| `.Method(Arguments)` | Instance method call on a record value |
+| `.Method(Arguments)` | Record instance method or receiver call to a visible callable |
 
 Suffixes evaluate left to right. Each step receives the value and static type of
 the previous step. The base expression and every argument are evaluated exactly
@@ -37,13 +37,16 @@ Factory.Create()[0]
 (Factory.Create()).Value
 ```
 
-## Instance methods
+## Calls after an expression
 
-`.Method(...)` on a value resolves an instance method. Static record functions
-stay callable only through a type designator (`Point.Create(...)`), not through
-a returned value.
+`.Method(...)` on a record value first resolves a record member. When no member
+has that name, the compiler can select a visible function, procedure, or
+callable value whose first parameter accepts the receiver. The same lookup
+works on arrays, dictionaries, strings, scalars, `Option`, and `Result` values.
+See [receiver calls](fluent-calls.md). Static record functions stay callable
+only through a type designator (`Point.Create(...)`).
 
-Procedure methods may appear only as the final call of a postfix chain used as
+Procedures may appear only as the final call of a postfix chain used as
 a statement. The procedure runs and its `Unit` result is discarded:
 
 ```pascal

@@ -6,7 +6,7 @@ use std::sync::Arc;
 use fpas_lexer::{SpannedToken, lex};
 use fpas_parser::CompilationUnit;
 
-use crate::{DocumentSnapshot, DocumentSymbol, DocumentSymbols};
+use crate::{DocumentAnalysis, DocumentSnapshot, DocumentSymbol, DocumentSymbols};
 
 #[derive(Clone)]
 pub(crate) struct NavigationDocument {
@@ -17,6 +17,8 @@ pub(crate) struct NavigationDocument {
     pub(crate) roots: Vec<DocumentSymbol>,
     pub(crate) tokens: Vec<SpannedToken>,
     pub(crate) is_editor_api: bool,
+    /// Completed semantic analysis for the query target, when available.
+    pub(crate) analysis: Option<Arc<DocumentAnalysis>>,
 }
 
 impl NavigationDocument {
@@ -51,6 +53,7 @@ impl NavigationDocument {
             uses,
             tokens,
             is_editor_api,
+            analysis: None,
         }
     }
 

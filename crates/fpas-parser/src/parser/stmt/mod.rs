@@ -146,7 +146,10 @@ impl Parser {
         go_span: fpas_lexer::Span,
     ) -> Expr {
         let expr = self.parse_expression();
-        if matches!(expr, Expr::Call { .. }) {
+        if matches!(expr, Expr::Call { .. })
+            || matches!(&expr, Expr::Postfix { operations, .. }
+                if matches!(operations.last(), Some(crate::ast::PostfixOperation::MethodCall { .. })))
+        {
             expr
         } else {
             self.error_with_code(

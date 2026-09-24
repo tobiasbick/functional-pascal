@@ -16,6 +16,7 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`function_decl`, `
 | [Generic routines](generic-routines.md) | Type parameters on routines |
 | [Early return](early-return.md) | `return` exits immediately |
 | [Postfix chaining](postfix-chaining.md) | `.Field`, `[Index]`, and `.Method(args)` on expression results |
+| [Receiver calls](fluent-calls.md) | Call a visible routine with the receiver as its first argument |
 
 ## Runtime recursion limit
 

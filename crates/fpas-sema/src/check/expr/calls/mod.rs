@@ -1,3 +1,4 @@
+mod fluent;
 mod methods;
 
 use super::super::Checker;
@@ -42,13 +43,30 @@ impl Checker {
             return CallResolution::Symbol { kind, ty };
         }
 
-        let method_result = if allow_procedure_result {
-            self.try_check_method_go_call(call_expr, designator, args, span)
-        } else {
-            self.try_check_method_call(call_expr, designator, args, span)
-        };
-        if let Some(result) = method_result {
-            return CallResolution::MethodResult(result);
+        if !self.designator_has_unit_prefix(designator) {
+            let previous_error_count = self.errors.len();
+            let method_result = if allow_procedure_result {
+                self.try_check_method_go_call(call_expr, designator, args, span)
+            } else {
+                self.try_check_method_call(call_expr, designator, args, span)
+            };
+            if let Some(result) = method_result {
+                return CallResolution::MethodResult(result);
+            }
+            if self.errors.len() != previous_error_count {
+                self.check_args_only(args);
+                return CallResolution::Failed;
+            }
+
+            if let Some(result) = self.try_check_fluent_designator(
+                Self::expr_lookup_key(call_expr),
+                designator,
+                args,
+                span,
+                allow_procedure_result,
+            ) {
+                return CallResolution::MethodResult(result);
+            }
         }
 
         if let Some(hint) = self.ambiguous_hint(&name) {

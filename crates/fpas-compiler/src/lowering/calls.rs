@@ -1,6 +1,7 @@
 //! Direct and first-class call lowering.
 
 mod arrays;
+mod fluent;
 
 use fpas_ir::{Constant, IntrinsicId, Operation, TypeId, ValueId};
 use fpas_parser::{Designator, DesignatorPart, Expr};
@@ -19,6 +20,12 @@ impl LoweringContext {
         span: fpas_lexer::Span,
         call_key: usize,
     ) -> Result<ValueId, CompileError> {
+        if self.member_value_calls.contains_key(&call_key) {
+            return self.lower_member_value_call(designator, arguments, result, span);
+        }
+        if let Some(target) = self.fluent_calls.get(&call_key).cloned() {
+            return self.lower_fluent_designator(designator, arguments, &target, result, span);
+        }
         if let Some(name) = self.intrinsic_calls.get(&call_key).cloned() {
             return self.lower_intrinsic_call(&name, arguments, result, span);
         }

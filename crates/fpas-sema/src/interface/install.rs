@@ -59,6 +59,10 @@ impl check::Checker {
                 self.scopes
                     .define_in_root(&exported.qualified_name, symbol.clone());
                 self.install_imported_record_defaults(exported);
+                self.imported_candidates
+                    .entry(canonical_symbol_name(&exported.name))
+                    .or_default()
+                    .push(exported.qualified_name.clone());
                 if !own_names.contains(&canonical_symbol_name(&exported.name)) {
                     short_candidates
                         .entry(canonical_symbol_name(&exported.name))
@@ -78,7 +82,9 @@ impl check::Checker {
             candidates.dedup_by(|left, right| left.0.eq_ignore_ascii_case(&right.0));
             if candidates.len() == 1 {
                 if let Some((_, symbol)) = candidates.pop() {
-                    self.scopes.define_in_root(&short, symbol);
+                    if self.scopes.define_in_root(&short, symbol) {
+                        self.source_short_alias_keys.insert(short);
+                    }
                 }
             } else {
                 self.ambiguous_imports.insert(

@@ -15,7 +15,7 @@ end.
 
 After `uses Std.Arrays;` use short names (`Length`, `Sort`, …) or qualified (`Std.Arrays.Length`, …).
 
-**Ambiguity with `Std.Str`:** short names **`Length`**, **`Contains`**, and **`IndexOf`** clash. Qualify as `Std.Arrays.Length(A)` vs `Std.Str.Length(S)`, etc.
+**Ambiguity with `Std.Str`:** ordinary short names such as **`Length`**, **`Contains`**, and **`IndexOf`** can clash. Qualify ordinary calls as `Std.Arrays.Length(A)` or `Std.Str.Length(S)`. Receiver calls such as `A.Length()` and `S.Length()` select by the first parameter type.
 
 ---
 
@@ -46,6 +46,7 @@ All routines are **generic over element type `T`** (your array’s element type)
 | procedure | `ForEach(A: array of T; F: procedure(X: T))` | call `F` for each element |
 
 **Mutating calls:** `Push` and `Pop` require **`A` to be a simple mutable array variable** (typically `mutable var Name: array of T := …`). The compiler rejects other targets.
+The receiver forms `A.Push(Value)` and `A.Pop()` keep this restriction.
 
 **Callbacks:** pass a named function or procedure whose type matches the parameter (e.g. `F: function(X: T): boolean`).
 

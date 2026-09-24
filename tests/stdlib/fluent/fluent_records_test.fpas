@@ -1,0 +1,46 @@
+program FluentRecordsTest;
+
+uses Std.Task, Std.Test;
+
+function Double(X: integer): integer;
+begin
+  return X * 2
+end;
+
+type
+  Box = record
+    Value: integer;
+    Callback: function(X: integer): integer;
+
+    function Add(Self: Box; X: integer): integer;
+    begin
+      return Self.Value + X
+    end;
+  end;
+
+function ValueOf(B: Box): integer;
+begin
+  return B.Value
+end;
+
+begin
+  var Item: Box := record
+    Value := 3;
+    Callback := Double;
+  end;
+
+  AssertEquals(5, Item.Add(2));
+  AssertEquals(5, Item.ValueOf() + 2);
+  AssertEquals(4, Item.Callback(2));
+  AssertEquals(6, (Item).Callback(3));
+  var Bound: function(X: integer): integer := Item.Add;
+  AssertEquals(5, (2).Bound());
+  var NamedTask: task := go Item.Add(4);
+  AssertEquals(7, Wait(NamedTask));
+  var PostfixTask: task := go (Item).Add(5);
+  AssertEquals(8, Wait(PostfixTask));
+  var FieldTask: task := go Item.Callback(6);
+  AssertEquals(12, Wait(FieldTask));
+  var PostfixFieldTask: task := go (Item).Callback(7);
+  AssertEquals(14, Wait(PostfixFieldTask))
+end.

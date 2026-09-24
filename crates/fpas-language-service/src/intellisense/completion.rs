@@ -5,6 +5,7 @@ use std::path::Path;
 
 use super::auto_import::auto_import_candidates;
 use super::context::completion_context;
+use super::receiver::receiver_callable_candidates;
 use super::{CompletionCandidate, CompletionDocumentation, CompletionKind, CompletionSource};
 use crate::navigation::{
     NavigationDocument, NavigationResult, find_type, resolve_qualified, resolve_unqualified,
@@ -45,7 +46,15 @@ fn complete(
     context: super::context::CompletionContext,
 ) -> Vec<CompletionCandidate> {
     let symbols = if let Some(receiver) = &context.receiver {
-        member_candidates(documents, target_index, receiver, offset)
+        let mut members = member_candidates(documents, target_index, receiver, offset);
+        members.extend(receiver_callable_candidates(
+            documents,
+            target_index,
+            receiver,
+            offset,
+            &members,
+        ));
+        members
     } else {
         visible_candidates(documents, target_index, offset)
     };
@@ -102,7 +111,7 @@ fn complete(
     candidates
 }
 
-fn visible_candidates(
+pub(super) fn visible_candidates(
     documents: &[NavigationDocument],
     target_index: usize,
     offset: usize,

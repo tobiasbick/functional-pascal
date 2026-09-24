@@ -106,6 +106,7 @@ example_run_tests! {
     (example_for_in, "examples/pascal/for-in/for_in_example.fpas"),
     (example_mutable_nested_functions, "examples/pascal/functions/mutable_nested_functions.fpas"),
     (example_nested_functions, "examples/pascal/functions/nested_functions.fpas"),
+    (example_fluent_calls, "examples/pascal/functions/fluent_calls.fpas"),
     (example_go_statement, "examples/pascal/concurrency/go_statement_example.fpas"),
     (example_concurrency_select_events, "examples/pascal/concurrency/select_events.fpas"),
     (example_concurrency_task_group_workers, "examples/pascal/concurrency/task_group_workers.fpas"),

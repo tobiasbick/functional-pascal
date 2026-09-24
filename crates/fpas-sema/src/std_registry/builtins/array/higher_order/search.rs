@@ -15,7 +15,7 @@ use super::super::super::callbacks::{
 use super::super::{array_elem_ty, check_argument_count};
 
 /// `Std.Arrays.Find(Arr, Pred)` → `option of T` where `Pred: function(V: T): boolean`.
-pub(crate) fn check_find(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
+pub(crate) fn check_find(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
     if !check_argument_count(
         c,
         s::STD_ARRAY_FIND,
@@ -55,7 +55,7 @@ pub(crate) fn check_find(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
 }
 
 /// `Std.Arrays.FindIndex(Arr, Pred)` → `integer`.
-pub(crate) fn check_find_index(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
+pub(crate) fn check_find_index(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
     if !check_argument_count(
         c,
         s::STD_ARRAY_FIND_INDEX,
@@ -98,7 +98,7 @@ pub(crate) fn check_find_index(c: &mut Checker, args: &[Expr], span: Span) -> Ty
 }
 
 /// `Std.Arrays.Any(Arr, Pred)` → `boolean`.
-pub(crate) fn check_any(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
+pub(crate) fn check_any(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
     if !check_argument_count(
         c,
         s::STD_ARRAY_ANY,
@@ -138,7 +138,7 @@ pub(crate) fn check_any(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
 }
 
 /// `Std.Arrays.All(Arr, Pred)` → `boolean`.
-pub(crate) fn check_all(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
+pub(crate) fn check_all(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
     if !check_argument_count(
         c,
         s::STD_ARRAY_ALL,
@@ -178,7 +178,7 @@ pub(crate) fn check_all(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
 }
 
 /// `Std.Arrays.ForEach(Arr, F)` → `unit`.
-pub(crate) fn check_for_each(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
+pub(crate) fn check_for_each(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
     if !check_argument_count(
         c,
         s::STD_ARRAY_FOR_EACH,

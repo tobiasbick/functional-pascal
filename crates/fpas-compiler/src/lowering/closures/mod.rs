@@ -2,6 +2,7 @@
 
 mod bound_methods;
 mod discover;
+mod intrinsic_tasks;
 
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 
@@ -36,11 +37,24 @@ pub(super) struct BoundMethodRoutine {
     pub owner: FunctionId,
 }
 
+/// A task entry that invokes one selected standard intrinsic.
+pub(super) struct IntrinsicTaskRoutine {
+    pub id: FunctionId,
+    name: String,
+    intrinsic: fpas_bytecode::Intrinsic,
+    parameters: Vec<fpas_ir::TypeId>,
+    result: fpas_ir::TypeId,
+    span: fpas_lexer::Span,
+    pub owner: FunctionId,
+}
+
 pub(super) struct ClosureRegistry<'a> {
     pub routines: Vec<ClosureRoutine<'a>>,
     pub targets: HashMap<usize, ClosureTarget>,
     pub bound_routines: Vec<BoundMethodRoutine>,
     pub bound_targets: HashMap<usize, BoundMethodTarget>,
+    pub intrinsic_task_routines: Vec<IntrinsicTaskRoutine>,
+    pub intrinsic_task_targets: HashMap<usize, BoundMethodTarget>,
     pub cell_names: HashMap<FunctionId, BTreeSet<String>>,
     callables: BTreeMap<String, Callable>,
     source_name: String,
@@ -54,6 +68,8 @@ impl<'a> ClosureRegistry<'a> {
             targets: HashMap::new(),
             bound_routines: Vec::new(),
             bound_targets: HashMap::new(),
+            intrinsic_task_routines: Vec::new(),
+            intrinsic_task_targets: HashMap::new(),
             cell_names: HashMap::new(),
             callables,
             source_name: source_name.to_string(),
@@ -137,6 +153,7 @@ impl<'a> ClosureRegistry<'a> {
             callables: callables.clone(),
             closure_targets: self.targets.clone(),
             bound_method_targets: self.bound_targets.clone(),
+            intrinsic_task_targets: self.intrinsic_task_targets.clone(),
             cell_names: self
                 .cell_names
                 .get(&routine.id)

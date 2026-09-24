@@ -34,6 +34,11 @@ impl Checker {
             .cloned()
             .collect();
         self.prepare_uses(&intrinsic_uses);
+        self.used_unit_names = program
+            .uses
+            .iter()
+            .map(|used| used.parts.join(".").to_ascii_lowercase())
+            .collect();
         self.install_supporting_interface_types(supporting_interfaces)?;
         self.install_interfaces(program, interfaces)?;
 
@@ -62,6 +67,11 @@ impl Checker {
             .cloned()
             .collect();
         self.prepare_uses(&intrinsic_uses);
+        self.used_unit_names = unit
+            .uses
+            .iter()
+            .map(|used| used.parts.join(".").to_ascii_lowercase())
+            .collect();
         self.install_supporting_interface_types(supporting_interfaces)?;
         self.install_interfaces_for_declarations(&unit.declarations, interfaces)?;
 
@@ -83,9 +93,15 @@ impl Checker {
     }
 
     fn prepare_uses(&mut self, uses: &[fpas_parser::QualifiedId]) {
+        self.used_unit_names = uses
+            .iter()
+            .map(|used| used.parts.join(".").to_ascii_lowercase())
+            .collect();
         self.loaded_std_units.clear();
+        self.imported_candidates.clear();
         self.short_builtin_redirect.clear();
         self.std_short_alias_keys.clear();
+        self.source_short_alias_keys.clear();
         self.ambiguous_enum_variants.clear();
         self.enum_short_variant_keys.clear();
         for u in uses {

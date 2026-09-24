@@ -115,9 +115,9 @@ fn unknown_method_on_postfix() {
          begin end.",
     );
     assert!(
-        errors
-            .iter()
-            .any(|e| e.message.contains("has no method `Missing`")),
+        errors.iter().any(|e| e
+            .message
+            .contains("No visible `Missing` accepts receiver type `Point`")),
         "{errors:#?}"
     );
 }

@@ -50,6 +50,16 @@ mutable var PutRequest: Request := Request.Put('http://127.0.0.1:8080/items/42')
 PutRequest.Body := Std.Net.Utf8.Encode('{"name":"updated"}')
 ```
 
+Receiver calls can thread the request and the explicit `Result` through the
+existing functions without unwrapping implicitly:
+
+```pascal
+uses Std.Http, Std.Results;
+
+var TextResult: result of string, string :=
+  Request.Get('https://example.test/items').Send().AndThen(BodyText);
+```
+
 `Method` deliberately remains a string so extension methods are not excluded. For example, a
 WebDAV request can use `Request.Create('PROPFIND', 'http://127.0.0.1:8080/documents')`. Method names
 must be non-empty RFC 9110 tokens; whitespace, control characters, and token separators are rejected

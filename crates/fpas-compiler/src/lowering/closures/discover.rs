@@ -71,10 +71,12 @@ impl<'a> ClosureRegistry<'a> {
                     self.visit_expression(value, owner, metadata, types)?;
                 }
             }
-            Stmt::Panic(value, _)
-            | Stmt::Expression { expr: value, .. }
-            | Stmt::Go { expr: value, .. } => {
+            Stmt::Panic(value, _) | Stmt::Expression { expr: value, .. } => {
                 self.visit_expression(value, owner, metadata, types)?;
+            }
+            Stmt::Go { expr, .. } => {
+                self.register_intrinsic_task(expr, owner, metadata, types)?;
+                self.visit_expression(expr, owner, metadata, types)?;
             }
             Stmt::If {
                 condition,
@@ -249,10 +251,13 @@ impl<'a> ClosureRegistry<'a> {
             Expr::UnaryOp { operand, .. }
             | Expr::Paren(operand, _)
             | Expr::Try(operand, _)
-            | Expr::Go(operand, _)
             | Expr::ResultOk(operand, _)
             | Expr::ResultError(operand, _)
             | Expr::OptionSome(operand, _) => {
+                self.visit_expression(operand, owner, metadata, types)?;
+            }
+            Expr::Go(operand, _) => {
+                self.register_intrinsic_task(operand, owner, metadata, types)?;
                 self.visit_expression(operand, owner, metadata, types)?;
             }
             Expr::BinaryOp { left, right, .. } => {

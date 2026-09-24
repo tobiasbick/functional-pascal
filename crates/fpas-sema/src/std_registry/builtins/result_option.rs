@@ -13,7 +13,7 @@ use fpas_std::std_symbols as s;
 pub(super) fn check_result_option_builtin_std_call(
     c: &mut Checker,
     name: &str,
-    args: &[Expr],
+    args: &[&Expr],
     span: Span,
 ) -> Option<Ty> {
     let ty = match name {
@@ -81,7 +81,7 @@ fn unwrap_option(c: &mut Checker, name: &str, ty: Ty, span: Span) -> Ty {
 fn check_one_arg(
     c: &mut Checker,
     name: &str,
-    args: &[Expr],
+    args: &[&Expr],
     span: Span,
     derive: impl FnOnce(&mut Checker, Ty) -> Ty,
 ) -> Ty {
@@ -101,7 +101,7 @@ fn check_one_arg(
 fn check_two_args(
     c: &mut Checker,
     name: &str,
-    args: &[Expr],
+    args: &[&Expr],
     span: Span,
     derive: impl FnOnce(&mut Checker, Ty, Ty) -> Ty,
 ) -> Ty {
@@ -120,7 +120,7 @@ fn check_two_args(
 }
 
 /// `Std.Results.Map(R, F)` -> `Result of U, E` where `F: function(V: T): U`.
-fn check_result_map(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
+fn check_result_map(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
     if args.len() != 2 {
         c.error_with_code(
             SEMA_WRONG_ARGUMENT_COUNT,
@@ -162,7 +162,7 @@ fn check_result_map(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
 }
 
 /// `Std.Results.AndThen(R, F)` -> `Result of U, E` where `F: function(V: T): Result of U, E`.
-fn check_result_and_then(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
+fn check_result_and_then(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
     if args.len() != 2 {
         c.error_with_code(
             SEMA_WRONG_ARGUMENT_COUNT,
@@ -204,7 +204,7 @@ fn check_result_and_then(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
 }
 
 /// `Std.Results.OrElse(R, F)` -> `Result of T, F` where `F: function(E: E): Result of T, F`.
-fn check_result_or_else(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
+fn check_result_or_else(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
     if args.len() != 2 {
         c.error_with_code(
             SEMA_WRONG_ARGUMENT_COUNT,
@@ -246,7 +246,7 @@ fn check_result_or_else(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
 }
 
 /// `Std.Options.Map(O, F)` -> `Option of U` where `F: function(V: T): U`.
-fn check_option_map(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
+fn check_option_map(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
     if args.len() != 2 {
         c.error_with_code(
             SEMA_WRONG_ARGUMENT_COUNT,
@@ -282,7 +282,7 @@ fn check_option_map(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
 }
 
 /// `Std.Options.AndThen(O, F)` -> `Option of U` where `F: function(V: T): Option of U`.
-fn check_option_and_then(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
+fn check_option_and_then(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
     if args.len() != 2 {
         c.error_with_code(
             SEMA_WRONG_ARGUMENT_COUNT,
@@ -324,7 +324,7 @@ fn check_option_and_then(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
 }
 
 /// `Std.Options.OrElse(O, F)` -> `Option of T` where `F: function(): Option of T`.
-fn check_option_or_else(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
+fn check_option_or_else(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
     if args.len() != 2 {
         c.error_with_code(
             SEMA_WRONG_ARGUMENT_COUNT,

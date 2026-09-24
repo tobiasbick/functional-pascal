@@ -7,7 +7,7 @@ use fpas_std::std_symbols as s;
 
 use super::{check_argument_count, mutable_array_elem_ty, simple_var_name};
 
-pub(super) fn check_push(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
+pub(super) fn check_push(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
     if !check_argument_count(
         c,
         s::STD_ARRAY_PUSH,
@@ -48,7 +48,7 @@ pub(super) fn check_push(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
     Ty::Unit
 }
 
-pub(super) fn check_pop(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
+pub(super) fn check_pop(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
     if !check_argument_count(
         c,
         s::STD_ARRAY_POP,

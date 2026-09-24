@@ -1,0 +1,25 @@
+program FluentCallsExample;
+
+uses Std.Arrays, Std.Console, Std.Conv, Std.Str;
+
+function IsEven(Value: integer): boolean;
+begin
+  return Value mod 2 = 0
+end;
+
+function Double(Value: integer): integer;
+begin
+  return Value * 2
+end;
+
+function Sum(Acc: integer; Value: integer): integer;
+begin
+  return Acc + Value
+end;
+
+begin
+  var Values: array of integer := [1, 2, 3, 4];
+  var Total: integer := Values.Filter(IsEven).Map(Double).Reduce(0, Sum);
+  WriteLn('Even values doubled: ' + Total.IntToStr());
+  WriteLn(('  Pascal  ').Trim().ToUpper())
+end.

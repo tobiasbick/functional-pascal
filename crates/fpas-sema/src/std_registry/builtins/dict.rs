@@ -10,7 +10,7 @@ mod reduce;
 pub(super) fn check_dict_builtin_std_call(
     c: &mut Checker,
     name: &str,
-    args: &[Expr],
+    args: &[&Expr],
     span: Span,
 ) -> Option<Ty> {
     let ty = match name {
@@ -40,7 +40,7 @@ pub(super) fn dict_kv_types(ty: &Ty) -> Option<(Ty, Ty)> {
 fn expect_dict_arg(
     c: &mut Checker,
     func_name: &str,
-    args: &[Expr],
+    args: &[&Expr],
     expected: usize,
     span: Span,
 ) -> Option<Ty> {
@@ -59,7 +59,7 @@ fn expect_dict_arg(
     Some(c.check_expr(&args[0]))
 }
 
-fn check_dict_length(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
+fn check_dict_length(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
     let Some(ty) = expect_dict_arg(c, s::STD_DICT_LENGTH, args, 1, span) else {
         return Ty::Error;
     };
@@ -76,7 +76,7 @@ fn check_dict_length(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
     }
 }
 
-fn check_dict_contains_key(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
+fn check_dict_contains_key(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
     if args.len() != 2 {
         c.error_with_code(
             SEMA_WRONG_ARGUMENT_COUNT,
@@ -109,7 +109,7 @@ fn check_dict_contains_key(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
     }
 }
 
-fn check_dict_keys(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
+fn check_dict_keys(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
     let Some(ty) = expect_dict_arg(c, s::STD_DICT_KEYS, args, 1, span) else {
         return Ty::Error;
     };
@@ -126,7 +126,7 @@ fn check_dict_keys(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
     }
 }
 
-fn check_dict_values(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
+fn check_dict_values(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
     let Some(ty) = expect_dict_arg(c, s::STD_DICT_VALUES, args, 1, span) else {
         return Ty::Error;
     };
@@ -143,7 +143,7 @@ fn check_dict_values(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
     }
 }
 
-fn check_dict_remove(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
+fn check_dict_remove(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
     if args.len() != 2 {
         c.error_with_code(
             SEMA_WRONG_ARGUMENT_COUNT,
@@ -173,7 +173,7 @@ fn check_dict_remove(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
     }
 }
 
-fn check_dict_get(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
+fn check_dict_get(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
     if args.len() != 2 {
         c.error_with_code(
             SEMA_WRONG_ARGUMENT_COUNT,
@@ -206,7 +206,7 @@ fn check_dict_get(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
     }
 }
 
-fn check_dict_merge(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
+fn check_dict_merge(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
     if args.len() != 2 {
         c.error_with_code(
             SEMA_WRONG_ARGUMENT_COUNT,
@@ -259,7 +259,7 @@ fn check_dict_merge(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
 }
 
 /// `Std.Dictionaries.Map(D, F)` — `F: function(V): V2` → `dict of K to V2`.
-fn check_dict_map(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
+fn check_dict_map(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
     if args.len() != 2 {
         c.error_with_code(
             SEMA_WRONG_ARGUMENT_COUNT,
@@ -323,7 +323,7 @@ fn check_dict_map(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
 }
 
 /// `Std.Dictionaries.Filter(D, F)` — `F: function(K; V): boolean` → `dict of K to V`.
-fn check_dict_filter(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
+fn check_dict_filter(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
     if args.len() != 2 {
         c.error_with_code(
             SEMA_WRONG_ARGUMENT_COUNT,

@@ -17,7 +17,7 @@ mod selection;
 pub(super) fn check_channel_task_builtin_std_call(
     c: &mut Checker,
     name: &str,
-    args: &[Expr],
+    args: &[&Expr],
     span: Span,
 ) -> Option<Ty> {
     let ty = match name {
@@ -76,7 +76,7 @@ enum ChannelWaitArg {
     Timeout,
 }
 
-fn check_create_channel(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
+fn check_create_channel(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
     if !expect_args(c, s::STD_TASK_CREATE_CHANNEL, args, 1, span) {
         return Ty::Error;
     }
@@ -86,7 +86,7 @@ fn check_create_channel(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
 
 fn check_send(
     c: &mut Checker,
-    args: &[Expr],
+    args: &[&Expr],
     span: Span,
     name: &str,
     wait_arg: ChannelWaitArg,
@@ -129,7 +129,7 @@ fn check_send(
 
 fn check_receive(
     c: &mut Checker,
-    args: &[Expr],
+    args: &[&Expr],
     span: Span,
     name: &str,
     wait_arg: ChannelWaitArg,
@@ -156,7 +156,7 @@ fn check_receive(
     channel_result(element)
 }
 
-fn check_close_channel(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
+fn check_close_channel(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
     if !expect_args(c, s::STD_TASK_CLOSE_CHANNEL, args, 1, span) {
         return Ty::Error;
     }
@@ -216,7 +216,7 @@ fn expect_type(c: &mut Checker, expr: &Expr, expected: &Ty, context: &str) {
     }
 }
 
-fn expect_args(c: &mut Checker, name: &str, args: &[Expr], expected: usize, span: Span) -> bool {
+fn expect_args(c: &mut Checker, name: &str, args: &[&Expr], expected: usize, span: Span) -> bool {
     if args.len() == expected {
         return true;
     }
@@ -253,7 +253,7 @@ fn expect_task_arg(c: &mut Checker, expr: &Expr, context: &str) -> Option<Ty> {
     }
 }
 
-fn check_task_wait(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
+fn check_task_wait(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
     if !expect_args(c, s::STD_TASK_WAIT, args, 1, span) {
         return Ty::Error;
     }
@@ -261,7 +261,7 @@ fn check_task_wait(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
     expect_task_arg(c, &args[0], "task wait target").unwrap_or(Ty::Error)
 }
 
-fn check_task_wait_all(c: &mut Checker, args: &[Expr], span: Span, name: &str) -> Ty {
+fn check_task_wait_all(c: &mut Checker, args: &[&Expr], span: Span, name: &str) -> Ty {
     if !expect_args(c, name, args, 1, span) {
         return Ty::Error;
     }

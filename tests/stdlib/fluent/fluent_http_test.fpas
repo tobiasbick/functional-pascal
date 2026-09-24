@@ -1,0 +1,49 @@
+program FluentHttpTest;
+
+uses Std.Conv, Std.Http, Std.Net, Std.Net.Utf8, Std.Results, Std.Task, Std.Test;
+
+function FetchText(Url: string): result of string, string;
+begin
+  return Request.Get(Url).Send().AndThen(BodyText)
+end;
+
+function Handle(RequestValue: ServerRequest): ServerResponse;
+begin
+  mutable var ResponseValue: ServerResponse := ServerResponse.Create(200, 'OK');
+  if (RequestValue.Method <> 'GET') or (RequestValue.Target <> '/fluent') then
+  begin
+    ResponseValue.Body := Std.Net.Utf8.Encode('unexpected request');
+    return ResponseValue
+  end;
+
+  ResponseValue.Body := Std.Net.Utf8.Encode('hello fluent');
+  return ResponseValue
+end;
+
+function ExerciseHttp(): result of boolean, string;
+begin
+  var ListenerValue: Listener := try Listen('127.0.0.1', 0);
+  var Address: NetworkAddress := try ListenerLocalAddress(ListenerValue);
+  mutable var Options: ServerOptions := ServerOptions.Create();
+  Options.MaxRequests := 1;
+  var ServerTask: task := go Serve(ListenerValue, Options, Handle);
+  var Url: string := ('http://127.0.0.1:' + IntToStr(Address.Port)) + '/fluent';
+  var Text: string := try FetchText(Url);
+  AssertEquals('hello fluent', Text);
+  var Served: boolean := try Wait(ServerTask);
+  var Closed: boolean := try CloseListener(ListenerValue);
+  return Ok(Served and Closed)
+end;
+
+begin
+  case ExerciseHttp() of
+    Ok(Succeeded):
+    begin
+      AssertTrue(Succeeded)
+    end;
+    Error(Message):
+    begin
+      Fail(Message)
+    end
+  end
+end.

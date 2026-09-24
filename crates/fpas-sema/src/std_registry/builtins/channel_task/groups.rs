@@ -5,7 +5,7 @@
 use super::*;
 
 /// Preserve the child's return type while checking its cancellation parameter and captures.
-pub(super) fn check_start(c: &mut Checker, name: &str, args: &[Expr], span: Span) -> Ty {
+pub(super) fn check_start(c: &mut Checker, name: &str, args: &[&Expr], span: Span) -> Ty {
     let supervised = name == s::STD_TASK_START_SUPERVISED_TASK;
     if !expect_args(c, name, args, if supervised { 4 } else { 2 }, span) {
         return Ty::Error;

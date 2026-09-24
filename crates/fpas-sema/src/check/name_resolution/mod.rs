@@ -7,6 +7,12 @@ mod types;
 
 impl Checker {
     pub(crate) fn hint_unknown_callable(&self, name: &str) -> String {
+        if let Some((unit, _)) = name.rsplit_once('.')
+            && !unit.to_ascii_lowercase().starts_with("std.")
+            && self.used_unit_names.contains(&unit.to_ascii_lowercase())
+        {
+            return "Check that the symbol is public. Private unit members are not visible outside their unit.".to_owned();
+        }
         hint_for_unknown_std_name(name, &self.loaded_std_units)
     }
 

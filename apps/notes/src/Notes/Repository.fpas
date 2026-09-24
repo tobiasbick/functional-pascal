@@ -34,7 +34,7 @@ end;
 // Sorts pinned notes first, then by descending timestamp; ties keep input order.
 public function NotesSort(Notes: array of Note): array of Note;
 begin
-  return NotesOrdered(Notes)
+  return Notes.NotesOrdered()
 end;
 
 function AppendEscapedPattern(Acc: string; Character: string): string;

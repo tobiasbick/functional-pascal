@@ -22,6 +22,9 @@ pub(crate) use event_access::EventRaiseRequest;
 
 impl Checker {
     pub(crate) fn check_expr(&mut self, expr: &Expr) -> Ty {
+        if let Some(ty) = self.prechecked_receivers.get(&Self::expr_lookup_key(expr)) {
+            return ty.clone();
+        }
         let ty = match expr {
             Expr::Integer(_, _) => Ty::Integer,
             Expr::Real(_, _) => Ty::Real,
@@ -107,6 +110,9 @@ impl Checker {
                     CallResolution::Failed => Ty::Error,
                 }
             }
+            Expr::Postfix {
+                base, operations, ..
+            } => self.check_postfix_go(base, operations, span),
             _ => {
                 let _ = self.check_expr(inner);
                 self.error_with_code(
@@ -135,7 +141,24 @@ impl Checker {
 
     pub(crate) fn callable_expr_is_task_bound(&self, expr: &Expr) -> bool {
         match expr {
-            Expr::Call { designator, .. } => self.designator_refers_to_task_bound(designator),
+            Expr::Call { designator, .. } => {
+                self.fluent_calls
+                    .get(&Self::expr_lookup_key(expr))
+                    .and_then(|target| self.scopes.lookup(&target.name))
+                    .is_some_and(|symbol| symbol.task_bound)
+                    || self.designator_refers_to_task_bound(designator)
+            }
+            Expr::Postfix { operations, .. } => {
+                operations
+                    .last()
+                    .and_then(|operation| {
+                        self.fluent_calls
+                            .get(&Self::postfix_operation_lookup_key(operation))
+                    })
+                    .and_then(|target| self.scopes.lookup(&target.name))
+                    .is_some_and(|symbol| symbol.task_bound)
+                    || self.expr_is_task_bound(Self::expr_lookup_key(expr))
+            }
             other => self.expr_is_task_bound(Self::expr_lookup_key(other)),
         }
     }

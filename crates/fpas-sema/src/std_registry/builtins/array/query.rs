@@ -7,7 +7,7 @@ use fpas_std::std_symbols as s;
 
 use super::{array_elem_ty, check_argument_count};
 
-pub(super) fn check_length(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
+pub(super) fn check_length(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
     if !check_argument_count(
         c,
         s::STD_ARRAY_LENGTH,
@@ -33,7 +33,7 @@ pub(super) fn check_length(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
     }
 }
 
-pub(super) fn check_sort_or_reverse(c: &mut Checker, name: &str, args: &[Expr], span: Span) -> Ty {
+pub(super) fn check_sort_or_reverse(c: &mut Checker, name: &str, args: &[&Expr], span: Span) -> Ty {
     if !check_argument_count(c, name, 1, args, "Example: Std.Arrays.Sort(A).", span) {
         return Ty::Error;
     }
@@ -55,7 +55,7 @@ pub(super) fn check_sort_or_reverse(c: &mut Checker, name: &str, args: &[Expr], 
 pub(super) fn check_contains_or_index_of(
     c: &mut Checker,
     name: &str,
-    args: &[Expr],
+    args: &[&Expr],
     span: Span,
 ) -> Ty {
     if !check_argument_count(
@@ -90,7 +90,7 @@ pub(super) fn check_contains_or_index_of(
     }
 }
 
-pub(super) fn check_slice(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
+pub(super) fn check_slice(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
     if !check_argument_count(
         c,
         s::STD_ARRAY_SLICE,
@@ -122,7 +122,7 @@ pub(super) fn check_slice(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
     array_ty
 }
 
-pub(super) fn check_concat(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
+pub(super) fn check_concat(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
     if !check_argument_count(
         c,
         s::STD_ARRAY_CONCAT,
@@ -169,7 +169,7 @@ pub(super) fn check_concat(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
     }
 }
 
-pub(super) fn check_fill(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
+pub(super) fn check_fill(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
     if !check_argument_count(
         c,
         s::STD_ARRAY_FILL,

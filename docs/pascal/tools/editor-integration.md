@@ -391,6 +391,12 @@ Equal candidates imported from different units remain distinct so the editor
 can present their qualified owners. Private, shadowed, and non-exported
 declarations are excluded.
 
+After a receiver and `.`, completion includes visible callables whose first
+parameter accepts the receiver's type. Existing record members take priority
+over same-named free callables. Definition and hover resolve a complete
+receiver call to the selected callable, and signature help shows only its
+remaining explicit parameters because the receiver supplies the first one.
+
 When one unresolved identifier maps to exactly one public declaration in one
 accessible unit, completion can add that unit to the compilation unit's `uses`
 clause. The edit is produced through the canonical formatter and is withheld

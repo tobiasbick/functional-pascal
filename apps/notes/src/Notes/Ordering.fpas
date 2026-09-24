@@ -16,40 +16,40 @@ end;
 // Merge-sorts notes without rebuilding the output for every inserted item.
 public function NotesOrdered(Notes: array of Note): array of Note;
 begin
-  var Count: integer := Std.Arrays.Length(Notes);
+  var Count: integer := Notes.Length();
   if Count < 2 then
   begin
     return Notes
   end;
   var Middle: integer := Count div 2;
-  var Left: array of Note := NotesOrdered(Std.Arrays.Slice(Notes, 0, Middle));
-  var Right: array of Note := NotesOrdered(Std.Arrays.Slice(Notes, Middle, Count - Middle));
+  var Left: array of Note := NotesOrdered(Notes.Slice(0, Middle));
+  var Right: array of Note := NotesOrdered(Notes.Slice(Middle, Count - Middle));
   mutable var Output: array of Note := [];
   mutable var L: integer := 0;
   mutable var R: integer := 0;
-  while (L < Std.Arrays.Length(Left)) and (R < Std.Arrays.Length(Right)) do
+  while (L < Left.Length()) and (R < Right.Length()) do
   begin
     if Before(Right[R], Left[L]) then
     begin
-      Std.Arrays.Push(Output, Right[R]);
+      Output.Push(Right[R]);
       R := R + 1
     end
     else
     begin
-      Std.Arrays.Push(Output, Left[L]);
+      Output.Push(Left[L]);
       L := L + 1
     end
   end;
 
-  while L < Std.Arrays.Length(Left) do
+  while L < Left.Length() do
   begin
-    Std.Arrays.Push(Output, Left[L]);
+    Output.Push(Left[L]);
     L := L + 1
   end;
 
-  while R < Std.Arrays.Length(Right) do
+  while R < Right.Length() do
   begin
-    Std.Arrays.Push(Output, Right[R]);
+    Output.Push(Right[R]);
     R := R + 1
   end;
 

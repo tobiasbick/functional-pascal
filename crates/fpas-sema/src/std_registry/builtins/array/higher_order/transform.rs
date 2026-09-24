@@ -15,7 +15,7 @@ use super::super::super::callbacks::{
 use super::super::{array_elem_ty, check_argument_count};
 
 /// `Std.Arrays.Map(Arr, F)` → `array of U` where `F: function(V: T): U`.
-pub(crate) fn check_map(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
+pub(crate) fn check_map(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
     if !check_argument_count(
         c,
         s::STD_ARRAY_MAP,
@@ -54,7 +54,7 @@ pub(crate) fn check_map(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
 }
 
 /// `Std.Arrays.Filter(Arr, F)` → `array of T` where `F: function(V: T): boolean`.
-pub(crate) fn check_filter(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
+pub(crate) fn check_filter(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
     if !check_argument_count(
         c,
         s::STD_ARRAY_FILTER,
@@ -95,7 +95,7 @@ pub(crate) fn check_filter(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
 }
 
 /// `Std.Arrays.Reduce(Arr, Init, F)` → `U` where `F: function(Acc: U; V: T): U`.
-pub(crate) fn check_reduce(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
+pub(crate) fn check_reduce(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
     if !check_argument_count(
         c,
         s::STD_ARRAY_REDUCE,
@@ -138,7 +138,7 @@ pub(crate) fn check_reduce(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
 }
 
 /// `Std.Arrays.FlatMap(Arr, F)` → `array of U` where `F: function(V: T): array of U`.
-pub(crate) fn check_flat_map(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
+pub(crate) fn check_flat_map(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
     if !check_argument_count(
         c,
         s::STD_ARRAY_FLAT_MAP,

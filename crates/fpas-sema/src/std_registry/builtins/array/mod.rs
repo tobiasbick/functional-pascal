@@ -12,7 +12,7 @@ mod query;
 pub(super) fn check_array_builtin_std_call(
     c: &mut Checker,
     name: &str,
-    args: &[Expr],
+    args: &[&Expr],
     span: Span,
 ) -> Option<Ty> {
     let ty = match name {

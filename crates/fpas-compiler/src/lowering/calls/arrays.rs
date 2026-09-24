@@ -13,6 +13,16 @@ impl LoweringContext {
         let [Expr::Designator(target), value] = arguments else {
             return Err(unsupported(span, "Std.Arrays.Push arguments"));
         };
+        self.lower_array_push_target(target, value, span)
+    }
+
+    /// Append through the same mutable variable target used by an ordinary call.
+    pub(super) fn lower_array_push_target(
+        &mut self,
+        target: &Designator,
+        value: &Expr,
+        span: fpas_lexer::Span,
+    ) -> Result<ValueId, CompileError> {
         let array_ty = self.mutable_array_target_type(target)?;
         let element_ty = match self.type_kind(array_ty) {
             Some(fpas_ir::IrType::Array(element)) => element,
@@ -62,6 +72,16 @@ impl LoweringContext {
         let [Expr::Designator(target)] = arguments else {
             return Err(unsupported(span, "Std.Arrays.Pop argument"));
         };
+        self.lower_array_pop_target(target, result, span)
+    }
+
+    /// Pop through the same mutable variable target used by an ordinary call.
+    pub(super) fn lower_array_pop_target(
+        &mut self,
+        target: &Designator,
+        result: TypeId,
+        span: fpas_lexer::Span,
+    ) -> Result<ValueId, CompileError> {
         let array_ty = self.mutable_array_target_type(target)?;
         if let [DesignatorPart::Ident(name, _)] = target.parts.as_slice()
             && let Some(local) = self.direct_local(name)

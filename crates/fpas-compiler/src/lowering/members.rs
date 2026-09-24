@@ -190,6 +190,30 @@ impl LoweringContext {
                 Ok(Some((result, callable.result)))
             }
             PostfixOperation::MethodCall { args, span, .. } => {
+                if let Some(result_ty) = self.member_value_calls.get(&key).cloned() {
+                    let result = self.type_table.id(&result_ty, span.line, span.column)?;
+                    let callee = self.lower_postfix_callable_member(value, operation)?;
+                    let callee = self.save_value(callee);
+                    let values = self.lower_expression_values(args, None, *span)?;
+                    let callee = self.restore_value(callee, *span)?;
+                    self.record_call_arguments(values.len(), *span)?;
+                    let value = self.emit_value(
+                        Operation::CallValue {
+                            callee,
+                            arguments: values,
+                        },
+                        result,
+                        *span,
+                    )?;
+                    return Ok(Some((value, result)));
+                }
+                if let Some(target) = self.fluent_calls.get(&key).cloned() {
+                    let result = self
+                        .type_table
+                        .id(&target.result_ty, span.line, span.column)?;
+                    let value = self.lower_fluent_value(value, args, &target, result, *span)?;
+                    return Ok(Some((value, result)));
+                }
                 let Some(target) = self.method_calls.get(&key).cloned() else {
                     return Ok(None);
                 };
@@ -207,7 +231,37 @@ impl LoweringContext {
         }
     }
 
+    /// Reads a callable field or property from an already evaluated record.
+    pub(super) fn lower_postfix_callable_member(
+        &mut self,
+        value: ValueId,
+        operation: &PostfixOperation,
+    ) -> Result<ValueId, CompileError> {
+        let PostfixOperation::MethodCall { name, span, .. } = operation else {
+            unreachable!("only a method-call operation can call a record member");
+        };
+        let key = fpas_sema::postfix_operation_lookup_key(operation);
+        if let Some(reads) = self.property_reads.get(&key).cloned() {
+            let Some(info) = reads.first() else {
+                return Err(unsupported(*span, "callable property metadata"));
+            };
+            let callable = self.member_callable(&info.getter_name, *span, "callable property")?;
+            return self.emit_member_call(&callable, vec![value], *span);
+        }
+        let ty = self
+            .lowered_value_type(value)
+            .ok_or_else(|| unsupported(*span, "callable field receiver type"))?;
+        self.lower_designator_part(value, ty, &DesignatorPart::Ident(name.clone(), *span))
+            .map(|(callee, _)| callee)
+    }
+
     pub(super) fn member_call_result(&self, key: usize) -> Option<TypeId> {
+        if let Some(ty) = self.member_value_calls.get(&key) {
+            return self.type_table.id(ty, 1, 1).ok();
+        }
+        if let Some(target) = self.fluent_calls.get(&key) {
+            return self.type_table.id(&target.result_ty, 1, 1).ok();
+        }
         if let Some(target) = self.method_calls.get(&key) {
             return self
                 .resolve_callable(target.qualified_name())
@@ -224,6 +278,33 @@ impl LoweringContext {
             return Some(result);
         }
         None
+    }
+
+    pub(super) fn lower_member_value_call(
+        &mut self,
+        designator: &Designator,
+        arguments: &[Expr],
+        result: TypeId,
+        span: fpas_lexer::Span,
+    ) -> Result<ValueId, CompileError> {
+        let key = fpas_sema::designator_lookup_key(designator);
+        let callee = if let Some(reads) = self.property_reads.get(&key).cloned() {
+            self.lower_property_read(designator, &reads)?
+        } else {
+            self.lower_designator_read(designator)?
+        };
+        let callee = self.save_value(callee);
+        let values = self.lower_expression_values(arguments, None, span)?;
+        let callee = self.restore_value(callee, span)?;
+        self.record_call_arguments(values.len(), span)?;
+        self.emit_value(
+            Operation::CallValue {
+                callee,
+                arguments: values,
+            },
+            result,
+            span,
+        )
     }
 
     /// Evaluates the method receiver and arguments in source order.
@@ -275,7 +356,7 @@ impl LoweringContext {
         self.emit_member_call(&getter, vec![receiver], span)
     }
 
-    fn lower_member_receiver(
+    pub(in crate::lowering) fn lower_member_receiver(
         &mut self,
         designator: &Designator,
         part_count: usize,

@@ -5,7 +5,7 @@
 use super::super::Checker;
 use crate::check::MethodCallTarget;
 use crate::types::{MethodKind, Ty};
-use fpas_diagnostics::codes::{SEMA_TYPE_MISMATCH, SEMA_UNKNOWN_NAME};
+use fpas_diagnostics::codes::SEMA_TYPE_MISMATCH;
 use fpas_lexer::Span;
 use fpas_parser::{Expr, PostfixOperation};
 
@@ -50,6 +50,26 @@ impl Checker {
             return;
         }
         self.check_postfix_chain(base, operations, true);
+    }
+
+    /// Check a postfix call that is spawned by `go`.
+    pub(crate) fn check_postfix_go(
+        &mut self,
+        base: &Expr,
+        operations: &[PostfixOperation],
+        span: Span,
+    ) -> Ty {
+        if !matches!(operations.last(), Some(PostfixOperation::MethodCall { .. })) {
+            self.error_with_code(
+                SEMA_TYPE_MISMATCH,
+                "`go` requires a final call",
+                "End the expression with `.Name(...)`.",
+                span,
+            );
+            self.check_postfix_chain(base, operations, false);
+            return Ty::Error;
+        }
+        self.check_postfix_chain(base, operations, true)
     }
 
     fn check_postfix_chain(
@@ -120,16 +140,18 @@ impl Checker {
         procedure_result_is_discarded: bool,
     ) -> Ty {
         let Ty::Record(record_ty) = receiver_ty else {
-            if !receiver_ty.is_error() {
-                self.error_with_code(
-                    SEMA_TYPE_MISMATCH,
-                    format!("`.{method_name}(...)` requires a record value"),
-                    "Only records support instance method calls after an expression.",
-                    span,
-                );
-            }
-            self.check_args_only(args);
-            return Ty::Error;
+            let receiver = Expr::Error(span);
+            return self.check_fluent_call(
+                Self::postfix_operation_lookup_key(operation),
+                &receiver,
+                receiver_ty,
+                method_name,
+                args,
+                span,
+                span,
+                procedure_result_is_discarded,
+                Vec::new(),
+            );
         };
 
         if self.reject_private_record_member(record_ty, method_name, span) {
@@ -139,6 +161,32 @@ impl Checker {
 
         let qualified = format!("{}.{}", record_ty.name, method_name);
         let op_key = Self::postfix_operation_lookup_key(operation);
+
+        if record_ty
+            .fields
+            .iter()
+            .any(|(name, _)| name.eq_ignore_ascii_case(method_name))
+            || record_ty
+                .properties
+                .iter()
+                .any(|(name, _)| name.eq_ignore_ascii_case(method_name))
+        {
+            let member_ty = self.check_record_member_access(
+                receiver_ty,
+                method_name,
+                span,
+                Some((op_key, 0)),
+                None,
+            );
+            return self.check_member_value_call(
+                op_key,
+                method_name,
+                &member_ty,
+                args,
+                span,
+                procedure_result_is_discarded,
+            );
+        }
 
         if let Some(routine_kind) = self.static_routine_kind_on_record(record_ty, method_name) {
             self.error_with_code(
@@ -158,14 +206,59 @@ impl Checker {
         }
 
         let Some(method_kind) = self.resolve_method_kind(record_ty, method_name, &qualified) else {
-            self.error_with_code(
-                SEMA_UNKNOWN_NAME,
-                format!("Record `{}` has no method `{method_name}`", record_ty.name),
-                "Check the record declaration or use a field without parentheses.",
+            if record_ty
+                .fields
+                .iter()
+                .any(|(name, _)| name.eq_ignore_ascii_case(method_name))
+                || record_ty
+                    .properties
+                    .iter()
+                    .any(|(name, _)| name.eq_ignore_ascii_case(method_name))
+            {
+                let member_ty = self.check_record_member_access(
+                    receiver_ty,
+                    method_name,
+                    span,
+                    Some((op_key, 0)),
+                    None,
+                );
+                return self.check_member_value_call(
+                    op_key,
+                    method_name,
+                    &member_ty,
+                    args,
+                    span,
+                    procedure_result_is_discarded,
+                );
+            }
+            if record_ty
+                .events
+                .iter()
+                .any(|(name, _)| name.eq_ignore_ascii_case(method_name))
+            {
+                self.error_with_code(
+                    SEMA_TYPE_MISMATCH,
+                    format!(
+                        "Record member `{method_name}` takes priority over receiver-call lookup"
+                    ),
+                    "Call the member with its declared arguments or use a qualified free routine.",
+                    span,
+                );
+                self.check_args_only(args);
+                return Ty::Error;
+            }
+            let receiver = Expr::Error(span);
+            return self.check_fluent_call(
+                op_key,
+                &receiver,
+                receiver_ty,
+                method_name,
+                args,
                 span,
+                span,
+                procedure_result_is_discarded,
+                Vec::new(),
             );
-            self.check_args_only(args);
-            return Ty::Error;
         };
 
         self.method_calls.insert(

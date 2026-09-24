@@ -53,6 +53,7 @@ impl ClosureRegistry<'_> {
             callables: self.callables.clone(),
             closure_targets: self.targets.clone(),
             bound_method_targets: self.bound_targets.clone(),
+            intrinsic_task_targets: self.intrinsic_task_targets.clone(),
             cell_names: BTreeSet::new(),
             type_table: types.clone(),
         })?;

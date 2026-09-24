@@ -16,6 +16,11 @@ use fpas_lexer::Span;
 use fpas_parser::{DesignatorPart, Expr};
 
 pub fn check_builtin_std_call(c: &mut Checker, name: &str, args: &[Expr], span: Span) -> Ty {
+    check_builtin_std_call_refs(c, name, &args.iter().collect::<Vec<_>>(), span)
+}
+
+/// Check an intrinsic using the original argument nodes, including an implicit receiver.
+pub fn check_builtin_std_call_refs(c: &mut Checker, name: &str, args: &[&Expr], span: Span) -> Ty {
     if let Some(ty) = array::check_array_builtin_std_call(c, name, args, span) {
         return ty;
     }
@@ -51,7 +56,7 @@ fn check_argument_count(
     c: &mut Checker,
     name: &str,
     expected: usize,
-    args: &[Expr],
+    args: &[&Expr],
     example: &str,
     span: Span,
 ) -> bool {

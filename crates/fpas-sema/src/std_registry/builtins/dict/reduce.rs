@@ -13,7 +13,7 @@ use super::super::callbacks::{TernaryFunctionCallbackSpec, expect_ternary_functi
 use super::super::check_argument_count;
 use super::dict_kv_types;
 
-pub(super) fn check_reduce(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
+pub(super) fn check_reduce(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
     if !check_argument_count(
         c,
         s::STD_DICT_REDUCE,

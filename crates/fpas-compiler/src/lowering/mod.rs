@@ -212,6 +212,7 @@ fn lower_analyzed_root(
         callables: callables.clone(),
         closure_targets: closures.targets.clone(),
         bound_method_targets: closures.bound_targets.clone(),
+        intrinsic_task_targets: closures.intrinsic_task_targets.clone(),
         cell_names: closures
             .cell_names
             .get(&FunctionId::new(0))
@@ -278,6 +279,7 @@ fn lower_analyzed_root(
                 constants: &constants,
                 closure_targets: closures.targets.clone(),
                 bound_method_targets: closures.bound_targets.clone(),
+                intrinsic_task_targets: closures.intrinsic_task_targets.clone(),
                 cell_names: closures.cell_names.get(&id).cloned().unwrap_or_default(),
             },
         )
@@ -313,6 +315,19 @@ fn lower_analyzed_root(
         type_table = updated_types;
         functions.push(function);
     }
+    for routine in &closures.intrinsic_task_routines {
+        let (function, updated_types) = closures
+            .lower_intrinsic_task(
+                routine,
+                &metadata,
+                &mut type_table,
+                &global_bindings,
+                &constants,
+            )
+            .map_err(|error| vec![error])?;
+        type_table = updated_types;
+        functions.push(function);
+    }
     functions.sort_by_key(|function| function.id);
     let mut owner_map = HashMap::new();
     for (index, owner) in routine_owners.iter().copied().enumerate() {
@@ -326,6 +341,9 @@ fn lower_analyzed_root(
         owner_map.insert(routine.id, routine.owner);
     }
     for routine in &closures.bound_routines {
+        owner_map.insert(routine.id, routine.owner);
+    }
+    for routine in &closures.intrinsic_task_routines {
         owner_map.insert(routine.id, routine.owner);
     }
     debug::attach(&mut functions, &owner_map).map_err(|error| vec![error])?;

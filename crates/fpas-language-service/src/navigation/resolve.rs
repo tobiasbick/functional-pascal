@@ -22,6 +22,12 @@ pub(crate) fn resolve(
         return Some((target_index, symbol.clone(), range));
     }
 
+    if let Some((index, symbol)) =
+        resolve_fluent_call(documents, target_index, token_index, &name, offset)
+    {
+        return Some((index, symbol, range));
+    }
+
     let (parts, selected_part) = qualified_parts(target, token_index);
     if selected_part == 0 {
         return resolve_unqualified(documents, target_index, &name, offset)
@@ -30,6 +36,58 @@ pub(crate) fn resolve(
 
     resolve_qualified(documents, target_index, &parts[..=selected_part], offset)
         .map(|(index, symbol)| (index, symbol, range))
+}
+
+pub(crate) fn resolve_fluent_call(
+    documents: &[NavigationDocument],
+    target_index: usize,
+    token_index: usize,
+    name: &str,
+    offset: usize,
+) -> Option<(usize, DocumentSymbol)> {
+    let target = documents.get(target_index)?;
+    let metadata = target.analysis.as_ref()?.semantic()?.metadata();
+    let token = target.tokens.get(token_index)?;
+    let selected = metadata
+        .fluent_calls
+        .values()
+        .filter(|call| {
+            call.name
+                .rsplit('.')
+                .next()
+                .is_some_and(|short| short.eq_ignore_ascii_case(name))
+                && call.call_span.offset <= offset
+                && offset < call.call_span.offset.saturating_add(call.call_span.length)
+                && target
+                    .tokens
+                    .iter()
+                    .enumerate()
+                    .find(|(index, candidate)| {
+                        candidate.span.offset >= call.call_span.offset
+                            && candidate.span.offset
+                                < call.call_span.offset.saturating_add(call.call_span.length)
+                            && token_name(target, *index)
+                                .is_some_and(|value| value.eq_ignore_ascii_case(name))
+                    })
+                    .is_some_and(|(_, first)| first.span.offset == token.span.offset)
+        })
+        .min_by_key(|call| call.call_span.length)?;
+    if !selected.name.contains('.') {
+        return resolve_unqualified(documents, target_index, &selected.name, offset);
+    }
+    documents.iter().enumerate().find_map(|(index, document)| {
+        if index != target_index && !target.uses_owner(&document.owner) {
+            return None;
+        }
+        document
+            .all_symbols()
+            .into_iter()
+            .find(|symbol| {
+                symbol.qualified_name.eq_ignore_ascii_case(&selected.name)
+                    && (index == target_index || symbol.visibility == SymbolVisibility::Public)
+            })
+            .map(|symbol| (index, symbol.clone()))
+    })
 }
 
 fn identifier_at(

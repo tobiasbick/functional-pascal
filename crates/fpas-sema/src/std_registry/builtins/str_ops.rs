@@ -17,7 +17,7 @@ use super::check_argument_count;
 pub(super) fn check_str_builtin_std_call(
     c: &mut Checker,
     name: &str,
-    args: &[Expr],
+    args: &[&Expr],
     span: Span,
 ) -> Option<Ty> {
     let ty = match name {
@@ -32,7 +32,7 @@ pub(super) fn check_str_builtin_std_call(
 fn check_map_or_filter(
     c: &mut Checker,
     name: &str,
-    args: &[Expr],
+    args: &[&Expr],
     span: Span,
     callback_result: Ty,
 ) -> Ty {
@@ -77,7 +77,7 @@ fn check_map_or_filter(
     }
 }
 
-fn check_reduce(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
+fn check_reduce(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
     if !check_argument_count(
         c,
         s::STD_STR_REDUCE,

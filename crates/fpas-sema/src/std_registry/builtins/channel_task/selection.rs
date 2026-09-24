@@ -6,7 +6,7 @@ use super::*;
 use crate::types::{ParamTy, ProcedureTy};
 
 /// Check each source's delivery type before returning the common opaque case type.
-pub(super) fn check_case(c: &mut Checker, name: &str, args: &[Expr], span: Span) -> Ty {
+pub(super) fn check_case(c: &mut Checker, name: &str, args: &[&Expr], span: Span) -> Ty {
     let count = if name == s::STD_TASK_SEND_CASE { 3 } else { 2 };
     if !expect_args(c, name, args, count, span) {
         return Ty::Error;

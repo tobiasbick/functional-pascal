@@ -55,14 +55,27 @@ fn identifier_end(source: &str, offset: usize) -> usize {
 fn receiver_before(source: &str, replacement_start: usize) -> Option<String> {
     let before = source.get(..replacement_start)?;
     let dot = before.strip_suffix('.')?;
-    let start = dot
-        .char_indices()
-        .rev()
-        .find(|(_, character)| {
-            !character.is_ascii_alphanumeric() && *character != '_' && *character != '.'
-        })
-        .map_or(0, |(index, character)| index + character.len_utf8());
-    let receiver = dot.get(start..)?.trim_matches('.');
+    let mut start = dot.len();
+    let mut parentheses = 0usize;
+    let mut brackets = 0usize;
+    for (index, character) in dot.char_indices().rev() {
+        match character {
+            ')' => parentheses += 1,
+            ']' => brackets += 1,
+            '(' if parentheses > 0 => parentheses -= 1,
+            '[' if brackets > 0 => brackets -= 1,
+            ch if parentheses == 0
+                && brackets == 0
+                && (ch.is_whitespace()
+                    || matches!(ch, ';' | ':' | '=' | '+' | '-' | '*' | '/')) =>
+            {
+                break;
+            }
+            _ => {}
+        }
+        start = index;
+    }
+    let receiver = dot.get(start..)?.trim().trim_matches('.');
     (!receiver.is_empty()).then(|| receiver.to_owned())
 }
 

@@ -8,7 +8,7 @@ use fpas_std::std_symbols as s;
 pub(super) fn check_math_builtin_std_call(
     c: &mut Checker,
     name: &str,
-    args: &[Expr],
+    args: &[&Expr],
     span: Span,
 ) -> Option<Ty> {
     let ty = match name {
@@ -21,7 +21,7 @@ pub(super) fn check_math_builtin_std_call(
     Some(ty)
 }
 
-fn check_abs(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
+fn check_abs(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
     if args.len() != 1 {
         c.error_with_code(
             SEMA_WRONG_ARGUMENT_COUNT,
@@ -51,7 +51,7 @@ fn check_abs(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
     }
 }
 
-fn check_min_max(c: &mut Checker, name: &str, args: &[Expr], span: Span) -> Ty {
+fn check_min_max(c: &mut Checker, name: &str, args: &[&Expr], span: Span) -> Ty {
     if args.len() != 2 {
         c.error_with_code(
             SEMA_WRONG_ARGUMENT_COUNT,
@@ -87,7 +87,7 @@ fn check_min_max(c: &mut Checker, name: &str, args: &[Expr], span: Span) -> Ty {
     }
 }
 
-fn check_sign(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
+fn check_sign(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
     if args.len() != 1 {
         c.error_with_code(
             SEMA_WRONG_ARGUMENT_COUNT,
@@ -115,7 +115,7 @@ fn check_sign(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
     }
 }
 
-fn check_clamp(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
+fn check_clamp(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
     if args.len() != 3 {
         c.error_with_code(
             SEMA_WRONG_ARGUMENT_COUNT,

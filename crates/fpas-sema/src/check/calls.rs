@@ -31,7 +31,7 @@ impl Checker {
                 params: &func_ty.params,
                 variadic: func_ty.variadic,
             },
-            args,
+            &args.iter().collect::<Vec<_>>(),
             span,
         )
     }
@@ -51,6 +51,46 @@ impl Checker {
                 params: &proc_ty.params,
                 variadic: proc_ty.variadic,
             },
+            &args.iter().collect::<Vec<_>>(),
+            span,
+        );
+    }
+
+    pub(crate) fn check_fluent_function_call_args(
+        &mut self,
+        name: &str,
+        func_ty: &FunctionTy,
+        args: &[&Expr],
+        span: Span,
+    ) -> HashMap<String, Ty> {
+        self.check_routine_call_args(
+            RoutineCallSignature {
+                name,
+                routine_label: "Function",
+                type_params: &func_ty.type_params,
+                params: &func_ty.params,
+                variadic: func_ty.variadic,
+            },
+            args,
+            span,
+        )
+    }
+
+    pub(crate) fn check_fluent_procedure_call_args(
+        &mut self,
+        name: &str,
+        proc_ty: &ProcedureTy,
+        args: &[&Expr],
+        span: Span,
+    ) {
+        self.check_routine_call_args(
+            RoutineCallSignature {
+                name,
+                routine_label: "Procedure",
+                type_params: &proc_ty.type_params,
+                params: &proc_ty.params,
+                variadic: proc_ty.variadic,
+            },
             args,
             span,
         );
@@ -59,7 +99,7 @@ impl Checker {
     fn check_routine_call_args(
         &mut self,
         signature: RoutineCallSignature<'_>,
-        args: &[Expr],
+        args: &[&Expr],
         span: Span,
     ) -> HashMap<String, Ty> {
         let RoutineCallSignature {

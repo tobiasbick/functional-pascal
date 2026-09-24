@@ -53,8 +53,28 @@ impl Checker {
             }
         }
 
-        if self.try_check_method_call_stmt(designator, args, span) {
-            return;
+        if !self.designator_has_unit_prefix(designator) {
+            let previous_error_count = self.errors.len();
+            if self.try_check_method_call_stmt(designator, args, span) {
+                return;
+            }
+            if self.errors.len() != previous_error_count {
+                self.check_args_only(args);
+                return;
+            }
+
+            if self
+                .try_check_fluent_designator(
+                    crate::designator_lookup_key(designator),
+                    designator,
+                    args,
+                    span,
+                    true,
+                )
+                .is_some()
+            {
+                return;
+            }
         }
 
         let (code, message, hint) = if let Some(ambiguous_hint) = self.ambiguous_hint(&name) {
@@ -107,11 +127,38 @@ impl Checker {
 
         let record_ty = match &resolved_receiver_ty {
             Ty::Record(record_ty) => record_ty.clone(),
-            _ => return false,
+            _ => {
+                if !receiver_reads.is_empty() {
+                    self.property_reads.insert(receiver_key, receiver_reads);
+                }
+                return false;
+            }
         };
 
         if self.reject_private_record_member(&record_ty, &method_name, span) {
             self.check_args_only(args);
+            return true;
+        }
+
+        if !through_type
+            && (record_ty
+                .fields
+                .iter()
+                .any(|(name, _)| name.eq_ignore_ascii_case(&method_name))
+                || record_ty
+                    .properties
+                    .iter()
+                    .any(|(name, _)| name.eq_ignore_ascii_case(&method_name)))
+        {
+            let member_ty = self.check_designator_expr(designator);
+            self.check_member_value_call(
+                crate::designator_lookup_key(designator),
+                &method_name,
+                &member_ty,
+                args,
+                span,
+                true,
+            );
             return true;
         }
 
@@ -166,6 +213,9 @@ impl Checker {
                 self.check_args_only(args);
                 return true;
             }
+            if !receiver_reads.is_empty() {
+                self.property_reads.insert(receiver_key, receiver_reads);
+            }
             return false;
         }
 
@@ -203,6 +253,9 @@ impl Checker {
 
         let method_kind = self.resolve_method_kind(&record_ty, &method_name, &qualified);
         let Some(method_kind) = method_kind else {
+            if !receiver_reads.is_empty() {
+                self.property_reads.insert(receiver_key, receiver_reads);
+            }
             return false;
         };
 

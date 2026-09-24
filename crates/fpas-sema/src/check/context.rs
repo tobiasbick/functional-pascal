@@ -14,6 +14,29 @@ pub type ExprTypeMap = HashMap<usize, Ty>;
 /// Maps a call expression or call-statement designator to its canonical `Std.*` dispatch name.
 pub type IntrinsicCallMap = HashMap<usize, String>;
 
+/// Target selected for a free or first-class receiver call.
+///
+/// **Documentation:** `docs/pascal/language/functions/fluent-calls.md`
+#[derive(Debug, Clone, PartialEq)]
+pub struct FluentCallTarget {
+    /// Qualified routine name, or the lexical callable binding name.
+    pub name: String,
+    /// Getter reads needed while evaluating a designator receiver.
+    pub receiver_reads: Vec<PropertyReadInfo>,
+    /// Static receiver type used for intrinsic overload selection.
+    pub receiver_ty: Ty,
+    /// Fully checked result type, including generic substitution.
+    pub result_ty: Ty,
+    /// Source span of the selected call name or postfix operation.
+    pub call_span: Span,
+}
+
+/// Maps call or postfix-operation identity to its selected receiver-call target.
+pub type FluentCallMap = HashMap<usize, FluentCallTarget>;
+
+/// Maps a callable record field or property call to its checked result type.
+pub type MemberValueCallMap = HashMap<usize, Ty>;
+
 /// Canonical root type name to its fully resolved semantic type.
 pub type NamedTypeMap = BTreeMap<String, Ty>;
 
@@ -181,6 +204,10 @@ pub struct AnalysisMetadata {
     pub named_types: NamedTypeMap,
     /// Resolved record method calls keyed by expression or designator identity.
     pub method_calls: MethodCallMap,
+    /// Selected free and first-class receiver calls.
+    pub fluent_calls: FluentCallMap,
+    /// Calls through callable record fields or properties.
+    pub member_value_calls: MemberValueCallMap,
     /// Named record defaults used while lowering record literals.
     pub record_defaults: RecordDefaultsMap,
     /// Scalar `case` labels interpreted as guard bindings.
@@ -210,8 +237,18 @@ pub struct Checker {
     /// Canonical standard-library calls keyed by expression or designator identity.
     pub(crate) intrinsic_calls: IntrinsicCallMap,
     pub(crate) method_calls: MethodCallMap,
+    /// Selected free and first-class receiver calls.
+    pub(crate) fluent_calls: FluentCallMap,
+    /// Calls through callable record fields or properties.
+    pub(crate) member_value_calls: MemberValueCallMap,
+    /// Imported public symbols grouped by their unqualified name.
+    pub(crate) imported_candidates: HashMap<String, Vec<String>>,
+    /// Synthetic receiver expressions already checked as part of a fluent call.
+    pub(crate) prechecked_receivers: ExprTypeMap,
     /// Canonical std unit names from `uses` (e.g. `Std.Console`).
     pub(crate) loaded_std_units: HashSet<String>,
+    /// All unit names in the current `uses` clause, including source units.
+    pub(crate) used_unit_names: HashSet<String>,
     /// Short names that map to multiple fully-qualified std symbols (ambiguous).
     pub(crate) ambiguous_imports: HashMap<String, Vec<String>>,
     /// Unqualified enum variant names that map to multiple `Type.Variant` symbols (ambiguous).
@@ -222,6 +259,8 @@ pub struct Checker {
     pub(crate) short_builtin_redirect: HashMap<String, String>,
     /// Canonical short names inserted at the program root by [`crate::std_registry::register_short_aliases`].
     pub(crate) std_short_alias_keys: HashSet<String>,
+    /// Canonical short names currently bound to imported source-unit symbols.
+    pub(crate) source_short_alias_keys: HashSet<String>,
     /// Named record type → ordered (field_name, optional_default_expr) pairs.
     pub(crate) record_defaults: RecordDefaultsMap,
     /// `case` label expressions that bind the scrutinee for a guarded scalar arm.
@@ -272,12 +311,18 @@ impl Checker {
             expr_types: ExprTypeMap::new(),
             intrinsic_calls: IntrinsicCallMap::new(),
             method_calls: MethodCallMap::new(),
+            fluent_calls: FluentCallMap::new(),
+            member_value_calls: MemberValueCallMap::new(),
+            imported_candidates: HashMap::new(),
+            prechecked_receivers: ExprTypeMap::new(),
             loaded_std_units: HashSet::new(),
+            used_unit_names: HashSet::new(),
             ambiguous_imports: HashMap::new(),
             ambiguous_enum_variants: HashMap::new(),
             enum_short_variant_keys: HashMap::new(),
             short_builtin_redirect: HashMap::new(),
             std_short_alias_keys: HashSet::new(),
+            source_short_alias_keys: HashSet::new(),
             record_defaults: RecordDefaultsMap::new(),
             scalar_case_bindings: ScalarCaseBindingMap::new(),
             closure_infos: ClosureInfoMap::new(),
@@ -300,6 +345,8 @@ impl Checker {
             intrinsic_calls: self.intrinsic_calls,
             named_types,
             method_calls: self.method_calls,
+            fluent_calls: self.fluent_calls,
+            member_value_calls: self.member_value_calls,
             record_defaults: self.record_defaults,
             scalar_case_bindings: self.scalar_case_bindings,
             closure_infos: self.closure_infos,

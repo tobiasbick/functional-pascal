@@ -8,13 +8,15 @@ mod aliases;
 mod api;
 mod builtins;
 mod loaded;
+mod receiver;
 
 pub use aliases::register_short_aliases;
 pub use api::{
     IntrinsicStdSymbol, IntrinsicStdSymbolKind, intrinsic_std_symbols, intrinsic_std_units,
 };
-pub use builtins::check_builtin_std_call;
+pub use builtins::{check_builtin_std_call, check_builtin_std_call_refs};
 pub use loaded::{register_loaded_std, register_single_std_unit};
+pub(crate) use receiver::builtin_accepts_receiver;
 
 use crate::check::Checker;
 use crate::scope::{Symbol, SymbolKind};

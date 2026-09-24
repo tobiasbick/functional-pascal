@@ -36,6 +36,7 @@ All routines are **generic over key type `K` and value type `V`**.
 | function | `Merge(D1: dict of K to V; D2: dict of K to V): dict of K to V` | combined dict; `D2` wins on conflict |
 | function | `Map(D: dict of K to V; F: function(V: V): V2): dict of K to V2` | transform all values |
 | function | `Filter(D: dict of K to V; F: function(K: K; V: V): boolean): dict of K to V` | keep matching entries |
+| function | `Reduce(D: dict of K to V; Init: U; F: function(Acc: U; Key: K; Value: V): U): U` | fold entries in insertion order |
 
 ---
 
@@ -185,6 +186,29 @@ var Scores: dict of string to integer := ['Alice': 90, 'Bob': 55, 'Carol': 80];
 var Passing: dict of string to integer := Std.Dictionaries.Filter(Scores, IsPassingScore);
 WriteLn(Passing)  // {Alice: 90, Carol: 80}
 ```
+
+---
+
+### `Reduce`
+
+```pascal
+function Reduce(D: dict of K to V; Init: U; F: function(Acc: U; Key: K; Value: V): U): U;
+```
+
+Visits entries in insertion order. Each callback receives the current accumulator, key, and value. The accumulator type `U` is inferred from `Init`, and the callback must return `U`.
+
+```pascal
+function Describe(Acc: string; Key: string; Value: integer): string;
+begin
+  return Acc + Key + ':' + Std.Conv.IntToStr(Value) + ';'
+end;
+
+var Scores: dict of string to integer := ['Alice': 90, 'Bob': 55];
+var Text: string := Std.Dictionaries.Reduce(Scores, '', Describe);
+// 'Alice:90;Bob:55;'
+```
+
+For an empty dictionary, `Reduce` returns `Init` without invoking `F`. Arguments are evaluated once in the usual left-to-right order. The operation visits the entries of its input value as they stood when the call began. A callback may change a captured mutable dictionary binding, but that does not change which entries this call visits. On callback failure, the operation stops and propagates the error without returning a partial result; earlier callback side effects remain visible.
 
 ---
 

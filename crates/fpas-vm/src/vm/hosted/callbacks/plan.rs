@@ -1,12 +1,15 @@
 //! Construction of resumable higher-order operation state.
 
 use fpas_bytecode::{
-    ArrayIntrinsic, DictIntrinsic, Intrinsic, OptionIntrinsic, ResultIntrinsic, Value,
+    ArrayIntrinsic, DictIntrinsic, Intrinsic, OptionIntrinsic, ResultIntrinsic, StrIntrinsic, Value,
 };
 
 use super::Worker;
 use super::arguments::CallbackArguments;
-use super::operation::{CallbackOperation, Cursor, Dictionary, Sequence, SingleWrapper};
+use super::operation::{
+    CallbackOperation, Cursor, Dictionary, DictionaryReduction, Sequence, SingleWrapper,
+};
+use super::string::{StringReduction, StringSequence};
 use crate::vm::VmError;
 
 /// Return a pass-through result when the callback branch is inactive.
@@ -53,6 +56,7 @@ pub(super) fn operation(
     match intrinsic {
         Intrinsic::Array(operation) => array_operation(worker, operation, arguments),
         Intrinsic::Dict(operation) => dict_operation(worker, operation, arguments),
+        Intrinsic::Str(operation) => str_operation(worker, operation, arguments),
         Intrinsic::Result(operation) => result_operation(worker, operation, arguments),
         Intrinsic::Option(operation) => option_operation(worker, operation, arguments),
         _ => Ok(None),
@@ -106,7 +110,10 @@ fn dict_operation(
     operation: DictIntrinsic,
     arguments: &[Value],
 ) -> Result<Option<(Value, CallbackOperation)>, VmError> {
-    if !matches!(operation, DictIntrinsic::Map | DictIntrinsic::Filter) {
+    if !matches!(
+        operation,
+        DictIntrinsic::Map | DictIntrinsic::Filter | DictIntrinsic::Reduce
+    ) {
         return Ok(None);
     }
     let Value::Dict(entries) = arguments
@@ -115,11 +122,70 @@ fn dict_operation(
     else {
         return Err(worker.callback_type_error("dict", arguments.first()));
     };
-    let callback = require_callback_argument(worker, arguments, "dict callback")?.clone();
-    let dictionary = Dictionary::new(entries.iter().cloned().collect());
+    let callback_index = if operation == DictIntrinsic::Reduce {
+        2
+    } else {
+        1
+    };
+    let callback = arguments
+        .get(callback_index)
+        .ok_or_else(|| worker.arity_error("dict callback"))?
+        .clone();
     let operation = match operation {
-        DictIntrinsic::Map => CallbackOperation::DictMap(dictionary),
-        DictIntrinsic::Filter => CallbackOperation::DictFilter(dictionary),
+        DictIntrinsic::Map => {
+            CallbackOperation::DictMap(Dictionary::new(entries.iter().cloned().collect()))
+        }
+        DictIntrinsic::Filter => {
+            CallbackOperation::DictFilter(Dictionary::new(entries.iter().cloned().collect()))
+        }
+        DictIntrinsic::Reduce => CallbackOperation::DictReduce(DictionaryReduction::new(
+            entries.iter().cloned().collect(),
+            arguments
+                .get(1)
+                .ok_or_else(|| worker.arity_error("Std.Dictionaries.Reduce"))?
+                .clone(),
+        )),
+        _ => unreachable!(),
+    };
+    Ok(Some((callback, operation)))
+}
+
+fn str_operation(
+    worker: &Worker,
+    operation: StrIntrinsic,
+    arguments: &[Value],
+) -> Result<Option<(Value, CallbackOperation)>, VmError> {
+    if !matches!(
+        operation,
+        StrIntrinsic::Map | StrIntrinsic::Filter | StrIntrinsic::Reduce
+    ) {
+        return Ok(None);
+    }
+    let Value::Str(input) = arguments
+        .first()
+        .ok_or_else(|| worker.arity_error("string callback"))?
+    else {
+        return Err(worker.callback_type_error("string", arguments.first()));
+    };
+    let callback_index = if operation == StrIntrinsic::Reduce {
+        2
+    } else {
+        1
+    };
+    let callback = arguments
+        .get(callback_index)
+        .ok_or_else(|| worker.arity_error("string callback"))?
+        .clone();
+    let operation = match operation {
+        StrIntrinsic::Map => CallbackOperation::StringMap(StringSequence::new(input)),
+        StrIntrinsic::Filter => CallbackOperation::StringFilter(StringSequence::new(input)),
+        StrIntrinsic::Reduce => CallbackOperation::StringReduce(StringReduction::new(
+            input,
+            arguments
+                .get(1)
+                .ok_or_else(|| worker.arity_error("Std.Str.Reduce"))?
+                .clone(),
+        )),
         _ => unreachable!(),
     };
     Ok(Some((callback, operation)))

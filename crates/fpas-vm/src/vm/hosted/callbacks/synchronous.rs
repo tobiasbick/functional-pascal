@@ -2,7 +2,7 @@
 
 use fpas_bytecode::{
     ArrayIntrinsic, DictIntrinsic, Intrinsic, OptionIntrinsic, ResultIntrinsic, SourceLocation,
-    Value,
+    StrIntrinsic, Value,
 };
 
 use super::Worker;
@@ -18,6 +18,7 @@ impl Worker {
         let result = match intrinsic {
             Intrinsic::Array(operation) => self.array_callback(operation, arguments)?,
             Intrinsic::Dict(operation) => self.dict_callback(operation, arguments)?,
+            Intrinsic::Str(operation) => self.str_callback(operation, arguments)?,
             Intrinsic::Result(operation) => self.result_callback(operation, arguments)?,
             Intrinsic::Option(operation) => self.option_callback(operation, arguments)?,
             _ => return Ok(None),
@@ -136,7 +137,10 @@ impl Worker {
         operation: DictIntrinsic,
         arguments: &[Value],
     ) -> Result<Option<Value>, VmError> {
-        if !matches!(operation, DictIntrinsic::Map | DictIntrinsic::Filter) {
+        if !matches!(
+            operation,
+            DictIntrinsic::Map | DictIntrinsic::Filter | DictIntrinsic::Reduce
+        ) {
             return Ok(None);
         }
         let Value::Dict(entries) = arguments
@@ -145,9 +149,25 @@ impl Worker {
         else {
             return Err(self.callback_type_error("dict", arguments.first()));
         };
+        let callback_index = if operation == DictIntrinsic::Reduce {
+            2
+        } else {
+            1
+        };
         let callback = arguments
-            .get(1)
+            .get(callback_index)
             .ok_or_else(|| self.arity_error("dict callback"))?;
+        if operation == DictIntrinsic::Reduce {
+            let mut accumulator = arguments
+                .get(1)
+                .ok_or_else(|| self.arity_error("Std.Dictionaries.Reduce"))?
+                .clone();
+            for (key, value) in entries.iter() {
+                accumulator =
+                    self.call_callback_sync(callback, [accumulator, key.clone(), value.clone()])?;
+            }
+            return Ok(Some(accumulator));
+        }
         let mut result = Vec::with_capacity(entries.len());
         for (key, value) in entries.iter() {
             match operation {
@@ -165,6 +185,63 @@ impl Worker {
             }
         }
         Ok(Some(Value::dict(result)))
+    }
+
+    fn str_callback(
+        &self,
+        operation: StrIntrinsic,
+        arguments: &[Value],
+    ) -> Result<Option<Value>, VmError> {
+        if !matches!(
+            operation,
+            StrIntrinsic::Map | StrIntrinsic::Filter | StrIntrinsic::Reduce
+        ) {
+            return Ok(None);
+        }
+        let Value::Str(input) = arguments
+            .first()
+            .ok_or_else(|| self.arity_error("string callback"))?
+        else {
+            return Err(self.callback_type_error("string", arguments.first()));
+        };
+        let callback_index = if operation == StrIntrinsic::Reduce {
+            2
+        } else {
+            1
+        };
+        let callback = arguments
+            .get(callback_index)
+            .ok_or_else(|| self.arity_error("string callback"))?;
+        if operation == StrIntrinsic::Reduce {
+            let mut accumulator = arguments
+                .get(1)
+                .ok_or_else(|| self.arity_error("Std.Str.Reduce"))?
+                .clone();
+            for scalar in input.chars() {
+                accumulator = self.call_callback_sync(
+                    callback,
+                    [accumulator, Value::Str(scalar.to_string().into())],
+                )?;
+            }
+            return Ok(Some(accumulator));
+        }
+        let mut result = String::with_capacity(input.len());
+        for scalar in input.chars() {
+            let argument = Value::Str(scalar.to_string().into());
+            match operation {
+                StrIntrinsic::Map => match self.call_callback_sync(callback, [argument])? {
+                    Value::Str(mapped) if mapped.char_len() == 1 => result.push_str(&mapped),
+                    other => return Err(self.string_map_result_error(&other)),
+                },
+                StrIntrinsic::Filter => {
+                    if self.callback_is_true(callback, &[argument])? {
+                        result.push(scalar);
+                    }
+                }
+                _ => unreachable!(),
+            }
+        }
+        Ok(Some(Value::Str(result.into())))
     }
 
     fn result_callback(

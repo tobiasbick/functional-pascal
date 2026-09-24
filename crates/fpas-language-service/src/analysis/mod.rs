@@ -9,4 +9,6 @@ pub use document::{DiagnosticAnalysis, DocumentAnalysis, SemanticAnalysis};
 pub use service::LanguageService;
 
 #[cfg(test)]
+mod collection_diagnostics;
+#[cfg(test)]
 mod disk_reads;

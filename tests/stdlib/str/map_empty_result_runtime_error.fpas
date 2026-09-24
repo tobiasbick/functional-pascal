@@ -1,0 +1,12 @@
+program StringMapEmptyResultRuntimeError;
+
+uses Std.Str;
+
+function Empty(C: string): string;
+begin
+  return ''
+end;
+
+begin
+  var Mapped: string := Map('abc', Empty)
+end.

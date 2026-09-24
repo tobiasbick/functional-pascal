@@ -1,15 +1,17 @@
 mod array;
+mod callbacks;
 mod channel_task;
 mod dict;
 mod math;
 mod result_option;
+mod str_ops;
 mod test;
 
 pub(super) use test::register_assert_equals_builtin;
 
 use crate::check::Checker;
 use crate::types::Ty;
-use fpas_diagnostics::codes::INTERNAL_COMPILER_INVARIANT_FAILURE;
+use fpas_diagnostics::codes::{INTERNAL_COMPILER_INVARIANT_FAILURE, SEMA_WRONG_ARGUMENT_COUNT};
 use fpas_lexer::Span;
 use fpas_parser::{DesignatorPart, Expr};
 
@@ -29,6 +31,9 @@ pub fn check_builtin_std_call(c: &mut Checker, name: &str, args: &[Expr], span: 
     if let Some(ty) = result_option::check_result_option_builtin_std_call(c, name, args, span) {
         return ty;
     }
+    if let Some(ty) = str_ops::check_str_builtin_std_call(c, name, args, span) {
+        return ty;
+    }
     if let Some(ty) = test::check_test_builtin_std_call(c, name, args, span) {
         return ty;
     }
@@ -40,6 +45,26 @@ pub fn check_builtin_std_call(c: &mut Checker, name: &str, args: &[Expr], span: 
         span,
     );
     Ty::Error
+}
+
+fn check_argument_count(
+    c: &mut Checker,
+    name: &str,
+    expected: usize,
+    args: &[Expr],
+    example: &str,
+    span: Span,
+) -> bool {
+    if args.len() == expected {
+        return true;
+    }
+    c.error_with_code(
+        SEMA_WRONG_ARGUMENT_COUNT,
+        format!("`{name}` expects {expected} arguments, got {}", args.len()),
+        example,
+        span,
+    );
+    false
 }
 
 pub(super) fn simple_var_name(expr: &Expr) -> Option<String> {

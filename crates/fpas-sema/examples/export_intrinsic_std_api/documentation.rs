@@ -128,20 +128,51 @@ fn parameter_names(signature: &str) -> Option<Vec<String>> {
     if value.trim().is_empty() || value.trim() == "..." {
         return Some(Vec::new());
     }
-    Some(
-        value
-            .split(';')
-            .filter_map(|parameter| {
-                let before_type = parameter.split(':').next()?.trim();
-                let name = before_type
-                    .trim_start_matches("mutable ")
-                    .split(',')
-                    .next_back()?
-                    .trim();
-                (!name.is_empty()).then(|| name.to_owned())
-            })
-            .collect(),
-    )
+    let mut names = Vec::new();
+    let mut depth = 0;
+    let mut start = 0;
+    for (index, character) in value.char_indices() {
+        match character {
+            '(' => depth += 1,
+            ')' => depth -= 1,
+            ';' if depth == 0 => {
+                if let Some(name) = parameter_name(&value[start..index]) {
+                    names.push(name);
+                }
+                start = index + 1;
+            }
+            _ => {}
+        }
+    }
+    if let Some(name) = parameter_name(&value[start..]) {
+        names.push(name);
+    }
+    Some(names)
+}
+
+fn parameter_name(parameter: &str) -> Option<String> {
+    let before_type = parameter.split(':').next()?.trim();
+    let name = before_type
+        .trim_start_matches("mutable ")
+        .split(',')
+        .next_back()?
+        .trim();
+    (!name.is_empty()).then(|| name.to_owned())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::parameter_names;
+
+    #[test]
+    fn callback_parameters_are_not_outer_parameters() {
+        assert_eq!(
+            parameter_names(
+                "Reduce(D: dict of K to V; Init: U; F: function(Acc: U; Key: K; Value: V): U): U"
+            ),
+            Some(vec!["D".to_owned(), "Init".to_owned(), "F".to_owned()])
+        );
+    }
 }
 
 fn sentence_summary(summary: &str) -> String {

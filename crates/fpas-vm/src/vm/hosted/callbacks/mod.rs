@@ -4,6 +4,7 @@ mod arguments;
 mod continuation;
 mod operation;
 mod plan;
+mod string;
 mod synchronous;
 
 pub(in crate::vm) use operation::CallbackContinuation;
@@ -111,6 +112,20 @@ impl Worker {
                 actual.map_or("missing argument", Value::type_name)
             ),
             format!("Pass a {expected} value to this intrinsic."),
+        )
+    }
+
+    fn string_map_result_error(&self, actual: &Value) -> VmError {
+        let detail = match actual {
+            Value::Str(value) => format!("{} Unicode scalars", value.char_len()),
+            value => format!("a `{}` value", value.type_name()),
+        };
+        diagnostics::at_address(
+            self.executable.executable(),
+            self.current_address,
+            RUNTIME_VM_OPERAND_TYPE_MISMATCH,
+            format!("Std.Str.Map callback must return exactly one Unicode scalar, got {detail}"),
+            "Return a string containing exactly one Unicode scalar from the callback.",
         )
     }
 

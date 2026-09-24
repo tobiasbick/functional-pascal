@@ -33,5 +33,9 @@ pub enum DictIntrinsic {
     ///
     /// **Documentation:** `docs/pascal/std/collections/dict.md`
     Filter = 128,
+    /// Fold entries in insertion order from an explicit initial value.
+    ///
+    /// **Documentation:** `docs/pascal/std/collections/dict.md`
+    Reduce = 572,
 }
 }

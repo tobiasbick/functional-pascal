@@ -29,6 +29,9 @@ std_symbol!(STD_STR_TRIM_LEFT = std_str!("TrimLeft"));
 std_symbol!(STD_STR_TRIM_RIGHT = std_str!("TrimRight"));
 std_symbol!(STD_STR_LAST_INDEX_OF = std_str!("LastIndexOf"));
 std_symbol!(STD_STR_FORMAT = std_str!("Format"));
+std_symbol!(STD_STR_MAP = std_str!("Map"));
+std_symbol!(STD_STR_FILTER = std_str!("Filter"));
+std_symbol!(STD_STR_REDUCE = std_str!("Reduce"));
 
 pub(in crate::std_units) const STD_STR_SYMBOLS: &[&str] = &[
     STD_STR_LENGTH,
@@ -60,4 +63,7 @@ pub(in crate::std_units) const STD_STR_SYMBOLS: &[&str] = &[
     STD_STR_TRIM_RIGHT,
     STD_STR_LAST_INDEX_OF,
     STD_STR_FORMAT,
+    STD_STR_MAP,
+    STD_STR_FILTER,
+    STD_STR_REDUCE,
 ];

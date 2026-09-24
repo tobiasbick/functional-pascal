@@ -37,24 +37,20 @@ begin
   return NotesOrdered(Notes)
 end;
 
+function AppendEscapedPattern(Acc: string; Character: string): string;
+begin
+  if (((Character = '[') or (Character = ']')) or (Character = '*')) or (Character = '?') then
+  begin
+    return ((Acc + '[') + Character) + ']'
+  end;
+
+  return Acc + Character
+end;
+
 // Escapes only the literal directory; the final note-file pattern stays active.
 function NoteDirectoryPattern(Directory: string): string;
 begin
-  mutable var Parts: array of string := [];
-  for Index: integer := 0 to Std.Str.Length(Directory) - 1 do
-  begin
-    var Character: string := Std.Str.CharAt(Directory, Index);
-    if (((Character = '[') or (Character = ']')) or (Character = '*')) or (Character = '?') then
-    begin
-      Std.Arrays.Push(Parts, ('[' + Character) + ']')
-    end
-    else
-    begin
-      Std.Arrays.Push(Parts, Character)
-    end
-  end;
-
-  return Std.Path.Join([Std.Str.Join(Parts, ''), '*.note'])
+  return Std.Path.Join([Std.Str.Reduce(Directory, '', AppendEscapedPattern), '*.note'])
 end;
 
 // Loads valid notes and preserves invalid files as visible issues.

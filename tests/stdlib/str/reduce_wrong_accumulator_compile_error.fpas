@@ -1,0 +1,12 @@
+program StringReduceWrongAccumulatorCompileError;
+
+uses Std.Str;
+
+function Wrong(Acc: string; C: string): string;
+begin
+  return Acc + C
+end;
+
+begin
+  var Count: integer := Reduce('abc', 0, Wrong)
+end.

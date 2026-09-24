@@ -3,6 +3,7 @@
 use fpas_bytecode::{SharedFunction, Value};
 
 use super::arguments::CallbackArguments;
+use super::string::{StringReduction, StringSequence};
 
 /// Complete resumable state for one higher-order intrinsic owned by a task.
 pub(in crate::vm) struct CallbackContinuation {
@@ -30,6 +31,10 @@ pub(super) enum CallbackOperation {
     ArrayForEach(Cursor),
     DictMap(Dictionary),
     DictFilter(Dictionary),
+    DictReduce(DictionaryReduction),
+    StringMap(StringSequence),
+    StringFilter(StringSequence),
+    StringReduce(StringReduction),
     Single {
         arguments: Option<CallbackArguments>,
         wrapper: SingleWrapper,
@@ -55,6 +60,13 @@ pub(super) struct Dictionary {
     output: Vec<(Value, Value)>,
 }
 
+/// Input snapshot and accumulator for dictionary entry reduction.
+pub(super) struct DictionaryReduction {
+    entries: Vec<(Value, Value)>,
+    next: usize,
+    accumulator: Value,
+}
+
 #[derive(Clone, Copy)]
 /// Result wrapper applied after a single callback invocation.
 pub(super) enum SingleWrapper {
@@ -74,6 +86,7 @@ pub(super) enum Advance {
 /// Failure while advancing a hosted callback operation.
 pub(super) enum AdvanceError {
     UnexpectedResult(Value),
+    InvalidStringMapResult(Value),
     InvalidState(&'static str),
 }
 
@@ -221,6 +234,24 @@ impl CallbackContinuation {
                 }
                 Ok(dictionary.next_filter())
             }
+            CallbackOperation::DictReduce(reduction) => Ok(reduction.advance(self.pending.take())),
+            CallbackOperation::StringMap(sequence) => {
+                if let Some(value) = self.pending.take() {
+                    sequence.push_mapped(value)?;
+                }
+                Ok(sequence.next_or_string())
+            }
+            CallbackOperation::StringFilter(sequence) => {
+                if let Some(value) = self.pending.take()
+                    && boolean(value)?
+                {
+                    sequence.push_previous();
+                }
+                Ok(sequence.next_or_string())
+            }
+            CallbackOperation::StringReduce(reduction) => {
+                Ok(reduction.advance(self.pending.take()))
+            }
             CallbackOperation::Single { arguments, wrapper } => {
                 if let Some(value) = self.pending.take() {
                     return Ok(Advance::Complete(wrapper.wrap(value)));
@@ -244,7 +275,8 @@ impl CallbackOperation {
     /// Return the visible arity of the first callback invocation.
     pub(super) fn first_arity(&self) -> usize {
         match self {
-            Self::ArrayReduce { .. } | Self::DictFilter(_) => 2,
+            Self::ArrayReduce { .. } | Self::DictFilter(_) | Self::StringReduce(_) => 2,
+            Self::DictReduce(_) => 3,
             Self::Single { arguments, .. } => arguments.as_ref().map_or(0, CallbackArguments::len),
             _ => 1,
         }
@@ -327,6 +359,33 @@ impl Dictionary {
             Advance::Call(CallbackArguments::two(key.clone(), value.clone()))
         } else {
             Advance::Complete(Value::dict(std::mem::take(&mut self.output)))
+        }
+    }
+}
+
+impl DictionaryReduction {
+    /// Snapshot entries and retain the initial accumulator.
+    pub(super) fn new(entries: Vec<(Value, Value)>, initial: Value) -> Self {
+        Self {
+            entries,
+            next: 0,
+            accumulator: initial,
+        }
+    }
+
+    fn advance(&mut self, pending: Option<Value>) -> Advance {
+        if let Some(value) = pending {
+            self.accumulator = value;
+        }
+        if let Some((key, value)) = self.entries.get(self.next) {
+            self.next += 1;
+            Advance::Call(CallbackArguments::three(
+                self.accumulator.clone(),
+                key.clone(),
+                value.clone(),
+            ))
+        } else {
+            Advance::Complete(self.accumulator.clone())
         }
     }
 }

@@ -70,7 +70,7 @@ Implementation references: [parser call and postfix paths](../../../crates/fpas-
 
 Current references: [postfix calls](../../pascal/language/functions/postfix-chaining.md), [record methods](../../pascal/language/types/record-methods.md), [unit imports](../../pascal/program-structure/units.md), [array operations](../../pascal/std/collections/array/README.md), and [HTTP](../../pascal/std/network/http.md).
 
-This proposal adds call syntax, not collection operations. Missing string `Map` or dictionary `Reduce` remain separate questions in [collection operations](collection-operations.md).
+This proposal adds call syntax. The existing string and dictionary collection operations are documented under [string higher-order operations](../../pascal/std/text/str/higher-order.md) and [dictionary operations](../../pascal/std/collections/dict.md).
 
 ## Verification when implemented
 

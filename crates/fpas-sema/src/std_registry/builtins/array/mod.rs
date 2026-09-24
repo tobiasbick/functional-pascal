@@ -1,7 +1,6 @@
-use super::{array_elem_ty, mutable_array_elem_ty, simple_var_name};
+use super::{array_elem_ty, check_argument_count, mutable_array_elem_ty, simple_var_name};
 use crate::check::Checker;
 use crate::types::Ty;
-use fpas_diagnostics::codes::SEMA_WRONG_ARGUMENT_COUNT;
 use fpas_lexer::Span;
 use fpas_parser::Expr;
 use fpas_std::std_symbols as s;
@@ -42,25 +41,4 @@ pub(super) fn check_array_builtin_std_call(
     };
 
     Some(ty)
-}
-
-fn check_argument_count(
-    c: &mut Checker,
-    name: &str,
-    expected: usize,
-    args: &[Expr],
-    example: &str,
-    span: Span,
-) -> bool {
-    if args.len() == expected {
-        return true;
-    }
-
-    c.error_with_code(
-        SEMA_WRONG_ARGUMENT_COUNT,
-        format!("`{name}` expects {expected} arguments, got {}", args.len()),
-        example,
-        span,
-    );
-    false
 }

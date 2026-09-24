@@ -42,6 +42,7 @@ pub(super) fn resume(worker: &mut Worker) -> Result<bool, VmError> {
         AdvanceError::UnexpectedResult(value) => {
             worker.callback_type_error("boolean callback result", Some(&value))
         }
+        AdvanceError::InvalidStringMapResult(value) => worker.string_map_result_error(&value),
         AdvanceError::InvalidState(message) => worker.callback_state_error(message),
     })?;
     match action {

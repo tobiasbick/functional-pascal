@@ -158,7 +158,6 @@ end;
 // - `A`: Input value used by `Reduce`.
 // - `Init`: Input value used by `Reduce`.
 // - `F`: Callback invoked by the higher-order operation.
-// - `V`: Input value used by `Reduce`.
 public function Reduce(A: array of T; Init: U; F: function(Acc: U; V: T): U): U;
 begin
   panic('Intrinsic API declaration')

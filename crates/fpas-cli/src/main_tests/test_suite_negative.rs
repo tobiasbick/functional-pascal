@@ -75,6 +75,70 @@ fn flat_map_rejects_scalar_mapper_result_is_compile_error() {
 }
 
 #[test]
+fn string_filter_rejects_wrong_callback_return_type() {
+    run_file_expect_failure(
+        "tests/stdlib/str/filter_wrong_callback_compile_error.fpas",
+        Some("callback return type"),
+    );
+}
+
+#[test]
+fn string_reduce_rejects_wrong_accumulator_type() {
+    run_file_expect_failure(
+        "tests/stdlib/str/reduce_wrong_accumulator_compile_error.fpas",
+        Some("callback argument 1"),
+    );
+}
+
+#[test]
+fn dictionary_reduce_requires_three_callback_arguments() {
+    run_file_expect_failure(
+        "tests/stdlib/dict/reduce_wrong_callback_arity_compile_error.fpas",
+        Some("callback must take exactly 3 arguments"),
+    );
+}
+
+#[test]
+fn string_map_rejects_empty_callback_result() {
+    run_file_expect_failure(
+        "tests/stdlib/str/map_empty_result_runtime_error.fpas",
+        Some("Std.Str.Map callback must return exactly one Unicode scalar, got 0 Unicode scalars"),
+    );
+}
+
+#[test]
+fn string_map_stops_at_callback_failure() {
+    run_file_expect_failure(
+        "tests/stdlib/str/map_callback_failure_runtime_error.fpas",
+        Some("string callback failed on second scalar"),
+    );
+}
+
+#[test]
+fn string_map_rejects_multiple_callback_scalars() {
+    run_file_expect_failure(
+        "tests/stdlib/str/map_multiple_result_runtime_error.fpas",
+        Some("Std.Str.Map callback must return exactly one Unicode scalar, got 2 Unicode scalars"),
+    );
+}
+
+#[test]
+fn string_map_rejects_multiple_callback_scalars_in_a_task() {
+    run_file_expect_failure(
+        "tests/stdlib/str/map_multiple_result_in_task_runtime_error.fpas",
+        Some("Std.Str.Map callback must return exactly one Unicode scalar"),
+    );
+}
+
+#[test]
+fn dictionary_reduce_propagates_callback_failure() {
+    run_file_expect_failure(
+        "tests/stdlib/dict/reduce_callback_failure_runtime_error.fpas",
+        Some("dictionary callback failed"),
+    );
+}
+
+#[test]
 fn pop_empty_is_runtime_error() {
     run_file_expect_failure(
         "tests/stdlib/array/pop_empty_is_runtime_error_runtime_error.fpas",

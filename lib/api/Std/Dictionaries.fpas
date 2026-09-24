@@ -19,7 +19,6 @@ end;
 // Parameters:
 // - `D`: Input value used by `Filter`.
 // - `F`: Callback invoked by the higher-order operation.
-// - `V`: Input value used by `Filter`.
 public function Filter(D: dict of K to V; F: function(K: K; V: V): boolean): dict of K to V;
 begin
   panic('Intrinsic API declaration')
@@ -69,6 +68,17 @@ end;
 // - `D1`: Input value used by `Merge`.
 // - `D2`: Input value used by `Merge`.
 public function Merge(D1: dict of K to V; D2: dict of K to V): dict of K to V;
+begin
+  panic('Intrinsic API declaration')
+end;
+
+// Fold entries in insertion order.
+//
+// Parameters:
+// - `D`: Input value used by `Reduce`.
+// - `Init`: Input value used by `Reduce`.
+// - `F`: Callback invoked by the higher-order operation.
+public function Reduce(D: dict of K to V; Init: U; F: function(Acc: U; Key: K; Value: V): U): U;
 begin
   panic('Intrinsic API declaration')
 end;

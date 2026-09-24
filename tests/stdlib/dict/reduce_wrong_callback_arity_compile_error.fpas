@@ -1,0 +1,13 @@
+program DictionaryReduceWrongCallbackArityCompileError;
+
+uses Std.Dictionaries;
+
+function Wrong(Acc: integer; Value: integer): integer;
+begin
+  return Acc + Value
+end;
+
+begin
+  var Values: dict of string to integer := ['A': 1];
+  var Total: integer := Reduce(Values, 0, Wrong)
+end.

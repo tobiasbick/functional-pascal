@@ -5,7 +5,6 @@
 //! - [`transform`]: `Map`, `Filter`, `Reduce`, `FlatMap`
 //! - [`search`]: `Find`, `FindIndex`, `Any`, `All`, `ForEach`
 
-mod callbacks;
 mod search;
 mod transform;
 

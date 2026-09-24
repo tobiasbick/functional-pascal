@@ -1,0 +1,49 @@
+program StringHigherOrderTest;
+
+uses Std.Str, Std.Test;
+
+function ReplaceFace(C: string): string;
+begin
+  if C = '😀' then
+  begin
+    return 'ß'
+  end;
+
+  return C
+end;
+
+function KeepBase(C: string): boolean;
+begin
+  return (C <> '́') and (C <> ' ')
+end;
+
+function Count(Acc: integer; C: string): integer;
+begin
+  return Acc + 1
+end;
+
+function Prepend(Acc: string; C: string): string;
+begin
+  return C + Acc
+end;
+
+begin
+  var Text: string := 'a😀éb';
+  AssertEquals(5, Length(Text));
+  AssertEquals('aßéb', Map(Text, ReplaceFace));
+  AssertEquals(5, Length(Map(Text, ReplaceFace)));
+  AssertEquals('a😀eb', Filter(Text, KeepBase));
+  AssertEquals('ab', Filter('a ́b', KeepBase));
+  AssertEquals(5, Reduce(Text, 0, Count));
+  AssertEquals('b́e😀a', Reduce(Text, '', Prepend));
+  mutable var Calls: integer := 0;
+  var Observe: function(C: string): string := function(C: string): string begin
+    Calls := Calls + 1;
+    return C
+  end;
+
+  AssertEquals('', Map('', Observe));
+  AssertEquals('', Filter('', KeepBase));
+  AssertEquals(42, Reduce('', 42, Count));
+  AssertEquals(0, Calls)
+end.

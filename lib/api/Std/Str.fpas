@@ -54,6 +54,16 @@ begin
   panic('Intrinsic API declaration')
 end;
 
+// Keep selected Unicode scalars.
+//
+// Parameters:
+// - `S`: UTF-8 text processed by the operation.
+// - `F`: Callback invoked by the higher-order operation.
+public function Filter(S: string; F: function(C: string): boolean): string;
+begin
+  panic('Intrinsic API declaration')
+end;
+
 // Printf-style string formatting.
 //
 // Parameters:
@@ -132,6 +142,16 @@ begin
   panic('Intrinsic API declaration')
 end;
 
+// Transform each Unicode scalar into one scalar.
+//
+// Parameters:
+// - `S`: UTF-8 text processed by the operation.
+// - `F`: Callback invoked by the higher-order operation.
+public function Map(S: string; F: function(C: string): string): string;
+begin
+  panic('Intrinsic API declaration')
+end;
+
 // Codepoint of one-scalar string.
 //
 // Parameters:
@@ -170,6 +190,17 @@ end;
 // - `Width`: Width in cells as documented by the operation.
 // - `PadChar`: `string` input value used by `PadRight`.
 public function PadRight(S: string; Width: integer; PadChar: string): string;
+begin
+  panic('Intrinsic API declaration')
+end;
+
+// Fold scalars left to right.
+//
+// Parameters:
+// - `S`: UTF-8 text processed by the operation.
+// - `Init`: Input value used by `Reduce`.
+// - `F`: Callback invoked by the higher-order operation.
+public function Reduce(S: string; Init: U; F: function(Acc: U; C: string): U): U;
 begin
   panic('Intrinsic API declaration')
 end;

@@ -9,6 +9,7 @@ std_symbol!(STD_DICT_GET = std_dict!("Get"));
 std_symbol!(STD_DICT_MERGE = std_dict!("Merge"));
 std_symbol!(STD_DICT_MAP = std_dict!("Map"));
 std_symbol!(STD_DICT_FILTER = std_dict!("Filter"));
+std_symbol!(STD_DICT_REDUCE = std_dict!("Reduce"));
 
 pub(in crate::std_units) const STD_DICT_SYMBOLS: &[&str] = &[
     STD_DICT_LENGTH,
@@ -20,4 +21,5 @@ pub(in crate::std_units) const STD_DICT_SYMBOLS: &[&str] = &[
     STD_DICT_MERGE,
     STD_DICT_MAP,
     STD_DICT_FILTER,
+    STD_DICT_REDUCE,
 ];

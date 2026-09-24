@@ -14,7 +14,7 @@ end.
 
 After `uses Std.Str;` you may use **short** names (`Length`, `ToUpper`, …) or **qualified** names (`Std.Str.Length`, …).
 
-**Ambiguity:** if you also `uses Std.Arrays`, the short names **`Length`**, **`Contains`**, and **`IndexOf`** exist in both units. The compiler reports an **ambiguous** error unless you qualify, for example `Std.Str.Length(S)` vs `Std.Arrays.Length(A)`.
+**Ambiguity:** if you also `uses Std.Arrays`, the short names **`Length`**, **`Contains`**, **`IndexOf`**, **`Map`**, **`Filter`**, and **`Reduce`** exist in both units. The compiler reports an **ambiguous** error unless you qualify, for example `Std.Str.Length(S)` vs `Std.Arrays.Length(A)`.
 
 ## Quick reference
 
@@ -51,6 +51,9 @@ Requires `uses Std.Str;`.
 | function | `TrimRight(S: string): string` | strip trailing whitespace |
 | function | `LastIndexOf(S: string; Sub: string): integer` | last index or `-1` |
 | function | `Format(Template: string; ...): string` | printf-style string formatting |
+| function | `Map(S: string; F: function(C: string): string): string` | transform each Unicode scalar into one scalar |
+| function | `Filter(S: string; F: function(C: string): boolean): string` | keep selected Unicode scalars |
+| function | `Reduce(S: string; Init: U; F: function(Acc: U; C: string): U): U` | fold scalars left to right |
 
 **Indexing:** all “character index” parameters are in **Unicode scalar** units (user-visible characters), not UTF-8 bytes.
 
@@ -65,6 +68,7 @@ Requires `uses Std.Str;`.
 | [Split and join](split-join.md) | `Split`, `Join` |
 | [Edit](edit.md) | `Replace`, `Pad*`, `Insert`, `Delete`, … |
 | [Format and characters](format-chars.md) | `Format`, `Ord`, `Chr`, `IsNumeric` |
+| [Higher-order operations](higher-order.md) | `Map`, `Filter`, `Reduce` over Unicode scalars |
 
 ## Implementation (contributors)
 
@@ -83,6 +87,7 @@ immutable input storage.
 | Scalar substring ranges | [`str/substring.rs`](../../../../../crates/fpas-std/src/str/substring.rs) |
 | Shared string storage (`SharedStr`, cached `char_len` for O(1) `Length`) | [`value/mod.rs`](../../../../../crates/fpas-bytecode/src/value/mod.rs) |
 | String concatenation (sums cached lengths) | [`scalar.rs`](../../../../../crates/fpas-vm/src/vm/value_ops/scalar.rs) |
+| Higher-order callbacks | [`hosted/callbacks/`](../../../../../crates/fpas-vm/src/vm/hosted/callbacks/) |
 | Registration | [`std_registry/mod.rs`](../../../../../crates/fpas-sema/src/std_registry/mod.rs) |
 
 ## See also

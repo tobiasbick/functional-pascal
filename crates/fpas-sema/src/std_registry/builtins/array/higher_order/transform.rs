@@ -9,10 +9,10 @@ use fpas_lexer::Span;
 use fpas_parser::Expr;
 use fpas_std::std_symbols as s;
 
-use super::super::{array_elem_ty, check_argument_count};
-use super::callbacks::{
+use super::super::super::callbacks::{
     BinaryFunctionCallbackSpec, expect_binary_function_callback, expect_unary_function_callback,
 };
+use super::super::{array_elem_ty, check_argument_count};
 
 /// `Std.Arrays.Map(Arr, F)` → `array of U` where `F: function(V: T): U`.
 pub(crate) fn check_map(c: &mut Checker, args: &[Expr], span: Span) -> Ty {

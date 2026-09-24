@@ -1,8 +1,8 @@
 //! Runtime ownership and mutable-dispatch metadata for intrinsic instructions.
 
 use super::{
-    ArrayIntrinsic, DictIntrinsic, Intrinsic, OptionIntrinsic, ResultIntrinsic, TestIntrinsic,
-    TimeIntrinsic,
+    ArrayIntrinsic, DictIntrinsic, Intrinsic, OptionIntrinsic, ResultIntrinsic, StrIntrinsic,
+    TestIntrinsic, TimeIntrinsic,
 };
 
 /// Runtime module that owns execution of an intrinsic.
@@ -61,7 +61,8 @@ impl Intrinsic {
                 | ArrayIntrinsic::FlatMap
                 | ArrayIntrinsic::ForEach,
             )
-            | Self::Dict(DictIntrinsic::Map | DictIntrinsic::Filter)
+            | Self::Dict(DictIntrinsic::Map | DictIntrinsic::Filter | DictIntrinsic::Reduce)
+            | Self::Str(StrIntrinsic::Map | StrIntrinsic::Filter | StrIntrinsic::Reduce)
             | Self::Result(
                 ResultIntrinsic::Map | ResultIntrinsic::AndThen | ResultIntrinsic::OrElse,
             )
@@ -105,6 +106,11 @@ mod tests {
                 Intrinsic::Dict(DictIntrinsic::Filter),
                 IntrinsicOwner::Callback,
             ),
+            (
+                Intrinsic::Dict(DictIntrinsic::Reduce),
+                IntrinsicOwner::Callback,
+            ),
+            (Intrinsic::Str(StrIntrinsic::Map), IntrinsicOwner::Callback),
             (
                 Intrinsic::Result(ResultIntrinsic::AndThen),
                 IntrinsicOwner::Callback,

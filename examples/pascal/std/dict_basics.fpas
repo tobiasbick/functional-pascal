@@ -14,6 +14,11 @@ begin
   return V >= 90
 end;
 
+function SumScores(Acc: integer; Key: string; Value: integer): integer;
+begin
+  return Acc + Value
+end;
+
 begin
   var Scores: dict of string to integer := ['Ada': 95, 'Bob': 72, 'Cara': 91];
   WriteLn('length: ', IntToStr(Std.Dictionaries.Length(Scores)));
@@ -35,5 +40,6 @@ begin
   var Top: dict of string to integer := Std.Dictionaries.Filter(Merged, IsHighScore);
   WriteLn('filter len: ', IntToStr(Std.Dictionaries.Length(Top)));
   var Ks: array of string := Keys(Top);
-  WriteLn('keys array len: ', IntToStr(Std.Arrays.Length(Ks)))
+  WriteLn('keys array len: ', IntToStr(Std.Arrays.Length(Ks)));
+  WriteLn('score total: ', IntToStr(Std.Dictionaries.Reduce(Scores, 0, SumScores)))
 end.

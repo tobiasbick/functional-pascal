@@ -65,6 +65,7 @@ pub(crate) fn resolve(name: &str, first_argument: Option<&Ty>) -> Option<Intrins
                 Merge,
                 Map,
                 Filter,
+                Reduce,
             ]
         ),
         "Env" => family!(member, Env, EnvIntrinsic, [Get, Exists]),
@@ -342,6 +343,9 @@ fn resolve_str(member: &str) -> Option<Intrinsic> {
             TrimRight,
             LastIndexOf,
             Format,
+            Map,
+            Filter,
+            Reduce,
         ]
     )
 }

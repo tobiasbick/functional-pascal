@@ -1,6 +1,6 @@
-use super::super::{define_func, define_func_variadic, p};
+use super::super::{define_builtin_std, define_func, define_func_variadic, p};
 use crate::check::Checker;
-use crate::types::Ty;
+use crate::types::{FunctionTy, Ty};
 use fpas_std::std_symbols as s;
 
 pub(super) fn register_std_str(checker: &mut Checker) {
@@ -213,4 +213,13 @@ pub(super) fn register_std_str(checker: &mut Checker) {
         vec![p("Template", Ty::String, false)],
         Ty::String,
     );
+    let callback_placeholder = Ty::Function(FunctionTy {
+        type_params: Vec::new(),
+        params: Vec::new(),
+        return_type: Box::new(Ty::Error),
+        variadic: false,
+    });
+    for name in [s::STD_STR_MAP, s::STD_STR_FILTER, s::STD_STR_REDUCE] {
+        define_builtin_std(checker, name, callback_placeholder.clone());
+    }
 }

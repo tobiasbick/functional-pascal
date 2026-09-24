@@ -4,6 +4,26 @@ program StrBasics;
 
 uses Std.Console, Std.Conv, Std.Str;
 
+function ReplaceStar(C: string): string;
+begin
+  if C = '*' then
+  begin
+    return '★'
+  end;
+
+  return C
+end;
+
+function KeepLetter(C: string): boolean;
+begin
+  return C <> ' '
+end;
+
+function Count(Acc: integer; C: string): integer;
+begin
+  return Acc + 1
+end;
+
 begin
   var S: string := '  Hello, World!  ';
   WriteLn('trim: ', Trim(S));
@@ -15,5 +35,8 @@ begin
   WriteLn('substring: ', Substring('Hello', 0, 3));
   WriteLn('replace: ', Replace('banana', 'na', 'NA'));
   WriteLn('reverse: ', Reverse('draw'));
-  WriteLn('pad: ', PadLeft('7', 4, '0'))
+  WriteLn('pad: ', PadLeft('7', 4, '0'));
+  WriteLn('map: ', Map('a*b', ReplaceStar));
+  WriteLn('filter: ', Filter('a b', KeepLetter));
+  WriteLn('reduce: ', IntToStr(Reduce('a😀b', 0, Count)))
 end.

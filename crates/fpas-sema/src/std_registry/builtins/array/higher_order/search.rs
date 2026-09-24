@@ -9,8 +9,10 @@ use fpas_lexer::Span;
 use fpas_parser::Expr;
 use fpas_std::std_symbols as s;
 
+use super::super::super::callbacks::{
+    expect_unary_function_callback, expect_unary_procedure_callback,
+};
 use super::super::{array_elem_ty, check_argument_count};
-use super::callbacks::{expect_unary_function_callback, expect_unary_procedure_callback};
 
 /// `Std.Arrays.Find(Arr, Pred)` → `option of T` where `Pred: function(V: T): boolean`.
 pub(crate) fn check_find(c: &mut Checker, args: &[Expr], span: Span) -> Ty {

@@ -1,0 +1,43 @@
+program CollectionCallbacksTest;
+
+uses Std.Dictionaries, Std.Str, Std.Task, Std.Test;
+
+function Identity(C: string): string;
+begin
+  return C
+end;
+
+function KeepFace(C: string): boolean;
+begin
+  return C = '😀'
+end;
+
+function Count(Acc: integer; C: string): integer;
+begin
+  return Acc + 1
+end;
+
+function Sum(Acc: integer; Key: string; Value: integer): integer;
+begin
+  return Acc + Value
+end;
+
+function StringWork(): integer;
+begin
+  AssertEquals('a😀b', Std.Str.Map('a😀b', Identity));
+  AssertEquals('😀', Std.Str.Filter('a😀b', KeepFace));
+  return Std.Str.Reduce('a😀b', 0, Count)
+end;
+
+function DictionaryWork(): integer;
+begin
+  var Values: dict of string to integer := ['A': 2, 'B': 4];
+  return Std.Dictionaries.Reduce(Values, 1, Sum)
+end;
+
+begin
+  var StringTask: task := go StringWork();
+  var DictionaryTask: task := go DictionaryWork();
+  AssertEquals(3, Wait(StringTask));
+  AssertEquals(7, Wait(DictionaryTask))
+end.

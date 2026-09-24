@@ -5,6 +5,8 @@ use fpas_lexer::Span;
 use fpas_parser::Expr;
 use fpas_std::std_symbols as s;
 
+mod reduce;
+
 pub(super) fn check_dict_builtin_std_call(
     c: &mut Checker,
     name: &str,
@@ -21,12 +23,13 @@ pub(super) fn check_dict_builtin_std_call(
         s::STD_DICT_MERGE => check_dict_merge(c, args, span),
         s::STD_DICT_MAP => check_dict_map(c, args, span),
         s::STD_DICT_FILTER => check_dict_filter(c, args, span),
+        s::STD_DICT_REDUCE => reduce::check_reduce(c, args, span),
         _ => return None,
     };
     Some(ty)
 }
 
-fn dict_kv_types(ty: &Ty) -> Option<(Ty, Ty)> {
+pub(super) fn dict_kv_types(ty: &Ty) -> Option<(Ty, Ty)> {
     if let Ty::Dict(k, v) = ty {
         Some((*k.clone(), *v.clone()))
     } else {

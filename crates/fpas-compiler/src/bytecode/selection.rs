@@ -48,10 +48,17 @@ impl<'a> Selector<'a> {
 
     pub fn select(
         &self,
-        instruction: &fpas_ir::Instruction,
+        block: &fpas_ir::BasicBlock,
+        index: usize,
         metadata: &mut MetadataBuilder,
-        previous: Option<&fpas_ir::Instruction>,
     ) -> Result<Vec<Instruction>, CompileError> {
+        let instruction = block
+            .instructions
+            .get(index)
+            .ok_or_else(|| selection_error("instruction index is outside its block"))?;
+        let previous = index
+            .checked_sub(1)
+            .and_then(|index| block.instructions.get(index));
         let result = instruction.result.map(|value| value.id);
         if let Some(selected) = self.select_aggregate(&instruction.operation, result, metadata)? {
             return Ok(selected);
@@ -89,11 +96,16 @@ impl<'a> Selector<'a> {
                     (BinaryOperation::DivideInteger, Some(_)) => Opcode::DivideIntegerImm,
                     _ => self.binary_opcode(*operation, *left)?,
                 };
-                abc(
+                // Auxiliary 1 lets ConcatString reuse a left temporary that dies here.
+                let consumes_left = opcode == Opcode::ConcatString
+                    && left != right
+                    && self.allocation.is_final_read(*left, block.id, index);
+                abc_aux(
                     opcode,
                     self.result_register(result)?,
                     self.allocation.value(*left)?.get(),
                     immediate.map_or(self.allocation.value(*right)?.get(), |value| value as u16),
+                    u8::from(consumes_left),
                 )
             }
             Operation::CallDirect {

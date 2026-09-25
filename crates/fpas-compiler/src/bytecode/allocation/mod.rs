@@ -3,7 +3,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use fpas_bytecode::Register;
-use fpas_ir::{Function, LocalId, Operation, Terminator, ValueId};
+use fpas_ir::{BlockId, Function, LocalId, Operation, Terminator, ValueId};
 
 use crate::CompileError;
 use crate::error::internal_compiler_error;
@@ -11,6 +11,8 @@ use crate::error::internal_compiler_error;
 pub(super) struct Allocation {
     locals: BTreeMap<LocalId, Register>,
     values: BTreeMap<ValueId, Register>,
+    // Temporary values paired with the instruction that reads them for the last time.
+    final_reads: BTreeSet<(BlockId, usize, ValueId)>,
     call_window: Register,
     pub register_count: u16,
 }
@@ -55,6 +57,8 @@ impl Allocation {
         let last_uses = last_uses(function);
         let coalesced_writes = coalesced_local_writes(function);
         let mut active: Vec<(ValueId, usize, Register)> = Vec::new();
+        let mut instruction_sites = BTreeMap::new();
+        let mut temporaries = Vec::new();
         let mut occupied = BTreeSet::new();
         let mut position = 0_usize;
         let mut high_water = next_fixed;
@@ -64,7 +68,8 @@ impl Allocation {
                     "register allocation received unsupported block parameters",
                 ));
             }
-            for instruction in &block.instructions {
+            for (index, instruction) in block.instructions.iter().enumerate() {
+                instruction_sites.insert(position, (block.id, index));
                 active.retain(|(_, last_use, register)| {
                     if *last_use < position {
                         occupied.remove(&register.get());
@@ -87,6 +92,7 @@ impl Allocation {
                         let last_use = last_uses.get(&result.id).copied().unwrap_or(position);
                         occupied.insert(register.get());
                         active.push((result.id, last_use, register));
+                        temporaries.push(result.id);
                         register
                     };
                     values.insert(result.id, register);
@@ -95,6 +101,13 @@ impl Allocation {
             }
             position = position.saturating_add(1);
         }
+        let final_reads = temporaries
+            .into_iter()
+            .filter_map(|value| {
+                let (block, index) = instruction_sites.get(last_uses.get(&value)?)?;
+                Some((*block, *index, value))
+            })
+            .collect();
         let call_window = Register::try_from_index(high_water)
             .map_err(|error| limit_error(&error.to_string()))?;
         let window_size = largest_window(function);
@@ -103,6 +116,7 @@ impl Allocation {
         Ok(Self {
             locals,
             values,
+            final_reads,
             call_window,
             register_count,
         })
@@ -120,6 +134,14 @@ impl Allocation {
             .get(&id)
             .copied()
             .ok_or_else(|| limit_error(&format!("value {} has no allocated register", id.get())))
+    }
+
+    /// Whether instruction `index` of `block` is the last reader of temporary `value`.
+    ///
+    /// The allocator reuses the register after this read, so the instruction may consume the
+    /// value. Parameters, locals, and values stored directly into locals never qualify.
+    pub fn is_final_read(&self, value: ValueId, block: BlockId, index: usize) -> bool {
+        self.final_reads.contains(&(block, index, value))
     }
 
     pub fn call_window(&self) -> Register {

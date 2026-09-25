@@ -165,3 +165,24 @@ fn string_ordering_uses_typed_opcodes() {
     }
     assert_succeeds(source);
 }
+
+#[test]
+fn string_append_consumes_dead_left_temporaries() {
+    let source = "program Append; begin mutable var S: string := ''; for I: integer := 1 to 3 do S := S + 'x'; var T: string := ('a' + S) + 'b'; if T <> 'axxxb' then panic('wrong') end.";
+    let program = parse_ok(source);
+    let executable = crate::compile(&program).expect("string append compiles");
+    let concatenations = executable
+        .executable()
+        .code
+        .iter()
+        .filter(|word| word.opcode() == Ok(fpas_bytecode::Opcode::ConcatString))
+        .collect::<Vec<_>>();
+    assert!(!concatenations.is_empty());
+    assert!(
+        concatenations
+            .iter()
+            .all(|word| word.abc_payload().auxiliary == 1),
+        "every left operand here is a temporary read for the last time"
+    );
+    assert_succeeds(source);
+}

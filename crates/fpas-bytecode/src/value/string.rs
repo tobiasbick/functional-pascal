@@ -1,7 +1,9 @@
 //! Shared string value storage with cached character counts.
 
+mod char_index;
+
 use std::ops::Deref;
-use std::sync::Arc;
+use std::sync::{Arc, OnceLock};
 
 use super::managed_heap::{managed_string_buffer, recycle_string};
 
@@ -10,6 +12,8 @@ use super::managed_heap::{managed_string_buffer, recycle_string};
 struct StrBody {
     data: String,
     char_len: usize,
+    // Built on the first character lookup into a long non-ASCII string.
+    char_offsets: OnceLock<Box<[usize]>>,
 }
 
 impl Clone for StrBody {
@@ -19,6 +23,7 @@ impl Clone for StrBody {
         Self {
             data,
             char_len: self.char_len,
+            char_offsets: OnceLock::new(),
         }
     }
 }
@@ -76,14 +81,61 @@ impl SharedStr {
         let mut data = managed_string_buffer(left.len() + right.len());
         data.push_str(left);
         data.push_str(right);
-        Self(Arc::new(StrBody {
-            data,
-            char_len: left.char_len() + right.char_len(),
-        }))
+        Self::from_parts(data, left.char_len() + right.char_len())
+    }
+
+    /// Append `other`, reusing this buffer in place when no other value shares it.
+    pub fn append(&mut self, other: &Self) {
+        if let Some(body) = Arc::get_mut(&mut self.0) {
+            body.data.push_str(other);
+            body.char_len += other.char_len();
+            body.char_offsets = OnceLock::new();
+        } else {
+            *self = Self::concat(self, other);
+        }
+    }
+
+    /// Byte offset of Unicode scalar `index`; `index == char_len()` yields the byte length.
+    ///
+    /// ASCII strings answer in O(1); longer non-ASCII strings use a sampled offset index that is
+    /// built once per string, so a lookup walks fewer than 64 scalars.
+    pub fn byte_offset(&self, index: usize) -> Option<usize> {
+        let body = &*self.0;
+        if index >= body.char_len {
+            return (index == body.char_len).then_some(body.data.len());
+        }
+        if body.char_len == body.data.len() {
+            return Some(index);
+        }
+        if body.char_len <= char_index::STRIDE {
+            return body
+                .data
+                .char_indices()
+                .nth(index)
+                .map(|(offset, _)| offset);
+        }
+        let samples = body
+            .char_offsets
+            .get_or_init(|| char_index::sample(&body.data));
+        char_index::byte_offset(&body.data, samples, index)
+    }
+
+    /// Unicode scalar at `index`, or `None` when `index` is not below [`Self::char_len`].
+    ///
+    /// **Documentation:** `docs/pascal/std/text/str/format-chars.md` (CharAt).
+    pub fn char_at(&self, index: usize) -> Option<char> {
+        if index >= self.char_len() {
+            return None;
+        }
+        self.0.data[self.byte_offset(index)?..].chars().next()
     }
 
     fn from_parts(data: String, char_len: usize) -> Self {
-        Self(Arc::new(StrBody { data, char_len }))
+        Self(Arc::new(StrBody {
+            data,
+            char_len,
+            char_offsets: OnceLock::new(),
+        }))
     }
 }
 
@@ -172,6 +224,41 @@ mod tests {
     fn char_len_handles_ascii_and_unicode() {
         assert_eq!(SharedStr::from("hello").char_len(), 5);
         assert_eq!(SharedStr::from("café").char_len(), 4);
+    }
+
+    #[test]
+    fn character_lookup_handles_ascii_short_and_sampled_unicode() {
+        let ascii = SharedStr::from("hello");
+        assert_eq!(ascii.char_at(1), Some('e'));
+        assert_eq!(ascii.char_at(5), None);
+        assert_eq!(ascii.byte_offset(5), Some(5));
+
+        let short = SharedStr::from("aé日😀");
+        assert_eq!(short.char_at(3), Some('😀'));
+        assert_eq!(short.byte_offset(2), Some(3));
+
+        let long: SharedStr = "aé日😀".repeat(40).into();
+        for (index, character) in long.chars().enumerate() {
+            assert_eq!(long.char_at(index), Some(character));
+        }
+        assert_eq!(long.char_at(long.char_len()), None);
+        assert_eq!(long.byte_offset(long.char_len()), Some(long.len()));
+    }
+
+    #[test]
+    fn append_reuses_unique_buffers_and_preserves_shared_ones() {
+        let mut unique = SharedStr::from("aé");
+        let before = Arc::as_ptr(&unique.0);
+        unique.append(&SharedStr::from("日"));
+        assert_eq!(Arc::as_ptr(&unique.0), before);
+        assert_eq!(unique.as_ref(), "aé日");
+        assert_eq!(unique.char_len(), 3);
+        assert_eq!(unique.char_at(2), Some('日'));
+
+        let mut appended = unique.clone();
+        appended.append(&SharedStr::from("!"));
+        assert_eq!(unique.as_ref(), "aé日");
+        assert_eq!(appended.as_ref(), "aé日!");
     }
 
     #[test]

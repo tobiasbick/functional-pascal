@@ -17,6 +17,7 @@ path = "src/bin/fpas-runner.rs"
 
 [dependencies]
 atomic-write-file = "0.3.0"
+mimalloc = { workspace = true }
 fpas-project = { path = "../fpas-project" }
 fpas-fmt = { path = "../fpas-fmt" }
 fpas-lexer = { path = "../fpas-lexer" }

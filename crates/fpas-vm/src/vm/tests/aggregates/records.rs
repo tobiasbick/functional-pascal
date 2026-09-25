@@ -75,3 +75,89 @@ fn store_field_reuses_unique_storage() {
     assert_eq!(record.body().values.as_ptr(), storage);
     assert_eq!(record.body().values[0], Value::Integer(7));
 }
+
+/// Verified single-field `Point` record image for update tests.
+fn point_image(
+    code: Vec<fpas_bytecode::Instruction>,
+    constants: Vec<Constant>,
+    register_count: u16,
+) -> fpas_bytecode::VerifiedExecutable {
+    let mut image = unverified(
+        code,
+        constants,
+        vec!["root", "test.fpas", "Point", "x"],
+        register_count,
+    );
+    image.records = vec![RecordLayout {
+        name: StringId::new(2),
+        fields: vec![RecordField {
+            name: StringId::new(3),
+            ty: fpas_bytecode::DebugTypeId::new(0),
+        }],
+        properties: Vec::new(),
+        methods: Vec::new(),
+    }];
+    image.verify().expect("record image must verify")
+}
+
+#[test]
+fn update_record_preserves_aliases() {
+    let image = point_image(
+        vec![
+            abx(Opcode::LoadConstant, 0, 0),
+            abc(Opcode::MakeRecord, 1, 0, 0),
+            abc(Opcode::Move, 2, 1, 0),
+            abx(Opcode::LoadConstant, 3, 1),
+            abx(Opcode::LoadConstant, 4, 2),
+            abc(Opcode::UpdateRecord, 1, 3, 1),
+            return_unit(),
+        ],
+        vec![
+            Constant::Integer(7),
+            Constant::Integer(0),
+            Constant::Integer(9),
+        ],
+        5,
+    );
+    let (_, registers, _) = execute(image).expect("record update runs");
+    let (Value::Record(updated), Value::Record(alias)) = (&registers[1], &registers[2]) else {
+        panic!("expected records");
+    };
+    assert_eq!(updated.body().values[0], Value::Integer(9));
+    assert_eq!(alias.body().values[0], Value::Integer(7));
+}
+
+#[test]
+fn update_record_reuses_unique_storage() {
+    let image = point_image(
+        vec![
+            abx(Opcode::LoadConstant, 0, 0),
+            abc(Opcode::MakeRecord, 1, 0, 0),
+            abx(Opcode::LoadConstant, 2, 1),
+            abx(Opcode::LoadConstant, 3, 2),
+            abc(Opcode::UpdateRecord, 1, 2, 1),
+            return_unit(),
+        ],
+        vec![
+            Constant::Integer(7),
+            Constant::Integer(0),
+            Constant::Integer(9),
+        ],
+        4,
+    );
+    let mut worker = crate::vm::worker::Worker::new(Arc::new(image)).expect("worker");
+    for _ in 0..4 {
+        worker.dispatch_one().expect("setup");
+    }
+    let Value::Record(record) = &worker.registers[1] else {
+        panic!("record");
+    };
+    let storage = record.body().values.as_ptr();
+    worker.dispatch_one().expect("record update");
+    let Value::Record(record) = &worker.registers[1] else {
+        panic!("record");
+    };
+    assert_eq!(record.body().values.as_ptr(), storage);
+    assert_eq!(record.body().values[0], Value::Integer(9));
+    assert!(worker.register_is_initialized(1));
+}

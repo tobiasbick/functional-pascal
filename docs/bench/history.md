@@ -14,6 +14,86 @@ cargo bench-fpas record "vm-only note" --group vm
 
 Newest entries are prepended below this header.
 
+## 2026-09-25 — Targeted string and record hotspots and mimalloc global allocator
+
+- Group: `all`
+- Suite: [`suite.toml`](suite.toml)
+
+Steps 6 and 7 of the VM performance plan. Alternating five-run medians of the previous commit
+(A), step 6 only (B), and steps 6 and 7 (C): `substring_unicode` 408 -> 14 -> 13 ms,
+`record_update` 225 -> 171 -> 159 ms, `record_field_access` 1044 -> 763 -> 690 ms,
+`unicode_char_at` 592 -> 523 -> 433 ms, `string_concat` 1375 -> 1295 -> 1054 ms,
+`tui_headless` 3079 -> 3010 -> 2514 ms, `notes_headless` 7472 -> 7296 -> 6566 ms,
+`mandelbrot_paint` 1079 -> 1083 -> 998 ms. `string_search` regressed with mimalloc
+(130 -> 143 ms). The in-process tooling benches varied without a clear direction; `project_queries`
+tended to be slower with mimalloc (about 1100 -> 1200 ms).
+
+| bench | elapsed_ms | throughput |
+|-------|------------|------------|
+| mandelbrot_render | 1017 | - |
+| mandelbrot_paint | 1006 | - |
+| integer_loop | 1717 | throughput: 29120559 iters/s |
+| typed_real | 478 | - |
+| typed_boolean | 308 | - |
+| typed_string | 369 | - |
+| global_access | 136 | throughput: 36764705 global updates/s |
+| record_field_access | 693 | throughput: 21645021 field accesses/s |
+| closure_call | 243 | throughput: 12345679 closure calls/s |
+| branch_dispatch | 1137 | throughput: 17590149 branches/s |
+| dynamic_numeric | 452 | throughput: 11061946 dynamic numeric ops/s |
+| array_push | 62 | throughput: 32258064 pushes/s |
+| array_length | 28 | throughput: 17857142 lengths/s |
+| string_concat | 1079 | throughput: 4633920 concats/s |
+| string_length | 28 | throughput: 17857142 lengths/s |
+| intrinsic_dispatch | 808 | throughput: 18564356 intrinsic calls/s |
+| function_call | 412 | throughput: 14563106 calls/s |
+| array_callbacks | 847 | throughput: 11334120 callbacks/s |
+| record_update | 160 | throughput: 6250000 updates/s |
+| unicode_char_at | 435 | throughput: 6896551 chars/s |
+| wrapper_payload | 825 | throughput: 12121212 wrappers/s |
+| task_spawn_wait | 485 | throughput: 206185 tasks/s |
+| task_array_callbacks | 899 | throughput: 4271412 callbacks/s |
+| tui_headless | 2616 | throughput: 191 frames/s |
+| notes_headless | 6443 | throughput: 38 frames/s |
+| analysis_queries | 222 | - |
+| string_search | 137 | - |
+| compiler_lowering | 1273 | - |
+| substring_ascii | 11 | - |
+| substring_unicode | 14 | - |
+| project_queries | 1367 | - |
+| project_edits | 5369 | - |
+| project_overlapping_queries | 800 | - |
+| project_build_cold | 1349 | - |
+| project_build_warm | 1282 | - |
+| unit_artifact_shared_types | 0 | - |
+| program_artifact_shared_types | 0 | - |
+| dictionary_reads | 5 | - |
+| scalar_membership | 28 | - |
+| array_pop | 1 | - |
+| text_area_locate | 1535 | - |
+| http_body_accumulation | 112 | - |
+| local_index_write | 21 | throughput: 30476190 writes/s |
+| cell_grid_headless | 164 | throughput: 609 paints/s |
+| partial_surface_fill | 97 | - |
+| source_utf8_ascii_2048 | 10 | - |
+| source_utf8_ascii_4096 | 21 | - |
+| source_utf8_ascii_8192 | 43 | - |
+| source_utf8_unicode_2048 | 40 | - |
+| source_utf8_unicode_4096 | 75 | - |
+| source_utf8_unicode_8192 | 157 | - |
+| source_notes_ascii_128 | 4 | - |
+| source_notes_ascii_256 | 10 | - |
+| source_notes_ascii_512 | 21 | - |
+| source_queue_ascii_256 | 82 | - |
+| source_queue_ascii_512 | 167 | - |
+| source_queue_ascii_1024 | 333 | - |
+| source_navigation_long_512 | 48 | - |
+| source_navigation_long_1024 | 92 | - |
+| source_navigation_long_2048 | 178 | - |
+| source_navigation_lines_512 | 9 | - |
+| source_navigation_lines_1024 | 13 | - |
+| source_navigation_lines_2048 | 22 | - |
+
 ## 2026-09-25 — Add VM superinstructions and typed scalar fast paths
 
 - Group: `all`

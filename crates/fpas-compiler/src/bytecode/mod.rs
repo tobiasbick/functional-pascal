@@ -202,13 +202,7 @@ fn compile_function(
         for (instruction_index, instruction) in block.instructions.iter().enumerate() {
             source = instruction.source.or(source);
             let selected_start = code.len();
-            for selected in selector.select(
-                instruction,
-                metadata,
-                instruction_index
-                    .checked_sub(1)
-                    .and_then(|index| block.instructions.get(index)),
-            )? {
+            for selected in selector.select(block, instruction_index, metadata)? {
                 emit(code, metadata, instruction.source, selected)?;
             }
             if code.len() > selected_start {

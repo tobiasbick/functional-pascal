@@ -53,6 +53,38 @@ impl Worker {
         self.write_operand(operands.a, result)
     }
 
+    /// Concatenate strings, growing the left buffer in place when the left register dies here.
+    ///
+    /// The compiler sets auxiliary 1 when the left operand is a temporary read for the last time;
+    /// a destination equal to the left register qualifies as well. The destination's previous
+    /// value is released first, so `S := S + X` leaves the copied buffer uniquely owned.
+    #[inline(always)]
+    pub(in crate::vm) fn execute_string_concat(
+        &mut self,
+        operands: AbcOperands,
+    ) -> Result<(), VmError> {
+        let consumes_left = operands.auxiliary == 1 || operands.a == operands.b;
+        let in_place = consumes_left
+            && operands.b != operands.c
+            && matches!(self.read_operand(operands.b)?, Value::Str(_))
+            && matches!(self.read_operand(operands.c)?, Value::Str(_));
+        if !in_place {
+            return self.execute_value_binary(operands, BinaryOperation::Add);
+        }
+        if operands.a != operands.b && operands.a != operands.c {
+            // The destination is overwritten below; releasing it early can make `left` unique.
+            self.take_register(self.base + usize::from(operands.a))?;
+        }
+        let Value::Str(mut left) = self.take_register(self.base + usize::from(operands.b))? else {
+            unreachable!("left concatenation operand was checked as a string");
+        };
+        let Value::Str(right) = self.read_operand(operands.c)? else {
+            unreachable!("right concatenation operand was checked as a string");
+        };
+        left.append(right);
+        self.write_operand(operands.a, Value::Str(left))
+    }
+
     /// Compare typed strings without generic value dispatch.
     #[inline(always)]
     pub(in crate::vm) fn execute_string_comparison(

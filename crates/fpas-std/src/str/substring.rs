@@ -30,14 +30,8 @@ pub(super) fn extract(
     }
     let start = start as usize;
     let len = len as usize;
-    // Equal byte and scalar counts prove ASCII without another input scan.
-    let (first, end) = if source.len() == source.char_len() {
-        (start, start + len)
-    } else {
-        let mut boundaries = source.char_indices().map(|(offset, _)| offset);
-        let first = boundaries.nth(start).unwrap_or(source.len());
-        let end = boundaries.nth(len - 1).unwrap_or(source.len());
-        (first, end)
-    };
+    // The range was checked above, so both scalar boundaries exist.
+    let first = source.byte_offset(start).unwrap_or(source.len());
+    let end = source.byte_offset(start + len).unwrap_or(source.len());
     Ok(source[first..end].into())
 }

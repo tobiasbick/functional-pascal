@@ -59,8 +59,7 @@ pub(super) fn index(value: &Value, key: &Value) -> Result<Value, ValueOperationE
             }),
         Value::Str(text) => {
             let index = checked_index(key, "string")?;
-            text.chars()
-                .nth(index)
+            text.char_at(index)
                 .map(|character| Value::Str(character.to_string().into()))
                 .ok_or_else(|| {
                     ValueOperationError::array_bounds(

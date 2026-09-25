@@ -28,6 +28,10 @@ use suite::{
     unix_timestamp_secs,
 };
 
+/// Native tooling drivers run in this process; match the allocator of the `fpas` binary.
+#[global_allocator]
+static GLOBAL_ALLOCATOR: mimalloc::MiMalloc = mimalloc::MiMalloc;
+
 fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
     if args.first().is_some_and(|argument| argument == "native") {

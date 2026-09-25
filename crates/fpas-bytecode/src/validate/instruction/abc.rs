@@ -55,7 +55,6 @@ pub(super) fn validate_abc(
         | Opcode::GreaterDynamic
         | Opcode::LessEqualDynamic
         | Opcode::GreaterEqualDynamic
-        | Opcode::ConcatString
         | Opcode::ShiftLeftInteger
         | Opcode::ShiftRightInteger
         | Opcode::BitAndInteger
@@ -109,6 +108,29 @@ pub(super) fn validate_abc(
                 auxiliary,
                 0,
             )
+        }
+        Opcode::ConcatString => {
+            validate_registers(
+                executable,
+                function_id,
+                function,
+                address,
+                opcode,
+                &[("destination", a), ("left", b), ("right", c)],
+            )?;
+            if auxiliary <= 1 {
+                Ok(())
+            } else {
+                canonical_u8(
+                    executable,
+                    function_id,
+                    address,
+                    opcode,
+                    "consume-left flag",
+                    auxiliary,
+                    1,
+                )
+            }
         }
         Opcode::AddIntegerImm | Opcode::DivideIntegerImm => {
             validate_registers(

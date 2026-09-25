@@ -67,7 +67,8 @@ pub enum Opcode {
     LessEqualDynamic = 23,
     /// Test dynamic greater-than-or-equal ordering.
     GreaterEqualDynamic = 24,
-    /// Concatenate strings.
+    /// Concatenate strings. Auxiliary 1 marks the left register as dead after this instruction,
+    /// so its buffer may be reused for the result.
     ConcatString = 25,
     /// Shift an integer left.
     ShiftLeftInteger = 26,

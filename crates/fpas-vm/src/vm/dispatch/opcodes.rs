@@ -31,9 +31,10 @@ impl Worker {
                 self.execute_integer_immediate(instruction.abc(), BinaryOperation::Add)?
             }
             Opcode::AddReal => self.execute_real_binary(instruction.abc(), BinaryOperation::Add)?,
-            Opcode::AddDynamic | Opcode::ConcatString => {
+            Opcode::AddDynamic => {
                 self.execute_value_binary(instruction.abc(), BinaryOperation::Add)?
             }
+            Opcode::ConcatString => self.execute_string_concat(instruction.abc())?,
             Opcode::SubtractInteger => {
                 self.execute_integer_binary(instruction.abc(), BinaryOperation::Subtract)?
             }

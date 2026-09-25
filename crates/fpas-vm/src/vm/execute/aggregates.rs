@@ -1,6 +1,7 @@
 //! Dense global and positional aggregate operations.
 
 mod arrays;
+mod records;
 
 use fpas_bytecode::{
     AbcOperands, AbxOperands, SharedEnum, SharedRecord, Value, managed_value_buffer,
@@ -156,74 +157,6 @@ impl Worker {
         let found = value_ops::binary(BinaryOperation::In, &needle, &aggregate)
             .map_err(|error| self.aggregate_error_code(error.code, error.message, error.hint))?;
         self.write(register(o.a)?, found)
-    }
-
-    pub fn make_record(&mut self, o: AbcOperands) -> Result<(), VmError> {
-        let layout = self
-            .layouts
-            .records
-            .get(usize::from(o.b))
-            .cloned()
-            .ok_or_else(|| self.bad_slot("record layout", u32::from(o.b)))?;
-        let values = self.window(o.c, layout.fields.len())?;
-        self.write(
-            register(o.a)?,
-            Value::Record(SharedRecord::new(layout, values)),
-        )
-    }
-
-    pub fn load_field(&mut self, o: AbcOperands) -> Result<(), VmError> {
-        let value = match self.read(register(o.b)?)? {
-            Value::Record(record) => record.body().values.get(usize::from(o.c)).cloned(),
-            other => return Err(self.type_mismatch("record", other)),
-        }
-        .ok_or_else(|| self.bad_slot("record field", u32::from(o.c)))?;
-        self.write(register(o.a)?, value)
-    }
-
-    /// Updates a validated field, reusing uniquely owned record storage.
-    pub fn store_field(&mut self, o: AbcOperands) -> Result<(), VmError> {
-        let value = self.read(register(o.c)?)?.clone();
-        let destination = register(o.a)?;
-        let field = usize::from(o.b);
-        match self.read(destination)? {
-            Value::Record(record) if field < record.body().values.len() => {}
-            Value::Record(_) => return Err(self.bad_slot("record field", u32::from(o.b))),
-            other => return Err(self.type_mismatch("record", other)),
-        }
-        let Value::Record(mut record) = self.take(destination)? else {
-            return Err(diagnostics::internal(
-                self.executable.executable(),
-                self.current_address,
-                "Validated StoreField destination changed type before commit",
-            ));
-        };
-        record.values_mut()[field] = value;
-        self.write(destination, Value::Record(record))
-    }
-
-    pub fn update_record(&mut self, o: AbcOperands) -> Result<(), VmError> {
-        let mut record = self.read(register(o.a)?)?.clone();
-        if !matches!(record, Value::Record(_)) {
-            return Err(self.type_mismatch("record", &record));
-        }
-        let overrides = self.window(o.b, usize::from(o.c) * 2)?;
-        for [field, value] in overrides.as_chunks::<2>().0 {
-            let Value::Integer(field) = field else {
-                return Err(self.type_mismatch("integer record field slot", field));
-            };
-            let field =
-                usize::try_from(*field).map_err(|_| self.bad_slot("record field", u32::MAX))?;
-            match &mut record {
-                Value::Record(record) => {
-                    *record.values_mut().get_mut(field).ok_or_else(|| {
-                        self.bad_slot("record field", u32::try_from(field).unwrap_or(u32::MAX))
-                    })? = value.clone()
-                }
-                _ => return Err(self.type_mismatch("record", &record)),
-            }
-        }
-        self.write(register(o.a)?, record)
     }
 
     pub fn make_enum(&mut self, o: AbcOperands) -> Result<(), VmError> {

@@ -29,6 +29,10 @@ mod test_script;
 use std::env;
 use std::process;
 
+/// Process-wide allocator; FPAS strings, arrays, and records allocate heavily.
+#[global_allocator]
+static GLOBAL_ALLOCATOR: mimalloc::MiMalloc = mimalloc::MiMalloc;
+
 #[cfg(test)]
 pub(crate) use cli_input::{CliConfig, TestCliConfig, TestReportFormat};
 pub(crate) use cli_input::{

@@ -848,3 +848,27 @@ fn array_pop_checks_both_registers_and_unused_operands() {
         assert!(image.verify().is_err());
     }
 }
+
+#[test]
+fn concatenation_accepts_only_the_consume_left_flag() {
+    for (auxiliary, valid) in [(0, true), (1, true), (2, false)] {
+        let mut executable = minimal_executable();
+        executable.functions[0].register_count = 3;
+        replace_root_code(
+            &mut executable,
+            vec![abc(Opcode::ConcatString, 0, 1, 2, auxiliary), return_unit()],
+        );
+        if valid {
+            let error = executable.verify().err().map(|error| error.kind);
+            assert!(
+                !matches!(error, Some(ValidationErrorKind::NonCanonicalOperand { .. })),
+                "auxiliary {auxiliary}: {error:?}"
+            );
+        } else {
+            assert!(matches!(
+                error_kind(executable),
+                ValidationErrorKind::NonCanonicalOperand { .. }
+            ));
+        }
+    }
+}

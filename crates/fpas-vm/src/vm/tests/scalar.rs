@@ -239,3 +239,32 @@ fn signed_integer_immediates_execute_and_preserve_division_errors() {
     let error = execute(zero).expect_err("zero divisor must fail");
     assert!(error.message.contains("Division by zero"));
 }
+
+#[test]
+fn consuming_concatenation_reuses_temporaries_without_touching_shared_strings() {
+    let executable = verified(
+        vec![
+            abx(Opcode::LoadConstant, 0, 0),
+            abc(Opcode::Move, 1, 0, 0),
+            abx(Opcode::LoadConstant, 2, 1),
+            abc_aux(Opcode::ConcatString, 3, 1, 2, 1),
+            abc_aux(Opcode::ConcatString, 0, 3, 2, 1),
+            return_unit(),
+        ],
+        vec![
+            Constant::String(fpas_bytecode::StringId::new(2)),
+            Constant::String(fpas_bytecode::StringId::new(3)),
+        ],
+        vec!["root", "test.fpas", "ab", "!"],
+        4,
+    );
+    let prepared = executable
+        .string_constant(0)
+        .cloned()
+        .expect("prepared string");
+    let (_, registers, _) = execute(executable).expect("concatenation runs");
+    assert_eq!(registers[0], Value::Str("ab!!".into()));
+    assert_eq!(registers[1], Value::Unit);
+    assert_eq!(registers[3], Value::Unit);
+    assert_eq!(prepared.as_ref(), "ab");
+}

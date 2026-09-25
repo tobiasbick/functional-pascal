@@ -186,11 +186,9 @@ pub(crate) fn run(
         Intrinsic::Str(StrIntrinsic::CharAt) => {
             let idx = pop_int(pop_value(call, location)?, location)?;
             let s = expect_str(pop_value(call, location)?, location)?;
-            let character = usize::try_from(idx)
-                .ok()
-                .and_then(|index| s.chars().nth(index));
+            let character = usize::try_from(idx).ok().and_then(|index| s.char_at(index));
             let Some(character) = character else {
-                let length = s.chars().count();
+                let length = s.char_len();
                 return Err(std_runtime_error(
                     RUNTIME_STRING_INDEX_OUT_OF_BOUNDS,
                     format!("CharAt index {idx} out of range (length {length})"),

@@ -326,6 +326,21 @@ mod tests {
     }
 
     #[test]
+    fn record_literal_inside_array_continues_from_the_opening_line() {
+        let formatted = expr_from_body(
+            "program T; type Item = record Value: integer; end; Box = record Items: array of Item; end; begin var Value: Box := record Items := [record Value := 10; end]; end; end.",
+        );
+        assert_eq!(
+            formatted,
+            "record
+  Items := [record
+    Value := 10;
+  end];
+end"
+        );
+    }
+
+    #[test]
     fn long_binary_chain_wraps() {
         let formatted = expr_from_body(
             "program T; begin var X: boolean := VeryLongIdentifierAlpha + VeryLongIdentifierBeta + VeryLongIdentifierGamma + VeryLongIdentifierDelta + VeryLongIdentifierEpsilon; end.",

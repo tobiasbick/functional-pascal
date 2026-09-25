@@ -26,6 +26,35 @@ fn opcode_index(executable: &fpas_bytecode::Executable, opcode: Opcode) -> usize
 }
 
 #[test]
+fn fused_branches_and_loops_require_valid_payloads() {
+    let mut branch = minimal_executable();
+    branch.functions[0].register_count = 3;
+    replace_root_code(
+        &mut branch,
+        vec![abc(Opcode::BranchIfLessInteger, 0, 1, 2, 0), return_unit()],
+    );
+    assert!(matches!(
+        error_kind(branch),
+        ValidationErrorKind::SuperinstructionPayload { .. }
+    ));
+
+    let mut loop_code = minimal_executable();
+    loop_code.functions[0].register_count = 2;
+    replace_root_code(
+        &mut loop_code,
+        vec![
+            abc(Opcode::ForLoop, 0, 1, 0, 0),
+            abx(Opcode::Jump, 0, 0),
+            return_unit(),
+        ],
+    );
+    assert!(matches!(
+        error_kind(loop_code),
+        ValidationErrorKind::SuperinstructionPayload { .. }
+    ));
+}
+
+#[test]
 fn debugger_metadata_references_ranges_and_order_are_checked() {
     let location = DebugSourceLocation {
         source: SourceId::new(0),

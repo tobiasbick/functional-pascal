@@ -321,6 +321,16 @@ fn terminator_values(terminator: &Terminator) -> Vec<ValueId> {
             values
         }
         Terminator::Jump(target) => target.arguments.clone(),
+        Terminator::ForLoop {
+            body_target,
+            after_target,
+            ..
+        } => {
+            let mut values = Vec::new();
+            values.extend(body_target.arguments.iter().copied());
+            values.extend(after_target.arguments.iter().copied());
+            values
+        }
         Terminator::Return(value) => value.iter().copied().collect(),
         Terminator::Panic(value) => vec![*value],
     }

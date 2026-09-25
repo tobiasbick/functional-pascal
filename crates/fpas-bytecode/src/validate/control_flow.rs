@@ -1,9 +1,12 @@
 //! Function partitions, frame metadata, branches, reachability, and feature flags.
 
+mod superinstructions;
+
 use std::collections::VecDeque;
 
 use crate::{FunctionId, FunctionInfo, InstructionAddress, Opcode, ReturnConvention, limits};
 
+use self::superinstructions::validate_superinstruction_payload;
 use super::instruction::validate_instruction;
 use super::{ValidationError, ValidationErrorKind};
 
@@ -153,6 +156,7 @@ fn validate_function_code(
     while raw_address < function.code.end.get() {
         let address = InstructionAddress::new(raw_address);
         let opcode = validate_instruction(executable, function_id, function, address)?;
+        validate_superinstruction_payload(executable, function_id, function, address, opcode)?;
         emitted_spawn |= matches!(opcode, Opcode::SpawnTask | Opcode::SpawnDetachedTask);
         if opcode == Opcode::Intrinsic {
             // Operand shape and intrinsic identity were checked by validate_instruction.
@@ -244,6 +248,45 @@ fn validate_reachable_control_flow(
             )
         })?;
         match opcode {
+            Opcode::BranchIfEqualInteger
+            | Opcode::BranchIfNotEqualInteger
+            | Opcode::BranchIfLessInteger
+            | Opcode::BranchIfGreaterInteger
+            | Opcode::BranchIfLessEqualInteger
+            | Opcode::BranchIfGreaterEqualInteger => {
+                let payload = executable.code[address.get() as usize + 1].abx_payload();
+                push_target(
+                    executable,
+                    function_id,
+                    function,
+                    address,
+                    payload.bx,
+                    &mut pending,
+                )?;
+                push_target(
+                    executable,
+                    function_id,
+                    function,
+                    address,
+                    address.get() + 2,
+                    &mut pending,
+                )?;
+            }
+            Opcode::ForLoop => {
+                for offset in [1, 2] {
+                    let target = executable.code[address.get() as usize + offset]
+                        .abx_payload()
+                        .bx;
+                    push_target(
+                        executable,
+                        function_id,
+                        function,
+                        address,
+                        target,
+                        &mut pending,
+                    )?;
+                }
+            }
             Opcode::Jump => {
                 let target = instruction
                     .abx_operands()

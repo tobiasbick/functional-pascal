@@ -256,19 +256,23 @@ impl LoweringContext {
                 span,
             ),
             BinaryOp::Lt | BinaryOp::Gt | BinaryOp::LtEq | BinaryOp::GtEq => {
-                let (integer, real, dynamic) = ordering_operations(operation)
+                let (integer, real, string, dynamic) = ordering_operations(operation)
                     .ok_or_else(|| unsupported(span, "ordering operation"))?;
-                self.lower_numeric_binary(
-                    integer,
-                    real,
-                    dynamic,
-                    left,
-                    right,
-                    &left_ty,
-                    &right_ty,
-                    types::BOOLEAN,
-                    span,
-                )
+                if matches!((&left_ty, &right_ty), (Ty::String, Ty::String)) {
+                    self.lower_direct_binary(string, left, right, types::BOOLEAN, span)
+                } else {
+                    self.lower_numeric_binary(
+                        integer,
+                        real,
+                        dynamic,
+                        left,
+                        right,
+                        &left_ty,
+                        &right_ty,
+                        types::BOOLEAN,
+                        span,
+                    )
+                }
             }
             BinaryOp::In => {
                 let value = self.lower_expression(left)?;
@@ -455,26 +459,30 @@ fn boolean_or_bitwise_operation(operation: BinaryOp, left_ty: &Ty) -> Option<IrB
     }
 }
 
-fn ordering_operations(operation: BinaryOp) -> Option<(IrBinary, IrBinary, IrBinary)> {
+fn ordering_operations(operation: BinaryOp) -> Option<(IrBinary, IrBinary, IrBinary, IrBinary)> {
     match operation {
         BinaryOp::Lt => Some((
             IrBinary::LessThanInteger,
             IrBinary::LessThanReal,
+            IrBinary::LessThanString,
             IrBinary::LessThanDynamic,
         )),
         BinaryOp::Gt => Some((
             IrBinary::GreaterThanInteger,
             IrBinary::GreaterThanReal,
+            IrBinary::GreaterThanString,
             IrBinary::GreaterThanDynamic,
         )),
         BinaryOp::LtEq => Some((
             IrBinary::LessEqualInteger,
             IrBinary::LessEqualReal,
+            IrBinary::LessEqualString,
             IrBinary::LessEqualDynamic,
         )),
         BinaryOp::GtEq => Some((
             IrBinary::GreaterEqualInteger,
             IrBinary::GreaterEqualReal,
+            IrBinary::GreaterEqualString,
             IrBinary::GreaterEqualDynamic,
         )),
         _ => None,

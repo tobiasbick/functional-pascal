@@ -61,9 +61,20 @@ pub(super) fn emit_array_literal(emitter: &mut Emitter, elements: &[Expr], comme
         return;
     }
 
+    // Multi-line items (record literals) continue relative to the indentation of the line that
+    // opens the array, so `[record` keeps its fields one level deeper and `end]` on that level.
     let single_line = format!("[{}]", items.join(", "));
-    if !exceeds_width(emitter.column(), text_width(&single_line)) {
-        emitter.write(&single_line);
+    let line_indent = emitter.line_indent();
+    let fits = single_line.split('\n').enumerate().all(|(index, line)| {
+        let column = if index == 0 {
+            emitter.column()
+        } else {
+            line_indent
+        };
+        !exceeds_width(column, text_width(line))
+    });
+    if fits {
+        write_block_relative(emitter, line_indent, &single_line);
         return;
     }
 
@@ -79,6 +90,16 @@ pub(super) fn emit_array_literal(emitter: &mut Emitter, elements: &[Expr], comme
     }
     write_to_column(emitter, base_column);
     emitter.write("]");
+}
+
+/// Writes `text`, starting continuation lines at `indent` plus their own leading spaces.
+fn write_block_relative(emitter: &mut Emitter, indent: usize, text: &str) {
+    for (index, line) in text.split('\n').enumerate() {
+        if index > 0 {
+            emitter.newline_to_column(indent);
+        }
+        emitter.write(line);
+    }
 }
 
 pub(super) fn write_block_at_column(emitter: &mut Emitter, column: usize, text: &str) {

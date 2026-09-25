@@ -4,7 +4,7 @@ use fpas_bytecode::{DecodedInstruction, NO_REGISTER, Opcode, Value};
 use fpas_diagnostics::codes::RUNTIME_PROGRAM_PANIC;
 
 use super::super::VmError;
-use super::super::value_ops::{BinaryOperation, UnaryOperation};
+use super::super::value_ops::{self, BinaryOperation, UnaryOperation};
 use super::super::worker::Worker;
 use super::{DispatchStep, Flow};
 
@@ -27,28 +27,44 @@ impl Worker {
             Opcode::AddInteger => {
                 self.execute_integer_binary(instruction.abc(), BinaryOperation::Add)?
             }
-            Opcode::AddReal | Opcode::AddDynamic | Opcode::ConcatString => {
+            Opcode::AddIntegerImm => {
+                self.execute_integer_immediate(instruction.abc(), BinaryOperation::Add)?
+            }
+            Opcode::AddReal => self.execute_real_binary(instruction.abc(), BinaryOperation::Add)?,
+            Opcode::AddDynamic | Opcode::ConcatString => {
                 self.execute_value_binary(instruction.abc(), BinaryOperation::Add)?
             }
             Opcode::SubtractInteger => {
                 self.execute_integer_binary(instruction.abc(), BinaryOperation::Subtract)?
             }
-            Opcode::SubtractReal | Opcode::SubtractDynamic => {
+            Opcode::SubtractReal => {
+                self.execute_real_binary(instruction.abc(), BinaryOperation::Subtract)?
+            }
+            Opcode::SubtractDynamic => {
                 self.execute_value_binary(instruction.abc(), BinaryOperation::Subtract)?
             }
             Opcode::MultiplyInteger => {
                 self.execute_integer_binary(instruction.abc(), BinaryOperation::Multiply)?
             }
-            Opcode::MultiplyReal | Opcode::MultiplyDynamic => {
+            Opcode::MultiplyReal => {
+                self.execute_real_binary(instruction.abc(), BinaryOperation::Multiply)?
+            }
+            Opcode::MultiplyDynamic => {
                 self.execute_value_binary(instruction.abc(), BinaryOperation::Multiply)?
             }
             Opcode::DivideInteger => {
                 self.execute_integer_binary(instruction.abc(), BinaryOperation::IntegerDivide)?
             }
+            Opcode::DivideIntegerImm => {
+                self.execute_integer_immediate(instruction.abc(), BinaryOperation::IntegerDivide)?
+            }
             Opcode::RemainderInteger => {
                 self.execute_integer_binary(instruction.abc(), BinaryOperation::Modulo)?
             }
-            Opcode::DivideReal | Opcode::DivideDynamic => {
+            Opcode::DivideReal => {
+                self.execute_real_binary(instruction.abc(), BinaryOperation::RealDivide)?
+            }
+            Opcode::DivideDynamic => {
                 self.execute_value_binary(instruction.abc(), BinaryOperation::RealDivide)?
             }
             Opcode::NegateInteger => {
@@ -93,49 +109,82 @@ impl Worker {
             Opcode::EqualInteger => {
                 self.execute_integer_binary(instruction.abc(), BinaryOperation::Equal)?
             }
-            Opcode::EqualReal | Opcode::EqualString | Opcode::EqualBoolean => {
-                self.execute_value_binary(instruction.abc(), BinaryOperation::Equal)?
+            Opcode::EqualReal => {
+                self.execute_real_comparison(instruction.abc(), BinaryOperation::Equal)?
+            }
+            Opcode::EqualString => {
+                self.execute_string_comparison(instruction.abc(), BinaryOperation::Equal)?
+            }
+            Opcode::EqualBoolean => {
+                self.execute_boolean_binary(instruction.abc(), BinaryOperation::Equal)?
             }
             Opcode::NotEqualInteger => {
                 self.execute_integer_binary(instruction.abc(), BinaryOperation::NotEqual)?
             }
-            Opcode::NotEqualReal | Opcode::NotEqualString | Opcode::NotEqualBoolean => {
-                self.execute_value_binary(instruction.abc(), BinaryOperation::NotEqual)?
+            Opcode::NotEqualReal => {
+                self.execute_real_comparison(instruction.abc(), BinaryOperation::NotEqual)?
+            }
+            Opcode::NotEqualString => {
+                self.execute_string_comparison(instruction.abc(), BinaryOperation::NotEqual)?
+            }
+            Opcode::NotEqualBoolean => {
+                self.execute_boolean_binary(instruction.abc(), BinaryOperation::NotEqual)?
             }
             Opcode::LessInteger => {
                 self.execute_integer_binary(instruction.abc(), BinaryOperation::Less)?
             }
-            Opcode::LessReal | Opcode::LessString => {
-                self.execute_value_binary(instruction.abc(), BinaryOperation::Less)?
+            Opcode::LessReal => {
+                self.execute_real_comparison(instruction.abc(), BinaryOperation::Less)?
+            }
+            Opcode::LessString => {
+                self.execute_string_comparison(instruction.abc(), BinaryOperation::Less)?
             }
             Opcode::GreaterInteger => {
                 self.execute_integer_binary(instruction.abc(), BinaryOperation::Greater)?
             }
-            Opcode::GreaterReal | Opcode::GreaterString => {
-                self.execute_value_binary(instruction.abc(), BinaryOperation::Greater)?
+            Opcode::GreaterReal => {
+                self.execute_real_comparison(instruction.abc(), BinaryOperation::Greater)?
+            }
+            Opcode::GreaterString => {
+                self.execute_string_comparison(instruction.abc(), BinaryOperation::Greater)?
             }
             Opcode::LessEqualInteger => {
                 self.execute_integer_binary(instruction.abc(), BinaryOperation::LessEqual)?
             }
-            Opcode::LessEqualReal | Opcode::LessEqualString => {
-                self.execute_value_binary(instruction.abc(), BinaryOperation::LessEqual)?
+            Opcode::LessEqualReal => {
+                self.execute_real_comparison(instruction.abc(), BinaryOperation::LessEqual)?
+            }
+            Opcode::LessEqualString => {
+                self.execute_string_comparison(instruction.abc(), BinaryOperation::LessEqual)?
             }
             Opcode::GreaterEqualInteger => {
                 self.execute_integer_binary(instruction.abc(), BinaryOperation::GreaterEqual)?
             }
-            Opcode::GreaterEqualReal | Opcode::GreaterEqualString => {
-                self.execute_value_binary(instruction.abc(), BinaryOperation::GreaterEqual)?
+            Opcode::GreaterEqualReal => {
+                self.execute_real_comparison(instruction.abc(), BinaryOperation::GreaterEqual)?
+            }
+            Opcode::GreaterEqualString => {
+                self.execute_string_comparison(instruction.abc(), BinaryOperation::GreaterEqual)?
             }
             Opcode::NotBoolean => {
                 self.execute_value_unary(instruction.abc(), UnaryOperation::Not)?
             }
             Opcode::AndBoolean => {
-                self.execute_value_binary(instruction.abc(), BinaryOperation::And)?
+                self.execute_boolean_binary(instruction.abc(), BinaryOperation::And)?
             }
             Opcode::OrBoolean => {
-                self.execute_value_binary(instruction.abc(), BinaryOperation::Or)?
+                self.execute_boolean_binary(instruction.abc(), BinaryOperation::Or)?
             }
             Opcode::IntegerToReal => self.execute_integer_to_real(instruction.abc())?,
+            Opcode::BranchIfEqualInteger
+            | Opcode::BranchIfNotEqualInteger
+            | Opcode::BranchIfLessInteger
+            | Opcode::BranchIfGreaterInteger
+            | Opcode::BranchIfLessEqualInteger
+            | Opcode::BranchIfGreaterEqualInteger => {
+                self.execute_integer_compare_branch(instruction)?;
+            }
+            Opcode::ForLoop => self.execute_for_loop(instruction.abc())?,
             Opcode::Jump => self.jump(instruction.abx().bx),
             Opcode::BranchIfFalse => {
                 let operands = instruction.abx();
@@ -235,5 +284,77 @@ impl Worker {
             Value::Unit | Value::OptionNone => false,
             _ => true,
         })
+    }
+
+    #[inline(always)]
+    fn execute_integer_immediate(
+        &mut self,
+        operands: fpas_bytecode::AbcOperands,
+        operation: BinaryOperation,
+    ) -> Result<(), VmError> {
+        let left = self.read_operand(operands.b)?;
+        let immediate = i64::from(operands.c as i16);
+        let result = match left {
+            Value::Integer(value) => value_ops::integer_binary(operation, *value, immediate),
+            _ => value_ops::binary(operation, left, &Value::Integer(immediate)),
+        }
+        .map_err(|error| self.runtime_error(error.code, error.message, error.hint))?;
+        self.write_operand(operands.a, result)
+    }
+
+    #[inline(always)]
+    fn execute_integer_compare_branch(
+        &mut self,
+        instruction: DecodedInstruction,
+    ) -> Result<(), VmError> {
+        let operands = instruction.abc();
+        let operation = match instruction.opcode() {
+            Opcode::BranchIfEqualInteger => BinaryOperation::Equal,
+            Opcode::BranchIfNotEqualInteger => BinaryOperation::NotEqual,
+            Opcode::BranchIfLessInteger => BinaryOperation::Less,
+            Opcode::BranchIfGreaterInteger => BinaryOperation::Greater,
+            Opcode::BranchIfLessEqualInteger => BinaryOperation::LessEqual,
+            Opcode::BranchIfGreaterEqualInteger => BinaryOperation::GreaterEqual,
+            _ => unreachable!("integer compare-and-branch opcode"),
+        };
+        self.execute_integer_binary(operands, operation)?;
+        let condition = self.branch_condition(operands.a)?;
+        let branch = self.executable.decoded()[self.ip];
+        let target = branch.abx().bx;
+        self.ip += 1;
+        if condition == (branch.opcode() == Opcode::BranchIfTrue) {
+            self.jump(target);
+        }
+        Ok(())
+    }
+
+    #[inline(always)]
+    fn execute_for_loop(&mut self, operands: fpas_bytecode::AbcOperands) -> Result<(), VmError> {
+        let counter = self.read_operand(operands.a)?;
+        let bound = self.read_operand(operands.b)?;
+        let (Value::Integer(counter), Value::Integer(bound)) = (counter, bound) else {
+            return Err(self.runtime_error(
+                fpas_diagnostics::codes::RUNTIME_VM_OPERAND_TYPE_MISMATCH,
+                "Integer loop requires integer counter and bound",
+                "Use integer values for the loop counter and bound.",
+            ));
+        };
+        let (target, updated) = if counter == bound {
+            (self.executable.decoded()[self.ip + 1].abx().bx, None)
+        } else {
+            (
+                self.executable.decoded()[self.ip].abx().bx,
+                Some(if operands.auxiliary == 0 {
+                    counter.wrapping_add(1)
+                } else {
+                    counter.wrapping_sub(1)
+                }),
+            )
+        };
+        if let Some(updated) = updated {
+            self.write_operand(operands.a, Value::Integer(updated))?;
+        }
+        self.jump(target);
+        Ok(())
     }
 }

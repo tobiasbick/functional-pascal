@@ -95,6 +95,12 @@ impl Emitter {
         self.column
     }
 
+    /// Leading-space width of the active line, i.e. the indentation it started with.
+    pub(crate) fn line_indent(&self) -> usize {
+        let line = self.out.rsplit('\n').next().unwrap_or_default();
+        line.len() - line.trim_start_matches(' ').len()
+    }
+
     /// Appends a newline and spaces to reach `target_column`, resetting the active column.
     pub(crate) fn newline_to_column(&mut self, target_column: usize) {
         self.out.push('\n');

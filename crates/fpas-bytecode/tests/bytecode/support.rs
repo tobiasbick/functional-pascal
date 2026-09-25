@@ -62,6 +62,21 @@ pub fn all_opcodes_executable() -> Executable {
     for opcode in Opcode::ALL {
         let address = u32::try_from(code.len()).expect("test code length must fit u32");
         code.push(valid_instruction(opcode, address.saturating_add(1)));
+        match opcode {
+            Opcode::BranchIfEqualInteger
+            | Opcode::BranchIfNotEqualInteger
+            | Opcode::BranchIfLessInteger
+            | Opcode::BranchIfGreaterInteger
+            | Opcode::BranchIfLessEqualInteger
+            | Opcode::BranchIfGreaterEqualInteger => {
+                code.push(abx(Opcode::BranchIfTrue, 0, address));
+            }
+            Opcode::ForLoop => {
+                code.push(abx(Opcode::Jump, 0, address));
+                code.push(abx(Opcode::Jump, 0, address));
+            }
+            _ => {}
+        }
     }
     let callee_start = u32::try_from(code.len()).expect("test code length must fit u32");
     code.push(return_unit());
@@ -218,6 +233,7 @@ fn valid_instruction(opcode: Opcode, next_address: u32) -> Instruction {
         Opcode::ArrayPop => abc(opcode, 0, 1, 0, 0),
         Opcode::ArrayPush => abc(opcode, 0, 1, 2, 0),
         Opcode::StoreGlobalIndexPath => abc(opcode, 0, 0, 0, 0),
+        Opcode::ForLoop => abc(opcode, 0, 1, 0, 0),
         _ => abc(opcode, 0, 1, 2, 0),
     }
 }

@@ -36,17 +36,18 @@ Boolean counters follow the order `false`, `true`; both directions and empty
 ranges use the same inclusive-bound rules. The counter retains its Boolean type
 inside the body. Simple enum counters follow their declared ordinal order.
 
-Counting `for` lowers to explicit IR blocks and typed register instructions.
-The initial comparison rejects empty ranges; the loop back edge checks equality
-with the saved end bound before advancing the counter. `for-in` uses a saved
-collection and an integer index checked against its length.
+Counting `for` lowers to IR blocks and typed register instructions. The initial
+comparison rejects empty ranges. For integer counters, the `ForLoop` instruction
+checks the saved end bound before advancing the counter. Boolean counters use
+separate comparison and update blocks. `for-in` uses a saved collection and an
+integer index checked against its length.
 
 | Concern | Location |
 |---------|----------|
 | Lowering | [`control_flow.rs`](../../../../crates/fpas-compiler/src/lowering/control_flow.rs) |
 | Counting loops | [`counting.rs`](../../../../crates/fpas-compiler/src/lowering/control_flow/counting.rs) |
-| Opcodes | [`instruction.rs`](../../../../crates/fpas-bytecode/src/instruction.rs) |
-| VM | [`dispatch.rs`](../../../../crates/fpas-vm/src/vm/dispatch.rs) |
+| Opcodes | [`opcode.rs`](../../../../crates/fpas-bytecode/src/instruction/opcode.rs) |
+| VM | [`opcodes.rs`](../../../../crates/fpas-vm/src/vm/dispatch/opcodes.rs) |
 
 ## See also
 

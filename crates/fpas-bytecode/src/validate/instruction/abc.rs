@@ -83,6 +83,12 @@ pub(super) fn validate_abc(
         | Opcode::NotEqualBoolean
         | Opcode::AndBoolean
         | Opcode::OrBoolean
+        | Opcode::BranchIfEqualInteger
+        | Opcode::BranchIfNotEqualInteger
+        | Opcode::BranchIfLessInteger
+        | Opcode::BranchIfGreaterInteger
+        | Opcode::BranchIfLessEqualInteger
+        | Opcode::BranchIfGreaterEqualInteger
         | Opcode::IndexGet
         | Opcode::IndexSet
         | Opcode::Contains => {
@@ -103,6 +109,49 @@ pub(super) fn validate_abc(
                 auxiliary,
                 0,
             )
+        }
+        Opcode::AddIntegerImm | Opcode::DivideIntegerImm => {
+            validate_registers(
+                executable,
+                function_id,
+                function,
+                address,
+                opcode,
+                &[("destination", a), ("left", b)],
+            )?;
+            canonical_u8(
+                executable,
+                function_id,
+                address,
+                opcode,
+                "auxiliary",
+                auxiliary,
+                0,
+            )
+        }
+        Opcode::ForLoop => {
+            validate_registers(
+                executable,
+                function_id,
+                function,
+                address,
+                opcode,
+                &[("counter", a), ("bound", b)],
+            )?;
+            canonical_u16(executable, function_id, address, opcode, "C", c, 0)?;
+            if auxiliary <= 1 {
+                Ok(())
+            } else {
+                canonical_u8(
+                    executable,
+                    function_id,
+                    address,
+                    opcode,
+                    "direction",
+                    auxiliary,
+                    1,
+                )
+            }
         }
         Opcode::Move
         | Opcode::ArrayPop

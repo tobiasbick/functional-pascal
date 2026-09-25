@@ -168,3 +168,74 @@ fn prepared_string_constants_stay_unchanged_after_concatenation() {
     assert_eq!(registers[0], Value::Str("abab".into()));
     assert_eq!(registers[1], Value::Str("ab".into()));
 }
+
+#[test]
+fn typed_real_division_retains_zero_diagnostic() {
+    let executable = verified(
+        vec![
+            abx(Opcode::LoadConstant, 0, 0),
+            abx(Opcode::LoadConstant, 1, 1),
+            abc(Opcode::DivideReal, 2, 0, 1),
+            return_unit(),
+        ],
+        vec![
+            Constant::Real(1.0_f64.to_bits()),
+            Constant::Real(0.0_f64.to_bits()),
+        ],
+        vec!["root", "test.fpas"],
+        3,
+    );
+    let error = execute(executable).expect_err("division by zero must fail");
+    assert!(error.message.contains("Division by zero"));
+}
+
+#[test]
+fn typed_real_ordering_retains_nan_diagnostic() {
+    let executable = verified(
+        vec![
+            abx(Opcode::LoadConstant, 0, 0),
+            abx(Opcode::LoadConstant, 1, 1),
+            abc(Opcode::LessReal, 2, 0, 1),
+            return_unit(),
+        ],
+        vec![
+            Constant::Real(f64::NAN.to_bits()),
+            Constant::Real(1.0_f64.to_bits()),
+        ],
+        vec!["root", "test.fpas"],
+        3,
+    );
+    let error = execute(executable).expect_err("NaN ordering must fail");
+    assert!(error.message.contains("Ordered comparison"));
+}
+
+#[test]
+fn signed_integer_immediates_execute_and_preserve_division_errors() {
+    let executable = verified(
+        vec![
+            abx(Opcode::LoadConstant, 0, 0),
+            abc(Opcode::AddIntegerImm, 0, 0, (-3_i16) as u16),
+            abc(Opcode::DivideIntegerImm, 1, 0, (-2_i16) as u16),
+            return_unit(),
+        ],
+        vec![Constant::Integer(7)],
+        vec!["root", "test.fpas"],
+        2,
+    );
+    let (_, registers, _) = execute(executable).expect("signed immediates execute");
+    assert_eq!(registers[0], Value::Integer(4));
+    assert_eq!(registers[1], Value::Integer(-2));
+
+    let zero = verified(
+        vec![
+            abx(Opcode::LoadConstant, 0, 0),
+            abc(Opcode::DivideIntegerImm, 1, 0, 0),
+            return_unit(),
+        ],
+        vec![Constant::Integer(7)],
+        vec!["root", "test.fpas"],
+        2,
+    );
+    let error = execute(zero).expect_err("zero divisor must fail");
+    assert!(error.message.contains("Division by zero"));
+}

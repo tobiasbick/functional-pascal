@@ -11,7 +11,10 @@ type
 function Factorial(Value: integer): integer;
 begin
   if Value <= 1 then
-    return 1;
+  begin
+    return 1
+  end;
+
   return Value * Factorial(Value - 1)
 end;
 

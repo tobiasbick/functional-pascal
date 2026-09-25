@@ -11,6 +11,7 @@ mod register_stack;
 mod runtime;
 mod scalar;
 mod shutdown;
+mod superinstructions;
 mod support;
 mod task_owned_functions;
 

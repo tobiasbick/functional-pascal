@@ -125,6 +125,7 @@ pub(super) fn terminator_width(terminator: &Terminator, next: Option<BlockId>) -
             ..
         } if next == Some(then_target.block) || next == Some(else_target.block) => 1,
         Terminator::Branch { .. } => 2,
+        Terminator::ForLoop { .. } => 3,
         Terminator::Jump(_) | Terminator::Return(_) | Terminator::Panic(_) => 1,
     }
 }

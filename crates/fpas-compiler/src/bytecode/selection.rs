@@ -16,6 +16,7 @@ use crate::error::internal_compiler_error;
 
 use super::allocation::Allocation;
 use super::metadata::MetadataBuilder;
+use super::superinstructions::integer_immediate;
 
 pub(super) struct Selector<'a> {
     program: &'a Program,
@@ -49,6 +50,7 @@ impl<'a> Selector<'a> {
         &self,
         instruction: &fpas_ir::Instruction,
         metadata: &mut MetadataBuilder,
+        previous: Option<&fpas_ir::Instruction>,
     ) -> Result<Vec<Instruction>, CompileError> {
         let result = instruction.result.map(|value| value.id);
         if let Some(selected) = self.select_aggregate(&instruction.operation, result, metadata)? {
@@ -80,12 +82,20 @@ impl<'a> Selector<'a> {
                 operation,
                 left,
                 right,
-            } => abc(
-                self.binary_opcode(*operation, *left)?,
-                self.result_register(result)?,
-                self.allocation.value(*left)?.get(),
-                self.allocation.value(*right)?.get(),
-            ),
+            } => {
+                let immediate = integer_immediate(previous, *operation, *left, *right);
+                let opcode = match (operation, immediate) {
+                    (BinaryOperation::AddInteger, Some(_)) => Opcode::AddIntegerImm,
+                    (BinaryOperation::DivideInteger, Some(_)) => Opcode::DivideIntegerImm,
+                    _ => self.binary_opcode(*operation, *left)?,
+                };
+                abc(
+                    opcode,
+                    self.result_register(result)?,
+                    self.allocation.value(*left)?.get(),
+                    immediate.map_or(self.allocation.value(*right)?.get(), |value| value as u16),
+                )
+            }
             Operation::CallDirect {
                 function,
                 arguments,
@@ -293,6 +303,10 @@ impl<'a> Selector<'a> {
             BinaryOperation::GreaterThanReal => Some(Opcode::GreaterReal),
             BinaryOperation::LessEqualReal => Some(Opcode::LessEqualReal),
             BinaryOperation::GreaterEqualReal => Some(Opcode::GreaterEqualReal),
+            BinaryOperation::LessThanString => Some(Opcode::LessString),
+            BinaryOperation::GreaterThanString => Some(Opcode::GreaterString),
+            BinaryOperation::LessEqualString => Some(Opcode::LessEqualString),
+            BinaryOperation::GreaterEqualString => Some(Opcode::GreaterEqualString),
             BinaryOperation::LessThanDynamic => Some(Opcode::LessDynamic),
             BinaryOperation::GreaterThanDynamic => Some(Opcode::GreaterDynamic),
             BinaryOperation::LessEqualDynamic => Some(Opcode::LessEqualDynamic),

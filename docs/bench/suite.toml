@@ -26,6 +26,27 @@ args = ["50000000"]
 timeout_ms = 120000
 
 [[bench]]
+id = "typed_real"
+group = "vm"
+path = "examples/pascal/vm/typed_scalar_benchmark.fpas"
+args = ["5000000", "real"]
+timeout_ms = 120000
+
+[[bench]]
+id = "typed_boolean"
+group = "vm"
+path = "examples/pascal/vm/typed_scalar_benchmark.fpas"
+args = ["5000000", "boolean"]
+timeout_ms = 120000
+
+[[bench]]
+id = "typed_string"
+group = "vm"
+path = "examples/pascal/vm/typed_scalar_benchmark.fpas"
+args = ["5000000", "string"]
+timeout_ms = 120000
+
+[[bench]]
 id = "global_access"
 group = "vm"
 path = "examples/pascal/vm/global_access_benchmark.fpas"

@@ -110,3 +110,58 @@ end.",
         .verify()
         .expect("all generated operands should verify");
 }
+
+#[test]
+fn integer_loops_emit_fused_comparison_and_for_loop() {
+    let program = parse_ok(
+        "program FusedLoop; begin mutable var Total: integer := 0; for I: integer := 1 to 4 do Total := Total + I; if Total <> 10 then panic('wrong') end.",
+    );
+    let executable = crate::compile(&program).expect("loop compiles");
+    let code = &executable.executable().code;
+    assert!(
+        code.iter()
+            .any(|word| word.opcode() == Ok(fpas_bytecode::Opcode::ForLoop))
+    );
+    assert!(
+        code.iter()
+            .any(|word| word.opcode() == Ok(fpas_bytecode::Opcode::BranchIfLessEqualInteger))
+    );
+    assert!(
+        code.iter()
+            .any(|word| word.opcode() == Ok(fpas_bytecode::Opcode::BranchIfNotEqualInteger))
+    );
+}
+
+#[test]
+fn single_use_integer_literals_emit_immediate_operations() {
+    let source = "program ImmediateInteger; begin mutable var X: integer := 5; X := X + 7; X := X div 3; X := X + (-3); if X <> 1 then panic('wrong') end.";
+    let program = parse_ok(source);
+    let executable = crate::compile(&program).expect("immediate arithmetic compiles");
+    let code = &executable.executable().code;
+    assert!(
+        code.iter()
+            .any(|word| word.opcode() == Ok(fpas_bytecode::Opcode::AddIntegerImm))
+    );
+    assert!(
+        code.iter()
+            .any(|word| word.opcode() == Ok(fpas_bytecode::Opcode::DivideIntegerImm))
+    );
+    assert_succeeds(source);
+}
+
+#[test]
+fn string_ordering_uses_typed_opcodes() {
+    let source = "program StringOrdering; begin if not ('a' < 'b') then panic('less'); if not ('b' > 'a') then panic('greater'); if not ('a' <= 'a') then panic('less equal'); if not ('b' >= 'b') then panic('greater equal') end.";
+    let program = parse_ok(source);
+    let executable = crate::compile(&program).expect("string ordering compiles");
+    let code = &executable.executable().code;
+    for opcode in [
+        fpas_bytecode::Opcode::LessString,
+        fpas_bytecode::Opcode::GreaterString,
+        fpas_bytecode::Opcode::LessEqualString,
+        fpas_bytecode::Opcode::GreaterEqualString,
+    ] {
+        assert!(code.iter().any(|word| word.opcode() == Ok(opcode)));
+    }
+    assert_succeeds(source);
+}

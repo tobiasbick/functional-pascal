@@ -1,6 +1,6 @@
 //! Explicit control-flow terminators and block arguments.
 
-use crate::{BlockId, ValueId};
+use crate::{BlockId, LocalId, ValueId};
 
 /// A target block together with its merge-value arguments.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -23,6 +23,19 @@ pub enum Terminator {
         /// Successor when the condition is false.
         else_target: BlockTarget,
     },
+    /// Completes one inclusive integer-loop iteration and selects the next block.
+    ForLoop {
+        /// Mutable counter value held in its local register.
+        counter: LocalId,
+        /// Inclusive bound captured before entering the loop.
+        bound: LocalId,
+        /// Whether to decrement the counter between iterations.
+        descending: bool,
+        /// Successor after advancing the counter.
+        body_target: BlockTarget,
+        /// Successor when the counter has reached the bound.
+        after_target: BlockTarget,
+    },
     /// Transfers unconditionally to one successor block.
     Jump(BlockTarget),
     /// Returns an optional Unit or typed function result.
@@ -41,6 +54,11 @@ impl Terminator {
                 else_target,
                 ..
             } => vec![then_target, else_target],
+            Self::ForLoop {
+                body_target,
+                after_target,
+                ..
+            } => vec![body_target, after_target],
             Self::Jump(target) => vec![target],
             Self::Return(_) | Self::Panic(_) => Vec::new(),
         }

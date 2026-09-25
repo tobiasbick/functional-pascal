@@ -14,6 +14,77 @@ cargo bench-fpas record "vm-only note" --group vm
 
 Newest entries are prepended below this header.
 
+## 2026-09-25 — Add VM superinstructions and typed scalar fast paths
+
+- Group: `all`
+- Suite: [`suite.toml`](suite.toml)
+
+| bench | elapsed_ms | throughput |
+|-------|------------|------------|
+| mandelbrot_render | 1255 | - |
+| mandelbrot_paint | 1333 | - |
+| integer_loop | 2365 | throughput: 21141649 iters/s |
+| typed_real | 493 | - |
+| typed_boolean | 308 | - |
+| typed_string | 377 | - |
+| global_access | 133 | throughput: 37593984 global updates/s |
+| record_field_access | 1029 | throughput: 14577259 field accesses/s |
+| closure_call | 254 | throughput: 11811023 closure calls/s |
+| branch_dispatch | 1174 | throughput: 17035775 branches/s |
+| dynamic_numeric | 451 | throughput: 11086474 dynamic numeric ops/s |
+| array_push | 66 | throughput: 30303030 pushes/s |
+| array_length | 28 | throughput: 17857142 lengths/s |
+| string_concat | 1397 | throughput: 3579098 concats/s |
+| string_length | 27 | throughput: 18518518 lengths/s |
+| intrinsic_dispatch | 814 | throughput: 18427518 intrinsic calls/s |
+| function_call | 429 | throughput: 13986013 calls/s |
+| array_callbacks | 890 | throughput: 10786516 callbacks/s |
+| record_update | 229 | throughput: 4366812 updates/s |
+| unicode_char_at | 610 | throughput: 4918032 chars/s |
+| wrapper_payload | 884 | throughput: 11312217 wrappers/s |
+| task_spawn_wait | 499 | throughput: 200400 tasks/s |
+| task_array_callbacks | 995 | throughput: 3859296 callbacks/s |
+| tui_headless | 2609 | throughput: 191 frames/s |
+| notes_headless | 5452 | throughput: 45 frames/s |
+| analysis_queries | 228 | - |
+| string_search | 131 | - |
+| compiler_lowering | 1387 | - |
+| substring_ascii | 9 | - |
+| substring_unicode | 412 | - |
+| project_queries | 974 | - |
+| project_edits | 2806 | - |
+| project_overlapping_queries | 615 | - |
+| project_build_cold | 1688 | - |
+| project_build_warm | 1322 | - |
+| unit_artifact_shared_types | 1 | - |
+| program_artifact_shared_types | 1 | - |
+| dictionary_reads | 5 | - |
+| scalar_membership | 28 | - |
+| array_pop | 2 | - |
+| text_area_locate | 1856 | - |
+| http_body_accumulation | 206 | - |
+| local_index_write | 20 | throughput: 32000000 writes/s |
+| cell_grid_headless | 155 | throughput: 645 paints/s |
+| partial_surface_fill | 99 | - |
+| source_utf8_ascii_2048 | 11 | - |
+| source_utf8_ascii_4096 | 23 | - |
+| source_utf8_ascii_8192 | 46 | - |
+| source_utf8_unicode_2048 | 39 | - |
+| source_utf8_unicode_4096 | 79 | - |
+| source_utf8_unicode_8192 | 163 | - |
+| source_notes_ascii_128 | 4 | - |
+| source_notes_ascii_256 | 10 | - |
+| source_notes_ascii_512 | 22 | - |
+| source_queue_ascii_256 | 92 | - |
+| source_queue_ascii_512 | 172 | - |
+| source_queue_ascii_1024 | 342 | - |
+| source_navigation_long_512 | 53 | - |
+| source_navigation_long_1024 | 102 | - |
+| source_navigation_long_2048 | 201 | - |
+| source_navigation_lines_512 | 10 | - |
+| source_navigation_lines_1024 | 16 | - |
+| source_navigation_lines_2048 | 27 | - |
+
 ## 2026-09-25 — Batched dispatch, single-check registers, boxed VM errors, and prepared string constants
 
 - Group: `all`

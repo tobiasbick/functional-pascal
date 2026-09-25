@@ -28,6 +28,37 @@ fn validate_terminator(
         Terminator::Jump(target) => {
             validate_target(program, function, block, target, all_values, available)
         }
+        Terminator::ForLoop {
+            counter,
+            bound,
+            body_target,
+            after_target,
+            ..
+        } => {
+            for local in [counter, bound] {
+                let local = function.local(*local).ok_or_else(|| {
+                    unknown(function, block, None, EntityKind::Local, local.get())
+                })?;
+                require_category(
+                    program,
+                    function,
+                    block,
+                    None,
+                    "integer loop operand",
+                    local.ty,
+                    TypeCategory::Integer,
+                )?;
+            }
+            validate_target(program, function, block, body_target, all_values, available)?;
+            validate_target(
+                program,
+                function,
+                block,
+                after_target,
+                all_values,
+                available,
+            )
+        }
         Terminator::Return(value) => match value {
             Some(value) => {
                 let actual = value_type(function, block, None, *value, all_values, available)?;

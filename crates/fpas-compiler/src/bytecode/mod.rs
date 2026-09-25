@@ -5,6 +5,7 @@ mod blocks;
 mod debug;
 mod metadata;
 mod selection;
+mod superinstructions;
 
 use fpas_bytecode::{
     CodeRange, Executable, FunctionFlags, FunctionId, FunctionInfo, Instruction,
@@ -20,6 +21,7 @@ use self::blocks::BlockLayout;
 use self::debug::{compile_debug_info, compile_debug_types};
 use self::metadata::MetadataBuilder;
 use self::selection::{Selector, abc, abx};
+use self::superinstructions::fuse_integer_branch;
 
 type EmittedInstructionAddresses = Vec<(BlockId, usize, InstructionAddress)>;
 
@@ -200,7 +202,13 @@ fn compile_function(
         for (instruction_index, instruction) in block.instructions.iter().enumerate() {
             source = instruction.source.or(source);
             let selected_start = code.len();
-            for selected in selector.select(instruction, metadata)? {
+            for selected in selector.select(
+                instruction,
+                metadata,
+                instruction_index
+                    .checked_sub(1)
+                    .and_then(|index| block.instructions.get(index)),
+            )? {
                 emit(code, metadata, instruction.source, selected)?;
             }
             if code.len() > selected_start {
@@ -216,6 +224,7 @@ fn compile_function(
             .terminators
             .first()
             .ok_or_else(|| compile_error("IR block has no terminator"))?;
+        let terminator_start = code.len();
         emit_terminator(
             code,
             metadata,
@@ -225,6 +234,11 @@ fn compile_function(
             function.blocks.get(index + 1).map(|next| next.id),
             source,
         )?;
+        if matches!(terminator, Terminator::Branch { .. })
+            && terminator_start > layout.start(block.id)? as usize
+        {
+            fuse_integer_branch(code, terminator_start)?;
+        }
     }
     let code_end = InstructionAddress::try_from_index(code.len())
         .map_err(|error| compile_error(&error.to_string()))?;
@@ -323,6 +337,39 @@ fn emit_terminator(
             source,
             abx(Opcode::Jump, 0, layout.start(target.block)?)?,
         ),
+        Terminator::ForLoop {
+            counter,
+            bound,
+            descending,
+            body_target,
+            after_target,
+        } => {
+            emit(
+                code,
+                metadata,
+                source,
+                Instruction::abc(
+                    Opcode::ForLoop,
+                    allocation.local(*counter)?.get(),
+                    allocation.local(*bound)?.get(),
+                    0,
+                    u8::from(*descending),
+                )
+                .map_err(|error| compile_error(&error.to_string()))?,
+            )?;
+            emit(
+                code,
+                metadata,
+                source,
+                abx(Opcode::Jump, 0, layout.start(body_target.block)?)?,
+            )?;
+            emit(
+                code,
+                metadata,
+                source,
+                abx(Opcode::Jump, 0, layout.start(after_target.block)?)?,
+            )
+        }
         Terminator::Return(None) => emit(
             code,
             metadata,

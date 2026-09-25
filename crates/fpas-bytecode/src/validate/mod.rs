@@ -161,6 +161,11 @@ pub enum ValidationErrorKind {
     Instruction(InstructionError),
     /// The known Ax opcode is reserved and cannot execute yet.
     ReservedOpcode,
+    /// A fused instruction is missing the branch or jump words it consumes.
+    SuperinstructionPayload {
+        /// Required payload shape.
+        expected: &'static str,
+    },
     /// An operand required to be zero or the sentinel is not canonical.
     NonCanonicalOperand {
         /// Operand name.

@@ -2,7 +2,7 @@
 
 End-to-end performance measurements use Functional Pascal programs under `examples/pascal/`, driven by the release `fpas` CLI. There is no Criterion / Rust `cargo bench` suite for these workloads.
 
-The curated suite lives in [`suite.toml`](suite.toml). Run it with the `fpas-bench` harness (cargo alias `bench-fpas`).
+The curated suite lives in [`suite.toml`](suite.toml). Run it with the `fpas-bench` harness (cargo alias `bench-fpas`). The `typed_real`, `typed_boolean`, and `typed_string` VM rows exercise typed scalar handlers separately.
 
 The `local-index` group measures direct local array writes, painting a prebuilt
 98-by-32 cell grid through the headless application, and partial working-surface

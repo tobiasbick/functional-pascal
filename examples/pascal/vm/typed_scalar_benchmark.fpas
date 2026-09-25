@@ -1,0 +1,114 @@
+// Build first: cargo build --release -p fpas-cli
+// Baseline: target/release/fpas run this-file.fpas -- 5000000 real
+
+program VmTypedScalarBenchmark;
+
+uses Std.Args, Std.Console, Std.Conv, Std.Time;
+
+const
+  WarmupIterations: integer := 10000;
+
+function RunReal(Iterations: integer): integer;
+begin
+  mutable var Value: real := 1.25;
+  for Index: integer := 1 to Iterations do
+  begin
+    Value := (Value + 1.25) * 0.75;
+    Value := (Value + 0.5) / 1.125;
+    Value := Value - 0.125;
+    if Value < 0.0 then
+    begin
+      Value := 1.25
+    end
+  end;
+
+  if Value > 0.0 then
+  begin
+    return 1
+  end;
+
+  return 0
+end;
+
+function RunBoolean(Iterations: integer): integer;
+begin
+  mutable var Left: boolean := true;
+  mutable var Right: boolean := false;
+  for Index: integer := 1 to Iterations do
+  begin
+    Left := (Left and not Right) or Right;
+    Right := not Right;
+    if Left = Right then
+    begin
+      Left := not Left
+    end
+  end;
+
+  if Left then
+  begin
+    return 1
+  end;
+
+  return 0
+end;
+
+function RunString(Iterations: integer): integer;
+begin
+  var Left: string := 'alpha';
+  var Right: string := 'beta';
+  mutable var Count: integer := 0;
+  for Index: integer := 1 to Iterations do
+  begin
+    if (Left = 'alpha') and (Left <> Right) then
+    begin
+      Count := Count + 1
+    end
+  end;
+
+  return Count
+end;
+
+function RunWork(Iterations: integer; Mode: string): integer;
+begin
+  if Mode = 'real' then
+  begin
+    return RunReal(Iterations)
+  end;
+
+  if Mode = 'boolean' then
+  begin
+    return RunBoolean(Iterations)
+  end;
+
+  if Mode = 'string' then
+  begin
+    return RunString(Iterations)
+  end;
+
+  panic('mode must be real, boolean, or string')
+end;
+
+begin
+  if ParamCount() <> 2 then
+  begin
+    panic('usage: typed_scalar_benchmark.fpas -- ITERATIONS real|boolean|string')
+  end;
+  var Iterations: integer := StrToInt(ParamStr(0));
+  var Mode: string := ParamStr(1);
+  if Iterations < 1 then
+  begin
+    panic('ITERATIONS must be positive')
+  end;
+  var Warmup: integer := RunWork(WarmupIterations, Mode);
+  var Started: integer := MonotonicMillis();
+  var Checksum: integer := RunWork(Iterations, Mode);
+  var Elapsed: integer := ElapsedMillis(Started);
+  if Warmup < 0 then
+  begin
+    panic('invalid warmup checksum')
+  end;
+
+  WriteLn((('mode: ' + Mode) + ', iterations: ') + IntToStr(Iterations));
+  WriteLn(('elapsed: ' + IntToStr(Elapsed)) + ' ms');
+  WriteLn('checksum: ' + IntToStr(Checksum))
+end.

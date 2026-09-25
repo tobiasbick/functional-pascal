@@ -80,6 +80,14 @@ pub enum BinaryOperation {
     LessEqualReal,
     /// Real greater-than-or-equal comparison.
     GreaterEqualReal,
+    /// String less-than comparison.
+    LessThanString,
+    /// String greater-than comparison.
+    GreaterThanString,
+    /// String less-than-or-equal comparison.
+    LessEqualString,
+    /// String greater-than-or-equal comparison.
+    GreaterEqualString,
     /// Dynamically checked less-than comparison.
     LessThanDynamic,
     /// Dynamically checked greater-than comparison.
@@ -436,6 +444,10 @@ pub const fn binary_categories(operation: BinaryOperation) -> (TypeCategory, Typ
         | BinaryOperation::GreaterThanReal
         | BinaryOperation::LessEqualReal
         | BinaryOperation::GreaterEqualReal => (TypeCategory::Real, TypeCategory::Boolean),
+        BinaryOperation::LessThanString
+        | BinaryOperation::GreaterThanString
+        | BinaryOperation::LessEqualString
+        | BinaryOperation::GreaterEqualString => (TypeCategory::String, TypeCategory::Boolean),
         BinaryOperation::LessThanDynamic
         | BinaryOperation::GreaterThanDynamic
         | BinaryOperation::LessEqualDynamic

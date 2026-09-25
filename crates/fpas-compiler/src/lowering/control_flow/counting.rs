@@ -2,7 +2,7 @@
 //!
 //! Documentation: `docs/pascal/language/control-flow/for-loops.md`.
 
-use fpas_ir::{BinaryOperation, Constant, Operation, Terminator, UnaryOperation};
+use fpas_ir::{BinaryOperation, Operation, Terminator, UnaryOperation};
 use fpas_parser::{Expr, ForDirection, Stmt};
 
 use crate::CompileError;
@@ -35,7 +35,11 @@ impl LoweringContext {
         let condition_block = self.new_block(span)?;
         let body_block = self.new_block(span)?;
         let terminal_block = self.new_block(span)?;
-        let increment_block = self.new_block(span)?;
+        let increment_block = if counter_type == types::BOOLEAN {
+            Some(self.new_block(span)?)
+        } else {
+            None
+        };
         let after_block = self.new_block(span)?;
         self.jump(condition_block)?;
 
@@ -66,38 +70,39 @@ impl LoweringContext {
         }
 
         self.switch_to(terminal_block);
-        let current = self.emit_value(Operation::ReadLocal(variable_local), counter_type, span)?;
-        let bound = self.emit_value(Operation::ReadLocal(end_local), counter_type, span)?;
-        let finished =
-            self.emit_binary(BinaryOperation::Equal, current, bound, types::BOOLEAN, span)?;
-        self.terminate(Terminator::Branch {
-            condition: finished,
-            then_target: target(after_block),
-            else_target: target(increment_block),
-        })?;
-
-        self.switch_to(increment_block);
-        let current = self.emit_value(Operation::ReadLocal(variable_local), counter_type, span)?;
-        let updated = if counter_type == types::BOOLEAN {
-            self.emit_value(
+        if let Some(increment_block) = increment_block {
+            let current =
+                self.emit_value(Operation::ReadLocal(variable_local), counter_type, span)?;
+            let bound = self.emit_value(Operation::ReadLocal(end_local), counter_type, span)?;
+            let finished =
+                self.emit_binary(BinaryOperation::Equal, current, bound, types::BOOLEAN, span)?;
+            self.terminate(Terminator::Branch {
+                condition: finished,
+                then_target: target(after_block),
+                else_target: target(increment_block),
+            })?;
+            self.switch_to(increment_block);
+            let current =
+                self.emit_value(Operation::ReadLocal(variable_local), counter_type, span)?;
+            let updated = self.emit_value(
                 Operation::Unary {
                     operation: UnaryOperation::NotBoolean,
                     operand: current,
                 },
                 counter_type,
                 span,
-            )?
+            )?;
+            self.write_local(variable_local, updated, span)?;
+            self.jump(body_block)?;
         } else {
-            let one =
-                self.emit_value(Operation::Const(Constant::Integer(1)), types::INTEGER, span)?;
-            let operation = match direction {
-                ForDirection::To => BinaryOperation::AddInteger,
-                ForDirection::Downto => BinaryOperation::SubtractInteger,
-            };
-            self.emit_binary(operation, current, one, counter_type, span)?
-        };
-        self.write_local(variable_local, updated, span)?;
-        self.jump(body_block)?;
+            self.terminate(Terminator::ForLoop {
+                counter: variable_local,
+                bound: end_local,
+                descending: *direction == ForDirection::Downto,
+                body_target: target(body_block),
+                after_target: target(after_block),
+            })?;
+        }
         self.pop_loop();
         self.end_scope();
         self.switch_to(after_block);

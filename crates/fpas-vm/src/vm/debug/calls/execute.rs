@@ -414,7 +414,8 @@ impl CallSandbox {
     }
 }
 
-fn runtime_error(diagnostic: fpas_diagnostics::Diagnostic) -> DebugSessionError {
+fn runtime_error(diagnostic: crate::vm::VmError) -> DebugSessionError {
+    let diagnostic = *diagnostic;
     error(
         DebugErrorKind::CallRuntime,
         diagnostic.message,

@@ -4,7 +4,9 @@ use fpas_bytecode::{Executable, InstructionAddress};
 use fpas_diagnostics::{Diagnostic, DiagnosticCode, SourceSpan};
 
 /// Structured runtime diagnostic returned by VM operations.
-pub type VmError = Diagnostic;
+///
+/// The diagnostic is boxed so `Result<_, VmError>` stays two words wide on hot interpreter paths.
+pub type VmError = Box<Diagnostic>;
 
 pub(crate) fn runtime_error(
     code: DiagnosticCode,
@@ -12,12 +14,12 @@ pub(crate) fn runtime_error(
     help: impl Into<String>,
     location: fpas_bytecode::SourceLocation,
 ) -> VmError {
-    Diagnostic::error(
+    Box::new(Diagnostic::error(
         code,
         message,
         Some(help.into()),
         SourceSpan::new(0, 1, location.line(), location.column()),
-    )
+    ))
 }
 
 pub(crate) fn internal_error(
@@ -41,12 +43,12 @@ pub(super) fn at_address(
     code: DiagnosticCode,
     message: impl Into<String>,
     help: impl Into<String>,
-) -> Diagnostic {
+) -> VmError {
     let span = executable.source_map.lookup(address).map_or_else(
         || SourceSpan::new(0, 1, 1, 1),
         |run| SourceSpan::new_with_source(0, 1, run.line, run.column, run.source.get()),
     );
-    Diagnostic::error(code, message, Some(help.into()), span)
+    Box::new(Diagnostic::error(code, message, Some(help.into()), span))
 }
 
 #[cold]
@@ -55,7 +57,7 @@ pub(super) fn internal(
     executable: &Executable,
     address: InstructionAddress,
     message: impl Into<String>,
-) -> Diagnostic {
+) -> VmError {
     at_address(
         executable,
         address,

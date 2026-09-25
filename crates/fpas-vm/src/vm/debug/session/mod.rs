@@ -465,7 +465,7 @@ fn stop_at_worker(
     }
 }
 
-fn runtime_initialization_error(diagnostic: fpas_diagnostics::Diagnostic) -> DebugSessionError {
+fn runtime_initialization_error(diagnostic: crate::vm::VmError) -> DebugSessionError {
     DebugSessionError {
         kind: DebugErrorKind::InvalidState,
         message: format!("cannot initialize debug runtime: {}", diagnostic.message),

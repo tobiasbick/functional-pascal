@@ -157,8 +157,11 @@ Use this while iterating on a change. JSON under `.temp-data/bench/` is **not** 
 
    ```sh
    cargo bench-fpas compare before
-   # or: cargo bench-fpas compare before --group vm
+   # or, for a baseline saved with --group vm:
+   cargo bench-fpas compare before --group vm
    ```
+
+   `compare` must use the same group as `save`; a mismatch is rejected.
 
 4. When the win is real, record it into history (see above) and commit `docs/bench/history.md` with the change.
 

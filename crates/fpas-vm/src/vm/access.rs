@@ -1,6 +1,6 @@
 //! Central checked register and persistent-constant access.
 
-use fpas_bytecode::{Constant, NO_REGISTER, Register, SharedStr, Value};
+use fpas_bytecode::{Constant, NO_REGISTER, Register, Value};
 use fpas_diagnostics::codes::RUNTIME_VM_OPERAND_TYPE_MISMATCH;
 
 use super::VmError;
@@ -78,10 +78,11 @@ impl Worker {
             Constant::Real(bits) => Ok(Value::Real(f64::from_bits(bits))),
             Constant::Boolean(value) => Ok(Value::Boolean(value)),
             Constant::Unit => Ok(Value::Unit),
-            Constant::String(string) => executable
-                .strings
-                .get(string)
-                .map(|value| Value::Str(SharedStr::from(value)))
+            Constant::String(string) => self
+                .executable
+                .string_constant(index as usize)
+                .cloned()
+                .map(Value::Str)
                 .ok_or_else(|| {
                     diagnostics::internal(
                         executable,

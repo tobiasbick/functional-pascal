@@ -14,6 +14,82 @@ cargo bench-fpas record "vm-only note" --group vm
 
 Newest entries are prepended below this header.
 
+## 2026-09-25 — Batched dispatch, single-check registers, boxed VM errors, and prepared string constants
+
+- Group: `all`
+- Suite: [`suite.toml`](suite.toml)
+
+Steps 2, 3, and 3.1 of the VM performance plan against the local `dispatch-before` snapshot
+(release profile with fat LTO): `integer_loop` 5949 -> 3373–3670 ms, `branch_dispatch`
+2918 -> ~1510 ms, `global_access` 455 -> ~245 ms, `function_call` 695 -> ~495 ms,
+`closure_call` 481 -> ~328 ms, `intrinsic_dispatch` 1395 -> 977–1074 ms. `array_callbacks`
+is back at the previous level (alternating A/B runs: 858–869 ms before, 839–856 ms after).
+`notes_headless` varied between 5021 and 7086 ms and the IO-heavy `project_*` tooling benches
+between runs, so these runs establish no direction for them.
+
+| bench | elapsed_ms | throughput |
+|-------|------------|------------|
+| mandelbrot_render | 992 | - |
+| mandelbrot_paint | 1241 | - |
+| integer_loop | 3373 | throughput: 14823599 iters/s |
+| global_access | 249 | throughput: 20080321 global updates/s |
+| record_field_access | 1106 | throughput: 13562386 field accesses/s |
+| closure_call | 328 | throughput: 9146341 closure calls/s |
+| branch_dispatch | 1511 | throughput: 13236267 branches/s |
+| dynamic_numeric | 573 | throughput: 8726003 dynamic numeric ops/s |
+| array_push | 113 | throughput: 17699115 pushes/s |
+| array_length | 42 | throughput: 11904761 lengths/s |
+| string_concat | 1482 | throughput: 3373819 concats/s |
+| string_length | 41 | throughput: 12195121 lengths/s |
+| intrinsic_dispatch | 1074 | throughput: 13966480 intrinsic calls/s |
+| function_call | 491 | throughput: 12219959 calls/s |
+| array_callbacks | 845 | throughput: 11360946 callbacks/s |
+| record_update | 249 | throughput: 4016064 updates/s |
+| unicode_char_at | 692 | throughput: 4335260 chars/s |
+| wrapper_payload | 992 | throughput: 10080645 wrappers/s |
+| task_spawn_wait | 454 | throughput: 220264 tasks/s |
+| task_array_callbacks | 903 | throughput: 4252491 callbacks/s |
+| tui_headless | 2574 | throughput: 194 frames/s |
+| notes_headless | 5202 | throughput: 48 frames/s |
+| analysis_queries | 229 | - |
+| string_search | 142 | - |
+| compiler_lowering | 1330 | - |
+| substring_ascii | 6 | - |
+| substring_unicode | 401 | - |
+| project_queries | 942 | - |
+| project_edits | 2601 | - |
+| project_overlapping_queries | 599 | - |
+| project_build_cold | 1632 | - |
+| project_build_warm | 1317 | - |
+| unit_artifact_shared_types | 1 | - |
+| program_artifact_shared_types | 1 | - |
+| dictionary_reads | 5 | - |
+| scalar_membership | 29 | - |
+| array_pop | 2 | - |
+| text_area_locate | 1805 | - |
+| http_body_accumulation | 196 | - |
+| local_index_write | 37 | throughput: 17297297 writes/s |
+| cell_grid_headless | 157 | throughput: 636 paints/s |
+| partial_surface_fill | 98 | - |
+| source_utf8_ascii_2048 | 10 | - |
+| source_utf8_ascii_4096 | 20 | - |
+| source_utf8_ascii_8192 | 39 | - |
+| source_utf8_unicode_2048 | 38 | - |
+| source_utf8_unicode_4096 | 76 | - |
+| source_utf8_unicode_8192 | 155 | - |
+| source_notes_ascii_128 | 4 | - |
+| source_notes_ascii_256 | 10 | - |
+| source_notes_ascii_512 | 22 | - |
+| source_queue_ascii_256 | 83 | - |
+| source_queue_ascii_512 | 165 | - |
+| source_queue_ascii_1024 | 333 | - |
+| source_navigation_long_512 | 54 | - |
+| source_navigation_long_1024 | 103 | - |
+| source_navigation_long_2048 | 209 | - |
+| source_navigation_lines_512 | 10 | - |
+| source_navigation_lines_1024 | 16 | - |
+| source_navigation_lines_2048 | 29 | - |
+
 ## 2026-09-25 — Enable fat LTO and one codegen unit for release builds
 
 - Group: `all`

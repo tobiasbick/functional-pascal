@@ -76,13 +76,9 @@ impl Worker {
                 None
             }
             ConsoleIntrinsic::GotoXY => {
-                self.with_console(|console| {
-                    console.goto_xy(
-                        integer(arguments, 0, 2, self)?,
-                        integer(arguments, 1, 2, self)?,
-                        location,
-                    )
-                })?;
+                let x = integer(arguments, 0, 2, self)?;
+                let y = integer(arguments, 1, 2, self)?;
+                self.with_console(|console| console.goto_xy(x, y, location))?;
                 None
             }
             ConsoleIntrinsic::WhereX => Some(Value::Integer(self.with_console(|c| c.where_x()))),
@@ -100,15 +96,11 @@ impl Worker {
                 None
             }
             ConsoleIntrinsic::Window => {
-                self.with_console(|console| {
-                    console.window(
-                        integer(arguments, 0, 4, self)?,
-                        integer(arguments, 1, 4, self)?,
-                        integer(arguments, 2, 4, self)?,
-                        integer(arguments, 3, 4, self)?,
-                        location,
-                    )
-                })?;
+                let left = integer(arguments, 0, 4, self)?;
+                let top = integer(arguments, 1, 4, self)?;
+                let right = integer(arguments, 2, 4, self)?;
+                let bottom = integer(arguments, 3, 4, self)?;
+                self.with_console(|console| console.window(left, top, right, bottom, location))?;
                 None
             }
             ConsoleIntrinsic::TextColor => {
@@ -303,14 +295,9 @@ impl Worker {
             }
             ConsoleIntrinsic::PutCell => {
                 let cell = console_cell_from_value(value(arguments, 2, 3, self)?, location)?;
-                self.with_console(|console| {
-                    console.put_cell(
-                        integer(arguments, 0, 3, self)?,
-                        integer(arguments, 1, 3, self)?,
-                        cell,
-                        location,
-                    )
-                })?;
+                let x = integer(arguments, 0, 3, self)?;
+                let y = integer(arguments, 1, 3, self)?;
+                self.with_console(|console| console.put_cell(x, y, cell, location))?;
                 None
             }
             ConsoleIntrinsic::GetCell => {
@@ -330,14 +317,9 @@ impl Worker {
             }
             ConsoleIntrinsic::WriteCells => {
                 let cells = console_cells(value(arguments, 2, 3, self)?, location, self)?;
-                self.with_console(|console| {
-                    console.write_cells(
-                        integer(arguments, 0, 3, self)?,
-                        integer(arguments, 1, 3, self)?,
-                        &cells,
-                        location,
-                    )
-                })?;
+                let x = integer(arguments, 0, 3, self)?;
+                let y = integer(arguments, 1, 3, self)?;
+                self.with_console(|console| console.write_cells(x, y, &cells, location))?;
                 None
             }
             ConsoleIntrinsic::SaveRegion => {

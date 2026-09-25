@@ -8,6 +8,11 @@ fn accept(listener: &TcpListener) -> TcpStream {
     loop {
         match listener.accept() {
             Ok((stream, _)) => {
+                // Accepted sockets can inherit the listener's nonblocking mode (Windows), which
+                // turns a not-yet-arrived request into a spurious `WouldBlock` read failure.
+                stream
+                    .set_nonblocking(false)
+                    .expect("blocking fixture connection");
                 stream
                     .set_read_timeout(Some(Duration::from_secs(5)))
                     .expect("read deadline");

@@ -124,7 +124,8 @@ impl Worker {
                 arguments,
                 location,
                 self.layouts.as_ref(),
-            ),
+            )
+            .map_err(Box::new),
             IntrinsicOwner::Hosted => self.execute_hosted_intrinsic(intrinsic, arguments, location),
             IntrinsicOwner::Callback => self
                 .execute_callback_intrinsic_sync(intrinsic, arguments, location)?

@@ -46,7 +46,9 @@ cargo bench-fpas save before
 cargo bench-fpas save before --group vm
 ```
 
-Writes `.temp-data/bench/before.json` (not committed).
+Writes `.temp-data/bench/before.json` (not committed). The snapshot remembers its group:
+`compare` must use the same `--group` (or none, for a full-suite snapshot). Save a full-suite
+baseline when the change might affect benches outside one group.
 
 ### 2 — Change
 
@@ -77,9 +79,13 @@ cargo build --release -p fpas-cli
 ### 4 — Compare
 
 ```sh
+# full-suite baseline (saved without --group):
 cargo bench-fpas compare before
-# or: cargo bench-fpas compare before --group vm
+# group baseline (saved with --group vm):
+cargo bench-fpas compare before --group vm
 ```
+
+A group mismatch is rejected; re-save the baseline with the group you want to compare.
 
 Read **every** row. A win on the target bench with a clear loss elsewhere is incomplete — call it out and decide with the user before recording.
 

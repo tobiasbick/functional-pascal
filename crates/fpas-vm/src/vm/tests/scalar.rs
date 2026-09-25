@@ -146,3 +146,25 @@ fn dynamic_numeric_operations_accept_mixed_integer_and_real_values() {
             .all(|value| value == &Value::Boolean(true))
     );
 }
+
+#[test]
+fn prepared_string_constants_stay_unchanged_after_concatenation() {
+    let executable = verified(
+        vec![
+            abx(Opcode::LoadConstant, 0, 0),
+            abc(Opcode::ConcatString, 0, 0, 0),
+            abx(Opcode::LoadConstant, 1, 0),
+            return_unit(),
+        ],
+        vec![Constant::String(fpas_bytecode::StringId::new(2))],
+        vec!["root", "test.fpas", "ab"],
+        2,
+    );
+    assert_eq!(
+        executable.string_constant(0).map(|value| &**value),
+        Some("ab")
+    );
+    let (_, registers, _) = execute(executable).expect("string constants execute");
+    assert_eq!(registers[0], Value::Str("abab".into()));
+    assert_eq!(registers[1], Value::Str("ab".into()));
+}

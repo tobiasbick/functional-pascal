@@ -75,7 +75,7 @@ fn require_count(
     if arguments.len() == expected {
         return Ok(());
     }
-    Err(fpas_diagnostics::Diagnostic::error(
+    Err(Box::new(fpas_diagnostics::Diagnostic::error(
         fpas_diagnostics::codes::RUNTIME_INTRINSIC_STACK_STATE_ERROR,
         format!(
             "Hosted intrinsic expected {expected} arguments, got {}",
@@ -89,5 +89,5 @@ fn require_count(
             location.column(),
             location.source_id(),
         ),
-    ))
+    )))
 }

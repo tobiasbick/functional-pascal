@@ -2,7 +2,7 @@
 
 use crate::{
     Constant, DebugType, DecodedInstruction, EnumLayout, EnumVariant, FunctionId, FunctionInfo,
-    GlobalInfo, Instruction, InstructionAddress, RecordLayout, SourceMap, StringTable,
+    GlobalInfo, Instruction, InstructionAddress, RecordLayout, SharedStr, SourceMap, StringTable,
     ValidationError, ValidationErrorKind,
 };
 
@@ -55,9 +55,18 @@ impl Executable {
                 })
             })
             .collect::<Result<Vec<_>, _>>()?;
+        let string_constants = self
+            .constants
+            .iter()
+            .map(|constant| match constant {
+                Constant::String(string) => self.strings.get(*string).map(SharedStr::from),
+                _ => None,
+            })
+            .collect();
         Ok(VerifiedExecutable {
             executable: self,
             decoded,
+            string_constants,
         })
     }
 }
@@ -67,6 +76,8 @@ impl Executable {
 pub struct VerifiedExecutable {
     executable: Executable,
     decoded: Vec<DecodedInstruction>,
+    // Shared runtime strings for string constants, indexed like `Executable::constants`.
+    string_constants: Vec<Option<SharedStr>>,
 }
 
 impl VerifiedExecutable {
@@ -80,6 +91,14 @@ impl VerifiedExecutable {
     #[must_use]
     pub fn decoded(&self) -> &[DecodedInstruction] {
         &self.decoded
+    }
+
+    /// Borrow the shared runtime string prepared for a string constant.
+    ///
+    /// Returns `None` when `index` is outside the constant table or names a non-string constant.
+    #[must_use]
+    pub fn string_constant(&self, index: usize) -> Option<&SharedStr> {
+        self.string_constants.get(index).and_then(Option::as_ref)
     }
 
     /// Consume the proof wrapper and return the untrusted candidate representation.

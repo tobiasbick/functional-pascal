@@ -52,7 +52,7 @@ impl DebugSession {
             let recovery = if self.state == DebugSessionState::Failed
                 && self.last_stop.reason == DebugStopReason::RuntimeError
             {
-                Some(self.last_stop.diagnostic.clone().ok_or_else(|| {
+                Some(self.last_stop.diagnostic.clone().map(Box::new).ok_or_else(|| {
                     unsupported(
                         "forced return cannot recover a runtime-error stop without its exact diagnostic",
                         "Restart the debug session because the stopped failure identity is incomplete.",

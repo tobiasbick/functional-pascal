@@ -66,6 +66,13 @@ impl Worker {
         continuation::resume(self)
     }
 
+    /// Return whether the top hosted callback operation is ready for its next step.
+    pub(in crate::vm) fn callback_resume_pending(&self) -> bool {
+        self.callback_continuations
+            .last()
+            .is_some_and(|continuation| continuation.awaiting_depth.is_none())
+    }
+
     /// Return whether the current function return completes the active hosted callback.
     pub(in crate::vm) fn callback_accepts_return(&self) -> bool {
         self.callback_continuations

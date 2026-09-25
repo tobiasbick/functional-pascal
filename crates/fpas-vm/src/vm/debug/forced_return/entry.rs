@@ -37,7 +37,7 @@ pub(in crate::vm::debug) fn prepare_entry(
         .map_or((worker.function, worker.base), |frame| {
             (frame.function, frame.base)
         });
-    if base > worker.active_register_count {
+    if base > worker.active_register_count() {
         return Err(unsupported(
             "forced entry completion cannot release an invalid register window",
             "Rebuild the executable with the current compiler and retry.",

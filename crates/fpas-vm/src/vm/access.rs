@@ -1,6 +1,6 @@
 //! Central checked register and persistent-constant access.
 
-use fpas_bytecode::{Constant, Register, SharedStr, Value};
+use fpas_bytecode::{Constant, NO_REGISTER, Register, SharedStr, Value};
 use fpas_diagnostics::codes::RUNTIME_VM_OPERAND_TYPE_MISMATCH;
 
 use super::VmError;
@@ -8,27 +8,43 @@ use super::diagnostics;
 use super::worker::Worker;
 
 impl Worker {
+    /// Borrow a register of the current frame.
     #[inline(always)]
     pub fn read(&self, register: Register) -> Result<&Value, VmError> {
-        let index = self.base + usize::from(register.get());
-        self.registers
-            .get(..self.active_register_count)
-            .and_then(|registers| registers.get(index))
-            .ok_or_else(|| {
-                diagnostics::internal(
-                    self.executable.executable(),
-                    self.current_address,
-                    format!(
-                        "Register {} is outside the initialized frame",
-                        register.get()
-                    ),
-                )
-            })
+        self.read_operand(register.get())
     }
 
+    /// Borrow a verified register operand of the current frame.
+    ///
+    /// The register vector holds exactly the active window and the verifier keeps every register
+    /// operand below the frame's register count, so one length check covers the frame bound.
+    #[inline(always)]
+    pub(super) fn read_operand(&self, operand: u16) -> Result<&Value, VmError> {
+        debug_assert_ne!(
+            operand, NO_REGISTER,
+            "verified register operands are never NO_REGISTER"
+        );
+        let index = self.base + usize::from(operand);
+        match self.registers.get(index) {
+            Some(value) => Ok(value),
+            None => Err(self.register_outside_frame(index)),
+        }
+    }
+
+    /// Replace a register of the current frame and mark it initialized.
     #[inline(always)]
     pub fn write(&mut self, register: Register, value: Value) -> Result<(), VmError> {
-        self.store_register(self.base + usize::from(register.get()), value)
+        self.write_operand(register.get(), value)
+    }
+
+    /// Replace a verified register operand of the current frame and mark it initialized.
+    #[inline(always)]
+    pub(super) fn write_operand(&mut self, operand: u16, value: Value) -> Result<(), VmError> {
+        debug_assert_ne!(
+            operand, NO_REGISTER,
+            "verified register operands are never NO_REGISTER"
+        );
+        self.store_register(self.base + usize::from(operand), value)
     }
 
     /// Remove a value from a register without cloning it.

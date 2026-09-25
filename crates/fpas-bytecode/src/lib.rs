@@ -11,6 +11,7 @@
 )]
 
 mod debug;
+mod decoded;
 mod executable;
 mod function;
 mod instruction;
@@ -26,6 +27,7 @@ pub use debug::{
     DebugScope, DebugSourceLocation, DebugType, FunctionDebugInfo, FunctionEffectSummary,
     SequencePoint, analyze_debug_effects, intrinsic_debug_effects,
 };
+pub use decoded::DecodedInstruction;
 pub use executable::{Executable, VerifiedExecutable};
 pub use fpas_diagnostics::SourceLocation;
 pub use function::{CodeRange, FunctionFlags, FunctionInfo, ReturnConvention};

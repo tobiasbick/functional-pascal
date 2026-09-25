@@ -1,8 +1,9 @@
 //! Untrusted and verified register executable aggregates.
 
 use crate::{
-    Constant, DebugType, EnumLayout, EnumVariant, FunctionId, FunctionInfo, GlobalInfo,
-    Instruction, RecordLayout, SourceMap, StringTable, ValidationError,
+    Constant, DebugType, DecodedInstruction, EnumLayout, EnumVariant, FunctionId, FunctionInfo,
+    GlobalInfo, Instruction, InstructionAddress, RecordLayout, SourceMap, StringTable,
+    ValidationError, ValidationErrorKind,
 };
 
 /// Complete untrusted register-bytecode candidate produced by a compiler or decoder.
@@ -40,7 +41,24 @@ impl Executable {
     /// Returns a contextual [`ValidationError`] for the first deterministic violation.
     pub fn verify(self) -> Result<VerifiedExecutable, ValidationError> {
         crate::validate::validate(&self)?;
-        Ok(VerifiedExecutable { executable: self })
+        let decoded = self
+            .code
+            .iter()
+            .enumerate()
+            .map(|(index, instruction)| {
+                DecodedInstruction::decode(*instruction).map_err(|error| ValidationError {
+                    function: None,
+                    function_name: None,
+                    instruction: InstructionAddress::try_from_index(index).ok(),
+                    opcode: None,
+                    kind: ValidationErrorKind::Instruction(error),
+                })
+            })
+            .collect::<Result<Vec<_>, _>>()?;
+        Ok(VerifiedExecutable {
+            executable: self,
+            decoded,
+        })
     }
 }
 
@@ -48,6 +66,7 @@ impl Executable {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct VerifiedExecutable {
     executable: Executable,
+    decoded: Vec<DecodedInstruction>,
 }
 
 impl VerifiedExecutable {
@@ -55,6 +74,12 @@ impl VerifiedExecutable {
     #[must_use]
     pub const fn executable(&self) -> &Executable {
         &self.executable
+    }
+
+    /// Borrow instructions prepared for the interpreter after validation.
+    #[must_use]
+    pub fn decoded(&self) -> &[DecodedInstruction] {
+        &self.decoded
     }
 
     /// Consume the proof wrapper and return the untrusted candidate representation.

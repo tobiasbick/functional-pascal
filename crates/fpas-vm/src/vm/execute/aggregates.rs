@@ -305,8 +305,7 @@ impl Worker {
                 .ok_or_else(|| self.bad_slot("register window", u32::from(base)))?;
             let value = self
                 .registers
-                .get(..self.active_register_count)
-                .and_then(|registers| registers.get(self.base + slot))
+                .get(self.base + slot)
                 .cloned()
                 .ok_or_else(|| {
                     self.bad_slot("register window", u32::try_from(slot).unwrap_or(u32::MAX))

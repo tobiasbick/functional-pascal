@@ -12,14 +12,13 @@ impl Worker {
         operands: AbcOperands,
         operation: BinaryOperation,
     ) -> Result<(), VmError> {
-        let destination = register(operands.a)?;
         let result = value_ops::binary(
             operation,
-            self.read(register(operands.b)?)?,
-            self.read(register(operands.c)?)?,
+            self.read_operand(operands.b)?,
+            self.read_operand(operands.c)?,
         )
         .map_err(|error| self.value_operation_error(error))?;
-        self.write(destination, result)
+        self.write_operand(operands.a, result)
     }
 
     pub fn execute_value_unary(
@@ -27,10 +26,9 @@ impl Worker {
         operands: AbcOperands,
         operation: UnaryOperation,
     ) -> Result<(), VmError> {
-        let destination = register(operands.a)?;
-        let result = value_ops::unary(operation, self.read(register(operands.b)?)?)
+        let result = value_ops::unary(operation, self.read_operand(operands.b)?)
             .map_err(|error| self.value_operation_error(error))?;
-        self.write(destination, result)
+        self.write_operand(operands.a, result)
     }
 
     pub fn execute_integer_to_real(&mut self, operands: AbcOperands) -> Result<(), VmError> {

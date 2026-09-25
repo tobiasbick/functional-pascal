@@ -33,6 +33,8 @@ pub(crate) fn internal_error(
     )
 }
 
+#[cold]
+#[inline(never)]
 pub(super) fn at_address(
     executable: &Executable,
     address: InstructionAddress,
@@ -47,6 +49,8 @@ pub(super) fn at_address(
     Diagnostic::error(code, message, Some(help.into()), span)
 }
 
+#[cold]
+#[inline(never)]
 pub(super) fn internal(
     executable: &Executable,
     address: InstructionAddress,

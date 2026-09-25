@@ -155,7 +155,7 @@ fn prove_restore(
             "Rebuild the executable with the current compiler and retry.",
         ));
     }
-    if caller.base > selected_base || selected_base > worker.active_register_count {
+    if caller.base > selected_base || selected_base > worker.active_register_count() {
         return Err(unsupported(
             "forced return cannot release selected and younger register windows because release bounds are invalid",
             "Rebuild the executable with the current compiler and retry.",
@@ -164,8 +164,7 @@ fn prove_restore(
     if let Some(destination) = caller.return_destination
         && (destination < caller.base
             || destination >= selected_base
-            || destination >= worker.active_register_count
-            || destination >= worker.registers.len()
+            || destination >= worker.active_register_count()
             || destination >= worker.register_initialized.len())
     {
         return Err(unsupported(

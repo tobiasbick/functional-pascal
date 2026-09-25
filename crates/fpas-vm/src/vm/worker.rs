@@ -1,18 +1,19 @@
 //! Register-window state and execution loop.
 
+mod run;
+
 use std::cell::{Cell, RefCell};
 use std::sync::{Arc, RwLock};
 
 use fpas_bytecode::{FunctionId, InstructionAddress, Value, VerifiedExecutable};
 
 use super::debug::initializer_suppression::SourceInitializerTarget;
-use super::dispatch::DispatchStep;
 use super::frame::CallFrame;
 use super::hosted::HostedState;
 use super::hosted::callbacks::CallbackContinuation;
 use super::layouts::RuntimeLayouts;
 use super::tasks::{TaskClock, TaskScheduler, TaskState, TaskSuspension, TaskSuspensionState};
-use super::{Execution, VmError, diagnostics};
+use super::{VmError, diagnostics};
 
 pub(super) struct Worker {
     pub(in crate::vm) supervision: Option<Box<super::tasks::supervision::SupervisedTask>>,
@@ -20,9 +21,8 @@ pub(super) struct Worker {
     pub function: FunctionId,
     pub ip: usize,
     pub base: usize,
+    // Live registers of all active frames; the length is the active window (see register_stack).
     pub registers: Vec<Value>,
-    // Physical register storage retains a high-water mark; this is the live prefix.
-    pub(super) active_register_count: usize,
     pub(super) register_initialized: Vec<bool>,
     pub globals: Arc<RwLock<Vec<Option<Value>>>>,
     pub(super) local_globals: Option<Vec<Option<Value>>>,
@@ -151,7 +151,6 @@ impl Worker {
             ip,
             base: 0,
             registers,
-            active_register_count: usize::from(register_count),
             register_initialized,
             globals,
             local_globals: None,
@@ -208,7 +207,6 @@ impl Worker {
             ip: self.ip,
             base: 0,
             registers: Vec::new(),
-            active_register_count: 0,
             register_initialized: Vec::new(),
             globals: Arc::clone(&self.globals),
             local_globals: None,
@@ -234,10 +232,9 @@ impl Worker {
     }
 
     pub(super) fn worker_for_task(&self, task: TaskState) -> Self {
-        let active_register_count = task.registers.len();
         debug_assert_eq!(
             task.register_initialized.len(),
-            active_register_count,
+            task.registers.len(),
             "task register initialization bits must match saved register values"
         );
         Self {
@@ -247,7 +244,6 @@ impl Worker {
             ip: task.ip,
             base: task.base,
             registers: task.registers,
-            active_register_count,
             register_initialized: task.register_initialized,
             globals: Arc::clone(&self.globals),
             local_globals: None,
@@ -273,9 +269,6 @@ impl Worker {
     }
 
     pub(super) fn take_task_state(&mut self) -> TaskState {
-        self.registers.truncate(self.active_register_count);
-        self.register_initialized
-            .truncate(self.active_register_count);
         TaskState {
             suspension: self.task_suspension.take(),
             supervision: self.supervision.take(),
@@ -309,70 +302,6 @@ impl Worker {
             };
             suspension.state(clock)
         })
-    }
-
-    pub(super) fn run_task(&mut self) -> Result<Option<Value>, VmError> {
-        loop {
-            if self
-                .scheduler
-                .as_ref()
-                .is_some_and(|scheduler| scheduler.is_aborted())
-            {
-                return Ok(None);
-            }
-            match self.dispatch_one()? {
-                DispatchStep::Continue => {}
-                DispatchStep::Suspend => return Ok(None),
-                DispatchStep::Return(value) => return Ok(Some(value)),
-            }
-            if self.task_id != 0 {
-                self.instructions_until_yield = self.instructions_until_yield.saturating_sub(1);
-                if self.instructions_until_yield == 0 {
-                    self.suspend_and_enqueue();
-                    return Ok(None);
-                }
-            }
-        }
-    }
-
-    pub fn run(mut self) -> Result<Execution, VmError> {
-        self.run_in_place()
-    }
-
-    pub(super) fn run_in_place(&mut self) -> Result<Execution, VmError> {
-        loop {
-            if self
-                .scheduler
-                .as_ref()
-                .is_some_and(|scheduler| scheduler.is_aborted())
-            {
-                return Err(diagnostics::at_address(
-                    self.executable.executable(),
-                    self.current_address,
-                    fpas_diagnostics::codes::RUNTIME_VM_SHUTDOWN,
-                    "Register VM execution was canceled",
-                    "Create a new VM instance to run the program again.",
-                ));
-            }
-            match self.dispatch_one()? {
-                DispatchStep::Continue => {}
-                DispatchStep::Suspend => {
-                    return Err(diagnostics::internal(
-                        self.executable.executable(),
-                        self.current_address,
-                        "Root register execution suspended unexpectedly",
-                    ));
-                }
-                DispatchStep::Return(value) => {
-                    return Ok(Execution {
-                        value,
-                        instruction_count: self
-                            .instruction_count
-                            .saturating_add(self.callback_instruction_count.get()),
-                    });
-                }
-            }
-        }
     }
 
     pub fn unavailable_opcode(&self, opcode: fpas_bytecode::Opcode) -> VmError {

@@ -79,8 +79,7 @@ pub(in crate::vm::debug) fn prepare(
             "Rebuild the executable with the current compiler and retry.",
         )
     })?;
-    if register_end > worker.active_register_count
-        || register_end > worker.registers.len()
+    if register_end > worker.active_register_count()
         || register_end > worker.register_initialized.len()
     {
         return Err(unsupported(

@@ -284,8 +284,8 @@ impl DebugSession {
             worker.ip,
             worker.base,
             worker.call_stack.len(),
-            worker.registers[..worker.active_register_count].to_vec(),
-            worker.register_initialized[..worker.active_register_count].to_vec(),
+            worker.registers.clone(),
+            worker.register_initialized.clone(),
         ))
     }
 

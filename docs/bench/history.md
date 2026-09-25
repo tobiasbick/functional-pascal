@@ -14,6 +14,81 @@ cargo bench-fpas record "vm-only note" --group vm
 
 Newest entries are prepended below this header.
 
+## 2026-09-25 — Enable fat LTO and one codegen unit for release builds
+
+- Group: `all`
+- Suite: [`suite.toml`](suite.toml)
+
+Against the local pre-change snapshot, three post-change runs put `integer_loop` at
+6501 -> 6071–6325 ms, `intrinsic_dispatch` at 1567 -> 1380–1439 ms, and
+`record_update` at 366 -> 329–340 ms. `closure_call` (451 -> 470–494 ms),
+`function_call` (659 -> 677–708 ms), and `dynamic_numeric` (852 -> 884–913 ms)
+were slower in all three. `mandelbrot_paint` varied from 1142 to 1363 ms against
+1186 ms before, so these runs do not establish a direction for that workload.
+
+| bench | elapsed_ms | throughput |
+|-------|------------|------------|
+| mandelbrot_render | 1320 | - |
+| mandelbrot_paint | 1142 | - |
+| integer_loop | 6325 | throughput: 7905138 iters/s |
+| global_access | 494 | throughput: 10121457 global updates/s |
+| record_field_access | 1357 | throughput: 11053795 field accesses/s |
+| closure_call | 470 | throughput: 6382978 closure calls/s |
+| branch_dispatch | 2916 | throughput: 6858710 branches/s |
+| dynamic_numeric | 884 | throughput: 5656108 dynamic numeric ops/s |
+| array_push | 204 | throughput: 9803921 pushes/s |
+| array_length | 66 | throughput: 7575757 lengths/s |
+| string_concat | 1913 | throughput: 2613695 concats/s |
+| string_length | 65 | throughput: 7692307 lengths/s |
+| intrinsic_dispatch | 1406 | throughput: 10668563 intrinsic calls/s |
+| function_call | 677 | throughput: 8862629 calls/s |
+| array_callbacks | 860 | throughput: 11162790 callbacks/s |
+| record_update | 329 | throughput: 3039513 updates/s |
+| unicode_char_at | 968 | throughput: 3099173 chars/s |
+| wrapper_payload | 1356 | throughput: 7374631 wrappers/s |
+| task_spawn_wait | 525 | throughput: 190476 tasks/s |
+| task_array_callbacks | 880 | throughput: 4363636 callbacks/s |
+| tui_headless | 3179 | throughput: 157 frames/s |
+| notes_headless | 6215 | throughput: 40 frames/s |
+| analysis_queries | 226 | - |
+| string_search | 273 | - |
+| compiler_lowering | 1342 | - |
+| substring_ascii | 10 | - |
+| substring_unicode | 400 | - |
+| project_queries | 888 | - |
+| project_edits | 2600 | - |
+| project_overlapping_queries | 595 | - |
+| project_build_cold | 1605 | - |
+| project_build_warm | 1241 | - |
+| unit_artifact_shared_types | 1 | - |
+| program_artifact_shared_types | 1 | - |
+| dictionary_reads | 8 | - |
+| scalar_membership | 29 | - |
+| array_pop | 5 | - |
+| text_area_locate | 2118 | - |
+| http_body_accumulation | 212 | - |
+| local_index_write | 73 | throughput: 8767123 writes/s |
+| cell_grid_headless | 235 | throughput: 425 paints/s |
+| partial_surface_fill | 158 | - |
+| source_utf8_ascii_2048 | 15 | - |
+| source_utf8_ascii_4096 | 29 | - |
+| source_utf8_ascii_8192 | 59 | - |
+| source_utf8_unicode_2048 | 58 | - |
+| source_utf8_unicode_4096 | 120 | - |
+| source_utf8_unicode_8192 | 239 | - |
+| source_notes_ascii_128 | 6 | - |
+| source_notes_ascii_256 | 12 | - |
+| source_notes_ascii_512 | 28 | - |
+| source_queue_ascii_256 | 107 | - |
+| source_queue_ascii_512 | 215 | - |
+| source_queue_ascii_1024 | 423 | - |
+| source_navigation_long_512 | 64 | - |
+| source_navigation_long_1024 | 123 | - |
+| source_navigation_long_2048 | 246 | - |
+| source_navigation_lines_512 | 14 | - |
+| source_navigation_lines_1024 | 23 | - |
+| source_navigation_lines_2048 | 40 | - |
+
 ## 2026-09-23 — TextArea grapheme traversal with preserved scalar caret positions
 
 - Group: `source-navigation`

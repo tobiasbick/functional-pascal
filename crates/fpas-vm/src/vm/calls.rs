@@ -167,7 +167,7 @@ impl Worker {
             })?;
         let argument_end = argument_start
             .checked_add(usize::from(argument_count))
-            .filter(|end| *end <= self.active_register_count)
+            .filter(|end| *end <= self.active_register_count())
             .ok_or_else(|| {
                 diagnostics::internal(
                     self.executable.executable(),
@@ -278,7 +278,7 @@ impl Worker {
         }
         let frame_size = usize::from(info.register_count);
         let new_register_count = self
-            .active_register_count
+            .active_register_count()
             .checked_add(frame_size)
             .filter(|len| *len <= MAX_REGISTER_SLOTS)
             .ok_or_else(|| {
@@ -318,7 +318,7 @@ impl Worker {
             base: self.base,
             return_destination: prepared.return_destination,
         });
-        self.base = self.active_register_count;
+        self.base = self.active_register_count();
         self.activate_registers(prepared.new_register_count);
     }
 
@@ -332,8 +332,7 @@ impl Worker {
             )
         })?;
         self.registers
-            .get(..self.active_register_count)
-            .and_then(|registers| registers.get(start..end))
+            .get(start..end)
             .map(<[Value]>::to_vec)
             .ok_or_else(|| {
                 diagnostics::internal(

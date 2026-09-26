@@ -234,11 +234,17 @@ pub enum Opcode {
     /// The callee reuses the current frame. Debugger-owned execution runs it as `CallDirect`
     /// followed by that `Return`, so debug stacks keep every frame.
     TailCall = 105,
+    /// Call a first-class function value whose result the following `Return` word returns.
+    ///
+    /// The callee reuses the current frame when both functions use the same return convention;
+    /// otherwise, and in debugger-owned execution, it runs as `CallValue` followed by that
+    /// `Return`.
+    TailCallValue = 106,
 }
 
 impl Opcode {
     /// Exhaustive opcode inventory used by format and verifier tests.
-    pub const ALL: [Self; 106] = [
+    pub const ALL: [Self; 107] = [
         Self::LoadConstant,
         Self::LoadUnit,
         Self::Move,
@@ -345,6 +351,7 @@ impl Opcode {
         Self::BranchIfGreaterEqualInteger,
         Self::ForLoop,
         Self::TailCall,
+        Self::TailCallValue,
     ];
 
     /// Return the physical payload form assigned to this opcode.

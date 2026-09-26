@@ -61,6 +61,20 @@ pub(super) fn validate_superinstruction_payload(
             }
             "a following Return of the call result and a matching return convention"
         }
+        Opcode::TailCallValue => {
+            let head = executable.code[address.get() as usize].abc_payload();
+            if executable
+                .code
+                .get(address.get() as usize + 1)
+                .is_some_and(|word| {
+                    word.opcode() == Ok(Opcode::Return) && word.abc_payload().a == head.a
+                })
+                && address.get() + 1 < function.code.end.get()
+            {
+                return Ok(());
+            }
+            "a following Return of the call result"
+        }
         _ => return Ok(()),
     };
     Err(ValidationError::instruction(

@@ -72,9 +72,16 @@ pub(super) fn compile_function(
             .terminators
             .first()
             .ok_or_else(|| compile_error("IR block has no terminator"))?;
-        if let Some(last) = selected.last_mut() {
+        if let (Some(last), Some(instruction)) = (selected.last_mut(), block.instructions.last()) {
             let before = last.words.len();
-            convert_tail_call(program, function, &allocation, &mut last.words, terminator)?;
+            convert_tail_call(
+                program,
+                function,
+                &allocation,
+                instruction,
+                &mut last.words,
+                terminator,
+            )?;
             width -= before - last.words.len();
         }
         let next = function.blocks.get(index + 1).map(|next| next.id);

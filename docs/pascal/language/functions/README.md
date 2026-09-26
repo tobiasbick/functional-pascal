@@ -24,6 +24,10 @@ The VM bounds both intermediate value storage and active function call frames. E
 recursion therefore stops with a `Call stack overflow` runtime diagnostic instead of exhausting
 host memory. Reduce the recursion depth or rewrite the processing as a loop when this occurs.
 
+A direct call whose result the routine returns immediately (`return F(X)`, or a procedure ending
+with a call to another procedure) reuses the current frame and does not count toward this limit.
+The debugger keeps such frames visible and therefore still applies the limit.
+
 ## See also
 
 - [Types — generics](../types/generics.md)

@@ -67,3 +67,10 @@ begin
 end.";
     assert_succeeds(source);
 }
+
+#[test]
+fn tail_calls_through_function_values_reuse_the_frame() {
+    let source = "program ValueTail; function Countdown(N: integer): integer; begin if N = 0 then return 0; var Next: function(N: integer): integer := Countdown; return Next(N - 1) end; begin if Countdown(100000) <> 0 then panic('wrong') end.";
+    assert!(opcodes(source).contains(&Opcode::TailCallValue));
+    assert_succeeds(source);
+}

@@ -87,7 +87,7 @@ pub fn analyze_debug_effects(executable: &VerifiedExecutable) -> Vec<FunctionEff
                     Ok(operands) => edges[index].push(usize::from(operands.b)),
                     Err(_) => local[index] = local[index].union(DebugEffectSet::UNKNOWN),
                 },
-                Opcode::CallValue => {
+                Opcode::CallValue | Opcode::TailCallValue => {
                     local[index] = local[index].union(DebugEffectSet::DYNAMIC_CALL);
                 }
                 Opcode::Intrinsic => match instruction.abc_operands() {

@@ -23,8 +23,10 @@ Steps 11, 12, and 13 of the VM performance plan. Alternating three-run medians a
 previous commit: `integer_loop` 1583 -> 1001 ms, `branch_dispatch` 1115 -> 652 ms,
 `function_call` 414 -> 293 ms, `closure_call` 243 -> 177 ms, `typed_real` 450 -> 210 ms,
 `typed_string` 364 -> 134 ms, `record_update` 117 -> 76 ms, `tui_headless` 2411 -> 1849 ms,
-`notes_headless` 4676 -> 3552 ms. `task_spawn_wait` regressed in a nine-run rerun
-(458 -> 495 ms); its kernel is a trivial task body, so it mostly measures task scheduling.
+`notes_headless` 4676 -> 3552 ms. `task_spawn_wait` looked slower in a nine-run rerun
+(458 -> 495 ms), but a later alternating comparison showed no difference (462–510 ms before,
+458–513 ms after); the benchmark mostly measures task scheduling and varies strongly with CPU
+affinity.
 `compiler_lowering` stayed at 1169–1223 ms.
 
 | bench | elapsed_ms | throughput |

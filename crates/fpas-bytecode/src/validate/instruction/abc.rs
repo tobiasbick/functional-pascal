@@ -288,7 +288,7 @@ pub(super) fn validate_abc(
                 argument_count: auxiliary,
             },
         ),
-        Opcode::CallValue | Opcode::SpawnTask => {
+        Opcode::CallValue | Opcode::TailCallValue | Opcode::SpawnTask => {
             validate_optional_register(
                 executable,
                 function_id,

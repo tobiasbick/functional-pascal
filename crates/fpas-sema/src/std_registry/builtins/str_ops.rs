@@ -46,8 +46,8 @@ fn check_map_or_filter(
     ) {
         return Ty::Error;
     }
-    let input = c.check_expr(&args[0]);
-    let callback = c.check_expr(&args[1]);
+    let input = c.check_expr(args[0]);
+    let callback = c.check_expr(args[1]);
     if input == Ty::Error || callback == Ty::Error {
         return Ty::Error;
     }
@@ -88,9 +88,9 @@ fn check_reduce(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
     ) {
         return Ty::Error;
     }
-    let input = c.check_expr(&args[0]);
-    let initial = c.check_expr(&args[1]);
-    let callback = c.check_expr(&args[2]);
+    let input = c.check_expr(args[0]);
+    let initial = c.check_expr(args[1]);
+    let callback = c.check_expr(args[2]);
     if input == Ty::Error || initial == Ty::Error || callback == Ty::Error {
         return Ty::Error;
     }

@@ -8,7 +8,7 @@ repository.workspace = true
 
 [dependencies]
 atomic-write-file = "0.3.0"
-blake3 = { workspace = true }
+fpas-binary = { path = "../fpas-binary" }
 fpas-bytecode = { path = "../fpas-bytecode" }
 serde = { workspace = true }
 serde_json = { workspace = true }

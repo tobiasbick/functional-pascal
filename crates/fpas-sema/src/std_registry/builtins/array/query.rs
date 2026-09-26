@@ -19,7 +19,7 @@ pub(super) fn check_length(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
         return Ty::Error;
     }
 
-    let ty = c.check_expr(&args[0]);
+    let ty = c.check_expr(args[0]);
     if array_elem_ty(&ty).is_some() {
         Ty::Integer
     } else {
@@ -38,7 +38,7 @@ pub(super) fn check_sort_or_reverse(c: &mut Checker, name: &str, args: &[&Expr],
         return Ty::Error;
     }
 
-    let ty = c.check_expr(&args[0]);
+    let ty = c.check_expr(args[0]);
     if array_elem_ty(&ty).is_some() {
         ty
     } else {
@@ -69,7 +69,7 @@ pub(super) fn check_contains_or_index_of(
         return Ty::Error;
     }
 
-    let array_ty = c.check_expr(&args[0]);
+    let array_ty = c.check_expr(args[0]);
     let Some(elem_ty) = array_elem_ty(&array_ty) else {
         c.error_with_code(
             SEMA_TYPE_MISMATCH,
@@ -77,10 +77,10 @@ pub(super) fn check_contains_or_index_of(
             "Pass `array of T`.",
             span,
         );
-        c.check_expr(&args[1]);
+        c.check_expr(args[1]);
         return Ty::Error;
     };
-    let value_ty = c.check_expr(&args[1]);
+    let value_ty = c.check_expr(args[1]);
     c.check_type_compat(&elem_ty, &value_ty, "compared value", span);
 
     if name.eq_ignore_ascii_case(s::STD_ARRAY_CONTAINS) {
@@ -102,7 +102,7 @@ pub(super) fn check_slice(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
         return Ty::Error;
     }
 
-    let array_ty = c.check_expr(&args[0]);
+    let array_ty = c.check_expr(args[0]);
     if array_elem_ty(&array_ty).is_none() {
         c.error_with_code(
             SEMA_TYPE_MISMATCH,
@@ -110,13 +110,13 @@ pub(super) fn check_slice(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
             "Pass `array of T`.",
             span,
         );
-        c.check_expr(&args[1]);
-        c.check_expr(&args[2]);
+        c.check_expr(args[1]);
+        c.check_expr(args[2]);
         return Ty::Error;
     }
 
-    let start_ty = c.check_expr(&args[1]);
-    let len_ty = c.check_expr(&args[2]);
+    let start_ty = c.check_expr(args[1]);
+    let len_ty = c.check_expr(args[2]);
     c.check_type_compat(&Ty::Integer, &start_ty, "start index", span);
     c.check_type_compat(&Ty::Integer, &len_ty, "length", span);
     array_ty
@@ -134,8 +134,8 @@ pub(super) fn check_concat(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
         return Ty::Error;
     }
 
-    let a_ty = c.check_expr(&args[0]);
-    let b_ty = c.check_expr(&args[1]);
+    let a_ty = c.check_expr(args[0]);
+    let b_ty = c.check_expr(args[1]);
 
     let Some(a_elem_ty) = array_elem_ty(&a_ty) else {
         c.error_with_code(
@@ -181,8 +181,8 @@ pub(super) fn check_fill(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
         return Ty::Error;
     }
 
-    let elem_ty = c.check_expr(&args[0]);
-    let count_ty = c.check_expr(&args[1]);
+    let elem_ty = c.check_expr(args[0]);
+    let count_ty = c.check_expr(args[1]);
     c.check_type_compat(&Ty::Integer, &count_ty, "count", span);
     Ty::Array(Box::new(elem_ty))
 }

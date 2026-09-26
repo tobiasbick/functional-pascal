@@ -7,7 +7,7 @@ impl Console {
     /// Returns `Some(coord)` if `raw` is a valid 1-based coordinate within `[1, max]`;
     /// returns `None` when the coordinate is out of bounds so the caller can silently skip
     /// the operation (e.g. after a terminal resize).
-    pub(super) fn check_coord(&self, raw: i64, max: u16) -> Option<u16> {
+    pub(super) fn check_coord(raw: i64, max: u16) -> Option<u16> {
         let value = u16::try_from(raw).ok()?;
         if value == 0 || value > max {
             None
@@ -16,50 +16,33 @@ impl Console {
         }
     }
 
-    pub(super) fn validate_color(
-        &self,
-        raw: i64,
-        op_name: &str,
-        location: SourceLocation,
-    ) -> Result<u8, StdError> {
-        validate_packed_crt_color(raw, op_name, location)
-    }
-
-    pub(super) fn validate_text_attr(
-        &self,
-        raw: i64,
-        location: SourceLocation,
-    ) -> Result<u8, StdError> {
-        if !(0..=255).contains(&raw) {
-            return Err(std_runtime_error(
+    pub(super) fn validate_text_attr(raw: i64, location: SourceLocation) -> Result<u8, StdError> {
+        u8::try_from(raw).map_err(|_| {
+            std_runtime_error(
                 RUNTIME_CONSOLE_STATE_ERROR,
                 format!("SetTextAttr expects an attribute from 0 to 255, got {raw}"),
                 "Use `TextAttr` values encoded as (Background * 16 + Foreground).",
                 location,
-            ));
-        }
-        Ok(raw as u8)
+            )
+        })
     }
 
     pub(super) fn validate_color_256(
-        &self,
         raw: i64,
         op_name: &str,
         location: SourceLocation,
     ) -> Result<u8, StdError> {
-        if !(0..=255).contains(&raw) {
-            return Err(std_runtime_error(
+        u8::try_from(raw).map_err(|_| {
+            std_runtime_error(
                 RUNTIME_CONSOLE_STATE_ERROR,
                 format!("{op_name} expects a color index from 0 to 255, got {raw}"),
                 "Pass an integer from 0 to 255 for the 256-color palette.",
                 location,
-            ));
-        }
-        Ok(raw as u8)
+            )
+        })
     }
 
     pub(super) fn validate_rgb(
-        &self,
         r: i64,
         g: i64,
         b: i64,

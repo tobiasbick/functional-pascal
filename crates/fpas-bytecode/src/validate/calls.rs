@@ -1,6 +1,7 @@
 //! Call targets, arity, destinations, and contiguous argument windows.
 
-use crate::{FunctionId, FunctionInfo, InstructionAddress, NO_REGISTER, Opcode, ReturnConvention};
+use crate::validate::site::InstructionSite;
+use crate::{NO_REGISTER, ReturnConvention};
 
 use super::{ValidationError, ValidationErrorKind};
 
@@ -12,13 +13,16 @@ pub(super) struct CallOperands {
 }
 
 pub(super) fn validate_call(
-    executable: &crate::Executable,
-    caller_id: FunctionId,
-    caller: &FunctionInfo,
-    address: InstructionAddress,
-    opcode: Opcode,
+    site: InstructionSite<'_>,
     operands: CallOperands,
 ) -> Result<(), ValidationError> {
+    let InstructionSite {
+        executable,
+        function_id: caller_id,
+        address,
+        opcode,
+        ..
+    } = site;
     let Some(target) = executable.functions.get(usize::from(operands.target)) else {
         return Err(ValidationError::instruction(
             executable,
@@ -46,21 +50,9 @@ pub(super) fn validate_call(
             },
         ));
     }
-    validate_destination(
-        executable,
-        caller_id,
-        caller,
-        address,
-        opcode,
-        operands.destination,
-        target.return_convention,
-    )?;
+    validate_destination(site, operands.destination, target.return_convention)?;
     validate_window(
-        executable,
-        caller_id,
-        caller,
-        address,
-        opcode,
+        site,
         "argument window",
         operands.argument_base,
         usize::from(operands.argument_count),
@@ -68,14 +60,17 @@ pub(super) fn validate_call(
 }
 
 pub(super) fn validate_destination(
-    executable: &crate::Executable,
-    function_id: FunctionId,
-    function: &FunctionInfo,
-    address: InstructionAddress,
-    opcode: Opcode,
+    site: InstructionSite<'_>,
     destination: u16,
     convention: ReturnConvention,
 ) -> Result<(), ValidationError> {
+    let InstructionSite {
+        executable,
+        function_id,
+        function,
+        address,
+        opcode,
+    } = site;
     match convention {
         ReturnConvention::Unit if destination == NO_REGISTER => Ok(()),
         ReturnConvention::Value if destination < function.register_count => Ok(()),
@@ -92,20 +87,19 @@ pub(super) fn validate_destination(
     }
 }
 
-#[expect(
-    clippy::too_many_arguments,
-    reason = "verifier context keeps diagnostics actionable"
-)]
 pub(super) fn validate_window(
-    executable: &crate::Executable,
-    function_id: FunctionId,
-    function: &FunctionInfo,
-    address: InstructionAddress,
-    opcode: Opcode,
+    site: InstructionSite<'_>,
     operand: &'static str,
     base: u16,
     count: usize,
 ) -> Result<(), ValidationError> {
+    let InstructionSite {
+        executable,
+        function_id,
+        function,
+        address,
+        opcode,
+    } = site;
     let end = usize::from(base).checked_add(count);
     if base != NO_REGISTER && end.is_some_and(|end| end <= usize::from(function.register_count)) {
         return Ok(());

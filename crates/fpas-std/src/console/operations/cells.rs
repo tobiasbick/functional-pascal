@@ -19,8 +19,8 @@ impl Console {
         self.sync_terminal_size();
         self.enable_crt_mode();
         let (Some(x), Some(y)) = (
-            self.check_coord(x, self.state.width()),
-            self.check_coord(y, self.state.height()),
+            Self::check_coord(x, self.state.width()),
+            Self::check_coord(y, self.state.height()),
         ) else {
             return Ok(());
         };
@@ -32,8 +32,8 @@ impl Console {
     ///
     /// Continuation columns of wide glyphs and out-of-bounds coordinates return `None`.
     pub fn get_cell(&self, x: i64, y: i64) -> Option<ConsoleCell> {
-        let x = self.check_coord(x, self.state.width())?;
-        let y = self.check_coord(y, self.state.height())?;
+        let x = Self::check_coord(x, self.state.width())?;
+        let y = Self::check_coord(y, self.state.height())?;
         self.state.public_cell_at(x, y)
     }
 
@@ -73,8 +73,8 @@ impl Console {
         self.sync_terminal_size();
         self.enable_crt_mode();
         let (Some(x), Some(y)) = (
-            self.check_coord(x, self.state.width()),
-            self.check_coord(y, self.state.height()),
+            Self::check_coord(x, self.state.width()),
+            Self::check_coord(y, self.state.height()),
         ) else {
             return Ok(());
         };

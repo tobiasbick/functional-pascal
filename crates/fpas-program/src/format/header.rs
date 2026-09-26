@@ -1,5 +1,7 @@
 //! Fixed portable program envelope and build identity codec.
 
+use fpas_binary::{ByteReader, write_digest, write_u16, write_u32};
+
 use crate::{Digest, LinkedUnitIdentity, ProgramIdentity};
 
 use super::{FormatError, PROGRAM_FORMAT_VERSION, check_limit, checked_u32};
@@ -58,7 +60,7 @@ pub(super) fn encode(
 }
 
 pub(super) fn decode(bytes: &[u8]) -> Result<DecodedHeader<'_>, FormatError> {
-    let mut reader = Reader::new(bytes);
+    let mut reader = ByteReader::<FormatError>::new(bytes);
     if reader.take(MAGIC.len(), "magic")? != MAGIC {
         return Err(FormatError::InvalidMagic);
     }
@@ -83,7 +85,10 @@ pub(super) fn decode(bytes: &[u8]) -> Result<DecodedHeader<'_>, FormatError> {
             flags,
         });
     }
-    let compiler_version = reader.string("compiler_version")?;
+    let compiler_version = reader.string(
+        "compiler_version",
+        fpas_bytecode::limits::MAX_IDENTITY_STRING_BYTES,
+    )?;
     let source_hash = reader.digest("source_hash")?;
     let options_hash = reader.digest("options_hash")?;
     let unit_count = reader.u32("linked_unit_count")? as usize;
@@ -98,7 +103,10 @@ pub(super) fn decode(bytes: &[u8]) -> Result<DecodedHeader<'_>, FormatError> {
     let mut units = Vec::with_capacity(unit_count);
     for _ in 0..unit_count {
         units.push(LinkedUnitIdentity {
-            unit_name: reader.string("unit_name")?,
+            unit_name: reader.string(
+                "unit_name",
+                fpas_bytecode::limits::MAX_IDENTITY_STRING_BYTES,
+            )?,
             object_hash: reader.digest("unit_object_hash")?,
         });
     }
@@ -145,18 +153,6 @@ pub(super) fn decode(bytes: &[u8]) -> Result<DecodedHeader<'_>, FormatError> {
     })
 }
 
-fn write_u16(output: &mut Vec<u8>, value: u16) {
-    output.extend_from_slice(&value.to_le_bytes());
-}
-
-fn write_u32(output: &mut Vec<u8>, value: u32) {
-    output.extend_from_slice(&value.to_le_bytes());
-}
-
-fn write_digest(output: &mut Vec<u8>, digest: Digest) {
-    output.extend_from_slice(digest.as_bytes());
-}
-
 fn write_string(output: &mut Vec<u8>, field: &'static str, value: &str) -> Result<(), FormatError> {
     check_limit(
         field,
@@ -166,64 +162,4 @@ fn write_string(output: &mut Vec<u8>, field: &'static str, value: &str) -> Resul
     write_u32(output, checked_u32(field, value.len())?);
     output.extend_from_slice(value.as_bytes());
     Ok(())
-}
-
-struct Reader<'a> {
-    bytes: &'a [u8],
-    position: usize,
-}
-
-impl<'a> Reader<'a> {
-    const fn new(bytes: &'a [u8]) -> Self {
-        Self { bytes, position: 0 }
-    }
-
-    fn remaining(&self) -> usize {
-        self.bytes.len().saturating_sub(self.position)
-    }
-
-    fn take(&mut self, length: usize, field: &'static str) -> Result<&'a [u8], FormatError> {
-        let Some(end) = self.position.checked_add(length) else {
-            return Err(FormatError::LimitExceeded {
-                field,
-                size: length,
-                maximum: self.remaining(),
-            });
-        };
-        let Some(value) = self.bytes.get(self.position..end) else {
-            return Err(FormatError::Truncated(field));
-        };
-        self.position = end;
-        Ok(value)
-    }
-
-    fn u16(&mut self, field: &'static str) -> Result<u16, FormatError> {
-        let bytes = self.take(2, field)?;
-        Ok(u16::from_le_bytes([bytes[0], bytes[1]]))
-    }
-
-    fn u32(&mut self, field: &'static str) -> Result<u32, FormatError> {
-        let bytes = self.take(4, field)?;
-        Ok(u32::from_le_bytes([bytes[0], bytes[1], bytes[2], bytes[3]]))
-    }
-
-    fn digest(&mut self, field: &'static str) -> Result<Digest, FormatError> {
-        let bytes = self.take(Digest::LENGTH, field)?;
-        let mut digest = [0_u8; Digest::LENGTH];
-        digest.copy_from_slice(bytes);
-        Ok(Digest::from_bytes(digest))
-    }
-
-    fn string(&mut self, field: &'static str) -> Result<String, FormatError> {
-        let length = self.u32(field)? as usize;
-        check_limit(
-            field,
-            length,
-            fpas_bytecode::limits::MAX_IDENTITY_STRING_BYTES,
-        )?;
-        let bytes = self.take(length, field)?;
-        std::str::from_utf8(bytes)
-            .map(str::to_owned)
-            .map_err(|_| FormatError::InvalidUtf8(field))
-    }
 }

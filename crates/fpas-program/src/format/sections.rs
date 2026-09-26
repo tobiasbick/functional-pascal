@@ -1,5 +1,10 @@
 //! Canonical executable section directory construction and validation.
 
+use std::ops::{Deref, DerefMut};
+
+use fpas_binary::ByteReader;
+pub(super) use fpas_binary::{write_i64, write_u8, write_u16, write_u32, write_u64};
+
 use super::{FormatError, check_limit, checked_u32};
 
 pub(super) const TAGS: [u16; 11] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
@@ -194,23 +199,22 @@ fn directory_bytes(count: usize) -> Result<usize, FormatError> {
         })
 }
 
+/// Bounds-checked reader for one section that rejects unread trailing bytes.
 pub(super) struct SectionReader<'a> {
-    bytes: &'a [u8],
-    position: usize,
+    reader: ByteReader<'a, FormatError>,
     container: &'static str,
 }
 
 impl<'a> SectionReader<'a> {
     pub(super) const fn new(bytes: &'a [u8], container: &'static str) -> Self {
         Self {
-            bytes,
-            position: 0,
+            reader: ByteReader::new(bytes),
             container,
         }
     }
 
     pub(super) fn finish(self) -> Result<(), FormatError> {
-        let remaining = self.bytes.len().saturating_sub(self.position);
+        let remaining = self.reader.remaining();
         if remaining != 0 {
             return Err(FormatError::TrailingBytes {
                 container: self.container,
@@ -227,76 +231,23 @@ impl<'a> SectionReader<'a> {
         minimum_bytes: usize,
         field: &'static str,
     ) -> Result<(), FormatError> {
-        if count > self.bytes.len().saturating_sub(self.position) / minimum_bytes {
+        if count > self.reader.remaining() / minimum_bytes {
             return Err(FormatError::Truncated(field));
         }
         Ok(())
     }
+}
 
-    pub(super) fn take(
-        &mut self,
-        length: usize,
-        field: &'static str,
-    ) -> Result<&'a [u8], FormatError> {
-        let Some(end) = self.position.checked_add(length) else {
-            return Err(FormatError::LimitExceeded {
-                field,
-                size: length,
-                maximum: self.bytes.len().saturating_sub(self.position),
-            });
-        };
-        let Some(value) = self.bytes.get(self.position..end) else {
-            return Err(FormatError::Truncated(field));
-        };
-        self.position = end;
-        Ok(value)
-    }
+impl<'a> Deref for SectionReader<'a> {
+    type Target = ByteReader<'a, FormatError>;
 
-    pub(super) fn u8(&mut self, field: &'static str) -> Result<u8, FormatError> {
-        Ok(self.take(1, field)?[0])
-    }
-
-    pub(super) fn u16(&mut self, field: &'static str) -> Result<u16, FormatError> {
-        let bytes = self.take(2, field)?;
-        Ok(u16::from_le_bytes([bytes[0], bytes[1]]))
-    }
-
-    pub(super) fn u32(&mut self, field: &'static str) -> Result<u32, FormatError> {
-        let bytes = self.take(4, field)?;
-        Ok(u32::from_le_bytes([bytes[0], bytes[1], bytes[2], bytes[3]]))
-    }
-
-    pub(super) fn u64(&mut self, field: &'static str) -> Result<u64, FormatError> {
-        let bytes = self.take(8, field)?;
-        Ok(u64::from_le_bytes([
-            bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5], bytes[6], bytes[7],
-        ]))
-    }
-
-    pub(super) fn i64(&mut self, field: &'static str) -> Result<i64, FormatError> {
-        let bytes = self.take(8, field)?;
-        Ok(i64::from_le_bytes([
-            bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5], bytes[6], bytes[7],
-        ]))
+    fn deref(&self) -> &Self::Target {
+        &self.reader
     }
 }
 
-pub(super) fn write_u8(output: &mut Vec<u8>, value: u8) {
-    output.push(value);
-}
-
-pub(super) fn write_u16(output: &mut Vec<u8>, value: u16) {
-    output.extend_from_slice(&value.to_le_bytes());
-}
-
-pub(super) fn write_u32(output: &mut Vec<u8>, value: u32) {
-    output.extend_from_slice(&value.to_le_bytes());
-}
-
-pub(super) fn write_u64(output: &mut Vec<u8>, value: u64) {
-    output.extend_from_slice(&value.to_le_bytes());
-}
-
-pub(super) fn write_i64(output: &mut Vec<u8>, value: i64) {
-    output.extend_from_slice(&value.to_le_bytes());
+impl DerefMut for SectionReader<'_> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.reader
+    }
 }

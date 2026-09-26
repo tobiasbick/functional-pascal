@@ -1,12 +1,12 @@
 use super::super::Checker;
-use crate::check::MethodCallTarget;
+use crate::check::expr::MethodCallSite;
 use crate::scope::SymbolKind;
-use crate::types::{MethodKind, Ty};
+use crate::types::Ty;
 use fpas_diagnostics::codes::{
     SEMA_AMBIGUOUS_IMPORTED_NAME, SEMA_TYPE_MISMATCH, SEMA_UNKNOWN_NAME,
 };
 use fpas_lexer::Span;
-use fpas_parser::{Designator, DesignatorPart, Expr};
+use fpas_parser::{Designator, Expr};
 
 impl Checker {
     pub(super) fn check_call_stmt(&mut self, designator: &Designator, args: &[Expr], span: Span) {
@@ -55,7 +55,10 @@ impl Checker {
 
         if !self.designator_has_unit_prefix(designator) {
             let previous_error_count = self.errors.len();
-            if self.try_check_method_call_stmt(designator, args, span) {
+            if self
+                .try_check_method_call_like(MethodCallSite::Statement, designator, args, span)
+                .is_some()
+            {
                 return;
             }
             if self.errors.len() != previous_error_count {
@@ -93,228 +96,5 @@ impl Checker {
 
         self.error_with_code(code, message, hint, span);
         self.check_args_only(args);
-    }
-
-    /// Try to resolve a call statement as a record instance or static member call.
-    fn try_check_method_call_stmt(
-        &mut self,
-        designator: &Designator,
-        args: &[Expr],
-        span: Span,
-    ) -> bool {
-        if designator.parts.len() < 2 {
-            return false;
-        }
-
-        let method_name = match designator.parts.last() {
-            Some(DesignatorPart::Ident(name, _)) => name.clone(),
-            _ => return false,
-        };
-
-        let receiver_designator = Designator {
-            parts: designator.parts[..designator.parts.len() - 1].to_vec(),
-            span: designator.span,
-        };
-
-        let through_type = self.designator_denotes_type(&receiver_designator);
-        let receiver_key = crate::designator_lookup_key(designator);
-        let receiver_ty = self.check_designator_prefix_expr(designator, designator.parts.len() - 1);
-        let receiver_reads = self
-            .property_reads
-            .remove(&receiver_key)
-            .unwrap_or_default();
-        let resolved_receiver_ty = self.resolve_visible_type(&receiver_ty);
-
-        let record_ty = match &resolved_receiver_ty {
-            Ty::Record(record_ty) => record_ty.clone(),
-            _ => {
-                if !receiver_reads.is_empty() {
-                    self.property_reads.insert(receiver_key, receiver_reads);
-                }
-                return false;
-            }
-        };
-
-        if self.reject_private_record_member(&record_ty, &method_name, span) {
-            self.check_args_only(args);
-            return true;
-        }
-
-        if !through_type
-            && (record_ty
-                .fields
-                .iter()
-                .any(|(name, _)| name.eq_ignore_ascii_case(&method_name))
-                || record_ty
-                    .properties
-                    .iter()
-                    .any(|(name, _)| name.eq_ignore_ascii_case(&method_name)))
-        {
-            let member_ty = self.check_designator_expr(designator);
-            self.check_member_value_call(
-                crate::designator_lookup_key(designator),
-                &method_name,
-                &member_ty,
-                args,
-                span,
-                true,
-            );
-            return true;
-        }
-
-        let qualified = format!("{}.{}", record_ty.name, method_name);
-        let call_key = crate::designator_lookup_key(designator);
-
-        if through_type {
-            if let Some(func_ty) =
-                self.resolve_static_function(&record_ty, &method_name, &qualified)
-            {
-                self.method_calls
-                    .insert(call_key, MethodCallTarget::Static(qualified.clone()));
-                self.check_static_call_args(
-                    &qualified,
-                    &func_ty.type_params,
-                    &func_ty.params,
-                    args,
-                    span,
-                );
-                return true;
-            }
-
-            if let Some(proc_ty) = self.resolve_static_procedure(&record_ty, &method_name) {
-                self.method_calls
-                    .insert(call_key, MethodCallTarget::Static(qualified.clone()));
-                self.check_static_call_args(
-                    &qualified,
-                    &proc_ty.type_params,
-                    &proc_ty.params,
-                    args,
-                    span,
-                );
-                return true;
-            }
-
-            if self
-                .resolve_method_kind(&record_ty, &method_name, &qualified)
-                .is_some()
-            {
-                self.error_with_code(
-                    SEMA_TYPE_MISMATCH,
-                    format!(
-                        "`{method_name}` is an instance method and must be called through a `{}.…` value",
-                        record_ty.name
-                    ),
-                    format!(
-                        "Call it as `Value.{method_name}(...)` where `Value` has type `{}`.",
-                        record_ty.name
-                    ),
-                    span,
-                );
-                self.check_args_only(args);
-                return true;
-            }
-            if !receiver_reads.is_empty() {
-                self.property_reads.insert(receiver_key, receiver_reads);
-            }
-            return false;
-        }
-
-        if let Some(routine_kind) = self.static_routine_kind_on_record(&record_ty, &method_name) {
-            self.error_with_code(
-                SEMA_TYPE_MISMATCH,
-                format!(
-                    "`{method_name}` is a static {routine_kind} and must be called through the type `{}.{}`",
-                    record_ty.name, method_name
-                ),
-                format!(
-                    "Write `{}.{}(...)` instead of calling it on a value.",
-                    record_ty.name, method_name
-                ),
-                span,
-            );
-            self.check_args_only(args);
-            return true;
-        }
-
-        if let Some(_ty) =
-            self.try_check_event_raise_on_record(super::super::expr::EventRaiseRequest {
-                call_key,
-                designator,
-                record_ty: &record_ty,
-                event_name: &method_name,
-                receiver_reads: receiver_reads.clone(),
-                args,
-                span,
-                as_statement: true,
-            })
-        {
-            return true;
-        }
-
-        let method_kind = self.resolve_method_kind(&record_ty, &method_name, &qualified);
-        let Some(method_kind) = method_kind else {
-            if !receiver_reads.is_empty() {
-                self.property_reads.insert(receiver_key, receiver_reads);
-            }
-            return false;
-        };
-
-        self.method_calls.insert(
-            call_key,
-            MethodCallTarget::Instance {
-                qualified_name: qualified.clone(),
-                receiver_reads,
-            },
-        );
-
-        self.check_stmt_method_kind(&qualified, &method_kind, args, span);
-        true
-    }
-
-    fn check_stmt_method_kind(
-        &mut self,
-        qualified: &str,
-        method_kind: &MethodKind,
-        args: &[Expr],
-        span: Span,
-    ) {
-        match method_kind {
-            MethodKind::Procedure(proc_ty) => {
-                let Some(visible_params) = proc_ty.params.get(1..) else {
-                    self.error_with_code(
-                        SEMA_TYPE_MISMATCH,
-                        format!("Method `{qualified}` must declare `Self` as its first parameter"),
-                        "Declare the method as `procedure Name(Self: RecordType; ...)`.",
-                        span,
-                    );
-                    return;
-                };
-                self.check_method_call_args(
-                    qualified,
-                    &proc_ty.type_params,
-                    visible_params,
-                    args,
-                    span,
-                );
-            }
-            MethodKind::Function(func_ty) => {
-                let Some(visible_params) = func_ty.params.get(1..) else {
-                    self.error_with_code(
-                        SEMA_TYPE_MISMATCH,
-                        format!("Method `{qualified}` must declare `Self` as its first parameter"),
-                        "Declare the method as `function Name(Self: RecordType; ...)`.",
-                        span,
-                    );
-                    return;
-                };
-                self.check_method_call_args(
-                    qualified,
-                    &func_ty.type_params,
-                    visible_params,
-                    args,
-                    span,
-                );
-            }
-        }
     }
 }

@@ -3,6 +3,7 @@
 //! **Documentation:** `docs/pascal/language/functions/postfix-chaining.md`
 
 use super::super::Checker;
+use super::calls::FluentCall;
 use crate::check::MethodCallTarget;
 use crate::types::{MethodKind, Ty};
 use fpas_diagnostics::codes::SEMA_TYPE_MISMATCH;
@@ -141,17 +142,17 @@ impl Checker {
     ) -> Ty {
         let Ty::Record(record_ty) = receiver_ty else {
             let receiver = Expr::Error(span);
-            return self.check_fluent_call(
-                Self::postfix_operation_lookup_key(operation),
-                &receiver,
+            return self.check_fluent_call(FluentCall {
+                call_key: Self::postfix_operation_lookup_key(operation),
+                receiver: &receiver,
                 receiver_ty,
-                method_name,
+                name: method_name,
                 args,
                 span,
-                span,
-                procedure_result_is_discarded,
-                Vec::new(),
-            );
+                call_span: span,
+                allow_procedure_result: procedure_result_is_discarded,
+                receiver_reads: Vec::new(),
+            });
         };
 
         if self.reject_private_record_member(record_ty, method_name, span) {
@@ -248,17 +249,17 @@ impl Checker {
                 return Ty::Error;
             }
             let receiver = Expr::Error(span);
-            return self.check_fluent_call(
-                op_key,
-                &receiver,
+            return self.check_fluent_call(FluentCall {
+                call_key: op_key,
+                receiver: &receiver,
                 receiver_ty,
-                method_name,
+                name: method_name,
                 args,
                 span,
-                span,
-                procedure_result_is_discarded,
-                Vec::new(),
-            );
+                call_span: span,
+                allow_procedure_result: procedure_result_is_discarded,
+                receiver_reads: Vec::new(),
+            });
         };
 
         self.method_calls.insert(

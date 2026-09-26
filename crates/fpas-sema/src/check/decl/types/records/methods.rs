@@ -4,7 +4,9 @@ use super::Checker;
 use crate::scope::{Symbol, SymbolKind, canonical_symbol_name};
 use crate::types::{FunctionTy, MethodKind, ParamTy, ProcedureTy, Ty};
 use fpas_diagnostics::codes::SEMA_DUPLICATE_DECLARATION;
-use fpas_parser::{FuncBody, FunctionDecl, RecordMethod, TypeParam};
+use fpas_parser::{
+    FormalParam, FuncBody, FunctionDecl, ProcedureDecl, RecordMethod, TypeExpr, TypeParam,
+};
 use std::collections::HashSet;
 
 /// Checked callable types grouped by their record dispatch kind.
@@ -48,72 +50,45 @@ impl Checker {
         let mut pending_bodies = Vec::new();
 
         for method in methods {
-            match method {
+            let (routine, dispatch) = match method {
                 RecordMethod::Function(function) => {
-                    if !self.register_record_member_name(
-                        type_name,
-                        &function.name,
-                        function.span,
-                        seen_members,
-                    ) {
-                        continue;
-                    }
-                    if let Some((entry, pending)) =
-                        self.check_instance_function(type_name, record_ty, function)
-                    {
-                        checked_methods.push(entry);
-                        pending_bodies.push(pending);
-                    }
+                    (RecordRoutine::function(function), RoutineDispatch::Instance)
                 }
                 RecordMethod::StaticFunction(function) => {
-                    if !self.register_record_member_name(
-                        type_name,
-                        &function.name,
-                        function.span,
-                        seen_members,
-                    ) {
-                        continue;
-                    }
-                    if let Some((entry, pending)) =
-                        self.check_static_function(type_name, record_ty, function)
-                    {
-                        checked_static.push(entry);
-                        pending_bodies.push(pending);
-                    }
+                    (RecordRoutine::function(function), RoutineDispatch::Static)
                 }
                 RecordMethod::StaticProcedure(procedure) => {
-                    if !self.register_record_member_name(
-                        type_name,
-                        &procedure.name,
-                        procedure.span,
-                        seen_members,
-                    ) {
-                        continue;
-                    }
-                    if let Some((entry, pending)) =
-                        self.check_static_procedure(type_name, record_ty, procedure)
-                    {
-                        checked_static_procedures.push(entry);
-                        pending_bodies.push(pending);
-                    }
+                    (RecordRoutine::procedure(procedure), RoutineDispatch::Static)
                 }
-                RecordMethod::Procedure(procedure) => {
-                    if !self.register_record_member_name(
-                        type_name,
-                        &procedure.name,
-                        procedure.span,
-                        seen_members,
-                    ) {
-                        continue;
-                    }
-                    if let Some((entry, pending)) =
-                        self.check_instance_procedure(type_name, record_ty, procedure)
-                    {
-                        checked_methods.push(entry);
-                        pending_bodies.push(pending);
-                    }
+                RecordMethod::Procedure(procedure) => (
+                    RecordRoutine::procedure(procedure),
+                    RoutineDispatch::Instance,
+                ),
+            };
+            if !self.register_record_member_name(
+                type_name,
+                routine.name,
+                routine.span,
+                seen_members,
+            ) {
+                continue;
+            }
+            let Some((kind, pending)) =
+                self.check_record_routine(type_name, record_ty, dispatch, &routine)
+            else {
+                continue;
+            };
+            let name = routine.name.to_owned();
+            match (dispatch, kind) {
+                (RoutineDispatch::Instance, kind) => checked_methods.push((name, kind)),
+                (RoutineDispatch::Static, MethodKind::Function(function_ty)) => {
+                    checked_static.push((name, function_ty));
+                }
+                (RoutineDispatch::Static, MethodKind::Procedure(procedure_ty)) => {
+                    checked_static_procedures.push((name, procedure_ty));
                 }
             }
+            pending_bodies.push(pending);
         }
 
         (
@@ -126,7 +101,8 @@ impl Checker {
         )
     }
 
-    fn register_record_member_name(
+    /// Record a member name, reporting a duplicate declaration when already seen.
+    pub(in crate::check::decl::types) fn register_record_member_name(
         &mut self,
         type_name: &str,
         name: &str,
@@ -145,21 +121,26 @@ impl Checker {
         false
     }
 
-    fn check_instance_function<'a>(
+    /// Resolve, validate, and register one record routine.
+    ///
+    /// Returns its callable type and the body to check once all members are visible.
+    fn check_record_routine<'a>(
         &mut self,
         type_name: &str,
         record_ty: &Ty,
-        function: &'a FunctionDecl,
-    ) -> Option<((String, MethodKind), PendingMethodBody<'a>)> {
-        self.check_unique_formal_param_names(&function.params);
+        dispatch: RoutineDispatch,
+        routine: &RecordRoutine<'a>,
+    ) -> Option<(MethodKind, PendingMethodBody<'a>)> {
+        self.check_unique_formal_param_names(routine.params);
 
-        let type_param_defs = Self::resolve_type_params(&function.type_params);
+        let type_param_defs = Self::resolve_type_params(routine.type_params);
 
         let (return_ty, params) =
-            self.with_type_params(&function.type_params, function.span, |checker| {
-                let return_ty =
-                    checker.resolve_method_param_type(&function.return_type, type_name, record_ty);
-                let params: Vec<ParamTy> = function
+            self.with_type_params(routine.type_params, routine.span, |checker| {
+                let return_ty = routine.return_type.map(|return_type| {
+                    checker.resolve_method_param_type(return_type, type_name, record_ty)
+                });
+                let params: Vec<ParamTy> = routine
                     .params
                     .iter()
                     .map(|param| ParamTy {
@@ -175,230 +156,120 @@ impl Checker {
                 (return_ty, params)
             });
 
-        if !self.validate_record_method_signature(type_name, &function.name, &params, function.span)
-        {
+        let valid = match dispatch {
+            RoutineDispatch::Instance => self.validate_record_method_signature(
+                type_name,
+                routine.name,
+                &params,
+                routine.span,
+            ),
+            RoutineDispatch::Static => self.validate_static_routine_signature(
+                type_name,
+                routine.name,
+                &params,
+                routine.span,
+                if return_ty.is_some() {
+                    "function"
+                } else {
+                    "procedure"
+                },
+            ),
+        };
+        if !valid {
             return None;
         }
 
-        let function_ty = FunctionTy {
-            type_params: type_param_defs,
-            params: params.clone(),
-            return_type: Box::new(return_ty.clone()),
-            variadic: false,
+        let (kind, ty, symbol_kind) = match &return_ty {
+            Some(return_ty) => {
+                let function_ty = FunctionTy {
+                    type_params: type_param_defs,
+                    params: params.clone(),
+                    return_type: Box::new(return_ty.clone()),
+                    variadic: false,
+                };
+                (
+                    MethodKind::Function(function_ty.clone()),
+                    Ty::Function(function_ty),
+                    SymbolKind::Function,
+                )
+            }
+            None => {
+                let procedure_ty = ProcedureTy {
+                    type_params: type_param_defs,
+                    variadic: false,
+                    params: params.clone(),
+                };
+                (
+                    MethodKind::Procedure(procedure_ty.clone()),
+                    Ty::Procedure(procedure_ty),
+                    SymbolKind::Procedure,
+                )
+            }
         };
 
-        let qualified = format!("{type_name}.{}", function.name);
+        let qualified = format!("{type_name}.{}", routine.name);
         self.scopes.define(
             &qualified,
             Symbol {
-                ty: Ty::Function(function_ty.clone()),
+                ty,
                 mutable: false,
-                kind: SymbolKind::Function,
+                kind: symbol_kind,
                 task_bound: false,
             },
         );
 
         Some((
-            (function.name.clone(), MethodKind::Function(function_ty)),
+            kind,
             PendingMethodBody {
                 qualified_name: qualified,
-                type_params: &function.type_params,
+                type_params: routine.type_params,
                 params,
-                param_spans: function.params.iter().map(|param| param.span).collect(),
-                return_type: Some(return_ty),
-                body: &function.body,
+                param_spans: routine.params.iter().map(|param| param.span).collect(),
+                return_type: return_ty,
+                body: routine.body,
             },
         ))
     }
+}
 
-    fn check_static_function<'a>(
-        &mut self,
-        type_name: &str,
-        record_ty: &Ty,
-        function: &'a FunctionDecl,
-    ) -> Option<((String, FunctionTy), PendingMethodBody<'a>)> {
-        self.check_unique_formal_param_names(&function.params);
+/// Whether a record routine is called through values or through the type.
+#[derive(Clone, Copy)]
+enum RoutineDispatch {
+    Instance,
+    Static,
+}
 
-        let type_param_defs = Self::resolve_type_params(&function.type_params);
+/// Declaration parts shared by record functions and procedures.
+struct RecordRoutine<'a> {
+    name: &'a str,
+    span: fpas_lexer::Span,
+    type_params: &'a [TypeParam],
+    params: &'a [FormalParam],
+    /// Declared result type, or `None` for a procedure.
+    return_type: Option<&'a TypeExpr>,
+    body: &'a FuncBody,
+}
 
-        let (return_ty, params) =
-            self.with_type_params(&function.type_params, function.span, |checker| {
-                let return_ty =
-                    checker.resolve_method_param_type(&function.return_type, type_name, record_ty);
-                let params: Vec<ParamTy> = function
-                    .params
-                    .iter()
-                    .map(|param| ParamTy {
-                        mutable: param.mutable,
-                        name: param.name.clone(),
-                        ty: checker.resolve_method_param_type(
-                            &param.type_expr,
-                            type_name,
-                            record_ty,
-                        ),
-                    })
-                    .collect();
-                (return_ty, params)
-            });
-
-        if !self.validate_static_function_signature(
-            type_name,
-            &function.name,
-            &params,
-            function.span,
-        ) {
-            return None;
+impl<'a> RecordRoutine<'a> {
+    fn function(function: &'a FunctionDecl) -> Self {
+        Self {
+            name: &function.name,
+            span: function.span,
+            type_params: &function.type_params,
+            params: &function.params,
+            return_type: Some(&function.return_type),
+            body: &function.body,
         }
-
-        let function_ty = FunctionTy {
-            type_params: type_param_defs,
-            params: params.clone(),
-            return_type: Box::new(return_ty.clone()),
-            variadic: false,
-        };
-
-        let qualified = format!("{type_name}.{}", function.name);
-        self.scopes.define(
-            &qualified,
-            Symbol {
-                ty: Ty::Function(function_ty.clone()),
-                mutable: false,
-                kind: SymbolKind::Function,
-                task_bound: false,
-            },
-        );
-
-        Some((
-            (function.name.clone(), function_ty),
-            PendingMethodBody {
-                qualified_name: qualified,
-                type_params: &function.type_params,
-                params,
-                param_spans: function.params.iter().map(|param| param.span).collect(),
-                return_type: Some(return_ty),
-                body: &function.body,
-            },
-        ))
     }
 
-    fn check_instance_procedure<'a>(
-        &mut self,
-        type_name: &str,
-        record_ty: &Ty,
-        procedure: &'a fpas_parser::ProcedureDecl,
-    ) -> Option<((String, MethodKind), PendingMethodBody<'a>)> {
-        self.check_unique_formal_param_names(&procedure.params);
-
-        let type_param_defs = Self::resolve_type_params(&procedure.type_params);
-
-        let params = self.with_type_params(&procedure.type_params, procedure.span, |checker| {
-            procedure
-                .params
-                .iter()
-                .map(|param| ParamTy {
-                    mutable: param.mutable,
-                    name: param.name.clone(),
-                    ty: checker.resolve_method_param_type(&param.type_expr, type_name, record_ty),
-                })
-                .collect::<Vec<_>>()
-        });
-
-        if !self.validate_record_method_signature(
-            type_name,
-            &procedure.name,
-            &params,
-            procedure.span,
-        ) {
-            return None;
+    fn procedure(procedure: &'a ProcedureDecl) -> Self {
+        Self {
+            name: &procedure.name,
+            span: procedure.span,
+            type_params: &procedure.type_params,
+            params: &procedure.params,
+            return_type: None,
+            body: &procedure.body,
         }
-
-        let procedure_ty = ProcedureTy {
-            type_params: type_param_defs,
-            variadic: false,
-            params: params.clone(),
-        };
-
-        let qualified = format!("{type_name}.{}", procedure.name);
-        self.scopes.define(
-            &qualified,
-            Symbol {
-                ty: Ty::Procedure(procedure_ty.clone()),
-                mutable: false,
-                kind: SymbolKind::Procedure,
-                task_bound: false,
-            },
-        );
-
-        Some((
-            (procedure.name.clone(), MethodKind::Procedure(procedure_ty)),
-            PendingMethodBody {
-                qualified_name: qualified,
-                type_params: &procedure.type_params,
-                params,
-                param_spans: procedure.params.iter().map(|param| param.span).collect(),
-                return_type: None,
-                body: &procedure.body,
-            },
-        ))
-    }
-
-    fn check_static_procedure<'a>(
-        &mut self,
-        type_name: &str,
-        record_ty: &Ty,
-        procedure: &'a fpas_parser::ProcedureDecl,
-    ) -> Option<((String, ProcedureTy), PendingMethodBody<'a>)> {
-        self.check_unique_formal_param_names(&procedure.params);
-
-        let type_param_defs = Self::resolve_type_params(&procedure.type_params);
-        let params = self.with_type_params(&procedure.type_params, procedure.span, |checker| {
-            procedure
-                .params
-                .iter()
-                .map(|param| ParamTy {
-                    mutable: param.mutable,
-                    name: param.name.clone(),
-                    ty: checker.resolve_method_param_type(&param.type_expr, type_name, record_ty),
-                })
-                .collect::<Vec<_>>()
-        });
-
-        if !self.validate_static_routine_signature(
-            type_name,
-            &procedure.name,
-            &params,
-            procedure.span,
-            "procedure",
-        ) {
-            return None;
-        }
-
-        let procedure_ty = ProcedureTy {
-            type_params: type_param_defs,
-            variadic: false,
-            params: params.clone(),
-        };
-        let qualified = format!("{type_name}.{}", procedure.name);
-        self.scopes.define(
-            &qualified,
-            Symbol {
-                ty: Ty::Procedure(procedure_ty.clone()),
-                mutable: false,
-                kind: SymbolKind::Procedure,
-                task_bound: false,
-            },
-        );
-
-        Some((
-            (procedure.name.clone(), procedure_ty),
-            PendingMethodBody {
-                qualified_name: qualified,
-                type_params: &procedure.type_params,
-                params,
-                param_spans: procedure.params.iter().map(|param| param.span).collect(),
-                return_type: None,
-                body: &procedure.body,
-            },
-        ))
     }
 }

@@ -6,7 +6,6 @@ use fpas_std::Console;
 use crate::vm::hosted::console_cell_records::{
     console_ansi256_color, console_cell_from_value, console_cell_record, console_color_record,
     console_crt_color, console_rect_from_value, console_rgb_color, saved_region_from_value,
-    saved_region_record,
 };
 use crate::vm::hosted::console_records::{console_event_record, key_event_record};
 
@@ -325,7 +324,7 @@ impl Worker {
             ConsoleIntrinsic::SaveRegion => {
                 let rect = console_rect_from_value(value(arguments, 0, 1, self)?, location)?;
                 let saved = self.with_console(|console| console.save_region(rect, location))?;
-                Some(saved_region_record(self, saved, location)?)
+                Some(Value::OpaqueHandle(saved.0))
             }
             ConsoleIntrinsic::RestoreRegion | ConsoleIntrinsic::DiscardRegion => {
                 let saved = saved_region_from_value(value(arguments, 0, 1, self)?, location)?;

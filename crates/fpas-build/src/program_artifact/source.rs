@@ -51,7 +51,7 @@ fn ensure_unit_current(node: &UnitNode) -> Result<(), BuildError> {
             node.display_name()
         ))
     })?;
-    ensure_path_current(node.path(), Digest::from_bytes(*expected.as_bytes()))
+    ensure_path_current(node.path(), expected)
 }
 
 fn ensure_path_current(path: &std::path::Path, expected: Digest) -> Result<(), BuildError> {

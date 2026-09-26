@@ -1,18 +1,16 @@
-#[expect(
-    clippy::too_many_arguments,
-    reason = "typed validation needs explicit operand scopes"
-)]
 fn validate_intrinsic(
-    program: &Program,
-    function: &Function,
-    block: BlockId,
-    instruction: usize,
+    scope: OperandScope<'_>,
     intrinsic: crate::IntrinsicId,
     arguments: &[ValueId],
     result: Option<ValueDefinition>,
-    all_values: &BTreeMap<ValueId, TypeId>,
-    available: &BTreeSet<ValueId>,
 ) -> Result<(), ValidationError> {
+    let OperandScope {
+        program,
+        function,
+        block,
+        instruction,
+        ..
+    } = scope;
     let intrinsic = program.intrinsic(intrinsic).ok_or_else(|| {
         unknown(
             function,
@@ -23,27 +21,9 @@ fn validate_intrinsic(
         )
     })?;
     if intrinsic.variadic {
-        validate_variadic_arguments(
-            program,
-            function,
-            block,
-            instruction,
-            arguments,
-            &intrinsic.parameters,
-            all_values,
-            available,
-        )?;
+        validate_variadic_arguments(scope, arguments, &intrinsic.parameters)?;
     } else {
-        validate_arguments(
-            program,
-            function,
-            block,
-            instruction,
-            arguments,
-            &intrinsic.parameters,
-            all_values,
-            available,
-        )?;
+        validate_arguments(scope, arguments, &intrinsic.parameters)?;
     }
     let result = result.ok_or_else(|| {
         function_error(
@@ -53,45 +33,24 @@ fn validate_intrinsic(
             ValidationErrorKind::MissingResult,
         )
     })?;
-    if types_compatible(program, intrinsic.result, result.ty) {
-        Ok(())
-    } else {
-        require_exact(
-            function,
-            block,
-            instruction,
-            "result",
-            intrinsic.result,
-            result.ty,
-        )
-    }
+    require_assignable(
+        program,
+        function,
+        block,
+        instruction,
+        "result",
+        intrinsic.result,
+        result.ty,
+    )
 }
 
-#[expect(
-    clippy::too_many_arguments,
-    reason = "typed validation needs explicit operand scopes"
-)]
 fn validate_variadic_arguments(
-    program: &Program,
-    function: &Function,
-    block: BlockId,
-    instruction: usize,
+    scope: OperandScope<'_>,
     arguments: &[ValueId],
     parameters: &[TypeId],
-    all_values: &BTreeMap<ValueId, TypeId>,
-    available: &BTreeSet<ValueId>,
 ) -> Result<(), ValidationError> {
     if arguments.len() < parameters.len() || parameters.is_empty() {
-        return validate_arguments(
-            program,
-            function,
-            block,
-            instruction,
-            arguments,
-            parameters,
-            all_values,
-            available,
-        );
+        return validate_arguments(scope, arguments, parameters);
     }
     let repeated = parameters[parameters.len() - 1];
     let expected = parameters
@@ -100,33 +59,23 @@ fn validate_variadic_arguments(
         .chain(std::iter::repeat(repeated))
         .take(arguments.len())
         .collect::<Vec<_>>();
-    validate_arguments(
+    validate_arguments(scope, arguments, &expected)
+}
+
+fn validate_closure(
+    scope: OperandScope<'_>,
+    target: FunctionId,
+    captures: &[ValueId],
+    result: Option<ValueDefinition>,
+) -> Result<(), ValidationError> {
+    let OperandScope {
         program,
         function,
         block,
         instruction,
-        arguments,
-        &expected,
         all_values,
         available,
-    )
-}
-
-#[expect(
-    clippy::too_many_arguments,
-    reason = "typed validation needs explicit operand scopes"
-)]
-fn validate_closure(
-    program: &Program,
-    function: &Function,
-    block: BlockId,
-    instruction: usize,
-    target: FunctionId,
-    captures: &[ValueId],
-    result: Option<ValueDefinition>,
-    all_values: &BTreeMap<ValueId, TypeId>,
-    available: &BTreeSet<ValueId>,
-) -> Result<(), ValidationError> {
+    } = scope;
     let target = program.function(target).ok_or_else(|| {
         unknown(
             function,

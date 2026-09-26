@@ -17,7 +17,15 @@ impl Checker {
         args: &[Expr],
         span: Span,
     ) -> Option<Ty> {
-        self.try_check_method_call_like(call_expr, designator, args, span, false)
+        self.try_check_method_call_like(
+            MethodCallSite::Expression {
+                call_expr,
+                allow_procedure_result: false,
+            },
+            designator,
+            args,
+            span,
+        )
     }
 
     pub(in crate::check::expr) fn try_check_method_go_call(
@@ -27,7 +35,15 @@ impl Checker {
         args: &[Expr],
         span: Span,
     ) -> Option<Ty> {
-        self.try_check_method_call_like(call_expr, designator, args, span, true)
+        self.try_check_method_call_like(
+            MethodCallSite::Expression {
+                call_expr,
+                allow_procedure_result: true,
+            },
+            designator,
+            args,
+            span,
+        )
     }
 
     pub(in crate::check) fn resolve_method_kind(
@@ -264,14 +280,22 @@ impl Checker {
         true
     }
 
-    fn try_check_method_call_like(
+    /// Try to resolve a call expression or call statement as a record instance or
+    /// static member call. Returns `Some(result_ty)` when the call is handled here.
+    pub(in crate::check) fn try_check_method_call_like(
         &mut self,
-        call_expr: &Expr,
+        site: MethodCallSite<'_>,
         designator: &Designator,
         args: &[Expr],
         span: Span,
-        allow_procedure_result: bool,
     ) -> Option<Ty> {
+        let (call_key, allow_procedure_result) = match site {
+            MethodCallSite::Expression {
+                call_expr,
+                allow_procedure_result,
+            } => (Self::expr_lookup_key(call_expr), allow_procedure_result),
+            MethodCallSite::Statement => (crate::designator_lookup_key(designator), true),
+        };
         if designator.parts.len() < 2 {
             return None;
         }
@@ -323,7 +347,7 @@ impl Checker {
         {
             let member_ty = self.check_designator_expr(designator);
             return Some(self.check_member_value_call(
-                Self::expr_lookup_key(call_expr),
+                call_key,
                 &method_name,
                 &member_ty,
                 args,
@@ -333,7 +357,6 @@ impl Checker {
         }
 
         let qualified = format!("{}.{}", record_ty.name, method_name);
-        let call_key = Self::expr_lookup_key(call_expr);
 
         if through_type {
             if let Some(func_ty) =
@@ -421,7 +444,7 @@ impl Checker {
 
         if let Some(ty) =
             self.try_check_event_raise_on_record(super::super::event_access::EventRaiseRequest {
-                call_key: Self::expr_lookup_key(call_expr),
+                call_key,
                 designator,
                 record_ty: &record_ty,
                 event_name: &method_name,
@@ -456,7 +479,8 @@ impl Checker {
                     self.error_with_code(
                         SEMA_TYPE_MISMATCH,
                         format!(
-                            "Record method `{qualified}` must declare `Self` as its first parameter"
+                            "{} `{qualified}` must declare `Self` as its first parameter",
+                            site.method_label()
                         ),
                         "Declare the method as `function Name(Self: RecordType; ...)`.",
                         span,
@@ -480,7 +504,8 @@ impl Checker {
                     self.error_with_code(
                         SEMA_TYPE_MISMATCH,
                         format!(
-                            "Record method `{qualified}` must declare `Self` as its first parameter"
+                            "{} `{qualified}` must declare `Self` as its first parameter",
+                            site.method_label()
                         ),
                         "Declare the method as `procedure Name(Self: RecordType; ...)`.",
                         span,
@@ -506,6 +531,28 @@ impl Checker {
                     Some(Ty::Error)
                 }
             }
+        }
+    }
+}
+
+/// Syntactic position of a record method call.
+#[derive(Clone, Copy)]
+pub(in crate::check) enum MethodCallSite<'a> {
+    /// Call expression; `allow_procedure_result` accepts procedures (e.g. `go` calls).
+    Expression {
+        call_expr: &'a Expr,
+        allow_procedure_result: bool,
+    },
+    /// Call statement keyed by its designator.
+    Statement,
+}
+
+impl MethodCallSite<'_> {
+    /// Diagnostic label for a method that lacks its `Self` receiver.
+    fn method_label(self) -> &'static str {
+        match self {
+            Self::Expression { .. } => "Record method",
+            Self::Statement => "Method",
         }
     }
 }

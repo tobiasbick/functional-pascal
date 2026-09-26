@@ -148,7 +148,7 @@ pub(super) fn register_std_console_key_api(checker: &mut Checker) {
         checker,
         s::STD_CONSOLE_KEY_EVENT,
         vec![
-            ("kind".into(), key_kind_ty.clone()),
+            ("kind".into(), key_kind_ty),
             ("ch".into(), Ty::String),
             ("shift".into(), Ty::Boolean),
             ("ctrl".into(), Ty::Boolean),

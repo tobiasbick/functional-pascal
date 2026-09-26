@@ -260,7 +260,7 @@ impl DebugTaskRuntime {
                     self.root_result = Some(value.clone());
                 }
                 if slot.worker.retain_result {
-                    self.scheduler.store_result(task_id, value.clone());
+                    self.scheduler.store_result(task_id, value);
                 }
                 if task_id != 0 {
                     slot.exited = true;

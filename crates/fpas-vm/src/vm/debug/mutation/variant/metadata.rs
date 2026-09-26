@@ -155,7 +155,7 @@ fn enum_variants(
                 variant_id,
                 type_name: type_name.to_string(),
                 variant: name.clone(),
-                fields: fields.clone(),
+                fields,
             });
             Ok(VariantMetadata {
                 canonical_name: format!("{type_name}.{name}"),

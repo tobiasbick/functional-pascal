@@ -260,28 +260,7 @@ fn collect_branch(
         snapshot,
         owner,
         std::slice::from_ref(branch),
-        stmt_span(branch).diagnostic_span_or_synthetic(),
+        branch.span().diagnostic_span_or_synthetic(),
         output,
     );
-}
-
-fn stmt_span(statement: &Stmt) -> Span {
-    match statement {
-        Stmt::Block(_, span)
-        | Stmt::Return(_, span)
-        | Stmt::Panic(_, span)
-        | Stmt::Break(span)
-        | Stmt::Continue(span) => *span,
-        Stmt::Var(value) | Stmt::MutableVar(value) => value.span,
-        Stmt::Assign { span, .. }
-        | Stmt::If { span, .. }
-        | Stmt::Case { span, .. }
-        | Stmt::For { span, .. }
-        | Stmt::ForIn { span, .. }
-        | Stmt::While { span, .. }
-        | Stmt::Repeat { span, .. }
-        | Stmt::Call { span, .. }
-        | Stmt::Expression { span, .. }
-        | Stmt::Go { span, .. } => *span,
-    }
 }

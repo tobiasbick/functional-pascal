@@ -27,8 +27,8 @@ pub(crate) fn check_map(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
         return Ty::Error;
     }
 
-    let arr_ty = c.check_expr(&args[0]);
-    let func_ty = c.check_expr(&args[1]);
+    let arr_ty = c.check_expr(args[0]);
+    let func_ty = c.check_expr(args[1]);
     let Some(elem_ty) = array_elem_ty(&arr_ty) else {
         c.error_with_code(
             SEMA_TYPE_MISMATCH,
@@ -66,8 +66,8 @@ pub(crate) fn check_filter(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
         return Ty::Error;
     }
 
-    let arr_ty = c.check_expr(&args[0]);
-    let func_ty = c.check_expr(&args[1]);
+    let arr_ty = c.check_expr(args[0]);
+    let func_ty = c.check_expr(args[1]);
     let Some(elem_ty) = array_elem_ty(&arr_ty) else {
         c.error_with_code(
             SEMA_TYPE_MISMATCH,
@@ -107,9 +107,9 @@ pub(crate) fn check_reduce(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
         return Ty::Error;
     }
 
-    let arr_ty = c.check_expr(&args[0]);
-    let init_ty = c.check_expr(&args[1]);
-    let func_ty = c.check_expr(&args[2]);
+    let arr_ty = c.check_expr(args[0]);
+    let init_ty = c.check_expr(args[1]);
+    let func_ty = c.check_expr(args[2]);
     let Some(elem_ty) = array_elem_ty(&arr_ty) else {
         c.error_with_code(
             SEMA_TYPE_MISMATCH,
@@ -150,8 +150,8 @@ pub(crate) fn check_flat_map(c: &mut Checker, args: &[&Expr], span: Span) -> Ty 
         return Ty::Error;
     }
 
-    let arr_ty = c.check_expr(&args[0]);
-    let func_ty = c.check_expr(&args[1]);
+    let arr_ty = c.check_expr(args[0]);
+    let func_ty = c.check_expr(args[1]);
     let Some(elem_ty) = array_elem_ty(&arr_ty) else {
         c.error_with_code(
             SEMA_TYPE_MISMATCH,

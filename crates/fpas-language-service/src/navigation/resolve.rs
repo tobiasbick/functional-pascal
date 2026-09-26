@@ -226,9 +226,9 @@ pub(crate) fn resolve_qualified(
 
     let (base_index, base) = resolve_unqualified(documents, target_index, first, offset)?;
     let mut owner_type = if matches!(base.kind, SymbolKind::Type | SymbolKind::Enum) {
-        Some(base.qualified_name.clone())
+        Some(base.qualified_name)
     } else {
-        base.type_name.clone()
+        base.type_name
     }?;
     for (member_index, member_name) in parts[1..].iter().enumerate() {
         let (type_index, type_symbol) =

@@ -142,7 +142,7 @@ fn collect_body(body: &FuncBody, offset: usize, spans: &mut Vec<SourceSpan>) {
 
 fn collect_statements(statements: &[Stmt], offset: usize, spans: &mut Vec<SourceSpan>) {
     for statement in statements {
-        let span = statement_span(statement);
+        let span = statement.span().diagnostic_span_or_synthetic();
         if !contains_offset(span, offset) {
             continue;
         }
@@ -184,27 +184,6 @@ fn collect_statements(statements: &[Stmt], offset: usize, spans: &mut Vec<Source
             | Stmt::Expression { .. }
             | Stmt::Go { .. } => {}
         }
-    }
-}
-
-fn statement_span(statement: &Stmt) -> SourceSpan {
-    match statement {
-        Stmt::Block(_, span)
-        | Stmt::Return(_, span)
-        | Stmt::Panic(_, span)
-        | Stmt::Break(span)
-        | Stmt::Continue(span) => span.diagnostic_span_or_synthetic(),
-        Stmt::Var(value) | Stmt::MutableVar(value) => value.span.diagnostic_span_or_synthetic(),
-        Stmt::Assign { span, .. }
-        | Stmt::If { span, .. }
-        | Stmt::Case { span, .. }
-        | Stmt::For { span, .. }
-        | Stmt::ForIn { span, .. }
-        | Stmt::While { span, .. }
-        | Stmt::Repeat { span, .. }
-        | Stmt::Call { span, .. }
-        | Stmt::Expression { span, .. }
-        | Stmt::Go { span, .. } => span.diagnostic_span_or_synthetic(),
     }
 }
 

@@ -69,7 +69,7 @@ fn build_program_artifact_before_publish(
             source::ensure_current(graph, Digest::of(target.source))?;
             let mut events = units.events;
             events.push(BuildEvent {
-                owner: program.name.clone(),
+                owner: program.name,
                 kind: BuildEventKind::ProgramImageReused,
             });
             return Ok(BuiltProgram { executable, events });
@@ -121,9 +121,7 @@ fn source_hashes(
                 node.source_id()
             ))
         })?;
-        *slot = node
-            .source_hash()
-            .map(|hash| fpas_program::Digest::from_bytes(*hash.as_bytes()));
+        *slot = node.source_hash();
     }
     hashes
         .into_iter()

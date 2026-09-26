@@ -159,54 +159,10 @@ pub(in crate::vm::debug) enum DebugCallTarget {
 }
 
 /// Unary operator in [`DebugExpression`].
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum DebugUnaryOperation {
-    /// Numeric negation with unary `-`.
-    Negate,
-    /// Boolean negation with `not`.
-    Not,
-}
+pub use crate::vm::value_ops::UnaryOperation as DebugUnaryOperation;
 
 /// Binary operator in [`DebugExpression`].
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum DebugBinaryOperation {
-    /// `+`.
-    Add,
-    /// `-`.
-    Subtract,
-    /// `*`.
-    Multiply,
-    /// `/`.
-    RealDivide,
-    /// `div`.
-    IntegerDivide,
-    /// `mod`.
-    Modulo,
-    /// `and`.
-    And,
-    /// `or`.
-    Or,
-    /// `xor`.
-    Xor,
-    /// `shl`.
-    ShiftLeft,
-    /// `shr`.
-    ShiftRight,
-    /// `=`.
-    Equal,
-    /// `<>`.
-    NotEqual,
-    /// `<`.
-    Less,
-    /// `<=`.
-    LessEqual,
-    /// `>`.
-    Greater,
-    /// `>=`.
-    GreaterEqual,
-    /// `in`.
-    In,
-}
+pub use crate::vm::value_ops::BinaryOperation as DebugBinaryOperation;
 
 /// Rendered result of one debugger expression evaluation.
 #[derive(Debug, Clone, PartialEq, Eq)]

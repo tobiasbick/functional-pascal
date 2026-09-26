@@ -5,15 +5,10 @@ use std::sync::{Arc, TryLockError};
 
 use fpas_bytecode::Value;
 
-use super::model::{
-    DebugBinaryOperation, DebugCallTarget, DebugEvaluationLimits, DebugExpression,
-    DebugUnaryOperation,
-};
+use super::model::{DebugCallTarget, DebugEvaluationLimits, DebugExpression};
 use super::qualified;
 use crate::vm::debug::types::{DebugErrorKind, DebugSessionError};
-use crate::vm::value_ops::{
-    self, BinaryOperation, UnaryOperation, ValueOperationError, ValueOperationErrorKind,
-};
+use crate::vm::value_ops::{self, ValueOperationError, ValueOperationErrorKind};
 
 pub(super) fn evaluate(
     expression: &DebugExpression,
@@ -62,7 +57,7 @@ fn evaluate_with_qualified_fallback(
         }
         DebugExpression::Unary { operation, operand } => {
             let operand = evaluate(operand, depth + 1, limits, budget, resolve, invoke)?;
-            value_ops::unary(map_unary(*operation), &operand).map_err(operation_error)?
+            value_ops::unary(*operation, &operand).map_err(operation_error)?
         }
         DebugExpression::Binary {
             operation,
@@ -71,7 +66,7 @@ fn evaluate_with_qualified_fallback(
         } => {
             let left = evaluate(left, depth + 1, limits, budget, resolve, invoke)?;
             let right = evaluate(right, depth + 1, limits, budget, resolve, invoke)?;
-            value_ops::binary(map_binary(*operation), &left, &right).map_err(operation_error)?
+            value_ops::binary(*operation, &left, &right).map_err(operation_error)?
         }
         DebugExpression::Field { base, name } => {
             count_traversal(budget, limits)?;
@@ -300,36 +295,6 @@ fn count_traversal(
         ));
     }
     Ok(())
-}
-
-fn map_unary(operation: DebugUnaryOperation) -> UnaryOperation {
-    match operation {
-        DebugUnaryOperation::Negate => UnaryOperation::Negate,
-        DebugUnaryOperation::Not => UnaryOperation::Not,
-    }
-}
-
-fn map_binary(operation: DebugBinaryOperation) -> BinaryOperation {
-    match operation {
-        DebugBinaryOperation::Add => BinaryOperation::Add,
-        DebugBinaryOperation::Subtract => BinaryOperation::Subtract,
-        DebugBinaryOperation::Multiply => BinaryOperation::Multiply,
-        DebugBinaryOperation::RealDivide => BinaryOperation::RealDivide,
-        DebugBinaryOperation::IntegerDivide => BinaryOperation::IntegerDivide,
-        DebugBinaryOperation::Modulo => BinaryOperation::Modulo,
-        DebugBinaryOperation::And => BinaryOperation::And,
-        DebugBinaryOperation::Or => BinaryOperation::Or,
-        DebugBinaryOperation::Xor => BinaryOperation::Xor,
-        DebugBinaryOperation::ShiftLeft => BinaryOperation::ShiftLeft,
-        DebugBinaryOperation::ShiftRight => BinaryOperation::ShiftRight,
-        DebugBinaryOperation::Equal => BinaryOperation::Equal,
-        DebugBinaryOperation::NotEqual => BinaryOperation::NotEqual,
-        DebugBinaryOperation::Less => BinaryOperation::Less,
-        DebugBinaryOperation::LessEqual => BinaryOperation::LessEqual,
-        DebugBinaryOperation::Greater => BinaryOperation::Greater,
-        DebugBinaryOperation::GreaterEqual => BinaryOperation::GreaterEqual,
-        DebugBinaryOperation::In => BinaryOperation::In,
-    }
 }
 
 fn operation_error(error: ValueOperationError) -> DebugSessionError {

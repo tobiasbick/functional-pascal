@@ -1,17 +1,16 @@
-#[expect(
-    clippy::too_many_arguments,
-    reason = "typed validation needs explicit operand scopes"
-)]
 fn validate_cell_make(
-    program: &Program,
-    function: &Function,
-    block: BlockId,
-    instruction: usize,
+    scope: OperandScope<'_>,
     value: ValueId,
     result: Option<ValueDefinition>,
-    all_values: &BTreeMap<ValueId, TypeId>,
-    available: &BTreeSet<ValueId>,
 ) -> Result<(), ValidationError> {
+    let OperandScope {
+        program,
+        function,
+        block,
+        instruction,
+        all_values,
+        available,
+    } = scope;
     let value_ty = value_type(function, block, instruction, value, all_values, available)?;
     let result = result.ok_or_else(|| {
         function_error(
@@ -36,20 +35,19 @@ fn validate_cell_make(
     }
 }
 
-#[expect(
-    clippy::too_many_arguments,
-    reason = "typed validation needs explicit operand scopes"
-)]
 fn validate_cell_read(
-    program: &Program,
-    function: &Function,
-    block: BlockId,
-    instruction: usize,
+    scope: OperandScope<'_>,
     cell: ValueId,
     result: Option<ValueDefinition>,
-    all_values: &BTreeMap<ValueId, TypeId>,
-    available: &BTreeSet<ValueId>,
 ) -> Result<(), ValidationError> {
+    let OperandScope {
+        program,
+        function,
+        block,
+        instruction,
+        all_values,
+        available,
+    } = scope;
     let cell_ty = value_type(function, block, instruction, cell, all_values, available)?;
     let Some(IrType::Cell(inner)) = program.ty(cell_ty).map(|definition| &definition.kind) else {
         return Err(function_error(
@@ -66,20 +64,19 @@ fn validate_cell_read(
     require_result_type(function, block, instruction, result, *inner)
 }
 
-#[expect(
-    clippy::too_many_arguments,
-    reason = "typed validation needs explicit operand scopes"
-)]
 fn validate_cell_write(
-    program: &Program,
-    function: &Function,
-    block: BlockId,
-    instruction: usize,
+    scope: OperandScope<'_>,
     cell: ValueId,
     value: ValueId,
-    all_values: &BTreeMap<ValueId, TypeId>,
-    available: &BTreeSet<ValueId>,
 ) -> Result<(), ValidationError> {
+    let OperandScope {
+        program,
+        function,
+        block,
+        instruction,
+        all_values,
+        available,
+    } = scope;
     let cell_ty = value_type(function, block, instruction, cell, all_values, available)?;
     let value_ty = value_type(function, block, instruction, value, all_values, available)?;
     let Some(IrType::Cell(inner)) = program.ty(cell_ty).map(|definition| &definition.kind) else {
@@ -97,46 +94,29 @@ fn validate_cell_write(
     require_exact(function, block, instruction, "cell value", *inner, value_ty)
 }
 
-#[expect(
-    clippy::too_many_arguments,
-    reason = "typed validation needs explicit operand scopes"
-)]
 fn validate_spawn(
-    program: &Program,
-    function: &Function,
-    block: BlockId,
-    instruction: usize,
+    scope: OperandScope<'_>,
     callee: ValueId,
     arguments: &[ValueId],
     result: Option<ValueDefinition>,
-    all_values: &BTreeMap<ValueId, TypeId>,
-    available: &BTreeSet<ValueId>,
 ) -> Result<(), ValidationError> {
-    let callee_ty = value_type(function, block, instruction, callee, all_values, available)?;
-    let Some(IrType::Function {
-        parameters,
-        result: output,
-    }) = program.ty(callee_ty).map(|definition| &definition.kind)
-    else {
-        return Err(function_error(
-            function.id,
-            Some(block),
-            Some(instruction),
-            ValidationErrorKind::CallValueType {
-                actual: callee_ty.get(),
-            },
-        ));
-    };
-    validate_arguments(
+    let OperandScope {
         program,
         function,
         block,
         instruction,
-        arguments,
-        parameters,
         all_values,
         available,
+    } = scope;
+    let callee_ty = value_type(function, block, instruction, callee, all_values, available)?;
+    let (parameters, output) = function_value_signature(
+        function,
+        block,
+        instruction,
+        callee_ty,
+        program.ty(callee_ty).map(|definition| &definition.kind),
     )?;
+    validate_arguments(scope, arguments, parameters)?;
     let result = result.ok_or_else(|| {
         function_error(
             function.id,
@@ -147,7 +127,7 @@ fn validate_spawn(
     })?;
     match program.ty(result.ty).map(|definition| &definition.kind) {
         Some(IrType::Task(inner))
-            if *inner == *output
+            if *inner == output
                 || matches!(program.ty(*inner).map(|definition| &definition.kind), Some(IrType::Dynamic)) => Ok(()),
         _ => Err(function_error(
             function.id,

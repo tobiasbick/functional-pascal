@@ -81,10 +81,10 @@ impl check::Checker {
             });
             candidates.dedup_by(|left, right| left.0.eq_ignore_ascii_case(&right.0));
             if candidates.len() == 1 {
-                if let Some((_, symbol)) = candidates.pop() {
-                    if self.scopes.define_in_root(&short, symbol) {
-                        self.source_short_alias_keys.insert(short);
-                    }
+                if let Some((_, symbol)) = candidates.pop()
+                    && self.scopes.define_in_root(&short, symbol)
+                {
+                    self.source_short_alias_keys.insert(short);
                 }
             } else {
                 self.ambiguous_imports.insert(

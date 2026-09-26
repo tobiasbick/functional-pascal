@@ -9,8 +9,8 @@ impl Console {
         self.sync_terminal_size();
         self.enable_crt_mode();
         let (Some(x), Some(y)) = (
-            self.check_coord(x, self.state.window_width()),
-            self.check_coord(y, self.state.window_height()),
+            Self::check_coord(x, self.state.window_width()),
+            Self::check_coord(y, self.state.window_height()),
         ) else {
             return Err(std_runtime_error(
                 RUNTIME_CONSOLE_STATE_ERROR,

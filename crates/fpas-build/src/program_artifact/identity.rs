@@ -13,7 +13,7 @@ pub(super) fn expected(
         compiler_version: options.compiler_version.clone(),
         bytecode_version: options.bytecode_version,
         source_hash: Digest::of(source),
-        options_hash: Digest::from_bytes(*options.options_hash.as_bytes()),
+        options_hash: options.options_hash,
         units: units.linked_units.clone(),
     }
 }

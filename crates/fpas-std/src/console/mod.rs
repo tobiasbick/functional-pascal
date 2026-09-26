@@ -140,18 +140,6 @@ impl Console {
     pub(crate) fn has_terminal_writer(&self) -> bool {
         self.writer.is_some()
     }
-
-    /// Paint one CRT cell for headless terminal rendering (no terminal I/O).
-    #[doc(hidden)]
-    pub fn paint_headless_cell(&mut self, x: u16, y: u16, ch: char, fg: u8, bg: u8) {
-        self.state.paint_packed_cell(x, y, ch, fg, bg);
-    }
-
-    /// Clear the logical CRT buffer without emitting terminal output.
-    #[doc(hidden)]
-    pub fn clear_headless_screen(&mut self) {
-        self.state.clear_window();
-    }
 }
 
 #[cfg(test)]

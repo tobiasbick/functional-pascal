@@ -56,7 +56,7 @@ fn expect_dict_arg(
         );
         return None;
     }
-    Some(c.check_expr(&args[0]))
+    Some(c.check_expr(args[0]))
 }
 
 fn check_dict_length(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
@@ -90,8 +90,8 @@ fn check_dict_contains_key(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
         );
         return Ty::Error;
     }
-    let dict_ty = c.check_expr(&args[0]);
-    let key_ty = c.check_expr(&args[1]);
+    let dict_ty = c.check_expr(args[0]);
+    let key_ty = c.check_expr(args[1]);
     if let Some((k, _)) = dict_kv_types(&dict_ty) {
         c.check_type_compat(&k, &key_ty, "dict key", span);
         Ty::Boolean
@@ -157,8 +157,8 @@ fn check_dict_remove(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
         );
         return Ty::Error;
     }
-    let dict_ty = c.check_expr(&args[0]);
-    let key_ty = c.check_expr(&args[1]);
+    let dict_ty = c.check_expr(args[0]);
+    let key_ty = c.check_expr(args[1]);
     if let Some((k, v)) = dict_kv_types(&dict_ty) {
         c.check_type_compat(&k, &key_ty, "dict key", span);
         Ty::Dict(Box::new(k), Box::new(v))
@@ -187,8 +187,8 @@ fn check_dict_get(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
         );
         return Ty::Error;
     }
-    let dict_ty = c.check_expr(&args[0]);
-    let key_ty = c.check_expr(&args[1]);
+    let dict_ty = c.check_expr(args[0]);
+    let key_ty = c.check_expr(args[1]);
     if let Some((k, v)) = dict_kv_types(&dict_ty) {
         c.check_type_compat(&k, &key_ty, "dict key", span);
         if !k.compatible_with(&key_ty) {
@@ -220,8 +220,8 @@ fn check_dict_merge(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
         );
         return Ty::Error;
     }
-    let dict1_ty = c.check_expr(&args[0]);
-    let dict2_ty = c.check_expr(&args[1]);
+    let dict1_ty = c.check_expr(args[0]);
+    let dict2_ty = c.check_expr(args[1]);
     let Some((k1, v1)) = dict_kv_types(&dict1_ty) else {
         c.error_with_code(
             SEMA_TYPE_MISMATCH,
@@ -273,8 +273,8 @@ fn check_dict_map(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
         );
         return Ty::Error;
     }
-    let dict_ty = c.check_expr(&args[0]);
-    let func_ty = c.check_expr(&args[1]);
+    let dict_ty = c.check_expr(args[0]);
+    let func_ty = c.check_expr(args[1]);
     let Some((k, v)) = dict_kv_types(&dict_ty) else {
         c.error_with_code(
             SEMA_TYPE_MISMATCH,
@@ -337,8 +337,8 @@ fn check_dict_filter(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
         );
         return Ty::Error;
     }
-    let dict_ty = c.check_expr(&args[0]);
-    let func_ty = c.check_expr(&args[1]);
+    let dict_ty = c.check_expr(args[0]);
+    let func_ty = c.check_expr(args[1]);
     let Some((k, v)) = dict_kv_types(&dict_ty) else {
         c.error_with_code(
             SEMA_TYPE_MISMATCH,

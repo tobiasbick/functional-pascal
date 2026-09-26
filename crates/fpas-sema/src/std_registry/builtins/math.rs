@@ -35,7 +35,7 @@ fn check_abs(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
         );
         return Ty::Error;
     }
-    let ty = c.check_expr(&args[0]);
+    let ty = c.check_expr(args[0]);
     if ty == Ty::Integer {
         Ty::Integer
     } else if ty == Ty::Real {
@@ -61,8 +61,8 @@ fn check_min_max(c: &mut Checker, name: &str, args: &[&Expr], span: Span) -> Ty 
         );
         return Ty::Error;
     }
-    let left_ty = c.check_expr(&args[0]);
-    let right_ty = c.check_expr(&args[1]);
+    let left_ty = c.check_expr(args[0]);
+    let right_ty = c.check_expr(args[1]);
     if !left_ty.is_numeric() || !right_ty.is_numeric() {
         c.error_with_code(
             SEMA_TYPE_MISMATCH,
@@ -101,7 +101,7 @@ fn check_sign(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
         );
         return Ty::Error;
     }
-    let ty = c.check_expr(&args[0]);
+    let ty = c.check_expr(args[0]);
     if ty == Ty::Integer || ty == Ty::Real {
         Ty::Integer
     } else {
@@ -129,9 +129,9 @@ fn check_clamp(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
         );
         return Ty::Error;
     }
-    let x_ty = c.check_expr(&args[0]);
-    let lo_ty = c.check_expr(&args[1]);
-    let hi_ty = c.check_expr(&args[2]);
+    let x_ty = c.check_expr(args[0]);
+    let lo_ty = c.check_expr(args[1]);
+    let hi_ty = c.check_expr(args[2]);
     if !x_ty.is_numeric() || !lo_ty.is_numeric() || !hi_ty.is_numeric() {
         c.error_with_code(
             SEMA_TYPE_MISMATCH,

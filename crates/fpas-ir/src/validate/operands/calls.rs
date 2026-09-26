@@ -1,18 +1,16 @@
-#[expect(
-    clippy::too_many_arguments,
-    reason = "typed validation needs explicit operand scopes"
-)]
 fn validate_direct_call(
-    program: &Program,
-    function: &Function,
-    block: BlockId,
-    instruction: usize,
+    scope: OperandScope<'_>,
     target: FunctionId,
     arguments: &[ValueId],
     result: Option<ValueDefinition>,
-    all_values: &BTreeMap<ValueId, TypeId>,
-    available: &BTreeSet<ValueId>,
 ) -> Result<(), ValidationError> {
+    let OperandScope {
+        program,
+        function,
+        block,
+        instruction,
+        ..
+    } = scope;
     let target = program.function(target).ok_or_else(|| {
         unknown(
             function,
@@ -22,16 +20,7 @@ fn validate_direct_call(
             target.get(),
         )
     })?;
-    validate_arguments(
-        program,
-        function,
-        block,
-        instruction,
-        arguments,
-        &target.signature.parameters,
-        all_values,
-        available,
-    )?;
+    validate_arguments(scope, arguments, &target.signature.parameters)?;
     let result = result.ok_or_else(|| function_error(function.id, Some(block), Some(instruction), ValidationErrorKind::MissingResult))?;
     if types_compatible(program, target.signature.result, result.ty) {
         return Ok(());
@@ -39,21 +28,20 @@ fn validate_direct_call(
     require_result_type(function, block, instruction, Some(result), target.signature.result)
 }
 
-#[expect(
-    clippy::too_many_arguments,
-    reason = "typed validation needs explicit operand scopes"
-)]
 fn validate_call_value(
-    program: &Program,
-    function: &Function,
-    block: BlockId,
-    instruction: usize,
+    scope: OperandScope<'_>,
     callee: ValueId,
     arguments: &[ValueId],
     result: Option<ValueDefinition>,
-    all_values: &BTreeMap<ValueId, TypeId>,
-    available: &BTreeSet<ValueId>,
 ) -> Result<(), ValidationError> {
+    let OperandScope {
+        program,
+        function,
+        block,
+        instruction,
+        all_values,
+        available,
+    } = scope;
     let callee_ty = value_type(function, block, instruction, callee, all_values, available)?;
     let definition = program.ty(callee_ty).ok_or_else(|| {
         unknown(
@@ -64,52 +52,51 @@ fn validate_call_value(
             callee_ty.get(),
         )
     })?;
-    let IrType::Function {
-        parameters,
-        result: expected_result,
-    } = &definition.kind
-    else {
-        return Err(function_error(
+    let (parameters, expected_result) =
+        function_value_signature(function, block, instruction, callee_ty, Some(&definition.kind))?;
+    validate_arguments(scope, arguments, parameters)?;
+    if let Some(result) = result
+        && !types_compatible(program, expected_result, result.ty)
+    {
+        require_result_type(function, block, instruction, Some(result), expected_result)?;
+    }
+    Ok(())
+}
+
+/// Return the parameter and result types of a function-typed callee value.
+fn function_value_signature<'p>(
+    function: &Function,
+    block: BlockId,
+    instruction: usize,
+    callee_ty: TypeId,
+    kind: Option<&'p IrType>,
+) -> Result<(&'p [TypeId], TypeId), ValidationError> {
+    match kind {
+        Some(IrType::Function { parameters, result }) => Ok((parameters, *result)),
+        _ => Err(function_error(
             function.id,
             Some(block),
             Some(instruction),
             ValidationErrorKind::CallValueType {
                 actual: callee_ty.get(),
             },
-        ));
-    };
-    validate_arguments(
+        )),
+    }
+}
+
+fn validate_arguments(
+    scope: OperandScope<'_>,
+    arguments: &[ValueId],
+    parameters: &[TypeId],
+) -> Result<(), ValidationError> {
+    let OperandScope {
         program,
         function,
         block,
         instruction,
-        arguments,
-        parameters,
         all_values,
         available,
-    )?;
-    if let Some(result) = result
-        && !types_compatible(program, *expected_result, result.ty)
-    {
-        require_result_type(function, block, instruction, Some(result), *expected_result)?;
-    }
-    Ok(())
-}
-
-#[expect(
-    clippy::too_many_arguments,
-    reason = "typed validation needs explicit operand scopes"
-)]
-fn validate_arguments(
-    program: &Program,
-    function: &Function,
-    block: BlockId,
-    instruction: usize,
-    arguments: &[ValueId],
-    parameters: &[TypeId],
-    all_values: &BTreeMap<ValueId, TypeId>,
-    available: &BTreeSet<ValueId>,
-) -> Result<(), ValidationError> {
+    } = scope;
     if arguments.len() != parameters.len() {
         return Err(function_error(
             function.id,

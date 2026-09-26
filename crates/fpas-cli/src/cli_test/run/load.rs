@@ -68,7 +68,7 @@ pub(super) fn apply_test_script(
     manifest_override: Option<&project::TestFileOverride>,
     vm: &mut fpas_vm::Vm,
 ) -> Result<(), String> {
-    let script_path = resolve_script_path(test_path, cli_script, manifest_override)?;
+    let script_path = resolve_script_path(test_path, cli_script, manifest_override);
 
     if let Some(script_path) = script_path {
         if !script_path.is_file() {
@@ -88,19 +88,15 @@ fn resolve_script_path(
     test_path: &Path,
     cli_script: Option<&Path>,
     manifest_override: Option<&project::TestFileOverride>,
-) -> Result<Option<PathBuf>, String> {
+) -> Option<PathBuf> {
     if let Some(path) = cli_script {
-        return Ok(Some(path.to_path_buf()));
+        return Some(path.to_path_buf());
     }
 
     if let Some(path) = manifest_override.and_then(|value| value.script.as_ref()) {
-        return Ok(Some(path.clone()));
+        return Some(path.clone());
     }
 
     let sidecar = sidecar_path_for_test(test_path);
-    if sidecar.is_file() {
-        return Ok(Some(sidecar));
-    }
-
-    Ok(None)
+    sidecar.is_file().then_some(sidecar)
 }

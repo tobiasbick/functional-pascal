@@ -17,7 +17,7 @@ impl Checker {
             (crate::types::Ty::Task(inner), crate::types::Ty::Task(actual))
                 if inner.is_error() && !actual.is_error() =>
             {
-                crate::types::Ty::Task(actual.clone())
+                crate::types::Ty::Task(actual)
             }
             _ => declared_ty.clone(),
         };

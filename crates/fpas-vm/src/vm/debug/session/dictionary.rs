@@ -2,11 +2,11 @@
 
 use fpas_bytecode::{DebugType, DebugTypeId, Value};
 
+use super::container_mutation::ContainerKind;
 use super::*;
 use crate::vm::debug::evaluation::{DebugEvaluationLimits, DebugExpression};
 use crate::vm::debug::mutation::{
-    DebugAssignmentSelector, DebugAssignmentTarget, DebugDictionaryMutationResult,
-    DictionaryTransformation,
+    DebugAssignmentTarget, DebugDictionaryMutationResult, DictionaryTransformation,
 };
 
 impl DebugSession {
@@ -47,7 +47,8 @@ impl DebugSession {
     ) -> Result<DebugDictionaryMutationResult, DebugSessionError> {
         self.require_stopped("dictionary.insert")?;
         let result = (|| {
-            let prepared = self.prepare_dictionary_mutation(
+            let prepared = self.prepare_container_mutation(
+                ContainerKind::Dictionary,
                 assignment,
                 &[key.clone(), value.clone()],
                 frame_id,
@@ -67,7 +68,7 @@ impl DebugSession {
                 limits.max_depth,
             )?;
             let transformation = super::super::mutation::insert(
-                prepared.dictionary,
+                prepared.container,
                 prepared.operands[0].clone(),
                 prepared.operands[1].clone(),
             )?;
@@ -116,7 +117,8 @@ impl DebugSession {
     ) -> Result<DebugDictionaryMutationResult, DebugSessionError> {
         self.require_stopped("dictionary.remove")?;
         let result = (|| {
-            let prepared = self.prepare_dictionary_mutation(
+            let prepared = self.prepare_container_mutation(
+                ContainerKind::Dictionary,
                 assignment,
                 std::slice::from_ref(key),
                 frame_id,
@@ -130,7 +132,7 @@ impl DebugSession {
                 limits.max_depth,
             )?;
             let transformation =
-                super::super::mutation::remove(prepared.dictionary, &prepared.operands[0])?;
+                super::super::mutation::remove(prepared.container, &prepared.operands[0])?;
             self.commit_dictionary_mutation(
                 prepared.task_id,
                 &prepared.target,
@@ -179,7 +181,8 @@ impl DebugSession {
     ) -> Result<DebugDictionaryMutationResult, DebugSessionError> {
         self.require_stopped("dictionary.replace_key")?;
         let result = (|| {
-            let prepared = self.prepare_dictionary_mutation(
+            let prepared = self.prepare_container_mutation(
+                ContainerKind::Dictionary,
                 assignment,
                 &[old_key.clone(), new_key.clone()],
                 frame_id,
@@ -195,7 +198,7 @@ impl DebugSession {
                 )?;
             }
             let transformation = super::super::mutation::replace_key(
-                prepared.dictionary,
+                prepared.container,
                 &prepared.operands[0],
                 prepared.operands[1].clone(),
             )?;
@@ -208,58 +211,6 @@ impl DebugSession {
         })();
         self.evaluation_cancelled.store(false, Ordering::Release);
         result
-    }
-
-    fn prepare_dictionary_mutation(
-        &self,
-        assignment: &DebugAssignmentTarget,
-        operation_expressions: &[DebugExpression],
-        frame_id: Option<u64>,
-        limits: DebugEvaluationLimits,
-    ) -> Result<PreparedDictionaryMutation, DebugSessionError> {
-        let task_id = self.task_for_frame(frame_id)?;
-        let (target, current) = self
-            .inspections
-            .get(&task_id)
-            .ok_or_else(|| unknown_task(task_id))?
-            .resolve_named_mutation_target(frame_id, &assignment.root)?;
-        let current = current.ok_or_else(|| uninitialized_container(&assignment.root))?;
-        let selector_count = assignment
-            .selectors
-            .iter()
-            .filter(|selector| matches!(selector, DebugAssignmentSelector::Index(_)))
-            .count();
-        let mut expressions = assignment
-            .selectors
-            .iter()
-            .filter_map(|selector| match selector {
-                DebugAssignmentSelector::Field(_) => None,
-                DebugAssignmentSelector::Index(expression) => Some(expression.clone()),
-            })
-            .collect::<Vec<_>>();
-        expressions.extend_from_slice(operation_expressions);
-        let mut values = self.evaluate_runtime_values(&expressions, frame_id, limits)?;
-        let operands = values.split_off(selector_count);
-        let (target, dictionary) = super::super::mutation::target_with_value(
-            self.executable.executable(),
-            assignment,
-            target,
-            current,
-            &values,
-        )?;
-        if operands.len() != operation_expressions.len() {
-            return Err(DebugSessionError {
-                kind: DebugErrorKind::VariableUnavailable,
-                message: "debug dictionary mutation input is unavailable".to_string(),
-                hint: "Retry with complete key and value expressions.".to_string(),
-            });
-        }
-        Ok(PreparedDictionaryMutation {
-            task_id,
-            target,
-            dictionary,
-            operands,
-        })
     }
 
     fn dictionary_types(
@@ -289,71 +240,27 @@ impl DebugSession {
         transformation: DictionaryTransformation,
         limits: DebugEvaluationLimits,
     ) -> Result<DebugDictionaryMutationResult, DebugSessionError> {
-        super::super::mutation::validate_replacement(
-            &self.executable,
-            target,
-            &transformation.dictionary,
-            limits.max_depth,
-        )?;
-        let inspection = self
-            .inspections
-            .get(&task_id)
-            .ok_or_else(|| unknown_task(task_id))?;
-        let removed = transformation
-            .removed
-            .as_ref()
-            .map(|value| inspection.evaluation_summary(value, limits))
-            .transpose()?;
-        let old_key = transformation
-            .old_key
-            .as_ref()
-            .map(|value| inspection.evaluation_summary(value, limits))
-            .transpose()?;
-        let new_key = transformation
-            .new_key
-            .as_ref()
-            .map(|value| inspection.evaluation_summary(value, limits))
-            .transpose()?;
-        inspection.evaluation_summary(&transformation.dictionary, limits)?;
-
-        let generation = inspection.generation();
-        let worker = self
-            .runtime
-            .worker_mut(task_id)
-            .ok_or_else(|| unknown_task(task_id))?;
-        let committed =
-            super::super::mutation::commit(worker, generation, target, transformation.dictionary)?;
-        self.invalidate_inspection();
-        self.refresh_inspection();
-        self.inspection_task_id = task_id;
-        let dictionary = self
-            .inspections
-            .get_mut(&task_id)
-            .ok_or_else(|| unknown_task(task_id))?
-            .retain_evaluation_result(committed, limits)?;
+        let DictionaryTransformation {
+            dictionary,
+            removed,
+            old_key,
+            new_key,
+        } = transformation;
+        let (dictionary, (removed, old_key, new_key)) =
+            self.commit_container_value(task_id, target, dictionary, limits, |inspection| {
+                let summary = |value: Option<Value>| {
+                    value
+                        .as_ref()
+                        .map(|value| inspection.evaluation_summary(value, limits))
+                        .transpose()
+                };
+                Ok((summary(removed)?, summary(old_key)?, summary(new_key)?))
+            })?;
         Ok(DebugDictionaryMutationResult {
             dictionary,
             removed,
             old_key,
             new_key,
         })
-    }
-}
-
-struct PreparedDictionaryMutation {
-    task_id: u64,
-    target: super::super::inspection::MutationTarget,
-    dictionary: Value,
-    operands: Vec<Value>,
-}
-
-fn uninitialized_container(name: &str) -> DebugSessionError {
-    DebugSessionError {
-        kind: DebugErrorKind::VariablePathUnsupported,
-        message: format!(
-            "debug variable target `{name}` has no writable descendants before initialization"
-        ),
-        hint: "Initialize the complete binding before inserting, removing, or replacing entries."
-            .to_string(),
     }
 }

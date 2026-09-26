@@ -406,6 +406,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "fpas-binary"
+version = "0.0.1"
+dependencies = [
+ "blake3",
+]
+
+[[package]]
 name = "fpas-build"
 version = "0.0.1"
 dependencies = [
@@ -577,7 +584,7 @@ name = "fpas-program"
 version = "0.0.1"
 dependencies = [
  "allocation-counter",
- "blake3",
+ "fpas-binary",
  "fpas-bytecode",
  "fpas-vm",
 ]
@@ -632,7 +639,7 @@ name = "fpas-unit"
 version = "0.0.1"
 dependencies = [
  "atomic-write-file",
- "blake3",
+ "fpas-binary",
  "fpas-bytecode",
  "serde",
  "serde_json",

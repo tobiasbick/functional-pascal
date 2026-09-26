@@ -1,3 +1,16 @@
+/// Program, position, and value environment of the instruction being validated.
+#[derive(Clone, Copy)]
+struct OperandScope<'a> {
+    program: &'a Program,
+    function: &'a Function,
+    block: BlockId,
+    instruction: usize,
+    /// Types of every value defined in the function.
+    all_values: &'a BTreeMap<ValueId, TypeId>,
+    /// Values defined before this instruction.
+    available: &'a BTreeSet<ValueId>,
+}
+
 fn validate_block(
     program: &Program,
     function: &Function,
@@ -9,16 +22,15 @@ fn validate_block(
     available.extend(block.parameters.iter().map(|parameter| parameter.id));
     for (instruction_index, instruction) in block.instructions.iter().enumerate() {
         validate_result_shape(function, block.id, instruction_index, instruction)?;
-        validate_operation(
+        let scope = OperandScope {
             program,
             function,
-            block.id,
-            instruction_index,
-            &instruction.operation,
-            instruction.result,
+            block: block.id,
+            instruction: instruction_index,
             all_values,
-            &available,
-        )?;
+            available: &available,
+        };
+        validate_operation(scope, &instruction.operation, instruction.result)?;
         if let Some(result) = instruction.result {
             available.insert(result.id);
         }
@@ -54,40 +66,28 @@ fn validate_result_shape(
     }
 }
 
-// Validation keeps ownership and source location explicit at each operation boundary.
-#[expect(
-    clippy::too_many_arguments,
-    reason = "typed validation needs explicit operand scopes"
-)]
 fn validate_operation(
-    program: &Program,
-    function: &Function,
-    block: BlockId,
-    instruction: usize,
+    scope: OperandScope<'_>,
     operation: &Operation,
     result: Option<ValueDefinition>,
-    all_values: &BTreeMap<ValueId, TypeId>,
-    available: &BTreeSet<ValueId>,
 ) -> Result<(), ValidationError> {
+    let OperandScope {
+        program,
+        function,
+        block,
+        instruction,
+        all_values,
+        available,
+    } = scope;
     match operation {
         Operation::Const(constant) => {
-            validate_constant(program, function, block, instruction, constant, result)
+            validate_constant(scope, constant, result)
         }
 Operation::StoreLocalIndex {
     local,
     index,
     value,
-} => validate_store_local_index(
-    program,
-    function,
-    block,
-    instruction,
-    *local,
-    *index,
-    *value,
-    all_values,
-    available,
-),
+} => validate_store_local_index(scope, *local, *index, *value),
         Operation::ReadLocal(local) => {
             let local = function.local(*local).ok_or_else(|| {
                 unknown(function, block, instruction, EntityKind::Local, local.get())
@@ -99,10 +99,8 @@ Operation::StoreLocalIndex {
             let local = function.local(*local).ok_or_else(|| {
                 unknown(function, block, instruction, EntityKind::Local, local.get())
             })?;
-            if types_compatible(program, local.ty, value_ty) {
-                return Ok(());
-            }
-            require_exact(
+            require_assignable(
+                program,
                 function,
                 block,
                 instruction,
@@ -118,55 +116,18 @@ Operation::StoreLocalIndex {
         } => {
             let left_ty = value_type(function, block, instruction, *left, all_values, available)?;
             let right_ty = value_type(function, block, instruction, *right, all_values, available)?;
-            validate_binary(
-                program,
-                function,
-                block,
-                instruction,
-                *operation,
-                left_ty,
-                right_ty,
-                result,
-            )
+            validate_binary(scope, *operation, left_ty, right_ty, result)
         }
         Operation::Unary { operation, operand } => {
             let operand_ty =
                 value_type(function, block, instruction, *operand, all_values, available)?;
-            validate_unary(
-                program,
-                function,
-                block,
-                instruction,
-                *operation,
-                operand_ty,
-                result,
-            )
+            validate_unary(scope, *operation, operand_ty, result)
         }
         Operation::CallDirect {
             function: target,
             arguments,
-        } => validate_direct_call(
-            program,
-            function,
-            block,
-            instruction,
-            *target,
-            arguments,
-            result,
-            all_values,
-            available,
-        ),
-        Operation::CallValue { callee, arguments } => validate_call_value(
-            program,
-            function,
-            block,
-            instruction,
-            *callee,
-            arguments,
-            result,
-            all_values,
-            available,
-        ),
+        } => validate_direct_call(scope, *target, arguments, result),
+        Operation::CallValue { callee, arguments } => validate_call_value(scope, *callee, arguments, result),
         Operation::LoadGlobal(global) => {
             let global = program.global(*global).ok_or_else(|| {
                 unknown(
@@ -190,10 +151,8 @@ Operation::StoreLocalIndex {
                 )
             })?;
             let value_ty = value_type(function, block, instruction, *value, all_values, available)?;
-            if types_compatible(program, global.ty, value_ty) {
-                return Ok(());
-            }
-            require_exact(
+            require_assignable(
+                program,
                 function,
                 block,
                 instruction,
@@ -207,18 +166,7 @@ Operation::StoreLocalIndex {
             root,
             indexes,
             value,
-        } => validate_store_global_index_path(
-            program,
-            function,
-            block,
-            instruction,
-            *global,
-            *root,
-            indexes,
-            *value,
-            all_values,
-            available,
-        ),
+        } => validate_store_global_index_path(scope, *global, *root, indexes, *value),
         Operation::MakeArray(_)
         | Operation::ArrayPush { .. }
         | Operation::ArrayPop { .. }
@@ -236,165 +184,42 @@ Operation::StoreLocalIndex {
         | Operation::UnwrapOk(_)
         | Operation::UnwrapError(_)
         | Operation::UnwrapSome(_)
-        | Operation::LoadEnumField { .. } => validate_p5(
-            program, function, block, instruction, operation, result, all_values, available,
-        ),
-        Operation::MakeRecord { layout, fields } => validate_record_make(
-            program,
-            function,
-            block,
-            instruction,
-            *layout,
-            fields,
-            result,
-            all_values,
-            available,
-        ),
+        | Operation::LoadEnumField { .. } => validate_p5(scope, operation, result),
+        Operation::MakeRecord { layout, fields } => validate_record_make(scope, *layout, fields, result),
         Operation::LoadField {
             record,
             layout,
             field,
-        } => validate_field_load(
-            program,
-            function,
-            block,
-            instruction,
-            *record,
-            *layout,
-            *field,
-            result,
-            all_values,
-            available,
-        ),
+        } => validate_field_load(scope, *record, *layout, *field, result),
         Operation::StoreField {
             record,
             layout,
             field,
             value,
-        } => validate_field_store(
-            program,
-            function,
-            block,
-            instruction,
-            *record,
-            *layout,
-            *field,
-            *value,
-            all_values,
-            available,
-        ),
+        } => validate_field_store(scope, *record, *layout, *field, *value),
         Operation::MakeEnum {
             layout,
             variant,
             fields,
-        } => validate_enum_make(
-            program,
-            function,
-            block,
-            instruction,
-            *layout,
-            *variant,
-            fields,
-            result,
-            all_values,
-            available,
-        ),
+        } => validate_enum_make(scope, *layout, *variant, fields, result),
         Operation::TestVariant {
             value,
             layout,
             variant,
-        } => validate_variant_test(
-            program,
-            function,
-            block,
-            instruction,
-            *value,
-            *layout,
-            *variant,
-            result,
-            all_values,
-            available,
-        ),
+        } => validate_variant_test(scope, *value, *layout, *variant, result),
         Operation::Intrinsic {
             intrinsic,
             arguments,
-        } => validate_intrinsic(
-            program,
-            function,
-            block,
-            instruction,
-            *intrinsic,
-            arguments,
-            result,
-            all_values,
-            available,
-        ),
+        } => validate_intrinsic(scope, *intrinsic, arguments, result),
         Operation::MakeClosure {
             function: target,
             captures,
-        } => validate_closure(
-            program,
-            function,
-            block,
-            instruction,
-            *target,
-            captures,
-            result,
-            all_values,
-            available,
-        ),
-        Operation::MakeCell(value) => validate_cell_make(
-            program,
-            function,
-            block,
-            instruction,
-            *value,
-            result,
-            all_values,
-            available,
-        ),
-        Operation::CellRead(cell) => validate_cell_read(
-            program,
-            function,
-            block,
-            instruction,
-            *cell,
-            result,
-            all_values,
-            available,
-        ),
-        Operation::CellWrite { cell, value } => validate_cell_write(
-            program,
-            function,
-            block,
-            instruction,
-            *cell,
-            *value,
-            all_values,
-            available,
-        ),
-        Operation::SpawnTask { callee, arguments } => validate_spawn(
-            program,
-            function,
-            block,
-            instruction,
-            *callee,
-            arguments,
-            result,
-            all_values,
-            available,
-        ),
-        Operation::SpawnDetachedTask { callee, arguments } => validate_call_value(
-            program,
-            function,
-            block,
-            instruction,
-            *callee,
-            arguments,
-            None,
-            all_values,
-            available,
-        ),
+        } => validate_closure(scope, *target, captures, result),
+        Operation::MakeCell(value) => validate_cell_make(scope, *value, result),
+        Operation::CellRead(cell) => validate_cell_read(scope, *cell, result),
+        Operation::CellWrite { cell, value } => validate_cell_write(scope, *cell, *value),
+        Operation::SpawnTask { callee, arguments } => validate_spawn(scope, *callee, arguments, result),
+        Operation::SpawnDetachedTask { callee, arguments } => validate_call_value(scope, *callee, arguments, None),
         Operation::Yield => Ok(()),
     }
 }

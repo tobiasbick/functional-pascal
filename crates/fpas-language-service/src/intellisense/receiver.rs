@@ -100,15 +100,16 @@ fn accepts(expected: &str, actual: &str) -> bool {
     if expected == actual {
         return true;
     }
-    if expected.starts_with("array of ") {
-        return actual.starts_with("array of ")
-            && accepts(&expected["array of ".len()..], &actual["array of ".len()..]);
+    if let Some(expected_inner) = expected.strip_prefix("array of ") {
+        return actual
+            .strip_prefix("array of ")
+            .is_some_and(|actual_inner| accepts(expected_inner, actual_inner));
     }
-    if expected.starts_with("dict of ") {
-        return structured_pair(&expected["dict of ".len()..], &actual, "dict of ", " to ");
+    if let Some(expected_inner) = expected.strip_prefix("dict of ") {
+        return structured_pair(expected_inner, &actual, "dict of ", " to ");
     }
-    if expected.starts_with("result of ") {
-        return structured_pair(&expected["result of ".len()..], &actual, "result of ", ", ");
+    if let Some(expected_inner) = expected.strip_prefix("result of ") {
+        return structured_pair(expected_inner, &actual, "result of ", ", ");
     }
     if expected.starts_with("option of ") {
         return actual

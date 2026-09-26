@@ -133,7 +133,7 @@ impl DebugEngine {
             Err(error) => {
                 self.status = DebugStatus::Stopped;
                 records.push(event(DebugEvent::ProtocolError(
-                    EngineFailure::from_session(error.clone()),
+                    EngineFailure::from_session(error),
                 )));
                 self.actor.restore(session);
             }

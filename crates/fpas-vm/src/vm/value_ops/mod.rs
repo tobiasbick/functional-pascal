@@ -77,33 +77,53 @@ impl ValueOperationError {
     }
 }
 
-/// Unary operation supported by the read-only runtime-value boundary.
+/// Unary operation on runtime values, shared by VM opcodes and debugger expressions.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) enum UnaryOperation {
+pub enum UnaryOperation {
+    /// Numeric negation with unary `-`.
     Negate,
+    /// Boolean negation with `not`.
     Not,
 }
 
-/// Binary operation supported by the read-only runtime-value boundary.
+/// Binary operation on runtime values, shared by VM opcodes and debugger expressions.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) enum BinaryOperation {
+pub enum BinaryOperation {
+    /// `+`.
     Add,
+    /// `-`.
     Subtract,
+    /// `*`.
     Multiply,
+    /// `/`.
     RealDivide,
+    /// `div`.
     IntegerDivide,
+    /// `mod`.
     Modulo,
+    /// `and`.
     And,
+    /// `or`.
     Or,
+    /// `xor`.
     Xor,
+    /// `shl`.
     ShiftLeft,
+    /// `shr`.
     ShiftRight,
+    /// `=`.
     Equal,
+    /// `<>`.
     NotEqual,
+    /// `<`.
     Less,
+    /// `<=`.
     LessEqual,
+    /// `>`.
     Greater,
+    /// `>=`.
     GreaterEqual,
+    /// `in`.
     In,
 }
 

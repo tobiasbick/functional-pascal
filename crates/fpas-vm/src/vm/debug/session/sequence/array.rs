@@ -2,6 +2,7 @@
 
 use fpas_bytecode::DebugType;
 
+use super::super::container_mutation::ContainerKind;
 use super::*;
 use crate::vm::debug::evaluation::{DebugEvaluationLimits, DebugExpression};
 use crate::vm::debug::mutation::{DebugArrayMutationResult, DebugAssignmentTarget};
@@ -44,7 +45,8 @@ impl DebugSession {
     ) -> Result<DebugArrayMutationResult, DebugSessionError> {
         self.require_stopped("array.insert")?;
         let result = (|| {
-            let prepared = self.prepare_sequence_mutation(
+            let prepared = self.prepare_container_mutation(
+                ContainerKind::Sequence,
                 assignment,
                 &[index.clone(), value.clone()],
                 frame_id,
@@ -59,16 +61,17 @@ impl DebugSession {
                 limits.max_depth,
             )?;
             let transformation = super::super::super::mutation::insert_array(
-                prepared.sequence,
+                prepared.container,
                 index,
                 prepared.operands[1].clone(),
             )?;
             let affected_index = transformation.index;
-            let array = self.commit_sequence_value(
+            let (array, ()) = self.commit_container_value(
                 prepared.task_id,
                 &prepared.target,
                 transformation.array,
                 limits,
+                |_| Ok(()),
             )?;
             Ok(DebugArrayMutationResult {
                 array,
@@ -114,7 +117,8 @@ impl DebugSession {
     ) -> Result<DebugArrayMutationResult, DebugSessionError> {
         self.require_stopped("array.remove")?;
         let result = (|| {
-            let prepared = self.prepare_sequence_mutation(
+            let prepared = self.prepare_container_mutation(
+                ContainerKind::Sequence,
                 assignment,
                 std::slice::from_ref(index),
                 frame_id,
@@ -123,7 +127,7 @@ impl DebugSession {
             self.array_element_type(&prepared.target)?;
             let index = Self::sequence_index(&prepared.operands[0])?;
             let transformation =
-                super::super::super::mutation::remove_array(prepared.sequence, index)?;
+                super::super::super::mutation::remove_array(prepared.container, index)?;
             let inspection = self
                 .inspections
                 .get(&prepared.task_id)
@@ -134,11 +138,12 @@ impl DebugSession {
                 .map(|value| inspection.evaluation_summary(value, limits))
                 .transpose()?;
             let affected_index = transformation.index;
-            let array = self.commit_sequence_value(
+            let (array, ()) = self.commit_container_value(
                 prepared.task_id,
                 &prepared.target,
                 transformation.array,
                 limits,
+                |_| Ok(()),
             )?;
             Ok(DebugArrayMutationResult {
                 array,

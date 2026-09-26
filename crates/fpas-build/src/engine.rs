@@ -223,7 +223,7 @@ fn compile_units<Backend: UnitBackend>(
         interfaces.insert(unit_name.clone(), interface, interface_hash);
         linked_units.push(LinkedUnitIdentity {
             unit_name: unit_name.clone(),
-            object_hash: fpas_program::Digest::from_bytes(*object_hash.as_bytes()),
+            object_hash,
         });
         objects.push(object);
     }

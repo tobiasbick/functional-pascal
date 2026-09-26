@@ -179,10 +179,10 @@ impl CallSandbox {
             Arc::clone(&self.layouts),
             Arc::new(HostedState::new(fpas_std::Console::new(), Vec::new())),
         )
-        .map_err(runtime_error)?;
+        .map_err(|diagnostic| runtime_error(*diagnostic))?;
         worker
             .execute_debug_intrinsic(intrinsic, &arguments)
-            .map_err(runtime_error)
+            .map_err(|diagnostic| runtime_error(*diagnostic))
     }
 
     fn invoke_member(
@@ -307,7 +307,7 @@ impl CallSandbox {
             Arc::clone(&self.layouts),
             Arc::new(HostedState::new(fpas_std::Console::new(), Vec::new())),
         )
-        .map_err(runtime_error)?;
+        .map_err(|diagnostic| runtime_error(*diagnostic))?;
         loop {
             self.check_running()?;
             if self.instructions >= self.limits.max_call_instructions {
@@ -320,7 +320,10 @@ impl CallSandbox {
                     "Use a smaller bounded callable.",
                 ));
             }
-            match worker.dispatch_one().map_err(runtime_error)? {
+            match worker
+                .dispatch_one()
+                .map_err(|diagnostic| runtime_error(*diagnostic))?
+            {
                 DispatchStep::Continue => {}
                 DispatchStep::Return(value) => return Ok(value),
                 DispatchStep::Suspend => {
@@ -414,13 +417,11 @@ impl CallSandbox {
     }
 }
 
-fn runtime_error(diagnostic: crate::vm::VmError) -> DebugSessionError {
-    let diagnostic = *diagnostic;
+fn runtime_error(diagnostic: fpas_diagnostics::Diagnostic) -> DebugSessionError {
+    let fpas_diagnostics::Diagnostic { message, help, .. } = diagnostic;
     error(
         DebugErrorKind::CallRuntime,
-        diagnostic.message,
-        diagnostic
-            .help
-            .unwrap_or_else(|| "Inspect the callable inputs and retry.".to_string()),
+        message,
+        help.unwrap_or_else(|| "Inspect the callable inputs and retry.".to_string()),
     )
 }

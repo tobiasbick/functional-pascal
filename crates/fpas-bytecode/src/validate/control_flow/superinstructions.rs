@@ -1,16 +1,20 @@
 //! Payload validation for multiword VM superinstructions.
 
-use crate::{FunctionId, FunctionInfo, InstructionAddress, Opcode};
+use crate::Opcode;
+use crate::validate::site::InstructionSite;
 
 use super::super::{ValidationError, ValidationErrorKind};
 
 pub(super) fn validate_superinstruction_payload(
-    executable: &crate::Executable,
-    function_id: FunctionId,
-    function: &FunctionInfo,
-    address: InstructionAddress,
-    opcode: Opcode,
+    site: InstructionSite<'_>,
 ) -> Result<(), ValidationError> {
+    let InstructionSite {
+        executable,
+        function_id,
+        function,
+        address,
+        opcode,
+    } = site;
     let expected = match opcode {
         Opcode::BranchIfEqualInteger
         | Opcode::BranchIfNotEqualInteger

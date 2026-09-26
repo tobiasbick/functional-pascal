@@ -1,3 +1,4 @@
+mod assignment;
 mod calls;
 mod control_flow;
 mod event_assignment;

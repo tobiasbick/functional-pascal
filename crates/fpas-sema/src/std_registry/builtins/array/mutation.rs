@@ -19,7 +19,7 @@ pub(super) fn check_push(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
         return Ty::Error;
     }
 
-    let Some(var_name) = simple_var_name(&args[0]) else {
+    let Some(var_name) = simple_var_name(args[0]) else {
         c.error_with_code(
             SEMA_IMMUTABLE_ASSIGNMENT,
             format!(
@@ -29,7 +29,7 @@ pub(super) fn check_push(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
             "Use `mutable var N: array of T := [...]` then `Std.Arrays.Push(N, x)`.",
             span,
         );
-        c.check_expr(&args[1]);
+        c.check_expr(args[1]);
         return Ty::Error;
     };
     let Some(elem_ty) = mutable_array_elem_ty(c, &var_name) else {
@@ -39,11 +39,11 @@ pub(super) fn check_push(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
             "Declare with `mutable var Name: array of T := ...`.",
             span,
         );
-        c.check_expr(&args[1]);
+        c.check_expr(args[1]);
         return Ty::Error;
     };
 
-    let value_ty = c.check_expr(&args[1]);
+    let value_ty = c.check_expr(args[1]);
     c.check_type_compat(&elem_ty, &value_ty, "pushed value", span);
     Ty::Unit
 }
@@ -60,7 +60,7 @@ pub(super) fn check_pop(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
         return Ty::Error;
     }
 
-    let Some(var_name) = simple_var_name(&args[0]) else {
+    let Some(var_name) = simple_var_name(args[0]) else {
         c.error_with_code(
             SEMA_IMMUTABLE_ASSIGNMENT,
             format!(

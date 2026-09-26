@@ -133,7 +133,7 @@ impl DebugCommand {
         }
     }
 
-    /// Return the stable protocol spelling while legacy commands are migrated.
+    /// Return the stable protocol spelling of this command.
     #[must_use]
     pub(crate) fn name(&self) -> &str {
         match self {

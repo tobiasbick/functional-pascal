@@ -1,0 +1,13 @@
+[package]
+name = "fpas-binary"
+description = "Shared little-endian encoding primitives and digests for Functional Pascal binary formats"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+blake3 = { workspace = true }
+
+[lints]
+workspace = true

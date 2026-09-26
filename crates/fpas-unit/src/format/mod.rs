@@ -95,6 +95,24 @@ impl fmt::Display for FormatError {
 
 impl std::error::Error for FormatError {}
 
+impl From<fpas_binary::ReadError> for FormatError {
+    fn from(error: fpas_binary::ReadError) -> Self {
+        match error {
+            fpas_binary::ReadError::Truncated(field) => Self::Truncated(field),
+            fpas_binary::ReadError::LimitExceeded {
+                field,
+                size,
+                maximum,
+            } => Self::LimitExceeded {
+                field,
+                size,
+                maximum,
+            },
+            fpas_binary::ReadError::InvalidUtf8(field) => Self::InvalidUtf8(field),
+        }
+    }
+}
+
 pub(super) fn validate_for_write(unit: &CompiledUnit) -> Result<(), FormatError> {
     check_size("unit_name", unit.identity.unit_name.len(), MAX_STRING_BYTES)?;
     check_size(

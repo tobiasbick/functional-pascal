@@ -9,7 +9,7 @@ use fpas_lexer::Span;
 use fpas_parser::Expr;
 use fpas_std::std_symbols as s;
 
-/// Type-checks a `Std.Test` [`SymbolKind::BuiltinStd`] call when `name` matches.
+/// Type-checks a `Std.Test` [`SymbolKind::BuiltinStd`](crate::scope::SymbolKind::BuiltinStd) call when `name` matches.
 pub(super) fn check_test_builtin_std_call(
     c: &mut Checker,
     name: &str,
@@ -34,8 +34,8 @@ pub(super) fn check_test_builtin_std_call(
         return Some(Ty::Unit);
     }
 
-    let expected_ty = c.check_expr(&args[0]);
-    let actual_ty = c.check_expr(&args[1]);
+    let expected_ty = c.check_expr(args[0]);
+    let actual_ty = c.check_expr(args[1]);
     if expected_ty != actual_ty {
         c.error_with_code(
             SEMA_TYPE_MISMATCH,

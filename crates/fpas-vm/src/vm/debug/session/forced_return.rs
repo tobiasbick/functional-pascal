@@ -207,12 +207,10 @@ impl DebugSession {
                 unreachable!("entry completion returned above")
             };
             if let Some(diagnostic) = recovery.as_ref() {
-                if !self.runtime.recover_failed_return(
-                    task_id,
-                    diagnostic,
-                    &prepared,
-                    value.clone(),
-                ) {
+                if !self
+                    .runtime
+                    .recover_failed_return(task_id, diagnostic, &prepared, value)
+                {
                     return Err(unsupported(
                         "forced return cannot recover because the stopped failure changed",
                         "Request the current stop and stack again, then retry the exact failed frame.",
@@ -224,7 +222,7 @@ impl DebugSession {
                     .runtime
                     .worker_mut(task_id)
                     .ok_or_else(|| unknown_task(task_id))?;
-                commit(worker, &prepared, value.clone())?;
+                commit(worker, &prepared, value)?;
             }
             self.last_stop = {
                 let Some(worker) = self.runtime.worker(task_id) else {

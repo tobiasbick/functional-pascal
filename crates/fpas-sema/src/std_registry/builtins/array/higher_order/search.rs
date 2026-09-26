@@ -27,8 +27,8 @@ pub(crate) fn check_find(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
         return Ty::Error;
     }
 
-    let arr_ty = c.check_expr(&args[0]);
-    let func_ty = c.check_expr(&args[1]);
+    let arr_ty = c.check_expr(args[0]);
+    let func_ty = c.check_expr(args[1]);
     let Some(elem_ty) = array_elem_ty(&arr_ty) else {
         c.error_with_code(
             SEMA_TYPE_MISMATCH,
@@ -67,8 +67,8 @@ pub(crate) fn check_find_index(c: &mut Checker, args: &[&Expr], span: Span) -> T
         return Ty::Error;
     }
 
-    let arr_ty = c.check_expr(&args[0]);
-    let func_ty = c.check_expr(&args[1]);
+    let arr_ty = c.check_expr(args[0]);
+    let func_ty = c.check_expr(args[1]);
     let Some(elem_ty) = array_elem_ty(&arr_ty) else {
         c.error_with_code(
             SEMA_TYPE_MISMATCH,
@@ -110,8 +110,8 @@ pub(crate) fn check_any(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
         return Ty::Error;
     }
 
-    let arr_ty = c.check_expr(&args[0]);
-    let func_ty = c.check_expr(&args[1]);
+    let arr_ty = c.check_expr(args[0]);
+    let func_ty = c.check_expr(args[1]);
     let Some(elem_ty) = array_elem_ty(&arr_ty) else {
         c.error_with_code(
             SEMA_TYPE_MISMATCH,
@@ -150,8 +150,8 @@ pub(crate) fn check_all(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
         return Ty::Error;
     }
 
-    let arr_ty = c.check_expr(&args[0]);
-    let func_ty = c.check_expr(&args[1]);
+    let arr_ty = c.check_expr(args[0]);
+    let func_ty = c.check_expr(args[1]);
     let Some(elem_ty) = array_elem_ty(&arr_ty) else {
         c.error_with_code(
             SEMA_TYPE_MISMATCH,
@@ -190,8 +190,8 @@ pub(crate) fn check_for_each(c: &mut Checker, args: &[&Expr], span: Span) -> Ty 
         return Ty::Error;
     }
 
-    let arr_ty = c.check_expr(&args[0]);
-    let func_ty = c.check_expr(&args[1]);
+    let arr_ty = c.check_expr(args[0]);
+    let func_ty = c.check_expr(args[1]);
     let Some(elem_ty) = array_elem_ty(&arr_ty) else {
         c.error_with_code(
             SEMA_TYPE_MISMATCH,

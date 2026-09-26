@@ -1,18 +1,22 @@
 //! Reusable contextual operand checks.
 
-use crate::{FunctionId, FunctionInfo, InstructionAddress, NO_REGISTER, Opcode};
+use crate::NO_REGISTER;
+use crate::validate::site::InstructionSite;
 
 use super::super::{ValidationError, ValidationErrorKind};
 
 pub(in crate::validate) fn validate_register(
-    executable: &crate::Executable,
-    function_id: FunctionId,
-    function: &FunctionInfo,
-    address: InstructionAddress,
-    opcode: Opcode,
+    site: InstructionSite<'_>,
     operand: &'static str,
     register: u16,
 ) -> Result<(), ValidationError> {
+    let InstructionSite {
+        executable,
+        function_id,
+        function,
+        address,
+        opcode,
+    } = site;
     if register != NO_REGISTER && register < function.register_count {
         Ok(())
     } else {
@@ -31,65 +35,41 @@ pub(in crate::validate) fn validate_register(
 }
 
 pub(super) fn validate_optional_register(
-    executable: &crate::Executable,
-    function_id: FunctionId,
-    function: &FunctionInfo,
-    address: InstructionAddress,
-    opcode: Opcode,
+    site: InstructionSite<'_>,
     operand: &'static str,
     register: u16,
 ) -> Result<(), ValidationError> {
     if register == NO_REGISTER {
         Ok(())
     } else {
-        validate_register(
-            executable,
-            function_id,
-            function,
-            address,
-            opcode,
-            operand,
-            register,
-        )
+        validate_register(site, operand, register)
     }
 }
 
 pub(super) fn validate_registers(
-    executable: &crate::Executable,
-    function_id: FunctionId,
-    function: &FunctionInfo,
-    address: InstructionAddress,
-    opcode: Opcode,
+    site: InstructionSite<'_>,
     registers: &[(&'static str, u16)],
 ) -> Result<(), ValidationError> {
     for (operand, register) in registers {
-        validate_register(
-            executable,
-            function_id,
-            function,
-            address,
-            opcode,
-            operand,
-            *register,
-        )?;
+        validate_register(site, operand, *register)?;
     }
     Ok(())
 }
 
-#[expect(
-    clippy::too_many_arguments,
-    reason = "verifier context keeps diagnostics actionable"
-)]
 pub(super) fn validate_table_u32(
-    executable: &crate::Executable,
-    function_id: FunctionId,
-    address: InstructionAddress,
-    opcode: Opcode,
+    site: InstructionSite<'_>,
     table: &'static str,
     operand: &'static str,
     actual: u32,
     length: usize,
 ) -> Result<(), ValidationError> {
+    let InstructionSite {
+        executable,
+        function_id,
+        address,
+        opcode,
+        ..
+    } = site;
     if usize::try_from(actual)
         .ok()
         .is_some_and(|index| index < length)
@@ -111,20 +91,20 @@ pub(super) fn validate_table_u32(
     }
 }
 
-#[expect(
-    clippy::too_many_arguments,
-    reason = "verifier context keeps diagnostics actionable"
-)]
 pub(super) fn table_u16_error(
-    executable: &crate::Executable,
-    function_id: FunctionId,
-    address: InstructionAddress,
-    opcode: Opcode,
+    site: InstructionSite<'_>,
     table: &'static str,
     operand: &'static str,
     actual: u16,
     length: usize,
 ) -> ValidationError {
+    let InstructionSite {
+        executable,
+        function_id,
+        address,
+        opcode,
+        ..
+    } = site;
     ValidationError::instruction(
         executable,
         function_id,
@@ -140,54 +120,36 @@ pub(super) fn table_u16_error(
 }
 
 pub(super) fn canonical_u16(
-    executable: &crate::Executable,
-    function_id: FunctionId,
-    address: InstructionAddress,
-    opcode: Opcode,
+    site: InstructionSite<'_>,
     operand: &'static str,
     actual: u16,
     expected: u16,
 ) -> Result<(), ValidationError> {
-    canonical(
-        executable,
-        function_id,
-        address,
-        opcode,
-        operand,
-        u64::from(actual),
-        u64::from(expected),
-    )
+    canonical(site, operand, u64::from(actual), u64::from(expected))
 }
 
 pub(super) fn canonical_u8(
-    executable: &crate::Executable,
-    function_id: FunctionId,
-    address: InstructionAddress,
-    opcode: Opcode,
+    site: InstructionSite<'_>,
     operand: &'static str,
     actual: u8,
     expected: u8,
 ) -> Result<(), ValidationError> {
-    canonical(
-        executable,
-        function_id,
-        address,
-        opcode,
-        operand,
-        u64::from(actual),
-        u64::from(expected),
-    )
+    canonical(site, operand, u64::from(actual), u64::from(expected))
 }
 
 fn canonical(
-    executable: &crate::Executable,
-    function_id: FunctionId,
-    address: InstructionAddress,
-    opcode: Opcode,
+    site: InstructionSite<'_>,
     operand: &'static str,
     actual: u64,
     expected: u64,
 ) -> Result<(), ValidationError> {
+    let InstructionSite {
+        executable,
+        function_id,
+        address,
+        opcode,
+        ..
+    } = site;
     if actual == expected {
         Ok(())
     } else {

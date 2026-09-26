@@ -1,18 +1,16 @@
-#[expect(
-    clippy::too_many_arguments,
-    reason = "typed validation needs explicit operand scopes"
-)]
 fn validate_record_make(
-    program: &Program,
-    function: &Function,
-    block: BlockId,
-    instruction: usize,
+    scope: OperandScope<'_>,
     layout: RecordLayoutId,
     fields: &[ValueId],
     result: Option<ValueDefinition>,
-    all_values: &BTreeMap<ValueId, TypeId>,
-    available: &BTreeSet<ValueId>,
 ) -> Result<(), ValidationError> {
+    let OperandScope {
+        program,
+        function,
+        block,
+        instruction,
+        ..
+    } = scope;
     let layout = program.record_layout(layout).ok_or_else(|| {
         unknown(
             function,
@@ -22,20 +20,11 @@ fn validate_record_make(
             layout.get(),
         )
     })?;
-    validate_arguments(
-        program,
-        function,
-        block,
-        instruction,
-        fields,
-        &layout
+    validate_arguments(scope, fields, &layout
             .fields
             .iter()
             .map(|field| field.ty)
-            .collect::<Vec<_>>(),
-        all_values,
-        available,
-    )?;
+            .collect::<Vec<_>>())?;
     let result = result.ok_or_else(|| {
         function_error(
             function.id,
@@ -58,44 +47,42 @@ fn validate_record_make(
     }
 }
 
-#[expect(
-    clippy::too_many_arguments,
-    reason = "typed validation needs explicit operand scopes"
-)]
 fn validate_field_load(
-    program: &Program,
-    function: &Function,
-    block: BlockId,
-    instruction: usize,
+    scope: OperandScope<'_>,
     record: ValueId,
     layout: RecordLayoutId,
     field: crate::FieldId,
     result: Option<ValueDefinition>,
-    all_values: &BTreeMap<ValueId, TypeId>,
-    available: &BTreeSet<ValueId>,
 ) -> Result<(), ValidationError> {
+    let OperandScope {
+        program,
+        function,
+        block,
+        instruction,
+        all_values,
+        available,
+    } = scope;
     let record_ty = value_type(function, block, instruction, record, all_values, available)?;
     require_record_layout(program, function, block, instruction, record_ty, layout)?;
     let field = record_field(program, function, block, instruction, layout, field)?;
     require_result_type(function, block, instruction, result, field.ty)
 }
 
-#[expect(
-    clippy::too_many_arguments,
-    reason = "typed validation needs explicit operand scopes"
-)]
 fn validate_field_store(
-    program: &Program,
-    function: &Function,
-    block: BlockId,
-    instruction: usize,
+    scope: OperandScope<'_>,
     record: ValueId,
     layout: RecordLayoutId,
     field: crate::FieldId,
     value: ValueId,
-    all_values: &BTreeMap<ValueId, TypeId>,
-    available: &BTreeSet<ValueId>,
 ) -> Result<(), ValidationError> {
+    let OperandScope {
+        program,
+        function,
+        block,
+        instruction,
+        all_values,
+        available,
+    } = scope;
     let record_ty = value_type(function, block, instruction, record, all_values, available)?;
     require_record_layout(program, function, block, instruction, record_ty, layout)?;
     let field = record_field(program, function, block, instruction, layout, field)?;
@@ -110,22 +97,20 @@ fn validate_field_store(
     )
 }
 
-#[expect(
-    clippy::too_many_arguments,
-    reason = "typed validation needs explicit operand scopes"
-)]
 fn validate_enum_make(
-    program: &Program,
-    function: &Function,
-    block: BlockId,
-    instruction: usize,
+    scope: OperandScope<'_>,
     layout: EnumLayoutId,
     variant: crate::VariantId,
     fields: &[ValueId],
     result: Option<ValueDefinition>,
-    all_values: &BTreeMap<ValueId, TypeId>,
-    available: &BTreeSet<ValueId>,
 ) -> Result<(), ValidationError> {
+    let OperandScope {
+        program,
+        function,
+        block,
+        instruction,
+        ..
+    } = scope;
     let layout = program.enum_layout(layout).ok_or_else(|| {
         unknown(
             function,
@@ -148,16 +133,7 @@ fn validate_enum_make(
                 variant.get(),
             )
         })?;
-    validate_arguments(
-        program,
-        function,
-        block,
-        instruction,
-        fields,
-        &variant.fields,
-        all_values,
-        available,
-    )?;
+    validate_arguments(scope, fields, &variant.fields)?;
     let result = result.ok_or_else(|| {
         function_error(
             function.id,
@@ -180,22 +156,21 @@ fn validate_enum_make(
     }
 }
 
-#[expect(
-    clippy::too_many_arguments,
-    reason = "typed validation needs explicit operand scopes"
-)]
 fn validate_variant_test(
-    program: &Program,
-    function: &Function,
-    block: BlockId,
-    instruction: usize,
+    scope: OperandScope<'_>,
     value: ValueId,
     layout: EnumLayoutId,
     variant: crate::VariantId,
     result: Option<ValueDefinition>,
-    all_values: &BTreeMap<ValueId, TypeId>,
-    available: &BTreeSet<ValueId>,
 ) -> Result<(), ValidationError> {
+    let OperandScope {
+        program,
+        function,
+        block,
+        instruction,
+        all_values,
+        available,
+    } = scope;
     let value_ty = value_type(function, block, instruction, value, all_values, available)?;
     require_enum_layout(program, function, block, instruction, value_ty, layout)?;
     let enum_layout = program.enum_layout(layout).ok_or_else(|| {

@@ -1,4 +1,5 @@
 use super::super::Console;
+use crate::console::validate_packed_crt_color;
 use crate::error::StdError;
 use fpas_bytecode::SourceLocation;
 
@@ -6,7 +7,7 @@ impl Console {
     /// `Std.Console.TextColor(Color)` — select a packed CRT foreground color.
     pub fn text_color(&mut self, color: i64, location: SourceLocation) -> Result<(), StdError> {
         self.enable_crt_mode();
-        self.state.fg = self.validate_color(color, "TextColor", location)?;
+        self.state.fg = validate_packed_crt_color(color, "TextColor", location)?;
         self.state.use_packed_colors();
         Ok(())
     }
@@ -18,7 +19,7 @@ impl Console {
         location: SourceLocation,
     ) -> Result<(), StdError> {
         self.enable_crt_mode();
-        self.state.bg = self.validate_color(color, "TextBackground", location)?;
+        self.state.bg = validate_packed_crt_color(color, "TextBackground", location)?;
         self.state.use_packed_colors();
         Ok(())
     }
@@ -60,7 +61,7 @@ impl Console {
     pub fn set_text_attr(&mut self, attr: i64, location: SourceLocation) -> Result<(), StdError> {
         self.sync_terminal_size();
         self.enable_crt_mode();
-        let attr = self.validate_text_attr(attr, location)?;
+        let attr = Self::validate_text_attr(attr, location)?;
         self.state.fg = attr & 0x0F;
         self.state.bg = (attr >> 4) & 0x0F;
         self.state.use_packed_colors();
@@ -77,7 +78,7 @@ impl Console {
         b: i64,
         location: SourceLocation,
     ) -> Result<(), StdError> {
-        let (r, g, b) = self.validate_rgb(r, g, b, "TextColorRGB", location)?;
+        let (r, g, b) = Self::validate_rgb(r, g, b, "TextColorRGB", location)?;
         self.state.set_extended_fg_rgb(r, g, b);
         if self.state.crt_mode {
             return Ok(());
@@ -99,7 +100,7 @@ impl Console {
         b: i64,
         location: SourceLocation,
     ) -> Result<(), StdError> {
-        let (r, g, b) = self.validate_rgb(r, g, b, "TextBackgroundRGB", location)?;
+        let (r, g, b) = Self::validate_rgb(r, g, b, "TextBackgroundRGB", location)?;
         self.state.set_extended_bg_rgb(r, g, b);
         if self.state.crt_mode {
             return Ok(());
@@ -115,7 +116,7 @@ impl Console {
     ///
     /// Spec: `docs/pascal/std/console/README.md`.
     pub fn text_color_256(&mut self, index: i64, location: SourceLocation) -> Result<(), StdError> {
-        let index = self.validate_color_256(index, "TextColor256", location)?;
+        let index = Self::validate_color_256(index, "TextColor256", location)?;
         self.state.set_extended_fg_ansi(index);
         if self.state.crt_mode {
             return Ok(());
@@ -135,7 +136,7 @@ impl Console {
         index: i64,
         location: SourceLocation,
     ) -> Result<(), StdError> {
-        let index = self.validate_color_256(index, "TextBackground256", location)?;
+        let index = Self::validate_color_256(index, "TextBackground256", location)?;
         self.state.set_extended_bg_ansi(index);
         if self.state.crt_mode {
             return Ok(());

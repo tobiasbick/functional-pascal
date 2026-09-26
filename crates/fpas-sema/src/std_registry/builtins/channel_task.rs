@@ -58,9 +58,9 @@ pub(super) fn check_channel_task_builtin_std_call(
             }
             check_task_wait_all(c, &args[..1], span, name);
             if name == s::STD_TASK_WAIT_ANY_WITH_TIMEOUT {
-                expect_type(c, &args[1], &Ty::Integer, "task wait timeout");
+                expect_type(c, args[1], &Ty::Integer, "task wait timeout");
             } else {
-                expect_cancellation_token(c, &args[1]);
+                expect_cancellation_token(c, args[1]);
             }
             Ty::Result(Box::new(Ty::Integer), Box::new(Ty::String))
         }
@@ -80,7 +80,7 @@ fn check_create_channel(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
     if !expect_args(c, s::STD_TASK_CREATE_CHANNEL, args, 1, span) {
         return Ty::Error;
     }
-    expect_type(c, &args[0], &Ty::Integer, "channel capacity");
+    expect_type(c, args[0], &Ty::Integer, "channel capacity");
     Ty::Channel(Box::new(Ty::Error))
 }
 
@@ -99,9 +99,9 @@ fn check_send(
         return Ty::Error;
     }
 
-    let channel = expect_channel_arg(c, &args[0]);
-    let value = c.check_expr(&args[1]);
-    if c.expr_is_task_bound(crate::expr_lookup_key(&args[1])) {
+    let channel = expect_channel_arg(c, args[0]);
+    let value = c.check_expr(args[1]);
+    if c.expr_is_task_bound(crate::expr_lookup_key(args[1])) {
         c.error_with_code(
             SEMA_TASK_BOUND_CALLABLE,
             "Cannot send a task-bound value through a channel",
@@ -121,8 +121,8 @@ fn check_send(
     }
     match wait_arg {
         ChannelWaitArg::None => {}
-        ChannelWaitArg::Cancellation => expect_cancellation_token(c, &args[2]),
-        ChannelWaitArg::Timeout => expect_type(c, &args[2], &Ty::Integer, "channel send timeout"),
+        ChannelWaitArg::Cancellation => expect_cancellation_token(c, args[2]),
+        ChannelWaitArg::Timeout => expect_type(c, args[2], &Ty::Integer, "channel send timeout"),
     }
     channel_result(Ty::Boolean)
 }
@@ -142,13 +142,11 @@ fn check_receive(
     if !expect_args(c, name, args, expected, span) {
         return Ty::Error;
     }
-    let mut element = expect_channel_arg(c, &args[0]).unwrap_or(Ty::Error);
+    let mut element = expect_channel_arg(c, args[0]).unwrap_or(Ty::Error);
     match wait_arg {
         ChannelWaitArg::None => {}
-        ChannelWaitArg::Cancellation => expect_cancellation_token(c, &args[1]),
-        ChannelWaitArg::Timeout => {
-            expect_type(c, &args[1], &Ty::Integer, "channel receive timeout")
-        }
+        ChannelWaitArg::Cancellation => expect_cancellation_token(c, args[1]),
+        ChannelWaitArg::Timeout => expect_type(c, args[1], &Ty::Integer, "channel receive timeout"),
     }
     if optional {
         element = Ty::Option(Box::new(element));
@@ -160,7 +158,7 @@ fn check_close_channel(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
     if !expect_args(c, s::STD_TASK_CLOSE_CHANNEL, args, 1, span) {
         return Ty::Error;
     }
-    expect_channel_arg(c, &args[0]);
+    expect_channel_arg(c, args[0]);
     Ty::Boolean
 }
 
@@ -258,7 +256,7 @@ fn check_task_wait(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
         return Ty::Error;
     }
 
-    expect_task_arg(c, &args[0], "task wait target").unwrap_or(Ty::Error)
+    expect_task_arg(c, args[0], "task wait target").unwrap_or(Ty::Error)
 }
 
 fn check_task_wait_all(c: &mut Checker, args: &[&Expr], span: Span, name: &str) -> Ty {
@@ -266,7 +264,7 @@ fn check_task_wait_all(c: &mut Checker, args: &[&Expr], span: Span, name: &str) 
         return Ty::Error;
     }
 
-    let tasks_ty = c.check_expr(&args[0]);
+    let tasks_ty = c.check_expr(args[0]);
     match tasks_ty {
         Ty::Array(inner) if matches!(inner.as_ref(), Ty::Task(_) | Ty::Error) => Ty::Unit,
         Ty::Array(inner) => {

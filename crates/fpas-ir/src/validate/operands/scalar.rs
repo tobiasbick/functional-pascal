@@ -1,11 +1,15 @@
 fn validate_constant(
-    program: &Program,
-    function: &Function,
-    block: BlockId,
-    instruction: usize,
+    scope: OperandScope<'_>,
     constant: &Constant,
     result: Option<ValueDefinition>,
 ) -> Result<(), ValidationError> {
+    let OperandScope {
+        program,
+        function,
+        block,
+        instruction,
+        ..
+    } = scope;
     let category = match constant {
         Constant::Unit => TypeCategory::Unit,
         Constant::Boolean(_) => TypeCategory::Boolean,
@@ -16,20 +20,20 @@ fn validate_constant(
     require_result_category(program, function, block, instruction, result, category)
 }
 
-#[expect(
-    clippy::too_many_arguments,
-    reason = "typed validation needs explicit operand scopes"
-)]
 fn validate_binary(
-    program: &Program,
-    function: &Function,
-    block: BlockId,
-    instruction: usize,
+    scope: OperandScope<'_>,
     operation: BinaryOperation,
     left: TypeId,
     right: TypeId,
     result: Option<ValueDefinition>,
 ) -> Result<(), ValidationError> {
+    let OperandScope {
+        program,
+        function,
+        block,
+        instruction,
+        ..
+    } = scope;
     let (operands, output) = binary_categories(operation);
     if operands == TypeCategory::Same {
         if !types_compatible(program, left, right) {
@@ -59,14 +63,18 @@ fn validate_binary(
 }
 
 fn validate_unary(
-    program: &Program,
-    function: &Function,
-    block: BlockId,
-    instruction: usize,
+    scope: OperandScope<'_>,
     operation: crate::UnaryOperation,
     operand: TypeId,
     result: Option<ValueDefinition>,
 ) -> Result<(), ValidationError> {
+    let OperandScope {
+        program,
+        function,
+        block,
+        instruction,
+        ..
+    } = scope;
     let (input, output) = unary_categories(operation);
     require_category(
         program,

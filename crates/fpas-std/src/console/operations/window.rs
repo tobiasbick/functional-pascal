@@ -64,10 +64,10 @@ impl Console {
         self.sync_terminal_size();
         self.enable_crt_mode();
         let (Some(x1), Some(y1), Some(x2), Some(y2)) = (
-            self.check_coord(x1, self.state.width),
-            self.check_coord(y1, self.state.height),
-            self.check_coord(x2, self.state.width),
-            self.check_coord(y2, self.state.height),
+            Self::check_coord(x1, self.state.width),
+            Self::check_coord(y1, self.state.height),
+            Self::check_coord(x2, self.state.width),
+            Self::check_coord(y2, self.state.height),
         ) else {
             return Err(std_runtime_error(
                 RUNTIME_CONSOLE_STATE_ERROR,
@@ -98,7 +98,7 @@ impl Console {
     pub fn text_mode(&mut self, mode: i64, location: SourceLocation) -> Result<(), StdError> {
         self.sync_terminal_size();
         self.enable_crt_mode();
-        self.validate_text_mode(mode, location)?;
+        Self::validate_text_mode(mode, location)?;
         self.state.last_mode = mode;
         self.state
             .set_window(WindowRect::full(self.state.width, self.state.height));
@@ -128,7 +128,7 @@ impl Console {
         self.state.screen_height()
     }
 
-    fn validate_text_mode(&self, mode: i64, location: SourceLocation) -> Result<(), StdError> {
+    fn validate_text_mode(mode: i64, location: SourceLocation) -> Result<(), StdError> {
         if mode < 0 {
             return Err(std_runtime_error(
                 RUNTIME_CONSOLE_STATE_ERROR,

@@ -1,18 +1,17 @@
-#[expect(
-    clippy::too_many_arguments,
-    reason = "typed validation keeps operand scopes explicit"
-)]
 fn validate_wrapper_test(
-    program: &Program,
-    function: &Function,
-    block: BlockId,
-    instruction: usize,
+    scope: OperandScope<'_>,
     value: ValueId,
     result: ValueDefinition,
-    all_values: &BTreeMap<ValueId, TypeId>,
-    available: &BTreeSet<ValueId>,
     result_wrapper: bool,
 ) -> Result<(), ValidationError> {
+    let OperandScope {
+        program,
+        function,
+        block,
+        instruction,
+        all_values,
+        available,
+    } = scope;
     let wrapper = value_type(function, block, instruction, value, all_values, available)?;
     let valid = match program.ty(wrapper).map(|definition| &definition.kind) {
         Some(IrType::Result { .. }) => result_wrapper,
@@ -32,21 +31,20 @@ fn validate_wrapper_test(
     )
 }
 
-#[expect(
-    clippy::too_many_arguments,
-    reason = "typed validation keeps operand scopes explicit"
-)]
 fn validate_wrapper(
-    program: &Program,
-    function: &Function,
-    block: BlockId,
-    instruction: usize,
+    scope: OperandScope<'_>,
     value: ValueId,
     result: ValueDefinition,
-    all_values: &BTreeMap<ValueId, TypeId>,
-    available: &BTreeSet<ValueId>,
     kind: u8,
 ) -> Result<(), ValidationError> {
+    let OperandScope {
+        program,
+        function,
+        block,
+        instruction,
+        all_values,
+        available,
+    } = scope;
     let payload = value_type(function, block, instruction, value, all_values, available)?;
     let expected = match (
         kind,
@@ -77,21 +75,20 @@ fn validate_wrapper(
     )
 }
 
-#[expect(
-    clippy::too_many_arguments,
-    reason = "typed validation keeps operand scopes explicit"
-)]
 fn validate_unwrap(
-    program: &Program,
-    function: &Function,
-    block: BlockId,
-    instruction: usize,
+    scope: OperandScope<'_>,
     value: ValueId,
     result: ValueDefinition,
-    all_values: &BTreeMap<ValueId, TypeId>,
-    available: &BTreeSet<ValueId>,
     kind: u8,
 ) -> Result<(), ValidationError> {
+    let OperandScope {
+        program,
+        function,
+        block,
+        instruction,
+        all_values,
+        available,
+    } = scope;
     let wrapper = value_type(function, block, instruction, value, all_values, available)?;
     let expected = match (kind, program.ty(wrapper).map(|definition| &definition.kind)) {
         (0, Some(IrType::Result { ok, .. })) => Some(*ok),

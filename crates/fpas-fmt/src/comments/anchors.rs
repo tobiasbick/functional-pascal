@@ -19,47 +19,13 @@ pub(crate) fn span_end(span: Span) -> usize {
 /// Returns the lexer start offset for `stmt`.
 #[must_use]
 pub(crate) fn stmt_start(stmt: &Stmt) -> usize {
-    match stmt {
-        Stmt::Block(_, span) => span.offset,
-        Stmt::Var(var) | Stmt::MutableVar(var) => var.span.offset,
-        Stmt::Assign { span, .. }
-        | Stmt::Return(_, span)
-        | Stmt::Panic(_, span)
-        | Stmt::If { span, .. }
-        | Stmt::Case { span, .. }
-        | Stmt::For { span, .. }
-        | Stmt::ForIn { span, .. }
-        | Stmt::While { span, .. }
-        | Stmt::Repeat { span, .. }
-        | Stmt::Break(span)
-        | Stmt::Continue(span)
-        | Stmt::Call { span, .. }
-        | Stmt::Expression { span, .. }
-        | Stmt::Go { span, .. } => span.offset,
-    }
+    stmt.span().offset
 }
 
 /// Returns the lexer end offset for `stmt`.
 #[must_use]
 pub(crate) fn stmt_end(stmt: &Stmt) -> usize {
-    match stmt {
-        Stmt::Block(_, span) => span_end(*span),
-        Stmt::Var(var) | Stmt::MutableVar(var) => span_end(var.span),
-        Stmt::Assign { span, .. }
-        | Stmt::Return(_, span)
-        | Stmt::Panic(_, span)
-        | Stmt::If { span, .. }
-        | Stmt::Case { span, .. }
-        | Stmt::For { span, .. }
-        | Stmt::ForIn { span, .. }
-        | Stmt::While { span, .. }
-        | Stmt::Repeat { span, .. }
-        | Stmt::Break(span)
-        | Stmt::Continue(span)
-        | Stmt::Call { span, .. }
-        | Stmt::Expression { span, .. }
-        | Stmt::Go { span, .. } => span_end(*span),
-    }
+    span_end(stmt.span())
 }
 
 /// Byte offset of the compilation unit's `uses` keyword when present.

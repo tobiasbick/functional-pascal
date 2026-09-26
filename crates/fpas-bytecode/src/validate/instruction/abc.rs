@@ -1,8 +1,7 @@
 //! ABC-form semantic operand checks.
 
-use crate::{
-    FunctionId, FunctionInfo, InstructionAddress, InstructionError, InstructionForm, Opcode,
-};
+use crate::validate::site::InstructionSite;
+use crate::{InstructionError, InstructionForm, Opcode};
 
 use super::super::calls::{CallOperands, validate_call, validate_destination, validate_window};
 use super::super::layouts::validate_layout_operand;
@@ -14,25 +13,18 @@ use super::operands::{
 
 /// Validates the semantic operands of one decoded ABC instruction.
 pub(super) fn validate_abc(
-    executable: &crate::Executable,
-    function_id: FunctionId,
-    function: &FunctionInfo,
-    address: InstructionAddress,
-    opcode: Opcode,
+    site: InstructionSite<'_>,
     operands: crate::AbcOperands,
 ) -> Result<(), ValidationError> {
-    let crate::AbcOperands { a, b, c, auxiliary } = operands;
-    if validate_layout_operand(
+    let InstructionSite {
         executable,
         function_id,
         function,
         address,
         opcode,
-        a,
-        b,
-        c,
-        auxiliary,
-    )? {
+    } = site;
+    let crate::AbcOperands { a, b, c, auxiliary } = operands;
+    if validate_layout_operand(site, a, b, c, auxiliary)? {
         return Ok(());
     }
     match opcode {
@@ -91,88 +83,28 @@ pub(super) fn validate_abc(
         | Opcode::IndexGet
         | Opcode::IndexSet
         | Opcode::Contains => {
-            validate_registers(
-                executable,
-                function_id,
-                function,
-                address,
-                opcode,
-                &[("destination", a), ("left", b), ("right", c)],
-            )?;
-            canonical_u8(
-                executable,
-                function_id,
-                address,
-                opcode,
-                "auxiliary",
-                auxiliary,
-                0,
-            )
+            validate_registers(site, &[("destination", a), ("left", b), ("right", c)])?;
+            canonical_u8(site, "auxiliary", auxiliary, 0)
         }
         Opcode::ConcatString => {
-            validate_registers(
-                executable,
-                function_id,
-                function,
-                address,
-                opcode,
-                &[("destination", a), ("left", b), ("right", c)],
-            )?;
+            validate_registers(site, &[("destination", a), ("left", b), ("right", c)])?;
             if auxiliary <= 1 {
                 Ok(())
             } else {
-                canonical_u8(
-                    executable,
-                    function_id,
-                    address,
-                    opcode,
-                    "consume-left flag",
-                    auxiliary,
-                    1,
-                )
+                canonical_u8(site, "consume-left flag", auxiliary, 1)
             }
         }
         Opcode::AddIntegerImm | Opcode::DivideIntegerImm => {
-            validate_registers(
-                executable,
-                function_id,
-                function,
-                address,
-                opcode,
-                &[("destination", a), ("left", b)],
-            )?;
-            canonical_u8(
-                executable,
-                function_id,
-                address,
-                opcode,
-                "auxiliary",
-                auxiliary,
-                0,
-            )
+            validate_registers(site, &[("destination", a), ("left", b)])?;
+            canonical_u8(site, "auxiliary", auxiliary, 0)
         }
         Opcode::ForLoop => {
-            validate_registers(
-                executable,
-                function_id,
-                function,
-                address,
-                opcode,
-                &[("counter", a), ("bound", b)],
-            )?;
-            canonical_u16(executable, function_id, address, opcode, "C", c, 0)?;
+            validate_registers(site, &[("counter", a), ("bound", b)])?;
+            canonical_u16(site, "C", c, 0)?;
             if auxiliary <= 1 {
                 Ok(())
             } else {
-                canonical_u8(
-                    executable,
-                    function_id,
-                    address,
-                    opcode,
-                    "direction",
-                    auxiliary,
-                    1,
-                )
+                canonical_u8(site, "direction", auxiliary, 1)
             }
         }
         Opcode::ArrayPop
@@ -191,96 +123,39 @@ pub(super) fn validate_abc(
         | Opcode::UnwrapOk
         | Opcode::UnwrapError
         | Opcode::UnwrapSome => {
-            validate_registers(
-                executable,
-                function_id,
-                function,
-                address,
-                opcode,
-                &[("destination", a), ("source", b)],
-            )?;
-            canonical_tail(executable, function_id, address, opcode, c, auxiliary)
+            validate_registers(site, &[("destination", a), ("source", b)])?;
+            canonical_tail(site, c, auxiliary)
         }
         Opcode::Move => {
-            validate_registers(
-                executable,
-                function_id,
-                function,
-                address,
-                opcode,
-                &[("destination", a), ("source", b)],
-            )?;
-            canonical_u16(executable, function_id, address, opcode, "C", c, 0)?;
+            validate_registers(site, &[("destination", a), ("source", b)])?;
+            canonical_u16(site, "C", c, 0)?;
             if auxiliary <= 1 {
                 Ok(())
             } else {
-                canonical_u8(
-                    executable,
-                    function_id,
-                    address,
-                    opcode,
-                    "consume-source flag",
-                    auxiliary,
-                    1,
-                )
+                canonical_u8(site, "consume-source flag", auxiliary, 1)
             }
         }
         Opcode::LoadUnit | Opcode::MakeNone => {
-            validate_register(
-                executable,
-                function_id,
-                function,
-                address,
-                opcode,
-                "destination",
-                a,
-            )?;
-            canonical_u16(executable, function_id, address, opcode, "B", b, 0)?;
-            canonical_tail(executable, function_id, address, opcode, c, auxiliary)
+            validate_register(site, "destination", a)?;
+            canonical_u16(site, "B", b, 0)?;
+            canonical_tail(site, c, auxiliary)
         }
         Opcode::CellWrite => {
-            validate_registers(
-                executable,
-                function_id,
-                function,
-                address,
-                opcode,
-                &[("cell", a), ("value", b)],
-            )?;
-            canonical_tail(executable, function_id, address, opcode, c, auxiliary)
+            validate_registers(site, &[("cell", a), ("value", b)])?;
+            canonical_tail(site, c, auxiliary)
         }
         Opcode::Return => {
-            validate_destination(
-                executable,
-                function_id,
-                function,
-                address,
-                opcode,
-                a,
-                function.return_convention,
-            )?;
-            canonical_u16(executable, function_id, address, opcode, "B", b, 0)?;
-            canonical_tail(executable, function_id, address, opcode, c, auxiliary)
+            validate_destination(site, a, function.return_convention)?;
+            canonical_u16(site, "B", b, 0)?;
+            canonical_tail(site, c, auxiliary)
         }
         Opcode::Panic => {
-            validate_register(
-                executable,
-                function_id,
-                function,
-                address,
-                opcode,
-                "panic value",
-                a,
-            )?;
-            canonical_u16(executable, function_id, address, opcode, "B", b, 0)?;
-            canonical_tail(executable, function_id, address, opcode, c, auxiliary)
+            validate_register(site, "panic value", a)?;
+            canonical_u16(site, "B", b, 0)?;
+            canonical_tail(site, c, auxiliary)
         }
         Opcode::CallDirect | Opcode::TailCall => validate_call(
-            executable,
-            function_id,
-            function,
-            address,
-            opcode,
+            site,
             CallOperands {
                 destination: a,
                 target: b,
@@ -289,166 +164,38 @@ pub(super) fn validate_abc(
             },
         ),
         Opcode::CallValue | Opcode::TailCallValue | Opcode::SpawnTask => {
-            validate_optional_register(
-                executable,
-                function_id,
-                function,
-                address,
-                opcode,
-                "destination",
-                a,
-            )?;
-            validate_register(
-                executable,
-                function_id,
-                function,
-                address,
-                opcode,
-                "callee",
-                b,
-            )?;
-            validate_window(
-                executable,
-                function_id,
-                function,
-                address,
-                opcode,
-                "argument window",
-                c,
-                usize::from(auxiliary),
-            )
+            validate_optional_register(site, "destination", a)?;
+            validate_register(site, "callee", b)?;
+            validate_window(site, "argument window", c, usize::from(auxiliary))
         }
         Opcode::SpawnDetachedTask => {
-            validate_register(
-                executable,
-                function_id,
-                function,
-                address,
-                opcode,
-                "callee",
-                a,
-            )?;
-            validate_window(
-                executable,
-                function_id,
-                function,
-                address,
-                opcode,
-                "argument window",
-                b,
-                usize::from(auxiliary),
-            )?;
-            canonical_u16(executable, function_id, address, opcode, "C", c, 0)
+            validate_register(site, "callee", a)?;
+            validate_window(site, "argument window", b, usize::from(auxiliary))?;
+            canonical_u16(site, "C", c, 0)
         }
-        Opcode::MakeClosure => validate_closure(
-            executable,
-            function_id,
-            function,
-            address,
-            opcode,
-            a,
-            b,
-            c,
-            auxiliary,
-        ),
+        Opcode::MakeClosure => validate_closure(site, a, b, c, auxiliary),
         Opcode::MakeArray => {
-            validate_register(
-                executable,
-                function_id,
-                function,
-                address,
-                opcode,
-                "destination",
-                a,
-            )?;
-            validate_window(
-                executable,
-                function_id,
-                function,
-                address,
-                opcode,
-                "array value window",
-                b,
-                usize::from(c),
-            )?;
-            canonical_u8(
-                executable,
-                function_id,
-                address,
-                opcode,
-                "auxiliary",
-                auxiliary,
-                0,
-            )
+            validate_register(site, "destination", a)?;
+            validate_window(site, "array value window", b, usize::from(c))?;
+            canonical_u8(site, "auxiliary", auxiliary, 0)
         }
         Opcode::MakeDictionary => {
-            validate_register(
-                executable,
-                function_id,
-                function,
-                address,
-                opcode,
-                "destination",
-                a,
-            )?;
-            let count = usize::from(c).checked_mul(2).ok_or_else(|| {
-                window_error(executable, function_id, function, address, opcode, b)
-            })?;
-            validate_window(
-                executable,
-                function_id,
-                function,
-                address,
-                opcode,
-                "dictionary pair window",
-                b,
-                count,
-            )?;
-            canonical_u8(
-                executable,
-                function_id,
-                address,
-                opcode,
-                "auxiliary",
-                auxiliary,
-                0,
-            )
+            validate_register(site, "destination", a)?;
+            let count = usize::from(c)
+                .checked_mul(2)
+                .ok_or_else(|| window_error(site, b))?;
+            validate_window(site, "dictionary pair window", b, count)?;
+            canonical_u8(site, "auxiliary", auxiliary, 0)
         }
         Opcode::ArrayPush => {
-            validate_registers(
-                executable,
-                function_id,
-                function,
-                address,
-                opcode,
-                &[("destination", a), ("array", b), ("value", c)],
-            )?;
-            canonical_u8(
-                executable,
-                function_id,
-                address,
-                opcode,
-                "auxiliary",
-                auxiliary,
-                0,
-            )
+            validate_registers(site, &[("destination", a), ("array", b), ("value", c)])?;
+            canonical_u8(site, "auxiliary", auxiliary, 0)
         }
         Opcode::StoreGlobalIndexPath => {
-            validate_register(
-                executable,
-                function_id,
-                function,
-                address,
-                opcode,
-                "global snapshot",
-                a,
-            )?;
+            validate_register(site, "global snapshot", a)?;
             if executable.globals.get(usize::from(b)).is_none() {
                 return Err(table_u16_error(
-                    executable,
-                    function_id,
-                    address,
-                    opcode,
+                    site,
                     "globals",
                     "global",
                     b,
@@ -456,26 +203,14 @@ pub(super) fn validate_abc(
                 ));
             }
             validate_window(
-                executable,
-                function_id,
-                function,
-                address,
-                opcode,
+                site,
                 "global index path window",
                 c,
                 usize::from(auxiliary).saturating_add(1),
             )
         }
         Opcode::Intrinsic => {
-            validate_optional_register(
-                executable,
-                function_id,
-                function,
-                address,
-                opcode,
-                "destination",
-                a,
-            )?;
+            validate_optional_register(site, "destination", a)?;
             if crate::Intrinsic::from_u16(b).is_none() {
                 return Err(ValidationError::instruction(
                     executable,
@@ -485,21 +220,12 @@ pub(super) fn validate_abc(
                     ValidationErrorKind::UnknownIntrinsic { actual: b },
                 ));
             }
-            validate_window(
-                executable,
-                function_id,
-                function,
-                address,
-                opcode,
-                "intrinsic argument window",
-                c,
-                usize::from(auxiliary),
-            )
+            validate_window(site, "intrinsic argument window", c, usize::from(auxiliary))
         }
         Opcode::Yield => {
-            canonical_u16(executable, function_id, address, opcode, "A", a, 0)?;
-            canonical_u16(executable, function_id, address, opcode, "B", b, 0)?;
-            canonical_tail(executable, function_id, address, opcode, c, auxiliary)
+            canonical_u16(site, "A", a, 0)?;
+            canonical_u16(site, "B", b, 0)?;
+            canonical_tail(site, c, auxiliary)
         }
         Opcode::LoadConstant
         | Opcode::Jump
@@ -527,33 +253,18 @@ pub(super) fn validate_abc(
     }
 }
 
-#[expect(clippy::too_many_arguments, reason = "closure verifier context")]
 fn validate_closure(
-    executable: &crate::Executable,
-    function_id: FunctionId,
-    function: &FunctionInfo,
-    address: InstructionAddress,
-    opcode: Opcode,
+    site: InstructionSite<'_>,
     destination: u16,
     target: u16,
     capture_base: u16,
     capture_count: u8,
 ) -> Result<(), ValidationError> {
-    validate_register(
-        executable,
-        function_id,
-        function,
-        address,
-        opcode,
-        "destination",
-        destination,
-    )?;
+    let InstructionSite { executable, .. } = site;
+    validate_register(site, "destination", destination)?;
     let Some(target_info) = executable.functions.get(usize::from(target)) else {
         return Err(table_u16_error(
-            executable,
-            function_id,
-            address,
-            opcode,
+            site,
             "functions",
             "function",
             target,
@@ -561,55 +272,29 @@ fn validate_closure(
         ));
     };
     if usize::from(target_info.capture_count) != usize::from(capture_count) {
-        return Err(window_error(
-            executable,
-            function_id,
-            function,
-            address,
-            opcode,
-            capture_base,
-        ));
+        return Err(window_error(site, capture_base));
     }
     validate_window(
-        executable,
-        function_id,
-        function,
-        address,
-        opcode,
+        site,
         "capture window",
         capture_base,
         usize::from(capture_count),
     )
 }
 
-fn canonical_tail(
-    executable: &crate::Executable,
-    function_id: FunctionId,
-    address: InstructionAddress,
-    opcode: Opcode,
-    c: u16,
-    auxiliary: u8,
-) -> Result<(), ValidationError> {
-    canonical_u16(executable, function_id, address, opcode, "C", c, 0)?;
-    canonical_u8(
-        executable,
-        function_id,
-        address,
-        opcode,
-        "auxiliary",
-        auxiliary,
-        0,
-    )
+fn canonical_tail(site: InstructionSite<'_>, c: u16, auxiliary: u8) -> Result<(), ValidationError> {
+    canonical_u16(site, "C", c, 0)?;
+    canonical_u8(site, "auxiliary", auxiliary, 0)
 }
 
-fn window_error(
-    executable: &crate::Executable,
-    function_id: FunctionId,
-    function: &FunctionInfo,
-    address: InstructionAddress,
-    opcode: Opcode,
-    base: u16,
-) -> ValidationError {
+fn window_error(site: InstructionSite<'_>, base: u16) -> ValidationError {
+    let InstructionSite {
+        executable,
+        function_id,
+        function,
+        address,
+        opcode,
+    } = site;
     ValidationError::instruction(
         executable,
         function_id,

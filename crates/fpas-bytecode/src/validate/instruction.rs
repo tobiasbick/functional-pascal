@@ -3,6 +3,7 @@
 mod abc;
 mod operands;
 
+use crate::validate::site::InstructionSite;
 use crate::{
     FunctionId, FunctionInfo, InstructionAddress, InstructionError, InstructionForm, Opcode,
 };
@@ -44,18 +45,25 @@ pub(super) fn validate_instruction(
             ValidationErrorKind::Instruction(error),
         )
     })?;
+    let site = InstructionSite {
+        executable,
+        function_id,
+        function,
+        address,
+        opcode,
+    };
     match opcode.form() {
         InstructionForm::Abc => {
-            let operands = instruction.abc_operands().map_err(|error| {
-                instruction_error(executable, function_id, address, opcode, error)
-            })?;
-            validate_abc(executable, function_id, function, address, opcode, operands)?;
+            let operands = instruction
+                .abc_operands()
+                .map_err(|error| instruction_error(site, error))?;
+            validate_abc(site, operands)?;
         }
         InstructionForm::Abx => {
-            let operands = instruction.abx_operands().map_err(|error| {
-                instruction_error(executable, function_id, address, opcode, error)
-            })?;
-            validate_abx(executable, function_id, function, address, opcode, operands)?;
+            let operands = instruction
+                .abx_operands()
+                .map_err(|error| instruction_error(site, error))?;
+            validate_abx(site, operands)?;
         }
         InstructionForm::Ax => {
             return Err(ValidationError::instruction(
@@ -71,30 +79,18 @@ pub(super) fn validate_instruction(
 }
 
 fn validate_abx(
-    executable: &crate::Executable,
-    function_id: FunctionId,
-    function: &FunctionInfo,
-    address: InstructionAddress,
-    opcode: Opcode,
+    site: InstructionSite<'_>,
     operands: crate::AbxOperands,
 ) -> Result<(), ValidationError> {
+    let InstructionSite {
+        executable, opcode, ..
+    } = site;
     let crate::AbxOperands { a, bx } = operands;
     match opcode {
         Opcode::LoadConstant => {
-            validate_register(
-                executable,
-                function_id,
-                function,
-                address,
-                opcode,
-                "destination",
-                a,
-            )?;
+            validate_register(site, "destination", a)?;
             validate_table_u32(
-                executable,
-                function_id,
-                address,
-                opcode,
+                site,
                 "constants",
                 "constant",
                 bx,
@@ -107,41 +103,13 @@ fn validate_abx(
             } else {
                 "value"
             };
-            validate_register(
-                executable,
-                function_id,
-                function,
-                address,
-                opcode,
-                operand,
-                a,
-            )?;
-            validate_table_u32(
-                executable,
-                function_id,
-                address,
-                opcode,
-                "globals",
-                "global",
-                bx,
-                executable.globals.len(),
-            )
+            validate_register(site, operand, a)?;
+            validate_table_u32(site, "globals", "global", bx, executable.globals.len())
         }
-        Opcode::Jump => canonical_u16(executable, function_id, address, opcode, "A", a, 0),
-        Opcode::BranchIfFalse | Opcode::BranchIfTrue => validate_register(
-            executable,
-            function_id,
-            function,
-            address,
-            opcode,
-            "condition",
-            a,
-        ),
+        Opcode::Jump => canonical_u16(site, "A", a, 0),
+        Opcode::BranchIfFalse | Opcode::BranchIfTrue => validate_register(site, "condition", a),
         _ => Err(instruction_error(
-            executable,
-            function_id,
-            address,
-            opcode,
+            site,
             InstructionError::FormMismatch {
                 opcode,
                 expected: opcode.form(),
@@ -151,13 +119,14 @@ fn validate_abx(
     }
 }
 
-fn instruction_error(
-    executable: &crate::Executable,
-    function_id: FunctionId,
-    address: InstructionAddress,
-    opcode: Opcode,
-    error: InstructionError,
-) -> ValidationError {
+fn instruction_error(site: InstructionSite<'_>, error: InstructionError) -> ValidationError {
+    let InstructionSite {
+        executable,
+        function_id,
+        address,
+        opcode,
+        ..
+    } = site;
     ValidationError::instruction(
         executable,
         function_id,

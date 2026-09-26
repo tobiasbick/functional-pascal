@@ -62,10 +62,7 @@ impl LoweringContext {
                 let targets = self.loop_targets(*span)?;
                 self.jump(targets.continue_block)
             }
-            _ => Err(unsupported(
-                statement_span(statement),
-                "control-flow statement",
-            )),
+            _ => Err(unsupported(statement.span(), "control-flow statement")),
         }
     }
 
@@ -285,25 +282,4 @@ impl LoweringContext {
 
 fn intrinsic_id(intrinsic: fpas_bytecode::Intrinsic) -> IntrinsicId {
     IntrinsicId::new(u32::from(u16::from(intrinsic)))
-}
-
-fn statement_span(statement: &Stmt) -> fpas_lexer::Span {
-    match statement {
-        Stmt::Block(_, span)
-        | Stmt::Return(_, span)
-        | Stmt::Panic(_, span)
-        | Stmt::Break(span)
-        | Stmt::Continue(span) => *span,
-        Stmt::Var(value) | Stmt::MutableVar(value) => value.span,
-        Stmt::Assign { span, .. }
-        | Stmt::If { span, .. }
-        | Stmt::Case { span, .. }
-        | Stmt::For { span, .. }
-        | Stmt::ForIn { span, .. }
-        | Stmt::While { span, .. }
-        | Stmt::Repeat { span, .. }
-        | Stmt::Call { span, .. }
-        | Stmt::Expression { span, .. }
-        | Stmt::Go { span, .. } => *span,
-    }
 }

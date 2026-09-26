@@ -79,8 +79,8 @@ pub fn register_std_task(c: &mut Checker) {
     define_func(
         c,
         s::STD_TASK_TRY_CLOSE_COMPLETED_TASK_GROUP,
-        vec![p("Group", group.clone(), false)],
-        Ty::Option(Box::new(Ty::Array(Box::new(failure.clone())))),
+        vec![p("Group", group, false)],
+        Ty::Option(Box::new(Ty::Array(Box::new(failure)))),
     );
 
     define_func(

@@ -4,9 +4,7 @@ use crate::text::cell_width::display_width;
 
 impl ConsoleState {
     pub(in super::super) fn clear_window(&mut self) {
-        let Some(dirty) = self.clip_window(self.window) else {
-            return;
-        };
+        let dirty = self.window;
         let blank = self.blank_cell();
         for y in dirty.top..=dirty.bottom {
             for x in dirty.left..=dirty.right {
@@ -25,13 +23,11 @@ impl ConsoleState {
         let blank = self.blank_cell();
         let y = self.abs_y();
         let left = self.abs_x();
-        let Some(dirty) = self.clip_window(super::WindowRect {
+        let dirty = super::WindowRect {
             left,
             top: y,
             right: self.window.right,
             bottom: y,
-        }) else {
-            return;
         };
         for x in dirty.left..=dirty.right {
             let idx = self.index(x, y);
@@ -43,13 +39,11 @@ impl ConsoleState {
 
     pub(in super::super) fn del_line(&mut self) {
         let abs_y = self.abs_y();
-        let Some(dirty) = self.clip_window(super::WindowRect {
+        let dirty = super::WindowRect {
             left: self.window.left,
             top: abs_y,
             right: self.window.right,
             bottom: self.window.bottom,
-        }) else {
-            return;
         };
         for y in dirty.top..dirty.bottom {
             for x in dirty.left..=dirty.right {
@@ -69,13 +63,11 @@ impl ConsoleState {
 
     pub(in super::super) fn ins_line(&mut self) {
         let abs_y = self.abs_y();
-        let Some(dirty) = self.clip_window(super::WindowRect {
+        let dirty = super::WindowRect {
             left: self.window.left,
             top: abs_y,
             right: self.window.right,
             bottom: self.window.bottom,
-        }) else {
-            return;
         };
         for y in (dirty.top + 1..=dirty.bottom).rev() {
             for x in dirty.left..=dirty.right {
@@ -126,17 +118,15 @@ impl ConsoleState {
                 }
                 let x = self.abs_x();
                 let y = self.abs_y();
-                if self.can_paint_cell(x, y) {
-                    self.put_cell(
-                        x,
-                        y,
-                        ConsoleCell {
-                            glyph: ch.to_string(),
-                            foreground: self.active_fg.into(),
-                            background: self.active_bg.into(),
-                        },
-                    );
-                }
+                self.put_cell(
+                    x,
+                    y,
+                    ConsoleCell {
+                        glyph: ch.to_string(),
+                        foreground: self.active_fg.into(),
+                        background: self.active_bg.into(),
+                    },
+                );
                 if self.cursor_x.saturating_add(width - 1) == self.window_width() {
                     self.pending_wrap = true;
                 } else {
@@ -157,9 +147,7 @@ impl ConsoleState {
     }
 
     fn scroll_window_up(&mut self) {
-        let Some(dirty) = self.clip_window(self.window) else {
-            return;
-        };
+        let dirty = self.window;
         for y in dirty.top..dirty.bottom {
             for x in dirty.left..=dirty.right {
                 let dst = self.index(x, y);

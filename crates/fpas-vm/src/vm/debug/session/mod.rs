@@ -25,6 +25,7 @@ use crate::vm::worker::Worker;
 
 mod breakpoints;
 mod completed_result;
+mod container_mutation;
 mod data_breakpoints;
 mod dictionary;
 mod events;
@@ -195,7 +196,7 @@ impl DebugSession {
         ]));
         let layouts = RuntimeLayouts::build(executable.executable(), InstructionAddress::new(0))
             .map(Arc::new)
-            .map_err(runtime_initialization_error)?;
+            .map_err(|diagnostic| runtime_initialization_error(&diagnostic))?;
         let debuggee = Arc::new(Mutex::new(DebuggeeChannel::new(
             execution_limits.max_input_bytes,
         )));
@@ -213,7 +214,7 @@ impl DebugSession {
             layouts,
             hosted,
         )
-        .map_err(runtime_initialization_error)?
+        .map_err(|diagnostic| runtime_initialization_error(&diagnostic))?
         .with_scheduler(Some(Arc::clone(&scheduler)))
         .with_debug_tasks(Arc::clone(&task_clock));
         let pause_requested = Arc::new(AtomicBool::new(false));
@@ -465,7 +466,7 @@ fn stop_at_worker(
     }
 }
 
-fn runtime_initialization_error(diagnostic: crate::vm::VmError) -> DebugSessionError {
+fn runtime_initialization_error(diagnostic: &fpas_diagnostics::Diagnostic) -> DebugSessionError {
     DebugSessionError {
         kind: DebugErrorKind::InvalidState,
         message: format!("cannot initialize debug runtime: {}", diagnostic.message),

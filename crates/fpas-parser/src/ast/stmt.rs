@@ -1,6 +1,31 @@
 use super::{Designator, Expr, TypeExpr, VarDef};
 use fpas_lexer::Span;
 
+impl Stmt {
+    /// Returns the source span that covers this statement.
+    #[must_use]
+    pub fn span(&self) -> Span {
+        match self {
+            Self::Block(_, span)
+            | Self::Return(_, span)
+            | Self::Panic(_, span)
+            | Self::Break(span)
+            | Self::Continue(span) => *span,
+            Self::Var(value) | Self::MutableVar(value) => value.span,
+            Self::Assign { span, .. }
+            | Self::If { span, .. }
+            | Self::Case { span, .. }
+            | Self::For { span, .. }
+            | Self::ForIn { span, .. }
+            | Self::While { span, .. }
+            | Self::Repeat { span, .. }
+            | Self::Call { span, .. }
+            | Self::Expression { span, .. }
+            | Self::Go { span, .. } => *span,
+        }
+    }
+}
+
 /// Parsed statement.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Stmt {

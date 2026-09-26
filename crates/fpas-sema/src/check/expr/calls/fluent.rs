@@ -122,17 +122,17 @@ impl Checker {
             .property_reads
             .remove(&crate::designator_lookup_key(designator))
             .unwrap_or_default();
-        Some(self.check_fluent_call(
+        Some(self.check_fluent_call(FluentCall {
             call_key,
-            &receiver,
-            &receiver_ty,
+            receiver: &receiver,
+            receiver_ty: &receiver_ty,
             name,
             args,
             span,
-            *name_span,
+            call_span: *name_span,
             allow_procedure_result,
             receiver_reads,
-        ))
+        }))
     }
 
     /// Checks a call through a callable record field or property.
@@ -179,18 +179,18 @@ impl Checker {
     }
 
     /// Selects and checks a receiver call using its first explicit parameter.
-    pub(in crate::check) fn check_fluent_call(
-        &mut self,
-        call_key: usize,
-        receiver: &Expr,
-        receiver_ty: &Ty,
-        name: &str,
-        args: &[Expr],
-        span: Span,
-        call_span: Span,
-        allow_procedure_result: bool,
-        receiver_reads: Vec<crate::check::PropertyReadInfo>,
-    ) -> Ty {
+    pub(in crate::check) fn check_fluent_call(&mut self, call: FluentCall<'_>) -> Ty {
+        let FluentCall {
+            call_key,
+            receiver,
+            receiver_ty,
+            name,
+            args,
+            span,
+            call_span,
+            allow_procedure_result,
+            receiver_reads,
+        } = call;
         if receiver_ty.is_error() {
             self.check_args_only(args);
             return Ty::Error;
@@ -266,23 +266,22 @@ impl Checker {
         span: Span,
     ) -> Option<(String, Symbol)> {
         let key = canonical_symbol_name(name);
-        if let Some((scope, symbol)) = self.scopes.lookup_with_scope(name) {
-            if scope > 0
+        if let Some((scope, symbol)) = self.scopes.lookup_with_scope(name)
+            && (scope > 0
                 || !self.std_short_alias_keys.contains(&key)
-                    && !self.source_short_alias_keys.contains(&key)
-            {
-                let symbol = symbol.clone();
-                if self.fluent_symbol_accepts(name, &symbol, receiver_ty) {
-                    return Some((name.to_string(), symbol));
-                }
-                self.error_with_code(
+                    && !self.source_short_alias_keys.contains(&key))
+        {
+            let symbol = symbol.clone();
+            if self.fluent_symbol_accepts(name, &symbol, receiver_ty) {
+                return Some((name.to_string(), symbol));
+            }
+            self.error_with_code(
                     SEMA_TYPE_MISMATCH,
                     format!("`{name}` cannot be called with receiver type `{receiver_ty}`"),
                     "The nearest binding must be callable and accept the receiver as its first parameter.",
                     span,
                 );
-                return None;
-            }
+            return None;
         }
 
         let mut matches = self
@@ -361,4 +360,26 @@ fn first_param_accepts(expected: &Ty, receiver: &Ty) -> bool {
         }
         _ => expected.compatible_with(receiver),
     }
+}
+
+/// One receiver call `Receiver.Name(Args)` resolved through a free routine.
+pub(in crate::check) struct FluentCall<'a> {
+    /// Lookup key recording the resolved target.
+    pub(in crate::check) call_key: usize,
+    /// Receiver expression passed as the first argument.
+    pub(in crate::check) receiver: &'a Expr,
+    /// Already checked receiver type.
+    pub(in crate::check) receiver_ty: &'a Ty,
+    /// Called routine name.
+    pub(in crate::check) name: &'a str,
+    /// Explicit arguments after the receiver.
+    pub(in crate::check) args: &'a [Expr],
+    /// Diagnostic span of the call.
+    pub(in crate::check) span: Span,
+    /// Span recorded for the call target.
+    pub(in crate::check) call_span: Span,
+    /// Accept procedures (statement position or `go`).
+    pub(in crate::check) allow_procedure_result: bool,
+    /// Property getter reads needed while evaluating the receiver.
+    pub(in crate::check) receiver_reads: Vec<crate::check::PropertyReadInfo>,
 }

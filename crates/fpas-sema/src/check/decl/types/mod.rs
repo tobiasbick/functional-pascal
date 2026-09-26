@@ -7,6 +7,7 @@ use fpas_parser::{TypeBody, TypeDef, TypeParam};
 use std::sync::Arc;
 
 mod enums;
+mod record_accessors;
 mod record_events;
 mod record_properties;
 mod records;

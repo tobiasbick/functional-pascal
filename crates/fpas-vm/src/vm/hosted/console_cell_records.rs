@@ -93,15 +93,6 @@ impl Worker {
             location,
         )
     }
-
-    /// Builds an opaque FPAS `Std.Console.SavedRegion` handle record.
-    pub(crate) fn saved_region_record(
-        &self,
-        id: SavedRegionId,
-        _location: SourceLocation,
-    ) -> Result<Value, VmError> {
-        Ok(Value::OpaqueHandle(id.0))
-    }
 }
 
 pub(crate) fn console_cell_from_value(
@@ -313,14 +304,6 @@ pub(crate) fn console_cell_record(
     location: SourceLocation,
 ) -> Result<Value, VmError> {
     worker.console_cell_record(cell, location)
-}
-
-pub(crate) fn saved_region_record(
-    worker: &Worker,
-    id: SavedRegionId,
-    location: SourceLocation,
-) -> Result<Value, VmError> {
-    worker.saved_region_record(id, location)
 }
 
 pub(crate) fn saved_region_from_value(

@@ -24,9 +24,9 @@ pub(super) fn check_reduce(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
     ) {
         return Ty::Error;
     }
-    let dictionary = c.check_expr(&args[0]);
-    let initial = c.check_expr(&args[1]);
-    let callback = c.check_expr(&args[2]);
+    let dictionary = c.check_expr(args[0]);
+    let initial = c.check_expr(args[1]);
+    let callback = c.check_expr(args[2]);
     if dictionary == Ty::Error || initial == Ty::Error || callback == Ty::Error {
         return Ty::Error;
     }

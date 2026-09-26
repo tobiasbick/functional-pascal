@@ -1,6 +1,8 @@
 //! Deterministic `.fpascu` encoder.
 
-use crate::{CompiledUnit, Digest};
+use fpas_binary::{write_digest, write_u16, write_u32};
+
+use crate::CompiledUnit;
 
 use super::{FORMAT_VERSION, FormatError, MAGIC, validate_for_write};
 
@@ -34,18 +36,6 @@ pub fn encode(unit: &CompiledUnit) -> Result<Vec<u8>, FormatError> {
     write_bytes(&mut output, &unit.interface)?;
     write_bytes(&mut output, &unit.object)?;
     Ok(output)
-}
-
-fn write_u16(output: &mut Vec<u8>, value: u16) {
-    output.extend_from_slice(&value.to_le_bytes());
-}
-
-fn write_u32(output: &mut Vec<u8>, value: u32) {
-    output.extend_from_slice(&value.to_le_bytes());
-}
-
-fn write_digest(output: &mut Vec<u8>, digest: Digest) {
-    output.extend_from_slice(digest.as_bytes());
 }
 
 fn write_string(output: &mut Vec<u8>, value: &str) -> Result<(), FormatError> {

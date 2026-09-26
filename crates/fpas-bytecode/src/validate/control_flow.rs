@@ -2,6 +2,7 @@
 
 mod superinstructions;
 
+use crate::validate::site::InstructionSite;
 use std::collections::VecDeque;
 
 use crate::{FunctionId, FunctionInfo, InstructionAddress, Opcode, ReturnConvention, limits};
@@ -156,7 +157,13 @@ fn validate_function_code(
     while raw_address < function.code.end.get() {
         let address = InstructionAddress::new(raw_address);
         let opcode = validate_instruction(executable, function_id, function, address)?;
-        validate_superinstruction_payload(executable, function_id, function, address, opcode)?;
+        validate_superinstruction_payload(InstructionSite {
+            executable,
+            function_id,
+            function,
+            address,
+            opcode,
+        })?;
         emitted_spawn |= matches!(opcode, Opcode::SpawnTask | Opcode::SpawnDetachedTask);
         if opcode == Opcode::Intrinsic {
             // Operand shape and intrinsic identity were checked by validate_instruction.

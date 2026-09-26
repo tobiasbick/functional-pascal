@@ -231,14 +231,6 @@ impl ConsoleState {
         self.pending_wrap = false;
     }
 
-    pub(super) fn clip_window(&self, window: WindowRect) -> Option<WindowRect> {
-        Some(window)
-    }
-
-    pub(super) fn can_paint_cell(&self, _x: u16, _y: u16) -> bool {
-        true
-    }
-
     pub(super) fn set_cursor(&mut self, x: u16, y: u16) {
         self.cursor_x = x;
         self.cursor_y = y;
@@ -247,20 +239,6 @@ impl ConsoleState {
 
     pub(super) fn cell_at(&self, x: u16, y: u16) -> ScreenCell {
         self.cells[self.index(x, y)].clone()
-    }
-
-    /// Writes one CRT cell using packed palette colors (`0..=15`), bypassing the cursor.
-    pub(super) fn paint_packed_cell(&mut self, x: u16, y: u16, ch: char, fg: u8, bg: u8) {
-        if x == 0 || y == 0 || x > self.width || y > self.height {
-            return;
-        }
-        let idx = self.index(x, y);
-        self.cells[idx] = ScreenCell {
-            glyph: ch.to_string(),
-            fg: RenderColor::Crt(fg.min(15)),
-            bg: RenderColor::Crt(bg.min(15)),
-            continuation: false,
-        };
     }
 
     pub(super) fn use_packed_colors(&mut self) {

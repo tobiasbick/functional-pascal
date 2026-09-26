@@ -329,6 +329,7 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md). Short pointers:
 | `fpas-ir` | Typed control-flow intermediate representation |
 | `fpas-compiler` | AST lowering through typed IR to register bytecode |
 | `fpas-bytecode` | Register-bytecode definitions and executable verification |
+| `fpas-binary` | Shared little-endian encoding primitives and BLAKE3 digests |
 | `fpas-unit` | Compiled-unit identities, format, and sidecar lifecycle |
 | `fpas-linker` | Deterministic linker from unit objects to verified executables |
 | `fpas-program` | Persistent executable `.fpascp` program images |

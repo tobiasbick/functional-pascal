@@ -1,11 +1,9 @@
 //! Metadata resource limits, table references, layouts, and sparse source maps.
 
+use crate::validate::site::InstructionSite;
 use std::collections::HashMap;
 
-use crate::{
-    EnumVariantId, FunctionId, FunctionInfo, InstructionAddress, Opcode, RecordTypeId, StringId,
-    limits,
-};
+use crate::{EnumVariantId, FunctionId, Opcode, RecordTypeId, StringId, limits};
 
 use super::calls::validate_window;
 use super::{ValidationError, ValidationErrorKind};
@@ -140,75 +138,42 @@ fn validate_function_reference<'a>(
         })
 }
 
-#[expect(
-    clippy::too_many_arguments,
-    reason = "verifier context keeps diagnostics actionable"
-)]
 pub(super) fn validate_layout_operand(
-    executable: &crate::Executable,
-    function_id: FunctionId,
-    function: &FunctionInfo,
-    address: InstructionAddress,
-    opcode: Opcode,
+    site: InstructionSite<'_>,
     a: u16,
     b: u16,
     c: u16,
     auxiliary: u8,
 ) -> Result<bool, ValidationError> {
+    let InstructionSite {
+        executable,
+        function_id,
+        address,
+        opcode,
+        ..
+    } = site;
     match opcode {
         Opcode::MakeRecord => {
-            super::instruction::validate_register(
-                executable,
-                function_id,
-                function,
-                address,
-                opcode,
-                "destination",
-                a,
-            )?;
+            super::instruction::validate_register(site, "destination", a)?;
             let Some(layout) = executable
                 .records
                 .get(usize::from(RecordTypeId::new(b).get()))
             else {
                 return Err(table_error(
-                    executable,
-                    function_id,
-                    address,
-                    opcode,
+                    site,
                     "record layouts",
                     "record type",
                     b,
                     executable.records.len(),
                 ));
             };
-            canonical(
-                executable,
-                function_id,
-                address,
-                opcode,
-                "auxiliary",
-                auxiliary,
-                0,
-            )?;
-            validate_window(
-                executable,
-                function_id,
-                function,
-                address,
-                opcode,
-                "record value window",
-                c,
-                layout.fields.len(),
-            )?;
+            canonical(site, "auxiliary", auxiliary, 0)?;
+            validate_window(site, "record value window", c, layout.fields.len())?;
             Ok(true)
         }
         Opcode::LoadField | Opcode::StoreField => {
             super::instruction::validate_register(
-                executable,
-                function_id,
-                function,
-                address,
-                opcode,
+                site,
                 if opcode == Opcode::LoadField {
                     "destination"
                 } else {
@@ -217,11 +182,7 @@ pub(super) fn validate_layout_operand(
                 a,
             )?;
             super::instruction::validate_register(
-                executable,
-                function_id,
-                function,
-                address,
-                opcode,
+                site,
                 if opcode == Opcode::LoadField {
                     "record"
                 } else {
@@ -249,155 +210,51 @@ pub(super) fn validate_layout_operand(
                     },
                 ));
             }
-            canonical(
-                executable,
-                function_id,
-                address,
-                opcode,
-                "auxiliary",
-                auxiliary,
-                0,
-            )?;
+            canonical(site, "auxiliary", auxiliary, 0)?;
             Ok(true)
         }
         Opcode::UpdateRecord => {
-            super::instruction::validate_register(
-                executable,
-                function_id,
-                function,
-                address,
-                opcode,
-                "record",
-                a,
-            )?;
-            validate_window(
-                executable,
-                function_id,
-                function,
-                address,
-                opcode,
-                "record override window",
-                b,
-                usize::from(c) * 2,
-            )?;
-            canonical(
-                executable,
-                function_id,
-                address,
-                opcode,
-                "auxiliary",
-                auxiliary,
-                0,
-            )?;
+            super::instruction::validate_register(site, "record", a)?;
+            validate_window(site, "record override window", b, usize::from(c) * 2)?;
+            canonical(site, "auxiliary", auxiliary, 0)?;
             Ok(true)
         }
         Opcode::MakeEnum => {
-            super::instruction::validate_register(
-                executable,
-                function_id,
-                function,
-                address,
-                opcode,
-                "destination",
-                a,
-            )?;
+            super::instruction::validate_register(site, "destination", a)?;
             let Some(variant) = executable
                 .enum_variants
                 .get(usize::from(EnumVariantId::new(b).get()))
             else {
                 return Err(table_error(
-                    executable,
-                    function_id,
-                    address,
-                    opcode,
+                    site,
                     "enum variants",
                     "enum variant",
                     b,
                     executable.enum_variants.len(),
                 ));
             };
-            canonical(
-                executable,
-                function_id,
-                address,
-                opcode,
-                "auxiliary",
-                auxiliary,
-                0,
-            )?;
-            validate_window(
-                executable,
-                function_id,
-                function,
-                address,
-                opcode,
-                "enum value window",
-                c,
-                variant.fields.len(),
-            )?;
+            canonical(site, "auxiliary", auxiliary, 0)?;
+            validate_window(site, "enum value window", c, variant.fields.len())?;
             Ok(true)
         }
         Opcode::TestVariant => {
-            super::instruction::validate_register(
-                executable,
-                function_id,
-                function,
-                address,
-                opcode,
-                "destination",
-                a,
-            )?;
-            super::instruction::validate_register(
-                executable,
-                function_id,
-                function,
-                address,
-                opcode,
-                "enum value",
-                b,
-            )?;
+            super::instruction::validate_register(site, "destination", a)?;
+            super::instruction::validate_register(site, "enum value", b)?;
             if usize::from(c) >= executable.enum_variants.len() {
                 return Err(table_error(
-                    executable,
-                    function_id,
-                    address,
-                    opcode,
+                    site,
                     "enum variants",
                     "enum variant",
                     c,
                     executable.enum_variants.len(),
                 ));
             }
-            canonical(
-                executable,
-                function_id,
-                address,
-                opcode,
-                "auxiliary",
-                auxiliary,
-                0,
-            )?;
+            canonical(site, "auxiliary", auxiliary, 0)?;
             Ok(true)
         }
         Opcode::LoadEnumField => {
-            super::instruction::validate_register(
-                executable,
-                function_id,
-                function,
-                address,
-                opcode,
-                "destination",
-                a,
-            )?;
-            super::instruction::validate_register(
-                executable,
-                function_id,
-                function,
-                address,
-                opcode,
-                "enum value",
-                b,
-            )?;
+            super::instruction::validate_register(site, "destination", a)?;
+            super::instruction::validate_register(site, "enum value", b)?;
             let available = executable
                 .enum_variants
                 .iter()
@@ -417,15 +274,7 @@ pub(super) fn validate_layout_operand(
                     },
                 ));
             }
-            canonical(
-                executable,
-                function_id,
-                address,
-                opcode,
-                "auxiliary",
-                auxiliary,
-                0,
-            )?;
+            canonical(site, "auxiliary", auxiliary, 0)?;
             Ok(true)
         }
         _ => Ok(false),
@@ -433,14 +282,18 @@ pub(super) fn validate_layout_operand(
 }
 
 fn canonical(
-    executable: &crate::Executable,
-    function_id: FunctionId,
-    address: InstructionAddress,
-    opcode: Opcode,
+    site: InstructionSite<'_>,
     operand: &'static str,
     actual: u8,
     expected: u8,
 ) -> Result<(), ValidationError> {
+    let InstructionSite {
+        executable,
+        function_id,
+        address,
+        opcode,
+        ..
+    } = site;
     if actual == expected {
         Ok(())
     } else {
@@ -458,20 +311,20 @@ fn canonical(
     }
 }
 
-#[expect(
-    clippy::too_many_arguments,
-    reason = "verifier context keeps diagnostics actionable"
-)]
 fn table_error(
-    executable: &crate::Executable,
-    function_id: FunctionId,
-    address: InstructionAddress,
-    opcode: Opcode,
+    site: InstructionSite<'_>,
     table: &'static str,
     operand: &'static str,
     actual: u16,
     length: usize,
 ) -> ValidationError {
+    let InstructionSite {
+        executable,
+        function_id,
+        address,
+        opcode,
+        ..
+    } = site;
     ValidationError::instruction(
         executable,
         function_id,

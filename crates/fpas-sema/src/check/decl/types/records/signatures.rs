@@ -48,17 +48,6 @@ impl Checker {
         true
     }
 
-    /// Validate that a static record function does not declare an instance receiver.
-    pub(super) fn validate_static_function_signature(
-        &mut self,
-        type_name: &str,
-        method_name: &str,
-        params: &[ParamTy],
-        span: fpas_lexer::Span,
-    ) -> bool {
-        self.validate_static_routine_signature(type_name, method_name, params, span, "function")
-    }
-
     /// Validate receiver rules shared by static record functions and procedures.
     pub(super) fn validate_static_routine_signature(
         &mut self,

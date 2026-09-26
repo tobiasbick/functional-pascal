@@ -1,6 +1,9 @@
 mod fluent;
 mod methods;
 
+pub(in crate::check) use fluent::FluentCall;
+pub(in crate::check) use methods::MethodCallSite;
+
 use super::super::Checker;
 use crate::scope::SymbolKind;
 use crate::types::Ty;

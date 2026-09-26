@@ -2,6 +2,7 @@
 
 use fpas_bytecode::DebugType;
 
+use super::super::container_mutation::ContainerKind;
 use super::*;
 use crate::vm::debug::evaluation::{DebugEvaluationLimits, DebugExpression};
 use crate::vm::debug::mutation::{DebugAssignmentTarget, DebugStringMutationResult};
@@ -44,7 +45,8 @@ impl DebugSession {
     ) -> Result<DebugStringMutationResult, DebugSessionError> {
         self.require_stopped("string.replace_character")?;
         let result = (|| {
-            let prepared = self.prepare_sequence_mutation(
+            let prepared = self.prepare_container_mutation(
+                ContainerKind::Sequence,
                 assignment,
                 &[index.clone(), value.clone()],
                 frame_id,
@@ -60,7 +62,7 @@ impl DebugSession {
                 limits.max_depth,
             )?;
             let transformation = super::super::super::mutation::replace_string_character(
-                prepared.sequence,
+                prepared.container,
                 index,
                 prepared.operands[1].clone(),
             )?;
@@ -73,11 +75,12 @@ impl DebugSession {
             let new_character =
                 inspection.evaluation_summary(&transformation.new_character, limits)?;
             let affected_index = transformation.index;
-            let string = self.commit_sequence_value(
+            let (string, ()) = self.commit_container_value(
                 prepared.task_id,
                 &prepared.target,
                 transformation.string,
                 limits,
+                |_| Ok(()),
             )?;
             Ok(DebugStringMutationResult {
                 string,

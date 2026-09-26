@@ -11,16 +11,16 @@ pub(super) fn check_start(c: &mut Checker, name: &str, args: &[&Expr], span: Spa
         return Ty::Error;
     }
     if supervised {
-        expect_type(c, &args[2], &Ty::Integer, "retry limit");
-        expect_type(c, &args[3], &Ty::Integer, "retry backoff");
+        expect_type(c, args[2], &Ty::Integer, "retry limit");
+        expect_type(c, args[3], &Ty::Integer, "retry backoff");
     }
     let group = c
         .scopes
         .lookup(s::STD_TASK_TASK_GROUP)
         .map_or(Ty::Error, |s| s.ty.clone());
-    expect_type(c, &args[0], &group, "task group");
-    let work = c.check_expr(&args[1]);
-    if c.expr_is_task_bound(crate::expr_lookup_key(&args[1])) {
+    expect_type(c, args[0], &group, "task group");
+    let work = c.check_expr(args[1]);
+    if c.expr_is_task_bound(crate::expr_lookup_key(args[1])) {
         c.error_with_code(
             SEMA_TASK_BOUND_CALLABLE,
             "Cannot start a task-bound worker in another task",

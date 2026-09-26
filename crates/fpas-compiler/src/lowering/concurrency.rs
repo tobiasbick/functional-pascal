@@ -44,8 +44,10 @@ impl LoweringContext {
                     key,
                     Some(receiver),
                     args,
-                    &target.name,
-                    &target.result_ty,
+                    GoTarget {
+                        name: &target.name,
+                        result_ty: &target.result_ty,
+                    },
                     span,
                     retain_result,
                 );
@@ -60,8 +62,10 @@ impl LoweringContext {
                     key,
                     Some(receiver),
                     args,
-                    target.qualified_name(),
-                    &result_ty,
+                    GoTarget {
+                        name: target.qualified_name(),
+                        result_ty: &result_ty,
+                    },
                     span,
                     retain_result,
                 );
@@ -102,8 +106,10 @@ impl LoweringContext {
                 fpas_sema::expr_lookup_key(expression),
                 Some(receiver),
                 args,
-                &target.name,
-                &target.result_ty,
+                GoTarget {
+                    name: &target.name,
+                    result_ty: &target.result_ty,
+                },
                 span,
                 retain_result,
             );
@@ -133,8 +139,10 @@ impl LoweringContext {
                 fpas_sema::expr_lookup_key(expression),
                 receiver,
                 args,
-                target.qualified_name(),
-                &result_ty,
+                GoTarget {
+                    name: target.qualified_name(),
+                    result_ty: &result_ty,
+                },
                 span,
                 retain_result,
             );
@@ -203,11 +211,11 @@ impl LoweringContext {
         key: usize,
         receiver: Option<ValueId>,
         args: &[Expr],
-        name: &str,
-        result_ty: &Ty,
+        target: GoTarget<'_>,
         span: fpas_lexer::Span,
         retain_result: bool,
     ) -> Result<ValueId, CompileError> {
+        let GoTarget { name, result_ty } = target;
         let receiver = receiver.map(|value| self.save_value(value));
         let (callee, output) = if let Some(target) = self.intrinsic_task_targets.get(&key).cloned()
         {
@@ -284,4 +292,10 @@ impl LoweringContext {
             )
         }
     }
+}
+
+/// Resolved routine started by `go`: its name and declared result type.
+struct GoTarget<'a> {
+    name: &'a str,
+    result_ty: &'a Ty,
 }

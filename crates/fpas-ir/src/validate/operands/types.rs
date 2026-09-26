@@ -134,6 +134,60 @@ fn require_category(
     ))
 }
 
+/// Validate `index_ty` against an array or dictionary `collection_ty` and return the
+/// element type, or `None` when the collection is neither.
+fn indexed_element_type(
+    program: &Program,
+    function: &Function,
+    block: BlockId,
+    instruction: usize,
+    collection_ty: TypeId,
+    index_ty: TypeId,
+) -> Result<Option<TypeId>, ValidationError> {
+    match program.ty(collection_ty).map(|definition| &definition.kind) {
+        Some(IrType::Array(element)) => {
+            require_category(
+                program,
+                function,
+                block,
+                instruction,
+                "array index",
+                index_ty,
+                TypeCategory::Integer,
+            )?;
+            Ok(Some(*element))
+        }
+        Some(IrType::Dictionary { key, value }) => {
+            require_exact(
+                function,
+                block,
+                instruction,
+                "dictionary key",
+                *key,
+                index_ty,
+            )?;
+            Ok(Some(*value))
+        }
+        _ => Ok(None),
+    }
+}
+
+/// Require `actual` to be assignable to `expected`, reporting an exact mismatch.
+fn require_assignable(
+    program: &Program,
+    function: &Function,
+    block: BlockId,
+    instruction: impl Into<Option<usize>>,
+    operand: &'static str,
+    expected: TypeId,
+    actual: TypeId,
+) -> Result<(), ValidationError> {
+    if types_compatible(program, expected, actual) {
+        return Ok(());
+    }
+    require_exact(function, block, instruction, operand, expected, actual)
+}
+
 fn require_record_layout(
     program: &Program,
     function: &Function,

@@ -18,7 +18,7 @@ use super::Checker;
 use crate::types::Ty;
 use fpas_parser::*;
 
-pub(crate) use event_access::EventRaiseRequest;
+pub(in crate::check) use calls::MethodCallSite;
 
 impl Checker {
     pub(crate) fn check_expr(&mut self, expr: &Expr) -> Ty {

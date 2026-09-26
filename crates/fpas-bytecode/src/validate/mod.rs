@@ -7,6 +7,7 @@ mod debug_types;
 mod instruction;
 mod layouts;
 mod resources;
+mod site;
 mod source_map;
 
 use std::fmt;

@@ -186,3 +186,17 @@ fn string_append_consumes_dead_left_temporaries() {
     );
     assert_succeeds(source);
 }
+
+#[test]
+fn record_self_update_moves_the_dead_temporary_and_keeps_aliases() {
+    let source = "program SelfUpdate; type P = record A: integer; end; begin mutable var R: P := record A := 1; end; var Copy: P := R; R := R with A := 2; end; if (R.A <> 2) or (Copy.A <> 1) then panic('wrong') end.";
+    let program = parse_ok(source);
+    let executable = crate::compile(&program).expect("record update compiles");
+    assert!(
+        executable.executable().code.iter().any(|word| {
+            word.opcode() == Ok(fpas_bytecode::Opcode::Move) && word.abc_payload().auxiliary == 1
+        }),
+        "the copied base of `R with` dies at the update and must be moved"
+    );
+    assert_succeeds(source);
+}

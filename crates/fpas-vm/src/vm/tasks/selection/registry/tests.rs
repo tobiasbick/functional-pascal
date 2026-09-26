@@ -6,7 +6,7 @@ use fpas_bytecode::FunctionId;
 fn case() -> WaitCase {
     WaitCase {
         source: CaseSource::Timer(0),
-        callback: SharedFunction::unbound(FunctionId::new(0), "callback".into(), vec![]),
+        callback: SharedFunction::unbound(FunctionId::new(0), "callback", vec![]),
     }
 }
 
@@ -76,7 +76,7 @@ fn close_claim_and_registry_teardown_release_callback_captures() {
                 source: CaseSource::Timer(0),
                 callback: SharedFunction::task_owned(
                     FunctionId::new(0),
-                    "callback".into(),
+                    "callback",
                     vec![Value::Cell(captured)],
                     0,
                 ),

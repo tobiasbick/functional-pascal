@@ -268,3 +268,51 @@ fn consuming_concatenation_reuses_temporaries_without_touching_shared_strings() 
     assert_eq!(registers[3], Value::Unit);
     assert_eq!(prepared.as_ref(), "ab");
 }
+
+#[test]
+fn consuming_move_transfers_the_value_and_clears_the_source() {
+    let executable = verified(
+        vec![
+            abx(Opcode::LoadConstant, 0, 0),
+            abc_aux(Opcode::Move, 1, 0, 0, 1),
+            abc(Opcode::Move, 2, 1, 0),
+            return_unit(),
+        ],
+        vec![Constant::String(fpas_bytecode::StringId::new(2))],
+        vec!["root", "test.fpas", "moved"],
+        3,
+    );
+    let mut worker =
+        crate::vm::worker::Worker::new(std::sync::Arc::new(executable)).expect("worker");
+    worker.dispatch_one().expect("load");
+    worker.dispatch_one().expect("consuming move");
+    assert_eq!(worker.registers[0], Value::Unit);
+    assert!(!worker.register_is_initialized(0));
+    assert_eq!(worker.registers[1], Value::Str("moved".into()));
+    worker.dispatch_one().expect("copying move");
+    assert_eq!(worker.registers[1], worker.registers[2]);
+    assert!(worker.register_is_initialized(1));
+}
+
+#[test]
+fn function_values_share_the_prepared_name() {
+    let executable = verified(
+        vec![
+            abx(Opcode::LoadConstant, 0, 0),
+            abx(Opcode::LoadConstant, 1, 0),
+            return_unit(),
+        ],
+        vec![Constant::Function {
+            function: fpas_bytecode::FunctionId::new(0),
+            task_bound: false,
+        }],
+        vec!["root", "test.fpas"],
+        2,
+    );
+    let (_, registers, _) = execute(executable).expect("function constants load");
+    let (Value::Function(first), Value::Function(second)) = (&registers[0], &registers[1]) else {
+        panic!("expected function values");
+    };
+    assert_eq!(&*first.name, "root");
+    assert!(std::sync::Arc::ptr_eq(&first.name, &second.name));
+}

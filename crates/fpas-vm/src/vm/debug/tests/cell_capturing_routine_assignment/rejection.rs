@@ -124,7 +124,7 @@ fn copied_task_owned_functions_cannot_escape_the_owner_frame() {
         },
         frame,
     );
-    assert_eq!(as_function(&packed).name, "identity");
+    assert_eq!(&*as_function(&packed).name, "identity");
 
     let mut captured = DebugSession::new(compile_fixture()).expect("capture copy");
     let frame = run_to(&mut captured, "var CaptureDestStop: integer := 0;");
@@ -138,7 +138,7 @@ fn copied_task_owned_functions_cannot_escape_the_owner_frame() {
     assert_eq!(rejected.kind, DebugErrorKind::VariableValueType);
     assert!(rejected.message.contains("capture-cell"), "{rejected:?}");
     let current = runtime(&captured, &name("Current"), frame);
-    assert_eq!(as_function(&current).name, "identity");
+    assert_eq!(&*as_function(&current).name, "identity");
 }
 
 #[test]

@@ -21,7 +21,8 @@ pub enum Opcode {
     LoadConstant = 0,
     /// Load the Unit value.
     LoadUnit = 1,
-    /// Copy a register value.
+    /// Copy a register value. Auxiliary 1 marks the source as dead after this instruction, so
+    /// the value is moved and the source left uninitialized.
     Move = 2,
     /// Add integers.
     AddInteger = 3,

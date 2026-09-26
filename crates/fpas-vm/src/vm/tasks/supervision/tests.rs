@@ -23,7 +23,7 @@ fn worker_and_group() -> (Worker, Value, Value) {
         .expect("work");
     let callable = Value::Function(SharedFunction::unbound(
         FunctionId::try_from_index(index).expect("function"),
-        "work".into(),
+        "work",
         vec![],
     ));
     let mut worker = Worker::new(Arc::new(image))

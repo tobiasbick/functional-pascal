@@ -16,7 +16,7 @@ fn worker() -> Worker {
 fn root_selection_leaves_queued_computation_for_pool_workers() {
     let mut worker = worker();
     let scheduler = Arc::clone(worker.scheduler_ref().unwrap());
-    let function = SharedFunction::unbound(FunctionId::new(0), "queued computation".into(), vec![]);
+    let function = SharedFunction::unbound(FunctionId::new(0), "queued computation", vec![]);
     let info = &worker.executable.executable().functions[0];
     scheduler.register_result(1);
     scheduler.enqueue(crate::vm::tasks::TaskState::entry(
@@ -44,11 +44,7 @@ fn wait(sources: Vec<CaseSource>) -> SelectionWait {
             .into_iter()
             .map(|source| WaitCase {
                 source,
-                callback: SharedFunction::unbound(
-                    FunctionId::new(0),
-                    "unused callback".into(),
-                    vec![],
-                ),
+                callback: SharedFunction::unbound(FunctionId::new(0), "unused callback", vec![]),
             })
             .collect(),
         started: Instant::now(),
@@ -224,17 +220,10 @@ begin FailSelected(Ok(true)) end."#,
         CaseSource::Send(queue, Value::Integer(42)),
         CaseSource::Timer(0),
     ]);
-    selection.cases[0].callback = SharedFunction::unbound(
-        FunctionId::new(callback as u16),
-        "FailSelected".into(),
-        vec![],
-    );
-    selection.cases[1].callback = SharedFunction::task_owned(
-        FunctionId::new(0),
-        "loser".into(),
-        vec![Value::Cell(captured)],
-        0,
-    );
+    selection.cases[0].callback =
+        SharedFunction::unbound(FunctionId::new(callback as u16), "FailSelected", vec![]);
+    selection.cases[1].callback =
+        SharedFunction::task_owned(FunctionId::new(0), "loser", vec![Value::Cell(captured)], 0);
     worker.run_selection(selection).unwrap();
     assert!(
         weak.upgrade().is_none(),
@@ -263,7 +252,7 @@ fn abandoning_a_suspended_debug_selection_releases_its_owned_cases() {
     let mut selection = wait(vec![CaseSource::Timer(100)]);
     selection.cases[0].callback = SharedFunction::task_owned(
         FunctionId::new(0),
-        "pending".into(),
+        "pending",
         vec![Value::Cell(captured)],
         0,
     );
@@ -285,7 +274,7 @@ fn scheduler_shutdown_releases_parked_pool_selection_captures() {
         let mut selection = wait(vec![CaseSource::Timer(u64::MAX)]);
         selection.cases[0].callback = SharedFunction::task_owned(
             FunctionId::new(0),
-            "pending".into(),
+            "pending",
             vec![Value::Cell(captured)],
             1,
         );
@@ -318,7 +307,7 @@ fn scheduler_shutdown_releases_normal_selection_cases_without_running_the_callba
     let mut selection = wait(vec![CaseSource::Timer(u64::MAX)]);
     selection.cases[0].callback = SharedFunction::task_owned(
         FunctionId::new(0),
-        "pending".into(),
+        "pending",
         vec![Value::Cell(captured)],
         0,
     );

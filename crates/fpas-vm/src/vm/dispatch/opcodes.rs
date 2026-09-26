@@ -21,7 +21,12 @@ impl Worker {
             Opcode::LoadUnit => self.write_operand(instruction.abc().a, Value::Unit)?,
             Opcode::Move => {
                 let operands = instruction.abc();
-                let value = self.read_operand(operands.b)?.clone();
+                // Auxiliary 1: the compiler proved the source dead, so transfer instead of clone.
+                let value = if operands.auxiliary == 1 {
+                    self.take_register(self.base + usize::from(operands.b))?
+                } else {
+                    self.read_operand(operands.b)?.clone()
+                };
                 self.write_operand(operands.a, value)?;
             }
             Opcode::AddInteger => {

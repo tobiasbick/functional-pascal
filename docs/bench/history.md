@@ -14,6 +14,85 @@ cargo bench-fpas record "vm-only note" --group vm
 
 Newest entries are prepended below this header.
 
+## 2026-09-26 — Shared function names, moved dead temporaries, and cell access without reference round trips
+
+- Group: `all`
+- Suite: [`suite.toml`](suite.toml)
+
+Steps 8, 10, and 14 of the VM performance plan; adds the `mutable_capture` bench. Alternating
+five-run medians against the previous commit: `record_field_access` 685 -> 440 ms,
+`record_update` 157 -> 117 ms, `mutable_capture` 412 -> 343 ms, `string_search` 129 -> 110 ms,
+`wrapper_payload` 816 -> 709 ms, `string_concat` 1022 -> 960 ms. `dynamic_numeric` was slightly
+slower in a nine-run rerun (444 -> 458 ms); `closure_call` was unchanged (239 -> 241 ms).
+`compiler_lowering` stayed at 1215–1219 ms.
+
+| bench | elapsed_ms | throughput |
+|-------|------------|------------|
+| mandelbrot_render | 941 | - |
+| mandelbrot_paint | 969 | - |
+| integer_loop | 1984 | throughput: 25201612 iters/s |
+| typed_real | 479 | - |
+| typed_boolean | 309 | - |
+| typed_string | 364 | - |
+| global_access | 136 | throughput: 36764705 global updates/s |
+| record_field_access | 438 | throughput: 34246575 field accesses/s |
+| closure_call | 242 | throughput: 12396694 closure calls/s |
+| mutable_capture | 345 | throughput: 8695652 captured updates/s |
+| branch_dispatch | 1089 | throughput: 18365472 branches/s |
+| dynamic_numeric | 476 | throughput: 10504201 dynamic numeric ops/s |
+| array_push | 63 | throughput: 31746031 pushes/s |
+| array_length | 28 | throughput: 17857142 lengths/s |
+| string_concat | 977 | throughput: 5117707 concats/s |
+| string_length | 27 | throughput: 18518518 lengths/s |
+| intrinsic_dispatch | 781 | throughput: 19206145 intrinsic calls/s |
+| function_call | 416 | throughput: 14423076 calls/s |
+| array_callbacks | 817 | throughput: 11750305 callbacks/s |
+| record_update | 117 | throughput: 8547008 updates/s |
+| unicode_char_at | 419 | throughput: 7159904 chars/s |
+| wrapper_payload | 715 | throughput: 13986013 wrappers/s |
+| task_spawn_wait | 495 | throughput: 202020 tasks/s |
+| task_array_callbacks | 857 | throughput: 4480746 callbacks/s |
+| tui_headless | 2433 | throughput: 205 frames/s |
+| notes_headless | 4633 | throughput: 53 frames/s |
+| analysis_queries | 224 | - |
+| string_search | 110 | - |
+| compiler_lowering | 1225 | - |
+| substring_ascii | 9 | - |
+| substring_unicode | 12 | - |
+| project_queries | 877 | - |
+| project_edits | 2429 | - |
+| project_overlapping_queries | 557 | - |
+| project_build_cold | 1135 | - |
+| project_build_warm | 965 | - |
+| unit_artifact_shared_types | 0 | - |
+| program_artifact_shared_types | 0 | - |
+| dictionary_reads | 5 | - |
+| scalar_membership | 27 | - |
+| array_pop | 1 | - |
+| text_area_locate | 1466 | - |
+| http_body_accumulation | 102 | - |
+| local_index_write | 20 | throughput: 32000000 writes/s |
+| cell_grid_headless | 147 | throughput: 680 paints/s |
+| partial_surface_fill | 97 | - |
+| source_utf8_ascii_2048 | 10 | - |
+| source_utf8_ascii_4096 | 20 | - |
+| source_utf8_ascii_8192 | 40 | - |
+| source_utf8_unicode_2048 | 37 | - |
+| source_utf8_unicode_4096 | 74 | - |
+| source_utf8_unicode_8192 | 144 | - |
+| source_notes_ascii_128 | 4 | - |
+| source_notes_ascii_256 | 9 | - |
+| source_notes_ascii_512 | 20 | - |
+| source_queue_ascii_256 | 76 | - |
+| source_queue_ascii_512 | 151 | - |
+| source_queue_ascii_1024 | 307 | - |
+| source_navigation_long_512 | 48 | - |
+| source_navigation_long_1024 | 89 | - |
+| source_navigation_long_2048 | 173 | - |
+| source_navigation_lines_512 | 8 | - |
+| source_navigation_lines_1024 | 13 | - |
+| source_navigation_lines_2048 | 21 | - |
+
 ## 2026-09-25 — Targeted string and record hotspots and mimalloc global allocator
 
 - Group: `all`

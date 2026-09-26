@@ -98,12 +98,20 @@ impl Value {
     }
 
     /// Create a non-task-bound first-class function value.
-    pub fn function(function: crate::FunctionId, name: String, captures: Vec<Value>) -> Self {
+    pub fn function(
+        function: crate::FunctionId,
+        name: impl Into<std::sync::Arc<str>>,
+        captures: Vec<Value>,
+    ) -> Self {
         Self::Function(SharedFunction::unbound(function, name, captures))
     }
 
     /// Create a first-class method value bound to one immutable receiver snapshot.
-    pub fn bound_function(function: crate::FunctionId, name: String, receiver: Value) -> Self {
+    pub fn bound_function(
+        function: crate::FunctionId,
+        name: impl Into<std::sync::Arc<str>>,
+        receiver: Value,
+    ) -> Self {
         Self::Function(SharedFunction::bound(function, name, receiver))
     }
 
@@ -112,7 +120,7 @@ impl Value {
     /// The owner token is runtime-only and is never stored in program artifacts.
     pub fn task_owned_function(
         function: crate::FunctionId,
-        name: String,
+        name: impl Into<std::sync::Arc<str>>,
         captures: Vec<Value>,
         owner_task: u64,
     ) -> Self {

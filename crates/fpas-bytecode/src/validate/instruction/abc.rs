@@ -175,8 +175,7 @@ pub(super) fn validate_abc(
                 )
             }
         }
-        Opcode::Move
-        | Opcode::ArrayPop
+        Opcode::ArrayPop
         | Opcode::NegateInteger
         | Opcode::NegateReal
         | Opcode::NegateDynamic
@@ -201,6 +200,30 @@ pub(super) fn validate_abc(
                 &[("destination", a), ("source", b)],
             )?;
             canonical_tail(executable, function_id, address, opcode, c, auxiliary)
+        }
+        Opcode::Move => {
+            validate_registers(
+                executable,
+                function_id,
+                function,
+                address,
+                opcode,
+                &[("destination", a), ("source", b)],
+            )?;
+            canonical_u16(executable, function_id, address, opcode, "C", c, 0)?;
+            if auxiliary <= 1 {
+                Ok(())
+            } else {
+                canonical_u8(
+                    executable,
+                    function_id,
+                    address,
+                    opcode,
+                    "consume-source flag",
+                    auxiliary,
+                    1,
+                )
+            }
         }
         Opcode::LoadUnit | Opcode::MakeNone => {
             validate_register(

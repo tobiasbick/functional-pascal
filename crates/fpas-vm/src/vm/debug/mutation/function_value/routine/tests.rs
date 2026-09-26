@@ -189,7 +189,7 @@ fn complete_metadata_materializes_an_empty_capture_function() {
     .expect("routine");
     match value {
         fpas_bytecode::Value::Function(function) => {
-            assert_eq!(function.name, "addtwo");
+            assert_eq!(&*function.name, "addtwo");
             assert!(function.captures.is_empty());
             assert!(!function.task_bound);
         }
@@ -412,7 +412,7 @@ fn ambiguous_and_unknown_names_are_stable() {
     .expect("unique qualified procedure");
     match procedure {
         fpas_bytecode::Value::Function(function) => {
-            assert_eq!(function.name, "math.transform");
+            assert_eq!(&*function.name, "math.transform");
             assert!(function.captures.is_empty());
         }
         other => panic!("expected function, got {}", other.type_name()),

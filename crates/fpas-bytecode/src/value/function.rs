@@ -13,8 +13,8 @@ use std::sync::Arc;
 pub struct FunctionValue {
     /// Executable target.
     pub function: FunctionId,
-    /// Canonical runtime function name.
-    pub name: String,
+    /// Canonical runtime function name, shared with the executable's prepared name table.
+    pub name: Arc<str>,
     /// Captured values appended to arguments when invoked.
     pub captures: Vec<Value>,
     /// Receiver inserted before visible arguments for a debugger-synthesized bound method.
@@ -31,10 +31,10 @@ pub struct SharedFunction(Arc<FunctionValue>);
 
 impl SharedFunction {
     /// Create a non-task-bound function with no runtime task owner.
-    pub fn unbound(function: FunctionId, name: String, captures: Vec<Value>) -> Self {
+    pub fn unbound(function: FunctionId, name: impl Into<Arc<str>>, captures: Vec<Value>) -> Self {
         Self(Arc::new(FunctionValue {
             function,
-            name,
+            name: name.into(),
             captures,
             bound_receiver: None,
             task_bound: false,
@@ -45,13 +45,13 @@ impl SharedFunction {
     /// Create a task-bound function owned by one runtime task.
     pub fn task_owned(
         function: FunctionId,
-        name: String,
+        name: impl Into<Arc<str>>,
         captures: Vec<Value>,
         owner_task: u64,
     ) -> Self {
         Self(Arc::new(FunctionValue {
             function,
-            name,
+            name: name.into(),
             captures,
             bound_receiver: None,
             task_bound: true,
@@ -60,10 +60,10 @@ impl SharedFunction {
     }
 
     /// Create a non-task-bound method value with one receiver argument.
-    pub fn bound(function: FunctionId, name: String, receiver: Value) -> Self {
+    pub fn bound(function: FunctionId, name: impl Into<Arc<str>>, receiver: Value) -> Self {
         Self(Arc::new(FunctionValue {
             function,
-            name,
+            name: name.into(),
             captures: Vec::new(),
             bound_receiver: Some(receiver),
             task_bound: false,

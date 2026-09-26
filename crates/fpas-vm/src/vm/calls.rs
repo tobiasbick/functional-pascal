@@ -71,30 +71,13 @@ impl Worker {
             Value::Function(function) => function.task_bound,
             _ => false,
         });
-        let image = self.executable.executable();
-        let info = image
-            .functions
-            .get(usize::from(target.get()))
-            .ok_or_else(|| {
-                diagnostics::internal(
-                    image,
-                    self.current_address,
-                    "Closure target is outside the function table",
-                )
-            })?;
-        let name = image.strings.get(info.name).ok_or_else(|| {
-            diagnostics::internal(
-                image,
-                self.current_address,
-                "Closure diagnostic name is missing",
-            )
-        })?;
+        let name = self.function_name(target)?;
         self.write(
             self.call_register(operands.a)?,
             if task_bound {
-                Value::task_owned_function(target, name.to_owned(), captures, self.task_id)
+                Value::task_owned_function(target, name, captures, self.task_id)
             } else {
-                Value::function(target, name.to_owned(), captures)
+                Value::function(target, name, captures)
             },
         )
     }
@@ -107,26 +90,31 @@ impl Worker {
         )
     }
 
+    /// Copy the value held by a mutable capture cell.
+    ///
+    /// The cell is borrowed from its register rather than cloned, so an access costs one
+    /// uncontended lock instead of an extra reference-count round trip.
     pub(super) fn read_cell(&mut self, operands: AbcOperands) -> Result<(), VmError> {
-        let cell_value = self.read(self.call_register(operands.b)?)?.clone();
-        let Value::Cell(cell) = cell_value else {
-            return Err(self.operand_type_error("cell", &cell_value));
+        let value = match self.read(self.call_register(operands.b)?)? {
+            Value::Cell(cell) => cell
+                .lock()
+                .unwrap_or_else(|poisoned| poisoned.into_inner())
+                .clone(),
+            other => return Err(self.operand_type_error("cell", other)),
         };
-        let value = cell
-            .lock()
-            .unwrap_or_else(|poisoned| poisoned.into_inner())
-            .clone();
         self.write(self.call_register(operands.a)?, value)
     }
 
+    /// Replace the value held by a mutable capture cell.
     pub(super) fn write_cell(&mut self, operands: AbcOperands) -> Result<(), VmError> {
-        let cell_value = self.read(self.call_register(operands.a)?)?.clone();
         let value = self.read(self.call_register(operands.b)?)?.clone();
-        let Value::Cell(cell) = cell_value else {
-            return Err(self.operand_type_error("cell", &cell_value));
-        };
-        *cell.lock().unwrap_or_else(|poisoned| poisoned.into_inner()) = value;
-        Ok(())
+        match self.read(self.call_register(operands.a)?)? {
+            Value::Cell(cell) => {
+                *cell.lock().unwrap_or_else(|poisoned| poisoned.into_inner()) = value;
+                Ok(())
+            }
+            other => Err(self.operand_type_error("cell", other)),
+        }
     }
 
     pub(super) fn return_from_call(&mut self, value: Value) -> Result<DispatchStep, VmError> {

@@ -1,6 +1,7 @@
 //! Total active-subset IR instruction selection into checked packed instructions.
 
 mod aggregates;
+mod consuming_moves;
 mod intrinsics;
 mod local_moves;
 
@@ -46,6 +47,7 @@ impl<'a> Selector<'a> {
         }
     }
 
+    /// Select the register instructions for instruction `index` of `block`.
     pub fn select(
         &self,
         block: &fpas_ir::BasicBlock,
@@ -56,6 +58,17 @@ impl<'a> Selector<'a> {
             .instructions
             .get(index)
             .ok_or_else(|| selection_error("instruction index is outside its block"))?;
+        let words = self.select_words(block, index, instruction, metadata)?;
+        self.mark_consuming_moves(words, block.id, index, instruction)
+    }
+
+    fn select_words(
+        &self,
+        block: &fpas_ir::BasicBlock,
+        index: usize,
+        instruction: &fpas_ir::Instruction,
+        metadata: &mut MetadataBuilder,
+    ) -> Result<Vec<Instruction>, CompileError> {
         let previous = index
             .checked_sub(1)
             .and_then(|index| block.instructions.get(index));

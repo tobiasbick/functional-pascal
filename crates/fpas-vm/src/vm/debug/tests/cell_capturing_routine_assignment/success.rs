@@ -186,7 +186,7 @@ fn uninitialized_local_and_mutable_parameter_registers_accept_task_owned_routine
     let assigned_value = runtime(&apply, &name("Current"), frame);
     let assigned = as_function(&assigned_value);
     assert!(assigned.task_bound);
-    assert_eq!(assigned.name, "apply.addparam");
+    assert_eq!(&*assigned.name, "apply.addparam");
 }
 
 #[test]

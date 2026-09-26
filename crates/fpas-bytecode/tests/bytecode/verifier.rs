@@ -872,3 +872,21 @@ fn concatenation_accepts_only_the_consume_left_flag() {
         }
     }
 }
+
+#[test]
+fn move_accepts_only_the_consume_source_flag() {
+    for (auxiliary, valid) in [(0, true), (1, true), (2, false)] {
+        let mut executable = minimal_executable();
+        executable.functions[0].register_count = 2;
+        replace_root_code(
+            &mut executable,
+            vec![abc(Opcode::Move, 0, 1, 0, auxiliary), return_unit()],
+        );
+        let error = executable.verify().err().map(|error| error.kind);
+        assert_eq!(
+            matches!(error, Some(ValidationErrorKind::NonCanonicalOperand { .. })),
+            !valid,
+            "auxiliary {auxiliary}: {error:?}"
+        );
+    }
+}

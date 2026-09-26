@@ -1,6 +1,8 @@
 //! Central checked register and persistent-constant access.
 
-use fpas_bytecode::{Constant, NO_REGISTER, Register, Value};
+use std::sync::Arc;
+
+use fpas_bytecode::{Constant, FunctionId, NO_REGISTER, Register, Value};
 use fpas_diagnostics::codes::RUNTIME_VM_OPERAND_TYPE_MISMATCH;
 
 use super::VmError;
@@ -97,30 +99,28 @@ impl Worker {
                 function,
                 task_bound,
             } => {
-                let info = executable
-                    .functions
-                    .get(usize::from(function.get()))
-                    .ok_or_else(|| {
-                        diagnostics::internal(
-                            executable,
-                            self.current_address,
-                            "Function constant target is missing",
-                        )
-                    })?;
-                let name = executable.strings.get(info.name).ok_or_else(|| {
-                    diagnostics::internal(
-                        executable,
-                        self.current_address,
-                        "Function constant name is missing",
-                    )
-                })?;
+                let name = self.function_name(function)?;
                 Ok(if task_bound {
-                    Value::task_owned_function(function, name.to_owned(), Vec::new(), self.task_id)
+                    Value::task_owned_function(function, name, Vec::new(), self.task_id)
                 } else {
-                    Value::function(function, name.to_owned(), Vec::new())
+                    Value::function(function, name, Vec::new())
                 })
             }
         }
+    }
+
+    /// Share the prepared name of `function` instead of allocating one per function value.
+    pub(super) fn function_name(&self, function: FunctionId) -> Result<Arc<str>, VmError> {
+        self.executable
+            .function_name(function)
+            .cloned()
+            .ok_or_else(|| {
+                diagnostics::internal(
+                    self.executable.executable(),
+                    self.current_address,
+                    "Function value target is outside the function table",
+                )
+            })
     }
 
     fn type_error(&self, expected: &str, actual: &Value) -> VmError {

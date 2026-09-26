@@ -1,5 +1,7 @@
 //! Untrusted and verified register executable aggregates.
 
+use std::sync::Arc;
+
 use crate::{
     Constant, DebugType, DecodedInstruction, EnumLayout, EnumVariant, FunctionId, FunctionInfo,
     GlobalInfo, Instruction, InstructionAddress, RecordLayout, SharedStr, SourceMap, StringTable,
@@ -63,10 +65,16 @@ impl Executable {
                 _ => None,
             })
             .collect();
+        let function_names = self
+            .functions
+            .iter()
+            .map(|function| Arc::from(self.strings.get(function.name).unwrap_or_default()))
+            .collect();
         Ok(VerifiedExecutable {
             executable: self,
             decoded,
             string_constants,
+            function_names,
         })
     }
 }
@@ -78,6 +86,8 @@ pub struct VerifiedExecutable {
     decoded: Vec<DecodedInstruction>,
     // Shared runtime strings for string constants, indexed like `Executable::constants`.
     string_constants: Vec<Option<SharedStr>>,
+    // Shared diagnostic names for first-class function values, indexed by `FunctionId`.
+    function_names: Vec<Arc<str>>,
 }
 
 impl VerifiedExecutable {
@@ -99,6 +109,12 @@ impl VerifiedExecutable {
     #[must_use]
     pub fn string_constant(&self, index: usize) -> Option<&SharedStr> {
         self.string_constants.get(index).and_then(Option::as_ref)
+    }
+
+    /// Borrow the shared name that first-class values of `function` carry.
+    #[must_use]
+    pub fn function_name(&self, function: FunctionId) -> Option<&Arc<str>> {
+        self.function_names.get(usize::from(function.get()))
     }
 
     /// Consume the proof wrapper and return the untrusted candidate representation.

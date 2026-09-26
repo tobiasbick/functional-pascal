@@ -144,6 +144,23 @@ impl Allocation {
         self.final_reads.contains(&(block, index, value))
     }
 
+    /// Registers of temporaries that `instruction` (at `index` in `block`) reads exactly once and
+    /// for the last time, so a move out of them may transfer the value instead of cloning it.
+    pub fn consumable_registers(
+        &self,
+        block: BlockId,
+        index: usize,
+        instruction: &fpas_ir::Instruction,
+    ) -> Vec<u16> {
+        let operands = operation_values(&instruction.operation);
+        operands
+            .iter()
+            .filter(|value| operands.iter().filter(|other| other == value).count() == 1)
+            .filter(|value| self.is_final_read(**value, block, index))
+            .filter_map(|value| self.values.get(value).map(|register| register.get()))
+            .collect()
+    }
+
     pub fn call_window(&self) -> Register {
         self.call_window
     }

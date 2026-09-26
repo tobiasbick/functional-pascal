@@ -68,6 +68,13 @@ args = ["3000000"]
 timeout_ms = 120000
 
 [[bench]]
+id = "mutable_capture"
+group = "vm"
+path = "examples/pascal/vm/mutable_capture_benchmark.fpas"
+args = ["3000000"]
+timeout_ms = 120000
+
+[[bench]]
 id = "branch_dispatch"
 group = "vm"
 path = "examples/pascal/vm/branch_dispatch_benchmark.fpas"

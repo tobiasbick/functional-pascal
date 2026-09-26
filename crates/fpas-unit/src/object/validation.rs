@@ -46,7 +46,9 @@ pub(super) fn relocation_category(
         Opcode::Jump | Opcode::BranchIfFalse | Opcode::BranchIfTrue => {
             Some(RelocationCategory::CodeAddress)
         }
-        Opcode::CallDirect | Opcode::MakeClosure => Some(RelocationCategory::Function),
+        Opcode::CallDirect | Opcode::TailCall | Opcode::MakeClosure => {
+            Some(RelocationCategory::Function)
+        }
         Opcode::LoadGlobal | Opcode::StoreGlobal | Opcode::StoreGlobalIndexPath => {
             Some(RelocationCategory::Global)
         }

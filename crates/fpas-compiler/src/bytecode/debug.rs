@@ -2,20 +2,21 @@
 
 use fpas_bytecode::{
     DebugBinding, DebugBindingKind, DebugScope, DebugSourceLocation, DebugType, DebugTypeId,
-    EnumTypeId, FunctionDebugInfo, InstructionAddress, RecordTypeId, SequencePoint, SourceId,
+    EnumTypeId, FunctionDebugInfo, RecordTypeId, SequencePoint, SourceId,
 };
-use fpas_ir::{BlockId, Function, IrType, Program, TypeId};
+use fpas_ir::{Function, IrType, Program, TypeId};
 
 use crate::CompileError;
 
 use super::allocation::Allocation;
+use super::function::InstructionPoint;
 use super::metadata::MetadataBuilder;
 
 pub(super) fn compile_debug_info(
     program: &Program,
     function: &Function,
     allocation: &Allocation,
-    point_addresses: &[(BlockId, usize, InstructionAddress)],
+    points: &[InstructionPoint],
     metadata: &mut MetadataBuilder,
 ) -> Result<FunctionDebugInfo, CompileError> {
     let scopes = function
@@ -50,13 +51,14 @@ pub(super) fn compile_debug_info(
                 initializer: binding
                     .initializer
                     .map(|initializer| {
-                        point_addresses
+                        points
                             .iter()
-                            .find(|(block, instruction, _)| {
-                                *block == initializer.block
-                                    && *instruction == initializer.instruction
+                            .find(|point| {
+                                point.emitted
+                                    && point.block == initializer.block
+                                    && point.instruction == initializer.instruction
                             })
-                            .map(|(_, _, address)| *address)
+                            .map(|point| point.address)
                             .ok_or_else(|| {
                                 super::compile_error(
                                     "debug binding initializer has no emitted store instruction",
@@ -67,21 +69,29 @@ pub(super) fn compile_debug_info(
             })
         })
         .collect::<Result<Vec<_>, CompileError>>()?;
-    let sequence_points = point_addresses
-        .iter()
-        .filter_map(|(block, instruction, address)| {
-            function
-                .debug
-                .sequence_points
-                .iter()
-                .find(|point| point.block == *block && point.instruction == *instruction)
-                .map(|point| SequencePoint {
-                    instruction: *address,
-                    location: location(point.source),
-                    scope: point.scope,
-                })
-        })
-        .collect();
+    let mut sequence_points: Vec<SequencePoint> = Vec::new();
+    for emitted in points {
+        let Some(point) =
+            function.debug.sequence_points.iter().find(|point| {
+                point.block == emitted.block && point.instruction == emitted.instruction
+            })
+        else {
+            continue;
+        };
+        // A forwarded read shares the address of the word that consumes it; the first point at
+        // an address wins because it belongs to the earliest source position of that word.
+        if sequence_points
+            .last()
+            .is_some_and(|previous| previous.instruction == emitted.address)
+        {
+            continue;
+        }
+        sequence_points.push(SequencePoint {
+            instruction: emitted.address,
+            location: location(point.source),
+            scope: point.scope,
+        });
+    }
     let lexical_owner = function
         .debug
         .lexical_owner

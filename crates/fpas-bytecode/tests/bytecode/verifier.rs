@@ -599,6 +599,8 @@ fn function_ranges_partitions_and_frames_are_rejected() {
     frame.functions[1].arity = 1;
     let direct_call = opcode_index(&frame, Opcode::CallDirect);
     frame.code[direct_call] = abc(Opcode::CallDirect, NO_REGISTER, 1, 0, 1);
+    let tail_call = opcode_index(&frame, Opcode::TailCall);
+    frame.code[tail_call] = abc(Opcode::TailCall, NO_REGISTER, 1, 0, 1);
     assert!(matches!(
         error_kind(frame),
         ValidationErrorKind::FrameWindow { .. }
@@ -889,4 +891,22 @@ fn move_accepts_only_the_consume_source_flag() {
             "auxiliary {auxiliary}: {error:?}"
         );
     }
+}
+
+#[test]
+fn tail_calls_require_a_following_return_of_their_result() {
+    let mut executable = minimal_executable();
+    executable.functions[0].register_count = 1;
+    replace_root_code(
+        &mut executable,
+        vec![
+            abc(Opcode::TailCall, fpas_bytecode::NO_REGISTER, 0, 0, 0),
+            abc(Opcode::LoadUnit, 0, 0, 0, 0),
+            return_unit(),
+        ],
+    );
+    assert!(matches!(
+        error_kind(executable),
+        ValidationErrorKind::SuperinstructionPayload { .. }
+    ));
 }

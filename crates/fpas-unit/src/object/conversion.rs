@@ -42,9 +42,9 @@ pub(super) fn relocation_for_instruction(
         Opcode::StoreGlobalIndexPath => Some(RelocationKind::Global(SymbolReference::Local(
             u32::from(operands.b),
         ))),
-        Opcode::CallDirect | Opcode::MakeClosure => Some(RelocationKind::Function(
-            SymbolReference::Local(u32::from(operands.b)),
-        )),
+        Opcode::CallDirect | Opcode::TailCall | Opcode::MakeClosure => Some(
+            RelocationKind::Function(SymbolReference::Local(u32::from(operands.b))),
+        ),
         Opcode::MakeRecord => Some(RelocationKind::Record(SymbolReference::Local(u32::from(
             operands.b,
         )))),

@@ -47,7 +47,8 @@ end.",
     let executable = crate::compile(&program).expect("compiler compilation should succeed");
     let image = executable.executable();
 
-    assert_eq!(image.code.len(), 8);
+    // Local reads use the local registers directly, so `B := A + B` is one AddInteger.
+    assert_eq!(image.code.len(), 6);
     let add = image
         .code
         .iter()
@@ -167,7 +168,7 @@ fn string_ordering_uses_typed_opcodes() {
 }
 
 #[test]
-fn string_append_consumes_dead_left_temporaries() {
+fn string_append_reuses_dead_left_operands() {
     let source = "program Append; begin mutable var S: string := ''; for I: integer := 1 to 3 do S := S + 'x'; var T: string := ('a' + S) + 'b'; if T <> 'axxxb' then panic('wrong') end.";
     let program = parse_ok(source);
     let executable = crate::compile(&program).expect("string append compiles");
@@ -179,10 +180,11 @@ fn string_append_consumes_dead_left_temporaries() {
         .collect::<Vec<_>>();
     assert!(!concatenations.is_empty());
     assert!(
-        concatenations
-            .iter()
-            .all(|word| word.abc_payload().auxiliary == 1),
-        "every left operand here is a temporary read for the last time"
+        concatenations.iter().all(|word| {
+            let operands = word.abc_payload();
+            operands.auxiliary == 1 || operands.a == operands.b
+        }),
+        "each left operand is a dying temporary or the destination local itself"
     );
     assert_succeeds(source);
 }

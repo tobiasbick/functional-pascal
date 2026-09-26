@@ -15,4 +15,7 @@ pub(super) struct CallFrame {
     pub ip: usize,
     pub base: usize,
     pub return_destination: Option<usize>,
+    /// Caller's active register count at the call; restored on return because an overlapping
+    /// callee frame starts inside the caller's argument window.
+    pub frame_end: usize,
 }

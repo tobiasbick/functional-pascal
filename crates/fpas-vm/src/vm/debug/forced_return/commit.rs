@@ -34,6 +34,7 @@ pub(in crate::vm::debug) fn apply_prepared(
 ) {
     worker.call_stack.truncate(prepared.new_call_stack_len);
     worker.release_registers(prepared.selected_base);
+    worker.restore_caller_window(&prepared.caller);
     worker.function = prepared.caller.function;
     worker.ip = prepared.caller.ip;
     worker.base = prepared.caller.base;

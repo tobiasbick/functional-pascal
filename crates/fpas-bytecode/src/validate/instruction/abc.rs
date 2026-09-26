@@ -275,7 +275,7 @@ pub(super) fn validate_abc(
             canonical_u16(executable, function_id, address, opcode, "B", b, 0)?;
             canonical_tail(executable, function_id, address, opcode, c, auxiliary)
         }
-        Opcode::CallDirect => validate_call(
+        Opcode::CallDirect | Opcode::TailCall => validate_call(
             executable,
             function_id,
             function,

@@ -2,6 +2,8 @@
 
 mod branches;
 mod immediates;
+mod tail_calls;
 
 pub(super) use branches::fuse_integer_branch;
-pub(super) use immediates::integer_immediate;
+pub(crate) use immediates::integer_immediate;
+pub(super) use tail_calls::convert_tail_call;

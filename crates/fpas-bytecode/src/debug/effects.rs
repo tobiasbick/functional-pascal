@@ -83,7 +83,7 @@ pub fn analyze_debug_effects(executable: &VerifiedExecutable) -> Vec<FunctionEff
                 continue;
             };
             match opcode {
-                Opcode::CallDirect => match instruction.abc_operands() {
+                Opcode::CallDirect | Opcode::TailCall => match instruction.abc_operands() {
                     Ok(operands) => edges[index].push(usize::from(operands.b)),
                     Err(_) => local[index] = local[index].union(DebugEffectSet::UNKNOWN),
                 },

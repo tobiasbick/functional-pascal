@@ -1,4 +1,7 @@
-//! Numeric calls, frame transitions, closures, and mutable capture cells.
+//! Numeric calls and frame transitions.
+
+mod closures;
+mod tail_call;
 
 use std::sync::{Arc, Mutex};
 
@@ -14,7 +17,7 @@ use super::{VmError, diagnostics};
 
 struct PreparedCall {
     target: FunctionId,
-    new_register_count: usize,
+    frame_size: usize,
     return_destination: Option<usize>,
     instruction_pointer: usize,
     argument_count: usize,
@@ -63,66 +66,13 @@ impl Worker {
         ))
     }
 
-    pub(super) fn make_closure(&mut self, operands: AbcOperands) -> Result<(), VmError> {
-        let target = FunctionId::new(operands.b);
-        let captures = self.clone_window(operands.c, operands.auxiliary)?;
-        let task_bound = captures.iter().any(|capture| match capture {
-            Value::Cell(_) => true,
-            Value::Function(function) => function.task_bound,
-            _ => false,
-        });
-        let name = self.function_name(target)?;
-        self.write(
-            self.call_register(operands.a)?,
-            if task_bound {
-                Value::task_owned_function(target, name, captures, self.task_id)
-            } else {
-                Value::function(target, name, captures)
-            },
-        )
-    }
-
-    pub(super) fn make_cell(&mut self, operands: AbcOperands) -> Result<(), VmError> {
-        let value = self.read(self.call_register(operands.b)?)?.clone();
-        self.write(
-            self.call_register(operands.a)?,
-            Value::Cell(Arc::new(Mutex::new(value))),
-        )
-    }
-
-    /// Copy the value held by a mutable capture cell.
-    ///
-    /// The cell is borrowed from its register rather than cloned, so an access costs one
-    /// uncontended lock instead of an extra reference-count round trip.
-    pub(super) fn read_cell(&mut self, operands: AbcOperands) -> Result<(), VmError> {
-        let value = match self.read(self.call_register(operands.b)?)? {
-            Value::Cell(cell) => cell
-                .lock()
-                .unwrap_or_else(|poisoned| poisoned.into_inner())
-                .clone(),
-            other => return Err(self.operand_type_error("cell", other)),
-        };
-        self.write(self.call_register(operands.a)?, value)
-    }
-
-    /// Replace the value held by a mutable capture cell.
-    pub(super) fn write_cell(&mut self, operands: AbcOperands) -> Result<(), VmError> {
-        let value = self.read(self.call_register(operands.b)?)?.clone();
-        match self.read(self.call_register(operands.a)?)? {
-            Value::Cell(cell) => {
-                *cell.lock().unwrap_or_else(|poisoned| poisoned.into_inner()) = value;
-                Ok(())
-            }
-            other => Err(self.operand_type_error("cell", other)),
-        }
-    }
-
     pub(super) fn return_from_call(&mut self, value: Value) -> Result<DispatchStep, VmError> {
         let callback_return = self.callback_accepts_return();
         let Some(frame) = self.call_stack.pop() else {
             return Ok(DispatchStep::Return(value));
         };
         self.release_registers(self.base);
+        self.restore_caller_window(&frame);
         self.function = frame.function;
         self.ip = frame.ip;
         self.base = frame.base;
@@ -167,15 +117,27 @@ impl Worker {
             usize::from(argument_count).saturating_add(prefix_arguments.len());
         let prepared =
             self.prepare_call(target, destination, actual_argument_count, captures.len())?;
-        self.activate_call(&prepared);
-        for (index, value) in prefix_arguments.iter().enumerate() {
-            self.store_register(self.base + index, value.clone())?;
-        }
-        for (index, source) in (argument_start..argument_end).enumerate() {
-            self.store_register(
-                self.base + prefix_arguments.len() + index,
-                self.registers[source].clone(),
-            )?;
+        // Arguments that end the caller's frame already sit where the callee's parameters go:
+        // the callee frame starts on them instead of copying (overlapping register windows).
+        let overlapping = prefix_arguments.is_empty()
+            && argument_count > 0
+            && argument_end == self.active_register_count();
+        let callee_base = if overlapping {
+            argument_start
+        } else {
+            self.active_register_count()
+        };
+        self.activate_call(&prepared, callee_base)?;
+        if !overlapping {
+            for (index, value) in prefix_arguments.iter().enumerate() {
+                self.store_register(self.base + index, value.clone())?;
+            }
+            for (index, source) in (argument_start..argument_end).enumerate() {
+                self.store_register(
+                    self.base + prefix_arguments.len() + index,
+                    self.registers[source].clone(),
+                )?;
+            }
         }
         for (index, value) in captures.iter().enumerate() {
             self.store_register(self.base + prepared.argument_count + index, value.clone())?;
@@ -200,7 +162,7 @@ impl Worker {
             argument_count,
             function.captures.len(),
         )?;
-        self.activate_call(&prepared);
+        self.activate_call(&prepared, self.active_register_count())?;
         let mut next = 0;
         if let Some(receiver) = &function.bound_receiver {
             self.store_register(self.base, receiver.clone())?;
@@ -265,19 +227,6 @@ impl Worker {
             ));
         }
         let frame_size = usize::from(info.register_count);
-        let new_register_count = self
-            .active_register_count()
-            .checked_add(frame_size)
-            .filter(|len| *len <= MAX_REGISTER_SLOTS)
-            .ok_or_else(|| {
-                diagnostics::at_address(
-                    image,
-                    self.current_address,
-                    RUNTIME_INTRINSIC_STACK_STATE_ERROR,
-                    "Register stack overflow",
-                    "Reduce recursion depth or the number of live registers per function.",
-                )
-            })?;
         let return_destination = if destination == fpas_bytecode::NO_REGISTER {
             None
         } else {
@@ -292,22 +241,48 @@ impl Worker {
         })?;
         Ok(PreparedCall {
             target,
-            new_register_count,
+            frame_size,
             return_destination,
             instruction_pointer,
             argument_count,
         })
     }
 
-    fn activate_call(&mut self, prepared: &PreparedCall) {
+    /// Push the caller frame and activate the callee frame starting at `callee_base`.
+    fn activate_call(
+        &mut self,
+        prepared: &PreparedCall,
+        callee_base: usize,
+    ) -> Result<(), VmError> {
+        let frame_end = callee_base
+            .checked_add(prepared.frame_size)
+            .filter(|end| *end <= MAX_REGISTER_SLOTS)
+            .ok_or_else(|| {
+                diagnostics::at_address(
+                    self.executable.executable(),
+                    self.current_address,
+                    RUNTIME_INTRINSIC_STACK_STATE_ERROR,
+                    "Register stack overflow",
+                    "Reduce recursion depth or the number of live registers per function.",
+                )
+            })?;
         self.call_stack.push(CallFrame {
             function: self.function,
             ip: self.ip,
             base: self.base,
             return_destination: prepared.return_destination,
+            frame_end: self.active_register_count(),
         });
-        self.base = self.active_register_count();
-        self.activate_registers(prepared.new_register_count);
+        self.base = callee_base;
+        self.activate_registers(frame_end);
+        Ok(())
+    }
+
+    /// Re-activate caller registers that an overlapping callee frame released on return.
+    pub(super) fn restore_caller_window(&mut self, frame: &CallFrame) {
+        if self.active_register_count() < frame.frame_end {
+            self.activate_registers(frame.frame_end);
+        }
     }
 
     pub(super) fn clone_window(&self, base: u16, count: u8) -> Result<Vec<Value>, VmError> {

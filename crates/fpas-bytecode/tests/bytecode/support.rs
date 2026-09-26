@@ -75,6 +75,7 @@ pub fn all_opcodes_executable() -> Executable {
                 code.push(abx(Opcode::Jump, 0, address));
                 code.push(abx(Opcode::Jump, 0, address));
             }
+            Opcode::TailCall => code.push(return_unit()),
             _ => {}
         }
     }
@@ -211,7 +212,7 @@ fn valid_instruction(opcode: Opcode, next_address: u32) -> Instruction {
         Opcode::CellWrite => abc(opcode, 0, 1, 0, 0),
         Opcode::Return => return_unit(),
         Opcode::Panic => abc(opcode, 0, 0, 0, 0),
-        Opcode::CallDirect => abc(opcode, NO_REGISTER, 1, 0, 0),
+        Opcode::CallDirect | Opcode::TailCall => abc(opcode, NO_REGISTER, 1, 0, 0),
         Opcode::CallValue => abc(opcode, NO_REGISTER, 0, 0, 0),
         Opcode::MakeClosure => abc(opcode, 0, 1, 0, 0),
         Opcode::MakeArray | Opcode::MakeDictionary => abc(opcode, 0, 0, 0, 0),

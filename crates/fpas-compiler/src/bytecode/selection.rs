@@ -4,6 +4,9 @@ mod aggregates;
 mod consuming_moves;
 mod intrinsics;
 mod local_moves;
+mod operators;
+
+use self::operators::unary_opcode;
 
 use std::collections::BTreeMap;
 
@@ -80,6 +83,11 @@ impl<'a> Selector<'a> {
             return Ok(selected);
         }
         let selected = match &instruction.operation {
+            Operation::Const(_)
+                if result.is_some_and(|result| self.allocation.is_dead_constant(result)) =>
+            {
+                return Ok(Vec::new());
+            }
             Operation::Const(constant) => {
                 let destination = self.result_register(result)?;
                 if let Some(constant) = metadata.constant(constant)? {
@@ -117,7 +125,10 @@ impl<'a> Selector<'a> {
                     opcode,
                     self.result_register(result)?,
                     self.allocation.value(*left)?.get(),
-                    immediate.map_or(self.allocation.value(*right)?.get(), |value| value as u16),
+                    match immediate {
+                        Some(value) => value as u16,
+                        None => self.allocation.value(*right)?.get(),
+                    },
                     u8::from(consumes_left),
                 )
             }
@@ -267,7 +278,14 @@ impl<'a> Selector<'a> {
         &self,
         values: &[ValueId],
     ) -> Result<Vec<Instruction>, CompileError> {
-        let base = self.allocation.call_window().get();
+        self.prepare_window_at(self.allocation.call_window().get(), values)
+    }
+
+    fn prepare_window_at(
+        &self,
+        base: u16,
+        values: &[ValueId],
+    ) -> Result<Vec<Instruction>, CompileError> {
         values
             .iter()
             .enumerate()
@@ -295,81 +313,18 @@ impl<'a> Selector<'a> {
         if let [value] = values {
             return Ok((Vec::new(), self.allocation.value(*value)?.get()));
         }
-        Ok((
-            self.prepare_window(values)?,
-            self.allocation.call_window().get(),
-        ))
-    }
-
-    fn binary_opcode(
-        &self,
-        operation: BinaryOperation,
-        left: ValueId,
-    ) -> Result<Opcode, CompileError> {
-        let direct = match operation {
-            BinaryOperation::AddInteger => Some(Opcode::AddInteger),
-            BinaryOperation::SubtractInteger => Some(Opcode::SubtractInteger),
-            BinaryOperation::MultiplyInteger => Some(Opcode::MultiplyInteger),
-            BinaryOperation::DivideInteger => Some(Opcode::DivideInteger),
-            BinaryOperation::RemainderInteger => Some(Opcode::RemainderInteger),
-            BinaryOperation::AddReal => Some(Opcode::AddReal),
-            BinaryOperation::SubtractReal => Some(Opcode::SubtractReal),
-            BinaryOperation::MultiplyReal => Some(Opcode::MultiplyReal),
-            BinaryOperation::DivideReal => Some(Opcode::DivideReal),
-            BinaryOperation::AddDynamic => Some(Opcode::AddDynamic),
-            BinaryOperation::SubtractDynamic => Some(Opcode::SubtractDynamic),
-            BinaryOperation::MultiplyDynamic => Some(Opcode::MultiplyDynamic),
-            BinaryOperation::DivideDynamic => Some(Opcode::DivideDynamic),
-            BinaryOperation::LessThanInteger => Some(Opcode::LessInteger),
-            BinaryOperation::GreaterThanInteger => Some(Opcode::GreaterInteger),
-            BinaryOperation::LessEqualInteger => Some(Opcode::LessEqualInteger),
-            BinaryOperation::GreaterEqualInteger => Some(Opcode::GreaterEqualInteger),
-            BinaryOperation::LessThanReal => Some(Opcode::LessReal),
-            BinaryOperation::GreaterThanReal => Some(Opcode::GreaterReal),
-            BinaryOperation::LessEqualReal => Some(Opcode::LessEqualReal),
-            BinaryOperation::GreaterEqualReal => Some(Opcode::GreaterEqualReal),
-            BinaryOperation::LessThanString => Some(Opcode::LessString),
-            BinaryOperation::GreaterThanString => Some(Opcode::GreaterString),
-            BinaryOperation::LessEqualString => Some(Opcode::LessEqualString),
-            BinaryOperation::GreaterEqualString => Some(Opcode::GreaterEqualString),
-            BinaryOperation::LessThanDynamic => Some(Opcode::LessDynamic),
-            BinaryOperation::GreaterThanDynamic => Some(Opcode::GreaterDynamic),
-            BinaryOperation::LessEqualDynamic => Some(Opcode::LessEqualDynamic),
-            BinaryOperation::GreaterEqualDynamic => Some(Opcode::GreaterEqualDynamic),
-            BinaryOperation::AndBoolean => Some(Opcode::AndBoolean),
-            BinaryOperation::OrBoolean => Some(Opcode::OrBoolean),
-            BinaryOperation::ConcatString => Some(Opcode::ConcatString),
-            BinaryOperation::ShiftLeftInteger => Some(Opcode::ShiftLeftInteger),
-            BinaryOperation::ShiftRightInteger => Some(Opcode::ShiftRightInteger),
-            BinaryOperation::BitAndInteger => Some(Opcode::BitAndInteger),
-            BinaryOperation::BitOrInteger => Some(Opcode::BitOrInteger),
-            BinaryOperation::BitXorInteger => Some(Opcode::BitXorInteger),
-            BinaryOperation::Equal | BinaryOperation::NotEqual => None,
-        };
-        if let Some(opcode) = direct {
-            return Ok(opcode);
-        }
-        let ty = self
-            .value_types
-            .get(&left)
-            .and_then(|ty| self.program.ty(*ty))
-            .map(|definition| &definition.kind)
-            .ok_or_else(|| selection_error("equality operand type is missing"))?;
-        let equal = operation == BinaryOperation::Equal;
-        match (ty, equal) {
-            (IrType::Integer, true) => Ok(Opcode::EqualInteger),
-            (IrType::Integer, false) => Ok(Opcode::NotEqualInteger),
-            (IrType::Real, true) => Ok(Opcode::EqualReal),
-            (IrType::Real, false) => Ok(Opcode::NotEqualReal),
-            (IrType::Boolean, true) => Ok(Opcode::EqualBoolean),
-            (IrType::Boolean, false) => Ok(Opcode::NotEqualBoolean),
-            (IrType::String, true) => Ok(Opcode::EqualString),
-            (IrType::String, false) => Ok(Opcode::NotEqualString),
-            (IrType::Dynamic, true) => Ok(Opcode::EqualDynamic),
-            (IrType::Dynamic, false) => Ok(Opcode::NotEqualDynamic),
-            (_, true) => Ok(Opcode::EqualDynamic),
-            (_, false) => Ok(Opcode::NotEqualDynamic),
-        }
+        // Arguments end at the frame's last register, so the VM can start the callee frame on
+        // them instead of copying (overlapping register windows).
+        let base = self
+            .allocation
+            .register_count
+            .checked_sub(
+                u16::try_from(values.len())
+                    .map_err(|_| selection_error("call argument count exceeds u16"))?,
+            )
+            .filter(|base| *base >= self.allocation.call_window().get())
+            .ok_or_else(|| selection_error("call arguments exceed the call window"))?;
+        Ok((self.prepare_window_at(base, values)?, base))
     }
 
     pub(super) fn result_register(&self, result: Option<ValueId>) -> Result<u16, CompileError> {
@@ -383,16 +338,6 @@ fn narrow(value: impl TryInto<u16>, kind: &str) -> Result<u16, CompileError> {
     value
         .try_into()
         .map_err(|_| selection_error(&format!("{kind} identifier exceeds u16")))
-}
-
-fn unary_opcode(operation: UnaryOperation) -> Opcode {
-    match operation {
-        UnaryOperation::NegateInteger => Opcode::NegateInteger,
-        UnaryOperation::NegateReal => Opcode::NegateReal,
-        UnaryOperation::NegateDynamic => Opcode::NegateDynamic,
-        UnaryOperation::NotBoolean => Opcode::NotBoolean,
-        UnaryOperation::IntegerToReal => Opcode::IntegerToReal,
-    }
 }
 
 pub(super) fn abc(opcode: Opcode, a: u16, b: u16, c: u16) -> Result<Instruction, CompileError> {

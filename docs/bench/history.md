@@ -14,6 +14,86 @@ cargo bench-fpas record "vm-only note" --group vm
 
 Newest entries are prepended below this header.
 
+## 2026-09-26 — IR optimization passes, tail calls, and overlapping call windows
+
+- Group: `all`
+- Suite: [`suite.toml`](suite.toml)
+
+Steps 11, 12, and 13 of the VM performance plan. Alternating three-run medians against the
+previous commit: `integer_loop` 1583 -> 1001 ms, `branch_dispatch` 1115 -> 652 ms,
+`function_call` 414 -> 293 ms, `closure_call` 243 -> 177 ms, `typed_real` 450 -> 210 ms,
+`typed_string` 364 -> 134 ms, `record_update` 117 -> 76 ms, `tui_headless` 2411 -> 1849 ms,
+`notes_headless` 4676 -> 3552 ms. `task_spawn_wait` regressed in a nine-run rerun
+(458 -> 495 ms); its kernel is a trivial task body, so it mostly measures task scheduling.
+`compiler_lowering` stayed at 1169–1223 ms.
+
+| bench | elapsed_ms | throughput |
+|-------|------------|------------|
+| mandelbrot_render | 902 | - |
+| mandelbrot_paint | 887 | - |
+| integer_loop | 1032 | throughput: 48449612 iters/s |
+| typed_real | 208 | - |
+| typed_boolean | 230 | - |
+| typed_string | 131 | - |
+| global_access | 116 | throughput: 43103448 global updates/s |
+| record_field_access | 307 | throughput: 48859934 field accesses/s |
+| closure_call | 176 | throughput: 17045454 closure calls/s |
+| mutable_capture | 238 | throughput: 12605042 captured updates/s |
+| branch_dispatch | 652 | throughput: 30674846 branches/s |
+| dynamic_numeric | 355 | throughput: 14084507 dynamic numeric ops/s |
+| array_push | 54 | throughput: 37037037 pushes/s |
+| array_length | 21 | throughput: 23809523 lengths/s |
+| string_concat | 895 | throughput: 5586592 concats/s |
+| string_length | 20 | throughput: 25000000 lengths/s |
+| intrinsic_dispatch | 604 | throughput: 24834437 intrinsic calls/s |
+| function_call | 291 | throughput: 20618556 calls/s |
+| array_callbacks | 759 | throughput: 12648221 callbacks/s |
+| record_update | 77 | throughput: 12987012 updates/s |
+| unicode_char_at | 350 | throughput: 8571428 chars/s |
+| wrapper_payload | 611 | throughput: 16366612 wrappers/s |
+| task_spawn_wait | 498 | throughput: 200803 tasks/s |
+| task_array_callbacks | 697 | throughput: 5509325 callbacks/s |
+| tui_headless | 1828 | throughput: 273 frames/s |
+| notes_headless | 3557 | throughput: 70 frames/s |
+| analysis_queries | 226 | - |
+| string_search | 78 | - |
+| compiler_lowering | 1175 | - |
+| substring_ascii | 6 | - |
+| substring_unicode | 11 | - |
+| project_queries | 867 | - |
+| project_edits | 2425 | - |
+| project_overlapping_queries | 596 | - |
+| project_build_cold | 1190 | - |
+| project_build_warm | 952 | - |
+| unit_artifact_shared_types | 0 | - |
+| program_artifact_shared_types | 0 | - |
+| dictionary_reads | 4 | - |
+| scalar_membership | 27 | - |
+| array_pop | 1 | - |
+| text_area_locate | 1137 | - |
+| http_body_accumulation | 119 | - |
+| local_index_write | 15 | throughput: 42666666 writes/s |
+| cell_grid_headless | 102 | throughput: 980 paints/s |
+| partial_surface_fill | 62 | - |
+| source_utf8_ascii_2048 | 7 | - |
+| source_utf8_ascii_4096 | 16 | - |
+| source_utf8_ascii_8192 | 31 | - |
+| source_utf8_unicode_2048 | 27 | - |
+| source_utf8_unicode_4096 | 54 | - |
+| source_utf8_unicode_8192 | 107 | - |
+| source_notes_ascii_128 | 3 | - |
+| source_notes_ascii_256 | 7 | - |
+| source_notes_ascii_512 | 16 | - |
+| source_queue_ascii_256 | 60 | - |
+| source_queue_ascii_512 | 119 | - |
+| source_queue_ascii_1024 | 239 | - |
+| source_navigation_long_512 | 37 | - |
+| source_navigation_long_1024 | 69 | - |
+| source_navigation_long_2048 | 134 | - |
+| source_navigation_lines_512 | 7 | - |
+| source_navigation_lines_1024 | 11 | - |
+| source_navigation_lines_2048 | 18 | - |
+
 ## 2026-09-26 — Shared function names, moved dead temporaries, and cell access without reference round trips
 
 - Group: `all`

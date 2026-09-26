@@ -14,6 +14,7 @@ mod error;
 mod intrinsic_catalog;
 mod lowering;
 mod object;
+mod optimize;
 
 pub use error::CompileError;
 pub use lowering::lower;
@@ -33,7 +34,7 @@ pub use object::{
 /// construction/verifier diagnostic represented as an internal compiler failure.
 pub fn compile(program: &Program) -> Result<fpas_bytecode::VerifiedExecutable, Vec<CompileError>> {
     let ir = lower(program)?;
-    bytecode::compile_program(&ir).map_err(|error| vec![error])
+    bytecode::compile_program(ir).map_err(|error| vec![error])
 }
 
 /// Compile one root program into a relocatable object.

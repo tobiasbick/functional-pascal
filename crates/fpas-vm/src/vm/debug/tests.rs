@@ -458,6 +458,7 @@ mod quiescence;
 mod recording;
 mod selection;
 mod supervision;
+mod tail_calls;
 mod task_control;
 mod task_groups;
 mod task_handle_assignment;

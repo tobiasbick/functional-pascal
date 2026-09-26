@@ -65,7 +65,7 @@ pub fn compile_unit_object_with_support(
     };
     let lowered = crate::lowering::lower_unit(unit, interfaces, supporting_interfaces)?;
     let executable =
-        crate::bytecode::compile_program(&lowered.program).map_err(|error| vec![error])?;
+        crate::bytecode::compile_program(lowered.program).map_err(|error| vec![error])?;
     let owner = unit.name.parts.join(".").to_ascii_lowercase();
     let mut object = RelocatableObject::from_executable(&owner, executable)
         .map_err(|error| object_error(unit.span, error))?;
@@ -101,7 +101,7 @@ pub fn compile_program_object_with_support(
     let lowered =
         crate::lowering::lower_program_with_support(program, interfaces, supporting_interfaces)?;
     let executable =
-        crate::bytecode::compile_program(&lowered.program).map_err(|error| vec![error])?;
+        crate::bytecode::compile_program(lowered.program).map_err(|error| vec![error])?;
     let mut object = RelocatableObject::from_executable(&program.name, executable)
         .map_err(|error| object_error(program.span, error))?;
     apply_imports(&mut object, lowered.imports)

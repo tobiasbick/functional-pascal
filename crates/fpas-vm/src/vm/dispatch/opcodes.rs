@@ -225,6 +225,10 @@ impl Worker {
                 ));
             }
             Opcode::CallDirect => self.call_direct(instruction.abc())?,
+            // Debugger-owned workers keep every frame; the following Return word then returns
+            // the callee's result as an ordinary call would.
+            Opcode::TailCall if self.debug_tasks => self.call_direct(instruction.abc())?,
+            Opcode::TailCall => self.tail_call(instruction.abc())?,
             Opcode::CallValue => self.call_value(instruction.abc())?,
             Opcode::MakeClosure => self.make_closure(instruction.abc())?,
             Opcode::MakeCell => self.make_cell(instruction.abc())?,

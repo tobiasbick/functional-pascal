@@ -42,6 +42,25 @@ pub(super) fn validate_superinstruction_payload(
             }
             "two jump targets"
         }
+        Opcode::TailCall => {
+            let head = executable.code[address.get() as usize].abc_payload();
+            let returns_head =
+                executable
+                    .code
+                    .get(address.get() as usize + 1)
+                    .is_some_and(|word| {
+                        word.opcode() == Ok(Opcode::Return) && word.abc_payload().a == head.a
+                    })
+                    && address.get() + 1 < function.code.end.get();
+            let same_convention = executable
+                .functions
+                .get(usize::from(head.b))
+                .is_some_and(|target| target.return_convention == function.return_convention);
+            if returns_head && same_convention {
+                return Ok(());
+            }
+            "a following Return of the call result and a matching return convention"
+        }
         _ => return Ok(()),
     };
     Err(ValidationError::instruction(

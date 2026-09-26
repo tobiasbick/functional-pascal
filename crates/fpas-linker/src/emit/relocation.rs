@@ -174,9 +174,11 @@ fn replace_abc(
         .abc_operands()
         .map_err(|error| error.to_string())?;
     let (a, b, c) = match opcode {
-        Opcode::CallDirect | Opcode::MakeClosure | Opcode::MakeRecord | Opcode::MakeEnum => {
-            (operands.a, mapped, operands.c)
-        }
+        Opcode::CallDirect
+        | Opcode::TailCall
+        | Opcode::MakeClosure
+        | Opcode::MakeRecord
+        | Opcode::MakeEnum => (operands.a, mapped, operands.c),
         Opcode::StoreGlobalIndexPath => (operands.a, mapped, operands.c),
         Opcode::LoadField | Opcode::TestVariant | Opcode::LoadEnumField => {
             (operands.a, operands.b, mapped)

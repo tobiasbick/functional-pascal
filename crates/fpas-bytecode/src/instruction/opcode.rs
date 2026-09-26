@@ -229,11 +229,16 @@ pub enum Opcode {
     BranchIfGreaterEqualInteger = 103,
     /// Check an inclusive integer loop boundary, then advance and consume the following jump.
     ForLoop = 104,
+    /// Call a numeric function target whose result the following `Return` word returns.
+    ///
+    /// The callee reuses the current frame. Debugger-owned execution runs it as `CallDirect`
+    /// followed by that `Return`, so debug stacks keep every frame.
+    TailCall = 105,
 }
 
 impl Opcode {
     /// Exhaustive opcode inventory used by format and verifier tests.
-    pub const ALL: [Self; 105] = [
+    pub const ALL: [Self; 106] = [
         Self::LoadConstant,
         Self::LoadUnit,
         Self::Move,
@@ -339,6 +344,7 @@ impl Opcode {
         Self::BranchIfLessEqualInteger,
         Self::BranchIfGreaterEqualInteger,
         Self::ForLoop,
+        Self::TailCall,
     ];
 
     /// Return the physical payload form assigned to this opcode.

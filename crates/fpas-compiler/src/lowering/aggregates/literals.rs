@@ -41,12 +41,33 @@ impl LoweringContext {
         expression: &Expr,
     ) -> Result<ValueId, CompileError> {
         let ty = self.expression_ir_type(expression)?;
+        self.lower_dictionary_literal_as(pairs, ty, expression.span())
+    }
+
+    /// Lowers dictionary entries with the expected key and value types, so an empty
+    /// literal such as `[:]` takes its type from the context instead of `Dynamic`.
+    pub(in crate::lowering) fn lower_dictionary_literal_as(
+        &mut self,
+        pairs: &[(Expr, Expr)],
+        ty: TypeId,
+        span: fpas_lexer::Span,
+    ) -> Result<ValueId, CompileError> {
+        let (key_ty, value_ty) = match self.type_kind(ty) {
+            Some(IrType::Dictionary { key, value }) => (Some(key), Some(value)),
+            _ => (None, None),
+        };
         let pairs = pairs
             .iter()
             .map(|(key, value)| {
-                let key = self.lower_expression(key)?;
+                let key = match key_ty {
+                    Some(expected) => self.lower_expression_as(key, expected)?,
+                    None => self.lower_expression(key)?,
+                };
                 let key = self.save_value(key);
-                let value = self.lower_expression(value)?;
+                let value = match value_ty {
+                    Some(expected) => self.lower_expression_as(value, expected)?,
+                    None => self.lower_expression(value)?,
+                };
                 Ok((key, self.save_value(value)))
             })
             .collect::<Result<Vec<_>, CompileError>>()?;
@@ -54,12 +75,12 @@ impl LoweringContext {
             .into_iter()
             .map(|(key, value)| {
                 Ok((
-                    self.restore_value(key, expression.span())?,
-                    self.restore_value(value, expression.span())?,
+                    self.restore_value(key, span)?,
+                    self.restore_value(value, span)?,
                 ))
             })
             .collect::<Result<Vec<_>, CompileError>>()?;
-        self.emit_value(Operation::MakeDictionary(pairs), ty, expression.span())
+        self.emit_value(Operation::MakeDictionary(pairs), ty, span)
     }
 
     pub(in crate::lowering) fn lower_wrapper(
@@ -110,6 +131,9 @@ impl LoweringContext {
             }
             Expr::ArrayLiteral(values, span) => {
                 self.lower_array_literal_as(values, expected, *span)
+            }
+            Expr::DictLiteral(pairs, span) => {
+                self.lower_dictionary_literal_as(pairs, expected, *span)
             }
             Expr::ResultOk(value, span) => self.lower_wrapper_as(Some(value), 0, expected, *span),
             Expr::ResultError(value, span) => {

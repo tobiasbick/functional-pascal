@@ -1,5 +1,6 @@
 use super::*;
 
+mod record_updates;
 mod try_expressions;
 
 #[test]

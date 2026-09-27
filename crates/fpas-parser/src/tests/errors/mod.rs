@@ -3,6 +3,7 @@ use crate::ParseDiagnostic;
 
 mod api;
 mod chained_comparison;
+mod delimiters;
 mod diagnostics;
 mod keywords;
 mod nesting;

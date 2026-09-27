@@ -19,12 +19,7 @@ end;
 function UpdateList(State: ListModel; Msg: TuiMsg; Cmd: TuiCmdOutput): ListModel;
 begin
   Cmd.Set(TuiCmd.NoCommand);
-  case Msg of
-    else
-    begin
-      return State
-    end
-  end
+  return State
 end;
 
 begin

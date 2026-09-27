@@ -32,6 +32,18 @@ fn run_file_expect_failure(rel_path: &str, stderr_contains: Option<&str>) {
 }
 
 #[test]
+fn record_update_requires_separator_between_fields() {
+    let (exit_code, _stdout, stderr) = support::run_source_and_capture_output(
+        "record_update_missing_separator.fpas",
+        "program T; type Point = record X: integer; Y: integer; end; \
+         begin var P: Point := record X := 1; Y := 2; end; \
+         var Q: Point := P with X := 3 Y := 4; end end.",
+    );
+    assert_ne!(exit_code, 0, "malformed record update was accepted");
+    assert!(stderr.contains("Expected `;`"), "{stderr}");
+}
+
+#[test]
 fn std_args_receives_program_arguments_after_cli_separator() {
     let root = repo_root();
     let path = root.join(

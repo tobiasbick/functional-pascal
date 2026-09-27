@@ -89,3 +89,33 @@ fn empty_record_update_is_rejected() {
         )
     );
 }
+
+#[test]
+fn record_update_accepts_nested_contextual_literals_and_parenthesized_chaining() {
+    for source in [
+        "P with Items := []; end",
+        "P with Tags := [:]; end",
+        "P with Child := record X := 1; end; end",
+        "P with Child := Q with X := 1; end; end",
+        "(P with X := 1; end) with Y := 2; end",
+    ] {
+        assert!(
+            matches!(parse_expr(source), Expr::RecordUpdate { .. }),
+            "expected record update: {source}"
+        );
+    }
+}
+
+#[test]
+fn record_update_rejects_malformed_field_initializers() {
+    for source in [
+        "P with X = 1; end",
+        "P with X := ; end",
+        "P with X := 1 Y := 2; end",
+        "P with X := 1;",
+    ] {
+        let program = format!("program T; begin return {source} end.");
+        let (_, errors) = parse_with_errors(&program);
+        assert!(!errors.is_empty(), "accepted malformed update: {source}");
+    }
+}

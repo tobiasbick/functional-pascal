@@ -8,6 +8,7 @@ mod postfix;
 mod record_context;
 mod record_events;
 mod record_properties;
+mod record_updates;
 mod std_shadowing;
 
 // ── Literals ────────────────────────────────────────────────────

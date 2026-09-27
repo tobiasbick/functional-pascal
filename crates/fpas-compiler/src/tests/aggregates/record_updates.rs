@@ -66,3 +66,33 @@ end.
 "#,
     );
 }
+
+#[test]
+fn record_update_propagates_context_through_option_and_result_payloads() {
+    assert_succeeds(
+        r#"
+program NestedUpdate;
+uses Std.Arrays, Std.Dictionaries, Std.Options, Std.Results;
+type Holder = record
+  Values: option of array of integer;
+  Lookup: result of dict of string to integer, string;
+end;
+begin
+  var Original: Holder := record
+    Values := Some([1]);
+    Lookup := Ok(['a': 1]);
+  end;
+  var Updated: Holder := Original with
+    Values := Some([]);
+    Lookup := Ok([:]);
+  end;
+  if Std.Arrays.Length(Std.Options.Unwrap(Updated.Values)) <> 0 then
+    panic('option payload');
+  if Std.Dictionaries.Length(Std.Results.Unwrap(Updated.Lookup)) <> 0 then
+    panic('result payload');
+  if Std.Arrays.Length(Std.Options.Unwrap(Original.Values)) <> 1 then
+    panic('base mutated')
+end.
+"#,
+    );
+}

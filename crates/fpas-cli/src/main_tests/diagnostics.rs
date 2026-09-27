@@ -25,6 +25,36 @@ fn cli_renders_parse_stage_output() {
 }
 
 #[test]
+fn check_rejects_case_without_an_arm_and_accepts_case_with_an_arm() {
+    let cwd = create_temp_dir("check-case-arm");
+    let invalid = cwd.join("missing_arm.fpas");
+    write_text(&invalid, "program T; begin case 1 of else return end end.");
+    let (exit_code, _, stderr) = support::run_cli_args_and_capture_output(
+        &[
+            String::from("check"),
+            invalid.to_string_lossy().into_owned(),
+        ],
+        &cwd,
+    );
+    assert_ne!(exit_code, 0, "case without an arm was accepted");
+    assert!(
+        stderr.contains("Expected at least one case arm"),
+        "{stderr}"
+    );
+
+    let valid = cwd.join("with_arm.fpas");
+    write_text(
+        &valid,
+        "program T; begin case 1 of 1: return else return end end.",
+    );
+    let (exit_code, _, stderr) = support::run_cli_args_and_capture_output(
+        &[String::from("check"), valid.to_string_lossy().into_owned()],
+        &cwd,
+    );
+    assert_eq!(exit_code, 0, "{stderr}");
+}
+
+#[test]
 fn cli_renders_sema_stage_output() {
     let source = "program SemaFail;\nbegin\n  x := 1;\nend.\n";
     let (exit_code, stderr_output) = support::run_and_capture_stderr("sema.fpas", source);

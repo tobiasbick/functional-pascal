@@ -75,4 +75,28 @@ pub const SOURCES: &[(&str, &str)] = &[
         "record_with_static_procedure",
         "program T; type Point = record X: integer; static procedure Print(Value: Point); begin Std.Console.WriteLn(Value.X) end; end; begin end.",
     ),
+    (
+        "nested_collection_literals",
+        "program T; begin var Values: array of dict of string to array of integer := [['a': [1, 2]], [:]] end.",
+    ),
+    (
+        "nested_record_update",
+        "program T; type Point = record X: integer; Y: integer; end; type Pair = record First: Point; Second: Point; end; begin var P: Pair := record First := record X := 1; Y := 2; end; Second := record X := 3; Y := 4; end; end; var Q: Pair := P with First := P.First with X := 5; end; end end.",
+    ),
+    (
+        "nested_option_result",
+        "program T; begin var Value: result of option of array of integer, string := Ok(Some([])) end.",
+    ),
+    (
+        "case_destructure_with_guard",
+        "program T; begin case Value of Some(Item) if Item > 0: return; None: return end end.",
+    ),
+    (
+        "postfix_call_chain",
+        "program T; begin return Factory.Create().Items[0].Value end.",
+    ),
+    (
+        "procedure_literal",
+        "program T; begin var Action: procedure() := procedure() begin return end end.",
+    ),
 ];

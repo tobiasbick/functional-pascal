@@ -19,12 +19,7 @@ end;
 function UpdateMenu(State: MenuModel; Msg: TuiMsg; Cmd: TuiCmdOutput): MenuModel;
 begin
   Cmd.Set(TuiCmd.NoCommand);
-  case Msg of
-    else
-    begin
-      return State
-    end
-  end
+  return State
 end;
 
 begin

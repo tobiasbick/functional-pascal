@@ -102,5 +102,6 @@ WriteLn(Stringify(Value));
 
 ## See also
 
+- [`Std.Toml.Fields`](toml-fields.md) — typed key access for parsed tables
 - [Text and parsing index](README.md)
 - [Standard library index](../README.md)

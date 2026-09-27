@@ -101,5 +101,6 @@ Nesting deeper than **256** levels is rejected: `Parse` returns `Error(Message)`
 
 ## See also
 
+- [`Std.Json.Fields`](json-fields.md) — typed field access for parsed objects
 - [Text and parsing index](README.md)
 - [Standard library index](../README.md)

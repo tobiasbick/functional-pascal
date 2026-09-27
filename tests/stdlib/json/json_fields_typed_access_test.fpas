@@ -1,0 +1,43 @@
+program JsonFieldsTypedAccessTest;
+
+uses Std.Arrays, Std.Json, Std.Json.Fields, Std.Results, Std.Test;
+
+function ErrorText<T>(Value: result of T, string): string;
+begin
+  case Value of
+    Ok(_):
+    begin
+      Fail('expected an error result');
+      return ''
+    end;
+    Error(Message):
+    begin
+      return Message
+    end
+  end
+end;
+
+begin
+  var Fields: dict of string to JsonValue := Unwrap(ParseObject('{"s":"x","b":true,"n":2.5,"i":-7,"big":1e300,"o":{"k":1},"rows":["a","b"],"mixed":["a",1]}'));
+  AssertEquals('x', Unwrap(StringField(Fields, 's')));
+  AssertTrue(Unwrap(BooleanField(Fields, 'b')));
+  AssertEquals(2.5, Unwrap(NumberField(Fields, 'n')));
+  AssertEquals(-7, Unwrap(IntegerField(Fields, 'i')));
+  AssertEquals(1, Std.Dictionaries.Length(Unwrap(ObjectField(Fields, 'o'))));
+  AssertEquals(2, Unwrap(ArrayField(Fields, 'mixed')).Length());
+  AssertEquals(2, Unwrap(StringArrayField(Fields, 'rows')).Length());
+
+  AssertEquals('missing field absent', ErrorText(Field(Fields, 'absent')));
+  AssertEquals('field n must be a string', ErrorText(StringField(Fields, 'n')));
+  AssertEquals('field n must be an integer', ErrorText(IntegerField(Fields, 'n')));
+  AssertEquals('field s must be a number', ErrorText(IntegerField(Fields, 's')));
+  // Out-of-range numbers are reported instead of raising a Trunc runtime error.
+  AssertEquals('field big is outside the integer range', ErrorText(IntegerField(Fields, 'big')));
+  AssertEquals('field mixed must be an array of strings', ErrorText(StringArrayField(Fields, 'mixed')));
+  AssertEquals('field s must be an object', ErrorText(ObjectField(Fields, 's')));
+
+  AssertTrue(Unwrap(RequireOnlyFields(Unwrap(ParseObject('{"a":1}')), ['a', 'b'])));
+  AssertEquals('unexpected field c', ErrorText(RequireOnlyFields(Unwrap(ParseObject('{"a":1,"c":2}')), ['a', 'b'])));
+  AssertEquals('JSON root must be an object', ErrorText(ParseObject('[1]')));
+  AssertTrue(IsError(ParseObject('{')))
+end.

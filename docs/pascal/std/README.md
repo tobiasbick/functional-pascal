@@ -48,7 +48,7 @@ intrinsic API or handbook change with
 | Host I/O | [host/](host/README.md) | Args, Env, Fs, Path, Proc, Time |
 | Networking | [network/](network/README.md) | Net, Server lifetime, URI, UTF-8, HTTP |
 | AI clients | [ai/](ai/README.md) | OpenAI-compatible chat completions |
-| Text | [text/](text/README.md) | Str, Conv, Parse, Json, Toml |
+| Text | [text/](text/README.md) | Str, Conv, Parse, Json, Json.Fields, Toml, Toml.Fields |
 | Collections | [collections/](collections/README.md) | Array, Dict |
 | Numeric | [numeric/](numeric/README.md) | Math, Random |
 | Cryptography | [cryptography/](cryptography/README.md) | Operating-system random bytes and secure integers |

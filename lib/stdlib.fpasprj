@@ -8,6 +8,8 @@ units = [
   "Std.Tui",
   "Std.Net.Uri",
   "Std.Net.Utf8",
+  "Std.Json.Fields",
+  "Std.Toml.Fields",
   "Std.Http",
   "Std.Ai.OpenAi",
 ]

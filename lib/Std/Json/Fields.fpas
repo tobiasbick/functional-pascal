@@ -1,0 +1,217 @@
+// Strict typed access to the fields of parsed JSON objects.
+// See docs/pascal/std/text/json-fields.md.
+unit Std.Json.Fields;
+
+uses Std.Arrays, Std.Conv, Std.Dictionaries, Std.Json, Std.Math;
+
+const
+  // Exclusive upper and inclusive lower real bounds of the 64-bit integer range.
+  IntegerUpperBound: real := 9223372036854775808.0;
+  IntegerLowerBound: real := -9223372036854775808.0;
+
+// Builds the type-mismatch error for one field.
+//
+// Parameters:
+// - `Name`: Field name reported in the message.
+// - `Expectation`: Required JSON kind, such as `a string`.
+function MismatchError(Name: string; Expectation: string): string;
+begin
+  return (('field ' + Name) + ' must be ') + Expectation
+end;
+
+// Parses JSON text whose root must be an object and returns its fields.
+//
+// Parameters:
+// - `Text`: JSON document text.
+public function ParseObject(Text: string): result of dict of string to JsonValue, string;
+begin
+  case try Std.Json.Parse(Text) of
+    JsonValue.Object(Fields):
+    begin
+      return Ok(Fields)
+    end
+    else
+    begin
+      return Error('JSON root must be an object')
+    end
+  end
+end;
+
+// Returns one present field of any JSON kind.
+//
+// Parameters:
+// - `Fields`: Object fields.
+// - `Name`: Required field name.
+public function Field(Fields: dict of string to JsonValue; Name: string): result of JsonValue, string;
+begin
+  case Std.Dictionaries.Get(Fields, Name) of
+    Some(Value):
+    begin
+      return Ok(Value)
+    end;
+    None:
+    begin
+      return Error('missing field ' + Name)
+    end
+  end
+end;
+
+// Returns one required string field.
+//
+// Parameters:
+// - `Fields`: Object fields.
+// - `Name`: Required field name.
+public function StringField(Fields: dict of string to JsonValue; Name: string): result of string, string;
+begin
+  case try Field(Fields, Name) of
+    JsonValue.String(Value):
+    begin
+      return Ok(Value)
+    end
+    else
+    begin
+      return Error(MismatchError(Name, 'a string'))
+    end
+  end
+end;
+
+// Returns one required boolean field.
+//
+// Parameters:
+// - `Fields`: Object fields.
+// - `Name`: Required field name.
+public function BooleanField(Fields: dict of string to JsonValue; Name: string): result of boolean, string;
+begin
+  case try Field(Fields, Name) of
+    JsonValue.Bool(Value):
+    begin
+      return Ok(Value)
+    end
+    else
+    begin
+      return Error(MismatchError(Name, 'a boolean'))
+    end
+  end
+end;
+
+// Returns one required number field as a real value.
+//
+// Parameters:
+// - `Fields`: Object fields.
+// - `Name`: Required field name.
+public function NumberField(Fields: dict of string to JsonValue; Name: string): result of real, string;
+begin
+  case try Field(Fields, Name) of
+    JsonValue.Number(Value):
+    begin
+      return Ok(Value)
+    end
+    else
+    begin
+      return Error(MismatchError(Name, 'a number'))
+    end
+  end
+end;
+
+// Returns one required number field that holds an exact integer in the 64-bit range.
+// Fractional or out-of-range numbers return `Error` instead of raising a runtime error.
+//
+// Parameters:
+// - `Fields`: Object fields.
+// - `Name`: Required field name.
+public function IntegerField(Fields: dict of string to JsonValue; Name: string): result of integer, string;
+begin
+  var Value: real := try NumberField(Fields, Name);
+  if (Value < IntegerLowerBound) or (Value >= IntegerUpperBound) then
+  begin
+    return Error(('field ' + Name) + ' is outside the integer range')
+  end;
+  var IntegerValue: integer := Trunc(Value);
+  if Std.Conv.IntToReal(IntegerValue) <> Value then
+  begin
+    return Error(MismatchError(Name, 'an integer'))
+  end;
+
+  return Ok(IntegerValue)
+end;
+
+// Returns one required nested object field.
+//
+// Parameters:
+// - `Fields`: Object fields.
+// - `Name`: Required field name.
+public function ObjectField(Fields: dict of string to JsonValue; Name: string): result of dict of string to JsonValue, string;
+begin
+  case try Field(Fields, Name) of
+    JsonValue.Object(Value):
+    begin
+      return Ok(Value)
+    end
+    else
+    begin
+      return Error(MismatchError(Name, 'an object'))
+    end
+  end
+end;
+
+// Returns one required array field without checking element kinds.
+//
+// Parameters:
+// - `Fields`: Object fields.
+// - `Name`: Required field name.
+public function ArrayField(Fields: dict of string to JsonValue; Name: string): result of array of JsonValue, string;
+begin
+  case try Field(Fields, Name) of
+    JsonValue.ArrayValue(Items):
+    begin
+      return Ok(Items)
+    end
+    else
+    begin
+      return Error(MismatchError(Name, 'an array'))
+    end
+  end
+end;
+
+// Returns one required array field whose elements must all be strings.
+//
+// Parameters:
+// - `Fields`: Object fields.
+// - `Name`: Required field name.
+public function StringArrayField(Fields: dict of string to JsonValue; Name: string): result of array of string, string;
+begin
+  mutable var Values: array of string := [];
+  for Item: JsonValue in try ArrayField(Fields, Name) do
+  begin
+    case Item of
+      JsonValue.String(Value):
+      begin
+        Std.Arrays.Push(Values, Value)
+      end
+      else
+      begin
+        return Error(MismatchError(Name, 'an array of strings'))
+      end
+    end
+  end;
+
+  return Ok(Values)
+end;
+
+// Rejects the first field whose name is not listed in `Allowed`; missing fields are not checked.
+//
+// Parameters:
+// - `Fields`: Object fields.
+// - `Allowed`: Every permitted field name.
+public function RequireOnlyFields(Fields: dict of string to JsonValue; Allowed: array of string): result of boolean, string;
+begin
+  for Name: string in Std.Dictionaries.Keys(Fields) do
+  begin
+    if not Std.Arrays.Contains(Allowed, Name) then
+    begin
+      return Error('unexpected field ' + Name)
+    end
+  end;
+
+  return Ok(true)
+end;

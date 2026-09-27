@@ -260,3 +260,61 @@ begin if Probe() <> Ok(12) then panic('result') end.
 "#,
     );
 }
+
+#[test]
+fn result_try_unwraps_generic_callee_to_concrete_payloads() {
+    assert_succeeds(
+        r#"
+program GenericResultTry;
+function Tagged<T>(Value: result of T, string): result of T, string;
+begin
+  case Value of
+    Ok(Content): return Ok(Content);
+    Error(Message): return Error('tagged ' + Message)
+  end
+end;
+function MakeInt(Fail: boolean): result of integer, string;
+begin
+  if Fail then return Error('int');
+  return Ok(7)
+end;
+function MakeValues(): result of array of integer, string;
+begin return Ok([2, 3]) end;
+function Probe(Fail: boolean): result of integer, string;
+begin
+  var Values: array of integer := try Tagged(MakeValues());
+  var Number: integer := try Tagged(MakeInt(Fail));
+  return Ok(Number * 10 + Values[0] + Values[1])
+end;
+begin
+  if Probe(false) <> Ok(75) then panic('generic payloads');
+  if Probe(true) <> Error('tagged int') then panic('generic error propagation')
+end.
+"#,
+    );
+}
+
+#[test]
+fn option_try_unwraps_generic_callee_to_concrete_payload() {
+    assert_succeeds(
+        r#"
+program GenericOptionTry;
+function Wrapped<T>(Value: Option of T): Option of T;
+begin return Value end;
+function Lookup(Present: boolean): Option of integer;
+begin
+  if Present then return Some(40);
+  return None
+end;
+function Probe(Present: boolean): Option of integer;
+begin
+  var Number: integer := try Wrapped(Lookup(Present));
+  return Some(Number + 2)
+end;
+begin
+  if Probe(true) <> Some(42) then panic('generic payload');
+  if Probe(false) <> None then panic('generic none')
+end.
+"#,
+    );
+}

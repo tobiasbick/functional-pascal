@@ -196,12 +196,15 @@ impl LoweringContext {
             wrapper_ty,
             expression.span(),
         )?;
-        let operation = match self.type_kind(wrapper_ty) {
-            Some(IrType::Result { .. }) => Operation::UnwrapOk(success_wrapper),
-            Some(IrType::Option(_)) => Operation::UnwrapSome(success_wrapper),
+        // The unwrap yields the wrapper's own payload type. A generic callee erases its
+        // type parameters to `Dynamic`, so that type can differ from the concrete `try`
+        // result; the payload local below converts it by ordinary assignment.
+        let (operation, payload_ty) = match self.type_kind(wrapper_ty) {
+            Some(IrType::Result { ok, .. }) => (Operation::UnwrapOk(success_wrapper), ok),
+            Some(IrType::Option(payload)) => (Operation::UnwrapSome(success_wrapper), payload),
             _ => return Err(unsupported(expression.span(), "try operand")),
         };
-        let payload = self.emit_value(operation, result_ty, expression.span())?;
+        let payload = self.emit_value(operation, payload_ty, expression.span())?;
         let payload_local = self.declare_hidden_local(result_ty, expression.span())?;
         self.write_local(payload_local, payload, expression.span())?;
         self.jump(merge)?;

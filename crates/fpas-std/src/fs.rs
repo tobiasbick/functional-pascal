@@ -61,6 +61,10 @@ pub(crate) fn run(
             let path = pop_string(pop_value(call, location)?, location)?;
             call.push(result_bool(fs::create_dir(path)));
         }
+        Intrinsic::Fs(FsIntrinsic::CreateDirAll) => {
+            let path = pop_string(pop_value(call, location)?, location)?;
+            call.push(result_bool(fs::create_dir_all(path)));
+        }
         Intrinsic::Fs(FsIntrinsic::Glob) => {
             let pattern = pop_string(pop_value(call, location)?, location)?;
             call.push(result_string_array(glob::glob_paths(&pattern)));
@@ -197,5 +201,36 @@ mod tests {
         assert_eq!(stack, vec![Value::result_ok(Value::Boolean(true))]);
         assert!(Path::new(&nested).is_dir());
         let _ = fs::remove_dir(nested);
+    }
+
+    #[test]
+    fn create_dir_all_creates_parents_and_accepts_existing_directory() {
+        let root = unique_temp_path("create-all");
+        let leaf = Path::new(&root).join("parent").join("leaf");
+        let leaf_text = leaf.to_string_lossy().into_owned();
+
+        for _ in 0..2 {
+            let mut stack = vec![Value::Str(leaf_text.clone().into())];
+            run_fs(FsIntrinsic::CreateDirAll, &mut stack);
+            assert_eq!(stack, vec![Value::result_ok(Value::Boolean(true))]);
+        }
+        assert!(leaf.is_dir());
+        let _ = fs::remove_dir_all(root);
+    }
+
+    #[test]
+    fn create_dir_all_rejects_file_in_path() {
+        let file_path = unique_temp_path("create-all-file");
+        fs::write(&file_path, "not a directory").expect("fixture file must be written");
+        let below_file = Path::new(&file_path)
+            .join("child")
+            .to_string_lossy()
+            .into_owned();
+        let mut stack = vec![Value::Str(below_file.into())];
+
+        run_fs(FsIntrinsic::CreateDirAll, &mut stack);
+
+        assert!(matches!(stack.as_slice(), [Value::ResultError(_)]));
+        let _ = fs::remove_file(file_path);
     }
 }

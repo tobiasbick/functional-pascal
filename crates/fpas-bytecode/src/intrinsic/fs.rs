@@ -35,6 +35,10 @@ pub enum FsIntrinsic {
     ///
     /// **Documentation:** `docs/pascal/std/host/fs.md`
     CreateDir = 320,
+    /// `Std.Fs.CreateDirAll(Path)` - create a directory and missing parents.
+    ///
+    /// **Documentation:** `docs/pascal/std/host/fs.md`
+    CreateDirAll = 613,
     /// `Std.Fs.Glob(Pattern)` - expand a glob pattern to matching file paths.
     ///
     /// **Documentation:** `docs/pascal/std/host/fs.md`

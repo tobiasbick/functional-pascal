@@ -26,7 +26,7 @@ Text reads and writes use UTF-8.
 
 ## Importing and names
 
-After `uses Std.Fs;` use **`ReadText`**, **`WriteText`**, **`WriteTextAtomic`**, **`DeleteFile`**, **`Exists`**, **`IsFile`**, **`IsDir`**, **`CreateDir`**, **`Glob`**, or the fully qualified forms such as **`Std.Fs.ReadText`**.
+After `uses Std.Fs;` use **`ReadText`**, **`WriteText`**, **`WriteTextAtomic`**, **`DeleteFile`**, **`Exists`**, **`IsFile`**, **`IsDir`**, **`CreateDir`**, **`CreateDirAll`**, **`Glob`**, or the fully qualified forms such as **`Std.Fs.ReadText`**.
 
 ---
 
@@ -48,6 +48,7 @@ Requires `uses Std.Fs;`.
 | function | `IsFile(Path: string): boolean` | `true` for a regular file |
 | function | `IsDir(Path: string): boolean` | `true` for a directory |
 | function | `CreateDir(Path: string): Result of boolean, string` | creates one directory, returns `Ok(true)` |
+| function | `CreateDirAll(Path: string): Result of boolean, string` | creates a directory and missing parents; an existing directory is `Ok(true)` |
 | function | `Glob(Pattern: string): Result of array of string, string` | expands a glob pattern to matching file paths |
 
 Fallible operations return `Error(message)` with a host error string instead of raising a runtime panic.
@@ -140,11 +141,24 @@ WriteLn(IsDir('src'))
 
 ## `function CreateDir(Path: string): Result of boolean, string`
 
-Creates a single directory at `Path`. Parent directories must already exist.
+Creates a single directory at `Path`. Parent directories must already exist. An existing entry at `Path`, including an existing directory, returns `Error(message)`.
 
 ```pascal
 if Std.Results.IsOk(CreateDir('build/output')) then
   WriteLn('directory created')
+```
+
+---
+
+## `function CreateDirAll(Path: string): Result of boolean, string`
+
+Creates the directory at `Path` together with every missing parent directory and returns `Ok(true)`. The call is idempotent: when `Path` already is a directory, including one created concurrently by another task or process, it also returns `Ok(true)`. A path component that exists but is not a directory, permission failures, and other OS errors return `Error(message)`. Directories created before a failure are not removed.
+
+```pascal
+case CreateDirAll('build/output/logs') of
+  Ok(Created): WriteLn('directory ready');
+  Error(Message): WriteLn('cannot create directory: ' + Message)
+end
 ```
 
 ---

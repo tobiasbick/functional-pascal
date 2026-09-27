@@ -8,6 +8,7 @@ std_symbol!(STD_FS_EXISTS = std_fs!("Exists"));
 std_symbol!(STD_FS_IS_FILE = std_fs!("IsFile"));
 std_symbol!(STD_FS_IS_DIR = std_fs!("IsDir"));
 std_symbol!(STD_FS_CREATE_DIR = std_fs!("CreateDir"));
+std_symbol!(STD_FS_CREATE_DIR_ALL = std_fs!("CreateDirAll"));
 std_symbol!(STD_FS_GLOB = std_fs!("Glob"));
 
 pub(in crate::std_units) const STD_FS_SYMBOLS: &[&str] = &[
@@ -19,5 +20,6 @@ pub(in crate::std_units) const STD_FS_SYMBOLS: &[&str] = &[
     STD_FS_IS_FILE,
     STD_FS_IS_DIR,
     STD_FS_CREATE_DIR,
+    STD_FS_CREATE_DIR_ALL,
     STD_FS_GLOB,
 ];

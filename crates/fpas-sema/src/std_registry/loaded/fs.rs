@@ -55,6 +55,12 @@ pub(super) fn register_std_fs(checker: &mut Checker) {
     );
     define_func(
         checker,
+        s::STD_FS_CREATE_DIR_ALL,
+        vec![p("Path", Ty::String, false)],
+        Ty::Result(Box::new(Ty::Boolean), Box::new(Ty::String)),
+    );
+    define_func(
+        checker,
         s::STD_FS_GLOB,
         vec![p("Pattern", Ty::String, false)],
         Ty::Result(

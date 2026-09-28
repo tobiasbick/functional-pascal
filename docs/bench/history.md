@@ -14,6 +14,79 @@ cargo bench-fpas record "vm-only note" --group vm
 
 Newest entries are prepended below this header.
 
+## 2026-09-28 — VM: fill new registers without Value::clone; inline scalar clones
+
+- Group: `all`
+- Suite: [`suite.toml`](suite.toml)
+
+| bench | elapsed_ms | throughput |
+|-------|------------|------------|
+| mandelbrot_render | 841 | - |
+| mandelbrot_paint | 783 | - |
+| integer_loop | 1027 | throughput: 48685491 iters/s |
+| typed_real | 213 | - |
+| typed_boolean | 228 | - |
+| typed_string | 133 | - |
+| global_access | 114 | throughput: 43859649 global updates/s |
+| record_field_access | 301 | throughput: 49833887 field accesses/s |
+| closure_call | 132 | throughput: 22727272 closure calls/s |
+| mutable_capture | 207 | throughput: 14492753 captured updates/s |
+| branch_dispatch | 650 | throughput: 30769230 branches/s |
+| dynamic_numeric | 262 | throughput: 19083969 dynamic numeric ops/s |
+| array_push | 56 | throughput: 35714285 pushes/s |
+| array_length | 22 | throughput: 22727272 lengths/s |
+| string_concat | 902 | throughput: 5543237 concats/s |
+| string_length | 21 | throughput: 23809523 lengths/s |
+| intrinsic_dispatch | 629 | throughput: 23847376 intrinsic calls/s |
+| function_call | 226 | throughput: 26548672 calls/s |
+| array_callbacks | 730 | throughput: 13150684 callbacks/s |
+| record_update | 75 | throughput: 13333333 updates/s |
+| unicode_char_at | 352 | throughput: 8522727 chars/s |
+| wrapper_payload | 591 | throughput: 16920473 wrappers/s |
+| task_spawn_wait | 493 | throughput: 202839 tasks/s |
+| task_array_callbacks | 714 | throughput: 5378151 callbacks/s |
+| tui_headless | 1531 | throughput: 326 frames/s |
+| notes_headless | 3705 | throughput: 67 frames/s |
+| tui_styled_cells | 315 | - |
+| analysis_queries | 224 | - |
+| string_search | 82 | - |
+| compiler_lowering | 1259 | - |
+| substring_ascii | 7 | - |
+| substring_unicode | 10 | - |
+| project_queries | 964 | - |
+| project_edits | 3114 | - |
+| project_overlapping_queries | 641 | - |
+| project_build_cold | 1270 | - |
+| project_build_warm | 1007 | - |
+| unit_artifact_shared_types | 0 | - |
+| program_artifact_shared_types | 0 | - |
+| dictionary_reads | 4 | - |
+| scalar_membership | 28 | - |
+| array_pop | 1 | - |
+| text_area_locate | 937 | - |
+| http_body_accumulation | 95 | - |
+| local_index_write | 15 | throughput: 42666666 writes/s |
+| cell_grid_headless | 101 | throughput: 990 paints/s |
+| partial_surface_fill | 61 | - |
+| source_utf8_ascii_2048 | 7 | - |
+| source_utf8_ascii_4096 | 16 | - |
+| source_utf8_ascii_8192 | 31 | - |
+| source_utf8_unicode_2048 | 25 | - |
+| source_utf8_unicode_4096 | 52 | - |
+| source_utf8_unicode_8192 | 104 | - |
+| source_notes_ascii_128 | 3 | - |
+| source_notes_ascii_256 | 7 | - |
+| source_notes_ascii_512 | 15 | - |
+| source_queue_ascii_256 | 51 | - |
+| source_queue_ascii_512 | 101 | - |
+| source_queue_ascii_1024 | 203 | - |
+| source_navigation_long_512 | 30 | - |
+| source_navigation_long_1024 | 57 | - |
+| source_navigation_long_2048 | 112 | - |
+| source_navigation_lines_512 | 6 | - |
+| source_navigation_lines_1024 | 10 | - |
+| source_navigation_lines_2048 | 18 | - |
+
 ## 2026-09-28 — Std.Tui: TuiColor.FromRgb checks all channels in one condition; add tui_styled_cells bench
 
 - Group: `all`

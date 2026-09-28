@@ -24,7 +24,9 @@ impl Worker {
             self.release_registers(active_count);
             return;
         }
-        self.registers.resize(active_count, Value::Unit);
+        // `resize_with` writes `Unit` directly; `resize` would call the full `Value::clone` per slot,
+        // which dominated the cost of entering small frames.
+        self.registers.resize_with(active_count, || Value::Unit);
         self.register_initialized.resize(active_count, false);
     }
 

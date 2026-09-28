@@ -19,7 +19,7 @@ pub use payload::ValuePayload;
 pub use string::SharedStr;
 
 /// Runtime value in the VM.
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub enum Value {
     /// Signed integer value.
     Integer(i64),
@@ -71,6 +71,51 @@ pub enum Value {
     Task(u64),
     /// Opaque host-resource handle that FPAS code can only pass back to its owning intrinsic.
     OpaqueHandle(u64),
+}
+
+impl Clone for Value {
+    /// Copies scalars inline; only reference-counted variants take the out-of-line path.
+    ///
+    /// Register moves clone values on every instruction that copies an operand, so keeping the
+    /// scalar case small lets it inline into the interpreter loop.
+    #[inline(always)]
+    fn clone(&self) -> Self {
+        match self {
+            Self::Integer(value) => Self::Integer(*value),
+            Self::Real(value) => Self::Real(*value),
+            Self::Boolean(value) => Self::Boolean(*value),
+            Self::Unit => Self::Unit,
+            Self::OptionNone => Self::OptionNone,
+            Self::Task(id) => Self::Task(*id),
+            Self::OpaqueHandle(id) => Self::OpaqueHandle(*id),
+            shared => shared.clone_shared(),
+        }
+    }
+}
+
+impl Value {
+    #[inline(never)]
+    fn clone_shared(&self) -> Self {
+        match self {
+            Self::Str(value) => Self::Str(value.clone()),
+            Self::Enum(value) => Self::Enum(value.clone()),
+            Self::Array(value) => Self::Array(value.clone()),
+            Self::Dict(value) => Self::Dict(value.clone()),
+            Self::Record(value) => Self::Record(value.clone()),
+            Self::ResultOk(value) => Self::ResultOk(value.clone()),
+            Self::ResultError(value) => Self::ResultError(value.clone()),
+            Self::OptionSome(value) => Self::OptionSome(value.clone()),
+            Self::Function(value) => Self::Function(value.clone()),
+            Self::Cell(value) => Self::Cell(value.clone()),
+            Self::Integer(_)
+            | Self::Real(_)
+            | Self::Boolean(_)
+            | Self::Unit
+            | Self::OptionNone
+            | Self::Task(_)
+            | Self::OpaqueHandle(_) => unreachable!("scalar values clone inline"),
+        }
+    }
 }
 
 impl Value {

@@ -165,10 +165,25 @@ end.",
 }
 
 #[test]
-fn std_console_fully_qualified_call_works_without_uses_clause() {
+fn std_console_fully_qualified_call_requires_uses_clause() {
+    let errs = check_errors(
+        "\
+program T;
+begin
+  Std.Console.WriteLn('x')
+end.",
+    );
+    assert_eq!(errs.len(), 1, "{errs:#?}");
+    assert!(
+        errs[0]
+            .message
+            .contains("Unit `Std.Console` is not imported"),
+        "{errs:#?}"
+    );
     check_ok(
         "\
 program T;
+uses Std.Console;
 begin
   Std.Console.WriteLn('x')
 end.",

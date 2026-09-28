@@ -33,6 +33,7 @@ fn retained_task_spawn_and_wait_execute() {
     let execution = assert_succeeds(
         "\
 program RegisterTasks;
+uses Std.Console, Std.Task;
 
 function Add(A: integer; B: integer): integer;
 begin
@@ -52,6 +53,7 @@ fn detached_task_executes_on_register_pool() {
     assert_succeeds(
         "\
 program RegisterDetached;
+uses Std.Console;
 
 procedure Work();
 begin
@@ -69,6 +71,7 @@ fn timeslice_preserves_nested_frames_and_live_aggregate_registers() {
     assert_succeeds(
         "\
 program RegisterTaskFrames;
+uses Std.Task;
 
 function Burn(Count: integer): integer;
 begin
@@ -96,6 +99,7 @@ fn cooperative_sleep_releases_register_pool_worker() {
     assert_succeeds(
         "\
 program RegisterTaskSleep;
+uses Std.Task, Std.Time;
 
 function Work(Value: integer): integer;
 begin
@@ -162,6 +166,7 @@ fn wait_all_keeps_register_task_results_available() {
     assert_succeeds(
         "\
 program RegisterWaitAll;
+uses Std.Task;
 
 function Work(Value: integer): integer;
 begin
@@ -182,6 +187,7 @@ end.",
 fn mutable_capture_cannot_cross_register_task_boundary() {
     let source = "\
 program RegisterTaskBound;
+uses Std.Task;
 
 function Make(): function(): integer;
 begin

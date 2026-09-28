@@ -51,6 +51,8 @@ fn run_cli_static_record_function_via_public_alias_over_private_unit() {
         "\
 unit Geom.Internal;
 
+uses Std.Console;
+
 public type
   PointImpl = record
     public X: integer;

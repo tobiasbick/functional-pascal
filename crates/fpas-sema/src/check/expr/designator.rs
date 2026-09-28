@@ -74,6 +74,21 @@ impl Checker {
                         return Ty::Error;
                     }
 
+                    if is_qualified_ident_chain
+                        && let Some(unit) =
+                            crate::std_units::missing_std_unit(&full_name, &self.loaded_std_units)
+                    {
+                        self.error_with_code(
+                            SEMA_UNKNOWN_NAME,
+                            format!("Unit `{unit}` is not imported"),
+                            format!(
+                                "Add `{unit}` to the `uses` clause; qualified names do not import a unit."
+                            ),
+                            designator.span,
+                        );
+                        return Ty::Error;
+                    }
+
                     let hint = if is_qualified_ident_chain {
                         if crate::std_units::looks_like_std_qualified_name(&full_name) {
                             self.hint_unknown_callable(&full_name)

@@ -21,6 +21,20 @@ impl Checker {
         })
     }
 
+    /// Hint for an ambiguous short routine name in a call with `arg_count` arguments.
+    ///
+    /// With at least one argument, the method form on that argument selects the routine by the
+    /// argument's type, for example `Value.Unwrap()` for an option or a result.
+    pub(crate) fn ambiguous_call_hint(&self, name: &str, arg_count: usize) -> Option<String> {
+        let hint = self.ambiguous_hint(name)?;
+        if arg_count == 0 || name.contains('.') {
+            return Some(hint);
+        }
+        Some(format!(
+            "{hint} Or write `{name}(Value, ...)` as `Value.{name}(...)`: the method form selects the routine by the type of `Value`."
+        ))
+    }
+
     /// Resolves standard call names while preserving lexical shadowing of imported aliases.
     ///
     /// **Documentation:** `docs/pascal/program-structure/units.md`.
@@ -64,24 +78,25 @@ impl Checker {
         name.to_string()
     }
 
+    /// Registers the qualified symbols of a `Std.*` unit named in `uses` on first qualified use.
+    ///
+    /// A qualified name of a unit missing from `uses` stays unresolved, so the lookup reports it
+    /// with a hint to import the unit; qualification never imports a unit implicitly.
+    ///
+    /// **Documentation:** `docs/pascal/program-structure/units.md`.
     pub(crate) fn ensure_fq_std_unit_loaded(&mut self, fully_qualified_name: &str) {
         let Some((unit, _)) = crate::std_units::parse_std_qualified_call(fully_qualified_name)
         else {
             return;
         };
 
-        if self.loaded_std_units.contains(&unit)
-            && self.scopes.lookup(fully_qualified_name).is_some()
+        if !self.loaded_std_units.contains(&unit)
+            || self.scopes.lookup(fully_qualified_name).is_some()
         {
             return;
         }
 
-        let new_unit = !self.loaded_std_units.contains(&unit);
-        self.loaded_std_units.insert(unit.clone());
         crate::std_registry::register_single_std_unit(self, unit.as_str());
-        if new_unit {
-            crate::std_registry::register_short_aliases(self);
-        }
     }
 
     pub(crate) fn report_ambiguous_type_name(&mut self, name: &str, span: fpas_lexer::Span) {

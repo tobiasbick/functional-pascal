@@ -93,6 +93,16 @@ impl Checker {
                 } else if self.ambiguous_hint(&name).is_some() {
                     self.report_ambiguous_type_name(&name, qid.span);
                     Ty::Error
+                } else if let Some(unit) =
+                    crate::std_units::missing_std_unit(&name, &self.loaded_std_units)
+                {
+                    self.error_with_code(
+                        SEMA_UNKNOWN_TYPE,
+                        format!("Unit `{unit}` is not imported"),
+                        format!("Add `{unit}` to the `uses` clause; qualified names do not import a unit."),
+                        qid.span,
+                    );
+                    Ty::Error
                 } else {
                     self.error_with_code(
                         SEMA_UNKNOWN_TYPE,

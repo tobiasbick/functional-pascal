@@ -95,6 +95,20 @@ pub fn parse_std_qualified_call(name: &str) -> Option<(String, String)> {
     Some((unit.to_string(), member))
 }
 
+/// Returns the canonical `Std.*` unit a qualified name starts with when that unit is not in `uses`.
+///
+/// Qualified names never import a unit implicitly, so such a name is always an error.
+pub fn missing_std_unit(name: &str, loaded: &HashSet<String>) -> Option<String> {
+    let mut parts = name.split('.');
+    let root = parts.next()?;
+    let tail = parts.next()?;
+    if !is_std_root_segment(root) {
+        return None;
+    }
+    let unit = canonical_std_unit_from_tail(tail)?.to_string();
+    (!loaded.contains(&unit)).then_some(unit)
+}
+
 /// LLM-friendly hint when a call or identifier is missing from scope.
 pub fn hint_for_unknown_std_name(name: &str, loaded: &HashSet<String>) -> String {
     let parsed = parse_std_qualified_call(name);

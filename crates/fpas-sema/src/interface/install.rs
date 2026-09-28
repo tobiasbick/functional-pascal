@@ -73,29 +73,14 @@ impl check::Checker {
             }
         }
 
-        for (short, mut candidates) in short_candidates {
-            candidates.sort_by(|left, right| {
-                canonical_symbol_name(&left.0)
-                    .cmp(&canonical_symbol_name(&right.0))
-                    .then_with(|| left.0.cmp(&right.0))
-            });
-            candidates.dedup_by(|left, right| left.0.eq_ignore_ascii_case(&right.0));
-            if candidates.len() == 1 {
-                if let Some((_, symbol)) = candidates.pop()
-                    && self.scopes.define_in_root(&short, symbol)
-                {
-                    self.source_short_alias_keys.insert(short);
-                }
-            } else {
-                self.ambiguous_imports.insert(
-                    short,
-                    candidates
-                        .into_iter()
-                        .map(|(qualified, _)| qualified)
-                        .collect(),
-                );
-            }
+        // Source and `Std.*` short names are resolved together so either can make a name ambiguous.
+        for (short, candidates) in short_candidates {
+            self.source_short_candidates
+                .entry(short)
+                .or_default()
+                .extend(candidates);
         }
+        crate::std_registry::register_short_aliases(self);
         Ok(())
     }
 

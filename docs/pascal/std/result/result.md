@@ -16,7 +16,7 @@ end.
 
 After `uses Std.Results;` use short names (`Unwrap`, `IsOk`, …) or qualified (`Std.Results.Unwrap`, …).
 
-**Ambiguity with `Std.Options`:** the short names **`Unwrap`** and **`UnwrapOr`** clash with `Std.Options`. When both units are imported, qualify as `Std.Results.Unwrap(R)` vs `Std.Options.Unwrap(O)`.
+**Ambiguity with `Std.Options`:** the short names **`Unwrap`** and **`UnwrapOr`** clash with `Std.Options`. When both units are imported, prefer the method form `R.Unwrap()`, which selects the routine by the value's type, or qualify as `Std.Results.Unwrap(R)` vs `Std.Options.Unwrap(O)`.
 
 `Unwrap` and `UnwrapOr` require a `Result of T, E` as their first argument. Passing the wrong container type produces a compile-time type error (`F2006`); use `Std.Options` for the other container type.
 

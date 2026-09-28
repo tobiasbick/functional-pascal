@@ -105,6 +105,33 @@ end.",
 }
 
 #[test]
+fn ambiguous_call_hint_suggests_the_method_form() {
+    let errs = check_errors(
+        "\
+program T;
+uses Std.Options, Std.Results;
+begin
+  var O: option of integer := Some(3);
+  var X: integer := Unwrap(O)
+end.",
+    );
+    assert_eq!(errs.len(), 1, "{errs:#?}");
+    let hint = errs[0].help.as_deref().unwrap_or("");
+    assert!(hint.contains("`Value.Unwrap(...)`"), "{hint}");
+    // The suggested method form resolves by the receiver's type.
+    check_ok(
+        "\
+program T;
+uses Std.Options, Std.Results;
+begin
+  var O: option of integer := Some(3);
+  var R: result of integer, string := Ok(4);
+  var X: integer := O.Unwrap() + R.Unwrap()
+end.",
+    );
+}
+
+#[test]
 fn ambiguous_length_error() {
     let errs = check_errors(
         "\
@@ -133,7 +160,7 @@ uses Std.Str, Std.Arrays;
 begin
   var L: integer := Length('hi')
 end.";
-    let expected = "`Length` exists in multiple imported units: Std.Arrays.Length, Std.Str.Length. Use the fully qualified name to disambiguate.";
+    let expected = "`Length` exists in multiple imported units: Std.Arrays.Length, Std.Str.Length. Use the fully qualified name to disambiguate. Or write `Length(Value, ...)` as `Value.Length(...)`: the method form selects the routine by the type of `Value`.";
 
     for _ in 0..64 {
         let errors = check_errors(source);
@@ -186,10 +213,10 @@ end.",
     );
 }
 
-/// After a second `Std.*` unit is pulled in via a fully qualified name, short-alias rebuild must
-/// drop a previously unique short name so it does not keep resolving to only one unit.
+/// A fully qualified name never imports its unit: the missing unit is reported, and the short
+/// names of the imported units keep their meaning.
 #[test]
-fn short_name_becomes_ambiguous_after_fq_std_loads_second_unit() {
+fn qualified_std_name_without_uses_is_rejected() {
     let errs = check_errors(
         "\
 program T;
@@ -200,18 +227,21 @@ begin
   var L2: integer := Length('hi')
 end.",
     );
+    assert_eq!(errs.len(), 1, "{errs:#?}");
     assert!(
-        errs.iter().any(|e| e.message.contains("Ambiguous")),
-        "expected ambiguous `Length` after `Std.Arrays` was auto-loaded: {errs:#?}"
+        errs[0]
+            .message
+            .contains("Unit `Std.Arrays` is not imported"),
+        "{errs:#?}"
     );
 }
 
 #[test]
-fn fq_std_after_single_uses_disambiguates_length() {
+fn qualified_names_disambiguate_imported_std_units() {
     check_ok(
         "\
 program T;
-uses Std.Str;
+uses Std.Str, Std.Arrays;
 begin
   var A: array of integer := [1];
   var L1: integer := Std.Arrays.Length(A);

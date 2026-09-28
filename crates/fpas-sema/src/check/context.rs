@@ -261,6 +261,10 @@ pub struct Checker {
     pub(crate) std_short_alias_keys: HashSet<String>,
     /// Canonical short names currently bound to imported source-unit symbols.
     pub(crate) source_short_alias_keys: HashSet<String>,
+    /// Short-name candidates exported by directly imported source units, keyed canonically.
+    ///
+    /// [`crate::std_registry::register_short_aliases`] merges them with `Std.*` candidates.
+    pub(crate) source_short_candidates: HashMap<String, Vec<(String, crate::scope::Symbol)>>,
     /// Named record type → ordered (field_name, optional_default_expr) pairs.
     pub(crate) record_defaults: RecordDefaultsMap,
     /// `case` label expressions that bind the scrutinee for a guarded scalar arm.
@@ -323,6 +327,7 @@ impl Checker {
             short_builtin_redirect: HashMap::new(),
             std_short_alias_keys: HashSet::new(),
             source_short_alias_keys: HashSet::new(),
+            source_short_candidates: HashMap::new(),
             record_defaults: RecordDefaultsMap::new(),
             scalar_case_bindings: ScalarCaseBindingMap::new(),
             closure_infos: ClosureInfoMap::new(),

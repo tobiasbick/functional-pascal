@@ -26,11 +26,11 @@ end.
 }
 
 #[test]
-fn local_send_procedure_shadows_intrinsic_after_another_std_unit_loads() {
+fn local_send_procedure_shadows_intrinsic_with_several_std_units() {
     assert_succeeds(
         r#"
 program SendProcedure;
-uses Std.Task;
+uses Std.Task, Std.Console;
 mutable var Total: integer := 0;
 procedure Send(First: integer; Second: integer; Third: integer);
 begin
@@ -41,7 +41,7 @@ begin
   if Total <> 6 then panic('local procedure');
   Std.Console.WriteLn('loaded another unit');
   sEnD(4, 5, 6);
-  if Total <> 15 then panic('local procedure replaced during alias refresh')
+  if Total <> 15 then panic('local procedure replaced by the intrinsic')
 end.
 "#,
     );

@@ -72,7 +72,7 @@ impl Checker {
             }
         }
 
-        if let Some(hint) = self.ambiguous_hint(&name) {
+        if let Some(hint) = self.ambiguous_call_hint(&name, args.len()) {
             self.error_with_code(
                 SEMA_AMBIGUOUS_IMPORTED_NAME,
                 format!("Ambiguous imported symbol `{name}`"),

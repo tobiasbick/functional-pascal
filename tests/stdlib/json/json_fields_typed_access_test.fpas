@@ -1,6 +1,6 @@
 program JsonFieldsTypedAccessTest;
 
-uses Std.Arrays, Std.Json, Std.Json.Fields, Std.Results, Std.Test;
+uses Std.Arrays, Std.Dictionaries, Std.Json, Std.Json.Fields, Std.Results, Std.Test;
 
 function ErrorText<T>(Value: result of T, string): string;
 begin

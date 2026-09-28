@@ -4,9 +4,7 @@
 
 program NotesHeadlessBenchmark;
 
-uses
-  Notes.Model, Notes.Update, Notes.View, Std.Args, Std.Arrays, Std.Console, Std.Conv, Std.Time,
-  Std.Tui;
+uses Notes.Model, Notes.Update, Notes.View, Std.Args, Std.Arrays, Std.Console, Std.Conv, Std.Str, Std.Time, Std.Tui;
 
 const
   WarmupIterations: integer := 25;

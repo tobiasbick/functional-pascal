@@ -102,6 +102,7 @@ impl Checker {
         self.short_builtin_redirect.clear();
         self.std_short_alias_keys.clear();
         self.source_short_alias_keys.clear();
+        self.source_short_candidates.clear();
         self.ambiguous_enum_variants.clear();
         self.enum_short_variant_keys.clear();
         for u in uses {

@@ -5,6 +5,7 @@ use super::analyze_unit;
 
 mod aliases;
 mod public_signatures;
+mod short_names;
 
 fn parse_unit(source: &str) -> fpas_parser::Unit {
     let (parsed, errors) = parse_compilation_unit(source);

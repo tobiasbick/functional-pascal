@@ -173,6 +173,9 @@ fn fpas_to_json_at_depth(
             )),
         },
         "Number" => match expect_one_field("Number", fields, location)? {
+            Value::Real(value) if is_exact_json_integer(value) => {
+                Ok(JsonValue::Number(Number::from(value as i64)))
+            }
             Value::Real(value) => match Number::from_f64(value) {
                 Some(number) => Ok(JsonValue::Number(number)),
                 None => Err(std_runtime_error(
@@ -263,6 +266,18 @@ fn fpas_to_json_at_depth(
             location,
         )),
     }
+}
+
+/// Largest magnitude up to which every integral `f64` is exactly representable.
+const MAX_EXACT_JSON_INTEGER: f64 = 9_007_199_254_740_992.0;
+
+/// Whether a real is written as a JSON integer: finite, integral, within the exactly representable
+/// range, and not negative zero.
+fn is_exact_json_integer(value: f64) -> bool {
+    value.is_finite()
+        && value.fract() == 0.0
+        && value.abs() <= MAX_EXACT_JSON_INTEGER
+        && !(value == 0.0 && value.is_sign_negative())
 }
 
 fn fpas_to_json(value: Value, location: SourceLocation) -> Result<JsonValue, StdError> {
@@ -370,5 +385,33 @@ mod tests {
         let err = fpas_to_json_at_depth(value, loc(), MAX_JSON_DEPTH)
             .expect_err("JSON conversion must enforce its nesting limit");
         assert_eq!(err.code, RUNTIME_VM_OPERAND_TYPE_MISMATCH);
+    }
+
+    fn stringified_number(value: f64) -> String {
+        let json =
+            fpas_to_json_at_depth(test_variant("Number", vec![Value::Real(value)]), loc(), 0)
+                .expect("finite number converts");
+        serde_json::to_string(&json).expect("number serializes")
+    }
+
+    #[test]
+    fn integral_numbers_stringify_without_a_fraction() {
+        assert_eq!(stringified_number(2.0), "2");
+        assert_eq!(stringified_number(-3.0), "-3");
+        assert_eq!(stringified_number(0.0), "0");
+        assert_eq!(
+            stringified_number(9_007_199_254_740_992.0),
+            "9007199254740992"
+        );
+    }
+
+    #[test]
+    fn other_numbers_keep_their_real_form() {
+        assert_eq!(stringified_number(1.5), "1.5");
+        assert_eq!(stringified_number(-0.0), "-0.0");
+        assert_eq!(
+            stringified_number(18_014_398_509_481_984.0),
+            "1.8014398509481984e+16"
+        );
     }
 }

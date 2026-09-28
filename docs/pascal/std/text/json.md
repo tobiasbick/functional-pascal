@@ -76,6 +76,11 @@ function Stringify(Value: JsonValue): string;
 
 Serializes a `JsonValue` to compact JSON text.
 
+A number with an integral value up to 2^53 in magnitude is written without a fraction, so
+`JsonValue.Number(2.0)` becomes `2`. Other numbers keep their fraction or exponent, and negative
+zero stays `-0.0`. JSON does not distinguish these forms, so `Parse` reads either back as the same
+real value.
+
 ```pascal
 var Value: JsonValue := JsonValue.ArrayValue([
   JsonValue.Bool(true),

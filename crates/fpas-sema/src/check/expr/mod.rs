@@ -8,6 +8,7 @@ mod bound_method;
 mod calls;
 mod closure;
 mod designator;
+mod equality;
 mod event_access;
 mod operators;
 mod postfix;

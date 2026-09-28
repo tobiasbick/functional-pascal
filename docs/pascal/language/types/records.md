@@ -61,6 +61,10 @@ var
   S: Size := P;        // Error: Point and Size are distinct declarations.
 ```
 
+Two values of the same record type compare with `=` and `<>` field by field when every field
+compares; see [Operators](../basics/operators.md). A record with an array, dictionary, or callable
+field has no whole-value equality.
+
 An anonymous record literal receives the expected named record type from its assignment, argument,
 array element, constant, or return context. This keeps direct construction concise without making
 separately declared record types interchangeable.

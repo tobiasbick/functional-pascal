@@ -3,6 +3,7 @@ use crate::analyze_with_types;
 
 mod bound_methods;
 mod closures;
+mod equality;
 mod fluent;
 mod postfix;
 mod record_context;
@@ -250,8 +251,8 @@ fn analysis_metadata_exposes_all_named_results() {
 }
 
 #[test]
-fn equality_record_error() {
-    check_errors(
+fn equality_records_with_comparable_fields_are_valid() {
+    check_ok(
         "program T; type Id = record Value: integer; end; var A: Id := record Value := 1; end; var B: Id := record Value := 1; end; var Same: boolean := A = B; begin end.",
     );
 }

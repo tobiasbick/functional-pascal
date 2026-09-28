@@ -26,8 +26,13 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (expression precede
 | `in`     | Membership        | `A in B`   |
 
 Equality (`=` and `<>`) accepts compatible scalar values (`integer`, `real`, `boolean`, `string`,
-and simple enums) plus compatible `Option` and `Result` values. Records, arrays, dictionaries, and
-procedures have no whole-value equality; compare their relevant fields or contents explicitly.
+and simple enums) plus compatible `Option` and `Result` values. Records and enums with associated
+data compare structurally when every field compares: two records are equal when all their fields
+are equal, and two enum values are equal when they have the same variant and equal fields. Both
+operands must have the same type. Arrays, dictionaries, callables, tasks, and channels have no
+whole-value equality, and neither does a record or enum that contains one; compare their relevant
+fields or contents explicitly. Ordering operators (`<`, `>`, `<=`, `>=`) never apply to records or
+enums with data.
 
 `in` returns `boolean`. It tests whether an array contains a value, whether a dictionary contains a key, or whether a string contains a substring (or a single-character string):
 

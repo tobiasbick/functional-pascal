@@ -22,7 +22,7 @@ var
   C: Color := Color.Red;
 ```
 
-When a program defines only one enum, unqualified variant names such as `Red` may also resolve if the short name is unique. If two enums export the same variant name (for example both define `Red`), the short name becomes ambiguous: the compiler reports an error and you must use fully qualified names such as `Color.Red` and `Status.Red`.
+When a program defines only one enum, unqualified variant names such as `Red` may also resolve if the short name is unique. If two enums export the same variant name (for example both define `Red`), the short name becomes ambiguous: the compiler reports an error and you must use fully qualified names such as `Color.Red` and `Status.Red`. A type with the same short name hides the variant's short name, whether declared in the same unit or imported: the variant stays reachable only as `Type.Variant`.
 
 ## Enum with backing values
 
@@ -86,6 +86,10 @@ case S of
     WriteLn('Point');
 end;
 ```
+
+Values of an enum with data compare with `=` and `<>`: they are equal when they have the same
+variant and equal fields, so `Shape.Circle(5.0) = Shape.Circle(5.0)` is `true`. This requires every
+field of every variant to compare; see [Operators](../basics/operators.md).
 
 Each binding name in the pattern is positional — it corresponds to the field at that position in the variant declaration. A variant without fields (like `Point` above) uses no parentheses.
 Each field position uses a plain identifier binding; use an `if` guard on the `case` arm for extra constraints.

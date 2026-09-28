@@ -223,6 +223,25 @@ fn resolve_cli_config_parses_test_strict_flag() {
 }
 
 #[test]
+fn resolve_cli_config_parses_test_show_output_flag() {
+    let cwd = test_project("test-show-output-flag");
+    let result = resolve_cli_config(
+        &[
+            String::from("test"),
+            String::from("--show-output"),
+            String::from("demo.fpasprj"),
+        ],
+        &cwd,
+    );
+
+    match result {
+        Ok(ResolvedCli::Test(config)) => assert!(config.show_output),
+        other => panic!("expected test config, got {other:?}"),
+    }
+    fs::remove_dir_all(&cwd).expect("temp directory must be removed");
+}
+
+#[test]
 fn resolve_cli_config_rejects_debug_listen_and_attach_flags() {
     let cwd = create_temp_dir("reject-attach-flags");
     let cases = [

@@ -27,6 +27,7 @@ fn test_cli_runs_passing_tests_in_directory() {
             timeout: None,
             jobs: 1,
             strict: false,
+            show_output: false,
             standard_library: None,
         },
         &mut stdout,

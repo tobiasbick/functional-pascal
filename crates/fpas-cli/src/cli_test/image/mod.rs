@@ -38,7 +38,7 @@ pub(super) fn attach_test_images(prepared: &mut [PreparedTest]) {
 mod tests {
     use super::*;
     use crate::cli_test::link::LinkContextCache;
-    use crate::cli_test::run::run_single_test_capture_prepared;
+    use crate::cli_test::run::{TestRunSettings, run_single_test_capture_prepared};
     use crate::test_support::{create_temp_dir, write_text};
 
     #[test]
@@ -87,8 +87,11 @@ mod tests {
             let (outcome, output) = run_single_test_capture_prepared(
                 &test.path,
                 None,
-                None,
-                None,
+                TestRunSettings {
+                    script_override: None,
+                    timeout: None,
+                    show_output: false,
+                },
                 test.compiled.as_ref(),
             );
             assert_eq!(
@@ -146,8 +149,11 @@ mod tests {
             let (outcome, _) = run_single_test_capture_prepared(
                 &test.path,
                 test.link.as_ref(),
-                None,
-                None,
+                TestRunSettings {
+                    script_override: None,
+                    timeout: None,
+                    show_output: false,
+                },
                 Some(compiled),
             );
             assert_eq!(outcome, crate::cli_test::report::TestOutcome::Pass);
@@ -191,8 +197,11 @@ mod tests {
             let (outcome, _) = run_single_test_capture_prepared(
                 &test.path,
                 None,
-                None,
-                None,
+                TestRunSettings {
+                    script_override: None,
+                    timeout: None,
+                    show_output: false,
+                },
                 test.compiled.as_ref(),
             );
             assert_eq!(outcome, crate::cli_test::report::TestOutcome::Pass);

@@ -1,5 +1,6 @@
 //! Integration tests for the pas test command.
 
+mod captured_output;
 mod discovery;
 mod golden;
 mod reporting;

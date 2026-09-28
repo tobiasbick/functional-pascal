@@ -12,6 +12,7 @@ pub(super) struct ParsedOptions {
     pub(super) list_changed: bool,
     pub(super) fail_fast: bool,
     pub(super) strict: bool,
+    pub(super) show_output: bool,
     pub(super) list_only: bool,
     pub(super) script_path: Option<PathBuf>,
     pub(super) filter: Option<String>,
@@ -38,6 +39,7 @@ pub(super) fn parse_options(mode: CliMode, cli_args: &[String]) -> Result<Parsed
         list_changed: false,
         fail_fast: false,
         strict: false,
+        show_output: false,
         list_only: false,
         script_path: None,
         filter: None,
@@ -123,6 +125,7 @@ pub(super) fn parse_options(mode: CliMode, cli_args: &[String]) -> Result<Parsed
             }
             "--fail-fast" if mode == CliMode::Test => options.fail_fast = true,
             "--strict" if mode == CliMode::Test => options.strict = true,
+            "--show-output" if mode == CliMode::Test => options.show_output = true,
             "--list" if mode == CliMode::Test => options.list_only = true,
             "--script" if mode == CliMode::Test => {
                 let path = take_option_value(
@@ -307,6 +310,7 @@ fn is_known_option(value: &str) -> bool {
             | "--list"
             | "--fail-fast"
             | "--strict"
+            | "--show-output"
             | "--script"
             | "--filter"
             | "--file"

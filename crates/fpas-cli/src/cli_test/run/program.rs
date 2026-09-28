@@ -56,6 +56,8 @@ pub(super) struct ProgramRunOptions<'a> {
     pub display: &'a str,
     /// Controls PASS/FAIL banner emission.
     pub output: RunOutput,
+    /// Print captured standard output after a PASS line too.
+    pub show_output: bool,
     /// Optional entry in a shared in-memory image.
     pub compiled: Option<&'a CompiledTestProgram>,
     /// Runner-owned directory shared by the test body and its hooks.
@@ -71,6 +73,7 @@ pub(in crate::cli_test) struct PreparedProgram {
     pub manifest_override: Option<fpas_project::TestFileOverride>,
     pub display: String,
     pub output: RunOutput,
+    pub show_output: bool,
     pub scratch_dir: PathBuf,
 }
 
@@ -106,6 +109,7 @@ fn prepare_test_program(
         timeout: _,
         display,
         output,
+        show_output,
         compiled,
         scratch_dir,
     } = options;
@@ -171,6 +175,7 @@ fn prepare_test_program(
             .cloned(),
         display: display.to_string(),
         output,
+        show_output,
         scratch_dir: scratch_dir.to_path_buf(),
     })
 }
@@ -196,6 +201,7 @@ pub(in crate::cli_test) fn run_prepared_program(
         manifest_override,
         display,
         output,
+        show_output,
         scratch_dir,
     } = prepared;
     let mut vm = fpas_vm::Vm::new(executable);
@@ -216,6 +222,7 @@ pub(in crate::cli_test) fn run_prepared_program(
         source_paths.as_deref(),
         &display,
         output,
+        show_output,
         execution,
         stderr,
     ))
@@ -232,6 +239,7 @@ fn classify_execution(
     source_paths: Option<&Vec<PathBuf>>,
     display: &str,
     output: RunOutput,
+    show_output: bool,
     execution: VmExecution,
     stderr: &mut dyn Write,
 ) -> TestOutcome {
@@ -255,12 +263,15 @@ fn classify_execution(
             }
             if output.emit_pass() {
                 let _ = writeln!(stderr, "  PASS  {display}");
+                if show_output {
+                    render_captured_stdout(stderr, stdout_lines);
+                }
             }
             TestOutcome::Pass
         }
         VmExecution {
             result: Err(diagnostic),
-            stdout_lines: _,
+            ref stdout_lines,
             skipped: _,
         } => {
             if output.emit_fail_banner() {
@@ -277,12 +288,24 @@ fn classify_execution(
                 )
                 .replace('\n', "\n        ")
             );
+            render_captured_stdout(stderr, stdout_lines);
             if diagnostic.code == RUNTIME_TEST_ASSERTION_FAILED {
                 TestOutcome::AssertFailed
             } else {
                 TestOutcome::RuntimeError
             }
         }
+    }
+}
+
+/// Prints a test's captured standard output below its result line; nothing when it wrote none.
+fn render_captured_stdout(stderr: &mut dyn Write, lines: &[String]) {
+    if lines.is_empty() {
+        return;
+    }
+    let _ = writeln!(stderr, "        stdout:");
+    for line in lines {
+        let _ = writeln!(stderr, "          {line}");
     }
 }
 

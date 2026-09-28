@@ -239,7 +239,7 @@ const TEST_HELP: &str = "\
 Run Functional Pascal test programs.
 
 Usage:
-  fpas test [--std-lib <dir>] [--list] [--fail-fast] [--strict] [--filter <pattern>] [--file <path>] [--report json] [--timeout <secs>] [--jobs <n>] [--script <path>] [<file.fpas | dir | file.fpasprj | file.fpasworkspace>]
+  fpas test [--std-lib <dir>] [--list] [--fail-fast] [--strict] [--show-output] [--filter <pattern>] [--file <path>] [--report json] [--timeout <secs>] [--jobs <n>] [--script <path>] [<file.fpas | dir | file.fpasprj | file.fpasworkspace>]
 
 With no path, discovers a `.fpasworkspace` or `.fpasprj` in the current directory.
 
@@ -248,6 +248,7 @@ Options:
   --list              Print discovered tests without running them
   --fail-fast         Stop after the first failing test
   --strict            Treat skipped tests as a failure
+  --show-output       Print standard output of passing tests (failing tests always show it)
   --filter <pattern>  Run matching test paths only
   --file <path>       Select an exact discovered test path (repeatable; relative to cwd)
   --report json        Write a machine-readable report to stdout

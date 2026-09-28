@@ -39,6 +39,7 @@ struct WorkerRequest {
     manifest_override: Option<ManifestOverride>,
     display: String,
     output: RunOutput,
+    show_output: bool,
     scratch_dir: PathBuf,
 }
 
@@ -201,6 +202,7 @@ fn write_worker_inputs(files: &WorkerFiles, prepared: &PreparedProgram) -> Resul
         manifest_override,
         display: prepared.display.clone(),
         output: prepared.output,
+        show_output: prepared.show_output,
         scratch_dir: prepared.scratch_dir.clone(),
     };
     let request_bytes = serde_json::to_vec(&request)
@@ -384,6 +386,7 @@ fn worker_main(files: &WorkerFiles) -> Result<(), String> {
         manifest_override,
         display: request.display,
         output: request.output,
+        show_output: request.show_output,
         scratch_dir: request.scratch_dir,
     };
     let mut output = CappedBuffer::new(MAX_CAPTURED_OUTPUT);

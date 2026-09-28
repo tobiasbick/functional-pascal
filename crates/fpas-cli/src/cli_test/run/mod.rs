@@ -21,6 +21,17 @@ use hook_exec::{HookRunContext, run_optional_teardown, run_test_hook};
 pub(super) use program::CompiledTestProgram;
 use program::{ProgramRunOptions, RunOutput, run_test_program};
 
+/// Per-run settings shared by every test of one `fpas test` invocation.
+#[derive(Clone, Copy)]
+pub(super) struct TestRunSettings<'a> {
+    /// Optional scripted input configuration.
+    pub script_override: Option<&'a Path>,
+    /// Optional wall-clock timeout per test.
+    pub timeout: Option<Duration>,
+    /// Print captured standard output of passing tests too.
+    pub show_output: bool,
+}
+
 /// Project sources used when linking a test program with local units.
 #[derive(Clone)]
 pub(super) struct LinkContext {
@@ -45,30 +56,41 @@ pub(super) fn run_single_test_capture(
     script_override: Option<&Path>,
     timeout: Option<Duration>,
 ) -> (TestOutcome, Vec<u8>) {
-    run_single_test_capture_prepared(path, link, script_override, timeout, None)
+    run_single_test_capture_prepared(
+        path,
+        link,
+        TestRunSettings {
+            script_override,
+            timeout,
+            show_output: false,
+        },
+        None,
+    )
 }
 
 pub(super) fn run_single_test_capture_prepared(
     path: &Path,
     link: Option<&LinkContext>,
-    script_override: Option<&Path>,
-    timeout: Option<Duration>,
+    settings: TestRunSettings<'_>,
     compiled: Option<&CompiledTestProgram>,
 ) -> (TestOutcome, Vec<u8>) {
     let mut buffer = Vec::new();
-    let outcome =
-        run_single_test_prepared(path, link, script_override, timeout, &mut buffer, compiled);
+    let outcome = run_single_test_prepared(path, link, settings, &mut buffer, compiled);
     (outcome, buffer)
 }
 
 pub(super) fn run_single_test_prepared(
     path: &Path,
     link: Option<&LinkContext>,
-    script_override: Option<&Path>,
-    timeout: Option<Duration>,
+    settings: TestRunSettings<'_>,
     stderr: &mut dyn Write,
     compiled: Option<&CompiledTestProgram>,
 ) -> TestOutcome {
+    let TestRunSettings {
+        script_override,
+        timeout,
+        show_output,
+    } = settings;
     let display = test_display_path(path);
     let scratch = match TestScratch::create(path) {
         Ok(scratch) => scratch,
@@ -117,6 +139,7 @@ pub(super) fn run_single_test_prepared(
             timeout,
             display: &display,
             output: body_output,
+            show_output,
             compiled,
             scratch_dir: scratch.path(),
         },

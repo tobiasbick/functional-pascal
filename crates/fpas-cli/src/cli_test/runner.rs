@@ -11,7 +11,7 @@ use super::image::attach_test_images;
 use super::link::LinkContextCache;
 use super::parallel;
 use super::report::{Summary, TestOutcome, print_json_report, print_summary};
-use super::run::{run_single_test_prepared, test_display_path};
+use super::run::{TestRunSettings, run_single_test_prepared, test_display_path};
 
 pub(super) fn finish_test_run(
     config: &TestCliConfig,
@@ -84,8 +84,11 @@ pub(super) fn run_tests_sequential(
         let outcome = run_single_test_prepared(
             &test.path,
             test.link.as_ref(),
-            config.script_path.as_deref(),
-            config.timeout,
+            TestRunSettings {
+                script_override: config.script_path.as_deref(),
+                timeout: config.timeout,
+                show_output: config.show_output,
+            },
             stderr,
             test.compiled.as_ref(),
         );
@@ -152,6 +155,7 @@ pub(super) fn run_tests_parallel(
         config.jobs,
         config.script_path.as_deref(),
         config.timeout,
+        config.show_output,
         config.fail_fast,
     ));
     results.sort_by_key(|result| result.index);

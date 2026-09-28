@@ -11,7 +11,9 @@ use std::time::Duration;
 use super::report::TestOutcome;
 #[cfg(test)]
 use super::run::run_single_test_capture;
-use super::run::{CompiledTestProgram, LinkContext, run_single_test_capture_prepared};
+use super::run::{
+    CompiledTestProgram, LinkContext, TestRunSettings, run_single_test_capture_prepared,
+};
 
 /// One test ready to execute on a worker thread.
 #[derive(Clone)]
@@ -48,6 +50,7 @@ pub(super) fn run_tests_parallel(
     jobs: usize,
     script_override: Option<&Path>,
     timeout: Option<Duration>,
+    show_output: bool,
     fail_fast: bool,
 ) -> Vec<IndexedTestResult> {
     if prepared.is_empty() {
@@ -56,7 +59,7 @@ pub(super) fn run_tests_parallel(
 
     let worker_count = effective_job_count(jobs, prepared.len());
     if worker_count <= 1 {
-        return run_tests_sequential(prepared, script_override, timeout, fail_fast);
+        return run_tests_sequential(prepared, script_override, timeout, show_output, fail_fast);
     }
 
     let script_path = script_override.map(Path::to_path_buf);
@@ -80,7 +83,7 @@ pub(super) fn run_tests_parallel(
                 if fail_fast && stop.load(Ordering::Relaxed) {
                     return not_run_result(test);
                 }
-                let result = run_prepared_test(test, script_path.as_deref(), timeout);
+                let result = run_prepared_test(test, script_path.as_deref(), timeout, show_output);
                 if fail_fast && result.outcome.is_failure() {
                     stop.store(true, Ordering::Relaxed);
                 }
@@ -110,6 +113,7 @@ fn run_tests_sequential(
     prepared: Vec<PreparedTest>,
     script_override: Option<&Path>,
     timeout: Option<Duration>,
+    show_output: bool,
     fail_fast: bool,
 ) -> Vec<IndexedTestResult> {
     let mut results = Vec::<IndexedTestResult>::with_capacity(prepared.len());
@@ -119,7 +123,7 @@ fn run_tests_sequential(
             results.push(not_run_result(test));
             continue;
         }
-        let result = run_prepared_test(test, script_override, timeout);
+        let result = run_prepared_test(test, script_override, timeout, show_output);
         if fail_fast && result.outcome.is_failure() {
             stop = true;
         }
@@ -168,12 +172,16 @@ fn run_prepared_test(
     test: PreparedTest,
     script_override: Option<&Path>,
     timeout: Option<Duration>,
+    show_output: bool,
 ) -> IndexedTestResult {
     let (outcome, output_bytes) = run_single_test_capture_prepared(
         &test.path,
         test.link.as_ref(),
-        script_override,
-        timeout,
+        TestRunSettings {
+            script_override,
+            timeout,
+            show_output,
+        },
         test.compiled.as_ref(),
     );
     IndexedTestResult {
@@ -266,7 +274,7 @@ mod tests {
             },
         ];
 
-        let results = run_tests_parallel(prepared, 2, None, None, false);
+        let results = run_tests_parallel(prepared, 2, None, None, false, false);
         assert_eq!(results.len(), 2);
         assert!(
             results
@@ -318,7 +326,7 @@ mod tests {
             },
         ];
 
-        let results = run_tests_parallel(prepared, 1, None, None, true);
+        let results = run_tests_parallel(prepared, 1, None, None, false, true);
         assert_eq!(results.len(), 3);
         assert_eq!(results[0].outcome, TestOutcome::Pass);
         assert_eq!(results[1].outcome, TestOutcome::AssertFailed);

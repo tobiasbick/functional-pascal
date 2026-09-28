@@ -258,6 +258,7 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
             timeout: Some(options.timeout.unwrap_or(DEFAULT_TEST_TIMEOUT)),
             jobs: options.jobs.unwrap_or(1),
             strict: options.strict,
+            show_output: options.show_output,
             standard_library: options.standard_library,
         }),
         CliMode::Env | CliMode::Lsp => {

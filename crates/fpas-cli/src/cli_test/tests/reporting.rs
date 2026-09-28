@@ -29,6 +29,7 @@ fn test_cli_json_report_writes_summary_to_stdout() {
             timeout: None,
             jobs: 1,
             strict: false,
+            show_output: false,
             standard_library: None,
         },
         &mut stdout,
@@ -94,6 +95,7 @@ fn report_config_without_json() -> TestCliConfig {
         timeout: None,
         jobs: 1,
         strict: false,
+        show_output: false,
         standard_library: None,
     }
 }

@@ -75,6 +75,7 @@ pub(super) fn run_test_hook(
         Some(link),
         stderr,
         ProgramRunOptions {
+            show_output: false,
             script_override: None,
             timeout,
             display,

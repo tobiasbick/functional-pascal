@@ -130,6 +130,8 @@ pub(crate) struct TestCliConfig {
     pub timeout: Option<Duration>,
     pub jobs: usize,
     pub strict: bool,
+    /// Print captured standard output of passing tests too; failing tests always show it.
+    pub show_output: bool,
     pub standard_library: Option<PathBuf>,
 }
 

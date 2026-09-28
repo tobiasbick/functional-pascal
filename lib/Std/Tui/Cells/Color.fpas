@@ -75,9 +75,15 @@ public type
     // - `Blue`: Blue RGB channel in the range `0..255`.
     public static function FromRgb(Red: integer; Green: integer; Blue: integer): TuiColor;
     begin
-      TuiColorRequireRange(Red, 0, 255, 'red channel');
-      TuiColorRequireRange(Green, 0, 255, 'green channel');
-      TuiColorRequireRange(Blue, 0, 255, 'blue channel');
+      // One combined check keeps the per-cell hot path cheap; failures still name the channel.
+      if (((Red < 0) or (Red > 255)) or ((Green < 0) or (Green > 255))) or
+         ((Blue < 0) or (Blue > 255)) then
+      begin
+        TuiColorRequireRange(Red, 0, 255, 'red channel');
+        TuiColorRequireRange(Green, 0, 255, 'green channel');
+        TuiColorRequireRange(Blue, 0, 255, 'blue channel')
+      end;
+
       return record
         Kind := TuiColorKind.Rgb;
         Index := 0;

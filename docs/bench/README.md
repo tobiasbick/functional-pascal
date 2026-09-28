@@ -4,6 +4,10 @@ End-to-end performance measurements use Functional Pascal programs under `exampl
 
 The curated suite lives in [`suite.toml`](suite.toml). Run it with the `fpas-bench` harness (cargo alias `bench-fpas`). The `typed_real`, `typed_boolean`, and `typed_string` VM rows exercise typed scalar handlers separately.
 
+The `tui_styled_cells` row builds 128-by-44 frames of half-block cells with a concrete RGB
+style per cell, the per-frame path of pixel renderers such as terminal raycasters. A checksum
+over the built cells validates the result.
+
 The `local-index` group measures direct local array writes, painting a prebuilt
 98-by-32 cell grid through the headless application, and partial working-surface
 rectangle fills. Input construction and warmup are outside the timers; checksums

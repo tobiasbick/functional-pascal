@@ -185,6 +185,13 @@ group = "tui"
 path = "examples/pascal/tui/notes-headless/notes-headless-benchmark.fpasprj"
 args = ["250"]
 timeout_ms = 120000
+
+[[bench]]
+id = "tui_styled_cells"
+group = "tui"
+path = "examples/pascal/tui/styled_cells_benchmark.fpas"
+args = ["40"]
+timeout_ms = 120000
 [[bench]]
 id = "analysis_queries"
 group = "tooling"

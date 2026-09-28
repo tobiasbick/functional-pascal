@@ -484,6 +484,18 @@ fn rejects_invalid_cell_glyphs() {
 }
 
 #[test]
+fn rejects_rgb_channels_outside_the_byte_range_by_name() {
+    let (exit, _stdout, stderr) =
+        run_repo_std_program("tests/stdlib/tui/invalid_rgb_channel_runtime_error.fpas");
+
+    assert_ne!(exit, 0, "RGB channels above 255 must fail");
+    assert!(
+        stderr.contains("Tui green channel is outside its supported range"),
+        "stderr: {stderr}"
+    );
+}
+
+#[test]
 fn rejects_cell_grid_length_mismatch() {
     let (exit, _stdout, stderr) =
         run_repo_std_program("tests/stdlib/tui/invalid_cell_grid_runtime_error.fpas");

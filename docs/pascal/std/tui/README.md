@@ -53,6 +53,7 @@ implementation details.
 | `TuiApplication.RunWithBackground(...)` | Runs a wakeable host with a bounded typed inbox. |
 | `Cmd.StartBackground(...)` | Starts one host-owned operation after `Update`. |
 | `Cmd.ReplaceSubscription(...)` / `CancelSubscription(...)` | Replaces or cancels a long-lived source by id. |
+| `Cmd.RequestTick(DelayMilliseconds)` | Asks the interactive host for one `TuiMsg.Tick` after a delay. |
 | `App.SurfaceSnapshot()` | Copies the last painted surface for assertions. |
 
 ## Implementation (contributors)

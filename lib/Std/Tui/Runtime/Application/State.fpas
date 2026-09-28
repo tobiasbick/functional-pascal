@@ -4,7 +4,7 @@ uses
   Std.Arrays, Std.Options, Std.Tui.Cells.Palette, Std.Tui.Elements.Element, Std.Tui.Geometry.Size,
   Std.Tui.Layout.Frame, Std.Tui.Rendering.Surface, Std.Tui.Runtime.Application.Background,
   Std.Tui.Runtime.Cmd, Std.Tui.Runtime.Input, Std.Tui.Runtime.Msg, Std.Tui.Runtime.Routing,
-  Std.Tui.Runtime.Routing.Pointer, Std.Tui.Runtime.TerminalSession;
+  Std.Tui.Runtime.Routing.Pointer, Std.Tui.Runtime.TerminalSession, Std.Time;
 
 public mutable var
   TuiAppInputHead: array of integer := [];
@@ -19,6 +19,9 @@ public mutable var
   TuiAppInteractive: array of boolean := [];
   TuiAppPalettes: array of TuiPalette := [];
   TuiAppStarted: array of boolean := [];
+  // Monotonic time of the pending tick request and its due time; negative due means none.
+  TuiAppTickRequestedAt: array of integer := [];
+  TuiAppTickDueAt: array of integer := [];
 
 // Opens application-owned state and returns its stable identifier.
 public function TuiAppOpenApplication(Size: TuiSize; Palette: TuiPalette; Interactive: boolean): integer;
@@ -35,6 +38,8 @@ begin
   TuiAppInteractive := Std.Arrays.Concat(TuiAppInteractive, [Interactive]);
   TuiAppPalettes := Std.Arrays.Concat(TuiAppPalettes, [Palette]);
   TuiAppStarted := Std.Arrays.Concat(TuiAppStarted, [false]);
+  TuiAppTickRequestedAt := Std.Arrays.Concat(TuiAppTickRequestedAt, [0]);
+  TuiAppTickDueAt := Std.Arrays.Concat(TuiAppTickDueAt, [-1]);
   TuiBackgroundOpenApplication();
   Std.Tui.Runtime.Routing.Pointer.TuiPointerRoutingOpen();
   return Std.Arrays.Length(TuiAppOpen)
@@ -266,6 +271,48 @@ begin
     end
   end;
 
+  case Output.ReadTickRequest() of
+    Some(Delay):
+    begin
+      var Now: integer := MonotonicMillis();
+      TuiAppTickRequestedAt[ApplicationId - 1] := Now;
+      TuiAppTickDueAt[ApplicationId - 1] := Now + Delay
+    end;
+    None:
+    begin
+    end
+  end;
+
   TuiAppPushMessages(ApplicationId, TuiBackgroundApply(ApplicationId, Output.ReadBackground()));
   return false
+end;
+
+// Returns milliseconds until the pending tick is due: 0 when due, -1 without a pending tick.
+public function TuiAppTickWait(ApplicationId: integer): integer;
+begin
+  var Due: integer := TuiAppTickDueAt[ApplicationId - 1];
+  if Due < 0 then
+  begin
+    return -1
+  end;
+  var Remaining: integer := Due - MonotonicMillis();
+  if Remaining < 0 then
+  begin
+    return 0
+  end;
+
+  return Remaining
+end;
+
+// Clears the pending tick and returns it with the milliseconds elapsed since its request.
+public function TuiAppTakeTick(ApplicationId: integer): TuiMsg;
+begin
+  TuiAppTickDueAt[ApplicationId - 1] := -1;
+  return TuiMsg.Tick(ElapsedMillis(TuiAppTickRequestedAt[ApplicationId - 1]))
+end;
+
+// Discards a pending tick request; headless runs deliver their own deterministic ticks.
+public procedure TuiAppClearTick(ApplicationId: integer);
+begin
+  TuiAppTickDueAt[ApplicationId - 1] := -1
 end;

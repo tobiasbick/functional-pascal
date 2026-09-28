@@ -145,6 +145,30 @@ receive implicit ticks and do not rebuild or repaint their view.
 deterministic time steps produced by `RunIterations`. The interactive host does
 not assume that every application needs an animation timer.
 
+An application that animates asks for its next frame explicitly.
+`Cmd.RequestTick(DelayMilliseconds)` schedules one `TuiMsg.Tick(Elapsed)` after
+the delay, where `Elapsed` is the number of milliseconds actually passed since
+the request and is never less than the delay. The request is one-shot: `Update`
+requests the following tick while it handles the current one, and stops
+animating by not requesting another. A later request replaces a pending one, so
+at most one tick is pending per application. Input, application messages, and
+paint continue while a tick is pending. A negative delay is a runtime error.
+
+```pascal
+TuiMsg.Tick(Elapsed):
+begin
+  Next.Animation := Advance(State.Animation, Elapsed);
+  if Next.Animation.Running then
+  begin
+    Cmd.RequestTick(40)
+  end
+end
+```
+
+Headless runs keep their deterministic time steps: `RunIterations` and
+`RunBackgroundIterations` deliver `TuiMsg.Tick(DeltaMilliseconds)` on every
+otherwise idle iteration, which also answers a pending request.
+
 Keyboard, mouse, and positive resize events are normalized before routing;
 paste and focus events are ignored. Mouse coordinates become zero-based.
 Consecutive native resize events are coalesced to the latest dimensions after

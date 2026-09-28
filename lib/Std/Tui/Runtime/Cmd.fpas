@@ -17,6 +17,8 @@ mutable var
   TuiCommandValues: array of TuiCmd := [];
   TuiCommandPalettes: array of option of TuiPalette := [];
   TuiCommandBackground: array of array of TuiBackgroundCommand := [];
+  // Requested tick delay in milliseconds per output; negative means no request.
+  TuiCommandTickDelays: array of integer := [];
 
 function TuiCmdOutputRequire(Slot: integer): integer;
 begin
@@ -40,6 +42,7 @@ public type
       TuiCommandValues := Std.Arrays.Concat(TuiCommandValues, [TuiCmd.NoCommand]);
       TuiCommandPalettes := Std.Arrays.Concat(TuiCommandPalettes, [None]);
       TuiCommandBackground := Std.Arrays.Concat(TuiCommandBackground, [[]]);
+      TuiCommandTickDelays := Std.Arrays.Concat(TuiCommandTickDelays, [-1]);
       return record
         Slot := Std.Arrays.Length(TuiCommandValues);
       end
@@ -54,7 +57,34 @@ public type
       var Slot: integer := TuiCmdOutputRequire(Self.Slot);
       TuiCommandValues[Slot - 1] := TuiCmd.NoCommand;
       TuiCommandPalettes[Slot - 1] := None;
-      TuiCommandBackground[Slot - 1] := []
+      TuiCommandBackground[Slot - 1] := [];
+      TuiCommandTickDelays[Slot - 1] := -1
+    end;
+
+    // Asks the interactive host for one `TuiMsg.Tick` after DelayMilliseconds.
+    // The latest request of an application replaces an earlier pending one.
+    public procedure RequestTick(Self: TuiCmdOutput; DelayMilliseconds: integer);
+    begin
+      var Slot: integer := TuiCmdOutputRequire(Self.Slot);
+      if DelayMilliseconds < 0 then
+      begin
+        panic('Tui tick delay must not be negative')
+      end;
+
+      TuiCommandTickDelays[Slot - 1] := DelayMilliseconds
+    end;
+
+    // Returns the tick delay requested by the current Update call, if any.
+    public function ReadTickRequest(Self: TuiCmdOutput): option of integer;
+    begin
+      var Slot: integer := TuiCmdOutputRequire(Self.Slot);
+      var Delay: integer := TuiCommandTickDelays[Slot - 1];
+      if Delay < 0 then
+      begin
+        return None
+      end;
+
+      return Some(Delay)
     end;
 
     // Starts one operation after Update returns. The host owns it until completion or shutdown.

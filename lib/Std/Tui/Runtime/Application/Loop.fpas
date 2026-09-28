@@ -152,6 +152,8 @@ begin
         None:
         begin
           Remaining := Remaining - 1;
+          // The deterministic tick also answers a pending tick request.
+          TuiAppClearTick(ApplicationId);
           Model := TuiLoopApplyFramework(ApplicationId, Model, TuiMsg.Tick(DeltaMilliseconds), Update);
           if TuiLoopFinishUpdate(ApplicationId, Model, View, false) then
           begin
@@ -164,6 +166,8 @@ begin
     else
     begin
       Remaining := Remaining - 1;
+      // The deterministic tick also answers a pending tick request.
+      TuiAppClearTick(ApplicationId);
       Model := TuiLoopApplyFramework(ApplicationId, Model, TuiMsg.Tick(DeltaMilliseconds), Update);
       if TuiLoopFinishUpdate(ApplicationId, Model, View, false) then
       begin
@@ -230,6 +234,13 @@ begin
       TuiAppRouteInput(ApplicationId, TuiAppPopInput(ApplicationId));
       continue
     end;
+    // A due tick is queued like any framework message; a pending one bounds the wait below.
+    var TickWait: integer := TuiAppTickWait(ApplicationId);
+    if TickWait = 0 then
+    begin
+      TuiAppPushMessages(ApplicationId, [TuiAppTakeTick(ApplicationId)]);
+      continue
+    end;
     mutable var ConsoleInput: option of TuiHostInput := None;
     mutable var ApplicationInput: option of TMessage := None;
     mutable var Cases: array of WaitCase := [];
@@ -276,6 +287,11 @@ begin
     if TuiBackgroundHasWork(ApplicationId) then
     begin
       Std.Arrays.Push(Cases, TimerCase(50, procedure() begin end))
+    end;
+
+    if TickWait > 0 then
+    begin
+      Std.Arrays.Push(Cases, TimerCase(TickWait, procedure() begin end))
     end;
 
     Select(Cases);

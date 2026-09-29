@@ -13,6 +13,7 @@ mod generic_aliases;
 mod qualified;
 mod record_events;
 mod record_properties;
+mod record_updates;
 mod resolution;
 mod run;
 mod support;

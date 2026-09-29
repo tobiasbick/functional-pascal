@@ -281,7 +281,8 @@ impl Checker {
                 .iter()
                 .find(|(name, _)| name.eq_ignore_ascii_case(&field_init.name))
             {
-                let value_ty = self.check_expr(&field_init.value);
+                let value_ty =
+                    self.check_expr_with_expected_record_literals(&field_init.value, field_ty);
                 self.check_type_compat(
                     field_ty,
                     &value_ty,

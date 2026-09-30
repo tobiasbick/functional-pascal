@@ -359,6 +359,10 @@ fn run_executable(
     stdout: Box<dyn Write + Send>,
     stderr: &mut dyn Write,
 ) -> i32 {
+    // Runtime diagnostics carry linked source IDs; callers pass paths indexed by graph source.
+    let source_paths =
+        source_paths.map(|paths| fpas_build::linked_source_paths(&executable, paths));
+    let source_paths = source_paths.as_deref();
     let mut vm = fpas_vm::Vm::with_writer_and_args(executable, stdout, program_args);
     if PROCESS_LIFECYCLE_AUTHORIZED.load(std::sync::atomic::Ordering::Acquire) {
         vm.allow_process_lifecycle();

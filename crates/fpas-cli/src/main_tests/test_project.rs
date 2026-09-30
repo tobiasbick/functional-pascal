@@ -273,3 +273,55 @@ fn test_cli_timeout_aborts_hanging_setup_hook() {
         "test body must not run after the setup hook timed out: {text}"
     );
 }
+
+#[test]
+fn test_cli_reports_runtime_errors_of_units_linked_out_of_graph_order() {
+    for jobs in [1, 2] {
+        let cwd = create_temp_dir("fpas-test-unit-link-order");
+        write_text(
+            &cwd.join("tests.fpasprj"),
+            "[project]\nname = \"tests\"\nkind = \"test\"\n\n[sources]\ninclude = [\"*.fpas\"]\n",
+        );
+        // `util.fpas` precedes `zeta.fpas` in the unit graph, but the linker emits App.Zeta first.
+        write_text(
+            &cwd.join("util.fpas"),
+            "unit App.Util;\nuses App.Zeta;\npublic procedure Trigger();\nbegin\n  if Seven() = 7 then panic('util failure')\nend;\n",
+        );
+        write_text(
+            &cwd.join("zeta.fpas"),
+            "unit App.Zeta;\npublic function Seven(): integer;\nbegin\n  return 7\nend;\n",
+        );
+        write_text(
+            &cwd.join("trigger_test.fpas"),
+            "program TriggerTest;\nuses App.Util;\nbegin\n  Trigger()\nend.",
+        );
+
+        let mut stderr = Vec::new();
+        let mut stdout = Vec::new();
+        let exit = test_cli(
+            TestCliConfig {
+                input: CliInput::ProjectFile(cwd.join("tests.fpasprj")),
+                cwd: cwd.clone(),
+                fail_fast: false,
+                list_only: false,
+                script_path: None,
+                filter: None,
+                files: Vec::new(),
+                report: None,
+                timeout: None,
+                jobs,
+                strict: false,
+                show_output: false,
+                standard_library: None,
+            },
+            &mut stdout,
+            &mut stderr,
+        );
+
+        let text = String::from_utf8(stderr).expect("utf-8");
+        assert_ne!(exit, 0, "jobs={jobs}");
+        assert!(text.contains("util.fpas:5:"), "jobs={jobs}: {text}");
+        assert!(text.contains("util failure"), "jobs={jobs}: {text}");
+        assert!(!text.contains("zeta.fpas:"), "jobs={jobs}: {text}");
+    }
+}

@@ -77,7 +77,8 @@ impl UnitBackend for Backend {
     }
 
     fn normalize(object: &mut Self::Object, source_id: u32) {
-        let source = format!("source-{source_id}.fpas");
-        object.sources.fill(source);
+        object
+            .sources
+            .fill(crate::source_labels::source_label(source_id));
     }
 }

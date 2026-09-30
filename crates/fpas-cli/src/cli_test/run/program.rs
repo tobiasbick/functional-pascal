@@ -204,6 +204,9 @@ pub(in crate::cli_test) fn run_prepared_program(
         show_output,
         scratch_dir,
     } = prepared;
+    // Runtime diagnostics carry linked source IDs; the prepared list is indexed by graph source.
+    let source_paths =
+        source_paths.map(|paths| fpas_build::linked_source_paths(&executable, &paths));
     let mut vm = fpas_vm::Vm::new(executable);
     vm.set_test_scratch_dir(scratch_dir);
     if let Err(message) = apply_test_script(
@@ -219,7 +222,7 @@ pub(in crate::cli_test) fn run_prepared_program(
     let execution = execute_vm(vm);
     Ok(classify_execution(
         &test_path,
-        source_paths.as_deref(),
+        source_paths.as_ref(),
         &display,
         output,
         show_output,

@@ -119,3 +119,34 @@ fn run_cli_reports_unit_runtime_errors_with_the_unit_path() {
     assert!(stderr_output.contains("util.fpas:4:21: error[F4001]: Division by zero"));
     assert!(!stderr_output.contains("main.fpas:4:21: error[F4001]"));
 }
+
+#[test]
+fn run_cli_reports_runtime_errors_of_units_linked_out_of_graph_order() {
+    let cwd = create_temp_dir("run-unit-link-order-path");
+    let project_file = cwd.join("app.fpasprj");
+    support::write_program_project_file(&project_file, "src/main.fpas", &["src/*.fpas"]);
+    write_text(
+        &cwd.join("src/main.fpas"),
+        "program Main;\nuses App.Util;\nbegin\n  Trigger()\nend.\n",
+    );
+    // `util.fpas` precedes `zeta.fpas` in the unit graph, but the linker emits App.Zeta first.
+    write_text(
+        &cwd.join("src/util.fpas"),
+        "unit App.Util;\nuses App.Zeta;\npublic procedure Trigger();\nbegin\n  if Seven() = 7 then panic('util failure')\nend;\n",
+    );
+    write_text(
+        &cwd.join("src/zeta.fpas"),
+        "unit App.Zeta;\npublic function Seven(): integer;\nbegin\n  return 7\nend;\n",
+    );
+
+    let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);
+    fs::remove_dir_all(&cwd).expect("temp directory must be removed");
+
+    assert_eq!(exit_code, 2);
+    assert!(
+        stderr_output.contains("util.fpas:5:"),
+        "panic must name the unit that raised it: {stderr_output}"
+    );
+    assert!(stderr_output.contains("util failure"));
+    assert!(!stderr_output.contains("zeta.fpas:"));
+}

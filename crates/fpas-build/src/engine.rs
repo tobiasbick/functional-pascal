@@ -283,8 +283,9 @@ pub(crate) fn link_program(
 }
 
 fn normalize_sources(object: &mut RelocatableObject, source_id: u32) {
-    let source = format!("source-{source_id}.fpas");
-    object.sources.fill(source);
+    object
+        .sources
+        .fill(crate::source_labels::source_label(source_id));
 }
 
 fn event(owner: &str, kind: BuildEventKind) -> BuildEvent {

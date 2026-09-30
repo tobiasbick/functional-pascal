@@ -13,13 +13,13 @@ requests another readiness probe after one millisecond; platform timer granulari
 load can delay the actual probe. This permits producer/consumer work and nested joins with one
 pool worker. Suspended values, destinations, and monotonic deadlines survive each probe.
 
-The main task may help queued tasks while waiting. Child waits yield back to that caller rather
-than retaining its stack. Hosted blocking I/O and non-cooperative computation can still delay
-progress; this is not a hard shutdown or wall-clock deadline guarantee. Debugger execution uses
-the same pending-operation state with its deterministic scheduling clock.
-
-`CloseTaskGroupWithTimeout` is an exception to main-task helping: it leaves queued child work to
-the pool so arbitrary child code cannot retain the timed caller's stack.
+The main task never executes queued tasks while it waits; pool workers run them. A queued child
+may wait for the main task itself, for example for a request it sends on a channel or socket, so
+running that child on the main task's thread could deadlock until the child's I/O times out, and a
+timed wait could not observe its budget. The main task parks until a notification or its next
+probe. Hosted blocking I/O and non-cooperative computation in children can still occupy every pool
+worker and delay progress; this is not a hard shutdown or wall-clock deadline guarantee. Debugger
+execution uses the same pending-operation state with its deterministic scheduling clock.
 
 ```pascal
 program Example;
@@ -206,7 +206,7 @@ request cancellation or seal an otherwise open group.
   does not certify that the final child finished before the nominal deadline. VM shutdown or a
   fatal scheduler error remains a runtime diagnostic, even when the timeout has also elapsed.
 
-The main task waits for notifications without executing queued workers itself. Child tasks save
+Like every main-task wait, it waits for notifications without executing queued workers itself. Child tasks save
 the deadline and yield the pool thread; the debugger uses the same suspension with its clock.
 Timer granularity, scheduling delays, and non-cooperative code occupying available execution
 threads can delay observation. This is a cooperative waiting budget, not a real-time guarantee,
@@ -367,7 +367,7 @@ Wait(Ta);
 Wait(Tb)
 ```
 
-The main task can help queued tasks while waiting; helping may delay its next completion observation.
+The main task waits without executing queued tasks; see [Waiting and execution](#waiting-and-execution).
 Child tasks suspend as described above. There is no per-input helper thread and no busy waiting.
 VM shutdown releases pending waits through the existing task-failure path.
 
@@ -379,17 +379,17 @@ Timeout returns `Error('Task wait timed out')`; cancellation returns
 `Error('Task wait was cancelled')`. Neither outcome cancels tasks or consumes their results.
 
 - Timeout milliseconds must be non-negative. One monotonic budget starts after argument validation;
-  wakeups and scheduler helping do not reset it. Zero performs one immediate completion observation.
+  wakeups and scheduler probes do not reset it. Zero performs one immediate completion observation.
 - In that initial observation, a ready task wins over timeout. In subsequent observations, an
-  expired budget wins over a successful completion, even if it became available while the worker
-  was busy helping another task. Completions are not timestamped.
+  expired budget wins over a successful completion, even if it became available while the caller
+  was not observing. Completions are not timestamped.
 - A cancelled token wins over successful completion, including on entry. Invalid task identities
   and task failures are checked first; they remain runtime diagnostics, not ordinary Result errors.
   Invalid tokens and timeouts also produce runtime diagnostics.
 - Main-task waits request parking intervals of at most 10 ms, shortened to the remaining timeout;
   child waits use the shared suspended-operation path described above.
-  This is cooperative, not a hard wall-clock bound: scheduler helping can execute task code that
-  blocks or runs for a long time. Control checks resume after that helped work yields or returns.
+  This is cooperative, not a hard wall-clock bound: timer granularity and scheduling delays can
+  postpone the next observation.
 - Debugger waits use its monotonic clock and explicit suspension. No per-input worker or persistent
   wait registration is created. Completion, timeout, cancellation, failure, and teardown release the
   suspended wait's task list without changing ownership of the tasks themselves.

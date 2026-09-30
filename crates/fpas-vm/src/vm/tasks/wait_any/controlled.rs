@@ -2,7 +2,7 @@
 //!
 //! Documentation: `docs/pascal/std/concurrency/task.md`.
 
-use super::super::{TaskSuspension, pool};
+use super::super::TaskSuspension;
 use crate::vm::shared::wakeups::WakeSignal;
 use crate::vm::{VmError, worker::Worker};
 use fpas_bytecode::{Register, TaskIntrinsic, Value};
@@ -85,16 +85,11 @@ impl Worker {
             if scheduler.is_shutdown() {
                 continue;
             }
-            if let Some(task) = scheduler.try_dequeue() {
-                drop(wake);
-                pool::run_helped(self, task, Arc::clone(&scheduler))?;
-            } else {
-                let interval = timeout.map_or(POLL_INTERVAL, |timeout| {
-                    timeout.saturating_sub(started.elapsed()).min(POLL_INTERVAL)
-                });
-                if let Some((signal, _, _)) = &wake {
-                    signal.wait(interval);
-                }
+            let interval = timeout.map_or(POLL_INTERVAL, |timeout| {
+                timeout.saturating_sub(started.elapsed()).min(POLL_INTERVAL)
+            });
+            if let Some((signal, _, _)) = &wake {
+                signal.wait(interval);
             }
         }
     }

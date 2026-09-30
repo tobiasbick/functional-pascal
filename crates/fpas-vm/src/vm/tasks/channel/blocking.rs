@@ -1,4 +1,8 @@
-//! Blocking bounded-channel operations.
+//! Blocking bounded-channel operations of the main task.
+//!
+//! The main task never runs queued tasks inline here: it may itself be the counterpart that a
+//! queued task waits for, so executing that task on this thread could deadlock until the task's
+//! own I/O times out. Pool workers make progress while the main task parks on the channel.
 
 use fpas_bytecode::Value;
 
@@ -26,9 +30,6 @@ impl Worker {
                 SendState::Closed => return Ok(error(CLOSED_ERROR)),
                 SendState::Cancelled => return Ok(error(SEND_CANCELLED_ERROR)),
                 SendState::Pending(pending) => value = pending,
-            }
-            if self.help_one_channel_task()? {
-                continue;
             }
             if self.channel_scheduler_stopped() {
                 return Ok(error(CLOSED_ERROR));
@@ -65,9 +66,6 @@ impl Worker {
                 ReceiveState::Closed => return Ok(error(CLOSED_ERROR)),
                 ReceiveState::Cancelled => return Ok(error(RECEIVE_CANCELLED_ERROR)),
                 ReceiveState::Pending => {}
-            }
-            if self.help_one_channel_task()? {
-                continue;
             }
             if self.channel_scheduler_stopped() {
                 return Ok(error(CLOSED_ERROR));

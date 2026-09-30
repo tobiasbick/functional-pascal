@@ -38,10 +38,9 @@ ready queue, so sleeping tasks do not occupy pool workers. `Sleep` on the main t
 host wait.
 
 Child task waits, blocking channel operations, mixed-source selection, and group close also save
-pending operation state and release the pool thread. Shared timer probes resume them without
-retaining an inline helper's waiting parent stack. Values and deadlines survive suspension.
-The main task may help queued work while waiting, except during `CloseTaskGroupWithTimeout`, which
-leaves child execution to the pool so it can observe its waiting budget. Requested timer intervals
+pending operation state and release the pool thread. Shared timer probes resume them, and values and
+deadlines survive suspension. The main task never runs queued work while it waits: a queued child
+may wait for the main task itself, and timed waits must observe their budget. Requested timer intervals
 are not hard wall-clock guarantees; see [Waiting and execution](../../std/concurrency/task.md#waiting-and-execution).
 
 Synchronous hosted callbacks execute as part of their owner task. If callback bytecode reaches

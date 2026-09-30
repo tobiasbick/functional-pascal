@@ -405,64 +405,6 @@ fn callback_failure_is_retained_for_the_owner_without_a_ghost_task() {
 }
 
 #[test]
-fn inline_helped_task_failure_is_retained_before_run_abort() {
-    let executable = task_image(
-        vec![
-            abx(Opcode::LoadConstant, 0, 0),
-            abc_aux(Opcode::SpawnTask, 2, 0, 0, 0),
-            abx(Opcode::LoadConstant, 1, 1),
-            abc_aux(Opcode::SpawnTask, 3, 1, 0, 0),
-            Instruction::abc(
-                Opcode::Intrinsic,
-                4,
-                u16::from(Intrinsic::Task(TaskIntrinsic::Wait)),
-                2,
-                1,
-            )
-            .expect("wait instruction"),
-            return_unit(),
-            abc(Opcode::Yield, 0, 0, 0),
-            return_unit(),
-            abx(Opcode::LoadConstant, 0, 2),
-            abc(Opcode::Panic, 0, 0, 0),
-            return_unit(),
-        ],
-        vec![
-            Constant::Function {
-                function: FunctionId::new(1),
-                task_bound: false,
-            },
-            Constant::Function {
-                function: FunctionId::new(2),
-                task_bound: false,
-            },
-            Constant::String(StringId::new(4)),
-        ],
-        vec!["root", "test.fpas", "yielding", "failing", "helped panic"],
-        vec![
-            task_function(0, 0, 6, 5, true),
-            task_function(2, 6, 8, 0, false),
-            task_function(3, 8, 11, 1, false),
-        ],
-    );
-    let mut vm = Vm::new(executable);
-    vm.pool_size = 0;
-    let scheduler = Arc::clone(&vm.scheduler);
-
-    let error = vm.run().expect_err("helped task must fail the run");
-    assert_eq!(error.code, fpas_diagnostics::codes::RUNTIME_PROGRAM_PANIC);
-    assert!(error.message.contains("helped panic"));
-    assert!(matches!(
-        scheduler.poll_result(2),
-        crate::vm::TaskResultPoll::Failed(retained) if retained == error
-    ));
-    assert!(matches!(
-        scheduler.poll_result(1),
-        crate::vm::TaskResultPoll::Failed(retained) if retained == error
-    ));
-}
-
-#[test]
 fn shared_images_have_isolated_single_use_vm_instances() {
     let image = Arc::new(verified(
         vec![return_unit()],

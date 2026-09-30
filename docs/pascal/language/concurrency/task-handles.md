@@ -12,8 +12,8 @@ group retains ownership even when the caller discards a handle; see [Task groups
 ## Waiting for a task
 
 `Std.Task.Wait` waits until the task completes and consumes its result of type **`T`**. Child waits
-save their continuation and release the pool thread; the main task may help queued work or wait
-for scheduler notification. See [Waiting and execution](../../std/concurrency/task.md#waiting-and-execution).
+save their continuation and release the pool thread; the main task waits for scheduler notification
+while pool workers run queued work. See [Waiting and execution](../../std/concurrency/task.md#waiting-and-execution).
 
 ```pascal
 var T: task := go Compute(100);

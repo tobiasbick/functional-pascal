@@ -1,10 +1,12 @@
-//! Register task pool execution and inline progress for synchronous waits.
+//! Register task pool execution.
 
 use std::sync::Arc;
 
 mod suspension;
 
-use super::{TaskScheduler, TaskState};
+use super::TaskScheduler;
+#[cfg(test)]
+use super::TaskState;
 use crate::vm::VmError;
 use crate::vm::worker::Worker;
 
@@ -18,6 +20,8 @@ pub(in crate::vm) fn pool_loop(
     Ok(())
 }
 
+/// Run one dequeued task on the caller's thread; tests use it to drive tasks deterministically.
+#[cfg(test)]
 pub(super) fn run_helped(
     parent: &Worker,
     task: TaskState,

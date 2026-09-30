@@ -5,7 +5,8 @@ mod non_blocking;
 mod suspension;
 mod timeout;
 
-use std::sync::Arc;
+#[cfg(test)]
+mod tests;
 
 use fpas_bytecode::{Intrinsic, Register, TaskIntrinsic, Value};
 use fpas_diagnostics::codes::{
@@ -14,7 +15,6 @@ use fpas_diagnostics::codes::{
 
 use super::super::worker::Worker;
 use super::super::{VmError, diagnostics};
-use super::pool;
 
 const CLOSED_ERROR: &str = "Channel is closed";
 const SEND_CANCELLED_ERROR: &str = "Channel send was cancelled";
@@ -145,17 +145,6 @@ impl Worker {
             | TaskIntrinsic::StartSupervisedTask
             | TaskIntrinsic::CloseWaitCase => Ok(None),
         }
-    }
-
-    pub(super) fn help_one_channel_task(&mut self) -> Result<bool, VmError> {
-        let Some(scheduler) = self.scheduler.clone() else {
-            return Ok(false);
-        };
-        let Some(task) = scheduler.try_dequeue() else {
-            return Ok(false);
-        };
-        pool::run_helped(self, task, Arc::clone(&scheduler))?;
-        Ok(true)
     }
 
     pub(super) fn channel_scheduler_stopped(&self) -> bool {

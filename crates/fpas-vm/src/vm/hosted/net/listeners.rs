@@ -144,6 +144,11 @@ impl NetworkListeners {
                 Err(error) => return Err(format!("Network listener accept failed: {error}")),
             };
             ensure_accept_active(&listener, &is_cancelled)?;
+            // Windows accepted sockets inherit the listener's non-blocking mode; plain reads and
+            // TLS handshake timeouts require a blocking socket.
+            stream
+                .set_nonblocking(false)
+                .map_err(|error| format!("Could not configure accepted connection: {error}"))?;
             stream
                 .set_nodelay(true)
                 .map_err(|error| format!("Could not configure accepted connection: {error}"))?;
@@ -242,7 +247,7 @@ mod tests {
     use std::net::{TcpListener, TcpStream};
     use std::sync::atomic::{AtomicBool, Ordering};
     use std::sync::{Arc, mpsc};
-    use std::time::Duration;
+    use std::time::{Duration, Instant};
 
     use super::NetworkListeners;
 
@@ -273,6 +278,31 @@ mod tests {
 
         assert_eq!(request, *b"ping");
         assert_eq!(client.join().expect("join client"), *b"pong");
+    }
+
+    /// Windows accepted sockets inherit the listener's non-blocking mode; the accepted
+    /// connection must still block until its read timeout instead of failing with WouldBlock.
+    #[test]
+    fn accepted_tcp_connection_blocks_until_its_read_timeout() {
+        let port = unused_port();
+        let listeners = NetworkListeners::new();
+        let handle = listeners
+            .listen("127.0.0.1", i64::from(port))
+            .expect("listen");
+        let _client = TcpStream::connect(("127.0.0.1", port)).expect("connect");
+        let mut stream = listeners.accept(handle).expect("accept");
+        stream
+            .set_timeout(Some(Duration::from_millis(200)))
+            .expect("read timeout");
+
+        let started = Instant::now();
+        let mut byte = [0_u8; 1];
+        let error = stream.read(&mut byte).expect_err("no data arrives");
+
+        assert!(
+            started.elapsed() >= Duration::from_millis(150),
+            "read returned before its timeout: {error}"
+        );
     }
 
     #[test]

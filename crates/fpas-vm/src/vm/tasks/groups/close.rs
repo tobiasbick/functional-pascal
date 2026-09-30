@@ -3,7 +3,7 @@
 //! Documentation: `docs/pascal/std/concurrency/task.md#closetaskgroupwithtimeout`.
 
 use crate::vm::shared::wakeups::WakeSignal;
-use crate::vm::tasks::{TaskSuspension, pool};
+use crate::vm::tasks::TaskSuspension;
 use crate::vm::{VmError, worker::Worker};
 use fpas_bytecode::{Register, Value};
 use std::sync::Arc;
@@ -29,7 +29,8 @@ impl Worker {
             .map_err(|e| self.group_error(e))?;
         loop {
             let signal = WakeSignal::new();
-            let registration = scheduler.subscribe(&signal);
+            // Keeps the wake subscription alive while this probe parks.
+            let _registration = scheduler.subscribe(&signal);
             if let Some(value) = self.group_close_result(id, deadline_millis)? {
                 return Ok(Some(value));
             }
@@ -42,21 +43,14 @@ impl Worker {
                 self.suspend_requested = true;
                 return Ok(None);
             }
-            // A timed root wait must not enter arbitrary child code on its own stack: a
-            // non-cooperative child could otherwise prevent the timeout from being observed.
-            if deadline_millis.is_none()
-                && let Some(task) = scheduler.try_dequeue()
-            {
-                drop(registration);
-                pool::run_helped(self, task, Arc::clone(&scheduler))?;
-            } else {
-                let milliseconds = deadline_millis.map_or(10, |deadline| {
-                    deadline
-                        .saturating_sub(self.task_clock_ref().now_millis())
-                        .min(10)
-                });
-                signal.wait(Duration::from_millis(milliseconds));
-            }
+            // The root never enters child code on its own stack: a child blocked on I/O that only
+            // the root would complete could otherwise deadlock it, and timeouts stay observable.
+            let milliseconds = deadline_millis.map_or(10, |deadline| {
+                deadline
+                    .saturating_sub(self.task_clock_ref().now_millis())
+                    .min(10)
+            });
+            signal.wait(Duration::from_millis(milliseconds));
         }
     }
 

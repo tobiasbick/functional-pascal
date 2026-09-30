@@ -2,7 +2,7 @@
 //!
 //! Documentation: `docs/pascal/std/concurrency/task.md`.
 
-use super::{TaskSuspension, pool};
+use super::TaskSuspension;
 use crate::vm::{TaskAnyPoll, VmError, diagnostics, worker::Worker};
 use fpas_bytecode::{Register, Value};
 use fpas_diagnostics::codes::RUNTIME_INVALID_TASK;
@@ -47,11 +47,7 @@ impl Worker {
             let scheduler = Arc::clone(self.scheduler_ref()?);
             scheduler.fail_pending_batch_if_shutdown(&ids);
             if !scheduler.is_shutdown() {
-                if let Some(task) = scheduler.try_dequeue() {
-                    pool::run_helped(self, task, Arc::clone(&scheduler))?;
-                } else {
-                    scheduler.wait_for_any(&ids);
-                }
+                scheduler.wait_for_any(&ids);
             }
         }
     }

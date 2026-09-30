@@ -98,7 +98,7 @@ impl Worker {
                             let scheduler = self.scheduler_ref()?;
                             scheduler.fail_pending_result_if_shutdown(*id);
                             if !scheduler.is_shutdown() {
-                                self.help_or_wait_result(*id)?;
+                                scheduler.wait_for_result(*id);
                             }
                         }
                     }
@@ -128,7 +128,7 @@ impl Worker {
                             let scheduler = self.scheduler_ref()?;
                             scheduler.fail_pending_batch_if_shutdown(&ids);
                             if !scheduler.is_shutdown() {
-                                self.help_or_wait_batch(&ids)?;
+                                scheduler.wait_for_batch(&ids);
                             }
                         }
                     }
@@ -317,24 +317,6 @@ impl Worker {
         Ok(ready)
     }
 
-    fn help_or_wait_result(&mut self, id: u64) -> Result<(), VmError> {
-        let scheduler = Arc::clone(self.scheduler_ref()?);
-        if let Some(task) = scheduler.try_dequeue() {
-            pool::run_helped(self, task, Arc::clone(&scheduler))?;
-        } else {
-            scheduler.wait_for_result(id);
-        }
-        Ok(())
-    }
-    fn help_or_wait_batch(&mut self, ids: &[u64]) -> Result<(), VmError> {
-        let scheduler = Arc::clone(self.scheduler_ref()?);
-        if let Some(task) = scheduler.try_dequeue() {
-            pool::run_helped(self, task, Arc::clone(&scheduler))?;
-        } else {
-            scheduler.wait_for_batch(ids);
-        }
-        Ok(())
-    }
     /// Access the shared scheduler for task and hosted resource ownership.
     pub(in crate::vm) fn scheduler_ref(&self) -> Result<&Arc<TaskScheduler>, VmError> {
         self.scheduler.as_ref().ok_or_else(|| {

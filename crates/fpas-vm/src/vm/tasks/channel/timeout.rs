@@ -43,9 +43,6 @@ impl Worker {
             let Some(remaining) = remaining(timeout, started) else {
                 return Ok(error(SEND_TIMEOUT_ERROR));
             };
-            if self.help_one_channel_task()? {
-                continue;
-            }
             if self.channel_scheduler_stopped() {
                 return Ok(error(CLOSED_ERROR));
             }
@@ -98,9 +95,6 @@ impl Worker {
             let Some(remaining) = remaining(timeout, started) else {
                 return Ok(error(RECEIVE_TIMEOUT_ERROR));
             };
-            if self.help_one_channel_task()? {
-                continue;
-            }
             if self.channel_scheduler_stopped() {
                 return Ok(error(CLOSED_ERROR));
             }

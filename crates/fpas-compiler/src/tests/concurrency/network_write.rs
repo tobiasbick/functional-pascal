@@ -10,18 +10,18 @@ fn network_write_reports_progress_and_pre_cancellation_end_to_end() {
     assert_succeeds(&format!(
         "\
 program CancellableWrite;
-uses Std.Net, Std.Task;
+uses Std.Net, Std.Tasks;
 begin
   case Std.Net.Connect('127.0.0.1', {port}, 1000) of
     Ok(ConnectionValue):
     begin
-      var Source: Std.Task.CancellationSource := Std.Task.CreateCancellationSource();
-      var Token: Std.Task.CancellationToken := Std.Task.GetCancellationToken(Source);
+      var Source: Std.Tasks.CancellationSource := Std.Tasks.CreateCancellationSource();
+      var Token: Std.Tasks.CancellationToken := Std.Tasks.GetCancellationToken(Source);
       case Std.Net.SendBytesWithCancellation(ConnectionValue, [42, 43], Token) of
         Ok(Count): if Count <> 2 then panic('wrong write count');
         Error(Message): panic(Message)
       end;
-      Std.Task.Cancel(Source);
+      Std.Tasks.Cancel(Source);
       case Std.Net.SendBytesWithCancellation(ConnectionValue, [99], Token) of
         Ok(Count): panic('cancelled write succeeded');
         Error(Message): if Message <> 'Network write cancelled' then panic(Message)

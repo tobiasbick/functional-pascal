@@ -27,7 +27,7 @@ export async function verifyTaskHandleAssignment(
   const lines = [
     "program DebuggerTaskHandleAssignment;",
     "",
-    "uses Std.Console, Std.Task;",
+    "uses Std.Console, Std.Tasks;",
     "",
     "function Seven(): integer;",
     "begin",

@@ -8,7 +8,7 @@ channel element types, closure ownership, and language syntax remain unchanged.
 
 ## Interface and typed value delivery
 
-Use an opaque `Std.Task.WaitCase` resource and function-based constructors. A case records one
+Use an opaque `Std.Tasks.WaitCase` resource and function-based constructors. A case records one
 operation and its completion callback; constructing it does not send, receive, or start a task.
 
 | Operation | Constructor inputs | Completion callback |

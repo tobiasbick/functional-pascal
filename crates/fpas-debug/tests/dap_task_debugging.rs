@@ -10,7 +10,7 @@ use serde_json::{Value, json};
 
 const SOURCE: &str = r#"program TaskDebugging;
 
-uses Std.Task;
+uses Std.Tasks;
 
 function Work(): integer;
 begin

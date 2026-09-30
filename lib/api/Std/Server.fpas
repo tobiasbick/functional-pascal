@@ -34,16 +34,16 @@ end;
 //
 // Parameters:
 // - `Lifetime`: `Std.Server.ServerLifetime` input value used by `GetStopToken`.
-public function GetStopToken(Lifetime: Std.Server.ServerLifetime): Std.Task.CancellationToken;
+public function GetStopToken(Lifetime: Std.Server.ServerLifetime): Std.Tasks.CancellationToken;
 begin
   panic('Intrinsic API declaration')
 end;
 
-// Group for all admitted server workers; use `Std.Task.StartTaskInGroup`.
+// Group for all admitted server workers; use `Std.Tasks.StartTaskInGroup`.
 //
 // Parameters:
 // - `Lifetime`: `Std.Server.ServerLifetime` input value used by `GetWorkGroup`.
-public function GetWorkGroup(Lifetime: Std.Server.ServerLifetime): Std.Task.TaskGroup;
+public function GetWorkGroup(Lifetime: Std.Server.ServerLifetime): Std.Tasks.TaskGroup;
 begin
   panic('Intrinsic API declaration')
 end;

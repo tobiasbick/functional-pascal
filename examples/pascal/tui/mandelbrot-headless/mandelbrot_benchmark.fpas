@@ -3,7 +3,7 @@ program MandelbrotBenchmark;
 
 uses
   Mandelbrot.Color, Mandelbrot.Render, Std.Args, Std.Arrays, Std.Console, Std.Conv, Std.Results,
-  Std.Task, Std.Time, Std.Tui;
+  Std.Tasks, Std.Time, Std.Tui;
 
 function Update(Grid: TuiCellGrid; Msg: TuiMsg; Cmd: TuiCmdOutput): TuiCellGrid;
 begin

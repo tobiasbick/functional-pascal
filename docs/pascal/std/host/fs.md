@@ -4,11 +4,11 @@ Basic blocking filesystem operations for hosted FPAS programs. This page is the 
 
 ```pascal
 program Example;
-uses Std.Fs, Std.Results, Std.Task;
+uses Std.Fs, Std.Results, Std.Tasks;
 
 begin
   var ReadJob: task := go ReadText('input.txt');
-  var Text: string := Std.Results.Unwrap(Std.Task.Wait(ReadJob))
+  var Text: string := Std.Results.Unwrap(Std.Tasks.Wait(ReadJob))
 end.
 ```
 
@@ -57,7 +57,7 @@ Fallible operations return `Error(message)` with a host error string instead of 
 
 ## Blocking and concurrency
 
-Filesystem calls block the thread that executes them. When a call runs inside `go`, it blocks that worker thread only. Combine `go ReadText(...)` or `go WriteText(...)` with `Std.Task.Wait` for task-based file workflows.
+Filesystem calls block the thread that executes them. When a call runs inside `go`, it blocks that worker thread only. Combine `go ReadText(...)` or `go WriteText(...)` with `Std.Tasks.Wait` for task-based file workflows.
 
 ---
 

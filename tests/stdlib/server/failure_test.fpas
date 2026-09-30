@@ -1,6 +1,6 @@
 program ServerFailureTest;
 
-uses Std.Server, Std.Net, Std.Task, Std.Results, Std.Test, Std.Arrays;
+uses Std.Server, Std.Net, Std.Tasks, Std.Results, Std.Test, Std.Arrays;
 
 function BindListener(): result of Std.Net.Listener, string;
 begin

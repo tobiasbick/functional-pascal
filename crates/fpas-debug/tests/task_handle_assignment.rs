@@ -174,7 +174,7 @@ fn jsonl_task_handles_copy_atomically_and_continue_through_wait() {
 fn jsonl_task_handle_assignment_stays_bound_to_the_selected_child_task() {
     const TASK_SOURCE: &str = r#"program TaskHandleChildAssignment;
 
-uses Std.Console, Std.Task;
+uses Std.Console, Std.Tasks;
 
 function Seven(): integer;
 begin

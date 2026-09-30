@@ -1,6 +1,6 @@
 program TaskGroupWorkers;
 
-uses Std.Task, Std.Console;
+uses Std.Tasks, Std.Console;
 
 function CheckConfiguration(Token: CancellationToken): result of boolean, string;
 begin

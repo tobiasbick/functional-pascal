@@ -51,7 +51,7 @@ loopback bridge. It carries the same key, mouse, resize, paste, focus, and
 terminal-output events as the integrated pseudoterminal. TUI events are
 processed only after continue; Debug Console evaluation does not dispatch them.
 
-Programs using `go`, `Std.Task.Wait`, `WaitAll`, and task-local `Sleep` appear
+Programs using `go`, `Std.Tasks.Wait`, `WaitAll`, and task-local `Sleep` appear
 as stable entries in VS Code's Threads view. Selecting a task selects its call
 stack and therefore the context used by Variables, Watch, hover, evaluation,
 and supported variable edits. Stops are all-thread stops. Continue and Pause

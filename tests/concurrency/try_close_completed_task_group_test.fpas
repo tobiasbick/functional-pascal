@@ -1,6 +1,6 @@
 program TryCloseCompletedTaskGroupTest;
 
-uses Std.Arrays, Std.Options, Std.Results, Std.Task, Std.Test, Std.Time;
+uses Std.Arrays, Std.Options, Std.Results, Std.Tasks, Std.Test, Std.Time;
 
 begin
   var Empty: TaskGroup := CreateTaskGroup();

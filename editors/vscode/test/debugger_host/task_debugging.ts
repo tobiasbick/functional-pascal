@@ -42,7 +42,7 @@ export async function verifyTaskDebugging(
   const sourceLines = [
     "program TaskDebuggerHost;",
     "",
-    "uses Std.Console, Std.Task;",
+    "uses Std.Console, Std.Tasks;",
     "",
     "function Work(Start: integer): integer;",
     "begin",

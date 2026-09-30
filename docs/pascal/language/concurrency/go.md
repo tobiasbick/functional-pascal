@@ -9,7 +9,7 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`go_call`, `go_stm
 Use `go` as an expression and assign it to capture a `task` handle:
 
 ```pascal
-uses Std.Console, Std.Task;
+uses Std.Console, Std.Tasks;
 
 function Worker(): integer;
 begin
@@ -45,4 +45,4 @@ Bare values, operators, and non-call expressions are rejected by the parser or s
 
 - [Task handles](task-handles.md)
 - [Scheduling](scheduling.md)
-- [`Std.Task`](../../std/concurrency/task.md)
+- [`Std.Tasks`](../../std/concurrency/task.md)

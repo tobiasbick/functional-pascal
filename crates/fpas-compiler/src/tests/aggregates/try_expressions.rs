@@ -4,7 +4,7 @@ fn check_expression(body: &str) {
     assert_succeeds(&format!(
         r#"
 program TryExpressions;
-uses Std.Task;
+uses Std.Tasks;
 mutable var Written: integer := 0;
 mutable var Grid: array of array of integer := [[0, 0, 0], [0, 0, 0]];
 mutable var Handler: Option of function(X: integer; Y: integer): integer := None;
@@ -109,7 +109,7 @@ fn function_value_preserves_callee_across_try() {
 #[test]
 fn task_spawn_preserves_callee_and_arguments_across_try() {
     check_expression(
-        "return Ok(Std.Task.Wait(go Combine(try ReadValue(1, FailAt), try ReadValue(2, FailAt))))",
+        "return Ok(Std.Tasks.Wait(go Combine(try ReadValue(1, FailAt), try ReadValue(2, FailAt))))",
     );
 }
 

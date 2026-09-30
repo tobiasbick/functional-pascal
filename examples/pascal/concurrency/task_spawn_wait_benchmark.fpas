@@ -4,7 +4,7 @@
 
 program TaskSpawnWaitBenchmark;
 
-uses Std.Args, Std.Arrays, Std.Console, Std.Conv, Std.Task, Std.Time;
+uses Std.Args, Std.Arrays, Std.Console, Std.Conv, Std.Tasks, Std.Time;
 
 const
   WarmupIterations: integer := 10;

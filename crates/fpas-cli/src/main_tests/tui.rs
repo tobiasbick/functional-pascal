@@ -342,7 +342,7 @@ fn interactive_background_message_wakes_idle_host_and_repaints() {
         &program,
         r#"program BackgroundWakeup;
 
-uses Std.Console, Std.Results, Std.Task, Std.Tui;
+uses Std.Console, Std.Results, Std.Tasks, Std.Tui;
 
 type
   Model = record

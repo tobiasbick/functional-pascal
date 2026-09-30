@@ -10,7 +10,7 @@ There is no new language syntax and no change to ordinary task-group close seman
 |------|-----------|-------------|
 | type | `ServerLifetime` | Opaque VM-local identity for one server lifetime |
 | function | `CreateLifetime(GraceMillis: integer; ForceExit: boolean): result of ServerLifetime, string` | Creates a ready lifetime with its own task group and stop token |
-| function | `GetWorkGroup(Lifetime: ServerLifetime): TaskGroup` | Group for all admitted server workers; use `Std.Task.StartTaskInGroup` |
+| function | `GetWorkGroup(Lifetime: ServerLifetime): TaskGroup` | Group for all admitted server workers; use `Std.Tasks.StartTaskInGroup` |
 | function | `GetStopToken(Lifetime: ServerLifetime): CancellationToken` | Token notified by any lifecycle stop request |
 | function | `IsReady(Lifetime: ServerLifetime): boolean` | True before shutdown begins; false once admission is sealed |
 | function | `RequestStop(Lifetime: ServerLifetime): boolean` | Starts shutdown once; later calls return false without extending the deadline |
@@ -20,7 +20,7 @@ There is no new language syntax and no change to ordinary task-group close seman
 | function | `ShutdownErrors(Lifetime: ServerLifetime): array of string` | Snapshot of retained listener-close failures, without consuming them |
 | function | `FinishShutdown(Lifetime: ServerLifetime): result of boolean, string` | Confirms caller-managed cleanup and disarms escalation after explicit group close |
 
-Import `Std.Task` for the group/token types and `Std.Net` for `Listener`.
+Import `Std.Tasks` for the group/token types and `Std.Net` for `Listener`.
 Foreign, fabricated, or wrong-kind handles raise a runtime diagnostic. Fallible configuration,
 ownership transfer, signal installation, and incomplete shutdown return `Error(string)`.
 

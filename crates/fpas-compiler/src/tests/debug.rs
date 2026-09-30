@@ -267,7 +267,7 @@ fn compiler_retains_distinct_task_result_types_for_local_and_global_bindings() {
         r#"
 program DebugTaskResultTypes;
 
-uses Std.Task;
+uses Std.Tasks;
 
 function Seven(): integer;
 begin

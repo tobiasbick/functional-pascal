@@ -244,7 +244,7 @@ mod vm_only_guard_tests {
             execute_test_intrinsic(Intrinsic::Task(TaskIntrinsic::Wait), &mut Vec::new(), loc())
                 .expect_err("err");
         assert!(
-            err.message.contains("Std.Task.Wait") && err.message.contains("owned by the VM"),
+            err.message.contains("Std.Tasks.Wait") && err.message.contains("owned by the VM"),
             "message={}",
             err.message
         );

@@ -331,7 +331,7 @@ coverage and the completed full workspace verification after build-artifact clea
 
 ### 2026-09-06 — task-only WaitAny completion barrier
 
-- Implemented `Std.Task.WaitAny(Tasks): integer`: a bounded, non-consuming completion barrier
+- Implemented `Std.Tasks.WaitAny(Tasks): integer`: a bounded, non-consuming completion barrier
   returning the lowest ready input index. Task-array typing, `Wait`, and `WaitAll` are unchanged.
 - All identities are validated before failure propagation or success selection. Duplicate handles
   and consumed successful results retain their input positions; losing tasks are not cancelled.
@@ -492,7 +492,7 @@ coverage and the completed full workspace verification after build-artifact clea
 - Added VM-owned FIFO channels with a fixed capacity of `1..=1048576`, blocking send and receive,
   idempotent close, buffered drain after close, and wakeup during close or VM shutdown.
 - Added `CreateChannel`, `Send`, `Receive`, cancellable send/receive variants, and `CloseChannel` to
-  `Std.Task`. Closed and cancelled operations return distinct documented errors.
+  `Std.Tasks`. Closed and cancelled operations return distinct documented errors.
 - Added static rejection for mismatched element types and task-bound values, plus parser, formatter,
   semantic, registry, compiler/runtime, and FPAS suite regressions.
 - Verified with `cargo fmt --check`, `cargo build --workspace`, `cargo test --workspace`, strict
@@ -503,7 +503,7 @@ coverage and the completed full workspace verification after build-artifact clea
 
 ### 2026-09-06 — cooperative cancellation foundation
 
-- Implemented VM-owned `CancellationSource` and clonable `CancellationToken` handles in `Std.Task`.
+- Implemented VM-owned `CancellationSource` and clonable `CancellationToken` handles in `Std.Tasks`.
 - Implemented idempotent `Cancel` and non-blocking `IsCancellationRequested`.
 - Added `Std.Net.AcceptWithCancellation` as the first end-to-end hosted consumer. Cancellation
   returns a distinct documented error and does not close the listener.

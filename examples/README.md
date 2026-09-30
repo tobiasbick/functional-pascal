@@ -209,7 +209,7 @@ See [pascal/monorepo/README.md](pascal/monorepo/README.md) and [docs/pascal/prog
 | `pascal/std/path_basics.fpas` | `Std.Path` — join, normalize, basename, dirname, extension |
 | `pascal/std/proc_basics.fpas` | `Std.Proc` — process launch failure as `Result` |
 | `pascal/std/random_basics.fpas` | `Std.Random` — random real and inclusive integer ranges |
-| `pascal/std/task_basics.fpas` | `Std.Task` — `go`, `Wait`, `WaitAll` |
+| `pascal/std/task_basics.fpas` | `Std.Tasks` — `go`, `Wait`, `WaitAll` |
 | `pascal/std/time_basics.fpas` | `Std.Time` — monotonic time, elapsed time, timestamp, sleep |
 | `pascal/std/array_basics.fpas` | `Std.Arrays` — `Length`, `Sort`, `Any`, `All` |
 | `network/http_server.fpas` + `network/http_client.fpas` | Local HTTP server plus buffered and streaming client |

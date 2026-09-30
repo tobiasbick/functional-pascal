@@ -189,7 +189,7 @@ fn jsonl_uninitialized_roots_initialize_atomically_and_continue() {
 fn jsonl_uninitialized_assignment_stays_bound_to_the_selected_child_task() {
     const TASK_SOURCE: &str = r#"program TaskUninitializedAssignment;
 
-uses Std.Console, Std.Task;
+uses Std.Console, Std.Tasks;
 
 function Work(): integer;
 begin

@@ -248,7 +248,7 @@ end.
 fn peer_and_stale_frames_are_rejected_without_worker_changes() {
     const SOURCE: &str = r#"program RestartPeer;
 
-uses Std.Task;
+uses Std.Tasks;
 
 function Work(): integer;
 begin

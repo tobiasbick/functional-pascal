@@ -1,6 +1,6 @@
 program ServerLifetimeTest;
 
-uses Std.Server, Std.Task, Std.Time, Std.Results, Std.Test, Std.Arrays;
+uses Std.Server, Std.Tasks, Std.Time, Std.Results, Std.Test, Std.Arrays;
 
 begin
   AssertTrue(IsError(CreateLifetime(-1, false)));

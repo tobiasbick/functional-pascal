@@ -1,7 +1,7 @@
 // Model a cleanup operation that needs an explicit release after cancellation.
 program TaskGroupCloseTimeout;
 
-uses Std.Task, Std.Results, Std.Console, Std.Arrays;
+uses Std.Tasks, Std.Results, Std.Console, Std.Arrays;
 
 begin
   var Release: channel of integer := CreateChannel(1);

@@ -198,6 +198,7 @@ impl Intrinsic {
                     "Dict" => "Dictionaries",
                     "Option" => "Options",
                     "Result" => "Results",
+                    "Task" => "Tasks",
                     other => other,
                 };
                 format!("Std.{family}.{}", member.trim_end_matches(')'))

@@ -3,7 +3,7 @@
 program MandelbrotShowcase;
 
 uses
-  Std.Console, Std.Task, Std.Tui, Mandelbrot.App, Mandelbrot.Model, Mandelbrot.Render,
+  Std.Console, Std.Tasks, Std.Tui, Mandelbrot.App, Mandelbrot.Model, Mandelbrot.Render,
   Mandelbrot.View;
 
 begin

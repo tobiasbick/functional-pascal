@@ -13,7 +13,7 @@ use serde_json::{Value, json};
 
 const SOURCE: &str = r#"program TaskControl;
 
-uses Std.Console, Std.Task;
+uses Std.Console, Std.Tasks;
 
 function Work(): integer;
 begin

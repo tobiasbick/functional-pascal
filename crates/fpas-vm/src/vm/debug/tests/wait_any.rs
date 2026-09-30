@@ -5,7 +5,7 @@ use super::*;
 #[test]
 fn wait_any_resumes_after_sleep_and_preserves_results() {
     let source = r#"program DebugWaitAny;
-uses Std.Task, Std.Time;
+uses Std.Tasks, Std.Time;
 function Work(Value: integer): integer;
 begin
   Sleep(10);

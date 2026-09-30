@@ -1,4 +1,4 @@
-//! `Std.Task` cooperative-cancellation intrinsic dispatch.
+//! `Std.Tasks` cooperative-cancellation intrinsic dispatch.
 
 use fpas_bytecode::{Intrinsic, TaskIntrinsic, Value};
 use fpas_diagnostics::codes::{
@@ -97,7 +97,7 @@ impl Worker {
         Err(self.runtime_error(
             RUNTIME_INTRINSIC_STACK_STATE_ERROR,
             format!(
-                "Std.Task cancellation intrinsic expected {expected} arguments, got {}",
+                "Std.Tasks cancellation intrinsic expected {expected} arguments, got {}",
                 arguments.len()
             ),
             "Check the compiler intrinsic signature and register argument count.",

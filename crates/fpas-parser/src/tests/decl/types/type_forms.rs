@@ -81,3 +81,36 @@ fn other_named_types_still_reject_generic_arguments() {
         parse_with_errors("program T; var Items: Queue of integer := Value; begin end.");
     assert!(!errors.is_empty());
 }
+
+#[test]
+fn task_keyword_cannot_be_a_name() {
+    for source in [
+        "program T; var Task: integer := 1; begin end.",
+        "program T; function F(Task: integer): integer; begin return Task end; begin end.",
+        "program T; type Job = record Task: integer; end; begin end.",
+        "program T; uses Std.Task; begin end.",
+    ] {
+        let (_, errors) = parse_with_errors(source);
+        assert!(!errors.is_empty(), "{source}");
+    }
+}
+
+#[test]
+fn task_keyword_types_nest_in_other_type_forms() {
+    let p = parse_ok("program T; var Jobs: array of TASK of option of task := []; begin end.");
+    match &p.declarations[0] {
+        Decl::Var(v) => match &v.type_expr {
+            TypeExpr::Array(inner, _) => match inner.as_ref() {
+                TypeExpr::Task(result, _) => match result.as_ref() {
+                    TypeExpr::Option { inner_type, .. } => {
+                        assert!(matches!(inner_type.as_ref(), TypeExpr::Named { .. }));
+                    }
+                    _ => panic!("expected option result type"),
+                },
+                _ => panic!("expected task element type"),
+            },
+            _ => panic!("expected array type"),
+        },
+        _ => panic!("expected Var"),
+    }
+}

@@ -4,7 +4,7 @@ The idiomatic way to run parallel work is to spawn one task per unit of work and
 
 ```pascal
 program ParallelSum;
-uses Std.Console, Std.Task;
+uses Std.Console, Std.Tasks;
 
 function Compute(N: integer): integer;
 begin

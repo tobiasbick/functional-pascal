@@ -23,7 +23,7 @@ documented_token_enum! {
 /// Lexical token produced by the Functional Pascal lexer.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Token {
-    // Keywords (63)
+    // Keywords (64)
     Program,
     Unit,
     Uses,
@@ -64,6 +64,8 @@ pub enum Token {
     Array,
     /// Introduces a typed bounded channel: `channel of T`.
     Channel,
+    /// A task handle type: bare `task` infers its result type, `task of T` declares it.
+    Task,
     Panic,
     Break,
     Continue,

@@ -1,4 +1,4 @@
-# `Std.Task`
+# `Std.Tasks`
 
 Blocking helpers for **`task`** handles, explicit task groups, cooperative cancellation,
 and typed bounded channels shared by tasks. For the `go` keyword, the `task` type, threading model,
@@ -23,7 +23,7 @@ execution uses the same pending-operation state with its deterministic schedulin
 
 ```pascal
 program Example;
-uses Std.Console, Std.Task;
+uses Std.Console, Std.Tasks;
 function N(): integer;
 begin
   return 7
@@ -37,7 +37,7 @@ end.
 
 ## Importing and names
 
-After `uses Std.Task;` use short names (`Wait`, `Cancel`, …) or qualified (`Std.Task.Wait`, …).
+After `uses Std.Tasks;` use short names (`Wait`, `Cancel`, …) or qualified (`Std.Tasks.Wait`, …).
 
 ---
 

@@ -85,7 +85,7 @@ macro_rules! std_option {
 }
 macro_rules! std_task {
     ($suffix:literal) => {
-        concat!("Std.Task.", $suffix)
+        concat!("Std.Tasks.", $suffix)
     };
 }
 macro_rules! std_dict {

@@ -1,7 +1,7 @@
 // A producer, three workers, and a collector share bounded channels.
 program WorkerPipeline;
 
-uses Std.Task, Std.Results, Std.Console, Std.Arrays;
+uses Std.Tasks, Std.Results, Std.Console, Std.Arrays;
 
 begin
   var Jobs: channel of integer := CreateChannel(2);

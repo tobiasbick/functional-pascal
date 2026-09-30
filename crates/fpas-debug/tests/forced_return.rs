@@ -239,7 +239,7 @@ fn jsonl_frame_return_completes_a_procedure_and_rejects_convention_errors() {
 fn jsonl_frame_return_stays_bound_to_the_selected_stop_task() {
     const TASK_SOURCE: &str = r#"program TaskForcedReturn;
 
-uses Std.Console, Std.Task, Std.Time;
+uses Std.Console, Std.Tasks, Std.Time;
 
 function Work(): integer;
 begin

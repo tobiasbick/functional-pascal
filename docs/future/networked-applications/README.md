@@ -5,7 +5,7 @@
 > `Std.Server` now adds listener/group ownership and explicit process-level shutdown escalation.
 > TUI background events are implemented with bounded typed inboxes and host-owned work.
 > The canonical Mandelbrot TUI uses CPU-pool row tasks, atomic image updates, and nonblocking subscription replacement.
-> Current behavior is documented under [Std.Task](../../pascal/std/concurrency/task.md).
+> Current behavior is documented under [Std.Tasks](../../pascal/std/concurrency/task.md).
 
 Functional Pascal already provides blocking TCP/TLS connections and listeners, HTTP client and
 server helpers, tasks, JSON, filesystem access, and a local terminal UI. Long-running secure

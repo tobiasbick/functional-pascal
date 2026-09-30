@@ -8,12 +8,12 @@ slices. Keep `go`, task result typing, `Wait`, `WaitAll`, and channel ownership 
 
 ## First slice: task completion
 
-`Std.Task.WaitAny(Tasks: array of task): integer` is implemented as a completion barrier. It returns the
+`Std.Tasks.WaitAny(Tasks: array of task): integer` is implemented as a completion barrier. It returns the
 zero-based position of one completed task, not the task's result. The caller still uses `Wait`
 to consume that result. Accept the same task-array types as `WaitAll`; do not introduce
 heterogeneous task-array conversion or erase result types.
 
-Implemented contract (current reference: [Std.Task](../../pascal/std/concurrency/task.md)):
+Implemented contract (current reference: [Std.Tasks](../../pascal/std/concurrency/task.md)):
 
 - Require a non-empty array, bounded to 1,048,576 entries. Reject invalid sizes before copying IDs.
 - Validate every handle before selecting a winner. Unknown or detached identities are runtime

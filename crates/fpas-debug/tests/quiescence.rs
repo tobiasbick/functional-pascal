@@ -13,7 +13,7 @@ use serde_json::{Value, json};
 
 const SOURCE: &str = r#"program TaskQuiescence;
 
-uses Std.Console, Std.Task;
+uses Std.Console, Std.Tasks;
 
 function Work(): integer;
 begin
@@ -127,7 +127,7 @@ fn continue_ignores_task_id_and_resumes_the_session() {
 fn runtime_error_stop_identifies_the_owner_and_freezes_peers() {
     const FAILURE: &str = r#"program TaskFailure;
 
-uses Std.Task;
+uses Std.Tasks;
 
 procedure Explode();
 begin

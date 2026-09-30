@@ -1,11 +1,11 @@
-//! `Std.Task` intrinsic discriminants.
+//! `Std.Tasks` intrinsic discriminants.
 //!
 //! **Documentation:** `docs/pascal/std/concurrency/task.md` (from the repository root).
 
 use num_enum::TryFromPrimitive;
 
 documented_intrinsic_enum! {
-/// Intrinsics for `Std.Task.*`.
+/// Intrinsics for `Std.Tasks.*`.
 ///
 /// **Documentation:** `docs/pascal/std/concurrency/task.md`
 #[derive(Debug, Clone, Copy, PartialEq, Eq, TryFromPrimitive)]

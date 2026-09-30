@@ -64,7 +64,7 @@ end.
 
 ### Ambiguity rule
 
-When two or more imported units export the same short name, the short name becomes ambiguous. This applies equally to `Std.*` units and your own units, in any combination, and regardless of parameter counts: a routine `Send` from `MyApp.Net` and `Std.Task.Send` make `Send` ambiguous. No error is raised at the `uses` site; the compiler reports an error only when the ambiguous short name is actually used. The fully qualified name always works as a fallback:
+When two or more imported units export the same short name, the short name becomes ambiguous. This applies equally to `Std.*` units and your own units, in any combination, and regardless of parameter counts: a routine `Send` from `MyApp.Net` and `Std.Tasks.Send` make `Send` ambiguous. No error is raised at the `uses` site; the compiler reports an error only when the ambiguous short name is actually used. The fully qualified name always works as a fallback:
 
 ```pascal
 program Demo;

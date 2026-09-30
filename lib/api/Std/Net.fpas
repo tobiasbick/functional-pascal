@@ -34,8 +34,8 @@ end;
 //
 // Parameters:
 // - `Listener`: `Std.Net.Listener` input value used by `AcceptWithCancellation`.
-// - `Token`: `Std.Task.CancellationToken` input value used by `AcceptWithCancellation`.
-public function AcceptWithCancellation(Listener: Std.Net.Listener; Token: Std.Task.CancellationToken): result of Std.Net.Connection, string;
+// - `Token`: `Std.Tasks.CancellationToken` input value used by `AcceptWithCancellation`.
+public function AcceptWithCancellation(Listener: Std.Net.Listener; Token: Std.Tasks.CancellationToken): result of Std.Net.Connection, string;
 begin
   panic('Intrinsic API declaration')
 end;
@@ -86,12 +86,12 @@ end;
 // - `Host`: `string` input value used by `ConnectTlsWithCancellation`.
 // - `Port`: `integer` input value used by `ConnectTlsWithCancellation`.
 // - `TimeoutMillis`: `integer` input value used by `ConnectTlsWithCancellation`.
-// - `Token`: `Std.Task.CancellationToken` input value used by `ConnectTlsWithCancellation`.
+// - `Token`: `Std.Tasks.CancellationToken` input value used by `ConnectTlsWithCancellation`.
 public function ConnectTlsWithCancellation(
   Host: string;
   Port: integer;
   TimeoutMillis: integer;
-  Token: Std.Task.CancellationToken
+  Token: Std.Tasks.CancellationToken
 ): result of Std.Net.Connection, string;
 begin
   panic('Intrinsic API declaration')
@@ -103,12 +103,12 @@ end;
 // - `Host`: `string` input value used by `ConnectWithCancellation`.
 // - `Port`: `integer` input value used by `ConnectWithCancellation`.
 // - `TimeoutMillis`: `integer` input value used by `ConnectWithCancellation`.
-// - `Token`: `Std.Task.CancellationToken` input value used by `ConnectWithCancellation`.
+// - `Token`: `Std.Tasks.CancellationToken` input value used by `ConnectWithCancellation`.
 public function ConnectWithCancellation(
   Host: string;
   Port: integer;
   TimeoutMillis: integer;
-  Token: Std.Task.CancellationToken
+  Token: Std.Tasks.CancellationToken
 ): result of Std.Net.Connection, string;
 begin
   panic('Intrinsic API declaration')
@@ -167,11 +167,11 @@ end;
 // Parameters:
 // - `Connection`: `Std.Net.Connection` input value used by `ReceiveBytesWithCancellation`.
 // - `MaxBytes`: `integer` input value used by `ReceiveBytesWithCancellation`.
-// - `Token`: `Std.Task.CancellationToken` input value used by `ReceiveBytesWithCancellation`.
+// - `Token`: `Std.Tasks.CancellationToken` input value used by `ReceiveBytesWithCancellation`.
 public function ReceiveBytesWithCancellation(
   Connection: Std.Net.Connection;
   MaxBytes: integer;
-  Token: Std.Task.CancellationToken
+  Token: Std.Tasks.CancellationToken
 ): result of array of integer, string;
 begin
   panic('Intrinsic API declaration')
@@ -192,11 +192,11 @@ end;
 // Parameters:
 // - `Connection`: `Std.Net.Connection` input value used by `SendBytesWithCancellation`.
 // - `Data`: `array of integer` input value used by `SendBytesWithCancellation`.
-// - `Token`: `Std.Task.CancellationToken` input value used by `SendBytesWithCancellation`.
+// - `Token`: `Std.Tasks.CancellationToken` input value used by `SendBytesWithCancellation`.
 public function SendBytesWithCancellation(
   Connection: Std.Net.Connection;
   Data: array of integer;
-  Token: Std.Task.CancellationToken
+  Token: Std.Tasks.CancellationToken
 ): result of integer, string;
 begin
   panic('Intrinsic API declaration')

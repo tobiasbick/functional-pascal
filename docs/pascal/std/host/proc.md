@@ -77,7 +77,7 @@ Returns `Error(message)` if the host cannot determine its executable path.
 
 `Run` and `RunCapture` block the thread that executes them until the child
 process exits. When a call runs inside `go`, it blocks that worker thread only.
-Combine a process call in `go` with `Std.Task.Wait` for task-based workflows.
+Combine a process call in `go` with `Std.Tasks.Wait` for task-based workflows.
 
 ---
 

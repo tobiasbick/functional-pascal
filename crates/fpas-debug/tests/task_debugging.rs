@@ -13,7 +13,7 @@ use serde_json::{Value, json};
 
 const SOURCE: &str = r#"program JsonlTaskDebugging;
 
-uses Std.Console, Std.Task;
+uses Std.Console, Std.Tasks;
 
 function Work(): integer;
 begin
@@ -219,7 +219,7 @@ fn task_snapshots_and_mutation_remain_bound_to_their_task() {
 fn dictionary_structure_mutation_remains_bound_to_the_child_task() {
     const DICTIONARY_TASK: &str = r#"program TaskDictionaryMutation;
 
-uses Std.Console, Std.Task;
+uses Std.Console, Std.Tasks;
 
 function Work(): integer;
 begin
@@ -275,7 +275,7 @@ end.
 fn wait_all_sleep_detached_and_nested_spawn_complete_under_debugging() {
     const WAIT_ALL: &str = r#"program TaskWaitAll;
 
-uses Std.Console, Std.Task, Std.Time;
+uses Std.Console, Std.Tasks, Std.Time;
 
 function Work(Value: integer): integer;
 begin
@@ -299,7 +299,7 @@ end.
 "#;
     const NESTED: &str = r#"program NestedTasks;
 
-uses Std.Console, Std.Task;
+uses Std.Console, Std.Tasks;
 
 function Leaf(Value: integer): integer;
 begin
@@ -356,7 +356,7 @@ end.
 fn child_failure_and_root_shutdown_report_one_clean_lifecycle() {
     const FAILURE: &str = r#"program TaskFailure;
 
-uses Std.Task;
+uses Std.Tasks;
 
 procedure Explode();
 begin
@@ -370,7 +370,7 @@ end.
 "#;
     const SHUTDOWN: &str = r#"program DetachedShutdown;
 
-uses Std.Console, Std.Task, Std.Time;
+uses Std.Console, Std.Tasks, Std.Time;
 
 procedure Later();
 begin

@@ -1,6 +1,6 @@
 program TuiBackgroundInjectionTest;
 
-uses Std.Arrays, Std.Results, Std.Task, Std.Test, Std.Tui;
+uses Std.Arrays, Std.Results, Std.Tasks, Std.Test, Std.Tui;
 
 type
   InjectionModel = record

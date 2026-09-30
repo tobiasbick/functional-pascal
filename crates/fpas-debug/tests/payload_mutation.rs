@@ -258,7 +258,7 @@ fn jsonl_payload_requests_validate_lifecycle() {
 fn jsonl_payload_mutation_stays_bound_to_the_selected_child_task() {
     const TASK_SOURCE: &str = r#"program TaskPayloadMutation;
 
-uses Std.Console, Std.Task;
+uses Std.Console, Std.Tasks;
 
 function Work(): integer;
 begin

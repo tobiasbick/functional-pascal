@@ -12,13 +12,13 @@ do        while     repeat    until
 and       or        not       xor
 div       mod       shl       shr
 true      false     type      record
-enum      array     channel   panic
-break     continue  result    option
-ok        error     some      none
-try       public    go        dict
-with      static    property  event
-read      write     comparable numeric
-printable self      nil
+enum      array     channel   task
+panic     break     continue  result
+option    ok        error     some
+none      try       public    go
+dict      with      static    property
+event     read      write     comparable
+numeric   printable self      nil
 ```
 
 Every word in the table is fully reserved, including after `.` in a qualified name or
@@ -34,7 +34,8 @@ identifier.
 Reserved words cannot be used as declarations or member names, even after a
 qualifier. Public APIs must therefore use an identifier-safe spelling such as `EndKey`
 instead of `End`, `NoCommand` instead of `None`, or `CompletedCommand` instead of
-`Result`. FPAS has no escaped-identifier syntax.
+`Result`. The standard units follow the same rule, which is why they are named `Std.Results` and
+`Std.Tasks` rather than after the `result` and `task` keywords. FPAS has no escaped-identifier syntax.
 
 ## Example
 

@@ -1,4 +1,4 @@
-//! `Std.Task` symbol names and registry group.
+//! `Std.Tasks` symbol names and registry group.
 
 /// Opaque group owner.
 pub const STD_TASK_TASK_GROUP: &str = std_task!("TaskGroup");
@@ -7,9 +7,9 @@ pub const STD_TASK_TASK_FAILURE: &str = std_task!("TaskFailure");
 /// Distinct ordinary and runtime failure classes.
 pub const STD_TASK_TASK_FAILURE_KIND: &str = std_task!("TaskFailureKind");
 
-/// Qualified name of the opaque `Std.Task.CancellationSource` record.
+/// Qualified name of the opaque `Std.Tasks.CancellationSource` record.
 pub const STD_TASK_CANCELLATION_SOURCE: &str = std_task!("CancellationSource");
-/// Qualified name of the opaque `Std.Task.CancellationToken` record.
+/// Qualified name of the opaque `Std.Tasks.CancellationToken` record.
 pub const STD_TASK_CANCELLATION_TOKEN: &str = std_task!("CancellationToken");
 std_symbol!(STD_TASK_CREATE_CANCELLATION_SOURCE = std_task!("CreateCancellationSource"));
 std_symbol!(STD_TASK_GET_CANCELLATION_TOKEN = std_task!("GetCancellationToken"));

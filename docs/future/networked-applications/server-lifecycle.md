@@ -69,11 +69,11 @@ remain outside the current interface.
 1. The lifecycle owner stops admission, marks readiness false, and requests cooperative
    cancellation. All cleanup phases share one monotonic grace-period deadline. A nested group
    close receives only the remaining budget, not a fresh full grace period.
-2. Use `Std.Task.CloseTaskGroupWithTimeout` to observe owned group completion. Timeout means work
+2. Use `Std.Tasks.CloseTaskGroupWithTimeout` to observe owned group completion. Timeout means work
    remains owned, not detached or successfully terminated. Keep the group for retry or escalation;
    never discard its failure reports merely because a waiting call returned.
 3. Escalation is explicitly selected by the host. Without a forced-exit policy, report incomplete
-   shutdown and retain ownership. Do not silently terminate the embedding process from `Std.Task`
+   shutdown and retain ownership. Do not silently terminate the embedding process from `Std.Tasks`
    or a VM destructor.
 4. With forced exit selected, request termination of the entire application process after grace
    expires. Individual task groups sharing a VM are not force-killed in place. If the host must

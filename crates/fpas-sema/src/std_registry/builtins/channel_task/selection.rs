@@ -1,4 +1,4 @@
-//! Typed delivery callbacks for `Std.Task` selection cases.
+//! Typed delivery callbacks for `Std.Tasks` selection cases.
 //!
 //! Documentation: `docs/pascal/std/concurrency/task.md`.
 

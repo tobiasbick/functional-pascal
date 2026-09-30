@@ -29,7 +29,7 @@ fn group_operations_reject_wrong_handles_and_worker_signatures() {
         "StartTaskInGroup(G, function(T: CancellationToken): result of integer, integer begin return Error(1) end)",
     ] {
         let source = format!(
-            "program T; uses Std.Task; procedure Work(Token: CancellationToken); begin end; begin var G: TaskGroup := CreateTaskGroup(); {call} end."
+            "program T; uses Std.Tasks; procedure Work(Token: CancellationToken); begin end; begin var G: TaskGroup := CreateTaskGroup(); {call} end."
         );
         assert!(
             !check_errors(&source).is_empty(),
@@ -42,7 +42,7 @@ fn group_operations_reject_wrong_handles_and_worker_signatures() {
 fn group_worker_rejects_mutable_captures() {
     let errors = check_errors(
         r#"program T;
-uses Std.Task;
+uses Std.Tasks;
 begin
   mutable var Count: integer := 0;
   var G: TaskGroup := CreateTaskGroup();
@@ -61,7 +61,7 @@ end."#,
 fn group_worker_preserves_unit_value_and_result_task_types() {
     check_ok(
         r#"program T;
-uses Std.Task;
+uses Std.Tasks;
 procedure NoValue(Token: CancellationToken); begin end;
 function Number(Token: CancellationToken): integer; begin return 42 end;
 function Outcome(Token: CancellationToken): result of integer, string; begin return Error('failed') end;
@@ -82,7 +82,7 @@ end."#,
 fn group_worker_does_not_erase_its_result_type() {
     let errors = check_errors(
         r#"program T;
-uses Std.Task;
+uses Std.Tasks;
 function Work(Token: CancellationToken): integer; begin return 7 end;
 begin
   var G: TaskGroup := CreateTaskGroup();
@@ -96,19 +96,19 @@ end."#,
 #[test]
 fn timed_group_close_preserves_result_and_failure_record_types() {
     check_ok(
-        "program T; uses Std.Task, Std.Results; begin var G: TaskGroup := CreateTaskGroup(); var R: result of array of TaskFailure, string := CloseTaskGroupWithTimeout(G, 0); var Reports: array of TaskFailure := Unwrap(R) end.",
+        "program T; uses Std.Tasks, Std.Results; begin var G: TaskGroup := CreateTaskGroup(); var R: result of array of TaskFailure, string := CloseTaskGroupWithTimeout(G, 0); var Reports: array of TaskFailure := Unwrap(R) end.",
     );
-    assert!(!check_errors("program T; uses Std.Task; begin var G: TaskGroup := CreateTaskGroup(); var Wrong: boolean := CloseTaskGroupWithTimeout(G, 0) end.").is_empty());
+    assert!(!check_errors("program T; uses Std.Tasks; begin var G: TaskGroup := CreateTaskGroup(); var Wrong: boolean := CloseTaskGroupWithTimeout(G, 0) end.").is_empty());
 }
 
 #[test]
 fn completed_group_probe_preserves_optional_failure_report_type() {
     check_ok(
-        "program T; uses Std.Task; begin var G: TaskGroup := CreateTaskGroup(); var R: option of array of TaskFailure := TryCloseCompletedTaskGroup(G) end.",
+        "program T; uses Std.Tasks; begin var G: TaskGroup := CreateTaskGroup(); var R: option of array of TaskFailure := TryCloseCompletedTaskGroup(G) end.",
     );
     assert!(
         !check_errors(
-            "program T; uses Std.Task; begin var G: TaskGroup := CreateTaskGroup(); var Wrong: boolean := TryCloseCompletedTaskGroup(G) end."
+            "program T; uses Std.Tasks; begin var G: TaskGroup := CreateTaskGroup(); var Wrong: boolean := TryCloseCompletedTaskGroup(G) end."
         )
         .is_empty()
     );

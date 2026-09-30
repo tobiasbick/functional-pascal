@@ -99,7 +99,7 @@ impl Worker {
                 // Payload-free Pascal enums use their integer backing value at runtime.
                 let kind = Value::Integer(failure.kind as i64);
                 self.record_value(
-                    "Std.Task.TaskFailure",
+                    "Std.Tasks.TaskFailure",
                     vec![
                         Value::Integer(failure.task as i64),
                         kind,

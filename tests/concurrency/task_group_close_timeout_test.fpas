@@ -1,6 +1,6 @@
 program TaskGroupCloseTimeoutTest;
 
-uses Std.Task, Std.Results, Std.Arrays, Std.Test;
+uses Std.Tasks, Std.Results, Std.Arrays, Std.Test;
 
 begin
   var Empty: TaskGroup := CreateTaskGroup();

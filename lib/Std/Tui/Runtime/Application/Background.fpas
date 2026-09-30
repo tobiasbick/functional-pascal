@@ -1,6 +1,6 @@
 unit Std.Tui.Runtime.Application.Background;
 
-uses Std.Arrays, Std.Options, Std.Results, Std.Task, Std.Tui.Runtime.Msg;
+uses Std.Arrays, Std.Options, Std.Results, Std.Tasks, Std.Tui.Runtime.Msg;
 
 public type
   // Cooperative function executed as host-owned background work.

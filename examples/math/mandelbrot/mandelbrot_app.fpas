@@ -3,7 +3,7 @@
 unit Mandelbrot.App;
 
 uses
-  Std.Arrays, Std.Console, Std.Conv, Std.Math, Std.Task, Std.Tui, Mandelbrot.Color, Mandelbrot.Model,
+  Std.Arrays, Std.Console, Std.Conv, Std.Math, Std.Tasks, Std.Tui, Mandelbrot.Color, Mandelbrot.Model,
   Mandelbrot.Render;
 
 const

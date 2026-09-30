@@ -102,7 +102,7 @@ impl CaseRegistry {
 
 fn validate(id: u64) -> Result<(), String> {
     if id & MASK != TAG {
-        return Err("Expected a WaitCase handle created by Std.Task".into());
+        return Err("Expected a WaitCase handle created by Std.Tasks".into());
     }
     Ok(())
 }

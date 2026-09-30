@@ -12,7 +12,7 @@ fn task_count_is_checked_before_allocating_identity_storage() {
 fn one_worker_completes_nested_wait_any() {
     let (program, errors) = fpas_parser::parse(
         r#"program SingleWorkerWaitAny;
-uses Std.Task, Std.Time;
+uses Std.Tasks, Std.Time;
 function Child(): integer;
 begin
   Sleep(1);

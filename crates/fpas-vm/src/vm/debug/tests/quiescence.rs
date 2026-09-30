@@ -44,7 +44,7 @@ fn pending_child_executable() -> VerifiedExecutable {
 fn shared_state_session() -> DebugSession {
     const SOURCE: &str = r#"program SharedStateQuiescence;
 
-uses Std.Task;
+uses Std.Tasks;
 
 mutable var Shared: integer := 0;
 

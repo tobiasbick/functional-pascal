@@ -262,7 +262,7 @@ fn jsonl_variant_replacements_commit_atomically_and_continue() {
 fn jsonl_variant_replacement_stays_bound_to_the_selected_child_task() {
     const TASK_SOURCE: &str = r#"program TaskVariantReplacement;
 
-uses Std.Console, Std.Task;
+uses Std.Console, Std.Tasks;
 
 function Work(): integer;
 begin

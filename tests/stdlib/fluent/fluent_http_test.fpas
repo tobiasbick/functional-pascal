@@ -1,6 +1,6 @@
 program FluentHttpTest;
 
-uses Std.Conv, Std.Http, Std.Net, Std.Net.Utf8, Std.Results, Std.Task, Std.Test;
+uses Std.Conv, Std.Http, Std.Net, Std.Net.Utf8, Std.Results, Std.Tasks, Std.Test;
 
 function FetchText(Url: string): result of string, string;
 begin

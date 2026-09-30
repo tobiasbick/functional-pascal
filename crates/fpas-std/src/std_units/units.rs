@@ -31,7 +31,7 @@ standard_unit_names! {
     STD_UNIT_ARRAY = "Std.Arrays";
     STD_UNIT_RESULT = "Std.Results";
     STD_UNIT_OPTION = "Std.Options";
-    STD_UNIT_TASK = "Std.Task";
+    STD_UNIT_TASK = "Std.Tasks";
     STD_UNIT_DICT = "Std.Dictionaries";
     STD_UNIT_JSON = "Std.Json";
     STD_UNIT_TOML = "Std.Toml";

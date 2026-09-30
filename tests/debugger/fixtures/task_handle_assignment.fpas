@@ -1,6 +1,6 @@
 program TaskHandleAssignment;
 
-uses Std.Console, Std.Task;
+uses Std.Console, Std.Tasks;
 
 function Seven(): integer;
 begin

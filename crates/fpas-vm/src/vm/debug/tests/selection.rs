@@ -3,7 +3,7 @@
 use super::*;
 
 const SOURCE: &str = r#"program SelectionContinuation;
-uses Std.Task, Std.Time, Std.Results;
+uses Std.Tasks, Std.Time, Std.Results;
 function Produce(Q: channel of integer): integer;
 begin
   Sleep(2);
@@ -90,7 +90,7 @@ fn selection_callbacks_and_timers_use_deterministic_debugger_execution() {
 fn selection_rejects_a_case_moved_to_another_task() {
     let (program, errors) = fpas_parser::parse(
         r#"program WrongOwner;
-uses Std.Task;
+uses Std.Tasks;
 function Other(C: WaitCase): integer;
 begin return Select([C]) end;
 begin

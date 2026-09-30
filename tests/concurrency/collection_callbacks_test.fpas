@@ -1,6 +1,6 @@
 program CollectionCallbacksTest;
 
-uses Std.Dictionaries, Std.Str, Std.Task, Std.Test;
+uses Std.Dictionaries, Std.Str, Std.Tasks, Std.Test;
 
 function Identity(C: string): string;
 begin

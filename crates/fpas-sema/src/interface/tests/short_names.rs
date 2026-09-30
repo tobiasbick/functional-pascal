@@ -30,7 +30,7 @@ fn source_and_std_short_names_are_ambiguous_even_with_different_arity() {
 
     let short = error_messages(
         "unit Demo.Short;
-         uses Demo.Sender, Std.Task;
+         uses Demo.Sender, Std.Tasks;
          public function Run(): integer;
          begin return Send(1, 2, 3) end;",
         &interfaces,
@@ -43,7 +43,7 @@ fn source_and_std_short_names_are_ambiguous_even_with_different_arity() {
 
     let qualified = error_messages(
         "unit Demo.Qualified;
-         uses Demo.Sender, Std.Task;
+         uses Demo.Sender, Std.Tasks;
          public function Run(): integer;
          begin return Demo.Sender.Send(1, 2, 3) end;",
         &interfaces,

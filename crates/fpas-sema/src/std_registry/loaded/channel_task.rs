@@ -1,4 +1,4 @@
-//! Registration of `Std.Task`.
+//! Registration of `Std.Tasks`.
 //!
 //! **Documentation:** `docs/pascal/std/concurrency/task.md` (from the repository root); language rules: `docs/pascal/language/concurrency/README.md`.
 

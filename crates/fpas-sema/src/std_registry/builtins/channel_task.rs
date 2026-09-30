@@ -1,4 +1,4 @@
-//! Type-checking builtins for `Std.Task`.
+//! Type-checking builtins for `Std.Tasks`.
 //!
 //! **Documentation:** `docs/pascal/std/concurrency/task.md` (from the repository root); language rules: `docs/pascal/language/concurrency/README.md`.
 
@@ -195,8 +195,8 @@ fn expect_cancellation_token(c: &mut Checker, expr: &Expr) {
     if !valid {
         c.error_with_code(
             SEMA_TYPE_MISMATCH,
-            format!("Type mismatch in cancellable task operation: expected `Std.Task.CancellationToken`, found `{actual}`"),
-            "Pass the token returned by `Std.Task.GetCancellationToken`.",
+            format!("Type mismatch in cancellable task operation: expected `Std.Tasks.CancellationToken`, found `{actual}`"),
+            "Pass the token returned by `Std.Tasks.GetCancellationToken`.",
             expr.span(),
         );
     }

@@ -3,8 +3,8 @@
 ## Thread pool
 
 The runtime starts background workers when any compiled function's verified metadata indicates a
-task-start operation: a retained or detached `go` spawn, `Std.Task.StartTaskInGroup`, or
-`Std.Task.StartSupervisedTask`. Without these operations, it does not start a worker pool.
+task-start operation: a retained or detached `go` spawn, `Std.Tasks.StartTaskInGroup`, or
+`Std.Tasks.StartSupervisedTask`. Without these operations, it does not start a worker pool.
 Creating a channel or task group, waiting, and `Yield` alone do not activate it.
 
 When required, the runtime starts **`max(1, available_parallelism − 1)`** worker threads that share a ready queue, while the **main task** (task id `0`) runs on the thread that started execution. Each pool thread runs **at most one** ready task at a time: workers block when the queue is empty and are woken when work is enqueued or the runtime shuts down. Together, this matches typical machine parallelism without starting idle workers for programs that never spawn tasks.
@@ -22,7 +22,7 @@ runtime error, other spawned work may be stopped cooperatively at the next instr
 The host surfaces **one** primary diagnostic: if the main task failed, that error wins; otherwise a
 worker error is reported. Explicit groups instead retain their children's failures for close;
 supervised workers expose only the final outcome after their selected retry policy. An explicit
-`Wait` or `WaitAll` still propagates a failed task's diagnostic. See [Std.Task](../../std/concurrency/task.md#task-groups).
+`Wait` or `WaitAll` still propagates a failed task's diagnostic. See [Std.Tasks](../../std/concurrency/task.md#task-groups).
 
 Group close is cooperative. `CloseTaskGroupWithTimeout` can end a waiting attempt without releasing
 unfinished children; it does not force workers to terminate or bound VM teardown. Blocking host

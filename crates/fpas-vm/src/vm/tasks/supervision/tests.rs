@@ -11,7 +11,7 @@ use std::sync::Arc;
 
 fn worker_and_group() -> (Worker, Value, Value) {
     let (program, errors) = fpas_parser::parse(
-        "program T; uses Std.Task; procedure Work(Token: CancellationToken); begin panic('body executed') end; begin end.",
+        "program T; uses Std.Tasks; procedure Work(Token: CancellationToken); begin panic('body executed') end; begin end.",
     );
     assert!(errors.is_empty(), "{errors:?}");
     let image = fpas_compiler::compile(&program).expect("compile");

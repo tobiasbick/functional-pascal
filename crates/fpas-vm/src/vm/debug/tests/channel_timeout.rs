@@ -5,7 +5,7 @@ use super::*;
 fn timeout_session() -> DebugSession {
     const SOURCE: &str = r#"program DebugChannelTimeout;
 
-uses Std.Task;
+uses Std.Tasks;
 
 begin
   var Messages: channel of integer := CreateChannel(1);

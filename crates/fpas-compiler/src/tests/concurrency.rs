@@ -11,7 +11,7 @@ fn task_spawn_with_arguments_keeps_loop_branch_addresses_aligned() {
     assert_succeeds(
         "\
 program RegisterTaskArgumentLoop;
-uses Std.Arrays, Std.Task;
+uses Std.Arrays, Std.Tasks;
 function Worker(Value: integer): integer;
 begin
   return Value + 1
@@ -33,7 +33,7 @@ fn retained_task_spawn_and_wait_execute() {
     let execution = assert_succeeds(
         "\
 program RegisterTasks;
-uses Std.Console, Std.Task;
+uses Std.Console, Std.Tasks;
 
 function Add(A: integer; B: integer): integer;
 begin
@@ -42,7 +42,7 @@ end;
 
 begin
   var T: task := go Add(20, 22);
-  Std.Console.WriteLn(Std.Task.Wait(T))
+  Std.Console.WriteLn(Std.Tasks.Wait(T))
 end.",
     );
     assert_eq!(execution.value, fpas_bytecode::Value::Unit);
@@ -71,7 +71,7 @@ fn timeslice_preserves_nested_frames_and_live_aggregate_registers() {
     assert_succeeds(
         "\
 program RegisterTaskFrames;
-uses Std.Task;
+uses Std.Tasks;
 
 function Burn(Count: integer): integer;
 begin
@@ -89,7 +89,7 @@ end;
 
 begin
   var T: task := go Work();
-  if Std.Task.Wait(T) <> 42 then panic('task state was not restored')
+  if Std.Tasks.Wait(T) <> 42 then panic('task state was not restored')
 end.",
     );
 }
@@ -99,7 +99,7 @@ fn cooperative_sleep_releases_register_pool_worker() {
     assert_succeeds(
         "\
 program RegisterTaskSleep;
-uses Std.Task, Std.Time;
+uses Std.Tasks, Std.Time;
 
 function Work(Value: integer): integer;
 begin
@@ -109,7 +109,7 @@ end;
 
 begin
   var A: task := go Work(42);
-  Std.Task.Wait(A)
+  Std.Tasks.Wait(A)
 end.",
     );
 }
@@ -123,11 +123,11 @@ fn cancellation_token_interrupts_network_accept_end_to_end() {
         "\
 program CancellableAccept;
 
-uses Std.Net, Std.Task, Std.Time;
+uses Std.Net, Std.Tasks, Std.Time;
 
 function WaitForCancellation(
   ListenerValue: Std.Net.Listener;
-  Token: Std.Task.CancellationToken
+  Token: Std.Tasks.CancellationToken
 ): string;
 begin
   case Std.Net.AcceptWithCancellation(ListenerValue, Token) of
@@ -144,12 +144,12 @@ begin
   case Std.Net.Listen('127.0.0.1', {port}) of
     Ok(ListenerValue):
     begin
-      var Source: Std.Task.CancellationSource := Std.Task.CreateCancellationSource();
-      var Token: Std.Task.CancellationToken := Std.Task.GetCancellationToken(Source);
+      var Source: Std.Tasks.CancellationSource := Std.Tasks.CreateCancellationSource();
+      var Token: Std.Tasks.CancellationToken := Std.Tasks.GetCancellationToken(Source);
       var Waiting: task := go WaitForCancellation(ListenerValue, Token);
       Std.Time.Sleep(50);
-      if not Std.Task.Cancel(Source) then panic('first cancellation did not change state');
-      if Std.Task.Wait(Waiting) <> 'Network accept cancelled' then
+      if not Std.Tasks.Cancel(Source) then panic('first cancellation did not change state');
+      if Std.Tasks.Wait(Waiting) <> 'Network accept cancelled' then
         panic('accept did not report cancellation');
       Std.Net.CloseListener(ListenerValue)
     end;
@@ -166,7 +166,7 @@ fn wait_all_keeps_register_task_results_available() {
     assert_succeeds(
         "\
 program RegisterWaitAll;
-uses Std.Task;
+uses Std.Tasks;
 
 function Work(Value: integer): integer;
 begin
@@ -176,9 +176,9 @@ end;
 begin
   var A: task := go Work(20);
   var B: task := go Work(22);
-  Std.Task.WaitAll([A, B]);
-  Std.Task.Wait(A);
-  Std.Task.Wait(B)
+  Std.Tasks.WaitAll([A, B]);
+  Std.Tasks.Wait(A);
+  Std.Tasks.Wait(B)
 end.",
     );
 }
@@ -187,7 +187,7 @@ end.",
 fn mutable_capture_cannot_cross_register_task_boundary() {
     let source = "\
 program RegisterTaskBound;
-uses Std.Task;
+uses Std.Tasks;
 
 function Make(): function(): integer;
 begin
@@ -202,7 +202,7 @@ end;
 begin
   var Work: function(): integer := Make();
   var T: task := go Work();
-  Std.Task.Wait(T)
+  Std.Tasks.Wait(T)
 end.";
     let error = run_program(source).expect_err("runtime must reject task-bound closure");
     assert!(error.message.contains("task-bound"));
@@ -213,7 +213,7 @@ fn bounded_channels_send_receive_close_and_drain_fifo() {
     assert_succeeds(
         "\
 program BoundedChannels;
-uses Std.Task;
+uses Std.Tasks;
 
 function Produce(Messages: channel of integer): boolean;
 begin
@@ -257,7 +257,7 @@ fn channel_creation_uses_argument_and_return_type_contexts() {
     assert_succeeds(
         "\
 program ContextualChannels;
-uses Std.Task;
+uses Std.Tasks;
 
 function MakeChannel(): channel of integer;
 begin
@@ -283,7 +283,7 @@ fn channel_non_blocking_and_timeout_operations_are_distinct() {
     assert_succeeds(
         "\
 program ChannelWaitModes;
-uses Std.Task;
+uses Std.Tasks;
 
 begin
   var Messages: channel of integer := CreateChannel(1);
@@ -330,7 +330,7 @@ fn channel_timeout_rejects_negative_milliseconds() {
     let error = run_program(
         "\
 program InvalidChannelTimeout;
-uses Std.Task;
+uses Std.Tasks;
 begin
   var Messages: channel of integer := CreateChannel(1);
   ReceiveWithTimeout(Messages, -1)
@@ -345,7 +345,7 @@ fn cancellable_channel_send_and_receive_report_distinct_errors() {
     assert_succeeds(
         "\
 program CancellableChannels;
-uses Std.Task, Std.Time;
+uses Std.Tasks, Std.Time;
 
 function BlockedSend(
   Messages: channel of integer;

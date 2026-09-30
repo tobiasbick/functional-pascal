@@ -24,6 +24,22 @@ impl Parser {
                 let inner = self.parse_type_expr();
                 TypeExpr::Channel(Box::new(inner), self.span_from(start))
             }
+            Token::Task => {
+                let start = self.current_span();
+                self.advance();
+                if self.eat(&Token::Of) {
+                    let inner = self.parse_type_expr();
+                    return TypeExpr::Task(Box::new(inner), self.span_from(start));
+                }
+                // A bare `task` infers its result type from the initializer's spawned call.
+                TypeExpr::Named {
+                    id: QualifiedId {
+                        parts: vec!["task".to_owned()],
+                        span: start,
+                    },
+                    span: start,
+                }
+            }
             Token::Function => {
                 let start = self.current_span();
                 self.advance();
@@ -92,11 +108,6 @@ impl Parser {
     fn parse_named_type_expr(&mut self) -> TypeExpr {
         let start = self.current_span();
         let qid = self.parse_qualified_id();
-        if self.check(&Token::Of) && is_task_name(&qid) {
-            self.advance();
-            let inner = self.parse_type_expr();
-            return TypeExpr::Task(Box::new(inner), self.span_from(start));
-        }
         if self.check(&Token::Of) {
             let span = self.current_span();
             self.error_with_code(
@@ -167,9 +178,4 @@ impl Parser {
         };
         crate::TypeParam { name, constraint }
     }
-}
-
-/// `task` is a built-in type name, not a keyword, so `task of T` is recognized by name.
-fn is_task_name(qid: &QualifiedId) -> bool {
-    matches!(qid.parts.as_slice(), [name] if name.eq_ignore_ascii_case("task"))
 }

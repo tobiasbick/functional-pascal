@@ -238,7 +238,7 @@
         },
         {
           "name": "storage.type.composite.fpas",
-          "match": "(?i:\\b(record|enum|array|dict|result|option)\\b)"
+          "match": "(?i:\\b(record|enum|array|channel|task|dict|result|option)\\b)"
         }
       ]
     },
@@ -246,7 +246,7 @@
       "patterns": [
         {
           "name": "support.type.builtin.fpas",
-          "match": "(?i:\\b(integer|real|boolean|string|task)\\b)"
+          "match": "(?i:\\b(integer|real|boolean|string)\\b)"
         },
         {
           "name": "support.type.constraint.fpas",

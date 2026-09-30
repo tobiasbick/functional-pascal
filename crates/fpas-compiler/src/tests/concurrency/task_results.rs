@@ -5,14 +5,14 @@ use super::*;
 #[test]
 fn wait_preserves_integer_before_procedure_task_results() {
     assert_succeeds(
-        "program Reversed; uses Std.Task; function Number(): integer; begin return 7 end; procedure Work(); begin end; begin if Wait(go Number()) <> 7 then panic('wrong result'); Wait(go Work()) end.",
+        "program Reversed; uses Std.Tasks; function Number(): integer; begin return 7 end; procedure Work(); begin end; begin if Wait(go Number()) <> 7 then panic('wrong result'); Wait(go Work()) end.",
     );
 }
 
 #[test]
 fn wait_preserves_mixed_direct_spawn_results() {
     assert_succeeds(
-        "program MixedDirect; uses Std.Task; function Number(): integer; begin return 7 end; procedure Work(); begin end; begin Wait(go Work()); if Wait(go Number()) <> 7 then panic('wrong result') end.",
+        "program MixedDirect; uses Std.Tasks; function Number(): integer; begin return 7 end; procedure Work(); begin end; begin Wait(go Work()); if Wait(go Number()) <> 7 then panic('wrong result') end.",
     );
 }
 
@@ -20,7 +20,7 @@ fn wait_preserves_mixed_direct_spawn_results() {
 fn wait_preserves_mixed_procedure_and_integer_task_results() {
     assert_succeeds(
         r#"program MixedTaskResults;
-uses Std.Task;
+uses Std.Tasks;
 function Number(): integer;
 begin
   return 7
@@ -41,7 +41,7 @@ end."#,
 fn wait_preserves_mixed_results_across_routines_and_loop_branches() {
     assert_succeeds(
         r#"program MixedTaskRoutines;
-uses Std.Task;
+uses Std.Tasks;
 function Number(): integer;
 begin
   return 7
@@ -72,7 +72,7 @@ end."#,
 #[test]
 fn wait_signature_merges_unit_and_value_without_erasing_call_types() {
     let ast = parse_ok(
-        "program MixedSignature; uses Std.Task; function Number(): integer; begin return 7 end; procedure Work(); begin end; begin Wait(go Work()); if Wait(go Number()) <> 7 then panic('wrong result') end.",
+        "program MixedSignature; uses Std.Tasks; function Number(): integer; begin return 7 end; procedure Work(); begin end; begin Wait(go Work()); if Wait(go Number()) <> 7 then panic('wrong result') end.",
     );
     let ir = crate::lower(&ast).expect("mixed task result IR");
     let wait = fpas_ir::IntrinsicId::new(u32::from(u16::from(fpas_bytecode::Intrinsic::Task(
@@ -94,7 +94,7 @@ fn wait_signature_merges_unit_and_value_without_erasing_call_types() {
 #[test]
 fn wait_signature_keeps_unit_for_procedure_only_calls() {
     let ast = parse_ok(
-        "program UnitSignature; uses Std.Task; procedure Work(); begin end; begin Wait(go Work()); Wait(go Work()) end.",
+        "program UnitSignature; uses Std.Tasks; procedure Work(); begin end; begin Wait(go Work()); Wait(go Work()) end.",
     );
     let ir = crate::lower(&ast).expect("procedure task result IR");
     let wait = fpas_ir::IntrinsicId::new(u32::from(u16::from(fpas_bytecode::Intrinsic::Task(

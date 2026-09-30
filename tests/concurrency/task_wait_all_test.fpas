@@ -1,6 +1,6 @@
 program WaitAll;
 
-uses Std.Console, Std.Task;
+uses Std.Console, Std.Tasks;
 
 function Double(X: integer): integer;
 begin
@@ -12,6 +12,6 @@ begin
   var T2: task := go Double(2);
   var T3: task := go Double(3);
   var Results: array of task := [T1, T2, T3];
-  Std.Task.WaitAll(Results);
+  Std.Tasks.WaitAll(Results);
   WriteLn('done')
 end.

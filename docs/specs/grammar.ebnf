@@ -78,7 +78,7 @@ line_comment    = '//' { (* any character except CR or LF *) } ;
 (* A contiguous standalone comment block immediately before a       *)
 (* declaration is Markdown documentation; this is a tooling rule.    *)
 
-(* ---- Keywords (63, case-insensitive) --------------------------- *)
+(* ---- Keywords (64, case-insensitive) --------------------------- *)
 
 keyword         = 'program'   | 'unit'      | 'uses'      | 'const'
                 | 'var'       | 'mutable'   | 'function'  | 'procedure'
@@ -96,7 +96,7 @@ keyword         = 'program'   | 'unit'      | 'uses'      | 'const'
                 | 'go'        | 'dict'      | 'with'      | 'static' | 'property'
                 | 'event'     | 'read'      | 'write'     | 'comparable'
                 | 'numeric'   | 'printable' | 'self'      | 'nil'
-                | 'channel' ;
+                | 'channel'   | 'task' ;
 
 (* ---- Symbols --------------------------------------------------- *)
 
@@ -201,13 +201,13 @@ constraint_name     = 'Comparable' | 'Numeric' | 'Printable' ;
 (* ---- 2.3 Type Expressions ------------------------------------- *)
 
 (* Built-in named types (via qualified_id): integer, real, boolean, *)
-(* string, task. `task` is a name, not a reserved word; `task of T` *)
-(* declares the result type explicitly. See docs/pascal/language/basics/ and *)
-(* docs/pascal/language/concurrency/README.md.                                  *)
+(* string. A bare `task` infers its result type from the spawned call; *)
+(* `task of T` declares it. See docs/pascal/language/basics/ and       *)
+(* docs/pascal/language/concurrency/task-handles.md.                   *)
 
 type_expr           = 'array' 'of' type_expr            (* array type     *)
                     | 'channel' 'of' type_expr          (* channel type   *)
-                    | 'task' 'of' type_expr             (* typed task     *)
+                    | 'task' [ 'of' type_expr ]         (* task handle    *)
                     | 'dict' 'of' type_expr 'to' type_expr (* dict type    *)
                     | 'result' 'of' type_expr ',' type_expr  (* result type *)
                     | 'option' 'of' type_expr            (* option type    *)
@@ -438,7 +438,7 @@ continue_stmt       = 'continue' ;
 (* The parser requires the expression after `go` to be a call (not   *)
 (* a bare designator or other expression). Semantics: statement     *)
 (* `go` … is fire-and-forget (no handle); expression `go` … has type *)
-(* `task` and retains the result for `Std.Task.Wait`. See           *)
+(* `task` and retains the result for `Std.Tasks.Wait`. See           *)
 (* docs/pascal/language/concurrency/README.md.                                   *)
 go_call             = designator '(' [ arg_list ] ')' ;
 go_stmt             = 'go' go_call ;

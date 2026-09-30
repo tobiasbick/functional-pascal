@@ -5,7 +5,7 @@ fn local_send_function_shadows_imported_channel_intrinsic() {
     assert_succeeds(
         r#"
 program SendShadowRepro;
-uses Std.Console, Std.Conv, Std.Task;
+uses Std.Console, Std.Conv, Std.Tasks;
 function Send(First: integer; Second: integer; Third: integer): integer;
 begin
   return First + Second + Third
@@ -14,7 +14,7 @@ begin
   if Send(1, 2, 3) <> 6 then panic('local Send was not selected');
   WriteLn(IntToStr(Send(1, 2, 3)));
   var Queue: channel of integer := CreateChannel(1);
-  Std.Task.Send(Queue, 42);
+  Std.Tasks.Send(Queue, 42);
   case Receive(Queue) of
     Ok(Value): if Value <> 42 then panic('qualified channel Send');
     Error(Message): panic(Message)
@@ -30,7 +30,7 @@ fn local_send_procedure_shadows_intrinsic_with_several_std_units() {
     assert_succeeds(
         r#"
 program SendProcedure;
-uses Std.Task, Std.Console;
+uses Std.Tasks, Std.Console;
 mutable var Total: integer := 0;
 procedure Send(First: integer; Second: integer; Third: integer);
 begin
@@ -52,7 +52,7 @@ fn callable_parameter_and_local_variable_shadow_standard_names() {
     assert_succeeds(
         r#"
 program CallableShadowing;
-uses Std.Conv, Std.Task;
+uses Std.Conv, Std.Tasks;
 function Apply(IntToStr: function(Value: integer): string): string;
 begin
   return IntToStr(42)

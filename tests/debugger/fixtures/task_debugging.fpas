@@ -1,6 +1,6 @@
 program DebuggerTasks;
 
-uses Std.Console, Std.Task;
+uses Std.Console, Std.Tasks;
 
 function Work(): integer;
 begin

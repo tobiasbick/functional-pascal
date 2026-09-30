@@ -1,6 +1,6 @@
 program CancellationTest;
 
-uses Std.Task, Std.Test;
+uses Std.Tasks, Std.Test;
 
 begin
   var Source: CancellationSource := CreateCancellationSource();

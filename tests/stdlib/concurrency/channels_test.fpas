@@ -1,6 +1,6 @@
 program ChannelsTest;
 
-uses Std.Task, Std.Test;
+uses Std.Tasks, Std.Test;
 
 function SendValues(Messages: channel of integer): boolean;
 begin

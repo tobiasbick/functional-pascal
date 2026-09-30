@@ -43,7 +43,7 @@ fn run_modes(source: &str) {
 fn timed_group_close_returns_while_a_running_pool_worker_ignores_cancellation() {
     let (program, errors) = fpas_parser::parse(
         r#"program NonCooperativeWorker;
-uses Std.Task, Std.Results, Std.Options, Std.Arrays;
+uses Std.Tasks, Std.Results, Std.Options, Std.Arrays;
 begin
   var Group: TaskGroup := CreateTaskGroup();
   var Ready: channel of boolean := CreateChannel(1);
@@ -81,7 +81,7 @@ fn timed_group_close_retains_blocked_worker_until_a_later_successful_close() {
 fn child_timed_group_close_yields_to_its_waiting_parent() {
     run_modes(
         r#"program NestedClose;
-uses Std.Task, Std.Results, Std.Arrays;
+uses Std.Tasks, Std.Results, Std.Arrays;
 begin
   var Outer: TaskGroup := CreateTaskGroup();
   var Ready: channel of boolean := CreateChannel(1);

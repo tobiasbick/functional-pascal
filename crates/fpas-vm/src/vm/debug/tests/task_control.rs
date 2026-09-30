@@ -27,7 +27,7 @@ fn fingerprint(session: &mut DebugSession) -> StateFingerprint {
 fn shared_state_session() -> DebugSession {
     const SOURCE: &str = r#"program SharedStateTaskControl;
 
-uses Std.Task;
+uses Std.Tasks;
 
 mutable var Shared: integer := 0;
 

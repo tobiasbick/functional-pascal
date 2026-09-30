@@ -1,7 +1,7 @@
 // Bounded concurrent HTTP server-loop orchestration.
 unit Std.Http.ServerLoop;
 
-uses Std.Arrays, Std.Http.Server, Std.Http.Types, Std.Net, Std.Task;
+uses Std.Arrays, Std.Http.Server, Std.Http.Types, Std.Net, Std.Tasks;
 
 // Validates all server-loop limits before accepting a connection.
 //
@@ -170,13 +170,13 @@ begin
         end;
         Error(Message):
         begin
-          Std.Task.WaitAll(Tasks);
+          Std.Tasks.WaitAll(Tasks);
           return Error(Message)
         end
       end
     end;
 
-    Std.Task.WaitAll(Tasks)
+    Std.Tasks.WaitAll(Tasks)
   end;
 
   return Ok(true)

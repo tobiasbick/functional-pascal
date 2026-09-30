@@ -2,7 +2,7 @@ program MandelbrotBackgroundTest;
 
 uses
   Mandelbrot.App, Mandelbrot.Color, Mandelbrot.Model, Mandelbrot.Render, Std.Arrays, Std.Console,
-  Std.Options, Std.Results, Std.Task, Std.Test, Std.Tui;
+  Std.Options, Std.Results, Std.Tasks, Std.Test, Std.Tui;
 
 procedure AssertColorEquals(Expected: TuiColor; Actual: TuiColor);
 begin

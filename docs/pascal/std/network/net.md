@@ -23,19 +23,19 @@ end
 | type | `NetworkAddress` | record with `Host: string` and `Port: integer` |
 | function | `Connect(Host: string; Port: integer; TimeoutMillis: integer): Result of Connection, string` | resolves and connects |
 | function | `ConnectTls(Host: string; Port: integer; TimeoutMillis: integer): Result of Connection, string` | resolves, connects, and completes a verified TLS handshake |
-| function | `ConnectWithCancellation(Host: string; Port: integer; TimeoutMillis: integer; Token: Std.Task.CancellationToken): Result of Connection, string` | cancellable TCP attempts; OS DNS checked on return |
-| function | `ConnectTlsWithCancellation(Host: string; Port: integer; TimeoutMillis: integer; Token: Std.Task.CancellationToken): Result of Connection, string` | also observes cancellation during TLS handshake I/O |
+| function | `ConnectWithCancellation(Host: string; Port: integer; TimeoutMillis: integer; Token: Std.Tasks.CancellationToken): Result of Connection, string` | cancellable TCP attempts; OS DNS checked on return |
+| function | `ConnectTlsWithCancellation(Host: string; Port: integer; TimeoutMillis: integer; Token: Std.Tasks.CancellationToken): Result of Connection, string` | also observes cancellation during TLS handshake I/O |
 | function | `Listen(Host: string; Port: integer): Result of Listener, string` | binds one TCP listener |
 | function | `ListenTls(Host: string; Port: integer; CertificatePath: string; PrivateKeyPath: string; HandshakeTimeoutMillis: integer): Result of Listener, string` | loads PEM credentials and binds one TLS listener |
 | function | `Accept(Listener): Result of Connection, string` | blocks until one client connects |
-| function | `AcceptWithCancellation(Listener; Token: Std.Task.CancellationToken): Result of Connection, string` | blocks until one client connects or cancellation is requested |
+| function | `AcceptWithCancellation(Listener; Token: Std.Tasks.CancellationToken): Result of Connection, string` | blocks until one client connects or cancellation is requested |
 | function | `CloseListener(Listener): Result of boolean, string` | invalidates the listener handle |
 | function | `ListenerLocalAddress(Listener): Result of NetworkAddress, string` | returns the bound numeric IP address and port |
 | function | `SetTimeout(Connection; TimeoutMillis: integer): Result of boolean, string` | sets read/write timeout; zero disables it |
 | function | `ReceiveBytes(Connection; MaxBytes: integer): Result of array of integer, string` | empty array means EOF |
-| function | `ReceiveBytesWithCancellation(Connection; MaxBytes: integer; Token: Std.Task.CancellationToken): Result of array of integer, string` | reads a chunk or reports cancellation; leaves the connection open |
+| function | `ReceiveBytesWithCancellation(Connection; MaxBytes: integer; Token: Std.Tasks.CancellationToken): Result of array of integer, string` | reads a chunk or reports cancellation; leaves the connection open |
 | function | `SendBytes(Connection; Data: array of integer): Result of integer, string` | returns bytes written; partial writes are possible |
-| function | `SendBytesWithCancellation(Connection; Data: array of integer; Token: Std.Task.CancellationToken): Result of integer, string` | returns accepted bytes or reports cancellation before progress |
+| function | `SendBytesWithCancellation(Connection; Data: array of integer; Token: Std.Tasks.CancellationToken): Result of integer, string` | returns accepted bytes or reports cancellation before progress |
 | function | `Close(Connection): Result of boolean, string` | invalidates the handle |
 
 `ConnectTls` verifies the server certificate and requested hostname through the operating system's
@@ -55,7 +55,7 @@ before returning and discards failed or timed-out handshakes while waiting for a
 Listener handles are closed separately with `CloseListener`. Both accept functions and connection
 I/O block the VM worker that executes them.
 
-`AcceptWithCancellation` observes a `Std.Task.CancellationToken`. If cancellation wins before a
+`AcceptWithCancellation` observes a `Std.Tasks.CancellationToken`. If cancellation wins before a
 connection is returned, the function returns `Error('Network accept cancelled')`. It leaves the
 listener open, so another task may accept from it later. `Accept` remains available when the caller
 does not need application-controlled cancellation.
@@ -101,7 +101,7 @@ advertising a wildcard listener.
 
 ## `ConnectWithCancellation` and `ConnectTlsWithCancellation`
 
-These variants take a `Std.Task.CancellationToken` and use the same host, port, and positive
+These variants take a `Std.Tasks.CancellationToken` and use the same host, port, and positive
 `1..300000` ms timeout limits as `Connect` and `ConnectTls`. TLS uses the same operating-system trust
 policy; cancellation does not bypass certificate or hostname verification.
 
@@ -128,7 +128,7 @@ policy; cancellation does not bypass certificate or hostname verification.
 ## `ReceiveBytesWithCancellation`
 
 Reads at most `MaxBytes` from an established TCP or TLS connection. The same byte-size limits and
-EOF representation as `ReceiveBytes` apply. Import `Std.Task` to create the cancellation source and token.
+EOF representation as `ReceiveBytes` apply. Import `Std.Tasks` to create the cancellation source and token.
 
 - Cancellation observed before a read attempt returns `Error('Network read cancelled')` without
   closing the connection. A token that is already cancelled does not consume available bytes.
@@ -144,7 +144,7 @@ EOF representation as `ReceiveBytes` apply. Import `Std.Task` to create the canc
 ## `SendBytesWithCancellation`
 
 Writes one bounded chunk to an established TCP or TLS connection. Byte values and the 1 MiB limit
-are the same as for `SendBytes`. Import `Std.Task` to create the cancellation source and token.
+are the same as for `SendBytes`. Import `Std.Tasks` to create the cancellation source and token.
 
 - `Ok(N)` means the first `N` bytes were accepted by the local transport. Partial writes are allowed;
   retry only the remaining suffix. The function does not loop to send the entire input.
@@ -190,5 +190,5 @@ its VM worker.
 
 - [Networking index](README.md)
 - [`Std.Http`](http.md)
-- [`Std.Task`](../concurrency/task.md)
+- [`Std.Tasks`](../concurrency/task.md)
 - [Standard library index](../README.md)

@@ -7,10 +7,10 @@ fn task_token_cancels_network_read_end_to_end() {
     assert_succeeds(&format!(
         "\
 program CancellableRead;
-uses Std.Net, Std.Task, Std.Time;
+uses Std.Net, Std.Tasks, Std.Time;
 
 function ReadUntilCancelled(ConnectionValue: Std.Net.Connection;
-  Token: Std.Task.CancellationToken): string;
+  Token: Std.Tasks.CancellationToken): string;
 begin
   case Std.Net.ReceiveBytesWithCancellation(ConnectionValue, 1, Token) of
     Ok(Data): return 'received';
@@ -23,12 +23,12 @@ begin
     Ok(ConnectionValue):
     begin
       Std.Net.SetTimeout(ConnectionValue, 1000);
-      var Source: Std.Task.CancellationSource := Std.Task.CreateCancellationSource();
-      var Token: Std.Task.CancellationToken := Std.Task.GetCancellationToken(Source);
+      var Source: Std.Tasks.CancellationSource := Std.Tasks.CreateCancellationSource();
+      var Token: Std.Tasks.CancellationToken := Std.Tasks.GetCancellationToken(Source);
       var Waiting: task := go ReadUntilCancelled(ConnectionValue, Token);
       Std.Time.Sleep(30);
-      Std.Task.Cancel(Source);
-      if Std.Task.Wait(Waiting) <> 'Network read cancelled' then
+      Std.Tasks.Cancel(Source);
+      if Std.Tasks.Wait(Waiting) <> 'Network read cancelled' then
         panic('read did not report cancellation');
       case Std.Net.Close(ConnectionValue) of
         Ok(Closed): if not Closed then panic('close failed');

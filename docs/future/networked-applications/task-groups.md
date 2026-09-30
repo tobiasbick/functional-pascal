@@ -1,7 +1,7 @@
 # Task-group ownership: completed implementation
 
 > C2 is implemented and verified. The current API and behavior are documented in
-> [Std.Task](../../pascal/std/concurrency/task.md#task-groups).
+> [Std.Tasks](../../pascal/std/concurrency/task.md#task-groups).
 
 Explicit groups own registered children independently of retained task handles. They propagate
 cooperative cancellation, collect distinct returned errors and runtime failures, and join children

@@ -128,7 +128,7 @@ pub(crate) fn resolve(name: &str, first_argument: Option<&Ty>) -> Option<Intrins
             OptionIntrinsic,
             [Unwrap, UnwrapOr, IsSome, IsNone, Map, AndThen, OrElse]
         ),
-        "Task" => family!(
+        "Tasks" => family!(
             member,
             Task,
             TaskIntrinsic,
@@ -462,6 +462,7 @@ mod tests {
                     "Dict" => "Dictionaries",
                     "Result" => "Results",
                     "Option" => "Options",
+                    "Task" => "Tasks",
                     other => other,
                 };
                 let member = member.trim_end_matches(')');

@@ -28,7 +28,7 @@ export async function verifyTaskResultReplacement(
   const lines = [
     "program DebuggerTaskResult;",
     "",
-    "uses Std.Console, Std.Task;",
+    "uses Std.Console, Std.Tasks;",
     "",
     "function Work(): integer;",
     "begin",

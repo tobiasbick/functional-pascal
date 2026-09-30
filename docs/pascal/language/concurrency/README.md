@@ -10,7 +10,7 @@ Go-inspired lightweight task concurrency. Tasks created with `go` may run on wor
 | [Scheduling](scheduling.md) | Thread pool, cooperative preemption, shared runtime |
 | [Channel types](../types/channels.md) | Typed bounded FIFO communication, cancellation, closure |
 
-Per-symbol API: [`Std.Task`](../../std/concurrency/task.md), including cancellation, typed channel
+Per-symbol API: [`Std.Tasks`](../../std/concurrency/task.md), including cancellation, typed channel
 operations, mixed-source `Select`, task groups, supervised retries, and cooperative timed close.
 
 ## Bytecode mapping
@@ -21,7 +21,7 @@ The compiler lowers `go` to dedicated VM opcodes:
 - **`go` as a statement** (fire-and-forget) emits a **detached** spawn without retaining a handle for the caller.
 
 At startup, the runtime checks verified function metadata for task-start operations. Both retained
-and detached `go` spawns, and the `Std.Task.StartTaskInGroup` and `StartSupervisedTask` intrinsics,
+and detached `go` spawns, and the `Std.Tasks.StartTaskInGroup` and `StartSupervisedTask` intrinsics,
 mark a function as able to start tasks. Without such metadata, the runtime does not start background
 worker threads. `Yield`, channel creation, and group creation alone do not require a pool.
 
@@ -39,4 +39,4 @@ wall-clock process exit.
 ## See also
 
 - [Language overview](../README.md)
-- [Std.Task API](../../std/concurrency/task.md)
+- [Std.Tasks API](../../std/concurrency/task.md)

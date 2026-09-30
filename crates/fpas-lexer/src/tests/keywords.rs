@@ -2,11 +2,11 @@ use super::toks;
 use crate::Token;
 
 #[test]
-fn all_63_keywords() {
+fn all_64_keywords() {
     let input = "program unit uses const var mutable function procedure begin end return \
                  if then else case of for to downto in in do while \
                  repeat until and or not xor div mod shl shr \
-                 true false type record enum array channel panic break continue \
+                 true false type record enum array channel task panic break continue \
                  public result option ok error some none try \
                  go dict with static property event read write comparable numeric printable self nil";
     let tokens = toks(input);
@@ -53,6 +53,7 @@ fn all_63_keywords() {
             Token::Enum,
             Token::Array,
             Token::Channel,
+            Token::Task,
             Token::Panic,
             Token::Break,
             Token::Continue,

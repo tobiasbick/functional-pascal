@@ -2,7 +2,7 @@
 
 unit Mandelbrot.Model;
 
-uses Std.Arrays, Std.Conv, Std.Math, Std.Task, Std.Tui, Mandelbrot.Color, Mandelbrot.Render;
+uses Std.Arrays, Std.Conv, Std.Math, Std.Tasks, Std.Tui, Mandelbrot.Color, Mandelbrot.Render;
 
 public type
   ExplorerState = record

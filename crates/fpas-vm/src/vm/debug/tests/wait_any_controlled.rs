@@ -3,7 +3,7 @@
 use super::*;
 
 const SOURCE: &str = r#"program ControlledWaitAny;
-uses Std.Task, Std.Time;
+uses Std.Tasks, Std.Time;
 function Work(): integer;
 begin
   Sleep(30);
@@ -65,7 +65,7 @@ fn controlled_wait_any_uses_debugger_deadlines_and_cancellation() {
 fn controlled_wait_any_preserves_results_with_one_worker() {
     let (program, errors) = fpas_parser::parse(
         r#"program ReadyControlledWait;
-uses Std.Task;
+uses Std.Tasks;
 function Work(): integer;
 begin
   return 7

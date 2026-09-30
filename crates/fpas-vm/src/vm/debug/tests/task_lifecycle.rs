@@ -27,7 +27,7 @@ fn fingerprint(session: &mut DebugSession) -> StateFingerprint {
 fn retained_session() -> DebugSession {
     const SOURCE: &str = r#"program TaskLifecycle;
 
-uses Std.Task;
+uses Std.Tasks;
 
 function Work(): integer;
 begin

@@ -50,7 +50,7 @@ pub fn canonical_std_unit_from_tail(tail: &str) -> Option<&'static str> {
         ("arrays", STD_UNIT_ARRAY),
         ("results", STD_UNIT_RESULT),
         ("options", STD_UNIT_OPTION),
-        ("task", STD_UNIT_TASK),
+        ("tasks", STD_UNIT_TASK),
         ("dictionaries", STD_UNIT_DICT),
         ("json", STD_UNIT_JSON),
         ("toml", STD_UNIT_TOML),

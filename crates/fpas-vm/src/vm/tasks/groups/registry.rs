@@ -13,7 +13,7 @@ const TAG: u64 = 0x4752_0000_0000_0000;
 const MASK: u64 = 0xffff_0000_0000_0000;
 static NEXT: AtomicU64 = AtomicU64::new(TAG | 1);
 
-/// Backing values of the payload-free `Std.Task.TaskFailureKind` enumeration.
+/// Backing values of the payload-free `Std.Tasks.TaskFailureKind` enumeration.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(i64)]
 pub(in crate::vm) enum GroupFailureKind {

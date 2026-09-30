@@ -1,4 +1,4 @@
-//! `Std.Task` bounded-channel intrinsic dispatch.
+//! `Std.Tasks` bounded-channel intrinsic dispatch.
 
 mod blocking;
 mod non_blocking;
@@ -191,7 +191,7 @@ impl Worker {
         Err(self.runtime_error(
             RUNTIME_INTRINSIC_STACK_STATE_ERROR,
             format!(
-                "Std.Task channel intrinsic expected {expected} arguments, got {}",
+                "Std.Tasks channel intrinsic expected {expected} arguments, got {}",
                 arguments.len()
             ),
             "Check the compiler intrinsic signature and register argument count.",

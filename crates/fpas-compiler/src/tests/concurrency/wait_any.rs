@@ -4,7 +4,7 @@ use super::*;
 fn controlled_wait_any_rejects_negative_timeout() {
     let error = run_program(
         r#"program BadTimeout;
-uses Std.Task;
+uses Std.Tasks;
 procedure Work();
 begin
 end;
@@ -24,7 +24,7 @@ fn controlled_wait_any_preserves_worker_failure() {
         "WithCancellation([T], GetCancellationToken(CreateCancellationSource()))",
     ] {
         let source = format!(
-            "program Failure; uses Std.Task; procedure Work(); begin panic('original failure') end; begin var T: task := go Work(); WaitAny{control} end."
+            "program Failure; uses Std.Tasks; procedure Work(); begin panic('original failure') end; begin var T: task := go Work(); WaitAny{control} end."
         );
         let error = run_program(&source).expect_err("task failure");
         assert_eq!(error.code, fpas_diagnostics::codes::RUNTIME_PROGRAM_PANIC);
@@ -34,7 +34,7 @@ fn controlled_wait_any_preserves_worker_failure() {
 
 #[test]
 fn wait_any_rejects_an_empty_task_array() {
-    let error = run_program("program EmptyWaitAny; uses Std.Task; begin var Tasks: array of task := []; WaitAny(Tasks) end.").expect_err("empty list");
+    let error = run_program("program EmptyWaitAny; uses Std.Tasks; begin var Tasks: array of task := []; WaitAny(Tasks) end.").expect_err("empty list");
     assert_eq!(error.code, fpas_diagnostics::codes::RUNTIME_INVALID_TASK);
     assert!(error.message.contains("between 1 and 1048576"));
 }
@@ -43,7 +43,7 @@ fn wait_any_rejects_an_empty_task_array() {
 fn wait_any_preserves_worker_failure_diagnostic() {
     let error = run_program(
         r#"program FailedWaitAny;
-uses Std.Task;
+uses Std.Tasks;
 procedure Work();
 begin
   panic('original worker failure')
@@ -62,7 +62,7 @@ end."#,
 fn wait_any_preserves_results_and_array_order() {
     assert_succeeds(
         r#"program WaitAnyOrder;
-uses Std.Task;
+uses Std.Tasks;
 function Work(Value: integer): integer;
 begin
   return Value
@@ -83,7 +83,7 @@ end."#,
 fn wait_any_worker_helps_nested_tasks() {
     assert_succeeds(
         r#"program WaitAnyNested;
-uses Std.Task, Std.Time;
+uses Std.Tasks, Std.Time;
 function Work(): integer;
 begin
   Sleep(1);

@@ -19,7 +19,7 @@ fn run_with_one_worker(source: &str) {
 fn timed_channel_wait_does_not_run_a_blocking_queued_task_inline() {
     run_with_one_worker(
         r#"program TimedWaitDoesNotHelp;
-uses Std.Net, Std.Results, Std.Task, Std.Time;
+uses Std.Net, Std.Results, Std.Tasks, Std.Time;
 function BlockingRead(ListenerValue: Listener; Token: CancellationToken): boolean;
 begin
   var Client: Connection := Std.Results.Unwrap(Accept(ListenerValue));
@@ -58,7 +58,7 @@ end."#,
 fn untimed_channel_waits_progress_through_the_pool_worker() {
     run_with_one_worker(
         r#"program PoolServesMainChannelWaits;
-uses Std.Results, Std.Task;
+uses Std.Results, Std.Tasks;
 function Doubler(Requests: channel of integer; Replies: channel of integer): integer;
 begin
   mutable var Count: integer := 0;
@@ -91,7 +91,7 @@ end."#,
 fn task_wait_does_not_run_a_queued_task_that_waits_for_the_main_task() {
     run_with_workers(
         r#"program TaskWaitDoesNotHelp;
-uses Std.Arrays, Std.Net, Std.Results, Std.Task, Std.Time;
+uses Std.Arrays, Std.Net, Std.Results, Std.Tasks, Std.Time;
 function Busy(ListenerValue: Listener; Token: CancellationToken): boolean;
 begin
   var Client: Connection := Std.Results.Unwrap(Accept(ListenerValue));

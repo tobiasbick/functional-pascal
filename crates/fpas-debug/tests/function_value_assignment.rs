@@ -261,7 +261,7 @@ fn jsonl_function_values_copy_atomically_and_continue() {
 fn jsonl_function_value_assignment_stays_bound_to_the_selected_child_task() {
     const TASK_SOURCE: &str = r#"program TaskFunctionValueAssignment;
 
-uses Std.Console, Std.Task;
+uses Std.Console, Std.Tasks;
 
 type
   Handler = function(Value: integer): integer;

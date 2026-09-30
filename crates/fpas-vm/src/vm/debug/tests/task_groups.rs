@@ -9,7 +9,7 @@ const LIFECYCLE: &str =
     include_str!("../../../../../../tests/concurrency/task_group_lifecycle_test.fpas");
 
 const SOURCE: &str = r#"program GroupFailures;
-uses Std.Task, Std.Time, Std.Arrays;
+uses Std.Tasks, Std.Time, Std.Arrays;
 function Ordinary(Token: CancellationToken): result of integer, string;
 begin
   Sleep(1);
@@ -158,7 +158,7 @@ fn task_group_exited_failure_cannot_be_resumed_or_force_returned() {
 #[test]
 fn task_group_debugger_cancellation_is_reported_as_cancelled() {
     let source = r#"program CancelOwnedChild;
-uses Std.Task, Std.Time, Std.Arrays;
+uses Std.Tasks, Std.Time, Std.Arrays;
 procedure Work(Token: CancellationToken); begin Sleep(1000) end;
 begin
   var G: TaskGroup := CreateTaskGroup();
@@ -180,7 +180,7 @@ end."#;
 #[test]
 fn task_group_child_close_is_rejected_and_collected_as_runtime_failure() {
     let source = r#"program ChildCannotClose;
-uses Std.Task, Std.Arrays;
+uses Std.Tasks, Std.Arrays;
 begin
   var G: TaskGroup := CreateTaskGroup();
   StartTaskInGroup(G, procedure(Token: CancellationToken) begin CloseTaskGroup(G) end);
@@ -204,7 +204,7 @@ end."#;
 #[test]
 fn task_group_explicit_wait_keeps_the_original_panic_diagnostic() {
     let source = r#"program ExplicitFailedWait;
-uses Std.Task;
+uses Std.Tasks;
 procedure Work(Token: CancellationToken); begin panic('original child failure') end;
 begin
   var G: TaskGroup := CreateTaskGroup();
@@ -223,7 +223,7 @@ end."#;
 #[test]
 fn task_group_ignored_close_report_still_has_verified_record_metadata() {
     let source = r#"program IgnoreReport;
-uses Std.Task;
+uses Std.Tasks;
 procedure Work(Token: CancellationToken); begin panic('contained') end;
 begin
   var G: TaskGroup := CreateTaskGroup();

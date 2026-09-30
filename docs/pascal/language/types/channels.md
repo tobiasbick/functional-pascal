@@ -4,7 +4,7 @@
 type is part of the static type: `channel of integer` and `channel of string` are different types.
 
 ```pascal
-var Messages: channel of string := Std.Task.CreateChannel(16)
+var Messages: channel of string := Std.Tasks.CreateChannel(16)
 ```
 
 ## Type rules
@@ -30,7 +30,7 @@ wakes blocked operations.
 Channel capacity is fixed at creation and must be in `1..=1048576`. There is no unbounded channel
 form.
 
-Operations are provided by [`Std.Task`](../../std/concurrency/task.md).
+Operations are provided by [`Std.Tasks`](../../std/concurrency/task.md).
 
 Blocking, cancellation-aware, timeout-bounded, and immediate send and receive operations all
 preserve the same element type and closure rules. Immediate receive represents a temporarily empty

@@ -7,15 +7,15 @@ fn network_connect_cancellation_variants_execute_end_to_end() {
     assert_succeeds(&format!(
         "\
 program CancellableConnect;
-uses Std.Net, Std.Task;
+uses Std.Net, Std.Tasks;
 begin
-  var Source: Std.Task.CancellationSource := Std.Task.CreateCancellationSource();
-  var Token: Std.Task.CancellationToken := Std.Task.GetCancellationToken(Source);
+  var Source: Std.Tasks.CancellationSource := Std.Tasks.CreateCancellationSource();
+  var Token: Std.Tasks.CancellationToken := Std.Tasks.GetCancellationToken(Source);
   case Std.Net.ConnectWithCancellation('127.0.0.1', {port}, 1000, Token) of
     Ok(ConnectionValue): Std.Net.Close(ConnectionValue);
     Error(Message): panic(Message)
   end;
-  Std.Task.Cancel(Source);
+  Std.Tasks.Cancel(Source);
   case Std.Net.ConnectWithCancellation('unused.invalid', 1, 1000, Token) of
     Ok(ConnectionValue): panic('cancelled TCP connect succeeded');
     Error(Message): if Message <> 'Network connect cancelled' then panic(Message)

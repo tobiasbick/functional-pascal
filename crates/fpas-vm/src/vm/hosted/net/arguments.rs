@@ -72,7 +72,7 @@ pub(super) fn cancellation_token(worker: &Worker, value: &Value) -> Result<u64, 
         actual => Err(type_error(
             worker,
             "Token",
-            "Std.Task.CancellationToken",
+            "Std.Tasks.CancellationToken",
             actual,
         )),
     }

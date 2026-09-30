@@ -451,7 +451,7 @@ type
 
 ## Types (summary)
 
-- `array of T`, `channel of T`, `dict of K to V`, `Result of T, E`, `Option of T`.
+- `array of T`, `channel of T`, `task of T`, `dict of K to V`, `Result of T, E`, `Option of T`.
 - Generics: `Box<T>`, usage `Box of string`, multiple params `Pair of integer, string`.
 - Enum variants with data: `Circle(Radius: real);`
 

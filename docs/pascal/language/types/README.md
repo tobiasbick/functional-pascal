@@ -15,6 +15,7 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`type_block`, `typ
 | [Enumerations](enums.md) | Plain, backed, and data-carrying enums |
 | [Arrays](arrays.md) | `array of T`, indexing, mutation |
 | [Channels](channels.md) | `channel of T`, bounded FIFO communication and closure |
+| [Task handles](../concurrency/task-handles.md#typed-task-handles) | `task` and `task of T`, handles whose `Wait` yields `T` |
 | [Dictionaries](dictionaries.md) | `dict of K to V` |
 | [Type aliases](type-aliases.md) | Semantic names for existing types |
 | [Generics](generics.md) | Type parameters on routines and record methods |

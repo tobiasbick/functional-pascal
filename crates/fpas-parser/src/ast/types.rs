@@ -17,6 +17,12 @@ pub enum TypeExpr {
     ///
     /// **Documentation:** `docs/pascal/language/types/channels.md`
     Channel(Box<TypeExpr>, Span),
+    /// A `task of T` handle type whose `Std.Task.Wait` yields `T`, together with its source span.
+    ///
+    /// A bare `task` remains a named type whose result type is inferred from its initializer.
+    ///
+    /// **Documentation:** `docs/pascal/language/concurrency/task-handles.md`
+    Task(Box<TypeExpr>, Span),
     /// A function type with parameter and return types.
     FunctionType {
         /// The formal parameter declarations.

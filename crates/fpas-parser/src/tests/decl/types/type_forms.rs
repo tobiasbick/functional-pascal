@@ -51,3 +51,33 @@ fn channel_type() {
         _ => panic!("expected Var"),
     }
 }
+
+#[test]
+fn typed_task_type() {
+    let p = parse_ok("program T; var Job: Task of result of integer, string := Value; begin end.");
+    match &p.declarations[0] {
+        Decl::Var(v) => match &v.type_expr {
+            TypeExpr::Task(inner, _) => {
+                assert!(matches!(inner.as_ref(), TypeExpr::Result { .. }));
+            }
+            _ => panic!("expected task type"),
+        },
+        _ => panic!("expected Var"),
+    }
+}
+
+#[test]
+fn bare_task_remains_a_named_type() {
+    let p = parse_ok("program T; var Job: task := Value; begin end.");
+    match &p.declarations[0] {
+        Decl::Var(v) => assert!(matches!(&v.type_expr, TypeExpr::Named { .. })),
+        _ => panic!("expected Var"),
+    }
+}
+
+#[test]
+fn other_named_types_still_reject_generic_arguments() {
+    let (_, errors) =
+        parse_with_errors("program T; var Items: Queue of integer := Value; begin end.");
+    assert!(!errors.is_empty());
+}

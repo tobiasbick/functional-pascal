@@ -87,3 +87,59 @@ fn run_cli_executes_library_deps_example_with_exports() {
 fn toml_path(path: &std::path::Path) -> String {
     path.to_string_lossy().replace('\\', "/")
 }
+
+#[test]
+fn run_cli_accepts_exported_functions_with_typed_task_parameters() {
+    let cwd = create_temp_dir("run-lib-typed-task-parameter");
+    let lib_dir = cwd.join("sessions");
+    let app_dir = cwd.join("app");
+    let lib_project = lib_dir.join("sessions.fpasprj");
+    let app_project = app_dir.join("app.fpasprj");
+
+    write_text(
+        &lib_project,
+        r#"[project]
+name = "sessions"
+kind = "library"
+
+[exports]
+units = ["Sessions.Outcome"]
+
+[sources]
+include = ["src/**/*.fpas"]
+"#,
+    );
+    write_text(
+        &lib_dir.join("src/outcome.fpas"),
+        "unit Sessions.Outcome;\nuses Std.Task;\npublic function Describe(Session: task of result of boolean, string): string;\nbegin\n  case Wait(Session) of\n    Ok(Done): begin return 'ok' end;\n    Error(Message): begin return Message end\n  end\nend;\n",
+    );
+
+    let lib_dep = toml_path(&lib_project);
+    write_text(
+        &app_project,
+        &format!(
+            r#"[project]
+name = "app"
+kind = "program"
+main = "src/main.fpas"
+
+[dependencies]
+projects = ["{lib_dep}"]
+
+[sources]
+include = ["src/**/*.fpas"]
+"#
+        ),
+    );
+    write_text(
+        &app_dir.join("src/main.fpas"),
+        "program App;\nuses Sessions.Outcome, Std.Console, Std.Task;\nfunction Session(): result of boolean, string;\nbegin\n  return Error('session failed')\nend;\nbegin\n  var Job: task := go Session();\n  WriteLn(Describe(Job))\nend.\n",
+    );
+
+    let (exit_code, stdout_output, stderr_output) =
+        support::run_cli_and_capture_output(&app_project, &app_dir);
+    fs::remove_dir_all(&cwd).expect("temp directory must be removed");
+
+    assert_eq!(exit_code, 0, "{stderr_output}");
+    assert_eq!(stdout_output, "session failed\n");
+}

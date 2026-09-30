@@ -42,6 +42,10 @@ pub(crate) fn emit_type_expr(emitter: &mut Emitter, ty: &TypeExpr) {
             emitter.write("channel of ");
             emit_type_expr(emitter, inner);
         }
+        TypeExpr::Task(inner, ..) => {
+            emitter.write("task of ");
+            emit_type_expr(emitter, inner);
+        }
         TypeExpr::FunctionType {
             params,
             return_type,
@@ -167,6 +171,16 @@ mod tests {
         assert_eq!(
             type_from_var("program T; begin var X: channel of string := Value; end."),
             "channel of string"
+        );
+        assert_eq!(
+            type_from_var(
+                "program T; begin var X: array of TASK OF result of integer, string := []; end."
+            ),
+            "array of task of result of integer, string"
+        );
+        assert_eq!(
+            type_from_var("program T; begin var X: task := Value; end."),
+            "task"
         );
     }
 

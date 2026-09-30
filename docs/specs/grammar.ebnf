@@ -201,11 +201,13 @@ constraint_name     = 'Comparable' | 'Numeric' | 'Printable' ;
 (* ---- 2.3 Type Expressions ------------------------------------- *)
 
 (* Built-in named types (via qualified_id): integer, real, boolean, *)
-(* string, task. See docs/pascal/language/basics/ and            *)
+(* string, task. `task` is a name, not a reserved word; `task of T` *)
+(* declares the result type explicitly. See docs/pascal/language/basics/ and *)
 (* docs/pascal/language/concurrency/README.md.                                  *)
 
 type_expr           = 'array' 'of' type_expr            (* array type     *)
                     | 'channel' 'of' type_expr          (* channel type   *)
+                    | 'task' 'of' type_expr             (* typed task     *)
                     | 'dict' 'of' type_expr 'to' type_expr (* dict type    *)
                     | 'result' 'of' type_expr ',' type_expr  (* result type *)
                     | 'option' 'of' type_expr            (* option type    *)

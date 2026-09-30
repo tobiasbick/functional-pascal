@@ -6,6 +6,22 @@ The `task` type represents a handle to a running task. Assign the result of a **
 var T: task := go ComputeSomething(Data);
 ```
 
+## Typed task handles
+
+Write `task of T` where a declaration has no initializer to infer the result type from, such as a
+parameter, a record field, or an array element type. `Wait` on a `task of T` returns `T`, and a handle
+whose spawned call returns another type is rejected. A bare `task` keeps inferring `T` from its
+initializer; `task` is a built-in type name, not a reserved word.
+
+```pascal
+function Doubled(Job: task of integer): integer;
+begin
+  return Wait(Job) * 2
+end;
+
+var Jobs: array of task of result of boolean, string := [go Connect(), go Serve()];
+```
+
 `Std.Task.StartTaskInGroup` and `StartSupervisedTask` also return typed task handles. Their explicit
 group retains ownership even when the caller discards a handle; see [Task groups](../../std/concurrency/task.md#task-groups).
 

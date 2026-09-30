@@ -15,6 +15,7 @@ pub(super) fn apply_type_expr_source_id(type_expr: &mut TypeExpr, source_id: u32
         }
         TypeExpr::Array(inner, span)
         | TypeExpr::Channel(inner, span)
+        | TypeExpr::Task(inner, span)
         | TypeExpr::Option {
             inner_type: inner,
             span,

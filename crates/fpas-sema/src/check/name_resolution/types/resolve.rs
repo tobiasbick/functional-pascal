@@ -11,6 +11,7 @@ impl Checker {
             TypeExpr::Named { id, .. } => self.resolve_named_type(id),
             TypeExpr::Array(inner, _) => Ty::Array(Box::new(self.resolve_type_expr(inner))),
             TypeExpr::Channel(inner, _) => Ty::Channel(Box::new(self.resolve_type_expr(inner))),
+            TypeExpr::Task(inner, _) => Ty::Task(Box::new(self.resolve_type_expr(inner))),
             TypeExpr::FunctionType {
                 params,
                 return_type,

@@ -354,3 +354,39 @@ end.",
         "errors: {errors:#?}"
     );
 }
+
+#[test]
+fn typed_task_parameters_wait_for_their_declared_result_type() {
+    check_ok(
+        r#"program T;
+uses Std.Task;
+function Seven(): integer;
+begin
+  return 7
+end;
+function Doubled(Job: task of integer): integer;
+begin
+  return Wait(Job) * 2
+end;
+function First(Jobs: array of task of integer): integer;
+begin
+  return Wait(Jobs[WaitAny(Jobs)])
+end;
+begin
+  var Job: task of integer := go Seven();
+  var Inferred: task := go Seven();
+  var Total: integer := Doubled(Job) + First([Inferred])
+end."#,
+    );
+}
+
+#[test]
+fn typed_tasks_reject_a_different_result_type() {
+    for source in [
+        "program T; uses Std.Task; function Seven(): integer; begin return 7 end; begin var Job: task of string := go Seven() end.",
+        "program T; uses Std.Task; function Seven(): integer; begin return 7 end; function Name(Job: task of string): string; begin return Wait(Job) end; begin var Job: task := go Seven(); var Text: string := Name(Job) end.",
+        "program T; uses Std.Task; function Count(Job: task of integer): string; begin return Wait(Job) end; begin end.",
+    ] {
+        assert!(!check_errors(source).is_empty(), "{source}");
+    }
+}

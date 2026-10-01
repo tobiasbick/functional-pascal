@@ -864,7 +864,6 @@ warm builds at 1861 → 1402 / 1429 ms. The high cold-build sample above did not
 repeat: a subsequent startup-group comparison measured 1675 ms cold and 1424 ms
 warm against its original 1786 / 1799 ms baseline. Retention rests on the
 repeatable warm-build improvement; no stable cold-build speedup is claimed.
-See the [phase report](../future/performance/fast-interpreter-plan.html#startup-follow-up).
 
 ## 2026-09-05 — Deduplicate normalized standard-library paths once per project composition
 

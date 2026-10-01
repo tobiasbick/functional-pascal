@@ -9,13 +9,11 @@ Current implemented behavior belongs under `docs/pascal/`, not here.
 | Area | Plan | Scope |
 |------|------|-------|
 | Language | [Strict ISO/IEC 14977 grammar](iso-14977-grammar.md) | Open decision on grammar authority, strict notation, and automated drift checks |
+| Language | [Syntax improvement implementation plan](improve-syntax/README.md) | Pascal-family syntax changes, explicit contracts, structured task scopes, dependency-ordered work packages, and regression checks |
 | Standard library | [Standard library roadmap](std-roadmap.md) | Future `Std.*` units and longer-term stdlib direction |
 | Networked applications | [Networked application platform](networked-applications/README.md) | Storage, security, concurrency, transports, interactive clients, operations, and distributed nodes |
 | WebDAV | [WebDAV](webdav.md) | Deferred WebDAV client and server ideas |
 | FTP | [FTP and FTPS](ftp.md) | Deferred FTP and FTPS ideas |
-| Dictionaries | [Dictionary decision](09-remove-dict.md) | Decide whether `Std.Dictionaries` stays, changes, or is removed |
-| Runtime | [Deferred Cranelift backend](cranelift-backend.md) | Parked second-backend idea with explicit re-entry gates |
-| Performance | [Rust hot-path investigation](performance/index.html) | Evidence-backed runtime hot paths, fast-interpreter stages, and replacement options |
 
 ## Ideas without an implementation plan
 

@@ -71,9 +71,7 @@ Production names such as `integer_literal`, `uses_clause`, and
 `integer literal`, `uses clause`, and `record update`.
 
 That rename affects every production definition, every internal reference,
-and every production reference under `docs/pascal/`. The generated training
-dataset must then be regenerated from the corrected documentation rather than
-edited by hand.
+and every production reference under `docs/pascal/`.
 
 ### Character sets and ranges
 
@@ -116,15 +114,6 @@ The conversion should be atomic: do not leave language pages referring to the
 old underscore names while the grammar already defines the new names, or vice
 versa.
 
-### Training data
-
-The FPAS training dataset ingests `docs/pascal/`. After the documentation
-references change, regenerate `training/fpas/data/*.jsonl` and
-`training/fpas/manifests/dataset-v1.json` through the existing generator.
-
-Dataset validation should reject obsolete production names so an old grammar
-vocabulary cannot silently return as positive training material.
-
 ## Automated drift guard
 
 Strict conversion is worthwhile only if conformance remains checked. The
@@ -155,8 +144,7 @@ detect known forms of drift.
   when no language change is intended.
 - ISO-valid special sequences may still be meaningless to tooling unless FPAS
   defines their interpretation.
-- Renaming every production creates coordinated churn in language pages and
-  generated training data.
+- Renaming every production creates coordinated churn in language pages.
 - A validator that checks only punctuation can create false confidence; the
   lexer and parser still need behavior-level regression tests.
 
@@ -184,9 +172,8 @@ validator indefinitely.
 5. Compare keyword inventory and all existing productions before and after the
    conversion.
 6. Update every production reference in `docs/pascal/`.
-7. Regenerate and validate the FPAS training dataset.
-8. Run formatter, build, workspace tests, FPAS tests, and link checks.
-9. Record the decision and remove any temporary compatibility checks for old
+7. Run formatter, build, workspace tests, FPAS tests, and link checks.
+8. Record the decision and remove any temporary compatibility checks for old
    production names.
 
 ## Acceptance criteria
@@ -201,7 +188,6 @@ The work is complete only when:
 - the grammar and lexer expose the same case-insensitive keyword set;
 - all special sequences have documented FPAS meanings;
 - all language-page references use the final production names;
-- generated training data contains no obsolete grammar vocabulary;
 - existing parser, compiler, formatter, application, and FPAS regression tests
   remain green.
 

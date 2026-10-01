@@ -26,7 +26,7 @@ pub(super) fn load_project_with_dependencies(
     visiting: &mut Vec<PathBuf>,
     cache: &mut HashMap<PathBuf, LoadedProject>,
     parse_cache: &mut ParsedSourceCache,
-) -> Result<LoadedProject, String> {
+) -> Result<LoadedProject, crate::ProjectError> {
     let canonical = canonical_project_path(path);
     if let Some(cached) = cache.get(&canonical) {
         return Ok(cached.clone());
@@ -36,7 +36,7 @@ pub(super) fn load_project_with_dependencies(
         .iter()
         .any(|visited| same_file(visited, &canonical))
     {
-        return Err(cyclic_project_dependency_error(visiting, path));
+        return Err(cyclic_project_dependency_error(visiting, path).into());
     }
 
     visiting.push(canonical.clone());
@@ -94,7 +94,7 @@ fn resolve_all_dependency_paths(
     consumer_project: &Path,
     project_paths: &[String],
     workspace_names: &[String],
-) -> Result<Vec<PathBuf>, String> {
+) -> Result<Vec<PathBuf>, crate::ProjectError> {
     let root_dir = consumer_project.parent().ok_or_else(|| {
         format!(
             "Cannot resolve project root for `{}`.\n  help: Use a normal file path inside a directory.",
@@ -133,7 +133,7 @@ fn merge_dependency_link_meta(
     consumer: &mut ProjectLinkMeta,
     dependency_path: &Path,
     dependency_loaded: &LoadedProject,
-) -> Result<(), String> {
+) -> Result<(), crate::ProjectError> {
     let dependency_canonical = canonical_project_path(dependency_path);
     consumer.library_export_policies.insert(
         dependency_canonical.clone(),
@@ -169,7 +169,7 @@ fn reject_library_source_overlap(
     link_meta: &ProjectLinkMeta,
     source_path: &Path,
     incoming_origin: &SourceOrigin,
-) -> Result<(), String> {
+) -> Result<(), crate::ProjectError> {
     let SourceOrigin::Library(incoming_owner) = incoming_origin else {
         return Ok(());
     };
@@ -180,27 +180,21 @@ fn reject_library_source_overlap(
         return Ok(());
     }
 
-    Err(source_ownership_conflict_error(
-        source_path,
-        existing_owner,
-        incoming_owner,
-    ))
+    Err(source_ownership_conflict_error(source_path, existing_owner, incoming_owner).into())
 }
 
 fn reject_own_source_overlap(
     project_path: &Path,
     own_source_paths: &[PathBuf],
     link_meta: &ProjectLinkMeta,
-) -> Result<(), String> {
+) -> Result<(), crate::ProjectError> {
     for source_path in own_source_paths {
         let Some(library_owner) = library_owner_for_source(link_meta, source_path) else {
             continue;
         };
-        return Err(source_ownership_conflict_error(
-            source_path,
-            library_owner,
-            project_path,
-        ));
+        return Err(
+            source_ownership_conflict_error(source_path, library_owner, project_path).into(),
+        );
     }
 
     Ok(())
@@ -237,7 +231,10 @@ fn source_ownership_conflict_error(
     )
 }
 
-fn ensure_library_dependency(path: &Path, loaded: &LoadedProject) -> Result<(), String> {
+fn ensure_library_dependency(
+    path: &Path,
+    loaded: &LoadedProject,
+) -> Result<(), crate::ProjectError> {
     if loaded.kind == ProjectKind::Library {
         return Ok(());
     }
@@ -245,7 +242,7 @@ fn ensure_library_dependency(path: &Path, loaded: &LoadedProject) -> Result<(), 
     Err(format!(
         "Project dependency `{}` must be a library project (`kind = \"library\"`).\n  help: Point `dependencies.projects` at a `.fpasprj` with `kind = \"library\"`, or change the dependency to a program-only local include.",
         path.to_string_lossy()
-    ))
+    ).into())
 }
 
 fn prune_link_meta_origins(link_meta: &mut ProjectLinkMeta, source_files: &[PathBuf]) {

@@ -42,7 +42,8 @@ impl LinkContextCache {
                 &[],
                 &project::ProjectLinkMeta::default(),
                 Some(standard_library),
-            )?;
+            )
+            .map_err(|error| error.to_string())?;
             let context = LinkContext {
                 source_files: Vec::new(),
                 program_graph: Arc::new(program_graph),
@@ -56,7 +57,7 @@ impl LinkContextCache {
             return Ok(Some(context.clone()));
         }
 
-        let loaded = project::load_project(&project_file)?;
+        let loaded = project::load_project(&project_file).map_err(|error| error.to_string())?;
         // Test entry programs are run individually and are never linkable unit sources.
         let source_files = loaded
             .source_files
@@ -68,7 +69,8 @@ impl LinkContextCache {
             &source_files,
             &loaded.link_meta,
             self.standard_library.as_deref(),
-        )?;
+        )
+        .map_err(|error| error.to_string())?;
         let context = LinkContext {
             source_files,
             program_graph: Arc::new(program_graph),

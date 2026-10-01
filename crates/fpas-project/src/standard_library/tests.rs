@@ -161,8 +161,11 @@ include = ["Std/**/*.fpas"]
     remove_dir(&dir);
 
     assert!(result.is_err(), "private source unit must be rejected");
-    let error = result.err().unwrap_or_default();
-    assert!(error.contains("not exported"), "unexpected error: {error}");
+    let error = result.expect_err("invalid standard library");
+    assert!(
+        error.to_string().contains("not exported"),
+        "unexpected error: {error}"
+    );
 }
 
 #[test]
@@ -184,7 +187,7 @@ include = ["Std/**/*.fpas"]
     remove_dir(&dir);
 
     assert!(
-        error.contains("collides with intrinsic"),
+        error.to_string().contains("collides with intrinsic"),
         "unexpected error: {error}"
     );
 }
@@ -207,7 +210,7 @@ include = ["src/**/*.fpas"]
     let error = load_standard_library(&dir).expect_err("non-Std unit must fail");
     remove_dir(&dir);
 
-    assert!(error.contains("must use the `Std.*` namespace"));
+    assert!(error.to_string().contains("must use the `Std.*` namespace"));
 }
 
 #[test]
@@ -217,7 +220,7 @@ fn standard_library_requires_manifest() {
     let error = load_standard_library(&dir).expect_err("missing manifest must fail");
     remove_dir(&dir);
 
-    assert!(error.contains("stdlib.fpasprj"));
+    assert!(error.to_string().contains("stdlib.fpasprj"));
 }
 
 fn temp_dir(name: &str) -> PathBuf {

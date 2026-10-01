@@ -49,15 +49,16 @@ pub fn stage_standard_library(
             source_root.display()
         ))
     })?;
-    let library =
-        fpas_project::load_standard_library(source_root).map_err(DistributionError::new)?;
+    let library = fpas_project::load_standard_library(source_root)
+        .map_err(|error| DistributionError::new(error.to_string()))?;
     let graph = fpas_project::build_unit_graph_with_standard_library(
         &[],
         &fpas_project::ProjectLinkMeta::default(),
         &library,
     )
-    .map_err(DistributionError::new)?;
-    let selection = fpas_project::resolve_library_units(&graph).map_err(DistributionError::new)?;
+    .map_err(|error| DistributionError::new(error.to_string()))?;
+    let selection = fpas_project::resolve_library_units(&graph)
+        .map_err(|error| DistributionError::new(error.to_string()))?;
     let built = build_library_units(&graph, &selection, options)
         .map_err(|error| DistributionError::new(error.to_string()))?;
     let counters = built.counters();

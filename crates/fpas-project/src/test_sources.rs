@@ -25,7 +25,7 @@ pub(crate) fn validate_project_test_sources(
     source_files: Vec<PathBuf>,
     warnings: &mut Vec<String>,
     parse_cache: &mut ParsedSourceCache,
-) -> Result<Vec<PathBuf>, String> {
+) -> Result<Vec<PathBuf>, crate::ProjectError> {
     let mut validated = Vec::new();
     let mut seen_unit_names = HashMap::<String, PathBuf>::new();
 
@@ -54,7 +54,7 @@ pub(crate) fn validate_project_test_sources(
                         "Duplicate unit name `{unit_name}` found in `{}` and `{}`.\n  help: Use a unique `unit` namespace per source file.",
                         first_path.to_string_lossy(),
                         source_path.to_string_lossy()
-                    ));
+                    ).into());
                 }
                 seen_unit_names.insert(key, source_path.clone());
                 validated.push(source_path);

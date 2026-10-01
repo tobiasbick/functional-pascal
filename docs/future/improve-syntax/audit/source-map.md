@@ -8,7 +8,10 @@ test names are evidence of test intent, not a claim of passing execution.
 
 Read this with the [test inventory](test-inventory.md) and
 [implementation sequence](implementation-sequence.md). Paths in code spans are
-repository-relative. Recheck the affected implementation before each slice.
+repository-relative. These findings describe the stage-1 baseline; current
+diagnostic implementation and verification are tracked in
+[stage 2](../stages/02-diagnostics.md). Recheck the affected implementation before
+each slice.
 
 ## Values, mutation, and resources
 

@@ -2,48 +2,50 @@
 
 This sequence implements the [settled contract](../language-contract.md) using
 the [source map](source-map.md) and [test inventory](test-inventory.md). It is not
-another stage checklist. Stage 1 is a source-audit/design deliverable. The first
-shared-model slice is implemented; the owning [diagnostics stage](../stages/02-diagnostics.md)
-records its evidence and remaining integration work. Later slices still require
-implementation, migration and executed verification.
+another stage checklist. Stage 1 is a source-audit/design deliverable. The shared
+model and build/project source-error transport are implemented; the owning
+[diagnostics stage](../stages/02-diagnostics.md) records verification and remaining
+integration work. Later language slices still require implementation, migration
+and executed verification.
 
-## First delivery: shared diagnostic representation
+## Completed first delivery: shared diagnostic representation
 
-Start stage 2 with one parser error, one no-source project/build error and one
-runtime error carried by the same record. Preserve all existing Fxxxx identities
-and text output for errors with known locations. Do not expose a partial JSON
-command option before every command/runner path supports its stream contract.
+The shared record preserves existing Fxxxx identities and known-location text
+output. Parser expectation details, source-read failures and runtime diagnostics
+use the same model. The implementation is organized as follows:
 
-Intended initial file layout (new paths are proposals, not existing modules):
+- `crates/fpas-diagnostics/src/diagnostic.rs` contains optional spans and
+  expected/found details; `codes.rs` contains the audited project/build additions.
+- `crates/fpas-diagnostics/src/span.rs` validates byte spans and marks synthetic
+  point locations; `source_range.rs` resolves Unicode scalar coordinates.
+- `crates/fpas-diagnostics/src/render/json.rs` serializes deterministic records;
+  `render.rs` retains text rendering from the same model.
+- `crates/fpas-diagnostics/tests/structured_output.rs` and
+  `tests/value_invariants.rs` cover ranges, null positions, escaping and codes.
+- Parser/runtime producers and compiler/editor consumers handle the shared
+  model. Project and build transport is described below.
 
-- Modify `crates/fpas-diagnostics/src/diagnostic.rs` for optional source range
-  and structured expected/found details; keep severity and code-derived phase.
-- Modify `crates/fpas-diagnostics/src/codes.rs` and `code.rs` only for audited
-  additions, including a project/build range; keep current codes stable.
-- Keep `crates/fpas-diagnostics/src/span.rs` as validated byte spans; add
-  `crates/fpas-diagnostics/src/source_range.rs` for resolved optional source
-  identity/start/exclusive-end positions. Compute coordinates from source text;
-  do not turn a missing location into a synthetic line one.
-- Add `crates/fpas-diagnostics/src/render/json.rs`; adapt the existing
-  `render.rs` and `lib.rs` exports. JSON and text consume one model.
-- Add `crates/fpas-diagnostics/tests/structured_output.rs`; extend
-  `tests/value_invariants.rs` for Unicode/end/null behavior and code stability.
-- Update producer/adaptor construction sites revealed by compilation across
-  lexer, parser, sema, compiler, project/build/linker, VM and language service.
-  Keep that mechanical propagation in the same compiling slice.
-- Trace existing CLI rendering through `crates/fpas-cli/src/cli_run.rs`
-  (emit_diagnostic and render_cli_diagnostic_with_sources), actual bundled
-  `src/bin/fpas-runner.rs` and `src/main_tests/diagnostics.rs`. Preserve source IDs
-  through linked artifacts; do not serialize formatted terminal prose as data.
+The first-delivery gate passed: shared schema tests, parser/runtime source
+identity, no-source errors and known-location text diagnostics. The public JSON
+command option remains open until every command/runner path supports its stream
+contract. Preserve source IDs through linked artifacts; do not serialize
+formatted terminal prose as diagnostic data.
 
-Before editing, refresh the diagnostic-code registry and precise constructor
-call sites. The new resolved-range representation is an internal design proposal;
-it must not duplicate byte-span validation or introduce a second error system.
+## Build-error transport before command streams
 
-First-delivery gate: shared round-trip/schema tests, parser/runtime source identity,
-no-source errors and unchanged known-location text diagnostics pass. Current
-documentation describes only the landed shared behavior; the public JSON option
-remains stage-2 work until the next delivery is complete.
+Implemented: `crates/fpas-build/src/engine/error.rs` retains compiler/parser
+records and native linker failures. Unit paths and artifact main paths remain
+available without parsing display text; failed artifact parsing retains multiple
+diagnostics. The [owning stage](../stages/02-diagnostics.md) records coverage and
+verification.
+
+Source records now also propagate through `ProjectError` in project loading,
+dependency traversal, standard-library loading and graph/snapshot APIs. The
+build boundary preserves these records and their source path. Next, convert
+remaining project/build/linker failures to shared coded diagnostics and retain
+successful-source warnings as records.
+`BuildError` still has explicit text-only failures, and a native `LinkError` is
+not yet a shared diagnostic record. Finish this boundary before CLI JSON routing.
 
 ## Second delivery: CLI and runner streams
 
@@ -59,7 +61,7 @@ remains stage-2 work until the next delivery is complete.
   mode. Keep stdout and failure exit codes intact, including runner startup errors.
 - Extend `src/main_tests/diagnostics.rs` and actual process tests; split JSON
   cases into `src/main_tests/diagnostics/json.rs` rather than growing one file.
-- Create `docs/pascal/tools/diagnostics.md` with the implemented envelope,
+- Extend `docs/pascal/tools/diagnostics.md` with the implemented envelope,
   coordinate unit, null locations, code inventory and all four command examples.
   Update command help and editor adapters to the same source mapping.
 

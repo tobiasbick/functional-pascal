@@ -186,6 +186,8 @@ define_codes!(RUNTIME_ALLOCATED_CODES => {
 define_codes!(PROJECT_ALLOCATED_CODES => {
     /// Reading a project source file failed before a source position was available.
     PROJECT_SOURCE_READ_FAILED = 5001;
+    /// Source bytes are not valid UTF-8; no scalar source position is available.
+    PROJECT_SOURCE_INVALID_UTF8 = 5002;
 });
 
 define_codes!(INTERNAL_ALLOCATED_CODES => {

@@ -209,5 +209,6 @@ Evidence: [source audit and grammar/consumer mapping](audit/source-map.md),
 Status: stage-1 design/audit deliverable complete. Existing tests were inspected;
 target cases are specified, not implemented or executed. Current language behavior
 and normative language documentation were unchanged by that audit. Stage 2 now
-has its first shared-model implementation; stages 3-6 remain unimplemented.
-Next: finish stage 2 CLI/runner stream integration before syntax migration.
+has its shared model and build/project source-error transport; stages 3-6 remain
+unimplemented. Next: finish remaining error conversion and stage 2 CLI/runner
+stream integration before syntax migration.

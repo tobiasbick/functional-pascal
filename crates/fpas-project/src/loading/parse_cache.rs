@@ -27,7 +27,7 @@ impl ParsedSourceCache {
         &mut self,
         path: &Path,
         source_id: u32,
-    ) -> Result<(CompilationUnit, Vec<String>), String> {
+    ) -> Result<(CompilationUnit, Vec<String>), crate::ProjectError> {
         let key = canonical_source_path(path);
         if let Some(entry) = self.entries.get(&key) {
             return Ok(entry.clone());

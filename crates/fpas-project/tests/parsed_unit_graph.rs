@@ -104,7 +104,11 @@ fn parsed_graph_still_validates_names_from_regular_library_dependencies() {
     let error = build_unit_graph_from_parsed_sources(sources, &link_meta)
         .expect_err("regular dependencies must not claim the Std namespace");
 
-    assert!(error.contains("reserved for standard library units"));
+    assert!(
+        error
+            .to_string()
+            .contains("reserved for standard library units")
+    );
 }
 
 #[test]
@@ -114,5 +118,9 @@ fn parsed_graph_rejects_reserved_std_names_from_user_sources() {
     let error = build_unit_graph_from_parsed_sources(sources, &ProjectLinkMeta::default())
         .expect_err("user project must not claim the Std namespace");
 
-    assert!(error.contains("reserved for standard library units"));
+    assert!(
+        error
+            .to_string()
+            .contains("reserved for standard library units")
+    );
 }

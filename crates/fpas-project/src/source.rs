@@ -3,8 +3,11 @@
 use fpas_diagnostics::Diagnostic;
 use fpas_lexer::lex_with_source_id;
 use fpas_parser::{CompilationUnit, QualifiedId, parse_tokens_compilation_unit};
+mod error;
 mod read;
 use std::path::Path;
+
+pub use error::ProjectError;
 
 /// Pascal-cases a lowercase dotted unit key for diagnostics (`mylib.core` → `Mylib.Core`).
 pub(super) fn display_unit_key(key: &str) -> String {
@@ -40,34 +43,41 @@ pub(super) fn validate_non_empty_entry(field_name: &str, value: &str) -> Result<
     Ok(())
 }
 
+/// Reads and parses one file without rendering source failures.
 pub(super) fn parse_compilation_unit_file(
     path: &Path,
     source_id: u32,
-) -> Result<(CompilationUnit, Vec<String>), String> {
+) -> Result<(CompilationUnit, Vec<String>), ProjectError> {
     let source = read::read_source(path)
-        .map_err(|diagnostic| fpas_diagnostics::render(&path.to_string_lossy(), &diagnostic))?;
+        .map_err(|diagnostic| ProjectError::from_source(path, vec![diagnostic]))?;
     parse_compilation_unit_source(path, &source, source_id)
 }
 
+/// Returns the authoritative source bytes and AST, preserving source failures.
 pub(super) fn read_compilation_unit_file(
     path: &Path,
     source_id: u32,
-) -> Result<(Vec<u8>, CompilationUnit, Vec<String>), String> {
+) -> Result<(Vec<u8>, CompilationUnit, Vec<String>), ProjectError> {
     let source = read::read_source(path)
-        .map_err(|diagnostic| fpas_diagnostics::render(&path.to_string_lossy(), &diagnostic))?;
+        .map_err(|diagnostic| ProjectError::from_source(path, vec![diagnostic]))?;
     let (unit, warnings) = parse_compilation_unit_source(path, &source, source_id)?;
     Ok((source, unit, warnings))
 }
 
+/// Parses a caller-owned snapshot and retains all diagnostics if parsing fails.
 pub(super) fn parse_compilation_unit_source(
     path: &Path,
     source: &[u8],
     source_id: u32,
-) -> Result<(CompilationUnit, Vec<String>), String> {
+) -> Result<(CompilationUnit, Vec<String>), ProjectError> {
     let source_text = std::str::from_utf8(source).map_err(|error| {
-        format!(
-            "Source file `{}` is not valid UTF-8: {error}",
-            path.to_string_lossy()
+        ProjectError::from_source(
+            path,
+            vec![Diagnostic::error_without_source(
+                fpas_diagnostics::codes::PROJECT_SOURCE_INVALID_UTF8,
+                format!("Source file is not valid UTF-8: {error}"),
+                Some("Save the source file as UTF-8 and retry.".to_owned()),
+            )],
         )
     })?;
 
@@ -81,13 +91,11 @@ pub(super) fn parse_compilation_unit_source(
             .map(|diagnostic| diagnostic.as_diagnostic().clone()),
     );
 
+    if diagnostics.iter().any(Diagnostic::is_error) {
+        return Err(ProjectError::from_source(path, diagnostics));
+    }
     let mut warnings = Vec::new();
     for diagnostic in diagnostics {
-        if diagnostic.is_error() {
-            let path_text = path.to_string_lossy();
-            return Err(fpas_diagnostics::render(path_text.as_ref(), &diagnostic));
-        }
-
         warnings.push(fpas_diagnostics::render(
             path.to_string_lossy().as_ref(),
             &diagnostic,

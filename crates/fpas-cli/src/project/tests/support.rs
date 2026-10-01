@@ -16,5 +16,5 @@ pub(super) fn load_project_ok(project_file: &std::path::Path) -> fpas_project::L
 ///
 /// Panics when the test fixture is expected to fail loading but succeeds.
 pub(super) fn load_project_error(project_file: &std::path::Path, context: &str) -> String {
-    load_project(project_file).expect_err(context)
+    load_project(project_file).expect_err(context).to_string()
 }

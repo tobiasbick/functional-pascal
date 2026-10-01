@@ -38,7 +38,7 @@ fn discover_from_path(path: &Path, cwd: &Path) -> Result<Vec<PathBuf>, String> {
 }
 
 fn discover_from_project(project_path: &Path) -> Result<Vec<PathBuf>, String> {
-    let loaded = project::load_project(project_path)?;
+    let loaded = project::load_project(project_path).map_err(|error| error.to_string())?;
     Ok(filter_test_files(loaded.source_files))
 }
 
@@ -46,7 +46,7 @@ fn discover_from_workspace(workspace_path: &Path) -> Result<Vec<PathBuf>, String
     let test_members = project::discover_test_projects_in_workspace(workspace_path)?;
     let mut paths = Vec::new();
     for member in test_members {
-        let loaded = project::load_project(&member)?;
+        let loaded = project::load_project(&member).map_err(|error| error.to_string())?;
         paths.extend(filter_test_files(loaded.source_files));
     }
     paths.sort();

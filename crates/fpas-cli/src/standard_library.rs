@@ -14,7 +14,9 @@ pub(crate) fn resolve_standard_library(
         },
     };
 
-    fpas_project::load_standard_library(&root).map(Some)
+    fpas_project::load_standard_library(&root)
+        .map(Some)
+        .map_err(|error| error.to_string())
 }
 
 /// Returns the source standard library installed beside the running toolchain.

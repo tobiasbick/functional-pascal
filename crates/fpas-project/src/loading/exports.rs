@@ -13,12 +13,11 @@ pub(crate) fn validate_library_exports(
     export_units: &[String],
     source_files: &[PathBuf],
     parse_cache: &mut ParsedSourceCache,
-) -> Result<HashSet<String>, String> {
+) -> Result<HashSet<String>, crate::ProjectError> {
     if export_units.is_empty() {
         return Err(
             "`exports.units` must contain at least one unit name.\n  help: List public units, for example `units = [\"MyLib.Core\"]`."
-                .to_string(),
-        );
+                .to_string().into());
     }
 
     let mut listed_units = HashSet::<String>::new();
@@ -28,7 +27,7 @@ pub(crate) fn validate_library_exports(
         if !listed_units.insert(key.clone()) {
             return Err(format!(
                 "Duplicate export unit `{raw}` in `exports.units`.\n  help: List each unit name once."
-            ));
+            ).into());
         }
     }
 
@@ -46,7 +45,7 @@ pub(crate) fn validate_library_exports(
             let display = display_unit_key(listed);
             return Err(format!(
                 "`exports.units` references unknown unit `{display}`.\n  help: Add a source file declaring `unit {display};` or fix the name."
-            ));
+            ).into());
         }
     }
 

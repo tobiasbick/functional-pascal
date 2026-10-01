@@ -36,7 +36,7 @@ use resolve::{all_library_units, resolve_reachable};
 pub fn build_unit_graph(
     source_files: &[PathBuf],
     link_meta: &ProjectLinkMeta,
-) -> Result<UnitGraph, String> {
+) -> Result<UnitGraph, crate::ProjectError> {
     build_unit_graph_with_base(source_files, link_meta, None, Vec::new())
 }
 
@@ -45,7 +45,7 @@ pub fn build_unit_graph_with_standard_library(
     source_files: &[PathBuf],
     link_meta: &ProjectLinkMeta,
     standard_library: &StandardLibrary,
-) -> Result<UnitGraph, String> {
+) -> Result<UnitGraph, crate::ProjectError> {
     build_unit_graph_with_base(source_files, link_meta, Some(standard_library), Vec::new())
 }
 
@@ -54,7 +54,7 @@ pub fn build_unit_graph_for_program(
     main_path: &Path,
     source_files: &[PathBuf],
     link_meta: &ProjectLinkMeta,
-) -> Result<UnitGraph, String> {
+) -> Result<UnitGraph, crate::ProjectError> {
     prepare_program_unit_graph(source_files, link_meta, None)
         .map(|graph| graph.instantiate(main_path))
 }
@@ -65,7 +65,7 @@ pub fn build_unit_graph_for_program_with_standard_library(
     source_files: &[PathBuf],
     link_meta: &ProjectLinkMeta,
     standard_library: &StandardLibrary,
-) -> Result<UnitGraph, String> {
+) -> Result<UnitGraph, crate::ProjectError> {
     prepare_program_unit_graph(source_files, link_meta, Some(standard_library))
         .map(|graph| graph.instantiate(main_path))
 }
@@ -75,7 +75,7 @@ pub(crate) fn build_unit_graph_with_base(
     link_meta: &ProjectLinkMeta,
     standard_library: Option<&StandardLibrary>,
     mut source_paths: Vec<PathBuf>,
-) -> Result<UnitGraph, String> {
+) -> Result<UnitGraph, crate::ProjectError> {
     let effective_link_meta = merge_standard_library_link_meta(link_meta, standard_library);
     let mut nodes = HashMap::<String, UnitNode>::new();
 
@@ -92,7 +92,7 @@ pub(crate) fn build_unit_graph_with_base(
                 "Source file `{}` declares `program {}`. Source files must use `unit` declarations.",
                 source_path.display(),
                 program.name
-            ));
+            ).into());
         };
         insert_unit(
             &mut nodes,
@@ -112,7 +112,8 @@ pub(crate) fn build_unit_graph_with_base(
                 return Err(format!(
                     "Standard library source file `{}` must declare a unit.",
                     source_path.display()
-                ));
+                )
+                .into());
             };
             insert_unit(
                 &mut nodes,
@@ -160,7 +161,7 @@ fn insert_unit(
     mut unit: Unit,
     source_hash: Option<fpas_unit::Digest>,
     validate_name: bool,
-) -> Result<(), String> {
+) -> Result<(), crate::ProjectError> {
     let source_id = next_source_id(source_paths.len())?;
     source_paths.push(source_path.to_path_buf());
     apply_unit_source_id(&mut unit, source_id);
@@ -175,7 +176,7 @@ fn insert_unit(
             qualified_id_to_string(&unit.name),
             existing.path().display(),
             source_path.display()
-        ));
+        ).into());
     }
 
     nodes.insert(
@@ -194,16 +195,16 @@ fn insert_unit(
 pub fn resolve_program_units(
     graph: &UnitGraph,
     root_uses: &[QualifiedId],
-) -> Result<ResolvedUnitGraph, String> {
+) -> Result<ResolvedUnitGraph, crate::ProjectError> {
     let policy = ImportPolicy::new(graph);
     let reachable = resolve_reachable(root_uses, graph, &policy)?;
-    resolve_order(&reachable, graph)
+    resolve_order(&reachable, graph).map_err(Into::into)
 }
 
 /// Resolves every unit in a library in stable dependency-first order.
-pub fn resolve_library_units(graph: &UnitGraph) -> Result<ResolvedUnitGraph, String> {
+pub fn resolve_library_units(graph: &UnitGraph) -> Result<ResolvedUnitGraph, crate::ProjectError> {
     let reachable = all_library_units(graph)?;
-    resolve_order(&reachable, graph)
+    resolve_order(&reachable, graph).map_err(Into::into)
 }
 
 pub(crate) fn canonical_unit_key(id: &QualifiedId) -> String {

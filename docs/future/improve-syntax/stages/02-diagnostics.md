@@ -34,8 +34,14 @@ information is missing. Diagnostics are not a compatibility parser mode.
   reporting, runner transport, and runtime source mapping; record exact paths.
 - [x] Extend the shared schema and renderers, including unavailable positions,
   expected/found details, source identity, and deterministic JSON serialization.
-- [ ] Preserve structured errors through project/build/linker APIs; the current
-  source-read implementation still renders at the string-returning boundary.
+- [ ] Complete shared coded diagnostics for all project/build/linker failures;
+  non-source validation and some filesystem failures still contain only text.
+- [ ] Preserve successful-source warnings as structured records through project
+  and build APIs.
+- [x] Preserve source-read, lexer and parser diagnostics through project loading,
+  dependencies, standard-library loading and graph/snapshot APIs.
+- [x] Preserve compiler/parser records and native linker errors in `BuildError`;
+  defer text rendering until `Display` and retain known producer source paths.
 - [ ] Implement CLI selection and child-runner forwarding without losing exit
   status, duplicating diagnostics, or misattributing imported-unit errors.
 - [x] Add the [shared diagnostics reference](../../../pascal/tools/diagnostics.md)
@@ -79,9 +85,9 @@ locations retain source IDs. LSP point conversion uses scalar-to-UTF-16 mapping.
 
 `crates/fpas-diagnostics/src/render/json.rs` serializes one deterministic JSON
 record; the existing text renderer retains known-location output. Project source
-reads use `crates/fpas-project/src/source/read.rs` to construct shared errors,
-then render at the current string-returning project API boundary. This is not yet
-structured transport through all project/build errors.
+reads use `crates/fpas-project/src/source/read.rs` to construct shared errors.
+The project transport below carries these records to callers. Non-source
+project/build failures are not all converted to shared diagnostics yet.
 
 The implemented API is documented in
 [shared diagnostics](../../../pascal/tools/diagnostics.md). The debugger JSONL
@@ -116,7 +122,57 @@ Verification:
   `tests/stdlib/json/json_fields_typed_access_test.fpas`, and
   `tests/stdlib/toml/toml_fields_typed_access_test.fpas`.
 
-Next: preserve structured errors through project/build/linker APIs; connect the
-mode to all four CLI commands and actual runner processes; separate program
-stderr events from diagnostics and suppress progress/test-summary contamination.
-Do not advertise `--diagnostics json` until that complete path is verified.
+## Implemented build-error transport slice
+
+`crates/fpas-build/src/engine/error.rs` owns `BuildError` and `BuildDiagnostic`.
+Compiler diagnostics retain their original codes, spans and details; artifact
+parsing retains every lexer/parser record on failure instead of discarding all
+but the first. Imported-unit errors retain the unit path when their source ID
+matches. Artifact compiler errors retain the supplied main path. AST-based root
+build/check calls do not infer a path from a possibly unrelated unit graph.
+
+Linking failures retain the native `LinkError`, exposed through `link_error()`
+and the standard error chain. Existing text-only build failures remain explicit;
+this slice does not invent shared codes for unconverted error producers.
+
+Regression tests in `crates/fpas-build/tests/diagnostics.rs` exercise public
+build/check and artifact calls. `src/engine/error/tests.rs` covers an actual link
+failure, foreign/missing source attribution and text-only failures.
+
+Verification: `cargo fmt --check`, `cargo build`, strict workspace Clippy and
+`cargo test --workspace` passed (3,313 tests, none failed or ignored). This includes
+seven new build-diagnostic regressions and the existing CLI source-path test.
+Documentation links and `git diff --check` passed. No FPAS source was changed;
+the existing FPAS suite coverage ran through the workspace's CLI tests.
+
+## Implemented project-source transport slice
+
+`crates/fpas-project/src/source/error.rs` owns `ProjectError`. Its diagnostic
+records and source path survive the parse cache, project dependency traversal,
+standard-library loading, graph construction and node snapshot parsing. Source
+read errors keep F5001; invalid UTF-8 has F5002 with no fabricated position.
+Lexer/parser failures retain every record in producer order. Graph construction
+uses per-file source ID zero; snapshot parsing retains the assigned graph ID.
+
+The build snapshot boundary converts these errors into `BuildError` records,
+including known paths on positionless errors. CLI, editor and distribution
+adapters explicitly render at their existing text interfaces. Manifest and graph
+validation messages, successful-source warnings and other uncoded producers
+remain outside this completed slice.
+
+`crates/fpas-project/tests/diagnostics.rs` covers main/dependency sources,
+standard-library loaders, graph reads, invalid UTF-8, multiple parser errors,
+snapshot source IDs and text-only manifest failures. Build regressions also
+exercise conversion without losing records or positionless source paths.
+
+Verification: `cargo fmt --check`, `cargo build`, strict workspace Clippy and
+`cargo test --workspace` passed (3,322 tests, none failed or ignored). Nine new
+regressions cover project-source transport and conversion to build errors.
+Documentation links and `git diff --check` passed. No FPAS source files changed;
+the workspace's existing CLI tests exercised the FPAS suites.
+
+Next: convert remaining project/build/linker failures to shared coded records and
+preserve successful-source warnings. Then
+connect all four CLI commands and actual runner processes, separating program
+stderr events and suppressing progress/test-summary contamination. Do not
+advertise `--diagnostics json` until that complete path is verified.

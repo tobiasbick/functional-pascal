@@ -86,7 +86,8 @@ pub(crate) fn build_test_program(
 ) -> Result<ProjectProgram, String> {
     let (_, program) = parse_program(main)?;
     let graph = test_program_graph(main, source_files, link_meta, standard_library)?;
-    let selection = fpas_project::resolve_program_units(&graph, &program.uses)?;
+    let selection = fpas_project::resolve_program_units(&graph, &program.uses)
+        .map_err(|error| error.to_string())?;
     let built = fpas_build::build_program(
         &graph,
         &selection,
@@ -106,7 +107,8 @@ pub(crate) fn build_test_program_with_graph(
 ) -> Result<ProjectProgram, String> {
     let (_, program) = parse_program(main)?;
     let graph = program_graph.instantiate(main);
-    let selection = fpas_project::resolve_program_units(&graph, &program.uses)?;
+    let selection = fpas_project::resolve_program_units(&graph, &program.uses)
+        .map_err(|error| error.to_string())?;
     let built = fpas_build::build_program(
         &graph,
         &selection,
@@ -129,7 +131,8 @@ pub(crate) fn check_source_program(
 ) -> Result<(), String> {
     let (_, program) = parse_program(main)?;
     let graph = test_program_graph(main, source_files, link_meta, standard_library)?;
-    let selection = fpas_project::resolve_program_units(&graph, &program.uses)?;
+    let selection = fpas_project::resolve_program_units(&graph, &program.uses)
+        .map_err(|error| error.to_string())?;
     fpas_build::check_program(
         &graph,
         &selection,
@@ -146,34 +149,39 @@ fn test_program_graph(
     link_meta: &fpas_project::ProjectLinkMeta,
     standard_library: Option<&StandardLibrary>,
 ) -> Result<UnitGraph, String> {
-    standard_library.map_or_else(
-        || fpas_project::build_unit_graph_for_program(main, source_files, link_meta),
-        |library| {
-            fpas_project::build_unit_graph_for_program_with_standard_library(
-                main,
-                source_files,
-                link_meta,
-                library,
-            )
-        },
-    )
+    standard_library
+        .map_or_else(
+            || fpas_project::build_unit_graph_for_program(main, source_files, link_meta),
+            |library| {
+                fpas_project::build_unit_graph_for_program_with_standard_library(
+                    main,
+                    source_files,
+                    link_meta,
+                    library,
+                )
+            },
+        )
+        .map_err(|error| error.to_string())
 }
 
 pub(crate) fn check_library(
     loaded: &LoadedProject,
     standard_library: Option<&StandardLibrary>,
 ) -> Result<(), String> {
-    let graph = standard_library.map_or_else(
-        || fpas_project::build_unit_graph(&loaded.source_files, &loaded.link_meta),
-        |library| {
-            fpas_project::build_unit_graph_with_standard_library(
-                &loaded.source_files,
-                &loaded.link_meta,
-                library,
-            )
-        },
-    )?;
-    let selection = fpas_project::resolve_library_units(&graph)?;
+    let graph = standard_library
+        .map_or_else(
+            || fpas_project::build_unit_graph(&loaded.source_files, &loaded.link_meta),
+            |library| {
+                fpas_project::build_unit_graph_with_standard_library(
+                    &loaded.source_files,
+                    &loaded.link_meta,
+                    library,
+                )
+            },
+        )
+        .map_err(|error| error.to_string())?;
+    let selection =
+        fpas_project::resolve_library_units(&graph).map_err(|error| error.to_string())?;
     fpas_build::build_library_units(&graph, &selection, &fpas_build::BuildOptions::default())
         .map(|_| ())
         .map_err(|error| format!("Cannot build library project: {error}"))
@@ -210,13 +218,20 @@ pub(crate) fn check_units(
     link_meta: &fpas_project::ProjectLinkMeta,
     standard_library: Option<&StandardLibrary>,
 ) -> Result<(), String> {
-    let graph = standard_library.map_or_else(
-        || fpas_project::build_unit_graph(source_files, link_meta),
-        |library| {
-            fpas_project::build_unit_graph_with_standard_library(source_files, link_meta, library)
-        },
-    )?;
-    let selection = fpas_project::resolve_library_units(&graph)?;
+    let graph = standard_library
+        .map_or_else(
+            || fpas_project::build_unit_graph(source_files, link_meta),
+            |library| {
+                fpas_project::build_unit_graph_with_standard_library(
+                    source_files,
+                    link_meta,
+                    library,
+                )
+            },
+        )
+        .map_err(|error| error.to_string())?;
+    let selection =
+        fpas_project::resolve_library_units(&graph).map_err(|error| error.to_string())?;
     fpas_build::build_library_units(&graph, &selection, &fpas_build::BuildOptions::default())
         .map(|_| ())
         .map_err(|error| format!("Cannot build source units: {error}"))
@@ -228,13 +243,20 @@ pub(crate) fn check_source_units(
     link_meta: &fpas_project::ProjectLinkMeta,
     standard_library: Option<&StandardLibrary>,
 ) -> Result<(), String> {
-    let graph = standard_library.map_or_else(
-        || fpas_project::build_unit_graph(source_files, link_meta),
-        |library| {
-            fpas_project::build_unit_graph_with_standard_library(source_files, link_meta, library)
-        },
-    )?;
-    let selection = fpas_project::resolve_library_units(&graph)?;
+    let graph = standard_library
+        .map_or_else(
+            || fpas_project::build_unit_graph(source_files, link_meta),
+            |library| {
+                fpas_project::build_unit_graph_with_standard_library(
+                    source_files,
+                    link_meta,
+                    library,
+                )
+            },
+        )
+        .map_err(|error| error.to_string())?;
+    let selection =
+        fpas_project::resolve_library_units(&graph).map_err(|error| error.to_string())?;
     fpas_build::check_library_units(&graph, &selection, &fpas_build::BuildOptions::default())
         .map(|_| ())
         .map_err(|error| format!("Cannot check source units: {error}"))
@@ -245,23 +267,25 @@ fn program_graph(
     loaded: &LoadedProject,
     standard_library: Option<&StandardLibrary>,
 ) -> Result<UnitGraph, String> {
-    standard_library.map_or_else(
-        || {
-            fpas_project::build_unit_graph_for_program(
-                main,
-                &loaded.source_files,
-                &loaded.link_meta,
-            )
-        },
-        |library| {
-            fpas_project::build_unit_graph_for_program_with_standard_library(
-                main,
-                &loaded.source_files,
-                &loaded.link_meta,
-                library,
-            )
-        },
-    )
+    standard_library
+        .map_or_else(
+            || {
+                fpas_project::build_unit_graph_for_program(
+                    main,
+                    &loaded.source_files,
+                    &loaded.link_meta,
+                )
+            },
+            |library| {
+                fpas_project::build_unit_graph_for_program_with_standard_library(
+                    main,
+                    &loaded.source_files,
+                    &loaded.link_meta,
+                    library,
+                )
+            },
+        )
+        .map_err(|error| error.to_string())
 }
 
 struct PreparedProgram<'a> {
@@ -282,7 +306,8 @@ fn prepare_program<'a>(
         .ok_or_else(|| "Project is missing `project.main`.".to_string())?;
     let (source, program) = parse_program(main)?;
     let graph = program_graph(main, loaded, standard_library)?;
-    let selection = fpas_project::resolve_program_units(&graph, &program.uses)?;
+    let selection = fpas_project::resolve_program_units(&graph, &program.uses)
+        .map_err(|error| error.to_string())?;
     Ok(PreparedProgram {
         main,
         source,

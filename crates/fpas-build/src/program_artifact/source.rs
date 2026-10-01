@@ -16,12 +16,20 @@ pub(super) fn parse(bytes: &[u8], source_paths: &[String]) -> Result<Program, Bu
         ))
     })?;
     let (unit, diagnostics) = fpas_parser::parse_compilation_unit(source);
-    if let Some(diagnostic) = diagnostics
+    if diagnostics
         .iter()
         .map(fpas_parser::ParseDiagnostic::as_diagnostic)
-        .find(|diagnostic| diagnostic.is_error())
+        .any(|diagnostic| diagnostic.is_error())
     {
-        return Err(BuildError::new(fpas_diagnostics::render(path, diagnostic)));
+        return Err(BuildError::from_diagnostics(
+            diagnostics
+                .into_iter()
+                .map(|diagnostic| diagnostic.as_diagnostic().clone())
+                .collect(),
+            source_paths
+                .first()
+                .map(|path| (0, std::path::Path::new(path))),
+        ));
     }
     match unit {
         CompilationUnit::Program(program) => Ok(program),

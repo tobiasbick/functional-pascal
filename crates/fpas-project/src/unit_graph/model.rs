@@ -111,14 +111,15 @@ impl UnitNode {
     ///
     /// Returns an error when the bytes are invalid source, no longer declare a unit, or declare a
     /// different unit name than the graph node.
-    pub fn parse_source_snapshot(&self, source: &[u8]) -> Result<Unit, String> {
+    pub fn parse_source_snapshot(&self, source: &[u8]) -> Result<Unit, crate::ProjectError> {
         let (parsed, _) =
             crate::source::parse_compilation_unit_source(&self.path, source, self.source_id)?;
         let fpas_parser::CompilationUnit::Unit(unit) = parsed else {
             return Err(format!(
                 "Source file `{}` no longer declares a unit.",
                 self.path.display()
-            ));
+            )
+            .into());
         };
         if !unit
             .name
@@ -131,7 +132,8 @@ impl UnitNode {
                 self.path.display(),
                 unit.name.parts.join("."),
                 self.display_name
-            ));
+            )
+            .into());
         }
         Ok(unit)
     }

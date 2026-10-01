@@ -163,8 +163,12 @@ fn graph_resolution_reports_complete_unit_cycle() {
 
     let error = resolve_program_units(&graph, &root_uses).expect_err("cycle must fail");
 
-    assert!(error.contains("Demo.A -> Demo.B -> Demo.C -> Demo.A"));
-    assert!(error.contains("extracting shared declarations"));
+    assert!(
+        error
+            .to_string()
+            .contains("Demo.A -> Demo.B -> Demo.C -> Demo.A")
+    );
+    assert!(error.to_string().contains("extracting shared declarations"));
 
     fs::remove_dir_all(dir).ok();
 }
@@ -215,9 +219,9 @@ include = ["src/**/*.fpas"]
     let error =
         resolve_program_units(&graph, &root_uses).expect_err("internal unit must be rejected");
 
-    assert!(error.contains("Lib.Internal"));
-    assert!(error.contains("not exported"));
-    assert!(error.contains("lib.fpasprj"));
+    assert!(error.to_string().contains("Lib.Internal"));
+    assert!(error.to_string().contains("not exported"));
+    assert!(error.to_string().contains("lib.fpasprj"));
 
     fs::remove_dir_all(dir).ok();
 }
@@ -236,9 +240,9 @@ fn unknown_transitive_unit_diagnostic_names_owner_and_known_units() {
 
     let error = resolve_program_units(&graph, &root_uses).expect_err("missing unit must fail");
 
-    assert!(error.contains("Demo.Missing"));
-    assert!(error.contains("unit `Demo.Feature`"));
-    assert!(error.contains("Available units: Demo.Feature"));
+    assert!(error.to_string().contains("Demo.Missing"));
+    assert!(error.to_string().contains("unit `Demo.Feature`"));
+    assert!(error.to_string().contains("Available units: Demo.Feature"));
 
     fs::remove_dir_all(dir).ok();
 }

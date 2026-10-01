@@ -56,7 +56,7 @@ fn build_program_artifact_before_publish(
 ) -> Result<BuiltProgram, BuildError> {
     let program = source::parse(target.source, target.source_paths)?;
     let selection =
-        fpas_project::resolve_program_units(graph, &program.uses).map_err(BuildError::new)?;
+        fpas_project::resolve_program_units(graph, &program.uses).map_err(BuildError::from)?;
     let units = build_library_units(graph, &selection, options)?;
     let expected = identity::expected(target.source, &units, options);
     let source_hashes = source_hashes(graph, target.source, target.source_paths.len())?;
@@ -76,7 +76,7 @@ fn build_program_artifact_before_publish(
         }
     }
 
-    let built = link_program(units, &program)?;
+    let built = link_program(units, &program, target.source_paths.first().map(Path::new))?;
     let BuiltProgram { executable, events } = built;
     let image = ProgramImage::new(
         expected,

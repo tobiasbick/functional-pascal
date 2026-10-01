@@ -44,10 +44,13 @@ pub(super) fn analyze_project(
     } else {
         build_unit_graph_from_parsed_sources(parsed_units, &project.loaded().link_meta)
     }
-    .map_err(|message| LanguageServiceError::analysis(project.manifest_path(), message))?;
+    .map_err(|message| {
+        LanguageServiceError::analysis(project.manifest_path(), message.to_string())
+    })?;
 
-    let unit_order = resolve_library_units(&graph)
-        .map_err(|message| LanguageServiceError::analysis(project.manifest_path(), message))?;
+    let unit_order = resolve_library_units(&graph).map_err(|message| {
+        LanguageServiceError::analysis(project.manifest_path(), message.to_string())
+    })?;
     let mut analyses = HashMap::<PathBuf, Arc<DocumentAnalysis>>::new();
     let mut interfaces = HashMap::<String, UnitInterface>::new();
     let mut supporting_interfaces = Vec::<UnitInterface>::new();
@@ -102,8 +105,9 @@ pub(super) fn analyze_project(
                 "A library project source declares a program.",
             ));
         }
-        resolve_program_units(&graph, &program.uses)
-            .map_err(|message| LanguageServiceError::analysis(snapshot.path(), message))?;
+        resolve_program_units(&graph, &program.uses).map_err(|message| {
+            LanguageServiceError::analysis(snapshot.path(), message.to_string())
+        })?;
         let direct = direct_interfaces(&program.uses, &interfaces);
         let metadata = fpas_sema::analyze_program_with_interface_support(
             program,

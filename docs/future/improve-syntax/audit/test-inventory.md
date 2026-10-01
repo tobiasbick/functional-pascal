@@ -2,8 +2,10 @@
 
 This inventory supports [stage 1](../language-contract.md) and the
 [source audit](source-map.md). It contains executable-test entry points and
-representative target test designs. Existing tests were inspected, not executed;
-target cases below are not implemented tests. Stage completion remains in the
+representative target test designs at the stage-1 baseline. Existing tests were
+inspected, not executed for that audit. The tables are test designs, not a live
+completion checklist; implemented diagnostic coverage and execution results are
+tracked in [stage 2](../stages/02-diagnostics.md). Stage completion remains in the
 [steering plan](../README.md).
 
 ## Existing coverage to preserve or deliberately migrate

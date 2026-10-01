@@ -61,7 +61,12 @@ fn unknown_root_std_unit_is_rejected() {
 
     let error = resolve_program_units(&graph, &root_uses).expect_err("unknown Unit must fail");
 
-    assert!(error.contains("Unknown unit `Std.Doesnotexist`"), "{error}");
+    assert!(
+        error
+            .to_string()
+            .contains("Unknown unit `Std.Doesnotexist`"),
+        "{error}"
+    );
 }
 
 #[test]
@@ -74,7 +79,7 @@ fn unknown_transitive_std_unit_is_rejected() {
 
     let error = resolve_program_units(&graph, &root_uses).expect_err("unknown Unit must fail");
 
-    assert!(error.contains("unit `Demo.Feature`"), "{error}");
+    assert!(error.to_string().contains("unit `Demo.Feature`"), "{error}");
     fs::remove_dir_all(dir).ok();
 }
 
@@ -95,7 +100,10 @@ fn source_defined_std_tui_must_be_present() {
 
     let error = resolve_program_units(&graph, &root_uses).expect_err("missing source Unit");
 
-    assert!(error.contains("Unknown unit `Std.Tui`"), "{error}");
+    assert!(
+        error.to_string().contains("Unknown unit `Std.Tui`"),
+        "{error}"
+    );
 }
 
 #[test]
@@ -176,7 +184,7 @@ fn lexical_aliases_preserve_library_exports() {
 
     let error = resolve_program_units(&graph, &root_uses).expect_err("private Unit must fail");
 
-    assert!(error.contains("not exported"), "{error}");
+    assert!(error.to_string().contains("not exported"), "{error}");
     fs::remove_dir_all(dir).ok();
 }
 
@@ -225,7 +233,7 @@ fn symlink_alias_preserves_library_origin() {
 
     let error = resolve_program_units(&graph, &root_uses).expect_err("private Unit must fail");
 
-    assert!(error.contains("not exported"), "{error}");
+    assert!(error.to_string().contains("not exported"), "{error}");
     fs::remove_dir_all(dir).ok();
 }
 

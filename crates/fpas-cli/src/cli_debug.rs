@@ -165,7 +165,7 @@ fn prepare_project(
     path: &Path,
     standard_library: Option<&fpas_project::StandardLibrary>,
 ) -> Result<PreparedExecutable, String> {
-    let loaded = fpas_project::load_project(path)?;
+    let loaded = fpas_project::load_project(path).map_err(|error| error.to_string())?;
     if loaded.kind != fpas_project::ProjectKind::Program {
         return Err(format!(
             "Project `{}` is not an executable program.\n  help: Debug a project with `kind = \"program\"`.",

@@ -32,7 +32,7 @@ impl StandardLibrary {
 }
 
 /// Loads the standard-library manifest below an implementation-owned library root.
-pub fn load_standard_library(root: &Path) -> Result<StandardLibrary, String> {
+pub fn load_standard_library(root: &Path) -> Result<StandardLibrary, crate::ProjectError> {
     let (manifest, own, source_files) = load_standard_library_sources(root)?;
     let mut link_meta = ProjectLinkMeta::default();
     link_meta
@@ -58,7 +58,7 @@ pub fn load_standard_library(root: &Path) -> Result<StandardLibrary, String> {
 ///
 /// Sources retain their trusted standard-library provenance so overlay-safe
 /// editor graphs accept the reserved `Std.*` namespace.
-pub fn load_standard_library_project(root: &Path) -> Result<LoadedProject, String> {
+pub fn load_standard_library_project(root: &Path) -> Result<LoadedProject, crate::ProjectError> {
     let (_, own, source_files) = load_standard_library_sources(root)?;
     let mut link_meta = ProjectLinkMeta::default();
     for source_file in &source_files {
@@ -84,12 +84,12 @@ pub fn load_standard_library_project(root: &Path) -> Result<LoadedProject, Strin
 
 fn load_standard_library_sources(
     root: &Path,
-) -> Result<(PathBuf, crate::loading::own::OwnProject, Vec<PathBuf>), String> {
+) -> Result<(PathBuf, crate::loading::own::OwnProject, Vec<PathBuf>), crate::ProjectError> {
     if !root.is_dir() {
         return Err(format!(
             "Standard library directory `{}` does not exist.\n  help: Pass `--std-lib <directory>` containing `{STANDARD_LIBRARY_MANIFEST}`.",
             root.display()
-        ));
+        ).into());
     }
 
     let manifest = root.join(STANDARD_LIBRARY_MANIFEST);
@@ -97,7 +97,7 @@ fn load_standard_library_sources(
         return Err(format!(
             "Standard library manifest `{}` does not exist.\n  help: Add `{STANDARD_LIBRARY_MANIFEST}` with `kind = \"library\"` and a `[sources]` section.",
             manifest.display()
-        ));
+        ).into());
     }
 
     let mut parse_cache = ParsedSourceCache::new();
@@ -106,13 +106,13 @@ fn load_standard_library_sources(
         return Err(format!(
             "Standard library manifest `{}` must declare `project.kind = \"library\"`.\n  help: Change `[project].kind` to `\"library\"`.",
             manifest.display()
-        ));
+        ).into());
     }
     if !own.dependency_projects.is_empty() || !own.workspace_dependencies.is_empty() {
         return Err(format!(
             "Standard library manifest `{}` must list all trusted sources directly and cannot declare dependencies.\n  help: Move the required `Std.*` source paths into `[sources].include`.",
             manifest.display()
-        ));
+        ).into());
     }
 
     let source_files = validate_standard_library_source_units(
@@ -126,7 +126,7 @@ fn load_standard_library_sources(
 fn validate_intrinsic_collisions(
     source_files: &[PathBuf],
     parse_cache: &mut ParsedSourceCache,
-) -> Result<(), String> {
+) -> Result<(), crate::ProjectError> {
     for source_file in source_files {
         let (parsed, _) = parse_cache.parse(source_file, 0)?;
         let fpas_parser::CompilationUnit::Unit(unit) = parsed else {
@@ -140,7 +140,7 @@ fn validate_intrinsic_collisions(
             return Err(format!(
                 "Source standard-library unit `{name}` in `{}` collides with intrinsic unit `{name}`.\n  help: Choose a distinct `Std.*` unit name; source units cannot replace individual intrinsic units.",
                 source_file.display()
-            ));
+            ).into());
         }
     }
     Ok(())

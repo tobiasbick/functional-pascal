@@ -300,8 +300,11 @@ fn load_editor_project(path: &Path) -> Result<ProjectContext, String> {
     if is_standard_library {
         let root = path.parent().unwrap_or(path);
         load_standard_library_project(root)
+            .map_err(|error| error.to_string())
             .map(|project| ProjectContext::new_standard_library(path, project))
     } else {
-        load_project(path).map(|project| ProjectContext::new(path, project))
+        load_project(path)
+            .map_err(|error| error.to_string())
+            .map(|project| ProjectContext::new(path, project))
     }
 }

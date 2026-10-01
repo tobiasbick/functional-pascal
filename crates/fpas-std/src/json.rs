@@ -395,6 +395,35 @@ mod tests {
     }
 
     #[test]
+    fn stringify_keeps_dictionary_insertion_order() {
+        let fields = vec![
+            (
+                Value::Str("zeta".into()),
+                test_variant("Number", vec![Value::Real(1.0)]),
+            ),
+            (
+                Value::Str("alpha".into()),
+                test_variant("Number", vec![Value::Real(2.0)]),
+            ),
+        ];
+        let object = test_variant("Object", vec![Value::dict(fields)]);
+        let json = fpas_to_json_at_depth(object, loc(), 0).expect("object converts");
+        assert_eq!(
+            serde_json::to_string(&json).unwrap(),
+            r#"{"zeta":1,"alpha":2}"#
+        );
+    }
+
+    #[test]
+    fn parse_keeps_document_member_order() {
+        let text = r#"{"zeta":1,"alpha":{"y":2,"b":3},"mid":[{"z":4,"a":5}]}"#;
+        let parsed = parse::parse(text).expect("valid JSON");
+        let value = test_json_to_fpas_at_depth(parsed, 1).expect("converts to FPAS");
+        let json = fpas_to_json_at_depth(value, loc(), 1).expect("converts back");
+        assert_eq!(serde_json::to_string(&json).unwrap(), text);
+    }
+
+    #[test]
     fn integral_numbers_stringify_without_a_fraction() {
         assert_eq!(stringified_number(2.0), "2");
         assert_eq!(stringified_number(-3.0), "-3");

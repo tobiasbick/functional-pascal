@@ -56,7 +56,7 @@ JSON `null` maps to `JsonValue.Null`. Objects use `dict of string to JsonValue`.
 function Parse(Text: string): Result of JsonValue, string;
 ```
 
-Rejects duplicate object member names with `Error(Message)` identifying the name and its location. Names are compared after decoding escapes and are case-sensitive. Each object has its own name set, including objects nested in arrays.
+Object members become dictionary entries in document order. Rejects duplicate object member names with `Error(Message)` identifying the name and its location. Names are compared after decoding escapes and are case-sensitive. Each object has its own name set, including objects nested in arrays.
 
 Parses JSON text. Accepted JSON returns `Ok(JsonValue)`. Invalid JSON returns `Error(Message)` instead of aborting the program.
 
@@ -74,7 +74,7 @@ end
 function Stringify(Value: JsonValue): string;
 ```
 
-Serializes a `JsonValue` to compact JSON text.
+Serializes a `JsonValue` to compact JSON text. Object members are written in the insertion order of their dictionary.
 
 A number with an integral value up to 2^53 in magnitude is written without a fraction, so
 `JsonValue.Number(2.0)` becomes `2`. Other numbers keep their fraction or exponent, and negative

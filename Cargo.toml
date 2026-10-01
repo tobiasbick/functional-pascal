@@ -1,6 +1,5 @@
 [workspace]
 members = ["crates/*"]
-exclude = ["crates/hall-vm"]
 resolver = "3"
 
 [profile.release]
@@ -39,7 +38,8 @@ rcgen = { version = "0.14.9", default-features = false, features = ["crypto", "p
 rustls = { version = "0.23.43", default-features = false, features = ["ring", "std", "tls12"] }
 rustls-platform-verifier = "0.7.0"
 serde = { version = "1", features = ["derive"] }
-serde_json = "1"
+# Objects keep insertion order so Std.Json agrees with ordered FPAS dictionaries.
+serde_json = { version = "1", features = ["preserve_order"] }
 socket2 = "0.6"
 toml = "0.9"
 unicode-segmentation = "1"

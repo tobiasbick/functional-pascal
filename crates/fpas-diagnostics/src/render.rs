@@ -2,6 +2,9 @@
 
 use crate::Diagnostic;
 
+mod json;
+pub use json::render_json;
+
 /// Renders a diagnostic with a source path.
 ///
 /// Printable Unicode is preserved. Control characters in paths and line content are escaped,
@@ -26,10 +29,14 @@ fn render_at(path: Option<&str>, diagnostic: &Diagnostic) -> String {
         push_escaped(&mut rendered, path);
         rendered.push(':');
     }
-    rendered.push_str(&diagnostic.span.line().to_string());
-    rendered.push(':');
-    rendered.push_str(&diagnostic.span.column().to_string());
-    rendered.push_str(": ");
+    if let Some(span) = diagnostic.span {
+        rendered.push_str(&span.line().to_string());
+        rendered.push(':');
+        rendered.push_str(&span.column().to_string());
+        rendered.push_str(": ");
+    } else if path.is_some() {
+        rendered.push(' ');
+    }
     rendered.push_str(if diagnostic.is_warning() {
         "warning"
     } else {

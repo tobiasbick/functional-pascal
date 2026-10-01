@@ -39,6 +39,9 @@ fn stage_boundaries_are_derived_from_the_code() {
         (4001, DiagnosticStage::Runtime),
         (4999, DiagnosticStage::Runtime),
         (5000, DiagnosticStage::Internal),
+        (5001, DiagnosticStage::Project),
+        (5999, DiagnosticStage::Project),
+        (6000, DiagnosticStage::Internal),
     ] {
         assert_eq!(DiagnosticCode::new(value).stage(), expected);
     }

@@ -36,9 +36,9 @@ implementation choices may be made within that contract. A discovered conflict
 must be resolved explicitly and recorded, not hidden in a compiler exception.
 Changing the agreed direction or adding an excluded feature requires agreement.
 
-The present task is planning only. Language implementation starts with a separate
-implementation request. Current grammar, code, source examples, and normative
-documentation are not changed by this planning rewrite.
+This directory describes the target and its implementation mapping. Completing
+the stage-1 source audit does not change current grammar, code, source examples,
+or normative documentation. Implementation deliveries are tracked separately.
 
 ## Stages and completion
 
@@ -48,8 +48,8 @@ The checklists in each document track work within that stage.
 
 | Done | Stage | Prerequisites | Status |
 |------|-------|---------------|--------|
-| [ ] | [1. Language contract](language-contract.md) | None | Target decisions recorded; implementation audit and grammar mapping pending |
-| [ ] | [2. Diagnostics](stages/02-diagnostics.md) | Stage 1 contract | Existing foundation identified; extension pending |
+| [x] | [1. Language contract](language-contract.md) | None | Source audit, grammar/owner mapping, test inventory and bounded sequence recorded; no language implementation claimed |
+| [ ] | [2. Diagnostics](stages/02-diagnostics.md) | Stage 1 contract | Shared optional locations, expectation details and Rust JSON renderer implemented; CLI/runner stream integration pending |
 | [ ] | [3. Syntax and names](stages/03-syntax-and-names.md) | Stages 1 and 2 | Planned |
 | [ ] | [4. Functional core](stages/04-functional-core.md) | Stages 1-3; coordinated mutation/purity work from stage 5 | Planned |
 | [ ] | [5. Effects and tasks](stages/05-effects-and-tasks.md) | Stage 4 facilities; contract fixed in stage 1 | Planned |
@@ -125,6 +125,12 @@ this redesign does not decide ISO notation or require a generated parser.
 
 ## Next step
 
-On an implementation request, complete stage 1's source audit and executable-test
-inventory, then implement a bounded diagnostics slice. Do not start a broad syntax
-migration just because the target-language examples are now written down.
+Stage 1's [source audit](audit/source-map.md),
+[executable-test inventory](audit/test-inventory.md), and
+[bounded implementation sequence](audit/implementation-sequence.md) are recorded.
+Existing tests were inspected, not executed for this documentation-only delivery.
+
+Stage 2's shared diagnostic representation is implemented; see its owning stage
+for verification and remaining work. Next, carry structured records through the
+project/build and runner boundaries, then expose JSON streams consistently in
+check/build/run/test. Do not start the broad syntax migration before that gate.

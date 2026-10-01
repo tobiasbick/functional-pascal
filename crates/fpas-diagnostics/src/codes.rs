@@ -6,6 +6,7 @@
 //! - **Sema:** `F2001`–`F2999`
 //! - **Compile:** `F3001`–`F3999`
 //! - **Runtime:** `F4001`–`F4999` (reserved gap: `F4017`)
+//! - **Project/build:** `F5001`–`F5999`
 //! - **Internal:** `F9001`–`F9999` and any other unassigned value
 //!
 //! Extension workflow:
@@ -182,6 +183,11 @@ define_codes!(RUNTIME_ALLOCATED_CODES => {
     RUNTIME_RANDOM_SOURCE_FAILURE = 4025;
 });
 
+define_codes!(PROJECT_ALLOCATED_CODES => {
+    /// Reading a project source file failed before a source position was available.
+    PROJECT_SOURCE_READ_FAILED = 5001;
+});
+
 define_codes!(INTERNAL_ALLOCATED_CODES => {
     INTERNAL_COMPILER_INVARIANT_FAILURE = 9001;
     INTERNAL_VM_INVARIANT_FAILURE = 9002;
@@ -194,6 +200,7 @@ const ALL_CODE_INVENTORIES: &[&[DiagnosticCode]] = &[
     SEMA_ALLOCATED_CODES,
     COMPILE_ALLOCATED_CODES,
     RUNTIME_ALLOCATED_CODES,
+    PROJECT_ALLOCATED_CODES,
     INTERNAL_ALLOCATED_CODES,
 ];
 
@@ -218,6 +225,9 @@ mod tests {
 
     #[test]
     fn allocated_codes_match_stage_ranges() {
+        for code in PROJECT_ALLOCATED_CODES {
+            assert_eq!(code.stage(), DiagnosticStage::Project);
+        }
         for code in LEX_ALLOCATED_CODES {
             assert_eq!(
                 code.stage(),

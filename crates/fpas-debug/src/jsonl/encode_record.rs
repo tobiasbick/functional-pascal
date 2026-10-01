@@ -9,6 +9,9 @@ use super::encode::{
 use super::protocol::{event, success};
 use crate::engine::{DebugEvent, DebugRecord, EngineFailure, ResponseBody};
 
+#[cfg(test)]
+mod tests;
+
 /// Encode one engine record for the JSONL adapter.
 #[must_use]
 pub(crate) fn encode_record(record: DebugRecord) -> Value {
@@ -114,9 +117,9 @@ fn encode_event(debug_event: DebugEvent) -> Value {
                 "code": format!("F{:04}", diagnostic.code.value()),
                 "message": diagnostic.message,
                 "help": diagnostic.help,
-                "line": diagnostic.span.line(),
-                "column": diagnostic.span.column(),
-                "source_id": diagnostic.span.source_id(),
+                "line": diagnostic.span.map(|span| span.line()),
+                "column": diagnostic.span.map(|span| span.column()),
+                "source_id": diagnostic.span.map(|span| span.source_id()),
                 "task_id": task_id
             }),
         ),

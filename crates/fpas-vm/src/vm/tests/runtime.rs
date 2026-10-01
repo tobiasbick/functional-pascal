@@ -73,9 +73,39 @@ fn scalar_failures_keep_codes_and_sparse_source_locations() {
         ))
         .expect_err("zero divisor must fail");
         assert_eq!(error.code, code);
-        assert_eq!(error.span.line(), 41);
-        assert_eq!(error.span.column(), 7);
+        assert_eq!(error.span.expect("source diagnostic span").line(), 41);
+        assert_eq!(error.span.expect("source diagnostic span").column(), 7);
+        assert!(error.span.expect("source diagnostic span").is_synthetic());
+        let json = fpas_diagnostics::render_json(Some("test.fpas"), None, &error)
+            .expect("runtime diagnostic JSON");
+        assert!(json.contains("\"phase\":\"runtime\""));
+        assert!(json.contains("\"start\":{\"line\":41,\"column\":7},\"end\":null"));
     }
+}
+
+#[test]
+fn runtime_diagnostic_without_debug_mapping_has_no_location() {
+    let mut image = unverified(
+        vec![
+            abx(Opcode::LoadConstant, 0, 0),
+            abx(Opcode::LoadConstant, 1, 1),
+            abc(Opcode::DivideInteger, 2, 0, 1),
+            return_unit(),
+        ],
+        vec![Constant::Integer(7), Constant::Integer(0)],
+        vec!["root", "test.fpas"],
+        3,
+    );
+    image.source_map.runs.clear();
+    let error = crate::vm::diagnostics::at_address(
+        &image,
+        InstructionAddress::new(2),
+        RUNTIME_DIVISION_BY_ZERO,
+        "Division by zero.",
+        "Use a nonzero divisor.",
+    );
+    assert_eq!(error.span, None);
+    assert!(fpas_diagnostics::render_without_path(&error).starts_with("error[F4001]"));
 }
 
 #[test]

@@ -62,8 +62,10 @@ fn run() -> i32 {
         fpas_vm::Vm::with_writer_and_args(image.into_executable(), Box::new(io::stdout()), args);
     vm.allow_process_lifecycle();
     if let Err(diagnostic) = vm.run() {
-        let path = source_paths
-            .get(usize::try_from(diagnostic.span.source_id()).unwrap_or(usize::MAX))
+        let path = diagnostic
+            .span
+            .and_then(|span| usize::try_from(span.source_id()).ok())
+            .and_then(|index| source_paths.get(index))
             .map_or_else(|| name.to_string(), |path| path.display().to_string());
         eprintln!("{}", fpas_diagnostics::render(&path, &diagnostic));
         return 2;

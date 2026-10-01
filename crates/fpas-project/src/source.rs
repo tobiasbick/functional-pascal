@@ -3,7 +3,7 @@
 use fpas_diagnostics::Diagnostic;
 use fpas_lexer::lex_with_source_id;
 use fpas_parser::{CompilationUnit, QualifiedId, parse_tokens_compilation_unit};
-use std::fs;
+mod read;
 use std::path::Path;
 
 /// Pascal-cases a lowercase dotted unit key for diagnostics (`mylib.core` → `Mylib.Core`).
@@ -44,12 +44,8 @@ pub(super) fn parse_compilation_unit_file(
     path: &Path,
     source_id: u32,
 ) -> Result<(CompilationUnit, Vec<String>), String> {
-    let source = fs::read(path).map_err(|e| {
-        format!(
-            "Error reading source file `{}`: {e}",
-            path.to_string_lossy()
-        )
-    })?;
+    let source = read::read_source(path)
+        .map_err(|diagnostic| fpas_diagnostics::render(&path.to_string_lossy(), &diagnostic))?;
     parse_compilation_unit_source(path, &source, source_id)
 }
 
@@ -57,12 +53,8 @@ pub(super) fn read_compilation_unit_file(
     path: &Path,
     source_id: u32,
 ) -> Result<(Vec<u8>, CompilationUnit, Vec<String>), String> {
-    let source = fs::read(path).map_err(|e| {
-        format!(
-            "Error reading source file `{}`: {e}",
-            path.to_string_lossy()
-        )
-    })?;
+    let source = read::read_source(path)
+        .map_err(|diagnostic| fpas_diagnostics::render(&path.to_string_lossy(), &diagnostic))?;
     let (unit, warnings) = parse_compilation_unit_source(path, &source, source_id)?;
     Ok((source, unit, warnings))
 }

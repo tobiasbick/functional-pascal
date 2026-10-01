@@ -15,6 +15,8 @@ pub enum DiagnosticStage {
     Compile,
     /// Program execution.
     Runtime,
+    /// Project loading and build orchestration.
+    Project,
     /// An invariant failure inside the toolchain.
     Internal,
 }
@@ -40,7 +42,11 @@ pub struct Diagnostic {
     /// Optional actionable correction or explanation.
     pub help: Option<String>,
     /// Source range associated with the diagnostic.
-    pub span: SourceSpan,
+    pub span: Option<SourceSpan>,
+    /// Expected token or value, when the producer can identify it precisely.
+    pub expected: Option<Box<str>>,
+    /// Actual token or value, when the producer can identify it precisely.
+    pub found: Option<Box<str>>,
 }
 
 impl DiagnosticCode {
@@ -53,12 +59,43 @@ impl DiagnosticCode {
             2001..=2999 => DiagnosticStage::Sema,
             3001..=3999 => DiagnosticStage::Compile,
             4001..=4999 => DiagnosticStage::Runtime,
+            5001..=5999 => DiagnosticStage::Project,
             _ => DiagnosticStage::Internal,
         }
     }
 }
 
 impl Diagnostic {
+    /// Creates an error without inventing a source position.
+    #[must_use]
+    pub fn error_without_source(
+        code: DiagnosticCode,
+        message: impl Into<String>,
+        help: Option<String>,
+    ) -> Self {
+        Self {
+            code,
+            severity: DiagnosticSeverity::Error,
+            message: message.into(),
+            help,
+            span: None,
+            expected: None,
+            found: None,
+        }
+    }
+
+    /// Attaches producer-supplied expectation details without parsing the message.
+    #[must_use]
+    pub fn with_expected_found(
+        mut self,
+        expected: impl Into<String>,
+        found: impl Into<String>,
+    ) -> Self {
+        self.expected = Some(expected.into().into_boxed_str());
+        self.found = Some(found.into().into_boxed_str());
+        self
+    }
+
     /// Returns the toolchain stage derived from this diagnostic's current code.
     #[must_use]
     pub const fn stage(&self) -> DiagnosticStage {
@@ -111,7 +148,9 @@ impl Diagnostic {
             severity,
             message: message.into(),
             help,
-            span,
+            span: Some(span),
+            expected: None,
+            found: None,
         }
     }
 }

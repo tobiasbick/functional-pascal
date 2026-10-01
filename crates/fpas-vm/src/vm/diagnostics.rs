@@ -18,7 +18,7 @@ pub(crate) fn runtime_error(
         code,
         message,
         Some(help.into()),
-        SourceSpan::new(0, 1, location.line(), location.column()),
+        SourceSpan::synthetic_from_location(location),
     ))
 }
 
@@ -44,11 +44,15 @@ pub(super) fn at_address(
     message: impl Into<String>,
     help: impl Into<String>,
 ) -> VmError {
-    let span = executable.source_map.lookup(address).map_or_else(
-        || SourceSpan::new(0, 1, 1, 1),
-        |run| SourceSpan::new_with_source(0, 1, run.line, run.column, run.source.get()),
-    );
-    Box::new(Diagnostic::error(code, message, Some(help.into()), span))
+    let mut diagnostic = Diagnostic::error_without_source(code, message, Some(help.into()));
+    diagnostic.span = executable.source_map.lookup(address).map(|run| {
+        SourceSpan::synthetic_from_location(fpas_diagnostics::SourceLocation::new_with_source(
+            run.line,
+            run.column,
+            run.source.get(),
+        ))
+    });
+    Box::new(diagnostic)
 }
 
 #[cold]

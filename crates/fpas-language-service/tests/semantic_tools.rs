@@ -148,7 +148,7 @@ fn unknown_name_action_adds_one_canonical_unambiguous_import() {
     let identity = DiagnosticIdentity {
         code: diagnostic.code,
         message: diagnostic.message.clone(),
-        span: diagnostic.span,
+        span: diagnostic.span.expect("source diagnostic span"),
     };
 
     let actions = service
@@ -199,7 +199,7 @@ fn unknown_type_action_adds_one_canonical_unambiguous_import() {
     let identity = DiagnosticIdentity {
         code: diagnostic.code,
         message: diagnostic.message.clone(),
-        span: diagnostic.span,
+        span: diagnostic.span.expect("source diagnostic span"),
     };
 
     let actions = service
@@ -239,7 +239,7 @@ fn import_action_rejects_a_stale_diagnostic_after_the_document_changes() {
     let stale = DiagnosticIdentity {
         code: diagnostic.code,
         message: diagnostic.message.clone(),
-        span: diagnostic.span,
+        span: diagnostic.span.expect("source diagnostic span"),
     };
     let changed = fixture.source.replace("UniqueValue", "DifferentValue");
     service
@@ -278,7 +278,7 @@ fn import_action_rejects_ambiguous_public_declarations() {
     let ambiguous_identity = DiagnosticIdentity {
         code: ambiguous_diagnostic.code,
         message: ambiguous_diagnostic.message.clone(),
-        span: ambiguous_diagnostic.span,
+        span: ambiguous_diagnostic.span.expect("source diagnostic span"),
     };
     assert!(
         ambiguous_service
@@ -303,7 +303,7 @@ fn import_action_rejects_an_inaccessible_private_declaration() {
     let identity = DiagnosticIdentity {
         code: diagnostic.code,
         message: diagnostic.message.clone(),
-        span: diagnostic.span,
+        span: diagnostic.span.expect("source diagnostic span"),
     };
 
     assert!(
@@ -330,7 +330,7 @@ fn explanatory_parser_help_does_not_become_a_code_action() {
     let identity = DiagnosticIdentity {
         code: diagnostic.code,
         message: diagnostic.message.clone(),
-        span: diagnostic.span,
+        span: diagnostic.span.expect("source diagnostic span"),
     };
 
     assert!(

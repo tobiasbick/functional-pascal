@@ -14,7 +14,11 @@ end.",
         .iter()
         .find(|e| e.code == SEMA_UNKNOWN_NAME)
         .expect("expected SEMA_UNKNOWN_NAME");
-    assert_eq!(e.span.line(), 3, "wrong line");
+    assert_eq!(
+        e.span.expect("source diagnostic span").line(),
+        3,
+        "wrong line"
+    );
     assert!(
         e.help.as_deref().is_some_and(|h| !h.is_empty()),
         "help text must be present"

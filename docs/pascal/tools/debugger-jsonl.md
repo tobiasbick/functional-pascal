@@ -365,7 +365,9 @@ point. Policy order is condition, hit test, then log-or-stop. Log templates use
 ## Events and capabilities
 
 Events are `initialized`, `breakpoint`, `output`, `task`, `stopped`,
-`runtime_error`, `terminated`, and fatal `protocol_error`. Task events report
+`runtime_error`, `terminated`, and fatal `protocol_error`. In a `runtime_error`,
+`line`, `column`, and `source_id` are null when no source mapping is available;
+known positions retain their one-based coordinates. Task events report
 `started` or `exited` with a stable `task_id`. Every stopped event reports the
 responsible `task_id` and `all_tasks_stopped: true`, including pause, step,
 breakpoint, and inspectable runtime-error stops; runtime errors also carry

@@ -58,16 +58,18 @@ impl Parser {
             Some(self.advance().span)
         } else {
             let span = self.current_span();
-            self.error_with_code(
+            let expected_text = super::token_display(expected);
+            let found_text = super::token_display(self.current_token());
+            let diagnostic = parse_error(
                 PARSE_EXPECTED_TOKEN,
-                &format!(
-                    "Expected `{expected_str}`, found `{found}`",
-                    expected_str = super::token_display(expected),
-                    found = super::token_display(self.current_token()),
-                ),
-                &format!("Insert `{}` here.", super::token_display(expected)),
+                format!("Expected `{expected_text}`, found `{found_text}`"),
+                format!("Insert `{expected_text}` here."),
                 span,
-            );
+            )
+            .with_expected_found(expected_text, found_text);
+            if !self.nesting_limit_reached {
+                self.errors.push(diagnostic);
+            }
             None
         }
     }

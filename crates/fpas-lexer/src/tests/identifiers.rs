@@ -83,8 +83,11 @@ fn invalid_identifier_recovery_consumes_ascii_remainder() {
     assert_eq!(tokens, vec![Token::Plus, Token::Ident("next".to_string())]);
     assert_eq!(errors.len(), 1);
     assert_eq!(errors[0].code, LEX_NON_ASCII_IN_IDENTIFIER);
-    assert_eq!(errors[0].span.offset(), 0);
-    assert_eq!(errors[0].span.length(), "fooébar".len());
+    assert_eq!(errors[0].span.expect("source diagnostic span").offset(), 0);
+    assert_eq!(
+        errors[0].span.expect("source diagnostic span").length(),
+        "fooébar".len()
+    );
 }
 
 #[test]

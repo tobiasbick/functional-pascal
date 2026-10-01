@@ -188,13 +188,13 @@ by this plan stays in scope for normal maintenance, not an unbounded redesign.
 
 ## Work and acceptance
 
-- [ ] Audit value copying, collection mutation, closure captures, resource kinds,
+- [x] Audit value copying, collection mutation, closure captures, resource kinds,
   constant evaluation, numeric behavior, and task APIs against the target rules.
-- [ ] Map each change to owning crates, handbook pages, grammar productions,
+- [x] Map each change to owning crates, handbook pages, grammar productions,
   existing tests, and source consumers. Identify reusable behavior explicitly.
-- [ ] Write a bounded implementation sequence with actual paths and coordinated
+- [x] Write a bounded implementation sequence with actual paths and coordinated
   migration boundaries, particularly for stages 4 and 5.
-- [ ] Prepare representative positive, negative, and interaction test cases from
+- [x] Prepare representative positive, negative, and interaction test cases from
   [verification](verification.md); do not introduce a parallel acceptance index.
 
 Acceptance: every target rule has an identified implementation owner and a
@@ -202,5 +202,12 @@ behavior-level verification route; migration dependencies are explicit. The
 decisions above are settled. Backend representations and algorithms are chosen
 during the audit without weakening observable contracts.
 
-Status: target decisions recorded; source audit and implementation mapping pending.
-Next: audit value/closure/resource behavior and all spawn/mutation entry points.
+Evidence: [source audit and grammar/consumer mapping](audit/source-map.md),
+[existing test inventory and target cases](audit/test-inventory.md), and
+[bounded implementation sequence](audit/implementation-sequence.md).
+
+Status: stage-1 design/audit deliverable complete. Existing tests were inspected;
+target cases are specified, not implemented or executed. Current language behavior
+and normative language documentation were unchanged by that audit. Stage 2 now
+has its first shared-model implementation; stages 3-6 remain unimplemented.
+Next: finish stage 2 CLI/runner stream integration before syntax migration.

@@ -55,6 +55,7 @@ pub struct SourceSpan {
     line: u32,
     column: u32,
     source_id: u32,
+    synthetic: bool,
 }
 
 impl SourceSpan {
@@ -96,6 +97,7 @@ impl SourceSpan {
             line,
             column,
             source_id,
+            synthetic: false,
         }
     }
 
@@ -135,19 +137,28 @@ impl SourceSpan {
             line,
             column,
             source_id,
+            synthetic: false,
         })
     }
 
     /// Creates a placeholder span when only a [`SourceLocation`] is known.
     #[must_use]
     pub fn synthetic_from_location(location: SourceLocation) -> Self {
-        Self::new_with_source(
+        let mut span = Self::new_with_source(
             0,
             1,
             location.line(),
             location.column(),
             location.source_id(),
-        )
+        );
+        span.synthetic = true;
+        span
+    }
+
+    /// Returns whether only the start location is known, without a byte range.
+    #[must_use]
+    pub const fn is_synthetic(self) -> bool {
+        self.synthetic
     }
 
     /// Returns the zero-based byte offset.

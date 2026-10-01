@@ -8,7 +8,7 @@
 use fpas_bytecode::{
     ConsoleIntrinsic, InstructionAddress, Intrinsic, Opcode, TimeIntrinsic, VerifiedExecutable,
 };
-use fpas_diagnostics::{Diagnostic, SourceSpan, codes::RUNTIME_RECORDING_UNSUPPORTED_EFFECT};
+use fpas_diagnostics::{Diagnostic, codes::RUNTIME_RECORDING_UNSUPPORTED_EFFECT};
 
 /// Return a diagnostic when the pending instruction is an unsupported host effect.
 ///
@@ -25,20 +25,14 @@ pub(crate) fn pending_unsupported_recording_effect(
     let intrinsic = Intrinsic::from_u16(instruction.abc_operands().ok()?.b)?;
     let unit = unsupported_recording_unit(intrinsic)?;
     let address = InstructionAddress::try_from_index(ip).ok()?;
-    let span = image.source_map.lookup(address).map_or_else(
-        || SourceSpan::new(0, 1, 1, 1),
-        |run| SourceSpan::new_with_source(0, 1, run.line, run.column, run.source.get()),
-    );
     Some((
         address,
-        Diagnostic::error(
+        *crate::vm::diagnostics::at_address(
+            image,
+            address,
             RUNTIME_RECORDING_UNSUPPORTED_EFFECT,
             format!("recording capture cannot execute {unit}"),
-            Some(
-                "Capture records all-stop events and queued ReadText/ReadLn only. Continue without record, or avoid this host effect while capturing. Reverse execution stays unavailable."
-                    .to_string(),
-            ),
-            span,
+            "Capture records all-stop events and queued ReadText/ReadLn only. Continue without record, or avoid this host effect while capturing. Reverse execution stays unavailable.",
         ),
     ))
 }

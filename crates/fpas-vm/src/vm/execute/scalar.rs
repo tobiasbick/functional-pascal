@@ -60,11 +60,10 @@ impl Worker {
 #[inline(always)]
 pub(in crate::vm) fn register(value: u16) -> Result<Register, VmError> {
     Register::new(value).map_err(|error| {
-        Box::new(fpas_diagnostics::Diagnostic::error(
+        Box::new(fpas_diagnostics::Diagnostic::error_without_source(
             fpas_diagnostics::codes::INTERNAL_VM_INVARIANT_FAILURE,
             format!("Invalid decoded register: {error}"),
             Some("This indicates malformed bytecode passed verifier admission.".to_string()),
-            fpas_diagnostics::SourceSpan::new(0, 1, 1, 1),
         ))
     })
 }

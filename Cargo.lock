@@ -508,6 +508,10 @@ dependencies = [
 [[package]]
 name = "fpas-diagnostics"
 version = "0.0.1"
+dependencies = [
+ "serde",
+ "serde_json",
+]
 
 [[package]]
 name = "fpas-fmt"

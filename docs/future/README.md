@@ -9,7 +9,7 @@ Current implemented behavior belongs under `docs/pascal/`, not here.
 | Area | Plan | Scope |
 |------|------|-------|
 | Language | [Strict ISO/IEC 14977 grammar](iso-14977-grammar.md) | Open decision on grammar authority, strict notation, and automated drift checks |
-| Language | [Syntax improvement implementation plan](improve-syntax/README.md) | Pascal-family syntax changes, explicit contracts, structured task scopes, dependency-ordered work packages, and regression checks |
+| Language | [Functional Pascal language redesign](improve-syntax/README.md) | Functional core, one canonical form per concept, value semantics, controlled mutation, structured tasks, and six implementation stages |
 | Standard library | [Standard library roadmap](std-roadmap.md) | Future `Std.*` units and longer-term stdlib direction |
 | Networked applications | [Networked application platform](networked-applications/README.md) | Storage, security, concurrency, transports, interactive clients, operations, and distributed nodes |
 | WebDAV | [WebDAV](webdav.md) | Deferred WebDAV client and server ideas |

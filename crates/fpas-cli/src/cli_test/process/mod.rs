@@ -3,6 +3,9 @@
 //! **Documentation:** [`docs/pascal/std/testing/test.md`](../../../../docs/pascal/std/testing/test.md)
 
 mod output;
+mod worker;
+
+pub(crate) use worker::run_worker_from_args;
 mod readiness;
 #[cfg(test)]
 mod tests;
@@ -11,10 +14,7 @@ mod unix;
 #[cfg(windows)]
 mod windows;
 
-use output::CappedBuffer;
-
 use std::fs;
-use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::{Child, Command, Stdio};
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -24,8 +24,11 @@ use std::time::{Duration, Instant};
 use fpas_program::{Digest, ProgramIdentity, ProgramImage};
 use serde::{Deserialize, Serialize};
 
+use super::log;
 use super::report::TestOutcome;
-use super::run::program::{PreparedProgram, RunOutput, run_prepared_program};
+use super::run::program::{PreparedProgram, RunOutput};
+use crate::cli_output::{CliFailure, DiagnosticFormat, Reporter};
+use fpas_diagnostics::codes::{TEST_RUNNER_FAILED, TEST_TIMED_OUT};
 
 const WORKER_ARGUMENT: &str = "__fpas-test-process";
 const POLL_INTERVAL: Duration = Duration::from_millis(10);
@@ -40,6 +43,7 @@ struct WorkerRequest {
     display: String,
     output: RunOutput,
     show_output: bool,
+    diagnostics: DiagnosticFormat,
     scratch_dir: PathBuf,
 }
 
@@ -107,13 +111,13 @@ impl WorkerFiles {
 pub(super) fn run_with_timeout(
     prepared: PreparedProgram,
     timeout: Duration,
-    stderr: &mut dyn Write,
+    reporter: &mut Reporter<'_>,
 ) -> TestOutcome {
     let files = match WorkerFiles::create() {
         Ok(files) => files,
-        Err(message) => return worker_failure(stderr, &prepared, &message),
+        Err(message) => return worker_failure(reporter, &prepared, &message),
     };
-    let result = run_with_files(prepared, timeout, stderr, &files);
+    let result = run_with_files(prepared, timeout, reporter, &files);
     files.cleanup();
     result
 }
@@ -121,36 +125,36 @@ pub(super) fn run_with_timeout(
 fn run_with_files(
     prepared: PreparedProgram,
     timeout: Duration,
-    stderr: &mut dyn Write,
+    reporter: &mut Reporter<'_>,
     files: &WorkerFiles,
 ) -> TestOutcome {
-    if let Err(message) = write_worker_inputs(files, &prepared) {
-        return worker_failure(stderr, &prepared, &message);
+    if let Err(message) = write_worker_inputs(files, &prepared, reporter.format()) {
+        return worker_failure(reporter, &prepared, &message);
     }
 
     let deadline = Instant::now() + timeout;
     let mut child = match spawn_worker(files) {
         Ok(child) => child,
-        Err(message) => return worker_failure(stderr, &prepared, &message),
+        Err(message) => return worker_failure(reporter, &prepared, &message),
     };
     match readiness::wait_until_ready(&mut child, &files.ready(), deadline) {
         Ok(readiness::WaitOutcome::Ready) => {}
         Ok(readiness::WaitOutcome::Exited(status)) => {
             terminate_process_tree(&mut child);
             return worker_failure(
-                stderr,
+                reporter,
                 &prepared,
                 &format!("Isolated test process exited before execution with status {status}."),
             );
         }
         Ok(readiness::WaitOutcome::TimedOut) => {
             terminate_process_tree(&mut child);
-            return timed_out(stderr, &prepared, timeout);
+            return timed_out(reporter, &prepared, timeout);
         }
         Err(error) => {
             terminate_process_tree(&mut child);
             return worker_failure(
-                stderr,
+                reporter,
                 &prepared,
                 &format!("Error waiting for isolated test process: {error}"),
             );
@@ -160,7 +164,7 @@ fn run_with_files(
     if let Err(error) = fs::write(files.start(), []) {
         terminate_process_tree(&mut child);
         return worker_failure(
-            stderr,
+            reporter,
             &prepared,
             &format!("Error starting isolated test process: {error}"),
         );
@@ -169,17 +173,17 @@ fn run_with_files(
     loop {
         match child.try_wait() {
             Ok(Some(status)) => {
-                return read_worker_result(files, status.success(), stderr, &prepared);
+                return read_worker_result(files, status.success(), reporter, &prepared);
             }
             Ok(None) if Instant::now() < deadline => thread::sleep(POLL_INTERVAL),
             Ok(None) => {
                 terminate_process_tree(&mut child);
-                return timed_out(stderr, &prepared, timeout);
+                return timed_out(reporter, &prepared, timeout);
             }
             Err(error) => {
                 terminate_process_tree(&mut child);
                 return worker_failure(
-                    stderr,
+                    reporter,
                     &prepared,
                     &format!("Error waiting for isolated test process: {error}"),
                 );
@@ -188,7 +192,11 @@ fn run_with_files(
     }
 }
 
-fn write_worker_inputs(files: &WorkerFiles, prepared: &PreparedProgram) -> Result<(), String> {
+fn write_worker_inputs(
+    files: &WorkerFiles,
+    prepared: &PreparedProgram,
+    diagnostics: DiagnosticFormat,
+) -> Result<(), String> {
     let manifest_override = prepared
         .manifest_override
         .as_ref()
@@ -203,6 +211,7 @@ fn write_worker_inputs(files: &WorkerFiles, prepared: &PreparedProgram) -> Resul
         display: prepared.display.clone(),
         output: prepared.output,
         show_output: prepared.show_output,
+        diagnostics,
         scratch_dir: prepared.scratch_dir.clone(),
     };
     let request_bytes = serde_json::to_vec(&request)
@@ -282,30 +291,30 @@ fn worker_executable() -> Result<PathBuf, String> {
 fn read_worker_result(
     files: &WorkerFiles,
     successful_exit: bool,
-    stderr: &mut dyn Write,
+    reporter: &mut Reporter<'_>,
     prepared: &PreparedProgram,
 ) -> TestOutcome {
     if !successful_exit {
-        return worker_failure(stderr, prepared, "Isolated test process failed.");
+        return worker_failure(reporter, prepared, "Isolated test process failed.");
     }
     let output = match fs::read(files.output()) {
         Ok(output) if output.len() <= MAX_CAPTURED_OUTPUT => output,
         Ok(_) => {
             return worker_failure(
-                stderr,
+                reporter,
                 prepared,
                 "Isolated test output exceeded the 8 MiB safety limit.",
             );
         }
         Err(error) => {
             return worker_failure(
-                stderr,
+                reporter,
                 prepared,
                 &format!("Error reading isolated test output: {error}"),
             );
         }
     };
-    let _ = stderr.write_all(&output);
+    reporter.forward(&output);
     let response = match fs::read(files.response())
         .map_err(|error| error.to_string())
         .and_then(|bytes| {
@@ -314,7 +323,7 @@ fn read_worker_result(
         Ok(response) => response,
         Err(error) => {
             return worker_failure(
-                stderr,
+                reporter,
                 prepared,
                 &format!("Error reading isolated test result: {error}"),
             );
@@ -323,90 +332,44 @@ fn read_worker_result(
     response.outcome
 }
 
-fn timed_out(stderr: &mut dyn Write, prepared: &PreparedProgram, timeout: Duration) -> TestOutcome {
+fn timed_out(
+    reporter: &mut Reporter<'_>,
+    prepared: &PreparedProgram,
+    timeout: Duration,
+) -> TestOutcome {
     if prepared.output.emit_fail_banner() {
-        let _ = writeln!(stderr, "  TIMEOUT  {}", prepared.display);
+        log::banner(reporter, "TIMEOUT", &prepared.display);
     }
-    let _ = writeln!(
-        stderr,
-        "        test run exceeded {} second timeout.\n  help: Fix an infinite loop or increase `--timeout`.",
-        timeout.as_secs()
+    log::failure(
+        reporter,
+        &CliFailure::new(
+            TEST_TIMED_OUT,
+            format!("test run exceeded {} second timeout.", timeout.as_secs()),
+        )
+        .with_help("Fix an infinite loop or increase `--timeout`.")
+        .in_file(&prepared.test_path),
     );
     TestOutcome::TimedOut
 }
 
-fn worker_failure(stderr: &mut dyn Write, prepared: &PreparedProgram, detail: &str) -> TestOutcome {
+fn worker_failure(
+    reporter: &mut Reporter<'_>,
+    prepared: &PreparedProgram,
+    detail: &str,
+) -> TestOutcome {
     if prepared.output.emit_fail_banner() {
-        let _ = writeln!(stderr, "  FAIL  {}", prepared.display);
+        log::banner(reporter, "FAIL", &prepared.display);
     }
-    let _ = writeln!(
-        stderr,
-        "        test worker failed unexpectedly: {detail}\n  help: Re-run under a debugger or report a compiler/runtime bug."
+    log::failure(
+        reporter,
+        &CliFailure::new(
+            TEST_RUNNER_FAILED,
+            format!("test worker failed unexpectedly: {detail}"),
+        )
+        .with_help("Re-run under a debugger or report a compiler/runtime bug.")
+        .in_file(&prepared.test_path),
     );
     TestOutcome::RuntimeError
-}
-
-/// Handles the private worker form and returns `None` for all public CLI arguments.
-pub(crate) fn run_worker_from_args(args: &[String]) -> Option<i32> {
-    if args.first().map(String::as_str) != Some(WORKER_ARGUMENT) {
-        return None;
-    }
-    let Some(root) = args.get(1).map(PathBuf::from) else {
-        return Some(2);
-    };
-    Some(match worker_main(&WorkerFiles { root }) {
-        Ok(()) => 0,
-        Err(_) => 1,
-    })
-}
-
-fn worker_main(files: &WorkerFiles) -> Result<(), String> {
-    let request = fs::read(files.request())
-        .map_err(|error| format!("Error reading worker request: {error}"))
-        .and_then(|bytes| {
-            serde_json::from_slice::<WorkerRequest>(&bytes)
-                .map_err(|error| format!("Error decoding worker request: {error}"))
-        })?;
-    let image = fs::read(files.image())
-        .map_err(|error| format!("Error reading worker image: {error}"))
-        .and_then(|bytes| {
-            fpas_program::decode(&bytes)
-                .map_err(|error| format!("Error decoding worker image: {error}"))
-        })?;
-    let manifest_override = request
-        .manifest_override
-        .map(|value| fpas_project::TestFileOverride {
-            script: value.script,
-        });
-    let prepared = PreparedProgram {
-        test_path: request.test_path,
-        executable: image.into_executable(),
-        source_paths: request.source_paths.map(std::sync::Arc::new),
-        script_override: request.script_override,
-        manifest_override,
-        display: request.display,
-        output: request.output,
-        show_output: request.show_output,
-        scratch_dir: request.scratch_dir,
-    };
-    let mut output = CappedBuffer::new(MAX_CAPTURED_OUTPUT);
-    let outcome = run_prepared_program(prepared, &mut output, || {
-        fs::write(files.ready(), [])
-            .map_err(|error| format!("Error signaling worker readiness: {error}"))?;
-        while !files.start().is_file() {
-            thread::sleep(POLL_INTERVAL);
-        }
-        Ok(())
-    })?;
-    if output.overflowed() {
-        return Err("Isolated test output exceeded the 8 MiB safety limit.".to_string());
-    }
-    fs::write(files.output(), output.into_inner())
-        .map_err(|error| format!("Error writing worker output: {error}"))?;
-    let response = serde_json::to_vec(&WorkerResponse { outcome })
-        .map_err(|error| format!("Error encoding worker result: {error}"))?;
-    fs::write(files.response(), response)
-        .map_err(|error| format!("Error writing worker result: {error}"))
 }
 
 fn configure_process_tree(command: &mut Command) {

@@ -1,14 +1,17 @@
 //! Setup and teardown hook execution for linked test projects.
 
 use std::fs;
-use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 
+use fpas_diagnostics::codes::TEST_RUNNER_FAILED;
+
 use super::super::hooks::{TestHook, hook_program_source};
+use super::super::log;
 use super::super::report::TestOutcome;
 use super::LinkContext;
 use super::program::{ProgramRunOptions, RunOutput, run_test_program};
+use crate::cli_output::{CliFailure, Reporter};
 
 /// Shared execution inputs for one setup or teardown hook.
 pub(super) struct HookRunContext<'a> {
@@ -28,7 +31,7 @@ pub(super) fn run_optional_teardown(
     link: &LinkContext,
     path: &Path,
     timeout: Option<Duration>,
-    stderr: &mut dyn Write,
+    reporter: &mut Reporter<'_>,
     display: &str,
     scratch_dir: &Path,
 ) -> Option<TestOutcome> {
@@ -43,7 +46,7 @@ pub(super) fn run_optional_teardown(
                 display,
                 scratch_dir,
             },
-            stderr,
+            reporter,
         )
     })
 }
@@ -52,7 +55,7 @@ pub(super) fn run_test_hook(
     hook: &TestHook,
     label: &str,
     context: HookRunContext<'_>,
-    stderr: &mut dyn Write,
+    reporter: &mut Reporter<'_>,
 ) -> TestOutcome {
     let HookRunContext {
         test_path,
@@ -64,8 +67,12 @@ pub(super) fn run_test_hook(
     let hook_path = match write_temp_hook_program(test_path, &hook_program_source(hook)) {
         Ok(path) => path,
         Err(message) => {
-            let _ = writeln!(stderr, "  FAIL  {display}");
-            let _ = writeln!(stderr, "        {label} hook failed: {message}");
+            log::banner(reporter, "FAIL", display);
+            log::message(
+                reporter,
+                TEST_RUNNER_FAILED,
+                &format!("{label} hook failed: {message}"),
+            );
             return TestOutcome::CompileError;
         }
     };
@@ -73,7 +80,7 @@ pub(super) fn run_test_hook(
     let outcome = run_test_program(
         &hook_path,
         Some(link),
-        stderr,
+        reporter,
         ProgramRunOptions {
             show_output: false,
             script_override: None,
@@ -87,10 +94,12 @@ pub(super) fn run_test_hook(
     let _ = fs::remove_file(&hook_path);
 
     if outcome.is_failure() {
-        let _ = writeln!(stderr, "  FAIL  {display}");
-        let _ = writeln!(
-            stderr,
-            "        {label} hook failed.\n  help: Fix the `{label}` procedure in the test project helper unit."
+        log::banner(reporter, "FAIL", display);
+        log::failure(
+            reporter,
+            &CliFailure::new(TEST_RUNNER_FAILED, format!("{label} hook failed.")).with_help(
+                format!("Fix the `{label}` procedure in the test project helper unit."),
+            ),
         );
     }
     outcome

@@ -1,6 +1,6 @@
 //! Integration tests for `fpas test`.
 
-use crate::cli_test::test_cli;
+use crate::cli_test::test_cli_with_stderr;
 use crate::test_support::{create_temp_dir, write_text};
 use crate::{CliInput, TestCliConfig};
 
@@ -14,7 +14,7 @@ fn test_cli_runs_passing_tests_in_directory() {
 
     let mut stderr = Vec::new();
     let mut stdout = Vec::new();
-    let exit = test_cli(
+    let exit = test_cli_with_stderr(
         TestCliConfig {
             input: CliInput::SourceFile(cwd.clone()),
             cwd,
@@ -28,6 +28,7 @@ fn test_cli_runs_passing_tests_in_directory() {
             jobs: 1,
             strict: false,
             show_output: false,
+            diagnostics: Default::default(),
             standard_library: None,
         },
         &mut stdout,

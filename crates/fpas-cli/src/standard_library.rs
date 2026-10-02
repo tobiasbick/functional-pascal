@@ -2,21 +2,26 @@
 
 use std::path::{Path, PathBuf};
 
+use fpas_diagnostics::codes::PROJECT_STANDARD_LIBRARY_INVALID;
+
+use crate::cli_output::CliFailure;
+
 /// Resolves an explicit override or the `lib` directory beside the executable.
 pub(crate) fn resolve_standard_library(
     override_path: Option<&Path>,
-) -> Result<Option<fpas_project::StandardLibrary>, String> {
+) -> Result<Option<fpas_project::StandardLibrary>, CliFailure> {
     let root = match override_path {
         Some(path) => path.to_path_buf(),
-        None => match default_standard_library_root()? {
+        None => match default_standard_library_root().map_err(|message| {
+            CliFailure::new(PROJECT_STANDARD_LIBRARY_INVALID, message)
+                .with_help("Pass `--std-lib <directory>` containing `stdlib.fpasprj`.")
+        })? {
             Some(root) => root,
             None => return Ok(None),
         },
     };
 
-    fpas_project::load_standard_library(&root)
-        .map(Some)
-        .map_err(|error| error.to_string())
+    Ok(Some(fpas_project::load_standard_library(&root)?))
 }
 
 /// Returns the source standard library installed beside the running toolchain.

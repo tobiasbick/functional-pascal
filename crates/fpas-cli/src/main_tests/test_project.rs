@@ -2,7 +2,7 @@
 
 mod exact_selection;
 
-use crate::cli_test::test_cli;
+use crate::cli_test::test_cli_with_stderr;
 use crate::test_support::{create_temp_dir, write_text};
 use crate::{CliInput, TestCliConfig};
 
@@ -24,7 +24,7 @@ fn test_cli_runs_tests_from_test_project_file() {
 
     let mut stderr = Vec::new();
     let mut stdout = Vec::new();
-    let exit = test_cli(
+    let exit = test_cli_with_stderr(
         TestCliConfig {
             input: CliInput::ProjectFile(cwd.join("tests.fpasprj")),
             cwd: cwd.clone(),
@@ -38,6 +38,7 @@ fn test_cli_runs_tests_from_test_project_file() {
             jobs: 1,
             strict: false,
             show_output: false,
+            diagnostics: Default::default(),
             standard_library: None,
         },
         &mut stdout,
@@ -68,7 +69,7 @@ fn test_cli_runs_tests_from_workspace_test_member() {
 
     let mut stderr = Vec::new();
     let mut stdout = Vec::new();
-    let exit = test_cli(
+    let exit = test_cli_with_stderr(
         TestCliConfig {
             input: CliInput::WorkspaceFile(cwd.join("root.fpasworkspace")),
             cwd: cwd.clone(),
@@ -82,6 +83,7 @@ fn test_cli_runs_tests_from_workspace_test_member() {
             jobs: 1,
             strict: false,
             show_output: false,
+            diagnostics: Default::default(),
             standard_library: None,
         },
         &mut stdout,
@@ -111,7 +113,7 @@ fn test_cli_uses_manifest_script_override() {
 
     let mut stderr = Vec::new();
     let mut stdout = Vec::new();
-    let exit = test_cli(
+    let exit = test_cli_with_stderr(
         TestCliConfig {
             input: CliInput::ProjectFile(cwd.join("tests.fpasprj")),
             cwd: cwd.clone(),
@@ -125,6 +127,7 @@ fn test_cli_uses_manifest_script_override() {
             jobs: 1,
             strict: false,
             show_output: false,
+            diagnostics: Default::default(),
             standard_library: None,
         },
         &mut stdout,
@@ -154,7 +157,7 @@ fn test_cli_runs_setup_and_teardown_hooks() {
 
     let mut stderr = Vec::new();
     let mut stdout = Vec::new();
-    let exit = test_cli(
+    let exit = test_cli_with_stderr(
         TestCliConfig {
             input: CliInput::ProjectFile(cwd.join("tests.fpasprj")),
             cwd: cwd.clone(),
@@ -168,6 +171,7 @@ fn test_cli_runs_setup_and_teardown_hooks() {
             jobs: 1,
             strict: false,
             show_output: false,
+            diagnostics: Default::default(),
             standard_library: None,
         },
         &mut stdout,
@@ -198,7 +202,7 @@ fn test_cli_fails_when_teardown_hook_fails() {
 
     let mut stderr = Vec::new();
     let mut stdout = Vec::new();
-    let exit = test_cli(
+    let exit = test_cli_with_stderr(
         TestCliConfig {
             input: CliInput::ProjectFile(cwd.join("tests.fpasprj")),
             cwd: cwd.clone(),
@@ -212,6 +216,7 @@ fn test_cli_fails_when_teardown_hook_fails() {
             jobs: 1,
             strict: false,
             show_output: false,
+            diagnostics: Default::default(),
             standard_library: None,
         },
         &mut stdout,
@@ -245,7 +250,7 @@ fn test_cli_timeout_aborts_hanging_setup_hook() {
 
     let mut stderr = Vec::new();
     let mut stdout = Vec::new();
-    let exit = test_cli(
+    let exit = test_cli_with_stderr(
         TestCliConfig {
             input: CliInput::ProjectFile(cwd.join("tests.fpasprj")),
             cwd: cwd.clone(),
@@ -259,6 +264,7 @@ fn test_cli_timeout_aborts_hanging_setup_hook() {
             jobs: 1,
             strict: false,
             show_output: false,
+            diagnostics: Default::default(),
             standard_library: None,
         },
         &mut stdout,
@@ -298,7 +304,7 @@ fn test_cli_reports_runtime_errors_of_units_linked_out_of_graph_order() {
 
         let mut stderr = Vec::new();
         let mut stdout = Vec::new();
-        let exit = test_cli(
+        let exit = test_cli_with_stderr(
             TestCliConfig {
                 input: CliInput::ProjectFile(cwd.join("tests.fpasprj")),
                 cwd: cwd.clone(),
@@ -312,6 +318,7 @@ fn test_cli_reports_runtime_errors_of_units_linked_out_of_graph_order() {
                 jobs,
                 strict: false,
                 show_output: false,
+                diagnostics: Default::default(),
                 standard_library: None,
             },
             &mut stdout,

@@ -82,12 +82,6 @@ fn require_count(
             arguments.len()
         ),
         Some("Check the compiler intrinsic signature and register argument count.".to_string()),
-        fpas_diagnostics::SourceSpan::new_with_source(
-            0,
-            1,
-            location.line(),
-            location.column(),
-            location.source_id(),
-        ),
+        fpas_diagnostics::SourceSpan::synthetic_from_location(location),
     )))
 }

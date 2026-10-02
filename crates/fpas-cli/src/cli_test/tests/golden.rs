@@ -1,5 +1,5 @@
 use crate::cli_input::TestCliConfig;
-use crate::cli_test::test_cli;
+use crate::cli_test::test_cli_with_stderr;
 use crate::test_support::{create_temp_dir, write_text};
 
 #[test]
@@ -13,7 +13,7 @@ fn test_cli_compares_golden_stdout_sidecar() {
 
     let mut stdout = Vec::new();
     let mut stderr = Vec::new();
-    let exit = test_cli(
+    let exit = test_cli_with_stderr(
         TestCliConfig {
             input: crate::CliInput::SourceFile(cwd.join("echo_test.fpas")),
             cwd: cwd.clone(),
@@ -27,6 +27,7 @@ fn test_cli_compares_golden_stdout_sidecar() {
             jobs: 1,
             strict: false,
             show_output: false,
+            diagnostics: Default::default(),
             standard_library: None,
         },
         &mut stdout,
@@ -49,7 +50,7 @@ fn test_cli_fails_on_stdout_mismatch() {
 
     let mut stdout = Vec::new();
     let mut stderr = Vec::new();
-    let exit = test_cli(
+    let exit = test_cli_with_stderr(
         TestCliConfig {
             input: crate::CliInput::SourceFile(cwd.join("echo_test.fpas")),
             cwd: cwd.clone(),
@@ -63,6 +64,7 @@ fn test_cli_fails_on_stdout_mismatch() {
             jobs: 1,
             strict: false,
             show_output: false,
+            diagnostics: Default::default(),
             standard_library: None,
         },
         &mut stdout,

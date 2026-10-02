@@ -91,6 +91,7 @@ mod tests {
                     script_override: None,
                     timeout: None,
                     show_output: false,
+                    diagnostics: crate::cli_output::DiagnosticFormat::Text,
                 },
                 test.compiled.as_ref(),
             );
@@ -153,6 +154,7 @@ mod tests {
                     script_override: None,
                     timeout: None,
                     show_output: false,
+                    diagnostics: crate::cli_output::DiagnosticFormat::Text,
                 },
                 Some(compiled),
             );
@@ -201,6 +203,7 @@ mod tests {
                     script_override: None,
                     timeout: None,
                     show_output: false,
+                    diagnostics: crate::cli_output::DiagnosticFormat::Text,
                 },
                 test.compiled.as_ref(),
             );

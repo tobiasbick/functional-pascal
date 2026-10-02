@@ -117,7 +117,7 @@ const BUILD_HELP: &str = "\
 Build Functional Pascal project artifacts.
 
 Usage:
-  fpas build [--std-lib <dir>] [--executable [--name <name>]] [<file.fpasprj | file.fpasworkspace>]
+  fpas build [--std-lib <dir>] [--diagnostics <text | json>] [--executable [--name <name>]] [<file.fpasprj | file.fpasworkspace>]
 
 With no path, discovers a `.fpasworkspace` or `.fpasprj` in the current directory.
 Program projects produce or reuse `<project.name>.fpascp`. Library projects build
@@ -127,6 +127,8 @@ for the current host. `--name` overrides its output base name.
 
 Options:
   --std-lib <dir>  Replace the complete source standard library
+  --diagnostics <text | json>
+                   Diagnostic format on stderr; `json` writes one record per line
   --executable     Bundle one program with the native FPAS runner
   --name <name>    Application/output base name (requires --executable)
   -h, --help       Print this help
@@ -145,13 +147,15 @@ const RUN_HELP: &str = "\
 Run a Functional Pascal source, project, workspace, or compiled program.
 
 Usage:
-  fpas run [--std-lib <dir>] [<file.fpas | file.fpasprj | file.fpasworkspace | file.fpascp>] [-- <args>...]
+  fpas run [--std-lib <dir>] [--diagnostics <text | json>] [<file.fpas | file.fpasprj | file.fpasworkspace | file.fpascp>] [-- <args>...]
 
 With no path, discovers the workspace program or `.fpasprj` in the current directory.
 Direct `.fpascp` execution does not load sources or the source standard library.
 
 Options:
   --std-lib <dir>  Replace the complete source standard library
+  --diagnostics <text | json>
+                   Diagnostic format on stderr; `json` writes one record per line
   -h, --help       Print this help
   -V, --version    Print version
 
@@ -168,12 +172,14 @@ const CHECK_HELP: &str = "\
 Type-check Functional Pascal sources and projects without running them.
 
 Usage:
-  fpas check [--std-lib <dir>] [<file.fpas | dir | file.fpasprj | file.fpasworkspace>]
+  fpas check [--std-lib <dir>] [--diagnostics <text | json>] [<file.fpas | dir | file.fpasprj | file.fpasworkspace>]
 
 With no path, discovers a `.fpasworkspace` or `.fpasprj` in the current directory.
 
 Options:
   --std-lib <dir>  Replace the complete source standard library
+  --diagnostics <text | json>
+                   Diagnostic format on stderr; `json` writes one record per line
   -h, --help       Print this help
   -V, --version    Print version
 
@@ -181,6 +187,7 @@ Examples:
   fpas check hello.fpas
   fpas check my-app.fpasprj
   fpas check src/
+  fpas check --diagnostics json my-app.fpasprj
 
 ";
 
@@ -239,12 +246,15 @@ const TEST_HELP: &str = "\
 Run Functional Pascal test programs.
 
 Usage:
-  fpas test [--std-lib <dir>] [--list] [--fail-fast] [--strict] [--show-output] [--filter <pattern>] [--file <path>] [--report json] [--timeout <secs>] [--jobs <n>] [--script <path>] [<file.fpas | dir | file.fpasprj | file.fpasworkspace>]
+  fpas test [--std-lib <dir>] [--diagnostics <text | json>] [--list] [--fail-fast] [--strict] [--show-output] [--filter <pattern>] [--file <path>] [--report json] [--timeout <secs>] [--jobs <n>] [--script <path>] [<file.fpas | dir | file.fpasprj | file.fpasworkspace>]
 
 With no path, discovers a `.fpasworkspace` or `.fpasprj` in the current directory.
 
 Options:
   --std-lib <dir>     Replace the complete source standard library
+  --diagnostics <text | json>
+                      Diagnostic format on stderr; `json` writes one record per line
+                      and omits progress and summary lines
   --list              Print discovered tests without running them
   --fail-fast         Stop after the first failing test
   --strict            Treat skipped tests as a failure

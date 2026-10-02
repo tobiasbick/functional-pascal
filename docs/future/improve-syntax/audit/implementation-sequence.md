@@ -51,6 +51,12 @@ This boundary is complete; CLI JSON routing is next.
 
 ## Second delivery: CLI and runner streams
 
+Implemented for `check`, `build`, `run` and `test` (see the
+[owning stage](../stages/02-diagnostics.md)): `cli_output/diagnostics.rs`,
+`cli_output/failure.rs`, coded test-runner output and JSON-mode suppression of
+progress lines. Still open: runner mode transport, program-output events and
+actual runner-process tests.
+
 - Extract diagnostic routing from `crates/fpas-cli/src/cli_run.rs` into
   `crates/fpas-cli/src/cli_output/diagnostics.rs`; keep ordinary output handling
   in `cli_output.rs`. This is the first affected oversized-file reorganization.

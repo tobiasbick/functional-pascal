@@ -50,8 +50,15 @@ fn main() {
     let cwd = match env::current_dir() {
         Ok(cwd) => cwd,
         Err(e) => {
-            eprintln!("Error reading current directory: {e}");
-            process::exit(1);
+            let mut stderr = std::io::stderr().lock();
+            let mut reporter = cli_output::Reporter::new(
+                cli_output::DiagnosticFormat::requested(&args),
+                &mut stderr,
+            );
+            process::exit(reporter.failure(&cli_output::CliFailure::new(
+                fpas_diagnostics::codes::PROJECT_DIRECTORY_READ_FAILED,
+                format!("Error reading current directory: {e}"),
+            )));
         }
     };
 

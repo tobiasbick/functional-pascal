@@ -1,5 +1,7 @@
 use super::*;
 
+mod json;
+
 #[test]
 fn cli_renders_lex_stage_output() {
     let source = "program LexFail;\nbegin\n  @\nend.\n";

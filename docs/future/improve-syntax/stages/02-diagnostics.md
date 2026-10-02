@@ -41,12 +41,15 @@ information is missing. Diagnostics are not a compatibility parser mode.
   dependencies, standard-library loading and graph/snapshot APIs.
 - [x] Preserve compiler/parser records and native linker errors in `BuildError`;
   defer text rendering until `Display` and retain known producer source paths.
-- [ ] Implement CLI selection and child-runner forwarding without losing exit
-  status, duplicating diagnostics, or misattributing imported-unit errors.
+- [x] Implement CLI selection for `check`, `build`, `run` and `test`, including
+  isolated test workers, without losing exit status or duplicating diagnostics.
+- [ ] Implement `fpas-runner` mode transport and program-output events for
+  inherited child-process stderr.
 - [x] Add the [shared diagnostics reference](../../../pascal/tools/diagnostics.md)
   with the implemented Rust API, schema, location rules, code inventory, and a
   wrong/corrected example; document debugger JSONL null positions.
-- [ ] Extend the reference with CLI stream rules and program-output envelopes
+- [x] Extend the reference with CLI stream rules.
+- [ ] Extend the reference with program-output envelopes
   when the command/runner integration is implemented.
 - [x] Test the shared model's Unicode ranges, null positions and JSON escaping,
   parser expected/found details, project source-read failures, VM diagnostic
@@ -225,6 +228,38 @@ Verification: `cargo fmt --check`, strict workspace Clippy and
 `fpas test tests/suite.fpasprj` passed: 458 passed, one skipped, none failed.
 `git diff --check` passed. No FPAS source files changed.
 
-Next: connect all four CLI commands and actual runner processes, separating program
-stderr events and suppressing progress/test-summary contamination. Do not
-advertise `--diagnostics json` until that complete path is verified.
+## Implemented CLI diagnostic stream slice
+
+`fpas check`, `build`, `run` and `test` accept `--diagnostics <text | json>`.
+`crates/fpas-cli/src/cli_output/diagnostics.rs` owns `DiagnosticFormat` and the
+`Reporter`, which writes text or one JSON record per stderr line and suppresses
+progress, banners, summaries and captured test output in JSON mode.
+`cli_output/failure.rs` owns `CliFailure`, a list of `FileDiagnostic` records that
+absorbs `ProjectError` and `BuildError` without rendering; `project_build.rs`,
+the four commands and the test runner return it instead of strings. Pathless
+build records are attributed through the graph source table, and portable image
+names are mapped back to real paths for build failures. Isolated test workers
+receive the format in their request and emit already-formatted output, which the
+parent forwards unchanged. New codes F5037–F5042 cover arguments, unsupported
+inputs, output writes, stdout golden mismatches (with expected/found),
+timeouts and runner failures; text output now shows these codes too.
+
+Standard-library and hosted-intrinsic runtime errors now use synthetic point
+spans (`fpas-std/src/error.rs`, `fpas-vm/src/vm/hosted/args.rs`); before, JSON
+rendering with source text resolved their placeholder offset to line 1.
+`cli_test/process/worker.rs` now owns the worker side of the process protocol.
+
+Regressions: `crates/fpas-cli/src/main_tests/diagnostics/json.rs` covers check
+(Unicode columns), build, run (stdout and exit 2 preserved), warnings, sequential
+and parallel `fpas test` with `--report json`, argument errors and text/JSON
+parity; `cli_output` unit tests cover format selection and progress suppression.
+
+Verification: `cargo fmt --check`, strict workspace Clippy and
+`cargo test --workspace` passed (3,341 tests, none failed or ignored).
+`fpas test tests/suite.fpasprj` passed: 458 passed, one skipped, none failed.
+`git diff --check` passed. No FPAS source files changed.
+
+Remaining: `fpas-runner` (bundled native applications) has no JSON mode, and
+stderr inherited by `Std.Proc` child processes is not wrapped as a program-output
+event. Next: decide the runner mode transport and the program-output envelope,
+then add actual runner-process tests.

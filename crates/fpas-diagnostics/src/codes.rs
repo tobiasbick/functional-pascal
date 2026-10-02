@@ -256,6 +256,18 @@ define_codes!(PROJECT_ALLOCATED_CODES => {
     PROJECT_DUPLICATE_SOURCE_FILE = 5035;
     /// Warning: a `program` source outside the entry rules was skipped.
     PROJECT_PROGRAM_SOURCE_SKIPPED = 5036;
+    /// Command-line arguments are invalid, duplicated, or incomplete.
+    CLI_ARGUMENTS_INVALID = 5037;
+    /// The selected input kind cannot be used by the requested command.
+    CLI_INPUT_UNSUPPORTED = 5038;
+    /// A command could not write its promised output or output files.
+    CLI_OUTPUT_FAILED = 5039;
+    /// A test's standard output differs from its `.expect.stdout` sidecar.
+    TEST_STDOUT_MISMATCH = 5040;
+    /// A test exceeded its wall-clock timeout.
+    TEST_TIMED_OUT = 5041;
+    /// The test runner could not prepare, isolate, or finish a test or hook.
+    TEST_RUNNER_FAILED = 5042;
 });
 
 define_codes!(INTERNAL_ALLOCATED_CODES => {

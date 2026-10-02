@@ -5,6 +5,7 @@ use std::time::Duration;
 
 use super::mode::CliMode;
 use super::types::{DebugProtocol, TestReportFormat};
+use crate::cli_output::DiagnosticFormat;
 
 pub(super) struct ParsedOptions {
     pub(super) check_only: bool,
@@ -18,6 +19,7 @@ pub(super) struct ParsedOptions {
     pub(super) filter: Option<String>,
     pub(super) files: Vec<PathBuf>,
     pub(super) report: Option<TestReportFormat>,
+    pub(super) diagnostics: Option<DiagnosticFormat>,
     pub(super) timeout: Option<Duration>,
     pub(super) jobs: Option<usize>,
     pub(super) standard_library: Option<PathBuf>,
@@ -45,6 +47,7 @@ pub(super) fn parse_options(mode: CliMode, cli_args: &[String]) -> Result<Parsed
         filter: None,
         files: Vec::new(),
         report: None,
+        diagnostics: None,
         timeout: None,
         jobs: None,
         standard_library: None,
@@ -91,6 +94,30 @@ pub(super) fn parse_options(mode: CliMode, cli_args: &[String]) -> Result<Parsed
                     .is_some()
                 {
                     return Err("Duplicate `--std-lib` option.".to_string());
+                }
+            }
+            "--diagnostics"
+                if matches!(
+                    mode,
+                    CliMode::Build | CliMode::Run | CliMode::Check | CliMode::Test
+                ) =>
+            {
+                let value = take_option_value(
+                    cli_args,
+                    &mut index,
+                    "--diagnostics",
+                    &format!(
+                        "Missing format after `--diagnostics`.\n  help: `fpas {} --diagnostics json`.",
+                        mode.name()
+                    ),
+                )?;
+                let format = DiagnosticFormat::parse(value).ok_or_else(|| {
+                    format!(
+                        "Unsupported diagnostics format `{value}`.\n  help: Use `--diagnostics text` or `--diagnostics json`."
+                    )
+                })?;
+                if options.diagnostics.replace(format).is_some() {
+                    return Err("Duplicate `--diagnostics` option.".to_string());
                 }
             }
             "--executable" if mode == CliMode::Build => {
@@ -315,6 +342,7 @@ fn is_known_option(value: &str) -> bool {
             | "--filter"
             | "--file"
             | "--report"
+            | "--diagnostics"
             | "--timeout"
             | "--jobs"
             | "--protocol"

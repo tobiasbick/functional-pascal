@@ -1,5 +1,5 @@
 use crate::cli_input::TestCliConfig;
-use crate::cli_test::test_cli;
+use crate::cli_test::test_cli_with_stderr;
 use crate::test_support::{create_temp_dir, write_text};
 
 #[test]
@@ -12,7 +12,7 @@ fn test_cli_rejects_unit_file_as_test_entry() {
 
     let mut stdout = Vec::new();
     let mut stderr = Vec::new();
-    let exit = test_cli(
+    let exit = test_cli_with_stderr(
         TestCliConfig {
             input: crate::CliInput::SourceFile(cwd.join("helper_test.fpas")),
             cwd: cwd.clone(),
@@ -26,6 +26,7 @@ fn test_cli_rejects_unit_file_as_test_entry() {
             jobs: 1,
             strict: false,
             show_output: false,
+            diagnostics: Default::default(),
             standard_library: None,
         },
         &mut stdout,

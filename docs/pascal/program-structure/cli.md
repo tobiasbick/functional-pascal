@@ -39,6 +39,7 @@ the source debugger and in-process test hosts do not grant this authority automa
   - Other extensions — error.
 - `fpas run` with more than one positional path argument — usage error.
 - `fpas check [<path>]` — type-check a `.fpas`, directory of `.fpas` files, `.fpasprj`, or `.fpasworkspace` without running. With no path, discovers `.fpasworkspace` or `.fpasprj` in the current directory.
+- `--diagnostics <text | json>` — accepted by `check`, `build`, `run`, and `test`; selects the stderr diagnostic format (see [Machine-readable diagnostics](#machine-readable-diagnostics)).
 - `fpas test [<path>]` — run `*_test.fpas` programs and print a pass/fail/skip summary. With no path, discovers a workspace or `.fpasprj` like `fpas check`. Flags: `--list`, `--fail-fast`, `--strict` (exit `1` when any test called `Skip`), `--show-output` (print captured standard output of passing tests too), `--filter <pattern>`, repeatable `--file <path>` (select an exact discovered file, relative to the current directory), `--report json`, `--timeout <secs>` (default: `300`), `--jobs <n>` (`0` = available CPU parallelism), `--script <path>`. Sidecars beside each test file (all optional): `<test>.script.toml` (scripted input), `<test>.expect.stdout`, and `<test>.expect.screen` (TUI). See [`Std.Test`](../std/testing/test.md). `--list` and `--report json` write results to stdout; JSON test entries identify their full source paths, including nested directories. Progress lines stay on stderr. A failing test's captured standard output is always printed below its result line; `--show-output` does the same for passing tests. A write failure on contracted stdout or summary output returns nonzero instead of reporting success. Each test's timeout budget starts before its isolated worker is spawned and covers worker preparation and VM execution. Tests run in a terminable process tree, so blocking startup, VM, or host calls cannot extend the timeout indefinitely.
 - `fpas debug [<path>] --protocol <jsonl | dap>` — run a source, program
   project, workspace, or verified compiled image under the source debugger;
@@ -222,6 +223,29 @@ lines.
 `CRLF`, bare `CR`, and `LF` inside messages or help text are normalized as logical line breaks.
 Every continuation is explicit: message continuations use `  message: ` and every help line uses
 `  help: `. A source path always remains on one physical output line.
+
+Every diagnostic has a stable `Fxxxx` code, including project, build, linker, argument and test
+runner failures; positionless records omit the `line:column` part, for example
+`error[F5037]: Unknown option `--bogus`.`.
+
+### Machine-readable diagnostics
+
+`fpas check`, `fpas build`, `fpas run`, and `fpas test` accept `--diagnostics <text | json>`
+(default `text`). With `--diagnostics json`, every stderr line is one UTF-8 JSON diagnostic record
+as described in [shared diagnostics](../tools/diagnostics.md#rust-json-rendering-api), and stderr
+contains nothing else: progress lines, result banners, test summaries, and captured test output are
+omitted. Warnings use the same records with `"severity":"warning"`. Standard output is unchanged:
+program output, build status lines, `--list`, and `--report json` still go to stdout. Exit codes
+are the same as in text mode (`2` for a runtime error in `fpas run`). Argument errors also use JSON
+when the arguments before `--` contain `--diagnostics json`.
+
+```text
+fpas check --diagnostics json src/main.fpas
+{"kind":"diagnostic","code":"F2003","severity":"error","phase":"sema","source":"/work/app/src/main.fpas","location":{"source_id":0,"start":{"line":3,"column":3},"end":{"line":3,"column":16}},"message":"Unknown procedure `MissingCall`","expected":null,"found":null,"hint":"Declare the function or procedure before use, or check the spelling."}
+```
+
+`source` is the resolved path of the source file for parse, compile and project records. Runtime records of a program project or `.fpascp` name the portable source path stored in the compiled image, relative to the project directory, as in text mode. Runtime records have a known start and a `null` end.
+Output written by child processes started through `Std.Proc` that inherit stderr is not wrapped.
 
 ## Formatting project sources
 

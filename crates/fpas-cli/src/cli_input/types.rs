@@ -3,6 +3,8 @@
 use std::path::PathBuf;
 use std::time::Duration;
 
+use crate::cli_output::DiagnosticFormat;
+
 /// Scaffold kind selected by `fpas init`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum InitKind {
@@ -54,6 +56,8 @@ pub(crate) struct CliConfig {
     pub input: CliInput,
     pub program_args: Vec<String>,
     pub standard_library: Option<PathBuf>,
+    /// Diagnostic stream format selected with `--diagnostics`.
+    pub diagnostics: DiagnosticFormat,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -82,6 +86,8 @@ pub(crate) struct BuildCliConfig {
     pub standard_library: Option<PathBuf>,
     pub executable: bool,
     pub name: Option<String>,
+    /// Diagnostic stream format selected with `--diagnostics`.
+    pub diagnostics: DiagnosticFormat,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -133,6 +139,8 @@ pub(crate) struct TestCliConfig {
     /// Print captured standard output of passing tests too; failing tests always show it.
     pub show_output: bool,
     pub standard_library: Option<PathBuf>,
+    /// Diagnostic stream format selected with `--diagnostics`.
+    pub diagnostics: DiagnosticFormat,
 }
 
 /// Result of parsing CLI arguments before loading sources.

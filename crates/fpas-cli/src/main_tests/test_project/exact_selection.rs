@@ -45,7 +45,7 @@ fn exact_test_selection_preserves_nested_identity_and_project_linking() {
         let mut stdout = Vec::new();
         let mut stderr = Vec::new();
         assert_eq!(
-            test_cli(config, &mut stdout, &mut stderr),
+            test_cli_with_stderr(config, &mut stdout, &mut stderr),
             0,
             "{}",
             String::from_utf8_lossy(&stderr)
@@ -67,7 +67,7 @@ fn exact_test_selection_preserves_nested_identity_and_project_linking() {
     };
     let mut stdout = Vec::new();
     let mut stderr = Vec::new();
-    assert_eq!(test_cli(config, &mut stdout, &mut stderr), 2);
+    assert_eq!(test_cli_with_stderr(config, &mut stdout, &mut stderr), 2);
     assert!(stdout.is_empty());
     assert!(String::from_utf8_lossy(&stderr).contains("not in the discovered test set"));
     std::fs::remove_dir_all(cwd).expect("remove fixture");

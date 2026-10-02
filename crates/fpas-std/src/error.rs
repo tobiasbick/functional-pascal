@@ -1,25 +1,14 @@
 //! Errors produced by standard library runtime (`Std.*` intrinsics and I/O).
 //!
-//! Call-site [`SourceLocation`] is mapped to a [`SourceSpan`] with placeholder
-//! `offset` and `length` (`0` and `1`) because std intrinsics only receive line,
-//! column, and `source_id` from the VM, not byte offsets into source text.
+//! Call-site [`SourceLocation`] becomes a synthetic point [`SourceSpan`] because std
+//! intrinsics only receive line, column, and `source_id` from the VM, not byte offsets
+//! into source text. Renderers therefore keep the point and never resolve a byte range.
 
 use fpas_diagnostics::codes::INTERNAL_VM_INVARIANT_FAILURE;
 use fpas_diagnostics::{Diagnostic, DiagnosticCode, SourceLocation, SourceSpan};
 
 /// Diagnostic returned when a standard-library operation fails.
 pub type StdError = Diagnostic;
-
-#[must_use]
-fn synthetic_span(location: SourceLocation) -> SourceSpan {
-    SourceSpan::new_with_source(
-        0,
-        1,
-        location.line(),
-        location.column(),
-        location.source_id(),
-    )
-}
 
 /// Runtime error with optional help line; pass `None` when the message alone is sufficient.
 #[must_use]
@@ -29,7 +18,12 @@ pub fn std_runtime_error_opt(
     help: Option<String>,
     location: SourceLocation,
 ) -> StdError {
-    Diagnostic::error(code, message, help, synthetic_span(location))
+    Diagnostic::error(
+        code,
+        message,
+        help,
+        SourceSpan::synthetic_from_location(location),
+    )
 }
 
 /// Runtime error including a `help:` line; see [`std_runtime_error_opt`] to omit help.
@@ -54,6 +48,6 @@ pub fn std_internal_error(
         INTERNAL_VM_INVARIANT_FAILURE,
         message,
         Some(help.into()),
-        synthetic_span(location),
+        SourceSpan::synthetic_from_location(location),
     )
 }

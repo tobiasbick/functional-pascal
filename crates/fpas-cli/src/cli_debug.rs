@@ -23,7 +23,7 @@ pub(crate) fn debug_cli(
         match crate::standard_library::resolve_standard_library(config.standard_library.as_deref())
         {
             Ok(library) => library,
-            Err(message) => return fail(stderr, message),
+            Err(failure) => return fail(stderr, failure.to_string()),
         };
     let target = match prepare_target(&config, library.as_ref()) {
         Ok(target) => target,
@@ -136,7 +136,8 @@ fn prepare_source(
             &[],
             &fpas_project::ProjectLinkMeta::default(),
             standard_library,
-        )?;
+        )
+        .map_err(|failure| failure.to_string())?;
         return install_debug_sources(built.executable, &built.source_paths, Some(cwd));
     }
     let source = fs::read_to_string(path)
@@ -173,7 +174,8 @@ fn prepare_project(
             path.display()
         ));
     }
-    let built = crate::project_build::build_program(&loaded, standard_library)?;
+    let built = crate::project_build::build_program(&loaded, standard_library)
+        .map_err(|failure| failure.to_string())?;
     install_debug_sources(built.executable, &built.source_paths, path.parent())
 }
 

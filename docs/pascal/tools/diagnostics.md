@@ -44,7 +44,9 @@ with `message:`.
 ## Rust JSON rendering API
 
 `render_json(path, source_text, diagnostic)` serializes one record without a
-trailing newline. This is a Rust library API; the CLI currently emits text.
+trailing newline. `fpas check`, `build`, `run` and `test` write these records with
+`--diagnostics json`, one per stderr line; see
+[machine-readable diagnostics](../program-structure/cli.md#machine-readable-diagnostics).
 The caller supplies the name and text matching the diagnostic's source ID.
 The renderer does not read files or guess another source when text is unavailable.
 
@@ -118,8 +120,8 @@ src/util.fpas: warning[F5035]: Duplicate source file was ignored; the first occu
 ```
 
 `Display` renders the records when requested by a caller; current CLI and editor
-adapters explicitly convert to their text interfaces. This API does not enable
-CLI JSON output.
+adapters explicitly convert to their text interfaces; the CLI writes the same
+records as JSON with `--diagnostics json`.
 
 ## Build error transport
 
@@ -163,10 +165,10 @@ entries still retain the artifact's known main path.
 | Sema | F2001–F2999 |
 | Compile | F3001–F3999 |
 | Runtime | F4001–F4999; F4017 remains reserved |
-| Project/build | F5001–F5999 |
+| Project, build, CLI and test runner | F5001–F5999 |
 | Internal | F9001–F9999 and otherwise unassigned values |
 
-Project, build and linker codes:
+Project, build, linker, CLI and test-runner codes:
 
 | Code | Meaning |
 |---|---|
@@ -206,6 +208,12 @@ Project, build and linker codes:
 | F5034 | The linked executable failed bytecode verification |
 | F5035 | Warning: a source file is listed more than once; the first occurrence is kept |
 | F5036 | Warning: a `program` source that is not an allowed entry file was skipped |
+| F5037 | Command-line arguments are invalid, duplicated or incomplete |
+| F5038 | The input kind cannot be used by the command (for example running a library) |
+| F5039 | A command could not write its promised output or output files |
+| F5040 | A test's standard output differs from its `.expect.stdout` file; expected/found carry both outputs |
+| F5041 | A test exceeded its timeout |
+| F5042 | The test runner could not prepare, isolate or finish a test or hook |
 | F9003 | Project graph or build orchestration reached an inconsistent state |
 
 The allocated code inventory is maintained in

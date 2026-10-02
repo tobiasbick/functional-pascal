@@ -1,21 +1,21 @@
 //! Compile, execute, and classify one FPAS test program run.
 
-use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::Duration;
 
-use fpas_diagnostics::codes::RUNTIME_TEST_ASSERTION_FAILED;
+use fpas_diagnostics::codes::{RUNTIME_TEST_ASSERTION_FAILED, TEST_RUNNER_FAILED};
 use fpas_vm::VmError;
 use serde::{Deserialize, Serialize};
 
 use super::super::expect_stdout;
+use super::super::log;
 use super::super::process;
 use super::super::report::TestOutcome;
 use super::LinkContext;
-use crate::cli_run::render_cli_diagnostic_with_sources;
+use crate::cli_output::{CliFailure, Reporter, locate};
 
-use super::load::{apply_test_script, load_program};
+use super::load::apply_test_script;
 
 /// One test entry in a shared, memory-only bytecode image.
 #[derive(Clone)]
@@ -80,19 +80,23 @@ pub(in crate::cli_test) struct PreparedProgram {
 pub(super) fn run_test_program(
     path: &Path,
     link: Option<&LinkContext>,
-    stderr: &mut dyn Write,
+    reporter: &mut Reporter<'_>,
     options: ProgramRunOptions<'_>,
 ) -> TestOutcome {
     let timeout = options.timeout;
-    let prepared = match prepare_test_program(path, link, stderr, options) {
+    let prepared = match prepare_test_program(path, link, reporter, options) {
         Ok(prepared) => prepared,
         Err(outcome) => return outcome,
     };
     if let Some(timeout) = timeout {
-        process::run_with_timeout(prepared, timeout, stderr)
+        process::run_with_timeout(prepared, timeout, reporter)
     } else {
-        run_prepared_program(prepared, stderr, || Ok(())).unwrap_or_else(|message| {
-            let _ = writeln!(stderr, "        test worker failed unexpectedly: {message}");
+        run_prepared_program(prepared, reporter, || Ok(())).unwrap_or_else(|message| {
+            log::message(
+                reporter,
+                TEST_RUNNER_FAILED,
+                &format!("test worker failed unexpectedly: {message}"),
+            );
             TestOutcome::RuntimeError
         })
     }
@@ -101,7 +105,7 @@ pub(super) fn run_test_program(
 fn prepare_test_program(
     path: &Path,
     link: Option<&LinkContext>,
-    stderr: &mut dyn Write,
+    reporter: &mut Reporter<'_>,
     options: ProgramRunOptions<'_>,
 ) -> Result<PreparedProgram, TestOutcome> {
     let ProgramRunOptions {
@@ -113,56 +117,30 @@ fn prepare_test_program(
         compiled,
         scratch_dir,
     } = options;
-    let path_text = path.to_string_lossy();
-    let (executable, source_paths) = if let Some(compiled) = compiled {
-        (
+    let built = if let Some(compiled) = compiled {
+        Ok((
             (*compiled.image).clone(),
             Some(Arc::clone(&compiled.source_paths)),
-        )
+        ))
     } else if let Some(link) = link {
-        if let Err(message) = super::load::reject_unit_test_entry(path, link) {
-            render_compile_error(stderr, display, output, &message);
+        super::load::reject_unit_test_entry(path, link)
+            .and_then(|()| {
+                crate::project_build::build_test_program_with_graph(path, &link.program_graph)
+            })
+            .map(|built| (built.executable, Some(Arc::new(built.source_paths))))
+    } else {
+        super::load::load_program(path).and_then(|(program, source_paths)| {
+            fpas_compiler::compile(&program)
+                .map(|executable| (executable, source_paths.map(Arc::new)))
+                .map_err(|diagnostics| CliFailure::from_diagnostics(path, &diagnostics))
+        })
+    };
+    let (executable, source_paths) = match built {
+        Ok(built) => built,
+        Err(failure) => {
+            render_failure(reporter, display, output, &failure);
             return Err(TestOutcome::CompileError);
         }
-        let built =
-            match crate::project_build::build_test_program_with_graph(path, &link.program_graph) {
-                Ok(built) => built,
-                Err(message) => {
-                    render_compile_error(stderr, display, output, &message);
-                    return Err(TestOutcome::CompileError);
-                }
-            };
-        (built.executable, Some(Arc::new(built.source_paths)))
-    } else {
-        let (program, source_paths) = match load_program(path) {
-            Ok(value) => value,
-            Err(message) => {
-                render_compile_error(stderr, display, output, &message);
-                return Err(TestOutcome::CompileError);
-            }
-        };
-        let executable = match fpas_compiler::compile(&program) {
-            Ok(executable) => executable,
-            Err(diagnostics) => {
-                if output.emit_fail_banner() {
-                    let _ = writeln!(stderr, "  FAIL  {display}");
-                }
-                for diagnostic in &diagnostics {
-                    let _ = writeln!(
-                        stderr,
-                        "        {}",
-                        render_cli_diagnostic_with_sources(
-                            path_text.as_ref(),
-                            source_paths.as_deref(),
-                            diagnostic,
-                        )
-                        .replace('\n', "\n        ")
-                    );
-                }
-                return Err(TestOutcome::CompileError);
-            }
-        };
-        (executable, source_paths.map(Arc::new))
     };
 
     Ok(PreparedProgram {
@@ -180,17 +158,22 @@ fn prepare_test_program(
     })
 }
 
-fn render_compile_error(stderr: &mut dyn Write, display: &str, output: RunOutput, message: &str) {
+fn render_failure(
+    reporter: &mut Reporter<'_>,
+    display: &str,
+    output: RunOutput,
+    failure: &CliFailure,
+) {
     if output.emit_fail_banner() {
-        let _ = writeln!(stderr, "  FAIL  {display}");
+        log::banner(reporter, "FAIL", display);
     }
-    let _ = writeln!(stderr, "        {message}");
+    log::failure(reporter, failure);
 }
 
 /// Applies scripted input, opens the execution gate, runs the VM, and classifies its result.
 pub(in crate::cli_test) fn run_prepared_program(
     prepared: PreparedProgram,
-    stderr: &mut dyn Write,
+    reporter: &mut Reporter<'_>,
     gate: impl FnOnce() -> Result<(), String>,
 ) -> Result<TestOutcome, String> {
     let PreparedProgram {
@@ -209,13 +192,13 @@ pub(in crate::cli_test) fn run_prepared_program(
         source_paths.map(|paths| fpas_build::linked_source_paths(&executable, &paths));
     let mut vm = fpas_vm::Vm::new(executable);
     vm.set_test_scratch_dir(scratch_dir);
-    if let Err(message) = apply_test_script(
+    if let Err(failure) = apply_test_script(
         &test_path,
         script_override.as_deref(),
         manifest_override.as_ref(),
         &mut vm,
     ) {
-        render_compile_error(stderr, &display, output, &message);
+        render_failure(reporter, &display, output, &failure);
         return Ok(TestOutcome::CompileError);
     }
     gate()?;
@@ -224,10 +207,9 @@ pub(in crate::cli_test) fn run_prepared_program(
         &test_path,
         source_paths.as_ref(),
         &display,
-        output,
-        show_output,
+        (output, show_output),
         execution,
-        stderr,
+        reporter,
     ))
 }
 
@@ -241,10 +223,9 @@ fn classify_execution(
     path: &Path,
     source_paths: Option<&Vec<PathBuf>>,
     display: &str,
-    output: RunOutput,
-    show_output: bool,
+    (output, show_output): (RunOutput, bool),
     execution: VmExecution,
-    stderr: &mut dyn Write,
+    reporter: &mut Reporter<'_>,
 ) -> TestOutcome {
     match execution {
         VmExecution {
@@ -253,21 +234,21 @@ fn classify_execution(
             skipped,
         } => {
             if matches!(output, RunOutput::Test | RunOutput::TestDeferredPass)
-                && let Err(message) = expect_stdout::compare_stdout(path, stdout_lines)
+                && let Err(failure) = expect_stdout::compare_stdout(path, stdout_lines)
             {
-                render_assertion_error(stderr, display, output, &message);
+                render_failure(reporter, display, output, &failure);
                 return TestOutcome::AssertFailed;
             }
             if skipped {
                 if output.emit_pass() {
-                    let _ = writeln!(stderr, "  SKIP  {display}");
+                    log::banner(reporter, "SKIP", display);
                 }
                 return TestOutcome::Skipped;
             }
             if output.emit_pass() {
-                let _ = writeln!(stderr, "  PASS  {display}");
+                log::banner(reporter, "PASS", display);
                 if show_output {
-                    render_captured_stdout(stderr, stdout_lines);
+                    log::captured_stdout(reporter, stdout_lines);
                 }
             }
             TestOutcome::Pass
@@ -278,20 +259,13 @@ fn classify_execution(
             skipped: _,
         } => {
             if output.emit_fail_banner() {
-                let _ = writeln!(stderr, "  FAIL  {display}");
+                log::banner(reporter, "FAIL", display);
             }
-            let path_text = path.to_string_lossy();
-            let _ = writeln!(
-                stderr,
-                "        {}",
-                render_cli_diagnostic_with_sources(
-                    path_text.as_ref(),
-                    source_paths.map(Vec::as_slice),
-                    &diagnostic,
-                )
-                .replace('\n', "\n        ")
+            log::record(
+                reporter,
+                &locate(path, source_paths.map(Vec::as_slice), &diagnostic),
             );
-            render_captured_stdout(stderr, stdout_lines);
+            log::captured_stdout(reporter, stdout_lines);
             if diagnostic.code == RUNTIME_TEST_ASSERTION_FAILED {
                 TestOutcome::AssertFailed
             } else {
@@ -299,24 +273,6 @@ fn classify_execution(
             }
         }
     }
-}
-
-/// Prints a test's captured standard output below its result line; nothing when it wrote none.
-fn render_captured_stdout(stderr: &mut dyn Write, lines: &[String]) {
-    if lines.is_empty() {
-        return;
-    }
-    let _ = writeln!(stderr, "        stdout:");
-    for line in lines {
-        let _ = writeln!(stderr, "          {line}");
-    }
-}
-
-fn render_assertion_error(stderr: &mut dyn Write, display: &str, output: RunOutput, message: &str) {
-    if output.emit_fail_banner() {
-        let _ = writeln!(stderr, "  FAIL  {display}");
-    }
-    let _ = writeln!(stderr, "        {message}");
 }
 
 fn execute_vm(mut vm: fpas_vm::Vm) -> VmExecution {

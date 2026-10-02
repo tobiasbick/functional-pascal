@@ -64,10 +64,14 @@ include = ["src/**/*.fpas"]
 
     assert_eq!(exit_code, 1);
     assert!(
-        stderr.contains("src/main.fpas`: 3:3: error[F2003]"),
+        stderr.contains("main.fpas:3:3: error[F2003]"),
         "stderr: {stderr}"
     );
-    assert!(!stderr.contains("manifest.fpasprj`: 3:3"));
+    assert!(!stderr.contains("manifest.fpasprj:3:3"));
+    assert!(
+        !stderr.starts_with("src/main.fpas"),
+        "stderr must name the real file: {stderr}"
+    );
 }
 
 #[test]

@@ -3,7 +3,7 @@
 use crate::Diagnostic;
 
 mod json;
-pub use json::render_json;
+pub use json::{render_json, render_program_stderr_json};
 
 /// Renders a diagnostic with a source path.
 ///

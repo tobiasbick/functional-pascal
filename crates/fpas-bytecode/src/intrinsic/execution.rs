@@ -1,8 +1,8 @@
 //! Runtime ownership and mutable-dispatch metadata for intrinsic instructions.
 
 use super::{
-    ArrayIntrinsic, DictIntrinsic, Intrinsic, OptionIntrinsic, ResultIntrinsic, StrIntrinsic,
-    TestIntrinsic, TimeIntrinsic,
+    ArrayIntrinsic, DictIntrinsic, Intrinsic, OptionIntrinsic, ProcIntrinsic, ResultIntrinsic,
+    StrIntrinsic, TestIntrinsic, TimeIntrinsic,
 };
 
 /// Runtime module that owns execution of an intrinsic.
@@ -42,7 +42,8 @@ impl Intrinsic {
             | Self::Net(_)
             | Self::Http(_)
             | Self::Random(_)
-            | Self::Crypto(_) => IntrinsicOwner::Hosted,
+            | Self::Crypto(_)
+            | Self::Proc(ProcIntrinsic::Run) => IntrinsicOwner::Hosted,
             Self::Test(
                 TestIntrinsic::AssertScreenLine
                 | TestIntrinsic::AssertScreenCell
@@ -129,6 +130,11 @@ mod tests {
             ),
             (
                 Intrinsic::Test(TestIntrinsic::AssertTrue),
+                IntrinsicOwner::Standard,
+            ),
+            (Intrinsic::Proc(ProcIntrinsic::Run), IntrinsicOwner::Hosted),
+            (
+                Intrinsic::Proc(ProcIntrinsic::RunCapture),
                 IntrinsicOwner::Standard,
             ),
             (

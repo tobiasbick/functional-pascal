@@ -83,6 +83,21 @@ characters. A caller can append one newline per record without message text
 injecting another record. Text and JSON preserve the same code, severity, message
 and hint; expected/found details are not reconstructed by parsing message prose.
 
+## Program-output records
+
+A JSON diagnostic stream can also carry text the program wrote to standard error
+through child processes (see
+[machine-readable diagnostics](../program-structure/cli.md#machine-readable-diagnostics)).
+`render_program_stderr_json(text)` serializes one such line:
+
+```json
+{"kind":"program-output","stream":"stderr","text":"child err"}
+```
+
+Consumers distinguish records by `kind`: `diagnostic` records have the fields
+above, while `program-output` records have only `stream` (always `stderr`) and
+`text` (one line without its line ending).
+
 ## Project error transport
 
 `fpas_project::ProjectError` preserves source failures through project loading,

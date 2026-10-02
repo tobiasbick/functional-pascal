@@ -93,6 +93,11 @@ if Std.Results.IsError(Status) then
 
 If the process cannot be started, returns `Error(message)`. If the host reports that the process ended without an exit code, returns `Error('process terminated without an exit code')`.
 
+The child inherits standard input and output. Its standard error is inherited too, except under
+`fpas run --diagnostics json` or a native application with `FPAS_DIAGNOSTICS=json`, where each
+stderr line becomes a JSON program-output record; see
+[machine-readable diagnostics](../../program-structure/cli.md#machine-readable-diagnostics).
+
 ---
 
 ## `function RunCapture(Command: string; Args: array of string): Result of ProcessOutput, string`
@@ -123,6 +128,7 @@ failure or a process termination without an exit code returns `Error(message)`.
 | Concern | Location |
 |---------|----------|
 | Runtime execution | [`proc.rs`](../../../../crates/fpas-std/src/proc.rs) |
+| Hosted `Run` and its stderr receiver | [`hosted/proc.rs`](../../../../crates/fpas-vm/src/vm/hosted/proc.rs) |
 | Compiler intrinsic catalog | [`intrinsic_catalog.rs`](../../../../crates/fpas-compiler/src/intrinsic_catalog.rs) |
 | Registration | [`std_registry/loaded/proc.rs`](../../../../crates/fpas-sema/src/std_registry/loaded/proc.rs) |
 | Intrinsic ids | [`intrinsic/proc.rs`](../../../../crates/fpas-bytecode/src/intrinsic/proc.rs) |

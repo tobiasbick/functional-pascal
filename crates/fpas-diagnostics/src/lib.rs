@@ -25,6 +25,6 @@ pub use code::{DiagnosticCode, InvalidDiagnosticCode};
 pub use diagnostic::{Diagnostic, DiagnosticSeverity, DiagnosticStage};
 pub use file_diagnostic::FileDiagnostic;
 pub use location::{SourceLocation, SourceLocationError};
-pub use render::{render, render_json, render_without_path};
+pub use render::{render, render_json, render_program_stderr_json, render_without_path};
 pub use source_range::{SourcePosition, SourceRange};
 pub use span::{SourceSpan, SourceSpanError};

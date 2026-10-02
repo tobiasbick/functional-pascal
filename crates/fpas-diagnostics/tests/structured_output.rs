@@ -11,7 +11,7 @@ use fpas_diagnostics::{
         PARSE_EXPECTED_TOKEN, PROJECT_DUPLICATE_SOURCE_FILE, PROJECT_SOURCE_READ_FAILED,
         RUNTIME_PROGRAM_PANIC,
     },
-    render, render_json, render_without_path,
+    render, render_json, render_program_stderr_json, render_without_path,
 };
 use serde_json::{Value, json};
 
@@ -162,4 +162,15 @@ fn file_diagnostics_render_positionless_warnings_with_their_path() {
     assert_eq!(record["severity"], "warning");
     assert_eq!(record["phase"], "project");
     assert_eq!(record["location"], Value::Null);
+}
+
+#[test]
+fn program_output_records_escape_text_and_name_their_kind() {
+    let line = render_program_stderr_json("warn \"x\"\t\u{1b}[31m").unwrap();
+    assert!(!line.contains('\n'));
+    let record: Value = serde_json::from_str(&line).unwrap();
+    assert_eq!(
+        record,
+        json!({"kind": "program-output", "stream": "stderr", "text": "warn \"x\"\t\u{1b}[31m"})
+    );
 }

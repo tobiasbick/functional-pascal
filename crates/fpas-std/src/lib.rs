@@ -55,6 +55,7 @@ pub use error::StdError;
 pub(crate) use intrinsics::execute_test_intrinsic;
 pub use intrinsics::run_intrinsic_borrowed;
 pub use key_event::{ConsoleKeyEvent, KEY_KIND_VARIANTS, key_kind_index};
+pub use proc::{ProgramStderr, run_process, run_process_arguments};
 pub use std_units::{
     STD_UNIT_ARGS, STD_UNIT_ARRAY, STD_UNIT_CONSOLE, STD_UNIT_CONV, STD_UNIT_CRYPTO, STD_UNIT_DICT,
     STD_UNIT_ENV, STD_UNIT_FS, STD_UNIT_JSON, STD_UNIT_MATH, STD_UNIT_NET, STD_UNIT_OPTION,

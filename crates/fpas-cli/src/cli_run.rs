@@ -344,6 +344,9 @@ fn run_executable(
     if PROCESS_LIFECYCLE_AUTHORIZED.load(std::sync::atomic::Ordering::Acquire) {
         vm.allow_process_lifecycle();
     }
+    if let Some(receiver) = crate::cli_output::program_stderr_receiver(reporter.format()) {
+        vm.set_program_stderr(receiver);
+    }
     if let Err(diagnostic) = vm.run() {
         reporter.record(&locate(path, source_paths.as_deref(), &diagnostic));
         return 2;

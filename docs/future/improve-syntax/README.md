@@ -49,7 +49,7 @@ The checklists in each document track work within that stage.
 | Done | Stage | Prerequisites | Status |
 |------|-------|---------------|--------|
 | [x] | [1. Language contract](language-contract.md) | None | Source audit, grammar/owner mapping, test inventory and bounded sequence recorded; no language implementation claimed |
-| [ ] | [2. Diagnostics](stages/02-diagnostics.md) | Stage 1 contract | Shared model/JSON renderer, build/project source-error transport and coded failures, structured warnings and `--diagnostics json` for check/build/run/test implemented; runner mode and program-output events pending |
+| [x] | [2. Diagnostics](stages/02-diagnostics.md) | Stage 1 contract | Coded records for all toolchain failures and warnings; `--diagnostics json` for check/build/run/test, `FPAS_DIAGNOSTICS=json` for native applications, and program-output records |
 | [ ] | [3. Syntax and names](stages/03-syntax-and-names.md) | Stages 1 and 2 | Planned |
 | [ ] | [4. Functional core](stages/04-functional-core.md) | Stages 1-3; coordinated mutation/purity work from stage 5 | Planned |
 | [ ] | [5. Effects and tasks](stages/05-effects-and-tasks.md) | Stage 4 facilities; contract fixed in stage 1 | Planned |
@@ -130,9 +130,6 @@ Stage 1's [source audit](audit/source-map.md),
 [bounded implementation sequence](audit/implementation-sequence.md) are recorded.
 Existing tests were inspected, not executed for the stage-1 documentation audit.
 
-Stage 2's shared diagnostic representation, build/project source-error
-transport, coded project/build/linker failures, structured loading warnings and
-`--diagnostics json` for check/build/run/test are implemented; see its owning
-stage for verification and remaining work. Next, add the `fpas-runner` mode and
-program-output events for inherited child-process stderr. Do not start the broad
-syntax migration before that gate.
+Stage 2 is complete; see its owning stage for the delivered slices, producer
+audit and verification. Next, begin [stage 3](stages/03-syntax-and-names.md)
+with its smallest coherent slice, inspecting the owning modules first.

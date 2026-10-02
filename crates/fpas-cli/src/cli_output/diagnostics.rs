@@ -59,6 +59,18 @@ pub(crate) fn locate(
     FileDiagnostic::new(diagnostic.clone(), Some(path))
 }
 
+/// Returns the receiver that wraps child-process stderr lines as JSON program-output
+/// records on the process's stderr, or `None` in text mode, where children inherit stderr.
+pub(crate) fn program_stderr_receiver(format: DiagnosticFormat) -> Option<fpas_std::ProgramStderr> {
+    (format == DiagnosticFormat::Json).then(|| {
+        std::sync::Arc::new(|text: &str| {
+            if let Ok(line) = fpas_diagnostics::render_program_stderr_json(text) {
+                let _ = std::io::stderr().write_all(format!("{line}\n").as_bytes());
+            }
+        }) as fpas_std::ProgramStderr
+    })
+}
+
 /// Writes diagnostics in the selected format and suppresses progress in JSON mode.
 pub(crate) struct Reporter<'a> {
     format: DiagnosticFormat,
@@ -96,7 +108,7 @@ impl<'a> Reporter<'a> {
                 }
             }
         };
-        let _ = writeln!(self.stderr, "{line}");
+        self.write_line(&line);
     }
 
     /// Writes one record; text mode prefixes every rendered line with `indent`.
@@ -104,7 +116,7 @@ impl<'a> Reporter<'a> {
         match self.format {
             DiagnosticFormat::Text => {
                 let text = record.to_string().replace('\n', &format!("\n{indent}"));
-                let _ = writeln!(self.stderr, "{indent}{text}");
+                self.write_line(&format!("{indent}{text}"));
             }
             DiagnosticFormat::Json => self.record(record),
         }
@@ -133,7 +145,7 @@ impl<'a> Reporter<'a> {
     /// Writes a progress or summary line in text mode only.
     pub(crate) fn progress(&mut self, line: impl fmt::Display) {
         if self.format == DiagnosticFormat::Text {
-            let _ = writeln!(self.stderr, "{line}");
+            self.write_line(&line.to_string());
         }
     }
 
@@ -143,6 +155,11 @@ impl<'a> Reporter<'a> {
             DiagnosticFormat::Text => Some(&mut *self.stderr),
             DiagnosticFormat::Json => None,
         }
+    }
+
+    // One write per line keeps lines whole when program-output events share stderr.
+    fn write_line(&mut self, line: &str) {
+        let _ = self.stderr.write_all(format!("{line}\n").as_bytes());
     }
 
     fn source(&mut self, path: &Path) -> Option<&str> {

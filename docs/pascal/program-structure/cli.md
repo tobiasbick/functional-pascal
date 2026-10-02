@@ -245,7 +245,22 @@ fpas check --diagnostics json src/main.fpas
 ```
 
 `source` is the resolved path of the source file for parse, compile and project records. Runtime records of a program project or `.fpascp` name the portable source path stored in the compiled image, relative to the project directory, as in text mode. Runtime records have a known start and a `null` end.
-Output written by child processes started through `Std.Proc` that inherit stderr is not wrapped.
+
+In `fpas run` with `--diagnostics json`, standard error of child processes started with
+`Std.Proc.Run` is not inherited. Each of its lines becomes a program-output record, so program text
+cannot be mistaken for a diagnostic:
+
+```text
+{"kind":"program-output","stream":"stderr","text":"child err"}
+```
+
+`text` is one line without its line ending. Records keep the order in which they are written.
+`Std.Proc.RunCapture` is unaffected, and test workers continue to discard child stderr.
+
+A native application built with `fpas build --executable` keeps every command-line argument for the
+program. Set the environment variable `FPAS_DIAGNOSTICS=json` to select the same JSON stderr stream
+for its runtime records, startup failures and program-output records; any other value or no value
+keeps text output.
 
 ## Formatting project sources
 

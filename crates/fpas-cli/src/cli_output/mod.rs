@@ -5,7 +5,7 @@ mod failure;
 
 use std::io::{self, Write};
 
-pub(crate) use diagnostics::{DiagnosticFormat, Reporter, locate};
+pub(crate) use diagnostics::{DiagnosticFormat, Reporter, locate, program_stderr_receiver};
 pub(crate) use failure::CliFailure;
 
 /// Writes a command result to stdout and reports failures on stderr.

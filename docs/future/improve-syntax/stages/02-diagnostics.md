@@ -30,8 +30,9 @@ information is missing. Diagnostics are not a compatibility parser mode.
 
 ## Work
 
-- [ ] Audit existing codes, lexer/parser recovery, semantic errors, project/build
-  reporting, runner transport, and runtime source mapping; record exact paths.
+- [x] Audit existing codes, lexer/parser recovery, semantic errors, project/build
+  reporting, runner transport, and runtime source mapping; record exact paths
+  (see [Diagnostic producer audit](#diagnostic-producer-audit)).
 - [x] Extend the shared schema and renderers, including unavailable positions,
   expected/found details, source identity, and deterministic JSON serialization.
 - [x] Complete shared coded diagnostics for all project/build/linker failures.
@@ -43,18 +44,17 @@ information is missing. Diagnostics are not a compatibility parser mode.
   defer text rendering until `Display` and retain known producer source paths.
 - [x] Implement CLI selection for `check`, `build`, `run` and `test`, including
   isolated test workers, without losing exit status or duplicating diagnostics.
-- [ ] Implement `fpas-runner` mode transport and program-output events for
+- [x] Implement `fpas-runner` mode transport and program-output events for
   inherited child-process stderr.
 - [x] Add the [shared diagnostics reference](../../../pascal/tools/diagnostics.md)
   with the implemented Rust API, schema, location rules, code inventory, and a
   wrong/corrected example; document debugger JSONL null positions.
 - [x] Extend the reference with CLI stream rules.
-- [ ] Extend the reference with program-output envelopes
-  when the command/runner integration is implemented.
+- [x] Extend the reference with program-output envelopes.
 - [x] Test the shared model's Unicode ranges, null positions and JSON escaping,
   parser expected/found details, project source-read failures, VM diagnostic
   mapping, LSP point conversion and debugger null-location events.
-- [ ] Complete end-to-end structured-output tests through lexer, parser, sema,
+- [x] Complete end-to-end structured-output tests through lexer, parser, sema,
   project/build, runtime, all four CLI commands, and the actual runner process.
 
 New language diagnostics ship with their owning stage, using this foundation.
@@ -259,7 +259,48 @@ Verification: `cargo fmt --check`, strict workspace Clippy and
 `fpas test tests/suite.fpasprj` passed: 458 passed, one skipped, none failed.
 `git diff --check` passed. No FPAS source files changed.
 
-Remaining: `fpas-runner` (bundled native applications) has no JSON mode, and
-stderr inherited by `Std.Proc` child processes is not wrapped as a program-output
-event. Next: decide the runner mode transport and the program-output envelope,
-then add actual runner-process tests.
+## Implemented runner and program-output slice
+
+`Std.Proc.Run` is now a hosted intrinsic (`fpas-bytecode` ownership,
+`crates/fpas-vm/src/vm/hosted/proc.rs`). `fpas_std::run_process` inherits child
+stderr unless a `ProgramStderr` receiver is installed with
+`Vm::set_program_stderr`; then it forwards each stderr line without its ending.
+`fpas run --diagnostics json` installs a receiver that writes
+`{"kind":"program-output","stream":"stderr","text":…}` records
+(`fpas_diagnostics::render_program_stderr_json`) to the same stderr stream; the
+CLI and reporter write each record with one call so concurrent tasks cannot split
+lines. `fpas-runner` reads `FPAS_DIAGNOSTICS=json` (exact value) and reports
+startup failures (F5024/F5025), runtime records and program-output records in
+JSON without consuming application arguments. Text mode is unchanged.
+
+Regressions: `crates/fpas-cli/tests/json_streams.rs` spawns the real `fpas` and
+a bundled native application to check program-output order, stdout, exit status
+2 and text-mode inheritance; `fpas-std` proc tests cover line forwarding, and
+`fpas-diagnostics` covers program-output escaping. A lexer/parser JSON case
+completes per-phase coverage.
+
+Verification: `cargo fmt --check`, strict workspace Clippy and
+`cargo test --workspace` passed (3,347 tests, none failed or ignored).
+`fpas test tests/suite.fpasprj` passed: 458 passed, one skipped, none failed.
+`git diff --check` passed. No FPAS source files changed.
+
+Status: every work item and the acceptance criteria are met; stage 2 is complete.
+
+## Diagnostic producer audit
+
+| Concern | Producers |
+|---|---|
+| Code registry and phases | `crates/fpas-diagnostics/src/codes.rs`, `diagnostic.rs` |
+| Lexer | `crates/fpas-lexer/src/lexer/`, `error.rs` |
+| Parser and recovery | `crates/fpas-parser/src/parser/` (`core.rs` recovery boundaries, `expr/`, `stmt/`, `decl/`), `error.rs` |
+| Semantic analysis | `crates/fpas-sema/src/check/`, `std_registry/`, `error.rs` |
+| Compiler | `crates/fpas-compiler/src/error.rs` |
+| Runtime and source mapping | `crates/fpas-vm/src/vm/diagnostics.rs`, `vm/hosted/`, `crates/fpas-std/src/error.rs` (synthetic point spans) |
+| Project loading | `crates/fpas-project/src/source/error.rs`, `manifest.rs`, `paths.rs`, `unit_graph/`, `workspace/` |
+| Build and linking | `crates/fpas-build/src/engine/error.rs`, `source_snapshot.rs`, `program_artifact/`, `crates/fpas-linker/src/error.rs` |
+| CLI and test runner | `crates/fpas-cli/src/cli_output/`, `project_build.rs`, `cli_test/` |
+| Native runner | `crates/fpas-cli/src/bin/fpas-runner.rs` |
+| Editor and debugger adapters | `crates/fpas-lsp/src/diagnostics/convert.rs`, `crates/fpas-debug/src/jsonl/encode_record.rs` |
+
+Not covered by the JSON stream: `fpas debug` (its own JSONL/DAP protocol) and
+`fpas fmt`, `init`, `env` and `lsp`, which keep their existing interfaces.

@@ -191,6 +191,18 @@ impl Vm {
             .unwrap_or_else(|poisoned| poisoned.into_inner()) = path;
     }
 
+    /// Routes standard-error lines of `Std.Proc.Run` children to `receiver`.
+    ///
+    /// Without a receiver, children inherit the host process's stderr.
+    /// Documentation: `docs/pascal/program-structure/cli.md` (machine-readable diagnostics).
+    pub fn set_program_stderr(&mut self, receiver: fpas_std::ProgramStderr) {
+        *self
+            .hosted
+            .program_stderr
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner()) = Some(receiver);
+    }
+
     /// Queue characters for hosted `Std.Console.ReadKey` calls.
     pub fn push_readkey_input(&mut self, characters: &str) {
         self.hosted

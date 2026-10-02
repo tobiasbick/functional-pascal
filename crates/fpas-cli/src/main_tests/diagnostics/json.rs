@@ -227,3 +227,25 @@ fn text_and_json_report_the_same_code_and_message() {
         record["code"].as_str().expect("code")
     )));
 }
+
+#[test]
+fn lexer_and_parser_records_keep_their_phases() {
+    let cwd = create_temp_dir("json-lex-parse");
+    let main = cwd.join("main.fpas");
+    write_text(&main, "program Broken\nbegin\n  @\nend.\n");
+
+    let (exit_code, _, stderr) = support::run_cli_args_and_capture_output(
+        &args(&["check", "--diagnostics", "json", &main.to_string_lossy()]),
+        &cwd,
+    );
+    fs::remove_dir_all(&cwd).expect("temp directory must be removed");
+
+    assert_eq!(exit_code, 1);
+    let records = records(&stderr);
+    let phases = records
+        .iter()
+        .map(|record| record["phase"].as_str().expect("phase"))
+        .collect::<Vec<_>>();
+    assert!(phases.contains(&"lex"), "{stderr}");
+    assert!(phases.contains(&"parse"), "{stderr}");
+}

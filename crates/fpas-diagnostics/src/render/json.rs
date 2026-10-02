@@ -59,3 +59,26 @@ pub fn render_json(
     };
     serde_json::to_string(&record)
 }
+
+#[derive(Serialize)]
+struct ProgramOutput<'a> {
+    kind: &'static str,
+    stream: &'static str,
+    text: &'a str,
+}
+
+/// Serializes one standard-error line written by the program, without a trailing newline.
+///
+/// The record has `"kind":"program-output"`, so a JSON diagnostic stream never
+/// presents program text as a compiler or runtime diagnostic.
+/// Documentation: `docs/pascal/tools/diagnostics.md`.
+///
+/// # Errors
+/// Returns a serialization error if the JSON serializer cannot encode the record.
+pub fn render_program_stderr_json(text: &str) -> Result<String, serde_json::Error> {
+    serde_json::to_string(&ProgramOutput {
+        kind: "program-output",
+        stream: "stderr",
+        text,
+    })
+}

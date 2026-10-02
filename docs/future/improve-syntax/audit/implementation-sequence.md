@@ -54,8 +54,9 @@ This boundary is complete; CLI JSON routing is next.
 Implemented for `check`, `build`, `run` and `test` (see the
 [owning stage](../stages/02-diagnostics.md)): `cli_output/diagnostics.rs`,
 `cli_output/failure.rs`, coded test-runner output and JSON-mode suppression of
-progress lines. Still open: runner mode transport, program-output events and
-actual runner-process tests.
+progress lines. The runner reads `FPAS_DIAGNOSTICS=json`, `Std.Proc.Run` child
+stderr becomes program-output records, and real-process tests cover both. The
+second delivery is complete.
 
 - Extract diagnostic routing from `crates/fpas-cli/src/cli_run.rs` into
   `crates/fpas-cli/src/cli_output/diagnostics.rs`; keep ordinary output handling

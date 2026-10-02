@@ -60,7 +60,7 @@ fn collect_project_paths(path: &Path, stderr: &mut dyn Write) -> Result<Vec<Path
     };
 
     for warning in &loaded.warnings {
-        let _ = writeln!(stderr, "warning: {warning}");
+        let _ = writeln!(stderr, "{warning}");
     }
 
     let mut paths = loaded.source_files;

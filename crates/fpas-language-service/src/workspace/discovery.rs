@@ -86,9 +86,9 @@ fn context_owning_source(
     }
     let manifests = direct_project_manifests(directory)?;
     if let Some(workspace_path) = discover_workspace_file(directory)
-        .map_err(|message| WorkspaceIssue {
+        .map_err(|error| WorkspaceIssue {
             path: directory.to_path_buf(),
-            message,
+            message: error.to_string(),
         })
         .map_err(DiscoveryError::Metadata)?
     {

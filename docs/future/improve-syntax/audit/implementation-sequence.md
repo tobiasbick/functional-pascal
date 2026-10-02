@@ -41,11 +41,13 @@ verification.
 
 Source records now also propagate through `ProjectError` in project loading,
 dependency traversal, standard-library loading and graph/snapshot APIs. The
-build boundary preserves these records and their source path. Next, convert
-remaining project/build/linker failures to shared coded diagnostics and retain
-successful-source warnings as records.
-`BuildError` still has explicit text-only failures, and a native `LinkError` is
-not yet a shared diagnostic record. Finish this boundary before CLI JSON routing.
+build boundary preserves these records and their source path.
+
+Implemented: every `ProjectError` and `BuildError` now carries coded records
+(F5003–F5034, F9003); `LinkError::code()` assigns linker categories and
+`stage_standard_library` returns `BuildError`. Loading warnings are
+`FileDiagnostic` records (F5035, F5036), the same type `BuildError` exposes.
+This boundary is complete; CLI JSON routing is next.
 
 ## Second delivery: CLI and runner streams
 

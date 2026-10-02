@@ -19,10 +19,27 @@ For example, `program Demo` without its terminating semicolon produces that
 error before the following `begin`. Correct the heading to `program Demo;`.
 
 When a position is unavailable, the renderer omits the line/column prefix.
-An available path can still identify the file. Project source-read failures use
-`F5001` with an operating-system error and a hint to check the file. Invalid UTF-8
-source bytes use `F5002` with no scalar position and a hint to save as UTF-8.
-Other project and build errors still use their existing reporting paths.
+An available path can still identify the file:
+
+```text
+error[F5005]: Invalid `project.kind` value `app` in `demo.fpasprj`.
+  help: Use `program`, `library`, or `test`.
+```
+
+Correct the manifest to `kind = "program"`, `"library"`, or `"test"`. A `uses`
+entry that names a missing unit is located at the import:
+
+```text
+src/a.fpas:2:6: error[F5015]: Unknown unit `Demo.Missing` in unit `Demo.A`.
+  help: Known units in `Demo`: Demo.A, Demo.B.
+```
+
+The hint lists units in the missing unit's namespace, otherwise units with the
+same root segment, otherwise the project's non-`Std` units; long lists show ten
+names and the number of omitted units.
+
+Multi-line messages, such as TOML parser excerpts, continue on lines prefixed
+with `message:`.
 
 ## Rust JSON rendering API
 
@@ -78,16 +95,36 @@ parse each source with ID zero before a graph exists; use the error's source
 path to identify that file. Snapshot parsing uses the existing graph node's
 source ID. A dependent source is not relabeled as its consuming project.
 
-Manifest and graph validation failures retain text, with an empty diagnostic
-slice and no source path. Successful-source warnings still use existing string
-collections. `Display` renders source records only when requested by a caller;
-current CLI, editor and distribution adapters explicitly convert to their text
-interfaces. This API does not enable CLI JSON output.
+Manifest, workspace, standard-library and graph validation failures also carry
+one coded record with an optional hint; `diagnostics()` is never empty. These
+records have no position and no source path because they concern manifests or
+several files, which their messages name. Unknown or non-exported units in a
+unit's `uses` clause are the exception: their record has the importing unit's
+path and the span of the imported name. The workspace discovery functions
+`load_workspace`, `discover_workspace_file`, `discover_run_project_in_workspace`
+and `discover_test_projects_in_workspace` return the same `ProjectError`.
+
+A successfully loaded project reports non-fatal findings in
+`LoadedProject::warnings` as `fpas_diagnostics::FileDiagnostic` records: the
+shared `Diagnostic` with warning severity and the file it concerns. F5035 marks a
+source file listed more than once (the first occurrence is kept); F5036 marks a
+`program` source that was skipped because it is not an allowed entry file.
+Lexer/parser warnings of a successfully parsed source keep their original code
+and span with that source's path. The CLI prints them in text form, for example:
+
+```text
+src/util.fpas: warning[F5035]: Duplicate source file was ignored; the first occurrence was retained.
+  help: List each source file once in `[sources].include`.
+```
+
+`Display` renders the records when requested by a caller; current CLI and editor
+adapters explicitly convert to their text interfaces. This API does not enable
+CLI JSON output.
 
 ## Build error transport
 
 `fpas_build::BuildError::diagnostics()` exposes the original compiler or parser
-records as `BuildDiagnostic` entries in producer order. Each entry contains the
+records as `FileDiagnostic` entries in producer order. Each entry contains the
 shared `Diagnostic` and an optional source path. Unit compilation retains its
 unit path when the diagnostic's source ID matches that unit. Unknown or foreign
 source IDs are not assigned the current file.
@@ -98,13 +135,15 @@ supplied main-source path. The AST-based `build_program` and `check_program` API
 do not receive an authoritative path for the supplied AST; their root compiler
 errors retain their source IDs and positions with no path.
 
-`BuildError::link_error()` exposes the original `fpas_linker::LinkError`, which is
-also available through `std::error::Error::source()`. Linker errors have not been
-assigned shared diagnostic codes. Conversion from `ProjectError` preserves all
-source records and their path, including positionless read/UTF-8 failures.
-Other filesystem, project-validation and build failures still use their existing
-text reporting. An empty `diagnostics()` slice
-therefore does not mean success; inspect the returned `Result` first.
+Every `BuildError` carries at least one coded record. Artifact filesystem and
+encoding failures, source files that cannot be read or changed during the build,
+and build invariant failures have positionless records; failures about one source
+file carry its path. `BuildError::link_error()` exposes the original
+`fpas_linker::LinkError`, which is also available through
+`std::error::Error::source()`; its record uses the code from `LinkError::code()`.
+Conversion from `ProjectError` preserves all records and their path, including
+positionless read/UTF-8 failures. `stage_standard_library` reports its failures
+as `BuildError` too.
 
 `Display` renders preserved records at the text-output boundary. It does not
 recover codes, coordinates or expected/found fields from message text. For JSON,
@@ -124,8 +163,50 @@ entries still retain the artifact's known main path.
 | Sema | F2001–F2999 |
 | Compile | F3001–F3999 |
 | Runtime | F4001–F4999; F4017 remains reserved |
-| Project/build | F5001–F5999; F5001 is source-read failure, F5002 is invalid UTF-8 source |
+| Project/build | F5001–F5999 |
 | Internal | F9001–F9999 and otherwise unassigned values |
+
+Project, build and linker codes:
+
+| Code | Meaning |
+|---|---|
+| F5001 | A source file cannot be read |
+| F5002 | Source bytes are not valid UTF-8 |
+| F5003 | A `.fpasprj` or `.fpasworkspace` manifest cannot be read |
+| F5004 | A manifest is not valid TOML or does not match the manifest schema |
+| F5005 | A manifest field is missing, empty, unknown or not allowed for the project kind |
+| F5006 | A manifest path is missing, not a file, has the wrong extension, or cannot be resolved |
+| F5007 | A source glob is invalid, cannot be evaluated, or matches no files |
+| F5008 | A manifest lists the same entry twice |
+| F5009 | A project dependency is not a library |
+| F5010 | Library projects depend on each other in a cycle |
+| F5011 | One source file belongs to more than one project |
+| F5012 | A source declares `program` where `unit` is required, or the reverse |
+| F5013 | A unit name violates the `Std.*` namespace rules |
+| F5014 | Two sources declare the same unit name |
+| F5015 | A `uses` clause or `[exports].units` names an unknown unit |
+| F5016 | A unit is imported across a library boundary without being exported |
+| F5017 | Units depend on each other in a cycle |
+| F5018 | Too many source files for 32-bit source IDs |
+| F5019 | A source file changed after its project graph or build snapshot was taken |
+| F5020 | A directory needed for workspace discovery cannot be read |
+| F5021 | Project or workspace discovery found no candidate or more than one |
+| F5022 | `[dependencies].workspace` names no workspace member |
+| F5023 | The standard-library directory or manifest is invalid |
+| F5024 | A compiled-unit or program artifact cannot be read, locked, written or replaced |
+| F5025 | A compiled interface, object or program image cannot be encoded or validated |
+| F5026 | A compiled object is malformed or inconsistent with linked objects |
+| F5027 | The root program object has no entry function |
+| F5028 | Two linked objects define the same symbol |
+| F5029 | Linked objects disagree on a record or enum layout |
+| F5030 | No linked object defines a required public symbol |
+| F5031 | An object imports a private definition |
+| F5032 | An import has the wrong kind or an incompatible ABI |
+| F5033 | A linked table or address exceeds its fixed-width limit |
+| F5034 | The linked executable failed bytecode verification |
+| F5035 | Warning: a source file is listed more than once; the first occurrence is kept |
+| F5036 | Warning: a `program` source that is not an allowed entry file was skipped |
+| F9003 | Project graph or build orchestration reached an inconsistent state |
 
 The allocated code inventory is maintained in
 [`codes.rs`](../../../crates/fpas-diagnostics/src/codes.rs). Existing allocated
@@ -137,9 +218,13 @@ The shared model and renderers live in
 [`fpas-diagnostics`](../../../crates/fpas-diagnostics/src/lib.rs).
 Parser token expectations populate structured expected/found fields.
 VM instruction source maps preserve source identity, including imported units.
-Project source failures are retained by
-[`ProjectError`](../../../crates/fpas-project/src/source/error.rs); build snapshot
-parsing forwards them into `BuildError` without rendering.
+Project failures are retained by
+[`ProjectError`](../../../crates/fpas-project/src/source/error.rs); shared manifest
+failures live in [`manifest.rs`](../../../crates/fpas-project/src/manifest.rs).
+Build failures are retained by
+[`BuildError`](../../../crates/fpas-build/src/engine/error.rs), which forwards
+project records without rendering. Linker categories are assigned in
+[`LinkError::code`](../../../crates/fpas-linker/src/error.rs).
 
 See also [tools](README.md), [CLI](../program-structure/cli.md), and
 [editor integration](editor-integration.md).

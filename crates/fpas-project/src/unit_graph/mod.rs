@@ -9,17 +9,22 @@ mod parsed;
 mod program;
 mod resolve;
 mod source_map;
+mod unknown_unit;
 
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
+use fpas_diagnostics::codes::{
+    INTERNAL_PROJECT_INVARIANT_FAILURE, PROJECT_SOURCE_LIMIT_EXCEEDED, PROJECT_UNIT_KIND_MISMATCH,
+};
 use fpas_parser::{CompilationUnit, QualifiedId, Unit};
 
 use crate::model::ProjectLinkMeta;
 use crate::source::{
-    display_unit_key, qualified_id_to_string, read_compilation_unit_file, validate_user_unit_name,
+    display_unit_key, duplicate_unit_error, qualified_id_to_string, read_compilation_unit_file,
+    validate_user_unit_name,
 };
-use crate::{StandardLibrary, is_test_source_file};
+use crate::{ProjectError, StandardLibrary, is_test_source_file};
 use source_map::apply_unit_source_id;
 
 pub use model::{ResolvedUnitGraph, UnitGraph, UnitNode};
@@ -31,6 +36,7 @@ pub(crate) use resolve::ImportPolicy;
 
 use order::resolve_order;
 use resolve::{all_library_units, resolve_reachable};
+pub(crate) use unknown_unit::unknown_unit_error;
 
 /// Parses project units and returns a graph independent from source declaration merging.
 pub fn build_unit_graph(
@@ -88,11 +94,14 @@ pub(crate) fn build_unit_graph_with_base(
             let CompilationUnit::Program(program) = parsed else {
                 unreachable!("compilation unit is program or unit");
             };
-            return Err(format!(
-                "Source file `{}` declares `program {}`. Source files must use `unit` declarations.",
-                source_path.display(),
-                program.name
-            ).into());
+            return Err(ProjectError::new(
+                PROJECT_UNIT_KIND_MISMATCH,
+                format!(
+                    "Source file `{}` declares `program {}`. Source files must use `unit` declarations.",
+                    source_path.display(),
+                    program.name
+                ),
+            ));
         };
         insert_unit(
             &mut nodes,
@@ -109,11 +118,13 @@ pub(crate) fn build_unit_graph_with_base(
         for source_path in standard_library.source_files() {
             let (source, parsed, _) = read_compilation_unit_file(source_path, 0)?;
             let CompilationUnit::Unit(unit) = parsed else {
-                return Err(format!(
-                    "Standard library source file `{}` must declare a unit.",
-                    source_path.display()
-                )
-                .into());
+                return Err(ProjectError::new(
+                    PROJECT_UNIT_KIND_MISMATCH,
+                    format!(
+                        "Standard library source file `{}` must declare a unit.",
+                        source_path.display()
+                    ),
+                ));
             };
             insert_unit(
                 &mut nodes,
@@ -171,12 +182,11 @@ fn insert_unit(
 
     let key = canonical_unit_key(&unit.name);
     if let Some(existing) = nodes.get(&key) {
-        return Err(format!(
-            "Duplicate unit name `{}` found in `{}` and `{}`.\n  help: Use unique unit names across source files.",
-            qualified_id_to_string(&unit.name),
-            existing.path().display(),
-            source_path.display()
-        ).into());
+        return Err(duplicate_unit_error(
+            &qualified_id_to_string(&unit.name),
+            existing.path(),
+            source_path,
+        ));
     }
 
     nodes.insert(
@@ -198,13 +208,13 @@ pub fn resolve_program_units(
 ) -> Result<ResolvedUnitGraph, crate::ProjectError> {
     let policy = ImportPolicy::new(graph);
     let reachable = resolve_reachable(root_uses, graph, &policy)?;
-    resolve_order(&reachable, graph).map_err(Into::into)
+    resolve_order(&reachable, graph)
 }
 
 /// Resolves every unit in a library in stable dependency-first order.
 pub fn resolve_library_units(graph: &UnitGraph) -> Result<ResolvedUnitGraph, crate::ProjectError> {
     let reachable = all_library_units(graph)?;
-    resolve_order(&reachable, graph).map_err(Into::into)
+    resolve_order(&reachable, graph)
 }
 
 pub(crate) fn canonical_unit_key(id: &QualifiedId) -> String {
@@ -219,54 +229,41 @@ pub(crate) fn is_intrinsic_std_unit(used: &QualifiedId, graph: &UnitGraph) -> bo
             .any(|known| known.eq_ignore_ascii_case(&key))
 }
 
-pub(crate) fn internal_graph_error(unit_key: &str, context: &str) -> String {
-    format!(
-        "Internal unit graph error: unit `{}` disappeared while {context}.\n  help: This indicates inconsistent project graph construction.",
-        display_unit_key(unit_key)
+pub(crate) fn internal_graph_error(unit_key: &str, context: &str) -> ProjectError {
+    ProjectError::new(
+        INTERNAL_PROJECT_INVARIANT_FAILURE,
+        format!(
+            "Internal unit graph error: unit `{}` disappeared while {context}.",
+            display_unit_key(unit_key)
+        ),
     )
+    .with_help("This indicates inconsistent project graph construction.")
 }
 
-pub(crate) fn unknown_unit_error(key: &str, graph: &UnitGraph, owner: &str) -> String {
-    let mut known = graph
-        .iter()
-        .map(|(_, node)| node.display_name().to_string())
-        .collect::<Vec<_>>();
-    known.sort();
-    let display = display_unit_key(key);
-    if known.is_empty() {
-        format!(
-            "Unknown unit `{display}` in {owner}. No source units are available in the project."
-        )
-    } else {
-        format!(
-            "Unknown unit `{display}` in {owner}.\n  help: Available units: {}.",
-            known.join(", ")
-        )
-    }
-}
-
-fn next_source_id(source_path_count: usize) -> Result<u32, String> {
+fn next_source_id(source_path_count: usize) -> Result<u32, ProjectError> {
     u32::try_from(source_path_count).map_err(|_| {
-        format!(
-            "Too many source files in project: {source_path_count}.
-  help: Reduce the number of linked source files so source IDs fit into 32 bits."
+        ProjectError::new(
+            PROJECT_SOURCE_LIMIT_EXCEEDED,
+            format!("Too many source files in project: {source_path_count}."),
         )
+        .with_help("Reduce the number of linked source files so source IDs fit into 32 bits.")
     })
 }
 
 #[cfg(test)]
 mod tests {
     use super::next_source_id;
+    use fpas_diagnostics::codes::PROJECT_SOURCE_LIMIT_EXCEEDED;
 
     #[test]
     fn source_id_rejects_counts_above_u32() {
-        let result = next_source_id((u32::MAX as usize).saturating_add(1));
+        let error = next_source_id((u32::MAX as usize).saturating_add(1))
+            .expect_err("source IDs must fit into 32 bits");
 
-        assert!(result.is_err());
+        assert_eq!(error.diagnostics()[0].code, PROJECT_SOURCE_LIMIT_EXCEEDED);
         assert!(
-            result
-                .err()
-                .unwrap_or_default()
+            error
+                .to_string()
                 .contains("Too many source files in project")
         );
     }

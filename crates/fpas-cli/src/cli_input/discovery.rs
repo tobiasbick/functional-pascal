@@ -89,7 +89,7 @@ pub(super) fn discover_input(cwd: &Path, mode: CliMode) -> Result<CliInput, Stri
 }
 
 fn discover_run_input(cwd: &Path) -> Result<CliInput, String> {
-    if let Some(workspace_path) = discover_workspace_file(cwd)? {
+    if let Some(workspace_path) = discover_workspace_file(cwd).map_err(|error| error.to_string())? {
         return Ok(CliInput::WorkspaceFile(workspace_path));
     }
 
@@ -98,7 +98,7 @@ fn discover_run_input(cwd: &Path) -> Result<CliInput, String> {
 
 /// Discovers workspace or project input for `fpas check`, `fpas fmt`, and `fpas test` when no path is given.
 pub(crate) fn discover_check_input(cwd: &Path) -> Result<CliInput, String> {
-    if let Some(workspace_path) = discover_workspace_file(cwd)? {
+    if let Some(workspace_path) = discover_workspace_file(cwd).map_err(|error| error.to_string())? {
         return Ok(CliInput::WorkspaceFile(workspace_path));
     }
 

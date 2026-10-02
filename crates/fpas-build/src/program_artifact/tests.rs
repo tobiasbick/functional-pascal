@@ -108,6 +108,10 @@ fn changed_unit_is_rejected_by_final_snapshot_validation() {
     let error =
         source::ensure_current(&graph, Digest::of(main_source)).expect_err("changed unit snapshot");
     assert!(error.to_string().contains("changed during the build"));
+    assert_eq!(
+        error.diagnostics()[0].diagnostic.code,
+        fpas_diagnostics::codes::PROJECT_SOURCE_CHANGED
+    );
     fs::remove_dir_all(root).ok();
 }
 

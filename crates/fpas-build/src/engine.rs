@@ -4,11 +4,12 @@ mod backend;
 mod error;
 mod interfaces;
 
-pub use error::{BuildDiagnostic, BuildError};
+pub use error::BuildError;
 
 use std::collections::HashMap;
 
 use fpas_bytecode::VerifiedExecutable;
+use fpas_diagnostics::codes::{BUILD_ARTIFACT_ENCODING_FAILED, INTERNAL_PROJECT_INVARIANT_FAILURE};
 use fpas_parser::Program;
 use fpas_program::LinkedUnitIdentity;
 use fpas_project::{ResolvedUnitGraph, UnitGraph};
@@ -16,7 +17,7 @@ use fpas_unit::interface::{UnitInterface, encode_interface};
 use fpas_unit::object::RelocatableObject;
 use fpas_unit::{CompiledUnit, Digest, ExpectedUnitIdentity, UnitIdentity, write_sidecar};
 
-use self::backend::{Backend, UnitBackend};
+use self::backend::{Backend, UnitBackend, sidecar_error};
 use self::interfaces::{InterfaceRegistry, direct_interfaces_from_map};
 use crate::source_snapshot::UnitSourceSnapshot;
 use crate::{BuildCounters, BuildEvent, BuildEventKind, BuildOptions};
@@ -129,9 +130,10 @@ fn compile_units<Backend: UnitBackend>(
 
     for unit_name in selection.order() {
         let node = graph.get(unit_name).ok_or_else(|| {
-            BuildError::new(format!(
-                "internal build graph error: selected unit `{unit_name}` is missing"
-            ))
+            BuildError::new(
+                INTERNAL_PROJECT_INVARIANT_FAILURE,
+                format!("internal build graph error: selected unit `{unit_name}` is missing"),
+            )
         })?;
         let dependencies = interfaces.direct_dependency_identities(node.direct_uses());
         let source = UnitSourceSnapshot::read(node)?;
@@ -171,8 +173,12 @@ fn compile_units<Backend: UnitBackend>(
             events.push(event(unit_name, BuildEventKind::InterfaceAnalyzed));
             events.push(event(unit_name, BuildEventKind::ImplementationAnalyzed));
             events.push(event(unit_name, BuildEventKind::Compiled));
-            let interface_bytes =
-                encode_interface(&interface).map_err(|error| BuildError::new(error.to_string()))?;
+            let interface_bytes = encode_interface(&interface).map_err(|error| {
+                BuildError::new(
+                    BUILD_ARTIFACT_ENCODING_FAILED,
+                    format!("cannot encode interface of unit `{unit_name}`: {error}"),
+                )
+            })?;
             let interface_hash = Digest::of(&interface_bytes);
             let object_bytes = Backend::encode(&object)?;
             let object_hash = Digest::of(&object_bytes);
@@ -193,10 +199,13 @@ fn compile_units<Backend: UnitBackend>(
             if sidecar_publication == SidecarPublication::Enabled {
                 source.ensure_current(node)?;
                 write_sidecar(node.path(), &sidecar).map_err(|error| {
-                    BuildError::new(format!(
-                        "cannot publish compiled unit beside `{}`: {error}",
-                        node.path().display()
-                    ))
+                    sidecar_error(
+                        error,
+                        &format!(
+                            "cannot publish compiled unit beside `{}`",
+                            node.path().display()
+                        ),
+                    )
                 })?;
             }
             (interface, object, interface_hash, object_hash)

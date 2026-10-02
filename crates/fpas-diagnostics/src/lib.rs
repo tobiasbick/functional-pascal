@@ -12,6 +12,7 @@
 
 mod code;
 mod diagnostic;
+mod file_diagnostic;
 mod location;
 mod render;
 mod source_range;
@@ -22,6 +23,7 @@ pub mod codes;
 
 pub use code::{DiagnosticCode, InvalidDiagnosticCode};
 pub use diagnostic::{Diagnostic, DiagnosticSeverity, DiagnosticStage};
+pub use file_diagnostic::FileDiagnostic;
 pub use location::{SourceLocation, SourceLocationError};
 pub use render::{render, render_json, render_without_path};
 pub use source_range::{SourcePosition, SourceRange};

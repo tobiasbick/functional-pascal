@@ -6,7 +6,8 @@
 use crate::loading::own::{load_own_project, validate_standard_library_source_units};
 use crate::loading::parse_cache::ParsedSourceCache;
 use crate::paths::{canonical_project_path, canonical_source_path};
-use crate::{LoadedProject, ProjectKind, ProjectLinkMeta, SourceOrigin};
+use crate::{LoadedProject, ProjectError, ProjectKind, ProjectLinkMeta, SourceOrigin};
+use fpas_diagnostics::codes::PROJECT_STANDARD_LIBRARY_INVALID;
 use fpas_std::STD_UNITS_INTRINSIC;
 use std::path::{Path, PathBuf};
 
@@ -86,33 +87,47 @@ fn load_standard_library_sources(
     root: &Path,
 ) -> Result<(PathBuf, crate::loading::own::OwnProject, Vec<PathBuf>), crate::ProjectError> {
     if !root.is_dir() {
-        return Err(format!(
-            "Standard library directory `{}` does not exist.\n  help: Pass `--std-lib <directory>` containing `{STANDARD_LIBRARY_MANIFEST}`.",
-            root.display()
-        ).into());
+        return Err(invalid_standard_library(
+            format!(
+                "Standard library directory `{}` does not exist.",
+                root.display()
+            ),
+            format!("Pass `--std-lib <directory>` containing `{STANDARD_LIBRARY_MANIFEST}`."),
+        ));
     }
 
     let manifest = root.join(STANDARD_LIBRARY_MANIFEST);
     if !manifest.is_file() {
-        return Err(format!(
-            "Standard library manifest `{}` does not exist.\n  help: Add `{STANDARD_LIBRARY_MANIFEST}` with `kind = \"library\"` and a `[sources]` section.",
-            manifest.display()
-        ).into());
+        return Err(invalid_standard_library(
+            format!(
+                "Standard library manifest `{}` does not exist.",
+                manifest.display()
+            ),
+            format!(
+                "Add `{STANDARD_LIBRARY_MANIFEST}` with `kind = \"library\"` and a `[sources]` section."
+            ),
+        ));
     }
 
     let mut parse_cache = ParsedSourceCache::new();
     let mut own = load_own_project(&manifest, &mut parse_cache)?;
     if own.kind != ProjectKind::Library {
-        return Err(format!(
-            "Standard library manifest `{}` must declare `project.kind = \"library\"`.\n  help: Change `[project].kind` to `\"library\"`.",
-            manifest.display()
-        ).into());
+        return Err(invalid_standard_library(
+            format!(
+                "Standard library manifest `{}` must declare `project.kind = \"library\"`.",
+                manifest.display()
+            ),
+            "Change `[project].kind` to `\"library\"`.".to_string(),
+        ));
     }
     if !own.dependency_projects.is_empty() || !own.workspace_dependencies.is_empty() {
-        return Err(format!(
-            "Standard library manifest `{}` must list all trusted sources directly and cannot declare dependencies.\n  help: Move the required `Std.*` source paths into `[sources].include`.",
-            manifest.display()
-        ).into());
+        return Err(invalid_standard_library(
+            format!(
+                "Standard library manifest `{}` must list all trusted sources directly and cannot declare dependencies.",
+                manifest.display()
+            ),
+            "Move the required `Std.*` source paths into `[sources].include`.".to_string(),
+        ));
     }
 
     let source_files = validate_standard_library_source_units(
@@ -137,13 +152,20 @@ fn validate_intrinsic_collisions(
             .iter()
             .any(|intrinsic| intrinsic.eq_ignore_ascii_case(&name))
         {
-            return Err(format!(
-                "Source standard-library unit `{name}` in `{}` collides with intrinsic unit `{name}`.\n  help: Choose a distinct `Std.*` unit name; source units cannot replace individual intrinsic units.",
-                source_file.display()
-            ).into());
+            return Err(invalid_standard_library(
+                format!(
+                    "Source standard-library unit `{name}` in `{}` collides with intrinsic unit `{name}`.",
+                    source_file.display()
+                ),
+                "Choose a distinct `Std.*` unit name; source units cannot replace individual intrinsic units.".to_string(),
+            ));
         }
     }
     Ok(())
+}
+
+fn invalid_standard_library(message: String, help: String) -> ProjectError {
+    ProjectError::new(PROJECT_STANDARD_LIBRARY_INVALID, message).with_help(help)
 }
 
 #[cfg(test)]

@@ -107,7 +107,7 @@ fn check_project_file(
     };
 
     for warning in &loaded.warnings {
-        let _ = writeln!(stderr, "warning: {warning}");
+        let _ = writeln!(stderr, "{warning}");
     }
 
     match loaded.kind {

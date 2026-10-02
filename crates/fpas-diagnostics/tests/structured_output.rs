@@ -6,8 +6,11 @@
 )]
 
 use fpas_diagnostics::{
-    Diagnostic, SourceLocation, SourceRange, SourceSpan,
-    codes::{PARSE_EXPECTED_TOKEN, PROJECT_SOURCE_READ_FAILED, RUNTIME_PROGRAM_PANIC},
+    Diagnostic, FileDiagnostic, SourceLocation, SourceRange, SourceSpan,
+    codes::{
+        PARSE_EXPECTED_TOKEN, PROJECT_DUPLICATE_SOURCE_FILE, PROJECT_SOURCE_READ_FAILED,
+        RUNTIME_PROGRAM_PANIC,
+    },
     render, render_json, render_without_path,
 };
 use serde_json::{Value, json};
@@ -132,4 +135,31 @@ fn scalar_positions_resolve_across_all_line_endings_and_eof() {
         );
     }
     assert_eq!(SourcePosition { line: 0, column: 1 }.offset_in(""), None);
+}
+
+#[test]
+fn file_diagnostics_render_positionless_warnings_with_their_path() {
+    let warning = Diagnostic::warning_without_source(
+        PROJECT_DUPLICATE_SOURCE_FILE,
+        "Duplicate source file was ignored.",
+        Some("List each source file once.".into()),
+    );
+    assert!(warning.is_warning());
+    assert_eq!(warning.span, None);
+
+    let located = FileDiagnostic::new(warning.clone(), Some("src/a.fpas".into()));
+    assert_eq!(
+        located.to_string(),
+        "src/a.fpas: warning[F5035]: Duplicate source file was ignored.\n  help: List each source file once."
+    );
+    assert_eq!(
+        FileDiagnostic::new(warning.clone(), None).to_string(),
+        render_without_path(&warning)
+    );
+
+    let record: Value =
+        serde_json::from_str(&render_json(Some("src/a.fpas"), None, &warning).unwrap()).unwrap();
+    assert_eq!(record["severity"], "warning");
+    assert_eq!(record["phase"], "project");
+    assert_eq!(record["location"], Value::Null);
 }

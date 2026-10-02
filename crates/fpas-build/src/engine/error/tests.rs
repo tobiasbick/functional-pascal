@@ -3,7 +3,8 @@
 use std::error::Error;
 use std::path::Path;
 
-use fpas_diagnostics::{Diagnostic, SourceSpan, codes::SEMA_TYPE_MISMATCH};
+use fpas_diagnostics::codes::{BUILD_ARTIFACT_IO_FAILED, LINK_INVALID_OBJECT, SEMA_TYPE_MISMATCH};
+use fpas_diagnostics::{Diagnostic, DiagnosticStage, SourceSpan};
 use fpas_linker::LinkError;
 
 use super::BuildError;
@@ -46,21 +47,38 @@ fn linking_preserves_the_native_error_and_error_chain() {
         .expect("a dependency must not have a program entry");
     let native = failure.link_error().expect("typed link failure");
     assert!(matches!(native, LinkError::UnitEntry(_)));
-    assert_eq!(failure.to_string(), native.to_string());
+    assert_eq!(
+        failure.to_string(),
+        format!("error[{LINK_INVALID_OBJECT}]: {native}")
+    );
     assert_eq!(
         failure
             .source()
             .and_then(|error| error.downcast_ref::<LinkError>()),
         Some(native)
     );
-    assert!(failure.diagnostics().is_empty());
+    let [record] = failure.diagnostics() else {
+        panic!("a link failure has exactly one record");
+    };
+    assert_eq!(record.diagnostic.code, LINK_INVALID_OBJECT);
+    assert_eq!(record.diagnostic.stage(), DiagnosticStage::Project);
+    assert_eq!(record.diagnostic.span, None);
 }
 
 #[test]
-fn text_only_build_failures_keep_their_message() {
-    let failure = BuildError::new("cannot publish artifact");
-    assert_eq!(failure.to_string(), "cannot publish artifact");
-    assert!(failure.diagnostics().is_empty());
+fn coded_build_failures_render_their_code_help_and_source() {
+    let failure = BuildError::new(BUILD_ARTIFACT_IO_FAILED, "cannot publish artifact")
+        .with_help("Check the output directory.")
+        .in_source(Path::new("main.fpas"));
+    assert_eq!(
+        failure.to_string(),
+        "main.fpas: error[F5024]: cannot publish artifact\n  help: Check the output directory."
+    );
+    let [record] = failure.diagnostics() else {
+        panic!("one record");
+    };
+    assert_eq!(record.diagnostic.code, BUILD_ARTIFACT_IO_FAILED);
+    assert_eq!(record.path.as_deref(), Some(Path::new("main.fpas")));
     assert!(failure.link_error().is_none());
     assert!(failure.source().is_none());
 }

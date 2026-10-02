@@ -242,7 +242,11 @@ fn unknown_transitive_unit_diagnostic_names_owner_and_known_units() {
 
     assert!(error.to_string().contains("Demo.Missing"));
     assert!(error.to_string().contains("unit `Demo.Feature`"));
-    assert!(error.to_string().contains("Available units: Demo.Feature"));
+    assert!(
+        error
+            .to_string()
+            .contains("Known units in `Demo`: Demo.Feature")
+    );
 
     fs::remove_dir_all(dir).ok();
 }

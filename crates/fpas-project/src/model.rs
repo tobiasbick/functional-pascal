@@ -1,8 +1,11 @@
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
-use crate::TestManifest;
+use fpas_diagnostics::FileDiagnostic;
+use fpas_diagnostics::codes::PROJECT_MANIFEST_VALUE_INVALID;
+
 use crate::paths::{canonical_project_path, canonical_source_path, same_file};
+use crate::{ProjectError, TestManifest};
 
 /// Kind of `.fpasprj` project described in `docs/pascal/program-structure/projects.md`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -16,28 +19,20 @@ pub enum ProjectKind {
 }
 
 impl ProjectKind {
-    /// Parses `project.kind` from a project manifest.
-    pub(super) fn parse(raw: &str) -> Result<Self, String> {
-        Self::parse_in_file(raw, None)
-    }
-
-    /// Like [`parse`](Self::parse), with optional manifest path in the error message.
-    pub(super) fn parse_in_file(raw: &str, path: Option<&Path>) -> Result<Self, String> {
+    /// Parses `project.kind` from the project manifest at `path`.
+    pub(super) fn parse(raw: &str, path: &Path) -> Result<Self, ProjectError> {
         match raw.trim() {
             "program" => Ok(Self::Program),
             "library" => Ok(Self::Library),
             "test" => Ok(Self::Test),
-            other => {
-                let base = format!("Invalid `project.kind` value `{other}`");
-                Err(if let Some(path) = path {
-                    format!(
-                        "{base} in `{}`.\n  help: Use `program`, `library`, or `test`.",
-                        path.display()
-                    )
-                } else {
-                    format!("{base}.\n  help: Use `program`, `library`, or `test`.")
-                })
-            }
+            other => Err(ProjectError::new(
+                PROJECT_MANIFEST_VALUE_INVALID,
+                format!(
+                    "Invalid `project.kind` value `{other}` in `{}`.",
+                    path.display()
+                ),
+            )
+            .with_help("Use `program`, `library`, or `test`.")),
         }
     }
 
@@ -139,7 +134,7 @@ pub struct LoadedProject {
     /// Validated user-unit source files included by the project.
     pub source_files: Vec<PathBuf>,
     /// Non-fatal loading warnings such as duplicate include entries.
-    pub warnings: Vec<String>,
+    pub warnings: Vec<FileDiagnostic>,
     /// Origins and library export policies for dependency-aware linking.
     pub link_meta: ProjectLinkMeta,
     /// How dependents may import units from this project when it is a library dependency.

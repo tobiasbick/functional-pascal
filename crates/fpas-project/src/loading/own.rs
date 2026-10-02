@@ -3,13 +3,23 @@
 //! Spec: `docs/pascal/program-structure/projects.md`
 
 use super::exports::validate_library_exports;
+use crate::ProjectError;
 use crate::loading::parse_cache::ParsedSourceCache;
+use crate::manifest::{invalid_value, parse_manifest, read_manifest};
 use crate::model::{LibraryExportPolicy, ProjectKind};
 use crate::paths::{
-    resolve_explicit_file_path, resolve_source_files, same_file, validate_source_extension,
+    resolve_explicit_file_path, resolve_source_files, same_file, unresolvable_root_error,
+    validate_source_extension,
 };
-use crate::source::{qualified_id_to_string, validate_non_empty, validate_user_unit_name};
+use crate::source::{
+    duplicate_unit_error, program_source_skipped, qualified_id_to_string, validate_non_empty,
+    validate_non_empty_entry, validate_user_unit_name,
+};
 use crate::test_manifest::{TestManifest, TestSectionRaw, parse_test_section};
+use fpas_diagnostics::FileDiagnostic;
+use fpas_diagnostics::codes::{
+    PROJECT_DUPLICATE_UNIT, PROJECT_UNIT_KIND_MISMATCH, PROJECT_UNIT_NAMESPACE_INVALID,
+};
 use fpas_parser::CompilationUnit;
 use serde::Deserialize;
 use std::collections::HashMap;
@@ -31,7 +41,7 @@ pub(crate) struct OwnProject {
     /// Names from `[dependencies].workspace` (resolved via enclosing `.fpasworkspace`).
     pub workspace_dependencies: Vec<String>,
     /// Non-fatal loading warnings such as duplicate include entries.
-    pub warnings: Vec<String>,
+    pub warnings: Vec<FileDiagnostic>,
     /// Export policy applied when this library is consumed as a dependency.
     pub export_policy: LibraryExportPolicy,
     /// Optional `[test]` overrides for `fpas test` when `kind = "test"`.
@@ -80,40 +90,34 @@ pub(crate) fn load_own_project(
     path: &Path,
     parse_cache: &mut ParsedSourceCache,
 ) -> Result<OwnProject, crate::ProjectError> {
-    let project_text = std::fs::read_to_string(path).map_err(|e| {
-        format!(
-            "Error reading project file `{}`: {e}",
-            path.to_string_lossy()
-        )
-    })?;
-
-    let project_file: ProjectFile = toml::from_str(&project_text).map_err(|e| {
-        format!(
-            "Invalid project file `{}`: {e}\n  help: Use TOML syntax with `[project]` and `[sources]` sections.",
-            path.to_string_lossy()
-        )
-    })?;
+    let project_text = read_manifest(path, "project")?;
+    let project_file: ProjectFile = parse_manifest(
+        path,
+        "project",
+        &project_text,
+        "Use TOML syntax with `[project]` and `[sources]` sections.",
+    )?;
 
     validate_non_empty("project.name", &project_file.project.name)?;
     validate_optional_non_empty("project.version", project_file.project.version.as_deref())?;
 
-    let kind = ProjectKind::parse(&project_file.project.kind)?;
-    let root_dir = path.parent().ok_or_else(|| {
-        format!(
-            "Cannot resolve project root for `{}`.\n  help: Use a normal file path inside a directory.",
-            path.to_string_lossy()
+    let kind = ProjectKind::parse(&project_file.project.kind, path)?;
+    let root_dir = path
+        .parent()
+        .ok_or_else(|| unresolvable_root_error("project", path))?;
+
+    let sources = project_file.sources.ok_or_else(|| {
+        invalid_value(
+            "Missing `[sources]` section.",
+            "Add `[sources]` with `include = [\"src/**/*.fpas\"]`.",
         )
     })?;
 
-    let sources = project_file.sources.ok_or_else(|| {
-        "Missing `[sources]` section.\n  help: Add `[sources]` with `include = [\"src/**/*.fpas\"]`."
-            .to_string()
-    })?;
-
     if sources.include.is_empty() {
-        return Err(
-            "`sources.include` must contain at least one entry.\n  help: Add one or more file paths or glob patterns."
-                .to_string().into());
+        return Err(invalid_value(
+            "`sources.include` must contain at least one entry.",
+            "Add one or more file paths or glob patterns.",
+        ));
     }
 
     let (dependency_projects, workspace_dependencies) = project_file
@@ -133,8 +137,10 @@ pub(crate) fn load_own_project(
     let main = match kind {
         ProjectKind::Program => {
             let main_raw = project_file.project.main.as_deref().ok_or_else(|| {
-                "Program projects require `project.main`.\n  help: Set `main = \"src/main.fpas\"` in `[project]`."
-                    .to_string()
+                invalid_value(
+                    "Program projects require `project.main`.",
+                    "Set `main = \"src/main.fpas\"` in `[project]`.",
+                )
             })?;
             let main_path = resolve_explicit_file_path("project.main", main_raw, root_dir)?;
             validate_source_extension(&main_path, "project.main")?;
@@ -143,17 +149,19 @@ pub(crate) fn load_own_project(
         }
         ProjectKind::Library => {
             if project_file.project.main.is_some() {
-                return Err(
-                    "Library projects must not define `project.main`.\n  help: Remove the `main` entry or change `project.kind` to `program`."
-                        .to_string().into());
+                return Err(invalid_value(
+                    "Library projects must not define `project.main`.",
+                    "Remove the `main` entry or change `project.kind` to `program`.",
+                ));
             }
             None
         }
         ProjectKind::Test => {
             if project_file.project.main.is_some() {
-                return Err(
-                    "Test projects must not define `project.main`.\n  help: Entry files are discovered by `*_test.fpas` naming; run them with `fpas test`."
-                        .to_string().into());
+                return Err(invalid_value(
+                    "Test projects must not define `project.main`.",
+                    "Entry files are discovered by `*_test.fpas` naming; run them with `fpas test`.",
+                ));
             }
             None
         }
@@ -194,11 +202,14 @@ fn parse_exports_section(
     };
 
     if kind != ProjectKind::Library {
-        return Err(format!(
-            "{} project `{}` must not define `[exports]`.\n  help: Remove `[exports]` or change `project.kind` to `library`.",
-            kind.label(),
-            project_path.to_string_lossy()
-        ).into());
+        return Err(invalid_value(
+            format!(
+                "{} project `{}` must not define `[exports]`.",
+                kind.label(),
+                project_path.to_string_lossy()
+            ),
+            "Remove `[exports]` or change `project.kind` to `library`.",
+        ));
     }
 
     Ok(ParsedExports::UnitNames(section.units.clone()))
@@ -225,11 +236,7 @@ fn validate_dependency_entries(
     entries: &[String],
 ) -> Result<(), crate::ProjectError> {
     for entry in entries {
-        if entry.trim().is_empty() {
-            return Err(format!(
-                "A `{field_name}` entry is empty.\n  help: Remove empty entries or provide a valid value."
-            ).into());
-        }
+        validate_non_empty_entry(field_name, entry)?;
     }
 
     Ok(())
@@ -248,7 +255,7 @@ fn validate_optional_non_empty(
 
 fn validate_program_main_file(
     main_path: &Path,
-    warnings: &mut Vec<String>,
+    warnings: &mut Vec<FileDiagnostic>,
     parse_cache: &mut ParsedSourceCache,
 ) -> Result<(), crate::ProjectError> {
     let (unit, parse_warnings) = parse_cache.parse(main_path, 0)?;
@@ -256,18 +263,22 @@ fn validate_program_main_file(
 
     match unit {
         CompilationUnit::Program(_) => Ok(()),
-        CompilationUnit::Unit(unit) => Err(format!(
-            "`project.main` must declare `program`, but `{}` declares `unit {}`.\n  help: Use a `program` declaration in the main file.",
-            main_path.to_string_lossy(),
-            qualified_id_to_string(&unit.name)
-        ).into()),
+        CompilationUnit::Unit(unit) => Err(ProjectError::new(
+            PROJECT_UNIT_KIND_MISMATCH,
+            format!(
+                "`project.main` must declare `program`, but `{}` declares `unit {}`.",
+                main_path.to_string_lossy(),
+                qualified_id_to_string(&unit.name)
+            ),
+        )
+        .with_help("Use a `program` declaration in the main file.")),
     }
 }
 
 /// Validates unit declarations and rejects duplicate unit names across `source_files`.
 pub(crate) fn validate_project_source_units(
     source_files: Vec<PathBuf>,
-    warnings: &mut Vec<String>,
+    warnings: &mut Vec<FileDiagnostic>,
     parse_cache: &mut ParsedSourceCache,
 ) -> Result<Vec<PathBuf>, crate::ProjectError> {
     let mut validated = Vec::new();
@@ -279,10 +290,10 @@ pub(crate) fn validate_project_source_units(
 
         match unit {
             CompilationUnit::Program(program) => {
-                warnings.push(format!(
-                    "Source file `{}` declares `program {}` and was skipped. Source files must use `unit` declarations.",
-                    source_path.to_string_lossy(),
-                    program.name
+                warnings.push(program_source_skipped(
+                    &source_path,
+                    &program.name,
+                    "Source files must use `unit` declarations.",
                 ));
             }
             CompilationUnit::Unit(unit) => {
@@ -290,11 +301,7 @@ pub(crate) fn validate_project_source_units(
                 let unit_name = qualified_id_to_string(&unit.name);
                 let key = unit_name.to_ascii_lowercase();
                 if let Some(first_path) = seen_unit_names.get(&key) {
-                    return Err(format!(
-                        "Duplicate unit name `{unit_name}` found in `{}` and `{}`.\n  help: Use a unique `unit` namespace per source file.",
-                        first_path.to_string_lossy(),
-                        source_path.to_string_lossy()
-                    ).into());
+                    return Err(duplicate_unit_error(&unit_name, first_path, &source_path));
                 }
                 seen_unit_names.insert(key, source_path.clone());
                 validated.push(source_path);
@@ -319,11 +326,15 @@ pub(crate) fn validate_standard_library_source_units(
             let CompilationUnit::Program(program) = unit else {
                 unreachable!("compilation unit is program or unit");
             };
-            return Err(format!(
-                "Standard library source file `{}` declares `program {}`.\n  help: Standard library manifests may include `unit Std.*` files only.",
-                source_path.display(),
-                program.name
-            ).into());
+            return Err(ProjectError::new(
+                PROJECT_UNIT_KIND_MISMATCH,
+                format!(
+                    "Standard library source file `{}` declares `program {}`.",
+                    source_path.display(),
+                    program.name
+                ),
+            )
+            .with_help("Standard library manifests may include `unit Std.*` files only."));
         };
 
         let unit_name = qualified_id_to_string(&unit.name);
@@ -334,19 +345,27 @@ pub(crate) fn validate_standard_library_source_units(
                 .first()
                 .is_some_and(|head| head.eq_ignore_ascii_case("std"));
         if !is_std_unit {
-            return Err(format!(
-                "Standard library source file `{}` declares `unit {unit_name}`.\n  help: Trusted standard-library units must use the `Std.*` namespace.",
-                source_path.display()
-            ).into());
+            return Err(ProjectError::new(
+                PROJECT_UNIT_NAMESPACE_INVALID,
+                format!(
+                    "Standard library source file `{}` declares `unit {unit_name}`.",
+                    source_path.display()
+                ),
+            )
+            .with_help("Trusted standard-library units must use the `Std.*` namespace."));
         }
 
         let key = unit_name.to_ascii_lowercase();
         if let Some(first_path) = seen_unit_names.get(&key) {
-            return Err(format!(
-                "Duplicate standard-library unit name `{unit_name}` found in `{}` and `{}`.\n  help: Use a unique `Std.*` namespace per source file.",
-                first_path.display(),
-                source_path.display()
-            ).into());
+            return Err(ProjectError::new(
+                PROJECT_DUPLICATE_UNIT,
+                format!(
+                    "Duplicate standard-library unit name `{unit_name}` found in `{}` and `{}`.",
+                    first_path.display(),
+                    source_path.display()
+                ),
+            )
+            .with_help("Use a unique `Std.*` namespace per source file."));
         }
         seen_unit_names.insert(key, source_path.clone());
         validated.push(source_path);

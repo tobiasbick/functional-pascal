@@ -1,20 +1,29 @@
-//! Source failures survive project loading, dependency traversal and snapshot parsing.
+//! Source failures survive project loading, dependency traversal and snapshot parsing;
+//! manifest, workspace and graph failures carry distinct project codes.
 
 #![allow(
     clippy::expect_used,
-    reason = "filesystem fixtures identify setup failures explicitly"
+    clippy::panic,
+    reason = "filesystem fixtures and record shapes identify failures explicitly"
 )]
 
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 
 use fpas_diagnostics::{
-    DiagnosticStage,
-    codes::{PROJECT_SOURCE_INVALID_UTF8, PROJECT_SOURCE_READ_FAILED},
+    DiagnosticCode, DiagnosticStage,
+    codes::{
+        PROJECT_DEPENDENCY_CYCLE, PROJECT_DISCOVERY_FAILED, PROJECT_DUPLICATE_SOURCE_FILE,
+        PROJECT_MANIFEST_READ_FAILED, PROJECT_MANIFEST_SYNTAX_INVALID,
+        PROJECT_MANIFEST_VALUE_INVALID, PROJECT_PATH_INVALID, PROJECT_PATTERN_INVALID,
+        PROJECT_PROGRAM_SOURCE_SKIPPED, PROJECT_SOURCE_INVALID_UTF8, PROJECT_SOURCE_READ_FAILED,
+        PROJECT_UNKNOWN_UNIT,
+    },
 };
 use fpas_project::{
-    ProjectLinkMeta, build_unit_graph, build_unit_graph_for_program, load_project,
-    load_standard_library, load_standard_library_project,
+    ProjectLinkMeta, build_unit_graph, build_unit_graph_for_program,
+    discover_run_project_in_workspace, load_project, load_standard_library,
+    load_standard_library_project, resolve_library_units,
 };
 
 const INVALID_PROGRAM: &str = "program Broken\nbegin\n  var X := ;\n  §\nend.";
@@ -179,15 +188,138 @@ fn trusted_standard_library_loaders_preserve_source_diagnostics() {
     }
 }
 
+/// Asserts one positionless project record with the given code and a help line.
+fn assert_validation(error: &fpas_project::ProjectError, code: DiagnosticCode) {
+    let [diagnostic] = error.diagnostics() else {
+        panic!(
+            "expected exactly one record, found {:?}",
+            error.diagnostics()
+        );
+    };
+    assert_eq!(diagnostic.code, code);
+    assert_eq!(diagnostic.stage(), DiagnosticStage::Project);
+    assert_eq!(diagnostic.span, None);
+    assert!(diagnostic.help.is_some(), "{diagnostic:?} needs a hint");
+    assert!(error.source_path().is_none());
+    assert!(!diagnostic.message.contains("help:"));
+    let first_line = diagnostic.message.lines().next().unwrap_or_default();
+    assert!(
+        error
+            .to_string()
+            .starts_with(&format!("error[{code}]: {first_line}"))
+    );
+}
+
 #[test]
-fn manifest_validation_errors_remain_distinct_from_source_diagnostics() {
+fn manifest_failures_have_distinct_project_codes() {
     let fixture = Fixture::new();
-    let manifest = fixture.write(
-        "invalid.fpasprj",
+    let missing = fixture.0.join("missing.fpasprj");
+    let syntax = fixture.write("syntax.fpasprj", "[project\n");
+    let kind = fixture.write(
+        "kind.fpasprj",
         "[project]\nname = 'invalid'\nkind = 'unknown'\n",
     );
-    let error = load_project(&manifest).expect_err("invalid manifest");
-    assert!(error.diagnostics().is_empty());
-    assert!(error.source_path().is_none());
-    assert!(error.to_string().contains("unknown"));
+    let path = fixture.write(
+        "path.fpasprj",
+        "[project]\nname = 'p'\nkind = 'library'\n[sources]\ninclude = ['absent.fpas']\n",
+    );
+    let pattern = fixture.write(
+        "pattern.fpasprj",
+        "[project]\nname = 'p'\nkind = 'library'\n[sources]\ninclude = ['none/*.fpas']\n",
+    );
+
+    for (manifest, code) in [
+        (missing, PROJECT_MANIFEST_READ_FAILED),
+        (syntax, PROJECT_MANIFEST_SYNTAX_INVALID),
+        (kind, PROJECT_MANIFEST_VALUE_INVALID),
+        (path, PROJECT_PATH_INVALID),
+        (pattern, PROJECT_PATTERN_INVALID),
+    ] {
+        let error = load_project(&manifest).expect_err("invalid manifest");
+        assert_validation(&error, code);
+    }
+}
+
+#[test]
+fn dependency_and_workspace_failures_have_project_codes() {
+    let fixture = Fixture::new();
+    fixture.write("unit.fpas", "unit Demo.A;\n");
+    let first = fixture.write(
+        "first.fpasprj",
+        "[project]\nname = 'first'\nkind = 'library'\n[sources]\ninclude = ['unit.fpas']\n[dependencies]\nprojects = ['second.fpasprj']\n",
+    );
+    fixture.write(
+        "second.fpasprj",
+        "[project]\nname = 'second'\nkind = 'library'\n[sources]\ninclude = ['unit.fpas']\n[dependencies]\nprojects = ['first.fpasprj']\n",
+    );
+    let error = load_project(&first).expect_err("dependency cycle");
+    assert_validation(&error, PROJECT_DEPENDENCY_CYCLE);
+
+    let workspace = fixture.write(
+        "demo.fpasworkspace",
+        "[workspace]\nname = 'demo'\nmembers = ['first.fpasprj']\n",
+    );
+    let error = discover_run_project_in_workspace(&workspace).expect_err("no program member");
+    assert_validation(&error, PROJECT_DISCOVERY_FAILED);
+}
+
+#[test]
+fn unknown_unit_import_is_located_at_its_uses_entry() {
+    let fixture = Fixture::new();
+    let source = "unit Demo.A;\nuses Demo.Missing;\n";
+    let unit = fixture.write("a.fpas", source);
+    let graph = build_unit_graph(std::slice::from_ref(&unit), &ProjectLinkMeta::default())
+        .expect("graph must build");
+
+    let error = resolve_library_units(&graph).expect_err("unknown import");
+    let [diagnostic] = error.diagnostics() else {
+        panic!("expected one record");
+    };
+    assert_eq!(diagnostic.code, PROJECT_UNKNOWN_UNIT);
+    assert_eq!(error.source_path(), Some(unit.as_path()));
+    let span = diagnostic.span.expect("import span");
+    assert_eq!((span.line(), span.column()), (2, 6));
+    let json = fpas_diagnostics::render_json(
+        error.source_path().and_then(Path::to_str),
+        Some(source),
+        diagnostic,
+    )
+    .expect("diagnostic JSON");
+    assert!(json.contains(r#""code":"F5015""#));
+    assert!(json.contains(r#""end":{"line":2,"column":18}"#));
+}
+
+#[test]
+fn loading_warnings_are_coded_records_with_their_source_path() {
+    let fixture = Fixture::new();
+    let unit = fixture.write("unit.fpas", "unit Demo.A;\n");
+    fixture.write("tool.fpas", "program Tool;\nbegin\nend.\n");
+    let manifest = fixture.write(
+        "lib.fpasprj",
+        "[project]\nname = 'lib'\nkind = 'library'\n[sources]\ninclude = ['unit.fpas', '*.fpas']\n",
+    );
+
+    let loaded = load_project(&manifest).expect("warnings do not fail loading");
+    let codes = loaded
+        .warnings
+        .iter()
+        .map(|warning| warning.diagnostic.code)
+        .collect::<Vec<_>>();
+    assert_eq!(
+        codes,
+        [
+            PROJECT_DUPLICATE_SOURCE_FILE,
+            PROJECT_PROGRAM_SOURCE_SKIPPED
+        ]
+    );
+    for warning in &loaded.warnings {
+        assert!(warning.diagnostic.is_warning());
+        assert_eq!(warning.diagnostic.span, None);
+        assert!(warning.diagnostic.help.is_some());
+        assert!(warning.path.is_some());
+    }
+    assert_eq!(
+        std::fs::canonicalize(loaded.warnings[0].path.as_ref().expect("path")).expect("path"),
+        std::fs::canonicalize(&unit).expect("unit")
+    );
 }

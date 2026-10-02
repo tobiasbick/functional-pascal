@@ -2,6 +2,8 @@
 
 use std::fmt;
 
+use fpas_diagnostics::{DiagnosticCode, codes};
+
 /// Register-object linking failure with deterministic, agent-readable context.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum LinkError {
@@ -214,3 +216,33 @@ impl fmt::Display for LinkError {
 }
 
 impl std::error::Error for LinkError {}
+
+impl LinkError {
+    /// Returns the stable diagnostic code that identifies this failure category.
+    ///
+    /// Documentation: `docs/pascal/tools/diagnostics.md`.
+    #[must_use]
+    pub const fn code(&self) -> DiagnosticCode {
+        match self {
+            Self::InvalidObject { .. }
+            | Self::UnitEntry(_)
+            | Self::InvalidInitializer { .. }
+            | Self::MissingDebugLayout { .. }
+            | Self::Instruction(_)
+            | Self::InvalidRelocation { .. }
+            | Self::InvalidField { .. } => codes::LINK_INVALID_OBJECT,
+            Self::MissingProgramEntry => codes::LINK_MISSING_PROGRAM_ENTRY,
+            Self::DuplicateDefinition(_) => codes::LINK_DUPLICATE_DEFINITION,
+            Self::IncompatibleLayoutCopies { .. } | Self::MissingVariant { .. } => {
+                codes::LINK_INCOMPATIBLE_LAYOUT
+            }
+            Self::UnresolvedImport { .. } => codes::LINK_UNRESOLVED_IMPORT,
+            Self::PrivateImport { .. } => codes::LINK_PRIVATE_IMPORT,
+            Self::ImportKind { .. } | Self::IncompatibleImport { .. } => {
+                codes::LINK_INCOMPATIBLE_IMPORT
+            }
+            Self::Overflow(_) => codes::LINK_LIMIT_EXCEEDED,
+            Self::InvalidExecutable(_) => codes::LINK_INVALID_EXECUTABLE,
+        }
+    }
+}

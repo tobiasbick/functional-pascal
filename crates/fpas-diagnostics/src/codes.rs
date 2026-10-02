@@ -188,11 +188,81 @@ define_codes!(PROJECT_ALLOCATED_CODES => {
     PROJECT_SOURCE_READ_FAILED = 5001;
     /// Source bytes are not valid UTF-8; no scalar source position is available.
     PROJECT_SOURCE_INVALID_UTF8 = 5002;
+    /// A `.fpasprj` or `.fpasworkspace` manifest could not be read.
+    PROJECT_MANIFEST_READ_FAILED = 5003;
+    /// A manifest is not valid TOML or does not match the manifest schema.
+    PROJECT_MANIFEST_SYNTAX_INVALID = 5004;
+    /// A manifest field has an empty, unknown, or disallowed value.
+    PROJECT_MANIFEST_VALUE_INVALID = 5005;
+    /// A manifest path is missing, not a file, has the wrong extension, or cannot be resolved.
+    PROJECT_PATH_INVALID = 5006;
+    /// A source glob pattern is invalid, cannot be evaluated, or matches no files.
+    PROJECT_PATTERN_INVALID = 5007;
+    /// A manifest lists the same entry more than once.
+    PROJECT_DUPLICATE_ENTRY = 5008;
+    /// `dependencies.projects` references a project that is not a library.
+    PROJECT_DEPENDENCY_NOT_LIBRARY = 5009;
+    /// Library projects depend on each other in a cycle.
+    PROJECT_DEPENDENCY_CYCLE = 5010;
+    /// One source file belongs to more than one project.
+    PROJECT_SOURCE_OWNERSHIP_CONFLICT = 5011;
+    /// A source file declares `program` where a `unit` is required, or the reverse.
+    PROJECT_UNIT_KIND_MISMATCH = 5012;
+    /// A unit name uses a namespace reserved for or required by the standard library.
+    PROJECT_UNIT_NAMESPACE_INVALID = 5013;
+    /// Two source files declare the same unit name.
+    PROJECT_DUPLICATE_UNIT = 5014;
+    /// A `uses` clause or `[exports].units` names a unit that no source declares.
+    PROJECT_UNKNOWN_UNIT = 5015;
+    /// A unit is imported across a library boundary without being exported.
+    PROJECT_UNIT_NOT_EXPORTED = 5016;
+    /// Units depend on each other in a cycle.
+    PROJECT_UNIT_CYCLE = 5017;
+    /// The project links more source files than source IDs can address.
+    PROJECT_SOURCE_LIMIT_EXCEEDED = 5018;
+    /// A source file no longer matches the snapshot the project graph was built from.
+    PROJECT_SOURCE_CHANGED = 5019;
+    /// A directory needed for project or workspace discovery could not be read.
+    PROJECT_DIRECTORY_READ_FAILED = 5020;
+    /// Project or workspace discovery found no candidate or more than one candidate.
+    PROJECT_DISCOVERY_FAILED = 5021;
+    /// `[dependencies].workspace` names no workspace member project.
+    PROJECT_UNKNOWN_WORKSPACE_DEPENDENCY = 5022;
+    /// The standard-library directory or manifest violates the trusted library rules.
+    PROJECT_STANDARD_LIBRARY_INVALID = 5023;
+    /// Reading, locking, writing or replacing a compiled-unit or program artifact failed.
+    BUILD_ARTIFACT_IO_FAILED = 5024;
+    /// A compiled interface, object or program image could not be encoded or validated.
+    BUILD_ARTIFACT_ENCODING_FAILED = 5025;
+    /// A compiled object is malformed or inconsistent with the objects it is linked with.
+    LINK_INVALID_OBJECT = 5026;
+    /// The root object of a program has no entry function.
+    LINK_MISSING_PROGRAM_ENTRY = 5027;
+    /// Two linked objects define the same canonical symbol.
+    LINK_DUPLICATE_DEFINITION = 5028;
+    /// Linked objects disagree on a record or enum layout, or a variant is missing.
+    LINK_INCOMPATIBLE_LAYOUT = 5029;
+    /// No linked object defines a required public symbol.
+    LINK_UNRESOLVED_IMPORT = 5030;
+    /// An object imports a definition that is private to another object.
+    LINK_PRIVATE_IMPORT = 5031;
+    /// An import resolves to a definition of the wrong kind or an incompatible ABI.
+    LINK_INCOMPATIBLE_IMPORT = 5032;
+    /// A linked table or address exceeds its fixed-width limit.
+    LINK_LIMIT_EXCEEDED = 5033;
+    /// The linked executable failed final bytecode verification.
+    LINK_INVALID_EXECUTABLE = 5034;
+    /// Warning: a source file matched more than once; the first occurrence was kept.
+    PROJECT_DUPLICATE_SOURCE_FILE = 5035;
+    /// Warning: a `program` source outside the entry rules was skipped.
+    PROJECT_PROGRAM_SOURCE_SKIPPED = 5036;
 });
 
 define_codes!(INTERNAL_ALLOCATED_CODES => {
     INTERNAL_COMPILER_INVARIANT_FAILURE = 9001;
     INTERNAL_VM_INVARIANT_FAILURE = 9002;
+    /// Project graph or build orchestration reached an inconsistent state.
+    INTERNAL_PROJECT_INVARIANT_FAILURE = 9003;
 });
 
 #[cfg(test)]

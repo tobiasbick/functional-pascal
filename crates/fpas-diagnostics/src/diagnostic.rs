@@ -84,6 +84,19 @@ impl Diagnostic {
         }
     }
 
+    /// Creates a warning without inventing a source position.
+    #[must_use]
+    pub fn warning_without_source(
+        code: DiagnosticCode,
+        message: impl Into<String>,
+        help: Option<String>,
+    ) -> Self {
+        Self {
+            severity: DiagnosticSeverity::Warning,
+            ..Self::error_without_source(code, message, help)
+        }
+    }
+
     /// Attaches producer-supplied expectation details without parsing the message.
     #[must_use]
     pub fn with_expected_found(

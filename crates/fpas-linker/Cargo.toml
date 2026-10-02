@@ -8,6 +8,7 @@ repository.workspace = true
 
 [dependencies]
 fpas-bytecode = { path = "../fpas-bytecode" }
+fpas-diagnostics = { path = "../fpas-diagnostics" }
 fpas-unit = { path = "../fpas-unit" }
 
 [dev-dependencies]

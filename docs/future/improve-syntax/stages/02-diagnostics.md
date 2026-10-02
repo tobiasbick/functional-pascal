@@ -34,9 +34,8 @@ information is missing. Diagnostics are not a compatibility parser mode.
   reporting, runner transport, and runtime source mapping; record exact paths.
 - [x] Extend the shared schema and renderers, including unavailable positions,
   expected/found details, source identity, and deterministic JSON serialization.
-- [ ] Complete shared coded diagnostics for all project/build/linker failures;
-  non-source validation and some filesystem failures still contain only text.
-- [ ] Preserve successful-source warnings as structured records through project
+- [x] Complete shared coded diagnostics for all project/build/linker failures.
+- [x] Preserve successful-source warnings as structured records through project
   and build APIs.
 - [x] Preserve source-read, lexer and parser diagnostics through project loading,
   dependencies, standard-library loading and graph/snapshot APIs.
@@ -171,8 +170,61 @@ regressions cover project-source transport and conversion to build errors.
 Documentation links and `git diff --check` passed. No FPAS source files changed;
 the workspace's existing CLI tests exercised the FPAS suites.
 
-Next: convert remaining project/build/linker failures to shared coded records and
-preserve successful-source warnings. Then
-connect all four CLI commands and actual runner processes, separating program
+## Implemented coded project/build/linker failures slice
+
+`ProjectError` and `BuildError` no longer have text-only variants; every failure
+carries at least one coded record with message and optional hint. Embedded
+`help:` lines moved into the hint field. New codes F5003–F5023 cover manifests,
+paths, globs, duplicates, dependencies, unit graphs, workspace discovery and the
+standard library; F5024–F5025 cover artifact I/O and encoding; F5026–F5034 cover
+linker categories through `LinkError::code()`; F9003 marks project/build
+invariant failures. Existing F5001/F5002 are reused for build-time source reads
+and invalid UTF-8, and F5019 for sources changed during a build.
+
+Manifest and graph records stay positionless without a source path because
+their messages name the manifest or several files. Unknown and non-exported
+units in a unit's `uses` clause are located at the import with the unit's path.
+`crates/fpas-project/src/manifest.rs` owns shared manifest read/parse/value
+failures. Workspace discovery functions return `ProjectError`; CLI and editor
+adapters render them at their existing text interfaces.
+`stage_standard_library` returns `BuildError`; `DistributionError` was removed.
+Text output gains the `error[Fxxxx]:` prefix and separate `help:` lines.
+Unknown-unit hints list at most ten units nearest the missing name's namespace
+(`crates/fpas-project/src/unit_graph/unknown_unit.rs`) instead of every
+standard-library unit.
+
+Regressions: `crates/fpas-project/tests/diagnostics.rs` covers manifest read,
+TOML syntax, field value, path and glob codes, dependency cycles, workspace
+discovery and a located unknown import with JSON range.
+`crates/fpas-build/src/engine/error/tests.rs` covers linker records and coded
+text rendering; incremental and program-artifact tests assert F5019.
+
+Verification: `cargo fmt --check`, `cargo build`, strict workspace Clippy and
+`cargo test --workspace` passed (3,324 tests, none failed or ignored).
+`fpas test tests/suite.fpasprj` passed: 458 passed, one skipped, none failed.
+`git diff --check` passed. No FPAS source files changed.
+
+## Implemented structured warnings slice
+
+`fpas_diagnostics::FileDiagnostic` pairs a `Diagnostic` with an optional file
+path and renders the text form. It replaces `fpas_build::BuildDiagnostic` as the
+`BuildError` record type and carries `LoadedProject::warnings`.
+`Diagnostic::warning_without_source` creates positionless warnings. New warning
+codes F5035 (duplicate source file) and F5036 (skipped `program` source) carry
+the source path and a hint; lexer/parser warnings keep their code and span.
+The build pipeline produces no additional warning records: compiler and semantic
+analysis currently emit only errors. CLI `check`, `build`, `run` and `fmt` print
+warnings as `path: warning[Fxxxx]: ...`.
+
+Regressions: `fpas-diagnostics/tests/structured_output.rs` covers warning text
+and JSON; `fpas-project/tests/diagnostics.rs` covers coded loading warnings with
+paths; CLI loading and process tests assert the warning codes.
+
+Verification: `cargo fmt --check`, strict workspace Clippy and
+`cargo test --workspace` passed (3,331 tests, none failed or ignored).
+`fpas test tests/suite.fpasprj` passed: 458 passed, one skipped, none failed.
+`git diff --check` passed. No FPAS source files changed.
+
+Next: connect all four CLI commands and actual runner processes, separating program
 stderr events and suppressing progress/test-summary contamination. Do not
 advertise `--diagnostics json` until that complete path is verified.

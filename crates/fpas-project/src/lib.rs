@@ -16,6 +16,7 @@
 
 mod dependencies;
 mod loading;
+mod manifest;
 mod model;
 mod path_glob;
 mod paths;

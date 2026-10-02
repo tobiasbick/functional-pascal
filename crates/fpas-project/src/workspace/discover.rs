@@ -3,13 +3,14 @@
 //! Documentation: `docs/pascal/program-structure/workspaces.md`
 
 use super::loading::{load_workspace, read_member_project_manifest};
-use crate::ProjectKind;
+use crate::{ProjectError, ProjectKind};
+use fpas_diagnostics::codes::PROJECT_DISCOVERY_FAILED;
 use std::path::{Path, PathBuf};
 
 /// Returns the sole `kind = "program"` member when a workspace has exactly one.
 ///
 /// Documentation: `docs/pascal/program-structure/workspaces.md`
-pub fn discover_run_project_in_workspace(workspace_path: &Path) -> Result<PathBuf, String> {
+pub fn discover_run_project_in_workspace(workspace_path: &Path) -> Result<PathBuf, ProjectError> {
     let workspace = load_workspace(workspace_path)?;
     let mut program_members = Vec::<PathBuf>::new();
 
@@ -21,10 +22,11 @@ pub fn discover_run_project_in_workspace(workspace_path: &Path) -> Result<PathBu
     }
 
     match program_members.len() {
-        0 => Err(
-            "No `program` projects found in the workspace.\n  help: Add a `kind = \"program\"` member to `workspace.members`, or pass a `.fpasprj` path explicitly."
-                .to_string(),
-        ),
+        0 => Err(ProjectError::new(
+            PROJECT_DISCOVERY_FAILED,
+            "No `program` projects found in the workspace.",
+        )
+        .with_help("Add a `kind = \"program\"` member to `workspace.members`, or pass a `.fpasprj` path explicitly.")),
         1 => Ok(program_members.remove(0)),
         _ => {
             let entries = program_members
@@ -32,9 +34,11 @@ pub fn discover_run_project_in_workspace(workspace_path: &Path) -> Result<PathBu
                 .map(|path| path.display().to_string())
                 .collect::<Vec<_>>()
                 .join(", ");
-            Err(format!(
-                "Found multiple `program` projects in the workspace: {entries}.\n  help: Pass the desired `.fpasprj` file path explicitly."
-            ))
+            Err(ProjectError::new(
+                PROJECT_DISCOVERY_FAILED,
+                format!("Found multiple `program` projects in the workspace: {entries}."),
+            )
+            .with_help("Pass the desired `.fpasprj` file path explicitly."))
         }
     }
 }

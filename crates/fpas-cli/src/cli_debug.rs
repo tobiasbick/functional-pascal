@@ -107,7 +107,8 @@ fn prepare_executable(
         CliInput::SourceFile(path) => prepare_source(path, &config.cwd, standard_library)?,
         CliInput::ProjectFile(path) => prepare_project(path, standard_library)?,
         CliInput::WorkspaceFile(path) => {
-            let project = fpas_project::discover_run_project_in_workspace(path)?;
+            let project = fpas_project::discover_run_project_in_workspace(path)
+                .map_err(|error| error.to_string())?;
             prepare_project(&project, standard_library)?
         }
         CliInput::CompiledProgramFile(path) => prepare_image(path, config.source_root.as_deref())?,

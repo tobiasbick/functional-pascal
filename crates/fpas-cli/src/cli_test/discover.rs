@@ -43,7 +43,8 @@ fn discover_from_project(project_path: &Path) -> Result<Vec<PathBuf>, String> {
 }
 
 fn discover_from_workspace(workspace_path: &Path) -> Result<Vec<PathBuf>, String> {
-    let test_members = project::discover_test_projects_in_workspace(workspace_path)?;
+    let test_members = project::discover_test_projects_in_workspace(workspace_path)
+        .map_err(|error| error.to_string())?;
     let mut paths = Vec::new();
     for member in test_members {
         let loaded = project::load_project(&member).map_err(|error| error.to_string())?;

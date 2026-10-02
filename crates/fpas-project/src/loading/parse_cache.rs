@@ -5,6 +5,7 @@
 
 use crate::paths::canonical_source_path;
 use crate::source::parse_compilation_unit_file;
+use fpas_diagnostics::FileDiagnostic;
 use fpas_parser::CompilationUnit;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -12,7 +13,7 @@ use std::path::{Path, PathBuf};
 /// Parsed compilation units keyed by canonical source path.
 #[derive(Debug, Default)]
 pub(crate) struct ParsedSourceCache {
-    entries: HashMap<PathBuf, (CompilationUnit, Vec<String>)>,
+    entries: HashMap<PathBuf, (CompilationUnit, Vec<FileDiagnostic>)>,
     parse_misses: usize,
 }
 
@@ -27,7 +28,7 @@ impl ParsedSourceCache {
         &mut self,
         path: &Path,
         source_id: u32,
-    ) -> Result<(CompilationUnit, Vec<String>), crate::ProjectError> {
+    ) -> Result<(CompilationUnit, Vec<FileDiagnostic>), crate::ProjectError> {
         let key = canonical_source_path(path);
         if let Some(entry) = self.entries.get(&key) {
             return Ok(entry.clone());

@@ -8,6 +8,7 @@ mod tests;
 
 use std::path::Path;
 
+use fpas_diagnostics::codes::{BUILD_ARTIFACT_ENCODING_FAILED, INTERNAL_PROJECT_INVARIANT_FAILURE};
 use fpas_program::{Digest, ProgramIdentity, ProgramImage};
 use fpas_project::UnitGraph;
 
@@ -62,7 +63,7 @@ fn build_program_artifact_before_publish(
     let source_hashes = source_hashes(graph, target.source, target.source_paths.len())?;
 
     {
-        let publication = publication_lock(target.path)?;
+        let publication = atomic::PublicationLock::acquire(target.path)?;
         if let Some(executable) =
             reusable_executable(&publication, &expected, target.source_paths, &source_hashes)?
         {
@@ -84,17 +85,14 @@ fn build_program_artifact_before_publish(
         source_hashes,
         executable,
     )
-    .map_err(|error| BuildError::new(error.to_string()))?;
-    let bytes = fpas_program::encode(&image).map_err(|error| BuildError::new(error.to_string()))?;
+    .map_err(|error| encoding_error(target.path, &error))?;
+    let bytes =
+        fpas_program::encode(&image).map_err(|error| encoding_error(target.path, &error))?;
     before_publish();
-    let publication = publication_lock(target.path)?;
-    let replacement = publication
-        .prepare(&bytes)
-        .map_err(|error| publication_error(target.path, error))?;
+    let publication = atomic::PublicationLock::acquire(target.path)?;
+    let replacement = publication.prepare(&bytes)?;
     source::ensure_current(graph, Digest::of(target.source))?;
-    replacement
-        .commit()
-        .map_err(|error| publication_error(target.path, error))?;
+    replacement.commit()?;
     Ok(BuiltProgram {
         executable: image.into_executable(),
         events,
@@ -109,6 +107,7 @@ fn source_hashes(
     let mut hashes = vec![None; source_count];
     let Some(main) = hashes.first_mut() else {
         return Err(BuildError::new(
+            INTERNAL_PROJECT_INVARIANT_FAILURE,
             "cannot publish a program image without its main source identity",
         ));
     };
@@ -116,10 +115,13 @@ fn source_hashes(
     for (_, node) in graph.iter() {
         let index = node.source_id() as usize;
         let slot = hashes.get_mut(index).ok_or_else(|| {
-            BuildError::new(format!(
-                "source identity {} is outside the program source table",
-                node.source_id()
-            ))
+            BuildError::new(
+                INTERNAL_PROJECT_INVARIANT_FAILURE,
+                format!(
+                    "source identity {} is outside the program source table",
+                    node.source_id()
+                ),
+            )
         })?;
         *slot = node.source_hash();
     }
@@ -128,9 +130,12 @@ fn source_hashes(
         .enumerate()
         .map(|(index, hash)| {
             hash.ok_or_else(|| {
-                BuildError::new(format!(
-                    "program source identity {index} is unavailable from the build snapshot"
-                ))
+                BuildError::new(
+                    INTERNAL_PROJECT_INVARIANT_FAILURE,
+                    format!(
+                        "program source identity {index} is unavailable from the build snapshot"
+                    ),
+                )
             })
         })
         .collect()
@@ -142,7 +147,7 @@ fn reusable_executable(
     source_paths: &[String],
     source_hashes: &[Digest],
 ) -> Result<Option<fpas_bytecode::VerifiedExecutable>, BuildError> {
-    let Some(bytes) = publication.read().map_err(BuildError::new)? else {
+    let Some(bytes) = publication.read()? else {
         return Ok(None);
     };
     let image = match fpas_program::decode(&bytes) {
@@ -173,13 +178,12 @@ fn source_table_matches(
         })
 }
 
-fn publication_lock(path: &Path) -> Result<atomic::PublicationLock, BuildError> {
-    atomic::PublicationLock::acquire(path).map_err(|error| publication_error(path, error))
-}
-
-fn publication_error(path: &Path, error: String) -> BuildError {
-    BuildError::new(format!(
-        "cannot publish compiled program `{}`: {error}",
-        path.display()
-    ))
+fn encoding_error(path: &Path, error: &dyn std::fmt::Display) -> BuildError {
+    BuildError::new(
+        BUILD_ARTIFACT_ENCODING_FAILED,
+        format!(
+            "cannot encode compiled program `{}`: {error}",
+            path.display()
+        ),
+    )
 }

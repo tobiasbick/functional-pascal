@@ -1,6 +1,10 @@
 //! Source reading, unit-name display, and manifest string validation.
 
-use fpas_diagnostics::Diagnostic;
+use fpas_diagnostics::codes::{
+    PROJECT_DUPLICATE_UNIT, PROJECT_MANIFEST_VALUE_INVALID, PROJECT_PROGRAM_SOURCE_SKIPPED,
+    PROJECT_UNIT_NAMESPACE_INVALID,
+};
+use fpas_diagnostics::{Diagnostic, FileDiagnostic};
 use fpas_lexer::lex_with_source_id;
 use fpas_parser::{CompilationUnit, QualifiedId, parse_tokens_compilation_unit};
 mod error;
@@ -25,20 +29,24 @@ pub(super) fn display_unit_key(key: &str) -> String {
     result
 }
 
-pub(super) fn validate_non_empty(field_name: &str, value: &str) -> Result<(), String> {
+pub(super) fn validate_non_empty(field_name: &str, value: &str) -> Result<(), ProjectError> {
     if value.trim().is_empty() {
-        return Err(format!(
-            "`{field_name}` must be a non-empty string.\n  help: Provide a value such as `\"my-app\"`."
-        ));
+        return Err(ProjectError::new(
+            PROJECT_MANIFEST_VALUE_INVALID,
+            format!("`{field_name}` must be a non-empty string."),
+        )
+        .with_help("Provide a value such as `\"my-app\"`."));
     }
     Ok(())
 }
 
-pub(super) fn validate_non_empty_entry(field_name: &str, value: &str) -> Result<(), String> {
+pub(super) fn validate_non_empty_entry(field_name: &str, value: &str) -> Result<(), ProjectError> {
     if value.trim().is_empty() {
-        return Err(format!(
-            "A `{field_name}` entry is empty.\n  help: Remove empty entries or provide a valid value."
-        ));
+        return Err(ProjectError::new(
+            PROJECT_MANIFEST_VALUE_INVALID,
+            format!("A `{field_name}` entry is empty."),
+        )
+        .with_help("Remove empty entries or provide a valid value."));
     }
     Ok(())
 }
@@ -47,7 +55,7 @@ pub(super) fn validate_non_empty_entry(field_name: &str, value: &str) -> Result<
 pub(super) fn parse_compilation_unit_file(
     path: &Path,
     source_id: u32,
-) -> Result<(CompilationUnit, Vec<String>), ProjectError> {
+) -> Result<(CompilationUnit, Vec<FileDiagnostic>), ProjectError> {
     let source = read::read_source(path)
         .map_err(|diagnostic| ProjectError::from_source(path, vec![diagnostic]))?;
     parse_compilation_unit_source(path, &source, source_id)
@@ -57,7 +65,7 @@ pub(super) fn parse_compilation_unit_file(
 pub(super) fn read_compilation_unit_file(
     path: &Path,
     source_id: u32,
-) -> Result<(Vec<u8>, CompilationUnit, Vec<String>), ProjectError> {
+) -> Result<(Vec<u8>, CompilationUnit, Vec<FileDiagnostic>), ProjectError> {
     let source = read::read_source(path)
         .map_err(|diagnostic| ProjectError::from_source(path, vec![diagnostic]))?;
     let (unit, warnings) = parse_compilation_unit_source(path, &source, source_id)?;
@@ -69,7 +77,7 @@ pub(super) fn parse_compilation_unit_source(
     path: &Path,
     source: &[u8],
     source_id: u32,
-) -> Result<(CompilationUnit, Vec<String>), ProjectError> {
+) -> Result<(CompilationUnit, Vec<FileDiagnostic>), ProjectError> {
     let source_text = std::str::from_utf8(source).map_err(|error| {
         ProjectError::from_source(
             path,
@@ -94,15 +102,41 @@ pub(super) fn parse_compilation_unit_source(
     if diagnostics.iter().any(Diagnostic::is_error) {
         return Err(ProjectError::from_source(path, diagnostics));
     }
-    let mut warnings = Vec::new();
-    for diagnostic in diagnostics {
-        warnings.push(fpas_diagnostics::render(
-            path.to_string_lossy().as_ref(),
-            &diagnostic,
-        ));
-    }
+    let warnings = diagnostics
+        .into_iter()
+        .map(|diagnostic| FileDiagnostic::new(diagnostic, Some(path.to_path_buf())))
+        .collect();
 
     Ok((unit, warnings))
+}
+
+/// Warns that a `program` source was skipped; `rule` explains which sources are kept.
+pub(super) fn program_source_skipped(
+    path: &Path,
+    program_name: &str,
+    rule: &str,
+) -> FileDiagnostic {
+    FileDiagnostic::new(
+        Diagnostic::warning_without_source(
+            PROJECT_PROGRAM_SOURCE_SKIPPED,
+            format!("Source file declares `program {program_name}` and was skipped."),
+            Some(rule.to_owned()),
+        ),
+        Some(path.to_path_buf()),
+    )
+}
+
+/// Rejects a second source file that declares an already-declared unit name.
+pub(super) fn duplicate_unit_error(unit_name: &str, first: &Path, second: &Path) -> ProjectError {
+    ProjectError::new(
+        PROJECT_DUPLICATE_UNIT,
+        format!(
+            "Duplicate unit name `{unit_name}` found in `{}` and `{}`.",
+            first.to_string_lossy(),
+            second.to_string_lossy()
+        ),
+    )
+    .with_help("Use a unique `unit` namespace per source file.")
 }
 
 pub(super) fn qualified_id_to_string(id: &QualifiedId) -> String {
@@ -110,18 +144,24 @@ pub(super) fn qualified_id_to_string(id: &QualifiedId) -> String {
 }
 
 /// `docs/pascal/program-structure/units.md`: `Std.*` is reserved for implementation-defined standard units.
-pub(super) fn validate_user_unit_name(path: &Path, id: &QualifiedId) -> Result<(), String> {
+pub(super) fn validate_user_unit_name(path: &Path, id: &QualifiedId) -> Result<(), ProjectError> {
     if id
         .parts
         .first()
         .is_some_and(|head| head.eq_ignore_ascii_case("std"))
     {
-        return Err(format!(
-            "Source file `{}` declares `unit {}`.\n  help: The root segment `Std` is reserved for standard library units. Rename the unit to a non-`Std` namespace such as `App.{}`.",
-            path.to_string_lossy(),
-            qualified_id_to_string(id),
+        return Err(ProjectError::new(
+            PROJECT_UNIT_NAMESPACE_INVALID,
+            format!(
+                "Source file `{}` declares `unit {}`.",
+                path.to_string_lossy(),
+                qualified_id_to_string(id)
+            ),
+        )
+        .with_help(format!(
+            "The root segment `Std` is reserved for standard library units. Rename the unit to a non-`Std` namespace such as `App.{}`.",
             id.parts.get(1).map_or("Core", String::as_str)
-        ));
+        )));
     }
 
     Ok(())

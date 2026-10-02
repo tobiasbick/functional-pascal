@@ -49,7 +49,7 @@ The checklists in each document track work within that stage.
 | Done | Stage | Prerequisites | Status |
 |------|-------|---------------|--------|
 | [x] | [1. Language contract](language-contract.md) | None | Source audit, grammar/owner mapping, test inventory and bounded sequence recorded; no language implementation claimed |
-| [ ] | [2. Diagnostics](stages/02-diagnostics.md) | Stage 1 contract | Shared model/JSON renderer and build/project source-error transport implemented; remaining error codes and CLI/runner streams pending |
+| [ ] | [2. Diagnostics](stages/02-diagnostics.md) | Stage 1 contract | Shared model/JSON renderer, build/project source-error transport and coded project/build/linker failures and structured warnings implemented; CLI/runner streams pending |
 | [ ] | [3. Syntax and names](stages/03-syntax-and-names.md) | Stages 1 and 2 | Planned |
 | [ ] | [4. Functional core](stages/04-functional-core.md) | Stages 1-3; coordinated mutation/purity work from stage 5 | Planned |
 | [ ] | [5. Effects and tasks](stages/05-effects-and-tasks.md) | Stage 4 facilities; contract fixed in stage 1 | Planned |
@@ -130,9 +130,8 @@ Stage 1's [source audit](audit/source-map.md),
 [bounded implementation sequence](audit/implementation-sequence.md) are recorded.
 Existing tests were inspected, not executed for the stage-1 documentation audit.
 
-Stage 2's shared diagnostic representation and build/project source-error
-transport are implemented; see its owning stage for verification and remaining
-work. Next, convert remaining project/build/linker failures to shared coded
-records and preserve successful-source warnings. Then
+Stage 2's shared diagnostic representation, build/project source-error
+transport, coded project/build/linker failures and structured loading warnings
+are implemented; see its owning stage for verification and remaining work. Next,
 expose JSON streams consistently in check/build/run/test and the runner. Do not
 start the broad syntax migration before that gate.

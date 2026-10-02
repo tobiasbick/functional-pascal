@@ -211,7 +211,7 @@ impl WorkspaceContext {
     pub(super) fn load_workspace_manifest(path: &Path) -> Self {
         let workspace = match load_workspace(path) {
             Ok(workspace) => workspace,
-            Err(message) => return Self::unavailable(path, message),
+            Err(error) => return Self::unavailable(path, error.to_string()),
         };
         let mut projects = Vec::new();
         let mut issues = Vec::new();

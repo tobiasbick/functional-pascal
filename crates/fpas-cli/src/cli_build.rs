@@ -133,7 +133,7 @@ fn build_native_project(
         return 1;
     }
     for warning in &loaded.warnings {
-        let _ = writeln!(stderr, "warning: {warning}");
+        let _ = writeln!(stderr, "{warning}");
     }
     let artifact =
         match crate::project_build::build_program_artifact(project_path, &loaded, standard_library)
@@ -175,7 +175,7 @@ fn build_project_file(
     };
 
     for warning in &loaded.warnings {
-        let _ = writeln!(stderr, "warning: {warning}");
+        let _ = writeln!(stderr, "{warning}");
     }
 
     let result = match loaded.kind {

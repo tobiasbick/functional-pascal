@@ -18,10 +18,10 @@ mod program_artifact;
 mod source_labels;
 mod source_snapshot;
 
-pub use distribution::{DistributionError, stage_standard_library};
+pub use distribution::stage_standard_library;
 pub use engine::{
-    BuildDiagnostic, BuildError, BuiltProgram, BuiltUnits, build_library_units, build_program,
-    check_library_units, check_program,
+    BuildError, BuiltProgram, BuiltUnits, build_library_units, build_program, check_library_units,
+    check_program,
 };
 pub use events::{BuildCounters, BuildEvent, BuildEventKind};
 pub use options::BuildOptions;

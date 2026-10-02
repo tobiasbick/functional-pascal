@@ -1,8 +1,14 @@
 //! Loads `.fpasworkspace` manifests (`docs/pascal/program-structure/workspaces.md`).
 
-use crate::ProjectKind;
-use crate::paths::resolve_explicit_file_path;
-use crate::source::validate_non_empty;
+use crate::manifest::{invalid_value, parse_manifest, read_manifest};
+use crate::paths::{
+    resolve_explicit_file_path, unresolvable_root_error, validate_project_file_extension,
+};
+use crate::source::{validate_non_empty, validate_non_empty_entry};
+use crate::{ProjectError, ProjectKind};
+use fpas_diagnostics::codes::{
+    PROJECT_DIRECTORY_READ_FAILED, PROJECT_DISCOVERY_FAILED, PROJECT_DUPLICATE_ENTRY,
+};
 use serde::Deserialize;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -50,33 +56,29 @@ pub(super) struct MemberProjectManifest {
 }
 
 /// Reads `project.name` and `project.kind` from a member `.fpasprj` without loading sources.
-pub(super) fn read_member_project_manifest(path: &Path) -> Result<MemberProjectManifest, String> {
+pub(super) fn read_member_project_manifest(
+    path: &Path,
+) -> Result<MemberProjectManifest, ProjectError> {
     let manifest = read_member_project_manifest_raw(path)?;
     Ok(MemberProjectManifest {
         name: manifest.name,
-        kind: ProjectKind::parse_in_file(&manifest.kind, Some(path))?,
+        kind: ProjectKind::parse(&manifest.kind, path)?,
     })
 }
 
 /// Reads `project.name` from a member `.fpasprj` without loading sources or dependencies.
-pub(super) fn read_member_project_name(path: &Path) -> Result<String, String> {
+pub(super) fn read_member_project_name(path: &Path) -> Result<String, ProjectError> {
     Ok(read_member_project_manifest(path)?.name)
 }
 
-fn read_member_project_manifest_raw(path: &Path) -> Result<ProjectNameSection, String> {
-    let project_text = fs::read_to_string(path).map_err(|e| {
-        format!(
-            "Error reading project file `{}`: {e}",
-            path.to_string_lossy()
-        )
-    })?;
-
-    let project_file: ProjectNameFile = toml::from_str(&project_text).map_err(|e| {
-        format!(
-            "Invalid project file `{}`: {e}\n  help: Use TOML syntax with a `[project]` section.",
-            path.to_string_lossy()
-        )
-    })?;
+fn read_member_project_manifest_raw(path: &Path) -> Result<ProjectNameSection, ProjectError> {
+    let project_text = read_manifest(path, "project")?;
+    let project_file: ProjectNameFile = parse_manifest(
+        path,
+        "project",
+        &project_text,
+        "Use TOML syntax with a `[project]` section.",
+    )?;
 
     validate_non_empty("project.name", &project_file.project.name)?;
     validate_non_empty("project.kind", &project_file.project.kind)?;
@@ -84,68 +86,57 @@ fn read_member_project_manifest_raw(path: &Path) -> Result<ProjectNameSection, S
 }
 
 /// Load and validate a workspace file.
-pub fn load_workspace(path: &Path) -> Result<LoadedWorkspace, String> {
-    let workspace_text = fs::read_to_string(path).map_err(|e| {
-        format!(
-            "Error reading workspace file `{}`: {e}",
-            path.to_string_lossy()
-        )
-    })?;
-
-    let workspace_file: WorkspaceFile = toml::from_str(&workspace_text).map_err(|e| {
-        format!(
-            "Invalid workspace file `{}`: {e}\n  help: Use TOML syntax with `[workspace]` and `members = [...]`.",
-            path.to_string_lossy()
-        )
-    })?;
+///
+/// Documentation: `docs/pascal/program-structure/workspaces.md`
+pub fn load_workspace(path: &Path) -> Result<LoadedWorkspace, ProjectError> {
+    let workspace_text = read_manifest(path, "workspace")?;
+    let workspace_file: WorkspaceFile = parse_manifest(
+        path,
+        "workspace",
+        &workspace_text,
+        "Use TOML syntax with `[workspace]` and `members = [...]`.",
+    )?;
 
     validate_non_empty("workspace.name", &workspace_file.workspace.name)?;
 
-    let root_dir = path.parent().ok_or_else(|| {
-        format!(
-            "Cannot resolve workspace root for `{}`.\n  help: Use a normal file path inside a directory.",
-            path.to_string_lossy()
-        )
-    })?;
+    let root_dir = path
+        .parent()
+        .ok_or_else(|| unresolvable_root_error("workspace", path))?;
 
     if workspace_file.workspace.members.is_empty() {
-        return Err(
-            "`workspace.members` must contain at least one project path.\n  help: Add one or more `.fpasprj` paths."
-                .to_string(),
-        );
+        return Err(invalid_value(
+            "`workspace.members` must contain at least one project path.",
+            "Add one or more `.fpasprj` paths.",
+        ));
     }
 
     let mut member_projects = Vec::new();
     let mut seen = Vec::<PathBuf>::new();
 
     for member in &workspace_file.workspace.members {
-        if member.trim().is_empty() {
-            return Err(
-                "A `workspace.members` entry is empty.\n  help: Remove empty entries or provide a `.fpasprj` path."
-                    .to_string(),
-            );
-        }
+        validate_non_empty_entry("workspace.members", member).map_err(|error| {
+            error.with_help("Remove empty entries or provide a `.fpasprj` path.")
+        })?;
 
-        let member_path = resolve_workspace_member_path(member, root_dir)?;
+        let member_path = resolve_explicit_file_path("workspace.members", member, root_dir)?;
+        validate_project_file_extension(&member_path, "workspace.members")
+            .map_err(|error| error.with_help("List project manifest paths only."))?;
         let key = crate::paths::canonical_project_path(&member_path);
         if seen
             .iter()
             .any(|existing| crate::paths::same_file(existing, &key))
         {
-            return Err(format!(
-                "Duplicate workspace member `{}` resolves to the same project as an earlier entry.\n  help: List each `.fpasprj` path at most once in `workspace.members`.",
-                member_path.to_string_lossy()
-            ));
+            return Err(ProjectError::new(
+                PROJECT_DUPLICATE_ENTRY,
+                format!(
+                    "Duplicate workspace member `{}` resolves to the same project as an earlier entry.",
+                    member_path.to_string_lossy()
+                ),
+            )
+            .with_help("List each `.fpasprj` path at most once in `workspace.members`."));
         }
         seen.push(key);
         member_projects.push(member_path);
-    }
-
-    if member_projects.is_empty() {
-        return Err(
-            "`workspace.members` did not resolve to any project files.\n  help: Add valid `.fpasprj` paths."
-                .to_string(),
-        );
     }
 
     Ok(LoadedWorkspace {
@@ -155,19 +146,23 @@ pub fn load_workspace(path: &Path) -> Result<LoadedWorkspace, String> {
 }
 
 /// Discover a single `.fpasworkspace` file in `cwd`, if present.
-pub fn discover_workspace_file(cwd: &Path) -> Result<Option<PathBuf>, String> {
-    let read_dir = fs::read_dir(cwd)
-        .map_err(|e| format!("Error reading current directory `{}`: {e}", cwd.display()))?;
+///
+/// Documentation: `docs/pascal/program-structure/workspaces.md`
+pub fn discover_workspace_file(cwd: &Path) -> Result<Option<PathBuf>, ProjectError> {
+    let directory_error = |error: std::io::Error| {
+        ProjectError::new(
+            PROJECT_DIRECTORY_READ_FAILED,
+            format!(
+                "Error reading current directory `{}`: {error}",
+                cwd.display()
+            ),
+        )
+    };
+    let read_dir = fs::read_dir(cwd).map_err(directory_error)?;
 
     let mut candidates = Vec::<PathBuf>::new();
     for entry in read_dir {
-        let entry = entry.map_err(|e| {
-            format!(
-                "Error reading entries from current directory `{}`: {e}",
-                cwd.display()
-            )
-        })?;
-        let path = entry.path();
+        let path = entry.map_err(directory_error)?.path();
         if path.is_file() && is_workspace_file(&path) {
             candidates.push(path);
         }
@@ -184,39 +179,20 @@ pub fn discover_workspace_file(cwd: &Path) -> Result<Option<PathBuf>, String> {
                 .map(|path| path.display().to_string())
                 .collect::<Vec<_>>()
                 .join(", ");
-            Err(format!(
-                "Found multiple `.fpasworkspace` files in current directory `{}`: {entries}.\n  help: Pass the desired workspace file path explicitly.",
-                cwd.display()
-            ))
+            Err(ProjectError::new(
+                PROJECT_DISCOVERY_FAILED,
+                format!(
+                    "Found multiple `.fpasworkspace` files in current directory `{}`: {entries}.",
+                    cwd.display()
+                ),
+            )
+            .with_help("Pass the desired workspace file path explicitly."))
         }
     }
-}
-
-fn resolve_workspace_member_path(member: &str, root_dir: &Path) -> Result<PathBuf, String> {
-    let path = resolve_explicit_file_path("workspace.members", member, root_dir)?;
-    validate_workspace_member_extension(&path)?;
-    Ok(path)
-}
-
-fn validate_workspace_member_extension(path: &Path) -> Result<(), String> {
-    if is_workspace_member_project(path) {
-        return Ok(());
-    }
-
-    Err(format!(
-        "`workspace.members` must reference a `.fpasprj` file: `{}`.\n  help: List project manifest paths only.",
-        path.to_string_lossy()
-    ))
 }
 
 fn is_workspace_file(path: &Path) -> bool {
     path.extension()
         .and_then(|value| value.to_str())
         .is_some_and(|value| value.eq_ignore_ascii_case(WORKSPACE_FILE_EXTENSION))
-}
-
-fn is_workspace_member_project(path: &Path) -> bool {
-    path.extension()
-        .and_then(|value| value.to_str())
-        .is_some_and(|value| value.eq_ignore_ascii_case("fpasprj"))
 }

@@ -9,6 +9,8 @@ use fpas_unit::interface::UnitInterface;
 impl Checker {
     pub fn check_program(&mut self, program: &Program) {
         self.prepare_program(program);
+        self.register_import_aliases(&program.uses);
+        self.collect_unit_types(&program.declarations);
 
         for decl in &program.declarations {
             self.check_decl(decl);
@@ -41,6 +43,8 @@ impl Checker {
             .collect();
         self.install_supporting_interface_types(supporting_interfaces)?;
         self.install_interfaces(program, interfaces)?;
+        self.register_import_aliases(&program.uses);
+        self.collect_unit_types(&program.declarations);
 
         for decl in &program.declarations {
             self.check_decl(decl);
@@ -74,6 +78,7 @@ impl Checker {
             .collect();
         self.install_supporting_interface_types(supporting_interfaces)?;
         self.install_interfaces_for_declarations(&unit.declarations, interfaces)?;
+        self.register_import_aliases(&unit.uses);
 
         let previous_context = self.scopes.function_ctx.take();
         self.scopes.function_ctx = Some(FunctionCtx {
@@ -81,6 +86,7 @@ impl Checker {
             return_type: None,
             owner_unit: Some(unit.name.parts.join(".")),
         });
+        self.collect_unit_types(&unit.declarations);
         for declaration in &unit.declarations {
             self.check_decl(declaration);
         }
@@ -92,17 +98,12 @@ impl Checker {
         self.prepare_uses(&program.uses);
     }
 
-    fn prepare_uses(&mut self, uses: &[fpas_parser::QualifiedId]) {
+    fn prepare_uses(&mut self, uses: &[fpas_parser::Import]) {
         self.used_unit_names = uses
             .iter()
             .map(|used| used.parts.join(".").to_ascii_lowercase())
             .collect();
         self.loaded_std_units.clear();
-        self.imported_candidates.clear();
-        self.short_builtin_redirect.clear();
-        self.std_short_alias_keys.clear();
-        self.source_short_alias_keys.clear();
-        self.source_short_candidates.clear();
         self.ambiguous_enum_variants.clear();
         self.enum_short_variant_keys.clear();
         for u in uses {
@@ -164,6 +165,5 @@ impl Checker {
     /// Symbols from standard units that are actually in scope (requires matching `uses`).
     fn register_loaded_std_library(&mut self) {
         crate::std_registry::register_loaded_std(self);
-        crate::std_registry::register_short_aliases(self);
     }
 }

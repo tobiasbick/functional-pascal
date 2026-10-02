@@ -4,10 +4,13 @@ Pure path manipulation without filesystem access. This page is the full API for 
 
 ```pascal
 program Example;
-uses Std.Console, Std.Path;
+
+uses Std.Console as Console;
+uses Std.Path as Path;
+
 begin
-  WriteLn(BaseName(Normalize('dir/nested/../file.txt')))
-end.
+  Console.WriteLn(Path.BaseName(Path.Normalize('dir/nested/../file.txt')));
+end program;
 ```
 
 `Std.Path` works on path strings only. It does not read the filesystem, resolve the current working directory, or check whether paths exist.
@@ -15,13 +18,13 @@ end.
 
 ## Importing and names
 
-After `uses Std.Path;` use **`Join`**, **`BaseName`**, **`DirName`**, **`Extension`**, **`Normalize`**, or the fully qualified forms such as **`Std.Path.Join`**.
+Import with `uses Std.Path as Path;`. Access every exported member through `Path`, for example `Path.Join(...)`. Imports open no short names.
 
 ---
 
 ## Quick reference
 
-Requires `uses Std.Path;`.
+Requires `uses Std.Path as Path;`.
 
 | Kind | Name | Notes |
 |------|------|-------|
@@ -50,13 +53,19 @@ Joins path segments in order using the platform separator.
 An absolute segment replaces earlier segments (host `PathBuf::push` semantics):
 
 ```pascal
+uses Std.Console as Console;
+uses Std.Path as Path;
+
 // Unix example: result is '/etc/hosts', not 'home/etc/hosts'
-WriteLn(Join(['home', '/etc/hosts']))
+Console.WriteLn(Path.Join(['home', '/etc/hosts']));
 ```
 
 ```pascal
+uses Std.Console as Console;
+uses Std.Path as Path;
+
 var Parts: array of string := ['src', 'main', 'app.txt'];
-WriteLn(BaseName(Join(Parts)))
+Console.WriteLn(Path.BaseName(Path.Join(Parts)));
 ```
 
 ---
@@ -66,7 +75,10 @@ WriteLn(BaseName(Join(Parts)))
 Returns the final component of `Path`.
 
 ```pascal
-WriteLn(BaseName('dir/nested/file.txt'))  // file.txt
+uses Std.Console as Console;
+uses Std.Path as Path;
+
+Console.WriteLn(Path.BaseName('dir/nested/file.txt')); // file.txt
 ```
 
 Trailing separators follow host `std::path::Path` rules and may differ between Windows and Unix.
@@ -78,8 +90,11 @@ Trailing separators follow host `std::path::Path` rules and may differ between W
 Returns the parent path without the final component.
 
 ```pascal
-WriteLn(DirName('dir/nested/file.txt'))  // dir/nested
-WriteLn(DirName('file.txt'))             // ''
+uses Std.Console as Console;
+uses Std.Path as Path;
+
+Console.WriteLn(Path.DirName('dir/nested/file.txt'));  // dir/nested
+Console.WriteLn(Path.DirName('file.txt'));             // ''
 ```
 
 ---
@@ -89,8 +104,11 @@ WriteLn(DirName('file.txt'))             // ''
 Returns the final extension without a leading dot.
 
 ```pascal
-WriteLn(Extension('archive.tar.gz'))  // gz
-WriteLn(Extension('README'))            // ''
+uses Std.Console as Console;
+uses Std.Path as Path;
+
+Console.WriteLn(Path.Extension('archive.tar.gz'));  // gz
+Console.WriteLn(Path.Extension('README'));            // ''
 ```
 
 ---
@@ -104,15 +122,21 @@ keeps the separator after its drive letter; a drive-relative path stays drive-re
 Parent components cannot climb above a rooted path's root, including a Windows UNC share.
 
 ```pascal
+uses Std.Console as Console;
+uses Std.Path as Path;
+
 // Windows examples:
-WriteLn(Normalize('D:/projects/demo'))       // D:\projects\demo
-WriteLn(Normalize('D:\projects\..\demo'))   // D:\demo
-WriteLn(Normalize('D:projects\..\demo'))     // D:demo (drive-relative)
+Console.WriteLn(Path.Normalize('D:/projects/demo'));       // D:\projects\demo
+Console.WriteLn(Path.Normalize('D:\projects\..\demo'));   // D:\demo
+Console.WriteLn(Path.Normalize('D:projects\..\demo'));     // D:demo (drive-relative)
 ```
 
 ```pascal
-WriteLn(Normalize('a/b/../c'))
-WriteLn(BaseName(Normalize('dir/nested/../file.txt')))
+uses Std.Console as Console;
+uses Std.Path as Path;
+
+Console.WriteLn(Path.Normalize('a/b/../c'));
+Console.WriteLn(Path.BaseName(Path.Normalize('dir/nested/../file.txt')));
 ```
 
 ---

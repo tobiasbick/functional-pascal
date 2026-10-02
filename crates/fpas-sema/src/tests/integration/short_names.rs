@@ -3,164 +3,142 @@ use super::*;
 #[test]
 fn short_name_console_writeln() {
     check_ok(
-        "\
-program T;
-uses Std.Console;
+        r#"program T;
+uses Std.Console as Console;
 begin
-  WriteLn('Hello')
-end.",
+  Console.WriteLn('Hello');
+end program;"#,
     );
 }
 
 #[test]
 fn short_name_console_keypressed() {
     check_ok(
-        "\
-program T;
-uses Std.Console;
+        r#"program T;
+uses Std.Console as Console;
 begin
-  var P: boolean := KeyPressed()
-end.",
+  var P: boolean := Console.KeyPressed();
+end program;"#,
     );
 }
 
 #[test]
 fn short_name_console_crt_names_and_constants() {
     check_ok(
-        "\
-program T;
-uses Std.Console;
+        r#"program T;
+uses Std.Console as Console;
 begin
-  Window(1, 1, 5, 5);
-  GotoXY(1, 1);
-  TextColor(Yellow);
-  TextBackground(Blue);
-  ClrScr();
-  var X: integer := WhereX();
-  var Y: integer := WhereY()
-end.",
+  Console.Window(1, 1, 5, 5);
+  Console.GotoXY(1, 1);
+  Console.TextColor(Console.Yellow);
+  Console.TextBackground(Console.Blue);
+  Console.ClrScr();
+  var X: integer := Console.WhereX();
+  var Y: integer := Console.WhereY();
+end program;"#,
     );
 }
 
 #[test]
 fn short_name_math_sqrt() {
     check_ok(
-        "\
-program T;
-uses Std.Math;
+        r#"program T;
+uses Std.Math as Math;
 begin
-  var R: real := Sqrt(4.0)
-end.",
+  var R: real := Math.Sqrt(4.0);
+end program;"#,
     );
 }
 
 #[test]
 fn short_name_math_pi_const() {
     check_ok(
-        "\
-program T;
-uses Std.Math;
+        r#"program T;
+uses Std.Math as Math;
 begin
-  var R: real := Pi
-end.",
+  var R: real := Math.Pi;
+end program;"#,
     );
 }
 
 #[test]
 fn short_name_conv_int_to_str() {
     check_ok(
-        "\
-program T;
-uses Std.Conv;
+        r#"program T;
+uses Std.Conv as Conv;
 begin
-  var S: string := IntToStr(42)
-end.",
+  var S: string := Conv.IntToStr(42);
+end program;"#,
     );
 }
 
 #[test]
 fn short_name_console_key_event_type() {
     check_ok(
-        "\
-program T;
-uses Std.Console;
+        r#"program T;
+uses Std.Console as Console;
 begin
-  var E: KeyEvent := ReadKeyEvent();
-  WriteLn(E.kind = KeyKind.Space);
-  WriteLn(E.shift)
-end.",
+  var E: Console.KeyEvent := Console.ReadKeyEvent();
+  Console.WriteLn(E.kind = Console.KeyKind.Space);
+  Console.WriteLn(E.shift);
+end program;"#,
     );
 }
 
 #[test]
 fn short_name_mixed_with_qualified() {
     check_ok(
-        "\
-program T;
-uses Std.Console, Std.Math;
+        r#"program T;
+uses Std.Console as Console; uses Std.Math as Math;
 begin
-  WriteLn(Std.Math.Sqrt(Pi))
-end.",
+  Console.WriteLn(Math.Sqrt(Math.Pi));
+end program;"#,
     );
 }
 
 #[test]
-fn ambiguous_call_hint_suggests_the_method_form() {
+fn unknown_call_hint_suggests_explicit_aliases() {
     let errs = check_errors(
-        "\
-program T;
-uses Std.Options, Std.Results;
-begin
-  var O: option of integer := Some(3);
-  var X: integer := Unwrap(O)
-end.",
+        "program T;\nuses Std.Options as Options; uses Std.Results as Results;\nbegin\n  var O: option of integer := Some(3);\n  var X: integer := Unwrap(O);\nend program;",
     );
     assert_eq!(errs.len(), 1, "{errs:#?}");
     let hint = errs[0].help.as_deref().unwrap_or("");
-    assert!(hint.contains("`Value.Unwrap(...)`"), "{hint}");
-    // The suggested method form resolves by the receiver's type.
+    assert!(
+        hint.contains("options.Unwrap") && hint.contains("results.Unwrap"),
+        "{hint}"
+    );
+    // Explicit aliases select the intended routine.
     check_ok(
-        "\
-program T;
-uses Std.Options, Std.Results;
+        r#"program T;
+uses Std.Options as Options; uses Std.Results as Results;
 begin
   var O: option of integer := Some(3);
   var R: result of integer, string := Ok(4);
-  var X: integer := O.Unwrap() + R.Unwrap()
-end.",
+  var X: integer := Options.Unwrap(O) + Results.Unwrap(R);
+end program;"#,
     );
 }
 
 #[test]
-fn ambiguous_length_error() {
+fn unqualified_length_error() {
     let errs = check_errors(
-        "\
-program T;
-uses Std.Str, Std.Arrays;
-begin
-  var L: integer := Length('hi')
-end.",
+        "program T;\nuses Std.Str as Str; uses Std.Arrays as Arrays;\nbegin\n  var L: integer := Length('hi');\nend program;",
     );
     assert!(
-        errs.iter().any(|e| e.message.contains("Ambiguous")),
+        errs.iter().any(|e| e.message.contains("Unknown")),
         "{errs:#?}"
     );
     let h = errs[0].help.as_deref().unwrap_or("");
     assert!(
-        h.contains("Std.Str.Length") && h.contains("Std.Arrays.Length"),
+        h.contains("str.Length") && h.contains("arrays.Length"),
         "hint should list both candidates: {h}"
     );
 }
 
 #[test]
-fn ambiguous_length_hint_has_canonical_candidate_order() {
-    let source = "\
-program T;
-uses Std.Str, Std.Arrays;
-begin
-  var L: integer := Length('hi')
-end.";
-    let expected = "`Length` exists in multiple imported units: Std.Arrays.Length, Std.Str.Length. Use the fully qualified name to disambiguate. Or write `Length(Value, ...)` as `Value.Length(...)`: the method form selects the routine by the type of `Value`.";
+fn unqualified_length_hint_has_stable_alias_order() {
+    let source = "program T;\nuses Std.Str as Str; uses Std.Arrays as Arrays;\nbegin\n  var L: integer := Length('hi');\nend program;";
+    let expected = "Imports open no short names. Use `arrays.Length` or `str.Length`.";
 
     for _ in 0..64 {
         let errors = check_errors(source);
@@ -173,17 +151,12 @@ end.";
 }
 
 #[test]
-fn ambiguous_contains_error() {
+fn unqualified_contains_error() {
     let errs = check_errors(
-        "\
-program T;
-uses Std.Str, Std.Arrays;
-begin
-  var B: boolean := Contains('hello', 'h')
-end.",
+        "program T;\nuses Std.Str as Str; uses Std.Arrays as Arrays;\nbegin\n  var B: boolean := Contains('hello', 'h');\nend program;",
     );
     assert!(
-        errs.iter().any(|e| e.message.contains("Ambiguous")),
+        errs.iter().any(|e| e.message.contains("Unknown")),
         "{errs:#?}"
     );
 }
@@ -191,25 +164,23 @@ end.",
 #[test]
 fn ambiguous_fallback_to_qualified() {
     check_ok(
-        "\
-program T;
-uses Std.Str, Std.Arrays;
+        r#"program T;
+uses Std.Str as Str; uses Std.Arrays as Arrays;
 begin
-  var L: integer := Std.Str.Length('hi');
-  var L2: integer := Std.Arrays.Length([1, 2])
-end.",
+  var L: integer := Str.Length('hi');
+  var L2: integer := Arrays.Length([1, 2]);
+end program;"#,
     );
 }
 
 #[test]
 fn no_ambiguity_single_unit() {
     check_ok(
-        "\
-program T;
-uses Std.Str;
+        r#"program T;
+uses Std.Str as Str;
 begin
-  var L: integer := Length('hello')
-end.",
+  var L: integer := Str.Length('hello');
+end program;"#,
     );
 }
 
@@ -218,14 +189,13 @@ end.",
 #[test]
 fn qualified_std_name_without_uses_is_rejected() {
     let errs = check_errors(
-        "\
-program T;
-uses Std.Str;
+        r#"program T;
+uses Std.Str as Str;
 begin
   var A: array of integer := [1];
   var L1: integer := Std.Arrays.Length(A);
-  var L2: integer := Length('hi')
-end.",
+  var L2: integer := Str.Length('hi');
+end program;"#,
     );
     assert_eq!(errs.len(), 1, "{errs:#?}");
     assert!(
@@ -239,13 +209,12 @@ end.",
 #[test]
 fn qualified_names_disambiguate_imported_std_units() {
     check_ok(
-        "\
-program T;
-uses Std.Str, Std.Arrays;
+        r#"program T;
+uses Std.Str as Str; uses Std.Arrays as Arrays;
 begin
   var A: array of integer := [1];
-  var L1: integer := Std.Arrays.Length(A);
-  var L2: integer := Std.Str.Length('hi')
-end.",
+  var L1: integer := Arrays.Length(A);
+  var L2: integer := Str.Length('hi');
+end program;"#,
     );
 }

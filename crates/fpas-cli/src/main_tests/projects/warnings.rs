@@ -7,13 +7,31 @@ fn run_cli_emits_warning_for_program_source_file_and_still_runs() {
     support::write_program_project_file(&project_file, "src/main.fpas", &["src/*.fpas"]);
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Util, Std.Console;\nbegin\n  WriteLn(GetValue())\nend.\n",
+        r#"program Main;
+uses App.Util as Util; uses Std.Console as Console;
+begin
+  Console.WriteLn(Util.GetValue());
+end program;
+"#,
     );
     write_text(
         &cwd.join("src/util.fpas"),
-        "unit App.Util;\npublic function GetValue(): integer;\nbegin\n  return 42\nend;\n",
+        r#"unit App.Util;
+public function GetValue(): integer;
+begin
+  return 42;
+end function;
+end unit;
+
+"#,
     );
-    write_text(&cwd.join("src/tool.fpas"), "program Tool;\nbegin\nend.\n");
+    write_text(
+        &cwd.join("src/tool.fpas"),
+        r#"program Tool;
+begin null;
+end program;
+"#,
+    );
 
     let (exit_code, stdout_output, stderr_output) =
         support::run_cli_and_capture_output(&project_file, &cwd);
@@ -36,11 +54,23 @@ fn run_cli_emits_warning_for_duplicate_source_file_and_still_runs() {
     );
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Util, Std.Console;\nbegin\n  WriteLn(GetValue())\nend.\n",
+        r#"program Main;
+uses App.Util as Util; uses Std.Console as Console;
+begin
+  Console.WriteLn(Util.GetValue());
+end program;
+"#,
     );
     write_text(
         &cwd.join("src/util.fpas"),
-        "unit App.Util;\npublic function GetValue(): integer;\nbegin\n  return 7\nend;\n",
+        r#"unit App.Util;
+public function GetValue(): integer;
+begin
+  return 7;
+end function;
+end unit;
+
+"#,
     );
 
     let (exit_code, stdout_output, stderr_output) =

@@ -1,14 +1,15 @@
 program T;
 
-uses Std.Console, Std.Arrays;
+uses Std.Console as Console;
+uses Std.Arrays as Arrays;
 
 function AddOne(X: integer): integer;
 begin
-  return X + 1
-end;
+  return X + 1;
+end function;
 
 begin
   var A: array of integer := [];
-  var B: array of integer := Map(A, AddOne);
-  WriteLn(Length(B))
-end.
+  var B: array of integer := Arrays.Map(A, AddOne);
+  Console.WriteLn(Arrays.Length(B));
+end program;

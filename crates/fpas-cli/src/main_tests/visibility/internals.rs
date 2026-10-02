@@ -17,23 +17,29 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Lib, Std.Console;\nbegin\n  WriteLn(GetValue())\nend.\n",
+        r#"program Main;
+uses App.Lib as Lib; uses Std.Console as Console;
+begin
+  Console.WriteLn(Lib.GetValue());
+end program;
+"#,
     );
     write_text(
         &cwd.join("src/lib.fpas"),
-        "\
-unit App.Lib;
+        r#"unit App.Lib;
 
 function Secret(): integer;
 begin
-  return 42
-end;
+  return 42;
+end function;
 
 public function GetValue(): integer;
 begin
-  return Secret()
-end;
-",
+  return Secret();
+end function;
+end unit;
+
+"#,
     );
 
     let (exit_code, stdout_output, stderr_output) =
@@ -62,23 +68,29 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Lib, Std.Console;\nbegin\n  WriteLn(PublicFn())\nend.\n",
+        r#"program Main;
+uses App.Lib as Lib; uses Std.Console as Console;
+begin
+  Console.WriteLn(Lib.PublicFn());
+end program;
+"#,
     );
     write_text(
         &cwd.join("src/lib.fpas"),
-        "\
-unit App.Lib;
+        r#"unit App.Lib;
 
 function Helper(): integer;
 begin
-  return 10
-end;
+  return 10;
+end function;
 
 public function PublicFn(): integer;
 begin
-  return Helper() + 5
-end;
-",
+  return Helper() + 5;
+end function;
+end unit;
+
+"#,
     );
 
     let (exit_code, stdout_output, _) = support::run_cli_and_capture_output(&project_file, &cwd);
@@ -105,21 +117,27 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Lib, Std.Console;\nbegin\n  WriteLn(GetSecret())\nend.\n",
+        r#"program Main;
+uses App.Lib as Lib; uses Std.Console as Console;
+begin
+  Console.WriteLn(Lib.GetSecret());
+end program;
+"#,
     );
     write_text(
         &cwd.join("src/lib.fpas"),
-        "\
-unit App.Lib;
+        r#"unit App.Lib;
 
-const
-  SecretVal: integer := 99;
+
+  const SecretVal: integer := 99;
 
 public function GetSecret(): integer;
 begin
-  return SecretVal
-end;
-",
+  return SecretVal;
+end function;
+end unit;
+
+"#,
     );
 
     let (exit_code, stdout_output, stderr_output) =
@@ -147,23 +165,29 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Lib, Std.Console;\nbegin\n  WriteLn(GetCounter())\nend.\n",
+        r#"program Main;
+uses App.Lib as Lib; uses Std.Console as Console;
+begin
+  Console.WriteLn(Lib.GetCounter());
+end program;
+"#,
     );
     write_text(
         &cwd.join("src/lib.fpas"),
-        "\
-unit App.Lib;
+        r#"unit App.Lib;
 
-mutable var
-  Counter: integer := -1;
+
+  mutable var Counter: integer := -1;
 
 public function GetCounter(): integer;
 begin
   if Counter < 0 then
-    Counter := 42;
-  return Counter
-end;
-",
+    Counter := 42; end if;
+  return Counter;
+end function;
+end unit;
+
+"#,
     );
 
     let (exit_code, stdout_output, stderr_output) =
@@ -191,30 +215,37 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Caller, Std.Console;\nbegin\n  WriteLn(TryCall())\nend.\n",
+        r#"program Main;
+uses App.Caller as Caller; uses Std.Console as Console;
+begin
+  Console.WriteLn(Caller.TryCall());
+end program;
+"#,
     );
     write_text(
         &cwd.join("src/caller.fpas"),
-        "\
-unit App.Caller;
-uses App.Lib;
+        r#"unit App.Caller;
+uses App.Lib as Lib;
 
 public function TryCall(): integer;
 begin
-  return Secret()
-end;
-",
+  return Secret();
+end function;
+end unit;
+
+"#,
     );
     write_text(
         &cwd.join("src/lib.fpas"),
-        "\
-unit App.Lib;
+        r#"unit App.Lib;
 
 function Secret(): integer;
 begin
-  return 42
-end;
-",
+  return 42;
+end function;
+end unit;
+
+"#,
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);
@@ -231,20 +262,19 @@ end;
 fn private_is_valid_identifier_in_program() {
     let (exit_code, stdout_output, stderr_output) = support::run_source_and_capture_output(
         "private_identifier.fpas",
-        "\
-program Main;
+        r#"program Main;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 function private(): integer;
 begin
-  return 42
-end;
+  return 42;
+end function;
 
 begin
-  WriteLn(private())
-end.
-",
+  Console.WriteLn(private());
+end program;
+"#,
     );
 
     assert_eq!(exit_code, 0, "{stderr_output}");

@@ -1,68 +1,76 @@
 program SseErrorStateTest;
 
-uses Std.Arrays, Std.Http, Std.Net.Utf8, Std.Results, Std.Str, Std.Test;
+uses Std.Arrays as Arrays;
+uses Std.Http as Http;
+uses Std.Net.Utf8 as Utf8;
+uses Std.Results as Results;
+uses Std.Str as Str;
+uses Std.Test as Test;
 
-procedure Terminal(Decoder: SseDecoder);
+procedure Terminal(Decoder: Http.SseDecoder);
 begin
   for Pass: integer := 1 to 3 do
-  begin
-    case FeedSse(Decoder, Std.Net.Utf8.Encode(('data: more' + #10) + #10)) of
-      Ok(_):
-      begin
-        Fail('feed after error')
-      end;
-      Error(Message):
-      begin
-        AssertTrue(Std.Str.Contains(Message, 'finished'))
-      end
-    end;
+    begin
+      case Http.FeedSse(Decoder, Utf8.Encode(('data: more' + #10) + #10)) of
+        when Ok(_):
+          begin
+            Test.Fail('feed after error');
+          end;
+        when Error(Message):
+          begin
+            Test.AssertTrue(Str.Contains(Message, 'finished'));
+          end;
+      end case;
 
-    case FinishSse(Decoder) of
-      Ok(_):
-      begin
-        Fail('finish after error')
-      end;
-      Error(Message):
-      begin
-        AssertTrue(Std.Str.Contains(Message, 'finished'))
-      end
-    end
-  end
-end;
+      case Http.FinishSse(Decoder) of
+        when Ok(_):
+          begin
+            Test.Fail('finish after error');
+          end;
+        when Error(Message):
+          begin
+            Test.AssertTrue(Str.Contains(Message, 'finished'));
+          end;
+      end case;
+    end;
+  end for;
+end procedure;
 
 begin
-  var Limited: SseDecoder := Unwrap(CreateSseDecoder(8));
-  case FeedSse(Limited, Std.Net.Utf8.Encode(Std.Str.RepeatStr('x', 100000))) of
-    Ok(_):
-    begin
-      Fail('oversized fragment')
-    end;
-    Error(_):
-    begin
-    end
-  end;
+  var Limited: Http.SseDecoder := Results.Unwrap(Http.CreateSseDecoder(8));
+  case Http.FeedSse(Limited, Utf8.Encode(Str.RepeatStr('x', 100000))) of
+    when Ok(_):
+      begin
+        Test.Fail('oversized fragment');
+      end;
+    when Error(_):
+      begin
+        null;
+      end;
+  end case;
 
   Terminal(Limited);
-  var Invalid: SseDecoder := Unwrap(CreateSseDecoder(16));
-  AssertEquals(0, Std.Arrays.Length(Unwrap(FeedSse(Invalid, [255]))));
-  case FinishSse(Invalid) of
-    Ok(_):
-    begin
-      Fail('invalid final UTF-8')
-    end;
-    Error(_):
-    begin
-    end
-  end;
+  var Invalid: Http.SseDecoder := Results.Unwrap(Http.CreateSseDecoder(16));
+  Test.AssertEquals(0, Arrays.Length(Results.Unwrap(Http.FeedSse(Invalid, [255]))));
+  case Http.FinishSse(Invalid) of
+    when Ok(_):
+      begin
+        Test.Fail('invalid final UTF-8');
+      end;
+    when Error(_):
+      begin
+        null;
+      end;
+  end case;
 
   Terminal(Invalid);
-  var Many: SseDecoder := Unwrap(CreateSseDecoder(9));
-  var Events: array of SseEvent := Unwrap(FeedSse(Many, Std.Net.Utf8.Encode(Std.Str.RepeatStr((('data:x' + #13) + #10) +
-                                                                                              #10, 500))));
-  AssertEquals(500, Std.Arrays.Length(Events));
-  AssertEquals('x', Events[499].Data);
-  var Split: SseDecoder := Unwrap(CreateSseDecoder(9));
-  AssertEquals(0, Std.Arrays.Length(Unwrap(FeedSse(Split, Std.Net.Utf8.Encode('data:x' + #13)))));
-  AssertEquals(1, Std.Arrays.Length(Unwrap(FeedSse(Split, [10, 10]))));
-  AssertEquals(0, Std.Arrays.Length(Unwrap(FinishSse(Split))))
-end.
+  var Many: Http.SseDecoder := Results.Unwrap(Http.CreateSseDecoder(9));
+  var Events: array of Http.SseEvent := Results.Unwrap(Http.FeedSse(Many, Utf8.Encode(Str.RepeatStr((('data:x' + #13) + #10) +
+                                                                                                    #10, 500))));
+  Test.AssertEquals(500, Arrays.Length(Events));
+  Test.AssertEquals('x', Events[499].Data);
+  var Split: Http.SseDecoder := Results.Unwrap(Http.CreateSseDecoder(9));
+  Test.AssertEquals(0, Arrays.Length(Results.Unwrap(Http.FeedSse(Split, Utf8.Encode('data:x' + #13)))));
+  Test.AssertEquals(1, Arrays.Length(Results.Unwrap(Http.FeedSse(Split, [10, 10]))));
+  Test.AssertEquals(0, Arrays.Length(Results.Unwrap(Http.FinishSse(Split))));
+end program;

@@ -31,12 +31,22 @@ include = ["Std/**/*.fpas"]
     );
     write_text(
         &dir.join("Std/Sample.fpas"),
-        "unit Std.Sample;\nconst\n  Value: integer := 42;\n",
+        r#"unit Std.Sample;
+
+  const Value: integer := 42;
+end unit;
+
+"#,
     );
     let program = dir.join("main.fpas");
     write_text(
         &program,
-        "program Main;\nuses Std.Sample;\nbegin\n  var Answer: integer := Value\nend.\n",
+        r#"program Main;
+uses Std.Sample as Sample;
+begin
+  var Answer: integer := Value;
+end program;
+"#,
     );
 
     let library = load_standard_library(&dir).expect("standard library must load");
@@ -73,12 +83,22 @@ include = ["Std/**/*.fpas"]
     let unit_path = dir.join("Std/Sample.fpas");
     write_text(
         &unit_path,
-        "unit Std.Sample;\nconst\n  Value: integer := 42;\n",
+        r#"unit Std.Sample;
+
+  const Value: integer := 42;
+end unit;
+
+"#,
     );
     let program = dir.join("main.fpas");
     write_text(
         &program,
-        "program Main;\nuses Std.Sample;\nbegin\n  var Answer: integer := Value\nend.\n",
+        r#"program Main;
+uses Std.Sample as Sample;
+begin
+  var Answer: integer := Value;
+end program;
+"#,
     );
 
     let library = load_standard_library(&dir).expect("standard library must load");
@@ -111,7 +131,13 @@ include = ["Std/**/*.fpas"]
 "#,
     );
     let unit_path = dir.join("Std/Sample.fpas");
-    write_text(&unit_path, "unit Std.Sample;\n");
+    write_text(
+        &unit_path,
+        r#"unit Std.Sample;
+end unit;
+
+"#,
+    );
 
     let project = load_standard_library_project(&dir).expect("editable standard library must load");
     let origin = project.link_meta.origin_for_source(&unit_path);
@@ -140,10 +166,29 @@ units = ["Std.Exported"]
 include = ["Std/**/*.fpas"]
 "#,
     );
-    write_text(&dir.join("Std/Exported.fpas"), "unit Std.Exported;\n");
-    write_text(&dir.join("Std/Internal.fpas"), "unit Std.Internal;\n");
+    write_text(
+        &dir.join("Std/Exported.fpas"),
+        r#"unit Std.Exported;
+end unit;
+
+"#,
+    );
+    write_text(
+        &dir.join("Std/Internal.fpas"),
+        r#"unit Std.Internal;
+end unit;
+
+"#,
+    );
     let program = dir.join("main.fpas");
-    write_text(&program, "program Main;\nuses Std.Internal;\nbegin\nend.\n");
+    write_text(
+        &program,
+        r#"program Main;
+uses Std.Internal as Internal;
+begin null;
+end program;
+"#,
+    );
 
     let library = load_standard_library(&dir).expect("standard library must load");
     let result = build_unit_graph_for_program_with_standard_library(
@@ -181,7 +226,13 @@ kind = "library"
 include = ["Std/**/*.fpas"]
 "#,
     );
-    write_text(&dir.join("Std/Console.fpas"), "unit Std.Console;\n");
+    write_text(
+        &dir.join("Std/Console.fpas"),
+        r#"unit Std.Console;
+end unit;
+
+"#,
+    );
 
     let error = load_standard_library(&dir).expect_err("intrinsic collision must fail");
     remove_dir(&dir);
@@ -205,7 +256,13 @@ kind = "library"
 include = ["src/**/*.fpas"]
 "#,
     );
-    write_text(&dir.join("src/Other.fpas"), "unit Other;\n");
+    write_text(
+        &dir.join("src/Other.fpas"),
+        r#"unit Other;
+end unit;
+
+"#,
+    );
 
     let error = load_standard_library(&dir).expect_err("non-Std unit must fail");
     remove_dir(&dir);

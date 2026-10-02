@@ -1,55 +1,56 @@
 program ShapesExample;
 
-uses Std.Console, Std.Conv, Std.Math;
+uses Std.Console as Console;
+uses Std.Conv as Conv;
+uses Std.Math as Math;
 
-type
-  Shape = enum
-    Circle(Radius: real);
-    Rectangle(Width: real; Height: real);
-    Point;
-  end;
+type Shape = enum
+  Circle(Radius: real);
+  Rectangle(Width: real; Height: real);
+  Point;
+end enum;
 
 function Area(S: Shape): real;
 begin
   case S of
-    Shape.Circle(R):
-    begin
-      return (Pi * R) * R
-    end;
-    Shape.Rectangle(W, H):
-    begin
-      return W * H
-    end;
-    Shape.Point:
-    begin
-      return 0.0
-    end
-  end
-end;
+    when Shape.Circle(R):
+      begin
+        return (Math.Pi * R) * R;
+      end;
+    when Shape.Rectangle(W, H):
+      begin
+        return W * H;
+      end;
+    when Shape.Point:
+      begin
+        return 0.0;
+      end;
+  end case;
+end function;
 
 function Describe(S: Shape): string;
 begin
   case S of
-    Shape.Circle(R):
-    begin
-      return 'Circle with radius ' + RealToStr(R)
-    end;
-    Shape.Rectangle(W, H):
-    begin
-      return (('Rectangle ' + RealToStr(W)) + ' x ') + RealToStr(H)
-    end;
-    Shape.Point:
-    begin
-      return 'Point'
-    end
-  end
-end;
+    when Shape.Circle(R):
+      begin
+        return 'Circle with radius ' + Conv.RealToStr(R);
+      end;
+    when Shape.Rectangle(W, H):
+      begin
+        return (('Rectangle ' + Conv.RealToStr(W)) + ' x ') + Conv.RealToStr(H);
+      end;
+    when Shape.Point:
+      begin
+        return 'Point';
+      end;
+  end case;
+end function;
 
 begin
   var C: Shape := Shape.Circle(5.0);
   var R: Shape := Shape.Rectangle(10.0, 3.0);
   var P: Shape := Shape.Point;
-  WriteLn((Describe(C) + ' -> area = ') + RealToStr(Area(C)));
-  WriteLn((Describe(R) + ' -> area = ') + RealToStr(Area(R)));
-  WriteLn((Describe(P) + ' -> area = ') + RealToStr(Area(P)))
-end.
+  Console.WriteLn((Describe(C) + ' -> area = ') + Conv.RealToStr(Area(C)));
+  Console.WriteLn((Describe(R) + ' -> area = ') + Conv.RealToStr(Area(R)));
+  Console.WriteLn((Describe(P) + ' -> area = ') + Conv.RealToStr(Area(P)));
+end program;

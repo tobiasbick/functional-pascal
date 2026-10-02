@@ -12,7 +12,9 @@ fn test_cli_json_report_writes_summary_to_stdout() {
     let cwd = create_temp_dir("fpas-test-json");
     write_text(
         &cwd.join("ok_test.fpas"),
-        "program O;\nuses Std.Test;\nbegin AssertTrue(true) end.",
+        r#"program O;
+uses Std.Test as Test;
+begin Test.AssertTrue(true); end program;"#,
     );
 
     let mut stdout = Vec::new();

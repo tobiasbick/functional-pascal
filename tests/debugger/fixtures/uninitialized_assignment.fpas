@@ -1,15 +1,13 @@
 program UninitializedAssignment;
 
-uses Std.Console;
+uses Std.Console as Console;
 
-type
-  Point = record
-    X: integer;
-    Y: integer;
-  end;
+type Point = record
+  X: integer;
+  Y: integer;
+end record;
 
-mutable var
-  GlobalCount: integer := 99;
+mutable var GlobalCount: integer := 99;
 
 begin
   mutable var Count: integer := 1;
@@ -17,19 +15,20 @@ begin
   mutable var Origin: Point := record
     X := 3;
     Y := 4;
-  end;
+  end record;
   var Frozen: integer := 2;
-  WriteLn(Count);
-  WriteLn(GlobalCount);
+  Console.WriteLn(Count);
+  Console.WriteLn(GlobalCount);
   if Flag then
-  begin
-    WriteLn(1)
-  end
+    begin
+      Console.WriteLn(1);
+    end;
   else
-  begin
-    WriteLn(0)
-  end;
+    begin
+      Console.WriteLn(0);
+    end;
+  end if;
 
-  WriteLn(Origin.X);
-  WriteLn(Frozen)
-end.
+  Console.WriteLn(Origin.X);
+  Console.WriteLn(Frozen);
+end program;

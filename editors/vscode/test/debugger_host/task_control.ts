@@ -29,19 +29,19 @@ export async function verifyTaskControl(
   const lines = [
     "program DebuggerTaskControl;",
     "",
-    "uses Std.Console, Std.Tasks;",
+    " uses Std.Console as Console; uses Std.Tasks as Tasks;",
     "",
     "function Work(): integer;",
     "begin",
     "  mutable var Value: integer := 40;",
     "  Value := Value + 2;",
-    "  return Value",
-    "end;",
+    "  return Value;",
+    "end function;",
     "",
     "begin",
     "  var Pending: task := go Work();",
-    "  WriteLn(Wait(Pending))",
-    "end.",
+    "  Console.WriteLn(Tasks.Wait(Pending));",
+    "end program;",
     ""
   ];
   const sourcePath = await writeSource(workspaceRoot, "task-control", lines);

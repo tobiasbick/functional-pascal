@@ -34,12 +34,12 @@ export async function verifyDebuggerInput(
   const lines = [
     "program DebuggerInput;",
     "",
-    "uses Std.Console;",
+    " uses Std.Console as Console;",
     "",
     "begin",
-    "  WriteLn(ReadLn());",
-    "  WriteLn(ReadLn())",
-    "end.",
+    "  Console.WriteLn(Console.ReadLn());",
+    "  Console.WriteLn(Console.ReadLn());",
+    "end program;",
     ""
   ];
   const sourcePath = await writeSource(workspaceRoot, "input", lines);

@@ -1,12 +1,12 @@
 program StringMapMultipleResultRuntimeError;
 
-uses Std.Str;
+uses Std.Str as Str;
 
 function Expand(C: string): string;
 begin
-  return 'ab'
-end;
+  return 'ab';
+end function;
 
 begin
-  var Mapped: string := Map('😀', Expand)
-end.
+  var Mapped: string := Str.Map('😀', Expand);
+end program;

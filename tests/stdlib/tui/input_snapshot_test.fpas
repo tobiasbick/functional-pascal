@@ -1,62 +1,63 @@
 program TuiInputSnapshotTest;
 
-uses Std.Str, Std.Test, Std.Tui;
+uses Std.Str as Str;
+uses Std.Test as Test;
+uses Std.Tui as Tui;
 
-type
-  InputSnapshotModel = record
-    Text: string;
-    Caret: integer;
-    Hint: string;
-  end;
+type InputSnapshotModel = record
+  Text: string;
+  Caret: integer;
+  Hint: string;
+end record;
 
-function ViewInput(State: InputSnapshotModel): TuiElement;
+function ViewInput(State: InputSnapshotModel): Tui.TuiElement;
 begin
-  return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(1)), [
-                                                                        TuiElementBuilders.MakeInputWithHint(TuiControlId.Create(1), State.Text, State.Caret, State.Hint, TuiAction.Create(1))
-                                                                      ])
-end;
+  return Tui.TuiElementBuilders.MakeDesktop(Some(Tui.TuiControlId.Create(1)), [
+                                                                                Tui.TuiElementBuilders.MakeInputWithHint(Tui.TuiControlId.Create(1), State.Text, State.Caret, State.Hint, Tui.TuiAction.Create(1))
+                                                                              ]);
+end function;
 
-function UpdateInput(State: InputSnapshotModel; Msg: TuiMsg; Cmd: TuiCmdOutput): InputSnapshotModel;
+function UpdateInput(State: InputSnapshotModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): InputSnapshotModel;
 begin
-  Cmd.Set(TuiCmd.NoCommand);
-  return State
-end;
+  Cmd.Set(Tui.TuiCmd.NoCommand);
+  return State;
+end function;
 
 begin
-  mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(10, 2));
+  mutable var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(10, 2));
   mutable var Model: InputSnapshotModel := record
     Text := '';
     Caret := 0;
     Hint := 'Path';
-  end;
+  end record;
 
   Model := App.RunIterations(Model, UpdateInput, ViewInput, 0, 0);
-  var HintSurface: TuiSurfaceSnapshot := App.SurfaceSnapshot();
-  AssertTrue(HintSurface.CellAt(1, 0).Role = TuiStyleRole.InputCursor);
-  AssertEquals('P', HintSurface.CellAt(2, 0).Glyph);
-  AssertTrue(HintSurface.CellAt(2, 0).Role = TuiStyleRole.InputHint);
+  var HintSurface: Tui.TuiSurfaceSnapshot := App.SurfaceSnapshot();
+  Test.AssertTrue(HintSurface.CellAt(1, 0).Role = Tui.TuiStyleRole.InputCursor);
+  Test.AssertEquals('P', HintSurface.CellAt(2, 0).Glyph);
+  Test.AssertTrue(HintSurface.CellAt(2, 0).Role = Tui.TuiStyleRole.InputHint);
   Model := record
     Text := 'abcdefghijk';
     Caret := 0;
     Hint := '';
-  end;
+  end record;
 
   Model := App.RunIterations(Model, UpdateInput, ViewInput, 0, 0);
-  var RightSurface: TuiSurfaceSnapshot := App.SurfaceSnapshot();
-  AssertEquals('►', RightSurface.CellAt(9, 0).Glyph);
-  AssertTrue(RightSurface.CellAt(9, 0).Role = TuiStyleRole.InputScroll);
-  AssertTrue(RightSurface.CellAt(1, 0).Role = TuiStyleRole.InputCursor);
+  var RightSurface: Tui.TuiSurfaceSnapshot := App.SurfaceSnapshot();
+  Test.AssertEquals('►', RightSurface.CellAt(9, 0).Glyph);
+  Test.AssertTrue(RightSurface.CellAt(9, 0).Role = Tui.TuiStyleRole.InputScroll);
+  Test.AssertTrue(RightSurface.CellAt(1, 0).Role = Tui.TuiStyleRole.InputCursor);
   Model := record
     Text := 'abcdefghijk';
     Caret := 11;
     Hint := '';
-  end;
+  end record;
 
   Model := App.RunIterations(Model, UpdateInput, ViewInput, 0, 0);
-  var LeftSurface: TuiSurfaceSnapshot := App.SurfaceSnapshot();
-  AssertEquals('◄', LeftSurface.CellAt(0, 0).Glyph);
-  AssertTrue(LeftSurface.CellAt(0, 0).Role = TuiStyleRole.InputScroll);
-  AssertTrue(LeftSurface.CellAt(8, 0).Role = TuiStyleRole.InputCursor);
-  AssertTrue(Std.Str.Contains(LeftSurface.LineAt(0), 'efghijk'));
-  App.Close()
-end.
+  var LeftSurface: Tui.TuiSurfaceSnapshot := App.SurfaceSnapshot();
+  Test.AssertEquals('◄', LeftSurface.CellAt(0, 0).Glyph);
+  Test.AssertTrue(LeftSurface.CellAt(0, 0).Role = Tui.TuiStyleRole.InputScroll);
+  Test.AssertTrue(LeftSurface.CellAt(8, 0).Role = Tui.TuiStyleRole.InputCursor);
+  Test.AssertTrue(Str.Contains(LeftSurface.LineAt(0), 'efghijk'));
+  App.Close();
+end program;

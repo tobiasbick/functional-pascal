@@ -1,20 +1,23 @@
 program GraphemeCellTest;
 
-uses Std.Arrays, Std.Console, Std.Options, Std.Test;
+uses Std.Arrays as Arrays;
+uses Std.Console as Console;
+uses Std.Options as Options;
+uses Std.Test as Test;
 
 begin
-  AssertEquals(1, GraphemeWidth('é'));
-  AssertEquals(2, GraphemeWidth('👩‍💻'));
-  var Graphemes: array of string := SplitGraphemes('Aé👩‍💻');
-  AssertEquals(3, Std.Arrays.Length(Graphemes));
-  AssertEquals('é', Graphemes[1]);
-  AssertEquals('👩‍💻', Graphemes[2]);
-  var Value: Cell := record
+  Test.AssertEquals(1, Console.GraphemeWidth('é'));
+  Test.AssertEquals(2, Console.GraphemeWidth('👩‍💻'));
+  var Graphemes: array of string := Console.SplitGraphemes('Aé👩‍💻');
+  Test.AssertEquals(3, Arrays.Length(Graphemes));
+  Test.AssertEquals('é', Graphemes[1]);
+  Test.AssertEquals('👩‍💻', Graphemes[2]);
+  var Value: Console.Cell := record
     glyph := 'é';
-    foreground := CrtColor(7);
-    background := CrtColor(0);
-  end;
+    foreground := Console.CrtColor(7);
+    background := Console.CrtColor(0);
+  end record;
 
-  PutCell(1, 1, Value);
-  AssertEquals('é', Std.Options.Unwrap(GetCell(1, 1)).glyph)
-end.
+  Console.PutCell(1, 1, Value);
+  Test.AssertEquals('é', Options.Unwrap(Console.GetCell(1, 1)).glyph);
+end program;

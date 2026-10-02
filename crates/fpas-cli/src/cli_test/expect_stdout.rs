@@ -99,7 +99,7 @@ mod tests {
     fn compare_stdout_passes_when_file_matches() {
         let cwd = create_temp_dir("expect-stdout-pass");
         let test_path = cwd.join("echo_test.fpas");
-        write_text(&test_path, "program T; begin end.");
+        write_text(&test_path, r#"program T; begin null; end program;"#);
         write_text(&expect_stdout_path_for_test(&test_path), "Hello\nWorld\n");
 
         assert!(compare_stdout(&test_path, &["Hello".into(), "World".into()]).is_ok());
@@ -109,7 +109,7 @@ mod tests {
     fn compare_stdout_fails_with_line_diff_hint() {
         let cwd = create_temp_dir("expect-stdout-fail");
         let test_path = cwd.join("echo_test.fpas");
-        write_text(&test_path, "program T; begin end.");
+        write_text(&test_path, r#"program T; begin null; end program;"#);
         write_text(&expect_stdout_path_for_test(&test_path), "Hello\n");
 
         let err = compare_stdout(&test_path, &["Hi".into()]).expect_err("mismatch must fail");

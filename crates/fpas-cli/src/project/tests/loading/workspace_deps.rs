@@ -29,7 +29,11 @@ include = ["src/**/*.fpas"]
     );
     write_text(
         &lib_project.parent().unwrap().join("src/greet.fpas"),
-        "unit Demo.Greet;\nconst Message: string := 'hi';\n",
+        r#"unit Demo.Greet;
+ const Message: string := 'hi';
+end unit;
+
+"#,
     );
 
     write_program_fpasprj_with_workspace_deps(
@@ -40,7 +44,12 @@ include = ["src/**/*.fpas"]
     );
     write_text(
         &app_project.parent().unwrap().join("src/main.fpas"),
-        "program Hello;\nuses Demo.Greet, Std.Console;\nbegin\n  WriteLn(Message)\nend.\n",
+        r#"program Hello;
+uses Demo.Greet as Greet; uses Std.Console as Console;
+begin
+  Console.WriteLn(Greet.Message);
+end program;
+"#,
     );
 
     let loaded = load_project_ok(&app_project);
@@ -66,7 +75,13 @@ fn workspace_dependency_without_enclosing_workspace_is_rejected() {
         &["src/**/*.fpas"],
         &["greet"],
     );
-    write_text(&dir.join("src/main.fpas"), "program App;\nbegin\nend.\n");
+    write_text(
+        &dir.join("src/main.fpas"),
+        r#"program App;
+begin null;
+end program;
+"#,
+    );
 
     let error = load_project_error(&app_project, "workspace dep requires workspace");
     fs::remove_dir_all(&dir).expect("temp directory must be removed");
@@ -93,7 +108,10 @@ members = ["lib.fpasprj", "app.fpasprj"]
     write_library_fpasprj(&lib_project, &["src/**/*.fpas"]);
     write_text(
         &lib_project.parent().unwrap().join("src/lib.fpas"),
-        "unit Lib.Core;\n",
+        r#"unit Lib.Core;
+end unit;
+
+"#,
     );
 
     write_program_fpasprj_with_workspace_deps(
@@ -104,7 +122,10 @@ members = ["lib.fpasprj", "app.fpasprj"]
     );
     write_text(
         &app_project.parent().unwrap().join("src/main.fpas"),
-        "program App;\nbegin\nend.\n",
+        r#"program App;
+begin null;
+end program;
+"#,
     );
 
     let error = load_project_error(&app_project, "unknown workspace dep must fail");

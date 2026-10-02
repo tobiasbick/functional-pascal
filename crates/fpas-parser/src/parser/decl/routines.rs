@@ -75,7 +75,7 @@ impl Parser {
     ) -> FunctionDecl {
         let (name, type_params, params, return_type, start) =
             self.parse_function_header(allow_self_receiver);
-        let body = self.parse_func_body();
+        let body = self.parse_func_body(&Token::Function);
         FunctionDecl {
             name,
             type_params,
@@ -111,7 +111,7 @@ impl Parser {
         allow_self_receiver: bool,
     ) -> ProcedureDecl {
         let (name, type_params, params, start) = self.parse_procedure_header(allow_self_receiver);
-        let body = self.parse_func_body();
+        let body = self.parse_func_body(&Token::Procedure);
         ProcedureDecl {
             name,
             type_params,
@@ -122,11 +122,11 @@ impl Parser {
         }
     }
 
-    fn parse_func_body(&mut self) -> FuncBody {
+    fn parse_func_body(&mut self, kind: &Token) -> FuncBody {
         let nested = self.parse_nested_decls();
         self.expect(&Token::Begin);
         let stmts = self.parse_statement_list();
-        self.expect(&Token::End);
+        self.expect_named_end(kind);
         self.expect_semi();
 
         FuncBody::Block { nested, stmts }

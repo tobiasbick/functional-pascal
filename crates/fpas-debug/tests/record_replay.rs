@@ -12,7 +12,8 @@ use fpas_debug::{
 use serde_json::{Value, json};
 
 fn server() -> JsonlServer {
-    let (program, diagnostics) = fpas_parser::parse("program RecordReplay; begin end.");
+    let (program, diagnostics) =
+        fpas_parser::parse(r#"program RecordReplay; begin null; end program;"#);
     assert!(diagnostics.is_empty(), "parse diagnostics: {diagnostics:?}");
     let executable = fpas_compiler::compile(&program).expect("compile record/replay fixture");
     JsonlServer::new(PreparedDebugTarget::new(executable, Vec::new())).expect("JSONL server")
@@ -138,10 +139,10 @@ fn jsonl_recording_describe_names_portable_identity_without_recording() {
 #[test]
 fn jsonl_record_captures_queued_input_without_replay() {
     let source = r#"program CaptureInput;
-uses Std.Console;
+uses Std.Console as Console;
 begin
-  WriteLn(ReadLn())
-end.
+  Console.WriteLn(Console.ReadLn());
+end program;
 "#;
     let (program, diagnostics) = fpas_parser::parse(source);
     assert!(diagnostics.is_empty(), "parse diagnostics: {diagnostics:?}");
@@ -188,11 +189,11 @@ fn jsonl_recording_describe_after_stop_does_not_resume() {
 }
 
 const RANDOM_ASSIGN: &str = r#"program QuietRandom;
-uses Std.Random;
+uses Std.Random as Random;
 begin
   mutable var X: integer := 0;
-  X := RandomInt(1, 1)
-end.
+  X := Random.RandomInt(1, 1);
+end program;
 "#;
 
 fn random_server() -> JsonlServer {

@@ -2,41 +2,44 @@
 
 program StrBasics;
 
-uses Std.Console, Std.Conv, Std.Str;
+uses Std.Console as Console;
+uses Std.Conv as Conv;
+uses Std.Str as Str;
 
 function ReplaceStar(C: string): string;
 begin
   if C = '*' then
-  begin
-    return '★'
-  end;
+    begin
+      return '★';
+    end;
+  end if;
 
-  return C
-end;
+  return C;
+end function;
 
 function KeepLetter(C: string): boolean;
 begin
-  return C <> ' '
-end;
+  return C <> ' ';
+end function;
 
 function Count(Acc: integer; C: string): integer;
 begin
-  return Acc + 1
-end;
+  return Acc + 1;
+end function;
 
 begin
   var S: string := '  Hello, World!  ';
-  WriteLn('trim: ', Trim(S));
-  WriteLn('upper: ', ToUpper('fpas'));
-  WriteLn('split+join: ', Join(Split('a,b,c', ','), '|'));
-  var Msg: string := Format('n=%d upper=%s', 42, ToUpper('ok'));
-  WriteLn('format: ', Msg);
-  WriteLn('contains b: ', Contains('abc', 'b'));
-  WriteLn('substring: ', Substring('Hello', 0, 3));
-  WriteLn('replace: ', Replace('banana', 'na', 'NA'));
-  WriteLn('reverse: ', Reverse('draw'));
-  WriteLn('pad: ', PadLeft('7', 4, '0'));
-  WriteLn('map: ', Map('a*b', ReplaceStar));
-  WriteLn('filter: ', Filter('a b', KeepLetter));
-  WriteLn('reduce: ', IntToStr(Reduce('a😀b', 0, Count)))
-end.
+  Console.WriteLn('trim: ', Str.Trim(S));
+  Console.WriteLn('upper: ', Str.ToUpper('fpas'));
+  Console.WriteLn('split+join: ', Str.Join(Str.Split('a,b,c', ','), '|'));
+  var Msg: string := Str.Format('n=%d upper=%s', 42, Str.ToUpper('ok'));
+  Console.WriteLn('format: ', Msg);
+  Console.WriteLn('contains b: ', Str.Contains('abc', 'b'));
+  Console.WriteLn('substring: ', Str.Substring('Hello', 0, 3));
+  Console.WriteLn('replace: ', Str.Replace('banana', 'na', 'NA'));
+  Console.WriteLn('reverse: ', Str.Reverse('draw'));
+  Console.WriteLn('pad: ', Str.PadLeft('7', 4, '0'));
+  Console.WriteLn('map: ', Str.Map('a*b', ReplaceStar));
+  Console.WriteLn('filter: ', Str.Filter('a b', KeepLetter));
+  Console.WriteLn('reduce: ', Conv.IntToStr(Str.Reduce('a😀b', 0, Count)));
+end program;

@@ -50,7 +50,7 @@ include = ["src/**/*.fpas"]
     manifest
 }
 
-fn uses_from_program(source: &str) -> Vec<fpas_parser::QualifiedId> {
+fn uses_from_program(source: &str) -> Vec<fpas_parser::Import> {
     let (program, diagnostics) = fpas_parser::parse(source);
     assert!(
         diagnostics
@@ -67,8 +67,21 @@ fn graph_records_unit_identity_origin_dependencies_and_source_path() {
     let manifest = write_project(
         &dir,
         &[
-            ("core.fpas", "unit Demo.Core;\n"),
-            ("feature.fpas", "unit Demo.Feature;\nuses Demo.Core;\n"),
+            (
+                "core.fpas",
+                r#"unit Demo.Core;
+end unit;
+
+"#,
+            ),
+            (
+                "feature.fpas",
+                r#"unit Demo.Feature;
+uses Demo.Core as Core;
+end unit;
+
+"#,
+            ),
         ],
     );
     let loaded = load_project(&manifest).expect("project must load");
@@ -95,15 +108,40 @@ fn program_resolution_excludes_unreachable_units_and_orders_dependencies_first()
     let manifest = write_project(
         &dir,
         &[
-            ("base.fpas", "unit Demo.Base;\n"),
-            ("feature.fpas", "unit Demo.Feature;\nuses Demo.Base;\n"),
-            ("unused.fpas", "unit Demo.Unused;\n"),
+            (
+                "base.fpas",
+                r#"unit Demo.Base;
+end unit;
+
+"#,
+            ),
+            (
+                "feature.fpas",
+                r#"unit Demo.Feature;
+uses Demo.Base as Base;
+end unit;
+
+"#,
+            ),
+            (
+                "unused.fpas",
+                r#"unit Demo.Unused;
+end unit;
+
+"#,
+            ),
         ],
     );
     let loaded = load_project(&manifest).expect("project must load");
     let graph =
         build_unit_graph(&loaded.source_files, &loaded.link_meta).expect("graph must build");
-    let root_uses = uses_from_program("program App;\nuses Demo.Feature;\nbegin\nend.\n");
+    let root_uses = uses_from_program(
+        r#"program App;
+uses Demo.Feature as Feature;
+begin null;
+end program;
+"#,
+    );
 
     let resolved = resolve_program_units(&graph, &root_uses).expect("graph must resolve");
 
@@ -122,9 +160,28 @@ fn library_resolution_includes_all_units_in_stable_dependency_order() {
     let manifest = write_project(
         &dir,
         &[
-            ("alpha.fpas", "unit Demo.Alpha;\n"),
-            ("beta.fpas", "unit Demo.Beta;\nuses Demo.Alpha;\n"),
-            ("unused.fpas", "unit Demo.Unused;\n"),
+            (
+                "alpha.fpas",
+                r#"unit Demo.Alpha;
+end unit;
+
+"#,
+            ),
+            (
+                "beta.fpas",
+                r#"unit Demo.Beta;
+uses Demo.Alpha as Alpha;
+end unit;
+
+"#,
+            ),
+            (
+                "unused.fpas",
+                r#"unit Demo.Unused;
+end unit;
+
+"#,
+            ),
         ],
     );
     let loaded = load_project(&manifest).expect("project must load");
@@ -151,15 +208,42 @@ fn graph_resolution_reports_complete_unit_cycle() {
     let manifest = write_project(
         &dir,
         &[
-            ("a.fpas", "unit Demo.A;\nuses Demo.B;\n"),
-            ("b.fpas", "unit Demo.B;\nuses Demo.C;\n"),
-            ("c.fpas", "unit Demo.C;\nuses Demo.A;\n"),
+            (
+                "a.fpas",
+                r#"unit Demo.A;
+uses Demo.B as B;
+end unit;
+
+"#,
+            ),
+            (
+                "b.fpas",
+                r#"unit Demo.B;
+uses Demo.C as C;
+end unit;
+
+"#,
+            ),
+            (
+                "c.fpas",
+                r#"unit Demo.C;
+uses Demo.A as A;
+end unit;
+
+"#,
+            ),
         ],
     );
     let loaded = load_project(&manifest).expect("project must load");
     let graph =
         build_unit_graph(&loaded.source_files, &loaded.link_meta).expect("graph must build");
-    let root_uses = uses_from_program("program App;\nuses Demo.A;\nbegin\nend.\n");
+    let root_uses = uses_from_program(
+        r#"program App;
+uses Demo.A as A;
+begin null;
+end program;
+"#,
+    );
 
     let error = resolve_program_units(&graph, &root_uses).expect_err("cycle must fail");
 
@@ -191,8 +275,20 @@ units = ["Lib.Api"]
 include = ["src/**/*.fpas"]
 "#,
     );
-    write(&dir.join("lib/src/api.fpas"), "unit Lib.Api;\n");
-    write(&dir.join("lib/src/internal.fpas"), "unit Lib.Internal;\n");
+    write(
+        &dir.join("lib/src/api.fpas"),
+        r#"unit Lib.Api;
+end unit;
+
+"#,
+    );
+    write(
+        &dir.join("lib/src/internal.fpas"),
+        r#"unit Lib.Internal;
+end unit;
+
+"#,
+    );
     write(
         &application,
         r#"[project]
@@ -209,12 +305,22 @@ include = ["src/**/*.fpas"]
     );
     write(
         &dir.join("app/src/main.fpas"),
-        "program App;\nuses Lib.Internal;\nbegin\nend.\n",
+        r#"program App;
+uses Lib.Internal as Internal;
+begin null;
+end program;
+"#,
     );
     let loaded = load_project(&application).expect("application project must load");
     let graph =
         build_unit_graph(&loaded.source_files, &loaded.link_meta).expect("graph must build");
-    let root_uses = uses_from_program("program App;\nuses Lib.Internal;\nbegin\nend.\n");
+    let root_uses = uses_from_program(
+        r#"program App;
+uses Lib.Internal as Internal;
+begin null;
+end program;
+"#,
+    );
 
     let error =
         resolve_program_units(&graph, &root_uses).expect_err("internal unit must be rejected");
@@ -231,12 +337,25 @@ fn unknown_transitive_unit_diagnostic_names_owner_and_known_units() {
     let dir = temp_dir("unknown");
     let manifest = write_project(
         &dir,
-        &[("feature.fpas", "unit Demo.Feature;\nuses Demo.Missing;\n")],
+        &[(
+            "feature.fpas",
+            r#"unit Demo.Feature;
+uses Demo.Missing as Missing;
+end unit;
+
+"#,
+        )],
     );
     let loaded = load_project(&manifest).expect("project must load");
     let graph =
         build_unit_graph(&loaded.source_files, &loaded.link_meta).expect("graph must build");
-    let root_uses = uses_from_program("program App;\nuses Demo.Feature;\nbegin\nend.\n");
+    let root_uses = uses_from_program(
+        r#"program App;
+uses Demo.Feature as Feature;
+begin null;
+end program;
+"#,
+    );
 
     let error = resolve_program_units(&graph, &root_uses).expect_err("missing unit must fail");
 

@@ -1,143 +1,145 @@
 unit Std.Tui.Cells.ButtonPalette;
 
-uses Std.Tui.Cells.Style, Std.Tui.Cells.StyleRole;
+uses Std.Tui.Cells.Style as Style2;
+uses Std.Tui.Cells.StyleRole as StyleRole;
 
-public type
-  // Concrete styles for every flat button state.
-  TuiButtonPalette = record
-    // Style used for normal content.
-    public Normal: TuiStyle;
-    // Style used for the default state.
-    public Default: TuiStyle;
-    // Selected item index or style.
-    public Selected: TuiStyle;
-    // Style used for disabled content.
-    public Disabled: TuiStyle;
-    // Shortcut text, gesture, or style.
-    public Shortcut: TuiStyle;
-    // Shortcut style used by a default button.
-    public DefaultShortcut: TuiStyle;
-    // Shortcut style used by a selected button.
-    public SelectedShortcut: TuiStyle;
+// Concrete styles for every flat button state.
+public type TuiButtonPalette = record
+  // Style used for normal content.
+  public Normal: Style2.TuiStyle;
+  // Style used for the default state.
+  public Default: Style2.TuiStyle;
+  // Selected item index or style.
+  public Selected: Style2.TuiStyle;
+  // Style used for disabled content.
+  public Disabled: Style2.TuiStyle;
+  // Shortcut text, gesture, or style.
+  public Shortcut: Style2.TuiStyle;
+  // Shortcut style used by a default button.
+  public DefaultShortcut: Style2.TuiStyle;
+  // Shortcut style used by a selected button.
+  public SelectedShortcut: Style2.TuiStyle;
 
-    // Creates a complete button palette.
-    //
-    // Parameters:
-    // - `Normal`: Normal-state style.
-    // - `Default`: Fallback value used when no value is available.
-    // - `Selected`: Selected item index.
-    // - `Disabled`: Whether the control is disabled.
-    // - `Shortcut`: Shortcut gesture or display text.
-    // - `DefaultShortcut`: Fallback shortcut displayed for the item.
-    // - `SelectedShortcut`: Shortcut displayed for the selected item.
-    public static function Create(
-  Normal: TuiStyle;
-  Default: TuiStyle;
-  Selected: TuiStyle;
-  Disabled: TuiStyle;
-  Shortcut: TuiStyle;
-  DefaultShortcut: TuiStyle;
-  SelectedShortcut: TuiStyle
+  // Creates a complete button palette.
+  //
+  // Parameters:
+  // - `Normal`: Normal-state style.
+  // - `Default`: Fallback value used when no value is available.
+  // - `Selected`: Selected item index.
+  // - `Disabled`: Whether the control is disabled.
+  // - `Shortcut`: Shortcut gesture or display text.
+  // - `DefaultShortcut`: Fallback shortcut displayed for the item.
+  // - `SelectedShortcut`: Shortcut displayed for the selected item.
+  public static function Create(
+  Normal: Style2.TuiStyle;
+  Default: Style2.TuiStyle;
+  Selected: Style2.TuiStyle;
+  Disabled: Style2.TuiStyle;
+  Shortcut: Style2.TuiStyle;
+  DefaultShortcut: Style2.TuiStyle;
+  SelectedShortcut: Style2.TuiStyle
 ): TuiButtonPalette;
-    begin
-      return record
-        Normal := Normal;
-        Default := Default;
-        Selected := Selected;
-        Disabled := Disabled;
-        Shortcut := Shortcut;
-        DefaultShortcut := DefaultShortcut;
-        SelectedShortcut := SelectedShortcut;
-      end
-    end;
+  begin
+    return record
+      Normal := Normal;
+      Default := Default;
+      Selected := Selected;
+      Disabled := Disabled;
+      Shortcut := Shortcut;
+      DefaultShortcut := DefaultShortcut;
+      SelectedShortcut := SelectedShortcut;
+    end record;
+  end function;
 
-    // Resolves one button role.
-    //
-    // Parameters:
-    // - `Self`: Receiver value operated on by the method.
-    // - `Role`: Semantic style role used by the operation.
-    public function ForRole(Self: TuiButtonPalette; Role: TuiStyleRole): TuiStyle;
-    begin
-      case Role of
-        TuiStyleRole.ButtonNormal:
+  // Resolves one button role.
+  //
+  // Parameters:
+  // - `Self`: Receiver value operated on by the method.
+  // - `Role`: Semantic style role used by the operation.
+  public function ForRole(Self: TuiButtonPalette; Role: StyleRole.TuiStyleRole): Style2.TuiStyle;
+  begin
+    case Role of
+      when StyleRole.TuiStyleRole.ButtonNormal:
         begin
-          return Self.Normal
+          return Self.Normal;
         end;
-        TuiStyleRole.ButtonDefault:
+      when StyleRole.TuiStyleRole.ButtonDefault:
         begin
-          return Self.Default
+          return Self.Default;
         end;
-        TuiStyleRole.ButtonSelected:
+      when StyleRole.TuiStyleRole.ButtonSelected:
         begin
-          return Self.Selected
+          return Self.Selected;
         end;
-        TuiStyleRole.ButtonDisabled:
+      when StyleRole.TuiStyleRole.ButtonDisabled:
         begin
-          return Self.Disabled
+          return Self.Disabled;
         end;
-        TuiStyleRole.ButtonShortcut:
+      when StyleRole.TuiStyleRole.ButtonShortcut:
         begin
-          return Self.Shortcut
+          return Self.Shortcut;
         end;
-        TuiStyleRole.ButtonDefaultShortcut:
+      when StyleRole.TuiStyleRole.ButtonDefaultShortcut:
         begin
-          return Self.DefaultShortcut
+          return Self.DefaultShortcut;
         end;
-        TuiStyleRole.ButtonSelectedShortcut:
+      when StyleRole.TuiStyleRole.ButtonSelectedShortcut:
         begin
-          return Self.SelectedShortcut
-        end
-        else
+          return Self.SelectedShortcut;
+        end;
+      else
         begin
-          panic('Tui button palette requires a button style role')
-        end
-      end
-    end;
+          panic('Tui button palette requires a button style role');
+        end;
+    end case;
+  end function;
 
-    // Returns a copy with one button role replaced.
-    //
-    // Parameters:
-    // - `Self`: Receiver value operated on by the method.
-    // - `Role`: Semantic style role used by the operation.
-    // - `Style`: Concrete terminal style.
-    public function WithRole(Self: TuiButtonPalette; Role: TuiStyleRole; Style: TuiStyle): TuiButtonPalette;
-    begin
-      mutable var Updated: TuiButtonPalette := Self;
-      case Role of
-        TuiStyleRole.ButtonNormal:
+  // Returns a copy with one button role replaced.
+  //
+  // Parameters:
+  // - `Self`: Receiver value operated on by the method.
+  // - `Role`: Semantic style role used by the operation.
+  // - `Style`: Concrete terminal style.
+  public function WithRole(Self: TuiButtonPalette; Role: StyleRole.TuiStyleRole; Style: Style2.TuiStyle): TuiButtonPalette;
+  begin
+    mutable var Updated: TuiButtonPalette := Self;
+    case Role of
+      when StyleRole.TuiStyleRole.ButtonNormal:
         begin
-          Updated.Normal := Style
+          Updated.Normal := Style;
         end;
-        TuiStyleRole.ButtonDefault:
+      when StyleRole.TuiStyleRole.ButtonDefault:
         begin
-          Updated.Default := Style
+          Updated.Default := Style;
         end;
-        TuiStyleRole.ButtonSelected:
+      when StyleRole.TuiStyleRole.ButtonSelected:
         begin
-          Updated.Selected := Style
+          Updated.Selected := Style;
         end;
-        TuiStyleRole.ButtonDisabled:
+      when StyleRole.TuiStyleRole.ButtonDisabled:
         begin
-          Updated.Disabled := Style
+          Updated.Disabled := Style;
         end;
-        TuiStyleRole.ButtonShortcut:
+      when StyleRole.TuiStyleRole.ButtonShortcut:
         begin
-          Updated.Shortcut := Style
+          Updated.Shortcut := Style;
         end;
-        TuiStyleRole.ButtonDefaultShortcut:
+      when StyleRole.TuiStyleRole.ButtonDefaultShortcut:
         begin
-          Updated.DefaultShortcut := Style
+          Updated.DefaultShortcut := Style;
         end;
-        TuiStyleRole.ButtonSelectedShortcut:
+      when StyleRole.TuiStyleRole.ButtonSelectedShortcut:
         begin
-          Updated.SelectedShortcut := Style
-        end
-        else
+          Updated.SelectedShortcut := Style;
+        end;
+      else
         begin
-          panic('Tui button palette requires a button style role')
-        end
-      end;
+          panic('Tui button palette requires a button style role');
+        end;
+    end case;
 
-      return Updated
-    end;
-  end;
+    return Updated;
+  end function;
+end record;
+
+end unit;

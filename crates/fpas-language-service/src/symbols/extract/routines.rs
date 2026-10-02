@@ -63,7 +63,7 @@ pub(super) fn collect_statement_symbols(
                     scope_span,
                 ));
             }
-            Stmt::Block(body, span) => {
+            Stmt::Block(body, span) | Stmt::StatementList(body, span) => {
                 collect_statement_symbols(
                     snapshot,
                     owner,
@@ -74,10 +74,14 @@ pub(super) fn collect_statement_symbols(
             }
             Stmt::If {
                 then_branch,
+                elsif_branches,
                 else_branch,
                 ..
             } => {
                 collect_branch(snapshot, owner, then_branch, output);
+                for (_, body) in elsif_branches {
+                    collect_branch(snapshot, owner, body, output);
+                }
                 if let Some(branch) = else_branch {
                     collect_branch(snapshot, owner, branch, output);
                 }

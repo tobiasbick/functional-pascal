@@ -1,11 +1,14 @@
 program T;
 
-uses Std.Console, Std.Dictionaries, Std.Conv;
+uses Std.Console as Console;
+uses Std.Dictionaries as Dictionaries;
+uses Std.Conv as Conv;
 
 begin
   var D: dict of string to integer := ['x': 10, 'y': 20];
   for K: string in D do
-  begin
-    WriteLn((K + '=') + IntToStr(D[K]))
-  end
-end.
+    begin
+      Console.WriteLn((K + '=') + Conv.IntToStr(D[K]));
+    end;
+  end for;
+end program;

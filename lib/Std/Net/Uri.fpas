@@ -1,20 +1,20 @@
 // Absolute HTTP and HTTPS URI parsing for network clients.
 unit Std.Net.Uri;
 
-uses Std.Net.Decimal, Std.Str;
+uses Std.Net.Decimal as Decimal;
+uses Std.Str as Str;
 
-public type
-  // Parsed absolute network URI used by protocol clients.
-  Uri = record
-    // Lowercase URI scheme.
-    public Scheme: string;
-    // Host name or unbracketed IPv6 address.
-    public Host: string;
-    // Explicit or scheme-default TCP port.
-    public Port: integer;
-    // Origin-form path including an optional query.
-    public Path: string;
-  end;
+// Parsed absolute network URI used by protocol clients.
+public type Uri = record
+  // Lowercase URI scheme.
+  public Scheme: string;
+  // Host name or unbracketed IPv6 address.
+  public Host: string;
+  // Explicit or scheme-default TCP port.
+  public Port: integer;
+  // Origin-form path including an optional query.
+  public Path: string;
+end record;
 
 // Returns the default port for a supported URI scheme.
 //
@@ -23,17 +23,19 @@ public type
 function DefaultPort(Scheme: string): result of integer, string;
 begin
   if Scheme = 'http' then
-  begin
-    return Ok(80)
-  end;
+    begin
+      return Ok(80);
+    end;
+  end if;
 
   if Scheme = 'https' then
-  begin
-    return Ok(443)
-  end;
+    begin
+      return Ok(443);
+    end;
+  end if;
 
-  return Error('Unsupported URI scheme: ' + Scheme)
-end;
+  return Error('Unsupported URI scheme: ' + Scheme);
+end function;
 
 // Parses and validates a decimal TCP port.
 //
@@ -41,22 +43,23 @@ end;
 // - `Text`: Decimal port text.
 function ParsePort(Text: string): result of integer, string;
 begin
-  case Std.Net.Decimal.Parse(Text, 65535) of
-    Ok(Port):
-    begin
-      if (Port >= 1) and (Port <= 65535) then
+  case Decimal.Parse(Text, 65535) of
+    when Ok(Port):
       begin
-        return Ok(Port)
-      end;
+        if (Port >= 1) and (Port <= 65535) then
+          begin
+            return Ok(Port);
+          end;
+        end if;
 
-      return Error('URI port must be in 1..65535')
-    end;
-    Error(Message):
-    begin
-      return Error('Invalid URI port: ' + Message)
-    end
-  end
-end;
+        return Error('URI port must be in 1..65535');
+      end;
+    when Error(Message):
+      begin
+        return Error('Invalid URI port: ' + Message);
+      end;
+  end case;
+end function;
 
 // Parses one authority and constructs the final URI value.
 //
@@ -67,68 +70,77 @@ end;
 function BuildUri(Scheme: string; Authority: string; Path: string): result of Uri, string;
 begin
   if Authority = '' then
-  begin
-    return Error('URI host must not be empty')
-  end;
+    begin
+      return Error('URI host must not be empty');
+    end;
+  end if;
 
-  if Std.Str.Contains(Authority, '@') then
-  begin
-    return Error('URI user information is not supported')
-  end;
+  if Str.Contains(Authority, '@') then
+    begin
+      return Error('URI user information is not supported');
+    end;
+  end if;
   var SchemePort: integer := try DefaultPort(Scheme);
   mutable var HasPort: boolean := false;
   mutable var Host: string := Authority;
   mutable var PortText: string := '';
-  if Std.Str.StartsWith(Authority, '[') then
-  begin
-    var Closing: integer := Std.Str.IndexOf(Authority, ']');
-    if Closing < 0 then
+  if Str.StartsWith(Authority, '[') then
     begin
-      return Error('IPv6 URI host is missing closing bracket')
+      var Closing: integer := Str.IndexOf(Authority, ']');
+      if Closing < 0 then
+        begin
+          return Error('IPv6 URI host is missing closing bracket');
+        end;
+      end if;
+
+      Host := Str.Substring(Authority, 1, Closing - 1);
+      var Remainder: string := Str.Substring(Authority, Closing + 1, (Str.Length(Authority) - Closing) -
+                                                                     1);
+      if Remainder <> '' then
+        begin
+          if not Str.StartsWith(Remainder, ':') then
+            begin
+              return Error('Unexpected text after IPv6 URI host');
+            end;
+          end if;
+
+          HasPort := true;
+          PortText := Str.Substring(Remainder, 1, Str.Length(Remainder) - 1);
+        end;
+      end if;
     end;
-
-    Host := Std.Str.Substring(Authority, 1, Closing - 1);
-    var Remainder: string := Std.Str.Substring(Authority, Closing + 1, (Std.Str.Length(Authority) - Closing) -
-                                                                       1);
-    if Remainder <> '' then
-    begin
-      if not Std.Str.StartsWith(Remainder, ':') then
-      begin
-        return Error('Unexpected text after IPv6 URI host')
-      end;
-
-      HasPort := true;
-      PortText := Std.Str.Substring(Remainder, 1, Std.Str.Length(Remainder) - 1)
-    end
-  end
   else
-  begin
-    var Colon: integer := Std.Str.LastIndexOf(Authority, ':');
-    if Colon >= 0 then
     begin
-      Host := Std.Str.Substring(Authority, 0, Colon);
-      HasPort := true;
-      PortText := Std.Str.Substring(Authority, Colon + 1, (Std.Str.Length(Authority) - Colon) - 1)
-    end
-  end;
+      var Colon: integer := Str.LastIndexOf(Authority, ':');
+      if Colon >= 0 then
+        begin
+          Host := Str.Substring(Authority, 0, Colon);
+          HasPort := true;
+          PortText := Str.Substring(Authority, Colon + 1, (Str.Length(Authority) - Colon) - 1);
+        end;
+      end if;
+    end;
+  end if;
 
   if Host = '' then
-  begin
-    return Error('URI host must not be empty')
-  end;
+    begin
+      return Error('URI host must not be empty');
+    end;
+  end if;
   mutable var Port: integer := SchemePort;
   if HasPort then
-  begin
-    Port := try ParsePort(PortText)
-  end;
+    begin
+      Port := try ParsePort(PortText);
+    end;
+  end if;
 
   return Ok(record
     Scheme := Scheme;
     Host := Host;
     Port := Port;
     Path := Path;
-  end)
-end;
+  end record);
+end function;
 
 // Parses an absolute HTTP or HTTPS URI.
 //
@@ -136,36 +148,42 @@ end;
 // - `Text`: Absolute URI text to parse.
 public function Parse(Text: string): result of Uri, string;
 begin
-  var SchemeEnd: integer := Std.Str.IndexOf(Text, '://');
+  var SchemeEnd: integer := Str.IndexOf(Text, '://');
   if SchemeEnd <= 0 then
-  begin
-    return Error('URI must be absolute and include ://')
-  end;
-  var Scheme: string := Std.Str.ToLower(Std.Str.Substring(Text, 0, SchemeEnd));
-  mutable var Rest: string := Std.Str.Substring(Text, SchemeEnd + 3, (Std.Str.Length(Text) - SchemeEnd) -
-                                                                     3);
-  var FragmentStart: integer := Std.Str.IndexOf(Rest, '#');
+    begin
+      return Error('URI must be absolute and include ://');
+    end;
+  end if;
+  var Scheme: string := Str.ToLower(Str.Substring(Text, 0, SchemeEnd));
+  mutable var Rest: string := Str.Substring(Text, SchemeEnd + 3, (Str.Length(Text) - SchemeEnd) - 3);
+  var FragmentStart: integer := Str.IndexOf(Rest, '#');
   if FragmentStart >= 0 then
-  begin
-    Rest := Std.Str.Substring(Rest, 0, FragmentStart)
-  end;
-  mutable var PathStart: integer := Std.Str.IndexOf(Rest, '/');
-  var QueryStart: integer := Std.Str.IndexOf(Rest, '?');
+    begin
+      Rest := Str.Substring(Rest, 0, FragmentStart);
+    end;
+  end if;
+  mutable var PathStart: integer := Str.IndexOf(Rest, '/');
+  var QueryStart: integer := Str.IndexOf(Rest, '?');
   if (PathStart < 0) or ((QueryStart >= 0) and (QueryStart < PathStart)) then
-  begin
-    PathStart := QueryStart
-  end;
+    begin
+      PathStart := QueryStart;
+    end;
+  end if;
   mutable var Authority: string := Rest;
   mutable var Path: string := '/';
   if PathStart >= 0 then
-  begin
-    Authority := Std.Str.Substring(Rest, 0, PathStart);
-    Path := Std.Str.Substring(Rest, PathStart, Std.Str.Length(Rest) - PathStart);
-    if Std.Str.StartsWith(Path, '?') then
     begin
-      Path := '/' + Path
-    end
-  end;
+      Authority := Str.Substring(Rest, 0, PathStart);
+      Path := Str.Substring(Rest, PathStart, Str.Length(Rest) - PathStart);
+      if Str.StartsWith(Path, '?') then
+        begin
+          Path := '/' + Path;
+        end;
+      end if;
+    end;
+  end if;
 
-  return BuildUri(Scheme, Authority, Path)
-end;
+  return BuildUri(Scheme, Authority, Path);
+end function;
+
+end unit;

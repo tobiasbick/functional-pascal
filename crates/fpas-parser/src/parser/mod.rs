@@ -1,3 +1,4 @@
+mod blocks;
 mod core;
 mod decl;
 mod display;

@@ -1,12 +1,13 @@
 program ReadlnOrderTest;
 
-uses Std.Console, Std.Test;
+uses Std.Console as Console;
+uses Std.Test as Test;
 
 begin
-  PushReadLn('first');
-  PushReadLn('second');
-  PushReadLn('third');
-  AssertEquals('first', ReadLn());
-  AssertEquals('second', ReadLn());
-  AssertEquals('third', ReadLn())
-end.
+  Test.PushReadLn('first');
+  Test.PushReadLn('second');
+  Test.PushReadLn('third');
+  Test.AssertEquals('first', Console.ReadLn());
+  Test.AssertEquals('second', Console.ReadLn());
+  Test.AssertEquals('third', Console.ReadLn());
+end program;

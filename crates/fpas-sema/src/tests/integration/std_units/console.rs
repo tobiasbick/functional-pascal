@@ -3,107 +3,101 @@ use super::{check_errors, check_ok};
 #[test]
 fn hello_world() {
     check_ok(
-        "\
-program Hello;
-uses Std.Console;
+        r#"program Hello;
+uses Std.Console as Console;
 begin
-  Std.Console.WriteLn('Hello, World!')
-end.",
+  Console.WriteLn('Hello, World!');
+end program;"#,
     );
 }
 
 #[test]
 fn std_console_read_readkey_keypressed() {
     check_ok(
-        "\
-program T;
-uses Std.Console;
+        r#"program T;
+uses Std.Console as Console;
 begin
-  var C: string := Std.Console.ReadText();
-  var K: string := Std.Console.ReadKey();
-  var P: boolean := Std.Console.KeyPressed();
-  var S: string := Std.Console.ReadLn();
-  Std.Console.WriteLn(C);
-  Std.Console.WriteLn(K);
-  Std.Console.WriteLn(P);
-  Std.Console.WriteLn(S);
-end.",
+  var C: string := Console.ReadText();
+  var K: string := Console.ReadKey();
+  var P: boolean := Console.KeyPressed();
+  var S: string := Console.ReadLn();
+  Console.WriteLn(C);
+  Console.WriteLn(K);
+  Console.WriteLn(P);
+  Console.WriteLn(S);
+end program;"#,
     );
 }
 
 #[test]
 fn std_console_read_key_event_and_fields() {
     check_ok(
-        "\
-program T;
-uses Std.Console;
+        r#"program T;
+uses Std.Console as Console;
 begin
-  var E: Std.Console.KeyEvent := Std.Console.ReadKeyEvent();
-  Std.Console.WriteLn(E.kind = Std.Console.KeyKind.Space);
-  Std.Console.WriteLn(E.shift);
-end.",
+  var E: Console.KeyEvent := Console.ReadKeyEvent();
+  Console.WriteLn(E.kind = Console.KeyKind.Space);
+  Console.WriteLn(E.shift);
+end program;"#,
     );
 }
 
 #[test]
 fn std_console_crt_window_and_colors() {
     check_ok(
-        "\
-program T;
-uses Std.Console;
+        r#"program T;
+uses Std.Console as Console;
 begin
-  Window(1, 1, 40, 10);
-  GotoXY(2, 3);
-  TextColor(LightRed);
-  TextBackground(Blue);
-  CursorOff();
-  CursorOn();
-  Delay(0);
-  ClrEol();
-  ClrScr();
-  var X: integer := WhereX();
-  var Y: integer := WhereY();
-  WriteLn(X);
-  WriteLn(Y)
-end.",
+  Console.Window(1, 1, 40, 10);
+  Console.GotoXY(2, 3);
+  Console.TextColor(Console.LightRed);
+  Console.TextBackground(Console.Blue);
+  Console.CursorOff();
+  Console.CursorOn();
+  Console.Delay(0);
+  Console.ClrEol();
+  Console.ClrScr();
+  var X: integer := Console.WhereX();
+  var Y: integer := Console.WhereY();
+  Console.WriteLn(X);
+  Console.WriteLn(Y);
+end program;"#,
     );
 }
 
 #[test]
 fn std_console_unified_event_api_and_session_calls() {
     check_ok(
-        "\
-program T;
-uses Std.Console;
+        r#"program T;
+uses Std.Console as Console;
 begin
-  var Pending: boolean := EventPending();
-  var E: Std.Console.ConsoleEvent := ReadEvent();
-  WriteLn(Pending);
-  WriteLn(E.kind = Std.Console.EventKind.Resize);
-  WriteLn(E.mouse_button = Std.Console.MouseButton.Left);
-  EnableRawMode();
-  DisableRawMode();
-  EnterAltScreen();
-  LeaveAltScreen();
-  EnableMouse();
-  DisableMouse();
-  EnableFocus();
-  DisableFocus();
-  EnablePaste();
-  DisablePaste()
-end.",
+  var Pending: boolean := Console.EventPending();
+  var E: Console.ConsoleEvent := Console.ReadEvent();
+  Console.WriteLn(Pending);
+  Console.WriteLn(E.kind = Console.EventKind.Resize);
+  Console.WriteLn(E.mouse_button = Console.MouseButton.Left);
+  Console.EnableRawMode();
+  Console.DisableRawMode();
+  Console.EnterAltScreen();
+  Console.LeaveAltScreen();
+  Console.EnableMouse();
+  Console.DisableMouse();
+  Console.EnableFocus();
+  Console.DisableFocus();
+  Console.EnablePaste();
+  Console.DisablePaste();
+end program;"#,
     );
 }
 
 #[test]
 fn std_console_read_key_event_wrong_arg_count() {
     let errs = check_errors(
-        "\
-program T;
-uses Std.Console;
+        r#"program T;
+uses Std.Console as Console;
 begin
-  Std.Console.ReadKeyEvent(1)
-end.",
+  Console.ReadKeyEvent(1);
+end program;"#,
     );
     assert!(
         errs.iter()
@@ -115,12 +109,11 @@ end.",
 #[test]
 fn std_console_read_key_event_wrong_arg_in_expr() {
     let errs = check_errors(
-        "\
-program T;
-uses Std.Console;
+        r#"program T;
+uses Std.Console as Console;
 begin
-  var E: Std.Console.KeyEvent := Std.Console.ReadKeyEvent(0)
-end.",
+  var E: Console.KeyEvent := Console.ReadKeyEvent(0);
+end program;"#,
     );
     assert!(
         errs.iter()
@@ -132,13 +125,12 @@ end.",
 #[test]
 fn std_console_key_event_unknown_field() {
     let errs = check_errors(
-        "\
-program T;
-uses Std.Console;
+        r#"program T;
+uses Std.Console as Console;
 begin
-  var E: Std.Console.KeyEvent := Std.Console.ReadKeyEvent();
-  Std.Console.WriteLn(E.not_a_field)
-end.",
+  var E: Console.KeyEvent := Console.ReadKeyEvent();
+  Console.WriteLn(E.not_a_field);
+end program;"#,
     );
     assert!(
         errs.iter().any(|e| e.message.contains("no field")),
@@ -149,13 +141,12 @@ end.",
 #[test]
 fn std_console_key_kind_unknown_member() {
     let errs = check_errors(
-        "\
-program T;
-uses Std.Console;
+        r#"program T;
+uses Std.Console as Console;
 begin
-  var E: Std.Console.KeyEvent := Std.Console.ReadKeyEvent();
-  Std.Console.WriteLn(E.kind = Std.Console.KeyKind.NotAKind)
-end.",
+  var E: Console.KeyEvent := Console.ReadKeyEvent();
+  Console.WriteLn(E.kind = Console.KeyKind.NotAKind);
+end program;"#,
     );
     assert!(
         errs.iter()
@@ -167,11 +158,10 @@ end.",
 #[test]
 fn std_console_fully_qualified_call_requires_uses_clause() {
     let errs = check_errors(
-        "\
-program T;
+        r#"program T;
 begin
-  Std.Console.WriteLn('x')
-end.",
+  Std.Console.WriteLn('x');
+end program;"#,
     );
     assert_eq!(errs.len(), 1, "{errs:#?}");
     assert!(
@@ -181,23 +171,21 @@ end.",
         "{errs:#?}"
     );
     check_ok(
-        "\
-program T;
-uses Std.Console;
+        r#"program T;
+uses Std.Console as Console;
 begin
-  Std.Console.WriteLn('x')
-end.",
+  Console.WriteLn('x');
+end program;"#,
     );
 }
 
 #[test]
 fn std_console_short_name_requires_uses() {
     let errs = check_errors(
-        "\
-program T;
+        r#"program T;
 begin
-  WriteLn('x')
-end.",
+  WriteLn('x');
+end program;"#,
     );
     assert!(
         errs.iter().any(|e| e.message.contains("Unknown procedure")),
@@ -213,11 +201,10 @@ end.",
 #[test]
 fn uses_std_console_case_insensitive() {
     check_ok(
-        "\
-program T;
-uses std.console;
+        r#"program T;
+uses std.console as console;
 begin
-  Std.Console.WriteLn('ok')
-end.",
+  console.WriteLn('ok');
+end program;"#,
     );
 }

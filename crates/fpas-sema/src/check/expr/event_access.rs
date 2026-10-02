@@ -62,7 +62,7 @@ impl Checker {
         args: &[Expr],
         span: Span,
     ) -> Option<Ty> {
-        let name = Self::resolve_designator_name(designator);
+        let name = self.resolve_designator_name(designator);
         if !name.eq_ignore_ascii_case("Assigned") {
             return None;
         }

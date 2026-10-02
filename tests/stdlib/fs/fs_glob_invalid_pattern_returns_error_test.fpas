@@ -1,16 +1,18 @@
 program FsGlobInvalidPatternReturnsErrorTest;
 
-uses Std.Fs, Std.Str, Std.Test;
+uses Std.Fs as Fs;
+uses Std.Str as Str;
+uses Std.Test as Test;
 
 begin
-  case Glob('[unclosed') of
-    Ok(_):
-    begin
-      Fail('Expected invalid glob pattern to fail')
-    end;
-    Error(Message):
-    begin
-      AssertTrue(Contains(Message, 'Invalid glob pattern'))
-    end
-  end
-end.
+  case Fs.Glob('[unclosed') of
+    when Ok(_):
+      begin
+        Test.Fail('Expected invalid glob pattern to fail');
+      end;
+    when Error(Message):
+      begin
+        Test.AssertTrue(Str.Contains(Message, 'Invalid glob pattern'));
+      end;
+  end case;
+end program;

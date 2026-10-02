@@ -29,7 +29,7 @@ fn help_and_version_fail_when_stdout_cannot_be_written() {
 fn fmt_stdout_fails_when_formatted_source_is_only_partially_written() {
     let cwd = create_temp_dir("contract-output-fmt-stdout");
     let source = cwd.join("main.fpas");
-    write_text(&source, "program Main; begin end.");
+    write_text(&source, r#"program Main; begin null; end program;"#);
     let args = [
         String::from("fmt"),
         String::from("--stdout"),
@@ -53,7 +53,7 @@ fn fmt_stdout_fails_when_formatted_source_is_only_partially_written() {
 fn fmt_list_fails_when_changed_file_list_cannot_be_written() {
     let cwd = create_temp_dir("contract-output-fmt-list");
     let source = cwd.join("main.fpas");
-    write_text(&source, "program Main; begin end.");
+    write_text(&source, r#"program Main; begin null; end program;"#);
     let args = [
         String::from("fmt"),
         String::from("--check"),

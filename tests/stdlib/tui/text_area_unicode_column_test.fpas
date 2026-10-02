@@ -1,15 +1,17 @@
 program TextAreaUnicodeColumnTest;
 
-uses Std.Console, Std.Str, Std.Test, Std.Tui;
+uses Std.Console as Console;
+uses Std.Str as Str;
+uses Std.Test as Test;
+uses Std.Tui as Tui;
 
-type
-  TextAreaModel = record
-    Text: string;
-    Caret: integer;
-    Offset: TuiPoint;
-  end;
+type TextAreaModel = record
+  Text: string;
+  Caret: integer;
+  Offset: Tui.TuiPoint;
+end record;
 
-function MakeKey(Kind: TuiKeyKind; Character: string): TuiKeyEvent;
+function MakeKey(Kind: Tui.TuiKeyKind; Character: string): Tui.TuiKeyEvent;
 begin
   return record
     kind := Kind;
@@ -18,81 +20,90 @@ begin
     ctrl := false;
     alt := false;
     meta := false;
-  end
-end;
+  end record;
+end function;
 
-function ViewTextArea(State: TextAreaModel): TuiElement;
+function ViewTextArea(State: TextAreaModel): Tui.TuiElement;
 begin
-  return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(1)), [
-                                                                        TuiElementBuilders.MakeTextArea(TuiControlId.Create(1), State.Text, State.Caret, State.Offset, TuiAction.Create(9))
-                                                                      ])
-end;
+  return Tui.TuiElementBuilders.MakeDesktop(Some(Tui.TuiControlId.Create(1)), [
+                                                                                Tui.TuiElementBuilders.MakeTextArea(Tui.TuiControlId.Create(1), State.Text, State.Caret, State.Offset, Tui.TuiAction.Create(9))
+                                                                              ]);
+end function;
 
-function UpdateTextArea(State: TextAreaModel; Msg: TuiMsg; Cmd: TuiCmdOutput): TextAreaModel;
+function UpdateTextArea(State: TextAreaModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): TextAreaModel;
 begin
-  Cmd.Set(TuiCmd.NoCommand);
+  Cmd.Set(Tui.TuiCmd.NoCommand);
   case Msg of
-    TuiMsg.TextAreaChanged(Source, Action, Text, Caret, Offset):
-    begin
-      AssertEquals(1, Source.Value);
-      AssertEquals(9, Action.Value);
-      return record
-        Text := Text;
-        Caret := Caret;
-        Offset := Offset;
-      end
-    end
+    when Tui.TuiMsg.TextAreaChanged(Source, Action, Text, Caret, Offset):
+      begin
+        Test.AssertEquals(1, Source.Value);
+        Test.AssertEquals(9, Action.Value);
+        return record
+          Text := Text;
+          Caret := Caret;
+          Offset := Offset;
+        end record;
+      end;
     else
-    begin
-      return State
-    end
-  end
-end;
+      begin
+        return State;
+      end;
+  end case;
+end function;
 
-function Press(App: TuiApplication; State: TextAreaModel; Kind: TuiKeyKind; Character: string): TextAreaModel;
+function Press(
+  App: Tui.TuiApplication;
+  State: TextAreaModel;
+  Kind: Tui.TuiKeyKind;
+  Character: string
+): TextAreaModel;
 begin
   App.InjectKeyForTest(MakeKey(Kind, Character));
-  return App.RunIterations(State, UpdateTextArea, ViewTextArea, 1, 0)
-end;
+  return App.RunIterations(State, UpdateTextArea, ViewTextArea, 1, 0);
+end function;
 
 // Reference the original scalar-prefix contract only for short correctness fixtures.
 function Expected(Line: string; Column: integer): integer;
 begin
-  for I: integer := 0 to Std.Str.Length(Line) - 1 do
-  begin
-    if Std.Console.DisplayWidth(Std.Str.Substring(Line, 0, I + 1)) > Column then
+  for I: integer := 0 to Str.Length(Line) - 1 do
     begin
-      return I
-    end
-  end;
+      if Console.DisplayWidth(Str.Substring(Line, 0, I + 1)) > Column then
+        begin
+          return I;
+        end;
+      end if;
+    end;
+  end for;
 
-  return Std.Str.Length(Line)
-end;
+  return Str.Length(Line);
+end function;
 
 begin
-  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(4, 2));
+  var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(4, 2));
   for Line: string in [
-                        (Std.Str.Chr(9800) + Std.Str.Chr(65038)) + 'x',
+                        (Str.Chr(9800) + Str.Chr(65038)) + 'x',
                         '',
-                        ('e' + Std.Str.Chr(769)) + 'x',
+                        ('e' + Str.Chr(769)) + 'x',
                         '中a',
-                        ('👩' + Std.Str.Chr(8205)) + '💻x',
-                        (('1' + Std.Str.Chr(65039)) + Std.Str.Chr(8419)) + 'x',
-                        Std.Str.Chr(769) + 'a',
+                        ('👩' + Str.Chr(8205)) + '💻x',
+                        (('1' + Str.Chr(65039)) + Str.Chr(8419)) + 'x',
+                        Str.Chr(769) + 'a',
                         '🇩🇪x'
                       ] do
-  begin
-    for Column: integer := 0 to 6 do
     begin
-      var State: TextAreaModel := record
-        Text := (('xxxxxx' + #10) + Line) + #10;
-        Caret := Column;
-        Offset := TuiPoint.Create(3, 0);
-      end;
-      var Moved: TextAreaModel := Press(App, State, TuiKeyKind.Down, '');
-      AssertEquals(7 + Expected(Line, Column), Moved.Caret)
-    end
-  end;
+      for Column: integer := 0 to 6 do
+        begin
+          var State: TextAreaModel := record
+            Text := (('xxxxxx' + #10) + Line) + #10;
+            Caret := Column;
+            Offset := Tui.TuiPoint.Create(3, 0);
+          end record;
+          var Moved: TextAreaModel := Press(App, State, Tui.TuiKeyKind.Down, '');
+          Test.AssertEquals(7 + Expected(Line, Column), Moved.Caret);
+        end;
+      end for;
+    end;
+  end for;
 
-  App.Close()
-end.
+  App.Close();
+end program;

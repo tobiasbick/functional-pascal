@@ -1,9 +1,15 @@
 unit Std.Tui.Runtime.Frame;
 
-uses
-  Std.Options, Std.Tui.Elements.Element, Std.Tui.Elements.Validate, Std.Tui.Geometry.Rect,
-  Std.Tui.Geometry.Size, Std.Tui.Ids.ControlId, Std.Tui.Layout.Arrange, Std.Tui.Layout.Frame,
-  Std.Tui.Rendering.Paint, Std.Tui.Rendering.Surface;
+uses Std.Options as Options;
+uses Std.Tui.Elements.Element as Element;
+uses Std.Tui.Elements.Validate as Validate;
+uses Std.Tui.Geometry.Rect as Rect;
+uses Std.Tui.Geometry.Size as Size;
+uses Std.Tui.Ids.ControlId as ControlId;
+uses Std.Tui.Layout.Arrange as Arrange;
+uses Std.Tui.Layout.Frame as Frame2;
+uses Std.Tui.Rendering.Paint as Paint;
+uses Std.Tui.Rendering.Surface as Surface2;
 
 // Validates, arranges, and paints one complete frame into the host-owned arranged frame.
 //
@@ -13,13 +19,15 @@ uses
 // - `Root`: Root of the element tree.
 // - `Pressed`: Whether the control is displayed as pressed.
 public procedure TuiRenderFrame(
-  Surface: TuiWorkingSurface;
-  Frame: TuiArrangedFrame;
-  Root: TuiElement;
-  Pressed: option of TuiControlId
+  Surface: Surface2.TuiWorkingSurface;
+  Frame: Frame2.TuiArrangedFrame;
+  Root: Element.TuiElement;
+  Pressed: option of ControlId.TuiControlId
 );
 begin
-  TuiElementValidate(Root);
-  TuiArrange(Frame, Root, TuiRectForSize(Surface.Size()));
-  TuiPaintView(Surface, Frame, Root, Pressed)
-end;
+  Validate.TuiElementValidate(Root);
+  Arrange.TuiArrange(Frame, Root, Rect.TuiRectForSize(Surface.Size()));
+  Paint.TuiPaintView(Surface, Frame, Root, Pressed);
+end procedure;
+
+end unit;

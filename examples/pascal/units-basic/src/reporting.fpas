@@ -2,15 +2,18 @@
 
 unit App.Reporting;
 
-uses App.Math, Std.Conv;
+uses App.Math as Math;
+uses Std.Conv as Conv;
 
 public function DescribeClamp(Value: integer): string;
 begin
-  var Clamped: integer := Clamp(Value, 0, 100);
-  return (('input=' + IntToStr(Value)) + ', clamped=') + IntToStr(Clamped)
-end;
+  var Clamped: integer := Math.Clamp(Value, 0, 100);
+  return (('input=' + Conv.IntToStr(Value)) + ', clamped=') + Conv.IntToStr(Clamped);
+end function;
 
 public function DescribeScaled(Value: integer; Factor: integer): string;
 begin
-  return 'scaled=' + IntToStr(Scale(Value, Factor))
-end;
+  return 'scaled=' + Conv.IntToStr(Math.Scale(Value, Factor));
+end function;
+
+end unit;

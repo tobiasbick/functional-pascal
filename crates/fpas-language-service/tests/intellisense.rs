@@ -148,17 +148,40 @@ fn completion_includes_public_declarations_from_workspace_dependencies() {
     );
     temp.write(
         "lib/src/library.fpas",
-        "unit Completion.Library;\n\npublic function GreetingFor(Name: string): string;\nbegin\n  return Name\nend;\n",
+        r#"unit Completion.Library;
+
+public function GreetingFor(Name: string): string;
+begin
+  return Name;
+end function;
+end unit;
+
+"#,
     );
     temp.write(
         "lib/src/hidden.fpas",
-        "unit Completion.Hidden;\n\npublic function HiddenDependencyValue(): integer;\nbegin\n  return 1\nend;\n",
+        r#"unit Completion.Hidden;
+
+public function HiddenDependencyValue(): integer;
+begin
+  return 1;
+end function;
+end unit;
+
+"#,
     );
     temp.write(
         "app/app.fpasprj",
         "[project]\nname = \"completion-app\"\nkind = \"program\"\nmain = \"src/main.fpas\"\n\n[dependencies]\nworkspace = [\"completion-lib\"]\n\n[sources]\ninclude = [\"src/**/*.fpas\"]\n",
     );
-    let source = "program CompletionApp;\n\nuses Completion.Library;\n\nbegin\n  GreetingFor('workspace')\nend.\n";
+    let source = r#"program CompletionApp;
+
+uses Completion.Library as Library;
+
+begin
+  Library.GreetingFor('workspace');
+end program;
+"#;
     let path = temp.write("app/src/main.fpas", source);
     let mut service = LanguageService::new(WorkspaceContext::load(temp.path()));
     let cursor = source.find("GreetingFor").expect("call");
@@ -202,21 +225,66 @@ fn auto_import_is_offered_only_for_one_public_declaration_and_preserves_formatti
     );
     temp.write(
         "src/core.fpas",
-        "unit Demo.Core;\n\npublic function Existing(): integer;\nbegin\n  return 1\nend;\n",
+        r#"unit Demo.Core;
+
+public function Existing(): integer;
+begin
+  return 1;
+end function;
+end unit;
+
+"#,
     );
     temp.write(
         "src/importable.fpas",
-        "unit Demo.Importable;\n\n// Returns the unique imported value.\npublic function UniqueValue(): integer;\nbegin\n  return 2\nend;\n\nfunction HiddenValue(): integer;\nbegin\n  return 3\nend;\n",
+        r#"unit Demo.Importable;
+
+// Returns the unique imported value.
+public function UniqueValue(): integer;
+begin
+  return 2;
+end function;
+
+function HiddenValue(): integer;
+begin
+  return 3;
+end function;
+end unit;
+
+"#,
     );
     temp.write(
         "src/first.fpas",
-        "unit Demo.First;\n\npublic function SharedValue(): integer;\nbegin\n  return 1\nend;\n",
+        r#"unit Demo.First;
+
+public function SharedValue(): integer;
+begin
+  return 1;
+end function;
+end unit;
+
+"#,
     );
     temp.write(
         "src/second.fpas",
-        "unit Demo.Second;\n\npublic function SharedValue(): integer;\nbegin\n  return 2\nend;\n",
+        r#"unit Demo.Second;
+
+public function SharedValue(): integer;
+begin
+  return 2;
+end function;
+end unit;
+
+"#,
     );
-    let source = "program AutoImport;\n\nuses Demo.Core;\n\nbegin\n  var Value: integer := UniqueValue\nend.\n";
+    let source = r#"program AutoImport;
+
+uses Demo.Core as Core;
+
+begin
+  var Value: integer := UniqueValue;
+end program;
+"#;
     let main = temp.write("src/main.fpas", source);
     let mut service = LanguageService::load(&manifest);
     let cursor = source.find("UniqueValue").expect("unresolved name") + "UniqueValue".len();
@@ -235,7 +303,7 @@ fn auto_import_is_offered_only_for_one_public_declaration_and_preserves_formatti
     let mut edited = source.to_owned();
     edited.replace_range(edit.span.offset()..edit.span.end(), &edit.new_text);
     assert!(
-        edited.contains("uses Demo.Core, Demo.Importable;"),
+        edited.contains("uses Demo.Core as Core;\nuses Demo.Importable as Importable;"),
         "{edited}"
     );
     let (unit, errors) = parse_compilation_unit(&edited);

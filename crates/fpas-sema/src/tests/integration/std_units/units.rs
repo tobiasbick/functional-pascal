@@ -10,11 +10,10 @@ fn parse_std_qualified_call_rejects_empty_segments() {
 #[test]
 fn uses_unknown_unit_rejected() {
     let errs = check_errors(
-        "\
-program T;
-uses Foo.Bar;
-begin
-end.",
+        r#"program T;
+uses Foo.Bar as Bar;
+begin null;
+end program;"#,
     );
     assert!(
         errs.iter().any(|e| e.message.contains("Unknown unit")),
@@ -25,11 +24,10 @@ end.",
 #[test]
 fn uses_bare_std_reserved() {
     let errs = check_errors(
-        "\
-program T;
-uses Std;
-begin
-end.",
+        r#"program T;
+uses Std as Std;
+begin null;
+end program;"#,
     );
     assert!(
         errs.iter().any(|e| e.message.contains("reserved")),
@@ -40,11 +38,10 @@ end.",
 #[test]
 fn uses_std_extra_segment_rejected() {
     let errs = check_errors(
-        "\
-program T;
-uses Std.Console.Extra;
-begin
-end.",
+        r#"program T;
+uses Std.Console.Extra as Extra;
+begin null;
+end program;"#,
     );
     assert!(
         errs.iter()

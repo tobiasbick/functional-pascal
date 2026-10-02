@@ -1,65 +1,66 @@
 program ChannelsTest;
 
-uses Std.Tasks, Std.Test;
+uses Std.Tasks as Tasks;
+uses Std.Test as Test;
 
 function SendValues(Messages: channel of integer): boolean;
 begin
-  case Send(Messages, 10) of
-    Ok(Sent):
-    begin
-      AssertTrue(Sent)
-    end;
-    Error(Message):
-    begin
-      Fail(Message)
-    end
-  end;
+  case Tasks.Send(Messages, 10) of
+    when Ok(Sent):
+      begin
+        Test.AssertTrue(Sent);
+      end;
+    when Error(Message):
+      begin
+        Test.Fail(Message);
+      end;
+  end case;
 
-  case Send(Messages, 20) of
-    Ok(Sent):
-    begin
-      AssertTrue(Sent)
-    end;
-    Error(Message):
-    begin
-      Fail(Message)
-    end
-  end;
+  case Tasks.Send(Messages, 20) of
+    when Ok(Sent):
+      begin
+        Test.AssertTrue(Sent);
+      end;
+    when Error(Message):
+      begin
+        Test.Fail(Message);
+      end;
+  end case;
 
-  return CloseChannel(Messages)
-end;
+  return Tasks.CloseChannel(Messages);
+end function;
 
 function ReceiveValue(Messages: channel of integer): integer;
 begin
-  case Receive(Messages) of
-    Ok(Value):
-    begin
-      return Value
-    end;
-    Error(Message):
-    begin
-      Fail(Message);
-      return 0
-    end
-  end
-end;
+  case Tasks.Receive(Messages) of
+    when Ok(Value):
+      begin
+        return Value;
+      end;
+    when Error(Message):
+      begin
+        Test.Fail(Message);
+        return 0;
+      end;
+  end case;
+end function;
 
 begin
-  var Messages: channel of integer := CreateChannel(1);
+  var Messages: channel of integer := Tasks.CreateChannel(1);
   var Producer: task := go SendValues(Messages);
-  AssertEquals(10, ReceiveValue(Messages));
-  AssertEquals(20, ReceiveValue(Messages));
-  AssertTrue(Wait(Producer));
-  case Receive(Messages) of
-    Ok(_):
-    begin
-      Fail('closed channel returned an extra value')
-    end;
-    Error(Message):
-    begin
-      AssertEquals('Channel is closed', Message)
-    end
-  end;
+  Test.AssertEquals(10, ReceiveValue(Messages));
+  Test.AssertEquals(20, ReceiveValue(Messages));
+  Test.AssertTrue(Tasks.Wait(Producer));
+  case Tasks.Receive(Messages) of
+    when Ok(_):
+      begin
+        Test.Fail('closed channel returned an extra value');
+      end;
+    when Error(Message):
+      begin
+        Test.AssertEquals('Channel is closed', Message);
+      end;
+  end case;
 
-  AssertFalse(CloseChannel(Messages))
-end.
+  Test.AssertFalse(Tasks.CloseChannel(Messages));
+end program;

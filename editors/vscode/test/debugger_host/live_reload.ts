@@ -101,16 +101,16 @@ function sourceWithValue(value: number): string[] {
   return [
     "program DebuggerLiveReload;",
     "",
-    "uses Std.Console;",
+    "uses Std.Console as Console;",
     "",
     "function Value(): integer;",
     "begin",
-    `  return ${value}`,
-    "end;",
+    `  return ${value};`,
+    "end function;",
     "",
     "begin",
-    "  WriteLn(Value())",
-    "end.",
+    "  Console.WriteLn(Value());",
+    "end program;",
     ""
   ];
 }

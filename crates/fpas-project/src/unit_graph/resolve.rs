@@ -4,7 +4,7 @@ use std::collections::HashSet;
 use std::path::Path;
 
 use fpas_diagnostics::codes::PROJECT_UNIT_NOT_EXPORTED;
-use fpas_parser::QualifiedId;
+use fpas_parser::Import;
 
 use crate::ProjectError;
 use crate::model::{LibraryExportPolicy, SourceOrigin};
@@ -23,7 +23,7 @@ impl<'a> ImportPolicy<'a> {
         Self { graph }
     }
 
-    pub(crate) fn validate_root_uses(&self, uses: &[QualifiedId]) -> Result<(), ProjectError> {
+    pub(crate) fn validate_root_uses(&self, uses: &[Import]) -> Result<(), ProjectError> {
         if !self.graph.link_meta().enforces_export_rules() {
             return Ok(());
         }
@@ -137,7 +137,7 @@ impl<'a> ImportPolicy<'a> {
 }
 
 pub(super) fn resolve_reachable(
-    root_uses: &[QualifiedId],
+    root_uses: &[Import],
     graph: &UnitGraph,
     policy: &ImportPolicy<'_>,
 ) -> Result<HashSet<String>, ProjectError> {
@@ -169,12 +169,12 @@ pub(super) fn resolve_reachable(
                     graph,
                     &format!("unit `{}`", node.display_name()),
                 )
-                .at_source(node.path(), used.span));
+                .at_source(node.path(), used.unit_span));
             }
             if !policy.can_import_for_unit(&next, &dependency_key) {
                 return Err(policy
                     .not_exported_error(&dependency_key)
-                    .at_source(node.path(), used.span));
+                    .at_source(node.path(), used.unit_span));
             }
             queue.push(dependency_key);
         }
@@ -201,12 +201,12 @@ pub(super) fn all_library_units(graph: &UnitGraph) -> Result<HashSet<String>, Pr
                     graph,
                     &format!("unit `{}`", node.display_name()),
                 )
-                .at_source(node.path(), used.span));
+                .at_source(node.path(), used.unit_span));
             }
             if !policy.can_import_for_unit(key, &dependency_key) {
                 return Err(policy
                     .not_exported_error(&dependency_key)
-                    .at_source(node.path(), used.span));
+                    .at_source(node.path(), used.unit_span));
             }
         }
     }

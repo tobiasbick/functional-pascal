@@ -1,16 +1,17 @@
 program T;
 
-uses Std.Console, Std.Arrays;
+uses Std.Console as Console;
+uses Std.Arrays as Arrays;
 
 function IsEven(X: integer): boolean;
 begin
-  return X mod 2 = 0
-end;
+  return X mod 2 = 0;
+end function;
 
 begin
   var Nums: array of integer := [1, 2, 3, 4, 5];
-  var Evens: array of integer := Filter(Nums, IsEven);
-  WriteLn(Length(Evens));
-  WriteLn(Evens[0]);
-  WriteLn(Evens[1])
-end.
+  var Evens: array of integer := Arrays.Filter(Nums, IsEven);
+  Console.WriteLn(Arrays.Length(Evens));
+  Console.WriteLn(Evens[0]);
+  Console.WriteLn(Evens[1]);
+end program;

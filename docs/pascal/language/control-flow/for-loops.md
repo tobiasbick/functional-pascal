@@ -5,19 +5,25 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`for_stmt`).
 ## Counting up
 
 ```pascal
+uses Std.Console as Console;
+
 for I: integer := 1 to 10 do
-begin
-  WriteLn(I);
-end;
+  begin
+    Console.WriteLn(I);
+  end;
+end for;
 ```
 
 ## Counting down
 
 ```pascal
+uses Std.Console as Console;
+
 for I: integer := 10 downto 1 do
-begin
-  WriteLn(I);
-end;
+  begin
+    Console.WriteLn(I);
+  end;
+end for;
 ```
 
 ## Implementation (contributors)

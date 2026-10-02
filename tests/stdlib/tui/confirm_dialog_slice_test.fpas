@@ -1,26 +1,27 @@
 program ConfirmDialogSliceTest;
 
-uses Std.Console, Std.Str, Std.Tui, Std.Test;
+uses Std.Console as Console;
+uses Std.Str as Str;
+uses Std.Tui as Tui;
+uses Std.Test as Test;
 
-const
-  NameControlValue: integer := 1;
-  SaveControlValue: integer := 2;
-  YesControlValue: integer := 3;
-  NoControlValue: integer := 4;
-  NameChangedActionValue: integer := 10;
-  SaveActionValue: integer := 11;
-  ConfirmYesActionValue: integer := 12;
-  ConfirmNoActionValue: integer := 13;
+const NameControlValue: integer := 1;
+const SaveControlValue: integer := 2;
+const YesControlValue: integer := 3;
+const NoControlValue: integer := 4;
+const NameChangedActionValue: integer := 10;
+const SaveActionValue: integer := 11;
+const ConfirmYesActionValue: integer := 12;
+const ConfirmNoActionValue: integer := 13;
 
-type
-  EditorModel = record
-    Name: string;
-    NameCaret: integer;
-    Focused: integer;
-    ConfirmOpen: boolean;
-    Saved: boolean;
-    Quit: boolean;
-  end;
+type EditorModel = record
+  Name: string;
+  NameCaret: integer;
+  Focused: integer;
+  ConfirmOpen: boolean;
+  Saved: boolean;
+  Quit: boolean;
+end record;
 
 function EditorState(
   State: EditorModel;
@@ -39,130 +40,134 @@ begin
     ConfirmOpen := ConfirmOpen;
     Saved := Saved;
     Quit := Quit;
-  end
-end;
+  end record;
+end function;
 
-function UpdateEditor(State: EditorModel; Msg: TuiMsg; Cmd: TuiCmdOutput): EditorModel;
+function UpdateEditor(State: EditorModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): EditorModel;
 begin
-  Cmd.Set(TuiCmd.NoCommand);
+  Cmd.Set(Tui.TuiCmd.NoCommand);
   case Msg of
-    TuiMsg.Key(Key):
-    begin
-      return State
-    end;
-    TuiMsg.Pointer(Pointer):
-    begin
-      return State
-    end;
-    TuiMsg.Resize(Size):
-    begin
-      return State
-    end;
-    TuiMsg.Tick(Delta):
-    begin
-      return State
-    end;
-    TuiMsg.FocusChanged(Previous, Current):
-    begin
-      case Current of
-        Some(Id):
-        begin
-          return EditorState(State, State.Name, State.NameCaret, Id.Value, State.ConfirmOpen, State.Saved, State.Quit)
-        end;
-        None:
-        begin
-          return State
-        end
-      end
-    end;
-    TuiMsg.Action(Source, Action):
-    begin
-      if Action.Value = SaveActionValue then
+    when Tui.TuiMsg.Key(Key):
       begin
-        AssertEquals(SaveControlValue, Source.Value);
-        return EditorState(State, State.Name, State.NameCaret, YesControlValue, true, State.Saved, State.Quit)
+        return State;
       end;
-
-      if Action.Value = ConfirmYesActionValue then
+    when Tui.TuiMsg.Pointer(Pointer):
       begin
-        AssertEquals(YesControlValue, Source.Value);
-        return EditorState(State, State.Name, State.NameCaret, SaveControlValue, false, true, State.Quit)
+        return State;
       end;
-
-      if Action.Value = ConfirmNoActionValue then
+    when Tui.TuiMsg.Resize(Size):
       begin
-        AssertEquals(NoControlValue, Source.Value);
-        return EditorState(State, State.Name, State.NameCaret, SaveControlValue, false, State.Saved, State.Quit)
+        return State;
       end;
+    when Tui.TuiMsg.Tick(Delta):
+      begin
+        return State;
+      end;
+    when Tui.TuiMsg.FocusChanged(Previous, Current):
+      begin
+        case Current of
+          when Some(Id):
+            begin
+              return EditorState(State, State.Name, State.NameCaret, Id.Value, State.ConfirmOpen, State.Saved, State.Quit);
+            end;
+          when None:
+            begin
+              return State;
+            end;
+        end case;
+      end;
+    when Tui.TuiMsg.Action(Source, Action):
+      begin
+        if Action.Value = SaveActionValue then
+          begin
+            Test.AssertEquals(SaveControlValue, Source.Value);
+            return EditorState(State, State.Name, State.NameCaret, YesControlValue, true, State.Saved, State.Quit);
+          end;
+        end if;
 
-      return State
-    end;
-    TuiMsg.TextChanged(Source, Action, Text, Caret):
-    begin
-      AssertEquals(NameControlValue, Source.Value);
-      AssertEquals(NameChangedActionValue, Action.Value);
-      return EditorState(State, Text, Caret, State.Focused, State.ConfirmOpen, State.Saved, State.Quit)
-    end;
-    TuiMsg.TextAreaChanged(Source, Action, Text, Caret, Offset):
-    begin
-      return State
-    end;
-    TuiMsg.CheckChanged(Source, Action, Checked):
-    begin
-      return State
-    end;
-    TuiMsg.SelectionChanged(Source, Action, Selected):
-    begin
-      return State
-    end;
-    TuiMsg.ScrollChanged(Source, Action, Offset):
-    begin
-      return State
-    end;
-    TuiMsg.MenuChanged(MenuSource, MenuAction, MenuState):
-    begin
-      Cmd.Set(TuiCmd.Quit);
-      return EditorState(State, 'SHOULD NOT PAINT', 0, State.Focused, State.ConfirmOpen, State.Saved, true)
-    end;
-    TuiMsg.QuitRequested:
-    begin
-      Cmd.Set(TuiCmd.Quit);
-      return EditorState(State, 'SHOULD NOT PAINT', 0, State.Focused, State.ConfirmOpen, State.Saved, true)
-    end
+        if Action.Value = ConfirmYesActionValue then
+          begin
+            Test.AssertEquals(YesControlValue, Source.Value);
+            return EditorState(State, State.Name, State.NameCaret, SaveControlValue, false, true, State.Quit);
+          end;
+        end if;
+
+        if Action.Value = ConfirmNoActionValue then
+          begin
+            Test.AssertEquals(NoControlValue, Source.Value);
+            return EditorState(State, State.Name, State.NameCaret, SaveControlValue, false, State.Saved, State.Quit);
+          end;
+        end if;
+
+        return State;
+      end;
+    when Tui.TuiMsg.TextChanged(Source, Action, Text, Caret):
+      begin
+        Test.AssertEquals(NameControlValue, Source.Value);
+        Test.AssertEquals(NameChangedActionValue, Action.Value);
+        return EditorState(State, Text, Caret, State.Focused, State.ConfirmOpen, State.Saved, State.Quit);
+      end;
+    when Tui.TuiMsg.TextAreaChanged(Source, Action, Text, Caret, Offset):
+      begin
+        return State;
+      end;
+    when Tui.TuiMsg.CheckChanged(Source, Action, Checked):
+      begin
+        return State;
+      end;
+    when Tui.TuiMsg.SelectionChanged(Source, Action, Selected):
+      begin
+        return State;
+      end;
+    when Tui.TuiMsg.ScrollChanged(Source, Action, Offset):
+      begin
+        return State;
+      end;
+    when Tui.TuiMsg.MenuChanged(MenuSource, MenuAction, MenuState):
+      begin
+        Cmd.Set(Tui.TuiCmd.Quit);
+        return EditorState(State, 'SHOULD NOT PAINT', 0, State.Focused, State.ConfirmOpen, State.Saved, true);
+      end;
+    when Tui.TuiMsg.QuitRequested:
+      begin
+        Cmd.Set(Tui.TuiCmd.Quit);
+        return EditorState(State, 'SHOULD NOT PAINT', 0, State.Focused, State.ConfirmOpen, State.Saved, true);
+      end;
     else
-    begin
-      return State
-    end
-  end
-end;
+      begin
+        return State;
+      end;
+  end case;
+end function;
 
-function ViewEditor(State: EditorModel): TuiElement;
+function ViewEditor(State: EditorModel): Tui.TuiElement;
 begin
-  mutable var Overlay: TuiElement := TuiElementBuilders.MakeEmpty();
+  mutable var Overlay: Tui.TuiElement := Tui.TuiElementBuilders.MakeEmpty();
   if State.ConfirmOpen then
-  begin
-    Overlay := TuiElementBuilders.MakeOverlay('Confirm', [
-                                                           TuiElementBuilders.MakeLabel('Save changes?'),
-                                                           TuiElementBuilders.MakeRow([
-                                                                                        TuiElementBuilders.MakeButton(TuiControlId.Create(YesControlValue), 'Yes', TuiAction.Create(ConfirmYesActionValue)),
-                                                                                        TuiElementBuilders.MakeButton(TuiControlId.Create(NoControlValue), 'No', TuiAction.Create(ConfirmNoActionValue))
-                                                                                      ])
-                                                         ])
-  end;
+    begin
+      Overlay := Tui.TuiElementBuilders.MakeOverlay('Confirm', [
+                                                                 Tui.TuiElementBuilders.MakeLabel('Save changes?'),
+                                                                 Tui.TuiElementBuilders.MakeRow([
+                                                                                                  Tui.TuiElementBuilders.MakeButton(Tui.TuiControlId.Create(YesControlValue), 'Yes', Tui.TuiAction.Create(ConfirmYesActionValue)),
+                                                                                                  Tui.TuiElementBuilders.MakeButton(Tui.TuiControlId.Create(NoControlValue), 'No', Tui.TuiAction.Create(ConfirmNoActionValue))
+                                                                                                ])
+                                                               ]);
+    end;
+  end if;
 
-  return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(State.Focused)), [
-                                                                                    TuiElementBuilders.MakePanel('Editor', [
-                                                                                                                             TuiElementBuilders.MakeColumn([
-                                                                                                                                                             TuiElementBuilders.MakeLabel('Name'),
-                                                                                                                                                             TuiElementBuilders.MakeInput(TuiControlId.Create(NameControlValue), State.Name, State.NameCaret, TuiAction.Create(NameChangedActionValue)),
-                                                                                                                                                             TuiElementBuilders.MakeButton(TuiControlId.Create(SaveControlValue), 'Save', TuiAction.Create(SaveActionValue))
-                                                                                                                                                           ])
-                                                                                                                           ]),
-                                                                                    Overlay
-                                                                                  ])
-end;
+  return Tui.TuiElementBuilders.MakeDesktop(Some(Tui.TuiControlId.Create(State.Focused)), [
+                                                                                            Tui.TuiElementBuilders.MakePanel('Editor', [
+                                                                                                                                         Tui.TuiElementBuilders.MakeColumn([
+                                                                                                                                                                             Tui.TuiElementBuilders.MakeLabel('Name'),
+                                                                                                                                                                             Tui.TuiElementBuilders.MakeInput(Tui.TuiControlId.Create(NameControlValue), State.Name, State.NameCaret, Tui.TuiAction.Create(NameChangedActionValue)),
+                                                                                                                                                                             Tui.TuiElementBuilders.MakeButton(Tui.TuiControlId.Create(SaveControlValue), 'Save', Tui.TuiAction.Create(SaveActionValue))
+                                                                                                                                                                           ])
+                                                                                                                                       ]),
+                                                                                            Overlay
+                                                                                          ]);
+end function;
 
-function MakeKey(Kind: TuiKeyKind; Character: string): TuiKeyEvent;
+function MakeKey(Kind: Tui.TuiKeyKind; Character: string): Tui.TuiKeyEvent;
 begin
   return record
     kind := Kind;
@@ -171,8 +176,8 @@ begin
     ctrl := false;
     alt := false;
     meta := false;
-  end
-end;
+  end record;
+end function;
 
 begin
   var Initial: EditorModel := record
@@ -182,35 +187,35 @@ begin
     ConfirmOpen := false;
     Saved := false;
     Quit := false;
-  end;
-  var DirectCmd: TuiCmdOutput := TuiCmdOutput.Create();
-  var DirectQuit: EditorModel := UpdateEditor(Initial, TuiMsg.QuitRequested, DirectCmd);
-  AssertTrue(DirectCmd.Command() = TuiCmd.Quit);
-  AssertTrue(DirectQuit.Quit);
-  mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(40, 12));
-  App.InjectKeyForTest(MakeKey(TuiKeyKind.Character, 'A'));
-  App.InjectKeyForTest(MakeKey(TuiKeyKind.Character, 'd'));
-  App.InjectKeyForTest(MakeKey(TuiKeyKind.Character, 'a'));
+  end record;
+  var DirectCmd: Tui.TuiCmdOutput := Tui.TuiCmdOutput.Create();
+  var DirectQuit: EditorModel := UpdateEditor(Initial, Tui.TuiMsg.QuitRequested, DirectCmd);
+  Test.AssertTrue(DirectCmd.Command() = Tui.TuiCmd.Quit);
+  Test.AssertTrue(DirectQuit.Quit);
+  mutable var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(40, 12));
+  App.InjectKeyForTest(MakeKey(Tui.TuiKeyKind.Character, 'A'));
+  App.InjectKeyForTest(MakeKey(Tui.TuiKeyKind.Character, 'd'));
+  App.InjectKeyForTest(MakeKey(Tui.TuiKeyKind.Character, 'a'));
   mutable var Model: EditorModel := App.RunIterations(Initial, UpdateEditor, ViewEditor, 3, 0);
-  AssertEquals('Ada', Model.Name);
-  AssertEquals(3, Model.NameCaret);
-  App.InjectKeyForTest(MakeKey(TuiKeyKind.Tab, ''));
-  App.InjectKeyForTest(MakeKey(TuiKeyKind.Enter, ''));
+  Test.AssertEquals('Ada', Model.Name);
+  Test.AssertEquals(3, Model.NameCaret);
+  App.InjectKeyForTest(MakeKey(Tui.TuiKeyKind.Tab, ''));
+  App.InjectKeyForTest(MakeKey(Tui.TuiKeyKind.Enter, ''));
   Model := App.RunIterations(Model, UpdateEditor, ViewEditor, 2, 0);
-  AssertTrue(Model.ConfirmOpen);
-  AssertEquals(YesControlValue, Model.Focused);
-  var DialogSurface: TuiSurfaceSnapshot := App.SurfaceSnapshot();
-  AssertTrue(Std.Str.Contains(DialogSurface.LineAt(4), ' Confirm '));
-  AssertTrue(Std.Str.Contains(DialogSurface.LineAt(5), 'Save changes?'));
-  App.InjectKeyForTest(MakeKey(TuiKeyKind.Enter, ''));
+  Test.AssertTrue(Model.ConfirmOpen);
+  Test.AssertEquals(YesControlValue, Model.Focused);
+  var DialogSurface: Tui.TuiSurfaceSnapshot := App.SurfaceSnapshot();
+  Test.AssertTrue(Str.Contains(DialogSurface.LineAt(4), ' Confirm '));
+  Test.AssertTrue(Str.Contains(DialogSurface.LineAt(5), 'Save changes?'));
+  App.InjectKeyForTest(MakeKey(Tui.TuiKeyKind.Enter, ''));
   Model := App.RunIterations(Model, UpdateEditor, ViewEditor, 1, 0);
-  AssertFalse(Model.ConfirmOpen);
-  AssertTrue(Model.Saved);
-  var BeforeQuit: TuiSurfaceSnapshot := App.SurfaceSnapshot();
-  App.InjectKeyForTest(MakeKey(TuiKeyKind.Escape, ''));
+  Test.AssertFalse(Model.ConfirmOpen);
+  Test.AssertTrue(Model.Saved);
+  var BeforeQuit: Tui.TuiSurfaceSnapshot := App.SurfaceSnapshot();
+  App.InjectKeyForTest(MakeKey(Tui.TuiKeyKind.Escape, ''));
   Model := App.RunIterations(Model, UpdateEditor, ViewEditor, 1, 0);
-  AssertTrue(Model.Quit);
-  var AfterQuit: TuiSurfaceSnapshot := App.SurfaceSnapshot();
-  AssertEquals(BeforeQuit.LineAt(2), AfterQuit.LineAt(2));
-  AssertFalse(Std.Str.Contains(AfterQuit.LineAt(2), 'SHOULD NOT PAINT'))
-end.
+  Test.AssertTrue(Model.Quit);
+  var AfterQuit: Tui.TuiSurfaceSnapshot := App.SurfaceSnapshot();
+  Test.AssertEquals(BeforeQuit.LineAt(2), AfterQuit.LineAt(2));
+  Test.AssertFalse(Str.Contains(AfterQuit.LineAt(2), 'SHOULD NOT PAINT'));
+end program;

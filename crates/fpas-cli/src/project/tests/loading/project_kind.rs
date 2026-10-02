@@ -14,7 +14,12 @@ kind = "program"
 include = ["src/**/*.fpas"]
 "#,
     );
-    write_text(&dir.join("src/util.fpas"), "unit App.Util;");
+    write_text(
+        &dir.join("src/util.fpas"),
+        r#"unit App.Util;
+end unit;
+"#,
+    );
 
     let error = load_project_error(&project_file, "program projects need main");
     fs::remove_dir_all(&dir).expect("temp directory must be removed");
@@ -36,7 +41,12 @@ main = "src/main.fpas"
 include = ["src/**/*.fpas"]
 "#,
     );
-    write_text(&dir.join("src/util.fpas"), "unit Lib.Util;");
+    write_text(
+        &dir.join("src/util.fpas"),
+        r#"unit Lib.Util;
+end unit;
+"#,
+    );
 
     let error = load_project_error(&project_file, "library project must reject main");
     fs::remove_dir_all(&dir).expect("temp directory must be removed");
@@ -58,7 +68,13 @@ main = "src/main.fpas"
 include = ["src/**/*.fpas"]
 "#,
     );
-    write_text(&dir.join("src/main.fpas"), "program Main;\nbegin\nend.\n");
+    write_text(
+        &dir.join("src/main.fpas"),
+        r#"program Main;
+begin null;
+end program;
+"#,
+    );
 
     let error = load_project_error(&project_file, "invalid kind must fail");
     fs::remove_dir_all(&dir).expect("temp directory must be removed");
@@ -83,7 +99,13 @@ main = "src/main.fpas"
 include = ["src/**/*.fpas"]
 "#,
     );
-    write_text(&dir.join("src/main.fpas"), "program Main;\nbegin\nend.\n");
+    write_text(
+        &dir.join("src/main.fpas"),
+        r#"program Main;
+begin null;
+end program;
+"#,
+    );
 
     let error = load_project_error(&project_file, "empty kind must fail");
     fs::remove_dir_all(&dir).expect("temp directory must be removed");
@@ -108,7 +130,13 @@ main = "src/main.fpas"
 include = ["src/**/*.fpas"]
 "#,
     );
-    write_text(&dir.join("src/main.fpas"), "program Main;\nbegin\nend.\n");
+    write_text(
+        &dir.join("src/main.fpas"),
+        r#"program Main;
+begin null;
+end program;
+"#,
+    );
 
     let error = load_project_error(&project_file, "whitespace-only kind must fail");
     fs::remove_dir_all(&dir).expect("temp directory must be removed");
@@ -152,7 +180,12 @@ kind = "library"
 include = ["src/**/*.fpas"]
 "#,
     );
-    write_text(&dir.join("src/util.fpas"), "unit Lib.Util;");
+    write_text(
+        &dir.join("src/util.fpas"),
+        r#"unit Lib.Util;
+end unit;
+"#,
+    );
 
     let loaded = load_project_ok(&project_file);
     fs::remove_dir_all(&dir).expect("temp directory must be removed");
@@ -176,10 +209,18 @@ kind = "test"
 include = ["*.fpas"]
 "#,
     );
-    write_text(&dir.join("helper.fpas"), "unit Tests.Helper;\n");
+    write_text(
+        &dir.join("helper.fpas"),
+        r#"unit Tests.Helper;
+end unit;
+
+"#,
+    );
     write_text(
         &dir.join("smoke_test.fpas"),
-        "program Smoke;\nuses Std.Test;\nbegin AssertTrue(true) end.",
+        r#"program Smoke;
+uses Std.Test as Test;
+begin Test.AssertTrue(true); end program;"#,
     );
 
     let loaded = load_project_ok(&project_file);
@@ -218,7 +259,9 @@ include = ["*.fpas"]
     );
     write_text(
         &dir.join("smoke_test.fpas"),
-        "program Smoke;\nuses Std.Test;\nbegin AssertTrue(true) end.",
+        r#"program Smoke;
+uses Std.Test as Test;
+begin Test.AssertTrue(true); end program;"#,
     );
 
     let error = load_project_error(&project_file, "test project must reject main");

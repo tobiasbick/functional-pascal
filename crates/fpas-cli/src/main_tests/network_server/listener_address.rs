@@ -12,30 +12,30 @@ fn tls_listener_reports_an_os_assigned_address() {
     let source = cwd.join("main.fpas");
     write_text(
         &source,
-        &"program TlsListenerAddress;
-uses Std.Net, Std.Test;
+        &r#"program TlsListenerAddress;
+uses Std.Net as Net; uses Std.Test as Test;
 function ExerciseListener(): result of boolean, string;
 begin
-  var Server: Listener := try ListenTls('127.0.0.1', 0, 'cert.pem', 'key.pem', 2000);
-  var Address: NetworkAddress := try ListenerLocalAddress(Server);
-  AssertEquals('127.0.0.1', Address.Host);
-  AssertTrue(Address.Port > 0);
-  AssertTrue(Address.Port <= 65535);
-  var Client: Connection := try Connect(Address.Host, Address.Port, 2000);
-  var ClientClosed: boolean := try Close(Client);
-  var ServerClosed: boolean := try CloseListener(Server);
-  case ListenerLocalAddress(Server) of
-    Ok(_): panic('Closed TLS listener returned an address');
-    Error(_): begin end
-  end;
-  return Ok(true)
-end;
+  var Server: Net.Listener := try Net.ListenTls('127.0.0.1', 0, 'cert.pem', 'key.pem', 2000);
+  var Address: Net.NetworkAddress := try Net.ListenerLocalAddress(Server);
+  Test.AssertEquals('127.0.0.1', Address.Host);
+  Test.AssertTrue(Address.Port > 0);
+  Test.AssertTrue(Address.Port <= 65535);
+  var Client: Net.Connection := try Net.Connect(Address.Host, Address.Port, 2000);
+  var ClientClosed: boolean := try Net.Close(Client);
+  var ServerClosed: boolean := try Net.CloseListener(Server);
+  case Net.ListenerLocalAddress(Server) of
+    when Ok(_): panic('Closed TLS listener returned an address');
+    when Error(_): begin null; end;
+  end case;
+  return Ok(true);
+end function;
 begin
   case ExerciseListener() of
-    Ok(_): begin end;
-    Error(Message): panic(Message)
-  end
-end."
+    when Ok(_): begin null; end;
+    when Error(Message): panic(Message);
+  end case;
+end program;"#
             .replace(
                 "cert.pem",
                 &cwd.join("cert.pem")

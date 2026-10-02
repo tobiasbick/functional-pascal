@@ -9,20 +9,22 @@
 ## Example
 
 ```pascal
-uses Std.Console;
+program Example;
+
+uses Std.Console as Console;
 
 begin
-  WriteText('Name: ');
-  var Name: string := ReadLn();
-  WriteLn('Hello, ', Name);
+  Console.WriteText('Name: ');
+  var Name: string := Console.ReadLn();
+  Console.WriteLn('Hello, ', Name);
 
-  WriteLn('Press Escape or any printable key.');
-  var Key: KeyEvent := ReadKeyEvent();
-  if Key.kind = KeyKind.Escape then
-    WriteLn('escape')
+  Console.WriteLn('Press Escape or any printable key.');
+  var Key: Console.KeyEvent := Console.ReadKeyEvent();
+  if Key.kind = Console.KeyKind.Escape then
+    Console.WriteLn('escape');
   else
-    WriteLn(Key.ch)
-end.
+    Console.WriteLn(Key.ch); end if;
+end program;
 ```
 
 ## See also

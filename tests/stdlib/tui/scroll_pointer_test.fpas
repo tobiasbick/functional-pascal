@@ -1,19 +1,19 @@
 program TuiScrollPointerTest;
 
-uses Std.Test, Std.Tui;
+uses Std.Test as Test;
+uses Std.Tui as Tui;
 
-type
-  ScrollModel = record
-    Focus: integer;
-    Offset: TuiPoint;
-  end;
+type ScrollModel = record
+  Focus: integer;
+  Offset: Tui.TuiPoint;
+end record;
 
-function MakeDownPointer(X: integer; Y: integer): TuiPointerEvent;
+function MakeDownPointer(X: integer; Y: integer): Tui.TuiPointerEvent;
 begin
-  return TuiPointerEvent.Create(TuiPointerAction.Down, TuiPointerButton.Left, TuiPoint.Create(X, Y))
-end;
+  return Tui.TuiPointerEvent.Create(Tui.TuiPointerAction.Down, Tui.TuiPointerButton.Left, Tui.TuiPoint.Create(X, Y));
+end function;
 
-function MakeKey(Kind: TuiKeyKind): TuiKeyEvent;
+function MakeKey(Kind: Tui.TuiKeyKind): Tui.TuiKeyEvent;
 begin
   return record
     kind := Kind;
@@ -22,74 +22,75 @@ begin
     ctrl := false;
     alt := false;
     meta := false;
-  end
-end;
+  end record;
+end function;
 
-function ViewScroll(State: ScrollModel): TuiElement;
+function ViewScroll(State: ScrollModel): Tui.TuiElement;
 begin
-  mutable var Focused: option of TuiControlId := None;
+  mutable var Focused: option of Tui.TuiControlId := None;
   if State.Focus > 0 then
-  begin
-    Focused := Some(TuiControlId.Create(State.Focus))
-  end;
-
-  return TuiElementBuilders.MakeDesktop(Focused, [
-                                                   TuiElementBuilders.MakeScroll(TuiControlId.Create(1), State.Offset, TuiAction.Create(7), TuiElementBuilders.MakeColumn([
-                                                                                                                                                                            TuiElementBuilders.MakeLabel('One'),
-                                                                                                                                                                            TuiElementBuilders.MakeLabel('Two'),
-                                                                                                                                                                            TuiElementBuilders.MakeLabel('Three'),
-                                                                                                                                                                            TuiElementBuilders.MakeLabel('Four')
-                                                                                                                                                                          ]))
-                                                 ])
-end;
-
-function UpdateScroll(State: ScrollModel; Msg: TuiMsg; Cmd: TuiCmdOutput): ScrollModel;
-begin
-  Cmd.Set(TuiCmd.NoCommand);
-  case Msg of
-    TuiMsg.FocusChanged(Previous, Current):
     begin
-      case Current of
-        Some(Id):
-        begin
-          return record
-            Focus := Id.Value;
-            Offset := State.Offset;
-          end
-        end;
-        None:
-        begin
-          return State
-        end
-      end
+      Focused := Some(Tui.TuiControlId.Create(State.Focus));
     end;
-    TuiMsg.ScrollChanged(Source, Action, Offset):
-    begin
-      return record
-        Focus := State.Focus;
-        Offset := Offset;
-      end
-    end
+  end if;
+
+  return Tui.TuiElementBuilders.MakeDesktop(Focused, [
+                                                       Tui.TuiElementBuilders.MakeScroll(Tui.TuiControlId.Create(1), State.Offset, Tui.TuiAction.Create(7), Tui.TuiElementBuilders.MakeColumn([
+                                                                                                                                                                                                Tui.TuiElementBuilders.MakeLabel('One'),
+                                                                                                                                                                                                Tui.TuiElementBuilders.MakeLabel('Two'),
+                                                                                                                                                                                                Tui.TuiElementBuilders.MakeLabel('Three'),
+                                                                                                                                                                                                Tui.TuiElementBuilders.MakeLabel('Four')
+                                                                                                                                                                                              ]))
+                                                     ]);
+end function;
+
+function UpdateScroll(State: ScrollModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): ScrollModel;
+begin
+  Cmd.Set(Tui.TuiCmd.NoCommand);
+  case Msg of
+    when Tui.TuiMsg.FocusChanged(Previous, Current):
+      begin
+        case Current of
+          when Some(Id):
+            begin
+              return record
+                Focus := Id.Value;
+                Offset := State.Offset;
+              end record;
+            end;
+          when None:
+            begin
+              return State;
+            end;
+        end case;
+      end;
+    when Tui.TuiMsg.ScrollChanged(Source, Action, Offset):
+      begin
+        return record
+          Focus := State.Focus;
+          Offset := Offset;
+        end record;
+      end;
     else
-    begin
-      return State
-    end
-  end
-end;
+      begin
+        return State;
+      end;
+  end case;
+end function;
 
 begin
-  mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(12, 2));
+  mutable var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(12, 2));
   mutable var Model: ScrollModel := record
     Focus := 0;
-    Offset := TuiPoint.Create(0, 0);
-  end;
+    Offset := Tui.TuiPoint.Create(0, 0);
+  end record;
 
   Model := App.RunIterations(Model, UpdateScroll, ViewScroll, 0, 0);
   App.InjectPointerForTest(MakeDownPointer(10, 1));
   Model := App.RunIterations(Model, UpdateScroll, ViewScroll, 1, 0);
-  AssertEquals(1, Model.Focus);
-  App.InjectKeyForTest(MakeKey(TuiKeyKind.Down));
+  Test.AssertEquals(1, Model.Focus);
+  App.InjectKeyForTest(MakeKey(Tui.TuiKeyKind.Down));
   Model := App.RunIterations(Model, UpdateScroll, ViewScroll, 1, 0);
-  AssertEquals(1, Model.Offset.Y);
-  App.Close()
-end.
+  Test.AssertEquals(1, Model.Offset.Y);
+  App.Close();
+end program;

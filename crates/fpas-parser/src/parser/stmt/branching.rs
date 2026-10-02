@@ -9,15 +9,24 @@ impl Parser {
         self.advance();
         let condition = self.parse_expression();
         self.expect(&Token::Then);
-        let then_branch = Box::new(self.parse_statement());
+        let then_branch = self.parse_statement_body();
+        let mut elsif_branches = Vec::new();
+        while self.eat(&Token::Elsif) {
+            let condition = self.parse_expression();
+            self.expect(&Token::Then);
+            let body = self.parse_statement_body();
+            elsif_branches.push((condition, body));
+        }
         let else_branch = if self.eat(&Token::Else) {
-            Some(Box::new(self.parse_statement()))
+            Some(self.parse_statement_body())
         } else {
             None
         };
+        self.expect_named_end(&Token::If);
         Stmt::If {
             condition,
             then_branch,
+            elsif_branches,
             else_branch,
             span: self.span_from(start),
         }
@@ -38,43 +47,30 @@ impl Parser {
                 self.current_span(),
             );
         }
-        while !self.is_case_arm_end() {
+        while self.check(&Token::When) {
             arms.push(self.parse_case_arm());
-            if self.eat(&Token::Semicolon) {
-                if self.is_case_arm_end() {
-                    break;
-                }
-                continue;
-            }
-            if self.is_case_arm_end() {
-                break;
-            }
-            let span = self.current_span();
+        }
+        if arms.is_empty() && !matches!(self.current_token(), Token::End | Token::Else | Token::Eof)
+        {
             self.error_with_code(
                 PARSE_EXPECTED_TOKEN,
-                &format!(
-                    "Expected `;` between case arms, found `{}`",
-                    super::super::token_display(self.current_token()),
-                ),
-                "Insert `;` after the case arm body.",
-                span,
+                "Case arms must start with `when`",
+                "Write `when Pattern: Statement;` after `of`.",
+                self.current_span(),
             );
-            // Keep parsing further arms when the next token can start a label.
-            if self.can_start_expression() {
-                continue;
+            while !self.at_end() && !self.check(&Token::End) {
+                self.advance();
             }
-            break;
         }
 
         let else_body = if self.eat(&Token::Else) {
             let body = self.parse_statement_list();
-            self.eat(&Token::Semicolon);
             Some(body)
         } else {
             None
         };
 
-        self.expect(&Token::End);
+        self.expect_named_end(&Token::Case);
         Stmt::Case {
             expr,
             arms,
@@ -83,12 +79,9 @@ impl Parser {
         }
     }
 
-    fn is_case_arm_end(&self) -> bool {
-        matches!(self.current_token(), Token::End | Token::Else | Token::Eof)
-    }
-
     fn parse_case_arm(&mut self) -> CaseArm {
         let start = self.current_span();
+        self.expect(&Token::When);
         let labels = self.parse_case_label_list();
         let guard = if self.eat(&Token::If) {
             Some(self.parse_expression())
@@ -96,7 +89,7 @@ impl Parser {
             None
         };
         self.expect(&Token::Colon);
-        let body = self.parse_statement();
+        let body = *self.parse_statement_body();
         CaseArm {
             labels,
             guard,

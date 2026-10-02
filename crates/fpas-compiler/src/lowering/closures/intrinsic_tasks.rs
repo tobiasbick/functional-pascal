@@ -1,4 +1,4 @@
-//! Synthetic task entry functions for receiver calls to standard intrinsics.
+//! Synthetic task entry functions for calls to standard intrinsics.
 //!
 //! **Documentation:** `docs/pascal/language/functions/fluent-calls.md`
 
@@ -17,7 +17,7 @@ use crate::lowering::types;
 use super::{ClosureRegistry, IntrinsicTaskRoutine};
 
 impl ClosureRegistry<'_> {
-    /// Registers an intrinsic receiver call that is the body of a `go` expression.
+    /// Registers a direct or receiver intrinsic call inside a `go` expression.
     pub(super) fn register_intrinsic_task(
         &mut self,
         expression: &Expr,
@@ -41,16 +41,36 @@ impl ClosureRegistry<'_> {
             }
             _ => return Ok(()),
         };
-        let Some(target) = metadata.fluent_calls.get(&key) else {
-            return Ok(());
-        };
-        let Some(intrinsic) =
-            crate::intrinsic_catalog::resolve(&target.name, Some(&target.receiver_ty))
-        else {
-            return Ok(());
-        };
         let span = expression.span();
-        let mut parameters = vec![types.intern(&target.receiver_ty, span.line, span.column)?];
+        let (name, receiver_ty, result_ty) = if let Some(target) = metadata.fluent_calls.get(&key) {
+            (
+                target.name.as_str(),
+                Some(&target.receiver_ty),
+                &target.result_ty,
+            )
+        } else if let Some(name) = metadata.intrinsic_calls.get(&key) {
+            let result = metadata
+                .expr_types
+                .get(&fpas_sema::expr_lookup_key(expression))
+                .ok_or_else(|| unsupported(span, "intrinsic task result type"))?;
+            (name.as_str(), None, result)
+        } else {
+            return Ok(());
+        };
+        let first_ty = receiver_ty.or_else(|| {
+            args.first().and_then(|argument| {
+                metadata
+                    .expr_types
+                    .get(&fpas_sema::expr_lookup_key(argument))
+            })
+        });
+        let Some(intrinsic) = crate::intrinsic_catalog::resolve(name, first_ty) else {
+            return Ok(());
+        };
+        let mut parameters = Vec::new();
+        if let Some(receiver_ty) = receiver_ty {
+            parameters.push(types.intern(receiver_ty, span.line, span.column)?);
+        }
         for argument in args {
             let ty = metadata
                 .expr_types
@@ -58,7 +78,7 @@ impl ClosureRegistry<'_> {
                 .ok_or_else(|| unsupported(argument.span(), "intrinsic task argument type"))?;
             parameters.push(types.intern(ty, span.line, span.column)?);
         }
-        let result = types.intern(&target.result_ty, span.line, span.column)?;
+        let result = types.intern(result_ty, span.line, span.column)?;
         let value_type = types.function_type(parameters.clone(), result, span)?;
         let id = FunctionId::new(self.next_id);
         self.next_id = self

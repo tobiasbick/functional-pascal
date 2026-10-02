@@ -4,7 +4,7 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 use fpas_lexer::{SpannedToken, lex};
-use fpas_parser::CompilationUnit;
+use fpas_parser::{CompilationUnit, Import};
 
 use crate::{DocumentAnalysis, DocumentSnapshot, DocumentSymbol, DocumentSymbols};
 
@@ -13,7 +13,7 @@ pub(crate) struct NavigationDocument {
     pub(crate) path: PathBuf,
     pub(crate) snapshot: Arc<DocumentSnapshot>,
     pub(crate) owner: String,
-    pub(crate) uses: Vec<String>,
+    pub(crate) uses: Vec<Import>,
     pub(crate) roots: Vec<DocumentSymbol>,
     pub(crate) tokens: Vec<SpannedToken>,
     pub(crate) is_editor_api: bool,
@@ -42,7 +42,7 @@ impl NavigationDocument {
             CompilationUnit::Unit(unit) => &unit.uses,
         }
         .iter()
-        .map(|used| used.parts.join("."))
+        .cloned()
         .collect();
         let tokens = lex(snapshot.source()).0;
         Self {
@@ -68,12 +68,27 @@ impl NavigationDocument {
             .unwrap_or_default()
     }
 
+    pub(crate) fn alias_owner(&self, alias: &str) -> Option<String> {
+        self.uses
+            .iter()
+            .find(|used| used.alias.eq_ignore_ascii_case(alias))
+            .map(|used| used.parts.join("."))
+    }
+
+    pub(crate) fn qualified_import_name(&self, name: &str) -> String {
+        let Some((root, member)) = name.split_once('.') else {
+            return name.to_owned();
+        };
+        self.alias_owner(root)
+            .map_or_else(|| name.to_owned(), |unit| format!("{unit}.{member}"))
+    }
+
     pub(crate) fn uses_owner(&self, owner: &str) -> bool {
         self.owner.eq_ignore_ascii_case(owner)
             || self
                 .uses
                 .iter()
-                .any(|used| used.eq_ignore_ascii_case(owner))
+                .any(|used| used.parts.join(".").eq_ignore_ascii_case(owner))
     }
 }
 

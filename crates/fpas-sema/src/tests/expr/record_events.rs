@@ -12,18 +12,20 @@ type
     Id: integer;
     function ReadOnClick(Self: Button): Option of procedure(Sender: Button);
     begin
-      return None
-    end;
+      return None;
+    end function;
     procedure WriteOnClick(Self: Button; Handler: Option of procedure(Sender: Button));
     begin
-    end;
+      null;
+    end procedure;
     event OnClick: procedure(Sender: Button) read ReadOnClick write WriteOnClick;
     procedure RaiseClick(Self: Button);
     begin
       if Assigned(Self.OnClick) then
-        Self.OnClick(Self)
-    end;
-  end;
+        Self.OnClick(Self);
+      end if;
+    end procedure;
+  end record;
 "
 }
 
@@ -33,14 +35,16 @@ fn event_assign_assigned_and_raise_ok() {
         "{}\
 procedure Handle(Sender: Button);
 begin
-end;
+  null;
+end procedure;
 begin
-  var B: Button := record Id := 1; end;
+  var B: Button := record Id := 1; end record;
   B.OnClick := Handle;
   if Assigned(B.OnClick) then
     B.RaiseClick();
-  B.OnClick := nil
-end.",
+  end if;
+  B.OnClick := nil;
+end program;",
         event_prelude()
     ));
 }
@@ -50,9 +54,9 @@ fn bare_event_read_is_rejected() {
     let errors = check_errors(&format!(
         "{}\
 begin
-  var B: Button := record Id := 1; end;
-  var H: procedure(Sender: Button) := B.OnClick
-end.",
+  var B: Button := record Id := 1; end record;
+  var H: procedure(Sender: Button) := B.OnClick;
+end program;",
         event_prelude()
     ));
     assert!(
@@ -65,7 +69,7 @@ end.",
 
 #[test]
 fn nil_outside_event_assignment_is_rejected() {
-    let errors = check_errors("program T; var X: integer := 0; begin X := nil end.");
+    let errors = check_errors(r#"program T;  var X: integer := 0; begin X := nil; end program;"#);
     assert!(
         errors
             .iter()
@@ -77,21 +81,18 @@ fn nil_outside_event_assignment_is_rejected() {
 #[test]
 fn event_requires_option_accessors() {
     let errors = check_errors(
-        "\
-program T;
-type
-  Button = record
+        r#"program T;
+
+  type Button = record
     function ReadOnClick(Self: Button): procedure();
-    begin
-      return procedure() begin end
-    end;
+    begin return procedure() begin null; end procedure;
+    end function;
     procedure WriteOnClick(Self: Button; Handler: procedure());
-    begin
-    end;
+    begin null;
+    end procedure;
     event OnClick: procedure() read ReadOnClick write WriteOnClick;
-  end;
-begin
-end.",
+  end record;
+begin null; end program;"#,
     );
     assert!(
         errors.iter().any(|e| e.message.contains("Option of")),
@@ -102,22 +103,19 @@ end.",
 #[test]
 fn event_duplicate_member_name_rejected() {
     let errors = check_errors(
-        "\
-program T;
-type
-  Button = record
+        r#"program T;
+
+  type Button = record
     OnClick: integer;
     function ReadOnClick(Self: Button): Option of procedure();
-    begin
-      return None
-    end;
+    begin return None;
+    end function;
     procedure WriteOnClick(Self: Button; Handler: Option of procedure());
-    begin
-    end;
+    begin null;
+    end procedure;
     event OnClick: procedure() read ReadOnClick write WriteOnClick;
-  end;
-begin
-end.",
+  end record;
+begin null; end program;"#,
     );
     assert!(
         errors
@@ -130,21 +128,18 @@ end.",
 #[test]
 fn event_rejects_generic_and_mutable_accessors() {
     let errors = check_errors(
-        "\
-program T;
-type
-  Button = record
+        r#"program T;
+
+  type Button = record
     function ReadOnClick<T>(Self: Button): Option of procedure();
-    begin
-      return None
-    end;
+    begin return None;
+    end function;
     procedure WriteOnClick(Self: Button; mutable Handler: Option of procedure());
-    begin
-    end;
+    begin null;
+    end procedure;
     event OnClick: procedure() read ReadOnClick write WriteOnClick;
-  end;
-begin
-end.",
+  end record;
+begin null; end program;"#,
     );
     assert!(
         errors
@@ -166,11 +161,12 @@ fn event_cannot_be_initialized_or_updated_as_a_field() {
         "{}\
 procedure Handle(Sender: Button);
 begin
-end;
+  null;
+end procedure;
 begin
-  var B: Button := record Id := 1; OnClick := Handle; end;
-  var C: Button := B with OnClick := Handle; end
-end.",
+  var B: Button := record Id := 1; OnClick := Handle; end record;
+  var C: Button := B with OnClick := Handle; end with;
+end program;",
         event_prelude()
     ));
     assert!(
@@ -192,9 +188,9 @@ fn event_raise_cannot_cross_task_boundary() {
     let errors = check_errors(&format!(
         "{}\
 begin
-  var B: Button := record Id := 1; end;
-  go B.OnClick(B)
-end.",
+  var B: Button := record Id := 1; end record;
+  go B.OnClick(B);
+end program;",
         event_prelude()
     ));
     assert!(
@@ -210,9 +206,9 @@ fn parenthesized_nil_clears_event() {
     check_ok(&format!(
         "{}\
 begin
-  var B: Button := record Id := 1; end;
-  B.OnClick := (nil)
-end.",
+  var B: Button := record Id := 1; end record;
+  B.OnClick := (nil);
+end program;",
         event_prelude()
     ));
 }

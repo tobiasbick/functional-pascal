@@ -24,19 +24,21 @@ rules, and examples.
 
 ### Type `KeyEvent` (record)
 
-Logical name in the compiler: `Std.Console.KeyEvent`. With `uses Std.Console`, you may write `KeyEvent`.
+Logical name in the compiler: `Std.Console.KeyEvent`. With `uses Std.Console as Console;`, you may write `KeyEvent`.
 
 Equivalent conceptual declaration:
 
 ```pascal
+uses Std.Console as Console;
+
 type KeyEvent = record
-  kind: KeyKind;
+  kind: Console.KeyKind;
   ch: string;
   shift: boolean;
   ctrl: boolean;
   alt: boolean;
-  meta: boolean
-end;
+  meta: boolean;
+end record;
 ```
 
 | Field | Type | Meaning |
@@ -52,16 +54,21 @@ end;
 
 ```pascal
 program Demo;
-uses Std.Console;
+
+uses Std.Console as Console;
+
 begin
-  var E: KeyEvent := ReadKeyEvent();
-  if E.kind = KeyKind.Escape then
-    WriteLn('escape')
-  else if E.kind = KeyKind.Character then
-    WriteLn(E.ch)
+  var E: Console.KeyEvent := Console.ReadKeyEvent();
+  if E.kind = Console.KeyKind.Escape then
+    Console.WriteLn('escape');
   else
-    WriteLn('other')
-end.
+    if E.kind = Console.KeyKind.Character then
+      Console.WriteLn(E.ch);
+    else
+      Console.WriteLn('other');
+    end if;
+  end if;
+end program;
 ```
 
 You can always use qualified enum literals instead, e.g. `Std.Console.KeyKind.Escape`.
@@ -108,12 +115,15 @@ The language represents the underlying ordinal as an integer index in the **fixe
 | 27 | `F12` |
 | 28 | `Character` |
 
-**Literals** (with `uses Std.Console`):
+**Literals** (with `uses Std.Console as Console;`):
 
 ```pascal
-var K: KeyKind := KeyKind.Space;
-if K = KeyKind.F1 then
-  WriteLn('F1');
+uses Std.Console as Console;
+
+var K: Console.KeyKind := Console.KeyKind.Space;
+if K = Console.KeyKind.F1 then
+  Console.WriteLn('F1');
+end if;
 ```
 
 ---
@@ -125,11 +135,13 @@ Logical name: `Std.Console.ConsoleEvent`. Short: `ConsoleEvent` when `Std.Consol
 Equivalent conceptual declaration:
 
 ```pascal
+uses Std.Console as Console;
+
 type ConsoleEvent = record
-  kind: EventKind;
-  key: KeyEvent;
-  mouse_action: MouseAction;
-  mouse_button: MouseButton;
+  kind: Console.EventKind;
+  key: Console.KeyEvent;
+  mouse_action: Console.MouseAction;
+  mouse_button: Console.MouseButton;
   mouse_x: integer;
   mouse_y: integer;
   width: integer;
@@ -138,8 +150,8 @@ type ConsoleEvent = record
   shift: boolean;
   ctrl: boolean;
   alt: boolean;
-  meta: boolean
-end;
+  meta: boolean;
+end record;
 ```
 
 `ConsoleEvent` is the low-level event container for later TUI-style code. Only the fields relevant to the current `kind` are populated:

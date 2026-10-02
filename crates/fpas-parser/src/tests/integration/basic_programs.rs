@@ -3,13 +3,12 @@ use super::*;
 #[test]
 fn hello_world() {
     let p = parse_ok(
-        "\
-program Hello;
-uses
-  Std.Console;
+        r#"program Hello;
+
+uses Std.Console as Console;
 begin
-  Std.Console.WriteLn('Hello, World!')
-end.",
+  Console.WriteLn('Hello, World!');
+end program;"#,
     );
     assert_eq!(p.name, "Hello");
     assert_eq!(p.uses.len(), 1);
@@ -21,31 +20,30 @@ end.",
 #[test]
 fn full_program() {
     let p = parse_ok(
-        "\
-program Calculator;
-uses Std.Console;
+        r#"program Calculator;
+uses Std.Console as Console;
 
-type Op = enum
+ type Op = enum
   OpAdd;
   OpSub;
   OpMul;
   OpDiv;
-end;
+end enum;
 
 function Calculate(A: integer; B: integer; Operation: Op): integer;
 begin
   case Operation of
-    OpAdd: return A + B;
-    OpSub: return A - B;
-    OpMul: return A * B;
-    OpDiv: return A div B
-  end
-end;
+    when OpAdd: return A + B;
+    when OpSub: return A - B;
+    when OpMul: return A * B;
+    when OpDiv: return A div B;
+  end case;
+end function;
 
 begin
   var Answer: integer := Calculate(10, 3, OpAdd);
-  Std.Console.WriteLn(Answer)
-end.",
+  Console.WriteLn(Answer);
+end program;"#,
     );
     assert_eq!(p.name, "Calculator");
     assert_eq!(p.declarations.len(), 2);

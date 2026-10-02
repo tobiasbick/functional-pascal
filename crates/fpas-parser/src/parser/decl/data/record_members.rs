@@ -16,6 +16,7 @@ impl Parser {
         let mut properties = Vec::new();
         let mut events = Vec::new();
         while !self.check(&Token::End) && !self.at_end() {
+            let position = self.pos;
             let visibility = self.parse_visibility(allow_member_visibility);
             match self.current_token() {
                 Token::Function => {
@@ -41,8 +42,11 @@ impl Parser {
                 }
                 _ => fields.push(self.parse_field_def(visibility)),
             }
+            if self.pos == position {
+                self.advance();
+            }
         }
-        self.expect(&Token::End);
+        self.expect_named_end(&Token::Record);
         RecordType {
             fields,
             methods,

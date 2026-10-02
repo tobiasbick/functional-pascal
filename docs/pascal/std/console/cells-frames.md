@@ -10,32 +10,35 @@ All coordinates in this API are **1-based and screen-absolute**. They do not use
 ## Quick reference
 
 ```pascal
-type
-  ColorKind = enum
-    Crt;
-    Ansi256;
-    Rgb;
-  end;
-  Color = record
-    kind: ColorKind;
-    index: integer;
-    red: integer;
-    green: integer;
-    blue: integer;
-  end;
-  Cell = record
-    glyph: string;
-    foreground: Color;
-    background: Color;
-  end;
-  Rect = record
-    x: integer;
-    y: integer;
-    width: integer;
-    height: integer;
-  end;
-  SavedRegion = record
-  end;
+type ColorKind = enum
+  Crt;
+  Ansi256;
+  Rgb;
+end enum;
+
+type Color = record
+  kind: ColorKind;
+  index: integer;
+  red: integer;
+  green: integer;
+  blue: integer;
+end record;
+
+type Cell = record
+  glyph: string;
+  foreground: Color;
+  background: Color;
+end record;
+
+type Rect = record
+  x: integer;
+  y: integer;
+  width: integer;
+  height: integer;
+end record;
+
+type SavedRegion = record
+end record;
 ```
 
 | Symbol | Result | Purpose |
@@ -61,12 +64,14 @@ type
 Use the constructors instead of assembling a `Color` record by hand:
 
 ```pascal
-var Accent: Color := RgbColor(255, 160, 32);
-var Tile: Cell := record
+uses Std.Console as Console;
+
+var Accent: Console.Color := Console.RgbColor(255, 160, 32);
+var Tile: Console.Cell := record
   glyph := 'A';
   foreground := Accent;
-  background := CrtColor(Black);
-end;
+  background := Console.CrtColor(Console.Black);
+end record;
 ```
 
 `CrtColor` accepts `0..15`, including the named CRT constants such as `Black`, `LightGray`, and
@@ -103,11 +108,18 @@ positive; a fully off-screen rectangle has no visible effect.
 at the screen edge. A wide glyph reserves its following column as a continuation:
 
 ```pascal
-var Cells: array of Cell := [
-  record glyph := 'A'; foreground := CrtColor(White); background := CrtColor(Black); end,
-  record glyph := '中'; foreground := RgbColor(80, 200, 255); background := CrtColor(Black); end
-];
-WriteCells(1, 1, Cells)
+uses Std.Console as Console;
+
+var Cells: array of Console.Cell := [record
+  glyph := 'A';
+  foreground := Console.CrtColor(Console.White);
+  background := Console.CrtColor(Console.Black);
+end record, record
+  glyph := '中';
+  foreground := Console.RgbColor(80, 200, 255);
+  background := Console.CrtColor(Console.Black);
+end record];
+Console.WriteCells(1, 1, Cells);
 ```
 
 `GetCell` returns:
@@ -125,13 +137,21 @@ Without a frame, cell operations and existing console operations remain immediat
 screen changes until `Present`, reducing visible tearing in fullscreen redraws:
 
 ```pascal
-BeginFrame();
-FillRect(
-  record x := 1; y := 1; width := ScreenWidth(); height := ScreenHeight(); end,
-  record glyph := ' '; foreground := CrtColor(LightGray); background := CrtColor(Black); end
-);
-WriteCells(1, 1, Cells);
-Present()
+uses Std.Console as Console;
+
+Console.BeginFrame();
+Console.FillRect(record
+  x := 1;
+  y := 1;
+  width := Console.ScreenWidth();
+  height := Console.ScreenHeight();
+end record, record
+  glyph := ' ';
+  foreground := Console.CrtColor(Console.LightGray);
+  background := Console.CrtColor(Console.Black);
+end record);
+Console.WriteCells(1, 1, Cells);
+Console.Present();
 ```
 
 Frames may nest. Each `BeginFrame` requires a matching `Present`; an inner `Present` only decreases
@@ -149,13 +169,25 @@ rectangle must overlap the screen and have positive dimensions.
 Each handle is one-shot:
 
 ```pascal
-var Underlay: SavedRegion :=
-  SaveRegion(record x := 10; y := 4; width := 24; height := 5; end);
-FillRect(
-  record x := 10; y := 4; width := 24; height := 5; end,
-  record glyph := ' '; foreground := CrtColor(White); background := Ansi256Color(24); end
-);
-RestoreRegion(Underlay)
+uses Std.Console as Console;
+
+var Underlay: Console.SavedRegion := Console.SaveRegion(record
+  x := 10;
+  y := 4;
+  width := 24;
+  height := 5;
+end record);
+Console.FillRect(record
+  x := 10;
+  y := 4;
+  width := 24;
+  height := 5;
+end record, record
+  glyph := ' ';
+  foreground := Console.CrtColor(Console.White);
+  background := Console.Ansi256Color(24);
+end record);
+Console.RestoreRegion(Underlay);
 ```
 
 `RestoreRegion` restores the captured cells and consumes the handle. `DiscardRegion` consumes it

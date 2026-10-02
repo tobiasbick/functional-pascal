@@ -51,7 +51,9 @@ fn timeout_force_stops_blocking_sleep_and_cleans_worker_files() {
     let test_file = root.join("sleep_test.fpas");
     write(
         &test_file,
-        "program SleepTest;\nuses Std.Time;\nbegin Sleep(60000) end.",
+        r#"program SleepTest;
+uses Std.Time as Time;
+begin Time.Sleep(60000); end program;"#,
     );
 
     let started = Instant::now();
@@ -87,7 +89,7 @@ fn timeout_terminates_processes_started_by_the_test() {
     write(
         &test_file,
         &format!(
-            "program ProcessTest;\nuses Std.Proc;\nmutable var Status: Result of integer, string := Error('not started');\nbegin Status := Run('{command}', [{arguments}]) end."
+            "program ProcessTest;\nuses Std.Proc as Proc;\n  mutable var Status: Result of integer, string := Error('not started');\nbegin Status := Proc.Run('{command}', [{arguments}]); end program;"
         ),
     );
 

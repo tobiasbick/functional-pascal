@@ -57,12 +57,11 @@ kind = "Escape"
 
 #[test]
 fn apply_readln_script_runs_readln_test_program() {
-    let source = "\
-program T;
-uses Std.Console, Std.Test;
+    let source = r#"program T;
+uses Std.Console as Console; uses Std.Test as Test;
 begin
-  AssertTrue(ReadLn() = 'Alice')
-end.";
+  Test.AssertTrue(Console.ReadLn() = 'Alice');
+end program;"#;
     let (program, _) = parse(source);
     let executable = compile(&program).expect("compile");
     let mut vm = fpas_vm::Vm::new(executable);
@@ -82,14 +81,13 @@ line = "Alice"
 
 #[test]
 fn apply_readln_events_are_consumed_in_script_order() {
-    let source = "\
-program T;
-uses Std.Console, Std.Test;
+    let source = r#"program T;
+uses Std.Console as Console; uses Std.Test as Test;
 begin
-  AssertEquals(ReadLn(), 'first');
-  AssertEquals(ReadLn(), 'second');
-  AssertEquals(ReadLn(), 'third')
-end.";
+  Test.AssertEquals(Console.ReadLn(), 'first');
+  Test.AssertEquals(Console.ReadLn(), 'second');
+  Test.AssertEquals(Console.ReadLn(), 'third');
+end program;"#;
     let (program, _) = parse(source);
     let executable = compile(&program).expect("compile");
     let mut vm = fpas_vm::Vm::new(executable);

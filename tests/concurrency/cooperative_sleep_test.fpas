@@ -1,22 +1,26 @@
 program CooperativeSleepTest;
 
-uses Std.Arrays, Std.Tasks, Std.Test, Std.Time;
+uses Std.Arrays as Arrays;
+uses Std.Tasks as Tasks2;
+uses Std.Test as Test;
+uses Std.Time as Time;
 
 procedure Sleeper();
 begin
-  Sleep(50)
-end;
+  Time.Sleep(50);
+end procedure;
 
 begin
   mutable var Tasks: array of task := [];
-  var Started: integer := MonotonicMillis();
+  var Started: integer := Time.MonotonicMillis();
   for I: integer := 1 to 8 do
-  begin
-    Push(Tasks, go Sleeper())
-  end;
+    begin
+      Arrays.Push(Tasks, go Sleeper());
+    end;
+  end for;
 
-  WaitAll(Tasks);
-  var Elapsed: integer := ElapsedMillis(Started);
-  AssertTrue(Elapsed >= 40);
-  AssertTrue(Elapsed < 1000)
-end.
+  Tasks2.WaitAll(Tasks);
+  var Elapsed: integer := Time.ElapsedMillis(Started);
+  Test.AssertTrue(Elapsed >= 40);
+  Test.AssertTrue(Elapsed < 1000);
+end program;

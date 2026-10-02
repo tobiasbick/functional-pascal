@@ -63,20 +63,20 @@ fn hover_and_definition_follow_lexical_shadowing_and_ignore_non_identifiers() {
     let temp = TempDirectory::new("navigation-local");
     let source = r#"program Local;
 
-var Value: integer := 1;
+ var Value: integer := 1;
 
 // Reads a value with **local** shadowing.
 function ReadValue(Value: integer): integer;
 begin
   var Other: integer := Value;
-  return Other
-end;
+  return Other;
+end function;
 
 begin
   // Value in a comment
   var Text: string := 'Value';
-  var Output: integer := ReadValue(Value)
-end.
+  var Output: integer := ReadValue(Value);
+end program;
 "#;
     let path = temp.write("local.fpas", source);
     let mut service = LanguageService::new(WorkspaceContext::loose(temp.path()));
@@ -125,34 +125,36 @@ fn project_navigation_respects_imports_visibility_members_and_unsaved_changes() 
     let (manifest, main, unit) = write_program_project(&temp);
     let unit_source = r#"unit Demo.Math;
 
-public type Point = record
+  public type Point = record
   public X: integer;
   Secret: integer;
-end;
+end record;
 
 // Returns the project answer.
 public function Answer(): integer;
 begin
-  return 42
-end;
+  return 42;
+end function;
 
 function Hidden(): integer;
 begin
-  return 0
-end;
+  return 0;
+end function;
+end unit;
+
 "#;
     std::fs::write(&unit, unit_source).expect("replace unit fixture");
     let main_source = r#"program App;
 
-uses Demo.Math;
+uses Demo.Math as Math;
 
 begin
-  var A: integer := Answer();
-  var B: integer := Demo.Math.Answer();
-  var P: Point := record X := 0; end;
+  var A: integer := Math.Answer();
+  var B: integer := Math.Answer();
+  var P: Math.Point := record X := 0; end record;
   var C: integer := P.X;
-  var D: integer := Hidden()
-end.
+  var D: integer := Hidden();
+end program;
 "#;
     std::fs::write(&main, main_source).expect("replace main fixture");
     let mut service = LanguageService::load(&manifest);
@@ -169,10 +171,10 @@ end.
         "{unit_symbols:?}"
     );
 
-    for reference in ["Answer();", "Demo.Math.Answer();"] {
+    for reference in ["Math.Answer();"] {
         let offset = main_source.find(reference).expect("public reference")
-            + if reference.starts_with("Demo.") {
-                "Demo.Math.".len()
+            + if reference.starts_with("Math.") {
+                "Math.".len()
             } else {
                 0
             };
@@ -216,7 +218,7 @@ end.
         .completions(&main, main_source.find("begin").expect("body"))
         .expect("project completion")
         .value;
-    assert!(normal.iter().any(|entry| entry.label == "Answer"));
+    assert!(normal.iter().any(|entry| entry.label == "Math"));
     assert!(!normal.iter().any(|entry| entry.label == "Hidden"));
     assert!(
         service
@@ -273,7 +275,10 @@ end.
 fn unknown_private_and_outside_project_queries_are_empty() {
     let temp = TempDirectory::new("navigation-negative");
     let (manifest, main, _unit) = write_program_project(&temp);
-    let outside = temp.write("outside.fpas", "program Outside; begin end.");
+    let outside = temp.write(
+        "outside.fpas",
+        r#"program Outside; begin null; end program;"#,
+    );
     let mut service = LanguageService::load(&manifest);
 
     let main_source = std::fs::read_to_string(&main).expect("main source");
@@ -301,7 +306,7 @@ fn unknown_private_and_outside_project_queries_are_empty() {
 }
 
 #[test]
-fn completion_preserves_equal_import_candidates_from_distinct_units() {
+fn completion_exposes_import_aliases_without_short_members() {
     let temp = TempDirectory::new("navigation-candidates");
     let manifest = temp.write(
         "demo.fpasprj",
@@ -316,25 +321,50 @@ include = ["src/**/*.fpas"]
     );
     let main = temp.write(
         "src/main.fpas",
-        "program App;\n\nuses Demo.First, Demo.Second;\n\nbegin\nend.\n",
+        r#"program App;
+
+uses Demo.First as First; uses Demo.Second as Second;
+
+begin null;
+end program;
+"#,
     );
     temp.write(
         "src/first.fpas",
-        "unit Demo.First;\n\npublic function Create(): integer;\nbegin\n  return 1\nend;\n",
+        r#"unit Demo.First;
+
+public function Create(): integer;
+begin
+  return 1;
+end function;
+end unit;
+
+"#,
     );
     temp.write(
         "src/second.fpas",
-        "unit Demo.Second;\n\npublic function Create(): integer;\nbegin\n  return 2\nend;\n",
+        r#"unit Demo.Second;
+
+public function Create(): integer;
+begin
+  return 2;
+end function;
+end unit;
+
+"#,
     );
     let mut service = LanguageService::load(&manifest);
     let source = std::fs::read_to_string(&main).expect("main source");
 
     let candidates = service
-        .completions(&main, source.find("end.").expect("completion position"))
+        .completions(
+            &main,
+            source.find("end program").expect("completion position"),
+        )
         .expect("completion candidates")
         .value
         .into_iter()
-        .filter(|candidate| candidate.label == "Create")
+        .filter(|candidate| matches!(candidate.label.as_str(), "First" | "Second"))
         .collect::<Vec<_>>();
 
     assert_eq!(candidates.len(), 2, "{candidates:?}");
@@ -359,11 +389,23 @@ include = ["src/**/*.fpas"]
     );
     temp.write(
         "lib/src/public.fpas",
-        "unit Demo.Exported;\n\npublic function Visible(): integer;\nbegin return 1 end;\n",
+        r#"unit Demo.Exported;
+
+public function Visible(): integer;
+begin return 1; end function;
+end unit;
+
+"#,
     );
     temp.write(
         "lib/src/internal.fpas",
-        "unit Demo.Internal;\n\npublic function Hidden(): integer;\nbegin return 2 end;\n",
+        r#"unit Demo.Internal;
+
+public function Hidden(): integer;
+begin return 2; end function;
+end unit;
+
+"#,
     );
     let manifest = temp.write(
         "app/app.fpasprj",
@@ -381,7 +423,14 @@ include = ["src/**/*.fpas"]
     );
     let main = temp.write(
         "app/src/main.fpas",
-        "program App;\n\nuses Demo.Internal;\n\nbegin\n  var Value: integer := Hidden()\nend.\n",
+        r#"program App;
+
+uses Demo.Internal as Internal;
+
+begin
+  var Value: integer := Internal.Hidden();
+end program;
+"#,
     );
     let mut service = LanguageService::load(&manifest);
     let source = std::fs::read_to_string(&main).expect("main source");

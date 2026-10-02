@@ -3,13 +3,12 @@ use crate::{SemaError, analyze_unit};
 use fpas_diagnostics::codes::{SEMA_TYPE_MISMATCH, SEMA_UNKNOWN_NAME};
 use fpas_parser::{CompilationUnit, Unit, parse_compilation_unit};
 
-const PREFIX: &str =
-    "program T; type Point = record X: integer; end; begin var P: Point := record X := 1; end;";
+const PREFIX: &str = "program T; type Point = record X: integer; end record; begin var P: Point := record X := 1; end record;";
 
 #[test]
 fn record_update_rejects_non_record_base() {
     let errors = check_errors(
-        "program T; begin var X: integer := 1; var Y: integer := X with Value := 2; end end.",
+        r#"program T; begin var X: integer := 1; var Y: integer := X with Value := 2; end with; end program;"#,
     );
     assert!(
         errors.iter().any(|error| error.code == SEMA_TYPE_MISMATCH),
@@ -20,10 +19,10 @@ fn record_update_rejects_non_record_base() {
 #[test]
 fn record_update_rejects_unknown_and_wrongly_typed_fields() {
     for (update, expected_code) in [
-        ("P with Missing := 2; end", SEMA_UNKNOWN_NAME),
-        ("P with X := 'wrong'; end", SEMA_TYPE_MISMATCH),
+        ("P with Missing := 2; end with", SEMA_UNKNOWN_NAME),
+        ("P with X := 'wrong'; end with", SEMA_TYPE_MISMATCH),
     ] {
-        let source = format!("{PREFIX} var Q: Point := {update} end.");
+        let source = format!("{PREFIX} var Q: Point := {update}; end program;");
         let errors = check_errors(&source);
         assert!(
             errors.iter().any(|error| error.code == expected_code),
@@ -43,21 +42,23 @@ fn parse_unit(source: &str) -> Unit {
 
 fn imported_update_errors(update: &str) -> Vec<SemaError> {
     let types = parse_unit(
-        "unit Demo.Types;
-         public type Point = record public X: integer; public Y: integer; end;
-         public type OtherPoint = record public X: integer; public Y: integer; end;
-         public type Holder = record
+        r#"unit Demo.Types;
+           public type Point = record public X: integer; public Y: integer; end record;
+           public type OtherPoint = record public X: integer; public Y: integer; end record;
+           public type Holder = record
            public Position: Point;
            public Points: array of Point;
-         end;",
+         end record;
+end unit;
+"#,
     );
     let types_analysis = analyze_unit(&types, &[]).expect("type unit analysis");
     assert!(types_analysis.metadata.errors.is_empty());
     let interface = types_analysis.interface.expect("type unit interface");
     let consumer = parse_unit(&format!(
-        "unit Demo.Consumer; uses Demo.Types;
-         public function Change(Original: Holder; Other: OtherPoint): Holder;
-         begin return Original with {update}; end end;"
+        "unit Demo.Consumer; uses Demo.Types as Types;
+         public function Change(Original: Types.Holder; Other: Types.OtherPoint): Types.Holder;
+         begin return Original with {update}; end with; end function; end unit;"
     ));
     analyze_unit(&consumer, &[interface])
         .expect("consumer analysis")
@@ -68,8 +69,8 @@ fn imported_update_errors(update: &str) -> Vec<SemaError> {
 #[test]
 fn record_update_contextually_types_imported_record_literals_and_array_elements() {
     for update in [
-        "Position := record X := 3; Y := 4; end",
-        "Points := [record X := 3; Y := 4; end]",
+        "Position := record X := 3; Y := 4; end record",
+        "Points := [record X := 3; Y := 4; end record]",
     ] {
         let errors = imported_update_errors(update);
         assert!(errors.is_empty(), "update: {update}; errors: {errors:#?}");
@@ -80,11 +81,11 @@ fn record_update_contextually_types_imported_record_literals_and_array_elements(
 fn record_update_preserves_imported_record_field_and_nominal_validation() {
     for (update, code) in [
         (
-            "Position := record X := 'wrong'; Y := 4; end",
+            "Position := record X := 'wrong'; Y := 4; end record",
             SEMA_TYPE_MISMATCH,
         ),
         (
-            "Position := record X := 3; Y := 4; Missing := 0; end",
+            "Position := record X := 3; Y := 4; Missing := 0; end record",
             SEMA_UNKNOWN_NAME,
         ),
         ("Position := Other", SEMA_TYPE_MISMATCH),

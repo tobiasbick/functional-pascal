@@ -11,8 +11,10 @@ Keyboard input is **separate** from the `ReadText` / `ReadLn` buffer. Enabling r
 - **Notes:** does not wait for Enter. **Extended keys** (arrows, function keys, etc.) may appear as a **two-step** sequence: first `''`, then a second `string` encoding the physical key (Turbo Pascal–style).
 
 ```pascal
-var C: string := ReadKey();
-WriteLn(C)
+uses Std.Console as Console;
+
+var C: string := Console.ReadKey();
+Console.WriteLn(C);
 ```
 
 ---
@@ -25,11 +27,14 @@ WriteLn(C)
 Use it to avoid blocking when you want a polling loop.
 
 ```pascal
-if KeyPressed() then
-begin
-  var C: string := ReadKey();
-  WriteLn(C)
-end
+uses Std.Console as Console;
+
+if Console.KeyPressed() then
+  begin
+    var C: string := Console.ReadKey();
+    Console.WriteLn(C);
+  end;
+end if;
 ```
 
 ---
@@ -49,14 +54,18 @@ end
 - **Unknown / unmapped:** `kind = KeyKind.Unknown`.
 
 ```pascal
-if KeyPressed() then
-begin
-  var E: KeyEvent := ReadKeyEvent();
-  if E.kind = KeyKind.Escape then
-    WriteLn('quit')
-  else
-    WriteLn(E.ch)
-end
+uses Std.Console as Console;
+
+if Console.KeyPressed() then
+  begin
+    var E: Console.KeyEvent := Console.ReadKeyEvent();
+    if E.kind = Console.KeyKind.Escape then
+      Console.WriteLn('quit');
+    else
+      Console.WriteLn(E.ch);
+    end if;
+  end;
+end if;
 ```
 
 ### `function EventPending(): boolean`

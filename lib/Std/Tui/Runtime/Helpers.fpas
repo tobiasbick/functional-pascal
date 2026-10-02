@@ -1,61 +1,72 @@
 unit Std.Tui.Runtime.Helpers;
 
-uses
-  Std.Arrays, Std.Tui.Elements.Element, Std.Tui.Geometry.Size, Std.Tui.Ids.ControlId,
-  Std.Tui.Layout.LayoutFit, Std.Tui.Layout.Measure, Std.Tui.Layout.MeasureResult,
-  Std.Tui.Layout.MeasureSpec, Std.Tui.Runtime.Routing.Focus;
+uses Std.Arrays as Arrays;
+uses Std.Tui.Elements.Element as Element;
+uses Std.Tui.Geometry.Size as Size;
+uses Std.Tui.Ids.ControlId as ControlId;
+uses Std.Tui.Layout.LayoutFit as LayoutFit;
+uses Std.Tui.Layout.Measure as Measure;
+uses Std.Tui.Layout.MeasureResult as MeasureResult;
+uses Std.Tui.Layout.MeasureSpec as MeasureSpec;
+uses Std.Tui.Runtime.Routing.Focus as Focus;
 
 // Returns the first focusable control in the active modal or full tree, or `None`.
 //
 // Parameters:
 // - `Root`: Root of the element tree.
-public function TuiFocusFirst(Root: TuiElement): option of TuiControlId;
+public function TuiFocusFirst(Root: Element.TuiElement): option of ControlId.TuiControlId;
 begin
-  var Controls: array of TuiControlId := TuiFocusableControls(Root);
-  if Std.Arrays.Length(Controls) = 0 then
-  begin
-    return None
-  end;
+  var Controls: array of ControlId.TuiControlId := Focus.TuiFocusableControls(Root);
+  if Arrays.Length(Controls) = 0 then
+    begin
+      return None;
+    end;
+  end if;
 
-  return Some(Controls[0])
-end;
+  return Some(Controls[0]);
+end function;
 
 // Returns `Preferred` when it is focusable in the active tree; otherwise the first focusable id.
 //
 // Parameters:
 // - `Root`: Root of the element tree.
 // - `Preferred`: Preferred size or focus identifier.
-public function TuiFocusResolve(Root: TuiElement; Preferred: option of TuiControlId): option of TuiControlId;
+public function TuiFocusResolve(Root: Element.TuiElement; Preferred: option of ControlId.TuiControlId): option of ControlId.TuiControlId;
 begin
-  var Controls: array of TuiControlId := TuiFocusableControls(Root);
-  if Std.Arrays.Length(Controls) = 0 then
-  begin
-    return None
-  end;
+  var Controls: array of ControlId.TuiControlId := Focus.TuiFocusableControls(Root);
+  if Arrays.Length(Controls) = 0 then
+    begin
+      return None;
+    end;
+  end if;
 
   case Preferred of
-    Some(Id):
-    begin
-      if TuiControlIndex(Controls, Id) >= 0 then
+    when Some(Id):
       begin
-        return Preferred
-      end
-    end;
-    None:
-    begin
-    end
-  end;
+        if Focus.TuiControlIndex(Controls, Id) >= 0 then
+          begin
+            return Preferred;
+          end;
+        end if;
+      end;
+    when None:
+      begin
+        null;
+      end;
+  end case;
 
-  return Some(Controls[0])
-end;
+  return Some(Controls[0]);
+end function;
 
 // Reports whether the root's unconstrained minimum fits the available terminal size.
 //
 // Parameters:
 // - `Root`: Root of the element tree.
 // - `Available`: Available terminal size.
-public function TuiLayoutFitFor(Root: TuiElement; Available: TuiSize): TuiLayoutFit;
+public function TuiLayoutFitFor(Root: Element.TuiElement; Available: Size.TuiSize): LayoutFit.TuiLayoutFit;
 begin
-  var Measured: TuiMeasureResult := TuiMeasure(Root, TuiMeasureSpec.Unbounded());
-  return TuiLayoutFit.Create(Measured.Minimum, Available)
-end;
+  var Measured: MeasureResult.TuiMeasureResult := Measure.TuiMeasure(Root, MeasureSpec.TuiMeasureSpec.Unbounded());
+  return LayoutFit.TuiLayoutFit.Create(Measured.Minimum, Available);
+end function;
+
+end unit;

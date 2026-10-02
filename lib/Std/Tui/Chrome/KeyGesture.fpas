@@ -1,37 +1,37 @@
 unit Std.Tui.Chrome.KeyGesture;
 
-uses Std.Console, Std.Str;
+uses Std.Console as Console;
+uses Std.Str as Str;
 
-public type
-  // Structural keyboard gesture used by menu commands.
-  TuiKeyGesture = record
-    // Variant kind represented by the value.
-    public Kind: Std.Console.KeyKind;
-    // Character component of the key gesture.
-    public Character: string;
-    // Whether the Shift modifier is active.
-    public Shift: boolean;
-    // Whether the Ctrl modifier is active.
-    public Ctrl: boolean;
-    // Whether the Alt modifier is active.
-    public Alt: boolean;
-    // Whether the Meta modifier is active.
-    public Meta: boolean;
-    // Human-readable representation of the gesture.
-    public Display: string;
+// Structural keyboard gesture used by menu commands.
+public type TuiKeyGesture = record
+  // Variant kind represented by the value.
+  public Kind: Console.KeyKind;
+  // Character component of the key gesture.
+  public Character: string;
+  // Whether the Shift modifier is active.
+  public Shift: boolean;
+  // Whether the Ctrl modifier is active.
+  public Ctrl: boolean;
+  // Whether the Alt modifier is active.
+  public Alt: boolean;
+  // Whether the Meta modifier is active.
+  public Meta: boolean;
+  // Human-readable representation of the gesture.
+  public Display: string;
 
-    // Creates a keyboard gesture and its menu display label.
-    //
-    // Parameters:
-    // - `Kind`: Variant kind assigned to the value.
-    // - `Character`: Character used by the drawing operation.
-    // - `Shift`: Whether the Shift modifier is active.
-    // - `Ctrl`: Whether the Ctrl modifier is active.
-    // - `Alt`: Whether the Alt modifier is active.
-    // - `Meta`: Whether the Meta modifier is active.
-    // - `Display`: Text displayed by the element.
-    public static function Create(
-  Kind: Std.Console.KeyKind;
+  // Creates a keyboard gesture and its menu display label.
+  //
+  // Parameters:
+  // - `Kind`: Variant kind assigned to the value.
+  // - `Character`: Character used by the drawing operation.
+  // - `Shift`: Whether the Shift modifier is active.
+  // - `Ctrl`: Whether the Ctrl modifier is active.
+  // - `Alt`: Whether the Alt modifier is active.
+  // - `Meta`: Whether the Meta modifier is active.
+  // - `Display`: Text displayed by the element.
+  public static function Create(
+  Kind: Console.KeyKind;
   Character: string;
   Shift: boolean;
   Ctrl: boolean;
@@ -39,36 +39,40 @@ public type
   Meta: boolean;
   Display: string
 ): TuiKeyGesture;
-    begin
-      return record
-        Kind := Kind;
-        Character := Character;
-        Shift := Shift;
-        Ctrl := Ctrl;
-        Alt := Alt;
-        Meta := Meta;
-        Display := Display;
-      end
-    end;
+  begin
+    return record
+      Kind := Kind;
+      Character := Character;
+      Shift := Shift;
+      Ctrl := Ctrl;
+      Alt := Alt;
+      Meta := Meta;
+      Display := Display;
+    end record;
+  end function;
 
-    // Reports whether a console key event matches this gesture.
-    //
-    // Parameters:
-    // - `Self`: Receiver value operated on by the method.
-    // - `Key`: Console key event to route or match.
-    public function Matches(Self: TuiKeyGesture; Key: Std.Console.KeyEvent): boolean;
-    begin
-      if ((((Self.Kind <> Key.kind) or (Self.Shift <> Key.shift)) or (Self.Ctrl <> Key.ctrl)) or (Self.Alt <> Key.alt)) or
-         (Self.Meta <> Key.meta) then
+  // Reports whether a console key event matches this gesture.
+  //
+  // Parameters:
+  // - `Self`: Receiver value operated on by the method.
+  // - `Key`: Console key event to route or match.
+  public function Matches(Self: TuiKeyGesture; Key: Console.KeyEvent): boolean;
+  begin
+    if ((((Self.Kind <> Key.kind) or (Self.Shift <> Key.shift)) or (Self.Ctrl <> Key.ctrl)) or (Self.Alt <> Key.alt)) or
+       (Self.Meta <> Key.meta) then
       begin
-        return false
+        return false;
       end;
+    end if;
 
-      if Self.Kind = Std.Console.KeyKind.Character then
+    if Self.Kind = Console.KeyKind.Character then
       begin
-        return Std.Str.ToLower(Self.Character) = Std.Str.ToLower(Key.ch)
+        return Str.ToLower(Self.Character) = Str.ToLower(Key.ch);
       end;
+    end if;
 
-      return true
-    end;
-  end;
+    return true;
+  end function;
+end record;
+
+end unit;

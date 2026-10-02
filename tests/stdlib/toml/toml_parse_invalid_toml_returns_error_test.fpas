@@ -1,8 +1,10 @@
 program TomlParseInvalidTomlReturnsErrorTest;
 
-uses Std.Results, Std.Test, Std.Toml;
+uses Std.Results as Results;
+uses Std.Test as Test;
+uses Std.Toml as Toml;
 
 begin
-  var Parsed: result of TomlValue, string := Parse('answer = [1,');
-  AssertTrue(IsError(Parsed))
-end.
+  var Parsed: result of Toml.TomlValue, string := Toml.Parse('answer = [1,');
+  Test.AssertTrue(Results.IsError(Parsed));
+end program;

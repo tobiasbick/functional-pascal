@@ -13,19 +13,19 @@ use serde_json::{Value, json};
 
 const SOURCE: &str = r#"program TaskQuiescence;
 
-uses Std.Console, Std.Tasks;
+uses Std.Console as Console; uses Std.Tasks as Tasks;
 
 function Work(): integer;
 begin
   mutable var Value: integer := 40;
   Value := Value + 2;
-  return Value
-end;
+  return Value;
+end function;
 
 begin
   var Pending: task := go Work();
-  WriteLn(Wait(Pending))
-end.
+  Console.WriteLn(Tasks.Wait(Pending));
+end program;
 "#;
 
 fn server() -> JsonlServer {
@@ -127,17 +127,17 @@ fn continue_ignores_task_id_and_resumes_the_session() {
 fn runtime_error_stop_identifies_the_owner_and_freezes_peers() {
     const FAILURE: &str = r#"program TaskFailure;
 
-uses Std.Tasks;
+uses Std.Tasks as Tasks;
 
 procedure Explode();
 begin
-  panic('child boom')
-end;
+  panic('child boom');
+end procedure;
 
 begin
   var Pending: task := go Explode();
-  Wait(Pending)
-end.
+  Tasks.Wait(Pending);
+end program;
 "#;
     let (program, diagnostics) = fpas_parser::parse(FAILURE);
     assert!(diagnostics.is_empty(), "parse diagnostics: {diagnostics:?}");

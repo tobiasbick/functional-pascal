@@ -4,10 +4,9 @@ use fpas_parser::{Decl, Expr, Program};
 use fpas_unit::interface as artifact;
 
 use crate::check;
-use crate::scope::{Symbol, SymbolKind as SemaSymbolKind, canonical_symbol_name};
+use crate::scope::{Symbol, SymbolKind as SemaSymbolKind};
 
 use super::conversion::{InterfaceConversionError, interface_symbol_to_sema, interface_type_to_ty};
-use super::export::declaration_name;
 
 impl check::Checker {
     /// Install only qualified type definitions from transitive supporting interfaces.
@@ -16,6 +15,8 @@ impl check::Checker {
         interfaces: &[artifact::UnitInterface],
     ) -> Result<(), InterfaceConversionError> {
         for interface in interfaces {
+            self.supporting_unit_names
+                .insert(interface.unit_name.to_ascii_lowercase());
             for exported in &interface.symbols {
                 if exported.kind != artifact::SymbolKind::Type {
                     continue;
@@ -41,46 +42,19 @@ impl check::Checker {
     /// Install directly visible interface symbols alongside the given declarations.
     pub(crate) fn install_interfaces_for_declarations(
         &mut self,
-        declarations: &[Decl],
+        _declarations: &[Decl],
         interfaces: &[artifact::UnitInterface],
     ) -> Result<(), InterfaceConversionError> {
-        use std::collections::{HashMap, HashSet};
-
-        let own_names: HashSet<String> = declarations
-            .iter()
-            .map(declaration_name)
-            .map(canonical_symbol_name)
-            .collect();
-        let mut short_candidates = HashMap::<String, Vec<(String, Symbol)>>::new();
-
         for interface in interfaces {
             for exported in &interface.symbols {
                 let symbol = interface_symbol_to_sema(exported)?;
                 self.scopes
                     .define_in_root(&exported.qualified_name, symbol.clone());
                 self.install_imported_record_defaults(exported);
-                self.imported_candidates
-                    .entry(canonical_symbol_name(&exported.name))
-                    .or_default()
-                    .push(exported.qualified_name.clone());
-                if !own_names.contains(&canonical_symbol_name(&exported.name)) {
-                    short_candidates
-                        .entry(canonical_symbol_name(&exported.name))
-                        .or_default()
-                        .push((exported.qualified_name.clone(), symbol));
-                }
-                self.install_imported_enum_variants(exported, &mut short_candidates, &own_names)?;
+                self.install_imported_enum_variants(exported)?;
             }
         }
 
-        // Source and `Std.*` short names are resolved together so either can make a name ambiguous.
-        for (short, candidates) in short_candidates {
-            self.source_short_candidates
-                .entry(short)
-                .or_default()
-                .extend(candidates);
-        }
-        crate::std_registry::register_short_aliases(self);
         Ok(())
     }
 
@@ -111,8 +85,6 @@ impl check::Checker {
     fn install_imported_enum_variants(
         &mut self,
         exported: &artifact::InterfaceSymbol,
-        short_candidates: &mut std::collections::HashMap<String, Vec<(String, Symbol)>>,
-        own_names: &std::collections::HashSet<String>,
     ) -> Result<(), InterfaceConversionError> {
         let artifact::InterfaceType::Enum(enum_ty) = &exported.ty else {
             return Ok(());
@@ -130,22 +102,8 @@ impl check::Checker {
                 kind,
                 task_bound: false,
             };
-            let fully_qualified = format!("{}.{}", enum_ty.name, variant.name);
-            self.scopes.define_in_root(&fully_qualified, symbol.clone());
-            if !own_names.contains(&canonical_symbol_name(&exported.name)) {
-                let type_qualified_short = format!("{}.{}", exported.name, variant.name);
-                short_candidates
-                    .entry(canonical_symbol_name(&type_qualified_short))
-                    .or_default()
-                    .push((fully_qualified.clone(), symbol.clone()));
-            }
-            let short = canonical_symbol_name(&variant.name);
-            if !own_names.contains(&short) {
-                short_candidates
-                    .entry(short)
-                    .or_default()
-                    .push((fully_qualified, symbol));
-            }
+            let fully_qualified = format!("{}.{}", exported.qualified_name, variant.name);
+            self.scopes.define_in_root(&fully_qualified, symbol);
         }
         Ok(())
     }

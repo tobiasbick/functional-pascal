@@ -60,11 +60,26 @@ include = ["src/**/*.fpas"]
     );
     let main = temp.write(
         "src/main.fpas",
-        "program App;\n\nuses Demo.Math;\n\nbegin\n  var Value: integer := Answer()\nend.\n",
+        r#"program App;
+
+uses Demo.Math as Math;
+
+begin
+  var Value: integer := Math.Answer();
+end program;
+"#,
     );
     let unit = temp.write(
         "src/math.fpas",
-        "unit Demo.Math;\n\npublic function Answer(): integer;\nbegin\n  return 42\nend;\n",
+        r#"unit Demo.Math;
+
+public function Answer(): integer;
+begin
+  return 42;
+end function;
+end unit;
+
+"#,
     );
     (manifest, main, unit)
 }

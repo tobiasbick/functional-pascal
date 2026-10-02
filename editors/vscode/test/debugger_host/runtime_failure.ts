@@ -26,8 +26,8 @@ export async function verifyRuntimeFailure(
     "",
     "begin",
     "  var Zero: integer := 0;",
-    "  var Value: integer := 1 div Zero",
-    "end.",
+    "  var Value: integer := 1 div Zero;",
+    "end program;",
     ""
   ]);
   const marker = { received: received.length, sent: sent.length };

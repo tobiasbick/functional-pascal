@@ -1,24 +1,28 @@
 program TaskSpawnLoopWithArgumentTest;
 
-uses Std.Arrays, Std.Tasks, Std.Test;
+uses Std.Arrays as Arrays;
+uses Std.Tasks as Tasks2;
+uses Std.Test as Test;
 
 function Worker(Value: integer): integer;
 begin
-  return Value + 1
-end;
+  return Value + 1;
+end function;
 
 begin
   mutable var Tasks: array of task := [];
   for Index: integer := 1 to 8 do
-  begin
-    Push(Tasks, go Worker(Index))
-  end;
+    begin
+      Arrays.Push(Tasks, go Worker(Index));
+    end;
+  end for;
 
-  WaitAll(Tasks);
-  AssertEquals(8, Length(Tasks));
-  for Index: integer := 0 to Length(Tasks) - 1 do
-  begin
-    var WorkerResult: integer := Std.Tasks.Wait(Tasks[Index]);
-    AssertEquals(Index + 2, WorkerResult)
-  end
-end.
+  Tasks2.WaitAll(Tasks);
+  Test.AssertEquals(8, Arrays.Length(Tasks));
+  for Index: integer := 0 to Arrays.Length(Tasks) - 1 do
+    begin
+      var WorkerResult: integer := Tasks2.Wait(Tasks[Index]);
+      Test.AssertEquals(Index + 2, WorkerResult);
+    end;
+  end for;
+end program;

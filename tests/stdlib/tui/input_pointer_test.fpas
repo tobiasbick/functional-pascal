@@ -1,69 +1,70 @@
 program TuiInputPointerTest;
 
-uses Std.Test, Std.Tui;
+uses Std.Test as Test;
+uses Std.Tui as Tui;
 
-type
-  InputPointerModel = record
-    FirstText: string;
-    FirstCaret: integer;
-    SecondText: string;
-    SecondCaret: integer;
-    LastSource: integer;
-    LastAction: integer;
-  end;
+type InputPointerModel = record
+  FirstText: string;
+  FirstCaret: integer;
+  SecondText: string;
+  SecondCaret: integer;
+  LastSource: integer;
+  LastAction: integer;
+end record;
 
-function ViewInput(State: InputPointerModel): TuiElement;
+function ViewInput(State: InputPointerModel): Tui.TuiElement;
 begin
-  return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(1)), [
-                                                                        TuiElementBuilders.MakeColumn([
-                                                                                                        TuiElementBuilders.MakeInput(TuiControlId.Create(1), State.FirstText, State.FirstCaret, TuiAction.Create(11)),
-                                                                                                        TuiElementBuilders.MakeInput(TuiControlId.Create(2), State.SecondText, State.SecondCaret, TuiAction.Create(22))
-                                                                                                      ])
-                                                                      ])
-end;
+  return Tui.TuiElementBuilders.MakeDesktop(Some(Tui.TuiControlId.Create(1)), [
+                                                                                Tui.TuiElementBuilders.MakeColumn([
+                                                                                                                    Tui.TuiElementBuilders.MakeInput(Tui.TuiControlId.Create(1), State.FirstText, State.FirstCaret, Tui.TuiAction.Create(11)),
+                                                                                                                    Tui.TuiElementBuilders.MakeInput(Tui.TuiControlId.Create(2), State.SecondText, State.SecondCaret, Tui.TuiAction.Create(22))
+                                                                                                                  ])
+                                                                              ]);
+end function;
 
-function UpdateInput(State: InputPointerModel; Msg: TuiMsg; Cmd: TuiCmdOutput): InputPointerModel;
+function UpdateInput(State: InputPointerModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): InputPointerModel;
 begin
-  Cmd.Set(TuiCmd.NoCommand);
+  Cmd.Set(Tui.TuiCmd.NoCommand);
   case Msg of
-    TuiMsg.TextChanged(Source, Action, Text, Caret):
-    begin
-      if Source.Value = 1 then
+    when Tui.TuiMsg.TextChanged(Source, Action, Text, Caret):
       begin
+        if Source.Value = 1 then
+          begin
+            return record
+              FirstText := Text;
+              FirstCaret := Caret;
+              SecondText := State.SecondText;
+              SecondCaret := State.SecondCaret;
+              LastSource := Source.Value;
+              LastAction := Action.Value;
+            end record;
+          end;
+        end if;
+
         return record
-          FirstText := Text;
-          FirstCaret := Caret;
-          SecondText := State.SecondText;
-          SecondCaret := State.SecondCaret;
+          FirstText := State.FirstText;
+          FirstCaret := State.FirstCaret;
+          SecondText := Text;
+          SecondCaret := Caret;
           LastSource := Source.Value;
           LastAction := Action.Value;
-        end
+        end record;
       end;
-
-      return record
-        FirstText := State.FirstText;
-        FirstCaret := State.FirstCaret;
-        SecondText := Text;
-        SecondCaret := Caret;
-        LastSource := Source.Value;
-        LastAction := Action.Value;
-      end
-    end
     else
-    begin
-      return State
-    end
-  end
-end;
+      begin
+        return State;
+      end;
+  end case;
+end function;
 
-function Click(App: TuiApplication; State: InputPointerModel; X: integer; Y: integer): InputPointerModel;
+function Click(App: Tui.TuiApplication; State: InputPointerModel; X: integer; Y: integer): InputPointerModel;
 begin
-  App.InjectPointerForTest(TuiPointerEvent.Create(TuiPointerAction.Down, TuiPointerButton.Left, TuiPoint.Create(X, Y)));
-  return App.RunIterations(State, UpdateInput, ViewInput, 2, 0)
-end;
+  App.InjectPointerForTest(Tui.TuiPointerEvent.Create(Tui.TuiPointerAction.Down, Tui.TuiPointerButton.Left, Tui.TuiPoint.Create(X, Y)));
+  return App.RunIterations(State, UpdateInput, ViewInput, 2, 0);
+end function;
 
 begin
-  mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(10, 2));
+  mutable var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(10, 2));
   mutable var Model: InputPointerModel := record
     FirstText := 'abcdef';
     FirstCaret := 0;
@@ -71,19 +72,19 @@ begin
     SecondCaret := 0;
     LastSource := 0;
     LastAction := 0;
-  end;
+  end record;
 
   Model := App.RunIterations(Model, UpdateInput, ViewInput, 0, 0);
   Model := Click(App, Model, 4, 0);
-  AssertEquals(3, Model.FirstCaret);
-  AssertEquals(1, Model.LastSource);
-  AssertEquals(11, Model.LastAction);
+  Test.AssertEquals(3, Model.FirstCaret);
+  Test.AssertEquals(1, Model.LastSource);
+  Test.AssertEquals(11, Model.LastAction);
   Model := Click(App, Model, 4, 1);
-  AssertEquals(3, Model.SecondCaret);
-  AssertEquals(2, Model.LastSource);
-  AssertEquals(22, Model.LastAction);
+  Test.AssertEquals(3, Model.SecondCaret);
+  Test.AssertEquals(2, Model.LastSource);
+  Test.AssertEquals(22, Model.LastAction);
   Model := Click(App, Model, 9, 0);
-  AssertEquals(6, Model.FirstCaret);
+  Test.AssertEquals(6, Model.FirstCaret);
   Model := record
     FirstText := 'a界b';
     FirstCaret := 0;
@@ -91,12 +92,12 @@ begin
     SecondCaret := Model.SecondCaret;
     LastSource := 0;
     LastAction := 0;
-  end;
+  end record;
 
   Model := App.RunIterations(Model, UpdateInput, ViewInput, 0, 0);
   Model := Click(App, Model, 3, 0);
-  AssertEquals(1, Model.FirstCaret);
-  AssertEquals(1, Model.LastSource);
-  AssertEquals(11, Model.LastAction);
-  App.Close()
-end.
+  Test.AssertEquals(1, Model.FirstCaret);
+  Test.AssertEquals(1, Model.LastSource);
+  Test.AssertEquals(11, Model.LastAction);
+  App.Close();
+end program;

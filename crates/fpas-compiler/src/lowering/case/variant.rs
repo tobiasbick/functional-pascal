@@ -69,7 +69,9 @@ impl LoweringContext {
             }
         }
         if let Some(statements) = else_body {
+            self.begin_scope();
             self.lower_statements(statements)?;
+            self.end_scope();
             if !self.is_terminated() {
                 self.jump(merge)?;
                 has_merge = true;

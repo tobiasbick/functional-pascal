@@ -8,19 +8,19 @@ use super::*;
 
 const ACTIVE_SOURCE: &str = r#"program RestartActive;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 function Branch(Value: integer): integer;
 begin
   mutable var Local: integer := Value + 10;
-  WriteLn('effect');
-  return Local
-end;
+  Console.WriteLn('effect');
+  return Local;
+end function;
 
 begin
   var Answer: integer := Branch(1);
-  WriteLn(Answer)
-end.
+  Console.WriteLn(Answer);
+end program;
 "#;
 
 fn session(source: &str) -> DebugSession {
@@ -132,22 +132,22 @@ fn active_restart_preserves_parameters_clears_locals_and_repeats_effects_only_af
 fn selected_older_restart_discards_younger_frames_and_reenters_the_selected_function() {
     const SOURCE: &str = r#"program RestartOlder;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 function Leaf(Value: integer): integer;
 begin
-  return Value + 1
-end;
+  return Value + 1;
+end function;
 
 function Branch(Value: integer): integer;
 begin
   var Local: integer := Value + 10;
-  return Leaf(Local)
-end;
+  return Leaf(Local);
+end function;
 
 begin
-  WriteLn(Branch(1))
-end.
+  Console.WriteLn(Branch(1));
+end program;
 "#;
     let mut session = session(SOURCE);
     let _ = stop_in_function(&mut session, "leaf");
@@ -181,23 +181,23 @@ end.
 fn restart_preserves_the_exact_mutable_capture_cell() {
     const SOURCE: &str = r#"program RestartCapture;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 function Outer(Start: integer): integer;
   function Inner(): integer;
   begin
     Counter := Counter + 1;
-    WriteLn(Counter);
-    return Counter
-  end;
+    Console.WriteLn(Counter);
+    return Counter;
+  end function;
 begin
   mutable var Counter: integer := Start;
-  return Inner()
-end;
+  return Inner();
+end function;
 
 begin
-  WriteLn(Outer(5))
-end.
+  Console.WriteLn(Outer(5));
+end program;
 "#;
     let mut session = session(SOURCE);
     let breakpoint = session
@@ -248,17 +248,17 @@ end.
 fn peer_and_stale_frames_are_rejected_without_worker_changes() {
     const SOURCE: &str = r#"program RestartPeer;
 
-uses Std.Tasks;
+uses Std.Tasks as Tasks;
 
 function Work(): integer;
 begin
-  return 7
-end;
+  return 7;
+end function;
 
 begin
   var Pending: task := go Work();
-  Wait(Pending)
-end.
+  Tasks.Wait(Pending);
+end program;
 "#;
     let mut session = session(SOURCE);
     session

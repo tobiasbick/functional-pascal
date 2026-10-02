@@ -1,18 +1,19 @@
 program DictionaryReduceCallbackFailureRuntimeError;
 
-uses Std.Dictionaries;
+uses Std.Dictionaries as Dictionaries;
 
 function FailOnSecond(Acc: integer; Key: string; Value: integer): integer;
 begin
   if Key = 'B' then
-  begin
-    panic('dictionary callback failed')
-  end;
+    begin
+      panic('dictionary callback failed');
+    end;
+  end if;
 
-  return Acc + Value
-end;
+  return Acc + Value;
+end function;
 
 begin
   var Values: dict of string to integer := ['A': 1, 'B': 2, 'C': 3];
-  var Total: integer := Reduce(Values, 0, FailOnSecond)
-end.
+  var Total: integer := Dictionaries.Reduce(Values, 0, FailOnSecond);
+end program;

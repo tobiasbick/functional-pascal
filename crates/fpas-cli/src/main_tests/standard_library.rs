@@ -19,12 +19,22 @@ include = ["Std/**/*.fpas"]
     );
     write_text(
         &library.join("Std/Version.fpas"),
-        "unit Std.Version;\npublic const\n  CompilerVersion: string := 'override';\n",
+        r#"unit Std.Version;
+
+  public const CompilerVersion: string := 'override';
+end unit;
+
+"#,
     );
     let program = cwd.join("main.fpas");
     write_text(
         &program,
-        "program Main;\nuses Std.Console, Std.Version;\nbegin\n  WriteLn(CompilerVersion)\nend.\n",
+        r#"program Main;
+uses Std.Console as Console; uses Std.Version as Version;
+begin
+  Console.WriteLn(Version.CompilerVersion);
+end program;
+"#,
     );
 
     let (exit, stdout, stderr) = support::run_cli_args_and_capture_output(
@@ -61,12 +71,22 @@ include = ["Std/**/*.fpas"]
     );
     write_text(
         &library.join("Std/Version.fpas"),
-        "unit Std.Version;\npublic const\n  LibraryVersion: string := 'test-override';\n",
+        r#"unit Std.Version;
+
+  public const LibraryVersion: string := 'test-override';
+end unit;
+
+"#,
     );
     let test = cwd.join("version_test.fpas");
     write_text(
         &test,
-        "program VersionTest;\nuses Std.Test, Std.Version;\nbegin\n  AssertEquals('test-override', LibraryVersion)\nend.\n",
+        r#"program VersionTest;
+uses Std.Test as Test; uses Std.Version as Version;
+begin
+  Test.AssertEquals('test-override', Version.LibraryVersion);
+end program;
+"#,
     );
 
     let (exit, _stdout, stderr) = support::run_cli_args_and_capture_output(
@@ -92,7 +112,12 @@ fn source_standard_library_is_copied_beside_the_cli_binary() {
     let program = root.join("target/test-std-version.fpas");
     write_text(
         &program,
-        "program Main;\nuses Std.Console, Std.Version;\nbegin\n  WriteLn(LibraryVersion)\nend.\n",
+        r#"program Main;
+uses Std.Console as Console; uses Std.Version as Version;
+begin
+  Console.WriteLn(Version.LibraryVersion);
+end program;
+"#,
     );
 
     let (exit, stdout, stderr) = support::run_cli_args_and_capture_output(

@@ -57,10 +57,12 @@ Create `hello.fpas`:
 
 ```pascal
 program Hello;
-uses Std.Console;
+
+uses Std.Console as Console;
+
 begin
-  WriteLn('Hello, World!')
-end.
+  Console.WriteLn('Hello, World!');
+end program;
 ```
 
 Run it:
@@ -135,92 +137,106 @@ standard-library demonstrations remain under `examples/`.
 
 ```pascal
 program Fibonacci;
-uses Std.Console;
+
+uses Std.Console as Console;
 
 function Fib(N: integer): integer;
 begin
   if N <= 1 then
-    return N
+    return N;
   else
-    return Fib(N - 1) + Fib(N - 2)
-end;
+    return Fib(N - 1) + Fib(N - 2);
+  end if;
+end function;
 
 begin
-  WriteLn('Fibonacci sequence:');
+  Console.WriteLn('Fibonacci sequence:');
   for I: integer := 0 to 9 do
-    WriteLn(Fib(I))
-end.
+    Console.WriteLn(Fib(I));
+  end for;
+end program;
 ```
 
 ### Pattern Matching
 
 ```pascal
 program PatternMatching;
-uses Std.Console;
 
-type
-  Light = enum
-    Red;
-    Yellow;
-    Green;
-  end;
+uses Std.Console as Console;
+
+type Light = enum
+  Red;
+  Yellow;
+  Green;
+end enum;
 
 function TrafficAdvice(L: Light): string;
 begin
   case L of
-    Light.Red:    return 'Stop';
-    Light.Yellow: return 'Caution';
-    Light.Green:  return 'Go'
-  end
-end;
+    when Light.Red:
+      return 'Stop';
+    when Light.Yellow:
+      return 'Caution';
+    when Light.Green:
+      return 'Go';
+  end case;
+end function;
 
 begin
-  WriteLn(TrafficAdvice(Light.Red))
-end.
+  Console.WriteLn(TrafficAdvice(Light.Red));
+end program;
 ```
 
 ### Higher-Order Functions
 
 ```pascal
 program HigherOrderFunctions;
-uses Std.Console;
+
+uses Std.Console as Console;
 
 function Double(X: integer): integer;
 begin
-  return X * 2
-end;
+  return X * 2;
+end function;
 
 function Apply(F: function(X: integer): integer; Value: integer): integer;
 begin
-  return F(Value)
-end;
+  return F(Value);
+end function;
 
 begin
   var Op: function(X: integer): integer := Double;
-  WriteLn(Apply(Op, 10)) // 20
-end.
+  Console.WriteLn(Apply(Op, 10)); // 20
+end program;
 ```
 
 ### Error Handling with Option
 
 ```pascal
 program OptionExample;
-uses Std.Console, Std.Arrays;
 
-function FindFirst(Items: array of integer; Min: integer): Option of integer;
+uses Std.Console as Console;
+uses Std.Arrays as Arrays;
+
+function FindFirst(Items: array of integer; Min: integer): option of integer;
 begin
-  for I: integer := 0 to Length(Items) - 1 do
+  for I: integer := 0 to Arrays.Length(Items) - 1 do
     if Items[I] >= Min then
       return Some(Items[I]);
-  return None
-end;
+    end if;
+  end for;
+
+  return None;
+end function;
 
 begin
   case FindFirst([3, 7, 15, 42], 10) of
-    Some(V): WriteLn('Found: ', V);
-    None:    WriteLn('Not found')
-  end
-end.
+    when Some(V):
+      Console.WriteLn('Found: ', V);
+    when None:
+      Console.WriteLn('Not found');
+  end case;
+end program;
 ```
 
 More examples in the [`examples/`](examples/) directory.

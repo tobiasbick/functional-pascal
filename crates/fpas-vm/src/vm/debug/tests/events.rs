@@ -26,13 +26,13 @@ fn queued_tui_events_wait_until_resume() {
     let mut session = compile_session(
         r#"program EventOwnership;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 begin
-  WriteLn('before');
-  if EventPending() then
-    WriteLn('got-event')
-end.
+  Console.WriteLn('before');
+  if Console.EventPending() then
+    Console.WriteLn('got-event'); end if;
+end program;
 "#,
     );
     session.test_push_console_event(ConsoleEvent::key(escape_key()));
@@ -53,12 +53,12 @@ fn empty_tui_queue_does_not_poll_the_terminal() {
     let mut session = compile_session(
         r#"program EventEmpty;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 begin
-  if EventPending() then
-    WriteLn('got-event')
-end.
+  if Console.EventPending() then
+    Console.WriteLn('got-event'); end if;
+end program;
 "#,
     );
     let _ = session.continue_execution().expect("resume");

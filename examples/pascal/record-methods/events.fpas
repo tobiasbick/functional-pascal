@@ -1,54 +1,55 @@
 program EventsExample;
 
-uses Std.Console, Std.Conv;
+uses Std.Console as Console;
+uses Std.Conv as Conv;
 
-mutable var
-  // In-memory handler slot standing in for a live registry.
-  ClickSlot: option of procedure(Sender: integer) := None;
+// In-memory handler slot standing in for a live registry.
+mutable var ClickSlot: option of procedure(Sender: integer) := None;
 
-type
-  ClickHandler = procedure(Sender: integer);
-  Button = record
-    Id: integer;
+type ClickHandler = procedure(Sender: integer);
 
-    function ReadOnClick(Self: Button): option of ClickHandler;
-    begin
-      return ClickSlot
-    end;
+type Button = record
+  Id: integer;
 
-    procedure WriteOnClick(Self: Button; Handler: option of ClickHandler);
-    begin
-      ClickSlot := Handler
-    end;
+  function ReadOnClick(Self: Button): option of ClickHandler;
+  begin
+    return ClickSlot;
+  end function;
 
-    procedure Click(Self: Button);
-    begin
-      if Assigned(Self.OnClick) then
+  procedure WriteOnClick(Self: Button; Handler: option of ClickHandler);
+  begin
+    ClickSlot := Handler;
+  end procedure;
+
+  procedure Click(Self: Button);
+  begin
+    if Assigned(Self.OnClick) then
       begin
-        Self.OnClick(Self.Id)
-      end
-      else
+        Self.OnClick(Self.Id);
+      end;
+    else
       begin
-        WriteLn('no handler')
-      end
-    end;
+        Console.WriteLn('no handler');
+      end;
+    end if;
+  end procedure;
 
-    event OnClick: ClickHandler read ReadOnClick write WriteOnClick;
-  end;
+  event OnClick: ClickHandler read ReadOnClick write WriteOnClick;
+end record;
 
 procedure HandleClick(Sender: integer);
 begin
-  WriteLn('clicked ' + IntToStr(Sender))
-end;
+  Console.WriteLn('clicked ' + Conv.IntToStr(Sender));
+end procedure;
 
 begin
   var B: Button := record
     Id := 1;
-  end;
+  end record;
 
   B.Click();
   B.OnClick := HandleClick;
   B.Click();
   B.OnClick := nil;
-  B.Click()
-end.
+  B.Click();
+end program;

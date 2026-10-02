@@ -1,15 +1,16 @@
 program TuiTextAreaKeyboardTest;
 
-uses Std.Str, Std.Test, Std.Tui;
+uses Std.Str as Str;
+uses Std.Test as Test;
+uses Std.Tui as Tui;
 
-type
-  TextAreaModel = record
-    Text: string;
-    Caret: integer;
-    Offset: TuiPoint;
-  end;
+type TextAreaModel = record
+  Text: string;
+  Caret: integer;
+  Offset: Tui.TuiPoint;
+end record;
 
-function MakeKey(Kind: TuiKeyKind; Character: string): TuiKeyEvent;
+function MakeKey(Kind: Tui.TuiKeyKind; Character: string): Tui.TuiKeyEvent;
 begin
   return record
     kind := Kind;
@@ -18,150 +19,155 @@ begin
     ctrl := false;
     alt := false;
     meta := false;
-  end
-end;
+  end record;
+end function;
 
-function ViewTextArea(State: TextAreaModel): TuiElement;
+function ViewTextArea(State: TextAreaModel): Tui.TuiElement;
 begin
-  return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(1)), [
-                                                                        TuiElementBuilders.MakeTextArea(TuiControlId.Create(1), State.Text, State.Caret, State.Offset, TuiAction.Create(9))
-                                                                      ])
-end;
+  return Tui.TuiElementBuilders.MakeDesktop(Some(Tui.TuiControlId.Create(1)), [
+                                                                                Tui.TuiElementBuilders.MakeTextArea(Tui.TuiControlId.Create(1), State.Text, State.Caret, State.Offset, Tui.TuiAction.Create(9))
+                                                                              ]);
+end function;
 
-function ViewWindowedTextArea(State: TextAreaModel): TuiElement;
+function ViewWindowedTextArea(State: TextAreaModel): Tui.TuiElement;
 begin
-  var Editor: TuiElement := TuiElementBuilders.MakeTextArea(TuiControlId.Create(1), State.Text, State.Caret, State.Offset, TuiAction.Create(9));
-  return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(1)), [
-                                                                        TuiElementBuilders.MakePanel('Editor', [Editor])
-                                                                      ])
-end;
+  var Editor: Tui.TuiElement := Tui.TuiElementBuilders.MakeTextArea(Tui.TuiControlId.Create(1), State.Text, State.Caret, State.Offset, Tui.TuiAction.Create(9));
+  return Tui.TuiElementBuilders.MakeDesktop(Some(Tui.TuiControlId.Create(1)), [
+                                                                                Tui.TuiElementBuilders.MakePanel('Editor', [Editor])
+                                                                              ]);
+end function;
 
-function UpdateTextArea(State: TextAreaModel; Msg: TuiMsg; Cmd: TuiCmdOutput): TextAreaModel;
+function UpdateTextArea(State: TextAreaModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): TextAreaModel;
 begin
-  Cmd.Set(TuiCmd.NoCommand);
+  Cmd.Set(Tui.TuiCmd.NoCommand);
   case Msg of
-    TuiMsg.TextAreaChanged(Source, Action, Text, Caret, Offset):
-    begin
-      AssertEquals(1, Source.Value);
-      AssertEquals(9, Action.Value);
-      return record
-        Text := Text;
-        Caret := Caret;
-        Offset := Offset;
-      end
-    end
+    when Tui.TuiMsg.TextAreaChanged(Source, Action, Text, Caret, Offset):
+      begin
+        Test.AssertEquals(1, Source.Value);
+        Test.AssertEquals(9, Action.Value);
+        return record
+          Text := Text;
+          Caret := Caret;
+          Offset := Offset;
+        end record;
+      end;
     else
-    begin
-      return State
-    end
-  end
-end;
+      begin
+        return State;
+      end;
+  end case;
+end function;
 
-function Press(App: TuiApplication; State: TextAreaModel; Kind: TuiKeyKind; Character: string): TextAreaModel;
-begin
-  App.InjectKeyForTest(MakeKey(Kind, Character));
-  return App.RunIterations(State, UpdateTextArea, ViewTextArea, 1, 0)
-end;
-
-function PressWindowed(
-  App: TuiApplication;
+function Press(
+  App: Tui.TuiApplication;
   State: TextAreaModel;
-  Kind: TuiKeyKind;
+  Kind: Tui.TuiKeyKind;
   Character: string
 ): TextAreaModel;
 begin
   App.InjectKeyForTest(MakeKey(Kind, Character));
-  return App.RunIterations(State, UpdateTextArea, ViewWindowedTextArea, 1, 0)
-end;
+  return App.RunIterations(State, UpdateTextArea, ViewTextArea, 1, 0);
+end function;
+
+function PressWindowed(
+  App: Tui.TuiApplication;
+  State: TextAreaModel;
+  Kind: Tui.TuiKeyKind;
+  Character: string
+): TextAreaModel;
+begin
+  App.InjectKeyForTest(MakeKey(Kind, Character));
+  return App.RunIterations(State, UpdateTextArea, ViewWindowedTextArea, 1, 0);
+end function;
 
 begin
-  mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(6, 2));
+  mutable var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(6, 2));
   mutable var Model: TextAreaModel := record
     Text := 'ab';
     Caret := 2;
-    Offset := TuiPoint.Create(0, 0);
-  end;
+    Offset := Tui.TuiPoint.Create(0, 0);
+  end record;
 
   Model := App.RunIterations(Model, UpdateTextArea, ViewTextArea, 0, 0);
-  Model := Press(App, Model, TuiKeyKind.Enter, '');
-  AssertEquals(('ab' + Std.Str.Chr(10)), Model.Text);
-  AssertEquals(3, Model.Caret);
-  Model := Press(App, Model, TuiKeyKind.Character, 'x');
-  AssertEquals((('ab' + Std.Str.Chr(10)) + 'x'), Model.Text);
-  Model := Press(App, Model, TuiKeyKind.Backspace, '');
-  Model := Press(App, Model, TuiKeyKind.Backspace, '');
-  AssertEquals('ab', Model.Text);
-  AssertEquals(2, Model.Caret);
-  Model := Press(App, Model, TuiKeyKind.Tab, '');
-  AssertEquals('ab  ', Model.Text);
-  AssertEquals(4, Model.Caret);
-  Model := Press(App, Model, TuiKeyKind.Home, '');
-  AssertEquals(0, Model.Caret);
-  Model := Press(App, Model, TuiKeyKind.EndKey, '');
-  AssertEquals(4, Model.Caret);
-  Model := Press(App, Model, TuiKeyKind.Left, '');
-  Model := Press(App, Model, TuiKeyKind.Delete, '');
-  AssertEquals('ab ', Model.Text);
-  AssertEquals(3, Model.Caret);
+  Model := Press(App, Model, Tui.TuiKeyKind.Enter, '');
+  Test.AssertEquals(('ab' + Str.Chr(10)), Model.Text);
+  Test.AssertEquals(3, Model.Caret);
+  Model := Press(App, Model, Tui.TuiKeyKind.Character, 'x');
+  Test.AssertEquals((('ab' + Str.Chr(10)) + 'x'), Model.Text);
+  Model := Press(App, Model, Tui.TuiKeyKind.Backspace, '');
+  Model := Press(App, Model, Tui.TuiKeyKind.Backspace, '');
+  Test.AssertEquals('ab', Model.Text);
+  Test.AssertEquals(2, Model.Caret);
+  Model := Press(App, Model, Tui.TuiKeyKind.Tab, '');
+  Test.AssertEquals('ab  ', Model.Text);
+  Test.AssertEquals(4, Model.Caret);
+  Model := Press(App, Model, Tui.TuiKeyKind.Home, '');
+  Test.AssertEquals(0, Model.Caret);
+  Model := Press(App, Model, Tui.TuiKeyKind.EndKey, '');
+  Test.AssertEquals(4, Model.Caret);
+  Model := Press(App, Model, Tui.TuiKeyKind.Left, '');
+  Model := Press(App, Model, Tui.TuiKeyKind.Delete, '');
+  Test.AssertEquals('ab ', Model.Text);
+  Test.AssertEquals(3, Model.Caret);
   Model := record
-    Text := ((('abcd' + Std.Str.Chr(10)) + 'x') + Std.Str.Chr(10)) + (('wxyz' + Std.Str.Chr(10)) + 'last');
+    Text := ((('abcd' + Str.Chr(10)) + 'x') + Str.Chr(10)) + (('wxyz' + Str.Chr(10)) + 'last');
     Caret := 3;
-    Offset := TuiPoint.Create(0, 0);
-  end;
+    Offset := Tui.TuiPoint.Create(0, 0);
+  end record;
 
   Model := App.RunIterations(Model, UpdateTextArea, ViewTextArea, 0, 0);
-  Model := Press(App, Model, TuiKeyKind.Down, '');
-  AssertEquals(6, Model.Caret);
-  Model := Press(App, Model, TuiKeyKind.Down, '');
-  AssertEquals(8, Model.Caret);
-  Model := Press(App, Model, TuiKeyKind.Up, '');
-  AssertEquals(6, Model.Caret);
-  Model := Press(App, Model, TuiKeyKind.PageDown, '');
-  AssertEquals(13, Model.Caret);
-  AssertEquals(2, Model.Offset.Y);
-  Model := Press(App, Model, TuiKeyKind.PageUp, '');
-  AssertEquals(6, Model.Caret);
-  AssertEquals(1, Model.Offset.Y);
+  Model := Press(App, Model, Tui.TuiKeyKind.Down, '');
+  Test.AssertEquals(6, Model.Caret);
+  Model := Press(App, Model, Tui.TuiKeyKind.Down, '');
+  Test.AssertEquals(8, Model.Caret);
+  Model := Press(App, Model, Tui.TuiKeyKind.Up, '');
+  Test.AssertEquals(6, Model.Caret);
+  Model := Press(App, Model, Tui.TuiKeyKind.PageDown, '');
+  Test.AssertEquals(13, Model.Caret);
+  Test.AssertEquals(2, Model.Offset.Y);
+  Model := Press(App, Model, Tui.TuiKeyKind.PageUp, '');
+  Test.AssertEquals(6, Model.Caret);
+  Test.AssertEquals(1, Model.Offset.Y);
   App.Close();
-  App := TuiApplication.OpenForTest(TuiSize.Create(4, 2));
+  App := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(4, 2));
   Model := record
     Text := 'abcdef';
     Caret := 0;
-    Offset := TuiPoint.Create(0, 0);
-  end;
+    Offset := Tui.TuiPoint.Create(0, 0);
+  end record;
 
   Model := App.RunIterations(Model, UpdateTextArea, ViewTextArea, 0, 0);
-  Model := Press(App, Model, TuiKeyKind.EndKey, '');
-  AssertEquals(6, Model.Caret);
-  AssertEquals(3, Model.Offset.X);
+  Model := Press(App, Model, Tui.TuiKeyKind.EndKey, '');
+  Test.AssertEquals(6, Model.Caret);
+  Test.AssertEquals(3, Model.Offset.X);
   Model := record
-    Text := ('one' + Std.Str.Chr(10)) + 'abcd';
+    Text := ('one' + Str.Chr(10)) + 'abcd';
     Caret := 6;
-    Offset := TuiPoint.Create(1, 1);
-  end;
+    Offset := Tui.TuiPoint.Create(1, 1);
+  end record;
 
   Model := App.RunIterations(Model, UpdateTextArea, ViewTextArea, 0, 0);
-  Model := Press(App, Model, TuiKeyKind.Right, '');
-  AssertEquals(7, Model.Caret);
-  AssertEquals(1, Model.Offset.X);
-  AssertEquals(1, Model.Offset.Y);
-  App.Inject(TuiMsgTextAreaChanged(TuiControlId.Create(1), TuiAction.Create(9), 'done', 4, TuiPoint.Create(0, 0)));
+  Model := Press(App, Model, Tui.TuiKeyKind.Right, '');
+  Test.AssertEquals(7, Model.Caret);
+  Test.AssertEquals(1, Model.Offset.X);
+  Test.AssertEquals(1, Model.Offset.Y);
+  App.Inject(Tui.TuiMsgTextAreaChanged(Tui.TuiControlId.Create(1), Tui.TuiAction.Create(9), 'done', 4, Tui.TuiPoint.Create(0, 0)));
   Model := App.RunIterations(Model, UpdateTextArea, ViewTextArea, 1, 0);
-  AssertEquals('done', Model.Text);
-  AssertEquals(4, Model.Caret);
-  AssertEquals(0, Model.Offset.X);
-  AssertEquals(0, Model.Offset.Y);
+  Test.AssertEquals('done', Model.Text);
+  Test.AssertEquals(4, Model.Caret);
+  Test.AssertEquals(0, Model.Offset.X);
+  Test.AssertEquals(0, Model.Offset.Y);
   App.Close();
-  App := TuiApplication.OpenForTest(TuiSize.Create(10, 5));
+  App := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(10, 5));
   Model := record
     Text := 'first';
     Caret := 5;
-    Offset := TuiPoint.Create(0, 0);
-  end;
+    Offset := Tui.TuiPoint.Create(0, 0);
+  end record;
 
   Model := App.RunIterations(Model, UpdateTextArea, ViewWindowedTextArea, 0, 0);
-  Model := PressWindowed(App, Model, TuiKeyKind.Enter, '');
-  AssertEquals(0, Model.Offset.Y);
-  AssertTrue(Std.Str.Contains(App.SurfaceSnapshot().LineAt(1), 'first'));
-  App.Close()
-end.
+  Model := PressWindowed(App, Model, Tui.TuiKeyKind.Enter, '');
+  Test.AssertEquals(0, Model.Offset.Y);
+  Test.AssertTrue(Str.Contains(App.SurfaceSnapshot().LineAt(1), 'first'));
+  App.Close();
+end program;

@@ -31,13 +31,20 @@ pub(super) fn emit_closure(
     } else {
         emit_formal_params_in_parens(emitter, "procedure(", params, "");
     }
-    emit_closure_body(emitter, owner_start, body, comments);
+    emit_closure_body(
+        emitter,
+        owner_start,
+        body,
+        if is_function { "function" } else { "procedure" },
+        comments,
+    );
 }
 
 fn emit_closure_body(
     emitter: &mut Emitter,
     owner_start: usize,
     body: &FuncBody,
+    kind: &str,
     comments: &CommentMap,
 ) {
     let FuncBody::Block { nested, stmts } = body;
@@ -59,12 +66,9 @@ fn emit_closure_body(
         emitter.write_current_indent();
     }
     emitter.write("begin");
-    if stmts.is_empty() && nested.is_empty() {
-        emitter.write(" end");
-        return;
-    }
     emitter.write("\n");
     emitter.with_indent(|inner| emit_stmts_in_block(inner, stmts, comments));
     emitter.write_current_indent();
-    emitter.write("end");
+    emitter.write("end ");
+    emitter.write(kind);
 }

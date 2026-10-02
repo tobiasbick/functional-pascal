@@ -25,9 +25,9 @@ fn completion_resolve_auto_import_and_signature_help_use_utf16_ranges() {
         "src/core.fpas",
         r#"unit Demo.Core;
 
-public type Counter = record
+  public type Counter = record
   public Amount: integer;
-end;
+end record;
 
 // Adds two integers.
 //
@@ -36,8 +36,10 @@ end;
 // - `Right`: Second addend.
 public function Add(Left: integer; Right: integer): integer;
 begin
-  return Left + Right
-end;
+  return Left + Right;
+end function;
+end unit;
+
 "#,
     );
     let importable = temp.write(
@@ -47,21 +49,23 @@ end;
 // Returns a value from the importable unit.
 public function UniqueValue(): integer;
 begin
-  return 42
-end;
+  return 42;
+end function;
+end unit;
+
 "#,
     );
     let source = r#"program IntelliSense;
 
-uses Demo.Core;
+uses Demo.Core as Core;
 
 begin
   var Music: string := '𝄞';
-  var CounterValue: Counter := record Amount := 1; end;
+  var CounterValue: Core.Counter := record Amount := 1; end record;
   var MemberValue: integer := CounterValue.AmTail;
-  var Total: integer := Add(1, Add(2, 3));
-  var Imported: integer := UniqueValue
-end.
+  var Total: integer := Core.Add(1, Core.Add(2, 3));
+  var Imported: integer := UniqueValue;
+end program;
 "#;
     temp.write("src/main.fpas", source);
     let root_uri = tower_lsp_server::ls_types::Uri::from_file_path(temp.path())
@@ -74,7 +78,10 @@ end.
     let member_cursor = source.find("AmTail").expect("member fragment") + 2;
     let import_cursor = source.find("UniqueValue").expect("auto import") + "UniqueValue".len();
     let nested_cursor = source.find("Add(2, 3)").expect("nested call") + "Add(2, ".len();
-    let stale_source = "unit Demo.Importable;\n";
+    let stale_source = r#"unit Demo.Importable;
+end unit;
+
+"#;
     let stale_uri = import_uri.clone();
     let transcript = run_script(&[
         TranscriptStep::Message(initialize_with_root(1, Some(&root_uri))),
@@ -138,7 +145,7 @@ end.
     );
     assert_eq!(
         imported["additionalTextEdits"][0]["newText"],
-        "uses Demo.Core, Demo.Importable;"
+        "\nuses Demo.Importable as Importable;"
     );
     assert_eq!(imported["data"]["uri"], import_uri);
     assert!(imported["data"]["sourceRevision"].is_number());

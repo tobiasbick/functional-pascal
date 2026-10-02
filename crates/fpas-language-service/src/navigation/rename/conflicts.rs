@@ -37,6 +37,13 @@ fn reject_same_scope_conflict(
     new_name: &str,
 ) -> Result<(), RenameError> {
     let target_document = &documents[target.document_index];
+    if target_document
+        .uses
+        .iter()
+        .any(|import| import.alias.eq_ignore_ascii_case(new_name))
+    {
+        return conflict_error(new_name);
+    }
     let conflict = target_document.all_symbols().into_iter().any(|symbol| {
         symbol.selection_span != target.symbol.selection_span
             && symbol.name.eq_ignore_ascii_case(new_name)

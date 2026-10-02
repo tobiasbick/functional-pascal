@@ -41,12 +41,13 @@ fn unit_with_invalid_uses_entry_still_parses_following_declaration() {
     let (unit, errors) = parse_compilation_unit_with_errors(
         "\
 unit MyApp.Core;
-uses , Std.Console;
+uses ; uses Std.Console as Console;
 
 function Answer(): integer;
 begin
-  return 42
-end;
+  return 42;
+end function;
+end unit;
 ",
     );
     assert!(!errors.is_empty());
@@ -69,8 +70,9 @@ fn unit_with_missing_uses_identifier_before_declaration_keeps_following_declarat
 unit MyApp.Core;
 uses function Answer(): integer;
 begin
-  return 42
-end;
+  return 42;
+end function;
+end unit;
 ",
     );
     assert!(!errors.is_empty());

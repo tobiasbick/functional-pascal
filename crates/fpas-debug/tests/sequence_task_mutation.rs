@@ -10,19 +10,19 @@ use serde_json::{Value, json};
 
 const SOURCE: &str = r#"program TaskSequenceMutation;
 
-uses Std.Console, Std.Tasks;
+uses Std.Console as Console; uses Std.Tasks as Tasks;
 
 function Work(): integer;
 begin
   mutable var Values: array of integer := [1, 3];
   var Marker: integer := Values[0];
-  return Values[0] + Values[1] + Values[2]
-end;
+  return Values[0] + Values[1] + Values[2];
+end function;
 
 begin
   var Pending: task := go Work();
-  WriteLn(Wait(Pending))
-end.
+  Console.WriteLn(Tasks.Wait(Pending));
+end program;
 "#;
 
 fn server() -> JsonlServer {

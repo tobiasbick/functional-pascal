@@ -6,7 +6,8 @@ use fpas_diagnostics::codes::PARSE_EXPECTED_TO_OR_DOWNTO;
 
 #[test]
 fn for_to() {
-    let stmts = body_stmts("program T; begin for I: integer := 0 to 9 do X := I end.");
+    let stmts =
+        body_stmts(r#"program T; begin for I: integer := 0 to 9 do X := I; end for; end program;"#);
     match &stmts[0] {
         Stmt::For {
             var_name,
@@ -22,7 +23,9 @@ fn for_to() {
 
 #[test]
 fn for_downto() {
-    let stmts = body_stmts("program T; begin for I: integer := 9 downto 0 do X := I end.");
+    let stmts = body_stmts(
+        r#"program T; begin for I: integer := 9 downto 0 do X := I; end for; end program;"#,
+    );
     match &stmts[0] {
         Stmt::For { direction, .. } => {
             assert_eq!(*direction, ForDirection::Downto);
@@ -54,7 +57,8 @@ fn for_loop_invalid_direction_uses_direction_code() {
 
 #[test]
 fn for_in() {
-    let stmts = body_stmts("program T; begin for X: integer in Arr do Y := X end.");
+    let stmts =
+        body_stmts(r#"program T; begin for X: integer in Arr do Y := X; end for; end program;"#);
     match &stmts[0] {
         Stmt::ForIn {
             var_name, iterable, ..
@@ -68,13 +72,14 @@ fn for_in() {
 
 #[test]
 fn while_loop() {
-    let stmts = body_stmts("program T; begin while X > 0 do X := X - 1 end.");
+    let stmts =
+        body_stmts(r#"program T; begin while X > 0 do X := X - 1; end while; end program;"#);
     assert!(matches!(&stmts[0], Stmt::While { .. }));
 }
 
 #[test]
 fn repeat_until() {
-    let stmts = body_stmts("program T; begin repeat X := X + 1 until X = 10 end.");
+    let stmts = body_stmts(r#"program T; begin repeat X := X + 1; until X = 10; end program;"#);
     match &stmts[0] {
         Stmt::Repeat { body, .. } => {
             assert_eq!(body.len(), 1);
@@ -85,7 +90,7 @@ fn repeat_until() {
 
 #[test]
 fn repeat_allows_trailing_semicolon_before_until() {
-    let stmts = body_stmts("program T; begin repeat X := X + 1; until X = 10 end.");
+    let stmts = body_stmts(r#"program T; begin repeat X := X + 1; until X = 10; end program;"#);
     match &stmts[0] {
         Stmt::Repeat { body, .. } => assert_eq!(body.len(), 1),
         _ => panic!("expected Repeat"),

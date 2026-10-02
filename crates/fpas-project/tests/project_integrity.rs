@@ -15,7 +15,7 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::atomic::{AtomicU64, Ordering};
 
-use fpas_parser::{CompilationUnit, QualifiedId, parse_compilation_unit};
+use fpas_parser::{CompilationUnit, Import, parse_compilation_unit};
 use fpas_project::{
     LibraryExportPolicy, ProjectLinkMeta, SourceOrigin, build_unit_graph,
     build_unit_graph_from_parsed_sources, build_unit_graph_with_standard_library, load_project,
@@ -39,7 +39,7 @@ fn write(path: &Path, text: &str) {
     fs::write(path, text).expect("fixture file");
 }
 
-fn uses(source: &str) -> Vec<QualifiedId> {
+fn uses(source: &str) -> Vec<Import> {
     let (parsed, diagnostics) = fpas_parser::parse(source);
     assert!(diagnostics.is_empty(), "{diagnostics:?}");
     parsed.uses
@@ -57,7 +57,13 @@ fn parsed_unit(source: &str) -> fpas_parser::Unit {
 #[test]
 fn unknown_root_std_unit_is_rejected() {
     let graph = build_unit_graph(&[], &ProjectLinkMeta::default()).expect("empty graph");
-    let root_uses = uses("program App;\nuses Std.DoesNotExist;\nbegin\nend.\n");
+    let root_uses = uses(
+        r#"program App;
+uses Std.DoesNotExist as DoesNotExist;
+begin null;
+end program;
+"#,
+    );
 
     let error = resolve_program_units(&graph, &root_uses).expect_err("unknown Unit must fail");
 
@@ -73,9 +79,22 @@ fn unknown_root_std_unit_is_rejected() {
 fn unknown_transitive_std_unit_is_rejected() {
     let dir = temp_dir("transitive-std");
     let source = dir.join("feature.fpas");
-    write(&source, "unit Demo.Feature;\nuses Std.DoesNotExist;\n");
+    write(
+        &source,
+        r#"unit Demo.Feature;
+uses Std.DoesNotExist as DoesNotExist;
+end unit;
+
+"#,
+    );
     let graph = build_unit_graph(&[source], &ProjectLinkMeta::default()).expect("graph");
-    let root_uses = uses("program App;\nuses Demo.Feature;\nbegin\nend.\n");
+    let root_uses = uses(
+        r#"program App;
+uses Demo.Feature as Feature;
+begin null;
+end program;
+"#,
+    );
 
     let error = resolve_program_units(&graph, &root_uses).expect_err("unknown Unit must fail");
 
@@ -86,7 +105,13 @@ fn unknown_transitive_std_unit_is_rejected() {
 #[test]
 fn known_intrinsic_std_unit_needs_no_source_node() {
     let graph = build_unit_graph(&[], &ProjectLinkMeta::default()).expect("empty graph");
-    let root_uses = uses("program App;\nuses Std.Console;\nbegin\nend.\n");
+    let root_uses = uses(
+        r#"program App;
+uses Std.Console as Console;
+begin null;
+end program;
+"#,
+    );
 
     let resolved = resolve_program_units(&graph, &root_uses).expect("intrinsic Unit");
 
@@ -96,7 +121,13 @@ fn known_intrinsic_std_unit_needs_no_source_node() {
 #[test]
 fn source_defined_std_tui_must_be_present() {
     let graph = build_unit_graph(&[], &ProjectLinkMeta::default()).expect("empty graph");
-    let root_uses = uses("program App;\nuses Std.Tui;\nbegin\nend.\n");
+    let root_uses = uses(
+        r#"program App;
+uses Std.Tui as Tui;
+begin null;
+end program;
+"#,
+    );
 
     let error = resolve_program_units(&graph, &root_uses).expect_err("missing source Unit");
 
@@ -113,12 +144,24 @@ fn source_defined_std_tui_resolves_from_standard_library() {
         &dir.join("stdlib.fpasprj"),
         "[project]\nname = \"stdlib\"\nkind = \"library\"\n\n[exports]\nunits = [\"Std.Tui\"]\n\n[sources]\ninclude = [\"Std/**/*.fpas\"]\n",
     );
-    write(&dir.join("Std/Tui.fpas"), "unit Std.Tui;\n");
+    write(
+        &dir.join("Std/Tui.fpas"),
+        r#"unit Std.Tui;
+end unit;
+
+"#,
+    );
     let standard_library = load_standard_library(&dir).expect("standard library");
     let graph =
         build_unit_graph_with_standard_library(&[], &ProjectLinkMeta::default(), &standard_library)
             .expect("graph");
-    let root_uses = uses("program App;\nuses Std.Tui;\nbegin\nend.\n");
+    let root_uses = uses(
+        r#"program App;
+uses Std.Tui as Tui;
+begin null;
+end program;
+"#,
+    );
 
     let resolved = resolve_program_units(&graph, &root_uses).expect("source Unit");
 
@@ -131,10 +174,20 @@ fn graph_dependencies_come_from_source_instead_of_matching_hash_sidecar() {
     let dir = temp_dir("sidecar");
     let feature = dir.join("feature.fpas");
     let real = dir.join("real.fpas");
-    let source = b"unit Demo.Feature;\nuses Demo.Real;\n";
+    let source = br#"unit Demo.Feature;
+uses Demo.Real as Real;
+end unit;
+
+"#;
     fs::create_dir_all(&dir).expect("fixture directory");
     fs::write(&feature, source).expect("feature source");
-    write(&real, "unit Demo.Real;\n");
+    write(
+        &real,
+        r#"unit Demo.Real;
+end unit;
+
+"#,
+    );
     let stale = CompiledUnit {
         identity: UnitIdentity {
             unit_name: "Demo.StaleOwner".to_string(),
@@ -167,7 +220,13 @@ fn lexical_aliases_preserve_library_exports() {
     let dir = temp_dir("alias-export");
     let source = dir.join("src/internal.fpas");
     let library = dir.join("lib/library.fpasprj");
-    write(&source, "unit Lib.Internal;\n");
+    write(
+        &source,
+        r#"unit Lib.Internal;
+end unit;
+
+"#,
+    );
     write(&library, "fixture");
     let source_alias = dir.join("src/../src/internal.fpas");
     let library_alias = dir.join("lib/../lib/library.fpasprj");
@@ -180,7 +239,13 @@ fn lexical_aliases_preserve_library_exports() {
         LibraryExportPolicy::ListedUnits(HashSet::new()),
     );
     let graph = build_unit_graph(&[source], &link_meta).expect("graph");
-    let root_uses = uses("program App;\nuses Lib.Internal;\nbegin\nend.\n");
+    let root_uses = uses(
+        r#"program App;
+uses Lib.Internal as Internal;
+begin null;
+end program;
+"#,
+    );
 
     let error = resolve_program_units(&graph, &root_uses).expect_err("private Unit must fail");
 
@@ -192,7 +257,13 @@ fn lexical_aliases_preserve_library_exports() {
 fn trusted_std_source_lookup_accepts_lexical_alias() {
     let dir = temp_dir("alias-std");
     let source = dir.join("Std/Source.fpas");
-    write(&source, "unit Std.Source;\n");
+    write(
+        &source,
+        r#"unit Std.Source;
+end unit;
+
+"#,
+    );
     let canonical = fs::canonicalize(&source).expect("canonical source");
     let mut link_meta = ProjectLinkMeta::default();
     link_meta
@@ -200,7 +271,15 @@ fn trusted_std_source_lookup_accepts_lexical_alias() {
         .insert(dir.join("Std/../Std/Source.fpas"));
 
     let graph = build_unit_graph_from_parsed_sources(
-        vec![(canonical, parsed_unit("unit Std.Source;\n"))],
+        vec![(
+            canonical,
+            parsed_unit(
+                r#"unit Std.Source;
+end unit;
+
+"#,
+            ),
+        )],
         &link_meta,
     )
     .expect("trusted parsed graph");
@@ -215,7 +294,13 @@ fn symlink_alias_preserves_library_origin() {
     let source = dir.join("src/internal.fpas");
     let alias = dir.join("alias.fpas");
     let library = dir.join("library.fpasprj");
-    write(&source, "unit Lib.Internal;\n");
+    write(
+        &source,
+        r#"unit Lib.Internal;
+end unit;
+
+"#,
+    );
     write(&library, "fixture");
     if create_file_symlink(&source, &alias).is_err() {
         fs::remove_dir_all(dir).ok();
@@ -229,7 +314,13 @@ fn symlink_alias_preserves_library_origin() {
         .library_export_policies
         .insert(library, LibraryExportPolicy::ListedUnits(HashSet::new()));
     let graph = build_unit_graph(&[source], &link_meta).expect("graph");
-    let root_uses = uses("program App;\nuses Lib.Internal;\nbegin\nend.\n");
+    let root_uses = uses(
+        r#"program App;
+uses Lib.Internal as Internal;
+begin null;
+end program;
+"#,
+    );
 
     let error = resolve_program_units(&graph, &root_uses).expect_err("private Unit must fail");
 
@@ -269,12 +360,24 @@ fn load_project_by_basename_resolves_enclosing_workspace() {
         &dir.join("app.fpasprj"),
         "[project]\nname = \"app\"\nkind = \"program\"\nmain = \"main.fpas\"\n\n[dependencies]\nworkspace = [\"lib\"]\n\n[sources]\ninclude = [\"main.fpas\"]\n",
     );
-    write(&dir.join("main.fpas"), "program App;\nbegin\nend.\n");
+    write(
+        &dir.join("main.fpas"),
+        r#"program App;
+begin null;
+end program;
+"#,
+    );
     write(
         &dir.join("lib.fpasprj"),
         "[project]\nname = \"lib\"\nkind = \"library\"\n\n[sources]\ninclude = [\"lib.fpas\"]\n",
     );
-    write(&dir.join("lib.fpas"), "unit Lib.Core;\n");
+    write(
+        &dir.join("lib.fpas"),
+        r#"unit Lib.Core;
+end unit;
+
+"#,
+    );
 
     let status = Command::new(std::env::current_exe().expect("test executable"))
         .arg("--exact")

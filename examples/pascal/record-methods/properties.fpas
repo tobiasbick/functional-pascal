@@ -1,31 +1,31 @@
 program PropertiesExample;
 
-uses Std.Console, Std.Conv;
+uses Std.Console as Console;
+uses Std.Conv as Conv;
 
-type
-  Counter = record
-    Base: integer;
+type Counter = record
+  Base: integer;
 
-    function GetBase(Self: Counter): integer;
-    begin
-      return Self.Base
-    end;
+  function GetBase(Self: Counter): integer;
+  begin
+    return Self.Base;
+  end function;
 
-    procedure SetBase(Self: Counter; Value: integer);
-    begin
-      WriteLn('Setter received: ' + IntToStr(Value))
-    end;
+  procedure SetBase(Self: Counter; Value: integer);
+  begin
+    Console.WriteLn('Setter received: ' + Conv.IntToStr(Value));
+  end procedure;
 
-    property Value: integer read GetBase write SetBase;
-  end;
+  property Value: integer read GetBase write SetBase;
+end record;
 
 begin
   var C: Counter := record
     Base := 10;
-  end;
+  end record;
 
-  WriteLn('Stored value: ' + IntToStr(C.Value));
+  Console.WriteLn('Stored value: ' + Conv.IntToStr(C.Value));
   // The setter receives Self by value, so this records the request but does not mutate C.
   C.Value := 20;
-  WriteLn('Stored value after setter: ' + IntToStr(C.Value))
-end.
+  Console.WriteLn('Stored value after setter: ' + Conv.IntToStr(C.Value));
+end program;

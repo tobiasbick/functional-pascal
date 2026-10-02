@@ -15,10 +15,10 @@ use super::super::types::{emit_formal_params_in_parens, emit_type_expr, format_t
 pub(crate) fn emit_decl(emitter: &mut Emitter, decl: &Decl, comments: &CommentMap) {
     emit_leading_comments(emitter, comments, crate::span::decl_span(decl), true);
     match decl {
-        Decl::Const(def) => emit_const_def(emitter, def, false, comments),
-        Decl::Var(def) => emit_var_def(emitter, "var", def, false, comments),
-        Decl::MutableVar(def) => emit_var_def(emitter, "mutable var", def, false, comments),
-        Decl::TypeDef(def) => emit_type_def(emitter, def, comments, false),
+        Decl::Const(def) => emit_const_def(emitter, def, comments),
+        Decl::Var(def) => emit_var_def(emitter, "var", def, comments),
+        Decl::MutableVar(def) => emit_var_def(emitter, "mutable var", def, comments),
+        Decl::TypeDef(def) => emit_type_def(emitter, def, comments),
         Decl::Function(function) => emit_function_decl(emitter, function, comments),
         Decl::Procedure(procedure) => emit_procedure_decl(emitter, procedure, comments),
     }
@@ -30,19 +30,10 @@ fn emit_visibility(emitter: &mut Emitter, visibility: Visibility) {
     }
 }
 
-pub(super) fn emit_const_def(
-    emitter: &mut Emitter,
-    def: &ConstDef,
-    in_const_block: bool,
-    comments: &CommentMap,
-) {
+pub(super) fn emit_const_def(emitter: &mut Emitter, def: &ConstDef, comments: &CommentMap) {
     emitter.write_current_indent();
-    if !in_const_block {
-        emit_visibility(emitter, def.visibility);
-    }
-    if !in_const_block {
-        emitter.write("const ");
-    }
+    emit_visibility(emitter, def.visibility);
+    emitter.write("const ");
     emitter.write(&def.name);
     emitter.write(": ");
     emit_type_expr(emitter, &def.type_expr);
@@ -55,15 +46,12 @@ pub(super) fn emit_var_def(
     emitter: &mut Emitter,
     keyword: &str,
     def: &VarDef,
-    in_var_block: bool,
     comments: &CommentMap,
 ) {
     emitter.write_current_indent();
-    if !in_var_block {
-        emit_visibility(emitter, def.visibility);
-        emitter.write(keyword);
-        emitter.write(" ");
-    }
+    emit_visibility(emitter, def.visibility);
+    emitter.write(keyword);
+    emitter.write(" ");
     emitter.write(&def.name);
     emitter.write(": ");
     emit_type_expr(emitter, &def.type_expr);
@@ -72,19 +60,10 @@ pub(super) fn emit_var_def(
     finish_decl_line(emitter, comments, def.span.offset);
 }
 
-pub(super) fn emit_type_def(
-    emitter: &mut Emitter,
-    def: &TypeDef,
-    comments: &CommentMap,
-    in_type_block: bool,
-) {
+pub(super) fn emit_type_def(emitter: &mut Emitter, def: &TypeDef, comments: &CommentMap) {
     emitter.write_current_indent();
-    if !in_type_block {
-        emit_visibility(emitter, def.visibility);
-    }
-    if !in_type_block {
-        emitter.write("type ");
-    }
+    emit_visibility(emitter, def.visibility);
+    emitter.write("type ");
     emitter.write(&def.name);
     emitter.write(" = ");
     emit_type_body(emitter, &def.body, comments);
@@ -134,7 +113,7 @@ fn emit_record_type(emitter: &mut Emitter, record: &RecordType, comments: &Comme
         }
     });
     emitter.write_current_indent();
-    emitter.write("end");
+    emitter.write("end record");
 }
 
 fn emit_field_def(emitter: &mut Emitter, field: &FieldDef, comments: &CommentMap) {
@@ -166,7 +145,13 @@ fn emit_record_method(emitter: &mut Emitter, method: &RecordMethod, comments: &C
             emitter.write(": ");
             emit_type_expr(emitter, &function.return_type);
             finish_routine_header_line(emitter, comments, function.span.offset);
-            emit_func_body(emitter, function.span.offset, &function.body, comments);
+            emit_func_body(
+                emitter,
+                function.span.offset,
+                &function.body,
+                "function",
+                comments,
+            );
         }
         RecordMethod::StaticFunction(function) => {
             emit_leading_comments(emitter, comments, function.span.offset, true);
@@ -182,7 +167,13 @@ fn emit_record_method(emitter: &mut Emitter, method: &RecordMethod, comments: &C
             emitter.write(": ");
             emit_type_expr(emitter, &function.return_type);
             finish_routine_header_line(emitter, comments, function.span.offset);
-            emit_func_body(emitter, function.span.offset, &function.body, comments);
+            emit_func_body(
+                emitter,
+                function.span.offset,
+                &function.body,
+                "function",
+                comments,
+            );
         }
         RecordMethod::StaticProcedure(procedure) => {
             emit_leading_comments(emitter, comments, procedure.span.offset, true);
@@ -196,7 +187,13 @@ fn emit_record_method(emitter: &mut Emitter, method: &RecordMethod, comments: &C
                 &procedure.params,
             );
             finish_routine_header_line(emitter, comments, procedure.span.offset);
-            emit_func_body(emitter, procedure.span.offset, &procedure.body, comments);
+            emit_func_body(
+                emitter,
+                procedure.span.offset,
+                &procedure.body,
+                "procedure",
+                comments,
+            );
         }
         RecordMethod::Procedure(procedure) => {
             emit_leading_comments(emitter, comments, procedure.span.offset, true);
@@ -209,7 +206,13 @@ fn emit_record_method(emitter: &mut Emitter, method: &RecordMethod, comments: &C
                 &procedure.params,
             );
             finish_routine_header_line(emitter, comments, procedure.span.offset);
-            emit_func_body(emitter, procedure.span.offset, &procedure.body, comments);
+            emit_func_body(
+                emitter,
+                procedure.span.offset,
+                &procedure.body,
+                "procedure",
+                comments,
+            );
         }
     }
 }
@@ -256,7 +259,7 @@ fn emit_enum_type(emitter: &mut Emitter, enum_type: &EnumType, comments: &Commen
         }
     });
     emitter.write_current_indent();
-    emitter.write("end");
+    emitter.write("end enum");
 }
 
 fn emit_enum_member(emitter: &mut Emitter, member: &EnumMember, comments: &CommentMap) {
@@ -293,7 +296,13 @@ fn emit_function_decl(emitter: &mut Emitter, function: &FunctionDecl, comments: 
     emitter.write(": ");
     emit_type_expr(emitter, &function.return_type);
     finish_routine_header_line(emitter, comments, function.span.offset);
-    emit_func_body(emitter, function.span.offset, &function.body, comments);
+    emit_func_body(
+        emitter,
+        function.span.offset,
+        &function.body,
+        "function",
+        comments,
+    );
 }
 
 fn emit_procedure_decl(emitter: &mut Emitter, procedure: &ProcedureDecl, comments: &CommentMap) {
@@ -306,7 +315,13 @@ fn emit_procedure_decl(emitter: &mut Emitter, procedure: &ProcedureDecl, comment
         &procedure.params,
     );
     finish_routine_header_line(emitter, comments, procedure.span.offset);
-    emit_func_body(emitter, procedure.span.offset, &procedure.body, comments);
+    emit_func_body(
+        emitter,
+        procedure.span.offset,
+        &procedure.body,
+        "procedure",
+        comments,
+    );
 }
 
 fn emit_function_header(
@@ -333,6 +348,7 @@ fn emit_func_body(
     emitter: &mut Emitter,
     owner_start: usize,
     body: &FuncBody,
+    kind: &str,
     comments: &CommentMap,
 ) {
     let FuncBody::Block { nested, stmts } = body;
@@ -345,7 +361,9 @@ fn emit_func_body(
     emitter.writeln("begin");
     emitter.with_indent(|inner| emit_stmts_in_block(inner, stmts, comments));
     emitter.write_current_indent();
-    emitter.write("end;");
+    emitter.write("end ");
+    emitter.write(kind);
+    emitter.write(";");
     emit_trailing_comments(emitter, comments, owner_start);
     if !emitter.ends_with_newline() {
         emitter.write_line_end();

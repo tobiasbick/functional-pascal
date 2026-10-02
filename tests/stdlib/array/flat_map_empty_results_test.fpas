@@ -1,13 +1,14 @@
 program T;
 
-uses Std.Console, Std.Arrays;
+uses Std.Console as Console;
+uses Std.Arrays as Arrays;
 
 function EmptyArray(X: integer): array of integer;
 begin
-  return []
-end;
+  return [];
+end function;
 
 begin
-  var R: array of integer := FlatMap([1, 2, 3], EmptyArray);
-  WriteLn(Length(R))
-end.
+  var R: array of integer := Arrays.FlatMap([1, 2, 3], EmptyArray);
+  Console.WriteLn(Arrays.Length(R));
+end program;

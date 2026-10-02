@@ -43,25 +43,25 @@ fn run_modes(source: &str) {
 fn timed_group_close_returns_while_a_running_pool_worker_ignores_cancellation() {
     let (program, errors) = fpas_parser::parse(
         r#"program NonCooperativeWorker;
-uses Std.Tasks, Std.Results, Std.Options, Std.Arrays;
+uses Std.Tasks as Tasks; uses Std.Results as Results; uses Std.Options as Options; uses Std.Arrays as Arrays;
 begin
-  var Group: TaskGroup := CreateTaskGroup();
-  var Ready: channel of boolean := CreateChannel(1);
-  var Release: channel of boolean := CreateChannel(1);
-  var Child: task := StartTaskInGroup(Group, function(Token: CancellationToken): integer
+  var Group: Tasks.TaskGroup := Tasks.CreateTaskGroup();
+  var Ready: channel of boolean := Tasks.CreateChannel(1);
+  var Release: channel of boolean := Tasks.CreateChannel(1);
+  var Child: task := Tasks.StartTaskInGroup(Group, function(Token: Tasks.CancellationToken): integer
   begin
-    Send(Ready, true);
-    while IsNone(Std.Results.Unwrap(TryReceive(Release))) do begin end;
-    if not IsCancellationRequested(Token) then panic('cancellation was not retained');
-    return 42
-  end);
-  while IsNone(Std.Results.Unwrap(TryReceive(Ready))) do begin end;
-  if not IsError(CloseTaskGroupWithTimeout(Group, 2)) then panic('running worker was lost');
-  Send(Release, true);
-  if Wait(Child) <> 42 then panic('worker could not finish after timeout');
-  if Length(CloseTaskGroup(Group)) <> 0 then panic('close failed');
-  CloseChannel(Ready); CloseChannel(Release)
-end."#,
+    Tasks.Send(Ready, true);
+    while Options.IsNone(Results.Unwrap(Tasks.TryReceive(Release))) do begin null; end; end while;
+    if not Tasks.IsCancellationRequested(Token) then panic('cancellation was not retained'); end if;
+    return 42;
+  end function);
+  while Options.IsNone(Results.Unwrap(Tasks.TryReceive(Ready))) do begin null; end; end while;
+  if not Results.IsError(Tasks.CloseTaskGroupWithTimeout(Group, 2)) then panic('running worker was lost'); end if;
+  Tasks.Send(Release, true);
+  if Tasks.Wait(Child) <> 42 then panic('worker could not finish after timeout'); end if;
+  if Arrays.Length(Tasks.CloseTaskGroup(Group)) <> 0 then panic('close failed'); end if;
+  Tasks.CloseChannel(Ready); Tasks.CloseChannel(Release);
+end program;"#,
     );
     assert!(errors.is_empty(), "{errors:?}");
     let executable = fpas_compiler::compile(&program).expect("compile");
@@ -81,25 +81,25 @@ fn timed_group_close_retains_blocked_worker_until_a_later_successful_close() {
 fn child_timed_group_close_yields_to_its_waiting_parent() {
     run_modes(
         r#"program NestedClose;
-uses Std.Tasks, Std.Results, Std.Arrays;
+uses Std.Tasks as Tasks; uses Std.Results as Results; uses Std.Arrays as Arrays;
 begin
-  var Outer: TaskGroup := CreateTaskGroup();
-  var Ready: channel of boolean := CreateChannel(1);
-  var Gate: channel of integer := CreateChannel(1);
-  var Parent: task := StartTaskInGroup(Outer, procedure(Token: CancellationToken)
+  var Outer: Tasks.TaskGroup := Tasks.CreateTaskGroup();
+  var Ready: channel of boolean := Tasks.CreateChannel(1);
+  var Gate: channel of integer := Tasks.CreateChannel(1);
+  var Parent: task := Tasks.StartTaskInGroup(Outer, procedure(Token: Tasks.CancellationToken)
   begin
-    var Inner: TaskGroup := CreateTaskGroup();
-    var Child: task := StartTaskInGroup(Inner, function(Stop: CancellationToken): integer
-      begin return Unwrap(Receive(Gate)) end);
-    if not IsError(CloseTaskGroupWithTimeout(Inner, 2)) then panic('premature close');
-    Unwrap(Send(Ready, true));
-    if Wait(Child) <> 42 then panic('child result was lost');
-    if Length(Unwrap(CloseTaskGroupWithTimeout(Inner, 1000))) <> 0 then panic('inner failures')
-  end);
-  Unwrap(Receive(Ready));
-  Unwrap(Send(Gate, 42));
-  if Length(Unwrap(CloseTaskGroupWithTimeout(Outer, 1000))) <> 0 then panic('outer failures');
-  CloseChannel(Ready); CloseChannel(Gate)
-end."#,
+    var Inner: Tasks.TaskGroup := Tasks.CreateTaskGroup();
+    var Child: task := Tasks.StartTaskInGroup(Inner, function(Stop: Tasks.CancellationToken): integer
+      begin return Results.Unwrap(Tasks.Receive(Gate)); end function);
+    if not Results.IsError(Tasks.CloseTaskGroupWithTimeout(Inner, 2)) then panic('premature close'); end if;
+    Results.Unwrap(Tasks.Send(Ready, true));
+    if Tasks.Wait(Child) <> 42 then panic('child result was lost'); end if;
+    if Arrays.Length(Results.Unwrap(Tasks.CloseTaskGroupWithTimeout(Inner, 1000))) <> 0 then panic('inner failures'); end if;
+  end procedure);
+  Results.Unwrap(Tasks.Receive(Ready));
+  Results.Unwrap(Tasks.Send(Gate, 42));
+  if Arrays.Length(Results.Unwrap(Tasks.CloseTaskGroupWithTimeout(Outer, 1000))) <> 0 then panic('outer failures'); end if;
+  Tasks.CloseChannel(Ready); Tasks.CloseChannel(Gate);
+end program;"#,
     );
 }

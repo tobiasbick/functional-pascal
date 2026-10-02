@@ -1,24 +1,23 @@
 unit MyApp.Utils;
 
-uses Std.Math;
+uses Std.Math as Math;
 
 public function Clamp(Value: integer; Min: integer; Max: integer): integer;
 begin
   if Value < Min then
-  begin
-    return Min
-  end
-  else if Value > Max then
-  begin
-    return Max
-  end
+    return Min;
   else
-  begin
-    return Value
-  end
-end;
+    if Value > Max then
+      return Max;
+    else
+      return Value;
+    end if;
+  end if;
+end function;
 
 function IsBlank(S: string): boolean;
 begin
-  return Length(Trim(S)) = 0
-end;
+  return Length(Trim(S)) = 0;
+end function;
+
+end unit;

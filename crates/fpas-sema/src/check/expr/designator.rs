@@ -23,7 +23,8 @@ impl Checker {
             .all(|p| matches!(p, DesignatorPart::Ident(_, _)));
 
         if only_ident_chain {
-            let full_name = Self::resolve_designator_parts_name(parts);
+            let raw_name = Self::resolve_designator_parts_name(parts);
+            let full_name = self.resolve_source_name(&raw_name, designator.span);
             self.ensure_fq_std_unit_loaded(&full_name);
             if let Some(symbol) = self.scopes.lookup(&full_name) {
                 return symbol.ty.clone();
@@ -50,21 +51,15 @@ impl Checker {
             DesignatorPart::Ident(first, _) => {
                 let resolved_base = self.resolve_designator_base(parts);
                 let Some((mut ty, base_part_count)) = resolved_base else {
-                    let full_name = Self::resolve_designator_parts_name(parts);
+                    let raw_name = Self::resolve_designator_parts_name(parts);
+                    let full_name = self.resolve_source_name(&raw_name, designator.span);
                     let is_qualified_ident_chain = parts.len() > 1
                         && parts
                             .iter()
                             .all(|part| matches!(part, DesignatorPart::Ident(_, _)));
 
                     if let Some(ambiguous_hint) = self.ambiguous_hint(first) {
-                        let message = if self
-                            .ambiguous_imports
-                            .contains_key(&crate::scope::canonical_symbol_name(first))
-                        {
-                            format!("Ambiguous imported symbol `{first}`")
-                        } else {
-                            format!("Ambiguous name `{first}`")
-                        };
+                        let message = format!("Ambiguous name `{first}`");
                         self.error_with_code(
                             SEMA_AMBIGUOUS_IMPORTED_NAME,
                             message,
@@ -89,7 +84,9 @@ impl Checker {
                         return Ty::Error;
                     }
 
-                    let hint = if is_qualified_ident_chain {
+                    let hint = if let Some(hint) = self.import_name_hint(first) {
+                        hint
+                    } else if is_qualified_ident_chain {
                         if crate::std_units::looks_like_std_qualified_name(&full_name) {
                             self.hint_unknown_callable(&full_name)
                         } else {
@@ -98,7 +95,9 @@ impl Checker {
                     } else if crate::std_units::looks_like_std_qualified_name(first) {
                         self.hint_unknown_callable(first)
                     } else {
-                        "Check spelling or declare the variable or constant.".to_string()
+                        self.import_name_hint(first).unwrap_or_else(|| {
+                            "Check spelling or declare the variable or constant.".to_string()
+                        })
                     };
 
                     let message = if is_qualified_ident_chain {
@@ -167,7 +166,7 @@ impl Checker {
                 qualified.push('.');
             }
             qualified.push_str(name);
-            if let Some(symbol) = self.scopes.lookup(&qualified)
+            if let Some(symbol) = self.scopes.lookup(&self.qualified_import_name(&qualified))
                 && matches!(
                     symbol.kind,
                     SymbolKind::Const | SymbolKind::Var | SymbolKind::Param | SymbolKind::ForVar

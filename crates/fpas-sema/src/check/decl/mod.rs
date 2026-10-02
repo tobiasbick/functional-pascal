@@ -1,6 +1,6 @@
 mod consts;
 mod routines;
-mod types;
+pub(in crate::check) mod types;
 mod vars;
 
 use super::Checker;

@@ -2,7 +2,7 @@ use super::*;
 
 #[test]
 fn if_then() {
-    let stmts = body_stmts("program T; begin if X > 0 then Y := 1 end.");
+    let stmts = body_stmts(r#"program T; begin if X > 0 then Y := 1; end if; end program;"#);
     match &stmts[0] {
         Stmt::If {
             else_branch: None, ..
@@ -13,7 +13,8 @@ fn if_then() {
 
 #[test]
 fn if_then_else() {
-    let stmts = body_stmts("program T; begin if X > 0 then Y := 1 else Y := 2 end.");
+    let stmts =
+        body_stmts(r#"program T; begin if X > 0 then Y := 1; else Y := 2; end if; end program;"#);
     match &stmts[0] {
         Stmt::If {
             else_branch: Some(_),
@@ -26,18 +27,14 @@ fn if_then_else() {
 #[test]
 fn else_if_chain() {
     let stmts = body_stmts(
-        "program T; begin \
-         if X = 1 then A := 1 \
-         else if X = 2 then A := 2 \
-         else A := 3 \
-         end.",
+        r#"program T; begin if X = 1 then A := 1; else if X = 2 then A := 2; else A := 3; end if; end if; end program;"#,
     );
     match &stmts[0] {
         Stmt::If {
             else_branch: Some(else_stmt),
             ..
         } => {
-            assert!(matches!(else_stmt.as_ref(), Stmt::If { .. }));
+            assert!(matches!(first(else_stmt), Stmt::If { .. }));
         }
         _ => panic!("expected else-if chain"),
     }

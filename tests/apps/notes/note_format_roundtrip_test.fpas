@@ -1,9 +1,13 @@
 program NoteFormatRoundtripTest;
 
-uses Notes.Format, Notes.Model, Std.Arrays, Std.Str, Std.Test;
+uses Notes.Format as Format;
+uses Notes.Model as Model;
+uses Std.Arrays as Arrays;
+uses Std.Str as Str;
+uses Std.Test as Test;
 
 begin
-  var Source: Note := record
+  var Source: Model.Note := record
     Id := '1700000000000-123456';
     Title := 'Agent-era notes';
     CreatedMillis := 1700000000000;
@@ -11,38 +15,38 @@ begin
     Tags := ['fpas', 'tui'];
     Pinned := true;
     Archived := false;
-    Body := ('Human-readable body' + Std.Str.Chr(10)) + 'with Markdown.';
+    Body := ('Human-readable body' + Str.Chr(10)) + 'with Markdown.';
     Path := '';
-  end;
-  var Encoded: string := NoteStringify(Source);
-  case NoteParse(Encoded) of
-    Ok(Parsed):
-    begin
-      AssertEquals(Source.Id, Parsed.Id);
-      AssertEquals(Source.Title, Parsed.Title);
-      AssertEquals(Source.CreatedMillis, Parsed.CreatedMillis);
-      AssertEquals(Source.UpdatedMillis, Parsed.UpdatedMillis);
-      AssertEquals(2, Std.Arrays.Length(Parsed.Tags));
-      AssertEquals('fpas', Parsed.Tags[0]);
-      AssertEquals(true, Parsed.Pinned);
-      AssertEquals(false, Parsed.Archived);
-      AssertEquals(Source.Body, Parsed.Body)
-    end;
-    Error(Message):
-    begin
-      Fail(Message)
-    end
-  end;
-  var CrLf: string := Std.Str.Replace(Encoded, Std.Str.Chr(10), Std.Str.Chr(13) + Std.Str.Chr(10));
-  case NoteParse(CrLf) of
-    Ok(Parsed):
-    begin
-      AssertEquals(Source.Title, Parsed.Title);
-      AssertEquals(Source.Body, Parsed.Body)
-    end;
-    Error(Message):
-    begin
-      Fail(Message)
-    end
-  end
-end.
+  end record;
+  var Encoded: string := Format.NoteStringify(Source);
+  case Format.NoteParse(Encoded) of
+    when Ok(Parsed):
+      begin
+        Test.AssertEquals(Source.Id, Parsed.Id);
+        Test.AssertEquals(Source.Title, Parsed.Title);
+        Test.AssertEquals(Source.CreatedMillis, Parsed.CreatedMillis);
+        Test.AssertEquals(Source.UpdatedMillis, Parsed.UpdatedMillis);
+        Test.AssertEquals(2, Arrays.Length(Parsed.Tags));
+        Test.AssertEquals('fpas', Parsed.Tags[0]);
+        Test.AssertEquals(true, Parsed.Pinned);
+        Test.AssertEquals(false, Parsed.Archived);
+        Test.AssertEquals(Source.Body, Parsed.Body);
+      end;
+    when Error(Message):
+      begin
+        Test.Fail(Message);
+      end;
+  end case;
+  var CrLf: string := Str.Replace(Encoded, Str.Chr(10), Str.Chr(13) + Str.Chr(10));
+  case Format.NoteParse(CrLf) of
+    when Ok(Parsed):
+      begin
+        Test.AssertEquals(Source.Title, Parsed.Title);
+        Test.AssertEquals(Source.Body, Parsed.Body);
+      end;
+    when Error(Message):
+      begin
+        Test.Fail(Message);
+      end;
+  end case;
+end program;

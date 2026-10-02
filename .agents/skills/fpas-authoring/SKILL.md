@@ -37,7 +37,7 @@ Workflow calibration: [references/examples.md](references/examples.md).
 
 1. **Single-file scratch?** → `program` file; run with `fpas run path.fpas` or `fpas check path.fpas`.
 2. **Multi-file app or library?** → follow `fpas-projects` skill; add units + `.fpasprj`.
-3. **Assert runtime behavior?** → `*_test.fpas` under `tests/` with `uses Std.Test`.
+3. **Assert runtime behavior?** → `*_test.fpas` under `tests/` with `uses Std.Test as Test;`.
 4. **Teach a feature?** → `examples/` demo; keep it short and runnable.
 
 ## Minimal skeletons
@@ -47,11 +47,11 @@ Workflow calibration: [references/examples.md](references/examples.md).
 ```pascal
 program MyApp;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 begin
-  WriteLn('Hello')
-end.
+  Console.WriteLn('Hello');
+end program;
 ```
 
 ### Unit (shared code)
@@ -62,12 +62,15 @@ unit MyApp.Bounds;
 public function Clamp(Value: integer; Min: integer; Max: integer): integer;
 begin
   if Value < Min then
-    return Min
-  else if Value > Max then
-    return Max
+    return Min;
+  elsif Value > Max then
+    return Max;
   else
-    return Value
-end;
+    return Value;
+  end if;
+end function;
+end unit;
+
 ```
 
 ### Regression test
@@ -75,11 +78,12 @@ end;
 ```pascal
 program AbsNegativeTest;
 
-uses Std.Math, Std.Test;
+uses Std.Math as Math;
+uses Std.Test as Test;
 
 begin
-  AssertEquals(7, Abs(-7))
-end.
+  Test.AssertEquals(7, Math.Abs(-7));
+end program;
 ```
 
 Test entry files must be `program`, not bare `unit`. Spec: [`docs/pascal/std/testing/test.md`](../../../docs/pascal/std/testing/test.md).
@@ -94,10 +98,10 @@ Do **not** assume Delphi/Free Pascal:
 |----------------------|------|
 | `FuncName := value` return | `return value` only |
 | `var x: Integer` mutable by default | `var` immutable; use `mutable var` to reassign |
-| `WriteLn('x');` required before every `end` | semicolons **separate** statements; no trailing `;` before `end` / `else` / `until` |
-| `uses Unit1, Unit2 in interface` | single `uses` clause; no Delphi `interface`/`implementation` split |
+| Omitting the last statement semicolon | Every statement ends with `;`, including before `else`, `elsif`, `when`, `until`, and closers |
+| `uses Unit1, Unit2` and bare imported names | One `uses Unit.Name as Alias;` per import; use only `Alias.Member` |
 | untyped lambda shorthand | use an anonymous `function` / `procedure` expression with explicit parameter and result types; use a named nested routine for implicit recursion |
-| `begin`/`end.` optional on programs | formatter inserts them — match [`fmt-style.md`](../../../docs/pascal/tools/fmt-style.md) |
+| `end.` on programs, bare `end` on routines | `end program;`, `end unit;`, `end function;`, and `end procedure;` |
 | `{...}`, `(*...*)`, or a separate doc-comment delimiter | `//` is the only comment syntax; an adjacent standalone block is Markdown documentation |
 
 Other habits:
@@ -105,7 +109,11 @@ Other habits:
 - Case-insensitive keywords and identifiers.
 - Strings use single quotes: `'Hello'`, escape with doubled quote: `'It''s'`.
 - `Std.*` units require explicit `uses` — listing a file in `.fpasprj` does not import it.
-- Qualify ambiguous short names (`Length`, `Map`, `Unwrap`, …) with the unit: `Std.Str.Length`, `Std.Array.Length`.
+- Imports open no short names. Use the declared alias for every imported name.
+- Repeat each declaration keyword; use `null;` for empty statement bodies.
+- Control-flow bodies are statement lists with named closers. Explicit plain
+  blocks retain `begin ... end;` and introduce a nested local scope.
+- Each conditional branch and each case arm has its own local scope.
 - Unit declarations and record members are private by default. Write `public`
   directly before each exported declaration or member. `public` is valid in
   **units** only, not `program` files; `private` is an ordinary identifier.

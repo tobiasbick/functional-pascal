@@ -5,28 +5,25 @@ screen control plus structured key and event APIs).
 
 ```pascal
 program Example;
-uses Std.Console;
+
+uses Std.Console as Console;
+
 begin
-  WriteLn('ok')
-end.
+  Console.WriteLn('ok');
+end program;
 ```
 
 ## Importing and names
 
-After `uses Std.Console;` you can call symbols in either form:
+Import with `uses Std.Console as Console;`. Access every exported member through `Console`, for example `Console.WriteLn(...)`. Imports open no short names.
 
-| Style | Example |
-|--------|---------|
-| **Fully qualified** | `Std.Console.WriteLn('hi')` |
-| **Short** | `WriteLn('hi')` |
-
-Short names exist only for symbols that belong to a `uses`'d unit. If two imported units expose the **same** short name (for example `Length` from `Std.Str` and `Std.Arrays`), the compiler reports an **ambiguous** error at the use site; then use the full name (`Std.Str.Length`, `Std.Arrays.Length`).
-
-Types follow the same idea: `KeyEvent` is the short form of `Std.Console.KeyEvent` when `Std.Console` is imported.
+Call `Console.WriteLn('hi')` and refer to types as `Console.KeyEvent`. The alias
+is the only import access path. Members from other imports use their own aliases,
+for example `Text.Length(S)` and `Arrays.Length(A)`.
 
 ## Quick reference
 
-Everything below requires `uses Std.Console;`.
+Everything below requires `uses Std.Console as Console;`.
 
 | Kind | Name | Notes |
 |------|------|--------|

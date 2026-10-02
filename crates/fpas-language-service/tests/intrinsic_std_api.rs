@@ -25,8 +25,14 @@ fn intrinsic_std_fixture(source: &str) -> (TempDirectory, std::path::PathBuf, La
 
 #[test]
 fn intrinsic_std_hover_includes_markdown_and_parameter_documentation() {
-    let source =
-        "program IntrinsicHover;\n\nuses Std.Fs;\n\nbegin\n  ReadText('notes.txt')\nend.\n";
+    let source = r#"program IntrinsicHover;
+
+uses Std.Fs as Fs;
+
+begin
+  Fs.ReadText('notes.txt');
+end program;
+"#;
     let (_temp, path, mut service) = intrinsic_std_fixture(source);
     let offset = source.find("ReadText").expect("ReadText call");
 
@@ -46,7 +52,8 @@ fn intrinsic_std_hover_includes_markdown_and_parameter_documentation() {
 
 #[test]
 fn intrinsic_std_completion_resolves_lazy_markdown_documentation() {
-    let source = "program IntrinsicCompletion;\n\nuses Std.Fs;\n\nbegin\n  Read\nend.\n";
+    let source =
+        "program IntrinsicCompletion;\n\nuses Std.Fs as Fs;\n\nbegin\n  Fs.Read\nend program;\n";
     let (_temp, path, mut service) = intrinsic_std_fixture(source);
     let offset = source.find("Read\n").expect("Read prefix") + "Read".len();
 
@@ -97,13 +104,20 @@ fn intrinsic_std_completion_offers_the_required_unit_import() {
             .additional_edit
             .expect("Std.Fs import edit")
             .new_text,
-        "\n\nuses Std.Fs;"
+        "\n\nuses Std.Fs as Fs;"
     );
 }
 
 #[test]
 fn intrinsic_std_definition_targets_the_editor_api_declaration() {
-    let source = "program IntrinsicDefinition;\n\nuses Std.Console;\n\nbegin\n  var Value: Color := CrtColor(1)\nend.\n";
+    let source = r#"program IntrinsicDefinition;
+
+uses Std.Console as Console;
+
+begin
+  var Value: Console.Color := Console.CrtColor(1);
+end program;
+"#;
     let (_temp, path, mut service) = intrinsic_std_fixture(source);
     let offset = source.find("Color :=").expect("Color type");
 
@@ -123,31 +137,35 @@ fn intrinsic_std_definition_targets_the_editor_api_declaration() {
 }
 
 #[test]
-fn receiver_call_completion_filters_imported_collection_routines() {
-    let source = "program FluentCompletion;\nuses Std.Arrays, Std.Dictionaries;\nbegin\n  var Items: array of integer := [1];\n  var N: integer := Items.Len\nend.\n";
+fn receiver_completion_excludes_imported_collection_routines() {
+    let source = r#"program FluentCompletion;
+uses Std.Arrays as Arrays; uses Std.Dictionaries as Dictionaries;
+begin
+  var Items: array of integer := [1];
+  var N: integer := Items.Len;
+end program;
+"#;
     let (_temp, path, mut service) = intrinsic_std_fixture(source);
     let offset = source.find("Items.Len").expect("receiver call") + "Items.Len".len();
     let candidates = service
         .completions(&path, offset)
         .expect("receiver completion")
         .value;
-    assert!(
-        candidates
-            .iter()
-            .any(|item| item.qualified_name == "Std.Arrays.Length"),
-        "{candidates:#?}"
-    );
-    assert!(
-        !candidates
-            .iter()
-            .any(|item| item.qualified_name == "Std.Dictionaries.Length"),
-        "{candidates:#?}"
-    );
+    assert!(candidates.is_empty(), "{candidates:#?}");
 }
 
 #[test]
 fn receiver_completion_on_returned_and_parenthesized_arrays() {
-    let source = "program FluentResults;\nuses Std.Arrays;\nfunction MakeValues(): array of integer; begin return [1] end;\nbegin\n  var Items: array of integer := [2];\n  var A: integer := MakeValues().Len;\n  var B: integer := (Items).Len\nend.\n";
+    let source = r#"program FluentResults;
+uses Std.Arrays as Arrays;
+function Length(Items: array of integer): integer; begin return Arrays.Length(Items); end function;
+function MakeValues(): array of integer; begin return [1]; end function;
+begin
+  var Items: array of integer := [2];
+  var A: integer := MakeValues().Len;
+  var B: integer := (Items).Len;
+end program;
+"#;
     let (_temp, path, mut service) = intrinsic_std_fixture(source);
     for needle in ["MakeValues().Len", "(Items).Len"] {
         let offset = source.find(needle).expect("receiver") + needle.len();
@@ -158,7 +176,7 @@ fn receiver_completion_on_returned_and_parenthesized_arrays() {
         assert!(
             candidates
                 .iter()
-                .any(|item| item.qualified_name == "Std.Arrays.Length"),
+                .any(|item| item.qualified_name == "FluentResults.Length"),
             "{needle}: {candidates:#?}"
         );
     }
@@ -166,9 +184,15 @@ fn receiver_completion_on_returned_and_parenthesized_arrays() {
 
 #[test]
 fn receiver_call_definition_and_signature_use_selected_array_routine() {
-    let source = "program FluentNavigation;\nuses Std.Arrays, Std.Dictionaries;\nbegin\n  var Items: array of integer := [1, 2];\n  var N: integer := Items.Slice(0, 1).Length()\nend.\n";
+    let source = r#"program FluentNavigation;
+uses Std.Arrays as Arrays; uses Std.Dictionaries as Dictionaries;
+begin
+  var Items: array of integer := [1, 2];
+  var N: integer := Arrays.Length(Arrays.Slice(Items, 0, 1));
+end program;
+"#;
     let (_temp, path, mut service) = intrinsic_std_fixture(source);
-    let offset = source.find("Length()").expect("fluent name");
+    let offset = source.find("Length(").expect("fluent name");
     let definitions = service
         .definitions(&path, offset)
         .expect("receiver definition")
@@ -176,24 +200,31 @@ fn receiver_call_definition_and_signature_use_selected_array_routine() {
     assert_eq!(definitions.len(), 1, "{definitions:#?}");
     assert_eq!(definitions[0].symbol.qualified_name, "Std.Arrays.Length");
 
-    let argument = source.find("Slice(0, 1)").expect("slice call") + "Slice(0, ".len();
+    let argument =
+        source.find("Slice(Items, 0, 1)").expect("slice call") + "Slice(Items, 0, ".len();
     let help = service
         .signature_help(&path, argument)
         .expect("receiver signature")
         .value
         .expect("signature");
-    assert_eq!(help.signature.parameters.len(), 2);
+    assert_eq!(help.signature.parameters.len(), 3);
     assert!(
-        help.signature.parameters[0].starts_with("Start:"),
+        help.signature.parameters[1].starts_with("Start:"),
         "{help:#?}"
     );
-    assert_eq!(help.active_parameter, Some(1));
+    assert_eq!(help.active_parameter, Some(2));
 }
 
 #[test]
 fn intrinsic_std_editor_api_declarations_cannot_be_renamed() {
-    let source =
-        "program IntrinsicRename;\n\nuses Std.Fs;\n\nbegin\n  ReadText('notes.txt')\nend.\n";
+    let source = r#"program IntrinsicRename;
+
+uses Std.Fs as Fs;
+
+begin
+  Fs.ReadText('notes.txt');
+end program;
+"#;
     let (_temp, path, mut service) = intrinsic_std_fixture(source);
     let offset = source.find("ReadText").expect("ReadText call");
 
@@ -212,7 +243,14 @@ fn intrinsic_std_editor_api_declarations_cannot_be_renamed() {
 
 #[test]
 fn intrinsic_std_signature_help_uses_declared_parameters() {
-    let source = "program IntrinsicSignature;\n\nuses Std.Fs;\n\nbegin\n  WriteText('notes.txt', 'hello')\nend.\n";
+    let source = r#"program IntrinsicSignature;
+
+uses Std.Fs as Fs;
+
+begin
+  Fs.WriteText('notes.txt', 'hello');
+end program;
+"#;
     let (_temp, path, mut service) = intrinsic_std_fixture(source);
     let offset = source.find(", 'hello'").expect("second argument") + 2;
 
@@ -241,7 +279,14 @@ fn intrinsic_std_signature_help_uses_declared_parameters() {
 
 #[test]
 fn intrinsic_std_enum_member_has_hover_and_definition() {
-    let source = "program IntrinsicEnum;\n\nuses Std.Json;\n\nbegin\n  var Value: JsonValue := JsonValue.ArrayValue([])\nend.\n";
+    let source = r#"program IntrinsicEnum;
+
+uses Std.Json as Json;
+
+begin
+  var Value: Json.JsonValue := Json.JsonValue.ArrayValue([]);
+end program;
+"#;
     let (_temp, path, mut service) = intrinsic_std_fixture(source);
     let offset = source.rfind("Array").expect("Array variant");
 
@@ -271,7 +316,14 @@ fn intrinsic_std_enum_member_has_hover_and_definition() {
 
 #[test]
 fn intrinsic_std_enum_constructor_has_signature_help() {
-    let source = "program IntrinsicEnumSignature;\n\nuses Std.Json;\n\nbegin\n  var Value: JsonValue := JsonValue.ArrayValue([])\nend.\n";
+    let source = r#"program IntrinsicEnumSignature;
+
+uses Std.Json as Json;
+
+begin
+  var Value: Json.JsonValue := Json.JsonValue.ArrayValue([]);
+end program;
+"#;
     let (_temp, path, mut service) = intrinsic_std_fixture(source);
     let offset = source.find("[]").expect("Array argument") + 1;
 
@@ -281,10 +333,7 @@ fn intrinsic_std_enum_constructor_has_signature_help() {
         .value
         .expect("Array constructor signature");
 
-    assert_eq!(
-        help.signature.parameters,
-        ["Items: array of Std.Json.JsonValue"]
-    );
+    assert_eq!(help.signature.parameters, ["Items: array of JsonValue"]);
     assert_eq!(
         help.parameter_documentation,
         [Some(
@@ -295,8 +344,7 @@ fn intrinsic_std_enum_constructor_has_signature_help() {
 
 #[test]
 fn intrinsic_std_keyword_enum_member_is_completed() {
-    let source =
-        "program IntrinsicEnumCompletion;\n\nuses Std.Json;\n\nbegin\n  JsonValue.Arr\nend.\n";
+    let source = "program IntrinsicEnumCompletion;\n\nuses Std.Json as Json;\n\nbegin\n  Json.JsonValue.Arr\nend program;\n";
     let (_temp, path, mut service) = intrinsic_std_fixture(source);
     let offset = source.find("Arr\n").expect("Array prefix") + "Arr".len();
 
@@ -315,7 +363,11 @@ fn intrinsic_std_keyword_enum_member_is_completed() {
 
 #[test]
 fn intrinsic_std_editor_api_covers_the_semantic_registry() {
-    let source = "program IntrinsicCatalog;\n\nbegin\nend.\n";
+    let source = r#"program IntrinsicCatalog;
+
+begin null;
+end program;
+"#;
     let (_temp, _path, mut service) = intrinsic_std_fixture(source);
     let index = service
         .workspace_symbol_index()
@@ -334,7 +386,11 @@ fn intrinsic_std_editor_api_covers_the_semantic_registry() {
 
 #[test]
 fn every_intrinsic_callable_parameter_has_markdown_documentation() {
-    let source = "program IntrinsicParameterCatalog;\n\nbegin\nend.\n";
+    let source = r#"program IntrinsicParameterCatalog;
+
+begin null;
+end program;
+"#;
     let (_temp, _path, mut service) = intrinsic_std_fixture(source);
     let index = service
         .workspace_symbol_index()
@@ -395,7 +451,11 @@ fn every_intrinsic_callable_parameter_has_markdown_documentation() {
 
 #[test]
 fn intrinsic_std_editor_api_is_valid_syntax_without_runtime_analysis() {
-    let source = "program IntrinsicSyntax;\n\nbegin\nend.\n";
+    let source = r#"program IntrinsicSyntax;
+
+begin null;
+end program;
+"#;
     let (_temp, _path, mut service) = intrinsic_std_fixture(source);
     let repository_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
     let api = repository_root.join("lib/api/Std/Fs.fpas");

@@ -1,47 +1,55 @@
 // Pull-based decoded HTTP response-body streaming.
 unit Std.Http.Stream;
 
-uses
-  Std.Arrays, Std.Http.Stream.Types, Std.Http.Io, Std.Http.BodyFraming, Std.Http.Handles,
-  Std.Http.Types, Std.Http.Wire, Std.Net, Std.Net.Utf8;
+uses Std.Arrays as Arrays;
+uses Std.Http.Stream.Types as Types;
+uses Std.Http.Io as Io;
+uses Std.Http.BodyFraming as BodyFraming;
+uses Std.Http.Handles as Handles;
+uses Std.Http.Types as Types2;
+uses Std.Http.Wire as Wire;
+uses Std.Net as Net;
+uses Std.Net.Utf8 as Utf8;
 
 // Reserves and stores one state in the hosted HTTP registry.
-function ReserveState(State: StreamState): integer;
+function ReserveState(State: Types.StreamState): integer;
 begin
-  return 0
-end;
+  return 0;
+end function;
 
 // Tests whether one hosted body-stream state exists.
 function HasState(Slot: integer): boolean;
 begin
-  return false
-end;
+  return false;
+end function;
 
 // Loads one state from the hosted HTTP registry.
-function LoadState(Slot: integer): StreamState;
+function LoadState(Slot: integer): Types.StreamState;
 begin
-  panic('internal HTTP stream state intrinsic was not lowered')
-end;
+  panic('internal HTTP stream state intrinsic was not lowered');
+end function;
 
 // Replaces one state in the hosted HTTP registry.
-procedure StoreState(Slot: integer; State: StreamState);
+procedure StoreState(Slot: integer; State: Types.StreamState);
 begin
-end;
+  null;
+end procedure;
 
 // Resolves and validates an opaque body-stream handle.
 //
 // Parameters:
 // - `StreamValue`: Body-stream handle to resolve.
-function StateIndex(StreamValue: Std.Http.Types.BodyStream): result of integer, string;
+function StateIndex(StreamValue: Types2.BodyStream): result of integer, string;
 begin
-  var Slot: integer := Std.Http.Handles.BodyStreamSlot(StreamValue);
+  var Slot: integer := Handles.BodyStreamSlot(StreamValue);
   if (Slot < 1) or (not HasState(Slot)) then
-  begin
-    return Error('HTTP body stream handle is invalid')
-  end;
+    begin
+      return Error('HTTP body stream handle is invalid');
+    end;
+  end if;
 
-  return Ok(Slot)
-end;
+  return Ok(Slot);
+end function;
 
 // Closes one indexed stream state and its backing connection.
 //
@@ -49,24 +57,27 @@ end;
 // - `Index`: One-based stream-state slot.
 procedure CloseAt(Index: integer);
 begin
-  mutable var State: StreamState := LoadState(Index);
+  mutable var State: Types.StreamState := LoadState(Index);
   if State.Open then
-  begin
-    case Std.Net.Close(State.Connection) of
-      Ok(_):
-      begin
-      end;
-      Error(_):
-      begin
-      end
-    end;
+    begin
+      case Net.Close(State.Connection) of
+        when Ok(_):
+          begin
+            null;
+          end;
+        when Error(_):
+          begin
+            null;
+          end;
+      end case;
 
-    State.Open := false
-  end;
+      State.Open := false;
+    end;
+  end if;
 
   State.Finished := true;
-  StoreState(Index, State)
-end;
+  StoreState(Index, State);
+end procedure;
 
 // Reads another bounded fragment into an open stream buffer.
 //
@@ -74,32 +85,34 @@ end;
 // - `Index`: One-based stream-state slot.
 function ReadNetwork(Index: integer): result of boolean, string;
 begin
-  mutable var State: StreamState := LoadState(Index);
+  mutable var State: Types.StreamState := LoadState(Index);
   if not State.Open then
-  begin
-    return Ok(false)
-  end;
-
-  case Std.Http.Io.ReadResponseBytes(State.Connection, State.Maximum - State.BytesReceived) of
-    Ok(Bytes):
     begin
-      if Std.Arrays.Length(Bytes) = 0 then
-      begin
-        return Ok(false)
-      end;
-
-      State.BytesReceived := State.BytesReceived + Std.Arrays.Length(Bytes);
-      State.Buffer := Std.Arrays.Concat(State.Buffer, Bytes);
-      StoreState(Index, State);
-      return Ok(true)
+      return Ok(false);
     end;
-    Error(Message):
-    begin
-      CloseAt(Index);
-      return Error(Message)
-    end
-  end
-end;
+  end if;
+
+  case Io.ReadResponseBytes(State.Connection, State.Maximum - State.BytesReceived) of
+    when Ok(Bytes):
+      begin
+        if Arrays.Length(Bytes) = 0 then
+          begin
+            return Ok(false);
+          end;
+        end if;
+
+        State.BytesReceived := State.BytesReceived + Arrays.Length(Bytes);
+        State.Buffer := Arrays.Concat(State.Buffer, Bytes);
+        StoreState(Index, State);
+        return Ok(true);
+      end;
+    when Error(Message):
+      begin
+        CloseAt(Index);
+        return Error(Message);
+      end;
+  end case;
+end function;
 
 // Reads until the buffer contains a requested number of bytes or reaches EOF.
 //
@@ -108,25 +121,27 @@ end;
 // - `Count`: Required buffered byte count.
 function EnsureBytes(Index: integer; Count: integer): result of boolean, string;
 begin
-  while Std.Arrays.Length(LoadState(Index).Buffer) < Count do
-  begin
-    case ReadNetwork(Index) of
-      Ok(ReadMore):
-      begin
-        if not ReadMore then
-        begin
-          return Ok(false)
-        end
-      end;
-      Error(Message):
-      begin
-        return Error(Message)
-      end
-    end
-  end;
+  while Arrays.Length(LoadState(Index).Buffer) < Count do
+    begin
+      case ReadNetwork(Index) of
+        when Ok(ReadMore):
+          begin
+            if not ReadMore then
+              begin
+                return Ok(false);
+              end;
+            end if;
+          end;
+        when Error(Message):
+          begin
+            return Error(Message);
+          end;
+      end case;
+    end;
+  end while;
 
-  return Ok(true)
-end;
+  return Ok(true);
+end function;
 
 // Removes and returns at most a requested number of buffered bytes.
 //
@@ -135,17 +150,18 @@ end;
 // - `Maximum`: Maximum bytes to remove.
 function TakeBuffer(Index: integer; Maximum: integer): array of integer;
 begin
-  mutable var State: StreamState := LoadState(Index);
-  mutable var Count: integer := Std.Arrays.Length(State.Buffer);
+  mutable var State: Types.StreamState := LoadState(Index);
+  mutable var Count: integer := Arrays.Length(State.Buffer);
   if Maximum < Count then
-  begin
-    Count := Maximum
-  end;
-  var Bytes: array of integer := Std.Arrays.Slice(State.Buffer, 0, Count);
-  State.Buffer := Std.Arrays.Slice(State.Buffer, Count, Std.Arrays.Length(State.Buffer) - Count);
+    begin
+      Count := Maximum;
+    end;
+  end if;
+  var Bytes: array of integer := Arrays.Slice(State.Buffer, 0, Count);
+  State.Buffer := Arrays.Slice(State.Buffer, Count, Arrays.Length(State.Buffer) - Count);
   StoreState(Index, State);
-  return Bytes
-end;
+  return Bytes;
+end function;
 
 // Reads one fragment from a fixed-length body.
 //
@@ -155,44 +171,49 @@ end;
 function ReadFixed(Index: integer; Maximum: integer): result of array of integer, string;
 begin
   if LoadState(Index).Remaining = 0 then
-  begin
-    CloseAt(Index);
-    return Ok([])
-  end;
+    begin
+      CloseAt(Index);
+      return Ok([]);
+    end;
+  end if;
 
-  if Std.Arrays.Length(LoadState(Index).Buffer) = 0 then
-  begin
-    case ReadNetwork(Index) of
-      Ok(ReadMore):
-      begin
-        if not ReadMore then
-        begin
-          CloseAt(Index);
-          return Error('HTTP response body is shorter than Content-Length')
-        end
-      end;
-      Error(Message):
-      begin
-        return Error(Message)
-      end
-    end
-  end;
+  if Arrays.Length(LoadState(Index).Buffer) = 0 then
+    begin
+      case ReadNetwork(Index) of
+        when Ok(ReadMore):
+          begin
+            if not ReadMore then
+              begin
+                CloseAt(Index);
+                return Error('HTTP response body is shorter than Content-Length');
+              end;
+            end if;
+          end;
+        when Error(Message):
+          begin
+            return Error(Message);
+          end;
+      end case;
+    end;
+  end if;
   mutable var Count: integer := Maximum;
   if LoadState(Index).Remaining < Count then
-  begin
-    Count := LoadState(Index).Remaining
-  end;
+    begin
+      Count := LoadState(Index).Remaining;
+    end;
+  end if;
   var Bytes: array of integer := TakeBuffer(Index, Count);
-  mutable var State: StreamState := LoadState(Index);
-  State.Remaining := State.Remaining - Std.Arrays.Length(Bytes);
+  mutable var State: Types.StreamState := LoadState(Index);
+  State.Remaining := State.Remaining - Arrays.Length(Bytes);
   StoreState(Index, State);
   if State.Remaining = 0 then
-  begin
-    CloseAt(Index)
-  end;
+    begin
+      CloseAt(Index);
+    end;
+  end if;
 
-  return Ok(Bytes)
-end;
+  return Ok(Bytes);
+end function;
 
 // Reads one fragment from a connection-delimited body.
 //
@@ -201,26 +222,28 @@ end;
 // - `Maximum`: Maximum decoded bytes to return.
 function ReadUntilClose(Index: integer; Maximum: integer): result of array of integer, string;
 begin
-  if Std.Arrays.Length(LoadState(Index).Buffer) = 0 then
-  begin
-    case ReadNetwork(Index) of
-      Ok(ReadMore):
-      begin
-        if not ReadMore then
-        begin
-          CloseAt(Index);
-          return Ok([])
-        end
-      end;
-      Error(Message):
-      begin
-        return Error(Message)
-      end
-    end
-  end;
+  if Arrays.Length(LoadState(Index).Buffer) = 0 then
+    begin
+      case ReadNetwork(Index) of
+        when Ok(ReadMore):
+          begin
+            if not ReadMore then
+              begin
+                CloseAt(Index);
+                return Ok([]);
+              end;
+            end if;
+          end;
+        when Error(Message):
+          begin
+            return Error(Message);
+          end;
+      end case;
+    end;
+  end if;
 
-  return Ok(TakeBuffer(Index, Maximum))
-end;
+  return Ok(TakeBuffer(Index, Maximum));
+end function;
 
 // Reads and consumes the next chunk-size line.
 //
@@ -228,42 +251,44 @@ end;
 // - `Index`: One-based stream-state slot.
 function ReadChunkSize(Index: integer): result of integer, string;
 begin
-  mutable var LineEnd: integer := Std.Http.Wire.FindLineEnd(LoadState(Index).Buffer, 0);
+  mutable var LineEnd: integer := Wire.FindLineEnd(LoadState(Index).Buffer, 0);
   while LineEnd < 0 do
-  begin
-    case ReadNetwork(Index) of
-      Ok(ReadMore):
-      begin
-        if not ReadMore then
-        begin
-          CloseAt(Index);
-          return Error('HTTP chunk size line is incomplete')
-        end
-      end;
-      Error(Message):
-      begin
-        return Error(Message)
-      end
-    end;
+    begin
+      case ReadNetwork(Index) of
+        when Ok(ReadMore):
+          begin
+            if not ReadMore then
+              begin
+                CloseAt(Index);
+                return Error('HTTP chunk size line is incomplete');
+              end;
+            end if;
+          end;
+        when Error(Message):
+          begin
+            return Error(Message);
+          end;
+      end case;
 
-    LineEnd := Std.Http.Wire.FindLineEnd(LoadState(Index).Buffer, 0)
-  end;
-  mutable var State: StreamState := LoadState(Index);
-  var LineBytes: array of integer := Std.Arrays.Slice(State.Buffer, 0, LineEnd);
-  State.Buffer := Std.Arrays.Slice(State.Buffer, LineEnd + 2, (Std.Arrays.Length(State.Buffer) - LineEnd) -
-                                                              2);
-  StoreState(Index, State);
-  case Std.Net.Utf8.Decode(LineBytes) of
-    Ok(Line):
-    begin
-      return Std.Http.Wire.ParseChunkSize(Line)
+      LineEnd := Wire.FindLineEnd(LoadState(Index).Buffer, 0);
     end;
-    Error(Message):
-    begin
-      return Error('HTTP chunk size is not ASCII: ' + Message)
-    end
-  end
-end;
+  end while;
+  mutable var State: Types.StreamState := LoadState(Index);
+  var LineBytes: array of integer := Arrays.Slice(State.Buffer, 0, LineEnd);
+  State.Buffer := Arrays.Slice(State.Buffer, LineEnd + 2, (Arrays.Length(State.Buffer) - LineEnd) -
+                                                          2);
+  StoreState(Index, State);
+  case Utf8.Decode(LineBytes) of
+    when Ok(Line):
+      begin
+        return Wire.ParseChunkSize(Line);
+      end;
+    when Error(Message):
+      begin
+        return Error('HTTP chunk size is not ASCII: ' + Message);
+      end;
+  end case;
+end function;
 
 // Reads one decoded fragment from a chunked body.
 //
@@ -273,100 +298,111 @@ end;
 function ReadChunked(Index: integer; Maximum: integer): result of array of integer, string;
 begin
   while true do
-  begin
-    if LoadState(Index).ChunkRemaining > 0 then
     begin
-      if Std.Arrays.Length(LoadState(Index).Buffer) = 0 then
-      begin
-        case ReadNetwork(Index) of
-          Ok(ReadMore):
-          begin
-            if not ReadMore then
+      if LoadState(Index).ChunkRemaining > 0 then
+        begin
+          if Arrays.Length(LoadState(Index).Buffer) = 0 then
+            begin
+              case ReadNetwork(Index) of
+                when Ok(ReadMore):
+                  begin
+                    if not ReadMore then
+                      begin
+                        CloseAt(Index);
+                        return Error('HTTP chunk body is incomplete');
+                      end;
+                    end if;
+                  end;
+                when Error(Message):
+                  begin
+                    return Error(Message);
+                  end;
+              end case;
+            end;
+          end if;
+          mutable var Count: integer := Maximum;
+          if LoadState(Index).ChunkRemaining < Count then
+            begin
+              Count := LoadState(Index).ChunkRemaining;
+            end;
+          end if;
+          var Bytes: array of integer := TakeBuffer(Index, Count);
+          mutable var DataState: Types.StreamState := LoadState(Index);
+          DataState.ChunkRemaining := DataState.ChunkRemaining - Arrays.Length(Bytes);
+          if DataState.ChunkRemaining = 0 then
+            begin
+              DataState.NeedChunkTerminator := true;
+            end;
+          end if;
+
+          StoreState(Index, DataState);
+          return Ok(Bytes);
+        end;
+      end if;
+
+      if LoadState(Index).NeedChunkTerminator then
+        begin
+          case EnsureBytes(Index, 2) of
+            when Ok(Complete):
+              begin
+                if not Complete then
+                  begin
+                    CloseAt(Index);
+                    return Error('HTTP chunk is missing its trailing CRLF');
+                  end;
+                end if;
+              end;
+            when Error(Message):
+              begin
+                return Error(Message);
+              end;
+          end case;
+          mutable var TerminatorState: Types.StreamState := LoadState(Index);
+          if (TerminatorState.Buffer[0] <> 13) or (TerminatorState.Buffer[1] <> 10) then
             begin
               CloseAt(Index);
-              return Error('HTTP chunk body is incomplete')
-            end
-          end;
-          Error(Message):
+              return Error('HTTP chunk is missing its trailing CRLF');
+            end;
+          end if;
+
+          TerminatorState.Buffer := Arrays.Slice(TerminatorState.Buffer, 2, Arrays.Length(TerminatorState.Buffer) -
+                                                                            2);
+          TerminatorState.NeedChunkTerminator := false;
+          StoreState(Index, TerminatorState);
+        end;
+      end if;
+
+      case ReadChunkSize(Index) of
+        when Ok(Size):
           begin
-            return Error(Message)
-          end
-        end
-      end;
-      mutable var Count: integer := Maximum;
-      if LoadState(Index).ChunkRemaining < Count then
-      begin
-        Count := LoadState(Index).ChunkRemaining
-      end;
-      var Bytes: array of integer := TakeBuffer(Index, Count);
-      mutable var DataState: StreamState := LoadState(Index);
-      DataState.ChunkRemaining := DataState.ChunkRemaining - Std.Arrays.Length(Bytes);
-      if DataState.ChunkRemaining = 0 then
-      begin
-        DataState.NeedChunkTerminator := true
-      end;
+            if Size = 0 then
+              begin
+                CloseAt(Index);
+                return Ok([]);
+              end;
+            end if;
 
-      StoreState(Index, DataState);
-      return Ok(Bytes)
-    end;
-
-    if LoadState(Index).NeedChunkTerminator then
-    begin
-      case EnsureBytes(Index, 2) of
-        Ok(Complete):
-        begin
-          if not Complete then
+            if Size > LoadState(Index).Maximum then
+              begin
+                CloseAt(Index);
+                return Error('HTTP chunk exceeds MaxResponseBytes');
+              end;
+            end if;
+            mutable var SizeState: Types.StreamState := LoadState(Index);
+            SizeState.ChunkRemaining := Size;
+            StoreState(Index, SizeState);
+          end;
+        when Error(Message):
           begin
             CloseAt(Index);
-            return Error('HTTP chunk is missing its trailing CRLF')
-          end
-        end;
-        Error(Message):
-        begin
-          return Error(Message)
-        end
-      end;
-      mutable var TerminatorState: StreamState := LoadState(Index);
-      if (TerminatorState.Buffer[0] <> 13) or (TerminatorState.Buffer[1] <> 10) then
-      begin
-        CloseAt(Index);
-        return Error('HTTP chunk is missing its trailing CRLF')
-      end;
-
-      TerminatorState.Buffer := Std.Arrays.Slice(TerminatorState.Buffer, 2, Std.Arrays.Length(TerminatorState.Buffer) -
-                                                                            2);
-      TerminatorState.NeedChunkTerminator := false;
-      StoreState(Index, TerminatorState)
+            return Error(Message);
+          end;
+      end case;
     end;
+  end while;
 
-    case ReadChunkSize(Index) of
-      Ok(Size):
-      begin
-        if Size = 0 then
-        begin
-          CloseAt(Index);
-          return Ok([])
-        end;
-
-        if Size > LoadState(Index).Maximum then
-        begin
-          CloseAt(Index);
-          return Error('HTTP chunk exceeds MaxResponseBytes')
-        end;
-        mutable var SizeState: StreamState := LoadState(Index);
-        SizeState.ChunkRemaining := Size;
-        StoreState(Index, SizeState)
-      end;
-      Error(Message):
-      begin
-        CloseAt(Index);
-        return Error(Message)
-      end
-    end
-  end;
-
-  return Ok([])
-end;
+  return Ok([]);
+end function;
 
 // Creates one body stream after the response head has been parsed.
 //
@@ -378,40 +414,43 @@ end;
 // - `BytesReceived`: Network bytes already counted against the limit.
 // - `Maximum`: Maximum total response bytes.
 public function CreateBody(
-  Connection: Std.Net.Connection;
+  Connection: Net.Connection;
   InitialBody: array of integer;
-  Headers: array of Header;
+  Headers: array of Types2.Header;
   HasBody: boolean;
   BytesReceived: integer;
   Maximum: integer
-): result of Std.Http.Types.BodyStream, string;
+): result of Types2.BodyStream, string;
 begin
   mutable var Mode: integer := 0;
   mutable var Remaining: integer := 0;
   if HasBody then
-  begin
-    case Std.Http.BodyFraming.Select(Headers) of
-      Ok(Value):
-      begin
-        Mode := Value.Mode;
-        Remaining := Value.Remaining
-      end;
-      Error(Message):
-      begin
-        case Std.Net.Close(Connection) of
-          Ok(_):
+    begin
+      case BodyFraming.Select(Headers) of
+        when Ok(Value):
           begin
+            Mode := Value.Mode;
+            Remaining := Value.Remaining;
           end;
-          Error(_):
+        when Error(Message):
           begin
-          end
-        end;
+            case Net.Close(Connection) of
+              when Ok(_):
+                begin
+                  null;
+                end;
+              when Error(_):
+                begin
+                  null;
+                end;
+            end case;
 
-        return Error(Message)
-      end
-    end
-  end;
-  var State: StreamState := record
+            return Error(Message);
+          end;
+      end case;
+    end;
+  end if;
+  var State: Types.StreamState := record
     Connection := Connection;
     Buffer := InitialBody;
     Mode := Mode;
@@ -422,70 +461,77 @@ begin
     Maximum := Maximum;
     Finished := false;
     Open := true;
-  end;
+  end record;
   var Index: integer := ReserveState(State);
   if (not HasBody) or ((Mode = 1) and (Remaining = 0)) then
-  begin
-    CloseAt(Index)
-  end;
+    begin
+      CloseAt(Index);
+    end;
+  end if;
 
-  return Ok(Std.Http.Handles.NewBodyStream(Index))
-end;
+  return Ok(Handles.NewBodyStream(Index));
+end function;
 
 // Reads at most MaxBytes decoded body bytes. An empty array means end of stream.
 //
 // Parameters:
 // - `StreamValue`: Open response-body handle.
 // - `MaxBytes`: Maximum decoded bytes to return.
-public function ReadBody(StreamValue: Std.Http.Types.BodyStream; MaxBytes: integer): result of array of integer, string;
+public function ReadBody(StreamValue: Types2.BodyStream; MaxBytes: integer): result of array of integer, string;
 begin
   if MaxBytes < 1 then
-  begin
-    return Error('HTTP stream MaxBytes must be positive')
-  end;
+    begin
+      return Error('HTTP stream MaxBytes must be positive');
+    end;
+  end if;
 
   case StateIndex(StreamValue) of
-    Ok(Index):
-    begin
-      if LoadState(Index).Finished then
+    when Ok(Index):
       begin
-        return Ok([])
-      end;
+        if LoadState(Index).Finished then
+          begin
+            return Ok([]);
+          end;
+        end if;
 
-      if LoadState(Index).Mode = 1 then
+        if LoadState(Index).Mode = 1 then
+          begin
+            return ReadFixed(Index, MaxBytes);
+          end;
+        end if;
+
+        if LoadState(Index).Mode = 2 then
+          begin
+            return ReadChunked(Index, MaxBytes);
+          end;
+        end if;
+
+        return ReadUntilClose(Index, MaxBytes);
+      end;
+    when Error(Message):
       begin
-        return ReadFixed(Index, MaxBytes)
+        return Error(Message);
       end;
-
-      if LoadState(Index).Mode = 2 then
-      begin
-        return ReadChunked(Index, MaxBytes)
-      end;
-
-      return ReadUntilClose(Index, MaxBytes)
-    end;
-    Error(Message):
-    begin
-      return Error(Message)
-    end
-  end
-end;
+  end case;
+end function;
 
 // Closes a body stream before end of stream.
 //
 // Parameters:
 // - `StreamValue`: Open response-body handle to close.
-public function CloseBody(StreamValue: Std.Http.Types.BodyStream): result of boolean, string;
+public function CloseBody(StreamValue: Types2.BodyStream): result of boolean, string;
 begin
   case StateIndex(StreamValue) of
-    Ok(Index):
-    begin
-      CloseAt(Index);
-      return Ok(true)
-    end;
-    Error(Message):
-    begin
-      return Error(Message)
-    end
-  end
-end;
+    when Ok(Index):
+      begin
+        CloseAt(Index);
+        return Ok(true);
+      end;
+    when Error(Message):
+      begin
+        return Error(Message);
+      end;
+  end case;
+end function;
+
+end unit;

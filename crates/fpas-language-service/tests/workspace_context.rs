@@ -40,7 +40,13 @@ kind = "library"
 include = ["src/**/*.fpas"]
 "#,
     );
-    temp.write("valid/src/valid.fpas", "unit Demo.Valid;\n");
+    temp.write(
+        "valid/src/valid.fpas",
+        r#"unit Demo.Valid;
+end unit;
+
+"#,
+    );
     let invalid_manifest = temp.write("invalid/invalid.fpasprj", "not toml");
     let workspace = temp.write(
         "suite.fpasworkspace",
@@ -89,7 +95,13 @@ projects = ["does-not-exist.fpasprj"]
 include = ["*.fpas"]
 "#,
     );
-    temp.write("main.fpas", "program Missing;\nbegin\nend.\n");
+    temp.write(
+        "main.fpas",
+        r#"program Missing;
+begin null;
+end program;
+"#,
+    );
     let missing_context = WorkspaceContext::load(&missing_dependency);
     assert_eq!(missing_context.kind(), WorkspaceKind::Unavailable);
     assert!(
@@ -102,7 +114,13 @@ include = ["*.fpas"]
 #[test]
 fn source_without_metadata_uses_loose_context() {
     let temp = TempDirectory::new("workspace-loose");
-    let source = temp.write("loose.fpas", "program Loose;\nbegin\nend.\n");
+    let source = temp.write(
+        "loose.fpas",
+        r#"program Loose;
+begin null;
+end program;
+"#,
+    );
 
     let context = WorkspaceContext::load(&source);
 
@@ -114,7 +132,7 @@ fn source_without_metadata_uses_loose_context() {
 #[test]
 fn source_discovery_preserves_invalid_ancestor_manifest_errors() {
     let temp = TempDirectory::new("ancestor-invalid");
-    let source = temp.write("src/main.fpas", "program App; begin end.");
+    let source = temp.write("src/main.fpas", r#"program App; begin null; end program;"#);
     for (extension, text) in [("fpasprj", "[project\n"), ("fpasworkspace", "[workspace\n")] {
         let manifest = temp.write(format!("broken.{extension}"), text);
         let context = WorkspaceContext::load(&source);
@@ -129,7 +147,7 @@ fn source_discovery_preserves_invalid_ancestor_manifest_errors() {
 #[test]
 fn source_discovery_preserves_missing_ancestor_dependency_errors() {
     let temp = TempDirectory::new("ancestor-dependency");
-    let source = temp.write("src/main.fpas", "program App; begin end.");
+    let source = temp.write("src/main.fpas", r#"program App; begin null; end program;"#);
     temp.write("app.fpasprj", "[project]\nname = \"app\"\nkind = \"program\"\nmain = \"src/main.fpas\"\n[dependencies]\nprojects = [\"missing.fpasprj\"]\n[sources]\ninclude = [\"src/*.fpas\"]\n");
     let context = WorkspaceContext::load(&source);
     assert_eq!(context.kind(), WorkspaceKind::Unavailable);
@@ -144,7 +162,7 @@ fn source_discovery_preserves_missing_ancestor_dependency_errors() {
 #[test]
 fn source_discovery_preserves_ambiguous_ancestor_ownership() {
     let temp = TempDirectory::new("ancestor-owners");
-    let source = temp.write("src/main.fpas", "program App; begin end.");
+    let source = temp.write("src/main.fpas", r#"program App; begin null; end program;"#);
     for name in ["one", "two"] {
         temp.write(
             format!("{name}.fpasprj"),

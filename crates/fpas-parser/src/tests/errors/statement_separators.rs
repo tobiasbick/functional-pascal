@@ -4,14 +4,14 @@ use fpas_diagnostics::codes::PARSE_INVALID_STATEMENT_START;
 
 #[test]
 fn program_body_missing_separator_keeps_following_statement() {
-    let (program, errors) = parse_with_errors("program T; begin A := 1 B := 2 end.");
+    let (program, errors) = parse_with_errors("program T; begin A := 1 B := 2; end program;");
 
     assert_eq!(program.body.len(), 2, "body: {:#?}", program.body);
     assert_eq!(
         errors
             .iter()
             .filter_map(ParseDiagnostic::as_parser_error)
-            .filter(|error| error.message.contains("between statements"))
+            .filter(|error| error.message.contains("after the statement"))
             .count(),
         1,
         "diagnostics: {errors:#?}"
@@ -21,9 +21,9 @@ fn program_body_missing_separator_keeps_following_statement() {
 #[test]
 fn statement_list_boundaries_do_not_require_separators() {
     for source in [
-        "program T; begin A := 1 end.",
-        "program T; begin if C then A := 1 else B := 2 end.",
-        "program T; begin repeat A := 1 until Done end.",
+        r#"program T; begin A := 1; end program;"#,
+        r#"program T; begin if C then A := 1; else B := 2; end if; end program;"#,
+        r#"program T; begin repeat A := 1; until Done; end program;"#,
     ] {
         let (_, errors) = parse_with_errors(source);
         assert!(
@@ -36,7 +36,7 @@ fn statement_list_boundaries_do_not_require_separators() {
 #[test]
 fn if_branch_blocks_missing_separators_keep_following_statements() {
     let (program, errors) = parse_with_errors(
-        "program T; begin if C then begin A := 1 B := 2 end else begin C := 3 D := 4 end end.",
+        "program T; begin if C then begin A := 1 B := 2; end; else begin C := 3 D := 4; end; end if; end program;",
     );
 
     let Stmt::If {
@@ -47,10 +47,10 @@ fn if_branch_blocks_missing_separators_keep_following_statements() {
     else {
         panic!("expected if statement, got {:#?}", program.body[0]);
     };
-    let Stmt::Block(then_statements, _) = then_branch.as_ref() else {
+    let Stmt::Block(then_statements, _) = super::first_branch_statement(then_branch) else {
         panic!("expected then block, got {then_branch:#?}");
     };
-    let Stmt::Block(else_statements, _) = else_branch.as_ref() else {
+    let Stmt::Block(else_statements, _) = super::first_branch_statement(else_branch) else {
         panic!("expected else block, got {else_branch:#?}");
     };
     assert_eq!(then_statements.len(), 2);
@@ -59,7 +59,7 @@ fn if_branch_blocks_missing_separators_keep_following_statements() {
         errors
             .iter()
             .filter_map(ParseDiagnostic::as_parser_error)
-            .filter(|error| error.message.contains("between statements"))
+            .filter(|error| error.message.contains("after the statement"))
             .count(),
         2,
         "diagnostics: {errors:#?}"
@@ -69,7 +69,7 @@ fn if_branch_blocks_missing_separators_keep_following_statements() {
 #[test]
 fn repeat_missing_separator_keeps_following_statement() {
     let (program, errors) =
-        parse_with_errors("program T; begin repeat A := 1 B := 2 until Done end.");
+        parse_with_errors("program T; begin repeat A := 1 B := 2; until Done; end program;");
 
     let Stmt::Repeat { body, .. } = &program.body[0] else {
         panic!("expected repeat statement, got {:#?}", program.body[0]);
@@ -79,7 +79,7 @@ fn repeat_missing_separator_keeps_following_statement() {
         errors
             .iter()
             .filter_map(ParseDiagnostic::as_parser_error)
-            .filter(|error| error.message.contains("between statements"))
+            .filter(|error| error.message.contains("after the statement"))
             .count(),
         1,
         "diagnostics: {errors:#?}"
@@ -88,8 +88,9 @@ fn repeat_missing_separator_keeps_following_statement() {
 
 #[test]
 fn case_else_missing_separator_keeps_following_statement() {
-    let (program, errors) =
-        parse_with_errors("program T; begin case X of 1: A := 1; else B := 2 C := 3 end end.");
+    let (program, errors) = parse_with_errors(
+        "program T; begin case X of when 1: A := 1; else B := 2 C := 3; end case; end program;",
+    );
 
     let Stmt::Case {
         else_body: Some(else_body),
@@ -103,7 +104,7 @@ fn case_else_missing_separator_keeps_following_statement() {
         errors
             .iter()
             .filter_map(ParseDiagnostic::as_parser_error)
-            .filter(|error| error.message.contains("between statements"))
+            .filter(|error| error.message.contains("after the statement"))
             .count(),
         1,
         "diagnostics: {errors:#?}"
@@ -112,14 +113,14 @@ fn case_else_missing_separator_keeps_following_statement() {
 
 #[test]
 fn separator_recovery_skips_invalid_tokens_before_next_statement() {
-    let (program, errors) = parse_with_errors("program T; begin A := 1 : B := 2 end.");
+    let (program, errors) = parse_with_errors("program T; begin A := 1 : B := 2; end program;");
 
     assert_eq!(program.body.len(), 2, "body: {:#?}", program.body);
     assert_eq!(
         errors
             .iter()
             .filter_map(ParseDiagnostic::as_parser_error)
-            .filter(|error| error.message.contains("between statements"))
+            .filter(|error| error.message.contains("after the statement"))
             .count(),
         1,
         "diagnostics: {errors:#?}"
@@ -128,7 +129,8 @@ fn separator_recovery_skips_invalid_tokens_before_next_statement() {
 
 #[test]
 fn separator_recovery_resumes_normal_statement_parsing_after_found_semicolon() {
-    let (program, errors) = parse_with_errors("program T; begin A := 1 : ; : ; B := 2 end.");
+    let (program, errors) =
+        parse_with_errors("program T; begin A := 1 : ; : ; B := 2; end program;");
     let parser_errors: Vec<_> = errors
         .iter()
         .filter_map(ParseDiagnostic::as_parser_error)
@@ -138,7 +140,7 @@ fn separator_recovery_resumes_normal_statement_parsing_after_found_semicolon() {
     assert_eq!(
         parser_errors
             .iter()
-            .filter(|error| error.message.contains("between statements"))
+            .filter(|error| error.message.contains("after the statement"))
             .count(),
         1,
         "diagnostics: {parser_errors:#?}"

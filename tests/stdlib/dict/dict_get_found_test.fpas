@@ -1,10 +1,12 @@
 program T;
 
-uses Std.Console, Std.Dictionaries, Std.Options;
+uses Std.Console as Console;
+uses Std.Dictionaries as Dictionaries;
+uses Std.Options as Options;
 
 begin
   var D: dict of string to integer := ['Alice': 30, 'Bob': 25];
-  var R: option of integer := Std.Dictionaries.Get(D, 'Alice');
-  WriteLn(IsSome(R));
-  WriteLn(Unwrap(R))
-end.
+  var R: option of integer := Dictionaries.Get(D, 'Alice');
+  Console.WriteLn(Options.IsSome(R));
+  Console.WriteLn(Options.Unwrap(R));
+end program;

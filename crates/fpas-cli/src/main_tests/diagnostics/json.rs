@@ -31,7 +31,12 @@ fn check_emits_located_compile_records_with_unicode_columns() {
     let main = cwd.join("main.fpas");
     write_text(
         &main,
-        "program Broken;\nuses Std.Console;\nbegin\n  WriteLn('ä😀'); MissingCall()\nend.\n",
+        r#"program Broken;
+uses Std.Console as Console;
+begin
+  Console.WriteLn('ä😀'); MissingCall();
+end program;
+"#,
     );
 
     let (exit_code, stdout, stderr) = support::run_cli_args_and_capture_output(
@@ -55,7 +60,7 @@ fn check_emits_located_compile_records_with_unicode_columns() {
     );
     // `ä` and `😀` each count as one scalar column.
     assert_eq!(record["location"]["start"]["line"], 4);
-    assert_eq!(record["location"]["start"]["column"], 18);
+    assert_eq!(record["location"]["start"]["column"], 26);
     assert!(record["location"]["end"].is_object());
 }
 
@@ -94,7 +99,13 @@ fn run_keeps_program_stdout_and_exit_status_for_runtime_records() {
     let main = cwd.join("main.fpas");
     write_text(
         &main,
-        "program RuntimeFail;\nuses Std.Console;\nbegin\n  WriteLn('before');\n  panic('boom');\nend.\n",
+        r#"program RuntimeFail;
+uses Std.Console as Console;
+begin
+  Console.WriteLn('before');
+  panic('boom');
+end program;
+"#,
     );
 
     let (exit_code, stdout, stderr) = support::run_cli_args_and_capture_output(
@@ -119,8 +130,20 @@ fn project_warnings_are_warning_records() {
         &project_file,
         "[project]\nname = \"app\"\nkind = \"program\"\nmain = \"src/main.fpas\"\n\n[sources]\ninclude = [\"src/util.fpas\", \"src/*.fpas\"]\n",
     );
-    write_text(&cwd.join("src/main.fpas"), "program Main;\nbegin\nend.\n");
-    write_text(&cwd.join("src/util.fpas"), "unit App.Util;\n");
+    write_text(
+        &cwd.join("src/main.fpas"),
+        r#"program Main;
+begin null;
+end program;
+"#,
+    );
+    write_text(
+        &cwd.join("src/util.fpas"),
+        r#"unit App.Util;
+end unit;
+
+"#,
+    );
 
     let (exit_code, _, stderr) = support::run_cli_args_and_capture_output(
         &args(&[
@@ -144,11 +167,21 @@ fn test_command_emits_only_records_and_keeps_the_json_report_on_stdout() {
     let cwd = create_temp_dir("json-test");
     write_text(
         &cwd.join("fail_test.fpas"),
-        "program F;\nuses Std.Test;\nbegin\n  AssertTrue(false)\nend.\n",
+        r#"program F;
+uses Std.Test as Test;
+begin
+  Test.AssertTrue(false);
+end program;
+"#,
     );
     write_text(
         &cwd.join("pass_test.fpas"),
-        "program P;\nuses Std.Test;\nbegin\n  AssertTrue(true)\nend.\n",
+        r#"program P;
+uses Std.Test as Test;
+begin
+  Test.AssertTrue(true);
+end program;
+"#,
     );
 
     for jobs in ["1", "2"] {
@@ -210,7 +243,14 @@ fn argument_errors_use_the_requested_format() {
 fn text_and_json_report_the_same_code_and_message() {
     let cwd = create_temp_dir("json-parity");
     let main = cwd.join("main.fpas");
-    write_text(&main, "program Broken;\nbegin\n  MissingCall()\nend.\n");
+    write_text(
+        &main,
+        r#"program Broken;
+begin
+  MissingCall();
+end program;
+"#,
+    );
     let path = main.to_string_lossy().into_owned();
 
     let (_, _, text) = support::run_cli_args_and_capture_output(&args(&["check", &path]), &cwd);

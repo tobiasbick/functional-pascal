@@ -53,7 +53,12 @@ include = ["Std/**/*.fpas"]
         );
         temp.write(
             format!("{root}/Std/Shared.fpas"),
-            "unit Std.Shared;\n\npublic type SharedValue = integer;\n",
+            r#"unit Std.Shared;
+
+  public type SharedValue = integer;
+end unit;
+
+"#,
         );
     }
     let source = temp.join("repository/lib/Std/Shared.fpas");
@@ -173,7 +178,14 @@ fn loose_program_analysis_resolves_the_source_standard_library() {
     let temp = TempDirectory::new("loose-standard-library");
     let source = temp.write(
         "standalone.fpas",
-        "program Standalone;\n\nuses Std.Tui;\n\nbegin\n  var Palette: TuiPalette := TuiPalette.Default()\nend.\n",
+        r#"program Standalone;
+
+uses Std.Tui as Tui;
+
+begin
+  var Palette: Tui.TuiPalette := Tui.TuiPalette.Default();
+end program;
+"#,
     );
     let mut service =
         LanguageService::load_with_standard_library(temp.path(), &repository_root.join("lib"))
@@ -236,7 +248,15 @@ include = ["src/**/*.fpas"]
     );
     let core = temp.write(
         "repository/core/src/api.fpas",
-        "unit Demo.Api;\n\npublic function Answer(): integer;\nbegin\n  return 42\nend;\n",
+        r#"unit Demo.Api;
+
+public function Answer(): integer;
+begin
+  return 42;
+end function;
+end unit;
+
+"#,
     );
     temp.write(
         "repository/app/app.fpasprj",
@@ -254,7 +274,14 @@ include = ["src/**/*.fpas"]
     );
     let main = temp.write(
         "repository/app/src/main.fpas",
-        "program App;\n\nuses Demo.Api;\n\nbegin\n  var Value: integer := Answer()\nend.\n",
+        r#"program App;
+
+uses Demo.Api as Api;
+
+begin
+  var Value: integer := Api.Answer();
+end program;
+"#,
     );
     let mut service = LanguageService::load(&temp.join("repository"));
     service
@@ -292,7 +319,13 @@ include = ["shared.fpas"]
             ),
         );
     }
-    let source = temp.write("repository/shared/shared.fpas", "unit Demo.Shared;\n");
+    let source = temp.write(
+        "repository/shared/shared.fpas",
+        r#"unit Demo.Shared;
+end unit;
+
+"#,
+    );
     let mut service = LanguageService::load(&temp.join("repository"));
 
     let error = service
@@ -319,7 +352,12 @@ fn loose_files_remain_analyzable_after_a_nested_project_is_loaded() {
     );
     let loose = temp.write(
         "repository/scratch/loose.fpas",
-        "program Loose;\n\nbegin\n  var Value: integer := 1\nend.\n",
+        r#"program Loose;
+
+begin
+  var Value: integer := 1;
+end program;
+"#,
     );
     let mut service = LanguageService::load(&temp.join("repository"));
     service
@@ -355,6 +393,6 @@ include = ["src/**/*.fpas"]
     );
     temp.write(
         format!("{root}/src/{source_name}"),
-        &format!("unit {unit};\n"),
+        &format!("unit {unit};\nend unit;\n"),
     )
 }

@@ -3,5 +3,5 @@ program T;
 // before begin
 begin
   // in body
-  WriteLn('ok')
-end.
+  WriteLn('ok');
+end program;

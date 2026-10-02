@@ -107,16 +107,18 @@ fn body_writes(body: &FuncBody, span: SourceSpan) -> bool {
 
 fn statements_write(statements: &[Stmt], span: SourceSpan) -> bool {
     statements.iter().any(|statement| match statement {
-        Stmt::Block(statements, _) => statements_write(statements, span),
+        Stmt::Block(statements, _) | Stmt::StatementList(statements, _) => statements_write(statements, span),
         Stmt::Assign { target, .. } => target.parts.iter().any(|part| {
             matches!(part, DesignatorPart::Ident(_, part_span) if part_span.diagnostic_span_or_synthetic() == span)
         }),
         Stmt::If {
             then_branch,
+            elsif_branches,
             else_branch,
             ..
         } => {
             statements_write(std::slice::from_ref(then_branch), span)
+                || elsif_branches.iter().any(|(_, body)| statements_write(std::slice::from_ref(body), span))
                 || else_branch.as_ref().is_some_and(|else_branch| {
                     statements_write(std::slice::from_ref(else_branch), span)
                 })
@@ -134,7 +136,7 @@ fn statements_write(statements: &[Stmt], span: SourceSpan) -> bool {
             statements_write(std::slice::from_ref(body), span)
         }
         Stmt::Repeat { body, .. } => statements_write(body, span),
-        Stmt::Var(_)
+        Stmt::Null(_) | Stmt::Var(_)
         | Stmt::MutableVar(_)
         | Stmt::Return(_, _)
         | Stmt::Panic(_, _)

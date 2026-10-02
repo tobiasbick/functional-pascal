@@ -7,23 +7,25 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`type_params`, `ty
 ## Generic functions and procedures
 
 ```pascal
+uses Std.Console as Console;
+
 function Identity<T>(Value: T): T;
 begin
-  return Value
-end;
+  return Value;
+end function;
 
 procedure PrintValue<T>(Value: T);
 begin
-  WriteLn(Value)
-end;
+  Console.WriteLn(Value);
+end procedure;
 ```
 
 Type arguments are inferred from the call-site arguments — no explicit instantiation is needed:
 
 ```pascal
-var
-  X: integer := Identity(42);    // T inferred as integer
-  S: string  := Identity('hi');  // T inferred as string
+var X: integer := Identity(42); // T inferred as integer
+var S: string := Identity('hi');
+
 ```
 
 ## Generic record methods
@@ -31,36 +33,38 @@ var
 Record methods declare type parameters in the method header; those parameters are scoped to the method.
 
 ```pascal
-type
-  Box = record
-    Value: integer;
+uses Std.Conv as Conv;
 
-    function Map<R>(Self: Box; F: function(X: integer): R): R;
-    begin
-      return F(Self.Value)
-    end;
-  end;
+type Box = record
+  Value: integer;
+
+  function Map<R>(Self: Box; F: function(X: integer): R): R;
+  begin
+    return F(Self.Value);
+  end function;
+end record;
 
 function ToText(X: integer): string;
 begin
-  return 'value=' + IntToStr(X)
-end;
+  return 'value=' + Conv.IntToStr(X);
+end function;
 
-var
-  B: Box := record Value := 42; end;
-  S: string := B.Map(ToText);   // R inferred as string
+var B: Box := record
+  Value := 42;
+end record;
+var S: string := B.Map(ToText);
 ```
 
 Method-level type parameters may also use constraints:
 
 ```pascal
-type
-  Accumulator = record
-    function Add<T: Numeric>(Self: Accumulator; Extra: T): T;
-    begin
-      return Extra
-    end;
-  end;
+type Accumulator = record
+  function Add<T: Numeric>(Self: Accumulator; Extra: T): T;
+  begin
+    return Extra;
+  end function;
+end record;
+
 ```
 
 ## Implementation
@@ -87,21 +91,25 @@ Type parameters can be constrained to require specific capabilities from the con
 ```pascal
 function Max<T: Comparable>(A: T; B: T): T;
 begin
-  if A > B then return A else return B
-end;
+  if A > B then
+    return A;
+  else
+    return B;
+  end if;
+end function;
 
 function Add<T: Numeric>(A: T; B: T): T;
 begin
-  return A + B
-end;
+  return A + B;
+end function;
+
 ```
 
 Constraint violations at call sites are compile-time errors:
 
 ```pascal
-var
-  M: integer := Max(3, 7);    // Valid — integer is Comparable
-// var Bad := Max([1], [2]);   ← compile error: array is not Comparable
+var M: integer := Max(3, 7);
+
 ```
 
 ## See also

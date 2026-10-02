@@ -33,7 +33,7 @@ impl Checker {
         span: Span,
         allow_procedure_result: bool,
     ) -> CallResolution {
-        let name = Self::resolve_designator_name(designator);
+        let name = self.resolve_designator_name(designator);
         self.ensure_fq_std_unit_loaded(&name);
 
         if let Some(symbol) = self.scopes.lookup(&name) {
@@ -106,7 +106,7 @@ impl Checker {
         }
         match self.resolve_call_target(call_expr, designator, args, span, false) {
             CallResolution::Symbol { kind, ty } => {
-                let name = Self::resolve_designator_name(designator);
+                let name = self.resolve_designator_name(designator);
                 self.check_known_call_symbol(
                     Self::expr_lookup_key(call_expr),
                     &name,
@@ -131,15 +131,14 @@ impl Checker {
         span: Span,
     ) -> Ty {
         let dispatch = self.builtin_std_dispatch_name(name);
+        if symbol_kind == SymbolKind::EnumVariantConstructor {
+            return self.check_enum_variant_constructor_call(name, &symbol_ty, args, span);
+        }
         if dispatch.starts_with("Std.") {
             self.intrinsic_calls.insert(call_key, dispatch.clone());
         }
         if symbol_kind == SymbolKind::BuiltinStd {
             return crate::std_registry::check_builtin_std_call(self, &dispatch, args, span);
-        }
-
-        if symbol_kind == SymbolKind::EnumVariantConstructor {
-            return self.check_enum_variant_constructor_call(name, &symbol_ty, args, span);
         }
 
         match &symbol_ty {

@@ -1,36 +1,46 @@
 // Local stack drain; each timed iteration includes array construction.
 program ArrayPopBenchmark;
 
-uses Std.Args, Std.Console, Std.Conv, Std.Time, Std.Arrays;
+uses Std.Args as Args;
+uses Std.Console as Console;
+uses Std.Conv as Conv;
+uses Std.Time as Time;
+uses Std.Arrays as Arrays;
 
 begin
-  if ParamCount() <> 2 then
-  begin
-    panic('expected ITERATIONS SIZE')
-  end;
-  var Iterations: integer := StrToInt(ParamStr(0));
-  var Size: integer := StrToInt(ParamStr(1));
-  if (Iterations < 1) or (Size < 1) then
-  begin
-    panic('arguments must be positive')
-  end;
-  var Started: integer := MonotonicMillis();
-  for Iteration: integer := 1 to Iterations do
-  begin
-    mutable var Values: array of integer := Std.Arrays.Fill(7, Size);
-    for Index: integer := 1 to Size do
+  if Args.ParamCount() <> 2 then
     begin
-      if Std.Arrays.Pop(Values) <> 7 then
-      begin
-        panic('popped value')
-      end
+      panic('expected ITERATIONS SIZE');
     end;
-
-    if Std.Arrays.Length(Values) <> 0 then
+  end if;
+  var Iterations: integer := Conv.StrToInt(Args.ParamStr(0));
+  var Size: integer := Conv.StrToInt(Args.ParamStr(1));
+  if (Iterations < 1) or (Size < 1) then
     begin
-      panic('drain length')
-    end
-  end;
+      panic('arguments must be positive');
+    end;
+  end if;
+  var Started: integer := Time.MonotonicMillis();
+  for Iteration: integer := 1 to Iterations do
+    begin
+      mutable var Values: array of integer := Arrays.Fill(7, Size);
+      for Index: integer := 1 to Size do
+        begin
+          if Arrays.Pop(Values) <> 7 then
+            begin
+              panic('popped value');
+            end;
+          end if;
+        end;
+      end for;
 
-  WriteLn(('elapsed: ' + IntToStr(ElapsedMillis(Started))) + ' ms')
-end.
+      if Arrays.Length(Values) <> 0 then
+        begin
+          panic('drain length');
+        end;
+      end if;
+    end;
+  end for;
+
+  Console.WriteLn(('elapsed: ' + Conv.IntToStr(Time.ElapsedMillis(Started))) + ' ms');
+end program;

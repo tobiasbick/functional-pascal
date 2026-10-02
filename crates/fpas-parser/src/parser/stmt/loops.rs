@@ -17,7 +17,8 @@ impl Parser {
         if self.eat(&Token::In) {
             let iterable = self.parse_expression();
             self.expect(&Token::Do);
-            let body = Box::new(self.parse_statement());
+            let body = self.parse_statement_body();
+            self.expect_named_end(&Token::For);
             return Stmt::ForIn {
                 var_name,
                 var_type,
@@ -49,7 +50,8 @@ impl Parser {
 
         let end_expr = self.parse_expression();
         self.expect(&Token::Do);
-        let body = Box::new(self.parse_statement());
+        let body = self.parse_statement_body();
+        self.expect_named_end(&Token::For);
 
         Stmt::For {
             var_name,
@@ -67,7 +69,8 @@ impl Parser {
         self.advance();
         let condition = self.parse_expression();
         self.expect(&Token::Do);
-        let body = Box::new(self.parse_statement());
+        let body = self.parse_statement_body();
+        self.expect_named_end(&Token::While);
         Stmt::While {
             condition,
             body,

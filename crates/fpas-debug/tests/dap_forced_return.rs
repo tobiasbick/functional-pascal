@@ -12,18 +12,18 @@ use serde_json::{Value, json};
 const SOURCE: &str = include_str!("../../../tests/debugger/fixtures/forced_return.fpas");
 const RECOVERY_SOURCE: &str = r#"program DebuggerRecovery;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 function Fail(): integer;
 begin
   panic('boom');
-  return 1
-end;
+  return 1;
+end function;
 
 begin
   var Value: integer := Fail();
-  WriteLn(Value)
-end.
+  Console.WriteLn(Value);
+end program;
 "#;
 
 fn server() -> DapServer {

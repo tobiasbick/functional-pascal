@@ -11,47 +11,49 @@ fn run_cli_assigns_and_owner_unit_raises_record_event() {
     support::write_program_project_file(&project_file, "src/main.fpas", &["src/*.fpas"]);
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;
-uses App.Widget, Std.Console, Std.Conv;
+        r#"program Main;
+uses App.Widget as Widget; uses Std.Console as Console; uses Std.Conv as Conv;
 procedure Handle(Value: integer);
 begin
-  WriteLn(IntToStr(Value))
-end;
+  Console.WriteLn(Conv.IntToStr(Value));
+end procedure;
 begin
-  var B: Button := Button.Make(14);
+  var B: Widget.Button := Widget.Button.Make(14);
   B.OnClick := Handle;
   if Assigned(B.OnClick) then
-    B.Click();
-  B.OnClick := nil
-end.",
+    B.Click(); end if;
+  B.OnClick := nil;
+end program;"#,
     );
     write_text(
         &cwd.join("src/widget.fpas"),
-        "unit App.Widget;
-public mutable var Slot: Option of procedure(Value: integer) := None;
-public type
-  Button = record
+        r#"unit App.Widget;
+   public mutable var Slot: Option of procedure(Value: integer) := None;
+
+  public type Button = record
     public Id: integer;
     public function ReadOnClick(Self: Button): Option of procedure(Value: integer);
     begin
-      return Slot
-    end;
+      return Slot;
+    end function;
     public procedure WriteOnClick(Self: Button; Handler: Option of procedure(Value: integer));
     begin
-      Slot := Handler
-    end;
+      Slot := Handler;
+    end procedure;
     public event OnClick: procedure(Value: integer) read ReadOnClick write WriteOnClick;
     public procedure Click(Self: Button);
     begin
       if Assigned(Self.OnClick) then
-        Self.OnClick(Self.Id)
-    end;
+        Self.OnClick(Self.Id); end if;
+    end procedure;
     public static function Make(Id: integer): Button;
     begin
-      return record Id := Id; end
-    end;
-  end;
-",
+      return record Id := Id; end record;
+    end function;
+  end record;
+end unit;
+
+"#,
     );
 
     let (exit_code, stdout_output, stderr_output) =

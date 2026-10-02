@@ -2,15 +2,16 @@
 
 program GoStatementExample;
 
-uses Std.Console, Std.Time;
+uses Std.Console as Console;
+uses Std.Time as Time;
 
 procedure LogLine(Message: string);
 begin
-  WriteLn(Message)
-end;
+  Console.WriteLn(Message);
+end procedure;
 
 begin
   go LogLine('from spawned task');
-  WriteLn('main continues immediately');
-  Sleep(50)
-end.
+  Console.WriteLn('main continues immediately');
+  Time.Sleep(50);
+end program;

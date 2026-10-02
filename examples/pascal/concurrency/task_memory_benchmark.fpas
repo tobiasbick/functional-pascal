@@ -5,41 +5,49 @@
 
 program TaskMemoryBenchmark;
 
-uses Std.Args, Std.Arrays, Std.Console, Std.Conv, Std.Tasks, Std.Time;
+uses Std.Args as Args;
+uses Std.Arrays as Arrays;
+uses Std.Console as Console;
+uses Std.Conv as Conv;
+uses Std.Tasks as Tasks2;
+uses Std.Time as Time;
 
-const
-  SleepMillis: integer := 10000;
-  ProgressEvery: integer := 10000;
+const SleepMillis: integer := 10000;
+const ProgressEvery: integer := 10000;
 
 procedure Worker();
 begin
-  Sleep(SleepMillis)
-end;
+  Time.Sleep(SleepMillis);
+end procedure;
 
 begin
-  if ParamCount() <> 1 then
-  begin
-    panic('usage: task_memory_benchmark.fpas -- TASK_COUNT')
-  end;
-  var TaskCount: integer := StrToInt(ParamStr(0));
+  if Args.ParamCount() <> 1 then
+    begin
+      panic('usage: task_memory_benchmark.fpas -- TASK_COUNT');
+    end;
+  end if;
+  var TaskCount: integer := Conv.StrToInt(Args.ParamStr(0));
   if TaskCount < 1 then
-  begin
-    panic('TASK_COUNT must be positive')
-  end;
+    begin
+      panic('TASK_COUNT must be positive');
+    end;
+  end if;
 
-  WriteLn(('spawning ' + IntToStr(TaskCount)) + ' tasks');
-  var Started: integer := MonotonicMillis();
+  Console.WriteLn(('spawning ' + Conv.IntToStr(TaskCount)) + ' tasks');
+  var Started: integer := Time.MonotonicMillis();
   mutable var Tasks: array of task := [];
   for I: integer := 1 to TaskCount do
-  begin
-    Push(Tasks, go Worker());
-    if I mod ProgressEvery = 0 then
     begin
-      WriteLn('spawned ' + IntToStr(I))
-    end
-  end;
+      Arrays.Push(Tasks, go Worker());
+      if I mod ProgressEvery = 0 then
+        begin
+          Console.WriteLn('spawned ' + Conv.IntToStr(I));
+        end;
+      end if;
+    end;
+  end for;
 
-  WriteLn('all tasks spawned; waiting');
-  WaitAll(Tasks);
-  WriteLn(('completed in ' + IntToStr(ElapsedMillis(Started))) + ' ms')
-end.
+  Console.WriteLn('all tasks spawned; waiting');
+  Tasks2.WaitAll(Tasks);
+  Console.WriteLn(('completed in ' + Conv.IntToStr(Time.ElapsedMillis(Started))) + ' ms');
+end program;

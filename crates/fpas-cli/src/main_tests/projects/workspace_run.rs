@@ -26,7 +26,11 @@ include = ["src/**/*.fpas"]
     );
     write_text(
         &lib_project.parent().unwrap().join("src/greet.fpas"),
-        "unit Demo.Greet;\npublic const Message: string := 'from lib';\n",
+        r#"unit Demo.Greet;
+  public const Message: string := 'from lib';
+end unit;
+
+"#,
     );
 
     write_text(
@@ -45,7 +49,12 @@ include = ["src/**/*.fpas"]
     );
     write_text(
         &app_project.parent().unwrap().join("src/main.fpas"),
-        "program Hello;\nuses Demo.Greet, Std.Console;\nbegin\n  WriteLn(Message)\nend.\n",
+        r#"program Hello;
+uses Demo.Greet as Greet; uses Std.Console as Console;
+begin
+  Console.WriteLn(Greet.Message);
+end program;
+"#,
     );
 
     let (exit_code, stdout_output, stderr_output) =
@@ -72,7 +81,12 @@ members = ["app/app.fpasprj"]
     support::write_program_project_file(&app_project, "src/main.fpas", &["src/**/*.fpas"]);
     write_text(
         &cwd.join("app/src/main.fpas"),
-        "program Main;\nuses Std.Console;\nbegin\n  WriteLn('workspace')\nend.\n",
+        r#"program Main;
+uses Std.Console as Console;
+begin
+  Console.WriteLn('workspace');
+end program;
+"#,
     );
 
     let (exit_code, stdout_output, stderr_output) =
@@ -115,7 +129,10 @@ include = ["main.fpas"]
         );
         write_text(
             &cwd.join(format!("{name}.fpas")),
-            "program P;\nbegin\nend.\n",
+            r#"program P;
+begin null;
+end program;
+"#,
         );
     }
 
@@ -152,7 +169,13 @@ kind = "library"
 include = ["lib.fpas"]
 "#,
     );
-    write_text(&cwd.join("lib.fpas"), "unit L.Core;\n");
+    write_text(
+        &cwd.join("lib.fpas"),
+        r#"unit L.Core;
+end unit;
+
+"#,
+    );
 
     let (exit_code, _, stderr_output) =
         support::run_cli_args_and_capture_output(&[String::from("run")], &cwd);

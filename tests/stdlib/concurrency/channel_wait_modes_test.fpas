@@ -1,90 +1,93 @@
 program ChannelWaitModesTest;
 
-uses Std.Tasks, Std.Test;
+uses Std.Tasks as Tasks;
+uses Std.Test as Test;
 
 begin
-  var Messages: channel of integer := CreateChannel(1);
-  case TryReceive(Messages) of
-    Ok(MaybeValue):
-    begin
-      case MaybeValue of
-        Some(_):
-        begin
-          Fail('empty channel produced a value')
-        end;
-        None:
-        begin
-        end
-      end
-    end;
-    Error(Message):
-    begin
-      Fail(Message)
-    end
-  end;
+  var Messages: channel of integer := Tasks.CreateChannel(1);
+  case Tasks.TryReceive(Messages) of
+    when Ok(MaybeValue):
+      begin
+        case MaybeValue of
+          when Some(_):
+            begin
+              Test.Fail('empty channel produced a value');
+            end;
+          when None:
+            begin
+              null;
+            end;
+        end case;
+      end;
+    when Error(Message):
+      begin
+        Test.Fail(Message);
+      end;
+  end case;
 
-  case TrySend(Messages, 7) of
-    Ok(Sent):
-    begin
-      AssertTrue(Sent)
-    end;
-    Error(Message):
-    begin
-      Fail(Message)
-    end
-  end;
+  case Tasks.TrySend(Messages, 7) of
+    when Ok(Sent):
+      begin
+        Test.AssertTrue(Sent);
+      end;
+    when Error(Message):
+      begin
+        Test.Fail(Message);
+      end;
+  end case;
 
-  case TrySend(Messages, 8) of
-    Ok(Sent):
-    begin
-      AssertFalse(Sent)
-    end;
-    Error(Message):
-    begin
-      Fail(Message)
-    end
-  end;
+  case Tasks.TrySend(Messages, 8) of
+    when Ok(Sent):
+      begin
+        Test.AssertFalse(Sent);
+      end;
+    when Error(Message):
+      begin
+        Test.Fail(Message);
+      end;
+  end case;
 
-  case ReceiveWithTimeout(Messages, 0) of
-    Ok(Value):
-    begin
-      AssertEquals(7, Value)
-    end;
-    Error(Message):
-    begin
-      Fail(Message)
-    end
-  end;
+  case Tasks.ReceiveWithTimeout(Messages, 0) of
+    when Ok(Value):
+      begin
+        Test.AssertEquals(7, Value);
+      end;
+    when Error(Message):
+      begin
+        Test.Fail(Message);
+      end;
+  end case;
 
-  case ReceiveWithTimeout(Messages, 1) of
-    Ok(_):
-    begin
-      Fail('empty channel did not time out')
-    end;
-    Error(Message):
-    begin
-      AssertEquals('Channel receive timed out', Message)
-    end
-  end;
+  case Tasks.ReceiveWithTimeout(Messages, 1) of
+    when Ok(_):
+      begin
+        Test.Fail('empty channel did not time out');
+      end;
+    when Error(Message):
+      begin
+        Test.AssertEquals('Channel receive timed out', Message);
+      end;
+  end case;
 
-  case Send(Messages, 9) of
-    Ok(_):
-    begin
-    end;
-    Error(Message):
-    begin
-      Fail(Message)
-    end
-  end;
+  case Tasks.Send(Messages, 9) of
+    when Ok(_):
+      begin
+        null;
+      end;
+    when Error(Message):
+      begin
+        Test.Fail(Message);
+      end;
+  end case;
 
-  case SendWithTimeout(Messages, 10, 1) of
-    Ok(_):
-    begin
-      Fail('full channel did not time out')
-    end;
-    Error(Message):
-    begin
-      AssertEquals('Channel send timed out', Message)
-    end
-  end
-end.
+  case Tasks.SendWithTimeout(Messages, 10, 1) of
+    when Ok(_):
+      begin
+        Test.Fail('full channel did not time out');
+      end;
+    when Error(Message):
+      begin
+        Test.AssertEquals('Channel send timed out', Message);
+      end;
+  end case;
+end program;

@@ -77,7 +77,7 @@ export async function run(): Promise<void> {
   await vscode.commands.executeCommand("workbench.action.revertAndCloseActiveEditor");
 
   const messySource =
-    "program Corrected; begin // kept\n var Value:integer:=1 end.";
+    "program Corrected; begin // kept\n var Value:integer:=1; end program;";
   await verifyFormattingKeepsLineEnding(
     extension.extensionPath,
     messySource,
@@ -241,8 +241,8 @@ async function verifyFormattingKeepsLineEnding(
         "",
         "begin",
         "  // kept",
-        "  var Value: integer := 1",
-        "end.",
+        "  var Value: integer := 1;",
+        "end program;",
         ""
       ].join(newline)
     );
@@ -271,7 +271,7 @@ async function verifyExternalProjectChanges(): Promise<void> {
       '[project]\nname = "watch-core"\nkind = "library"\n\n[sources]\ninclude = ["src/**/*.fpas"]\n'
     );
     const declarationSource =
-      "unit Watch.Core;\n\npublic function WatchedValue(): integer;\nbegin return 42 end;\n";
+      "unit Watch.Core;\n\npublic function WatchedValue(): integer;\nbegin return 42; end function;\nend unit;\n\n";
     await fs.writeFile(coreSource, declarationSource);
     await fs.writeFile(
       appManifest,
@@ -279,7 +279,7 @@ async function verifyExternalProjectChanges(): Promise<void> {
     );
     await fs.writeFile(
       appSource,
-      "program WatchApp;\n\nuses Watch.Core;\n\nbegin var First: integer := WatchedValue() end.\n"
+      "program WatchApp;\n\n uses Watch.Core as Core;\n\nbegin var First: integer := Core.WatchedValue(); end program;\n"
     );
 
     const declarationUri = vscode.Uri.file(coreSource);
@@ -296,7 +296,7 @@ async function verifyExternalProjectChanges(): Promise<void> {
 
     await fs.writeFile(
       appSource,
-      "program WatchApp;\n\nuses Watch.Core;\n\nbegin\n  var First: integer := WatchedValue();\n  var Second: integer := WatchedValue()\nend.\n"
+      "program WatchApp;\n\n uses Watch.Core as Core;\n\nbegin\n  var First: integer := Core.WatchedValue();\n  var Second: integer := Core.WatchedValue();\nend program;\n"
     );
     await waitForReferences(declarationUri, position, 3);
   } finally {
@@ -322,14 +322,14 @@ async function verifyWorkspaceNavigation(): Promise<void> {
     );
     await fs.writeFile(
       coreSource,
-      "unit Navigation.Core;\n\npublic type HostPoint = record\n  public X: integer;\nend;\n"
+      "unit Navigation.Core;\n\n  public type HostPoint = record\n  public X: integer;\nend record;\nend unit;\n\n"
     );
     await fs.writeFile(
       path.join(fixtureRoot, "app", "app.fpasprj"),
       '[project]\nname = "navigation-app"\nkind = "program"\nmain = "src/main.fpas"\n\n[dependencies]\nprojects = ["../core/core.fpasprj"]\n\n[sources]\ninclude = ["src/**/*.fpas"]\n'
     );
     const source =
-      "program NavigationApp;\n\nuses Navigation.Core;\n\nmutable var Counter: integer := 0;\n\nbegin\n  Counter := Counter + 1;\n  var Value: HostPoint := record X := Counter; end\nend.\n";
+      "program NavigationApp;\n\n uses Navigation.Core as Core;\n\n  mutable var Counter: integer := 0;\n\nbegin\n  Counter := Counter + 1;\n  var Value: Core.HostPoint := record X := Counter; end record;\nend program;\n";
     await fs.writeFile(appSource, source);
 
     const symbols = await waitForWorkspaceSymbols("HostPoint");

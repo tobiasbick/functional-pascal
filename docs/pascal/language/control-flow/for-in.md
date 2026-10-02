@@ -7,21 +7,23 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`for_in_stmt`).
 Iterates over each element of an array. The loop variable is immutable.
 
 ```pascal
-var
-  Names: array of string := ['Alice', 'Bob', 'Charlie'];
+uses Std.Console as Console;
 
+var Names: array of string := ['Alice', 'Bob', 'Charlie'];
 for Name: string in Names do
-  WriteLn(Name);
+  Console.WriteLn(Name);
+end for;
 ```
 
 The element type must match the array's element type:
 
 ```pascal
-var
-  Scores: array of integer := [10, 20, 30];
+uses Std.Console as Console;
 
+var Scores: array of integer := [10, 20, 30];
 for S: integer in Scores do
-  WriteLn(S);
+  Console.WriteLn(S);
+end for;
 ```
 
 ## Dict key iteration
@@ -29,12 +31,15 @@ for S: integer in Scores do
 Iterates over the **keys** of a `dict of K to V` in insertion order. The loop variable receives each key; values can be looked up via the key inside the body. Requires `uses Std.Dictionaries`.
 
 ```pascal
-uses Std.Dictionaries, Std.Conv;
+uses Std.Console as Console;
 
-var Ages: dict of string to integer := ['Alice': 30, 'Bob': 25];
+uses Std.Dictionaries as Dictionaries;
+uses Std.Conv as Conv;
 
-for Name: string in Ages do
-  WriteLn(Name + ': ' + IntToStr(Ages[Name]));
+  var Ages: dict of string to integer := ['Alice': 30, 'Bob': 25];
+  for Name: string in Ages do
+    Console.WriteLn((Name + ': ') + Conv.IntToStr(Ages[Name]));
+  end for;
 ```
 
 The loop variable type must match the dict's key type. Iterating an empty dict executes the body zero times. `break` and `continue` work as usual.
@@ -42,12 +47,18 @@ The loop variable type must match the dict's key type. Iterating an empty dict e
 This is separate from the `in` membership operator in expressions. In `for K: string in Ages`, `in` introduces iteration. In `'Alice' in Ages`, `in` returns whether the dictionary contains that key.
 
 ```pascal
+uses Std.Console as Console;
+
 // Print only keys whose value exceeds 10
 for K: string in Ages do
-begin
-  if Ages[K] <= 10 then continue;
-  WriteLn(K);
-end;
+  begin
+    if Ages[K] <= 10 then
+      continue;
+    end if;
+
+    Console.WriteLn(K);
+  end;
+end for;
 ```
 
 ## See also

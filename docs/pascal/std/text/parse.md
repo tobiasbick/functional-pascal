@@ -4,17 +4,21 @@ Structured parsing helpers for text input. `Std.Parse` is for callers that want 
 
 ```pascal
 program Example;
-uses Std.Console, Std.Parse, Std.Results;
+
+uses Std.Console as Console;
+uses Std.Parse as Parse;
+uses Std.Results as Results;
+
 begin
-  var Parsed: Result of integer, string := TryInt('42');
-  WriteLn(UnwrapOr(Parsed, 0))
-end.
+  var Parsed: result of integer, string := Parse.TryInt('42');
+  Console.WriteLn(Results.UnwrapOr(Parsed, 0));
+end program;
 ```
 
 
 ## Importing and names
 
-After `uses Std.Parse;` use short names (`TryInt`, `TryReal`, `TryBool`) or qualified names (`Std.Parse.TryInt`, etc.).
+Import with `uses Std.Parse as Parse;`. Access every exported member through `Parse`, for example `Parse.TryInt(...)`. Imports open no short names.
 
 ---
 
@@ -33,8 +37,11 @@ After `uses Std.Parse;` use short names (`TryInt`, `TryReal`, `TryBool`) or qual
 Parses Pascal integer text. Returns `Ok(Value)` on success or `Error(Message)` on invalid text or overflow.
 
 ```pascal
-var R: Result of integer, string := TryInt(' +1_024 ');
-WriteLn(UnwrapOr(R, 0))                       // 1024
+uses Std.Console as Console;
+uses Std.Parse as Parse;
+
+var R: result of integer, string := Parse.TryInt(' +1_024 ');
+Console.WriteLn(UnwrapOr(R, 0)); // 1024
 ```
 
 ---
@@ -44,8 +51,11 @@ WriteLn(UnwrapOr(R, 0))                       // 1024
 Parses Pascal real text. The text must include a fractional part; `1.0`, `-2.5`, and `1_024.0e-2` are valid, while `1e3`, `5.`, `NaN`, and `inf` are not.
 
 ```pascal
-var R: Result of real, string := TryReal('1_024.0e-2');
-WriteLn(UnwrapOr(R, 0.0))                     // 10.24
+uses Std.Console as Console;
+uses Std.Parse as Parse;
+
+var R: result of real, string := Parse.TryReal('1_024.0e-2');
+Console.WriteLn(UnwrapOr(R, 0.0)); // 10.24
 ```
 
 ---
@@ -55,8 +65,11 @@ WriteLn(UnwrapOr(R, 0.0))                     // 10.24
 Parses boolean text. Leading and trailing whitespace is ignored; casing does not matter.
 
 ```pascal
-var R: Result of boolean, string := TryBool(' FALSE ');
-WriteLn(UnwrapOr(R, true))                    // false
+uses Std.Console as Console;
+uses Std.Parse as Parse;
+
+var R: result of boolean, string := Parse.TryBool(' FALSE ');
+Console.WriteLn(UnwrapOr(R, true)); // false
 ```
 
 ---
@@ -66,10 +79,15 @@ WriteLn(UnwrapOr(R, true))                    // false
 `Try*` functions do not raise runtime parse errors. Inspect the result with `Std.Results.IsOk` / `Std.Results.IsError`, recover with `Std.Results.UnwrapOr`, or destructure the result with `case`.
 
 ```pascal
-case TryInt(Input) of
-  Ok(N): WriteLn(N);
-  Error(Message): WriteLn(Message)
-end
+uses Std.Console as Console;
+uses Std.Parse as Parse;
+
+case Parse.TryInt(Input) of
+  when Ok(N):
+    Console.WriteLn(N);
+  when Error(Message):
+    Console.WriteLn(Message);
+end case;
 ```
 
 ## Implementation (contributors)

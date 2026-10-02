@@ -62,14 +62,22 @@ fn import_action(
     })?;
     let owner = candidate.owner?;
     let edit = candidate.additional_edit?;
-    let semantic_edit = SemanticEdit {
+    let import_edit = SemanticEdit {
         span: edit.span,
         new_text: edit.new_text,
     };
-    canonical_after_edit(snapshot.source(), &semantic_edit).then(|| SemanticCodeAction {
+    let qualification = SemanticEdit {
+        span: identifier,
+        new_text: candidate.insert_text,
+    };
+    let new_text = canonical_after_edits(snapshot.source(), &[import_edit, qualification])?;
+    Some(SemanticCodeAction {
         title: format!("Import {owner}"),
         diagnostic: diagnostic.clone(),
-        edits: vec![semantic_edit],
+        edits: vec![SemanticEdit {
+            span: fpas_diagnostics::SourceSpan::new(0, snapshot.source().len(), 1, 1),
+            new_text,
+        }],
     })
 }
 
@@ -113,17 +121,23 @@ fn identifier_byte(value: u8) -> bool {
     value.is_ascii_alphanumeric() || value == b'_'
 }
 
-fn canonical_after_edit(source: &str, edit: &SemanticEdit) -> bool {
-    let end = edit.span.end();
-    if end > source.len()
-        || !source.is_char_boundary(edit.span.offset())
-        || !source.is_char_boundary(end)
-    {
-        return false;
-    }
+fn canonical_after_edits(source: &str, edits: &[SemanticEdit]) -> Option<String> {
     let mut edited = source.to_owned();
-    edited.replace_range(edit.span.offset()..end, &edit.new_text);
+    let mut edits = edits.iter().collect::<Vec<_>>();
+    edits.sort_by_key(|edit| std::cmp::Reverse(edit.span.offset()));
+    for edit in edits {
+        let end = edit.span.end();
+        if end > source.len()
+            || !source.is_char_boundary(edit.span.offset())
+            || !source.is_char_boundary(end)
+        {
+            return None;
+        }
+        edited.replace_range(edit.span.offset()..end, &edit.new_text);
+    }
     let (unit, diagnostics) = parse_compilation_unit(&edited);
-    diagnostics.is_empty()
-        && fpas_fmt::format_source(&edited, &unit).is_ok_and(|formatted| formatted == edited)
+    diagnostics
+        .is_empty()
+        .then(|| fpas_fmt::format_source(&edited, &unit).ok())
+        .flatten()
 }

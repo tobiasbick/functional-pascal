@@ -49,17 +49,17 @@ export async function verifySequenceMutation(
   const lines = [
     "program DebuggerSequenceMutation;",
     "",
-    "uses Std.Console;",
+    " uses Std.Console as Console;",
     "",
     "begin",
     "  mutable var Numbers: array of integer := [1, 2, 3];",
     "  mutable var Text: string := 'A😀B';",
     "  var StopMarker: integer := 0;",
-    "  WriteLn(Numbers[0]);",
-    "  WriteLn(Numbers[1]);",
-    "  WriteLn(Numbers[2]);",
-    "  WriteLn(Text)",
-    "end.",
+    "  Console.WriteLn(Numbers[0]);",
+    "  Console.WriteLn(Numbers[1]);",
+    "  Console.WriteLn(Numbers[2]);",
+    "  Console.WriteLn(Text);",
+    "end program;",
     ""
   ];
   const sourcePath = await writeSource(workspaceRoot, "sequence-mutation", lines);

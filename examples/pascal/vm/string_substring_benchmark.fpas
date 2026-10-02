@@ -1,77 +1,93 @@
 // Measures short, empty, and full slices of long ASCII or Unicode strings.
 program VmStringSubstringBenchmark;
 
-uses Std.Args, Std.Console, Std.Conv, Std.Str, Std.Time;
+uses Std.Args as Args;
+uses Std.Console as Console;
+uses Std.Conv as Conv;
+uses Std.Str as Str;
+uses Std.Time as Time;
 
 function RunSlices(Text: string; UnitText: string; Iterations: integer): integer;
 begin
-  var Count: integer := Std.Str.Length(Text);
-  var Width: integer := Std.Str.Length(UnitText);
+  var Count: integer := Str.Length(Text);
+  var Width: integer := Str.Length(UnitText);
   mutable var Matches: integer := 0;
   for Index: integer := 1 to Iterations do
-  begin
-    if Std.Str.Substring(Text, 0, Width) = UnitText then
     begin
-      Matches := Matches + 1
+      if Str.Substring(Text, 0, Width) = UnitText then
+        begin
+          Matches := Matches + 1;
+        end;
+      end if;
+
+      if Str.Substring(Text, Count div 2, Width) = UnitText then
+        begin
+          Matches := Matches + 1;
+        end;
+      end if;
+
+      if Str.Substring(Text, Count - Width, Width) = UnitText then
+        begin
+          Matches := Matches + 1;
+        end;
+      end if;
+
+      if Str.Substring(Text, Count, 0) = '' then
+        begin
+          Matches := Matches + 1;
+        end;
+      end if;
+
+      if Str.Substring(Text, 0, Count) = Text then
+        begin
+          Matches := Matches + 1;
+        end;
+      end if;
     end;
+  end for;
 
-    if Std.Str.Substring(Text, Count div 2, Width) = UnitText then
-    begin
-      Matches := Matches + 1
-    end;
-
-    if Std.Str.Substring(Text, Count - Width, Width) = UnitText then
-    begin
-      Matches := Matches + 1
-    end;
-
-    if Std.Str.Substring(Text, Count, 0) = '' then
-    begin
-      Matches := Matches + 1
-    end;
-
-    if Std.Str.Substring(Text, 0, Count) = Text then
-    begin
-      Matches := Matches + 1
-    end
-  end;
-
-  return Matches
-end;
+  return Matches;
+end function;
 
 begin
-  if ParamCount() <> 2 then
-  begin
-    panic('usage: string_substring_benchmark.fpas -- ITERATIONS ascii|unicode')
-  end;
-  var Iterations: integer := StrToInt(ParamStr(0));
+  if Args.ParamCount() <> 2 then
+    begin
+      panic('usage: string_substring_benchmark.fpas -- ITERATIONS ascii|unicode');
+    end;
+  end if;
+  var Iterations: integer := Conv.StrToInt(Args.ParamStr(0));
   if Iterations < 1 then
-  begin
-    panic('ITERATIONS must be positive')
-  end;
-  var Mode: string := ParamStr(1);
+    begin
+      panic('ITERATIONS must be positive');
+    end;
+  end if;
+  var Mode: string := Args.ParamStr(1);
   if (Mode <> 'ascii') and (Mode <> 'unicode') then
-  begin
-    panic('mode must be ascii or unicode')
-  end;
+    begin
+      panic('mode must be ascii or unicode');
+    end;
+  end if;
   mutable var UnitText: string := 'abcd';
   if Mode = 'unicode' then
-  begin
-    UnitText := 'aé😀界'
-  end;
-  var Text: string := Std.Str.RepeatStr(UnitText, 8192);
+    begin
+      UnitText := 'aé😀界';
+    end;
+  end if;
+  var Text: string := Str.RepeatStr(UnitText, 8192);
   if RunSlices(Text, UnitText, 100) <> 500 then
-  begin
-    panic('warmup substring mismatch')
-  end;
-  var Started: integer := MonotonicMillis();
+    begin
+      panic('warmup substring mismatch');
+    end;
+  end if;
+  var Started: integer := Time.MonotonicMillis();
   var Matches: integer := RunSlices(Text, UnitText, Iterations);
-  var Elapsed: integer := ElapsedMillis(Started);
+  var Elapsed: integer := Time.ElapsedMillis(Started);
   if Matches <> Iterations * 5 then
-  begin
-    panic('substring result mismatch')
-  end;
+    begin
+      panic('substring result mismatch');
+    end;
+  end if;
 
-  WriteLn(('elapsed: ' + IntToStr(Elapsed)) + ' ms');
-  WriteLn('matches: ' + IntToStr(Matches))
-end.
+  Console.WriteLn(('elapsed: ' + Conv.IntToStr(Elapsed)) + ' ms');
+  Console.WriteLn('matches: ' + Conv.IntToStr(Matches));
+end program;

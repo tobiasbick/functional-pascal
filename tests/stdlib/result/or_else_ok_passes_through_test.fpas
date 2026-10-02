@@ -1,14 +1,15 @@
 program T;
 
-uses Std.Console, Std.Results;
+uses Std.Console as Console;
+uses Std.Results as Results;
 
 function RecoverZero(E: string): result of integer, string;
 begin
-  return Ok(0)
-end;
+  return Ok(0);
+end function;
 
 begin
   var R: result of integer, string := Ok(42);
-  var M: result of integer, string := OrElse(R, RecoverZero);
-  WriteLn(Unwrap(M))
-end.
+  var M: result of integer, string := Results.OrElse(R, RecoverZero);
+  Console.WriteLn(Results.Unwrap(M));
+end program;

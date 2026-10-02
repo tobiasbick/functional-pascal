@@ -1,78 +1,83 @@
 unit Julia.Compute;
 
-uses Std.Tasks, Std.Math, Std.Conv, Std.Arrays;
+uses Std.Tasks as Tasks;
+uses Std.Math as Math;
+uses Std.Conv as Conv;
+uses Std.Arrays as Arrays;
 
-type
-  Complex = record
-    public Re: real;
-    public Im: real;
+type Complex = record
+  public Re: real;
+  public Im: real;
 
-    public static function Create(Re: real; Im: real): Complex;
-    begin
-      return record
-        Re := Re;
-        Im := Im;
-      end
-    end;
+  public static function Create(Re: real; Im: real): Complex;
+  begin
+    return record
+      Re := Re;
+      Im := Im;
+    end record;
+  end function;
 
-    public function Sq(Self: Complex): Complex;
-    begin
-      return record
-        Re := Self.Re * Self.Re - Self.Im * Self.Im;
-        Im := (2.0 * Self.Re) * Self.Im;
-      end
-    end;
+  public function Sq(Self: Complex): Complex;
+  begin
+    return record
+      Re := Self.Re * Self.Re - Self.Im * Self.Im;
+      Im := (2.0 * Self.Re) * Self.Im;
+    end record;
+  end function;
 
-    public function Add(Self: Complex; Other: Complex): Complex;
-    begin
-      return record
-        Re := Self.Re + Other.Re;
-        Im := Self.Im + Other.Im;
-      end
-    end;
+  public function Add(Self: Complex; Other: Complex): Complex;
+  begin
+    return record
+      Re := Self.Re + Other.Re;
+      Im := Self.Im + Other.Im;
+    end record;
+  end function;
 
-    public function MagSq(Self: Complex): real;
-    begin
-      return Self.Re * Self.Re + Self.Im * Self.Im
-    end;
-  end;
+  public function MagSq(Self: Complex): real;
+  begin
+    return Self.Re * Self.Re + Self.Im * Self.Im;
+  end function;
+end record;
 
-public type
-  PixelSample = record
-    public IsInside: boolean;
-    public EscapeValue: real;
-  end;
+public type PixelSample = record
+  public IsInside: boolean;
+  public EscapeValue: real;
+end record;
 
-function Iterate(Z0: Complex; C: Complex; MaxIter: integer; Token: CancellationToken): PixelSample;
+function Iterate(Z0: Complex; C: Complex; MaxIter: integer; Token: Tasks.CancellationToken): PixelSample;
 begin
   var EscapeRadiusSq: real := 256.0;
   mutable var Z: Complex := Z0;
   mutable var N: integer := 0;
   while (N < MaxIter) and (Z.MagSq() <= EscapeRadiusSq) do
-  begin
-    if (N mod 32 = 0) and IsCancellationRequested(Token) then
     begin
-      break
-    end;
+      if (N mod 32 = 0) and Tasks.IsCancellationRequested(Token) then
+        begin
+          break;
+        end;
+      end if;
 
-    Z := Z.Sq().Add(C);
-    N := N + 1
-  end;
+      Z := Z.Sq().Add(C);
+      N := N + 1;
+    end;
+  end while;
 
   if N >= MaxIter then
-  begin
-    return record
-      IsInside := true;
-      EscapeValue := 0.0;
-    end
-  end;
-  var MagnitudeSq: real := Max(Z.MagSq(), 4.0);
-  var Smooth: real := (IntToReal(N) + 1.0) - (Log(Log(MagnitudeSq) * 0.5) / Log(2.0));
+    begin
+      return record
+        IsInside := true;
+        EscapeValue := 0.0;
+      end record;
+    end;
+  end if;
+  var MagnitudeSq: real := Math.Max(Z.MagSq(), 4.0);
+  var Smooth: real := (Conv.IntToReal(N) + 1.0) -
+                      (Math.Log(Math.Log(MagnitudeSq) * 0.5) / Math.Log(2.0));
   return record
     IsInside := false;
     EscapeValue := Smooth;
-  end
-end;
+  end record;
+end function;
 
 // Compute one row, returning an empty array when cancellation is observed.
 public function ComputeRow(
@@ -86,39 +91,46 @@ public function ComputeRow(
   MaxIter: integer;
   Jr: real;
   Ji: real;
-  Token: CancellationToken
+  Token: Tasks.CancellationToken
 ): array of PixelSample;
 begin
   mutable var WidthRange: integer := Width - 1;
   mutable var HeightRange: integer := Height - 1;
   if WidthRange < 1 then
-  begin
-    WidthRange := 1
-  end;
+    begin
+      WidthRange := 1;
+    end;
+  end if;
 
   if HeightRange < 1 then
-  begin
-    HeightRange := 1
-  end;
-  var Wr: real := IntToReal(WidthRange);
-  var Hr: real := IntToReal(HeightRange);
+    begin
+      HeightRange := 1;
+    end;
+  end if;
+  var Wr: real := Conv.IntToReal(WidthRange);
+  var Hr: real := Conv.IntToReal(HeightRange);
   var cy: real := YMax - (Py / Hr) * (YMax - YMin);
   var C: Complex := Complex.Create(Jr, Ji);
   mutable var Row: array of PixelSample := [];
   for Px: integer := 0 to Width - 1 do
-  begin
-    if IsCancellationRequested(Token) then
     begin
-      return []
+      if Tasks.IsCancellationRequested(Token) then
+        begin
+          return [];
+        end;
+      end if;
+      var cx: real := XMin + (Px / Wr) * (XMax - XMin);
+      Arrays.Push(Row, Iterate(Complex.Create(cx, cy), C, MaxIter, Token));
     end;
-    var cx: real := XMin + (Px / Wr) * (XMax - XMin);
-    Push(Row, Iterate(Complex.Create(cx, cy), C, MaxIter, Token))
-  end;
+  end for;
 
-  if IsCancellationRequested(Token) then
-  begin
-    return []
-  end;
+  if Tasks.IsCancellationRequested(Token) then
+    begin
+      return [];
+    end;
+  end if;
 
-  return Row
-end;
+  return Row;
+end function;
+
+end unit;

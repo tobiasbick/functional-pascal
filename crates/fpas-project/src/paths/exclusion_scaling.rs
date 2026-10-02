@@ -7,8 +7,13 @@ fn exclusion_canonicalizations_scale_linearly() {
     fs::create_dir_all(&root).expect("fixture directory");
     for count in [100, 200] {
         for index in 0..count {
-            fs::write(root.join(format!("unit{index:03}.fpas")), "unit Example;")
-                .expect("fixture unit");
+            fs::write(
+                root.join(format!("unit{index:03}.fpas")),
+                r#"unit Example;
+end unit;
+"#,
+            )
+            .expect("fixture unit");
         }
         let exclude = (0..count / 2)
             .map(|index| format!("unit{index:03}.fpas"))

@@ -58,14 +58,14 @@ impl Parser {
 
         self.expect(&Token::Begin);
         let body = self.parse_statement_list();
-        self.expect(&Token::End);
-        let has_terminating_dot = self.expect(&Token::Dot).is_some();
+        self.expect_named_end(&Token::Program);
+        let has_terminator = self.expect(&Token::Semicolon).is_some();
 
         let span = self.span_from(start);
-        if has_terminating_dot {
+        if has_terminator {
             self.reject_trailing_input(
                 "program terminator",
-                "Remove all tokens after the final `end.`.",
+                "Remove all tokens after the final `end program;`.",
             );
         }
         Program {
@@ -87,6 +87,9 @@ impl Parser {
 
         let (uses, declarations) = self.parse_uses_and_declarations(true);
 
+        self.expect_named_end(&Token::Unit);
+        self.expect_semi();
+
         let span = self.span_from(start);
         self.reject_trailing_input(
             "unit declarations",
@@ -100,28 +103,49 @@ impl Parser {
         }
     }
 
-    fn parse_uses_and_declarations(
-        &mut self,
-        allow_visibility: bool,
-    ) -> (Vec<QualifiedId>, Vec<Decl>) {
-        let uses = if self.check(&Token::Uses) {
-            self.parse_uses_clause()
-        } else {
-            Vec::new()
-        };
+    fn parse_uses_and_declarations(&mut self, allow_visibility: bool) -> (Vec<Import>, Vec<Decl>) {
+        let mut uses = Vec::new();
+        while self.check(&Token::Uses) {
+            uses.push(self.parse_import());
+        }
         let declarations = self.parse_declarations(allow_visibility);
         (uses, declarations)
     }
 
-    fn parse_uses_clause(&mut self) -> Vec<QualifiedId> {
+    fn parse_import(&mut self) -> Import {
+        let start = self.current_span();
         self.advance();
-        let mut units = Vec::new();
-        units.push(self.parse_qualified_id());
-        while self.eat(&Token::Comma) {
-            units.push(self.parse_qualified_id());
+        let unit = self.parse_qualified_id();
+        if !self.eat(&Token::As) {
+            self.error_with_code(
+                PARSE_EXPECTED_TOKEN,
+                "Every import requires one explicit alias",
+                "Write one unit per declaration, for example `uses Std.Console as Console;`, then call `Console.WriteLn(...)`.",
+                self.current_span(),
+            );
+        }
+        let (alias, alias_span) = self
+            .expect_ident()
+            .unwrap_or_else(|| self.error_ident(self.current_span()));
+        if self.check(&Token::Comma) {
+            self.error_with_code(
+                PARSE_EXPECTED_TOKEN,
+                "Import declarations cannot contain a comma-separated unit list",
+                "Repeat `uses Unit as Alias;` for each imported unit.",
+                self.current_span(),
+            );
+            while !self.at_end() && !self.check(&Token::Semicolon) {
+                self.advance();
+            }
         }
         self.expect_semi();
-        units
+        Import {
+            parts: unit.parts,
+            alias,
+            unit_span: unit.span,
+            alias_span,
+            span: self.span_from(start),
+        }
     }
 
     /// Parse a dotted identifier path while preserving strong sync tokens on recovery.
@@ -201,6 +225,9 @@ impl Parser {
                 | Token::RBracket
                 | Token::Then
                 | Token::Else
+                | Token::Elsif
+                | Token::When
+                | Token::As
                 | Token::Of
                 | Token::To
                 | Token::Downto

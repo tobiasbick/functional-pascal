@@ -5,8 +5,12 @@
 `true` if `Sub` occurs anywhere in `S`, else `false`.
 
 ```pascal
-if Contains('abc', 'b') then
-  WriteLn('yes')
+uses Std.Console as Console;
+uses Std.Str as Str;
+
+if Str.Contains('abc', 'b') then
+  Console.WriteLn('yes');
+end if;
 ```
 
 ---
@@ -16,7 +20,9 @@ if Contains('abc', 'b') then
 `true` if `S` begins with `Pre`.
 
 ```pascal
-WriteLn(StartsWith('abc', 'ab'))
+uses Std.Console as Console;
+
+Console.WriteLn(StartsWith('abc', 'ab'));
 ```
 
 ---
@@ -26,7 +32,9 @@ WriteLn(StartsWith('abc', 'ab'))
 `true` if `S` ends with `Suf`.
 
 ```pascal
-WriteLn(EndsWith('abc', 'bc'))
+uses Std.Console as Console;
+
+Console.WriteLn(EndsWith('abc', 'bc'));
 ```
 
 ---
@@ -36,7 +44,9 @@ WriteLn(EndsWith('abc', 'bc'))
 Copies `Len` characters starting at `Start`. **Bounds are checked at runtime**; invalid ranges produce a runtime error.
 
 ```pascal
-WriteLn(Substring('Hello', 0, 3))
+uses Std.Console as Console;
+
+Console.WriteLn(Substring('Hello', 0, 3));
 ```
 
 ---
@@ -46,8 +56,10 @@ WriteLn(Substring('Hello', 0, 3))
 Returns the **first** character index of `Sub` in `S`, or **`-1`** if not found.
 
 ```pascal
-WriteLn(IndexOf('aba', 'a'));
-WriteLn(IndexOf('aba', 'z'))
+uses Std.Console as Console;
+
+Console.WriteLn(IndexOf('aba', 'a'));
+Console.WriteLn(IndexOf('aba', 'z'));
 ```
 
 ---
@@ -57,8 +69,10 @@ WriteLn(IndexOf('aba', 'z'))
 Returns the **last** character index of `Sub` in `S`, or **`-1`** if not found.
 
 ```pascal
-WriteLn(LastIndexOf('abcabc', 'abc'))  // 3
-WriteLn(LastIndexOf('abc', 'z'))       // -1
+uses Std.Console as Console;
+
+Console.WriteLn(LastIndexOf('abcabc', 'abc'));  // 3
+Console.WriteLn(LastIndexOf('abc', 'z'));       // -1
 ```
 
 ## See also

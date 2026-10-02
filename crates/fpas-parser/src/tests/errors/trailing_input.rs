@@ -4,7 +4,7 @@ use fpas_diagnostics::codes::PARSE_EXPECTED_TOKEN;
 
 #[test]
 fn identifier_after_program_terminator_is_rejected_without_expanding_program_span() {
-    let valid_source = "program T; begin end.";
+    let valid_source = r#"program T; begin null; end program;"#;
     let (program, errors) = parse_with_errors(&format!("{valid_source} Garbage"));
     let parser_errors: Vec<_> = errors
         .iter()
@@ -23,8 +23,9 @@ fn identifier_after_program_terminator_is_rejected_without_expanding_program_spa
 
 #[test]
 fn second_program_after_terminator_is_rejected_once() {
-    let (program, errors) =
-        parse_with_errors("program First; begin end. program Second; begin end.");
+    let (program, errors) = parse_with_errors(
+        "program First; begin null; end program; program Second; begin null; end program;",
+    );
     let parser_errors: Vec<_> = errors
         .iter()
         .filter_map(ParseDiagnostic::as_parser_error)
@@ -37,7 +38,7 @@ fn second_program_after_terminator_is_rejected_once() {
 
 #[test]
 fn literal_after_program_terminator_is_rejected() {
-    let (program, errors) = parse_with_errors("program T; begin X := 1 end. 42");
+    let (program, errors) = parse_with_errors("program T; begin X := 1; end program; 42");
     let parser_errors: Vec<_> = errors
         .iter()
         .filter_map(ParseDiagnostic::as_parser_error)

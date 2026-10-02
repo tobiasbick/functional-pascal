@@ -39,10 +39,12 @@ fn assert_private_signature_error(source: &str, declaration: &str, private_type:
 #[test]
 fn private_record_function_result_is_rejected() {
     assert_private_signature_error(
-        "unit Demo.ReturnValue;
-         type Hidden = record Value: integer; end;
+        r#"unit Demo.ReturnValue;
+          type Hidden = record Value: integer; end record;
          public function Make(): Hidden;
-         begin return record Value := 1; end end;",
+         begin return record Value := 1; end record; end function;
+end unit;
+"#,
         "Make",
         "Hidden",
     );
@@ -51,10 +53,12 @@ fn private_record_function_result_is_rejected() {
 #[test]
 fn private_enum_procedure_parameter_is_rejected() {
     assert_private_signature_error(
-        "unit Demo.Parameter;
-         type HiddenState = enum Ready; Done; end;
+        r#"unit Demo.Parameter;
+          type HiddenState = enum Ready; Done; end enum;
          public procedure Accept(Value: HiddenState);
-         begin end;",
+         begin null; end procedure;
+end unit;
+"#,
         "Accept",
         "HiddenState",
     );
@@ -63,9 +67,11 @@ fn private_enum_procedure_parameter_is_rejected() {
 #[test]
 fn private_record_public_global_is_rejected() {
     assert_private_signature_error(
-        "unit Demo.Global;
-         type Hidden = record Value: integer; end;
-         public var Current: Hidden := record Value := 1; end;",
+        r#"unit Demo.Global;
+          type Hidden = record Value: integer; end record;
+           public var Current: Hidden := record Value := 1; end record;
+end unit;
+"#,
         "Current",
         "Hidden",
     );
@@ -74,9 +80,11 @@ fn private_record_public_global_is_rejected() {
 #[test]
 fn public_alias_of_private_type_is_rejected() {
     assert_private_signature_error(
-        "unit Demo.Alias;
-         type Hidden = record Value: integer; end;
-         public type Exposed = Hidden;",
+        r#"unit Demo.Alias;
+          type Hidden = record Value: integer; end record;
+           public type Exposed = Hidden;
+end unit;
+"#,
         "Exposed",
         "Hidden",
     );
@@ -85,12 +93,14 @@ fn public_alias_of_private_type_is_rejected() {
 #[test]
 fn private_type_nested_in_callable_collection_is_rejected_once() {
     assert_private_signature_error(
-        "unit Demo.Nested;
-         type Hidden = record Value: integer; end;
+        r#"unit Demo.Nested;
+          type Hidden = record Value: integer; end record;
          public procedure Register(
            Callback: function(Values: array of Hidden): Option of Hidden
          );
-         begin end;",
+         begin null; end procedure;
+end unit;
+"#,
         "Register",
         "Hidden",
     );
@@ -99,9 +109,11 @@ fn private_type_nested_in_callable_collection_is_rejected_once() {
 #[test]
 fn private_type_in_exported_record_layout_is_rejected() {
     assert_private_signature_error(
-        "unit Demo.RecordLayout;
-         type Hidden = record Value: integer; end;
-         public type Wrapper = record HiddenValue: Hidden; end;",
+        r#"unit Demo.RecordLayout;
+          type Hidden = record Value: integer; end record;
+           public type Wrapper = record HiddenValue: Hidden; end record;
+end unit;
+"#,
         "Wrapper",
         "Hidden",
     );
@@ -110,9 +122,11 @@ fn private_type_in_exported_record_layout_is_rejected() {
 #[test]
 fn private_type_in_exported_enum_layout_is_rejected() {
     assert_private_signature_error(
-        "unit Demo.EnumLayout;
-         type Hidden = record Value: integer; end;
-         public type Wrapper = enum Value(Item: Hidden); Empty; end;",
+        r#"unit Demo.EnumLayout;
+          type Hidden = record Value: integer; end record;
+           public type Wrapper = enum Value(Item: Hidden); Empty; end enum;
+end unit;
+"#,
         "Wrapper",
         "Hidden",
     );
@@ -122,10 +136,12 @@ fn private_type_in_exported_enum_layout_is_rejected() {
 fn public_type_in_public_signature_remains_valid() {
     let analysis = analyze_unit(
         &parse_unit(
-            "unit Demo.Valid;
-             public type Visible = record public Value: integer; end;
+            r#"unit Demo.Valid;
+               public type Visible = record public Value: integer; end record;
              public procedure Accept(Values: array of Visible);
-             begin end;",
+             begin null; end procedure;
+end unit;
+"#,
         ),
         &[],
     )
@@ -146,8 +162,10 @@ fn public_type_in_public_signature_remains_valid() {
 fn qualified_import_with_private_local_short_name_remains_valid() {
     let dependency = analyze_unit(
         &parse_unit(
-            "unit Demo.Dependency;
-             public type Hidden = record public Value: integer; end;",
+            r#"unit Demo.Dependency;
+               public type Hidden = record public Value: integer; end record;
+end unit;
+"#,
         ),
         &[],
     )
@@ -156,11 +174,13 @@ fn qualified_import_with_private_local_short_name_remains_valid() {
     .expect("dependency interface must be valid");
     let analysis = analyze_unit(
         &parse_unit(
-            "unit Demo.Consumer;
-             uses Demo.Dependency;
-             type Hidden = record Value: string; end;
-             public procedure Accept(Value: Demo.Dependency.Hidden);
-             begin end;",
+            r#"unit Demo.Consumer;
+uses Demo.Dependency as Dependency;
+              type Hidden = record Value: string; end record;
+             public procedure Accept(Value: Dependency.Hidden);
+             begin null; end procedure;
+end unit;
+"#,
         ),
         &[dependency],
     )

@@ -178,6 +178,7 @@ impl CaptureCollector<'_> {
 
     fn collect_from_stmt(&mut self, stmt: &Stmt) {
         match stmt {
+            Stmt::StatementList(statements, _) => self.collect_statement_list(statements),
             Stmt::Block(stmts, _) => {
                 self.push_bound_scope();
                 self.collect_statement_list(stmts);
@@ -194,17 +195,28 @@ impl CaptureCollector<'_> {
             | Stmt::Go { expr, .. } => {
                 self.collect_from_expr(expr);
             }
-            Stmt::Return(None, _) | Stmt::Break(_) | Stmt::Continue(_) => {}
+            Stmt::Null(_) | Stmt::Return(None, _) | Stmt::Break(_) | Stmt::Continue(_) => {}
             Stmt::If {
                 condition,
                 then_branch,
+                elsif_branches,
                 else_branch,
                 ..
             } => {
                 self.collect_from_expr(condition);
+                self.push_bound_scope();
                 self.collect_from_stmt(then_branch);
+                self.pop_bound_scope();
+                for (condition, body) in elsif_branches {
+                    self.collect_from_expr(condition);
+                    self.push_bound_scope();
+                    self.collect_from_stmt(body);
+                    self.pop_bound_scope();
+                }
                 if let Some(branch) = else_branch {
+                    self.push_bound_scope();
                     self.collect_from_stmt(branch);
+                    self.pop_bound_scope();
                 }
             }
             Stmt::Case {

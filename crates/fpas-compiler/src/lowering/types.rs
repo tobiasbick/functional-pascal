@@ -70,6 +70,18 @@ impl TypeTable {
             let id = table.intern(ty, 1, 1)?;
             table.named.insert(name.to_ascii_lowercase(), id);
         }
+        for (alias, unit) in &metadata.import_aliases {
+            let prefix = format!("{}.", unit.to_ascii_lowercase());
+            let imported = table
+                .named
+                .iter()
+                .filter_map(|(name, id)| {
+                    name.strip_prefix(&prefix)
+                        .map(|member| (format!("{alias}.{member}"), *id))
+                })
+                .collect::<Vec<_>>();
+            table.named.extend(imported);
+        }
         for ty in metadata.expr_types.values() {
             if matches!(ty, Ty::Error | Ty::Named(_)) {
                 continue;

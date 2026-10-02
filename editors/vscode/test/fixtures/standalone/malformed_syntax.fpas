@@ -2,4 +2,4 @@ program MalformedSyntax
 
 begin
   var Value: integer := 1
-end.
+end program;

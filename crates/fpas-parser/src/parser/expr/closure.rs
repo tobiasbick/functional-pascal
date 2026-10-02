@@ -27,7 +27,11 @@ impl Parser {
             None
         };
 
-        let body = self.parse_closure_body();
+        let body = self.parse_closure_body(if is_function {
+            &Token::Function
+        } else {
+            &Token::Procedure
+        });
         Expr::Closure(Box::new(ClosureExpr {
             is_function,
             params,
@@ -38,11 +42,11 @@ impl Parser {
     }
 
     /// Closure body ends with `end` and does not consume a trailing semicolon.
-    fn parse_closure_body(&mut self) -> FuncBody {
+    fn parse_closure_body(&mut self, kind: &Token) -> FuncBody {
         let nested = self.parse_nested_decls();
         self.expect(&Token::Begin);
         let stmts = self.parse_statement_list();
-        self.expect(&Token::End);
+        self.expect_named_end(kind);
         FuncBody::Block { nested, stmts }
     }
 

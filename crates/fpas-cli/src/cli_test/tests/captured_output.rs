@@ -34,11 +34,15 @@ fn run(name: &str, show_output: bool, timeout: Option<Duration>, jobs: usize) ->
     let cwd = create_temp_dir(name);
     write_text(
         &cwd.join("pass_test.fpas"),
-        "program P;\nuses Std.Console;\nbegin WriteLn('passing detail') end.",
+        r#"program P;
+uses Std.Console as Console;
+begin Console.WriteLn('passing detail'); end program;"#,
     );
     write_text(
         &cwd.join("fail_test.fpas"),
-        "program F;\nuses Std.Console, Std.Test;\nbegin WriteLn('failing detail'); AssertEquals(1, 2) end.",
+        r#"program F;
+uses Std.Console as Console; uses Std.Test as Test;
+begin Console.WriteLn('failing detail'); Test.AssertEquals(1, 2); end program;"#,
     );
     let mut stdout = Vec::new();
     let mut stderr = Vec::new();

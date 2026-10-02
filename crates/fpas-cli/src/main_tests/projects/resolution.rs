@@ -5,7 +5,13 @@ fn run_cli_resolves_nested_project_main_entry() {
     let cwd = create_temp_dir("run-nested-project-main-entry");
     let project_file = cwd.join("app.fpasprj");
     support::write_program_project_file(&project_file, "app/main.fpas", &["app/**/*.fpas"]);
-    write_text(&cwd.join("app/main.fpas"), "program Main;\nbegin\nend.\n");
+    write_text(
+        &cwd.join("app/main.fpas"),
+        r#"program Main;
+begin null;
+end program;
+"#,
+    );
 
     let (exit_code, stdout_output, stderr_output) =
         support::run_cli_and_capture_output(&project_file, &cwd);

@@ -4,22 +4,29 @@ JSON parsing and stringification with an explicit Functional Pascal value repres
 
 ```pascal
 program Example;
-uses Std.Console, Std.Json;
+
+uses Std.Console as Console;
+uses Std.Json as Json;
+
 begin
-  var R: Result of JsonValue, string := Parse('{"ok":true}');
+  var R: result of Json.JsonValue, string := Json.Parse('{"ok":true}');
   case R of
-    Ok(Value): WriteLn(Stringify(Value));
-    Error(Message): WriteLn(Message)
-  end
-end.
+    when Ok(Value):
+      Console.WriteLn(Json.Stringify(Value));
+    when Error(Message):
+      Console.WriteLn(Message);
+  end case;
+end program;
 ```
 
 
 ## Importing and names
 
-After `uses Std.Json;` use short names (`JsonValue`, `Parse`, `Stringify`) or qualified names (`Std.Json.JsonValue`, `Std.Json.Parse`, `Std.Json.Stringify`).
+Import with `uses Std.Json as Json;`. Access every exported member through `Json`, for example `Json.Parse(...)`. Imports open no short names.
 
-`JsonValue` is an enum. Use `JsonValue.String('text')`, `JsonValue.ArrayValue([...])`, and similar constructors for new JSON values.
+`JsonValue` is an enum. With `uses Std.Json as Json;`, use
+`Json.JsonValue.String('text')`, `Json.JsonValue.ArrayValue([...])`, and similar
+constructors for new JSON values.
 
 ---
 
@@ -35,16 +42,16 @@ After `uses Std.Json;` use short names (`JsonValue`, `Parse`, `Stringify`) or qu
 
 ```pascal
 type JsonValue = enum
-  Null;
+  NullValue;
   Bool(Value: boolean);
   Number(Value: real);
   String(Value: string);
   ArrayValue(Items: array of JsonValue);
   Object(Fields: dict of string to JsonValue);
-end;
+end enum;
 ```
 
-JSON `null` maps to `JsonValue.Null`. Objects use `dict of string to JsonValue`. Arrays use `array of JsonValue`.
+JSON `null` maps to `JsonValue.NullValue`. Objects use `dict of string to JsonValue`. Arrays use `array of JsonValue`.
 
 ---
 
@@ -61,11 +68,16 @@ Object members become dictionary entries in document order. Rejects duplicate ob
 Parses JSON text. Accepted JSON returns `Ok(JsonValue)`. Invalid JSON returns `Error(Message)` instead of aborting the program.
 
 ```pascal
-var R: Result of JsonValue, string := Std.Json.Parse('[1, true, null]');
+uses Std.Console as Console;
+uses Std.Json as Json;
+
+var R: result of Json.JsonValue, string := Json.Parse('[1, true, null]');
 case R of
-  Ok(Value): WriteLn(Std.Json.Stringify(Value));
-  Error(Message): WriteLn('JSON error: ' + Message)
-end
+  when Ok(Value):
+    Console.WriteLn(Json.Stringify(Value));
+  when Error(Message):
+    Console.WriteLn('JSON error: ' + Message);
+end case;
 ```
 
 ### `Stringify`
@@ -82,13 +94,16 @@ zero stays `-0.0`. JSON does not distinguish these forms, so `Parse` reads eithe
 real value.
 
 ```pascal
-var Value: JsonValue := JsonValue.ArrayValue([
-  JsonValue.Bool(true),
-  JsonValue.Null,
-  JsonValue.String('hi'),
-  JsonValue.Number(1.5)
-]);
-WriteLn(Std.Json.Stringify(Value))  // [true,null,"hi",1.5]
+uses Std.Console as Console;
+uses Std.Json as Json;
+
+var Value: Json.JsonValue := Json.JsonValue.ArrayValue([
+                                               Json.JsonValue.Bool(true),
+                                               Json.JsonValue.NullValue,
+                                               Json.JsonValue.String('hi'),
+                                               Json.JsonValue.Number(1.5)
+                                             ]);
+Console.WriteLn(Json.Stringify(Value)); // [true,null,"hi",1.5]
 ```
 
 Malformed runtime payloads, such as an enum value pretending to be `JsonValue`, raise a runtime error. Normal parse failures should be handled through the `Result` returned by `Parse`.

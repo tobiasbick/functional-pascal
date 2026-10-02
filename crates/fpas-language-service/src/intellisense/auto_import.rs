@@ -3,9 +3,7 @@
 use std::collections::{HashMap, HashSet};
 
 use fpas_diagnostics::SourceSpan;
-use fpas_fmt::format_compilation_unit;
-use fpas_lexer::{Span, Token};
-use fpas_parser::{CompilationUnit, QualifiedId};
+use fpas_lexer::Token;
 
 use super::CompletionEdit;
 use crate::navigation::NavigationDocument;
@@ -15,6 +13,7 @@ pub(super) struct AutoImportCandidate<'a> {
     pub(super) document_index: usize,
     pub(super) symbol: &'a DocumentSymbol,
     pub(super) edit: CompletionEdit,
+    pub(super) alias: String,
 }
 
 pub(super) fn auto_import_candidates<'a>(
@@ -48,10 +47,13 @@ pub(super) fn auto_import_candidates<'a>(
             let [(document_index, symbol)] = matches.as_slice() else {
                 return None;
             };
-            import_edit(target, &documents[*document_index].owner).map(|edit| AutoImportCandidate {
-                document_index: *document_index,
-                symbol,
-                edit,
+            import_edit(target, &documents[*document_index].owner).map(|(edit, alias)| {
+                AutoImportCandidate {
+                    document_index: *document_index,
+                    symbol,
+                    edit,
+                    alias,
+                }
             })
         })
         .collect::<Vec<_>>();
@@ -65,77 +67,47 @@ pub(super) fn auto_import_candidates<'a>(
     candidates
 }
 
-fn import_edit(document: &NavigationDocument, unit: &str) -> Option<CompletionEdit> {
-    let clause = canonical_uses_clause(document, unit)?;
-    let uses_index = document
-        .tokens
-        .iter()
-        .position(|token| matches!(token.token, Token::Uses));
-    if let Some(uses_index) = uses_index {
-        let semicolon = document.tokens[uses_index..]
-            .iter()
-            .find(|token| matches!(token.token, Token::Semicolon))?;
-        let start = document.tokens[uses_index].span.offset;
-        let end = semicolon.span.offset.saturating_add(semicolon.span.length);
-        let current = document.snapshot.source().get(start..end)?;
-        if contains_comment(current) {
-            return None;
-        }
-        return Some(CompletionEdit {
-            span: SourceSpan::new(start, end.saturating_sub(start), 1, 1),
-            new_text: clause,
-        });
+fn import_edit(document: &NavigationDocument, unit: &str) -> Option<(CompletionEdit, String)> {
+    let short = unit.rsplit('.').next()?;
+    let mut alias = short.to_owned();
+    if !matches!(fpas_lexer::lex(&alias).0.first()?.token, Token::Ident(_)) {
+        alias.push_str("Unit");
     }
-
-    let header_semicolon = document
+    let base = alias.clone();
+    let mut suffix = 2;
+    while document.tokens.iter().any(
+        |token| matches!(&token.token, Token::Ident(name) if name.eq_ignore_ascii_case(&alias)),
+    ) {
+        alias = format!("{base}{suffix}");
+        suffix += 1;
+    }
+    let header = document
         .tokens
         .iter()
-        .find(|token| matches!(token.token, Token::Semicolon))?;
-    let insertion = header_semicolon
-        .span
-        .offset
-        .saturating_add(header_semicolon.span.length);
-    let line_end = document.snapshot.source()[insertion..]
+        .find(|token| token.token == Token::Semicolon)?;
+    let mut insertion = document.uses.last().map_or_else(
+        || header.span.offset.checked_add(header.span.length),
+        |import| import.span.offset.checked_add(import.span.length),
+    )?;
+    let source = document.snapshot.source();
+    let line_end = source[insertion..]
         .find('\n')
-        .map_or(document.snapshot.source().len(), |length| {
-            insertion + length
-        });
-    if !document.snapshot.source()[insertion..line_end]
-        .trim()
-        .is_empty()
-    {
-        return None;
+        .map_or(source.len(), |length| insertion + length);
+    if source[insertion..line_end].trim_start().starts_with("//") {
+        insertion = (line_end + 1).min(source.len());
     }
-    Some(CompletionEdit {
+    let edit = CompletionEdit {
         span: SourceSpan::new(insertion, 0, 1, 1),
-        new_text: format!("\n\n{clause}"),
-    })
-}
-
-fn canonical_uses_clause(document: &NavigationDocument, unit: &str) -> Option<String> {
-    let mut compilation = document.snapshot.compilation_unit().clone();
-    let uses = match &mut compilation {
-        CompilationUnit::Program(program) => &mut program.uses,
-        CompilationUnit::Unit(unit) => &mut unit.uses,
+        new_text: format!(
+            "{}uses {unit} as {alias};",
+            if document.uses.is_empty() {
+                "\n\n"
+            } else {
+                "\n"
+            }
+        ),
     };
-    uses.push(QualifiedId {
-        parts: unit.split('.').map(str::to_owned).collect(),
-        span: Span {
-            offset: 0,
-            length: 0,
-            line: 1,
-            column: 1,
-            source_id: 0,
-        },
-    });
-    let formatted = format_compilation_unit(&compilation);
-    let start = formatted.find("uses")?;
-    let end = formatted.get(start..)?.find(';')? + start + 1;
-    formatted.get(start..end).map(str::to_owned)
-}
-
-fn contains_comment(source: &str) -> bool {
-    source.contains("//") || source.contains('{') || source.contains("(*")
+    Some((edit, alias))
 }
 
 fn starts_with(name: &str, prefix: &str) -> bool {

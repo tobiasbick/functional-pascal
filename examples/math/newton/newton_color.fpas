@@ -2,30 +2,38 @@
 
 unit Newton.Color;
 
-uses Std.Console, Std.Math;
+uses Std.Console as Console;
+uses Std.Math as Math;
 
-public function RootColor(Root: integer; Shade: real): Color;
+public function RootColor(Root: integer; Shade: real): Console.Color;
 begin
-  var T: real := Clamp(Shade, 0.2, 1.0);
+  var T: real := Math.Clamp(Shade, 0.2, 1.0);
   if Root = 1 then
-  begin
-    return RgbColor(Trunc(T * 220.0), Trunc(T * 64.0), Trunc(T * 72.0))
-  end
-  else if Root = 2 then
-  begin
-    return RgbColor(Trunc(T * 48.0), Trunc(T * 190.0), Trunc(T * 96.0))
-  end
-  else if Root = 3 then
-  begin
-    return RgbColor(Trunc(T * 64.0), Trunc(T * 96.0), Trunc(T * 220.0))
-  end
+    begin
+      return Console.RgbColor(Math.Trunc(T * 220.0), Math.Trunc(T * 64.0), Math.Trunc(T * 72.0));
+    end;
   else
-  begin
-    return RgbColor(0, 0, 0)
-  end
-end;
+    if Root = 2 then
+      begin
+        return Console.RgbColor(Math.Trunc(T * 48.0), Math.Trunc(T * 190.0), Math.Trunc(T * 96.0));
+      end;
+    else
+      if Root = 3 then
+        begin
+          return Console.RgbColor(Math.Trunc(T * 64.0), Math.Trunc(T * 96.0), Math.Trunc(T * 220.0));
+        end;
+      else
+        begin
+          return Console.RgbColor(0, 0, 0);
+        end;
+      end if;
+    end if;
+  end if;
+end function;
 
-public function InsideColor(): Color;
+public function InsideColor(): Console.Color;
 begin
-  return RgbColor(0, 0, 0)
-end;
+  return Console.RgbColor(0, 0, 0);
+end function;
+
+end unit;

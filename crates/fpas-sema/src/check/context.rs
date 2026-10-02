@@ -202,6 +202,8 @@ pub struct AnalysisMetadata {
     pub intrinsic_calls: IntrinsicCallMap,
     /// Fully resolved named types used to construct deterministic runtime layouts.
     pub named_types: NamedTypeMap,
+    /// Import alias to canonical linked unit identity.
+    pub import_aliases: HashMap<String, String>,
     /// Resolved record method calls keyed by expression or designator identity.
     pub method_calls: MethodCallMap,
     /// Selected free and first-class receiver calls.
@@ -231,6 +233,7 @@ pub struct AnalysisMetadata {
 }
 
 pub struct Checker {
+    pub(in crate::check) type_collection: super::decl::types::collection::TypeCollection,
     pub(crate) scopes: ScopeStack,
     pub(crate) errors: Vec<SemaError>,
     pub(crate) expr_types: ExprTypeMap,
@@ -241,30 +244,18 @@ pub struct Checker {
     pub(crate) fluent_calls: FluentCallMap,
     /// Calls through callable record fields or properties.
     pub(crate) member_value_calls: MemberValueCallMap,
-    /// Imported public symbols grouped by their unqualified name.
-    pub(crate) imported_candidates: HashMap<String, Vec<String>>,
+    pub(crate) import_aliases: HashMap<String, String>,
+    pub(crate) supporting_unit_names: HashSet<String>,
     /// Synthetic receiver expressions already checked as part of a fluent call.
     pub(crate) prechecked_receivers: ExprTypeMap,
     /// Canonical std unit names from `uses` (e.g. `Std.Console`).
     pub(crate) loaded_std_units: HashSet<String>,
     /// All unit names in the current `uses` clause, including source units.
     pub(crate) used_unit_names: HashSet<String>,
-    /// Short names that map to multiple fully-qualified std symbols (ambiguous).
-    pub(crate) ambiguous_imports: HashMap<String, Vec<String>>,
     /// Unqualified enum variant names that map to multiple `Type.Variant` symbols (ambiguous).
     pub(crate) ambiguous_enum_variants: HashMap<String, Vec<String>>,
     /// Canonical short enum variant names registered at the program root without ambiguity.
     pub(crate) enum_short_variant_keys: HashMap<String, String>,
-    /// Unqualified `BuiltinStd` call -> fully qualified name for the polymorphic checker.
-    pub(crate) short_builtin_redirect: HashMap<String, String>,
-    /// Canonical short names inserted at the program root by [`crate::std_registry::register_short_aliases`].
-    pub(crate) std_short_alias_keys: HashSet<String>,
-    /// Canonical short names currently bound to imported source-unit symbols.
-    pub(crate) source_short_alias_keys: HashSet<String>,
-    /// Short-name candidates exported by directly imported source units, keyed canonically.
-    ///
-    /// [`crate::std_registry::register_short_aliases`] merges them with `Std.*` candidates.
-    pub(crate) source_short_candidates: HashMap<String, Vec<(String, crate::scope::Symbol)>>,
     /// Named record type → ordered (field_name, optional_default_expr) pairs.
     pub(crate) record_defaults: RecordDefaultsMap,
     /// `case` label expressions that bind the scrutinee for a guarded scalar arm.
@@ -310,6 +301,7 @@ pub struct Checker {
 impl Checker {
     pub fn new() -> Self {
         Self {
+            type_collection: super::decl::types::collection::TypeCollection::default(),
             scopes: ScopeStack::new(),
             errors: Vec::new(),
             expr_types: ExprTypeMap::new(),
@@ -317,17 +309,13 @@ impl Checker {
             method_calls: MethodCallMap::new(),
             fluent_calls: FluentCallMap::new(),
             member_value_calls: MemberValueCallMap::new(),
-            imported_candidates: HashMap::new(),
+            import_aliases: HashMap::new(),
+            supporting_unit_names: HashSet::new(),
             prechecked_receivers: ExprTypeMap::new(),
             loaded_std_units: HashSet::new(),
             used_unit_names: HashSet::new(),
-            ambiguous_imports: HashMap::new(),
             ambiguous_enum_variants: HashMap::new(),
             enum_short_variant_keys: HashMap::new(),
-            short_builtin_redirect: HashMap::new(),
-            std_short_alias_keys: HashSet::new(),
-            source_short_alias_keys: HashSet::new(),
-            source_short_candidates: HashMap::new(),
             record_defaults: RecordDefaultsMap::new(),
             scalar_case_bindings: ScalarCaseBindingMap::new(),
             closure_infos: ClosureInfoMap::new(),
@@ -342,13 +330,15 @@ impl Checker {
         }
     }
 
-    pub fn finish(self) -> AnalysisMetadata {
+    pub fn finish(mut self) -> AnalysisMetadata {
+        self.report_import_alias_conflicts();
         let named_types = self.scopes.root_types();
         AnalysisMetadata {
             errors: self.errors,
             expr_types: self.expr_types,
             intrinsic_calls: self.intrinsic_calls,
             named_types,
+            import_aliases: self.import_aliases,
             method_calls: self.method_calls,
             fluent_calls: self.fluent_calls,
             member_value_calls: self.member_value_calls,

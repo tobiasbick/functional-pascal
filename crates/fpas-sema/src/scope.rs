@@ -68,6 +68,8 @@ impl Scope {
 #[derive(Debug)]
 pub struct ScopeStack {
     scopes: Vec<Scope>,
+    import_aliases: HashMap<String, Span>,
+    pub(crate) import_alias_conflicts: Vec<(String, Span)>,
     /// Current loop depth (for break/continue validation).
     pub loop_depth: u32,
     /// Current function context (for return validation).
@@ -89,6 +91,8 @@ impl ScopeStack {
     pub fn new() -> Self {
         Self {
             scopes: vec![Scope::new()],
+            import_aliases: HashMap::new(),
+            import_alias_conflicts: Vec::new(),
             loop_depth: 0,
             function_ctx: None,
         }
@@ -109,6 +113,9 @@ impl ScopeStack {
     /// Define a symbol in the current (innermost) scope.
     /// Returns false if already defined in the same scope.
     pub fn define(&mut self, name: &str, symbol: Symbol) -> bool {
+        if self.reject_import_shadow(name, None) {
+            return false;
+        }
         let scope_index = self.scopes.len() - 1;
         Self::define_in_scope(&mut self.scopes[scope_index], name, symbol, None)
     }
@@ -120,6 +127,9 @@ impl ScopeStack {
         symbol: Symbol,
         declaration: Span,
     ) -> bool {
+        if self.reject_import_shadow(name, Some(declaration)) {
+            return false;
+        }
         let scope_index = self.scopes.len() - 1;
         Self::define_in_scope(
             &mut self.scopes[scope_index],
@@ -129,12 +139,28 @@ impl ScopeStack {
         )
     }
 
-    /// Define in the outermost (program) scope. Used for `Std.*` short aliases so nested checking
-    /// (for example inside a routine body) does not attach imports to a transient inner scope.
+    /// Define a linked unit symbol in the outermost (program) scope.
     ///
     /// **Documentation:** `docs/pascal/program-structure/units.md` (from the repository root).
     pub fn define_in_root(&mut self, name: &str, symbol: Symbol) -> bool {
+        if self.reject_import_shadow(name, None) {
+            return false;
+        }
         Self::define_in_scope(&mut self.scopes[0], name, symbol, None)
+    }
+
+    pub(crate) fn reserve_import_alias(&mut self, name: &str, span: Span) {
+        self.import_aliases
+            .insert(canonical_symbol_name(name), span);
+    }
+
+    fn reject_import_shadow(&mut self, name: &str, declaration: Option<Span>) -> bool {
+        let Some(alias_span) = self.import_aliases.get(&canonical_symbol_name(name)) else {
+            return false;
+        };
+        self.import_alias_conflicts
+            .push((name.to_owned(), declaration.unwrap_or(*alias_span)));
+        true
     }
 
     fn define_in_scope(
@@ -158,7 +184,7 @@ impl ScopeStack {
         true
     }
 
-    /// Remove a symbol from the program root scope. Used when rebuilding `Std` short aliases.
+    /// Remove a symbol from the program root scope when an enum short name becomes ambiguous.
     pub fn remove_from_root(&mut self, name: &str) -> bool {
         let canonical_name = canonical_symbol_name(name);
         self.scopes[0].symbols.remove(&canonical_name).is_some()
@@ -214,15 +240,6 @@ impl ScopeStack {
         None
     }
 
-    /// Look up a symbol only in the current (innermost) scope.
-    pub fn lookup_current(&self, name: &str) -> Option<&Symbol> {
-        let canonical_name = canonical_symbol_name(name);
-        self.scopes
-            .last()
-            .and_then(|scope| scope.symbols.get(&canonical_name))
-            .map(|entry| &entry.symbol)
-    }
-
     /// Look up a symbol only in the program root scope.
     pub fn lookup_root(&self, name: &str) -> Option<&Symbol> {
         let canonical_name = canonical_symbol_name(name);
@@ -251,20 +268,6 @@ impl ScopeStack {
             }
         }
         None
-    }
-
-    /// Return all symbol names that start with a given prefix.
-    pub fn names_with_prefix(&self, prefix: &str) -> Vec<String> {
-        let canonical_prefix = canonical_symbol_name(prefix);
-        let mut names = Vec::new();
-        for scope in &self.scopes {
-            for (canonical_name, symbol) in &scope.symbols {
-                if canonical_name.starts_with(&canonical_prefix) {
-                    names.push(symbol.original_name.clone());
-                }
-            }
-        }
-        names
     }
 
     pub(crate) fn root_symbols_with_prefix(&self, prefix: &str) -> Vec<(String, Symbol)> {
@@ -326,7 +329,7 @@ mod tests {
             }
         ));
         assert!(stack.remove_from_current("Offset"));
-        assert!(stack.lookup_current("offset").is_none());
+        assert!(stack.lookup("offset").is_none());
         assert!(!stack.remove_from_current("offset"));
     }
 }

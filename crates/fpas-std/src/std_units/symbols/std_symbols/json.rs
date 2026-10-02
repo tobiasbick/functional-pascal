@@ -1,7 +1,7 @@
 //! `Std.Json` symbol names and registry group.
 
 std_symbol!(STD_JSON_VALUE = std_json!("JsonValue"));
-std_symbol!(STD_JSON_VALUE_NULL = std_json!("JsonValue.Null"));
+std_symbol!(STD_JSON_VALUE_NULL = std_json!("JsonValue.NullValue"));
 std_symbol!(STD_JSON_VALUE_BOOL = std_json!("JsonValue.Bool"));
 std_symbol!(STD_JSON_VALUE_NUMBER = std_json!("JsonValue.Number"));
 std_symbol!(STD_JSON_VALUE_STRING = std_json!("JsonValue.String"));

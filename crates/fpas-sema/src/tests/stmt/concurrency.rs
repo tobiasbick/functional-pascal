@@ -8,13 +8,13 @@ mod groups;
 fn selection_send_rejects_task_bound_values() {
     let errors = check_errors(
         r#"program T;
-uses Std.Tasks;
+uses Std.Tasks as Tasks;
 begin
   mutable var Count: integer := 0;
-  var Work: procedure() := procedure() begin Count := Count + 1 end;
-  var Q: channel of procedure() := CreateChannel(1);
-  SendCase(Q, Work, procedure(R: result of boolean, string) begin end)
-end."#,
+  var Work: procedure() := procedure() begin Count := Count + 1; end procedure;
+  var Q: channel of procedure() := Tasks.CreateChannel(1);
+  Tasks.SendCase(Q, Work, procedure(R: result of boolean, string) begin null; end procedure);
+end program;"#,
     );
     assert!(
         errors
@@ -27,18 +27,18 @@ end."#,
 #[test]
 fn selection_cases_reject_wrong_payload_callback_and_control_types() {
     for call in [
-        "ReceiveCase(Q, procedure(R: result of string, string) begin end)",
-        "SendCase(Q, 'wrong', procedure(R: result of boolean, string) begin end)",
-        "SendCase(Q, 1, procedure(R: result of integer, string) begin end)",
-        "TimerCase(0, function(): integer begin return 1 end)",
-        "TimerCase('wrong', procedure() begin end)",
-        "TaskCase(1, procedure() begin end)",
-        "CancellationCase(CreateCancellationSource(), procedure() begin end)",
-        "Select([1])",
-        "CloseWaitCase(CreateCancellationSource())",
+        "Tasks.ReceiveCase(Q, procedure(R: result of string, string) begin null; end procedure)",
+        "Tasks.SendCase(Q, 'wrong', procedure(R: result of boolean, string) begin null; end procedure)",
+        "Tasks.SendCase(Q, 1, procedure(R: result of integer, string) begin null; end procedure)",
+        "Tasks.TimerCase(0, function(): integer begin return 1; end function)",
+        "Tasks.TimerCase('wrong', procedure() begin null; end procedure)",
+        "Tasks.TaskCase(1, procedure() begin null; end procedure)",
+        "Tasks.CancellationCase(Tasks.CreateCancellationSource(), procedure() begin null; end procedure)",
+        "Tasks.Select([1])",
+        "Tasks.CloseWaitCase(Tasks.CreateCancellationSource())",
     ] {
         let source = format!(
-            "program T; uses Std.Tasks; begin var Q: channel of integer := CreateChannel(1); {call} end."
+            "program T; uses Std.Tasks as Tasks; begin var Q: channel of integer := Tasks.CreateChannel(1); {call}; end program;"
         );
         assert!(
             !check_errors(&source).is_empty(),
@@ -50,44 +50,45 @@ fn selection_cases_reject_wrong_payload_callback_and_control_types() {
 #[test]
 fn controlled_wait_any_checks_control_types_and_arity() {
     for call in [
-        "WaitAnyWithTimeout(Tasks, 'bad')",
-        "WaitAnyWithCancellation(Tasks, CreateCancellationSource())",
-        "WaitAnyWithTimeout(Tasks)",
-        "WaitAnyWithCancellation([1, 2], GetCancellationToken(CreateCancellationSource()))",
+        "Workers.WaitAnyWithTimeout(Handles, 'bad')",
+        "Workers.WaitAnyWithCancellation(Handles, Workers.CreateCancellationSource())",
+        "Workers.WaitAnyWithTimeout(Handles)",
+        "Workers.WaitAnyWithCancellation([1, 2], Workers.GetCancellationToken(Workers.CreateCancellationSource()))",
     ] {
-        let source =
-            format!("program T; uses Std.Tasks; begin var Tasks: array of task := []; {call} end.");
+        let source = format!(
+            "program T; uses Std.Tasks as Workers; begin var Handles: array of task := []; {call}; end program;"
+        );
         assert!(!check_errors(&source).is_empty(), "{call}");
     }
 }
 
 #[test]
 fn wait_any_rejects_non_task_arrays_and_reports_its_own_arity() {
-    let errors = check_errors("program T; uses Std.Tasks; begin WaitAny([1, 2]) end.");
+    let errors = check_errors(
+        r#"program T;  uses Std.Tasks as Tasks; begin Tasks.WaitAny([1, 2]); end program;"#,
+    );
     assert!(
         errors
             .iter()
             .any(|error| error.message.contains("expected `array of task`"))
     );
-    let errors = check_errors("program T; uses Std.Tasks; begin WaitAny() end.");
+    let errors =
+        check_errors(r#"program T;  uses Std.Tasks as Tasks; begin Tasks.WaitAny(); end program;"#);
     assert!(errors.iter().any(|error| error.message.contains("WaitAny")));
 }
 
 #[test]
 fn network_io_cancellation_requires_a_token_not_a_source() {
     let errors = check_errors(
-        "\
-program T;
-uses Std.Net, Std.Tasks;
-procedure Invalid(ConnectionValue: Std.Net.Connection);
-begin
-  Std.Net.ReceiveBytesWithCancellation(ConnectionValue, 1, Std.Tasks.CreateCancellationSource());
-  Std.Net.SendBytesWithCancellation(ConnectionValue, [1], Std.Tasks.CreateCancellationSource());
-  Std.Net.ConnectWithCancellation('unused.invalid', 1, 1000, Std.Tasks.CreateCancellationSource());
-  Std.Net.ConnectTlsWithCancellation('unused.invalid', 1, 1000, Std.Tasks.CreateCancellationSource())
-end;
-begin
-end.",
+        r#"program T;
+uses Std.Net as Net; uses Std.Tasks as Tasks;
+procedure Invalid(ConnectionValue: Net.Connection);
+begin Net.ReceiveBytesWithCancellation(ConnectionValue, 1, Tasks.CreateCancellationSource());
+  Net.SendBytesWithCancellation(ConnectionValue, [1], Tasks.CreateCancellationSource());
+  Net.ConnectWithCancellation('unused.invalid', 1, 1000, Tasks.CreateCancellationSource());
+  Net.ConnectTlsWithCancellation('unused.invalid', 1, 1000, Tasks.CreateCancellationSource());
+end procedure;
+begin null; end program;"#,
     );
     assert_eq!(
         errors
@@ -102,18 +103,17 @@ end.",
 #[test]
 fn go_accepts_procedure_calls_as_tasks() {
     check_ok(
-        "\
-program T;
-uses Std.Tasks;
+        r#"program T;
+uses Std.Tasks as Tasks;
 
 procedure LogAnswer();
-begin
-end;
+begin null;
+end procedure;
 
 begin
   var Tsk: task := go LogAnswer();
-  Std.Tasks.Wait(Tsk)
-end.",
+  Tasks.Wait(Tsk);
+end program;"#,
     );
 }
 
@@ -141,38 +141,36 @@ end.",
 #[test]
 fn task_wait_uses_task_result_type() {
     check_ok(
-        "\
-program T;
-uses Std.Tasks;
+        r#"program T;
+uses Std.Tasks as Tasks;
 
 function Answer(): integer;
 begin
-  return 42
-end;
+  return 42;
+end function;
 
 begin
   var Tsk: task := go Answer();
-  var Value: integer := Std.Tasks.Wait(Tsk)
-end.",
+  var Value: integer := Tasks.Wait(Tsk);
+end program;"#,
     );
 }
 
 #[test]
 fn task_wait_reports_assignment_mismatch() {
     let errors = check_errors(
-        "\
-program T;
-uses Std.Tasks;
+        r#"program T;
+uses Std.Tasks as Tasks;
 
 function Answer(): integer;
 begin
-  return 42
-end;
+  return 42;
+end function;
 
 begin
   var Tsk: task := go Answer();
-  var Value: string := Std.Tasks.Wait(Tsk)
-end.",
+  var Value: string := Tasks.Wait(Tsk);
+end program;"#,
     );
 
     assert!(
@@ -186,18 +184,17 @@ end.",
 #[test]
 fn go_rejects_task_bound_mutable_closure() {
     let errors = check_errors(
-        "\
-program T;
-uses Std.Tasks;
+        r#"program T;
+uses Std.Tasks as Tasks;
 begin
   mutable var Count: integer := 0;
   var Inc: procedure() :=
     procedure()
     begin
-      Count := Count + 1
-    end;
-  go Inc()
-end.",
+      Count := Count + 1;
+    end procedure;
+  go Inc();
+end program;"#,
     );
 
     assert!(
@@ -212,28 +209,26 @@ end.",
 #[test]
 fn typed_channel_operations_preserve_the_element_type() {
     check_ok(
-        "\
-program T;
-uses Std.Tasks;
+        r#"program T;
+uses Std.Tasks as Tasks;
 begin
-  var Messages: channel of integer := CreateChannel(1);
-  var Sent: result of boolean, string := Send(Messages, 42);
-  var Received: result of integer, string := Receive(Messages);
-  CloseChannel(Messages)
-end.",
+  var Messages: channel of integer := Tasks.CreateChannel(1);
+  var Sent: result of boolean, string := Tasks.Send(Messages, 42);
+  var Received: result of integer, string := Tasks.Receive(Messages);
+  Tasks.CloseChannel(Messages);
+end program;"#,
     );
 }
 
 #[test]
 fn channel_send_rejects_the_wrong_element_type() {
     let errors = check_errors(
-        "\
-program T;
-uses Std.Tasks;
+        r#"program T;
+uses Std.Tasks as Tasks;
 begin
-  var Messages: channel of integer := CreateChannel(1);
-  Send(Messages, 'wrong')
-end.",
+  var Messages: channel of integer := Tasks.CreateChannel(1);
+  Tasks.Send(Messages, 'wrong');
+end program;"#,
     );
 
     assert!(
@@ -247,16 +242,15 @@ end.",
 #[test]
 fn channel_wait_modes_preserve_element_and_timeout_types() {
     let errors = check_errors(
-        "\
-program T;
-uses Std.Tasks;
+        r#"program T;
+uses Std.Tasks as Tasks;
 begin
-  var Messages: channel of integer := CreateChannel(1);
-  var Pending: result of option of integer, string := TryReceive(Messages);
-  TrySend(Messages, 'wrong');
-  SendWithTimeout(Messages, 1, 'soon');
-  ReceiveWithTimeout(Messages, 'soon')
-end.",
+  var Messages: channel of integer := Tasks.CreateChannel(1);
+  var Pending: result of option of integer, string := Tasks.TryReceive(Messages);
+  Tasks.TrySend(Messages, 'wrong');
+  Tasks.SendWithTimeout(Messages, 1, 'soon');
+  Tasks.ReceiveWithTimeout(Messages, 'soon');
+end program;"#,
     );
 
     assert_eq!(
@@ -272,15 +266,14 @@ end.",
 #[test]
 fn channel_send_rejects_task_bound_values() {
     let errors = check_errors(
-        "\
-program T;
-uses Std.Tasks;
+        r#"program T;
+uses Std.Tasks as Tasks;
 begin
   mutable var Count: integer := 0;
-  var Work: procedure() := procedure() begin Count := Count + 1 end;
-  var Queue: channel of procedure() := CreateChannel(1);
-  Send(Queue, Work)
-end.",
+  var Work: procedure() := procedure() begin Count := Count + 1; end procedure;
+  var Queue: channel of procedure() := Tasks.CreateChannel(1);
+  Tasks.Send(Queue, Work);
+end program;"#,
     );
 
     assert!(
@@ -294,24 +287,23 @@ end.",
 #[test]
 fn channel_send_rejects_task_bound_values_wrapped_in_aggregates() {
     let errors = check_errors(
-        "\
-program T;
-uses Std.Tasks;
-type WorkBox = record
+        r#"program T;
+uses Std.Tasks as Tasks;
+ type WorkBox = record
   Work: procedure();
-end;
+end record;
 begin
   mutable var Count: integer := 0;
-  var Work: procedure() := procedure() begin Count := Count + 1 end;
-  var ArrayQueue: channel of array of procedure() := CreateChannel(1);
-  var RecordQueue: channel of WorkBox := CreateChannel(1);
-  var ResultQueue: channel of result of procedure(), string := CreateChannel(1);
-  var OptionQueue: channel of option of procedure() := CreateChannel(1);
-  Send(ArrayQueue, [Work]);
-  Send(RecordQueue, record Work := Work; end);
-  Send(ResultQueue, Ok(Work));
-  Send(OptionQueue, Some(Work))
-end.",
+  var Work: procedure() := procedure() begin Count := Count + 1; end procedure;
+  var ArrayQueue: channel of array of procedure() := Tasks.CreateChannel(1);
+  var RecordQueue: channel of WorkBox := Tasks.CreateChannel(1);
+  var ResultQueue: channel of result of procedure(), string := Tasks.CreateChannel(1);
+  var OptionQueue: channel of option of procedure() := Tasks.CreateChannel(1);
+  Tasks.Send(ArrayQueue, [Work]);
+  Tasks.Send(RecordQueue, record Work := Work; end record);
+  Tasks.Send(ResultQueue, Ok(Work));
+  Tasks.Send(OptionQueue, Some(Work));
+end program;"#,
     );
 
     assert_eq!(
@@ -327,22 +319,21 @@ end.",
 #[test]
 fn channel_send_tracks_task_bound_postfix_results_by_selected_type() {
     let errors = check_errors(
-        "\
-program T;
-uses Std.Tasks;
-type WorkBox = record
+        r#"program T;
+uses Std.Tasks as Tasks;
+ type WorkBox = record
   Work: procedure();
   Safe: integer;
-end;
+end record;
 begin
   mutable var Count: integer := 0;
-  var Work: procedure() := procedure() begin Count := Count + 1 end;
-  var Boxed: WorkBox := record Work := Work; Safe := 7; end;
-  var WorkQueue: channel of procedure() := CreateChannel(1);
-  var SafeQueue: channel of integer := CreateChannel(1);
-  Send(WorkQueue, Boxed.Work);
-  Send(SafeQueue, Boxed.Safe)
-end.",
+  var Work: procedure() := procedure() begin Count := Count + 1; end procedure;
+  var Boxed: WorkBox := record Work := Work; Safe := 7; end record;
+  var WorkQueue: channel of procedure() := Tasks.CreateChannel(1);
+  var SafeQueue: channel of integer := Tasks.CreateChannel(1);
+  Tasks.Send(WorkQueue, Boxed.Work);
+  Tasks.Send(SafeQueue, Boxed.Safe);
+end program;"#,
     );
 
     assert_eq!(
@@ -359,33 +350,33 @@ end.",
 fn typed_task_parameters_wait_for_their_declared_result_type() {
     check_ok(
         r#"program T;
-uses Std.Tasks;
+uses Std.Tasks as Tasks;
 function Seven(): integer;
 begin
-  return 7
-end;
+  return 7;
+end function;
 function Doubled(Job: task of integer): integer;
 begin
-  return Wait(Job) * 2
-end;
+  return Tasks.Wait(Job) * 2;
+end function;
 function First(Jobs: array of task of integer): integer;
 begin
-  return Wait(Jobs[WaitAny(Jobs)])
-end;
+  return Tasks.Wait(Jobs[Tasks.WaitAny(Jobs)]);
+end function;
 begin
   var Job: task of integer := go Seven();
   var Inferred: task := go Seven();
-  var Total: integer := Doubled(Job) + First([Inferred])
-end."#,
+  var Total: integer := Doubled(Job) + First([Inferred]);
+end program;"#,
     );
 }
 
 #[test]
 fn typed_tasks_reject_a_different_result_type() {
     for source in [
-        "program T; uses Std.Tasks; function Seven(): integer; begin return 7 end; begin var Job: task of string := go Seven() end.",
-        "program T; uses Std.Tasks; function Seven(): integer; begin return 7 end; function Name(Job: task of string): string; begin return Wait(Job) end; begin var Job: task := go Seven(); var Text: string := Name(Job) end.",
-        "program T; uses Std.Tasks; function Count(Job: task of integer): string; begin return Wait(Job) end; begin end.",
+        r#"program T;  uses Std.Tasks as Tasks; function Seven(): integer; begin return 7; end function; begin var Job: task of string := go Seven(); end program;"#,
+        r#"program T;  uses Std.Tasks as Tasks; function Seven(): integer; begin return 7; end function; function Name(Job: task of string): string; begin return Tasks.Wait(Job); end function; begin var Job: task := go Seven(); var Text: string := Name(Job); end program;"#,
+        r#"program T;  uses Std.Tasks as Tasks; function Count(Job: task of integer): string; begin return Tasks.Wait(Job); end function; begin null; end program;"#,
     ] {
         assert!(!check_errors(source).is_empty(), "{source}");
     }

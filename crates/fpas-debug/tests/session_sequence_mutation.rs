@@ -61,13 +61,13 @@ program ArrayParameterMutation;
 function ReadAdded(mutable Values: array of integer): integer;
 begin
   var Marker: integer := Values[0];
-  return Values[1] + Marker
-end;
+  return Values[1] + Marker;
+end function;
 
 begin
   var OutputValue: integer := ReadAdded([1]);
-  var Marker: integer := OutputValue
-end.
+  var Marker: integer := OutputValue;
+end program;
 "#,
     );
     let parameter_frame = frame_with_scope(&mut parameter, "Parameters");
@@ -106,15 +106,15 @@ begin
   mutable var Text: string := 'A😀B';
   return function(): string begin
     var Marker: string := Text;
-    return Text
-  end
-end;
+    return Text;
+  end function;
+end function;
 
 begin
   var ReadValue: function(): string := Reader();
   var OutputValue: string := ReadValue();
-  var Marker: string := OutputValue
-end.
+  var Marker: string := OutputValue;
+end program;
 "#,
     );
     let capture_frame = frame_with_scope(&mut capture, "Captures");
@@ -149,20 +149,20 @@ fn sequence_mutation_supports_global_and_nested_stored_targets() {
         r#"
 program NestedSequenceMutation;
 
-type
-  Container = record
-    Items: array of integer;
-  end;
 
-mutable var
-  GlobalValues: array of integer := [4, 6];
+  type Container = record
+    Items: array of integer;
+  end record;
+
+
+  mutable var GlobalValues: array of integer := [4, 6];
 
 begin
   mutable var Nested: Container := record
     Items := [1, 3];
-  end;
-  var Marker: integer := Nested.Items[0] + GlobalValues[0]
-end.
+  end record;
+  var Marker: integer := Nested.Items[0] + GlobalValues[0];
+end program;
 "#,
     );
     while session
@@ -231,23 +231,23 @@ fn sequence_mutation_obeys_shared_limits_effect_policy_and_cancellation() {
         r#"
 program SequenceMutationLimits;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 function Forever(): integer;
 begin
-  while true do begin end;
-  return 0
-end;
+  while true do begin null; end; end while;
+  return 0;
+end function;
 
 procedure Emit();
 begin
-  WriteLn('not live')
-end;
+  Console.WriteLn('not live');
+end procedure;
 
 begin
   mutable var Values: array of integer := [1];
-  var Marker: integer := Values[0]
-end.
+  var Marker: integer := Values[0];
+end program;
 "#,
     );
     let frame = loop {

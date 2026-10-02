@@ -1,10 +1,11 @@
 program T;
 
-uses Std.Console, Std.Arrays;
+uses Std.Console as Console;
+uses Std.Arrays as Arrays;
 
 begin
   var A: array of integer := [1, 2, 3];
-  var B: array of integer := Sort(A);
-  WriteLn(B[0]);
-  WriteLn(B[2])
-end.
+  var B: array of integer := Arrays.Sort(A);
+  Console.WriteLn(B[0]);
+  Console.WriteLn(B[2]);
+end program;

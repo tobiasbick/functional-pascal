@@ -1,7 +1,8 @@
 program T;
 
-uses Std.Console, Std.Str;
+uses Std.Console as Console;
+uses Std.Str as Str;
 
 begin
-  var Parts: array of string := Split('abc', '')
-end.
+  var Parts: array of string := Str.Split('abc', '');
+end program;

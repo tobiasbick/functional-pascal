@@ -1,38 +1,34 @@
 program T;
 
-type
-  Point = record
-    X: integer;
-    Y: integer;
-  end;
+type Point = record
+  X: integer;
+  Y: integer;
+end record;
 
 begin
   var A: Point := record
     X := 3;
     Y := 4;
-  end;
+  end record;
   var B: Point := record
     X := 10;
     Y := 20;
-  end;
-  var UpdatedB: Point := B with X := 11; end;
+  end record;
+  var UpdatedB: Point := B with X := 11; end with;
 
   A.Print();
   if Ready then
-  begin
-    Save()
-  end;
+    Save();
+  end if;
 
   // present result
   Present();
   if NeedsCount then
-  begin
-    Prepare()
-  end;
+    Prepare();
+  end if;
   var Count: integer := 1;
   WriteLn(Count);
   if Done then
-  begin
-    Finish()
-  end
-end.
+    Finish();
+  end if;
+end program;

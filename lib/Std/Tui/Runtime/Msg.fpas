@@ -1,106 +1,110 @@
 unit Std.Tui.Runtime.Msg;
 
-uses
-  Std.Console, Std.Tasks, Std.Tui.Chrome.MenuNode, Std.Tui.Geometry.Point, Std.Tui.Geometry.Size,
-  Std.Tui.Ids.Action, Std.Tui.Ids.ControlId, Std.Tui.Runtime.PointerEvent;
+uses Std.Console as Console;
+uses Std.Tasks as Tasks;
+uses Std.Tui.Chrome.MenuNode as MenuNode;
+uses Std.Tui.Geometry.Point as Point;
+uses Std.Tui.Geometry.Size as Size2;
+uses Std.Tui.Ids.Action as Action2;
+uses Std.Tui.Ids.ControlId as ControlId;
+uses Std.Tui.Runtime.PointerEvent as PointerEvent;
 
-public type
-  // Framework messages delivered to an application's Update function.
-  TuiMsg = enum
-    // Signals startup after the first frame of a background-enabled host.
-    Started;
-    // Represents the `Key` variant of `TuiMsg`.
-    //
-    // Parameters:
-    // - `Key`: Console key event carried by the variant.
-    Key(Key: Std.Console.KeyEvent);
-    // Represents the `Pointer` variant of `TuiMsg`.
-    //
-    // Parameters:
-    // - `Pointer`: Normalized pointer event carried by the variant.
-    Pointer(Pointer: TuiPointerEvent);
-    // Represents the `Tick` variant of `TuiMsg`.
-    //
-    // Parameters:
-    // - `DeltaMilliseconds`: Elapsed time in milliseconds.
-    Tick(DeltaMilliseconds: integer);
-    // Represents the `Resize` variant of `TuiMsg`.
-    //
-    // Parameters:
-    // - `Size`: Size in terminal cells.
-    Resize(Size: TuiSize);
-    // Represents the `FocusChanged` variant of `TuiMsg`.
-    //
-    // Parameters:
-    // - `Previous`: Previously focused control identifier.
-    // - `Current`: Currently focused control identifier.
-    FocusChanged(Previous: option of TuiControlId; Current: option of TuiControlId);
-    // Represents the `Action` variant of `TuiMsg`.
-    //
-    // Parameters:
-    // - `Source`: Identifier of the control that produced the value.
-    // - `Action`: Application action carried by the variant.
-    Action(Source: TuiControlId; Action: TuiAction);
-    // Represents the `TextChanged` variant of `TuiMsg`.
-    //
-    // Parameters:
-    // - `Source`: Identifier of the control that produced the value.
-    // - `Action`: Application action carried by the variant.
-    // - `Text`: Text carried or displayed by the variant.
-    // - `Caret`: Zero-based character index of the caret.
-    TextChanged(Source: TuiControlId; Action: TuiAction; Text: string; Caret: integer);
-    // Represents the `TextAreaChanged` variant of `TuiMsg`.
-    //
-    // Parameters:
-    // - `Source`: Identifier of the control that produced the value.
-    // - `Action`: Application action carried by the variant.
-    // - `Text`: Text carried or displayed by the variant.
-    // - `Caret`: Zero-based character index of the caret.
-    // - `Offset`: Scroll offset carried by the variant.
-    TextAreaChanged(Source: TuiControlId; Action: TuiAction; Text: string; Caret: integer; Offset: TuiPoint);
-    // Represents the `CheckChanged` variant of `TuiMsg`.
-    //
-    // Parameters:
-    // - `Source`: Identifier of the control that produced the value.
-    // - `Action`: Application action carried by the variant.
-    // - `Checked`: Checked state carried by the variant.
-    CheckChanged(Source: TuiControlId; Action: TuiAction; Checked: boolean);
-    // Represents the `SelectionChanged` variant of `TuiMsg`.
-    //
-    // Parameters:
-    // - `Source`: Identifier of the control that produced the value.
-    // - `Action`: Application action carried by the variant.
-    // - `Selected`: Selected item index.
-    SelectionChanged(Source: TuiControlId; Action: TuiAction; Selected: integer);
-    // Represents the `ScrollChanged` variant of `TuiMsg`.
-    //
-    // Parameters:
-    // - `Source`: Identifier of the control that produced the value.
-    // - `Action`: Application action carried by the variant.
-    // - `Offset`: Scroll offset carried by the variant.
-    ScrollChanged(Source: TuiControlId; Action: TuiAction; Offset: TuiPoint);
-    // Represents the `MenuChanged` variant of `TuiMsg`.
-    //
-    // Parameters:
-    // - `Source`: Identifier of the control that produced the value.
-    // - `Action`: Application action carried by the variant.
-    // - `State`: Controlled menu state carried by the variant.
-    MenuChanged(Source: TuiControlId; Action: TuiAction; State: TuiMenuState);
-    // Reports a completed host-owned operation that returned or raised a failure.
-    BackgroundFailed(Id: integer; Kind: TaskFailureKind; Message: string; Code: integer; Line: integer; Column: integer);
-    // Represents the `QuitRequested` variant of `TuiMsg`.
-    QuitRequested;
-  end;
+// Framework messages delivered to an application's Update function.
+public type TuiMsg = enum
+  // Signals startup after the first frame of a background-enabled host.
+  Started;
+  // Represents the `Key` variant of `TuiMsg`.
+  //
+  // Parameters:
+  // - `Key`: Console key event carried by the variant.
+  Key(Key: Console.KeyEvent);
+  // Represents the `Pointer` variant of `TuiMsg`.
+  //
+  // Parameters:
+  // - `Pointer`: Normalized pointer event carried by the variant.
+  Pointer(Pointer: PointerEvent.TuiPointerEvent);
+  // Represents the `Tick` variant of `TuiMsg`.
+  //
+  // Parameters:
+  // - `DeltaMilliseconds`: Elapsed time in milliseconds.
+  Tick(DeltaMilliseconds: integer);
+  // Represents the `Resize` variant of `TuiMsg`.
+  //
+  // Parameters:
+  // - `Size`: Size in terminal cells.
+  Resize(Size: Size2.TuiSize);
+  // Represents the `FocusChanged` variant of `TuiMsg`.
+  //
+  // Parameters:
+  // - `Previous`: Previously focused control identifier.
+  // - `Current`: Currently focused control identifier.
+  FocusChanged(Previous: option of ControlId.TuiControlId; Current: option of ControlId.TuiControlId);
+  // Represents the `Action` variant of `TuiMsg`.
+  //
+  // Parameters:
+  // - `Source`: Identifier of the control that produced the value.
+  // - `Action`: Application action carried by the variant.
+  Action(Source: ControlId.TuiControlId; Action: Action2.TuiAction);
+  // Represents the `TextChanged` variant of `TuiMsg`.
+  //
+  // Parameters:
+  // - `Source`: Identifier of the control that produced the value.
+  // - `Action`: Application action carried by the variant.
+  // - `Text`: Text carried or displayed by the variant.
+  // - `Caret`: Zero-based character index of the caret.
+  TextChanged(Source: ControlId.TuiControlId; Action: Action2.TuiAction; Text: string; Caret: integer);
+  // Represents the `TextAreaChanged` variant of `TuiMsg`.
+  //
+  // Parameters:
+  // - `Source`: Identifier of the control that produced the value.
+  // - `Action`: Application action carried by the variant.
+  // - `Text`: Text carried or displayed by the variant.
+  // - `Caret`: Zero-based character index of the caret.
+  // - `Offset`: Scroll offset carried by the variant.
+  TextAreaChanged(Source: ControlId.TuiControlId; Action: Action2.TuiAction; Text: string; Caret: integer; Offset: Point.TuiPoint);
+  // Represents the `CheckChanged` variant of `TuiMsg`.
+  //
+  // Parameters:
+  // - `Source`: Identifier of the control that produced the value.
+  // - `Action`: Application action carried by the variant.
+  // - `Checked`: Checked state carried by the variant.
+  CheckChanged(Source: ControlId.TuiControlId; Action: Action2.TuiAction; Checked: boolean);
+  // Represents the `SelectionChanged` variant of `TuiMsg`.
+  //
+  // Parameters:
+  // - `Source`: Identifier of the control that produced the value.
+  // - `Action`: Application action carried by the variant.
+  // - `Selected`: Selected item index.
+  SelectionChanged(Source: ControlId.TuiControlId; Action: Action2.TuiAction; Selected: integer);
+  // Represents the `ScrollChanged` variant of `TuiMsg`.
+  //
+  // Parameters:
+  // - `Source`: Identifier of the control that produced the value.
+  // - `Action`: Application action carried by the variant.
+  // - `Offset`: Scroll offset carried by the variant.
+  ScrollChanged(Source: ControlId.TuiControlId; Action: Action2.TuiAction; Offset: Point.TuiPoint);
+  // Represents the `MenuChanged` variant of `TuiMsg`.
+  //
+  // Parameters:
+  // - `Source`: Identifier of the control that produced the value.
+  // - `Action`: Application action carried by the variant.
+  // - `State`: Controlled menu state carried by the variant.
+  MenuChanged(Source: ControlId.TuiControlId; Action: Action2.TuiAction; State: MenuNode.TuiMenuState);
+  // Reports a completed host-owned operation that returned or raised a failure.
+  BackgroundFailed(Id: integer; Kind: Tasks.TaskFailureKind; Message: string; Code: integer; Line: integer; Column: integer);
+  // Represents the `QuitRequested` variant of `TuiMsg`.
+  QuitRequested;
+end enum;
 
 // Creates a source-aware action message.
 //
 // Parameters:
 // - `Source`: Identifier of the control that produced the message.
 // - `Action`: Application action associated with the control or emitted message.
-public function TuiMsgAction(Source: TuiControlId; Action: TuiAction): TuiMsg;
+public function TuiMsgAction(Source: ControlId.TuiControlId; Action: Action2.TuiAction): TuiMsg;
 begin
-  return TuiMsg.Action(Source, Action)
-end;
+  return TuiMsg.Action(Source, Action);
+end function;
 
 // Creates a source-aware controlled-input change message.
 //
@@ -109,10 +113,15 @@ end;
 // - `Action`: Application action associated with the control or emitted message.
 // - `Text`: Text processed or displayed by the operation.
 // - `Caret`: Zero-based character index of the caret.
-public function TuiMsgTextChanged(Source: TuiControlId; Action: TuiAction; Text: string; Caret: integer): TuiMsg;
+public function TuiMsgTextChanged(
+  Source: ControlId.TuiControlId;
+  Action: Action2.TuiAction;
+  Text: string;
+  Caret: integer
+): TuiMsg;
 begin
-  return TuiMsg.TextChanged(Source, Action, Text, Caret)
-end;
+  return TuiMsg.TextChanged(Source, Action, Text, Caret);
+end function;
 
 // Creates a source-aware controlled multiline text-area change message.
 //
@@ -123,15 +132,15 @@ end;
 // - `Caret`: Zero-based character index of the caret.
 // - `Offset`: Scroll offset or position applied by the operation.
 public function TuiMsgTextAreaChanged(
-  Source: TuiControlId;
-  Action: TuiAction;
+  Source: ControlId.TuiControlId;
+  Action: Action2.TuiAction;
   Text: string;
   Caret: integer;
-  Offset: TuiPoint
+  Offset: Point.TuiPoint
 ): TuiMsg;
 begin
-  return TuiMsg.TextAreaChanged(Source, Action, Text, Caret, Offset)
-end;
+  return TuiMsg.TextAreaChanged(Source, Action, Text, Caret, Offset);
+end function;
 
 // Creates a source-aware controlled check-box change message.
 //
@@ -139,10 +148,14 @@ end;
 // - `Source`: Identifier of the control that produced the message.
 // - `Action`: Application action associated with the control or emitted message.
 // - `Checked`: Proposed checked state.
-public function TuiMsgCheckChanged(Source: TuiControlId; Action: TuiAction; Checked: boolean): TuiMsg;
+public function TuiMsgCheckChanged(
+  Source: ControlId.TuiControlId;
+  Action: Action2.TuiAction;
+  Checked: boolean
+): TuiMsg;
 begin
-  return TuiMsg.CheckChanged(Source, Action, Checked)
-end;
+  return TuiMsg.CheckChanged(Source, Action, Checked);
+end function;
 
 // Creates a source-aware controlled list selection-change message.
 //
@@ -150,10 +163,14 @@ end;
 // - `Source`: Identifier of the control that produced the message.
 // - `Action`: Application action associated with the control or emitted message.
 // - `Selected`: Selected item index.
-public function TuiMsgSelectionChanged(Source: TuiControlId; Action: TuiAction; Selected: integer): TuiMsg;
+public function TuiMsgSelectionChanged(
+  Source: ControlId.TuiControlId;
+  Action: Action2.TuiAction;
+  Selected: integer
+): TuiMsg;
 begin
-  return TuiMsg.SelectionChanged(Source, Action, Selected)
-end;
+  return TuiMsg.SelectionChanged(Source, Action, Selected);
+end function;
 
 // Creates a source-aware controlled scroll-offset change message.
 //
@@ -161,7 +178,13 @@ end;
 // - `Source`: Identifier of the control that produced the message.
 // - `Action`: Application action associated with the control or emitted message.
 // - `Offset`: Scroll offset or position applied by the operation.
-public function TuiMsgScrollChanged(Source: TuiControlId; Action: TuiAction; Offset: TuiPoint): TuiMsg;
+public function TuiMsgScrollChanged(
+  Source: ControlId.TuiControlId;
+  Action: Action2.TuiAction;
+  Offset: Point.TuiPoint
+): TuiMsg;
 begin
-  return TuiMsg.ScrollChanged(Source, Action, Offset)
-end;
+  return TuiMsg.ScrollChanged(Source, Action, Offset);
+end function;
+
+end unit;

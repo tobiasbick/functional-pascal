@@ -1,16 +1,18 @@
 program FsGlobNoMatchesReturnsEmptyArrayTest;
 
-uses Std.Arrays, Std.Fs, Std.Test;
+uses Std.Arrays as Arrays;
+uses Std.Fs as Fs;
+uses Std.Test as Test;
 
 begin
-  case Glob(ScratchDir() + '/no-match/**/*.fpas') of
-    Ok(Paths):
-    begin
-      AssertEquals(0, Std.Arrays.Length(Paths))
-    end;
-    Error(Message):
-    begin
-      Fail(Message)
-    end
-  end
-end.
+  case Fs.Glob(Test.ScratchDir() + '/no-match/**/*.fpas') of
+    when Ok(Paths):
+      begin
+        Test.AssertEquals(0, Arrays.Length(Paths));
+      end;
+    when Error(Message):
+      begin
+        Test.Fail(Message);
+      end;
+  end case;
+end program;

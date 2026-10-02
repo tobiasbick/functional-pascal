@@ -9,7 +9,7 @@ use fpas_debug::{PreparedDebugTarget, dap::DapServer};
 use serde_json::{Value, json};
 
 fn server() -> DapServer {
-    let (program, diagnostics) = fpas_parser::parse("program Attach; begin end.");
+    let (program, diagnostics) = fpas_parser::parse(r#"program Attach; begin null; end program;"#);
     assert!(diagnostics.is_empty(), "parse diagnostics: {diagnostics:?}");
     let executable = fpas_compiler::compile(&program).expect("compile attach fixture");
     DapServer::new(PreparedDebugTarget::new(executable, Vec::new())).expect("DAP server")

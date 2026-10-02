@@ -1,108 +1,113 @@
 program TomlParseArraysOfTablesAndEdgeValuesTest;
 
-uses Std.Arrays, Std.Dictionaries, Std.Options, Std.Str, Std.Test, Std.Toml;
+uses Std.Arrays as Arrays;
+uses Std.Dictionaries as Dictionaries;
+uses Std.Options as Options;
+uses Std.Str as Str;
+uses Std.Test as Test;
+uses Std.Toml as Toml;
 
 begin
-  var Parsed: result of TomlValue, string := Parse(((((((((((((('empty = []' + Chr(10)) + 'special = nan') + Chr(10)) + 'point.x = 1') + Chr(10)) + 'point.y = 2') + Chr(10)) + '[[products]]') + Chr(10)) + 'name = ''Hammer''') + Chr(10)) + '[[products]]') + Chr(10)) +
-                                                   'name = ''Nail''');
+  var Parsed: result of Toml.TomlValue, string := Toml.Parse(((((((((((((('empty = []' + Str.Chr(10)) + 'special = nan') + Str.Chr(10)) + 'point.x = 1') + Str.Chr(10)) + 'point.y = 2') + Str.Chr(10)) + '[[products]]') + Str.Chr(10)) + 'name = ''Hammer''') + Str.Chr(10)) + '[[products]]') + Str.Chr(10)) +
+                                                             'name = ''Nail''');
   case Parsed of
-    Ok(Value):
-    begin
-      case Value of
-        TomlValue.Table(Fields):
-        begin
-          case Std.Options.Unwrap(Std.Dictionaries.Get(Fields, 'empty')) of
-            TomlValue.ArrayValue(Items):
+    when Ok(Value):
+      begin
+        case Value of
+          when Toml.TomlValue.Table(Fields):
             begin
-              AssertEquals(0, Std.Arrays.Length(Items))
-            end
-            else
-            begin
-              Fail('Expected empty array')
-            end
-          end;
-
-          case Std.Options.Unwrap(Std.Dictionaries.Get(Fields, 'special')) of
-            TomlValue.Float(Number):
-            begin
-              AssertTrue(Number <> Number)
-            end
-            else
-            begin
-              Fail('Expected float nan')
-            end
-          end;
-
-          case Std.Options.Unwrap(Std.Dictionaries.Get(Fields, 'point')) of
-            TomlValue.Table(Point):
-            begin
-              AssertEquals(2, Std.Dictionaries.Length(Point))
-            end
-            else
-            begin
-              Fail('Expected point table')
-            end
-          end;
-
-          case Std.Options.Unwrap(Std.Dictionaries.Get(Fields, 'products')) of
-            TomlValue.ArrayValue(Products):
-            begin
-              AssertEquals(2, Std.Arrays.Length(Products));
-              case Products[0] of
-                TomlValue.Table(Product):
-                begin
-                  case Std.Options.Unwrap(Std.Dictionaries.Get(Product, 'name')) of
-                    TomlValue.String(Name):
-                    begin
-                      AssertEquals('Hammer', Name)
-                    end
-                    else
-                    begin
-                      Fail('Expected product name string')
-                    end
-                  end
-                end
+              case Options.Unwrap(Dictionaries.Get(Fields, 'empty')) of
+                when Toml.TomlValue.ArrayValue(Items):
+                  begin
+                    Test.AssertEquals(0, Arrays.Length(Items));
+                  end;
                 else
-                begin
-                  Fail('Expected first product table')
-                end
-              end;
+                  begin
+                    Test.Fail('Expected empty array');
+                  end;
+              end case;
 
-              case Products[1] of
-                TomlValue.Table(Product):
-                begin
-                  case Std.Options.Unwrap(Std.Dictionaries.Get(Product, 'name')) of
-                    TomlValue.String(Name):
-                    begin
-                      AssertEquals('Nail', Name)
-                    end
-                    else
-                    begin
-                      Fail('Expected product name string')
-                    end
-                  end
-                end
+              case Options.Unwrap(Dictionaries.Get(Fields, 'special')) of
+                when Toml.TomlValue.Float(Number):
+                  begin
+                    Test.AssertTrue(Number <> Number);
+                  end;
                 else
-                begin
-                  Fail('Expected second product table')
-                end
-              end
-            end
-            else
+                  begin
+                    Test.Fail('Expected float nan');
+                  end;
+              end case;
+
+              case Options.Unwrap(Dictionaries.Get(Fields, 'point')) of
+                when Toml.TomlValue.Table(Point):
+                  begin
+                    Test.AssertEquals(2, Dictionaries.Length(Point));
+                  end;
+                else
+                  begin
+                    Test.Fail('Expected point table');
+                  end;
+              end case;
+
+              case Options.Unwrap(Dictionaries.Get(Fields, 'products')) of
+                when Toml.TomlValue.ArrayValue(Products):
+                  begin
+                    Test.AssertEquals(2, Arrays.Length(Products));
+                    case Products[0] of
+                      when Toml.TomlValue.Table(Product):
+                        begin
+                          case Options.Unwrap(Dictionaries.Get(Product, 'name')) of
+                            when Toml.TomlValue.String(Name):
+                              begin
+                                Test.AssertEquals('Hammer', Name);
+                              end;
+                            else
+                              begin
+                                Test.Fail('Expected product name string');
+                              end;
+                          end case;
+                        end;
+                      else
+                        begin
+                          Test.Fail('Expected first product table');
+                        end;
+                    end case;
+
+                    case Products[1] of
+                      when Toml.TomlValue.Table(Product):
+                        begin
+                          case Options.Unwrap(Dictionaries.Get(Product, 'name')) of
+                            when Toml.TomlValue.String(Name):
+                              begin
+                                Test.AssertEquals('Nail', Name);
+                              end;
+                            else
+                              begin
+                                Test.Fail('Expected product name string');
+                              end;
+                          end case;
+                        end;
+                      else
+                        begin
+                          Test.Fail('Expected second product table');
+                        end;
+                    end case;
+                  end;
+                else
+                  begin
+                    Test.Fail('Expected products array');
+                  end;
+              end case;
+            end;
+          else
             begin
-              Fail('Expected products array')
-            end
-          end
-        end
-        else
-        begin
-          Fail('Expected TOML table')
-        end
-      end
-    end;
-    Error(Message):
-    begin
-      Fail(Message)
-    end
-  end
-end.
+              Test.Fail('Expected TOML table');
+            end;
+        end case;
+      end;
+    when Error(Message):
+      begin
+        Test.Fail(Message);
+      end;
+  end case;
+end program;

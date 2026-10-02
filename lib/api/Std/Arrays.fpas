@@ -11,8 +11,8 @@ unit Std.Arrays;
 // - `F`: Callback invoked by the higher-order operation.
 public function All(A: array of T; F: function(X: T): boolean): boolean;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // `true` if any satisfies `F`.
 //
@@ -21,8 +21,8 @@ end;
 // - `F`: Callback invoked by the higher-order operation.
 public function Any(A: array of T; F: function(X: T): boolean): boolean;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // Concatenate two arrays.
 //
@@ -31,8 +31,8 @@ end;
 // - `B`: Input value used by `Concat`.
 public function Concat(A: array of T; B: array of T): array of T;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // Membership.
 //
@@ -41,8 +41,8 @@ end;
 // - `Value`: Value consumed or returned by the operation.
 public function Contains(A: array of T; Value: T): boolean;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // Array of `Count` copies.
 //
@@ -51,8 +51,8 @@ end;
 // - `Count`: Number of values to create or process.
 public function Fill(Value: T; Count: integer): array of T;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // Keep matching elements.
 //
@@ -61,8 +61,8 @@ end;
 // - `F`: Callback invoked by the higher-order operation.
 public function Filter(A: array of T; F: function(X: T): boolean): array of T;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // First match or `None`.
 //
@@ -71,8 +71,8 @@ end;
 // - `F`: Callback invoked by the higher-order operation.
 public function Find(A: array of T; F: function(X: T): boolean): option of T;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // Index of first match or `-1`.
 //
@@ -81,8 +81,8 @@ end;
 // - `F`: Callback invoked by the higher-order operation.
 public function FindIndex(A: array of T; F: function(X: T): boolean): integer;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // Map then flatten.
 //
@@ -91,8 +91,8 @@ end;
 // - `F`: Callback invoked by the higher-order operation.
 public function FlatMap(A: array of T; F: function(X: T): array of U): array of U;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // Call `F` for each element.
 //
@@ -101,8 +101,8 @@ end;
 // - `F`: Callback invoked by the higher-order operation.
 public procedure ForEach(A: array of T; F: procedure(X: T));
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end procedure;
 
 // First index or `-1`.
 //
@@ -111,8 +111,8 @@ end;
 // - `Value`: Value consumed or returned by the operation.
 public function IndexOf(A: array of T; Value: T): integer;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // Element count.
 //
@@ -120,8 +120,8 @@ end;
 // - `A`: Input value used by `Length`.
 public function Length(A: array of T): integer;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // Transform each element.
 //
@@ -130,8 +130,8 @@ end;
 // - `F`: Callback invoked by the higher-order operation.
 public function Map(A: array of T; F: function(X: T): U): array of U;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // Remove last.
 //
@@ -139,8 +139,8 @@ end;
 // - `A`: Input value used by `Pop`.
 public function Pop(mutable A: array of T): T;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // Append in place.
 //
@@ -149,8 +149,8 @@ end;
 // - `Value`: Value consumed or returned by the operation.
 public procedure Push(mutable A: array of T; Value: T);
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end procedure;
 
 // Fold to single value.
 //
@@ -160,8 +160,8 @@ end;
 // - `F`: Callback invoked by the higher-order operation.
 public function Reduce(A: array of T; Init: U; F: function(Acc: U; V: T): U): U;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // New reversed array.
 //
@@ -169,8 +169,8 @@ end;
 // - `A`: Input value used by `Reverse`.
 public function Reverse(A: array of T): array of T;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // Sub-range; bounds checked.
 //
@@ -180,8 +180,8 @@ end;
 // - `Len`: Number of elements or characters to process.
 public function Slice(A: array of T; Start: integer; Len: integer): array of T;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // New sorted array.
 //
@@ -189,5 +189,7 @@ end;
 // - `A`: Input value used by `Sort`.
 public function Sort(A: array of T): array of T;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
+
+end unit;

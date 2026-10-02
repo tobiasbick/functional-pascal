@@ -1,45 +1,46 @@
 program TuiCheckBoxLayoutTest;
 
-uses Std.Str, Std.Test, Std.Tui;
+uses Std.Str as Str;
+uses Std.Test as Test;
+uses Std.Tui as Tui;
 
-type
-  CheckModel = record
-    Checked: boolean;
-  end;
+type CheckModel = record
+  Checked: boolean;
+end record;
 
-function ViewCheck(State: CheckModel): TuiElement;
+function ViewCheck(State: CheckModel): Tui.TuiElement;
 begin
-  return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(1)), [
-                                                                        TuiElementBuilders.MakePanel('Host', [
-                                                                                                               TuiElementBuilders.MakeCheckBox(TuiControlId.Create(1), 'Flag', State.Checked, TuiAction.Create(9))
-                                                                                                             ])
-                                                                      ])
-end;
+  return Tui.TuiElementBuilders.MakeDesktop(Some(Tui.TuiControlId.Create(1)), [
+                                                                                Tui.TuiElementBuilders.MakePanel('Host', [
+                                                                                                                           Tui.TuiElementBuilders.MakeCheckBox(Tui.TuiControlId.Create(1), 'Flag', State.Checked, Tui.TuiAction.Create(9))
+                                                                                                                         ])
+                                                                              ]);
+end function;
 
-function UpdateCheck(State: CheckModel; Msg: TuiMsg; Cmd: TuiCmdOutput): CheckModel;
+function UpdateCheck(State: CheckModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): CheckModel;
 begin
-  Cmd.Set(TuiCmd.NoCommand);
-  return State
-end;
+  Cmd.Set(Tui.TuiCmd.NoCommand);
+  return State;
+end function;
 
 begin
-  var Unchecked: TuiMeasureResult := TuiMeasure(TuiElementBuilders.MakeCheckBox(TuiControlId.Create(1), 'Flag', false, TuiAction.Create(1)), TuiMeasureSpec.Unbounded());
-  AssertEquals(8, Unchecked.Preferred.Width);
-  AssertEquals(1, Unchecked.Preferred.Height);
-  AssertEquals(8, Unchecked.Minimum.Width);
-  var CheckedSize: TuiMeasureResult := TuiMeasure(TuiElementBuilders.MakeCheckBox(TuiControlId.Create(1), 'Flag', true, TuiAction.Create(1)), TuiMeasureSpec.Unbounded());
-  AssertEquals(8, CheckedSize.Preferred.Width);
-  mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 6));
+  var Unchecked: Tui.TuiMeasureResult := Tui.TuiMeasure(Tui.TuiElementBuilders.MakeCheckBox(Tui.TuiControlId.Create(1), 'Flag', false, Tui.TuiAction.Create(1)), Tui.TuiMeasureSpec.Unbounded());
+  Test.AssertEquals(8, Unchecked.Preferred.Width);
+  Test.AssertEquals(1, Unchecked.Preferred.Height);
+  Test.AssertEquals(8, Unchecked.Minimum.Width);
+  var CheckedSize: Tui.TuiMeasureResult := Tui.TuiMeasure(Tui.TuiElementBuilders.MakeCheckBox(Tui.TuiControlId.Create(1), 'Flag', true, Tui.TuiAction.Create(1)), Tui.TuiMeasureSpec.Unbounded());
+  Test.AssertEquals(8, CheckedSize.Preferred.Width);
+  mutable var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(24, 6));
   mutable var Model: CheckModel := record
     Checked := false;
-  end;
+  end record;
 
   Model := App.RunIterations(Model, UpdateCheck, ViewCheck, 0, 0);
-  AssertTrue(Std.Str.Contains(App.SurfaceSnapshot().LineAt(1), 'Flag'));
-  App.InjectResizeForTest(TuiSize.Create(12, 4));
+  Test.AssertTrue(Str.Contains(App.SurfaceSnapshot().LineAt(1), 'Flag'));
+  App.InjectResizeForTest(Tui.TuiSize.Create(12, 4));
   Model := App.RunIterations(Model, UpdateCheck, ViewCheck, 1, 0);
-  AssertEquals(12, App.SurfaceSnapshot().Width);
-  AssertEquals(4, App.SurfaceSnapshot().Height);
-  AssertTrue(Std.Str.Contains(App.SurfaceSnapshot().LineAt(1), 'Fla'));
-  App.Close()
-end.
+  Test.AssertEquals(12, App.SurfaceSnapshot().Width);
+  Test.AssertEquals(4, App.SurfaceSnapshot().Height);
+  Test.AssertTrue(Str.Contains(App.SurfaceSnapshot().LineAt(1), 'Fla'));
+  App.Close();
+end program;

@@ -1,71 +1,75 @@
 program TomlStringifyConstructedTableRoundtripTest;
 
-uses Std.Arrays, Std.Dictionaries, Std.Options, Std.Test, Std.Toml;
+uses Std.Arrays as Arrays;
+uses Std.Dictionaries as Dictionaries;
+uses Std.Options as Options;
+uses Std.Test as Test;
+uses Std.Toml as Toml;
 
 begin
-  var Source: TomlValue := TomlValue.Table(['project': TomlValue.Table(['name': TomlValue.String('demo'), 'version': TomlValue.Integer(1), 'released': TomlValue.Datetime('2026-07-14')]), 'enabled': TomlValue.Boolean(true), 'targets': TomlValue.ArrayValue([
-                                                                                                                                                                                                                                                                 TomlValue.String('linux'),
-                                                                                                                                                                                                                                                                 TomlValue.String('windows')
-                                                                                                                                                                                                                                                               ])]);
-  var Encoded: string := Stringify(Source);
-  var Parsed: result of TomlValue, string := Parse(Encoded);
+  var Source: Toml.TomlValue := Toml.TomlValue.Table(['project': Toml.TomlValue.Table(['name': Toml.TomlValue.String('demo'), 'version': Toml.TomlValue.Integer(1), 'released': Toml.TomlValue.Datetime('2026-07-14')]), 'enabled': Toml.TomlValue.Boolean(true), 'targets': Toml.TomlValue.ArrayValue([
+                                                                                                                                                                                                                                                                                                         Toml.TomlValue.String('linux'),
+                                                                                                                                                                                                                                                                                                         Toml.TomlValue.String('windows')
+                                                                                                                                                                                                                                                                                                       ])]);
+  var Encoded: string := Toml.Stringify(Source);
+  var Parsed: result of Toml.TomlValue, string := Toml.Parse(Encoded);
   case Parsed of
-    Ok(Value):
-    begin
-      case Value of
-        TomlValue.Table(Fields):
-        begin
-          case Std.Options.Unwrap(Std.Dictionaries.Get(Fields, 'project')) of
-            TomlValue.Table(Project):
+    when Ok(Value):
+      begin
+        case Value of
+          when Toml.TomlValue.Table(Fields):
             begin
-              case Std.Options.Unwrap(Std.Dictionaries.Get(Project, 'name')) of
-                TomlValue.String(Name):
-                begin
-                  AssertEquals('demo', Name)
-                end
-                else
-                begin
-                  Fail('Expected project name string')
-                end
-              end;
+              case Options.Unwrap(Dictionaries.Get(Fields, 'project')) of
+                when Toml.TomlValue.Table(Project):
+                  begin
+                    case Options.Unwrap(Dictionaries.Get(Project, 'name')) of
+                      when Toml.TomlValue.String(Name):
+                        begin
+                          Test.AssertEquals('demo', Name);
+                        end;
+                      else
+                        begin
+                          Test.Fail('Expected project name string');
+                        end;
+                    end case;
 
-              case Std.Options.Unwrap(Std.Dictionaries.Get(Project, 'released')) of
-                TomlValue.Datetime(Date):
-                begin
-                  AssertEquals('2026-07-14', Date)
-                end
+                    case Options.Unwrap(Dictionaries.Get(Project, 'released')) of
+                      when Toml.TomlValue.Datetime(Date):
+                        begin
+                          Test.AssertEquals('2026-07-14', Date);
+                        end;
+                      else
+                        begin
+                          Test.Fail('Expected project released datetime');
+                        end;
+                    end case;
+                  end;
                 else
-                begin
-                  Fail('Expected project released datetime')
-                end
-              end
-            end
-            else
-            begin
-              Fail('Expected project table')
-            end
-          end;
+                  begin
+                    Test.Fail('Expected project table');
+                  end;
+              end case;
 
-          case Std.Options.Unwrap(Std.Dictionaries.Get(Fields, 'targets')) of
-            TomlValue.ArrayValue(Targets):
+              case Options.Unwrap(Dictionaries.Get(Fields, 'targets')) of
+                when Toml.TomlValue.ArrayValue(Targets):
+                  begin
+                    Test.AssertEquals(2, Arrays.Length(Targets));
+                  end;
+                else
+                  begin
+                    Test.Fail('Expected targets array');
+                  end;
+              end case;
+            end;
+          else
             begin
-              AssertEquals(2, Std.Arrays.Length(Targets))
-            end
-            else
-            begin
-              Fail('Expected targets array')
-            end
-          end
-        end
-        else
-        begin
-          Fail('Expected TOML table')
-        end
-      end
-    end;
-    Error(Message):
-    begin
-      Fail(Message)
-    end
-  end
-end.
+              Test.Fail('Expected TOML table');
+            end;
+        end case;
+      end;
+    when Error(Message):
+      begin
+        Test.Fail(Message);
+      end;
+  end case;
+end program;

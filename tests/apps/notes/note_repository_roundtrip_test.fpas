@@ -1,35 +1,39 @@
 program NoteRepositoryRoundtripTest;
 
-uses Notes.Model, Notes.Repository, Std.Arrays, Std.Test;
+uses Notes.Model as Model;
+uses Notes.Repository as Repository;
+uses Std.Arrays as Arrays;
+uses Std.Test as Test;
 
 begin
-  var Directory: string := ScratchDir() + '/notes';
-  mutable var NoteValue: Note := NoteCreate('repository-roundtrip', 1700000000000);
+  var Directory: string := Test.ScratchDir() + '/notes';
+  mutable var NoteValue: Model.Note := Model.NoteCreate('repository-roundtrip', 1700000000000);
   NoteValue.Title := 'Repository roundtrip';
   NoteValue.Tags := ['storage'];
   NoteValue.Body := 'Saved atomically';
-  case NotesSave(Directory, NoteValue) of
-    Ok(Written):
-    begin
-    end;
-    Error(Message):
-    begin
-      Fail(Message)
-    end
-  end;
+  case Repository.NotesSave(Directory, NoteValue) of
+    when Ok(Written):
+      begin
+        null;
+      end;
+    when Error(Message):
+      begin
+        Test.Fail(Message);
+      end;
+  end case;
 
-  case NotesLoadDirectory(Directory) of
-    Ok(Loaded):
-    begin
-      AssertEquals(1, Std.Arrays.Length(Loaded.Notes));
-      AssertEquals(0, Std.Arrays.Length(Loaded.Issues));
-      AssertEquals(NoteValue.Id, Loaded.Notes[0].Id);
-      AssertEquals(NoteValue.Title, Loaded.Notes[0].Title);
-      AssertEquals(NoteValue.Body, Loaded.Notes[0].Body)
-    end;
-    Error(Message):
-    begin
-      Fail(Message)
-    end
-  end
-end.
+  case Repository.NotesLoadDirectory(Directory) of
+    when Ok(Loaded):
+      begin
+        Test.AssertEquals(1, Arrays.Length(Loaded.Notes));
+        Test.AssertEquals(0, Arrays.Length(Loaded.Issues));
+        Test.AssertEquals(NoteValue.Id, Loaded.Notes[0].Id);
+        Test.AssertEquals(NoteValue.Title, Loaded.Notes[0].Title);
+        Test.AssertEquals(NoteValue.Body, Loaded.Notes[0].Body);
+      end;
+    when Error(Message):
+      begin
+        Test.Fail(Message);
+      end;
+  end case;
+end program;

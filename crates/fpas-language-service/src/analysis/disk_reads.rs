@@ -9,11 +9,11 @@ fn diagnostics_read_closed_units_once_and_preserve_freshness() {
     let manifest = root.join("app.fpasprj");
     std::fs::write(&manifest, "[project]\nname = \"app\"\nkind = \"program\"\nmain = \"main.fpas\"\n[sources]\ninclude = [\"*.fpas\"]\n").expect("manifest");
     let main = root.join("main.fpas");
-    let source = "program App; begin end.";
+    let source = r#"program App; begin null; end program;"#;
     std::fs::write(&main, source).expect("main source");
     let mut expected_bytes = 0;
     for index in 0..40 {
-        let source = format!("unit U{index};\n");
+        let source = format!("unit U{index};\nend unit;\n\n");
         expected_bytes += source.len();
         std::fs::write(root.join(format!("u{index}.fpas")), source).expect("unit");
     }
@@ -59,7 +59,14 @@ fn diagnostics_read_closed_units_once_and_preserve_freshness() {
         (80, expected_bytes * 2)
     );
     let changed = root.join("u0.fpas");
-    std::fs::write(&changed, "unit U0; // changed without watcher\n").expect("disk mutation");
+    std::fs::write(
+        &changed,
+        r#"unit U0;
+end unit;
+ // changed without watcher
+"#,
+    )
+    .expect("disk mutation");
     let fresh = service
         .analyze_document_diagnostics(&main)
         .expect("fresh query");

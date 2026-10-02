@@ -267,7 +267,7 @@ mod tests {
         let child = base.join("source");
         std::fs::create_dir_all(&child).expect("source directory");
         let source = child.join("loose.fpas");
-        std::fs::write(&source, "program Loose; begin end.").expect("source file");
+        std::fs::write(&source, r#"program Loose; begin null; end program;"#).expect("source file");
         let context = discover_initial_context_with(&source, |directory| {
             if directory == child {
                 Ok(None)
@@ -292,7 +292,8 @@ mod tests {
         std::fs::write(&manifest, "[project]\nname = \"app\"\nkind = \"program\"\nmain = \"main.fpas\"\n\n[sources]\ninclude = [\"main.fpas\"]\n")
             .expect("project manifest");
         let source = child.join("main.fpas");
-        std::fs::write(&source, "program App; begin end.").expect("project source");
+        std::fs::write(&source, r#"program App; begin null; end program;"#)
+            .expect("project source");
         let context = discover_initial_context_with(&source, |directory| {
             if directory == child {
                 context_owning_source(directory, &source)
@@ -314,8 +315,15 @@ mod tests {
         let child = base.join("source");
         std::fs::create_dir_all(&child).expect("source directory");
         let source = child.join("loose.fpas");
-        std::fs::write(&source, "program Loose; begin end.").expect("loose source");
-        std::fs::write(base.join("other.fpas"), "unit Other;").expect("unrelated source");
+        std::fs::write(&source, r#"program Loose; begin null; end program;"#)
+            .expect("loose source");
+        std::fs::write(
+            base.join("other.fpas"),
+            r#"unit Other;
+end unit;
+"#,
+        )
+        .expect("unrelated source");
         std::fs::write(base.join("other.fpasprj"), "[project]\nname = \"other\"\nkind = \"library\"\n\n[sources]\ninclude = [\"other.fpas\"]\n")
             .expect("unrelated project");
 

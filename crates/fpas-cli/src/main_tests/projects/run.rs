@@ -5,7 +5,13 @@ fn run_cli_executes_program_project_main_file() {
     let cwd = create_temp_dir("run-program-project");
     let project_file = cwd.join("app.fpasprj");
     support::write_program_project_file(&project_file, "src/main.fpas", &["src/**/*.fpas"]);
-    write_text(&cwd.join("src/main.fpas"), "program Main;\nbegin\nend.\n");
+    write_text(
+        &cwd.join("src/main.fpas"),
+        r#"program Main;
+begin null;
+end program;
+"#,
+    );
 
     let (exit_code, stdout_output, stderr_output) =
         support::run_cli_and_capture_output(&project_file, &cwd);
@@ -27,14 +33,24 @@ fn run_cli_rebuilds_stale_program_artifact_before_execution() {
     support::write_program_project_file(&project_file, "src/main.fpas", &["src/**/*.fpas"]);
     write_text(
         &main_file,
-        "program Main;\nuses Std.Console;\nbegin\n  WriteLn(1)\nend.\n",
+        r#"program Main;
+uses Std.Console as Console;
+begin
+  Console.WriteLn(1);
+end program;
+"#,
     );
 
     let first = support::run_cli_and_capture_output(&project_file, &cwd);
     let first_artifact = fs::read(&artifact_file).expect("first run must publish artifact");
     write_text(
         &main_file,
-        "program Main;\nuses Std.Console;\nbegin\n  WriteLn(2)\nend.\n",
+        r#"program Main;
+uses Std.Console as Console;
+begin
+  Console.WriteLn(2);
+end program;
+"#,
     );
     let second = support::run_cli_and_capture_output(&project_file, &cwd);
     let second_artifact = fs::read(&artifact_file).expect("second run must retain artifact");
@@ -55,7 +71,12 @@ fn run_cli_executes_compiled_program_without_project_sources() {
     support::write_program_project_file(&project_file, "src/main.fpas", &["src/**/*.fpas"]);
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses Std.Console;\nbegin\n  WriteLn('from image')\nend.\n",
+        r#"program Main;
+uses Std.Console as Console;
+begin
+  Console.WriteLn('from image');
+end program;
+"#,
     );
 
     let build = support::run_cli_args_and_capture_output(
@@ -138,15 +159,35 @@ fn run_cli_executes_multi_file_project_end_to_end() {
     support::write_program_project_file(&project_file, "src/main.fpas", &["src/*.fpas"]);
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Util, Std.Console;\nbegin\n  WriteLn(Double(3))\nend.\n",
+        r#"program Main;
+uses App.Util as Util; uses Std.Console as Console;
+begin
+  Console.WriteLn(Util.Double(3));
+end program;
+"#,
     );
     write_text(
         &cwd.join("src/util.fpas"),
-        "unit App.Util;\nuses App.Math;\npublic function Double(X: integer): integer;\nbegin\n  return Add(X, X)\nend;\n",
+        r#"unit App.Util;
+uses App.Math as Math;
+public function Double(X: integer): integer;
+begin
+  return Math.Add(X, X);
+end function;
+end unit;
+
+"#,
     );
     write_text(
         &cwd.join("src/math.fpas"),
-        "unit App.Math;\npublic function Add(A: integer; B: integer): integer;\nbegin\n  return A + B\nend;\n",
+        r#"unit App.Math;
+public function Add(A: integer; B: integer): integer;
+begin
+  return A + B;
+end function;
+end unit;
+
+"#,
     );
 
     let (exit_code, stdout_output, stderr_output) =
@@ -165,11 +206,22 @@ fn run_cli_shares_constants_via_unit_instead_of_include() {
     support::write_program_project_file(&project_file, "src/main.fpas", &["src/*.fpas"]);
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Parts, Std.Console;\nbegin\n  WriteLn(Message)\nend.\n",
+        r#"program Main;
+uses App.Parts as Parts; uses Std.Console as Console;
+begin
+  Console.WriteLn(Parts.Message);
+end program;
+"#,
     );
     write_text(
         &cwd.join("src/parts.fpas"),
-        "unit App.Parts;\n\npublic const\n  Message: string := 'Hello from unit';\n",
+        r#"unit App.Parts;
+
+
+  public const Message: string := 'Hello from unit';
+end unit;
+
+"#,
     );
 
     let (exit_code, stdout_output, stderr_output) =
@@ -184,7 +236,13 @@ fn run_cli_shares_constants_via_unit_instead_of_include() {
 #[test]
 fn run_cli_rejects_directory_path() {
     let cwd = create_temp_dir("run-source-directory");
-    write_text(&cwd.join("main.fpas"), "program Main;\nbegin\nend.\n");
+    write_text(
+        &cwd.join("main.fpas"),
+        r#"program Main;
+begin null;
+end program;
+"#,
+    );
 
     let (exit_code, _, stderr_output) = support::run_cli_args_and_capture_output(
         &[String::from("run"), cwd.to_string_lossy().to_string()],

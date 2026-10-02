@@ -4,11 +4,16 @@ Process environment access for hosted FPAS programs. This page is the full API f
 
 ```pascal
 program Example;
-uses Std.Console, Std.Env, Std.Options;
+
+uses Std.Console as Console;
+uses Std.Env as Env;
+uses Std.Options as Options;
+
 begin
-  if Exists('PATH') then
-    WriteLn(Std.Options.Unwrap(Get('PATH')))
-end.
+  if Env.Exists('PATH') then
+    Console.WriteLn(Options.Unwrap(Env.Get('PATH')));
+  end if;
+end program;
 ```
 
 `Std.Env` reads the environment visible to the host process. It is UI-independent: console, TUI, and background-task programs can import it when they need environment values.
@@ -16,13 +21,13 @@ end.
 
 ## Importing and names
 
-After `uses Std.Env;` use **`Get`**, **`Exists`**, or the fully qualified forms **`Std.Env.Get`**, **`Std.Env.Exists`**.
+Import with `uses Std.Env as Env;`. Access every exported member through `Env`, for example `Env.Get(...)`. Imports open no short names.
 
 ---
 
 ## Quick reference
 
-Requires `uses Std.Env;`.
+Requires `uses Std.Env as Env;`.
 
 | Kind | Name | Notes |
 |------|------|-------|
@@ -38,9 +43,14 @@ Environment lookup is process-wide and effectful because it reads host process s
 Returns the environment variable named `Name`, or `None` when it is missing.
 
 ```pascal
-var Home: Option of string := Get('HOME');
-if Std.Options.IsSome(Home) then
-  WriteLn(Std.Options.Unwrap(Home))
+uses Std.Console as Console;
+uses Std.Env as Env;
+uses Std.Options as Options;
+
+var Home: option of string := Env.Get('HOME');
+if Options.IsSome(Home) then
+  Console.WriteLn(Options.Unwrap(Home));
+end if;
 ```
 
 ---
@@ -50,8 +60,12 @@ if Std.Options.IsSome(Home) then
 Returns `true` when the process environment contains `Name`.
 
 ```pascal
-if Exists('PATH') then
-  WriteLn('PATH is available')
+uses Std.Console as Console;
+uses Std.Env as Env;
+
+if Env.Exists('PATH') then
+  Console.WriteLn('PATH is available');
+end if;
 ```
 
 ---

@@ -3,66 +3,66 @@
 use super::*;
 
 const SOURCE: &str = r#"program SelectionContinuation;
-uses Std.Tasks, Std.Time, Std.Results;
+uses Std.Tasks as Tasks; uses Std.Time as Time; uses Std.Results as Results;
 function Produce(Q: channel of integer): integer;
 begin
-  Sleep(2);
-  Send(Q, 123);
-  return 1
-end;
+  Time.Sleep(2);
+  Tasks.Send(Q, 123);
+  return 1;
+end function;
 function Child(): integer;
 begin
-  Sleep(2);
-  return 7
-end;
+  Time.Sleep(2);
+  return 7;
+end function;
 function Parent(): integer;
 begin
   var T: task := go Child();
   mutable var Seen: integer := 0;
-  var C: WaitCase := TaskCase(T, procedure()
+  var C: Tasks.WaitCase := Tasks.TaskCase(T, procedure()
   begin
-    Sleep(0);
-    Sleep(1);
-    Seen := Wait(T)
-  end);
-  if Select([C]) <> 0 then panic('task index');
-  return Seen
-end;
+    Time.Sleep(0);
+    Time.Sleep(1);
+    Seen := Tasks.Wait(T);
+  end procedure);
+  if Tasks.Select([C]) <> 0 then panic('task index'); end if;
+  return Seen;
+end function;
 begin
   var T: task := go Parent();
-  var Q: channel of integer := CreateChannel(1);
+  var Q: channel of integer := Tasks.CreateChannel(1);
   mutable var Seen: integer := 0;
-  var S: WaitCase := SendCase(Q, 42, procedure(R: result of boolean, string)
+  var S: Tasks.WaitCase := Tasks.SendCase(Q, 42, procedure(R: result of boolean, string)
   begin
-    if not Unwrap(R) then panic('send result');
-    Sleep(1);
-    var Receive: WaitCase := ReceiveCase(Q, procedure(V: result of integer, string)
-    begin Seen := Unwrap(V) end);
-    if Select([Receive]) <> 0 then panic('nested selection')
-  end);
-  if Select([S]) <> 0 then panic('send index');
-  if Seen <> 42 then panic('callback did not complete');
-  if Wait(T) <> 7 then panic('task value lost');
+    if not Results.Unwrap(R) then panic('send result'); end if;
+    Time.Sleep(1);
+    var Receive: Tasks.WaitCase := Tasks.ReceiveCase(Q, procedure(V: result of integer, string)
+    begin Seen := Results.Unwrap(V); end procedure);
+    if Tasks.Select([Receive]) <> 0 then panic('nested selection'); end if;
+  end procedure);
+  if Tasks.Select([S]) <> 0 then panic('send index'); end if;
+  if Seen <> 42 then panic('callback did not complete'); end if;
+  if Tasks.Wait(T) <> 7 then panic('task value lost'); end if;
   var Producer: task := go Produce(Q);
-  var Pending: WaitCase := ReceiveCase(Q, procedure(R: result of integer, string)
-  begin Seen := Unwrap(R) end);
-  var Fallback: WaitCase := TimerCase(1000, procedure() begin panic('pending receive timed out') end);
-  if Select([Pending, Fallback]) <> 0 then panic('pending receive index');
-  if Seen <> 123 then panic('pending receive value');
-  if Wait(Producer) <> 1 then panic('producer result');
-  var Closed: WaitCase := ReceiveCase(Q, procedure(R: result of integer, string)
+  var Pending: Tasks.WaitCase := Tasks.ReceiveCase(Q, procedure(R: result of integer, string)
+  begin Seen := Results.Unwrap(R); end procedure);
+  var Fallback: Tasks.WaitCase := Tasks.TimerCase(1000, procedure() begin panic('pending receive timed out'); end procedure);
+  if Tasks.Select([Pending, Fallback]) <> 0 then panic('pending receive index'); end if;
+  if Seen <> 123 then panic('pending receive value'); end if;
+  if Tasks.Wait(Producer) <> 1 then panic('producer result'); end if;
+  var Closed: Tasks.WaitCase := Tasks.ReceiveCase(Q, procedure(R: result of integer, string)
   begin
     case R of
-      Ok(_): panic('closed channel delivered');
-      Error(Message): if Message <> 'Channel is closed' then panic(Message)
-    end
-  end);
-  CloseChannel(Q);
-  if Select([Closed]) <> 0 then panic('closed index');
-  var Timer: WaitCase := TimerCase(2, procedure() begin Seen := 99 end);
-  if Select([Timer]) <> 0 then panic('timer index');
-  if Seen <> 99 then panic('timer callback')
-end."#;
+      when Ok(_): panic('closed channel delivered');
+      when Error(Message): if Message <> 'Channel is closed' then panic(Message); end if;
+    end case;
+  end procedure);
+  Tasks.CloseChannel(Q);
+  if Tasks.Select([Closed]) <> 0 then panic('closed index'); end if;
+  var Timer: Tasks.WaitCase := Tasks.TimerCase(2, procedure() begin Seen := 99; end procedure);
+  if Tasks.Select([Timer]) <> 0 then panic('timer index'); end if;
+  if Seen <> 99 then panic('timer callback'); end if;
+end program;"#;
 
 #[test]
 fn selection_callbacks_resume_nested_waits_with_one_worker() {
@@ -90,14 +90,14 @@ fn selection_callbacks_and_timers_use_deterministic_debugger_execution() {
 fn selection_rejects_a_case_moved_to_another_task() {
     let (program, errors) = fpas_parser::parse(
         r#"program WrongOwner;
-uses Std.Tasks;
-function Other(C: WaitCase): integer;
-begin return Select([C]) end;
+uses Std.Tasks as Tasks;
+function Other(C: Tasks.WaitCase): integer;
+begin return Tasks.Select([C]); end function;
 begin
-  var C: WaitCase := TimerCase(0, procedure() begin end);
+  var C: Tasks.WaitCase := Tasks.TimerCase(0, procedure() begin null; end procedure);
   var T: task := go Other(C);
-  Wait(T)
-end."#,
+  Tasks.Wait(T);
+end program;"#,
     );
     assert!(errors.is_empty(), "{errors:?}");
     let mut vm = crate::vm::Vm::new(fpas_compiler::compile(&program).unwrap());

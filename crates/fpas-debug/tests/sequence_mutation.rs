@@ -11,18 +11,18 @@ use serde_json::{Value, json};
 
 const SOURCE: &str = r#"program JsonlSequenceMutation;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 begin
   mutable var Numbers: array of integer := [1, 2, 3];
   var Fixed: array of integer := [8];
   mutable var Text: string := 'A😀B';
-  WriteLn(Numbers[0]);
-  WriteLn(Numbers[1]);
-  WriteLn(Numbers[2]);
-  WriteLn(Text);
-  WriteLn(Fixed[0])
-end.
+  Console.WriteLn(Numbers[0]);
+  Console.WriteLn(Numbers[1]);
+  Console.WriteLn(Numbers[2]);
+  Console.WriteLn(Text);
+  Console.WriteLn(Fixed[0]);
+end program;
 "#;
 
 fn server() -> JsonlServer {

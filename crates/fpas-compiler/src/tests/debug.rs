@@ -13,17 +13,17 @@ fn compiler_retains_exact_record_method_mappings_for_debugger_binding() {
     let program = parse_ok(
         r#"
 program DebugBoundMethod;
-type Counter = record
+ type Counter = record
   Base: integer;
   function Add(Self: Counter; Value: integer): integer;
   begin
-    return Self.Base + Value
-  end;
-end;
+    return Self.Base + Value;
+  end function;
+end record;
 begin
-  var C: Counter := record Base := 2; end;
-  if C.Add(3) <> 5 then panic('wrong')
-end.
+  var C: Counter := record Base := 2; end record;
+  if C.Add(3) <> 5 then panic('wrong'); end if;
+end program;
 "#,
     );
     let executable = crate::compile(&program).expect("record method source should compile");
@@ -48,16 +48,16 @@ begin
   begin
     var Nested: integer := Value + Offset;
     if Nested < 0 then
-      panic('unreachable')
+      panic('unreachable'); end if;
   end;
-  return Value + Offset
-end;
+  return Value + Offset;
+end function;
 
 begin
   var Answer: integer := Add(41);
   if Answer <> 42 then
-    panic('wrong answer')
-end.
+    panic('wrong answer'); end if;
+end program;
 "#,
     );
     let executable = crate::compile(&program).expect("debug metadata source should compile");
@@ -121,15 +121,15 @@ begin
   mutable var Value: integer := 0;
   return function(): integer begin
     Value := Value + 1;
-    return Value
-  end
-end;
+    return Value;
+  end function;
+end function;
 
 begin
   var Next: function(): integer := Counter();
   for Index: integer := 1 to 2 do
-    Next()
-end.
+    Next(); end for;
+end program;
 "#,
     );
     let executable = crate::compile(&program).expect("capture metadata source should compile");
@@ -163,21 +163,21 @@ fn compiler_retains_structured_debug_types_for_roots_and_aggregate_children() {
         r#"
 program DebugStructuredTypes;
 
-type
-  Box = record
-    Value: integer;
-  end;
 
-mutable var
-  Scores: dict of string to integer := ['Ada': 1];
+  type Box = record
+    Value: integer;
+  end record;
+
+
+  mutable var Scores: dict of string to integer := ['Ada': 1];
 
 begin
   mutable var Item: Box := record
     Value := 2;
-  end;
+  end record;
   mutable var Items: array of integer := [3];
-  var Maybe: option of integer := Some(4)
-end.
+  var Maybe: option of integer := Some(4);
+end program;
 "#,
     );
     let executable = crate::compile(&program).expect("structured debug types should compile");
@@ -230,10 +230,10 @@ begin
   var Value: integer := 1;
   begin
     var Value: integer := 2; var Other: integer := Value + 1;
-    if Other <> 3 then panic('wrong inner value')
+    if Other <> 3 then panic('wrong inner value'); end if;
   end;
-  if Value <> 1 then panic('wrong outer value')
-end.
+  if Value <> 1 then panic('wrong outer value'); end if;
+end program;
 "#,
     );
     let executable = crate::compile(&program).expect("shadow metadata source should compile");
@@ -267,25 +267,25 @@ fn compiler_retains_distinct_task_result_types_for_local_and_global_bindings() {
         r#"
 program DebugTaskResultTypes;
 
-uses Std.Tasks;
+uses Std.Tasks as Tasks;
 
 function Seven(): integer;
 begin
-  return 7
-end;
+  return 7;
+end function;
 
 function Label(): string;
 begin
-  return 'nope'
-end;
+  return 'nope';
+end function;
 
-var GlobalCurrent: task := go Seven();
-var GlobalWrong: task := go Label();
+ var GlobalCurrent: task := go Seven();
+ var GlobalWrong: task := go Label();
 
 begin
   var Current: task := go Seven();
-  var Wrong: task := go Label()
-end.
+  var Wrong: task := go Label();
+end program;
 "#,
     );
     let executable = crate::compile(&program).expect("task debug types should compile");
@@ -339,63 +339,63 @@ fn compiler_records_exact_capture_provenance_for_named_nested_routines() {
         r#"
 program CaptureProvenance;
 
-type
-  Handler = function(Value: integer): integer;
+
+  type Handler = function(Value: integer): integer;
 
 function MakeAdder(Base: integer): Handler;
   function AddBase(Value: integer): integer;
   begin
-    return Base + Value
-  end;
+    return Base + Value;
+  end function;
 begin
-  return AddBase
-end;
+  return AddBase;
+end function;
 
 function Outer(Offset: integer): integer;
   function AddOffset(Value: integer): integer;
   begin
-    return Value + Offset
-  end;
+    return Value + Offset;
+  end function;
 begin
   begin
     var Offset: integer := 99;
-    return AddOffset(1)
-  end
-end;
+    return AddOffset(1);
+  end;
+end function;
 
 function Mutating(): Handler;
   function AddCell(Value: integer): integer;
   begin
     Cell := Cell + 1;
-    return Value + Cell
-  end;
+    return Value + Cell;
+  end function;
 begin
   mutable var Cell: integer := 1;
-  return AddCell
-end;
+  return AddCell;
+end function;
 
 function OuterCell(): Handler;
   function Mid(): Handler;
     function AddEnclosed(Value: integer): integer;
     begin
       Cell := Cell + 1;
-      return Value + Cell
-    end;
+      return Value + Cell;
+    end function;
   begin
     var Keep: integer := Cell;
-    return AddEnclosed
-  end;
+    return AddEnclosed;
+  end function;
 begin
   mutable var Cell: integer := 1;
-  return Mid()
-end;
+  return Mid();
+end function;
 
 begin
   var First: Handler := MakeAdder(10);
   var Answer: integer := Outer(7);
   var Next: Handler := Mutating();
-  var Enclosed: Handler := OuterCell()
-end.
+  var Enclosed: Handler := OuterCell();
+end program;
 "#,
     );
     let executable = crate::compile(&program).expect("capture provenance should compile");
@@ -465,31 +465,31 @@ fn same_named_nested_routines_keep_distinct_capture_identity() {
         r#"
 program DistinctNestedCaptures;
 
-type
-  Handler = function(Value: integer): integer;
+
+  type Handler = function(Value: integer): integer;
 
 function FactoryA(A: integer): Handler;
   function Apply(Value: integer): integer;
   begin
-    return A + Value
-  end;
+    return A + Value;
+  end function;
 begin
-  return Apply
-end;
+  return Apply;
+end function;
 
 function FactoryB(B: integer): Handler;
   function Apply(Value: integer): integer;
   begin
-    return B + Value
-  end;
+    return B + Value;
+  end function;
 begin
-  return Apply
-end;
+  return Apply;
+end function;
 
 begin
   var First: Handler := FactoryA(1);
-  var Second: Handler := FactoryB(2)
-end.
+  var Second: Handler := FactoryB(2);
+end program;
 "#,
     );
     let executable = crate::compile(&program).expect("same-named nested routines should compile");

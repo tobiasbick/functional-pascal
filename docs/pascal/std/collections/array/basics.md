@@ -5,8 +5,10 @@
 Number of elements in `A`.
 
 ```pascal
+uses Std.Console as Console;
+
 var A: array of integer := [1, 2, 3];
-WriteLn(Length(A))
+Console.WriteLn(Length(A));
 ```
 
 ---
@@ -16,9 +18,11 @@ WriteLn(Length(A))
 Returns a **new** sorted array. **`A` is not modified.**
 
 ```pascal
+uses Std.Console as Console;
+
 var A: array of integer := [3, 1, 2];
 var B: array of integer := Sort(A);
-WriteLn(IndexOf(B, 2))
+Console.WriteLn(IndexOf(B, 2));
 ```
 
 ---
@@ -28,9 +32,11 @@ WriteLn(IndexOf(B, 2))
 Returns a **new** array with elements in reverse order. **`A` is not modified.**
 
 ```pascal
+uses Std.Console as Console;
+
 var A: array of integer := [1, 2, 3];
 var R: array of integer := Reverse(A);
-WriteLn(Length(R))
+Console.WriteLn(Length(R));
 ```
 
 ---
@@ -40,9 +46,11 @@ WriteLn(Length(R))
 `true` if some element equals `Value`.
 
 ```pascal
+uses Std.Console as Console;
+
 var A: array of integer := [1, 2, 3];
-WriteLn(Contains(A, 2));
-WriteLn(Contains(A, 99))
+Console.WriteLn(Contains(A, 2));
+Console.WriteLn(Contains(A, 99));
 ```
 
 ---
@@ -52,7 +60,9 @@ WriteLn(Contains(A, 99))
 First index where `A[i] = Value`, or **`-1`**.
 
 ```pascal
-WriteLn(IndexOf([10, 20, 30], 20))
+uses Std.Console as Console;
+
+Console.WriteLn(IndexOf([10, 20, 30], 20));
 ```
 
 ---
@@ -62,9 +72,11 @@ WriteLn(IndexOf([10, 20, 30], 20))
 Copies `Len` elements starting at `Start`. **Runtime error** if the range is out of bounds.
 
 ```pascal
+uses Std.Console as Console;
+
 var A: array of integer := [10, 20, 30, 40];
 var C: array of integer := Slice(A, 1, 2);
-WriteLn(Length(C))
+Console.WriteLn(Length(C));
 ```
 
 ## See also

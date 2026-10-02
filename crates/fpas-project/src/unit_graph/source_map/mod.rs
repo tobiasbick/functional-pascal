@@ -13,7 +13,9 @@ use fpas_parser::Unit;
 pub(crate) fn apply_unit_source_id(unit: &mut Unit, source_id: u32) {
     support::apply_qualified_id_source_id(&mut unit.name, source_id);
     for used in &mut unit.uses {
-        support::apply_qualified_id_source_id(used, source_id);
+        support::apply_span(&mut used.span, source_id);
+        support::apply_span(&mut used.unit_span, source_id);
+        support::apply_span(&mut used.alias_span, source_id);
     }
     for declaration in &mut unit.declarations {
         declarations::apply_decl_source_id(declaration, source_id);

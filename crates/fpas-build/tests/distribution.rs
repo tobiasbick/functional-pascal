@@ -78,7 +78,11 @@ include = ["Std/**/*.fpas"]
     );
     write(
         &staging.join("Std/DistributionFixture.fpas"),
-        "unit Std.DistributionFixture;\nconst Answer: integer := 42;\n",
+        r#"unit Std.DistributionFixture;
+ const Answer: integer := 42;
+end unit;
+
+"#,
     );
     write(
         &staging.join("Std/DistributionFixture.fpascu"),
@@ -163,7 +167,11 @@ include = ["Std/**/*.fpas"]
     );
     write(
         &staging.join("Std/InvalidDistributionFixture.fpas"),
-        "unit Std.InvalidDistributionFixture;\nconst Answer: integer := 'wrong';\n",
+        r#"unit Std.InvalidDistributionFixture;
+ const Answer: integer := 'wrong';
+end unit;
+
+"#,
     );
     write(&distribution.join("marker.txt"), "previous distribution");
 

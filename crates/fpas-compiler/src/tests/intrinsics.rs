@@ -3,12 +3,11 @@ use super::*;
 #[test]
 fn interface_backed_program_keeps_short_standard_intrinsic_dispatch() {
     let program = parse_ok(
-        "\
-program RegisterInterfaceIntrinsic;
-uses Std.Console;
+        r#"program RegisterInterfaceIntrinsic;
+uses Std.Console as Console;
 begin
-  WriteLn('hello')
-end.",
+  Console.WriteLn('hello');
+end program;"#,
     );
     assert!(
         !fpas_sema::analyze_with_types(&program)
@@ -29,12 +28,11 @@ end.",
 #[test]
 fn object_retains_layouts_constructed_by_runtime_intrinsics() {
     let program = parse_ok(
-        "\
-program RuntimeLayouts;
-uses Std.Json;
+        r#"program RuntimeLayouts;
+uses Std.Json as Json;
 begin
-  var Parsed: result of JsonValue, string := Parse('null')
-end.",
+  var Parsed: result of Json.JsonValue, string := Json.Parse('null');
+end program;"#,
     );
     let object = crate::compile_program_object_with_support(&program, &[], &[])
         .expect("runtime aggregate layouts must compile");
@@ -53,17 +51,17 @@ fn object_retains_layouts_referenced_by_portable_debug_types() {
         r#"
 program DebugLayout;
 
-type
-  Point = record
+
+  type Point = record
     X: integer;
-  end;
+  end record;
 
 begin
   var Origin: Point := record
     X := 1;
-  end;
-  var Marker: integer := Origin.X
-end.
+  end record;
+  var Marker: integer := Origin.X;
+end program;
 "#,
     );
     let object = crate::compile_program_object_with_support(&program, &[], &[])
@@ -84,19 +82,18 @@ end.
 #[test]
 fn borrowed_standard_intrinsics_execute() {
     let execution = assert_succeeds(
-        "\
-program RegisterIntrinsics;
-uses Std.Str, Std.Math, Std.Conv, Std.Test;
+        r#"program RegisterIntrinsics;
+uses Std.Str as Str; uses Std.Math as Math; uses Std.Conv as Conv; uses Std.Test as Test;
 begin
-  var Text: string := Std.Str.ToUpper('fpas');
-  var Root: real := Std.Math.Sqrt(81.0);
-  var Number: string := Std.Conv.IntToStr(42);
-  var Formatted: string := Std.Str.Format('n=%d %s', 42, 'ok');
-  Std.Test.AssertEquals('FPAS', Text);
-  Std.Test.AssertEquals(9.0, Root);
-  Std.Test.AssertEquals('42', Number);
-  Std.Test.AssertEquals('n=42 ok', Formatted)
-end.",
+  var Text: string := Str.ToUpper('fpas');
+  var Root: real := Math.Sqrt(81.0);
+  var Number: string := Conv.IntToStr(42);
+  var Formatted: string := Str.Format('n=%d %s', 42, 'ok');
+  Test.AssertEquals('FPAS', Text);
+  Test.AssertEquals(9.0, Root);
+  Test.AssertEquals('42', Number);
+  Test.AssertEquals('n=42 ok', Formatted);
+end program;"#,
     );
     assert_eq!(execution.value, fpas_bytecode::Value::Unit);
 }
@@ -104,12 +101,11 @@ end.",
 #[test]
 fn intrinsic_selection_uses_one_verified_register_window_convention() {
     let program = parse_ok(
-        "\
-program RegisterIntrinsicShape;
-uses Std.Str;
+        r#"program RegisterIntrinsicShape;
+uses Std.Str as Str;
 begin
-  if Std.Str.Length('abc') <> 3 then panic('bad')
-end.",
+  if Str.Length('abc') <> 3 then panic('bad'); end if;
+end program;"#,
     );
     let metadata = fpas_sema::analyze_with_types(&program);
     assert!(
@@ -143,20 +139,19 @@ end.",
 #[test]
 fn higher_order_intrinsics_invoke_numeric_callbacks() {
     let execution = assert_succeeds(
-        "\
-program RegisterCallbacks;
-uses Std.Arrays, Std.Test;
+        r#"program RegisterCallbacks;
+uses Std.Arrays as Arrays; uses Std.Test as Test;
 
 function Double(Value: integer): integer;
 begin
-  return Value * 2
-end;
+  return Value * 2;
+end function;
 
 begin
-  var Values: array of integer := Std.Arrays.Map([2, 3, 4], Double);
-  Std.Test.AssertEquals(3, Std.Arrays.Length(Values));
-  Std.Test.AssertEquals(6, Values[1])
-end.",
+  var Values: array of integer := Arrays.Map([2, 3, 4], Double);
+  Test.AssertEquals(3, Arrays.Length(Values));
+  Test.AssertEquals(6, Values[1]);
+end program;"#,
     );
     assert_eq!(execution.value, fpas_bytecode::Value::Unit);
 }
@@ -164,40 +159,38 @@ end.",
 #[test]
 fn intrinsic_temporaries_do_not_clobber_loop_state() {
     assert_succeeds(
-        "\
-program RegisterIntrinsicLoop;
-uses Std.Str, Std.Test;
+        r#"program RegisterIntrinsicLoop;
+uses Std.Str as Str; uses Std.Test as Test;
 begin
   mutable var Total: integer := 0;
   for Index: integer := 1 to 3 do
   begin
-    Total := Total + Std.Str.Length('abc')
-  end;
-  Std.Test.AssertEquals(9, Total)
-end.",
+    Total := Total + Str.Length('abc');
+  end; end for;
+  Test.AssertEquals(9, Total);
+end program;"#,
     );
 }
 
 #[test]
 fn variadic_console_output_preserves_evaluation_order() {
     let execution = assert_succeeds(
-        "\
-program RegisterConsoleOutput;
-uses Std.Console, Std.Test;
+        r#"program RegisterConsoleOutput;
+uses Std.Console as Console; uses Std.Test as Test;
 
 function SideEffect(): string;
 begin
-  Std.Console.WriteText('B');
-  return 'C'
-end;
+  Console.WriteText('B');
+  return 'C';
+end function;
 
 begin
-  Std.Console.WriteText('A', SideEffect());
-  Std.Console.WriteLn('D', 42, true);
-  Std.Console.WriteLn();
-  Std.Test.AssertScreenLine('ABCD42true', 1);
-  Std.Test.AssertScreenLine('', 2)
-end.",
+  Console.WriteText('A', SideEffect());
+  Console.WriteLn('D', 42, true);
+  Console.WriteLn();
+  Test.AssertScreenLine('ABCD42true', 1);
+  Test.AssertScreenLine('', 2);
+end program;"#,
     );
     assert_eq!(execution.value, fpas_bytecode::Value::Unit);
 }

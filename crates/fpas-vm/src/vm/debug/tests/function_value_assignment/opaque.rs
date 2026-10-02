@@ -6,23 +6,23 @@ use super::*;
 
 const SOURCE: &str = r#"program OpaqueIdentityBoundary;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 begin
-  var Region: SavedRegion := SaveRegion(record
+  var Region: Console.SavedRegion := Console.SaveRegion(record
     x := 1;
     y := 1;
     width := 1;
     height := 1;
-  end);
-  mutable var Copy: SavedRegion := SaveRegion(record
+  end record);
+  mutable var Copy: Console.SavedRegion := Console.SaveRegion(record
     x := 1;
     y := 2;
     width := 1;
     height := 1;
-  end);
+  end record);
   var StopMarker: integer := 0;
-end.
+end program;
 "#;
 
 fn compile_opaque() -> VerifiedExecutable {

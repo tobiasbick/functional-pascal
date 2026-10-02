@@ -1,14 +1,15 @@
 program T;
 
-uses Std.Console, Std.Results;
+uses Std.Console as Console;
+uses Std.Results as Results;
 
 function AlwaysOk(V: integer): string;
 begin
-  return 'ok'
-end;
+  return 'ok';
+end function;
 
 begin
   var R: result of integer, string := Error('fail');
-  var M: result of string, string := Map(R, AlwaysOk);
-  WriteLn(IsError(M))
-end.
+  var M: result of string, string := Results.Map(R, AlwaysOk);
+  Console.WriteLn(Results.IsError(M));
+end program;

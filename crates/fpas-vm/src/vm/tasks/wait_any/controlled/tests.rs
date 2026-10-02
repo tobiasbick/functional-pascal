@@ -7,7 +7,7 @@ use std::sync::Arc;
 use std::time::Duration;
 
 fn worker() -> Worker {
-    let (program, errors) = fpas_parser::parse("program T; begin end.");
+    let (program, errors) = fpas_parser::parse(r#"program T; begin null; end program;"#);
     assert!(errors.is_empty());
     let mut worker =
         Worker::new(Arc::new(fpas_compiler::compile(&program).expect("compile"))).expect("worker");

@@ -39,6 +39,13 @@ Every body statement ends with `;`, including the final statement before `else`,
 standalone empty statements and empty body lists are invalid. A branch needs no
 `begin`; an explicit plain block inside it still needs its own `end;`.
 
+Each `if`, `elsif`, and `else` branch has its own local declaration scope.
+Each `when` arm and the `else` body of a `case` also has its own local scope.
+Bindings declared in a branch are not visible after the conditional or in a
+neighboring branch. An explicit plain block still introduces its own nested scope.
+The `null` keyword is reserved; the JSON enum member is migrated from
+`JsonValue.Null` to `JsonValue.NullValue` with its registry, sources, and docs.
+
 `else if` starts a nested conditional requiring its own closer. `elsif` continues
 the same conditional. Diagnose a missing nested closer with an `elsif` hint.
 The required semicolon before `else` is valid; an extra empty statement is not.
@@ -101,10 +108,14 @@ functions are pure; their pattern semantics do not change checked arithmetic.
 
 ## Work
 
-- [ ] Inventory lexer tokens, parser productions/recovery, formatter/comment
+- [x] Inventory lexer tokens, parser productions/recovery, formatter/comment
   attachment, generated source, and editor snippets before modifying grammar.
-- [ ] Implement block endings, terminators, declaration grouping removal, and
+  Evidence: [syntax and consumer inventory](../audit/syntax-and-names.md),
+  including current test coverage, target gaps, and executed baseline checks.
+- [x] Implement block endings, terminators, declaration grouping removal, and
   qualifier-only resolution with targeted diagnostics.
+  Evidence: [block syntax and names delivery](../audit/block-syntax-delivery.md),
+  including migrated consumers and positive, negative, and edge-case coverage.
 - [ ] Implement the precedence/evaluation table and bit-function replacements.
   Inspect existing short-circuit lowering rather than assuming it is absent.
 - [ ] Convert sources through resolved syntax/symbols. Preserve scopes, dangling
@@ -127,5 +138,13 @@ Owners: `fpas-lexer`, `fpas-parser`, `fpas-fmt`, `fpas-sema`, `fpas-project`,
 Current docs to migrate include basics/operators, control-flow, program structure,
 and `docs/pascal/tools/fmt-style.md`; preserve grammar-production links.
 
-Status: target syntax settled; implementation and migration pending.
-Next: after diagnostics, inventory closing-token and import-resolution consumers.
+Status: the inventory and first implementation item are complete. Named block
+endings, terminators, declaration keywords, type-header collection, and alias-only
+resolution are implemented with source, documentation, generator, and editor
+migration. Workspace, FPAS, formatter, CLI, and real editor checks pass; see the
+[delivery evidence](../audit/block-syntax-delivery.md). The remaining migration,
+documentation, and test items also cover operators and later constructs and
+therefore remain open.
+Next: implement the precedence/evaluation table and bit-function replacements
+using the coordinated boundaries in the
+[implementation sequence](../audit/implementation-sequence.md#syntax-and-resolution-deliveries).

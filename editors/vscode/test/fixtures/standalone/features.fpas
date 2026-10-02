@@ -1,23 +1,23 @@
 // Representative valid editor fixture.
 program EditorFeatures;
 
-uses Std.Console;
+ uses Std.Console as Console;
 
-type
-  Greeting = record
+
+  type Greeting = record
     Text: string;
     Count: integer;
-  end;
+  end record;
 
 function RenderGreeting(Value: Greeting): string;
 begin
-  return Value.Text + ' — it''s Functional Pascal'
-end;
+  return Value.Text + ' — it''s Functional Pascal';
+end function;
 
 begin
   // Unicode text is valid inside a UTF-8 string.
-  var Message: Greeting := record Text := 'Grüße aus 東京 🙂'; Count := 1; end;
+  var Message: Greeting := record Text := 'Grüße aus 東京 🙂'; Count := 1; end record;
   // The record and function are intentionally used by the fixture.
   // Keep a line-comment token in the positive fixture.
-  WriteLn(RenderGreeting(Message))
-end.
+  Console.WriteLn(RenderGreeting(Message));
+end program;

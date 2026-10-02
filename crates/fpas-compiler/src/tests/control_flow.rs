@@ -7,28 +7,26 @@ mod repetition;
 #[test]
 fn for_in_array_and_dictionary_execute() {
     assert_succeeds(
-        "\
-program RegisterForIn;
-uses Std.Console, Std.Conv, Std.Dictionaries;
+        r#"program RegisterForIn;
+uses Std.Console as Console; uses Std.Conv as Conv; uses Std.Dictionaries as Dictionaries;
 begin
   mutable var Sum: integer := 0;
-  for Value: integer in [1, 2, 3] do Sum := Sum + Value;
+  for Value: integer in [1, 2, 3] do Sum := Sum + Value; end for;
   var Values: dict of string to integer := ['a': 4, 'b': 5];
   for Key: string in Values do
   begin
-    WriteLn(IntToStr(Values[Key]));
-    Sum := Sum + Values[Key]
-  end;
-  if Sum <> 15 then panic('for-in mismatch')
-end.",
+    Console.WriteLn(Conv.IntToStr(Values[Key]));
+    Sum := Sum + Values[Key];
+  end; end for;
+  if Sum <> 15 then panic('for-in mismatch'); end if;
+end program;"#,
     );
 }
 
 #[test]
 fn scalar_locals_temporaries_and_operations_execute() {
     let execution = assert_succeeds(
-        "\
-program RegisterScalars;
+        r#"program RegisterScalars;
 begin
   mutable var I: integer := 7;
   mutable var R: real := 1.5;
@@ -39,8 +37,8 @@ begin
   S := S + 'cd';
   B := (B and not false) xor false;
   if (I <> 10) or (R <> 1.75) or (S <> 'abcd') or (not B) then
-    panic('scalar mismatch')
-end.",
+    panic('scalar mismatch'); end if;
+end program;"#,
     );
     assert_eq!(execution.value, fpas_bytecode::Value::Unit);
 }
@@ -48,77 +46,74 @@ end.",
 #[test]
 fn nested_while_repeat_for_break_and_continue_execute() {
     assert_succeeds(
-        "\
-program RegisterLoops;
+        r#"program RegisterLoops;
 begin
   mutable var Sum: integer := 0;
   mutable var I: integer := 0;
   while I < 4 do
   begin
     I := I + 1;
-    if I = 2 then continue;
+    if I = 2 then continue; end if;
     for J: integer := 3 downto 1 do
     begin
-      if J = 2 then continue;
+      if J = 2 then continue; end if;
       Sum := Sum + I * J;
-      if Sum > 40 then break
-    end
-  end;
+      if Sum > 40 then break; end if;
+    end; end for;
+  end; end while;
   repeat
     Sum := Sum - 1;
-    if Sum = 30 then break
+    if Sum = 30 then break; end if;
   until Sum < 0;
-  if Sum <> 30 then panic('loop mismatch')
-end.",
+  if Sum <> 30 then panic('loop mismatch'); end if;
+end program;"#,
     );
 }
 
 #[test]
 fn scalar_case_values_ranges_guards_and_else_execute() {
     assert_succeeds(
-        "\
-program RegisterCase;
+        r#"program RegisterCase;
 begin
   mutable var Score: integer := 0;
   var I: integer := 5;
   case I of
-    Candidate if Candidate < 0: Score := 99;
-    1..3: Score := 1;
-    5 if I > 5: Score := 2;
-    5: Score := 3
+    when Candidate if Candidate < 0: Score := 99;
+    when 1..3: Score := 1;
+    when 5 if I > 5: Score := 2;
+    when 5: Score := 3;
   else
-    Score := 4
-  end;
+    Score := 4;
+  end case;
   var S: string := 'beta';
   case S of
-    'alpha': Score := 10;
-    'beta': Score := Score + 4
+    when 'alpha': Score := 10;
+    when 'beta': Score := Score + 4;
   else
-    Score := 20
-  end;
+    Score := 20;
+  end case;
   var Flag: boolean := true;
   case Flag of
-    false: Score := 100;
-    true: Score := Score + 5
-  end;
-  if Score <> 12 then panic('case mismatch')
-end.",
+    when false: Score := 100;
+    when true: Score := Score + 5;
+  end case;
+  if Score <> 12 then panic('case mismatch'); end if;
+end program;"#,
     );
 }
 
 #[test]
 fn mixed_numeric_comparisons_and_integer_edges_execute() {
     assert_succeeds(
-        "\
-program RegisterNumeric;
+        r#"program RegisterNumeric;
 begin
   mutable var X: integer := 9223372036854775807;
   X := X + 1;
   var Bits: integer := (12 and 10) or (3 xor 1);
   var Shifted: integer := (1 shl 5) shr 2;
   if (X <> -9223372036854775807 - 1) or (Bits <> 10) or (Shifted <> 8) then
-    panic('integer mismatch');
-  if not (2 < 2.5) then panic('mixed comparison mismatch')
-end.",
+    panic('integer mismatch'); end if;
+  if not (2 < 2.5) then panic('mixed comparison mismatch'); end if;
+end program;"#,
     );
 }

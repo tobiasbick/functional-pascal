@@ -1,56 +1,56 @@
 program ExpressionEval;
 
-uses Std.Console, Std.Conv;
+uses Std.Console as Console;
+uses Std.Conv as Conv;
 
-type
-  // A simple expression tree using enums with associated data
-  Expr = enum
-    Num(Value: integer);
-    Add(Left: Expr; Right: Expr);
-    Mul(Left: Expr; Right: Expr);
-  end;
+// A simple expression tree using enums with associated data
+type Expr = enum
+  Num(Value: integer);
+  Add(Left: Expr; Right: Expr);
+  Mul(Left: Expr; Right: Expr);
+end enum;
 
 function Eval(E: Expr): integer;
 begin
   case E of
-    Expr.Num(V):
-    begin
-      return V
-    end;
-    Expr.Add(L, R):
-    begin
-      return Eval(L) + Eval(R)
-    end;
-    Expr.Mul(L, R):
-    begin
-      return Eval(L) * Eval(R)
-    end
-  end
-end;
+    when Expr.Num(V):
+      begin
+        return V;
+      end;
+    when Expr.Add(L, R):
+      begin
+        return Eval(L) + Eval(R);
+      end;
+    when Expr.Mul(L, R):
+      begin
+        return Eval(L) * Eval(R);
+      end;
+  end case;
+end function;
 
 function Show(E: Expr): string;
 begin
   case E of
-    Expr.Num(V):
-    begin
-      return IntToStr(V)
-    end;
-    Expr.Add(L, R):
-    begin
-      return ((('(' + Show(L)) + ' + ') + Show(R)) + ')'
-    end;
-    Expr.Mul(L, R):
-    begin
-      return ((('(' + Show(L)) + ' * ') + Show(R)) + ')'
-    end
-  end
-end;
+    when Expr.Num(V):
+      begin
+        return Conv.IntToStr(V);
+      end;
+    when Expr.Add(L, R):
+      begin
+        return ((('(' + Show(L)) + ' + ') + Show(R)) + ')';
+      end;
+    when Expr.Mul(L, R):
+      begin
+        return ((('(' + Show(L)) + ' * ') + Show(R)) + ')';
+      end;
+  end case;
+end function;
 
 begin
   var E1: Expr := Expr.Num(42);
   var E2: Expr := Expr.Add(Expr.Num(3), Expr.Num(7));
   var E3: Expr := Expr.Mul(E2, Expr.Add(Expr.Num(4), Expr.Num(5)));
-  WriteLn((Show(E1) + ' = ') + IntToStr(Eval(E1)));
-  WriteLn((Show(E2) + ' = ') + IntToStr(Eval(E2)));
-  WriteLn((Show(E3) + ' = ') + IntToStr(Eval(E3)))
-end.
+  Console.WriteLn((Show(E1) + ' = ') + Conv.IntToStr(Eval(E1)));
+  Console.WriteLn((Show(E2) + ' = ') + Conv.IntToStr(Eval(E2)));
+  Console.WriteLn((Show(E3) + ' = ') + Conv.IntToStr(Eval(E3)));
+end program;

@@ -19,12 +19,16 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`case_stmt`, `case
 ## Example
 
 ```pascal
+uses Std.Console as Console;
+
 case Status of
-  0: WriteLn('ok');
-  1, 2: WriteLn('retry');
-else
-  WriteLn('failed')
-end
+  when 0:
+    Console.WriteLn('ok');
+  when 1, 2:
+    Console.WriteLn('retry');
+  else
+    Console.WriteLn('failed');
+end case;
 ```
 
 ## See also

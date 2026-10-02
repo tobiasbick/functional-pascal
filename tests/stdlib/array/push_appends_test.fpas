@@ -1,10 +1,11 @@
 program T;
 
-uses Std.Console, Std.Arrays;
+uses Std.Console as Console;
+uses Std.Arrays as Arrays;
 
 begin
   mutable var A: array of integer := [1, 2];
-  Push(A, 3);
-  WriteLn(Length(A));
-  WriteLn(A[2])
-end.
+  Arrays.Push(A, 3);
+  Console.WriteLn(Arrays.Length(A));
+  Console.WriteLn(A[2]);
+end program;

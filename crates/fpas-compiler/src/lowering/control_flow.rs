@@ -19,9 +19,16 @@ impl LoweringContext {
             Stmt::If {
                 condition,
                 then_branch,
+                elsif_branches,
                 else_branch,
                 span,
-            } => self.lower_if(condition, then_branch, else_branch.as_deref(), *span),
+            } => self.lower_if(
+                condition,
+                then_branch,
+                elsif_branches,
+                else_branch.as_deref(),
+                *span,
+            ),
             Stmt::While {
                 condition,
                 body,
@@ -70,6 +77,7 @@ impl LoweringContext {
         &mut self,
         condition: &Expr,
         then_branch: &Stmt,
+        elsif_branches: &[(Expr, Box<Stmt>)],
         else_branch: Option<&Stmt>,
         span: fpas_lexer::Span,
     ) -> Result<(), CompileError> {
@@ -84,15 +92,21 @@ impl LoweringContext {
         })?;
 
         self.switch_to(then_block);
+        self.begin_scope();
         self.lower_statement(then_branch)?;
+        self.end_scope();
         let then_continues = !self.is_terminated();
         if then_continues {
             self.jump(merge_block)?;
         }
 
         self.switch_to(else_block);
-        if let Some(else_branch) = else_branch {
+        if let Some(((condition, body), remaining)) = elsif_branches.split_first() {
+            self.lower_if(condition, body, remaining, else_branch, span)?;
+        } else if let Some(else_branch) = else_branch {
+            self.begin_scope();
             self.lower_statement(else_branch)?;
+            self.end_scope();
         }
         let else_continues = !self.is_terminated();
         if else_continues {

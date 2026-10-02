@@ -5,8 +5,8 @@
 
 program AssertFailDemo;
 
-uses Std.Test;
+uses Std.Test as Test;
 
 begin
-  AssertEquals(4, 2 + 3)
-end.
+  Test.AssertEquals(4, 2 + 3);
+end program;

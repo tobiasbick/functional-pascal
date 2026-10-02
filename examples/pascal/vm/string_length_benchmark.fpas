@@ -4,79 +4,92 @@
 
 program VmStringLengthBenchmark;
 
-uses Std.Args, Std.Console, Std.Conv, Std.Str, Std.Time;
+uses Std.Args as Args;
+uses Std.Console as Console;
+uses Std.Conv as Conv;
+uses Std.Str as Str;
+uses Std.Time as Time;
 
-const
-  WarmupIterations: integer := 10000;
-  StringSize: integer := 10000;
+const WarmupIterations: integer := 10000;
+const StringSize: integer := 10000;
 
 function MakeLong(Count: integer): string;
 begin
   mutable var Text: string := '';
   for Index: integer := 1 to Count do
-  begin
-    Text := Text + 'x'
-  end;
+    begin
+      Text := Text + 'x';
+    end;
+  end for;
 
-  return Text
-end;
+  return Text;
+end function;
 
 function RunLength(Text: string; Iterations: integer): integer;
 begin
   mutable var Total: integer := 0;
   for Index: integer := 1 to Iterations do
-  begin
-    Total := Total + Std.Str.Length(Text)
-  end;
+    begin
+      Total := Total + Str.Length(Text);
+    end;
+  end for;
 
-  return Total
-end;
+  return Total;
+end function;
 
 begin
-  if (ParamCount() < 1) or (ParamCount() > 2) then
-  begin
-    panic('usage: string_length_benchmark.fpas -- ITERATIONS [MAX_MILLIS]')
-  end;
-  var Iterations: integer := StrToInt(ParamStr(0));
-  if Iterations < 1 then
-  begin
-    panic('ITERATIONS must be positive')
-  end;
-  mutable var MaxMillis: integer := 0;
-  if ParamCount() = 2 then
-  begin
-    MaxMillis := StrToInt(ParamStr(1));
-    if MaxMillis < 1 then
+  if (Args.ParamCount() < 1) or (Args.ParamCount() > 2) then
     begin
-      panic('MAX_MILLIS must be positive')
-    end
-  end;
+      panic('usage: string_length_benchmark.fpas -- ITERATIONS [MAX_MILLIS]');
+    end;
+  end if;
+  var Iterations: integer := Conv.StrToInt(Args.ParamStr(0));
+  if Iterations < 1 then
+    begin
+      panic('ITERATIONS must be positive');
+    end;
+  end if;
+  mutable var MaxMillis: integer := 0;
+  if Args.ParamCount() = 2 then
+    begin
+      MaxMillis := Conv.StrToInt(Args.ParamStr(1));
+      if MaxMillis < 1 then
+        begin
+          panic('MAX_MILLIS must be positive');
+        end;
+      end if;
+    end;
+  end if;
   var Text: string := MakeLong(StringSize);
   mutable var Total: integer := RunLength(Text, WarmupIterations);
-  var Started: integer := MonotonicMillis();
+  var Started: integer := Time.MonotonicMillis();
   Total := RunLength(Text, Iterations);
-  var Elapsed: integer := ElapsedMillis(Started);
+  var Elapsed: integer := Time.ElapsedMillis(Started);
   mutable var OpsPerSecond: integer := 0;
   if Elapsed > 0 then
-  begin
-    OpsPerSecond := (Iterations * 1000) div Elapsed
-  end;
+    begin
+      OpsPerSecond := (Iterations * 1000) div Elapsed;
+    end;
+  end if;
 
-  WriteLn((('iterations: ' + IntToStr(Iterations)) + ', string size: ') + IntToStr(StringSize));
-  WriteLn(('elapsed: ' + IntToStr(Elapsed)) + ' ms');
+  Console.WriteLn((('iterations: ' + Conv.IntToStr(Iterations)) + ', string size: ') +
+                  Conv.IntToStr(StringSize));
+  Console.WriteLn(('elapsed: ' + Conv.IntToStr(Elapsed)) + ' ms');
   if Elapsed > 0 then
-  begin
-    WriteLn(('throughput: ' + IntToStr(OpsPerSecond)) + ' lengths/s')
-  end
+    begin
+      Console.WriteLn(('throughput: ' + Conv.IntToStr(OpsPerSecond)) + ' lengths/s');
+    end;
   else
-  begin
-    WriteLn('throughput: unavailable (elapsed time is 0 ms)')
-  end;
+    begin
+      Console.WriteLn('throughput: unavailable (elapsed time is 0 ms)');
+    end;
+  end if;
 
-  WriteLn('length total: ' + IntToStr(Total));
+  Console.WriteLn('length total: ' + Conv.IntToStr(Total));
   if (MaxMillis > 0) and (Elapsed > MaxMillis) then
-  begin
-    panic(((('string-length benchmark regression: ' + IntToStr(Elapsed)) + ' ms exceeds limit ') + IntToStr(MaxMillis)) +
-          ' ms')
-  end
-end.
+    begin
+      panic(((('string-length benchmark regression: ' + Conv.IntToStr(Elapsed)) + ' ms exceeds limit ') + Conv.IntToStr(MaxMillis)) +
+            ' ms');
+    end;
+  end if;
+end program;

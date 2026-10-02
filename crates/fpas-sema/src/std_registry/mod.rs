@@ -4,13 +4,11 @@
 //! **Maintenance:** Registering or changing a `Std.*` symbol here must be reflected in the matching unit
 //! Markdown file and in runtime/compiler/bytecode code (`fpas-std`, `fpas-bytecode`, `fpas-compiler`).
 
-mod aliases;
 mod api;
 mod builtins;
 mod loaded;
 mod receiver;
 
-pub use aliases::register_short_aliases;
 pub use api::{
     IntrinsicStdSymbol, IntrinsicStdSymbolKind, intrinsic_std_symbols, intrinsic_std_units,
 };

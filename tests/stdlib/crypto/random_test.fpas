@@ -1,36 +1,40 @@
 program CryptoRandomTest;
 
-uses Std.Arrays, Std.Crypto, Std.Results, Std.Test;
+uses Std.Arrays as Arrays;
+uses Std.Crypto as Crypto;
+uses Std.Results as Results;
+uses Std.Test as Test;
 
 begin
-  case RandomBytes(32) of
-    Ok(Bytes):
-    begin
-      AssertEquals(32, Length(Bytes));
-      for Index: integer := 0 to Length(Bytes) - 1 do
+  case Crypto.RandomBytes(32) of
+    when Ok(Bytes):
       begin
-        AssertTrue(Bytes[Index] >= 0);
-        AssertTrue(Bytes[Index] <= 255)
-      end
-    end;
-    Error(Message):
-    begin
-      Fail(Message)
-    end
-  end;
+        Test.AssertEquals(32, Arrays.Length(Bytes));
+        for Index: integer := 0 to Arrays.Length(Bytes) - 1 do
+          begin
+            Test.AssertTrue(Bytes[Index] >= 0);
+            Test.AssertTrue(Bytes[Index] <= 255);
+          end;
+        end for;
+      end;
+    when Error(Message):
+      begin
+        Test.Fail(Message);
+      end;
+  end case;
 
-  case RandomInt(7, 7) of
-    Ok(Value):
-    begin
-      AssertEquals(7, Value)
-    end;
-    Error(Message):
-    begin
-      Fail(Message)
-    end
-  end;
+  case Crypto.RandomInt(7, 7) of
+    when Ok(Value):
+      begin
+        Test.AssertEquals(7, Value);
+      end;
+    when Error(Message):
+      begin
+        Test.Fail(Message);
+      end;
+  end case;
 
-  AssertTrue(Std.Results.IsError(RandomBytes(-1)));
-  AssertTrue(Std.Results.IsError(RandomBytes(1048577)));
-  AssertTrue(Std.Results.IsError(RandomInt(2, 1)))
-end.
+  Test.AssertTrue(Results.IsError(Crypto.RandomBytes(-1)));
+  Test.AssertTrue(Results.IsError(Crypto.RandomBytes(1048577)));
+  Test.AssertTrue(Results.IsError(Crypto.RandomInt(2, 1)));
+end program;

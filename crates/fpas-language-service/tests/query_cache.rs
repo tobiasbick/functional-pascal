@@ -58,12 +58,12 @@ fn older_request_completion_cannot_replace_new_editor_contents() {
     let mut service = LanguageService::load(&manifest);
     service
         .documents_mut()
-        .open_document(&main, 1, "program Old; begin end.")
+        .open_document(&main, 1, r#"program Old; begin null; end program;"#)
         .expect("old buffer");
     let mut old_request = service.fork_for_queries();
     service
         .documents_mut()
-        .apply_full_text(&main, 2, "program New; begin end.")
+        .apply_full_text(&main, 2, r#"program New; begin null; end program;"#)
         .expect("new buffer");
     let latest = service
         .fork_for_queries()

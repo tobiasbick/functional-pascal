@@ -1,19 +1,22 @@
 program FluentMutationTaskTest;
 
-uses Std.Arrays, Std.Math, Std.Tasks, Std.Test;
+uses Std.Arrays as Arrays;
+uses Std.Math as Math;
+uses Std.Tasks as Tasks;
+uses Std.Test as Test;
 
 function Add(X: integer; Y: integer): integer;
 begin
-  return X + Y
-end;
+  return X + Y;
+end function;
 
 begin
   mutable var Items: array of integer := [1, 2];
-  Items.Push(3);
-  AssertEquals(3, Items.Pop());
-  AssertEquals(2, Items.Length());
+  Arrays.Push(Items, 3);
+  Test.AssertEquals(3, Arrays.Pop(Items));
+  Test.AssertEquals(2, Arrays.Length(Items));
   var Job: task := go (20).Add(22);
-  AssertEquals(42, Wait(Job));
-  var IntrinsicTask: task := go (-2).Abs();
-  AssertEquals(2, Wait(IntrinsicTask))
-end.
+  Test.AssertEquals(42, Tasks.Wait(Job));
+  var IntrinsicTask: task := go Math.Abs((-2));
+  Test.AssertEquals(2, Tasks.Wait(IntrinsicTask));
+end program;

@@ -1,12 +1,14 @@
 program JsonParseDuplicateNamesTest;
 
-uses Std.Json, Std.Results, Std.Test;
+uses Std.Json as Json;
+uses Std.Results as Results;
+uses Std.Test as Test;
 
 begin
-  AssertTrue(Std.Results.IsError(Parse('{"version":1,"version":2}')));
-  AssertTrue(Std.Results.IsError(Parse('{"outer":{"x":1,"x":2}}')));
-  AssertTrue(Std.Results.IsError(Parse('[{"x":1,"x":2}]')));
-  AssertTrue(Std.Results.IsError(Parse('{"x":1,"\u0078":2}')));
-  AssertTrue(Std.Results.IsOk(Parse('[{"x":1},{"x":2}]')));
-  AssertTrue(Std.Results.IsOk(Parse('{"x":1,"X":2}')))
-end.
+  Test.AssertTrue(Results.IsError(Json.Parse('{"version":1,"version":2}')));
+  Test.AssertTrue(Results.IsError(Json.Parse('{"outer":{"x":1,"x":2}}')));
+  Test.AssertTrue(Results.IsError(Json.Parse('[{"x":1,"x":2}]')));
+  Test.AssertTrue(Results.IsError(Json.Parse('{"x":1,"\u0078":2}')));
+  Test.AssertTrue(Results.IsOk(Json.Parse('[{"x":1},{"x":2}]')));
+  Test.AssertTrue(Results.IsOk(Json.Parse('{"x":1,"X":2}')));
+end program;

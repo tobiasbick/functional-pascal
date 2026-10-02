@@ -1,7 +1,7 @@
 program T;
 
-uses Std.Arrays;
+uses Std.Arrays as Arrays;
 
 begin
-  var C: array of integer := Concat([1], [true])
-end.
+  var C: array of integer := Arrays.Concat([1], [true]);
+end program;

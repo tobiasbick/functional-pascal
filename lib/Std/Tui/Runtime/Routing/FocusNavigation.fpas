@@ -1,115 +1,130 @@
 unit Std.Tui.Runtime.Routing.FocusNavigation;
 
-uses
-  Std.Arrays, Std.Console, Std.Tui.Chrome.StatusItem, Std.Tui.Elements.Element,
-  Std.Tui.Ids.ControlId, Std.Tui.Runtime.Msg, Std.Tui.Runtime.Routing.Focus;
+uses Std.Arrays as Arrays;
+uses Std.Console as Console;
+uses Std.Tui.Chrome.StatusItem as StatusItem;
+uses Std.Tui.Elements.Element as Element;
+uses Std.Tui.Ids.ControlId as ControlId;
+uses Std.Tui.Runtime.Msg as Msg;
+uses Std.Tui.Runtime.Routing.Focus as Focus;
 
-function TuiButtonFocusControls(Node: TuiElement): array of TuiControlId;
+function TuiButtonFocusControls(Node: Element.TuiElement): array of ControlId.TuiControlId;
 begin
   case Node of
-    TuiElement.Button(Button):
-    begin
-      if Button.Enabled then
+    when Element.TuiElement.Button(Button):
       begin
-        return [Button.Id]
-      end;
-
-      return []
-    end;
-    TuiElement.Desktop(Focused, Children):
-    begin
-      mutable var LastOverlay: integer := -1;
-      for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
-      begin
-        case Children[Index] of
-          TuiElement.Overlay(Title, OverlayChildren):
+        if Button.Enabled then
           begin
-            LastOverlay := Index
-          end
-          else
+            return [Button.Id];
+          end;
+        end if;
+
+        return [];
+      end;
+    when Element.TuiElement.Desktop(Focused, Children):
+      begin
+        mutable var LastOverlay: integer := -1;
+        for Index: integer := 0 to Arrays.Length(Children) - 1 do
           begin
-          end
-        end
-      end;
+            case Children[Index] of
+              when Element.TuiElement.Overlay(Title, OverlayChildren):
+                begin
+                  LastOverlay := Index;
+                end;
+              else
+                begin
+                  null;
+                end;
+            end case;
+          end;
+        end for;
 
-      if LastOverlay >= 0 then
-      begin
-        return TuiButtonFocusControls(Children[LastOverlay])
-      end;
-      mutable var Controls: array of TuiControlId := [];
-      for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
-      begin
-        Controls := Std.Arrays.Concat(Controls, TuiButtonFocusControls(Children[Index]))
-      end;
+        if LastOverlay >= 0 then
+          begin
+            return TuiButtonFocusControls(Children[LastOverlay]);
+          end;
+        end if;
+        mutable var Controls: array of ControlId.TuiControlId := [];
+        for Index: integer := 0 to Arrays.Length(Children) - 1 do
+          begin
+            Controls := Arrays.Concat(Controls, TuiButtonFocusControls(Children[Index]));
+          end;
+        end for;
 
-      return Controls
-    end;
-    TuiElement.Scroll(Id, Offset, ChangeAction, Children):
-    begin
-      mutable var Controls: array of TuiControlId := [];
-      for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
-      begin
-        Controls := Std.Arrays.Concat(Controls, TuiButtonFocusControls(Children[Index]))
+        return Controls;
       end;
-
-      return Controls
-    end;
-    TuiElement.Row(Children, Spacing):
-    begin
-      mutable var Controls: array of TuiControlId := [];
-      for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
+    when Element.TuiElement.Scroll(Id, Offset, ChangeAction, Children):
       begin
-        Controls := Std.Arrays.Concat(Controls, TuiButtonFocusControls(Children[Index]))
-      end;
+        mutable var Controls: array of ControlId.TuiControlId := [];
+        for Index: integer := 0 to Arrays.Length(Children) - 1 do
+          begin
+            Controls := Arrays.Concat(Controls, TuiButtonFocusControls(Children[Index]));
+          end;
+        end for;
 
-      return Controls
-    end;
-    TuiElement.Column(Children, Spacing):
-    begin
-      mutable var Controls: array of TuiControlId := [];
-      for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
+        return Controls;
+      end;
+    when Element.TuiElement.Row(Children, Spacing):
       begin
-        Controls := Std.Arrays.Concat(Controls, TuiButtonFocusControls(Children[Index]))
-      end;
+        mutable var Controls: array of ControlId.TuiControlId := [];
+        for Index: integer := 0 to Arrays.Length(Children) - 1 do
+          begin
+            Controls := Arrays.Concat(Controls, TuiButtonFocusControls(Children[Index]));
+          end;
+        end for;
 
-      return Controls
-    end;
-    TuiElement.Layout(Settings, Children):
-    begin
-      mutable var Controls: array of TuiControlId := [];
-      for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
+        return Controls;
+      end;
+    when Element.TuiElement.Column(Children, Spacing):
       begin
-        Controls := Std.Arrays.Concat(Controls, TuiButtonFocusControls(Children[Index]))
-      end;
+        mutable var Controls: array of ControlId.TuiControlId := [];
+        for Index: integer := 0 to Arrays.Length(Children) - 1 do
+          begin
+            Controls := Arrays.Concat(Controls, TuiButtonFocusControls(Children[Index]));
+          end;
+        end for;
 
-      return Controls
-    end;
-    TuiElement.Panel(Title, Children):
-    begin
-      mutable var Controls: array of TuiControlId := [];
-      for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
+        return Controls;
+      end;
+    when Element.TuiElement.Layout(Settings, Children):
       begin
-        Controls := Std.Arrays.Concat(Controls, TuiButtonFocusControls(Children[Index]))
-      end;
+        mutable var Controls: array of ControlId.TuiControlId := [];
+        for Index: integer := 0 to Arrays.Length(Children) - 1 do
+          begin
+            Controls := Arrays.Concat(Controls, TuiButtonFocusControls(Children[Index]));
+          end;
+        end for;
 
-      return Controls
-    end;
-    TuiElement.Overlay(Title, Children):
-    begin
-      mutable var Controls: array of TuiControlId := [];
-      for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
+        return Controls;
+      end;
+    when Element.TuiElement.Panel(Title, Children):
       begin
-        Controls := Std.Arrays.Concat(Controls, TuiButtonFocusControls(Children[Index]))
-      end;
+        mutable var Controls: array of ControlId.TuiControlId := [];
+        for Index: integer := 0 to Arrays.Length(Children) - 1 do
+          begin
+            Controls := Arrays.Concat(Controls, TuiButtonFocusControls(Children[Index]));
+          end;
+        end for;
 
-      return Controls
-    end
+        return Controls;
+      end;
+    when Element.TuiElement.Overlay(Title, Children):
+      begin
+        mutable var Controls: array of ControlId.TuiControlId := [];
+        for Index: integer := 0 to Arrays.Length(Children) - 1 do
+          begin
+            Controls := Arrays.Concat(Controls, TuiButtonFocusControls(Children[Index]));
+          end;
+        end for;
+
+        return Controls;
+      end;
     else
-    begin
-      return []
-    end
-  end
-end;
+      begin
+        return [];
+      end;
+  end case;
+end function;
 
 // Routes an unmodified arrow key between enabled buttons in the active modal or full tree.
 //
@@ -118,63 +133,75 @@ end;
 // - `Previous`: Previously focused control identifier.
 // - `Key`: Console key event to route or match.
 public function TuiRouteButtonFocusNavigation(
-  Root: TuiElement;
-  Previous: option of TuiControlId;
-  Key: Std.Console.KeyEvent
-): option of array of TuiMsg;
+  Root: Element.TuiElement;
+  Previous: option of ControlId.TuiControlId;
+  Key: Console.KeyEvent
+): option of array of Msg.TuiMsg;
 begin
   if ((Key.shift or Key.ctrl) or Key.alt) or Key.meta then
-  begin
-    return None
-  end;
+    begin
+      return None;
+    end;
+  end if;
   mutable var Direction: integer := 0;
-  if (Key.kind = Std.Console.KeyKind.Up) or (Key.kind = Std.Console.KeyKind.Left) then
-  begin
-    Direction := -1
-  end
-  else if (Key.kind = Std.Console.KeyKind.Down) or (Key.kind = Std.Console.KeyKind.Right) then
-  begin
-    Direction := 1
-  end
+  if (Key.kind = Console.KeyKind.Up) or (Key.kind = Console.KeyKind.Left) then
+    begin
+      Direction := -1;
+    end;
   else
-  begin
-    return None
-  end;
-  var Controls: array of TuiControlId := TuiButtonFocusControls(Root);
-  if Std.Arrays.Length(Controls) = 0 then
-  begin
-    return None
-  end;
+    if (Key.kind = Console.KeyKind.Down) or (Key.kind = Console.KeyKind.Right) then
+      begin
+        Direction := 1;
+      end;
+    else
+      begin
+        return None;
+      end;
+    end if;
+  end if;
+  var Controls: array of ControlId.TuiControlId := TuiButtonFocusControls(Root);
+  if Arrays.Length(Controls) = 0 then
+    begin
+      return None;
+    end;
+  end if;
   mutable var CurrentIndex: integer := -1;
   case Previous of
-    Some(Id):
-    begin
-      CurrentIndex := TuiControlIndex(Controls, Id)
-    end;
-    None:
-    begin
-      return None
-    end
-  end;
+    when Some(Id):
+      begin
+        CurrentIndex := Focus.TuiControlIndex(Controls, Id);
+      end;
+    when None:
+      begin
+        return None;
+      end;
+  end case;
 
   if CurrentIndex < 0 then
-  begin
-    return None
-  end;
+    begin
+      return None;
+    end;
+  end if;
   mutable var NextIndex: integer := CurrentIndex + Direction;
   if NextIndex < 0 then
-  begin
-    NextIndex := Std.Arrays.Length(Controls) - 1
-  end
-  else if NextIndex >= Std.Arrays.Length(Controls) then
-  begin
-    NextIndex := 0
-  end;
+    begin
+      NextIndex := Arrays.Length(Controls) - 1;
+    end;
+  else
+    if NextIndex >= Arrays.Length(Controls) then
+      begin
+        NextIndex := 0;
+      end;
+    end if;
+  end if;
 
   if NextIndex = CurrentIndex then
-  begin
-    return Some([])
-  end;
+    begin
+      return Some([]);
+    end;
+  end if;
 
-  return Some([TuiMsg.FocusChanged(Previous, Some(Controls[NextIndex]))])
-end;
+  return Some([Msg.TuiMsg.FocusChanged(Previous, Some(Controls[NextIndex]))]);
+end function;
+
+end unit;

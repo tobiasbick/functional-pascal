@@ -3,15 +3,16 @@ use super::*;
 #[test]
 fn unit_with_uses_and_declarations() {
     let unit = parse_unit_ok(
-        "\
-unit MyApp.Math;
-uses Std.Math;
+        r#"unit MyApp.Math;
+uses Std.Math as Math;
 
 function Double(X: integer): integer;
 begin
-  return X * 2
-end;
-",
+  return X * 2;
+end function;
+end unit;
+
+"#,
     );
 
     assert_eq!(unit.name.parts, vec!["MyApp", "Math"]);
@@ -24,10 +25,11 @@ end;
 #[test]
 fn unit_with_multiple_uses_comma_separated() {
     let unit = parse_unit_ok(
-        "\
-unit MyApp.Core;
-uses Std.Console, Std.Math, Std.Str;
-",
+        r#"unit MyApp.Core;
+uses Std.Console as Console; uses Std.Math as Math; uses Std.Str as Str;
+end unit;
+
+"#,
     );
 
     assert_eq!(unit.uses.len(), 3);
@@ -39,18 +41,19 @@ uses Std.Console, Std.Math, Std.Str;
 #[test]
 fn unit_with_only_const_and_type_declarations() {
     let unit = parse_unit_ok(
-        "\
-unit MyApp.Config;
+        r#"unit MyApp.Config;
 
-const
-  MaxSize: integer := 1024;
 
-type
-  Pair = record
+  const MaxSize: integer := 1024;
+
+
+  type Pair = record
     A: integer;
     B: integer;
-  end;
-",
+  end record;
+end unit;
+
+"#,
     );
 
     assert_eq!(unit.declarations.len(), 2);

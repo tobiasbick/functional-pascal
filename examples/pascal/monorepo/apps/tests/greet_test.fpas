@@ -1,7 +1,8 @@
 program GreetTest;
 
-uses Demo.Greet, Std.Test;
+uses Demo.Greet as Greet;
+uses Std.Test as Test;
 
 begin
-  AssertEquals('Hello from library project', Message())
-end.
+  Test.AssertEquals('Hello from library project', Greet.Message());
+end program;

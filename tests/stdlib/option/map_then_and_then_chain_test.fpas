@@ -1,27 +1,30 @@
 program T;
 
-uses Std.Console, Std.Options, Std.Conv;
+uses Std.Console as Console;
+uses Std.Options as Options;
+uses Std.Conv as Conv;
 
 function Double(V: integer): integer;
 begin
-  return V * 2
-end;
+  return V * 2;
+end function;
 
 function PositiveToStr(V: integer): option of string;
 begin
   if V > 0 then
-  begin
-    return Some(IntToStr(V))
-  end
+    begin
+      return Some(Conv.IntToStr(V));
+    end;
   else
-  begin
-    return None
-  end
-end;
+    begin
+      return None;
+    end;
+  end if;
+end function;
 
 begin
   var O: option of integer := Some(5);
-  var Doubled: option of integer := Map(O, Double);
-  var Final: option of string := AndThen(Doubled, PositiveToStr);
-  WriteLn(Unwrap(Final))
-end.
+  var Doubled: option of integer := Options.Map(O, Double);
+  var Final: option of string := Options.AndThen(Doubled, PositiveToStr);
+  Console.WriteLn(Options.Unwrap(Final));
+end program;

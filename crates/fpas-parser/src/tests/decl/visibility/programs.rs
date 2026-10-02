@@ -3,15 +3,14 @@ use super::*;
 #[test]
 fn program_declarations_default_to_private() {
     let program = parse_ok(
-        "\
-program App;
+        r#"program App;
 
-var
-  X: integer := 1;
 
-begin
-end.
-",
+  var X: integer := 1;
+
+begin null;
+end program;
+"#,
     );
 
     assert_eq!(program.declarations.len(), 1);

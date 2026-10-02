@@ -3,30 +3,40 @@
 `Option of T` represents a value that may be absent:
 
 ```pascal
-var O: Option of integer := Some(42);
-var N: Option of integer := None;
+var O: option of integer := Some(42);
+var N: option of integer := None;
+
 ```
 
 ## Using Option
 
 ```pascal
-function FindIndex(Items: array of integer; Target: integer): Option of integer;
+function FindIndex(Items: array of integer; Target: integer): option of integer;
 begin
   for I: integer := 0 to Length(Items) - 1 do
     if Items[I] = Target then
       return Some(I);
-  return None
-end;
+    end if;
+  end for;
+
+  return None;
+end function;
+
 ```
 
 ## Handling with case
 
 ```pascal
-var Idx: Option of integer := FindIndex([10, 20, 30], 20);
+uses Std.Console as Console;
+uses Std.Conv as Conv;
+
+var Idx: option of integer := FindIndex([10, 20, 30], 20);
 case Idx of
-  Some(I): WriteLn('Found at ' + IntToStr(I));
-  None:    WriteLn('Not found');
-end;
+  when Some(I):
+    Console.WriteLn('Found at ' + Conv.IntToStr(I));
+  when None:
+    Console.WriteLn('Not found');
+end case;
 ```
 
 ## See also

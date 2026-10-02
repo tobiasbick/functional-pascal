@@ -12,8 +12,8 @@ fn unwrap_namespace_mismatch_reports_a_type_error_before_lowering() {
         .nth(2)
         .expect("repository root");
     for (container, constructor, correct, wrong) in [
-        ("option of TuiStyle", "Some", "Options", "Results"),
-        ("result of TuiStyle, string", "Ok", "Results", "Options"),
+        ("option of Tui.TuiStyle", "Some", "Options", "Results"),
+        ("result of Tui.TuiStyle, string", "Ok", "Results", "Options"),
     ] {
         for function in ["Unwrap", "UnwrapOr"] {
             for namespace in [wrong, correct] {
@@ -21,15 +21,7 @@ fn unwrap_namespace_mismatch_reports_a_type_error_before_lowering() {
                 write_text(
                     &cwd.join("src/main.fpas"),
                     &format!(
-                        "program UnwrapRepro;
-uses Std.Options, Std.Results, Std.Tui, Std.Test;
-begin
-  var Base: TuiStyle := TuiStyle.FromColors(
-    TuiColor.FromRgb(1, 2, 3), TuiColor.FromRgb(4, 5, 6));
-  var Style: {container} := {constructor}(Base);
-  var Red: integer := Std.{namespace}.{function}(Style{fallback}).Background.Red;
-  AssertEquals(4, Red)
-end."
+                        "program UnwrapRepro;\nuses Std.Options as Options; uses Std.Results as Results; uses Std.Tui as Tui; uses Std.Test as Test;\nbegin\n  var Base: Tui.TuiStyle := Tui.TuiStyle.FromColors(\n    Tui.TuiColor.FromRgb(1, 2, 3), Tui.TuiColor.FromRgb(4, 5, 6));\n  var Style: {container} := {constructor}(Base);\n  var Red: integer := {namespace}.{function}(Style{fallback}).Background.Red;\n  Test.AssertEquals(4, Red);\nend program;"
                     ),
                 );
                 let command = if namespace == correct { "run" } else { "check" };

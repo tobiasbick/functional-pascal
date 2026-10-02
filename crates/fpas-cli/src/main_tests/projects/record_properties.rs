@@ -11,32 +11,34 @@ fn run_cli_reads_and_writes_property_from_unit_global_record() {
     support::write_program_project_file(&project_file, "src/main.fpas", &["src/*.fpas"]);
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;
-uses App.Data, Std.Console, Std.Conv;
+        r#"program Main;
+uses App.Data as Data; uses Std.Console as Console; uses Std.Conv as Conv;
 begin
-  WriteLn(IntToStr(Global.Value));
-  Global.Value := 19
-end.",
+  Console.WriteLn(Conv.IntToStr(Data.Global.Value));
+  Data.Global.Value := 19;
+end program;"#,
     );
     write_text(
         &cwd.join("src/data.fpas"),
-        "unit App.Data;
-uses Std.Console, Std.Conv;
-public type
-  Counter = record
+        r#"unit App.Data;
+uses Std.Console as Console; uses Std.Conv as Conv;
+
+  public type Counter = record
     public Base: integer;
     public function GetValue(Self: Counter): integer;
     begin
-      return Self.Base
-    end;
+      return Self.Base;
+    end function;
     public procedure SetValue(Self: Counter; Value: integer);
     begin
-      WriteLn('set:' + IntToStr(Value))
-    end;
+      Console.WriteLn('set:' + Conv.IntToStr(Value));
+    end procedure;
     public property Value: integer read GetValue write SetValue;
-  end;
-public var Global: Counter := record Base := 12; end;
-",
+  end record;
+  public var Global: Counter := record Base := 12; end record;
+end unit;
+
+"#,
     );
 
     let (exit_code, stdout_output, stderr_output) =

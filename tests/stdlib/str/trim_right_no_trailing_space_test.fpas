@@ -1,7 +1,8 @@
 program T;
 
-uses Std.Console, Std.Str;
+uses Std.Console as Console;
+uses Std.Str as Str;
 
 begin
-  WriteLn(TrimRight('hi'))
-end.
+  Console.WriteLn(Str.TrimRight('hi'));
+end program;

@@ -1,6 +1,6 @@
 //! Safe source-span anchors used while attaching comments.
 
-use fpas_lexer::{Span, Token, lex_with_comments};
+use fpas_lexer::Span;
 use fpas_parser::Stmt;
 
 /// Start/end byte offsets of a formattable construct in source.
@@ -26,16 +26,6 @@ pub(crate) fn stmt_start(stmt: &Stmt) -> usize {
 #[must_use]
 pub(crate) fn stmt_end(stmt: &Stmt) -> usize {
     span_end(stmt.span())
-}
-
-/// Byte offset of the compilation unit's `uses` keyword when present.
-#[must_use]
-pub(crate) fn uses_keyword_offset(source: &str) -> Option<usize> {
-    let (tokens, _, _) = lex_with_comments(source);
-    tokens
-        .iter()
-        .find(|token| token.token == Token::Uses)
-        .map(|token| token.span.offset)
 }
 
 /// Returns `true` when `comment` may trail the construct ending at `anchor_end`.

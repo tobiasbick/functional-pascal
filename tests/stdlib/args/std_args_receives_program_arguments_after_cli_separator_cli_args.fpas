@@ -1,9 +1,10 @@
 program T;
 
-uses Std.Console, Std.Args;
+uses Std.Console as Console;
+uses Std.Args as Args;
 
 begin
-  WriteLn(ParamCount());
-  WriteLn(ParamStr(0));
-  WriteLn(ParamStr(1))
-end.
+  Console.WriteLn(Args.ParamCount());
+  Console.WriteLn(Args.ParamStr(0));
+  Console.WriteLn(Args.ParamStr(1));
+end program;

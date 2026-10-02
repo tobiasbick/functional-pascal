@@ -1,29 +1,34 @@
 program SupervisedTaskRetryTest;
 
-uses Std.Tasks, Std.Arrays, Std.Results, Std.Test;
+uses Std.Tasks as Tasks;
+uses Std.Arrays as Arrays;
+uses Std.Results as Results;
+uses Std.Test as Test;
 
 begin
-  var Group: TaskGroup := CreateTaskGroup();
-  var Attempts: channel of integer := CreateChannel(3);
-  Send(Attempts, 0);
-  Send(Attempts, 1);
-  Send(Attempts, 2);
-  var Child: task := StartSupervisedTask(Group, function(Token: CancellationToken): result of integer, string begin
-    var Attempt: integer := Unwrap(Receive(Attempts));
+  var Group: Tasks.TaskGroup := Tasks.CreateTaskGroup();
+  var Attempts: channel of integer := Tasks.CreateChannel(3);
+  Tasks.Send(Attempts, 0);
+  Tasks.Send(Attempts, 1);
+  Tasks.Send(Attempts, 2);
+  var Child: task := Tasks.StartSupervisedTask(Group, function(Token: Tasks.CancellationToken): result of integer, string begin
+    var Attempt: integer := Results.Unwrap(Tasks.Receive(Attempts));
     if Attempt = 0 then
-    begin
-      return Error('retryable error')
-    end;
+      begin
+        return Error('retryable error');
+      end;
+    end if;
 
     if Attempt = 1 then
-    begin
-      panic('retryable panic')
-    end;
+      begin
+        panic('retryable panic');
+      end;
+    end if;
 
-    return Ok(42)
-  end, 2, 1);
-  AssertEquals(0, WaitAny([Child]));
-  AssertEquals(42, Unwrap(Wait(Child)));
-  AssertEquals(0, Length(CloseTaskGroup(Group)));
-  CloseChannel(Attempts)
-end.
+    return Ok(42);
+  end function, 2, 1);
+  Test.AssertEquals(0, Tasks.WaitAny([Child]));
+  Test.AssertEquals(42, Results.Unwrap(Tasks.Wait(Child)));
+  Test.AssertEquals(0, Arrays.Length(Tasks.CloseTaskGroup(Group)));
+  Tasks.CloseChannel(Attempts);
+end program;

@@ -22,17 +22,15 @@ file.
 
 ## Declaration
 
-```pascal
-type
-  ClickHandler = procedure(Sender: Button);
+```text
+type ClickHandler = procedure(Sender: Button);
 
-  Button = record
+type Button = record
     function ReadOnClick(Self: Button): Option of ClickHandler;
     procedure WriteOnClick(Self: Button; Handler: Option of ClickHandler);
 
     event OnClick: ClickHandler read ReadOnClick write WriteOnClick;
-  end;
-```
+  end record;```
 
 Rules:
 
@@ -94,6 +92,7 @@ test a visible event but cannot raise it.
 ```pascal
 if Assigned(B.OnClick) then
   B.OnClick(B);
+end if;
 ```
 
 Invocation evaluates the getter once, unwraps the handler, and calls it synchronously.

@@ -23,11 +23,26 @@ include = ["src/**/*.fpas"]
     );
     write_text(
         &lib_dir.join("src/core.fpas"),
-        "unit MyLib.Core;\nuses MyLib.Internal;\nfunction Double(X: integer): integer;\nbegin\n  return Scale(X)\nend;\n",
+        r#"unit MyLib.Core;
+uses MyLib.Internal as Internal;
+function Double(X: integer): integer;
+begin
+  return Internal.Scale(X);
+end function;
+end unit;
+
+"#,
     );
     write_text(
         &lib_dir.join("src/internal.fpas"),
-        "unit MyLib.Internal;\nfunction Scale(X: integer): integer;\nbegin\n  return X + X\nend;\n",
+        r#"unit MyLib.Internal;
+function Scale(X: integer): integer;
+begin
+  return X + X;
+end function;
+end unit;
+
+"#,
     );
 
     let lib_dep = toml_path(&lib_project);
@@ -49,7 +64,12 @@ include = ["src/**/*.fpas"]
     );
     write_text(
         &app_dir.join("src/main.fpas"),
-        "program App;\nuses MyLib.Internal, Std.Console;\nbegin\n  WriteLn(Scale(3))\nend.\n",
+        r#"program App;
+uses MyLib.Internal as Internal; uses Std.Console as Console;
+begin
+  Console.WriteLn(Internal.Scale(3));
+end program;
+"#,
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_args_and_capture_output(
@@ -111,7 +131,18 @@ include = ["src/**/*.fpas"]
     );
     write_text(
         &lib_dir.join("src/outcome.fpas"),
-        "unit Sessions.Outcome;\nuses Std.Tasks;\npublic function Describe(Session: task of result of boolean, string): string;\nbegin\n  case Wait(Session) of\n    Ok(Done): begin return 'ok' end;\n    Error(Message): begin return Message end\n  end\nend;\n",
+        r#"unit Sessions.Outcome;
+uses Std.Tasks as Tasks;
+public function Describe(Session: task of result of boolean, string): string;
+begin
+  case Tasks.Wait(Session) of
+    when Ok(Done): begin return 'ok'; end;
+    when Error(Message): begin return Message; end;
+  end case;
+end function;
+end unit;
+
+"#,
     );
 
     let lib_dep = toml_path(&lib_project);
@@ -133,7 +164,17 @@ include = ["src/**/*.fpas"]
     );
     write_text(
         &app_dir.join("src/main.fpas"),
-        "program App;\nuses Sessions.Outcome, Std.Console, Std.Tasks;\nfunction Session(): result of boolean, string;\nbegin\n  return Error('session failed')\nend;\nbegin\n  var Job: task := go Session();\n  WriteLn(Describe(Job))\nend.\n",
+        r#"program App;
+uses Sessions.Outcome as Outcome; uses Std.Console as Console; uses Std.Tasks as Tasks;
+function Session(): result of boolean, string;
+begin
+  return Error('session failed');
+end function;
+begin
+  var Job: task := go Session();
+  Console.WriteLn(Outcome.Describe(Job));
+end program;
+"#,
     );
 
     let (exit_code, stdout_output, stderr_output) =

@@ -1,33 +1,37 @@
 // Model a cleanup operation that needs an explicit release after cancellation.
 program TaskGroupCloseTimeout;
 
-uses Std.Tasks, Std.Results, Std.Console, Std.Arrays;
+uses Std.Tasks as Tasks;
+uses Std.Results as Results;
+uses Std.Console as Console;
+uses Std.Arrays as Arrays;
 
 begin
-  var Release: channel of integer := CreateChannel(1);
-  var Group: TaskGroup := CreateTaskGroup();
-  StartTaskInGroup(Group, procedure(Token: CancellationToken) begin
+  var Release: channel of integer := Tasks.CreateChannel(1);
+  var Group: Tasks.TaskGroup := Tasks.CreateTaskGroup();
+  Tasks.StartTaskInGroup(Group, procedure(Token: Tasks.CancellationToken) begin
     // Intentionally not cancellable: the owner must release this cleanup gate.
-    Unwrap(Receive(Release))
-  end);
-  case CloseTaskGroupWithTimeout(Group, 0) of
-    Error(Message):
+    Results.Unwrap(Tasks.Receive(Release));
+  end procedure);
+  case Tasks.CloseTaskGroupWithTimeout(Group, 0) of
+    when Error(Message):
+      begin
+        Console.WriteLn(Message);
+      end;
+    when Ok(_):
+      begin
+        panic('Cleanup gate was not released');
+      end;
+  end case;
+
+  Results.Unwrap(Tasks.Send(Release, 1));
+  var Failures: array of Tasks.TaskFailure := Tasks.CloseTaskGroup(Group);
+  Tasks.CloseChannel(Release);
+  if Arrays.Length(Failures) <> 0 then
     begin
-      WriteLn(Message)
+      panic('Cleanup failed');
     end;
-    Ok(_):
-    begin
-      panic('Cleanup gate was not released')
-    end
-  end;
+  end if;
 
-  Unwrap(Send(Release, 1));
-  var Failures: array of TaskFailure := CloseTaskGroup(Group);
-  CloseChannel(Release);
-  if Length(Failures) <> 0 then
-  begin
-    panic('Cleanup failed')
-  end;
-
-  WriteLn('Cleanup joined; ownership released')
-end.
+  Console.WriteLn('Cleanup joined; ownership released');
+end program;

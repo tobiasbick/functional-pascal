@@ -38,6 +38,21 @@ fn classify_document(documents: &[NavigationDocument], target_index: usize) -> V
                 return None;
             };
             let span = token.span.diagnostic_span_or_synthetic();
+            if target.uses.iter().any(|import| {
+                contains(
+                    import.alias_span.diagnostic_span_or_synthetic(),
+                    span.offset(),
+                )
+            }) {
+                return Some(SemanticToken {
+                    span,
+                    kind: SemanticTokenKind::Namespace,
+                    modifiers: SemanticTokenModifiers {
+                        declaration: true,
+                        ..SemanticTokenModifiers::default()
+                    },
+                });
+            }
             if let Some((document_index, symbol, _)) =
                 resolve(documents, target_index, span.offset())
             {
@@ -96,6 +111,14 @@ fn namespace_component(
     selected: usize,
 ) -> bool {
     let target = &documents[target_index];
+    if target.uses.iter().any(|import| {
+        contains(
+            import.unit_span.diagnostic_span_or_synthetic(),
+            target.tokens[selected].span.offset,
+        )
+    }) {
+        return true;
+    }
     let mut start = selected;
     while start >= 2
         && matches!(target.tokens[start - 1].token, Token::Dot)
@@ -120,18 +143,10 @@ fn namespace_component(
         index += 2;
     }
     let selected_part = selected_part.unwrap_or(usize::MAX);
-    documents.iter().any(|document| {
-        if !target.uses_owner(&document.owner) {
-            return false;
-        }
-        let owner = document.owner.split('.').collect::<Vec<_>>();
-        selected_part < owner.len()
-            && names.len() >= owner.len()
-            && names[..owner.len()]
-                .iter()
-                .zip(owner)
-                .all(|(left, right)| left.eq_ignore_ascii_case(right))
-    })
+    selected_part == 0
+        && names
+            .first()
+            .is_some_and(|name| target.alias_owner(name).is_some())
 }
 
 fn contains(span: SourceSpan, offset: usize) -> bool {

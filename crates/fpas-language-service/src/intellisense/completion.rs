@@ -75,6 +75,24 @@ fn complete(
         .collect::<Vec<_>>();
 
     if context.receiver.is_none() {
+        for import in &documents[target_index].uses {
+            if starts_with(&import.alias, &context.prefix) {
+                candidates.push(CompletionCandidate {
+                    label: import.alias.clone(),
+                    kind: CompletionKind::Symbol(SymbolKind::Unit),
+                    detail: format!("import {}", import.parts.join(".")),
+                    owner: None,
+                    qualified_name: import.parts.join("."),
+                    sort_text: sort_text(0, &import.alias, &import.parts.join(".")),
+                    filter_text: import.alias.clone(),
+                    insert_text: import.alias.clone(),
+                    replacement_span: context.replacement,
+                    source: CompletionSource::Declaration,
+                    documentation: None,
+                    additional_edit: None,
+                });
+            }
+        }
         candidates.extend(keyword_candidates(&context));
         if !context.prefix.is_empty() {
             let visible_labels = candidates
@@ -86,7 +104,7 @@ fn complete(
                 auto_import_candidates(documents, target_index, &context.prefix, &visible_labels)
                     .into_iter()
                     .map(|candidate| {
-                        declaration_candidate(
+                        let mut completion = declaration_candidate(
                             documents,
                             candidate.document_index,
                             candidate.symbol,
@@ -94,7 +112,10 @@ fn complete(
                             CompletionSource::AutoImport,
                             2,
                             Some(candidate.edit),
-                        )
+                        );
+                        completion.insert_text =
+                            format!("{}.{}", candidate.alias, candidate.symbol.name);
+                        completion
                     }),
             );
         }
@@ -136,24 +157,10 @@ pub(super) fn visible_candidates(
             .entry(symbol.name.to_ascii_lowercase())
             .or_insert(symbol);
     }
-    let mut result = nearest
+    let result = nearest
         .values()
         .map(|symbol| (target_index, *symbol))
         .collect::<Vec<_>>();
-    for (document_index, document) in documents.iter().enumerate() {
-        if document_index == target_index || !target.uses_owner(&document.owner) {
-            continue;
-        }
-        for symbol in document
-            .top_level()
-            .iter()
-            .filter(|symbol| symbol.visibility == SymbolVisibility::Public)
-        {
-            if !nearest.contains_key(&symbol.name.to_ascii_lowercase()) {
-                result.push((document_index, symbol));
-            }
-        }
-    }
     result
 }
 
@@ -164,8 +171,9 @@ fn member_candidates<'a>(
     offset: usize,
 ) -> Vec<(usize, &'a DocumentSymbol)> {
     if let Some((index, document)) = documents.iter().enumerate().find(|(_, document)| {
-        document.owner.eq_ignore_ascii_case(receiver)
-            && documents[target_index].uses_owner(&document.owner)
+        documents[target_index]
+            .alias_owner(receiver)
+            .is_some_and(|owner| owner.eq_ignore_ascii_case(&document.owner))
     }) {
         return public_members(document.top_level(), index, target_index);
     }
@@ -245,8 +253,8 @@ fn declaration_candidate(
 fn keyword_candidates(context: &super::context::CompletionContext) -> Vec<CompletionCandidate> {
     let keywords: &[&str] = if context.statements {
         &[
-            "begin", "case", "false", "for", "go", "if", "mutable", "nil", "panic", "repeat",
-            "true", "var", "while",
+            "begin", "case", "false", "for", "go", "if", "elsif", "when", "mutable", "nil", "null",
+            "panic", "repeat", "true", "var", "while",
         ]
     } else {
         &[

@@ -45,29 +45,35 @@ include = ["src/**/*.fpas"]
     );
     write(
         &root.join("src/base.fpas"),
-        "unit Demo.Base;
-         public type Point = record public X: integer := 1; end;
+        r#"unit Demo.Base;
+           public type Point = record public X: integer := 1; end record;
          public function Make(X: integer): Point;
-         begin return record X := X; end end;",
+         begin return record X := X; end record; end function;
+end unit;
+"#,
     );
     write(
         &root.join("src/math.fpas"),
-        "unit Demo.Math;
-         uses Demo.Base;
+        r#"unit Demo.Math;
+uses Demo.Base as Base;
          public function Compute(X: integer): integer;
          begin
-           var P: Point := Make(X);
-           return P.X
-         end;",
+           var P: Base.Point := Base.Make(X);
+           return P.X;
+         end function;
+end unit;
+"#,
     );
     write(
         &root.join("src/app.fpas"),
-        "unit Demo.App;
-         uses Demo.Math;
+        r#"unit Demo.App;
+uses Demo.Math as Math;
          public function Run(): integer;
          begin
-           return Compute(7)
-         end;",
+           return Math.Compute(7);
+         end function;
+end unit;
+"#,
     );
 
     let project = load_project(&manifest).expect("project load");

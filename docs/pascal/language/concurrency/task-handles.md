@@ -4,6 +4,7 @@ The `task` type represents a handle to a running task. Assign the result of a **
 
 ```pascal
 var T: task := go ComputeSomething(Data);
+
 ```
 
 ## Typed task handles
@@ -16,10 +17,11 @@ initializer. `task` is a reserved word, so it cannot name a variable, field, or 
 ```pascal
 function Doubled(Job: task of integer): integer;
 begin
-  return Wait(Job) * 2
-end;
+  return Wait(Job) * 2;
+end function;
 
 var Jobs: array of task of result of boolean, string := [go Connect(), go Serve()];
+
 ```
 
 `Std.Tasks.StartTaskInGroup` and `StartSupervisedTask` also return typed task handles. Their explicit
@@ -34,6 +36,7 @@ while pool workers run queued work. See [Waiting and execution](../../std/concur
 ```pascal
 var T: task := go Compute(100);
 var TaskValue: integer := Wait(T);
+
 ```
 
 For a **procedure** task, `Wait` completes when the procedure finishes; **`T`** is the unit type in the type system.

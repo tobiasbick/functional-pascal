@@ -1,7 +1,8 @@
 program T;
 
-uses Std.Console, Std.Str;
+uses Std.Console as Console;
+uses Std.Str as Str;
 
 begin
-  WriteLn(Chr(65))
-end.
+  Console.WriteLn(Str.Chr(65));
+end program;

@@ -13,19 +13,19 @@ use serde_json::{Value, json};
 
 const SOURCE: &str = r#"program JsonlTaskDebugging;
 
-uses Std.Console, Std.Tasks;
+uses Std.Console as Console; uses Std.Tasks as Tasks;
 
 function Work(): integer;
 begin
   mutable var Value: integer := 40;
   Value := Value + 2;
-  return Value
-end;
+  return Value;
+end function;
 
 begin
   var Pending: task := go Work();
-  WriteLn(Wait(Pending))
-end.
+  Console.WriteLn(Tasks.Wait(Pending));
+end program;
 "#;
 
 fn server() -> JsonlServer {
@@ -219,19 +219,19 @@ fn task_snapshots_and_mutation_remain_bound_to_their_task() {
 fn dictionary_structure_mutation_remains_bound_to_the_child_task() {
     const DICTIONARY_TASK: &str = r#"program TaskDictionaryMutation;
 
-uses Std.Console, Std.Tasks;
+uses Std.Console as Console; uses Std.Tasks as Tasks;
 
 function Work(): integer;
 begin
   mutable var Scores: dict of string to integer := ['Seed': 1];
   var Marker: integer := Scores['Seed'];
-  return Scores['Added'] + Marker
-end;
+  return Scores['Added'] + Marker;
+end function;
 
 begin
   var Pending: task := go Work();
-  WriteLn(Wait(Pending))
-end.
+  Console.WriteLn(Tasks.Wait(Pending));
+end program;
 "#;
     let mut server = server_for(DICTIONARY_TASK);
     let _ = server.handle_line(&request(1, "initialize", json!({"version":2})));
@@ -275,47 +275,47 @@ end.
 fn wait_all_sleep_detached_and_nested_spawn_complete_under_debugging() {
     const WAIT_ALL: &str = r#"program TaskWaitAll;
 
-uses Std.Console, Std.Tasks, Std.Time;
+uses Std.Console as Console; uses Std.Tasks as Tasks; uses Std.Time as Time;
 
 function Work(Value: integer): integer;
 begin
-  Sleep(1);
-  return Value
-end;
+  Time.Sleep(1);
+  return Value;
+end function;
 
 procedure Detached();
-begin
-end;
+begin null;
+end procedure;
 
 begin
   go Detached();
   var First: task := go Work(20);
   var Second: task := go Work(22);
   var Pending: array of task := [First, Second, First];
-  WaitAll(Pending);
-  WriteLn(Wait(First));
-  WriteLn(Wait(Second))
-end.
+  Tasks.WaitAll(Pending);
+  Console.WriteLn(Tasks.Wait(First));
+  Console.WriteLn(Tasks.Wait(Second));
+end program;
 "#;
     const NESTED: &str = r#"program NestedTasks;
 
-uses Std.Console, Std.Tasks;
+uses Std.Console as Console; uses Std.Tasks as Tasks;
 
 function Leaf(Value: integer): integer;
 begin
-  return Value
-end;
+  return Value;
+end function;
 
 function Parent(): integer;
 begin
   var Child: task := go Leaf(41);
-  return Wait(Child) + 1
-end;
+  return Tasks.Wait(Child) + 1;
+end function;
 
 begin
   var Pending: task := go Parent();
-  WriteLn(Wait(Pending))
-end.
+  Console.WriteLn(Tasks.Wait(Pending));
+end program;
 "#;
 
     let mut wait_all = server_for(WAIT_ALL);
@@ -356,31 +356,31 @@ end.
 fn child_failure_and_root_shutdown_report_one_clean_lifecycle() {
     const FAILURE: &str = r#"program TaskFailure;
 
-uses Std.Tasks;
+uses Std.Tasks as Tasks;
 
 procedure Explode();
 begin
-  panic('child boom')
-end;
+  panic('child boom');
+end procedure;
 
 begin
   var Pending: task := go Explode();
-  Wait(Pending)
-end.
+  Tasks.Wait(Pending);
+end program;
 "#;
     const SHUTDOWN: &str = r#"program DetachedShutdown;
 
-uses Std.Console, Std.Tasks, Std.Time;
+uses Std.Console as Console; uses Std.Tasks as Tasks; uses Std.Time as Time;
 
 procedure Later();
 begin
-  Sleep(1000);
-  WriteLn('too late')
-end;
+  Time.Sleep(1000);
+  Console.WriteLn('too late');
+end procedure;
 
 begin
-  go Later()
-end.
+  go Later();
+end program;
 "#;
 
     let mut failure = server_for(FAILURE);

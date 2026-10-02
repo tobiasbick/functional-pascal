@@ -30,24 +30,28 @@ fn source_review_sse_failure_releases_retained_input() {
     copy_sources(&root.join("lib"), &library);
     let decoder = library.join("Std/Http/Sse.fpas");
     let mut source = fs::read_to_string(&decoder).expect("decoder source");
-    source.push_str(
+    let closer = source.rfind("end unit;").expect("unit closer");
+    source.insert_str(
+        closer,
         r#"
-public function ReviewRetained(Decoder: Std.Http.Types.SseDecoder): integer;
+public function ReviewRetained(Decoder: Types.SseDecoder): integer;
 begin
-  var Index: integer := Std.Http.Handles.SseDecoderSlot(Decoder);
+  var Index: integer := Handles.SseDecoderSlot(Decoder);
   var State: DecoderState := LoadState(Index);
-  return Std.Arrays.Length(State.Buffer) + Std.Str.Length(State.Data) +
-    Std.Str.Length(State.EventType) + Std.Str.Length(State.LastEventId) + State.EventBytes
-end;
+  return Arrays.Length(State.Buffer) + Str.Length(State.Data) +
+    Str.Length(State.EventType) + Str.Length(State.LastEventId) + State.EventBytes;
+end function;
 "#,
     );
     write_text(&decoder, &source);
     let api = library.join("Std/Http.fpas");
     let mut source = fs::read_to_string(&api).expect("HTTP API source");
-    source.push_str(
+    let closer = source.rfind("end unit;").expect("unit closer");
+    source.insert_str(
+        closer,
         r#"
 public function ReviewRetained(Decoder: SseDecoder): integer;
-begin return Std.Http.Sse.ReviewRetained(Decoder) end;
+begin return Sse.ReviewRetained(Decoder); end function;
 "#,
     );
     write_text(&api, &source);
@@ -55,22 +59,22 @@ begin return Std.Http.Sse.ReviewRetained(Decoder) end;
     write_text(
         &program,
         r#"program RetainedSse;
-uses Std.Http, Std.Net.Utf8, Std.Results, Std.Str, Std.Test;
+uses Std.Http as Http; uses Std.Net.Utf8 as Utf8; uses Std.Results as Results; uses Std.Str as Str; uses Std.Test as Test;
 begin
-  var Decoder: SseDecoder := Unwrap(CreateSseDecoder(32));
-  Unwrap(FeedSse(Decoder, Std.Net.Utf8.Encode('id:old' + #10 + 'data:x' + #10)));
-  AssertTrue(ReviewRetained(Decoder) > 0);
-  case FeedSse(Decoder, Std.Net.Utf8.Encode(Std.Str.RepeatStr('x', 100000))) of
-    Ok(_): Fail('expected size failure'); Error(_): begin end
-  end;
-  AssertEquals(0, ReviewRetained(Decoder));
-  var FinalDecoder: SseDecoder := Unwrap(CreateSseDecoder(32));
-  Unwrap(FeedSse(FinalDecoder, [255]));
-  case FinishSse(FinalDecoder) of
-    Ok(_): Fail('expected UTF-8 failure'); Error(_): begin end
-  end;
-  AssertEquals(0, ReviewRetained(FinalDecoder))
-end.
+  var Decoder: Http.SseDecoder := Results.Unwrap(Http.CreateSseDecoder(32));
+  Results.Unwrap(Http.FeedSse(Decoder, Utf8.Encode('id:old' + #10 + 'data:x' + #10)));
+  Test.AssertTrue(Http.ReviewRetained(Decoder) > 0);
+  case Http.FeedSse(Decoder, Utf8.Encode(Str.RepeatStr('x', 100000))) of
+    when Ok(_): Test.Fail('expected size failure'); when Error(_): begin null; end;
+  end case;
+  Test.AssertEquals(0, Http.ReviewRetained(Decoder));
+  var FinalDecoder: Http.SseDecoder := Results.Unwrap(Http.CreateSseDecoder(32));
+  Results.Unwrap(Http.FeedSse(FinalDecoder, [255]));
+  case Http.FinishSse(FinalDecoder) of
+    when Ok(_): Test.Fail('expected UTF-8 failure'); when Error(_): begin null; end;
+  end case;
+  Test.AssertEquals(0, Http.ReviewRetained(FinalDecoder));
+end program;
 "#,
     );
     let (exit, _, stderr) = support::run_cli_args_and_capture_output(

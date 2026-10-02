@@ -1,50 +1,55 @@
 program JsonBasics;
 
-uses Std.Console, Std.Json, Std.Dictionaries, Std.Options, Std.Arrays, Std.Conv;
+uses Std.Console as Console;
+uses Std.Json as Json;
+uses Std.Dictionaries as Dictionaries;
+uses Std.Options as Options;
+uses Std.Arrays as Arrays;
+uses Std.Conv as Conv;
 
 begin
-  var Parsed: result of JsonValue, string := Parse('{"name":"Ada","scores":[10,20],"active":true}');
+  var Parsed: result of Json.JsonValue, string := Json.Parse('{"name":"Ada","scores":[10,20],"active":true}');
   case Parsed of
-    Ok(Value):
-    begin
-      case Value of
-        JsonValue.Object(Fields):
-        begin
-          var NameValue: option of JsonValue := Std.Dictionaries.Get(Fields, 'name');
-          var ScoresValue: option of JsonValue := Std.Dictionaries.Get(Fields, 'scores');
-          case Unwrap(NameValue) of
-            JsonValue.String(Name):
+    when Ok(Value):
+      begin
+        case Value of
+          when Json.JsonValue.Object(Fields):
             begin
-              WriteLn('name = ' + Name)
-            end
-            else
-            begin
-              WriteLn('missing name')
-            end
-          end;
+              var NameValue: option of Json.JsonValue := Dictionaries.Get(Fields, 'name');
+              var ScoresValue: option of Json.JsonValue := Dictionaries.Get(Fields, 'scores');
+              case Options.Unwrap(NameValue) of
+                when Json.JsonValue.String(Name):
+                  begin
+                    Console.WriteLn('name = ' + Name);
+                  end;
+                else
+                  begin
+                    Console.WriteLn('missing name');
+                  end;
+              end case;
 
-          case Unwrap(ScoresValue) of
-            JsonValue.ArrayValue(Scores):
-            begin
-              WriteLn('scores = ' + IntToStr(Std.Arrays.Length(Scores)))
-            end
-            else
-            begin
-              WriteLn('missing scores')
-            end
-          end;
+              case Options.Unwrap(ScoresValue) of
+                when Json.JsonValue.ArrayValue(Scores):
+                  begin
+                    Console.WriteLn('scores = ' + Conv.IntToStr(Arrays.Length(Scores)));
+                  end;
+                else
+                  begin
+                    Console.WriteLn('missing scores');
+                  end;
+              end case;
 
-          WriteLn(Stringify(Value))
-        end
-        else
-        begin
-          WriteLn('expected object')
-        end
-      end
-    end;
-    Error(Message):
-    begin
-      WriteLn('JSON error: ' + Message)
-    end
-  end
-end.
+              Console.WriteLn(Json.Stringify(Value));
+            end;
+          else
+            begin
+              Console.WriteLn('expected object');
+            end;
+        end case;
+      end;
+    when Error(Message):
+      begin
+        Console.WriteLn('JSON error: ' + Message);
+      end;
+  end case;
+end program;

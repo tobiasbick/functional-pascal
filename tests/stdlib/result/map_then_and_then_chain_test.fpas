@@ -1,27 +1,30 @@
 program T;
 
-uses Std.Console, Std.Results, Std.Conv;
+uses Std.Console as Console;
+uses Std.Results as Results;
+uses Std.Conv as Conv;
 
 function Double(V: integer): integer;
 begin
-  return V * 2
-end;
+  return V * 2;
+end function;
 
 function PositiveToStr(V: integer): result of string, string;
 begin
   if V > 0 then
-  begin
-    return Ok(IntToStr(V))
-  end
+    begin
+      return Ok(Conv.IntToStr(V));
+    end;
   else
-  begin
-    return Error('non-positive')
-  end
-end;
+    begin
+      return Error('non-positive');
+    end;
+  end if;
+end function;
 
 begin
   var R: result of integer, string := Ok(5);
-  var Doubled: result of integer, string := Map(R, Double);
-  var Final: result of string, string := AndThen(Doubled, PositiveToStr);
-  WriteLn(Unwrap(Final))
-end.
+  var Doubled: result of integer, string := Results.Map(R, Double);
+  var Final: result of string, string := Results.AndThen(Doubled, PositiveToStr);
+  Console.WriteLn(Results.Unwrap(Final));
+end program;

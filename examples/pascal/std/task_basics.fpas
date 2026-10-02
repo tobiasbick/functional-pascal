@@ -2,23 +2,26 @@
 
 program TaskBasics;
 
-uses Std.Console, Std.Conv, Std.Tasks, Std.Arrays;
+uses Std.Console as Console;
+uses Std.Conv as Conv;
+uses Std.Tasks as Tasks;
+uses Std.Arrays as Arrays;
 
 function Square(N: integer): integer;
 begin
-  return N * N
-end;
+  return N * N;
+end function;
 
 begin
   var One: task := go Square(6);
-  WriteLn('wait one: ', IntToStr(Wait(One)));
+  Console.WriteLn('wait one: ', Conv.IntToStr(Tasks.Wait(One)));
   mutable var Jobs: array of task := [];
-  Push(Jobs, go Square(3));
-  Push(Jobs, go Square(4));
-  WriteLn('wait [0]: ', IntToStr(Wait(Jobs[0])));
-  WriteLn('wait [1]: ', IntToStr(Wait(Jobs[1])));
+  Arrays.Push(Jobs, go Square(3));
+  Arrays.Push(Jobs, go Square(4));
+  Console.WriteLn('wait [0]: ', Conv.IntToStr(Tasks.Wait(Jobs[0])));
+  Console.WriteLn('wait [1]: ', Conv.IntToStr(Tasks.Wait(Jobs[1])));
   var Ta: task := go Square(2);
   var Tb: task := go Square(3);
-  WaitAll([Ta, Tb]);
-  WriteLn('after waitall: ', IntToStr(Wait(Ta) + Wait(Tb)))
-end.
+  Tasks.WaitAll([Ta, Tb]);
+  Console.WriteLn('after waitall: ', Conv.IntToStr(Tasks.Wait(Ta) + Tasks.Wait(Tb)));
+end program;

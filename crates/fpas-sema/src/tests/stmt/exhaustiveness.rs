@@ -3,15 +3,7 @@ use super::super::{check_errors, check_ok};
 #[test]
 fn case_enum_missing_variant_is_non_exhaustive() {
     let errors = check_errors(
-        "program T; \
-         type Light = enum Red; Yellow; Green; end; \
-         begin \
-           var L: Light := Light.Red; \
-           case L of \
-             Light.Red: return; \
-             Light.Green: return \
-           end \
-         end.",
+        r#"program T;  type Light = enum Red; Yellow; Green; end enum; begin var L: Light := Light.Red; case L of when Light.Red: return; when Light.Green: return; end case; end program;"#,
     );
     assert!(
         errors
@@ -24,29 +16,14 @@ fn case_enum_missing_variant_is_non_exhaustive() {
 #[test]
 fn case_enum_else_branch_skips_exhaustiveness_check() {
     check_ok(
-        "program T; \
-         type Light = enum Red; Yellow; Green; end; \
-         begin \
-           var L: Light := Light.Red; \
-           case L of \
-             Light.Red: return \
-           else \
-             return \
-           end \
-         end.",
+        r#"program T;  type Light = enum Red; Yellow; Green; end enum; begin var L: Light := Light.Red; case L of when Light.Red: return; else return; end case; end program;"#,
     );
 }
 
 #[test]
 fn case_result_missing_variant_is_non_exhaustive() {
     let errors = check_errors(
-        "program T; \
-         begin \
-           var R: Result of integer, string := Ok(1); \
-           case R of \
-             Ok(V): return \
-           end \
-         end.",
+        r#"program T; begin var R: Result of integer, string := Ok(1); case R of when Ok(V): return; end case; end program;"#,
     );
     assert!(
         errors
@@ -59,14 +36,7 @@ fn case_result_missing_variant_is_non_exhaustive() {
 #[test]
 fn case_data_enum_missing_variant_is_non_exhaustive() {
     let errors = check_errors(
-        "program T; \
-         type Shape = enum Circle(Radius: real); Point; end; \
-         begin \
-           var S: Shape := Shape.Point; \
-           case S of \
-             Shape.Circle(R): return \
-           end \
-         end.",
+        r#"program T;  type Shape = enum Circle(Radius: real); Point; end enum; begin var S: Shape := Shape.Point; case S of when Shape.Circle(R): return; end case; end program;"#,
     );
     assert!(
         errors
@@ -79,18 +49,7 @@ fn case_data_enum_missing_variant_is_non_exhaustive() {
 #[test]
 fn case_on_recursive_enum_binding_is_checked_for_exhaustiveness() {
     let errors = check_errors(
-        "program T; \
-         type Tree = enum Leaf; Node(Left: Tree; Right: Tree); end; \
-         begin \
-           var T: Tree := Tree.Leaf; \
-           case T of \
-             Tree.Node(L, R): \
-               case L of \
-                 Tree.Node(A, B): return \
-               end; \
-             Tree.Leaf: return \
-           end \
-         end.",
+        r#"program T;  type Tree = enum Leaf; Node(Left: Tree; Right: Tree); end enum; begin var T: Tree := Tree.Leaf; case T of when Tree.Node(L, R): case L of when Tree.Node(A, B): return; end case; when Tree.Leaf: return; end case; end program;"#,
     );
     assert!(
         errors
@@ -103,15 +62,7 @@ fn case_on_recursive_enum_binding_is_checked_for_exhaustiveness() {
 #[test]
 fn shadowed_variant_name_does_not_count_toward_exhaustiveness() {
     let errors = check_errors(
-        "program T; \
-         type Color = enum Red; Green; Blue; end; \
-         begin \
-           var C: Color := Color.Red; \
-           var Red: Color := Color.Blue; \
-           case C of \
-             Red, Color.Green, Color.Blue: return \
-           end \
-         end.",
+        r#"program T;  type Color = enum Red; Green; Blue; end enum; begin var C: Color := Color.Red; var Red: Color := Color.Blue; case C of when Red, Color.Green, Color.Blue: return; end case; end program;"#,
     );
 
     assert!(
@@ -125,13 +76,6 @@ fn shadowed_variant_name_does_not_count_toward_exhaustiveness() {
 #[test]
 fn qualified_enum_variants_still_satisfy_exhaustiveness() {
     check_ok(
-        "program T; \
-         type Color = enum Red; Green; Blue; end; \
-         begin \
-           var C: Color := Color.Red; \
-           case C of \
-             Color.Red, Color.Green, Color.Blue: return \
-           end \
-         end.",
+        r#"program T;  type Color = enum Red; Green; Blue; end enum; begin var C: Color := Color.Red; case C of when Color.Red, Color.Green, Color.Blue: return; end case; end program;"#,
     );
 }

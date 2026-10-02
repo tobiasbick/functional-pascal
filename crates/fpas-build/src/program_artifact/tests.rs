@@ -34,7 +34,7 @@ fn stale_build_cannot_replace_a_newer_program_image() {
     let main = root.join("main.fpas");
     let artifact = root.join("race.fpascp");
     let source_paths = vec!["main.fpas".to_string()];
-    let old_source = b"program Race; begin end.".to_vec();
+    let old_source = b"program Race; begin null; end program;".to_vec();
     fs::write(&main, &old_source).expect("old main source");
     let old_graph = graph_for(&main, &[]);
 
@@ -59,7 +59,7 @@ fn stale_build_cannot_replace_a_newer_program_image() {
     });
 
     old_ready_rx.recv().expect("old build reached publication");
-    let new_source = b"program Race; begin end.\n".to_vec();
+    let new_source = b"program Race; begin null; end program;\n".to_vec();
     fs::write(&main, &new_source).expect("new main source");
     let new_graph = graph_for(&main, &[]);
     build_program_artifact(
@@ -90,18 +90,22 @@ fn changed_unit_is_rejected_by_final_snapshot_validation() {
     fs::create_dir_all(&root).expect("temporary directory");
     let main = root.join("main.fpas");
     let unit = root.join("unit.fpas");
-    let main_source = b"program Race; uses Race.Work; begin end.";
+    let main_source = b"program Race; uses Race.Work as Work; begin null; end program;";
     fs::write(&main, main_source).expect("main source");
     fs::write(
         &unit,
-        "unit Race.Work; public function Value(): integer; begin return 1 end;",
+        r#"unit Race.Work; public function Value(): integer; begin return 1; end function;
+end unit;
+"#,
     )
     .expect("old unit source");
     let graph = graph_for(&main, std::slice::from_ref(&unit));
 
     fs::write(
         &unit,
-        "unit Race.Work; public function Value(): integer; begin return 2 end;",
+        r#"unit Race.Work; public function Value(): integer; begin return 2; end function;
+end unit;
+"#,
     )
     .expect("new unit source");
 
@@ -123,16 +127,20 @@ fn reordered_source_ids_keep_correct_portable_path_bindings() {
     let first = root.join("first.fpas");
     let second = root.join("second.fpas");
     let artifact = root.join("sources.fpascp");
-    let main_source = b"program Sources; uses Race.First, Race.Second; begin end.";
+    let main_source = b"program Sources; uses Race.First as First; uses Race.Second as Second; begin null; end program;";
     fs::write(&main, main_source).expect("main source");
     fs::write(
         &first,
-        "unit Race.First; public function Value(): integer; begin return 1 end;",
+        r#"unit Race.First; public function Value(): integer; begin return 1; end function;
+end unit;
+"#,
     )
     .expect("first unit source");
     fs::write(
         &second,
-        "unit Race.Second; public function Value(): integer; begin return 2 end;",
+        r#"unit Race.Second; public function Value(): integer; begin return 2; end function;
+end unit;
+"#,
     )
     .expect("second unit source");
 
@@ -210,8 +218,8 @@ fn changed_source_hash_rebuilds_the_program_image() {
     let main = root.join("main.fpas");
     let unit = root.join("unit.fpas");
     let artifact = root.join("hash.fpascp");
-    let main_source = b"program Sources; uses Race.Work; begin end.";
-    let initial_unit = b"unit Race.Work; public function Value(): integer; begin return 1 end;";
+    let main_source = b"program Sources; uses Race.Work as Work; begin null; end program;";
+    let initial_unit = b"unit Race.Work; public function Value(): integer; begin return 1; end function; end unit;";
     fs::write(&main, main_source).expect("main source");
     fs::write(&unit, initial_unit).expect("initial unit source");
     let source_paths = vec!["main.fpas".to_string(), "unit.fpas".to_string()];

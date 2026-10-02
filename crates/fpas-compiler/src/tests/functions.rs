@@ -10,11 +10,11 @@ program DirectCall;
 function Add(A: integer; B: integer): integer;
 begin
   return A + B;
-end;
+end function;
 begin
   if Add(20, 22) <> 42 then
-    panic('direct call mismatch');
-end.
+    panic('direct call mismatch'); end if;
+end program;
 "#,
     );
 }
@@ -27,13 +27,13 @@ program RecursiveCall;
 function Factorial(N: integer): integer;
 begin
   if N <= 1 then
-    return 1;
+    return 1; end if;
   return N * Factorial(N - 1);
-end;
+end function;
 begin
   if Factorial(5) <> 120 then
-    panic('recursion mismatch');
-end.
+    panic('recursion mismatch'); end if;
+end program;
 "#,
     );
 }
@@ -46,11 +46,11 @@ program ProcedureCall;
 procedure Validate(Value: integer);
 begin
   if Value <> 42 then
-    panic('procedure argument mismatch');
-end;
+    panic('procedure argument mismatch'); end if;
+end procedure;
 begin
   Validate(42);
-end.
+end program;
 "#,
     );
 }
@@ -64,14 +64,14 @@ function Outer(Value: integer): integer;
   function Double(Input: integer): integer;
   begin
     return Input + Input;
-  end;
+  end function;
 begin
   return Double(Value);
-end;
+end function;
 begin
   if Outer(21) <> 42 then
-    panic('nested call mismatch');
-end.
+    panic('nested call mismatch'); end if;
+end program;
 "#,
     );
 }
@@ -84,15 +84,15 @@ program FirstClassFunction;
 function Double(Value: integer): integer;
 begin
   return Value + Value;
-end;
+end function;
 function Apply(Action: function(Value: integer): integer; Value: integer): integer;
 begin
   return Action(Value);
-end;
+end function;
 begin
   if Apply(Double, 21) <> 42 then
-    panic('function value mismatch');
-end.
+    panic('function value mismatch'); end if;
+end program;
 "#,
     );
 }
@@ -105,15 +105,15 @@ program FirstClassProcedure;
 procedure Validate(Value: integer);
 begin
   if Value <> 42 then
-    panic('procedure callback mismatch');
-end;
+    panic('procedure callback mismatch'); end if;
+end procedure;
 procedure Invoke(Action: procedure(Value: integer); Value: integer);
 begin
   Action(Value);
-end;
+end procedure;
 begin
   Invoke(Validate, 42);
-end.
+end program;
 "#,
     );
 }
@@ -123,15 +123,15 @@ fn parameters_shadow_short_standard_constant_names() {
     assert_succeeds(
         r#"
 program ParameterConstantShadowing;
-uses Std.Console;
+uses Std.Console as Console;
 function Pack(Red: integer; Green: integer; Blue: integer): integer;
 begin
   return Red * 10000 + Green * 100 + Blue;
-end;
+end function;
 begin
   if Pack(10, 20, 30) <> 102030 then
-    panic('parameters did not shadow standard constants');
-end.
+    panic('parameters did not shadow standard constants'); end if;
+end program;
 "#,
     );
 }
@@ -141,18 +141,18 @@ fn record_fields_shadow_short_standard_constant_names() {
     assert_succeeds(
         r#"
 program FieldConstantShadowing;
-uses Std.Console;
-type
-  Channels = record
+uses Std.Console as Console;
+
+  type Channels = record
     Red: integer;
     Green: integer;
     Blue: integer;
-  end;
+  end record;
 begin
-  var Value: Channels := record Red := 10; Green := 20; Blue := 30; end;
+  var Value: Channels := record Red := 10; Green := 20; Blue := 30; end record;
   if Value.Red * 10000 + Value.Green * 100 + Value.Blue <> 102030 then
-    panic('record fields did not shadow standard constants');
-end.
+    panic('record fields did not shadow standard constants'); end if;
+end program;
 "#,
     );
 }

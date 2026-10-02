@@ -1,69 +1,80 @@
 // A producer, three workers, and a collector share bounded channels.
 program WorkerPipeline;
 
-uses Std.Tasks, Std.Results, Std.Console, Std.Arrays;
+uses Std.Tasks as Tasks;
+uses Std.Results as Results2;
+uses Std.Console as Console;
+uses Std.Arrays as Arrays;
 
 begin
-  var Jobs: channel of integer := CreateChannel(2);
-  var Results: channel of integer := CreateChannel(2);
-  var Group: TaskGroup := CreateTaskGroup();
-  StartTaskInGroup(Group, procedure(Token: CancellationToken) begin
+  var Jobs: channel of integer := Tasks.CreateChannel(2);
+  var Results: channel of integer := Tasks.CreateChannel(2);
+  var Group: Tasks.TaskGroup := Tasks.CreateTaskGroup();
+  Tasks.StartTaskInGroup(Group, procedure(Token: Tasks.CancellationToken) begin
     for Value: integer := 1 to 12 do
-    begin
-      if IsError(SendWithCancellation(Jobs, Value, Token)) then
       begin
-        return
-      end
-    end;
-
-    CloseChannel(Jobs)
-  end);
-  for Worker: integer := 1 to 3 do
-  begin
-    StartTaskInGroup(Group, procedure(Token: CancellationToken) begin
-      while not IsCancellationRequested(Token) do
-      begin
-        case ReceiveWithCancellation(Jobs, Token) of
-          Ok(Value):
+        if Results2.IsError(Tasks.SendWithCancellation(Jobs, Value, Token)) then
           begin
-            if IsError(SendWithCancellation(Results, Value * Value, Token)) then
-            begin
-              return
-            end
+            return;
           end;
-          Error(_):
+        end if;
+      end;
+    end for;
+
+    Tasks.CloseChannel(Jobs);
+  end procedure);
+  for Worker: integer := 1 to 3 do
+    begin
+      Tasks.StartTaskInGroup(Group, procedure(Token: Tasks.CancellationToken) begin
+        while not Tasks.IsCancellationRequested(Token) do
           begin
-            return
-          end
-        end
-      end
-    end)
-  end;
+            case Tasks.ReceiveWithCancellation(Jobs, Token) of
+              when Ok(Value):
+                begin
+                  if Results2.IsError(Tasks.SendWithCancellation(Results, Value * Value, Token)) then
+                    begin
+                      return;
+                    end;
+                  end if;
+                end;
+              when Error(_):
+                begin
+                  return;
+                end;
+            end case;
+          end;
+        end while;
+      end procedure);
+    end;
+  end for;
   // Collect while the producer runs: filling Jobs first could deadlock the pipeline.
   mutable var Total: integer := 0;
   for Index: integer := 1 to 12 do
-  begin
-    Total := Total + Unwrap(Receive(Results))
-  end;
-
-  case CloseTaskGroupWithTimeout(Group, 1000) of
-    Ok(Failures):
     begin
-      if Length(Failures) <> 0 then
-      begin
-        panic('Worker failed')
-      end
+      Total := Total + Results2.Unwrap(Tasks.Receive(Results));
     end;
-    Error(_):
-    begin
-      // A timeout retains ownership. Joining is still required, not a forced kill.
-      if Length(CloseTaskGroup(Group)) <> 0 then
-      begin
-        panic('Worker failed')
-      end
-    end
-  end;
+  end for;
 
-  CloseChannel(Results);
-  WriteLn(Total)
-end.
+  case Tasks.CloseTaskGroupWithTimeout(Group, 1000) of
+    when Ok(Failures):
+      begin
+        if Arrays.Length(Failures) <> 0 then
+          begin
+            panic('Worker failed');
+          end;
+        end if;
+      end;
+    when Error(_):
+      begin
+        // A timeout retains ownership. Joining is still required, not a forced kill.
+        if Arrays.Length(Tasks.CloseTaskGroup(Group)) <> 0 then
+          begin
+            panic('Worker failed');
+          end;
+        end if;
+      end;
+  end case;
+
+  Tasks.CloseChannel(Results);
+  Console.WriteLn(Total);
+end program;

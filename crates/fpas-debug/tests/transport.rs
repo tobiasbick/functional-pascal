@@ -19,21 +19,21 @@ use serde_json::{Value, json};
 
 const OUTPUT_SOURCE: &str = r#"program TransportOutput;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 begin
-  WriteLn('hello-raw')
-end.
+  Console.WriteLn('hello-raw');
+end program;
 "#;
 
 const INPUT_SOURCE: &str = r#"program TransportInput;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 begin
-  WriteLn(ReadLn());
-  WriteLn(ReadLn())
-end.
+  Console.WriteLn(Console.ReadLn());
+  Console.WriteLn(Console.ReadLn());
+end program;
 "#;
 
 fn server_for(source: &str) -> JsonlServer {

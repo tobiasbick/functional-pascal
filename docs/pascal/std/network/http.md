@@ -33,31 +33,40 @@ An HTTP/1.1 and HTTPS client plus bounded HTTP/1.x server helpers, implemented i
 Create a request with defaults, then replace the fields needed by the caller:
 
 ```pascal
-mutable var RequestValue: Request := Request.Create('POST', 'http://127.0.0.1:8080/v1/items');
-RequestValue.Headers := [Header.Create('Content-Type', 'application/json')];
-RequestValue.Body := Std.Net.Utf8.Encode('{"name":"example"}');
-case Send(RequestValue) of
-  Ok(ResponseValue): WriteLn(ResponseValue.StatusCode);
-  Error(Message): panic(Message)
-end
+uses Std.Console as Console;
+uses Std.Http as Http;
+uses Std.Net as Net;
+
+mutable var RequestValue: Http.Request := Http.Request.Create('POST', 'http://127.0.0.1:8080/v1/items');
+RequestValue.Headers := [Http.Header.Create('Content-Type', 'application/json')];
+RequestValue.Body := Utf8.Encode('{"name":"example"}');
+case Http.Send(RequestValue) of
+  when Ok(ResponseValue):
+    Console.WriteLn(ResponseValue.StatusCode);
+  when Error(Message):
+    panic(Message);
+end case;
 ```
 
 Standard methods have short constructors:
 
 ```pascal
-var GetRequest: Request := Request.Get('http://127.0.0.1:8080/items');
-mutable var PutRequest: Request := Request.Put('http://127.0.0.1:8080/items/42');
-PutRequest.Body := Std.Net.Utf8.Encode('{"name":"updated"}')
+uses Std.Http as Http;
+uses Std.Net as Net;
+
+var GetRequest: Http.Request := Http.Request.Get('http://127.0.0.1:8080/items');
+mutable var PutRequest: Http.Request := Http.Request.Put('http://127.0.0.1:8080/items/42');
+PutRequest.Body := Utf8.Encode('{"name":"updated"}');
 ```
 
-Receiver calls can thread the request and the explicit `Result` through the
-existing functions without unwrapping implicitly:
+Alias-qualified calls thread the request and the explicit `Result` through
+`Http.Send` and `Results.AndThen` without unwrapping implicitly:
 
 ```pascal
-uses Std.Http, Std.Results;
+uses Std.Http as Http;
+uses Std.Results as Results;
 
-var TextResult: result of string, string :=
-  Request.Get('https://example.test/items').Send().AndThen(BodyText);
+var TextResult: result of string, string := Results.AndThen(Http.Send(Http.Request.Get('https://example.test/items')), Http.BodyText);
 ```
 
 `Method` deliberately remains a string so extension methods are not excluded. For example, a
@@ -100,20 +109,27 @@ Independent streams may be opened and consumed by different tasks. Calls that mu
 `BodyStream` handle must remain serialized.
 
 ```pascal
-case OpenStream(Request.Get('https://example.test/events')) of
-  Ok(ResponseValue):
-  begin
-    mutable var Reading: boolean := true;
-    while Reading do
+uses Std.Http as Http;
+uses Std.Arrays as Arrays;
+
+case Http.OpenStream(Http.Request.Get('https://example.test/events')) of
+  when Ok(ResponseValue):
     begin
-      case ReadStream(ResponseValue.Body, 4096) of
-        Ok(Bytes): Reading := Std.Arrays.Length(Bytes) <> 0;
-        Error(Message): panic(Message)
-      end
-    end
-  end;
-  Error(Message): panic(Message)
-end
+      mutable var Reading: boolean := true;
+      while Reading do
+        begin
+          case Http.ReadStream(ResponseValue.Body, 4096) of
+            when Ok(Bytes):
+              Reading := Arrays.Length(Bytes) <> 0;
+            when Error(Message):
+              panic(Message);
+          end case;
+        end;
+      end while;
+    end;
+  when Error(Message):
+    panic(Message);
+end case;
 ```
 
 `MaxHeaderBytes` bounds each response head, while `MaxResponseBytes` bounds all bytes received for
@@ -154,46 +170,59 @@ values, and reads a `Content-Length` body.
 ambiguous framing, unsupported transfer codings, and truncated bodies are rejected.
 
 ```pascal
-uses Std.Http, Std.Net, Std.Net.Utf8;
+uses Std.Http as Http;
+uses Std.Net as Net;
+uses Std.Net.Utf8 as Utf8;
 
-case Listen('127.0.0.1', 8080) of
-  Ok(ListenerValue):
-  begin
-    case Accept(ListenerValue) of
-      Ok(Connection):
+  case Net.Listen('127.0.0.1', 8080) of
+    when Ok(ListenerValue):
       begin
-        case SetTimeout(Connection, 30000) of
-          Ok(_):
-          begin
-          end;
-          Error(Message): panic(Message)
-        end;
-        case ReadRequest(Connection, 65536, 1048576) of
-          Ok(RequestValue):
-          begin
-            mutable var ResponseValue: ServerResponse := ServerResponse.Create(200, 'OK');
-            ResponseValue.Body := Std.Net.Utf8.Encode('Hello');
-            case WriteResponse(Connection, ResponseValue) of
-              Ok(_):
-              begin
-              end;
-              Error(Message): panic(Message)
-            end
-          end;
-          Error(Message): panic(Message)
-        end;
-        case Close(Connection) of
-          Ok(_):
-          begin
-          end;
-          Error(Message): panic(Message)
-        end
+        case Net.Accept(ListenerValue) of
+          when Ok(Connection):
+            begin
+              case Net.SetTimeout(Connection, 30000) of
+                when Ok(_):
+                  begin
+                    null;
+                  end;
+                when Error(Message):
+                  panic(Message);
+              end case;
+
+              case Http.ReadRequest(Connection, 65536, 1048576) of
+                when Ok(RequestValue):
+                  begin
+                    mutable var ResponseValue: Http.ServerResponse := Http.ServerResponse.Create(200, 'OK');
+                    ResponseValue.Body := Utf8.Encode('Hello');
+                    case Http.WriteResponse(Connection, ResponseValue) of
+                      when Ok(_):
+                        begin
+                          null;
+                        end;
+                      when Error(Message):
+                        panic(Message);
+                    end case;
+                  end;
+                when Error(Message):
+                  panic(Message);
+              end case;
+
+              case Net.Close(Connection) of
+                when Ok(_):
+                  begin
+                    null;
+                  end;
+                when Error(Message):
+                  panic(Message);
+              end case;
+            end;
+          when Error(Message):
+            panic(Message);
+        end case;
       end;
-      Error(Message): panic(Message)
-    end
-  end;
-  Error(Message): panic(Message)
-end
+    when Error(Message):
+      panic(Message);
+  end case;
 ```
 
 `WriteResponse` emits HTTP/1.1 with managed `Content-Length` and `Connection: close` fields. It does
@@ -203,29 +232,34 @@ accept another request.
 For a reusable loop, pass the listener and a handler to `Serve`:
 
 ```pascal
-uses Std.Http, Std.Net, Std.Net.Utf8;
+uses Std.Http as Http;
+uses Std.Net as Net;
+uses Std.Net.Utf8 as Utf8;
 
-function Handle(RequestValue: ServerRequest): ServerResponse;
+function Handle(RequestValue: Http.ServerRequest): Http.ServerResponse;
 begin
-  mutable var ResponseValue: ServerResponse := ServerResponse.Create(200, 'OK');
-  ResponseValue.Body := Std.Net.Utf8.Encode('Path: ' + RequestValue.Target);
-  return ResponseValue
-end;
+  mutable var ResponseValue: Http.ServerResponse := Http.ServerResponse.Create(200, 'OK');
+  ResponseValue.Body := Utf8.Encode('Path: ' + RequestValue.Target);
+  return ResponseValue;
+end function;
 
-case Listen('127.0.0.1', 8080) of
-  Ok(ListenerValue):
-  begin
-    mutable var Options: ServerOptions := ServerOptions.Create();
-    Options.MaxConcurrentRequests := 16;
-    case Serve(ListenerValue, Options, Handle) of
-      Ok(_):
+  case Net.Listen('127.0.0.1', 8080) of
+    when Ok(ListenerValue):
       begin
+        mutable var Options: Http.ServerOptions := Http.ServerOptions.Create();
+        Options.MaxConcurrentRequests := 16;
+        case Http.Serve(ListenerValue, Options, Handle) of
+          when Ok(_):
+            begin
+              null;
+            end;
+          when Error(Message):
+            panic(Message);
+        end case;
       end;
-      Error(Message): panic(Message)
-    end
-  end;
-  Error(Message): panic(Message)
-end
+    when Error(Message):
+      panic(Message);
+  end case;
 ```
 
 `ServerOptions.Create` defaults to a 64 KiB request-head limit, a 1 MiB request-body limit, a
@@ -244,19 +278,25 @@ For HTTPS, replace `Listen` with a certificate-configured TLS listener; the hand
 remain unchanged:
 
 ```pascal
-case ListenTls('127.0.0.1', 8443, 'certificate.pem', 'private-key.pem', 10000) of
-  Ok(ListenerValue):
-  begin
-    mutable var Options: ServerOptions := ServerOptions.Create();
-    case Serve(ListenerValue, Options, Handle) of
-      Ok(_):
-      begin
-      end;
-      Error(Message): panic(Message)
-    end
-  end;
-  Error(Message): panic(Message)
-end
+uses Std.Http as Http;
+uses Std.Net as Net;
+
+case Net.ListenTls('127.0.0.1', 8443, 'certificate.pem', 'private-key.pem', 10000) of
+  when Ok(ListenerValue):
+    begin
+      mutable var Options: Http.ServerOptions := Http.ServerOptions.Create();
+      case Http.Serve(ListenerValue, Options, Handle) of
+        when Ok(_):
+          begin
+            null;
+          end;
+        when Error(Message):
+          panic(Message);
+      end case;
+    end;
+  when Error(Message):
+    panic(Message);
+end case;
 ```
 
 The certificate chain and private key must be PEM files. The handshake timeout bounds clients that

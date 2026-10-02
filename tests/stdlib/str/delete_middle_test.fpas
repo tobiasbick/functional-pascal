@@ -1,7 +1,8 @@
 program T;
 
-uses Std.Console, Std.Str;
+uses Std.Console as Console;
+uses Std.Str as Str;
 
 begin
-  WriteLn(Std.Str.Delete('Hello', 1, 3))
-end.
+  Console.WriteLn(Str.Delete('Hello', 1, 3));
+end program;

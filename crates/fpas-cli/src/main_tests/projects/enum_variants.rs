@@ -10,28 +10,28 @@ fn enum_payload_infers_nested_anonymous_record_type() {
     let source = cwd.join("main.fpas");
     write_text(
         &source,
-        "program NestedRecordEnumConstructor;
-uses Std.Console;
-type
-  Point = record X: integer; Y: integer; end;
-  Position = enum At(Value: Point); end;
-  State = record Player: Position; end;
+        r#"program NestedRecordEnumConstructor;
+uses Std.Console as Console;
+
+  type Point = record X: integer; Y: integer; end record;
+  type Position = enum At(Value: Point); end enum;
+  type State = record Player: Position; end record;
 function Moved(Current: Point): State;
 begin
   return record
     Player := Position.At(record
       Y := Current.Y;
       X := Current.X + 1;
-    end);
-  end
-end;
+    end record);
+  end record;
+end function;
 begin
-  var Initial: Point := record X := 1; Y := 7; end;
+  var Initial: Point := record X := 1; Y := 7; end record;
   var Outcome: State := Moved(Initial);
   case Outcome.Player of
-    Position.At(Value): WriteLn(Value.X, ',', Value.Y)
-  end
-end.",
+    when Position.At(Value): Console.WriteLn(Value.X, ',', Value.Y);
+  end case;
+end program;"#,
     );
     for command in ["check", "run"] {
         let (code, stdout, stderr) = support::run_cli_args_and_capture_output(
@@ -51,23 +51,15 @@ fn enum_record_payload_rejects_incompatible_arguments() {
     let cwd = create_temp_dir("invalid-enum-record-payload");
     let source = cwd.join("main.fpas");
     for argument in [
-        "record X := 'wrong'; Y := 2; end",
-        "record X := 1; end",
-        "record X := 1; Y := 2; Z := 3; end",
+        "record X := 'wrong'; Y := 2; end record",
+        "record X := 1; end record",
+        "record X := 1; Y := 2; Z := 3; end record",
         "Other",
     ] {
         write_text(
             &source,
             &format!(
-                "program InvalidEnumRecordPayload;
-type
-  Point = record X: integer; Y: integer; end;
-  Size = record X: integer; Y: integer; end;
-  Position = enum At(Value: Point); end;
-begin
-  var Other: Size := record X := 1; Y := 2; end;
-  var Value: Position := Position.At({argument})
-end."
+                "program InvalidEnumRecordPayload;\n\n  type Point = record X: integer; Y: integer; end record;\n  type Size = record X: integer; Y: integer; end record;\n  type Position = enum At(Value: Point); end enum;\nbegin\n  var Other: Size := record X := 1; Y := 2; end record;\n  var Value: Position := Position.At({argument});\nend program;"
             ),
         );
         let (code, _, stderr) = support::run_cli_args_and_capture_output(
@@ -100,29 +92,31 @@ projects = ["json-lib.fpasprj"]
     support::write_library_project_file(&cwd.join("json-lib.fpasprj"), &["json.fpas"]);
     write_text(
         &cwd.join("json.fpas"),
-        "unit Repro.Json;
-uses Std.Json;
-public type
-  Message = enum
+        r#"unit Repro.Json;
+uses Std.Json as Json;
+
+  public type Message = enum
     ErrorMessage(Code: string);
-  end;
+  end enum;
 public function Encode(Value: Message): string;
 begin
   case Value of
-    Message.ErrorMessage(Code):
+    when Message.ErrorMessage(Code):
     begin
-      return Stringify(JsonValue.String(Code))
-    end
-  end
-end;",
+      return Json.Stringify(Json.JsonValue.String(Code));
+    end;
+  end case;
+end function;
+end unit;
+"#,
     );
     write_text(
         &cwd.join("main.fpas"),
-        "program JsonLibraryRepro;
-uses Repro.Json, Std.Console;
+        r#"program JsonLibraryRepro;
+uses Repro.Json as Json; uses Std.Console as Console;
 begin
-  WriteLn(Encode(Message.ErrorMessage('code')))
-end.",
+  Console.WriteLn(Json.Encode(Json.Message.ErrorMessage('code')));
+end program;"#,
     );
 
     let (exit_code, stdout, stderr) = support::run_cli_and_capture_output(&project_file, &cwd);

@@ -3,13 +3,12 @@ use crate::Token;
 
 #[test]
 fn hello_world_program() {
-    let src = "\
-program Hello;
-uses
-  Std.Console;
+    let src = r#"program Hello;
+
+uses Std.Console as Console;
 begin
-  Std.Console.WriteLn('Hello, World!')
-end.";
+  Console.WriteLn('Hello, World!');
+end program;"#;
 
     assert_eq!(
         toks(src),
@@ -21,18 +20,20 @@ end.";
             Token::Ident("Std".into()),
             Token::Dot,
             Token::Ident("Console".into()),
+            Token::As,
+            Token::Ident("Console".into()),
             Token::Semicolon,
             Token::Begin,
-            Token::Ident("Std".into()),
-            Token::Dot,
             Token::Ident("Console".into()),
             Token::Dot,
             Token::Ident("WriteLn".into()),
             Token::LParen,
             Token::Str("Hello, World!".into()),
             Token::RParen,
+            Token::Semicolon,
             Token::End,
-            Token::Dot,
+            Token::Program,
+            Token::Semicolon,
         ]
     );
 }

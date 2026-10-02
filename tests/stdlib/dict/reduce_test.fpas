@@ -1,34 +1,37 @@
 program DictionaryReduceTest;
 
-uses Std.Conv, Std.Dictionaries, Std.Test;
+uses Std.Conv as Conv;
+uses Std.Dictionaries as Dictionaries;
+uses Std.Test as Test;
 
 function Describe(Acc: string; Key: string; Value: integer): string;
 begin
-  return (((Acc + Key) + ':') + IntToStr(Value)) + ';'
-end;
+  return (((Acc + Key) + ':') + Conv.IntToStr(Value)) + ';';
+end function;
 
 function Sum(Acc: integer; Key: string; Value: integer): integer;
 begin
-  return Acc + Value
-end;
+  return Acc + Value;
+end function;
 
 begin
   var Scores: dict of string to integer := ['Ada': 3, 'Bob': 5];
-  AssertEquals('Ada:3;Bob:5;', Reduce(Scores, '', Describe));
-  AssertEquals(18, Reduce(Scores, 10, Sum));
+  Test.AssertEquals('Ada:3;Bob:5;', Dictionaries.Reduce(Scores, '', Describe));
+  Test.AssertEquals(18, Dictionaries.Reduce(Scores, 10, Sum));
   var Empty: dict of string to integer := [:];
-  AssertEquals('start', Reduce(Empty, 'start', Describe));
+  Test.AssertEquals('start', Dictionaries.Reduce(Empty, 'start', Describe));
   mutable var Current: dict of string to integer := ['A': 1, 'B': 2];
   var Visit: function(Acc: string; Key: string; Value: integer): string := function(Acc: string; Key: string; Value: integer): string begin
     if Key = 'A' then
-    begin
-      Current['C'] := 3
-    end;
+      begin
+        Current['C'] := 3;
+      end;
+    end if;
 
-    return (Acc + Key) + IntToStr(Value)
-  end;
+    return (Acc + Key) + Conv.IntToStr(Value);
+  end function;
 
-  AssertEquals('A1B2', Reduce(Current, '', Visit));
-  AssertEquals(3, Length(Current));
-  AssertEquals('A:1;B:2;C:3;', Reduce(Current, '', Describe))
-end.
+  Test.AssertEquals('A1B2', Dictionaries.Reduce(Current, '', Visit));
+  Test.AssertEquals(3, Dictionaries.Length(Current));
+  Test.AssertEquals('A:1;B:2;C:3;', Dictionaries.Reduce(Current, '', Describe));
+end program;

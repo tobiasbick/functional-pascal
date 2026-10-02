@@ -319,7 +319,11 @@ mod tests {
     fn compiled_image_rejects_stale_and_escaping_sources() {
         let root = crate::test_support::create_temp_dir("debug-stale-image");
         let source_path = root.join("main.fpas");
-        crate::test_support::write_text(&source_path, "program Main; begin end.\n");
+        crate::test_support::write_text(
+            &source_path,
+            r#"program Main; begin null; end program;
+"#,
+        );
         let source = fs::read_to_string(&source_path).expect("read source");
         let (program, diagnostics) = fpas_parser::parse(&source);
         assert!(diagnostics.is_empty());

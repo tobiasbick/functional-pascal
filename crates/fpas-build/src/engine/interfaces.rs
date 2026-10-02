@@ -2,7 +2,7 @@
 
 use std::collections::HashMap;
 
-use fpas_parser::QualifiedId;
+use fpas_parser::Import;
 use fpas_program::LinkedUnitIdentity;
 use fpas_unit::interface::UnitInterface;
 use fpas_unit::{DependencyIdentity, Digest};
@@ -12,7 +12,7 @@ use crate::BuildEvent;
 use super::CompiledUnits;
 
 pub(super) fn direct_interfaces_from_map(
-    uses: &[QualifiedId],
+    uses: &[Import],
     interfaces: &HashMap<String, UnitInterface>,
 ) -> Vec<UnitInterface> {
     uses.iter()
@@ -43,10 +43,7 @@ impl InterfaceRegistry {
         &self.interfaces
     }
 
-    pub(super) fn direct_dependency_identities(
-        &self,
-        uses: &[QualifiedId],
-    ) -> Vec<DependencyIdentity> {
+    pub(super) fn direct_dependency_identities(&self, uses: &[Import]) -> Vec<DependencyIdentity> {
         let mut dependencies = Vec::new();
         for used in uses {
             let name = canonical_unit_name(used);
@@ -62,7 +59,7 @@ impl InterfaceRegistry {
     }
 
     /// Copies direct interfaces only for units that require compilation.
-    pub(super) fn direct_interfaces(&self, uses: &[QualifiedId]) -> Vec<UnitInterface> {
+    pub(super) fn direct_interfaces(&self, uses: &[Import]) -> Vec<UnitInterface> {
         uses.iter()
             .filter_map(|used| {
                 self.positions
@@ -105,6 +102,6 @@ impl InterfaceRegistry {
     }
 }
 
-fn canonical_unit_name(used: &QualifiedId) -> String {
+fn canonical_unit_name(used: &Import) -> String {
     used.parts.join(".").to_ascii_lowercase()
 }

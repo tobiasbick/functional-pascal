@@ -16,7 +16,11 @@ fn debug_jsonl_script_emits_only_json_records() {
     let cwd = create_temp_dir("debug-jsonl");
     let source = cwd.join("main.fpas");
     let commands = cwd.join("commands.jsonl");
-    write_text(&source, "program Main; begin var X: integer := 1 end.\n");
+    write_text(
+        &source,
+        r#"program Main; begin var X: integer := 1; end program;
+"#,
+    );
     write_text(
         &commands,
         "{\"type\":\"request\",\"id\":1,\"command\":\"initialize\",\"arguments\":{}}\n{\"type\":\"request\",\"id\":2,\"command\":\"launch\",\"arguments\":{\"stop_on_entry\":false}}\n",
@@ -40,7 +44,11 @@ fn debug_jsonl_malformed_script_exits_nonzero_after_protocol_error() {
     let cwd = create_temp_dir("debug-jsonl-malformed");
     let source = cwd.join("main.fpas");
     let commands = cwd.join("commands.jsonl");
-    write_text(&source, "program Main; begin end.\n");
+    write_text(
+        &source,
+        r#"program Main; begin null; end program;
+"#,
+    );
     write_text(&commands, "\n{\n");
 
     let (exit, stdout, stderr) =
@@ -62,7 +70,11 @@ fn debug_compile_failure_stays_off_protocol_stdout() {
     let cwd = create_temp_dir("debug-compile-failure");
     let source = cwd.join("broken.fpas");
     let commands = cwd.join("commands.jsonl");
-    write_text(&source, "program Broken; begin Missing() end.\n");
+    write_text(
+        &source,
+        r#"program Broken; begin Missing(); end program;
+"#,
+    );
     write_text(
         &commands,
         "{\"type\":\"request\",\"id\":1,\"command\":\"initialize\",\"arguments\":{}}\n",
@@ -82,7 +94,8 @@ fn debug_output_limit_is_a_stable_protocol_error() {
     let commands = cwd.join("commands.jsonl");
     write_text(
         &source,
-        "program Main; uses Std.Console; begin WriteLn('too much output') end.\n",
+        r#"program Main;  uses Std.Console as Console; begin Console.WriteLn('too much output'); end program;
+"#,
     );
     write_text(
         &commands,
@@ -109,7 +122,11 @@ fn debug_accepts_program_projects_and_workspaces() {
     let source = cwd.join("app/src/main.fpas");
     let commands = cwd.join("commands.jsonl");
     crate::test_support::write_program_fpasprj(&project, "src/main.fpas", &["src/**/*.fpas"]);
-    write_text(&source, "program Main; begin end.\n");
+    write_text(
+        &source,
+        r#"program Main; begin null; end program;
+"#,
+    );
     write_text(
         &workspace,
         "[workspace]\nname = \"suite\"\nmembers = [\"app/app.fpasprj\"]\n",

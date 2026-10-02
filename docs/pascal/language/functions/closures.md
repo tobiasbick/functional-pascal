@@ -9,18 +9,13 @@ expression; surrounding syntax supplies any separator.
 
 ```pascal
 mutable var Count: integer := 0;
+var Increment: procedure() := procedure() begin
+  Count := Count + 1;
+end procedure;
+var AddBase: function(Value: integer): integer := function(Value: integer): integer begin
+  return Count + Value;
+end function;
 
-var Increment: procedure() :=
-  procedure()
-  begin
-    Count := Count + 1
-  end;
-
-var AddBase: function(Value: integer): integer :=
-  function(Value: integer): integer
-  begin
-    return Count + Value
-  end;
 ```
 
 Closures may be stored in variables and records, passed as arguments, returned from
@@ -48,12 +43,12 @@ the same cell. The cell survives until the final closure that references it is r
 function Counter(): function(): integer;
 begin
   mutable var Value: integer := 0;
-  return function(): integer
-  begin
+  return function(): integer begin
     Value := Value + 1;
-    return Value
-  end
-end;
+    return Value;
+  end function;
+end function;
+
 ```
 
 There is no capture-list syntax. Immutability is declared at the variable (or
@@ -66,13 +61,14 @@ when it is used as a first-class value (assigned, returned, or passed):
 
 ```pascal
 function MakeAdder(Base: integer): function(Value: integer): integer;
-  function Add(Value: integer): integer;
-  begin
-    return Base + Value
-  end;
+function Add(Value: integer): integer;
 begin
-  return Add
-end;
+  return Base + Value;
+end function;
+begin
+  return Add;
+end function;
+
 ```
 
 Non-escaping nested helpers that are only called by name while their parent frame is
@@ -99,29 +95,23 @@ also makes the outer closure task-bound (the mutable cells are still reachable).
 ```pascal
 // Accepted: immutable capture
 var N: integer := 3;
-var Work: function(): integer :=
-  function(): integer
-  begin
-    return N * 2
-  end;
+var Work: function(): integer := function(): integer begin
+  return N * 2;
+end function;
 var Handle: task := go Work();
-
 // Rejected: mutable capture
 mutable var Count: integer := 0;
-var Inc: procedure() :=
-  procedure()
-  begin
-    Count := Count + 1
-  end;
-go Inc();  // Compile-time error
+var Inc: procedure() := procedure() begin
+  Count := Count + 1;
+end procedure;
 
+go Inc(); // Compile-time error
 // Rejected: nested task-bound capture
-var Outer: procedure() :=
-  procedure()
-  begin
-    Inc()
-  end;
-go Outer();  // Compile-time error — Outer captures task-bound Inc
+var Outer: procedure() := procedure() begin
+  Inc();
+end procedure;
+
+go Outer(); // Compile-time error — Outer captures task-bound Inc
 ```
 
 ## Panic and cleanup

@@ -1,8 +1,9 @@
 program T;
 
-uses Std.Console, Std.Options;
+uses Std.Console as Console;
+uses Std.Options as Options;
 
 begin
   var O: option of integer := Some(99);
-  WriteLn(Std.Options.Unwrap(O))
-end.
+  Console.WriteLn(Options.Unwrap(O));
+end program;

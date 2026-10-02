@@ -8,59 +8,56 @@ use crate::analyze_with_types;
 #[test]
 fn bound_instance_function_is_callable_type() {
     check_ok(
-        "\
-program T;
-type
-  Counter = record
+        r#"program T;
+
+  type Counter = record
     Base: integer;
     function Add(Self: Counter; Value: integer): integer;
     begin
-      return Self.Base + Value
-    end;
-  end;
+      return Self.Base + Value;
+    end function;
+  end record;
 begin
-  var C: Counter := record Base := 10; end;
-  var AddTen: function(Value: integer): integer := C.Add
-end.",
+  var C: Counter := record Base := 10; end record;
+  var AddTen: function(Value: integer): integer := C.Add;
+end program;"#,
     );
 }
 
 #[test]
 fn bound_instance_procedure_is_callable_type() {
     check_ok(
-        "\
-program T;
-type
-  Counter = record
+        r#"program T;
+
+  type Counter = record
     Base: integer;
     procedure Bump(Self: Counter);
-    begin
-    end;
-  end;
+    begin null;
+    end procedure;
+  end record;
 begin
-  var C: Counter := record Base := 1; end;
-  var Op: procedure() := C.Bump
-end.",
+  var C: Counter := record Base := 1; end record;
+  var Op: procedure() := C.Bump;
+end program;"#,
     );
 }
 
 #[test]
 fn rejects_binding_static_function_from_value() {
     let errors = check_errors(
-        "\
-program T;
-type
-  Point = record
+        r#"program T;
+
+  type Point = record
     X: integer;
     static function Origin(): Point;
     begin
-      return record X := 0; end
-    end;
-  end;
+      return record X := 0; end record;
+    end function;
+  end record;
 begin
   var P: Point := Point.Origin();
-  var F: function(): Point := P.Origin
-end.",
+  var F: function(): Point := P.Origin;
+end program;"#,
     );
     assert!(
         errors
@@ -73,20 +70,19 @@ end.",
 #[test]
 fn rejects_binding_mutable_self_method() {
     let errors = check_errors(
-        "\
-program T;
-type
-  Counter = record
+        r#"program T;
+
+  type Counter = record
     Base: integer;
     procedure Inc(mutable Self: Counter);
     begin
-      Self.Base := Self.Base + 1
-    end;
-  end;
+      Self.Base := Self.Base + 1;
+    end procedure;
+  end record;
 begin
-  var C: Counter := record Base := 0; end;
-  var Op: procedure() := C.Inc
-end.",
+  var C: Counter := record Base := 0; end record;
+  var Op: procedure() := C.Inc;
+end program;"#,
     );
     assert!(
         errors
@@ -99,20 +95,19 @@ end.",
 #[test]
 fn bound_method_records_metadata() {
     let (program, parse_errors) = fpas_parser::parse(
-        "\
-program T;
-type
-  Counter = record
+        r#"program T;
+
+  type Counter = record
     Base: integer;
     function Add(Self: Counter; Value: integer): integer;
     begin
-      return Self.Base + Value
-    end;
-  end;
+      return Self.Base + Value;
+    end function;
+  end record;
 begin
-  var C: Counter := record Base := 10; end;
-  var AddTen: function(Value: integer): integer := C.Add
-end.",
+  var C: Counter := record Base := 10; end record;
+  var AddTen: function(Value: integer): integer := C.Add;
+end program;"#,
     );
     assert!(parse_errors.is_empty(), "{parse_errors:#?}");
     let metadata = analyze_with_types(&program);

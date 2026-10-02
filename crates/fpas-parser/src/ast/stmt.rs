@@ -7,6 +7,8 @@ impl Stmt {
     pub fn span(&self) -> Span {
         match self {
             Self::Block(_, span)
+            | Self::StatementList(_, span)
+            | Self::Null(span)
             | Self::Return(_, span)
             | Self::Panic(_, span)
             | Self::Break(span)
@@ -31,6 +33,10 @@ impl Stmt {
 pub enum Stmt {
     /// Compound `begin ... end` statement and its source span.
     Block(Vec<Stmt>, Span),
+    /// A named control-flow body's statement list, without an explicit lexical block.
+    StatementList(Vec<Stmt>, Span),
+    /// Explicit no-action statement `null;`.
+    Null(Span),
     /// Immutable local variable declaration.
     Var(VarDef),
     /// Mutable local variable declaration.
@@ -54,6 +60,8 @@ pub enum Stmt {
         condition: Expr,
         /// Statement executed when the condition is true.
         then_branch: Box<Stmt>,
+        /// Additional condition/body pairs evaluated in written `elsif` order.
+        elsif_branches: Vec<(Expr, Box<Stmt>)>,
         /// Statement executed when the condition is false, when present.
         else_branch: Option<Box<Stmt>>,
         /// Source span of the complete conditional.

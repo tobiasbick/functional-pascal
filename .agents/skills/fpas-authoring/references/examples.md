@@ -13,7 +13,8 @@ add a test that Str.Trim removes spaces
 Expected behavior:
 
 - Create `tests/stdlib/str/trim_normal_test.fpas` (or match nearby naming in that folder).
-- Use `program …Test;` + `uses Std.Str, Std.Test;` + `AssertEquals(…)`.
+- Use `program …Test;`, `uses Std.Str as Text;`, `uses Std.Test as Test;`,
+  and `Test.AssertEquals(…)`; close the main body with `end program;`.
 - Do **not** put it under `examples/`.
 - Run `fpas fmt` on the new file; confirm path is covered by `tests/suite.fpasprj` globs.
 - If behavior is already documented, no doc change; otherwise follow `fpas-change-checklist`.
@@ -44,7 +45,8 @@ split helpers out of main.fpas
 Expected behavior:
 
 - Create a `unit` file in the same project `src/` tree.
-- Move routines into the unit; keep `program` as entry with `uses MyUnit`.
+- Move routines into the unit; keep `program` as entry with `uses MyUnit as Model;`
+  and call exported routines through `Model`. Close the unit with `end unit;`.
 - Ensure the unit is picked up by the project `[sources].include` glob.
 - `fpas check <project>.fpasprj` — listing in `.fpasprj` alone does not import; `uses` does.
 
@@ -72,7 +74,9 @@ fix the compile error in my.fpas
 
 Expected behavior:
 
-- Read the diagnostic; common fixes: `return` instead of `FuncName :=`, add `mutable var`, qualify `Length`/`Map`, add missing `uses Std.*`.
+- Read the diagnostic; common fixes: `return` instead of `FuncName :=`, add
+  `mutable var`, declare the required `uses Unit.Name as Alias;`, qualify imported
+  names through that alias, and use the matching named closer and statement `;`.
 - Re-check with `fpas check my.fpas`.
 - Grep a similar working file under `tests/` or `examples/` before guessing syntax.
 

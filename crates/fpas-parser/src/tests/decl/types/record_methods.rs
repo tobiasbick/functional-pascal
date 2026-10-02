@@ -4,9 +4,7 @@ use fpas_diagnostics::codes::PARSE_INVALID_STATIC_PLACEMENT;
 #[test]
 fn record_with_function_method() {
     let p = parse_ok(
-        "program T; type Num = record V: integer; \
-         function Double(Self: Num): integer; begin return Self.V * 2 end; \
-         end; begin end.",
+        r#"program T;  type Num = record V: integer; function Double(Self: Num): integer; begin return Self.V * 2; end function; end record; begin null; end program;"#,
     );
     match &p.declarations[0] {
         Decl::TypeDef(td) => match &td.body {
@@ -24,13 +22,9 @@ fn record_with_function_method() {
 #[test]
 fn unit_record_routines_preserve_per_member_visibility() {
     let unit = parse_unit_ok(
-        "unit Demo.Types; \
-         type Counter = record \
-           function Hidden(Self: Counter): integer; begin return 1 end; \
-           public procedure Reset(Self: Counter); begin end; \
-           static function CreateHidden(): Counter; begin return record end end; \
-           public static procedure Clear(); begin end; \
-         end;",
+        r#"unit Demo.Types;  type Counter = record function Hidden(Self: Counter): integer; begin return 1; end function; public procedure Reset(Self: Counter); begin null; end procedure; static function CreateHidden(): Counter; begin return record end record; end function; public static procedure Clear(); begin null; end procedure; end record;
+end unit;
+"#,
     );
     let Decl::TypeDef(type_def) = &unit.declarations[0] else {
         panic!("expected TypeDef");
@@ -66,9 +60,7 @@ fn public_record_routine_is_rejected_in_program_files() {
 #[test]
 fn record_with_procedure_method() {
     let p = parse_ok(
-        "program T; type Greeter = record Name: string; \
-         procedure SayHello(Self: Greeter); begin Std.Console.WriteLn('hi') end; \
-         end; begin end.",
+        r#"program T;  type Greeter = record Name: string; procedure SayHello(Self: Greeter); begin Std.Console.WriteLn('hi'); end procedure; end record; begin null; end program;"#,
     );
     match &p.declarations[0] {
         Decl::TypeDef(td) => match &td.body {
@@ -85,10 +77,7 @@ fn record_with_procedure_method() {
 #[test]
 fn record_with_multiple_methods() {
     let p = parse_ok(
-        "program T; type Rect = record W: integer; H: integer; \
-         function Area(Self: Rect): integer; begin return Self.W * Self.H end; \
-         procedure Print(Self: Rect); begin Std.Console.WriteLn(Self.W) end; \
-         end; begin end.",
+        r#"program T;  type Rect = record W: integer; H: integer; function Area(Self: Rect): integer; begin return Self.W * Self.H; end function; procedure Print(Self: Rect); begin Std.Console.WriteLn(Self.W); end procedure; end record; begin null; end program;"#,
     );
     match &p.declarations[0] {
         Decl::TypeDef(td) => match &td.body {
@@ -107,10 +96,7 @@ fn record_with_multiple_methods() {
 #[test]
 fn record_with_generic_function_method() {
     let p = parse_ok(
-        "program T; type Box = record Value: integer; \
-         function Map<R>(Self: Box; F: function(X: integer): R): R; \
-         begin return F(Self.Value) end; \
-         end; begin end.",
+        r#"program T;  type Box = record Value: integer; function Map<R>(Self: Box; F: function(X: integer): R): R; begin return F(Self.Value); end function; end record; begin null; end program;"#,
     );
     match &p.declarations[0] {
         Decl::TypeDef(td) => match &td.body {
@@ -131,10 +117,7 @@ fn record_with_generic_function_method() {
 #[test]
 fn record_with_static_function() {
     let p = parse_ok(
-        "program T; type Point = record X: integer; Y: integer; \
-         static function Create(X: integer; Y: integer): Point; \
-         begin return record X := X; Y := Y; end end; \
-         end; begin end.",
+        r#"program T;  type Point = record X: integer; Y: integer; static function Create(X: integer; Y: integer): Point; begin return record X := X; Y := Y; end record; end function; end record; begin null; end program;"#,
     );
     match &p.declarations[0] {
         Decl::TypeDef(td) => match &td.body {
@@ -158,11 +141,7 @@ fn record_with_static_function() {
 #[test]
 fn record_static_and_instance_methods_together() {
     let p = parse_ok(
-        "program T; type Point = record X: integer; Y: integer; \
-         static function Origin(): Point; \
-         begin return record X := 0; Y := 0; end end; \
-         function Sum(Self: Point): integer; begin return Self.X + Self.Y end; \
-         end; begin end.",
+        r#"program T;  type Point = record X: integer; Y: integer; static function Origin(): Point; begin return record X := 0; Y := 0; end record; end function; function Sum(Self: Point): integer; begin return Self.X + Self.Y; end function; end record; begin null; end program;"#,
     );
     match &p.declarations[0] {
         Decl::TypeDef(td) => match &td.body {
@@ -180,9 +159,7 @@ fn record_static_and_instance_methods_together() {
 #[test]
 fn record_with_static_procedure() {
     let p = parse_ok(
-        "program T; type Point = record X: integer; \
-         static procedure Reset(X: integer); begin end; \
-         end; begin end.",
+        r#"program T;  type Point = record X: integer; static procedure Reset(X: integer); begin null; end procedure; end record; begin null; end program;"#,
     );
     match &p.declarations[0] {
         Decl::TypeDef(td) => match &td.body {

@@ -17,11 +17,24 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Lib, Std.Console;\nbegin\n  WriteLn(Secret())\nend.\n",
+        r#"program Main;
+uses App.Lib as Lib; uses Std.Console as Console;
+begin
+  Console.WriteLn(Secret());
+end program;
+"#,
     );
     write_text(
         &cwd.join("src/lib.fpas"),
-        "unit App.Lib;\n\nfunction Secret(): integer;\nbegin\n  return 42\nend;\n",
+        r#"unit App.Lib;
+
+function Secret(): integer;
+begin
+  return 42;
+end function;
+end unit;
+
+"#,
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);
@@ -51,11 +64,24 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Lib, Std.Console;\nbegin\n  WriteLn(App.Lib.Secret())\nend.\n",
+        r#"program Main;
+uses App.Lib as Lib; uses Std.Console as Console;
+begin
+  Console.WriteLn(Lib.Secret());
+end program;
+"#,
     );
     write_text(
         &cwd.join("src/lib.fpas"),
-        "unit App.Lib;\n\nfunction Secret(): integer;\nbegin\n  return 42\nend;\n",
+        r#"unit App.Lib;
+
+function Secret(): integer;
+begin
+  return 42;
+end function;
+end unit;
+
+"#,
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);
@@ -85,11 +111,22 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Lib, Std.Console;\nbegin\n  WriteLn(Secret)\nend.\n",
+        r#"program Main;
+uses App.Lib as Lib; uses Std.Console as Console;
+begin
+  Console.WriteLn(Secret);
+end program;
+"#,
     );
     write_text(
         &cwd.join("src/lib.fpas"),
-        "unit App.Lib;\n\nconst\n  Secret: integer := 42;\n",
+        r#"unit App.Lib;
+
+
+  const Secret: integer := 42;
+end unit;
+
+"#,
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);
@@ -119,11 +156,23 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Lib;\nbegin\n  DoSecret()\nend.\n",
+        r#"program Main;
+uses App.Lib as Lib;
+begin
+  DoSecret();
+end program;
+"#,
     );
     write_text(
         &cwd.join("src/lib.fpas"),
-        "unit App.Lib;\n\nprocedure DoSecret();\nbegin\nend;\n",
+        r#"unit App.Lib;
+
+procedure DoSecret();
+begin null;
+end procedure;
+end unit;
+
+"#,
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);
@@ -153,25 +202,25 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/main.fpas"),
-        "\
-program Main;
-uses App.Lib;
+        r#"program Main;
+uses App.Lib as Lib;
 begin
-  var P: SecretPoint := record X := 1; Y := 2; end;
-end.
-",
+  var P: SecretPoint := record X := 1; Y := 2; end record;
+end program;
+"#,
     );
     write_text(
         &cwd.join("src/lib.fpas"),
-        "\
-unit App.Lib;
+        r#"unit App.Lib;
 
-type
-  SecretPoint = record
+
+  type SecretPoint = record
     X: integer;
     Y: integer;
-  end;
-",
+  end record;
+end unit;
+
+"#,
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);
@@ -201,25 +250,25 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/main.fpas"),
-        "\
-program Main;
-uses App.Lib;
+        r#"program Main;
+uses App.Lib as Lib;
 begin
-  var P: App.Lib.SecretPoint := record X := 1; Y := 2; end;
-end.
-",
+  var P: Lib.SecretPoint := record X := 1; Y := 2; end record;
+end program;
+"#,
     );
     write_text(
         &cwd.join("src/lib.fpas"),
-        "\
-unit App.Lib;
+        r#"unit App.Lib;
 
-type
-  SecretPoint = record
+
+  type SecretPoint = record
     X: integer;
     Y: integer;
-  end;
-",
+  end record;
+end unit;
+
+"#,
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);
@@ -249,11 +298,22 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Lib, Std.Console;\nbegin\n  WriteLn(Secret)\nend.\n",
+        r#"program Main;
+uses App.Lib as Lib; uses Std.Console as Console;
+begin
+  Console.WriteLn(Secret);
+end program;
+"#,
     );
     write_text(
         &cwd.join("src/lib.fpas"),
-        "unit App.Lib;\n\nvar\n  Secret: integer := 42;\n",
+        r#"unit App.Lib;
+
+
+  var Secret: integer := 42;
+end unit;
+
+"#,
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);
@@ -283,11 +343,22 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Lib, Std.Console;\nbegin\n  WriteLn(Counter)\nend.\n",
+        r#"program Main;
+uses App.Lib as Lib; uses Std.Console as Console;
+begin
+  Console.WriteLn(Counter);
+end program;
+"#,
     );
     write_text(
         &cwd.join("src/lib.fpas"),
-        "unit App.Lib;\n\nmutable var\n  Counter: integer := 0;\n",
+        r#"unit App.Lib;
+
+
+  mutable var Counter: integer := 0;
+end unit;
+
+"#,
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);
@@ -317,11 +388,22 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Lib, Std.Console;\nbegin\n  WriteLn(App.Lib.Secret)\nend.\n",
+        r#"program Main;
+uses App.Lib as Lib; uses Std.Console as Console;
+begin
+  Console.WriteLn(Lib.Secret);
+end program;
+"#,
     );
     write_text(
         &cwd.join("src/lib.fpas"),
-        "unit App.Lib;\n\nvar\n  Secret: integer := 42;\n",
+        r#"unit App.Lib;
+
+
+  var Secret: integer := 42;
+end unit;
+
+"#,
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);
@@ -351,11 +433,22 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Lib, Std.Console;\nbegin\n  WriteLn(App.Lib.Secret)\nend.\n",
+        r#"program Main;
+uses App.Lib as Lib; uses Std.Console as Console;
+begin
+  Console.WriteLn(Lib.Secret);
+end program;
+"#,
     );
     write_text(
         &cwd.join("src/lib.fpas"),
-        "unit App.Lib;\n\nconst\n  Secret: integer := 42;\n",
+        r#"unit App.Lib;
+
+
+  const Secret: integer := 42;
+end unit;
+
+"#,
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);
@@ -385,11 +478,23 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Lib;\nbegin\n  App.Lib.DoSecret()\nend.\n",
+        r#"program Main;
+uses App.Lib as Lib;
+begin
+  Lib.DoSecret();
+end program;
+"#,
     );
     write_text(
         &cwd.join("src/lib.fpas"),
-        "unit App.Lib;\n\nprocedure DoSecret();\nbegin\nend;\n",
+        r#"unit App.Lib;
+
+procedure DoSecret();
+begin null;
+end procedure;
+end unit;
+
+"#,
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);

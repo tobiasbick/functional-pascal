@@ -6,8 +6,8 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`panic_stmt`).
 
 ```pascal
 begin
-  panic('Something went terribly wrong');
-end.
+panic('Something went terribly wrong');
+end;
 ```
 
 ## Guarding assumptions
@@ -17,8 +17,11 @@ function DivideChecked(A: integer; B: integer): integer;
 begin
   if B = 0 then
     panic('Division by zero');
-  return A div B
-end;
+  end if;
+
+  return A div B;
+end function;
+
 ```
 
 ## When to use panic vs Result

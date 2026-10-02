@@ -5,9 +5,11 @@ are zero-based. Sizes and rectangle extents must be non-negative. Rectangles
 are half-open: `right = x + width` and `bottom = y + height`.
 
 ```pascal
-var Bounds: TuiRect := TuiRect.FromEdges(2, 3, 10, 8);
-var Inside: boolean := Bounds.Contains(TuiPoint.Create(9, 7));
-var Content: TuiRect := Bounds.Inset();
+uses Std.Tui as Tui;
+
+var Bounds: Tui.TuiRect := Tui.TuiRect.FromEdges(2, 3, 10, 8);
+var Inside: boolean := Bounds.Contains(Tui.TuiPoint.Create(9, 7));
+var Content: Tui.TuiRect := Bounds.Inset();
 ```
 
 | Symbol | Purpose |

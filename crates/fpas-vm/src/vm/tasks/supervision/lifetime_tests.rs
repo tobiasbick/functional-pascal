@@ -12,17 +12,7 @@ use crate::vm::worker::Worker;
 
 fn image(outcome: &str) -> Arc<VerifiedExecutable> {
     let (program, errors) = fpas_parser::parse(&format!(
-        "program Captures; uses Std.Tasks;
-         type Payload = record Number: integer; end;
-         begin
-           var Captured: Payload := record Number := 42; end;
-           var Group: TaskGroup := CreateTaskGroup();
-           StartSupervisedTask(Group, function(Token: CancellationToken): result of integer, string
-           begin
-             if Captured.Number <> 42 then panic('capture changed');
-             return {outcome}
-           end, 2, 0)
-         end."
+        "program Captures;  uses Std.Tasks as Tasks;\n          type Payload = record Number: integer; end record;\n         begin\n           var Captured: Payload := record Number := 42; end record;\n           var Group: Tasks.TaskGroup := Tasks.CreateTaskGroup();\n           Tasks.StartSupervisedTask(Group, function(Token: Tasks.CancellationToken): result of integer, string\n           begin\n             if Captured.Number <> 42 then panic('capture changed'); end if;\n             return {outcome};\n           end function, 2, 0);\n         end program;"
     ));
     assert!(errors.is_empty(), "{errors:?}");
     Arc::new(fpas_compiler::compile(&program).expect("capture fixture"))

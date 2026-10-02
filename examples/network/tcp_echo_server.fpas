@@ -1,7 +1,12 @@
 // Accepts one LF-delimited TCP request, echoes it, and exits.
 program NetworkTcpEchoServer;
 
-uses Std.Args, Std.Arrays, Std.Conv, Std.Console, Std.Net, Std.Net.Utf8;
+uses Std.Args as Args;
+uses Std.Arrays as Arrays;
+uses Std.Conv as Conv;
+uses Std.Console as Console;
+uses Std.Net as Net;
+uses Std.Net.Utf8 as Utf8;
 
 // Returns the first LF delimiter index or minus one.
 //
@@ -9,151 +14,162 @@ uses Std.Args, Std.Arrays, Std.Conv, Std.Console, Std.Net, Std.Net.Utf8;
 // - `Bytes`: Network bytes to inspect.
 function LineFeedIndex(Bytes: array of integer): integer;
 begin
-  for Index: integer := 0 to Std.Arrays.Length(Bytes) - 1 do
-  begin
-    if Bytes[Index] = 10 then
+  for Index: integer := 0 to Arrays.Length(Bytes) - 1 do
     begin
-      return Index
-    end
-  end;
+      if Bytes[Index] = 10 then
+        begin
+          return Index;
+        end;
+      end if;
+    end;
+  end for;
 
-  return -1
-end;
+  return -1;
+end function;
 
 // Reads byte fragments until the client sends an LF delimiter.
 //
 // Parameters:
 // - `ConnectionValue`: Open TCP connection.
-function ReadLine(ConnectionValue: Connection): string;
+function ReadLine(ConnectionValue: Net.Connection): string;
 begin
   mutable var Bytes: array of integer := [];
   mutable var LineEnd: integer := -1;
   while LineEnd < 0 do
-  begin
-    case Std.Net.ReceiveBytes(ConnectionValue, 4096) of
-      Ok(Part):
-      begin
-        if Std.Arrays.Length(Part) = 0 then
-        begin
-          panic('TCP connection closed before the LF delimiter')
-        end;
-
-        Bytes := Std.Arrays.Concat(Bytes, Part);
-        LineEnd := LineFeedIndex(Bytes)
-      end;
-      Error(Message):
-      begin
-        panic(Message)
-      end
-    end
-  end;
-
-  if LineEnd + 1 <> Std.Arrays.Length(Bytes) then
-  begin
-    panic('TCP echo server accepts exactly one LF-delimited request per connection')
-  end;
-  var TextBytes: array of integer := Std.Arrays.Slice(Bytes, 0, LineEnd);
-  case Std.Net.Utf8.Decode(TextBytes) of
-    Ok(Text):
     begin
-      return Text
+      case Net.ReceiveBytes(ConnectionValue, 4096) of
+        when Ok(Part):
+          begin
+            if Arrays.Length(Part) = 0 then
+              begin
+                panic('TCP connection closed before the LF delimiter');
+              end;
+            end if;
+
+            Bytes := Arrays.Concat(Bytes, Part);
+            LineEnd := LineFeedIndex(Bytes);
+          end;
+        when Error(Message):
+          begin
+            panic(Message);
+          end;
+      end case;
     end;
-    Error(Message):
+  end while;
+
+  if LineEnd + 1 <> Arrays.Length(Bytes) then
     begin
-      panic(Message)
-    end
-  end
-end;
+      panic('TCP echo server accepts exactly one LF-delimited request per connection');
+    end;
+  end if;
+  var TextBytes: array of integer := Arrays.Slice(Bytes, 0, LineEnd);
+  case Utf8.Decode(TextBytes) of
+    when Ok(Text):
+      begin
+        return Text;
+      end;
+    when Error(Message):
+      begin
+        panic(Message);
+      end;
+  end case;
+end function;
 
 // Writes every byte even when the transport reports a partial write.
 //
 // Parameters:
 // - `ConnectionValue`: Open TCP connection.
 // - `Bytes`: Complete byte sequence to write.
-procedure WriteAll(ConnectionValue: Connection; Bytes: array of integer);
+procedure WriteAll(ConnectionValue: Net.Connection; Bytes: array of integer);
 begin
   mutable var Offset: integer := 0;
-  while Offset < Std.Arrays.Length(Bytes) do
-  begin
-    var Remaining: array of integer := Std.Arrays.Slice(Bytes, Offset, Std.Arrays.Length(Bytes) -
-                                                                       Offset);
-    case Std.Net.SendBytes(ConnectionValue, Remaining) of
-      Ok(Count):
-      begin
-        if Count <= 0 then
-        begin
-          panic('TCP connection stopped while writing')
-        end;
+  while Offset < Arrays.Length(Bytes) do
+    begin
+      var Remaining: array of integer := Arrays.Slice(Bytes, Offset, Arrays.Length(Bytes) - Offset);
+      case Net.SendBytes(ConnectionValue, Remaining) of
+        when Ok(Count):
+          begin
+            if Count <= 0 then
+              begin
+                panic('TCP connection stopped while writing');
+              end;
+            end if;
 
-        Offset := Offset + Count
-      end;
-      Error(Message):
-      begin
-        panic(Message)
-      end
-    end
-  end
-end;
+            Offset := Offset + Count;
+          end;
+        when Error(Message):
+          begin
+            panic(Message);
+          end;
+      end case;
+    end;
+  end while;
+end procedure;
 
 begin
   mutable var Port: integer := 18081;
-  if ParamCount() = 1 then
-  begin
-    Port := StrToInt(ParamStr(0))
-  end
-  else if ParamCount() <> 0 then
-  begin
-    panic('usage: tcp_echo_server.fpas -- [PORT]')
-  end;
-
-  case Listen('127.0.0.1', Port) of
-    Ok(ListenerValue):
+  if Args.ParamCount() = 1 then
     begin
-      WriteLn('TCP echo server listening on 127.0.0.1:' + IntToStr(Port));
-      case Accept(ListenerValue) of
-        Ok(ConnectionValue):
-        begin
-          case SetTimeout(ConnectionValue, 5000) of
-            Ok(_):
-            begin
-            end;
-            Error(Message):
-            begin
-              panic(Message)
-            end
-          end;
-          var Text: string := ReadLine(ConnectionValue);
-          WriteAll(ConnectionValue, Std.Net.Utf8.Encode('Echo: ' + Text));
-          case Close(ConnectionValue) of
-            Ok(_):
-            begin
-            end;
-            Error(Message):
-            begin
-              panic(Message)
-            end
-          end
-        end;
-        Error(Message):
-        begin
-          panic(Message)
-        end
-      end;
-
-      case CloseListener(ListenerValue) of
-        Ok(_):
-        begin
-          WriteLn('TCP echo server stopped')
-        end;
-        Error(Message):
-        begin
-          panic(Message)
-        end
-      end
+      Port := Conv.StrToInt(Args.ParamStr(0));
     end;
-    Error(Message):
-    begin
-      panic(Message)
-    end
-  end
-end.
+  else
+    if Args.ParamCount() <> 0 then
+      begin
+        panic('usage: tcp_echo_server.fpas -- [PORT]');
+      end;
+    end if;
+  end if;
+
+  case Net.Listen('127.0.0.1', Port) of
+    when Ok(ListenerValue):
+      begin
+        Console.WriteLn('TCP echo server listening on 127.0.0.1:' + Conv.IntToStr(Port));
+        case Net.Accept(ListenerValue) of
+          when Ok(ConnectionValue):
+            begin
+              case Net.SetTimeout(ConnectionValue, 5000) of
+                when Ok(_):
+                  begin
+                    null;
+                  end;
+                when Error(Message):
+                  begin
+                    panic(Message);
+                  end;
+              end case;
+              var Text: string := ReadLine(ConnectionValue);
+              WriteAll(ConnectionValue, Utf8.Encode('Echo: ' + Text));
+              case Net.Close(ConnectionValue) of
+                when Ok(_):
+                  begin
+                    null;
+                  end;
+                when Error(Message):
+                  begin
+                    panic(Message);
+                  end;
+              end case;
+            end;
+          when Error(Message):
+            begin
+              panic(Message);
+            end;
+        end case;
+
+        case Net.CloseListener(ListenerValue) of
+          when Ok(_):
+            begin
+              Console.WriteLn('TCP echo server stopped');
+            end;
+          when Error(Message):
+            begin
+              panic(Message);
+            end;
+        end case;
+      end;
+    when Error(Message):
+      begin
+        panic(Message);
+      end;
+  end case;
+end program;

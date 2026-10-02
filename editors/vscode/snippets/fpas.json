@@ -5,8 +5,8 @@
       "program ${1:ProgramName};",
       "",
       "begin",
-      "  $0",
-      "end."
+      "  ${0:null};",
+      "end program;"
     ],
     "description": "Create a Functional Pascal program"
   },
@@ -15,7 +15,9 @@
     "body": [
       "unit ${1:UnitName};",
       "",
-      "$0"
+      "$0",
+      "",
+      "end unit;"
     ],
     "description": "Create a Functional Pascal unit"
   },
@@ -24,8 +26,8 @@
     "body": [
       "function ${1:FunctionName}(${2:Value}: ${3:integer}): ${4:integer};",
       "begin",
-      "  return ${2:Value}",
-      "end;"
+      "  return ${2:Value};",
+      "end function;"
     ],
     "description": "Declare a function"
   },
@@ -34,8 +36,8 @@
     "body": [
       "procedure ${1:ProcedureName}(${2:Value}: ${3:integer});",
       "begin",
-      "  $0",
-      "end;"
+      "  ${0:null};",
+      "end procedure;"
     ],
     "description": "Declare a procedure"
   },
@@ -44,7 +46,7 @@
     "body": [
       "type ${1:RecordName} = record",
       "  ${2:Value}: ${3:integer};",
-      "end;"
+      "end record;"
     ],
     "description": "Declare a record type"
   },
@@ -57,9 +59,8 @@
     "prefix": "if",
     "body": [
       "if ${1:true} then",
-      "begin",
-      "  $0",
-      "end"
+      "  ${0:null};",
+      "end if;"
     ],
     "description": "Insert an if statement"
   },
@@ -67,9 +68,8 @@
     "prefix": "for",
     "body": [
       "for ${1:I}: ${2:integer} := ${3:0} to ${4:10} do",
-      "begin",
-      "  $0",
-      "end"
+      "  ${0:null};",
+      "end for;"
     ],
     "description": "Insert a for loop"
   },
@@ -77,9 +77,8 @@
     "prefix": "while",
     "body": [
       "while ${1:true} do",
-      "begin",
-      "  $0",
-      "end"
+      "  ${0:null};",
+      "end while;"
     ],
     "description": "Insert a while loop"
   },
@@ -87,8 +86,8 @@
     "prefix": "repeat",
     "body": [
       "repeat",
-      "  $0",
-      "until ${1:true}"
+      "  ${0:null};",
+      "until ${1:true};"
     ],
     "description": "Insert a repeat loop"
   },
@@ -96,10 +95,15 @@
     "prefix": "case",
     "body": [
       "case ${1:Value} of",
-      "  ${2:0}:",
-      "    var ${3:Match}: ${4:integer} := ${1:Value}$0",
-      "end"
+      "  when ${2:0}:",
+      "    var ${3:Match}: ${4:integer} := ${1:Value}$0;",
+      "end case;"
     ],
     "description": "Insert a case statement"
+  },
+  "Import unit": {
+    "prefix": "uses",
+    "body": "uses ${1:Std.Console} as ${2:Console};",
+    "description": "Import one unit through an explicit alias"
   }
 }

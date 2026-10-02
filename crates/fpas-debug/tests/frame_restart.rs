@@ -10,18 +10,18 @@ use serde_json::{Value, json};
 
 const SOURCE: &str = r#"program FrameRestart;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 function Branch(Value: integer): integer;
 begin
   mutable var Local: integer := Value + 10;
-  WriteLn('effect');
-  return Local
-end;
+  Console.WriteLn('effect');
+  return Local;
+end function;
 
 begin
-  WriteLn(Branch(1))
-end.
+  Console.WriteLn(Branch(1));
+end program;
 "#;
 
 fn server() -> JsonlServer {

@@ -1,38 +1,47 @@
 // Measures repeated clipped rectangle fills on a prebuilt working surface.
 program PartialFillBenchmark;
 
-uses Std.Args, Std.Console, Std.Conv, Std.Time, Std.Tui;
+uses Std.Args as Args;
+uses Std.Console as Console;
+uses Std.Conv as Conv;
+uses Std.Time as Time;
+uses Std.Tui as Tui;
 
 begin
-  if ParamCount() <> 1 then
-  begin
-    panic('usage: partial_fill_benchmark.fpas -- ITERATIONS')
-  end;
-  var Iterations: integer := StrToInt(ParamStr(0));
+  if Args.ParamCount() <> 1 then
+    begin
+      panic('usage: partial_fill_benchmark.fpas -- ITERATIONS');
+    end;
+  end if;
+  var Iterations: integer := Conv.StrToInt(Args.ParamStr(0));
   if Iterations < 1 then
-  begin
-    panic('ITERATIONS must be positive')
-  end;
-  var Surface: TuiWorkingSurface := TuiWorkingSurface.Create(TuiSize.Create(98, 32));
-  var Canvas: TuiCanvas := TuiCanvas.Create(Surface, TuiRect.Create(0, 0, 98, 32));
-  var Bounds: TuiRect := TuiRect.Create(4, 3, 90, 26);
-  var Cell: TuiCell := TuiCell.Create('#', TuiStyleRole.Accent);
+    begin
+      panic('ITERATIONS must be positive');
+    end;
+  end if;
+  var Surface: Tui.TuiWorkingSurface := Tui.TuiWorkingSurface.Create(Tui.TuiSize.Create(98, 32));
+  var Canvas: Tui.TuiCanvas := Tui.TuiCanvas.Create(Surface, Tui.TuiRect.Create(0, 0, 98, 32));
+  var Bounds: Tui.TuiRect := Tui.TuiRect.Create(4, 3, 90, 26);
+  var Cell: Tui.TuiCell := Tui.TuiCell.Create('#', Tui.TuiStyleRole.Accent);
   for Warmup: integer := 1 to 5 do
-  begin
-    Canvas.FillRect(Bounds, Cell)
-  end;
-  var Started: integer := MonotonicMillis();
+    begin
+      Canvas.FillRect(Bounds, Cell);
+    end;
+  end for;
+  var Started: integer := Time.MonotonicMillis();
   for Iteration: integer := 1 to Iterations do
-  begin
-    Canvas.FillRect(Bounds, Cell)
-  end;
-  var Elapsed: integer := ElapsedMillis(Started);
-  var Snapshot: TuiSurfaceSnapshot := Surface.Snapshot();
+    begin
+      Canvas.FillRect(Bounds, Cell);
+    end;
+  end for;
+  var Elapsed: integer := Time.ElapsedMillis(Started);
+  var Snapshot: Tui.TuiSurfaceSnapshot := Surface.Snapshot();
   if (((Snapshot.CellAt(4, 3).Glyph <> '#') or (Snapshot.CellAt(93, 28).Glyph <> '#')) or (Snapshot.CellAt(3, 3).Glyph <> ' ')) or
      (Snapshot.CellAt(94, 28).Glyph <> ' ') then
-  begin
-    panic('partial fill snapshot mismatch')
-  end;
+    begin
+      panic('partial fill snapshot mismatch');
+    end;
+  end if;
 
-  WriteLn(('elapsed: ' + IntToStr(Elapsed)) + ' ms')
-end.
+  Console.WriteLn(('elapsed: ' + Conv.IntToStr(Elapsed)) + ' ms');
+end program;

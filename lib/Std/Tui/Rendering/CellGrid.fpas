@@ -1,9 +1,11 @@
 // Cell-grid painting.
 unit Std.Tui.Rendering.CellGrid;
 
-uses
-  Std.Arrays, Std.Tui.Chrome.CellGrid, Std.Tui.Geometry.Point, Std.Tui.Geometry.Rect,
-  Std.Tui.Rendering.Canvas;
+uses Std.Arrays as Arrays;
+uses Std.Tui.Chrome.CellGrid as CellGrid;
+uses Std.Tui.Geometry.Point as Point;
+uses Std.Tui.Geometry.Rect as Rect;
+uses Std.Tui.Rendering.Canvas as Canvas2;
 
 // Paints the visible part of a row-major terminal cell grid.
 //
@@ -11,23 +13,32 @@ uses
 // - `Canvas`: Canvas that receives the drawing operation.
 // - `Bounds`: Rectangle affected by the operation.
 // - `Grid`: Cell grid to paint.
-public procedure TuiPaintCellGrid(Canvas: TuiCanvas; Bounds: TuiRect; Grid: TuiCellGrid);
+public procedure TuiPaintCellGrid(
+  Canvas: Canvas2.TuiCanvas;
+  Bounds: Rect.TuiRect;
+  Grid: CellGrid.TuiCellGrid
+);
 begin
   mutable var Width: integer := Grid.Width;
   mutable var Height: integer := Grid.Height;
   if Width > Bounds.Width then
-  begin
-    Width := Bounds.Width
-  end;
+    begin
+      Width := Bounds.Width;
+    end;
+  end if;
 
   if Height > Bounds.Height then
-  begin
-    Height := Bounds.Height
-  end;
+    begin
+      Height := Bounds.Height;
+    end;
+  end if;
 
   for Y: integer := 0 to Height - 1 do
-  begin
-    TuiCanvasPutCells(Canvas, TuiPoint.Create(Bounds.X, Bounds.Y + Y), Std.Arrays.Slice(Grid.Cells, Y *
-                                                                                                    Grid.Width, Width))
-  end
-end;
+    begin
+      Canvas2.TuiCanvasPutCells(Canvas, Point.TuiPoint.Create(Bounds.X, Bounds.Y + Y), Arrays.Slice(Grid.Cells, Y *
+                                                                                                                Grid.Width, Width));
+    end;
+  end for;
+end procedure;
+
+end unit;

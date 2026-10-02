@@ -1,32 +1,34 @@
 program CellCapturingRoutineAssignment;
 
-uses Std.Console, Std.Tasks;
+uses Std.Console as Console;
+uses Std.Tasks as Tasks;
 
-type
-  Handler = function(Value: integer): integer;
-  Action = procedure();
-  Pack = record
-    Item: Handler;
-  end;
+type Handler = function(Value: integer): integer;
+
+type Action = procedure();
+
+type Pack = record
+  Item: Handler;
+end record;
 
 function Identity(Value: integer): integer;
 begin
-  return Value
-end;
+  return Value;
+end function;
 
 procedure Noop();
 begin
-end;
+  null;
+end procedure;
 
-mutable var
-  Shared: Handler := Identity;
+mutable var Shared: Handler := Identity;
 
 function Mutating(): Handler;
 function AddCell(Value: integer): integer;
 begin
   Cell := Cell + 1;
-  return Value + Cell
-end;
+  return Value + Cell;
+end function;
 begin
   mutable var Cell: integer := 1;
   var Original: Handler := AddCell;
@@ -35,179 +37,180 @@ begin
   mutable var Copy: Handler := Identity;
   mutable var Packed: Pack := record
     Item := Identity;
-  end;
+  end record;
   var CellStop: integer := 0;
   Cell := Cell + 10;
-  WriteLn(Current(0));
-  WriteLn(Original(0));
-  return Current
-end;
+  Console.WriteLn(Current(0));
+  Console.WriteLn(Original(0));
+  return Current;
+end function;
 
 function Mix(Base: integer): Handler;
 function MixBoth(Value: integer): integer;
 begin
   Cell := Cell + 1;
-  return (Value + Base) + Cell
-end;
+  return (Value + Base) + Cell;
+end function;
 begin
   mutable var Cell: integer := 1;
   mutable var Current: Handler := Identity;
   var MixStop: integer := 0;
-  return Current
-end;
+  return Current;
+end function;
 
 function OuterCell(): Handler;
 function Mid(): Handler;
 function AddEnclosed(Value: integer): integer;
 begin
   Cell := Cell + 1;
-  return Value + Cell
-end;
+  return Value + Cell;
+end function;
 begin
   var Original: Handler := AddEnclosed;
   mutable var Current: Handler := Identity;
   var EnclosingStop: integer := 0;
-  return Current
-end;
+  return Current;
+end function;
 begin
   mutable var Cell: integer := 1;
-  return Mid()
-end;
+  return Mid();
+end function;
 
 function Walk(N: integer): integer;
 function AddAcc(Value: integer): integer;
 begin
   Acc := Acc + 1;
-  return Value + Acc
-end;
+  return Value + Acc;
+end function;
 begin
   mutable var Acc: integer := N;
   mutable var Current: Handler := Identity;
   var WalkStop: integer := 0;
   if N = 0 then
-  begin
-    return Current(0)
-  end
+    begin
+      return Current(0);
+    end;
   else
-  begin
-    return Walk(N - 1)
-  end
-end;
+    begin
+      return Walk(N - 1);
+    end;
+  end if;
+end function;
 
 function Shadow(): Handler;
 function AddOffset(Value: integer): integer;
 begin
   Offset := Offset + 1;
-  return Value + Offset
-end;
+  return Value + Offset;
+end function;
 begin
   mutable var Offset: integer := 7;
   mutable var Current: Handler := Identity;
   begin
     var Offset: integer := 99;
     var ShadowStop: integer := 0;
-    return Current
-  end
-end;
+    return Current;
+  end;
+end function;
 
 function LateCell(): Handler;
 function AddLate(Value: integer): integer;
 begin
   Cell := Cell + 1;
-  return Value + Cell
-end;
+  return Value + Cell;
+end function;
 begin
   mutable var Current: Handler := Identity;
   var LateStop: integer := 0;
   mutable var Cell: integer := 1;
   var LateReady: integer := 0;
-  return Current
-end;
+  return Current;
+end function;
 
 function PendingDest(): Handler;
 function AddPending(Value: integer): integer;
 begin
   Cell := Cell + 1;
-  return Value + Cell
-end;
+  return Value + Cell;
+end function;
 begin
   mutable var Cell: integer := 1;
   var PendingStop: integer := 0;
   mutable var Current: Handler := Identity;
-  return Current
-end;
+  return Current;
+end function;
 
 procedure Apply(mutable Current: Handler);
 function AddParam(Value: integer): integer;
 begin
   Cell := Cell + 1;
-  return Value + Cell
-end;
+  return Value + Cell;
+end function;
 begin
   mutable var Cell: integer := 1;
-  var ParamStop: integer := 0
-end;
+  var ParamStop: integer := 0;
+end procedure;
 
 function NestedBox(): integer;
 function AddBoxed(Value: integer): integer;
 begin
   Cell := Cell + 1;
-  return Value + Cell
-end;
+  return Value + Cell;
+end function;
 begin
   mutable var Cell: integer := 1;
   mutable var Packed: Pack := record
     Item := Identity;
-  end;
+  end record;
   var BoxStop: integer := 0;
-  return 0
-end;
+  return 0;
+end function;
 
 function CaptureDest(): Handler;
 function AddCaptured(Value: integer): integer;
 begin
   Cell := Cell + 1;
-  return Value + Cell
-end;
+  return Value + Cell;
+end function;
 function Touch(): integer;
 begin
-  return Current(0)
-end;
+  return Current(0);
+end function;
 begin
   mutable var Cell: integer := 1;
   mutable var Source: Handler := Identity;
   mutable var Current: Handler := Identity;
   var Keep: integer := Touch();
   var CaptureDestStop: integer := 0;
-  return Current
-end;
+  return Current;
+end function;
 
 function SpawnProbe(): integer;
 procedure RunSpawn();
 begin
-  Cell := Cell + 1
-end;
+  Cell := Cell + 1;
+end procedure;
 begin
   mutable var Cell: integer := 1;
   mutable var Current: Action := Noop;
   var SpawnStop: integer := 0;
   var Pending: task := go Current();
-  Wait(Pending);
-  return Cell
-end;
+  Tasks.Wait(Pending);
+  return Cell;
+end function;
 
 function Worker(): Handler;
 function AddWorker(Value: integer): integer;
 begin
   Cell := Cell + 1;
-  return Value + Cell
-end;
+  return Value + Cell;
+end function;
 begin
   mutable var Cell: integer := 8;
   mutable var Current: Handler := Identity;
   var WorkerStop: integer := 0;
-  return Current
-end;
+  return Current;
+end function;
 
 begin
   mutable var Current: Handler := Identity;
@@ -223,7 +226,7 @@ begin
   var CapturedDest: Handler := CaptureDest();
   var Spawned: integer := SpawnProbe();
   var Child: task := go Worker();
-  var Stolen: Handler := Wait(Child);
+  var Stolen: Handler := Tasks.Wait(Child);
   var RootStop: integer := 0;
-  WriteLn(Stolen(1))
-end.
+  Console.WriteLn(Stolen(1));
+end program;

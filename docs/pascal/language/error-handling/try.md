@@ -5,21 +5,24 @@
 Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`try` expression).
 
 ```pascal
-function Process(A: integer; B: integer): Result of string, string;
+uses Std.Conv as Conv;
+
+function Process(A: integer; B: integer): result of string, string;
 begin
   var Quotient: integer := try Divide(A, B);
-  return Ok(IntToStr(Quotient))
-end;
+  return Ok(Conv.IntToStr(Quotient));
+end function;
 ```
 
 `try` also works with `Option`:
 
 ```pascal
-function FirstPositive(Items: array of integer): Option of integer;
+function FirstPositive(Items: array of integer): option of integer;
 begin
   var Idx: integer := try FindIndex(Items, 1);
-  return Some(Items[Idx])
-end;
+  return Some(Items[Idx]);
+end function;
+
 ```
 
 ## See also

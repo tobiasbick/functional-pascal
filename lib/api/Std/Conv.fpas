@@ -10,8 +10,8 @@ unit Std.Conv;
 // - `B`: `boolean` input value used by `BoolToStr`.
 public function BoolToStr(B: boolean): string;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // Parse hex; supports `$` / `0x` prefix.
 //
@@ -19,8 +19,8 @@ end;
 // - `S`: UTF-8 text processed by the operation.
 public function HexToInt(S: string): integer;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // Uppercase hex, zero-padded.
 //
@@ -29,8 +29,8 @@ end;
 // - `Digits`: `integer` input value used by `IntToHex`.
 public function IntToHex(N: integer; Digits: integer): string;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // Widen.
 //
@@ -38,8 +38,8 @@ end;
 // - `N`: `integer` input value used by `IntToReal`.
 public function IntToReal(N: integer): real;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // Decimal text.
 //
@@ -47,8 +47,8 @@ end;
 // - `N`: `integer` input value used by `IntToStr`.
 public function IntToStr(N: integer): string;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // Text form.
 //
@@ -56,8 +56,8 @@ end;
 // - `R`: `real` input value used by `RealToStr`.
 public function RealToStr(R: real): string;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // Parse; case-insensitive; error if invalid.
 //
@@ -65,8 +65,8 @@ end;
 // - `S`: UTF-8 text processed by the operation.
 public function StrToBool(S: string): boolean;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // Parse; error if invalid.
 //
@@ -74,8 +74,8 @@ end;
 // - `S`: UTF-8 text processed by the operation.
 public function StrToInt(S: string): integer;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // Parse; error if invalid.
 //
@@ -83,5 +83,7 @@ end;
 // - `S`: UTF-8 text processed by the operation.
 public function StrToReal(S: string): real;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
+
+end unit;

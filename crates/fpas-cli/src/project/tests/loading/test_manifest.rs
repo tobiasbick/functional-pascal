@@ -19,7 +19,9 @@ script = "alpha.script.toml"
     );
     write_text(
         &dir.join("alpha_test.fpas"),
-        "program A;\nuses Std.Test;\nbegin AssertTrue(true) end.",
+        r#"program A;
+uses Std.Test as Test;
+begin Test.AssertTrue(true); end program;"#,
     );
     write_text(
         &dir.join("alpha.script.toml"),
@@ -54,7 +56,13 @@ include = ["*.fpas"]
 script = "demo.script.toml"
 "#,
     );
-    write_text(&dir.join("main.fpas"), "program Main;\nbegin\nend.\n");
+    write_text(
+        &dir.join("main.fpas"),
+        r#"program Main;
+begin null;
+end program;
+"#,
+    );
 
     let error = load_project_error(&project_file, "program must reject [test]");
     fs::remove_dir_all(&dir).expect("temp directory must be removed");
@@ -77,7 +85,13 @@ include = ["*.fpas"]
 [test.overrides."alpha_test.fpas"]
 "#,
     );
-    write_text(&dir.join("alpha_test.fpas"), "program A;\nbegin\nend.\n");
+    write_text(
+        &dir.join("alpha_test.fpas"),
+        r#"program A;
+begin null;
+end program;
+"#,
+    );
 
     let error = load_project_error(&project_file, "empty test override must fail");
     fs::remove_dir_all(&dir).expect("temp directory must be removed");
@@ -101,7 +115,13 @@ include = ["*.fpas"]
 script = "missing.script.toml"
 "#,
     );
-    write_text(&dir.join("alpha_test.fpas"), "program A;\nbegin\nend.\n");
+    write_text(
+        &dir.join("alpha_test.fpas"),
+        r#"program A;
+begin null;
+end program;
+"#,
+    );
 
     let error = load_project_error(&project_file, "unknown test override must fail");
     fs::remove_dir_all(&dir).expect("temp directory must be removed");

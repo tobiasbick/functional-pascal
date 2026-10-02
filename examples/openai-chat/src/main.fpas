@@ -1,53 +1,62 @@
 // Runs an interactive chat against a configured OpenAI-compatible endpoint.
 program OpenAiChat;
 
-uses Std.Ai.OpenAi, Std.Args, Std.Arrays, Std.Console, Std.Env;
+uses Std.Ai.OpenAi as OpenAi;
+uses Std.Args as Args;
+uses Std.Arrays as Arrays;
+uses Std.Console as Console;
+uses Std.Env as Env;
 
 begin
-  if ParamCount() <> 2 then
-  begin
-    WriteLn('Usage: fpas run examples/openai-chat/openai-chat.fpasprj -- <base-url> <model>');
-    WriteLn('Example: ... -- http://127.0.0.1:8080/v1 local-model');
-    return
-  end;
-  mutable var ClientValue: Client := Client.Create(ParamStr(0), ParamStr(1));
-  case Std.Env.Get('OPENAI_API_KEY') of
-    Some(Value):
+  if Args.ParamCount() <> 2 then
     begin
-      ClientValue.ApiKey := Some(Value)
+      Console.WriteLn('Usage: fpas run examples/openai-chat/openai-chat.fpasprj -- <base-url> <model>');
+      Console.WriteLn('Example: ... -- http://127.0.0.1:8080/v1 local-model');
+      return;
     end;
-    None:
-    begin
-    end
-  end;
-  mutable var Messages: array of ChatMessage := [];
-  var Options: ChatOptions := ChatOptions.Default();
-  WriteLn('OpenAI-compatible FPAS chat. Enter /exit to quit.');
+  end if;
+  mutable var ClientValue: OpenAi.Client := OpenAi.Client.Create(Args.ParamStr(0), Args.ParamStr(1));
+  case Env.Get('OPENAI_API_KEY') of
+    when Some(Value):
+      begin
+        ClientValue.ApiKey := Some(Value);
+      end;
+    when None:
+      begin
+        null;
+      end;
+  end case;
+  mutable var Messages: array of OpenAi.ChatMessage := [];
+  var Options: OpenAi.ChatOptions := OpenAi.ChatOptions.Default();
+  Console.WriteLn('OpenAI-compatible FPAS chat. Enter /exit to quit.');
   while true do
-  begin
-    WriteText('you> ');
-    var Prompt: string := ReadLn();
-    if Prompt = '/exit' then
     begin
-      break
-    end;
-
-    if Prompt <> '' then
-    begin
-      mutable var RequestMessages: array of ChatMessage := Messages;
-      Std.Arrays.Push(RequestMessages, ChatMessage.User(Prompt));
-      case Complete(ClientValue, RequestMessages, Options) of
-        Ok(Content):
+      Console.WriteText('you> ');
+      var Prompt: string := Console.ReadLn();
+      if Prompt = '/exit' then
         begin
-          WriteLn('assistant> ' + Content);
-          Std.Arrays.Push(Messages, ChatMessage.User(Prompt));
-          Std.Arrays.Push(Messages, ChatMessage.Assistant(Content))
+          break;
         end;
-        Error(Message):
+      end if;
+
+      if Prompt <> '' then
         begin
-          WriteLn('error> ' + Message)
-        end
-      end
-    end
-  end
-end.
+          mutable var RequestMessages: array of OpenAi.ChatMessage := Messages;
+          Arrays.Push(RequestMessages, OpenAi.ChatMessage.User(Prompt));
+          case OpenAi.Complete(ClientValue, RequestMessages, Options) of
+            when Ok(Content):
+              begin
+                Console.WriteLn('assistant> ' + Content);
+                Arrays.Push(Messages, OpenAi.ChatMessage.User(Prompt));
+                Arrays.Push(Messages, OpenAi.ChatMessage.Assistant(Content));
+              end;
+            when Error(Message):
+              begin
+                Console.WriteLn('error> ' + Message);
+              end;
+          end case;
+        end;
+      end if;
+    end;
+  end while;
+end program;

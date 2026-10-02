@@ -26,39 +26,39 @@ export async function verifyDebuggerEvaluation(
   const lines = [
     "program DebuggerEvaluation;",
     "",
-    "uses Std.Console;",
+    " uses Std.Console as Console;",
     "",
-    "type",
-    "  Point = record",
+    "",
+    "  type Point = record",
     "    X: integer;",
     "    Y: integer;",
     "    static function Create(X: integer; Y: integer): Point;",
     "    begin",
-    "      return record X := X; Y := Y; end",
-    "    end;",
+    "      return record X := X; Y := Y; end record;",
+    "    end function;",
     "    function Sum(Self: Point): integer;",
     "    begin",
-    "      return Self.X + Self.Y",
-    "    end;",
+    "      return Self.X + Self.Y;",
+    "    end function;",
     "    function ReadFirst(Self: Point): integer;",
     "    begin",
-    "      return Self.X",
-    "    end;",
+    "      return Self.X;",
+    "    end function;",
     "    property First: integer read ReadFirst;",
-    "  end;",
+    "  end record;",
     "",
     "begin",
     "  var Origin: Point := record",
     "    X := 3;",
     "    Y := 4;",
-    "  end;",
+    "  end record;",
     "  var Offset: integer := 2;",
-    "  WriteLn(Offset)",
-    "end.",
+    "  Console.WriteLn(Offset);",
+    "end program;",
     ""
   ];
   const sourcePath = await writeSource(workspaceRoot, "evaluation", lines);
-  const line = lines.indexOf("  WriteLn(Offset)");
+  const line = lines.indexOf("  Console.WriteLn(Offset);");
   const breakpoint = new vscode.SourceBreakpoint(
     new vscode.Location(vscode.Uri.file(sourcePath), new vscode.Position(line, 2))
   );
@@ -114,7 +114,7 @@ export async function verifyDebuggerEvaluation(
     const activeSession = session;
     await assert.rejects(
       async () => activeSession.customRequest("evaluate", {
-        expression: "WriteLn(Offset)",
+        expression: "Std.Console.WriteLn(Offset)",
         frameId,
         context: "repl"
       }),

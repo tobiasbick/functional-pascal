@@ -15,23 +15,25 @@ declarations and record members).
 ```pascal
 unit MyApp.Geometry;
 
-uses Std.Math;
+ uses Std.Math as Math;
 
-public type
-  Point = record
+
+  public type Point = record
     public X: real;
     public Y: real;
-  end;
+  end record;
 
 function Square(V: real): real;
 begin
-  return V * V
-end;
+  return V * V;
+end function;
 
 public function Distance(A: Point; B: Point): real;
 begin
-  return Sqrt(Square(B.X - A.X) + Square(B.Y - A.Y))
-end;
+  return Math.Sqrt(Square(B.X - A.X) + Square(B.Y - A.Y));
+end function;
+end unit;
+
 ```
 
 `Point` and `Distance` are public. `Square` is private because it has no

@@ -258,28 +258,28 @@ fn jsonl_payload_requests_validate_lifecycle() {
 fn jsonl_payload_mutation_stays_bound_to_the_selected_child_task() {
     const TASK_SOURCE: &str = r#"program TaskPayloadMutation;
 
-uses Std.Console, Std.Tasks;
+uses Std.Console as Console; uses Std.Tasks as Tasks;
 
 function Work(): integer;
 begin
   mutable var Optional: Option of integer := Some(1);
   var Marker: integer := 0;
   case Optional of
-    Some(Value):
+    when Some(Value):
     begin
-      return Value
+      return Value;
     end;
-    None:
+    when None:
     begin
-      return 0
-    end
-  end
-end;
+      return 0;
+    end;
+  end case;
+end function;
 
 begin
   var Pending: task := go Work();
-  WriteLn(Wait(Pending))
-end.
+  Console.WriteLn(Tasks.Wait(Pending));
+end program;
 "#;
     let (program, diagnostics) = fpas_parser::parse(TASK_SOURCE);
     assert!(diagnostics.is_empty(), "parse diagnostics: {diagnostics:?}");

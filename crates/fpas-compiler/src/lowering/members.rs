@@ -407,20 +407,20 @@ impl LoweringContext {
         designator: &Designator,
         part_count: usize,
     ) -> Result<(ValueId, TypeId), CompileError> {
-        let Some(DesignatorPart::Ident(name, _)) = designator.parts.first() else {
+        let Some((name, consumed)) = self.designator_root(designator) else {
             return Err(unsupported(designator.span, "record member receiver"));
         };
         let ty = self
-            .root_type(name)
+            .root_type(&name)
             .ok_or_else(|| unsupported(designator.span, "record member receiver type"))?;
-        let value = if self.has_binding(name) {
-            self.read_named_local(name, designator.span)?
+        let value = if self.has_binding(&name) {
+            self.read_named_local(&name, designator.span)?
         } else {
-            self.read_global(name, designator.span)?
+            self.read_global(&name, designator.span)?
         };
         let parts = designator
             .parts
-            .get(1..part_count)
+            .get(consumed..part_count)
             .ok_or_else(|| unsupported(designator.span, "record member receiver prefix"))?;
         self.lower_raw_suffix(value, ty, parts)
     }

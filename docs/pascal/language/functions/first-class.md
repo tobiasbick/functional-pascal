@@ -3,44 +3,53 @@
 Functions can be assigned to variables and passed as arguments:
 
 ```pascal
+program Example;
+
+uses Std.Console as Console;
+
 function Apply(F: function(X: integer): integer; Value: integer): integer;
 begin
   return F(Value);
-end;
+end function;
 
 function Double(X: integer): integer;
 begin
   return X * 2;
-end;
+end function;
 
 begin
-  var R: integer := Apply(Double, 5);  // 10
+  var R: integer := Apply(Double, 5); // 10
   var Op: function(X: integer): integer := Double;
-  WriteLn(Op(7));                      // 14
-end.
+  Console.WriteLn(Op(7)); // 14
+end program;
 ```
 
 Call sites pass a **named** function or procedure, a **closure expression**, a
 **bound record method**, or a **variable** whose type is a function or procedure
-type. Qualified routines work the same way: `Std.Console.WriteLn(...)`.
+type. Qualified routines work the same way: `Console.WriteLn(...)` after `uses Std.Console as Console;`.
 
 ```pascal
-type
-  Counter = record
-    Base: integer;
+program Example;
 
-    function Add(Self: Counter; Value: integer): integer;
-    begin
-      return Self.Base + Value
-    end;
-  end;
+uses Std.Console as Console;
+
+type Counter = record
+  Base: integer;
+
+  function Add(Self: Counter; Value: integer): integer;
+  begin
+    return Self.Base + Value;
+  end function;
+end record;
 
 begin
-  var C: Counter := record Base := 10; end;
+  var C: Counter := record
+    Base := 10;
+  end record;
   var AddTen: function(Value: integer): integer := C.Add;
-  WriteLn(AddTen(5));           // 15
-  WriteLn(Apply(AddTen, 7));    // 17
-end.
+  Console.WriteLn(AddTen(5)); // 15
+  Console.WriteLn(AddTen(7)); // 17
+end program;
 ```
 
 `C.Add` captures `C` by value once; calling `AddTen` supplies only the remaining

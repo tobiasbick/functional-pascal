@@ -3,6 +3,7 @@
 #![allow(clippy::expect_used, dead_code)]
 
 pub mod corpus;
+pub mod structure;
 pub mod walk;
 
 use fpas_fmt::format_source;
@@ -28,6 +29,11 @@ pub fn assert_round_trip(name: &str, source: &str) {
     );
 
     let (unit_again, _) = parse_compilation_unit(&formatted);
+    assert_eq!(
+        structure::normalized_ast(&unit),
+        structure::normalized_ast(&unit_again),
+        "{name}: formatting must preserve AST structure"
+    );
     let formatted_again =
         format_source(&formatted, &unit_again).expect("matching formatted source and AST");
     assert_eq!(

@@ -1,28 +1,36 @@
 // Scaling workload driven by cargo bench-fpas. Setup is outside the timer.
 program ScalarMembershipBenchmark;
 
-uses Std.Args, Std.Console, Std.Conv, Std.Time, Std.Arrays;
+uses Std.Args as Args;
+uses Std.Console as Console;
+uses Std.Conv as Conv;
+uses Std.Time as Time;
+uses Std.Arrays as Arrays;
 
 begin
-  if ParamCount() <> 2 then
-  begin
-    panic('expected ITERATIONS SIZE')
-  end;
-  var Iterations: integer := StrToInt(ParamStr(0));
-  var Size: integer := StrToInt(ParamStr(1));
-  if (Iterations < 1) or (Size < 1) then
-  begin
-    panic('arguments must be positive')
-  end;
-  var Values: array of integer := Std.Arrays.Fill(7, Size);
-  var Started: integer := MonotonicMillis();
-  for Iteration: integer := 1 to Iterations do
-  begin
-    if Std.Arrays.Contains(Values, 8) then
+  if Args.ParamCount() <> 2 then
     begin
-      panic('missing scalar')
-    end
-  end;
+      panic('expected ITERATIONS SIZE');
+    end;
+  end if;
+  var Iterations: integer := Conv.StrToInt(Args.ParamStr(0));
+  var Size: integer := Conv.StrToInt(Args.ParamStr(1));
+  if (Iterations < 1) or (Size < 1) then
+    begin
+      panic('arguments must be positive');
+    end;
+  end if;
+  var Values: array of integer := Arrays.Fill(7, Size);
+  var Started: integer := Time.MonotonicMillis();
+  for Iteration: integer := 1 to Iterations do
+    begin
+      if Arrays.Contains(Values, 8) then
+        begin
+          panic('missing scalar');
+        end;
+      end if;
+    end;
+  end for;
 
-  WriteLn(('elapsed: ' + IntToStr(ElapsedMillis(Started))) + ' ms')
-end.
+  Console.WriteLn(('elapsed: ' + Conv.IntToStr(Time.ElapsedMillis(Started))) + ' ms');
+end program;

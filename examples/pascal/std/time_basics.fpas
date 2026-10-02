@@ -2,11 +2,13 @@
 
 program TimeBasics;
 
-uses Std.Console, Std.Conv, Std.Time;
+uses Std.Console as Console;
+uses Std.Conv as Conv;
+uses Std.Time as Time;
 
 begin
-  var Start: integer := MonotonicMillis();
-  Sleep(25);
-  WriteLn('elapsed ms: ', IntToStr(ElapsedMillis(Start)));
-  WriteLn('timestamp ms: ', IntToStr(TimestampMillis()))
-end.
+  var Start: integer := Time.MonotonicMillis();
+  Time.Sleep(25);
+  Console.WriteLn('elapsed ms: ', Conv.IntToStr(Time.ElapsedMillis(Start)));
+  Console.WriteLn('timestamp ms: ', Conv.IntToStr(Time.TimestampMillis()));
+end program;

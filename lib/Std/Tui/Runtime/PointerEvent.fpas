@@ -1,83 +1,86 @@
 unit Std.Tui.Runtime.PointerEvent;
 
-uses Std.Console, Std.Tui.Geometry.Point;
+uses Std.Console as Console;
+uses Std.Tui.Geometry.Point as Point;
 
-public type
-  // Pointer button carried by a normalized pointer event.
-  TuiPointerButton = enum
-    // Represents the `NoButton` variant of `TuiPointerButton`.
-    NoButton;
-    // Represents the `Left` variant of `TuiPointerButton`.
-    Left;
-    // Represents the `Right` variant of `TuiPointerButton`.
-    Right;
-    // Represents the `Middle` variant of `TuiPointerButton`.
-    Middle;
-  end;
-  // Normalized pointer action in zero-based application coordinates.
-  TuiPointerEvent = record
-    // Application action associated with the value.
-    public Action: Std.Console.MouseAction;
-    // Button specification associated with the value.
-    public Button: TuiPointerButton;
-    // Position in terminal-cell coordinates.
-    public Position: TuiPoint;
-    // Whether the Shift modifier is active.
-    public Shift: boolean;
-    // Whether the Ctrl modifier is active.
-    public Ctrl: boolean;
-    // Whether the Alt modifier is active.
-    public Alt: boolean;
-    // Whether the Meta modifier is active.
-    public Meta: boolean;
+// Pointer button carried by a normalized pointer event.
+public type TuiPointerButton = enum
+  // Represents the `NoButton` variant of `TuiPointerButton`.
+  NoButton;
+  // Represents the `Left` variant of `TuiPointerButton`.
+  Left;
+  // Represents the `Right` variant of `TuiPointerButton`.
+  Right;
+  // Represents the `Middle` variant of `TuiPointerButton`.
+  Middle;
+end enum;
 
-    // Creates a pointer event with no modifiers.
-    //
-    // Parameters:
-    // - `Action`: Application action associated with the control or emitted message.
-    // - `Button`: Button specification used by the operation.
-    // - `Position`: Position in terminal-cell coordinates.
-    public static function Create(Action: Std.Console.MouseAction; Button: TuiPointerButton; Position: TuiPoint): TuiPointerEvent;
-    begin
-      return record
-        Action := Action;
-        Button := Button;
-        Position := Position;
-        Shift := false;
-        Ctrl := false;
-        Alt := false;
-        Meta := false;
-      end
-    end;
+// Normalized pointer action in zero-based application coordinates.
+public type TuiPointerEvent = record
+  // Application action associated with the value.
+  public Action: Console.MouseAction;
+  // Button specification associated with the value.
+  public Button: TuiPointerButton;
+  // Position in terminal-cell coordinates.
+  public Position: Point.TuiPoint;
+  // Whether the Shift modifier is active.
+  public Shift: boolean;
+  // Whether the Ctrl modifier is active.
+  public Ctrl: boolean;
+  // Whether the Alt modifier is active.
+  public Alt: boolean;
+  // Whether the Meta modifier is active.
+  public Meta: boolean;
 
-    // Creates a pointer event with explicit modifiers.
-    //
-    // Parameters:
-    // - `Action`: Application action associated with the control or emitted message.
-    // - `Button`: Button specification used by the operation.
-    // - `Position`: Position in terminal-cell coordinates.
-    // - `Shift`: Whether the Shift modifier is active.
-    // - `Ctrl`: Whether the Ctrl modifier is active.
-    // - `Alt`: Whether the Alt modifier is active.
-    // - `Meta`: Whether the Meta modifier is active.
-    public static function WithModifiers(
-  Action: Std.Console.MouseAction;
+  // Creates a pointer event with no modifiers.
+  //
+  // Parameters:
+  // - `Action`: Application action associated with the control or emitted message.
+  // - `Button`: Button specification used by the operation.
+  // - `Position`: Position in terminal-cell coordinates.
+  public static function Create(Action: Console.MouseAction; Button: TuiPointerButton; Position: Point.TuiPoint): TuiPointerEvent;
+  begin
+    return record
+      Action := Action;
+      Button := Button;
+      Position := Position;
+      Shift := false;
+      Ctrl := false;
+      Alt := false;
+      Meta := false;
+    end record;
+  end function;
+
+  // Creates a pointer event with explicit modifiers.
+  //
+  // Parameters:
+  // - `Action`: Application action associated with the control or emitted message.
+  // - `Button`: Button specification used by the operation.
+  // - `Position`: Position in terminal-cell coordinates.
+  // - `Shift`: Whether the Shift modifier is active.
+  // - `Ctrl`: Whether the Ctrl modifier is active.
+  // - `Alt`: Whether the Alt modifier is active.
+  // - `Meta`: Whether the Meta modifier is active.
+  public static function WithModifiers(
+  Action: Console.MouseAction;
   Button: TuiPointerButton;
-  Position: TuiPoint;
+  Position: Point.TuiPoint;
   Shift: boolean;
   Ctrl: boolean;
   Alt: boolean;
   Meta: boolean
 ): TuiPointerEvent;
-    begin
-      return record
-        Action := Action;
-        Button := Button;
-        Position := Position;
-        Shift := Shift;
-        Ctrl := Ctrl;
-        Alt := Alt;
-        Meta := Meta;
-      end
-    end;
-  end;
+  begin
+    return record
+      Action := Action;
+      Button := Button;
+      Position := Position;
+      Shift := Shift;
+      Ctrl := Ctrl;
+      Alt := Alt;
+      Meta := Meta;
+    end record;
+  end function;
+end record;
+
+end unit;

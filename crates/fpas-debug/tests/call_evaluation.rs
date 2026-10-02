@@ -29,31 +29,28 @@ fn call(name: &str, arguments: Vec<DebugExpression>) -> DebugExpression {
 
 #[test]
 fn methods_properties_static_constructors_records_and_intrinsics_execute() {
-    let source = "\
-program DebugMembers;
-uses Std.Math;
-type
-  Counter = record
+    let source = r#"program DebugMembers;
+uses Std.Math as Math;
+
+  type Counter = record
     Value: integer;
     static function Create(Value: integer): Counter;
-    begin
-      return record Value := Value; end
-    end;
+    begin return record Value := Value; end record;
+    end function;
     function Double(Self: Counter): integer;
     begin
-      return Self.Value * 2
-    end;
+      return Self.Value * 2;
+    end function;
     function ReadNumber(Self: Counter): integer;
     begin
-      return Self.Value
-    end;
+      return Self.Value;
+    end function;
     property Number: integer read ReadNumber;
-  end;
+  end record;
 procedure Touch();
-begin
-end;
-begin
-end.";
+begin null;
+end procedure;
+begin null; end program;"#;
     let mut server = fpas_debug::jsonl::JsonlServer::new(fpas_debug::PreparedDebugTarget::new(
         compile(source),
         Vec::new(),
@@ -72,7 +69,7 @@ end.";
     let cases = [
         ("Counter.Create(6).Double()", "12"),
         ("Counter.Create(7).Number", "7"),
-        ("(record Value := 8; end).Double()", "16"),
+        ("(record Value := 8; end record).Double()", "16"),
         ("Std.Math.Abs(-9)", "9"),
         ("Touch()", "()"),
         ("try Some(11)", "11"),
@@ -89,16 +86,13 @@ end.";
 
 #[test]
 fn denied_host_effects_never_reach_the_live_console() {
-    let source = "\
-program DebugDenied;
-uses Std.Console;
+    let source = r#"program DebugDenied;
+uses Std.Console as Console;
 function Noisy(): integer;
-begin
-  Std.Console.WriteLn('leak');
-  return 1
-end;
-begin
-end.";
+begin Console.WriteLn('leak');
+  return 1;
+end function;
+begin null; end program;"#;
     let mut session = DebugSession::new(compile(source)).expect("debug session");
     let before = session.output();
 
@@ -124,18 +118,17 @@ end.";
 
 #[test]
 fn detached_global_writes_roll_back_and_stop_identity_survives() {
-    let source = "\
-program DebugRollback;
-mutable var Counter: integer := 5;
+    let source = r#"program DebugRollback;
+  mutable var Counter: integer := 5;
 function Increment(): integer;
 begin
   Counter := Counter + 1;
-  return Counter
-end;
+  return Counter;
+end function;
 begin
   mutable var Anchor: integer := Counter;
-  Anchor := Anchor + 1
-end.";
+  Anchor := Anchor + 1;
+end program;"#;
     let mut session = DebugSession::new(compile(source)).expect("debug session");
     let breakpoint = session
         .set_breakpoint(SourceBreakpoint {
@@ -165,18 +158,17 @@ end.";
 
 #[test]
 fn visible_first_class_closure_uses_detached_mutable_captures() {
-    let source = "\
-program DebugClosure;
+    let source = r#"program DebugClosure;
 begin
   mutable var Base: integer := 10;
   var AddBase: function(Value: integer): integer :=
     function(Value: integer): integer
     begin
-      return Base + Value
-    end;
+      return Base + Value;
+    end function;
   mutable var Marker: integer := 0;
-  Marker := Marker + 1
-end.";
+  Marker := Marker + 1;
+end program;"#;
     let mut session = DebugSession::new(compile(source)).expect("debug session");
     let breakpoint = session
         .set_breakpoint(SourceBreakpoint {
@@ -204,15 +196,12 @@ end.";
 
 #[test]
 fn timeout_and_cooperative_cancellation_leave_the_session_stopped() {
-    let source = "\
-program DebugLimits;
+    let source = r#"program DebugLimits;
 function Forever(): integer;
-begin
-  while true do begin end;
-  return 0
-end;
-begin
-end.";
+begin while true do begin null; end; end while;
+  return 0;
+end function;
+begin null; end program;"#;
     let mut timed = DebugSession::new(compile(source)).expect("timed session");
     let before = timed.last_stop().clone();
     let failure = timed

@@ -1,17 +1,18 @@
 program SetSeedReplaysSequenceTest;
 
-uses Std.Random, Std.Test;
+uses Std.Random as Random2;
+uses Std.Test as Test;
 
 begin
-  SetSeed(-17);
-  var FirstInteger: integer := RandomInt(-1000000, 1000000);
-  var FirstReal: real := Random();
-  var SecondInteger: integer := RandomInt(-1000000, 1000000);
-  AssertEquals(436834, FirstInteger);
-  AssertEquals(0.018693080316887545, FirstReal);
-  AssertEquals(-809256, SecondInteger);
-  SetSeed(-17);
-  AssertEquals(FirstInteger, RandomInt(-1000000, 1000000));
-  AssertEquals(FirstReal, Random());
-  AssertEquals(SecondInteger, RandomInt(-1000000, 1000000))
-end.
+  Random2.SetSeed(-17);
+  var FirstInteger: integer := Random2.RandomInt(-1000000, 1000000);
+  var FirstReal: real := Random2.Random();
+  var SecondInteger: integer := Random2.RandomInt(-1000000, 1000000);
+  Test.AssertEquals(436834, FirstInteger);
+  Test.AssertEquals(0.018693080316887545, FirstReal);
+  Test.AssertEquals(-809256, SecondInteger);
+  Random2.SetSeed(-17);
+  Test.AssertEquals(FirstInteger, Random2.RandomInt(-1000000, 1000000));
+  Test.AssertEquals(FirstReal, Random2.Random());
+  Test.AssertEquals(SecondInteger, Random2.RandomInt(-1000000, 1000000));
+end program;

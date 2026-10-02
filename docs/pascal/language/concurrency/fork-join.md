@@ -4,18 +4,20 @@ The idiomatic way to run parallel work is to spawn one task per unit of work and
 
 ```pascal
 program ParallelSum;
-uses Std.Console, Std.Tasks;
+
+uses Std.Console as Console;
+uses Std.Tasks as Tasks;
 
 function Compute(N: integer): integer;
 begin
-  return N * N
-end;
+  return N * N;
+end function;
 
 begin
   var T1: task := go Compute(3);
   var T2: task := go Compute(4);
-  WriteLn(Wait(T1) + Wait(T2))
-end.
+  Console.WriteLn(Tasks.Wait(T1) + Tasks.Wait(T2));
+end program;
 ```
 
 The Mandelbrot showcase project in `examples/math/mandelbrot/` demonstrates this pattern: one task per row, all collected in order via `Wait`, combined with a live terminal UI.

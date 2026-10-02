@@ -1,27 +1,29 @@
 program ProcRunCaptureTest;
 
-uses Std.Proc, Std.Str, Std.Test;
+uses Std.Proc as Proc;
+uses Std.Str as Str;
+uses Std.Test as Test;
 
 begin
-  case CurrentExecutable() of
-    Ok(Executable):
-    begin
-      case RunCapture(Executable, ['--version']) of
-        Ok(Output):
-        begin
-          AssertEquals(0, Output.ExitCode);
-          AssertTrue(Contains(Output.Stdout, 'fpas'));
-          AssertEquals('', Output.Stderr)
-        end;
-        Error(Message):
-        begin
-          Fail(Message)
-        end
-      end
-    end;
-    Error(Message):
-    begin
-      Fail(Message)
-    end
-  end
-end.
+  case Proc.CurrentExecutable() of
+    when Ok(Executable):
+      begin
+        case Proc.RunCapture(Executable, ['--version']) of
+          when Ok(Output):
+            begin
+              Test.AssertEquals(0, Output.ExitCode);
+              Test.AssertTrue(Str.Contains(Output.Stdout, 'fpas'));
+              Test.AssertEquals('', Output.Stderr);
+            end;
+          when Error(Message):
+            begin
+              Test.Fail(Message);
+            end;
+        end case;
+      end;
+    when Error(Message):
+      begin
+        Test.Fail(Message);
+      end;
+  end case;
+end program;

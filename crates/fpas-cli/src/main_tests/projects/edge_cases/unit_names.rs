@@ -7,15 +7,33 @@ fn duplicate_unit_names_in_different_files_rejected() {
     support::write_program_project_file(&project_file, "src/main.fpas", &["src/*.fpas"]);
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Lib;\nbegin\nend.\n",
+        r#"program Main;
+uses App.Lib as Lib;
+begin null;
+end program;
+"#,
     );
     write_text(
         &cwd.join("src/lib1.fpas"),
-        "unit App.Lib;\npublic function Foo(): integer;\nbegin\n  return 1\nend;\n",
+        r#"unit App.Lib;
+public function Foo(): integer;
+begin
+  return 1;
+end function;
+end unit;
+
+"#,
     );
     write_text(
         &cwd.join("src/lib2.fpas"),
-        "unit App.Lib;\npublic function Bar(): integer;\nbegin\n  return 2\nend;\n",
+        r#"unit App.Lib;
+public function Bar(): integer;
+begin
+  return 2;
+end function;
+end unit;
+
+"#,
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);
@@ -29,25 +47,38 @@ fn duplicate_unit_names_in_different_files_rejected() {
 }
 
 #[test]
-fn duplicate_uses_entries_are_harmless() {
+fn duplicate_uses_entries_are_rejected() {
     let cwd = create_temp_dir("run-dup-uses");
     let project_file = cwd.join("app.fpasprj");
     support::write_program_project_file(&project_file, "src/main.fpas", &["src/*.fpas"]);
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Lib, App.Lib, Std.Console;\nbegin\n  WriteLn(GetVal())\nend.\n",
+        r#"program Main;
+uses App.Lib as Lib; uses App.Lib as Lib2; uses Std.Console as Console;
+begin
+  Console.WriteLn(Lib.GetVal());
+end program;
+"#,
     );
     write_text(
         &cwd.join("src/lib.fpas"),
-        "unit App.Lib;\npublic function GetVal(): integer;\nbegin\n  return 7\nend;\n",
+        r#"unit App.Lib;
+public function GetVal(): integer;
+begin
+  return 7;
+end function;
+end unit;
+
+"#,
     );
 
     let (exit_code, stdout_output, stderr_output) =
         support::run_cli_and_capture_output(&project_file, &cwd);
     fs::remove_dir_all(&cwd).expect("temp directory must be removed");
 
-    assert_eq!(exit_code, 0, "stderr: {stderr_output}");
-    assert_eq!(stdout_output, "7\n");
+    assert_eq!(exit_code, 1, "stderr: {stderr_output}");
+    assert!(stdout_output.is_empty());
+    assert!(stderr_output.contains("Unit `App.Lib` is imported more than once"));
 }
 
 #[test]
@@ -57,11 +88,23 @@ fn single_segment_unit_name_compiles() {
     support::write_program_project_file(&project_file, "src/main.fpas", &["src/*.fpas"]);
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses Utils, Std.Console;\nbegin\n  WriteLn(GetNum())\nend.\n",
+        r#"program Main;
+uses Utils as Utils; uses Std.Console as Console;
+begin
+  Console.WriteLn(Utils.GetNum());
+end program;
+"#,
     );
     write_text(
         &cwd.join("src/utils.fpas"),
-        "unit Utils;\npublic function GetNum(): integer;\nbegin\n  return 42\nend;\n",
+        r#"unit Utils;
+public function GetNum(): integer;
+begin
+  return 42;
+end function;
+end unit;
+
+"#,
     );
 
     let (exit_code, stdout_output, stderr_output) =
@@ -79,9 +122,19 @@ fn empty_unit_compiles_successfully() {
     support::write_program_project_file(&project_file, "src/main.fpas", &["src/*.fpas"]);
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Empty;\nbegin\nend.\n",
+        r#"program Main;
+uses App.Empty as Empty;
+begin null;
+end program;
+"#,
     );
-    write_text(&cwd.join("src/empty.fpas"), "unit App.Empty;\n");
+    write_text(
+        &cwd.join("src/empty.fpas"),
+        r#"unit App.Empty;
+end unit;
+
+"#,
+    );
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);
     fs::remove_dir_all(&cwd).expect("temp directory must be removed");
@@ -97,11 +150,23 @@ fn unit_name_resolved_case_insensitively() {
     // uses clause has different casing than unit declaration
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses app.lib, Std.Console;\nbegin\n  WriteLn(GetValue())\nend.\n",
+        r#"program Main;
+uses app.lib as lib; uses Std.Console as Console;
+begin
+  Console.WriteLn(lib.GetValue());
+end program;
+"#,
     );
     write_text(
         &cwd.join("src/lib.fpas"),
-        "unit App.Lib;\npublic function GetValue(): integer;\nbegin\n  return 33\nend;\n",
+        r#"unit App.Lib;
+public function GetValue(): integer;
+begin
+  return 33;
+end function;
+end unit;
+
+"#,
     );
 
     let (exit_code, stdout_output, stderr_output) =
@@ -119,11 +184,23 @@ fn unit_name_is_resolved_from_declaration_not_file_path() {
     support::write_program_project_file(&project_file, "src/main.fpas", &["src/**/*.fpas"]);
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Tools, Std.Console;\nbegin\n  WriteLn(GetValue())\nend.\n",
+        r#"program Main;
+uses App.Tools as Tools; uses Std.Console as Console;
+begin
+  Console.WriteLn(Tools.GetValue());
+end program;
+"#,
     );
     write_text(
         &cwd.join("src/nested/mismatched_name.fpas"),
-        "unit App.Tools;\npublic function GetValue(): integer;\nbegin\n  return 17\nend;\n",
+        r#"unit App.Tools;
+public function GetValue(): integer;
+begin
+  return 17;
+end function;
+end unit;
+
+"#,
     );
 
     let (exit_code, stdout_output, stderr_output) =

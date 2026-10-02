@@ -15,8 +15,8 @@ const DIVISION_BY_ZERO: &str = r#"program RuntimeFailure;
 
 begin
   var Zero: integer := 0;
-  var Value: integer := 1 div Zero
-end.
+  var Value: integer := 1 div Zero;
+end program;
 "#;
 
 fn server() -> JsonlServer {

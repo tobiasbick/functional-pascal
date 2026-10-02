@@ -1,8 +1,9 @@
 program T;
 
-uses Std.Console, Std.Arrays;
+uses Std.Console as Console;
+uses Std.Arrays as Arrays;
 
 begin
   mutable var A: array of integer := [];
-  var X: integer := Pop(A)
-end.
+  var X: integer := Arrays.Pop(A);
+end program;

@@ -1,7 +1,7 @@
 # Std.Server
 
 Server lifetime ownership for cooperative stop, listener closure, a shared shutdown budget,
-and explicitly authorized process escalation. Import with `uses Std.Server`.
+and explicitly authorized process escalation. Import with `uses Std.Server as Server;`.
 There is no new language syntax and no change to ordinary task-group close semantics.
 
 ## Quick reference

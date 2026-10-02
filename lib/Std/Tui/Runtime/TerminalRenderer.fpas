@@ -1,57 +1,63 @@
 unit Std.Tui.Runtime.TerminalRenderer;
 
-uses
-  Std.Arrays, Std.Console, Std.Tui.Cells.Cell, Std.Tui.Cells.Color, Std.Tui.Cells.Palette,
-  Std.Tui.Cells.Style, Std.Tui.Rendering.Surface;
+uses Std.Arrays as Arrays;
+uses Std.Console as Console;
+uses Std.Tui.Cells.Cell as Cell2;
+uses Std.Tui.Cells.Color as Color2;
+uses Std.Tui.Cells.Palette as Palette2;
+uses Std.Tui.Cells.Style as Style2;
+uses Std.Tui.Rendering.Surface as Surface2;
 
-function TuiColorToConsole(Color: TuiColor): Std.Console.Color;
+function TuiColorToConsole(Color: Color2.TuiColor): Console.Color;
 begin
   case Color.Kind of
-    TuiColorKind.Crt:
-    begin
-      return CrtColor(Color.Index)
-    end;
-    TuiColorKind.Ansi256:
-    begin
-      return Ansi256Color(Color.Index)
-    end;
-    TuiColorKind.Rgb:
-    begin
-      return RgbColor(Color.Red, Color.Green, Color.Blue)
-    end
-  end
-end;
+    when Color2.TuiColorKind.Crt:
+      begin
+        return Console.CrtColor(Color.Index);
+      end;
+    when Color2.TuiColorKind.Ansi256:
+      begin
+        return Console.Ansi256Color(Color.Index);
+      end;
+    when Color2.TuiColorKind.Rgb:
+      begin
+        return Console.RgbColor(Color.Red, Color.Green, Color.Blue);
+      end;
+  end case;
+end function;
 
-function TuiCellToConsole(Cell: TuiCell; Palette: TuiPalette): Std.Console.Cell;
+function TuiCellToConsole(Cell: Cell2.TuiCell; Palette: Palette2.TuiPalette): Console.Cell;
 begin
-  mutable var Style: TuiStyle := Palette.ForRole(Cell.Role);
+  mutable var Style: Style2.TuiStyle := Palette.ForRole(Cell.Role);
   case Cell.ConcreteStyle of
-    Some(Concrete):
-    begin
-      Style := Concrete
-    end;
-    None:
-    begin
-    end
-  end;
+    when Some(Concrete):
+      begin
+        Style := Concrete;
+      end;
+    when None:
+      begin
+        null;
+      end;
+  end case;
 
   return record
     glyph := Cell.Glyph;
     foreground := TuiColorToConsole(Style.Foreground);
     background := TuiColorToConsole(Style.Background);
-  end
-end;
+  end record;
+end function;
 
-function TuiTerminalDamageRow(Damage: TuiSurfaceDamage; Palette: TuiPalette): array of Std.Console.Cell;
+function TuiTerminalDamageRow(Damage: Surface2.TuiSurfaceDamage; Palette: Palette2.TuiPalette): array of Console.Cell;
 begin
-  mutable var Row: array of Std.Console.Cell := [];
-  for Cell: TuiCell in Damage.Cells do
-  begin
-    Std.Arrays.Push(Row, TuiCellToConsole(Cell, Palette))
-  end;
+  mutable var Row: array of Console.Cell := [];
+  for Cell: Cell2.TuiCell in Damage.Cells do
+    begin
+      Arrays.Push(Row, TuiCellToConsole(Cell, Palette));
+    end;
+  end for;
 
-  return Row
-end;
+  return Row;
+end function;
 
 // Flushes the current working surface through the Console frame API.
 //
@@ -61,23 +67,28 @@ end;
 // Parameters:
 // - `Surface`: Working surface affected by the operation.
 // - `Palette`: Palette used to resolve semantic style roles.
-public procedure TuiFlushSurface(Surface: TuiWorkingSurface; Palette: TuiPalette);
+public procedure TuiFlushSurface(Surface: Surface2.TuiWorkingSurface; Palette: Palette2.TuiPalette);
 begin
-  var Damage: array of TuiSurfaceDamage := TuiSurfaceTakeTerminalDamage(Surface);
-  if Std.Arrays.Length(Damage) = 0 then
-  begin
-    return
-  end;
-
-  BeginFrame();
-  for Item: TuiSurfaceDamage in Damage do
-  begin
-    var Row: array of Std.Console.Cell := TuiTerminalDamageRow(Item, Palette);
-    if Std.Arrays.Length(Row) > 0 then
+  var Damage: array of Surface2.TuiSurfaceDamage := Surface2.TuiSurfaceTakeTerminalDamage(Surface);
+  if Arrays.Length(Damage) = 0 then
     begin
-      WriteCells(Item.FirstX + 1, Item.Y + 1, Row)
-    end
-  end;
+      return;
+    end;
+  end if;
 
-  Present()
-end;
+  Console.BeginFrame();
+  for Item: Surface2.TuiSurfaceDamage in Damage do
+    begin
+      var Row: array of Console.Cell := TuiTerminalDamageRow(Item, Palette);
+      if Arrays.Length(Row) > 0 then
+        begin
+          Console.WriteCells(Item.FirstX + 1, Item.Y + 1, Row);
+        end;
+      end if;
+    end;
+  end for;
+
+  Console.Present();
+end procedure;
+
+end unit;

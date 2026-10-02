@@ -2,39 +2,42 @@
 
 program ParseBasics;
 
-uses Std.Console, Std.Parse, Std.Results, Std.Conv;
+uses Std.Console as Console;
+uses Std.Parse as Parse;
+uses Std.Results as Results;
+uses Std.Conv as Conv;
 
 begin
-  case TryInt(' +1_024 ') of
-    Ok(N):
-    begin
-      WriteLn('try int: ', IntToStr(N))
-    end;
-    Error(M):
-    begin
-      WriteLn('try int error: ', M)
-    end
-  end;
+  case Parse.TryInt(' +1_024 ') of
+    when Ok(N):
+      begin
+        Console.WriteLn('try int: ', Conv.IntToStr(N));
+      end;
+    when Error(M):
+      begin
+        Console.WriteLn('try int error: ', M);
+      end;
+  end case;
 
-  case TryReal('1_024.0e-2') of
-    Ok(R):
-    begin
-      WriteLn('try real: ', RealToStr(R))
-    end;
-    Error(M):
-    begin
-      WriteLn('try real error: ', M)
-    end
-  end;
+  case Parse.TryReal('1_024.0e-2') of
+    when Ok(R):
+      begin
+        Console.WriteLn('try real: ', Conv.RealToStr(R));
+      end;
+    when Error(M):
+      begin
+        Console.WriteLn('try real error: ', M);
+      end;
+  end case;
 
-  case TryBool(' FALSE ') of
-    Ok(B):
-    begin
-      WriteLn('try bool: ', BoolToStr(B))
-    end;
-    Error(M):
-    begin
-      WriteLn('try bool error: ', M)
-    end
-  end
-end.
+  case Parse.TryBool(' FALSE ') of
+    when Ok(B):
+      begin
+        Console.WriteLn('try bool: ', Conv.BoolToStr(B));
+      end;
+    when Error(M):
+      begin
+        Console.WriteLn('try bool error: ', M);
+      end;
+  end case;
+end program;

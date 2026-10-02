@@ -2,9 +2,11 @@
 
 unit Demo.Greet;
 
-uses Demo.Greet.Internal;
+uses Demo.Greet.Internal as Internal;
 
 public function Message(): string;
 begin
-  return GreetingText()
-end;
+  return Internal.GreetingText();
+end function;
+
+end unit;

@@ -1,14 +1,16 @@
 program T;
 
-uses Std.Console, Std.Options, Std.Conv;
+uses Std.Console as Console;
+uses Std.Options as Options;
+uses Std.Conv as Conv;
 
 function ToStr(V: integer): string;
 begin
-  return IntToStr(V)
-end;
+  return Conv.IntToStr(V);
+end function;
 
 begin
   var O: option of integer := Some(10);
-  var M: option of string := Std.Options.Map(O, ToStr);
-  WriteLn(Unwrap(M))
-end.
+  var M: option of string := Options.Map(O, ToStr);
+  Console.WriteLn(Options.Unwrap(M));
+end program;

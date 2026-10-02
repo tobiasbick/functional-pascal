@@ -15,7 +15,13 @@ main = "src/main.fpas"
 include = ["src/**/*.fpas"]
 "#,
     );
-    write_text(&cwd.join("src/main.fpas"), "program Hello;\nbegin\nend.\n");
+    write_text(
+        &cwd.join("src/main.fpas"),
+        r#"program Hello;
+begin null;
+end program;
+"#,
+    );
 
     let args = [
         String::from("build"),
@@ -51,7 +57,14 @@ include = ["src/**/*.fpas"]
 "#,
     );
     let main = cwd.join("src/main.fpas");
-    write_text(&main, "program Broken;\nbegin\n  MissingCall()\nend.\n");
+    write_text(
+        &main,
+        r#"program Broken;
+begin
+  MissingCall();
+end program;
+"#,
+    );
 
     let (exit_code, _, stderr) = support::run_cli_args_and_capture_output(
         &[
@@ -90,7 +103,11 @@ include = ["src/**/*.fpas"]
     );
     write_text(
         &cwd.join("src/math.fpas"),
-        "unit Demo.Math;\npublic const Answer: integer := 42;\n",
+        r#"unit Demo.Math;
+  public const Answer: integer := 42;
+end unit;
+
+"#,
     );
 
     let (exit_code, stdout, stderr) = support::run_cli_args_and_capture_output(
@@ -135,7 +152,14 @@ include = ["src/**/*.fpas"]
     );
     write_text(
         &cwd.join("libs/math/src/math.fpas"),
-        "unit Demo.Math;\npublic function Answer(): integer;\nbegin\n  return 42\nend;\n",
+        r#"unit Demo.Math;
+public function Answer(): integer;
+begin
+  return 42;
+end function;
+end unit;
+
+"#,
     );
     write_text(
         &program_project,
@@ -153,7 +177,12 @@ include = ["src/**/*.fpas"]
     );
     write_text(
         &cwd.join("apps/hello/src/main.fpas"),
-        "program Hello;\nuses Demo.Math;\nbegin\n  Answer()\nend.\n",
+        r#"program Hello;
+uses Demo.Math as Math;
+begin
+  Math.Answer();
+end program;
+"#,
     );
 
     let (exit_code, stdout, stderr) = support::run_cli_args_and_capture_output(
@@ -190,11 +219,23 @@ include = ["**/*.fpas"]
     );
     write_text(
         &cwd.join("support.fpas"),
-        "unit Demo.Support;\npublic function Answer(): integer;\nbegin\n  return 42\nend;\n",
+        r#"unit Demo.Support;
+public function Answer(): integer;
+begin
+  return 42;
+end function;
+end unit;
+
+"#,
     );
     write_text(
         &cwd.join("answer_test.fpas"),
-        "program AnswerTest;\nuses Demo.Support;\nbegin\n  Answer()\nend.\n",
+        r#"program AnswerTest;
+uses Demo.Support as Support;
+begin
+  Support.Answer();
+end program;
+"#,
     );
 
     let (exit_code, stdout, stderr) = support::run_cli_args_and_capture_output(
@@ -218,7 +259,13 @@ include = ["**/*.fpas"]
 fn build_cli_rejects_source_files_with_an_actionable_error() {
     let cwd = create_temp_dir("build-source-rejected");
     let source = cwd.join("main.fpas");
-    write_text(&source, "program Main;\nbegin\nend.\n");
+    write_text(
+        &source,
+        r#"program Main;
+begin null;
+end program;
+"#,
+    );
 
     let (exit_code, _, stderr) = support::run_cli_args_and_capture_output(
         &[String::from("build"), source.to_string_lossy().into_owned()],
@@ -245,7 +292,13 @@ main = "main.fpas"
 include = ["main.fpas"]
 "#,
     );
-    write_text(&cwd.join("main.fpas"), "program Main;\nbegin\nend.\n");
+    write_text(
+        &cwd.join("main.fpas"),
+        r#"program Main;
+begin null;
+end program;
+"#,
+    );
 
     let (exit_code, _, stderr) = support::run_cli_args_and_capture_output(
         &[
@@ -280,7 +333,13 @@ main = "main.fpas"
 include = ["main.fpas"]
 "#,
     );
-    write_text(&cwd.join("main.fpas"), "program Main;\nbegin\nend.\n");
+    write_text(
+        &cwd.join("main.fpas"),
+        r#"program Main;
+begin null;
+end program;
+"#,
+    );
 
     let (exit_code, _, stderr) = support::run_cli_args_and_capture_output(
         &[
@@ -300,7 +359,13 @@ fn build_executable_rejects_non_program_project_before_runner_lookup() {
     let cwd = create_temp_dir("build-native-library");
     let project_file = cwd.join("library.fpasprj");
     support::write_library_project_file(&project_file, &["src/**/*.fpas"]);
-    write_text(&cwd.join("src/lib.fpas"), "unit Demo.Lib;\n");
+    write_text(
+        &cwd.join("src/lib.fpas"),
+        r#"unit Demo.Lib;
+end unit;
+
+"#,
+    );
 
     let (exit_code, _, stderr) = support::run_cli_args_and_capture_output(
         &[
@@ -321,7 +386,13 @@ fn build_executable_rejects_invalid_application_name_before_building() {
     let cwd = create_temp_dir("build-native-invalid-name");
     let project_file = cwd.join("app.fpasprj");
     support::write_program_project_file(&project_file, "main.fpas", &["main.fpas"]);
-    write_text(&cwd.join("main.fpas"), "program Main;\nbegin\nend.\n");
+    write_text(
+        &cwd.join("main.fpas"),
+        r#"program Main;
+begin null;
+end program;
+"#,
+    );
 
     let (exit_code, _, stderr) = support::run_cli_args_and_capture_output(
         &[
@@ -368,7 +439,10 @@ include = ["{name}.fpas"]
         );
         write_text(
             &cwd.join(format!("{name}.fpas")),
-            "program Main;\nbegin\nend.\n",
+            r#"program Main;
+begin null;
+end program;
+"#,
         );
     }
 

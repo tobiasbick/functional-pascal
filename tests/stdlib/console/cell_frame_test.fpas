@@ -1,38 +1,40 @@
 program CellFrameTest;
 
-uses Std.Console, Std.Options, Std.Test;
+uses Std.Console as Console;
+uses Std.Options as Options;
+uses Std.Test as Test;
 
-function MakeCell(Glyph: string; Foreground: Color; Background: Color): Cell;
+function MakeCell(Glyph: string; Foreground: Console.Color; Background: Console.Color): Console.Cell;
 begin
   return record
     glyph := Glyph;
     foreground := Foreground;
     background := Background;
-  end
-end;
+  end record;
+end function;
 
 begin
-  BeginFrame();
-  FillRect(record
+  Console.BeginFrame();
+  Console.FillRect(record
     x := 1;
     y := 1;
     width := 5;
     height := 2;
-  end, MakeCell('.', CrtColor(LightGray), CrtColor(Black)));
-  PutCell(2, 1, MakeCell('X', RgbColor(10, 20, 30), Ansi256Color(42)));
-  WriteCells(3, 1, [
-                     MakeCell('Y', CrtColor(Yellow), CrtColor(Blue)),
-                     MakeCell('Z', CrtColor(White), CrtColor(Red))
-                   ]);
-  Present();
-  AssertScreenLine('.XYZ.', 1);
-  AssertScreenLine('.....', 2);
-  var ReadBack: Cell := Unwrap(GetCell(2, 1));
-  var Foreground: Color := ReadBack.foreground;
-  var Background: Color := ReadBack.background;
-  AssertEquals('X', ReadBack.glyph);
-  AssertTrue(Foreground.kind = ColorKind.Rgb);
-  AssertEquals(10, Foreground.red);
-  AssertTrue(Background.kind = ColorKind.Ansi256);
-  AssertEquals(42, Background.index)
-end.
+  end record, MakeCell('.', Console.CrtColor(Console.LightGray), Console.CrtColor(Console.Black)));
+  Console.PutCell(2, 1, MakeCell('X', Console.RgbColor(10, 20, 30), Console.Ansi256Color(42)));
+  Console.WriteCells(3, 1, [
+                             MakeCell('Y', Console.CrtColor(Console.Yellow), Console.CrtColor(Console.Blue)),
+                             MakeCell('Z', Console.CrtColor(Console.White), Console.CrtColor(Console.Red))
+                           ]);
+  Console.Present();
+  Test.AssertScreenLine('.XYZ.', 1);
+  Test.AssertScreenLine('.....', 2);
+  var ReadBack: Console.Cell := Options.Unwrap(Console.GetCell(2, 1));
+  var Foreground: Console.Color := ReadBack.foreground;
+  var Background: Console.Color := ReadBack.background;
+  Test.AssertEquals('X', ReadBack.glyph);
+  Test.AssertTrue(Foreground.kind = Console.ColorKind.Rgb);
+  Test.AssertEquals(10, Foreground.red);
+  Test.AssertTrue(Background.kind = Console.ColorKind.Ansi256);
+  Test.AssertEquals(42, Background.index);
+end program;

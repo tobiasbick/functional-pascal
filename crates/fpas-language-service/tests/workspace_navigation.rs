@@ -21,11 +21,22 @@ fn workspace_symbols_filter_rank_limit_and_preserve_equal_names() {
     );
     temp.write(
         "src/first.fpas",
-        "unit Demo.First;\n\npublic function Create(): integer; begin return 1 end;\nfunction LocalCreate(): integer; begin return 2 end;\n",
+        r#"unit Demo.First;
+
+public function Create(): integer; begin return 1; end function;
+function LocalCreate(): integer; begin return 2; end function;
+end unit;
+
+"#,
     );
     temp.write(
         "src/second.fpas",
-        "unit Demo.Second;\n\npublic function Create(): integer; begin return 3 end;\n",
+        r#"unit Demo.Second;
+
+public function Create(): integer; begin return 3; end function;
+end unit;
+
+"#,
     );
     let mut service = LanguageService::load(&manifest);
 
@@ -57,9 +68,9 @@ fn workspace_symbols_filter_rank_limit_and_preserve_equal_names() {
 fn workspace_symbols_are_bounded_and_include_unsaved_local_declarations() {
     let temp = TempDirectory::new("workspace-symbol-limit");
     let declarations = (0..130)
-        .map(|index| format!("var Item{index:03}: integer := {index};\n"))
+        .map(|index| format!("var Item{index:03}: integer := {index};"))
         .collect::<String>();
-    let source = format!("program Many;\n\n{declarations}\nbegin\nend.\n");
+    let source = format!("program Many;\n\n {declarations}\nbegin null;\nend program;\n");
     let path = temp.write("many.fpas", &source);
     let mut service = LanguageService::new(WorkspaceContext::loose(temp.path()));
     service
@@ -145,37 +156,39 @@ fn type_definition_follows_imported_aliases_members_parameters_and_results() {
         "src/types.fpas",
         r#"unit Demo.Types;
 
-public type Point = record
+  public type Point = record
   public X: integer;
-end;
+end record;
 
-public type PointAlias = Point;
+  public type PointAlias = Point;
 
-public type Holder = record
+  public type Holder = record
   public Item: Point;
   public property Selected: Point read Item;
-end;
+end record;
 
-type Secret = Point;
+ type Secret = Point;
 
 public function Echo(Value: Point): Point;
 begin
-  return Value
-end;
+  return Value;
+end function;
+end unit;
+
 "#,
     );
     let main_source = r#"program TypesApp;
 
-uses Demo.Types;
+uses Demo.Types as Types;
 
 begin
-  var AliasValue: PointAlias := record X := 1; end;
-  var HolderValue: Holder := record Item := AliasValue; end;
-  var PointValue: Point := HolderValue.Item;
-  var SelectedValue: Point := HolderValue.Selected;
-  var ResultValue: Point := Demo.Types.Echo(PointValue);
-  var HiddenValue: Secret := PointValue
-end.
+  var AliasValue: Types.PointAlias := record X := 1; end record;
+  var HolderValue: Types.Holder := record Item := AliasValue; end record;
+  var PointValue: Types.Point := HolderValue.Item;
+  var SelectedValue: Types.Point := HolderValue.Selected;
+  var ResultValue: Types.Point := Types.Echo(PointValue);
+  var HiddenValue: Secret := PointValue;
+end program;
 "#;
     let main = temp.write("src/main.fpas", main_source);
     let mut service = LanguageService::load(&manifest);
@@ -218,9 +231,9 @@ end.
     assert_eq!(parameter_target[0].symbol.name, "Point");
 
     let call = main_source
-        .find("Demo.Types.Echo(PointValue)")
+        .find("Types.Echo(PointValue)")
         .expect("qualified function call")
-        + "Demo.Types.".len();
+        + "Types.".len();
     let result_target = service
         .type_definitions(&main, call)
         .expect("routine result type")
@@ -271,15 +284,15 @@ function ReadValue(Value: integer): integer;
 begin
   if Value > 0 then
   begin
-    return Value
-  end
+    return Value;
+  end;
   else
-    return 0
-end;
+    return 0; end if;
+end function;
 
 begin
-  var ResultValue: integer := ReadValue(1)
-end.
+  var ResultValue: integer := ReadValue(1);
+end program;
 "#;
     let path = temp.write("select.fpas", source);
     let mut service = LanguageService::new(WorkspaceContext::loose(temp.path()));
@@ -313,7 +326,7 @@ fn workspace_symbol_kinds_remain_editor_facing() {
     let temp = TempDirectory::new("workspace-symbol-kind");
     let path = temp.write(
         "kind.fpas",
-        "program Kinds; begin var Value: integer := 1 end.",
+        r#"program Kinds; begin var Value: integer := 1; end program;"#,
     );
     let mut service = LanguageService::new(WorkspaceContext::loose(temp.path()));
     service
@@ -321,7 +334,7 @@ fn workspace_symbol_kinds_remain_editor_facing() {
         .open_document(
             &path,
             1,
-            "program Kinds; begin var Value: integer := 1 end.",
+            r#"program Kinds; begin var Value: integer := 1; end program;"#,
         )
         .expect("open loose document");
 

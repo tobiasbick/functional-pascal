@@ -16,7 +16,7 @@ pub(super) fn register_std_json(checker: &mut Checker) {
     let json_ref = Ty::Named(s::STD_JSON_VALUE.into());
     let variants = vec![
         EnumVariantTy {
-            name: "Null".into(),
+            name: "NullValue".into(),
             fields: vec![],
             backing_value: None,
         },

@@ -1,13 +1,14 @@
 program DebuggerTasks;
 
-uses Std.Console, Std.Tasks;
+uses Std.Console as Console;
+uses Std.Tasks as Tasks;
 
 function Work(): integer;
 begin
-  return 42
-end;
+  return 42;
+end function;
 
 begin
   var Pending: task := go Work();
-  WriteLn(Wait(Pending))
-end.
+  Console.WriteLn(Tasks.Wait(Pending));
+end program;

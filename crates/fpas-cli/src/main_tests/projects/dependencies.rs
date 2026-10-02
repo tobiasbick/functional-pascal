@@ -14,7 +14,14 @@ fn run_cli_executes_program_with_library_project_dependency() {
     write_library_fpasprj(&lib_project, &["src/**/*.fpas"]);
     write_text(
         &lib_dir.join("src/math.fpas"),
-        "unit Calc.Math;\npublic function Mul(A: integer; B: integer): integer;\nbegin\n  return A * B\nend;\n",
+        r#"unit Calc.Math;
+public function Mul(A: integer; B: integer): integer;
+begin
+  return A * B;
+end function;
+end unit;
+
+"#,
     );
 
     write_program_fpasprj_with_deps(
@@ -25,7 +32,12 @@ fn run_cli_executes_program_with_library_project_dependency() {
     );
     write_text(
         &app_dir.join("src/main.fpas"),
-        "program Calc;\nuses Calc.Math, Std.Console;\nbegin\n  WriteLn(Mul(6, 7))\nend.\n",
+        r#"program Calc;
+uses Calc.Math as Math; uses Std.Console as Console;
+begin
+  Console.WriteLn(Math.Mul(6, 7));
+end program;
+"#,
     );
 
     let (exit_code, stdout_output, stderr_output) =
@@ -48,13 +60,12 @@ fn run_cli_static_record_function_via_public_alias_over_private_unit() {
     write_library_fpasprj_with_exports(&lib_project, &["src/**/*.fpas"], &["Geom.Api"]);
     write_text(
         &lib_dir.join("src/internal.fpas"),
-        "\
-unit Geom.Internal;
+        r#"unit Geom.Internal;
 
-uses Std.Console;
+uses Std.Console as Console;
 
-public type
-  PointImpl = record
+
+  public type PointImpl = record
     public X: integer;
     public Y: integer;
 
@@ -63,31 +74,34 @@ public type
       return record
         X := X;
         Y := Y;
-      end
-    end;
+      end record;
+    end function;
 
     public static procedure Print(Value: PointImpl);
     begin
-      Std.Console.WriteLn(Value.Sum())
-    end;
+      Console.WriteLn(Value.Sum());
+    end procedure;
 
     public function Sum(Self: PointImpl): integer;
     begin
-      return Self.X + Self.Y
-    end;
-  end;
-",
+      return Self.X + Self.Y;
+    end function;
+  end record;
+end unit;
+
+"#,
     );
     write_text(
         &lib_dir.join("src/api.fpas"),
-        "\
-unit Geom.Api;
+        r#"unit Geom.Api;
 
-uses Geom.Internal;
+uses Geom.Internal as Internal;
 
-public type
-  Point = PointImpl;
-",
+
+  public type Point = Internal.PointImpl;
+end unit;
+
+"#,
     );
 
     write_program_fpasprj_with_deps(
@@ -98,14 +112,13 @@ public type
     );
     write_text(
         &app_dir.join("src/main.fpas"),
-        "\
-program App;
-uses Geom.Api;
+        r#"program App;
+uses Geom.Api as Api;
 begin
-  var P: Point := Point.Create(3, 4);
-  Point.Print(P)
-end.
-",
+  var P: Api.Point := Api.Point.Create(3, 4);
+  Api.Point.Print(P);
+end program;
+"#,
     );
 
     let (exit_code, stdout_output, stderr_output) =

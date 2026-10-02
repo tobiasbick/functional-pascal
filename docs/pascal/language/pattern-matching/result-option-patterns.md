@@ -3,24 +3,33 @@
 Destructuring `case` arms for `Result of T, E` and `Option of T`:
 
 ```pascal
-case Success of
-  Ok(Value): WriteLn(IntToStr(Value));
-  Error(Message): WriteLn(Message)
-end;
+uses Std.Console as Console;
+uses Std.Conv as Conv;
 
-case Present of
-  Some(Value): WriteLn(IntToStr(Value));
-  None: WriteLn('empty')
-end;
+case Success of
+  when Ok(Value):
+    Console.WriteLn(Conv.IntToStr(Value));
+  when Error(Message):
+    Console.WriteLn(Message);
+end case;
+
+case Console.Present of
+  when Some(Value):
+    Console.WriteLn(Conv.IntToStr(Value));
+  when None:
+    Console.WriteLn('empty');
+end case;
 ```
 
 Multiple destructure labels in one arm may reuse one binding name:
 
 ```pascal
+uses Std.Console as Console;
+
 case R of
-  Ok(Msg), Error(Msg):
-    WriteLn(Msg)
-end;
+  when Ok(Msg), Error(Msg):
+    Console.WriteLn(Msg);
+end case;
 ```
 
 Because all labels share one body, they must expose the same binding names with

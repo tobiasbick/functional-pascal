@@ -3,14 +3,13 @@ use super::check_ok;
 #[test]
 fn std_test_assertions_resolve() {
     check_ok(
-        "\
-program T;
-uses Std.Test;
+        r#"program T;
+uses Std.Test as Test;
 begin
-  AssertEquals(4, 2 + 2);
-  AssertTrue(1 + 1 = 2);
-  AssertFalse(1 = 2);
-  AssertEquals('ok', 'o' + 'k')
-end.",
+  Test.AssertEquals(4, 2 + 2);
+  Test.AssertTrue(1 + 1 = 2);
+  Test.AssertFalse(1 = 2);
+  Test.AssertEquals('ok', 'o' + 'k');
+end program;"#,
     );
 }

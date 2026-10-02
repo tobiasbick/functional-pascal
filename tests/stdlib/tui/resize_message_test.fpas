@@ -1,84 +1,86 @@
 program TuiResizeMessageTest;
 
-uses Std.Arrays, Std.Test, Std.Tui;
+uses Std.Arrays as Arrays;
+uses Std.Test as Test;
+uses Std.Tui as Tui;
 
-type
-  ResizeModel = record
-    Events: array of string;
-    ResizeWidth: integer;
-    ResizeHeight: integer;
-    HostWidthAtResize: integer;
-    HostHeightAtResize: integer;
-  end;
+type ResizeModel = record
+  Events: array of string;
+  ResizeWidth: integer;
+  ResizeHeight: integer;
+  HostWidthAtResize: integer;
+  HostHeightAtResize: integer;
+end record;
 
 function PushEvent(State: ResizeModel; InputEvent: string): ResizeModel;
 begin
   return record
-    Events := Std.Arrays.Concat(State.Events, [InputEvent]);
+    Events := Arrays.Concat(State.Events, [InputEvent]);
     ResizeWidth := State.ResizeWidth;
     ResizeHeight := State.ResizeHeight;
     HostWidthAtResize := State.HostWidthAtResize;
     HostHeightAtResize := State.HostHeightAtResize;
-  end
-end;
+  end record;
+end function;
 
 begin
-  mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(20, 6));
-  AssertEquals(20, App.SurfaceSnapshot().Width);
-  AssertEquals(6, App.SurfaceSnapshot().Height);
-  App.Inject(TuiMsg.Tick(1));
-  App.InjectResizeForTest(TuiSize.Create(32, 10));
-  App.Inject(TuiMsg.Tick(2));
+  mutable var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(20, 6));
+  Test.AssertEquals(20, App.SurfaceSnapshot().Width);
+  Test.AssertEquals(6, App.SurfaceSnapshot().Height);
+  App.Inject(Tui.TuiMsg.Tick(1));
+  App.InjectResizeForTest(Tui.TuiSize.Create(32, 10));
+  App.Inject(Tui.TuiMsg.Tick(2));
   mutable var Model: ResizeModel := record
     Events := [];
     ResizeWidth := 0;
     ResizeHeight := 0;
     HostWidthAtResize := 0;
     HostHeightAtResize := 0;
-  end;
+  end record;
 
-  Model := App.RunIterations(Model, function(State: ResizeModel; Msg: TuiMsg; Cmd: TuiCmdOutput): ResizeModel begin
-    Cmd.Set(TuiCmd.NoCommand);
+  Model := App.RunIterations(Model, function(State: ResizeModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): ResizeModel begin
+    Cmd.Set(Tui.TuiCmd.NoCommand);
     case Msg of
-      TuiMsg.Tick(Delta):
-      begin
-        if Delta = 1 then
+      when Tui.TuiMsg.Tick(Delta):
         begin
-          return PushEvent(State, 'tick-1')
-        end;
+          if Delta = 1 then
+            begin
+              return PushEvent(State, 'tick-1');
+            end;
+          end if;
 
-        return PushEvent(State, 'tick-2')
-      end;
-      TuiMsg.Resize(Size):
-      begin
-        var Snapshot: TuiSurfaceSnapshot := App.SurfaceSnapshot();
-        return record
-          Events := Std.Arrays.Concat(State.Events, ['resize']);
-          ResizeWidth := Size.Width;
-          ResizeHeight := Size.Height;
-          HostWidthAtResize := Snapshot.Width;
-          HostHeightAtResize := Snapshot.Height;
-        end
-      end
+          return PushEvent(State, 'tick-2');
+        end;
+      when Tui.TuiMsg.Resize(Size):
+        begin
+          var Snapshot: Tui.TuiSurfaceSnapshot := App.SurfaceSnapshot();
+          return record
+            Events := Arrays.Concat(State.Events, ['resize']);
+            ResizeWidth := Size.Width;
+            ResizeHeight := Size.Height;
+            HostWidthAtResize := Snapshot.Width;
+            HostHeightAtResize := Snapshot.Height;
+          end record;
+        end;
       else
-      begin
-        return State
-      end
-    end
-  end, function(State: ResizeModel): TuiElement begin
-    return TuiElementBuilders.MakeLabel('resize')
-  end, 3, 0);
-  AssertEquals(3, Std.Arrays.Length(Model.Events));
-  AssertEquals('tick-1', Model.Events[0]);
-  AssertEquals('resize', Model.Events[1]);
-  AssertEquals('tick-2', Model.Events[2]);
-  AssertEquals(32, Model.ResizeWidth);
-  AssertEquals(10, Model.ResizeHeight);
-  AssertEquals(32, Model.HostWidthAtResize);
-  AssertEquals(10, Model.HostHeightAtResize);
-  AssertEquals(32, App.SurfaceSnapshot().Width);
-  AssertEquals(10, App.SurfaceSnapshot().Height);
+        begin
+          return State;
+        end;
+    end case;
+  end function, function(State: ResizeModel): Tui.TuiElement begin
+    return Tui.TuiElementBuilders.MakeLabel('resize');
+  end function, 3, 0);
+  Test.AssertEquals(3, Arrays.Length(Model.Events));
+  Test.AssertEquals('tick-1', Model.Events[0]);
+  Test.AssertEquals('resize', Model.Events[1]);
+  Test.AssertEquals('tick-2', Model.Events[2]);
+  Test.AssertEquals(32, Model.ResizeWidth);
+  Test.AssertEquals(10, Model.ResizeHeight);
+  Test.AssertEquals(32, Model.HostWidthAtResize);
+  Test.AssertEquals(10, Model.HostHeightAtResize);
+  Test.AssertEquals(32, App.SurfaceSnapshot().Width);
+  Test.AssertEquals(10, App.SurfaceSnapshot().Height);
   App.Close();
-  var Probe: TuiWorkingSurface := TuiWorkingSurface.Create(TuiSize.Create(1, 1));
-  AssertEquals(2, Probe.Slot)
-end.
+  var Probe: Tui.TuiWorkingSurface := Tui.TuiWorkingSurface.Create(Tui.TuiSize.Create(1, 1));
+  Test.AssertEquals(2, Probe.Slot);
+end program;

@@ -1,53 +1,59 @@
 program FluentCollectionTest;
 
-uses Std.Arrays, Std.Dictionaries, Std.Json, Std.Options, Std.Results, Std.Str, Std.Test;
+uses Std.Arrays as Arrays;
+uses Std.Dictionaries as Dictionaries;
+uses Std.Json as Json;
+uses Std.Options as Options;
+uses Std.Results as Results;
+uses Std.Str as Str;
+uses Std.Test as Test;
 
 function IsEven(X: integer): boolean;
 begin
-  return X mod 2 = 0
-end;
+  return X mod 2 = 0;
+end function;
 
 function Double(X: integer): integer;
 begin
-  return X * 2
-end;
+  return X * 2;
+end function;
 
 function Sum(Acc: integer; X: integer): integer;
 begin
-  return Acc + X
-end;
+  return Acc + X;
+end function;
 
 function AddEntry(Acc: integer; Key: string; Value: integer): integer;
 begin
-  return Acc + Value
-end;
+  return Acc + Value;
+end function;
 
 function Upper(C: string): string;
 begin
-  return Std.Str.ToUpper(C)
-end;
+  return Str.ToUpper(C);
+end function;
 
 function MakeNumbers(): array of integer;
 begin
-  return [1, 2]
-end;
+  return [1, 2];
+end function;
 
 function Apply(X: integer; Operation: function(Value: integer): integer): integer;
 begin
-  return X.Operation()
-end;
+  return X.Operation();
+end function;
 
 begin
   var Numbers: array of integer := [1, 2, 3, 4];
-  AssertEquals(12, Numbers.Filter(IsEven).Map(Double).Reduce(0, Sum));
-  AssertEquals(4, (2).Double());
+  Test.AssertEquals(12, Arrays.Reduce(Arrays.Map(Arrays.Filter(Numbers, IsEven), Double), 0, Sum));
+  Test.AssertEquals(4, (2).Double());
   var Scores: dict of string to integer := ['A': 2, 'B': 3];
-  AssertEquals(5, Scores.Reduce(0, AddEntry));
-  AssertTrue(Scores.Get('A').IsSome());
-  AssertEquals('AB', ('ab').Map(Upper));
-  AssertEquals(2, MakeNumbers().Length());
-  AssertTrue(Parse('1').IsOk());
+  Test.AssertEquals(5, Dictionaries.Reduce(Scores, 0, AddEntry));
+  Test.AssertTrue(Options.IsSome(Dictionaries.Get(Scores, 'A')));
+  Test.AssertEquals('AB', Str.Map(('ab'), Upper));
+  Test.AssertEquals(2, Arrays.Length(MakeNumbers()));
+  Test.AssertTrue(Results.IsOk(Json.Parse('1')));
   var DoubleValue: function(X: integer): integer := Double;
-  AssertEquals(6, (3).DoubleValue());
-  AssertEquals(8, Apply(4, Double))
-end.
+  Test.AssertEquals(6, (3).DoubleValue());
+  Test.AssertEquals(8, Apply(4, Double));
+end program;

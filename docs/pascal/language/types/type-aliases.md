@@ -5,18 +5,21 @@ Create semantic names for existing types.
 Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`type_def`, `type_expr` — alias form).
 
 ```pascal
-type
-  UserId = integer;
-  UserName = string;
-  Callback = function(Value: integer): boolean;
+type UserId = integer;
+
+type UserName = string;
+
+type Callback = function(Value: integer): boolean;
+
 ```
 
 Aliases to enum types retain qualified variant access. This is useful when a public API exposes an
 enum owned by an internal unit:
 
 ```pascal
-type
-  PaletteColor = Color;
+uses Std.Console as Console;
+
+type PaletteColor = Console.Color;
 
 var Value: PaletteColor := PaletteColor.Green;
 ```

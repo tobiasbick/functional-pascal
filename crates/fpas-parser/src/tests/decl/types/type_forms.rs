@@ -2,7 +2,7 @@ use super::*;
 
 #[test]
 fn type_alias() {
-    let p = parse_ok("program T; type Name = string; begin end.");
+    let p = parse_ok(r#"program T;  type Name = string; begin null; end program;"#);
     match &p.declarations[0] {
         Decl::TypeDef(td) => {
             assert_eq!(td.name, "Name");
@@ -26,7 +26,7 @@ fn property_keyword_cannot_be_a_variable_name() {
 
 #[test]
 fn array_type() {
-    let p = parse_ok("program T; var Xs: array of integer := []; begin end.");
+    let p = parse_ok(r#"program T;  var Xs: array of integer := []; begin null; end program;"#);
     match &p.declarations[0] {
         Decl::Var(v) => match &v.type_expr {
             TypeExpr::Array(inner, _) => {
@@ -40,7 +40,9 @@ fn array_type() {
 
 #[test]
 fn channel_type() {
-    let p = parse_ok("program T; var Messages: channel of string := Value; begin end.");
+    let p = parse_ok(
+        r#"program T;  var Messages: channel of string := Value; begin null; end program;"#,
+    );
     match &p.declarations[0] {
         Decl::Var(v) => match &v.type_expr {
             TypeExpr::Channel(inner, _) => {
@@ -54,7 +56,9 @@ fn channel_type() {
 
 #[test]
 fn typed_task_type() {
-    let p = parse_ok("program T; var Job: Task of result of integer, string := Value; begin end.");
+    let p = parse_ok(
+        r#"program T;  var Job: Task of result of integer, string := Value; begin null; end program;"#,
+    );
     match &p.declarations[0] {
         Decl::Var(v) => match &v.type_expr {
             TypeExpr::Task(inner, _) => {
@@ -68,7 +72,7 @@ fn typed_task_type() {
 
 #[test]
 fn bare_task_remains_a_named_type() {
-    let p = parse_ok("program T; var Job: task := Value; begin end.");
+    let p = parse_ok(r#"program T;  var Job: task := Value; begin null; end program;"#);
     match &p.declarations[0] {
         Decl::Var(v) => assert!(matches!(&v.type_expr, TypeExpr::Named { .. })),
         _ => panic!("expected Var"),
@@ -97,7 +101,9 @@ fn task_keyword_cannot_be_a_name() {
 
 #[test]
 fn task_keyword_types_nest_in_other_type_forms() {
-    let p = parse_ok("program T; var Jobs: array of TASK of option of task := []; begin end.");
+    let p = parse_ok(
+        r#"program T;  var Jobs: array of TASK of option of task := []; begin null; end program;"#,
+    );
     match &p.declarations[0] {
         Decl::Var(v) => match &v.type_expr {
             TypeExpr::Array(inner, _) => match inner.as_ref() {

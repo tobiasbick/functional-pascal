@@ -16,12 +16,27 @@ include = ["src/**/*.fpas"]
 exclude = ["src/generated/**/*.fpas"]
 "#,
     );
-    write_text(&dir.join("src/main.fpas"), "program Main;\nbegin\nend.\n");
+    write_text(
+        &dir.join("src/main.fpas"),
+        r#"program Main;
+begin null;
+end program;
+"#,
+    );
     write_text(
         &dir.join("src/generated/stub.fpas"),
-        "unit App.Generated;\n",
+        r#"unit App.Generated;
+end unit;
+
+"#,
     );
-    write_text(&dir.join("src/util.fpas"), "unit App.Util;\n");
+    write_text(
+        &dir.join("src/util.fpas"),
+        r#"unit App.Util;
+end unit;
+
+"#,
+    );
 
     let loaded = load_project_ok(&project_file);
     fs::remove_dir_all(&dir).expect("temp directory must be removed");
@@ -53,8 +68,20 @@ include = ["src/**/*.fpas"]
 exclude = ["src/missing/**/*.fpas"]
 "#,
     );
-    write_text(&dir.join("src/main.fpas"), "program Main;\nbegin\nend.\n");
-    write_text(&dir.join("src/util.fpas"), "unit App.Util;\n");
+    write_text(
+        &dir.join("src/main.fpas"),
+        r#"program Main;
+begin null;
+end program;
+"#,
+    );
+    write_text(
+        &dir.join("src/util.fpas"),
+        r#"unit App.Util;
+end unit;
+
+"#,
+    );
 
     let loaded = load_project_ok(&project_file);
     fs::remove_dir_all(&dir).expect("temp directory must be removed");
@@ -78,7 +105,13 @@ include = ["src/**/*.fpas"]
 exclude = [""]
 "#,
     );
-    write_text(&dir.join("src/main.fpas"), "program Main;\nbegin\nend.\n");
+    write_text(
+        &dir.join("src/main.fpas"),
+        r#"program Main;
+begin null;
+end program;
+"#,
+    );
 
     let error = load_project_error(&project_file, "empty exclude entry must fail");
     fs::remove_dir_all(&dir).expect("temp directory must be removed");

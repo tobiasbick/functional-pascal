@@ -1,83 +1,93 @@
 // Bounded byte transfers for HTTP transports.
 unit Std.Http.Io;
 
-uses Std.Arrays, Std.Net;
+uses Std.Arrays as Arrays;
+uses Std.Net as Net;
 
 // Materializes ordered response or request fragments as one byte array.
 public function JoinChunks(Chunks: array of array of integer): array of integer;
 begin
-  return Std.Arrays.FlatMap(Chunks, function(Chunk: array of integer): array of integer begin
-    return Chunk
-  end)
-end;
+  return Arrays.FlatMap(Chunks, function(Chunk: array of integer): array of integer begin
+    return Chunk;
+  end function);
+end function;
 
 // Reads within the remaining response budget, probing only for EOF at its boundary.
-public function ReadResponseBytes(Connection: Std.Net.Connection; Available: integer): result of array of integer, string;
+public function ReadResponseBytes(Connection: Net.Connection; Available: integer): result of array of integer, string;
 begin
   if Available < 0 then
-  begin
-    return Error('HTTP response exceeds MaxResponseBytes')
-  end;
+    begin
+      return Error('HTTP response exceeds MaxResponseBytes');
+    end;
+  end if;
   mutable var Count: integer := Available;
   if Count > 65536 then
-  begin
-    Count := 65536
-  end;
+    begin
+      Count := 65536;
+    end;
+  end if;
 
   if Count = 0 then
-  begin
-    Count := 1
-  end;
-
-  case Std.Net.ReceiveBytes(Connection, Count) of
-    Ok(Bytes):
     begin
-      if Std.Arrays.Length(Bytes) > Available then
-      begin
-        return Error('HTTP response exceeds MaxResponseBytes')
-      end;
-
-      return Ok(Bytes)
+      Count := 1;
     end;
-    Error(Message):
-    begin
-      return Error(Message)
-    end
-  end
-end;
+  end if;
+
+  case Net.ReceiveBytes(Connection, Count) of
+    when Ok(Bytes):
+      begin
+        if Arrays.Length(Bytes) > Available then
+          begin
+            return Error('HTTP response exceeds MaxResponseBytes');
+          end;
+        end if;
+
+        return Ok(Bytes);
+      end;
+    when Error(Message):
+      begin
+        return Error(Message);
+      end;
+  end case;
+end function;
 
 // Writes every byte or reports when the connection stops making progress.
 //
 // Parameters:
 // - `Connection`: Open TCP or TLS connection.
 // - `Bytes`: Complete byte sequence to write.
-public function WriteAll(Connection: Std.Net.Connection; Bytes: array of integer): result of boolean, string;
+public function WriteAll(Connection: Net.Connection; Bytes: array of integer): result of boolean, string;
 begin
   mutable var Offset: integer := 0;
-  while Offset < Std.Arrays.Length(Bytes) do
-  begin
-    mutable var Count: integer := Std.Arrays.Length(Bytes) - Offset;
-    if Count > 1048576 then
+  while Offset < Arrays.Length(Bytes) do
     begin
-      Count := 1048576
-    end;
-    var Remaining: array of integer := Std.Arrays.Slice(Bytes, Offset, Count);
-    case Std.Net.SendBytes(Connection, Remaining) of
-      Ok(Count):
-      begin
-        if Count <= 0 then
+      mutable var Count: integer := Arrays.Length(Bytes) - Offset;
+      if Count > 1048576 then
         begin
-          return Error('Network connection stopped while writing HTTP bytes')
+          Count := 1048576;
         end;
+      end if;
+      var Remaining: array of integer := Arrays.Slice(Bytes, Offset, Count);
+      case Net.SendBytes(Connection, Remaining) of
+        when Ok(Count):
+          begin
+            if Count <= 0 then
+              begin
+                return Error('Network connection stopped while writing HTTP bytes');
+              end;
+            end if;
 
-        Offset := Offset + Count
-      end;
-      Error(Message):
-      begin
-        return Error(Message)
-      end
-    end
-  end;
+            Offset := Offset + Count;
+          end;
+        when Error(Message):
+          begin
+            return Error(Message);
+          end;
+      end case;
+    end;
+  end while;
 
-  return Ok(true)
-end;
+  return Ok(true);
+end function;
+
+end unit;

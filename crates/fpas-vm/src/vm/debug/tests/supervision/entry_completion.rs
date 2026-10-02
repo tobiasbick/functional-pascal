@@ -6,21 +6,21 @@ use super::*;
 fn forcing_a_supervised_error_result_finishes_the_task_without_retrying() {
     let (program, errors) = fpas_parser::parse(
         r#"program ForcedSupervisor;
-uses Std.Tasks, Std.Arrays;
-function Work(Token: CancellationToken): result of integer, string;
-begin panic('worker body must not execute') end;
+uses Std.Tasks as Tasks; uses Std.Arrays as Arrays;
+function Work(Token: Tasks.CancellationToken): result of integer, string;
+begin panic('worker body must not execute'); end function;
 begin
-  var Group: TaskGroup := CreateTaskGroup();
-  var Child: task := StartSupervisedTask(Group, Work, 1023, 0);
-  case Wait(Child) of
-    Ok(_): panic('forced error lost');
-    Error(Message): if Message <> 'forced' then panic('wrong forced error')
-  end;
-  var Failures: array of TaskFailure := CloseTaskGroup(Group);
-  if Length(Failures) <> 1 then panic('wrong report count');
-  if Failures[0].Kind <> TaskFailureKind.ReturnedError then panic('wrong report kind');
-  if Failures[0].Message <> 'forced' then panic('wrong report message')
-end."#,
+  var Group: Tasks.TaskGroup := Tasks.CreateTaskGroup();
+  var Child: task := Tasks.StartSupervisedTask(Group, Work, 1023, 0);
+  case Tasks.Wait(Child) of
+    when Ok(_): panic('forced error lost');
+    when Error(Message): if Message <> 'forced' then panic('wrong forced error'); end if;
+  end case;
+  var Failures: array of Tasks.TaskFailure := Tasks.CloseTaskGroup(Group);
+  if Arrays.Length(Failures) <> 1 then panic('wrong report count'); end if;
+  if Failures[0].Kind <> Tasks.TaskFailureKind.ReturnedError then panic('wrong report kind'); end if;
+  if Failures[0].Message <> 'forced' then panic('wrong report message'); end if;
+end program;"#,
     );
     assert!(errors.is_empty(), "{errors:?}");
     let mut session =

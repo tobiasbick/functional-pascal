@@ -28,11 +28,7 @@ fn write(path: &Path, source: &str) {
 
 fn base_source(hidden_body: &str) -> String {
     format!(
-        "unit Demo.Base;
-         function Hidden(Value: integer): integer;
-         begin {hidden_body} end;
-         public function AddOne(Value: integer): integer;
-         begin return Value + 1 end;"
+        "unit Demo.Base;\n         function Hidden(Value: integer): integer;\n         begin {hidden_body}; end function;\n         public function AddOne(Value: integer): integer;\n         begin return Value + 1; end function;\nend unit;\n"
     )
 }
 
@@ -65,16 +61,18 @@ include = ["src/**/*.fpas"]
         write(&base, &base_source("return Value"));
         write(
             &root.join("src/consumer.fpas"),
-            "unit Demo.Consumer;
-             uses Demo.Base;
+            r#"unit Demo.Consumer;
+uses Demo.Base as Base;
              public function Run(): integer;
-             begin return AddOne(41) end;",
+             begin return Base.AddOne(41); end function;
+end unit;
+"#,
         );
         write(
             &main,
-            "program Demo;
-             uses Demo.Consumer, Std.Console;
-             begin Std.Console.WriteLn(Run()) end.",
+            r#"program Demo;
+uses Demo.Consumer as Consumer; uses Std.Console as Console;
+             begin Console.WriteLn(Consumer.Run()); end program;"#,
         );
         Self {
             root,
@@ -170,8 +168,8 @@ fn main_source_change_relinks_the_program() {
     let fixture = Fixture::create();
     fixture.build().expect("initial build");
     let changed = b"program Demo;
-                    uses Demo.Consumer, Std.Console;
-                    begin Std.Console.WriteLn(Run() + 1) end.";
+uses Demo.Consumer as Consumer; uses Std.Console as Console;
+                    begin Console.WriteLn(Consumer.Run() + 1); end program;";
     write(
         &fixture.main,
         std::str::from_utf8(changed).expect("changed source"),
@@ -245,8 +243,8 @@ fn failed_program_rebuild_preserves_the_previous_artifact() {
     fixture.build().expect("initial build");
     let previous = fs::read(&fixture.artifact).expect("initial artifact");
     let invalid = b"program Demo;
-                    uses Demo.Consumer, Std.Console;
-                    begin Std.Console.WriteLn(Missing()) end.";
+uses Demo.Consumer as Consumer; uses Std.Console as Console;
+                    begin Console.WriteLn(Missing()); end program;";
 
     assert!(fixture.build_source(invalid).is_err());
     assert_eq!(
@@ -261,7 +259,7 @@ fn non_program_source_is_rejected_before_cached_artifact_lookup() {
     let fixture = Fixture::create();
     fixture.build().expect("initial build");
     let previous = fs::read(&fixture.artifact).expect("initial artifact");
-    let unit_source = b"unit Demo; public const Value: integer := 1;";
+    let unit_source = b"unit Demo; public const Value: integer := 1; end unit;";
 
     let error = fixture
         .build_source(unit_source)

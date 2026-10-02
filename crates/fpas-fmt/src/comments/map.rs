@@ -7,7 +7,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use fpas_lexer::SourceComment;
 use fpas_parser::CompilationUnit;
 
-use super::anchors::{trailing_gap_allows, uses_keyword_offset};
+use super::anchors::trailing_gap_allows;
 use super::traversal;
 use crate::FormatError;
 
@@ -19,7 +19,6 @@ pub struct CommentMap {
     trailing: BTreeMap<usize, Vec<String>>,
     /// Leading comments with no following anchor (e.g. after `end.`).
     trailing_end: Vec<String>,
-    uses_anchor: Option<usize>,
     body_anchors: BTreeMap<usize, usize>,
     header_anchors: BTreeMap<usize, usize>,
 }
@@ -50,7 +49,6 @@ impl CommentMap {
             &anchors.emission,
             &anchors.declarations,
         )?;
-        map.uses_anchor = uses_keyword_offset(source);
         map.body_anchors = anchors.bodies;
         map.header_anchors = anchors.headers;
         Ok(map)
@@ -72,12 +70,6 @@ impl CommentMap {
     #[must_use]
     pub fn trailing_at(&self, anchor_start: usize) -> &[String] {
         self.trailing.get(&anchor_start).map_or(&[], Vec::as_slice)
-    }
-
-    /// Byte offset of the `uses` keyword when the unit had a uses clause in source.
-    #[must_use]
-    pub fn uses_anchor(&self) -> Option<usize> {
-        self.uses_anchor
     }
 
     /// Byte offset of the `begin` keyword belonging to a program, routine, or closure owner.
@@ -177,7 +169,6 @@ impl CommentMap {
             leading_blank_after,
             trailing: sort_grouped(trailing),
             trailing_end: sort_entries(trailing_end),
-            uses_anchor: None,
             body_anchors: BTreeMap::new(),
             header_anchors: BTreeMap::new(),
         })
@@ -327,7 +318,7 @@ mod tests {
 
     #[test]
     fn attaches_line_comments_to_following_declarations() -> Result<(), String> {
-        let source = "// Unit doc.\nunit Demo;\n\n// field doc\nmutable var Count: integer := 0;\n";
+        let source = "// Unit doc.\nunit Demo;\n\n// field doc\nmutable var Count: integer := 0;\nend unit;\n";
         let (unit, errors) = parse_compilation_unit(source);
         assert!(errors.is_empty(), "{errors:?}");
         let map = CommentMap::build(source, &unit).map_err(|error| error.to_string())?;
@@ -346,11 +337,18 @@ mod tests {
 
     #[test]
     fn preserves_comments_before_uses_begin_and_end_of_line() -> Result<(), String> {
-        let source = "program T;\n// before uses\nuses Std.Console;\n\n// before begin\nbegin\n  WriteLn('ok') // trail\nend. // tail";
+        let source = r#"program T;
+// before uses
+ uses Std.Console as Console;
+
+// before begin
+begin
+  Console.WriteLn('ok'); // trail
+end program; // tail"#;
         let (unit, errors) = parse_compilation_unit(source);
         assert!(errors.is_empty(), "{errors:?}");
         let map = CommentMap::build(source, &unit).map_err(|error| error.to_string())?;
-        let Some(uses_anchor) = map.uses_anchor() else {
+        let Some(uses_anchor) = source.find("uses Std.") else {
             return Err("expected uses anchor".to_string());
         };
         assert_eq!(map.leading_at(uses_anchor)[0].text, "// before uses");
@@ -372,7 +370,12 @@ mod tests {
 
     #[test]
     fn attaches_leading_and_trailing_comments_to_uses_items() -> Result<(), String> {
-        let source = "program T;\nuses Std.Console, // io\n// conversions\nStd.Conv;\nbegin\nend.";
+        let source = r#"program T;
+ uses Std.Console as Console; // io
+// conversions
+uses Std.Conv as Conv;
+begin null;
+end program;"#;
         let (unit, errors) = parse_compilation_unit(source);
         assert!(errors.is_empty(), "{errors:?}");
         let map = CommentMap::build(source, &unit).map_err(|error| error.to_string())?;
@@ -394,7 +397,10 @@ mod tests {
 
     #[test]
     fn preserves_line_comments_before_statements() {
-        let source = "program T; begin\n  // setup\n  WriteLn('ok')\nend.";
+        let source = r#"program T; begin
+  // setup
+  WriteLn('ok');
+end program;"#;
         let (unit, errors) = parse_compilation_unit(source);
         assert!(errors.is_empty(), "{errors:?}");
         let formatted = crate::format_source(source, &unit).expect("matching source and AST");

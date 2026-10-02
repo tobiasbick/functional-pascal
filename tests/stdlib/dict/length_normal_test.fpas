@@ -1,8 +1,9 @@
 program T;
 
-uses Std.Console, Std.Dictionaries;
+uses Std.Console as Console;
+uses Std.Dictionaries as Dictionaries;
 
 begin
   var D: dict of string to integer := ['A': 1, 'B': 2];
-  WriteLn(Std.Dictionaries.Length(D))
-end.
+  Console.WriteLn(Dictionaries.Length(D));
+end program;

@@ -12,7 +12,7 @@ mod primitives;
 mod standalone;
 
 fn parse_expr(expr_src: &str) -> Expr {
-    let src = format!("program T; begin return {expr_src} end.");
+    let src = format!("program T; begin return {expr_src}; end program;");
     let program = parse_ok(&src);
     match &program.body[0] {
         Stmt::Return(Some(expr), _) => expr.clone(),

@@ -10,6 +10,12 @@ use fpas_parser::*;
 impl Checker {
     pub(crate) fn check_stmt(&mut self, stmt: &Stmt) {
         match stmt {
+            Stmt::Null(_) => {}
+            Stmt::StatementList(statements, _) => {
+                for statement in statements {
+                    self.check_stmt(statement);
+                }
+            }
             Stmt::Block(stmts, _) => {
                 self.scopes.push_scope();
                 for stmt in stmts {
@@ -33,9 +39,16 @@ impl Checker {
             Stmt::If {
                 condition,
                 then_branch,
+                elsif_branches,
                 else_branch,
                 span,
-            } => self.check_if_stmt(condition, then_branch, else_branch.as_deref(), *span),
+            } => self.check_if_stmt(
+                condition,
+                then_branch,
+                elsif_branches,
+                else_branch.as_deref(),
+                *span,
+            ),
 
             Stmt::Case {
                 expr,

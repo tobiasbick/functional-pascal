@@ -5,8 +5,10 @@
 Returns how many characters are in `S` (scalar count).
 
 ```pascal
+uses Std.Console as Console;
+
 var N: integer := Length('café');
-WriteLn(N)
+Console.WriteLn(N);
 ```
 
 ---
@@ -16,7 +18,9 @@ WriteLn(N)
 Returns a new string with letters uppercased (Unicode-aware where the runtime supports it).
 
 ```pascal
-WriteLn(ToUpper('ab'))
+uses Std.Console as Console;
+
+Console.WriteLn(ToUpper('ab'));
 ```
 
 ---
@@ -26,7 +30,9 @@ WriteLn(ToUpper('ab'))
 Returns a new string with letters lowercased.
 
 ```pascal
-WriteLn(ToLower('AB'))
+uses Std.Console as Console;
+
+Console.WriteLn(ToLower('AB'));
 ```
 
 ---
@@ -36,7 +42,9 @@ WriteLn(ToLower('AB'))
 Strips leading and trailing whitespace.
 
 ```pascal
-WriteLn(Trim('  x  '))
+uses Std.Console as Console;
+
+Console.WriteLn(Trim('  x  '));
 ```
 
 ---
@@ -46,7 +54,9 @@ WriteLn(Trim('  x  '))
 Strips leading whitespace only.
 
 ```pascal
-WriteLn(TrimLeft('  hi  '))  // 'hi  '
+uses Std.Console as Console;
+
+Console.WriteLn(TrimLeft('  hi  ')); // 'hi  '
 ```
 
 ---
@@ -56,7 +66,9 @@ WriteLn(TrimLeft('  hi  '))  // 'hi  '
 Strips trailing whitespace only.
 
 ```pascal
-WriteLn(TrimRight('  hi  '))  // '  hi'
+uses Std.Console as Console;
+
+Console.WriteLn(TrimRight('  hi  ')); // '  hi'
 ```
 
 ## See also

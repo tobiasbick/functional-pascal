@@ -1,58 +1,67 @@
 program HttpParallelSseDecoderTest;
 
-uses Std.Arrays, Std.Conv, Std.Http, Std.Net.Utf8, Std.Tasks, Std.Test;
+uses Std.Arrays as Arrays;
+uses Std.Conv as Conv;
+uses Std.Http as Http;
+uses Std.Net.Utf8 as Utf8;
+uses Std.Tasks as Tasks2;
+uses Std.Test as Test;
 
-function CreateDecoder(Index: integer): SseDecoder;
+function CreateDecoder(Index: integer): Http.SseDecoder;
 begin
-  case CreateSseDecoder(1024) of
-    Ok(Decoder):
-    begin
-      return Decoder
-    end;
-    Error(Message):
-    begin
-      panic((('decoder ' + IntToStr(Index)) + ' failed: ') + Message)
-    end
-  end
-end;
+  case Http.CreateSseDecoder(1024) of
+    when Ok(Decoder):
+      begin
+        return Decoder;
+      end;
+    when Error(Message):
+      begin
+        panic((('decoder ' + Conv.IntToStr(Index)) + ' failed: ') + Message);
+      end;
+  end case;
+end function;
 
 begin
   mutable var Tasks: array of task := [];
   for Index: integer := 1 to 128 do
-  begin
-    Push(Tasks, go CreateDecoder(Index))
-  end;
-
-  WaitAll(Tasks);
-  mutable var Decoders: array of SseDecoder := [];
-  for Index: integer := 0 to Length(Tasks) - 1 do
-  begin
-    Push(Decoders, Wait(Tasks[Index]))
-  end;
-
-  for Index: integer := 0 to Length(Decoders) - 1 do
-  begin
-    var Expected: string := IntToStr(Index);
-    case FeedSse(Decoders[Index], Std.Net.Utf8.Encode((('data: ' + Expected) + #10) + #10)) of
-      Ok(Events):
-      begin
-        AssertEquals(1, Length(Events));
-        AssertEquals(Expected, Events[0].Data)
-      end;
-      Error(Message):
-      begin
-        panic(Message)
-      end
+    begin
+      Arrays.Push(Tasks, go CreateDecoder(Index));
     end;
+  end for;
 
-    case FinishSse(Decoders[Index]) of
-      Ok(_):
-      begin
-      end;
-      Error(Message):
-      begin
-        panic(Message)
-      end
-    end
-  end
-end.
+  Tasks2.WaitAll(Tasks);
+  mutable var Decoders: array of Http.SseDecoder := [];
+  for Index: integer := 0 to Arrays.Length(Tasks) - 1 do
+    begin
+      Arrays.Push(Decoders, Tasks2.Wait(Tasks[Index]));
+    end;
+  end for;
+
+  for Index: integer := 0 to Arrays.Length(Decoders) - 1 do
+    begin
+      var Expected: string := Conv.IntToStr(Index);
+      case Http.FeedSse(Decoders[Index], Utf8.Encode((('data: ' + Expected) + #10) + #10)) of
+        when Ok(Events):
+          begin
+            Test.AssertEquals(1, Arrays.Length(Events));
+            Test.AssertEquals(Expected, Events[0].Data);
+          end;
+        when Error(Message):
+          begin
+            panic(Message);
+          end;
+      end case;
+
+      case Http.FinishSse(Decoders[Index]) of
+        when Ok(_):
+          begin
+            null;
+          end;
+        when Error(Message):
+          begin
+            panic(Message);
+          end;
+      end case;
+    end;
+  end for;
+end program;

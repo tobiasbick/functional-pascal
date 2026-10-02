@@ -1,26 +1,27 @@
 program RecordDefaultsWithUpdate;
 
-uses Std.Console, Std.Conv;
+uses Std.Console as Console;
+uses Std.Conv as Conv;
 
-type
-  Config = record
-    Host: string := 'localhost';
-    Port: integer := 8080;
-    Retries: integer := 3;
-  end;
+type Config = record
+  Host: string := 'localhost';
+  Port: integer := 8080;
+  Retries: integer := 3;
+end record;
 
 function ShowConfig(Value: Config): string;
 begin
-  return (((Value.Host + ':') + IntToStr(Value.Port)) + ' retries=') + IntToStr(Value.Retries)
-end;
+  return (((Value.Host + ':') + Conv.IntToStr(Value.Port)) + ' retries=') +
+         Conv.IntToStr(Value.Retries);
+end function;
 
 begin
-  var DefaultConfig: Config := record end;
-  var DevConfig: Config := DefaultConfig with Port := 3000; end;
-  var ProdConfig: Config := DevConfig with Host := 'api.example'; Port := 443; end;
+  var DefaultConfig: Config := record end record;
+  var DevConfig: Config := DefaultConfig with Port := 3000; end with;
+  var ProdConfig: Config := DevConfig with Host := 'api.example'; Port := 443; end with;
 
-  WriteLn('Default: ' + ShowConfig(DefaultConfig));
-  WriteLn('Dev: ' + ShowConfig(DevConfig));
-  WriteLn('Prod: ' + ShowConfig(ProdConfig));
-  WriteLn('Original still unchanged: ' + ShowConfig(DefaultConfig))
-end.
+  Console.WriteLn('Default: ' + ShowConfig(DefaultConfig));
+  Console.WriteLn('Dev: ' + ShowConfig(DevConfig));
+  Console.WriteLn('Prod: ' + ShowConfig(ProdConfig));
+  Console.WriteLn('Original still unchanged: ' + ShowConfig(DefaultConfig));
+end program;

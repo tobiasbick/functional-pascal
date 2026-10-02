@@ -1,47 +1,48 @@
 program TuiListLayoutTest;
 
-uses Std.Str, Std.Test, Std.Tui;
+uses Std.Str as Str;
+uses Std.Test as Test;
+uses Std.Tui as Tui;
 
-type
-  ListModel = record
-    Selected: integer;
-  end;
+type ListModel = record
+  Selected: integer;
+end record;
 
-function ViewList(State: ListModel): TuiElement;
+function ViewList(State: ListModel): Tui.TuiElement;
 begin
-  return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(1)), [
-                                                                        TuiElementBuilders.MakePanel('Host', [
-                                                                                                               TuiElementBuilders.MakeList(TuiControlId.Create(1), ['Alpha', 'Beta', 'Gamma'], State.Selected, TuiAction.Create(5))
-                                                                                                             ])
-                                                                      ])
-end;
+  return Tui.TuiElementBuilders.MakeDesktop(Some(Tui.TuiControlId.Create(1)), [
+                                                                                Tui.TuiElementBuilders.MakePanel('Host', [
+                                                                                                                           Tui.TuiElementBuilders.MakeList(Tui.TuiControlId.Create(1), ['Alpha', 'Beta', 'Gamma'], State.Selected, Tui.TuiAction.Create(5))
+                                                                                                                         ])
+                                                                              ]);
+end function;
 
-function UpdateList(State: ListModel; Msg: TuiMsg; Cmd: TuiCmdOutput): ListModel;
+function UpdateList(State: ListModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): ListModel;
 begin
-  Cmd.Set(TuiCmd.NoCommand);
-  return State
-end;
+  Cmd.Set(Tui.TuiCmd.NoCommand);
+  return State;
+end function;
 
 begin
-  var Measured: TuiMeasureResult := TuiMeasure(TuiElementBuilders.MakeList(TuiControlId.Create(1), [
-                                                                                                     'Alpha',
-                                                                                                     'Beta',
-                                                                                                     'Gamma'
-                                                                                                   ], 0, TuiAction.Create(1)), TuiMeasureSpec.Unbounded());
-  AssertEquals(7, Measured.Preferred.Width);
-  AssertEquals(3, Measured.Preferred.Height);
-  var Empty: TuiMeasureResult := TuiMeasure(TuiElementBuilders.MakeList(TuiControlId.Create(1), [], -1, TuiAction.Create(1)), TuiMeasureSpec.Unbounded());
-  AssertEquals(2, Empty.Preferred.Width);
-  AssertEquals(1, Empty.Preferred.Height);
-  mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 8));
+  var Measured: Tui.TuiMeasureResult := Tui.TuiMeasure(Tui.TuiElementBuilders.MakeList(Tui.TuiControlId.Create(1), [
+                                                                                                                     'Alpha',
+                                                                                                                     'Beta',
+                                                                                                                     'Gamma'
+                                                                                                                   ], 0, Tui.TuiAction.Create(1)), Tui.TuiMeasureSpec.Unbounded());
+  Test.AssertEquals(7, Measured.Preferred.Width);
+  Test.AssertEquals(3, Measured.Preferred.Height);
+  var Empty: Tui.TuiMeasureResult := Tui.TuiMeasure(Tui.TuiElementBuilders.MakeList(Tui.TuiControlId.Create(1), [], -1, Tui.TuiAction.Create(1)), Tui.TuiMeasureSpec.Unbounded());
+  Test.AssertEquals(2, Empty.Preferred.Width);
+  Test.AssertEquals(1, Empty.Preferred.Height);
+  mutable var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(24, 8));
   mutable var Model: ListModel := record
     Selected := 0;
-  end;
+  end record;
 
   Model := App.RunIterations(Model, UpdateList, ViewList, 0, 0);
-  App.InjectResizeForTest(TuiSize.Create(16, 5));
+  App.InjectResizeForTest(Tui.TuiSize.Create(16, 5));
   Model := App.RunIterations(Model, UpdateList, ViewList, 1, 0);
-  AssertEquals(16, App.SurfaceSnapshot().Width);
-  AssertTrue(Std.Str.Contains(App.SurfaceSnapshot().LineAt(1), 'Alpha'));
-  App.Close()
-end.
+  Test.AssertEquals(16, App.SurfaceSnapshot().Width);
+  Test.AssertTrue(Str.Contains(App.SurfaceSnapshot().LineAt(1), 'Alpha'));
+  App.Close();
+end program;

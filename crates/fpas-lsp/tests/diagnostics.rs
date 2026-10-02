@@ -28,7 +28,7 @@ fn invalid_comment_form_publishes_one_actionable_lexer_diagnostic() {
         TranscriptStep::Message(open(
             uri,
             1,
-            "program Invalid;\n{ not a comment }\nbegin\nend.\n",
+            "program Invalid;\n{ not a comment }\nbegin null;\nend program;\n",
         )),
         TranscriptStep::Wait(ANALYSIS_WAIT),
         TranscriptStep::Message(shutdown(2)),
@@ -61,13 +61,21 @@ fn parser_and_semantic_errors_publish_and_a_fixed_version_clears_them() {
         TranscriptStep::Message(change(
             uri,
             2,
-            "program Semantic;\nbegin\n  var Value: integer := 'wrong'\nend.\n",
+            r#"program Semantic;
+begin
+  var Value: integer := 'wrong';
+end program;
+"#,
         )),
         TranscriptStep::Wait(ANALYSIS_WAIT),
         TranscriptStep::Message(change(
             uri,
             3,
-            "program Fixed;\nbegin\n  var Value: integer := 1\nend.\n",
+            r#"program Fixed;
+begin
+  var Value: integer := 1;
+end program;
+"#,
         )),
         TranscriptStep::Wait(ANALYSIS_WAIT),
         TranscriptStep::Message(shutdown(2)),
@@ -129,12 +137,20 @@ fn rapid_changes_publish_only_the_latest_document_version() {
         TranscriptStep::Message(change(
             uri,
             2,
-            "program Second;\nbegin\n  var Value: integer := 'wrong'\nend.\n",
+            r#"program Second;
+begin
+  var Value: integer := 'wrong';
+end program;
+"#,
         )),
         TranscriptStep::Message(change(
             uri,
             3,
-            "program Latest;\nbegin\n  var Value: integer := 1\nend.\n",
+            r#"program Latest;
+begin
+  var Value: integer := 1;
+end program;
+"#,
         )),
         TranscriptStep::Wait(ANALYSIS_WAIT),
         TranscriptStep::Message(shutdown(2)),
@@ -200,10 +216,24 @@ include = ["src/**/*.fpas"]
     );
     temp.write(
         "src/main.fpas",
-        "program App;\n\nuses Demo.Math;\n\nbegin\n  var Value: integer := Answer()\nend.\n",
+        r#"program App;
+
+uses Demo.Math as Math;
+
+begin
+  var Value: integer := Math.Answer();
+end program;
+"#,
     );
-    let unit_source =
-        "unit Demo.Math;\n\npublic function Answer(): integer;\nbegin\n  return 'wrong'\nend;\n";
+    let unit_source = r#"unit Demo.Math;
+
+public function Answer(): integer;
+begin
+  return 'wrong';
+end function;
+end unit;
+
+"#;
     temp.write("src/math.fpas", unit_source);
     let root_uri = temp.uri(".");
     let unit_uri = temp.uri("src/math.fpas");
@@ -248,10 +278,23 @@ main = "src/main.fpas"
 include = ["src/**/*.fpas"]
 "#,
     );
-    let valid =
-        "program App;\n\nuses Demo.Math;\n\nbegin\n  var Value: integer := Answer()\nend.\n";
-    let unit_source =
-        "unit Demo.Math;\n\npublic function Answer(): integer;\nbegin\n  return 42\nend;\n";
+    let valid = r#"program App;
+
+uses Demo.Math as Math;
+
+begin
+  var Value: integer := Math.Answer();
+end program;
+"#;
+    let unit_source = r#"unit Demo.Math;
+
+public function Answer(): integer;
+begin
+  return 42;
+end function;
+end unit;
+
+"#;
     let main = temp.write("src/main.fpas", valid);
     let unit = temp.write("src/math.fpas", unit_source);
     let root_uri = temp.uri(".");
@@ -320,7 +363,12 @@ include = ["Std/**/*.fpas"]
     );
     temp.write(
         "bundle/Std/Point.fpas",
-        "unit Std.Point;\n\npublic type Point = integer;\n",
+        r#"unit Std.Point;
+
+  public type Point = integer;
+end unit;
+
+"#,
     );
     temp.write(
         "repository/lib/stdlib.fpasprj",
@@ -336,16 +384,20 @@ include = ["Std/**/*.fpas"]
         "repository/lib/Std/Point.fpas",
         r#"unit Std.Point;
 
-public type Point = record
+  public type Point = record
   public X: integer;
-end;
+end record;
+end unit;
+
 "#,
     );
     let facade_source = r#"unit Std.Facade;
 
-uses Std.Point;
+uses Std.Point as Point;
 
-public type FacadePoint = Std.Point.Point;
+  public type FacadePoint = Point.Point;
+end unit;
+
 "#;
     temp.write("repository/lib/Std/Facade.fpas", facade_source);
     let root_uri = temp.uri("repository");
@@ -398,7 +450,12 @@ include = ["Std/**/*.fpas"]
     );
     temp.write(
         "bundle/Std/Tui.fpas",
-        "unit Std.Tui;\n\npublic type TuiPalette = integer;\n",
+        r#"unit Std.Tui;
+
+  public type TuiPalette = integer;
+end unit;
+
+"#,
     );
     temp.write(
         "external/external.fpasprj",
@@ -411,8 +468,14 @@ main = "main.fpas"
 include = ["main.fpas"]
 "#,
     );
-    let source =
-        "program External;\n\nuses Std.Tui;\n\nbegin\n  var Palette: TuiPalette := 1\nend.\n";
+    let source = r#"program External;
+
+uses Std.Tui as Tui;
+
+begin
+  var Palette: Tui.TuiPalette := 1;
+end program;
+"#;
     temp.write("external/main.fpas", source);
     let root_uri = temp.uri("external");
     let standard_library_uri = temp.uri("bundle");

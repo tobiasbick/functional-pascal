@@ -11,7 +11,7 @@
 //! ```
 //! use fpas_parser::parse;
 //!
-//! let (program, diagnostics) = parse("program Hello; begin end.");
+//! let (program, diagnostics) = parse("program Hello; begin null; end program;");
 //! assert!(diagnostics.is_empty());
 //! assert_eq!(program.name, "Hello");
 //! ```

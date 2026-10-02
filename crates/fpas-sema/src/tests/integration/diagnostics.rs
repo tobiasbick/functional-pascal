@@ -4,11 +4,10 @@ use super::*;
 fn unknown_name_has_correct_code_location_help() {
     use fpas_diagnostics::codes::SEMA_UNKNOWN_NAME;
     let errs = check_errors(
-        "\
-program T;
+        r#"program T;
 begin
-  Foo()
-end.",
+  Foo();
+end program;"#,
     );
     let e = errs
         .iter()
@@ -29,12 +28,11 @@ end.",
 fn duplicate_declaration_has_correct_code() {
     use fpas_diagnostics::codes::SEMA_DUPLICATE_DECLARATION;
     let errs = check_errors(
-        "\
-program T;
-const X: integer := 1;
-const X: integer := 2;
-begin
-end.",
+        r#"program T;
+ const X: integer := 1;
+ const X: integer := 2;
+begin null;
+end program;"#,
     );
     let e = errs
         .iter()
@@ -50,11 +48,10 @@ end.",
 fn type_mismatch_has_correct_code() {
     use fpas_diagnostics::codes::SEMA_TYPE_MISMATCH;
     let errs = check_errors(
-        "\
-program T;
+        r#"program T;
 begin
-  var N: integer := 'hello'
-end.",
+  var N: integer := 'hello';
+end program;"#,
     );
     assert!(
         errs.iter().any(|e| e.code == SEMA_TYPE_MISMATCH),

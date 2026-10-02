@@ -4,73 +4,84 @@
 
 program VmBranchDispatchBenchmark;
 
-uses Std.Args, Std.Console, Std.Conv, Std.Time;
+uses Std.Args as Args;
+uses Std.Console as Console;
+uses Std.Conv as Conv;
+uses Std.Time as Time;
 
-const
-  WarmupIterations: integer := 100000;
+const WarmupIterations: integer := 100000;
 
 function RunBranches(Iterations: integer): integer;
 begin
   mutable var Total: integer := 0;
   for Index: integer := 1 to Iterations do
-  begin
-    if (Index mod 2) = 0 then
     begin
-      Total := Total + Index
-    end
-    else
-    begin
-      Total := Total - Index
-    end
-  end;
+      if (Index mod 2) = 0 then
+        begin
+          Total := Total + Index;
+        end;
+      else
+        begin
+          Total := Total - Index;
+        end;
+      end if;
+    end;
+  end for;
 
-  return Total
-end;
+  return Total;
+end function;
 
 begin
-  if (ParamCount() < 1) or (ParamCount() > 2) then
-  begin
-    panic('usage: branch_dispatch_benchmark.fpas -- ITERATIONS [MAX_MILLIS]')
-  end;
-  var Iterations: integer := StrToInt(ParamStr(0));
-  if Iterations < 1 then
-  begin
-    panic('ITERATIONS must be positive')
-  end;
-  mutable var MaxMillis: integer := 0;
-  if ParamCount() = 2 then
-  begin
-    MaxMillis := StrToInt(ParamStr(1));
-    if MaxMillis < 1 then
+  if (Args.ParamCount() < 1) or (Args.ParamCount() > 2) then
     begin
-      panic('MAX_MILLIS must be positive')
-    end
-  end;
+      panic('usage: branch_dispatch_benchmark.fpas -- ITERATIONS [MAX_MILLIS]');
+    end;
+  end if;
+  var Iterations: integer := Conv.StrToInt(Args.ParamStr(0));
+  if Iterations < 1 then
+    begin
+      panic('ITERATIONS must be positive');
+    end;
+  end if;
+  mutable var MaxMillis: integer := 0;
+  if Args.ParamCount() = 2 then
+    begin
+      MaxMillis := Conv.StrToInt(Args.ParamStr(1));
+      if MaxMillis < 1 then
+        begin
+          panic('MAX_MILLIS must be positive');
+        end;
+      end if;
+    end;
+  end if;
   mutable var Checksum: integer := RunBranches(WarmupIterations);
-  var Started: integer := MonotonicMillis();
+  var Started: integer := Time.MonotonicMillis();
   Checksum := RunBranches(Iterations);
-  var Elapsed: integer := ElapsedMillis(Started);
+  var Elapsed: integer := Time.ElapsedMillis(Started);
   mutable var OpsPerSecond: integer := 0;
   if Elapsed > 0 then
-  begin
-    OpsPerSecond := (Iterations * 1000) div Elapsed
-  end;
+    begin
+      OpsPerSecond := (Iterations * 1000) div Elapsed;
+    end;
+  end if;
 
-  WriteLn('iterations: ' + IntToStr(Iterations));
-  WriteLn(('elapsed: ' + IntToStr(Elapsed)) + ' ms');
+  Console.WriteLn('iterations: ' + Conv.IntToStr(Iterations));
+  Console.WriteLn(('elapsed: ' + Conv.IntToStr(Elapsed)) + ' ms');
   if Elapsed > 0 then
-  begin
-    WriteLn(('throughput: ' + IntToStr(OpsPerSecond)) + ' branches/s')
-  end
+    begin
+      Console.WriteLn(('throughput: ' + Conv.IntToStr(OpsPerSecond)) + ' branches/s');
+    end;
   else
-  begin
-    WriteLn('throughput: unavailable (elapsed time is 0 ms)')
-  end;
+    begin
+      Console.WriteLn('throughput: unavailable (elapsed time is 0 ms)');
+    end;
+  end if;
 
-  WriteLn('checksum: ' + IntToStr(Checksum));
+  Console.WriteLn('checksum: ' + Conv.IntToStr(Checksum));
   if (MaxMillis > 0) and (Elapsed > MaxMillis) then
-  begin
-    panic(((('branch-dispatch benchmark regression: ' + IntToStr(Elapsed)) + ' ms exceeds limit ') + IntToStr(MaxMillis)) +
-          ' ms')
-  end
-end.
+    begin
+      panic(((('branch-dispatch benchmark regression: ' + Conv.IntToStr(Elapsed)) + ' ms exceeds limit ') + Conv.IntToStr(MaxMillis)) +
+            ' ms');
+    end;
+  end if;
+end program;

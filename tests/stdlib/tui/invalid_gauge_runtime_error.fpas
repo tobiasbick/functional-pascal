@@ -1,19 +1,19 @@
 program TuiInvalidGaugeRuntimeError;
 
-uses Std.Tui;
+uses Std.Tui as Tui;
 
-function UpdateGauge(State: integer; Msg: TuiMsg; Cmd: TuiCmdOutput): integer;
+function UpdateGauge(State: integer; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): integer;
 begin
-  Cmd.Set(TuiCmd.NoCommand);
-  return State
-end;
+  Cmd.Set(Tui.TuiCmd.NoCommand);
+  return State;
+end function;
 
-function ViewGauge(State: integer): TuiElement;
+function ViewGauge(State: integer): Tui.TuiElement;
 begin
-  return TuiElementBuilders.MakeGauge('Invalid', 2, 1)
-end;
+  return Tui.TuiElementBuilders.MakeGauge('Invalid', 2, 1);
+end function;
 
 begin
-  mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(20, 2));
-  App.RunIterations(0, UpdateGauge, ViewGauge, 0, 0)
-end.
+  mutable var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(20, 2));
+  App.RunIterations(0, UpdateGauge, ViewGauge, 0, 0);
+end program;

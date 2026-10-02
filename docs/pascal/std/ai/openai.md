@@ -12,11 +12,16 @@ Non-streaming chat completions for configurable OpenAI-compatible HTTP endpoints
 | function | `Complete(Client; Messages; Options): Result of string, string` | returns the first text choice |
 
 ```pascal
-var ClientValue: Client := Client.Create('http://127.0.0.1:8080/v1', 'local-model');
-case Complete(ClientValue, [ChatMessage.User('Hello')], ChatOptions.Default()) of
-  Ok(Content): WriteLn(Content);
-  Error(Message): panic(Message)
-end
+uses Std.Console as Console;
+uses Std.Ai.OpenAi as AiOpenAi;
+
+var ClientValue: AiOpenAi.Client := AiOpenAi.Client.Create('http://127.0.0.1:8080/v1', 'local-model');
+case AiOpenAi.Complete(ClientValue, [AiOpenAi.ChatMessage.User('Hello')], AiOpenAi.ChatOptions.Default()) of
+  when Ok(Content):
+    Console.WriteLn(Content);
+  when Error(Message):
+    panic(Message);
+end case;
 ```
 
 `Complete` posts JSON to `<BaseUrl>/chat/completions` with `stream: false`. When `ApiKey` is `Some(nonEmpty)`, it sends an `Authorization: Bearer` header. Successful responses must contain text at `choices[0].message.content`. Non-2xx responses and malformed response shapes return `Error(message)`.

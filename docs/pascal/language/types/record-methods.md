@@ -12,15 +12,14 @@ Record functions and procedures declared in a unit are private by default.
 `public` is written directly before each exported routine, before an optional
 `static`. FPAS has no visibility sections and no explicit `private` keyword.
 
-```pascal
-type
-  Counter = record
+```text
+type Counter = record
     Value: integer;
 
     function ReadValue(Self: Counter): integer;
     public static function Create(): Counter;
     public function Current(Self: Counter): integer;
-  end;
+  end record;
 ```
 
 The declaring unit may call `ReadValue`; importing units cannot. `Create` and
@@ -37,36 +36,38 @@ inside an instance method. Callers use value dot notation; `Self` is passed
 implicitly.
 
 ```pascal
-type
-  Point = record
-    X: real;
-    Y: real;
+uses Std.Console as Console;
+uses Std.Conv as Conv;
+uses Std.Math as Math;
 
-    function DistanceTo(Self: Point; Other: Point): real;
-    begin
-      var DX: real := Other.X - Self.X;
-      var DY: real := Other.Y - Self.Y;
-      return Sqrt(DX * DX + DY * DY)
-    end;
+type Point = record
+  X: real;
+  Y: real;
 
-    procedure Print(Self: Point);
-    begin
-      WriteLn('(' + RealToStr(Self.X) + ', ' + RealToStr(Self.Y) + ')')
-    end;
-  end;
+  function DistanceTo(Self: Point; Other: Point): real;
+  begin
+    var DX: real := Other.X - Self.X;
+    var DY: real := Other.Y - Self.Y;
+    return Math.Sqrt(DX * DX + DY * DY);
+  end function;
+
+  procedure Print(Self: Point);
+  begin
+    Console.WriteLn(((('(' + Conv.RealToStr(Self.X)) + ', ') + Conv.RealToStr(Self.Y)) + ')');
+  end procedure;
+end record;
 ```
 
 Calling instance methods:
 
 ```pascal
-var
-  A: Point := record X := 0.0; Y := 0.0; end;
-  B: Point := record X := 3.0; Y := 4.0; end;
-  Dist: real := A.DistanceTo(B);  // Self = A, Other = B
+var A: Point := record X := 0.0; Y := 0.0; end record;
+  var B: Point := record X := 3.0; Y := 4.0; end record;
+  var Dist: real := A.DistanceTo(B);  // Self = A, Other = B
 
 begin
-  A.Print()  // Self = A
-end.
+  A.Print();  // Self = A
+end;
 ```
 
 Returned record values can keep calling instance methods (and reading fields)
@@ -74,6 +75,7 @@ without intermediate variables:
 
 ```pascal
 var Next: Point := BuildOrigin().Offset(1.0, 2.0).Normalize();
+
 ```
 
 See [Expression postfix chaining](../functions/postfix-chaining.md).
@@ -84,22 +86,27 @@ Reading an instance method without calling it produces a callable value with the
 receiver bound. The resulting type omits the implicit `Self` parameter:
 
 ```pascal
-type
-  Counter = record
-    Base: integer;
+program Example;
 
-    function Add(Self: Counter; Value: integer): integer;
-    begin
-      return Self.Base + Value
-    end;
-  end;
+uses Std.Console as Console;
 
-var C: Counter := record Base := 10; end;
+type Counter = record
+  Base: integer;
+
+  function Add(Self: Counter; Value: integer): integer;
+  begin
+    return Self.Base + Value;
+  end function;
+end record;
+
+var C: Counter := record
+  Base := 10;
+end record;
 var AddTen: function(Value: integer): integer := C.Add;
 
 begin
-  WriteLn(AddTen(5))  // 15 — Counter.Add(C, 5)
-end.
+  Console.WriteLn(AddTen(5)); // 15 — Counter.Add(C, 5)
+end program;
 ```
 
 Rules:
@@ -124,44 +131,79 @@ body. Static routines have no implicit receiver and must not declare a `Self`
 parameter. They are called through the type name:
 
 ```pascal
-type
-  Point = record
-    X: integer;
-    Y: integer;
+uses Std.Console as Console;
+uses Std.Conv as Conv;
 
-    static function Create(X: integer; Y: integer): Point;
-    begin
-      return record
-        X := X;
-        Y := Y;
-      end
-    end;
+type Point = record
+  X: integer;
+  Y: integer;
 
-    static function Origin(): Point;
-    begin
-      return Point.Create(0, 0)
-    end;
+  static function Create(X: integer; Y: integer): Point;
+  begin
+    return record
+      X := X;
+      Y := Y;
+    end record;
+  end function;
 
-    static procedure Print(Value: Point);
-    begin
-      WriteLn('(' + IntToStr(Value.X) + ', ' + IntToStr(Value.Y) + ')')
-    end;
+  static function Origin(): Point;
+  begin
+    return Point.Create(0, 0);
+  end function;
 
-    function Sum(Self: Point): integer;
-    begin
-      return Self.X + Self.Y
-    end;
-  end;
+  static procedure Print(Value: Point);
+  begin
+    Console.WriteLn(((('(' + Conv.IntToStr(Value.X)) + ', ') + Conv.IntToStr(Value.Y)) + ')');
+  end procedure;
+
+  function Sum(Self: Point): integer;
+  begin
+    return Self.X + Self.Y;
+  end function;
+end record;
 ```
 
 ```pascal
-var
-  P: Point := Point.Create(3, 4);
-  O: Point := Point.Origin();
+program Example;
+
+uses Std.Console as Console;
+uses Std.Conv as Conv;
+
+type Point = record
+  X: integer;
+  Y: integer;
+
+  static function Create(X: integer; Y: integer): Point;
+  begin
+    return record
+      X := X;
+      Y := Y;
+    end record;
+  end function;
+
+  static function Origin(): Point;
+  begin
+    return Point.Create(0, 0);
+  end function;
+
+  static procedure Print(Value: Point);
+  begin
+    Console.WriteLn(((('(' + Conv.IntToStr(Value.X)) + ', ') + Conv.IntToStr(Value.Y)) + ')');
+  end procedure;
+
+  function Sum(Self: Point): integer;
+  begin
+    return Self.X + Self.Y;
+  end function;
+end record;
+
+var P: Point := Point.Create(3, 4);
+var O: Point := Point.Origin();
+
 begin
   Point.Print(P);
-  WriteLn(P.Sum())  // 7
-end.
+  Console.WriteLn(P.Sum()); // 7
+end program;
 ```
 
 Rules:
@@ -181,7 +223,7 @@ Rules:
 Construction helpers often use distinct names such as `Create` and `From…`
 instead of overloads:
 
-```pascal
+```text
 TuiRect.Create(X, Y, Width, Height)
 TuiRect.FromEdges(Left, Top, Right, Bottom)
 ```
@@ -190,6 +232,7 @@ Copying a record does not need a static function; records have value semantics:
 
 ```pascal
 var Copy: Point := OtherPoint;
+
 ```
 
 ## Free-standing functions
@@ -197,10 +240,12 @@ var Copy: Point := OtherPoint;
 Free-standing functions work equally well for operations on records:
 
 ```pascal
+uses Std.Conv as Conv;
+
 function PointToString(P: Point): string;
 begin
-  return '(' + RealToStr(P.X) + ', ' + RealToStr(P.Y) + ')'
-end;
+  return ((('(' + Conv.RealToStr(P.X)) + ', ') + Conv.RealToStr(P.Y)) + ')';
+end function;
 ```
 
 Method-level type parameters are documented in [Generics](generics.md#generic-record-methods).

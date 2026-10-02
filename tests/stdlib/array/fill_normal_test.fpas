@@ -1,10 +1,11 @@
 program T;
 
-uses Std.Console, Std.Arrays;
+uses Std.Console as Console;
+uses Std.Arrays as Arrays;
 
 begin
-  var A: array of integer := Fill(7, 3);
-  WriteLn(Length(A));
-  WriteLn(A[0]);
-  WriteLn(A[2])
-end.
+  var A: array of integer := Arrays.Fill(7, 3);
+  Console.WriteLn(Arrays.Length(A));
+  Console.WriteLn(A[0]);
+  Console.WriteLn(A[2]);
+end program;

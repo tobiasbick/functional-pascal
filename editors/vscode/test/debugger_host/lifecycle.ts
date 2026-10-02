@@ -37,30 +37,30 @@ export async function verifyDebuggerLifecycle(
   const sourceLines = [
     "program DebuggerHost;",
     "",
-    "uses Std.Console;",
+    " uses Std.Console as Console;",
     "",
-    "type",
-    "  Point = record",
+    "",
+    "  type Point = record",
     "    X: integer;",
     "    Y: integer;",
-    "  end;",
+    "  end record;",
     "",
     "function Factorial(Value: integer): integer;",
     "begin",
     "  if Value <= 1 then",
-    "    return 1;",
-    "  return Value * Factorial(Value - 1)",
-    "end;",
+    "    return 1; end if;",
+    "  return Value * Factorial(Value - 1);",
+    "end function;",
     "",
     "begin",
     "  var Origin: Point := record",
     "    X := 3;",
     "    Y := 4;",
-    "  end;",
+    "  end record;",
     "  mutable var Computed: integer := Factorial(4);",
     "  Computed := Computed + Origin.X;",
-    "  WriteLn(Computed)",
-    "end.",
+    "  Console.WriteLn(Computed);",
+    "end program;",
     ""
   ];
   const sourcePath = await writeSource(workspaceRoot, "lifecycle", sourceLines);
@@ -71,7 +71,7 @@ export async function verifyDebuggerLifecycle(
 
   try {
     const breakpointLine = sourceLines.indexOf(
-      "  return Value * Factorial(Value - 1)"
+      "  return Value * Factorial(Value - 1);"
     );
     assert.ok(breakpointLine >= 0, "breakpoint source line exists");
     const editor = await vscode.window.showTextDocument(

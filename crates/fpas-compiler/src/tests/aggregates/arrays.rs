@@ -10,10 +10,10 @@ begin
   var Original: dict of string to integer := Values;
   Values['a'] := 9;
   Values['b'] := Values['a'] + 1;
-  if Original['a'] <> 1 then panic('alias changed');
-  if 'b' in Original then panic('alias gained key');
-  if Values['b'] <> 10 then panic('insert failed')
-end.
+  if Original['a'] <> 1 then panic('alias changed'); end if;
+  if 'b' in Original then panic('alias gained key'); end if;
+  if Values['b'] <> 10 then panic('insert failed'); end if;
+end program;
 "#,
     );
 }
@@ -31,39 +31,38 @@ begin
   begin
     Order := Order * 10 + 2;
     Values := [7, 8];
-    return 0
-  end;
+    return 0;
+  end function;
   var Replacement: function(): integer := function(): integer
   begin
     Order := Order * 10 + 1;
-    return 9
-  end;
+    return 9;
+  end function;
   Values[Index()] := Replacement();
-  if Order <> 12 then panic('evaluation order');
-  if (Values[0] <> 9) or (Values[1] <> 2) then panic('root snapshot');
+  if Order <> 12 then panic('evaluation order'); end if;
+  if (Values[0] <> 9) or (Values[1] <> 2) then panic('root snapshot'); end if;
   Values[1] := 4;
-  if Values[1] <> 4 then panic('captured direct index')
-end;
+  if Values[1] <> 4 then panic('captured direct index'); end if;
+end procedure;
 begin
-  Check()
-end.
+  Check();
+end program;
 "#,
     );
 }
 
 #[test]
 fn array_push_uses_direct_opcode_and_preserves_value_aliases() {
-    let source = "\
-program RegisterArrayPush;
-uses Std.Arrays;
+    let source = r#"program RegisterArrayPush;
+uses Std.Arrays as Arrays;
 begin
   mutable var A: array of integer := [1];
   var Original: array of integer := A;
-  Push(A, 2);
-  if Length(Original) <> 1 then panic('array alias changed');
-  if Length(A) <> 2 then panic('array push length mismatch');
-  if A[1] <> 2 then panic('array push value mismatch')
-end.";
+  Arrays.Push(A, 2);
+  if Arrays.Length(Original) <> 1 then panic('array alias changed'); end if;
+  if Arrays.Length(A) <> 2 then panic('array push length mismatch'); end if;
+  if A[1] <> 2 then panic('array push value mismatch'); end if;
+end program;"#;
     assert_succeeds(source);
 
     let program = super::parse_ok(source);
@@ -81,26 +80,26 @@ end.";
 fn array_pop_uses_direct_opcode_and_preserves_value_aliases() {
     let source = r#"
 program RegisterArrayPop;
-uses Std.Arrays;
-mutable var Global: array of integer := [4, 5];
+uses Std.Arrays as Arrays;
+  mutable var Global: array of integer := [4, 5];
 begin
   mutable var A: array of integer := [1, 2];
   var Original: array of integer := A;
-  if Pop(A) <> 2 then panic('last value');
-  if Length(Original) <> 2 then panic('alias length');
-  if Original[1] <> 2 then panic('alias value');
-  if Pop(A) <> 1 then panic('first value');
-  if Length(A) <> 0 then panic('empty length');
-  if Pop(Global) <> 5 then panic('global value');
-  if Length(Global) <> 1 then panic('global length');
+  if Arrays.Pop(A) <> 2 then panic('last value'); end if;
+  if Arrays.Length(Original) <> 2 then panic('alias length'); end if;
+  if Original[1] <> 2 then panic('alias value'); end if;
+  if Arrays.Pop(A) <> 1 then panic('first value'); end if;
+  if Arrays.Length(A) <> 0 then panic('empty length'); end if;
+  if Arrays.Pop(Global) <> 5 then panic('global value'); end if;
+  if Arrays.Length(Global) <> 1 then panic('global length'); end if;
   mutable var Captured: array of integer := [7, 8];
   var Take: function(): integer := function(): integer
   begin
-    return Pop(Captured)
-  end;
-  if Take() <> 8 then panic('capture value');
-  if Length(Captured) <> 1 then panic('capture length')
-end."#;
+    return Arrays.Pop(Captured);
+  end function;
+  if Take() <> 8 then panic('capture value'); end if;
+  if Arrays.Length(Captured) <> 1 then panic('capture length'); end if;
+end program;"#;
     assert_succeeds(source);
     let executable = crate::compile(&super::super::parse_ok(source)).expect("compile");
     assert!(
@@ -120,9 +119,9 @@ begin
   mutable var Values: array of integer := [1, 2];
   var Original: array of integer := Values;
   Values[1] := 9;
-  if Original[1] <> 2 then panic('array alias changed');
-  if Values[1] <> 9 then panic('array value mismatch')
-end.
+  if Original[1] <> 2 then panic('array alias changed'); end if;
+  if Values[1] <> 9 then panic('array value mismatch'); end if;
+end program;
 "#;
     assert_succeeds(source);
 

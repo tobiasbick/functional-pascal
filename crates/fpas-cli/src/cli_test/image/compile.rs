@@ -89,7 +89,7 @@ mod tests {
         let root = std::env::temp_dir().join(format!("fpas-image-single-{}", std::process::id()));
         std::fs::create_dir_all(&root).expect("fixture directory");
         let path = root.join("one_test.fpas");
-        std::fs::write(&path, "program One; begin end.").expect("fixture source");
+        std::fs::write(&path, r#"program One; begin null; end program;"#).expect("fixture source");
         let batch = ImageBatch::new(
             vec![ImageCandidate {
                 prepared_index: 0,

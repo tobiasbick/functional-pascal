@@ -1,14 +1,16 @@
 program T;
 
-uses Std.Console, Std.Results, Std.Conv;
+uses Std.Console as Console;
+uses Std.Results as Results;
+uses Std.Conv as Conv;
 
 function ToStr(V: integer): string;
 begin
-  return IntToStr(V)
-end;
+  return Conv.IntToStr(V);
+end function;
 
 begin
   var R: result of integer, string := Ok(5);
-  var M: result of string, string := Std.Results.Map(R, ToStr);
-  WriteLn(Unwrap(M))
-end.
+  var M: result of string, string := Results.Map(R, ToStr);
+  Console.WriteLn(Results.Unwrap(M));
+end program;

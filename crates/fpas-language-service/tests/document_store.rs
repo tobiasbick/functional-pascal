@@ -123,7 +123,13 @@ fn line_index_is_bound_to_its_source_layout_and_roundtrips_utf8_boundaries() {
 #[test]
 fn open_apply_close_and_reopen_enforce_versions_and_disk_fallback() {
     let temp = TempDirectory::new("document-versions");
-    let path = temp.write("source.fpas", "program Disk;\nbegin\nend.\n");
+    let path = temp.write(
+        "source.fpas",
+        r#"program Disk;
+begin null;
+end program;
+"#,
+    );
     let mut store = DocumentStore::new();
 
     let disk = store.snapshot(&path).expect("disk snapshot");
@@ -132,17 +138,34 @@ fn open_apply_close_and_reopen_enforce_versions_and_disk_fallback() {
     assert!(matches!(disk.version(), SourceVersion::Disk(_)));
 
     let opened = store
-        .open_document(&path, 7, "program Open;\nbegin\nend.\n")
+        .open_document(
+            &path,
+            7,
+            r#"program Open;
+begin null;
+end program;
+"#,
+        )
         .expect("open snapshot");
     assert_eq!(opened.version(), SourceVersion::Editor(7));
     assert!(store.is_open(&path));
     assert_eq!(
         store.snapshot(&path).expect("overlay snapshot").source(),
-        "program Open;\nbegin\nend.\n"
+        r#"program Open;
+begin null;
+end program;
+"#
     );
 
     let stale = store
-        .apply_full_text(&path, 7, "program Stale;\nbegin\nend.\n")
+        .apply_full_text(
+            &path,
+            7,
+            r#"program Stale;
+begin null;
+end program;
+"#,
+        )
         .expect_err("same version must be rejected");
     assert!(matches!(
         stale,
@@ -154,7 +177,14 @@ fn open_apply_close_and_reopen_enforce_versions_and_disk_fallback() {
     ));
 
     let changed = store
-        .apply_full_text(&path, 8, "program Changed;\nbegin\nend.\n")
+        .apply_full_text(
+            &path,
+            8,
+            r#"program Changed;
+begin null;
+end program;
+"#,
+        )
         .expect("newer version");
     assert!(!Arc::ptr_eq(&opened, &changed));
     store.close_document(&path).expect("open snapshot removed");
@@ -163,16 +193,35 @@ fn open_apply_close_and_reopen_enforce_versions_and_disk_fallback() {
         disk.source()
     );
     let reopened = store
-        .open_document(&path, 9, "program Reopened;\nbegin\nend.\n")
+        .open_document(
+            &path,
+            9,
+            r#"program Reopened;
+begin null;
+end program;
+"#,
+        )
         .expect("newer reopened version");
     assert_eq!(reopened.version(), SourceVersion::Editor(9));
-    assert_eq!(reopened.source(), "program Reopened;\nbegin\nend.\n");
+    assert_eq!(
+        reopened.source(),
+        r#"program Reopened;
+begin null;
+end program;
+"#
+    );
 }
 
 #[test]
 fn deleted_disk_file_returns_error_and_recreated_file_gets_new_revision() {
     let temp = TempDirectory::new("document-delete");
-    let path = temp.write("source.fpas", "program First;\nbegin\nend.\n");
+    let path = temp.write(
+        "source.fpas",
+        r#"program First;
+begin null;
+end program;
+"#,
+    );
     let mut store = DocumentStore::new();
     let first = store.snapshot(&path).expect("first disk snapshot");
 
@@ -180,10 +229,23 @@ fn deleted_disk_file_returns_error_and_recreated_file_gets_new_revision() {
     let missing = store.snapshot(&path).expect_err("deleted source must fail");
     assert!(matches!(missing, LanguageServiceError::SourceRead { .. }));
 
-    std::fs::write(&path, "program Second;\nbegin\nend.\n").expect("source recreated");
+    std::fs::write(
+        &path,
+        r#"program Second;
+begin null;
+end program;
+"#,
+    )
+    .expect("source recreated");
     let second = store.snapshot(&path).expect("recreated disk snapshot");
     assert_ne!(first.version(), second.version());
-    assert_eq!(second.source(), "program Second;\nbegin\nend.\n");
+    assert_eq!(
+        second.source(),
+        r#"program Second;
+begin null;
+end program;
+"#
+    );
 }
 
 #[test]
@@ -205,13 +267,23 @@ fn empty_open_document_produces_a_recoverable_snapshot() {
 fn newly_saved_file_keeps_its_existing_editor_overlay() {
     let temp = TempDirectory::new("document-first-save");
     let path = temp.join("new.fpas");
-    let overlay = "program Unsaved;\nbegin\nend.\n";
+    let overlay = r#"program Unsaved;
+begin null;
+end program;
+"#;
     let mut store = DocumentStore::new();
     store
         .open_document(&path, 1, overlay)
         .expect("new unsaved buffer");
 
-    std::fs::write(&path, "program Disk;\nbegin\nend.\n").expect("first disk save");
+    std::fs::write(
+        &path,
+        r#"program Disk;
+begin null;
+end program;
+"#,
+    )
+    .expect("first disk save");
 
     assert_eq!(
         store

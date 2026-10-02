@@ -1,142 +1,151 @@
 unit Notes.Format;
 
-uses
-  Notes.Model, Std.Arrays, Std.Conv, Std.Dictionaries, Std.Options, Std.Results, Std.Str, Std.Toml;
+uses Notes.Model as Model;
+uses Std.Arrays as Arrays;
+uses Std.Conv as Conv;
+uses Std.Dictionaries as Dictionaries;
+uses Std.Options as Options;
+uses Std.Results as Results;
+uses Std.Str as Str;
+uses Std.Toml as Toml;
 
-const
-  NoteFormatVersion: integer := 1;
+const NoteFormatVersion: integer := 1;
 
 function MissingField(Name: string): string;
 begin
-  return ('Missing required note field `' + Name) + '`'
-end;
+  return ('Missing required note field `' + Name) + '`';
+end function;
 
-function FieldString(Fields: dict of string to TomlValue; Name: string): result of string, string;
+function FieldString(Fields: dict of string to Toml.TomlValue; Name: string): result of string, string;
 begin
-  case Std.Dictionaries.Get(Fields, Name) of
-    Some(Value):
-    begin
-      case Value of
-        TomlValue.String(Text):
-        begin
-          return Ok(Text)
-        end
-        else
-        begin
-          return Error(('Note field `' + Name) + '` must be a string')
-        end
-      end
-    end;
-    None:
-    begin
-      return Error(MissingField(Name))
-    end
-  end
-end;
+  case Dictionaries.Get(Fields, Name) of
+    when Some(Value):
+      begin
+        case Value of
+          when Toml.TomlValue.String(Text):
+            begin
+              return Ok(Text);
+            end;
+          else
+            begin
+              return Error(('Note field `' + Name) + '` must be a string');
+            end;
+        end case;
+      end;
+    when None:
+      begin
+        return Error(MissingField(Name));
+      end;
+  end case;
+end function;
 
-function FieldInteger(Fields: dict of string to TomlValue; Name: string): result of integer, string;
+function FieldInteger(Fields: dict of string to Toml.TomlValue; Name: string): result of integer, string;
 begin
-  case Std.Dictionaries.Get(Fields, Name) of
-    Some(Value):
-    begin
-      case Value of
-        TomlValue.Integer(Number):
-        begin
-          return Ok(Number)
-        end
-        else
-        begin
-          return Error(('Note field `' + Name) + '` must be an integer')
-        end
-      end
-    end;
-    None:
-    begin
-      return Error(MissingField(Name))
-    end
-  end
-end;
+  case Dictionaries.Get(Fields, Name) of
+    when Some(Value):
+      begin
+        case Value of
+          when Toml.TomlValue.Integer(Number):
+            begin
+              return Ok(Number);
+            end;
+          else
+            begin
+              return Error(('Note field `' + Name) + '` must be an integer');
+            end;
+        end case;
+      end;
+    when None:
+      begin
+        return Error(MissingField(Name));
+      end;
+  end case;
+end function;
 
-function FieldBoolean(Fields: dict of string to TomlValue; Name: string): result of boolean, string;
+function FieldBoolean(Fields: dict of string to Toml.TomlValue; Name: string): result of boolean, string;
 begin
-  case Std.Dictionaries.Get(Fields, Name) of
-    Some(Value):
-    begin
-      case Value of
-        TomlValue.Boolean(Flag):
-        begin
-          return Ok(Flag)
-        end
-        else
-        begin
-          return Error(('Note field `' + Name) + '` must be a boolean')
-        end
-      end
-    end;
-    None:
-    begin
-      return Error(MissingField(Name))
-    end
-  end
-end;
+  case Dictionaries.Get(Fields, Name) of
+    when Some(Value):
+      begin
+        case Value of
+          when Toml.TomlValue.Boolean(Flag):
+            begin
+              return Ok(Flag);
+            end;
+          else
+            begin
+              return Error(('Note field `' + Name) + '` must be a boolean');
+            end;
+        end case;
+      end;
+    when None:
+      begin
+        return Error(MissingField(Name));
+      end;
+  end case;
+end function;
 
-function FieldTags(Fields: dict of string to TomlValue): result of array of string, string;
+function FieldTags(Fields: dict of string to Toml.TomlValue): result of array of string, string;
 begin
-  case Std.Dictionaries.Get(Fields, 'tags') of
-    Some(Value):
-    begin
-      case Value of
-        TomlValue.ArrayValue(Items):
-        begin
-          mutable var Tags: array of string := [];
-          for Index: integer := 0 to Std.Arrays.Length(Items) - 1 do
-          begin
-            case Items[Index] of
-              TomlValue.String(Tag):
-              begin
-                Std.Arrays.Push(Tags, Tag)
-              end
-              else
-              begin
-                return Error('Every note tag must be a string')
-              end
-            end
-          end;
+  case Dictionaries.Get(Fields, 'tags') of
+    when Some(Value):
+      begin
+        case Value of
+          when Toml.TomlValue.ArrayValue(Items):
+            begin
+              mutable var Tags: array of string := [];
+              for Index: integer := 0 to Arrays.Length(Items) - 1 do
+                begin
+                  case Items[Index] of
+                    when Toml.TomlValue.String(Tag):
+                      begin
+                        Arrays.Push(Tags, Tag);
+                      end;
+                    else
+                      begin
+                        return Error('Every note tag must be a string');
+                      end;
+                  end case;
+                end;
+              end for;
 
-          return Ok(Tags)
-        end
-        else
-        begin
-          return Error('Note field `tags` must be an array')
-        end
-      end
-    end;
-    None:
-    begin
-      return Error(MissingField('tags'))
-    end
-  end
-end;
+              return Ok(Tags);
+            end;
+          else
+            begin
+              return Error('Note field `tags` must be an array');
+            end;
+        end case;
+      end;
+    when None:
+      begin
+        return Error(MissingField('tags'));
+      end;
+  end case;
+end function;
 
-function ParseFields(Fields: dict of string to TomlValue; Body: string): result of Note, string;
+function ParseFields(Fields: dict of string to Toml.TomlValue; Body: string): result of Model.Note, string;
 begin
   var Version: integer := try FieldInteger(Fields, 'format');
   if Version <> NoteFormatVersion then
-  begin
-    return Error(('Unsupported note format version ' + IntToStr(Version)) + '; expected 1')
-  end;
+    begin
+      return Error(('Unsupported note format version ' + Conv.IntToStr(Version)) + '; expected 1');
+    end;
+  end if;
   var Id: string := try FieldString(Fields, 'id');
-  if Std.Str.Trim(Id) = '' then
-  begin
-    return Error('Note field `id` must not be empty')
-  end;
+  if Str.Trim(Id) = '' then
+    begin
+      return Error('Note field `id` must not be empty');
+    end;
+  end if;
   var Title: string := try FieldString(Fields, 'title');
   var Created: integer := try FieldInteger(Fields, 'created_ms');
   var Updated: integer := try FieldInteger(Fields, 'updated_ms');
   if (Created < 0) or (Updated < 0) then
-  begin
-    return Error('Note timestamps must not be negative')
-  end;
+    begin
+      return Error('Note timestamps must not be negative');
+    end;
+  end if;
 
   return Ok(record
     Id := Id;
@@ -148,61 +157,66 @@ begin
     Archived := try FieldBoolean(Fields, 'archived');
     Body := Body;
     Path := '';
-  end)
-end;
+  end record);
+end function;
 
 // Parses one UTF-8 `.note` document with TOML frontmatter.
-public function NoteParse(Text: string): result of Note, string;
+public function NoteParse(Text: string): result of Model.Note, string;
 begin
-  var NewLine: string := Std.Str.Chr(10);
-  var Source: string := Std.Str.Replace(Std.Str.Replace(Text, Std.Str.Chr(13) + NewLine, NewLine), Std.Str.Chr(13), NewLine);
+  var NewLine: string := Str.Chr(10);
+  var Source: string := Str.Replace(Str.Replace(Text, Str.Chr(13) + NewLine, NewLine), Str.Chr(13), NewLine);
   var Prefix: string := '+++' + NewLine;
-  if not Std.Str.StartsWith(Source, Prefix) then
-  begin
-    return Error('A .note file must start with a `+++` TOML header')
-  end;
-  var Remaining: string := Std.Str.Substring(Source, Std.Str.Length(Prefix), Std.Str.Length(Source) -
-                                                                             Std.Str.Length(Prefix));
-  var Boundary: string := (NewLine + '+++') + NewLine;
-  var BoundaryIndex: integer := Std.Str.IndexOf(Remaining, Boundary);
-  if BoundaryIndex < 0 then
-  begin
-    return Error('A .note file must close its TOML header with `+++`')
-  end;
-  var Header: string := Std.Str.Substring(Remaining, 0, BoundaryIndex);
-  var BodyStart: integer := BoundaryIndex + Std.Str.Length(Boundary);
-  var Body: string := Std.Str.Substring(Remaining, BodyStart, Std.Str.Length(Remaining) - BodyStart);
-  case Std.Toml.Parse(Header) of
-    Ok(Value):
+  if not Str.StartsWith(Source, Prefix) then
     begin
-      case Value of
-        TomlValue.Table(Fields):
-        begin
-          return ParseFields(Fields, Body)
-        end
-        else
-        begin
-          return Error('The .note metadata root must be a TOML table')
-        end
-      end
+      return Error('A .note file must start with a `+++` TOML header');
     end;
-    Error(Message):
+  end if;
+  var Remaining: string := Str.Substring(Source, Str.Length(Prefix), Str.Length(Source) -
+                                                                     Str.Length(Prefix));
+  var Boundary: string := (NewLine + '+++') + NewLine;
+  var BoundaryIndex: integer := Str.IndexOf(Remaining, Boundary);
+  if BoundaryIndex < 0 then
     begin
-      return Error('Invalid .note TOML header: ' + Message)
-    end
-  end
-end;
+      return Error('A .note file must close its TOML header with `+++`');
+    end;
+  end if;
+  var Header: string := Str.Substring(Remaining, 0, BoundaryIndex);
+  var BodyStart: integer := BoundaryIndex + Str.Length(Boundary);
+  var Body: string := Str.Substring(Remaining, BodyStart, Str.Length(Remaining) - BodyStart);
+  case Toml.Parse(Header) of
+    when Ok(Value):
+      begin
+        case Value of
+          when Toml.TomlValue.Table(Fields):
+            begin
+              return ParseFields(Fields, Body);
+            end;
+          else
+            begin
+              return Error('The .note metadata root must be a TOML table');
+            end;
+        end case;
+      end;
+    when Error(Message):
+      begin
+        return Error('Invalid .note TOML header: ' + Message);
+      end;
+  end case;
+end function;
 
 // Encodes one note as deterministic TOML frontmatter and Markdown body text.
-public function NoteStringify(NoteValue: Note): string;
+public function NoteStringify(NoteValue: Model.Note): string;
 begin
-  mutable var TagValues: array of TomlValue := [];
-  for Index: integer := 0 to Std.Arrays.Length(NoteValue.Tags) - 1 do
-  begin
-    Std.Arrays.Push(TagValues, TomlValue.String(NoteValue.Tags[Index]))
-  end;
-  var Header: TomlValue := TomlValue.Table(['format': TomlValue.Integer(NoteFormatVersion), 'id': TomlValue.String(NoteValue.Id), 'title': TomlValue.String(NoteValue.Title), 'created_ms': TomlValue.Integer(NoteValue.CreatedMillis), 'updated_ms': TomlValue.Integer(NoteValue.UpdatedMillis), 'tags': TomlValue.ArrayValue(TagValues), 'pinned': TomlValue.Boolean(NoteValue.Pinned), 'archived': TomlValue.Boolean(NoteValue.Archived)]);
-  var NewLine: string := Std.Str.Chr(10);
-  return ((((('+++' + NewLine) + Std.Str.TrimRight(Std.Toml.Stringify(Header))) + NewLine) + '+++') + NewLine) +
-         NoteValue.Body
-end;
+  mutable var TagValues: array of Toml.TomlValue := [];
+  for Index: integer := 0 to Arrays.Length(NoteValue.Tags) - 1 do
+    begin
+      Arrays.Push(TagValues, Toml.TomlValue.String(NoteValue.Tags[Index]));
+    end;
+  end for;
+  var Header: Toml.TomlValue := Toml.TomlValue.Table(['format': Toml.TomlValue.Integer(NoteFormatVersion), 'id': Toml.TomlValue.String(NoteValue.Id), 'title': Toml.TomlValue.String(NoteValue.Title), 'created_ms': Toml.TomlValue.Integer(NoteValue.CreatedMillis), 'updated_ms': Toml.TomlValue.Integer(NoteValue.UpdatedMillis), 'tags': Toml.TomlValue.ArrayValue(TagValues), 'pinned': Toml.TomlValue.Boolean(NoteValue.Pinned), 'archived': Toml.TomlValue.Boolean(NoteValue.Archived)]);
+  var NewLine: string := Str.Chr(10);
+  return ((((('+++' + NewLine) + Str.TrimRight(Toml.Stringify(Header))) + NewLine) + '+++') + NewLine) +
+         NoteValue.Body;
+end function;
+
+end unit;

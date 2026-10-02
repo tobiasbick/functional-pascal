@@ -15,7 +15,9 @@ fn parse_tokens_compilation_unit_accepts_empty_stream_without_panicking() {
 
 #[test]
 fn parse_tokens_compilation_unit_parses_lexed_unit() {
-    let source = "unit Demo; function Answer(): integer; begin return 42 end;";
+    let source = r#"unit Demo; function Answer(): integer; begin return 42; end function;
+end unit;
+"#;
     let (tokens, _, lex_errors) = lex_with_source_id(source, 7);
     assert!(lex_errors.is_empty());
 
@@ -31,7 +33,7 @@ fn parse_tokens_compilation_unit_parses_lexed_unit() {
 
 #[test]
 fn parse_tokens_compilation_unit_matches_source_api() {
-    let source = "program T; begin end.";
+    let source = r#"program T; begin null; end program;"#;
     let (tokens, _) = lex(source);
     let (unit_from_tokens, token_errors) = parse_tokens_compilation_unit(tokens);
     let (unit_from_source, source_errors) = parse_compilation_unit_with_errors(source);

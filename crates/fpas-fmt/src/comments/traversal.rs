@@ -90,6 +90,7 @@ fn collect_program(program: &Program, source: &str, begins: &[usize], out: &mut 
 fn collect_unit(unit: &Unit, source: &str, begins: &[usize], out: &mut CollectedAnchors) {
     out.leading.push(unit.span.offset);
     out.declarations.insert(unit.span.offset);
+    push_span(unit.span, out);
     for name in &unit.uses {
         out.leading.push(name.span.offset);
         push_uses_span(name.span, source, out);
@@ -241,7 +242,7 @@ fn collect_nested_stmt(stmt: &Stmt, begins: &[usize], out: &mut CollectedAnchors
 
 fn collect_branch_stmt(stmt: &Stmt, begins: &[usize], out: &mut CollectedAnchors) {
     out.leading.push(stmt_start(stmt));
-    if !matches!(stmt, Stmt::Block(..)) {
+    if !matches!(stmt, Stmt::Block(..) | Stmt::StatementList(..)) {
         out.emission.push(EmissionAnchor {
             start: stmt_start(stmt),
             end: stmt_end(stmt),
@@ -252,7 +253,8 @@ fn collect_branch_stmt(stmt: &Stmt, begins: &[usize], out: &mut CollectedAnchors
 
 fn collect_stmt_contents(stmt: &Stmt, begins: &[usize], out: &mut CollectedAnchors) {
     match stmt {
-        Stmt::Block(stmts, _) => collect_stmts(stmts, begins, out),
+        Stmt::Block(stmts, _) | Stmt::StatementList(stmts, _) => collect_stmts(stmts, begins, out),
+        Stmt::Null(_) => {}
         Stmt::Var(var) | Stmt::MutableVar(var) => collect_expr(&var.value, begins, out),
         Stmt::Assign { target, value, .. } => {
             collect_designator(target, begins, out);
@@ -267,11 +269,16 @@ fn collect_stmt_contents(stmt: &Stmt, begins: &[usize], out: &mut CollectedAncho
         Stmt::If {
             condition,
             then_branch,
+            elsif_branches,
             else_branch,
             ..
         } => {
             collect_expr(condition, begins, out);
             collect_branch_stmt(then_branch, begins, out);
+            for (condition, body) in elsif_branches {
+                collect_expr(condition, begins, out);
+                collect_branch_stmt(body, begins, out);
+            }
             if let Some(branch) = else_branch {
                 collect_branch_stmt(branch, begins, out);
             }

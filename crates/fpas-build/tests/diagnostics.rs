@@ -45,7 +45,7 @@ impl Drop for Fixture {
 
 #[test]
 fn root_build_and_check_preserve_multiple_compiler_diagnostics() {
-    let source = "program Demo; begin var A: integer := 'x'; var B: boolean := 42 end.";
+    let source = r#"program Demo; begin var A: integer := 'x'; var B: boolean := 42; end program;"#;
     let (program, parse_errors) = fpas_parser::parse(source);
     assert!(parse_errors.is_empty());
     let expected = fpas_compiler::compile_program_object_with_support(&program, &[], &[])
@@ -88,7 +88,9 @@ fn imported_unit_diagnostics_keep_the_unit_path_and_nonzero_source_id() {
     let fixture = Fixture::new();
     let unit = fixture.write(
         "broken.fpas",
-        "unit Broken; public const Number: integer := 'bad';",
+        r#"unit Broken;   public const Number: integer := 'bad';
+end unit;
+"#,
     );
     let graph = build_unit_graph_for_program(
         &fixture.0.join("main.fpas"),
@@ -173,7 +175,7 @@ fn artifact_parser_retains_every_diagnostic_and_expectation_detail() {
 #[test]
 fn artifact_compiler_errors_keep_the_supplied_main_path() {
     let fixture = Fixture::new();
-    let source = "program Demo; begin var X: integer := 'bad' end.";
+    let source = r#"program Demo; begin var X: integer := 'bad'; end program;"#;
     let main = fixture.write("main.fpas", source);
     let graph =
         build_unit_graph_for_program(&main, &[], &ProjectLinkMeta::default()).expect("graph");
@@ -230,7 +232,12 @@ fn project_read_errors_keep_their_path_without_a_source_span_in_build_errors() {
 #[test]
 fn snapshot_parser_records_survive_conversion_to_build_errors() {
     let fixture = Fixture::new();
-    let unit = fixture.write("demo.fpas", "unit Demo;");
+    let unit = fixture.write(
+        "demo.fpas",
+        r#"unit Demo;
+end unit;
+"#,
+    );
     let graph = build_unit_graph_for_program(
         &fixture.0.join("main.fpas"),
         std::slice::from_ref(&unit),

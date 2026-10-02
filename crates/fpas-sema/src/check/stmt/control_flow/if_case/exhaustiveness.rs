@@ -133,7 +133,9 @@ impl Checker {
                 DesignatorPart::Index(_, _) => None,
             })
             .collect::<Option<Vec<_>>>()?;
-        let symbol = self.scopes.lookup(&parts.join("."))?;
+        let symbol = self
+            .scopes
+            .lookup(&self.qualified_import_name(&parts.join(".")))?;
         if !matches!(
             symbol.kind,
             SymbolKind::EnumMember | SymbolKind::EnumVariantConstructor

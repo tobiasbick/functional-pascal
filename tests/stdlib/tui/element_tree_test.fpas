@@ -1,66 +1,68 @@
 program ElementTreeTest;
 
-uses Std.Arrays, Std.Test, Std.Tui;
+uses Std.Arrays as Arrays;
+uses Std.Test as Test;
+uses Std.Tui as Tui;
 
-function ViewTree(Value: integer): TuiElement;
+function ViewTree(Value: integer): Tui.TuiElement;
 begin
-  return TuiElementBuilders.MakeDesktop(None, [
-                                                TuiElementBuilders.MakePanel('Dashboard', [
-                                                                                            TuiElementBuilders.MakeColumnSpaced([
-                                                                                                                                  TuiElementBuilders.MakeRule('Metrics'),
-                                                                                                                                  TuiElementBuilders.MakeGauge('Load', 3, 4),
-                                                                                                                                  TuiElementBuilders.MakeCellGrid(TuiCellGrid.Create(2, 1, [
-                                                                                                                                                                                             TuiCell.Create('A', TuiStyleRole.Normal),
-                                                                                                                                                                                             TuiCell.Create('B', TuiStyleRole.Accent)
-                                                                                                                                                                                           ]))
-                                                                                                                                ], 1)
-                                                                                          ]),
-                                                TuiElementBuilders.MakeOverlay('Confirm', [TuiElementBuilders.MakeLabel('Continue?')])
-                                              ])
-end;
+  return Tui.TuiElementBuilders.MakeDesktop(None, [
+                                                    Tui.TuiElementBuilders.MakePanel('Dashboard', [
+                                                                                                    Tui.TuiElementBuilders.MakeColumnSpaced([
+                                                                                                                                              Tui.TuiElementBuilders.MakeRule('Metrics'),
+                                                                                                                                              Tui.TuiElementBuilders.MakeGauge('Load', 3, 4),
+                                                                                                                                              Tui.TuiElementBuilders.MakeCellGrid(Tui.TuiCellGrid.Create(2, 1, [
+                                                                                                                                                                                                                 Tui.TuiCell.Create('A', Tui.TuiStyleRole.Normal),
+                                                                                                                                                                                                                 Tui.TuiCell.Create('B', Tui.TuiStyleRole.Accent)
+                                                                                                                                                                                                               ]))
+                                                                                                                                            ], 1)
+                                                                                                  ]),
+                                                    Tui.TuiElementBuilders.MakeOverlay('Confirm', [Tui.TuiElementBuilders.MakeLabel('Continue?')])
+                                                  ]);
+end function;
 
-function UpdateTree(State: integer; Msg: TuiMsg; Cmd: TuiCmdOutput): integer;
+function UpdateTree(State: integer; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): integer;
 begin
-  Cmd.Set(TuiCmd.NoCommand);
-  return State
-end;
+  Cmd.Set(Tui.TuiCmd.NoCommand);
+  return State;
+end function;
 
 begin
-  var Tree: TuiElement := ViewTree(0);
+  var Tree: Tui.TuiElement := ViewTree(0);
   case Tree of
-    TuiElement.Desktop(Focused, DesktopChildren):
-    begin
-      AssertEquals(2, Std.Arrays.Length(DesktopChildren));
-      case DesktopChildren[0] of
-        TuiElement.Panel(Title, PanelChildren):
-        begin
-          AssertEquals('Dashboard', Title);
-          AssertEquals(1, Std.Arrays.Length(PanelChildren))
-        end
-        else
-        begin
-          panic('expected panel element')
-        end
-      end;
+    when Tui.TuiElement.Desktop(Focused, DesktopChildren):
+      begin
+        Test.AssertEquals(2, Arrays.Length(DesktopChildren));
+        case DesktopChildren[0] of
+          when Tui.TuiElement.Panel(Title, PanelChildren):
+            begin
+              Test.AssertEquals('Dashboard', Title);
+              Test.AssertEquals(1, Arrays.Length(PanelChildren));
+            end;
+          else
+            begin
+              panic('expected panel element');
+            end;
+        end case;
 
-      case DesktopChildren[1] of
-        TuiElement.Overlay(Title, OverlayChildren):
-        begin
-          AssertEquals('Confirm', Title);
-          AssertEquals(1, Std.Arrays.Length(OverlayChildren))
-        end
-        else
-        begin
-          panic('expected overlay element')
-        end
-      end
-    end
+        case DesktopChildren[1] of
+          when Tui.TuiElement.Overlay(Title, OverlayChildren):
+            begin
+              Test.AssertEquals('Confirm', Title);
+              Test.AssertEquals(1, Arrays.Length(OverlayChildren));
+            end;
+          else
+            begin
+              panic('expected overlay element');
+            end;
+        end case;
+      end;
     else
-    begin
-      panic('expected desktop element')
-    end
-  end;
-  mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(30, 10));
-  AssertEquals(0, App.RunIterations(0, UpdateTree, ViewTree, 0, 0));
-  App.Close()
-end.
+      begin
+        panic('expected desktop element');
+      end;
+  end case;
+  mutable var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(30, 10));
+  Test.AssertEquals(0, App.RunIterations(0, UpdateTree, ViewTree, 0, 0));
+  App.Close();
+end program;

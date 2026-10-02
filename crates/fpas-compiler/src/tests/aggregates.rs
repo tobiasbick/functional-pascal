@@ -9,31 +9,31 @@ fn contextual_record_literals_expand_defaults_in_all_lowering_positions() {
     assert_succeeds(
         r#"
 program ContextualRecords;
-type Point = record
+ type Point = record
   X: integer := 0;
   Y: integer := 0;
-end;
-const OriginPoint: Point := record X := 0; end;
+end record;
+ const OriginPoint: Point := record X := 0; end record;
 function Origin(): Point;
 begin
-  return record X := 4; end
-end;
+  return record X := 4; end record;
+end function;
 procedure Draw(P: Point);
 begin
-  if (P.X <> 0) or (P.Y <> 2) then panic('argument defaults')
-end;
+  if (P.X <> 0) or (P.Y <> 2) then panic('argument defaults'); end if;
+end procedure;
 begin
-  mutable var P: Point := record end;
-  P := record X := 1; end;
-  Draw(record Y := 2; end);
-  var Points: array of Point := [record X := 3; end];
+  mutable var P: Point := record end record;
+  P := record X := 1; end record;
+  Draw(record Y := 2; end record);
+  var Points: array of Point := [record X := 3; end record];
   var Returned: Point := Origin();
   if (P.X <> 1) or (P.Y <> 0) or
      (Points[0].X <> 3) or (Points[0].Y <> 0) or
      (Returned.X <> 4) or (Returned.Y <> 0) or
      (OriginPoint.X <> 0) or (OriginPoint.Y <> 0) then
-    panic('contextual record defaults')
-end.
+    panic('contextual record defaults'); end if;
+end program;
 "#,
     );
 }
@@ -41,9 +41,8 @@ end.
 #[test]
 fn globals_arrays_and_dictionaries_execute() {
     assert_succeeds(
-        "\
-program RegisterCollections;
-mutable var Total: integer := 1;
+        r#"program RegisterCollections;
+  mutable var Total: integer := 1;
 begin
   mutable var Values: array of integer := [2, 3, 4];
   Values[1] := 8;
@@ -51,31 +50,30 @@ begin
   Lookup['b'] := 7;
   Total := Total + Values[1] + Lookup['b'];
   if (Total <> 16) or not (8 in Values) or not ('b' in Lookup) then
-    panic('collection mismatch')
-end.",
+    panic('collection mismatch'); end if;
+end program;"#,
     );
 }
 
 #[test]
 fn records_defaults_updates_and_nested_cow_execute_on_register_path() {
     run_program(
-        "\
-program RegisterRecords;
-type
-  Point = record
+        r#"program RegisterRecords;
+
+  type Point = record
     X: integer;
     Y: integer := 2;
-  end;
+  end record;
 begin
-  var Original: Point := record X := 1; end;
-  var Updated: Point := Original with X := 9; end;
+  var Original: Point := record X := 1; end record;
+  var Updated: Point := Original with X := 9; end with;
   mutable var Items: array of Point := [Original, Updated];
   Items[0].Y := 7;
   if (Original.X <> 1) or (Original.Y <> 2) or (Updated.X <> 9) then
-    panic('record copy mismatch');
+    panic('record copy mismatch'); end if;
   if (Items[0].Y <> 7) or (Items[1].Y <> 2) then
-    panic('nested record mismatch')
-end.",
+    panic('nested record mismatch'); end if;
+end program;"#,
     )
     .expect("register record path must succeed");
 }
@@ -83,39 +81,37 @@ end.",
 #[test]
 fn result_option_and_data_enum_construction_execute() {
     assert_succeeds(
-        "\
-program RegisterVariants;
-type
-  Choice = enum
+        r#"program RegisterVariants;
+
+  type Choice = enum
     Number(Value: integer);
     Empty;
-  end;
+  end enum;
 begin
   var A: Result of integer, string := Ok(5);
   var B: Option of integer := Some(6);
   var C: Option of integer := None;
   var D: Choice := Choice.Number(7);
   if (A <> Ok(5)) or (B <> Some(6)) or (C <> None) then
-    panic('variant mismatch')
-end.",
+    panic('variant mismatch'); end if;
+end program;"#,
     );
 }
 
 #[test]
 fn aggregate_identifiers_remain_case_insensitive() {
     run_program(
-        "\
-program RegisterAggregateCase;
-type
-  Pair = record
+        r#"program RegisterAggregateCase;
+
+  type Pair = record
     Left: integer;
     Right: integer;
-  end;
+  end record;
 begin
-  mutable var VALUE: Pair := record Left := 1; Right := 2; end;
+  mutable var VALUE: Pair := record Left := 1; Right := 2; end record;
   value.lEfT := VALUE.right;
-  if Value.Left <> 2 then panic('case mismatch')
-end.",
+  if Value.Left <> 2 then panic('case mismatch'); end if;
+end program;"#,
     )
     .expect("register record names must be case-insensitive");
 }
@@ -123,212 +119,206 @@ end.",
 #[test]
 fn try_unwraps_and_returns_early_for_result_and_option() {
     assert_succeeds(
-        "\
-program RegisterTry;
+        r#"program RegisterTry;
 function ResultValue(Input: Result of integer, string): Result of integer, string;
 begin
   var Value: integer := try Input;
-  return Ok(Value + 1)
-end;
+  return Ok(Value + 1);
+end function;
 function OptionValue(Input: Option of integer): Option of integer;
 begin
   var Value: integer := try Input;
-  return Some(Value + 1)
-end;
+  return Some(Value + 1);
+end function;
 begin
-  if ResultValue(Ok(4)) <> Ok(5) then panic('result success');
-  if ResultValue(Error('bad')) <> Error('bad') then panic('result failure');
-  if OptionValue(Some(4)) <> Some(5) then panic('option success');
-  if OptionValue(None) <> None then panic('option failure')
-end.",
+  if ResultValue(Ok(4)) <> Ok(5) then panic('result success'); end if;
+  if ResultValue(Error('bad')) <> Error('bad') then panic('result failure'); end if;
+  if OptionValue(Some(4)) <> Some(5) then panic('option success'); end if;
+  if OptionValue(None) <> None then panic('option failure'); end if;
+end program;"#,
     );
 }
 
 #[test]
 fn record_fields_survive_try_control_flow() {
     assert_succeeds(
-        "\
-program RegisterRecordTry;
-type
-  Triple = record
+        r#"program RegisterRecordTry;
+
+  type Triple = record
     First: integer;
     Second: integer;
     Third: integer;
-  end;
+  end record;
 function ReadValue(Value: Result of integer, string): Result of integer, string;
 begin
-  return Value
-end;
+  return Value;
+end function;
 function Build(Second: Result of integer, string): Result of Triple, string;
 begin
   return Ok(record
     First := 1;
     Second := try ReadValue(Second);
     Third := try ReadValue(Ok(3));
-  end)
-end;
+  end record);
+end function;
 begin
   case Build(Ok(2)) of
-    Ok(Value):
+    when Ok(Value):
       if (Value.First <> 1) or (Value.Second <> 2) or (Value.Third <> 3) then
-        panic('record values');
-    Error(Message): panic('unexpected record error')
-  end;
+        panic('record values'); end if;
+    when Error(Message): panic('unexpected record error');
+  end case;
   if Build(Error('expected')) <> Error('expected') then
-    panic('record try propagation')
-end.",
+    panic('record try propagation'); end if;
+end program;"#,
     );
 }
 
 #[test]
 fn result_option_and_enum_patterns_bind_positional_fields() {
     assert_succeeds(
-        "\
-program RegisterPatterns;
-type
-  Shape = enum
+        r#"program RegisterPatterns;
+
+  type Shape = enum
     Point;
     Pair(Left: integer; Right: integer);
-  end;
+  end enum;
 begin
   mutable var Sum: integer := 0;
   var ResultValue: Result of integer, string := Ok(3);
   case ResultValue of
-    Ok(Value): Sum := Sum + Value;
-    Error(Message): Sum := 99
-  end;
+    when Ok(Value): Sum := Sum + Value;
+    when Error(Message): Sum := 99;
+  end case;
   var OptionValue: Option of integer := Some(4);
   case OptionValue of
-    Some(Value): Sum := Sum + Value;
-    None: Sum := 99
-  end;
+    when Some(Value): Sum := Sum + Value;
+    when None: Sum := 99;
+  end case;
   var ShapeValue: Shape := Shape.Pair(5, 6);
   case ShapeValue of
-    Shape.Point: Sum := 99;
-    Shape.Pair(A, B): Sum := Sum + A + B
-  end;
-  if Sum <> 18 then panic('pattern mismatch')
-end.",
+    when Shape.Point: Sum := 99;
+    when Shape.Pair(A, B): Sum := Sum + A + B;
+  end case;
+  if Sum <> 18 then panic('pattern mismatch'); end if;
+end program;"#,
     );
 }
 
 #[test]
 fn simple_enum_values_keep_backing_numbers_and_case_insensitivity() {
     assert_succeeds(
-        "\
-program RegisterSimpleEnum;
-type
-  State = enum
+        r#"program RegisterSimpleEnum;
+
+  type State = enum
     Ready = 4;
     Running;
     Done = 9;
-  end;
-  StateAlias = State;
+  end enum;
+  type StateAlias = State;
 begin
   var Value: State := state.rUnNiNg;
   var AliasValue: StateAlias := StateAlias.Done;
   mutable var Number: integer := 0;
   case Value of
-    State.Ready: Number := 4;
-    State.Running: Number := 5;
-    State.Done: Number := 9
-  end;
-  if Number <> 5 then panic('simple enum mismatch');
+    when State.Ready: Number := 4;
+    when State.Running: Number := 5;
+    when State.Done: Number := 9;
+  end case;
+  if Number <> 5 then panic('simple enum mismatch'); end if;
   case StateAlias.Running of
-    State.Ready: Number := 99;
-    State.Running: Number := Number + 1;
-    State.Done: Number := 99
-  end;
+    when State.Ready: Number := 99;
+    when State.Running: Number := Number + 1;
+    when State.Done: Number := 99;
+  end case;
   case AliasValue of
-    State.Ready: Number := 99;
-    State.Running: Number := 99;
-    State.Done: Number := Number + 1
-  end;
-  if Number <> 7 then panic('alias enum backing mismatch')
-end.",
+    when State.Ready: Number := 99;
+    when State.Running: Number := 99;
+    when State.Done: Number := Number + 1;
+  end case;
+  if Number <> 7 then panic('alias enum backing mismatch'); end if;
+end program;"#,
     );
 }
 
 #[test]
 fn record_methods_properties_and_events_execute() {
     assert_succeeds(
-        "\
-program RegisterMembers;
-mutable var LastValue: integer := 0;
-mutable var Handler: Option of procedure(Value: integer) := None;
+        r#"program RegisterMembers;
+  mutable var LastValue: integer := 0;
+  mutable var Handler: Option of procedure(Value: integer) := None;
 
-type
-  Counter = record
+
+  type Counter = record
     Value: integer;
     function Double(Self: Counter): integer;
     begin
-      return Self.Value * 2
-    end;
+      return Self.Value * 2;
+    end function;
     function ReadNumber(Self: Counter): integer;
     begin
-      return Self.Value
-    end;
+      return Self.Value;
+    end function;
     procedure WriteNumber(Self: Counter; Value: integer);
     begin
-      LastValue := Value
-    end;
+      LastValue := Value;
+    end procedure;
     property Number: integer read ReadNumber write WriteNumber;
-  end;
+  end record;
 
-  Button = record
+  type Button = record
     function ReadOnValue(Self: Button): Option of procedure(Value: integer);
     begin
-      return Handler
-    end;
+      return Handler;
+    end function;
     procedure WriteOnValue(Self: Button; Value: Option of procedure(Value: integer));
     begin
-      Handler := Value
-    end;
+      Handler := Value;
+    end procedure;
     event OnValue: procedure(Value: integer) read ReadOnValue write WriteOnValue;
-  end;
+  end record;
 
 procedure Remember(Value: integer);
 begin
-  LastValue := Value
-end;
+  LastValue := Value;
+end procedure;
 
 begin
-  var C: Counter := record Value := 6; end;
-  if C.Double() <> 12 then panic('method mismatch');
-  if C.Number <> 6 then panic('property read mismatch');
+  var C: Counter := record Value := 6; end record;
+  if C.Double() <> 12 then panic('method mismatch'); end if;
+  if C.Number <> 6 then panic('property read mismatch'); end if;
   C.Number := 9;
-  if LastValue <> 9 then panic('property write mismatch');
+  if LastValue <> 9 then panic('property write mismatch'); end if;
 
-  var B: Button := record end;
-  if Assigned(B.OnValue) then panic('unexpected handler');
+  var B: Button := record end record;
+  if Assigned(B.OnValue) then panic('unexpected handler'); end if;
   B.OnValue := Remember;
-  if not Assigned(B.OnValue) then panic('missing handler');
+  if not Assigned(B.OnValue) then panic('missing handler'); end if;
   B.OnValue(17);
-  if LastValue <> 17 then panic('event raise mismatch');
+  if LastValue <> 17 then panic('event raise mismatch'); end if;
   B.OnValue := (nil);
-  if Assigned(B.OnValue) then panic('handler was not cleared')
-end.",
+  if Assigned(B.OnValue) then panic('handler was not cleared'); end if;
+end program;"#,
     );
 }
 
 #[test]
 fn readable_record_properties_keep_exact_getter_metadata() {
     let program = parse_ok(
-        "\
-program RecordPropertyMetadata;
-type
-  Counter = record
+        r#"program RecordPropertyMetadata;
+
+  type Counter = record
     Value: integer;
     function ReadNumber(Self: Counter): integer;
     begin
-      return Self.Value
-    end;
+      return Self.Value;
+    end function;
     property Number: integer read ReadNumber;
-  end;
+  end record;
 begin
-  var C: Counter := record Value := 1; end;
-  if C.Number <> 1 then panic('property metadata fixture')
-end.",
+  var C: Counter := record Value := 1; end record;
+  if C.Number <> 1 then panic('property metadata fixture'); end if;
+end program;"#,
     );
     let executable = crate::compile(&program).expect("property metadata source should compile");
     let executable = executable.executable();
@@ -351,26 +341,24 @@ end.",
 #[test]
 fn string_indexing_and_membership_execute() {
     assert_succeeds(
-        "\
-program RegisterStringAggregateOps;
+        r#"program RegisterStringAggregateOps;
 begin
   var Text: string := 'Hällo';
-  if Text[1] <> 'ä' then panic('unicode string index mismatch');
-  if not ('äll' in Text) then panic('substring membership mismatch');
-  if not ('ä' in Text) then panic('character membership mismatch')
-end.",
+  if Text[1] <> 'ä' then panic('unicode string index mismatch'); end if;
+  if not ('äll' in Text) then panic('substring membership mismatch'); end if;
+  if not ('ä' in Text) then panic('character membership mismatch'); end if;
+end program;"#,
     );
 }
 
 #[test]
 fn anonymous_record_shapes_use_positional_fields() {
     assert_succeeds(
-        "\
-program RegisterAnonymousRecord;
+        r#"program RegisterAnonymousRecord;
 begin
-  if (record Left := 3; Right := 4; end).Left <> 3 then
-    panic('anonymous record mismatch')
-end.",
+  if (record Left := 3; Right := 4; end record).Left <> 3 then
+    panic('anonymous record mismatch'); end if;
+end program;"#,
     );
 }
 
@@ -379,23 +367,23 @@ fn inferred_and_contextual_records_preserve_initializer_order() {
     assert_succeeds(
         r#"
 program RecordInitializerOrder;
-type Pair = record
+ type Pair = record
   First: integer;
   Second: integer := 7;
-end;
-mutable var Calls: integer := 0;
+end record;
+  mutable var Calls: integer := 0;
 function Next(): integer;
 begin
   Calls := Calls + 1;
-  return Calls
-end;
+  return Calls;
+end function;
 begin
-  if (record First := Next(); Second := Next(); end).Second <> 2 then
-    panic('anonymous record initializer order');
-  var Typed: Pair := record First := Next(); end;
+  if (record First := Next(); Second := Next(); end record).Second <> 2 then
+    panic('anonymous record initializer order'); end if;
+  var Typed: Pair := record First := Next(); end record;
   if (Typed.First <> 3) or (Typed.Second <> 7) or (Calls <> 3) then
-    panic('record initializer order')
-end.
+    panic('record initializer order'); end if;
+end program;
 "#,
     );
 }
@@ -403,168 +391,163 @@ end.
 #[test]
 fn generic_routines_preserve_record_and_enum_values() {
     assert_succeeds(
-        "\
-program RegisterGenericAggregates;
-type
-  Point = record
+        r#"program RegisterGenericAggregates;
+
+  type Point = record
     X: integer;
-  end;
-  Choice = enum
+  end record;
+  type Choice = enum
     Number(Value: integer);
     Empty;
-  end;
+  end enum;
 function Identity<T>(Value: T): T;
 begin
-  return Value
-end;
+  return Value;
+end function;
 begin
-  var P: Point := Identity(record X := 8; end);
-  if P.X <> 8 then panic('generic record mismatch');
+  var P: Point := Identity(record X := 8; end record);
+  if P.X <> 8 then panic('generic record mismatch'); end if;
   var C: Choice := Identity(Choice.Number(9));
   case C of
-    Choice.Number(Value): if Value <> 9 then panic('generic enum payload mismatch');
-    Choice.Empty: panic('generic enum variant mismatch')
-  end
-end.",
+    when Choice.Number(Value): if Value <> 9 then panic('generic enum payload mismatch'); end if;
+    when Choice.Empty: panic('generic enum variant mismatch');
+  end case;
+end program;"#,
     );
 }
 
 #[test]
 fn static_and_generic_record_methods_use_resolved_targets() {
     assert_succeeds(
-        "\
-program RegisterGenericMethods;
-type
-  Box = record
+        r#"program RegisterGenericMethods;
+
+  type Box = record
     Value: integer;
     static function Create(Value: integer): Box;
     begin
-      return record Value := Value; end
-    end;
+      return record Value := Value; end record;
+    end function;
     function ReadNumber(Self: Box): integer;
     begin
-      return Self.Value
-    end;
+      return Self.Value;
+    end function;
     property Number: integer read ReadNumber;
     function Map<T>(Self: Box; Transform: function(Value: integer): T): T;
     begin
-      return Transform(Self.Value)
-    end;
-  end;
+      return Transform(Self.Value);
+    end function;
+  end record;
 function Double(Value: integer): integer;
 begin
-  return Value * 2
-end;
+  return Value * 2;
+end function;
 begin
   var B: Box := box.create(11);
-  if B.Map(Double) <> 22 then panic('generic method mismatch');
-  if Box.Create(7).Number <> 7 then panic('postfix property mismatch')
-end.",
+  if B.Map(Double) <> 22 then panic('generic method mismatch'); end if;
+  if Box.Create(7).Number <> 7 then panic('postfix property mismatch'); end if;
+end program;"#,
     );
 }
 
 #[test]
 fn bound_record_method_values_capture_the_receiver() {
     assert_succeeds(
-        "\
-program RegisterBoundMethod;
-type
-  Counter = record
+        r#"program RegisterBoundMethod;
+
+  type Counter = record
     Base: integer;
     function Add(Self: Counter; Value: integer): integer;
     begin
-      return Self.Base + Value
-    end;
-  end;
+      return Self.Base + Value;
+    end function;
+  end record;
 begin
-  var C: Counter := record Base := 10; end;
+  var C: Counter := record Base := 10; end record;
   var AddToCounter: function(Value: integer): integer := C.Add;
-  if AddToCounter(7) <> 17 then panic('bound method mismatch')
-end.",
+  if AddToCounter(7) <> 17 then panic('bound method mismatch'); end if;
+end program;"#,
     );
 }
 
 #[test]
 fn event_handlers_accept_bound_record_methods() {
     assert_succeeds(
-        "\
-program RegisterBoundEvent;
-mutable var Handler: Option of function(Value: integer): integer := None;
-type
-  Counter = record
+        r#"program RegisterBoundEvent;
+  mutable var Handler: Option of function(Value: integer): integer := None;
+
+  type Counter = record
     Base: integer;
     function Add(Self: Counter; Value: integer): integer;
     begin
-      return Self.Base + Value
-    end;
-  end;
-  Source = record
+      return Self.Base + Value;
+    end function;
+  end record;
+  type Source = record
     function ReadValue(Self: Source): Option of function(Value: integer): integer;
     begin
-      return Handler
-    end;
+      return Handler;
+    end function;
     procedure WriteValue(
       Self: Source;
       Value: Option of function(Value: integer): integer
     );
     begin
-      Handler := Value
-    end;
+      Handler := Value;
+    end procedure;
     event OnValue: function(Value: integer): integer read ReadValue write WriteValue;
-  end;
+  end record;
 begin
-  var C: Counter := record Base := 12; end;
-  var S: Source := record end;
+  var C: Counter := record Base := 12; end record;
+  var S: Source := record end record;
   S.OnValue := C.Add;
-  if S.OnValue(8) <> 20 then panic('bound event mismatch')
-end.",
+  if S.OnValue(8) <> 20 then panic('bound event mismatch'); end if;
+end program;"#,
     );
 }
 
 #[test]
 fn chained_properties_evaluate_receiver_then_value_once() {
     assert_succeeds(
-        "\
-program RegisterPropertyOrder;
-mutable var Step: integer := 0;
-mutable var Written: integer := 0;
-type
-  Inner = record
+        r#"program RegisterPropertyOrder;
+  mutable var Step: integer := 0;
+  mutable var Written: integer := 0;
+
+  type Inner = record
     Value: integer;
     function ReadNumber(Self: Inner): integer;
     begin
       Step := Step * 10 + 4;
-      return Self.Value
-    end;
+      return Self.Value;
+    end function;
     procedure WriteNumber(Self: Inner; Value: integer);
     begin
       Step := Step * 10 + 3;
-      Written := Value
-    end;
+      Written := Value;
+    end procedure;
     property Number: integer read ReadNumber write WriteNumber;
-  end;
-  Outer = record
+  end record;
+  type Outer = record
     Item: Inner;
     function ReadChild(Self: Outer): Inner;
     begin
       Step := Step * 10 + 1;
-      return Self.Item
-    end;
+      return Self.Item;
+    end function;
     property Child: Inner read ReadChild;
-  end;
+  end record;
 function BuildValue(): integer;
 begin
   Step := Step * 10 + 2;
-  return 23
-end;
+  return 23;
+end function;
 begin
-  var O: Outer := record Item := record Value := 17; end; end;
+  var O: Outer := record Item := record Value := 17; end record; end record;
   O.Child.Number := BuildValue();
-  if (Step <> 123) or (Written <> 23) then panic('property write order mismatch');
+  if (Step <> 123) or (Written <> 23) then panic('property write order mismatch'); end if;
   Step := 0;
-  if O.Child.Number <> 17 then panic('property read mismatch');
-  if Step <> 14 then panic('property read order mismatch')
-end.",
+  if O.Child.Number <> 17 then panic('property read mismatch'); end if;
+  if Step <> 14 then panic('property read order mismatch'); end if;
+end program;"#,
     );
 }
 
@@ -572,15 +555,14 @@ mod arrays;
 
 #[test]
 fn global_nested_index_write_uses_direct_path_and_preserves_value_aliases() {
-    let source = "\
-program RegisterGlobalIndexPath;
-mutable var Surface: array of array of integer := [[1, 2]];
+    let source = r#"program RegisterGlobalIndexPath;
+  mutable var Surface: array of array of integer := [[1, 2]];
 begin
   var Original: array of array of integer := Surface;
   Surface[0][1] := 9;
-  if Original[0][1] <> 2 then panic('global alias changed');
-  if Surface[0][1] <> 9 then panic('global path value mismatch')
-end.";
+  if Original[0][1] <> 2 then panic('global alias changed'); end if;
+  if Surface[0][1] <> 9 then panic('global path value mismatch'); end if;
+end program;"#;
     assert_succeeds(source);
 
     let program = super::parse_ok(source);
@@ -593,33 +575,31 @@ end.";
 #[test]
 fn global_nested_index_write_preserves_index_side_effect_order() {
     assert_succeeds(
-        "\
-program RegisterGlobalIndexOrder;
-mutable var Surface: array of array of integer := [[1, 2]];
+        r#"program RegisterGlobalIndexOrder;
+  mutable var Surface: array of array of integer := [[1, 2]];
 function ChangeSurface(): integer;
 begin
   Surface := [[3, 4]];
-  return 1
-end;
+  return 1;
+end function;
 begin
   Surface[0][ChangeSurface()] := 9;
-  if Surface[0][0] <> 1 then panic('snapshot order changed');
-  if Surface[0][1] <> 9 then panic('snapshot update missing')
-end.",
+  if Surface[0][0] <> 1 then panic('snapshot order changed'); end if;
+  if Surface[0][1] <> 9 then panic('snapshot update missing'); end if;
+end program;"#,
     );
 }
 
 #[test]
 fn global_nested_dictionary_write_inserts_leaf_and_preserves_aliases() {
     assert_succeeds(
-        "\
-program RegisterGlobalDictionaryPath;
-mutable var Lookup: dict of string to dict of string to integer := ['outer': ['old': 1]];
+        r#"program RegisterGlobalDictionaryPath;
+  mutable var Lookup: dict of string to dict of string to integer := ['outer': ['old': 1]];
 begin
   var Original: dict of string to dict of string to integer := Lookup;
   Lookup['outer']['new'] := 2;
-  if 'new' in Original['outer'] then panic('dictionary alias changed');
-  if Lookup['outer']['new'] <> 2 then panic('dictionary path value mismatch')
-end.",
+  if 'new' in Original['outer'] then panic('dictionary alias changed'); end if;
+  if Lookup['outer']['new'] <> 2 then panic('dictionary path value mismatch'); end if;
+end program;"#,
     );
 }

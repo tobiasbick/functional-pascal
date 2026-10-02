@@ -5,11 +5,24 @@ fn unreachable_unit_is_not_linked() {
     let cwd = create_temp_dir("run-unreachable-unit");
     let project_file = cwd.join("app.fpasprj");
     support::write_program_project_file(&project_file, "src/main.fpas", &["src/*.fpas"]);
-    write_text(&cwd.join("src/main.fpas"), "program Main;\nbegin\nend.\n");
+    write_text(
+        &cwd.join("src/main.fpas"),
+        r#"program Main;
+begin null;
+end program;
+"#,
+    );
     // This unit is valid but never imported — it should not affect the program
     write_text(
         &cwd.join("src/unused.fpas"),
-        "unit App.Unused;\nfunction Unused(): integer;\nbegin\n  return 999\nend;\n",
+        r#"unit App.Unused;
+function Unused(): integer;
+begin
+  return 999;
+end function;
+end unit;
+
+"#,
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);
@@ -26,18 +39,23 @@ fn unit_with_only_private_declarations_exports_nothing() {
     // Import the unit but don't call anything — should succeed
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Internal;\nbegin\nend.\n",
+        r#"program Main;
+uses App.Internal as Internal;
+begin null;
+end program;
+"#,
     );
     write_text(
         &cwd.join("src/internal.fpas"),
-        "\
-unit App.Internal;
+        r#"unit App.Internal;
 
 function Secret(): integer;
 begin
-  return 0
-end;
-",
+  return 0;
+end function;
+end unit;
+
+"#,
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);
@@ -53,18 +71,24 @@ fn calling_private_symbol_from_only_private_unit_fails() {
     support::write_program_project_file(&project_file, "src/main.fpas", &["src/*.fpas"]);
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Internal, Std.Console;\nbegin\n  WriteLn(Secret())\nend.\n",
+        r#"program Main;
+uses App.Internal as Internal; uses Std.Console as Console;
+begin
+  Console.WriteLn(Secret());
+end program;
+"#,
     );
     write_text(
         &cwd.join("src/internal.fpas"),
-        "\
-unit App.Internal;
+        r#"unit App.Internal;
 
 function Secret(): integer;
 begin
-  return 42
-end;
-",
+  return 42;
+end function;
+end unit;
+
+"#,
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);
@@ -85,11 +109,22 @@ fn unused_import_does_not_cause_error() {
     // Import the unit but never call any of its functions
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Lib;\nbegin\nend.\n",
+        r#"program Main;
+uses App.Lib as Lib;
+begin null;
+end program;
+"#,
     );
     write_text(
         &cwd.join("src/lib.fpas"),
-        "unit App.Lib;\nfunction Foo(): integer;\nbegin\n  return 1\nend;\n",
+        r#"unit App.Lib;
+function Foo(): integer;
+begin
+  return 1;
+end function;
+end unit;
+
+"#,
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);

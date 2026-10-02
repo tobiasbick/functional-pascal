@@ -2,21 +2,21 @@
 
 program LiteralsAliasStringIndex;
 
-uses Std.Console, Std.Conv, Std.Str;
+uses Std.Console as Console;
+uses Std.Conv as Conv;
+uses Std.Str as Str;
 
-type
-  Score = integer;
+type Score = integer;
 
-const
-  HexMask: integer := 15;
-  BigScore: integer := 1000;
+const HexMask: integer := 15;
+const BigScore: integer := 1000;
 
 begin
   var Name: string := 'FPAS';
   var First: string := Name[0];
-  var Last: string := Name[Length(Name) - 1];
+  var Last: string := Name[Str.Length(Name) - 1];
   var Total: Score := BigScore + HexMask;
-  WriteLn('total: ', IntToStr(Total));
-  WriteLn('first: ', First);
-  WriteLn('last: ', Last)
-end.
+  Console.WriteLn('total: ', Conv.IntToStr(Total));
+  Console.WriteLn('first: ', First);
+  Console.WriteLn('last: ', Last);
+end program;

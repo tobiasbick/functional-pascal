@@ -2,7 +2,7 @@ use super::*;
 use crate::vm::Vm;
 
 fn fixture() -> (Vm, Arc<Lifetime>) {
-    let (source, errors) = fpas_parser::parse("program Empty; begin end.");
+    let (source, errors) = fpas_parser::parse(r#"program Empty; begin null; end program;"#);
     assert!(errors.is_empty());
     let vm = Vm::with_writer_and_args(
         fpas_compiler::compile(&source).unwrap(),

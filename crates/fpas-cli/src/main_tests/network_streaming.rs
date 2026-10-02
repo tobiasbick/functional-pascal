@@ -64,56 +64,56 @@ fn http_stream_decodes_fragmented_chunked_sse_response() {
         &format!(
             r#"program HttpStreamingRoundtrip;
 
-uses Std.Arrays, Std.Console, Std.Http;
+uses Std.Arrays as Arrays; uses Std.Console as Console; uses Std.Http as Http;
 
-procedure PrintEvents(Events: array of SseEvent);
+procedure PrintEvents(Events: array of Http.SseEvent);
 begin
-  for Index: integer := 0 to Std.Arrays.Length(Events) - 1 do
+  for Index: integer := 0 to Arrays.Length(Events) - 1 do
   begin
-    WriteLn((Events[Index].EventType + ':') + Events[Index].Data)
-  end
-end;
+    Console.WriteLn((Events[Index].EventType + ':') + Events[Index].Data);
+  end; end for;
+end procedure;
 
 begin
-  case OpenStream(Request.Get('http://127.0.0.1:{port}/events')) of
-    Ok(ResponseValue):
+  case Http.OpenStream(Http.Request.Get('http://127.0.0.1:{port}/events')) of
+    when Ok(ResponseValue):
     begin
-      WriteLn(ResponseValue.StatusCode);
-      case CreateSseDecoder(4096) of
-        Ok(Decoder):
+      Console.WriteLn(ResponseValue.StatusCode);
+      case Http.CreateSseDecoder(4096) of
+        when Ok(Decoder):
         begin
           mutable var Reading: boolean := true;
           while Reading do
           begin
-            case ReadStream(ResponseValue.Body, 3) of
-              Ok(Bytes):
+            case Http.ReadStream(ResponseValue.Body, 3) of
+              when Ok(Bytes):
               begin
-                if Std.Arrays.Length(Bytes) = 0 then
+                if Arrays.Length(Bytes) = 0 then
                 begin
-                  Reading := false
-                end
+                  Reading := false;
+                end;
                 else
                 begin
-                  case FeedSse(Decoder, Bytes) of
-                    Ok(Events): PrintEvents(Events);
-                    Error(Message): panic(Message)
-                  end
-                end
+                  case Http.FeedSse(Decoder, Bytes) of
+                    when Ok(Events): PrintEvents(Events);
+                    when Error(Message): panic(Message);
+                  end case;
+                end; end if;
               end;
-              Error(Message): panic(Message)
-            end
-          end;
-          case FinishSse(Decoder) of
-            Ok(Events): PrintEvents(Events);
-            Error(Message): panic(Message)
-          end
+              when Error(Message): panic(Message);
+            end case;
+          end; end while;
+          case Http.FinishSse(Decoder) of
+            when Ok(Events): PrintEvents(Events);
+            when Error(Message): panic(Message);
+          end case;
         end;
-        Error(Message): panic(Message)
-      end
+        when Error(Message): panic(Message);
+      end case;
     end;
-    Error(Message): panic(Message)
-  end
-end.
+    when Error(Message): panic(Message);
+  end case;
+end program;
 "#
         ),
     );
@@ -160,37 +160,37 @@ fn http_stream_rejects_truncated_content_length() {
         &format!(
             r#"program HttpStreamingTruncated;
 
-uses Std.Arrays, Std.Console, Std.Http, Std.Str;
+uses Std.Arrays as Arrays; uses Std.Console as Console; uses Std.Http as Http; uses Std.Str as Str;
 
 begin
-  case OpenStream(Request.Get('http://127.0.0.1:{port}/truncated')) of
-    Ok(ResponseValue):
+  case Http.OpenStream(Http.Request.Get('http://127.0.0.1:{port}/truncated')) of
+    when Ok(ResponseValue):
     begin
-      case ReadStream(ResponseValue.Body, 8) of
-        Ok(Bytes):
+      case Http.ReadStream(ResponseValue.Body, 8) of
+        when Ok(Bytes):
         begin
-          if Std.Arrays.Length(Bytes) <> 3 then
+          if Arrays.Length(Bytes) <> 3 then
           begin
-            panic('unexpected first body fragment')
-          end
+            panic('unexpected first body fragment');
+          end; end if;
         end;
-        Error(Message): panic(Message)
-      end;
-      case ReadStream(ResponseValue.Body, 8) of
-        Ok(_): panic('truncated Content-Length was accepted');
-        Error(Message):
+        when Error(Message): panic(Message);
+      end case;
+      case Http.ReadStream(ResponseValue.Body, 8) of
+        when Ok(_): panic('truncated Content-Length was accepted');
+        when Error(Message):
         begin
-          if not Std.Str.Contains(Message, 'shorter than Content-Length') then
+          if not Str.Contains(Message, 'shorter than Content-Length') then
           begin
-            panic(Message)
-          end
-        end
-      end;
-      WriteLn('ok')
+            panic(Message);
+          end; end if;
+        end;
+      end case;
+      Console.WriteLn('ok');
     end;
-    Error(Message): panic(Message)
-  end
-end.
+    when Error(Message): panic(Message);
+  end case;
+end program;
 "#
         ),
     );

@@ -18,11 +18,11 @@ pub(super) fn run(queries: usize, functions: usize) -> Result<(), String> {
     for index in 0..functions {
         writeln!(
             source,
-            "function F{index}(X: integer): integer; begin return X + {index} end;"
+            "function F{index}(X: integer): integer; begin return X + {index}; end function;"
         )
         .map_err(|error| error.to_string())?;
     }
-    source.push_str("begin var Value: integer := F0(1) end.\n");
+    source.push_str("begin var Value: integer := F0(1); end program;\n");
     let mut service = LanguageService::new(WorkspaceContext::loose(&root));
     service
         .documents_mut()

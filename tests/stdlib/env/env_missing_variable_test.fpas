@@ -1,16 +1,19 @@
 program EnvMissingVariableTest;
 
-uses Std.Env, Std.Options, Std.Test;
+uses Std.Env as Env;
+uses Std.Options as Options;
+uses Std.Test as Test;
 
 begin
-  AssertFalse(Exists('__FPAS_ENV_TEST_MISSING_903B5CF4__'));
-  case Get('__FPAS_ENV_TEST_MISSING_903B5CF4__') of
-    Some(_):
-    begin
-      Fail('expected None for missing environment variable')
-    end;
-    None:
-    begin
-    end
-  end
-end.
+  Test.AssertFalse(Env.Exists('__FPAS_ENV_TEST_MISSING_903B5CF4__'));
+  case Env.Get('__FPAS_ENV_TEST_MISSING_903B5CF4__') of
+    when Some(_):
+      begin
+        Test.Fail('expected None for missing environment variable');
+      end;
+    when None:
+      begin
+        null;
+      end;
+  end case;
+end program;

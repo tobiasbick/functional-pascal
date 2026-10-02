@@ -10,22 +10,25 @@ A unit file starts with a `unit` declaration followed by declarations (functions
 
 ```pascal
 unit MyApp.Utils;
-uses Std.Str;
+uses Std.Str as Str;
 
 public function Clamp(Value: integer; Min: integer; Max: integer): integer;
 begin
   if Value < Min then
-    return Min
-  else if Value > Max then
-    return Max
+    return Min;
+  elsif Value > Max then
+    return Max;
   else
-    return Value
-end;
+    return Value;
+  end if;
+end function;
 
 public function IsBlank(S: string): boolean;
 begin
-  return Length(Trim(S)) = 0
-end;
+  return Str.Length(Str.Trim(S)) = 0;
+end function;
+end unit;
+
 ```
 
 ## Program file
@@ -34,47 +37,62 @@ The program file uses a `program` declaration instead of `unit`. It does not def
 
 ## Using units
 
-Units must be explicitly imported via `uses` to be accessible — including `Std.*` units. Being listed in the project `.fpasprj` file does not make a unit automatically visible. This also applies to fully qualified names: `Std.Math.Abs(-3)` compiles only with `Std.Math` in `uses`; a qualified name never imports its unit.
+Import each unit with its own `uses Unit.Name as Alias;` declaration. The alias
+is the only source access path and opens no short names. Listing a source in a
+project manifest does not import it. These rules apply to `Std.*` and source units
+alike.
 
 ```pascal
 program Main;
 
-uses
-  MyApp.Utils,
-  Std.Console;
+uses MyApp.Utils as Utils;
+uses Std.Console as Console;
 
 begin
-  var Clamped: integer := Clamp(150, 0, 100);
-  WriteLn(Clamped);  // 100
-end.
+  var Clamped: integer := Utils.Clamp(150, 0, 100);
+  Console.WriteLn(Clamped);
+end program;
 ```
 
-## Short names and qualified names
+After `uses Std.Str as Text;`, call `Text.Trim(' value ')`. Neither `Trim(...)`,
+`Str.Trim(...)`, nor `Std.Str.Trim(...)` accesses that import. Imported types,
+constants, variables, routines, and enum members use the same alias prefix.
+An imported type may expose record members using its ordinary member syntax.
+Import aliases do not re-export the imported unit's names.
 
-When a unit is imported via `uses`, its exported symbols become available by their short (unqualified) name and by their fully qualified name:
+An alias names exactly its imported unit. For example, `uses Std.Net as Net;`
+does not expose the separate unit `Std.Net.Utf8` as `Net.Utf8`. Import it with
+`uses Std.Net.Utf8 as Utf8;` and call `Utf8.Encode(...)` instead.
 
-```pascal
-program Hello;
-uses Std.Console;
-begin
-  WriteLn('short');              // OK — short name
-  Std.Console.WriteLn('full');   // OK — fully qualified
-end.
-```
+## Alias collisions and visibility
 
-### Ambiguity rule
+Aliases are case-insensitive and reserved throughout the compilation unit's
+lexical scopes. A local declaration, routine parameter, generic parameter, loop
+variable, or pattern binding cannot shadow an alias. Different imports cannot
+share an alias, and importing the same unit twice is an error even with different
+aliases. Choose a distinct alias when a local declaration already uses the name.
 
-When two or more imported units export the same short name, the short name becomes ambiguous. This applies equally to `Std.*` units and your own units, in any combination, and regardless of parameter counts: a routine `Send` from `MyApp.Net` and `Std.Tasks.Send` make `Send` ambiguous. No error is raised at the `uses` site; the compiler reports an error only when the ambiguous short name is actually used. The fully qualified name always works as a fallback:
+Two units may export the same member name: `Text.Length(...)` and
+`Arrays.Length(...)` stay distinct under unrelated imports. Bare imported names
+are always invalid, including when only one imported unit exports that name.
+Lexically declared names keep their normal meaning.
 
-```pascal
-program Demo;
-uses Std.Str, Std.Arrays;           // Both units may export Length
-begin
-  // Length('hi');   ← ERROR: ambiguous — exists in Std.Str and Std.Arrays
-  var L1: integer := Std.Str.Length('hi');       // Qualified string Length
-  var L2: integer := Std.Arrays.Length([1, 2]);   // Qualified array Length
-end.
-```
+Imports expose public declarations only. An alias does not bypass visibility
+checks for types, routines, variables, or record members. Transitive imports are
+available for linking and type identity, but must be imported explicitly before
+source code can name their declarations. See [Visibility](visibility.md).
+
+## Declarations and type lookup
+
+Each declaration repeats its own keyword, including `public type`, `public const`,
+and `public var`. A type and routine cannot share a name in the same scope.
+Type headers are collected across the compilation unit before routine signatures
+and type bodies are checked. A signature or record field can therefore refer to
+a type declared later in the file. Constant and variable initializers, including
+record field defaults, retain declaration-order visibility.
+
+Units end with `end unit;` and contain declarations only; programs end with
+`end program;` after their required main block.
 
 ## Reserved namespace `Std`
 
@@ -150,14 +168,14 @@ the command reports the source-adjacent file it could not publish.
 
 ## Implementation (contributors)
 
-Standard-call dispatch in `crates/fpas-sema/src/check/name_resolution/std_names.rs`
-canonicalizes an unqualified name only when it resolves to the registered root-scope
-Std alias. A local callable with the same name retains its resolved target. When a
-routine replaces a builtin alias, routine declaration checking removes the alias
-bookkeeping so loading another Std unit cannot remove the local routine.
+Alias registration and source-name qualification live in
+`crates/fpas-sema/src/check/name_resolution/imports.rs`. Semantic metadata retains
+the mapping to canonical unit identities for compiler lowering and linking.
+Source-unit interfaces expose qualified public symbols. Supporting interfaces
+supply type identities without opening additional source names.
 
-Regression coverage is in `crates/fpas-sema/src/tests/expr/std_shadowing.rs` and
-`crates/fpas-compiler/src/tests/functions/std_shadowing.rs`.
+Regression coverage includes `crates/fpas-sema/tests/syntax_and_names.rs` and
+`crates/fpas-cli/src/main_tests/projects/qualified_globals.rs`.
 
 ## See also
 

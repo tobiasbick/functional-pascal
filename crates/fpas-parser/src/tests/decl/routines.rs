@@ -15,12 +15,7 @@ fn function_rejects_legacy_forward_token() {
 #[test]
 fn function_with_body() {
     let p = parse_ok(
-        "program T; \
-         function Add(A: integer; B: integer): integer; \
-         begin \
-           return A + B \
-         end; \
-         begin end.",
+        r#"program T; function Add(A: integer; B: integer): integer; begin return A + B; end function; begin null; end program;"#,
     );
     match &p.declarations[0] {
         Decl::Function(f) => {
@@ -39,12 +34,7 @@ fn function_with_body() {
 #[test]
 fn procedure_declaration() {
     let p = parse_ok(
-        "program T; \
-         procedure Greet(Name: string); \
-         begin \
-           Std.Console.WriteLn(Name) \
-         end; \
-         begin end.",
+        r#"program T; procedure Greet(Name: string); begin Std.Console.WriteLn(Name); end procedure; begin null; end program;"#,
     );
     match &p.declarations[0] {
         Decl::Procedure(proc) => {
@@ -58,12 +48,7 @@ fn procedure_declaration() {
 #[test]
 fn mutable_param() {
     let p = parse_ok(
-        "program T; \
-         procedure Inc(mutable X: integer); \
-         begin \
-           X := X + 1 \
-         end; \
-         begin end.",
+        r#"program T; procedure Inc(mutable X: integer); begin X := X + 1; end procedure; begin null; end program;"#,
     );
     match &p.declarations[0] {
         Decl::Procedure(proc) => {
@@ -76,12 +61,7 @@ fn mutable_param() {
 #[test]
 fn nested_function() {
     let p = parse_ok(
-        "program T; \
-         function Outer(): integer; \
-           function Inner(): integer; \
-           begin return 1 end; \
-         begin return Inner() end; \
-         begin end.",
+        r#"program T; function Outer(): integer; function Inner(): integer; begin return 1; end function; begin return Inner(); end function; begin null; end program;"#,
     );
     match &p.declarations[0] {
         Decl::Function(f) => match &f.body {

@@ -13,6 +13,7 @@ pub(super) struct CompletionContext {
     pub(super) statements: bool,
 }
 
+/// Computes the receiver, replacement token, and statement context for completion.
 pub(super) fn completion_context(
     document: &NavigationDocument,
     offset: usize,
@@ -67,7 +68,10 @@ fn receiver_before(source: &str, replacement_start: usize) -> Option<String> {
             ch if parentheses == 0
                 && brackets == 0
                 && (ch.is_whitespace()
-                    || matches!(ch, ';' | ':' | '=' | '+' | '-' | '*' | '/')) =>
+                    || matches!(
+                        ch,
+                        ';' | ':' | '=' | '+' | '-' | '*' | '/' | '(' | '[' | ','
+                    )) =>
             {
                 break;
             }
@@ -86,17 +90,42 @@ fn identifier_byte(value: u8) -> bool {
 fn statement_context(document: &NavigationDocument, offset: usize) -> bool {
     let mut blocks = Vec::<bool>::new();
     let mut previous = None;
-    for token in document
+    let mut tokens = document
         .tokens
         .iter()
         .take_while(|token| token.span.offset < offset)
-    {
+        .peekable();
+    while let Some(token) = tokens.next() {
         previous = Some(&token.token);
         match token.token {
             Token::Begin | Token::Case | Token::Repeat => blocks.push(true),
             Token::Record | Token::Enum => blocks.push(false),
             Token::End => {
-                blocks.pop();
+                let named = tokens.peek().map(|token| &token.token);
+                if !matches!(
+                    named,
+                    Some(Token::If | Token::For | Token::While | Token::With)
+                ) {
+                    blocks.pop();
+                }
+                if named.is_some_and(|token| {
+                    matches!(
+                        token,
+                        Token::If
+                            | Token::For
+                            | Token::While
+                            | Token::With
+                            | Token::Case
+                            | Token::Record
+                            | Token::Enum
+                            | Token::Function
+                            | Token::Procedure
+                            | Token::Program
+                            | Token::Unit
+                    )
+                }) {
+                    tokens.next();
+                }
             }
             Token::Until if blocks.last() == Some(&true) => {
                 blocks.pop();

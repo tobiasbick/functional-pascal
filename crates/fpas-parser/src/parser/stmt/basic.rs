@@ -8,7 +8,16 @@ impl Parser {
         let start = self.current_span();
         self.advance();
         let stmts = self.parse_statement_list();
-        self.expect(&Token::End);
+        if self.check(&Token::End) && matches!(self.peek_token(), Token::Semicolon | Token::Eof) {
+            self.advance();
+        } else {
+            self.error_with_code(
+                fpas_diagnostics::codes::PARSE_EXPECTED_TOKEN,
+                "Expected bare `end` to close the plain lexical block",
+                "Close the explicit `begin` block with `end;` before the enclosing named closer.",
+                self.current_span(),
+            );
+        }
         Stmt::Block(stmts, self.span_from(start))
     }
 

@@ -155,9 +155,23 @@ mod tests {
             &project_file,
             "[project]\nname = \"suite\"\nkind = \"test\"\n\n[sources]\ninclude = [\"*.fpas\"]\n",
         );
-        write_text(&first_test, "program First;\nbegin end.");
-        write_text(&second_test, "program Second;\nbegin end.");
-        write_text(&helper, "unit Tests.Fixture;\n");
+        write_text(
+            &first_test,
+            r#"program First;
+begin null; end program;"#,
+        );
+        write_text(
+            &second_test,
+            r#"program Second;
+begin null; end program;"#,
+        );
+        write_text(
+            &helper,
+            r#"unit Tests.Fixture;
+end unit;
+
+"#,
+        );
 
         let mut contexts = LinkContextCache::new(None);
         let context = contexts

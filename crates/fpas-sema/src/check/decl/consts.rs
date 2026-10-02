@@ -51,7 +51,7 @@ impl Checker {
                     return false;
                 }
 
-                let full_name = Self::resolve_designator_name(designator);
+                let full_name = self.resolve_designator_name(designator);
                 self.ensure_fq_std_unit_loaded(&full_name);
 
                 self.scopes

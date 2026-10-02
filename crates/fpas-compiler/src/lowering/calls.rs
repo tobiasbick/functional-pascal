@@ -113,9 +113,12 @@ impl LoweringContext {
                 .cloned()
         });
         let Some(intrinsic) = crate::intrinsic_catalog::resolve(name, first_type.as_ref()) else {
-            let callable = self
-                .resolve_callable(name)
-                .ok_or_else(|| unsupported(span, "standard-library or source-unit call"))?;
+            let callable = self.resolve_callable(name).ok_or_else(|| {
+                unsupported(
+                    span,
+                    &format!("standard-library or source-unit call `{name}`"),
+                )
+            })?;
             let values = self.lower_call_arguments(arguments, span)?;
             return self.emit_value(
                 Operation::CallDirect {

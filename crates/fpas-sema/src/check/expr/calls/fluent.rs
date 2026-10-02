@@ -4,11 +4,9 @@
 
 use super::super::super::Checker;
 use crate::check::FluentCallTarget;
-use crate::scope::{Symbol, SymbolKind, canonical_symbol_name};
+use crate::scope::{Symbol, SymbolKind};
 use crate::types::Ty;
-use fpas_diagnostics::codes::{
-    SEMA_AMBIGUOUS_IMPORTED_NAME, SEMA_TYPE_MISMATCH, SEMA_UNKNOWN_NAME,
-};
+use fpas_diagnostics::codes::{SEMA_TYPE_MISMATCH, SEMA_UNKNOWN_NAME};
 use fpas_lexer::Span;
 use fpas_parser::{Designator, DesignatorPart, Expr};
 
@@ -26,8 +24,13 @@ impl Checker {
             })
             .collect::<Option<Vec<_>>>();
         names.is_some_and(|names| {
-            self.used_unit_names
+            (self
+                .used_unit_names
                 .contains(&names.join(".").to_ascii_lowercase())
+                || (names.len() == 1
+                    && names.first().is_some_and(|root| {
+                        self.import_aliases.contains_key(&root.to_ascii_lowercase())
+                    })))
                 && names
                     .first()
                     .is_some_and(|root| self.scopes.lookup(root).is_none())
@@ -265,12 +268,7 @@ impl Checker {
         receiver_ty: &Ty,
         span: Span,
     ) -> Option<(String, Symbol)> {
-        let key = canonical_symbol_name(name);
-        if let Some((scope, symbol)) = self.scopes.lookup_with_scope(name)
-            && (scope > 0
-                || !self.std_short_alias_keys.contains(&key)
-                    && !self.source_short_alias_keys.contains(&key))
-        {
+        if let Some(symbol) = self.scopes.lookup(name) {
             let symbol = symbol.clone();
             if self.fluent_symbol_accepts(name, &symbol, receiver_ty) {
                 return Some((name.to_string(), symbol));
@@ -284,51 +282,15 @@ impl Checker {
             return None;
         }
 
-        let mut matches = self
-            .imported_candidates
-            .get(&key)
-            .into_iter()
-            .flatten()
-            .filter_map(|qualified| {
-                let symbol = self.scopes.lookup(qualified)?.clone();
-                self.fluent_symbol_accepts(qualified, &symbol, receiver_ty)
-                    .then_some((qualified.clone(), symbol))
-            })
-            .collect::<Vec<_>>();
-        matches.sort_by(|left, right| {
-            left.0
-                .to_ascii_lowercase()
-                .cmp(&right.0.to_ascii_lowercase())
-        });
-        matches.dedup_by(|left, right| left.0.eq_ignore_ascii_case(&right.0));
-        match matches.len() {
-            1 => matches.pop(),
-            0 => {
-                self.error_with_code(
-                    SEMA_UNKNOWN_NAME,
-                    format!("No visible `{name}` accepts receiver type `{receiver_ty}`"),
-                    "Import a unit that exports a matching callable, or call a qualified routine explicitly.",
-                    span,
-                );
-                None
-            }
-            _ => {
-                self.error_with_code(
-                    SEMA_AMBIGUOUS_IMPORTED_NAME,
-                    format!("Ambiguous receiver call `.{name}(...)` for `{receiver_ty}`"),
-                    format!(
-                        "Matching imported callables: {}. Use a qualified ordinary call.",
-                        matches
-                            .iter()
-                            .map(|entry| entry.0.as_str())
-                            .collect::<Vec<_>>()
-                            .join(", ")
-                    ),
-                    span,
-                );
-                None
-            }
-        }
+        self.error_with_code(
+            SEMA_UNKNOWN_NAME,
+            format!("No lexical `{name}` accepts receiver type `{receiver_ty}`"),
+            self.import_name_hint(name).unwrap_or_else(|| {
+                "Declare a matching callable or use `Alias.Routine(Receiver, ...)`.".to_owned()
+            }),
+            span,
+        );
+        None
     }
 
     fn fluent_symbol_accepts(&self, name: &str, symbol: &Symbol, receiver_ty: &Ty) -> bool {

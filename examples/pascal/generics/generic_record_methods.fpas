@@ -2,37 +2,38 @@
 
 program GenericRecordMethods;
 
-uses Std.Console, Std.Conv;
+uses Std.Console as Console;
+uses Std.Conv as Conv;
 
-type
-  Box = record
-    Value: integer;
+type Box = record
+  Value: integer;
 
-    function Map<R>(Self: Box; F: function(X: integer): R): R;
-    begin
-      return F(Self.Value)
-    end;
-  end;
-  Accumulator = record
-    function EchoNumeric<T: Numeric>(Self: Accumulator; Extra: T): T;
-    begin
-      return Extra
-    end;
-  end;
+  function Map<R>(Self: Box; F: function(X: integer): R): R;
+  begin
+    return F(Self.Value);
+  end function;
+end record;
+
+type Accumulator = record
+  function EchoNumeric<T: Numeric>(Self: Accumulator; Extra: T): T;
+  begin
+    return Extra;
+  end function;
+end record;
 
 function ToText(X: integer): string;
 begin
-  return 'value=' + IntToStr(X)
-end;
+  return 'value=' + Conv.IntToStr(X);
+end function;
 
 begin
   var B: Box := record
     Value := 42;
-  end;
+  end record;
 
-  WriteLn(B.Map(ToText));
-  var A: Accumulator := record end;
+  Console.WriteLn(B.Map(ToText));
+  var A: Accumulator := record end record;
 
-  WriteLn('numeric int: ', IntToStr(A.EchoNumeric(21)));
-  WriteLn('numeric real ok: ', A.EchoNumeric(1.5) > 1.0)
-end.
+  Console.WriteLn('numeric int: ', Conv.IntToStr(A.EchoNumeric(21)));
+  Console.WriteLn('numeric real ok: ', A.EchoNumeric(1.5) > 1.0);
+end program;

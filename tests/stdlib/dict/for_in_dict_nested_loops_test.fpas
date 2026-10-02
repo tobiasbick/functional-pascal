@@ -1,15 +1,19 @@
 program T;
 
-uses Std.Console, Std.Dictionaries, Std.Conv;
+uses Std.Console as Console;
+uses Std.Dictionaries as Dictionaries;
+uses Std.Conv as Conv;
 
 begin
   var Outer: dict of string to integer := ['a': 1, 'b': 2];
   var Inner: dict of string to integer := ['x': 10, 'y': 20];
   for Ko: string in Outer do
-  begin
-    for Ki: string in Inner do
     begin
-      WriteLn(Ko + Ki)
-    end
-  end
-end.
+      for Ki: string in Inner do
+        begin
+          Console.WriteLn(Ko + Ki);
+        end;
+      end for;
+    end;
+  end for;
+end program;

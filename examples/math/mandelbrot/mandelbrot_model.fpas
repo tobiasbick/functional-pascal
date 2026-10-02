@@ -2,87 +2,94 @@
 
 unit Mandelbrot.Model;
 
-uses Std.Arrays, Std.Conv, Std.Math, Std.Tasks, Std.Tui, Mandelbrot.Color, Mandelbrot.Render;
+uses Std.Arrays as Arrays;
+uses Std.Conv as Conv;
+uses Std.Math as Math;
+uses Std.Tasks as Tasks;
+uses Std.Tui as Tui;
+uses Mandelbrot.Color as Color;
+uses Mandelbrot.Render as Render;
 
-public type
-  ExplorerState = record
-    public CenterX: real;
-    public CenterY: real;
-    public SpanY: real;
-    public MaxIter: integer;
-    public Palette: PaletteKind;
+public type ExplorerState = record
+  public CenterX: real;
+  public CenterY: real;
+  public SpanY: real;
+  public MaxIter: integer;
+  public Palette: Color.PaletteKind;
 
-    public static function Default(): ExplorerState;
-    begin
-      return record
-        CenterX := -0.75;
-        CenterY := 0.0;
-        SpanY := 2.4;
-        MaxIter := 160;
-        Palette := PaletteKind.DeepOcean;
-      end
-    end;
+  public static function Default(): ExplorerState;
+  begin
+    return record
+      CenterX := -0.75;
+      CenterY := 0.0;
+      SpanY := 2.4;
+      MaxIter := 160;
+      Palette := Color.PaletteKind.DeepOcean;
+    end record;
+  end function;
 
-    public function SpanX(Self: ExplorerState; Width: integer; Height: integer): real;
-    begin
-      return (Self.SpanY * (IntToReal(Max(Width, 1)) / IntToReal(Max(Height, 1)))) * 0.5
-    end;
+  public function SpanX(Self: ExplorerState; Width: integer; Height: integer): real;
+  begin
+    return (Self.SpanY * (Conv.IntToReal(Math.Max(Width, 1)) / Conv.IntToReal(Math.Max(Height, 1)))) *
+           0.5;
+  end function;
 
-    public function XMin(Self: ExplorerState; Width: integer; Height: integer): real;
-    begin
-      return Self.CenterX - (Self.SpanX(Width, Height) * 0.5)
-    end;
+  public function XMin(Self: ExplorerState; Width: integer; Height: integer): real;
+  begin
+    return Self.CenterX - (Self.SpanX(Width, Height) * 0.5);
+  end function;
 
-    public function XMax(Self: ExplorerState; Width: integer; Height: integer): real;
-    begin
-      return Self.CenterX + (Self.SpanX(Width, Height) * 0.5)
-    end;
+  public function XMax(Self: ExplorerState; Width: integer; Height: integer): real;
+  begin
+    return Self.CenterX + (Self.SpanX(Width, Height) * 0.5);
+  end function;
 
-    public function YMin(Self: ExplorerState): real;
-    begin
-      return Self.CenterY - (Self.SpanY * 0.5)
-    end;
+  public function YMin(Self: ExplorerState): real;
+  begin
+    return Self.CenterY - (Self.SpanY * 0.5);
+  end function;
 
-    public function YMax(Self: ExplorerState): real;
-    begin
-      return Self.CenterY + (Self.SpanY * 0.5)
-    end;
+  public function YMax(Self: ExplorerState): real;
+  begin
+    return Self.CenterY + (Self.SpanY * 0.5);
+  end function;
 
-    public function GetZoom(Self: ExplorerState): real;
-    begin
-      return 2.4 / Self.SpanY
-    end;
+  public function GetZoom(Self: ExplorerState): real;
+  begin
+    return 2.4 / Self.SpanY;
+  end function;
 
-    public property Zoom: real read GetZoom;
-  end;
-  MandelbrotModel = record
-    public Explorer: ExplorerState;
-    public TerminalWidth: integer;
-    public TerminalHeight: integer;
-    public Grid: TuiCellGrid;
-    public HelpOpen: boolean;
-    public Generation: integer;
-    public RowsRendered: integer;
-    public FailureMessage: string;
-    public Inbox: channel of MandelbrotRenderFrame;
-  end;
+  public property Zoom: real read GetZoom;
+end record;
+
+public type MandelbrotModel = record
+  public Explorer: ExplorerState;
+  public TerminalWidth: integer;
+  public TerminalHeight: integer;
+  public Grid: Tui.TuiCellGrid;
+  public HelpOpen: boolean;
+  public Generation: integer;
+  public RowsRendered: integer;
+  public FailureMessage: string;
+  public Inbox: channel of Render.MandelbrotRenderFrame;
+end record;
 
 public function GridWidth(TerminalWidth: integer): integer;
 begin
-  return Max(TerminalWidth - 2, 1)
-end;
+  return Math.Max(TerminalWidth - 2, 1);
+end function;
 
 public function GridHeight(TerminalHeight: integer): integer;
 begin
-  return Max(TerminalHeight - 6, 1)
-end;
+  return Math.Max(TerminalHeight - 6, 1);
+end function;
 
-function BlankGrid(Width: integer; Height: integer): TuiCellGrid;
+function BlankGrid(Width: integer; Height: integer): Tui.TuiCellGrid;
 begin
-  var Black: TuiColor := TuiColor.FromRgb(0, 0, 0);
-  var Blank: TuiCell := TuiCell.Styled(' ', TuiStyle.FromColors(Black, Black));
-  return TuiCellGrid.Create(Width, Height, Std.Arrays.Fill(Blank, Width * Height))
-end;
+  var Black: Tui.TuiColor := Tui.TuiColor.FromRgb(0, 0, 0);
+  var Blank: Tui.TuiCell := Tui.TuiCell.Styled(' ', Tui.TuiStyle.FromColors(Black, Black));
+  return Tui.TuiCellGrid.Create(Width, Height, Arrays.Fill(Blank, Width * Height));
+end function;
 
 public function CreateMandelbrotModel(
   Explorer: ExplorerState;
@@ -90,11 +97,11 @@ public function CreateMandelbrotModel(
   TerminalHeight: integer;
   HelpOpen: boolean;
   Generation: integer;
-  Inbox: channel of MandelbrotRenderFrame
+  Inbox: channel of Render.MandelbrotRenderFrame
 ): MandelbrotModel;
 begin
-  var Width: integer := Max(TerminalWidth, 1);
-  var Height: integer := Max(TerminalHeight, 1);
+  var Width: integer := Math.Max(TerminalWidth, 1);
+  var Height: integer := Math.Max(TerminalHeight, 1);
   var RenderWidth: integer := GridWidth(Width);
   var RenderHeight: integer := GridHeight(Height);
   return record
@@ -107,20 +114,20 @@ begin
     RowsRendered := 0;
     FailureMessage := '';
     Inbox := Inbox;
-  end
-end;
+  end record;
+end function;
 
 // Creates the initial blank model; TuiMsg.Started schedules its first render.
 public function NewMandelbrotModel(
-  Inbox: channel of MandelbrotRenderFrame;
+  Inbox: channel of Render.MandelbrotRenderFrame;
   TerminalWidth: integer;
   TerminalHeight: integer
 ): MandelbrotModel;
 begin
-  return CreateMandelbrotModel(ExplorerState.Default(), TerminalWidth, TerminalHeight, false, 1, Inbox)
-end;
+  return CreateMandelbrotModel(ExplorerState.Default(), TerminalWidth, TerminalHeight, false, 1, Inbox);
+end function;
 
-public function MandelbrotRequest(State: MandelbrotModel): MandelbrotRenderRequest;
+public function MandelbrotRequest(State: MandelbrotModel): Render.MandelbrotRenderRequest;
 begin
   return record
     Generation := State.Generation;
@@ -132,5 +139,7 @@ begin
     Height := State.Grid.Height;
     MaxIter := State.Explorer.MaxIter;
     Palette := State.Explorer.Palette;
-  end
-end;
+  end record;
+end function;
+
+end unit;

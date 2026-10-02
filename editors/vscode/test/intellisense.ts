@@ -25,14 +25,14 @@ export async function verifyIntelliSense(extensionPath: string): Promise<void> {
   const source = [
     "program IntelliSenseHost;",
     "",
-    "uses Intellisense.Core;",
+    " uses Intellisense.Core as Core;",
     "",
     "begin",
-    "  var CounterValue: Counter := record Amount := 1; end;",
+    "  var CounterValue: Core.Counter := record Amount := 1; end record;",
     "  var Member: integer := CounterValue.Amount;",
-    "  var Sum: integer := Add(1, 2);",
-    "  var Imported: integer := UniqueHostValue()",
-    "end.",
+    "  var Sum: integer := Core.Add(1, 2);",
+    "  var Imported: integer := UniqueHostValue();",
+    "end program;",
     ""
   ].join("\n");
 
@@ -47,15 +47,17 @@ export async function verifyIntelliSense(extensionPath: string): Promise<void> {
       [
         "unit Intellisense.Core;",
         "",
-        "public type",
-        "  Counter = record",
+        " ",
+        "  public type Counter = record",
         "    public Amount: integer;",
-        "  end;",
+        "  end record;",
         "",
         "public function Add(Left: integer; Right: integer): integer;",
         "begin",
-        "  return Left + Right",
-        "end;",
+        "  return Left + Right;",
+        "end function;",
+        "end unit;",
+        "",
         ""
       ].join("\n")
     );
@@ -67,8 +69,10 @@ export async function verifyIntelliSense(extensionPath: string): Promise<void> {
         "// Returns the stable IntelliSense fixture value.",
         "public function UniqueHostValue(): integer;",
         "begin",
-        "  return 42",
-        "end;",
+        "  return 42;",
+        "end function;",
+        "end unit;",
+        "",
         ""
       ].join("\n")
     );
@@ -141,7 +145,7 @@ function verifySnippetContribution(extensionPath: string): void {
 async function verifySnippetCompletion(fixtureRoot: string): Promise<void> {
   const snippetPath = path.join(fixtureRoot, "src", "snippet.fpas");
   const source =
-    "program SnippetHost;\n\nbegin\n  if true then\n  begin\n  end\nend.\n";
+    "program SnippetHost;\n\nbegin\n  if true then\n  begin null;\n  end; end if;\nend program;\n";
   await fs.writeFile(snippetPath, source);
   const document = await vscode.workspace.openTextDocument(snippetPath);
   await vscode.window.showTextDocument(document);

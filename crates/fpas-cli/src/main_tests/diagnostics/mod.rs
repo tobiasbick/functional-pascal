@@ -4,7 +4,7 @@ mod json;
 
 #[test]
 fn cli_renders_lex_stage_output() {
-    let source = "program LexFail;\nbegin\n  @\nend.\n";
+    let source = "program LexFail;\nbegin\n  @ null;\nend program;\n";
     let (exit_code, stderr_output) = support::run_and_capture_stderr("lex.fpas", source);
 
     assert_eq!(exit_code, 1);
@@ -16,7 +16,7 @@ fn cli_renders_lex_stage_output() {
 
 #[test]
 fn cli_renders_parse_stage_output() {
-    let source = "program ParseFail\nbegin\nend.\n";
+    let source = "program ParseFail\nbegin\n  null;\nend program;\n";
     let (exit_code, stderr_output) = support::run_and_capture_stderr("parse.fpas", source);
 
     assert_eq!(exit_code, 1);
@@ -30,7 +30,10 @@ fn cli_renders_parse_stage_output() {
 fn check_rejects_case_without_an_arm_and_accepts_case_with_an_arm() {
     let cwd = create_temp_dir("check-case-arm");
     let invalid = cwd.join("missing_arm.fpas");
-    write_text(&invalid, "program T; begin case 1 of else return end end.");
+    write_text(
+        &invalid,
+        "program T; begin case 1 of else return; end case; end program;",
+    );
     let (exit_code, _, stderr) = support::run_cli_args_and_capture_output(
         &[
             String::from("check"),
@@ -47,7 +50,7 @@ fn check_rejects_case_without_an_arm_and_accepts_case_with_an_arm() {
     let valid = cwd.join("with_arm.fpas");
     write_text(
         &valid,
-        "program T; begin case 1 of 1: return else return end end.",
+        r#"program T; begin case 1 of when 1: return; else return; end case; end program;"#,
     );
     let (exit_code, _, stderr) = support::run_cli_args_and_capture_output(
         &[String::from("check"), valid.to_string_lossy().into_owned()],
@@ -58,7 +61,11 @@ fn check_rejects_case_without_an_arm_and_accepts_case_with_an_arm() {
 
 #[test]
 fn cli_renders_sema_stage_output() {
-    let source = "program SemaFail;\nbegin\n  x := 1;\nend.\n";
+    let source = r#"program SemaFail;
+begin
+  x := 1;
+end program;
+"#;
     let (exit_code, stderr_output) = support::run_and_capture_stderr("sema.fpas", source);
 
     assert_eq!(exit_code, 1);
@@ -86,7 +93,11 @@ fn cli_renders_compile_stage_output() {
 
 #[test]
 fn cli_renders_runtime_stage_output() {
-    let source = "program RuntimeFail;\nbegin\n  panic('boom');\nend.\n";
+    let source = r#"program RuntimeFail;
+begin
+  panic('boom');
+end program;
+"#;
     let (exit_code, stderr_output) = support::run_and_capture_stderr("runtime.fpas", source);
 
     assert_eq!(exit_code, 2);
@@ -98,7 +109,7 @@ fn cli_renders_runtime_stage_output() {
 
 #[test]
 fn cli_reports_compiler_directive_syntax_as_lex_error() {
-    let source = "program Fail;\n{$R+}\nbegin\nend.\n";
+    let source = "program Fail;\n{$R+}\nbegin\n  null;\nend program;\n";
     let (exit_code, stdout_output, stderr_output) =
         support::run_source_and_capture_output("directive.fpas", source);
 
@@ -112,7 +123,7 @@ fn cli_reports_compiler_directive_syntax_as_lex_error() {
 
 #[test]
 fn cli_reports_invalid_comment_form_with_the_valid_syntax() {
-    let source = "program Fail;\n{ not a comment }\nbegin\nend.\n";
+    let source = "program Fail;\n{ not a comment }\nbegin\n  null;\nend program;\n";
     let (exit_code, stdout_output, stderr_output) =
         support::run_source_and_capture_output("comment.fpas", source);
 

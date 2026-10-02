@@ -1,42 +1,46 @@
 program TaskGroupCloseTimeoutTest;
 
-uses Std.Tasks, Std.Results, Std.Arrays, Std.Test;
+uses Std.Tasks as Tasks;
+uses Std.Results as Results;
+uses Std.Arrays as Arrays;
+uses Std.Test as Test;
 
 begin
-  var Empty: TaskGroup := CreateTaskGroup();
-  AssertEquals(0, Length(Unwrap(CloseTaskGroupWithTimeout(Empty, 0))));
-  AssertEquals(0, Length(Unwrap(CloseTaskGroupWithTimeout(Empty, 0))));
-  var Group: TaskGroup := CreateTaskGroup();
-  var Token: CancellationToken := GetTaskGroupToken(Group);
-  var Gate: channel of integer := CreateChannel(1);
-  var Child: task := StartTaskInGroup(Group, function(Stop: CancellationToken): result of integer, string begin
-    Unwrap(Receive(Gate));
-    if not IsCancellationRequested(Stop) then
-    begin
-      panic('missing cancellation')
-    end;
+  var Empty: Tasks.TaskGroup := Tasks.CreateTaskGroup();
+  Test.AssertEquals(0, Arrays.Length(Results.Unwrap(Tasks.CloseTaskGroupWithTimeout(Empty, 0))));
+  Test.AssertEquals(0, Arrays.Length(Results.Unwrap(Tasks.CloseTaskGroupWithTimeout(Empty, 0))));
+  var Group: Tasks.TaskGroup := Tasks.CreateTaskGroup();
+  var Token: Tasks.CancellationToken := Tasks.GetTaskGroupToken(Group);
+  var Gate: channel of integer := Tasks.CreateChannel(1);
+  var Child: task := Tasks.StartTaskInGroup(Group, function(Stop: Tasks.CancellationToken): result of integer, string begin
+    Results.Unwrap(Tasks.Receive(Gate));
+    if not Tasks.IsCancellationRequested(Stop) then
+      begin
+        panic('missing cancellation');
+      end;
+    end if;
 
-    return Error('retained worker failure')
-  end);
-  var First: result of array of TaskFailure, string := CloseTaskGroupWithTimeout(Group, 2);
+    return Error('retained worker failure');
+  end function);
+  var First: result of array of Tasks.TaskFailure, string := Tasks.CloseTaskGroupWithTimeout(Group, 2);
   case First of
-    Error(Message):
-    begin
-      AssertEquals('Task group close timed out', Message)
-    end;
-    Ok(Reports):
-    begin
-      panic('worker has not been released')
-    end
-  end;
+    when Error(Message):
+      begin
+        Test.AssertEquals('Task group close timed out', Message);
+      end;
+    when Ok(Reports):
+      begin
+        panic('worker has not been released');
+      end;
+  end case;
 
-  AssertTrue(IsCancellationRequested(Token));
-  AssertTrue(IsError(CloseTaskGroupWithTimeout(Group, 0)));
-  Unwrap(Send(Gate, 1));
-  var Reports: array of TaskFailure := Unwrap(CloseTaskGroupWithTimeout(Group, 1000));
-  AssertEquals(1, Length(Reports));
-  AssertTrue(Reports[0].Kind = TaskFailureKind.ReturnedError);
-  AssertEquals('retained worker failure', Reports[0].Message);
-  AssertEquals(0, Length(CloseTaskGroup(Group)));
-  CloseChannel(Gate)
-end.
+  Test.AssertTrue(Tasks.IsCancellationRequested(Token));
+  Test.AssertTrue(Results.IsError(Tasks.CloseTaskGroupWithTimeout(Group, 0)));
+  Results.Unwrap(Tasks.Send(Gate, 1));
+  var Reports: array of Tasks.TaskFailure := Results.Unwrap(Tasks.CloseTaskGroupWithTimeout(Group, 1000));
+  Test.AssertEquals(1, Arrays.Length(Reports));
+  Test.AssertTrue(Reports[0].Kind = Tasks.TaskFailureKind.ReturnedError);
+  Test.AssertEquals('retained worker failure', Reports[0].Message);
+  Test.AssertEquals(0, Arrays.Length(Tasks.CloseTaskGroup(Group)));
+  Tasks.CloseChannel(Gate);
+end program;

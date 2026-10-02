@@ -1,45 +1,45 @@
 program BoundMethodsExample;
 
-uses Std.Console, Std.Conv;
+uses Std.Console as Console;
+uses Std.Conv as Conv;
 
-type
-  Counter = record
-    Base: integer;
+type Counter = record
+  Base: integer;
 
-    function Add(Self: Counter; Value: integer): integer;
-    begin
-      return Self.Base + Value
-    end;
+  function Add(Self: Counter; Value: integer): integer;
+  begin
+    return Self.Base + Value;
+  end function;
 
-    procedure Show(Self: Counter);
-    begin
-      WriteLn('Base: ' + IntToStr(Self.Base))
-    end;
+  procedure Show(Self: Counter);
+  begin
+    Console.WriteLn('Base: ' + Conv.IntToStr(Self.Base));
+  end procedure;
 
-    static function Make(Base: integer): Counter;
-    begin
-      return record
-        Base := Base;
-      end
-    end;
-  end;
+  static function Make(Base: integer): Counter;
+  begin
+    return record
+      Base := Base;
+    end record;
+  end function;
+end record;
 
 function Apply(F: function(Value: integer): integer; Value: integer): integer;
 begin
-  return F(Value)
-end;
+  return F(Value);
+end function;
 
 begin
   mutable var C: Counter := record
     Base := 10;
-  end;
+  end record;
   var AddTen: function(Value: integer): integer := C.Add;
   C := record
     Base := 99;
-  end;
+  end record;
 
-  WriteLn(IntToStr(AddTen(5)));
-  WriteLn(IntToStr(Apply(AddTen, 7)));
+  Console.WriteLn(Conv.IntToStr(AddTen(5)));
+  Console.WriteLn(Conv.IntToStr(Apply(AddTen, 7)));
   var ShowBase: procedure() := Counter.Make(3).Show;
-  ShowBase()
-end.
+  ShowBase();
+end program;

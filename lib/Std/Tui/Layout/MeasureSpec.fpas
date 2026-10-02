@@ -1,40 +1,45 @@
 unit Std.Tui.Layout.MeasureSpec;
 
-uses Std.Tui.Geometry.Size, Std.Tui.Layout.MeasureConstraint;
+uses Std.Tui.Geometry.Size as Size2;
+uses Std.Tui.Layout.MeasureConstraint as MeasureConstraint;
 
-public type
-  // Width and height measurement constraints for one element.
-  TuiMeasureSpec = record
-    // Width in terminal cells.
-    public Width: TuiMeasureConstraint;
-    // Height in terminal cells.
-    public Height: TuiMeasureConstraint;
+// Width and height measurement constraints for one element.
+public type TuiMeasureSpec = record
+  // Width in terminal cells.
+  public Width: MeasureConstraint.TuiMeasureConstraint;
+  // Height in terminal cells.
+  public Height: MeasureConstraint.TuiMeasureConstraint;
 
-    // Creates a two-axis measure specification.
-    //
-    // Parameters:
-    // - `Width`: Width in terminal cells.
-    // - `Height`: Height in terminal cells.
-    public static function Create(Width: TuiMeasureConstraint; Height: TuiMeasureConstraint): TuiMeasureSpec;
-    begin
-      return record
-        Width := Width;
-        Height := Height;
-      end
-    end;
+  // Creates a two-axis measure specification.
+  //
+  // Parameters:
+  // - `Width`: Width in terminal cells.
+  // - `Height`: Height in terminal cells.
+  public static function Create(
+  Width: MeasureConstraint.TuiMeasureConstraint;
+  Height: MeasureConstraint.TuiMeasureConstraint
+): TuiMeasureSpec;
+  begin
+    return record
+      Width := Width;
+      Height := Height;
+    end record;
+  end function;
 
-    // Both axes unbounded.
-    public static function Unbounded(): TuiMeasureSpec;
-    begin
-      return TuiMeasureSpec.Create(TuiMeasureConstraint.Unbounded(), TuiMeasureConstraint.Unbounded())
-    end;
+  // Both axes unbounded.
+  public static function Unbounded(): TuiMeasureSpec;
+  begin
+    return TuiMeasureSpec.Create(MeasureConstraint.TuiMeasureConstraint.Unbounded(), MeasureConstraint.TuiMeasureConstraint.Unbounded());
+  end function;
 
-    // Both axes capped by the given size.
-    //
-    // Parameters:
-    // - `Size`: Size in terminal cells.
-    public static function AtMost(Size: TuiSize): TuiMeasureSpec;
-    begin
-      return TuiMeasureSpec.Create(TuiMeasureConstraint.AtMost(Size.Width), TuiMeasureConstraint.AtMost(Size.Height))
-    end;
-  end;
+  // Both axes capped by the given size.
+  //
+  // Parameters:
+  // - `Size`: Size in terminal cells.
+  public static function AtMost(Size: Size2.TuiSize): TuiMeasureSpec;
+  begin
+    return TuiMeasureSpec.Create(MeasureConstraint.TuiMeasureConstraint.AtMost(Size.Width), MeasureConstraint.TuiMeasureConstraint.AtMost(Size.Height));
+  end function;
+end record;
+
+end unit;

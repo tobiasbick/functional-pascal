@@ -7,19 +7,19 @@ use crate::vm::debug::{
 
 const SOURCE: &str = r#"program DataLocation;
 
-mutable var Flag: integer := 0;
+  mutable var Flag: integer := 0;
 
 procedure Inner();
 begin
   mutable var Nested: integer := 1;
-  Nested := Nested + Flag
-end;
+  Nested := Nested + Flag;
+end procedure;
 
 begin
   Flag := 1;
   Inner();
-  Flag := 2
-end.
+  Flag := 2;
+end program;
 "#;
 
 fn compile_session() -> DebugSession {

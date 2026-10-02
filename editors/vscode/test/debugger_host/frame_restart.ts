@@ -22,22 +22,22 @@ export async function verifyFrameRestart(
   const lines = [
     "program DebuggerFrameRestart;",
     "",
-    "uses Std.Console;",
+    " uses Std.Console as Console;",
     "",
     "function Branch(Value: integer): integer;",
     "begin",
     "  mutable var Local: integer := Value + 10;",
-    "  WriteLn('effect');",
-    "  return Local",
-    "end;",
+    "  Console.WriteLn('effect');",
+    "  return Local;",
+    "end function;",
     "",
     "begin",
-    "  WriteLn(Branch(1))",
-    "end.",
+    "  Console.WriteLn(Branch(1));",
+    "end program;",
     ""
   ];
   const sourcePath = await writeSource(workspaceRoot, "frame-restart", lines);
-  const breakpointLine = lines.indexOf("  return Local");
+  const breakpointLine = lines.indexOf("  return Local;");
   const breakpoint = new vscode.SourceBreakpoint(
     new vscode.Location(vscode.Uri.file(sourcePath), new vscode.Position(breakpointLine, 2))
   );

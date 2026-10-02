@@ -1,152 +1,157 @@
 program CapturingRoutineAssignment;
 
-uses Std.Console, Std.Tasks;
+uses Std.Console as Console;
+uses Std.Tasks as Tasks;
 
-type
-  Handler = function(Value: integer): integer;
-  Action = procedure();
-  Math = record
-    static function Transform(Value: integer): integer;
-    begin
-      return Value + 5
-    end;
-  end;
-  Stats = record
-    static function Transform(Value: integer): integer;
-    begin
-      return Value + 6
-    end;
-  end;
+type Handler = function(Value: integer): integer;
+
+type Action = procedure();
+
+type Math = record
+  static function Transform(Value: integer): integer;
+  begin
+    return Value + 5;
+  end function;
+end record;
+
+type Stats = record
+  static function Transform(Value: integer): integer;
+  begin
+    return Value + 6;
+  end function;
+end record;
 
 function Identity(Value: integer): integer;
 begin
-  return Value
-end;
+  return Value;
+end function;
 
 procedure Noop();
 begin
-end;
+  null;
+end procedure;
 
 function MakeAdder(Base: integer): Handler;
 function AddBase(Value: integer): integer;
 begin
-  return Base + Value
-end;
+  return Base + Value;
+end function;
 begin
   mutable var Current: Handler := Identity;
   var MakeStop: integer := 0;
-  return Current
-end;
+  return Current;
+end function;
 
 function Combine(Left: integer; Right: integer): Handler;
 function AddBoth(Value: integer): integer;
 begin
-  return (Value + Left * 10) + Right
-end;
+  return (Value + Left * 10) + Right;
+end function;
 begin
   mutable var Current: Handler := Identity;
   var CombineStop: integer := 0;
-  return Current
-end;
+  return Current;
+end function;
 
 function Outer(Offset: integer): integer;
 function AddOffset(Value: integer): integer;
 begin
-  return Value + Offset
-end;
+  return Value + Offset;
+end function;
 begin
   mutable var Current: Handler := Identity;
   begin
     var Offset: integer := 99;
     var ShadowStop: integer := 0;
-    return Current(1)
-  end
-end;
+    return Current(1);
+  end;
+end function;
 
 function Walk(N: integer; Acc: integer): integer;
 function AddAcc(Value: integer): integer;
 begin
-  return Value + Acc
-end;
+  return Value + Acc;
+end function;
 begin
   mutable var Current: Handler := Identity;
   var WalkStop: integer := 0;
   if N = 0 then
-  begin
-    return Current(0)
-  end
+    begin
+      return Current(0);
+    end;
   else
-  begin
-    return Walk(N - 1, Acc + 10)
-  end
-end;
+    begin
+      return Walk(N - 1, Acc + 10);
+    end;
+  end if;
+end function;
 
 function Mutating(): Handler;
 function AddCell(Value: integer): integer;
 begin
   Cell := Cell + 1;
-  return Value + Cell
-end;
+  return Value + Cell;
+end function;
 begin
   mutable var Cell: integer := 1;
   mutable var Current: Handler := Identity;
   var CellStop: integer := 0;
-  return Current
-end;
+  return Current;
+end function;
 
 function OuterCell(): Handler;
 function Mid(): Handler;
 function AddEnclosed(Value: integer): integer;
 begin
   Cell := Cell + 1;
-  return Value + Cell
-end;
+  return Value + Cell;
+end function;
 begin
   var Keep: integer := Cell;
   mutable var Current: Handler := Identity;
   var EnclosingStop: integer := 0;
-  return Current
-end;
+  return Current;
+end function;
 begin
   mutable var Cell: integer := 1;
-  return Mid()
-end;
+  return Mid();
+end function;
 
 function LateInit(): integer;
 function AddLate(Value: integer): integer;
 begin
-  return Value + Offset
-end;
+  return Value + Offset;
+end function;
 begin
   mutable var Current: Handler := Identity;
   var LateStop: integer := 0;
   var Offset: integer := 7;
   var LateReady: integer := 0;
-  return Current(1)
-end;
+  return Current(1);
+end function;
 
 function Worker(Base: integer): integer;
 function AddWorker(Value: integer): integer;
 begin
-  return Base + Value
-end;
+  return Base + Value;
+end function;
 begin
   mutable var Current: Handler := Identity;
   var WorkerStop: integer := 0;
-  return Current(1)
-end;
+  return Current(1);
+end function;
 
 function HoldTask(Pending: task): Handler;
 function IgnorePending(Value: integer): integer;
 begin
   var Keep: task := Pending;
-  return Value
-end;
+  return Value;
+end function;
 begin
   mutable var Current: Handler := Identity;
   var TaskStop: integer := 0;
-  return Current
-end;
+  return Current;
+end function;
 
 begin
   mutable var Current: Handler := Identity;
@@ -161,6 +166,6 @@ begin
   var Pending: task := go Worker(8);
   var Held: Handler := HoldTask(Pending);
   var RootStop: integer := 0;
-  WriteLn(Wait(Pending));
-  WriteLn(First(1))
-end.
+  Console.WriteLn(Tasks.Wait(Pending));
+  Console.WriteLn(First(1));
+end program;

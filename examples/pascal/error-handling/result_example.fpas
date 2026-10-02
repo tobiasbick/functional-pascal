@@ -1,73 +1,76 @@
 program ResultExample;
 
-uses Std.Console, Std.Conv, Std.Results;
+uses Std.Console as Console;
+uses Std.Conv as Conv;
+uses Std.Results as Results;
 
 function Divide(A: integer; B: integer): result of integer, string;
 begin
   if B = 0 then
-  begin
-    return Error('Division by zero')
-  end
+    begin
+      return Error('Division by zero');
+    end;
   else
-  begin
-    return Ok(A div B)
-  end
-end;
+    begin
+      return Ok(A div B);
+    end;
+  end if;
+end function;
 
 function Stringify(A: integer; B: integer): result of string, string;
 begin
   var Quotient: integer := try Divide(A, B);
-  return Ok((((IntToStr(A) + ' / ') + IntToStr(B)) + ' = ') + IntToStr(Quotient))
-end;
+  return Ok((((Conv.IntToStr(A) + ' / ') + Conv.IntToStr(B)) + ' = ') + Conv.IntToStr(Quotient));
+end function;
 
 begin
   var R1: result of integer, string := Divide(10, 3);
-  WriteLn('IsOk: ', IsOk(R1));
-  WriteLn('Value: ', Unwrap(R1));
+  Console.WriteLn('IsOk: ', Results.IsOk(R1));
+  Console.WriteLn('Value: ', Results.Unwrap(R1));
   var R2: result of integer, string := Divide(5, 0);
-  WriteLn('IsError: ', IsError(R2));
-  WriteLn('UnwrapOr: ', UnwrapOr(R2, -1));
+  Console.WriteLn('IsError: ', Results.IsError(R2));
+  Console.WriteLn('UnwrapOr: ', Results.UnwrapOr(R2, -1));
   case Divide(42, 6) of
-    Ok(V):
-    begin
-      WriteLn('42 / 6 = ', V)
-    end;
-    Error(E):
-    begin
-      WriteLn('Error: ', E)
-    end
-  end;
+    when Ok(V):
+      begin
+        Console.WriteLn('42 / 6 = ', V);
+      end;
+    when Error(E):
+      begin
+        Console.WriteLn('Error: ', E);
+      end;
+  end case;
 
   case Divide(7, 0) of
-    Ok(V):
-    begin
-      WriteLn('7 / 0 = ', V)
-    end;
-    Error(E):
-    begin
-      WriteLn('Error: ', E)
-    end
-  end;
+    when Ok(V):
+      begin
+        Console.WriteLn('7 / 0 = ', V);
+      end;
+    when Error(E):
+      begin
+        Console.WriteLn('Error: ', E);
+      end;
+  end case;
 
   case Stringify(100, 4) of
-    Ok(S):
-    begin
-      WriteLn(S)
-    end;
-    Error(E):
-    begin
-      WriteLn('Failed: ', E)
-    end
-  end;
+    when Ok(S):
+      begin
+        Console.WriteLn(S);
+      end;
+    when Error(E):
+      begin
+        Console.WriteLn('Failed: ', E);
+      end;
+  end case;
 
   case Stringify(100, 0) of
-    Ok(S):
-    begin
-      WriteLn(S)
-    end;
-    Error(E):
-    begin
-      WriteLn('Failed: ', E)
-    end
-  end
-end.
+    when Ok(S):
+      begin
+        Console.WriteLn(S);
+      end;
+    when Error(E):
+      begin
+        Console.WriteLn('Failed: ', E);
+      end;
+  end case;
+end program;

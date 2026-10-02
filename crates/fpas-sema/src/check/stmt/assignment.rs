@@ -59,7 +59,7 @@ impl Checker {
         };
 
         if base_resolved && !self.designator_is_mutable_target(target) {
-            let target_name = Self::resolve_designator_name(target);
+            let target_name = self.resolve_designator_name(target);
             let hint = match target.parts.first() {
                 Some(DesignatorPart::Ident(base, _)) => self
                     .scopes
@@ -132,7 +132,7 @@ impl Checker {
             .iter()
             .all(|part| matches!(part, DesignatorPart::Ident(_, _)));
         if only_idents {
-            let full_name = Self::resolve_designator_name(target);
+            let full_name = self.resolve_designator_name(target);
             if self.scopes.lookup(&full_name).is_some() {
                 return None;
             }

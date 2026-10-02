@@ -1,9 +1,11 @@
 program T;
 
-uses Std.Console, Std.Dictionaries, Std.Options;
+uses Std.Console as Console;
+uses Std.Dictionaries as Dictionaries;
+uses Std.Options as Options;
 
 begin
   var D: dict of string to integer := ['Alice': 30];
-  var R: option of integer := Std.Dictionaries.Get(D, 'Eve');
-  WriteLn(IsNone(R))
-end.
+  var R: option of integer := Dictionaries.Get(D, 'Eve');
+  Console.WriteLn(Options.IsNone(R));
+end program;

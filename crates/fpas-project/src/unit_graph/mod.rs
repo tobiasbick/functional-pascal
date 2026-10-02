@@ -17,7 +17,7 @@ use std::path::{Path, PathBuf};
 use fpas_diagnostics::codes::{
     INTERNAL_PROJECT_INVARIANT_FAILURE, PROJECT_SOURCE_LIMIT_EXCEEDED, PROJECT_UNIT_KIND_MISMATCH,
 };
-use fpas_parser::{CompilationUnit, QualifiedId, Unit};
+use fpas_parser::{CompilationUnit, Import, Unit};
 
 use crate::model::ProjectLinkMeta;
 use crate::source::{
@@ -180,7 +180,7 @@ fn insert_unit(
         validate_user_unit_name(source_path, &unit.name)?;
     }
 
-    let key = canonical_unit_key(&unit.name);
+    let key = unit.name.parts.join(".").to_ascii_lowercase();
     if let Some(existing) = nodes.get(&key) {
         return Err(duplicate_unit_error(
             &qualified_id_to_string(&unit.name),
@@ -204,7 +204,7 @@ fn insert_unit(
 /// Resolves units reachable from a program or test entry `uses` clause.
 pub fn resolve_program_units(
     graph: &UnitGraph,
-    root_uses: &[QualifiedId],
+    root_uses: &[Import],
 ) -> Result<ResolvedUnitGraph, crate::ProjectError> {
     let policy = ImportPolicy::new(graph);
     let reachable = resolve_reachable(root_uses, graph, &policy)?;
@@ -217,11 +217,11 @@ pub fn resolve_library_units(graph: &UnitGraph) -> Result<ResolvedUnitGraph, cra
     resolve_order(&reachable, graph)
 }
 
-pub(crate) fn canonical_unit_key(id: &QualifiedId) -> String {
-    qualified_id_to_string(id).to_ascii_lowercase()
+pub(crate) fn canonical_unit_key(id: &Import) -> String {
+    id.parts.join(".").to_ascii_lowercase()
 }
 
-pub(crate) fn is_intrinsic_std_unit(used: &QualifiedId, graph: &UnitGraph) -> bool {
+pub(crate) fn is_intrinsic_std_unit(used: &Import, graph: &UnitGraph) -> bool {
     let key = canonical_unit_key(used);
     !graph.contains(&key)
         && fpas_std::STD_UNITS_INTRINSIC

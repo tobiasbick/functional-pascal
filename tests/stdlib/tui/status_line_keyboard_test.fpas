@@ -1,14 +1,15 @@
 program TuiStatusLineKeyboardTest;
 
-uses Std.Arrays, Std.Test, Std.Tui;
+uses Std.Arrays as Arrays;
+uses Std.Test as Test;
+uses Std.Tui as Tui;
 
-type
-  StatusModel = record
-    Focus: integer;
-    Actions: array of integer;
-  end;
+type StatusModel = record
+  Focus: integer;
+  Actions: array of integer;
+end record;
 
-function MakeKey(Kind: TuiKeyKind): TuiKeyEvent;
+function MakeKey(Kind: Tui.TuiKeyKind): Tui.TuiKeyEvent;
 begin
   return record
     kind := Kind;
@@ -17,68 +18,68 @@ begin
     ctrl := false;
     alt := false;
     meta := false;
-  end
-end;
+  end record;
+end function;
 
-function ViewStatus(State: StatusModel): TuiElement;
+function ViewStatus(State: StatusModel): Tui.TuiElement;
 begin
-  return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(State.Focus)), [
-                                                                                  TuiElementBuilders.MakeStatusLine([
-                                                                                                                      TuiStatusItemBuilders.MakeHint('Ready'),
-                                                                                                                      TuiStatusItemBuilders.MakeDisabledCommand(TuiControlId.Create(2), 'Save', TuiAction.Create(20)),
-                                                                                                                      TuiStatusItemBuilders.MakeCommand(TuiControlId.Create(3), 'Quit', TuiAction.Create(30))
-                                                                                                                    ])
-                                                                                ])
-end;
+  return Tui.TuiElementBuilders.MakeDesktop(Some(Tui.TuiControlId.Create(State.Focus)), [
+                                                                                          Tui.TuiElementBuilders.MakeStatusLine([
+                                                                                                                                  Tui.TuiStatusItemBuilders.MakeHint('Ready'),
+                                                                                                                                  Tui.TuiStatusItemBuilders.MakeDisabledCommand(Tui.TuiControlId.Create(2), 'Save', Tui.TuiAction.Create(20)),
+                                                                                                                                  Tui.TuiStatusItemBuilders.MakeCommand(Tui.TuiControlId.Create(3), 'Quit', Tui.TuiAction.Create(30))
+                                                                                                                                ])
+                                                                                        ]);
+end function;
 
-function UpdateStatus(State: StatusModel; Msg: TuiMsg; Cmd: TuiCmdOutput): StatusModel;
+function UpdateStatus(State: StatusModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): StatusModel;
 begin
-  Cmd.Set(TuiCmd.NoCommand);
+  Cmd.Set(Tui.TuiCmd.NoCommand);
   case Msg of
-    TuiMsg.FocusChanged(Previous, Current):
-    begin
-      case Current of
-        Some(Id):
-        begin
-          return record
-            Focus := Id.Value;
-            Actions := State.Actions;
-          end
-        end;
-        None:
-        begin
-          return State
-        end
-      end
-    end;
-    TuiMsg.Action(Source, Action):
-    begin
-      return record
-        Focus := State.Focus;
-        Actions := Std.Arrays.Concat(State.Actions, [Action.Value]);
-      end
-    end
+    when Tui.TuiMsg.FocusChanged(Previous, Current):
+      begin
+        case Current of
+          when Some(Id):
+            begin
+              return record
+                Focus := Id.Value;
+                Actions := State.Actions;
+              end record;
+            end;
+          when None:
+            begin
+              return State;
+            end;
+        end case;
+      end;
+    when Tui.TuiMsg.Action(Source, Action):
+      begin
+        return record
+          Focus := State.Focus;
+          Actions := Arrays.Concat(State.Actions, [Action.Value]);
+        end record;
+      end;
     else
-    begin
-      return State
-    end
-  end
-end;
+      begin
+        return State;
+      end;
+  end case;
+end function;
 
 begin
-  mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 4));
+  mutable var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(24, 4));
   mutable var Model: StatusModel := record
     Focus := 3;
     Actions := [];
-  end;
+  end record;
 
   Model := App.RunIterations(Model, UpdateStatus, ViewStatus, 0, 0);
-  App.InjectKeyForTest(MakeKey(TuiKeyKind.Enter));
+  App.InjectKeyForTest(MakeKey(Tui.TuiKeyKind.Enter));
   Model := App.RunIterations(Model, UpdateStatus, ViewStatus, 1, 0);
-  AssertEquals(1, Std.Arrays.Length(Model.Actions));
-  AssertEquals(30, Model.Actions[0]);
-  App.InjectKeyForTest(MakeKey(TuiKeyKind.Tab));
+  Test.AssertEquals(1, Arrays.Length(Model.Actions));
+  Test.AssertEquals(30, Model.Actions[0]);
+  App.InjectKeyForTest(MakeKey(Tui.TuiKeyKind.Tab));
   Model := App.RunIterations(Model, UpdateStatus, ViewStatus, 1, 0);
-  AssertEquals(3, Model.Focus);
-  App.Close()
-end.
+  Test.AssertEquals(3, Model.Focus);
+  App.Close();
+end program;

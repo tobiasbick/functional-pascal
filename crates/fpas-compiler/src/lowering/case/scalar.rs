@@ -60,8 +60,8 @@ impl LoweringContext {
                 })?;
 
                 self.switch_to(body_block);
+                self.begin_scope();
                 if is_binding {
-                    self.begin_scope();
                     let name =
                         binding_name(label).ok_or_else(|| unsupported(arm.span, "case binding"))?;
                     let value =
@@ -84,15 +84,15 @@ impl LoweringContext {
                     self.jump(merge_block)?;
                     has_merge_predecessor = true;
                 }
-                if is_binding {
-                    self.end_scope();
-                }
+                self.end_scope();
                 self.switch_to(next_test);
             }
         }
 
         if let Some(else_body) = else_body {
+            self.begin_scope();
             self.lower_statements(else_body)?;
+            self.end_scope();
         } else if exhaustive_enum && !self.is_terminated() {
             let message = self.emit_value(
                 Operation::Const(Constant::String(

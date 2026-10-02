@@ -1,32 +1,33 @@
 // Covers HTTP server-loop defaults and request-handler typing.
 program HttpServerLoopTypesTest;
 
-uses Std.Http, Std.Test;
+uses Std.Http as Http;
+uses Std.Test as Test;
 
 // Returns a response whose reason phrase mirrors the request method.
 //
 // Parameters:
 // - `RequestValue`: Request supplied through the handler type.
-function Handle(RequestValue: ServerRequest): ServerResponse;
+function Handle(RequestValue: Http.ServerRequest): Http.ServerResponse;
 begin
-  return ServerResponse.Create(200, RequestValue.Method)
-end;
+  return Http.ServerResponse.Create(200, RequestValue.Method);
+end function;
 
 begin
-  var Options: ServerOptions := ServerOptions.Create();
-  AssertEquals(65536, Options.MaxHeaderBytes);
-  AssertEquals(1048576, Options.MaxBodyBytes);
-  AssertEquals(30000, Options.ConnectionTimeoutMillis);
-  AssertEquals(8, Options.MaxConcurrentRequests);
-  AssertEquals(0, Options.MaxRequests);
-  var HandlerValue: RequestHandler := Handle;
-  var RequestValue: ServerRequest := record
+  var Options: Http.ServerOptions := Http.ServerOptions.Create();
+  Test.AssertEquals(65536, Options.MaxHeaderBytes);
+  Test.AssertEquals(1048576, Options.MaxBodyBytes);
+  Test.AssertEquals(30000, Options.ConnectionTimeoutMillis);
+  Test.AssertEquals(8, Options.MaxConcurrentRequests);
+  Test.AssertEquals(0, Options.MaxRequests);
+  var HandlerValue: Http.RequestHandler := Handle;
+  var RequestValue: Http.ServerRequest := record
     Method := 'OK';
     Target := '/';
     Headers := [];
     Body := [];
-  end;
-  var ResponseValue: ServerResponse := HandlerValue(RequestValue);
-  AssertEquals(200, ResponseValue.StatusCode);
-  AssertEquals('OK', ResponseValue.ReasonPhrase)
-end.
+  end record;
+  var ResponseValue: Http.ServerResponse := HandlerValue(RequestValue);
+  Test.AssertEquals(200, ResponseValue.StatusCode);
+  Test.AssertEquals('OK', ResponseValue.ReasonPhrase);
+end program;

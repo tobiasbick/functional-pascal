@@ -148,13 +148,19 @@ fn collect_statements(statements: &[Stmt], offset: usize, spans: &mut Vec<Source
         }
         spans.push(span);
         match statement {
-            Stmt::Block(statements, _) => collect_statements(statements, offset, spans),
+            Stmt::Block(statements, _) | Stmt::StatementList(statements, _) => {
+                collect_statements(statements, offset, spans)
+            }
             Stmt::If {
                 then_branch,
+                elsif_branches,
                 else_branch,
                 ..
             } => {
                 collect_statements(std::slice::from_ref(then_branch), offset, spans);
+                for (_, body) in elsif_branches {
+                    collect_statements(std::slice::from_ref(body), offset, spans);
+                }
                 if let Some(else_branch) = else_branch {
                     collect_statements(std::slice::from_ref(else_branch), offset, spans);
                 }
@@ -173,7 +179,8 @@ fn collect_statements(statements: &[Stmt], offset: usize, spans: &mut Vec<Source
                 collect_statements(std::slice::from_ref(body), offset, spans);
             }
             Stmt::Repeat { body, .. } => collect_statements(body, offset, spans),
-            Stmt::Var(_)
+            Stmt::Null(_)
+            | Stmt::Var(_)
             | Stmt::MutableVar(_)
             | Stmt::Assign { .. }
             | Stmt::Return(_, _)

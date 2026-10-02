@@ -141,15 +141,15 @@ mod tests {
     #[test]
     fn named_and_array_types() {
         assert_eq!(
-            type_from_var("program T; begin var X: integer := 0; end."),
+            type_from_var(r#"program T; begin var X: integer := 0; end program;"#),
             "integer"
         );
         assert_eq!(
-            type_from_var("program T; begin var X: MyLib.Utils.Id := 0; end."),
+            type_from_var(r#"program T; begin var X: MyLib.Utils.Id := 0; end program;"#),
             "MyLib.Utils.Id"
         );
         assert_eq!(
-            type_from_var("program T; begin var X: array of integer := []; end."),
+            type_from_var(r#"program T; begin var X: array of integer := []; end program;"#),
             "array of integer"
         );
     }
@@ -157,29 +157,33 @@ mod tests {
     #[test]
     fn result_option_dict_types() {
         assert_eq!(
-            type_from_var("program T; begin var X: result of integer, string := Ok(0); end."),
+            type_from_var(
+                r#"program T; begin var X: result of integer, string := Ok(0); end program;"#
+            ),
             "result of integer, string"
         );
         assert_eq!(
-            type_from_var("program T; begin var X: option of integer := None; end."),
+            type_from_var(r#"program T; begin var X: option of integer := None; end program;"#),
             "option of integer"
         );
         assert_eq!(
-            type_from_var("program T; begin var X: dict of string to integer := [:]; end."),
+            type_from_var(
+                r#"program T; begin var X: dict of string to integer := [:]; end program;"#
+            ),
             "dict of string to integer"
         );
         assert_eq!(
-            type_from_var("program T; begin var X: channel of string := Value; end."),
+            type_from_var(r#"program T; begin var X: channel of string := Value; end program;"#),
             "channel of string"
         );
         assert_eq!(
             type_from_var(
-                "program T; begin var X: array of TASK OF result of integer, string := []; end."
+                r#"program T; begin var X: array of TASK OF result of integer, string := []; end program;"#
             ),
             "array of task of result of integer, string"
         );
         assert_eq!(
-            type_from_var("program T; begin var X: task := Value; end."),
+            type_from_var(r#"program T; begin var X: task := Value; end program;"#),
             "task"
         );
     }
@@ -187,16 +191,20 @@ mod tests {
     #[test]
     fn function_and_procedure_types() {
         assert_eq!(
-            type_from_var("program T; begin var F: function(X: integer): integer := Add; end."),
+            type_from_var(
+                r#"program T; begin var F: function(X: integer): integer := Add; end program;"#
+            ),
             "function(X: integer): integer"
         );
         assert_eq!(
-            type_from_var("program T; begin var P: procedure(Msg: string) := WriteLn; end."),
+            type_from_var(
+                r#"program T; begin var P: procedure(Msg: string) := WriteLn; end program;"#
+            ),
             "procedure(Msg: string)"
         );
         assert_eq!(
             type_from_var(
-                "program T; begin var F: function(A: integer; mutable B: integer): boolean := Check; end."
+                r#"program T; begin var F: function(A: integer; mutable B: integer): boolean := Check; end program;"#
             ),
             "function(A: integer; mutable B: integer): boolean"
         );
@@ -206,7 +214,7 @@ mod tests {
     fn long_formal_param_list_wraps() {
         assert_eq!(
             type_from_var(
-                "program T; begin var F: function(AlphaParameter: integer; BetaParameter: integer; GammaParameter: integer; DeltaParameter: integer): boolean := Check; end.",
+                r#"program T; begin var F: function(AlphaParameter: integer; BetaParameter: integer; GammaParameter: integer; DeltaParameter: integer): boolean := Check; end program;"#,
             ),
             "function(\n  AlphaParameter: integer;\n  BetaParameter: integer;\n  GammaParameter: integer;\n  DeltaParameter: integer\n): boolean"
         );

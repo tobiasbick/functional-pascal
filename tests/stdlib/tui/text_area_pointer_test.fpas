@@ -1,106 +1,108 @@
 program TuiTextAreaPointerTest;
 
-uses Std.Str, Std.Test, Std.Tui;
+uses Std.Str as Str;
+uses Std.Test as Test;
+uses Std.Tui as Tui;
 
-type
-  PointerModel = record
-    Focus: integer;
-    Text: string;
-    Caret: integer;
-    Offset: TuiPoint;
-  end;
+type PointerModel = record
+  Focus: integer;
+  Text: string;
+  Caret: integer;
+  Offset: Tui.TuiPoint;
+end record;
 
-function ViewTextArea(State: PointerModel): TuiElement;
+function ViewTextArea(State: PointerModel): Tui.TuiElement;
 begin
-  mutable var Focused: option of TuiControlId := None;
+  mutable var Focused: option of Tui.TuiControlId := None;
   if State.Focus > 0 then
-  begin
-    Focused := Some(TuiControlId.Create(State.Focus))
-  end;
-
-  return TuiElementBuilders.MakeDesktop(Focused, [
-                                                   TuiElementBuilders.MakeTextArea(TuiControlId.Create(1), State.Text, State.Caret, State.Offset, TuiAction.Create(9))
-                                                 ])
-end;
-
-function UpdateTextArea(State: PointerModel; Msg: TuiMsg; Cmd: TuiCmdOutput): PointerModel;
-begin
-  Cmd.Set(TuiCmd.NoCommand);
-  case Msg of
-    TuiMsg.FocusChanged(Previous, Current):
     begin
-      case Current of
-        Some(Id):
-        begin
-          return record
-            Focus := Id.Value;
-            Text := State.Text;
-            Caret := State.Caret;
-            Offset := State.Offset;
-          end
-        end;
-        None:
-        begin
-          return State
-        end
-      end
+      Focused := Some(Tui.TuiControlId.Create(State.Focus));
     end;
-    TuiMsg.TextAreaChanged(Source, Action, Text, Caret, Offset):
-    begin
-      AssertEquals(1, Source.Value);
-      AssertEquals(9, Action.Value);
-      return record
-        Focus := State.Focus;
-        Text := Text;
-        Caret := Caret;
-        Offset := Offset;
-      end
-    end
+  end if;
+
+  return Tui.TuiElementBuilders.MakeDesktop(Focused, [
+                                                       Tui.TuiElementBuilders.MakeTextArea(Tui.TuiControlId.Create(1), State.Text, State.Caret, State.Offset, Tui.TuiAction.Create(9))
+                                                     ]);
+end function;
+
+function UpdateTextArea(State: PointerModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): PointerModel;
+begin
+  Cmd.Set(Tui.TuiCmd.NoCommand);
+  case Msg of
+    when Tui.TuiMsg.FocusChanged(Previous, Current):
+      begin
+        case Current of
+          when Some(Id):
+            begin
+              return record
+                Focus := Id.Value;
+                Text := State.Text;
+                Caret := State.Caret;
+                Offset := State.Offset;
+              end record;
+            end;
+          when None:
+            begin
+              return State;
+            end;
+        end case;
+      end;
+    when Tui.TuiMsg.TextAreaChanged(Source, Action, Text, Caret, Offset):
+      begin
+        Test.AssertEquals(1, Source.Value);
+        Test.AssertEquals(9, Action.Value);
+        return record
+          Focus := State.Focus;
+          Text := Text;
+          Caret := Caret;
+          Offset := Offset;
+        end record;
+      end;
     else
-    begin
-      return State
-    end
-  end
-end;
+      begin
+        return State;
+      end;
+  end case;
+end function;
 
 function Click(
-  App: TuiApplication;
+  App: Tui.TuiApplication;
   State: PointerModel;
   X: integer;
   Y: integer;
   Iterations: integer
 ): PointerModel;
 begin
-  App.InjectPointerForTest(TuiPointerEvent.Create(TuiPointerAction.Down, TuiPointerButton.Left, TuiPoint.Create(X, Y)));
-  return App.RunIterations(State, UpdateTextArea, ViewTextArea, Iterations, 0)
-end;
+  App.InjectPointerForTest(Tui.TuiPointerEvent.Create(Tui.TuiPointerAction.Down, Tui.TuiPointerButton.Left, Tui.TuiPoint.Create(X, Y)));
+  return App.RunIterations(State, UpdateTextArea, ViewTextArea, Iterations, 0);
+end function;
 
 begin
-  mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(6, 3));
+  mutable var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(6, 3));
   mutable var Model: PointerModel := record
     Focus := 0;
-    Text := (('zero' + Std.Str.Chr(10)) + 'one') + (Std.Str.Chr(10) + 'three');
+    Text := (('zero' + Str.Chr(10)) + 'one') + (Str.Chr(10) + 'three');
     Caret := 0;
-    Offset := TuiPoint.Create(0, 0);
-  end;
+    Offset := Tui.TuiPoint.Create(0, 0);
+  end record;
 
   Model := App.RunIterations(Model, UpdateTextArea, ViewTextArea, 0, 0);
   Model := Click(App, Model, 2, 1, 2);
-  AssertEquals(1, Model.Focus);
-  AssertEquals(7, Model.Caret);
+  Test.AssertEquals(1, Model.Focus);
+  Test.AssertEquals(7, Model.Caret);
   Model := Click(App, Model, 5, 1, 1);
-  AssertEquals(8, Model.Caret);
+  Test.AssertEquals(8, Model.Caret);
   Model := record
     Focus := 1;
     Text := Model.Text;
     Caret := Model.Caret;
-    Offset := TuiPoint.Create(2, 1);
-  end;
+    Offset := Tui.TuiPoint.Create(2, 1);
+  end record;
 
   Model := App.RunIterations(Model, UpdateTextArea, ViewTextArea, 0, 0);
   Model := Click(App, Model, 1, 1, 1);
-  AssertEquals(12, Model.Caret);
-  AssertEquals(2, Model.Offset.X);
-  AssertEquals(1, Model.Offset.Y);
-  App.Close()
-end.
+  Test.AssertEquals(12, Model.Caret);
+  Test.AssertEquals(2, Model.Offset.X);
+  Test.AssertEquals(1, Model.Offset.Y);
+  App.Close();
+end program;

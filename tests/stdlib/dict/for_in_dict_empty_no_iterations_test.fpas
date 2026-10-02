@@ -1,14 +1,16 @@
 program T;
 
-uses Std.Console, Std.Dictionaries;
+uses Std.Console as Console;
+uses Std.Dictionaries as Dictionaries;
 
 begin
   var D: dict of string to integer := [:];
   mutable var Count: integer := 0;
   for K: string in D do
-  begin
-    Count := Count + 1
-  end;
+    begin
+      Count := Count + 1;
+    end;
+  end for;
 
-  WriteLn(Count)
-end.
+  Console.WriteLn(Count);
+end program;

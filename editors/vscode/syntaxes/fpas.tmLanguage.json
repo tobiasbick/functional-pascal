@@ -4,16 +4,13 @@
   "scopeName": "source.fpas",
   "patterns": [
     {
-      "include": "#typeSection"
-    },
-    {
-      "include": "#constSection"
-    },
-    {
       "include": "#comments"
     },
     {
       "include": "#strings"
+    },
+    {
+      "include": "#namedClosers"
     },
     {
       "include": "#declarations"
@@ -38,106 +35,6 @@
     }
   ],
   "repository": {
-    "typeSection": {
-      "name": "meta.declaration.type-section.fpas",
-      "begin": "^(?i:(?:(public)\\s+)?(type))\\b",
-      "beginCaptures": {
-        "1": {
-          "name": "keyword.declaration.visibility.fpas"
-        },
-        "2": {
-          "name": "keyword.declaration.type.fpas"
-        }
-      },
-      "end": "^(?=(?i:(?:(?:public|static)\\s+)?(?:const|var|mutable|function|procedure|begin|type)\\b))",
-      "patterns": [
-        {
-          "include": "#comments"
-        },
-        {
-          "include": "#strings"
-        },
-        {
-          "match": "^\\s+([A-Za-z_][A-Za-z0-9_]*)\\s*(=)",
-          "captures": {
-            "1": {
-              "name": "entity.name.type.fpas"
-            },
-            "2": {
-              "name": "keyword.operator.assignment.type.fpas"
-            }
-          }
-        },
-        {
-          "include": "#constants"
-        },
-        {
-          "include": "#keywords"
-        },
-        {
-          "include": "#builtInTypes"
-        },
-        {
-          "include": "#qualifiedNames"
-        },
-        {
-          "include": "#operators"
-        },
-        {
-          "include": "#punctuation"
-        }
-      ]
-    },
-    "constSection": {
-      "name": "meta.declaration.const-section.fpas",
-      "begin": "^(?i:(?:(public)\\s+)?(const))\\b",
-      "beginCaptures": {
-        "1": {
-          "name": "keyword.declaration.visibility.fpas"
-        },
-        "2": {
-          "name": "storage.type.constant.fpas"
-        }
-      },
-      "end": "^(?=(?i:(?:(?:public|static)\\s+)?(?:const|var|mutable|function|procedure|begin|type)\\b))",
-      "patterns": [
-        {
-          "include": "#comments"
-        },
-        {
-          "include": "#strings"
-        },
-        {
-          "match": "^\\s+([A-Za-z_][A-Za-z0-9_]*)\\s*(:)",
-          "captures": {
-            "1": {
-              "name": "entity.name.constant.fpas"
-            },
-            "2": {
-              "name": "punctuation.separator.type.fpas"
-            }
-          }
-        },
-        {
-          "include": "#constants"
-        },
-        {
-          "include": "#keywords"
-        },
-        {
-          "include": "#builtInTypes"
-        },
-        {
-          "include": "#qualifiedNames"
-        },
-        {
-          "include": "#operators"
-        },
-        {
-          "include": "#punctuation"
-        }
-      ]
-    },
     "comments": {
       "patterns": [
         {
@@ -190,7 +87,29 @@
           }
         },
         {
-          "match": "(?i:\\b(const|var)\\b)\\s+([A-Za-z_][A-Za-z0-9_]*)",
+          "match": "(?i:\\b(type)\\b)\\s+([A-Za-z_][A-Za-z0-9_]*)",
+          "captures": {
+            "1": {
+              "name": "storage.type.fpas"
+            },
+            "2": {
+              "name": "entity.name.type.fpas"
+            }
+          }
+        },
+        {
+          "match": "(?i:\\b(const)\\b)\\s+([A-Za-z_][A-Za-z0-9_]*)",
+          "captures": {
+            "1": {
+              "name": "storage.type.fpas"
+            },
+            "2": {
+              "name": "entity.name.constant.fpas"
+            }
+          }
+        },
+        {
+          "match": "(?i:\\b(var)\\b)\\s+([A-Za-z_][A-Za-z0-9_]*)",
           "captures": {
             "1": {
               "name": "storage.type.fpas"
@@ -226,11 +145,11 @@
       "patterns": [
         {
           "name": "keyword.declaration.fpas",
-          "match": "(?i:\\b(program|unit|uses|const|var|mutable|function|procedure|type|public|static|property|event)\\b)"
+          "match": "(?i:\\b(program|unit|uses|as|const|var|mutable|function|procedure|type|public|static|property|event)\\b)"
         },
         {
           "name": "keyword.control.fpas",
-          "match": "(?i:\\b(begin|end|return|if|then|else|case|of|for|to|downto|in|do|while|repeat|until|panic|break|continue|try|go|with)\\b)"
+          "match": "(?i:\\b(begin|end|return|if|then|else|elsif|case|when|of|for|to|downto|in|do|while|repeat|until|panic|break|continue|null|try|go|with)\\b)"
         },
         {
           "name": "keyword.operator.word.fpas",
@@ -285,6 +204,10 @@
           "match": "[()\\[\\]]"
         }
       ]
+    },
+    "namedClosers": {
+      "name": "keyword.control.fpas",
+      "match": "(?i:\\bend\\s+(program|unit|function|procedure|record|enum|with|if|for|while|case)\\b)"
     }
   }
 }

@@ -1,8 +1,9 @@
 program T;
 
-uses Std.Console, Std.Conv;
+uses Std.Console as Console;
+uses Std.Conv as Conv;
 
 begin
-  WriteLn(StrToBool('True'));
-  WriteLn(StrToBool('FALSE'))
-end.
+  Console.WriteLn(Conv.StrToBool('True'));
+  Console.WriteLn(Conv.StrToBool('FALSE'));
+end program;

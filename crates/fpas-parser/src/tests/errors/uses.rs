@@ -2,7 +2,8 @@ use super::*;
 
 #[test]
 fn missing_uses_identifier_keeps_non_empty_qualified_id() {
-    let (unit, errs) = parse_compilation_unit_with_errors("program T; uses ; begin end.");
+    let (unit, errs) =
+        parse_compilation_unit_with_errors("program T; uses ; begin null; end program;");
     assert!(!errs.is_empty());
 
     let crate::CompilationUnit::Program(program) = unit else {
@@ -15,7 +16,8 @@ fn missing_uses_identifier_keeps_non_empty_qualified_id() {
 
 #[test]
 fn missing_uses_segment_after_dot_keeps_placeholder_part() {
-    let (unit, errs) = parse_compilation_unit_with_errors("program T; uses Std.; begin end.");
+    let (unit, errs) =
+        parse_compilation_unit_with_errors("program T; uses Std.; begin null; end program;");
     assert!(!errs.is_empty());
 
     let crate::CompilationUnit::Program(program) = unit else {
@@ -28,8 +30,9 @@ fn missing_uses_segment_after_dot_keeps_placeholder_part() {
 
 #[test]
 fn empty_uses_entry_before_valid_unit_recovers_next_entry() {
-    let (unit, errs) =
-        parse_compilation_unit_with_errors("program T; uses , Std.Console; begin end.");
+    let (unit, errs) = parse_compilation_unit_with_errors(
+        "program T; uses ; uses Std.Console as Console; begin null; end program;",
+    );
     assert!(!errs.is_empty());
 
     let crate::CompilationUnit::Program(program) = unit else {
@@ -43,7 +46,7 @@ fn empty_uses_entry_before_valid_unit_recovers_next_entry() {
 
 #[test]
 fn missing_uses_identifier_before_begin_keeps_program_body() {
-    let (program, errs) = parse_with_errors("program T; uses begin end.");
+    let (program, errs) = parse_with_errors("program T; uses begin null; end program;");
     assert!(!errs.is_empty());
 
     let parse_errors = errs
@@ -54,12 +57,12 @@ fn missing_uses_identifier_before_begin_keeps_program_body() {
         })
         .collect::<Vec<_>>();
 
-    assert_eq!(program.body.len(), 0);
+    assert_eq!(program.body.len(), 1);
     assert_eq!(program.uses.len(), 1);
     assert_eq!(program.uses[0].parts, vec!["_error_"]);
     assert_eq!(
         parse_errors.len(),
-        2,
+        4,
         "unexpected parser diagnostics: {parse_errors:#?}"
     );
 }
@@ -67,7 +70,7 @@ fn missing_uses_identifier_before_begin_keeps_program_body() {
 #[test]
 fn missing_uses_identifier_before_declaration_keeps_following_declaration() {
     let (program, errs) = parse_with_errors(
-        "program T; uses function Answer(): integer; begin return 42 end; begin end.",
+        "program T; uses function Answer(): integer; begin return 42 end; begin null; end program;",
     );
     assert!(!errs.is_empty());
     assert_eq!(program.uses.len(), 1);

@@ -9,10 +9,11 @@ use super::super::expr::emit_expr;
 use super::super::types::emit_type_expr;
 use super::line::write_indented;
 
-pub(super) fn emit_if(emitter: &mut Emitter, stmt: &Stmt, prefix: &str, comments: &CommentMap) {
+pub(super) fn emit_if(emitter: &mut Emitter, stmt: &Stmt, comments: &CommentMap) {
     let Stmt::If {
         condition,
         then_branch,
+        elsif_branches,
         else_branch,
         ..
     } = stmt
@@ -21,52 +22,37 @@ pub(super) fn emit_if(emitter: &mut Emitter, stmt: &Stmt, prefix: &str, comments
     };
 
     write_indented(emitter);
-    emitter.write(prefix);
     emitter.write("if ");
     emit_expr(emitter, condition, 0, comments);
     emitter.write(" then\n");
-    emit_wrapped_branch(emitter, then_branch, comments);
+    emit_statement_body(emitter, then_branch, comments);
+
+    for (condition, body) in elsif_branches {
+        write_indented(emitter);
+        emitter.write("elsif ");
+        emit_expr(emitter, condition, 0, comments);
+        emitter.write(" then\n");
+        emit_statement_body(emitter, body, comments);
+    }
 
     match else_branch {
-        Some(else_branch) if matches!(else_branch.as_ref(), Stmt::If { .. }) => {
-            emit_leading_comments(emitter, comments, stmt_start(else_branch), false);
-            emit_if(emitter, else_branch, "else ", comments);
-        }
         Some(else_branch) => {
             emitter.writeln("else");
-            emit_wrapped_branch(emitter, else_branch, comments);
+            emit_statement_body(emitter, else_branch, comments);
         }
         None => {}
     }
+    emitter.writeln("end if");
 }
 
-pub(super) fn emit_wrapped_branch(emitter: &mut Emitter, branch: &Stmt, comments: &CommentMap) {
-    emit_wrapped_branch_with_semicolon(emitter, branch, false, comments);
-}
-
-pub(super) fn emit_wrapped_branch_with_semicolon(
-    emitter: &mut Emitter,
-    branch: &Stmt,
-    semicolon_after_end: bool,
-    comments: &CommentMap,
-) {
-    if matches!(branch, Stmt::Block(..)) {
-        emit_leading_comments(emitter, comments, stmt_start(branch), false);
-    }
-    emitter.writeln("begin");
+pub(super) fn emit_statement_body(emitter: &mut Emitter, branch: &Stmt, comments: &CommentMap) {
     emitter.with_indent(|inner| match branch {
-        Stmt::Block(stmts, ..) => super::emit_stmts_in_block(inner, stmts, comments),
+        Stmt::StatementList(stmts, ..) => super::emit_stmts_in_block(inner, stmts, comments),
         other => {
             emit_leading_comments(inner, comments, stmt_start(other), false);
-            super::emit_stmt_in_block(inner, other, true, comments);
+            super::emit_stmt_in_block(inner, other, comments);
         }
     });
-    write_indented(emitter);
-    emitter.write("end");
-    if semicolon_after_end {
-        emitter.write(";");
-    }
-    emitter.write("\n");
 }
 
 pub(super) fn emit_case(emitter: &mut Emitter, stmt: &Stmt, comments: &CommentMap) {
@@ -86,41 +72,30 @@ pub(super) fn emit_case(emitter: &mut Emitter, stmt: &Stmt, comments: &CommentMa
     emitter.write(" of\n");
 
     emitter.with_indent(|inner| {
-        for (index, arm) in arms.iter().enumerate() {
-            let is_last_arm = index + 1 == arms.len();
-            emit_case_arm(inner, arm, is_last_arm, comments);
+        for arm in arms {
+            emit_case_arm(inner, arm, comments);
         }
 
         if let Some(else_stmts) = else_body {
             inner.writeln("else");
-            if else_stmts.len() == 1 {
-                emit_wrapped_branch_with_semicolon(inner, &else_stmts[0], false, comments);
-            } else {
-                inner.writeln("begin");
-                inner.with_indent(|body| super::emit_stmts_in_block(body, else_stmts, comments));
-                inner.writeln("end");
-            }
+            inner.with_indent(|body| super::emit_stmts_in_block(body, else_stmts, comments));
         }
     });
 
     write_indented(emitter);
-    emitter.write("end");
+    emitter.write("end case");
 }
 
-pub(super) fn emit_case_arm(
-    emitter: &mut Emitter,
-    arm: &CaseArm,
-    is_last_arm: bool,
-    comments: &CommentMap,
-) {
+pub(super) fn emit_case_arm(emitter: &mut Emitter, arm: &CaseArm, comments: &CommentMap) {
     write_indented(emitter);
+    emitter.write("when ");
     emit_case_labels(emitter, &arm.labels, comments);
     if let Some(guard) = &arm.guard {
         emitter.write(" if ");
         emit_expr(emitter, guard, 0, comments);
     }
     emitter.write(":\n");
-    emit_wrapped_branch_with_semicolon(emitter, &arm.body, !is_last_arm, comments);
+    emit_statement_body(emitter, &arm.body, comments);
 }
 
 pub(super) fn emit_case_labels(emitter: &mut Emitter, labels: &[CaseLabel], comments: &CommentMap) {
@@ -187,7 +162,8 @@ pub(super) fn emit_for(emitter: &mut Emitter, stmt: &Stmt, comments: &CommentMap
             emitter.write(" ");
             emit_expr(emitter, end, 0, comments);
             emitter.write(" do\n");
-            emit_wrapped_branch(emitter, body, comments);
+            emit_statement_body(emitter, body, comments);
+            emitter.writeln("end for");
         }
         Stmt::ForIn {
             var_name,
@@ -204,7 +180,8 @@ pub(super) fn emit_for(emitter: &mut Emitter, stmt: &Stmt, comments: &CommentMap
             emitter.write(" in ");
             emit_expr(emitter, iterable, 0, comments);
             emitter.write(" do\n");
-            emit_wrapped_branch(emitter, body, comments);
+            emit_statement_body(emitter, body, comments);
+            emitter.writeln("end for");
         }
         _ => {}
     }
@@ -222,7 +199,8 @@ pub(super) fn emit_while(emitter: &mut Emitter, stmt: &Stmt, comments: &CommentM
     emitter.write("while ");
     emit_expr(emitter, condition, 0, comments);
     emitter.write(" do\n");
-    emit_wrapped_branch(emitter, body, comments);
+    emit_statement_body(emitter, body, comments);
+    emitter.writeln("end while");
 }
 
 pub(super) fn emit_repeat(emitter: &mut Emitter, stmt: &Stmt, comments: &CommentMap) {

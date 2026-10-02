@@ -11,8 +11,8 @@ unit Std.Dictionaries;
 // - `Key`: Lookup key or keyboard event, according to the operation.
 public function ContainsKey(D: dict of K to V; Key: K): boolean;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // Keep matching entries.
 //
@@ -21,8 +21,8 @@ end;
 // - `F`: Callback invoked by the higher-order operation.
 public function Filter(D: dict of K to V; F: function(K: K; V: V): boolean): dict of K to V;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // Safe lookup; `None` if absent.
 //
@@ -31,8 +31,8 @@ end;
 // - `Key`: Lookup key or keyboard event, according to the operation.
 public function Get(D: dict of K to V; Key: K): option of V;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // All keys in insertion order.
 //
@@ -40,8 +40,8 @@ end;
 // - `D`: Input value used by `Keys`.
 public function Keys(D: dict of K to V): array of K;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // Number of entries.
 //
@@ -49,8 +49,8 @@ end;
 // - `D`: Input value used by `Length`.
 public function Length(D: dict of K to V): integer;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // Transform all values.
 //
@@ -59,8 +59,8 @@ end;
 // - `F`: Callback invoked by the higher-order operation.
 public function Map(D: dict of K to V; F: function(V: V): V2): dict of K to V2;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // Combined dict; `D2` wins on conflict.
 //
@@ -69,8 +69,8 @@ end;
 // - `D2`: Input value used by `Merge`.
 public function Merge(D1: dict of K to V; D2: dict of K to V): dict of K to V;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // Fold entries in insertion order.
 //
@@ -80,8 +80,8 @@ end;
 // - `F`: Callback invoked by the higher-order operation.
 public function Reduce(D: dict of K to V; Init: U; F: function(Acc: U; Key: K; Value: V): U): U;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // New dict without the given key.
 //
@@ -90,8 +90,8 @@ end;
 // - `Key`: Lookup key or keyboard event, according to the operation.
 public function Remove(D: dict of K to V; Key: K): dict of K to V;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // All values in insertion order.
 //
@@ -99,5 +99,7 @@ end;
 // - `D`: Input value used by `Values`.
 public function Values(D: dict of K to V): array of V;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
+
+end unit;

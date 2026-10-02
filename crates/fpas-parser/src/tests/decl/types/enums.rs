@@ -3,7 +3,9 @@ use fpas_diagnostics::codes::{PARSE_EMPTY_ENUM_FIELD_LIST, PARSE_TRAILING_ENUM_F
 
 #[test]
 fn enum_type() {
-    let p = parse_ok("program T; type Color = enum Red; Green; Blue; end; begin end.");
+    let p = parse_ok(
+        r#"program T;  type Color = enum Red; Green; Blue; end enum; begin null; end program;"#,
+    );
     match &p.declarations[0] {
         Decl::TypeDef(td) => match &td.body {
             TypeBody::Enum(e) => {
@@ -19,7 +21,9 @@ fn enum_type() {
 
 #[test]
 fn enum_with_values() {
-    let p = parse_ok("program T; type Suit = enum Hearts = 1; Diamonds = 2; end; begin end.");
+    let p = parse_ok(
+        r#"program T;  type Suit = enum Hearts = 1; Diamonds = 2; end enum; begin null; end program;"#,
+    );
     match &p.declarations[0] {
         Decl::TypeDef(td) => match &td.body {
             TypeBody::Enum(e) => {
@@ -55,7 +59,9 @@ fn enum_member_non_integer_value_uses_parser_code() {
 
 #[test]
 fn enum_data_single_field() {
-    let p = parse_ok("program T; type Wrapper = enum Val(X: integer); end; begin end.");
+    let p = parse_ok(
+        r#"program T;  type Wrapper = enum Val(X: integer); end enum; begin null; end program;"#,
+    );
     match &p.declarations[0] {
         Decl::TypeDef(td) => match &td.body {
             TypeBody::Enum(e) => {
@@ -74,7 +80,7 @@ fn enum_data_single_field() {
 #[test]
 fn enum_data_multiple_fields() {
     let p = parse_ok(
-        "program T; type Shape = enum Circle(Radius: real); Rect(W: real; H: real); end; begin end.",
+        r#"program T;  type Shape = enum Circle(Radius: real); Rect(W: real; H: real); end enum; begin null; end program;"#,
     );
     match &p.declarations[0] {
         Decl::TypeDef(td) => match &td.body {
@@ -93,7 +99,9 @@ fn enum_data_multiple_fields() {
 
 #[test]
 fn enum_data_mixed_simple_and_data_variants() {
-    let p = parse_ok("program T; type Token = enum Eof; Number(V: integer); end; begin end.");
+    let p = parse_ok(
+        r#"program T;  type Token = enum Eof; Number(V: integer); end enum; begin null; end program;"#,
+    );
     match &p.declarations[0] {
         Decl::TypeDef(td) => match &td.body {
             TypeBody::Enum(e) => {
@@ -109,7 +117,9 @@ fn enum_data_mixed_simple_and_data_variants() {
 
 #[test]
 fn enum_data_fieldless_has_no_backing_value() {
-    let p = parse_ok("program T; type Token = enum Eof; Number(V: integer); end; begin end.");
+    let p = parse_ok(
+        r#"program T;  type Token = enum Eof; Number(V: integer); end enum; begin null; end program;"#,
+    );
     match &p.declarations[0] {
         Decl::TypeDef(td) => match &td.body {
             TypeBody::Enum(e) => {

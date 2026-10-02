@@ -1,21 +1,23 @@
 program FractalCameraTest;
 
-uses Fractal.Camera, Std.Math, Std.Test;
+uses Fractal.Camera as Camera2;
+uses Std.Math as Math;
+uses Std.Test as Test;
 
 begin
-  var Camera: ExplorerCamera := record
+  var Camera: Camera2.ExplorerCamera := record
     CenterX := -0.45;
     CenterY := -0.55;
     SpanY := 2.8;
     MaxIter := 160;
     Palette := 2;
-  end;
+  end record;
 
-  AssertTrue(Abs(Camera.SpanX(80, 40) - 2.8) < 0.000001);
-  AssertTrue(Abs(Camera.XMin(80, 40) + 1.85) < 0.000001);
-  AssertTrue(Abs(Camera.XMax(80, 40) - 0.95) < 0.000001);
-  AssertTrue(Abs(Camera.YMin() + 1.95) < 0.000001);
-  AssertTrue(Abs(Camera.YMax() - 0.85) < 0.000001);
-  AssertTrue(Abs(Camera.Zoom - 1.0) < 0.000001);
-  AssertTrue(Camera.SpanX(0, 0) > 0.0)
-end.
+  Test.AssertTrue(Math.Abs(Camera.SpanX(80, 40) - 2.8) < 0.000001);
+  Test.AssertTrue(Math.Abs(Camera.XMin(80, 40) + 1.85) < 0.000001);
+  Test.AssertTrue(Math.Abs(Camera.XMax(80, 40) - 0.95) < 0.000001);
+  Test.AssertTrue(Math.Abs(Camera.YMin() + 1.95) < 0.000001);
+  Test.AssertTrue(Math.Abs(Camera.YMax() - 0.85) < 0.000001);
+  Test.AssertTrue(Math.Abs(Camera.Zoom - 1.0) < 0.000001);
+  Test.AssertTrue(Camera.SpanX(0, 0) > 0.0);
+end program;

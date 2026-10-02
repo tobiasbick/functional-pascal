@@ -3,20 +3,23 @@
 `Result of T, E` represents either a success (`Ok`) or a failure (`Error`):
 
 ```pascal
-var R: Result of integer, string := Ok(42);
-var E: Result of integer, string := Error('not found');
+var R: result of integer, string := Ok(42);
+var E: result of integer, string := Error('not found');
+
 ```
 
 ## Returning errors
 
 ```pascal
-function Divide(A: integer; B: integer): Result of integer, string;
+function Divide(A: integer; B: integer): result of integer, string;
 begin
   if B = 0 then
-    return Error('Division by zero')
+    return Error('Division by zero');
   else
-    return Ok(A div B)
-end;
+    return Ok(A div B);
+  end if;
+end function;
+
 ```
 
 ## Handling with case
@@ -24,11 +27,16 @@ end;
 Use `case of` with destructuring to handle both branches:
 
 ```pascal
-var R: Result of integer, string := Divide(10, 0);
+uses Std.Console as Console;
+uses Std.Conv as Conv;
+
+var R: result of integer, string := Divide(10, 0);
 case R of
-  Ok(V):  WriteLn('Value: ' + IntToStr(V));
-  Error(E): WriteLn('Error: ' + E);
-end;
+  when Ok(V):
+    Console.WriteLn('Value: ' + Conv.IntToStr(V));
+  when Error(E):
+    Console.WriteLn('Error: ' + E);
+end case;
 ```
 
 The binding variable (`V`, `E`) is scoped to its arm body.

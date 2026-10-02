@@ -17,11 +17,24 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Lib, Std.Console;\nbegin\n  WriteLn(GetValue())\nend.\n",
+        r#"program Main;
+uses App.Lib as Lib; uses Std.Console as Console;
+begin
+  Console.WriteLn(Lib.GetValue());
+end program;
+"#,
     );
     write_text(
         &cwd.join("src/lib.fpas"),
-        "unit App.Lib;\n\npublic function GetValue(): integer;\nbegin\n  return 42\nend;\n",
+        r#"unit App.Lib;
+
+public function GetValue(): integer;
+begin
+  return 42;
+end function;
+end unit;
+
+"#,
     );
 
     let (exit_code, stdout_output, _) = support::run_cli_and_capture_output(&project_file, &cwd);
@@ -48,11 +61,24 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Lib, Std.Console;\nbegin\n  WriteLn(GetValue())\nend.\n",
+        r#"program Main;
+uses App.Lib as Lib; uses Std.Console as Console;
+begin
+  Console.WriteLn(Lib.GetValue());
+end program;
+"#,
     );
     write_text(
         &cwd.join("src/lib.fpas"),
-        "unit App.Lib;\n\nfunction GetValue(): integer;\nbegin\n  return 99\nend;\n",
+        r#"unit App.Lib;
+
+function GetValue(): integer;
+begin
+  return 99;
+end function;
+end unit;
+
+"#,
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);
@@ -82,11 +108,22 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Config, Std.Console;\nbegin\n  WriteLn(MaxSize)\nend.\n",
+        r#"program Main;
+uses App.Config as Config; uses Std.Console as Console;
+begin
+  Console.WriteLn(Config.MaxSize);
+end program;
+"#,
     );
     write_text(
         &cwd.join("src/config.fpas"),
-        "unit App.Config;\n\npublic const\n  MaxSize: integer := 1024;\n",
+        r#"unit App.Config;
+
+
+  public const MaxSize: integer := 1024;
+end unit;
+
+"#,
     );
 
     let (exit_code, stdout_output, stderr_output) =
@@ -114,11 +151,24 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Lib, Std.Console;\nbegin\n  WriteLn(GetValue())\nend.\n",
+        r#"program Main;
+uses App.Lib as Lib; uses Std.Console as Console;
+begin
+  Console.WriteLn(Lib.GetValue());
+end program;
+"#,
     );
     write_text(
         &cwd.join("src/lib.fpas"),
-        "unit App.Lib;\n\npublic function GetValue(): integer;\nbegin\n  return 88\nend;\n",
+        r#"unit App.Lib;
+
+public function GetValue(): integer;
+begin
+  return 88;
+end function;
+end unit;
+
+"#,
     );
 
     let (exit_code, stdout_output, stderr_output) =

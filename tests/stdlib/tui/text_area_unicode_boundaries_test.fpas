@@ -1,39 +1,40 @@
 program TextAreaUnicodeBoundariesTest;
 
-uses Std.Str, Std.Test, Std.Tui;
+uses Std.Str as Str;
+uses Std.Test as Test;
+uses Std.Tui as Tui;
 
-type
-  Model = record
-    Text: string;
-    Caret: integer;
-  end;
+type Model = record
+  Text: string;
+  Caret: integer;
+end record;
 
-function View(State: Model): TuiElement;
+function View(State: Model): Tui.TuiElement;
 begin
-  return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(1)), [
-                                                                        TuiElementBuilders.MakeTextArea(TuiControlId.Create(1), State.Text, State.Caret, TuiPoint.Create(0, 0), TuiAction.Create(1))
-                                                                      ])
-end;
+  return Tui.TuiElementBuilders.MakeDesktop(Some(Tui.TuiControlId.Create(1)), [
+                                                                                Tui.TuiElementBuilders.MakeTextArea(Tui.TuiControlId.Create(1), State.Text, State.Caret, Tui.TuiPoint.Create(0, 0), Tui.TuiAction.Create(1))
+                                                                              ]);
+end function;
 
-function Update(State: Model; Msg: TuiMsg; Cmd: TuiCmdOutput): Model;
+function Update(State: Model; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): Model;
 begin
-  Cmd.Set(TuiCmd.NoCommand);
-  return State
-end;
+  Cmd.Set(Tui.TuiCmd.NoCommand);
+  return State;
+end function;
 
-procedure CheckCaret(App: TuiApplication; Text: string; Caret: integer; X: integer; Y: integer);
+procedure CheckCaret(App: Tui.TuiApplication; Text: string; Caret: integer; X: integer; Y: integer);
 begin
   App.RunIterations(record
     Text := Text;
     Caret := Caret;
-  end, Update, View, 0, 0);
-  AssertTrue(App.SurfaceSnapshot().CellAt(X, Y).Role = TuiStyleRole.Focused)
-end;
+  end record, Update, View, 0, 0);
+  Test.AssertTrue(App.SurfaceSnapshot().CellAt(X, Y).Role = Tui.TuiStyleRole.Focused);
+end procedure;
 
 begin
-  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(8, 4));
-  var Text: string := ((((('e' + Std.Str.Chr(769)) + '界') + Std.Str.Chr(10)) + Std.Str.Chr(10)) + 'x') +
-                      Std.Str.Chr(10);
+  var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(8, 4));
+  var Text: string := ((((('e' + Str.Chr(769)) + '界') + Str.Chr(10)) + Str.Chr(10)) + 'x') +
+                      Str.Chr(10);
   CheckCaret(App, Text, 0, 0, 0);
   CheckCaret(App, Text, 2, 1, 0);
   CheckCaret(App, Text, 3, 3, 0);
@@ -42,5 +43,5 @@ begin
   CheckCaret(App, Text, 6, 1, 2);
   CheckCaret(App, Text, 7, 0, 3);
   CheckCaret(App, '', 0, 0, 0);
-  App.Close()
-end.
+  App.Close();
+end program;

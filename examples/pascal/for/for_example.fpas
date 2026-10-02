@@ -1,24 +1,28 @@
 program ForExample;
 
-uses Std.Console, Std.Arrays;
+uses Std.Console as Console;
+uses Std.Arrays as Arrays;
 
 begin
   var Scores: array of integer := [12, 45, 3, 67, 29, 88, 51, 7, 93, 34];
-  WriteLn('Filtered scores:');
-  for I: integer := 0 to Length(Scores) - 1 do
-  begin
-    var S: integer := Scores[I];
-    if S > 90 then
+  Console.WriteLn('Filtered scores:');
+  for I: integer := 0 to Arrays.Length(Scores) - 1 do
     begin
-      WriteLn('Stopping — score above 90 found');
-      break
-    end;
+      var S: integer := Scores[I];
+      if S > 90 then
+        begin
+          Console.WriteLn('Stopping — score above 90 found');
+          break;
+        end;
+      end if;
 
-    if S <= 10 then
-    begin
-      continue
-    end;
+      if S <= 10 then
+        begin
+          continue;
+        end;
+      end if;
 
-    WriteLn(S)
-  end
-end.
+      Console.WriteLn(S);
+    end;
+  end for;
+end program;

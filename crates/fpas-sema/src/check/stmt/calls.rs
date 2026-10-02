@@ -10,7 +10,7 @@ use fpas_parser::{Designator, Expr};
 
 impl Checker {
     pub(super) fn check_call_stmt(&mut self, designator: &Designator, args: &[Expr], span: Span) {
-        let name = Self::resolve_designator_name(designator);
+        let name = self.resolve_designator_name(designator);
         self.ensure_fq_std_unit_loaded(&name);
 
         if let Some(symbol) = self.scopes.lookup(&name) {

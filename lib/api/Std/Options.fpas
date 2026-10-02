@@ -11,8 +11,8 @@ unit Std.Options;
 // - `F`: Callback invoked by the higher-order operation.
 public function AndThen(O: option of T; F: function(V: T): option of U): option of U;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // True if None.
 //
@@ -20,8 +20,8 @@ end;
 // - `O`: Input value used by `IsNone`.
 public function IsNone(O: option of T): boolean;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // True if Some.
 //
@@ -29,8 +29,8 @@ end;
 // - `O`: Input value used by `IsSome`.
 public function IsSome(O: option of T): boolean;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // Transform Some value.
 //
@@ -39,8 +39,8 @@ end;
 // - `F`: Callback invoked by the higher-order operation.
 public function Map(O: option of T; F: function(V: T): U): option of U;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // Provide fallback.
 //
@@ -49,8 +49,8 @@ end;
 // - `F`: Callback invoked by the higher-order operation.
 public function OrElse(O: option of T; F: function(): option of T): option of T;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // Panics if None.
 //
@@ -58,8 +58,8 @@ end;
 // - `O`: Input value used by `Unwrap`.
 public function Unwrap(O: option of T): T;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // Returns Default if None.
 //
@@ -68,5 +68,7 @@ end;
 // - `Default`: Value consumed or returned by the operation.
 public function UnwrapOr(O: option of T; Default: T): T;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
+
+end unit;

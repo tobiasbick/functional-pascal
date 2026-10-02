@@ -48,11 +48,11 @@ mod tests {
         let second = dir.join("second_test.fpas");
         write_text(
             &first,
-            "program First; uses Std.Test; begin AssertEquals(2, 1 + 1) end.",
+            r#"program First;  uses Std.Test as Test; begin Test.AssertEquals(2, 1 + 1); end program;"#,
         );
         write_text(
             &second,
-            "program Second; uses Std.Test; begin AssertTrue(true) end.",
+            r#"program Second;  uses Std.Test as Test; begin Test.AssertTrue(true); end program;"#,
         );
         let mut prepared = vec![
             PreparedTest {
@@ -117,13 +117,19 @@ mod tests {
         );
         write_text(
             &helper,
-            "unit Suite.Helper;\npublic var Answer: integer := 42;\npublic function GetAnswer(): integer;\nbegin return Answer end;\n",
+            r#"unit Suite.Helper;
+  public var Answer: integer := 42;
+public function GetAnswer(): integer;
+begin return Answer; end function;
+end unit;
+
+"#,
         );
         for (path, name) in [(&first, "First"), (&second, "Second")] {
             write_text(
                 path,
                 &format!(
-                    "program {name}; uses Suite.Helper, Std.Test; begin AssertEquals(42, GetAnswer()) end."
+                    "program {name}; uses Suite.Helper as Helper; uses Std.Test as Test; begin Test.AssertEquals(42, Helper.GetAnswer()); end program;"
                 ),
             );
         }
@@ -171,7 +177,7 @@ mod tests {
             write_text(
                 path,
                 &format!(
-                    "program {name}; uses Std.Test; var Value: integer := {value}; begin AssertEquals({value}, Value) end."
+                    "program {name}; uses Std.Test as Test; var Value: integer := {value}; begin Test.AssertEquals({value}, Value); end program;"
                 ),
             );
         }

@@ -3,129 +3,122 @@ use super::*;
 #[test]
 fn fibonacci() {
     check_ok(
-        "\
-program Fib;
+        r#"program Fib;
 
 function Fibonacci(N: integer): integer;
 begin
   if N <= 1 then
-    return N
+    return N;
   else
-    return Fibonacci(N - 1) + Fibonacci(N - 2)
-end;
+    return Fibonacci(N - 1) + Fibonacci(N - 2); end if;
+end function;
 
 begin
-  return
-end.",
+  return;
+end program;"#,
     );
 }
 
 #[test]
 fn calculator() {
     check_ok(
-        "\
-program Calculator;
+        r#"program Calculator;
 
-type Op = enum
+ type Op = enum
   OpAdd;
   OpSub;
   OpMul;
   OpDiv;
-end;
+end enum;
 
 function Calculate(A: integer; B: integer; Operation: Op): integer;
 begin
   case Operation of
-    OpAdd: return A + B;
-    OpSub: return A - B;
-    OpMul: return A * B;
-    OpDiv: return A div B
-  end
-end;
+    when OpAdd: return A + B;
+    when OpSub: return A - B;
+    when OpMul: return A * B;
+    when OpDiv: return A div B;
+  end case;
+end function;
 
 begin
-  var Answer: integer := Calculate(10, 3, OpAdd)
-end.",
+  var Answer: integer := Calculate(10, 3, OpAdd);
+end program;"#,
     );
 }
 
 #[test]
 fn record_usage() {
     check_ok(
-        "\
-program Geometry;
+        r#"program Geometry;
 
-type Point = record
+ type Point = record
   X: real;
   Y: real;
-end;
+end record;
 
 begin
-  var P: Point := record X := 1.0; Y := 2.0; end
-end.",
+  var P: Point := record X := 1.0; Y := 2.0; end record;
+end program;"#,
     );
 }
 
 #[test]
 fn nested_loops_with_break_continue() {
     check_ok(
-        "\
-program T;
+        r#"program T;
 begin
   for I: integer := 0 to 9 do
     for J: integer := 0 to 9 do
       begin
-        if I = J then continue;
-        if I + J > 10 then break
-      end
-end.",
+        if I = J then continue; end if;
+        if I + J > 10 then break; end if;
+      end; end for; end for;
+end program;"#,
     );
 }
 
 #[test]
 fn nested_mutual_recursion_even_odd() {
     check_ok(
-        "\
-program T;
+        r#"program T;
 
 function IsEven(N: integer): boolean;
   function IsOdd(X: integer): boolean;
   begin
-    if X = 0 then return false
-    else return IsEven(X - 1)
-  end;
+    if X = 0 then return false;
+    else return IsEven(X - 1); end if;
+  end function;
 begin
-  if N = 0 then return true
-  else return IsOdd(N - 1)
-end;
+  if N = 0 then return true;
+  else return IsOdd(N - 1); end if;
+end function;
 
 begin
-  return
-end.",
+  return;
+end program;"#,
     );
 }
 
 #[test]
 fn immutable_assignment_error() {
     check_errors(
-        "\
-program T;
-var X: integer := 42;
+        r#"program T;
+ var X: integer := 42;
 begin
-  X := 100
-end.",
+  X := 100;
+end program;"#,
     );
 }
 
 #[test]
 fn mixed_errors() {
     let errs = check_errors(
-        "\
-program T;
+        r#"program T;
 begin
   break;
-  var X: integer := true
-end.",
+  var X: integer := true;
+end program;"#,
     );
     assert!(errs.len() >= 2);
 }

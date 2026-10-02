@@ -10,17 +10,17 @@ use serde_json::{Value, json};
 
 const SOURCE: &str = r#"program CompletedTaskResult;
 
-uses Std.Console, Std.Tasks;
+uses Std.Console as Console; uses Std.Tasks as Tasks;
 
 function Work(): integer;
 begin
-  return 7
-end;
+  return 7;
+end function;
 
 begin
   var Pending: task := go Work();
-  WriteLn(Wait(Pending))
-end.
+  Console.WriteLn(Tasks.Wait(Pending));
+end program;
 "#;
 
 fn server() -> JsonlServer {

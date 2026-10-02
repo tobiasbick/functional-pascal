@@ -1,13 +1,14 @@
 program GoStr;
 
-uses Std.Tasks, Std.Test;
+uses Std.Tasks as Tasks;
+uses Std.Test as Test;
 
 function Greet(): string;
 begin
-  return 'hello'
-end;
+  return 'hello';
+end function;
 
 begin
   var T: task := go Greet();
-  AssertEquals('hello', Std.Tasks.Wait(T))
-end.
+  Test.AssertEquals('hello', Tasks.Wait(T));
+end program;

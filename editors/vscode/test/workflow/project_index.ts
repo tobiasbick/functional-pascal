@@ -121,7 +121,7 @@ export async function verifyProjectIndex(): Promise<void> {
   const secondManifest = path.join(fixture, "second.fpasprj");
   try {
     await fs.mkdir(path.dirname(source));
-    await fs.writeFile(source, "program Main; begin end.");
+    await fs.writeFile(source, "program Main; begin null; end program;");
     await fs.writeFile(firstManifest,
       '[project]\nname = "first"\nkind = "program"\nmain = """src/main.fpas"""\n[sources]\ninclude = ["src/*.fpas"]\n');
     await fs.writeFile(path.join(fixture, "bad.fpasprj"), "invalid = '\n");

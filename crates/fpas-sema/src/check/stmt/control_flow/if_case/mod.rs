@@ -32,9 +32,28 @@ impl Checker {
         &mut self,
         condition: &Expr,
         then_branch: &Stmt,
+        elsif_branches: &[(Expr, Box<Stmt>)],
         else_branch: Option<&Stmt>,
         span: Span,
     ) {
+        self.check_if_condition(condition, span);
+        self.check_if_branch(then_branch);
+        for (condition, body) in elsif_branches {
+            self.check_if_condition(condition, condition.span());
+            self.check_if_branch(body);
+        }
+        if let Some(else_branch) = else_branch {
+            self.check_if_branch(else_branch);
+        }
+    }
+
+    fn check_if_branch(&mut self, branch: &Stmt) {
+        self.scopes.push_scope();
+        self.check_stmt(branch);
+        self.scopes.pop_scope();
+    }
+
+    fn check_if_condition(&mut self, condition: &Expr, span: Span) {
         let condition_ty = self.check_expr(condition);
         if matches!(condition_ty, Ty::GenericParam(..)) {
             self.check_type_compat(&Ty::Boolean, &condition_ty, "if condition", span);
@@ -45,11 +64,6 @@ impl Checker {
                 "if <boolean> then ...",
                 span,
             );
-        }
-
-        self.check_stmt(then_branch);
-        if let Some(else_branch) = else_branch {
-            self.check_stmt(else_branch);
         }
     }
 
@@ -107,8 +121,8 @@ impl Checker {
                 .collect();
             let bindings = self.shared_case_arm_bindings(binding_sets, arm.span);
 
+            self.scopes.push_scope();
             if !bindings.is_empty() {
-                self.scopes.push_scope();
                 for (name, ty) in &bindings {
                     self.scopes.define_with_declaration(
                         name,
@@ -124,15 +138,15 @@ impl Checker {
             }
             self.check_guard(&arm.guard, span);
             self.check_stmt(&arm.body);
-            if !bindings.is_empty() {
-                self.scopes.pop_scope();
-            }
+            self.scopes.pop_scope();
         }
 
         if let Some(else_body) = else_body {
+            self.scopes.push_scope();
             for stmt in else_body {
                 self.check_stmt(stmt);
             }
+            self.scopes.pop_scope();
         }
 
         if else_body.is_none() {

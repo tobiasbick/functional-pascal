@@ -1,14 +1,15 @@
 program T;
 
-uses Std.Console, Std.Options;
+uses Std.Console as Console;
+uses Std.Options as Options;
 
 function FallbackNinetyNine(): option of integer;
 begin
-  return Some(99)
-end;
+  return Some(99);
+end function;
 
 begin
   var O: option of integer := None;
-  var M: option of integer := OrElse(O, FallbackNinetyNine);
-  WriteLn(Unwrap(M))
-end.
+  var M: option of integer := Options.OrElse(O, FallbackNinetyNine);
+  Console.WriteLn(Options.Unwrap(M));
+end program;

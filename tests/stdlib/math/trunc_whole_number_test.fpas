@@ -1,7 +1,8 @@
 program T;
 
-uses Std.Console, Std.Math;
+uses Std.Console as Console;
+uses Std.Math as Math;
 
 begin
-  WriteLn(Trunc(5.0))
-end.
+  Console.WriteLn(Math.Trunc(5.0));
+end program;

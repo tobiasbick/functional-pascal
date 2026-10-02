@@ -4,11 +4,9 @@ use fpas_diagnostics::codes::PARSE_INVALID_EVENT_ACCESSOR_ORDER;
 #[test]
 fn record_events_default_to_private_and_accept_public() {
     let unit = parse_unit_ok(
-        "unit Demo.Types; \
-         type Counter = record \
-           event Hidden: procedure() read GetHidden write SetHidden; \
-           public event Changed: procedure() read GetChanged write SetChanged; \
-         end;",
+        r#"unit Demo.Types;  type Counter = record event Hidden: procedure() read GetHidden write SetHidden; public event Changed: procedure() read GetChanged write SetChanged; end record;
+end unit;
+"#,
     );
     let Decl::TypeDef(type_def) = &unit.declarations[0] else {
         panic!("expected type");
@@ -23,11 +21,7 @@ fn record_events_default_to_private_and_accept_public() {
 #[test]
 fn record_event_parses() {
     let p = parse_ok(
-        "program T; type Button = record \
-         function ReadOnClick(Self: Button): Option of procedure(); begin return None end; \
-         procedure WriteOnClick(Self: Button; H: Option of procedure()); begin end; \
-         event OnClick: procedure() read ReadOnClick write WriteOnClick; \
-         end; begin end.",
+        r#"program T;  type Button = record function ReadOnClick(Self: Button): Option of procedure(); begin return None; end function; procedure WriteOnClick(Self: Button; H: Option of procedure()); begin null; end procedure; event OnClick: procedure() read ReadOnClick write WriteOnClick; end record; begin null; end program;"#,
     );
     match &p.declarations[0] {
         Decl::TypeDef(td) => match &td.body {
@@ -46,7 +40,7 @@ fn record_event_parses() {
 
 #[test]
 fn nil_literal_parses() {
-    let (_, errors) = parse_with_errors("program T; begin X := nil end.");
+    let (_, errors) = parse_with_errors(r#"program T; begin X := nil; end program;"#);
     assert!(
         errors.is_empty()
             || errors

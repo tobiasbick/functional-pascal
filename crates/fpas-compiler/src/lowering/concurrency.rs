@@ -147,20 +147,55 @@ impl LoweringContext {
                 retain_result,
             );
         }
-        let [DesignatorPart::Ident(name, _)] = designator.parts.as_slice() else {
-            return Err(unsupported(designator.span, "task call target"));
-        };
-        let (callee, output) = if self.has_binding(name) {
+        let name = designator
+            .parts
+            .iter()
+            .map(|part| match part {
+                DesignatorPart::Ident(name, _) => Some(name.as_str()),
+                DesignatorPart::Index(_, _) => None,
+            })
+            .collect::<Option<Vec<_>>>()
+            .map(|parts| parts.join("."))
+            .ok_or_else(|| unsupported(designator.span, "task call target"))?;
+        if self
+            .intrinsic_task_targets
+            .contains_key(&fpas_sema::expr_lookup_key(expression))
+        {
+            let result_ty = self
+                .expr_types
+                .get(&fpas_sema::expr_lookup_key(expression))
+                .cloned()
+                .ok_or_else(|| unsupported(span, "intrinsic task result type"))?;
+            return self.lower_resolved_go(
+                fpas_sema::expr_lookup_key(expression),
+                None,
+                args,
+                GoTarget {
+                    name: &name,
+                    result_ty: &result_ty,
+                },
+                span,
+                retain_result,
+            );
+        }
+        let (callee, output) = if self.has_binding(&name) || self.has_global(&name) {
             let callee_ty = self
-                .binding_type(name)
+                .root_type(&name)
                 .ok_or_else(|| unsupported(designator.span, "task callable binding"))?;
             let output = self
                 .function_result_type(callee_ty)
                 .ok_or_else(|| unsupported(designator.span, "task callable type"))?;
-            (self.read_named_local(name, designator.span)?, output)
+            (
+                if self.has_binding(&name) {
+                    self.read_named_local(&name, designator.span)?
+                } else {
+                    self.read_global(&name, designator.span)?
+                },
+                output,
+            )
         } else {
             let callable = self
-                .resolve_callable(name)
+                .resolve_callable(&name)
                 .ok_or_else(|| unsupported(designator.span, "unresolved task call"))?;
             let captures = callable
                 .captures

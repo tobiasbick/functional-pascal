@@ -1,34 +1,45 @@
 // Driven by the harness's local HTTP fixture; setup and compilation are not timed.
 program HttpBodyAccumulationBenchmark;
 
-uses Std.Args, Std.Arrays, Std.Console, Std.Conv, Std.Http, Std.Results, Std.Time;
+uses Std.Args as Args;
+uses Std.Arrays as Arrays;
+uses Std.Console as Console;
+uses Std.Conv as Conv;
+uses Std.Http as Http;
+uses Std.Results as Results;
+uses Std.Time as Time;
 
 begin
-  if ParamCount() <> 3 then
-  begin
-    panic('expected ITERATIONS SIZE URL')
-  end;
-  var Iterations: integer := StrToInt(ParamStr(0));
-  var Size: integer := StrToInt(ParamStr(1));
-  var Url: string := ParamStr(2);
-  if (Iterations < 1) or (Size < 1) then
-  begin
-    panic('arguments must be positive')
-  end;
-  var Started: integer := MonotonicMillis();
-  for Iteration: integer := 1 to Iterations do
-  begin
-    var ResponseValue: Response := Std.Results.Unwrap(Send(Request.Get(Url)));
-    if Std.Arrays.Length(ResponseValue.Body) <> Size * 128 then
+  if Args.ParamCount() <> 3 then
     begin
-      panic('body length')
+      panic('expected ITERATIONS SIZE URL');
     end;
-
-    if ResponseValue.Body[Size * 128 - 1] <> 65 then
+  end if;
+  var Iterations: integer := Conv.StrToInt(Args.ParamStr(0));
+  var Size: integer := Conv.StrToInt(Args.ParamStr(1));
+  var Url: string := Args.ParamStr(2);
+  if (Iterations < 1) or (Size < 1) then
     begin
-      panic('body data')
-    end
-  end;
+      panic('arguments must be positive');
+    end;
+  end if;
+  var Started: integer := Time.MonotonicMillis();
+  for Iteration: integer := 1 to Iterations do
+    begin
+      var ResponseValue: Http.Response := Results.Unwrap(Http.Send(Http.Request.Get(Url)));
+      if Arrays.Length(ResponseValue.Body) <> Size * 128 then
+        begin
+          panic('body length');
+        end;
+      end if;
 
-  WriteLn(('elapsed: ' + IntToStr(ElapsedMillis(Started))) + ' ms')
-end.
+      if ResponseValue.Body[Size * 128 - 1] <> 65 then
+        begin
+          panic('body data');
+        end;
+      end if;
+    end;
+  end for;
+
+  Console.WriteLn(('elapsed: ' + Conv.IntToStr(Time.ElapsedMillis(Started))) + ' ms');
+end program;

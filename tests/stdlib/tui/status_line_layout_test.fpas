@@ -1,13 +1,14 @@
 program TuiStatusLineLayoutTest;
 
-uses Std.Test, Std.Tui;
+uses Std.Test as Test;
+uses Std.Tui as Tui;
 
 begin
-  var Measured: TuiMeasureResult := TuiMeasure(TuiElementBuilders.MakeStatusLine([
-                                                                                   TuiStatusItemBuilders.MakeHint('Ready'),
-                                                                                   TuiStatusItemBuilders.MakeCommand(TuiControlId.Create(1), 'Save', TuiAction.Create(10)),
-                                                                                   TuiStatusItemBuilders.MakeDisabledCommand(TuiControlId.Create(2), 'Quit', TuiAction.Create(20))
-                                                                                 ]), TuiMeasureSpec.Unbounded());
-  AssertEquals(15, Measured.Preferred.Width);
-  AssertEquals(1, Measured.Preferred.Height)
-end.
+  var Measured: Tui.TuiMeasureResult := Tui.TuiMeasure(Tui.TuiElementBuilders.MakeStatusLine([
+                                                                                               Tui.TuiStatusItemBuilders.MakeHint('Ready'),
+                                                                                               Tui.TuiStatusItemBuilders.MakeCommand(Tui.TuiControlId.Create(1), 'Save', Tui.TuiAction.Create(10)),
+                                                                                               Tui.TuiStatusItemBuilders.MakeDisabledCommand(Tui.TuiControlId.Create(2), 'Quit', Tui.TuiAction.Create(20))
+                                                                                             ]), Tui.TuiMeasureSpec.Unbounded());
+  Test.AssertEquals(15, Measured.Preferred.Width);
+  Test.AssertEquals(1, Measured.Preferred.Height);
+end program;

@@ -1,9 +1,14 @@
 // Compact dashboard-gauge painting.
 unit Std.Tui.Rendering.Gauge;
 
-uses
-  Std.Console, Std.Conv, Std.Tui.Cells.Cell, Std.Tui.Cells.StyleRole, Std.Tui.Chrome.Gauge,
-  Std.Tui.Geometry.Point, Std.Tui.Geometry.Rect, Std.Tui.Rendering.Canvas;
+uses Std.Console as Console;
+uses Std.Conv as Conv;
+uses Std.Tui.Cells.Cell as Cell;
+uses Std.Tui.Cells.StyleRole as StyleRole;
+uses Std.Tui.Chrome.Gauge as Gauge2;
+uses Std.Tui.Geometry.Point as Point;
+uses Std.Tui.Geometry.Rect as Rect;
+uses Std.Tui.Rendering.Canvas as Canvas2;
 
 // Paints a label, bounded bar, and percentage on one row.
 //
@@ -11,26 +16,30 @@ uses
 // - `Canvas`: Canvas that receives the drawing operation.
 // - `Bounds`: Rectangle affected by the operation.
 // - `Gauge`: Gauge specification to paint.
-public procedure TuiPaintGauge(Canvas: TuiCanvas; Bounds: TuiRect; Gauge: TuiGauge);
+public procedure TuiPaintGauge(Canvas: Canvas2.TuiCanvas; Bounds: Rect.TuiRect; Gauge: Gauge2.TuiGauge);
 begin
   if Bounds.IsEmpty() then
-  begin
-    return
-  end;
-  var LabelWidth: integer := Std.Console.DisplayWidth(Gauge.LabelText);
+    begin
+      return;
+    end;
+  end if;
+  var LabelWidth: integer := Console.DisplayWidth(Gauge.LabelText);
   var Percent: integer := (Gauge.Value * 100) div Gauge.Maximum;
-  var PercentText: string := Std.Conv.IntToStr(Percent) + '%';
-  var PercentWidth: integer := Std.Console.DisplayWidth(PercentText);
+  var PercentText: string := Conv.IntToStr(Percent) + '%';
+  var PercentWidth: integer := Console.DisplayWidth(PercentText);
   mutable var BarWidth: integer := ((Bounds.Width - LabelWidth) - PercentWidth) - 4;
   if BarWidth < 1 then
-  begin
-    BarWidth := 1
-  end;
+    begin
+      BarWidth := 1;
+    end;
+  end if;
   var BarX: integer := (Bounds.X + LabelWidth) + 2;
   var FillWidth: integer := (BarWidth * Gauge.Value) div Gauge.Maximum;
-  Canvas.FillRect(Bounds, TuiCell.Create(' ', TuiStyleRole.Normal));
-  Canvas.WriteText(TuiPoint.Create(Bounds.X, Bounds.Y), Gauge.LabelText, TuiStyleRole.Normal);
-  Canvas.DrawHorizontalLine(BarX, Bounds.Y, BarWidth, TuiStyleRole.GaugeTrack);
-  Canvas.DrawHorizontalLine(BarX, Bounds.Y, FillWidth, TuiStyleRole.GaugeFill);
-  Canvas.WriteText(TuiPoint.Create(Bounds.Right() - PercentWidth, Bounds.Y), PercentText, TuiStyleRole.Accent)
-end;
+  Canvas.FillRect(Bounds, Cell.TuiCell.Create(' ', StyleRole.TuiStyleRole.Normal));
+  Canvas.WriteText(Point.TuiPoint.Create(Bounds.X, Bounds.Y), Gauge.LabelText, StyleRole.TuiStyleRole.Normal);
+  Canvas.DrawHorizontalLine(BarX, Bounds.Y, BarWidth, StyleRole.TuiStyleRole.GaugeTrack);
+  Canvas.DrawHorizontalLine(BarX, Bounds.Y, FillWidth, StyleRole.TuiStyleRole.GaugeFill);
+  Canvas.WriteText(Point.TuiPoint.Create(Bounds.Right() - PercentWidth, Bounds.Y), PercentText, StyleRole.TuiStyleRole.Accent);
+end procedure;
+
+end unit;

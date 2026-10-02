@@ -20,15 +20,13 @@ implement the public property. The `public` modifier is not valid in a
 
 ## Declaration
 
-```pascal
-type
-  Button = record
+```text
+type Button = record
     function GetText(Self: Button): string;
     procedure SetText(Self: Button; Value: string);
 
     property Text: string read GetText write SetText;
-  end;
-```
+  end record;```
 
 Version 1 supports read-only, write-only, and read-write forms:
 
@@ -59,8 +57,10 @@ Rules:
 A readable property is an ordinary expression of the property type:
 
 ```pascal
+uses Std.Console as Console;
+
 var Caption: string := Button.Text;
-WriteLn(CreateButton().Text);
+Console.WriteLn(CreateButton().Text);
 ```
 
 The getter runs once at each access. Postfix chaining may continue from the
@@ -97,7 +97,7 @@ registry, or other mutable facility without mutating the handle binding itself:
 
 ```pascal
 var Button: TuiButton := FindButton();
-Button.Text := 'Save';  // Valid — Button is unchanged as a value
+Button.Text := 'Save'; // Valid — Button is unchanged as a value
 ```
 
 ## Properties versus fields

@@ -1,74 +1,77 @@
 program ExhaustivenessExample;
 
-uses Std.Console, Std.Conv, Std.Arrays;
+uses Std.Console as Console;
+uses Std.Conv as Conv;
+uses Std.Arrays as Arrays;
 
-type
-  // Every enum variant must have a case arm unless an else branch is present.
-  Light = enum
-    Red;
-    Yellow;
-    Green;
-  end;
+// Every enum variant must have a case arm unless an else branch is present.
+type Light = enum
+  Red;
+  Yellow;
+  Green;
+end enum;
 
 function TrafficAdvice(L: Light): string;
 begin
   case L of
-    Light.Red:
-    begin
-      return 'Stop'
-    end;
-    Light.Yellow:
-    begin
-      return 'Caution'
-    end;
-    Light.Green:
-    begin
-      return 'Go'
-    end
-  end
-end;
+    when Light.Red:
+      begin
+        return 'Stop';
+      end;
+    when Light.Yellow:
+      begin
+        return 'Caution';
+      end;
+    when Light.Green:
+      begin
+        return 'Go';
+      end;
+  end case;
+end function;
 
 function SafeLookup(Items: array of integer; Target: integer): option of integer;
 begin
-  for I: integer := 0 to Length(Items) - 1 do
-  begin
-    if Items[I] = Target then
+  for I: integer := 0 to Arrays.Length(Items) - 1 do
     begin
-      return Some(I)
-    end
-  end;
+      if Items[I] = Target then
+        begin
+          return Some(I);
+        end;
+      end if;
+    end;
+  end for;
 
-  return None
-end;
+  return None;
+end function;
 
 begin
-  WriteLn('--- Enum exhaustiveness ---');
-  WriteLn(TrafficAdvice(Light.Red));
-  WriteLn(TrafficAdvice(Light.Yellow));
-  WriteLn(TrafficAdvice(Light.Green));
-  WriteLn('--- Option exhaustiveness ---');
+  Console.WriteLn('--- Enum exhaustiveness ---');
+  Console.WriteLn(TrafficAdvice(Light.Red));
+  Console.WriteLn(TrafficAdvice(Light.Yellow));
+  Console.WriteLn(TrafficAdvice(Light.Green));
+  Console.WriteLn('--- Option exhaustiveness ---');
   var Idx: option of integer := SafeLookup([10, 20, 30], 20);
   case Idx of
-    Some(I):
-    begin
-      WriteLn('Found at index ' + IntToStr(I))
-    end;
-    None:
-    begin
-      WriteLn('Not found')
-    end
-  end;
+    when Some(I):
+      begin
+        Console.WriteLn('Found at index ' + Conv.IntToStr(I));
+      end;
+    when None:
+      begin
+        Console.WriteLn('Not found');
+      end;
+  end case;
 
-  WriteLn('--- Result exhaustiveness ---');
+  Console.WriteLn('--- Result exhaustiveness ---');
   var R: result of integer, string := Ok(42);
   case R of
-    Ok(V):
-    begin
-      WriteLn('Value: ' + IntToStr(V))
-    end;
-    Error(E):
-    begin
-      WriteLn('Error: ' + E)
-    end
-  end
-end.
+    when Ok(V):
+      begin
+        Console.WriteLn('Value: ' + Conv.IntToStr(V));
+      end;
+    when Error(E):
+      begin
+        Console.WriteLn('Error: ' + E);
+      end;
+  end case;
+end program;

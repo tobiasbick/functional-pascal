@@ -27,19 +27,19 @@ fn fingerprint(session: &mut DebugSession) -> StateFingerprint {
 fn shared_state_session() -> DebugSession {
     const SOURCE: &str = r#"program SharedStateTaskControl;
 
-uses Std.Tasks;
+uses Std.Tasks as Tasks;
 
-mutable var Shared: integer := 0;
+  mutable var Shared: integer := 0;
 
 procedure Writer();
 begin
-  Shared := 1
-end;
+  Shared := 1;
+end procedure;
 
 begin
   var Pending: task := go Writer();
-  Wait(Pending)
-end.
+  Tasks.Wait(Pending);
+end program;
 "#;
     let (program, diagnostics) = fpas_parser::parse(SOURCE);
     assert!(diagnostics.is_empty(), "parse diagnostics: {diagnostics:?}");

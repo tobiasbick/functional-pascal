@@ -10,8 +10,8 @@ unit Std.Fs;
 // - `Path`: File or directory path processed by the operation.
 public function CreateDir(Path: string): result of boolean, string;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // Creates a directory and missing parents; an existing directory is `Ok(true)`.
 //
@@ -19,8 +19,8 @@ end;
 // - `Path`: File or directory path processed by the operation.
 public function CreateDirAll(Path: string): result of boolean, string;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // Removes one file entry, returns `Ok(true)`.
 //
@@ -28,8 +28,8 @@ end;
 // - `Path`: File or directory path processed by the operation.
 public function DeleteFile(Path: string): result of boolean, string;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // `true` when the path exists.
 //
@@ -37,8 +37,8 @@ end;
 // - `Path`: File or directory path processed by the operation.
 public function Exists(Path: string): boolean;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // Expands a glob pattern to matching file paths.
 //
@@ -46,8 +46,8 @@ end;
 // - `Pattern`: Glob or matching pattern evaluated by the operation.
 public function Glob(Pattern: string): result of array of string, string;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // `true` for a directory.
 //
@@ -55,8 +55,8 @@ end;
 // - `Path`: File or directory path processed by the operation.
 public function IsDir(Path: string): boolean;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // `true` for a regular file.
 //
@@ -64,8 +64,8 @@ end;
 // - `Path`: File or directory path processed by the operation.
 public function IsFile(Path: string): boolean;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // Reads UTF-8 text.
 //
@@ -73,8 +73,8 @@ end;
 // - `Path`: File or directory path processed by the operation.
 public function ReadText(Path: string): result of string, string;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // Writes UTF-8 text, returns `Ok(true)`.
 //
@@ -83,8 +83,8 @@ end;
 // - `Text`: UTF-8 text processed by the operation.
 public function WriteText(Path: string; Text: string): result of boolean, string;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // Publishes complete UTF-8 text through a same-directory temporary file.
 //
@@ -93,5 +93,7 @@ end;
 // - `Text`: UTF-8 text processed by the operation.
 public function WriteTextAtomic(Path: string; Text: string): result of boolean, string;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
+
+end unit;

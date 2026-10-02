@@ -97,60 +97,7 @@ fn fpas_http_server_accepts_get_and_writes_response() {
     let (cwd, server) = start_server(
         "http-server-get",
         format!(
-            r#"program HttpServerGet;
-
-uses Std.Console, Std.Http, Std.Net, Std.Net.Utf8;
-
-begin
-  case Listen('127.0.0.1', {port}) of
-    Ok(ListenerValue):
-    begin
-      case Accept(ListenerValue) of
-        Ok(Connection):
-        begin
-          case SetTimeout(Connection, 2000) of
-            Ok(_):
-            begin
-            end;
-            Error(Message): panic(Message)
-          end;
-          case ReadRequest(Connection, 4096, 1024) of
-            Ok(RequestValue):
-            begin
-              if (RequestValue.Method <> 'GET') or (RequestValue.Target <> '/hello?name=fpas') then
-              begin
-                panic('unexpected request')
-              end;
-              mutable var ResponseValue: ServerResponse := ServerResponse.Create(200, 'OK');
-              ResponseValue.Headers := [Header.Create('Content-Type', 'text/plain')];
-              ResponseValue.Body := Std.Net.Utf8.Encode('hello from fpas');
-              case WriteResponse(Connection, ResponseValue) of
-                Ok(_):
-                begin
-                end;
-                Error(Message): panic(Message)
-              end
-            end;
-            Error(Message): panic(Message)
-          end;
-          case Close(Connection) of
-            Ok(_):
-            begin
-            end;
-            Error(Message): panic(Message)
-          end
-        end;
-        Error(Message): panic(Message)
-      end;
-      case CloseListener(ListenerValue) of
-        Ok(_): WriteLn('served');
-        Error(Message): panic(Message)
-      end
-    end;
-    Error(Message): panic(Message)
-  end
-end.
-"#
+            "program HttpServerGet;\n\nuses Std.Console as Console; uses Std.Http as Http; uses Std.Net as Net; uses Std.Net.Utf8 as Utf8;\n\nbegin\n  case Net.Listen('127.0.0.1', {port}) of\n    when Ok(ListenerValue):\n    begin\n      case Net.Accept(ListenerValue) of\n        when Ok(Connection):\n        begin\n          case Net.SetTimeout(Connection, 2000) of\n            when Ok(_):\n            begin null;\n            end;\n            when Error(Message): panic(Message);\n          end case;\n          case Http.ReadRequest(Connection, 4096, 1024) of\n            when Ok(RequestValue):\n            begin\n              if (RequestValue.Method <> 'GET') or (RequestValue.Target <> '/hello?name=fpas') then\n              begin\n                panic('unexpected request');\n              end; end if;\n              mutable var ResponseValue: Http.ServerResponse := Http.ServerResponse.Create(200, 'OK');\n              ResponseValue.Headers := [Http.Header.Create('Content-Type', 'text/plain')];\n              ResponseValue.Body := Utf8.Encode('hello from fpas');\n              case Http.WriteResponse(Connection, ResponseValue) of\n                when Ok(_):\n                begin null;\n                end;\n                when Error(Message): panic(Message);\n              end case;\n            end;\n            when Error(Message): panic(Message);\n          end case;\n          case Net.Close(Connection) of\n            when Ok(_):\n            begin null;\n            end;\n            when Error(Message): panic(Message);\n          end case;\n        end;\n        when Error(Message): panic(Message);\n      end case;\n      case Net.CloseListener(ListenerValue) of\n        when Ok(_): Console.WriteLn('served');\n        when Error(Message): panic(Message);\n      end case;\n    end;\n    when Error(Message): panic(Message);\n  end case;\nend program;\n"
         ),
     );
 
@@ -173,63 +120,7 @@ fn fpas_http_server_reads_fragmented_post_body() {
     let (cwd, server) = start_server(
         "http-server-post",
         format!(
-            r#"program HttpServerPost;
-
-uses Std.Http, Std.Net, Std.Net.Utf8;
-
-begin
-  case Listen('127.0.0.1', {port}) of
-    Ok(ListenerValue):
-    begin
-      case Accept(ListenerValue) of
-        Ok(Connection):
-        begin
-          case SetTimeout(Connection, 2000) of
-            Ok(_):
-            begin
-            end;
-            Error(Message): panic(Message)
-          end;
-          case ReadRequest(Connection, 4096, 1024) of
-            Ok(RequestValue):
-            begin
-              case Std.Net.Utf8.Decode(RequestValue.Body) of
-                Ok(Text):
-                begin
-                  mutable var ResponseValue: ServerResponse := ServerResponse.Create(201, 'Created');
-                  ResponseValue.Body := Std.Net.Utf8.Encode(RequestValue.Target + ':' + Text);
-                  case WriteResponse(Connection, ResponseValue) of
-                    Ok(_):
-                    begin
-                    end;
-                    Error(Message): panic(Message)
-                  end
-                end;
-                Error(Message): panic(Message)
-              end
-            end;
-            Error(Message): panic(Message)
-          end;
-          case Close(Connection) of
-            Ok(_):
-            begin
-            end;
-            Error(Message): panic(Message)
-          end
-        end;
-        Error(Message): panic(Message)
-      end;
-      case CloseListener(ListenerValue) of
-        Ok(_):
-        begin
-        end;
-        Error(Message): panic(Message)
-      end
-    end;
-    Error(Message): panic(Message)
-  end
-end.
-"#
+            "program HttpServerPost;\n\nuses Std.Http as Http; uses Std.Net as Net; uses Std.Net.Utf8 as Utf8;\n\nbegin\n  case Net.Listen('127.0.0.1', {port}) of\n    when Ok(ListenerValue):\n    begin\n      case Net.Accept(ListenerValue) of\n        when Ok(Connection):\n        begin\n          case Net.SetTimeout(Connection, 2000) of\n            when Ok(_):\n            begin null;\n            end;\n            when Error(Message): panic(Message);\n          end case;\n          case Http.ReadRequest(Connection, 4096, 1024) of\n            when Ok(RequestValue):\n            begin\n              case Utf8.Decode(RequestValue.Body) of\n                when Ok(Text):\n                begin\n                  mutable var ResponseValue: Http.ServerResponse := Http.ServerResponse.Create(201, 'Created');\n                  ResponseValue.Body := Utf8.Encode(RequestValue.Target + ':' + Text);\n                  case Http.WriteResponse(Connection, ResponseValue) of\n                    when Ok(_):\n                    begin null;\n                    end;\n                    when Error(Message): panic(Message);\n                  end case;\n                end;\n                when Error(Message): panic(Message);\n              end case;\n            end;\n            when Error(Message): panic(Message);\n          end case;\n          case Net.Close(Connection) of\n            when Ok(_):\n            begin null;\n            end;\n            when Error(Message): panic(Message);\n          end case;\n        end;\n        when Error(Message): panic(Message);\n      end case;\n      case Net.CloseListener(ListenerValue) of\n        when Ok(_):\n        begin null;\n        end;\n        when Error(Message): panic(Message);\n      end case;\n    end;\n    when Error(Message): panic(Message);\n  end case;\nend program;\n"
         ),
     );
 
@@ -255,55 +146,7 @@ fn fpas_http_server_rejects_ambiguous_request_framing() {
     let (cwd, server) = start_server(
         "http-server-hostile",
         format!(
-            r#"program HttpServerHostile;
-
-uses Std.Http, Std.Net, Std.Net.Utf8, Std.Str;
-
-begin
-  case Listen('127.0.0.1', {port}) of
-    Ok(ListenerValue):
-    begin
-      case Accept(ListenerValue) of
-        Ok(Connection):
-        begin
-          case ReadRequest(Connection, 4096, 1024) of
-            Ok(_): panic('ambiguous framing was accepted');
-            Error(Message):
-            begin
-              if not Std.Str.Contains(Message, 'both Transfer-Encoding and Content-Length') then
-              begin
-                panic(Message)
-              end;
-              mutable var ResponseValue: ServerResponse := ServerResponse.Create(400, 'Bad Request');
-              ResponseValue.Body := Std.Net.Utf8.Encode('rejected');
-              case WriteResponse(Connection, ResponseValue) of
-                Ok(_):
-                begin
-                end;
-                Error(WriteMessage): panic(WriteMessage)
-              end
-            end
-          end;
-          case Close(Connection) of
-            Ok(_):
-            begin
-            end;
-            Error(Message): panic(Message)
-          end
-        end;
-        Error(Message): panic(Message)
-      end;
-      case CloseListener(ListenerValue) of
-        Ok(_):
-        begin
-        end;
-        Error(Message): panic(Message)
-      end
-    end;
-    Error(Message): panic(Message)
-  end
-end.
-"#
+            "program HttpServerHostile;\n\nuses Std.Http as Http; uses Std.Net as Net; uses Std.Net.Utf8 as Utf8; uses Std.Str as Str;\n\nbegin\n  case Net.Listen('127.0.0.1', {port}) of\n    when Ok(ListenerValue):\n    begin\n      case Net.Accept(ListenerValue) of\n        when Ok(Connection):\n        begin\n          case Http.ReadRequest(Connection, 4096, 1024) of\n            when Ok(_): panic('ambiguous framing was accepted');\n            when Error(Message):\n            begin\n              if not Str.Contains(Message, 'both Transfer-Encoding and Content-Length') then\n              begin\n                panic(Message);\n              end; end if;\n              mutable var ResponseValue: Http.ServerResponse := Http.ServerResponse.Create(400, 'Bad Request');\n              ResponseValue.Body := Utf8.Encode('rejected');\n              case Http.WriteResponse(Connection, ResponseValue) of\n                when Ok(_):\n                begin null;\n                end;\n                when Error(WriteMessage): panic(WriteMessage);\n              end case;\n            end;\n          end case;\n          case Net.Close(Connection) of\n            when Ok(_):\n            begin null;\n            end;\n            when Error(Message): panic(Message);\n          end case;\n        end;\n        when Error(Message): panic(Message);\n      end case;\n      case Net.CloseListener(ListenerValue) of\n        when Ok(_):\n        begin null;\n        end;\n        when Error(Message): panic(Message);\n      end case;\n    end;\n    when Error(Message): panic(Message);\n  end case;\nend program;\n"
         ),
     );
 
@@ -325,55 +168,7 @@ fn fpas_http_server_enforces_request_body_limit() {
     let (cwd, server) = start_server(
         "http-server-body-limit",
         format!(
-            r#"program HttpServerBodyLimit;
-
-uses Std.Http, Std.Net, Std.Net.Utf8, Std.Str;
-
-begin
-  case Listen('127.0.0.1', {port}) of
-    Ok(ListenerValue):
-    begin
-      case Accept(ListenerValue) of
-        Ok(Connection):
-        begin
-          case ReadRequest(Connection, 4096, 4) of
-            Ok(_): panic('oversized request body was accepted');
-            Error(Message):
-            begin
-              if not Std.Str.Contains(Message, 'MaxBodyBytes') then
-              begin
-                panic(Message)
-              end;
-              mutable var ResponseValue: ServerResponse := ServerResponse.Create(413, 'Content Too Large');
-              ResponseValue.Body := Std.Net.Utf8.Encode('too large');
-              case WriteResponse(Connection, ResponseValue) of
-                Ok(_):
-                begin
-                end;
-                Error(WriteMessage): panic(WriteMessage)
-              end
-            end
-          end;
-          case Close(Connection) of
-            Ok(_):
-            begin
-            end;
-            Error(Message): panic(Message)
-          end
-        end;
-        Error(Message): panic(Message)
-      end;
-      case CloseListener(ListenerValue) of
-        Ok(_):
-        begin
-        end;
-        Error(Message): panic(Message)
-      end
-    end;
-    Error(Message): panic(Message)
-  end
-end.
-"#
+            "program HttpServerBodyLimit;\n\nuses Std.Http as Http; uses Std.Net as Net; uses Std.Net.Utf8 as Utf8; uses Std.Str as Str;\n\nbegin\n  case Net.Listen('127.0.0.1', {port}) of\n    when Ok(ListenerValue):\n    begin\n      case Net.Accept(ListenerValue) of\n        when Ok(Connection):\n        begin\n          case Http.ReadRequest(Connection, 4096, 4) of\n            when Ok(_): panic('oversized request body was accepted');\n            when Error(Message):\n            begin\n              if not Str.Contains(Message, 'MaxBodyBytes') then\n              begin\n                panic(Message);\n              end; end if;\n              mutable var ResponseValue: Http.ServerResponse := Http.ServerResponse.Create(413, 'Content Too Large');\n              ResponseValue.Body := Utf8.Encode('too large');\n              case Http.WriteResponse(Connection, ResponseValue) of\n                when Ok(_):\n                begin null;\n                end;\n                when Error(WriteMessage): panic(WriteMessage);\n              end case;\n            end;\n          end case;\n          case Net.Close(Connection) of\n            when Ok(_):\n            begin null;\n            end;\n            when Error(Message): panic(Message);\n          end case;\n        end;\n        when Error(Message): panic(Message);\n      end case;\n      case Net.CloseListener(ListenerValue) of\n        when Ok(_):\n        begin null;\n        end;\n        when Error(Message): panic(Message);\n      end case;\n    end;\n    when Error(Message): panic(Message);\n  end case;\nend program;\n"
         ),
     );
 

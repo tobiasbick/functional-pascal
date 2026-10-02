@@ -1,7 +1,8 @@
 program T;
 
-uses Std.Console, Std.Math;
+uses Std.Console as Console;
+uses Std.Math as Math;
 
 begin
-  WriteLn(Round(Log(2.718281828459045)))
-end.
+  Console.WriteLn(Math.Round(Math.Log(2.718281828459045)));
+end program;

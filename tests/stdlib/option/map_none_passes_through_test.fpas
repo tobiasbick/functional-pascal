@@ -1,14 +1,15 @@
 program T;
 
-uses Std.Console, Std.Options;
+uses Std.Console as Console;
+uses Std.Options as Options;
 
 function AlwaysOk(V: integer): string;
 begin
-  return 'ok'
-end;
+  return 'ok';
+end function;
 
 begin
   var O: option of integer := None;
-  var M: option of string := Map(O, AlwaysOk);
-  WriteLn(IsNone(M))
-end.
+  var M: option of string := Options.Map(O, AlwaysOk);
+  Console.WriteLn(Options.IsNone(M));
+end program;

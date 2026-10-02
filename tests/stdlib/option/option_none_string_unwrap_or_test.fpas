@@ -1,8 +1,9 @@
 program T;
 
-uses Std.Console, Std.Options;
+uses Std.Console as Console;
+uses Std.Options as Options;
 
 begin
   var O: option of string := None;
-  WriteLn(UnwrapOr(O, 'default'))
-end.
+  Console.WriteLn(Options.UnwrapOr(O, 'default'));
+end program;

@@ -1,67 +1,71 @@
 program TuiBackgroundPanicTest;
 
-uses Std.Results, Std.Tasks, Std.Test, Std.Time, Std.Tui;
+uses Std.Results as Results;
+uses Std.Tasks as Tasks;
+uses Std.Test as Test;
+uses Std.Time as Time;
+uses Std.Tui as Tui;
 
-type
-  PanicModel = record
-    Ready: channel of boolean;
-    FailureSeen: boolean;
-  end;
+type PanicModel = record
+  Ready: channel of boolean;
+  FailureSeen: boolean;
+end record;
 
-function UpdateFramework(State: PanicModel; Msg: TuiMsg; Cmd: TuiCmdOutput): PanicModel;
+function UpdateFramework(State: PanicModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): PanicModel;
 begin
   case Msg of
-    TuiMsg.Started:
-    begin
-      var Ready: channel of boolean := State.Ready;
-      Cmd.StartBackground(23, function(Token: CancellationToken): result of boolean, string begin
-        Send(Ready, true);
-        panic('expected Tui worker panic')
-      end);
-      return State
-    end;
-    TuiMsg.BackgroundFailed(Id, Kind, Message, Code, Line, Column):
-    begin
-      AssertEquals(23, Id);
-      AssertTrue(Kind = TaskFailureKind.Panicked);
-      AssertEquals('panic: expected Tui worker panic', Message);
-      return record
-        Ready := State.Ready;
-        FailureSeen := true;
-      end
-    end
+    when Tui.TuiMsg.Started:
+      begin
+        var Ready: channel of boolean := State.Ready;
+        Cmd.StartBackground(23, function(Token: Tasks.CancellationToken): result of boolean, string begin
+          Tasks.Send(Ready, true);
+          panic('expected Tui worker panic');
+        end function);
+        return State;
+      end;
+    when Tui.TuiMsg.BackgroundFailed(Id, Kind, Message, Code, Line, Column):
+      begin
+        Test.AssertEquals(23, Id);
+        Test.AssertTrue(Kind = Tasks.TaskFailureKind.Panicked);
+        Test.AssertEquals('panic: expected Tui worker panic', Message);
+        return record
+          Ready := State.Ready;
+          FailureSeen := true;
+        end record;
+      end;
     else
-    begin
-      return State
-    end
-  end
-end;
+      begin
+        return State;
+      end;
+  end case;
+end function;
 
-function UpdateApplication(State: PanicModel; Message: integer; Cmd: TuiCmdOutput): PanicModel;
+function UpdateApplication(State: PanicModel; Message: integer; Cmd: Tui.TuiCmdOutput): PanicModel;
 begin
-  return State
-end;
+  return State;
+end function;
 
-function View(State: PanicModel): TuiElement;
+function View(State: PanicModel): Tui.TuiElement;
 begin
-  return TuiElementBuilders.MakeLabel('panic')
-end;
+  return Tui.TuiElementBuilders.MakeLabel('panic');
+end function;
 
 begin
-  var Inbox: channel of integer := CreateChannel(1);
-  var Ready: channel of boolean := CreateChannel(1);
-  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 4));
+  var Inbox: channel of integer := Tasks.CreateChannel(1);
+  var Ready: channel of boolean := Tasks.CreateChannel(1);
+  var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(24, 4));
   mutable var Model: PanicModel := App.RunBackgroundIterations(record
     Ready := Ready;
     FailureSeen := false;
-  end, Inbox, UpdateFramework, UpdateApplication, View, 1, 0);
-  AssertTrue(Unwrap(ReceiveWithTimeout(Ready, 10000)));
+  end record, Inbox, UpdateFramework, UpdateApplication, View, 1, 0);
+  Test.AssertTrue(Results.Unwrap(Tasks.ReceiveWithTimeout(Ready, 10000)));
   while not Model.FailureSeen do
-  begin
-    Sleep(1);
-    Model := App.RunBackgroundIterations(Model, Inbox, UpdateFramework, UpdateApplication, View, 1, 0)
-  end;
+    begin
+      Time.Sleep(1);
+      Model := App.RunBackgroundIterations(Model, Inbox, UpdateFramework, UpdateApplication, View, 1, 0);
+    end;
+  end while;
 
   App.CloseWithBackground(Inbox);
-  CloseChannel(Ready)
-end.
+  Tasks.CloseChannel(Ready);
+end program;

@@ -1,147 +1,167 @@
 unit Notes.Repository;
 
-uses
-  Notes.Ordering, Notes.Format, Notes.Model, Std.Arrays, Std.Conv, Std.Dictionaries, Std.Fs,
-  Std.Path, Std.Random, Std.Results, Std.Str, Std.Time;
+uses Notes.Ordering as Ordering;
+uses Notes.Format as Format;
+uses Notes.Model as Model;
+uses Std.Arrays as Arrays;
+uses Std.Conv as Conv;
+uses Std.Dictionaries as Dictionaries;
+uses Std.Fs as Fs;
+uses Std.Path as Path2;
+uses Std.Random as Random;
+uses Std.Results as Results;
+uses Std.Str as Str;
+uses Std.Time as Time;
 
 // Creates the notes directory or validates that it already exists.
 public function NotesEnsureDirectory(Directory: string): result of boolean, string;
 begin
-  if Std.Fs.Exists(Directory) then
-  begin
-    if Std.Fs.IsDir(Directory) then
+  if Fs.Exists(Directory) then
     begin
-      return Ok(true)
+      if Fs.IsDir(Directory) then
+        begin
+          return Ok(true);
+        end;
+      end if;
+
+      return Error('Notes path exists but is not a directory: ' + Directory);
     end;
+  end if;
 
-    return Error('Notes path exists but is not a directory: ' + Directory)
-  end;
-
-  return Std.Fs.CreateDir(Directory)
-end;
+  return Fs.CreateDir(Directory);
+end function;
 
 // Resolves a note's existing or identity-derived `.note` path.
-public function NoteFilePath(Directory: string; NoteValue: Note): string;
+public function NoteFilePath(Directory: string; NoteValue: Model.Note): string;
 begin
   if NoteValue.Path <> '' then
-  begin
-    return NoteValue.Path
-  end;
+    begin
+      return NoteValue.Path;
+    end;
+  end if;
 
-  return Std.Path.Join([Directory, NoteValue.Id + '.note'])
-end;
+  return Path2.Join([Directory, NoteValue.Id + '.note']);
+end function;
 
 // Sorts pinned notes first, then by descending timestamp; ties keep input order.
-public function NotesSort(Notes: array of Note): array of Note;
+public function NotesSort(Notes: array of Model.Note): array of Model.Note;
 begin
-  return Notes.NotesOrdered()
-end;
+  return Ordering.NotesOrdered(Notes);
+end function;
 
 function AppendEscapedPattern(Acc: string; Character: string): string;
 begin
   if (((Character = '[') or (Character = ']')) or (Character = '*')) or (Character = '?') then
-  begin
-    return ((Acc + '[') + Character) + ']'
-  end;
+    begin
+      return ((Acc + '[') + Character) + ']';
+    end;
+  end if;
 
-  return Acc + Character
-end;
+  return Acc + Character;
+end function;
 
 // Escapes only the literal directory; the final note-file pattern stays active.
 function NoteDirectoryPattern(Directory: string): string;
 begin
-  return Std.Path.Join([Std.Str.Reduce(Directory, '', AppendEscapedPattern), '*.note'])
-end;
+  return Path2.Join([Str.Reduce(Directory, '', AppendEscapedPattern), '*.note']);
+end function;
 
 // Loads valid notes and preserves invalid files as visible issues.
-public function NotesLoadDirectory(Directory: string): result of NotesLoad, string;
+public function NotesLoadDirectory(Directory: string): result of Model.NotesLoad, string;
 begin
   var DirectoryReady: boolean := try NotesEnsureDirectory(Directory);
-  var Paths: array of string := try Std.Fs.Glob(NoteDirectoryPattern(Directory));
-  mutable var Notes: array of Note := [];
+  var Paths: array of string := try Fs.Glob(NoteDirectoryPattern(Directory));
+  mutable var Notes: array of Model.Note := [];
   mutable var IdCounts: dict of string to integer := [:];
-  mutable var Issues: array of NoteIssue := [];
-  for Index: integer := 0 to Std.Arrays.Length(Paths) - 1 do
-  begin
-    var Path: string := Paths[Index];
-    case Std.Fs.ReadText(Path) of
-      Ok(Text):
-      begin
-        case NoteParse(Text) of
-          Ok(NoteValue):
+  mutable var Issues: array of Model.NoteIssue := [];
+  for Index: integer := 0 to Arrays.Length(Paths) - 1 do
+    begin
+      var Path: string := Paths[Index];
+      case Fs.ReadText(Path) of
+        when Ok(Text):
           begin
-            mutable var Loaded: Note := NoteValue;
-            Loaded.Path := Path;
-            Std.Arrays.Push(Notes, Loaded);
-            if Std.Dictionaries.ContainsKey(IdCounts, Loaded.Id) then
-            begin
-              IdCounts[Loaded.Id] := IdCounts[Loaded.Id] + 1
-            end
-            else
-            begin
-              IdCounts[Loaded.Id] := 1
-            end
+            case Format.NoteParse(Text) of
+              when Ok(NoteValue):
+                begin
+                  mutable var Loaded: Model.Note := NoteValue;
+                  Loaded.Path := Path;
+                  Arrays.Push(Notes, Loaded);
+                  if Dictionaries.ContainsKey(IdCounts, Loaded.Id) then
+                    begin
+                      IdCounts[Loaded.Id] := IdCounts[Loaded.Id] + 1;
+                    end;
+                  else
+                    begin
+                      IdCounts[Loaded.Id] := 1;
+                    end;
+                  end if;
+                end;
+              when Error(Message):
+                begin
+                  Arrays.Push(Issues, record
+                    Path := Path;
+                    Message := Message;
+                  end record);
+                end;
+            end case;
           end;
-          Error(Message):
+        when Error(Message):
           begin
-            Std.Arrays.Push(Issues, record
+            Arrays.Push(Issues, record
               Path := Path;
               Message := Message;
-            end)
-          end
-        end
-      end;
-      Error(Message):
-      begin
-        Std.Arrays.Push(Issues, record
-          Path := Path;
-          Message := Message;
-        end)
-      end
-    end
-  end;
-  mutable var Unique: array of Note := [];
-  for Loaded: Note in Notes do
-  begin
-    if IdCounts[Loaded.Id] > 1 then
+            end record);
+          end;
+      end case;
+    end;
+  end for;
+  mutable var Unique: array of Model.Note := [];
+  for Loaded: Model.Note in Notes do
     begin
-      Std.Arrays.Push(Issues, record
-        Path := Loaded.Path;
-        Message := ('Duplicate note ID: ' + Loaded.Id) + '. Give each file a unique ID before editing.';
-      end)
-    end
-    else
-    begin
-      Std.Arrays.Push(Unique, Loaded)
-    end
-  end;
+      if IdCounts[Loaded.Id] > 1 then
+        begin
+          Arrays.Push(Issues, record
+            Path := Loaded.Path;
+            Message := ('Duplicate note ID: ' + Loaded.Id) + '. Give each file a unique ID before editing.';
+          end record);
+        end;
+      else
+        begin
+          Arrays.Push(Unique, Loaded);
+        end;
+      end if;
+    end;
+  end for;
 
   return Ok(record
     Notes := NotesSort(Unique);
     Issues := Issues;
-  end)
-end;
+  end record);
+end function;
 
 // Atomically writes one note to its stable file path.
-public function NotesSave(Directory: string; NoteValue: Note): result of boolean, string;
+public function NotesSave(Directory: string; NoteValue: Model.Note): result of boolean, string;
 begin
   var DirectoryReady: boolean := try NotesEnsureDirectory(Directory);
-  return Std.Fs.WriteTextAtomic(NoteFilePath(Directory, NoteValue), NoteStringify(NoteValue))
-end;
+  return Fs.WriteTextAtomic(NoteFilePath(Directory, NoteValue), Format.NoteStringify(NoteValue));
+end function;
 
 // Generates an unused timestamp-and-random identity in one directory.
 public function NotesCreateId(Directory: string; TimestampMillis: integer): string;
 begin
   mutable var Candidate: string := '';
   repeat
-    Candidate := (IntToStr(TimestampMillis) + '-') + IntToStr(Std.Random.RandomInt(100000, 999999))
-  until not Std.Fs.Exists(Std.Path.Join([Directory, Candidate + '.note']));
-  return Candidate
-end;
+    Candidate := (Conv.IntToStr(TimestampMillis) + '-') +
+                 Conv.IntToStr(Random.RandomInt(100000, 999999));
+  until not Fs.Exists(Path2.Join([Directory, Candidate + '.note']));
+  return Candidate;
+end function;
 
 // Creates an in-memory draft with a new identity and current timestamp.
-public function NotesCreateDraft(Directory: string): Note;
+public function NotesCreateDraft(Directory: string): Model.Note;
 begin
-  var Now: integer := Std.Time.TimestampMillis();
-  return NoteCreate(NotesCreateId(Directory, Now), Now)
-end;
+  var Now: integer := Time.TimestampMillis();
+  return Model.NoteCreate(NotesCreateId(Directory, Now), Now);
+end function;
+
+end unit;

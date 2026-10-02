@@ -10,8 +10,8 @@ unit Std.Parse;
 // - `Text`: UTF-8 text processed by the operation.
 public function TryBool(Text: string): result of boolean, string;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // Trims whitespace; accepts Pascal integer text with `_` digit separators.
 //
@@ -19,8 +19,8 @@ end;
 // - `Text`: UTF-8 text processed by the operation.
 public function TryInt(Text: string): result of integer, string;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // Trims whitespace; requires a decimal point, for example `3.14` or `1.0e3`.
 //
@@ -28,5 +28,7 @@ end;
 // - `Text`: UTF-8 text processed by the operation.
 public function TryReal(Text: string): result of real, string;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
+
+end unit;

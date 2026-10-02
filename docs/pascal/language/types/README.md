@@ -4,6 +4,17 @@ Composite and built-in type forms: records, enums, arrays, dictionaries, aliases
 
 Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`type_block`, `type_def`, `type_expr`, `record_type`, `enum_type`).
 
+Each declaration repeats its keyword, including exported declarations such as
+`public type Point = record ... end record;`. Grouped declaration sections are
+invalid.
+
+All type headers in a program or unit are collected before type definitions and
+routine bodies are checked. A type reference may therefore name a later type in
+the same program or unit. Recursive records and enums retain their nominal
+identity; a cycle made only from type aliases is invalid. Constant and variable
+initializers, including record field defaults, still follow declaration order:
+type collection does not make later values available to an earlier initializer.
+
 | Topic | Description |
 |-------|-------------|
 | [Records](records.md) | Declaration, literals, fields, immutability, default values |

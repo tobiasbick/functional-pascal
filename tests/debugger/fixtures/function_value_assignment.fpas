@@ -1,52 +1,55 @@
 program FunctionValueAssignment;
 
-uses Std.Console;
+uses Std.Console as Console;
 
-type
-  Handler = function(Value: integer): integer;
-  NoArgHandler = function(): integer;
-  Math = record
-    static function Transform(Value: integer): integer;
-    begin
-      return Value + 3
-    end;
-  end;
-  Stats = record
-    static function Transform(Value: integer): integer;
-    begin
-      return Value + 4
-    end;
-  end;
-  Counter = record
-    Base: integer;
+type Handler = function(Value: integer): integer;
 
-    function Add(Self: Counter; Value: integer): integer;
-    begin
-      return Self.Base + Value
-    end;
-  end;
+type NoArgHandler = function(): integer;
+
+type Math = record
+  static function Transform(Value: integer): integer;
+  begin
+    return Value + 3;
+  end function;
+end record;
+
+type Stats = record
+  static function Transform(Value: integer): integer;
+  begin
+    return Value + 4;
+  end function;
+end record;
+
+type Counter = record
+  Base: integer;
+
+  function Add(Self: Counter; Value: integer): integer;
+  begin
+    return Self.Base + Value;
+  end function;
+end record;
 
 function AddOne(Value: integer): integer;
 begin
-  return Value + 1
-end;
+  return Value + 1;
+end function;
 
 function AddTwo(Value: integer): integer;
 begin
-  return Value + 2
-end;
+  return Value + 2;
+end function;
 
 function Answer(): integer;
 begin
-  return 42
-end;
+  return 42;
+end function;
 
 function MakeAdder(Amount: integer): Handler;
 begin
   return function(Value: integer): integer begin
-    return Value + Amount
-  end
-end;
+    return Value + Amount;
+  end function;
+end function;
 
 begin
   mutable var Current: Handler := AddOne;
@@ -56,8 +59,8 @@ begin
   mutable var WrongSignature: NoArgHandler := Answer;
   var Receiver: Counter := record
     Base := 10;
-  end;
+  end record;
   var StopMarker: integer := 0;
-  WriteLn(Current(1));
-  WriteLn(Captured(1))
-end.
+  Console.WriteLn(Current(1));
+  Console.WriteLn(Captured(1));
+end program;

@@ -1,9 +1,10 @@
 program T;
 
-uses Std.Console, Std.Random;
+uses Std.Console as Console;
+uses Std.Random as Random2;
 
 begin
-  var R: real := Random();
-  WriteLn(R >= 0.0);
-  WriteLn(R < 1.0)
-end.
+  var R: real := Random2.Random();
+  Console.WriteLn(R >= 0.0);
+  Console.WriteLn(R < 1.0);
+end program;

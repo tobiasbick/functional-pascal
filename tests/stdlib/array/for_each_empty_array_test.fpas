@@ -1,13 +1,14 @@
 program T;
 
-uses Std.Console, Std.Arrays;
+uses Std.Console as Console;
+uses Std.Arrays as Arrays;
 
 procedure PrintValue(X: integer);
 begin
-  WriteLn(X)
-end;
+  Console.WriteLn(X);
+end procedure;
 
 begin
-  ForEach([], PrintValue);
-  WriteLn('done')
-end.
+  Arrays.ForEach([], PrintValue);
+  Console.WriteLn('done');
+end program;

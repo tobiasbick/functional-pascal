@@ -67,7 +67,13 @@ mod tests {
 
     #[test]
     fn parse_is_cached_by_canonical_path() -> Result<(), Box<dyn std::error::Error>> {
-        let path = temp_file("unit", "unit Demo.Core;\n")?;
+        let path = temp_file(
+            "unit",
+            r#"unit Demo.Core;
+end unit;
+
+"#,
+        )?;
         let mut cache = ParsedSourceCache::new();
 
         cache.parse(&path, 0)?;
@@ -88,7 +94,13 @@ mod tests {
         fs::create_dir_all(&dir)?;
         let file_name = "core.fpas";
         let relative = dir.join(file_name);
-        fs::write(&relative, "unit Demo.Core;\n")?;
+        fs::write(
+            &relative,
+            r#"unit Demo.Core;
+end unit;
+
+"#,
+        )?;
 
         let absolute = fs::canonicalize(&relative)?;
         let mut cache = ParsedSourceCache::new();

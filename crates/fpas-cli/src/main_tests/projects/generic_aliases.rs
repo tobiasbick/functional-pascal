@@ -11,42 +11,46 @@ fn generic_tui_callbacks_accept_a_public_model_alias() {
     support::write_program_project_file(&project, "src/main.fpas", &["src/**/*.fpas"]);
     write_text(
         &cwd.join("src/model.fpas"),
-        "unit Repro.Model;
-public type
-  Model = record
+        r#"unit Repro.Model;
+
+  public type Model = record
     public Value: integer;
-  end;",
+  end record;
+end unit;
+"#,
     );
     write_text(
         &cwd.join("src/facade.fpas"),
-        "unit Repro.Facade;
-uses Repro.Model, Std.Tui;
-public type
-  Model = Repro.Model.Model;
+        r#"unit Repro.Facade;
+uses Repro.Model as Model2; uses Std.Tui as Tui;
+
+  public type Model = Model2.Model;
 public function NewModel(): Model;
 begin
-  return record Value := 0; end
-end;
-public function Update(State: Model; Msg: TuiMsg; Cmd: TuiCmdOutput): Model;
+  return record Value := 0; end record;
+end function;
+public function Update(State: Model; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): Model;
 begin
-  return State
-end;
-public function View(State: Model): TuiElement;
+  return State;
+end function;
+public function View(State: Model): Tui.TuiElement;
 begin
-  return TuiElementBuilders.MakeLabel('value')
-end;",
+  return Tui.TuiElementBuilders.MakeLabel('value');
+end function;
+end unit;
+"#,
     );
     write_text(
         &cwd.join("src/main.fpas"),
-        "program GenericAliasRepro;
-uses Repro.Facade, Std.Tui, Std.Test;
+        r#"program GenericAliasRepro;
+uses Repro.Facade as Facade; uses Std.Tui as Tui; uses Std.Test as Test;
 begin
-  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(20, 4));
-  mutable var State: Model := NewModel();
-  State := App.RunIterations(State, Update, View, 0, 0);
-  AssertEquals(0, State.Value);
-  App.Close()
-end.",
+  var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(20, 4));
+  mutable var State: Facade.Model := Facade.NewModel();
+  State := App.RunIterations(State, Facade.Update, Facade.View, 0, 0);
+  Test.AssertEquals(0, State.Value);
+  App.Close();
+end program;"#,
     );
     let root = Path::new(env!("CARGO_MANIFEST_DIR"))
         .ancestors()

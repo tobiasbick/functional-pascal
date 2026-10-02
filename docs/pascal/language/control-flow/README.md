@@ -6,7 +6,7 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`if_stmt`, `case_s
 
 | Topic | Description |
 |-------|-------------|
-| [If / then / else](if-then-else.md) | Conditionals and `else if` chains |
+| [If / then / else](if-then-else.md) | Conditionals and `elsif` chains |
 | [Case of intro](case-of-intro.md) | Scalar `case` labels and ranges |
 | [For loops](for-loops.md) | `to` / `downto` counting loops |
 | [For-in](for-in.md) | Array and dict iteration |

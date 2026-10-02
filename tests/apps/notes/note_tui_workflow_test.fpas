@@ -1,21 +1,30 @@
 program NoteTuiWorkflowTest;
 
-uses Notes.Model, Notes.Update, Notes.View, Std.Arrays, Std.Fs, Std.Str, Std.Test, Std.Tui;
+uses Notes.Model as Model2;
+uses Notes.Update as Update;
+uses Notes.View as View;
+uses Std.Arrays as Arrays;
+uses Std.Fs as Fs;
+uses Std.Str as Str;
+uses Std.Test as Test;
+uses Std.Tui as Tui;
 
-function ScreenContains(Snapshot: TuiSurfaceSnapshot; Text: string): boolean;
+function ScreenContains(Snapshot: Tui.TuiSurfaceSnapshot; Text: string): boolean;
 begin
   for Row: integer := 0 to Snapshot.Height - 1 do
-  begin
-    if Std.Str.Contains(Snapshot.LineAt(Row), Text) then
     begin
-      return true
-    end
-  end;
+      if Str.Contains(Snapshot.LineAt(Row), Text) then
+        begin
+          return true;
+        end;
+      end if;
+    end;
+  end for;
 
-  return false
-end;
+  return false;
+end function;
 
-function MakeKey(Kind: TuiKeyKind): TuiKeyEvent;
+function MakeKey(Kind: Tui.TuiKeyKind): Tui.TuiKeyEvent;
 begin
   return record
     kind := Kind;
@@ -24,157 +33,157 @@ begin
     ctrl := false;
     alt := false;
     meta := false;
-  end
-end;
+  end record;
+end function;
 
-function MakeCtrlKey(Character: string): TuiKeyEvent;
+function MakeCtrlKey(Character: string): Tui.TuiKeyEvent;
 begin
   return record
-    kind := TuiKeyKind.Character;
+    kind := Tui.TuiKeyKind.Character;
     ch := Character;
     shift := false;
     ctrl := true;
     alt := false;
     meta := false;
-  end
-end;
+  end record;
+end function;
 
-function MakeAltKey(Character: string): TuiKeyEvent;
+function MakeAltKey(Character: string): Tui.TuiKeyEvent;
 begin
   return record
-    kind := TuiKeyKind.Character;
+    kind := Tui.TuiKeyKind.Character;
     ch := Character;
     shift := false;
     ctrl := false;
     alt := true;
     meta := false;
-  end
-end;
+  end record;
+end function;
 
 begin
-  var Directory: string := ScratchDir() + '/notes';
-  var EmptyLoaded: NotesLoad := record
+  var Directory: string := Test.ScratchDir() + '/notes';
+  var EmptyLoaded: Model2.NotesLoad := record
     Notes := [];
     Issues := [];
-  end;
-  mutable var EmptyModel: NotesModel := NotesModelCreate(Directory, EmptyLoaded);
-  var EmptyApp: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(100, 24));
-  EmptyModel := EmptyApp.RunIterations(EmptyModel, NotesUpdate, NotesView, 0, 0);
-  var EmptySnapshot: TuiSurfaceSnapshot := EmptyApp.SurfaceSnapshot();
-  AssertEquals('╰', EmptySnapshot.CellAt(0, 22).Glyph);
-  AssertEquals('╯', EmptySnapshot.CellAt(32, 22).Glyph);
-  AssertEquals('╰', EmptySnapshot.CellAt(33, 22).Glyph);
-  AssertEquals('╯', EmptySnapshot.CellAt(99, 22).Glyph);
-  AssertTrue(Std.Str.Contains(EmptySnapshot.LineAt(22), '╯╰'));
-  EmptyApp.Inject(TuiMsgAction(TuiControlId.Create(20), TuiAction.Create(14)));
-  EmptyModel := EmptyApp.RunIterations(EmptyModel, NotesUpdate, NotesView, 1, 0);
-  AssertTrue(EmptyModel.Overlay = NotesOverlay.Commands);
-  EmptyApp.InjectKeyForTest(MakeKey(TuiKeyKind.Down));
-  EmptyModel := EmptyApp.RunIterations(EmptyModel, NotesUpdate, NotesView, 1, 0);
-  AssertEquals(24, EmptyModel.Focus);
-  EmptyApp.InjectKeyForTest(MakeKey(TuiKeyKind.Enter));
-  EmptyModel := EmptyApp.RunIterations(EmptyModel, NotesUpdate, NotesView, 1, 0);
-  AssertTrue(EmptyModel.Overlay = NotesOverlay.Help);
+  end record;
+  mutable var EmptyModel: Model2.NotesModel := Model2.NotesModelCreate(Directory, EmptyLoaded);
+  var EmptyApp: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(100, 24));
+  EmptyModel := EmptyApp.RunIterations(EmptyModel, Update.NotesUpdate, View.NotesView, 0, 0);
+  var EmptySnapshot: Tui.TuiSurfaceSnapshot := EmptyApp.SurfaceSnapshot();
+  Test.AssertEquals('╰', EmptySnapshot.CellAt(0, 22).Glyph);
+  Test.AssertEquals('╯', EmptySnapshot.CellAt(32, 22).Glyph);
+  Test.AssertEquals('╰', EmptySnapshot.CellAt(33, 22).Glyph);
+  Test.AssertEquals('╯', EmptySnapshot.CellAt(99, 22).Glyph);
+  Test.AssertTrue(Str.Contains(EmptySnapshot.LineAt(22), '╯╰'));
+  EmptyApp.Inject(Tui.TuiMsgAction(Tui.TuiControlId.Create(20), Tui.TuiAction.Create(14)));
+  EmptyModel := EmptyApp.RunIterations(EmptyModel, Update.NotesUpdate, View.NotesView, 1, 0);
+  Test.AssertTrue(EmptyModel.Overlay = Model2.NotesOverlay.Commands);
+  EmptyApp.InjectKeyForTest(MakeKey(Tui.TuiKeyKind.Down));
+  EmptyModel := EmptyApp.RunIterations(EmptyModel, Update.NotesUpdate, View.NotesView, 1, 0);
+  Test.AssertEquals(24, EmptyModel.Focus);
+  EmptyApp.InjectKeyForTest(MakeKey(Tui.TuiKeyKind.Enter));
+  EmptyModel := EmptyApp.RunIterations(EmptyModel, Update.NotesUpdate, View.NotesView, 1, 0);
+  Test.AssertTrue(EmptyModel.Overlay = Model2.NotesOverlay.Help);
   EmptyApp.Close();
-  var First: Note := NoteCreate('focus-first', 1);
-  var Second: Note := NoteCreate('focus-second', 2);
-  var FocusLoaded: NotesLoad := record
+  var First: Model2.Note := Model2.NoteCreate('focus-first', 1);
+  var Second: Model2.Note := Model2.NoteCreate('focus-second', 2);
+  var FocusLoaded: Model2.NotesLoad := record
     Notes := [First, Second];
     Issues := [];
-  end;
-  mutable var FocusModel: NotesModel := NotesModelCreate(Directory, FocusLoaded);
-  var FocusApp: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(100, 24));
-  FocusModel := FocusApp.RunIterations(FocusModel, NotesUpdate, NotesView, 0, 0);
+  end record;
+  mutable var FocusModel: Model2.NotesModel := Model2.NotesModelCreate(Directory, FocusLoaded);
+  var FocusApp: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(100, 24));
+  FocusModel := FocusApp.RunIterations(FocusModel, Update.NotesUpdate, View.NotesView, 0, 0);
   FocusApp.InjectKeyForTest(MakeCtrlKey('1'));
-  FocusModel := FocusApp.RunIterations(FocusModel, NotesUpdate, NotesView, 1, 0);
-  AssertEquals(1, FocusModel.Focus);
-  AssertTrue(FocusModel.Pane = NotesPane.List);
-  FocusApp.InjectKeyForTest(MakeKey(TuiKeyKind.Tab));
-  FocusModel := FocusApp.RunIterations(FocusModel, NotesUpdate, NotesView, 1, 0);
-  AssertEquals(2, FocusModel.Focus);
-  FocusApp.InjectKeyForTest(MakeKey(TuiKeyKind.Down));
-  FocusModel := FocusApp.RunIterations(FocusModel, NotesUpdate, NotesView, 1, 0);
-  AssertEquals(1, FocusModel.Selected);
-  AssertEquals(2, FocusModel.Focus);
-  AssertTrue(FocusModel.Pane = NotesPane.List);
-  FocusApp.InjectKeyForTest(MakeKey(TuiKeyKind.Enter));
-  FocusModel := FocusApp.RunIterations(FocusModel, NotesUpdate, NotesView, 1, 0);
-  AssertEquals(1, FocusModel.Selected);
-  AssertEquals(5, FocusModel.Focus);
-  AssertTrue(FocusModel.Pane = NotesPane.Editor);
+  FocusModel := FocusApp.RunIterations(FocusModel, Update.NotesUpdate, View.NotesView, 1, 0);
+  Test.AssertEquals(1, FocusModel.Focus);
+  Test.AssertTrue(FocusModel.Pane = Model2.NotesPane.List);
+  FocusApp.InjectKeyForTest(MakeKey(Tui.TuiKeyKind.Tab));
+  FocusModel := FocusApp.RunIterations(FocusModel, Update.NotesUpdate, View.NotesView, 1, 0);
+  Test.AssertEquals(2, FocusModel.Focus);
+  FocusApp.InjectKeyForTest(MakeKey(Tui.TuiKeyKind.Down));
+  FocusModel := FocusApp.RunIterations(FocusModel, Update.NotesUpdate, View.NotesView, 1, 0);
+  Test.AssertEquals(1, FocusModel.Selected);
+  Test.AssertEquals(2, FocusModel.Focus);
+  Test.AssertTrue(FocusModel.Pane = Model2.NotesPane.List);
+  FocusApp.InjectKeyForTest(MakeKey(Tui.TuiKeyKind.Enter));
+  FocusModel := FocusApp.RunIterations(FocusModel, Update.NotesUpdate, View.NotesView, 1, 0);
+  Test.AssertEquals(1, FocusModel.Selected);
+  Test.AssertEquals(5, FocusModel.Focus);
+  Test.AssertTrue(FocusModel.Pane = Model2.NotesPane.Editor);
   FocusApp.Close();
-  var QuitCmd: TuiCmdOutput := TuiCmdOutput.Create();
-  var CleanEscape: NotesModel := NotesUpdate(FocusModel, TuiMsg.QuitRequested, QuitCmd);
-  AssertTrue(QuitCmd.Command() = TuiCmd.NoCommand);
-  AssertTrue(CleanEscape.Overlay = NotesOverlay.Closed);
-  AssertEquals(FocusModel.Focus, CleanEscape.Focus);
-  mutable var DirtyEscapeModel: NotesModel := FocusModel;
+  var QuitCmd: Tui.TuiCmdOutput := Tui.TuiCmdOutput.Create();
+  var CleanEscape: Model2.NotesModel := Update.NotesUpdate(FocusModel, Tui.TuiMsg.QuitRequested, QuitCmd);
+  Test.AssertTrue(QuitCmd.Command() = Tui.TuiCmd.NoCommand);
+  Test.AssertTrue(CleanEscape.Overlay = Model2.NotesOverlay.Closed);
+  Test.AssertEquals(FocusModel.Focus, CleanEscape.Focus);
+  mutable var DirtyEscapeModel: Model2.NotesModel := FocusModel;
   DirtyEscapeModel.Dirty := true;
-  var DirtyEscape: NotesModel := NotesUpdate(DirtyEscapeModel, TuiMsg.QuitRequested, QuitCmd);
-  AssertTrue(QuitCmd.Command() = TuiCmd.NoCommand);
-  AssertTrue(DirtyEscape.Dirty);
-  AssertTrue(DirtyEscape.Overlay = NotesOverlay.Closed);
-  var CleanQuit: NotesModel := NotesUpdate(FocusModel, TuiMsg.Key(MakeAltKey('x')), QuitCmd);
-  AssertTrue(QuitCmd.Command() = TuiCmd.Quit);
-  AssertTrue(CleanQuit.Overlay = NotesOverlay.Closed);
-  mutable var DirtyModel: NotesModel := FocusModel;
+  var DirtyEscape: Model2.NotesModel := Update.NotesUpdate(DirtyEscapeModel, Tui.TuiMsg.QuitRequested, QuitCmd);
+  Test.AssertTrue(QuitCmd.Command() = Tui.TuiCmd.NoCommand);
+  Test.AssertTrue(DirtyEscape.Dirty);
+  Test.AssertTrue(DirtyEscape.Overlay = Model2.NotesOverlay.Closed);
+  var CleanQuit: Model2.NotesModel := Update.NotesUpdate(FocusModel, Tui.TuiMsg.Key(MakeAltKey('x')), QuitCmd);
+  Test.AssertTrue(QuitCmd.Command() = Tui.TuiCmd.Quit);
+  Test.AssertTrue(CleanQuit.Overlay = Model2.NotesOverlay.Closed);
+  mutable var DirtyModel: Model2.NotesModel := FocusModel;
   DirtyModel.Dirty := true;
-  DirtyModel.Overlay := NotesOverlay.Help;
-  var DirtyQuit: NotesModel := NotesUpdate(DirtyModel, TuiMsg.Key(MakeAltKey('X')), QuitCmd);
-  AssertTrue(QuitCmd.Command() = TuiCmd.NoCommand);
-  AssertTrue(DirtyQuit.Overlay = NotesOverlay.QuitConfirmation);
-  mutable var NoteValue: Note := NoteCreate('tui-workflow', 1700000000000);
+  DirtyModel.Overlay := Model2.NotesOverlay.Help;
+  var DirtyQuit: Model2.NotesModel := Update.NotesUpdate(DirtyModel, Tui.TuiMsg.Key(MakeAltKey('X')), QuitCmd);
+  Test.AssertTrue(QuitCmd.Command() = Tui.TuiCmd.NoCommand);
+  Test.AssertTrue(DirtyQuit.Overlay = Model2.NotesOverlay.QuitConfirmation);
+  mutable var NoteValue: Model2.Note := Model2.NoteCreate('tui-workflow', 1700000000000);
   NoteValue.Title := 'A very long note title that must never resize the notes sidebar';
-  NoteValue.Body := ((('first off-screen line' + Std.Str.Chr(10)) + 'second off-screen line') + Std.Str.Chr(10)) +
-                    (Std.Str.Chr(65279) + 'visible body text');
-  var Issue: NoteIssue := record
+  NoteValue.Body := ((('first off-screen line' + Str.Chr(10)) + 'second off-screen line') + Str.Chr(10)) +
+                    (Str.Chr(65279) + 'visible body text');
+  var Issue: Model2.NoteIssue := record
     Path := 'broken.note';
     Message := 'invalid header';
-  end;
-  var Loaded: NotesLoad := record
+  end record;
+  var Loaded: Model2.NotesLoad := record
     Notes := [NoteValue];
     Issues := [Issue];
-  end;
-  mutable var Model: NotesModel := NotesModelCreate(Directory, Loaded);
-  mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(100, 24));
-  Model := App.RunIterations(Model, NotesUpdate, NotesView, 0, 0);
-  var InitialSnapshot: TuiSurfaceSnapshot := App.SurfaceSnapshot();
-  AssertTrue(ScreenContains(InitialSnapshot, 'NOTES'));
-  AssertTrue(ScreenContains(InitialSnapshot, '1 invalid'));
-  AssertEquals('╯', InitialSnapshot.CellAt(32, 22).Glyph);
-  AssertEquals('╰', InitialSnapshot.CellAt(33, 22).Glyph);
-  AssertTrue(ScreenContains(InitialSnapshot, '…'));
-  AssertTrue(Std.Str.Contains(Model.Notes[0].Body, Std.Str.Chr(65279) + 'visible body text'));
-  Model.BodyOffset := TuiPoint.Create(0, 2);
-  Model := App.RunIterations(Model, NotesUpdate, NotesView, 0, 0);
-  AssertTrue(ScreenContains(App.SurfaceSnapshot(), 'visible body text'));
-  App.Inject(TuiMsgTextChanged(TuiControlId.Create(3), TuiAction.Create(3), 'Modern terminal notes', 21));
-  App.Inject(TuiMsgTextAreaChanged(TuiControlId.Create(5), TuiAction.Create(5), 'Written through MVU', 19, TuiPoint.Create(0, 0)));
-  Model := App.RunIterations(Model, NotesUpdate, NotesView, 2, 0);
-  AssertTrue(Model.Dirty);
-  App.Inject(TuiMsgAction(TuiControlId.Create(21), TuiAction.Create(11)));
-  Model := App.RunIterations(Model, NotesUpdate, NotesView, 1, 0);
-  AssertFalse(Model.Dirty);
-  AssertTrue(Std.Fs.Exists(Directory + '/tui-workflow.note'));
-  AssertTrue(ScreenContains(App.SurfaceSnapshot(), 'NOTES'));
-  App.Inject(TuiMsgAction(TuiControlId.Create(22), TuiAction.Create(12)));
-  Model := App.RunIterations(Model, NotesUpdate, NotesView, 1, 0);
-  AssertTrue(Model.Notes[0].Pinned);
-  AssertFalse(Model.Dirty);
-  App.Inject(TuiMsgAction(TuiControlId.Create(20), TuiAction.Create(14)));
-  Model := App.RunIterations(Model, NotesUpdate, NotesView, 1, 0);
-  AssertTrue(Model.Overlay = NotesOverlay.Commands);
-  AssertTrue(ScreenContains(App.SurfaceSnapshot(), 'Quick actions'));
-  App.Inject(TuiMsg.QuitRequested);
-  Model := App.RunIterations(Model, NotesUpdate, NotesView, 1, 0);
-  AssertTrue(Model.Overlay = NotesOverlay.Closed);
-  App.InjectResizeForTest(TuiSize.Create(60, 20));
-  Model := App.RunIterations(Model, NotesUpdate, NotesView, 1, 0);
-  AssertEquals(60, Model.Width);
-  AssertTrue(ScreenContains(App.SurfaceSnapshot(), 'Editor'));
-  App.Inject(TuiMsgAction(TuiControlId.Create(23), TuiAction.Create(13)));
-  Model := App.RunIterations(Model, NotesUpdate, NotesView, 1, 0);
-  AssertTrue(Model.Notes[0].Archived);
-  AssertEquals(-1, Model.Selected);
-  App.Close()
-end.
+  end record;
+  mutable var Model: Model2.NotesModel := Model2.NotesModelCreate(Directory, Loaded);
+  mutable var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(100, 24));
+  Model := App.RunIterations(Model, Update.NotesUpdate, View.NotesView, 0, 0);
+  var InitialSnapshot: Tui.TuiSurfaceSnapshot := App.SurfaceSnapshot();
+  Test.AssertTrue(ScreenContains(InitialSnapshot, 'NOTES'));
+  Test.AssertTrue(ScreenContains(InitialSnapshot, '1 invalid'));
+  Test.AssertEquals('╯', InitialSnapshot.CellAt(32, 22).Glyph);
+  Test.AssertEquals('╰', InitialSnapshot.CellAt(33, 22).Glyph);
+  Test.AssertTrue(ScreenContains(InitialSnapshot, '…'));
+  Test.AssertTrue(Str.Contains(Model.Notes[0].Body, Str.Chr(65279) + 'visible body text'));
+  Model.BodyOffset := Tui.TuiPoint.Create(0, 2);
+  Model := App.RunIterations(Model, Update.NotesUpdate, View.NotesView, 0, 0);
+  Test.AssertTrue(ScreenContains(App.SurfaceSnapshot(), 'visible body text'));
+  App.Inject(Tui.TuiMsgTextChanged(Tui.TuiControlId.Create(3), Tui.TuiAction.Create(3), 'Modern terminal notes', 21));
+  App.Inject(Tui.TuiMsgTextAreaChanged(Tui.TuiControlId.Create(5), Tui.TuiAction.Create(5), 'Written through MVU', 19, Tui.TuiPoint.Create(0, 0)));
+  Model := App.RunIterations(Model, Update.NotesUpdate, View.NotesView, 2, 0);
+  Test.AssertTrue(Model.Dirty);
+  App.Inject(Tui.TuiMsgAction(Tui.TuiControlId.Create(21), Tui.TuiAction.Create(11)));
+  Model := App.RunIterations(Model, Update.NotesUpdate, View.NotesView, 1, 0);
+  Test.AssertFalse(Model.Dirty);
+  Test.AssertTrue(Fs.Exists(Directory + '/tui-workflow.note'));
+  Test.AssertTrue(ScreenContains(App.SurfaceSnapshot(), 'NOTES'));
+  App.Inject(Tui.TuiMsgAction(Tui.TuiControlId.Create(22), Tui.TuiAction.Create(12)));
+  Model := App.RunIterations(Model, Update.NotesUpdate, View.NotesView, 1, 0);
+  Test.AssertTrue(Model.Notes[0].Pinned);
+  Test.AssertFalse(Model.Dirty);
+  App.Inject(Tui.TuiMsgAction(Tui.TuiControlId.Create(20), Tui.TuiAction.Create(14)));
+  Model := App.RunIterations(Model, Update.NotesUpdate, View.NotesView, 1, 0);
+  Test.AssertTrue(Model.Overlay = Model2.NotesOverlay.Commands);
+  Test.AssertTrue(ScreenContains(App.SurfaceSnapshot(), 'Quick actions'));
+  App.Inject(Tui.TuiMsg.QuitRequested);
+  Model := App.RunIterations(Model, Update.NotesUpdate, View.NotesView, 1, 0);
+  Test.AssertTrue(Model.Overlay = Model2.NotesOverlay.Closed);
+  App.InjectResizeForTest(Tui.TuiSize.Create(60, 20));
+  Model := App.RunIterations(Model, Update.NotesUpdate, View.NotesView, 1, 0);
+  Test.AssertEquals(60, Model.Width);
+  Test.AssertTrue(ScreenContains(App.SurfaceSnapshot(), 'Editor'));
+  App.Inject(Tui.TuiMsgAction(Tui.TuiControlId.Create(23), Tui.TuiAction.Create(13)));
+  Model := App.RunIterations(Model, Update.NotesUpdate, View.NotesView, 1, 0);
+  Test.AssertTrue(Model.Notes[0].Archived);
+  Test.AssertEquals(-1, Model.Selected);
+  App.Close();
+end program;

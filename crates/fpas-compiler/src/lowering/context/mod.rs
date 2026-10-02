@@ -5,6 +5,9 @@ mod block_order;
 mod blocks;
 mod debug;
 mod descriptors;
+mod designators;
+mod globals;
+mod imports;
 mod saved_values;
 
 #[cfg(test)]
@@ -45,6 +48,7 @@ pub(super) struct LoweringContext {
     cell_names: BTreeSet<String>,
     globals: BTreeMap<String, GlobalBinding>,
     constants: BTreeMap<String, fpas_ir::Constant>,
+    import_aliases: HashMap<String, String>,
     pub(super) type_table: types::TypeTable,
     pub(super) expr_types: ExprTypeMap,
     pub(super) intrinsic_calls: fpas_sema::IntrinsicCallMap,
@@ -220,6 +224,7 @@ impl LoweringContext {
             cell_names,
             globals,
             constants,
+            import_aliases: metadata.import_aliases.clone(),
             type_table,
             expr_types: metadata.expr_types.clone(),
             intrinsic_calls: metadata.intrinsic_calls.clone(),

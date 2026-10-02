@@ -1,46 +1,46 @@
 program FluentRecordsTest;
 
-uses Std.Tasks, Std.Test;
+uses Std.Tasks as Tasks;
+uses Std.Test as Test;
 
 function Double(X: integer): integer;
 begin
-  return X * 2
-end;
+  return X * 2;
+end function;
 
-type
-  Box = record
-    Value: integer;
-    Callback: function(X: integer): integer;
+type Box = record
+  Value: integer;
+  Callback: function(X: integer): integer;
 
-    function Add(Self: Box; X: integer): integer;
-    begin
-      return Self.Value + X
-    end;
-  end;
+  function Add(Self: Box; X: integer): integer;
+  begin
+    return Self.Value + X;
+  end function;
+end record;
 
 function ValueOf(B: Box): integer;
 begin
-  return B.Value
-end;
+  return B.Value;
+end function;
 
 begin
   var Item: Box := record
     Value := 3;
     Callback := Double;
-  end;
+  end record;
 
-  AssertEquals(5, Item.Add(2));
-  AssertEquals(5, Item.ValueOf() + 2);
-  AssertEquals(4, Item.Callback(2));
-  AssertEquals(6, (Item).Callback(3));
+  Test.AssertEquals(5, Item.Add(2));
+  Test.AssertEquals(5, Item.ValueOf() + 2);
+  Test.AssertEquals(4, Item.Callback(2));
+  Test.AssertEquals(6, (Item).Callback(3));
   var Bound: function(X: integer): integer := Item.Add;
-  AssertEquals(5, (2).Bound());
+  Test.AssertEquals(5, (2).Bound());
   var NamedTask: task := go Item.Add(4);
-  AssertEquals(7, Wait(NamedTask));
+  Test.AssertEquals(7, Tasks.Wait(NamedTask));
   var PostfixTask: task := go (Item).Add(5);
-  AssertEquals(8, Wait(PostfixTask));
+  Test.AssertEquals(8, Tasks.Wait(PostfixTask));
   var FieldTask: task := go Item.Callback(6);
-  AssertEquals(12, Wait(FieldTask));
+  Test.AssertEquals(12, Tasks.Wait(FieldTask));
   var PostfixFieldTask: task := go (Item).Callback(7);
-  AssertEquals(14, Wait(PostfixFieldTask))
-end.
+  Test.AssertEquals(14, Tasks.Wait(PostfixFieldTask));
+end program;

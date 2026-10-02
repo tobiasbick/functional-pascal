@@ -1,23 +1,23 @@
 program DuplicateControlIdRuntimeError;
 
-uses Std.Tui;
+uses Std.Tui as Tui;
 
-function Update(State: integer; Msg: TuiMsg; Cmd: TuiCmdOutput): integer;
+function Update(State: integer; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): integer;
 begin
-  return State
-end;
+  return State;
+end function;
 
-function View(State: integer): TuiElement;
+function View(State: integer): Tui.TuiElement;
 begin
-  var Id: TuiControlId := TuiControlId.Create(1);
-  var Action: TuiAction := TuiAction.Create(10);
-  return TuiElementBuilders.MakeRow([
-                                      TuiElementBuilders.MakeButton(Id, 'First', Action),
-                                      TuiElementBuilders.MakeButton(Id, 'Second', Action)
-                                    ])
-end;
+  var Id: Tui.TuiControlId := Tui.TuiControlId.Create(1);
+  var Action: Tui.TuiAction := Tui.TuiAction.Create(10);
+  return Tui.TuiElementBuilders.MakeRow([
+                                          Tui.TuiElementBuilders.MakeButton(Id, 'First', Action),
+                                          Tui.TuiElementBuilders.MakeButton(Id, 'Second', Action)
+                                        ]);
+end function;
 
 begin
-  mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(20, 4));
-  App.RunIterations(0, Update, View, 0, 0)
-end.
+  mutable var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(20, 4));
+  App.RunIterations(0, Update, View, 0, 0);
+end program;

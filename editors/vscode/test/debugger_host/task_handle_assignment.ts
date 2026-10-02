@@ -27,17 +27,17 @@ export async function verifyTaskHandleAssignment(
   const lines = [
     "program DebuggerTaskHandleAssignment;",
     "",
-    "uses Std.Console, Std.Tasks;",
+    " uses Std.Console as Console; uses Std.Tasks as Tasks;",
     "",
     "function Seven(): integer;",
     "begin",
-    "  return 7",
-    "end;",
+    "  return 7;",
+    "end function;",
     "",
     "function Nine(): integer;",
     "begin",
-    "  return 9",
-    "end;",
+    "  return 9;",
+    "end function;",
     "",
     "begin",
     "  var Pending: task := go Seven();",
@@ -45,8 +45,8 @@ export async function verifyTaskHandleAssignment(
     "  var Frozen: task := go Seven();",
     "  mutable var StopMarker: integer := 0;",
     "  StopMarker := StopMarker + 1;",
-    "  WriteLn(Wait(Current))",
-    "end.",
+    "  Console.WriteLn(Tasks.Wait(Current));",
+    "end program;",
     ""
   ];
   const sourcePath = await writeSource(workspaceRoot, "task-handle-assignment", lines);

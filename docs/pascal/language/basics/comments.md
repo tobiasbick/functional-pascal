@@ -8,6 +8,7 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (Part 1 — comment
 ```pascal
 // This is a comment.
 var Count: integer := 1; // This is also a comment.
+
 ```
 
 For multiple comment lines, prefix every line with `//`:
@@ -16,6 +17,7 @@ For multiple comment lines, prefix every line with `//`:
 // The next value is displayed in the status line.
 // It is measured in seconds.
 var ElapsedSeconds: integer := 0;
+
 ```
 
 `{...}` and `(*...*)` are not valid comment syntax. The lexer reports `F0013` and suggests the
@@ -36,10 +38,11 @@ and the declaration.
 function Max(Left: integer; Right: integer): integer;
 begin
   if Left >= Right then
-    return Left
+    return Left;
   else
-    return Right
-end;
+    return Right;
+  end if;
+end function;
 ```
 
 Tooling removes the indentation, the first `//`, and at most one following ASCII space from each
@@ -52,6 +55,7 @@ A blank source line detaches a comment from the following declaration:
 // This comment is not declaration documentation.
 
 var Count: integer := 1;
+
 ```
 
 End-of-line comments are never declaration documentation. `fpas fmt` preserves both attachment and

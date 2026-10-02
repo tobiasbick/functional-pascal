@@ -1,14 +1,16 @@
 program T;
 
-uses Std.Console, Std.Arrays, Std.Options;
+uses Std.Console as Console;
+uses Std.Arrays as Arrays;
+uses Std.Options as Options;
 
 function IsGreaterThanTen(X: integer): boolean;
 begin
-  return X > 10
-end;
+  return X > 10;
+end function;
 
 begin
   var A: array of integer := [1, 2, 3];
-  var R: option of integer := Find(A, IsGreaterThanTen);
-  WriteLn(IsNone(R))
-end.
+  var R: option of integer := Arrays.Find(A, IsGreaterThanTen);
+  Console.WriteLn(Options.IsNone(R));
+end program;

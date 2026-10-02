@@ -2,47 +2,48 @@
 
 program ConsoleCellsBasics;
 
-uses Std.Console, Std.Options;
+uses Std.Console as Console;
+uses Std.Options as Options;
 
 begin
-  var Bounds: Rect := record
+  var Bounds: Console.Rect := record
     x := 1;
     y := 1;
     width := 6;
     height := 1;
-  end;
-  var Underlay: SavedRegion := SaveRegion(Bounds);
-  BeginFrame();
-  FillRect(Bounds, record
+  end record;
+  var Underlay: Console.SavedRegion := Console.SaveRegion(Bounds);
+  Console.BeginFrame();
+  Console.FillRect(Bounds, record
     glyph := ' ';
-    foreground := CrtColor(White);
-    background := Ansi256Color(24);
-  end);
-  var First: Cell := record
+    foreground := Console.CrtColor(Console.White);
+    background := Console.Ansi256Color(24);
+  end record);
+  var First: Console.Cell := record
     glyph := 'O';
-    foreground := RgbColor(255, 220, 120);
-    background := Ansi256Color(24);
-  end;
-  var Second: Cell := record
+    foreground := Console.RgbColor(255, 220, 120);
+    background := Console.Ansi256Color(24);
+  end record;
+  var Second: Console.Cell := record
     glyph := 'K';
-    foreground := RgbColor(156, 204, 255);
-    background := Ansi256Color(24);
-  end;
-  var LabelCells: array of Cell := [First, Second];
-  WriteCells(2, 1, LabelCells);
-  var ReadBack: option of Cell := GetCell(2, 1);
-  Present();
-  BeginFrame();
-  RestoreRegion(Underlay);
-  Present();
+    foreground := Console.RgbColor(156, 204, 255);
+    background := Console.Ansi256Color(24);
+  end record;
+  var LabelCells: array of Console.Cell := [First, Second];
+  Console.WriteCells(2, 1, LabelCells);
+  var ReadBack: option of Console.Cell := Console.GetCell(2, 1);
+  Console.Present();
+  Console.BeginFrame();
+  Console.RestoreRegion(Underlay);
+  Console.Present();
   case ReadBack of
-    Some(Value):
-    begin
-      WriteLn('ReadText back: ' + Value.glyph)
-    end;
-    None:
-    begin
-      WriteLn('No cell')
-    end
-  end
-end.
+    when Some(Value):
+      begin
+        Console.WriteLn('ReadText back: ' + Value.glyph);
+      end;
+    when None:
+      begin
+        Console.WriteLn('No cell');
+      end;
+  end case;
+end program;

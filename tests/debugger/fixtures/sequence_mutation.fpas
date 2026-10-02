@@ -1,14 +1,13 @@
 program SequenceMutation;
 
-uses Std.Console;
+uses Std.Console as Console;
 
-mutable var
-  Numbers: array of integer := [1, 2, 3];
-  Text: string := 'A😀B';
+mutable var Numbers: array of integer := [1, 2, 3];
+mutable var Text: string := 'A😀B';
 
 begin
-  WriteLn(Numbers[0]);
-  WriteLn(Numbers[1]);
-  WriteLn(Numbers[2]);
-  WriteLn(Text)
-end.
+  Console.WriteLn(Numbers[0]);
+  Console.WriteLn(Numbers[1]);
+  Console.WriteLn(Numbers[2]);
+  Console.WriteLn(Text);
+end program;

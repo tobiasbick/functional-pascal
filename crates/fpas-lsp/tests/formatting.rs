@@ -15,7 +15,7 @@ use support::{exit, initialize, initialized, response, run, shutdown};
 #[test]
 fn formatting_matches_the_canonical_fpas_formatter_for_the_unsaved_buffer() {
     let uri = "file:///phase5/format-parity.fpas";
-    let source = "program Messy; begin var Value:integer:=1 end.";
+    let source = r#"program Messy; begin var Value:integer:=1; end program;"#;
     let (unit, diagnostics) = fpas_parser::parse_compilation_unit(source);
     assert!(diagnostics.is_empty(), "{diagnostics:?}");
     let expected = fpas_fmt::format_source(source, &unit).expect("matching source and AST");
@@ -47,8 +47,12 @@ fn formatting_matches_the_canonical_fpas_formatter_for_the_unsaved_buffer() {
 #[test]
 fn formatting_preserves_comments_and_is_idempotent() {
     let uri = "file:///phase5/format-comments.fpas";
-    let source =
-        "program Comments; // header\nbegin\n// before\nWriteLn('ok'); // tail\nend. // done\n";
+    let source = r#"program Comments; // header
+begin
+// before
+WriteLn('ok'); // tail
+end program; // done
+"#;
     let (unit, diagnostics) = fpas_parser::parse_compilation_unit(source);
     assert!(diagnostics.is_empty(), "{diagnostics:?}");
     let canonical = fpas_fmt::format_source(source, &unit).expect("matching source and AST");

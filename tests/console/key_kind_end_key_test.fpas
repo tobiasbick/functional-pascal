@@ -1,8 +1,9 @@
 program KeyKindEndKeyTest;
 
-uses Std.Console, Std.Test;
+uses Std.Console as Console;
+uses Std.Test as Test;
 
 begin
-  var Kind: KeyKind := KeyKind.EndKey;
-  AssertTrue(Kind = KeyKind.EndKey)
-end.
+  var Kind: Console.KeyKind := Console.KeyKind.EndKey;
+  Test.AssertTrue(Kind = Console.KeyKind.EndKey);
+end program;

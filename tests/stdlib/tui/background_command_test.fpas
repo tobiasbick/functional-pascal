@@ -1,65 +1,68 @@
 program TuiBackgroundCommandTest;
 
-uses Std.Results, Std.Tasks, Std.Test, Std.Tui;
+uses Std.Results as Results;
+uses Std.Tasks as Tasks;
+uses Std.Test as Test;
+uses Std.Tui as Tui;
 
-type
-  CommandModel = record
-    Inbox: channel of integer;
-    Ready: channel of boolean;
-    Value: integer;
-  end;
+type CommandModel = record
+  Inbox: channel of integer;
+  Ready: channel of boolean;
+  Value: integer;
+end record;
 
-function UpdateFramework(State: CommandModel; Msg: TuiMsg; Cmd: TuiCmdOutput): CommandModel;
+function UpdateFramework(State: CommandModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): CommandModel;
 begin
   case Msg of
-    TuiMsg.Started:
-    begin
-      var Target: channel of integer := State.Inbox;
-      var Ready: channel of boolean := State.Ready;
-      Cmd.StartBackground(7, function(Token: CancellationToken): result of boolean, string begin
-        if IsError(SendWithCancellation(Target, 42, Token)) then
-        begin
-          return Ok(true)
-        end;
+    when Tui.TuiMsg.Started:
+      begin
+        var Target: channel of integer := State.Inbox;
+        var Ready: channel of boolean := State.Ready;
+        Cmd.StartBackground(7, function(Token: Tasks.CancellationToken): result of boolean, string begin
+          if Results.IsError(Tasks.SendWithCancellation(Target, 42, Token)) then
+            begin
+              return Ok(true);
+            end;
+          end if;
 
-        Send(Ready, true);
-        return Ok(true)
-      end);
-      return State
-    end
+          Tasks.Send(Ready, true);
+          return Ok(true);
+        end function);
+        return State;
+      end;
     else
-    begin
-      return State
-    end
-  end
-end;
+      begin
+        return State;
+      end;
+  end case;
+end function;
 
-function UpdateApplication(State: CommandModel; Message: integer; Cmd: TuiCmdOutput): CommandModel;
+function UpdateApplication(State: CommandModel; Message: integer; Cmd: Tui.TuiCmdOutput): CommandModel;
 begin
   return record
     Inbox := State.Inbox;
     Ready := State.Ready;
     Value := Message;
-  end
-end;
+  end record;
+end function;
 
-function View(State: CommandModel): TuiElement;
+function View(State: CommandModel): Tui.TuiElement;
 begin
-  return TuiElementBuilders.MakeLabel('command')
-end;
+  return Tui.TuiElementBuilders.MakeLabel('command');
+end function;
 
 begin
-  var Inbox: channel of integer := CreateChannel(1);
-  var Ready: channel of boolean := CreateChannel(1);
-  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 4));
+  var Inbox: channel of integer := Tasks.CreateChannel(1);
+  var Ready: channel of boolean := Tasks.CreateChannel(1);
+  var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(24, 4));
   mutable var Model: CommandModel := App.RunBackgroundIterations(record
     Inbox := Inbox;
     Ready := Ready;
     Value := 0;
-  end, Inbox, UpdateFramework, UpdateApplication, View, 1, 0);
-  AssertTrue(Unwrap(ReceiveWithTimeout(Ready, 10000)));
+  end record, Inbox, UpdateFramework, UpdateApplication, View, 1, 0);
+  Test.AssertTrue(Results.Unwrap(Tasks.ReceiveWithTimeout(Ready, 10000)));
   Model := App.RunBackgroundIterations(Model, Inbox, UpdateFramework, UpdateApplication, View, 1, 0);
-  AssertEquals(42, Model.Value);
+  Test.AssertEquals(42, Model.Value);
   App.CloseWithBackground(Inbox);
-  CloseChannel(Ready)
-end.
+  Tasks.CloseChannel(Ready);
+end program;

@@ -4,15 +4,19 @@ Cryptographically secure randomness supplied directly by the operating system. T
 
 ```pascal
 program Example;
-uses Std.Arrays, Std.Crypto, Std.Results;
+
+uses Std.Arrays as Arrays;
+uses Std.Crypto as Crypto;
+uses Std.Results as Results;
+
 begin
-  var Token: array of integer := Unwrap(RandomBytes(32))
-end.
+  var Token: array of integer := Results.Unwrap(Crypto.RandomBytes(32));
+end program;
 ```
 
 ## Importing and names
 
-After `uses Std.Crypto;` use **`RandomBytes`** and **`RandomInt`**, or the fully qualified forms **`Std.Crypto.RandomBytes`** and **`Std.Crypto.RandomInt`**.
+Import with `uses Std.Crypto as Crypto;`. Access every exported member through `Crypto`, for example `Crypto.RandomBytes(...)`. Imports open no short names.
 
 ## Quick reference
 
@@ -28,10 +32,16 @@ Both functions request randomness from the operating system. Failure is returned
 Returns exactly `Count` bytes. Each byte is represented by an `integer` in `0..255`, matching the existing FPAS byte-array convention. `Count` must be in `0..1048576`; invalid counts return `Error` without contacting the operating-system source.
 
 ```pascal
-case RandomBytes(32) of
-  Ok(Bytes): WriteLn(Std.Arrays.Length(Bytes));
-  Error(Message): panic(Message)
-end
+uses Std.Console as Console;
+uses Std.Crypto as Crypto;
+uses Std.Arrays as Arrays;
+
+case Crypto.RandomBytes(32) of
+  when Ok(Bytes):
+    Console.WriteLn(Arrays.Length(Bytes));
+  when Error(Message):
+    panic(Message);
+end case;
 ```
 
 ## `RandomInt`
@@ -39,10 +49,15 @@ end
 Returns a uniformly sampled integer in the inclusive range `[Lo, Hi]`. Equal bounds and the full `integer` range are supported. `Lo > Hi` returns `Error`.
 
 ```pascal
-case RandomInt(100000, 999999) of
-  Ok(Code): WriteLn(Code);
-  Error(Message): panic(Message)
-end
+uses Std.Console as Console;
+uses Std.Crypto as Crypto;
+
+case Crypto.RandomInt(100000, 999999) of
+  when Ok(Code):
+    Console.WriteLn(Code);
+  when Error(Message):
+    panic(Message);
+end case;
 ```
 
 ## Security boundary

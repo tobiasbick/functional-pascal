@@ -6,6 +6,7 @@ use fpas_lexer::Span;
 use fpas_parser::{TypeBody, TypeDef, TypeParam};
 use std::sync::Arc;
 
+pub(in crate::check) mod collection;
 mod enums;
 mod record_accessors;
 mod record_events;
@@ -14,6 +15,12 @@ mod records;
 
 impl Checker {
     pub(super) fn check_type_def(&mut self, td: &TypeDef) {
+        if !self.type_collection.collecting && self.has_collected_type(td) {
+            if let TypeBody::Record(record) = &td.body {
+                self.check_record_type_def(td, record);
+            }
+            return;
+        }
         match &td.body {
             TypeBody::Record(record) => self.check_record_type_def(td, record),
             TypeBody::Enum(enum_ty) => self.check_enum_type_def(td, enum_ty),
@@ -125,6 +132,12 @@ impl Checker {
     }
 
     pub(super) fn define_type_symbol(&mut self, td: &TypeDef, ty: Ty) -> bool {
+        if self.has_collected_type(td) {
+            if let Some(symbol) = self.scopes.lookup_mut(&td.name) {
+                *symbol.ty_mut() = ty;
+            }
+            return true;
+        }
         if self.scopes.define(
             &td.name,
             Symbol {

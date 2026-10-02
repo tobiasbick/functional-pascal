@@ -1,8 +1,10 @@
 program T;
 
-uses Std.Console, Std.Results, Std.Options;
+uses Std.Console as Console;
+uses Std.Results as Results;
+uses Std.Options as Options;
 
 begin
   var R: result of integer, string := Ok(42);
-  WriteLn(Unwrap(R))
-end.
+  Console.WriteLn(Unwrap(R));
+end program;

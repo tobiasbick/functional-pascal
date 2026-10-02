@@ -48,14 +48,14 @@ export async function verifyDictionaryMutation(
   const lines = [
     "program DebuggerDictionaryMutation;",
     "",
-    "uses Std.Console;",
+    " uses Std.Console as Console;",
     "",
     "begin",
     "  mutable var Scores: dict of string to integer := ['Ada': 1, 'Grace': 2];",
     "  var StopMarker: integer := 0;",
-    "  WriteLn(Scores['Hopper']);",
-    "  WriteLn(Scores['Bob'])",
-    "end.",
+    "  Console.WriteLn(Scores['Hopper']);",
+    "  Console.WriteLn(Scores['Bob']);",
+    "end program;",
     ""
   ];
   const sourcePath = await writeSource(workspaceRoot, "dictionary-mutation", lines);

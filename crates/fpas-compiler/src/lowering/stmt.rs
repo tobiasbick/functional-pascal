@@ -13,6 +13,13 @@ impl LoweringContext {
             return Ok(());
         }
         match statement {
+            Stmt::Null(_) => Ok(()),
+            Stmt::StatementList(statements, _) => {
+                for statement in statements {
+                    self.lower_statement(statement)?;
+                }
+                Ok(())
+            }
             Stmt::Block(statements, _) => {
                 self.begin_scope();
                 for statement in statements {

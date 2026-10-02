@@ -1,29 +1,31 @@
 program FsReadWriteRoundtripTest;
 
-uses Std.Fs, Std.Test;
+uses Std.Fs as Fs;
+uses Std.Test as Test;
 
 begin
-  var Path: string := ScratchDir() + '/roundtrip.txt';
-  case WriteText(Path, 'hello fs') of
-    Ok(_):
-    begin
-    end;
-    Error(Message):
-    begin
-      Fail(Message)
-    end
-  end;
+  var Path: string := Test.ScratchDir() + '/roundtrip.txt';
+  case Fs.WriteText(Path, 'hello fs') of
+    when Ok(_):
+      begin
+        null;
+      end;
+    when Error(Message):
+      begin
+        Test.Fail(Message);
+      end;
+  end case;
 
-  AssertTrue(Exists(Path));
-  AssertTrue(IsFile(Path));
-  case ReadText(Path) of
-    Ok(Text):
-    begin
-      AssertEquals('hello fs', Text)
-    end;
-    Error(Message):
-    begin
-      Fail(Message)
-    end
-  end
-end.
+  Test.AssertTrue(Fs.Exists(Path));
+  Test.AssertTrue(Fs.IsFile(Path));
+  case Fs.ReadText(Path) of
+    when Ok(Text):
+      begin
+        Test.AssertEquals('hello fs', Text);
+      end;
+    when Error(Message):
+      begin
+        Test.Fail(Message);
+      end;
+  end case;
+end program;

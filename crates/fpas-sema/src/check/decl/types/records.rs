@@ -16,15 +16,17 @@ use std::sync::Arc;
 
 impl Checker {
     pub(super) fn check_record_type_def(&mut self, td: &TypeDef, record: &RecordType) {
-        if !self.scopes.define(
-            &td.name,
-            Symbol {
-                ty: Ty::Named(td.name.clone()),
-                mutable: false,
-                kind: SymbolKind::Type,
-                task_bound: false,
-            },
-        ) {
+        if !self.has_collected_type(td)
+            && !self.scopes.define(
+                &td.name,
+                Symbol {
+                    ty: Ty::Named(td.name.clone()),
+                    mutable: false,
+                    kind: SymbolKind::Type,
+                    task_bound: false,
+                },
+            )
+        {
             self.error_with_code(
                 SEMA_DUPLICATE_DECLARATION,
                 format!("Duplicate type `{}`", td.name),
@@ -58,6 +60,9 @@ impl Checker {
             .zip(fields.iter())
             .map(|(field_def, (_, field_ty))| {
                 if let Some(default_expr) = &field_def.default_value {
+                    if self.type_collection.collecting {
+                        return (field_def.name.clone(), Some(default_expr.clone()));
+                    }
                     let default_ty = self.check_expr(default_expr);
                     self.check_type_compat(
                         field_ty,
@@ -156,6 +161,9 @@ impl Checker {
 
         // Method bodies run after properties and events are visible on the type symbol.
         for pending in pending_bodies {
+            if self.type_collection.collecting {
+                continue;
+            }
             self.check_method_body(
                 &pending.qualified_name,
                 pending.type_params,

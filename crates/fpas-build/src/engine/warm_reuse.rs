@@ -15,17 +15,17 @@ fn warm_many_import_build_avoids_direct_interface_copies() {
     .expect("manifest");
     for id in 0..32 {
         let imports = (0..id)
-            .map(|used| format!("U{used}"))
+            .map(|used| format!("uses U{used} as Imported{used};"))
             .collect::<Vec<_>>()
-            .join(", ");
+            .join(" ");
         let uses = if imports.is_empty() {
             String::new()
         } else {
-            format!("uses {imports};")
+            imports
         };
         std::fs::write(
             root.join(format!("u{id}.fpas")),
-            format!("unit U{id}; {uses} public const Value{id}: integer := {id};"),
+            format!("unit U{id}; {uses} public const Value{id}: integer := {id}; end unit;"),
         )
         .expect("unit source");
     }

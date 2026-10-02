@@ -15,7 +15,13 @@ main = "src/main.fpas"
 include = ["src/**/*.fpas"]
 "#,
     );
-    write_text(&dir.join("src/main.fpas"), "program Main;\nbegin\nend.\n");
+    write_text(
+        &dir.join("src/main.fpas"),
+        r#"program Main;
+begin null;
+end program;
+"#,
+    );
 
     let loaded = load_project_ok(&project_file);
     fs::remove_dir_all(&dir).expect("temp directory must be removed");
@@ -38,7 +44,13 @@ main = "src/main.fpas"
 include = ["units/**/*.fpas"]
 "#,
     );
-    write_text(&dir.join("src/main.fpas"), "program Main;\nbegin\nend.\n");
+    write_text(
+        &dir.join("src/main.fpas"),
+        r#"program Main;
+begin null;
+end program;
+"#,
+    );
 
     let error = load_project_error(&project_file, "include glob without matches must fail");
     fs::remove_dir_all(&dir).expect("temp directory must be removed");
@@ -60,7 +72,13 @@ main = "src/main.fpas"
 include = ["src/missing.fpas"]
 "#,
     );
-    write_text(&dir.join("src/main.fpas"), "program Main;\nbegin\nend.\n");
+    write_text(
+        &dir.join("src/main.fpas"),
+        r#"program Main;
+begin null;
+end program;
+"#,
+    );
 
     let error = load_project_error(&project_file, "missing include must fail");
     fs::remove_dir_all(&dir).expect("temp directory must be removed");
@@ -82,7 +100,13 @@ main = "src/main.fpas"
 include = []
 "#,
     );
-    write_text(&dir.join("src/main.fpas"), "program Main;\nbegin\nend.\n");
+    write_text(
+        &dir.join("src/main.fpas"),
+        r#"program Main;
+begin null;
+end program;
+"#,
+    );
 
     let error = load_project_error(&project_file, "empty include must fail");
     fs::remove_dir_all(&dir).expect("temp directory must be removed");
@@ -107,7 +131,13 @@ main = "src/main.fpas"
 include = [""]
 "#,
     );
-    write_text(&dir.join("src/main.fpas"), "program Main;\nbegin\nend.\n");
+    write_text(
+        &dir.join("src/main.fpas"),
+        r#"program Main;
+begin null;
+end program;
+"#,
+    );
 
     let error = load_project_error(&project_file, "empty entry must fail");
     fs::remove_dir_all(&dir).expect("temp directory must be removed");
@@ -134,10 +164,24 @@ include = ["src/math.fpas", "lib/*.fpas"]
     );
     write_text(
         &dir.join("src/main.fpas"),
-        "program Main;\nuses App.Math, App.Lib;\nbegin\nend.\n",
+        r#"program Main;
+uses App.Math as Math; uses App.Lib as Lib;
+begin null;
+end program;
+"#,
     );
-    write_text(&dir.join("src/math.fpas"), "unit App.Math;");
-    write_text(&dir.join("lib/helpers.fpas"), "unit App.Lib;");
+    write_text(
+        &dir.join("src/math.fpas"),
+        r#"unit App.Math;
+end unit;
+"#,
+    );
+    write_text(
+        &dir.join("lib/helpers.fpas"),
+        r#"unit App.Lib;
+end unit;
+"#,
+    );
 
     let loaded = load_project_ok(&project_file);
     fs::remove_dir_all(&dir).expect("temp directory must be removed");
@@ -160,7 +204,13 @@ main = "src/main.fpas"
 include = ["   "]
 "#,
     );
-    write_text(&dir.join("src/main.fpas"), "program Main;\nbegin\nend.\n");
+    write_text(
+        &dir.join("src/main.fpas"),
+        r#"program Main;
+begin null;
+end program;
+"#,
+    );
 
     let error = load_project_error(&project_file, "whitespace-only entry must fail");
     fs::remove_dir_all(&dir).expect("temp directory must be removed");
@@ -185,7 +235,13 @@ main = "src/main.fpas"
 include = ["src/readme.md"]
 "#,
     );
-    write_text(&dir.join("src/main.fpas"), "program Main;\nbegin\nend.\n");
+    write_text(
+        &dir.join("src/main.fpas"),
+        r#"program Main;
+begin null;
+end program;
+"#,
+    );
     write_text(&dir.join("src/readme.md"), "docs");
 
     let error = load_project_error(&project_file, "include extension must be validated");

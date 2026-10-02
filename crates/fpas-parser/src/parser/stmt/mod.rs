@@ -13,16 +13,28 @@ impl Parser {
         let mut stmts = Vec::new();
 
         if self.is_stmt_list_end() {
+            self.error_with_code(
+                PARSE_INVALID_STATEMENT_START,
+                "Empty statement bodies are invalid",
+                "Write `null;` for a body that performs no action.",
+                self.current_span(),
+            );
             return stmts;
         }
 
-        stmts.push(self.parse_statement());
         while !self.is_stmt_list_end() {
+            if self.check(&Token::Semicolon) {
+                self.error_with_code(
+                    PARSE_INVALID_STATEMENT_START,
+                    "Standalone empty statements are invalid",
+                    "Remove the extra `;`, or write `null;` for an explicit no-action statement.",
+                    self.current_span(),
+                );
+                self.advance();
+                continue;
+            }
+            stmts.push(self.parse_statement());
             if self.eat(&Token::Semicolon) {
-                if self.is_stmt_list_end() {
-                    break;
-                }
-                stmts.push(self.parse_statement());
                 continue;
             }
 
@@ -30,10 +42,10 @@ impl Parser {
             self.error_with_code(
                 fpas_diagnostics::codes::PARSE_EXPECTED_TOKEN,
                 &format!(
-                    "Expected `;` between statements, found `{}`",
+                    "Expected `;` after the statement, found `{}`",
                     super::token_display(self.current_token())
                 ),
-                "Insert `;` before the next statement.",
+                "Every statement ends with `;`, including the final statement before a branch or closer.",
                 span,
             );
             self.recover_statement_separator();
@@ -43,16 +55,17 @@ impl Parser {
             }
 
             if self.eat(&Token::Semicolon) {
-                if self.is_stmt_list_end() {
-                    break;
-                }
-                stmts.push(self.parse_statement());
                 continue;
             }
-
-            stmts.push(self.parse_statement());
         }
         stmts
+    }
+
+    /// Parses the list belonging to a named control-flow body.
+    pub(super) fn parse_statement_body(&mut self) -> Box<Stmt> {
+        let start = self.current_span();
+        let body = self.parse_statement_list();
+        Box::new(Stmt::StatementList(body, self.span_from(start)))
     }
 
     fn recover_statement_separator(&mut self) {
@@ -68,7 +81,7 @@ impl Parser {
     fn is_stmt_list_end(&self) -> bool {
         matches!(
             self.current_token(),
-            Token::End | Token::Else | Token::Until | Token::Eof
+            Token::End | Token::Else | Token::Elsif | Token::When | Token::Until | Token::Eof
         )
     }
 
@@ -78,6 +91,7 @@ impl Parser {
 
     fn parse_statement_inner(&mut self) -> Stmt {
         match self.current_token() {
+            Token::Null => Stmt::Null(self.advance().span),
             Token::Begin => self.parse_block(),
             Token::Var => self.parse_var_stmt(false),
             Token::Mutable if self.is_mutable_var_start() => self.parse_var_stmt(true),
@@ -110,6 +124,7 @@ impl Parser {
         matches!(
             self.current_token(),
             Token::Begin
+                | Token::Null
                 | Token::Var
                 | Token::Mutable
                 | Token::Return
@@ -138,7 +153,7 @@ impl Parser {
         while !self.at_end() && !self.check(&Token::Semicolon) && !self.is_stmt_list_end() {
             self.advance();
         }
-        Stmt::Block(Vec::new(), span)
+        Stmt::Null(span)
     }
 
     pub(in crate::parser) fn parse_go_call_expression(

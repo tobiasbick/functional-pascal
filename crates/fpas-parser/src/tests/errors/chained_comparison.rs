@@ -4,7 +4,7 @@ use fpas_diagnostics::codes::PARSE_EXPECTED_EXPRESSION;
 
 #[test]
 fn chained_comparison_reports_dedicated_error() {
-    let (_, errors) = parse_with_errors("program T; begin X := 1 = 2 = 3 end.");
+    let (_, errors) = parse_with_errors("program T; begin X := 1 = 2 = 3; end program;");
     let parser_errors: Vec<_> = errors
         .iter()
         .filter_map(ParseDiagnostic::as_parser_error)
@@ -24,7 +24,8 @@ fn chained_comparison_reports_dedicated_error() {
 
 #[test]
 fn longer_chained_comparison_recovers_all_extra_operators() {
-    let (program, errors) = parse_with_errors("program T; begin X := 1 = 2 = 3 = 4; Y := 5 end.");
+    let (program, errors) =
+        parse_with_errors("program T; begin X := 1 = 2 = 3 = 4; Y := 5; end program;");
     let parser_errors: Vec<_> = errors
         .iter()
         .filter_map(ParseDiagnostic::as_parser_error)

@@ -11,24 +11,24 @@ use serde_json::{Value, json};
 
 const SOURCE: &str = r#"program JsonlExpressionMutation;
 
-uses Std.Console;
+uses Std.Console as Console;
 
-type
-  Box = record
+
+  type Box = record
     Value: integer;
     Other: integer;
-  end;
-  Container = record
+  end record;
+  type Container = record
     Items: array of Box;
-  end;
+  end record;
 
-mutable var
-  GlobalValue: integer := 5;
+
+  mutable var GlobalValue: integer := 5;
 
 function ChooseIndex(): integer;
 begin
-  return 1
-end;
+  return 1;
+end function;
 
 begin
   mutable var Selected: integer := 0;
@@ -39,22 +39,22 @@ begin
       record
         Value := 10;
         Other := 11;
-      end,
+      end record,
       record
         Value := 20;
         Other := 21;
-      end
+      end record
     ];
-  end;
+  end record;
   mutable var Scores: dict of string to integer := ['blue': 30];
   mutable var Text: string := 'abc';
   Counter := Counter + Fixed;
-  WriteLn(GlobalValue);
-  WriteLn(Counter);
-  WriteLn(State.Items[1].Value);
-  WriteLn(Scores['blue']);
-  WriteLn(Text)
-end.
+  Console.WriteLn(GlobalValue);
+  Console.WriteLn(Counter);
+  Console.WriteLn(State.Items[1].Value);
+  Console.WriteLn(Scores['blue']);
+  Console.WriteLn(Text);
+end program;
 "#;
 
 fn new_server() -> JsonlServer {

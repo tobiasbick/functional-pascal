@@ -1,8 +1,9 @@
 program ReadlnTest;
 
-uses Std.Console, Std.Test;
+uses Std.Console as Console;
+uses Std.Test as Test;
 
 begin
-  PushReadLn('Alice');
-  AssertTrue(ReadLn() = 'Alice')
-end.
+  Test.PushReadLn('Alice');
+  Test.AssertTrue(Console.ReadLn() = 'Alice');
+end program;

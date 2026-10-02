@@ -1,7 +1,8 @@
 program CharAtUnicodeTest;
 
-uses Std.Str, Std.Test;
+uses Std.Str as Str;
+uses Std.Test as Test;
 
 begin
-  AssertEquals('🙂', CharAt('Aé🙂Z', 2))
-end.
+  Test.AssertEquals('🙂', Str.CharAt('Aé🙂Z', 2));
+end program;

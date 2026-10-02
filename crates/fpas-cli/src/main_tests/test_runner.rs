@@ -9,7 +9,9 @@ fn test_cli_runs_passing_tests_in_directory() {
     let cwd = create_temp_dir("fpas-test-pass");
     write_text(
         &cwd.join("math_test.fpas"),
-        "program M;\nuses Std.Test;\nbegin AssertEquals(6, 2 * 3) end.",
+        r#"program M;
+uses Std.Test as Test;
+begin Test.AssertEquals(6, 2 * 3); end program;"#,
     );
 
     let mut stderr = Vec::new();

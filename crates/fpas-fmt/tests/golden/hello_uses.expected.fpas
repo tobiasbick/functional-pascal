@@ -1,7 +1,7 @@
 program Hello;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 begin
-  WriteLn('Hello, World!')
-end.
+  Console.WriteLn('Hello, World!');
+end program;

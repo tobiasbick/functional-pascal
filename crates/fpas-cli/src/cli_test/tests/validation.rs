@@ -7,7 +7,11 @@ fn test_cli_rejects_unit_file_as_test_entry() {
     let cwd = create_temp_dir("fpas-test-unit-reject");
     write_text(
         &cwd.join("helper_test.fpas"),
-        "unit Tests.Helper;\nprocedure X();\nbegin end;",
+        r#"unit Tests.Helper;
+procedure X();
+begin null; end procedure;
+end unit;
+"#,
     );
 
     let mut stdout = Vec::new();

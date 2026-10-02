@@ -8,8 +8,8 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`var_stmt` in stat
 function FullName(First: string; Last: string): string;
 begin
   var Space: string := ' ';
-  return First + Space + Last;
-end;
+  return (First + Space) + Last;
+end function;
 ```
 
 ## See also

@@ -29,10 +29,20 @@ fn parsed_unit(path: &str, source: &str) -> (PathBuf, fpas_parser::Unit) {
 #[test]
 fn parsed_source_graph_does_not_read_nonexistent_source_paths() {
     let sources = vec![
-        parsed_unit("virtual/base.fpas", "unit Demo.Base;\n"),
+        parsed_unit(
+            "virtual/base.fpas",
+            r#"unit Demo.Base;
+end unit;
+
+"#,
+        ),
         parsed_unit(
             "virtual/feature.fpas",
-            "unit Demo.Feature;\nuses Demo.Base;\n",
+            r#"unit Demo.Feature;
+uses Demo.Base as Base;
+end unit;
+
+"#,
         ),
     ];
 
@@ -47,14 +57,29 @@ fn parsed_source_graph_does_not_read_nonexistent_source_paths() {
 #[test]
 fn parsed_program_graph_reserves_main_source_and_resolves_dependencies() {
     let sources = vec![
-        parsed_unit("virtual/base.fpas", "unit Demo.Base;\n"),
+        parsed_unit(
+            "virtual/base.fpas",
+            r#"unit Demo.Base;
+end unit;
+
+"#,
+        ),
         parsed_unit(
             "virtual/feature.fpas",
-            "unit Demo.Feature;\nuses Demo.Base;\n",
+            r#"unit Demo.Feature;
+uses Demo.Base as Base;
+end unit;
+
+"#,
         ),
     ];
-    let (program, diagnostics) =
-        fpas_parser::parse("program App;\nuses Demo.Feature;\nbegin\nend.\n");
+    let (program, diagnostics) = fpas_parser::parse(
+        r#"program App;
+uses Demo.Feature as Feature;
+begin null;
+end program;
+"#,
+    );
     assert!(diagnostics.is_empty(), "{diagnostics:?}");
 
     let graph = build_unit_graph_for_program_from_parsed_sources(
@@ -77,7 +102,10 @@ fn parsed_graph_accepts_reserved_std_names_from_trusted_library_sources() {
     let path = PathBuf::from("virtual/Std/Sample.fpas");
     let sources = vec![parsed_unit(
         path.to_str().expect("UTF-8 fixture path"),
-        "unit Std.Sample;\n",
+        r#"unit Std.Sample;
+end unit;
+
+"#,
     )];
     let mut link_meta = ProjectLinkMeta::default();
     link_meta.trusted_standard_library_sources.insert(path);
@@ -93,7 +121,10 @@ fn parsed_graph_still_validates_names_from_regular_library_dependencies() {
     let path = PathBuf::from("virtual/Std/Sample.fpas");
     let sources = vec![parsed_unit(
         path.to_str().expect("UTF-8 fixture path"),
-        "unit Std.Sample;\n",
+        r#"unit Std.Sample;
+end unit;
+
+"#,
     )];
     let mut link_meta = ProjectLinkMeta::default();
     link_meta.source_origins.insert(
@@ -113,7 +144,13 @@ fn parsed_graph_still_validates_names_from_regular_library_dependencies() {
 
 #[test]
 fn parsed_graph_rejects_reserved_std_names_from_user_sources() {
-    let sources = vec![parsed_unit("virtual/Std/Sample.fpas", "unit Std.Sample;\n")];
+    let sources = vec![parsed_unit(
+        "virtual/Std/Sample.fpas",
+        r#"unit Std.Sample;
+end unit;
+
+"#,
+    )];
 
     let error = build_unit_graph_from_parsed_sources(sources, &ProjectLinkMeta::default())
         .expect_err("user project must not claim the Std namespace");

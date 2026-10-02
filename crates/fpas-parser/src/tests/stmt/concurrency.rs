@@ -4,7 +4,7 @@ use crate::{ParseDiagnostic, ast::*};
 
 #[test]
 fn go_statement_parses_call_expression() {
-    let stmts = body_stmts("program T; begin go Worker() end.");
+    let stmts = body_stmts(r#"program T; begin go Worker(); end program;"#);
     match &stmts[0] {
         Stmt::Go { expr, .. } => assert!(matches!(expr, Expr::Call { .. })),
         _ => panic!("expected Go statement"),
@@ -13,7 +13,7 @@ fn go_statement_parses_call_expression() {
 
 #[test]
 fn go_statement_parses_qualified_call_expression() {
-    let stmts = body_stmts("program T; begin go Std.Console.WriteLn('hi') end.");
+    let stmts = body_stmts(r#"program T; begin go Std.Console.WriteLn('hi'); end program;"#);
     match &stmts[0] {
         Stmt::Go { expr, .. } => match expr {
             Expr::Call { designator, .. } => {
@@ -28,21 +28,18 @@ fn go_statement_parses_qualified_call_expression() {
 #[test]
 fn return_can_start_with_go_expression() {
     let program = parse_ok(
-        "\
-program T;
+        r#"program T;
 
 function Worker(): integer;
-begin
-  return 1
-end;
+begin return 1;
+end function;
 
 function Spawn(): task;
 begin
-  return go Worker()
-end;
+  return go Worker();
+end function;
 
-begin
-end.",
+begin null; end program;"#,
     );
 
     let Decl::Function(spawn) = &program.declarations[1] else {
@@ -60,7 +57,7 @@ end.",
 #[test]
 fn go_as_expression_in_var_decl() {
     let stmts = body_stmts(
-        "program T; function Work(): integer; begin return 1 end; begin var T: task := go Work() end.",
+        r#"program T; function Work(): integer; begin return 1; end function; begin var T: task := go Work(); end program;"#,
     );
 
     match &stmts[0] {

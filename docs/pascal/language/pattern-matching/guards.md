@@ -8,31 +8,34 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (guarded `case_labe
 function Classify(N: integer): string;
 begin
   case N of
-    0:
+    when 0:
       return 'zero';
-    N if N > 0:
+    when N if N > 0:
       return 'positive';
-    N if N < 0:
+    when N if N < 0:
       return 'negative';
-  end;
-end;
+  end case;
+end function;
+
 ```
 
 Guards work with all label types — values, ranges, destructuring, and enum patterns:
 
 ```pascal
+uses Std.Console as Console;
+
 case S of
-  Shape.Circle(R) if R > 10.0:
-    WriteLn('Large circle');
-  Shape.Circle(R):
-    WriteLn('Small circle');
-  Shape.Rectangle(W, H) if W = H:
-    WriteLn('Square');
-  Shape.Rectangle(W, H):
-    WriteLn('Rectangle');
-  Shape.Point:
-    WriteLn('Point');
-end;
+  when Shape.Circle(R) if R > 10.0:
+    Console.WriteLn('Large circle');
+  when Shape.Circle(R):
+    Console.WriteLn('Small circle');
+  when Shape.Rectangle(W, H) if W = H:
+    Console.WriteLn('Square');
+  when Shape.Rectangle(W, H):
+    Console.WriteLn('Rectangle');
+  when Shape.Point:
+    Console.WriteLn('Point');
+end case;
 ```
 
 The guard expression has access to any bindings introduced by the label.
@@ -43,14 +46,16 @@ For enum patterns, pattern arguments bind names only; put literals and extra che
 In scalar `case` arms, a single bare identifier with a guard introduces a binding for the matched value:
 
 ```pascal
+uses Std.Console as Console;
+
 case Value of
-  N if N > 0:
-    WriteLn('positive');
-  N if N < 0:
-    WriteLn('negative');
-else
-  WriteLn('zero');
-end;
+  when N if N > 0:
+    Console.WriteLn('positive');
+  when N if N < 0:
+    Console.WriteLn('negative');
+  else
+    Console.WriteLn('zero');
+end case;
 ```
 
 `N` is available in both the guard and the arm body, but only inside that arm.

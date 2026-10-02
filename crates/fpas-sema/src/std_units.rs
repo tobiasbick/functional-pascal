@@ -1,6 +1,6 @@
 //! Standard library units (`Std.*`) referenced only via `uses`.
 
-use fpas_parser::QualifiedId;
+use fpas_parser::Import;
 use fpas_std::{
     STD_UNITS_KNOWN, canonical_std_unit_from_segments, canonical_std_unit_from_tail,
     is_std_root_segment, std_unit_symbols,
@@ -28,7 +28,7 @@ pub fn is_reserved_std_root_segment(ident: &str) -> bool {
 }
 
 /// Map a `uses` clause entry to a canonical std unit name, or an error message.
-pub fn canonical_unit_from_uses_clause(q: &QualifiedId) -> Result<String, String> {
+pub fn canonical_unit_from_uses_clause(q: &Import) -> Result<String, String> {
     let display = q.parts.join(".");
 
     if q.parts.is_empty() {

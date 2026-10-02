@@ -11,7 +11,7 @@ fn fmt_cli_formats_source_file_in_place() {
     let source_path = cwd.join("hello.fpas");
     write_text(
         &source_path,
-        "program Hello; uses Std.Console; begin WriteLn('hi') end.",
+        r#"program Hello;  uses Std.Console as Console; begin Console.WriteLn('hi'); end program;"#,
     );
 
     let (exit_code, _, stderr_output) = run_cli_args_and_capture_output(
@@ -27,7 +27,7 @@ fn fmt_cli_formats_source_file_in_place() {
 
     assert_eq!(exit_code, 0, "stderr: {stderr_output}");
     assert!(stderr_output.is_empty());
-    assert!(formatted.contains("program Hello;\n\nuses Std.Console;\n\nbegin\n"));
+    assert!(formatted.contains("program Hello;\n\nuses Std.Console as Console;\n\nbegin\n"));
 }
 
 #[test]
@@ -36,7 +36,7 @@ fn fmt_cli_check_reports_unformatted_file() {
     let source_path = cwd.join("hello.fpas");
     write_text(
         &source_path,
-        "program Hello; uses Std.Console; begin WriteLn('hi') end.",
+        r#"program Hello;  uses Std.Console as Console; begin Console.WriteLn('hi'); end program;"#,
     );
 
     let (exit_code, _, stderr_output) = run_cli_args_and_capture_output(
@@ -52,7 +52,7 @@ fn fmt_cli_check_reports_unformatted_file() {
     fs::remove_dir_all(&cwd).expect("temp directory must be removed");
 
     assert_eq!(exit_code, EXIT_WOULD_CHANGE, "stderr: {stderr_output}");
-    assert!(unchanged.contains("program Hello; uses Std.Console;"));
+    assert!(unchanged.contains("program Hello;  uses Std.Console as Console;"));
 }
 
 #[test]
@@ -61,7 +61,14 @@ fn fmt_cli_check_passes_on_canonical_file() {
     let source_path = cwd.join("hello.fpas");
     write_text(
         &source_path,
-        "program Hello;\n\nuses Std.Console;\n\nbegin\n  WriteLn('hi')\nend.\n",
+        r#"program Hello;
+
+uses Std.Console as Console;
+
+begin
+  Console.WriteLn('hi');
+end program;
+"#,
     );
 
     let (exit_code, _, stderr_output) = run_cli_args_and_capture_output(
@@ -82,7 +89,8 @@ fn fmt_cli_formats_two_explicit_source_files() {
     let cwd = create_temp_dir("fmt-two-files");
     let first = cwd.join("a.fpas");
     let second = cwd.join("b.fpas");
-    let messy = "program Hello; uses Std.Console; begin WriteLn('hi') end.";
+    let messy =
+        r#"program Hello;  uses Std.Console as Console; begin Console.WriteLn('hi'); end program;"#;
     write_text(&first, messy);
     write_text(&second, messy);
 
@@ -100,8 +108,8 @@ fn fmt_cli_formats_two_explicit_source_files() {
     fs::remove_dir_all(&cwd).expect("temp directory must be removed");
 
     assert_eq!(exit_code, 0, "stderr: {stderr_output}");
-    assert!(formatted_first.contains("program Hello;\n\nuses Std.Console;\n\nbegin\n"));
-    assert!(formatted_second.contains("program Hello;\n\nuses Std.Console;\n\nbegin\n"));
+    assert!(formatted_first.contains("program Hello;\n\nuses Std.Console as Console;\n\nbegin\n"));
+    assert!(formatted_second.contains("program Hello;\n\nuses Std.Console as Console;\n\nbegin\n"));
 }
 
 #[test]
@@ -120,7 +128,10 @@ main = "src/main.fpas"
 include = ["src/**/*.fpas"]
 "#,
     );
-    write_text(&main, "program Main; begin var Value:integer:=1 end.");
+    write_text(
+        &main,
+        r#"program Main; begin var Value:integer:=1; end program;"#,
+    );
 
     let (exit_code, _, stderr_output) = run_cli_args_and_capture_output(
         &[String::from("fmt"), project.to_string_lossy().to_string()],
@@ -132,7 +143,12 @@ include = ["src/**/*.fpas"]
     assert_eq!(exit_code, 0, "stderr: {stderr_output}");
     assert_eq!(
         formatted,
-        "program Main;\n\nbegin\n  var Value: integer := 1\nend.\n"
+        r#"program Main;
+
+begin
+  var Value: integer := 1;
+end program;
+"#
     );
 }
 
@@ -140,7 +156,8 @@ include = ["src/**/*.fpas"]
 fn fmt_cli_stdout_does_not_modify_file_on_disk() {
     let cwd = create_temp_dir("fmt-stdout");
     let source_path = cwd.join("hello.fpas");
-    let original = "program Hello; uses Std.Console; begin WriteLn('hi') end.";
+    let original =
+        r#"program Hello;  uses Std.Console as Console; begin Console.WriteLn('hi'); end program;"#;
     write_text(&source_path, original);
 
     let (exit_code, stdout_output, stderr_output) = run_cli_args_and_capture_output(
@@ -157,7 +174,7 @@ fn fmt_cli_stdout_does_not_modify_file_on_disk() {
 
     assert_eq!(exit_code, 0, "stderr: {stderr_output}");
     assert_eq!(unchanged, original);
-    assert!(stdout_output.contains("program Hello;\n\nuses Std.Console;\n\nbegin\n"));
+    assert!(stdout_output.contains("program Hello;\n\nuses Std.Console as Console;\n\nbegin\n"));
 }
 
 #[test]
@@ -167,11 +184,18 @@ fn fmt_cli_check_list_prints_dirty_paths_only() {
     let clean = cwd.join("clean.fpas");
     write_text(
         &dirty,
-        "program Dirty; uses Std.Console; begin WriteLn('dirty') end.",
+        r#"program Dirty;  uses Std.Console as Console; begin Console.WriteLn('dirty'); end program;"#,
     );
     write_text(
         &clean,
-        "program Clean;\n\nuses Std.Console;\n\nbegin\n  WriteLn('clean')\nend.\n",
+        r#"program Clean;
+
+uses Std.Console as Console;
+
+begin
+  Console.WriteLn('clean');
+end program;
+"#,
     );
 
     let (exit_code, stdout_output, stderr_output) = run_cli_args_and_capture_output(
@@ -198,7 +222,7 @@ fn fmt_cli_expands_glob_pattern() {
     let nested = src_dir.join("nested.fpas");
     write_text(
         &nested,
-        "program Nested; uses Std.Console; begin WriteLn('nested') end.",
+        r#"program Nested;  uses Std.Console as Console; begin Console.WriteLn('nested'); end program;"#,
     );
 
     let (exit_code, _, stderr_output) = run_cli_args_and_capture_output(
@@ -210,7 +234,7 @@ fn fmt_cli_expands_glob_pattern() {
     fs::remove_dir_all(&cwd).expect("temp directory must be removed");
 
     assert_eq!(exit_code, 0, "stderr: {stderr_output}");
-    assert!(formatted.contains("program Nested;\n\nuses Std.Console;\n\nbegin\n"));
+    assert!(formatted.contains("program Nested;\n\nuses Std.Console as Console;\n\nbegin\n"));
 }
 
 #[cfg(unix)]
@@ -224,7 +248,7 @@ fn fmt_cli_expands_glob_below_non_utf8_working_directory() {
         .expect("source directory must be created");
     write_text(
         &source,
-        "program Nested; uses Std.Console; begin WriteLn('nested') end.",
+        r#"program Nested;  uses Std.Console as Console; begin Console.WriteLn('nested'); end program;"#,
     );
 
     let (exit_code, _, stderr_output) = run_cli_args_and_capture_output(
@@ -237,7 +261,7 @@ fn fmt_cli_expands_glob_below_non_utf8_working_directory() {
     assert_eq!(
         (
             exit_code,
-            formatted.contains("program Nested;\n\nuses Std.Console;\n\nbegin\n")
+            formatted.contains("program Nested;\n\nuses Std.Console as Console;\n\nbegin\n")
         ),
         (0, true),
         "stderr: {stderr_output}"
@@ -250,7 +274,7 @@ fn fmt_cli_does_not_follow_file_symlinks() {
     let outside = create_temp_dir("fmt-symlink-target");
     let target = outside.join("outside.fpas");
     let link = cwd.join("linked.fpas");
-    let original = "program Outside; begin end.";
+    let original = r#"program Outside; begin null; end program;"#;
     write_text(&target, original);
 
     #[cfg(unix)]
@@ -293,7 +317,7 @@ fn fmt_cli_rejects_stdout_with_check() {
     let source_path = cwd.join("hello.fpas");
     write_text(
         &source_path,
-        "program Hello; uses Std.Console; begin WriteLn('hi') end.",
+        r#"program Hello;  uses Std.Console as Console; begin Console.WriteLn('hi'); end program;"#,
     );
 
     let (exit_code, _, stderr_output) = run_cli_args_and_capture_output(

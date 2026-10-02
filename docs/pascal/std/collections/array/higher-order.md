@@ -7,11 +7,12 @@ Returns a new array where each element is the result of calling `F` on the corre
 ```pascal
 function Double(X: integer): integer;
 begin
-  return X * 2
-end;
+  return X * 2;
+end function;
 
 var Nums: array of integer := [1, 2, 3];
 var Doubled: array of integer := Map(Nums, Double);
+
 ```
 
 ---
@@ -23,11 +24,12 @@ Returns a new array containing only elements for which `F` returns `true`.
 ```pascal
 function IsEven(X: integer): boolean;
 begin
-  return X mod 2 = 0
-end;
+  return X mod 2 = 0;
+end function;
 
 var Nums: array of integer := [1, 2, 3, 4, 5];
 var Evens: array of integer := Filter(Nums, IsEven);
+
 ```
 
 ---
@@ -39,28 +41,29 @@ Folds elements left-to-right, starting from `Init`.
 ```pascal
 function Sum(Acc: integer; V: integer): integer;
 begin
-  return Acc + V
-end;
+  return Acc + V;
+end function;
 
 var Nums: array of integer := [1, 2, 3, 4, 5];
 var Total: integer := Reduce(Nums, 0, Sum);
+
 ```
 
 ---
 
 ## `function Find(A: array of T; F: function(X: T): boolean): Option of T`
 
-Returns the **first** element for which `F` returns `true`, wrapped in `Some`. Returns `None` if no element matches. Requires `uses Std.Options` to work with the result.
+Returns the **first** element for which `F` returns `true`, wrapped in `Some`. Returns `None` if no element matches. Requires `uses Std.Options as Options;` to work with the result.
 
 ```pascal
 function IsAboveThree(X: integer): boolean;
 begin
-  return X > 3
-end;
+  return X > 3;
+end function;
 
 var Nums: array of integer := [1, 2, 3, 4, 5];
-var First: Option of integer := Find(Nums, IsAboveThree);
-// Some(4)
+var First: option of integer := Find(Nums, IsAboveThree);
+
 ```
 
 ---
@@ -70,13 +73,15 @@ var First: Option of integer := Find(Nums, IsAboveThree);
 Returns the **index** of the first element for which `F` returns `true`, or **`-1`** if none matches.
 
 ```pascal
+uses Std.Console as Console;
+
 function IsAboveFifteen(X: integer): boolean;
 begin
-  return X > 15
-end;
+  return X > 15;
+end function;
 
-var Idx: integer := FindIndex([10, 20, 30], IsAboveFifteen);
-WriteLn(Idx)  // 1
+  var Idx: integer := FindIndex([10, 20, 30], IsAboveFifteen);
+  Console.WriteLn(Idx); // 1
 ```
 
 ---
@@ -86,13 +91,15 @@ WriteLn(Idx)  // 1
 Returns `true` if **at least one** element satisfies `F`.
 
 ```pascal
+uses Std.Console as Console;
+
 function IsNegative(X: integer): boolean;
 begin
-  return X < 0
-end;
+  return X < 0;
+end function;
 
-var HasNeg: boolean := Any([1, -2, 3], IsNegative);
-WriteLn(HasNeg)  // true
+  var HasNeg: boolean := Any([1, -2, 3], IsNegative);
+  Console.WriteLn(HasNeg); // true
 ```
 
 ---
@@ -102,13 +109,15 @@ WriteLn(HasNeg)  // true
 Returns `true` if **every** element satisfies `F`.
 
 ```pascal
+uses Std.Console as Console;
+
 function IsPositive(X: integer): boolean;
 begin
-  return X > 0
-end;
+  return X > 0;
+end function;
 
-var AllPos: boolean := All([1, 2, 3], IsPositive);
-WriteLn(AllPos)  // true
+  var AllPos: boolean := All([1, 2, 3], IsPositive);
+  Console.WriteLn(AllPos); // true
 ```
 
 ## See also

@@ -10,19 +10,19 @@ use serde_json::{Value, json};
 
 const SOURCE: &str = r#"program TaskQuiescence;
 
-uses Std.Tasks;
+uses Std.Tasks as Tasks;
 
 function Work(): integer;
 begin
   mutable var Value: integer := 40;
   Value := Value + 2;
-  return Value
-end;
+  return Value;
+end function;
 
 begin
   var Pending: task := go Work();
-  Wait(Pending)
-end.
+  Tasks.Wait(Pending);
+end program;
 "#;
 
 fn target() -> PreparedDebugTarget {

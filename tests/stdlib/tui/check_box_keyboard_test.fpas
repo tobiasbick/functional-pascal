@@ -1,15 +1,16 @@
 program TuiCheckBoxKeyboardTest;
 
-uses Std.Arrays, Std.Test, Std.Tui;
+uses Std.Arrays as Arrays;
+uses Std.Test as Test;
+uses Std.Tui as Tui;
 
-type
-  CheckModel = record
-    Focus: integer;
-    Checked: boolean;
-    Changes: array of boolean;
-  end;
+type CheckModel = record
+  Focus: integer;
+  Checked: boolean;
+  Changes: array of boolean;
+end record;
 
-function MakeKey(Kind: TuiKeyKind; Character: string): TuiKeyEvent;
+function MakeKey(Kind: Tui.TuiKeyKind; Character: string): Tui.TuiKeyEvent;
 begin
   return record
     kind := Kind;
@@ -18,74 +19,74 @@ begin
     ctrl := false;
     alt := false;
     meta := false;
-  end
-end;
+  end record;
+end function;
 
-function ViewCheck(State: CheckModel): TuiElement;
+function ViewCheck(State: CheckModel): Tui.TuiElement;
 begin
-  return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(State.Focus)), [
-                                                                                  TuiElementBuilders.MakePanel('Host', [
-                                                                                                                         TuiElementBuilders.MakeCheckBox(TuiControlId.Create(1), 'Flag', State.Checked, TuiAction.Create(9))
-                                                                                                                       ])
-                                                                                ])
-end;
+  return Tui.TuiElementBuilders.MakeDesktop(Some(Tui.TuiControlId.Create(State.Focus)), [
+                                                                                          Tui.TuiElementBuilders.MakePanel('Host', [
+                                                                                                                                     Tui.TuiElementBuilders.MakeCheckBox(Tui.TuiControlId.Create(1), 'Flag', State.Checked, Tui.TuiAction.Create(9))
+                                                                                                                                   ])
+                                                                                        ]);
+end function;
 
-function UpdateCheck(State: CheckModel; Msg: TuiMsg; Cmd: TuiCmdOutput): CheckModel;
+function UpdateCheck(State: CheckModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): CheckModel;
 begin
-  Cmd.Set(TuiCmd.NoCommand);
+  Cmd.Set(Tui.TuiCmd.NoCommand);
   case Msg of
-    TuiMsg.FocusChanged(Previous, Current):
-    begin
-      case Current of
-        Some(Id):
-        begin
-          return record
-            Focus := Id.Value;
-            Checked := State.Checked;
-            Changes := State.Changes;
-          end
-        end;
-        None:
-        begin
-          return State
-        end
-      end
-    end;
-    TuiMsg.CheckChanged(Source, Action, Checked):
-    begin
-      AssertEquals(1, Source.Value);
-      AssertEquals(9, Action.Value);
-      return record
-        Focus := State.Focus;
-        Checked := Checked;
-        Changes := Std.Arrays.Concat(State.Changes, [Checked]);
-      end
-    end
+    when Tui.TuiMsg.FocusChanged(Previous, Current):
+      begin
+        case Current of
+          when Some(Id):
+            begin
+              return record
+                Focus := Id.Value;
+                Checked := State.Checked;
+                Changes := State.Changes;
+              end record;
+            end;
+          when None:
+            begin
+              return State;
+            end;
+        end case;
+      end;
+    when Tui.TuiMsg.CheckChanged(Source, Action, Checked):
+      begin
+        Test.AssertEquals(1, Source.Value);
+        Test.AssertEquals(9, Action.Value);
+        return record
+          Focus := State.Focus;
+          Checked := Checked;
+          Changes := Arrays.Concat(State.Changes, [Checked]);
+        end record;
+      end;
     else
-    begin
-      return State
-    end
-  end
-end;
+      begin
+        return State;
+      end;
+  end case;
+end function;
 
 begin
-  mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 6));
+  mutable var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(24, 6));
   mutable var Model: CheckModel := record
     Focus := 1;
     Checked := false;
     Changes := [];
-  end;
+  end record;
 
   Model := App.RunIterations(Model, UpdateCheck, ViewCheck, 0, 0);
-  App.InjectKeyForTest(MakeKey(TuiKeyKind.Space, ''));
+  App.InjectKeyForTest(MakeKey(Tui.TuiKeyKind.Space, ''));
   Model := App.RunIterations(Model, UpdateCheck, ViewCheck, 1, 0);
-  AssertTrue(Model.Checked);
-  AssertEquals(1, Std.Arrays.Length(Model.Changes));
-  AssertTrue(Model.Changes[0]);
-  App.InjectKeyForTest(MakeKey(TuiKeyKind.Enter, ''));
+  Test.AssertTrue(Model.Checked);
+  Test.AssertEquals(1, Arrays.Length(Model.Changes));
+  Test.AssertTrue(Model.Changes[0]);
+  App.InjectKeyForTest(MakeKey(Tui.TuiKeyKind.Enter, ''));
   Model := App.RunIterations(Model, UpdateCheck, ViewCheck, 1, 0);
-  AssertFalse(Model.Checked);
-  AssertEquals(2, Std.Arrays.Length(Model.Changes));
-  AssertFalse(Model.Changes[1]);
-  App.Close()
-end.
+  Test.AssertFalse(Model.Checked);
+  Test.AssertEquals(2, Arrays.Length(Model.Changes));
+  Test.AssertFalse(Model.Changes[1]);
+  App.Close();
+end program;

@@ -1,11 +1,12 @@
 program T;
 
-uses Std.Console, Std.Arrays;
+uses Std.Console as Console;
+uses Std.Arrays as Arrays;
 
 begin
   var A: array of integer := [1, 2, 3];
-  var R: array of integer := Reverse(A);
-  WriteLn(R[0]);
-  WriteLn(R[1]);
-  WriteLn(R[2])
-end.
+  var R: array of integer := Arrays.Reverse(A);
+  Console.WriteLn(R[0]);
+  Console.WriteLn(R[1]);
+  Console.WriteLn(R[2]);
+end program;

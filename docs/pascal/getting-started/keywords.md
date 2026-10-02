@@ -42,11 +42,13 @@ instead of `End`, `NoCommand` instead of `None`, or `CompletedCommand` instead o
 Keywords and identifiers are case-insensitive:
 
 ```pascal
-PROGRAM KeywordDemo;
+program KeywordDemo;
 
-BEGIN
-  writeln('same keywords, different casing')
-END.
+uses Std.Console as Console;
+
+begin
+  Console.WriteLn('same keywords, different casing');
+end program;
 ```
 
 ## See also

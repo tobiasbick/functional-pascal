@@ -17,11 +17,15 @@ function View(State: AppModel): TuiElement;
 Set a command explicitly when needed:
 
 ```pascal
-TuiMsg.QuitRequested:
+uses Std.Tui as Tui;
+
+case Message of
+  when Tui.TuiMsg.QuitRequested:
 begin
-  Cmd.Set(TuiCmd.Quit);
-  return State
-end
+  Cmd.Set(Tui.TuiCmd.Quit);
+  return State;
+end;
+end case;
 ```
 
 `TuiCmdOutput` is a host-owned output capability. The host resets it to
@@ -37,17 +41,22 @@ paint. `TuiCmd` remains a closed scalar command enum; the host-owned
 A background-enabled application uses a caller-created bounded `channel of TMessage` and a second
 update callback:
 
-```pascal
+```text
 function UpdateApplication(
   State: AppModel;
   Message: AppMessage;
   Cmd: TuiCmdOutput
 ): AppModel;
+```
 
-var Inbox: channel of AppMessage := CreateChannel(32);
-var Final: AppModel := TuiApplication.RunWithBackground(
+```pascal
+uses Std.Tui as Tui;
+uses Std.Tasks as Tasks;
+
+var Inbox: channel of AppMessage := Tasks.CreateChannel(32);
+var Final: AppModel := Tui.TuiApplication.RunWithBackground(
   Initial, Inbox, Update, UpdateApplication, View
-)
+);
 ```
 
 `RunWithBackgroundAndPalette` adds the same palette argument as `RunWithPalette`. The host takes
@@ -60,10 +69,14 @@ The initial frame is rendered before the background-enabled host delivers `TuiMs
 `Update` can use that message to queue initial work:
 
 ```pascal
-TuiMsg.Started:
+uses Std.Tui as Tui;
+
+case Message of
+  when Tui.TuiMsg.Started:
 begin
-  Cmd.StartBackground(1, LoadData)
-end
+  Cmd.StartBackground(1, LoadData);
+end;
+end case;
 ```
 
 The fixed work signature is:
@@ -87,7 +100,9 @@ Completed successful operations are reaped silently. A returned `Error`, panic, 
 delivered on the main application thread as:
 
 ```pascal
-TuiMsg.BackgroundFailed(Id, Kind, Message, Code, Line, Column)
+uses Std.Tui as Tui;
+
+Tui.TuiMsg.BackgroundFailed(Id, Kind, Message, Code, Line, Column);
 ```
 
 `Kind` is a `TaskFailureKind`. Cancellation caused by replacement, explicit subscription
@@ -155,14 +170,19 @@ at most one tick is pending per application. Input, application messages, and
 paint continue while a tick is pending. A negative delay is a runtime error.
 
 ```pascal
-TuiMsg.Tick(Elapsed):
+uses Std.Tui as Tui;
+
+case Message of
+  when Tui.TuiMsg.Tick(Elapsed):
 begin
   Next.Animation := Advance(State.Animation, Elapsed);
   if Next.Animation.Running then
   begin
-    Cmd.RequestTick(40)
-  end
-end
+    Cmd.RequestTick(40);
+  end;
+  end if;
+end;
+end case;
 ```
 
 Headless runs keep their deterministic time steps: `RunIterations` and

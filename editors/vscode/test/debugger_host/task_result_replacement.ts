@@ -28,21 +28,21 @@ export async function verifyTaskResultReplacement(
   const lines = [
     "program DebuggerTaskResult;",
     "",
-    "uses Std.Console, Std.Tasks;",
+    " uses Std.Console as Console; uses Std.Tasks as Tasks;",
     "",
     "function Work(): integer;",
     "begin",
-    "  return 7",
-    "end;",
+    "  return 7;",
+    "end function;",
     "",
     "begin",
     "  var Pending: task := go Work();",
-    "  WriteLn(Wait(Pending))",
-    "end.",
+    "  Console.WriteLn(Tasks.Wait(Pending));",
+    "end program;",
     ""
   ];
   const sourcePath = await writeSource(workspaceRoot, "task-result-replacement", lines);
-  const breakpointLine = lines.indexOf("  return 7");
+  const breakpointLine = lines.indexOf("  return 7;");
   const breakpoint = new vscode.SourceBreakpoint(
     new vscode.Location(vscode.Uri.file(sourcePath), new vscode.Position(breakpointLine, 2))
   );

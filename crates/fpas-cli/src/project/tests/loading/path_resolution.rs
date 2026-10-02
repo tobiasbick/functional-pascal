@@ -19,7 +19,13 @@ include = ["src/**/*.fpas"]
 "#
         ),
     );
-    write_text(&main_path, "program Main;\nbegin\nend.\n");
+    write_text(
+        &main_path,
+        r#"program Main;
+begin null;
+end program;
+"#,
+    );
 
     let loaded = load_project_ok(&project_file);
     fs::remove_dir_all(&dir).expect("temp directory must be removed");
@@ -47,8 +53,19 @@ include = ["{util_path_text}"]
 "#
         ),
     );
-    write_text(&dir.join("src/main.fpas"), "program Main;\nbegin\nend.\n");
-    write_text(&util_path, "unit App.Util;");
+    write_text(
+        &dir.join("src/main.fpas"),
+        r#"program Main;
+begin null;
+end program;
+"#,
+    );
+    write_text(
+        &util_path,
+        r#"unit App.Util;
+end unit;
+"#,
+    );
 
     let loaded = load_project_ok(&project_file);
     fs::remove_dir_all(&dir).expect("temp directory must be removed");
@@ -73,8 +90,19 @@ main = "src/main.fpas"
 include = ["src/[draft].fpas"]
 "#,
     );
-    write_text(&dir.join("src/main.fpas"), "program Main;\nbegin\nend.\n");
-    write_text(&unit_path, "unit App.Draft;");
+    write_text(
+        &dir.join("src/main.fpas"),
+        r#"program Main;
+begin null;
+end program;
+"#,
+    );
+    write_text(
+        &unit_path,
+        r#"unit App.Draft;
+end unit;
+"#,
+    );
 
     let loaded = load_project_ok(&project_file);
     fs::remove_dir_all(&dir).expect("temp directory must be removed");
@@ -97,7 +125,12 @@ main = "src"
 include = ["src/util.fpas"]
 "#,
     );
-    write_text(&dir.join("src/util.fpas"), "unit App.Util;");
+    write_text(
+        &dir.join("src/util.fpas"),
+        r#"unit App.Util;
+end unit;
+"#,
+    );
 
     let error = load_project_error(&project_file, "main directory must fail");
     fs::remove_dir_all(&dir).expect("temp directory must be removed");
@@ -123,7 +156,13 @@ main = "src/main.fpas"
 include = ["src"]
 "#,
     );
-    write_text(&dir.join("src/main.fpas"), "program Main;\nbegin\nend.\n");
+    write_text(
+        &dir.join("src/main.fpas"),
+        r#"program Main;
+begin null;
+end program;
+"#,
+    );
 
     let error = load_project_error(&project_file, "include directory must fail");
     fs::remove_dir_all(&dir).expect("temp directory must be removed");
@@ -149,7 +188,13 @@ main = "src/main.fpas"
 include = ["src/**/*"]
 "#,
     );
-    write_text(&dir.join("src/main.fpas"), "program Main;\nbegin\nend.\n");
+    write_text(
+        &dir.join("src/main.fpas"),
+        r#"program Main;
+begin null;
+end program;
+"#,
+    );
     write_text(&dir.join("src/readme.md"), "not pascal");
 
     let error = load_project_error(&project_file, "glob with non-source file must fail");
@@ -176,7 +221,13 @@ main = "src/main.fpas"
 include = ["src/[draft].fpas"]
 "#,
     );
-    write_text(&dir.join("src/main.fpas"), "program Main;\nbegin\nend.\n");
+    write_text(
+        &dir.join("src/main.fpas"),
+        r#"program Main;
+begin null;
+end program;
+"#,
+    );
 
     let error = load_project_error(&project_file, "missing bracket path must fail");
     fs::remove_dir_all(&dir).expect("temp directory must be removed");

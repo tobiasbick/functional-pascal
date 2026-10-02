@@ -1,14 +1,15 @@
 program TuiButtonKeyboardTest;
 
-uses Std.Arrays, Std.Test, Std.Tui;
+uses Std.Arrays as Arrays;
+uses Std.Test as Test;
+uses Std.Tui as Tui;
 
-type
-  ButtonKeyboardModel = record
-    Focus: integer;
-    Actions: array of integer;
-  end;
+type ButtonKeyboardModel = record
+  Focus: integer;
+  Actions: array of integer;
+end record;
 
-function MakeKey(Kind: TuiKeyKind; Character: string; Alt: boolean): TuiKeyEvent;
+function MakeKey(Kind: Tui.TuiKeyKind; Character: string; Alt: boolean): Tui.TuiKeyEvent;
 begin
   return record
     kind := Kind;
@@ -17,92 +18,92 @@ begin
     ctrl := false;
     alt := Alt;
     meta := false;
-  end
-end;
+  end record;
+end function;
 
-function ViewButtons(State: ButtonKeyboardModel): TuiElement;
+function ViewButtons(State: ButtonKeyboardModel): Tui.TuiElement;
 begin
-  return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(State.Focus)), [
-                                                                                  TuiElementBuilders.MakeColumn([
-                                                                                                                  TuiElementBuilders.MakeInput(TuiControlId.Create(1), '', 0, TuiAction.Create(1)),
-                                                                                                                  TuiElementBuilders.MakeDefaultButton(TuiControlId.Create(2), 'Save', 'S', TuiAction.Create(20)),
-                                                                                                                  TuiElementBuilders.MakeButtonWithMnemonic(TuiControlId.Create(3), 'Discard', 'D', TuiAction.Create(30)),
-                                                                                                                  TuiElementBuilders.MakeDisabledButton(TuiControlId.Create(4), 'Cancel', 'C', TuiAction.Create(40))
-                                                                                                                ])
-                                                                                ])
-end;
+  return Tui.TuiElementBuilders.MakeDesktop(Some(Tui.TuiControlId.Create(State.Focus)), [
+                                                                                          Tui.TuiElementBuilders.MakeColumn([
+                                                                                                                              Tui.TuiElementBuilders.MakeInput(Tui.TuiControlId.Create(1), '', 0, Tui.TuiAction.Create(1)),
+                                                                                                                              Tui.TuiElementBuilders.MakeDefaultButton(Tui.TuiControlId.Create(2), 'Save', 'S', Tui.TuiAction.Create(20)),
+                                                                                                                              Tui.TuiElementBuilders.MakeButtonWithMnemonic(Tui.TuiControlId.Create(3), 'Discard', 'D', Tui.TuiAction.Create(30)),
+                                                                                                                              Tui.TuiElementBuilders.MakeDisabledButton(Tui.TuiControlId.Create(4), 'Cancel', 'C', Tui.TuiAction.Create(40))
+                                                                                                                            ])
+                                                                                        ]);
+end function;
 
-function UpdateButtons(State: ButtonKeyboardModel; Msg: TuiMsg; Cmd: TuiCmdOutput): ButtonKeyboardModel;
+function UpdateButtons(State: ButtonKeyboardModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): ButtonKeyboardModel;
 begin
-  Cmd.Set(TuiCmd.NoCommand);
+  Cmd.Set(Tui.TuiCmd.NoCommand);
   case Msg of
-    TuiMsg.Action(Source, Action):
-    begin
-      return record
-        Focus := State.Focus;
-        Actions := Std.Arrays.Concat(State.Actions, [Action.Value]);
-      end
-    end;
-    TuiMsg.FocusChanged(Previous, Current):
-    begin
-      case Current of
-        Some(Id):
-        begin
-          return record
-            Focus := Id.Value;
-            Actions := State.Actions;
-          end
-        end;
-        None:
-        begin
-          return State
-        end
-      end
-    end
+    when Tui.TuiMsg.Action(Source, Action):
+      begin
+        return record
+          Focus := State.Focus;
+          Actions := Arrays.Concat(State.Actions, [Action.Value]);
+        end record;
+      end;
+    when Tui.TuiMsg.FocusChanged(Previous, Current):
+      begin
+        case Current of
+          when Some(Id):
+            begin
+              return record
+                Focus := Id.Value;
+                Actions := State.Actions;
+              end record;
+            end;
+          when None:
+            begin
+              return State;
+            end;
+        end case;
+      end;
     else
-    begin
-      return State
-    end
-  end
-end;
+      begin
+        return State;
+      end;
+  end case;
+end function;
 
 begin
-  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(30, 10));
+  var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(30, 10));
   mutable var Model: ButtonKeyboardModel := record
     Focus := 1;
     Actions := [];
-  end;
+  end record;
 
   Model := App.RunIterations(Model, UpdateButtons, ViewButtons, 0, 0);
-  App.InjectKeyForTest(MakeKey(TuiKeyKind.Enter, '', false));
+  App.InjectKeyForTest(MakeKey(Tui.TuiKeyKind.Enter, '', false));
   Model := App.RunIterations(Model, UpdateButtons, ViewButtons, 1, 0);
-  AssertEquals(20, Model.Actions[0]);
-  App.InjectKeyForTest(MakeKey(TuiKeyKind.Character, 'd', true));
+  Test.AssertEquals(20, Model.Actions[0]);
+  App.InjectKeyForTest(MakeKey(Tui.TuiKeyKind.Character, 'd', true));
   Model := App.RunIterations(Model, UpdateButtons, ViewButtons, 1, 0);
-  AssertEquals(30, Model.Actions[1]);
-  App.InjectKeyForTest(MakeKey(TuiKeyKind.Character, 'c', true));
+  Test.AssertEquals(30, Model.Actions[1]);
+  App.InjectKeyForTest(MakeKey(Tui.TuiKeyKind.Character, 'c', true));
   Model := App.RunIterations(Model, UpdateButtons, ViewButtons, 1, 0);
-  AssertEquals(2, Std.Arrays.Length(Model.Actions));
+  Test.AssertEquals(2, Arrays.Length(Model.Actions));
   Model := record
     Focus := 3;
     Actions := Model.Actions;
-  end;
+  end record;
 
   Model := App.RunIterations(Model, UpdateButtons, ViewButtons, 0, 0);
-  App.InjectKeyForTest(MakeKey(TuiKeyKind.Space, '', false));
+  App.InjectKeyForTest(MakeKey(Tui.TuiKeyKind.Space, '', false));
   Model := App.RunIterations(Model, UpdateButtons, ViewButtons, 1, 0);
-  AssertEquals(30, Model.Actions[2]);
-  App.InjectKeyForTest(MakeKey(TuiKeyKind.Down, '', false));
+  Test.AssertEquals(30, Model.Actions[2]);
+  App.InjectKeyForTest(MakeKey(Tui.TuiKeyKind.Down, '', false));
   Model := App.RunIterations(Model, UpdateButtons, ViewButtons, 1, 0);
-  AssertEquals(2, Model.Focus);
-  App.InjectKeyForTest(MakeKey(TuiKeyKind.Up, '', false));
+  Test.AssertEquals(2, Model.Focus);
+  App.InjectKeyForTest(MakeKey(Tui.TuiKeyKind.Up, '', false));
   Model := App.RunIterations(Model, UpdateButtons, ViewButtons, 1, 0);
-  AssertEquals(3, Model.Focus);
-  App.InjectKeyForTest(MakeKey(TuiKeyKind.Left, '', false));
+  Test.AssertEquals(3, Model.Focus);
+  App.InjectKeyForTest(MakeKey(Tui.TuiKeyKind.Left, '', false));
   Model := App.RunIterations(Model, UpdateButtons, ViewButtons, 1, 0);
-  AssertEquals(2, Model.Focus);
-  App.InjectKeyForTest(MakeKey(TuiKeyKind.Right, '', false));
+  Test.AssertEquals(2, Model.Focus);
+  App.InjectKeyForTest(MakeKey(Tui.TuiKeyKind.Right, '', false));
   Model := App.RunIterations(Model, UpdateButtons, ViewButtons, 1, 0);
-  AssertEquals(3, Model.Focus);
-  App.Close()
-end.
+  Test.AssertEquals(3, Model.Focus);
+  App.Close();
+end program;

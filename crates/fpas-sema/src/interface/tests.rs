@@ -19,12 +19,14 @@ fn parse_unit(source: &str) -> fpas_parser::Unit {
 #[test]
 fn unit_interface_exports_public_symbols_and_qualified_types() {
     let unit = parse_unit(
-        "unit Demo.Types;
-         public const Answer: integer := 42;
-         const Secret: integer := 7;
-         public type Point = record public X: integer; public Y: integer; end;
+        r#"unit Demo.Types;
+           public const Answer: integer := 42;
+          const Secret: integer := 7;
+           public type Point = record public X: integer; public Y: integer; end record;
          public function GetX(P: Point): integer;
-         begin return P.X end;",
+         begin return P.X; end function;
+end unit;
+"#,
     );
 
     let analysis = analyze_unit(&unit, &[]).expect("unit analysis must succeed");
@@ -66,10 +68,12 @@ fn unit_interface_exports_public_symbols_and_qualified_types() {
 #[test]
 fn consumer_analysis_uses_interface_without_dependency_ast() {
     let dependency = parse_unit(
-        "unit Demo.Api;
-         public type State = enum Idle; Ready; end;
+        r#"unit Demo.Api;
+           public type State = enum Idle; Ready; end enum;
          public function Next(Value: integer): integer;
-         begin return Value + 1 end;",
+         begin return Value + 1; end function;
+end unit;
+"#,
     );
     let dependency_analysis =
         analyze_unit(&dependency, &[]).expect("dependency analysis must succeed");
@@ -80,13 +84,15 @@ fn consumer_analysis_uses_interface_without_dependency_ast() {
     );
 
     let consumer = parse_unit(
-        "unit Demo.Consumer;
-         uses Demo.Api;
+        r#"unit Demo.Consumer;
+uses Demo.Api as Api;
          public function Run(Value: integer): integer;
          begin
-           var Current: State := State.Ready;
-           return Next(Value)
-         end;",
+           var Current: Api.State := Api.State.Ready;
+           return Api.Next(Value);
+         end function;
+end unit;
+"#,
     );
     let consumer_analysis = analyze_unit(
         &consumer,
@@ -103,8 +109,10 @@ fn consumer_analysis_uses_interface_without_dependency_ast() {
 #[test]
 fn enum_backing_values_survive_export_import_and_alias_export() {
     let dependency = parse_unit(
-        "unit Demo.Values;
-         public type State = enum Idle = 7; Ready; Done = 20; end;",
+        r#"unit Demo.Values;
+           public type State = enum Idle = 7; Ready; Done = 20; end enum;
+end unit;
+"#,
     );
     let dependency_interface = analyze_unit(&dependency, &[])
         .expect("dependency analysis must succeed")
@@ -128,9 +136,11 @@ fn enum_backing_values_survive_export_import_and_alias_export() {
     );
 
     let consumer = parse_unit(
-        "unit Demo.Aliases;
-         uses Demo.Values;
-         public type StateAlias = State;",
+        r#"unit Demo.Aliases;
+uses Demo.Values as Values;
+           public type StateAlias = Values.State;
+end unit;
+"#,
     );
     let consumer_interface = analyze_unit(&consumer, &[dependency_interface])
         .expect("consumer analysis must succeed")
@@ -157,18 +167,22 @@ fn enum_backing_values_survive_export_import_and_alias_export() {
 #[test]
 fn private_body_changes_do_not_change_interface_digest() {
     let left = parse_unit(
-        "unit Demo.Stable;
+        r#"unit Demo.Stable;
          public function PublicValue(X: integer): integer;
-         begin return X end;
+         begin return X; end function;
          function Hidden(): integer;
-         begin return 1 end;",
+         begin return 1; end function;
+end unit;
+"#,
     );
     let right = parse_unit(
-        "unit Demo.Stable;
+        r#"unit Demo.Stable;
          public function PublicValue(X: integer): integer;
-         begin return X + 99 end;
+         begin return X + 99; end function;
          function Hidden(): integer;
-         begin return 2 end;",
+         begin return 2; end function;
+end unit;
+"#,
     );
     let left_interface = analyze_unit(&left, &[])
         .expect("left analysis")
@@ -187,14 +201,18 @@ fn private_body_changes_do_not_change_interface_digest() {
 #[test]
 fn imported_name_ambiguity_is_reported_only_when_short_name_is_used() {
     let first = parse_unit(
-        "unit Demo.First;
+        r#"unit Demo.First;
          public function Value(): integer;
-         begin return 1 end;",
+         begin return 1; end function;
+end unit;
+"#,
     );
     let second = parse_unit(
-        "unit Demo.Second;
+        r#"unit Demo.Second;
          public function Value(): integer;
-         begin return 2 end;",
+         begin return 2; end function;
+end unit;
+"#,
     );
     let interfaces = [
         analyze_unit(&first, &[])
@@ -208,10 +226,12 @@ fn imported_name_ambiguity_is_reported_only_when_short_name_is_used() {
     ];
 
     let qualified = parse_unit(
-        "unit Demo.Qualified;
-         uses Demo.First, Demo.Second;
+        r#"unit Demo.Qualified;
+uses Demo.First as First; uses Demo.Second as Second;
          public function Run(): integer;
-         begin return Demo.First.Value() + Demo.Second.Value() end;",
+         begin return First.Value() + Second.Value(); end function;
+end unit;
+"#,
     );
     let qualified_analysis = analyze_unit(&qualified, &interfaces).expect("qualified analysis");
     assert!(
@@ -221,17 +241,19 @@ fn imported_name_ambiguity_is_reported_only_when_short_name_is_used() {
     );
 
     let ambiguous = parse_unit(
-        "unit Demo.Ambiguous;
-         uses Demo.First, Demo.Second;
+        r#"unit Demo.Ambiguous;
+uses Demo.First as First; uses Demo.Second as Second;
          public function Run(): integer;
-         begin return Value() end;",
+         begin return Value(); end function;
+end unit;
+"#,
     );
     let ambiguous_analysis = analyze_unit(&ambiguous, &interfaces).expect("ambiguous analysis");
     assert_eq!(ambiguous_analysis.metadata.errors.len(), 1);
     assert!(
         ambiguous_analysis.metadata.errors[0]
             .message
-            .contains("Ambiguous imported symbol `Value`")
+            .contains("Unknown function or procedure `Value`")
     );
     assert!(ambiguous_analysis.interface.is_none());
 }
@@ -239,12 +261,16 @@ fn imported_name_ambiguity_is_reported_only_when_short_name_is_used() {
 #[test]
 fn imported_enum_type_qualified_short_variant_is_ambiguous() {
     let first = parse_unit(
-        "unit Demo.First;
-         public type Color = enum Red; Blue; end;",
+        r#"unit Demo.First;
+           public type Color = enum Red; Blue; end enum;
+end unit;
+"#,
     );
     let second = parse_unit(
-        "unit Demo.Second;
-         public type Color = enum Red; Green; end;",
+        r#"unit Demo.Second;
+           public type Color = enum Red; Green; end enum;
+end unit;
+"#,
     );
     let interfaces = [
         analyze_unit(&first, &[])
@@ -258,10 +284,12 @@ fn imported_enum_type_qualified_short_variant_is_ambiguous() {
     ];
 
     let qualified = parse_unit(
-        "unit Demo.Qualified;
-         uses Demo.First, Demo.Second;
-         public function Run(): Demo.First.Color;
-         begin return Demo.First.Color.Red end;",
+        r#"unit Demo.Qualified;
+uses Demo.First as First; uses Demo.Second as Second;
+         public function Run(): First.Color;
+         begin return First.Color.Red; end function;
+end unit;
+"#,
     );
     let qualified_analysis = analyze_unit(&qualified, &interfaces).expect("qualified analysis");
     assert!(
@@ -271,17 +299,19 @@ fn imported_enum_type_qualified_short_variant_is_ambiguous() {
     );
 
     let ambiguous = parse_unit(
-        "unit Demo.Ambiguous;
-         uses Demo.First, Demo.Second;
-         public function Run(): Demo.First.Color;
-         begin return Color.Red end;",
+        r#"unit Demo.Ambiguous;
+uses Demo.First as First; uses Demo.Second as Second;
+         public function Run(): First.Color;
+         begin return Color.Red; end function;
+end unit;
+"#,
     );
     let ambiguous_analysis = analyze_unit(&ambiguous, &interfaces).expect("ambiguous analysis");
     assert!(
         ambiguous_analysis.metadata.errors.iter().any(|error| {
-            error.code == fpas_diagnostics::codes::SEMA_AMBIGUOUS_IMPORTED_NAME
+            error.code == fpas_diagnostics::codes::SEMA_UNKNOWN_NAME
                 && error.help.as_deref().is_some_and(|help| {
-                    help.contains("Demo.First.Color") && help.contains("Demo.Second.Color")
+                    help.contains("first.Color") && help.contains("second.Color")
                 })
         }),
         "{:#?}",

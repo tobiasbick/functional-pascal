@@ -2,14 +2,16 @@
 
 program DowntoExample;
 
-uses Std.Console, Std.Conv;
+uses Std.Console as Console;
+uses Std.Conv as Conv;
 
 begin
   mutable var Sum: integer := 0;
   for I: integer := 5 downto 1 do
-  begin
-    Sum := Sum + I
-  end;
+    begin
+      Sum := Sum + I;
+    end;
+  end for;
 
-  WriteLn('sum: ', IntToStr(Sum))
-end.
+  Console.WriteLn('sum: ', Conv.IntToStr(Sum));
+end program;

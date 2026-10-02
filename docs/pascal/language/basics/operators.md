@@ -37,10 +37,12 @@ enums with data.
 `in` returns `boolean`. It tests whether an array contains a value, whether a dictionary contains a key, or whether a string contains a substring (or a single-character string):
 
 ```pascal
-WriteLn(2 in [1, 2, 3]);
-WriteLn('Alice' in ['Alice': 30]);
-WriteLn('a' in 'pascal');
-WriteLn('asc' in 'pascal')
+uses Std.Console as Console;
+
+Console.WriteLn(2 in [1, 2, 3]);
+Console.WriteLn('Alice' in ['Alice': 30]);
+Console.WriteLn('a' in 'pascal');
+Console.WriteLn('asc' in 'pascal');
 ```
 
 ## Operator precedence
@@ -72,28 +74,33 @@ Record update (`expr with Field := Value; … end`) binds tighter than binary op
 Individual characters can be read by 0-based integer index using bracket notation. The result type is `string` (a single-character string).
 
 ```pascal
-var
-  S: string := 'Hello';
-  C: string := S[0];   // 'H'
-  L: string := S[4];   // 'o'
+var S: string := 'Hello';
+var C: string := S[0]; // 'H'
+var L: string := S[4];
+
 ```
 
 Accessing an out-of-bounds index is a **runtime error**. The index must be an `integer`; non-integer indices are a compile-time error.
 
 ```pascal
+uses Std.Console as Console;
+uses Std.Str as Str;
+
 // iterate over characters
 mutable var I: integer := 0;
-while I < Std.Str.Length(S) do begin
-  WriteLn(S[I]);
-  I := I + 1
-end
+while I < Str.Length(S) do
+  begin
+    Console.WriteLn(S[I]);
+    I := I + 1;
+  end;
+end while;
 ```
 
 ## String concatenation
 
 ```pascal
-var
-  Full: string := 'Hello' + ' ' + 'World';  // 'Hello World'
+var Full: string := ('Hello' + ' ') + 'World';
+
 ```
 
 ## See also

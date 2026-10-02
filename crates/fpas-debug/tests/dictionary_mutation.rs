@@ -11,15 +11,15 @@ use serde_json::{Value, json};
 
 const SOURCE: &str = r#"program JsonlDictionaryMutation;
 
-uses Std.Console;
+uses Std.Console as Console;
 
-type
-  Row = record
+
+  type Row = record
     Scores: dict of string to integer;
-  end;
+  end record;
 
-mutable var
-  GlobalScores: dict of string to integer := ['Root': 7];
+
+  mutable var GlobalScores: dict of string to integer := ['Root': 7];
 
 begin
   mutable var Scores: dict of string to integer := [
@@ -32,17 +32,17 @@ begin
   mutable var Rows: array of Row := [
     record
       Scores := ['Left': 10];
-    end,
+    end record,
     record
       Scores := ['Right': 20];
-    end
+    end record
   ];
-  WriteLn(Scores['Hopper']);
-  WriteLn(Scores['Bob']);
-  WriteLn(Rows[1].Scores['Nested']);
-  WriteLn(GlobalScores['Zed']);
-  WriteLn(FixedScores['Fixed'])
-end.
+  Console.WriteLn(Scores['Hopper']);
+  Console.WriteLn(Scores['Bob']);
+  Console.WriteLn(Rows[1].Scores['Nested']);
+  Console.WriteLn(GlobalScores['Zed']);
+  Console.WriteLn(FixedScores['Fixed']);
+end program;
 "#;
 
 fn server() -> JsonlServer {

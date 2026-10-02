@@ -13,12 +13,7 @@ impl Checker {
             ));
         }
 
-        self.ambiguous_imports.get(&canonical_name).map(|candidates| {
-            format!(
-                "`{name}` exists in multiple imported units: {}. Use the fully qualified name to disambiguate.",
-                candidates.join(", ")
-            )
-        })
+        None
     }
 
     /// Hint for an ambiguous short routine name in a call with `arg_count` arguments.
@@ -27,55 +22,18 @@ impl Checker {
     /// argument's type, for example `Value.Unwrap()` for an option or a result.
     pub(crate) fn ambiguous_call_hint(&self, name: &str, arg_count: usize) -> Option<String> {
         let hint = self.ambiguous_hint(name)?;
-        if arg_count == 0 || name.contains('.') {
-            return Some(hint);
-        }
-        Some(format!(
-            "{hint} Or write `{name}(Value, ...)` as `Value.{name}(...)`: the method form selects the routine by the type of `Value`."
-        ))
+        let _ = arg_count;
+        Some(hint)
     }
 
     /// Resolves standard call names while preserving lexical shadowing of imported aliases.
     ///
     /// **Documentation:** `docs/pascal/program-structure/units.md`.
     pub(crate) fn builtin_std_dispatch_name(&self, name: &str) -> String {
-        let canonical = canonical_symbol_name(name);
-        if !name.contains('.')
-            && !(self.std_short_alias_keys.contains(&canonical)
-                && self
-                    .scopes
-                    .lookup_with_scope(name)
-                    .is_some_and(|(scope, _)| scope == 0))
-        {
-            return name.to_string();
-        }
-        if let Some(qualified) = self.short_builtin_redirect.get(&canonical) {
-            return qualified.clone();
-        }
-        if name.contains('.') {
-            return self
-                .scopes
-                .lookup_original_name(name)
-                .unwrap_or(name)
-                .to_string();
-        }
-        let mut candidates = self
-            .loaded_std_units
-            .iter()
-            .flat_map(|unit| fpas_std::std_unit_symbols(unit))
-            .filter(|qualified| {
-                qualified
-                    .rsplit_once('.')
-                    .is_some_and(|(_, short)| short.eq_ignore_ascii_case(name))
-            })
-            .copied()
-            .collect::<Vec<_>>();
-        candidates.sort_unstable();
-        candidates.dedup();
-        if let [qualified] = candidates.as_slice() {
-            return (*qualified).to_string();
-        }
-        name.to_string()
+        self.scopes
+            .lookup_original_name(name)
+            .unwrap_or(name)
+            .to_owned()
     }
 
     /// Registers the qualified symbols of a `Std.*` unit named in `uses` on first qualified use.

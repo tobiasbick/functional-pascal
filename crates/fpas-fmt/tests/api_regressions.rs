@@ -7,7 +7,7 @@ use fpas_parser::{CompilationUnit, parse_compilation_unit};
 
 #[test]
 fn matching_source_and_ast_format_successfully() {
-    let source = "program T; begin end.";
+    let source = r#"program T; begin null; end program;"#;
     let (unit, diagnostics) = parse_compilation_unit(source);
     assert!(diagnostics.is_empty(), "{diagnostics:?}");
 
@@ -16,8 +16,8 @@ fn matching_source_and_ast_format_successfully() {
 
 #[test]
 fn same_length_but_different_source_is_rejected() {
-    let source = "program A; begin end.";
-    let other = "program B; begin end.";
+    let source = r#"program A; begin null; end program;"#;
+    let other = r#"program B; begin null; end program;"#;
     let (unit, diagnostics) = parse_compilation_unit(source);
     assert!(diagnostics.is_empty(), "{diagnostics:?}");
 
@@ -30,7 +30,7 @@ fn same_length_but_different_source_is_rejected() {
 #[test]
 fn utf8_midpoint_span_is_rejected_without_panicking() {
     let source = "éprogram T; begin end.";
-    let (mut unit, _) = parse_compilation_unit("program T; begin end.");
+    let (mut unit, _) = parse_compilation_unit(r#"program T; begin null; end program;"#);
     let CompilationUnit::Program(program) = &mut unit else {
         panic!("expected program");
     };
@@ -44,7 +44,7 @@ fn utf8_midpoint_span_is_rejected_without_panicking() {
 
 #[test]
 fn overflowing_span_is_rejected_without_panicking() {
-    let source = "program T; begin end.";
+    let source = r#"program T; begin null; end program;"#;
     let (mut unit, diagnostics) = parse_compilation_unit(source);
     assert!(diagnostics.is_empty(), "{diagnostics:?}");
     let CompilationUnit::Program(program) = &mut unit else {

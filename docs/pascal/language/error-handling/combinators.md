@@ -3,30 +3,47 @@
 `Std.Results` and `Std.Options` provide `Map`, `AndThen`, and `OrElse` for transforming and chaining values without manual `case` destructuring. See [`Std.Results`](../../std/result/result.md) and [`Std.Options`](../../std/result/option.md) for full API details.
 
 ```pascal
-uses Std.Results, Std.Conv;
+program Example;
+
+uses Std.Results as Results;
+uses Std.Conv as Conv;
 
 function DoubleToString(V: integer): string;
 begin
-  return IntToStr(V * 2)
-end;
+  return Conv.IntToStr(V * 2);
+end function;
 
-var R: Result of integer, string := Ok(21);
-var M: Result of string, string := Map(R, DoubleToString);
+var R: result of integer, string := Ok(21);
+var M: result of string, string := Results.Map(R, DoubleToString);
+
 // M = Ok('42')
+begin
+  null;
+end program;
 ```
 
 ```pascal
-uses Std.Options, Std.Conv;
+program Example;
 
-function PositiveToString(V: integer): Option of string;
+uses Std.Options as Options;
+uses Std.Conv as Conv;
+
+function PositiveToString(V: integer): option of string;
 begin
-  if V > 0 then return Some(IntToStr(V))
-  else return None
-end;
+  if V > 0 then
+    return Some(Conv.IntToStr(V));
+  else
+    return None;
+  end if;
+end function;
 
-var O: Option of integer := Some(5);
-var M: Option of string := AndThen(O, PositiveToString);
+var O: option of integer := Some(5);
+var M: option of string := Options.AndThen(O, PositiveToString);
+
 // M = Some('5')
+begin
+  null;
+end program;
 ```
 
 | Combinator | Result | Option |

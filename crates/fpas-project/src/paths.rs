@@ -359,7 +359,8 @@ mod tests {
         let source = root.join("src/nested.fpas");
         fs::create_dir_all(source.parent().expect("source must have a parent"))
             .expect("source directory must be created");
-        fs::write(&source, "program Nested; begin end.").expect("source fixture must be written");
+        fs::write(&source, r#"program Nested; begin null; end program;"#)
+            .expect("source fixture must be written");
 
         let result = expand_source_pattern("sources.include", "src/**/*.fpas", &root, true);
         fs::remove_dir_all(&root).expect("fixture must be removed");

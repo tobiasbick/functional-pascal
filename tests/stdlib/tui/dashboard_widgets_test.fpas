@@ -1,47 +1,48 @@
 program TuiDashboardWidgetsTest;
 
-uses Std.Test, Std.Tui;
+uses Std.Test as Test;
+uses Std.Tui as Tui;
 
-function ViewDashboard(State: integer): TuiElement;
+function ViewDashboard(State: integer): Tui.TuiElement;
 begin
-  var Concrete: TuiStyle := TuiStyle.FromColors(TuiColor.FromRgb(1, 2, 3), TuiColor.FromRgb(4, 5, 6));
-  return TuiElementBuilders.MakeDesktop(None, [
-                                                TuiElementBuilders.MakeColumn([
-                                                                                TuiElementBuilders.MakeCellGrid(TuiCellGrid.Create(2, 1, [
-                                                                                                                                           TuiCell.Styled('A', Concrete),
-                                                                                                                                           TuiCell.Create('B', TuiStyleRole.Accent)
-                                                                                                                                         ])),
-                                                                                TuiElementBuilders.MakeRule('Metrics'),
-                                                                                TuiElementBuilders.MakeGauge('Load', 3, 4)
-                                                                              ])
-                                              ])
-end;
+  var Concrete: Tui.TuiStyle := Tui.TuiStyle.FromColors(Tui.TuiColor.FromRgb(1, 2, 3), Tui.TuiColor.FromRgb(4, 5, 6));
+  return Tui.TuiElementBuilders.MakeDesktop(None, [
+                                                    Tui.TuiElementBuilders.MakeColumn([
+                                                                                        Tui.TuiElementBuilders.MakeCellGrid(Tui.TuiCellGrid.Create(2, 1, [
+                                                                                                                                                           Tui.TuiCell.Styled('A', Concrete),
+                                                                                                                                                           Tui.TuiCell.Create('B', Tui.TuiStyleRole.Accent)
+                                                                                                                                                         ])),
+                                                                                        Tui.TuiElementBuilders.MakeRule('Metrics'),
+                                                                                        Tui.TuiElementBuilders.MakeGauge('Load', 3, 4)
+                                                                                      ])
+                                                  ]);
+end function;
 
-function UpdateDashboard(State: integer; Msg: TuiMsg; Cmd: TuiCmdOutput): integer;
+function UpdateDashboard(State: integer; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): integer;
 begin
-  Cmd.Set(TuiCmd.NoCommand);
-  return State
-end;
+  Cmd.Set(Tui.TuiCmd.NoCommand);
+  return State;
+end function;
 
 begin
-  mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 4));
+  mutable var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(24, 4));
   App.RunIterations(0, UpdateDashboard, ViewDashboard, 0, 0);
-  var Snapshot: TuiSurfaceSnapshot := App.SurfaceSnapshot();
-  AssertEquals('A', Snapshot.CellAt(0, 0).Glyph);
+  var Snapshot: Tui.TuiSurfaceSnapshot := App.SurfaceSnapshot();
+  Test.AssertEquals('A', Snapshot.CellAt(0, 0).Glyph);
   case Snapshot.CellAt(0, 0).ConcreteStyle of
-    Some(Style):
-    begin
-      AssertEquals(2, Style.Foreground.Green);
-      AssertEquals(5, Style.Background.Green)
-    end;
-    None:
-    begin
-      panic('expected concrete cell-grid style')
-    end
-  end;
+    when Some(Style):
+      begin
+        Test.AssertEquals(2, Style.Foreground.Green);
+        Test.AssertEquals(5, Style.Background.Green);
+      end;
+    when None:
+      begin
+        panic('expected concrete cell-grid style');
+      end;
+  end case;
 
-  AssertTrue(Snapshot.CellAt(1, 0).Role = TuiStyleRole.Accent);
-  AssertTrue(Snapshot.CellAt(0, 1).Role = TuiStyleRole.Rule);
-  AssertTrue(Snapshot.CellAt(7, 2).Role = TuiStyleRole.GaugeFill);
-  App.Close()
-end.
+  Test.AssertTrue(Snapshot.CellAt(1, 0).Role = Tui.TuiStyleRole.Accent);
+  Test.AssertTrue(Snapshot.CellAt(0, 1).Role = Tui.TuiStyleRole.Rule);
+  Test.AssertTrue(Snapshot.CellAt(7, 2).Role = Tui.TuiStyleRole.GaugeFill);
+  App.Close();
+end program;

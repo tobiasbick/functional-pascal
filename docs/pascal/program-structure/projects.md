@@ -192,10 +192,13 @@ include = ["src/**/*.fpas"]
 
 ```pascal
 program MyApp;
-uses MyApp.Math, Std.Console;
+
+uses MyApp.Math as Math;
+uses Std.Console as Console;
+
 begin
-  WriteLn(Add(3, 4));
-end.
+  Console.WriteLn(Math.Add(3, 4));
+end program;
 ```
 
 `src/math.fpas`:
@@ -205,8 +208,10 @@ unit MyApp.Math;
 
 public function Add(A: integer; B: integer): integer;
 begin
-  return A + B
-end;
+  return A + B;
+end function;
+end unit;
+
 ```
 
 ## Example: program with a library dependency
@@ -245,8 +250,10 @@ unit Acme.Math;
 
 public function Add(A: integer; B: integer): integer;
 begin
-  return A + B
-end;
+  return A + B;
+end function;
+end unit;
+
 ```
 
 `apps/portal/portal.fpasprj`:
@@ -270,10 +277,13 @@ include = ["src/**/*.fpas"]
 
 ```pascal
 program Portal;
-uses Acme.Math, Std.Console;
+
+uses Acme.Math as Math;
+uses Std.Console as Console;
+
 begin
-  WriteLn(Add(3, 4));
-end.
+  Console.WriteLn(Math.Add(3, 4));
+end program;
 ```
 
 A library outside the monorepo uses the same `[dependencies].projects` field with an absolute path to its `.fpasprj` file.

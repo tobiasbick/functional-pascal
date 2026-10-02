@@ -9,41 +9,39 @@ mod wait_any;
 #[test]
 fn task_spawn_with_arguments_keeps_loop_branch_addresses_aligned() {
     assert_succeeds(
-        "\
-program RegisterTaskArgumentLoop;
-uses Std.Arrays, Std.Tasks;
+        r#"program RegisterTaskArgumentLoop;
+uses Std.Arrays as Arrays; uses Std.Tasks as Tasks2;
 function Worker(Value: integer): integer;
 begin
-  return Value + 1
-end;
+  return Value + 1;
+end function;
 begin
   mutable var Tasks: array of task := [];
   for Index: integer := 1 to 8 do
   begin
-    Push(Tasks, go Worker(Index))
-  end;
-  WaitAll(Tasks);
-  if Length(Tasks) <> 8 then panic('task loop count mismatch')
-end.",
+    Arrays.Push(Tasks, go Worker(Index));
+  end; end for;
+  Tasks2.WaitAll(Tasks);
+  if Arrays.Length(Tasks) <> 8 then panic('task loop count mismatch'); end if;
+end program;"#,
     );
 }
 
 #[test]
 fn retained_task_spawn_and_wait_execute() {
     let execution = assert_succeeds(
-        "\
-program RegisterTasks;
-uses Std.Console, Std.Tasks;
+        r#"program RegisterTasks;
+uses Std.Console as Console; uses Std.Tasks as Tasks;
 
 function Add(A: integer; B: integer): integer;
 begin
-  return A + B
-end;
+  return A + B;
+end function;
 
 begin
   var T: task := go Add(20, 22);
-  Std.Console.WriteLn(Std.Tasks.Wait(T))
-end.",
+  Console.WriteLn(Tasks.Wait(T));
+end program;"#,
     );
     assert_eq!(execution.value, fpas_bytecode::Value::Unit);
 }
@@ -51,66 +49,63 @@ end.",
 #[test]
 fn detached_task_executes_on_register_pool() {
     assert_succeeds(
-        "\
-program RegisterDetached;
-uses Std.Console;
+        r#"program RegisterDetached;
+uses Std.Console as Console;
 
 procedure Work();
 begin
-  Std.Console.WriteLn('worker')
-end;
+  Console.WriteLn('worker');
+end procedure;
 
 begin
-  go Work()
-end.",
+  go Work();
+end program;"#,
     );
 }
 
 #[test]
 fn timeslice_preserves_nested_frames_and_live_aggregate_registers() {
     assert_succeeds(
-        "\
-program RegisterTaskFrames;
-uses Std.Tasks;
+        r#"program RegisterTaskFrames;
+uses Std.Tasks as Tasks;
 
 function Burn(Count: integer): integer;
 begin
   mutable var I: integer := 0;
   while I < Count do
-    I := I + 1;
-  return I
-end;
+    I := I + 1; end while;
+  return I;
+end function;
 
 function Work(): integer;
 begin
   var Values: array of integer := [40, 2];
-  return Burn(700) - 700 + Values[0] + Values[1]
-end;
+  return Burn(700) - 700 + Values[0] + Values[1];
+end function;
 
 begin
   var T: task := go Work();
-  if Std.Tasks.Wait(T) <> 42 then panic('task state was not restored')
-end.",
+  if Tasks.Wait(T) <> 42 then panic('task state was not restored'); end if;
+end program;"#,
     );
 }
 
 #[test]
 fn cooperative_sleep_releases_register_pool_worker() {
     assert_succeeds(
-        "\
-program RegisterTaskSleep;
-uses Std.Tasks, Std.Time;
+        r#"program RegisterTaskSleep;
+uses Std.Tasks as Tasks; uses Std.Time as Time;
 
 function Work(Value: integer): integer;
 begin
-  Std.Time.Sleep(1);
-  return Value
-end;
+  Time.Sleep(1);
+  return Value;
+end function;
 
 begin
   var A: task := go Work(42);
-  Std.Tasks.Wait(A)
-end.",
+  Tasks.Wait(A);
+end program;"#,
     );
 }
 
@@ -120,42 +115,7 @@ fn cancellation_token_interrupts_network_accept_end_to_end() {
     let port = reservation.local_addr().expect("reserved address").port();
     drop(reservation);
     let source = format!(
-        "\
-program CancellableAccept;
-
-uses Std.Net, Std.Tasks, Std.Time;
-
-function WaitForCancellation(
-  ListenerValue: Std.Net.Listener;
-  Token: Std.Tasks.CancellationToken
-): string;
-begin
-  case Std.Net.AcceptWithCancellation(ListenerValue, Token) of
-    Ok(Connection):
-    begin
-      Std.Net.Close(Connection);
-      return 'accepted'
-    end;
-    Error(Message): return Message
-  end
-end;
-
-begin
-  case Std.Net.Listen('127.0.0.1', {port}) of
-    Ok(ListenerValue):
-    begin
-      var Source: Std.Tasks.CancellationSource := Std.Tasks.CreateCancellationSource();
-      var Token: Std.Tasks.CancellationToken := Std.Tasks.GetCancellationToken(Source);
-      var Waiting: task := go WaitForCancellation(ListenerValue, Token);
-      Std.Time.Sleep(50);
-      if not Std.Tasks.Cancel(Source) then panic('first cancellation did not change state');
-      if Std.Tasks.Wait(Waiting) <> 'Network accept cancelled' then
-        panic('accept did not report cancellation');
-      Std.Net.CloseListener(ListenerValue)
-    end;
-    Error(Message): panic(Message)
-  end
-end."
+        "program CancellableAccept;\n\nuses Std.Net as Net; uses Std.Tasks as Tasks; uses Std.Time as Time;\n\nfunction WaitForCancellation(\n  ListenerValue: Net.Listener;\n  Token: Tasks.CancellationToken\n): string;\nbegin\n  case Net.AcceptWithCancellation(ListenerValue, Token) of\n    when Ok(Connection):\n    begin\n      Net.Close(Connection);\n      return 'accepted';\n    end;\n    when Error(Message): return Message;\n  end case;\nend function;\n\nbegin\n  case Net.Listen('127.0.0.1', {port}) of\n    when Ok(ListenerValue):\n    begin\n      var Source: Tasks.CancellationSource := Tasks.CreateCancellationSource();\n      var Token: Tasks.CancellationToken := Tasks.GetCancellationToken(Source);\n      var Waiting: task := go WaitForCancellation(ListenerValue, Token);\n      Time.Sleep(50);\n      if not Tasks.Cancel(Source) then panic('first cancellation did not change state'); end if;\n      if Tasks.Wait(Waiting) <> 'Network accept cancelled' then\n        panic('accept did not report cancellation'); end if;\n      Net.CloseListener(ListenerValue);\n    end;\n    when Error(Message): panic(Message);\n  end case;\nend program;"
     );
 
     assert_succeeds(&source);
@@ -164,30 +124,28 @@ end."
 #[test]
 fn wait_all_keeps_register_task_results_available() {
     assert_succeeds(
-        "\
-program RegisterWaitAll;
-uses Std.Tasks;
+        r#"program RegisterWaitAll;
+uses Std.Tasks as Tasks;
 
 function Work(Value: integer): integer;
 begin
-  return Value
-end;
+  return Value;
+end function;
 
 begin
   var A: task := go Work(20);
   var B: task := go Work(22);
-  Std.Tasks.WaitAll([A, B]);
-  Std.Tasks.Wait(A);
-  Std.Tasks.Wait(B)
-end.",
+  Tasks.WaitAll([A, B]);
+  Tasks.Wait(A);
+  Tasks.Wait(B);
+end program;"#,
     );
 }
 
 #[test]
 fn mutable_capture_cannot_cross_register_task_boundary() {
-    let source = "\
-program RegisterTaskBound;
-uses Std.Tasks;
+    let source = r#"program RegisterTaskBound;
+uses Std.Tasks as Tasks;
 
 function Make(): function(): integer;
 begin
@@ -195,15 +153,15 @@ begin
   return function(): integer
   begin
     Value := Value + 1;
-    return Value
-  end
-end;
+    return Value;
+  end function;
+end function;
 
 begin
   var Work: function(): integer := Make();
   var T: task := go Work();
-  Std.Tasks.Wait(T)
-end.";
+  Tasks.Wait(T);
+end program;"#;
     let error = run_program(source).expect_err("runtime must reject task-bound closure");
     assert!(error.message.contains("task-bound"));
 }
@@ -211,130 +169,126 @@ end.";
 #[test]
 fn bounded_channels_send_receive_close_and_drain_fifo() {
     assert_succeeds(
-        "\
-program BoundedChannels;
-uses Std.Tasks;
+        r#"program BoundedChannels;
+uses Std.Tasks as Tasks;
 
 function Produce(Messages: channel of integer): boolean;
 begin
-  case Send(Messages, 20) of
-    Ok(_): begin end;
-    Error(Message): panic(Message)
-  end;
-  case Send(Messages, 22) of
-    Ok(_): begin end;
-    Error(Message): panic(Message)
-  end;
-  return CloseChannel(Messages)
-end;
+  case Tasks.Send(Messages, 20) of
+    when Ok(_): begin null; end;
+    when Error(Message): panic(Message);
+  end case;
+  case Tasks.Send(Messages, 22) of
+    when Ok(_): begin null; end;
+    when Error(Message): panic(Message);
+  end case;
+  return Tasks.CloseChannel(Messages);
+end function;
 
 function Take(Messages: channel of integer): integer;
 begin
-  case Receive(Messages) of
-    Ok(Value): return Value;
-    Error(Message): panic(Message)
-  end
-end;
+  case Tasks.Receive(Messages) of
+    when Ok(Value): return Value;
+    when Error(Message): panic(Message);
+  end case;
+end function;
 
 begin
-  var Messages: channel of integer := CreateChannel(1);
+  var Messages: channel of integer := Tasks.CreateChannel(1);
   var Producer: task := go Produce(Messages);
-  if Take(Messages) <> 20 then panic('first channel value was not FIFO');
-  if Take(Messages) <> 22 then panic('second channel value was not FIFO');
-  if not Wait(Producer) then panic('channel close was not first');
-  case Receive(Messages) of
-    Ok(_): panic('closed channel produced an extra value');
-    Error(Message):
-      if Message <> 'Channel is closed' then panic(Message)
-  end;
-  if CloseChannel(Messages) then panic('channel close was not idempotent')
-end.",
+  if Take(Messages) <> 20 then panic('first channel value was not FIFO'); end if;
+  if Take(Messages) <> 22 then panic('second channel value was not FIFO'); end if;
+  if not Tasks.Wait(Producer) then panic('channel close was not first'); end if;
+  case Tasks.Receive(Messages) of
+    when Ok(_): panic('closed channel produced an extra value');
+    when Error(Message):
+      if Message <> 'Channel is closed' then panic(Message); end if;
+  end case;
+  if Tasks.CloseChannel(Messages) then panic('channel close was not idempotent'); end if;
+end program;"#,
     );
 }
 
 #[test]
 fn channel_creation_uses_argument_and_return_type_contexts() {
     assert_succeeds(
-        "\
-program ContextualChannels;
-uses Std.Tasks;
+        r#"program ContextualChannels;
+uses Std.Tasks as Tasks;
 
 function MakeChannel(): channel of integer;
 begin
-  return CreateChannel(1)
-end;
+  return Tasks.CreateChannel(1);
+end function;
 
 function CloseChannelArgument(Messages: channel of integer): boolean;
 begin
-  return CloseChannel(Messages)
-end;
+  return Tasks.CloseChannel(Messages);
+end function;
 
 begin
-  if not CloseChannelArgument(CreateChannel(1)) then
-    panic('direct channel argument was not typed');
+  if not CloseChannelArgument(Tasks.CreateChannel(1)) then
+    panic('direct channel argument was not typed'); end if;
   var Messages: channel of integer := MakeChannel();
-  if not CloseChannel(Messages) then panic('returned channel was not typed')
-end.",
+  if not Tasks.CloseChannel(Messages) then panic('returned channel was not typed'); end if;
+end program;"#,
     );
 }
 
 #[test]
 fn channel_non_blocking_and_timeout_operations_are_distinct() {
     assert_succeeds(
-        "\
-program ChannelWaitModes;
-uses Std.Tasks;
+        r#"program ChannelWaitModes;
+uses Std.Tasks as Tasks;
 
 begin
-  var Messages: channel of integer := CreateChannel(1);
-  case TryReceive(Messages) of
-    Ok(MaybeValue):
+  var Messages: channel of integer := Tasks.CreateChannel(1);
+  case Tasks.TryReceive(Messages) of
+    when Ok(MaybeValue):
       case MaybeValue of
-        Some(_): panic('empty channel produced a value');
-        None: begin end
-      end;
-    Error(Message): panic(Message)
-  end;
-  case TrySend(Messages, 1) of
-    Ok(Sent): if not Sent then panic('first try-send did not send');
-    Error(Message): panic(Message)
-  end;
-  case TrySend(Messages, 2) of
-    Ok(Sent): if Sent then panic('full channel accepted a value');
-    Error(Message): panic(Message)
-  end;
-  case ReceiveWithTimeout(Messages, 0) of
-    Ok(Value): if Value <> 1 then panic('timeout receive changed FIFO order');
-    Error(Message): panic(Message)
-  end;
-  case ReceiveWithTimeout(Messages, 1) of
-    Ok(_): panic('empty channel did not time out');
-    Error(Message):
-      if Message <> 'Channel receive timed out' then panic(Message)
-  end;
-  case Send(Messages, 3) of
-    Ok(_): begin end;
-    Error(Message): panic(Message)
-  end;
-  case SendWithTimeout(Messages, 4, 1) of
-    Ok(_): panic('full channel did not time out');
-    Error(Message):
-      if Message <> 'Channel send timed out' then panic(Message)
-  end
-end.",
+        when Some(_): panic('empty channel produced a value');
+        when None: begin null; end;
+      end case;
+    when Error(Message): panic(Message);
+  end case;
+  case Tasks.TrySend(Messages, 1) of
+    when Ok(Sent): if not Sent then panic('first try-send did not send'); end if;
+    when Error(Message): panic(Message);
+  end case;
+  case Tasks.TrySend(Messages, 2) of
+    when Ok(Sent): if Sent then panic('full channel accepted a value'); end if;
+    when Error(Message): panic(Message);
+  end case;
+  case Tasks.ReceiveWithTimeout(Messages, 0) of
+    when Ok(Value): if Value <> 1 then panic('timeout receive changed FIFO order'); end if;
+    when Error(Message): panic(Message);
+  end case;
+  case Tasks.ReceiveWithTimeout(Messages, 1) of
+    when Ok(_): panic('empty channel did not time out');
+    when Error(Message):
+      if Message <> 'Channel receive timed out' then panic(Message); end if;
+  end case;
+  case Tasks.Send(Messages, 3) of
+    when Ok(_): begin null; end;
+    when Error(Message): panic(Message);
+  end case;
+  case Tasks.SendWithTimeout(Messages, 4, 1) of
+    when Ok(_): panic('full channel did not time out');
+    when Error(Message):
+      if Message <> 'Channel send timed out' then panic(Message); end if;
+  end case;
+end program;"#,
     );
 }
 
 #[test]
 fn channel_timeout_rejects_negative_milliseconds() {
     let error = run_program(
-        "\
-program InvalidChannelTimeout;
-uses Std.Tasks;
+        r#"program InvalidChannelTimeout;
+uses Std.Tasks as Tasks;
 begin
-  var Messages: channel of integer := CreateChannel(1);
-  ReceiveWithTimeout(Messages, -1)
-end.",
+  var Messages: channel of integer := Tasks.CreateChannel(1);
+  Tasks.ReceiveWithTimeout(Messages, -1);
+end program;"#,
     )
     .expect_err("negative channel timeout must fail");
     assert!(error.message.contains("non-negative timeout"));
@@ -343,51 +297,50 @@ end.",
 #[test]
 fn cancellable_channel_send_and_receive_report_distinct_errors() {
     assert_succeeds(
-        "\
-program CancellableChannels;
-uses Std.Tasks, Std.Time;
+        r#"program CancellableChannels;
+uses Std.Tasks as Tasks; uses Std.Time as Time;
 
 function BlockedSend(
   Messages: channel of integer;
-  Token: CancellationToken
+  Token: Tasks.CancellationToken
 ): string;
 begin
-  case SendWithCancellation(Messages, 2, Token) of
-    Ok(_): return 'sent';
-    Error(Message): return Message
-  end
-end;
+  case Tasks.SendWithCancellation(Messages, 2, Token) of
+    when Ok(_): return 'sent';
+    when Error(Message): return Message;
+  end case;
+end function;
 
 function BlockedReceive(
   Messages: channel of integer;
-  Token: CancellationToken
+  Token: Tasks.CancellationToken
 ): string;
 begin
-  case ReceiveWithCancellation(Messages, Token) of
-    Ok(_): return 'received';
-    Error(Message): return Message
-  end
-end;
+  case Tasks.ReceiveWithCancellation(Messages, Token) of
+    when Ok(_): return 'received';
+    when Error(Message): return Message;
+  end case;
+end function;
 
 begin
-  var Full: channel of integer := CreateChannel(1);
-  case Send(Full, 1) of
-    Ok(_): begin end;
-    Error(Message): panic(Message)
-  end;
-  var SendSource: CancellationSource := CreateCancellationSource();
-  var Sending: task := go BlockedSend(Full, GetCancellationToken(SendSource));
-  Sleep(20);
-  Cancel(SendSource);
-  if Wait(Sending) <> 'Channel send was cancelled' then panic('send cancellation mismatch');
+  var Full: channel of integer := Tasks.CreateChannel(1);
+  case Tasks.Send(Full, 1) of
+    when Ok(_): begin null; end;
+    when Error(Message): panic(Message);
+  end case;
+  var SendSource: Tasks.CancellationSource := Tasks.CreateCancellationSource();
+  var Sending: task := go BlockedSend(Full, Tasks.GetCancellationToken(SendSource));
+  Time.Sleep(20);
+  Tasks.Cancel(SendSource);
+  if Tasks.Wait(Sending) <> 'Channel send was cancelled' then panic('send cancellation mismatch'); end if;
 
-  var Empty: channel of integer := CreateChannel(1);
-  var ReceiveSource: CancellationSource := CreateCancellationSource();
-  var Receiving: task := go BlockedReceive(Empty, GetCancellationToken(ReceiveSource));
-  Sleep(20);
-  Cancel(ReceiveSource);
-  if Wait(Receiving) <> 'Channel receive was cancelled' then
-    panic('receive cancellation mismatch')
-end.",
+  var Empty: channel of integer := Tasks.CreateChannel(1);
+  var ReceiveSource: Tasks.CancellationSource := Tasks.CreateCancellationSource();
+  var Receiving: task := go BlockedReceive(Empty, Tasks.GetCancellationToken(ReceiveSource));
+  Time.Sleep(20);
+  Tasks.Cancel(ReceiveSource);
+  if Tasks.Wait(Receiving) <> 'Channel receive was cancelled' then
+    panic('receive cancellation mismatch'); end if;
+end program;"#,
     );
 }

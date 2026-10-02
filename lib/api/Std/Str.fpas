@@ -11,8 +11,8 @@ unit Std.Str;
 // - `Index`: Zero-based index unless the operation documents another base.
 public function CharAt(S: string; Index: integer): string;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // Character from codepoint.
 //
@@ -20,8 +20,8 @@ end;
 // - `N`: `integer` input value used by `Chr`.
 public function Chr(N: integer): string;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // Substring test.
 //
@@ -30,8 +30,8 @@ end;
 // - `Sub`: `string` input value used by `Contains`.
 public function Contains(S: string; Sub: string): boolean;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // Remove `Len` chars.
 //
@@ -41,8 +41,8 @@ end;
 // - `Len`: Number of elements or characters to process.
 public function Delete(S: string; Index: integer; Len: integer): string;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // Suffix test.
 //
@@ -51,8 +51,8 @@ end;
 // - `Suf`: `string` input value used by `EndsWith`.
 public function EndsWith(S: string; Suf: string): boolean;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // Keep selected Unicode scalars.
 //
@@ -61,8 +61,8 @@ end;
 // - `F`: Callback invoked by the higher-order operation.
 public function Filter(S: string; F: function(C: string): boolean): string;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // Printf-style string formatting.
 //
@@ -70,8 +70,8 @@ end;
 // - `Template`: `string` input value used by `Format`.
 public function Format(Template: string): string;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // Repeated one-scalar string.
 //
@@ -80,8 +80,8 @@ end;
 // - `N`: `integer` input value used by `FromChar`.
 public function FromChar(C: string; N: integer): string;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // First index or `-1`.
 //
@@ -90,8 +90,8 @@ end;
 // - `Sub`: `string` input value used by `IndexOf`.
 public function IndexOf(S: string; Sub: string): integer;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // Insert `Sub` at index.
 //
@@ -101,8 +101,8 @@ end;
 // - `Sub`: `string` input value used by `Insert`.
 public function Insert(S: string; Index: integer; Sub: string): string;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // Parses as number?.
 //
@@ -110,8 +110,8 @@ end;
 // - `S`: UTF-8 text processed by the operation.
 public function IsNumeric(S: string): boolean;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // Join with delimiter.
 //
@@ -120,8 +120,8 @@ end;
 // - `Delim`: Delimiter used to split or join text.
 public function Join(Parts: array of string; Delim: string): string;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // Last index or `-1`.
 //
@@ -130,8 +130,8 @@ end;
 // - `Sub`: `string` input value used by `LastIndexOf`.
 public function LastIndexOf(S: string; Sub: string): integer;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // Character count.
 //
@@ -139,8 +139,8 @@ end;
 // - `S`: UTF-8 text processed by the operation.
 public function Length(S: string): integer;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // Transform each Unicode scalar into one scalar.
 //
@@ -149,8 +149,8 @@ end;
 // - `F`: Callback invoked by the higher-order operation.
 public function Map(S: string; F: function(C: string): string): string;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // Codepoint of one-scalar string.
 //
@@ -158,8 +158,8 @@ end;
 // - `C`: `string` input value used by `Ord`.
 public function Ord(C: string): integer;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // Center-pad to `Width`.
 //
@@ -169,8 +169,8 @@ end;
 // - `PadChar`: `string` input value used by `PadCenter`.
 public function PadCenter(S: string; Width: integer; PadChar: string): string;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // Left-pad to `Width`.
 //
@@ -180,8 +180,8 @@ end;
 // - `PadChar`: `string` input value used by `PadLeft`.
 public function PadLeft(S: string; Width: integer; PadChar: string): string;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // Right-pad to `Width`.
 //
@@ -191,8 +191,8 @@ end;
 // - `PadChar`: `string` input value used by `PadRight`.
 public function PadRight(S: string; Width: integer; PadChar: string): string;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // Fold scalars left to right.
 //
@@ -202,8 +202,8 @@ end;
 // - `F`: Callback invoked by the higher-order operation.
 public function Reduce(S: string; Init: U; F: function(Acc: U; C: string): U): U;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // Repeat `S`; `Count <= 0` returns empty string.
 //
@@ -212,8 +212,8 @@ end;
 // - `N`: `integer` input value used by `RepeatStr`.
 public function RepeatStr(S: string; N: integer): string;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // Replace all.
 //
@@ -223,8 +223,8 @@ end;
 // - `New`: Replacement text.
 public function Replace(S: string; Old: string; New: string): string;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // Reversed copy.
 //
@@ -232,8 +232,8 @@ end;
 // - `S`: UTF-8 text processed by the operation.
 public function Reverse(S: string): string;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // Replace with one-scalar string.
 //
@@ -243,8 +243,8 @@ end;
 // - `C`: `string` input value used by `SetCharAt`.
 public function SetCharAt(S: string; Index: integer; C: string): string;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // Split segments.
 //
@@ -253,8 +253,8 @@ end;
 // - `Delim`: Delimiter used to split or join text.
 public function Split(S: string; Delim: string): array of string;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // Prefix test.
 //
@@ -263,8 +263,8 @@ end;
 // - `Pre`: `string` input value used by `StartsWith`.
 public function StartsWith(S: string; Pre: string): boolean;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // Slice by index.
 //
@@ -274,8 +274,8 @@ end;
 // - `Len`: Number of elements or characters to process.
 public function Substring(S: string; Start: integer; Len: integer): string;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // Lowercased copy.
 //
@@ -283,8 +283,8 @@ end;
 // - `S`: UTF-8 text processed by the operation.
 public function ToLower(S: string): string;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // Uppercased copy.
 //
@@ -292,8 +292,8 @@ end;
 // - `S`: UTF-8 text processed by the operation.
 public function ToUpper(S: string): string;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // Trim whitespace.
 //
@@ -301,8 +301,8 @@ end;
 // - `S`: UTF-8 text processed by the operation.
 public function Trim(S: string): string;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // Strip leading whitespace.
 //
@@ -310,8 +310,8 @@ end;
 // - `S`: UTF-8 text processed by the operation.
 public function TrimLeft(S: string): string;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // Strip trailing whitespace.
 //
@@ -319,5 +319,7 @@ end;
 // - `S`: UTF-8 text processed by the operation.
 public function TrimRight(S: string): string;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
+
+end unit;

@@ -1,11 +1,13 @@
 program T;
 
-uses Std.Console, Std.Str, Std.Arrays;
+uses Std.Console as Console;
+uses Std.Str as Str;
+uses Std.Arrays as Arrays;
 
 begin
-  var Parts: array of string := Split('a,b,c', ',');
-  WriteLn(Std.Arrays.Length(Parts));
-  WriteLn(Parts[0]);
-  WriteLn(Parts[1]);
-  WriteLn(Parts[2])
-end.
+  var Parts: array of string := Str.Split('a,b,c', ',');
+  Console.WriteLn(Arrays.Length(Parts));
+  Console.WriteLn(Parts[0]);
+  Console.WriteLn(Parts[1]);
+  Console.WriteLn(Parts[2]);
+end program;

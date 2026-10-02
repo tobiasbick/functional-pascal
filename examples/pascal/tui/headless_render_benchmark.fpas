@@ -4,141 +4,155 @@
 
 program TuiHeadlessRenderBenchmark;
 
-uses Std.Args, Std.Arrays, Std.Console, Std.Conv, Std.Time, Std.Tui;
+uses Std.Args as Args;
+uses Std.Arrays as Arrays;
+uses Std.Console as Console;
+uses Std.Conv as Conv;
+uses Std.Time as Time;
+uses Std.Tui as Tui;
 
-const
-  WarmupIterations: integer := 100;
-  DeltaMillis: integer := 16;
+const WarmupIterations: integer := 100;
+const DeltaMillis: integer := 16;
 
-function UpdateBenchmark(State: integer; Msg: TuiMsg; Cmd: TuiCmdOutput): integer;
+function UpdateBenchmark(State: integer; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): integer;
 begin
-  Cmd.Set(TuiCmd.NoCommand);
+  Cmd.Set(Tui.TuiCmd.NoCommand);
   case Msg of
-    TuiMsg.Tick(Delta):
-    begin
-      return State + 1
-    end;
-    TuiMsg.Key(Key):
-    begin
-      return State
-    end;
-    TuiMsg.Pointer(Pointer):
-    begin
-      return State
-    end;
-    TuiMsg.Resize(Size):
-    begin
-      return State
-    end;
-    TuiMsg.FocusChanged(Previous, Current):
-    begin
-      return State
-    end;
-    TuiMsg.Action(Source, Action):
-    begin
-      return State
-    end;
-    TuiMsg.TextChanged(Source, Action, Text, Caret):
-    begin
-      return State
-    end;
-    TuiMsg.TextAreaChanged(Source, Action, Text, Caret, TextAreaOffset):
-    begin
-      return State
-    end;
-    TuiMsg.CheckChanged(Source, Action, Checked):
-    begin
-      return State
-    end;
-    TuiMsg.SelectionChanged(Source, Action, Selected):
-    begin
-      return State
-    end;
-    TuiMsg.ScrollChanged(Source, Action, Offset):
-    begin
-      return State
-    end;
-    TuiMsg.MenuChanged(MenuSource, MenuAction, MenuState):
-    begin
-      return State
-    end;
-    TuiMsg.QuitRequested:
-    begin
-      return State
-    end
+    when Tui.TuiMsg.Tick(Delta):
+      begin
+        return State + 1;
+      end;
+    when Tui.TuiMsg.Key(Key):
+      begin
+        return State;
+      end;
+    when Tui.TuiMsg.Pointer(Pointer):
+      begin
+        return State;
+      end;
+    when Tui.TuiMsg.Resize(Size):
+      begin
+        return State;
+      end;
+    when Tui.TuiMsg.FocusChanged(Previous, Current):
+      begin
+        return State;
+      end;
+    when Tui.TuiMsg.Action(Source, Action):
+      begin
+        return State;
+      end;
+    when Tui.TuiMsg.TextChanged(Source, Action, Text, Caret):
+      begin
+        return State;
+      end;
+    when Tui.TuiMsg.TextAreaChanged(Source, Action, Text, Caret, TextAreaOffset):
+      begin
+        return State;
+      end;
+    when Tui.TuiMsg.CheckChanged(Source, Action, Checked):
+      begin
+        return State;
+      end;
+    when Tui.TuiMsg.SelectionChanged(Source, Action, Selected):
+      begin
+        return State;
+      end;
+    when Tui.TuiMsg.ScrollChanged(Source, Action, Offset):
+      begin
+        return State;
+      end;
+    when Tui.TuiMsg.MenuChanged(MenuSource, MenuAction, MenuState):
+      begin
+        return State;
+      end;
+    when Tui.TuiMsg.QuitRequested:
+      begin
+        return State;
+      end;
     else
-    begin
-      return State
-    end
-  end
-end;
+      begin
+        return State;
+      end;
+  end case;
+end function;
 
-function ViewBenchmark(State: integer): TuiElement;
+function ViewBenchmark(State: integer): Tui.TuiElement;
 begin
-  mutable var Children: array of TuiElement := [
-                                                 TuiElementBuilders.MakeLabel('frame ' + IntToStr(State))
-                                               ];
+  mutable var Children: array of Tui.TuiElement := [
+                                                     Tui.TuiElementBuilders.MakeLabel('frame ' + Conv.IntToStr(State))
+                                                   ];
   for Index: integer := 2 to 32 do
-  begin
-    Std.Arrays.Push(Children, TuiElementBuilders.MakeLabel('row'))
-  end;
-  var SharedAction: TuiAction := TuiAction.Create(100);
+    begin
+      Arrays.Push(Children, Tui.TuiElementBuilders.MakeLabel('row'));
+    end;
+  end for;
+  var SharedAction: Tui.TuiAction := Tui.TuiAction.Create(100);
   for Index: integer := 1 to 8 do
-  begin
-    Std.Arrays.Push(Children, TuiElementBuilders.MakeButton(TuiControlId.Create(Index), 'action', SharedAction))
-  end;
+    begin
+      Arrays.Push(Children, Tui.TuiElementBuilders.MakeButton(Tui.TuiControlId.Create(Index), 'action', SharedAction));
+    end;
+  end for;
 
-  return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(1)), [
-                                                                        TuiElementBuilders.MakePanel('Headless benchmark', [TuiElementBuilders.MakeColumn(Children)])
-                                                                      ])
-end;
+  return Tui.TuiElementBuilders.MakeDesktop(Some(Tui.TuiControlId.Create(1)), [
+                                                                                Tui.TuiElementBuilders.MakePanel('Headless benchmark', [Tui.TuiElementBuilders.MakeColumn(Children)])
+                                                                              ]);
+end function;
 
 begin
-  if (ParamCount() < 1) or (ParamCount() > 2) then
-  begin
-    panic('usage: headless_render_benchmark.fpas -- ITERATIONS [MAX_MILLIS]')
-  end;
-  var Iterations: integer := StrToInt(ParamStr(0));
-  if Iterations < 1 then
-  begin
-    panic('ITERATIONS must be positive')
-  end;
-  mutable var MaxMillis: integer := 0;
-  if ParamCount() = 2 then
-  begin
-    MaxMillis := StrToInt(ParamStr(1));
-    if MaxMillis < 1 then
+  if (Args.ParamCount() < 1) or (Args.ParamCount() > 2) then
     begin
-      panic('MAX_MILLIS must be positive')
-    end
-  end;
-  mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(120, 40));
+      panic('usage: headless_render_benchmark.fpas -- ITERATIONS [MAX_MILLIS]');
+    end;
+  end if;
+  var Iterations: integer := Conv.StrToInt(Args.ParamStr(0));
+  if Iterations < 1 then
+    begin
+      panic('ITERATIONS must be positive');
+    end;
+  end if;
+  mutable var MaxMillis: integer := 0;
+  if Args.ParamCount() = 2 then
+    begin
+      MaxMillis := Conv.StrToInt(Args.ParamStr(1));
+      if MaxMillis < 1 then
+        begin
+          panic('MAX_MILLIS must be positive');
+        end;
+      end if;
+    end;
+  end if;
+  mutable var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(120, 40));
   mutable var Model: integer := App.RunIterations(0, UpdateBenchmark, ViewBenchmark, WarmupIterations, DeltaMillis);
-  var Started: integer := MonotonicMillis();
+  var Started: integer := Time.MonotonicMillis();
   Model := App.RunIterations(Model, UpdateBenchmark, ViewBenchmark, Iterations, DeltaMillis);
-  var Elapsed: integer := ElapsedMillis(Started);
+  var Elapsed: integer := Time.ElapsedMillis(Started);
   App.Close();
   mutable var FramesPerSecond: integer := 0;
   if Elapsed > 0 then
-  begin
-    FramesPerSecond := (Iterations * 1000) div Elapsed
-  end;
+    begin
+      FramesPerSecond := (Iterations * 1000) div Elapsed;
+    end;
+  end if;
 
-  WriteLn((('iterations: ' + IntToStr(Iterations)) + ', warm-up: ') + IntToStr(WarmupIterations));
-  WriteLn(('elapsed: ' + IntToStr(Elapsed)) + ' ms');
+  Console.WriteLn((('iterations: ' + Conv.IntToStr(Iterations)) + ', warm-up: ') +
+                  Conv.IntToStr(WarmupIterations));
+  Console.WriteLn(('elapsed: ' + Conv.IntToStr(Elapsed)) + ' ms');
   if Elapsed > 0 then
-  begin
-    WriteLn(('throughput: ' + IntToStr(FramesPerSecond)) + ' frames/s')
-  end
+    begin
+      Console.WriteLn(('throughput: ' + Conv.IntToStr(FramesPerSecond)) + ' frames/s');
+    end;
   else
-  begin
-    WriteLn('throughput: unavailable (elapsed time is 0 ms)')
-  end;
+    begin
+      Console.WriteLn('throughput: unavailable (elapsed time is 0 ms)');
+    end;
+  end if;
 
-  WriteLn('final state: ' + IntToStr(Model));
+  Console.WriteLn('final state: ' + Conv.IntToStr(Model));
   if (MaxMillis > 0) and (Elapsed > MaxMillis) then
-  begin
-    panic(((('TUI benchmark regression: ' + IntToStr(Elapsed)) + ' ms exceeds limit ') + IntToStr(MaxMillis)) +
-          ' ms')
-  end
-end.
+    begin
+      panic(((('TUI benchmark regression: ' + Conv.IntToStr(Elapsed)) + ' ms exceeds limit ') + Conv.IntToStr(MaxMillis)) +
+            ' ms');
+    end;
+  end if;
+end program;

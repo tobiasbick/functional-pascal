@@ -4,13 +4,9 @@
 complete state and supplies it again on every `View`:
 
 ```pascal
-TuiElementBuilders.MakeTextArea(
-  Id,
-  Text,
-  Caret,
-  Offset,
-  ChangeAction
-)
+uses Std.Tui as Tui;
+
+Tui.TuiElementBuilders.MakeTextArea(Id, Text, Caret, Offset, ChangeAction);
 ```
 
 `Id` and `ChangeAction` must be positive typed identities. `Caret` is a
@@ -23,21 +19,27 @@ zero-based `Std.Str` character index in the inclusive range
 Keyboard and pointer routing propose the entire next value:
 
 ```pascal
-TuiMsg.TextAreaChanged(Source, Action, Text, Caret, Offset)
+uses Std.Tui as Tui;
+
+Tui.TuiMsg.TextAreaChanged(Source, Action, Text, Caret, Offset);
 ```
 
 Use `TuiMsgTextAreaChanged` to construct the same message explicitly. An
 application normally accepts a routed proposal in `Update`:
 
 ```pascal
-TuiMsg.TextAreaChanged(Source, Action, Text, Caret, Offset):
+uses Std.Tui as Tui;
+
+case Message of
+  when Tui.TuiMsg.TextAreaChanged(Source, Action, Text, Caret, Offset):
 begin
   return record
     Text := Text;
     Caret := Caret;
     Offset := Offset;
-  end
-end
+  end record;
+end;
+end case;
 ```
 
 The host stores no editable text, caret, or scroll state between frames.

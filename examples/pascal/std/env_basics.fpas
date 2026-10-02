@@ -2,18 +2,20 @@
 
 program EnvBasics;
 
-uses Std.Console, Std.Env, Std.Options;
+uses Std.Console as Console;
+uses Std.Env as Env;
+uses Std.Options as Options;
 
 begin
-  WriteLn('PATH set: ', Exists('PATH'));
-  case Get('PATH') of
-    Some(_):
-    begin
-      WriteLn('PATH lookup: some')
-    end;
-    None:
-    begin
-      WriteLn('PATH lookup: none')
-    end
-  end
-end.
+  Console.WriteLn('PATH set: ', Env.Exists('PATH'));
+  case Env.Get('PATH') of
+    when Some(_):
+      begin
+        Console.WriteLn('PATH lookup: some');
+      end;
+    when None:
+      begin
+        Console.WriteLn('PATH lookup: none');
+      end;
+  end case;
+end program;

@@ -1,291 +1,314 @@
 unit Std.Tui.Runtime.Routing.Focus;
 
-uses
-  Std.Arrays, Std.Tui.Chrome.StatusItem, Std.Tui.Elements.Element, Std.Tui.Ids.ControlId,
-  Std.Tui.Layout.Frame;
+uses Std.Arrays as Arrays;
+uses Std.Tui.Chrome.StatusItem as StatusItem;
+uses Std.Tui.Elements.Element as Element;
+uses Std.Tui.Ids.ControlId as ControlId;
+uses Std.Tui.Layout.Frame as Frame2;
 
 function TuiRouteFrameMatchesNode(
-  Frame: TuiArrangedFrame;
-  Node: TuiElement;
+  Frame: Frame2.TuiArrangedFrame;
+  Node: Element.TuiElement;
   Index: integer;
   ParentIndex: integer
 ): integer;
 begin
   if Frame.EntryAt(Index).ParentIndex <> ParentIndex then
-  begin
-    panic('Tui routing received a frame for a different element tree')
-  end;
+    begin
+      panic('Tui routing received a frame for a different element tree');
+    end;
+  end if;
   mutable var Next: integer := Index + 1;
-  mutable var Descendants: array of TuiElement := [];
+  mutable var Descendants: array of Element.TuiElement := [];
   case Node of
-    TuiElement.Scroll(Id, Offset, ChangeAction, ScrollChildren):
-    begin
-      Descendants := ScrollChildren
-    end;
-    TuiElement.Row(RowChildren, Spacing):
-    begin
-      Descendants := RowChildren
-    end;
-    TuiElement.Column(ColumnChildren, Spacing):
-    begin
-      Descendants := ColumnChildren
-    end;
-    TuiElement.Layout(Settings, LayoutChildren):
-    begin
-      Descendants := LayoutChildren
-    end;
-    TuiElement.Panel(Title, PanelChildren):
-    begin
-      Descendants := PanelChildren
-    end;
-    TuiElement.Overlay(Title, OverlayChildren):
-    begin
-      Descendants := OverlayChildren
-    end;
-    TuiElement.Desktop(Focused, DesktopChildren):
-    begin
-      Descendants := DesktopChildren
-    end
+    when Element.TuiElement.Scroll(Id, Offset, ChangeAction, ScrollChildren):
+      begin
+        Descendants := ScrollChildren;
+      end;
+    when Element.TuiElement.Row(RowChildren, Spacing):
+      begin
+        Descendants := RowChildren;
+      end;
+    when Element.TuiElement.Column(ColumnChildren, Spacing):
+      begin
+        Descendants := ColumnChildren;
+      end;
+    when Element.TuiElement.Layout(Settings, LayoutChildren):
+      begin
+        Descendants := LayoutChildren;
+      end;
+    when Element.TuiElement.Panel(Title, PanelChildren):
+      begin
+        Descendants := PanelChildren;
+      end;
+    when Element.TuiElement.Overlay(Title, OverlayChildren):
+      begin
+        Descendants := OverlayChildren;
+      end;
+    when Element.TuiElement.Desktop(Focused, DesktopChildren):
+      begin
+        Descendants := DesktopChildren;
+      end;
     else
+      begin
+        null;
+      end;
+  end case;
+
+  for ChildIndex: integer := 0 to Arrays.Length(Descendants) - 1 do
     begin
-    end
-  end;
+      Next := TuiRouteFrameMatchesNode(Frame, Descendants[ChildIndex], Next, Index);
+    end;
+  end for;
 
-  for ChildIndex: integer := 0 to Std.Arrays.Length(Descendants) - 1 do
-  begin
-    Next := TuiRouteFrameMatchesNode(Frame, Descendants[ChildIndex], Next, Index)
-  end;
-
-  return Next
-end;
+  return Next;
+end function;
 
 // Panics when the arranged frame does not match the previous painted tree.
 //
 // Parameters:
 // - `Frame`: Arranged frame containing element geometry.
 // - `Root`: Root of the element tree.
-public procedure TuiRouteRequireMatchingFrame(Frame: TuiArrangedFrame; Root: TuiElement);
+public procedure TuiRouteRequireMatchingFrame(Frame: Frame2.TuiArrangedFrame; Root: Element.TuiElement);
 begin
   if Frame.Count() = 0 then
-  begin
-    panic('Tui routing requires a successfully painted frame')
-  end;
+    begin
+      panic('Tui routing requires a successfully painted frame');
+    end;
+  end if;
 
   if TuiRouteFrameMatchesNode(Frame, Root, 0, -1) <> Frame.Count() then
-  begin
-    panic('Tui routing received a frame for a different element tree')
-  end
-end;
+    begin
+      panic('Tui routing received a frame for a different element tree');
+    end;
+  end if;
+end procedure;
 
 // Returns focusable control ids in the active modal or full tree order.
 //
 // Parameters:
 // - `Node`: Element or menu node processed by the operation.
-public function TuiFocusableControls(Node: TuiElement): array of TuiControlId;
+public function TuiFocusableControls(Node: Element.TuiElement): array of ControlId.TuiControlId;
 begin
-  mutable var Descendants: array of TuiElement := [];
+  mutable var Descendants: array of Element.TuiElement := [];
   case Node of
-    TuiElement.Button(Button):
-    begin
-      if Button.Enabled then
+    when Element.TuiElement.Button(Button):
       begin
-        return [Button.Id]
-      end
-      else
-      begin
-        return []
-      end
-    end;
-    TuiElement.Input(Input):
-    begin
-      return [Input.Id]
-    end;
-    TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction):
-    begin
-      return [Id]
-    end;
-    TuiElement.CheckBox(Id, Text, Checked, ChangeAction):
-    begin
-      return [Id]
-    end;
-    TuiElement.List(Id, Items, Selected, ChangeAction):
-    begin
-      return [Id]
-    end;
-    TuiElement.Menu(Id, Nodes, State, ChangeAction):
-    begin
-      return [Id]
-    end;
-    TuiElement.Scroll(Id, Offset, ChangeAction, Children):
-    begin
-      mutable var Controls: array of TuiControlId := [Id];
-      for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
-      begin
-        Controls := Std.Arrays.Concat(Controls, TuiFocusableControls(Children[Index]))
-      end;
-
-      return Controls
-    end;
-    TuiElement.MenuBar(Items):
-    begin
-      mutable var Controls: array of TuiControlId := [];
-      for Index: integer := 0 to Std.Arrays.Length(Items) - 1 do
-      begin
-        if Items[Index].Enabled then
-        begin
-          Controls := Std.Arrays.Concat(Controls, [Items[Index].Id])
-        end
-      end;
-
-      return Controls
-    end;
-    TuiElement.StatusLine(Items):
-    begin
-      mutable var Controls: array of TuiControlId := [];
-      for Index: integer := 0 to Std.Arrays.Length(Items) - 1 do
-      begin
-        case Items[Index] of
-          TuiStatusItem.Command(Id, Text, Action, Enabled):
+        if Button.Enabled then
           begin
-            if Enabled then
-            begin
-              Controls := Std.Arrays.Concat(Controls, [Id])
-            end
-          end
-          else
+            return [Button.Id];
+          end;
+        else
           begin
-          end
-        end
+            return [];
+          end;
+        end if;
       end;
-
-      return Controls
-    end;
-    TuiElement.Row(RowChildren, Spacing):
-    begin
-      Descendants := RowChildren
-    end;
-    TuiElement.Column(ColumnChildren, Spacing):
-    begin
-      Descendants := ColumnChildren
-    end;
-    TuiElement.Layout(Settings, LayoutChildren):
-    begin
-      Descendants := LayoutChildren
-    end;
-    TuiElement.Panel(Title, PanelChildren):
-    begin
-      Descendants := PanelChildren
-    end;
-    TuiElement.Overlay(Title, OverlayChildren):
-    begin
-      Descendants := OverlayChildren
-    end;
-    TuiElement.Desktop(Focused, Children):
-    begin
-      mutable var LastOverlay: integer := -1;
-      for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
+    when Element.TuiElement.Input(Input):
       begin
-        case Children[Index] of
-          TuiElement.Overlay(Title, OverlayChildren):
-          begin
-            LastOverlay := Index
-          end
-          else
-          begin
-          end
-        end
+        return [Input.Id];
       end;
-
-      if LastOverlay >= 0 then
+    when Element.TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction):
       begin
-        return TuiFocusableControls(Children[LastOverlay])
-      end
-      else
+        return [Id];
+      end;
+    when Element.TuiElement.CheckBox(Id, Text, Checked, ChangeAction):
       begin
-        mutable var Controls: array of TuiControlId := [];
-        for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
-        begin
-          Controls := Std.Arrays.Concat(Controls, TuiFocusableControls(Children[Index]))
-        end;
+        return [Id];
+      end;
+    when Element.TuiElement.List(Id, Items, Selected, ChangeAction):
+      begin
+        return [Id];
+      end;
+    when Element.TuiElement.Menu(Id, Nodes, State, ChangeAction):
+      begin
+        return [Id];
+      end;
+    when Element.TuiElement.Scroll(Id, Offset, ChangeAction, Children):
+      begin
+        mutable var Controls: array of ControlId.TuiControlId := [Id];
+        for Index: integer := 0 to Arrays.Length(Children) - 1 do
+          begin
+            Controls := Arrays.Concat(Controls, TuiFocusableControls(Children[Index]));
+          end;
+        end for;
 
-        return Controls
-      end
-    end
+        return Controls;
+      end;
+    when Element.TuiElement.MenuBar(Items):
+      begin
+        mutable var Controls: array of ControlId.TuiControlId := [];
+        for Index: integer := 0 to Arrays.Length(Items) - 1 do
+          begin
+            if Items[Index].Enabled then
+              begin
+                Controls := Arrays.Concat(Controls, [Items[Index].Id]);
+              end;
+            end if;
+          end;
+        end for;
+
+        return Controls;
+      end;
+    when Element.TuiElement.StatusLine(Items):
+      begin
+        mutable var Controls: array of ControlId.TuiControlId := [];
+        for Index: integer := 0 to Arrays.Length(Items) - 1 do
+          begin
+            case Items[Index] of
+              when StatusItem.TuiStatusItem.Command(Id, Text, Action, Enabled):
+                begin
+                  if Enabled then
+                    begin
+                      Controls := Arrays.Concat(Controls, [Id]);
+                    end;
+                  end if;
+                end;
+              else
+                begin
+                  null;
+                end;
+            end case;
+          end;
+        end for;
+
+        return Controls;
+      end;
+    when Element.TuiElement.Row(RowChildren, Spacing):
+      begin
+        Descendants := RowChildren;
+      end;
+    when Element.TuiElement.Column(ColumnChildren, Spacing):
+      begin
+        Descendants := ColumnChildren;
+      end;
+    when Element.TuiElement.Layout(Settings, LayoutChildren):
+      begin
+        Descendants := LayoutChildren;
+      end;
+    when Element.TuiElement.Panel(Title, PanelChildren):
+      begin
+        Descendants := PanelChildren;
+      end;
+    when Element.TuiElement.Overlay(Title, OverlayChildren):
+      begin
+        Descendants := OverlayChildren;
+      end;
+    when Element.TuiElement.Desktop(Focused, Children):
+      begin
+        mutable var LastOverlay: integer := -1;
+        for Index: integer := 0 to Arrays.Length(Children) - 1 do
+          begin
+            case Children[Index] of
+              when Element.TuiElement.Overlay(Title, OverlayChildren):
+                begin
+                  LastOverlay := Index;
+                end;
+              else
+                begin
+                  null;
+                end;
+            end case;
+          end;
+        end for;
+
+        if LastOverlay >= 0 then
+          begin
+            return TuiFocusableControls(Children[LastOverlay]);
+          end;
+        else
+          begin
+            mutable var Controls: array of ControlId.TuiControlId := [];
+            for Index: integer := 0 to Arrays.Length(Children) - 1 do
+              begin
+                Controls := Arrays.Concat(Controls, TuiFocusableControls(Children[Index]));
+              end;
+            end for;
+
+            return Controls;
+          end;
+        end if;
+      end;
     else
+      begin
+        return [];
+      end;
+  end case;
+  mutable var Controls: array of ControlId.TuiControlId := [];
+  for Index: integer := 0 to Arrays.Length(Descendants) - 1 do
     begin
-      return []
-    end
-  end;
-  mutable var Controls: array of TuiControlId := [];
-  for Index: integer := 0 to Std.Arrays.Length(Descendants) - 1 do
-  begin
-    Controls := Std.Arrays.Concat(Controls, TuiFocusableControls(Descendants[Index]))
-  end;
+      Controls := Arrays.Concat(Controls, TuiFocusableControls(Descendants[Index]));
+    end;
+  end for;
 
-  return Controls
-end;
+  return Controls;
+end function;
 
 // Reads the desktop focus id, or `None` when the root is not a desktop.
 //
 // Parameters:
 // - `Root`: Root of the element tree.
-public function TuiRootFocus(Root: TuiElement): option of TuiControlId;
+public function TuiRootFocus(Root: Element.TuiElement): option of ControlId.TuiControlId;
 begin
   case Root of
-    TuiElement.Desktop(Focused, Children):
-    begin
-      return Focused
-    end
+    when Element.TuiElement.Desktop(Focused, Children):
+      begin
+        return Focused;
+      end;
     else
-    begin
-      return None
-    end
-  end
-end;
+      begin
+        return None;
+      end;
+  end case;
+end function;
 
 // Returns the focusable-list index of a control id, or `-1` when absent.
 //
 // Parameters:
 // - `Controls`: Ordered control identifiers to search.
 // - `Id`: Identifier assigned to the created or selected value.
-public function TuiControlIndex(Controls: array of TuiControlId; Id: TuiControlId): integer;
+public function TuiControlIndex(Controls: array of ControlId.TuiControlId; Id: ControlId.TuiControlId): integer;
 begin
-  for Index: integer := 0 to Std.Arrays.Length(Controls) - 1 do
-  begin
-    if Controls[Index].Value = Id.Value then
+  for Index: integer := 0 to Arrays.Length(Controls) - 1 do
     begin
-      return Index
-    end
-  end;
+      if Controls[Index].Value = Id.Value then
+        begin
+          return Index;
+        end;
+      end if;
+    end;
+  end for;
 
-  return -1
-end;
+  return -1;
+end function;
 
 // Returns whether two control ids refer to the same identity.
 //
 // Parameters:
 // - `Left`: Left input value or edge.
 // - `Right`: Right input value or edge.
-public function TuiSameControlId(Left: TuiControlId; Right: TuiControlId): boolean;
+public function TuiSameControlId(Left: ControlId.TuiControlId; Right: ControlId.TuiControlId): boolean;
 begin
-  return Left.Value = Right.Value
-end;
+  return Left.Value = Right.Value;
+end function;
 
 // Returns whether the option id matches the target control.
 //
 // Parameters:
 // - `Focused`: Whether the control currently owns focus.
 // - `Target`: Target control identifier.
-public function TuiFocusMatches(Focused: option of TuiControlId; Target: TuiControlId): boolean;
+public function TuiFocusMatches(Focused: option of ControlId.TuiControlId; Target: ControlId.TuiControlId): boolean;
 begin
   case Focused of
-    Some(Id):
-    begin
-      return TuiSameControlId(Id, Target)
-    end;
-    None:
-    begin
-      return false
-    end
-  end
-end;
+    when Some(Id):
+      begin
+        return TuiSameControlId(Id, Target);
+      end;
+    when None:
+      begin
+        return false;
+      end;
+  end case;
+end function;
+
+end unit;

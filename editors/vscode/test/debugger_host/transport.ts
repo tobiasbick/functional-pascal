@@ -22,11 +22,11 @@ export async function verifyDebuggerTransport(
   const lines = [
     "program DebuggerTransport;",
     "",
-    "uses Std.Console;",
+    " uses Std.Console as Console;",
     "",
     "begin",
-    "  WriteLn('hello-raw')",
-    "end.",
+    "  Console.WriteLn('hello-raw');",
+    "end program;",
     ""
   ];
   const sourcePath = await writeSource(workspaceRoot, "transport", lines);

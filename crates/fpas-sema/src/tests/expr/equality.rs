@@ -4,36 +4,38 @@ use super::{check_errors, check_ok};
 use fpas_diagnostics::codes::SEMA_TYPE_MISMATCH;
 
 const TYPES: &str = "program T;
-type
-  Point = record X: integer; Y: real; end;
-  Named = record Point: Point; Name: string; Tag: option of Point; end;
-  Shape = enum Circle(Center: Point; Radius: integer); Dot; end;
-  Bag = record Items: array of integer; end;
-  Holder = enum Full(Values: array of integer); Empty; end;
-  Callback = record Run: function(): integer; end;
-  Tree = enum Leaf(Value: integer); Node(Left: option of Tree; Right: option of Tree); end;
+type Point = record X: integer; Y: real; end record;
+type Named = record Point: Point; Name: string; Tag: option of Point; end record;
+type Shape = enum Circle(Center: Point; Radius: integer); Dot; end enum;
+type Bag = record Items: array of integer; end record;
+type Holder = enum Full(Values: array of integer); Empty; end enum;
+type Callback = record Run: function(): integer; end record;
+type Tree = enum Leaf(Value: integer); Node(Left: option of Tree; Right: option of Tree); end enum;
 ";
 
 fn errors_for(declarations: &str, condition: &str) -> Vec<crate::SemaError> {
     check_errors(&format!(
         "{TYPES}{declarations}
 begin
-  var Same: boolean := {condition}
-end."
+  var Same: boolean := {condition};
+end program;"
     ))
 }
 
 #[test]
 fn records_and_payload_enums_with_comparable_fields_support_equality() {
     for (declarations, condition) in [
-        ("var A: Point := record X := 1; Y := 2.0; end;", "A = A"),
         (
-            "var A: Named := record Point := record X := 1; Y := 2.0; end; Name := 'a'; Tag := None; end;",
+            "var A: Point := record X := 1; Y := 2.0; end record;",
+            "A = A",
+        ),
+        (
+            "var A: Named := record Point := record X := 1; Y := 2.0; end record; Name := 'a'; Tag := None; end record;",
             "A <> A",
         ),
         (
             "var S: Shape := Shape.Dot;",
-            "S = Shape.Circle(record X := 1; Y := 1.0; end, 2)",
+            "S = Shape.Circle(record X := 1; Y := 1.0; end record, 2)",
         ),
         (
             "var T: Tree := Tree.Leaf(1);",
@@ -43,8 +45,8 @@ fn records_and_payload_enums_with_comparable_fields_support_equality() {
         check_ok(&format!(
             "{TYPES}{declarations}
 begin
-  var Same: boolean := {condition}
-end."
+  var Same: boolean := {condition};
+end program;"
         ));
     }
 }
@@ -52,10 +54,10 @@ end."
 #[test]
 fn aggregates_with_non_comparable_fields_reject_equality() {
     for (declarations, condition) in [
-        ("var B: Bag := record Items := []; end;", "B = B"),
+        ("var B: Bag := record Items := []; end record;", "B = B"),
         ("var H: Holder := Holder.Empty;", "H = Holder.Empty"),
         (
-            "var C: Callback := record Run := function(): integer begin return 1 end; end;",
+            "var C: Callback := record Run := function(): integer begin return 1; end function; end record;",
             "C <> C",
         ),
     ] {
@@ -72,10 +74,13 @@ fn aggregates_with_non_comparable_fields_reject_equality() {
 #[test]
 fn records_of_different_types_and_ordering_stay_rejected() {
     let different = errors_for(
-        "var A: Point := record X := 1; Y := 2.0; end; var S: Shape := Shape.Dot;",
+        "var A: Point := record X := 1; Y := 2.0; end record; var S: Shape := Shape.Dot;",
         "A = S",
     );
     assert_eq!(different.len(), 1, "{different:#?}");
-    let ordered = errors_for("var A: Point := record X := 1; Y := 2.0; end;", "A < A");
+    let ordered = errors_for(
+        "var A: Point := record X := 1; Y := 2.0; end record;",
+        "A < A",
+    );
     assert_eq!(ordered.len(), 1, "{ordered:#?}");
 }

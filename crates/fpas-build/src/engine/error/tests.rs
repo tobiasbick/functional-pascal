@@ -31,7 +31,7 @@ fn an_unknown_or_foreign_source_is_not_assigned_the_current_file() {
 
 #[test]
 fn linking_preserves_the_native_error_and_error_chain() {
-    let (program, diagnostics) = fpas_parser::parse("program Demo; begin end.");
+    let (program, diagnostics) = fpas_parser::parse(r#"program Demo; begin null; end program;"#);
     assert!(diagnostics.is_empty());
     let object = fpas_compiler::compile_program_object_with_support(&program, &[], &[])
         .expect("valid object");

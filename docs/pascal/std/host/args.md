@@ -4,12 +4,16 @@ Process argument access for hosted FPAS programs. This page is the full API for 
 
 ```pascal
 program Example;
-uses Std.Console, Std.Args;
+
+uses Std.Console as Console;
+uses Std.Args as Args;
+
 begin
-  WriteLn(ParamCount());
-  if ParamCount() > 0 then
-    WriteLn(ParamStr(0))
-end.
+  Console.WriteLn(Args.ParamCount());
+  if Args.ParamCount() > 0 then
+    Console.WriteLn(Args.ParamStr(0));
+  end if;
+end program;
 ```
 
 Run program arguments after the CLI separator:
@@ -21,13 +25,13 @@ fpas run app.fpas -- input.txt verbose
 
 ## Importing and names
 
-After `uses Std.Args;` use **`ParamCount`**, **`ParamStr`**, or the fully qualified forms **`Std.Args.ParamCount`**, **`Std.Args.ParamStr`**.
+Import with `uses Std.Args as Args;`. Access every exported member through `Args`, for example `Args.ParamStr(...)`. Imports open no short names.
 
 ---
 
 ## Quick reference
 
-Requires `uses Std.Args;`.
+Requires `uses Std.Args as Args;`.
 
 | Kind | Name | Notes |
 |------|------|--------|
@@ -43,7 +47,10 @@ The input file name and the `fpas` executable name are not included. Only values
 Returns the number of program arguments supplied after the CLI separator.
 
 ```pascal
-WriteLn(ParamCount())
+uses Std.Console as Console;
+uses Std.Args as Args;
+
+Console.WriteLn(Args.ParamCount());
 ```
 
 ---
@@ -55,8 +62,12 @@ Returns the argument at 0-based `Index`.
 Runtime error if `Index` is negative or greater than or equal to `ParamCount()`.
 
 ```pascal
-if ParamCount() > 0 then
-  WriteLn(ParamStr(0))
+uses Std.Console as Console;
+uses Std.Args as Args;
+
+if Args.ParamCount() > 0 then
+  Console.WriteLn(Args.ParamStr(0));
+end if;
 ```
 
 ---

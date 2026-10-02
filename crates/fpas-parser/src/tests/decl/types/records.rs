@@ -2,7 +2,9 @@ use super::*;
 
 #[test]
 fn record_type() {
-    let p = parse_ok("program T; type Point = record X: real; Y: real; end; begin end.");
+    let p = parse_ok(
+        r#"program T;  type Point = record X: real; Y: real; end record; begin null; end program;"#,
+    );
     match &p.declarations[0] {
         Decl::TypeDef(td) => {
             assert_eq!(td.name, "Point");
@@ -22,12 +24,9 @@ fn record_type() {
 #[test]
 fn unit_record_fields_preserve_per_member_visibility() {
     let unit = parse_unit_ok(
-        "unit Demo.Types; \
-         type Counter = record \
-           Value: integer; \
-           public Step: integer; \
-           LabelText: string; \
-         end;",
+        r#"unit Demo.Types;  type Counter = record Value: integer; public Step: integer; LabelText: string; end record;
+end unit;
+"#,
     );
     let Decl::TypeDef(type_def) = &unit.declarations[0] else {
         panic!("expected TypeDef");

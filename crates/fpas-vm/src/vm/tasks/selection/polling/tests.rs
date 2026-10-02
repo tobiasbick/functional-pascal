@@ -5,7 +5,7 @@ use crate::vm::tasks::TaskScheduler;
 use fpas_bytecode::{FunctionId, SharedFunction};
 
 fn worker() -> Worker {
-    let (program, errors) = fpas_parser::parse("program T; begin end.");
+    let (program, errors) = fpas_parser::parse(r#"program T; begin null; end program;"#);
     assert!(errors.is_empty());
     let mut worker = Worker::new(Arc::new(fpas_compiler::compile(&program).unwrap())).unwrap();
     worker.scheduler = Some(Arc::new(TaskScheduler::new()));
@@ -191,10 +191,10 @@ fn callback_panic_keeps_the_committed_send_and_losing_captures_are_already_relea
     use std::sync::Mutex;
     let (program, errors) = fpas_parser::parse(
         r#"program CallbackFailure;
-uses Std.Tasks;
+uses Std.Tasks as Tasks;
 procedure FailSelected(Outcome: result of boolean, string);
-begin panic('selected callback failed') end;
-begin FailSelected(Ok(true)) end."#,
+begin panic('selected callback failed'); end procedure;
+begin FailSelected(Ok(true)); end program;"#,
     );
     assert!(errors.is_empty(), "{errors:?}");
     let executable = fpas_compiler::compile(&program).unwrap();

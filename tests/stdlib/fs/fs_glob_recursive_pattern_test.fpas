@@ -1,65 +1,72 @@
 program FsGlobRecursivePatternTest;
 
-uses Std.Arrays, Std.Fs, Std.Test;
+uses Std.Arrays as Arrays;
+uses Std.Fs as Fs;
+uses Std.Test as Test;
 
 procedure EnsureDir(Path: string);
 begin
-  if Exists(Path) then
-  begin
-    if not IsDir(Path) then
+  if Fs.Exists(Path) then
     begin
-      Fail(('Expected directory: ') + Path)
-    end;
+      if not Fs.IsDir(Path) then
+        begin
+          Test.Fail(('Expected directory: ') + Path);
+        end;
+      end if;
 
-    return
-  end;
-
-  case CreateDir(Path) of
-    Ok(_):
-    begin
+      return;
     end;
-    Error(Message):
-    begin
-      Fail(Message)
-    end
-  end
-end;
+  end if;
+
+  case Fs.CreateDir(Path) of
+    when Ok(_):
+      begin
+        null;
+      end;
+    when Error(Message):
+      begin
+        Test.Fail(Message);
+      end;
+  end case;
+end procedure;
 
 begin
-  var Root: string := ScratchDir() + '/glob-tree';
+  var Root: string := Test.ScratchDir() + '/glob-tree';
   EnsureDir(Root);
   EnsureDir(Root + '/src');
   EnsureDir(Root + '/src/ui');
-  case WriteText(Root + '/src/main.fpas', '') of
-    Ok(_):
-    begin
-    end;
-    Error(Message):
-    begin
-      Fail(Message)
-    end
-  end;
+  case Fs.WriteText(Root + '/src/main.fpas', '') of
+    when Ok(_):
+      begin
+        null;
+      end;
+    when Error(Message):
+      begin
+        Test.Fail(Message);
+      end;
+  end case;
 
-  case WriteText(Root + '/src/ui/menu.fpas', '') of
-    Ok(_):
-    begin
-    end;
-    Error(Message):
-    begin
-      Fail(Message)
-    end
-  end;
+  case Fs.WriteText(Root + '/src/ui/menu.fpas', '') of
+    when Ok(_):
+      begin
+        null;
+      end;
+    when Error(Message):
+      begin
+        Test.Fail(Message);
+      end;
+  end case;
 
-  case Glob(Root + '/src/**/*.fpas') of
-    Ok(Paths):
-    begin
-      AssertEquals(2, Std.Arrays.Length(Paths));
-      AssertEquals(Root + '/src/main.fpas', Paths[0]);
-      AssertEquals(Root + '/src/ui/menu.fpas', Paths[1])
-    end;
-    Error(Message):
-    begin
-      Fail(Message)
-    end
-  end
-end.
+  case Fs.Glob(Root + '/src/**/*.fpas') of
+    when Ok(Paths):
+      begin
+        Test.AssertEquals(2, Arrays.Length(Paths));
+        Test.AssertEquals(Root + '/src/main.fpas', Paths[0]);
+        Test.AssertEquals(Root + '/src/ui/menu.fpas', Paths[1]);
+      end;
+    when Error(Message):
+      begin
+        Test.Fail(Message);
+      end;
+  end case;
+end program;

@@ -1,55 +1,58 @@
 unit Std.Tui.Cells.Cell;
 
-uses Std.Tui.Cells.Glyph, Std.Tui.Cells.Style, Std.Tui.Cells.StyleRole;
+uses Std.Tui.Cells.Glyph as Glyph2;
+uses Std.Tui.Cells.Style as Style2;
+uses Std.Tui.Cells.StyleRole as StyleRole;
 
-public type
-  // One validated renderable grapheme with a semantic or concrete style.
-  TuiCell = record
-    // Single renderable grapheme.
-    public Glyph: string;
-    // Semantic style role of the cell.
-    public Role: TuiStyleRole;
-    // Optional concrete style overriding semantic role resolution.
-    public ConcreteStyle: option of TuiStyle;
-    // Display width of the glyph in terminal cells.
-    public Columns: integer;
+// One validated renderable grapheme with a semantic or concrete style.
+public type TuiCell = record
+  // Single renderable grapheme.
+  public Glyph: string;
+  // Semantic style role of the cell.
+  public Role: StyleRole.TuiStyleRole;
+  // Optional concrete style overriding semantic role resolution.
+  public ConcreteStyle: option of Style2.TuiStyle;
+  // Display width of the glyph in terminal cells.
+  public Columns: integer;
 
-    // Creates a theme-resolved cell; the glyph must be one non-zero-width grapheme cluster.
-    //
-    // Parameters:
-    // - `Glyph`: Single renderable grapheme.
-    // - `Role`: Semantic style role used by the operation.
-    public static function Create(Glyph: string; Role: TuiStyleRole): TuiCell;
-    begin
-      return record
-        Glyph := Glyph;
-        Role := Role;
-        ConcreteStyle := None;
-        Columns := TuiGlyphWidth(Glyph);
-      end
-    end;
+  // Creates a theme-resolved cell; the glyph must be one non-zero-width grapheme cluster.
+  //
+  // Parameters:
+  // - `Glyph`: Single renderable grapheme.
+  // - `Role`: Semantic style role used by the operation.
+  public static function Create(Glyph: string; Role: StyleRole.TuiStyleRole): TuiCell;
+  begin
+    return record
+      Glyph := Glyph;
+      Role := Role;
+      ConcreteStyle := None;
+      Columns := Glyph2.TuiGlyphWidth(Glyph);
+    end record;
+  end function;
 
-    // Creates a cell with a concrete style that bypasses theme lookup.
-    //
-    // Parameters:
-    // - `Glyph`: Single renderable grapheme.
-    // - `Style`: Concrete terminal style.
-    public static function Styled(Glyph: string; Style: TuiStyle): TuiCell;
-    begin
-      return record
-        Glyph := Glyph;
-        Role := TuiStyleRole.Normal;
-        ConcreteStyle := Some(Style);
-        Columns := TuiGlyphWidth(Glyph);
-      end
-    end;
+  // Creates a cell with a concrete style that bypasses theme lookup.
+  //
+  // Parameters:
+  // - `Glyph`: Single renderable grapheme.
+  // - `Style`: Concrete terminal style.
+  public static function Styled(Glyph: string; Style: Style2.TuiStyle): TuiCell;
+  begin
+    return record
+      Glyph := Glyph;
+      Role := StyleRole.TuiStyleRole.Normal;
+      ConcreteStyle := Some(Style);
+      Columns := Glyph2.TuiGlyphWidth(Glyph);
+    end record;
+  end function;
 
-    // Returns the terminal-column width of the cell glyph (`1` or `2`).
-    //
-    // Parameters:
-    // - `Self`: Receiver value operated on by the method.
-    public function Width(Self: TuiCell): integer;
-    begin
-      return Self.Columns
-    end;
-  end;
+  // Returns the terminal-column width of the cell glyph (`1` or `2`).
+  //
+  // Parameters:
+  // - `Self`: Receiver value operated on by the method.
+  public function Width(Self: TuiCell): integer;
+  begin
+    return Self.Columns;
+  end function;
+end record;
+
+end unit;

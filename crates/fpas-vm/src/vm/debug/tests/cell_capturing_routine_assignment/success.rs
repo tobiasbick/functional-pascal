@@ -178,7 +178,7 @@ fn uninitialized_local_and_mutable_parameter_registers_accept_task_owned_routine
     );
 
     let mut apply = DebugSession::new(compile_fixture()).expect("parameter dest");
-    let frame = run_to(&mut apply, "var ParamStop: integer := 0");
+    let frame = run_to(&mut apply, "var ParamStop: integer := 0;");
     apply
         .set_expression(&root("Current"), &name("AddParam"), Some(frame))
         .expect("mutable parameter");

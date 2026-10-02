@@ -1,80 +1,86 @@
 // Verifies that the interactive host delivers requested ticks after their delay and that a later request replaces a pending one.
 program TuiInteractiveTickTest;
 
-uses Std.Results, Std.Tasks, Std.Test, Std.Time, Std.Tui;
+uses Std.Results as Results;
+uses Std.Tasks as Tasks;
+uses Std.Test as Test;
+uses Std.Time as Time;
+uses Std.Tui as Tui;
 
-type
-  TickModel = record
-    Inbox: channel of integer;
-    Ticks: integer;
-    ShortestTick: integer;
-    Started: integer;
-    Replaced: boolean;
-  end;
+type TickModel = record
+  Inbox: channel of integer;
+  Ticks: integer;
+  ShortestTick: integer;
+  Started: integer;
+  Replaced: boolean;
+end record;
 
-function Update(State: TickModel; Msg: TuiMsg; Cmd: TuiCmdOutput): TickModel;
+function Update(State: TickModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): TickModel;
 begin
   mutable var Next: TickModel := State;
   case Msg of
-    TuiMsg.Started:
-    begin
-      // A far request that the background message below replaces.
-      Cmd.RequestTick(600000);
-      Next.Started := MonotonicMillis();
-      var Inbox: channel of integer := State.Inbox;
-      Cmd.StartBackground(1, function(Token: CancellationToken): result of boolean, string begin
-        return SendWithCancellation(Inbox, 1, Token)
-      end)
-    end;
-    TuiMsg.Tick(Elapsed):
-    begin
-      Next.Ticks := State.Ticks + 1;
-      if (State.ShortestTick < 0) or (Elapsed < State.ShortestTick) then
+    when Tui.TuiMsg.Started:
       begin
-        Next.ShortestTick := Elapsed
+        // A far request that the background message below replaces.
+        Cmd.RequestTick(600000);
+        Next.Started := Time.MonotonicMillis();
+        var Inbox: channel of integer := State.Inbox;
+        Cmd.StartBackground(1, function(Token: Tasks.CancellationToken): result of boolean, string begin
+          return Tasks.SendWithCancellation(Inbox, 1, Token);
+        end function);
       end;
+    when Tui.TuiMsg.Tick(Elapsed):
+      begin
+        Next.Ticks := State.Ticks + 1;
+        if (State.ShortestTick < 0) or (Elapsed < State.ShortestTick) then
+          begin
+            Next.ShortestTick := Elapsed;
+          end;
+        end if;
 
-      if Next.Ticks < 3 then
-      begin
-        Cmd.RequestTick(20)
-      end
-      else
-      begin
-        Cmd.Set(TuiCmd.Quit)
-      end
-    end
+        if Next.Ticks < 3 then
+          begin
+            Cmd.RequestTick(20);
+          end;
+        else
+          begin
+            Cmd.Set(Tui.TuiCmd.Quit);
+          end;
+        end if;
+      end;
     else
-    begin
-    end
-  end;
+      begin
+        null;
+      end;
+  end case;
 
-  return Next
-end;
+  return Next;
+end function;
 
-function UpdateMessage(State: TickModel; Message: integer; Cmd: TuiCmdOutput): TickModel;
+function UpdateMessage(State: TickModel; Message: integer; Cmd: Tui.TuiCmdOutput): TickModel;
 begin
   Cmd.RequestTick(20);
-  return State with Replaced := true; end
-end;
+  return State with Replaced := true; end with;
+end function;
 
-function View(State: TickModel): TuiElement;
+function View(State: TickModel): Tui.TuiElement;
 begin
-  return TuiElementBuilders.MakeLabel('ticks')
-end;
+  return Tui.TuiElementBuilders.MakeLabel('ticks');
+end function;
 
 begin
-  var Inbox: channel of integer := CreateChannel(1);
-  var Final: TickModel := TuiApplication.RunWithBackground(record
+  var Inbox: channel of integer := Tasks.CreateChannel(1);
+  var Final: TickModel := Tui.TuiApplication.RunWithBackground(record
     Inbox := Inbox;
     Ticks := 0;
     ShortestTick := -1;
     Started := 0;
     Replaced := false;
-  end, Inbox, Update, UpdateMessage, View);
-  AssertTrue(Final.Replaced);
-  AssertEquals(3, Final.Ticks);
+  end record, Inbox, Update, UpdateMessage, View);
+  Test.AssertTrue(Final.Replaced);
+  Test.AssertEquals(3, Final.Ticks);
   // Every tick waited at least its requested delay.
-  AssertTrue(Final.ShortestTick >= 20);
+  Test.AssertTrue(Final.ShortestTick >= 20);
   // The replaced 600 s request never delayed the run.
-  AssertTrue(ElapsedMillis(Final.Started) < 60000)
-end.
+  Test.AssertTrue(Time.ElapsedMillis(Final.Started) < 60000);
+end program;

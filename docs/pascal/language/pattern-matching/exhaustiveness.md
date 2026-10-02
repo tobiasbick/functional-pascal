@@ -5,38 +5,43 @@ The compiler checks that `case` statements on enum, `Result`, and `Option` types
 ## Enum exhaustiveness
 
 ```pascal
-type
-  Light = enum
-    Red;
-    Yellow;
-    Green;
-  end;
+type Light = enum
+  Red;
+  Yellow;
+  Green;
+end enum;
 
 // ERROR: non-exhaustive match — missing Light.Yellow
-case L of
-  Light.Red:   WriteLn('Stop');
-  Light.Green: WriteLn('Go');
-end;
+  case L of
+    when Light.Red:
+      Console.WriteLn('Stop');
+    when Light.Green:
+      Console.WriteLn('Go');
+  end case;
 ```
 
 Fix by covering all variants:
 
 ```pascal
 case L of
-  Light.Red:    WriteLn('Stop');
-  Light.Yellow: WriteLn('Caution');
-  Light.Green:  WriteLn('Go');
-end;
+  when Light.Red:
+    Console.WriteLn('Stop');
+  when Light.Yellow:
+    Console.WriteLn('Caution');
+  when Light.Green:
+    Console.WriteLn('Go');
+end case;
 ```
 
 Or by adding `else`:
 
 ```pascal
 case L of
-  Light.Red: WriteLn('Stop');
-else
-  WriteLn('Proceed with caution');
-end;
+  when Light.Red:
+    Console.WriteLn('Stop');
+  else
+    Console.WriteLn('Proceed with caution');
+end case;
 ```
 
 ## Result and Option exhaustiveness
@@ -46,14 +51,17 @@ end;
 ```pascal
 // ERROR: non-exhaustive — missing Error
 case R of
-  Ok(V): WriteLn(IntToStr(V));
-end;
+  when Ok(V):
+    Console.WriteLn(Conv.IntToStr(V));
+end case;
 
 // OK: both variants covered
 case R of
-  Ok(V):  WriteLn(IntToStr(V));
-  Error(E): WriteLn('Error: ' + E);
-end;
+  when Ok(V):
+    Console.WriteLn(Conv.IntToStr(V));
+  when Error(E):
+    Console.WriteLn('Error: ' + E);
+end case;
 ```
 
 ## Rules
@@ -61,7 +69,7 @@ end;
 - Enum types: every variant name must appear on an **unguarded** arm, or `else` must be present. Data-carrying variants count by name (`Shape.Circle`, not by field values).
 - `Result`: both `Ok` and `Error` must appear on unguarded arms, or `else` must be present.
 - `Option`: both `Some` and `None` must appear on unguarded arms, or `else` must be present.
-- Scalar types (`integer`, `string`, `string`, `boolean`): `else` is recommended but not required.
+- Scalar types (`integer`, `string`, `boolean`): `else` is recommended but not required.
 - Guard clauses do not count toward exhaustiveness — `Shape.Circle(R) if R > 0` does not cover variant `Circle`; add an unguarded `Shape.Circle(R)` arm or `else`.
 
 ## See also

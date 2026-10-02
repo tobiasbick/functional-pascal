@@ -4,22 +4,25 @@ Explicit conversions between text and numbers (and simple numeric widens). Use t
 
 ```pascal
 program Example;
-uses Std.Console, Std.Conv;
+
+uses Std.Console as Console;
+uses Std.Conv as Conv;
+
 begin
-  WriteLn(IntToStr(42))
-end.
+  Console.WriteLn(Conv.IntToStr(42));
+end program;
 ```
 
 
 ## Importing and names
 
-After `uses Std.Conv;` you may write **`IntToStr`**, **`StrToInt`**, … or **`Std.Conv.IntToStr`**, etc.
+Import with `uses Std.Conv as Conv;`. Access every exported member through `Conv`, for example `Conv.IntToStr(...)`. Imports open no short names.
 
 ---
 
 ## Quick reference
 
-Requires `uses Std.Conv;`.
+Requires `uses Std.Conv as Conv;`.
 
 | Kind | Name | Notes |
 |------|------|--------|
@@ -40,7 +43,10 @@ Requires `uses Std.Conv;`.
 Decimal string representation of `N`.
 
 ```pascal
-WriteLn(IntToStr(42))
+uses Std.Console as Console;
+uses Std.Conv as Conv;
+
+Console.WriteLn(Conv.IntToStr(42));
 ```
 
 ---
@@ -50,7 +56,10 @@ WriteLn(IntToStr(42))
 Parses an integer. Surrounding **whitespace is ignored**. **Runtime error** if the text is not a valid integer.
 
 ```pascal
-WriteLn(StrToInt('  -7  '))
+uses Std.Console as Console;
+uses Std.Conv as Conv;
+
+Console.WriteLn(Conv.StrToInt('  -7  '));
 ```
 
 ---
@@ -60,8 +69,11 @@ WriteLn(StrToInt('  -7  '))
 Converts integer to `real` (exact for integers in the representable range).
 
 ```pascal
-var X: real := IntToReal(3);
-WriteLn(X)
+uses Std.Console as Console;
+uses Std.Conv as Conv;
+
+var X: real := Conv.IntToReal(3);
+Console.WriteLn(X);
 ```
 
 ---
@@ -71,7 +83,10 @@ WriteLn(X)
 Returns a string representation of `R` (format follows the runtime).
 
 ```pascal
-WriteLn(RealToStr(1.5))
+uses Std.Console as Console;
+uses Std.Conv as Conv;
+
+Console.WriteLn(Conv.RealToStr(1.5));
 ```
 
 ---
@@ -81,7 +96,10 @@ WriteLn(RealToStr(1.5))
 Parses a floating-point value. Surrounding **whitespace is ignored**. **Runtime error** if invalid.
 
 ```pascal
-WriteLn(StrToReal('2.25'))
+uses Std.Console as Console;
+uses Std.Conv as Conv;
+
+Console.WriteLn(Conv.StrToReal('2.25'));
 ```
 
 ---
@@ -91,8 +109,11 @@ WriteLn(StrToReal('2.25'))
 Returns `'true'` or `'false'`.
 
 ```pascal
-WriteLn(BoolToStr(true))   // true
-WriteLn(BoolToStr(false))  // false
+uses Std.Console as Console;
+uses Std.Conv as Conv;
+
+Console.WriteLn(Conv.BoolToStr(true));   // true
+Console.WriteLn(Conv.BoolToStr(false));  // false
 ```
 
 ---
@@ -102,8 +123,11 @@ WriteLn(BoolToStr(false))  // false
 Parses `'true'` or `'false'` (case-insensitive). **Runtime error** if `S` is neither.
 
 ```pascal
-WriteLn(StrToBool('True'));    // true
-WriteLn(StrToBool('FALSE'))    // false
+uses Std.Console as Console;
+uses Std.Conv as Conv;
+
+Console.WriteLn(Conv.StrToBool('True')); // true
+Console.WriteLn(Conv.StrToBool('FALSE')); // false
 ```
 
 ---
@@ -115,8 +139,11 @@ Returns `N` as an uppercase hexadecimal string, zero-padded to at least `Digits`
 `Digits` must be at most **1_000_000**. Larger values raise a runtime error.
 
 ```pascal
-WriteLn(IntToHex(255, 2));    // FF
-WriteLn(IntToHex(255, 4))     // 00FF
+uses Std.Console as Console;
+uses Std.Conv as Conv;
+
+Console.WriteLn(Conv.IntToHex(255, 2)); // FF
+Console.WriteLn(Conv.IntToHex(255, 4)); // 00FF
 ```
 
 ---
@@ -126,9 +153,12 @@ WriteLn(IntToHex(255, 4))     // 00FF
 Parses a hexadecimal string. Accepts optional `$` or `0x` prefix. **Runtime error** if the string is not valid hex.
 
 ```pascal
-WriteLn(HexToInt('FF'));     // 255
-WriteLn(HexToInt('$FF'));    // 255
-WriteLn(HexToInt('0xFF'))    // 255
+uses Std.Console as Console;
+uses Std.Conv as Conv;
+
+Console.WriteLn(Conv.HexToInt('FF')); // 255
+Console.WriteLn(Conv.HexToInt('$FF')); // 255
+Console.WriteLn(Conv.HexToInt('0xFF')); // 255
 ```
 
 ---

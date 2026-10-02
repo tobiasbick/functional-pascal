@@ -1,141 +1,165 @@
 // Four connection workers with signal-aware shutdown and explicit process escalation.
 program ParallelTcpEchoServer;
 
-uses
-  Std.Args, Std.Conv, Std.Arrays, Std.Console, Std.Net, Std.Tasks, Std.Results, Std.Time, Std.Server;
+uses Std.Args as Args;
+uses Std.Conv as Conv;
+uses Std.Arrays as Arrays;
+uses Std.Console as Console;
+uses Std.Net as Net;
+uses Std.Tasks as Tasks;
+uses Std.Results as Results;
+uses Std.Time as Time;
+uses Std.Server as Server;
 
-function Echo(Client: Connection; Token: CancellationToken): result of boolean, string;
+function Echo(Client: Net.Connection; Token: Tasks.CancellationToken): result of boolean, string;
 begin
-  var Configured: boolean := try SetTimeout(Client, 5000);
-  while not IsCancellationRequested(Token) do
-  begin
-    var Bytes: array of integer := try ReceiveBytesWithCancellation(Client, 4096, Token);
-    if Length(Bytes) = 0 then
+  var Configured: boolean := try Net.SetTimeout(Client, 5000);
+  while not Tasks.IsCancellationRequested(Token) do
     begin
-      return Ok(true)
+      var Bytes: array of integer := try Net.ReceiveBytesWithCancellation(Client, 4096, Token);
+      if Arrays.Length(Bytes) = 0 then
+        begin
+          return Ok(true);
+        end;
+      end if;
+      mutable var Offset: integer := 0;
+      while Offset < Arrays.Length(Bytes) do
+        begin
+          var Count: integer := try Net.SendBytesWithCancellation(Client, Arrays.Slice(Bytes, Offset, Arrays.Length(Bytes) -
+                                                                                                      Offset), Token);
+          if Count <= 0 then
+            begin
+              return Error('TCP write made no progress');
+            end;
+          end if;
+
+          Offset := Offset + Count;
+        end;
+      end while;
     end;
-    mutable var Offset: integer := 0;
-    while Offset < Length(Bytes) do
-    begin
-      var Count: integer := try SendBytesWithCancellation(Client, Slice(Bytes, Offset, Length(Bytes) -
-                                                                                       Offset), Token);
-      if Count <= 0 then
-      begin
-        return Error('TCP write made no progress')
-      end;
+  end while;
 
-      Offset := Offset + Count
-    end
-  end;
-
-  return Ok(true)
-end;
+  return Ok(true);
+end function;
 
 begin
   mutable var Port: integer := 18082;
   mutable var LifetimeMillis: integer := 10000;
-  if ParamCount() > 2 then
-  begin
-    panic('usage: tcp_parallel_echo_server.fpas -- [PORT [LIFETIME_MS]]')
-  end;
+  if Args.ParamCount() > 2 then
+    begin
+      panic('usage: tcp_parallel_echo_server.fpas -- [PORT [LIFETIME_MS]]');
+    end;
+  end if;
 
-  if ParamCount() >= 1 then
-  begin
-    Port := StrToInt(ParamStr(0))
-  end;
+  if Args.ParamCount() >= 1 then
+    begin
+      Port := Conv.StrToInt(Args.ParamStr(0));
+    end;
+  end if;
 
-  if ParamCount() = 2 then
-  begin
-    LifetimeMillis := StrToInt(ParamStr(1))
-  end;
+  if Args.ParamCount() = 2 then
+    begin
+      LifetimeMillis := Conv.StrToInt(Args.ParamStr(1));
+    end;
+  end if;
 
   if (LifetimeMillis < 1) or (LifetimeMillis > 300000) then
-  begin
-    panic('LIFETIME_MS must be 1..300000')
-  end;
-  var ListenerValue: Listener := Unwrap(Listen('127.0.0.1', Port));
-  var Life: ServerLifetime := Unwrap(CreateLifetime(1000, true));
-  Unwrap(OwnListener(Life, ListenerValue));
-  Unwrap(ObserveSignals(Life));
-  var Workers: TaskGroup := GetWorkGroup(Life);
-  for Index: integer := 1 to 4 do
-  begin
-    StartTaskInGroup(Workers, function(Token: CancellationToken): result of boolean, string begin
-      while not IsCancellationRequested(Token) do
-      begin
-        case AcceptWithCancellation(ListenerValue, Token) of
-          Ok(Client):
-          begin
-            var Outcome: result of boolean, string := Echo(Client, Token);
-            // Close even on read/write failure. One failed client does not stop admission.
-            var Closed: boolean := try Close(Client);
-            case Outcome of
-              Error(Message):
-              begin
-                if not IsCancellationRequested(Token) then
-                begin
-                  WriteLn(Message)
-                end
-              end;
-              Ok(_):
-              begin
-              end
-            end
-          end;
-          Error(Message):
-          begin
-            if IsCancellationRequested(Token) then
-            begin
-              return Ok(true)
-            end;
-
-            RequestStop(Life);
-            return Error(Message)
-          end
-        end
-      end;
-
-      return Ok(true)
-    end)
-  end;
-
-  WriteLn('Parallel TCP echo ready');
-  var Started: integer := MonotonicMillis();
-  while IsReady(Life) and (ElapsedMillis(Started) < LifetimeMillis) do
-  begin
-    Sleep(10)
-  end;
-
-  RequestStop(Life);
-  mutable var Failures: array of TaskFailure := [];
-  case CloseTaskGroupWithTimeout(Workers, RemainingMillis(Life)) of
-    Ok(Reports):
     begin
-      Failures := Reports
+      panic('LIFETIME_MS must be 1..300000');
     end;
-    Error(Message):
+  end if;
+  var ListenerValue: Net.Listener := Results.Unwrap(Net.Listen('127.0.0.1', Port));
+  var Life: Server.ServerLifetime := Results.Unwrap(Server.CreateLifetime(1000, true));
+  Results.Unwrap(Server.OwnListener(Life, ListenerValue));
+  Results.Unwrap(Server.ObserveSignals(Life));
+  var Workers: Tasks.TaskGroup := Server.GetWorkGroup(Life);
+  for Index: integer := 1 to 4 do
     begin
-      WriteLn(Message);
-      // The independent host watchdog remains armed even if diagnostic output blocks.
-      panic('Server shutdown incomplete; process escalation remains armed')
-    end
-  end;
+      Tasks.StartTaskInGroup(Workers, function(Token: Tasks.CancellationToken): result of boolean, string begin
+        while not Tasks.IsCancellationRequested(Token) do
+          begin
+            case Net.AcceptWithCancellation(ListenerValue, Token) of
+              when Ok(Client):
+                begin
+                  var Outcome: result of boolean, string := Echo(Client, Token);
+                  // Close even on read/write failure. One failed client does not stop admission.
+                  var Closed: boolean := try Net.Close(Client);
+                  case Outcome of
+                    when Error(Message):
+                      begin
+                        if not Tasks.IsCancellationRequested(Token) then
+                          begin
+                            Console.WriteLn(Message);
+                          end;
+                        end if;
+                      end;
+                    when Ok(_):
+                      begin
+                        null;
+                      end;
+                  end case;
+                end;
+              when Error(Message):
+                begin
+                  if Tasks.IsCancellationRequested(Token) then
+                    begin
+                      return Ok(true);
+                    end;
+                  end if;
 
-  for Failure: TaskFailure in Failures do
-  begin
-    WriteLn(Failure.Message)
-  end;
+                  Server.RequestStop(Life);
+                  return Error(Message);
+                end;
+            end case;
+          end;
+        end while;
 
-  for Message: string in ShutdownErrors(Life) do
-  begin
-    WriteLn(Message)
-  end;
+        return Ok(true);
+      end function);
+    end;
+  end for;
 
-  Unwrap(FinishShutdown(Life));
-  if Length(Failures) <> 0 then
-  begin
-    panic('TCP worker failed')
-  end;
+  Console.WriteLn('Parallel TCP echo ready');
+  var Started: integer := Time.MonotonicMillis();
+  while Server.IsReady(Life) and (Time.ElapsedMillis(Started) < LifetimeMillis) do
+    begin
+      Time.Sleep(10);
+    end;
+  end while;
 
-  WriteLn('Parallel TCP echo stopped')
-end.
+  Server.RequestStop(Life);
+  mutable var Failures: array of Tasks.TaskFailure := [];
+  case Tasks.CloseTaskGroupWithTimeout(Workers, Server.RemainingMillis(Life)) of
+    when Ok(Reports):
+      begin
+        Failures := Reports;
+      end;
+    when Error(Message):
+      begin
+        Console.WriteLn(Message);
+        // The independent host watchdog remains armed even if diagnostic output blocks.
+        panic('Server shutdown incomplete; process escalation remains armed');
+      end;
+  end case;
+
+  for Failure: Tasks.TaskFailure in Failures do
+    begin
+      Console.WriteLn(Failure.Message);
+    end;
+  end for;
+
+  for Message: string in Server.ShutdownErrors(Life) do
+    begin
+      Console.WriteLn(Message);
+    end;
+  end for;
+
+  Results.Unwrap(Server.FinishShutdown(Life));
+  if Arrays.Length(Failures) <> 0 then
+    begin
+      panic('TCP worker failed');
+    end;
+  end if;
+
+  Console.WriteLn('Parallel TCP echo stopped');
+end program;

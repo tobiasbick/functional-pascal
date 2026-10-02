@@ -1,14 +1,17 @@
 program RecordUpdateContextTest;
 
-uses Std.Arrays, Std.Dictionaries, Std.Options, Std.Results, Std.Test;
+uses Std.Arrays as Arrays;
+uses Std.Dictionaries as Dictionaries;
+uses Std.Options as Options;
+uses Std.Results as Results;
+uses Std.Test as Test;
 
-type
-  Holder = record
-    Items: array of integer;
-    Tags: dict of string to integer;
-    MaybeItems: option of array of integer;
-    Lookup: result of dict of string to integer, string;
-  end;
+type Holder = record
+  Items: array of integer;
+  Tags: dict of string to integer;
+  MaybeItems: option of array of integer;
+  Lookup: result of dict of string to integer, string;
+end record;
 
 begin
   var Original: Holder := record
@@ -16,13 +19,13 @@ begin
     Tags := ['old': 1];
     MaybeItems := Some([3]);
     Lookup := Ok(['old': 2]);
-  end;
-  var Updated: Holder := Original with Items := []; Tags := [:]; MaybeItems := Some([]); Lookup := Ok([:]); end;
+  end record;
+  var Updated: Holder := Original with Items := []; Tags := [:]; MaybeItems := Some([]); Lookup := Ok([:]); end with;
 
-  AssertEquals(0, Std.Arrays.Length(Updated.Items));
-  AssertEquals(0, Std.Dictionaries.Length(Updated.Tags));
-  AssertEquals(0, Std.Arrays.Length(Std.Options.Unwrap(Updated.MaybeItems)));
-  AssertEquals(0, Std.Dictionaries.Length(Std.Results.Unwrap(Updated.Lookup)));
-  AssertEquals(2, Std.Arrays.Length(Original.Items));
-  AssertEquals(1, Std.Dictionaries.Length(Original.Tags))
-end.
+  Test.AssertEquals(0, Arrays.Length(Updated.Items));
+  Test.AssertEquals(0, Dictionaries.Length(Updated.Tags));
+  Test.AssertEquals(0, Arrays.Length(Options.Unwrap(Updated.MaybeItems)));
+  Test.AssertEquals(0, Dictionaries.Length(Results.Unwrap(Updated.Lookup)));
+  Test.AssertEquals(2, Arrays.Length(Original.Items));
+  Test.AssertEquals(1, Dictionaries.Length(Original.Tags));
+end program;

@@ -140,7 +140,8 @@ impl LoweringContext {
     }
 
     pub(in crate::lowering) fn is_cell_backed(&self, name: &str) -> bool {
-        self.cell_names.contains(&name.to_ascii_lowercase())
+        self.cell_names
+            .contains(&self.qualified_import_name(name).to_ascii_lowercase())
     }
 
     pub(in crate::lowering) fn mark_binding_cell(&mut self, name: &str, logical_ty: TypeId) {
@@ -182,7 +183,7 @@ impl LoweringContext {
     }
 
     pub(in crate::lowering) fn resolve_callable(&self, name: &str) -> Option<Callable> {
-        let canonical = name.to_ascii_lowercase();
+        let canonical = self.qualified_import_name(name).to_ascii_lowercase();
         if let Some(callable) = self.callables.get(&canonical) {
             return Some(callable.clone());
         }
@@ -231,102 +232,8 @@ impl LoweringContext {
             .map(|binding| binding.ty)
     }
 
-    pub(in crate::lowering) fn has_global(&self, name: &str) -> bool {
-        self.globals.contains_key(&name.to_ascii_lowercase())
-    }
-
-    pub(in crate::lowering) fn constant(&self, name: &str) -> Option<fpas_ir::Constant> {
-        self.constants.get(&name.to_ascii_lowercase()).cloned()
-    }
-
     pub(in crate::lowering) fn current_result_type(&self) -> TypeId {
         self.result_type
-    }
-
-    pub(in crate::lowering) fn read_global(
-        &mut self,
-        name: &str,
-        span: Span,
-    ) -> Result<ValueId, CompileError> {
-        let global = self
-            .globals
-            .get(&name.to_ascii_lowercase())
-            .copied()
-            .ok_or_else(|| {
-                internal_compiler_error(
-                    format!("Global `{name}` is missing from lowering metadata."),
-                    "Re-run compilation and report the source program.",
-                    span.line,
-                    span.column,
-                )
-            })?;
-        self.emit_value(Operation::LoadGlobal(global.id), global.ty, span)
-    }
-
-    pub(in crate::lowering) fn write_global(
-        &mut self,
-        name: &str,
-        value: ValueId,
-        span: Span,
-    ) -> Result<(), CompileError> {
-        let global = self
-            .globals
-            .get(&name.to_ascii_lowercase())
-            .copied()
-            .ok_or_else(|| {
-                internal_compiler_error(
-                    format!("Global `{name}` is missing from lowering metadata."),
-                    "Re-run compilation and report the source program.",
-                    span.line,
-                    span.column,
-                )
-            })?;
-        self.emit_effect(
-            Operation::StoreGlobal {
-                global: global.id,
-                value,
-            },
-            span,
-        )
-    }
-
-    /// Emits one typed update of an index-only path below a global snapshot.
-    pub(in crate::lowering) fn write_global_index_path(
-        &mut self,
-        name: &str,
-        root: ValueId,
-        indexes: Vec<ValueId>,
-        value: ValueId,
-        span: Span,
-    ) -> Result<(), CompileError> {
-        let global = self
-            .globals
-            .get(&name.to_ascii_lowercase())
-            .copied()
-            .ok_or_else(|| {
-                internal_compiler_error(
-                    format!("Global `{name}` is missing from lowering metadata."),
-                    "Re-run compilation and report the source program.",
-                    span.line,
-                    span.column,
-                )
-            })?;
-        self.emit_effect(
-            Operation::StoreGlobalIndexPath {
-                global: global.id,
-                root,
-                indexes,
-                value,
-            },
-            span,
-        )
-    }
-
-    /// Returns whether the global slot fits the compact direct-path opcode.
-    pub(in crate::lowering) fn global_index_path_uses_u16_slot(&self, name: &str) -> bool {
-        self.globals
-            .get(&name.to_ascii_lowercase())
-            .is_some_and(|global| u16::try_from(global.id.get()).is_ok())
     }
 
     pub(in crate::lowering) fn call_result_type(&self, name: &str) -> Option<TypeId> {
@@ -337,7 +244,7 @@ impl LoweringContext {
             .and_then(|binding| self.type_table.function_result(binding.ty))
             .or_else(|| {
                 self.globals
-                    .get(&name.to_ascii_lowercase())
+                    .get(&self.qualified_import_name(name).to_ascii_lowercase())
                     .and_then(|global| self.type_table.function_result(global.ty))
             })
             .or_else(|| self.resolve_callable(name).map(|callable| callable.result))
@@ -351,38 +258,9 @@ impl LoweringContext {
             .map(|binding| binding.ty)
             .or_else(|| {
                 self.globals
-                    .get(&name.to_ascii_lowercase())
+                    .get(&self.qualified_import_name(name).to_ascii_lowercase())
                     .map(|global| global.ty)
             })
-    }
-
-    pub(in crate::lowering) fn designator_type(
-        &self,
-        designator: &fpas_parser::Designator,
-    ) -> Option<TypeId> {
-        let fpas_parser::DesignatorPart::Ident(name, _) = designator.parts.first()? else {
-            return None;
-        };
-        let mut ty = self.root_type(name)?;
-        for part in &designator.parts[1..] {
-            ty = match (part, self.type_kind(ty)?) {
-                (fpas_parser::DesignatorPart::Ident(name, _), fpas_ir::IrType::Record(layout)) => {
-                    self.record_field(layout, name)?.1
-                }
-                (fpas_parser::DesignatorPart::Index(_, _), fpas_ir::IrType::Array(element)) => {
-                    element
-                }
-                (
-                    fpas_parser::DesignatorPart::Index(_, _),
-                    fpas_ir::IrType::Dictionary { value, .. },
-                ) => value,
-                (fpas_parser::DesignatorPart::Index(_, _), fpas_ir::IrType::String) => {
-                    super::types::STRING
-                }
-                _ => return None,
-            };
-        }
-        Some(ty)
     }
 
     pub(in crate::lowering) fn type_kind(&self, ty: TypeId) -> Option<fpas_ir::IrType> {

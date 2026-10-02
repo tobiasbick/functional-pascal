@@ -23,21 +23,25 @@ execution uses the same pending-operation state with its deterministic schedulin
 
 ```pascal
 program Example;
-uses Std.Console, Std.Tasks;
+
+uses Std.Console as Console;
+uses Std.Tasks as Tasks;
+
 function N(): integer;
 begin
-  return 7
-end;
+  return 7;
+end function;
+
 begin
   var T: task := go N();
-  WriteLn(Wait(T))
-end.
+  Console.WriteLn(Tasks.Wait(T));
+end program;
 ```
 
 
 ## Importing and names
 
-After `uses Std.Tasks;` use short names (`Wait`, `Cancel`, …) or qualified (`Std.Tasks.Wait`, …).
+Import with `uses Std.Tasks as Tasks;`. Access every exported member through `Tasks`, for example `Tasks.Wait(...)`. Imports open no short names.
 
 ---
 
@@ -101,13 +105,17 @@ only when it checks the token. The cancellation-aware `Std.Net` connect, accept,
 operations observe tokens while their interruptible network phases are pending.
 
 ```pascal
-var Source: CancellationSource := CreateCancellationSource();
-var Token: CancellationToken := GetCancellationToken(Source);
-Cancel(Source);
-if IsCancellationRequested(Token) then
-begin
-  WriteLn('stopping')
-end
+uses Std.Console as Console;
+uses Std.Tasks as Tasks;
+
+var Source: Tasks.CancellationSource := Tasks.CreateCancellationSource();
+var Token: Tasks.CancellationToken := Tasks.GetCancellationToken(Source);
+Tasks.Cancel(Source);
+if Tasks.IsCancellationRequested(Token) then
+  begin
+    Console.WriteLn('stopping');
+  end;
+end if;
 ```
 
 Sources and tokens belong to the VM that created them. Ordinary source storage is released when
@@ -268,22 +276,33 @@ debugger failure recovery after its terminal report has been published.
 because capacity alone cannot infer `T`:
 
 ```pascal
-var Messages: channel of string := CreateChannel(16)
+uses Std.Tasks as Tasks;
+
+var Messages: channel of string := Tasks.CreateChannel(16);
 ```
 
 `Send` waits until space is available. `Receive` waits until a value is available. Successful sends
 return `Ok(true)`; successful receives return `Ok(Value)`. Values are received in send order.
 
 ```pascal
-case Send(Messages, 'ready') of
-  Ok(_): begin end;
-  Error(Message): panic(Message)
-end;
+uses Std.Console as Console;
+uses Std.Tasks as Tasks;
 
-case Receive(Messages) of
-  Ok(Message): WriteLn(Message);
-  Error(Message): panic(Message)
-end
+case Tasks.Send(Messages, 'ready') of
+  when Ok(_):
+    begin
+      null;
+    end;
+  when Error(Message):
+    panic(Message);
+end case;
+
+case Tasks.Receive(Messages) of
+  when Ok(Message):
+    Console.WriteLn(Message);
+  when Error(Message):
+    panic(Message);
+end case;
 ```
 
 `CloseChannel` is idempotent: the first close returns `true`, and later closes return `false`.
@@ -318,8 +337,11 @@ task-bound values with mutable captures cannot cross the channel boundary. See
 Blocks until the spawned call completes, then returns its value. The task result is **consumed**: calling `Wait` again on the same logical completion is a runtime error.
 
 ```pascal
+uses Std.Console as Console;
+uses Std.Tasks as Tasks;
+
 var T: task := go Square(6);
-WriteLn(Wait(T))
+Console.WriteLn(Tasks.Wait(T));
 ```
 
 **Hint:** If you need the result only once, assign `Wait(T)` to a variable and reuse that value.
@@ -331,12 +353,14 @@ WriteLn(Wait(T))
 Blocks until every task in the array has finished. This is a **barrier only**; it does not pop return values. Typical use: synchronize before reading results with `Wait`, or when you only need to know that all work finished.
 
 ```pascal
+uses Std.Tasks as Tasks;
+
 var Ta: task := go Work(1);
 var Tb: task := go Work(2);
-WaitAll([Ta, Tb]);
+Tasks.WaitAll([Ta, Tb]);
 // still valid:
-Wait(Ta);
-Wait(Tb)
+Tasks.Wait(Ta);
+Tasks.Wait(Tb);
 ```
 
 An empty array completes immediately.
@@ -360,11 +384,13 @@ by `Wait` still counts as complete, as with `WaitAll`; waiting for its value aga
 Existing runtime-wide worker-failure handling remains active.
 
 ```pascal
-var First: integer := WaitAny([Ta, Tb]);
+uses Std.Tasks as Tasks;
+
+var First: integer := Tasks.WaitAny([Ta, Tb]);
 // Both results still belong to their task handles.
-WaitAll([Ta, Tb]);
-Wait(Ta);
-Wait(Tb)
+Tasks.WaitAll([Ta, Tb]);
+Tasks.Wait(Ta);
+Tasks.Wait(Tb);
 ```
 
 The main task waits without executing queued tasks; see [Waiting and execution](#waiting-and-execution).

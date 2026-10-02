@@ -20,20 +20,41 @@ fn phase09_navigation_capabilities_and_utf16_results_are_exposed() {
     );
     temp.write(
         "src/types.fpas",
-        "unit Demo.Types;\n\npublic type Point = record public X: integer; end;\npublic function Create(): Point; begin return record X := 1; end end;\n",
+        r#"unit Demo.Types;
+
+  public type Point = record public X: integer; end record;
+public function Create(): Point; begin return record X := 1; end record; end function;
+end unit;
+
+"#,
     );
     temp.write(
         "src/other.fpas",
-        "unit Demo.Other;\n\npublic function Create(): integer; begin return 2 end;\n",
+        r#"unit Demo.Other;
+
+public function Create(): integer; begin return 2; end function;
+end unit;
+
+"#,
     );
-    let source = "program Nav;\n\nuses Demo.Types, Demo.Other;\n\nmutable var Value: integer := 1;\n\nbegin\n  var Music: string := '𝄞'; Value := Value + 1;\n  var Item: Point := Demo.Types.Create()\nend.\n";
+    let source = r#"program Nav;
+
+uses Demo.Types as Types; uses Demo.Other as Other;
+
+  mutable var Value: integer := 1;
+
+begin
+  var Music: string := '𝄞'; Value := Value + 1;
+  var Item: Types.Point := Types.Create();
+end program;
+"#;
     temp.write("src/main.fpas", source);
     let root_uri = tower_lsp_server::ls_types::Uri::from_file_path(temp.path())
         .expect("root URI")
         .to_string();
     let uri = temp.uri("src/main.fpas");
     let write = source.find("Value := Value").expect("write occurrence");
-    let type_query = source.find("Item: Point").expect("typed variable");
+    let type_query = source.find("Item: Types.Point").expect("typed variable");
     let read = source.find("Value + 1").expect("read occurrence");
     let transcript = run(&[
         initialize_with_root(1, Some(&root_uri)),

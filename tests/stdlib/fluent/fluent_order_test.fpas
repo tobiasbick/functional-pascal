@@ -1,24 +1,24 @@
 program FluentOrderTest;
 
-uses Std.Arrays, Std.Test;
+uses Std.Arrays as Arrays;
+uses Std.Test as Test;
 
-mutable var
-  Visits: array of integer := [];
+mutable var Visits: array of integer := [];
 
 function Visit(Value: integer): integer;
 begin
-  Visits.Push(Value);
-  return Value
-end;
+  Arrays.Push(Visits, Value);
+  return Value;
+end function;
 
 function Add(Left: integer; Right: integer): integer;
 begin
-  return Left + Right
-end;
+  return Left + Right;
+end function;
 
 begin
-  AssertEquals(3, (Visit(1)).Add(Visit(2)));
-  AssertEquals(2, Visits.Length());
-  AssertEquals(1, Visits[0]);
-  AssertEquals(2, Visits[1])
-end.
+  Test.AssertEquals(3, (Visit(1)).Add(Visit(2)));
+  Test.AssertEquals(2, Arrays.Length(Visits));
+  Test.AssertEquals(1, Visits[0]);
+  Test.AssertEquals(2, Visits[1]);
+end program;

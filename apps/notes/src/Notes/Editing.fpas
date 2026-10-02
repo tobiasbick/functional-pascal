@@ -1,117 +1,133 @@
 // Controlled text proposals and selection updates for Notes.
 unit Notes.Editing;
 
-uses Notes.Actions, Notes.Model, Std.Arrays, Std.Conv, Std.Tui;
+uses Notes.Actions as Actions;
+uses Notes.Model as Model;
+uses Std.Arrays as Arrays;
+uses Std.Conv as Conv;
+uses Std.Tui as Tui;
 
 // Reports whether the selection refers to an existing note.
-public function NotesHasSelection(State: NotesModel): boolean;
+public function NotesHasSelection(State: Model.NotesModel): boolean;
 begin
-  return (State.Selected >= 0) and (State.Selected < Std.Arrays.Length(State.Notes))
-end;
+  return (State.Selected >= 0) and (State.Selected < Arrays.Length(State.Notes));
+end function;
 
 // Replaces one note while preserving the remaining model state.
-public function NotesWithNote(State: NotesModel; Index: integer; NoteValue: Note): NotesModel;
+public function NotesWithNote(State: Model.NotesModel; Index: integer; NoteValue: Model.Note): Model.NotesModel;
 begin
-  mutable var Notes: array of Note := State.Notes;
+  mutable var Notes: array of Model.Note := State.Notes;
   Notes[Index] := NoteValue;
-  mutable var Next: NotesModel := State;
+  mutable var Next: Model.NotesModel := State;
   Next.Notes := Notes;
-  return Next
-end;
+  return Next;
+end function;
 
 function SameTags(Left: array of string; Right: array of string): boolean;
 begin
-  if Std.Arrays.Length(Left) <> Std.Arrays.Length(Right) then
-  begin
-    return false
-  end;
-
-  for Index: integer := 0 to Std.Arrays.Length(Left) - 1 do
-  begin
-    if Left[Index] <> Right[Index] then
+  if Arrays.Length(Left) <> Arrays.Length(Right) then
     begin
-      return false
-    end
-  end;
+      return false;
+    end;
+  end if;
 
-  return true
-end;
+  for Index: integer := 0 to Arrays.Length(Left) - 1 do
+    begin
+      if Left[Index] <> Right[Index] then
+        begin
+          return false;
+        end;
+      end if;
+    end;
+  end for;
+
+  return true;
+end function;
 
 // Applies a single-line proposal, preserving clean state for caret-only changes.
-public function NotesEditText(State: NotesModel; Action: integer; Text: string; Caret: integer): NotesModel;
+public function NotesEditText(State: Model.NotesModel; Action: integer; Text: string; Caret: integer): Model.NotesModel;
 begin
-  mutable var Next: NotesModel := State;
-  if Action = SearchChangedAction then
-  begin
-    Next.Search := Text;
-    Next.SearchCaret := Caret;
-    Next.Status := IntToStr(Std.Arrays.Length(NotesFilteredIndices(Next.Notes, Text))) +
-                   ' matching note(s)';
-    return Next
-  end;
-
-  if (Action = TitleChangedAction) and NotesHasSelection(Next) then
-  begin
-    mutable var NoteValue: Note := Next.Notes[Next.Selected];
-    Next.TitleCaret := Caret;
-    if NoteValue.Title = Text then
+  mutable var Next: Model.NotesModel := State;
+  if Action = Actions.SearchChangedAction then
     begin
-      return Next
+      Next.Search := Text;
+      Next.SearchCaret := Caret;
+      Next.Status := Conv.IntToStr(Arrays.Length(Model.NotesFilteredIndices(Next.Notes, Text))) +
+                     ' matching note(s)';
+      return Next;
     end;
+  end if;
 
-    NoteValue.Title := Text;
-    Next := NotesWithNote(Next, Next.Selected, NoteValue);
-    Next.Dirty := true;
-    Next.Status := 'Unsaved changes';
-    return Next
-  end;
-
-  if (Action = TagsChangedAction) and NotesHasSelection(Next) then
-  begin
-    Next.TagsText := Text;
-    Next.TagsCaret := Caret;
-    mutable var NoteValue: Note := Next.Notes[Next.Selected];
-    var Tags: array of string := NoteTagsFromText(Text);
-    if SameTags(NoteValue.Tags, Tags) then
+  if (Action = Actions.TitleChangedAction) and NotesHasSelection(Next) then
     begin
-      return Next
+      mutable var NoteValue: Model.Note := Next.Notes[Next.Selected];
+      Next.TitleCaret := Caret;
+      if NoteValue.Title = Text then
+        begin
+          return Next;
+        end;
+      end if;
+
+      NoteValue.Title := Text;
+      Next := NotesWithNote(Next, Next.Selected, NoteValue);
+      Next.Dirty := true;
+      Next.Status := 'Unsaved changes';
+      return Next;
     end;
+  end if;
 
-    NoteValue.Tags := Tags;
-    Next := NotesWithNote(Next, Next.Selected, NoteValue);
-    Next.Dirty := true;
-    Next.Status := 'Unsaved changes';
-    return Next
-  end;
+  if (Action = Actions.TagsChangedAction) and NotesHasSelection(Next) then
+    begin
+      Next.TagsText := Text;
+      Next.TagsCaret := Caret;
+      mutable var NoteValue: Model.Note := Next.Notes[Next.Selected];
+      var Tags: array of string := Model.NoteTagsFromText(Text);
+      if SameTags(NoteValue.Tags, Tags) then
+        begin
+          return Next;
+        end;
+      end if;
 
-  return Next
-end;
+      NoteValue.Tags := Tags;
+      Next := NotesWithNote(Next, Next.Selected, NoteValue);
+      Next.Dirty := true;
+      Next.Status := 'Unsaved changes';
+      return Next;
+    end;
+  end if;
+
+  return Next;
+end function;
 
 // Applies body text, caret and viewport changes independently.
 public function NotesEditBody(
-  State: NotesModel;
+  State: Model.NotesModel;
   Action: integer;
   Text: string;
   Caret: integer;
-  Offset: TuiPoint
-): NotesModel;
+  Offset: Tui.TuiPoint
+): Model.NotesModel;
 begin
-  mutable var Next: NotesModel := State;
-  if (Action = BodyChangedAction) and NotesHasSelection(Next) then
-  begin
-    mutable var NoteValue: Note := Next.Notes[Next.Selected];
-    Next.BodyCaret := Caret;
-    Next.BodyOffset := Offset;
-    if NoteValue.Body = Text then
+  mutable var Next: Model.NotesModel := State;
+  if (Action = Actions.BodyChangedAction) and NotesHasSelection(Next) then
     begin
-      return Next
+      mutable var NoteValue: Model.Note := Next.Notes[Next.Selected];
+      Next.BodyCaret := Caret;
+      Next.BodyOffset := Offset;
+      if NoteValue.Body = Text then
+        begin
+          return Next;
+        end;
+      end if;
+
+      NoteValue.Body := Text;
+      Next := NotesWithNote(Next, Next.Selected, NoteValue);
+      Next.Dirty := true;
+      Next.Status := 'Unsaved changes';
     end;
+  end if;
 
-    NoteValue.Body := Text;
-    Next := NotesWithNote(Next, Next.Selected, NoteValue);
-    Next.Dirty := true;
-    Next.Status := 'Unsaved changes'
-  end;
+  return Next;
+end function;
 
-  return Next
-end;
+end unit;

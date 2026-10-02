@@ -35,12 +35,12 @@ include = ["{source_glob}"]
         &once,
         r#"program FlushOnce;
 
-uses Std.Tui, Std.Tui.Runtime.TerminalRenderer;
+uses Std.Tui as Tui; uses Std.Tui.Runtime.TerminalRenderer as TerminalRenderer;
 
 begin
-  var Surface: TuiWorkingSurface := TuiWorkingSurface.Create(TuiSize.Create(4, 2));
-  TuiFlushSurface(Surface, TuiPalette.Default())
-end.
+  var Surface: Tui.TuiWorkingSurface := Tui.TuiWorkingSurface.Create(Tui.TuiSize.Create(4, 2));
+  TerminalRenderer.TuiFlushSurface(Surface, Tui.TuiPalette.Default());
+end program;
 "#,
     );
     let unchanged = cwd.join("unchanged.fpas");
@@ -48,13 +48,13 @@ end.
         &unchanged,
         r#"program FlushUnchanged;
 
-uses Std.Tui, Std.Tui.Runtime.TerminalRenderer;
+uses Std.Tui as Tui; uses Std.Tui.Runtime.TerminalRenderer as TerminalRenderer;
 
 begin
-  var Surface: TuiWorkingSurface := TuiWorkingSurface.Create(TuiSize.Create(4, 2));
-  TuiFlushSurface(Surface, TuiPalette.Default());
-  TuiFlushSurface(Surface, TuiPalette.Default())
-end.
+  var Surface: Tui.TuiWorkingSurface := Tui.TuiWorkingSurface.Create(Tui.TuiSize.Create(4, 2));
+  TerminalRenderer.TuiFlushSurface(Surface, Tui.TuiPalette.Default());
+  TerminalRenderer.TuiFlushSurface(Surface, Tui.TuiPalette.Default());
+end program;
 "#,
     );
     let changed = cwd.join("changed.fpas");
@@ -62,14 +62,14 @@ end.
         &changed,
         r#"program FlushChanged;
 
-uses Std.Tui, Std.Tui.Runtime.TerminalRenderer;
+uses Std.Tui as Tui; uses Std.Tui.Runtime.TerminalRenderer as TerminalRenderer;
 
 begin
-  var Surface: TuiWorkingSurface := TuiWorkingSurface.Create(TuiSize.Create(4, 2));
-  TuiFlushSurface(Surface, TuiPalette.Default());
+  var Surface: Tui.TuiWorkingSurface := Tui.TuiWorkingSurface.Create(Tui.TuiSize.Create(4, 2));
+  TerminalRenderer.TuiFlushSurface(Surface, Tui.TuiPalette.Default());
   Surface.PutGlyph(1, 0, 'X');
-  TuiFlushSurface(Surface, TuiPalette.Default())
-end.
+  TerminalRenderer.TuiFlushSurface(Surface, Tui.TuiPalette.Default());
+end program;
 "#,
     );
     let wide = cwd.join("wide.fpas");
@@ -77,18 +77,18 @@ end.
         &wide,
         r#"program FlushWideTransition;
 
-uses
-  Std.Console, Std.Options, Std.Test, Std.Tui, Std.Tui.Runtime.TerminalRenderer;
+
+uses Std.Console as Console; uses Std.Options as Options; uses Std.Test as Test; uses Std.Tui as Tui; uses Std.Tui.Runtime.TerminalRenderer as TerminalRenderer;
 
 begin
-  var Surface: TuiWorkingSurface := TuiWorkingSurface.Create(TuiSize.Create(4, 1));
-  Surface.PutCell(TuiPoint.Create(1, 0), TuiCell.Create('中', TuiStyleRole.Accent));
-  TuiFlushSurface(Surface, TuiPalette.Default());
+  var Surface: Tui.TuiWorkingSurface := Tui.TuiWorkingSurface.Create(Tui.TuiSize.Create(4, 1));
+  Surface.PutCell(Tui.TuiPoint.Create(1, 0), Tui.TuiCell.Create('中', Tui.TuiStyleRole.Accent));
+  TerminalRenderer.TuiFlushSurface(Surface, Tui.TuiPalette.Default());
   Surface.PutGlyph(2, 0, 'X');
-  TuiFlushSurface(Surface, TuiPalette.Default());
-  AssertEquals(' ', Std.Options.Unwrap(GetCell(2, 1)).glyph);
-  AssertEquals('X', Std.Options.Unwrap(GetCell(3, 1)).glyph)
-end.
+  TerminalRenderer.TuiFlushSurface(Surface, Tui.TuiPalette.Default());
+  Test.AssertEquals(' ', Options.Unwrap(Console.GetCell(2, 1)).glyph);
+  Test.AssertEquals('X', Options.Unwrap(Console.GetCell(3, 1)).glyph);
+end program;
 "#,
     );
 
@@ -135,47 +135,47 @@ fn theme_switch_repaints_unchanged_terminal_cells() {
         &program,
         r#"program ThemeSwitch;
 
-uses Std.Console, Std.Options, Std.Test, Std.Tui;
+uses Std.Console as Console; uses Std.Options as Options; uses Std.Test as Test; uses Std.Tui as Tui;
 
-function UpdateTheme(State: integer; Msg: TuiMsg; Cmd: TuiCmdOutput): integer;
+function UpdateTheme(State: integer; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): integer;
 begin
   case Msg of
-    TuiMsg.Resize(Size):
+    when Tui.TuiMsg.Resize(Size):
     begin
-      Cmd.SetPalette(TuiPalette.Default()
-                       .WithRole(TuiStyleRole.Normal, TuiStyle.FromColors(TuiColor.FromRgb(1, 2, 3), TuiColor.FromRgb(4, 5, 6))));
-      return State + 1
+      Cmd.SetPalette(Tui.TuiPalette.Default()
+                       .WithRole(Tui.TuiStyleRole.Normal, Tui.TuiStyle.FromColors(Tui.TuiColor.FromRgb(1, 2, 3), Tui.TuiColor.FromRgb(4, 5, 6))));
+      return State + 1;
     end;
-    TuiMsg.QuitRequested:
+    when Tui.TuiMsg.QuitRequested:
     begin
-      Cmd.Set(TuiCmd.Quit);
-      return State
-    end
+      Cmd.Set(Tui.TuiCmd.Quit);
+      return State;
+    end;
     else
     begin
-      return State
-    end
-  end
-end;
+      return State;
+    end;
+  end case;
+end function;
 
-function ViewTheme(State: integer): TuiElement;
+function ViewTheme(State: integer): Tui.TuiElement;
 begin
-  return TuiElementBuilders.MakeLabel('theme')
-end;
+  return Tui.TuiElementBuilders.MakeLabel('theme');
+end function;
 
 begin
-  var Initial: TuiPalette := TuiPalette.Default()
-                               .WithRole(TuiStyleRole.Normal, TuiStyle.FromColors(TuiColor.FromRgb(10, 20, 30), TuiColor.FromRgb(40, 50, 60)));
-  AssertEquals(1, TuiApplication.RunWithPalette(0, UpdateTheme, ViewTheme, Initial));
-  var Painted: Cell := Unwrap(GetCell(1, 1));
-  AssertTrue(Painted.foreground.kind = ColorKind.Rgb);
-  AssertEquals(1, Painted.foreground.red);
-  AssertEquals(2, Painted.foreground.green);
-  AssertEquals(3, Painted.foreground.blue);
-  AssertEquals(4, Painted.background.red);
-  AssertEquals(5, Painted.background.green);
-  AssertEquals(6, Painted.background.blue)
-end.
+  var Initial: Tui.TuiPalette := Tui.TuiPalette.Default()
+                               .WithRole(Tui.TuiStyleRole.Normal, Tui.TuiStyle.FromColors(Tui.TuiColor.FromRgb(10, 20, 30), Tui.TuiColor.FromRgb(40, 50, 60)));
+  Test.AssertEquals(1, Tui.TuiApplication.RunWithPalette(0, UpdateTheme, ViewTheme, Initial));
+  var Painted: Console.Cell := Options.Unwrap(Console.GetCell(1, 1));
+  Test.AssertTrue(Painted.foreground.kind = Console.ColorKind.Rgb);
+  Test.AssertEquals(1, Painted.foreground.red);
+  Test.AssertEquals(2, Painted.foreground.green);
+  Test.AssertEquals(3, Painted.foreground.blue);
+  Test.AssertEquals(4, Painted.background.red);
+  Test.AssertEquals(5, Painted.background.green);
+  Test.AssertEquals(6, Painted.background.blue);
+end program;
 "#,
     );
     let built =
@@ -205,49 +205,49 @@ fn interactive_host_debounces_resize_burst_after_quiet_period() {
         &program,
         r#"program ResizeDebounce;
 
-uses Std.Console, Std.Tui;
+uses Std.Console as Console; uses Std.Tui as Tui;
 
-type
-  Model = record
+
+  type Model = record
     ResizeCount: integer;
     Width: integer;
     Height: integer;
-  end;
+  end record;
 
-function Update(State: Model; Msg: TuiMsg; Cmd: TuiCmdOutput): Model;
+function Update(State: Model; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): Model;
 begin
   case Msg of
-    TuiMsg.Resize(Size):
+    when Tui.TuiMsg.Resize(Size):
     begin
-      Cmd.Set(TuiCmd.Quit);
+      Cmd.Set(Tui.TuiCmd.Quit);
       return record
         ResizeCount := State.ResizeCount + 1;
         Width := Size.Width;
         Height := Size.Height;
-      end
-    end
+      end record;
+    end;
     else
     begin
-      return State
-    end
-  end
-end;
+      return State;
+    end;
+  end case;
+end function;
 
-function View(State: Model): TuiElement;
+function View(State: Model): Tui.TuiElement;
 begin
-  return TuiElementBuilders.MakeLabel('resize')
-end;
+  return Tui.TuiElementBuilders.MakeLabel('resize');
+end function;
 
 begin
-  var Final: Model := TuiApplication.Run(record
+  var Final: Model := Tui.TuiApplication.Run(record
     ResizeCount := 0;
     Width := 0;
     Height := 0;
-  end, Update, View);
-  WriteLn(Final.ResizeCount);
-  WriteLn(Final.Width);
-  WriteLn(Final.Height)
-end.
+  end record, Update, View);
+  Console.WriteLn(Final.ResizeCount);
+  Console.WriteLn(Final.Width);
+  Console.WriteLn(Final.Height);
+end program;
 "#,
     );
     let built =
@@ -273,41 +273,41 @@ fn interactive_host_does_not_emit_ticks_without_explicit_timer_input() {
         &program,
         r#"program EventDrivenIdle;
 
-uses Std.Console, Std.Tui;
+uses Std.Console as Console; uses Std.Tui as Tui;
 
-type
-  Model = record
+
+  type Model = record
     Ticks: integer;
-  end;
+  end record;
 
-function Update(State: Model; Msg: TuiMsg; Cmd: TuiCmdOutput): Model;
+function Update(State: Model; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): Model;
 begin
   case Msg of
-    TuiMsg.Tick(Delta):
+    when Tui.TuiMsg.Tick(Delta):
     begin
-      return record Ticks := State.Ticks + 1; end
+      return record Ticks := State.Ticks + 1; end record;
     end;
-    TuiMsg.QuitRequested:
+    when Tui.TuiMsg.QuitRequested:
     begin
-      Cmd.Set(TuiCmd.Quit);
-      return State
-    end
+      Cmd.Set(Tui.TuiCmd.Quit);
+      return State;
+    end;
   else
   begin
-    return State
-  end
-  end
-end;
+    return State;
+  end;
+  end case;
+end function;
 
-function View(State: Model): TuiElement;
+function View(State: Model): Tui.TuiElement;
 begin
-  return TuiElementBuilders.MakeLabel('idle')
-end;
+  return Tui.TuiElementBuilders.MakeLabel('idle');
+end function;
 
 begin
-  var Final: Model := TuiApplication.Run(record Ticks := 0; end, Update, View);
-  WriteLn(Final.Ticks)
-end.
+  var Final: Model := Tui.TuiApplication.Run(record Ticks := 0; end record, Update, View);
+  Console.WriteLn(Final.Ticks);
+end program;
 "#,
     );
     let built =
@@ -342,58 +342,58 @@ fn interactive_background_message_wakes_idle_host_and_repaints() {
         &program,
         r#"program BackgroundWakeup;
 
-uses Std.Console, Std.Results, Std.Tasks, Std.Tui;
+uses Std.Console as Console; uses Std.Results as Results; uses Std.Tasks as Tasks; uses Std.Tui as Tui;
 
-type
-  Model = record
+
+  type Model = record
     Inbox: channel of integer;
     Value: integer;
-  end;
+  end record;
 
-function Update(State: Model; Msg: TuiMsg; Cmd: TuiCmdOutput): Model;
+function Update(State: Model; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): Model;
 begin
   case Msg of
-    TuiMsg.Started:
+    when Tui.TuiMsg.Started:
     begin
       var Target: channel of integer := State.Inbox;
-      Cmd.StartBackground(1, function(Token: CancellationToken): result of boolean, string begin
-        return SendWithCancellation(Target, 42, Token)
-      end);
-      return State
+      Cmd.StartBackground(1, function(Token: Tasks.CancellationToken): result of boolean, string begin
+        return Tasks.SendWithCancellation(Target, 42, Token);
+      end function);
+      return State;
     end;
-    TuiMsg.BackgroundFailed(Id, Kind, Message, Code, Line, Column):
+    when Tui.TuiMsg.BackgroundFailed(Id, Kind, Message, Code, Line, Column):
     begin
-      panic(Message)
-    end
+      panic(Message);
+    end;
     else
     begin
-      return State
-    end
-  end
-end;
+      return State;
+    end;
+  end case;
+end function;
 
-function UpdateApplication(State: Model; Message: integer; Cmd: TuiCmdOutput): Model;
+function UpdateApplication(State: Model; Message: integer; Cmd: Tui.TuiCmdOutput): Model;
 begin
-  Cmd.Set(TuiCmd.Quit);
+  Cmd.Set(Tui.TuiCmd.Quit);
   return record
     Inbox := State.Inbox;
     Value := Message;
-  end
-end;
+  end record;
+end function;
 
-function View(State: Model): TuiElement;
+function View(State: Model): Tui.TuiElement;
 begin
-  return TuiElementBuilders.MakeLabel('value')
-end;
+  return Tui.TuiElementBuilders.MakeLabel('value');
+end function;
 
 begin
-  var Inbox: channel of integer := CreateChannel(1);
-  var Final: Model := TuiApplication.RunWithBackground(record
+  var Inbox: channel of integer := Tasks.CreateChannel(1);
+  var Final: Model := Tui.TuiApplication.RunWithBackground(record
     Inbox := Inbox;
     Value := 0;
-  end, Inbox, Update, UpdateApplication, View);
-  WriteLn(Final.Value)
-end.
+  end record, Inbox, Update, UpdateApplication, View);
+  Console.WriteLn(Final.Value);
+end program;
 "#,
     );
     let built =

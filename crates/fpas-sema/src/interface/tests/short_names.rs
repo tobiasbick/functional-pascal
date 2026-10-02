@@ -1,4 +1,4 @@
-//! Short names of imported source units resolve together with `Std.*` short names.
+//! Imported source declarations require their declared alias.
 
 use super::*;
 
@@ -20,130 +20,157 @@ fn error_messages(source: &str, interfaces: &[fpas_unit::interface::UnitInterfac
 }
 
 #[test]
-fn source_and_std_short_names_are_ambiguous_even_with_different_arity() {
+fn source_and_std_names_require_aliases_even_with_different_arity() {
     let sender = interface_of(
-        "unit Demo.Sender;
+        r#"unit Demo.Sender;
          public function Send(A: integer; B: integer; C: integer): integer;
-         begin return A + B + C end;",
+         begin return A + B + C; end function;
+end unit;
+"#,
     );
     let interfaces = [sender];
 
     let short = error_messages(
-        "unit Demo.Short;
-         uses Demo.Sender, Std.Tasks;
+        r#"unit Demo.Short;
+uses Demo.Sender as Sender; uses Std.Tasks as Tasks;
          public function Run(): integer;
-         begin return Send(1, 2, 3) end;",
+         begin return Send(1, 2, 3); end function;
+end unit;
+"#,
         &interfaces,
     );
     assert_eq!(short.len(), 1, "{short:#?}");
     assert!(
-        short[0].contains("Ambiguous imported symbol `Send`"),
+        short[0].contains("Unknown function or procedure `Send`"),
         "{short:#?}"
     );
 
     let qualified = error_messages(
-        "unit Demo.Qualified;
-         uses Demo.Sender, Std.Tasks;
+        r#"unit Demo.Qualified;
+uses Demo.Sender as Sender; uses Std.Tasks as Tasks;
          public function Run(): integer;
-         begin return Demo.Sender.Send(1, 2, 3) end;",
+         begin return Sender.Send(1, 2, 3); end function;
+end unit;
+"#,
         &interfaces,
     );
     assert!(qualified.is_empty(), "{qualified:#?}");
 
     let without_std = error_messages(
-        "unit Demo.WithoutStd;
-         uses Demo.Sender;
+        r#"unit Demo.WithoutStd;
+uses Demo.Sender as Sender;
          public function Run(): integer;
-         begin return Send(1, 2, 3) end;",
+         begin return Send(1, 2, 3); end function;
+end unit;
+"#,
         &interfaces,
     );
-    assert!(without_std.is_empty(), "{without_std:#?}");
+    assert_eq!(without_std.len(), 1, "{without_std:#?}");
 }
 
 #[test]
-fn qualified_std_use_keeps_source_short_name_ambiguity() {
+fn qualified_std_use_does_not_open_source_names() {
     let first = interface_of(
-        "unit Demo.First;
+        r#"unit Demo.First;
          public function Value(): integer;
-         begin return 1 end;",
+         begin return 1; end function;
+end unit;
+"#,
     );
     let second = interface_of(
-        "unit Demo.Second;
+        r#"unit Demo.Second;
          public function Value(): integer;
-         begin return 2 end;",
+         begin return 2; end function;
+end unit;
+"#,
     );
-    // Registering the qualified `Std.Math` symbols on first use rebuilds the short names.
     let messages = error_messages(
-        "unit Demo.Lazy;
-         uses Demo.First, Demo.Second, Std.Math;
+        r#"unit Demo.Lazy;
+uses Demo.First as First; uses Demo.Second as Second; uses Std.Math as Math;
          public function Run(): integer;
-         begin return Std.Math.Abs(-1) + Value() end;",
+         begin return Math.Abs(-1) + Value(); end function;
+end unit;
+"#,
         &[first, second],
     );
     assert_eq!(messages.len(), 1, "{messages:#?}");
     assert!(
-        messages[0].contains("Ambiguous imported symbol `Value`"),
+        messages[0].contains("Unknown function or procedure `Value`"),
         "{messages:#?}"
     );
 }
 
 #[test]
-fn imported_type_hides_imported_enum_variant_short_name() {
+fn alias_paths_distinguish_imported_types_and_variants() {
     let frames = interface_of(
-        "unit Demo.Frames;
-         public type Frame = record public X: integer; end;",
+        r#"unit Demo.Frames;
+           public type Frame = record public X: integer; end record;
+end unit;
+"#,
     );
     let signals = interface_of(
-        "unit Demo.Signals;
-         public type Signal = enum Frame(Milliseconds: integer); Other; end;",
+        r#"unit Demo.Signals;
+           public type Signal = enum Frame(Milliseconds: integer); Other; end enum;
+end unit;
+"#,
     );
     let interfaces = [frames, signals];
 
-    // As within one unit, the type name wins and the variant stays reachable qualified.
+    // Types and variants use their unit alias.
     let messages = error_messages(
-        "unit Demo.Mixed;
-         uses Demo.Frames, Demo.Signals;
+        r#"unit Demo.Mixed;
+uses Demo.Frames as Frames; uses Demo.Signals as Signals;
          public function Run(): integer;
          begin
-           var F: Frame := record X := 1; end;
-           var S: Signal := Signal.Frame(2);
-           return F.X
-         end;",
+           var F: Frames.Frame := record X := 1; end record;
+           var S: Signals.Signal := Signals.Signal.Frame(2);
+           return F.X;
+         end function;
+end unit;
+"#,
         &interfaces,
     );
     assert!(messages.is_empty(), "{messages:#?}");
 
     let variant_short = error_messages(
-        "unit Demo.VariantShort;
-         uses Demo.Frames, Demo.Signals;
-         public function Run(): Signal;
-         begin return Frame(2) end;",
+        r#"unit Demo.VariantShort;
+uses Demo.Frames as Frames; uses Demo.Signals as Signals;
+         public function Run(): Signals.Signal;
+         begin return Frame(2); end function;
+end unit;
+"#,
         &interfaces,
     );
     assert_eq!(variant_short.len(), 1, "{variant_short:#?}");
 }
 
 #[test]
-fn imported_routine_and_enum_variant_short_names_stay_ambiguous() {
+fn imported_routines_and_variants_do_not_open_short_names() {
     let routines = interface_of(
-        "unit Demo.Routines;
+        r#"unit Demo.Routines;
          public function Frame(X: integer): integer;
-         begin return X end;",
+         begin return X; end function;
+end unit;
+"#,
     );
     let signals = interface_of(
-        "unit Demo.Signals;
-         public type Signal = enum Frame(Milliseconds: integer); Other; end;",
+        r#"unit Demo.Signals;
+           public type Signal = enum Frame(Milliseconds: integer); Other; end enum;
+end unit;
+"#,
     );
     let messages = error_messages(
-        "unit Demo.Mixed;
-         uses Demo.Routines, Demo.Signals;
+        r#"unit Demo.Mixed;
+uses Demo.Routines as Routines; uses Demo.Signals as Signals;
          public function Run(): integer;
-         begin return Frame(2) end;",
+         begin return Frame(2); end function;
+end unit;
+"#,
         &[routines, signals],
     );
     assert_eq!(messages.len(), 1, "{messages:#?}");
     assert!(
-        messages[0].contains("Ambiguous imported symbol `Frame`"),
+        messages[0].contains("Unknown function or procedure `Frame`"),
         "{messages:#?}"
     );
 }

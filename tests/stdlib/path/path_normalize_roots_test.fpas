@@ -1,20 +1,22 @@
 program PathNormalizeRootsTest;
 
-uses Std.Path, Std.Test;
+uses Std.Path as Path;
+uses Std.Test as Test;
 
 begin
-  if Join(['a', 'b']) = 'a\b' then
-  begin
-    AssertEquals('D:\projects\demo', Normalize('D:\projects\demo'));
-    AssertEquals('D:\projects\demo', Normalize('D:/projects/demo'));
-    AssertEquals('D:\', Normalize('D:\demo\..'));
-    AssertEquals('D:\demo', Normalize('D:\..\demo'));
-    AssertEquals('D:demo', Normalize('D:projects\..\demo'));
-    AssertEquals('\demo', Normalize('\projects\..\demo'))
-  end
+  if Path.Join(['a', 'b']) = 'a\b' then
+    begin
+      Test.AssertEquals('D:\projects\demo', Path.Normalize('D:\projects\demo'));
+      Test.AssertEquals('D:\projects\demo', Path.Normalize('D:/projects/demo'));
+      Test.AssertEquals('D:\', Path.Normalize('D:\demo\..'));
+      Test.AssertEquals('D:\demo', Path.Normalize('D:\..\demo'));
+      Test.AssertEquals('D:demo', Path.Normalize('D:projects\..\demo'));
+      Test.AssertEquals('\demo', Path.Normalize('\projects\..\demo'));
+    end;
   else
-  begin
-    AssertEquals('/projects/demo', Normalize('/projects/./demo'));
-    AssertEquals('/', Normalize('/demo/../..'))
-  end
-end.
+    begin
+      Test.AssertEquals('/projects/demo', Path.Normalize('/projects/./demo'));
+      Test.AssertEquals('/', Path.Normalize('/demo/../..'));
+    end;
+  end if;
+end program;

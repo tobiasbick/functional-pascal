@@ -161,7 +161,7 @@ impl Parser {
     fn parse_record_literal(&mut self) -> Expr {
         let start = self.current_span();
         self.advance();
-        let fields = self.parse_field_init_list();
+        let fields = self.parse_field_init_list(&Token::Record);
         Expr::RecordLiteral {
             fields,
             span: self.span_from(start),
@@ -171,9 +171,16 @@ impl Parser {
     /// Parse `Field := Value;` initializers until `end`, then consume `end`.
     ///
     /// Shared by record literals and record update expressions.
-    fn parse_field_init_list(&mut self) -> Vec<FieldInit> {
+    fn parse_field_init_list(&mut self, kind: &Token) -> Vec<FieldInit> {
         let mut fields = Vec::new();
         while !self.check(&Token::End) && !self.at_end() {
+            if matches!(
+                self.current_token(),
+                Token::Else | Token::Elsif | Token::When | Token::Until
+            ) {
+                break;
+            }
+            let position = self.pos;
             let field_start = self.current_span();
             let (name, _) = self
                 .expect_ident()
@@ -186,8 +193,11 @@ impl Parser {
                 value,
                 span: self.span_from(field_start),
             });
+            if self.pos == position {
+                self.advance();
+            }
         }
-        self.expect(&Token::End);
+        self.expect_named_end(kind);
         fields
     }
 
@@ -207,7 +217,7 @@ impl Parser {
                 self.current_span(),
             );
         }
-        let fields = self.parse_field_init_list();
+        let fields = self.parse_field_init_list(&Token::With);
         Expr::RecordUpdate {
             base: Box::new(base),
             fields,

@@ -13,8 +13,8 @@ const SOURCE: &str = r#"program DapDictionaryMutation;
 
 begin
   mutable var Scores: dict of string to integer := ['Ada': 1, 'Grace': 2];
-  var Marker: integer := Scores['Grace']
-end.
+  var Marker: integer := Scores['Grace'];
+end program;
 "#;
 
 fn server() -> DapServer {

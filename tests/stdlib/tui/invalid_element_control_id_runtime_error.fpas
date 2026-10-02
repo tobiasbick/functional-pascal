@@ -1,22 +1,22 @@
 program InvalidElementControlIdRuntimeError;
 
-uses Std.Tui;
+uses Std.Tui as Tui;
 
-function Update(State: integer; Msg: TuiMsg; Cmd: TuiCmdOutput): integer;
+function Update(State: integer; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): integer;
 begin
-  return State
-end;
+  return State;
+end function;
 
-function View(State: integer): TuiElement;
+function View(State: integer): Tui.TuiElement;
 begin
-  var InvalidId: TuiControlId := record
+  var InvalidId: Tui.TuiControlId := record
     Value := 0;
-  end;
+  end record;
 
-  return TuiElement.Button(TuiButtonSpec.Normal(InvalidId, 'Invalid', '', TuiAction.Create(10)))
-end;
+  return Tui.TuiElement.Button(Tui.TuiButtonSpec.Normal(InvalidId, 'Invalid', '', Tui.TuiAction.Create(10)));
+end function;
 
 begin
-  mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(20, 4));
-  App.RunIterations(0, Update, View, 0, 0)
-end.
+  mutable var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(20, 4));
+  App.RunIterations(0, Update, View, 0, 0);
+end program;

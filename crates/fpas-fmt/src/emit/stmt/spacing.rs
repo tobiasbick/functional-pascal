@@ -8,7 +8,8 @@ pub(super) fn needs_blank_line(previous: &Stmt, next: &Stmt) -> bool {
 
 fn statement_ends_with_end(stmt: &Stmt) -> bool {
     match stmt {
-        Stmt::Block(..)
+        Stmt::StatementList(..)
+        | Stmt::Block(..)
         | Stmt::If { .. }
         | Stmt::Case { .. }
         | Stmt::For { .. }
@@ -19,7 +20,8 @@ fn statement_ends_with_end(stmt: &Stmt) -> bool {
         Stmt::Return(Some(value), ..)
         | Stmt::Expression { expr: value, .. }
         | Stmt::Go { expr: value, .. } => expression_ends_with_end(value),
-        Stmt::Return(None, ..)
+        Stmt::Null(_)
+        | Stmt::Return(None, ..)
         | Stmt::Panic(..)
         | Stmt::Repeat { .. }
         | Stmt::Break(..)

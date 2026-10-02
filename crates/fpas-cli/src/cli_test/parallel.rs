@@ -276,11 +276,15 @@ mod tests {
         let second = dir.join("b_test.fpas");
         write_text(
             &first,
-            "program A;\nuses Std.Test;\nbegin AssertTrue(true) end.",
+            r#"program A;
+uses Std.Test as Test;
+begin Test.AssertTrue(true); end program;"#,
         );
         write_text(
             &second,
-            "program B;\nuses Std.Test;\nbegin AssertTrue(true) end.",
+            r#"program B;
+uses Std.Test as Test;
+begin Test.AssertTrue(true); end program;"#,
         );
 
         let handles = [first, second]
@@ -299,11 +303,15 @@ mod tests {
         let second = dir.join("two_test.fpas");
         write_text(
             &first,
-            "program O;\nuses Std.Test;\nbegin AssertTrue(true) end.",
+            r#"program O;
+uses Std.Test as Test;
+begin Test.AssertTrue(true); end program;"#,
         );
         write_text(
             &second,
-            "program T;\nuses Std.Test;\nbegin AssertEquals(2, 1 + 1) end.",
+            r#"program T;
+uses Std.Test as Test;
+begin Test.AssertEquals(2, 1 + 1); end program;"#,
         );
 
         let prepared = vec![
@@ -340,15 +348,21 @@ mod tests {
         let later = dir.join("later_test.fpas");
         write_text(
             &pass,
-            "program P;\nuses Std.Test;\nbegin AssertTrue(true) end.",
+            r#"program P;
+uses Std.Test as Test;
+begin Test.AssertTrue(true); end program;"#,
         );
         write_text(
             &fail,
-            "program F;\nuses Std.Test;\nbegin AssertTrue(false) end.",
+            r#"program F;
+uses Std.Test as Test;
+begin Test.AssertTrue(false); end program;"#,
         );
         write_text(
             &later,
-            "program L;\nuses Std.Test;\nbegin AssertTrue(true) end.",
+            r#"program L;
+uses Std.Test as Test;
+begin Test.AssertTrue(true); end program;"#,
         );
 
         let prepared = vec![

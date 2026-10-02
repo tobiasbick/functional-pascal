@@ -40,7 +40,7 @@ fn json_to_fpas_at_depth(
         ));
     }
     match value {
-        JsonValue::Null => json_variant(call, "Null", Vec::new(), location),
+        JsonValue::Null => json_variant(call, "NullValue", Vec::new(), location),
         JsonValue::Bool(value) => json_variant(call, "Bool", vec![Value::Boolean(value)], location),
         JsonValue::Number(number) => {
             let Some(value) = number.as_f64() else {
@@ -148,14 +148,14 @@ fn fpas_to_json_at_depth(
     }
 
     match variant.as_str() {
-        "Null" => {
+        "NullValue" => {
             if fields.is_empty() {
                 Ok(JsonValue::Null)
             } else {
                 Err(std_runtime_error(
                     RUNTIME_VM_OPERAND_TYPE_MISMATCH,
-                    "Std.Json.JsonValue.Null must not carry runtime fields",
-                    "Use Std.Json.JsonValue.Null without arguments.",
+                    "Std.Json.JsonValue.NullValue must not carry runtime fields",
+                    "Use Std.Json.JsonValue.NullValue without arguments.",
                     location,
                 ))
             }
@@ -262,7 +262,7 @@ fn fpas_to_json_at_depth(
         other => Err(std_runtime_error(
             RUNTIME_VM_OPERAND_TYPE_MISMATCH,
             format!("unknown Std.Json.JsonValue variant `{other}`"),
-            "Use one of Null, Bool, Number, String, Array, or Object.",
+            "Use one of NullValue, Bool, Number, String, Array, or Object.",
             location,
         )),
     }
@@ -371,7 +371,7 @@ mod tests {
     fn fpas_to_json_accepts_container_at_depth_limit() {
         let value = test_variant(
             "ArrayValue",
-            vec![Value::Array(vec![test_variant("Null", vec![])].into())],
+            vec![Value::Array(vec![test_variant("NullValue", vec![])].into())],
         );
         assert!(fpas_to_json_at_depth(value, loc(), MAX_JSON_DEPTH - 1).is_ok());
     }
@@ -380,7 +380,7 @@ mod tests {
     fn fpas_to_json_rejects_container_child_beyond_depth_limit() {
         let value = test_variant(
             "ArrayValue",
-            vec![Value::Array(vec![test_variant("Null", vec![])].into())],
+            vec![Value::Array(vec![test_variant("NullValue", vec![])].into())],
         );
         let err = fpas_to_json_at_depth(value, loc(), MAX_JSON_DEPTH)
             .expect_err("JSON conversion must enforce its nesting limit");

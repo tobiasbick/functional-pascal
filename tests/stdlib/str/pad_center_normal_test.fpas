@@ -1,7 +1,8 @@
 program T;
 
-uses Std.Console, Std.Str;
+uses Std.Console as Console;
+uses Std.Str as Str;
 
 begin
-  WriteLn(PadCenter('Hi', 6, '-'))
-end.
+  Console.WriteLn(Str.PadCenter('Hi', 6, '-'));
+end program;

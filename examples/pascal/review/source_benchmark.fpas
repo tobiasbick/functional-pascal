@@ -1,86 +1,104 @@
 // Targeted source-library workloads; input creation is outside the timer.
 program SourceReviewBenchmark;
 
-uses
-  Notes.Model, Notes.Repository, Std.Args, Std.Arrays, Std.Console, Std.Conv, Std.Net.Utf8, Std.Str,
-  Std.Time, Std.Tui;
+uses Notes.Model as Model;
+uses Notes.Repository as Repository;
+uses Std.Args as Args;
+uses Std.Arrays as Arrays;
+uses Std.Console as Console;
+uses Std.Conv as Conv;
+uses Std.Net.Utf8 as Utf8;
+uses Std.Str as Str;
+uses Std.Time as Time;
+uses Std.Tui as Tui;
 
-function View(Value: integer): TuiElement;
+function View(Value: integer): Tui.TuiElement;
 begin
-  return TuiElementBuilders.MakeEmpty()
-end;
+  return Tui.TuiElementBuilders.MakeEmpty();
+end function;
 
-function Update(Value: integer; Msg: TuiMsg; Cmd: TuiCmdOutput): integer;
+function Update(Value: integer; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): integer;
 begin
   case Msg of
-    TuiMsg.Tick(Delta):
-    begin
-      return Value + Delta
-    end
+    when Tui.TuiMsg.Tick(Delta):
+      begin
+        return Value + Delta;
+      end;
     else
-    begin
-      return Value
-    end
-  end
-end;
+      begin
+        return Value;
+      end;
+  end case;
+end function;
 
 begin
-  var Mode: string := ParamStr(0);
-  var Size: integer := StrToInt(ParamStr(1));
-  var Text: string := Std.Str.RepeatStr(ParamStr(2), Size);
-  mutable var Notes: array of Note := [];
+  var Mode: string := Args.ParamStr(0);
+  var Size: integer := Conv.StrToInt(Args.ParamStr(1));
+  var Text: string := Str.RepeatStr(Args.ParamStr(2), Size);
+  mutable var Notes: array of Model.Note := [];
   for I: integer := 1 to Size do
-  begin
-    Std.Arrays.Push(Notes, NoteCreate(IntToStr(I), I))
-  end;
-  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(1, 1));
+    begin
+      Arrays.Push(Notes, Model.NoteCreate(Conv.IntToStr(I), I));
+    end;
+  end for;
+  var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(1, 1));
   mutable var Sum: integer := 0;
-  var Started: integer := MonotonicMillis();
+  var Started: integer := Time.MonotonicMillis();
   for Pass: integer := 1 to 10 do
-  begin
-    if Mode = 'utf8' then
     begin
-      case Std.Net.Utf8.Decode(Std.Net.Utf8.Encode(Text)) of
-        Ok(Decoded):
+      if Mode = 'utf8' then
         begin
-          if Decoded <> Text then
-          begin
-            panic('roundtrip')
-          end
+          case Utf8.Decode(Utf8.Encode(Text)) of
+            when Ok(Decoded):
+              begin
+                if Decoded <> Text then
+                  begin
+                    panic('roundtrip');
+                  end;
+                end if;
+              end;
+            when Error(Message):
+              begin
+                panic(Message);
+              end;
+          end case;
         end;
-        Error(Message):
-        begin
-          panic(Message)
-        end
-      end
-    end
-    else if Mode = 'notes' then
-    begin
-      var Sorted: array of Note := NotesSort(Notes);
-      if Sorted[0].UpdatedMillis <> Size then
-      begin
-        panic('sort')
-      end
-    end
-    else if Mode = 'queue' then
-    begin
-      for I: integer := 1 to Size do
-      begin
-        App.Inject(TuiMsg.Tick(1))
-      end;
+      else
+        if Mode = 'notes' then
+          begin
+            var Sorted: array of Model.Note := Repository.NotesSort(Notes);
+            if Sorted[0].UpdatedMillis <> Size then
+              begin
+                panic('sort');
+              end;
+            end if;
+          end;
+        else
+          if Mode = 'queue' then
+            begin
+              for I: integer := 1 to Size do
+                begin
+                  App.Inject(Tui.TuiMsg.Tick(1));
+                end;
+              end for;
 
-      Sum := App.RunIterations(0, Update, View, Size, 0);
-      if Sum <> Size then
-      begin
-        panic('queue')
-      end
-    end
-    else
-    begin
-      panic('unknown mode')
-    end
-  end;
+              Sum := App.RunIterations(0, Update, View, Size, 0);
+              if Sum <> Size then
+                begin
+                  panic('queue');
+                end;
+              end if;
+            end;
+          else
+            begin
+              panic('unknown mode');
+            end;
+          end if;
+        end if;
+      end if;
+    end;
+  end for;
 
-  WriteLn(('elapsed: ' + IntToStr(ElapsedMillis(Started))) + ' ms');
-  App.Close()
-end.
+  Console.WriteLn(('elapsed: ' + Conv.IntToStr(Time.ElapsedMillis(Started))) + ' ms');
+  App.Close();
+end program;

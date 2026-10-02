@@ -12,9 +12,9 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (literals, `type_ex
 Single-character text uses the same `string` type as longer text:
 
 ```pascal
-var
-  Letter: string := 'A';
-  Word: string := 'Hello';
+var Letter: string := 'A';
+var Word: string := 'Hello';
+
 ```
 
 Strings use single quotes with doubled apostrophes for escaping: `'It''s Pascal'`.
@@ -22,9 +22,7 @@ Strings use single quotes with doubled apostrophes for escaping: `'It''s Pascal'
 Strings may span multiple lines:
 
 ```pascal
-var
-  Poem: string := 'Roses are red
-Violets are blue';
+var Poem: string := 'Roses are red'#10'Violets are blue';
 ```
 
 ## Character codes
@@ -32,11 +30,10 @@ Violets are blue';
 The `#` prefix denotes a character by its decimal byte value (range **0..255**). These can be concatenated directly with string literals:
 
 ```pascal
-var
-  LineBreak: string := #13#10;                  // CR+LF
-  Greeting: string := 'Hello'#13#10'World';     // Hello\r\nWorld
-  Tab: string := #9;                            // Tab character
-  Letter: string := #65;                        // 'A'
+var LineBreak: string := #13#10; // CR+LF
+var Greeting: string := 'Hello'#13#10'World'; // Hello\r\nWorld
+var Tab: string := #9; // Tab character
+var Letter: string := 'A';
 ```
 
 ## See also

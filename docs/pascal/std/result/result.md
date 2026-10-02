@@ -4,19 +4,22 @@ Helper functions for `Result of T, E` values. See [Error handling](../../languag
 
 ```pascal
 program Example;
-uses Std.Console, Std.Results;
+
+uses Std.Console as Console;
+uses Std.Results as Results;
+
 begin
-  var R: Result of integer, string := Ok(42);
-  WriteLn(Unwrap(R))
-end.
+  var R: result of integer, string := Ok(42);
+  Console.WriteLn(Results.Unwrap(R));
+end program;
 ```
 
 
 ## Importing and names
 
-After `uses Std.Results;` use short names (`Unwrap`, `IsOk`, …) or qualified (`Std.Results.Unwrap`, …).
+Import with `uses Std.Results as Results;`. Access every exported member through `Results`, for example `Results.Unwrap(...)`. Imports open no short names.
 
-**Ambiguity with `Std.Options`:** the short names **`Unwrap`** and **`UnwrapOr`** clash with `Std.Options`. When both units are imported, prefer the method form `R.Unwrap()`, which selects the routine by the value's type, or qualify as `Std.Results.Unwrap(R)` vs `Std.Options.Unwrap(O)`.
+Explicit aliases keep names from different units distinct. Imported routines use alias-qualified calls; receiver-call lookup applies only to routines declared locally.
 
 `Unwrap` and `UnwrapOr` require a `Result of T, E` as their first argument. Passing the wrong container type produces a compile-time type error (`F2006`); use `Std.Options` for the other container type.
 
@@ -45,8 +48,11 @@ Examples pass named helper functions whose types match each callback parameter.
 Extracts the value from `Ok(value)`. **Runtime error** if `R` is `Error`.
 
 ```pascal
-var R: Result of integer, string := Ok(42);
-WriteLn(Unwrap(R))                             // 42
+uses Std.Console as Console;
+uses Std.Results as Results;
+
+var R: result of integer, string := Ok(42);
+Console.WriteLn(Results.Unwrap(R)); // 42
 ```
 
 ---
@@ -56,8 +62,11 @@ WriteLn(Unwrap(R))                             // 42
 Extracts the value from `Ok(value)`, or returns `Default` if `R` is `Error`.
 
 ```pascal
-var R: Result of integer, string := Error('oops');
-WriteLn(UnwrapOr(R, 0))                       // 0
+uses Std.Console as Console;
+uses Std.Results as Results;
+
+var R: result of integer, string := Error('oops');
+Console.WriteLn(Results.UnwrapOr(R, 0)); // 0
 ```
 
 ---
@@ -67,8 +76,11 @@ WriteLn(UnwrapOr(R, 0))                       // 0
 Returns `true` if `R` is an `Ok` variant.
 
 ```pascal
-var R: Result of integer, string := Ok(42);
-WriteLn(IsOk(R))                               // true
+uses Std.Console as Console;
+uses Std.Results as Results;
+
+var R: result of integer, string := Ok(42);
+Console.WriteLn(Results.IsOk(R)); // true
 ```
 
 ---
@@ -78,8 +90,11 @@ WriteLn(IsOk(R))                               // true
 Returns `true` if `R` is an `Error` variant.
 
 ```pascal
-var R: Result of integer, string := Error('fail');
-WriteLn(IsError(R))                              // true
+uses Std.Console as Console;
+uses Std.Results as Results;
+
+var R: result of integer, string := Error('fail');
+Console.WriteLn(Results.IsError(R)); // true
 ```
 
 ---
@@ -89,14 +104,16 @@ WriteLn(IsError(R))                              // true
 Transforms the `Ok` value with `F`. If `R` is `Error`, returns it unchanged.
 
 ```pascal
+uses Std.Conv as Conv;
+uses Std.Results as Results;
+
 function DoubleToString(V: integer): string;
 begin
-  return IntToStr(V * 2)
-end;
+  return Conv.IntToStr(V * 2);
+end function;
 
-var R: Result of integer, string := Ok(21);
-var M: Result of string, string := Map(R, DoubleToString);
-// M = Ok('42')
+var R: result of integer, string := Ok(21);
+var M: result of string, string := Results.Map(R, DoubleToString);
 ```
 
 ---
@@ -106,15 +123,20 @@ var M: Result of string, string := Map(R, DoubleToString);
 Calls `F` with the `Ok` value. `F` returns a new `Result`, enabling chained fallible operations. If `R` is `Error`, returns it unchanged.
 
 ```pascal
-function PositiveToResult(V: integer): Result of string, string;
-begin
-  if V > 0 then return Ok(IntToStr(V))
-  else return Error('non-positive')
-end;
+uses Std.Conv as Conv;
+uses Std.Results as Results;
 
-var R: Result of integer, string := Ok(10);
-var M: Result of string, string := AndThen(R, PositiveToResult);
-// M = Ok('10')
+function PositiveToResult(V: integer): result of string, string;
+begin
+  if V > 0 then
+    return Ok(Conv.IntToStr(V));
+  else
+    return Error('non-positive');
+  end if;
+end function;
+
+var R: result of integer, string := Ok(10);
+var M: result of string, string := Results.AndThen(R, PositiveToResult);
 ```
 
 ---
@@ -124,14 +146,15 @@ var M: Result of string, string := AndThen(R, PositiveToResult);
 Calls `F` with the `Error` value to attempt recovery. If `R` is `Ok`, returns it unchanged.
 
 ```pascal
-function RecoverToZero(E: string): Result of integer, string;
-begin
-  return Ok(0)
-end;
+uses Std.Results as Results;
 
-var R: Result of integer, string := Error('oops');
-var M: Result of integer, string := OrElse(R, RecoverToZero);
-// M = Ok(0)
+function RecoverToZero(E: string): result of integer, string;
+begin
+  return Ok(0);
+end function;
+
+var R: result of integer, string := Error('oops');
+var M: result of integer, string := Results.OrElse(R, RecoverToZero);
 ```
 
 ---

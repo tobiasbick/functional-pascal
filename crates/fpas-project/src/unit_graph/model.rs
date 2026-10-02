@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use fpas_diagnostics::codes::PROJECT_SOURCE_CHANGED;
-use fpas_parser::{QualifiedId, Unit};
+use fpas_parser::{Import, Unit};
 use fpas_unit::Digest;
 
 use crate::ProjectError;
@@ -21,7 +21,7 @@ pub struct UnitNode {
     origin: SourceOrigin,
     source_id: u32,
     source_hash: Option<Digest>,
-    direct_uses: Vec<QualifiedId>,
+    direct_uses: Vec<Import>,
     unit: Arc<Unit>,
 }
 
@@ -94,7 +94,7 @@ impl UnitNode {
 
     /// Direct unit dependencies from this unit's `uses` clause.
     #[must_use]
-    pub fn direct_uses(&self) -> &[QualifiedId] {
+    pub fn direct_uses(&self) -> &[Import] {
         &self.direct_uses
     }
 

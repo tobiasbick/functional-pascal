@@ -20,33 +20,35 @@ fn semantic_tokens_classify_every_supported_symbol_kind_and_modifier() {
     let temp = TempDirectory::new("semantic-token-kinds");
     let source = r#"unit Semantic.Sample;
 
-public const Answer: integer := 42;
-public var LabelText: string := 'sample';
+  public const Answer: integer := 42;
+  public var LabelText: string := 'sample';
 
-public type
-  Choice = enum
+
+  public type Choice = enum
     First;
-  end;
-  Counter = record
+  end enum;
+  public type Counter = record
     public Value: integer;
     public property Current: integer read GetCurrent;
     public event Changed: procedure() read ReadChanged write WriteChanged;
     public function Add<T>(Self: Counter; Amount: T): integer;
     begin
-      return Self.Value
-    end;
-  end;
+      return Self.Value;
+    end function;
+  end record;
 
 public function Identity<T>(Input: T): T;
 begin
   var Local: T := Input;
-  return Local
-end;
+  return Local;
+end function;
 
 public procedure Notify(MessageText: string);
 begin
-  mutable var CopyText: string := MessageText
-end;
+  mutable var CopyText: string := MessageText;
+end procedure;
+end unit;
+
 "#;
     let path = temp.write("sample.fpas", source);
     let mut service = LanguageService::new(WorkspaceContext::loose(temp.path()));
@@ -168,7 +170,7 @@ fn unknown_name_action_adds_one_canonical_unambiguous_import() {
         fpas_fmt::format_source(&edited, &unit).expect("matching source and AST"),
         edited
     );
-    assert!(edited.contains("uses Actions.Core, Actions.Importable;"));
+    assert!(edited.contains("uses Actions.Core as Core;\nuses Actions.Importable as Importable;"));
 }
 
 #[test]
@@ -180,14 +182,30 @@ fn unknown_type_action_adds_one_canonical_unambiguous_import() {
     );
     temp.write(
         "src/core.fpas",
-        "unit Actions.Core;\n\npublic const Existing: integer := 1;\n",
+        r#"unit Actions.Core;
+
+  public const Existing: integer := 1;
+end unit;
+
+"#,
     );
     temp.write(
         "src/types.fpas",
-        "unit Actions.Types;\n\npublic type UniqueType = integer;\n",
+        r#"unit Actions.Types;
+
+  public type UniqueType = integer;
+end unit;
+
+"#,
     );
-    let source =
-        "program Actions;\n\nuses Actions.Core;\n\nbegin\n  var Value: UniqueType := 1\nend.\n";
+    let source = r#"program Actions;
+
+uses Actions.Core as Core;
+
+begin
+  var Value: UniqueType := 1;
+end program;
+"#;
     let main = temp.write("src/main.fpas", source);
     let mut service = LanguageService::load(&manifest);
     let analysis = service.analyze_document(&main).expect("project analysis");
@@ -222,7 +240,7 @@ fn unknown_type_action_adds_one_canonical_unambiguous_import() {
         fpas_fmt::format_source(&edited, &unit).expect("matching source and AST"),
         edited
     );
-    assert!(edited.contains("uses Actions.Core, Actions.Types;"));
+    assert!(edited.contains("uses Actions.Core as Core;\nuses Actions.Types as Types;"));
 }
 
 #[test]
@@ -261,11 +279,27 @@ fn import_action_rejects_ambiguous_public_declarations() {
     let fixture = import_fixture("SharedValue");
     fixture.temp.write(
         "src/second.fpas",
-        "unit Actions.Second;\n\npublic function SharedValue(): integer;\nbegin\n  return 2\nend;\n",
+        r#"unit Actions.Second;
+
+public function SharedValue(): integer;
+begin
+  return 2;
+end function;
+end unit;
+
+"#,
     );
     fixture.temp.write(
         "src/first.fpas",
-        "unit Actions.First;\n\npublic function SharedValue(): integer;\nbegin\n  return 1\nend;\n",
+        r#"unit Actions.First;
+
+public function SharedValue(): integer;
+begin
+  return 1;
+end function;
+end unit;
+
+"#,
     );
     let mut ambiguous_service = LanguageService::load(&fixture.manifest);
     let ambiguous_analysis = ambiguous_service
@@ -357,14 +391,35 @@ fn import_fixture(name: &str) -> ImportFixture {
     );
     temp.write(
         "src/core.fpas",
-        "unit Actions.Core;\n\npublic function Existing(): integer;\nbegin\n  return 1\nend;\n",
+        r#"unit Actions.Core;
+
+public function Existing(): integer;
+begin
+  return 1;
+end function;
+end unit;
+
+"#,
     );
     temp.write(
         "src/importable.fpas",
-        "unit Actions.Importable;\n\npublic function UniqueValue(): integer;\nbegin\n  return 42\nend;\n\nfunction PrivateValue(): integer;\nbegin\n  return 0\nend;\n",
+        r#"unit Actions.Importable;
+
+public function UniqueValue(): integer;
+begin
+  return 42;
+end function;
+
+function PrivateValue(): integer;
+begin
+  return 0;
+end function;
+end unit;
+
+"#,
     );
     let source = format!(
-        "program Actions;\n\nuses Actions.Core;\n\nbegin\n  var Value: integer := {name}()\nend.\n"
+        "program Actions;\n\nuses Actions.Core as Core;\n\nbegin\n  var Value: integer := {name}();\nend program;\n"
     );
     let main = temp.write("src/main.fpas", &source);
     ImportFixture {

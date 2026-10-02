@@ -3,13 +3,15 @@ use super::*;
 #[test]
 fn unit_declarations_default_to_private() {
     let unit = parse_unit_ok(
-        "unit MyApp.Core;
-         const Secret: integer := 1;
-         var State: integer := 2;
-         mutable var Counter: integer := 3;
-         type InternalId = integer;
-         function Helper(): integer; begin return 1 end;
-         procedure Reset(); begin end;",
+        r#"unit MyApp.Core;
+          const Secret: integer := 1;
+          var State: integer := 2;
+           mutable var Counter: integer := 3;
+          type InternalId = integer;
+         function Helper(): integer; begin return 1; end function;
+         procedure Reset(); begin null; end procedure;
+end unit;
+"#,
     );
 
     assert_eq!(unit.declarations.len(), 6);
@@ -23,13 +25,15 @@ fn unit_declarations_default_to_private() {
 #[test]
 fn public_applies_to_every_supported_declaration_kind() {
     let unit = parse_unit_ok(
-        "unit MyApp.Core;
-         public const Answer: integer := 42;
-         public var State: integer := 2;
-         public mutable var Counter: integer := 3;
-         public type PublicId = integer;
-         public function ReadValue(): integer; begin return Answer end;
-         public procedure Reset(); begin end;",
+        r#"unit MyApp.Core;
+           public const Answer: integer := 42;
+           public var State: integer := 2;
+            public mutable var Counter: integer := 3;
+           public type PublicId = integer;
+         public function ReadValue(): integer; begin return Answer; end function;
+         public procedure Reset(); begin null; end procedure;
+end unit;
+"#,
     );
 
     assert_eq!(unit.declarations.len(), 6);
@@ -43,12 +47,14 @@ fn public_applies_to_every_supported_declaration_kind() {
 #[test]
 fn public_visibility_applies_to_an_entire_declaration_block() {
     let unit = parse_unit_ok(
-        "unit MyApp.Core;
-         public const
-           A: integer := 1;
-           B: integer := 2;
-         const
-           C: integer := 3;",
+        r#"unit MyApp.Core;
+
+           public const A: integer := 1;
+           public const B: integer := 2;
+
+           const C: integer := 3;
+end unit;
+"#,
     );
 
     assert_eq!(unit.declarations.len(), 3);
@@ -60,11 +66,13 @@ fn public_visibility_applies_to_an_entire_declaration_block() {
 #[test]
 fn private_can_be_used_as_an_identifier() {
     let unit = parse_unit_ok(
-        "unit MyApp.Core;
+        r#"unit MyApp.Core;
          function private(): integer;
          begin
-           return 1
-         end;",
+           return 1;
+         end function;
+end unit;
+"#,
     );
 
     let Decl::Function(function) = &unit.declarations[0] else {

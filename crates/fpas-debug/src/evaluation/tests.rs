@@ -226,7 +226,7 @@ fn validator_accepts_the_complete_read_only_category_matrix() {
         "Value.Method()",
         "[]",
         "[: ]",
-        "record X := 1; end",
+        "record X := 1; end record",
         "Ok(1)",
         "Error('x')",
         "Some(1)",
@@ -235,7 +235,7 @@ fn validator_accepts_the_complete_read_only_category_matrix() {
         "Choice.Pair(1, 2)",
         "cHoIcE.pAiR(1, 2)",
         "try Work()",
-        "Point with X := 2; end",
+        "Point with X := 2; end with",
     ];
     for source in expressions {
         assert!(

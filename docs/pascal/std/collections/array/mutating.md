@@ -5,10 +5,12 @@
 Appends `Value` to the end of **`A`** (mutates `A`).
 
 ```pascal
+uses Std.Console as Console;
+
 mutable var A: array of integer := [1, 2];
 Push(A, 3);
 A.Push(4);
-WriteLn(Length(A))
+Console.WriteLn(Length(A));
 ```
 
 ---
@@ -18,11 +20,13 @@ WriteLn(Length(A))
 Removes the **last** element and returns it. **`A` becomes shorter.** **Runtime error** if `A` is empty.
 
 ```pascal
+uses Std.Console as Console;
+
 mutable var A: array of integer := [1, 2, 3];
 var Last: integer := Pop(A);
 var Next: integer := A.Pop();
-WriteLn(Last);
-WriteLn(Length(A))
+Console.WriteLn(Last);
+Console.WriteLn(Length(A));
 ```
 
 For a directly stored local array, `Pop` reuses uniquely owned storage. If another

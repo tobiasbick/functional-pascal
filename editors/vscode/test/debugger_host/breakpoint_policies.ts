@@ -20,20 +20,20 @@ export async function verifyBreakpointPolicies(
   const lines = [
     "program DebuggerBreakpointPolicies;",
     "",
-    "uses Std.Console;",
+    " uses Std.Console as Console;",
     "",
     "begin",
     "  mutable var Counter: integer := 0;",
     "  while Counter < 4 do",
     "  begin",
     "    Counter := Counter + 1;",
-    "    WriteLn(Counter)",
-    "  end",
-    "end.",
+    "    Console.WriteLn(Counter);",
+    "  end; end while;",
+    "end program;",
     ""
   ];
   const sourcePath = await writeSource(workspaceRoot, "policies", lines);
-  const line = lines.indexOf("    WriteLn(Counter)");
+  const line = lines.indexOf("    Console.WriteLn(Counter);");
   try {
     await verifyExactHit(workspaceRoot, sourcePath, line, received, sent);
     await verifyLogpoint(workspaceRoot, sourcePath, line, received, sent);

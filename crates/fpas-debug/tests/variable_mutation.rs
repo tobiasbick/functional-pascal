@@ -15,7 +15,18 @@ use fpas_vm::{
 use serde_json::{Value, json};
 
 fn server() -> JsonlServer {
-    let source = "program Main;\n\nfunction Twice(Value: integer): integer;\nbegin\n  return Value * 2\nend;\n\nbegin\n  mutable var X: integer := 1;\n  var Fixed: integer := 2;\n  X := X + Fixed\nend.";
+    let source = r#"program Main;
+
+function Twice(Value: integer): integer;
+begin
+  return Value * 2;
+end function;
+
+begin
+  mutable var X: integer := 1;
+  var Fixed: integer := 2;
+  X := X + Fixed;
+end program;"#;
     let (program, diagnostics) = fpas_parser::parse(source);
     assert!(diagnostics.is_empty(), "parse diagnostics: {diagnostics:?}");
     let executable = fpas_compiler::compile(&program).expect("compile mutation fixture");
@@ -166,29 +177,29 @@ fn record_and_dictionary_descendants_rebuild_the_mutable_root() {
         r#"
 program AggregateMutation;
 
-type
-  Box = record
+
+  type Box = record
     Value: integer;
     Other: integer;
-  end;
-  Container = record
+  end record;
+  type Container = record
     Items: array of Box;
-  end;
+  end record;
 
 begin
   mutable var Item: Box := record
     Value := 1;
     Other := 2;
-  end;
+  end record;
   mutable var Nested: Container := record
     Items := [record
       Value := 3;
       Other := 4;
-    end];
-  end;
+    end record];
+  end record;
   mutable var Scores: dict of string to integer := ['Ada': 2, 'Grace': 5];
-  var Marker: integer := 0
-end.
+  var Marker: integer := 0;
+end program;
 "#,
     );
     let locals = loop {
@@ -323,13 +334,13 @@ program ParameterMutation;
 
 function ReadBack(mutable Value: integer): integer;
 begin
-  return Value
-end;
+  return Value;
+end function;
 
 begin
   var OutputValue: integer := ReadBack(1);
-  var Marker: integer := OutputValue
-end.
+  var Marker: integer := OutputValue;
+end program;
 "#,
     );
     let frame = loop {
@@ -376,15 +387,15 @@ begin
   mutable var Value: integer := 0;
   return function(): integer begin
     Value := Value + 1;
-    return Value
-  end
-end;
+    return Value;
+  end function;
+end function;
 
 begin
   var Next: function(): integer := Counter();
   var First: integer := Next();
-  var Marker: integer := First
-end.
+  var Marker: integer := First;
+end program;
 "#,
     );
     let (frame, captures) = loop {
@@ -437,13 +448,13 @@ program DictionaryParameterMutation;
 function ReadAdded(mutable Scores: dict of string to integer): integer;
 begin
   var Marker: integer := Scores['Seed'];
-  return Scores['Added'] + Marker
-end;
+  return Scores['Added'] + Marker;
+end function;
 
 begin
   var OutputValue: integer := ReadAdded(['Seed': 1]);
-  var Marker: integer := OutputValue
-end.
+  var Marker: integer := OutputValue;
+end program;
 "#,
     );
     let parameter_frame = loop {
@@ -496,15 +507,15 @@ begin
   mutable var Scores: dict of string to integer := ['Seed': 1];
   return function(): integer begin
     var Marker: integer := Scores['Seed'];
-    return Scores['Added'] + Marker
-  end
-end;
+    return Scores['Added'] + Marker;
+  end function;
+end function;
 
 begin
   var ReadValue: function(): integer := Reader();
   var OutputValue: integer := ReadValue();
-  var Marker: integer := OutputValue
-end.
+  var Marker: integer := OutputValue;
+end program;
 "#,
     );
     let capture_frame = loop {
@@ -555,23 +566,23 @@ fn dictionary_structure_mutation_obeys_shared_limits_effect_policy_and_cancellat
         r#"
 program DictionaryMutationLimits;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 function Forever(): integer;
 begin
-  while true do begin end;
-  return 0
-end;
+  while true do begin null; end; end while;
+  return 0;
+end function;
 
 procedure Emit();
 begin
-  WriteLn('not live')
-end;
+  Console.WriteLn('not live');
+end procedure;
 
 begin
   mutable var Scores: dict of string to integer := ['Seed': 1];
-  var Marker: integer := Scores['Seed']
-end.
+  var Marker: integer := Scores['Seed'];
+end program;
 "#,
     );
     let frame = loop {
@@ -668,22 +679,22 @@ fn textual_selectors_share_one_call_and_limit_budget_before_commit() {
         r#"
 program SelectorMutation;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 function ChooseIndex(): integer;
 begin
-  return 1
-end;
+  return 1;
+end function;
 
 procedure Emit();
 begin
-  WriteLn('not live')
-end;
+  Console.WriteLn('not live');
+end procedure;
 
 begin
   mutable var Items: array of integer := [1, 2];
-  var Marker: integer := Items[0]
-end.
+  var Marker: integer := Items[0];
+end program;
 "#,
     );
     let frame = loop {

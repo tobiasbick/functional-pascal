@@ -99,7 +99,7 @@ fn duplicate_hook_error(hook_name: &str, first: &Path, second: &Path) -> String 
 /// Builds a synthetic hook program that calls one project procedure.
 pub(super) fn hook_program_source(hook: &TestHook) -> String {
     format!(
-        "program __FpasTestHook;\nuses {unit};\nbegin\n  {proc}()\nend.",
+        "program __FpasTestHook;\nuses {unit} as Hook;\nbegin\n  Hook.{proc}();\nend program;",
         unit = hook.unit_name,
         proc = hook.procedure_name,
     )
@@ -119,11 +119,19 @@ mod tests {
         let dir = create_temp_dir("fpas-hooks-discover");
         write_text(
             &dir.join("fixture.fpas"),
-            "unit Tests.Fixture;\nprocedure Setup();\nbegin end;\nprocedure Teardown();\nbegin end;",
+            r#"unit Tests.Fixture;
+procedure Setup();
+begin null; end procedure;
+procedure Teardown();
+begin null; end procedure;
+end unit;
+"#,
         );
         write_text(
             &dir.join("demo_test.fpas"),
-            "program D;\nuses Std.Test;\nbegin AssertTrue(true) end.",
+            r#"program D;
+uses Std.Test as Test;
+begin Test.AssertTrue(true); end program;"#,
         );
 
         let hooks = discover_test_hooks(&[dir.join("fixture.fpas"), dir.join("demo_test.fpas")])
@@ -143,11 +151,19 @@ mod tests {
         let dir = create_temp_dir("fpas-hooks-dup");
         write_text(
             &dir.join("a.fpas"),
-            "unit A.One;\nprocedure Setup();\nbegin end;",
+            r#"unit A.One;
+procedure Setup();
+begin null; end procedure;
+end unit;
+"#,
         );
         write_text(
             &dir.join("b.fpas"),
-            "unit B.Two;\nprocedure Setup();\nbegin end;",
+            r#"unit B.Two;
+procedure Setup();
+begin null; end procedure;
+end unit;
+"#,
         );
 
         let error = discover_test_hooks(&[dir.join("a.fpas"), dir.join("b.fpas")])

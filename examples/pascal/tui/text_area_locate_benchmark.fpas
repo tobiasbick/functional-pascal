@@ -1,52 +1,61 @@
 // Long-document caret rendering through the public headless TUI.
 program TextAreaLocateBenchmark;
 
-uses Std.Args, Std.Console, Std.Conv, Std.Str, Std.Time, Std.Tui;
+uses Std.Args as Args;
+uses Std.Console as Console;
+uses Std.Conv as Conv;
+uses Std.Str as Str;
+uses Std.Time as Time;
+uses Std.Tui as Tui;
 
-function View(Text: string): TuiElement;
+function View(Text: string): Tui.TuiElement;
 begin
-  return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(1)), [
-                                                                        TuiElementBuilders.MakeTextArea(TuiControlId.Create(1), Text, Std.Str.Length(Text), TuiPoint.Create(0, 0), TuiAction.Create(1))
-                                                                      ])
-end;
+  return Tui.TuiElementBuilders.MakeDesktop(Some(Tui.TuiControlId.Create(1)), [
+                                                                                Tui.TuiElementBuilders.MakeTextArea(Tui.TuiControlId.Create(1), Text, Str.Length(Text), Tui.TuiPoint.Create(0, 0), Tui.TuiAction.Create(1))
+                                                                              ]);
+end function;
 
-function Update(Text: string; Msg: TuiMsg; Cmd: TuiCmdOutput): string;
+function Update(Text: string; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): string;
 begin
-  return Text
-end;
+  return Text;
+end function;
 
 begin
-  if ParamCount() <> 2 then
-  begin
-    panic('expected ITERATIONS SIZE')
-  end;
-  var Iterations: integer := StrToInt(ParamStr(0));
-  var Size: integer := StrToInt(ParamStr(1));
+  if Args.ParamCount() <> 2 then
+    begin
+      panic('expected ITERATIONS SIZE');
+    end;
+  end if;
+  var Iterations: integer := Conv.StrToInt(Args.ParamStr(0));
+  var Size: integer := Conv.StrToInt(Args.ParamStr(1));
   if (Iterations < 1) or (Size < 1) then
-  begin
-    panic('arguments must be positive')
-  end;
-  var Text: string := Std.Str.RepeatStr('é', Size);
-  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(80, 24));
+    begin
+      panic('arguments must be positive');
+    end;
+  end if;
+  var Text: string := Str.RepeatStr('é', Size);
+  var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(80, 24));
   App.RunIterations(Text, Update, View, 0, 0);
-  var Started: integer := MonotonicMillis();
+  var Started: integer := Time.MonotonicMillis();
   for Iteration: integer := 1 to Iterations do
-  begin
-    App.RunIterations(Text, Update, View, 0, 0)
-  end;
+    begin
+      App.RunIterations(Text, Update, View, 0, 0);
+    end;
+  end for;
 
-  WriteLn(('elapsed: ' + IntToStr(ElapsedMillis(Started))) + ' ms');
+  Console.WriteLn(('elapsed: ' + Conv.IntToStr(Time.ElapsedMillis(Started))) + ' ms');
   mutable var Visible: integer := Size;
   if Visible > 80 then
-  begin
-    Visible := 80
-  end;
+    begin
+      Visible := 80;
+    end;
+  end if;
 
-  if Std.Str.Substring(App.SurfaceSnapshot().LineAt(0), 0, Visible) <>
-     Std.Str.RepeatStr('é', Visible) then
-  begin
-    panic('rendered text')
-  end;
+  if Str.Substring(App.SurfaceSnapshot().LineAt(0), 0, Visible) <> Str.RepeatStr('é', Visible) then
+    begin
+      panic('rendered text');
+    end;
+  end if;
 
-  App.Close()
-end.
+  App.Close();
+end program;

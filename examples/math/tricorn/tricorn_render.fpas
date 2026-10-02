@@ -2,62 +2,68 @@
 
 unit Tricorn.Render;
 
-uses Std.Console, Std.Tasks, Std.Arrays, Std.Conv, Std.Math, Std.Str, Tricorn.Color;
+uses Std.Console as Console;
+uses Std.Tasks as Tasks2;
+uses Std.Arrays as Arrays;
+uses Std.Conv as Conv;
+uses Std.Math as Math;
+uses Std.Str as Str;
+uses Tricorn.Color as Color2;
 
-type
-  Complex = record
-    public Re: real;
-    public Im: real;
+type Complex = record
+  public Re: real;
+  public Im: real;
 
-    public static function Zero(): Complex;
-    begin
-      return record
-        Re := 0.0;
-        Im := 0.0;
-      end
-    end;
+  public static function Zero(): Complex;
+  begin
+    return record
+      Re := 0.0;
+      Im := 0.0;
+    end record;
+  end function;
 
-    public static function Create(Re: real; Im: real): Complex;
-    begin
-      return record
-        Re := Re;
-        Im := Im;
-      end
-    end;
+  public static function Create(Re: real; Im: real): Complex;
+  begin
+    return record
+      Re := Re;
+      Im := Im;
+    end record;
+  end function;
 
-    public function Conj(Self: Complex): Complex;
-    begin
-      return record
-        Re := Self.Re;
-        Im := - Self.Im;
-      end
-    end;
+  public function Conj(Self: Complex): Complex;
+  begin
+    return record
+      Re := Self.Re;
+      Im := - Self.Im;
+    end record;
+  end function;
 
-    public function Sq(Self: Complex): Complex;
-    begin
-      return record
-        Re := Self.Re * Self.Re - Self.Im * Self.Im;
-        Im := (2.0 * Self.Re) * Self.Im;
-      end
-    end;
+  public function Sq(Self: Complex): Complex;
+  begin
+    return record
+      Re := Self.Re * Self.Re - Self.Im * Self.Im;
+      Im := (2.0 * Self.Re) * Self.Im;
+    end record;
+  end function;
 
-    public function Add(Self: Complex; Other: Complex): Complex;
-    begin
-      return record
-        Re := Self.Re + Other.Re;
-        Im := Self.Im + Other.Im;
-      end
-    end;
+  public function Add(Self: Complex; Other: Complex): Complex;
+  begin
+    return record
+      Re := Self.Re + Other.Re;
+      Im := Self.Im + Other.Im;
+    end record;
+  end function;
 
-    public function MagSq(Self: Complex): real;
-    begin
-      return Self.Re * Self.Re + Self.Im * Self.Im
-    end;
-  end;
-  PixelSample = record
-    public IsInside: boolean;
-    public EscapeValue: real;
-  end;
+  public function MagSq(Self: Complex): real;
+  begin
+    return Self.Re * Self.Re + Self.Im * Self.Im;
+  end function;
+end record;
+
+type PixelSample = record
+  public IsInside: boolean;
+  public EscapeValue: real;
+end record;
 
 function Iterate(C: Complex; MaxIter: integer): PixelSample;
 begin
@@ -65,25 +71,28 @@ begin
   mutable var Z: Complex := Complex.Zero();
   mutable var N: integer := 0;
   while (N < MaxIter) and (Z.MagSq() <= EscapeRadiusSq) do
-  begin
-    Z := Z.Conj().Sq().Add(C);
-    N := N + 1
-  end;
+    begin
+      Z := Z.Conj().Sq().Add(C);
+      N := N + 1;
+    end;
+  end while;
 
   if N >= MaxIter then
-  begin
-    return record
-      IsInside := true;
-      EscapeValue := 0.0;
-    end
-  end;
-  var MagnitudeSq: real := Max(Z.MagSq(), 4.0);
-  var Smooth: real := (IntToReal(N) + 1.0) - (Log(Log(MagnitudeSq) * 0.5) / Log(2.0));
+    begin
+      return record
+        IsInside := true;
+        EscapeValue := 0.0;
+      end record;
+    end;
+  end if;
+  var MagnitudeSq: real := Math.Max(Z.MagSq(), 4.0);
+  var Smooth: real := (Conv.IntToReal(N) + 1.0) -
+                      (Math.Log(Math.Log(MagnitudeSq) * 0.5) / Math.Log(2.0));
   return record
     IsInside := false;
     EscapeValue := Smooth;
-  end
-end;
+  end record;
+end function;
 
 function ComputeRow(
   Py: integer;
@@ -99,76 +108,88 @@ begin
   mutable var WidthRange: integer := Width - 1;
   mutable var HeightRange: integer := Height - 1;
   if WidthRange < 1 then
-  begin
-    WidthRange := 1
-  end;
+    begin
+      WidthRange := 1;
+    end;
+  end if;
 
   if HeightRange < 1 then
-  begin
-    HeightRange := 1
-  end;
-  var Wr: real := IntToReal(WidthRange);
-  var Hr: real := IntToReal(HeightRange);
+    begin
+      HeightRange := 1;
+    end;
+  end if;
+  var Wr: real := Conv.IntToReal(WidthRange);
+  var Hr: real := Conv.IntToReal(HeightRange);
   var cy: real := YMax - (Py / Hr) * (YMax - YMin);
   mutable var Row: array of PixelSample := [];
   for Px: integer := 0 to Width - 1 do
-  begin
-    var cx: real := XMin + (Px / Wr) * (XMax - XMin);
-    Push(Row, Iterate(Complex.Create(cx, cy), MaxIter))
-  end;
+    begin
+      var cx: real := XMin + (Px / Wr) * (XMax - XMin);
+      Arrays.Push(Row, Iterate(Complex.Create(cx, cy), MaxIter));
+    end;
+  end for;
 
-  return Row
-end;
+  return Row;
+end function;
 
 function EscapeGlyph(EscapeValue: real): string;
 begin
   var Ramp: string := ' ░▒▓█';
-  var Count: integer := Std.Str.Length(Ramp);
-  var Phase: real := Frac(EscapeValue * 0.08);
-  var Index: integer := Clamp(Trunc(Phase * IntToReal(Count)), 0, Count - 1);
-  return CharAt(Ramp, Index)
-end;
+  var Count: integer := Str.Length(Ramp);
+  var Phase: real := Math.Frac(EscapeValue * 0.08);
+  var Index: integer := Math.Clamp(Math.Trunc(Phase * Conv.IntToReal(Count)), 0, Count - 1);
+  return Str.CharAt(Ramp, Index);
+end function;
 
-function RenderCell(Sample: PixelSample; Palette: PaletteKind): Cell;
+function RenderCell(Sample: PixelSample; Palette: Color2.PaletteKind): Console.Cell;
 begin
   if Sample.IsInside then
-  begin
-    var CellShade: Color := InsideColor();
-    return record
-      glyph := ' ';
-      foreground := CellShade;
-      background := CellShade;
-    end
-  end;
+    begin
+      var CellShade: Console.Color := Color2.InsideColor();
+      return record
+        glyph := ' ';
+        foreground := CellShade;
+        background := CellShade;
+      end record;
+    end;
+  end if;
 
   return record
     glyph := EscapeGlyph(Sample.EscapeValue);
-    foreground := EscapeColor(Palette, Sample.EscapeValue);
-    background := RgbColor(0, 0, 0);
-  end
-end;
+    foreground := Color2.EscapeColor(Palette, Sample.EscapeValue);
+    background := Console.RgbColor(0, 0, 0);
+  end record;
+end function;
 
-procedure DrawRow(Row: array of PixelSample; Width: integer; Y: integer; Palette: PaletteKind);
+procedure DrawRow(
+  Row: array of PixelSample;
+  Width: integer;
+  Y: integer;
+  Palette: Color2.PaletteKind
+);
 begin
-  var CurrentWidth: integer := ScreenWidth();
+  var CurrentWidth: integer := Console.ScreenWidth();
   mutable var DrawWidth: integer := Width;
   if DrawWidth > CurrentWidth then
-  begin
-    DrawWidth := CurrentWidth
-  end;
+    begin
+      DrawWidth := CurrentWidth;
+    end;
+  end if;
 
   if DrawWidth < 1 then
-  begin
-    return
-  end;
-  mutable var Cells: array of Cell := [];
+    begin
+      return;
+    end;
+  end if;
+  mutable var Cells: array of Console.Cell := [];
   for Px: integer := 0 to DrawWidth - 1 do
-  begin
-    Push(Cells, RenderCell(Row[Px], Palette))
-  end;
+    begin
+      Arrays.Push(Cells, RenderCell(Row[Px], Palette));
+    end;
+  end for;
 
-  WriteCells(1, Y, Cells)
-end;
+  Console.WriteCells(1, Y, Cells);
+end procedure;
 
 public procedure Render(
   XMin: real;
@@ -178,21 +199,26 @@ public procedure Render(
   Width: integer;
   Height: integer;
   MaxIter: integer;
-  Palette: PaletteKind
+  Palette: Color2.PaletteKind
 );
 begin
   mutable var Tasks: array of task := [];
   for Py: integer := 0 to Height - 1 do
-  begin
-    Push(Tasks, go ComputeRow(Py, Width, Height, XMin, XMax, YMin, YMax, MaxIter))
-  end;
+    begin
+      Arrays.Push(Tasks, go ComputeRow(Py, Width, Height, XMin, XMax, YMin, YMax, MaxIter));
+    end;
+  end for;
 
   for Py: integer := 0 to Height - 1 do
-  begin
-    var Row: array of PixelSample := Wait(Tasks[Py]);
-    if (Py + 1) <= Max(ScreenHeight() - 2, 1) then
     begin
-      DrawRow(Row, Width, Py + 1, Palette)
-    end
-  end
-end;
+      var Row: array of PixelSample := Tasks2.Wait(Tasks[Py]);
+      if (Py + 1) <= Math.Max(Console.ScreenHeight() - 2, 1) then
+        begin
+          DrawRow(Row, Width, Py + 1, Palette);
+        end;
+      end if;
+    end;
+  end for;
+end procedure;
+
+end unit;

@@ -189,19 +189,19 @@ fn jsonl_uninitialized_roots_initialize_atomically_and_continue() {
 fn jsonl_uninitialized_assignment_stays_bound_to_the_selected_child_task() {
     const TASK_SOURCE: &str = r#"program TaskUninitializedAssignment;
 
-uses Std.Console, Std.Tasks;
+uses Std.Console as Console; uses Std.Tasks as Tasks;
 
 function Work(): integer;
 begin
   mutable var Count: integer := 1;
   var Marker: integer := 0;
-  return Count
-end;
+  return Count;
+end function;
 
 begin
   var Pending: task := go Work();
-  WriteLn(Wait(Pending))
-end.
+  Console.WriteLn(Tasks.Wait(Pending));
+end program;
 "#;
     let (program, diagnostics) = fpas_parser::parse(TASK_SOURCE);
     assert!(diagnostics.is_empty(), "parse diagnostics: {diagnostics:?}");

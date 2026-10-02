@@ -3,12 +3,11 @@
 ```pascal
 program Hello;
 
-uses
-  Std.Console;
+uses Std.Console as Console;
 
 begin
-  WriteLn('Hello, World!');
-end.
+  Console.WriteLn('Hello, World!');
+end program;
 ```
 
 Run with `fpas run` from a project directory that includes this program, or pass the `.fpas` file path directly (`fpas run hello.fpas`).

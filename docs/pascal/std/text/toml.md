@@ -5,20 +5,25 @@ Parse and stringify TOML 1.0 documents with an explicit Functional Pascal value 
 ```pascal
 program Example;
 
-uses Std.Console, Std.Str, Std.Toml;
+uses Std.Console as Console;
+uses Std.Str as Str;
+uses Std.Toml as Toml;
 
 begin
-  var Parsed: result of TomlValue, string := Parse('[project]' + Chr(10) + 'name = ''demo''');
+  var Parsed: result of Toml.TomlValue, string := Toml.Parse(('[project]' + Str.Chr(10)) +
+                                                             'name = ''demo''');
   case Parsed of
-    Ok(Value): WriteLn(Stringify(Value));
-    Error(Message): WriteLn(Message)
-  end
-end.
+    when Ok(Value):
+      Console.WriteLn(Toml.Stringify(Value));
+    when Error(Message):
+      Console.WriteLn(Message);
+  end case;
+end program;
 ```
 
 ## Importing and names
 
-After `uses Std.Toml;` use short names (`TomlValue`, `Parse`, `Stringify`) or qualified names such as `Std.Toml.Parse`.
+Import with `uses Std.Toml as Toml;`. Access every exported member through `Toml`, for example `Toml.Parse(...)`. Imports open no short names.
 
 `TomlValue` is an enum. Tables use `dict of string to TomlValue`; arrays use `array of TomlValue`.
 
@@ -41,7 +46,7 @@ type TomlValue = enum
   Datetime(Value: string);
   ArrayValue(Items: array of TomlValue);
   Table(Fields: dict of string to TomlValue);
-end;
+end enum;
 ```
 
 `Datetime` preserves the TOML date, time, local date-time, or offset date-time spelling returned by the parser. Its `Value` must be a valid TOML date/time string when passed to `Stringify`.
@@ -57,16 +62,19 @@ Parses a TOML document. Valid input returns `Ok(TomlValue)`; syntax errors retur
 All TOML 1.0 value kinds are represented: strings, signed 64-bit integers, floating-point values (including `inf` and `nan`), booleans, date/time values, arrays, tables, inline tables, and arrays of tables.
 
 ```pascal
-var Parsed: result of TomlValue, string := Parse(
+uses Std.Console as Console;
+uses Std.Toml as Toml;
+
+var Parsed: result of Toml.TomlValue, string := Toml.Parse(
   'title = ''example''' + Chr(10) +
   'enabled = true' + Chr(10) +
   '[server]' + Chr(10) +
   'port = 8080'
 );
 case Parsed of
-  Ok(TomlValue.Table(Fields)): WriteLn('parsed');
-  Error(Message): WriteLn('TOML error: ' + Message)
-end
+  when Ok(Value): Console.WriteLn('parsed');
+  when Error(Message): Console.WriteLn('TOML error: ' + Message);
+end case;
 ```
 
 ## `Stringify`
@@ -78,13 +86,11 @@ function Stringify(Value: TomlValue): string;
 Encodes a `TomlValue` tree as TOML. The supplied root must be a table because TOML documents have table roots. `Stringify` raises a runtime error for malformed manually constructed values, non-string table keys, invalid date/time text, or nesting deeper than 256 levels.
 
 ```pascal
-var Value: TomlValue := TomlValue.Table([
-  'project': TomlValue.Table([
-    'name': TomlValue.String('demo'),
-    'version': TomlValue.Integer(1)
-  ])
-]);
-WriteLn(Stringify(Value));
+uses Std.Console as Console;
+uses Std.Toml as Toml;
+
+var Value: Toml.TomlValue := Toml.TomlValue.Table(['project': Toml.TomlValue.Table(['name': Toml.TomlValue.String('demo'), 'version': Toml.TomlValue.Integer(1)])]);
+Console.WriteLn(Toml.Stringify(Value));
 ```
 
 ## Limits and errors

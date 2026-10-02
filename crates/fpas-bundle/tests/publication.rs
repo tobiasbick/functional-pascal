@@ -21,7 +21,8 @@ fn temp_dir() -> PathBuf {
 }
 
 fn encoded_bundle(runner: &[u8]) -> Vec<u8> {
-    let (program, diagnostics) = fpas_parser::parse("program BundleFixture; begin end.");
+    let (program, diagnostics) =
+        fpas_parser::parse(r#"program BundleFixture; begin null; end program;"#);
     assert!(diagnostics.is_empty());
     let executable = fpas_compiler::compile(&program).expect("fixture must compile");
     let image = ProgramImage::new(

@@ -1,29 +1,41 @@
 // Status-line painting with semantic shortcut and selection roles.
 unit Std.Tui.Rendering.StatusLine;
 
-uses
-  Std.Arrays, Std.Console, Std.Tui.Cells.Cell, Std.Tui.Cells.StyleRole, Std.Tui.Chrome.StatusItem,
-  Std.Tui.Geometry.Point, Std.Tui.Geometry.Rect, Std.Tui.Ids.ControlId, Std.Tui.Rendering.Canvas;
+uses Std.Arrays as Arrays;
+uses Std.Console as Console;
+uses Std.Tui.Cells.Cell as Cell;
+uses Std.Tui.Cells.StyleRole as StyleRole;
+uses Std.Tui.Chrome.StatusItem as StatusItem;
+uses Std.Tui.Geometry.Point as Point;
+uses Std.Tui.Geometry.Rect as Rect;
+uses Std.Tui.Ids.ControlId as ControlId;
+uses Std.Tui.Rendering.Canvas as Canvas2;
 
-function TuiStatusFocused(Focused: option of TuiControlId; Id: TuiControlId): boolean;
+function TuiStatusFocused(Focused: option of ControlId.TuiControlId; Id: ControlId.TuiControlId): boolean;
 begin
   case Focused of
-    Some(Value):
-    begin
-      return Value.Value = Id.Value
-    end;
-    None:
-    begin
-      return false
-    end
-  end
-end;
+    when Some(Value):
+      begin
+        return Value.Value = Id.Value;
+      end;
+    when None:
+      begin
+        return false;
+      end;
+  end case;
+end function;
 
-function TuiStatusWrite(Canvas: TuiCanvas; X: integer; Y: integer; Text: string; Role: TuiStyleRole): integer;
+function TuiStatusWrite(
+  Canvas: Canvas2.TuiCanvas;
+  X: integer;
+  Y: integer;
+  Text: string;
+  Role: StyleRole.TuiStyleRole
+): integer;
 begin
-  Canvas.WriteText(TuiPoint.Create(X, Y), Text, Role);
-  return X + Std.Console.DisplayWidth(Text)
-end;
+  Canvas.WriteText(Point.TuiPoint.Create(X, Y), Text, Role);
+  return X + Console.DisplayWidth(Text);
+end function;
 
 // Paints one complete status row, including its unused background cells.
 //
@@ -33,46 +45,53 @@ end;
 // - `Items`: Ordered child or menu items.
 // - `Focused`: Whether the control currently owns focus.
 public procedure TuiPaintStatusLine(
-  Canvas: TuiCanvas;
-  Bounds: TuiRect;
-  Items: array of TuiStatusItem;
-  Focused: option of TuiControlId
+  Canvas: Canvas2.TuiCanvas;
+  Bounds: Rect.TuiRect;
+  Items: array of StatusItem.TuiStatusItem;
+  Focused: option of ControlId.TuiControlId
 );
 begin
-  Canvas.FillRect(Bounds, TuiCell.Create(' ', TuiStyleRole.StatusNormal));
+  Canvas.FillRect(Bounds, Cell.TuiCell.Create(' ', StyleRole.TuiStyleRole.StatusNormal));
   mutable var X: integer := Bounds.X;
-  for Index: integer := 0 to Std.Arrays.Length(Items) - 1 do
-  begin
-    if Index > 0 then
+  for Index: integer := 0 to Arrays.Length(Items) - 1 do
     begin
-      X := TuiStatusWrite(Canvas, X, Bounds.Y, ' ', TuiStyleRole.StatusNormal)
-    end;
-
-    case Items[Index] of
-      TuiStatusItem.Hint(Text):
-      begin
-        X := TuiStatusWrite(Canvas, X, Bounds.Y, Text, TuiStyleRole.StatusNormal)
-      end;
-      TuiStatusItem.KeyHint(KeyText, Text):
-      begin
-        X := TuiStatusWrite(Canvas, X, Bounds.Y, KeyText, TuiStyleRole.StatusShortcut);
-        X := TuiStatusWrite(Canvas, X, Bounds.Y, ' ', TuiStyleRole.StatusNormal);
-        X := TuiStatusWrite(Canvas, X, Bounds.Y, Text, TuiStyleRole.StatusNormal)
-      end;
-      TuiStatusItem.Command(Id, Text, Action, Enabled):
-      begin
-        mutable var Role: TuiStyleRole := TuiStyleRole.StatusNormal;
-        if not Enabled then
+      if Index > 0 then
         begin
-          Role := TuiStyleRole.StatusDisabled
-        end
-        else if TuiStatusFocused(Focused, Id) then
-        begin
-          Role := TuiStyleRole.StatusSelected
+          X := TuiStatusWrite(Canvas, X, Bounds.Y, ' ', StyleRole.TuiStyleRole.StatusNormal);
         end;
+      end if;
 
-        X := TuiStatusWrite(Canvas, X, Bounds.Y, Text, Role)
-      end
-    end
-  end
-end;
+      case Items[Index] of
+        when StatusItem.TuiStatusItem.Hint(Text):
+          begin
+            X := TuiStatusWrite(Canvas, X, Bounds.Y, Text, StyleRole.TuiStyleRole.StatusNormal);
+          end;
+        when StatusItem.TuiStatusItem.KeyHint(KeyText, Text):
+          begin
+            X := TuiStatusWrite(Canvas, X, Bounds.Y, KeyText, StyleRole.TuiStyleRole.StatusShortcut);
+            X := TuiStatusWrite(Canvas, X, Bounds.Y, ' ', StyleRole.TuiStyleRole.StatusNormal);
+            X := TuiStatusWrite(Canvas, X, Bounds.Y, Text, StyleRole.TuiStyleRole.StatusNormal);
+          end;
+        when StatusItem.TuiStatusItem.Command(Id, Text, Action, Enabled):
+          begin
+            mutable var Role: StyleRole.TuiStyleRole := StyleRole.TuiStyleRole.StatusNormal;
+            if not Enabled then
+              begin
+                Role := StyleRole.TuiStyleRole.StatusDisabled;
+              end;
+            else
+              if TuiStatusFocused(Focused, Id) then
+                begin
+                  Role := StyleRole.TuiStyleRole.StatusSelected;
+                end;
+              end if;
+            end if;
+
+            X := TuiStatusWrite(Canvas, X, Bounds.Y, Text, Role);
+          end;
+      end case;
+    end;
+  end for;
+end procedure;
+
+end unit;

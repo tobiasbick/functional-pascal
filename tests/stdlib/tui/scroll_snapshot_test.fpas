@@ -1,51 +1,52 @@
 program TuiScrollSnapshotTest;
 
-uses Std.Str, Std.Test, Std.Tui;
+uses Std.Str as Str;
+uses Std.Test as Test;
+uses Std.Tui as Tui;
 
-type
-  ScrollModel = record
-    Offset: TuiPoint;
-  end;
+type ScrollModel = record
+  Offset: Tui.TuiPoint;
+end record;
 
-function ViewScroll(State: ScrollModel): TuiElement;
+function ViewScroll(State: ScrollModel): Tui.TuiElement;
 begin
-  return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(1)), [
-                                                                        TuiElementBuilders.MakeScroll(TuiControlId.Create(1), State.Offset, TuiAction.Create(7), TuiElementBuilders.MakeColumn([
-                                                                                                                                                                                                 TuiElementBuilders.MakeLabel('First'),
-                                                                                                                                                                                                 TuiElementBuilders.MakeLabel('Second'),
-                                                                                                                                                                                                 TuiElementBuilders.MakeLabel('Third')
-                                                                                                                                                                                               ]))
-                                                                      ])
-end;
+  return Tui.TuiElementBuilders.MakeDesktop(Some(Tui.TuiControlId.Create(1)), [
+                                                                                Tui.TuiElementBuilders.MakeScroll(Tui.TuiControlId.Create(1), State.Offset, Tui.TuiAction.Create(7), Tui.TuiElementBuilders.MakeColumn([
+                                                                                                                                                                                                                         Tui.TuiElementBuilders.MakeLabel('First'),
+                                                                                                                                                                                                                         Tui.TuiElementBuilders.MakeLabel('Second'),
+                                                                                                                                                                                                                         Tui.TuiElementBuilders.MakeLabel('Third')
+                                                                                                                                                                                                                       ]))
+                                                                              ]);
+end function;
 
-function UpdateScroll(State: ScrollModel; Msg: TuiMsg; Cmd: TuiCmdOutput): ScrollModel;
+function UpdateScroll(State: ScrollModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): ScrollModel;
 begin
-  Cmd.Set(TuiCmd.NoCommand);
+  Cmd.Set(Tui.TuiCmd.NoCommand);
   case Msg of
-    TuiMsg.ScrollChanged(Source, Action, Offset):
-    begin
-      return record
-        Offset := Offset;
-      end
-    end
+    when Tui.TuiMsg.ScrollChanged(Source, Action, Offset):
+      begin
+        return record
+          Offset := Offset;
+        end record;
+      end;
     else
-    begin
-      return State
-    end
-  end
-end;
+      begin
+        return State;
+      end;
+  end case;
+end function;
 
 begin
-  mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(12, 2));
+  mutable var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(12, 2));
   mutable var Model: ScrollModel := record
-    Offset := TuiPoint.Create(0, 0);
-  end;
+    Offset := Tui.TuiPoint.Create(0, 0);
+  end record;
 
   Model := App.RunIterations(Model, UpdateScroll, ViewScroll, 0, 0);
-  AssertTrue(Std.Str.Contains(App.SurfaceSnapshot().LineAt(0), 'First'));
-  App.Inject(TuiMsgScrollChanged(TuiControlId.Create(1), TuiAction.Create(7), TuiPoint.Create(0, 1)));
+  Test.AssertTrue(Str.Contains(App.SurfaceSnapshot().LineAt(0), 'First'));
+  App.Inject(Tui.TuiMsgScrollChanged(Tui.TuiControlId.Create(1), Tui.TuiAction.Create(7), Tui.TuiPoint.Create(0, 1)));
   Model := App.RunIterations(Model, UpdateScroll, ViewScroll, 1, 0);
-  AssertTrue(Std.Str.Contains(App.SurfaceSnapshot().LineAt(0), 'Second'));
-  AssertFalse(Std.Str.Contains(App.SurfaceSnapshot().LineAt(0), 'First'));
-  App.Close()
-end.
+  Test.AssertTrue(Str.Contains(App.SurfaceSnapshot().LineAt(0), 'Second'));
+  Test.AssertFalse(Str.Contains(App.SurfaceSnapshot().LineAt(0), 'First'));
+  App.Close();
+end program;

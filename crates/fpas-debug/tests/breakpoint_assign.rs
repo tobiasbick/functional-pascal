@@ -13,12 +13,12 @@ use serde_json::{Value, json};
 
 const SOURCE: &str = r#"program BreakpointAssign;
 
-mutable var Flag: integer := 0;
+  mutable var Flag: integer := 0;
 
 begin
   Flag := 1;
-  Flag := 2
-end.
+  Flag := 2;
+end program;
 "#;
 
 fn server() -> JsonlServer {

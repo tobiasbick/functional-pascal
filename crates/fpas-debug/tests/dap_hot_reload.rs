@@ -9,7 +9,8 @@ use fpas_debug::{DebugSourceContent, PreparedDebugTarget, ReloadedDebugTarget, d
 use serde_json::{Value, json};
 
 fn server() -> DapServer {
-    let (program, diagnostics) = fpas_parser::parse("program HotReload; begin end.");
+    let (program, diagnostics) =
+        fpas_parser::parse(r#"program HotReload; begin null; end program;"#);
     assert!(diagnostics.is_empty(), "parse diagnostics: {diagnostics:?}");
     let executable = fpas_compiler::compile(&program).expect("compile hot-reload fixture");
     DapServer::new(PreparedDebugTarget::new(executable, Vec::new())).expect("DAP server")
@@ -17,7 +18,7 @@ fn server() -> DapServer {
 
 fn compile_reloadable(value: i64) -> fpas_bytecode::VerifiedExecutable {
     let source = format!(
-        "program HotReload;\nfunction Helper(): integer;\nbegin\n  return {value}\nend;\nbegin\nend."
+        "program HotReload;\nfunction Helper(): integer;\nbegin\n  return {value};\nend function;\nbegin null;\nend program;"
     );
     let (program, diagnostics) = fpas_parser::parse(&source);
     assert!(diagnostics.is_empty(), "parse diagnostics: {diagnostics:?}");
@@ -148,7 +149,11 @@ fn dap_incompatible_replace_is_rejected_before_the_image_changes() {
         .expect("entry frame");
 
     let (program, diagnostics) = fpas_parser::parse(
-        "program IncompatibleReload;\nfunction Extra(): integer;\nbegin\n  return 1\nend;\nbegin\nend.",
+        r#"program IncompatibleReload;
+function Extra(): integer;
+begin return 1;
+end function;
+begin null; end program;"#,
     );
     assert!(diagnostics.is_empty(), "parse diagnostics: {diagnostics:?}");
     let candidate = fpas_compiler::compile(&program).expect("compile incompatible fixture");

@@ -33,13 +33,23 @@ mod tests {
     fn partial_write_failure_preserves_existing_source() {
         let directory = create_temp_dir("fmt-atomic-partial-write");
         let path = directory.join("source.fpas");
-        let original = "program Original;\nbegin\nend.\n";
+        let original = r#"program Original;
+begin null;
+end program;
+"#;
         fs::write(&path, original).expect("source fixture must be written");
 
-        let error = write_source_with(&path, "program Replacement;\nbegin\nend.\n", |file, _| {
-            file.write_all(b"partial")?;
-            Err(io::Error::other("injected partial write failure"))
-        })
+        let error = write_source_with(
+            &path,
+            r#"program Replacement;
+begin null;
+end program;
+"#,
+            |file, _| {
+                file.write_all(b"partial")?;
+                Err(io::Error::other("injected partial write failure"))
+            },
+        )
         .expect_err("injected write failure must be returned");
         let actual = fs::read_to_string(&path).expect("source must remain readable");
         fs::remove_dir_all(directory).expect("temp directory must be removed");

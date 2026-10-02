@@ -11,13 +11,18 @@ exports `Map`, `Filter`, or `Reduce`; receiver calls such as
 Calls `F` once per scalar and returns the mapped scalars in order. Every callback result must contain **exactly one Unicode scalar**. An empty or multi-scalar result raises a runtime error naming `Std.Str.Map`; the result is not returned. The scalar length of the result equals that of `S`. Use `Filter` to remove scalars; `Map` does not expand one scalar into several.
 
 ```pascal
+uses Std.Str as Str;
+
 function ReplaceStar(C: string): string;
 begin
-  if C = '*' then return '★';
-  return C
-end;
+  if C = '*' then
+    return '★';
+  end if;
 
-var ResultText: string := Std.Str.Map('a*b', ReplaceStar);  // 'a★b'
+  return C;
+end function;
+
+var ResultText: string := Str.Map('a*b', ReplaceStar);
 ```
 
 ## `Filter(S: string; F: function(C: string): boolean): string`
@@ -25,12 +30,14 @@ var ResultText: string := Std.Str.Map('a*b', ReplaceStar);  // 'a★b'
 Calls `F` once per scalar and retains those for which it returns `true`, preserving their order.
 
 ```pascal
+uses Std.Str as Str;
+
 function NotSpace(C: string): boolean;
 begin
-  return C <> ' '
-end;
+  return C <> ' ';
+end function;
 
-var Compact: string := Std.Str.Filter('a b c', NotSpace);  // 'abc'
+var Compact: string := Str.Filter('a b c', NotSpace);
 ```
 
 ## `Reduce(S: string; Init: U; F: function(Acc: U; C: string): U): U`
@@ -38,13 +45,18 @@ var Compact: string := Std.Str.Filter('a b c', NotSpace);  // 'abc'
 Starts with `Init` and passes the current accumulator and scalar to `F` in left-to-right order. The callback must return the accumulator type, which is inferred from `Init`.
 
 ```pascal
+uses Std.Str as Str;
+
 function CountNonSpaces(Acc: integer; C: string): integer;
 begin
-  if C = ' ' then return Acc;
-  return Acc + 1
-end;
+  if C = ' ' then
+    return Acc;
+  end if;
 
-var Count: integer := Std.Str.Reduce('a b c', 0, CountNonSpaces);  // 3
+  return Acc + 1;
+end function;
+
+var Count: integer := Str.Reduce('a b c', 0, CountNonSpaces);
 ```
 
 For empty `S`, `Map` and `Filter` return `''` and `Reduce` returns `Init`; no callback runs. Arguments are evaluated once in the usual left-to-right order. If a callback fails, the operation stops at that scalar and propagates the error without returning a partial result. Side effects from callbacks already run remain visible.

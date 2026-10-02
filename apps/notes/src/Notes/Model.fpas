@@ -1,65 +1,74 @@
 unit Notes.Model;
 
-uses Notes.Actions, Std.Arrays, Std.Console, Std.Conv, Std.Str, Std.Tui;
+uses Notes.Actions as Actions;
+uses Std.Arrays as Arrays;
+uses Std.Console as Console;
+uses Std.Conv as Conv;
+uses Std.Str as Str;
+uses Std.Tui as Tui;
 
-public type
-  // One persisted `.note` document and its source path.
-  Note = record
-    public Id: string;
-    public Title: string;
-    public CreatedMillis: integer;
-    public UpdatedMillis: integer;
-    public Tags: array of string;
-    public Pinned: boolean;
-    public Archived: boolean;
-    public Body: string;
-    public Path: string;
-  end;
-  // One note file that could not be read or parsed.
-  NoteIssue = record
-    public Path: string;
-    public Message: string;
-  end;
-  // Complete result of loading one notes directory.
-  NotesLoad = record
-    public Notes: array of Note;
-    public Issues: array of NoteIssue;
-  end;
-  // Visible pane in a narrow terminal.
-  NotesPane = enum
-    List;
-    Editor;
-  end;
-  // Active modal layer, if any.
-  NotesOverlay = enum
-    Closed;
-    Commands;
-    Help;
-    QuitConfirmation;
-    SaveFailure;
-  end;
-  // Complete immutable application state supplied to the MVU view.
-  NotesModel = record
-    public Directory: string;
-    public Notes: array of Note;
-    public Issues: array of NoteIssue;
-    public Selected: integer;
-    public Search: string;
-    public SearchCaret: integer;
-    public TitleCaret: integer;
-    public TagsText: string;
-    public TagsCaret: integer;
-    public BodyCaret: integer;
-    public BodyOffset: TuiPoint;
-    public Focus: integer;
-    public Pane: NotesPane;
-    public Overlay: NotesOverlay;
-    public Dirty: boolean;
-    public Status: string;
-    public ErrorMessage: string;
-    public Width: integer;
-    public Height: integer;
-  end;
+// One persisted `.note` document and its source path.
+public type Note = record
+  public Id: string;
+  public Title: string;
+  public CreatedMillis: integer;
+  public UpdatedMillis: integer;
+  public Tags: array of string;
+  public Pinned: boolean;
+  public Archived: boolean;
+  public Body: string;
+  public Path: string;
+end record;
+
+// One note file that could not be read or parsed.
+public type NoteIssue = record
+  public Path: string;
+  public Message: string;
+end record;
+
+// Complete result of loading one notes directory.
+public type NotesLoad = record
+  public Notes: array of Note;
+  public Issues: array of NoteIssue;
+end record;
+
+// Visible pane in a narrow terminal.
+public type NotesPane = enum
+  List;
+  Editor;
+end enum;
+
+// Active modal layer, if any.
+public type NotesOverlay = enum
+  Closed;
+  Commands;
+  Help;
+  QuitConfirmation;
+  SaveFailure;
+end enum;
+
+// Complete immutable application state supplied to the MVU view.
+public type NotesModel = record
+  public Directory: string;
+  public Notes: array of Note;
+  public Issues: array of NoteIssue;
+  public Selected: integer;
+  public Search: string;
+  public SearchCaret: integer;
+  public TitleCaret: integer;
+  public TagsText: string;
+  public TagsCaret: integer;
+  public BodyCaret: integer;
+  public BodyOffset: Tui.TuiPoint;
+  public Focus: integer;
+  public Pane: NotesPane;
+  public Overlay: NotesOverlay;
+  public Dirty: boolean;
+  public Status: string;
+  public ErrorMessage: string;
+  public Width: integer;
+  public Height: integer;
+end record;
 
 // Creates a new unsaved note with stable identity and timestamps.
 public function NoteCreate(Id: string; TimestampMillis: integer): Note;
@@ -74,8 +83,8 @@ begin
     Archived := false;
     Body := '';
     Path := '';
-  end
-end;
+  end record;
+end function;
 
 // Creates initial application state from a directory load result.
 public function NotesModelCreate(Directory: string; Loaded: NotesLoad): NotesModel;
@@ -87,20 +96,22 @@ begin
   mutable var TitleCaret: integer := 0;
   mutable var TagsText: string := '';
   mutable var TagsCaret: integer := 0;
-  if Std.Arrays.Length(Loaded.Notes) > 0 then
-  begin
-    Selected := 0;
-    Focus := TitleControl;
-    Pane := NotesPane.Editor;
-    TitleCaret := Std.Str.Length(Loaded.Notes[0].Title);
-    TagsText := Std.Str.Join(Loaded.Notes[0].Tags, ', ');
-    TagsCaret := Std.Str.Length(TagsText)
-  end;
+  if Arrays.Length(Loaded.Notes) > 0 then
+    begin
+      Selected := 0;
+      Focus := Actions.TitleControl;
+      Pane := NotesPane.Editor;
+      TitleCaret := Str.Length(Loaded.Notes[0].Title);
+      TagsText := Str.Join(Loaded.Notes[0].Tags, ', ');
+      TagsCaret := Str.Length(TagsText);
+    end;
+  end if;
 
-  if Std.Arrays.Length(Loaded.Issues) > 0 then
-  begin
-    Status := IntToStr(Std.Arrays.Length(Loaded.Issues)) + ' invalid note file(s)'
-  end;
+  if Arrays.Length(Loaded.Issues) > 0 then
+    begin
+      Status := Conv.IntToStr(Arrays.Length(Loaded.Issues)) + ' invalid note file(s)';
+    end;
+  end if;
 
   return record
     Directory := Directory;
@@ -113,7 +124,7 @@ begin
     TagsText := TagsText;
     TagsCaret := TagsCaret;
     BodyCaret := 0;
-    BodyOffset := TuiPoint.Create(0, 0);
+    BodyOffset := Tui.TuiPoint.Create(0, 0);
     Focus := Focus;
     Pane := Pane;
     Overlay := NotesOverlay.Closed;
@@ -122,120 +133,136 @@ begin
     ErrorMessage := '';
     Width := 100;
     Height := 30;
-  end
-end;
+  end record;
+end function;
 
 // Formats a note's tags for the controlled metadata input.
 public function NoteTagsText(NoteValue: Note): string;
 begin
-  return Std.Str.Join(NoteValue.Tags, ', ')
-end;
+  return Str.Join(NoteValue.Tags, ', ');
+end function;
 
 // Parses, trims, and deduplicates comma-separated tags.
 public function NoteTagsFromText(Text: string): array of string;
 begin
   mutable var Tags: array of string := [];
-  var Parts: array of string := Std.Str.Split(Text, ',');
-  for Index: integer := 0 to Std.Arrays.Length(Parts) - 1 do
-  begin
-    var Tag: string := Std.Str.Trim(Parts[Index]);
-    if (Tag <> '') and (not Std.Arrays.Contains(Tags, Tag)) then
+  var Parts: array of string := Str.Split(Text, ',');
+  for Index: integer := 0 to Arrays.Length(Parts) - 1 do
     begin
-      Std.Arrays.Push(Tags, Tag)
-    end
-  end;
+      var Tag: string := Str.Trim(Parts[Index]);
+      if (Tag <> '') and (not Arrays.Contains(Tags, Tag)) then
+        begin
+          Arrays.Push(Tags, Tag);
+        end;
+      end if;
+    end;
+  end for;
 
-  return Tags
-end;
+  return Tags;
+end function;
 
 // Reports whether an active note matches a case-insensitive query.
 public function NoteMatches(NoteValue: Note; Search: string): boolean;
 begin
-  var Query: string := Std.Str.ToLower(Std.Str.Trim(Search));
+  var Query: string := Str.ToLower(Str.Trim(Search));
   if Query = '' then
-  begin
-    return not NoteValue.Archived
-  end;
+    begin
+      return not NoteValue.Archived;
+    end;
+  end if;
 
   if NoteValue.Archived then
-  begin
-    return false
-  end;
+    begin
+      return false;
+    end;
+  end if;
 
-  return (Std.Str.Contains(Std.Str.ToLower(NoteValue.Title), Query) or Std.Str.Contains(Std.Str.ToLower(NoteValue.Body), Query)) or
-         Std.Str.Contains(Std.Str.ToLower(NoteTagsText(NoteValue)), Query)
-end;
+  return (Str.Contains(Str.ToLower(NoteValue.Title), Query) or Str.Contains(Str.ToLower(NoteValue.Body), Query)) or
+         Str.Contains(Str.ToLower(NoteTagsText(NoteValue)), Query);
+end function;
 
 // Returns source-array indices for all visible filtered notes.
 public function NotesFilteredIndices(Notes: array of Note; Search: string): array of integer;
 begin
   mutable var Indices: array of integer := [];
-  for Index: integer := 0 to Std.Arrays.Length(Notes) - 1 do
-  begin
-    if NoteMatches(Notes[Index], Search) then
+  for Index: integer := 0 to Arrays.Length(Notes) - 1 do
     begin
-      Std.Arrays.Push(Indices, Index)
-    end
-  end;
+      if NoteMatches(Notes[Index], Search) then
+        begin
+          Arrays.Push(Indices, Index);
+        end;
+      end if;
+    end;
+  end for;
 
-  return Indices
-end;
+  return Indices;
+end function;
 
 function ClipListText(Text: string; MaximumWidth: integer): string;
 begin
   if MaximumWidth <= 0 then
-  begin
-    return ''
-  end;
+    begin
+      return '';
+    end;
+  end if;
 
-  if Std.Console.DisplayWidth(Text) <= MaximumWidth then
-  begin
-    return Text
-  end;
+  if Console.DisplayWidth(Text) <= MaximumWidth then
+    begin
+      return Text;
+    end;
+  end if;
 
   if MaximumWidth = 1 then
-  begin
-    return '…'
-  end;
+    begin
+      return '…';
+    end;
+  end if;
   mutable var Clipped: string := '';
   mutable var Width: integer := 0;
   var ContentWidth: integer := MaximumWidth - 1;
-  for Grapheme: string in Std.Console.SplitGraphemes(Text) do
-  begin
-    var GraphemeWidth: integer := Std.Console.DisplayWidth(Grapheme);
-    if Width + GraphemeWidth > ContentWidth then
+  for Grapheme: string in Console.SplitGraphemes(Text) do
     begin
-      return Clipped + '…'
+      var GraphemeWidth: integer := Console.DisplayWidth(Grapheme);
+      if Width + GraphemeWidth > ContentWidth then
+        begin
+          return Clipped + '…';
+        end;
+      end if;
+
+      Clipped := Clipped + Grapheme;
+      Width := Width + GraphemeWidth;
     end;
+  end for;
 
-    Clipped := Clipped + Grapheme;
-    Width := Width + GraphemeWidth
-  end;
-
-  return Clipped
-end;
+  return Clipped;
+end function;
 
 // Builds width-bounded list labels for all visible filtered notes.
 public function NotesListItems(Notes: array of Note; Search: string; MaximumWidth: integer): array of string;
 begin
   mutable var Items: array of string := [];
   var Indices: array of integer := NotesFilteredIndices(Notes, Search);
-  for Index: integer := 0 to Std.Arrays.Length(Indices) - 1 do
-  begin
-    var NoteValue: Note := Notes[Indices[Index]];
-    mutable var Prefix: string := '  ';
-    if NoteValue.Pinned then
+  for Index: integer := 0 to Arrays.Length(Indices) - 1 do
     begin
-      Prefix := '★ '
-    end;
-    mutable var Tags: string := NoteTagsText(NoteValue);
-    if Tags <> '' then
-    begin
-      Tags := '  ·  ' + Tags
-    end;
+      var NoteValue: Note := Notes[Indices[Index]];
+      mutable var Prefix: string := '  ';
+      if NoteValue.Pinned then
+        begin
+          Prefix := '★ ';
+        end;
+      end if;
+      mutable var Tags: string := NoteTagsText(NoteValue);
+      if Tags <> '' then
+        begin
+          Tags := '  ·  ' + Tags;
+        end;
+      end if;
 
-    Std.Arrays.Push(Items, ClipListText((Prefix + NoteValue.Title) + Tags, MaximumWidth))
-  end;
+      Arrays.Push(Items, ClipListText((Prefix + NoteValue.Title) + Tags, MaximumWidth));
+    end;
+  end for;
 
-  return Items
-end;
+  return Items;
+end function;
+
+end unit;

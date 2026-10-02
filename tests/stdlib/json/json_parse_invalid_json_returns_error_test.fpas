@@ -1,17 +1,18 @@
 program T;
 
-uses Std.Console, Std.Json;
+uses Std.Console as Console;
+uses Std.Json as Json;
 
 begin
-  var R: result of JsonValue, string := Parse('{bad json');
+  var R: result of Json.JsonValue, string := Json.Parse('{bad json');
   case R of
-    Ok(V):
-    begin
-      WriteLn(Stringify(V))
-    end;
-    Error(E):
-    begin
-      WriteLn('error')
-    end
-  end
-end.
+    when Ok(V):
+      begin
+        Console.WriteLn(Json.Stringify(V));
+      end;
+    when Error(E):
+      begin
+        Console.WriteLn('error');
+      end;
+  end case;
+end program;

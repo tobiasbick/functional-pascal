@@ -4,19 +4,22 @@ Helper functions for `Option of T` values. See [Error handling](../../language/e
 
 ```pascal
 program Example;
-uses Std.Console, Std.Options;
+
+uses Std.Console as Console;
+uses Std.Options as Options;
+
 begin
-  var O: Option of integer := Some(7);
-  WriteLn(Unwrap(O))
-end.
+  var O: option of integer := Some(7);
+  Console.WriteLn(Options.Unwrap(O));
+end program;
 ```
 
 
 ## Importing and names
 
-After `uses Std.Options;` use short names (`Unwrap`, `IsSome`, …) or qualified (`Std.Options.Unwrap`, …).
+Import with `uses Std.Options as Options;`. Access every exported member through `Options`, for example `Options.Unwrap(...)`. Imports open no short names.
 
-**Ambiguity with `Std.Results`:** the short names **`Unwrap`** and **`UnwrapOr`** clash with `Std.Results`. When both units are imported, prefer the method form `O.Unwrap()`, which selects the routine by the value's type, or qualify as `Std.Options.Unwrap(O)` vs `Std.Results.Unwrap(R)`.
+Explicit aliases keep names from different units distinct. Imported routines use alias-qualified calls; receiver-call lookup applies only to routines declared locally.
 
 `Unwrap` and `UnwrapOr` require a `Option of T` as their first argument. Passing the wrong container type produces a compile-time type error (`F2006`); use `Std.Results` for the other container type.
 
@@ -45,8 +48,11 @@ Examples pass named helper functions whose types match each callback parameter.
 Extracts the value from `Some(value)`. **Runtime error** if `O` is `None`.
 
 ```pascal
-var O: Option of integer := Some(7);
-WriteLn(Unwrap(O))                             // 7
+uses Std.Console as Console;
+uses Std.Options as Options;
+
+var O: option of integer := Some(7);
+Console.WriteLn(Options.Unwrap(O)); // 7
 ```
 
 ---
@@ -56,8 +62,11 @@ WriteLn(Unwrap(O))                             // 7
 Extracts the value from `Some(value)`, or returns `Default` if `O` is `None`.
 
 ```pascal
-var O: Option of integer := None;
-WriteLn(UnwrapOr(O, -1))                      // -1
+uses Std.Console as Console;
+uses Std.Options as Options;
+
+var O: option of integer := None;
+Console.WriteLn(Options.UnwrapOr(O, -1)); // -1
 ```
 
 ---
@@ -67,8 +76,11 @@ WriteLn(UnwrapOr(O, -1))                      // -1
 Returns `true` if `O` is a `Some` variant.
 
 ```pascal
-var O: Option of integer := Some(7);
-WriteLn(IsSome(O))                             // true
+uses Std.Console as Console;
+uses Std.Options as Options;
+
+var O: option of integer := Some(7);
+Console.WriteLn(Options.IsSome(O)); // true
 ```
 
 ---
@@ -78,8 +90,11 @@ WriteLn(IsSome(O))                             // true
 Returns `true` if `O` is `None`.
 
 ```pascal
-var O: Option of integer := None;
-WriteLn(IsNone(O))                             // true
+uses Std.Console as Console;
+uses Std.Options as Options;
+
+var O: option of integer := None;
+Console.WriteLn(Options.IsNone(O)); // true
 ```
 
 ---
@@ -89,14 +104,16 @@ WriteLn(IsNone(O))                             // true
 Transforms the `Some` value with `F`. If `O` is `None`, returns `None`.
 
 ```pascal
+uses Std.Conv as Conv;
+uses Std.Options as Options;
+
 function TripleToString(V: integer): string;
 begin
-  return IntToStr(V * 3)
-end;
+  return Conv.IntToStr(V * 3);
+end function;
 
-var O: Option of integer := Some(7);
-var M: Option of string := Map(O, TripleToString);
-// M = Some('21')
+var O: option of integer := Some(7);
+var M: option of string := Options.Map(O, TripleToString);
 ```
 
 ---
@@ -106,15 +123,20 @@ var M: Option of string := Map(O, TripleToString);
 Calls `F` with the `Some` value. `F` returns a new `Option`, enabling chained lookups. If `O` is `None`, returns `None`.
 
 ```pascal
-function PositiveToOptionString(V: integer): Option of string;
-begin
-  if V > 0 then return Some(IntToStr(V))
-  else return None
-end;
+uses Std.Conv as Conv;
+uses Std.Options as Options;
 
-var O: Option of integer := Some(5);
-var M: Option of string := AndThen(O, PositiveToOptionString);
-// M = Some('5')
+function PositiveToOptionString(V: integer): option of string;
+begin
+  if V > 0 then
+    return Some(Conv.IntToStr(V));
+  else
+    return None;
+  end if;
+end function;
+
+var O: option of integer := Some(5);
+var M: option of string := Options.AndThen(O, PositiveToOptionString);
 ```
 
 ---
@@ -124,14 +146,15 @@ var M: Option of string := AndThen(O, PositiveToOptionString);
 Calls `F` to provide a fallback when `O` is `None`. If `O` is `Some`, returns it unchanged.
 
 ```pascal
-function Fallback99(): Option of integer;
-begin
-  return Some(99)
-end;
+uses Std.Options as Options;
 
-var O: Option of integer := None;
-var M: Option of integer := OrElse(O, Fallback99);
-// M = Some(99)
+function Fallback99(): option of integer;
+begin
+  return Some(99);
+end function;
+
+var O: option of integer := None;
+var M: option of integer := Options.OrElse(O, Fallback99);
 ```
 
 ---

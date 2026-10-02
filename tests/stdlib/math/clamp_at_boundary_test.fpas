@@ -1,8 +1,9 @@
 program T;
 
-uses Std.Console, Std.Math;
+uses Std.Console as Console;
+uses Std.Math as Math;
 
 begin
-  WriteLn(Clamp(0, 0, 100));
-  WriteLn(Clamp(100, 0, 100))
-end.
+  Console.WriteLn(Math.Clamp(0, 0, 100));
+  Console.WriteLn(Math.Clamp(100, 0, 100));
+end program;

@@ -212,26 +212,26 @@ fn selected_capture_and_global_are_visible() {
     const SOURCE: &str = r#"
 program SelectedCapture;
 
-var Shared: integer := 100;
+ var Shared: integer := 100;
 
 function Outer(Value: integer): integer;
   function Mid(): integer;
     function Inner(): integer;
     begin
       var Hidden: integer := 999;
-      return Hidden
-    end;
+      return Hidden;
+    end function;
   begin
     var MidLocal: integer := Value + 1;
-    return Inner()
-  end;
+    return Inner();
+  end function;
 begin
-  return Mid()
-end;
+  return Mid();
+end function;
 
 begin
-  var Nested: integer := Outer(1)
-end.
+  var Nested: integer := Outer(1);
+end program;
 "#;
     let (program, diagnostics) = fpas_parser::parse(SOURCE);
     assert!(diagnostics.is_empty(), "{diagnostics:?}");

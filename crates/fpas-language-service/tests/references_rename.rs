@@ -14,9 +14,24 @@ use support::{TempDirectory, write_program_project};
 fn references_find_cross_unit_uses_and_optionally_include_the_declaration() {
     let temp = TempDirectory::new("references-project");
     let (manifest, main, unit) = write_program_project(&temp);
-    let unit_source =
-        "unit Demo.Math;\n\npublic function Answer(): integer;\nbegin return 42 end;\n";
-    let main_source = "program App;\n\nuses Demo.Math;\n\nbegin\n  var A: integer := Answer();\n  var B: integer := Demo.Math.Answer();\n  var Text: string := 'Answer';\n  // Answer()\nend.\n";
+    let unit_source = r#"unit Demo.Math;
+
+public function Answer(): integer;
+begin return 42; end function;
+end unit;
+
+"#;
+    let main_source = r#"program App;
+
+uses Demo.Math as Math;
+
+begin
+  var A: integer := Math.Answer();
+  var B: integer := Math.Answer();
+  var Text: string := 'Answer';
+  // Answer()
+end program;
+"#;
     std::fs::write(&unit, unit_source).expect("write unit");
     std::fs::write(&main, main_source).expect("write program");
     let mut service = LanguageService::load(&manifest);
@@ -63,9 +78,22 @@ fn references_preserve_lexical_shadowing() {
 fn rename_produces_cross_unit_edits_for_declaration_and_uses() {
     let temp = TempDirectory::new("rename-project");
     let (manifest, main, unit) = write_program_project(&temp);
-    let unit_source =
-        "unit Demo.Math;\n\npublic function Answer(): integer;\nbegin return 42 end;\n";
-    let main_source = "program App;\n\nuses Demo.Math;\n\nbegin\n  var A: integer := Answer();\n  var B: integer := Demo.Math.Answer()\nend.\n";
+    let unit_source = r#"unit Demo.Math;
+
+public function Answer(): integer;
+begin return 42; end function;
+end unit;
+
+"#;
+    let main_source = r#"program App;
+
+uses Demo.Math as Math;
+
+begin
+  var A: integer := Math.Answer();
+  var B: integer := Math.Answer();
+end program;
+"#;
     std::fs::write(&unit, unit_source).expect("write unit");
     std::fs::write(&main, main_source).expect("write program");
     let mut service = LanguageService::load(&manifest);
@@ -85,10 +113,19 @@ fn rename_produces_cross_unit_edits_for_declaration_and_uses() {
 fn reference_and_rename_spans_keep_the_snapshot_used_by_navigation() {
     let temp = TempDirectory::new("navigation-snapshot-binding");
     let (manifest, main, unit) = write_program_project(&temp);
-    let unit_source =
-        "unit Demo.Math;\n\npublic function Answer(): integer;\nbegin return 42 end;\n";
-    let main_source =
-        "program App;\n\nuses Demo.Math;\n\nbegin var Value: integer := Answer() end.\n";
+    let unit_source = r#"unit Demo.Math;
+
+public function Answer(): integer;
+begin return 42; end function;
+end unit;
+
+"#;
+    let main_source = r#"program App;
+
+uses Demo.Math as Math;
+
+begin var Value: integer := Math.Answer(); end program;
+"#;
     std::fs::write(&unit, unit_source).expect("write unit");
     std::fs::write(&main, main_source).expect("write program");
     let mut service = LanguageService::load(&manifest);
@@ -184,14 +221,26 @@ fn rename_rejects_compilation_units_and_dependencies_outside_the_editor_root() {
     );
     let unit = temp.write(
         "lib/src/math.fpas",
-        "unit Demo.Math;\n\npublic function Answer(): integer;\nbegin return 42 end;\n",
+        r#"unit Demo.Math;
+
+public function Answer(): integer;
+begin return 42; end function;
+end unit;
+
+"#,
     );
     let manifest = temp.write(
         "app/app.fpasprj",
         "[project]\nname = \"app\"\nkind = \"program\"\nmain = \"src/main.fpas\"\n\n[dependencies]\nprojects = [\"../lib/lib.fpasprj\"]\n\n[sources]\ninclude = [\"src/**/*.fpas\"]\n",
     );
-    let main_source =
-        "program App;\n\nuses Demo.Math;\n\nbegin\n  var Value: integer := Answer()\nend.\n";
+    let main_source = r#"program App;
+
+uses Demo.Math as Math;
+
+begin
+  var Value: integer := Math.Answer();
+end program;
+"#;
     let main = temp.write("app/src/main.fpas", main_source);
     assert!(library.exists() && unit.exists());
     let mut service = LanguageService::load(&manifest);
@@ -218,8 +267,13 @@ fn rename_rejects_reverse_consumers_outside_the_editor_root() {
         "lib/lib.fpasprj",
         "[project]\nname = \"lib\"\nkind = \"library\"\n\n[sources]\ninclude = [\"src/**/*.fpas\"]\n",
     );
-    let unit_source =
-        "unit Demo.Math;\n\npublic function Answer(): integer;\nbegin return 42 end;\n";
+    let unit_source = r#"unit Demo.Math;
+
+public function Answer(): integer;
+begin return 42; end function;
+end unit;
+
+"#;
     let unit = temp.write("lib/src/math.fpas", unit_source);
     temp.write(
         "app/app.fpasprj",
@@ -227,7 +281,14 @@ fn rename_rejects_reverse_consumers_outside_the_editor_root() {
     );
     let main = temp.write(
         "app/src/main.fpas",
-        "program App;\n\nuses Demo.Math;\n\nbegin\n  var Value: integer := Answer()\nend.\n",
+        r#"program App;
+
+uses Demo.Math as Math;
+
+begin
+  var Value: integer := Math.Answer();
+end program;
+"#,
     );
     let mut service = LanguageService::load(&library);
     service

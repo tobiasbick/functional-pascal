@@ -1,71 +1,77 @@
 // Incremental bounded Server-Sent Events decoding.
 unit Std.Http.Sse;
 
-uses Std.Arrays, Std.Http.Handles, Std.Http.Types, Std.Net.Utf8, Std.Str;
+uses Std.Arrays as Arrays;
+uses Std.Http.Handles as Handles;
+uses Std.Http.Types as Types;
+uses Std.Net.Utf8 as Utf8;
+uses Std.Str as Str;
 
-type
-  // Mutable parsing state retained for one decoder handle.
-  DecoderState = record
-    // Incomplete input bytes not yet terminated by a line ending.
-    Buffer: array of integer;
-    // Joined data fields for the current event.
-    Data: string;
-    // Optional event field for the current event.
-    EventType: string;
-    // Most recently observed event identifier.
-    LastEventId: string;
-    // Bytes accumulated for the current event.
-    EventBytes: integer;
-    // Maximum bytes allowed for one event.
-    Maximum: integer;
-    // Whether the decoder has consumed its final input.
-    Finished: boolean;
-  end;
-  // Result of processing every complete line currently buffered.
-  DecoderProcess = record
-    // Updated decoder state.
-    State: DecoderState;
-    // Complete events emitted while processing.
-    Events: array of SseEvent;
-  end;
+// Mutable parsing state retained for one decoder handle.
+type DecoderState = record
+  // Incomplete input bytes not yet terminated by a line ending.
+  Buffer: array of integer;
+  // Joined data fields for the current event.
+  Data: string;
+  // Optional event field for the current event.
+  EventType: string;
+  // Most recently observed event identifier.
+  LastEventId: string;
+  // Bytes accumulated for the current event.
+  EventBytes: integer;
+  // Maximum bytes allowed for one event.
+  Maximum: integer;
+  // Whether the decoder has consumed its final input.
+  Finished: boolean;
+end record;
+
+// Result of processing every complete line currently buffered.
+type DecoderProcess = record
+  // Updated decoder state.
+  State: DecoderState;
+  // Complete events emitted while processing.
+  Events: array of Types.SseEvent;
+end record;
 
 // Reserves and stores one state in the hosted HTTP registry.
 function ReserveState(State: DecoderState): integer;
 begin
-  return 0
-end;
+  return 0;
+end function;
 
 // Tests whether one hosted SSE-decoder state exists.
 function HasState(Slot: integer): boolean;
 begin
-  return false
-end;
+  return false;
+end function;
 
 // Loads one state from the hosted HTTP registry.
 function LoadState(Slot: integer): DecoderState;
 begin
-  panic('internal SSE decoder state intrinsic was not lowered')
-end;
+  panic('internal SSE decoder state intrinsic was not lowered');
+end function;
 
 // Replaces one state in the hosted HTTP registry.
 procedure StoreState(Slot: integer; State: DecoderState);
 begin
-end;
+  null;
+end procedure;
 
 // Resolves and validates an opaque decoder handle.
 //
 // Parameters:
 // - `Decoder`: Decoder handle to resolve.
-function DecoderIndex(Decoder: Std.Http.Types.SseDecoder): result of integer, string;
+function DecoderIndex(Decoder: Types.SseDecoder): result of integer, string;
 begin
-  var Slot: integer := Std.Http.Handles.SseDecoderSlot(Decoder);
+  var Slot: integer := Handles.SseDecoderSlot(Decoder);
   if (Slot < 1) or (not HasState(Slot)) then
-  begin
-    return Error('SSE decoder handle is invalid')
-  end;
+    begin
+      return Error('SSE decoder handle is invalid');
+    end;
+  end if;
 
-  return Ok(Slot)
-end;
+  return Ok(Slot);
+end function;
 
 // Finds the next supported line ending and its byte width.
 //
@@ -73,62 +79,71 @@ end;
 // - `Bytes`: Buffered bytes to scan from the beginning.
 function LineEnd(Bytes: array of integer; Final: boolean): array of integer;
 begin
-  for Index: integer := 0 to Std.Arrays.Length(Bytes) - 1 do
-  begin
-    if Bytes[Index] = 10 then
+  for Index: integer := 0 to Arrays.Length(Bytes) - 1 do
     begin
-      return [Index, 1]
-    end;
-
-    if Bytes[Index] = 13 then
-    begin
-      if Index + 1 >= Std.Arrays.Length(Bytes) then
-      begin
-        if Final then
+      if Bytes[Index] = 10 then
         begin
-          return [Index, 1]
+          return [Index, 1];
         end;
+      end if;
 
-        return [-1, 0]
-      end;
+      if Bytes[Index] = 13 then
+        begin
+          if Index + 1 >= Arrays.Length(Bytes) then
+            begin
+              if Final then
+                begin
+                  return [Index, 1];
+                end;
+              end if;
 
-      if Bytes[Index + 1] = 10 then
-      begin
-        return [Index, 2]
-      end;
+              return [-1, 0];
+            end;
+          end if;
 
-      return [Index, 1]
-    end
-  end;
+          if Bytes[Index + 1] = 10 then
+            begin
+              return [Index, 2];
+            end;
+          end if;
 
-  if Final and (Std.Arrays.Length(Bytes) > 0) then
-  begin
-    return [Std.Arrays.Length(Bytes), 0]
-  end;
+          return [Index, 1];
+        end;
+      end if;
+    end;
+  end for;
 
-  return [-1, 0]
-end;
+  if Final and (Arrays.Length(Bytes) > 0) then
+    begin
+      return [Arrays.Length(Bytes), 0];
+    end;
+  end if;
+
+  return [-1, 0];
+end function;
 
 // Appends the pending event without adding input bytes.
-function EmitEvent(State: DecoderState; mutable Events: array of SseEvent): array of SseEvent;
+function EmitEvent(State: DecoderState; mutable Events: array of Types.SseEvent): array of Types.SseEvent;
 begin
   if State.Data <> '' then
-  begin
-    mutable var EventType: string := State.EventType;
-    if EventType = '' then
     begin
-      EventType := 'message'
+      mutable var EventType: string := State.EventType;
+      if EventType = '' then
+        begin
+          EventType := 'message';
+        end;
+      end if;
+
+      Arrays.Push(Events, record
+        EventType := EventType;
+        Data := Str.Substring(State.Data, 0, Str.Length(State.Data) - 1);
+        Id := State.LastEventId;
+      end record);
     end;
+  end if;
 
-    Std.Arrays.Push(Events, record
-      EventType := EventType;
-      Data := Std.Str.Substring(State.Data, 0, Std.Str.Length(State.Data) - 1);
-      Id := State.LastEventId;
-    end)
-  end;
-
-  return Events
-end;
+  return Events;
+end function;
 
 // Consumes complete SSE lines and returns updated state plus emitted events.
 //
@@ -136,87 +151,101 @@ end;
 // - `State`: Decoder state updated while parsing buffered lines.
 function Process(mutable State: DecoderState; Final: boolean): result of DecoderProcess, string;
 begin
-  mutable var Events: array of SseEvent := [];
+  mutable var Events: array of Types.SseEvent := [];
   mutable var EndValue: array of integer := LineEnd(State.Buffer, Final);
   while EndValue[0] >= 0 do
-  begin
-    var LineBytes: array of integer := Std.Arrays.Slice(State.Buffer, 0, EndValue[0]);
-    State.EventBytes := (State.EventBytes + EndValue[0]) + EndValue[1];
-    if State.EventBytes > State.Maximum then
     begin
-      return Error('SSE event exceeds MaxEventBytes')
-    end;
+      var LineBytes: array of integer := Arrays.Slice(State.Buffer, 0, EndValue[0]);
+      State.EventBytes := (State.EventBytes + EndValue[0]) + EndValue[1];
+      if State.EventBytes > State.Maximum then
+        begin
+          return Error('SSE event exceeds MaxEventBytes');
+        end;
+      end if;
 
-    State.Buffer := Std.Arrays.Slice(State.Buffer, EndValue[0] + EndValue[1], (Std.Arrays.Length(State.Buffer) - EndValue[0]) -
-                                                                              EndValue[1]);
-    case Std.Net.Utf8.Decode(LineBytes) of
-      Ok(Line):
-      begin
-        if Line = '' then
-        begin
-          Events := EmitEvent(State, Events);
-          State.Data := '';
-          State.EventType := '';
-          State.EventBytes := 0
-        end
-        else if not Std.Str.StartsWith(Line, ':') then
-        begin
-          mutable var Name: string := Line;
-          mutable var Value: string := '';
-          var Colon: integer := Std.Str.IndexOf(Line, ':');
-          if Colon >= 0 then
+      State.Buffer := Arrays.Slice(State.Buffer, EndValue[0] + EndValue[1], (Arrays.Length(State.Buffer) - EndValue[0]) -
+                                                                            EndValue[1]);
+      case Utf8.Decode(LineBytes) of
+        when Ok(Line):
           begin
-            Name := Std.Str.Substring(Line, 0, Colon);
-            Value := Std.Str.Substring(Line, Colon + 1, (Std.Str.Length(Line) - Colon) - 1);
-            if Std.Str.StartsWith(Value, ' ') then
-            begin
-              Value := Std.Str.Substring(Value, 1, Std.Str.Length(Value) - 1)
-            end
+            if Line = '' then
+              begin
+                Events := EmitEvent(State, Events);
+                State.Data := '';
+                State.EventType := '';
+                State.EventBytes := 0;
+              end;
+            else
+              if not Str.StartsWith(Line, ':') then
+                begin
+                  mutable var Name: string := Line;
+                  mutable var Value: string := '';
+                  var Colon: integer := Str.IndexOf(Line, ':');
+                  if Colon >= 0 then
+                    begin
+                      Name := Str.Substring(Line, 0, Colon);
+                      Value := Str.Substring(Line, Colon + 1, (Str.Length(Line) - Colon) - 1);
+                      if Str.StartsWith(Value, ' ') then
+                        begin
+                          Value := Str.Substring(Value, 1, Str.Length(Value) - 1);
+                        end;
+                      end if;
+                    end;
+                  end if;
+
+                  if Name = 'data' then
+                    begin
+                      State.Data := (State.Data + Value) + #10;
+                    end;
+                  else
+                    if Name = 'event' then
+                      begin
+                        State.EventType := Value;
+                      end;
+                    else
+                      if (Name = 'id') and (not Str.Contains(Value, #0)) then
+                        begin
+                          State.LastEventId := Value;
+                        end;
+                      end if;
+                    end if;
+                  end if;
+                end;
+              end if;
+            end if;
           end;
+        when Error(Message):
+          begin
+            return Error('SSE line is not valid UTF-8: ' + Message);
+          end;
+      end case;
 
-          if Name = 'data' then
-          begin
-            State.Data := (State.Data + Value) + #10
-          end
-          else if Name = 'event' then
-          begin
-            State.EventType := Value
-          end
-          else if (Name = 'id') and (not Std.Str.Contains(Value, #0)) then
-          begin
-            State.LastEventId := Value
-          end
-        end
-      end;
-      Error(Message):
-      begin
-        return Error('SSE line is not valid UTF-8: ' + Message)
-      end
+      EndValue := LineEnd(State.Buffer, Final);
     end;
+  end while;
 
-    EndValue := LineEnd(State.Buffer, Final)
-  end;
-
-  if State.EventBytes + Std.Arrays.Length(State.Buffer) > State.Maximum then
-  begin
-    return Error('SSE event exceeds MaxEventBytes')
-  end;
+  if State.EventBytes + Arrays.Length(State.Buffer) > State.Maximum then
+    begin
+      return Error('SSE event exceeds MaxEventBytes');
+    end;
+  end if;
 
   if Final then
-  begin
-    Events := EmitEvent(State, Events);
-    State.Data := '';
-    State.EventType := '';
-    State.EventBytes := 0;
-    State.Finished := true
-  end;
+    begin
+      Events := EmitEvent(State, Events);
+      State.Data := '';
+      State.EventType := '';
+      State.EventBytes := 0;
+      State.Finished := true;
+    end;
+  end if;
   var Output: DecoderProcess := record
     State := State;
     Events := Events;
-  end;
+  end record;
 
-  return Ok(Output)
-end;
+  return Ok(Output);
+end function;
 
 // Discards all retained input after an error and prevents further decoding.
 function FailedState(mutable State: DecoderState): DecoderState;
@@ -227,19 +256,20 @@ begin
   State.LastEventId := '';
   State.EventBytes := 0;
   State.Finished := true;
-  return State
-end;
+  return State;
+end function;
 
 // Creates an incremental decoder with a bounded event buffer.
 //
 // Parameters:
 // - `MaxEventBytes`: Maximum buffered bytes for one incomplete event.
-public function Create(MaxEventBytes: integer): result of Std.Http.Types.SseDecoder, string;
+public function Create(MaxEventBytes: integer): result of Types.SseDecoder, string;
 begin
   if MaxEventBytes < 1 then
-  begin
-    return Error('SSE MaxEventBytes must be positive')
-  end;
+    begin
+      return Error('SSE MaxEventBytes must be positive');
+    end;
+  end if;
   var State: DecoderState := record
     Buffer := [];
     Data := '';
@@ -248,105 +278,113 @@ begin
     EventBytes := 0;
     Maximum := MaxEventBytes;
     Finished := false;
-  end;
+  end record;
   var Slot: integer := ReserveState(State);
-  return Ok(Std.Http.Handles.NewSseDecoder(Slot))
-end;
+  return Ok(Handles.NewSseDecoder(Slot));
+end function;
 
 // Feeds one byte fragment and returns every complete decoded event.
 //
 // Parameters:
 // - `Decoder`: Open incremental SSE decoder.
 // - `Bytes`: Next response-body byte fragment.
-public function Feed(Decoder: Std.Http.Types.SseDecoder; Bytes: array of integer): result of array of SseEvent, string;
+public function Feed(Decoder: Types.SseDecoder; Bytes: array of integer): result of array of Types.SseEvent, string;
 begin
   case DecoderIndex(Decoder) of
-    Ok(Index):
-    begin
-      mutable var State: DecoderState := LoadState(Index);
-      if State.Finished then
+    when Ok(Index):
       begin
-        return Error('SSE decoder is already finished')
-      end;
-      mutable var Events: array of SseEvent := [];
-      mutable var Offset: integer := 0;
-      while Offset < Std.Arrays.Length(Bytes) do
-      begin
-        var Available: integer := (State.Maximum - State.EventBytes) -
-                                  Std.Arrays.Length(State.Buffer);
-        mutable var Count: integer := Std.Arrays.Length(Bytes) - Offset;
-        if Count > 1024 then
-        begin
-          Count := 1024
-        end;
-
-        // One lookahead byte lets Process resolve a trailing CR or reject overflow.
-        if Count > Available then
-        begin
-          Count := Available + 1
-        end;
-
-        State.Buffer := Std.Arrays.Concat(State.Buffer, Std.Arrays.Slice(Bytes, Offset, Count));
-        case Process(State, false) of
-          Ok(Output):
+        mutable var State: DecoderState := LoadState(Index);
+        if State.Finished then
           begin
-            State := Output.State;
-            for Item: SseEvent in Output.Events do
-            begin
-              Std.Arrays.Push(Events, Item)
-            end
+            return Error('SSE decoder is already finished');
           end;
-          Error(Message):
+        end if;
+        mutable var Events: array of Types.SseEvent := [];
+        mutable var Offset: integer := 0;
+        while Offset < Arrays.Length(Bytes) do
           begin
-            StoreState(Index, FailedState(State));
-            return Error(Message)
-          end
-        end;
+            var Available: integer := (State.Maximum - State.EventBytes) -
+                                      Arrays.Length(State.Buffer);
+            mutable var Count: integer := Arrays.Length(Bytes) - Offset;
+            if Count > 1024 then
+              begin
+                Count := 1024;
+              end;
+            end if;
 
-        Offset := Offset + Count
+            // One lookahead byte lets Process resolve a trailing CR or reject overflow.
+            if Count > Available then
+              begin
+                Count := Available + 1;
+              end;
+            end if;
+
+            State.Buffer := Arrays.Concat(State.Buffer, Arrays.Slice(Bytes, Offset, Count));
+            case Process(State, false) of
+              when Ok(Output):
+                begin
+                  State := Output.State;
+                  for Item: Types.SseEvent in Output.Events do
+                    begin
+                      Arrays.Push(Events, Item);
+                    end;
+                  end for;
+                end;
+              when Error(Message):
+                begin
+                  StoreState(Index, FailedState(State));
+                  return Error(Message);
+                end;
+            end case;
+
+            Offset := Offset + Count;
+          end;
+        end while;
+
+        StoreState(Index, State);
+        return Ok(Events);
       end;
-
-      StoreState(Index, State);
-      return Ok(Events)
-    end;
-    Error(Message):
-    begin
-      return Error(Message)
-    end
-  end
-end;
+    when Error(Message):
+      begin
+        return Error(Message);
+      end;
+  end case;
+end function;
 
 // Flushes the final SSE line and prevents further input.
 //
 // Parameters:
 // - `Decoder`: Open incremental SSE decoder to finish.
-public function Finish(Decoder: Std.Http.Types.SseDecoder): result of array of SseEvent, string;
+public function Finish(Decoder: Types.SseDecoder): result of array of Types.SseEvent, string;
 begin
   case DecoderIndex(Decoder) of
-    Ok(Index):
-    begin
-      var State: DecoderState := LoadState(Index);
-      if State.Finished then
+    when Ok(Index):
       begin
-        return Error('SSE decoder is already finished')
-      end;
+        var State: DecoderState := LoadState(Index);
+        if State.Finished then
+          begin
+            return Error('SSE decoder is already finished');
+          end;
+        end if;
 
-      case Process(State, true) of
-        Ok(Output):
-        begin
-          StoreState(Index, Output.State);
-          return Ok(Output.Events)
-        end;
-        Error(Message):
-        begin
-          StoreState(Index, FailedState(State));
-          return Error(Message)
-        end
-      end
-    end;
-    Error(Message):
-    begin
-      return Error(Message)
-    end
-  end
-end;
+        case Process(State, true) of
+          when Ok(Output):
+            begin
+              StoreState(Index, Output.State);
+              return Ok(Output.Events);
+            end;
+          when Error(Message):
+            begin
+              StoreState(Index, FailedState(State));
+              return Error(Message);
+            end;
+        end case;
+      end;
+    when Error(Message):
+      begin
+        return Error(Message);
+      end;
+  end case;
+end function;
+
+end unit;

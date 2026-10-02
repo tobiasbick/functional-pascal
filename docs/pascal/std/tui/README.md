@@ -5,7 +5,7 @@ return a fresh immutable `TuiElement` tree from `View`; they do not create,
 attach, or destroy live widgets. The same application contract supports
 deterministic headless tests and an interactive Console terminal.
 
-All public symbols require `uses Std.Tui;`. Private `Std.Tui.*` units are
+All public symbols require `uses Std.Tui as Tui;`. Private `Std.Tui.*` units are
 implementation details.
 
 ## Topics

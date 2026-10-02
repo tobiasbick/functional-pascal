@@ -4,18 +4,21 @@ Non-mutating array helpers (length, sort, search, slice, …) plus **in-place** 
 
 ```pascal
 program Example;
-uses Std.Console, Std.Arrays;
+
+uses Std.Console as Console;
+uses Std.Arrays as Arrays;
+
 begin
   var A: array of integer := [1, 2, 3];
-  WriteLn(Length(A))
-end.
+  Console.WriteLn(Arrays.Length(A));
+end program;
 ```
 
 ## Importing and names
 
-After `uses Std.Arrays;` use short names (`Length`, `Sort`, …) or qualified (`Std.Arrays.Length`, …).
+Import with `uses Std.Arrays as Arrays;`. Access every exported member through `Arrays`, for example `Arrays.Length(...)`. Imports open no short names.
 
-**Ambiguity with `Std.Str`:** ordinary short names such as **`Length`**, **`Contains`**, and **`IndexOf`** can clash. Qualify ordinary calls as `Std.Arrays.Length(A)` or `Std.Str.Length(S)`. Receiver calls such as `A.Length()` and `S.Length()` select by the first parameter type.
+Explicit aliases keep names from different units distinct. Imported routines use alias-qualified calls; receiver-call lookup applies only to routines declared locally.
 
 ---
 

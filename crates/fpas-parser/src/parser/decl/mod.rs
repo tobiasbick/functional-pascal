@@ -33,6 +33,18 @@ impl Parser {
                         decls.push(decl);
                     }
                 }
+                Token::Ident(_) => {
+                    let span = self.current_span();
+                    self.error_with_code(fpas_diagnostics::codes::PARSE_EXPECTED_TOKEN, "Each declaration requires its own keyword", "Repeat `type`, `const`, or `var` for every declaration, including `public` for every exported declaration.", span);
+                    while !self.at_end()
+                        && !self.check(&Token::Semicolon)
+                        && !self.check(&Token::Begin)
+                        && !self.check(&Token::End)
+                    {
+                        self.advance();
+                    }
+                    self.eat(&Token::Semicolon);
+                }
                 _ => break,
             }
         }

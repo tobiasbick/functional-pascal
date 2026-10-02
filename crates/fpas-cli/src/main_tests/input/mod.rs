@@ -96,7 +96,13 @@ main = "main.fpas"
 include = ["main.fpas"]
 "#,
     );
-    write_text(&cwd.join("main.fpas"), "program App;\nbegin\nend.\n");
+    write_text(
+        &cwd.join("main.fpas"),
+        r#"program App;
+begin null;
+end program;
+"#,
+    );
 
     let result = resolve_cli_input(&run_args(&[]), &cwd);
     fs::remove_dir_all(&cwd).expect("temp directory must be removed");

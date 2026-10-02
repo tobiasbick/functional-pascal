@@ -1,8 +1,9 @@
 program T;
 
-uses Std.Console, Std.Options;
+uses Std.Console as Console;
+uses Std.Options as Options;
 
 begin
   var O: option of integer := Some(7);
-  WriteLn(UnwrapOr(O, -1))
-end.
+  Console.WriteLn(Options.UnwrapOr(O, -1));
+end program;

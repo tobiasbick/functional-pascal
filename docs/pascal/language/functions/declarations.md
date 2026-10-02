@@ -32,7 +32,8 @@ A function returns a value using `return`:
 function Add(A: integer; B: integer): integer;
 begin
   return A + B;
-end;
+end function;
+
 ```
 
 ## Procedures
@@ -40,22 +41,28 @@ end;
 A procedure performs an action but returns no value:
 
 ```pascal
+uses Std.Console as Console;
+
 procedure SayHello(Name: string);
 begin
-  WriteLn('Hello, ' + Name + '!');
-end;
+  Console.WriteLn(('Hello, ' + Name) + '!');
+end procedure;
 ```
 
 Procedures use bare `return` to exit early without a value:
 
 ```pascal
+uses Std.Console as Console;
+
 procedure LogIfPositive(mutable Count: integer; Value: integer);
 begin
   if Value <= 0 then
     return;
+  end if;
+
   Count := Count + 1;
-  WriteLn('logged ', Value);
-end;
+  Console.WriteLn('logged ', Value);
+end procedure;
 ```
 
 ## See also

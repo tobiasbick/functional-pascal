@@ -1,12 +1,12 @@
 program T;
 
-uses Std.Arrays;
+uses Std.Arrays as Arrays;
 
 function Identity(V: integer): integer;
 begin
-  return V
-end;
+  return V;
+end function;
 
 begin
-  var X: integer := FlatMap([1, 2], Identity)
-end.
+  var X: integer := Arrays.FlatMap([1, 2], Identity);
+end program;

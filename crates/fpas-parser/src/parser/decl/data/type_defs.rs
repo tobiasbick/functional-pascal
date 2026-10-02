@@ -22,7 +22,7 @@ impl Parser {
                 self.current_span(),
             );
         }
-        while let Token::Ident(_) = self.current_token() {
+        if let Token::Ident(_) = self.current_token() {
             defs.push(Decl::TypeDef(
                 self.parse_type_def(visibility, allow_member_visibility),
             ));
@@ -80,7 +80,7 @@ impl Parser {
         while !self.check(&Token::End) && !self.at_end() {
             members.push(self.parse_enum_member());
         }
-        self.expect(&Token::End);
+        self.expect_named_end(&Token::Enum);
         EnumType {
             members,
             span: self.span_from(start),

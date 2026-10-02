@@ -14,8 +14,8 @@ const SOURCE: &str = r#"program DapSequenceMutation;
 begin
   mutable var Numbers: array of integer := [1, 2];
   mutable var Text: string := 'A😀B';
-  var Marker: integer := Numbers[0]
-end.
+  var Marker: integer := Numbers[0];
+end program;
 "#;
 
 fn server() -> DapServer {

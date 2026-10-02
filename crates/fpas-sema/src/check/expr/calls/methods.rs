@@ -227,8 +227,8 @@ impl Checker {
     }
 
     /// True when the designator names a type symbol (possibly qualified).
-    pub(in crate::check) fn designator_denotes_type(&self, designator: &Designator) -> bool {
-        let name = Self::resolve_designator_name(designator);
+    pub(in crate::check) fn designator_denotes_type(&mut self, designator: &Designator) -> bool {
+        let name = self.resolve_designator_name(designator);
         self.scopes
             .lookup(&name)
             .is_some_and(|symbol| matches!(symbol.kind, SymbolKind::Type))

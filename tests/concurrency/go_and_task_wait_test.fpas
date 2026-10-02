@@ -1,13 +1,14 @@
 program GoWait;
 
-uses Std.Tasks, Std.Test;
+uses Std.Tasks as Tasks;
+uses Std.Test as Test;
 
 function Worker(): integer;
 begin
-  return 42
-end;
+  return 42;
+end function;
 
 begin
   var T: task := go Worker();
-  AssertEquals(42, Std.Tasks.Wait(T))
-end.
+  Test.AssertEquals(42, Tasks.Wait(T));
+end program;

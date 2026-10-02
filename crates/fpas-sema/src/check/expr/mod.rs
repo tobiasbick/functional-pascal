@@ -104,7 +104,14 @@ impl Checker {
                 use calls::CallResolution;
                 match self.resolve_call_target(inner, designator, args, *call_span, true) {
                     CallResolution::Symbol { kind, ty } => {
-                        let name = Self::resolve_designator_name(designator);
+                        let name = self.resolve_designator_name(designator);
+                        let dispatch = self.builtin_std_dispatch_name(&name);
+                        if dispatch.starts_with("Std.")
+                            && kind != crate::scope::SymbolKind::EnumVariantConstructor
+                        {
+                            self.intrinsic_calls
+                                .insert(Self::expr_lookup_key(inner), dispatch);
+                        }
                         self.check_known_go_call_symbol(&name, kind, ty, args, *call_span)
                     }
                     CallResolution::MethodResult(ty) => ty,
@@ -165,7 +172,7 @@ impl Checker {
     }
 
     pub(crate) fn designator_refers_to_task_bound(&self, designator: &Designator) -> bool {
-        let name = Self::resolve_designator_name(designator);
+        let name = self.qualified_import_name(&Self::designator_name(designator));
         let Some(symbol) = self.scopes.lookup(&name).or_else(|| {
             designator.parts.first().and_then(|part| match part {
                 DesignatorPart::Ident(base, _) => self.scopes.lookup(base),

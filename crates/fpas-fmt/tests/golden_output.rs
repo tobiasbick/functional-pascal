@@ -8,7 +8,7 @@ mod common;
 fn hello_minimal() {
     common::assert_golden(
         "hello_minimal",
-        "program Hello; begin WriteLn('Hello, World!') end.",
+        r#"program Hello; begin WriteLn('Hello, World!'); end program;"#,
         include_str!("golden/hello_minimal.expected.fpas"),
     );
 }
@@ -17,7 +17,7 @@ fn hello_minimal() {
 fn hello_uses() {
     common::assert_golden(
         "hello_uses",
-        "program Hello; uses Std.Console; begin WriteLn('Hello, World!') end.",
+        r#"program Hello;  uses Std.Console as Console; begin Console.WriteLn('Hello, World!'); end program;"#,
         include_str!("golden/hello_uses.expected.fpas"),
     );
 }
@@ -26,7 +26,9 @@ fn hello_uses() {
 fn unit_clamp() {
     common::assert_golden(
         "unit_clamp",
-        "unit MyApp.Utils; uses Std.Math; public function Clamp(Value: integer; Min: integer; Max: integer): integer; begin if Value < Min then return Min else if Value > Max then return Max else return Value end; function IsBlank(S: string): boolean; begin return Length(Trim(S)) = 0 end;",
+        r#"unit MyApp.Utils;  uses Std.Math as Math; public function Clamp(Value: integer; Min: integer; Max: integer): integer; begin if Value < Min then return Min; else if Value > Max then return Max; else return Value; end if; end if; end function; function IsBlank(S: string): boolean; begin return Length(Trim(S)) = 0; end function;
+end unit;
+"#,
         include_str!("golden/unit_clamp.expected.fpas"),
     );
 }
@@ -35,7 +37,9 @@ fn unit_clamp() {
 fn record_member_visibility() {
     common::assert_golden(
         "record_visibility",
-        "unit Demo.Counter; public type Counter = record Value: integer; public Step: integer; function Hidden(Self: Counter): integer; begin return Self.Value end; public static function Create(): Counter; begin return record Value := 0; Step := 1; end end; public property Current: integer read Hidden; public event Changed: procedure() read ReadChanged write WriteChanged; end;",
+        r#"unit Demo.Counter;   public type Counter = record Value: integer; public Step: integer; function Hidden(Self: Counter): integer; begin return Self.Value; end function; public static function Create(): Counter; begin return record Value := 0; Step := 1; end record; end function; public property Current: integer read Hidden; public event Changed: procedure() read ReadChanged write WriteChanged; end record;
+end unit;
+"#,
         include_str!("golden/record_visibility.expected.fpas"),
     );
 }
@@ -44,7 +48,7 @@ fn record_member_visibility() {
 fn long_uses() {
     common::assert_golden(
         "long_uses",
-        "program LongUses; uses Std.Console, Std.Conv, Std.Arrays, Std.Dictionaries, Std.Options, Std.Results, Std.String, MyApp.Very.Long.Namespace.One, MyApp.Very.Long.Namespace.Two; begin WriteLn('ok') end.",
+        r#"program LongUses;  uses Std.Console as Console; uses Std.Conv as Conv; uses Std.Arrays as Arrays; uses Std.Dictionaries as Dictionaries; uses Std.Options as Options; uses Std.Results as Results; uses Std.String as String; uses MyApp.Very.Long.Namespace.One as One; uses MyApp.Very.Long.Namespace.Two as Two; begin Console.WriteLn('ok'); end program;"#,
         include_str!("golden/long_uses.expected.fpas"),
     );
 }
@@ -53,7 +57,7 @@ fn long_uses() {
 fn short_record_literal_is_multiline() {
     common::assert_golden(
         "short_record",
-        "program T; type Point = record X: integer; Y: integer; end; begin var A: Point := record X := 3; Y := 4; end; end.",
+        r#"program T;  type Point = record X: integer; Y: integer; end record; begin var A: Point := record X := 3; Y := 4; end record; end program;"#,
         include_str!("golden/short_record.expected.fpas"),
     );
 }
@@ -62,7 +66,9 @@ fn short_record_literal_is_multiline() {
 fn logical_block_spacing() {
     common::assert_golden(
         "logical_block_spacing",
-        "program T; type Point = record X: integer; Y: integer; end; begin var A: Point := record X := 3; Y := 4; end; var B: Point := record X := 10; Y := 20; end; var UpdatedB: Point := B with X := 11; end; A.Print(); if Ready then Save();\n// present result\nPresent(); if NeedsCount then Prepare(); var Count: integer := 1; WriteLn(Count); if Done then Finish() end.",
+        r#"program T;  type Point = record X: integer; Y: integer; end record; begin var A: Point := record X := 3; Y := 4; end record; var B: Point := record X := 10; Y := 20; end record; var UpdatedB: Point := B with X := 11; end with; A.Print(); if Ready then Save(); end if;
+// present result
+Present(); if NeedsCount then Prepare(); end if; var Count: integer := 1; WriteLn(Count); if Done then Finish(); end if; end program;"#,
         include_str!("golden/logical_block_spacing.expected.fpas"),
     );
 }
@@ -71,8 +77,14 @@ fn logical_block_spacing() {
 fn wrapped_parenthesized_comparisons_preserve_full_expression() {
     common::assert_golden(
         "wrapped_parenthesized_comparisons",
-        "program T; begin var InsideHorizontalBounds: boolean := (MouseEvent.mouse_x > ButtonBounds.x) and (MouseEvent.mouse_x <= ButtonBounds.x + ButtonBounds.width); end.",
-        "program T;\n\nbegin\n  var InsideHorizontalBounds: boolean := (MouseEvent.mouse_x > ButtonBounds.x) and\n                                         (MouseEvent.mouse_x <= ButtonBounds.x + ButtonBounds.width)\nend.\n",
+        r#"program T; begin var InsideHorizontalBounds: boolean := (MouseEvent.mouse_x > ButtonBounds.x) and (MouseEvent.mouse_x <= ButtonBounds.x + ButtonBounds.width); end program;"#,
+        r#"program T;
+
+begin
+  var InsideHorizontalBounds: boolean := (MouseEvent.mouse_x > ButtonBounds.x) and
+                                         (MouseEvent.mouse_x <= ButtonBounds.x + ButtonBounds.width);
+end program;
+"#,
     );
 }
 
@@ -80,7 +92,7 @@ fn wrapped_parenthesized_comparisons_preserve_full_expression() {
 fn comments_unit_declaration_docs() {
     common::assert_golden(
         "comments_unit",
-        "// Unit doc.\nunit Demo;\n\n// field doc\nmutable var Count: integer := 0;\n",
+        "// Unit doc.\nunit Demo;\n\n// field doc\nmutable var Count: integer := 0;\nend unit;\n",
         include_str!("golden/comments_unit.expected.fpas"),
     );
 }
@@ -89,7 +101,15 @@ fn comments_unit_declaration_docs() {
 fn comments_program_uses_begin_body_and_trailing() {
     common::assert_golden(
         "comments_program",
-        "program T;\n// before uses\nuses Std.Console;\n\n// before begin\nbegin\n  // setup\n  WriteLn('ok') // trail\nend. // tail",
+        r#"program T;
+// before uses
+ uses Std.Console as Console;
+
+// before begin
+begin
+  // setup
+  Console.WriteLn('ok'); // trail
+end program; // tail"#,
         include_str!("golden/comments_program.expected.fpas"),
     );
 }
@@ -98,7 +118,12 @@ fn comments_program_uses_begin_body_and_trailing() {
 fn comments_before_begin_and_statement() {
     common::assert_golden(
         "comments_before_body",
-        "program T;\n// before begin\nbegin\n  // in body\n  WriteLn('ok')\nend.",
+        r#"program T;
+// before begin
+begin
+  // in body
+  WriteLn('ok');
+end program;"#,
         include_str!("golden/comments_before_body.expected.fpas"),
     );
 }
@@ -107,18 +132,18 @@ fn comments_before_begin_and_statement() {
 fn postfix_chaining_compact() {
     common::assert_golden(
         "postfix_chaining",
-        "program CompactPostfix; begin var X: integer := Factory.Create().Transform(2).Value; end.",
+        r#"program CompactPostfix; begin var X: integer := Factory.Create().Transform(2).Value; end program;"#,
         include_str!("golden/postfix_chaining.expected.fpas"),
     );
     common::assert_round_trip(
         "postfix_chaining_round_trip",
-        "program CompactPostfix; begin var X: integer := Factory.Create().Transform(2).Value; end.",
+        r#"program CompactPostfix; begin var X: integer := Factory.Create().Transform(2).Value; end program;"#,
     );
 }
 
 #[test]
 fn postfix_chaining_wraps_long_chain() {
-    let source = "program T; begin var X: integer := VeryLongFactoryName.CreateVeryLongThing().TransformWithVeryLongName(VeryLongArgumentAlpha).ScaleWithAnotherLongName(VeryLongArgumentBeta).Value; end.";
+    let source = r#"program T; begin var X: integer := VeryLongFactoryName.CreateVeryLongThing().TransformWithVeryLongName(VeryLongArgumentAlpha).ScaleWithAnotherLongName(VeryLongArgumentBeta).Value; end program;"#;
     let (unit, errors) = fpas_parser::parse_compilation_unit(source);
     assert!(errors.is_empty(), "{errors:?}");
     let formatted = fpas_fmt::format_source(source, &unit).expect("matching source and AST");
@@ -139,11 +164,18 @@ fn postfix_chaining_wraps_long_chain() {
 fn closure_literal_round_trips() {
     common::assert_round_trip(
         "closure_compact",
-        "program T; begin var F: procedure() := procedure() begin end; end.",
+        r#"program T; begin var F: procedure() := procedure() begin null; end procedure; end program;"#,
     );
     common::assert_round_trip(
         "closure_multiline",
-        "program T;\nbegin\n  var Add: function(Value: integer): integer :=\n    function(Value: integer): integer\n    begin\n      return Value + 1\n    end\nend.",
+        r#"program T;
+begin
+  var Add: function(Value: integer): integer :=
+    function(Value: integer): integer
+    begin
+      return Value + 1;
+    end function;
+end program;"#,
     );
 }
 
@@ -151,6 +183,6 @@ fn closure_literal_round_trips() {
 fn postfix_chaining_round_trips_field_index_mixture() {
     common::assert_round_trip(
         "postfix_field_index_mixture",
-        "program T; begin var X: integer := Factory.Create().Items[0].Value; end.",
+        r#"program T; begin var X: integer := Factory.Create().Items[0].Value; end program;"#,
     );
 }

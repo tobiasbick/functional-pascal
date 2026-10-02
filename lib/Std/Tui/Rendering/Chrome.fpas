@@ -1,9 +1,11 @@
 // Flat panel and overlay chrome painting.
 unit Std.Tui.Rendering.Chrome;
 
-uses
-  Std.Tui.Cells.Cell, Std.Tui.Cells.StyleRole, Std.Tui.Geometry.Point, Std.Tui.Geometry.Rect,
-  Std.Tui.Rendering.Canvas;
+uses Std.Tui.Cells.Cell as Cell;
+uses Std.Tui.Cells.StyleRole as StyleRole;
+uses Std.Tui.Geometry.Point as Point;
+uses Std.Tui.Geometry.Rect as Rect;
+uses Std.Tui.Rendering.Canvas as Canvas2;
 
 // Paints an opaque panel with a thin rounded frame and left-aligned title.
 //
@@ -11,18 +13,22 @@ uses
 // - `Canvas`: Canvas that receives the drawing operation.
 // - `Bounds`: Rectangle affected by the operation.
 // - `Title`: Title displayed by the panel.
-public procedure TuiPaintPanel(Canvas: TuiCanvas; Bounds: TuiRect; Title: string);
+public procedure TuiPaintPanel(Canvas: Canvas2.TuiCanvas; Bounds: Rect.TuiRect; Title: string);
 begin
   if Bounds.IsEmpty() then
-  begin
-    return
-  end;
+    begin
+      return;
+    end;
+  end if;
 
-  Canvas.FillRect(Bounds, TuiCell.Create(' ', TuiStyleRole.Normal));
-  Canvas.DrawFrame(Bounds, TuiStyleRole.Frame);
+  Canvas.FillRect(Bounds, Cell.TuiCell.Create(' ', StyleRole.TuiStyleRole.Normal));
+  Canvas.DrawFrame(Bounds, StyleRole.TuiStyleRole.Frame);
   if (Title <> '') and (Bounds.Width > 6) then
-  begin
-    Canvas.Child(TuiRect.Create(Bounds.X + 2, Bounds.Y, Bounds.Width - 4, 1))
-      .WriteText(TuiPoint.Create(0, 0), (' ' + Title) + ' ', TuiStyleRole.Title)
-  end
-end;
+    begin
+      Canvas.Child(Rect.TuiRect.Create(Bounds.X + 2, Bounds.Y, Bounds.Width - 4, 1))
+        .WriteText(Point.TuiPoint.Create(0, 0), (' ' + Title) + ' ', StyleRole.TuiStyleRole.Title);
+    end;
+  end if;
+end procedure;
+
+end unit;

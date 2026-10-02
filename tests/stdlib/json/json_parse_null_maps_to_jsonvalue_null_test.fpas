@@ -1,26 +1,27 @@
 program T;
 
-uses Std.Console, Std.Json;
+uses Std.Console as Console;
+uses Std.Json as Json;
 
 begin
-  var R: result of JsonValue, string := Parse('null');
+  var R: result of Json.JsonValue, string := Json.Parse('null');
   case R of
-    Ok(V):
-    begin
-      case V of
-        JsonValue.Null:
-        begin
-          WriteLn('null')
-        end
-        else
-        begin
-          WriteLn('not-null')
-        end
-      end
-    end;
-    Error(E):
-    begin
-      WriteLn('error: ' + E)
-    end
-  end
-end.
+    when Ok(V):
+      begin
+        case V of
+          when Json.JsonValue.NullValue:
+            begin
+              Console.WriteLn('null');
+            end;
+          else
+            begin
+              Console.WriteLn('not-null');
+            end;
+        end case;
+      end;
+    when Error(E):
+      begin
+        Console.WriteLn('error: ' + E);
+      end;
+  end case;
+end program;

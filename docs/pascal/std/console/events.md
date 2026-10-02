@@ -15,9 +15,12 @@ another event follows the burst, it remains next in FIFO order. Test-injected
 `ConsoleEvent` values retain their explicit queue order.
 
 ```pascal
-var E: ConsoleEvent := ReadEvent();
-if E.kind = EventKind.Resize then
-  WriteLn(E.width, 'x', E.height)
+uses Std.Console as Console;
+
+var E: Console.ConsoleEvent := Console.ReadEvent();
+if E.kind = Console.EventKind.Resize then
+  Console.WriteLn(E.width, 'x', E.height);
+end if;
 ```
 
 ### `function ReadEventTimeout(Milliseconds: integer): Option of ConsoleEvent`
@@ -32,20 +35,21 @@ runtime continues waiting with the remaining deadline instead of returning
 deadline reaches zero.
 
 ```pascal
-uses Std.Console, Std.Options;
+uses Std.Console as Console;
+uses Std.Options as Options;
 
-EnableRawMode();
-var MaybeEvent: Option of ConsoleEvent := ReadEventTimeout(100);
-case MaybeEvent of
-  Some(E):
-  begin
-    WriteLn(E.kind)
-  end;
-  None:
-  begin
-    WriteLn('timeout')
-  end
-end
+  Console.EnableRawMode();
+  var MaybeEvent: option of Console.ConsoleEvent := Console.ReadEventTimeout(100);
+  case MaybeEvent of
+    when Some(E):
+      begin
+        Console.WriteLn(E.kind);
+      end;
+    when None:
+      begin
+        Console.WriteLn('timeout');
+      end;
+  end case;
 ```
 
 ### `function PollEvent(): Option of ConsoleEvent`
@@ -59,20 +63,21 @@ that no FPAS event is available, so a ready press following a release is
 returned by the same call.
 
 ```pascal
-uses Std.Console, Std.Options;
+uses Std.Console as Console;
+uses Std.Options as Options;
 
-EnableRawMode();
-var MaybeE: Option of ConsoleEvent := PollEvent();
-case MaybeE of
-  Some(E):
-  begin
-    WriteLn('got event')
-  end;
-  None:
-  begin
-    WriteLn('nothing pending')
-  end
-end
+  Console.EnableRawMode();
+  var MaybeE: option of Console.ConsoleEvent := Console.PollEvent();
+  case MaybeE of
+    when Some(E):
+      begin
+        Console.WriteLn('got event');
+      end;
+    when None:
+      begin
+        Console.WriteLn('nothing pending');
+      end;
+  end case;
 ```
 
 ### `procedure DisableRawMode()`

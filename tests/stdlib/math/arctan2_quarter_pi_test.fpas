@@ -1,7 +1,8 @@
 program T;
 
-uses Std.Console, Std.Math;
+uses Std.Console as Console;
+uses Std.Math as Math;
 
 begin
-  WriteLn(Round(ArcTan2(1.0, 1.0) * 1000.0))
-end.
+  Console.WriteLn(Math.Round(Math.ArcTan2(1.0, 1.0) * 1000.0));
+end program;

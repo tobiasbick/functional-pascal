@@ -17,14 +17,14 @@ impl LoweringContext {
         replacement: ValueId,
         span: fpas_lexer::Span,
     ) -> Result<(), CompileError> {
-        let Some(DesignatorPart::Ident(name, _)) = designator.parts.first() else {
+        let Some((name, consumed)) = self.designator_root(designator) else {
             return Err(unsupported(designator.span, "assignment root"));
         };
-        if designator.parts.len() == 1 {
-            return if self.has_binding(name) {
-                self.write_named_local(name, replacement, span)
+        if designator.parts.len() == consumed {
+            return if self.has_binding(&name) {
+                self.write_named_local(&name, replacement, span)
             } else {
-                self.write_global(name, replacement, span)
+                self.write_global(&name, replacement, span)
             };
         }
         if let (
@@ -32,9 +32,9 @@ impl LoweringContext {
             [DesignatorPart::Index(index, _)],
             Some(IrType::Array(_) | IrType::Dictionary { .. }),
         ) = (
-            self.direct_local(name),
-            &designator.parts[1..],
-            self.root_type(name).and_then(|ty| self.type_kind(ty)),
+            self.direct_local(&name),
+            &designator.parts[consumed..],
+            self.root_type(&name).and_then(|ty| self.type_kind(ty)),
         ) && is_side_effect_free_index(index)
         {
             let index = self.lower_expression(index)?;
@@ -47,10 +47,10 @@ impl LoweringContext {
                 span,
             );
         }
-        if !self.has_binding(name)
+        if !self.has_binding(&name)
             && self.lower_global_index_path_write(
-                name,
-                &designator.parts[1..],
+                &name,
+                &designator.parts[consumed..],
                 replacement,
                 span,
             )?
@@ -58,19 +58,19 @@ impl LoweringContext {
             return Ok(());
         }
         let ty = self
-            .root_type(name)
+            .root_type(&name)
             .ok_or_else(|| unsupported(designator.span, "assignment root type"))?;
-        let root = if self.has_binding(name) {
-            self.read_named_local(name, span)?
+        let root = if self.has_binding(&name) {
+            self.read_named_local(&name, span)?
         } else {
-            self.read_global(name, span)?
+            self.read_global(&name, span)?
         };
         let updated =
-            self.lower_path_update(root, ty, &designator.parts[1..], replacement, span)?;
-        if self.has_binding(name) {
-            self.write_named_local(name, updated, span)
+            self.lower_path_update(root, ty, &designator.parts[consumed..], replacement, span)?;
+        if self.has_binding(&name) {
+            self.write_named_local(&name, updated, span)
         } else {
-            self.write_global(name, updated, span)
+            self.write_global(&name, updated, span)
         }
     }
 
@@ -172,18 +172,32 @@ impl LoweringContext {
         &mut self,
         designator: &Designator,
     ) -> Result<ValueId, CompileError> {
-        let Some(DesignatorPart::Ident(name, _)) = designator.parts.first() else {
+        let Some((name, consumed)) = self.designator_root(designator) else {
             return Err(unsupported(designator.span, "designator root"));
         };
-        let mut ty = self
-            .root_type(name)
-            .ok_or_else(|| unsupported(designator.span, "unresolved designator"))?;
-        let mut value = if self.has_binding(name) {
-            self.read_named_local(name, designator.span)?
+        let mut ty = self.root_type(&name).ok_or_else(|| {
+            unsupported(
+                designator.span,
+                &format!(
+                    "unresolved designator `{}`",
+                    designator
+                        .parts
+                        .iter()
+                        .filter_map(|part| match part {
+                            DesignatorPart::Ident(name, _) => Some(name.as_str()),
+                            _ => None,
+                        })
+                        .collect::<Vec<_>>()
+                        .join(".")
+                ),
+            )
+        })?;
+        let mut value = if self.has_binding(&name) {
+            self.read_named_local(&name, designator.span)?
         } else {
-            self.read_global(name, designator.span)?
+            self.read_global(&name, designator.span)?
         };
-        for part in &designator.parts[1..] {
+        for part in &designator.parts[consumed..] {
             (value, ty) = self.lower_designator_part(value, ty, part)?;
         }
         Ok(value)

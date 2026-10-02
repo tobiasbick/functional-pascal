@@ -11,21 +11,21 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`record_type`, rec
 ## Declaring a record
 
 ```pascal
-type
-  Point = record
-    X: real;
-    Y: real;
-  end;
+type Point = record
+  X: real;
+  Y: real;
+end record;
+
 ```
 
 ## Creating a record
 
 ```pascal
-var
-  P: Point := record
-    X := 0.0;
-    Y := 5.0;
-  end;
+var P: Point := record
+  X := 0.0;
+  Y := 5.0;
+end record;
+
 ```
 
 Each field may appear at most once in a record literal. Field names are
@@ -39,26 +39,25 @@ because they contain fields with the same names and types. Assignments, argument
 values must use the same record declaration or an alias of that declaration.
 
 ```pascal
-type
-  Point = record
-    X: integer;
-    Y: integer;
-  end;
+type Point = record
+  X: integer;
+  Y: integer;
+end record;
 
-  Size = record
-    X: integer;
-    Y: integer;
-  end;
+type Size = record
+  X: integer;
+  Y: integer;
+end record;
 
-  PointAlias = Point;
+type PointAlias = Point;
 
-var
-  P: Point := record
-    X := 1;
-    Y := 2;
-  end;
-  A: PointAlias := P;  // Valid: PointAlias names the Point declaration.
-  S: Size := P;        // Error: Point and Size are distinct declarations.
+var P: Point := record
+  X := 1;
+  Y := 2;
+end record;
+var A: PointAlias := P; // Valid: PointAlias names the Point declaration.
+var S: Size := P;
+
 ```
 
 Two values of the same record type compare with `=` and `<>` field by field when every field
@@ -72,8 +71,8 @@ separately declared record types interchangeable.
 ## Accessing fields
 
 ```pascal
-var
-  PosX: real := P.X;
+var PosX: real := P.X;
+
 ```
 
 ## Field visibility
@@ -85,11 +84,13 @@ visibility sections and no explicit `private` keyword.
 ```pascal
 unit MyApp.Counters;
 
-public type
-  Counter = record
+
+  public type Counter = record
     Value: integer;
     public Step: integer;
-  end;
+  end record;
+end unit;
+
 ```
 
 Code in `MyApp.Counters` may read and write `Value`. Importing units may use
@@ -111,15 +112,14 @@ rule.
 Record instances follow the same immutability rules as variables. A `mutable var` record allows field reassignment:
 
 ```pascal
-mutable var
-  P: Point := record
+mutable var P: Point := record
     X := 1.0;
     Y := 2.0;
-  end;
+  end record;
 
 begin
   P.X := 10.0;  // Valid — P is mutable
-end.
+end;
 ```
 
 ## Default field values
@@ -127,41 +127,48 @@ end.
 A field declaration may include a default value using `:=`. When a record literal omits a field that has a default, the compiler substitutes the default automatically. Fields without a default must always be supplied.
 
 ```pascal
-type
-  Config = record
-    Host: string := 'localhost';
-    Port: integer := 8080;
-    Debug: boolean := false;
-  end;
+type Config = record
+  Host: string := 'localhost';
+  Port: integer := 8080;
+  Debug: boolean := false;
+end record;
+
 ```
 
 Omitting defaulted fields:
 
 ```pascal
-var
-  C: Config := record end;                 // Host='localhost', Port=8080, Debug=false
-  D: Config := record Port := 9000; end;   // Host='localhost', Port=9000, Debug=false
+var C: Config := record end record; // Host='localhost', Port=8080, Debug=false
+var D: Config := record
+  Port := 9000;
+end record;
+
 ```
 
 Explicitly providing a value overrides the default:
 
 ```pascal
-var
-  E: Config := record Host := 'example.com'; Port := 443; Debug := true; end;
+var E: Config := record
+  Host := 'example.com';
+  Port := 443;
+  Debug := true;
+end record;
+
 ```
 
 Fields without a default remain required:
 
 ```pascal
-type
-  Vertex = record
-    Id: integer;           // Required
-    X: integer := 0;       // Optional
-    Y: integer := 0;       // Optional
-  end;
+type Vertex = record
+  Id: integer; // Required
+  X: integer := 0; // Optional
+  Y: integer := 0; // Optional
+end record;
 
-var
-  V: Vertex := record Id := 7; end;  // X=0, Y=0 from defaults
+var V: Vertex := record
+  Id := 7;
+end record;
+
 ```
 
 ## See also

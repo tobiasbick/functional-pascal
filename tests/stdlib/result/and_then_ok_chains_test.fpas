@@ -1,21 +1,24 @@
 program T;
 
-uses Std.Console, Std.Results, Std.Conv;
+uses Std.Console as Console;
+uses Std.Results as Results;
+uses Std.Conv as Conv;
 
 function PositiveToStr(V: integer): result of string, string;
 begin
   if V > 0 then
-  begin
-    return Ok(IntToStr(V))
-  end
+    begin
+      return Ok(Conv.IntToStr(V));
+    end;
   else
-  begin
-    return Error('non-positive')
-  end
-end;
+    begin
+      return Error('non-positive');
+    end;
+  end if;
+end function;
 
 begin
   var R: result of integer, string := Ok(10);
-  var M: result of string, string := AndThen(R, PositiveToStr);
-  WriteLn(Unwrap(M))
-end.
+  var M: result of string, string := Results.AndThen(R, PositiveToStr);
+  Console.WriteLn(Results.Unwrap(M));
+end program;

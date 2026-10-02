@@ -1,14 +1,15 @@
 program T;
 
-uses Std.Console, Std.Options;
+uses Std.Console as Console;
+uses Std.Options as Options;
 
 function AlwaysNone(): option of integer;
 begin
-  return None
-end;
+  return None;
+end function;
 
 begin
   var O: option of integer := None;
-  var M: option of integer := OrElse(O, AlwaysNone);
-  WriteLn(IsNone(M))
-end.
+  var M: option of integer := Options.OrElse(O, AlwaysNone);
+  Console.WriteLn(Options.IsNone(M));
+end program;

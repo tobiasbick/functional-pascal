@@ -9,7 +9,11 @@ use fpas_debug::{PreparedDebugTarget, dap::DapServer};
 use serde_json::{Value, json};
 
 fn server() -> DapServer {
-    let source = "program Main;\nbegin\n  mutable var X: integer := 1;\n  X := X + 1\nend.";
+    let source = r#"program Main;
+begin
+  mutable var X: integer := 1;
+  X := X + 1;
+end program;"#;
     let (program, diagnostics) = fpas_parser::parse(source);
     assert!(diagnostics.is_empty(), "parse diagnostics: {diagnostics:?}");
     let executable = fpas_compiler::compile(&program).expect("compile mutation fixture");

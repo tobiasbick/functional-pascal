@@ -34,16 +34,16 @@ export async function verifyExpressionMutation(
   const lines = [
     "program DebuggerExpressionMutation;",
     "",
-    "uses Std.Console;",
+    " uses Std.Console as Console;",
     "",
-    "type",
-    "  Point = record",
+    "",
+    "  type Point = record",
     "    X: integer;",
     "    Y: integer;",
-    "  end;",
+    "  end record;",
     "",
-    "mutable var",
-    "  GlobalValue: integer := 5;",
+    " ",
+    "  mutable var GlobalValue: integer := 5;",
     "",
     "begin",
     "  mutable var Scalar: integer := 1;",
@@ -51,12 +51,12 @@ export async function verifyExpressionMutation(
     "  mutable var Origin: Point := record",
     "    X := 3;",
     "    Y := 4;",
-    "  end;",
+    "  end record;",
     "  mutable var Items: array of integer := [6, 7];",
     "  mutable var Scores: dict of string to integer := ['Ada': 8];",
     "  var StopMarker: integer := Fixed;",
-    "  WriteLn(Scalar + Origin.X + Items[1] + Scores['Ada'] + GlobalValue)",
-    "end.",
+    "  Console.WriteLn(Scalar + Origin.X + Items[1] + Scores['Ada'] + GlobalValue);",
+    "end program;",
     ""
   ];
   const sourcePath = await writeSource(workspaceRoot, "expression-mutation", lines);
@@ -93,7 +93,7 @@ export async function verifyExpressionMutation(
     const aggregate = await setExpression(
       session,
       "Origin",
-      "Origin with X := 20; end",
+      "Origin with X := 20; end with",
       true
     );
     assert.equal(aggregate.type, "Point");
@@ -169,7 +169,7 @@ async function setExpression(
     value,
     frameId
   }) as SetExpressionResult;
-  assert.equal(result.value, value === "Origin with X := 20; end" ? "Point {...}" : value);
+  assert.equal(result.value, value === "Origin with X := 20; end with" ? "Point {...}" : value);
   return result;
 }
 

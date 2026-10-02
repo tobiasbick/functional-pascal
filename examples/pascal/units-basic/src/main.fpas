@@ -2,10 +2,13 @@
 
 program UnitsBasic;
 
-uses App.Math, App.Reporting, Std.Console, Std.Conv;
+uses App.Math as Math;
+uses App.Reporting as Reporting;
+uses Std.Console as Console;
+uses Std.Conv as Conv;
 
 begin
-  WriteLn('Short name: ', DescribeClamp(135));
-  WriteLn('Qualified name: ', App.Reporting.DescribeScaled(6, 7));
-  WriteLn('Clamp direct call: ', IntToStr(App.Math.Clamp(-4, 0, 10)))
-end.
+  Console.WriteLn('Short name: ', Reporting.DescribeClamp(135));
+  Console.WriteLn('Qualified name: ', Reporting.DescribeScaled(6, 7));
+  Console.WriteLn('Clamp direct call: ', Conv.IntToStr(Math.Clamp(-4, 0, 10)));
+end program;

@@ -15,17 +15,17 @@ fn rename_rejects_an_inner_declaration_capturing_edited_global_uses() {
     let temp = TempDirectory::new("rename-global-capture");
     let source = r#"program GlobalCapture;
 
-var Source: integer := 1;
+ var Source: integer := 1;
 
 function ReadValue(): integer;
 begin
   var Captured: integer := 2;
-  return Source
-end;
+  return Source;
+end function;
 
 begin
-  var Result: integer := ReadValue()
-end.
+  var ResultValue: integer := ReadValue();
+end program;
 "#;
     let path = temp.write("global.fpas", source);
     let mut service = LanguageService::new(WorkspaceContext::loose(temp.path()));
@@ -50,17 +50,17 @@ fn rename_rejects_a_local_declaration_capturing_unedited_outer_uses() {
     let temp = TempDirectory::new("rename-local-capture");
     let source = r#"program LocalCapture;
 
-var Outer: integer := 1;
+ var Outer: integer := 1;
 
 function ReadValue(): integer;
 begin
   var Local: integer := 2;
-  return Local + Outer
-end;
+  return Local + Outer;
+end function;
 
 begin
-  var Result: integer := ReadValue()
-end.
+  var ResultValue: integer := ReadValue();
+end program;
 "#;
     let path = temp.write("local.fpas", source);
     let mut service = LanguageService::new(WorkspaceContext::loose(temp.path()));
@@ -88,18 +88,18 @@ fn rename_allows_disjoint_local_names_and_the_edited_source_resolves() {
 function First(): integer;
 begin
   var Source: integer := 1;
-  return Source
-end;
+  return Source;
+end function;
 
 function Second(): integer;
 begin
   var Target: integer := 2;
-  return Target
-end;
+  return Target;
+end function;
 
 begin
-  var Result: integer := First() + Second()
-end.
+  var ResultValue: integer := First() + Second();
+end program;
 "#;
     let path = temp.write("disjoint.fpas", source);
     let mut service = LanguageService::new(WorkspaceContext::loose(temp.path()));

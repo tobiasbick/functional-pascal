@@ -1,18 +1,19 @@
 program StringMapMultipleResultInTaskRuntimeError;
 
-uses Std.Str, Std.Tasks;
+uses Std.Str as Str;
+uses Std.Tasks as Tasks;
 
 function Expand(C: string): string;
 begin
-  return 'ab'
-end;
+  return 'ab';
+end function;
 
 function Work(): string;
 begin
-  return Map('x', Expand)
-end;
+  return Str.Map('x', Expand);
+end function;
 
 begin
   var Job: task := go Work();
-  var Mapped: string := Wait(Job)
-end.
+  var Mapped: string := Tasks.Wait(Job);
+end program;

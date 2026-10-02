@@ -3,21 +3,20 @@ use super::*;
 #[test]
 fn fibonacci() {
     let p = parse_ok(
-        "\
-program Fib;
-uses Std.Console;
+        r#"program Fib;
+uses Std.Console as Console;
 
 function Fibonacci(N: integer): integer;
 begin
   if N <= 1 then
-    return N
+    return N;
   else
-    return Fibonacci(N - 1) + Fibonacci(N - 2)
-end;
+    return Fibonacci(N - 1) + Fibonacci(N - 2); end if;
+end function;
 
 begin
-  Std.Console.WriteLn(Fibonacci(10))
-end.",
+  Console.WriteLn(Fibonacci(10));
+end program;"#,
     );
     assert_eq!(p.name, "Fib");
     assert_eq!(p.declarations.len(), 1);
@@ -27,23 +26,22 @@ end.",
 #[test]
 fn nested_mutual_recursion_even_odd() {
     let p = parse_ok(
-        "\
-program T;
+        r#"program T;
 
 function IsEven(N: integer): boolean;
   function IsOdd(X: integer): boolean;
   begin
-    if X = 0 then return false
-    else return IsEven(X - 1)
-  end;
+    if X = 0 then return false;
+    else return IsEven(X - 1); end if;
+  end function;
 begin
-  if N = 0 then return true
-  else return IsOdd(N - 1)
-end;
+  if N = 0 then return true;
+  else return IsOdd(N - 1); end if;
+end function;
 
 begin
-  return
-end.",
+  return;
+end program;"#,
     );
     assert_eq!(p.declarations.len(), 1);
     match &p.declarations[0] {

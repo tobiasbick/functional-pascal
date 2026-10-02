@@ -1,17 +1,19 @@
 program WhileRepeatExample;
 
-uses Std.Console, Std.Conv;
+uses Std.Console as Console;
+uses Std.Conv as Conv;
 
 begin
   mutable var Count: integer := 0;
   while Count < 3 do
-  begin
-    WriteLn('while step: ', IntToStr(Count));
-    Count := Count + 1
-  end;
+    begin
+      Console.WriteLn('while step: ', Conv.IntToStr(Count));
+      Count := Count + 1;
+    end;
+  end while;
   mutable var Attempts: integer := 0;
   repeat
-    WriteLn('repeat step: ', IntToStr(Attempts));
-    Attempts := Attempts + 1
-  until Attempts >= 3
-end.
+    Console.WriteLn('repeat step: ', Conv.IntToStr(Attempts));
+    Attempts := Attempts + 1;
+  until Attempts >= 3;
+end program;

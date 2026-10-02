@@ -9,22 +9,13 @@ Root nodes must be submenus. Commands, nested submenus, and separators refer to
 their parent by identity:
 
 ```pascal
-var FileId: TuiMenuNodeId := TuiMenuNodeId.Create(1);
-var Nodes: array of TuiMenuNode := [
-  TuiMenuNodeBuilders.Submenu(FileId, None, 'File', 'F'),
-  TuiMenuNodeBuilders.CommandWithShortcut(
-    TuiMenuNodeId.Create(2),
-    Some(FileId),
-    'Open',
-    'O',
-    TuiAction.Create(10),
-    TuiKeyGesture.Create(
-      TuiKeyKind.Character, 'o',
-      false, true, false, false,
-      'Ctrl+O'
-    )
-  )
-];
+uses Std.Tui as Tui;
+
+var FileId: Tui.TuiMenuNodeId := Tui.TuiMenuNodeId.Create(1);
+var Nodes: array of Tui.TuiMenuNode := [
+                                     Tui.TuiMenuNodeBuilders.Submenu(FileId, None, 'File', 'F'),
+                                     Tui.TuiMenuNodeBuilders.CommandWithShortcut(Tui.TuiMenuNodeId.Create(2), Some(FileId), 'Open', 'O', Tui.TuiAction.Create(10), Tui.TuiKeyGesture.Create(Tui.TuiKeyKind.Character, 'o', false, true, false, false, 'Ctrl+O'))
+                                   ];
 ```
 
 `TuiKeyGesture` stores the key kind, character, modifiers, and display label.
@@ -37,13 +28,17 @@ The application model owns `TuiMenuState`. Render it with a stable menu control
 and change action:
 
 ```pascal
-TuiElementBuilders.MakeMenu(MenuId, Nodes, Model.Menu, MenuChangedAction)
+uses Std.Tui as Tui;
+
+Tui.TuiElementBuilders.MakeMenu(MenuId, Nodes, Model.Menu, MenuChangedAction);
 ```
 
 Routing proposes changes through:
 
 ```pascal
-TuiMsg.MenuChanged(Source, Action, State)
+uses Std.Tui as Tui;
+
+Tui.TuiMsg.MenuChanged(Source, Action, State);
 ```
 
 Accept the message by copying `State` into the model. Commands emit

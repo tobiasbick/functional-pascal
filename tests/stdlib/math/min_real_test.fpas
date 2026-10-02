@@ -1,8 +1,9 @@
 program T;
 
-uses Std.Console, Std.Math;
+uses Std.Console as Console;
+uses Std.Math as Math;
 
 begin
-  WriteLn(Min(3.5, 1.2));
-  WriteLn(Min(-0.5, 0.5))
-end.
+  Console.WriteLn(Math.Min(3.5, 1.2));
+  Console.WriteLn(Math.Min(-0.5, 0.5));
+end program;

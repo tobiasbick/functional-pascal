@@ -1,7 +1,8 @@
 program T;
 
-uses Std.Console, Std.Conv;
+uses Std.Console as Console;
+uses Std.Conv as Conv;
 
 begin
-  WriteLn(HexToInt('ff'))
-end.
+  Console.WriteLn(Conv.HexToInt('ff'));
+end program;

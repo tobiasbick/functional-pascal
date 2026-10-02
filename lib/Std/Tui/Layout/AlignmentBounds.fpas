@@ -1,89 +1,104 @@
 unit Std.Tui.Layout.AlignmentBounds;
 
-uses Std.Tui.Geometry.Rect, Std.Tui.Layout.Alignment, Std.Tui.Layout.MeasureResult;
+uses Std.Tui.Geometry.Rect as Rect;
+uses Std.Tui.Layout.Alignment as Alignment2;
+uses Std.Tui.Layout.MeasureResult as MeasureResult;
 
 function TuiAlignmentBoundsMin(Left: integer; Right: integer): integer;
 begin
   if Left < Right then
-  begin
-    return Left
-  end;
+    begin
+      return Left;
+    end;
+  end if;
 
-  return Right
-end;
+  return Right;
+end function;
 
 function TuiAlignmentBoundsMax(Left: integer; Right: integer): integer;
 begin
   if Left > Right then
-  begin
-    return Left
-  end;
+    begin
+      return Left;
+    end;
+  end if;
 
-  return Right
-end;
+  return Right;
+end function;
 
 function TuiAlignmentBoundsExtent(
   Minimum: integer;
   Preferred: integer;
   Maximum: integer;
   Available: integer;
-  Alignment: TuiAlignmentKind
+  Alignment: Alignment2.TuiAlignmentKind
 ): integer;
 begin
   mutable var Extent: integer := Preferred;
-  if Alignment = TuiAlignmentKind.Fill then
-  begin
-    Extent := TuiAlignmentBoundsMin(Available, Maximum)
-  end;
+  if Alignment = Alignment2.TuiAlignmentKind.Fill then
+    begin
+      Extent := TuiAlignmentBoundsMin(Available, Maximum);
+    end;
+  end if;
 
   Extent := TuiAlignmentBoundsMax(Minimum, Extent);
   if Available >= Minimum then
-  begin
-    Extent := TuiAlignmentBoundsMin(Extent, Available)
-  end;
+    begin
+      Extent := TuiAlignmentBoundsMin(Extent, Available);
+    end;
+  end if;
 
-  return Extent
-end;
+  return Extent;
+end function;
 
-function TuiAlignmentBoundsOffset(Available: integer; Extent: integer; Alignment: TuiAlignmentKind): integer;
+function TuiAlignmentBoundsOffset(
+  Available: integer;
+  Extent: integer;
+  Alignment: Alignment2.TuiAlignmentKind
+): integer;
 begin
   case Alignment of
-    TuiAlignmentKind.Leading:
-    begin
-      return 0
-    end;
-    TuiAlignmentKind.Center:
-    begin
-      return (Available - Extent) div 2
-    end;
-    TuiAlignmentKind.Trailing:
-    begin
-      return Available - Extent
-    end;
-    TuiAlignmentKind.Fill:
-    begin
-      return 0
-    end
-  end;
+    when Alignment2.TuiAlignmentKind.Leading:
+      begin
+        return 0;
+      end;
+    when Alignment2.TuiAlignmentKind.Center:
+      begin
+        return (Available - Extent) div 2;
+      end;
+    when Alignment2.TuiAlignmentKind.Trailing:
+      begin
+        return Available - Extent;
+      end;
+    when Alignment2.TuiAlignmentKind.Fill:
+      begin
+        return 0;
+      end;
+  end case;
 
-  return 0
-end;
+  return 0;
+end function;
 
-public type
-  // Resolves one measured element into an aligned rectangle within an allocated area.
-  TuiAlignmentBounds = record
-    // Applies independent alignment and size limits on both axes.
-    //
-    // Parameters:
-    // - `Measured`: Measured minimum, preferred, and maximum sizes.
-    // - `Alignment`: Alignment applied within the available area.
-    // - `Area`: Available layout rectangle.
-    public static function Resolve(Measured: TuiMeasureResult; Alignment: TuiAlignment; Area: TuiRect): TuiRect;
-    begin
-      var Width: integer := TuiAlignmentBoundsExtent(Measured.Minimum.Width, Measured.Preferred.Width, Measured.Maximum.Width, Area.Width, Alignment.Horizontal);
-      var Height: integer := TuiAlignmentBoundsExtent(Measured.Minimum.Height, Measured.Preferred.Height, Measured.Maximum.Height, Area.Height, Alignment.Vertical);
-      return TuiRect.Create(Area.X +
-                            TuiAlignmentBoundsOffset(Area.Width, Width, Alignment.Horizontal), Area.Y +
-                                                                                               TuiAlignmentBoundsOffset(Area.Height, Height, Alignment.Vertical), Width, Height)
-    end;
-  end;
+// Resolves one measured element into an aligned rectangle within an allocated area.
+public type TuiAlignmentBounds = record
+  // Applies independent alignment and size limits on both axes.
+  //
+  // Parameters:
+  // - `Measured`: Measured minimum, preferred, and maximum sizes.
+  // - `Alignment`: Alignment applied within the available area.
+  // - `Area`: Available layout rectangle.
+  public static function Resolve(
+  Measured: MeasureResult.TuiMeasureResult;
+  Alignment: Alignment2.TuiAlignment;
+  Area: Rect.TuiRect
+): Rect.TuiRect;
+  begin
+    var Width: integer := TuiAlignmentBoundsExtent(Measured.Minimum.Width, Measured.Preferred.Width, Measured.Maximum.Width, Area.Width, Alignment.Horizontal);
+    var Height: integer := TuiAlignmentBoundsExtent(Measured.Minimum.Height, Measured.Preferred.Height, Measured.Maximum.Height, Area.Height, Alignment.Vertical);
+    return Rect.TuiRect.Create(Area.X +
+                               TuiAlignmentBoundsOffset(Area.Width, Width, Alignment.Horizontal), Area.Y +
+                                                                                                  TuiAlignmentBoundsOffset(Area.Height, Height, Alignment.Vertical), Width, Height);
+  end function;
+end record;
+
+end unit;

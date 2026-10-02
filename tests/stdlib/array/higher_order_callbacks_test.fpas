@@ -1,32 +1,33 @@
 program ArrayHigherOrderCallbacksTest;
 
-uses Std.Arrays, Std.Test;
+uses Std.Arrays as Arrays;
+uses Std.Test as Test;
 
 function Double(Value: integer): integer;
 begin
-  return Value * 2
-end;
+  return Value * 2;
+end function;
 
 function IsAboveFour(Value: integer): boolean;
 begin
-  return Value > 4
-end;
+  return Value > 4;
+end function;
 
 function Sum(Accumulator: integer; Value: integer): integer;
 begin
-  return Accumulator + Value
-end;
+  return Accumulator + Value;
+end function;
 
 begin
   var Values: array of integer := [1, 2, 3, 4];
-  var Mapped: array of integer := Map(Values, Double);
-  var Filtered: array of integer := Filter(Mapped, IsAboveFour);
-  AssertEquals(4, Length(Mapped));
-  AssertEquals(2, Mapped[0]);
-  AssertEquals(8, Mapped[3]);
-  AssertEquals(2, Length(Filtered));
-  AssertEquals(6, Filtered[0]);
-  AssertEquals(8, Filtered[1]);
-  AssertEquals(14, Reduce(Filtered, 0, Sum));
-  AssertEquals(20, Reduce(Mapped, 0, Sum))
-end.
+  var Mapped: array of integer := Arrays.Map(Values, Double);
+  var Filtered: array of integer := Arrays.Filter(Mapped, IsAboveFour);
+  Test.AssertEquals(4, Arrays.Length(Mapped));
+  Test.AssertEquals(2, Mapped[0]);
+  Test.AssertEquals(8, Mapped[3]);
+  Test.AssertEquals(2, Arrays.Length(Filtered));
+  Test.AssertEquals(6, Filtered[0]);
+  Test.AssertEquals(8, Filtered[1]);
+  Test.AssertEquals(14, Arrays.Reduce(Filtered, 0, Sum));
+  Test.AssertEquals(20, Arrays.Reduce(Mapped, 0, Sum));
+end program;

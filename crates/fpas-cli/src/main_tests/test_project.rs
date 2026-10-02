@@ -15,11 +15,15 @@ fn test_cli_runs_tests_from_test_project_file() {
     );
     write_text(
         &cwd.join("alpha_test.fpas"),
-        "program A;\nuses Std.Test;\nbegin AssertTrue(true) end.",
+        r#"program A;
+uses Std.Test as Test;
+begin Test.AssertTrue(true); end program;"#,
     );
     write_text(
         &cwd.join("beta_test.fpas"),
-        "program B;\nuses Std.Test;\nbegin AssertEquals(2, 1 + 1) end.",
+        r#"program B;
+uses Std.Test as Test;
+begin Test.AssertEquals(2, 1 + 1); end program;"#,
     );
 
     let mut stderr = Vec::new();
@@ -64,7 +68,9 @@ fn test_cli_runs_tests_from_workspace_test_member() {
     );
     write_text(
         &cwd.join("tests/only_test.fpas"),
-        "program O;\nuses Std.Test;\nbegin AssertTrue(true) end.",
+        r#"program O;
+uses Std.Test as Test;
+begin Test.AssertTrue(true); end program;"#,
     );
 
     let mut stderr = Vec::new();
@@ -104,7 +110,12 @@ fn test_cli_uses_manifest_script_override() {
     );
     write_text(
         &cwd.join("prompt_test.fpas"),
-        "program P;\nuses Std.Console, Std.Test;\nbegin\n  var Name: string := ReadLn();\n  AssertTrue(Name = 'Alice')\nend.",
+        r#"program P;
+uses Std.Console as Console; uses Std.Test as Test;
+begin
+  var Name: string := Console.ReadLn();
+  Test.AssertTrue(Name = 'Alice');
+end program;"#,
     );
     write_text(
         &cwd.join("prompt.script.toml"),
@@ -148,11 +159,20 @@ fn test_cli_runs_setup_and_teardown_hooks() {
     );
     write_text(
         &cwd.join("fixture.fpas"),
-        "unit Tests.Fixture;\nuses Std.Test;\npublic procedure Setup();\nbegin AssertTrue(true) end;\npublic procedure Teardown();\nbegin AssertTrue(true) end;",
+        r#"unit Tests.Fixture;
+uses Std.Test as Test;
+public procedure Setup();
+begin Test.AssertTrue(true); end procedure;
+public procedure Teardown();
+begin Test.AssertTrue(true); end procedure;
+end unit;
+"#,
     );
     write_text(
         &cwd.join("demo_test.fpas"),
-        "program D;\nuses Std.Test;\nbegin AssertTrue(true) end.",
+        r#"program D;
+uses Std.Test as Test;
+begin Test.AssertTrue(true); end program;"#,
     );
 
     let mut stderr = Vec::new();
@@ -193,11 +213,18 @@ fn test_cli_fails_when_teardown_hook_fails() {
     );
     write_text(
         &cwd.join("fixture.fpas"),
-        "unit Tests.Fixture;\nuses Std.Test;\npublic procedure Teardown();\nbegin AssertTrue(false) end;",
+        r#"unit Tests.Fixture;
+uses Std.Test as Test;
+public procedure Teardown();
+begin Test.AssertTrue(false); end procedure;
+end unit;
+"#,
     );
     write_text(
         &cwd.join("demo_test.fpas"),
-        "program D;\nuses Std.Test;\nbegin AssertTrue(true) end.",
+        r#"program D;
+uses Std.Test as Test;
+begin Test.AssertTrue(true); end program;"#,
     );
 
     let mut stderr = Vec::new();
@@ -241,11 +268,21 @@ fn test_cli_timeout_aborts_hanging_setup_hook() {
     );
     write_text(
         &cwd.join("fixture.fpas"),
-        "unit Tests.Fixture;\npublic procedure Setup();\nbegin\n  while 1 = 1 do\n  begin\n  end\nend;",
+        r#"unit Tests.Fixture;
+public procedure Setup();
+begin
+  while 1 = 1 do
+  begin null;
+  end; end while;
+end procedure;
+end unit;
+"#,
     );
     write_text(
         &cwd.join("demo_test.fpas"),
-        "program D;\nuses Std.Test;\nbegin AssertTrue(true) end.",
+        r#"program D;
+uses Std.Test as Test;
+begin Test.AssertTrue(true); end program;"#,
     );
 
     let mut stderr = Vec::new();
@@ -291,15 +328,34 @@ fn test_cli_reports_runtime_errors_of_units_linked_out_of_graph_order() {
         // `util.fpas` precedes `zeta.fpas` in the unit graph, but the linker emits App.Zeta first.
         write_text(
             &cwd.join("util.fpas"),
-            "unit App.Util;\nuses App.Zeta;\npublic procedure Trigger();\nbegin\n  if Seven() = 7 then panic('util failure')\nend;\n",
+            r#"unit App.Util;
+uses App.Zeta as Zeta;
+public procedure Trigger();
+begin
+  if Zeta.Seven() = 7 then panic('util failure'); end if;
+end procedure;
+end unit;
+
+"#,
         );
         write_text(
             &cwd.join("zeta.fpas"),
-            "unit App.Zeta;\npublic function Seven(): integer;\nbegin\n  return 7\nend;\n",
+            r#"unit App.Zeta;
+public function Seven(): integer;
+begin
+  return 7;
+end function;
+end unit;
+
+"#,
         );
         write_text(
             &cwd.join("trigger_test.fpas"),
-            "program TriggerTest;\nuses App.Util;\nbegin\n  Trigger()\nend.",
+            r#"program TriggerTest;
+uses App.Util as Util;
+begin
+  Util.Trigger();
+end program;"#,
         );
 
         let mut stderr = Vec::new();

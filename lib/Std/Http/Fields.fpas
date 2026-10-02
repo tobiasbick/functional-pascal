@@ -1,7 +1,10 @@
 // Shared HTTP field validation and parsing.
 unit Std.Http.Fields;
 
-uses Std.Arrays, Std.Http.Method, Std.Http.Types, Std.Str;
+uses Std.Arrays as Arrays;
+uses Std.Http.Method as Method;
+uses Std.Http.Types as Types;
+uses Std.Str as Str;
 
 // Reports whether an HTTP field value contains only permitted text characters.
 //
@@ -9,49 +12,57 @@ uses Std.Arrays, Std.Http.Method, Std.Http.Types, Std.Str;
 // - `Value`: Field value to validate.
 public function IsValidValue(Value: string): boolean;
 begin
-  for Index: integer := 0 to Std.Str.Length(Value) - 1 do
-  begin
-    var Code: integer := Std.Str.Ord(Std.Str.CharAt(Value, Index));
-    if ((Code < 32) and (Code <> 9)) or (Code = 127) then
+  for Index: integer := 0 to Str.Length(Value) - 1 do
     begin
-      return false
-    end
-  end;
+      var Code: integer := Str.Ord(Str.CharAt(Value, Index));
+      if ((Code < 32) and (Code <> 9)) or (Code = 127) then
+        begin
+          return false;
+        end;
+      end if;
+    end;
+  end for;
 
-  return true
-end;
+  return true;
+end function;
 
 // Parses validated HTTP fields after the first start-line in a text block.
 //
 // Parameters:
 // - `Text`: Complete decoded message head.
 // - `MessageKind`: Message label used in diagnostics.
-public function Parse(Text: string; MessageKind: string): result of array of Header, string;
+public function Parse(Text: string; MessageKind: string): result of array of Types.Header, string;
 begin
-  var Lines: array of string := Std.Str.Split(Text, #13 + #10);
-  mutable var Headers: array of Header := [];
-  for Index: integer := 1 to Std.Arrays.Length(Lines) - 1 do
-  begin
-    var Colon: integer := Std.Str.IndexOf(Lines[Index], ':');
-    if Colon <= 0 then
+  var Lines: array of string := Str.Split(Text, #13 + #10);
+  mutable var Headers: array of Types.Header := [];
+  for Index: integer := 1 to Arrays.Length(Lines) - 1 do
     begin
-      return Error((('Invalid HTTP ' + MessageKind) + ' header: ') + Lines[Index])
-    end;
-    var Name: string := Std.Str.Substring(Lines[Index], 0, Colon);
-    var Value: string := Std.Str.Trim(Std.Str.Substring(Lines[Index], Colon + 1, (Std.Str.Length(Lines[Index]) - Colon) -
-                                                                                 1));
-    if not Std.Http.Method.IsValidToken(Name) then
-    begin
-      return Error((('Invalid HTTP ' + MessageKind) + ' header name: ') + Name)
-    end;
+      var Colon: integer := Str.IndexOf(Lines[Index], ':');
+      if Colon <= 0 then
+        begin
+          return Error((('Invalid HTTP ' + MessageKind) + ' header: ') + Lines[Index]);
+        end;
+      end if;
+      var Name: string := Str.Substring(Lines[Index], 0, Colon);
+      var Value: string := Str.Trim(Str.Substring(Lines[Index], Colon + 1, (Str.Length(Lines[Index]) - Colon) -
+                                                                           1));
+      if not Method.IsValidToken(Name) then
+        begin
+          return Error((('Invalid HTTP ' + MessageKind) + ' header name: ') + Name);
+        end;
+      end if;
 
-    if not IsValidValue(Value) then
-    begin
-      return Error(('HTTP ' + MessageKind) + ' header contains an invalid control character')
+      if not IsValidValue(Value) then
+        begin
+          return Error(('HTTP ' + MessageKind) + ' header contains an invalid control character');
+        end;
+      end if;
+
+      Arrays.Push(Headers, Types.Header.Create(Name, Value));
     end;
+  end for;
 
-    Std.Arrays.Push(Headers, Header.Create(Name, Value))
-  end;
+  return Ok(Headers);
+end function;
 
-  return Ok(Headers)
-end;
+end unit;

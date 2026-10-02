@@ -41,7 +41,7 @@ pub(super) fn emit_record_fields(
     }
     emitter.write("\n");
     write_to_column(emitter, base_column);
-    emitter.write("end");
+    emitter.write("end record");
 }
 
 pub(super) fn write_to_column(emitter: &mut Emitter, column: usize) {
@@ -129,7 +129,11 @@ pub(super) fn emit_record_field_inits(
 }
 
 pub(super) fn record_literal_end(fields: &[FieldInit]) -> &'static str {
-    if fields.is_empty() { "end" } else { "; end" }
+    if fields.is_empty() {
+        "end record"
+    } else {
+        "; end record"
+    }
 }
 
 pub(super) fn format_string(value: &str) -> String {

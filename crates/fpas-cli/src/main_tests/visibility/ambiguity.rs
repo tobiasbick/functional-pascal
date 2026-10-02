@@ -1,7 +1,7 @@
 use super::*;
 
 #[test]
-fn ambiguity_with_three_units() {
+fn unqualified_call_with_three_imports_is_unknown() {
     let cwd = create_temp_dir("vis-ambig-three");
     let project_file = cwd.join("app.fpasprj");
     write_text(
@@ -17,19 +17,45 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.A, App.B, App.C;\nbegin\n  Compute()\nend.\n",
+        r#"program Main;
+uses App.A as A; uses App.B as B; uses App.C as C;
+begin
+  Compute();
+end program;
+"#,
     );
     write_text(
         &cwd.join("src/a.fpas"),
-        "unit App.A;\npublic function Compute(): integer;\nbegin\n  return 1\nend;\n",
+        r#"unit App.A;
+public function Compute(): integer;
+begin
+  return 1;
+end function;
+end unit;
+
+"#,
     );
     write_text(
         &cwd.join("src/b.fpas"),
-        "unit App.B;\npublic function Compute(): integer;\nbegin\n  return 2\nend;\n",
+        r#"unit App.B;
+public function Compute(): integer;
+begin
+  return 2;
+end function;
+end unit;
+
+"#,
     );
     write_text(
         &cwd.join("src/c.fpas"),
-        "unit App.C;\npublic function Compute(): integer;\nbegin\n  return 3\nend;\n",
+        r#"unit App.C;
+public function Compute(): integer;
+begin
+  return 3;
+end function;
+end unit;
+
+"#,
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);
@@ -37,13 +63,13 @@ include = ["src/*.fpas"]
 
     assert_eq!(exit_code, 1);
     assert!(
-        stderr_output.contains("Ambiguous imported symbol `Compute`"),
-        "expected ambiguity error, got: {stderr_output}"
+        stderr_output.contains("Unknown procedure `Compute`"),
+        "expected unknown-name error, got: {stderr_output}"
     );
 }
 
 #[test]
-fn ambiguity_error_mentions_qualified_alternatives() {
+fn unknown_name_error_mentions_alias_qualified_alternatives() {
     let cwd = create_temp_dir("vis-ambig-hint");
     let project_file = cwd.join("app.fpasprj");
     write_text(
@@ -59,15 +85,34 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.X, App.Y;\nbegin\n  Foo()\nend.\n",
+        r#"program Main;
+uses App.X as X; uses App.Y as Y;
+begin
+  Foo();
+end program;
+"#,
     );
     write_text(
         &cwd.join("src/x.fpas"),
-        "unit App.X;\npublic function Foo(): integer;\nbegin\n  return 1\nend;\n",
+        r#"unit App.X;
+public function Foo(): integer;
+begin
+  return 1;
+end function;
+end unit;
+
+"#,
     );
     write_text(
         &cwd.join("src/y.fpas"),
-        "unit App.Y;\npublic function Foo(): integer;\nbegin\n  return 2\nend;\n",
+        r#"unit App.Y;
+public function Foo(): integer;
+begin
+  return 2;
+end function;
+end unit;
+
+"#,
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);
@@ -75,13 +120,13 @@ include = ["src/*.fpas"]
 
     assert_eq!(exit_code, 1);
     assert!(
-        stderr_output.contains("App.X.Foo") && stderr_output.contains("App.Y.Foo"),
+        stderr_output.contains("x.Foo") && stderr_output.contains("y.Foo"),
         "error should mention qualified alternatives, got: {stderr_output}"
     );
 }
 
 #[test]
-fn private_does_not_cause_ambiguity() {
+fn public_member_remains_accessible_through_its_alias() {
     let cwd = create_temp_dir("vis-no-ambiguity");
     let project_file = cwd.join("app.fpasprj");
     write_text(
@@ -97,15 +142,36 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.A, App.B, Std.Console;\nbegin\n  WriteLn(Compute())\nend.\n",
+        r#"program Main;
+uses App.A as A; uses App.B as B; uses Std.Console as Console;
+begin
+  Console.WriteLn(B.Compute());
+end program;
+"#,
     );
     write_text(
         &cwd.join("src/a.fpas"),
-        "unit App.A;\n\nfunction Compute(): integer;\nbegin\n  return 1\nend;\n",
+        r#"unit App.A;
+
+function Compute(): integer;
+begin
+  return 1;
+end function;
+end unit;
+
+"#,
     );
     write_text(
         &cwd.join("src/b.fpas"),
-        "unit App.B;\n\npublic function Compute(): integer;\nbegin\n  return 2\nend;\n",
+        r#"unit App.B;
+
+public function Compute(): integer;
+begin
+  return 2;
+end function;
+end unit;
+
+"#,
     );
 
     let (exit_code, stdout_output, _) = support::run_cli_and_capture_output(&project_file, &cwd);
@@ -133,22 +199,35 @@ include = ["src/*.fpas"]
     // Two units export the same short name — use qualified names to disambiguate
     write_text(
         &cwd.join("src/main.fpas"),
-        "\
-program Main;
-uses App.Math, App.Advanced, Std.Console;
+        r#"program Main;
+uses App.Math as Math; uses App.Advanced as Advanced; uses Std.Console as Console;
 begin
-  WriteLn(App.Math.Add(1, 2));
-  WriteLn(App.Advanced.Add(10, 20))
-end.
-",
+  Console.WriteLn(Math.Add(1, 2));
+  Console.WriteLn(Advanced.Add(10, 20));
+end program;
+"#,
     );
     write_text(
         &cwd.join("src/math.fpas"),
-        "unit App.Math;\npublic function Add(A: integer; B: integer): integer;\nbegin\n  return A + B\nend;\n",
+        r#"unit App.Math;
+public function Add(A: integer; B: integer): integer;
+begin
+  return A + B;
+end function;
+end unit;
+
+"#,
     );
     write_text(
         &cwd.join("src/advanced.fpas"),
-        "unit App.Advanced;\npublic function Add(A: integer; B: integer): integer;\nbegin\n  return A * B\nend;\n",
+        r#"unit App.Advanced;
+public function Add(A: integer; B: integer): integer;
+begin
+  return A * B;
+end function;
+end unit;
+
+"#,
     );
 
     let (exit_code, stdout_output, stderr_output) =
@@ -177,15 +256,33 @@ include = ["src/*.fpas"]
     // Import two units with conflicting short names but never use the ambiguous name
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Math, App.Advanced;\nbegin\nend.\n",
+        r#"program Main;
+uses App.Math as Math; uses App.Advanced as Advanced;
+begin null;
+end program;
+"#,
     );
     write_text(
         &cwd.join("src/math.fpas"),
-        "unit App.Math;\npublic function Add(A: integer; B: integer): integer;\nbegin\n  return A + B\nend;\n",
+        r#"unit App.Math;
+public function Add(A: integer; B: integer): integer;
+begin
+  return A + B;
+end function;
+end unit;
+
+"#,
     );
     write_text(
         &cwd.join("src/advanced.fpas"),
-        "unit App.Advanced;\npublic function Add(A: integer; B: integer): integer;\nbegin\n  return A * B\nend;\n",
+        r#"unit App.Advanced;
+public function Add(A: integer; B: integer): integer;
+begin
+  return A * B;
+end function;
+end unit;
+
+"#,
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);

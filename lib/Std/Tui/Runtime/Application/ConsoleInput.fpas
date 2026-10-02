@@ -1,97 +1,108 @@
 unit Std.Tui.Runtime.Application.ConsoleInput;
 
-uses
-  Std.Options, Std.Results, Std.Tasks, Std.Time, Std.Tui.Geometry.Size, Std.Tui.Runtime.ConsoleEvents,
-  Std.Tui.Runtime.Input;
+uses Std.Options as Options;
+uses Std.Results as Results;
+uses Std.Tasks as Tasks;
+uses Std.Time as Time;
+uses Std.Tui.Geometry.Size as Size2;
+uses Std.Tui.Runtime.ConsoleEvents as ConsoleEvents;
+uses Std.Tui.Runtime.Input as Input2;
 
-const
-  TuiResizeSettleMilliseconds: integer := 50;
+const TuiResizeSettleMilliseconds: integer := 50;
 
 function TuiConsoleInputSend(
-  Token: CancellationToken;
-  Output: channel of TuiHostInput;
-  Input: TuiHostInput
+  Token: Tasks.CancellationToken;
+  Output: channel of Input2.TuiHostInput;
+  Input: Input2.TuiHostInput
 ): boolean;
 begin
-  return IsError(SendWithCancellation(Output, Input, Token))
-end;
+  return Results.IsError(Tasks.SendWithCancellation(Output, Input, Token));
+end function;
 
 function TuiConsoleInputSettleResize(
-  Token: CancellationToken;
-  Output: channel of TuiHostInput;
-  InitialSize: TuiSize
+  Token: Tasks.CancellationToken;
+  Output: channel of Input2.TuiHostInput;
+  InitialSize: Size2.TuiSize
 ): boolean;
 begin
-  mutable var LatestSize: TuiSize := InitialSize;
-  while not IsCancellationRequested(Token) do
-  begin
-    case TuiReadConsoleHostInputWithTimeout(TuiResizeSettleMilliseconds) of
-      Some(Input):
-      begin
-        case Input of
-          TuiHostInput.Resize(Size):
+  mutable var LatestSize: Size2.TuiSize := InitialSize;
+  while not Tasks.IsCancellationRequested(Token) do
+    begin
+      case ConsoleEvents.TuiReadConsoleHostInputWithTimeout(TuiResizeSettleMilliseconds) of
+        when Some(Input):
           begin
-            LatestSize := Size;
-            Sleep(0)
-          end
-          else
+            case Input of
+              when Input2.TuiHostInput.Resize(Size):
+                begin
+                  LatestSize := Size;
+                  Time.Sleep(0);
+                end;
+              else
+                begin
+                  if TuiConsoleInputSend(Token, Output, Input2.TuiHostInput.Resize(LatestSize)) then
+                    begin
+                      return true;
+                    end;
+                  end if;
+
+                  return TuiConsoleInputSend(Token, Output, Input);
+                end;
+            end case;
+          end;
+        when None:
           begin
-            if TuiConsoleInputSend(Token, Output, TuiHostInput.Resize(LatestSize)) then
-            begin
-              return true
-            end;
+            return TuiConsoleInputSend(Token, Output, Input2.TuiHostInput.Resize(LatestSize));
+          end;
+      end case;
+    end;
+  end while;
 
-            return TuiConsoleInputSend(Token, Output, Input)
-          end
-        end
-      end;
-      None:
-      begin
-        return TuiConsoleInputSend(Token, Output, TuiHostInput.Resize(LatestSize))
-      end
-    end
-  end;
-
-  return true
-end;
+  return true;
+end function;
 
 // Pumps Console input while collapsing a resize burst after a quiet period.
 //
 // Parameters:
 // - `Token`: Cancellation token owned by the interactive application.
 // - `Output`: Destination for normalized host input.
-public function TuiConsoleInputPump(Token: CancellationToken; Output: channel of TuiHostInput): result of boolean, string;
+public function TuiConsoleInputPump(Token: Tasks.CancellationToken; Output: channel of Input2.TuiHostInput): result of boolean, string;
 begin
-  while not IsCancellationRequested(Token) do
-  begin
-    case TuiReadConsoleHostInputWithTimeout(TuiResizeSettleMilliseconds) of
-      Some(Input):
-      begin
-        case Input of
-          TuiHostInput.Resize(Size):
+  while not Tasks.IsCancellationRequested(Token) do
+    begin
+      case ConsoleEvents.TuiReadConsoleHostInputWithTimeout(TuiResizeSettleMilliseconds) of
+        when Some(Input):
           begin
-            if TuiConsoleInputSettleResize(Token, Output, Size) then
-            begin
-              return Ok(true)
-            end
-          end
-          else
+            case Input of
+              when Input2.TuiHostInput.Resize(Size):
+                begin
+                  if TuiConsoleInputSettleResize(Token, Output, Size) then
+                    begin
+                      return Ok(true);
+                    end;
+                  end if;
+                end;
+              else
+                begin
+                  if TuiConsoleInputSend(Token, Output, Input) then
+                    begin
+                      return Ok(true);
+                    end;
+                  end if;
+                end;
+            end case;
+          end;
+        when None:
           begin
-            if TuiConsoleInputSend(Token, Output, Input) then
-            begin
-              return Ok(true)
-            end
-          end
-        end
-      end;
-      None:
-      begin
-      end
+            null;
+          end;
+      end case;
+
+      // Release the pool worker even when Console polling returns no event.
+      Time.Sleep(0);
     end;
+  end while;
 
-    // Release the pool worker even when Console polling returns no event.
-    Sleep(0)
-  end;
+  return Ok(true);
+end function;
 
-  return Ok(true)
-end;
+end unit;

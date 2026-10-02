@@ -1,17 +1,18 @@
 program ElementMakeLabelTest;
 
-uses Std.Tui, Std.Test;
+uses Std.Tui as Tui;
+uses Std.Test as Test;
 
 begin
-  var Node: TuiElement := TuiElementBuilders.MakeLabel('hi');
+  var Node: Tui.TuiElement := Tui.TuiElementBuilders.MakeLabel('hi');
   case Node of
-    TuiElement.Label(Text):
-    begin
-      AssertEquals('hi', Text)
-    end
+    when Tui.TuiElement.Label(Text):
+      begin
+        Test.AssertEquals('hi', Text);
+      end;
     else
-    begin
-      panic('expected label element')
-    end
-  end
-end.
+      begin
+        panic('expected label element');
+      end;
+  end case;
+end program;

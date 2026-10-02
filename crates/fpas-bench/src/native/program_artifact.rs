@@ -11,7 +11,7 @@ pub(super) fn run(iterations: usize, depth: usize) -> Result<(), String> {
     if depth > 64 {
         return Err("Program artifact type depth must not exceed 64".to_owned());
     }
-    let source = "program Artifact; begin end.";
+    let source = r#"program Artifact; begin null; end program;"#;
     let (program, errors) = fpas_parser::parse(source);
     if !errors.is_empty() {
         return Err(format!("Artifact fixture parsing failed: {errors:?}"));

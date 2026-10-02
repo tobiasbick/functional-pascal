@@ -1,8 +1,9 @@
 program T;
 
-uses Std.Console, Std.Arrays;
+uses Std.Console as Console;
+uses Std.Arrays as Arrays;
 
 begin
   var A: array of integer := [1, 2, 3];
-  WriteLn(Length(A))
-end.
+  Console.WriteLn(Arrays.Length(A));
+end program;

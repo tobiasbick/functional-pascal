@@ -1,114 +1,123 @@
 program TuiBackgroundResponsivenessTest;
 
-uses Std.Results, Std.Tasks, Std.Test, Std.Time, Std.Tui;
+uses Std.Results as Results;
+uses Std.Tasks as Tasks;
+uses Std.Test as Test;
+uses Std.Time as Time;
+uses Std.Tui as Tui;
 
-type
-  Model = record
-    Generation: integer;
-    Gate: channel of boolean;
-    Started: channel of integer;
-    Painted: channel of integer;
-  end;
+type Model = record
+  Generation: integer;
+  Gate: channel of boolean;
+  Started: channel of integer;
+  Painted: channel of integer;
+end record;
 
-procedure Replace(State: Model; Cmd: TuiCmdOutput);
+procedure Replace(State: Model; Cmd: Tui.TuiCmdOutput);
 begin
   var Generation: integer := State.Generation;
   var Gate: channel of boolean := State.Gate;
   var Started: channel of integer := State.Started;
-  Cmd.ReplaceSubscription(1, function(Token: CancellationToken): result of boolean, string begin
-    Send(Started, Generation);
+  Cmd.ReplaceSubscription(1, function(Token: Tasks.CancellationToken): result of boolean, string begin
+    Tasks.Send(Started, Generation);
     if Generation = 0 then
-    begin
-      // Deliberately defer cooperation to prove that the host remains responsive.
-      Receive(Gate)
-    end;
+      begin
+        // Deliberately defer cooperation to prove that the host remains responsive.
+        Tasks.Receive(Gate);
+      end;
+    end if;
 
-    return Ok(true)
-  end)
-end;
+    return Ok(true);
+  end function);
+end procedure;
 
-function Update(State: Model; Msg: TuiMsg; Cmd: TuiCmdOutput): Model;
+function Update(State: Model; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): Model;
 begin
   case Msg of
-    TuiMsg.Started:
-    begin
-      Replace(State, Cmd)
-    end;
-    TuiMsg.Tick(Delta):
-    begin
-      if Delta > 0 then
+    when Tui.TuiMsg.Started:
       begin
-        mutable var Next: Model := State;
-        Next.Generation := State.Generation + 1;
-        Replace(Next, Cmd);
-        return Next
-      end
-    end
+        Replace(State, Cmd);
+      end;
+    when Tui.TuiMsg.Tick(Delta):
+      begin
+        if Delta > 0 then
+          begin
+            mutable var Next: Model := State;
+            Next.Generation := State.Generation + 1;
+            Replace(Next, Cmd);
+            return Next;
+          end;
+        end if;
+      end;
     else
-    begin
-    end
-  end;
+      begin
+        null;
+      end;
+  end case;
 
-  return State
-end;
+  return State;
+end function;
 
-function UpdateMessage(State: Model; Message: integer; Cmd: TuiCmdOutput): Model;
+function UpdateMessage(State: Model; Message: integer; Cmd: Tui.TuiCmdOutput): Model;
 begin
-  return State
-end;
+  return State;
+end function;
 
-function View(State: Model): TuiElement;
+function View(State: Model): Tui.TuiElement;
 begin
   if State.Generation = 3 then
-  begin
-    TrySend(State.Painted, 3)
-  end;
+    begin
+      Tasks.TrySend(State.Painted, 3);
+    end;
+  end if;
 
-  return TuiElementBuilders.MakeLabel('responsive')
-end;
+  return Tui.TuiElementBuilders.MakeLabel('responsive');
+end function;
 
 function ReleaseAfterPaint(Painted: channel of integer; Gate: channel of boolean): boolean;
 begin
   // A timeout releases the gate even on the old blocking implementation.
-  var Paint: result of integer, string := ReceiveWithTimeout(Painted, 3000);
-  Send(Gate, true);
-  return IsOk(Paint)
-end;
+  var Paint: result of integer, string := Tasks.ReceiveWithTimeout(Painted, 3000);
+  Tasks.Send(Gate, true);
+  return Results.IsOk(Paint);
+end function;
 
 begin
-  var Inbox: channel of integer := CreateChannel(1);
-  var Gate: channel of boolean := CreateChannel(1);
-  var Started: channel of integer := CreateChannel(4);
-  var Painted: channel of integer := CreateChannel(1);
-  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(20, 4));
+  var Inbox: channel of integer := Tasks.CreateChannel(1);
+  var Gate: channel of boolean := Tasks.CreateChannel(1);
+  var Started: channel of integer := Tasks.CreateChannel(4);
+  var Painted: channel of integer := Tasks.CreateChannel(1);
+  var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(20, 4));
   mutable var State: Model := App.RunBackgroundIterations(record
     Generation := 0;
     Gate := Gate;
     Started := Started;
     Painted := Painted;
-  end, Inbox, Update, UpdateMessage, View, 1, 0);
-  AssertEquals(0, Unwrap(ReceiveWithTimeout(Started, 5000)));
+  end record, Inbox, Update, UpdateMessage, View, 1, 0);
+  Test.AssertEquals(0, Results.Unwrap(Tasks.ReceiveWithTimeout(Started, 5000)));
   var Observer: task := go ReleaseAfterPaint(Painted, Gate);
   for Index: integer := 1 to 3 do
-  begin
-    App.Inject(TuiMsg.Tick(1));
-    State := App.RunBackgroundIterations(State, Inbox, Update, UpdateMessage, View, 1, 0);
-    AssertEquals(Index, State.Generation)
-  end;
+    begin
+      App.Inject(Tui.TuiMsg.Tick(1));
+      State := App.RunBackgroundIterations(State, Inbox, Update, UpdateMessage, View, 1, 0);
+      Test.AssertEquals(Index, State.Generation);
+    end;
+  end for;
 
-  AssertTrue(Wait(Observer));
-  mutable var Replacement: result of integer, string := ReceiveWithTimeout(Started, 0);
-  var Deadline: integer := MonotonicMillis() + 5000;
-  while IsError(Replacement) and (MonotonicMillis() < Deadline) do
-  begin
-    State := App.RunBackgroundIterations(State, Inbox, Update, UpdateMessage, View, 1, 0);
-    Replacement := ReceiveWithTimeout(Started, 1)
-  end;
+  Test.AssertTrue(Tasks.Wait(Observer));
+  mutable var Replacement: result of integer, string := Tasks.ReceiveWithTimeout(Started, 0);
+  var Deadline: integer := Time.MonotonicMillis() + 5000;
+  while Results.IsError(Replacement) and (Time.MonotonicMillis() < Deadline) do
+    begin
+      State := App.RunBackgroundIterations(State, Inbox, Update, UpdateMessage, View, 1, 0);
+      Replacement := Tasks.ReceiveWithTimeout(Started, 1);
+    end;
+  end while;
 
-  AssertEquals(3, Unwrap(Replacement));
-  AssertTrue(IsError(ReceiveWithTimeout(Started, 0)));
+  Test.AssertEquals(3, Results.Unwrap(Replacement));
+  Test.AssertTrue(Results.IsError(Tasks.ReceiveWithTimeout(Started, 0)));
   App.CloseWithBackground(Inbox);
-  CloseChannel(Gate);
-  CloseChannel(Started);
-  CloseChannel(Painted)
-end.
+  Tasks.CloseChannel(Gate);
+  Tasks.CloseChannel(Started);
+  Tasks.CloseChannel(Painted);
+end program;

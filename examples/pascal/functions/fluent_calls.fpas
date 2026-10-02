@@ -1,25 +1,28 @@
 program FluentCallsExample;
 
-uses Std.Arrays, Std.Console, Std.Conv, Std.Str;
+uses Std.Arrays as Arrays;
+uses Std.Console as Console;
+uses Std.Conv as Conv;
+uses Std.Str as Str;
 
 function IsEven(Value: integer): boolean;
 begin
-  return Value mod 2 = 0
-end;
+  return Value mod 2 = 0;
+end function;
 
 function Double(Value: integer): integer;
 begin
-  return Value * 2
-end;
+  return Value * 2;
+end function;
 
 function Sum(Acc: integer; Value: integer): integer;
 begin
-  return Acc + Value
-end;
+  return Acc + Value;
+end function;
 
 begin
   var Values: array of integer := [1, 2, 3, 4];
-  var Total: integer := Values.Filter(IsEven).Map(Double).Reduce(0, Sum);
-  WriteLn('Even values doubled: ' + Total.IntToStr());
-  WriteLn(('  Pascal  ').Trim().ToUpper())
-end.
+  var Total: integer := Arrays.Reduce(Arrays.Map(Arrays.Filter(Values, IsEven), Double), 0, Sum);
+  Console.WriteLn('Even values doubled: ' + Conv.IntToStr(Total));
+  Console.WriteLn(Str.ToUpper(Str.Trim(('  Pascal  '))));
+end program;

@@ -1,42 +1,53 @@
 program TomlFieldsTypedAccessTest;
 
-uses Std.Arrays, Std.Str, Std.Toml, Std.Toml.Fields, Std.Results, Std.Test;
+uses Std.Arrays as Arrays;
+uses Std.Str as Str;
+uses Std.Toml as Toml;
+uses Std.Toml.Fields as Fields2;
+uses Std.Results as Results;
+uses Std.Test as Test;
 
 function ErrorText<T>(Value: result of T, string): string;
 begin
   case Value of
-    Ok(_):
-    begin
-      Fail('expected an error result');
-      return ''
-    end;
-    Error(Message):
-    begin
-      return Message
-    end
-  end
-end;
+    when Ok(_):
+      begin
+        Test.Fail('expected an error result');
+        return '';
+      end;
+    when Error(Message):
+      begin
+        return Message;
+      end;
+  end case;
+end function;
 
 begin
-  var Text: string := 'name = ''demo''' + Chr(10) + 'port = 8080' + Chr(10) + 'ratio = 0.5' + Chr(10) + 'enabled = true' + Chr(10) + 'tags = [''a'', ''b'']' + Chr(10) + 'mixed = [''a'', 1]' + Chr(10) + '[server]' + Chr(10) + 'host = ''local''';
-  var Fields: dict of string to TomlValue := Unwrap(ParseTable(Text));
-  AssertEquals('demo', Unwrap(StringField(Fields, 'name')));
-  AssertEquals(8080, Unwrap(IntegerField(Fields, 'port')));
-  AssertEquals(0.5, Unwrap(FloatField(Fields, 'ratio')));
-  AssertTrue(Unwrap(BooleanField(Fields, 'enabled')));
-  AssertEquals('local', Unwrap(StringField(Unwrap(TableField(Fields, 'server')), 'host')));
-  AssertEquals(2, Unwrap(ArrayField(Fields, 'mixed')).Length());
-  AssertEquals(2, Unwrap(StringArrayField(Fields, 'tags')).Length());
-
-  AssertEquals('missing field absent', ErrorText(Field(Fields, 'absent')));
-  AssertEquals('field port must be a string', ErrorText(StringField(Fields, 'port')));
+  var Text: string := ((((((((((((('name = ''demo''' + Str.Chr(10)) + 'port = 8080') + Str.Chr(10)) + 'ratio = 0.5') + Str.Chr(10)) + 'enabled = true') + Str.Chr(10)) + 'tags = [''a'', ''b'']') + Str.Chr(10)) + 'mixed = [''a'', 1]') + Str.Chr(10)) + '[server]') + Str.Chr(10)) +
+                      'host = ''local''';
+  var Fields: dict of string to Toml.TomlValue := Results.Unwrap(Fields2.ParseTable(Text));
+  Test.AssertEquals('demo', Results.Unwrap(Fields2.StringField(Fields, 'name')));
+  Test.AssertEquals(8080, Results.Unwrap(Fields2.IntegerField(Fields, 'port')));
+  Test.AssertEquals(0.5, Results.Unwrap(Fields2.FloatField(Fields, 'ratio')));
+  Test.AssertTrue(Results.Unwrap(Fields2.BooleanField(Fields, 'enabled')));
+  Test.AssertEquals('local', Results.Unwrap(Fields2.StringField(Results.Unwrap(Fields2.TableField(Fields, 'server')), 'host')));
+  Test.AssertEquals(2, Arrays.Length(Results.Unwrap(Fields2.ArrayField(Fields, 'mixed'))));
+  Test.AssertEquals(2, Arrays.Length(Results.Unwrap(Fields2.StringArrayField(Fields, 'tags'))));
+  Test.AssertEquals('missing field absent', ErrorText(Fields2.Field(Fields, 'absent')));
+  Test.AssertEquals('field port must be a string', ErrorText(Fields2.StringField(Fields, 'port')));
   // Integer and float keys are not converted into each other.
-  AssertEquals('field ratio must be an integer', ErrorText(IntegerField(Fields, 'ratio')));
-  AssertEquals('field port must be a float', ErrorText(FloatField(Fields, 'port')));
-  AssertEquals('field name must be a table', ErrorText(TableField(Fields, 'name')));
-  AssertEquals('field mixed must be an array of strings', ErrorText(StringArrayField(Fields, 'mixed')));
-
-  AssertTrue(Unwrap(RequireOnlyFields(Unwrap(ParseTable('a = 1')), ['a', 'b'])));
-  AssertEquals('unexpected field c', ErrorText(RequireOnlyFields(Unwrap(ParseTable('a = 1' + Chr(10) + 'c = 2')), ['a', 'b'])));
-  AssertTrue(IsError(ParseTable('a = ')))
-end.
+  Test.AssertEquals('field ratio must be an integer', ErrorText(Fields2.IntegerField(Fields, 'ratio')));
+  Test.AssertEquals('field port must be a float', ErrorText(Fields2.FloatField(Fields, 'port')));
+  Test.AssertEquals('field name must be a table', ErrorText(Fields2.TableField(Fields, 'name')));
+  Test.AssertEquals('field mixed must be an array of strings', ErrorText(Fields2.StringArrayField(Fields, 'mixed')));
+  Test.AssertTrue(Results.Unwrap(Fields2.RequireOnlyFields(Results.Unwrap(Fields2.ParseTable('a = 1')), [
+                                                                                                          'a',
+                                                                                                          'b'
+                                                                                                        ])));
+  Test.AssertEquals('unexpected field c', ErrorText(Fields2.RequireOnlyFields(Results.Unwrap(Fields2.ParseTable(('a = 1' + Str.Chr(10)) +
+                                                                                                                'c = 2')), [
+                                                                                                                             'a',
+                                                                                                                             'b'
+                                                                                                                           ])));
+  Test.AssertTrue(Results.IsError(Fields2.ParseTable('a = ')));
+end program;

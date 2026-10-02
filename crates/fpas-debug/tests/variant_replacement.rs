@@ -262,28 +262,28 @@ fn jsonl_variant_replacements_commit_atomically_and_continue() {
 fn jsonl_variant_replacement_stays_bound_to_the_selected_child_task() {
     const TASK_SOURCE: &str = r#"program TaskVariantReplacement;
 
-uses Std.Console, Std.Tasks;
+uses Std.Console as Console; uses Std.Tasks as Tasks;
 
 function Work(): integer;
 begin
   mutable var Optional: Option of integer := Some(1);
   var Marker: integer := 0;
   case Optional of
-    Some(Value):
+    when Some(Value):
     begin
-      return Value
+      return Value;
     end;
-    None:
+    when None:
     begin
-      return 0
-    end
-  end
-end;
+      return 0;
+    end;
+  end case;
+end function;
 
 begin
   var Pending: task := go Work();
-  WriteLn(Wait(Pending))
-end.
+  Console.WriteLn(Tasks.Wait(Pending));
+end program;
 "#;
     let (program, diagnostics) = fpas_parser::parse(TASK_SOURCE);
     assert!(diagnostics.is_empty(), "parse diagnostics: {diagnostics:?}");
@@ -369,31 +369,31 @@ fn variant_replacement_supports_mutable_parameters_and_capture_cells() {
         r#"
 program VariantParameter;
 
-type
-  Choice = enum
+
+  type Choice = enum
     Count(Value: integer);
     Pair(Left: integer; Right: integer);
-  end;
+  end enum;
 
 function ReadChoice(mutable Item: Choice): integer;
 begin
   var Marker: integer := 0;
   case Item of
-    Choice.Count(Value):
+    when Choice.Count(Value):
     begin
-      return Value
+      return Value;
     end;
-    Choice.Pair(Left, Right):
+    when Choice.Pair(Left, Right):
     begin
-      return Left + Right
-    end
-  end
-end;
+      return Left + Right;
+    end;
+  end case;
+end function;
 
 begin
   var OutputValue: integer := ReadChoice(Choice.Count(1));
-  var Marker: integer := OutputValue
-end.
+  var Marker: integer := OutputValue;
+end program;
 "#,
     );
     let parameter_frame = loop {
@@ -434,34 +434,34 @@ end.
         r#"
 program VariantCapture;
 
-type
-  Choice = enum
+
+  type Choice = enum
     Count(Value: integer);
     Pair(Left: integer; Right: integer);
-  end;
+  end enum;
 
 function NextChoice(): function(): integer;
 begin
   mutable var Selected: Choice := Choice.Count(1);
   return function(): integer begin
     case Selected of
-      Choice.Count(Value):
+      when Choice.Count(Value):
       begin
-        return Value
+        return Value;
       end;
-      Choice.Pair(Left, Right):
+      when Choice.Pair(Left, Right):
       begin
-        return Left + Right
-      end
-    end
-  end
-end;
+        return Left + Right;
+      end;
+    end case;
+  end function;
+end function;
 
 begin
   var Next: function(): integer := NextChoice();
   var First: integer := Next();
-  var Marker: integer := First
-end.
+  var Marker: integer := First;
+end program;
 "#,
     );
     let (frame, _captures) = loop {

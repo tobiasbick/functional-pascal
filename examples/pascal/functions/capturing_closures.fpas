@@ -1,36 +1,37 @@
 program CapturingClosures;
 
-uses Std.Console, Std.Conv;
+uses Std.Console as Console;
+uses Std.Conv as Conv;
 
 function Counter(): function(): integer;
 begin
   mutable var Value: integer := 0;
   return function(): integer begin
     Value := Value + 1;
-    return Value
-  end
-end;
+    return Value;
+  end function;
+end function;
 
 function MakeAdder(Base: integer): function(Value: integer): integer;
 function Add(Value: integer): integer;
 begin
-  return Base + Value
-end;
+  return Base + Value;
+end function;
 begin
-  return Add
-end;
+  return Add;
+end function;
 
 begin
   var Next: function(): integer := Counter();
-  WriteLn('counter: ', IntToStr(Next()), ', ', IntToStr(Next()));
+  Console.WriteLn('counter: ', Conv.IntToStr(Next()), ', ', Conv.IntToStr(Next()));
   mutable var Count: integer := 0;
   var Increment: procedure() := procedure() begin
-    Count := Count + 1
-  end;
+    Count := Count + 1;
+  end procedure;
 
   Increment();
   Increment();
-  WriteLn('shared count: ', IntToStr(Count));
+  Console.WriteLn('shared count: ', Conv.IntToStr(Count));
   var AddTen: function(Value: integer): integer := MakeAdder(10);
-  WriteLn('named escape: ', IntToStr(AddTen(5)))
-end.
+  Console.WriteLn('named escape: ', Conv.IntToStr(AddTen(5)));
+end program;

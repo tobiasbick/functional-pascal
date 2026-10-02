@@ -1,111 +1,116 @@
 program TomlParseAllValueKindsTest;
 
-uses Std.Arrays, Std.Dictionaries, Std.Options, Std.Str, Std.Test, Std.Toml;
+uses Std.Arrays as Arrays;
+uses Std.Dictionaries as Dictionaries;
+uses Std.Options as Options;
+uses Std.Str as Str;
+uses Std.Test as Test;
+uses Std.Toml as Toml;
 
 begin
-  var Parsed: result of TomlValue, string := Parse(((((((((((((('title = ''TOML''' + Chr(10)) + 'integer = -42') + Chr(10)) + 'float = 1.5') + Chr(10)) + 'enabled = true') + Chr(10)) + 'when = 1979-05-27T07:32:00Z') + Chr(10)) + 'items = [''a'', 2]') + Chr(10)) + '[nested]') + Chr(10)) +
-                                                   'value = ''ok''');
+  var Parsed: result of Toml.TomlValue, string := Toml.Parse(((((((((((((('title = ''TOML''' + Str.Chr(10)) + 'integer = -42') + Str.Chr(10)) + 'float = 1.5') + Str.Chr(10)) + 'enabled = true') + Str.Chr(10)) + 'when = 1979-05-27T07:32:00Z') + Str.Chr(10)) + 'items = [''a'', 2]') + Str.Chr(10)) + '[nested]') + Str.Chr(10)) +
+                                                             'value = ''ok''');
   case Parsed of
-    Ok(Value):
-    begin
-      case Value of
-        TomlValue.Table(Fields):
-        begin
-          case Std.Options.Unwrap(Std.Dictionaries.Get(Fields, 'title')) of
-            TomlValue.String(Text):
+    when Ok(Value):
+      begin
+        case Value of
+          when Toml.TomlValue.Table(Fields):
             begin
-              AssertEquals('TOML', Text)
-            end
-            else
-            begin
-              Fail('Expected string title')
-            end
-          end;
-
-          case Std.Options.Unwrap(Std.Dictionaries.Get(Fields, 'integer')) of
-            TomlValue.Integer(Number):
-            begin
-              AssertEquals(-42, Number)
-            end
-            else
-            begin
-              Fail('Expected integer value')
-            end
-          end;
-
-          case Std.Options.Unwrap(Std.Dictionaries.Get(Fields, 'float')) of
-            TomlValue.Float(Number):
-            begin
-              AssertEquals(1.5, Number)
-            end
-            else
-            begin
-              Fail('Expected float value')
-            end
-          end;
-
-          case Std.Options.Unwrap(Std.Dictionaries.Get(Fields, 'enabled')) of
-            TomlValue.Boolean(Enabled):
-            begin
-              AssertTrue(Enabled)
-            end
-            else
-            begin
-              Fail('Expected boolean value')
-            end
-          end;
-
-          case Std.Options.Unwrap(Std.Dictionaries.Get(Fields, 'when')) of
-            TomlValue.Datetime(When):
-            begin
-              AssertEquals('1979-05-27T07:32:00Z', When)
-            end
-            else
-            begin
-              Fail('Expected datetime value')
-            end
-          end;
-
-          case Std.Options.Unwrap(Std.Dictionaries.Get(Fields, 'items')) of
-            TomlValue.ArrayValue(Items):
-            begin
-              AssertEquals(2, Std.Arrays.Length(Items))
-            end
-            else
-            begin
-              Fail('Expected array value')
-            end
-          end;
-
-          case Std.Options.Unwrap(Std.Dictionaries.Get(Fields, 'nested')) of
-            TomlValue.Table(Nested):
-            begin
-              case Std.Options.Unwrap(Std.Dictionaries.Get(Nested, 'value')) of
-                TomlValue.String(Text):
-                begin
-                  AssertEquals('ok', Text)
-                end
+              case Options.Unwrap(Dictionaries.Get(Fields, 'title')) of
+                when Toml.TomlValue.String(Text):
+                  begin
+                    Test.AssertEquals('TOML', Text);
+                  end;
                 else
-                begin
-                  Fail('Expected nested string value')
-                end
-              end
-            end
-            else
+                  begin
+                    Test.Fail('Expected string title');
+                  end;
+              end case;
+
+              case Options.Unwrap(Dictionaries.Get(Fields, 'integer')) of
+                when Toml.TomlValue.Integer(Number):
+                  begin
+                    Test.AssertEquals(-42, Number);
+                  end;
+                else
+                  begin
+                    Test.Fail('Expected integer value');
+                  end;
+              end case;
+
+              case Options.Unwrap(Dictionaries.Get(Fields, 'float')) of
+                when Toml.TomlValue.Float(Number):
+                  begin
+                    Test.AssertEquals(1.5, Number);
+                  end;
+                else
+                  begin
+                    Test.Fail('Expected float value');
+                  end;
+              end case;
+
+              case Options.Unwrap(Dictionaries.Get(Fields, 'enabled')) of
+                when Toml.TomlValue.Boolean(Enabled):
+                  begin
+                    Test.AssertTrue(Enabled);
+                  end;
+                else
+                  begin
+                    Test.Fail('Expected boolean value');
+                  end;
+              end case;
+
+              case Options.Unwrap(Dictionaries.Get(Fields, 'when')) of
+                when Toml.TomlValue.Datetime(TimestampText):
+                  begin
+                    Test.AssertEquals('1979-05-27T07:32:00Z', TimestampText);
+                  end;
+                else
+                  begin
+                    Test.Fail('Expected datetime value');
+                  end;
+              end case;
+
+              case Options.Unwrap(Dictionaries.Get(Fields, 'items')) of
+                when Toml.TomlValue.ArrayValue(Items):
+                  begin
+                    Test.AssertEquals(2, Arrays.Length(Items));
+                  end;
+                else
+                  begin
+                    Test.Fail('Expected array value');
+                  end;
+              end case;
+
+              case Options.Unwrap(Dictionaries.Get(Fields, 'nested')) of
+                when Toml.TomlValue.Table(Nested):
+                  begin
+                    case Options.Unwrap(Dictionaries.Get(Nested, 'value')) of
+                      when Toml.TomlValue.String(Text):
+                        begin
+                          Test.AssertEquals('ok', Text);
+                        end;
+                      else
+                        begin
+                          Test.Fail('Expected nested string value');
+                        end;
+                    end case;
+                  end;
+                else
+                  begin
+                    Test.Fail('Expected nested table');
+                  end;
+              end case;
+            end;
+          else
             begin
-              Fail('Expected nested table')
-            end
-          end
-        end
-        else
-        begin
-          Fail('Expected TOML table')
-        end
-      end
-    end;
-    Error(Message):
-    begin
-      Fail(Message)
-    end
-  end
-end.
+              Test.Fail('Expected TOML table');
+            end;
+        end case;
+      end;
+    when Error(Message):
+      begin
+        Test.Fail(Message);
+      end;
+  end case;
+end program;

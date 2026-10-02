@@ -1,7 +1,7 @@
 program T;
 
-uses Std.Console;
+uses Std.Console as Console;
 
 begin
-  WriteLn(42)
-end.
+  Console.WriteLn(42);
+end program;

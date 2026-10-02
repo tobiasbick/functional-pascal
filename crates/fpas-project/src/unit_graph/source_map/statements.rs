@@ -7,7 +7,7 @@ use fpas_parser::{CaseArm, CaseLabel, Stmt};
 
 pub(super) fn apply_stmt_source_id(stmt: &mut Stmt, source_id: u32) {
     match stmt {
-        Stmt::Block(stmts, span) => {
+        Stmt::Block(stmts, span) | Stmt::StatementList(stmts, span) => {
             for stmt in stmts {
                 apply_stmt_source_id(stmt, source_id);
             }
@@ -38,11 +38,16 @@ pub(super) fn apply_stmt_source_id(stmt: &mut Stmt, source_id: u32) {
         Stmt::If {
             condition,
             then_branch,
+            elsif_branches,
             else_branch,
             span,
         } => {
             apply_expr_source_id(condition, source_id);
             apply_stmt_source_id(then_branch, source_id);
+            for (condition, body) in elsif_branches {
+                apply_expr_source_id(condition, source_id);
+                apply_stmt_source_id(body, source_id);
+            }
             if let Some(else_branch) = else_branch {
                 apply_stmt_source_id(else_branch, source_id);
             }
@@ -112,7 +117,7 @@ pub(super) fn apply_stmt_source_id(stmt: &mut Stmt, source_id: u32) {
             apply_expr_source_id(condition, source_id);
             apply_span(span, source_id);
         }
-        Stmt::Break(span) | Stmt::Continue(span) => apply_span(span, source_id),
+        Stmt::Null(span) | Stmt::Break(span) | Stmt::Continue(span) => apply_span(span, source_id),
         Stmt::Call {
             designator,
             args,

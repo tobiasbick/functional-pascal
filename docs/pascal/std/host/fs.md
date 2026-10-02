@@ -4,12 +4,15 @@ Basic blocking filesystem operations for hosted FPAS programs. This page is the 
 
 ```pascal
 program Example;
-uses Std.Fs, Std.Results, Std.Tasks;
+
+uses Std.Fs as Fs;
+uses Std.Results as Results;
+uses Std.Tasks as Tasks;
 
 begin
-  var ReadJob: task := go ReadText('input.txt');
-  var Text: string := Std.Results.Unwrap(Std.Tasks.Wait(ReadJob))
-end.
+  var ReadJob: task := go Fs.ReadText('input.txt');
+  var Text: string := Results.Unwrap(Tasks.Wait(ReadJob));
+end program;
 ```
 
 `Std.Fs` reads and writes host files. Calls are blocking and may run on worker threads when invoked from `go`, but the runtime uses thread-safe Rust filesystem APIs.
@@ -26,7 +29,7 @@ Text reads and writes use UTF-8.
 
 ## Importing and names
 
-After `uses Std.Fs;` use **`ReadText`**, **`WriteText`**, **`WriteTextAtomic`**, **`DeleteFile`**, **`Exists`**, **`IsFile`**, **`IsDir`**, **`CreateDir`**, **`CreateDirAll`**, **`Glob`**, or the fully qualified forms such as **`Std.Fs.ReadText`**.
+Import with `uses Std.Fs as Fs;`. Access every exported member through `Fs`, for example `Fs.ReadText(...)`. Imports open no short names.
 
 ---
 
@@ -36,7 +39,7 @@ Deletes one file entry and returns `Ok(true)`. Missing paths, directories, permi
 
 ## Quick reference
 
-Requires `uses Std.Fs;`.
+Requires `uses Std.Fs as Fs;`.
 
 | Kind | Name | Notes |
 |------|------|-------|
@@ -68,9 +71,14 @@ Reads the entire file at `Path` as UTF-8 text.
 Files larger than 64 MiB return `Error(message)` instead of loading into memory.
 
 ```pascal
-var Content: Result of string, string := ReadText('notes.txt');
-if Std.Results.IsOk(Content) then
-  WriteLn(Std.Results.Unwrap(Content))
+uses Std.Console as Console;
+uses Std.Fs as Fs;
+uses Std.Results as Results;
+
+var Content: result of string, string := Fs.ReadText('notes.txt');
+if Results.IsOk(Content) then
+  Console.WriteLn(Results.Unwrap(Content));
+end if;
 ```
 
 ---
@@ -80,8 +88,13 @@ if Std.Results.IsOk(Content) then
 Writes UTF-8 text to `Path`, creating or replacing the file.
 
 ```pascal
-if Std.Results.IsOk(WriteText('out.txt', 'hello')) then
-  WriteLn('written')
+uses Std.Console as Console;
+uses Std.Fs as Fs;
+uses Std.Results as Results;
+
+if Results.IsOk(Fs.WriteText('out.txt', 'hello')) then
+  Console.WriteLn('written');
+end if;
 ```
 
 ---
@@ -96,10 +109,15 @@ Callers therefore never observe a successfully published partially written
 file.
 
 ```pascal
-case WriteTextAtomic('note.note', EncodedNote) of
-  Ok(Written): WriteLn('saved');
-  Error(Message): WriteLn(Message)
-end
+uses Std.Console as Console;
+uses Std.Fs as Fs;
+
+case Fs.WriteTextAtomic('note.note', EncodedNote) of
+  when Ok(Written):
+    Console.WriteLn('saved');
+  when Error(Message):
+    Console.WriteLn(Message);
+end case;
 ```
 
 Publication uses the host's same-directory atomic replacement primitive on
@@ -113,8 +131,12 @@ backup and does not remove stale sibling files that it does not own.
 Returns `true` when the host filesystem reports that `Path` exists.
 
 ```pascal
-if Exists('config.json') then
-  WriteLn('config is present')
+uses Std.Console as Console;
+uses Std.Fs as Fs;
+
+if Fs.Exists('config.json') then
+  Console.WriteLn('config is present');
+end if;
 ```
 
 ---
@@ -124,7 +146,10 @@ if Exists('config.json') then
 Returns `true` when `Path` exists and is a regular file.
 
 ```pascal
-WriteLn(IsFile('data.txt'))
+uses Std.Console as Console;
+uses Std.Fs as Fs;
+
+Console.WriteLn(Fs.IsFile('data.txt'));
 ```
 
 ---
@@ -134,7 +159,10 @@ WriteLn(IsFile('data.txt'))
 Returns `true` when `Path` exists and is a directory.
 
 ```pascal
-WriteLn(IsDir('src'))
+uses Std.Console as Console;
+uses Std.Fs as Fs;
+
+Console.WriteLn(Fs.IsDir('src'));
 ```
 
 ---
@@ -144,8 +172,13 @@ WriteLn(IsDir('src'))
 Creates a single directory at `Path`. Parent directories must already exist. An existing entry at `Path`, including an existing directory, returns `Error(message)`.
 
 ```pascal
-if Std.Results.IsOk(CreateDir('build/output')) then
-  WriteLn('directory created')
+uses Std.Console as Console;
+uses Std.Fs as Fs;
+uses Std.Results as Results;
+
+if Results.IsOk(Fs.CreateDir('build/output')) then
+  Console.WriteLn('directory created');
+end if;
 ```
 
 ---
@@ -155,10 +188,15 @@ if Std.Results.IsOk(CreateDir('build/output')) then
 Creates the directory at `Path` together with every missing parent directory and returns `Ok(true)`. The call is idempotent: when `Path` already is a directory, including one created concurrently by another task or process, it also returns `Ok(true)`. A path component that exists but is not a directory, permission failures, and other OS errors return `Error(message)`. Directories created before a failure are not removed.
 
 ```pascal
-case CreateDirAll('build/output/logs') of
-  Ok(Created): WriteLn('directory ready');
-  Error(Message): WriteLn('cannot create directory: ' + Message)
-end
+uses Std.Console as Console;
+uses Std.Fs as Fs;
+
+case Fs.CreateDirAll('build/output/logs') of
+  when Ok(Created):
+    Console.WriteLn('directory ready');
+  when Error(Message):
+    Console.WriteLn('cannot create directory: ' + Message);
+end case;
 ```
 
 ---
@@ -168,16 +206,20 @@ end
 Expands `Pattern` against the host filesystem and returns every matching **file** path in stable sorted order. Directory entries are never included.
 
 ```pascal
-case Glob('src/**/*.fpas') of
-  Ok(Paths):
-  begin
-    WriteLn(Std.Arrays.Length(Paths))
-  end;
-  Error(Message):
-  begin
-    WriteLn(Message)
-  end
-end
+uses Std.Console as Console;
+uses Std.Fs as Fs;
+uses Std.Arrays as Arrays;
+
+case Fs.Glob('src/**/*.fpas') of
+  when Ok(Paths):
+    begin
+      Console.WriteLn(Arrays.Length(Paths));
+    end;
+  when Error(Message):
+    begin
+      Console.WriteLn(Message);
+    end;
+end case;
 ```
 
 Behavior:

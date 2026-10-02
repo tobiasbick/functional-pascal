@@ -1,14 +1,15 @@
 program T;
 
-uses Std.Console, Std.Arrays;
+uses Std.Console as Console;
+uses Std.Arrays as Arrays;
 
 function AddAcc(Acc: integer; V: integer): integer;
 begin
-  return Acc + V
-end;
+  return Acc + V;
+end function;
 
 begin
   var Nums: array of integer := [1, 2, 3, 4, 5];
-  var Sum: integer := Reduce(Nums, 0, AddAcc);
-  WriteLn(Sum)
-end.
+  var Sum: integer := Arrays.Reduce(Nums, 0, AddAcc);
+  Console.WriteLn(Sum);
+end program;

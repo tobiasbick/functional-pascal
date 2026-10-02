@@ -96,7 +96,8 @@ impl LoweringContext {
                     DesignatorPart::Index(_, _) => None,
                 })
                 .is_some_and(|root| !self.has_binding(root) && !self.has_global(root))
-            && let Some(value) = super::super::builtin_constants::value(name)
+            && let Some(value) =
+                super::super::builtin_constants::value(&self.qualified_import_name(name))
         {
             let (constant, ty) = match value {
                 fpas_bytecode::Value::Integer(value) => (Constant::Integer(value), types::INTEGER),
@@ -105,14 +106,12 @@ impl LoweringContext {
             };
             return self.emit_value(Operation::Const(constant), ty, designator.span);
         }
-        let [DesignatorPart::Ident(name, _)] = designator.parts.as_slice() else {
+        if self.designator_root(designator).is_some() {
             return self.lower_designator_read(designator);
-        };
-        if self.has_binding(name) {
-            self.read_named_local(name, designator.span)
-        } else if self.has_global(name) {
-            self.read_global(name, designator.span)
-        } else if let Some(callable) = self.resolve_callable(name) {
+        }
+        if let Some(name) = qualified.as_deref()
+            && let Some(callable) = self.resolve_callable(name)
+        {
             let captures = callable
                 .captures
                 .iter()
@@ -127,7 +126,13 @@ impl LoweringContext {
                 designator.span,
             )
         } else {
-            Err(unsupported(designator.span, "unresolved designator"))
+            Err(unsupported(
+                designator.span,
+                &format!(
+                    "unresolved designator `{}`",
+                    qualified.as_deref().unwrap_or("indexed value")
+                ),
+            ))
         }
     }
 }

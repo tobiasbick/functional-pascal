@@ -1,14 +1,16 @@
 program T;
 
-uses Std.Console, Std.Options, Std.Conv;
+uses Std.Console as Console;
+uses Std.Options as Options;
+uses Std.Conv as Conv;
 
 function TripleToStr(V: integer): string;
 begin
-  return IntToStr(V * 3)
-end;
+  return Conv.IntToStr(V * 3);
+end function;
 
 begin
   var O: option of integer := Some(7);
-  var M: option of string := Map(O, TripleToStr);
-  WriteLn(Unwrap(M))
-end.
+  var M: option of string := Options.Map(O, TripleToStr);
+  Console.WriteLn(Options.Unwrap(M));
+end program;

@@ -1,27 +1,29 @@
 // Spec: docs/pascal/std/concurrency/task.md
 program SelectEvents;
 
-uses Std.Tasks, Std.Console, Std.Results;
+uses Std.Tasks as Tasks;
+uses Std.Console as Console;
+uses Std.Results as Results;
 
 begin
-  var Messages: channel of string := CreateChannel(4);
-  Send(Messages, 'hello from the queue');
-  var Message: WaitCase := ReceiveCase(Messages, procedure(Outcome: result of string, string) begin
+  var Messages: channel of string := Tasks.CreateChannel(4);
+  Tasks.Send(Messages, 'hello from the queue');
+  var Message: Tasks.WaitCase := Tasks.ReceiveCase(Messages, procedure(Outcome: result of string, string) begin
     case Outcome of
-      Ok(Text):
-      begin
-        WriteLn(Text)
-      end;
-      Error(Reason):
-      begin
-        WriteLn(Reason)
-      end
-    end
-  end);
-  var Timeout: WaitCase := TimerCase(100, procedure() begin
-    WriteLn('no message before the deadline')
-  end);
-  Select([Message, Timeout]);
+      when Ok(Text):
+        begin
+          Console.WriteLn(Text);
+        end;
+      when Error(Reason):
+        begin
+          Console.WriteLn(Reason);
+        end;
+    end case;
+  end procedure);
+  var Timeout: Tasks.WaitCase := Tasks.TimerCase(100, procedure() begin
+    Console.WriteLn('no message before the deadline');
+  end procedure);
+  Tasks.Select([Message, Timeout]);
   // Both cases are now consumed; a second selection needs new cases.
-  CloseChannel(Messages)
-end.
+  Tasks.CloseChannel(Messages);
+end program;

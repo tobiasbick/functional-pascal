@@ -4,87 +4,101 @@
 // Guard: target/release/fpas run this-file.fpas -- 40 MAX_MILLIS
 program TuiStyledCellsBenchmark;
 
-uses Std.Args, Std.Arrays, Std.Console, Std.Conv, Std.Time, Std.Tui;
+uses Std.Args as Args;
+uses Std.Arrays as Arrays;
+uses Std.Console as Console;
+uses Std.Conv as Conv;
+uses Std.Time as Time;
+uses Std.Tui as Tui;
 
-const
-  // One 128 by 44 cell frame of half-block pixels.
-  FrameWidth: integer := 128;
-  FrameHeight: integer := 44;
+// One 128 by 44 cell frame of half-block pixels.
+const FrameWidth: integer := 128;
+const FrameHeight: integer := 44;
 
 // Builds one frame of cells whose colors vary per cell and returns a checksum of its channels.
 function BuildFrame(Frame: integer): integer;
 begin
-  mutable var Cells: array of TuiCell := [];
+  mutable var Cells: array of Tui.TuiCell := [];
   for Y: integer := 0 to FrameHeight - 1 do
-  begin
-    for X: integer := 0 to FrameWidth - 1 do
     begin
-      var Upper: TuiColor := TuiColor.FromRgb((X + Frame) mod 256, Y mod 256, 40);
-      var Lower: TuiColor := TuiColor.FromRgb(X mod 256, (Y + Frame) mod 256, 80);
-      Std.Arrays.Push(Cells, TuiCell.Styled('▀', TuiStyle.FromColors(Upper, Lower)))
-    end
-  end;
+      for X: integer := 0 to FrameWidth - 1 do
+        begin
+          var Upper: Tui.TuiColor := Tui.TuiColor.FromRgb((X + Frame) mod 256, Y mod 256, 40);
+          var Lower: Tui.TuiColor := Tui.TuiColor.FromRgb(X mod 256, (Y + Frame) mod 256, 80);
+          Arrays.Push(Cells, Tui.TuiCell.Styled('▀', Tui.TuiStyle.FromColors(Upper, Lower)));
+        end;
+      end for;
+    end;
+  end for;
   mutable var Checksum: integer := 0;
-  for Cell: TuiCell in Cells do
-  begin
-    case Cell.ConcreteStyle of
-      Some(Style):
-      begin
-        Checksum := (Checksum + Style.Foreground.Red) + Style.Background.Green
-      end;
-      None:
-      begin
-        panic('styled cell lost its style')
-      end
-    end
-  end;
+  for Cell: Tui.TuiCell in Cells do
+    begin
+      case Cell.ConcreteStyle of
+        when Some(Style):
+          begin
+            Checksum := (Checksum + Style.Foreground.Red) + Style.Background.Green;
+          end;
+        when None:
+          begin
+            panic('styled cell lost its style');
+          end;
+      end case;
+    end;
+  end for;
 
-  return Checksum
-end;
+  return Checksum;
+end function;
 
 function RunFrames(Frames: integer): integer;
 begin
   mutable var Total: integer := 0;
   for Frame: integer := 1 to Frames do
-  begin
-    Total := Total + BuildFrame(Frame)
-  end;
+    begin
+      Total := Total + BuildFrame(Frame);
+    end;
+  end for;
 
-  return Total
-end;
+  return Total;
+end function;
 
 begin
-  if (ParamCount() < 1) or (ParamCount() > 2) then
-  begin
-    panic('usage: styled_cells_benchmark.fpas -- FRAMES [MAX_MILLIS]')
-  end;
-  var Frames: integer := StrToInt(ParamStr(0));
-  if Frames < 1 then
-  begin
-    panic('FRAMES must be positive')
-  end;
-  mutable var MaxMillis: integer := 0;
-  if ParamCount() = 2 then
-  begin
-    MaxMillis := StrToInt(ParamStr(1));
-    if MaxMillis < 1 then
+  if (Args.ParamCount() < 1) or (Args.ParamCount() > 2) then
     begin
-      panic('MAX_MILLIS must be positive')
-    end
-  end;
+      panic('usage: styled_cells_benchmark.fpas -- FRAMES [MAX_MILLIS]');
+    end;
+  end if;
+  var Frames: integer := Conv.StrToInt(Args.ParamStr(0));
+  if Frames < 1 then
+    begin
+      panic('FRAMES must be positive');
+    end;
+  end if;
+  mutable var MaxMillis: integer := 0;
+  if Args.ParamCount() = 2 then
+    begin
+      MaxMillis := Conv.StrToInt(Args.ParamStr(1));
+      if MaxMillis < 1 then
+        begin
+          panic('MAX_MILLIS must be positive');
+        end;
+      end if;
+    end;
+  end if;
   var Warmup: integer := RunFrames(2);
-  var Started: integer := MonotonicMillis();
+  var Started: integer := Time.MonotonicMillis();
   var Checksum: integer := RunFrames(Frames);
-  var Elapsed: integer := ElapsedMillis(Started);
+  var Elapsed: integer := Time.ElapsedMillis(Started);
   if (Warmup <= 0) or (Checksum <= 0) then
-  begin
-    panic('styled cell checksum mismatch')
-  end;
+    begin
+      panic('styled cell checksum mismatch');
+    end;
+  end if;
 
-  WriteLn(('elapsed: ' + IntToStr(Elapsed)) + ' ms');
-  WriteLn('checksum: ' + IntToStr(Checksum));
+  Console.WriteLn(('elapsed: ' + Conv.IntToStr(Elapsed)) + ' ms');
+  Console.WriteLn('checksum: ' + Conv.IntToStr(Checksum));
   if (MaxMillis > 0) and (Elapsed > MaxMillis) then
-  begin
-    panic('styled cells benchmark exceeded MAX_MILLIS')
-  end
-end.
+    begin
+      panic('styled cells benchmark exceeded MAX_MILLIS');
+    end;
+  end if;
+end program;

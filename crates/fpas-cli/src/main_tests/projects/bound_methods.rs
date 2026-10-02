@@ -11,26 +11,28 @@ fn run_cli_binds_method_from_unit_global_record() {
     support::write_program_project_file(&project_file, "src/main.fpas", &["src/*.fpas"]);
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;
-uses App.Data, Std.Console, Std.Conv;
+        r#"program Main;
+uses App.Data as Data; uses Std.Console as Console; uses Std.Conv as Conv;
 begin
-  var AddTwelve: function(Value: integer): integer := Global.Add;
-  WriteLn(IntToStr(AddTwelve(3)))
-end.",
+  var AddTwelve: function(Value: integer): integer := Data.Global.Add;
+  Console.WriteLn(Conv.IntToStr(AddTwelve(3)));
+end program;"#,
     );
     write_text(
         &cwd.join("src/data.fpas"),
-        "unit App.Data;
-public type
-  Counter = record
+        r#"unit App.Data;
+
+  public type Counter = record
     public Base: integer;
     public function Add(Self: Counter; Value: integer): integer;
     begin
-      return Self.Base + Value
-    end;
-  end;
-public var Global: Counter := record Base := 12; end;
-",
+      return Self.Base + Value;
+    end function;
+  end record;
+  public var Global: Counter := record Base := 12; end record;
+end unit;
+
+"#,
     );
 
     let (exit_code, stdout_output, stderr_output) =

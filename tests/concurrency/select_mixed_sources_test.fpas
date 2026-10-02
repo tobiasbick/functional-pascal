@@ -1,44 +1,46 @@
 program SelectMixedSourcesTest;
 
-uses Std.Tasks, Std.Results, Std.Test;
+uses Std.Tasks as Tasks;
+uses Std.Results as Results;
+uses Std.Test as Test;
 
 begin
-  var Numbers: channel of integer := CreateChannel(2);
-  var Words: channel of string := CreateChannel(2);
-  Send(Numbers, 42);
-  Send(Words, 'retained');
+  var Numbers: channel of integer := Tasks.CreateChannel(2);
+  var Words: channel of string := Tasks.CreateChannel(2);
+  Tasks.Send(Numbers, 42);
+  Tasks.Send(Words, 'retained');
   mutable var Seen: integer := 0;
-  var First: WaitCase := ReceiveCase(Numbers, procedure(Outcome: result of integer, string) begin
-    Seen := Unwrap(Outcome)
-  end);
-  var Second: WaitCase := ReceiveCase(Words, procedure(Outcome: result of string, string) begin
-    panic('losing callback ran')
-  end);
-  AssertEquals(0, Select([First, Second]));
-  AssertEquals(42, Seen);
-  AssertEquals('retained', Unwrap(Receive(Words)));
-  AssertFalse(CloseWaitCase(First));
-  AssertFalse(CloseWaitCase(Second));
-  var Unused: WaitCase := TimerCase(0, procedure() begin
-    panic('unused callback ran')
-  end);
-  AssertTrue(CloseWaitCase(Unused));
-  AssertFalse(CloseWaitCase(Unused));
-  var Source: CancellationSource := CreateCancellationSource();
-  Cancel(Source);
-  var Cancelled: WaitCase := CancellationCase(GetCancellationToken(Source), procedure() begin
-    Seen := 7
-  end);
-  var Timer: WaitCase := TimerCase(0, procedure() begin
-    panic('losing timer ran')
-  end);
-  AssertEquals(0, Select([Cancelled, Timer]));
-  AssertEquals(7, Seen);
-  var Timed: WaitCase := TimerCase(1, procedure() begin
-    Seen := 9
-  end);
-  AssertEquals(0, Select([Timed]));
-  AssertEquals(9, Seen);
-  CloseChannel(Numbers);
-  CloseChannel(Words)
-end.
+  var First: Tasks.WaitCase := Tasks.ReceiveCase(Numbers, procedure(Outcome: result of integer, string) begin
+    Seen := Results.Unwrap(Outcome);
+  end procedure);
+  var Second: Tasks.WaitCase := Tasks.ReceiveCase(Words, procedure(Outcome: result of string, string) begin
+    panic('losing callback ran');
+  end procedure);
+  Test.AssertEquals(0, Tasks.Select([First, Second]));
+  Test.AssertEquals(42, Seen);
+  Test.AssertEquals('retained', Results.Unwrap(Tasks.Receive(Words)));
+  Test.AssertFalse(Tasks.CloseWaitCase(First));
+  Test.AssertFalse(Tasks.CloseWaitCase(Second));
+  var Unused: Tasks.WaitCase := Tasks.TimerCase(0, procedure() begin
+    panic('unused callback ran');
+  end procedure);
+  Test.AssertTrue(Tasks.CloseWaitCase(Unused));
+  Test.AssertFalse(Tasks.CloseWaitCase(Unused));
+  var Source: Tasks.CancellationSource := Tasks.CreateCancellationSource();
+  Tasks.Cancel(Source);
+  var Cancelled: Tasks.WaitCase := Tasks.CancellationCase(Tasks.GetCancellationToken(Source), procedure() begin
+    Seen := 7;
+  end procedure);
+  var Timer: Tasks.WaitCase := Tasks.TimerCase(0, procedure() begin
+    panic('losing timer ran');
+  end procedure);
+  Test.AssertEquals(0, Tasks.Select([Cancelled, Timer]));
+  Test.AssertEquals(7, Seen);
+  var Timed: Tasks.WaitCase := Tasks.TimerCase(1, procedure() begin
+    Seen := 9;
+  end procedure);
+  Test.AssertEquals(0, Tasks.Select([Timed]));
+  Test.AssertEquals(9, Seen);
+  Tasks.CloseChannel(Numbers);
+  Tasks.CloseChannel(Words);
+end program;

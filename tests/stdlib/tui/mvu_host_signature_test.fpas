@@ -1,50 +1,50 @@
 program MvuHostSignatureTest;
 
 // Phase 0: prove the exact generic RunIterations / Update / View callable pattern.
-uses Std.Tui, Std.Test;
+uses Std.Tui as Tui;
+uses Std.Test as Test;
 
-type
-  CounterModel = record
-    Value: integer;
-  end;
+type CounterModel = record
+  Value: integer;
+end record;
 
-function UpdateCounter(State: CounterModel; Msg: TuiMsg; Cmd: TuiCmdOutput): CounterModel;
+function UpdateCounter(State: CounterModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): CounterModel;
 begin
-  Cmd.Set(TuiCmd.NoCommand);
+  Cmd.Set(Tui.TuiCmd.NoCommand);
   case Msg of
-    TuiMsg.Tick(Delta):
-    begin
-      return record
-        Value := State.Value + 1;
-      end
-    end;
-    TuiMsg.MenuChanged(MenuSource, MenuAction, MenuState):
-    begin
-      Cmd.Set(TuiCmd.Quit);
-      return State
-    end;
-    TuiMsg.QuitRequested:
-    begin
-      Cmd.Set(TuiCmd.Quit);
-      return State
-    end
+    when Tui.TuiMsg.Tick(Delta):
+      begin
+        return record
+          Value := State.Value + 1;
+        end record;
+      end;
+    when Tui.TuiMsg.MenuChanged(MenuSource, MenuAction, MenuState):
+      begin
+        Cmd.Set(Tui.TuiCmd.Quit);
+        return State;
+      end;
+    when Tui.TuiMsg.QuitRequested:
+      begin
+        Cmd.Set(Tui.TuiCmd.Quit);
+        return State;
+      end;
     else
-    begin
-      return State
-    end
-  end
-end;
+      begin
+        return State;
+      end;
+  end case;
+end function;
 
-function ViewCounter(State: CounterModel): TuiElement;
+function ViewCounter(State: CounterModel): Tui.TuiElement;
 begin
-  return TuiElementBuilders.MakeLabel('count')
-end;
+  return Tui.TuiElementBuilders.MakeLabel('count');
+end function;
 
 begin
-  mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(40, 12));
+  mutable var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(40, 12));
   var FinalModel: CounterModel := App.RunIterations(record
     Value := 0;
-  end, UpdateCounter, ViewCounter, 3, 16);
-  AssertEquals(3, FinalModel.Value);
-  App.Close()
-end.
+  end record, UpdateCounter, ViewCounter, 3, 16);
+  Test.AssertEquals(3, FinalModel.Value);
+  App.Close();
+end program;

@@ -29,7 +29,7 @@ pub(super) fn project(name: &str, identifier: &str) -> TemplatePlan {
             file(
                 "src/main.fpas",
                 format!(
-                    "program {identifier};\n\nuses Std.Console;\n\nbegin\n  WriteLn('Hello from {name}')\nend.\n"
+                    "program {identifier};\n\nuses Std.Console as Console;\n\nbegin\n  Console.WriteLn('Hello from {name}');\nend program;\n"
                 ),
             ),
         ],
@@ -51,7 +51,7 @@ pub(super) fn library(name: &str, unit: &str) -> TemplatePlan {
             file(
                 &format!("src/{}.fpas", source_stem(unit)),
                 format!(
-                    "unit {unit};\n\npublic function Message(): string;\nbegin\n  return 'Hello from {name}'\nend;\n"
+                    "unit {unit};\n\npublic function Message(): string;\nbegin\n  return 'Hello from {name}';\nend function;\n\nend unit;\n"
                 ),
             ),
         ],
@@ -82,7 +82,7 @@ pub(super) fn workspace(name: &str, identifier: &str) -> TemplatePlan {
             file(
                 &format!("libs/{library_name}/src/core.fpas"),
                 format!(
-                    "unit {unit};\n\npublic function Message(): string;\nbegin\n  return 'Hello from {name}'\nend;\n"
+                    "unit {unit};\n\npublic function Message(): string;\nbegin\n  return 'Hello from {name}';\nend function;\n\nend unit;\n"
                 ),
             ),
             file(
@@ -94,7 +94,7 @@ pub(super) fn workspace(name: &str, identifier: &str) -> TemplatePlan {
             file(
                 &format!("apps/{name}/src/main.fpas"),
                 format!(
-                    "program {identifier};\n\nuses {unit}, Std.Console;\n\nbegin\n  WriteLn(Message())\nend.\n"
+                    "program {identifier};\n\nuses {unit} as Core;\nuses Std.Console as Console;\n\nbegin\n  Console.WriteLn(Core.Message());\nend program;\n"
                 ),
             ),
         ],

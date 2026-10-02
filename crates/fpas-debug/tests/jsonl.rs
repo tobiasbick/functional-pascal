@@ -44,7 +44,7 @@ fn lifecycle_is_machine_readable_and_deterministic() {
     serve_script(
         script.as_bytes(),
         &mut output,
-        server("program Main; begin var X: integer := 1 end."),
+        server(r#"program Main; begin var X: integer := 1; end program;"#),
     )
     .expect("serve script");
     let records = String::from_utf8(output).expect("UTF-8 records");
@@ -64,12 +64,12 @@ fn lifecycle_is_machine_readable_and_deterministic() {
 
 #[test]
 fn malformed_input_and_duplicate_ids_return_stable_errors() {
-    let mut malformed = server("program Main; begin end.");
+    let mut malformed = server(r#"program Main; begin null; end program;"#);
     let records = malformed.handle_line("{");
     assert_eq!(records[0]["body"]["code"], "invalid_request");
     assert_eq!(malformed.status(), ServerStatus::Terminated);
 
-    let mut duplicate = server("program Main; begin end.");
+    let mut duplicate = server(r#"program Main; begin null; end program;"#);
     let _ = duplicate.handle_line(&request(1, "initialize", json!({})));
     let records = duplicate.handle_line(&request(1, "launch", json!({})));
     assert_eq!(records[0]["error"]["code"], "invalid_request");
@@ -77,7 +77,7 @@ fn malformed_input_and_duplicate_ids_return_stable_errors() {
 
 #[test]
 fn invalid_state_and_unsupported_commands_are_explicit() {
-    let mut server = server("program Main; begin end.");
+    let mut server = server(r#"program Main; begin null; end program;"#);
     let _ = server.handle_line(&request(1, "initialize", json!({})));
     let invalid = server.handle_line(&request(2, "continue", json!({})));
     assert_eq!(invalid[0]["error"]["code"], "invalid_state");
@@ -89,7 +89,7 @@ fn invalid_state_and_unsupported_commands_are_explicit() {
 fn instruction_and_timeout_limits_are_reported() {
     let cases = [
         (
-            "program Main; begin while true do begin end end.",
+            r#"program Main; begin while true do begin null; end; end while; end program;"#,
             DebugExecutionLimits {
                 max_instructions: 2,
                 ..DebugExecutionLimits::default()
@@ -97,7 +97,7 @@ fn instruction_and_timeout_limits_are_reported() {
             "instruction_limit",
         ),
         (
-            "program Main; begin while true do begin end end.",
+            r#"program Main; begin while true do begin null; end; end while; end program;"#,
             DebugExecutionLimits {
                 timeout: Duration::ZERO,
                 ..DebugExecutionLimits::default()
@@ -125,7 +125,7 @@ fn initialize_reports_the_configured_execution_limits() {
         max_output_bytes: 789,
         max_input_bytes: 321,
     };
-    let mut server = server_with_limits("program Main; begin end.", limits);
+    let mut server = server_with_limits(r#"program Main; begin null; end program;"#, limits);
 
     let records = server.handle_line(&request(1, "initialize", json!({})));
     let reported = &records[0]["body"]["limits"];
@@ -163,7 +163,7 @@ fn broken_protocol_writer_is_returned_as_transport_failure() {
     let error = serve_script(
         script.as_bytes(),
         BrokenWriter,
-        server("program Main; begin end."),
+        server(r#"program Main; begin null; end program;"#),
     )
     .expect_err("broken writer must fail transport");
     assert_eq!(error.kind(), std::io::ErrorKind::BrokenPipe);
@@ -172,7 +172,7 @@ fn broken_protocol_writer_is_returned_as_transport_failure() {
 #[test]
 fn evaluate_parses_one_read_only_expression_and_reports_stable_errors() {
     let mut server = server(
-        "program Main; function Double(X: integer): integer; begin return X * 2 end; begin var X: integer := 1 end.",
+        r#"program Main; function Double(X: integer): integer; begin return X * 2; end function; begin var X: integer := 1; end program;"#,
     );
     let _ = server.handle_line(&request(1, "initialize", json!({"version":2})));
     let _ = server.handle_line(&request(2, "launch", json!({"stop_on_entry":true})));
@@ -301,27 +301,27 @@ fn logpoints_interpolate_without_stopping_and_shared_locations_log_before_stop()
 
 #[test]
 fn conditions_and_logpoints_use_detached_controlled_calls() {
-    let source = "program Main;\n\
-                  mutable var Probe: integer := 0;\n\
-                  function Matches(Value: integer): boolean;\n\
-                  begin\n\
-                    Probe := Probe + 1;\n\
-                    return Value = 2\n\
-                  end;\n\
-                  function Render(Value: integer): integer;\n\
-                  begin\n\
-                    return Value + 10\n\
-                  end;\n\
-                  begin\n\
-                    mutable var I: integer := 0;\n\
-                    while I < 3 do\n\
-                    begin\n\
-                      I := I + 1\n\
-                    end\n\
-                  end.";
+    let source = r#"program Main;
+  mutable var Probe: integer := 0;
+function Matches(Value: integer): boolean;
+begin
+Probe := Probe + 1;
+return Value = 2;
+end function;
+function Render(Value: integer): integer;
+begin
+return Value + 10;
+end function;
+begin
+mutable var I: integer := 0;
+while I < 3 do
+begin
+I := I + 1;
+end; end while;
+end program;"#;
     let line = source
         .lines()
-        .position(|line| line.trim() == "I := I + 1")
+        .position(|line| line.trim() == "I := I + 1;")
         .map(|line| line + 1)
         .expect("loop line");
 
@@ -384,14 +384,14 @@ fn invalid_breakpoint_expressions_and_templates_are_unverified() {
 
 fn loop_server() -> JsonlServer {
     server(
-        "program Main;\n\
-         begin\n\
-           mutable var I: integer := 0;\n\
-           while I < 5 do\n\
-           begin\n\
-             I := I + 1\n\
-           end\n\
-         end.",
+        r#"program Main;
+begin
+mutable var I: integer := 0;
+while I < 5 do
+begin
+I := I + 1;
+end; end while;
+end program;"#,
     )
 }
 

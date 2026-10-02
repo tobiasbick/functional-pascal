@@ -3,27 +3,29 @@ unit Std.Tui.Ids.Action;
 function TuiActionRequirePositive(Value: integer): integer;
 begin
   if Value <= 0 then
-  begin
-    panic('Tui action id must be positive')
-  end;
-
-  return Value
-end;
-
-public type
-  // Positive application-intent identity; duplicates across controls are allowed.
-  TuiAction = record
-    // Validated scalar value represented by the record.
-    public Value: integer;
-
-    // Creates a validated positive action identity.
-    //
-    // Parameters:
-    // - `Value`: Value used to create or update the result.
-    public static function Create(Value: integer): TuiAction;
     begin
-      return record
-        Value := TuiActionRequirePositive(Value);
-      end
+      panic('Tui action id must be positive');
     end;
-  end;
+  end if;
+
+  return Value;
+end function;
+
+// Positive application-intent identity; duplicates across controls are allowed.
+public type TuiAction = record
+  // Validated scalar value represented by the record.
+  public Value: integer;
+
+  // Creates a validated positive action identity.
+  //
+  // Parameters:
+  // - `Value`: Value used to create or update the result.
+  public static function Create(Value: integer): TuiAction;
+  begin
+    return record
+      Value := TuiActionRequirePositive(Value);
+    end record;
+  end function;
+end record;
+
+end unit;

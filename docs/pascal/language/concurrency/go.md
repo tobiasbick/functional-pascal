@@ -9,18 +9,20 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`go_call`, `go_stm
 Use `go` as an expression and assign it to capture a `task` handle:
 
 ```pascal
-uses Std.Console, Std.Tasks;
+program Example;
+
+uses Std.Console as Console; uses Std.Tasks as Tasks;
 
 function Worker(): integer;
 begin
-  return 42
-end;
+  return 42;
+end function;
 
 begin
   var T: task := go Worker();
-  var R: integer := Wait(T);
-  WriteLn(R)
-end.
+  var R: integer := Tasks.Wait(T);
+  Console.WriteLn(R);
+end program;
 ```
 
 ## Statement form (fire-and-forget)
@@ -35,7 +37,7 @@ go LogEvent('started');
 
 `go` must be followed by a **single call expression** (not a bare designator or arbitrary value). The callee may be:
 
-- a **function** or **procedure** (including qualified names such as `Std.Console.WriteLn(...)`),
+- a **function** or **procedure** (including qualified names such as `Console.WriteLn(...)` after `uses Std.Console as Console;`),
 - a **method** call, or
 - a call through a **callable variable** (function type, procedure type, and similar).
 

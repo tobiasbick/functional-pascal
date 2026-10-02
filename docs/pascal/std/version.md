@@ -5,12 +5,13 @@
 ```pascal
 program ShowVersion;
 
-uses Std.Console, Std.Version;
+uses Std.Console as Console;
+uses Std.Version as Version;
 
 begin
-  WriteLn(CompilerVersion);
-  WriteLn(LibraryVersion)
-end.
+  Console.WriteLn(Version.CompilerVersion);
+  Console.WriteLn(Version.LibraryVersion);
+end program;
 ```
 
 ## Quick reference

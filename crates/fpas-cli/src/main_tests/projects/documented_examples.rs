@@ -48,3 +48,24 @@ fn source_review_documented_project_examples_compile() {
         assert_eq!(exit, 0, "{label}: {stderr}");
     }
 }
+
+#[test]
+fn source_review_documented_unit_examples_compile() {
+    let text = include_str!("../../../../../docs/pascal/program-structure/units.md");
+    let cwd = create_temp_dir("documented-units");
+    let project = cwd.join("app.fpasprj");
+    support::write_program_project_file(&project, "src/main.fpas", &["src/*.fpas"]);
+    let sources = text.split("```pascal").skip(1).map(|block| {
+        let (_, source) = block.split_once('\n').expect("fenced language");
+        source.split_once("```").expect("closing fence").0
+    });
+    for (file, source) in ["src/utils.fpas", "src/main.fpas"].into_iter().zip(sources) {
+        write_text(&cwd.join(file), source);
+    }
+    let (exit, _, stderr) = support::run_cli_args_and_capture_output(
+        &["check".into(), project.to_string_lossy().into_owned()],
+        &cwd,
+    );
+    fs::remove_dir_all(&cwd).expect("remove fixture");
+    assert_eq!(exit, 0, "{stderr}");
+}

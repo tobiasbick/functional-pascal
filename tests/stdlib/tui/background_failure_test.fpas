@@ -1,63 +1,65 @@
 program TuiBackgroundFailureTest;
 
-uses Std.Results, Std.Tasks, Std.Test, Std.Tui;
+uses Std.Results as Results;
+uses Std.Tasks as Tasks;
+uses Std.Test as Test;
+uses Std.Tui as Tui;
 
-type
-  FailureModel = record
-    Ready: channel of boolean;
-    FailureSeen: boolean;
-  end;
+type FailureModel = record
+  Ready: channel of boolean;
+  FailureSeen: boolean;
+end record;
 
-function UpdateFramework(State: FailureModel; Msg: TuiMsg; Cmd: TuiCmdOutput): FailureModel;
+function UpdateFramework(State: FailureModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): FailureModel;
 begin
   case Msg of
-    TuiMsg.Started:
-    begin
-      var Ready: channel of boolean := State.Ready;
-      Cmd.StartBackground(19, function(Token: CancellationToken): result of boolean, string begin
-        Send(Ready, true);
-        return Error('expected background failure')
-      end);
-      return State
-    end;
-    TuiMsg.BackgroundFailed(Id, Kind, Message, Code, Line, Column):
-    begin
-      AssertEquals(19, Id);
-      AssertTrue(Kind = TaskFailureKind.ReturnedError);
-      AssertEquals('expected background failure', Message);
-      return record
-        Ready := State.Ready;
-        FailureSeen := true;
-      end
-    end
+    when Tui.TuiMsg.Started:
+      begin
+        var Ready: channel of boolean := State.Ready;
+        Cmd.StartBackground(19, function(Token: Tasks.CancellationToken): result of boolean, string begin
+          Tasks.Send(Ready, true);
+          return Error('expected background failure');
+        end function);
+        return State;
+      end;
+    when Tui.TuiMsg.BackgroundFailed(Id, Kind, Message, Code, Line, Column):
+      begin
+        Test.AssertEquals(19, Id);
+        Test.AssertTrue(Kind = Tasks.TaskFailureKind.ReturnedError);
+        Test.AssertEquals('expected background failure', Message);
+        return record
+          Ready := State.Ready;
+          FailureSeen := true;
+        end record;
+      end;
     else
-    begin
-      return State
-    end
-  end
-end;
+      begin
+        return State;
+      end;
+  end case;
+end function;
 
-function UpdateApplication(State: FailureModel; Message: integer; Cmd: TuiCmdOutput): FailureModel;
+function UpdateApplication(State: FailureModel; Message: integer; Cmd: Tui.TuiCmdOutput): FailureModel;
 begin
-  return State
-end;
+  return State;
+end function;
 
-function View(State: FailureModel): TuiElement;
+function View(State: FailureModel): Tui.TuiElement;
 begin
-  return TuiElementBuilders.MakeLabel('failure')
-end;
+  return Tui.TuiElementBuilders.MakeLabel('failure');
+end function;
 
 begin
-  var Inbox: channel of integer := CreateChannel(1);
-  var Ready: channel of boolean := CreateChannel(1);
-  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 4));
+  var Inbox: channel of integer := Tasks.CreateChannel(1);
+  var Ready: channel of boolean := Tasks.CreateChannel(1);
+  var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(24, 4));
   mutable var Model: FailureModel := App.RunBackgroundIterations(record
     Ready := Ready;
     FailureSeen := false;
-  end, Inbox, UpdateFramework, UpdateApplication, View, 1, 0);
-  AssertTrue(Unwrap(ReceiveWithTimeout(Ready, 10000)));
+  end record, Inbox, UpdateFramework, UpdateApplication, View, 1, 0);
+  Test.AssertTrue(Results.Unwrap(Tasks.ReceiveWithTimeout(Ready, 10000)));
   Model := App.RunBackgroundIterations(Model, Inbox, UpdateFramework, UpdateApplication, View, 1, 0);
-  AssertTrue(Model.FailureSeen);
+  Test.AssertTrue(Model.FailureSeen);
   App.CloseWithBackground(Inbox);
-  CloseChannel(Ready)
-end.
+  Tasks.CloseChannel(Ready);
+end program;

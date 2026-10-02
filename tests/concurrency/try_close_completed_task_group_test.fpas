@@ -1,58 +1,65 @@
 program TryCloseCompletedTaskGroupTest;
 
-uses Std.Arrays, Std.Options, Std.Results, Std.Tasks, Std.Test, Std.Time;
+uses Std.Arrays as Arrays;
+uses Std.Options as Options;
+uses Std.Results as Results;
+uses Std.Tasks as Tasks;
+uses Std.Test as Test;
+uses Std.Time as Time;
 
 begin
-  var Empty: TaskGroup := CreateTaskGroup();
-  AssertEquals(0, Std.Arrays.Length(Std.Options.Unwrap(TryCloseCompletedTaskGroup(Empty))));
-  AssertEquals(0, Std.Arrays.Length(Std.Options.Unwrap(TryCloseCompletedTaskGroup(Empty))));
-  var Gate: channel of boolean := CreateChannel(1);
-  var Ready: channel of boolean := CreateChannel(1);
-  var Returned: TaskGroup := CreateTaskGroup();
-  StartTaskInGroup(Returned, function(Token: CancellationToken): result of boolean, string begin
-    Send(Ready, true);
-    case ReceiveWithCancellation(Gate, Token) of
-      Ok(_):
-      begin
-        return Error('expected returned error')
-      end;
-      Error(Message):
-      begin
-        return Error('probe cancelled pending work')
-      end
-    end
-  end);
-  AssertTrue(Std.Results.Unwrap(ReceiveWithTimeout(Ready, 10000)));
-  AssertTrue(IsNone(TryCloseCompletedTaskGroup(Returned)));
-  Send(Gate, true);
-  mutable var ReturnedFailures: option of array of TaskFailure := None;
-  while IsNone(ReturnedFailures) do
-  begin
-    Sleep(1);
-    ReturnedFailures := TryCloseCompletedTaskGroup(Returned)
-  end;
-  var ReturnedReport: array of TaskFailure := Std.Options.Unwrap(ReturnedFailures);
-  AssertEquals(1, Std.Arrays.Length(ReturnedReport));
-  AssertTrue(ReturnedReport[0].Kind = TaskFailureKind.ReturnedError);
-  AssertEquals('expected returned error', ReturnedReport[0].Message);
-  var PanicReady: channel of boolean := CreateChannel(1);
-  var Panicked: TaskGroup := CreateTaskGroup();
-  StartTaskInGroup(Panicked, procedure(Token: CancellationToken) begin
-    Send(PanicReady, true);
-    panic('expected panic report')
-  end);
-  AssertTrue(Std.Results.Unwrap(ReceiveWithTimeout(PanicReady, 10000)));
-  mutable var PanicFailures: option of array of TaskFailure := None;
-  while IsNone(PanicFailures) do
-  begin
-    Sleep(1);
-    PanicFailures := TryCloseCompletedTaskGroup(Panicked)
-  end;
-  var PanicReport: array of TaskFailure := Std.Options.Unwrap(PanicFailures);
-  AssertEquals(1, Std.Arrays.Length(PanicReport));
-  AssertTrue(PanicReport[0].Kind = TaskFailureKind.Panicked);
-  AssertEquals('panic: expected panic report', PanicReport[0].Message);
-  CloseChannel(Gate);
-  CloseChannel(Ready);
-  CloseChannel(PanicReady)
-end.
+  var Empty: Tasks.TaskGroup := Tasks.CreateTaskGroup();
+  Test.AssertEquals(0, Arrays.Length(Options.Unwrap(Tasks.TryCloseCompletedTaskGroup(Empty))));
+  Test.AssertEquals(0, Arrays.Length(Options.Unwrap(Tasks.TryCloseCompletedTaskGroup(Empty))));
+  var Gate: channel of boolean := Tasks.CreateChannel(1);
+  var Ready: channel of boolean := Tasks.CreateChannel(1);
+  var Returned: Tasks.TaskGroup := Tasks.CreateTaskGroup();
+  Tasks.StartTaskInGroup(Returned, function(Token: Tasks.CancellationToken): result of boolean, string begin
+    Tasks.Send(Ready, true);
+    case Tasks.ReceiveWithCancellation(Gate, Token) of
+      when Ok(_):
+        begin
+          return Error('expected returned error');
+        end;
+      when Error(Message):
+        begin
+          return Error('probe cancelled pending work');
+        end;
+    end case;
+  end function);
+  Test.AssertTrue(Results.Unwrap(Tasks.ReceiveWithTimeout(Ready, 10000)));
+  Test.AssertTrue(Options.IsNone(Tasks.TryCloseCompletedTaskGroup(Returned)));
+  Tasks.Send(Gate, true);
+  mutable var ReturnedFailures: option of array of Tasks.TaskFailure := None;
+  while Options.IsNone(ReturnedFailures) do
+    begin
+      Time.Sleep(1);
+      ReturnedFailures := Tasks.TryCloseCompletedTaskGroup(Returned);
+    end;
+  end while;
+  var ReturnedReport: array of Tasks.TaskFailure := Options.Unwrap(ReturnedFailures);
+  Test.AssertEquals(1, Arrays.Length(ReturnedReport));
+  Test.AssertTrue(ReturnedReport[0].Kind = Tasks.TaskFailureKind.ReturnedError);
+  Test.AssertEquals('expected returned error', ReturnedReport[0].Message);
+  var PanicReady: channel of boolean := Tasks.CreateChannel(1);
+  var Panicked: Tasks.TaskGroup := Tasks.CreateTaskGroup();
+  Tasks.StartTaskInGroup(Panicked, procedure(Token: Tasks.CancellationToken) begin
+    Tasks.Send(PanicReady, true);
+    panic('expected panic report');
+  end procedure);
+  Test.AssertTrue(Results.Unwrap(Tasks.ReceiveWithTimeout(PanicReady, 10000)));
+  mutable var PanicFailures: option of array of Tasks.TaskFailure := None;
+  while Options.IsNone(PanicFailures) do
+    begin
+      Time.Sleep(1);
+      PanicFailures := Tasks.TryCloseCompletedTaskGroup(Panicked);
+    end;
+  end while;
+  var PanicReport: array of Tasks.TaskFailure := Options.Unwrap(PanicFailures);
+  Test.AssertEquals(1, Arrays.Length(PanicReport));
+  Test.AssertTrue(PanicReport[0].Kind = Tasks.TaskFailureKind.Panicked);
+  Test.AssertEquals('panic: expected panic report', PanicReport[0].Message);
+  Tasks.CloseChannel(Gate);
+  Tasks.CloseChannel(Ready);
+  Tasks.CloseChannel(PanicReady);
+end program;

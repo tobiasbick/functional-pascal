@@ -1,9 +1,15 @@
 program JuliaRenderTest;
 
-uses Julia.Render, Julia.Compute, Julia.Color, Std.Tasks, Std.Arrays, Std.Results, Std.Test;
+uses Julia.Render as Render;
+uses Julia.Compute as Compute;
+uses Julia.Color as Color;
+uses Std.Tasks as Tasks;
+uses Std.Arrays as Arrays;
+uses Std.Results as Results;
+uses Std.Test as Test;
 
 begin
-  var Job: RenderJob := StartRender(-1.0, 1.0, -1.0, 1.0, 7, 9, 32, PaletteKind.DeepOcean, -0.8, 0.156);
+  var Job: Render.RenderJob := Render.StartRender(-1.0, 1.0, -1.0, 1.0, 7, 9, 32, Color.PaletteKind.DeepOcean, -0.8, 0.156);
   mutable var Seen: array of boolean := [
                                           false,
                                           false,
@@ -16,23 +22,26 @@ begin
                                           false
                                         ];
   for Index: integer := 1 to 9 do
-  begin
-    var Row: RenderRow := Unwrap(ReceiveWithTimeout(Job.Rows, 5000));
-    AssertTrue((Row.Y >= 0) and (Row.Y < 9));
-    AssertFalse(Seen[Row.Y]);
-    Seen[Row.Y] := true;
-    var Expected: array of PixelSample := ComputeRow(Row.Y, 7, 9, -1.0, 1.0, -1.0, 1.0, 32, -0.8, 0.156, GetTaskGroupToken(Job.Group));
-    AssertEquals(7, Length(Row.Samples));
-    for X: integer := 0 to 6 do
     begin
-      AssertTrue(Row.Samples[X].IsInside = Expected[X].IsInside);
-      AssertTrue(Row.Samples[X].EscapeValue = Expected[X].EscapeValue)
-    end
-  end;
+      var Row: Render.RenderRow := Results.Unwrap(Tasks.ReceiveWithTimeout(Job.Rows, 5000));
+      Test.AssertTrue((Row.Y >= 0) and (Row.Y < 9));
+      Test.AssertFalse(Seen[Row.Y]);
+      Seen[Row.Y] := true;
+      var Expected: array of Compute.PixelSample := Compute.ComputeRow(Row.Y, 7, 9, -1.0, 1.0, -1.0, 1.0, 32, -0.8, 0.156, Tasks.GetTaskGroupToken(Job.Group));
+      Test.AssertEquals(7, Arrays.Length(Row.Samples));
+      for X: integer := 0 to 6 do
+        begin
+          Test.AssertTrue(Row.Samples[X].IsInside = Expected[X].IsInside);
+          Test.AssertTrue(Row.Samples[X].EscapeValue = Expected[X].EscapeValue);
+        end;
+      end for;
+    end;
+  end for;
 
-  StopRender(Job);
+  Render.StopRender(Job);
   for Found: boolean in Seen do
-  begin
-    AssertTrue(Found)
-  end
-end.
+    begin
+      Test.AssertTrue(Found);
+    end;
+  end for;
+end program;

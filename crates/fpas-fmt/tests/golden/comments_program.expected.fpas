@@ -1,10 +1,10 @@
 program T;
 
 // before uses
-uses Std.Console;
+uses Std.Console as Console;
 
 // before begin
 begin
   // setup
-  WriteLn('ok') // trail
-end. // tail
+  Console.WriteLn('ok'); // trail
+end program; // tail

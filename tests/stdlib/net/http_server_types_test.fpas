@@ -1,14 +1,17 @@
 // Covers HTTP server response construction and mutable fields.
 program HttpServerTypesTest;
 
-uses Std.Arrays, Std.Http, Std.Net.Utf8, Std.Test;
+uses Std.Arrays as Arrays;
+uses Std.Http as Http;
+uses Std.Net.Utf8 as Utf8;
+uses Std.Test as Test;
 
 begin
-  mutable var ResponseValue: ServerResponse := ServerResponse.Create(201, 'Created');
-  ResponseValue.Headers := [Header.Create('Content-Type', 'text/plain')];
-  ResponseValue.Body := Std.Net.Utf8.Encode('ok');
-  AssertEquals(201, ResponseValue.StatusCode);
-  AssertEquals('Created', ResponseValue.ReasonPhrase);
-  AssertEquals(1, Std.Arrays.Length(ResponseValue.Headers));
-  AssertEquals(2, Std.Arrays.Length(ResponseValue.Body))
-end.
+  mutable var ResponseValue: Http.ServerResponse := Http.ServerResponse.Create(201, 'Created');
+  ResponseValue.Headers := [Http.Header.Create('Content-Type', 'text/plain')];
+  ResponseValue.Body := Utf8.Encode('ok');
+  Test.AssertEquals(201, ResponseValue.StatusCode);
+  Test.AssertEquals('Created', ResponseValue.ReasonPhrase);
+  Test.AssertEquals(1, Arrays.Length(ResponseValue.Headers));
+  Test.AssertEquals(2, Arrays.Length(ResponseValue.Body));
+end program;

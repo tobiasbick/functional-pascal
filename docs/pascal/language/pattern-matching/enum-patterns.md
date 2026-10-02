@@ -3,36 +3,42 @@
 Match on enum variants:
 
 ```pascal
-type
-  Direction = enum
-    North;
-    South;
-    East;
-    West;
-  end;
+type Direction = enum
+  North;
+  South;
+  East;
+  West;
+end enum;
 
 function DirectionName(D: Direction): string;
 begin
   case D of
-    Direction.North: return 'North';
-    Direction.South: return 'South';
-    Direction.East:  return 'East';
-    Direction.West:  return 'West';
-  end;
-end;
+    when Direction.North:
+      return 'North';
+    when Direction.South:
+      return 'South';
+    when Direction.East:
+      return 'East';
+    when Direction.West:
+      return 'West';
+  end case;
+end function;
+
 ```
 
 Enum patterns bind variant fields positionally with plain identifiers only:
 
 ```pascal
+uses Std.Console as Console;
+
 case S of
-  Shape.Circle(R):
-    WriteLn('Circle');
-  Shape.Rectangle(W, H):
-    WriteLn('Rectangle');
-  Shape.Point:
-    WriteLn('Point');
-end;
+  when Shape.Circle(R):
+    Console.WriteLn('Circle');
+  when Shape.Rectangle(W, H):
+    Console.WriteLn('Rectangle');
+  when Shape.Point:
+    Console.WriteLn('Point');
+end case;
 ```
 
 Rules:

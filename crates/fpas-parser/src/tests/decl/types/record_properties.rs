@@ -3,11 +3,9 @@ use super::*;
 #[test]
 fn record_properties_default_to_private_and_accept_public() {
     let unit = parse_unit_ok(
-        "unit Demo.Types; \
-         type Counter = record \
-           property Hidden: integer read GetHidden; \
-           public property Value: integer read GetValue; \
-         end;",
+        r#"unit Demo.Types;  type Counter = record property Hidden: integer read GetHidden; public property Value: integer read GetValue; end record;
+end unit;
+"#,
     );
     let Decl::TypeDef(type_def) = &unit.declarations[0] else {
         panic!("expected type");
@@ -22,11 +20,7 @@ fn record_properties_default_to_private_and_accept_public() {
 #[test]
 fn record_read_write_property() {
     let p = parse_ok(
-        "program T; type Button = record \
-         function GetText(Self: Button): string; begin return '' end; \
-         procedure SetText(Self: Button; Value: string); begin end; \
-         property Text: string read GetText write SetText; \
-         end; begin end.",
+        r#"program T;  type Button = record function GetText(Self: Button): string; begin return ''; end function; procedure SetText(Self: Button; Value: string); begin null; end procedure; property Text: string read GetText write SetText; end record; begin null; end program;"#,
     );
     match &p.declarations[0] {
         Decl::TypeDef(td) => match &td.body {
@@ -46,10 +40,7 @@ fn record_read_write_property() {
 #[test]
 fn record_read_only_property() {
     let p = parse_ok(
-        "program T; type Box = record \
-         function GetWidth(Self: Box): integer; begin return 0 end; \
-         property Width: integer read GetWidth; \
-         end; begin end.",
+        r#"program T;  type Box = record function GetWidth(Self: Box): integer; begin return 0; end function; property Width: integer read GetWidth; end record; begin null; end program;"#,
     );
     match &p.declarations[0] {
         Decl::TypeDef(td) => match &td.body {
@@ -67,10 +58,7 @@ fn record_read_only_property() {
 #[test]
 fn record_write_only_property() {
     let p = parse_ok(
-        "program T; type Box = record \
-         procedure SetPassword(Self: Box; Value: string); begin end; \
-         property Password: string write SetPassword; \
-         end; begin end.",
+        r#"program T;  type Box = record procedure SetPassword(Self: Box; Value: string); begin null; end procedure; property Password: string write SetPassword; end record; begin null; end program;"#,
     );
     match &p.declarations[0] {
         Decl::TypeDef(td) => match &td.body {

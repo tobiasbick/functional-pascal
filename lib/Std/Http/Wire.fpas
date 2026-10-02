@@ -1,12 +1,19 @@
 // HTTP/1.1 wire parsing and request serialization.
 unit Std.Http.Wire;
 
-uses
-  Std.Arrays, Std.Conv, Std.Http.BodyFraming, Std.Http.Fields, Std.Http.Headers, Std.Http.Method,
-  Std.Http.Types, Std.Net.Uri, Std.Net.Utf8, Std.Parse, Std.Str;
+uses Std.Arrays as Arrays;
+uses Std.Conv as Conv;
+uses Std.Http.BodyFraming as BodyFraming;
+uses Std.Http.Fields as Fields;
+uses Std.Http.Headers as Headers2;
+uses Std.Http.Method as Method;
+uses Std.Http.Types as Types;
+uses Std.Net.Uri as Uri2;
+uses Std.Net.Utf8 as Utf8;
+uses Std.Parse as Parse;
+uses Std.Str as Str;
 
-const
-  MaximumChunkSize: integer := 9223372036854775807;
+const MaximumChunkSize: integer := 9223372036854775807;
 
 // Finds the next HTTP head terminator.
 //
@@ -15,17 +22,19 @@ const
 // - `Start`: First byte index to inspect.
 public function FindSeparator(Bytes: array of integer; Start: integer): integer;
 begin
-  for Index: integer := Start to Std.Arrays.Length(Bytes) - 4 do
-  begin
-    if (((Bytes[Index] = 13) and (Bytes[Index + 1] = 10)) and (Bytes[Index + 2] = 13)) and
-       (Bytes[Index + 3] = 10) then
+  for Index: integer := Start to Arrays.Length(Bytes) - 4 do
     begin
-      return Index
-    end
-  end;
+      if (((Bytes[Index] = 13) and (Bytes[Index + 1] = 10)) and (Bytes[Index + 2] = 13)) and
+         (Bytes[Index + 3] = 10) then
+        begin
+          return Index;
+        end;
+      end if;
+    end;
+  end for;
 
-  return -1
-end;
+  return -1;
+end function;
 
 // Finds the next CRLF line ending.
 //
@@ -34,16 +43,18 @@ end;
 // - `Start`: First byte index to inspect.
 public function FindLineEnd(Bytes: array of integer; Start: integer): integer;
 begin
-  for Index: integer := Start to Std.Arrays.Length(Bytes) - 2 do
-  begin
-    if (Bytes[Index] = 13) and (Bytes[Index + 1] = 10) then
+  for Index: integer := Start to Arrays.Length(Bytes) - 2 do
     begin
-      return Index
-    end
-  end;
+      if (Bytes[Index] = 13) and (Bytes[Index + 1] = 10) then
+        begin
+          return Index;
+        end;
+      end if;
+    end;
+  end for;
 
-  return -1
-end;
+  return -1;
+end function;
 
 // Parses a supported HTTP response status line.
 //
@@ -51,29 +62,31 @@ end;
 // - `Line`: Decoded response status line.
 function ParseStatus(Line: string): result of array of string, string;
 begin
-  if (not Std.Str.StartsWith(Line, 'HTTP/1.0 ')) and (not Std.Str.StartsWith(Line, 'HTTP/1.1 ')) then
-  begin
-    return Error('HTTP response has an unsupported status line: ' + Line)
-  end;
-  var FirstSpace: integer := Std.Str.IndexOf(Line, ' ');
+  if (not Str.StartsWith(Line, 'HTTP/1.0 ')) and (not Str.StartsWith(Line, 'HTTP/1.1 ')) then
+    begin
+      return Error('HTTP response has an unsupported status line: ' + Line);
+    end;
+  end if;
+  var FirstSpace: integer := Str.IndexOf(Line, ' ');
   if FirstSpace < 0 then
-  begin
-    return Error('HTTP response status line is missing a status code')
-  end;
-  var Remainder: string := Std.Str.Trim(Std.Str.Substring(Line, FirstSpace + 1, (Std.Str.Length(Line) - FirstSpace) -
-                                                                                1));
-  var SecondSpace: integer := Std.Str.IndexOf(Remainder, ' ');
+    begin
+      return Error('HTTP response status line is missing a status code');
+    end;
+  end if;
+  var Remainder: string := Str.Trim(Str.Substring(Line, FirstSpace + 1, (Str.Length(Line) - FirstSpace) -
+                                                                        1));
+  var SecondSpace: integer := Str.IndexOf(Remainder, ' ');
   if SecondSpace < 0 then
-  begin
-    return Ok([Remainder, ''])
-  end;
+    begin
+      return Ok([Remainder, '']);
+    end;
+  end if;
 
   return Ok([
-              Std.Str.Substring(Remainder, 0, SecondSpace),
-              Std.Str.Trim(Std.Str.Substring(Remainder, SecondSpace + 1, (Std.Str.Length(Remainder) - SecondSpace) -
-                                                                         1))
-            ])
-end;
+              Str.Substring(Remainder, 0, SecondSpace),
+              Str.Trim(Str.Substring(Remainder, SecondSpace + 1, (Str.Length(Remainder) - SecondSpace) - 1))
+            ]);
+end function;
 
 // Reports whether text is exactly three decimal digits.
 //
@@ -81,22 +94,25 @@ end;
 // - `Text`: Candidate HTTP status code.
 function IsStatusCode(Text: string): boolean;
 begin
-  if Std.Str.Length(Text) <> 3 then
-  begin
-    return false
-  end;
+  if Str.Length(Text) <> 3 then
+    begin
+      return false;
+    end;
+  end if;
 
   for Index: integer := 0 to 2 do
-  begin
-    var Code: integer := Std.Str.Ord(Std.Str.CharAt(Text, Index));
-    if (Code < 48) or (Code > 57) then
     begin
-      return false
-    end
-  end;
+      var Code: integer := Str.Ord(Str.CharAt(Text, Index));
+      if (Code < 48) or (Code > 57) then
+        begin
+          return false;
+        end;
+      end if;
+    end;
+  end for;
 
-  return true
-end;
+  return true;
+end function;
 
 // Converts one hexadecimal character to its value or minus one.
 //
@@ -104,19 +120,21 @@ end;
 // - `Character`: Single hexadecimal character.
 function HexDigit(Character: string): integer;
 begin
-  var Code: integer := Std.Str.Ord(Std.Str.ToUpper(Character));
+  var Code: integer := Str.Ord(Str.ToUpper(Character));
   if (Code >= 48) and (Code <= 57) then
-  begin
-    return Code - 48
-  end;
+    begin
+      return Code - 48;
+    end;
+  end if;
 
   if (Code >= 65) and (Code <= 70) then
-  begin
-    return Code - 55
-  end;
+    begin
+      return Code - 55;
+    end;
+  end if;
 
-  return -1
-end;
+  return -1;
+end function;
 
 // Parses one hexadecimal chunk-size line and ignores extensions.
 //
@@ -125,37 +143,42 @@ end;
 public function ParseChunkSize(Line: string): result of integer, string;
 begin
   mutable var SizeText: string := Line;
-  var Extension: integer := Std.Str.IndexOf(SizeText, ';');
+  var Extension: integer := Str.IndexOf(SizeText, ';');
   if Extension >= 0 then
-  begin
-    SizeText := Std.Str.Substring(SizeText, 0, Extension)
-  end;
+    begin
+      SizeText := Str.Substring(SizeText, 0, Extension);
+    end;
+  end if;
 
-  SizeText := Std.Str.Trim(SizeText);
+  SizeText := Str.Trim(SizeText);
   if SizeText = '' then
-  begin
-    return Error('HTTP chunk size is empty')
-  end;
+    begin
+      return Error('HTTP chunk size is empty');
+    end;
+  end if;
   mutable var Size: integer := 0;
-  for Index: integer := 0 to Std.Str.Length(SizeText) - 1 do
-  begin
-    var Digit: integer := HexDigit(Std.Str.CharAt(SizeText, Index));
-    if Digit < 0 then
+  for Index: integer := 0 to Str.Length(SizeText) - 1 do
     begin
-      return Error('Invalid HTTP chunk size: ' + SizeText)
+      var Digit: integer := HexDigit(Str.CharAt(SizeText, Index));
+      if Digit < 0 then
+        begin
+          return Error('Invalid HTTP chunk size: ' + SizeText);
+        end;
+      end if;
+
+      if (Size > MaximumChunkSize div 16) or
+         ((Size = MaximumChunkSize div 16) and (Digit > MaximumChunkSize mod 16)) then
+        begin
+          return Error('HTTP chunk size exceeds the integer range: ' + SizeText);
+        end;
+      end if;
+
+      Size := Size * 16 + Digit;
     end;
+  end for;
 
-    if (Size > MaximumChunkSize div 16) or
-       ((Size = MaximumChunkSize div 16) and (Digit > MaximumChunkSize mod 16)) then
-    begin
-      return Error('HTTP chunk size exceeds the integer range: ' + SizeText)
-    end;
-
-    Size := Size * 16 + Digit
-  end;
-
-  return Ok(Size)
-end;
+  return Ok(Size);
+end function;
 
 // Decodes one complete chunked body.
 //
@@ -165,60 +188,65 @@ function DecodeChunked(Bytes: array of integer): result of array of integer, str
 begin
   mutable var Position: integer := 0;
   mutable var Body: array of integer := [];
-  while Position < Std.Arrays.Length(Bytes) do
-  begin
-    var LineEnd: integer := FindLineEnd(Bytes, Position);
-    if LineEnd < 0 then
+  while Position < Arrays.Length(Bytes) do
     begin
-      return Error('HTTP chunk size line is incomplete')
-    end;
-    var LineBytes: array of integer := Std.Arrays.Slice(Bytes, Position, LineEnd - Position);
-    mutable var Line: string := '';
-    case Std.Net.Utf8.Decode(LineBytes) of
-      Ok(Value):
-      begin
-        Line := Value
-      end;
-      Error(Message):
-      begin
-        return Error('HTTP chunk size is not ASCII: ' + Message)
-      end
-    end;
-    mutable var Size: integer := 0;
-    case ParseChunkSize(Line) of
-      Ok(Value):
-      begin
-        Size := Value
-      end;
-      Error(Message):
-      begin
-        return Error(Message)
-      end
-    end;
+      var LineEnd: integer := FindLineEnd(Bytes, Position);
+      if LineEnd < 0 then
+        begin
+          return Error('HTTP chunk size line is incomplete');
+        end;
+      end if;
+      var LineBytes: array of integer := Arrays.Slice(Bytes, Position, LineEnd - Position);
+      mutable var Line: string := '';
+      case Utf8.Decode(LineBytes) of
+        when Ok(Value):
+          begin
+            Line := Value;
+          end;
+        when Error(Message):
+          begin
+            return Error('HTTP chunk size is not ASCII: ' + Message);
+          end;
+      end case;
+      mutable var Size: integer := 0;
+      case ParseChunkSize(Line) of
+        when Ok(Value):
+          begin
+            Size := Value;
+          end;
+        when Error(Message):
+          begin
+            return Error(Message);
+          end;
+      end case;
 
-    Position := LineEnd + 2;
-    if Size = 0 then
-    begin
-      return Ok(Body)
+      Position := LineEnd + 2;
+      if Size = 0 then
+        begin
+          return Ok(Body);
+        end;
+      end if;
+
+      if (Position + Size) + 2 > Arrays.Length(Bytes) then
+        begin
+          return Error('HTTP chunk body is incomplete');
+        end;
+      end if;
+
+      Body := Arrays.Concat(Body, Arrays.Slice(Bytes, Position, Size));
+      Position := Position + Size;
+      if (Bytes[Position] <> 13) or (Bytes[Position + 1] <> 10) then
+        begin
+          return Error('HTTP chunk is missing its trailing CRLF');
+        end;
+      end if;
+
+      Position := Position + 2;
     end;
+  end while;
 
-    if (Position + Size) + 2 > Std.Arrays.Length(Bytes) then
-    begin
-      return Error('HTTP chunk body is incomplete')
-    end;
-
-    Body := Std.Arrays.Concat(Body, Std.Arrays.Slice(Bytes, Position, Size));
-    Position := Position + Size;
-    if (Bytes[Position] <> 13) or (Bytes[Position + 1] <> 10) then
-    begin
-      return Error('HTTP chunk is missing its trailing CRLF')
-    end;
-
-    Position := Position + 2
-  end;
-
-  return Error('HTTP chunked body is missing its final zero chunk')
-end;
+  return Error('HTTP chunked body is missing its final zero chunk');
+end function;
 
 // Reports whether response semantics permit a message body.
 //
@@ -228,13 +256,14 @@ end;
 public function ResponseHasBody(RequestMethod: string; StatusCode: integer): boolean;
 begin
   if RequestMethod = 'HEAD' then
-  begin
-    return false
-  end;
+    begin
+      return false;
+    end;
+  end if;
 
   return ((StatusCode < 100) or (StatusCode > 199)) and
-         ((StatusCode <> 204) and (StatusCode <> 304))
-end;
+         ((StatusCode <> 204) and (StatusCode <> 304));
+end function;
 
 // Applies selected framing to one complete raw response body.
 //
@@ -242,211 +271,228 @@ end;
 // - `Headers`: Parsed response fields.
 // - `Bytes`: Raw bytes following the response head.
 // - `HasBody`: Whether response semantics permit a body.
-function ResponseBody(Headers: array of Header; Bytes: array of integer; HasBody: boolean): result of array of integer, string;
+function ResponseBody(Headers: array of Types.Header; Bytes: array of integer; HasBody: boolean): result of array of integer, string;
 begin
   if not HasBody then
-  begin
-    return Ok([])
-  end;
-
-  case Std.Http.BodyFraming.Select(Headers) of
-    Ok(Framing):
     begin
-      if Framing.Mode = 2 then
-      begin
-        return DecodeChunked(Bytes)
-      end;
-
-      if Framing.Mode = 1 then
-      begin
-        if Std.Arrays.Length(Bytes) < Framing.Remaining then
-        begin
-          return Error('HTTP response body is shorter than Content-Length')
-        end;
-
-        return Ok(Std.Arrays.Slice(Bytes, 0, Framing.Remaining))
-      end;
-
-      return Ok(Bytes)
+      return Ok([]);
     end;
-    Error(Message):
-    begin
-      return Error(Message)
-    end
-  end
-end;
+  end if;
+
+  case BodyFraming.Select(Headers) of
+    when Ok(Framing):
+      begin
+        if Framing.Mode = 2 then
+          begin
+            return DecodeChunked(Bytes);
+          end;
+        end if;
+
+        if Framing.Mode = 1 then
+          begin
+            if Arrays.Length(Bytes) < Framing.Remaining then
+              begin
+                return Error('HTTP response body is shorter than Content-Length');
+              end;
+            end if;
+
+            return Ok(Arrays.Slice(Bytes, 0, Framing.Remaining));
+          end;
+        end if;
+
+        return Ok(Bytes);
+      end;
+    when Error(Message):
+      begin
+        return Error(Message);
+      end;
+  end case;
+end function;
 
 // Parses one complete response head and returns its body offset.
 //
 // Parameters:
 // - `Bytes`: Response bytes containing a complete head.
-public function ParseResponseHead(Bytes: array of integer): result of ResponseHead, string;
+public function ParseResponseHead(Bytes: array of integer): result of Types.ResponseHead, string;
 begin
   var Separator: integer := FindSeparator(Bytes, 0);
   if Separator < 0 then
-  begin
-    return Error('HTTP response is missing the header terminator')
-  end;
-  var HeaderBytes: array of integer := Std.Arrays.Slice(Bytes, 0, Separator);
-  mutable var HeaderText: string := '';
-  case Std.Net.Utf8.Decode(HeaderBytes) of
-    Ok(Value):
     begin
-      HeaderText := Value
+      return Error('HTTP response is missing the header terminator');
     end;
-    Error(Message):
+  end if;
+  var HeaderBytes: array of integer := Arrays.Slice(Bytes, 0, Separator);
+  mutable var HeaderText: string := '';
+  case Utf8.Decode(HeaderBytes) of
+    when Ok(Value):
+      begin
+        HeaderText := Value;
+      end;
+    when Error(Message):
+      begin
+        return Error('HTTP response headers are not valid UTF-8: ' + Message);
+      end;
+  end case;
+  var Lines: array of string := Str.Split(HeaderText, #13 + #10);
+  if Arrays.Length(Lines) = 0 then
     begin
-      return Error('HTTP response headers are not valid UTF-8: ' + Message)
-    end
-  end;
-  var Lines: array of string := Std.Str.Split(HeaderText, #13 + #10);
-  if Std.Arrays.Length(Lines) = 0 then
-  begin
-    return Error('HTTP response status line is missing')
-  end;
+      return Error('HTTP response status line is missing');
+    end;
+  end if;
   mutable var Status: array of string := [];
   case ParseStatus(Lines[0]) of
-    Ok(Value):
-    begin
-      Status := Value
-    end;
-    Error(Message):
-    begin
-      return Error(Message)
-    end
-  end;
+    when Ok(Value):
+      begin
+        Status := Value;
+      end;
+    when Error(Message):
+      begin
+        return Error(Message);
+      end;
+  end case;
   mutable var StatusCode: integer := 0;
   if not IsStatusCode(Status[0]) then
-  begin
-    return Error('HTTP status code must contain exactly three digits')
-  end;
+    begin
+      return Error('HTTP status code must contain exactly three digits');
+    end;
+  end if;
 
-  case Std.Parse.TryInt(Status[0]) of
-    Ok(Value):
-    begin
-      StatusCode := Value
-    end;
-    Error(Message):
-    begin
-      return Error('Invalid HTTP status code: ' + Message)
-    end
-  end;
-  mutable var Headers: array of Header := [];
-  case Std.Http.Fields.Parse(HeaderText, 'response') of
-    Ok(Value):
-    begin
-      Headers := Value
-    end;
-    Error(Message):
-    begin
-      return Error(Message)
-    end
-  end;
+  case Parse.TryInt(Status[0]) of
+    when Ok(Value):
+      begin
+        StatusCode := Value;
+      end;
+    when Error(Message):
+      begin
+        return Error('Invalid HTTP status code: ' + Message);
+      end;
+  end case;
+  mutable var Headers: array of Types.Header := [];
+  case Fields.Parse(HeaderText, 'response') of
+    when Ok(Value):
+      begin
+        Headers := Value;
+      end;
+    when Error(Message):
+      begin
+        return Error(Message);
+      end;
+  end case;
 
   return Ok(record
     StatusCode := StatusCode;
     ReasonPhrase := Status[1];
     Headers := Headers;
     BodyOffset := Separator + 4;
-  end)
-end;
+  end record);
+end function;
 
 // Parses one complete buffered HTTP response.
 //
 // Parameters:
 // - `Bytes`: Complete HTTP response bytes.
 // - `RequestMethod`: Method used by the matching request.
-public function ParseResponse(Bytes: array of integer; RequestMethod: string): result of Response, string;
+public function ParseResponse(Bytes: array of integer; RequestMethod: string): result of Types.Response, string;
 begin
   case ParseResponseHead(Bytes) of
-    Ok(Head):
-    begin
-      var RawBody: array of integer := Std.Arrays.Slice(Bytes, Head.BodyOffset, Std.Arrays.Length(Bytes) -
-                                                                                Head.BodyOffset);
-      case ResponseBody(Head.Headers, RawBody, ResponseHasBody(RequestMethod, Head.StatusCode)) of
-        Ok(Body):
-        begin
-          return Ok(record
-            StatusCode := Head.StatusCode;
-            ReasonPhrase := Head.ReasonPhrase;
-            Headers := Head.Headers;
-            Body := Body;
-          end)
-        end;
-        Error(Message):
-        begin
-          return Error(Message)
-        end
-      end
-    end;
-    Error(Message):
-    begin
-      return Error(Message)
-    end
-  end
-end;
+    when Ok(Head):
+      begin
+        var RawBody: array of integer := Arrays.Slice(Bytes, Head.BodyOffset, Arrays.Length(Bytes) -
+                                                                              Head.BodyOffset);
+        case ResponseBody(Head.Headers, RawBody, ResponseHasBody(RequestMethod, Head.StatusCode)) of
+          when Ok(Body):
+            begin
+              return Ok(record
+                StatusCode := Head.StatusCode;
+                ReasonPhrase := Head.ReasonPhrase;
+                Headers := Head.Headers;
+                Body := Body;
+              end record);
+            end;
+          when Error(Message):
+            begin
+              return Error(Message);
+            end;
+        end case;
+      end;
+    when Error(Message):
+      begin
+        return Error(Message);
+      end;
+  end case;
+end function;
 
 // Formats the Host field value for a parsed URI.
 //
 // Parameters:
 // - `UriValue`: Parsed request URI.
-function HostHeader(UriValue: Uri): string;
+function HostHeader(UriValue: Uri2.Uri): string;
 begin
   mutable var Host: string := UriValue.Host;
-  if Std.Str.Contains(Host, ':') then
-  begin
-    Host := ('[' + Host) + ']'
-  end;
+  if Str.Contains(Host, ':') then
+    begin
+      Host := ('[' + Host) + ']';
+    end;
+  end if;
 
   if (UriValue.Scheme = 'http') and (UriValue.Port = 80) then
-  begin
-    return Host
-  end;
+    begin
+      return Host;
+    end;
+  end if;
 
   if (UriValue.Scheme = 'https') and (UriValue.Port = 443) then
-  begin
-    return Host
-  end;
+    begin
+      return Host;
+    end;
+  end if;
 
-  return (Host + ':') + Std.Conv.IntToStr(UriValue.Port)
-end;
+  return (Host + ':') + Conv.IntToStr(UriValue.Port);
+end function;
 
 // Validates and serializes one HTTP/1.1 request.
 //
 // Parameters:
 // - `RequestValue`: Complete request to encode.
 // - `UriValue`: Parsed absolute request URI.
-public function EncodeRequest(RequestValue: Request; UriValue: Uri): result of array of integer, string;
+public function EncodeRequest(RequestValue: Types.Request; UriValue: Uri2.Uri): result of array of integer, string;
 begin
-  if not Std.Http.Method.IsValidToken(RequestValue.Method) then
-  begin
-    return Error('HTTP method must be a non-empty RFC 9110 token')
-  end;
+  if not Method.IsValidToken(RequestValue.Method) then
+    begin
+      return Error('HTTP method must be a non-empty RFC 9110 token');
+    end;
+  end if;
 
-  if ContainsUnsafeText(UriValue.Path) then
-  begin
-    return Error('HTTP request target contains CR or LF')
-  end;
-  mutable var Head: string := (((((((((((((((RequestValue.Method + ' ') + UriValue.Path) + ' HTTP/1.1') + #13) + #10) + 'Host: ') + HostHeader(UriValue)) + #13) + #10) + 'Connection: close') + #13) + #10) + 'Content-Length: ') + Std.Conv.IntToStr(Std.Arrays.Length(RequestValue.Body))) + #13) +
+  if Headers2.ContainsUnsafeText(UriValue.Path) then
+    begin
+      return Error('HTTP request target contains CR or LF');
+    end;
+  end if;
+  mutable var Head: string := (((((((((((((((RequestValue.Method + ' ') + UriValue.Path) + ' HTTP/1.1') + #13) + #10) + 'Host: ') + HostHeader(UriValue)) + #13) + #10) + 'Connection: close') + #13) + #10) + 'Content-Length: ') + Conv.IntToStr(Arrays.Length(RequestValue.Body))) + #13) +
                               #10;
-  for Index: integer := 0 to Std.Arrays.Length(RequestValue.Headers) - 1 do
-  begin
-    var HeaderValue: Header := RequestValue.Headers[Index];
-    if (not Std.Http.Method.IsValidToken(HeaderValue.Name)) or
-       (ContainsUnsafeText(HeaderValue.Value) or (not Std.Http.Fields.IsValidValue(HeaderValue.Value))) then
+  for Index: integer := 0 to Arrays.Length(RequestValue.Headers) - 1 do
     begin
-      return Error('HTTP request contains an invalid header')
-    end;
+      var HeaderValue: Types.Header := RequestValue.Headers[Index];
+      if (not Method.IsValidToken(HeaderValue.Name)) or
+         (Headers2.ContainsUnsafeText(HeaderValue.Value) or (not Fields.IsValidValue(HeaderValue.Value))) then
+        begin
+          return Error('HTTP request contains an invalid header');
+        end;
+      end if;
 
-    if ((IsName(HeaderValue.Name, 'Host') or IsName(HeaderValue.Name, 'Content-Length')) or IsName(HeaderValue.Name, 'Connection')) or
-       IsName(HeaderValue.Name, 'Transfer-Encoding') then
-    begin
-      return Error('Host, Content-Length, Transfer-Encoding, and Connection headers are managed by Std.Http')
-    end;
+      if ((Headers2.IsName(HeaderValue.Name, 'Host') or Headers2.IsName(HeaderValue.Name, 'Content-Length')) or Headers2.IsName(HeaderValue.Name, 'Connection')) or
+         Headers2.IsName(HeaderValue.Name, 'Transfer-Encoding') then
+        begin
+          return Error('Host, Content-Length, Transfer-Encoding, and Connection headers are managed by Std.Http');
+        end;
+      end if;
 
-    Head := ((((Head + HeaderValue.Name) + ': ') + HeaderValue.Value) + #13) + #10
-  end;
+      Head := ((((Head + HeaderValue.Name) + ': ') + HeaderValue.Value) + #13) + #10;
+    end;
+  end for;
 
   Head := (Head + #13) + #10;
-  return Ok(Std.Arrays.Concat(Std.Net.Utf8.Encode(Head), RequestValue.Body))
-end;
+  return Ok(Arrays.Concat(Utf8.Encode(Head), RequestValue.Body));
+end function;
+
+end unit;

@@ -15,11 +15,12 @@ Functional Pascal is a modern, function-first programming language built on Pasc
 
 ```pascal
 program Greeting;
-uses Std.Console;
+
+uses Std.Console as Console;
 
 begin
-  WriteLn('Hello, Functional Pascal')
-end.
+  Console.WriteLn('Hello, Functional Pascal');
+end program;
 ```
 
 ## See also

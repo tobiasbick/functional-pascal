@@ -10,15 +10,17 @@ use std::sync::Arc;
 
 impl Checker {
     pub(super) fn check_enum_type_def(&mut self, td: &TypeDef, enum_ty: &EnumType) {
-        if !self.scopes.define(
-            &td.name,
-            Symbol {
-                ty: Ty::Named(td.name.clone()),
-                mutable: false,
-                kind: SymbolKind::Type,
-                task_bound: false,
-            },
-        ) {
+        if !self.has_collected_type(td)
+            && !self.scopes.define(
+                &td.name,
+                Symbol {
+                    ty: Ty::Named(td.name.clone()),
+                    mutable: false,
+                    kind: SymbolKind::Type,
+                    task_bound: false,
+                },
+            )
+        {
             self.define_type_symbol(td, Ty::Error);
             return;
         }

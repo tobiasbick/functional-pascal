@@ -17,11 +17,28 @@ fn folder_catalog_refreshes_dependencies_and_is_open_order_independent() {
     let manifest = temp.write("app/app.fpasprj", app_manifest(false));
     let consumer = temp.write(
         "app/src/main.fpas",
-        "program App;\n\nuses Demo.Core;\n\nbegin\n  var Value: integer := Answer()\nend.\n",
+        r#"program App;
+
+uses Demo.Core as Core;
+
+begin
+  var Value: integer := Core.Answer();
+end program;
+"#,
     );
     let unrelated = temp.write(
         "unrelated/src/main.fpas",
-        "program Unrelated;\n\nfunction Answer(): integer;\nbegin\n  return 7\nend;\n\nbegin\n  var Value: integer := Answer()\nend.\n",
+        r#"program Unrelated;
+
+function Answer(): integer;
+begin
+  return 7;
+end function;
+
+begin
+  var Value: integer := Answer();
+end program;
+"#,
     );
     temp.write(
         "unrelated/unrelated.fpasprj",
@@ -77,7 +94,13 @@ include = ["src/**/*.fpas"]
 fn source_creation_and_deletion_update_glob_membership() {
     let temp = TempDirectory::new("project-index-sources");
     write_core(&temp);
-    let created = temp.write("core/src/extra.fpas", "unit Demo.Extra;\n");
+    let created = temp.write(
+        "core/src/extra.fpas",
+        r#"unit Demo.Extra;
+end unit;
+
+"#,
+    );
     let mut service = LanguageService::load(temp.path());
     assert!(service.workspace().project_for_source(&created).is_some());
 
@@ -87,7 +110,14 @@ fn source_creation_and_deletion_update_glob_membership() {
         .expect("refresh deleted source");
     assert!(service.workspace().project_for_source(&created).is_none());
 
-    std::fs::write(&created, "unit Demo.Extra;\n").expect("recreate indexed source");
+    std::fs::write(
+        &created,
+        r#"unit Demo.Extra;
+end unit;
+
+"#,
+    )
+    .expect("recreate indexed source");
     service
         .refresh_paths(std::slice::from_ref(&created), &CancellationToken::new())
         .expect("refresh created source");
@@ -116,13 +146,26 @@ fn refresh_preserves_authoritative_open_snapshot() {
     let temp = TempDirectory::new("project-index-open-snapshot");
     let source = write_core(&temp);
     let mut service = LanguageService::load(temp.path());
-    let unsaved = "unit Demo.Core;\n\n// unsaved editor text\n";
+    let unsaved = r#"unit Demo.Core;
+end unit;
+
+
+// unsaved editor text
+"#;
     service
         .documents_mut()
         .open_document(&source, 7, unsaved)
         .expect("open editor snapshot");
-    std::fs::write(&source, "unit Demo.Core;\n\n// external disk text\n")
-        .expect("external source update");
+    std::fs::write(
+        &source,
+        r#"unit Demo.Core;
+end unit;
+
+
+// external disk text
+"#,
+    )
+    .expect("external source update");
 
     service
         .refresh_paths(std::slice::from_ref(&source), &CancellationToken::new())
@@ -144,18 +187,35 @@ fn source_create_and_delete_refresh_project_analysis() {
         "core/core.fpasprj",
         "[project]\nname = \"core\"\nkind = \"library\"\n\n[sources]\ninclude = [\"src/**/*.fpas\"]\n",
     );
-    temp.write("core/src/other.fpas", "unit Demo.Other;\n");
+    temp.write(
+        "core/src/other.fpas",
+        r#"unit Demo.Other;
+end unit;
+
+"#,
+    );
     temp.write("app/app.fpasprj", app_manifest(true));
     let main = temp.write(
         "app/src/main.fpas",
-        "program App;\n\nuses Demo.Core;\n\nbegin var Value: integer := Answer() end.\n",
+        r#"program App;
+
+uses Demo.Core as Core;
+
+begin var Value: integer := Core.Answer(); end program;
+"#,
     );
     let mut service = LanguageService::load(temp.path());
     assert!(service.analyze_document(&main).is_err());
 
     let core = temp.write(
         "core/src/core.fpas",
-        "unit Demo.Core;\n\npublic function Answer(): integer;\nbegin return 42 end;\n",
+        r#"unit Demo.Core;
+
+public function Answer(): integer;
+begin return 42; end function;
+end unit;
+
+"#,
     );
     service
         .refresh_paths(std::slice::from_ref(&core), &CancellationToken::new())
@@ -181,13 +241,30 @@ fn export_changes_refresh_consumer_navigation() {
     let core_manifest_path = temp.write("core/core.fpasprj", &core_manifest("Demo.Core"));
     let declaration = temp.write(
         "core/src/core.fpas",
-        "unit Demo.Core;\n\npublic function Answer(): integer;\nbegin return 42 end;\n",
+        r#"unit Demo.Core;
+
+public function Answer(): integer;
+begin return 42; end function;
+end unit;
+
+"#,
     );
-    temp.write("core/src/other.fpas", "unit Demo.Other;\n");
+    temp.write(
+        "core/src/other.fpas",
+        r#"unit Demo.Other;
+end unit;
+
+"#,
+    );
     temp.write("app/app.fpasprj", app_manifest(true));
     temp.write(
         "app/src/main.fpas",
-        "program App;\n\nuses Demo.Core;\n\nbegin var Value: integer := Answer() end.\n",
+        r#"program App;
+
+uses Demo.Core as Core;
+
+begin var Value: integer := Core.Answer(); end program;
+"#,
     );
     let offset = std::fs::read_to_string(&declaration)
         .expect("core source")
@@ -245,7 +322,15 @@ include = ["src/**/*.fpas"]
     );
     temp.write(
         "core/src/core.fpas",
-        "unit Demo.Core;\n\npublic function Answer(): integer;\nbegin\n  return 42\nend;\n",
+        r#"unit Demo.Core;
+
+public function Answer(): integer;
+begin
+  return 42;
+end function;
+end unit;
+
+"#,
     )
 }
 

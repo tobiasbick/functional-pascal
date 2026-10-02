@@ -1,7 +1,7 @@
 program TuiInvalidRgbChannelRuntimeError;
 
-uses Std.Tui;
+uses Std.Tui as Tui;
 
 begin
-  TuiColor.FromRgb(0, 256, 0)
-end.
+  Tui.TuiColor.FromRgb(0, 256, 0);
+end program;

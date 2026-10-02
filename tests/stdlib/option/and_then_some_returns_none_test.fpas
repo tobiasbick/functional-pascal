@@ -1,21 +1,23 @@
 program T;
 
-uses Std.Console, Std.Options;
+uses Std.Console as Console;
+uses Std.Options as Options;
 
 function PositiveOk(V: integer): option of string;
 begin
   if V > 0 then
-  begin
-    return Some('ok')
-  end
+    begin
+      return Some('ok');
+    end;
   else
-  begin
-    return None
-  end
-end;
+    begin
+      return None;
+    end;
+  end if;
+end function;
 
 begin
   var O: option of integer := Some(-1);
-  var M: option of string := AndThen(O, PositiveOk);
-  WriteLn(IsNone(M))
-end.
+  var M: option of string := Options.AndThen(O, PositiveOk);
+  Console.WriteLn(Options.IsNone(M));
+end program;

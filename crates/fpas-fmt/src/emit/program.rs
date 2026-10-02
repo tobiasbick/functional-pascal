@@ -1,6 +1,6 @@
 //! `program` and `unit` compilation units.
 
-use fpas_parser::{Program, QualifiedId, Unit};
+use fpas_parser::{Import, Program, Unit};
 
 use crate::comments::{
     CommentMap, emit_leading_comments, emit_trailing_comments, emit_trailing_end_comments,
@@ -10,7 +10,6 @@ use super::Emitter;
 use super::decl::emit_decls;
 use super::stmt::emit_stmts_in_block;
 use super::types::emit_qualified_id;
-use super::wrap::{emit_wrapped_comma_list, measure_emit};
 
 /// Formats a `program` compilation unit.
 #[must_use]
@@ -33,9 +32,6 @@ fn emit_program(emitter: &mut Emitter, program: &Program, comments: &CommentMap)
     emitter.write(&format!("program {};", program.name));
     finish_header_line(emitter, comments, program.span.offset);
     emitter.blank_line();
-    if let Some(anchor) = comments.uses_anchor() {
-        emit_leading_comments(emitter, comments, anchor, false);
-    }
     emit_optional_uses(emitter, &program.uses, comments);
     if !program.declarations.is_empty() {
         emit_decls(emitter, &program.declarations, comments);
@@ -47,7 +43,7 @@ fn emit_program(emitter: &mut Emitter, program: &Program, comments: &CommentMap)
     emitter.writeln("begin");
     emitter.with_indent(|inner| emit_stmts_in_block(inner, &program.body, comments));
     emitter.write_current_indent();
-    emitter.write("end.");
+    emitter.write("end program;");
     emit_trailing_comments(emitter, comments, program.span.offset);
     if !emitter.ends_with_newline() {
         emitter.write_line_end();
@@ -62,51 +58,39 @@ fn emit_unit(emitter: &mut Emitter, unit: &Unit, comments: &CommentMap) {
     emitter.write(";");
     finish_header_line(emitter, comments, unit.span.offset);
     emitter.blank_line();
-    if let Some(anchor) = comments.uses_anchor() {
-        emit_leading_comments(emitter, comments, anchor, false);
-    }
     emit_optional_uses(emitter, &unit.uses, comments);
     if !unit.declarations.is_empty() {
         emit_decls(emitter, &unit.declarations, comments);
+        emitter.blank_line();
+    }
+    emitter.write_current_indent();
+    emitter.write("end unit;");
+    emit_trailing_comments(emitter, comments, unit.span.offset);
+    if !emitter.ends_with_newline() {
+        emitter.write_line_end();
     }
     emit_trailing_end_comments(emitter, comments);
 }
 
-fn emit_optional_uses(emitter: &mut Emitter, uses: &[QualifiedId], comments: &CommentMap) {
+fn emit_optional_uses(emitter: &mut Emitter, uses: &[Import], comments: &CommentMap) {
     if uses.is_empty() {
         return;
     }
-    if uses.iter().any(|unit_name| {
+    for unit_name in uses {
         let offset = unit_name.span.offset;
-        !comments.leading_at(offset).is_empty() || !comments.trailing_at(offset).is_empty()
-    }) {
-        emit_commented_uses(emitter, uses, comments);
-        emitter.blank_line();
-        return;
-    }
-    let items: Vec<String> = uses
-        .iter()
-        .map(|unit_name| measure_emit(|inner| emit_qualified_id(inner, unit_name)))
-        .collect();
-    emit_wrapped_comma_list(emitter, "uses ", crate::style::INDENT_WIDTH, &items, ";");
-    emitter.blank_line();
-}
-
-fn emit_commented_uses(emitter: &mut Emitter, uses: &[QualifiedId], comments: &CommentMap) {
-    emitter.writeln("uses");
-    emitter.with_indent(|inner| {
-        for (index, unit_name) in uses.iter().enumerate() {
-            let offset = unit_name.span.offset;
-            emit_leading_comments(inner, comments, offset, false);
-            inner.write_current_indent();
-            emit_qualified_id(inner, unit_name);
-            inner.write(if index + 1 == uses.len() { ";" } else { "," });
-            emit_trailing_comments(inner, comments, offset);
-            if !inner.ends_with_newline() {
-                inner.write_line_end();
-            }
+        emit_leading_comments(emitter, comments, offset, false);
+        emitter.write_current_indent();
+        emitter.write("uses ");
+        emitter.write(&unit_name.parts.join("."));
+        emitter.write(" as ");
+        emitter.write(&unit_name.alias);
+        emitter.write(";");
+        emit_trailing_comments(emitter, comments, offset);
+        if !emitter.ends_with_newline() {
+            emitter.write_line_end();
         }
-    });
+    }
+    emitter.blank_line();
 }
 
 fn finish_header_line(emitter: &mut Emitter, comments: &CommentMap, owner_start: usize) {
@@ -133,46 +117,67 @@ mod tests {
 
     #[test]
     fn minimal_program() {
-        let formatted = parse_and_format("program Hello; begin WriteLn('Hello, World!') end.");
+        let formatted =
+            parse_and_format(r#"program Hello; begin WriteLn('Hello, World!'); end program;"#);
         assert_eq!(
             formatted,
-            "program Hello;\n\nbegin\n  WriteLn('Hello, World!')\nend.\n"
+            r#"program Hello;
+
+begin
+  WriteLn('Hello, World!');
+end program;
+"#
         );
     }
 
     #[test]
     fn program_with_uses() {
         let formatted = parse_and_format(
-            "program Hello; uses Std.Console; begin WriteLn('Hello, World!') end.",
+            r#"program Hello;  uses Std.Console as Console; begin Console.WriteLn('Hello, World!'); end program;"#,
         );
         assert_eq!(
             formatted,
-            "program Hello;\n\nuses Std.Console;\n\nbegin\n  WriteLn('Hello, World!')\nend.\n"
+            r#"program Hello;
+
+uses Std.Console as Console;
+
+begin
+  Console.WriteLn('Hello, World!');
+end program;
+"#
         );
     }
 
     #[test]
-    fn unit_clamp_expands_branch_blocks() {
-        let source = "unit MyApp.Utils; uses Std.Math; function Clamp(Value: integer; Min: integer; Max: integer): integer; begin if Value < Min then return Min else if Value > Max then return Max else return Value end; function IsBlank(S: string): boolean; begin return Length(Trim(S)) = 0 end;";
+    fn unit_clamp_preserves_branch_lists() {
+        let source = r#"unit MyApp.Utils;  uses Std.Math as Math; function Clamp(Value: integer; Min: integer; Max: integer): integer; begin if Value < Min then return Min; else if Value > Max then return Max; else return Value; end if; end if; end function; function IsBlank(S: string): boolean; begin return Length(Trim(S)) = 0; end function;
+end unit;
+"#;
         let formatted = parse_and_format(source);
-        assert!(formatted.starts_with("unit MyApp.Utils;\n\nuses Std.Math;\n\n"));
-        assert!(formatted.contains("if Value < Min then\n  begin\n    return Min\n  end"));
+        assert!(formatted.starts_with(
+            r#"unit MyApp.Utils;
+
+uses Std.Math as Math;
+
+"#
+        ));
+        assert!(formatted.contains("if Value < Min then\n    return Min;\n"));
         assert!(formatted.contains("function IsBlank"));
     }
 
     #[test]
     fn program_type_then_begin() {
         let formatted = parse_and_format(
-            "program T; type Point = record X: integer; Y: integer; end; begin var P: Point := record X := 1; Y := 2; end end.",
+            r#"program T;  type Point = record X: integer; Y: integer; end record; begin var P: Point := record X := 1; Y := 2; end record; end program;"#,
         );
-        assert!(formatted.contains("type\n  Point = record\n"));
-        assert!(formatted.contains("end;\n\nbegin\n"));
+        assert!(formatted.contains("type Point = record\n"));
+        assert!(formatted.contains("end record;\n\nbegin\n"));
     }
 
     #[test]
     fn array_literal_short_stays_single_line() {
         let formatted = parse_and_format(
-            "program T; begin var Words: array of string := ['red', 'green', 'blue']; end.",
+            r#"program T; begin var Words: array of string := ['red', 'green', 'blue']; end program;"#,
         );
         assert!(
             formatted.contains("['red', 'green', 'blue']"),
@@ -183,15 +188,20 @@ mod tests {
     #[test]
     fn long_uses_clause_wraps() {
         let formatted = parse_and_format(
-            "program LongUses; uses Std.Console, Std.Conv, Std.Arrays, Std.Dictionaries, Std.Options, Std.Results, Std.String, MyApp.Very.Long.Namespace.One, MyApp.Very.Long.Namespace.Two; begin WriteLn('ok') end.",
+            r#"program LongUses;  uses Std.Console as Console; uses Std.Conv as Conv; uses Std.Arrays as Arrays; uses Std.Dictionaries as Dictionaries; uses Std.Options as Options; uses Std.Results as Results; uses Std.String as String; uses MyApp.Very.Long.Namespace.One as One; uses MyApp.Very.Long.Namespace.Two as Two; begin Console.WriteLn('ok'); end program;"#,
         );
-        assert!(formatted.contains("uses\n"));
+        assert!(formatted.contains("uses Std.Console as Console;\nuses Std.Conv as Conv;\n"));
         assert!(formatted.contains("MyApp.Very.Long.Namespace.Two"));
     }
 
     #[test]
     fn round_trip_hello() {
-        let source = "program Hello;\nuses Std.Console;\nbegin\n  WriteLn('Hello, World!')\nend.\n";
+        let source = r#"program Hello;
+uses Std.Console as Console;
+begin
+  Console.WriteLn('Hello, World!');
+end program;
+"#;
         let formatted = parse_and_format(source);
         let (_, errors) = parse_compilation_unit(&formatted);
         assert!(errors.is_empty(), "{errors:?}");
@@ -204,9 +214,15 @@ mod tests {
     #[test]
     fn unit_qualified_name() {
         let formatted = parse_and_format(
-            "unit App.Math; function Scale(Value: integer): integer; begin return Value * 2 end;",
+            r#"unit App.Math; function Scale(Value: integer): integer; begin return Value * 2; end function;
+end unit;
+"#,
         );
-        assert!(formatted.starts_with("unit App.Math;\n\n"));
+        assert!(formatted.starts_with(
+            r#"unit App.Math;
+
+"#
+        ));
         assert!(formatted.contains("function Scale"));
     }
 }

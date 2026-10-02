@@ -13,13 +13,13 @@ fn server() -> DapServer {
 
 function Helper(Value: integer): integer;
 begin
-  return Value + 1
-end;
+  return Value + 1;
+end function;
 
 begin
   var First: integer := Helper(1);
-  var Second: integer := Helper(First)
-end.
+  var Second: integer := Helper(First);
+end program;
 "#;
     let (program, diagnostics) = fpas_parser::parse(source);
     assert!(diagnostics.is_empty(), "{diagnostics:?}");

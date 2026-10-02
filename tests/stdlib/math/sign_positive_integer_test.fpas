@@ -1,7 +1,8 @@
 program T;
 
-uses Std.Console, Std.Math;
+uses Std.Console as Console;
+uses Std.Math as Math;
 
 begin
-  WriteLn(Sign(42))
-end.
+  Console.WriteLn(Math.Sign(42));
+end program;

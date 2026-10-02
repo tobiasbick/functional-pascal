@@ -7,19 +7,47 @@ fn diamond_dependency_graph() {
     support::write_program_project_file(&project_file, "src/main.fpas", &["src/*.fpas"]);
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.A, App.B, Std.Console;\nbegin\n  WriteLn(FromA() + FromB())\nend.\n",
+        r#"program Main;
+uses App.A as A; uses App.B as B; uses Std.Console as Console;
+begin
+  Console.WriteLn(A.FromA() + B.FromB());
+end program;
+"#,
     );
     write_text(
         &cwd.join("src/a.fpas"),
-        "unit App.A;\nuses App.Shared;\npublic function FromA(): integer;\nbegin\n  return Base() + 1\nend;\n",
+        r#"unit App.A;
+uses App.Shared as Shared;
+public function FromA(): integer;
+begin
+  return Shared.Base() + 1;
+end function;
+end unit;
+
+"#,
     );
     write_text(
         &cwd.join("src/b.fpas"),
-        "unit App.B;\nuses App.Shared;\npublic function FromB(): integer;\nbegin\n  return Base() + 10\nend;\n",
+        r#"unit App.B;
+uses App.Shared as Shared;
+public function FromB(): integer;
+begin
+  return Shared.Base() + 10;
+end function;
+end unit;
+
+"#,
     );
     write_text(
         &cwd.join("src/shared.fpas"),
-        "unit App.Shared;\npublic function Base(): integer;\nbegin\n  return 100\nend;\n",
+        r#"unit App.Shared;
+public function Base(): integer;
+begin
+  return 100;
+end function;
+end unit;
+
+"#,
     );
 
     let (exit_code, stdout_output, stderr_output) =
@@ -37,11 +65,36 @@ fn three_unit_cyclic_dependency() {
     support::write_program_project_file(&project_file, "src/main.fpas", &["src/*.fpas"]);
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.A;\nbegin\nend.\n",
+        r#"program Main;
+uses App.A as A;
+begin null;
+end program;
+"#,
     );
-    write_text(&cwd.join("src/a.fpas"), "unit App.A;\nuses App.B;\n");
-    write_text(&cwd.join("src/b.fpas"), "unit App.B;\nuses App.C;\n");
-    write_text(&cwd.join("src/c.fpas"), "unit App.C;\nuses App.A;\n");
+    write_text(
+        &cwd.join("src/a.fpas"),
+        r#"unit App.A;
+uses App.B as B;
+end unit;
+
+"#,
+    );
+    write_text(
+        &cwd.join("src/b.fpas"),
+        r#"unit App.B;
+uses App.C as C;
+end unit;
+
+"#,
+    );
+    write_text(
+        &cwd.join("src/c.fpas"),
+        r#"unit App.C;
+uses App.A as A;
+end unit;
+
+"#,
+    );
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);
     fs::remove_dir_all(&cwd).expect("temp directory must be removed");
@@ -60,9 +113,20 @@ fn self_import_reports_cycle() {
     support::write_program_project_file(&project_file, "src/main.fpas", &["src/*.fpas"]);
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.A;\nbegin\nend.\n",
+        r#"program Main;
+uses App.A as A;
+begin null;
+end program;
+"#,
     );
-    write_text(&cwd.join("src/a.fpas"), "unit App.A;\nuses App.A;\n");
+    write_text(
+        &cwd.join("src/a.fpas"),
+        r#"unit App.A;
+uses App.A as A;
+end unit;
+
+"#,
+    );
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);
     fs::remove_dir_all(&cwd).expect("temp directory must be removed");
@@ -89,17 +153,17 @@ members = ["common/lib.fpasprj", "left/lib.fpasprj", "right/lib.fpasprj", "app/a
         (
             "common",
             "",
-            "public function Value(): integer; begin return 1 end;",
+            "public function Value(): integer; begin return 1; end function;",
         ),
         (
             "left",
             "workspace = [\"common\"]",
-            "uses Repro.common; public function LeftValue(): integer; begin return Value() end;",
+            "uses Repro.common as Common; public function LeftValue(): integer; begin return Common.Value(); end function;",
         ),
         (
             "right",
             "workspace = [\"common\"]",
-            "uses Repro.common; public function RightValue(): integer; begin return Value() end;",
+            "uses Repro.common as Common; public function RightValue(): integer; begin return Common.Value(); end function;",
         ),
     ] {
         write_text(
@@ -119,7 +183,7 @@ units = ["Repro.{name}"]
         );
         write_text(
             &cwd.join(name).join("src/unit.fpas"),
-            &format!("unit Repro.{name}; {body}"),
+            &format!("unit Repro.{name}; {body} end unit;"),
         );
     }
     let project = cwd.join("app/app.fpasprj");
@@ -137,7 +201,7 @@ workspace = ["left", "right"]
     );
     write_text(
         &cwd.join("app/main.fpas"),
-        "program App; uses Repro.left, Repro.right, Std.Console; begin WriteLn(LeftValue() + RightValue()) end.",
+        r#"program App;  uses Repro.left as left; uses Repro.right as right; uses Std.Console as Console; begin Console.WriteLn(left.LeftValue() + right.RightValue()); end program;"#,
     );
     for (command, path) in [
         ("check", &workspace),

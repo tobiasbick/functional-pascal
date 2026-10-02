@@ -1,18 +1,17 @@
 # Standard library reference (`Std.*`)
 
-Standard-library units under the reserved `Std` namespace. Import via `uses` and refer to symbols by short or fully qualified names:
+Standard-library units live under the reserved `Std` namespace. Import each unit
+with an explicit alias and access its members through that alias:
 
 ```pascal
 program Hello;
 
-uses
-  Std.Console,
-  Std.Math;
+uses Std.Console as Console;
+uses Std.Math as Math;
 
 begin
-  WriteLn(Sqrt(16.0));
-  Std.Console.WriteLn(Std.Math.Sqrt(16.0));
-end.
+  Console.WriteLn(Math.Sqrt(16.0));
+end program;
 ```
 
 See [Units](../program-structure/units.md) for `uses` rules and the reserved `Std` namespace.
@@ -29,7 +28,8 @@ public; its private implementation units cannot be imported by applications. Use
 `fpas test --std-lib <directory> …` to replace the complete source standard library for that
 invocation.
 
-Each unit page is a **self-contained handbook**: importing and short vs qualified names, a **quick reference** table, then routines and types with parameters, behavior, edge cases, and examples.
+Each unit page describes imports, alias-qualified access, a quick reference,
+and routines and types with parameters, behavior, edge cases, and examples.
 
 Intrinsic units implemented by the compiler, VM, or Rust runtime also expose
 generated editor declarations under [`lib/api/Std/`](../../../lib/api/Std/).
@@ -63,12 +63,12 @@ intrinsic API or handbook change with
 ### Console I/O
 
 ```pascal
-uses Std.Console;
+uses Std.Console as Console;
 
-WriteLn('Hello!');
-TextColorRGB(255, 160, 0);
-WriteLn('Accent text');
-NormVideo();
+Console.WriteLn('Hello!');
+Console.TextColorRGB(255, 160, 0);
+Console.WriteLn('Accent text');
+Console.NormVideo();
 ```
 
 Fullscreen code can batch explicit cells with `BeginFrame`, `WriteCells`, and `Present`; see
@@ -77,10 +77,13 @@ Fullscreen code can batch explicit cells with `BeginFrame`, `WriteCells`, and `P
 ### Error handling helpers
 
 ```pascal
-uses Std.Results, Std.Options;
+uses Std.Console as Console;
 
-var R: Result of integer, string := Ok(42);
-WriteLn(Std.Results.Unwrap(R));
+uses Std.Results as Results;
+uses Std.Options as Options;
+
+  var R: result of integer, string := Ok(42);
+  Console.WriteLn(Results.Unwrap(R));
 ```
 
 Language rules: [Error handling](../language/error-handling/README.md).

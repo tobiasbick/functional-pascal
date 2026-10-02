@@ -17,26 +17,55 @@ fn format_idempotently(source: &str) -> String {
 
 #[test]
 fn callable_body_comments_stay_with_each_begin() {
-    let source = "program T;\nprocedure First();\n// first body\nbegin\nend;\nprocedure Second();\n// second body\nbegin\nend;\n// main body\nbegin\nend.";
+    let source = r#"program T;
+procedure First();
+// first body
+begin null;
+end procedure;
+procedure Second();
+// second body
+begin null;
+end procedure;
+// main body
+begin null; end program;"#;
     let formatted = format_idempotently(source);
 
     assert!(formatted.contains("procedure First();\n// first body\nbegin"));
     assert!(formatted.contains("procedure Second();\n// second body\nbegin"));
-    assert!(formatted.contains("end;\n\n// main body\nbegin"));
+    assert!(formatted.contains("end procedure;\n\n// main body\nbegin"));
 }
 
 #[test]
 fn nested_routine_body_comments_use_structural_owners() {
-    let source = "unit Demo;\nprocedure Outer();\nprocedure Inner();\n// inner body\nbegin\nend;\n// outer body\nbegin\nend;";
+    let source = r#"unit Demo;
+procedure Outer();
+procedure Inner();
+// inner body
+begin null;
+end procedure;
+// outer body
+begin null;
+end procedure;
+end unit;
+"#;
     let formatted = format_idempotently(source);
 
     assert!(formatted.contains("procedure Inner();\n// inner body\nbegin"));
-    assert!(formatted.contains("end;\n// outer body\nbegin"));
+    assert!(formatted.contains("end procedure;\n// outer body\nbegin"));
 }
 
 #[test]
 fn closure_comments_survive_expression_emission() {
-    let source = "program T;\nbegin\n  var Handler: procedure() := procedure()\n  // closure body\n  begin\n    // setup\n    WriteLn('ok') // closure trail\n  end;\n  Handler()\nend.";
+    let source = r#"program T;
+begin
+  var Handler: procedure() := procedure()
+  // closure body
+  begin
+    // setup
+    WriteLn('ok'); // closure trail
+  end procedure;
+  Handler();
+end program;"#;
     let formatted = format_idempotently(source);
 
     for comment in ["// closure body", "// setup", "// closure trail"] {
@@ -49,7 +78,26 @@ fn closure_comments_survive_expression_emission() {
 
 #[test]
 fn record_enum_and_routine_eol_comments_remain_on_member_lines() {
-    let source = "program T;\ntype Shape = enum\n  // leading member\n  Plain; // plain\n  Valued = 2; // valued\n  Circle(Radius: real); // payload\nend;\nCounter = record\n  Value: integer; // field\n  function ReadValue(Self: Counter): integer;\n  begin\n    return Self.Value\n  end; // method\n  property Current: integer read ReadValue; // property\n  event Changed: procedure() read ReadChanged write WriteChanged; // event\nend;\nfunction Top(): integer;\nbegin\n  return 1\nend; // top routine\nbegin\nend.";
+    let source = r#"program T;
+ type Shape = enum
+  // leading member
+  Plain; // plain
+  Valued = 2; // valued
+  Circle(Radius: real); // payload
+end enum;
+type Counter = record
+  Value: integer; // field
+  function ReadValue(Self: Counter): integer;
+  begin return Self.Value;
+  end function; // method
+  property Current: integer read ReadValue; // property
+  event Changed: procedure() read ReadChanged write WriteChanged; // event
+end record;
+function Top(): integer;
+begin
+  return 1;
+end function; // top routine
+begin null; end program;"#;
     let formatted = format_idempotently(source);
 
     for line in [
@@ -57,62 +105,78 @@ fn record_enum_and_routine_eol_comments_remain_on_member_lines() {
         "Valued = 2; // valued",
         "Circle(Radius: real); // payload",
         "Value: integer; // field",
-        "end; // method",
+        "end function; // method",
         "property Current: integer read ReadValue; // property",
         "event Changed: procedure() read ReadChanged write WriteChanged; // event",
-        "end; // top routine",
+        "end function; // top routine",
     ] {
         assert!(formatted.contains(line), "missing `{line}`:\n{formatted}");
     }
-    assert!(formatted.contains("// leading member\n    Plain"));
+    assert!(formatted.contains("// leading member\n  Plain"));
 }
 
 #[test]
 fn explicit_block_eol_comment_precedes_the_statement_separator() {
-    let source = "program T; begin if true then begin WriteLn('yes') end; // block tail\nWriteLn('done') end.";
+    let source = r#"program T; begin if true then begin WriteLn('yes'); end; end if; // block tail
+WriteLn('done'); end program;"#;
     let formatted = format_idempotently(source);
 
-    assert!(formatted.contains("end; // block tail\n"), "{formatted}");
+    assert!(formatted.contains("end if; // block tail\n"), "{formatted}");
     assert!(!formatted.contains("// block tail;"), "{formatted}");
 }
 
 #[test]
 fn cr_only_input_preserves_comment_line_ownership() {
-    let source = "program T;\rbegin\r  // setup\r  WriteLn('ok') // trail\rend. // tail\r";
+    let source = "program T;\rbegin\r  // setup\r  WriteLn('ok'); // trail\rend program; // tail\r";
     let formatted = format_idempotently(source);
 
     assert!(!formatted.contains('\r'));
-    assert!(formatted.contains("// setup\n  WriteLn('ok') // trail\n"));
-    assert!(formatted.contains("end. // tail\n"));
+    assert!(formatted.contains("// setup\n  WriteLn('ok'); // trail\n"));
+    assert!(formatted.contains("end program; // tail\n"));
 }
 
 #[test]
 fn branch_comments_survive_single_and_explicit_block_bodies() {
-    let source = "program T; begin if true then // single branch\nWriteLn('single'); if false then\n// explicit block\nbegin WriteLn('block') end end.";
+    let source = r#"program T; begin if true then // single branch
+WriteLn('single'); end if; if false then
+// explicit block
+begin WriteLn('block'); end; end if; end program;"#;
     let formatted = format_idempotently(source);
 
     assert!(formatted.contains("// single branch\n    WriteLn('single')"));
-    assert!(formatted.contains("then\n  // explicit block\n  begin"));
+    assert!(formatted.contains("then\n    // explicit block\n    begin"));
 }
 
 #[test]
 fn compilation_and_routine_header_comments_stay_on_header_lines() {
-    let program_source = "program T; // program header\nprocedure Work(); // routine header\nbegin\nend; // routine end\nbegin\nend.";
+    let program_source = r#"program T; // program header
+procedure Work(); // routine header
+begin null;
+end procedure; // routine end
+begin null; end program;"#;
     let program = format_idempotently(program_source);
     assert!(program.contains("program T; // program header\n"));
     assert!(program.contains("procedure Work(); // routine header\n"));
-    assert!(program.contains("end; // routine end\n"));
+    assert!(program.contains("end procedure; // routine end\n"));
 
-    let unit_source =
-        "unit Demo; // unit header\nprocedure Work(); // unit routine header\nbegin\nend;";
+    let unit_source = r#"unit Demo; // unit header
+procedure Work(); // unit routine header
+begin null;
+end procedure;
+end unit;
+"#;
     let unit = format_idempotently(unit_source);
-    assert!(unit.contains("unit Demo; // unit header\n"));
+    assert!(unit.contains(
+        r#"unit Demo; // unit header
+"#
+    ));
     assert!(unit.contains("procedure Work(); // unit routine header\n"));
 }
 
 #[test]
 fn eol_comment_stays_on_its_code_line() {
-    let source = "program T; begin var A: integer := 1; // value\nWriteLn(A) end.";
+    let source = r#"program T; begin var A: integer := 1; // value
+WriteLn(A); end program;"#;
     let formatted = format_idempotently(source);
 
     assert!(formatted.contains("var A: integer := 1; // value\n"));
@@ -120,19 +184,31 @@ fn eol_comment_stays_on_its_code_line() {
 
 #[test]
 fn uses_item_comments_survive_formatting() {
-    let source = "program T;\nuses Std.Console, // io\n  Std.Conv;\nbegin\nend.";
+    let source = r#"program T;
+ uses Std.Console as Console; // io
+  uses Std.Conv as Conv;
+begin null;
+end program;"#;
     let formatted = format_idempotently(source);
 
-    assert!(formatted.contains("Std.Console, // io\n"), "{formatted}");
+    assert!(
+        formatted.contains("uses Std.Console as Console; // io\n"),
+        "{formatted}"
+    );
 }
 
 #[test]
 fn standalone_comment_between_uses_items_survives_formatting() {
-    let source = "program T;\nuses Std.Console,\n  // conversions\n  Std.Conv;\nbegin\nend.";
+    let source = r#"program T;
+ uses Std.Console as Console;
+  // conversions
+  uses Std.Conv as Conv;
+begin null;
+end program;"#;
     let formatted = format_idempotently(source);
 
     assert!(
-        formatted.contains("Std.Console,\n  // conversions\n  Std.Conv;"),
+        formatted.contains("uses Std.Console as Console;\n// conversions\nuses Std.Conv as Conv;"),
         "{formatted}"
     );
 }

@@ -61,28 +61,28 @@ fn http_client_sends_request_and_decodes_chunked_response() {
         &format!(
             r#"program HttpClientRoundtrip;
 
-uses Std.Console, Std.Http, Std.Net.Utf8;
+uses Std.Console as Console; uses Std.Http as Http; uses Std.Net.Utf8 as Utf8;
 
 begin
-  mutable var RequestValue: Request := Request.Create('POST', 'http://127.0.0.1:{port}/v1/chat');
-  RequestValue.Headers := [Header.Create('X-Test', 'yes')];
-  RequestValue.Body := Std.Net.Utf8.Encode('ping');
-  case Send(RequestValue) of
-    Ok(ResponseValue):
+  mutable var RequestValue: Http.Request := Http.Request.Create('POST', 'http://127.0.0.1:{port}/v1/chat');
+  RequestValue.Headers := [Http.Header.Create('X-Test', 'yes')];
+  RequestValue.Body := Utf8.Encode('ping');
+  case Http.Send(RequestValue) of
+    when Ok(ResponseValue):
     begin
-      WriteLn(ResponseValue.StatusCode);
-      case BodyText(ResponseValue) of
-        Ok(Text): WriteLn(Text);
-        Error(Message): panic(Message)
-      end;
-      case HeaderValue(ResponseValue, 'content-type') of
-        Some(Value): WriteLn(Value);
-        None: panic('missing content type')
-      end
+      Console.WriteLn(ResponseValue.StatusCode);
+      case Http.BodyText(ResponseValue) of
+        when Ok(Text): Console.WriteLn(Text);
+        when Error(Message): panic(Message);
+      end case;
+      case Http.HeaderValue(ResponseValue, 'content-type') of
+        when Some(Value): Console.WriteLn(Value);
+        when None: panic('missing content type');
+      end case;
     end;
-    Error(Message): panic(Message)
-  end
-end.
+    when Error(Message): panic(Message);
+  end case;
+end program;
 "#
         ),
     );
@@ -97,9 +97,8 @@ end.
         &cwd,
     );
     std::fs::remove_dir_all(&cwd).expect("temporary directory must be removed");
-    server.join().expect("HTTP fixture must finish");
-
     assert_eq!(exit, 0, "stderr: {stderr}");
+    server.join().expect("HTTP fixture must finish");
     assert_eq!(stdout, "200\nhello world\ntext/plain\n");
 }
 
@@ -151,55 +150,55 @@ fn http_client_supports_standard_extension_and_head_methods() {
         &format!(
             r#"program HttpClientMethods;
 
-uses Std.Arrays, Std.Console, Std.Http, Std.Str;
+uses Std.Arrays as Arrays; uses Std.Console as Console; uses Std.Http as Http; uses Std.Str as Str;
 
-procedure Expect(RequestValue: Request; ExpectedBodyLength: integer);
+procedure Expect(RequestValue: Http.Request; ExpectedBodyLength: integer);
 begin
-  case Send(RequestValue) of
-    Ok(ResponseValue):
+  case Http.Send(RequestValue) of
+    when Ok(ResponseValue):
     begin
       if ResponseValue.StatusCode <> 200 then
       begin
-        panic('unexpected HTTP status')
-      end;
+        panic('unexpected HTTP status');
+      end; end if;
 
-      if Std.Arrays.Length(ResponseValue.Body) <> ExpectedBodyLength then
+      if Arrays.Length(ResponseValue.Body) <> ExpectedBodyLength then
       begin
-        panic('unexpected HTTP body length')
-      end
+        panic('unexpected HTTP body length');
+      end; end if;
     end;
-    Error(Message):
+    when Error(Message):
     begin
-      panic(Message)
-    end
-  end
-end;
+      panic(Message);
+    end;
+  end case;
+end procedure;
 
 begin
   var BaseUrl: string := 'http://127.0.0.1:{port}';
-  Expect(Request.Get(BaseUrl + '/get'), 2);
-  Expect(Request.Post(BaseUrl + '/post'), 2);
-  Expect(Request.Put(BaseUrl + '/put'), 2);
-  Expect(Request.Patch(BaseUrl + '/patch'), 2);
-  Expect(Request.Delete(BaseUrl + '/delete'), 2);
-  Expect(Request.Head(BaseUrl + '/head'), 0);
-  Expect(Request.Options(BaseUrl + '/options'), 2);
-  Expect(Request.Create('PROPFIND', BaseUrl + '/webdav'), 2);
-  case Send(Request.Create('BAD@METHOD', BaseUrl + '/invalid')) of
-    Ok(ResponseValue):
+  Expect(Http.Request.Get(BaseUrl + '/get'), 2);
+  Expect(Http.Request.Post(BaseUrl + '/post'), 2);
+  Expect(Http.Request.Put(BaseUrl + '/put'), 2);
+  Expect(Http.Request.Patch(BaseUrl + '/patch'), 2);
+  Expect(Http.Request.Delete(BaseUrl + '/delete'), 2);
+  Expect(Http.Request.Head(BaseUrl + '/head'), 0);
+  Expect(Http.Request.Options(BaseUrl + '/options'), 2);
+  Expect(Http.Request.Create('PROPFIND', BaseUrl + '/webdav'), 2);
+  case Http.Send(Http.Request.Create('BAD@METHOD', BaseUrl + '/invalid')) of
+    when Ok(ResponseValue):
     begin
-      panic('invalid HTTP method was accepted')
+      panic('invalid HTTP method was accepted');
     end;
-    Error(Message):
+    when Error(Message):
     begin
-      if not Std.Str.Contains(Message, 'RFC 9110 token') then
+      if not Str.Contains(Message, 'RFC 9110 token') then
       begin
-        panic(Message)
-      end
-    end
-  end;
-  WriteLn('ok')
-end.
+        panic(Message);
+      end; end if;
+    end;
+  end case;
+  Console.WriteLn('ok');
+end program;
 "#
         ),
     );
@@ -214,9 +213,8 @@ end.
         &cwd,
     );
     std::fs::remove_dir_all(&cwd).expect("temporary directory must be removed");
-    server.join().expect("HTTP method fixture must finish");
-
     assert_eq!(exit, 0, "stderr: {stderr}");
+    server.join().expect("HTTP method fixture must finish");
     assert_eq!(stdout, "ok\n");
 }
 
@@ -267,24 +265,24 @@ fn openai_compatible_client_sends_configured_chat_completion() {
         &format!(
             r#"program OpenAiCompatibleRoundtrip;
 
-uses Std.Ai.OpenAi, Std.Console;
+uses Std.Ai.OpenAi as OpenAi; uses Std.Console as Console;
 
 begin
-  mutable var ClientValue: Client := Client.Create('http://127.0.0.1:{port}/v1', 'local-model');
+  mutable var ClientValue: OpenAi.Client := OpenAi.Client.Create('http://127.0.0.1:{port}/v1', 'local-model');
   ClientValue.ApiKey := Some('test-key');
   ClientValue.TimeoutMillis := 5000;
-  mutable var Options: ChatOptions := ChatOptions.Default();
+  mutable var Options: OpenAi.ChatOptions := OpenAi.ChatOptions.Default();
   Options.Temperature := Some(0.25);
   Options.MaxTokens := Some(64);
-  case Complete(
+  case OpenAi.Complete(
     ClientValue,
-    [ChatMessage.System('Be concise'), ChatMessage.User('Hello locally')],
+    [OpenAi.ChatMessage.System('Be concise'), OpenAi.ChatMessage.User('Hello locally')],
     Options
   ) of
-    Ok(Content): WriteLn(Content);
-    Error(Message): panic(Message)
-  end
-end.
+    when Ok(Content): Console.WriteLn(Content);
+    when Error(Message): panic(Message);
+  end case;
+end program;
 "#
         ),
     );
@@ -299,8 +297,7 @@ end.
         &cwd,
     );
     std::fs::remove_dir_all(&cwd).expect("temporary directory must be removed");
-    server.join().expect("OpenAI fixture must finish");
-
     assert_eq!(exit, 0, "stderr: {stderr}");
+    server.join().expect("OpenAI fixture must finish");
     assert_eq!(stdout, "Mock reply\n");
 }

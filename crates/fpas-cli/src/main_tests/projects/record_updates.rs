@@ -16,32 +16,34 @@ include = ["*.fpas"]
     );
     write_text(
         &cwd.join("types.fpas"),
-        "unit Demo.Types;
-public type Point = record public X: integer; public Y: integer; end;
-public type Holder = record public Position: Point; public Points: array of Point; end;",
+        r#"unit Demo.Types;
+  public type Point = record public X: integer; public Y: integer; end record;
+  public type Holder = record public Position: Point; public Points: array of Point; end record;
+end unit;
+"#,
     );
     write_text(
         &cwd.join("main.fpas"),
-        "program Main;
-uses Demo.Types, Std.Console;
+        r#"program Main;
+uses Demo.Types as Types; uses Std.Console as Console;
 begin
-  var Original: Holder := record
-    Position := record X := 1; Y := 2; end;
-    Points := [record X := 5; Y := 6; end];
-  end;
-  var Changed: Holder := Original with
-    Position := record X := 3; Y := 4; end;
-    Points := [record X := 7; Y := 8; end];
-  end;
-  WriteLn(Changed.Position.X);
-  WriteLn(Changed.Position.Y);
-  WriteLn(Changed.Points[0].X);
-  WriteLn(Changed.Points[0].Y);
-  WriteLn(Original.Position.X);
-  WriteLn(Original.Position.Y);
-  WriteLn(Original.Points[0].X);
-  WriteLn(Original.Points[0].Y)
-end.",
+  var Original: Types.Holder := record
+    Position := record X := 1; Y := 2; end record;
+    Points := [record X := 5; Y := 6; end record];
+  end record;
+  var Changed: Types.Holder := Original with
+    Position := record X := 3; Y := 4; end record;
+    Points := [record X := 7; Y := 8; end record];
+  end with;
+  Console.WriteLn(Changed.Position.X);
+  Console.WriteLn(Changed.Position.Y);
+  Console.WriteLn(Changed.Points[0].X);
+  Console.WriteLn(Changed.Points[0].Y);
+  Console.WriteLn(Original.Position.X);
+  Console.WriteLn(Original.Position.Y);
+  Console.WriteLn(Original.Points[0].X);
+  Console.WriteLn(Original.Points[0].Y);
+end program;"#,
     );
     let (exit_code, stdout, stderr) =
         super::super::support::run_cli_and_capture_output(&project, &cwd);

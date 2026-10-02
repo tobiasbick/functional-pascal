@@ -290,28 +290,28 @@ fn jsonl_variant_transitions_commit_atomically_and_continue() {
 fn jsonl_variant_transition_stays_bound_to_the_selected_child_task() {
     const TASK_SOURCE: &str = r#"program TaskVariantTransition;
 
-uses Std.Console, Std.Tasks;
+uses Std.Console as Console; uses Std.Tasks as Tasks;
 
 function Work(): integer;
 begin
   mutable var Optional: Option of integer := None;
   var Marker: integer := 0;
   case Optional of
-    Some(Value):
+    when Some(Value):
     begin
-      return Value
+      return Value;
     end;
-    None:
+    when None:
     begin
-      return 0
-    end
-  end
-end;
+      return 0;
+    end;
+  end case;
+end function;
 
 begin
   var Pending: task := go Work();
-  WriteLn(Wait(Pending))
-end.
+  Console.WriteLn(Tasks.Wait(Pending));
+end program;
 "#;
     let (program, diagnostics) = fpas_parser::parse(TASK_SOURCE);
     assert!(diagnostics.is_empty(), "parse diagnostics: {diagnostics:?}");
@@ -400,31 +400,31 @@ fn variant_transition_supports_mutable_parameters_and_capture_cells() {
         r#"
 program TransitionParameter;
 
-type
-  Choice = enum
+
+  type Choice = enum
     Empty;
     Count(Value: integer);
-  end;
+  end enum;
 
 function ReadChoice(mutable Item: Choice): integer;
 begin
   var Marker: integer := 0;
   case Item of
-    Choice.Empty:
+    when Choice.Empty:
     begin
-      return 0
+      return 0;
     end;
-    Choice.Count(Value):
+    when Choice.Count(Value):
     begin
-      return Value
-    end
-  end
-end;
+      return Value;
+    end;
+  end case;
+end function;
 
 begin
   var OutputValue: integer := ReadChoice(Choice.Empty);
-  var Marker: integer := OutputValue
-end.
+  var Marker: integer := OutputValue;
+end program;
 "#,
     );
     let parameter_frame = loop {
@@ -462,34 +462,34 @@ end.
         r#"
 program TransitionCapture;
 
-type
-  Choice = enum
+
+  type Choice = enum
     Empty;
     Count(Value: integer);
-  end;
+  end enum;
 
 function NextChoice(): function(): integer;
 begin
   mutable var Selected: Choice := Choice.Empty;
   return function(): integer begin
     case Selected of
-      Choice.Empty:
+      when Choice.Empty:
       begin
-        return 0
+        return 0;
       end;
-      Choice.Count(Value):
+      when Choice.Count(Value):
       begin
-        return Value
-      end
-    end
-  end
-end;
+        return Value;
+      end;
+    end case;
+  end function;
+end function;
 
 begin
   var Next: function(): integer := NextChoice();
   var First: integer := Next();
-  var Marker: integer := First
-end.
+  var Marker: integer := First;
+end program;
 "#,
     );
     let (frame, _captures) = loop {
@@ -531,22 +531,22 @@ fn explicit_variant_name_wins_over_an_active_payload_field_collision() {
         r#"
 program TransitionCollision;
 
-type
-  Payload = record
+
+  type Payload = record
     Value: integer;
-  end;
-  Choice = enum
+  end record;
+  type Choice = enum
     Holder(Count: Payload);
     Count(Value: integer);
-  end;
+  end enum;
 
 begin
   var Initial: Payload := record
     Value := 1;
-  end;
+  end record;
   mutable var Selected: Choice := Choice.Holder(Initial);
-  var Marker: integer := 0
-end.
+  var Marker: integer := 0;
+end program;
 "#,
     );
     let frame = loop {

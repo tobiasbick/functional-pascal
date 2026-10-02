@@ -5,25 +5,25 @@ use super::*;
 fn timeout_session() -> DebugSession {
     const SOURCE: &str = r#"program DebugChannelTimeout;
 
-uses Std.Tasks;
+uses Std.Tasks as Tasks;
 
 begin
-  var Messages: channel of integer := CreateChannel(1);
-  case ReceiveWithTimeout(Messages, 25) of
-    Ok(_): panic('empty channel did not time out');
-    Error(Message):
-      if Message <> 'Channel receive timed out' then panic(Message)
-  end;
-  case Send(Messages, 1) of
-    Ok(_): begin end;
-    Error(Message): panic(Message)
-  end;
-  case SendWithTimeout(Messages, 2, 25) of
-    Ok(_): panic('full channel did not time out');
-    Error(Message):
-      if Message <> 'Channel send timed out' then panic(Message)
-  end
-end.
+  var Messages: channel of integer := Tasks.CreateChannel(1);
+  case Tasks.ReceiveWithTimeout(Messages, 25) of
+    when Ok(_): panic('empty channel did not time out');
+    when Error(Message):
+      if Message <> 'Channel receive timed out' then panic(Message); end if;
+  end case;
+  case Tasks.Send(Messages, 1) of
+    when Ok(_): begin null; end;
+    when Error(Message): panic(Message);
+  end case;
+  case Tasks.SendWithTimeout(Messages, 2, 25) of
+    when Ok(_): panic('full channel did not time out');
+    when Error(Message):
+      if Message <> 'Channel send timed out' then panic(Message); end if;
+  end case;
+end program;
 "#;
     let (program, diagnostics) = fpas_parser::parse(SOURCE);
     assert!(diagnostics.is_empty(), "parse diagnostics: {diagnostics:?}");

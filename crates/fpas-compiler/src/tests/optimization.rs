@@ -12,8 +12,7 @@ fn code(source: &str) -> (Vec<Instruction>, Vec<Constant>) {
 
 #[test]
 fn constant_operands_fold_into_one_constant() {
-    let source =
-        "program Fold; begin var X: integer := 2 * 3 + 1; if X <> 7 then panic('wrong') end.";
+    let source = r#"program Fold; begin var X: integer := 2 * 3 + 1; if X <> 7 then panic('wrong'); end if; end program;"#;
     let (code, constants) = code(source);
     assert!(constants.contains(&Constant::Integer(7)));
     assert!(
@@ -28,7 +27,7 @@ fn constant_operands_fold_into_one_constant() {
 
 #[test]
 fn failing_constant_operations_stay_runtime_errors() {
-    let (code, _) = code("program Fail; begin var X: integer := 1 div 0; end.");
+    let (code, _) = code(r#"program Fail; begin var X: integer := 1 div 0; end program;"#);
     assert!(
         code.iter().any(|word| matches!(
             word.opcode(),
@@ -41,7 +40,7 @@ fn failing_constant_operations_stay_runtime_errors() {
 #[test]
 fn jumps_to_the_next_block_are_not_emitted() {
     let (code, _) = code(
-        "program Fallthrough; begin mutable var T: integer := 0; for I: integer := 1 to 3 do T := T + I; if T <> 6 then panic('wrong') end.",
+        r#"program Fallthrough; begin mutable var T: integer := 0; for I: integer := 1 to 3 do T := T + I; end for; if T <> 6 then panic('wrong'); end if; end program;"#,
     );
     for (address, word) in code.iter().enumerate() {
         if word.opcode() == Ok(Opcode::Jump) && address > 0 {
@@ -63,7 +62,7 @@ fn jumps_to_the_next_block_are_not_emitted() {
 
 #[test]
 fn loop_constants_load_once_before_the_loop() {
-    let source = "program Hoist; begin mutable var Even: integer := 0; for I: integer := 1 to 10 do if I mod 2 = 0 then Even := Even + 1; if Even <> 5 then panic('wrong') end.";
+    let source = r#"program Hoist; begin mutable var Even: integer := 0; for I: integer := 1 to 10 do if I mod 2 = 0 then Even := Even + 1; end if; end for; if Even <> 5 then panic('wrong'); end if; end program;"#;
     let (code, _) = code(source);
     let for_loop = code
         .iter()
@@ -82,7 +81,7 @@ fn loop_constants_load_once_before_the_loop() {
 #[test]
 fn local_reads_use_local_registers_directly() {
     let (code, _) = code(
-        "program Alias; begin mutable var A: integer := 1; mutable var B: integer := 2; B := A + B; if B <> 3 then panic('wrong') end.",
+        r#"program Alias; begin mutable var A: integer := 1; mutable var B: integer := 2; B := A + B; if B <> 3 then panic('wrong'); end if; end program;"#,
     );
     let add = code
         .iter()

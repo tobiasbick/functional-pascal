@@ -1,70 +1,70 @@
 program GuardsExample;
 
-uses Std.Console, Std.Conv;
+uses Std.Console as Console;
+uses Std.Conv as Conv;
 
-type
-  // The arm matches only when both the label and the guard are true.
-  Shape = enum
-    Circle(Radius: real);
-    Rectangle(Width: real; Height: real);
-    Point;
-  end;
+// The arm matches only when both the label and the guard are true.
+type Shape = enum
+  Circle(Radius: real);
+  Rectangle(Width: real; Height: real);
+  Point;
+end enum;
 
 function Classify(N: integer): string;
 begin
   case N of
-    0:
-    begin
-      return 'zero'
-    end;
-    N if N > 0:
-    begin
-      return 'positive'
-    end;
-    N if N < 0:
-    begin
-      return 'negative'
-    end
-  end;
+    when 0:
+      begin
+        return 'zero';
+      end;
+    when N if N > 0:
+      begin
+        return 'positive';
+      end;
+    when N if N < 0:
+      begin
+        return 'negative';
+      end;
+  end case;
 
-  return 'unknown'
-end;
+  return 'unknown';
+end function;
 
 function DescribeShape(S: Shape): string;
 begin
   case S of
-    Shape.Circle(R) if R > 10.0:
-    begin
-      return ('Large circle (radius ' + RealToStr(R)) + ')'
-    end;
-    Shape.Circle(R):
-    begin
-      return ('Small circle (radius ' + RealToStr(R)) + ')'
-    end;
-    Shape.Rectangle(W, H) if W = H:
-    begin
-      return ('Square (' + RealToStr(W)) + ')'
-    end;
-    Shape.Rectangle(W, H):
-    begin
-      return ((('Rectangle (' + RealToStr(W)) + ' x ') + RealToStr(H)) + ')'
-    end;
-    Shape.Point:
-    begin
-      return 'Point'
-    end
-  end
-end;
+    when Shape.Circle(R) if R > 10.0:
+      begin
+        return ('Large circle (radius ' + Conv.RealToStr(R)) + ')';
+      end;
+    when Shape.Circle(R):
+      begin
+        return ('Small circle (radius ' + Conv.RealToStr(R)) + ')';
+      end;
+    when Shape.Rectangle(W, H) if W = H:
+      begin
+        return ('Square (' + Conv.RealToStr(W)) + ')';
+      end;
+    when Shape.Rectangle(W, H):
+      begin
+        return ((('Rectangle (' + Conv.RealToStr(W)) + ' x ') + Conv.RealToStr(H)) + ')';
+      end;
+    when Shape.Point:
+      begin
+        return 'Point';
+      end;
+  end case;
+end function;
 
 begin
-  WriteLn('--- Integer guards ---');
-  WriteLn(Classify(-7));
-  WriteLn(Classify(0));
-  WriteLn(Classify(42));
-  WriteLn('--- Shape guards ---');
-  WriteLn(DescribeShape(Shape.Circle(3.0)));
-  WriteLn(DescribeShape(Shape.Circle(25.0)));
-  WriteLn(DescribeShape(Shape.Rectangle(5.0, 5.0)));
-  WriteLn(DescribeShape(Shape.Rectangle(4.0, 8.0)));
-  WriteLn(DescribeShape(Shape.Point))
-end.
+  Console.WriteLn('--- Integer guards ---');
+  Console.WriteLn(Classify(-7));
+  Console.WriteLn(Classify(0));
+  Console.WriteLn(Classify(42));
+  Console.WriteLn('--- Shape guards ---');
+  Console.WriteLn(DescribeShape(Shape.Circle(3.0)));
+  Console.WriteLn(DescribeShape(Shape.Circle(25.0)));
+  Console.WriteLn(DescribeShape(Shape.Rectangle(5.0, 5.0)));
+  Console.WriteLn(DescribeShape(Shape.Rectangle(4.0, 8.0)));
+  Console.WriteLn(DescribeShape(Shape.Point));
+end program;

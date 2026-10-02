@@ -4,21 +4,24 @@ String helpers: measure, search, transform, split, and join. This page lists **e
 
 ```pascal
 program Example;
-uses Std.Console, Std.Str;
+
+uses Std.Console as Console;
+uses Std.Str as Str;
+
 begin
-  WriteLn(Length('hello'))
-end.
+  Console.WriteLn(Str.Length('hello'));
+end program;
 ```
 
 ## Importing and names
 
-After `uses Std.Str;` you may use **short** names (`Length`, `ToUpper`, …) or **qualified** names (`Std.Str.Length`, …).
+Import with `uses Std.Str as Str;`. Access every exported member through `Str`, for example `Str.Trim(...)`. Imports open no short names.
 
-**Ambiguity:** if you also `uses Std.Arrays`, the short names **`Length`**, **`Contains`**, **`IndexOf`**, **`Map`**, **`Filter`**, and **`Reduce`** exist in both units. The compiler reports an **ambiguous** error unless you qualify, for example `Std.Str.Length(S)` vs `Std.Arrays.Length(A)`.
+Explicit aliases keep names from different units distinct. Imported routines use alias-qualified calls; receiver-call lookup applies only to routines declared locally.
 
 ## Quick reference
 
-Requires `uses Std.Str;`.
+Requires `uses Std.Str as Str;`.
 
 | Kind | Name | Result |
 |------|------|--------|

@@ -22,38 +22,7 @@ fn fpas_https_server_serves_one_verified_request() {
     let server = spawn_server(
         &cwd,
         format!(
-            r#"program HttpsServer;
-
-uses Std.Console, Std.Http, Std.Net, Std.Net.Utf8;
-
-function Handle(RequestValue: ServerRequest): ServerResponse;
-begin
-  mutable var ResponseValue: ServerResponse := ServerResponse.Create(200, 'OK');
-  ResponseValue.Body := Std.Net.Utf8.Encode('secure ' + RequestValue.Target);
-  return ResponseValue
-end;
-
-begin
-  case ListenTls('127.0.0.1', {port}, '{certificate_source}', '{private_key_source}', 2000) of
-    Ok(ListenerValue):
-    begin
-      mutable var Options: ServerOptions := ServerOptions.Create();
-      Options.MaxRequests := 1;
-      case Serve(ListenerValue, Options, Handle) of
-        Ok(_):
-        begin
-        end;
-        Error(Message): panic(Message)
-      end;
-      case CloseListener(ListenerValue) of
-        Ok(_): WriteLn('served https');
-        Error(Message): panic(Message)
-      end
-    end;
-    Error(Message): panic(Message)
-  end
-end.
-"#
+            "program HttpsServer;\n\nuses Std.Console as Console; uses Std.Http as Http; uses Std.Net as Net; uses Std.Net.Utf8 as Utf8;\n\nfunction Handle(RequestValue: Http.ServerRequest): Http.ServerResponse;\nbegin\n  mutable var ResponseValue: Http.ServerResponse := Http.ServerResponse.Create(200, 'OK');\n  ResponseValue.Body := Utf8.Encode('secure ' + RequestValue.Target);\n  return ResponseValue;\nend function;\n\nbegin\n  case Net.ListenTls('127.0.0.1', {port}, '{certificate_source}', '{private_key_source}', 2000) of\n    when Ok(ListenerValue):\n    begin\n      mutable var Options: Http.ServerOptions := Http.ServerOptions.Create();\n      Options.MaxRequests := 1;\n      case Http.Serve(ListenerValue, Options, Handle) of\n        when Ok(_):\n        begin null;\n        end;\n        when Error(Message): panic(Message);\n      end case;\n      case Net.CloseListener(ListenerValue) of\n        when Ok(_): Console.WriteLn('served https');\n        when Error(Message): panic(Message);\n      end case;\n    end;\n    when Error(Message): panic(Message);\n  end case;\nend program;\n"
         ),
     );
 

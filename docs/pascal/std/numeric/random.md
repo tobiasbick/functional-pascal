@@ -4,18 +4,21 @@ Deterministic pseudo-random number helpers for simulations, games, randomized te
 
 ```pascal
 program Example;
-uses Std.Console, Std.Random;
+
+uses Std.Console as Console;
+uses Std.Random as Random;
+
 begin
-  SetSeed(42);
-  WriteLn(RandomInt(1, 6))
-end.
+  Random.SetSeed(42);
+  Console.WriteLn(Random.RandomInt(1, 6));
+end program;
 ```
 
 Do not use this unit for secrets, tokens, passwords, keys, or nonces. Use [`Std.Crypto`](../cryptography/crypto.md) when unpredictability is a security requirement.
 
 ## Importing and names
 
-After `uses Std.Random;` use **`Random`**, **`RandomInt`**, **`Randomize`**, and **`SetSeed`**, or their fully qualified `Std.Random.*` forms.
+Import with `uses Std.Random as Random;`. Access every exported member through `Random`, for example `Random.Random(...)`. Imports open no short names.
 
 ## Quick reference
 
@@ -35,7 +38,7 @@ Calling `Random` or `RandomInt` before either seeding procedure automatically in
 Returns a pseudo-random real number in `[0.0, 1.0)`.
 
 ```pascal
-var R: real := Random()
+var R: real := Random();
 ```
 
 ## `function RandomInt(Lo: integer; Hi: integer): integer`
@@ -43,7 +46,9 @@ var R: real := Random()
 Returns an unbiased pseudo-random integer in `[Lo, Hi]`, including either bound. The full `integer` range is supported. A runtime error occurs when `Lo > Hi`.
 
 ```pascal
-var Die: integer := RandomInt(1, 6)
+uses Std.Random as Random;
+
+var Die: integer := Random.RandomInt(1, 6);
 ```
 
 ## `procedure Randomize()`
@@ -51,7 +56,9 @@ var Die: integer := RandomInt(1, 6)
 Replaces the current VM's pseudo-random state with a seed supplied by the operating system. A runtime error occurs if that source is unavailable; the runtime never substitutes a predictable seed.
 
 ```pascal
-Randomize()
+uses Std.Random as Random;
+
+Random.Randomize();
 ```
 
 ## `procedure SetSeed(Seed: integer)`
@@ -59,10 +66,12 @@ Randomize()
 Replaces the current VM's pseudo-random state with the repeatable sequence selected by `Seed`. Reusing a seed restarts that sequence.
 
 ```pascal
-SetSeed(17);
-var First: integer := RandomInt(1, 100);
-SetSeed(17);
-var Repeated: integer := RandomInt(1, 100)
+uses Std.Random as Random;
+
+Random.SetSeed(17);
+var First: integer := Random.RandomInt(1, 100);
+Random.SetSeed(17);
+var Repeated: integer := Random.RandomInt(1, 100);
 ```
 
 ## Implementation (contributors)

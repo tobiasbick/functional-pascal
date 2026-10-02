@@ -6,15 +6,17 @@ use super::*;
 fn reexported_record_alias_preserves_its_owner_across_facades() {
     let original = analyze_unit(
         &parse_unit(
-            "unit Repro.Model;
-public type Model = record
+            r#"unit Repro.Model;
+  public type Model = record
   public Value: integer;
   function ReadChanged(Self: Model): Option of procedure(Value: integer);
-  begin return None end;
+  begin return None; end function;
   procedure WriteChanged(Self: Model; Handler: Option of procedure(Value: integer));
-  begin end;
+  begin null; end procedure;
   public event Changed: procedure(Value: integer) read ReadChanged write WriteChanged;
-end;",
+end record;
+end unit;
+"#,
         ),
         &[],
     )
@@ -23,13 +25,13 @@ end;",
     .expect("model interface");
     let original_type = original.symbols[0].ty.clone();
     let mut interfaces = vec![original];
-    for (unit, dependency, target) in [
+    for (unit, dependency, _target) in [
         ("Repro.Facade", "Repro.Model", "Repro.Model.Model"),
         ("Repro.Second", "Repro.Facade", "Repro.Facade.Model"),
     ] {
         let analysis = analyze_unit(
             &parse_unit(&format!(
-                "unit {unit}; uses {dependency}; public type Model = {target};"
+                "unit {unit}; uses {dependency} as Imported; public type Model = Imported.Model; end unit;"
             )),
             &interfaces,
         )

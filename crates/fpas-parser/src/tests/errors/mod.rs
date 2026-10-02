@@ -13,3 +13,10 @@ mod syntax;
 mod synthetic_eof;
 mod trailing_input;
 mod uses;
+
+fn first_branch_statement(statement: &crate::Stmt) -> &crate::Stmt {
+    let crate::Stmt::StatementList(statements, _) = statement else {
+        panic!("expected statement list");
+    };
+    &statements[0]
+}

@@ -84,7 +84,7 @@ mod tests {
 
     #[test]
     fn format_source_preserves_all_comments() {
-        let source = "// Unit doc.\nunit Demo;\n\n// field doc\nmutable var Count: integer := 0;\n";
+        let source = "// Unit doc.\nunit Demo;\n\n// field doc\nmutable var Count: integer := 0;\nend unit;\n";
         let (unit, errors) = parse_compilation_unit(source);
         assert!(errors.is_empty(), "{errors:?}");
 
@@ -101,7 +101,9 @@ mod tests {
 
     #[test]
     fn format_source_preserves_end_of_line_comments() {
-        let source = "program T; begin\n  WriteLn('ok') // trail\nend.";
+        let source = r#"program T; begin
+  WriteLn('ok'); // trail
+end program;"#;
         let (unit, errors) = parse_compilation_unit(source);
         assert!(errors.is_empty(), "{errors:?}");
         let formatted = format_source(source, &unit).expect("matching source and AST");
@@ -112,11 +114,11 @@ mod tests {
     fn format_source_preserves_documentation_attachment_and_detachment() {
         for (source, expected) in [
             (
-                "// attached\nprogram T; begin end.",
+                "// attached\nprogram T; begin null; end program;",
                 "// attached\nprogram T;",
             ),
             (
-                "// detached\n\nprogram T; begin end.",
+                "// detached\n\nprogram T; begin null; end program;",
                 "// detached\n\nprogram T;",
             ),
         ] {

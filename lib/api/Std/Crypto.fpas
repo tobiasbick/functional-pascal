@@ -10,8 +10,8 @@ unit Std.Crypto;
 // - `Count`: Number of values to create or process.
 public function RandomBytes(Count: integer): result of array of integer, string;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
 
 // Unbiased secure value in inclusive `[Lo, Hi]`.
 //
@@ -20,5 +20,7 @@ end;
 // - `Hi`: `integer` input value used by `RandomInt`.
 public function RandomInt(Lo: integer; Hi: integer): result of integer, string;
 begin
-  panic('Intrinsic API declaration')
-end;
+  panic('Intrinsic API declaration');
+end function;
+
+end unit;

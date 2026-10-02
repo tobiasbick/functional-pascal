@@ -33,7 +33,10 @@ fn stdio_transcript_supports_initialize_documents_shutdown_and_exit() {
                     "uri": uri,
                     "languageId": "fpas",
                     "version": 1,
-                    "text": "program Lifecycle;\nbegin\nend.\n"
+                    "text": r#"program Lifecycle;
+begin null;
+end program;
+"#
                 }
             }
         }),
@@ -43,7 +46,11 @@ fn stdio_transcript_supports_initialize_documents_shutdown_and_exit() {
             "params": {
                 "textDocument": {"uri": uri, "version": 2},
                 "contentChanges": [
-                    {"text": "program Lifecycle;\nbegin\n  WriteLn('ok');\nend.\n"}
+                    {"text": r#"program Lifecycle;
+begin
+  WriteLn('ok');
+end program;
+"#}
                 ]
             }
         }),
@@ -158,7 +165,10 @@ fn invalid_uri_stale_version_incremental_change_and_cancel_do_not_crash() {
                     "uri": uri,
                     "languageId": "fpas",
                     "version": 2,
-                    "text": "program Input;\nbegin\nend.\n"
+                    "text": r#"program Input;
+begin null;
+end program;
+"#
                 }
             }
         }),
@@ -167,7 +177,10 @@ fn invalid_uri_stale_version_incremental_change_and_cancel_do_not_crash() {
             "method": "textDocument/didChange",
             "params": {
                 "textDocument": {"uri": uri, "version": 1},
-                "contentChanges": [{"text": "program Stale;\nbegin\nend.\n"}]
+                "contentChanges": [{"text": r#"program Stale;
+begin null;
+end program;
+"#}]
             }
         }),
         json!({
@@ -241,11 +254,17 @@ fn cancelling_an_active_reference_scan_keeps_the_server_responsive() {
         "scan.fpasprj",
         "[project]\nname = \"scan\"\nkind = \"library\"\n\n[sources]\ninclude = [\"src/**/*.fpas\"]\n",
     );
-    let core = "unit Demo.Core;\n\npublic function Answer(): integer;\nbegin return 42 end;\n";
+    let core = r#"unit Demo.Core;
+
+public function Answer(): integer;
+begin return 42; end function;
+end unit;
+
+"#;
     temp.write("src/core.fpas", core);
     for index in 0..120 {
         let calls = (0..60)
-            .map(|value| format!("  var Value{value}: integer := Answer()\n"))
+            .map(|value| format!("var Value{value}: integer := Answer();"))
             .collect::<String>();
         temp.write(
             format!("src/use_{index}.fpas"),

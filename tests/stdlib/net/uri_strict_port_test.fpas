@@ -1,41 +1,44 @@
 program UriStrictPortTest;
 
-uses Std.Net.Uri, Std.Test;
+uses Std.Net.Uri as Uri;
+uses Std.Test as Test;
 
 procedure Rejected(Text: string);
 begin
-  case Std.Net.Uri.Parse(Text) of
-    Ok(_):
-    begin
-      Fail('accepted ' + Text)
-    end;
-    Error(_):
-    begin
-    end
-  end
-end;
+  case Uri.Parse(Text) of
+    when Ok(_):
+      begin
+        Test.Fail('accepted ' + Text);
+      end;
+    when Error(_):
+      begin
+        null;
+      end;
+  end case;
+end procedure;
 
 procedure Accepted(Text: string; Scheme: string; Port: integer);
 begin
-  case Std.Net.Uri.Parse(Text) of
-    Ok(Value):
-    begin
-      AssertEquals(Scheme, Value.Scheme);
-      AssertEquals(Port, Value.Port)
-    end;
-    Error(Message):
-    begin
-      Fail(Message)
-    end
-  end
-end;
+  case Uri.Parse(Text) of
+    when Ok(Value):
+      begin
+        Test.AssertEquals(Scheme, Value.Scheme);
+        Test.AssertEquals(Port, Value.Port);
+      end;
+    when Error(Message):
+      begin
+        Test.Fail(Message);
+      end;
+  end case;
+end procedure;
 
 begin
   for Scheme: string in ['ftp', 'file', 'ws'] do
-  begin
-    Rejected(Scheme + '://127.0.0.1');
-    Rejected(Scheme + '://127.0.0.1:80')
-  end;
+    begin
+      Rejected(Scheme + '://127.0.0.1');
+      Rejected(Scheme + '://127.0.0.1:80');
+    end;
+  end for;
 
   for Port: string in [
                         '',
@@ -50,14 +53,15 @@ begin
                         '65536',
                         '9223372036854775808'
                       ] do
-  begin
-    Rejected('http://host:' + Port);
-    Rejected('https://[::1]:' + Port)
-  end;
+    begin
+      Rejected('http://host:' + Port);
+      Rejected('https://[::1]:' + Port);
+    end;
+  end for;
 
   Accepted('HTTP://host', 'http', 80);
   Accepted('HTTPS://[::1]', 'https', 443);
   Accepted('http://host:1', 'http', 1);
   Accepted('https://[::1]:65535', 'https', 65535);
-  Accepted('http://host:00080', 'http', 80)
-end.
+  Accepted('http://host:00080', 'http', 80);
+end program;

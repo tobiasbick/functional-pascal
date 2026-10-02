@@ -5,8 +5,10 @@
 Returns a **new** array containing all elements of `A` followed by all elements of `B`.
 
 ```pascal
+uses Std.Console as Console;
+
 var C: array of integer := Concat([1, 2], [3, 4]);
-WriteLn(Length(C))  // 4
+Console.WriteLn(Length(C)); // 4
 ```
 
 ---
@@ -18,11 +20,11 @@ Applies `F` to each element (producing an array), then flattens all results into
 ```pascal
 function ExpandPair(X: integer): array of integer;
 begin
-  return [X, X * 10]
-end;
+  return [X, X * 10];
+end function;
 
 var Output: array of integer := FlatMap([1, 2, 3], ExpandPair);
-// [1, 10, 2, 20, 3, 30]
+
 ```
 
 ---
@@ -32,8 +34,10 @@ var Output: array of integer := FlatMap([1, 2, 3], ExpandPair);
 Creates a new array containing `Count` copies of `Value`.
 
 ```pascal
+uses Std.Console as Console;
+
 var Zeros: array of integer := Fill(0, 5);
-WriteLn(Length(Zeros))  // 5
+Console.WriteLn(Length(Zeros)); // 5
 ```
 
 `Count` must be non-negative and at most **1_000_000**. Larger counts raise a runtime error instead of allocating unbounded memory.
@@ -45,12 +49,14 @@ WriteLn(Length(Zeros))  // 5
 Calls `F` for each element in `A`. Does not return a value.
 
 ```pascal
+uses Std.Console as Console;
+
 procedure PrintValue(X: integer);
 begin
-  WriteLn(X)
-end;
+  Console.WriteLn(X);
+end procedure;
 
-ForEach([1, 2, 3], PrintValue);
+  ForEach([1, 2, 3], PrintValue);
 ```
 
 ## See also

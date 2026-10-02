@@ -78,7 +78,7 @@ line_comment    = '//' { (* any character except CR or LF *) } ;
 (* A contiguous standalone comment block immediately before a       *)
 (* declaration is Markdown documentation; this is a tooling rule.    *)
 
-(* ---- Keywords (64, case-insensitive) --------------------------- *)
+(* ---- Keywords (68, case-insensitive) --------------------------- *)
 
 keyword         = 'program'   | 'unit'      | 'uses'      | 'const'
                 | 'var'       | 'mutable'   | 'function'  | 'procedure'
@@ -96,7 +96,8 @@ keyword         = 'program'   | 'unit'      | 'uses'      | 'const'
                 | 'go'        | 'dict'      | 'with'      | 'static' | 'property'
                 | 'event'     | 'read'      | 'write'     | 'comparable'
                 | 'numeric'   | 'printable' | 'self'      | 'nil'
-                | 'channel'   | 'task' ;
+                | 'channel'   | 'task'      | 'as'        | 'elsif'
+                | 'when'      | 'null' ;
 
 (* ---- Symbols --------------------------------------------------- *)
 
@@ -120,40 +121,36 @@ token           = keyword | identifier | integer_literal
 (* PART 2 — SYNTACTIC GRAMMAR                                      *)
 (* ================================================================ *)
 
-(* Semicolons separate statements. One trailing ';' is permitted.  *)
-(* No ';' is required before 'end', 'else', or 'until'.            *)
+(* Every statement ends with ';', including the final statement.    *)
+(* Every body is nonempty; use 'null;' when no action is required.    *)
 
 (* ---- 2.1 Program / Unit Structure ------------------------------ *)
 
 compilation_unit    = program | unit ;
 
 program             = program_heading
-                      [ uses_clause ]
+                      { uses_clause }
                       { program_declaration }
-                      main_block '.' ;
+                      main_block ;
 
 program_heading     = 'program' identifier ';' ;
 
 unit                = unit_heading
-                      [ uses_clause ]
-                      { unit_declaration } ;
+                      { uses_clause }
+                      { unit_declaration } 'end' 'unit' ';' ;
 
 unit_heading        = 'unit' qualified_id ';' ;
 
 (* Units have no main block. They contain declarations only.        *)
 
-(* uses_clause: each qualified_id names a unit to import. All symbols of the unit are brought into
-   scope under their short (unqualified) name. If two units export the same short name, the name is
-   ambiguous and the compiler reports an error at the point of use (not at the uses site). The fully
-   qualified name always works as a fallback. User-defined project and library units may use qualified
-   names but must not use `Std` as their leading segment. Intrinsic standard-library units use
-   two-part names such as `Std.Console`. The trusted source-standard-library manifest may additionally
-   export multi-segment `Std.*` units such as `Std.Tools.Format`; applications may import only the
-   units exported by that manifest. Unknown or non-exported `Std.*` units are rejected. *)
+(* Each import declares one alias. Only Alias.Member accesses imported *)
+(* declarations; short names and the original qualified unit path are *)
+(* unavailable. Aliases are case-insensitive and cannot be shadowed.   *)
+(* Repeated imports of the same unit are invalid. Std is reserved for  *)
+(* standard-library units; only exported Std units are importable.     *)
+uses_clause         = 'uses' qualified_id 'as' identifier ';' ;
 
-uses_clause         = 'uses' qualified_id { ',' qualified_id } ';' ;
-
-main_block          = 'begin' statement_list 'end' ;
+main_block          = 'begin' statement_list 'end' 'program' ';' ;
 
 (* ---- 2.2 Declarations ----------------------------------------- *)
 
@@ -173,7 +170,7 @@ public_modifier     = 'public' ;
 (* not valid in `program` files. `private` is an ordinary identifier. *)
 
 (* -- Constants -- *)
-const_block         = 'const' const_def { const_def } ;
+const_block         = 'const' const_def ;
 const_def           = identifier ':' type_expr ':=' expression ';' ;
 
 (* The initializer must be compile-time known. Syntax allows a general *)
@@ -181,14 +178,14 @@ const_def           = identifier ':' type_expr ':=' expression ';' ;
 (* other constants, enum members, and pure operator combinations.      *)
 
 (* -- Immutable variables -- *)
-var_block           = 'var' var_def { var_def } ;
+var_block           = 'var' var_def ;
 var_def             = identifier ':' type_expr ':=' expression ';' ;
 
 (* -- Mutable variables -- *)
-mutable_var_block   = 'mutable' 'var' var_def { var_def } ;
+mutable_var_block   = 'mutable' 'var' var_def ;
 
 (* -- Type definitions -- *)
-type_block          = 'type' type_def { type_def } ;
+type_block          = 'type' type_def ;
 type_def            = identifier '=' type_body ';' ;
 type_body           = record_type
                     | enum_type
@@ -225,7 +222,7 @@ formal_type_param   = [ 'mutable' ] identifier ':' type_expr ;
 
 record_type         = 'record'
                       { record_member }
-                      'end' ;
+                      'end' 'record' ;
 record_member       = [ public_modifier ]
                       ( field_def | record_method | record_property | record_event ) ;
 field_def           = identifier ':' type_expr [ ':=' expression ] ';' ;
@@ -239,11 +236,11 @@ record_method       = static_record_method | instance_record_method ;
 static_record_method = 'static' ( function_decl | procedure_decl ) ;
 instance_record_method = instance_function_decl | instance_procedure_decl ;
 instance_function_decl = instance_function_heading ';'
-                         { nested_decl } 'begin' statement_list 'end' ';' ;
+                         { nested_decl } 'begin' statement_list 'end' 'function' ';' ;
 instance_function_heading = 'function' identifier [ type_params ]
                             '(' [ instance_param_list ] ')' ':' type_expr ;
 instance_procedure_decl = instance_procedure_heading ';'
-                          { nested_decl } 'begin' statement_list 'end' ';' ;
+                          { nested_decl } 'begin' statement_list 'end' 'procedure' ';' ;
 instance_procedure_heading = 'procedure' identifier [ type_params ]
                              '(' [ instance_param_list ] ')' ;
 instance_param_list = instance_first_param { ';' param_group } ;
@@ -280,7 +277,7 @@ property_accessor   = 'read' identifier
 record_event        = 'event' identifier ':' type_expr
                       'read' identifier 'write' identifier ';' ;
 
-enum_type           = 'enum' enum_member { enum_member } 'end' ;
+enum_type           = 'enum' enum_member { enum_member } 'end' 'enum' ;
 enum_member         = identifier [ enum_fields | '=' integer_literal ] ';' ;
 enum_fields         = '(' enum_field { ';' enum_field } ')' ;
 enum_field          = identifier ':' type_expr ;
@@ -294,13 +291,13 @@ enum_field          = identifier ':' type_expr ;
 (* ---- 2.5 Functions & Procedures -------------------------------- *)
 
 function_decl       = function_heading ';'
-                      { nested_decl } 'begin' statement_list 'end' ';' ;
+                      { nested_decl } 'begin' statement_list 'end' 'function' ';' ;
 
 function_heading    = 'function' identifier [ type_params ]
                       '(' [ param_list ] ')' ':' type_expr ;
 
 procedure_decl      = procedure_heading ';'
-                      { nested_decl } 'begin' statement_list 'end' ';' ;
+                      { nested_decl } 'begin' statement_list 'end' 'procedure' ';' ;
 
 procedure_heading   = 'procedure' identifier [ type_params ]
                       '(' [ param_list ] ')' ;
@@ -313,7 +310,7 @@ nested_decl         = function_decl
 
 (* ---- 2.6 Statements ------------------------------------------- *)
 
-statement_list      = [ statement { ';' statement } [ ';' ] ] ;
+statement_list      = statement ';' { statement ';' } ;
 
 statement           = block
                     | var_stmt
@@ -331,7 +328,10 @@ statement           = block
                     | continue_stmt
                     | go_stmt
                     | call_stmt
-                    | postfix_expr_stmt ;
+                    | postfix_expr_stmt
+                    | null_stmt ;
+
+null_stmt           = 'null' ;
 
 block               = 'begin' statement_list 'end' ;
 
@@ -352,20 +352,20 @@ return_stmt         = 'return' [ expression ] ;
 panic_stmt          = 'panic' '(' expression ')' ;
 
 (* -- If / Then / Else -- *)
-if_stmt             = 'if' expression 'then' statement
-                      [ 'else' statement ] ;
+if_stmt             = 'if' expression 'then' statement_list
+                      { 'elsif' expression 'then' statement_list }
+                      [ 'else' statement_list ] 'end' 'if' ;
 
-(* 'else if' is not a keyword — it is 'else' followed by another   *)
-(* if_stmt. The dangling-else ambiguity resolves by binding 'else'  *)
-(* to the nearest unmatched 'if'.                                   *)
+(* Each branch has its own local scope. 'else if' nests another if;   *)
+(* it requires two closers. Use 'elsif' to continue one conditional. *)
 
 (* -- Case / Of -- *)
 case_stmt           = 'case' expression 'of'
-                      case_arm { ';' case_arm } [ ';' ]
-                      [ 'else' statement_list [ ';' ] ]
-                      'end' ;
+                      case_arm { case_arm }
+                      [ 'else' statement_list ] 'end' 'case' ;
 
-case_arm            = case_label_list [ 'if' expression ] ':' statement ;
+case_arm            = 'when' case_label_list [ 'if' expression ] ':' statement_list ;
+
 case_label_list     = case_label { ',' case_label } ;
 case_label          = destructure_label                  (* Result/Option  *)
                     | enum_pattern                       (* enum with data *)
@@ -381,7 +381,7 @@ pattern_arg         = identifier ;                       (* binding only   *)
 
 (* Each field position in an enum pattern is a plain identifier binding. *)
 (* Use a guard clause for additional constraints:                       *)
-(*   Shape.Circle(R) if R > 10.0: ...                                *)
+(*   when Shape.Circle(R) if R > 10.0: ...                                *)
 (*                                                                  *)
 (* Value labels must be compile-time constants: integer,      *)
 (* string, boolean, or enum literals. Ranges use '..'.              *)
@@ -409,13 +409,13 @@ pattern_arg         = identifier ;                       (* binding only   *)
 (* -- For Loop -- *)
 for_stmt            = 'for' identifier ':' type_expr ':=' expression
                       ( 'to' | 'downto' ) expression
-                      'do' statement ;
+                      'do' statement_list 'end' 'for' ;
 
 (* -- For-In Loop -- *)
 (* Works for both array-of-T (yields elements) and dict-of-K-to-V  *)
 (* (yields keys in insertion order). Loop variable is immutable.   *)
 for_in_stmt         = 'for' identifier ':' type_expr 'in' expression
-                      'do' statement ;
+                      'do' statement_list 'end' 'for' ;
 
 (* 'in' is a keyword used by for-in loops and as the membership    *)
 (* comparison operator described in section 4.                     *)
@@ -424,7 +424,7 @@ for_in_stmt         = 'for' identifier ':' type_expr 'in' expression
 (* the loop body.                                                   *)
 
 (* -- While Loop -- *)
-while_stmt          = 'while' expression 'do' statement ;
+while_stmt          = 'while' expression 'do' statement_list 'end' 'while' ;
 
 (* -- Repeat / Until -- *)
 repeat_stmt         = 'repeat' statement_list 'until' expression ;
@@ -478,11 +478,11 @@ unary_expr          = 'not' unary_expr
                     | 'try' unary_expr                   (* error propagation *)
                     | primary_expr [ record_update ] ;
 
-record_update       = 'with' field_init { field_init } 'end' ;
+record_update       = 'with' field_init { field_init } 'end' 'with' ;
 
 (* record_update is a postfix operator that produces a new record   *)
 (* value identical to the base except for the overridden fields.    *)
-(* At least one field_init is required. `Value with end` is invalid. *)
+(* At least one field_init is required. `Value with end with` is invalid. *)
 (* The base expression must have a record type. Unknown or wrong-   *)
 (* typed field overrides are compile-time errors.                   *)
 (* Example: P with X := 10; end — produces a copy of P with X = 10 *)
@@ -514,9 +514,9 @@ primary_atom        = integer_literal
 (* Anonymous function/procedure expression. Parameter and result types are required. *)
 (* Documentation: docs/pascal/language/functions/closures.md *)
 closure_expr        = 'function' '(' [ param_list ] ')' ':' type_expr
-                        [ nested_decl { nested_decl } ] 'begin' statement_list 'end'
+                        [ nested_decl { nested_decl } ] 'begin' statement_list 'end' 'function'
                     | 'procedure' '(' [ param_list ] ')'
-                        [ nested_decl { nested_decl } ] 'begin' statement_list 'end' ;
+                        [ nested_decl { nested_decl } ] 'begin' statement_list 'end' 'procedure' ;
 
 postfix_suffix      = '.' identifier [ call_args ]
                     | '[' expression ']' ;
@@ -525,10 +525,10 @@ postfix_suffix      = '.' identifier [ call_args ]
 call_args           = '(' [ arg_list ] ')' ;
 
 (* -- Record construction -- *)
-record_literal      = 'record' { field_init } 'end' ;
+record_literal      = 'record' { field_init } 'end' 'record' ;
 
 (* Zero field_inits is valid when every field of the target type    *)
-(* has a default value: var P: Point := record end;                 *)
+(* has a default value: var P: Point := record end record;                 *)
 field_init          = identifier ':=' expression ';' ;
 
 arg_list            = expression { ',' expression } ;

@@ -1,16 +1,17 @@
 program T;
 
-uses Std.Console, Std.Arrays;
+uses Std.Console as Console;
+uses Std.Arrays as Arrays;
 
 function Double(X: integer): integer;
 begin
-  return X * 2
-end;
+  return X * 2;
+end function;
 
 begin
   var Nums: array of integer := [1, 2, 3];
-  var Doubled: array of integer := Map(Nums, Double);
-  WriteLn(Doubled[0]);
-  WriteLn(Doubled[1]);
-  WriteLn(Doubled[2])
-end.
+  var Doubled: array of integer := Arrays.Map(Nums, Double);
+  Console.WriteLn(Doubled[0]);
+  Console.WriteLn(Doubled[1]);
+  Console.WriteLn(Doubled[2]);
+end program;

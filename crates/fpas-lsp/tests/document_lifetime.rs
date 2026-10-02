@@ -18,13 +18,24 @@ fn reopened_client_version_publishes_analysis_for_the_new_document_lifetime() {
     let transcript = run_script(&[
         TranscriptStep::Message(initialize(1)),
         TranscriptStep::Message(initialized()),
-        TranscriptStep::Message(open(uri, 1, "program First;\nbegin\nend.\n")),
+        TranscriptStep::Message(open(
+            uri,
+            1,
+            r#"program First;
+begin null;
+end program;
+"#,
+        )),
         TranscriptStep::Wait(Duration::from_millis(260)),
         TranscriptStep::Message(close(uri)),
         TranscriptStep::Message(open(
             uri,
             1,
-            "program Second;\nbegin\n  var Broken: integer := 'text'\nend.\n",
+            r#"program Second;
+begin
+  var Broken: integer := 'text';
+end program;
+"#,
         )),
         TranscriptStep::Wait(Duration::from_millis(260)),
         TranscriptStep::Message(shutdown(2)),

@@ -22,13 +22,39 @@ fn semantic_tokens_and_quick_fixes_use_utf16_and_reject_stale_diagnostics() {
     );
     temp.write(
         "src/core.fpas",
-        "unit Actions.Core;\n\npublic const ExistingText: string := 'ok';\n\npublic function Existing(): integer;\nbegin\n  return 1\nend;\n",
+        r#"unit Actions.Core;
+
+  public const ExistingText: string := 'ok';
+
+public function Existing(): integer;
+begin
+  return 1;
+end function;
+end unit;
+
+"#,
     );
     temp.write(
         "src/importable.fpas",
-        "unit Actions.Importable;\n\npublic function UniqueValue(): integer;\nbegin\n  return 42\nend;\n",
+        r#"unit Actions.Importable;
+
+public function UniqueValue(): integer;
+begin
+  return 42;
+end function;
+end unit;
+
+"#,
     );
-    let source = "program Actions;\n\nuses Actions.Core;\n\nbegin\n  var Music: string := '𝄞' + ExistingText;\n  var Value: integer := UniqueValue()\nend.\n";
+    let source = r#"program Actions;
+
+uses Actions.Core as Core;
+
+begin
+  var Music: string := '𝄞' + Core.ExistingText;
+  var Value: integer := UniqueValue();
+end program;
+"#;
     let main_path = temp.write("src/main.fpas", source);
     let root_uri = temp.uri(".");
     let main_uri = temp.uri("src/main.fpas");
@@ -159,7 +185,18 @@ fn semantic_tokens_and_quick_fixes_use_utf16_and_reject_stale_diagnostics() {
     assert_eq!(document_edit["textDocument"]["uri"], main_uri);
     assert_eq!(document_edit["textDocument"]["version"], 1);
     let edit = &document_edit["edits"][0];
-    assert_eq!(edit["newText"], "uses Actions.Core, Actions.Importable;");
+    assert!(
+        edit["newText"]
+            .as_str()
+            .expect("source edit")
+            .contains("uses Actions.Importable as Importable;")
+    );
+    assert!(
+        edit["newText"]
+            .as_str()
+            .expect("source edit")
+            .contains("Importable.UniqueValue()")
+    );
     let edited = apply_edit(source, edit);
     let (unit, parse_diagnostics) = fpas_parser::parse_compilation_unit(&edited);
     assert!(parse_diagnostics.is_empty(), "{parse_diagnostics:#?}");
@@ -286,10 +323,14 @@ fn apply_edit(source: &str, edit: &Value) -> String {
 fn offset(source: &str, position: &Value) -> usize {
     let line = position["line"].as_u64().expect("edit line") as usize;
     let character = position["character"].as_u64().expect("edit character") as usize;
-    let line_start = source
-        .match_indices('\n')
-        .nth(line.saturating_sub(1))
-        .map_or(0, |(index, _)| index + 1);
+    let line_start = if line == 0 {
+        0
+    } else {
+        source
+            .match_indices('\n')
+            .nth(line.saturating_sub(1))
+            .map_or(0, |(index, _)| index + 1)
+    };
     let line_end = source[line_start..]
         .find('\n')
         .map_or(source.len(), |length| line_start + length);

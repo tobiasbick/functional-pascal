@@ -2,11 +2,10 @@ use super::*;
 
 #[test]
 fn division_by_zero_preserves_code_message_and_source_location() {
-    let source = "\
-program RegisterDivisionError;
+    let source = r#"program RegisterDivisionError;
 begin
-  var X: integer := 7 div 0
-end.";
+  var X: integer := 7 div 0;
+end program;"#;
     let error = run_program(source).expect_err("division should fail");
     assert_eq!(
         error.code,
@@ -29,11 +28,10 @@ end.";
 
 #[test]
 fn explicit_panic_preserves_diagnostic_contract() {
-    let source = "\
-program RegisterPanic;
+    let source = r#"program RegisterPanic;
 begin
-  panic('expected failure')
-end.";
+  panic('expected failure');
+end program;"#;
     let error = run_program(source).expect_err("panic should fail");
     assert_eq!(error.code, fpas_diagnostics::codes::RUNTIME_PROGRAM_PANIC);
     assert!(error.message.contains("expected failure"));

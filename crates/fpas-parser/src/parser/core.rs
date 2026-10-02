@@ -183,6 +183,8 @@ impl Parser {
                 | Token::Do
                 | Token::Until
                 | Token::Else
+                | Token::Elsif
+                | Token::When
                 | Token::Of
                 | Token::To
                 | Token::Downto

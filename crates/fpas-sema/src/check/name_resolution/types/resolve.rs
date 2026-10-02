@@ -71,7 +71,7 @@ impl Checker {
     }
 
     fn resolve_named_type(&mut self, qid: &QualifiedId) -> Ty {
-        let name = qid.parts.join(".");
+        let name = self.resolve_source_name(&qid.parts.join("."), qid.span);
         match canonical_symbol_name(&name).as_str() {
             "integer" => Ty::Integer,
             "real" => Ty::Real,
@@ -79,6 +79,9 @@ impl Checker {
             "string" => Ty::String,
             "task" => Ty::Task(Box::new(Ty::Error)),
             _ => {
+                if self.type_collection.collecting {
+                    self.resolve_type_header(&name);
+                }
                 if let Some(symbol) = self.scopes.lookup(&name) {
                     if matches!(symbol.kind, SymbolKind::Type) {
                         symbol.ty.clone()
@@ -108,7 +111,9 @@ impl Checker {
                     self.error_with_code(
                         SEMA_UNKNOWN_TYPE,
                         format!("Unknown type `{name}`"),
-                        "Check spelling or add a type definition.",
+                        self.import_name_hint(&name).unwrap_or_else(|| {
+                            "Check spelling or add a type definition.".to_owned()
+                        }),
                         qid.span,
                     );
                     Ty::Error

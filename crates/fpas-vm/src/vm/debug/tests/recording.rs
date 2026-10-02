@@ -23,11 +23,11 @@ fn local_value(session: &mut DebugSession, name: &str) -> String {
 }
 
 const RANDOM_ASSIGN: &str = r#"program QuietRandom;
-uses Std.Random;
+uses Std.Random as Random;
 begin
   mutable var X: integer := 0;
-  X := RandomInt(1, 1)
-end.
+  X := Random.RandomInt(1, 1);
+end program;
 "#;
 
 fn compile_session(source: &str) -> DebugSession {
@@ -72,7 +72,7 @@ fn host_path_executable(source: &str) -> VerifiedExecutable {
 
 #[test]
 fn envelope_names_portable_program_identity_without_host_paths() {
-    let session = compile_session("program Envelope; begin end.");
+    let session = compile_session(r#"program Envelope; begin null; end program;"#);
     let envelope = session
         .recording_envelope()
         .expect("portable recording identity");
@@ -112,7 +112,7 @@ fn from_executable_rejects_posix_absolute_sources() {
 
 #[test]
 fn recording_stays_empty_until_start() {
-    let mut session = compile_session("program Quiet; begin end.");
+    let mut session = compile_session(r#"program Quiet; begin null; end program;"#);
     assert!(!session.is_recording());
     assert!(!session.recording_truncated());
     assert!(session.recording_events().is_empty());
@@ -127,10 +127,10 @@ fn recording_stays_empty_until_start() {
 fn start_recording_captures_current_stop_and_later_input() {
     let mut session = compile_session(
         r#"program CaptureInput;
-uses Std.Console;
+uses Std.Console as Console;
 begin
-  WriteLn(ReadLn())
-end.
+  Console.WriteLn(Console.ReadLn());
+end program;
 "#,
     );
     session.start_recording();
@@ -178,8 +178,8 @@ fn continue_after_record_captures_the_next_all_stop() {
         r#"program CaptureStop;
 begin
   mutable var Flag: integer := 0;
-  Flag := 1
-end.
+  Flag := 1;
+end program;
 "#,
     );
     session

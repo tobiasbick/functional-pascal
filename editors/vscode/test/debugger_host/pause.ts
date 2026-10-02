@@ -22,9 +22,9 @@ export async function verifyPauseAndDisconnect(
     "",
     "begin",
     "  while true do",
-    "  begin",
-    "  end",
-    "end.",
+    "  begin null;",
+    "  end; end while;",
+    "end program;",
     ""
   ]);
   const marker = { received: received.length, sent: sent.length };

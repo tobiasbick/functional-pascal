@@ -1,9 +1,15 @@
 program LongUses;
 
-uses
-  Std.Console, Std.Conv, Std.Arrays, Std.Dictionaries, Std.Options, Std.Results, Std.String,
-  MyApp.Very.Long.Namespace.One, MyApp.Very.Long.Namespace.Two;
+uses Std.Console as Console;
+uses Std.Conv as Conv;
+uses Std.Arrays as Arrays;
+uses Std.Dictionaries as Dictionaries;
+uses Std.Options as Options;
+uses Std.Results as Results;
+uses Std.String as String;
+uses MyApp.Very.Long.Namespace.One as One;
+uses MyApp.Very.Long.Namespace.Two as Two;
 
 begin
-  WriteLn('ok')
-end.
+  Console.WriteLn('ok');
+end program;

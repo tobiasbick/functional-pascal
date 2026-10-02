@@ -1,41 +1,42 @@
 program TuiStatusLineSnapshotTest;
 
-uses Std.Str, Std.Test, Std.Tui;
+uses Std.Str as Str;
+uses Std.Test as Test;
+uses Std.Tui as Tui;
 
-type
-  StatusModel = record
-  end;
+type StatusModel = record
+end record;
 
-function ViewStatus(State: StatusModel): TuiElement;
+function ViewStatus(State: StatusModel): Tui.TuiElement;
 begin
-  return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(1)), [
-                                                                        TuiElementBuilders.MakeStatusLine([
-                                                                                                            TuiStatusItemBuilders.MakeHint('Ready'),
-                                                                                                            TuiStatusItemBuilders.MakeKeyHint('F2', 'Save'),
-                                                                                                            TuiStatusItemBuilders.MakeCommand(TuiControlId.Create(1), 'Open', TuiAction.Create(10)),
-                                                                                                            TuiStatusItemBuilders.MakeDisabledCommand(TuiControlId.Create(2), 'Quit', TuiAction.Create(20))
-                                                                                                          ])
-                                                                      ])
-end;
+  return Tui.TuiElementBuilders.MakeDesktop(Some(Tui.TuiControlId.Create(1)), [
+                                                                                Tui.TuiElementBuilders.MakeStatusLine([
+                                                                                                                        Tui.TuiStatusItemBuilders.MakeHint('Ready'),
+                                                                                                                        Tui.TuiStatusItemBuilders.MakeKeyHint('F2', 'Save'),
+                                                                                                                        Tui.TuiStatusItemBuilders.MakeCommand(Tui.TuiControlId.Create(1), 'Open', Tui.TuiAction.Create(10)),
+                                                                                                                        Tui.TuiStatusItemBuilders.MakeDisabledCommand(Tui.TuiControlId.Create(2), 'Quit', Tui.TuiAction.Create(20))
+                                                                                                                      ])
+                                                                              ]);
+end function;
 
-function UpdateStatus(State: StatusModel; Msg: TuiMsg; Cmd: TuiCmdOutput): StatusModel;
+function UpdateStatus(State: StatusModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): StatusModel;
 begin
-  Cmd.Set(TuiCmd.NoCommand);
-  return State
-end;
+  Cmd.Set(Tui.TuiCmd.NoCommand);
+  return State;
+end function;
 
 begin
-  mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 3));
-  mutable var Model: StatusModel := record end;
+  mutable var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(24, 3));
+  mutable var Model: StatusModel := record end record;
 
   Model := App.RunIterations(Model, UpdateStatus, ViewStatus, 0, 0);
-  var Surface: TuiSurfaceSnapshot := App.SurfaceSnapshot();
-  AssertTrue(Std.Str.Contains(Surface.LineAt(0), 'Ready F2 Save Open Quit'));
-  AssertTrue(Surface.CellAt(0, 0).Role = TuiStyleRole.StatusNormal);
-  AssertTrue(Surface.CellAt(6, 0).Role = TuiStyleRole.StatusShortcut);
-  AssertTrue(Surface.CellAt(9, 0).Role = TuiStyleRole.StatusNormal);
-  AssertTrue(Surface.CellAt(14, 0).Role = TuiStyleRole.StatusSelected);
-  AssertTrue(Surface.CellAt(19, 0).Role = TuiStyleRole.StatusDisabled);
-  AssertTrue(Surface.CellAt(23, 0).Role = TuiStyleRole.StatusNormal);
-  App.Close()
-end.
+  var Surface: Tui.TuiSurfaceSnapshot := App.SurfaceSnapshot();
+  Test.AssertTrue(Str.Contains(Surface.LineAt(0), 'Ready F2 Save Open Quit'));
+  Test.AssertTrue(Surface.CellAt(0, 0).Role = Tui.TuiStyleRole.StatusNormal);
+  Test.AssertTrue(Surface.CellAt(6, 0).Role = Tui.TuiStyleRole.StatusShortcut);
+  Test.AssertTrue(Surface.CellAt(9, 0).Role = Tui.TuiStyleRole.StatusNormal);
+  Test.AssertTrue(Surface.CellAt(14, 0).Role = Tui.TuiStyleRole.StatusSelected);
+  Test.AssertTrue(Surface.CellAt(19, 0).Role = Tui.TuiStyleRole.StatusDisabled);
+  Test.AssertTrue(Surface.CellAt(23, 0).Role = Tui.TuiStyleRole.StatusNormal);
+  App.Close();
+end program;

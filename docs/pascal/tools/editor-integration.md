@@ -334,10 +334,10 @@ under `lib/api/Std/`; these declarations expose the Rust-registered signatures a
 Markdown blocks without participating in compilation or runtime dispatch. **Go to Definition** works for
 declarations and references in the same file and across units in the loaded
 project. Project navigation follows FPAS rules for lexical shadowing, direct
-`uses` imports, public declarations and record members, qualified unit names,
-and library `[exports].units`. For hierarchical unit names, navigation checks
-every matching imported owner and returns a target only when the complete
-qualified identity resolves unambiguously.
+`uses` aliases, public declarations and record members, and library
+`[exports].units`. An alias identifies exactly one directly imported unit,
+including when unit names share a hierarchical prefix. Raw unit names and
+unqualified imported members are not source access paths.
 
 **Go to Type Definition** follows the named source type of variables,
 parameters, record fields and properties, function results, and aliases. It
@@ -387,21 +387,22 @@ declaration; changed, deleted, or manipulated identities leave the completion
 item undocumented instead of attaching documentation from another symbol.
 The same rule applies to generated intrinsic declarations, including their
 `Parameters:` lists.
-Equal candidates imported from different units remain distinct so the editor
-can present their qualified owners. Private, shadowed, and non-exported
+Import aliases are offered in the lexical completion list. After `Alias.`,
+completion offers that unit's public members. Private, shadowed, and non-exported
 declarations are excluded.
 
-After a receiver and `.`, completion includes visible callables whose first
+After a value receiver and `.`, completion includes local callables whose first
 parameter accepts the receiver's type. Existing record members take priority
 over same-named free callables. Definition and hover resolve a complete
 receiver call to the selected callable, and signature help shows only its
 remaining explicit parameters because the receiver supplies the first one.
 
-When one unresolved identifier maps to exactly one public declaration in one
-accessible unit, completion can add that unit to the compilation unit's `uses`
-clause. The edit is produced through the canonical formatter and is withheld
-when the declaration or unit is ambiguous, inaccessible, already visible, or
-the existing clause cannot be edited conservatively.
+When an unresolved identifier maps to exactly one public declaration in one
+accessible unit, completion inserts a separate `uses Unit as Alias;` declaration
+and replaces the identifier with `Alias.Member`. The alias avoids existing
+identifiers and reserved words. The diagnostic quick fix applies both changes
+and formats the result. Ambiguous, inaccessible, or already imported units
+receive no auto-import suggestion.
 
 Signature help covers functions, procedures, record methods, nested routines,
 function values, enum constructors with associated values, and generic calls.

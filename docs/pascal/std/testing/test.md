@@ -4,12 +4,14 @@ Assertion procedures for FPAS test programs. Run single tests with `fpas run` or
 
 ```pascal
 program Example;
-uses Std.Test;
+
+uses Std.Test as Test;
+
 begin
-  AssertEquals(4, 2 + 2);
-  AssertTrue(1 + 1 = 2);
-  AssertFalse(1 = 2)
-end.
+  Test.AssertEquals(4, 2 + 2);
+  Test.AssertTrue(1 + 1 = 2);
+  Test.AssertFalse(1 = 2);
+end program;
 ```
 
 Test entry files are named `*_test.fpas` and must declare a `program` (not a bare `unit`).
@@ -17,13 +19,13 @@ Test entry files are named `*_test.fpas` and must declare a `program` (not a bar
 
 ## Importing and names
 
-After `uses Std.Test;` use short names (`AssertEquals`, …) or qualified forms (`Std.Test.AssertEquals`, …).
+Import with `uses Std.Test as Test;`. Access every exported member through `Test`, for example `Test.AssertTrue(...)`. Imports open no short names.
 
 ---
 
 ## Quick reference
 
-Requires `uses Std.Test;`.
+Requires `uses Std.Test as Test;`.
 
 | Kind | Name | Notes |
 |------|------|-------|
@@ -74,7 +76,7 @@ directly with `fpas run` receives `.temp-data` as the fallback and manages its o
 
 ### `procedure AssertScreenLine(Expected: string; Y: integer)`
 
-Fail with **F4023** when row `Y` (one-based) of the virtual CRT back buffer does not equal `Expected`. Use after drawing with `Std.Console`. Requires `uses Std.Console`.
+Fail with **F4023** when row `Y` (one-based) of the virtual CRT back buffer does not equal `Expected`. Use after drawing with `Std.Console`. Requires `uses Std.Console as Console;`.
 
 ### `procedure AssertScreenCell(X, Y: integer; Ch: string; Fg, Bg: integer)`
 
@@ -91,7 +93,7 @@ When tests run via `fpas test` inside a `kind = "test"` project, the runner may 
 | `Setup` | Before each test program (at most one per project) |
 | `Teardown` | After each test program, even if the test failed (at most one per project) |
 
-Hooks must be parameterless procedures. Names are matched case-insensitively. Use `uses Std.Test` in the helper unit if hooks need assertions.
+Hooks must be parameterless procedures. Names are matched case-insensitively. Use `uses Std.Test as Test;` in the helper unit if hooks need assertions.
 
 See [Projects](../../program-structure/projects.md) for `kind = "test"` manifests.
 

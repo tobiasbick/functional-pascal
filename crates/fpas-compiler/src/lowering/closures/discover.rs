@@ -50,7 +50,7 @@ impl<'a> ClosureRegistry<'a> {
         types: &mut types::TypeTable,
     ) -> Result<(), CompileError> {
         match statement {
-            Stmt::Block(statements, _) => {
+            Stmt::Block(statements, _) | Stmt::StatementList(statements, _) => {
                 self.discover_statements(statements, owner, metadata, types)?;
             }
             Stmt::Repeat {
@@ -81,11 +81,16 @@ impl<'a> ClosureRegistry<'a> {
             Stmt::If {
                 condition,
                 then_branch,
+                elsif_branches,
                 else_branch,
                 ..
             } => {
                 self.visit_expression(condition, owner, metadata, types)?;
                 self.visit_statement(then_branch, owner, metadata, types)?;
+                for (condition, body) in elsif_branches {
+                    self.visit_expression(condition, owner, metadata, types)?;
+                    self.visit_statement(body, owner, metadata, types)?;
+                }
                 if let Some(branch) = else_branch {
                     self.visit_statement(branch, owner, metadata, types)?;
                 }
@@ -140,7 +145,7 @@ impl<'a> ClosureRegistry<'a> {
                     self.visit_expression(argument, owner, metadata, types)?;
                 }
             }
-            Stmt::Break(_) | Stmt::Continue(_) => {}
+            Stmt::Null(_) | Stmt::Break(_) | Stmt::Continue(_) => {}
         }
         Ok(())
     }

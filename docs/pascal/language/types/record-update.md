@@ -12,26 +12,31 @@ At least one field assignment is required. An empty update such as
 `P with end` is invalid; use `P` directly instead.
 
 ```pascal
-type
-  Point = record X: integer; Y: integer; end;
+type Point = record
+  X: integer;
+  Y: integer;
+end record;
 
-var
-  P: Point := record X := 1; Y := 2; end;
-  Q: Point := P with X := 99; end;   // Q.X=99, Q.Y=2; P is unchanged
+var P: Point := record
+  X := 1;
+  Y := 2;
+end record;
+var Q: Point := P with X := 99; end with;
+
 ```
 
 Multiple fields can be updated in one expression:
 
 ```pascal
-var
-  R: Point := P with X := 10; Y := 20; end;
+var R: Point := P with X := 10; Y := 20; end with;
+
 ```
 
 Updates may be chained by wrapping the inner expression in parentheses:
 
 ```pascal
-var
-  S: Point := (P with X := 5; end) with Y := 7; end;
+var S: Point := (P with X := 5; end with) with Y := 7; end with;
+
 ```
 
 `with` works on any record value, including function return values:
@@ -39,11 +44,14 @@ var
 ```pascal
 function Origin(): Point;
 begin
-  return record X := 0; Y := 0; end
-end;
+  return record
+    X := 0;
+    Y := 0;
+  end record;
+end function;
 
-var
-  T: Point := Origin() with X := 42; end;
+var T: Point := Origin() with X := 42; end with;
+
 ```
 
 Unknown field names and type mismatches in override values are compile-time errors.

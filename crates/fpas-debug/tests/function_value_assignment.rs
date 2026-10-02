@@ -215,7 +215,7 @@ fn jsonl_function_values_copy_atomically_and_continue() {
         ("Current", "MakeAdder(1)", "variable_value_type"),
         (
             "Current",
-            "function(Value: integer): integer begin return Value end",
+            "function(Value: integer): integer begin return Value; end function",
             "unsupported_expression",
         ),
         ("Current", "1", "variable_value_type"),
@@ -261,33 +261,33 @@ fn jsonl_function_values_copy_atomically_and_continue() {
 fn jsonl_function_value_assignment_stays_bound_to_the_selected_child_task() {
     const TASK_SOURCE: &str = r#"program TaskFunctionValueAssignment;
 
-uses Std.Console, Std.Tasks;
+uses Std.Console as Console; uses Std.Tasks as Tasks;
 
-type
-  Handler = function(Value: integer): integer;
+
+  type Handler = function(Value: integer): integer;
 
 function AddOne(Value: integer): integer;
 begin
-  return Value + 1
-end;
+  return Value + 1;
+end function;
 
 function AddTwo(Value: integer): integer;
 begin
-  return Value + 2
-end;
+  return Value + 2;
+end function;
 
 function Work(): integer;
 begin
   mutable var Current: Handler := AddOne;
   var Backup: Handler := AddTwo;
   var Marker: integer := 0;
-  return Current(1)
-end;
+  return Current(1);
+end function;
 
 begin
   var Pending: task := go Work();
-  WriteLn(Wait(Pending))
-end.
+  Console.WriteLn(Tasks.Wait(Pending));
+end program;
 "#;
     let (program, diagnostics) = fpas_parser::parse(TASK_SOURCE);
     assert!(diagnostics.is_empty(), "parse diagnostics: {diagnostics:?}");

@@ -1,5 +1,21 @@
-//! Compile the actual Markdown project examples, including visibility modifiers.
+//! Compile and run the actual Markdown examples through production CLI paths.
 use super::*;
+
+#[test]
+fn documented_first_program_builds_and_runs_with_matching_routine_name() {
+    let text = include_str!("../../../../../docs/pascal/getting-started/first-program.md");
+    let block = text.split("```pascal").nth(1).expect("first program");
+    let (_, source) = block.split_once('\n').expect("fenced language");
+    let source = source.split_once("```").expect("closing fence").0;
+    let cwd = create_temp_dir("documented-first-program");
+    let project = cwd.join("app.fpasprj");
+    support::write_program_project_file(&project, "main.fpas", &["main.fpas"]);
+    write_text(&cwd.join("main.fpas"), source);
+    let (exit, stdout, stderr) = support::run_cli_and_capture_output(&project, &cwd);
+    fs::remove_dir_all(&cwd).expect("remove fixture");
+    assert_eq!(exit, 0, "{stderr}");
+    assert_eq!(stdout, "Hello, Pascal!\n");
+}
 
 #[test]
 fn source_review_documented_project_examples_compile() {

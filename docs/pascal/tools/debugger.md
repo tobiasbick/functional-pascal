@@ -415,6 +415,11 @@ sequence point remains visible as unverified. Function breakpoints support the
 same Boolean conditions and exact positive hit counts as source breakpoints;
 log messages and assignments are not accepted.
 
+The main frame and recording identity display the canonical program name.
+When a program and routine share a name, a function breakpoint with that name
+binds the declared routine. Internal program entries and unit initializers are
+excluded from short routine-name matching.
+
 Runtime failures stop for inspection by default. A client may instead replace
 the session filter with exact advertised diagnostic codes such as `F4001`, or
 with the single filter `all`. An empty selection stops on no runtime failures.

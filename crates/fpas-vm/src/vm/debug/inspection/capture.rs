@@ -179,6 +179,7 @@ impl InspectionSnapshot {
             .and_then(|point| breakpoints::source_location(&worker.executable, point))
             .or_else(|| diagnostic_location(worker, frame.instruction));
         let name = image.strings.get(function.name).unwrap_or("<function>");
+        let name = fpas_bytecode::entry_source_name(name).unwrap_or(name);
         self.frames.push(FrameSnapshot {
             frame: DebugFrame {
                 id: frame_id,

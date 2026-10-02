@@ -2,6 +2,10 @@
 
 use crate::{FunctionDebugInfo, InstructionAddress, StringId};
 
+mod source_entry;
+
+pub use source_entry::{entry_source_name, program_entry_name, unit_initializer_name};
+
 /// Half-open instruction range owned by one function.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct CodeRange {
@@ -56,7 +60,8 @@ pub struct FunctionFlags {
 /// Metadata for one dense register-bytecode function.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct FunctionInfo {
-    /// Canonical diagnostic name in the executable string table.
+    /// Canonical function identity in the executable string table.
+    /// Use [`entry_source_name`] to display an internal source entry.
     pub name: StringId,
     /// Half-open instruction range owned by the function.
     pub code: CodeRange,

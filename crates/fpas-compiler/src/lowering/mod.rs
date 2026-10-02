@@ -249,7 +249,9 @@ fn lower_analyzed_root(
             .lower_statement(statement)
             .map_err(|error| vec![error])?;
     }
-    let (root, updated_types) = context.finish(span).map_err(|error| vec![error])?;
+    let (mut root, updated_types) = context.finish(span).map_err(|error| vec![error])?;
+    // Keep source names during lexical resolution; reserve the entry identity afterward.
+    root.name = fpas_bytecode::program_entry_name(name);
     for (global, location) in global_initializers {
         let declaration = globals
             .get_mut(global.get() as usize)

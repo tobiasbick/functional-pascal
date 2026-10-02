@@ -106,12 +106,15 @@ projects pass `fpas check`. Of 52 complete handbook programs, 49 pass standalone
 checks; three project-dependent examples are covered by CLI project integration
 tests. The FPAS suite passes 458 tests with one intentional skip and no failures.
 
-## Remaining stage work
+## Program-entry regression
 
-A separate existing compiler issue rejects a program and routine sharing the
-same name with `F9001` / `DuplicateName`. The handbook's greeting example uses
-`GreetingDemo` as its program name; this delivery does not change that unrelated
-compiler naming behavior.
+The compiler's program-entry name collision is resolved: programs and routines
+can share a source name without `F9001` / `DuplicateName`. The handbook greeting
+example again uses `Greet` for both names and is built and run by a CLI regression
+test. Program entries and unit initializers have distinct internal identities;
+debugger frames and recording identities retain canonical source names.
+
+## Remaining stage work
 
 Operator precedence, logical evaluation restrictions, and `Std.Bits`
 replacements remain the next open implementation item. Future expressions,

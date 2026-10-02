@@ -30,7 +30,10 @@ pub use debug::{
 pub use decoded::DecodedInstruction;
 pub use executable::{Executable, VerifiedExecutable};
 pub use fpas_diagnostics::SourceLocation;
-pub use function::{CodeRange, FunctionFlags, FunctionInfo, ReturnConvention};
+pub use function::{
+    CodeRange, FunctionFlags, FunctionInfo, ReturnConvention, entry_source_name,
+    program_entry_name, unit_initializer_name,
+};
 pub use instruction::{
     AbcOperands, AbxOperands, Instruction, InstructionError, InstructionForm, Opcode,
 };

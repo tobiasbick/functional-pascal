@@ -3,7 +3,7 @@
 ## A first taste
 
 ```pascal
-program GreetingDemo;
+program Greet;
 
 uses Std.Console as Console;
 

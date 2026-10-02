@@ -21,7 +21,7 @@ pub struct DebugRecordingEnvelope {
     pub version: u32,
     /// Bytecode version understood by this runtime.
     pub bytecode_version: u32,
-    /// Entry-function diagnostic name.
+    /// Canonical source program name, without an internal entry prefix.
     pub program: String,
     /// Portable source identities in executable order.
     pub sources: Vec<String>,
@@ -57,7 +57,9 @@ impl DebugRecordingEnvelope {
             .functions
             .get(usize::from(image.entry.get()))
             .and_then(|function| image.strings.get(function.name))
-            .unwrap_or_default()
+            .unwrap_or_default();
+        let program = fpas_bytecode::entry_source_name(program)
+            .unwrap_or(program)
             .to_owned();
         Ok(Self {
             version: RECORDING_ENVELOPE_VERSION,

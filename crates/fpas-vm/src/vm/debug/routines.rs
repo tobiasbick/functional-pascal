@@ -2,7 +2,7 @@
 //!
 //! **Documentation:** `docs/pascal/tools/debugger.md`
 
-use fpas_bytecode::{FunctionId, VerifiedExecutable};
+use fpas_bytecode::{FunctionId, VerifiedExecutable, entry_source_name};
 
 /// Return every executable function whose canonical or unique-short name matches `name`.
 pub(in crate::vm::debug) fn matching_functions(
@@ -28,7 +28,8 @@ pub(in crate::vm::debug) fn matching_functions(
 /// Whether a stored executable name matches a requested simple or qualified name.
 pub(in crate::vm::debug) fn callable_name_matches(candidate: &str, requested: &str) -> bool {
     candidate.eq_ignore_ascii_case(requested)
-        || (!requested.contains('.')
+        || (entry_source_name(candidate).is_none()
+            && !requested.contains('.')
             && candidate
                 .rsplit_once('.')
                 .is_some_and(|(_, short)| short.eq_ignore_ascii_case(requested)))

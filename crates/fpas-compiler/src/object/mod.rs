@@ -128,7 +128,7 @@ fn qualify_unit_definitions(
 ) -> Result<(), fpas_unit::object::ObjectError> {
     for (index, function) in object.functions.iter_mut().enumerate() {
         if object.initializer == u32::try_from(index).ok() {
-            function.name = owner.to_string();
+            function.name = fpas_bytecode::unit_initializer_name(owner);
         } else if !function.name.starts_with(&format!("{owner}.")) {
             function.name = format!("{owner}.{}", function.name);
         }

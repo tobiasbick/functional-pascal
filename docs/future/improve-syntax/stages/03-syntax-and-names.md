@@ -122,8 +122,12 @@ from `pure function` belong to stage 5, when the common purity checker lands.
   Inspected the existing eager lowering and added boolean short-circuit branches.
   Evidence: [operator and bit API delivery](../audit/operator-delivery.md),
   including positive, negative, edge-case, real-process, and editor coverage.
-- [ ] Convert sources through resolved syntax/symbols. Preserve scopes, dangling
-  branch ownership, comments, and evaluation order; reject ambiguous migrations.
+- [x] Convert sources for the implemented block/name and operator constructs
+  through resolved syntax/symbols. Preserve scopes, dangling branch ownership,
+  comments, and evaluation order; reject ambiguous migrations.
+  Evidence: [source conversion verification](../audit/source-conversion.md),
+  including the migrated corpus, resolved unit owners, execution before/after
+  formatting, unchanged rejected sources, and positive/negative/edge-case tests.
 - [ ] Update grammar, applicable handbook pages, formatter style, authoring
   guidance, source templates, and editor formatting together when implemented.
 - [ ] Test every block-table row as its construct lands, missing/mismatched
@@ -147,7 +151,10 @@ The [block/name evidence](../audit/block-syntax-delivery.md) and
 [operator evidence](../audit/operator-delivery.md) record their coordinated
 source, documentation, runtime, and editor verification. Bit functions are
 side-effect-free; formal purity metadata remains assigned to stage 5 as agreed.
-The remaining migration, documentation, and test checklist items also cover later
-constructs and remain open.
-Next: review the remaining source-conversion work item against the completed
-deliveries and the [implementation sequence](../audit/implementation-sequence.md#syntax-and-resolution-deliveries).
+Source conversion for the implemented constructs is complete; see the
+[verification](../audit/source-conversion.md). The remaining documentation and
+coverage items concern implemented stage-3 behavior. Conditional/case expressions
+belong to stage 4, and task scopes belong to stage 5; their migration and tests
+land with those owning stages. They do not keep this source-conversion item open.
+Next: verify the coordinated grammar, handbook, formatter, authoring guidance,
+source templates, and editor documentation item against the completed deliveries.

@@ -51,7 +51,7 @@ The checklists in each document track work within that stage.
 |------|-------|---------------|--------|
 | [x] | [1. Language contract](language-contract.md) | None | Source audit, grammar/owner mapping, test inventory and bounded sequence recorded; no language implementation claimed |
 | [x] | [2. Diagnostics](stages/02-diagnostics.md) | Stage 1 contract | Coded records for all toolchain failures and warnings; `--diagnostics json` for check/build/run/test, `FPAS_DIAGNOSTICS=json` for native applications, and program-output records |
-| [ ] | [3. Syntax and names](stages/03-syntax-and-names.md) | Stages 1 and 2 | Inventory and first implementation item complete: block syntax, terminators, individual declarations, and alias-only names with consumer migration and tests; operators remain open |
+| [ ] | [3. Syntax and names](stages/03-syntax-and-names.md) | Stages 1 and 2 | Inventory, block/name syntax, operators/bit APIs, and source conversion for implemented constructs complete; final documentation and coverage checklist items remain open |
 | [ ] | [4. Functional core](stages/04-functional-core.md) | Stages 1-3; coordinated mutation/purity work from stage 5 | Planned |
 | [ ] | [5. Effects and tasks](stages/05-effects-and-tasks.md) | Stage 4 facilities; contract fixed in stage 1 | Planned |
 | [ ] | [6. Domain types and contracts](stages/06-domain-types-and-contracts.md) | Stages 4 and 5 | Planned |
@@ -134,5 +134,8 @@ Existing tests were inspected, not executed for the stage-1 documentation audit.
 Stage 2 is complete; see its owning stage for the delivered slices, producer
 audit and verification. Stage 3's [syntax and consumer inventory](audit/syntax-and-names.md)
 is complete, including existing positive/negative/edge coverage and target gaps.
-Next, implement its block/declaration/import work using the audited owners and
-coordinated migration boundaries. Stage 3 itself remains open.
+Block/declaration/import and operator/bit API delivery, including their
+[source conversion verification](audit/source-conversion.md), are complete.
+Next, verify the coordinated documentation item for implemented stage-3 behavior.
+Stage 3 itself remains open; later constructs retain their owning stage's
+migration and test boundaries.

@@ -117,6 +117,9 @@ debugger frames and recording identities retain canonical source names.
 ## Remaining stage work
 
 Operator precedence, logical evaluation restrictions, and `Std.Bits`
-replacements remain the next open implementation item. Future expressions,
-purity, mutation replacement, and task scopes belong to their owning later
-stages. This delivery does not complete stage 3 or those later constructs.
+replacements have since landed in the [operator delivery](operator-delivery.md).
+[Source conversion verification](source-conversion.md) closes the migration
+item for these implemented stage-3 constructs. Final documentation and coverage
+checklist items remain open. Future expressions, purity, mutation replacement,
+and task scopes retain migration and tests in their owning later stages.
+This delivery does not complete stage 3 or those later constructs.

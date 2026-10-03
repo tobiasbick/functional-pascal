@@ -80,13 +80,15 @@ Only then can stage 2 be marked complete.
 
 ## Syntax and resolution deliveries
 
-1. **Named blocks and declarations:** change parser `program.rs`,
+1. **Named blocks and declarations (implemented):** see the
+   [block/name delivery](block-syntax-delivery.md). Owners: parser `program.rs`,
    `decl/routines.rs`, `decl/data/const_var.rs`, `decl/data/type_defs.rs`,
    `stmt/branching.rs`, `stmt/loops.rs`, and formatter `emit/stmt/`, `emit/decl/`,
    `emit/program.rs`, `comments/traversal/` under their owning crates. Add null
    bodies and recovery tests. Migrate all source/templates/goldens with matching
    grammar/handbook updates; new later-stage constructs are not reserved early.
-2. **Import qualifiers and forward type collection:** parser `program.rs`, sema
+2. **Import qualifiers and forward type collection (implemented):** see the
+   [block/name delivery](block-syntax-delivery.md). Owners: parser `program.rs`, sema
    `check/entry.rs`, `check/name_resolution/`, `interface/install.rs` and project
    `unit_graph/resolve.rs`. Add focused sema `check/decl/types/collection.rs`
    for whole-unit type headers. Migrate resolved names, qualified variants,
@@ -104,6 +106,9 @@ Only then can stage 2 be marked complete.
 
 Each delivery includes its consumer migration and real execution tests. Source
 conversion tools may exist temporarily; no delivered legacy parser mode remains.
+The [source conversion verification](source-conversion.md) closes the stage-3
+migration item for these three implemented deliveries. Later constructs are
+migrated and tested with their owning stage, rather than extending this item.
 
 ## Coordinated functional-core and mutation boundary
 

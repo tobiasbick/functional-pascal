@@ -5,6 +5,8 @@ use std::fs;
 #[cfg(unix)]
 use std::os::unix::ffi::OsStringExt;
 
+mod source_conversion;
+
 #[test]
 fn fmt_cli_formats_source_file_in_place() {
     let cwd = create_temp_dir("fmt-source");

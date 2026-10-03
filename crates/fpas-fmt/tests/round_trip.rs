@@ -30,6 +30,11 @@ fn apps_tree_round_trip() {
     round_trip_tree("apps", &repo_root("apps"));
 }
 
+#[test]
+fn library_and_generated_api_tree_round_trip() {
+    round_trip_tree("lib", &repo_root("lib"));
+}
+
 fn round_trip_tree(label: &str, root: &Path) {
     walk_fpas_files(root, &mut |path, source| {
         let relative = path

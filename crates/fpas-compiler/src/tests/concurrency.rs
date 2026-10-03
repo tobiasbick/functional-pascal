@@ -104,7 +104,7 @@ end function;
 
 begin
   var A: task := go Work(42);
-  Tasks.Wait(A);
+  discard Tasks.Wait(A);
 end program;"#,
     );
 }
@@ -115,7 +115,7 @@ fn cancellation_token_interrupts_network_accept_end_to_end() {
     let port = reservation.local_addr().expect("reserved address").port();
     drop(reservation);
     let source = format!(
-        "program CancellableAccept;\n\nuses Std.Net as Net; uses Std.Tasks as Tasks; uses Std.Time as Time;\n\nfunction WaitForCancellation(\n  ListenerValue: Net.Listener;\n  Token: Tasks.CancellationToken\n): string;\nbegin\n  case Net.AcceptWithCancellation(ListenerValue, Token) of\n    when Ok(Connection):\n    begin\n      Net.Close(Connection);\n      return 'accepted';\n    end;\n    when Error(Message): return Message;\n  end case;\nend function;\n\nbegin\n  case Net.Listen('127.0.0.1', {port}) of\n    when Ok(ListenerValue):\n    begin\n      var Source: Tasks.CancellationSource := Tasks.CreateCancellationSource();\n      var Token: Tasks.CancellationToken := Tasks.GetCancellationToken(Source);\n      var Waiting: task := go WaitForCancellation(ListenerValue, Token);\n      Time.Sleep(50);\n      if not Tasks.Cancel(Source) then panic('first cancellation did not change state'); end if;\n      if Tasks.Wait(Waiting) <> 'Network accept cancelled' then\n        panic('accept did not report cancellation'); end if;\n      Net.CloseListener(ListenerValue);\n    end;\n    when Error(Message): panic(Message);\n  end case;\nend program;"
+        "program CancellableAccept;\n\nuses Std.Net as Net; uses Std.Tasks as Tasks; uses Std.Time as Time;\n\nfunction WaitForCancellation(\n  ListenerValue: Net.Listener;\n  Token: Tasks.CancellationToken\n): string;\nbegin\n  case Net.AcceptWithCancellation(ListenerValue, Token) of\n    when Ok(Connection):\n    begin\n      discard Net.Close(Connection);\n      return 'accepted';\n    end;\n    when Error(Message): return Message;\n  end case;\nend function;\n\nbegin\n  case Net.Listen('127.0.0.1', {port}) of\n    when Ok(ListenerValue):\n    begin\n      var Source: Tasks.CancellationSource := Tasks.CreateCancellationSource();\n      var Token: Tasks.CancellationToken := Tasks.GetCancellationToken(Source);\n      var Waiting: task := go WaitForCancellation(ListenerValue, Token);\n      Time.Sleep(50);\n      if not Tasks.Cancel(Source) then panic('first cancellation did not change state'); end if;\n      if Tasks.Wait(Waiting) <> 'Network accept cancelled' then\n        panic('accept did not report cancellation'); end if;\n      discard Net.CloseListener(ListenerValue);\n    end;\n    when Error(Message): panic(Message);\n  end case;\nend program;"
     );
 
     assert_succeeds(&source);
@@ -136,8 +136,8 @@ begin
   var A: task := go Work(20);
   var B: task := go Work(22);
   Tasks.WaitAll([A, B]);
-  Tasks.Wait(A);
-  Tasks.Wait(B);
+  discard Tasks.Wait(A);
+  discard Tasks.Wait(B);
 end program;"#,
     );
 }
@@ -160,7 +160,7 @@ end function;
 begin
   var Work: function(): integer := Make();
   var T: task := go Work();
-  Tasks.Wait(T);
+  discard Tasks.Wait(T);
 end program;"#;
     let error = run_program(source).expect_err("runtime must reject task-bound closure");
     assert!(error.message.contains("task-bound"));
@@ -287,7 +287,7 @@ fn channel_timeout_rejects_negative_milliseconds() {
 uses Std.Tasks as Tasks;
 begin
   var Messages: channel of integer := Tasks.CreateChannel(1);
-  Tasks.ReceiveWithTimeout(Messages, -1);
+  discard Tasks.ReceiveWithTimeout(Messages, -1);
 end program;"#,
     )
     .expect_err("negative channel timeout must fail");
@@ -331,14 +331,14 @@ begin
   var SendSource: Tasks.CancellationSource := Tasks.CreateCancellationSource();
   var Sending: task := go BlockedSend(Full, Tasks.GetCancellationToken(SendSource));
   Time.Sleep(20);
-  Tasks.Cancel(SendSource);
+  discard Tasks.Cancel(SendSource);
   if Tasks.Wait(Sending) <> 'Channel send was cancelled' then panic('send cancellation mismatch'); end if;
 
   var Empty: channel of integer := Tasks.CreateChannel(1);
   var ReceiveSource: Tasks.CancellationSource := Tasks.CreateCancellationSource();
   var Receiving: task := go BlockedReceive(Empty, Tasks.GetCancellationToken(ReceiveSource));
   Time.Sleep(20);
-  Tasks.Cancel(ReceiveSource);
+  discard Tasks.Cancel(ReceiveSource);
   if Tasks.Wait(Receiving) <> 'Channel receive was cancelled' then
     panic('receive cancellation mismatch'); end if;
 end program;"#,

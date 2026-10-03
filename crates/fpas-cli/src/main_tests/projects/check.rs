@@ -326,7 +326,7 @@ end unit;
         r#"program Main;
 uses Demo.Math as Math;
 begin
-  Math.Answer();
+  discard Math.Answer();
 end program;
 "#,
     );
@@ -404,7 +404,7 @@ end unit;
         r#"program First;
 uses Demo.Shared as Shared;
 begin
-  Shared.Value();
+  discard Shared.Value();
 end program;
 "#,
     );
@@ -413,7 +413,7 @@ end program;
         r#"program Second;
 uses Demo.Shared as Shared;
 begin
-  Shared.Value();
+  discard Shared.Value();
 end program;
 "#,
     );

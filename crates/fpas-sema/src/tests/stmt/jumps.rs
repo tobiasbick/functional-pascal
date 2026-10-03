@@ -40,7 +40,7 @@ fn continue_in_if_outside_loop() {
 #[test]
 fn break_in_function_body_not_in_loop() {
     check_errors(
-        r#"program T; function Foo(): integer; begin break; return 0; end function; begin Foo(); end program;"#,
+        r#"program T; function Foo(): integer; begin break; return 0; end function; begin discard Foo(); end program;"#,
     );
 }
 

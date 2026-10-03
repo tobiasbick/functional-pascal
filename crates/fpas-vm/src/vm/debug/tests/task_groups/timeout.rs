@@ -50,17 +50,17 @@ begin
   var Release: channel of boolean := Tasks.CreateChannel(1);
   var Child: task := Tasks.StartTaskInGroup(Group, function(Token: Tasks.CancellationToken): integer
   begin
-    Tasks.Send(Ready, true);
+    discard Tasks.Send(Ready, true);
     while Options.IsNone(Results.Unwrap(Tasks.TryReceive(Release))) do begin null; end; end while;
     if not Tasks.IsCancellationRequested(Token) then panic('cancellation was not retained'); end if;
     return 42;
   end function);
   while Options.IsNone(Results.Unwrap(Tasks.TryReceive(Ready))) do begin null; end; end while;
   if not Results.IsError(Tasks.CloseTaskGroupWithTimeout(Group, 2)) then panic('running worker was lost'); end if;
-  Tasks.Send(Release, true);
+  discard Tasks.Send(Release, true);
   if Tasks.Wait(Child) <> 42 then panic('worker could not finish after timeout'); end if;
   if Arrays.Length(Tasks.CloseTaskGroup(Group)) <> 0 then panic('close failed'); end if;
-  Tasks.CloseChannel(Ready); Tasks.CloseChannel(Release);
+  discard Tasks.CloseChannel(Ready); discard Tasks.CloseChannel(Release);
 end program;"#,
     );
     assert!(errors.is_empty(), "{errors:?}");
@@ -92,14 +92,14 @@ begin
     var Child: task := Tasks.StartTaskInGroup(Inner, function(Stop: Tasks.CancellationToken): integer
       begin return Results.Unwrap(Tasks.Receive(Gate)); end function);
     if not Results.IsError(Tasks.CloseTaskGroupWithTimeout(Inner, 2)) then panic('premature close'); end if;
-    Results.Unwrap(Tasks.Send(Ready, true));
+    discard Results.Unwrap(Tasks.Send(Ready, true));
     if Tasks.Wait(Child) <> 42 then panic('child result was lost'); end if;
     if Arrays.Length(Results.Unwrap(Tasks.CloseTaskGroupWithTimeout(Inner, 1000))) <> 0 then panic('inner failures'); end if;
   end procedure);
-  Results.Unwrap(Tasks.Receive(Ready));
-  Results.Unwrap(Tasks.Send(Gate, 42));
+  discard Results.Unwrap(Tasks.Receive(Ready));
+  discard Results.Unwrap(Tasks.Send(Gate, 42));
   if Arrays.Length(Results.Unwrap(Tasks.CloseTaskGroupWithTimeout(Outer, 1000))) <> 0 then panic('outer failures'); end if;
-  Tasks.CloseChannel(Ready); Tasks.CloseChannel(Gate);
+  discard Tasks.CloseChannel(Ready); discard Tasks.CloseChannel(Gate);
 end program;"#,
     );
 }

@@ -8,8 +8,8 @@ begin
   var Workers: Tasks.TaskGroup := Tasks.CreateTaskGroup();
   // This queue models a transient failure followed by a successful operation.
   var Outcomes: channel of boolean := Tasks.CreateChannel(2);
-  Tasks.Send(Outcomes, false);
-  Tasks.Send(Outcomes, true);
+  discard Tasks.Send(Outcomes, false);
+  discard Tasks.Send(Outcomes, true);
   var Worker: task := Tasks.StartSupervisedTask(Workers, function(Token: Tasks.CancellationToken): result of string, string begin
     Console.WriteLn('Starting an attempt');
     if not Results.Unwrap(Tasks.Receive(Outcomes)) then
@@ -22,6 +22,6 @@ begin
   end function, 2, 10);
   // Wait retrieves the final result; intermediate failures remain inside the supervisor.
   Console.WriteLn(Results.Unwrap(Tasks.Wait(Worker)));
-  Tasks.CloseTaskGroup(Workers);
-  Tasks.CloseChannel(Outcomes);
+  discard Tasks.CloseTaskGroup(Workers);
+  discard Tasks.CloseChannel(Outcomes);
 end program;

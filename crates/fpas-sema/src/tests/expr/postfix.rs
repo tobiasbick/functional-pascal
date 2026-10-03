@@ -173,7 +173,7 @@ fn postfix_value_may_not_be_used_as_statement() {
     assert!(
         errors
             .iter()
-            .any(|error| error.message.contains("must end with a method call")),
+            .any(|error| error.message.contains("must end with a call")),
         "{errors:#?}"
     );
 }

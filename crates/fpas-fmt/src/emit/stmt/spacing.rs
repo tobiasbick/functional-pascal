@@ -22,6 +22,7 @@ fn statement_ends_with_end(stmt: &Stmt) -> bool {
         | Stmt::Go { expr: value, .. } => expression_ends_with_end(value),
         Stmt::Null(_)
         | Stmt::Return(None, ..)
+        | Stmt::Discard(..)
         | Stmt::Panic(..)
         | Stmt::Repeat { .. }
         | Stmt::Break(..)

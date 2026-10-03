@@ -30,7 +30,7 @@ fn embedding_does_not_implicitly_authorize_process_control() {
       Test2.AssertTrue(Results.IsError(Server.CreateLifetime(10, true)));
       var Life: Server.ServerLifetime := Results.Unwrap(Server.CreateLifetime(10, false));
       Test2.AssertTrue(Results.IsError(Server.ObserveSignals(Life)));
-      Server.RequestStop(Life); Tasks.CloseTaskGroup(Server.GetWorkGroup(Life));
+      discard Server.RequestStop(Life); discard Tasks.CloseTaskGroup(Server.GetWorkGroup(Life));
       Test2.AssertTrue(Results.IsOk(Server.FinishShutdown(Life))); end program;"#,
     )
     .run()
@@ -41,8 +41,8 @@ fn embedding_does_not_implicitly_authorize_process_control() {
 fn stop_rejects_new_group_work() {
     let error = vm(r#"program Test;  uses Std.Server as Server; uses Std.Results as Results; uses Std.Tasks as Tasks; begin
       var Life: Server.ServerLifetime := Results.Unwrap(Server.CreateLifetime(10, false));
-      Server.RequestStop(Life);
-      Tasks.StartTaskInGroup(Server.GetWorkGroup(Life), function(Token: Tasks.CancellationToken): boolean begin return true; end function);
+      discard Server.RequestStop(Life);
+      var WorkerHandle: task := Tasks.StartTaskInGroup(Server.GetWorkGroup(Life), function(Token: Tasks.CancellationToken): boolean begin return true; end function);
       end program;"#).run().unwrap_err();
     assert!(
         error.message.contains("closing or cancelled"),
@@ -55,7 +55,7 @@ fn stop_rejects_new_group_work() {
 fn returning_without_explicit_cleanup_reports_incomplete_shutdown() {
     let error = vm(
         r#"program Test;  uses Std.Server as Server; uses Std.Results as Results; begin
-      Results.Unwrap(Server.CreateLifetime(0, false)); end program;"#,
+      discard Results.Unwrap(Server.CreateLifetime(0, false)); end program;"#,
     )
     .run()
     .unwrap_err();
@@ -156,14 +156,14 @@ fn server_lifecycle_child() {
     };
     let body = if mode == "signals" {
         "Test.AssertTrue(Results.Unwrap(Server.ObserveSignals(Life))); Test.AssertTrue(not Results.Unwrap(Server.ObserveSignals(Life)));
-         Server.RequestStop(Life); Tasks.CloseTaskGroup(Server.GetWorkGroup(Life)); Test.AssertTrue(Results.IsOk(Server.FinishShutdown(Life)));"
+         discard Server.RequestStop(Life); discard Tasks.CloseTaskGroup(Server.GetWorkGroup(Life)); Test.AssertTrue(Results.IsOk(Server.FinishShutdown(Life)));"
     } else if mode == "clean" {
-        "Server.RequestStop(Life); Tasks.CloseTaskGroup(Server.GetWorkGroup(Life));
+        "discard Server.RequestStop(Life); discard Tasks.CloseTaskGroup(Server.GetWorkGroup(Life));
          Test.AssertTrue(Results.IsOk(Server.FinishShutdown(Life))); Time.Sleep(200);"
     } else if mode == "compute" {
-        "Server.RequestStop(Life); while true do null; end while;"
+        "discard Server.RequestStop(Life); while true do null; end while;"
     } else {
-        "Server.RequestStop(Life); Console.WriteLn('output');"
+        "discard Server.RequestStop(Life); Console.WriteLn('output');"
     };
     let source = format!(
         "program Child;  uses Std.Server as Server; uses Std.Results as Results; uses Std.Tasks as Tasks; uses Std.Time as Time; uses Std.Console as Console; uses Std.Test as Test;\n        begin var Life: Server.ServerLifetime := Results.Unwrap(Server.CreateLifetime(50, true)); {body} end program;"

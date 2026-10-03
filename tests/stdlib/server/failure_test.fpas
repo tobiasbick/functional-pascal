@@ -30,10 +30,10 @@ begin
     return Error('session failed');
   end function);
   var Listener: Net.Listener := Results.Unwrap(BindListener());
-  Server.OwnListener(Life, Listener);
+  discard Server.OwnListener(Life, Listener);
   // Deliberate ownership misuse: cleanup must preserve this failure.
-  Net.CloseListener(Listener);
-  Server.RequestStop(Life);
+  discard Net.CloseListener(Listener);
+  discard Server.RequestStop(Life);
   var Failures: array of Tasks.TaskFailure := Tasks.CloseTaskGroup(Group);
   Test.AssertEquals(1, Arrays.Length(Failures));
   Test.AssertEquals('session failed', Failures[0].Message);

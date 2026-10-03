@@ -10,7 +10,7 @@ begin
   var Jobs: channel of integer := Tasks.CreateChannel(2);
   var Results: channel of integer := Tasks.CreateChannel(2);
   var Group: Tasks.TaskGroup := Tasks.CreateTaskGroup();
-  Tasks.StartTaskInGroup(Group, procedure(Token: Tasks.CancellationToken) begin
+  var StartedTask1: task := Tasks.StartTaskInGroup(Group, procedure(Token: Tasks.CancellationToken) begin
     for Value: integer := 1 to 12 do
       begin
         if Results2.IsError(Tasks.SendWithCancellation(Jobs, Value, Token)) then
@@ -21,11 +21,11 @@ begin
       end;
     end for;
 
-    Tasks.CloseChannel(Jobs);
+    discard Tasks.CloseChannel(Jobs);
   end procedure);
   for Worker: integer := 1 to 3 do
     begin
-      Tasks.StartTaskInGroup(Group, procedure(Token: Tasks.CancellationToken) begin
+      var WorkerHandle: task := Tasks.StartTaskInGroup(Group, procedure(Token: Tasks.CancellationToken) begin
         while not Tasks.IsCancellationRequested(Token) do
           begin
             case Tasks.ReceiveWithCancellation(Jobs, Token) of
@@ -75,6 +75,6 @@ begin
       end;
   end case;
 
-  Tasks.CloseChannel(Results);
+  discard Tasks.CloseChannel(Results);
   Console.WriteLn(Total);
 end program;

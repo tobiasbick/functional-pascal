@@ -25,7 +25,7 @@ begin
             end;
           end if;
 
-          Tasks.Send(Ready, true);
+          discard Tasks.Send(Ready, true);
           return Ok(true);
         end function);
         return State;
@@ -64,5 +64,5 @@ begin
   Model := App.RunBackgroundIterations(Model, Inbox, UpdateFramework, UpdateApplication, View, 1, 0);
   Test.AssertEquals(42, Model.Value);
   App.CloseWithBackground(Inbox);
-  Tasks.CloseChannel(Ready);
+  discard Tasks.CloseChannel(Ready);
 end program;

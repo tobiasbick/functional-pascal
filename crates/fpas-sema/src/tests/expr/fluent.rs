@@ -133,7 +133,7 @@ fn record_field_blocks_free_call_fallback() {
     assert!(
         errors.iter().any(|error| error
             .message
-            .contains("Record member `Value` is not callable")),
+            .contains("Callable target `Value` is not callable")),
         "{errors:#?}"
     );
 }

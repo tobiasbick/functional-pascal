@@ -10,5 +10,5 @@ uses Std.Tui as Tui;
 
 begin
   var Initial: Model.LocalChatModel := Model.LocalChatModelCreate(Console.ScreenWidth(), Console.ScreenHeight());
-  Tui.TuiApplication.RunWithPalette(Initial, Update.LocalChatUpdate, View.LocalChatView, Theme.LocalChatPalette());
+  discard Tui.TuiApplication.RunWithPalette(Initial, Update.LocalChatUpdate, View.LocalChatView, Theme.LocalChatPalette());
 end program;

@@ -124,7 +124,7 @@ begin
 end function;
 
 begin
-  Tui.TuiApplication.Run(record
+  discard Tui.TuiApplication.Run(record
     Text := '';
     Caret := 0;
     Confirming := false;

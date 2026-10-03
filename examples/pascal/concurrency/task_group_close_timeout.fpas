@@ -9,9 +9,9 @@ uses Std.Arrays as Arrays;
 begin
   var Release: channel of integer := Tasks.CreateChannel(1);
   var Group: Tasks.TaskGroup := Tasks.CreateTaskGroup();
-  Tasks.StartTaskInGroup(Group, procedure(Token: Tasks.CancellationToken) begin
+  var StartedTask1: task := Tasks.StartTaskInGroup(Group, procedure(Token: Tasks.CancellationToken) begin
     // Intentionally not cancellable: the owner must release this cleanup gate.
-    Results.Unwrap(Tasks.Receive(Release));
+    discard Results.Unwrap(Tasks.Receive(Release));
   end procedure);
   case Tasks.CloseTaskGroupWithTimeout(Group, 0) of
     when Error(Message):
@@ -24,9 +24,9 @@ begin
       end;
   end case;
 
-  Results.Unwrap(Tasks.Send(Release, 1));
+  discard Results.Unwrap(Tasks.Send(Release, 1));
   var Failures: array of Tasks.TaskFailure := Tasks.CloseTaskGroup(Group);
-  Tasks.CloseChannel(Release);
+  discard Tasks.CloseChannel(Release);
   if Arrays.Length(Failures) <> 0 then
     begin
       panic('Cleanup failed');

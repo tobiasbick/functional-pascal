@@ -139,28 +139,28 @@ fn generic_function_reused_type_param_requires_same_concrete_type() {
 #[test]
 fn generic_function_numeric_constraint_allows_arithmetic() {
     check_ok(
-        r#"program T; function Add<T: Numeric>(A: T; B: T): T; begin return A + B; end function; begin Add(1, 2); end program;"#,
+        r#"program T; function Add<T: Numeric>(A: T; B: T): T; begin return A + B; end function; begin discard Add(1, 2); end program;"#,
     );
 }
 
 #[test]
 fn generic_function_numeric_constraint_allows_negate() {
     check_ok(
-        r#"program T; function Neg<T: Numeric>(X: T): T; begin return -X; end function; begin Neg(5); end program;"#,
+        r#"program T; function Neg<T: Numeric>(X: T): T; begin return -X; end function; begin discard Neg(5); end program;"#,
     );
 }
 
 #[test]
 fn generic_function_comparable_constraint_allows_lt() {
     check_ok(
-        r#"program T; function IsLess<T: Comparable>(A: T; B: T): boolean; begin return A < B; end function; begin IsLess(1, 2); end program;"#,
+        r#"program T; function IsLess<T: Comparable>(A: T; B: T): boolean; begin return A < B; end function; begin discard IsLess(1, 2); end program;"#,
     );
 }
 
 #[test]
 fn generic_function_unconstrained_rejects_arithmetic() {
     let errors = check_errors(
-        r#"program T; function Add<T>(A: T; B: T): T; begin return A + B; end function; begin Add(1, 2); end program;"#,
+        r#"program T; function Add<T>(A: T; B: T): T; begin return A + B; end function; begin discard Add(1, 2); end program;"#,
     );
     assert!(
         errors

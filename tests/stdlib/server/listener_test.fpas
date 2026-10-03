@@ -36,7 +36,7 @@ begin
   Test.AssertEquals(0, Arrays.Length(Tasks.CloseTaskGroup(Server.GetWorkGroup(Life))));
   Test.AssertTrue(Results.Unwrap(Server.FinishShutdown(Life)));
   Test.AssertEquals(0, Arrays.Length(Server.ShutdownErrors(Life)));
-  Server.RequestStop(Other);
-  Tasks.CloseTaskGroup(Server.GetWorkGroup(Other));
+  discard Server.RequestStop(Other);
+  discard Tasks.CloseTaskGroup(Server.GetWorkGroup(Other));
   Test.AssertTrue(Results.Unwrap(Server.FinishShutdown(Other)));
 end program;

@@ -17,6 +17,7 @@ pub(super) fn token_display(t: &Token) -> Cow<'static, str> {
         Token::Procedure => "procedure".into(),
         Token::Begin => "begin".into(),
         Token::End => "end".into(),
+        Token::Discard => "discard".into(),
         Token::Return => "return".into(),
         Token::If => "if".into(),
         Token::Then => "then".into(),

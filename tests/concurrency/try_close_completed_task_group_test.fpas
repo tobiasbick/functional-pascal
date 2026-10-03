@@ -14,8 +14,8 @@ begin
   var Gate: channel of boolean := Tasks.CreateChannel(1);
   var Ready: channel of boolean := Tasks.CreateChannel(1);
   var Returned: Tasks.TaskGroup := Tasks.CreateTaskGroup();
-  Tasks.StartTaskInGroup(Returned, function(Token: Tasks.CancellationToken): result of boolean, string begin
-    Tasks.Send(Ready, true);
+  var StartedTask1: task := Tasks.StartTaskInGroup(Returned, function(Token: Tasks.CancellationToken): result of boolean, string begin
+    discard Tasks.Send(Ready, true);
     case Tasks.ReceiveWithCancellation(Gate, Token) of
       when Ok(_):
         begin
@@ -29,7 +29,7 @@ begin
   end function);
   Test.AssertTrue(Results.Unwrap(Tasks.ReceiveWithTimeout(Ready, 10000)));
   Test.AssertTrue(Options.IsNone(Tasks.TryCloseCompletedTaskGroup(Returned)));
-  Tasks.Send(Gate, true);
+  discard Tasks.Send(Gate, true);
   mutable var ReturnedFailures: option of array of Tasks.TaskFailure := None;
   while Options.IsNone(ReturnedFailures) do
     begin
@@ -43,8 +43,8 @@ begin
   Test.AssertEquals('expected returned error', ReturnedReport[0].Message);
   var PanicReady: channel of boolean := Tasks.CreateChannel(1);
   var Panicked: Tasks.TaskGroup := Tasks.CreateTaskGroup();
-  Tasks.StartTaskInGroup(Panicked, procedure(Token: Tasks.CancellationToken) begin
-    Tasks.Send(PanicReady, true);
+  var StartedTask2: task := Tasks.StartTaskInGroup(Panicked, procedure(Token: Tasks.CancellationToken) begin
+    discard Tasks.Send(PanicReady, true);
     panic('expected panic report');
   end procedure);
   Test.AssertTrue(Results.Unwrap(Tasks.ReceiveWithTimeout(PanicReady, 10000)));
@@ -59,7 +59,7 @@ begin
   Test.AssertEquals(1, Arrays.Length(PanicReport));
   Test.AssertTrue(PanicReport[0].Kind = Tasks.TaskFailureKind.Panicked);
   Test.AssertEquals('panic: expected panic report', PanicReport[0].Message);
-  Tasks.CloseChannel(Gate);
-  Tasks.CloseChannel(Ready);
-  Tasks.CloseChannel(PanicReady);
+  discard Tasks.CloseChannel(Gate);
+  discard Tasks.CloseChannel(Ready);
+  discard Tasks.CloseChannel(PanicReady);
 end program;

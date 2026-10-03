@@ -17,7 +17,7 @@ begin
       begin
         var Ready: channel of boolean := State.Ready;
         Cmd.StartBackground(19, function(Token: Tasks.CancellationToken): result of boolean, string begin
-          Tasks.Send(Ready, true);
+          discard Tasks.Send(Ready, true);
           return Error('expected background failure');
         end function);
         return State;
@@ -61,5 +61,5 @@ begin
   Model := App.RunBackgroundIterations(Model, Inbox, UpdateFramework, UpdateApplication, View, 1, 0);
   Test.AssertTrue(Model.FailureSeen);
   App.CloseWithBackground(Inbox);
-  Tasks.CloseChannel(Ready);
+  discard Tasks.CloseChannel(Ready);
 end program;

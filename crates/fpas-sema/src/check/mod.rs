@@ -8,6 +8,8 @@ mod name_resolution;
 mod record_visibility;
 mod stmt;
 
+/// Metadata for checked callable-value invocations.
+pub use calls::{ValueCallMap, ValueCallTarget};
 pub use closures::CaptureBinding;
 pub use closures::ClosureInfo;
 pub use closures::ClosureInfoMap;
@@ -27,7 +29,6 @@ pub use context::ExprTypeMap;
 pub use context::FluentCallMap;
 pub use context::FluentCallTarget;
 pub use context::IntrinsicCallMap;
-pub use context::MemberValueCallMap;
 pub use context::MethodCallMap;
 pub use context::MethodCallTarget;
 pub use context::NamedTypeMap;

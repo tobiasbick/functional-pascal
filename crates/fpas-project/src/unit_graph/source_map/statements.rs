@@ -31,7 +31,7 @@ pub(super) fn apply_stmt_source_id(stmt: &mut Stmt, source_id: u32) {
             }
             apply_span(span, source_id);
         }
-        Stmt::Panic(expr, span) => {
+        Stmt::Panic(expr, span) | Stmt::Discard(expr, span) => {
             apply_expr_source_id(expr, source_id);
             apply_span(span, source_id);
         }

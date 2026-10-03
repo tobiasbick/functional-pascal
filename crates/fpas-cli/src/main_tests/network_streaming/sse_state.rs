@@ -62,14 +62,14 @@ begin return Sse.ReviewRetained(Decoder); end function;
 uses Std.Http as Http; uses Std.Net.Utf8 as Utf8; uses Std.Results as Results; uses Std.Str as Str; uses Std.Test as Test;
 begin
   var Decoder: Http.SseDecoder := Results.Unwrap(Http.CreateSseDecoder(32));
-  Results.Unwrap(Http.FeedSse(Decoder, Utf8.Encode('id:old' + #10 + 'data:x' + #10)));
+  discard Results.Unwrap(Http.FeedSse(Decoder, Utf8.Encode('id:old' + #10 + 'data:x' + #10)));
   Test.AssertTrue(Http.ReviewRetained(Decoder) > 0);
   case Http.FeedSse(Decoder, Utf8.Encode(Str.RepeatStr('x', 100000))) of
     when Ok(_): Test.Fail('expected size failure'); when Error(_): begin null; end;
   end case;
   Test.AssertEquals(0, Http.ReviewRetained(Decoder));
   var FinalDecoder: Http.SseDecoder := Results.Unwrap(Http.CreateSseDecoder(32));
-  Results.Unwrap(Http.FeedSse(FinalDecoder, [255]));
+  discard Results.Unwrap(Http.FeedSse(FinalDecoder, [255]));
   case Http.FinishSse(FinalDecoder) of
     when Ok(_): Test.Fail('expected UTF-8 failure'); when Error(_): begin null; end;
   end case;

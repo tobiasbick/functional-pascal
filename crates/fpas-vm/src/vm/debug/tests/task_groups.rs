@@ -120,7 +120,7 @@ fn stop_before_close(source: &str) -> DebugSession {
 fn task_group_exited_failure_cannot_be_resumed_or_force_returned() {
     let source = SOURCE.replace(
         "  var Failures:",
-        "  Tasks.Select([Tasks.TimerCase(5, procedure() begin null; end procedure)]);\n  var Failures:",
+        "  discard Tasks.Select([Tasks.TimerCase(5, procedure() begin null; end procedure)]);\n  var Failures:",
     );
     let mut session = stop_before_close(&source);
     let events = session.take_task_events();
@@ -162,7 +162,7 @@ uses Std.Tasks as Tasks; uses Std.Time as Time; uses Std.Arrays as Arrays;
 procedure Work(Token: Tasks.CancellationToken); begin Time.Sleep(1000); end procedure;
 begin
   var G: Tasks.TaskGroup := Tasks.CreateTaskGroup();
-  Tasks.StartTaskInGroup(G, Work);
+  var WorkerHandle: task := Tasks.StartTaskInGroup(G, Work);
   var Failures: array of Tasks.TaskFailure := Tasks.CloseTaskGroup(G);
   if Arrays.Length(Failures) <> 1 then panic('failure count'); end if;
   if Failures[0].Kind <> Tasks.TaskFailureKind.Cancelled then panic('cancellation kind'); end if;
@@ -183,7 +183,7 @@ fn task_group_child_close_is_rejected_and_collected_as_runtime_failure() {
 uses Std.Tasks as Tasks; uses Std.Arrays as Arrays;
 begin
   var G: Tasks.TaskGroup := Tasks.CreateTaskGroup();
-  Tasks.StartTaskInGroup(G, procedure(Token: Tasks.CancellationToken) begin Tasks.CloseTaskGroup(G); end procedure);
+  var StartedTask1: task := Tasks.StartTaskInGroup(G, procedure(Token: Tasks.CancellationToken) begin discard Tasks.CloseTaskGroup(G); end procedure);
   var Failures: array of Tasks.TaskFailure := Tasks.CloseTaskGroup(G);
   if Arrays.Length(Failures) <> 1 then panic('failure count'); end if;
   if Failures[0].Kind <> Tasks.TaskFailureKind.RuntimeError then panic('runtime kind'); end if;
@@ -227,8 +227,8 @@ uses Std.Tasks as Tasks;
 procedure Work(Token: Tasks.CancellationToken); begin panic('contained'); end procedure;
 begin
   var G: Tasks.TaskGroup := Tasks.CreateTaskGroup();
-  Tasks.StartTaskInGroup(G, Work);
-  Tasks.CloseTaskGroup(G);
+  var WorkerHandle: task := Tasks.StartTaskInGroup(G, Work);
+  discard Tasks.CloseTaskGroup(G);
 end program;"#;
     let (program, errors) = fpas_parser::parse(source);
     assert!(errors.is_empty(), "{errors:?}");

@@ -25,8 +25,8 @@ public type TuiSize = record
   // - `Height`: Height in terminal cells.
   public static function Create(Width: integer; Height: integer): TuiSize;
   begin
-    TuiSizeRequireNonNegative(Width, 'width');
-    TuiSizeRequireNonNegative(Height, 'height');
+    discard TuiSizeRequireNonNegative(Width, 'width');
+    discard TuiSizeRequireNonNegative(Height, 'height');
     return record
       Width := Width;
       Height := Height;

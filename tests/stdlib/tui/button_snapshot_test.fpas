@@ -25,7 +25,7 @@ end function;
 
 begin
   var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(24, 10));
-  App.RunIterations(0, UpdateButtons, ViewButtons, 0, 0);
+  discard App.RunIterations(0, UpdateButtons, ViewButtons, 0, 0);
   var Surface: Tui.TuiSurfaceSnapshot := App.SurfaceSnapshot();
   var GoX: integer := Str.IndexOf(Surface.LineAt(1), 'G');
   var OkX: integer := Str.IndexOf(Surface.LineAt(2), 'O');

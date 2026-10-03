@@ -20,6 +20,7 @@ dict      with      static    property
 event     read      write     comparable
 numeric   printable self      nil
 as        elsif     when      null
+discard
 ```
 
 Every word in the table is fully reserved, including after `.` in a qualified name or
@@ -37,6 +38,9 @@ qualifier. Public APIs must therefore use an identifier-safe spelling such as `E
 instead of `End`, `NoCommand` instead of `None`, or `CompletedCommand` instead of
 `Result`. The standard units follow the same rule, which is why they are named `Std.Results` and
 `Std.Tasks` rather than after the `result` and `task` keywords. FPAS has no escaped-identifier syntax.
+
+`discard Expression;` explicitly consumes an ignored value; see
+[first-class callables](../language/functions/first-class.md#result-consumption-and-discard).
 
 ## Example
 

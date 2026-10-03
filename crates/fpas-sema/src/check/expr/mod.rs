@@ -94,7 +94,8 @@ impl Checker {
         ty
     }
 
-    fn check_go_expr(&mut self, inner: &Expr, span: fpas_lexer::Span) -> Ty {
+    /// Check a spawned call using the same target rules in both go positions.
+    pub(in crate::check) fn check_go_expr(&mut self, inner: &Expr, span: fpas_lexer::Span) -> Ty {
         let inner_ty = match inner {
             Expr::Call {
                 designator,
@@ -157,7 +158,9 @@ impl Checker {
                     || self.designator_refers_to_task_bound(designator)
             }
             Expr::Postfix { operations, .. } => {
-                operations
+                operations.last().is_some_and(|operation| {
+                    self.expr_is_task_bound(Self::postfix_operation_lookup_key(operation))
+                }) || operations
                     .last()
                     .and_then(|operation| {
                         self.fluent_calls

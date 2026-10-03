@@ -7,7 +7,7 @@ uses Std.Tasks as Tasks; uses Std.Time as Time; uses Std.Results as Results;
 function Produce(Q: channel of integer): integer;
 begin
   Time.Sleep(2);
-  Tasks.Send(Q, 123);
+  discard Tasks.Send(Q, 123);
   return 1;
 end function;
 function Child(): integer;
@@ -57,7 +57,7 @@ begin
       when Error(Message): if Message <> 'Channel is closed' then panic(Message); end if;
     end case;
   end procedure);
-  Tasks.CloseChannel(Q);
+  discard Tasks.CloseChannel(Q);
   if Tasks.Select([Closed]) <> 0 then panic('closed index'); end if;
   var Timer: Tasks.WaitCase := Tasks.TimerCase(2, procedure() begin Seen := 99; end procedure);
   if Tasks.Select([Timer]) <> 0 then panic('timer index'); end if;
@@ -96,7 +96,7 @@ begin return Tasks.Select([C]); end function;
 begin
   var C: Tasks.WaitCase := Tasks.TimerCase(0, procedure() begin null; end procedure);
   var T: task := go Other(C);
-  Tasks.Wait(T);
+  discard Tasks.Wait(T);
 end program;"#,
     );
     assert!(errors.is_empty(), "{errors:?}");

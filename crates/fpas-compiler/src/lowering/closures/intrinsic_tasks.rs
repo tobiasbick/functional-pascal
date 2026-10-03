@@ -31,7 +31,9 @@ impl ClosureRegistry<'_> {
                 let Some(last) = operations.last() else {
                     return Ok(());
                 };
-                let PostfixOperation::MethodCall { args, .. } = last else {
+                let (PostfixOperation::MethodCall { args, .. }
+                | PostfixOperation::Call { args, .. }) = last
+                else {
                     return Ok(());
                 };
                 (

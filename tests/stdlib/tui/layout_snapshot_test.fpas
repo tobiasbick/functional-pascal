@@ -7,7 +7,7 @@ uses Std.Tui as Tui;
 begin
   var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(20, 8));
   var Model: integer := 0;
-  App.RunIterations(Model, function(State: integer; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): integer begin
+  discard App.RunIterations(Model, function(State: integer; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): integer begin
     return State;
   end function, function(State: integer): Tui.TuiElement begin
     return Tui.TuiElementBuilders.MakeDesktop(Some(Tui.TuiControlId.Create(1)), [
@@ -27,7 +27,7 @@ begin
   Test.AssertTrue(Str.Contains(Snapshot.LineAt(3), 'ab'));
   App.Close();
   var Wide: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(40, 10));
-  Wide.RunIterations(0, function(State: integer; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): integer begin
+  discard Wide.RunIterations(0, function(State: integer; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): integer begin
     return State;
   end function, function(State: integer): Tui.TuiElement begin
     return Tui.TuiElementBuilders.MakeDesktop(None, [

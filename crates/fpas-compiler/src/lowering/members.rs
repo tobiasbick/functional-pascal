@@ -161,10 +161,14 @@ impl LoweringContext {
         operation: &PostfixOperation,
     ) -> Result<Option<(ValueId, TypeId)>, CompileError> {
         let key = fpas_sema::postfix_operation_lookup_key(operation);
+        if let Some(call) = self.lower_postfix_value_call(value, operation)? {
+            return Ok(Some(call));
+        }
         if let Some(target) = self.bound_method_targets.get(&key).cloned() {
             let span = match operation {
                 PostfixOperation::Field { span, .. }
                 | PostfixOperation::MethodCall { span, .. }
+                | PostfixOperation::Call { span, .. }
                 | PostfixOperation::Index { span, .. } => *span,
             };
             let closure = self.emit_value(
@@ -190,23 +194,6 @@ impl LoweringContext {
                 Ok(Some((result, callable.result)))
             }
             PostfixOperation::MethodCall { args, span, .. } => {
-                if let Some(result_ty) = self.member_value_calls.get(&key).cloned() {
-                    let result = self.type_table.id(&result_ty, span.line, span.column)?;
-                    let callee = self.lower_postfix_callable_member(value, operation)?;
-                    let callee = self.save_value(callee);
-                    let values = self.lower_expression_values(args, None, *span)?;
-                    let callee = self.restore_value(callee, *span)?;
-                    self.record_call_arguments(values.len(), *span)?;
-                    let value = self.emit_value(
-                        Operation::CallValue {
-                            callee,
-                            arguments: values,
-                        },
-                        result,
-                        *span,
-                    )?;
-                    return Ok(Some((value, result)));
-                }
                 if let Some(target) = self.fluent_calls.get(&key).cloned() {
                     let result = self
                         .type_table
@@ -226,6 +213,9 @@ impl LoweringContext {
                 values.insert(0, self.restore_value(value, *span)?);
                 let result = self.emit_member_call(&callable, values, *span)?;
                 Ok(Some((result, callable.result)))
+            }
+            PostfixOperation::Call { span, .. } => {
+                Err(unsupported(*span, "missing callable target metadata"))
             }
             PostfixOperation::Index { .. } => Ok(None),
         }
@@ -256,8 +246,8 @@ impl LoweringContext {
     }
 
     pub(super) fn member_call_result(&self, key: usize) -> Option<TypeId> {
-        if let Some(ty) = self.member_value_calls.get(&key) {
-            return self.type_table.id(ty, 1, 1).ok();
+        if let Some(ty) = self.value_calls.get(&key) {
+            return self.type_table.id(&ty.result_ty, 1, 1).ok();
         }
         if let Some(target) = self.fluent_calls.get(&key) {
             return self.type_table.id(&target.result_ty, 1, 1).ok();
@@ -280,34 +270,6 @@ impl LoweringContext {
         None
     }
 
-    pub(super) fn lower_member_value_call(
-        &mut self,
-        designator: &Designator,
-        arguments: &[Expr],
-        result: TypeId,
-        span: fpas_lexer::Span,
-    ) -> Result<ValueId, CompileError> {
-        let key = fpas_sema::designator_lookup_key(designator);
-        let callee = if let Some(reads) = self.property_reads.get(&key).cloned() {
-            self.lower_property_read(designator, &reads)?
-        } else {
-            self.lower_designator_read(designator)?
-        };
-        let callee = self.save_value(callee);
-        let values = self.lower_expression_values(arguments, None, span)?;
-        let callee = self.restore_value(callee, span)?;
-        self.record_call_arguments(values.len(), span)?;
-        self.emit_value(
-            Operation::CallValue {
-                callee,
-                arguments: values,
-            },
-            result,
-            span,
-        )
-    }
-
-    /// Evaluates the method receiver and arguments in source order.
     pub(super) fn lower_method_call(
         &mut self,
         designator: &Designator,

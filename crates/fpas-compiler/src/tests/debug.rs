@@ -128,7 +128,7 @@ end function;
 begin
   var Next: function(): integer := Counter();
   for Index: integer := 1 to 2 do
-    Next(); end for;
+    discard Next(); end for;
 end program;
 "#,
     );

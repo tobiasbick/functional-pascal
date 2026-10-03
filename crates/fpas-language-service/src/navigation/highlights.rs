@@ -139,6 +139,7 @@ fn statements_write(statements: &[Stmt], span: SourceSpan) -> bool {
         Stmt::Null(_) | Stmt::Var(_)
         | Stmt::MutableVar(_)
         | Stmt::Return(_, _)
+        | Stmt::Discard(..)
         | Stmt::Panic(_, _)
         | Stmt::Break(_)
         | Stmt::Continue(_)

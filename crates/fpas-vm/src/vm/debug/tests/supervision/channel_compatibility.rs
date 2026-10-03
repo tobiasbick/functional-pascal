@@ -8,11 +8,11 @@ begin
   var Child: task := Tasks.StartTaskInGroup(Group, procedure(Token: Tasks.CancellationToken)
   begin
     for Item: integer := 1 to 2 do
-      Results.Unwrap(SEND_OPERATION); end for;
+      discard Results.Unwrap(SEND_OPERATION); end for;
   end procedure);
   mutable var Total: integer := 0;
   for Item: integer := 1 to 2 do
-    Tasks.Select([
+    discard Tasks.Select([
       Tasks.ReceiveCase(Queue, procedure(Outcome: result of integer, string)
         begin Total := Total + Results.Unwrap(Outcome); end procedure),
       Tasks.TimerCase(1000, procedure() begin panic('consumer stalled'); end procedure)
@@ -20,7 +20,7 @@ begin
   Tasks.Wait(Child);
   if Total <> 3 then panic('delivery lost'); end if;
   if Arrays.Length(Tasks.CloseTaskGroup(Group)) <> 0 then panic('worker failed'); end if;
-  Tasks.CloseChannel(Queue);
+  discard Tasks.CloseChannel(Queue);
 end program;"#;
 
 #[test]
@@ -55,11 +55,11 @@ begin
     return Total;
   end function);
   for Item: integer := 1 to 2 do
-    Tasks.Select([Tasks.SendCase(Queue, Item, procedure(Outcome: result of boolean, string)
-      begin Results.Unwrap(Outcome); end procedure)]); end for;
+    discard Tasks.Select([Tasks.SendCase(Queue, Item, procedure(Outcome: result of boolean, string)
+      begin discard Results.Unwrap(Outcome); end procedure)]); end for;
   if Tasks.Wait(Child) <> 3 then panic('delivery lost'); end if;
   if Arrays.Length(Tasks.CloseTaskGroup(Group)) <> 0 then panic('worker failed'); end if;
-  Tasks.CloseChannel(Queue);
+  discard Tasks.CloseChannel(Queue);
 end program;"#;
 
 #[test]
@@ -85,17 +85,17 @@ fn timed_receive_cooperates_with_a_select_producer() {
 #[test]
 fn nested_task_barriers_release_the_consumers_stack() {
     let source = PRODUCER.replace(
-        "for Item: integer := 1 to 2 do\n      Results.Unwrap(SEND_OPERATION); end for;",
+        "for Item: integer := 1 to 2 do\n      discard Results.Unwrap(SEND_OPERATION); end for;",
         "var Grandchild: task := Tasks.StartTaskInGroup(Group, procedure(ChildToken: Tasks.CancellationToken)
-         begin Tasks.Send(Queue, 1); Tasks.Send(Queue, 2); end procedure);
+         begin discard Tasks.Send(Queue, 1); discard Tasks.Send(Queue, 2); end procedure);
          WAIT_OPERATION;",
     );
     for operation in [
         "Tasks.Wait(Grandchild)",
         "Tasks.WaitAll([Grandchild])",
-        "Tasks.WaitAny([Grandchild])",
-        "Results.Unwrap(Tasks.WaitAnyWithTimeout([Grandchild], 1000))",
-        "Results.Unwrap(Tasks.WaitAnyWithCancellation([Grandchild], Token))",
+        "discard Tasks.WaitAny([Grandchild])",
+        "discard Results.Unwrap(Tasks.WaitAnyWithTimeout([Grandchild], 1000))",
+        "discard Results.Unwrap(Tasks.WaitAnyWithCancellation([Grandchild], Token))",
     ] {
         super::run_with_children(&source.replace("WAIT_OPERATION", operation), 2);
     }
@@ -104,10 +104,10 @@ fn nested_task_barriers_release_the_consumers_stack() {
 #[test]
 fn closing_a_nested_group_releases_the_consumers_stack() {
     let source = PRODUCER.replace(
-        "for Item: integer := 1 to 2 do\n      Results.Unwrap(SEND_OPERATION); end for;",
+        "for Item: integer := 1 to 2 do\n      discard Results.Unwrap(SEND_OPERATION); end for;",
         "var Nested: Tasks.TaskGroup := Tasks.CreateTaskGroup();
-         Tasks.StartTaskInGroup(Nested, procedure(ChildToken: Tasks.CancellationToken)
-           begin Tasks.Send(Queue, 1); Tasks.Send(Queue, 2); end procedure);
+         var NestedChild: task := Tasks.StartTaskInGroup(Nested, procedure(ChildToken: Tasks.CancellationToken)
+           begin discard Tasks.Send(Queue, 1); discard Tasks.Send(Queue, 2); end procedure);
          if Arrays.Length(Tasks.CloseTaskGroup(Nested)) <> 0 then panic('nested child failed'); end if;",
     );
     super::run_with_children(&source, 2);

@@ -123,7 +123,7 @@ end function;
 
 public function TuiAppRequireOpen(ApplicationId: integer): integer;
 begin
-  TuiAppRequireHandle(ApplicationId);
+  discard TuiAppRequireHandle(ApplicationId);
   if not TuiAppOpen[ApplicationId - 1] then
     begin
       panic('Tui application is closed');
@@ -215,7 +215,7 @@ end procedure;
 // Queues Started exactly once for a background-enabled host.
 public procedure TuiAppStart(ApplicationId: integer);
 begin
-  TuiAppRequireOpen(ApplicationId);
+  discard TuiAppRequireOpen(ApplicationId);
   if not TuiAppStarted[ApplicationId - 1] then
     begin
       TuiAppStarted[ApplicationId - 1] := true;

@@ -66,7 +66,7 @@ public type TuiApplication = record
   public procedure CloseWithBackground<TMessage>(Self: TuiApplication; Inbox: channel of TMessage);
   begin
     var Failures: array of Msg2.TuiMsg := State2.TuiAppCloseApplication(Self.Id);
-    Tasks.CloseChannel(Inbox);
+    discard Tasks.CloseChannel(Inbox);
     State2.TuiAppRaiseShutdownFailure(Failures);
   end procedure;
 
@@ -121,7 +121,7 @@ public type TuiApplication = record
   Message: TMessage
 ): result of boolean, string;
   begin
-    State2.TuiAppRequireOpen(Self.Id);
+    discard State2.TuiAppRequireOpen(Self.Id);
     return Tasks.TrySend(Inbox, Message);
   end function;
 
@@ -168,7 +168,7 @@ public type TuiApplication = record
   begin
     var Inbox: channel of boolean := Tasks.CreateChannel(1);
     var Model: TModel := Loop.TuiRunHeadless(Self.Id, InitialModel, Inbox, Update, TuiIgnoreApplicationMessage, View, IterationCount, DeltaMilliseconds, false);
-    Tasks.CloseChannel(Inbox);
+    discard Tasks.CloseChannel(Inbox);
     return Model;
   end function;
 
@@ -242,7 +242,7 @@ public type TuiApplication = record
     end record;
     var Inbox: channel of boolean := Tasks.CreateChannel(1);
     var Model: TModel := Loop.TuiRunInteractive(App.Id, InitialModel, Inbox, Update, TuiIgnoreApplicationMessage, View, false);
-    Tasks.CloseChannel(Inbox);
+    discard Tasks.CloseChannel(Inbox);
     return Model;
   end function;
 

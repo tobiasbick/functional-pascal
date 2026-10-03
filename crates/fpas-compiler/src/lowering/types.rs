@@ -92,8 +92,9 @@ impl TypeTable {
             let _ = table.intern(&call.receiver_ty, 1, 1)?;
             let _ = table.intern(&call.result_ty, 1, 1)?;
         }
-        for ty in metadata.member_value_calls.values() {
-            let _ = table.intern(ty, 1, 1)?;
+        for target in metadata.value_calls.values() {
+            let _ = table.intern(&target.callable_ty, 1, 1)?;
+            let _ = table.intern(&target.result_ty, 1, 1)?;
         }
         let dictionary_keys = table
             .definitions

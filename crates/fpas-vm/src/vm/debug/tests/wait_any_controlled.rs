@@ -12,7 +12,7 @@ end function;
 function CancelLater(Source: Tasks.CancellationSource): integer;
 begin
   Time.Sleep(1);
-  Tasks.Cancel(Source);
+  discard Tasks.Cancel(Source);
   return 0;
 end function;
 begin
@@ -78,7 +78,7 @@ begin
     when Error(Message): panic(Message);
   end case;
   var Source: Tasks.CancellationSource := Tasks.CreateCancellationSource();
-  Tasks.Cancel(Source);
+  discard Tasks.Cancel(Source);
   case Tasks.WaitAnyWithCancellation([T], Tasks.GetCancellationToken(Source)) of
     when Ok(_): panic('pre-cancellation lost');
     when Error(Message): if Message <> 'Task wait was cancelled' then panic(Message); end if;

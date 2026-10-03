@@ -121,13 +121,13 @@ begin
   end record;
   var CancelToken: Tasks.CancellationToken := Tasks.GetCancellationToken(CancelSource);
   // Fill the output queue so publication must wait until cancellation.
-  Tasks.Send(CancelInbox, Frame);
+  discard Tasks.Send(CancelInbox, Frame);
   var Background: task := go Render.RunBackgroundRender(CancelRequest, CancelInbox, CancelToken);
   Test.AssertTrue(Results.IsError(Tasks.WaitAnyWithTimeout([Background], 1)));
   Test.AssertTrue(Tasks.Cancel(CancelSource));
   Test.AssertTrue(Results.IsOk(Tasks.Wait(Background)));
   Test.AssertEquals(Frame.Generation, Results.Unwrap(Tasks.Receive(CancelInbox)).Generation);
   Test.AssertTrue(Results.IsError(Tasks.ReceiveWithTimeout(CancelInbox, 0)));
-  Tasks.CloseChannel(Inbox);
-  Tasks.CloseChannel(CancelInbox);
+  discard Tasks.CloseChannel(Inbox);
+  discard Tasks.CloseChannel(CancelInbox);
 end program;

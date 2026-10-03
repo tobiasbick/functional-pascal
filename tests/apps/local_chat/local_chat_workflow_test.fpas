@@ -69,7 +69,7 @@ begin
   Test.AssertEquals(60, Model.Width);
   Test.AssertEquals(18, Model.Height);
   var Cmd: Tui.TuiCmdOutput := Tui.TuiCmdOutput.Create();
-  Update.LocalChatUpdate(Model, Tui.TuiMsg.Key(QuitKey()), Cmd);
+  discard Update.LocalChatUpdate(Model, Tui.TuiMsg.Key(QuitKey()), Cmd);
   Test.AssertTrue(Cmd.Command() = Tui.TuiCmd.Quit);
   App.Close();
 end program;

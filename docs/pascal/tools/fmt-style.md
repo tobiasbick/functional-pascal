@@ -176,6 +176,12 @@ or declaration reordering. Invalid or partial syntax is not formatted.
 
 ## Operators
 
+Callable invocation suffixes follow the same compact/wrapped chain rules as
+fields, indices and member calls: `MakeAdder(3)(5)` and `Callbacks[0](42)`.
+Parentheses around callable targets are preserved. Explicit result consumption
+uses `discard Expression;`, with one space after the keyword. Comments in callable
+arguments and anonymous routine bodies remain attached through formatting.
+
 Formatting follows the [operator table](../language/basics/operators.md).
 Comparisons bind above `not`, which binds above `and`, `or`, and `xor`.
 Keep parentheses around mixed logical operators and non-left-associated

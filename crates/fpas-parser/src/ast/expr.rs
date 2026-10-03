@@ -176,6 +176,13 @@ pub struct ClosureExpr {
 /// **Documentation:** `docs/pascal/language/functions/README.md`
 #[derive(Debug, Clone, PartialEq)]
 pub enum PostfixOperation {
+    /// Invoke the preceding callable value with explicit positional arguments.
+    Call {
+        /// Arguments in evaluation order.
+        args: Vec<Expr>,
+        /// Source span of the invocation suffix.
+        span: Span,
+    },
     /// `.Field` access on the preceding value.
     Field {
         /// Accessed field name.

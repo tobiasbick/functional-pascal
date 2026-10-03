@@ -69,6 +69,7 @@ impl LoweringContext {
                     .transpose()?;
                 self.terminate(Terminator::Return(value))
             }
+            Stmt::Discard(value, _) => self.lower_expression(value).map(|_| ()),
             Stmt::Panic(value, span) => {
                 let value = self.lower_expression(value)?;
                 self.set_last_instruction_source(*span)?;

@@ -3,6 +3,7 @@ use crate::analyze_with_types;
 
 mod bits;
 mod bound_methods;
+mod callable_targets;
 mod closures;
 mod equality;
 mod fluent;
@@ -216,7 +217,7 @@ fn analysis_metadata_exposes_all_named_results() {
         named_types,
         method_calls,
         fluent_calls,
-        member_value_calls,
+        value_calls,
         record_defaults,
         scalar_case_bindings,
         closure_infos,
@@ -238,7 +239,7 @@ fn analysis_metadata_exposes_all_named_results() {
             intrinsic_calls.len(),
             method_calls.len(),
             fluent_calls.len(),
-            member_value_calls.len(),
+            value_calls.len(),
             record_defaults.len(),
             scalar_case_bindings.len(),
             closure_infos.len(),

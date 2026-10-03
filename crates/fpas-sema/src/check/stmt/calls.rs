@@ -9,7 +9,9 @@ use fpas_lexer::Span;
 use fpas_parser::{Designator, Expr};
 
 impl Checker {
+    /// Check a procedure statement and reject unconsumed function results.
     pub(super) fn check_call_stmt(&mut self, designator: &Designator, args: &[Expr], span: Span) {
+        let previous_error_count = self.errors.len();
         let name = self.resolve_designator_name(designator);
         self.ensure_fq_std_unit_loaded(&name);
 
@@ -27,7 +29,11 @@ impl Checker {
                     .insert(crate::designator_lookup_key(designator), dispatch.clone());
             }
             if kind == SymbolKind::BuiltinStd {
-                let _ = crate::std_registry::check_builtin_std_call(self, &dispatch, args, span);
+                let result =
+                    crate::std_registry::check_builtin_std_call(self, &dispatch, args, span);
+                if self.errors.len() == previous_error_count {
+                    self.require_consumed_call_result(&result, span);
+                }
                 return;
             }
 
@@ -38,6 +44,9 @@ impl Checker {
                 }
                 Ty::Function(func_ty) => {
                     self.check_function_call_args(&name, &func_ty, args, span);
+                    if self.errors.len() == previous_error_count {
+                        self.require_consumed_call_result(&func_ty.return_type, span);
+                    }
                     return;
                 }
                 _ => {
@@ -55,10 +64,12 @@ impl Checker {
 
         if !self.designator_has_unit_prefix(designator) {
             let previous_error_count = self.errors.len();
-            if self
-                .try_check_method_call_like(MethodCallSite::Statement, designator, args, span)
-                .is_some()
+            if let Some(result) =
+                self.try_check_method_call_like(MethodCallSite::Statement, designator, args, span)
             {
+                if self.errors.len() == previous_error_count {
+                    self.require_consumed_call_result(&result, span);
+                }
                 return;
             }
             if self.errors.len() != previous_error_count {
@@ -66,16 +77,16 @@ impl Checker {
                 return;
             }
 
-            if self
-                .try_check_fluent_designator(
-                    crate::designator_lookup_key(designator),
-                    designator,
-                    args,
-                    span,
-                    true,
-                )
-                .is_some()
-            {
+            if let Some(result) = self.try_check_fluent_designator(
+                crate::designator_lookup_key(designator),
+                designator,
+                args,
+                span,
+                true,
+            ) {
+                if self.errors.len() == previous_error_count {
+                    self.require_consumed_call_result(&result, span);
+                }
                 return;
             }
         }

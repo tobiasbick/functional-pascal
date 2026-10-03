@@ -1,0 +1,58 @@
+program CallableTargetsTest;
+
+uses Std.Test as Test;
+
+type Handler = function(Value: integer): integer;
+
+function MakeAdder(Base: integer): Handler;
+begin
+  return function(Value: integer): integer begin
+    return Base + Value;
+  end function;
+end function;
+
+function SelectHandler(First: boolean): Handler;
+begin
+  if First then
+    return MakeAdder(10);
+  else
+    return MakeAdder(20);
+  end if;
+end function;
+
+function Counter(mutable Count: integer): function(): integer;
+function Next(): integer;
+begin
+  Count := Count + 1;
+  return Count;
+end function;
+begin
+  return Next;
+end function;
+
+procedure CheckActions();
+begin
+  mutable var Count: integer := 0;
+  var Action: procedure() := procedure() begin
+    Count := Count + 1;
+  end procedure;
+  var Actions: array of procedure() := [Action];
+  Actions[0]();
+  (Action)();
+  Test.AssertEquals(2, Count);
+end procedure;
+
+begin
+  Test.AssertEquals(8, MakeAdder(3)(5));
+  var Functions: array of Handler := [MakeAdder(40)];
+  Test.AssertEquals(42, Functions[0](2));
+  Test.AssertEquals(42, (Functions[0])(2));
+  Test.AssertEquals(11, SelectHandler(true)(1));
+  Test.AssertEquals(21, SelectHandler(false)(1));
+  var Next: function(): integer := Counter(0);
+  var Copy: function(): integer := Next;
+  Test.AssertEquals(1, Next());
+  Test.AssertEquals(2, (Copy)());
+  discard Counter(0)();
+  CheckActions();
+end program;

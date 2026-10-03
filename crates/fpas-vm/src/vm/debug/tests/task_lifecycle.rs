@@ -38,7 +38,7 @@ end function;
 
 begin
   var Pending: task := go Work();
-  Tasks.Wait(Pending);
+  discard Tasks.Wait(Pending);
 end program;
 "#;
     let (program, diagnostics) = fpas_parser::parse(SOURCE);

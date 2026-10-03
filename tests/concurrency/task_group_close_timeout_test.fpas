@@ -13,7 +13,7 @@ begin
   var Token: Tasks.CancellationToken := Tasks.GetTaskGroupToken(Group);
   var Gate: channel of integer := Tasks.CreateChannel(1);
   var Child: task := Tasks.StartTaskInGroup(Group, function(Stop: Tasks.CancellationToken): result of integer, string begin
-    Results.Unwrap(Tasks.Receive(Gate));
+    discard Results.Unwrap(Tasks.Receive(Gate));
     if not Tasks.IsCancellationRequested(Stop) then
       begin
         panic('missing cancellation');
@@ -36,11 +36,11 @@ begin
 
   Test.AssertTrue(Tasks.IsCancellationRequested(Token));
   Test.AssertTrue(Results.IsError(Tasks.CloseTaskGroupWithTimeout(Group, 0)));
-  Results.Unwrap(Tasks.Send(Gate, 1));
+  discard Results.Unwrap(Tasks.Send(Gate, 1));
   var Reports: array of Tasks.TaskFailure := Results.Unwrap(Tasks.CloseTaskGroupWithTimeout(Group, 1000));
   Test.AssertEquals(1, Arrays.Length(Reports));
   Test.AssertTrue(Reports[0].Kind = Tasks.TaskFailureKind.ReturnedError);
   Test.AssertEquals('retained worker failure', Reports[0].Message);
   Test.AssertEquals(0, Arrays.Length(Tasks.CloseTaskGroup(Group)));
-  Tasks.CloseChannel(Gate);
+  discard Tasks.CloseChannel(Gate);
 end program;

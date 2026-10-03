@@ -28,8 +28,8 @@ integer rules from stage 1 across constant evaluation, compiler lowering, and VM
 Calls accept any correctly typed callable expression, including returned functions,
 selected values, indexed functions, and record fields. No receiver is inserted.
 Anonymous routines retain `function`/`procedure` and explicit signatures; named
-nested routines use the same capture semantics. A procedure has no expression
-value and cannot be used to initialize a binding.
+nested routines use the same capture semantics. A procedure call produces no value
+and cannot initialize a binding. A procedure value may be stored in a binding.
 
 Target example (not a compiled fixture):
 
@@ -149,9 +149,9 @@ collection API only when an actual application requires it.
 
 ## Work and acceptance
 
-- [ ] Audit reuse in parser/AST, sema, compiler/IR, VM, generic routines, closures,
+- [x] Audit reuse in parser/AST, sema, compiler/IR, VM, generic routines, closures,
   record construction/update, equality, and formatter before extending modules.
-- [ ] Implement and test arbitrary callable targets and capture rules first.
+- [x] Implement and test arbitrary callable targets and capture rules first.
 - [ ] Implement generic records/enums and construction, then nested patterns and
   exhaustive case expressions; implement if expressions with the same type rules.
 - [ ] Implement bindings, inference, value copying, checked numeric behavior, and
@@ -173,6 +173,18 @@ mutability. Stage 4 completes only with coordinated mutation and purity support.
 Owners: `fpas-parser`, `fpas-sema`, `fpas-ir`, `fpas-compiler`, `fpas-bytecode`,
 `fpas-vm`, `fpas-fmt`, std registries/source units, and language-service adapters.
 
-Status: target contract settled; implementation and migration pending.
-Next: audit callable targets and capture representation, then define the smallest
-end-to-end callable/generic-data slice with exact files and regressions.
+Evidence: [functional-core reuse audit](../audit/functional-core-reuse.md) maps
+pre-implementation owners and gaps. The
+[callable delivery](../audit/functional-core-callables.md) records implemented
+scope, module splits, capture correction, consumer migration and coverage.
+
+Status: arbitrary callable targets, capture rules and result consumption/discard
+are complete, including the mutable-parameter capture correction, source consumer
+migration, current documentation and positive/negative/edge coverage. Workspace
+format/build/tests, FPAS formatting/suite, application/example checks, editor
+grammar and documentation/diff checks pass. Stage 4 remains open.
+
+Next: implement generic records/enums and construction, followed by shared
+decision-expression typing. Bindings, caller mutation, purity and default checks
+remain coordinated with stage 5. Member removal follows working ordinary-function
+replacements.

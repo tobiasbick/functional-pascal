@@ -7,7 +7,7 @@ uses Std.Tui as Tui;
 function Paint(Tree: Tui.TuiElement; Size: Tui.TuiSize): Tui.TuiSurfaceSnapshot;
 begin
   var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Size);
-  App.RunIterations(Tree, function(State: Tui.TuiElement; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): Tui.TuiElement begin
+  discard App.RunIterations(Tree, function(State: Tui.TuiElement; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): Tui.TuiElement begin
     return State;
   end function, function(State: Tui.TuiElement): Tui.TuiElement begin
     return State;

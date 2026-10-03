@@ -215,7 +215,7 @@ begin
   var Messages: channel of integer := Tasks.CreateChannel(1);
   var Sent: result of boolean, string := Tasks.Send(Messages, 42);
   var Received: result of integer, string := Tasks.Receive(Messages);
-  Tasks.CloseChannel(Messages);
+  discard Tasks.CloseChannel(Messages);
 end program;"#,
     );
 }
@@ -332,7 +332,7 @@ begin
   var WorkQueue: channel of procedure() := Tasks.CreateChannel(1);
   var SafeQueue: channel of integer := Tasks.CreateChannel(1);
   Tasks.Send(WorkQueue, Boxed.Work);
-  Tasks.Send(SafeQueue, Boxed.Safe);
+  discard Tasks.Send(SafeQueue, Boxed.Safe);
 end program;"#,
     );
 

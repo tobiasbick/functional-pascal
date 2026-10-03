@@ -22,8 +22,8 @@ begin
       for Producer: integer := 0 to 7 do
         begin
           var Attempts: channel of boolean := Tasks.CreateChannel(2);
-          Tasks.Send(Attempts, false);
-          Tasks.Send(Attempts, true);
+          discard Tasks.Send(Attempts, false);
+          discard Tasks.Send(Attempts, true);
           Arrays.Push(Children, Tasks.StartSupervisedTask(Group, function(WorkerToken: Tasks.CancellationToken): result of integer, string begin
             if not Results.Unwrap(Tasks.Receive(Attempts)) then
               begin
@@ -31,17 +31,17 @@ begin
               end;
             end if;
 
-            Tasks.CloseChannel(Attempts);
+            discard Tasks.CloseChannel(Attempts);
             for Item: integer := 0 to 31 do
               begin
-                Tasks.Select([
-                               Tasks.SendCase(Output, Producer * 32 + Item, procedure(Outcome: result of boolean, string) begin
-                                 Test.AssertTrue(Results.Unwrap(Outcome));
-                               end procedure),
-                               Tasks.CancellationCase(WorkerToken, procedure() begin
-                                 panic('producer cancelled before drain');
-                               end procedure)
-                             ]);
+                discard Tasks.Select([
+                                       Tasks.SendCase(Output, Producer * 32 + Item, procedure(Outcome: result of boolean, string) begin
+                                         Test.AssertTrue(Results.Unwrap(Outcome));
+                                       end procedure),
+                                       Tasks.CancellationCase(WorkerToken, procedure() begin
+                                         panic('producer cancelled before drain');
+                                       end procedure)
+                                     ]);
               end;
             end for;
 
@@ -88,7 +88,7 @@ begin
           end;
       end case;
 
-      Tasks.CloseChannel(Output);
+      discard Tasks.CloseChannel(Output);
     end;
   end for;
 end program;

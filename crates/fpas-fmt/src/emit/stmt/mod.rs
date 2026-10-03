@@ -62,6 +62,12 @@ fn emit_stmt_in_block(emitter: &mut Emitter, stmt: &Stmt, comments: &CommentMap)
             }
             finish_stmt_line(emitter, comments, stmt);
         }
+        Stmt::Discard(expr, ..) => {
+            write_indented(emitter);
+            emitter.write("discard ");
+            emit_expr(emitter, expr, 0, comments);
+            finish_stmt_line(emitter, comments, stmt);
+        }
         Stmt::Panic(expr, ..) => {
             write_indented(emitter);
             emitter.write("panic(");

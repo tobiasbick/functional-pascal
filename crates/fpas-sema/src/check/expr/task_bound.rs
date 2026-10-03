@@ -52,7 +52,8 @@ impl Checker {
         }
     }
 
-    fn type_can_contain_callable(&self, ty: &Ty) -> bool {
+    /// Whether a value type can carry callable capture state through a postfix chain.
+    pub(in crate::check::expr) fn type_can_contain_callable(&self, ty: &Ty) -> bool {
         self.type_can_contain_callable_inner(ty, &mut std::collections::HashSet::new())
     }
 

@@ -19,11 +19,11 @@ begin
   var Gate: channel of boolean := State.Gate;
   var Started: channel of integer := State.Started;
   Cmd.ReplaceSubscription(1, function(Token: Tasks.CancellationToken): result of boolean, string begin
-    Tasks.Send(Started, Generation);
+    discard Tasks.Send(Started, Generation);
     if Generation = 0 then
       begin
         // Deliberately defer cooperation to prove that the host remains responsive.
-        Tasks.Receive(Gate);
+        discard Tasks.Receive(Gate);
       end;
     end if;
 
@@ -67,7 +67,7 @@ function View(State: Model): Tui.TuiElement;
 begin
   if State.Generation = 3 then
     begin
-      Tasks.TrySend(State.Painted, 3);
+      discard Tasks.TrySend(State.Painted, 3);
     end;
   end if;
 
@@ -78,7 +78,7 @@ function ReleaseAfterPaint(Painted: channel of integer; Gate: channel of boolean
 begin
   // A timeout releases the gate even on the old blocking implementation.
   var Paint: result of integer, string := Tasks.ReceiveWithTimeout(Painted, 3000);
-  Tasks.Send(Gate, true);
+  discard Tasks.Send(Gate, true);
   return Results.IsOk(Paint);
 end function;
 
@@ -117,7 +117,7 @@ begin
   Test.AssertEquals(3, Results.Unwrap(Replacement));
   Test.AssertTrue(Results.IsError(Tasks.ReceiveWithTimeout(Started, 0)));
   App.CloseWithBackground(Inbox);
-  Tasks.CloseChannel(Gate);
-  Tasks.CloseChannel(Started);
-  Tasks.CloseChannel(Painted);
+  discard Tasks.CloseChannel(Gate);
+  discard Tasks.CloseChannel(Started);
+  discard Tasks.CloseChannel(Painted);
 end program;

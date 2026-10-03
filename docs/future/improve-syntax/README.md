@@ -52,7 +52,7 @@ The checklists in each document track work within that stage.
 | [x] | [1. Language contract](language-contract.md) | None | Source audit, grammar/owner mapping, test inventory and bounded sequence recorded; no language implementation claimed |
 | [x] | [2. Diagnostics](stages/02-diagnostics.md) | Stage 1 contract | Coded records for all toolchain failures and warnings; `--diagnostics json` for check/build/run/test, `FPAS_DIAGNOSTICS=json` for native applications, and program-output records |
 | [x] | [3. Syntax and names](stages/03-syntax-and-names.md) | Stages 1 and 2 | Inventory, implemented block/name syntax and operators/bit APIs, source conversion, coordinated documentation, and full positive/negative/edge coverage verified; later constructs retain their stage-4/5 owners |
-| [ ] | [4. Functional core](stages/04-functional-core.md) | Stages 1-3; coordinated mutation/purity work from stage 5 | Planned |
+| [ ] | [4. Functional core](stages/04-functional-core.md) | Stages 1-3; coordinated mutation/purity work from stage 5 | Callable targets, captures, result consumption/discard and consumer migration verified; generic data/decisions and coordinated mutation/purity work remain |
 | [ ] | [5. Effects and tasks](stages/05-effects-and-tasks.md) | Stage 4 facilities; contract fixed in stage 1 | Planned |
 | [ ] | [6. Domain types and contracts](stages/06-domain-types-and-contracts.md) | Stages 4 and 5 | Planned |
 
@@ -141,6 +141,11 @@ grammar, handbook, formatter style, authoring guidance, templates, and editor
 formatting. The [full coverage delivery](audit/coverage-delivery.md) verifies
 every implemented block row, boundary diagnostics, names, precedence, effects,
 and bit counts through workspace, CLI/runner, FPAS, and editor checks. Stage 3
-is complete. Next: stage-4 callable/type facilities, followed by the coordinated
-stage-5 references/purity and stage-4 binding/default migration in the bounded
-sequence. Later constructs retain their owning stage's migration and test gates.
+is complete. Stage 4's [functional-core reuse audit](audit/functional-core-reuse.md)
+is complete, with refreshed owners, module sizes, existing coverage and target gaps.
+The [callable delivery](audit/functional-core-callables.md) records implementation,
+capture correction, consumers, coverage and passed verification.
+Next: implement generic data/decisions,
+followed by coordinated stage-5 references/purity and stage-4 binding/default
+migration in the bounded sequence. Later constructs retain their owning stage's
+migration and test gates.

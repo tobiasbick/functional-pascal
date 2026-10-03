@@ -68,7 +68,7 @@ begin
 end function;
 begin
   var Next: function(): integer := MakeCounter();
-  Next();
+  discard Next();
   if Next() <> 42 then
     panic('mutable closure mismatch'); end if;
 end program;

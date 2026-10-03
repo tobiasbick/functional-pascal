@@ -55,7 +55,8 @@ pub(super) fn collect_expr(expr: &Expr, begins: &[usize], out: &mut CollectedAnc
             for operation in operations {
                 match operation {
                     PostfixOperation::Index { index, .. } => collect_expr(index, begins, out),
-                    PostfixOperation::MethodCall { args, .. } => {
+                    PostfixOperation::MethodCall { args, .. }
+                    | PostfixOperation::Call { args, .. } => {
                         for arg in args {
                             collect_expr(arg, begins, out);
                         }

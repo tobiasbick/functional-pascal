@@ -19,10 +19,10 @@ begin
   var Stopped: channel of integer := State.Stopped;
   var Generation: integer := State.Generation;
   Cmd.ReplaceSubscription(1, function(Token: Tasks.CancellationToken): result of boolean, string begin
-    Tasks.Send(Started, Generation);
+    discard Tasks.Send(Started, Generation);
     if Results.IsError(Tasks.ReceiveWithCancellation(Gate, Token)) then
       begin
-        Tasks.Send(Stopped, Generation);
+        discard Tasks.Send(Stopped, Generation);
       end;
     end if;
 
@@ -94,7 +94,7 @@ begin
   App.CloseWithBackground(Inbox);
   Test.AssertEquals(1, Results.Unwrap(Tasks.ReceiveWithTimeout(Stopped, 10000)));
   Test.AssertTrue(Results.IsError(Tasks.TrySend(Inbox, 1)));
-  Tasks.CloseChannel(Gate);
-  Tasks.CloseChannel(Started);
-  Tasks.CloseChannel(Stopped);
+  discard Tasks.CloseChannel(Gate);
+  discard Tasks.CloseChannel(Started);
+  discard Tasks.CloseChannel(Stopped);
 end program;

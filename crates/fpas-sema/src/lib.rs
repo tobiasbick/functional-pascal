@@ -34,7 +34,6 @@ pub use check::ExprTypeMap;
 pub use check::FluentCallMap;
 pub use check::FluentCallTarget;
 pub use check::IntrinsicCallMap;
-pub use check::MemberValueCallMap;
 pub use check::MethodCallMap;
 pub use check::MethodCallTarget;
 pub use check::NamedTypeMap;
@@ -46,6 +45,8 @@ pub use check::PropertyWriteInfo;
 pub use check::PropertyWriteMap;
 pub use check::RecordDefaultsMap;
 pub use check::ScalarCaseBindingMap;
+/// Metadata for checked callable-value invocations.
+pub use check::{ValueCallMap, ValueCallTarget};
 pub use error::SemaError;
 pub use interface::{
     InterfaceConversionError, UnitAnalysis, analyze_program_with_interface_support,

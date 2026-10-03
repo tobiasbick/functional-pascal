@@ -101,7 +101,7 @@ impl Checker {
                         .any(|(member, _)| member.eq_ignore_ascii_case(name))
                 {
                     let member_ty = self.check_designator_expr(designator);
-                    return Some(self.check_member_value_call(
+                    return Some(self.check_value_call(
                         call_key,
                         name,
                         &member_ty,
@@ -136,49 +136,6 @@ impl Checker {
             allow_procedure_result,
             receiver_reads,
         }))
-    }
-
-    /// Checks a call through a callable record field or property.
-    pub(in crate::check) fn check_member_value_call(
-        &mut self,
-        call_key: usize,
-        name: &str,
-        member_ty: &Ty,
-        args: &[Expr],
-        span: Span,
-        allow_procedure_result: bool,
-    ) -> Ty {
-        let result = match member_ty {
-            Ty::Function(signature) => {
-                let inferred = self.check_function_call_args(name, signature, args, span);
-                Self::substitute_type_params(&signature.return_type, &inferred)
-            }
-            Ty::Procedure(signature) => {
-                self.check_procedure_call_args(name, signature, args, span);
-                Ty::Unit
-            }
-            _ => {
-                self.error_with_code(
-                    SEMA_TYPE_MISMATCH,
-                    format!("Record member `{name}` is not callable"),
-                    "Use a callable field or property, or call a qualified free routine.",
-                    span,
-                );
-                self.check_args_only(args);
-                return Ty::Error;
-            }
-        };
-        if result == Ty::Unit && !allow_procedure_result {
-            self.error_with_code(
-                SEMA_TYPE_MISMATCH,
-                format!("Record member `{name}` does not return a value"),
-                "Use the call as the final operation of a statement.",
-                span,
-            );
-            return Ty::Error;
-        }
-        self.member_value_calls.insert(call_key, result.clone());
-        result
     }
 
     /// Selects and checks a receiver call using its first explicit parameter.

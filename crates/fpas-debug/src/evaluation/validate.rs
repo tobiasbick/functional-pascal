@@ -51,6 +51,13 @@ fn lower(
             for operation in operations {
                 count_traversal(expression, limits, budget)?;
                 lowered = match operation {
+                    PostfixOperation::Call { args, .. } => DebugExpression::Call {
+                        callee: Box::new(lowered),
+                        arguments: args
+                            .iter()
+                            .map(|arg| lower(arg, depth + 1, limits, budget))
+                            .collect::<Result<Vec<_>, _>>()?,
+                    },
                     PostfixOperation::Field { name, .. } => DebugExpression::Field {
                         base: Box::new(lowered),
                         name: name.clone(),

@@ -28,10 +28,10 @@ begin
   Test.AssertTrue(Results.IsError(Server.FinishShutdown(Life)));
   Test.AssertTrue(not Server.RequestStop(Life));
   Test.AssertEquals(0, Server.RemainingMillis(Life));
-  Tasks.Send(Gate, true);
+  discard Tasks.Send(Gate, true);
   Test.AssertEquals(0, Arrays.Length(Tasks.CloseTaskGroup(Group)));
   Test.AssertTrue(Results.Unwrap(Server.FinishShutdown(Life)));
   Test.AssertTrue(Results.Unwrap(Server.FinishShutdown(Life)));
   Test.AssertEquals(0, Arrays.Length(Server.ShutdownErrors(Life)));
-  Tasks.CloseChannel(Gate);
+  discard Tasks.CloseChannel(Gate);
 end program;

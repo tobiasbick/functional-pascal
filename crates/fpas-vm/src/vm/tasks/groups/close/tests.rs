@@ -9,7 +9,7 @@ use fpas_bytecode::{Intrinsic, TaskIntrinsic};
 
 fn worker_and_group() -> (Worker, u64) {
     let (program, errors) = fpas_parser::parse(
-        r#"program T;  uses Std.Tasks as Tasks; begin var G: Tasks.TaskGroup := Tasks.CreateTaskGroup(); Tasks.CloseTaskGroupWithTimeout(G, 0); end program;"#,
+        r#"program T;  uses Std.Tasks as Tasks; begin var G: Tasks.TaskGroup := Tasks.CreateTaskGroup(); discard Tasks.CloseTaskGroupWithTimeout(G, 0); end program;"#,
     );
     assert!(errors.is_empty(), "{errors:?}");
     let mut worker = Worker::new(Arc::new(fpas_compiler::compile(&program).expect("compile")))

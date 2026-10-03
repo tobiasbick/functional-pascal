@@ -1,5 +1,7 @@
 //! Callable resolution and active-argument tracking for nested source calls.
 
+mod values;
+
 use std::path::Path;
 
 use fpas_lexer::Token;
@@ -22,7 +24,10 @@ impl LanguageService {
         let value = context.target_index.and_then(|target_index| {
             let document = &context.documents[target_index];
             let frame = active_call(document, offset)?;
-            let callable_token = &document.tokens[frame.callable_token];
+            let Some(callable_index) = frame.callable_token else {
+                return values::signature_help(document, frame.open_offset, frame.active_argument);
+            };
+            let callable_token = &document.tokens[callable_index];
             let (document_index, symbol, _) =
                 resolve(&context.documents, target_index, callable_token.span.offset)?;
             let mut signature = symbol.callable?;
@@ -79,7 +84,8 @@ impl LanguageService {
 
 #[derive(Debug, Clone, Copy)]
 struct CallFrame {
-    callable_token: usize,
+    callable_token: Option<usize>,
+    open_offset: usize,
     active_argument: usize,
 }
 
@@ -98,12 +104,17 @@ fn active_call(document: &NavigationDocument, offset: usize) -> Option<CallFrame
         .take_while(|(_, token)| token.span.offset < offset)
     {
         match token.token {
-            Token::LParen => delimiters.push(Delimiter::Parenthesis(
-                callable_before(document, index).map(|callable_token| CallFrame {
+            Token::LParen => {
+                let callable_token = callable_before(document, index);
+                let frame = (callable_token.is_some()
+                    || values::has_value_call(document, token.span.offset))
+                .then_some(CallFrame {
                     callable_token,
+                    open_offset: token.span.offset,
                     active_argument: 0,
-                }),
-            )),
+                });
+                delimiters.push(Delimiter::Parenthesis(frame));
+            }
             Token::RParen => pop_parenthesis(&mut delimiters),
             Token::LBracket => delimiters.push(Delimiter::Bracket),
             Token::RBracket => pop_bracket(&mut delimiters),

@@ -7,8 +7,8 @@ uses Std.Test as Test;
 begin
   var Numbers: channel of integer := Tasks.CreateChannel(2);
   var Words: channel of string := Tasks.CreateChannel(2);
-  Tasks.Send(Numbers, 42);
-  Tasks.Send(Words, 'retained');
+  discard Tasks.Send(Numbers, 42);
+  discard Tasks.Send(Words, 'retained');
   mutable var Seen: integer := 0;
   var First: Tasks.WaitCase := Tasks.ReceiveCase(Numbers, procedure(Outcome: result of integer, string) begin
     Seen := Results.Unwrap(Outcome);
@@ -27,7 +27,7 @@ begin
   Test.AssertTrue(Tasks.CloseWaitCase(Unused));
   Test.AssertFalse(Tasks.CloseWaitCase(Unused));
   var Source: Tasks.CancellationSource := Tasks.CreateCancellationSource();
-  Tasks.Cancel(Source);
+  discard Tasks.Cancel(Source);
   var Cancelled: Tasks.WaitCase := Tasks.CancellationCase(Tasks.GetCancellationToken(Source), procedure() begin
     Seen := 7;
   end procedure);
@@ -41,6 +41,6 @@ begin
   end procedure);
   Test.AssertEquals(0, Tasks.Select([Timed]));
   Test.AssertEquals(9, Seen);
-  Tasks.CloseChannel(Numbers);
-  Tasks.CloseChannel(Words);
+  discard Tasks.CloseChannel(Numbers);
+  discard Tasks.CloseChannel(Words);
 end program;

@@ -268,7 +268,7 @@ fn collect_stmt_contents(stmt: &Stmt, begins: &[usize], out: &mut CollectedAncho
                 collect_expr(value, begins, out);
             }
         }
-        Stmt::Panic(value, _) => collect_expr(value, begins, out),
+        Stmt::Panic(value, _) | Stmt::Discard(value, _) => collect_expr(value, begins, out),
         Stmt::If {
             condition,
             then_branch,

@@ -71,7 +71,9 @@ impl<'a> ClosureRegistry<'a> {
                     self.visit_expression(value, owner, metadata, types)?;
                 }
             }
-            Stmt::Panic(value, _) | Stmt::Expression { expr: value, .. } => {
+            Stmt::Panic(value, _)
+            | Stmt::Discard(value, _)
+            | Stmt::Expression { expr: value, .. } => {
                 self.visit_expression(value, owner, metadata, types)?;
             }
             Stmt::Go { expr, .. } => {
@@ -300,7 +302,8 @@ impl<'a> ClosureRegistry<'a> {
                         PostfixOperation::Index { index, .. } => {
                             self.visit_expression(index, owner, metadata, types)?
                         }
-                        PostfixOperation::MethodCall { args, .. } => {
+                        PostfixOperation::MethodCall { args, .. }
+                        | PostfixOperation::Call { args, .. } => {
                             for argument in args {
                                 self.visit_expression(argument, owner, metadata, types)?;
                             }

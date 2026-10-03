@@ -14,12 +14,12 @@ begin
   if Send(1, 2, 3) <> 6 then panic('local Send was not selected'); end if;
   Console.WriteLn(Conv.IntToStr(Send(1, 2, 3)));
   var Queue: channel of integer := Tasks.CreateChannel(1);
-  Tasks.Send(Queue, 42);
+  discard Tasks.Send(Queue, 42);
   case Tasks.Receive(Queue) of
     when Ok(Value): if Value <> 42 then panic('qualified channel Send'); end if;
     when Error(Message): panic(Message);
   end case;
-  Tasks.CloseChannel(Queue);
+  discard Tasks.CloseChannel(Queue);
 end program;
 "#,
     );

@@ -365,7 +365,7 @@ procedure HandleEvent(E: Console.ConsoleEvent);
 begin
   if E.kind = Console.EventKind.Key then
     begin
-      HandleKey(E.key);
+      discard HandleKey(E.key);
     end;
   else
     if E.kind = Console.EventKind.Mouse then

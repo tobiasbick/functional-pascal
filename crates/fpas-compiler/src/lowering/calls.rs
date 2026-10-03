@@ -2,6 +2,7 @@
 
 mod arrays;
 mod fluent;
+mod values;
 
 use fpas_ir::{Constant, IntrinsicId, Operation, TypeId, ValueId};
 use fpas_parser::{Designator, DesignatorPart, Expr};
@@ -20,7 +21,7 @@ impl LoweringContext {
         span: fpas_lexer::Span,
         call_key: usize,
     ) -> Result<ValueId, CompileError> {
-        if self.member_value_calls.contains_key(&call_key) {
+        if self.value_calls.contains_key(&call_key) {
             return self.lower_member_value_call(designator, arguments, result, span);
         }
         if let Some(target) = self.fluent_calls.get(&call_key).cloned() {

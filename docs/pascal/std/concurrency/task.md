@@ -110,7 +110,7 @@ uses Std.Tasks as Tasks;
 
 var Source: Tasks.CancellationSource := Tasks.CreateCancellationSource();
 var Token: Tasks.CancellationToken := Tasks.GetCancellationToken(Source);
-Tasks.Cancel(Source);
+discard Tasks.Cancel(Source);
 if Tasks.IsCancellationRequested(Token) then
   begin
     Console.WriteLn('stopping');
@@ -137,7 +137,7 @@ retains the routine's result type, so `Wait` retrieves its value using the exist
 A worker returning a top-level `result of T, E` must use `string` for `E`.
 
 The creator and registered children may start children in an open group. Unrelated tasks may not.
-Ordinary `go` does not implicitly register with a group. Discarding a child's handle does not
+Ordinary `go` does not implicitly register with a group. Allowing a child's handle binding to leave scope does not
 detach it: the group keeps ownership until close. Limits are 4096 live groups per VM and 1024
 total registered children per group, including children that have already finished.
 
@@ -358,9 +358,9 @@ uses Std.Tasks as Tasks;
 var Ta: task := go Work(1);
 var Tb: task := go Work(2);
 Tasks.WaitAll([Ta, Tb]);
-// still valid:
-Tasks.Wait(Ta);
-Tasks.Wait(Tb);
+// Work returns an ordinary value; consume each result explicitly:
+discard Tasks.Wait(Ta);
+discard Tasks.Wait(Tb);
 ```
 
 An empty array completes immediately.
@@ -387,10 +387,10 @@ Existing runtime-wide worker-failure handling remains active.
 uses Std.Tasks as Tasks;
 
 var First: integer := Tasks.WaitAny([Ta, Tb]);
-// Both results still belong to their task handles.
+// Both ordinary results still belong to their task handles.
 Tasks.WaitAll([Ta, Tb]);
-Tasks.Wait(Ta);
-Tasks.Wait(Tb);
+discard Tasks.Wait(Ta);
+discard Tasks.Wait(Tb);
 ```
 
 The main task waits without executing queued tasks; see [Waiting and execution](#waiting-and-execution).

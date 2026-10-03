@@ -1,11 +1,13 @@
 use super::super::super::Checker;
 use crate::check::MethodCallTarget;
 use crate::scope::SymbolKind;
-use crate::types::{GenericParamDef, MethodKind, ParamTy, Ty};
-use fpas_diagnostics::codes::{SEMA_TYPE_MISMATCH, SEMA_WRONG_ARGUMENT_COUNT};
+use crate::types::{MethodKind, Ty};
+use fpas_diagnostics::codes::SEMA_TYPE_MISMATCH;
 use fpas_lexer::Span;
 use fpas_parser::{Designator, DesignatorPart, Expr};
-use std::collections::HashMap;
+
+mod arguments;
+mod resolution;
 
 impl Checker {
     /// Try to resolve `designator(args)` as a record instance or static member call.
@@ -44,186 +46,6 @@ impl Checker {
             args,
             span,
         )
-    }
-
-    pub(in crate::check) fn resolve_method_kind(
-        &self,
-        record_ty: &crate::types::RecordTy,
-        method_name: &str,
-        qualified: &str,
-    ) -> Option<MethodKind> {
-        if !self.record_member_is_visible(record_ty, method_name) {
-            return None;
-        }
-        if let Some((_, method_kind)) = record_ty
-            .methods
-            .iter()
-            .find(|(name, _)| name.eq_ignore_ascii_case(method_name))
-        {
-            return Some(method_kind.clone());
-        }
-
-        let symbol = self.scopes.lookup(qualified)?;
-        match &symbol.ty {
-            Ty::Function(function_ty) => Some(MethodKind::Function(function_ty.clone())),
-            Ty::Procedure(procedure_ty) => Some(MethodKind::Procedure(procedure_ty.clone())),
-            _ => None,
-        }
-    }
-
-    pub(in crate::check) fn resolve_static_function(
-        &self,
-        record_ty: &crate::types::RecordTy,
-        method_name: &str,
-        _qualified: &str,
-    ) -> Option<crate::types::FunctionTy> {
-        if !self.record_member_is_visible(record_ty, method_name) {
-            return None;
-        }
-        if let Some((_, function_ty)) = record_ty
-            .static_functions
-            .iter()
-            .find(|(name, _)| name.eq_ignore_ascii_case(method_name))
-        {
-            return Some(function_ty.clone());
-        }
-
-        // RecordTy clones on values may omit the table; consult the type symbol.
-        if let Some(symbol) = self.scopes.lookup(&record_ty.name)
-            && let Ty::Record(stored) = &symbol.ty
-            && let Some((_, function_ty)) = stored
-                .static_functions
-                .iter()
-                .find(|(name, _)| name.eq_ignore_ascii_case(method_name))
-        {
-            return Some(function_ty.clone());
-        }
-        None
-    }
-
-    pub(in crate::check) fn resolve_static_procedure(
-        &self,
-        record_ty: &crate::types::RecordTy,
-        method_name: &str,
-    ) -> Option<crate::types::ProcedureTy> {
-        if !self.record_member_is_visible(record_ty, method_name) {
-            return None;
-        }
-        if let Some((_, procedure_ty)) = record_ty
-            .static_procedures
-            .iter()
-            .find(|(name, _)| name.eq_ignore_ascii_case(method_name))
-        {
-            return Some(procedure_ty.clone());
-        }
-
-        if let Some(symbol) = self.scopes.lookup(&record_ty.name)
-            && let Ty::Record(stored) = &symbol.ty
-            && let Some((_, procedure_ty)) = stored
-                .static_procedures
-                .iter()
-                .find(|(name, _)| name.eq_ignore_ascii_case(method_name))
-        {
-            return Some(procedure_ty.clone());
-        }
-        None
-    }
-
-    pub(in crate::check) fn static_routine_kind_on_record(
-        &self,
-        record_ty: &crate::types::RecordTy,
-        method_name: &str,
-    ) -> Option<&'static str> {
-        if self
-            .resolve_static_function(record_ty, method_name, "")
-            .is_some()
-        {
-            Some("function")
-        } else if self
-            .resolve_static_procedure(record_ty, method_name)
-            .is_some()
-        {
-            Some("procedure")
-        } else {
-            None
-        }
-    }
-
-    pub(in crate::check) fn check_method_call_args(
-        &mut self,
-        name: &str,
-        type_params: &[GenericParamDef],
-        visible_params: &[ParamTy],
-        args: &[Expr],
-        span: Span,
-    ) -> HashMap<String, Ty> {
-        self.check_method_call_args_with_hint(
-            name,
-            type_params,
-            visible_params,
-            args,
-            span,
-            "Check the number of arguments (Self is implicit).",
-        )
-    }
-
-    pub(in crate::check) fn check_static_call_args(
-        &mut self,
-        name: &str,
-        type_params: &[GenericParamDef],
-        params: &[ParamTy],
-        args: &[Expr],
-        span: Span,
-    ) -> HashMap<String, Ty> {
-        self.check_method_call_args_with_hint(
-            name,
-            type_params,
-            params,
-            args,
-            span,
-            "Check the number of arguments.",
-        )
-    }
-
-    fn check_method_call_args_with_hint(
-        &mut self,
-        name: &str,
-        type_params: &[GenericParamDef],
-        visible_params: &[ParamTy],
-        args: &[Expr],
-        span: Span,
-        arity_hint: &str,
-    ) -> HashMap<String, Ty> {
-        if visible_params.len() != args.len() {
-            self.error_with_code(
-                SEMA_WRONG_ARGUMENT_COUNT,
-                format!(
-                    "Method `{name}` expects {} arguments, got {}",
-                    visible_params.len(),
-                    args.len()
-                ),
-                arity_hint,
-                span,
-            );
-        }
-
-        let mut arg_types = Vec::with_capacity(args.len());
-        for (index, arg) in args.iter().enumerate() {
-            let arg_ty = if let Some(param) = visible_params.get(index) {
-                self.check_expr_with_expected_record_literals(arg, &param.ty)
-            } else {
-                self.check_expr(arg)
-            };
-            arg_types.push(arg_ty);
-        }
-
-        let inferred =
-            self.validate_routine_constraints(type_params, visible_params, &arg_types, span);
-        for (index, (param, arg_ty)) in visible_params.iter().zip(&arg_types).enumerate() {
-            let expected = Self::substitute_type_params(&param.ty, &inferred);
-            self.check_type_compat(&expected, arg_ty, &format!("argument {}", index + 1), span);
-        }
-        inferred
     }
 
     /// True when the designator names a type symbol (possibly qualified).
@@ -346,7 +168,7 @@ impl Checker {
                     .any(|(name, _)| name.eq_ignore_ascii_case(&method_name)))
         {
             let member_ty = self.check_designator_expr(designator);
-            return Some(self.check_member_value_call(
+            return Some(self.check_value_call(
                 call_key,
                 &method_name,
                 &member_ty,

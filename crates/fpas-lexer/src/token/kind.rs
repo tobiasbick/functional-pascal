@@ -23,7 +23,7 @@ documented_token_enum! {
 /// Lexical token produced by the Functional Pascal lexer.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Token {
-    // Keywords (68)
+    // Keywords
     Program,
     Unit,
     Uses,
@@ -36,6 +36,7 @@ pub enum Token {
     Begin,
     End,
     Return,
+    Discard,
     If,
     Then,
     Else,

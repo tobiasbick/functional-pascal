@@ -21,7 +21,7 @@ end function;
 
 begin
   var Pending: task := go Work();
-  Tasks.Wait(Pending);
+  discard Tasks.Wait(Pending);
 end program;
 "#;
 

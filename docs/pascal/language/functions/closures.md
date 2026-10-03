@@ -65,6 +65,15 @@ a local, parameter, or enclosing capture that is not declared by the closure its
 
 All closures created by one activation and capturing the same mutable local observe
 the same cell. The cell survives until the final closure that references it is released.
+Captured mutable parameters use the same cell storage. Reassigning such a parameter
+changes the activation's local value and its captures; it does not change the caller's
+binding. Each activation creates its own cells.
+
+An immutable captured collection is a value snapshot, including nested collections.
+Copying a stateful callable shares its environment and mutable cells. Loop-variable
+captures preserve the value of the iteration that created each closure. References
+in callable targets, indices and arguments are captured just like references in
+ordinary operands; inner parameters and local bindings retain lexical shadowing.
 
 ```pascal
 function Counter(): function(): integer;
@@ -100,6 +109,10 @@ end function;
 
 Non-escaping nested helpers that are only called by name while their parent frame is
 active keep the existing nested-function behavior.
+
+Escaping named and anonymous routines use the same value/cell capture rules and
+declaration identities. They can be invoked directly after a factory call:
+`MakeAdder(3)(5)`.
 
 ## Lifetime and equality
 

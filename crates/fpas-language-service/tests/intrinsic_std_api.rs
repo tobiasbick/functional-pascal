@@ -30,7 +30,7 @@ fn intrinsic_std_hover_includes_markdown_and_parameter_documentation() {
 uses Std.Fs as Fs;
 
 begin
-  Fs.ReadText('notes.txt');
+  discard Fs.ReadText('notes.txt');
 end program;
 "#;
     let (_temp, path, mut service) = intrinsic_std_fixture(source);
@@ -222,7 +222,7 @@ fn intrinsic_std_editor_api_declarations_cannot_be_renamed() {
 uses Std.Fs as Fs;
 
 begin
-  Fs.ReadText('notes.txt');
+  discard Fs.ReadText('notes.txt');
 end program;
 "#;
     let (_temp, path, mut service) = intrinsic_std_fixture(source);
@@ -248,7 +248,7 @@ fn intrinsic_std_signature_help_uses_declared_parameters() {
 uses Std.Fs as Fs;
 
 begin
-  Fs.WriteText('notes.txt', 'hello');
+  discard Fs.WriteText('notes.txt', 'hello');
 end program;
 "#;
     let (_temp, path, mut service) = intrinsic_std_fixture(source);

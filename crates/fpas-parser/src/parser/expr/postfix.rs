@@ -3,11 +3,17 @@ use crate::ast::*;
 use fpas_lexer::Token;
 
 impl Parser {
+    /// Keep named calls distinct from indexed targets; see `docs/pascal/language/functions/postfix-chaining.md`.
     pub(super) fn parse_designator_or_call(&mut self) -> Expr {
         let start = self.current_span();
         let designator = self.parse_designator();
 
-        if self.check(&Token::LParen) {
+        if self.check(&Token::LParen)
+            && !designator
+                .parts
+                .iter()
+                .any(|part| matches!(part, DesignatorPart::Index(..)))
+        {
             self.advance();
             let args = if self.check(&Token::RParen) {
                 Vec::new()
@@ -25,7 +31,7 @@ impl Parser {
         }
     }
 
-    /// Apply zero or more `.Field` / `.Method(args)` / `[index]` suffixes to a primary atom.
+    /// Apply zero or more `.Field` / `.Method(args)` / `[index]` / `(args)` suffixes to a primary atom.
     ///
     /// Returns `base` unchanged when no suffix is present. Never emits an empty operation list.
     ///
@@ -71,6 +77,19 @@ impl Parser {
                 self.expect(&Token::RBracket);
                 operations.push(PostfixOperation::Index {
                     index: Box::new(index),
+                    span: self.span_from(op_start),
+                });
+            } else if self.check(&Token::LParen) {
+                let op_start = self.current_span();
+                self.advance();
+                let args = if self.check(&Token::RParen) {
+                    Vec::new()
+                } else {
+                    self.parse_arg_list()
+                };
+                self.expect(&Token::RParen);
+                operations.push(PostfixOperation::Call {
+                    args,
                     span: self.span_from(op_start),
                 });
             } else {

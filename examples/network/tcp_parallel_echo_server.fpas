@@ -70,12 +70,12 @@ begin
   end if;
   var ListenerValue: Net.Listener := Results.Unwrap(Net.Listen('127.0.0.1', Port));
   var Life: Server.ServerLifetime := Results.Unwrap(Server.CreateLifetime(1000, true));
-  Results.Unwrap(Server.OwnListener(Life, ListenerValue));
-  Results.Unwrap(Server.ObserveSignals(Life));
+  discard Results.Unwrap(Server.OwnListener(Life, ListenerValue));
+  discard Results.Unwrap(Server.ObserveSignals(Life));
   var Workers: Tasks.TaskGroup := Server.GetWorkGroup(Life);
   for Index: integer := 1 to 4 do
     begin
-      Tasks.StartTaskInGroup(Workers, function(Token: Tasks.CancellationToken): result of boolean, string begin
+      var StartedTask1: task := Tasks.StartTaskInGroup(Workers, function(Token: Tasks.CancellationToken): result of boolean, string begin
         while not Tasks.IsCancellationRequested(Token) do
           begin
             case Net.AcceptWithCancellation(ListenerValue, Token) of
@@ -107,7 +107,7 @@ begin
                     end;
                   end if;
 
-                  Server.RequestStop(Life);
+                  discard Server.RequestStop(Life);
                   return Error(Message);
                 end;
             end case;
@@ -127,7 +127,7 @@ begin
     end;
   end while;
 
-  Server.RequestStop(Life);
+  discard Server.RequestStop(Life);
   mutable var Failures: array of Tasks.TaskFailure := [];
   case Tasks.CloseTaskGroupWithTimeout(Workers, Server.RemainingMillis(Life)) of
     when Ok(Reports):
@@ -154,7 +154,7 @@ begin
     end;
   end for;
 
-  Results.Unwrap(Server.FinishShutdown(Life));
+  discard Results.Unwrap(Server.FinishShutdown(Life));
   if Arrays.Length(Failures) <> 0 then
     begin
       panic('TCP worker failed');

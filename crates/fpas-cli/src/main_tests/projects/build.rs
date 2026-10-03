@@ -180,7 +180,7 @@ include = ["src/**/*.fpas"]
         r#"program Hello;
 uses Demo.Math as Math;
 begin
-  Math.Answer();
+  discard Math.Answer();
 end program;
 "#,
     );
@@ -233,7 +233,7 @@ end unit;
         r#"program AnswerTest;
 uses Demo.Support as Support;
 begin
-  Support.Answer();
+  discard Support.Answer();
 end program;
 "#,
     );

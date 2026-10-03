@@ -55,6 +55,14 @@ impl Parser {
         Stmt::Return(expr, self.span_from(start))
     }
 
+    /// Parse an explicit value consumer; see `docs/pascal/language/functions/first-class.md`.
+    pub(super) fn parse_discard_stmt(&mut self) -> Stmt {
+        let start = self.current_span();
+        self.advance();
+        let expr = self.parse_expression();
+        Stmt::Discard(expr, self.span_from(start))
+    }
+
     pub(super) fn parse_panic_stmt(&mut self) -> Stmt {
         let start = self.current_span();
         self.advance();
@@ -76,7 +84,12 @@ impl Parser {
                 span: self.span_from(start),
             }
         } else {
-            let base = if self.eat(&Token::LParen) {
+            let base = if !designator
+                .parts
+                .iter()
+                .any(|part| matches!(part, DesignatorPart::Index(..)))
+                && self.eat(&Token::LParen)
+            {
                 let args = if self.check(&Token::RParen) {
                     Vec::new()
                 } else {

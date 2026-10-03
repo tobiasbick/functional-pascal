@@ -19,6 +19,7 @@ begin
   var Origin: Point := record X := 42; Y := 3.5; end record;
   // Mask value.
   var Mask: integer := 42;
+  discard Distance(Origin);
   if Mask >= 1 then
   begin
     Console.WriteLn('It''s the origin');

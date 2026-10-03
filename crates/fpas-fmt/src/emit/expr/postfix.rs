@@ -62,6 +62,11 @@ fn emit_postfix_wrapped(
 
 fn emit_postfix_operation(emitter: &mut Emitter, op: &PostfixOperation, comments: &CommentMap) {
     match op {
+        PostfixOperation::Call { args, .. } => {
+            emitter.write("(");
+            emit_arg_list(emitter, args, comments);
+            emitter.write(")");
+        }
         PostfixOperation::Field { name, .. } => {
             emitter.write(".");
             emitter.write(name);

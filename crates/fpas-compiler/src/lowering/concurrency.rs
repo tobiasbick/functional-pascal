@@ -26,7 +26,9 @@ impl LoweringContext {
                 return Err(unsupported(span, "empty task postfix call"));
             };
             let key = fpas_sema::postfix_operation_lookup_key(last);
-            let fpas_parser::PostfixOperation::MethodCall { args, .. } = last else {
+            let (fpas_parser::PostfixOperation::MethodCall { args, .. }
+            | fpas_parser::PostfixOperation::Call { args, .. }) = last
+            else {
                 return Err(unsupported(span, "task postfix call"));
             };
             let receiver = if prefix.is_empty() {
@@ -34,9 +36,15 @@ impl LoweringContext {
             } else {
                 self.lower_postfix(base, prefix, span)?
             };
-            if let Some(result_ty) = self.member_value_calls.get(&key).cloned() {
-                let callee = self.lower_postfix_callable_member(receiver, last)?;
-                let output = self.type_table.id(&result_ty, span.line, span.column)?;
+            if let Some(target) = self.value_calls.get(&key).cloned() {
+                let callee = if matches!(last, fpas_parser::PostfixOperation::Call { .. }) {
+                    receiver
+                } else {
+                    self.lower_postfix_callable_member(receiver, last)?
+                };
+                let output = self
+                    .type_table
+                    .id(&target.result_ty, span.line, span.column)?;
                 return self.spawn_callable_value(callee, output, args, span, retain_result);
             }
             if let Some(target) = self.fluent_calls.get(&key).cloned() {
@@ -78,8 +86,8 @@ impl LoweringContext {
         else {
             return Err(unsupported(span, "invalid task expression"));
         };
-        if let Some(result_ty) = self
-            .member_value_calls
+        if let Some(target) = self
+            .value_calls
             .get(&fpas_sema::expr_lookup_key(expression))
             .cloned()
         {
@@ -89,7 +97,9 @@ impl LoweringContext {
             } else {
                 self.lower_designator_read(designator)?
             };
-            let output = self.type_table.id(&result_ty, span.line, span.column)?;
+            let output = self
+                .type_table
+                .id(&target.result_ty, span.line, span.column)?;
             return self.spawn_callable_value(callee, output, args, span, retain_result);
         }
         if let Some(target) = self

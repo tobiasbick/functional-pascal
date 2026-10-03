@@ -73,7 +73,7 @@ begin
   Tasks.Wait(A);
   var N: integer := Tasks.Wait(B);
   var R: result of integer, string := Tasks.Wait(C);
-  Tasks.CloseTaskGroup(G);
+  discard Tasks.CloseTaskGroup(G);
 end program;"#,
     );
 }

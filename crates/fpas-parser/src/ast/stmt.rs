@@ -11,6 +11,7 @@ impl Stmt {
             | Self::Null(span)
             | Self::Return(_, span)
             | Self::Panic(_, span)
+            | Self::Discard(_, span)
             | Self::Break(span)
             | Self::Continue(span) => *span,
             Self::Var(value) | Self::MutableVar(value) => value.span,
@@ -52,6 +53,8 @@ pub enum Stmt {
     },
     /// Return statement, its optional result expression, and its source span.
     Return(Option<Expr>, Span),
+    /// Evaluate a value exactly once and explicitly discard its result.
+    Discard(Expr, Span),
     /// Panic statement, its payload expression, and its source span.
     Panic(Expr, Span),
     /// Conditional `if` statement.

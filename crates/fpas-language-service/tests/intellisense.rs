@@ -14,6 +14,37 @@ use fpas_parser::parse_compilation_unit;
 use support::TempDirectory;
 
 #[test]
+fn signature_help_resolves_returned_indexed_and_parenthesized_callables() {
+    let temp = TempDirectory::new("callable-target-signatures");
+    let source = r#"program Signatures;
+type Handler = function(Left: integer; Right: integer): integer;
+function Make(): Handler;
+begin return function(A: integer; B: integer): integer begin return A + B; end function; end function;
+begin
+  var Handlers: array of Handler := [Make()];
+  discard Make()(1, 2);
+  discard Handlers[0](3, 4);
+  discard (Handlers[0])(5, 6);
+end program;
+"#;
+    let path = temp.write("targets.fpas", source);
+    let mut service = LanguageService::new(WorkspaceContext::loose(temp.path()));
+    for suffix in ["(1, 2)", "(3, 4)", "(5, 6)"] {
+        let offset = source.find(suffix).expect("call") + suffix.find(',').expect("comma") + 2;
+        let help = service
+            .signature_help(&path, offset)
+            .expect("signature query")
+            .value
+            .expect("typed callable signature");
+        assert_eq!(
+            help.signature.parameters,
+            ["Left: integer", "Right: integer"]
+        );
+        assert_eq!(help.active_parameter, Some(1));
+    }
+}
+
+#[test]
 fn completion_reports_member_metadata_and_replaces_the_complete_identifier() {
     let temp = TempDirectory::new("intellisense-members");
     let source = r#"program Complete;

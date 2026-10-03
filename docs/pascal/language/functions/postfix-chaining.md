@@ -14,6 +14,7 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`primary_expr`,
 |--------|---------|
 | `.Field` | Record field access |
 | `[Index]` | Array, dictionary, or string index |
+| `(Arguments)` | Invoke the preceding callable value with explicit positional arguments |
 | `.Method(Arguments)` | Record instance method or receiver call to a visible callable |
 
 Suffixes evaluate left to right. Each step receives the value and static type of
@@ -27,7 +28,7 @@ var First: string := LoadItems()[0];
 var Scaled: integer := Num.Create(3).Scale(2).Next().Value;
 ```
 
-Qualified root calls such as `Std.Math.Sqrt(4.0)` remain ordinary calls. Only
+Qualified root calls such as `Math.Sqrt(4.0)` after `uses Std.Math as Math;` remain ordinary calls. Only
 suffixes that follow a completed primary become postfix operations:
 
 ```pascal
@@ -35,9 +36,17 @@ Factory.Create().Value
 Factory.Create().Transform(2).Value
 Factory.Create()[0]
 (Factory.Create()).Value
+MakeAdder(3)(5)
+Callbacks[0](42)
+(Callback)(42)
 ```
 
 ## Calls after an expression
+
+`(Arguments)` calls the preceding function or procedure value. Callable record
+fields also use their own declared signature when called as `.Field(Arguments)`;
+no receiver argument is inserted. This differs from a declared record method or
+receiver call, whose existing rules are described below.
 
 `.Method(...)` on a record value first resolves a record member. When no member
 has that name, the compiler can select a visible function, procedure, or
@@ -47,17 +56,21 @@ See [receiver calls](fluent-calls.md). Static record functions stay callable
 only through a type designator (`Point.Create(...)`).
 
 Procedures may appear only as the final call of a postfix chain used as
-a statement. The procedure runs and its `Unit` result is discarded:
+a statement. A procedure call produces no value:
 
 ```pascal
-TuiContainer.AsView(Container).Destroy()
-Factory.Create().Configure().Start()
+Views.AsView(Container).Destroy();
+Factory.Create().Configure().Start();
 ```
 
 Every earlier step must still produce a value. A procedure cannot appear in the
 middle of a chain, and a postfix statement cannot end in a field or index. A
-final method function is also valid; its result is discarded just like an
-ordinary function call used as a statement.
+final function call requires consumption by another expression or an explicit
+`discard`, just like an ordinary function call.
+
+```pascal
+discard MakeAdder(3)(5);
+```
 
 ## Indexing
 

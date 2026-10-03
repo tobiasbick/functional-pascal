@@ -3,5 +3,5 @@ program TuiInvalidCellGlyphRuntimeError;
 uses Std.Tui as Tui;
 
 begin
-  Tui.TuiCell.Create('', Tui.TuiStyleRole.Normal);
+  discard Tui.TuiCell.Create('', Tui.TuiStyleRole.Normal);
 end program;

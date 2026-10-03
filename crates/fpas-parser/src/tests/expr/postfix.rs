@@ -3,6 +3,43 @@ use crate::ast::*;
 use crate::tests::parse_with_errors;
 
 #[test]
+fn invocation_suffixes_accept_expression_targets() {
+    for source in [
+        "Make()(1)",
+        "Callbacks[0](1)",
+        "(Callback)(1)",
+        "[Callback][0](1)",
+        "(function(X: integer): integer begin return X; end function)(1)",
+    ] {
+        let Expr::Postfix { operations, .. } = parse_expr(source) else {
+            panic!("expected an expression-target call: {source}");
+        };
+        assert!(
+            matches!(operations.last(), Some(PostfixOperation::Call { args, .. }) if args.len() == 1)
+        );
+    }
+}
+
+#[test]
+fn malformed_invocation_recovers_with_structured_diagnostics() {
+    for source in [
+        "program P; begin discard Make()(1,); end program;",
+        "program P; begin discard (F)(Name := 1); end program;",
+        "program P; begin discard (F)(1; end program;",
+        "program P; begin discard; end program;",
+    ] {
+        let (_, errors) = parse_with_errors(source);
+        assert!(!errors.is_empty(), "{source}");
+        assert!(
+            errors
+                .iter()
+                .all(|error| error.as_diagnostic().span.is_some()),
+            "{errors:#?}"
+        );
+    }
+}
+
+#[test]
 fn call_result_followed_by_field() {
     match parse_expr("Foo().Bar") {
         Expr::Postfix {

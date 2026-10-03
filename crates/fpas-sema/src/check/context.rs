@@ -34,8 +34,7 @@ pub struct FluentCallTarget {
 /// Maps call or postfix-operation identity to its selected receiver-call target.
 pub type FluentCallMap = HashMap<usize, FluentCallTarget>;
 
-/// Maps a callable record field or property call to its checked result type.
-pub type MemberValueCallMap = HashMap<usize, Ty>;
+use super::calls::ValueCallMap;
 
 /// Canonical root type name to its fully resolved semantic type.
 pub type NamedTypeMap = BTreeMap<String, Ty>;
@@ -208,8 +207,8 @@ pub struct AnalysisMetadata {
     pub method_calls: MethodCallMap,
     /// Selected free and first-class receiver calls.
     pub fluent_calls: FluentCallMap,
-    /// Calls through callable record fields or properties.
-    pub member_value_calls: MemberValueCallMap,
+    /// Checked calls through ordinary callable values and record members.
+    pub value_calls: ValueCallMap,
     /// Named record defaults used while lowering record literals.
     pub record_defaults: RecordDefaultsMap,
     /// Scalar `case` labels interpreted as guard bindings.
@@ -242,8 +241,8 @@ pub struct Checker {
     pub(crate) method_calls: MethodCallMap,
     /// Selected free and first-class receiver calls.
     pub(crate) fluent_calls: FluentCallMap,
-    /// Calls through callable record fields or properties.
-    pub(crate) member_value_calls: MemberValueCallMap,
+    /// Checked calls through ordinary callable values and record members.
+    pub(crate) value_calls: ValueCallMap,
     pub(crate) import_aliases: HashMap<String, String>,
     /// Source spelling of each import alias, keyed by its canonical lowercase name.
     pub(crate) import_alias_spellings: HashMap<String, String>,
@@ -310,7 +309,7 @@ impl Checker {
             intrinsic_calls: IntrinsicCallMap::new(),
             method_calls: MethodCallMap::new(),
             fluent_calls: FluentCallMap::new(),
-            member_value_calls: MemberValueCallMap::new(),
+            value_calls: ValueCallMap::new(),
             import_aliases: HashMap::new(),
             import_alias_spellings: HashMap::new(),
             supporting_unit_names: HashSet::new(),
@@ -344,7 +343,7 @@ impl Checker {
             import_aliases: self.import_aliases,
             method_calls: self.method_calls,
             fluent_calls: self.fluent_calls,
-            member_value_calls: self.member_value_calls,
+            value_calls: self.value_calls,
             record_defaults: self.record_defaults,
             scalar_case_bindings: self.scalar_case_bindings,
             closure_infos: self.closure_infos,

@@ -135,6 +135,10 @@ async function verifyPositiveScopes(grammar) {
     "entity.name.function.fpas"
   );
   assertScope(
+    tokenAt(fixture, "discard Distance(Origin)", "discard"),
+    "keyword.control.fpas"
+  );
+  assertScope(
     tokenAt(fixture, "if Mask >= 1", "if"),
     "keyword.control.fpas"
   );

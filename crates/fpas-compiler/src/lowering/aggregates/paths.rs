@@ -226,7 +226,7 @@ impl LoweringContext {
                     let part = DesignatorPart::Index((**index).clone(), *span);
                     (value, ty) = self.lower_designator_part(value, ty, &part)?;
                 }
-                PostfixOperation::MethodCall { .. } => {
+                PostfixOperation::MethodCall { .. } | PostfixOperation::Call { .. } => {
                     return Err(unsupported(span, "postfix method call"));
                 }
             }

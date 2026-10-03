@@ -3,5 +3,5 @@ program TuiInvalidCellGridRuntimeError;
 uses Std.Tui as Tui;
 
 begin
-  Tui.TuiCellGrid.Create(2, 1, [Tui.TuiCell.Create('X', Tui.TuiStyleRole.Normal)]);
+  discard Tui.TuiCellGrid.Create(2, 1, [Tui.TuiCell.Create('X', Tui.TuiStyleRole.Normal)]);
 end program;

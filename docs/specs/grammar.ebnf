@@ -83,6 +83,7 @@ line_comment    = '//' { (* any character except CR or LF *) } ;
 keyword         = 'program'   | 'unit'      | 'uses'      | 'const'
                 | 'var'       | 'mutable'   | 'function'  | 'procedure'
                 | 'begin'     | 'end'       | 'return'    | 'if'
+                | 'discard'
                 | 'then'      | 'else'      | 'case'      | 'of'
                 | 'for'       | 'to'        | 'downto'    | 'in'
                 | 'do'        | 'while'     | 'repeat'    | 'until'
@@ -318,6 +319,7 @@ statement           = block
                     | mutable_var_stmt
                     | assignment_stmt
                     | return_stmt
+                    | discard_stmt
                     | panic_stmt
                     | if_stmt
                     | case_stmt
@@ -345,6 +347,7 @@ assignment_stmt     = designator ':=' expression ;
 
 (* -- Return -- *)
 return_stmt         = 'return' [ expression ] ;
+discard_stmt        = 'discard' expression ;
 
 (* In functions, 'return expr' sets the return value and exits.     *)
 (* In procedures, bare 'return' exits without a value.              *)
@@ -441,15 +444,16 @@ continue_stmt       = 'continue' ;
 (* `go` … is fire-and-forget (no handle); expression `go` … has type *)
 (* `task` and retains the result for `Std.Tasks.Wait`. See           *)
 (* docs/pascal/language/concurrency/README.md.                                   *)
-go_call             = designator '(' [ arg_list ] ')' ;
+(* Semantic analysis requires the final operation to be a call. *)
+go_call             = primary_expr ;
 go_stmt             = 'go' go_call ;
 
-(* -- Procedure / Function Call (statement position) -- *)
+(* -- Procedure call (function results require a consumer or discard) -- *)
 call_stmt           = designator '(' [ arg_list ] ')' ;
 
 (* A postfix expression may be used as a statement when semantic analysis *)
-(* confirms that its final suffix is a method call. Final procedure calls  *)
-(* are valid because their Unit result is discarded.                      *)
+(* confirms that its final suffix invokes a procedure. A function result   *)
+(* must be consumed by another expression or by an explicit discard.       *)
 postfix_expr_stmt   = primary_atom postfix_suffix { postfix_suffix } ;
 
 (* ---- 2.7 Expressions ------------------------------------------ *)
@@ -489,7 +493,7 @@ record_update       = 'with' field_init { field_init } 'end' 'with' ;
 
 (* primary_atom is a complete call/designator/literal. After it, optional       *)
 (* postfix suffixes allow chaining on the result: `.Field`, `[Index]`,         *)
-(* and `.Method(args)`. Ordinary designators keep field/index inside the path. *)
+(* `.Method(args)` and `(args)`. Ordinary designators retain field/index paths. *)
 (* Documentation: docs/pascal/language/functions/README.md                     *)
 primary_expr        = primary_atom { postfix_suffix } ;
 
@@ -519,7 +523,8 @@ closure_expr        = 'function' '(' [ param_list ] ')' ':' type_expr
                         [ nested_decl { nested_decl } ] 'begin' statement_list 'end' 'procedure' ;
 
 postfix_suffix      = '.' identifier [ call_args ]
-                    | '[' expression ']' ;
+                    | '[' expression ']'
+                    | call_args ;
 
 (* -- Function call -- *)
 call_args           = '(' [ arg_list ] ')' ;

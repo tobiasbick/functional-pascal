@@ -29,7 +29,9 @@ end procedure;
 
 ## Functions
 
-A function returns a value using `return`:
+A function returns a value using `return`. Its caller must consume the result
+or explicitly write `discard Function(...);`; see
+[result consumption](first-class.md#result-consumption-and-discard).
 
 ```pascal
 function Add(A: integer; B: integer): integer;

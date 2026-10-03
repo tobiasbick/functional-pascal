@@ -8,9 +8,9 @@ uses Std.Test as Test;
 begin
   var Group: Tasks.TaskGroup := Tasks.CreateTaskGroup();
   var Attempts: channel of integer := Tasks.CreateChannel(3);
-  Tasks.Send(Attempts, 0);
-  Tasks.Send(Attempts, 1);
-  Tasks.Send(Attempts, 2);
+  discard Tasks.Send(Attempts, 0);
+  discard Tasks.Send(Attempts, 1);
+  discard Tasks.Send(Attempts, 2);
   var Child: task := Tasks.StartSupervisedTask(Group, function(Token: Tasks.CancellationToken): result of integer, string begin
     var Attempt: integer := Results.Unwrap(Tasks.Receive(Attempts));
     if Attempt = 0 then
@@ -30,5 +30,5 @@ begin
   Test.AssertEquals(0, Tasks.WaitAny([Child]));
   Test.AssertEquals(42, Results.Unwrap(Tasks.Wait(Child)));
   Test.AssertEquals(0, Arrays.Length(Tasks.CloseTaskGroup(Group)));
-  Tasks.CloseChannel(Attempts);
+  discard Tasks.CloseChannel(Attempts);
 end program;

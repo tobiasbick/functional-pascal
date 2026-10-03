@@ -112,7 +112,8 @@ fn apply_postfix_operations_source_id(operations: &mut [PostfixOperation], sourc
                 apply_expr_source_id(index, source_id);
                 apply_span(span, source_id);
             }
-            PostfixOperation::MethodCall { args, span, .. } => {
+            PostfixOperation::MethodCall { args, span, .. }
+            | PostfixOperation::Call { args, span } => {
                 for arg in args {
                     apply_expr_source_id(arg, source_id);
                 }

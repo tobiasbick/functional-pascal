@@ -11,12 +11,12 @@ end function;
 begin
   var Workers: Tasks.TaskGroup := Tasks.CreateTaskGroup();
   // Keep the group even when individual task handles are not needed.
-  Tasks.StartTaskInGroup(Workers, CheckConfiguration);
-  Tasks.StartTaskInGroup(Workers, procedure(Token: Tasks.CancellationToken) begin
+  var WorkerHandle: task := Tasks.StartTaskInGroup(Workers, CheckConfiguration);
+  var StartedTask1: task := Tasks.StartTaskInGroup(Workers, procedure(Token: Tasks.CancellationToken) begin
     var Stop: Tasks.WaitCase := Tasks.CancellationCase(Token, procedure() begin
       Console.WriteLn('Background worker stopped');
     end procedure);
-    Tasks.Select([Stop]);
+    discard Tasks.Select([Stop]);
   end procedure);
   // Close requests cooperative cancellation and waits for every registered worker.
   var Failures: array of Tasks.TaskFailure := Tasks.CloseTaskGroup(Workers);

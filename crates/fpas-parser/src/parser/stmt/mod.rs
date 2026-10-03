@@ -97,6 +97,7 @@ impl Parser {
             Token::Mutable if self.is_mutable_var_start() => self.parse_var_stmt(true),
             Token::Mutable => self.parse_invalid_statement_start(),
             Token::Return => self.parse_return_stmt(),
+            Token::Discard => self.parse_discard_stmt(),
             Token::Panic => self.parse_panic_stmt(),
             Token::If => self.parse_if_stmt(),
             Token::Case => self.parse_case_stmt(),
@@ -127,6 +128,7 @@ impl Parser {
                 | Token::Null
                 | Token::Var
                 | Token::Mutable
+                | Token::Discard
                 | Token::Return
                 | Token::Panic
                 | Token::If
@@ -163,7 +165,7 @@ impl Parser {
         let expr = self.parse_expression();
         if matches!(expr, Expr::Call { .. })
             || matches!(&expr, Expr::Postfix { operations, .. }
-                if matches!(operations.last(), Some(crate::ast::PostfixOperation::MethodCall { .. })))
+                if matches!(operations.last(), Some(crate::ast::PostfixOperation::MethodCall { .. } | crate::ast::PostfixOperation::Call { .. })))
         {
             expr
         } else {

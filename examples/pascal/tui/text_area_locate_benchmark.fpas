@@ -35,11 +35,11 @@ begin
   end if;
   var Text: string := Str.RepeatStr('é', Size);
   var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(80, 24));
-  App.RunIterations(Text, Update, View, 0, 0);
+  discard App.RunIterations(Text, Update, View, 0, 0);
   var Started: integer := Time.MonotonicMillis();
   for Iteration: integer := 1 to Iterations do
     begin
-      App.RunIterations(Text, Update, View, 0, 0);
+      discard App.RunIterations(Text, Update, View, 0, 0);
     end;
   end for;
 

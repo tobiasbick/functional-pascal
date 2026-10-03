@@ -32,7 +32,8 @@ Expected behavior:
 - Library: `kind = "library"`, units under `src/`, optional `[exports].units`.
 - Consumer program: `[dependencies].projects = ["../libs/greet/greet.fpasprj"]` or `workspace = ["greet"]` when inside a workspace.
 - Copy layout from `examples/pascal/monorepo/`.
-- Verify: `fpas check` on both manifests; `uses Demo.Greet` (or exported unit name) in the program.
+- Verify: `fpas check` on both manifests; `uses Demo.Greet as Greet;` in the program,
+  with exported routines accessed through `Greet`.
 
 ## Example 3: Workspace for monorepo
 

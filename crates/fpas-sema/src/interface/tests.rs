@@ -311,7 +311,7 @@ end unit;
         ambiguous_analysis.metadata.errors.iter().any(|error| {
             error.code == fpas_diagnostics::codes::SEMA_UNKNOWN_NAME
                 && error.help.as_deref().is_some_and(|help| {
-                    help.contains("first.Color") && help.contains("second.Color")
+                    help.contains("First.Color") && help.contains("Second.Color")
                 })
         }),
         "{:#?}",

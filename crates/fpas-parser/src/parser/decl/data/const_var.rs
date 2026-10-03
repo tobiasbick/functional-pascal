@@ -1,6 +1,6 @@
 use crate::ast::*;
 use crate::parser::Parser;
-use fpas_diagnostics::codes::PARSE_EXPECTED_IDENTIFIER;
+use fpas_diagnostics::codes::{PARSE_EXPECTED_IDENTIFIER, PARSE_EXPECTED_TOKEN};
 use fpas_lexer::Token;
 
 impl Parser {
@@ -77,11 +77,49 @@ impl Parser {
         start: fpas_lexer::Span,
     ) -> (String, TypeExpr, Expr) {
         let (name, _) = self.expect_ident_or_error(start);
+        self.reject_grouped_names(&name, |name| format!("var {name}: integer := 0;"), " ");
         self.expect(&Token::Colon);
         let type_expr = self.parse_type_expr();
         self.expect(&Token::ColonAssign);
         let value = self.parse_expression();
         (name, type_expr, value)
+    }
+
+    /// Diagnoses `A, B: T` and skips the extra names so the type still parses.
+    ///
+    /// `example` renders one corrected declaration per name; `separator` joins them.
+    pub(in crate::parser) fn reject_grouped_names(
+        &mut self,
+        first: &str,
+        example: fn(&str) -> String,
+        separator: &str,
+    ) {
+        if !self.check(&Token::Comma) {
+            return;
+        }
+        let span = self.current_span();
+        let mut names = vec![first.to_owned()];
+        while self.check(&Token::Comma) {
+            self.advance();
+            match self.current_token() {
+                Token::Ident(name) => {
+                    names.push(name.clone());
+                    self.advance();
+                }
+                _ => break,
+            }
+        }
+        let example = names
+            .iter()
+            .map(|name| example(name))
+            .collect::<Vec<_>>()
+            .join(separator);
+        self.error_with_code(
+            PARSE_EXPECTED_TOKEN,
+            "Each declaration names exactly one binding",
+            &format!("Write one declaration per name, for example `{example}`."),
+            span,
+        );
     }
 
     pub(in crate::parser) fn parse_var_def(&mut self, visibility: Visibility) -> VarDef {

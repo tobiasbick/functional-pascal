@@ -187,6 +187,7 @@ impl Parser {
             self.expect_ident()
                 .unwrap_or_else(|| self.error_ident(start))
         };
+        self.reject_grouped_names(&name, |name| format!("{name}: integer"), "; ");
         self.expect(&Token::Colon);
         let type_expr = self.parse_type_expr();
         FormalParam {

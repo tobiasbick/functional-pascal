@@ -1,6 +1,8 @@
 # Variables
 
-Variables are **immutable by default**. Use `mutable var` to allow reassignment. This works both as a declaration block and as an inline statement inside a `begin..end` block.
+Variables are **immutable by default**. Use `mutable var` to allow reassignment.
+Both forms work as top-level declarations and as inline statements in a body.
+Repeat `var` or `mutable var` for each binding; declaration groups are invalid.
 
 Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`var_block`, `var_stmt`, `mutable_var_block`, and `mutable_var_stmt`).
 

@@ -31,7 +31,7 @@ impl Checker {
             Expr::Real(_, _) => Ty::Real,
             Expr::Str(_, _) => Ty::String,
             Expr::Bool(_, _) => Ty::Boolean,
-            Expr::Designator(designator) => self.check_designator_expr(designator),
+            Expr::Designator(designator) => self.check_designator_value_expr(designator),
             Expr::Call {
                 designator,
                 args,

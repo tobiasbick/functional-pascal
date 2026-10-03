@@ -94,8 +94,9 @@ interactions without duplicating the entire grammar matrix.
 The source-conversion checkbox now names its implemented constructs and links
 to this evidence. The central stage index, previous delivery's remaining-work
 paragraph, and implementation sequence reflect completed operator and migration
-work. The documentation and full coverage checklist items remain open for
-their own verification. Stage 3 as a whole is not marked complete.
+work. The [coordinated documentation delivery](documentation-delivery.md)
+closes the documentation item. The [full coverage delivery](coverage-delivery.md)
+verifies the final checklist item and closes stage 3 for implemented constructs.
 
 Current-language documentation and Rust documentation links are unchanged:
 this delivery adds verification of implemented behavior, without changing

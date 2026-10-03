@@ -28,7 +28,10 @@ end for;
 
 ## Dict key iteration
 
-Iterates over the **keys** of a `dict of K to V` in insertion order. The loop variable receives each key; values can be looked up via the key inside the body. Requires `uses Std.Dictionaries`.
+Iterates over the **keys** of a `dict of K to V` in insertion order. The loop
+variable receives each key; values can be looked up via the key inside the body.
+Import `uses Std.Dictionaries as Dictionaries;` when calling dictionary routines;
+iteration and indexing themselves need no library call.
 
 ```pascal
 uses Std.Console as Console;

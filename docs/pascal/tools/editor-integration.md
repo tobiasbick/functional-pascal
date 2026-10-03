@@ -303,6 +303,11 @@ edit when it is already canonical. Parser errors return no edit, preventing a
 recovered or partial syntax tree from destructively replacing the source.
 Comments are preserved according to the [formatter style](fmt-style.md).
 
+Named closers, required statement semicolons, import aliases, and operator
+parentheses follow that same style. Formatting keeps explicit lexical blocks
+and nested `else if` ownership. It returns no edit for missing or mismatched
+closers, missing or extra terminators, or ambiguous logical chains.
+
 The editor's standard format-on-save setting works without an FPAS-specific
 watcher or extension setting. For example:
 

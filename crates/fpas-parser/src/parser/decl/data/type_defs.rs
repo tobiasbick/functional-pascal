@@ -73,7 +73,7 @@ impl Parser {
             self.error_with_code(
                 PARSE_EXPECTED_IDENTIFIER,
                 "Expected at least one enum member",
-                "Add a member such as `Red;` between `enum` and `end`.",
+                "Add a member such as `Red;` between `enum` and `end enum`.",
                 self.current_span(),
             );
         }

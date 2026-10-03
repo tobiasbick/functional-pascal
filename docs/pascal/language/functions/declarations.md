@@ -9,18 +9,21 @@ function Name [<T>] ( [ params ] ) : RetType ;
   // nested function | nested procedure
 begin
   ...
-end;
+end function;
 
 procedure Name [<T>] ( [ params ] ) ;
   // nested function | nested procedure
 begin
   ...
-end;
+end procedure;
 ```
 
-- The header ends with `;` before the body. The body ends with `end;` (including top-level declarations in a program or unit).
+- The header ends with `;` before the body. Functions close with `end function;`
+  and procedures with `end procedure;`, including nested and record routines.
+- Every body statement ends with `;`. Use `null;` when a procedure performs no action.
 - Use `()` when there are no parameters: `function Pi(): real;`.
-- Parameter lists use `;` between parameters; call sites use `,`.
+- Parameter lists use `;` between individually typed parameters; call sites use
+  `,`. Write `A: integer; B: integer`, rather than grouped `A, B: integer`.
 - Calls always include parentheses, including calls without arguments: `Pi()` or
   `SayHello()`. A bare routine name is not call syntax.
 

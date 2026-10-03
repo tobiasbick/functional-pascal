@@ -1,0 +1,37 @@
+program ShiftCountsTest;
+
+uses Std.Bits as Bits;
+uses Std.Test as Test;
+
+begin
+  var Min: integer := -9223372036854775807 - 1;
+  var Max: integer := 9223372036854775807;
+  mutable var LeftExpected: integer := 1;
+  mutable var RightExpected: integer := Max;
+  for Count: integer := 0 to 63 do
+    Test.AssertEquals(LeftExpected, Bits.ShiftLeft(1, Count));
+    if Count = 0 then
+      Test.AssertEquals(-1, Bits.ShiftRight(-1, Count));
+    else
+      Test.AssertEquals(RightExpected, Bits.ShiftRight(-1, Count));
+      RightExpected := RightExpected div 2;
+    end if;
+
+    Test.AssertEquals(0, Bits.ShiftLeft(0, Count));
+    Test.AssertEquals(0, Bits.ShiftRight(0, Count));
+    if Count < 62 then
+      LeftExpected := LeftExpected * 2;
+    elsif Count = 62 then
+      LeftExpected := Min;
+    end if;
+  end for;
+
+  Test.AssertEquals(Min, Bits.ShiftLeft(Min, 0));
+  Test.AssertEquals(Min, Bits.ShiftRight(Min, 0));
+  Test.AssertEquals(Max, Bits.ShiftLeft(Max, 0));
+  Test.AssertEquals(Max, Bits.ShiftRight(Max, 0));
+  Test.AssertEquals(-2, Bits.ShiftLeft(-1, 1));
+  Test.AssertEquals(-1, Bits.BitOr(Min, Max));
+  Test.AssertEquals(0, Bits.BitAnd(Min, Max));
+  Test.AssertEquals(-1, Bits.BitXor(Min, Max));
+end program;

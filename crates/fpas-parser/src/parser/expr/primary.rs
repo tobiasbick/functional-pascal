@@ -168,7 +168,7 @@ impl Parser {
         }
     }
 
-    /// Parse `Field := Value;` initializers until `end`, then consume `end`.
+    /// Parse `Field := Value;` initializers, then consume their named closer.
     ///
     /// Shared by record literals and record update expressions.
     fn parse_field_init_list(&mut self, kind: &Token) -> Vec<FieldInit> {
@@ -201,10 +201,10 @@ impl Parser {
         fields
     }
 
-    /// Parse a record update expression: `base with Field := Value; … end`.
+    /// Parse a record update expression: `base with Field := Value; … end with`.
     ///
     /// The `with` token has already been peeked but **not consumed** when this is called.
-    /// Consumes `with`, the field overrides, and `end`.
+    /// Consumes `with`, the field overrides, and `end with`.
     ///
     /// **Documentation:** `docs/pascal/language/types/record-update.md`
     pub(super) fn parse_record_update(&mut self, base: Expr, start: fpas_lexer::Span) -> Expr {
@@ -213,7 +213,7 @@ impl Parser {
             self.error_with_code(
                 PARSE_EMPTY_RECORD_UPDATE,
                 "Record update requires at least one field assignment",
-                "Add a field assignment, for example `Value with X := 1; end`, or use the original value directly.",
+                "Add a field assignment, for example `Value with X := 1; end with`, or use the original value directly.",
                 self.current_span(),
             );
         }

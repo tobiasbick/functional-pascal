@@ -120,7 +120,7 @@ end unit;
 
     assert_eq!(exit_code, 1);
     assert!(
-        stderr_output.contains("x.Foo") && stderr_output.contains("y.Foo"),
+        stderr_output.contains("X.Foo") && stderr_output.contains("Y.Foo"),
         "error should mention qualified alternatives, got: {stderr_output}"
     );
 }

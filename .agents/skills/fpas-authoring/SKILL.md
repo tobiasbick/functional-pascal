@@ -69,8 +69,8 @@ begin
     return Value;
   end if;
 end function;
-end unit;
 
+end unit;
 ```
 
 ### Regression test

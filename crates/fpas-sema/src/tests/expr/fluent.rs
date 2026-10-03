@@ -73,7 +73,7 @@ end unit;
     assert!(
         errors.iter().any(|error| error.code == SEMA_UNKNOWN_NAME
             && error.help.as_deref().is_some_and(
-                |help| help.contains("first.Choose") && help.contains("second.Choose")
+                |help| help.contains("First.Choose") && help.contains("Second.Choose")
             )),
         "{errors:#?}"
     );

@@ -14,10 +14,15 @@ parameter, a record field, or an array element type. `Wait` on a `task of T` ret
 whose spawned call returns another type is rejected. A bare `task` keeps inferring `T` from its
 initializer. `task` is a reserved word, so it cannot name a variable, field, or unit segment.
 
+The examples that wait for tasks import `uses Std.Tasks as Tasks;`. Task operations
+are accessed through this alias, like other imported routines.
+
 ```pascal
+uses Std.Tasks as Tasks;
+
 function Doubled(Job: task of integer): integer;
 begin
-  return Wait(Job) * 2;
+  return Tasks.Wait(Job) * 2;
 end function;
 
 var Jobs: array of task of result of boolean, string := [go Connect(), go Serve()];
@@ -34,8 +39,10 @@ save their continuation and release the pool thread; the main task waits for sch
 while pool workers run queued work. See [Waiting and execution](../../std/concurrency/task.md#waiting-and-execution).
 
 ```pascal
+uses Std.Tasks as Tasks;
+
 var T: task := go Compute(100);
-var TaskValue: integer := Wait(T);
+var TaskValue: integer := Tasks.Wait(T);
 
 ```
 
@@ -47,7 +54,9 @@ For a **procedure** task, `Wait` completes when the procedure finishes; **`T`** 
 child-wait mechanism as `Wait`:
 
 ```pascal
-WaitAll([T1, T2, T3]);
+uses Std.Tasks as Tasks;
+
+Tasks.WaitAll([T1, T2, T3]);
 ```
 
 `WaitAll` is a barrier only: it does not consume return values. You may still `Wait` each handle afterward. See [`Std.Tasks`](../../std/concurrency/task.md).

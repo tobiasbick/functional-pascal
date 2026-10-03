@@ -44,6 +44,8 @@ impl Checker {
                 );
             }
             self.scopes.reserve_import_alias(&alias, import.alias_span);
+            self.import_alias_spellings
+                .insert(alias.clone(), import.alias.clone());
             self.import_aliases.insert(alias, unit);
         }
     }
@@ -116,9 +118,17 @@ impl Checker {
             return resolved;
         }
         let replacement = self.import_aliases.iter().find_map(|(alias, unit)| {
-            name.to_ascii_lowercase()
-                .strip_prefix(&format!("{}.", unit.to_ascii_lowercase()))
-                .map(|member| format!("{alias}.{member}"))
+            let prefix_len = unit.len() + 1;
+            (name.len() > prefix_len
+                && name.is_char_boundary(prefix_len)
+                && name[..prefix_len].eq_ignore_ascii_case(&format!("{unit}.")))
+            .then(|| {
+                format!(
+                    "{}.{}",
+                    self.import_alias_spellings[alias],
+                    &name[prefix_len..]
+                )
+            })
         });
         if let Some(replacement) = replacement {
             if !self.errors.iter().any(|error| {
@@ -151,6 +161,7 @@ impl Checker {
     pub(crate) fn import_name_hint(&self, name: &str) -> Option<String> {
         let mut candidates = Vec::new();
         for (alias, unit) in &self.import_aliases {
+            let alias = &self.import_alias_spellings[alias];
             if unit
                 .rsplit('.')
                 .next()

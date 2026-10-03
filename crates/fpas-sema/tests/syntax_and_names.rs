@@ -37,7 +37,7 @@ fn imports_expose_only_the_declared_alias() {
             errors.iter().any(|error| error
                 .help
                 .as_ref()
-                .is_some_and(|help| help.contains("text.") || help.contains("json."))),
+                .is_some_and(|help| help.contains("Text.") || help.contains("Json."))),
             "{errors:#?}"
         );
     }
@@ -193,6 +193,68 @@ fn source_unit_imports_keep_types_variants_and_private_members_distinct() {
 }
 
 #[test]
+fn aliases_preserve_private_record_fields_and_factory_access() {
+    let (CompilationUnit::Unit(unit), diagnostics) = fpas_parser::parse_compilation_unit(
+        "unit Library.Values; public type Boxed = record Hidden: integer; public Open: integer; end record; function Secret(): integer; begin return 1; end function; public function Create(): Boxed; begin return record Hidden := Secret(); Open := 2; end record; end function; end unit;",
+    ) else {
+        panic!("expected unit");
+    };
+    assert!(diagnostics.is_empty(), "{diagnostics:#?}");
+    let analysis = fpas_sema::analyze_unit(&unit, &[]).unwrap();
+    assert!(
+        analysis.metadata.errors.is_empty(),
+        "{:#?}",
+        analysis.metadata.errors
+    );
+    let interface = analysis.interface.unwrap();
+    for (body, valid) in [
+        (
+            "var Box: Values.Boxed := Values.Create(); var X: integer := Box.oPeN;",
+            true,
+        ),
+        (
+            "var Box: Values.Boxed := Values.Create(); var X: integer := Box.hIdDeN;",
+            false,
+        ),
+        (
+            "var Box: Values.Boxed := Values.Create(); Box.Hidden := 3;",
+            false,
+        ),
+        (
+            "var Box: Values.Boxed := Values.Create(); var Copy: Values.Boxed := Box with Hidden := 3; end with;",
+            false,
+        ),
+        (
+            "var Box: Values.Boxed := record Hidden := 1; Open := 2; end record;",
+            false,
+        ),
+    ] {
+        let ast = program(&format!(
+            "program P; uses Library.Values as Values; begin {body} end program;"
+        ));
+        let metadata =
+            fpas_sema::analyze_program_with_interfaces(&ast, std::slice::from_ref(&interface))
+                .unwrap();
+        assert_eq!(
+            metadata.errors.is_empty(),
+            valid,
+            "{body}: {:#?}",
+            metadata.errors
+        );
+        if !valid {
+            assert!(
+                metadata
+                    .errors
+                    .iter()
+                    .any(|error| error.code == fpas_diagnostics::codes::SEMA_PRIVATE_RECORD_MEMBER),
+                "{body}: {:#?}",
+                metadata.errors
+            );
+        }
+    }
+}
+
+#[test]
 fn case_arm_declarations_are_local_even_without_pattern_bindings() {
     assert!(errors("program P; begin var X: integer := 1; case 1 of when 0: var X: string := 'zero'; when 1: var X: boolean := true; else var X: real := 2.0; end case; var Y: integer := X; end program;").is_empty());
     for body in [
@@ -209,6 +271,68 @@ fn case_arm_declarations_are_local_even_without_pattern_bindings() {
             "{diagnostics:#?}"
         );
     }
+}
+
+#[test]
+fn case_pattern_bindings_reserve_import_aliases_and_stay_in_their_arm() {
+    for body in [
+        "case Some(1) of when Some(tExT): null; else null; end case;",
+        "case 1 of when TEXT if TEXT > 0: null; else null; end case;",
+    ] {
+        let diagnostics = errors(&format!(
+            "program P; uses Std.Str as Text; begin {body} end program;"
+        ));
+        assert!(
+            diagnostics
+                .iter()
+                .any(|error| error.message.contains("import alias")),
+            "{body}: {diagnostics:#?}"
+        );
+    }
+    let valid = "case Some(1) of when Some(Value) if Value > 0: var Local: integer := Value; else var Value: string := 'fallback'; end case; var Value: boolean := true;";
+    assert!(errors(&format!("program P; begin {valid} end program;")).is_empty());
+    for body in [
+        "case Some(1) of when Some(Value): null; when None if Value > 0: null; else null; end case;",
+        "case Some(1) of when Some(Value): null; else var X: integer := Value; end case;",
+        "case 1 of when Value if Value > 0: null; else null; end case; var X: integer := Value;",
+    ] {
+        let diagnostics = errors(&format!("program P; begin {body} end program;"));
+        assert!(
+            diagnostics.iter().any(|error| error.code
+                == fpas_diagnostics::codes::SEMA_UNKNOWN_NAME
+                && error.message.contains("Value")),
+            "{body}: {diagnostics:#?}"
+        );
+    }
+}
+
+#[test]
+fn loop_and_closure_locals_do_not_escape_and_nested_aliases_cannot_shadow() {
+    for body in [
+        "for I: integer := 1 to 2 do null; end for; var X: integer := I;",
+        "for Item: integer in [1] do null; end for; var X: integer := Item;",
+        "while false do begin var Hidden: integer := 1; end; end while; var X: integer := Hidden;",
+        "repeat var Hidden: integer := 1; until Hidden = 1;",
+        "var F: procedure() := procedure() begin var Hidden: integer := 1; end procedure; var X: integer := Hidden;",
+    ] {
+        let diagnostics = errors(&format!("program P; begin {body} end program;"));
+        assert!(
+            diagnostics
+                .iter()
+                .any(|error| error.code == fpas_diagnostics::codes::SEMA_UNKNOWN_NAME),
+            "{body}: {diagnostics:#?}"
+        );
+    }
+    let diagnostics = errors(
+        "program P; uses Std.Str as Text; procedure Outer(); procedure TEXT(); begin null; end procedure; begin null; end procedure; begin null; end program;",
+    );
+    assert!(
+        diagnostics
+            .iter()
+            .any(|error| error.message.contains("import alias")),
+        "{diagnostics:#?}"
+    );
+    assert!(errors("program P; var Hidden: integer := 1; begin repeat var Hidden: string := 'local'; until Hidden = 1; end program;").is_empty());
 }
 
 #[test]
@@ -259,5 +383,52 @@ fn an_import_alias_cannot_open_a_nested_unit_namespace() {
                 "one diagnostic per source path"
             );
         }
+    }
+}
+
+#[test]
+fn alias_conflicts_report_only_the_alias_diagnostic() {
+    for declaration in ["var Console: integer := 1;", "var console: integer := 1;"] {
+        let source =
+            format!("program P; uses Std.Console as Console; begin {declaration} end program;");
+        let errors = errors(&source);
+        assert_eq!(errors.len(), 1, "{source}: {errors:#?}");
+        assert!(errors[0].message.contains("conflicts with an import alias"));
+    }
+}
+
+#[test]
+fn import_hints_keep_the_alias_and_member_spelling() {
+    let short = errors("program P; uses Std.Console as Out; begin WriteLn(1); end program;");
+    assert!(
+        short.iter().any(|error| error.help.as_deref()
+            == Some("Imports open no short names. Use `Out.WriteLn`.")),
+        "{short:#?}"
+    );
+    let qualified = errors(
+        "program P; uses Std.Str as Text; begin var S: string := Std.Str.Trim(' a '); end program;",
+    );
+    assert!(
+        qualified.iter().any(|error| error
+            .help
+            .as_deref()
+            .is_some_and(|help| help.starts_with("Write `Text.Trim`;"))),
+        "{qualified:#?}"
+    );
+}
+
+#[test]
+fn type_names_are_not_values() {
+    for value in ["R", "R with X := 1; end with"] {
+        let source = format!(
+            "program P; type R = record X: integer; end record; begin var V: R := {value}; end program;"
+        );
+        let errors = errors(&source);
+        assert!(
+            errors
+                .iter()
+                .any(|error| error.message == "Type `R` is not a value"),
+            "{source}: {errors:#?}"
+        );
     }
 }

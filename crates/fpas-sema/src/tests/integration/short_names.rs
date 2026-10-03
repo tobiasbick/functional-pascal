@@ -104,7 +104,7 @@ fn unknown_call_hint_suggests_explicit_aliases() {
     assert_eq!(errs.len(), 1, "{errs:#?}");
     let hint = errs[0].help.as_deref().unwrap_or("");
     assert!(
-        hint.contains("options.Unwrap") && hint.contains("results.Unwrap"),
+        hint.contains("Options.Unwrap") && hint.contains("Results.Unwrap"),
         "{hint}"
     );
     // Explicit aliases select the intended routine.
@@ -130,7 +130,7 @@ fn unqualified_length_error() {
     );
     let h = errs[0].help.as_deref().unwrap_or("");
     assert!(
-        h.contains("str.Length") && h.contains("arrays.Length"),
+        h.contains("Str.Length") && h.contains("Arrays.Length"),
         "hint should list both candidates: {h}"
     );
 }
@@ -138,7 +138,7 @@ fn unqualified_length_error() {
 #[test]
 fn unqualified_length_hint_has_stable_alias_order() {
     let source = "program T;\nuses Std.Str as Str; uses Std.Arrays as Arrays;\nbegin\n  var L: integer := Length('hi');\nend program;";
-    let expected = "Imports open no short names. Use `arrays.Length` or `str.Length`.";
+    let expected = "Imports open no short names. Use `Arrays.Length` or `Str.Length`.";
 
     for _ in 0..64 {
         let errors = check_errors(source);

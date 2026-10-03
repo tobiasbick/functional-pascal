@@ -83,5 +83,6 @@ VS Code highlighting treats the retired shift words as identifiers.
 - `fpas fmt --check tests/`, `examples/`, and `apps/` passed.
 - `git diff --check` and relative links in the changed handbook/delivery pages passed.
 
-The operator work item is complete. No claim is made that the remaining stage-3
-checklist or stage-5 purity system is complete.
+The operator work item is complete. The
+[full coverage delivery](coverage-delivery.md) verifies the final stage-3 gate.
+Checked purity metadata retains its stage-5 owner.

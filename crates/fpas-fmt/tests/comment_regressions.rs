@@ -7,6 +7,36 @@ mod common;
 use fpas_fmt::format_source;
 use fpas_parser::parse_compilation_unit;
 
+#[test]
+fn empty_unit_closer_comment_stays_on_the_closer() {
+    let source = "unit Empty; end unit; // tail";
+    common::assert_golden(
+        "empty unit closer comment",
+        source,
+        "unit Empty;\n\nend unit; // tail\n",
+    );
+    common::assert_round_trip("empty unit closer comment", source);
+}
+
+#[test]
+fn empty_unit_header_and_closer_comments_keep_distinct_anchors() {
+    for source in [
+        "unit Empty; // header\nend unit; // closer",
+        "unit Empty; // header\r\nend unit; // closer",
+        "unit Empty; // header\nuses Std.Str as Text; // import\nend unit; // closer",
+    ] {
+        let formatted = format_idempotently(source);
+        assert!(formatted.contains("unit Empty; // header\n"), "{formatted}");
+        assert!(formatted.contains("end unit; // closer\n"), "{formatted}");
+        if source.contains("uses") {
+            assert!(
+                formatted.contains("uses Std.Str as Text; // import\n"),
+                "{formatted}"
+            );
+        }
+    }
+}
+
 fn format_idempotently(source: &str) -> String {
     let (unit, diagnostics) = parse_compilation_unit(source);
     assert!(diagnostics.is_empty(), "source must parse: {diagnostics:?}");

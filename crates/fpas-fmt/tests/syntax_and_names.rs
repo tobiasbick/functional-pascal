@@ -28,3 +28,15 @@ fn else_if_and_explicit_blocks_remain_distinct_from_elsif() {
     assert!(!formatted.contains("elsif"));
     assert!(formatted.contains("end;"));
 }
+
+#[test]
+fn nested_named_routines_and_expression_closers_keep_caller_delimiters() {
+    for source in [
+        "unit Library; public function F(): integer; procedure P(); begin if true then null; else begin null; end; end if; end procedure; begin P(); return 1; end function; end unit;",
+        "program P; begin Consume(function(): integer begin // function body\n return 1; end function, procedure() begin // procedure body\n repeat null; until true; end procedure); end program;",
+        "program P; begin Consume(record X := 1; end record with X := 2; end with, record end record); end program;",
+        "program P; type Empty = record end record; begin for I: integer := 2 downto 1 do case I of when 1: if true then null; elsif false then null; else null; end if; else null; end case; end for; end program;",
+    ] {
+        common::assert_round_trip("nested closers and delimiters", source);
+    }
+}

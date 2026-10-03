@@ -168,7 +168,7 @@ Discovery with no path:
 
 | Mistake | Fix |
 |---------|-----|
-| Unit in `.fpasprj` but not imported | Add `uses MyUnit` in the consumer |
+| Unit in `.fpasprj` but not imported | Add `uses MyUnit as Model;` and access exported names through `Model` |
 | Cyclic `dependencies.projects` | Break the cycle — loader rejects cycles |
 | `program` in `kind = "library"` project | Libraries contain `unit` files only |
 | `*_test.fpas` in `examples/` | Move to `tests/` |

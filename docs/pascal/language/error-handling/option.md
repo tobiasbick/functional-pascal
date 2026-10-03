@@ -11,9 +11,11 @@ var N: option of integer := None;
 ## Using Option
 
 ```pascal
+uses Std.Arrays as Arrays;
+
 function FindIndex(Items: array of integer; Target: integer): option of integer;
 begin
-  for I: integer := 0 to Length(Items) - 1 do
+  for I: integer := 0 to Arrays.Length(Items) - 1 do
     if Items[I] = Target then
       return Some(I);
     end if;

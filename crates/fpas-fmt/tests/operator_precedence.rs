@@ -14,6 +14,14 @@ fn target_operator_expressions_keep_structure_comments_and_idempotence() {
         "(not A) = B",
         "try GetValue() + 2 * 3",
         "A and // right operand\n not B = C",
+        "-Get()[0].Value * 2",
+        "try Get()[0].Value * 2",
+        "-Value with X := 1 + 2; end with + 3",
+        "A / (B / C)",
+        "A div (B mod C)",
+        "(A = B) = C",
+        "A = (B = C)",
+        "(A in B) <> (C in D)",
     ] {
         common::assert_round_trip(
             expression,

@@ -11,6 +11,36 @@ impl Checker {
         self.check_designator_prefix_expr(designator, designator.parts.len())
     }
 
+    /// Type-check a designator that stands alone as a value expression.
+    ///
+    /// Type names may prefix static calls and variant constructors, but are not values themselves.
+    pub(crate) fn check_designator_value_expr(&mut self, designator: &Designator) -> Ty {
+        if designator
+            .parts
+            .iter()
+            .all(|part| matches!(part, DesignatorPart::Ident(_, _)))
+        {
+            let raw_name = Self::resolve_designator_parts_name(&designator.parts);
+            let full_name = self.qualified_import_name(&raw_name);
+            if self
+                .scopes
+                .lookup(&full_name)
+                .is_some_and(|symbol| matches!(symbol.kind, SymbolKind::Type))
+            {
+                self.error_with_code(
+                    SEMA_TYPE_MISMATCH,
+                    format!("Type `{raw_name}` is not a value"),
+                    format!(
+                        "Use a value of type `{raw_name}`, for example a variable or a record literal `record Field := Value; end record`."
+                    ),
+                    designator.span,
+                );
+                return Ty::Error;
+            }
+        }
+        self.check_designator_expr(designator)
+    }
+
     /// Type-check a leading portion of a designator without cloning its index expressions.
     pub(crate) fn check_designator_prefix_expr(
         &mut self,

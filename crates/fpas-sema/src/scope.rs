@@ -113,9 +113,7 @@ impl ScopeStack {
     /// Define a symbol in the current (innermost) scope.
     /// Returns false if already defined in the same scope.
     pub fn define(&mut self, name: &str, symbol: Symbol) -> bool {
-        if self.reject_import_shadow(name, None) {
-            return false;
-        }
+        self.record_import_shadow(name, None);
         let scope_index = self.scopes.len() - 1;
         Self::define_in_scope(&mut self.scopes[scope_index], name, symbol, None)
     }
@@ -127,9 +125,7 @@ impl ScopeStack {
         symbol: Symbol,
         declaration: Span,
     ) -> bool {
-        if self.reject_import_shadow(name, Some(declaration)) {
-            return false;
-        }
+        self.record_import_shadow(name, Some(declaration));
         let scope_index = self.scopes.len() - 1;
         Self::define_in_scope(
             &mut self.scopes[scope_index],
@@ -143,9 +139,7 @@ impl ScopeStack {
     ///
     /// **Documentation:** `docs/pascal/program-structure/units.md` (from the repository root).
     pub fn define_in_root(&mut self, name: &str, symbol: Symbol) -> bool {
-        if self.reject_import_shadow(name, None) {
-            return false;
-        }
+        self.record_import_shadow(name, None);
         Self::define_in_scope(&mut self.scopes[0], name, symbol, None)
     }
 
@@ -154,13 +148,12 @@ impl ScopeStack {
             .insert(canonical_symbol_name(name), span);
     }
 
-    fn reject_import_shadow(&mut self, name: &str, declaration: Option<Span>) -> bool {
-        let Some(alias_span) = self.import_aliases.get(&canonical_symbol_name(name)) else {
-            return false;
-        };
-        self.import_alias_conflicts
-            .push((name.to_owned(), declaration.unwrap_or(*alias_span)));
-        true
+    // The declaration is still defined so the alias conflict is the only diagnostic.
+    fn record_import_shadow(&mut self, name: &str, declaration: Option<Span>) {
+        if let Some(alias_span) = self.import_aliases.get(&canonical_symbol_name(name)) {
+            self.import_alias_conflicts
+                .push((name.to_owned(), declaration.unwrap_or(*alias_span)));
+        }
     }
 
     fn define_in_scope(

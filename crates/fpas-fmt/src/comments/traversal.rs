@@ -96,13 +96,16 @@ fn collect_unit(unit: &Unit, source: &str, begins: &[usize], out: &mut Collected
         push_uses_span(name.span, source, out);
     }
     collect_decls(&unit.declarations, begins, out);
-    let header_boundary = unit
-        .uses
-        .first()
-        .map(|name| name.span.offset)
-        .or_else(|| unit.declarations.first().map(crate::span::decl_span))
-        .unwrap_or_else(|| span_end(unit.span));
-    collect_header(unit.span.offset, header_boundary, out);
+    // A unit header has no parameter separators. Its first semicolon is the
+    // header terminator, even when `end unit;` immediately follows it.
+    if let Some(header) = out
+        .semicolons
+        .iter()
+        .copied()
+        .find(|anchor| anchor.start >= unit.span.offset && anchor.end <= span_end(unit.span))
+    {
+        collect_header(unit.span.offset, header.end, out);
+    }
 }
 
 fn collect_decls(decls: &[Decl], begins: &[usize], out: &mut CollectedAnchors) {

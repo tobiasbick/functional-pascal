@@ -158,8 +158,8 @@ fn semantic_check_rejects_unresolved_ownership_and_alias_collisions() {
     let cwd = create_temp_dir("fmt-reject-ownership");
     let path = cwd.join("main.fpas");
     for (body, hint) in [
-        ("var S: string := Trim(' a ');", "text."),
-        ("var S: string := Std.Str.Trim(' a ');", "text."),
+        ("var S: string := Trim(' a ');", "Text."),
+        ("var S: string := Std.Str.Trim(' a ');", "Text.Trim"),
         ("begin var TEXT: integer := 1; end;", "import alias"),
         (
             "if true then var Local: integer := 1; else Local := 2; end if;",

@@ -110,6 +110,13 @@ The [source conversion verification](source-conversion.md) closes the stage-3
 migration item for these three implemented deliveries. Later constructs are
 migrated and tested with their owning stage, rather than extending this item.
 
+The [coordinated documentation delivery](documentation-delivery.md) verifies
+grammar, handbook, formatter style, authoring guidance, source templates, and
+editor formatting for these implemented constructs. The
+[full coverage delivery](coverage-delivery.md) verifies the final stage-3
+completion gate. Stage 3 is complete; the coordinated functional-core and
+mutation boundary below is next.
+
 ## Coordinated functional-core and mutation boundary
 
 Build these capabilities in this order; the binding/default migration must not

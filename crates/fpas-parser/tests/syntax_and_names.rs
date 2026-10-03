@@ -2,3 +2,6 @@
 
 #[path = "syntax_and_names/blocks.rs"]
 mod blocks;
+
+#[path = "syntax_and_names/boundaries.rs"]
+mod boundaries;

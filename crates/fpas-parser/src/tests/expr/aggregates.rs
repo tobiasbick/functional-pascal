@@ -85,7 +85,7 @@ fn empty_record_update_is_rejected() {
     assert_eq!(
         diagnostic.help.as_deref(),
         Some(
-            "Add a field assignment, for example `Value with X := 1; end`, or use the original value directly."
+            "Add a field assignment, for example `Value with X := 1; end with`, or use the original value directly."
         )
     );
 }

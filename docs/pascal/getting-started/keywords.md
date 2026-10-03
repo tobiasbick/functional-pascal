@@ -19,6 +19,7 @@ none      try       public    go
 dict      with      static    property
 event     read      write     comparable
 numeric   printable self      nil
+as        elsif     when      null
 ```
 
 Every word in the table is fully reserved, including after `.` in a qualified name or

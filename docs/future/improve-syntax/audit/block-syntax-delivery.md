@@ -119,7 +119,9 @@ debugger frames and recording identities retain canonical source names.
 Operator precedence, logical evaluation restrictions, and `Std.Bits`
 replacements have since landed in the [operator delivery](operator-delivery.md).
 [Source conversion verification](source-conversion.md) closes the migration
-item for these implemented stage-3 constructs. Final documentation and coverage
-checklist items remain open. Future expressions, purity, mutation replacement,
-and task scopes retain migration and tests in their owning later stages.
-This delivery does not complete stage 3 or those later constructs.
+item for these implemented stage-3 constructs. The
+[coordinated documentation delivery](documentation-delivery.md) closes the
+documentation item. The [full coverage delivery](coverage-delivery.md) verifies
+the final checklist item and closes stage 3. Future expressions, purity,
+mutation replacement, and task scopes retain migration and tests in their owning
+later stages.

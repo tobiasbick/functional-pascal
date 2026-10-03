@@ -36,6 +36,44 @@ fn operator_and_bit_errors_use_the_real_cli_json_stream() {
 }
 
 #[test]
+fn invalid_shift_counts_report_the_numeric_domain_code_through_the_cli() {
+    let root = temp_dir();
+    for name in ["ShiftLeft", "ShiftRight"] {
+        for count in [
+            "-9223372036854775807 - 1",
+            "-1",
+            "64",
+            "65",
+            "9223372036854775807",
+        ] {
+            write(
+                &root.join("main.fpas"),
+                &format!(
+                    "program Main; uses Std.Bits as Bits; begin var X: integer := Bits.{name}(0, {count}); end program;"
+                ),
+            );
+            let output = Command::new(env!("CARGO_BIN_EXE_fpas"))
+                .current_dir(&root)
+                .args(["run", "--diagnostics", "json", "main.fpas"])
+                .output()
+                .expect("CLI starts");
+            assert_eq!(output.status.code(), Some(2), "{name}({count}): {output:?}");
+            let records = stderr_records(&output);
+            assert!(
+                records.iter().any(|record| record["kind"] == "diagnostic"
+                    && record["phase"] == "runtime"
+                    && record["code"] == "F4012"
+                    && record["message"]
+                        .as_str()
+                        .is_some_and(|message| message.contains("0..63"))),
+                "{name}({count}): {records:#?}"
+            );
+        }
+    }
+    fs::remove_dir_all(root).expect("remove fixtures");
+}
+
+#[test]
 fn linked_native_runner_executes_short_circuits_and_bits() {
     let root = temp_dir();
     write(

@@ -3,13 +3,15 @@
 Functions can be declared inside other functions. Use nested declarations for local helpers and mutual recursion:
 
 ```pascal
+uses Std.Math as Math;
+
 function Hypotenuse(A: real; B: real): real;
 function Square(X: real): real;
 begin
   return X * X;
 end function;
 begin
-  return Sqrt(Square(A) + Square(B));
+  return Math.Sqrt(Square(A) + Square(B));
 end function;
 
 ```

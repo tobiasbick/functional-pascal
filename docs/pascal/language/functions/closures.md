@@ -4,8 +4,9 @@ Anonymous `function` / `procedure` expressions create callable values that own a
 managed lexical environment. The value uses the existing function or procedure type
 whose signature matches the closure.
 
-Parameter and result annotations are mandatory. The final `end` belongs to the
-expression; surrounding syntax supplies any separator.
+Parameter and result annotations are mandatory. The final `end function` or
+`end procedure` belongs to the expression; surrounding syntax supplies any
+separator. Body statements still require their own semicolons.
 
 ```pascal
 mutable var Count: integer := 0;
@@ -22,6 +23,32 @@ Closures may be stored in variables and records, passed as arguments, returned f
 routines, and invoked through ordinary call syntax.
 
 Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`closure_expr`).
+
+## Anonymous routines as arguments
+
+An anonymous routine closes directly before an argument comma or closing
+parenthesis. There is no additional semicolon between its closer and that
+separator:
+
+```pascal
+program Callbacks;
+
+uses Std.Console as Console;
+
+procedure Apply(F: function(Value: integer): integer; Value: integer; OnDone: procedure());
+begin
+  Console.WriteLn(F(Value));
+  OnDone();
+end procedure;
+
+begin
+  Apply(function(Value: integer): integer begin
+    return Value + 1;
+  end function, 41, procedure() begin
+    null;
+  end procedure);
+end program;
+```
 
 ## Capture rules
 

@@ -42,6 +42,95 @@ fn same_operator_chains_are_left_associative() {
 }
 
 #[test]
+fn every_arithmetic_and_comparison_operator_respects_its_boundary() {
+    for (multiplicative, expected) in [
+        ("*", B::Mul),
+        ("/", B::RealDiv),
+        ("div", B::IntDiv),
+        ("mod", B::Mod),
+    ] {
+        for (additive, additive_op) in [("+", B::Add), ("-", B::Sub)] {
+            let Expr::BinaryOp { op, right, .. } =
+                expression(&format!("A {additive} B {multiplicative} C"))
+            else {
+                panic!("additive root");
+            };
+            assert_eq!(op, additive_op);
+            assert!(matches!(*right, Expr::BinaryOp { op, .. } if op == expected));
+        }
+        let Expr::BinaryOp { op, left, .. } =
+            expression(&format!("A {multiplicative} B {multiplicative} C"))
+        else {
+            panic!("multiplicative root");
+        };
+        assert_eq!(op, expected);
+        assert!(matches!(*left, Expr::BinaryOp { op, .. } if op == expected));
+    }
+    for (comparison, expected) in [
+        ("=", B::Eq),
+        ("<>", B::NotEq),
+        ("<", B::Lt),
+        (">", B::Gt),
+        ("<=", B::LtEq),
+        (">=", B::GtEq),
+        ("in", B::In),
+    ] {
+        let Expr::UnaryOp {
+            op: UnaryOp::Not,
+            operand,
+            ..
+        } = expression(&format!("not A + B {comparison} C"))
+        else {
+            panic!("not root");
+        };
+        assert!(
+            matches!(*operand, Expr::BinaryOp { op, left, .. } if op == expected && matches!(*left, Expr::BinaryOp { op: B::Add, .. }))
+        );
+        for second in ["=", "<>", "<", ">", "<=", ">=", "in"] {
+            let source = format!("A {comparison} B {second} C");
+            let (_, errors) = parse_expression(&source);
+            assert!(
+                errors.iter().any(|error| error
+                    .as_parser_error()
+                    .is_some_and(|error| error.message.contains("Chained comparison"))),
+                "{source}: {errors:#?}"
+            );
+        }
+    }
+}
+
+#[test]
+fn postfix_chains_and_record_updates_bind_above_unary_and_arithmetic() {
+    for source in ["-Get()[0].Value * 2", "try Get()[0].Value * 2"] {
+        let Expr::BinaryOp {
+            op: B::Mul, left, ..
+        } = expression(source)
+        else {
+            panic!("multiply root");
+        };
+        let operand = match *left {
+            Expr::UnaryOp {
+                op: UnaryOp::Negate,
+                operand,
+                ..
+            }
+            | Expr::Try(operand, _) => operand,
+            other => panic!("prefix operand: {other:#?}"),
+        };
+        assert!(matches!(*operand, Expr::Postfix { operations, .. } if operations.len() == 2));
+    }
+    let Expr::BinaryOp {
+        op: B::Add, left, ..
+    } = expression("-Value with X := 1 + 2; end with + 3")
+    else {
+        panic!("add root");
+    };
+    assert!(
+        matches!(*left, Expr::UnaryOp { operand, .. } if matches!(*operand, Expr::RecordUpdate { .. }))
+    );
+}
+
+#[test]
 fn every_mixed_pair_requires_explicit_grouping() {
     for first in ["and", "or", "xor"] {
         for second in ["and", "or", "xor"] {

@@ -34,6 +34,34 @@ end program;"#,
 }
 
 #[test]
+fn same_operator_chains_stop_at_the_first_decisive_operand() {
+    assert_succeeds(
+        r#"program ChainOrder;
+uses Std.Test as Test;
+mutable var Trace: integer := 0;
+function Mark(Digit: integer; Value: boolean): boolean;
+begin Trace := Trace * 10 + Digit; return Value; end function;
+begin
+  var A: boolean := Mark(1, true) and Mark(2, false) and Mark(3, true);
+  Test.AssertEquals(false, A);
+  Test.AssertEquals(12, Trace);
+  Trace := 0;
+  var B: boolean := Mark(1, false) or Mark(2, true) or Mark(3, false);
+  Test.AssertEquals(true, B);
+  Test.AssertEquals(12, Trace);
+  Trace := 0;
+  var C: boolean := Mark(1, true) and Mark(2, true) and Mark(3, true);
+  Test.AssertEquals(true, C);
+  Test.AssertEquals(123, Trace);
+  Trace := 0;
+  var D: boolean := Mark(1, false) or Mark(2, false) or Mark(3, false);
+  Test.AssertEquals(false, D);
+  Test.AssertEquals(123, Trace);
+end program;"#,
+    );
+}
+
+#[test]
 fn skipped_failures_and_constant_initializers_do_not_execute() {
     assert_succeeds(
         r#"program Skip;

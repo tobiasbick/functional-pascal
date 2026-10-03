@@ -128,11 +128,17 @@ from `pure function` belong to stage 5, when the common purity checker lands.
   Evidence: [source conversion verification](../audit/source-conversion.md),
   including the migrated corpus, resolved unit owners, execution before/after
   formatting, unchanged rejected sources, and positive/negative/edge-case tests.
-- [ ] Update grammar, applicable handbook pages, formatter style, authoring
+- [x] Update grammar, applicable handbook pages, formatter style, authoring
   guidance, source templates, and editor formatting together when implemented.
-- [ ] Test every block-table row as its construct lands, missing/mismatched
+  Evidence: [coordinated documentation delivery](../audit/documentation-delivery.md),
+  including actual handbook/source-template checks, keyword-table agreement,
+  formatter regression fixes, and positive/negative/edge-case editor coverage.
+- [x] Test every block-table row as its construct lands, missing/mismatched
   closers, extra/missing semicolons, nested branches, lexical visibility, import
   collisions, precedence boundaries, side effects, and bit-count boundaries.
+  Evidence: [full stage-3 coverage delivery](../audit/coverage-delivery.md),
+  including the construct/category matrix, additional positive/negative/edge
+  regressions, real CLI/runner coverage, and final workspace/editor checks.
 
 ## Acceptance
 
@@ -152,9 +158,15 @@ The [block/name evidence](../audit/block-syntax-delivery.md) and
 source, documentation, runtime, and editor verification. Bit functions are
 side-effect-free; formal purity metadata remains assigned to stage 5 as agreed.
 Source conversion for the implemented constructs is complete; see the
-[verification](../audit/source-conversion.md). The remaining documentation and
-coverage items concern implemented stage-3 behavior. Conditional/case expressions
+[verification](../audit/source-conversion.md). The coverage item
+concerns implemented stage-3 behavior. Conditional/case expressions
 belong to stage 4, and task scopes belong to stage 5; their migration and tests
-land with those owning stages. They do not keep this source-conversion item open.
-Next: verify the coordinated grammar, handbook, formatter, authoring guidance,
-source templates, and editor documentation item against the completed deliveries.
+land with those owning stages.
+Coordinated grammar, handbook, formatter style, authoring guidance, source
+templates, and editor formatting are verified; see the
+[documentation delivery](../audit/documentation-delivery.md).
+The [full coverage delivery](../audit/coverage-delivery.md) closes the final
+work item with all required checks passing. Stage 3 is complete for its
+implemented constructs. Next: the stage-4 callable/type facilities in the
+[bounded sequence](../audit/implementation-sequence.md), coordinated with
+stage-5 references and purity before binding/default migration.

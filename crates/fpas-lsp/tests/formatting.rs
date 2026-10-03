@@ -178,3 +178,64 @@ fn operator_formatting_matches_cli_formatter_and_rejects_ambiguous_chains() {
         }
     }
 }
+
+#[test]
+fn handbook_output_and_empty_unit_comments_match_editor_formatting_with_any_tab_options() {
+    let handbook = include_str!("../../../docs/pascal/tools/fmt-style.md").replace("\r\n", "\n");
+    let examples = handbook
+        .split("```pascal\n")
+        .skip(1)
+        .map(|block| block.split_once("```").expect("closed handbook fence").0);
+    for source in examples.chain(["unit Empty; end unit; // Grüße 東京"]) {
+        let dirty = source.replace('\n', "\r\n");
+        let (unit, diagnostics) = fpas_parser::parse_compilation_unit(&dirty);
+        assert!(diagnostics.is_empty(), "{diagnostics:?}");
+        let canonical = fpas_fmt::format_source(&dirty, &unit).expect("handbook formatter");
+        let uri = "file:///handbook-formatting.fpas";
+        let mut request = formatting_request(2, uri);
+        request["params"]["options"] = json!({"tabSize": 8, "insertSpaces": false});
+        let transcript = run(&[
+            initialize(1),
+            initialized(),
+            open(uri, 1, &dirty),
+            request,
+            change(uri, 2, &canonical),
+            formatting_request(3, uri),
+            shutdown(4),
+            exit(),
+        ]);
+        assert_success(&transcript);
+        assert_eq!(
+            response(&transcript.messages, 2)["result"][0]["newText"],
+            canonical
+        );
+        assert_eq!(response(&transcript.messages, 3)["result"], json!([]));
+    }
+}
+
+#[test]
+fn missing_named_closers_or_terminators_produce_no_editor_edit() {
+    for source in [
+        "program P; begin if true then null; end program;",
+        "program P; begin while true do null; end for; end program;",
+        "program P; begin null end program;",
+        "program P; begin null;; end program;",
+        "program P; uses Std.Console; begin null; end program;",
+    ] {
+        let uri = "file:///handbook-malformed.fpas";
+        let transcript = run(&[
+            initialize(1),
+            initialized(),
+            open(uri, 1, source),
+            formatting_request(2, uri),
+            shutdown(3),
+            exit(),
+        ]);
+        assert_success(&transcript);
+        assert_eq!(
+            response(&transcript.messages, 2)["result"],
+            Value::Null,
+            "{source}"
+        );
+    }
+}

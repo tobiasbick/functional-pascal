@@ -5,11 +5,11 @@ The `with` expression creates a copy of a record with selected fields replaced. 
 Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`record_update`).
 
 ```
-base with Field := NewValue; … end
+base with Field := NewValue; … end with
 ```
 
 At least one field assignment is required. An empty update such as
-`P with end` is invalid; use `P` directly instead.
+`P with end with` is invalid; use `P` directly instead.
 
 ```pascal
 type Point = record

@@ -245,6 +245,8 @@ pub struct Checker {
     /// Calls through callable record fields or properties.
     pub(crate) member_value_calls: MemberValueCallMap,
     pub(crate) import_aliases: HashMap<String, String>,
+    /// Source spelling of each import alias, keyed by its canonical lowercase name.
+    pub(crate) import_alias_spellings: HashMap<String, String>,
     pub(crate) supporting_unit_names: HashSet<String>,
     /// Synthetic receiver expressions already checked as part of a fluent call.
     pub(crate) prechecked_receivers: ExprTypeMap,
@@ -310,6 +312,7 @@ impl Checker {
             fluent_calls: FluentCallMap::new(),
             member_value_calls: MemberValueCallMap::new(),
             import_aliases: HashMap::new(),
+            import_alias_spellings: HashMap::new(),
             supporting_unit_names: HashSet::new(),
             prechecked_receivers: ExprTypeMap::new(),
             loaded_std_units: HashSet::new(),

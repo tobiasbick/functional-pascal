@@ -57,7 +57,7 @@ as values, use `nil` / `Assigned`, and may be raised only from the declaring uni
 ```pascal
 B.OnClick := HandleClick;           // Setter receives Some(HandleClick)
 B.OnClick := Controller.HandleClick;
-B.OnClick := procedure(Sender: Button) begin … end;
+B.OnClick := procedure(Sender: Button) begin null; end procedure;
 B.OnClick := nil;                   // Setter receives None
 ```
 

@@ -78,7 +78,7 @@ line_comment    = '//' { (* any character except CR or LF *) } ;
 (* A contiguous standalone comment block immediately before a       *)
 (* declaration is Markdown documentation; this is a tooling rule.    *)
 
-(* ---- Keywords (68, case-insensitive) --------------------------- *)
+(* ---- Keywords (case-insensitive) ------------------------------- *)
 
 keyword         = 'program'   | 'unit'      | 'uses'      | 'const'
                 | 'var'       | 'mutable'   | 'function'  | 'procedure'
@@ -122,7 +122,8 @@ token           = keyword | identifier | integer_literal
 (* ================================================================ *)
 
 (* Every statement ends with ';', including the final statement.    *)
-(* Every body is nonempty; use 'null;' when no action is required.    *)
+(* Statement bodies are nonempty; use 'null;' when no action is required. *)
+(* A unit may contain no declarations.                               *)
 
 (* ---- 2.1 Program / Unit Structure ------------------------------ *)
 
@@ -484,7 +485,7 @@ record_update       = 'with' field_init { field_init } 'end' 'with' ;
 (* At least one field_init is required. `Value with end with` is invalid. *)
 (* The base expression must have a record type. Unknown or wrong-   *)
 (* typed field overrides are compile-time errors.                   *)
-(* Example: P with X := 10; end — produces a copy of P with X = 10 *)
+(* Example: P with X := 10; end with — produces a copy of P with X = 10 *)
 
 (* primary_atom is a complete call/designator/literal. After it, optional       *)
 (* postfix suffixes allow chaining on the result: `.Field`, `[Index]`,         *)

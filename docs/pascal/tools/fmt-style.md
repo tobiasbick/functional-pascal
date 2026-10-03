@@ -34,6 +34,9 @@ Programs close with `end program;`, and units with `end unit;`. Routines have a
 `begin` body and close with `end function;` or `end procedure;`. Separate sibling
 routines with one blank line. Nested routines use the same rules.
 
+Separate a unit's last declaration from `end unit;` with one blank line. An
+empty unit contains just its header, one blank line, and `end unit;`.
+
 ## Statement bodies and semicolons
 
 Every statement ends with `;`, including the final statement before `else`,

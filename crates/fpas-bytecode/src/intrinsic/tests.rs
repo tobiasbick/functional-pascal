@@ -22,6 +22,12 @@ fn debugger_names_use_the_public_reserved_keyword_safe_api() {
 
 /// All intrinsic variants — used by tests to verify completeness of `from_u16` coverage.
 const ALL_INTRINSICS: &[Intrinsic] = &[
+    Intrinsic::Bits(BitsIntrinsic::BitAnd),
+    Intrinsic::Bits(BitsIntrinsic::BitOr),
+    Intrinsic::Bits(BitsIntrinsic::BitXor),
+    Intrinsic::Bits(BitsIntrinsic::BitNot),
+    Intrinsic::Bits(BitsIntrinsic::ShiftLeft),
+    Intrinsic::Bits(BitsIntrinsic::ShiftRight),
     Intrinsic::Server(ServerIntrinsic::CreateLifetime),
     Intrinsic::Server(ServerIntrinsic::GetWorkGroup),
     Intrinsic::Server(ServerIntrinsic::GetStopToken),

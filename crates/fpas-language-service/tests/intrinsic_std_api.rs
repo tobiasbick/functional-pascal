@@ -471,3 +471,21 @@ end program;
     );
     assert!(analysis.semantic().is_none());
 }
+
+#[test]
+fn bits_alias_hover_uses_generated_integer_signature_and_documentation() {
+    let source = "program T; uses Std.Bits as Flags; begin var X: integer := Flags.ShiftRight(-1, 63); end program;";
+    let (_temp, path, mut service) = intrinsic_std_fixture(source);
+    let hover = service
+        .hover(&path, source.find("ShiftRight").expect("call"))
+        .expect("query")
+        .value
+        .expect("hover");
+    assert!(
+        hover
+            .documentation
+            .as_deref()
+            .is_some_and(|text| text.contains("zero")),
+        "{hover:?}"
+    );
+}

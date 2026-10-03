@@ -60,6 +60,7 @@ const fn unsupported_recording_unit(intrinsic: Intrinsic) -> Option<&'static str
         Intrinsic::Str(_)
         | Intrinsic::Conv(_)
         | Intrinsic::Parse(_)
+        | Intrinsic::Bits(_)
         | Intrinsic::Math(_)
         | Intrinsic::Path(_)
         | Intrinsic::Json(_)

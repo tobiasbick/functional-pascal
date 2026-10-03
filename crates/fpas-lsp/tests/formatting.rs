@@ -139,3 +139,42 @@ fn assert_success(transcript: &support::Transcript) {
         String::from_utf8_lossy(&transcript.output.stderr)
     );
 }
+
+#[test]
+fn operator_formatting_matches_cli_formatter_and_rejects_ambiguous_chains() {
+    let uri = "file:///operators.fpas";
+    for (source, valid) in [
+        (
+            "program T; begin var X:boolean:=not 1>2 and 3<4; end program;",
+            true,
+        ),
+        (
+            "program T; begin var X:boolean:=true and false or true; end program;",
+            false,
+        ),
+    ] {
+        let transcript = run(&[
+            initialize(1),
+            initialized(),
+            open(uri, 1, source),
+            formatting_request(2, uri),
+            shutdown(3),
+            exit(),
+        ]);
+        assert_success(&transcript);
+        let result = &response(&transcript.messages, 2)["result"];
+        if valid {
+            let (unit, errors) = fpas_parser::parse_compilation_unit(source);
+            assert!(errors.is_empty());
+            assert_eq!(
+                result[0]["newText"],
+                fpas_fmt::format_source(source, &unit).expect("format")
+            );
+        } else {
+            assert!(
+                result.is_null() || result.as_array().is_some_and(Vec::is_empty),
+                "{result:?}"
+            );
+        }
+    }
+}

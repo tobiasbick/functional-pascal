@@ -1,0 +1,22 @@
+program BitPatternsTest;
+
+uses Std.Bits as Bits;
+uses Std.Test as Test;
+
+begin
+  var Min: integer := -9223372036854775807 - 1;
+  Test.AssertEquals(8, Bits.BitAnd(12, 10));
+  Test.AssertEquals(14, Bits.BitOr(12, 10));
+  Test.AssertEquals(6, Bits.BitXor(12, 10));
+  Test.AssertEquals(-1, Bits.BitNot(0));
+  Test.AssertEquals(0, Bits.BitNot(-1));
+  Test.AssertEquals(9223372036854775807, Bits.BitNot(Min));
+  Test.AssertEquals(Min, Bits.ShiftLeft(1, 63));
+  Test.AssertEquals(0, Bits.ShiftLeft(Min, 1));
+  Test.AssertEquals(1, Bits.ShiftRight(Min, 63));
+  Test.AssertEquals(9223372036854775807, Bits.ShiftRight(-1, 1));
+  Test.AssertEquals(-1, Bits.ShiftRight(-1, 0));
+  Test.AssertEquals(true, not 3 < 2 and 2 + 3 * 4 = 14);
+  Test.AssertEquals(false, false and (1 div 0 = 0));
+  Test.AssertEquals(true, true or (1 div 0 = 0));
+end program;

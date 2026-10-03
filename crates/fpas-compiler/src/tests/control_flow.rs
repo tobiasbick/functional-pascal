@@ -1,5 +1,6 @@
 use super::*;
 
+mod boolean;
 mod counting;
 mod ordinal;
 mod repetition;
@@ -106,11 +107,12 @@ end program;"#,
 fn mixed_numeric_comparisons_and_integer_edges_execute() {
     assert_succeeds(
         r#"program RegisterNumeric;
+uses Std.Bits as BitOps;
 begin
   mutable var X: integer := 9223372036854775807;
   X := X + 1;
-  var Bits: integer := (12 and 10) or (3 xor 1);
-  var Shifted: integer := (1 shl 5) shr 2;
+  var Bits: integer := BitOps.BitOr(BitOps.BitAnd(12, 10), BitOps.BitXor(3, 1));
+  var Shifted: integer := BitOps.ShiftRight(BitOps.ShiftLeft(1, 5), 2);
   if (X <> -9223372036854775807 - 1) or (Bits <> 10) or (Shifted <> 8) then
     panic('integer mismatch'); end if;
   if not (2 < 2.5) then panic('mixed comparison mismatch'); end if;

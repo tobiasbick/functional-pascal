@@ -170,3 +170,12 @@ or declaration reordering. Invalid or partial syntax is not formatted.
 - [Tools index](README.md)
 - [Editor integration](editor-integration.md)
 - [CLI reference](../program-structure/cli.md)
+
+## Operators
+
+Formatting follows the [operator table](../language/basics/operators.md).
+Comparisons bind above `not`, which binds above `and`, `or`, and `xor`.
+Keep parentheses around mixed logical operators and non-left-associated
+arithmetic. Comments between operands retain their order. The formatter rejects
+ambiguous mixed logical chains and obsolete infix shifts along with other parse
+errors; it does not choose a migration meaning.

@@ -250,19 +250,15 @@ pub enum BinaryOp {
     IntDiv,
     /// Integer remainder with `mod`.
     Mod,
-    /// Logical or bitwise conjunction with `and`.
+    /// Logical conjunction with `and`.
     And,
-    /// Left shift with `shl`.
-    Shl,
-    /// Right shift with `shr`.
-    Shr,
     /// Addition with `+`.
     Add,
     /// Subtraction with `-`.
     Sub,
-    /// Logical or bitwise disjunction with `or`.
+    /// Logical disjunction with `or`.
     Or,
-    /// Logical or bitwise exclusive disjunction with `xor`.
+    /// Logical exclusive disjunction with `xor`.
     Xor,
     /// Equality comparison with `=`.
     Eq,

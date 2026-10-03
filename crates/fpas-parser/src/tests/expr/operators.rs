@@ -74,22 +74,6 @@ fn xor_op() {
 }
 
 #[test]
-fn shl_op() {
-    match parse_expr("1 shl 4") {
-        Expr::BinaryOp { op, .. } => assert_eq!(op, BinaryOp::Shl),
-        _ => panic!("expected BinaryOp"),
-    }
-}
-
-#[test]
-fn shr_op() {
-    match parse_expr("16 shr 4") {
-        Expr::BinaryOp { op, .. } => assert_eq!(op, BinaryOp::Shr),
-        _ => panic!("expected BinaryOp"),
-    }
-}
-
-#[test]
 fn equal() {
     match parse_expr("1 = 1") {
         Expr::BinaryOp { op, .. } => assert_eq!(op, BinaryOp::Eq),

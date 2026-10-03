@@ -1,11 +1,11 @@
 //! Canonical `Std.*` call names to stable intrinsic wire identifiers.
 
 use fpas_bytecode::{
-    ArgsIntrinsic, ArrayIntrinsic, ConsoleIntrinsic, ConvIntrinsic, CryptoIntrinsic, DictIntrinsic,
-    EnvIntrinsic, FsIntrinsic, HttpIntrinsic, Intrinsic, JsonIntrinsic, MathIntrinsic,
-    NetIntrinsic, OptionIntrinsic, ParseIntrinsic, PathIntrinsic, ProcIntrinsic, RandomIntrinsic,
-    ResultIntrinsic, ServerIntrinsic, StrIntrinsic, TaskIntrinsic, TestIntrinsic, TimeIntrinsic,
-    TomlIntrinsic,
+    ArgsIntrinsic, ArrayIntrinsic, BitsIntrinsic, ConsoleIntrinsic, ConvIntrinsic, CryptoIntrinsic,
+    DictIntrinsic, EnvIntrinsic, FsIntrinsic, HttpIntrinsic, Intrinsic, JsonIntrinsic,
+    MathIntrinsic, NetIntrinsic, OptionIntrinsic, ParseIntrinsic, PathIntrinsic, ProcIntrinsic,
+    RandomIntrinsic, ResultIntrinsic, ServerIntrinsic, StrIntrinsic, TaskIntrinsic, TestIntrinsic,
+    TimeIntrinsic, TomlIntrinsic,
 };
 use fpas_sema::Ty;
 
@@ -41,6 +41,12 @@ pub(crate) fn resolve(name: &str, first_argument: Option<&Ty>) -> Option<Intrins
         ),
         "Crypto" => family!(member, Crypto, CryptoIntrinsic, [RandomBytes, RandomInt]),
         "Parse" => family!(member, Parse, ParseIntrinsic, [TryInt, TryReal, TryBool]),
+        "Bits" => family!(
+            member,
+            Bits,
+            BitsIntrinsic,
+            [BitAnd, BitOr, BitXor, BitNot, ShiftLeft, ShiftRight]
+        ),
         "Math" => resolve_math(member),
         "Net" => resolve_net(member),
         "Http" => resolve_http(member),

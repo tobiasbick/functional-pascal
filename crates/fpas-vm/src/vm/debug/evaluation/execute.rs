@@ -8,8 +8,11 @@ use fpas_bytecode::Value;
 use super::model::{DebugCallTarget, DebugEvaluationLimits, DebugExpression};
 use super::qualified;
 use crate::vm::debug::types::{DebugErrorKind, DebugSessionError};
-use crate::vm::value_ops::{self, ValueOperationError, ValueOperationErrorKind};
+use crate::vm::value_ops::{
+    self, BinaryOperation, UnaryOperation, ValueOperationError, ValueOperationErrorKind,
+};
 
+/// Evaluates a watch expression using the language operator evaluation order.
 pub(super) fn evaluate(
     expression: &DebugExpression,
     depth: usize,
@@ -57,6 +60,9 @@ fn evaluate_with_qualified_fallback(
         }
         DebugExpression::Unary { operation, operand } => {
             let operand = evaluate(operand, depth + 1, limits, budget, resolve, invoke)?;
+            if *operation == UnaryOperation::Not {
+                require_boolean(&operand)?;
+            }
             value_ops::unary(*operation, &operand).map_err(operation_error)?
         }
         DebugExpression::Binary {
@@ -65,7 +71,24 @@ fn evaluate_with_qualified_fallback(
             right,
         } => {
             let left = evaluate(left, depth + 1, limits, budget, resolve, invoke)?;
+            if matches!(
+                operation,
+                BinaryOperation::And | BinaryOperation::Or | BinaryOperation::Xor
+            ) {
+                let value = require_boolean(&left)?;
+                if (*operation == BinaryOperation::And && !value)
+                    || (*operation == BinaryOperation::Or && value)
+                {
+                    return Ok(left);
+                }
+            }
             let right = evaluate(right, depth + 1, limits, budget, resolve, invoke)?;
+            if matches!(
+                operation,
+                BinaryOperation::And | BinaryOperation::Or | BinaryOperation::Xor
+            ) {
+                require_boolean(&right)?;
+            }
             value_ops::binary(*operation, &left, &right).map_err(operation_error)?
         }
         DebugExpression::Field { base, name } => {
@@ -339,3 +362,16 @@ impl EvaluationBudget {
         }
     }
 }
+
+fn require_boolean(value: &Value) -> Result<bool, DebugSessionError> {
+    match value {
+        Value::Boolean(value) => Ok(*value),
+        _ => Err(operation_error(ValueOperationError::type_mismatch(
+            "Logical operators require boolean operands",
+            "Use Std.Bits functions for integer bit patterns.",
+        ))),
+    }
+}
+
+#[cfg(test)]
+mod boolean_tests;

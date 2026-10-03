@@ -1,3 +1,5 @@
+//! Boolean and numeric typing; see `docs/pascal/language/basics/operators.md`.
+
 use super::super::Checker;
 use crate::types::Ty;
 use fpas_diagnostics::codes::SEMA_TYPE_MISMATCH;
@@ -15,8 +17,6 @@ fn binary_op_symbol(op: BinaryOp) -> &'static str {
         BinaryOp::And => "and",
         BinaryOp::Or => "or",
         BinaryOp::Xor => "xor",
-        BinaryOp::Shl => "shl",
-        BinaryOp::Shr => "shr",
         BinaryOp::Eq => "=",
         BinaryOp::NotEq => "<>",
         BinaryOp::Lt => "<",
@@ -46,15 +46,13 @@ impl Checker {
                 }
             }
             UnaryOp::Not => {
-                if operand_ty.compatible_with(&Ty::Boolean)
-                    || operand_ty.compatible_with(&Ty::Integer)
-                {
+                if operand_ty.compatible_with(&Ty::Boolean) {
                     operand_ty
                 } else {
                     self.error_with_code(
                         SEMA_TYPE_MISMATCH,
-                        "`not` requires a boolean or integer operand",
-                        "Use boolean or integer values.",
+                        "`not` requires a boolean operand",
+                        "Use a boolean value; for integer bits import `Std.Bits` and call `Bits.BitNot(Value)`.",
                         span,
                     );
                     Ty::Error
@@ -109,7 +107,7 @@ impl Checker {
                 }
             }
 
-            BinaryOp::IntDiv | BinaryOp::Mod | BinaryOp::Shl | BinaryOp::Shr => {
+            BinaryOp::IntDiv | BinaryOp::Mod => {
                 if *left == Ty::Integer && *right == Ty::Integer {
                     Ty::Integer
                 } else {
@@ -129,16 +127,14 @@ impl Checker {
             BinaryOp::And | BinaryOp::Or | BinaryOp::Xor => {
                 if *left == Ty::Boolean && *right == Ty::Boolean {
                     Ty::Boolean
-                } else if *left == Ty::Integer && *right == Ty::Integer {
-                    Ty::Integer
                 } else {
                     self.error_with_code(
                         SEMA_TYPE_MISMATCH,
                         format!(
-                            "Operator `{}` requires boolean or integer operands",
+                            "Operator `{}` requires boolean operands",
                             binary_op_symbol(op)
                         ),
-                        "Both sides must be the same type (boolean or integer).",
+                        "Both sides must be boolean. For integer bits import `Std.Bits` and use `Bits.BitAnd`, `Bits.BitOr`, or `Bits.BitXor`.",
                         span,
                     );
                     Ty::Error

@@ -15,6 +15,9 @@ use std::sync::atomic::{AtomicU64, Ordering};
 
 use serde_json::Value;
 
+#[path = "json_streams/operators.rs"]
+mod operators;
+
 fn temp_dir() -> PathBuf {
     static NEXT: AtomicU64 = AtomicU64::new(1);
     let path = std::env::temp_dir().join(format!(

@@ -58,8 +58,6 @@ pub enum Token {
     Xor,
     Div,
     Mod,
-    Shl,
-    Shr,
     True,
     False,
     Type,

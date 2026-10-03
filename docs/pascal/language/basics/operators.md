@@ -45,29 +45,38 @@ Console.WriteLn('a' in 'pascal');
 Console.WriteLn('asc' in 'pascal');
 ```
 
-## Operator precedence
+## Operator precedence and evaluation
 
-From highest to lowest binding strength:
+From strongest to weakest:
 
-| Level | Operators |
-| ----- | --------- |
-| 1 | `not`, unary `-`, `try` |
-| 2 | `*`, `/`, `div`, `mod`, `and`, `shl`, `shr` |
-| 3 | `+`, `-`, `or`, `xor` |
-| 4 | `=`, `<>`, `<`, `>`, `<=`, `>=`, `in` |
+| Level | Operators | Grouping |
+|-------|-----------|----------|
+| 1 | Call, indexing, field selection, `with ... end with` | Postfix |
+| 2 | Unary `-`, `try` | Prefix |
+| 3 | `*`, `/`, `div`, `mod` | Left associative |
+| 4 | `+`, `-` | Left associative |
+| 5 | `=`, `<>`, `<`, `>`, `<=`, `>=`, `in` | One comparison |
+| 6 | `not` | Boolean prefix |
+| 7 | `and`, `or`, `xor` | Same-operator chains only |
 
-Record update (`expr with Field := Value; … end`) binds tighter than binary operators because it is postfix on the primary expression.
+`X > 0 and Y > 0` compares both values. `not X > 0` means `not (X > 0)`.
+Use parentheses to mix logical operators: `(A and B) or C` or `A and (B or C)`.
+`A and B or C` is rejected. Arithmetic and same-operator logical chains group
+from the left; `A - B - C` means `(A - B) - C`.
 
-## Logical / bitwise
+Comparison chains such as `A < B < C` are rejected. Write `(A < B) and (B < C)`.
+If the middle expression has side effects, evaluate it once into a local binding
+and use that binding in both comparisons.
 
-| Operator | Description                          | Example         |
-|----------|--------------------------------------|------------------|
-| `and`    | Logical AND / bitwise AND on integer | `A and B`       |
-| `or`     | Logical OR / bitwise OR on integer   | `A or B`        |
-| `not`    | Logical NOT / bitwise NOT on integer | `not A`         |
-| `xor`    | Logical XOR / bitwise XOR on integer | `A xor B`       |
-| `shl`    | Shift left (integer)                 | `A shl 2`       |
-| `shr`    | Shift right (integer)                | `A shr 1`       |
+Operands evaluate from left to right. `and` skips its right operand when the left
+is false; `or` skips it when the left is true. `xor` evaluates both operands once.
+`not`, `and`, `or`, and `xor` accept only booleans. The compiler type-checks both sides,
+including operands skipped at runtime. The evaluation rules also apply to
+constant initializers and debugger expressions.
+
+Integer bit operations use explicitly imported [Std.Bits](../../std/numeric/bits.md)
+functions. `shl` and `shr` are ordinary identifiers; their former infix uses are
+rejected with migration guidance.
 
 ## String indexing
 

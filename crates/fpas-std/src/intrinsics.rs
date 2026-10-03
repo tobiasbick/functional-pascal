@@ -44,6 +44,7 @@ fn dispatch_intrinsic(
         Intrinsic::Str(_) => str::run(intrinsic, call, location),
         Intrinsic::Conv(_) => conv::run(intrinsic, call, location),
         Intrinsic::Parse(_) => parse::run(intrinsic, call, location),
+        Intrinsic::Bits(_) => crate::bits::run(intrinsic, call, location),
         Intrinsic::Math(_) => math::run(intrinsic, call, location),
         Intrinsic::Array(_) => array::run(intrinsic, call, location),
         Intrinsic::Dict(_) => dict::run(intrinsic, call, location),

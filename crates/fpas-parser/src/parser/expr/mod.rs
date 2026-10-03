@@ -31,7 +31,7 @@ impl Parser {
     }
 
     pub(crate) fn parse_expression(&mut self) -> Expr {
-        self.with_nesting(Self::parse_comparison)
+        self.with_nesting(Self::parse_logical)
     }
 
     pub(crate) fn parse_designator(&mut self) -> Designator {

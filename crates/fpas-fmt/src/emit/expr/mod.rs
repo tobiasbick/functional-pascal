@@ -65,7 +65,7 @@ pub(super) fn emit_expr_impl(
             emitter.write(")");
         }
         Expr::UnaryOp { op, operand, .. } => {
-            let prec = 4;
+            let prec = if *op == UnaryOp::Not { 2 } else { 6 };
             if prec < min_prec {
                 emitter.write("(");
                 emit_expr_impl(emitter, expr, 0, false, comments);
@@ -96,9 +96,15 @@ pub(super) fn emit_expr_impl(
                 emitter.write(")");
                 return;
             }
-            emit_expr_impl(emitter, left, prec + 1, false, comments);
+            emit_expr_impl(
+                emitter,
+                left,
+                binary::left_precedence(*op, left),
+                false,
+                comments,
+            );
             emitter.write(binary_op_spaced(*op));
-            emit_expr_impl(emitter, right, prec, false, comments);
+            emit_expr_impl(emitter, right, prec + 1, false, comments);
         }
         Expr::Paren(inner, ..) => {
             emitter.write("(");
@@ -152,7 +158,7 @@ pub(super) fn emit_expr_impl(
         Expr::Nil(..) => emitter.write("nil"),
         Expr::Try(inner, ..) => {
             emitter.write("try ");
-            emit_expr(emitter, inner, 4, comments);
+            emit_expr(emitter, inner, 6, comments);
         }
         Expr::Go(inner, ..) => {
             emitter.write("go ");

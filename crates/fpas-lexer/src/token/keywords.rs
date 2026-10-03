@@ -37,8 +37,6 @@ fn keyword_token(raw: &str) -> Option<Token> {
         s if s.eq_ignore_ascii_case("xor") => Some(Token::Xor),
         s if s.eq_ignore_ascii_case("div") => Some(Token::Div),
         s if s.eq_ignore_ascii_case("mod") => Some(Token::Mod),
-        s if s.eq_ignore_ascii_case("shl") => Some(Token::Shl),
-        s if s.eq_ignore_ascii_case("shr") => Some(Token::Shr),
         s if s.eq_ignore_ascii_case("true") => Some(Token::True),
         s if s.eq_ignore_ascii_case("false") => Some(Token::False),
         s if s.eq_ignore_ascii_case("type") => Some(Token::Type),

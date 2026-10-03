@@ -22,7 +22,7 @@ fn mul_before_add() {
 }
 
 #[test]
-fn comparison_lowest_precedence() {
+fn comparison_binds_below_addition() {
     match parse_expr("A + B = C") {
         Expr::BinaryOp {
             op: BinaryOp::Eq,
@@ -56,7 +56,7 @@ fn parens_override_precedence() {
 }
 
 #[test]
-fn not_highest_precedence() {
+fn not_binds_above_logical_operators() {
     match parse_expr("not A and B") {
         Expr::BinaryOp {
             op: BinaryOp::And,

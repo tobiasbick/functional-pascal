@@ -24,6 +24,7 @@ standard_unit_names! {
     STD_UNIT_STR = "Std.Str";
     STD_UNIT_CONV = "Std.Conv";
     STD_UNIT_PARSE = "Std.Parse";
+    STD_UNIT_BITS = "Std.Bits";
     STD_UNIT_MATH = "Std.Math";
     STD_UNIT_NET = "Std.Net";
     STD_UNIT_RANDOM = "Std.Random";
@@ -52,6 +53,7 @@ pub const STD_UNITS_INTRINSIC: &[&str] = &[
     STD_UNIT_STR,
     STD_UNIT_CONV,
     STD_UNIT_PARSE,
+    STD_UNIT_BITS,
     STD_UNIT_MATH,
     STD_UNIT_NET,
     STD_UNIT_RANDOM,
@@ -79,6 +81,7 @@ pub const STD_UNITS_KNOWN: &[&str] = &[
     STD_UNIT_STR,
     STD_UNIT_CONV,
     STD_UNIT_PARSE,
+    STD_UNIT_BITS,
     STD_UNIT_MATH,
     STD_UNIT_NET,
     STD_UNIT_RANDOM,

@@ -2,7 +2,7 @@ use super::toks;
 use crate::Token;
 
 #[test]
-fn all_64_keywords() {
+fn reserved_keywords_and_retired_shift_identifiers() {
     let input = "program unit uses const var mutable function procedure begin end return \
                  if then else case of for to downto in in do while \
                  repeat until and or not xor div mod shl shr \
@@ -44,8 +44,8 @@ fn all_64_keywords() {
             Token::Xor,
             Token::Div,
             Token::Mod,
-            Token::Shl,
-            Token::Shr,
+            Token::Ident("shl".into()),
+            Token::Ident("shr".into()),
             Token::True,
             Token::False,
             Token::Type,
@@ -154,4 +154,18 @@ fn keywords_surrounded_by_symbols() {
         vec![Token::LParen, Token::Begin, Token::RParen]
     );
     assert_eq!(toks("not="), vec![Token::Not, Token::Equal]);
+}
+
+#[test]
+fn removed_shift_words_are_identifiers() {
+    assert_eq!(
+        toks("shl SHR ShL shlValue 'shr' // shl\n"),
+        vec![
+            Token::Ident("shl".into()),
+            Token::Ident("SHR".into()),
+            Token::Ident("ShL".into()),
+            Token::Ident("shlValue".into()),
+            Token::Str("shr".into())
+        ]
+    );
 }

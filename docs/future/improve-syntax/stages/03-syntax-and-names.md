@@ -104,7 +104,9 @@ Provide `Std.Bits.BitAnd`, `BitOr`, `BitXor`, `BitNot`, `ShiftLeft`, and
 `ShiftRight` as explicitly imported operations on 64-bit integer bit patterns.
 Shifts accept counts 0 through 63; other counts fail under the checked-operation
 rules. Left shifts discard shifted-out bits, and right shifts zero-fill. Bitwise
-functions are pure; their pattern semantics do not change checked arithmetic.
+functions are side-effect-free; their pattern semantics do not change checked arithmetic.
+This delivery verifies their runtime behavior. Checked purity metadata and use
+from `pure function` belong to stage 5, when the common purity checker lands.
 
 ## Work
 
@@ -116,8 +118,10 @@ functions are pure; their pattern semantics do not change checked arithmetic.
   qualifier-only resolution with targeted diagnostics.
   Evidence: [block syntax and names delivery](../audit/block-syntax-delivery.md),
   including migrated consumers and positive, negative, and edge-case coverage.
-- [ ] Implement the precedence/evaluation table and bit-function replacements.
-  Inspect existing short-circuit lowering rather than assuming it is absent.
+- [x] Implement the precedence/evaluation table and bit-function replacements.
+  Inspected the existing eager lowering and added boolean short-circuit branches.
+  Evidence: [operator and bit API delivery](../audit/operator-delivery.md),
+  including positive, negative, edge-case, real-process, and editor coverage.
 - [ ] Convert sources through resolved syntax/symbols. Preserve scopes, dangling
   branch ownership, comments, and evaluation order; reject ambiguous migrations.
 - [ ] Update grammar, applicable handbook pages, formatter style, authoring
@@ -138,13 +142,12 @@ Owners: `fpas-lexer`, `fpas-parser`, `fpas-fmt`, `fpas-sema`, `fpas-project`,
 Current docs to migrate include basics/operators, control-flow, program structure,
 and `docs/pascal/tools/fmt-style.md`; preserve grammar-production links.
 
-Status: the inventory and first implementation item are complete. Named block
-endings, terminators, declaration keywords, type-header collection, and alias-only
-resolution are implemented with source, documentation, generator, and editor
-migration. Workspace, FPAS, formatter, CLI, and real editor checks pass; see the
-[delivery evidence](../audit/block-syntax-delivery.md). The remaining migration,
-documentation, and test items also cover operators and later constructs and
-therefore remain open.
-Next: implement the precedence/evaluation table and bit-function replacements
-using the coordinated boundaries in the
-[implementation sequence](../audit/implementation-sequence.md#syntax-and-resolution-deliveries).
+Status: inventory, block/name syntax, and operator/bit API delivery are complete.
+The [block/name evidence](../audit/block-syntax-delivery.md) and
+[operator evidence](../audit/operator-delivery.md) record their coordinated
+source, documentation, runtime, and editor verification. Bit functions are
+side-effect-free; formal purity metadata remains assigned to stage 5 as agreed.
+The remaining migration, documentation, and test checklist items also cover later
+constructs and remain open.
+Next: review the remaining source-conversion work item against the completed
+deliveries and the [implementation sequence](../audit/implementation-sequence.md#syntax-and-resolution-deliveries).

@@ -91,13 +91,16 @@ Only then can stage 2 be marked complete.
    `unit_graph/resolve.rs`. Add focused sema `check/decl/types/collection.rs`
    for whole-unit type headers. Migrate resolved names, qualified variants,
    generated APIs, completion and auto-import together. Keep initializer order.
-3. **Operators and bit APIs:** parser `expr/precedence.rs`, sema
+3. **Operators and bit APIs (implemented):** see the
+   [delivery evidence](operator-delivery.md). Owners: parser `expr/precedence.rs`, sema
    `check/expr/operators.rs`, compiler `lowering/expr.rs`, VM `value_ops/integer.rs`.
    Put new bit registration/runtime code in unit-owned modules alongside existing
    `std_registry/loaded/` and `fpas-std/src/` units and include intrinsic catalog,
    bytecode selection and generated declarations. Split boolean lowering into
    `crates/fpas-compiler/src/lowering/expr/boolean.rs` before extending the
    490-line dispatcher. Preserve source evaluation with explicit grouping.
+   Deliver side-effect-free bit runtime functions here; checked purity metadata
+   and their use from pure callables land with the common stage-5 checker.
 
 Each delivery includes its consumer migration and real execution tests. Source
 conversion tools may exist temporarily; no delivered legacy parser mode remains.

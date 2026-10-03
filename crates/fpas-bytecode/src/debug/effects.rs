@@ -156,6 +156,7 @@ pub const fn intrinsic_debug_effects(intrinsic: Intrinsic) -> DebugEffectSet {
         Intrinsic::Str(_)
         | Intrinsic::Conv(_)
         | Intrinsic::Parse(_)
+        | Intrinsic::Bits(_)
         | Intrinsic::Math(_)
         | Intrinsic::Path(_)
         | Intrinsic::Json(_)

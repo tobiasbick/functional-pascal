@@ -1,6 +1,7 @@
 use super::{check_errors, check_ok};
 use crate::analyze_with_types;
 
+mod bits;
 mod bound_methods;
 mod closures;
 mod equality;
@@ -127,8 +128,8 @@ fn or_booleans() {
 }
 
 #[test]
-fn and_integers_bitwise() {
-    check_ok(r#"program T;  var X: integer := 5 and 3; begin null; end program;"#);
+fn and_integers_rejected() {
+    check_errors(r#"program T;  var X: integer := 5 and 3; begin null; end program;"#);
 }
 
 #[test]
@@ -264,22 +265,30 @@ fn equality_records_with_comparable_fields_are_valid() {
 
 #[test]
 fn shl_valid() {
-    check_ok(r#"program T;  var X: integer := 1 shl 4; begin null; end program;"#);
+    check_ok(
+        r#"program T; uses Std.Bits as Bits; var X: integer := Bits.ShiftLeft(1, 4); begin null; end program;"#,
+    );
 }
 
 #[test]
 fn shr_valid() {
-    check_ok(r#"program T;  var X: integer := 16 shr 4; begin null; end program;"#);
+    check_ok(
+        r#"program T; uses Std.Bits as Bits; var X: integer := Bits.ShiftRight(16, 4); begin null; end program;"#,
+    );
 }
 
 #[test]
 fn shl_with_real_error() {
-    check_errors(r#"program T;  var X: integer := 1 shl 2.0; begin null; end program;"#);
+    check_errors(
+        r#"program T; uses Std.Bits as Bits; var X: integer := Bits.ShiftLeft(1, 2.0); begin null; end program;"#,
+    );
 }
 
 #[test]
 fn shr_with_real_error() {
-    check_errors(r#"program T;  var X: integer := 16 shr 1.5; begin null; end program;"#);
+    check_errors(
+        r#"program T; uses Std.Bits as Bits; var X: integer := Bits.ShiftRight(16, 1.5); begin null; end program;"#,
+    );
 }
 
 #[test]
@@ -293,8 +302,8 @@ fn xor_booleans() {
 }
 
 #[test]
-fn xor_integers_bitwise() {
-    check_ok(r#"program T;  var X: integer := 5 xor 3; begin null; end program;"#);
+fn xor_integers_rejected() {
+    check_errors(r#"program T;  var X: integer := 5 xor 3; begin null; end program;"#);
 }
 
 #[test]
@@ -318,8 +327,8 @@ fn not_string_error() {
 }
 
 #[test]
-fn not_integer_bitwise() {
-    check_ok(r#"program T;  var X: integer := not 0; begin null; end program;"#);
+fn not_integer_rejected() {
+    check_errors(r#"program T;  var X: integer := not 0; begin null; end program;"#);
 }
 
 #[test]

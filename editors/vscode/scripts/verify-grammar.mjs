@@ -183,6 +183,9 @@ async function verifyPositiveScopes(grammar) {
 async function verifyNegativeScopes(grammar) {
   const fixture = await tokenizeFixture(grammar, "negative.fpas");
 
+  assertNoKeywordScope(tokenAt(fixture, "var shl: integer", "shl"));
+  assertNoKeywordScope(tokenAt(fixture, "var shr: integer", "shr"));
+
   assertNoKeywordScope(
     tokenAt(fixture, "beginValue: string", "beginValue")
   );

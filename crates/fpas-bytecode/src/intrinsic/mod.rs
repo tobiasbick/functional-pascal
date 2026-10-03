@@ -26,6 +26,7 @@ macro_rules! documented_intrinsic_enum {
 
 pub mod args;
 pub mod array;
+pub mod bits;
 pub mod console;
 pub mod conv;
 pub mod crypto;
@@ -52,6 +53,7 @@ pub mod toml;
 
 pub use args::ArgsIntrinsic;
 pub use array::ArrayIntrinsic;
+pub use bits::BitsIntrinsic;
 pub use console::ConsoleIntrinsic;
 pub use conv::ConvIntrinsic;
 pub use crypto::CryptoIntrinsic;
@@ -95,6 +97,8 @@ pub enum Intrinsic {
     Crypto(CryptoIntrinsic),
     /// Fallible text-parsing operation.
     Parse(ParseIntrinsic),
+    /// Side-effect-free bit-pattern operation.
+    Bits(BitsIntrinsic),
     /// Mathematical operation.
     Math(MathIntrinsic),
     /// Hosted TCP networking operation.
@@ -238,6 +242,7 @@ intrinsic_wire_ops!(
     Crypto(CryptoIntrinsic),
     Parse(ParseIntrinsic),
     Math(MathIntrinsic),
+    Bits(BitsIntrinsic),
     Net(NetIntrinsic),
     Http(HttpIntrinsic),
     Random(RandomIntrinsic),

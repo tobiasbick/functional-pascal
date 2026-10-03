@@ -15,4 +15,7 @@ begin
   begin
     Console.WriteLn(beginValue);
   end; end if;
+  var shl: integer := 1;
+  var shr: integer := shl;
+  var ShiftText: string := 'shl shr'; // shl shr
 end program;

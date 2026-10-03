@@ -231,8 +231,6 @@ fn lower_binary(operation: BinaryOp) -> DebugBinaryOperation {
         BinaryOp::IntDiv => DebugBinaryOperation::IntegerDivide,
         BinaryOp::Mod => DebugBinaryOperation::Modulo,
         BinaryOp::And => DebugBinaryOperation::And,
-        BinaryOp::Shl => DebugBinaryOperation::ShiftLeft,
-        BinaryOp::Shr => DebugBinaryOperation::ShiftRight,
         BinaryOp::Add => DebugBinaryOperation::Add,
         BinaryOp::Sub => DebugBinaryOperation::Subtract,
         BinaryOp::Or => DebugBinaryOperation::Or,

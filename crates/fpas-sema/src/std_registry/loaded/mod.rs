@@ -1,5 +1,6 @@
 mod args;
 mod array;
+mod bits;
 mod channel_task;
 mod console;
 mod conv;
@@ -54,6 +55,7 @@ pub fn register_single_std_unit(checker: &mut Checker, unit: &str) {
         STD_UNIT_CONV => conv::register_std_conv(checker),
         STD_UNIT_CRYPTO => crypto::register_std_crypto(checker),
         STD_UNIT_PARSE => parse::register_std_parse(checker),
+        fpas_std::STD_UNIT_BITS => bits::register(checker),
         STD_UNIT_MATH => math::register_std_math(checker),
         STD_UNIT_NET => net::register_std_net(checker),
         STD_UNIT_RANDOM => random::register_std_random(checker),

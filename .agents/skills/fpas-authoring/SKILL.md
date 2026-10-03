@@ -107,6 +107,9 @@ Do **not** assume Delphi/Free Pascal:
 Other habits:
 
 - Case-insensitive keywords and identifiers.
+- Logical operators are boolean-only. `and`/`or` short-circuit; `xor` evaluates both operands.
+  Comparisons bind above `not`; parenthesize mixed logical operators. Use explicitly imported
+  `Std.Bits` functions for integer bits and shifts. See [operators](../../../docs/pascal/language/basics/operators.md).
 - Strings use single quotes: `'Hello'`, escape with doubled quote: `'It''s'`.
 - `Std.*` units require explicit `uses` — listing a file in `.fpasprj` does not import it.
 - Imports open no short names. Use the declared alias for every imported name.

@@ -93,7 +93,7 @@ briefly visible for lifecycle reporting but have no fabricated inspectable
 stack.
 
 Evaluation is available only at a stable stop. It accepts FPAS literals,
-visible names, parentheses, unary `-` and `not`, arithmetic, Boolean/bitwise,
+visible names, parentheses, unary `-` and `not`, arithmetic, Boolean,
 shift, comparison and `in` operators, stored record/enum fields, and read-only
 array, dictionary, or string indexes. It also accepts controlled calls,
 readable properties, instance and static record methods, array/dictionary/record/Result/Option construction, fully qualified enum

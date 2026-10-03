@@ -87,7 +87,7 @@ keyword         = 'program'   | 'unit'      | 'uses'      | 'const'
                 | 'for'       | 'to'        | 'downto'    | 'in'
                 | 'do'        | 'while'     | 'repeat'    | 'until'
                 | 'and'       | 'or'        | 'not'       | 'xor'
-                | 'div'       | 'mod'       | 'shl'       | 'shr'
+                | 'div'       | 'mod'
                 | 'true'      | 'false'     | 'type'      | 'record'
                 | 'enum'      | 'array'     | 'panic'
                 | 'break'     | 'continue'  | 'result'    | 'option'
@@ -453,29 +453,28 @@ postfix_expr_stmt   = primary_atom postfix_suffix { postfix_suffix } ;
 
 (* ---- 2.7 Expressions ------------------------------------------ *)
 
-(* Operator precedence (highest → lowest), classical Pascal:        *)
-(*                                                                  *)
-(*   1. not, unary -                   prefix                       *)
-(*   2. *  /  div  mod  and  shl  shr  multiplicative               *)
-(*   3. +  -  or  xor                  additive                     *)
-(*   4. =  <>  <  >  <=  >=  in       comparison                   *)
+(* Precedence, highest first: postfix; unary -/try; multiplication; *)
+(* addition; comparison; not; same-operator boolean chains.          *)
+(* and/or short-circuit left to right; xor evaluates both operands.  *)
+(* Logical operators accept only booleans. Bit operations use Std.Bits. *)
 
-expression          = comparison_expr ;
-
+expression          = logical_expr ;
+logical_expr        = not_expr ( { 'and' not_expr }
+                               | { 'or' not_expr }
+                               | { 'xor' not_expr } ) ;
+not_expr            = 'not' not_expr | comparison_expr ;
 comparison_expr     = additive_expr [ comparison_op additive_expr ] ;
 comparison_op       = '=' | '<>' | '<' | '>' | '<=' | '>=' | 'in' ;
 
 (* `in` tests membership: value in array, key in dict, or substring in string. *)
+(* Comparisons cannot be chained; mixed logical operators need parentheses. *)
 
 additive_expr       = mult_expr { additive_op mult_expr } ;
-additive_op         = '+' | '-' | 'or' | 'xor' ;
-
+additive_op         = '+' | '-' ;
 mult_expr           = unary_expr { mult_op unary_expr } ;
-mult_op             = '*' | '/' | 'div' | 'mod' | 'and' | 'shl' | 'shr' ;
-
-unary_expr          = 'not' unary_expr
-                    | '-' unary_expr
-                    | 'try' unary_expr                   (* error propagation *)
+mult_op             = '*' | '/' | 'div' | 'mod' ;
+unary_expr          = '-' unary_expr
+                    | 'try' unary_expr
                     | primary_expr [ record_update ] ;
 
 record_update       = 'with' field_init { field_init } 'end' 'with' ;

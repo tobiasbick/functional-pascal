@@ -77,23 +77,23 @@ public function LocalChatView(State: Model.LocalChatModel): Tui.TuiElement;
 begin
   if (State.Width < 50) or (State.Height < 14) then
     begin
-      return Tui.TuiElementBuilders.MakeDesktop(None, [
-                                                        Tui.TuiElementBuilders.MakePanel('Local Chat', [
-                                                                                                         Tui.TuiElementBuilders.MakeLabel('Terminal too small'),
-                                                                                                         Tui.TuiElementBuilders.MakeLabel('Use at least 50 × 14 cells.')
-                                                                                                       ])
-                                                      ]);
+      return Tui.TuiElementBuilders.MakeDesktop(Option.None, [
+                                                               Tui.TuiElementBuilders.MakePanel('Local Chat', [
+                                                                                                                Tui.TuiElementBuilders.MakeLabel('Terminal too small'),
+                                                                                                                Tui.TuiElementBuilders.MakeLabel('Use at least 50 × 14 cells.')
+                                                                                                              ])
+                                                             ]);
     end;
   end if;
 
-  return Tui.TuiElementBuilders.MakeDesktop(Some(Tui.TuiControlId.Create(State.Focus)), [
-                                                                                          Tui.TuiElementBuilders.MakeColumn([
-                                                                                                                              Header(),
-                                                                                                                              Expanding(Transcript(State), 1),
-                                                                                                                              Composer(State),
-                                                                                                                              Status(State)
-                                                                                                                            ])
-                                                                                        ]);
+  return Tui.TuiElementBuilders.MakeDesktop(Option.Some(Tui.TuiControlId.Create(State.Focus)), [
+                                                                                                 Tui.TuiElementBuilders.MakeColumn([
+                                                                                                                                     Header(),
+                                                                                                                                     Expanding(Transcript(State), 1),
+                                                                                                                                     Composer(State),
+                                                                                                                                     Status(State)
+                                                                                                                                   ])
+                                                                                               ]);
 end function;
 
 end unit;

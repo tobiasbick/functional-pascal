@@ -1,22 +1,22 @@
 # Result
 
-`Result of T, E` represents either a success (`Ok`) or a failure (`Error`):
+`Result of (T, E)` represents either a success (`Result.Ok`) or a failure (`Result.Error`):
 
 ```pascal
-var R: result of integer, string := Ok(42);
-var E: result of integer, string := Error('not found');
+var R: result of (integer, string) := Result.Ok(42);
+var E: result of (integer, string) := Result.Error('not found');
 
 ```
 
 ## Returning errors
 
 ```pascal
-function Divide(A: integer; B: integer): result of integer, string;
+function Divide(A: integer; B: integer): result of (integer, string);
 begin
   if B = 0 then
-    return Error('Division by zero');
+    return Result.Error('Division by zero');
   else
-    return Ok(A div B);
+    return Result.Ok(A div B);
   end if;
 end function;
 
@@ -30,11 +30,11 @@ Use `case of` with destructuring to handle both branches:
 uses Std.Console as Console;
 uses Std.Conv as Conv;
 
-var R: result of integer, string := Divide(10, 0);
+var R: result of (integer, string) := Divide(10, 0);
 case R of
-  when Ok(V):
+  when Result.Ok(const V):
     Console.WriteLn('Value: ' + Conv.IntToStr(V));
-  when Error(E):
+  when Result.Error(const E):
     Console.WriteLn('Error: ' + E);
 end case;
 ```

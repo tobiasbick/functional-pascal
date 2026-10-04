@@ -13,38 +13,53 @@ pub(crate) fn format_type_expr(ty: &TypeExpr) -> String {
     emitter.finish()
 }
 
-/// Formats generic type parameters (`<T>`, `<T: Comparable>`).
+/// Formats canonical generic type parameters (` of (T: Comparable)`).
 #[must_use]
 pub(crate) fn format_type_params(params: &[TypeParam]) -> String {
     if params.is_empty() {
         return String::new();
     }
     let mut emitter = Emitter::new();
-    emitter.write("<");
+    emitter.write(" of (");
     for (index, param) in params.iter().enumerate() {
         if index > 0 {
             emitter.write(", ");
         }
         emit_type_param(&mut emitter, param);
     }
-    emitter.write(">");
+    emitter.write(")");
     emitter.finish()
 }
 
 pub(crate) fn emit_type_expr(emitter: &mut Emitter, ty: &TypeExpr) {
     match ty {
-        TypeExpr::Named { id, .. } => emit_qualified_id(emitter, id),
+        TypeExpr::Named { id, arguments, .. } => {
+            emit_qualified_id(emitter, id);
+            if !arguments.is_empty() {
+                emitter.write(" of (");
+                for (index, argument) in arguments.iter().enumerate() {
+                    if index > 0 {
+                        emitter.write(", ");
+                    }
+                    emit_type_expr(emitter, argument);
+                }
+                emitter.write(")");
+            }
+        }
         TypeExpr::Array(inner, ..) => {
-            emitter.write("array of ");
+            emitter.write("array of (");
             emit_type_expr(emitter, inner);
+            emitter.write(")");
         }
         TypeExpr::Channel(inner, ..) => {
-            emitter.write("channel of ");
+            emitter.write("channel of (");
             emit_type_expr(emitter, inner);
+            emitter.write(")");
         }
         TypeExpr::Task(inner, ..) => {
-            emitter.write("task of ");
+            emitter.write("task of (");
             emit_type_expr(emitter, inner);
+            emitter.write(")");
         }
         TypeExpr::FunctionType {
             params,
@@ -60,24 +75,27 @@ pub(crate) fn emit_type_expr(emitter: &mut Emitter, ty: &TypeExpr) {
         TypeExpr::Result {
             ok_type, err_type, ..
         } => {
-            emitter.write("result of ");
+            emitter.write("Result of (");
             emit_type_expr(emitter, ok_type);
             emitter.write(", ");
             emit_type_expr(emitter, err_type);
+            emitter.write(")");
         }
         TypeExpr::Option { inner_type, .. } => {
-            emitter.write("option of ");
+            emitter.write("Option of (");
             emit_type_expr(emitter, inner_type);
+            emitter.write(")");
         }
         TypeExpr::Dict {
             key_type,
             value_type,
             ..
         } => {
-            emitter.write("dict of ");
+            emitter.write("dict of (");
             emit_type_expr(emitter, key_type);
-            emitter.write(" to ");
+            emitter.write(", ");
             emit_type_expr(emitter, value_type);
+            emitter.write(")");
         }
     }
 }
@@ -149,8 +167,8 @@ mod tests {
             "MyLib.Utils.Id"
         );
         assert_eq!(
-            type_from_var(r#"program T; begin var X: array of integer := []; end program;"#),
-            "array of integer"
+            type_from_var(r#"program T; begin var X: array of (integer) := []; end program;"#),
+            "array of (integer)"
         );
     }
 
@@ -158,29 +176,31 @@ mod tests {
     fn result_option_dict_types() {
         assert_eq!(
             type_from_var(
-                r#"program T; begin var X: result of integer, string := Ok(0); end program;"#
+                r#"program T; begin var X: result of (integer, string) := Result.Ok(0); end program;"#
             ),
-            "result of integer, string"
-        );
-        assert_eq!(
-            type_from_var(r#"program T; begin var X: option of integer := None; end program;"#),
-            "option of integer"
+            "Result of (integer, string)"
         );
         assert_eq!(
             type_from_var(
-                r#"program T; begin var X: dict of string to integer := [:]; end program;"#
+                r#"program T; begin var X: option of (integer) := Option.None; end program;"#
             ),
-            "dict of string to integer"
-        );
-        assert_eq!(
-            type_from_var(r#"program T; begin var X: channel of string := Value; end program;"#),
-            "channel of string"
+            "Option of (integer)"
         );
         assert_eq!(
             type_from_var(
-                r#"program T; begin var X: array of TASK OF result of integer, string := []; end program;"#
+                r#"program T; begin var X: dict of (string, integer) := [:]; end program;"#
             ),
-            "array of task of result of integer, string"
+            "dict of (string, integer)"
+        );
+        assert_eq!(
+            type_from_var(r#"program T; begin var X: channel of (string) := Value; end program;"#),
+            "channel of (string)"
+        );
+        assert_eq!(
+            type_from_var(
+                r#"program T; begin var X: array of (TASK OF (result of (integer, string))) := []; end program;"#
+            ),
+            "array of (task of (Result of (integer, string)))"
         );
         assert_eq!(
             type_from_var(r#"program T; begin var X: task := Value; end program;"#),

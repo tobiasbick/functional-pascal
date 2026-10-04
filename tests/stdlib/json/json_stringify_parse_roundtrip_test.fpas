@@ -4,13 +4,13 @@ uses Std.Console as Console;
 uses Std.Json as Json;
 
 begin
-  var R: result of Json.JsonValue, string := Json.Parse('[false,null,"x"]');
+  var R: Result of (Json.JsonValue, string) := Json.Parse('[false,null,"x"]');
   case R of
-    when Ok(V):
+    when Result.Ok(const V):
       begin
         Console.WriteLn(Json.Stringify(V));
       end;
-    when Error(E):
+    when Result.Error(const E):
       begin
         Console.WriteLn('error: ' + E);
       end;

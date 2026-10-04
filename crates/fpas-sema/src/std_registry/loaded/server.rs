@@ -1,16 +1,16 @@
 //! Server lifetime signatures. See `docs/pascal/std/network/server.md`.
 
 use super::super::{define_func, p};
-use super::type_registration::register_record_type;
+use super::type_registration::register_resource_type;
 use crate::{check::Checker, types::Ty};
 use fpas_std::std_symbols as s;
 
 /// Register the opaque lifetime and its hosted operations.
 pub(super) fn register(checker: &mut Checker) {
-    let lifetime = register_record_type(checker, s::STD_SERVER_LIFETIME, vec![]);
-    let group = register_record_type(checker, s::STD_TASK_TASK_GROUP, vec![]);
-    let token = register_record_type(checker, s::STD_TASK_CANCELLATION_TOKEN, vec![]);
-    let listener = register_record_type(checker, s::STD_NET_LISTENER, vec![]);
+    let lifetime = register_resource_type(checker, s::STD_SERVER_LIFETIME);
+    let group = register_resource_type(checker, s::STD_TASK_TASK_GROUP);
+    let token = register_resource_type(checker, s::STD_TASK_CANCELLATION_TOKEN);
+    let listener = register_resource_type(checker, s::STD_NET_LISTENER);
     let result = |ty| Ty::Result(Box::new(ty), Box::new(Ty::String));
     define_func(
         checker,

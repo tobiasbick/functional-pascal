@@ -26,9 +26,9 @@ public type TuiLayoutSettings = record
   // Whether the item stretches across the available extent.
   public Stretch: integer;
   // Width in terminal cells.
-  public Width: option of integer;
+  public Width: Option of (integer);
   // Height in terminal cells.
-  public Height: option of integer;
+  public Height: Option of (integer);
 
   // Creates validated layout settings.
   //
@@ -44,14 +44,7 @@ public type TuiLayoutSettings = record
   Stretch: integer
 ): TuiLayoutSettings;
   begin
-    return record
-      Margins := Margins;
-      SizePolicy := SizePolicy;
-      Alignment := Alignment;
-      Stretch := TuiLayoutSettingsRequireNonNegativeStretch(Stretch);
-      Width := None;
-      Height := None;
-    end record;
+    return TuiLayoutSettings(Margins := Margins, SizePolicy := SizePolicy, Alignment := Alignment, Stretch := TuiLayoutSettingsRequireNonNegativeStretch(Stretch), Width := Option.None, Height := Option.None);
   end function;
 
   // Returns a copy constrained to one total width; negative widths panic.
@@ -67,14 +60,7 @@ public type TuiLayoutSettings = record
       end;
     end if;
 
-    return record
-      Margins := Self.Margins;
-      SizePolicy := Self.SizePolicy;
-      Alignment := Self.Alignment;
-      Stretch := Self.Stretch;
-      Width := Some(Width);
-      Height := Self.Height;
-    end record;
+    return TuiLayoutSettings(Margins := Self.Margins, SizePolicy := Self.SizePolicy, Alignment := Self.Alignment, Stretch := Self.Stretch, Width := Option.Some(Width), Height := Self.Height);
   end function;
 
   // Returns a copy constrained to one total height; negative heights panic.
@@ -90,14 +76,7 @@ public type TuiLayoutSettings = record
       end;
     end if;
 
-    return record
-      Margins := Self.Margins;
-      SizePolicy := Self.SizePolicy;
-      Alignment := Self.Alignment;
-      Stretch := Self.Stretch;
-      Width := Self.Width;
-      Height := Some(Height);
-    end record;
+    return TuiLayoutSettings(Margins := Self.Margins, SizePolicy := Self.SizePolicy, Alignment := Self.Alignment, Stretch := Self.Stretch, Width := Self.Width, Height := Option.Some(Height));
   end function;
 
   // Zero margins, preferred policy, fill alignment, and stretch zero.

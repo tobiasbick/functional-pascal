@@ -6,11 +6,11 @@ uses Std.Test as Test;
 
 begin
   case Fs.Glob('[unclosed') of
-    when Ok(_):
+    when Result.Ok(_):
       begin
         Test.Fail('Expected invalid glob pattern to fail');
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
         Test.AssertTrue(Str.Contains(Message, 'Invalid glob pattern'));
       end;

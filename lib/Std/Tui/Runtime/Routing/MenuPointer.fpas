@@ -19,7 +19,7 @@ public type TuiPointerMenu = record
   // Stable identifier of the value.
   public Id: ControlId.TuiControlId;
   // Flat ordered menu-node collection.
-  public Nodes: array of MenuNode.TuiMenuNode;
+  public Nodes: array of (MenuNode.TuiMenuNode);
   // Controlled menu state.
   public State: MenuNode.TuiMenuState;
   // Action emitted when the controlled value changes.
@@ -28,7 +28,7 @@ public type TuiPointerMenu = record
   public Bounds: Rect.TuiRect;
 end record;
 
-mutable var TuiPointerMenus: array of TuiPointerMenu := [];
+mutable var TuiPointerMenus: array of (TuiPointerMenu) := [];
 
 function TuiPointerMenuWalk(
   Frame: Frame2.TuiArrangedFrame;
@@ -39,36 +39,33 @@ function TuiPointerMenuWalk(
 begin
   mutable var Next: integer := Index + 1;
   case Node of
-    when Element.TuiElement.Menu(Id, Nodes, State, ChangeAction):
+    when Element.TuiElement.Menu(const Id, const Nodes, const State, const ChangeAction):
       begin
         if AllowMenu then
           begin
-            mutable var Menus: array of TuiPointerMenu := TuiPointerMenus;
+            mutable var Menus: array of (TuiPointerMenu) := TuiPointerMenus;
             TuiPointerMenus := [];
-            Arrays.Push(Menus, record
-              Id := Id;
-              Nodes := Nodes;
-              State := State;
-              ChangeAction := ChangeAction;
-              Bounds := Frame.EntryAt(Index).Bounds;
-            end record);
+            Arrays.Push(Menus, TuiPointerMenu(Id := Id, Nodes := Nodes, State := State, ChangeAction := ChangeAction, Bounds := Frame.EntryAt(Index)
+                                                                                                                                  .Bounds));
             TuiPointerMenus := Menus;
           end;
         end if;
       end;
-    when Element.TuiElement.Desktop(Focused, Children):
+    when Element.TuiElement.Desktop(const Focused, const Children):
       begin
         mutable var ModalIndex: integer := -1;
         for ChildIndex: integer := 0 to Arrays.Length(Children) - 1 do
           begin
             case Children[ChildIndex] of
-              when Element.TuiElement.Overlay(Title, OverlayChildren):
+              when Element.TuiElement.Overlay(const Title, const OverlayChildren):
                 begin
                   ModalIndex := ChildIndex;
                 end;
-              else
+              when Element.TuiElement.Empty, Element.TuiElement.Label(_), Element.TuiElement.Button(_), Element.TuiElement.Input(_), Element.TuiElement.TextArea(_, _, _, _, _), Element.TuiElement.CheckBox(_, _, _, _), Element.TuiElement.List(_, _, _, _), Element.TuiElement.Scroll(_, _, _, _), Element.TuiElement.MenuBar(_), Element.TuiElement.Menu(_, _, _, _), Element.TuiElement.StatusLine(_), Element.TuiElement.CellGrid(_), Element.TuiElement.Rule(_), Element.TuiElement.Gauge(_), Element.TuiElement.Row(_, _), Element.TuiElement.Column(_, _), Element.TuiElement.Layout(_, _), Element.TuiElement.Spacer(_), Element.TuiElement.Panel(_, _), Element.TuiElement.Desktop(_, _):
                 begin
-                  null;
+                  begin
+                    null;
+                  end;
                 end;
             end case;
           end;
@@ -81,7 +78,7 @@ begin
           end;
         end for;
       end;
-    when Element.TuiElement.Scroll(Id, Offset, ChangeAction, Children):
+    when Element.TuiElement.Scroll(const Id, const Offset, const ChangeAction, const Children):
       begin
         for ChildIndex: integer := 0 to Arrays.Length(Children) - 1 do
           begin
@@ -89,7 +86,7 @@ begin
           end;
         end for;
       end;
-    when Element.TuiElement.Row(Children, Spacing):
+    when Element.TuiElement.Row(const Children, const Spacing):
       begin
         for ChildIndex: integer := 0 to Arrays.Length(Children) - 1 do
           begin
@@ -97,7 +94,7 @@ begin
           end;
         end for;
       end;
-    when Element.TuiElement.Column(Children, Spacing):
+    when Element.TuiElement.Column(const Children, const Spacing):
       begin
         for ChildIndex: integer := 0 to Arrays.Length(Children) - 1 do
           begin
@@ -105,7 +102,7 @@ begin
           end;
         end for;
       end;
-    when Element.TuiElement.Layout(Settings, Children):
+    when Element.TuiElement.Layout(const Settings, const Children):
       begin
         for ChildIndex: integer := 0 to Arrays.Length(Children) - 1 do
           begin
@@ -113,7 +110,7 @@ begin
           end;
         end for;
       end;
-    when Element.TuiElement.Panel(Title, Children):
+    when Element.TuiElement.Panel(const Title, const Children):
       begin
         for ChildIndex: integer := 0 to Arrays.Length(Children) - 1 do
           begin
@@ -121,7 +118,7 @@ begin
           end;
         end for;
       end;
-    when Element.TuiElement.Overlay(Title, Children):
+    when Element.TuiElement.Overlay(const Title, const Children):
       begin
         for ChildIndex: integer := 0 to Arrays.Length(Children) - 1 do
           begin
@@ -129,31 +126,33 @@ begin
           end;
         end for;
       end;
-    else
+    when Element.TuiElement.Empty, Element.TuiElement.Label(_), Element.TuiElement.Button(_), Element.TuiElement.Input(_), Element.TuiElement.TextArea(_, _, _, _, _), Element.TuiElement.CheckBox(_, _, _, _), Element.TuiElement.List(_, _, _, _), Element.TuiElement.MenuBar(_), Element.TuiElement.StatusLine(_), Element.TuiElement.CellGrid(_), Element.TuiElement.Rule(_), Element.TuiElement.Gauge(_), Element.TuiElement.Spacer(_):
       begin
-        null;
+        begin
+          null;
+        end;
       end;
   end case;
 
   return Next;
 end function;
 
-function TuiPointerMenuFocus(Root: Element.TuiElement; Menu: TuiPointerMenu): array of Msg.TuiMsg;
+function TuiPointerMenuFocus(Root: Element.TuiElement; Menu: TuiPointerMenu): array of (Msg.TuiMsg);
 begin
-  var Previous: option of ControlId.TuiControlId := Focus.TuiRootFocus(Root);
+  var Previous: Option of (ControlId.TuiControlId) := Focus.TuiRootFocus(Root);
   if Focus.TuiFocusMatches(Previous, Menu.Id) then
     begin
       return [];
     end;
   end if;
 
-  return [Msg.TuiMsg.FocusChanged(Previous, Some(Menu.Id))];
+  return [Msg.TuiMsg.FocusChanged(Previous, Option.Some(Menu.Id))];
 end function;
 
-function TuiPointerMenuHover(Menu: TuiPointerMenu; Id: MenuNode.TuiMenuNodeId): array of Msg.TuiMsg;
+function TuiPointerMenuHover(Menu: TuiPointerMenu; Id: MenuNode.TuiMenuNodeId): array of (Msg.TuiMsg);
 begin
   case Menu.State.Active of
-    when Some(Active):
+    when Option.Some(const Active):
       begin
         if Active.Value = Id.Value then
           begin
@@ -161,7 +160,7 @@ begin
           end;
         end if;
       end;
-    when None:
+    when Option.None:
       begin
         null;
       end;
@@ -175,22 +174,22 @@ function TuiPointerMenuBarHit(
   Menu: TuiPointerMenu;
   Point: Point2.TuiPoint;
   Activate: boolean
-): option of array of Msg.TuiMsg;
+): Option of (array of (Msg.TuiMsg));
 begin
   if not Rect.TuiRect.Create(Menu.Bounds.X, Menu.Bounds.Y, Menu.Bounds.Width, 1).Contains(Point) then
     begin
-      return None;
+      return Option.None;
     end;
   end if;
   mutable var X: integer := Menu.Bounds.X;
   for Index: integer := 0 to Arrays.Length(Menu.Nodes) - 1 do
     begin
       case MenuQuery.TuiMenuNodeParent(Menu.Nodes[Index]) of
-        when Some(Parent):
+        when Option.Some(const Parent):
           begin
             null;
           end;
-        when None:
+        when Option.None:
           begin
             var Width: integer := Console.DisplayWidth(MenuQuery.TuiMenuNodeText(Menu.Nodes[Index])) +
                                   2;
@@ -199,13 +198,13 @@ begin
               begin
                 if not Activate then
                   begin
-                    return Some(TuiPointerMenuHover(Menu, MenuQuery.TuiMenuNodeIdOf(Menu.Nodes[Index])));
+                    return Option.Some(TuiPointerMenuHover(Menu, MenuQuery.TuiMenuNodeIdOf(Menu.Nodes[Index])));
                   end;
                 end if;
 
-                return Some(Arrays.Concat(TuiPointerMenuFocus(Root, Menu), [
-                                                                             Msg.TuiMsg.MenuChanged(Menu.Id, Menu.ChangeAction, MenuNode.TuiMenuState.OpenAt(MenuQuery.TuiMenuNodeIdOf(Menu.Nodes[Index])))
-                                                                           ]));
+                return Option.Some(Arrays.Concat(TuiPointerMenuFocus(Root, Menu), [
+                                                                                    Msg.TuiMsg.MenuChanged(Menu.Id, Menu.ChangeAction, MenuNode.TuiMenuState.OpenAt(MenuQuery.TuiMenuNodeIdOf(Menu.Nodes[Index])))
+                                                                                  ]));
               end;
             end if;
 
@@ -215,7 +214,7 @@ begin
     end;
   end for;
 
-  return Some([]);
+  return Option.Some([]);
 end function;
 
 function TuiPointerMenuPopupHit(
@@ -223,9 +222,9 @@ function TuiPointerMenuPopupHit(
   Point: Point2.TuiPoint;
   TerminalBounds: Rect.TuiRect;
   Activate: boolean
-): option of array of Msg.TuiMsg;
+): Option of (array of (Msg.TuiMsg));
 begin
-  var Popups: array of MenuGeometry.TuiMenuPopup := MenuGeometry.TuiMenuPopupGeometry(Menu.Nodes, Menu.State, Menu.Bounds, TerminalBounds);
+  var Popups: array of (MenuGeometry.TuiMenuPopup) := MenuGeometry.TuiMenuPopupGeometry(Menu.Nodes, Menu.State, Menu.Bounds, TerminalBounds);
   for PopupIndex: integer := Arrays.Length(Popups) - 1 downto 0 do
     begin
       if Popups[PopupIndex].Bounds.Contains(Point) then
@@ -233,19 +232,19 @@ begin
           var Row: integer := (Point.Y - Popups[PopupIndex].Bounds.Y) - 1;
           if (Row < 0) or (Row >= Popups[PopupIndex].Bounds.Height - 2) then
             begin
-              return Some([]);
+              return Option.Some([]);
             end;
           end if;
           mutable var ChildRow: integer := 0;
           for Index: integer := 0 to Arrays.Length(Menu.Nodes) - 1 do
             begin
-              if MenuQuery.TuiMenuHasParent(Menu.Nodes[Index], Some(Popups[PopupIndex].Parent)) then
+              if MenuQuery.TuiMenuHasParent(Menu.Nodes[Index], Option.Some(Popups[PopupIndex].Parent)) then
                 begin
                   if ChildRow = Row then
                     begin
                       if not MenuQuery.TuiMenuNodeSelectable(Menu.Nodes[Index]) then
                         begin
-                          return Some([]);
+                          return Option.Some([]);
                         end;
                       end if;
 
@@ -253,33 +252,33 @@ begin
                         begin
                           if not Activate then
                             begin
-                              return Some(TuiPointerMenuHover(Menu, MenuQuery.TuiMenuNodeIdOf(Menu.Nodes[Index])));
+                              return Option.Some(TuiPointerMenuHover(Menu, MenuQuery.TuiMenuNodeIdOf(Menu.Nodes[Index])));
                             end;
                           end if;
 
-                          return Some([
-                                        Msg.TuiMsg.MenuChanged(Menu.Id, Menu.ChangeAction, MenuNode.TuiMenuState.OpenAt(MenuQuery.TuiMenuNodeIdOf(Menu.Nodes[Index])))
-                                      ]);
+                          return Option.Some([
+                                               Msg.TuiMsg.MenuChanged(Menu.Id, Menu.ChangeAction, MenuNode.TuiMenuState.OpenAt(MenuQuery.TuiMenuNodeIdOf(Menu.Nodes[Index])))
+                                             ]);
                         end;
                       end if;
 
                       if not Activate then
                         begin
-                          return Some(TuiPointerMenuHover(Menu, MenuQuery.TuiMenuNodeIdOf(Menu.Nodes[Index])));
+                          return Option.Some(TuiPointerMenuHover(Menu, MenuQuery.TuiMenuNodeIdOf(Menu.Nodes[Index])));
                         end;
                       end if;
 
                       case MenuQuery.TuiMenuNodeAction(Menu.Nodes[Index]) of
-                        when Some(Action):
+                        when Option.Some(const Action):
                           begin
-                            return Some([
-                                          Msg.TuiMsg.MenuChanged(Menu.Id, Menu.ChangeAction, MenuNode.TuiMenuState.Closed()),
-                                          Msg.TuiMsg.Action(Menu.Id, Action)
-                                        ]);
+                            return Option.Some([
+                                                 Msg.TuiMsg.MenuChanged(Menu.Id, Menu.ChangeAction, MenuNode.TuiMenuState.Closed()),
+                                                 Msg.TuiMsg.Action(Menu.Id, Action)
+                                               ]);
                           end;
-                        when None:
+                        when Option.None:
                           begin
-                            return Some([]);
+                            return Option.Some([]);
                           end;
                       end case;
                     end;
@@ -291,13 +290,13 @@ begin
             end;
           end for;
 
-          return Some([]);
+          return Option.Some([]);
         end;
       end if;
     end;
   end for;
 
-  return None;
+  return Option.None;
 end function;
 
 // Routes a left-button press or movement over one active hierarchical menu.
@@ -312,7 +311,7 @@ public function TuiRouteMenuPointer(
   Frame: Frame2.TuiArrangedFrame;
   Point: Point2.TuiPoint;
   Activate: boolean
-): option of array of Msg.TuiMsg;
+): Option of (array of (Msg.TuiMsg));
 begin
   TuiPointerMenus := [];
   if TuiPointerMenuWalk(Frame, Root, 0, true) <> Frame.Count() then
@@ -323,22 +322,22 @@ begin
 
   if Arrays.Length(TuiPointerMenus) = 0 then
     begin
-      return None;
+      return Option.None;
     end;
   end if;
   var Menu: TuiPointerMenu := TuiPointerMenus[0];
   if not Activate and not Menu.State.Open then
     begin
-      return None;
+      return Option.None;
     end;
   end if;
 
   case TuiPointerMenuBarHit(Root, Menu, Point, Activate) of
-    when Some(Messages):
+    when Option.Some(const Messages):
       begin
-        return Some(Messages);
+        return Option.Some(Messages);
       end;
-    when None:
+    when Option.None:
       begin
         null;
       end;
@@ -347,27 +346,27 @@ begin
   if Menu.State.Open then
     begin
       case TuiPointerMenuPopupHit(Menu, Point, Frame.EntryAt(0).Bounds, Activate) of
-        when Some(Messages):
+        when Option.Some(const Messages):
           begin
-            return Some(Messages);
+            return Option.Some(Messages);
           end;
-        when None:
+        when Option.None:
           begin
             if not Activate then
               begin
-                return Some([]);
+                return Option.Some([]);
               end;
             end if;
 
-            return Some([
-                          Msg.TuiMsg.MenuChanged(Menu.Id, Menu.ChangeAction, MenuNode.TuiMenuState.Closed())
-                        ]);
+            return Option.Some([
+                                 Msg.TuiMsg.MenuChanged(Menu.Id, Menu.ChangeAction, MenuNode.TuiMenuState.Closed())
+                               ]);
           end;
       end case;
     end;
   end if;
 
-  return None;
+  return Option.None;
 end function;
 
 end unit;

@@ -124,7 +124,7 @@ fn jsonl_variant_replacements_commit_atomically_and_continue() {
         &mut server,
         &mut id,
         "expression.set",
-        json!({"frame_id":current,"target":"Outcome","expression":"Error('fail')"}),
+        json!({"frame_id":current,"target":"Outcome","expression":"Result.Error('fail')"}),
     );
     assert_eq!(outcome[0]["body"]["result"], "Error(...)", "{outcome:?}");
 
@@ -133,7 +133,7 @@ fn jsonl_variant_replacements_commit_atomically_and_continue() {
         &mut server,
         &mut id,
         "expression.set",
-        json!({"frame_id":current,"target":"Failed","expression":"Ok(9)"}),
+        json!({"frame_id":current,"target":"Failed","expression":"Result.Ok(9)"}),
     );
     assert_eq!(failed[0]["body"]["result"], "Ok(...)", "{failed:?}");
 
@@ -142,7 +142,7 @@ fn jsonl_variant_replacements_commit_atomically_and_continue() {
         &mut server,
         &mut id,
         "expression.set",
-        json!({"frame_id":current,"target":"Optional","expression":"None"}),
+        json!({"frame_id":current,"target":"Optional","expression":"Option.None"}),
     );
     assert_eq!(optional[0]["body"]["result"], "None", "{optional:?}");
 
@@ -151,7 +151,7 @@ fn jsonl_variant_replacements_commit_atomically_and_continue() {
         &mut server,
         &mut id,
         "expression.set",
-        json!({"frame_id":current,"target":"Missing","expression":"Some(8)"}),
+        json!({"frame_id":current,"target":"Missing","expression":"Option.Some(8)"}),
     );
     assert_eq!(missing[0]["body"]["result"], "Some(...)", "{missing:?}");
 
@@ -160,7 +160,7 @@ fn jsonl_variant_replacements_commit_atomically_and_continue() {
         &mut server,
         &mut id,
         "expression.set",
-        json!({"frame_id":current,"target":"Packed","expression":"Error('pack')"}),
+        json!({"frame_id":current,"target":"Packed","expression":"Result.Error('pack')"}),
     );
     assert_eq!(packed[0]["body"]["result"], "Error(...)", "{packed:?}");
 
@@ -169,7 +169,7 @@ fn jsonl_variant_replacements_commit_atomically_and_continue() {
         &mut server,
         &mut id,
         "expression.set",
-        json!({"frame_id":current,"target":"NestedResult","expression":"None"}),
+        json!({"frame_id":current,"target":"NestedResult","expression":"Option.None"}),
     );
     assert_eq!(
         nested_result[0]["body"]["result"], "None",
@@ -262,21 +262,22 @@ fn jsonl_variant_replacements_commit_atomically_and_continue() {
 fn jsonl_variant_replacement_stays_bound_to_the_selected_child_task() {
     const TASK_SOURCE: &str = r#"program TaskVariantReplacement;
 
-uses Std.Console as Console; uses Std.Tasks as Tasks;
+uses Std.Console as Console;
+uses Std.Tasks as Tasks;
 
 function Work(): integer;
 begin
-  mutable var Optional: Option of integer := Some(1);
+  mutable var Optional: Option of (integer) := Option.Some(1);
   var Marker: integer := 0;
   case Optional of
-    when Some(Value):
-    begin
-      return Value;
-    end;
-    when None:
-    begin
-      return 0;
-    end;
+    when Option.Some(const Value):
+      begin
+        return Value;
+      end;
+    when Option.None:
+      begin
+        return 0;
+      end;
   end case;
 end function;
 
@@ -317,7 +318,7 @@ end program;
     let updated = server.handle_line(&request(
         6,
         "expression.set",
-        json!({"frame_id":child_frame,"target":"Optional","expression":"None"}),
+        json!({"frame_id":child_frame,"target":"Optional","expression":"Option.None"}),
     ));
     assert_eq!(updated[0]["body"]["result"], "None", "{updated:?}");
     let expired_main = server.handle_line(&request(7, "scopes", json!({"frame_id":main_frame})));
@@ -366,27 +367,25 @@ fn root(name: &str) -> DebugAssignmentTarget {
 #[test]
 fn variant_replacement_supports_mutable_parameters_and_capture_cells() {
     let mut parameter = session(
-        r#"
-program VariantParameter;
+        r#"program VariantParameter;
 
-
-  type Choice = enum
-    Count(Value: integer);
-    Pair(Left: integer; Right: integer);
-  end enum;
+type Choice = enum
+  Count(Value: integer);
+  Pair(Left: integer; Right: integer);
+end enum;
 
 function ReadChoice(mutable Item: Choice): integer;
 begin
   var Marker: integer := 0;
   case Item of
-    when Choice.Count(Value):
-    begin
-      return Value;
-    end;
-    when Choice.Pair(Left, Right):
-    begin
-      return Left + Right;
-    end;
+    when Choice.Count(const Value):
+      begin
+        return Value;
+      end;
+    when Choice.Pair(const Left, const Right):
+      begin
+        return Left + Right;
+      end;
   end case;
 end function;
 
@@ -431,28 +430,26 @@ end program;
     );
 
     let mut capture = session(
-        r#"
-program VariantCapture;
+        r#"program VariantCapture;
 
-
-  type Choice = enum
-    Count(Value: integer);
-    Pair(Left: integer; Right: integer);
-  end enum;
+type Choice = enum
+  Count(Value: integer);
+  Pair(Left: integer; Right: integer);
+end enum;
 
 function NextChoice(): function(): integer;
 begin
   mutable var Selected: Choice := Choice.Count(1);
   return function(): integer begin
     case Selected of
-      when Choice.Count(Value):
-      begin
-        return Value;
-      end;
-      when Choice.Pair(Left, Right):
-      begin
-        return Left + Right;
-      end;
+      when Choice.Count(const Value):
+        begin
+          return Value;
+        end;
+      when Choice.Pair(const Left, const Right):
+        begin
+          return Left + Right;
+        end;
     end case;
   end function;
 end function;

@@ -25,7 +25,7 @@ pub(super) fn inspection_executable() -> VerifiedExecutable {
             "G",
             "Value",
             "Items",
-            "array of Integer",
+            "array of (Integer)",
         ]
         .into_iter()
         .map(str::to_string)

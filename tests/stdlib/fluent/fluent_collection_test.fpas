@@ -33,7 +33,7 @@ begin
   return Str.ToUpper(C);
 end function;
 
-function MakeNumbers(): array of integer;
+function MakeNumbers(): array of (integer);
 begin
   return [1, 2];
 end function;
@@ -44,10 +44,10 @@ begin
 end function;
 
 begin
-  var Numbers: array of integer := [1, 2, 3, 4];
+  var Numbers: array of (integer) := [1, 2, 3, 4];
   Test.AssertEquals(12, Arrays.Reduce(Arrays.Map(Arrays.Filter(Numbers, IsEven), Double), 0, Sum));
   Test.AssertEquals(4, (2).Double());
-  var Scores: dict of string to integer := ['A': 2, 'B': 3];
+  var Scores: dict of (string, integer) := ['A': 2, 'B': 3];
   Test.AssertEquals(5, Dictionaries.Reduce(Scores, 0, AddEntry));
   Test.AssertTrue(Options.IsSome(Dictionaries.Get(Scores, 'A')));
   Test.AssertEquals('AB', Str.Map(('ab'), Upper));

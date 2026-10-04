@@ -32,7 +32,7 @@ impl TypeTable {
     ) -> Result<TypeId, CompileError> {
         use fpas_parser::TypeExpr;
         match type_expr {
-            TypeExpr::Named { id, span } => {
+            TypeExpr::Named { id, span, .. } => {
                 let name = id.parts.join(".");
                 if id.parts.len() == 1 && generics.contains(&name.to_ascii_lowercase()) {
                     return Ok(DYNAMIC);

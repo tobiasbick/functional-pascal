@@ -191,21 +191,21 @@ pub(super) fn format_debug_type(
         Some(DebugType::String) => Ok("String".to_string()),
         Some(DebugType::Dynamic) => Ok("Dynamic".to_string()),
         Some(DebugType::Array(inner)) => Ok(format!(
-            "array of {}",
+            "array of ({})",
             format_debug_type(executable, *inner)?
         )),
         Some(DebugType::Dictionary { key, value }) => Ok(format!(
-            "dict of {} to {}",
+            "dict of ({}, {})",
             format_debug_type(executable, *key)?,
             format_debug_type(executable, *value)?
         )),
         Some(DebugType::Result { ok, error }) => Ok(format!(
-            "result of {}, {}",
+            "result of ({}, {})",
             format_debug_type(executable, *ok)?,
             format_debug_type(executable, *error)?
         )),
         Some(DebugType::Option(inner)) => Ok(format!(
-            "option of {}",
+            "option of ({})",
             format_debug_type(executable, *inner)?
         )),
         Some(DebugType::Function { .. }) => Ok("function".to_string()),
@@ -219,11 +219,11 @@ pub(super) fn format_debug_type(
         Some(DebugType::Enum(enumeration)) => enum_type_name(executable, *enumeration),
         Some(DebugType::Cell(inner)) => format_debug_type(executable, *inner),
         Some(DebugType::Task(inner)) => Ok(format!(
-            "task of {}",
+            "task of ({})",
             format_debug_type(executable, *inner)?
         )),
         Some(DebugType::Channel(inner)) => Ok(format!(
-            "channel of {}",
+            "channel of ({})",
             format_debug_type(executable, *inner)?
         )),
         None => Err(unsupported_metadata()),

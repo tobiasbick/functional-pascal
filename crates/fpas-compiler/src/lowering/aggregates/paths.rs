@@ -109,8 +109,15 @@ impl LoweringContext {
                         field_ty,
                         *part_span,
                     )?;
-                    self.lower_path_update(child, field_ty, tail, replacement, span)?
+                    let (child, child_ty) = self.refine_projection(
+                        child,
+                        field_ty,
+                        fpas_sema::designator_part_lookup_key(part),
+                        *part_span,
+                    )?;
+                    self.lower_path_update(child, child_ty, tail, replacement, span)?
                 };
+                let value = self.coerce_value_type(value, field_ty, span)?;
                 let aggregate = self.restore_value(saved_aggregate, span)?;
                 self.emit_value(
                     Operation::UpdateRecord {
@@ -151,8 +158,15 @@ impl LoweringContext {
                         element_ty,
                         *part_span,
                     )?;
-                    self.lower_path_update(child, element_ty, tail, replacement, span)?
+                    let (child, child_ty) = self.refine_projection(
+                        child,
+                        element_ty,
+                        fpas_sema::designator_part_lookup_key(part),
+                        *part_span,
+                    )?;
+                    self.lower_path_update(child, child_ty, tail, replacement, span)?
                 };
+                let value = self.coerce_value_type(value, element_ty, span)?;
                 let aggregate = self.restore_value(saved_aggregate, span)?;
                 let index = self.restore_value(saved_index, span)?;
                 self.emit_value(
@@ -230,6 +244,12 @@ impl LoweringContext {
                     return Err(unsupported(span, "postfix method call"));
                 }
             }
+            (value, ty) = self.refine_projection(
+                value,
+                ty,
+                fpas_sema::postfix_operation_lookup_key(operation),
+                span,
+            )?;
         }
         Ok(value)
     }
@@ -241,7 +261,7 @@ impl LoweringContext {
         ty: TypeId,
         part: &DesignatorPart,
     ) -> Result<(ValueId, TypeId), CompileError> {
-        match part {
+        let (value, ty) = match part {
             DesignatorPart::Ident(name, span) => {
                 let IrType::Record(layout) = self
                     .type_kind(ty)
@@ -283,7 +303,11 @@ impl LoweringContext {
                 )?;
                 Ok((result, result_ty))
             }
-        }
+        }?;
+        let span = match part {
+            DesignatorPart::Ident(_, span) | DesignatorPart::Index(_, span) => *span,
+        };
+        self.refine_projection(value, ty, fpas_sema::designator_part_lookup_key(part), span)
     }
 }
 

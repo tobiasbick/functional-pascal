@@ -2,7 +2,7 @@ program SequenceMutation;
 
 uses Std.Console as Console;
 
-mutable var Numbers: array of integer := [1, 2, 3];
+mutable var Numbers: array of (integer) := [1, 2, 3];
 mutable var Text: string := 'A😀B';
 
 begin

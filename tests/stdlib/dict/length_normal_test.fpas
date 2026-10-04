@@ -4,6 +4,6 @@ uses Std.Console as Console;
 uses Std.Dictionaries as Dictionaries;
 
 begin
-  var D: dict of string to integer := ['A': 1, 'B': 2];
+  var D: dict of (string, integer) := ['A': 1, 'B': 2];
   Console.WriteLn(Dictionaries.Length(D));
 end program;

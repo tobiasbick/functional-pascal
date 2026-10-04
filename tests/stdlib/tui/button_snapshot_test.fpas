@@ -6,15 +6,15 @@ uses Std.Tui as Tui;
 
 function ViewButtons(State: integer): Tui.TuiElement;
 begin
-  return Tui.TuiElementBuilders.MakeDesktop(Some(Tui.TuiControlId.Create(1)), [
-                                                                                Tui.TuiElementBuilders.MakePanel('Buttons', [
-                                                                                                                              Tui.TuiElementBuilders.MakeColumn([
-                                                                                                                                                                  Tui.TuiElementBuilders.MakeButtonWithMnemonic(Tui.TuiControlId.Create(1), 'Go', 'G', Tui.TuiAction.Create(1)),
-                                                                                                                                                                  Tui.TuiElementBuilders.MakeDefaultButton(Tui.TuiControlId.Create(2), 'OK', 'O', Tui.TuiAction.Create(2)),
-                                                                                                                                                                  Tui.TuiElementBuilders.MakeDisabledButton(Tui.TuiControlId.Create(3), 'Stop', 'S', Tui.TuiAction.Create(3))
-                                                                                                                                                                ])
-                                                                                                                            ])
-                                                                              ]);
+  return Tui.TuiElementBuilders.MakeDesktop(Option.Some(Tui.TuiControlId.Create(1)), [
+                                                                                       Tui.TuiElementBuilders.MakePanel('Buttons', [
+                                                                                                                                     Tui.TuiElementBuilders.MakeColumn([
+                                                                                                                                                                         Tui.TuiElementBuilders.MakeButtonWithMnemonic(Tui.TuiControlId.Create(1), 'Go', 'G', Tui.TuiAction.Create(1)),
+                                                                                                                                                                         Tui.TuiElementBuilders.MakeDefaultButton(Tui.TuiControlId.Create(2), 'OK', 'O', Tui.TuiAction.Create(2)),
+                                                                                                                                                                         Tui.TuiElementBuilders.MakeDisabledButton(Tui.TuiControlId.Create(3), 'Stop', 'S', Tui.TuiAction.Create(3))
+                                                                                                                                                                       ])
+                                                                                                                                   ])
+                                                                                     ]);
 end function;
 
 function UpdateButtons(State: integer; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): integer;

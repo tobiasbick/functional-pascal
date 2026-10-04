@@ -12,32 +12,28 @@ end record;
 
 function ViewButton(State: ButtonPointerModel): Tui.TuiElement;
 begin
-  return Tui.TuiElementBuilders.MakeDesktop(None, [
-                                                    Tui.TuiElementBuilders.MakeButtonWithMnemonic(Tui.TuiControlId.Create(1), 'Go', 'G', Tui.TuiAction.Create(10))
-                                                  ]);
+  return Tui.TuiElementBuilders.MakeDesktop(Option.None, [
+                                                           Tui.TuiElementBuilders.MakeButtonWithMnemonic(Tui.TuiControlId.Create(1), 'Go', 'G', Tui.TuiAction.Create(10))
+                                                         ]);
 end function;
 
 function UpdateButton(State: ButtonPointerModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): ButtonPointerModel;
 begin
   Cmd.Set(Tui.TuiCmd.NoCommand);
   case Msg of
-    when Tui.TuiMsg.Action(Source, Action):
+    when Tui.TuiMsg.Action(const Source, const Action):
       begin
-        return record
-          Actions := State.Actions + 1;
-          PointerEvents := State.PointerEvents;
-        end record;
+        return ButtonPointerModel(Actions := State.Actions + 1, PointerEvents := State.PointerEvents);
       end;
-    when Tui.TuiMsg.Pointer(Pointer):
+    when Tui.TuiMsg.Pointer(const Pointer):
       begin
-        return record
-          Actions := State.Actions;
-          PointerEvents := State.PointerEvents + 1;
-        end record;
+        return ButtonPointerModel(Actions := State.Actions, PointerEvents := State.PointerEvents + 1);
       end;
-    else
+    when Tui.TuiMsg.Started, Tui.TuiMsg.Key(_), Tui.TuiMsg.Tick(_), Tui.TuiMsg.Resize(_), Tui.TuiMsg.FocusChanged(_, _), Tui.TuiMsg.TextChanged(_, _, _, _), Tui.TuiMsg.TextAreaChanged(_, _, _, _, _), Tui.TuiMsg.CheckChanged(_, _, _), Tui.TuiMsg.SelectionChanged(_, _, _), Tui.TuiMsg.ScrollChanged(_, _, _), Tui.TuiMsg.MenuChanged(_, _, _), Tui.TuiMsg.BackgroundFailed(_, _, _, _, _, _), Tui.TuiMsg.QuitRequested:
       begin
-        return State;
+        begin
+          return State;
+        end;
       end;
   end case;
 end function;
@@ -49,11 +45,7 @@ end function;
 
 begin
   var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(16, 4));
-  mutable var Model: ButtonPointerModel := record
-    Actions := 0;
-    PointerEvents := 0;
-  end record;
-
+  mutable var Model: ButtonPointerModel := ButtonPointerModel(Actions := 0, PointerEvents := 0);
   Model := App.RunIterations(Model, UpdateButton, ViewButton, 0, 0);
   var GoX: integer := Str.IndexOf(App.SurfaceSnapshot().LineAt(0), 'G');
   var Inside: Tui.TuiPoint := Tui.TuiPoint.Create(GoX, 0);

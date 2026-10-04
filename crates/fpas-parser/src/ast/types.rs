@@ -8,16 +8,18 @@ pub enum TypeExpr {
     Named {
         /// The qualified type name.
         id: QualifiedId,
+        /// Explicit type arguments in declaration order, when the type is generic.
+        arguments: Vec<TypeExpr>,
         /// The source span covering the type expression.
         span: Span,
     },
-    /// An `array of T` type, together with its source span.
+    /// An `array of (T)` type, together with its source span.
     Array(Box<TypeExpr>, Span),
-    /// A `channel of T` type, together with its source span.
+    /// A `channel of (T)` type, together with its source span.
     ///
     /// **Documentation:** `docs/pascal/language/types/channels.md`
     Channel(Box<TypeExpr>, Span),
-    /// A `task of T` handle type whose `Std.Tasks.Wait` yields `T`, together with its source span.
+    /// A `task of (T)` handle type whose `Std.Tasks.Wait` yields `T`, together with its source span.
     ///
     /// A bare `task` is parsed as the named type `task`, whose result type is inferred.
     ///
@@ -39,7 +41,7 @@ pub enum TypeExpr {
         /// The source span covering the type expression.
         span: Span,
     },
-    /// `Result of T, E`
+    /// `Result of (T, E)`
     Result {
         /// The type carried by an `Ok` value.
         ok_type: Box<TypeExpr>,
@@ -48,14 +50,14 @@ pub enum TypeExpr {
         /// The source span covering the type expression.
         span: Span,
     },
-    /// `Option of T`
+    /// `Option of (T)`
     Option {
         /// The type carried by a `Some` value.
         inner_type: Box<TypeExpr>,
         /// The source span covering the type expression.
         span: Span,
     },
-    /// `dict of K to V`
+    /// `dict of (K, V)`
     ///
     /// **Documentation:** `docs/pascal/language/types/dictionaries.md`
     Dict {
@@ -66,6 +68,23 @@ pub enum TypeExpr {
         /// The source span covering the type expression.
         span: Span,
     },
+}
+
+impl TypeExpr {
+    /// Return the complete source span of this type annotation.
+    pub fn span(&self) -> Span {
+        match self {
+            Self::Named { span, .. }
+            | Self::FunctionType { span, .. }
+            | Self::ProcedureType { span, .. }
+            | Self::Result { span, .. }
+            | Self::Option { span, .. }
+            | Self::Dict { span, .. }
+            | Self::Array(_, span)
+            | Self::Channel(_, span)
+            | Self::Task(_, span) => *span,
+        }
+    }
 }
 
 /// Parsed formal parameter.

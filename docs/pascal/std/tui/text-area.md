@@ -25,21 +25,18 @@ Tui.TuiMsg.TextAreaChanged(Source, Action, Text, Caret, Offset);
 ```
 
 Use `TuiMsgTextAreaChanged` to construct the same message explicitly. An
-application normally accepts a routed proposal in `Update`:
+application normally accepts a routed proposal in `Update`. Add an arm like this
+to its exhaustive message case, updating the existing application model:
 
 ```pascal
 uses Std.Tui as Tui;
 
-case Message of
-  when Tui.TuiMsg.TextAreaChanged(Source, Action, Text, Caret, Offset):
-begin
-  return record
+when Tui.TuiMsg.TextAreaChanged(_, _, const Text, const Caret, const Offset):
+  return Model with
     Text := Text;
     Caret := Caret;
     Offset := Offset;
-  end record;
-end;
-end case;
+  end with;
 ```
 
 The host stores no editable text, caret, or scroll state between frames.

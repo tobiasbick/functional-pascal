@@ -29,19 +29,19 @@ begin
   end case;
 end function;
 
-function SafeLookup(Items: array of integer; Target: integer): option of integer;
+function SafeLookup(Items: array of (integer); Target: integer): Option of (integer);
 begin
   for I: integer := 0 to Arrays.Length(Items) - 1 do
     begin
       if Items[I] = Target then
         begin
-          return Some(I);
+          return Option.Some(I);
         end;
       end if;
     end;
   end for;
 
-  return None;
+  return Option.None;
 end function;
 
 begin
@@ -50,26 +50,26 @@ begin
   Console.WriteLn(TrafficAdvice(Light.Yellow));
   Console.WriteLn(TrafficAdvice(Light.Green));
   Console.WriteLn('--- Option exhaustiveness ---');
-  var Idx: option of integer := SafeLookup([10, 20, 30], 20);
+  var Idx: Option of (integer) := SafeLookup([10, 20, 30], 20);
   case Idx of
-    when Some(I):
+    when Option.Some(const I):
       begin
         Console.WriteLn('Found at index ' + Conv.IntToStr(I));
       end;
-    when None:
+    when Option.None:
       begin
         Console.WriteLn('Not found');
       end;
   end case;
 
   Console.WriteLn('--- Result exhaustiveness ---');
-  var R: result of integer, string := Ok(42);
+  var R: Result of (integer, string) := Result.Ok(42);
   case R of
-    when Ok(V):
+    when Result.Ok(const V):
       begin
         Console.WriteLn('Value: ' + Conv.IntToStr(V));
       end;
-    when Error(E):
+    when Result.Error(const E):
       begin
         Console.WriteLn('Error: ' + E);
       end;

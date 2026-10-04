@@ -36,6 +36,6 @@ fn member_assign_undefined_receiver_reports_once() {
 #[test]
 fn assign_to_array_element_ok() {
     check_ok(
-        r#"program T; begin mutable var A: array of integer := [1, 2, 3]; A[0] := 99; end program;"#,
+        r#"program T; begin mutable var A: array of (integer) := [1, 2, 3]; A[0] := 99; end program;"#,
     );
 }

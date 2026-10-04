@@ -4,7 +4,7 @@ use fpas_diagnostics::codes::SEMA_CONSTRAINT_VIOLATION;
 use fpas_lexer::Span;
 
 impl Checker {
-    /// Check that each concrete type argument satisfies its parameter's constraint.
+    /// Check concrete arguments and capabilities of forwarded generic parameters.
     ///
     /// Used during generic function call checking.
     ///
@@ -16,12 +16,11 @@ impl Checker {
         span: Span,
     ) {
         for (param, arg) in type_params.iter().zip(args.iter()) {
-            // Skip validation for error types and unresolved generic params.
-            if arg.is_error() || matches!(arg, Ty::GenericParam(..)) {
+            if arg.is_error() {
                 continue;
             }
             if let Some(constraint) = param.constraint
-                && !constraint.satisfied_by(arg)
+                && !constraint.satisfied_by_with(arg, |ty| self.resolve_visible_type(ty))
             {
                 self.error_with_code(
                     SEMA_CONSTRAINT_VIOLATION,
@@ -34,6 +33,7 @@ impl Checker {
                         "The `{}` constraint requires a type that supports {}.",
                         constraint.display_name(),
                         match constraint {
+                            crate::types::TypeConstraint::Equatable => "structural equality (=, <>) without resource, task, or callable components",
                             crate::types::TypeConstraint::Comparable =>
                                 "comparison operators (=, <>, <, >, <=, >=)",
                             crate::types::TypeConstraint::Numeric =>

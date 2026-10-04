@@ -1,5 +1,21 @@
 # Scalar labels
 
+Value labels and both endpoints of a range must be literals or static constants.
+Variables, routine calls and `try` are not static labels. Perform computed
+comparisons in a guard instead:
+
+```pascal
+case Value of
+  when const Number if Number = ComputeTarget():
+    Console.WriteLn('matched');
+  else
+    null;
+end case;
+```
+
+The binding is immutable and local to the arm. Its guard runs only after the
+pattern matches; the scrutinee runs once.
+
 ## Basic matching
 
 ```pascal

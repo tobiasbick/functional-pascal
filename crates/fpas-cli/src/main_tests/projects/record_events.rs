@@ -28,31 +28,38 @@ end program;"#,
     write_text(
         &cwd.join("src/widget.fpas"),
         r#"unit App.Widget;
-   public mutable var Slot: Option of procedure(Value: integer) := None;
 
-  public type Button = record
-    public Id: integer;
-    public function ReadOnClick(Self: Button): Option of procedure(Value: integer);
-    begin
-      return Slot;
-    end function;
-    public procedure WriteOnClick(Self: Button; Handler: Option of procedure(Value: integer));
-    begin
-      Slot := Handler;
-    end procedure;
-    public event OnClick: procedure(Value: integer) read ReadOnClick write WriteOnClick;
-    public procedure Click(Self: Button);
-    begin
-      if Assigned(Self.OnClick) then
-        Self.OnClick(Self.Id); end if;
-    end procedure;
-    public static function Make(Id: integer): Button;
-    begin
-      return record Id := Id; end record;
-    end function;
-  end record;
+public mutable var Slot: Option of (procedure(Value: integer)) := Option.None;
+
+public type Button = record
+  public Id: integer;
+
+  public function ReadOnClick(Self: Button): Option of (procedure(Value: integer));
+  begin
+    return Slot;
+  end function;
+
+  public procedure WriteOnClick(Self: Button; Handler: Option of (procedure(Value: integer)));
+  begin
+    Slot := Handler;
+  end procedure;
+
+  public procedure Click(Self: Button);
+  begin
+    if Assigned(Self.OnClick) then
+      Self.OnClick(Self.Id);
+    end if;
+  end procedure;
+
+  public static function Make(Id: integer): Button;
+  begin
+    return Button(Id := Id);
+  end function;
+
+  public event OnClick: procedure(Value: integer) read ReadOnClick write WriteOnClick;
+end record;
+
 end unit;
-
 "#,
     );
 

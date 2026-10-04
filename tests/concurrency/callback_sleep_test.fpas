@@ -13,7 +13,7 @@ end function;
 
 function MapValue(): integer;
 begin
-  var Values: array of integer := Arrays.Map([21], SleepAndDouble);
+  var Values: array of (integer) := Arrays.Map([21], SleepAndDouble);
   return Values[0];
 end function;
 

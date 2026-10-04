@@ -197,7 +197,7 @@ Variants in ordinal order:
 
 | Index | Variant |
 |------:|---------|
-| 0 | `None` |
+| 0 | `Option.None` |
 | 1 | `Left` |
 | 2 | `Right` |
 | 3 | `Middle` |

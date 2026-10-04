@@ -6,19 +6,19 @@ uses Std.Test as Test;
 begin
   // Host process that exits 0 on Windows and Unix.
   case Proc.Run('cmd', ['/C', 'exit 0']) of
-    when Ok(Code):
+    when Result.Ok(const Code):
       begin
         Test.AssertEquals(0, Code);
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
         // Fall back for non-Windows hosts where `cmd` is absent.
         case Proc.Run('sh', ['-c', 'exit 0']) of
-          when Ok(Code):
+          when Result.Ok(const Code):
             begin
               Test.AssertEquals(0, Code);
             end;
-          when Error(FallbackMessage):
+          when Result.Error(const FallbackMessage):
             begin
               Test.Fail((Message + ' / ') + FallbackMessage);
             end;

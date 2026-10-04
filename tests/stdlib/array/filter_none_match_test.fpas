@@ -9,7 +9,7 @@ begin
 end function;
 
 begin
-  var Nums: array of integer := [1, 3, 5];
-  var Evens: array of integer := Arrays.Filter(Nums, IsEven);
+  var Nums: array of (integer) := [1, 3, 5];
+  var Evens: array of (integer) := Arrays.Filter(Nums, IsEven);
   Console.WriteLn(Arrays.Length(Evens));
 end program;

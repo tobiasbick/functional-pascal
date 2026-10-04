@@ -4,7 +4,7 @@ uses Std.Console as Console;
 uses Std.Dictionaries as Dictionaries;
 
 begin
-  mutable var D: dict of string to integer := ['A': 1];
+  mutable var D: dict of (string, integer) := ['A': 1];
   D['A'] := 2;
   D['B'] := 3;
   Console.WriteLn(D['A']);

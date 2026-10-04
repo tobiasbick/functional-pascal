@@ -8,7 +8,18 @@ use fpas_parser::{QualifiedId, TypeExpr};
 impl Checker {
     pub(crate) fn resolve_type_expr(&mut self, type_expr: &TypeExpr) -> Ty {
         match type_expr {
-            TypeExpr::Named { id, .. } => self.resolve_named_type(id),
+            TypeExpr::Named {
+                id,
+                arguments,
+                span,
+            } => {
+                let ty = self.resolve_named_type(id);
+                let arguments = arguments
+                    .iter()
+                    .map(|argument| self.resolve_type_expr(argument))
+                    .collect();
+                self.apply_type_arguments(ty, arguments, *span)
+            }
             TypeExpr::Array(inner, _) => Ty::Array(Box::new(self.resolve_type_expr(inner))),
             TypeExpr::Channel(inner, _) => Ty::Channel(Box::new(self.resolve_type_expr(inner))),
             TypeExpr::Task(inner, _) => Ty::Task(Box::new(self.resolve_type_expr(inner))),
@@ -64,6 +75,7 @@ impl Checker {
                 ..
             } => {
                 let key = self.resolve_type_expr(key_type);
+                self.check_dictionary_key_type(&key, key_type.span());
                 let value = self.resolve_type_expr(value_type);
                 Ty::Dict(Box::new(key), Box::new(value))
             }
@@ -94,9 +106,6 @@ impl Checker {
                         );
                         Ty::Error
                     }
-                } else if self.ambiguous_hint(&name).is_some() {
-                    self.report_ambiguous_type_name(&name, qid.span);
-                    Ty::Error
                 } else if let Some(unit) =
                     crate::std_units::missing_std_unit(&name, &self.loaded_std_units)
                 {

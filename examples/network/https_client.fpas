@@ -14,21 +14,21 @@ begin
   end if;
 
   case Http.Send(Http.Request.Get(Args.ParamStr(0))) of
-    when Ok(ResponseValue):
+    when Result.Ok(const ResponseValue):
       begin
         Console.WriteLn('HTTPS status: ' + Conv.IntToStr(ResponseValue.StatusCode));
         case Http.BodyText(ResponseValue) of
-          when Ok(Text):
+          when Result.Ok(const Text):
             begin
               Console.WriteLn(Text);
             end;
-          when Error(Message):
+          when Result.Error(const Message):
             begin
               panic(Message);
             end;
         end case;
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
         panic(Message);
       end;

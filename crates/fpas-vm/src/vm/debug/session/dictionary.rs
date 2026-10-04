@@ -227,7 +227,7 @@ impl DebugSession {
             _ => Err(DebugSessionError {
                 kind: DebugErrorKind::VariablePathUnsupported,
                 message: "debug dictionary mutation target is not a dictionary".to_string(),
-                hint: "Select a mutable target whose complete value is `dict of K to V`."
+                hint: "Select a mutable target whose complete value is `dict of (K, V)`."
                     .to_string(),
             }),
         }

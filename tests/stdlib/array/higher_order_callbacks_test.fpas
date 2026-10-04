@@ -19,9 +19,9 @@ begin
 end function;
 
 begin
-  var Values: array of integer := [1, 2, 3, 4];
-  var Mapped: array of integer := Arrays.Map(Values, Double);
-  var Filtered: array of integer := Arrays.Filter(Mapped, IsAboveFour);
+  var Values: array of (integer) := [1, 2, 3, 4];
+  var Mapped: array of (integer) := Arrays.Map(Values, Double);
+  var Filtered: array of (integer) := Arrays.Filter(Mapped, IsAboveFour);
   Test.AssertEquals(4, Arrays.Length(Mapped));
   Test.AssertEquals(2, Mapped[0]);
   Test.AssertEquals(8, Mapped[3]);

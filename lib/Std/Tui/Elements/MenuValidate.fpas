@@ -7,32 +7,32 @@ uses Std.Tui.Chrome.MenuNode as MenuNode;
 uses Std.Tui.Chrome.MenuQuery as MenuQuery;
 
 function TuiMenuSameOptionalId(
-  Left: option of MenuNode.TuiMenuNodeId;
-  Right: option of MenuNode.TuiMenuNodeId
+  Left: Option of (MenuNode.TuiMenuNodeId);
+  Right: Option of (MenuNode.TuiMenuNodeId)
 ): boolean;
 begin
   case Left of
-    when Some(LeftId):
+    when Option.Some(const LeftId):
       begin
         case Right of
-          when Some(RightId):
+          when Option.Some(const RightId):
             begin
               return LeftId.Value = RightId.Value;
             end;
-          when None:
+          when Option.None:
             begin
               return false;
             end;
         end case;
       end;
-    when None:
+    when Option.None:
       begin
         case Right of
-          when Some(RightId):
+          when Option.Some(const RightId):
             begin
               return false;
             end;
-          when None:
+          when Option.None:
             begin
               return true;
             end;
@@ -46,7 +46,7 @@ end function;
 // Parameters:
 // - `Nodes`: Flat ordered menu-node collection.
 // - `State`: Controlled state used by the operation.
-public procedure TuiMenuValidate(Nodes: array of MenuNode.TuiMenuNode; State: MenuNode.TuiMenuState);
+public procedure TuiMenuValidate(Nodes: array of (MenuNode.TuiMenuNode); State: MenuNode.TuiMenuState);
 begin
   for Index: integer := 0 to Arrays.Length(Nodes) - 1 do
     begin
@@ -68,7 +68,7 @@ begin
       end if;
 
       case MenuQuery.TuiMenuNodeParent(Nodes[Index]) of
-        when Some(Parent):
+        when Option.Some(const Parent):
           begin
             var ParentIndex: integer := MenuQuery.TuiMenuFind(Nodes, Parent);
             if ParentIndex < 0 then
@@ -83,7 +83,7 @@ begin
               end;
             end if;
           end;
-        when None:
+        when Option.None:
           begin
             if not MenuQuery.TuiMenuNodeIsSubmenu(Nodes[Index]) then
               begin
@@ -99,7 +99,7 @@ begin
           Remaining := Remaining - 1;
           var CurrentIndex: integer := MenuQuery.TuiMenuFind(Nodes, Current);
           case MenuQuery.TuiMenuNodeParent(Nodes[CurrentIndex]) of
-            when Some(Parent):
+            when Option.Some(const Parent):
               begin
                 if Parent.Value = Id.Value then
                   begin
@@ -109,7 +109,7 @@ begin
 
                 Current := Parent;
               end;
-            when None:
+            when Option.None:
               begin
                 Remaining := 0;
               end;
@@ -133,7 +133,7 @@ begin
   if State.Open then
     begin
       case State.Active of
-        when Some(Active):
+        when Option.Some(const Active):
           begin
             var ActiveIndex: integer := MenuQuery.TuiMenuFind(Nodes, Active);
             if (ActiveIndex < 0) or not MenuQuery.TuiMenuNodeSelectable(Nodes[ActiveIndex]) then
@@ -142,7 +142,7 @@ begin
               end;
             end if;
           end;
-        when None:
+        when Option.None:
           begin
             panic('Tui open menu requires an active node');
           end;
@@ -151,11 +151,11 @@ begin
   else
     begin
       case State.Active of
-        when Some(Active):
+        when Option.Some(const Active):
           begin
             panic('Tui closed menu must not have an active node');
           end;
-        when None:
+        when Option.None:
           begin
             null;
           end;

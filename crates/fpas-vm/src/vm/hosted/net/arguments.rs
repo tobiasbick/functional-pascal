@@ -81,7 +81,7 @@ pub(super) fn cancellation_token(worker: &Worker, value: &Value) -> Result<u64, 
 /// Validate and convert a byte-array argument.
 pub(super) fn bytes(worker: &Worker, value: &Value) -> Result<Vec<u8>, VmError> {
     let Value::Array(values) = value else {
-        return Err(type_error(worker, "Data", "array of integer", value));
+        return Err(type_error(worker, "Data", "array of (integer)", value));
     };
     values
         .iter()

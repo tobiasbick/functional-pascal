@@ -9,7 +9,7 @@ begin
 end function;
 
 begin
-  var A: array of integer := [];
-  var B: array of integer := Arrays.Map(A, AddOne);
+  var A: array of (integer) := [];
+  var B: array of (integer) := Arrays.Map(A, AddOne);
   Console.WriteLn(Arrays.Length(B));
 end program;

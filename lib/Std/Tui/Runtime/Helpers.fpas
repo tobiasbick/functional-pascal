@@ -14,16 +14,16 @@ uses Std.Tui.Runtime.Routing.Focus as Focus;
 //
 // Parameters:
 // - `Root`: Root of the element tree.
-public function TuiFocusFirst(Root: Element.TuiElement): option of ControlId.TuiControlId;
+public function TuiFocusFirst(Root: Element.TuiElement): Option of (ControlId.TuiControlId);
 begin
-  var Controls: array of ControlId.TuiControlId := Focus.TuiFocusableControls(Root);
+  var Controls: array of (ControlId.TuiControlId) := Focus.TuiFocusableControls(Root);
   if Arrays.Length(Controls) = 0 then
     begin
-      return None;
+      return Option.None;
     end;
   end if;
 
-  return Some(Controls[0]);
+  return Option.Some(Controls[0]);
 end function;
 
 // Returns `Preferred` when it is focusable in the active tree; otherwise the first focusable id.
@@ -31,17 +31,17 @@ end function;
 // Parameters:
 // - `Root`: Root of the element tree.
 // - `Preferred`: Preferred size or focus identifier.
-public function TuiFocusResolve(Root: Element.TuiElement; Preferred: option of ControlId.TuiControlId): option of ControlId.TuiControlId;
+public function TuiFocusResolve(Root: Element.TuiElement; Preferred: Option of (ControlId.TuiControlId)): Option of (ControlId.TuiControlId);
 begin
-  var Controls: array of ControlId.TuiControlId := Focus.TuiFocusableControls(Root);
+  var Controls: array of (ControlId.TuiControlId) := Focus.TuiFocusableControls(Root);
   if Arrays.Length(Controls) = 0 then
     begin
-      return None;
+      return Option.None;
     end;
   end if;
 
   case Preferred of
-    when Some(Id):
+    when Option.Some(const Id):
       begin
         if Focus.TuiControlIndex(Controls, Id) >= 0 then
           begin
@@ -49,13 +49,13 @@ begin
           end;
         end if;
       end;
-    when None:
+    when Option.None:
       begin
         null;
       end;
   end case;
 
-  return Some(Controls[0]);
+  return Option.Some(Controls[0]);
 end function;
 
 // Reports whether the root's unconstrained minimum fits the available terminal size.

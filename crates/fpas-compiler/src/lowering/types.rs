@@ -82,7 +82,12 @@ impl TypeTable {
                 .collect::<Vec<_>>();
             table.named.extend(imported);
         }
-        for ty in metadata.expr_types.values() {
+        for ty in metadata
+            .expr_types
+            .values()
+            .chain(metadata.projection_types.values())
+            .chain(metadata.pattern_infos.values().map(|info| &info.ty))
+        {
             if matches!(ty, Ty::Error | Ty::Named(_)) {
                 continue;
             }
@@ -152,7 +157,7 @@ impl TypeTable {
                     .insert(enumeration.name.to_ascii_lowercase());
                 return Ok(INTEGER);
             }
-            Ty::Named(name) => {
+            Ty::Named(name) | Ty::Applied(name, _) => {
                 return Ok(self.named_type(name).unwrap_or(DYNAMIC));
             }
             Ty::Error => return Ok(DYNAMIC),
@@ -289,13 +294,6 @@ impl TypeTable {
                     .map(|field| (field.name.clone(), field.ty))
                     .collect()
             })
-    }
-
-    pub fn record_layout_name(&self, layout: RecordLayoutId) -> Option<&str> {
-        self.record_layouts
-            .iter()
-            .find(|item| item.id == layout)
-            .map(|item| item.name.as_str())
     }
 
     pub fn record_layout_id(&self, ty: TypeId) -> Option<RecordLayoutId> {

@@ -15,22 +15,15 @@ end function;
 
 function MakeKey(Kind: Tui.TuiKeyKind): Tui.TuiKeyEvent;
 begin
-  return record
-    kind := Kind;
-    ch := '';
-    shift := false;
-    ctrl := false;
-    alt := false;
-    meta := false;
-  end record;
+  return Tui.TuiKeyEvent(kind := Kind, ch := '', shift := false, ctrl := false, alt := false, meta := false);
 end function;
 
 function ViewScroll(State: ScrollModel): Tui.TuiElement;
 begin
-  mutable var Focused: option of Tui.TuiControlId := None;
+  mutable var Focused: Option of (Tui.TuiControlId) := Option.None;
   if State.Focus > 0 then
     begin
-      Focused := Some(Tui.TuiControlId.Create(State.Focus));
+      Focused := Option.Some(Tui.TuiControlId.Create(State.Focus));
     end;
   end if;
 
@@ -48,43 +41,35 @@ function UpdateScroll(State: ScrollModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput
 begin
   Cmd.Set(Tui.TuiCmd.NoCommand);
   case Msg of
-    when Tui.TuiMsg.FocusChanged(Previous, Current):
+    when Tui.TuiMsg.FocusChanged(const Previous, const Current):
       begin
         case Current of
-          when Some(Id):
+          when Option.Some(const Id):
             begin
-              return record
-                Focus := Id.Value;
-                Offset := State.Offset;
-              end record;
+              return ScrollModel(Focus := Id.Value, Offset := State.Offset);
             end;
-          when None:
+          when Option.None:
             begin
               return State;
             end;
         end case;
       end;
-    when Tui.TuiMsg.ScrollChanged(Source, Action, Offset):
+    when Tui.TuiMsg.ScrollChanged(const Source, const Action, const Offset):
       begin
-        return record
-          Focus := State.Focus;
-          Offset := Offset;
-        end record;
+        return ScrollModel(Focus := State.Focus, Offset := Offset);
       end;
-    else
+    when Tui.TuiMsg.Started, Tui.TuiMsg.Key(_), Tui.TuiMsg.Pointer(_), Tui.TuiMsg.Tick(_), Tui.TuiMsg.Resize(_), Tui.TuiMsg.Action(_, _), Tui.TuiMsg.TextChanged(_, _, _, _), Tui.TuiMsg.TextAreaChanged(_, _, _, _, _), Tui.TuiMsg.CheckChanged(_, _, _), Tui.TuiMsg.SelectionChanged(_, _, _), Tui.TuiMsg.MenuChanged(_, _, _), Tui.TuiMsg.BackgroundFailed(_, _, _, _, _, _), Tui.TuiMsg.QuitRequested:
       begin
-        return State;
+        begin
+          return State;
+        end;
       end;
   end case;
 end function;
 
 begin
   mutable var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(12, 2));
-  mutable var Model: ScrollModel := record
-    Focus := 0;
-    Offset := Tui.TuiPoint.Create(0, 0);
-  end record;
-
+  mutable var Model: ScrollModel := ScrollModel(Focus := 0, Offset := Tui.TuiPoint.Create(0, 0));
   Model := App.RunIterations(Model, UpdateScroll, ViewScroll, 0, 0);
   App.InjectPointerForTest(MakeDownPointer(10, 1));
   Model := App.RunIterations(Model, UpdateScroll, ViewScroll, 1, 0);

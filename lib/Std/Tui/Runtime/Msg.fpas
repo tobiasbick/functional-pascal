@@ -38,7 +38,7 @@ public type TuiMsg = enum
   // Parameters:
   // - `Previous`: Previously focused control identifier.
   // - `Current`: Currently focused control identifier.
-  FocusChanged(Previous: option of ControlId.TuiControlId; Current: option of ControlId.TuiControlId);
+  FocusChanged(Previous: Option of (ControlId.TuiControlId); Current: Option of (ControlId.TuiControlId));
   // Represents the `Action` variant of `TuiMsg`.
   //
   // Parameters:

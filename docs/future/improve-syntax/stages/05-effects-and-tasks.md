@@ -86,6 +86,13 @@ an expression returning `task of (T)`. Both register with the innermost scope.
 The procedure form has no hidden public unit-result type or bare-task exception.
 Calling `go` through a stored callable follows its declared function/procedure kind.
 
+Remove bare `task` annotations and their parser/type-inference paths together
+with this task migration and stage-4 local binding inference. The
+[approved migration boundary](../audit/task-migration-boundary.md) assigns this
+removal here: generic-data migration cannot replace procedure-result handles
+before procedure spawning without handles exists. Verify source consumers,
+intrinsic signatures, generated declarations, and inline test sources together.
+
 ```pascal
 uses Std.Tasks as Tasks;
 

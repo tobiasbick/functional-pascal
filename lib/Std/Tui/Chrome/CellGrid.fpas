@@ -10,7 +10,7 @@ public type TuiCellGrid = record
   // Height in terminal cells.
   public Height: integer;
   // Row-major terminal cells.
-  public Cells: array of Cell.TuiCell;
+  public Cells: array of (Cell.TuiCell);
 
   // Creates a row-major cell grid.
   //
@@ -18,7 +18,7 @@ public type TuiCellGrid = record
   // - `Width`: Width in terminal cells.
   // - `Height`: Height in terminal cells.
   // - `Cells`: Row-major terminal cells used to populate the grid.
-  public static function Create(Width: integer; Height: integer; Cells: array of Cell.TuiCell): TuiCellGrid;
+  public static function Create(Width: integer; Height: integer; Cells: array of (Cell.TuiCell)): TuiCellGrid;
   begin
     if (Width < 0) or (Height < 0) then
       begin
@@ -32,11 +32,7 @@ public type TuiCellGrid = record
       end;
     end if;
 
-    return record
-      Width := Width;
-      Height := Height;
-      Cells := Cells;
-    end record;
+    return TuiCellGrid(Width := Width, Height := Height, Cells := Cells);
   end function;
 end record;
 

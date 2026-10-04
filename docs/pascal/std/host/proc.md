@@ -10,12 +10,12 @@ uses Std.Proc as Proc;
 
 begin
   case Proc.RunCapture('fpas', ['--version']) of
-    when Ok(Output):
+    when Result.Ok(const Output):
       begin
         Console.WriteLn(Output.Stdout);
         Console.WriteLn('exit code: ', Output.ExitCode);
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       Console.WriteLn(Message);
   end case;
 end program;
@@ -45,11 +45,11 @@ Requires `uses Std.Proc as Proc;`.
 | Kind | Name | Notes |
 |------|------|-------|
 | record | `ProcessOutput` | captured `ExitCode`, `Stdout`, and `Stderr` |
-| function | `CurrentExecutable(): Result of string, string` | returns the absolute path of the running FPAS host executable |
-| function | `Run(Command: string; Args: array of string): Result of integer, string` | starts a process, waits for completion, and returns the exit code |
-| function | `RunCapture(Command: string; Args: array of string): Result of ProcessOutput, string` | starts a process and captures its exit code and output |
+| function | `CurrentExecutable(): Result of (string, string)` | returns the absolute path of the running FPAS host executable |
+| function | `Run(Command: string; Args: array of (string)): Result of (integer, string)` | starts a process, waits for completion, and returns the exit code |
+| function | `RunCapture(Command: string; Args: array of (string)): Result of (ProcessOutput, string)` | starts a process and captures its exit code and output |
 
-Fallible operations return `Error(message)` with a host error string instead of raising a runtime panic.
+Fallible operations return `Result.Error(message)` with a host error string instead of raising a runtime panic.
 
 ---
 
@@ -66,12 +66,12 @@ with the Unicode replacement character so process completion remains observable.
 
 ---
 
-## `function CurrentExecutable(): Result of string, string`
+## `function CurrentExecutable(): Result of (string, string)`
 
 Returns the absolute path of the executable hosting the running FPAS program.
 This allows a tool launched by `fpas` to invoke that same compiler binary.
 
-Returns `Error(message)` if the host cannot determine its executable path.
+Returns `Result.Error(message)` if the host cannot determine its executable path.
 
 ---
 
@@ -83,22 +83,22 @@ Combine a process call in `go` with `Std.Tasks.Wait` for task-based workflows.
 
 ---
 
-## `function Run(Command: string; Args: array of string): Result of integer, string`
+## `function Run(Command: string; Args: array of (string)): Result of (integer, string)`
 
-Starts `Command` with `Args`, waits for the process to exit, and returns `Ok(exitCode)`.
+Starts `Command` with `Args`, waits for the process to exit, and returns `Result.Ok(exitCode)`.
 
 ```pascal
 uses Std.Console as Console;
 uses Std.Proc as Proc;
 uses Std.Results as Results;
 
-var Status: result of integer, string := Proc.Run('fpas', ['--version']);
+var Status: result of (integer, string) := Proc.Run('fpas', ['--version']);
 if Results.IsError(Status) then
   Console.WriteLn(Results.UnwrapOr(Status, -1));
 end if;
 ```
 
-If the process cannot be started, returns `Error(message)`. If the host reports that the process ended without an exit code, returns `Error('process terminated without an exit code')`.
+If the process cannot be started, returns `Result.Error(message)`. If the host reports that the process ended without an exit code, returns `Result.Error('process terminated without an exit code')`.
 
 The child inherits standard input and output. Its standard error is inherited too, except under
 `fpas run --diagnostics json` or a native application with `FPAS_DIAGNOSTICS=json`, where each
@@ -107,10 +107,10 @@ stderr line becomes a JSON program-output record; see
 
 ---
 
-## `function RunCapture(Command: string; Args: array of string): Result of ProcessOutput, string`
+## `function RunCapture(Command: string; Args: array of (string)): Result of (ProcessOutput, string)`
 
 Starts `Command` with `Args`, waits for it to finish, and returns
-`Ok(ProcessOutput)` without writing the child's stdout or stderr to the parent
+`Result.Ok(ProcessOutput)` without writing the child's stdout or stderr to the parent
 terminal.
 
 ```pascal
@@ -118,19 +118,19 @@ uses Std.Console as Console;
 uses Std.Proc as Proc;
 
 case Proc.RunCapture('fpas', ['check', 'main.fpas']) of
-  when Ok(Output):
+  when Result.Ok(const Output):
     begin
       Console.WriteLn(Output.Stdout);
       Console.WriteLn(Output.Stderr);
     end;
-  when Error(Message):
+  when Result.Error(const Message):
     Console.WriteLn(Message);
 end case;
 ```
 
-A non-zero exit code is a completed process and therefore remains `Ok`; inspect
+A non-zero exit code is a completed process and therefore remains `Result.Ok`; inspect
 `Output.ExitCode` to distinguish command success from command failure. A spawn
-failure or a process termination without an exit code returns `Error(message)`.
+failure or a process termination without an exit code returns `Result.Error(message)`.
 
 ---
 

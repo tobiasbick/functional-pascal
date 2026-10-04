@@ -7,15 +7,15 @@ uses Std.Test as Test;
 
 begin
   var Group: Tasks.TaskGroup := Tasks.CreateTaskGroup();
-  var Attempts: channel of integer := Tasks.CreateChannel(3);
+  var Attempts: channel of (integer) := Tasks.CreateChannel(3);
   discard Tasks.Send(Attempts, 0);
   discard Tasks.Send(Attempts, 1);
   discard Tasks.Send(Attempts, 2);
-  var Child: task := Tasks.StartSupervisedTask(Group, function(Token: Tasks.CancellationToken): result of integer, string begin
+  var Child: task := Tasks.StartSupervisedTask(Group, function(Token: Tasks.CancellationToken): Result of (integer, string) begin
     var Attempt: integer := Results.Unwrap(Tasks.Receive(Attempts));
     if Attempt = 0 then
       begin
-        return Error('retryable error');
+        return Result.Error('retryable error');
       end;
     end if;
 
@@ -25,7 +25,7 @@ begin
       end;
     end if;
 
-    return Ok(42);
+    return Result.Ok(42);
   end function, 2, 1);
   Test.AssertEquals(0, Tasks.WaitAny([Child]));
   Test.AssertEquals(42, Results.Unwrap(Tasks.Wait(Child)));

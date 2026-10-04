@@ -12,7 +12,7 @@ begin
   var T1: task := go Double(1);
   var T2: task := go Double(2);
   var T3: task := go Double(3);
-  var Results: array of task := [T1, T2, T3];
+  var Results: array of (task) := [T1, T2, T3];
   Tasks.WaitAll(Results);
   Console.WriteLn('done');
 end program;

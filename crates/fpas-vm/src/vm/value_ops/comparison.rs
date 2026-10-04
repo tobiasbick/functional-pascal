@@ -30,12 +30,7 @@ pub(super) fn binary(
 }
 
 fn equality(left: &Value, right: &Value) -> bool {
-    match (left, right) {
-        (Value::Real(left), Value::Real(right)) => left == right,
-        (Value::Integer(left), Value::Real(right)) => (*left as f64) == *right,
-        (Value::Real(left), Value::Integer(right)) => *left == (*right as f64),
-        _ => left == right,
-    }
+    left.language_equal(right)
 }
 
 fn ordering(left: &Value, right: &Value) -> Result<Ordering, ValueOperationError> {
@@ -62,8 +57,8 @@ fn ordering(left: &Value, right: &Value) -> Result<Ordering, ValueOperationError
 
 fn membership(needle: &Value, aggregate: &Value) -> Result<bool, ValueOperationError> {
     match aggregate {
-        Value::Array(values) => Ok(values.iter().any(|value| value == needle)),
-        Value::Dict(pairs) => Ok(pairs.iter().any(|(key, _)| key == needle)),
+        Value::Array(values) => Ok(values.iter().any(|value| value.language_equal(needle))),
+        Value::Dict(pairs) => Ok(pairs.iter().any(|(key, _)| key.language_equal(needle))),
         Value::Str(text) => {
             let Value::Str(value) = needle else {
                 return Err(ValueOperationError::type_mismatch(

@@ -7,20 +7,14 @@ uses Std.Str as Str;
 uses Std.Test as Test;
 
 begin
-  var Source: Model.Note := record
-    Id := '1700000000000-123456';
-    Title := 'Agent-era notes';
-    CreatedMillis := 1700000000000;
-    UpdatedMillis := 1700000000123;
-    Tags := ['fpas', 'tui'];
-    Pinned := true;
-    Archived := false;
-    Body := ('Human-readable body' + Str.Chr(10)) + 'with Markdown.';
-    Path := '';
-  end record;
+  var Source: Model.Note := Model.Note(Id := '1700000000000-123456', Title := 'Agent-era notes', CreatedMillis := 1700000000000, UpdatedMillis := 1700000000123, Tags := [
+                                                                                                                                                                           'fpas',
+                                                                                                                                                                           'tui'
+                                                                                                                                                                         ], Pinned := true, Archived := false, Body := ('Human-readable body' + Str.Chr(10)) +
+                                                                                                                                                                                                                       'with Markdown.', Path := '');
   var Encoded: string := Format.NoteStringify(Source);
   case Format.NoteParse(Encoded) of
-    when Ok(Parsed):
+    when Result.Ok(const Parsed):
       begin
         Test.AssertEquals(Source.Id, Parsed.Id);
         Test.AssertEquals(Source.Title, Parsed.Title);
@@ -32,19 +26,19 @@ begin
         Test.AssertEquals(false, Parsed.Archived);
         Test.AssertEquals(Source.Body, Parsed.Body);
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
         Test.Fail(Message);
       end;
   end case;
   var CrLf: string := Str.Replace(Encoded, Str.Chr(10), Str.Chr(13) + Str.Chr(10));
   case Format.NoteParse(CrLf) of
-    when Ok(Parsed):
+    when Result.Ok(const Parsed):
       begin
         Test.AssertEquals(Source.Title, Parsed.Title);
         Test.AssertEquals(Source.Body, Parsed.Body);
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
         Test.Fail(Message);
       end;

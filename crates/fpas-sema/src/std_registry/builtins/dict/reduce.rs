@@ -34,7 +34,7 @@ pub(super) fn check_reduce(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
         c.error_with_code(
             SEMA_TYPE_MISMATCH,
             format!("`{}` first argument must be a dict", s::STD_DICT_REDUCE),
-            "Pass a dict of K to V as the first argument.",
+            "Pass a dict of (K, V) as the first argument.",
             span,
         );
         return Ty::Error;

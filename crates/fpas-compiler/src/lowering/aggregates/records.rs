@@ -1,4 +1,4 @@
-//! Record literal, default-field, and copy-update lowering.
+//! Named record construction, default-field, and copy-update lowering.
 
 use std::collections::HashMap;
 
@@ -11,22 +11,18 @@ use crate::CompileError;
 use super::super::context::{LoweringContext, unsupported};
 
 impl LoweringContext {
-    pub(in crate::lowering) fn lower_record_literal(
+    pub(in crate::lowering) fn lower_record_construction(
         &mut self,
         fields: &[FieldInit],
         expression: &Expr,
     ) -> Result<ValueId, CompileError> {
         let Ty::Record(record) = self.expression_type(expression)? else {
-            return Err(unsupported(expression.span(), "record literal type"));
+            return Err(unsupported(expression.span(), "record construction type"));
         };
         let ty = self.expression_ir_type(expression)?;
         let layout = self
             .record_layout_id(ty)
             .ok_or_else(|| unsupported(expression.span(), "record layout"))?;
-        let provided = fields
-            .iter()
-            .map(|field| (field.name.to_ascii_lowercase(), &field.value))
-            .collect::<HashMap<_, _>>();
         let defaults = self
             .record_defaults
             .get(&record.name)
@@ -41,87 +37,64 @@ impl LoweringContext {
         let field_types = self
             .record_fields(layout)
             .ok_or_else(|| unsupported(expression.span(), "record fields"))?;
-        let mut resolved = Vec::with_capacity(defaults.len());
-        for (name, default) in &defaults {
-            let expression = provided
-                .get(&name.to_ascii_lowercase())
-                .copied()
-                .or(default.as_ref())
-                .ok_or_else(|| unsupported(expression.span(), "missing record field"))?;
-            let expected = field_types
-                .iter()
-                .find(|(field, _)| field.eq_ignore_ascii_case(name))
-                .map(|(_, ty)| *ty)
-                .ok_or_else(|| unsupported(expression.span(), "record field type"))?;
-            resolved.push((expression, expected));
-        }
-        self.lower_resolved_record_fields(layout, ty, expression.span(), &resolved)
+        self.lower_record_fields_in_order(
+            layout,
+            ty,
+            expression.span(),
+            fields,
+            &field_types,
+            &defaults,
+        )
     }
 
-    pub(in crate::lowering) fn lower_record_literal_as(
-        &mut self,
-        fields: &[FieldInit],
-        ty: TypeId,
-        span: fpas_lexer::Span,
-    ) -> Result<ValueId, CompileError> {
-        let layout = self
-            .record_layout_id(ty)
-            .ok_or_else(|| unsupported(span, "expected record layout"))?;
-        let provided = fields
-            .iter()
-            .map(|field| (field.name.to_ascii_lowercase(), &field.value))
-            .collect::<HashMap<_, _>>();
-        let layout_name = self
-            .record_layout_name(layout)
-            .ok_or_else(|| unsupported(span, "expected record layout name"))?;
-        let defaults = self
-            .record_defaults
-            .iter()
-            .find(|(name, _)| name.eq_ignore_ascii_case(layout_name))
-            .or_else(|| {
-                self.record_defaults
-                    .iter()
-                    .find(|(name, _)| super::super::type_names::matches(name, layout_name))
-            })
-            .map(|(_, fields)| fields.clone())
-            .unwrap_or_default();
-        let fields = self
-            .record_fields(layout)
-            .ok_or_else(|| unsupported(span, "expected record fields"))?;
-        let mut resolved = Vec::with_capacity(fields.len());
-        for (name, field_ty) in &fields {
-            let expression = provided
-                .get(&name.to_ascii_lowercase())
-                .copied()
-                .or_else(|| {
-                    defaults
-                        .iter()
-                        .find(|(field, _)| field.eq_ignore_ascii_case(name))
-                        .and_then(|(_, value)| value.as_ref())
-                })
-                .ok_or_else(|| unsupported(span, "missing record field"))?;
-            resolved.push((expression, *field_ty));
-        }
-        self.lower_resolved_record_fields(layout, ty, span, &resolved)
-    }
-
-    fn lower_resolved_record_fields(
+    fn lower_record_fields_in_order(
         &mut self,
         layout: fpas_ir::RecordLayoutId,
         ty: TypeId,
         span: fpas_lexer::Span,
-        fields: &[(&Expr, TypeId)],
+        supplied: &[FieldInit],
+        declared: &[(String, TypeId)],
+        defaults: &[(String, Option<std::sync::Arc<Expr>>)],
     ) -> Result<ValueId, CompileError> {
-        let mut staged = Vec::with_capacity(fields.len());
-        for &(expression, field_ty) in fields {
+        let mut staged = HashMap::new();
+        for field in supplied {
+            let field_ty = declared
+                .iter()
+                .find(|(name, _)| name.eq_ignore_ascii_case(&field.name))
+                .map(|(_, ty)| *ty)
+                .ok_or_else(|| unsupported(field.span, "record field type"))?;
+            let expression = &field.value;
             let value = self.lower_expression_as(expression, field_ty)?;
             let local = self.declare_hidden_local(field_ty, expression.span())?;
             self.write_local(local, value, expression.span())?;
-            staged.push((local, field_ty, expression.span()));
+            staged.insert(
+                field.name.to_ascii_lowercase(),
+                (local, field_ty, expression.span()),
+            );
         }
-        let values = staged
-            .into_iter()
-            .map(|(local, ty, span)| self.emit_value(Operation::ReadLocal(local), ty, span))
+        for (name, field_ty) in declared {
+            let key = name.to_ascii_lowercase();
+            if staged.contains_key(&key) {
+                continue;
+            }
+            let expression = defaults
+                .iter()
+                .find(|(field, _)| field.eq_ignore_ascii_case(name))
+                .and_then(|(_, expression)| expression.as_deref())
+                .ok_or_else(|| unsupported(span, "missing record field"))?;
+            let value = self.lower_expression_as(expression, *field_ty)?;
+            let local = self.declare_hidden_local(*field_ty, expression.span())?;
+            self.write_local(local, value, expression.span())?;
+            staged.insert(key, (local, *field_ty, expression.span()));
+        }
+        let values = declared
+            .iter()
+            .map(|(name, _)| {
+                let (local, ty, span) = staged
+                    .remove(&name.to_ascii_lowercase())
+                    .ok_or_else(|| unsupported(span, "staged record field"))?;
+                self.emit_value(Operation::ReadLocal(local), ty, span)
+            })
             .collect::<Result<Vec<_>, _>>()?;
         self.emit_value(
             Operation::MakeRecord {
@@ -152,9 +125,10 @@ impl LoweringContext {
                 let (id, field_ty) = self
                     .record_field(layout, &field.name)
                     .ok_or_else(|| unsupported(field.span, "record update field"))?;
-                // Like record literals, overrides take the field type as their expected type,
+                // Like constructors, overrides take the field type as their expected type,
                 // so context-typed values such as `[]` get the field's element type.
                 let value = self.lower_expression_as(&field.value, field_ty)?;
+                let value = self.coerce_value_type(value, field_ty, field.span)?;
                 Ok((id, self.save_value(value)))
             })
             .collect::<Result<Vec<_>, CompileError>>()?;

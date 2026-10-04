@@ -258,21 +258,22 @@ fn jsonl_payload_requests_validate_lifecycle() {
 fn jsonl_payload_mutation_stays_bound_to_the_selected_child_task() {
     const TASK_SOURCE: &str = r#"program TaskPayloadMutation;
 
-uses Std.Console as Console; uses Std.Tasks as Tasks;
+uses Std.Console as Console;
+uses Std.Tasks as Tasks;
 
 function Work(): integer;
 begin
-  mutable var Optional: Option of integer := Some(1);
+  mutable var Optional: Option of (integer) := Option.Some(1);
   var Marker: integer := 0;
   case Optional of
-    when Some(Value):
-    begin
-      return Value;
-    end;
-    when None:
-    begin
-      return 0;
-    end;
+    when Option.Some(const Value):
+      begin
+        return Value;
+      end;
+    when Option.None:
+      begin
+        return 0;
+      end;
   end case;
 end function;
 
@@ -286,11 +287,16 @@ end program;
     let executable = fpas_compiler::compile(&program).expect("compile task payload fixture");
     let mut server =
         JsonlServer::new(PreparedDebugTarget::new(executable, Vec::new())).expect("JSONL server");
+    let marker_line = TASK_SOURCE
+        .lines()
+        .position(|line| line.contains("var Marker:"))
+        .expect("task fixture marker")
+        + 1;
     let _ = server.handle_line(&request(1, "initialize", json!({"version":2})));
     let breakpoint = server.handle_line(&request(
         2,
         "breakpoint.set",
-        json!({"source":"<memory>","line":8}),
+        json!({"source":"<memory>","line":marker_line}),
     ));
     assert_eq!(breakpoint[0]["body"]["verified"], true, "{breakpoint:?}");
     let _ = server.handle_line(&request(3, "launch", json!({"stop_on_entry":false})));

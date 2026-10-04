@@ -9,7 +9,7 @@ begin
 end function;
 
 begin
-  var A: array of integer := [];
+  var A: array of (integer) := [];
   var Val: integer := Arrays.Reduce(A, 99, AddAcc);
   Console.WriteLn(Val);
 end program;

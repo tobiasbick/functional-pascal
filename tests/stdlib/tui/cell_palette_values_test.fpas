@@ -13,11 +13,11 @@ begin
   Test.AssertEquals('X', Styled.Glyph);
   Test.AssertEquals(1, Styled.Width());
   case Styled.ConcreteStyle of
-    when Some(Concrete):
+    when Option.Some(const Concrete):
       begin
         Test.AssertEquals(20, Concrete.Foreground.Green);
       end;
-    when None:
+    when Option.None:
       begin
         panic('expected concrete cell style');
       end;

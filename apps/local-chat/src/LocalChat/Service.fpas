@@ -8,7 +8,7 @@ uses Std.Ai.OpenAi as OpenAi;
 //
 // Parameters:
 // - `Prompt`: User prompt sent as the sole chat message.
-public function LocalChatRequest(Prompt: string): result of string, string;
+public function LocalChatRequest(Prompt: string): Result of (string, string);
 begin
   var ClientValue: OpenAi.Client := OpenAi.Client.Create(Config.LocalChatBaseUrl, Config.LocalChatModelName);
   return OpenAi.Complete(ClientValue, [OpenAi.ChatMessage.User(Prompt)], OpenAi.ChatOptions.Default());

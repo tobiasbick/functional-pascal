@@ -54,7 +54,7 @@ impl Checker {
         }
 
         // Validate default values and build the defaults map entry.
-        let defaults_entry: Vec<(String, Option<fpas_parser::Expr>)> = field_indexes
+        let defaults_entry: Vec<(String, Option<Arc<fpas_parser::Expr>>)> = field_indexes
             .iter()
             .map(|field_index| &record.fields[*field_index])
             .zip(fields.iter())
@@ -63,7 +63,7 @@ impl Checker {
                     if self.type_collection.collecting {
                         return (field_def.name.clone(), Some(default_expr.clone()));
                     }
-                    let default_ty = self.check_expr(default_expr);
+                    let default_ty = self.check_expr_with_expected(default_expr, field_ty);
                     self.check_type_compat(
                         field_ty,
                         &default_ty,
@@ -121,6 +121,9 @@ impl Checker {
         };
         let record_ty = RecordTy {
             name: td.name.clone(),
+            type_params: Self::resolve_type_params(&td.type_params),
+            type_args: Vec::new(),
+            is_resource: false,
             owner_unit,
             private_members,
             fields,
@@ -155,7 +158,7 @@ impl Checker {
             record_ty.events = events;
         }
 
-        if let Some(existing) = self.scopes.lookup_mut(&td.name) {
+        if let Some(existing) = self.scopes.lookup_root_mut(&td.name) {
             *existing.ty_mut() = ty;
         }
 

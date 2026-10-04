@@ -31,7 +31,7 @@ impl Worker {
     ) -> Result<Option<Option<Value>>, VmError> {
         let [Value::Array(_)] = arguments else {
             return Err(
-                self.task_type_error("array of task", arguments.first().unwrap_or(&Value::Unit))
+                self.task_type_error("array of (task)", arguments.first().unwrap_or(&Value::Unit))
             );
         };
         let ids = self.wait_any_ids(&arguments[0])?;
@@ -54,7 +54,7 @@ impl Worker {
 
     fn wait_any_ids(&self, value: &Value) -> Result<Vec<u64>, VmError> {
         let Value::Array(values) = value else {
-            return Err(self.task_type_error("array of task", value));
+            return Err(self.task_type_error("array of (task)", value));
         };
         if let Err(message) = validate_task_count(values.len()) {
             return Err(diagnostics::at_address(

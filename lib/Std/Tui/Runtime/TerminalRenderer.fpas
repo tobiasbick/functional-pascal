@@ -30,26 +30,22 @@ function TuiCellToConsole(Cell: Cell2.TuiCell; Palette: Palette2.TuiPalette): Co
 begin
   mutable var Style: Style2.TuiStyle := Palette.ForRole(Cell.Role);
   case Cell.ConcreteStyle of
-    when Some(Concrete):
+    when Option.Some(const Concrete):
       begin
         Style := Concrete;
       end;
-    when None:
+    when Option.None:
       begin
         null;
       end;
   end case;
 
-  return record
-    glyph := Cell.Glyph;
-    foreground := TuiColorToConsole(Style.Foreground);
-    background := TuiColorToConsole(Style.Background);
-  end record;
+  return Console.Cell(glyph := Cell.Glyph, foreground := TuiColorToConsole(Style.Foreground), background := TuiColorToConsole(Style.Background));
 end function;
 
-function TuiTerminalDamageRow(Damage: Surface2.TuiSurfaceDamage; Palette: Palette2.TuiPalette): array of Console.Cell;
+function TuiTerminalDamageRow(Damage: Surface2.TuiSurfaceDamage; Palette: Palette2.TuiPalette): array of (Console.Cell);
 begin
-  mutable var Row: array of Console.Cell := [];
+  mutable var Row: array of (Console.Cell) := [];
   for Cell: Cell2.TuiCell in Damage.Cells do
     begin
       Arrays.Push(Row, TuiCellToConsole(Cell, Palette));
@@ -69,7 +65,7 @@ end function;
 // - `Palette`: Palette used to resolve semantic style roles.
 public procedure TuiFlushSurface(Surface: Surface2.TuiWorkingSurface; Palette: Palette2.TuiPalette);
 begin
-  var Damage: array of Surface2.TuiSurfaceDamage := Surface2.TuiSurfaceTakeTerminalDamage(Surface);
+  var Damage: array of (Surface2.TuiSurfaceDamage) := Surface2.TuiSurfaceTakeTerminalDamage(Surface);
   if Arrays.Length(Damage) = 0 then
     begin
       return;
@@ -79,7 +75,7 @@ begin
   Console.BeginFrame();
   for Item: Surface2.TuiSurfaceDamage in Damage do
     begin
-      var Row: array of Console.Cell := TuiTerminalDamageRow(Item, Palette);
+      var Row: array of (Console.Cell) := TuiTerminalDamageRow(Item, Palette);
       if Arrays.Length(Row) > 0 then
         begin
           Console.WriteCells(Item.FirstX + 1, Item.Y + 1, Row);

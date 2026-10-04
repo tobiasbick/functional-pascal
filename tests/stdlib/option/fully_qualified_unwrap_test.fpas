@@ -4,6 +4,6 @@ uses Std.Console as Console;
 uses Std.Options as Options;
 
 begin
-  var O: option of integer := Some(99);
+  var O: Option of (integer) := Option.Some(99);
   Console.WriteLn(Options.Unwrap(O));
 end program;

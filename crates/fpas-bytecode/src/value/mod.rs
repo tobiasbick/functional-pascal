@@ -1,5 +1,6 @@
 mod aggregate;
 mod array;
+mod dictionary;
 mod display;
 mod equal;
 mod function;
@@ -94,6 +95,15 @@ impl Clone for Value {
 }
 
 impl Value {
+    /// Compare FPAS value data structurally, with IEEE real and dictionary mapping equality.
+    ///
+    /// Resource, task and callable identities do not participate in this comparison.
+    /// **Documentation:** `docs/pascal/language/basics/operators.md`.
+    #[must_use]
+    pub fn language_equal(&self, other: &Self) -> bool {
+        equal::language_values_equal(self, other)
+    }
+
     #[inline(never)]
     fn clone_shared(&self) -> Self {
         match self {
@@ -137,9 +147,11 @@ impl Value {
         Self::OptionSome(ValuePayload::new(value))
     }
 
-    /// Create an ordered dictionary value with copy-on-write storage.
+    /// Create an ordered mapping; equal keys keep their first position and last value.
+    ///
+    /// **Documentation:** `docs/pascal/language/types/dictionaries.md`.
     pub fn dict(pairs: Vec<(Value, Value)>) -> Self {
-        Self::Dict(pairs.into())
+        Self::Dict(dictionary::normalize(pairs))
     }
 
     /// Create a non-task-bound first-class function value.

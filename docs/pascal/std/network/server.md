@@ -9,20 +9,20 @@ There is no new language syntax and no change to ordinary task-group close seman
 | Kind | Signature | Description |
 |------|-----------|-------------|
 | type | `ServerLifetime` | Opaque VM-local identity for one server lifetime |
-| function | `CreateLifetime(GraceMillis: integer; ForceExit: boolean): result of ServerLifetime, string` | Creates a ready lifetime with its own task group and stop token |
+| function | `CreateLifetime(GraceMillis: integer; ForceExit: boolean): result of (ServerLifetime, string)` | Creates a ready lifetime with its own task group and stop token |
 | function | `GetWorkGroup(Lifetime: ServerLifetime): TaskGroup` | Group for all admitted server workers; use `Std.Tasks.StartTaskInGroup` |
 | function | `GetStopToken(Lifetime: ServerLifetime): CancellationToken` | Token notified by any lifecycle stop request |
 | function | `IsReady(Lifetime: ServerLifetime): boolean` | True before shutdown begins; false once admission is sealed |
 | function | `RequestStop(Lifetime: ServerLifetime): boolean` | Starts shutdown once; later calls return false without extending the deadline |
 | function | `RemainingMillis(Lifetime: ServerLifetime): integer` | Remaining common grace budget, rounded up to milliseconds and clamped at zero |
-| function | `OwnListener(Lifetime: ServerLifetime; Listener: Listener): result of boolean, string` | Transfers TCP/TLS listener cleanup to this lifetime |
-| function | `ObserveSignals(Lifetime: ServerLifetime): result of boolean, string` | Explicitly subscribes this lifetime to process stop signals |
-| function | `ShutdownErrors(Lifetime: ServerLifetime): array of string` | Snapshot of retained listener-close failures, without consuming them |
-| function | `FinishShutdown(Lifetime: ServerLifetime): result of boolean, string` | Confirms caller-managed cleanup and disarms escalation after explicit group close |
+| function | `OwnListener(Lifetime: ServerLifetime; Listener: Listener): result of (boolean, string)` | Transfers TCP/TLS listener cleanup to this lifetime |
+| function | `ObserveSignals(Lifetime: ServerLifetime): result of (boolean, string)` | Explicitly subscribes this lifetime to process stop signals |
+| function | `ShutdownErrors(Lifetime: ServerLifetime): array of (string)` | Snapshot of retained listener-close failures, without consuming them |
+| function | `FinishShutdown(Lifetime: ServerLifetime): result of (boolean, string)` | Confirms caller-managed cleanup and disarms escalation after explicit group close |
 
 Import `Std.Tasks` for the group/token types and `Std.Net` for `Listener`.
 Foreign, fabricated, or wrong-kind handles raise a runtime diagnostic. Fallible configuration,
-ownership transfer, signal installation, and incomplete shutdown return `Error(string)`.
+ownership transfer, signal installation, and incomplete shutdown return `Result.Error(string)`.
 
 ## Ownership and stop ordering
 
@@ -42,7 +42,7 @@ Already admitted workers receive cooperative cancellation. Connections are still
 session workers: those workers must close them on success and failure. Stop notification does not
 prove that computation or a blocking host call has ended.
 
-`OwnListener` returns `Ok(false)` for a listener already owned by this lifetime. Transfer to a
+`OwnListener` returns `Result.Ok(false)` for a listener already owned by this lifetime. Transfer to a
 different lifetime, transfer after stop, and invalid/closed listeners return an error. After
 transfer, applications must not close the listener themselves; failure tests deliberately violate
 this rule to verify that cleanup diagnostics are retained.
@@ -54,7 +54,7 @@ Pass the remaining budget to every additional cleanup phase instead of granting 
 fresh full grace period. Before stop, `RemainingMillis` returns the configured grace period.
 After expiration it remains zero, including after repeated stop requests.
 
-`Ok(Failures)` from group close confirms completion, not success of each worker. Inspect these
+`Result.Ok(Failures)` from group close confirms completion, not success of each worker. Inspect these
 reports and `ShutdownErrors`. A timeout retains the group and its reports; keep the lifetime and
 retry close when completion becomes possible. `FinishShutdown` does not join, discard failures,
 force-close a group, or certify that application-owned writes have been committed.
@@ -63,7 +63,7 @@ After workers close, finish application-specific session notifications, durable-
 queue and log cleanup in the application's required order, using the same budget. Call
 `FinishShutdown` only when these phases have actually completed. It requires the creating task,
 a prior stop request, completed listener closure, and an explicitly closed work group.
-Successful and repeated completion return `Ok(true)`. Close errors remain available afterwards.
+Successful and repeated completion return `Result.Ok(true)`. Close errors remain available afterwards.
 
 Returning from the VM root or a fatal VM failure requests the same stop path for unfinished
 lifetimes. Returning without explicit `FinishShutdown` reports incomplete shutdown rather than
@@ -78,7 +78,7 @@ An embedded `fpas_vm::Vm` defaults to neither authority. Its host may explicitly
 `Vm::allow_process_lifecycle()` before running. Source-debugger instances do not authorize process
 control, and recording capture rejects `Std.Server` host effects.
 
-`ObserveSignals` returns `Ok(true)` for the first subscription and `Ok(false)` for a duplicate.
+`ObserveSignals` returns `Result.Ok(true)` for the first subscription and `Result.Ok(false)` for a duplicate.
 It reports installation conflicts rather than overwriting an existing Unix signal handler.
 The process-wide handler remains installed for the rest of the process; this is an explicit host
 ownership decision, not a temporary per-VM signal hook. Signals request lifecycle cancellation,

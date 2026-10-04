@@ -28,10 +28,7 @@ public type TuiSizePolicy = record
   // - `Vertical`: Vertical policy, alignment, or extent.
   public static function Create(Horizontal: TuiSizePolicyKind; Vertical: TuiSizePolicyKind): TuiSizePolicy;
   begin
-    return record
-      Horizontal := Horizontal;
-      Vertical := Vertical;
-    end record;
+    return TuiSizePolicy(Horizontal := Horizontal, Vertical := Vertical);
   end function;
 
   // Both axes fixed to preferred size.

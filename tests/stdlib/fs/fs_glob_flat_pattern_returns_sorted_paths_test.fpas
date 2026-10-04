@@ -7,35 +7,35 @@ uses Std.Test as Test;
 begin
   var Prefix: string := Test.ScratchDir() + '/glob-flat-';
   case Fs.WriteText(Prefix + 'b.txt', '') of
-    when Ok(_):
+    when Result.Ok(_):
       begin
         null;
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
         Test.Fail(Message);
       end;
   end case;
 
   case Fs.WriteText(Prefix + 'a.txt', '') of
-    when Ok(_):
+    when Result.Ok(_):
       begin
         null;
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
         Test.Fail(Message);
       end;
   end case;
 
   case Fs.Glob(Prefix + '*.txt') of
-    when Ok(Paths):
+    when Result.Ok(const Paths):
       begin
         Test.AssertEquals(2, Arrays.Length(Paths));
         Test.AssertEquals(Prefix + 'a.txt', Paths[0]);
         Test.AssertEquals(Prefix + 'b.txt', Paths[1]);
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
         Test.Fail(Message);
       end;

@@ -8,7 +8,7 @@ uses Std.Time as Time;
 uses Std.Tui as Tui;
 
 type TickModel = record
-  Inbox: channel of integer;
+  Inbox: channel of (integer);
   Ticks: integer;
   ShortestTick: integer;
   Started: integer;
@@ -24,12 +24,12 @@ begin
         // A far request that the background message below replaces.
         Cmd.RequestTick(600000);
         Next.Started := Time.MonotonicMillis();
-        var Inbox: channel of integer := State.Inbox;
-        Cmd.StartBackground(1, function(Token: Tasks.CancellationToken): result of boolean, string begin
+        var Inbox: channel of (integer) := State.Inbox;
+        Cmd.StartBackground(1, function(Token: Tasks.CancellationToken): Result of (boolean, string) begin
           return Tasks.SendWithCancellation(Inbox, 1, Token);
         end function);
       end;
-    when Tui.TuiMsg.Tick(Elapsed):
+    when Tui.TuiMsg.Tick(const Elapsed):
       begin
         Next.Ticks := State.Ticks + 1;
         if (State.ShortestTick < 0) or (Elapsed < State.ShortestTick) then
@@ -48,9 +48,11 @@ begin
           end;
         end if;
       end;
-    else
+    when Tui.TuiMsg.Key(_), Tui.TuiMsg.Pointer(_), Tui.TuiMsg.Resize(_), Tui.TuiMsg.FocusChanged(_, _), Tui.TuiMsg.Action(_, _), Tui.TuiMsg.TextChanged(_, _, _, _), Tui.TuiMsg.TextAreaChanged(_, _, _, _, _), Tui.TuiMsg.CheckChanged(_, _, _), Tui.TuiMsg.SelectionChanged(_, _, _), Tui.TuiMsg.ScrollChanged(_, _, _), Tui.TuiMsg.MenuChanged(_, _, _), Tui.TuiMsg.BackgroundFailed(_, _, _, _, _, _), Tui.TuiMsg.QuitRequested:
       begin
-        null;
+        begin
+          null;
+        end;
       end;
   end case;
 
@@ -69,14 +71,8 @@ begin
 end function;
 
 begin
-  var Inbox: channel of integer := Tasks.CreateChannel(1);
-  var Final: TickModel := Tui.TuiApplication.RunWithBackground(record
-    Inbox := Inbox;
-    Ticks := 0;
-    ShortestTick := -1;
-    Started := 0;
-    Replaced := false;
-  end record, Inbox, Update, UpdateMessage, View);
+  var Inbox: channel of (integer) := Tasks.CreateChannel(1);
+  var Final: TickModel := Tui.TuiApplication.RunWithBackground(TickModel(Inbox := Inbox, Ticks := 0, ShortestTick := -1, Started := 0, Replaced := false), Inbox, Update, UpdateMessage, View);
   Test.AssertTrue(Final.Replaced);
   Test.AssertEquals(3, Final.Ticks);
   // Every tick waited at least its requested delay.

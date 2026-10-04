@@ -1,11 +1,12 @@
 //! Extraction and qualification of persistent interfaces from analyzed units.
 
-use fpas_parser::{Decl, Expr, TypeBody, Unit, Visibility};
+use fpas_parser::{Decl, Unit, Visibility};
 use fpas_unit::interface as artifact;
 
 use crate::check;
 use crate::scope::canonical_symbol_name;
 
+use super::constants::ScalarConstants;
 use super::conversion::{
     InterfaceConversionError, ty_to_interface_reference, ty_to_interface_type,
 };
@@ -15,6 +16,7 @@ impl check::Checker {
     pub(super) fn extract_unit_interface(
         &self,
         unit: &Unit,
+        interfaces: &[artifact::UnitInterface],
     ) -> Result<artifact::UnitInterface, InterfaceConversionError> {
         let unit_name = unit.name.parts.join(".");
         let own_types: std::collections::HashSet<String> = unit
@@ -26,6 +28,7 @@ impl check::Checker {
             })
             .collect();
         let mut symbols = Vec::new();
+        let constants = ScalarConstants::collect(unit, interfaces, &self.import_aliases);
         for declaration in &unit.declarations {
             if declaration.visibility() == Visibility::Private {
                 continue;
@@ -41,38 +44,17 @@ impl check::Checker {
             } else {
                 ty_to_interface_reference(&symbol.ty)?
             };
-            apply_declared_metadata(declaration, &mut ty)?;
+            self.export_record_defaults(&mut ty, &constants)?;
             qualify_owned_type(&mut ty, &unit_name, &own_types);
             symbols.push(artifact::InterfaceSymbol {
                 name: name.to_string(),
                 qualified_name: format!("{unit_name}.{name}"),
                 ty,
-                kind: exported_symbol_kind(declaration),
+                kind: exported_symbol_kind(declaration, &constants),
             });
         }
         Ok(artifact::UnitInterface { unit_name, symbols }.canonicalized())
     }
-}
-
-fn apply_declared_metadata(
-    declaration: &Decl,
-    ty: &mut artifact::InterfaceType,
-) -> Result<(), InterfaceConversionError> {
-    let Decl::TypeDef(definition) = declaration else {
-        return Ok(());
-    };
-    if let (TypeBody::Record(declared), artifact::InterfaceType::Record(interface)) =
-        (&definition.body, ty)
-    {
-        for (field, declared_field) in interface.fields.iter_mut().zip(&declared.fields) {
-            field.default_value = declared_field
-                .default_value
-                .as_ref()
-                .map(interface_constant_value)
-                .transpose()?;
-        }
-    }
-    Ok(())
 }
 
 /// Return the declared source name of a top-level declaration.
@@ -86,10 +68,10 @@ pub(super) fn declaration_name(declaration: &Decl) -> &str {
     }
 }
 
-fn exported_symbol_kind(declaration: &Decl) -> artifact::SymbolKind {
+fn exported_symbol_kind(declaration: &Decl, constants: &ScalarConstants) -> artifact::SymbolKind {
     match declaration {
         Decl::Const(definition) => {
-            artifact::SymbolKind::Constant(constant_value(&definition.value))
+            artifact::SymbolKind::Constant(constants.named_value(&definition.name))
         }
         Decl::Var(_) => artifact::SymbolKind::Variable,
         Decl::MutableVar(_) => artifact::SymbolKind::MutableVariable,
@@ -97,40 +79,6 @@ fn exported_symbol_kind(declaration: &Decl) -> artifact::SymbolKind {
         Decl::Procedure(_) => artifact::SymbolKind::Procedure,
         Decl::TypeDef(_) => artifact::SymbolKind::Type,
     }
-}
-
-fn constant_value(expression: &Expr) -> Option<artifact::ConstantValue> {
-    match expression {
-        Expr::Integer(value, _) => Some(artifact::ConstantValue::Integer(*value)),
-        Expr::Real(value, _) => Some(artifact::ConstantValue::Real(value.to_bits())),
-        Expr::Bool(value, _) => Some(artifact::ConstantValue::Boolean(*value)),
-        Expr::Str(value, _) => Some(artifact::ConstantValue::String(value.clone())),
-        Expr::Paren(inner, _) => constant_value(inner),
-        Expr::UnaryOp {
-            op: fpas_parser::UnaryOp::Negate,
-            operand,
-            ..
-        } => match constant_value(operand)? {
-            artifact::ConstantValue::Integer(value) => {
-                value.checked_neg().map(artifact::ConstantValue::Integer)
-            }
-            artifact::ConstantValue::Real(bits) => Some(artifact::ConstantValue::Real(
-                (-f64::from_bits(bits)).to_bits(),
-            )),
-            _ => None,
-        },
-        _ => None,
-    }
-}
-
-fn interface_constant_value(
-    expression: &Expr,
-) -> Result<artifact::ConstantValue, InterfaceConversionError> {
-    constant_value(expression).ok_or_else(|| {
-        InterfaceConversionError::new(
-            "exported record field defaults must be scalar constant expressions",
-        )
-    })
 }
 
 fn qualify_owned_type(
@@ -154,6 +102,9 @@ fn qualify_owned_type(
             qualify_callable(callable, unit_name, own_types);
         }
         Record(record) => {
+            for argument in &mut record.type_arguments {
+                qualify_owned_type(argument, unit_name, own_types);
+            }
             // Transparent aliases retain their declaration owner, including event visibility.
             // Documentation: docs/pascal/language/types/type-aliases.md
             let owned = own_types.contains(&canonical_symbol_name(&record.name));
@@ -192,6 +143,9 @@ fn qualify_owned_type(
             }
         }
         Enum(enum_ty) => {
+            for argument in &mut enum_ty.type_arguments {
+                qualify_owned_type(argument, unit_name, own_types);
+            }
             enum_ty.name = qualify_owned_name(&enum_ty.name, unit_name, own_types);
             for variant in &mut enum_ty.variants {
                 for field in &mut variant.fields {
@@ -200,6 +154,12 @@ fn qualify_owned_type(
             }
         }
         Named(name) => *name = qualify_owned_name(name, unit_name, own_types),
+        artifact::InterfaceType::Applied(name, arguments) => {
+            *name = qualify_owned_name(name, unit_name, own_types);
+            for argument in arguments {
+                qualify_owned_type(argument, unit_name, own_types);
+            }
+        }
         GenericParameter(_, _) => {}
         _ => {}
     }

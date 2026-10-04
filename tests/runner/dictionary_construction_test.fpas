@@ -1,0 +1,37 @@
+program DictionaryConstructionTest;
+
+uses Std.Test as Test;
+uses Std.Dictionaries as Dictionaries;
+
+type Key = record
+  Value: integer;
+end record;
+
+mutable var Trace: integer := 0;
+
+function MarkKey(Step: integer): string;
+begin
+  Trace := Trace * 10 + Step;
+  return 'same';
+end function;
+
+function MarkValue(Step: integer): integer;
+begin
+  Trace := Trace * 10 + Step;
+  return Step;
+end function;
+
+begin
+  var Values: dict of (string, integer) := [MarkKey(1): MarkValue(2), MarkKey(3): MarkValue(4)];
+  var Keys: dict of (Key, integer) := [Key(Value := 1): 1, Key(Value := 2): 2, Key(Value := 1): 42];
+  var MappingKeys: dict of (dict of (string, integer), integer) := [['a': 1, 'b': 2]: 1, ['b': 2, 'a': 1]: 42];
+  Test.AssertEquals(1234, Trace);
+  Test.AssertEquals(1, Dictionaries.Length(Values));
+  Test.AssertEquals(4, Values['same']);
+  Test.AssertEquals(2, Dictionaries.Length(Keys));
+  Test.AssertEquals(42, Keys[Key(Value := 1)]);
+  Test.AssertTrue(Dictionaries.Keys(Keys) = [Key(Value := 1), Key(Value := 2)]);
+  Test.AssertEquals(1, Dictionaries.Length(MappingKeys));
+  Test.AssertEquals(42, MappingKeys[['a': 1, 'b': 2]]);
+  Test.AssertTrue(Values = ['same': 4]);
+end program;

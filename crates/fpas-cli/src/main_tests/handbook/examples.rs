@@ -46,10 +46,7 @@ fn documented_routine_imports_compile_and_handle_empty_and_boundary_inputs() {
         (
             "docs/pascal/language/error-handling/option.md",
             1,
-            "case FindIndex([], 1) of when Some(I): panic('unexpected match'); \
-             when None: Console.WriteLn('empty'); end case; \
-             case FindIndex([10, 20], 20) of when Some(I): Console.WriteLn(I); \
-             when None: panic('missing match'); end case;",
+            "case FindIndex([], 1) of when Option.Some(const I): panic('unexpected match'); when Option.None: Console.WriteLn('empty'); end case; case FindIndex([10, 20], 20) of when Option.Some(const I): Console.WriteLn(I); when Option.None: panic('missing match'); end case;",
             "empty\n1\n",
         ),
     ] {
@@ -70,11 +67,7 @@ fn documented_routine_imports_compile_and_handle_empty_and_boundary_inputs() {
 #[test]
 fn documented_task_waits_use_their_import_alias_and_preserve_result_types() {
     let path = "docs/pascal/language/concurrency/task-handles.md";
-    let routines = "const Data: integer := 7; \
-        function Compute(Value: integer): integer; begin return Value; end function; \
-        function ComputeSomething(Value: integer): integer; begin return Value; end function; \
-        function Connect(): result of boolean, string; begin return Ok(true); end function; \
-        function Serve(): result of boolean, string; begin return Ok(true); end function;";
+    let routines = "const Data: integer := 7; function Compute(Value: integer): integer; begin return Value; end function; function ComputeSomething(Value: integer): integer; begin return Value; end function; function Connect(): result of (boolean, string); begin return Result.Ok(true); end function; function Serve(): result of (boolean, string); begin return Result.Ok(true); end function;";
     for (index, declarations, before, after, expected) in [
         (0, false, "", "Console.WriteLn(Tasks.Wait(T));", "7\n"),
         (

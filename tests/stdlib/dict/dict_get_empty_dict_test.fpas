@@ -5,7 +5,7 @@ uses Std.Dictionaries as Dictionaries;
 uses Std.Options as Options;
 
 begin
-  var D: dict of string to integer := [:];
-  var R: option of integer := Dictionaries.Get(D, 'X');
+  var D: dict of (string, integer) := [:];
+  var R: Option of (integer) := Dictionaries.Get(D, 'X');
   Console.WriteLn(Options.IsNone(R));
 end program;

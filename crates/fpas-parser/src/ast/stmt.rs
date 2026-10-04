@@ -171,51 +171,20 @@ pub enum ForDirection {
     Downto,
 }
 
-/// One arm of a [`Stmt::Case`] statement.
+/// One pattern-selected statement or value-expression arm.
 #[derive(Debug, Clone, PartialEq)]
-pub struct CaseArm {
+pub struct CaseArm<Body = Stmt> {
     /// Labels that select this arm.
     pub labels: Vec<CaseLabel>,
     /// Optional condition evaluated after a label matches.
     pub guard: Option<Expr>,
-    /// Statement executed when a label and the optional guard match.
-    pub body: Stmt,
+    /// Statement or expression selected after a label and optional guard match.
+    pub body: Body,
     /// Source span of the complete case arm.
     pub span: Span,
 }
 
-/// Label that selects a [`CaseArm`].
-#[derive(Debug, Clone, PartialEq)]
-pub enum CaseLabel {
-    /// Classic value label: single value or range (`1`, `1..10`).
-    Value {
-        /// Single label expression or inclusive range start.
-        start: Expr,
-        /// Inclusive range end, or `None` for a single value.
-        end: Option<Expr>,
-        /// Source span of the complete label.
-        span: Span,
-    },
-    /// Destructure pattern for Result/Option: `Ok(Binding)`, `Error(Binding)`, `Some(Binding)`, `None`.
-    Destructure {
-        /// Result or option variant matched by the pattern.
-        variant: DestructureVariant,
-        /// Name bound to the wrapped value, when the variant carries one.
-        binding: Option<String>,
-        /// Source span of the complete pattern.
-        span: Span,
-    },
-}
-
-/// Result or option variant used by a destructuring case label.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum DestructureVariant {
-    /// Successful result containing a value.
-    Ok,
-    /// Failed result containing an error value.
-    Error,
-    /// Present option containing a value.
-    Some,
-    /// Empty option without a value.
-    None,
-}
+/// Pattern that selects a [`CaseArm`], shared with value-producing decisions.
+///
+/// **Documentation:** `docs/pascal/language/pattern-matching/README.md`.
+pub type CaseLabel = super::Pattern;

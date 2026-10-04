@@ -35,7 +35,7 @@ begin
 
   Console.WriteLn(('spawning ' + Conv.IntToStr(TaskCount)) + ' tasks');
   var Started: integer := Time.MonotonicMillis();
-  mutable var Tasks: array of task := [];
+  mutable var Tasks: array of (task) := [];
   for I: integer := 1 to TaskCount do
     begin
       Arrays.Push(Tasks, go Worker());

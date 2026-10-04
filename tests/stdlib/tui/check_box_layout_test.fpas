@@ -10,11 +10,11 @@ end record;
 
 function ViewCheck(State: CheckModel): Tui.TuiElement;
 begin
-  return Tui.TuiElementBuilders.MakeDesktop(Some(Tui.TuiControlId.Create(1)), [
-                                                                                Tui.TuiElementBuilders.MakePanel('Host', [
-                                                                                                                           Tui.TuiElementBuilders.MakeCheckBox(Tui.TuiControlId.Create(1), 'Flag', State.Checked, Tui.TuiAction.Create(9))
-                                                                                                                         ])
-                                                                              ]);
+  return Tui.TuiElementBuilders.MakeDesktop(Option.Some(Tui.TuiControlId.Create(1)), [
+                                                                                       Tui.TuiElementBuilders.MakePanel('Host', [
+                                                                                                                                  Tui.TuiElementBuilders.MakeCheckBox(Tui.TuiControlId.Create(1), 'Flag', State.Checked, Tui.TuiAction.Create(9))
+                                                                                                                                ])
+                                                                                     ]);
 end function;
 
 function UpdateCheck(State: CheckModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): CheckModel;
@@ -31,10 +31,7 @@ begin
   var CheckedSize: Tui.TuiMeasureResult := Tui.TuiMeasure(Tui.TuiElementBuilders.MakeCheckBox(Tui.TuiControlId.Create(1), 'Flag', true, Tui.TuiAction.Create(1)), Tui.TuiMeasureSpec.Unbounded());
   Test.AssertEquals(8, CheckedSize.Preferred.Width);
   mutable var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(24, 6));
-  mutable var Model: CheckModel := record
-    Checked := false;
-  end record;
-
+  mutable var Model: CheckModel := CheckModel(Checked := false);
   Model := App.RunIterations(Model, UpdateCheck, ViewCheck, 0, 0);
   Test.AssertTrue(Str.Contains(App.SurfaceSnapshot().LineAt(1), 'Flag'));
   App.InjectResizeForTest(Tui.TuiSize.Create(12, 4));

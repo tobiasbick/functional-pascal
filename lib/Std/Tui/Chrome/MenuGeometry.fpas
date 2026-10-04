@@ -15,7 +15,7 @@ public type TuiMenuPopup = record
 end record;
 
 function TuiMenuRootItemX(
-  Nodes: array of MenuNode.TuiMenuNode;
+  Nodes: array of (MenuNode.TuiMenuNode);
   BarBounds: Rect.TuiRect;
   Target: MenuNode.TuiMenuNodeId
 ): integer;
@@ -24,11 +24,11 @@ begin
   for Index: integer := 0 to Arrays.Length(Nodes) - 1 do
     begin
       case MenuQuery.TuiMenuNodeParent(Nodes[Index]) of
-        when Some(Parent):
+        when Option.Some(const Parent):
           begin
             null;
           end;
-        when None:
+        when Option.None:
           begin
             if MenuQuery.TuiMenuNodeIdOf(Nodes[Index]).Value = Target.Value then
               begin
@@ -46,7 +46,7 @@ begin
 end function;
 
 function TuiMenuChildRow(
-  Nodes: array of MenuNode.TuiMenuNode;
+  Nodes: array of (MenuNode.TuiMenuNode);
   Parent: MenuNode.TuiMenuNodeId;
   Target: MenuNode.TuiMenuNodeId
 ): integer;
@@ -54,7 +54,7 @@ begin
   mutable var Row: integer := 0;
   for Index: integer := 0 to Arrays.Length(Nodes) - 1 do
     begin
-      if MenuQuery.TuiMenuHasParent(Nodes[Index], Some(Parent)) then
+      if MenuQuery.TuiMenuHasParent(Nodes[Index], Option.Some(Parent)) then
         begin
           if MenuQuery.TuiMenuNodeIdOf(Nodes[Index]).Value = Target.Value then
             begin
@@ -71,22 +71,22 @@ begin
   return 0;
 end function;
 
-function TuiMenuPopupSize(Nodes: array of MenuNode.TuiMenuNode; Parent: MenuNode.TuiMenuNodeId): Rect.TuiRect;
+function TuiMenuPopupSize(Nodes: array of (MenuNode.TuiMenuNode); Parent: MenuNode.TuiMenuNodeId): Rect.TuiRect;
 begin
   mutable var Width: integer := 4;
   mutable var Height: integer := 2;
   for Index: integer := 0 to Arrays.Length(Nodes) - 1 do
     begin
-      if MenuQuery.TuiMenuHasParent(Nodes[Index], Some(Parent)) then
+      if MenuQuery.TuiMenuHasParent(Nodes[Index], Option.Some(Parent)) then
         begin
           Height := Height + 1;
           mutable var ContentWidth: integer := Console.DisplayWidth(MenuQuery.TuiMenuNodeText(Nodes[Index]));
           case MenuQuery.TuiMenuNodeShortcut(Nodes[Index]) of
-            when Some(Shortcut):
+            when Option.Some(const Shortcut):
               begin
                 ContentWidth := (ContentWidth + Console.DisplayWidth(Shortcut.Display)) + 2;
               end;
-            when None:
+            when Option.None:
               begin
                 null;
               end;
@@ -111,10 +111,10 @@ begin
   return Rect.TuiRect.Create(0, 0, Width, Height);
 end function;
 
-function TuiMenuOpenParents(Nodes: array of MenuNode.TuiMenuNode; State: MenuNode.TuiMenuState): array of MenuNode.TuiMenuNodeId;
+function TuiMenuOpenParents(Nodes: array of (MenuNode.TuiMenuNode); State: MenuNode.TuiMenuState): array of (MenuNode.TuiMenuNodeId);
 begin
-  mutable var Reversed: array of MenuNode.TuiMenuNodeId := [];
-  mutable var Opened: array of MenuNode.TuiMenuNodeId := [];
+  mutable var Reversed: array of (MenuNode.TuiMenuNodeId) := [];
+  mutable var Opened: array of (MenuNode.TuiMenuNodeId) := [];
   if not State.Open then
     begin
       return [];
@@ -122,18 +122,18 @@ begin
   end if;
 
   case State.Active of
-    when Some(Active):
+    when Option.Some(const Active):
       begin
         mutable var Current: MenuNode.TuiMenuNodeId := Active;
         mutable var CurrentIndex: integer := MenuQuery.TuiMenuFind(Nodes, Current);
         if not MenuQuery.TuiMenuNodeIsSubmenu(Nodes[CurrentIndex]) then
           begin
             case MenuQuery.TuiMenuNodeParent(Nodes[CurrentIndex]) of
-              when Some(Parent):
+              when Option.Some(const Parent):
                 begin
                   Current := Parent;
                 end;
-              when None:
+              when Option.None:
                 begin
                   null;
                 end;
@@ -147,11 +147,11 @@ begin
             Arrays.Push(Reversed, Current);
             CurrentIndex := MenuQuery.TuiMenuFind(Nodes, Current);
             case MenuQuery.TuiMenuNodeParent(Nodes[CurrentIndex]) of
-              when Some(Parent):
+              when Option.Some(const Parent):
                 begin
                   Current := Parent;
                 end;
-              when None:
+              when Option.None:
                 begin
                   Remaining := 0;
                 end;
@@ -159,7 +159,7 @@ begin
           end;
         end while;
       end;
-    when None:
+    when Option.None:
       begin
         null;
       end;
@@ -183,11 +183,11 @@ end function;
 // - `BarBounds`: Arranged bounds of the menu bar.
 // - `TerminalBounds`: Bounds of the terminal viewport.
 public function TuiMenuPopupGeometry(
-  Nodes: array of MenuNode.TuiMenuNode;
+  Nodes: array of (MenuNode.TuiMenuNode);
   State: MenuNode.TuiMenuState;
   BarBounds: Rect.TuiRect;
   TerminalBounds: Rect.TuiRect
-): array of TuiMenuPopup;
+): array of (TuiMenuPopup);
 begin
   mutable var PopupBounds: Rect.TuiRect := TerminalBounds;
   if PopupBounds.Width > 2 then
@@ -201,8 +201,8 @@ begin
       PopupBounds.Height := PopupBounds.Height - 1;
     end;
   end if;
-  var Parents: array of MenuNode.TuiMenuNodeId := TuiMenuOpenParents(Nodes, State);
-  mutable var Popups: array of TuiMenuPopup := [];
+  var Parents: array of (MenuNode.TuiMenuNodeId) := TuiMenuOpenParents(Nodes, State);
+  mutable var Popups: array of (TuiMenuPopup) := [];
   for Index: integer := 0 to Arrays.Length(Parents) - 1 do
     begin
       var Size: Rect.TuiRect := TuiMenuPopupSize(Nodes, Parents[Index]);
@@ -248,10 +248,7 @@ begin
         end;
       end if;
 
-      Arrays.Push(Popups, record
-        Parent := Parents[Index];
-        Bounds := Rect.TuiRect.Create(X, Y, Size.Width, Size.Height);
-      end record);
+      Arrays.Push(Popups, TuiMenuPopup(Parent := Parents[Index], Bounds := Rect.TuiRect.Create(X, Y, Size.Width, Size.Height)));
     end;
   end for;
 

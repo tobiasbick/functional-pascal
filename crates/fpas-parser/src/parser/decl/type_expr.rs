@@ -1,9 +1,13 @@
+//! Canonical parenthesized type applications and callable annotations.
+//!
+//! **Documentation:** `docs/pascal/language/types/generics.md`.
+
 use super::super::Parser;
 use crate::ast::*;
-use fpas_diagnostics::codes::PARSE_EXPECTED_TOKEN;
 use fpas_lexer::Token;
 
 impl Parser {
+    /// Parse one type annotation within the shared nesting budget.
     pub(crate) fn parse_type_expr(&mut self) -> TypeExpr {
         self.with_nesting(Self::parse_type_expr_inner)
     }
@@ -14,21 +18,27 @@ impl Parser {
                 let start = self.current_span();
                 self.advance();
                 self.expect(&Token::Of);
+                self.expect_type_argument_list();
                 let inner = self.parse_type_expr();
+                self.expect(&Token::RParen);
                 TypeExpr::Array(Box::new(inner), self.span_from(start))
             }
             Token::Channel => {
                 let start = self.current_span();
                 self.advance();
                 self.expect(&Token::Of);
+                self.expect_type_argument_list();
                 let inner = self.parse_type_expr();
+                self.expect(&Token::RParen);
                 TypeExpr::Channel(Box::new(inner), self.span_from(start))
             }
             Token::Task => {
                 let start = self.current_span();
                 self.advance();
                 if self.eat(&Token::Of) {
+                    self.expect_type_argument_list();
                     let inner = self.parse_type_expr();
+                    self.expect(&Token::RParen);
                     return TypeExpr::Task(Box::new(inner), self.span_from(start));
                 }
                 // A bare `task` infers its result type from the initializer's spawned call.
@@ -37,6 +47,7 @@ impl Parser {
                         parts: vec!["task".to_owned()],
                         span: start,
                     },
+                    arguments: Vec::new(),
                     span: start,
                 }
             }
@@ -69,9 +80,11 @@ impl Parser {
                 let start = self.current_span();
                 self.advance();
                 self.expect(&Token::Of);
+                self.expect_type_argument_list();
                 let ok_type = self.parse_type_expr();
                 self.expect(&Token::Comma);
                 let err_type = self.parse_type_expr();
+                self.expect(&Token::RParen);
                 TypeExpr::Result {
                     ok_type: Box::new(ok_type),
                     err_type: Box::new(err_type),
@@ -82,7 +95,9 @@ impl Parser {
                 let start = self.current_span();
                 self.advance();
                 self.expect(&Token::Of);
+                self.expect_type_argument_list();
                 let inner_type = self.parse_type_expr();
+                self.expect(&Token::RParen);
                 TypeExpr::Option {
                     inner_type: Box::new(inner_type),
                     span: self.span_from(start),
@@ -92,9 +107,11 @@ impl Parser {
                 let start = self.current_span();
                 self.advance();
                 self.expect(&Token::Of);
+                self.expect_type_argument_list();
                 let key_type = self.parse_type_expr();
-                self.expect(&Token::To);
+                self.expect(&Token::Comma);
                 let value_type = self.parse_type_expr();
+                self.expect(&Token::RParen);
                 TypeExpr::Dict {
                     key_type: Box::new(key_type),
                     value_type: Box::new(value_type),
@@ -105,77 +122,33 @@ impl Parser {
         }
     }
 
+    fn expect_type_argument_list(&mut self) {
+        if !self.eat(&Token::LParen) {
+            self.error_with_code(
+                fpas_diagnostics::codes::PARSE_EXPECTED_TOKEN,
+                "Type arguments after `of` require parentheses",
+                "Write `array of (integer)`, `Result of (integer, string)`, or `dict of (string, integer)`.",
+                self.current_span(),
+            );
+        }
+    }
+
     fn parse_named_type_expr(&mut self) -> TypeExpr {
         let start = self.current_span();
         let qid = self.parse_qualified_id();
-        if self.check(&Token::Of) {
-            let span = self.current_span();
-            self.error_with_code(
-                PARSE_EXPECTED_TOKEN,
-                "User-defined generic type arguments (`Type of T`) are not supported. Use built-in generic types: `array of T`, `option of T`, `result of T, E`.",
-                "Remove the `of ...` part, or use a built-in generic type.",
-                span,
-            );
-            // consume `of` and the following type expression to recover
-            self.advance();
-            self.parse_type_expr();
+        let mut arguments = Vec::new();
+        if self.eat(&Token::Of) {
+            self.expect_type_argument_list();
+            arguments.push(self.parse_type_expr());
             while self.eat(&Token::Comma) {
-                self.parse_type_expr();
+                arguments.push(self.parse_type_expr());
             }
+            self.expect(&Token::RParen);
         }
         TypeExpr::Named {
             id: qid,
+            arguments,
             span: self.span_from(start),
         }
-    }
-
-    /// Parse optional generic type parameters: `<T>`, `<T: Comparable>`, `<A, B>`.
-    /// Returns an empty vec if no `<` follows.
-    ///
-    /// **Documentation:** `docs/pascal/language/types/generics.md` (Constraints)
-    pub(crate) fn parse_type_params(&mut self) -> Vec<crate::TypeParam> {
-        if !self.eat(&Token::Less) {
-            return Vec::new();
-        }
-        let mut params = Vec::new();
-        params.push(self.parse_single_type_param());
-        while self.eat(&Token::Comma) {
-            params.push(self.parse_single_type_param());
-        }
-        self.expect(&Token::Greater);
-        params
-    }
-
-    /// Parse a single type parameter: `T` or `T: Constraint`.
-    fn parse_single_type_param(&mut self) -> crate::TypeParam {
-        let (name, _) = self
-            .expect_ident()
-            .unwrap_or_else(|| self.error_ident(self.current_span()));
-        let constraint = if self.eat(&Token::Colon) {
-            let constraint_name = match self.current_token() {
-                Token::Comparable => "Comparable",
-                Token::Numeric => "Numeric",
-                Token::Printable => "Printable",
-                _ => {
-                    let span = self.current_span();
-                    self.error_with_code(
-                        PARSE_EXPECTED_TOKEN,
-                        "Expected generic constraint `Comparable`, `Numeric`, or `Printable`",
-                        "Use one of the supported generic constraints.",
-                        span,
-                    );
-                    return crate::TypeParam {
-                        name,
-                        constraint: None,
-                    };
-                }
-            }
-            .to_owned();
-            self.advance();
-            Some(constraint_name)
-        } else {
-            None
-        };
-        crate::TypeParam { name, constraint }
     }
 }

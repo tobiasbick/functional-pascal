@@ -12,7 +12,7 @@ begin
   Test.AssertTrue(Results.IsError(Server.CreateLifetime(86400001, false)));
   var Life: Server.ServerLifetime := Results.Unwrap(Server.CreateLifetime(20, false));
   var Group: Tasks.TaskGroup := Server.GetWorkGroup(Life);
-  var Gate: channel of boolean := Tasks.CreateChannel(1);
+  var Gate: channel of (boolean) := Tasks.CreateChannel(1);
   var Worker: task := Tasks.StartTaskInGroup(Group, function(Token: Tasks.CancellationToken): boolean begin
     return Results.Unwrap(Tasks.Receive(Gate));
   end function);

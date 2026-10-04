@@ -34,7 +34,7 @@ end function;
 // - `Line`: Zero-based logical line index.
 public function TuiTextAreaLineText(Text: string; Line: integer): string;
 begin
-  var Lines: array of string := Str.Split(Text, Str.Chr(10));
+  var Lines: array of (string) := Str.Split(Text, Str.Chr(10));
   if (Line < 0) or (Line >= Arrays.Length(Lines)) then
     begin
       panic('Tui text area line must be within its text');
@@ -44,7 +44,7 @@ begin
   return Lines[Line];
 end function;
 
-function TuiTextAreaLineStartAt(Lines: array of string; Line: integer): integer;
+function TuiTextAreaLineStartAt(Lines: array of (string); Line: integer): integer;
 begin
   mutable var Target: integer := Line;
   if Target < 0 then
@@ -80,7 +80,7 @@ begin
       panic('Tui text area caret must be within its text');
     end;
   end if;
-  var Lines: array of string := Str.Split(Text, Str.Chr(10));
+  var Lines: array of (string) := Str.Split(Text, Str.Chr(10));
   mutable var LineStart: integer := 0;
   for Line: integer := 0 to Arrays.Length(Lines) - 1 do
     begin
@@ -88,12 +88,7 @@ begin
       if Caret <= LineEnd then
         begin
           var Prefix: string := Str.Substring(Lines[Line], 0, Caret - LineStart);
-          return record
-            Line := Line;
-            LineStart := LineStart;
-            LineEnd := LineEnd;
-            DisplayColumn := Console.DisplayWidth(Prefix);
-          end record;
+          return TuiTextAreaPosition(Line := Line, LineStart := LineStart, LineEnd := LineEnd, DisplayColumn := Console.DisplayWidth(Prefix));
         end;
       end if;
 
@@ -118,7 +113,7 @@ begin
       TargetColumn := 0;
     end;
   end if;
-  var Lines: array of string := Str.Split(Text, Str.Chr(10));
+  var Lines: array of (string) := Str.Split(Text, Str.Chr(10));
   if (Line < 0) or (Line >= Arrays.Length(Lines)) then
     begin
       panic('Tui text area line must be within its text');
@@ -162,7 +157,7 @@ end function;
 // - `Text`: Text processed or displayed by the operation.
 public function TuiTextAreaContentSize(Text: string): Size.TuiSize;
 begin
-  var Lines: array of string := Str.Split(Text, Str.Chr(10));
+  var Lines: array of (string) := Str.Split(Text, Str.Chr(10));
   mutable var Width: integer := 1;
   for Index: integer := 0 to Arrays.Length(Lines) - 1 do
     begin

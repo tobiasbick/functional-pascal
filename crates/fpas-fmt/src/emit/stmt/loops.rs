@@ -1,6 +1,6 @@
 //! Control-flow statements (`if`, `case`, loops).
 
-use fpas_parser::{CaseArm, CaseLabel, DestructureVariant, ForDirection, Stmt};
+use fpas_parser::{CaseArm, CaseLabel, ForDirection, Stmt};
 
 use crate::comments::{CommentMap, emit_leading_comments, stmt_start};
 
@@ -98,40 +98,62 @@ pub(super) fn emit_case_arm(emitter: &mut Emitter, arm: &CaseArm, comments: &Com
     emit_statement_body(emitter, &arm.body, comments);
 }
 
-pub(super) fn emit_case_labels(emitter: &mut Emitter, labels: &[CaseLabel], comments: &CommentMap) {
+pub(in crate::emit) fn emit_case_labels(
+    emitter: &mut Emitter,
+    labels: &[CaseLabel],
+    comments: &CommentMap,
+) {
     for (index, label) in labels.iter().enumerate() {
         if index > 0 {
             emitter.write(", ");
         }
-        emit_case_label(emitter, label, comments);
+        emit_pattern(emitter, label, comments);
     }
 }
 
-pub(super) fn emit_case_label(emitter: &mut Emitter, label: &CaseLabel, comments: &CommentMap) {
-    match label {
-        CaseLabel::Value { start, end, .. } => {
+pub(in crate::emit) fn emit_pattern(
+    emitter: &mut Emitter,
+    pattern: &fpas_parser::Pattern,
+    comments: &CommentMap,
+) {
+    use fpas_parser::{DesignatorPart, Pattern};
+    match pattern {
+        Pattern::Binding { name, .. } => {
+            emitter.write("const ");
+            emitter.write(name);
+        }
+        Pattern::Wildcard(_) => emitter.write("_"),
+        Pattern::Value { start, end, .. } => {
             emit_expr(emitter, start, 0, comments);
-            if let Some(end_expr) = end {
+            if let Some(end) = end {
                 emitter.write("..");
-                emit_expr(emitter, end_expr, 0, comments);
+                emit_expr(emitter, end, 0, comments);
             }
         }
-        CaseLabel::Destructure {
-            variant, binding, ..
+        Pattern::Variant {
+            designator,
+            arguments,
+            parenthesized,
+            ..
         } => {
-            let name = match variant {
-                DestructureVariant::Ok => "Ok",
-                DestructureVariant::Error => "Error",
-                DestructureVariant::Some => "Some",
-                DestructureVariant::None => "None",
-            };
-            emitter.write(name);
-            if *variant == DestructureVariant::None {
-                return;
+            for (index, part) in designator.parts.iter().enumerate() {
+                if index > 0 {
+                    emitter.write(".");
+                }
+                if let DesignatorPart::Ident(name, _) = part {
+                    emitter.write(name);
+                }
             }
-            emitter.write("(");
-            emitter.write(binding.as_deref().unwrap_or("_"));
-            emitter.write(")");
+            if *parenthesized {
+                emitter.write("(");
+                for (index, argument) in arguments.iter().enumerate() {
+                    if index > 0 {
+                        emitter.write(", ");
+                    }
+                    emit_pattern(emitter, argument, comments);
+                }
+                emitter.write(")");
+            }
         }
     }
 }

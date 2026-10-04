@@ -5,15 +5,15 @@ uses Std.Results as Results;
 uses Std.Test as Test;
 
 begin
-  var Numbers: channel of integer := Tasks.CreateChannel(2);
-  var Words: channel of string := Tasks.CreateChannel(2);
+  var Numbers: channel of (integer) := Tasks.CreateChannel(2);
+  var Words: channel of (string) := Tasks.CreateChannel(2);
   discard Tasks.Send(Numbers, 42);
   discard Tasks.Send(Words, 'retained');
   mutable var Seen: integer := 0;
-  var First: Tasks.WaitCase := Tasks.ReceiveCase(Numbers, procedure(Outcome: result of integer, string) begin
+  var First: Tasks.WaitCase := Tasks.ReceiveCase(Numbers, procedure(Outcome: Result of (integer, string)) begin
     Seen := Results.Unwrap(Outcome);
   end procedure);
-  var Second: Tasks.WaitCase := Tasks.ReceiveCase(Words, procedure(Outcome: result of string, string) begin
+  var Second: Tasks.WaitCase := Tasks.ReceiveCase(Words, procedure(Outcome: Result of (string, string)) begin
     panic('losing callback ran');
   end procedure);
   Test.AssertEquals(0, Tasks.Select([First, Second]));

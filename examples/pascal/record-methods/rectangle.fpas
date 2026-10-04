@@ -37,16 +37,8 @@ type Rectangle = record
 end record;
 
 begin
-  var R: Rectangle := record
-    W := 5;
-    H := 3;
-  end record;
-
+  var R: Rectangle := Rectangle(W := 5, H := 3);
   R.Describe();
-  var S: Rectangle := record
-    W := 4;
-    H := 4;
-  end record;
-
+  var S: Rectangle := Rectangle(W := 4, H := 4);
   S.Describe();
 end program;

@@ -11,14 +11,14 @@ uses Std.Tui.Geometry.Rect as Rect;
 uses Std.Tui.Ids.ControlId as ControlId;
 uses Std.Tui.Rendering.Canvas as Canvas2;
 
-function TuiStatusFocused(Focused: option of ControlId.TuiControlId; Id: ControlId.TuiControlId): boolean;
+function TuiStatusFocused(Focused: Option of (ControlId.TuiControlId); Id: ControlId.TuiControlId): boolean;
 begin
   case Focused of
-    when Some(Value):
+    when Option.Some(const Value):
       begin
         return Value.Value = Id.Value;
       end;
-    when None:
+    when Option.None:
       begin
         return false;
       end;
@@ -47,8 +47,8 @@ end function;
 public procedure TuiPaintStatusLine(
   Canvas: Canvas2.TuiCanvas;
   Bounds: Rect.TuiRect;
-  Items: array of StatusItem.TuiStatusItem;
-  Focused: option of ControlId.TuiControlId
+  Items: array of (StatusItem.TuiStatusItem);
+  Focused: Option of (ControlId.TuiControlId)
 );
 begin
   Canvas.FillRect(Bounds, Cell.TuiCell.Create(' ', StyleRole.TuiStyleRole.StatusNormal));
@@ -62,17 +62,17 @@ begin
       end if;
 
       case Items[Index] of
-        when StatusItem.TuiStatusItem.Hint(Text):
+        when StatusItem.TuiStatusItem.Hint(const Text):
           begin
             X := TuiStatusWrite(Canvas, X, Bounds.Y, Text, StyleRole.TuiStyleRole.StatusNormal);
           end;
-        when StatusItem.TuiStatusItem.KeyHint(KeyText, Text):
+        when StatusItem.TuiStatusItem.KeyHint(const KeyText, const Text):
           begin
             X := TuiStatusWrite(Canvas, X, Bounds.Y, KeyText, StyleRole.TuiStyleRole.StatusShortcut);
             X := TuiStatusWrite(Canvas, X, Bounds.Y, ' ', StyleRole.TuiStyleRole.StatusNormal);
             X := TuiStatusWrite(Canvas, X, Bounds.Y, Text, StyleRole.TuiStyleRole.StatusNormal);
           end;
-        when StatusItem.TuiStatusItem.Command(Id, Text, Action, Enabled):
+        when StatusItem.TuiStatusItem.Command(const Id, const Text, const Action, const Enabled):
           begin
             mutable var Role: StyleRole.TuiStyleRole := StyleRole.TuiStyleRole.StatusNormal;
             if not Enabled then

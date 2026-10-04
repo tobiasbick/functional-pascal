@@ -3,13 +3,13 @@ program T;
 uses Std.Console as Console;
 uses Std.Options as Options;
 
-function FallbackNinetyNine(): option of integer;
+function FallbackNinetyNine(): Option of (integer);
 begin
-  return Some(99);
+  return Option.Some(99);
 end function;
 
 begin
-  var O: option of integer := Some(7);
-  var M: option of integer := Options.OrElse(O, FallbackNinetyNine);
+  var O: Option of (integer) := Option.Some(7);
+  var M: Option of (integer) := Options.OrElse(O, FallbackNinetyNine);
   Console.WriteLn(Options.Unwrap(M));
 end program;

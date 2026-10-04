@@ -8,7 +8,7 @@ uses Std.Tui as Tui;
 type ModalModel = record
   Focus: integer;
   ConfirmOpen: boolean;
-  Actions: array of integer;
+  Actions: array of (integer);
   PointerHits: integer;
 end record;
 
@@ -19,14 +19,7 @@ end function;
 
 function MakeKey(Kind: Tui.TuiKeyKind; Character: string): Tui.TuiKeyEvent;
 begin
-  return record
-    kind := Kind;
-    ch := Character;
-    shift := false;
-    ctrl := false;
-    alt := false;
-    meta := false;
-  end record;
+  return Tui.TuiKeyEvent(kind := Kind, ch := Character, shift := false, ctrl := false, alt := false, meta := false);
 end function;
 
 function FindGlyph(Snapshot: Tui.TuiSurfaceSnapshot; Glyph: string): Tui.TuiPoint;
@@ -60,81 +53,62 @@ begin
     end;
   end if;
 
-  return Tui.TuiElementBuilders.MakeDesktop(Some(Tui.TuiControlId.Create(State.Focus)), [
-                                                                                          Tui.TuiElementBuilders.MakePanel('Host', [
-                                                                                                                                     Tui.TuiElementBuilders.MakeButton(Tui.TuiControlId.Create(1), 'Save', Tui.TuiAction.Create(10))
-                                                                                                                                   ]),
-                                                                                          Overlay
-                                                                                        ]);
+  return Tui.TuiElementBuilders.MakeDesktop(Option.Some(Tui.TuiControlId.Create(State.Focus)), [
+                                                                                                 Tui.TuiElementBuilders.MakePanel('Host', [
+                                                                                                                                            Tui.TuiElementBuilders.MakeButton(Tui.TuiControlId.Create(1), 'Save', Tui.TuiAction.Create(10))
+                                                                                                                                          ]),
+                                                                                                 Overlay
+                                                                                               ]);
 end function;
 
 function UpdateModal(State: ModalModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): ModalModel;
 begin
   Cmd.Set(Tui.TuiCmd.NoCommand);
   case Msg of
-    when Tui.TuiMsg.FocusChanged(Previous, Current):
+    when Tui.TuiMsg.FocusChanged(const Previous, const Current):
       begin
         case Current of
-          when Some(Id):
+          when Option.Some(const Id):
             begin
-              return record
-                Focus := Id.Value;
-                ConfirmOpen := State.ConfirmOpen;
-                Actions := State.Actions;
-                PointerHits := State.PointerHits;
-              end record;
+              return ModalModel(Focus := Id.Value, ConfirmOpen := State.ConfirmOpen, Actions := State.Actions, PointerHits := State.PointerHits);
             end;
-          when None:
+          when Option.None:
             begin
               return State;
             end;
         end case;
       end;
-    when Tui.TuiMsg.Action(Source, Action):
+    when Tui.TuiMsg.Action(const Source, const Action):
       begin
         if Action.Value = 10 then
           begin
-            return record
-              Focus := 3;
-              ConfirmOpen := true;
-              Actions := Arrays.Concat(State.Actions, [Action.Value]);
-              PointerHits := State.PointerHits;
-            end record;
+            return ModalModel(Focus := 3, ConfirmOpen := true, Actions := Arrays.Concat(State.Actions, [
+                                                                                                         Action.Value
+                                                                                                       ]), PointerHits := State.PointerHits);
           end;
         end if;
 
-        return record
-          Focus := 1;
-          ConfirmOpen := false;
-          Actions := Arrays.Concat(State.Actions, [Action.Value]);
-          PointerHits := State.PointerHits;
-        end record;
+        return ModalModel(Focus := 1, ConfirmOpen := false, Actions := Arrays.Concat(State.Actions, [
+                                                                                                      Action.Value
+                                                                                                    ]), PointerHits := State.PointerHits);
       end;
-    when Tui.TuiMsg.Pointer(Pointer):
+    when Tui.TuiMsg.Pointer(const Pointer):
       begin
-        return record
-          Focus := State.Focus;
-          ConfirmOpen := State.ConfirmOpen;
-          Actions := State.Actions;
-          PointerHits := State.PointerHits + 1;
-        end record;
+        return ModalModel(Focus := State.Focus, ConfirmOpen := State.ConfirmOpen, Actions := State.Actions, PointerHits := State.PointerHits +
+                                                                                                                           1);
       end;
-    else
+    when Tui.TuiMsg.Started, Tui.TuiMsg.Key(_), Tui.TuiMsg.Tick(_), Tui.TuiMsg.Resize(_), Tui.TuiMsg.TextChanged(_, _, _, _), Tui.TuiMsg.TextAreaChanged(_, _, _, _, _), Tui.TuiMsg.CheckChanged(_, _, _), Tui.TuiMsg.SelectionChanged(_, _, _), Tui.TuiMsg.ScrollChanged(_, _, _), Tui.TuiMsg.MenuChanged(_, _, _), Tui.TuiMsg.BackgroundFailed(_, _, _, _, _, _), Tui.TuiMsg.QuitRequested:
       begin
-        return State;
+        begin
+          return State;
+        end;
       end;
   end case;
 end function;
 
 begin
   mutable var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(40, 12));
-  mutable var Model: ModalModel := record
-    Focus := 1;
-    ConfirmOpen := false;
-    Actions := [];
-    PointerHits := 0;
-  end record;
-
+  mutable var Model: ModalModel := ModalModel(Focus := 1, ConfirmOpen := false, Actions := [], PointerHits := 0);
   Model := App.RunIterations(Model, UpdateModal, ViewModal, 0, 0);
   var SaveAt: Tui.TuiPoint := FindGlyph(App.SurfaceSnapshot(), 'Save');
   App.InjectPointerForTest(MakePointer(Tui.TuiPointerAction.Down, SaveAt.X, SaveAt.Y));

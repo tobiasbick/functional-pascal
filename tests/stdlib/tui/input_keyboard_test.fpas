@@ -12,14 +12,7 @@ end record;
 
 function MakeKey(Kind: Tui.TuiKeyKind; Ctrl: boolean): Tui.TuiKeyEvent;
 begin
-  return record
-    kind := Kind;
-    ch := '';
-    shift := false;
-    ctrl := Ctrl;
-    alt := false;
-    meta := false;
-  end record;
+  return Tui.TuiKeyEvent(kind := Kind, ch := '', shift := false, ctrl := Ctrl, alt := false, meta := false);
 end function;
 
 function ViewInput(State: InputKeyboardModel): Tui.TuiElement;
@@ -34,34 +27,27 @@ begin
     end;
   end if;
 
-  return Tui.TuiElementBuilders.MakeDesktop(Some(Tui.TuiControlId.Create(1)), [Input]);
+  return Tui.TuiElementBuilders.MakeDesktop(Option.Some(Tui.TuiControlId.Create(1)), [Input]);
 end function;
 
 function UpdateInput(State: InputKeyboardModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): InputKeyboardModel;
 begin
   Cmd.Set(Tui.TuiCmd.NoCommand);
   case Msg of
-    when Tui.TuiMsg.TextChanged(Source, Action, Text, Caret):
+    when Tui.TuiMsg.TextChanged(const Source, const Action, const Text, const Caret):
       begin
-        return record
-          Text := Text;
-          Caret := Caret;
-          UseHistory := State.UseHistory;
-          KeyHits := State.KeyHits;
-        end record;
+        return InputKeyboardModel(Text := Text, Caret := Caret, UseHistory := State.UseHistory, KeyHits := State.KeyHits);
       end;
-    when Tui.TuiMsg.Key(Key):
+    when Tui.TuiMsg.Key(const Key):
       begin
-        return record
-          Text := State.Text;
-          Caret := State.Caret;
-          UseHistory := State.UseHistory;
-          KeyHits := State.KeyHits + 1;
-        end record;
+        return InputKeyboardModel(Text := State.Text, Caret := State.Caret, UseHistory := State.UseHistory, KeyHits := State.KeyHits +
+                                                                                                                       1);
       end;
-    else
+    when Tui.TuiMsg.Started, Tui.TuiMsg.Pointer(_), Tui.TuiMsg.Tick(_), Tui.TuiMsg.Resize(_), Tui.TuiMsg.FocusChanged(_, _), Tui.TuiMsg.Action(_, _), Tui.TuiMsg.TextAreaChanged(_, _, _, _, _), Tui.TuiMsg.CheckChanged(_, _, _), Tui.TuiMsg.SelectionChanged(_, _, _), Tui.TuiMsg.ScrollChanged(_, _, _), Tui.TuiMsg.MenuChanged(_, _, _), Tui.TuiMsg.BackgroundFailed(_, _, _, _, _, _), Tui.TuiMsg.QuitRequested:
       begin
-        return State;
+        begin
+          return State;
+        end;
       end;
   end case;
 end function;
@@ -79,39 +65,21 @@ end function;
 
 begin
   mutable var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(20, 2));
-  mutable var Model: InputKeyboardModel := record
-    Text := 'alpha beta';
-    Caret := 10;
-    UseHistory := false;
-    KeyHits := 0;
-  end record;
-
+  mutable var Model: InputKeyboardModel := InputKeyboardModel(Text := 'alpha beta', Caret := 10, UseHistory := false, KeyHits := 0);
   Model := App.RunIterations(Model, UpdateInput, ViewInput, 0, 0);
   Model := Press(App, Model, Tui.TuiKeyKind.Left, true);
   Test.AssertEquals(6, Model.Caret);
   Model := Press(App, Model, Tui.TuiKeyKind.Backspace, true);
   Test.AssertEquals('beta', Model.Text);
   Test.AssertEquals(0, Model.Caret);
-  Model := record
-    Text := 'alpha beta';
-    Caret := 0;
-    UseHistory := false;
-    KeyHits := 0;
-  end record;
-
+  Model := InputKeyboardModel(Text := 'alpha beta', Caret := 0, UseHistory := false, KeyHits := 0);
   Model := App.RunIterations(Model, UpdateInput, ViewInput, 0, 0);
   Model := Press(App, Model, Tui.TuiKeyKind.Delete, true);
   Test.AssertEquals('beta', Model.Text);
   Test.AssertEquals(0, Model.Caret);
   Model := Press(App, Model, Tui.TuiKeyKind.Up, false);
   Test.AssertEquals(1, Model.KeyHits);
-  Model := record
-    Text := 'draft';
-    Caret := 5;
-    UseHistory := true;
-    KeyHits := 0;
-  end record;
-
+  Model := InputKeyboardModel(Text := 'draft', Caret := 5, UseHistory := true, KeyHits := 0);
   Model := App.RunIterations(Model, UpdateInput, ViewInput, 0, 0);
   Model := Press(App, Model, Tui.TuiKeyKind.Up, false);
   Test.AssertEquals('second', Model.Text);

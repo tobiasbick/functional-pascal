@@ -9,7 +9,7 @@ begin
 end function;
 
 begin
-  var A: array of integer := [1, 2, 3];
+  var A: array of (integer) := [1, 2, 3];
   var Idx: integer := Arrays.FindIndex(A, IsGreaterThanHundred);
   Console.WriteLn(Idx);
 end program;

@@ -22,7 +22,30 @@ fn record_with_function_method() {
 #[test]
 fn unit_record_routines_preserve_per_member_visibility() {
     let unit = parse_unit_ok(
-        r#"unit Demo.Types;  type Counter = record function Hidden(Self: Counter): integer; begin return 1; end function; public procedure Reset(Self: Counter); begin null; end procedure; static function CreateHidden(): Counter; begin return record end record; end function; public static procedure Clear(); begin null; end procedure; end record;
+        r#"unit Demo.Types;
+
+type Counter = record
+  function Hidden(Self: Counter): integer;
+  begin
+    return 1;
+  end function;
+
+  public procedure Reset(Self: Counter);
+  begin
+    null;
+  end procedure;
+
+  static function CreateHidden(): Counter;
+  begin
+    return Counter();
+  end function;
+
+  public static procedure Clear();
+  begin
+    null;
+  end procedure;
+end record;
+
 end unit;
 "#,
     );
@@ -96,7 +119,7 @@ fn record_with_multiple_methods() {
 #[test]
 fn record_with_generic_function_method() {
     let p = parse_ok(
-        r#"program T;  type Box = record Value: integer; function Map<R>(Self: Box; F: function(X: integer): R): R; begin return F(Self.Value); end function; end record; begin null; end program;"#,
+        r#"program T;  type Box = record Value: integer; function Map of (R)(Self: Box; F: function(X: integer): R): R; begin return F(Self.Value); end function; end record; begin null; end program;"#,
     );
     match &p.declarations[0] {
         Decl::TypeDef(td) => match &td.body {
@@ -117,7 +140,22 @@ fn record_with_generic_function_method() {
 #[test]
 fn record_with_static_function() {
     let p = parse_ok(
-        r#"program T;  type Point = record X: integer; Y: integer; static function Create(X: integer; Y: integer): Point; begin return record X := X; Y := Y; end record; end function; end record; begin null; end program;"#,
+        r#"program T;
+
+type Point = record
+  X: integer;
+  Y: integer;
+
+  static function Create(X: integer; Y: integer): Point;
+  begin
+    return Point(X := X, Y := Y);
+  end function;
+end record;
+
+begin
+  null;
+end program;
+"#,
     );
     match &p.declarations[0] {
         Decl::TypeDef(td) => match &td.body {
@@ -141,7 +179,27 @@ fn record_with_static_function() {
 #[test]
 fn record_static_and_instance_methods_together() {
     let p = parse_ok(
-        r#"program T;  type Point = record X: integer; Y: integer; static function Origin(): Point; begin return record X := 0; Y := 0; end record; end function; function Sum(Self: Point): integer; begin return Self.X + Self.Y; end function; end record; begin null; end program;"#,
+        r#"program T;
+
+type Point = record
+  X: integer;
+  Y: integer;
+
+  static function Origin(): Point;
+  begin
+    return Point(X := 0, Y := 0);
+  end function;
+
+  function Sum(Self: Point): integer;
+  begin
+    return Self.X + Self.Y;
+  end function;
+end record;
+
+begin
+  null;
+end program;
+"#,
     );
     match &p.declarations[0] {
         Decl::TypeDef(td) => match &td.body {

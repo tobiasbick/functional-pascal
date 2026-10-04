@@ -8,7 +8,7 @@ uses Std.Results as Results;
 uses Std.Tasks as Tasks;
 uses Std.Test as Test;
 
-function FetchText(Url: string): result of string, string;
+function FetchText(Url: string): Result of (string, string);
 begin
   return Results.AndThen(Http.Send(Http.Request.Get(Url)), Http.BodyText);
 end function;
@@ -27,7 +27,7 @@ begin
   return ResponseValue;
 end function;
 
-function ExerciseHttp(): result of boolean, string;
+function ExerciseHttp(): Result of (boolean, string);
 begin
   var ListenerValue: Net.Listener := try Net.Listen('127.0.0.1', 0);
   var Address: Net.NetworkAddress := try Net.ListenerLocalAddress(ListenerValue);
@@ -39,16 +39,16 @@ begin
   Test.AssertEquals('hello fluent', Text);
   var Served: boolean := try Tasks.Wait(ServerTask);
   var Closed: boolean := try Net.CloseListener(ListenerValue);
-  return Ok(Served and Closed);
+  return Result.Ok(Served and Closed);
 end function;
 
 begin
   case ExerciseHttp() of
-    when Ok(Succeeded):
+    when Result.Ok(const Succeeded):
       begin
         Test.AssertTrue(Succeeded);
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
         Test.Fail(Message);
       end;

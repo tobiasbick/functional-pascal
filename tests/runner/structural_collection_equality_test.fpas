@@ -1,0 +1,23 @@
+program StructuralCollectionEqualityTest;
+
+uses Std.Math as Math;
+uses Std.Test as Test;
+
+function Same of (T: Equatable)(A: T; B: T): boolean;
+begin
+  return A = B;
+end function;
+
+begin
+  Test.AssertTrue(Same([[1], [2]], [[1], [2]]));
+  Test.AssertFalse(Same([1, 2], [2, 1]));
+  Test.AssertTrue(Same(['a': [1], 'b': [2]], ['b': [2], 'a': [1]]));
+  Test.AssertFalse(Same(['a': [1]], ['a': [2]]));
+  Test.AssertFalse(Same(Option.None, Option.Some(1)));
+  Test.AssertFalse(Same(Result.Error('failed'), Result.Ok(1)));
+  Test.AssertTrue(Same([Option.None, Option.Some(1)], [Option.None, Option.Some(1)]));
+  Test.AssertTrue(Same(['a': Option.None, 'b': Option.Some(1)], ['b': Option.Some(1), 'a': Option.None]));
+  var Nan: real := Math.Pow(-1.0, 0.5);
+  Test.AssertFalse(Same([Nan], [Nan]));
+  Test.AssertTrue(Same([0.0], [-0.0]));
+end program;

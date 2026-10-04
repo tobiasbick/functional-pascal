@@ -17,10 +17,7 @@ public type Header = record
   // - `Value`: HTTP field value.
   public static function Create(Name: string; Value: string): Header;
   begin
-    return record
-      Name := Name;
-      Value := Value;
-    end record;
+    return Header(Name := Name, Value := Value);
   end function;
 end record;
 
@@ -31,9 +28,9 @@ public type Request = record
   // Absolute HTTP or HTTPS URL.
   public Url: string;
   // Request fields in wire order.
-  public Headers: array of Header;
+  public Headers: array of (Header);
   // Complete request-body bytes.
-  public Body: array of integer;
+  public Body: array of (integer);
   // Network timeout in milliseconds.
   public TimeoutMillis: integer;
   // Maximum response-head size in bytes.
@@ -50,16 +47,7 @@ public type Request = record
   // - `Url`: Absolute HTTP or HTTPS URL.
   public static function Create(Method: string; Url: string): Request;
   begin
-    return record
-      Method := Method;
-      Url := Url;
-      Headers := [];
-      Body := [];
-      TimeoutMillis := 30000;
-      MaxHeaderBytes := 65536;
-      MaxResponseBytes := 16777216;
-      MaxRedirects := 5;
-    end record;
+    return Request(Method := Method, Url := Url, Headers := [], Body := [], TimeoutMillis := 30000, MaxHeaderBytes := 65536, MaxResponseBytes := 16777216, MaxRedirects := 5);
   end function;
 
   // Creates a GET request with default transport limits.
@@ -133,9 +121,9 @@ public type Response = record
   // HTTP reason phrase from the response line.
   public ReasonPhrase: string;
   // Response fields in wire order.
-  public Headers: array of Header;
+  public Headers: array of (Header);
   // Complete decoded response-body bytes.
-  public Body: array of integer;
+  public Body: array of (integer);
 end record;
 
 // Opaque pull-based HTTP response body.
@@ -148,7 +136,7 @@ public type StreamResponse = record
   // HTTP reason phrase from the response line.
   public ReasonPhrase: string;
   // Response fields in wire order.
-  public Headers: array of Header;
+  public Headers: array of (Header);
   // Pull-based decoded response-body handle.
   public Body: BodyStream;
 end record;
@@ -160,7 +148,7 @@ public type ResponseHead = record
   // HTTP reason phrase from the response line.
   public ReasonPhrase: string;
   // Parsed response fields.
-  public Headers: array of Header;
+  public Headers: array of (Header);
   // Byte offset immediately after the response head.
   public BodyOffset: integer;
 end record;
@@ -172,9 +160,9 @@ public type ServerRequest = record
   // Origin-form request target.
   public Target: string;
   // Request fields in wire order.
-  public Headers: array of Header;
+  public Headers: array of (Header);
   // Complete request-body bytes.
-  public Body: array of integer;
+  public Body: array of (integer);
 end record;
 
 // One complete response written by the HTTP server helpers.
@@ -184,9 +172,9 @@ public type ServerResponse = record
   // HTTP reason phrase written in the status line.
   public ReasonPhrase: string;
   // Caller-supplied response fields.
-  public Headers: array of Header;
+  public Headers: array of (Header);
   // Complete response-body bytes.
-  public Body: array of integer;
+  public Body: array of (integer);
 
   // Creates an empty response with an explicit status.
   //
@@ -195,12 +183,7 @@ public type ServerResponse = record
   // - `ReasonPhrase`: HTTP reason phrase written in the status line.
   public static function Create(StatusCode: integer; ReasonPhrase: string): ServerResponse;
   begin
-    return record
-      StatusCode := StatusCode;
-      ReasonPhrase := ReasonPhrase;
-      Headers := [];
-      Body := [];
-    end record;
+    return ServerResponse(StatusCode := StatusCode, ReasonPhrase := ReasonPhrase, Headers := [], Body := []);
   end function;
 end record;
 
@@ -220,13 +203,7 @@ public type ServerOptions = record
   // Returns the default bounded server-loop configuration.
   public static function Create(): ServerOptions;
   begin
-    return record
-      MaxHeaderBytes := 65536;
-      MaxBodyBytes := 1048576;
-      ConnectionTimeoutMillis := 30000;
-      MaxConcurrentRequests := 8;
-      MaxRequests := 0;
-    end record;
+    return ServerOptions(MaxHeaderBytes := 65536, MaxBodyBytes := 1048576, ConnectionTimeoutMillis := 30000, MaxConcurrentRequests := 8, MaxRequests := 0);
   end function;
 end record;
 

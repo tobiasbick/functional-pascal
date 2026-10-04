@@ -66,6 +66,7 @@ pub(super) fn token_display(t: &Token) -> Cow<'static, str> {
         Token::Read => "read".into(),
         Token::Write => "write".into(),
         Token::Comparable => "Comparable".into(),
+        Token::Equatable => "Equatable".into(),
         Token::Numeric => "Numeric".into(),
         Token::Printable => "Printable".into(),
         Token::SelfKw => "Self".into(),

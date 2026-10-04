@@ -99,7 +99,7 @@ end program;"#,
 #[test]
 fn unknown_call_hint_suggests_explicit_aliases() {
     let errs = check_errors(
-        "program T;\nuses Std.Options as Options; uses Std.Results as Results;\nbegin\n  var O: option of integer := Some(3);\n  var X: integer := Unwrap(O);\nend program;",
+        "program T;\nuses Std.Options as Options; uses Std.Results as Results;\nbegin\n  var O: option of (integer) := Option.Some(3);\n  var X: integer := Unwrap(O);\nend program;",
     );
     assert_eq!(errs.len(), 1, "{errs:#?}");
     let hint = errs[0].help.as_deref().unwrap_or("");
@@ -112,8 +112,8 @@ fn unknown_call_hint_suggests_explicit_aliases() {
         r#"program T;
 uses Std.Options as Options; uses Std.Results as Results;
 begin
-  var O: option of integer := Some(3);
-  var R: result of integer, string := Ok(4);
+  var O: option of (integer) := Option.Some(3);
+  var R: result of (integer, string) := Result.Ok(4);
   var X: integer := Options.Unwrap(O) + Results.Unwrap(R);
 end program;"#,
     );
@@ -192,7 +192,7 @@ fn qualified_std_name_without_uses_is_rejected() {
         r#"program T;
 uses Std.Str as Str;
 begin
-  var A: array of integer := [1];
+  var A: array of (integer) := [1];
   var L1: integer := Std.Arrays.Length(A);
   var L2: integer := Str.Length('hi');
 end program;"#,
@@ -212,7 +212,7 @@ fn qualified_names_disambiguate_imported_std_units() {
         r#"program T;
 uses Std.Str as Str; uses Std.Arrays as Arrays;
 begin
-  var A: array of integer := [1];
+  var A: array of (integer) := [1];
   var L1: integer := Arrays.Length(A);
   var L2: integer := Str.Length('hi');
 end program;"#,

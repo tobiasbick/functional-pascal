@@ -39,7 +39,7 @@ impl Checker {
         self.errors.truncate(checkpoint);
 
         let target_ty = self.check_designator_expr(target);
-        let value_ty = self.check_expr_with_expected_record_literals(value, &target_ty);
+        let value_ty = self.check_expr_with_expected(value, &target_ty);
 
         if !target_ty.is_error() {
             self.check_type_compat(&target_ty, &value_ty, "assignment", span);
@@ -176,9 +176,6 @@ impl Checker {
         };
         if let Some(found) = find(record_ty) {
             return Some(found);
-        }
-        if record_ty.name == "<anonymous>" {
-            return None;
         }
         let symbol = self.scopes.lookup(&record_ty.name)?;
         let Ty::Record(canonical) = &symbol.ty else {

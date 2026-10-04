@@ -1,72 +1,64 @@
 # Guards
 
-Add conditions to case arms with `if`. The guard is evaluated after the label matches; the arm executes only when the guard is `true`:
+Add a Boolean condition to a case arm with `if`. The complete pattern must match
+before the guard runs. If the guard is false, matching continues with the next
+arm. The scrutinee is evaluated once, and only the selected body runs.
 
-Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (guarded `case_label`).
+Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`case_arm`,
+`case_value_arm`, and `pattern`).
 
 ```pascal
 function Classify(N: integer): string;
 begin
-  case N of
-    when 0:
-      return 'zero';
-    when N if N > 0:
-      return 'positive';
-    when N if N < 0:
-      return 'negative';
+  return case N of
+    when 0: 'zero';
+    when const Value if Value > 0: 'positive';
+    else 'negative';
   end case;
 end function;
-
 ```
 
-Guards work with all label types — values, ranges, destructuring, and enum patterns:
+`const Value` introduces an immutable binding for the matched value. A plain
+identifier refers to a static constant and never introduces a binding, including
+when the arm has a guard. Function calls and nonstatic comparisons belong in
+guards, rather than value labels or range endpoints.
+
+## Payload bindings
+
+Bindings introduced by any nested payload pattern are available in the guard
+and body:
 
 ```pascal
-uses Std.Console as Console;
-
 case S of
-  when Shape.Circle(R) if R > 10.0:
+  when Shape.Circle(const Radius) if Radius > 10.0:
     Console.WriteLn('Large circle');
-  when Shape.Circle(R):
+  when Shape.Circle(_):
     Console.WriteLn('Small circle');
-  when Shape.Rectangle(W, H) if W = H:
+  when Shape.Rectangle(const Width, const Height) if Width = Height:
     Console.WriteLn('Square');
-  when Shape.Rectangle(W, H):
+  when Shape.Rectangle(_, _):
     Console.WriteLn('Rectangle');
   when Shape.Point:
     Console.WriteLn('Point');
 end case;
 ```
 
-The guard expression has access to any bindings introduced by the label.
-For enum patterns, pattern arguments bind names only; put literals and extra checks in the `if` guard.
+Literal and static-constant payload patterns compare values directly; they do
+not need a guard. `_` ignores a payload without introducing a name.
 
-## Scalar guard bindings
+## Binding scope and coverage
 
-In scalar `case` arms, a single bare identifier with a guard introduces a binding for the matched value:
+Bindings belong to one arm. They may shadow outer locals, but cannot shadow an
+import qualifier or be redeclared within the same arm scope. Grouped patterns
+must introduce the same binding names with the same types. Each grouped arm
+evaluates its guard once after the first matching alternative.
 
-```pascal
-uses Std.Console as Console;
-
-case Value of
-  when N if N > 0:
-    Console.WriteLn('positive');
-  when N if N < 0:
-    Console.WriteLn('negative');
-  else
-    Console.WriteLn('zero');
-end case;
-```
-
-`N` is available in both the guard and the arm body, but only inside that arm.
-
-Rules:
-
-- The arm must have exactly one label.
-- The label must be a single bare identifier, not a range or a comma-separated label list.
-- If the identifier resolves to a compile-time constant or enum member, it remains a normal value label instead of becoming a binding.
+Guards do not establish exhaustiveness. Closed enum, Option, and Result cases
+need unguarded coverage of every named variant and its payload alternatives.
+See [Exhaustiveness](exhaustiveness.md).
 
 ## See also
 
 - [Enum patterns](enum-patterns.md)
+- [Scalar labels](scalar-labels.md)
 - [Exhaustiveness](exhaustiveness.md)

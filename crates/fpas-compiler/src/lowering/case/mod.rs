@@ -1,4 +1,4 @@
-//! Scalar and variant `case` lowering.
+//! Statement and expression case lowering with shared recursive patterns.
 
-mod scalar;
-mod variant;
+mod patterns;
+mod recursive;

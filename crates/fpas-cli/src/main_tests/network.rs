@@ -61,26 +61,34 @@ fn http_client_sends_request_and_decodes_chunked_response() {
         &format!(
             r#"program HttpClientRoundtrip;
 
-uses Std.Console as Console; uses Std.Http as Http; uses Std.Net.Utf8 as Utf8;
+uses Std.Console as Console;
+uses Std.Http as Http;
+uses Std.Net.Utf8 as Utf8;
 
 begin
   mutable var RequestValue: Http.Request := Http.Request.Create('POST', 'http://127.0.0.1:{port}/v1/chat');
   RequestValue.Headers := [Http.Header.Create('X-Test', 'yes')];
   RequestValue.Body := Utf8.Encode('ping');
   case Http.Send(RequestValue) of
-    when Ok(ResponseValue):
-    begin
-      Console.WriteLn(ResponseValue.StatusCode);
-      case Http.BodyText(ResponseValue) of
-        when Ok(Text): Console.WriteLn(Text);
-        when Error(Message): panic(Message);
-      end case;
-      case Http.HeaderValue(ResponseValue, 'content-type') of
-        when Some(Value): Console.WriteLn(Value);
-        when None: panic('missing content type');
-      end case;
-    end;
-    when Error(Message): panic(Message);
+    when Result.Ok(const ResponseValue):
+      begin
+        Console.WriteLn(ResponseValue.StatusCode);
+        case Http.BodyText(ResponseValue) of
+          when Result.Ok(const Text):
+            Console.WriteLn(Text);
+          when Result.Error(const Message):
+            panic(Message);
+        end case;
+
+        case Http.HeaderValue(ResponseValue, 'content-type') of
+          when Option.Some(const Value):
+            Console.WriteLn(Value);
+          when Option.None:
+            panic('missing content type');
+        end case;
+      end;
+    when Result.Error(const Message):
+      panic(Message);
   end case;
 end program;
 "#
@@ -150,27 +158,32 @@ fn http_client_supports_standard_extension_and_head_methods() {
         &format!(
             r#"program HttpClientMethods;
 
-uses Std.Arrays as Arrays; uses Std.Console as Console; uses Std.Http as Http; uses Std.Str as Str;
+uses Std.Arrays as Arrays;
+uses Std.Console as Console;
+uses Std.Http as Http;
+uses Std.Str as Str;
 
 procedure Expect(RequestValue: Http.Request; ExpectedBodyLength: integer);
 begin
   case Http.Send(RequestValue) of
-    when Ok(ResponseValue):
-    begin
-      if ResponseValue.StatusCode <> 200 then
+    when Result.Ok(const ResponseValue):
       begin
-        panic('unexpected HTTP status');
-      end; end if;
+        if ResponseValue.StatusCode <> 200 then
+          begin
+            panic('unexpected HTTP status');
+          end;
+        end if;
 
-      if Arrays.Length(ResponseValue.Body) <> ExpectedBodyLength then
+        if Arrays.Length(ResponseValue.Body) <> ExpectedBodyLength then
+          begin
+            panic('unexpected HTTP body length');
+          end;
+        end if;
+      end;
+    when Result.Error(const Message):
       begin
-        panic('unexpected HTTP body length');
-      end; end if;
-    end;
-    when Error(Message):
-    begin
-      panic(Message);
-    end;
+        panic(Message);
+      end;
   end case;
 end procedure;
 
@@ -185,18 +198,20 @@ begin
   Expect(Http.Request.Options(BaseUrl + '/options'), 2);
   Expect(Http.Request.Create('PROPFIND', BaseUrl + '/webdav'), 2);
   case Http.Send(Http.Request.Create('BAD@METHOD', BaseUrl + '/invalid')) of
-    when Ok(ResponseValue):
-    begin
-      panic('invalid HTTP method was accepted');
-    end;
-    when Error(Message):
-    begin
-      if not Str.Contains(Message, 'RFC 9110 token') then
+    when Result.Ok(const ResponseValue):
       begin
-        panic(Message);
-      end; end if;
-    end;
+        panic('invalid HTTP method was accepted');
+      end;
+    when Result.Error(const Message):
+      begin
+        if not Str.Contains(Message, 'RFC 9110 token') then
+          begin
+            panic(Message);
+          end;
+        end if;
+      end;
   end case;
+
   Console.WriteLn('ok');
 end program;
 "#
@@ -265,22 +280,24 @@ fn openai_compatible_client_sends_configured_chat_completion() {
         &format!(
             r#"program OpenAiCompatibleRoundtrip;
 
-uses Std.Ai.OpenAi as OpenAi; uses Std.Console as Console;
+uses Std.Ai.OpenAi as OpenAi;
+uses Std.Console as Console;
 
 begin
   mutable var ClientValue: OpenAi.Client := OpenAi.Client.Create('http://127.0.0.1:{port}/v1', 'local-model');
-  ClientValue.ApiKey := Some('test-key');
+  ClientValue.ApiKey := Option.Some('test-key');
   ClientValue.TimeoutMillis := 5000;
   mutable var Options: OpenAi.ChatOptions := OpenAi.ChatOptions.Default();
-  Options.Temperature := Some(0.25);
-  Options.MaxTokens := Some(64);
-  case OpenAi.Complete(
-    ClientValue,
-    [OpenAi.ChatMessage.System('Be concise'), OpenAi.ChatMessage.User('Hello locally')],
-    Options
-  ) of
-    when Ok(Content): Console.WriteLn(Content);
-    when Error(Message): panic(Message);
+  Options.Temperature := Option.Some(0.25);
+  Options.MaxTokens := Option.Some(64);
+  case OpenAi.Complete(ClientValue, [
+                                      OpenAi.ChatMessage.System('Be concise'),
+                                      OpenAi.ChatMessage.User('Hello locally')
+                                    ], Options) of
+    when Result.Ok(const Content):
+      Console.WriteLn(Content);
+    when Result.Error(const Message):
+      panic(Message);
   end case;
 end program;
 "#

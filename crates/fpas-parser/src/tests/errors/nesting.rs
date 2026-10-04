@@ -64,14 +64,28 @@ fn excessive_statement_nesting_reports_the_shared_limit() {
 
 #[test]
 fn excessive_type_nesting_reports_the_shared_limit() {
+    let depth = MAX_PARSER_NESTING_DEPTH + 1;
     let source = format!(
-        "program T; type Deep = {}integer; begin end.",
-        "array of ".repeat(MAX_PARSER_NESTING_DEPTH + 1)
+        "program T; type Deep = {}integer{}; begin null; end program;",
+        "array of (".repeat(depth),
+        ")".repeat(depth)
     );
 
     let (_, diagnostics) = parse(&source);
 
     assert_only_nesting_limit(&diagnostics);
+}
+
+#[test]
+fn deeply_nested_parenthesized_types_remain_accepted_below_the_limit() {
+    let depth = MAX_PARSER_NESTING_DEPTH - 3;
+    let source = format!(
+        "program T; type Deep = {}integer{}; begin null; end program;",
+        "array of (".repeat(depth),
+        ")".repeat(depth)
+    );
+    let (_, diagnostics) = parse(&source);
+    assert!(diagnostics.is_empty(), "{diagnostics:?}");
 }
 
 #[test]

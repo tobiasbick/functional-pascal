@@ -174,30 +174,21 @@ fn jsonl_sets_variables_with_stable_errors_and_fresh_handles() {
 #[test]
 fn record_and_dictionary_descendants_rebuild_the_mutable_root() {
     let mut session = session(
-        r#"
-program AggregateMutation;
+        r#"program AggregateMutation;
 
+type Box = record
+  Value: integer;
+  Other: integer;
+end record;
 
-  type Box = record
-    Value: integer;
-    Other: integer;
-  end record;
-  type Container = record
-    Items: array of Box;
-  end record;
+type Container = record
+  Items: array of (Box);
+end record;
 
 begin
-  mutable var Item: Box := record
-    Value := 1;
-    Other := 2;
-  end record;
-  mutable var Nested: Container := record
-    Items := [record
-      Value := 3;
-      Other := 4;
-    end record];
-  end record;
-  mutable var Scores: dict of string to integer := ['Ada': 2, 'Grace': 5];
+  mutable var Item: Box := Box(Value := 1, Other := 2);
+  mutable var Nested: Container := Container(Items := [Box(Value := 3, Other := 4)]);
+  mutable var Scores: dict of (string, integer) := ['Ada': 2, 'Grace': 5];
   var Marker: integer := 0;
 end program;
 "#,
@@ -445,7 +436,7 @@ fn dictionary_structure_mutation_supports_parameters_and_capture_cells() {
         r#"
 program DictionaryParameterMutation;
 
-function ReadAdded(mutable Scores: dict of string to integer): integer;
+function ReadAdded(mutable Scores: dict of (string, integer)): integer;
 begin
   var Marker: integer := Scores['Seed'];
   return Scores['Added'] + Marker;
@@ -504,7 +495,7 @@ program DictionaryCaptureMutation;
 
 function Reader(): function(): integer;
 begin
-  mutable var Scores: dict of string to integer := ['Seed': 1];
+  mutable var Scores: dict of (string, integer) := ['Seed': 1];
   return function(): integer begin
     var Marker: integer := Scores['Seed'];
     return Scores['Added'] + Marker;
@@ -580,7 +571,7 @@ begin
 end procedure;
 
 begin
-  mutable var Scores: dict of string to integer := ['Seed': 1];
+  mutable var Scores: dict of (string, integer) := ['Seed': 1];
   var Marker: integer := Scores['Seed'];
 end program;
 "#,
@@ -692,7 +683,7 @@ begin
 end procedure;
 
 begin
-  mutable var Items: array of integer := [1, 2];
+  mutable var Items: array of (integer) := [1, 2];
   var Marker: integer := Items[0];
 end program;
 "#,

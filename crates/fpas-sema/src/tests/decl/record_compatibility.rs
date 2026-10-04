@@ -27,14 +27,45 @@ fn interface_for(source: &str) -> UnitInterface {
 #[test]
 fn same_record_declaration_and_alias_are_compatible() {
     check_ok(
-        r#"program T;  type Point = record X: integer; Y: integer; end record;  type PointAlias = Point; begin var PointValue: Point := record X := 1; Y := 2; end record; var SameType: Point := PointValue; var AliasValue: PointAlias := PointValue; var ContextualLiteral: PointAlias := record X := 3; Y := 4; end record; end program;"#,
+        r#"program T;
+
+type Point = record
+  X: integer;
+  Y: integer;
+end record;
+
+type PointAlias = Point;
+
+begin
+  var PointValue: Point := Point(X := 1, Y := 2);
+  var SameType: Point := PointValue;
+  var AliasValue: PointAlias := PointValue;
+  var ContextualLiteral: PointAlias := Point(X := 3, Y := 4);
+end program;
+"#,
     );
 }
 
 #[test]
 fn distinct_public_record_declarations_are_incompatible_despite_equal_fields() {
     let errors = check_errors(
-        r#"program T;  type Point = record X: integer; Y: integer; end record;  type Size = record X: integer; Y: integer; end record; begin var SizeValue: Size := record X := 1; Y := 2; end record; var PointValue: Point := SizeValue; end program;"#,
+        r#"program T;
+
+type Point = record
+  X: integer;
+  Y: integer;
+end record;
+
+type Size = record
+  X: integer;
+  Y: integer;
+end record;
+
+begin
+  var SizeValue: Size := Size(X := 1, Y := 2);
+  var PointValue: Point := SizeValue;
+end program;
+"#,
     );
 
     assert!(
@@ -105,7 +136,27 @@ end unit;
 #[test]
 fn anonymous_generic_binding_does_not_bridge_distinct_named_records() {
     let errors = check_errors(
-        r#"program T;  type Left = record Value: integer; end record;  type Right = record Value: integer; end record; function Pick<TValue>(A: TValue; B: TValue; C: TValue): TValue; begin return A; end function; begin var LeftValue: Left := record Value := 1; end record; var RightValue: Right := record Value := 2; end record; var ResultValue: Left := Pick(record Value := 0; end record, LeftValue, RightValue); end program;"#,
+        r#"program T;
+
+type Left = record
+  Value: integer;
+end record;
+
+type Right = record
+  Value: integer;
+end record;
+
+function Pick of (TValue)(A: TValue; B: TValue; C: TValue): TValue;
+begin
+  return A;
+end function;
+
+begin
+  var LeftValue: Left := Left(Value := 1);
+  var RightValue: Right := Right(Value := 2);
+  var ResultValue: Left := Pick(Left(Value := 0), LeftValue, RightValue);
+end program;
+"#,
     );
 
     assert!(

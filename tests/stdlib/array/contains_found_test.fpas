@@ -4,6 +4,6 @@ uses Std.Console as Console;
 uses Std.Arrays as Arrays;
 
 begin
-  var A: array of integer := [1, 2, 3];
+  var A: array of (integer) := [1, 2, 3];
   Console.WriteLn(Arrays.Contains(A, 2));
 end program;

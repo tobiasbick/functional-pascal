@@ -24,7 +24,7 @@ fn calculator() {
     check_ok(
         r#"program Calculator;
 
- type Op = enum
+type Op = enum
   OpAdd;
   OpSub;
   OpMul;
@@ -34,16 +34,21 @@ end enum;
 function Calculate(A: integer; B: integer; Operation: Op): integer;
 begin
   case Operation of
-    when OpAdd: return A + B;
-    when OpSub: return A - B;
-    when OpMul: return A * B;
-    when OpDiv: return A div B;
+    when Op.OpAdd:
+      return A + B;
+    when Op.OpSub:
+      return A - B;
+    when Op.OpMul:
+      return A * B;
+    when Op.OpDiv:
+      return A div B;
   end case;
 end function;
 
 begin
-  var Answer: integer := Calculate(10, 3, OpAdd);
-end program;"#,
+  var Answer: integer := Calculate(10, 3, Op.OpAdd);
+end program;
+"#,
     );
 }
 
@@ -52,14 +57,15 @@ fn record_usage() {
     check_ok(
         r#"program Geometry;
 
- type Point = record
+type Point = record
   X: real;
   Y: real;
 end record;
 
 begin
-  var P: Point := record X := 1.0; Y := 2.0; end record;
-end program;"#,
+  var P: Point := Point(X := 1.0, Y := 2.0);
+end program;
+"#,
     );
 }
 

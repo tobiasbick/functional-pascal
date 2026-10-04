@@ -31,16 +31,16 @@ end function;
 // Parameters:
 // - `Text`: Complete decoded message head.
 // - `MessageKind`: Message label used in diagnostics.
-public function Parse(Text: string; MessageKind: string): result of array of Types.Header, string;
+public function Parse(Text: string; MessageKind: string): Result of (array of (Types.Header), string);
 begin
-  var Lines: array of string := Str.Split(Text, #13 + #10);
-  mutable var Headers: array of Types.Header := [];
+  var Lines: array of (string) := Str.Split(Text, #13 + #10);
+  mutable var Headers: array of (Types.Header) := [];
   for Index: integer := 1 to Arrays.Length(Lines) - 1 do
     begin
       var Colon: integer := Str.IndexOf(Lines[Index], ':');
       if Colon <= 0 then
         begin
-          return Error((('Invalid HTTP ' + MessageKind) + ' header: ') + Lines[Index]);
+          return Result.Error((('Invalid HTTP ' + MessageKind) + ' header: ') + Lines[Index]);
         end;
       end if;
       var Name: string := Str.Substring(Lines[Index], 0, Colon);
@@ -48,13 +48,14 @@ begin
                                                                            1));
       if not Method.IsValidToken(Name) then
         begin
-          return Error((('Invalid HTTP ' + MessageKind) + ' header name: ') + Name);
+          return Result.Error((('Invalid HTTP ' + MessageKind) + ' header name: ') + Name);
         end;
       end if;
 
       if not IsValidValue(Value) then
         begin
-          return Error(('HTTP ' + MessageKind) + ' header contains an invalid control character');
+          return Result.Error(('HTTP ' + MessageKind) +
+                              ' header contains an invalid control character');
         end;
       end if;
 
@@ -62,7 +63,7 @@ begin
     end;
   end for;
 
-  return Ok(Headers);
+  return Result.Ok(Headers);
 end function;
 
 end unit;

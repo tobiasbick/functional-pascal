@@ -5,8 +5,10 @@ mod bits;
 mod bound_methods;
 mod callable_targets;
 mod closures;
+mod decisions;
 mod equality;
 mod fluent;
+mod obsolete_records;
 mod postfix;
 mod record_context;
 mod record_events;
@@ -219,7 +221,8 @@ fn analysis_metadata_exposes_all_named_results() {
         fluent_calls,
         value_calls,
         record_defaults,
-        scalar_case_bindings,
+        record_constructions: _,
+        projection_types: _,
         closure_infos,
         nested_routine_captures,
         bound_methods,
@@ -229,6 +232,8 @@ fn analysis_metadata_exposes_all_named_results() {
         event_assigned,
         event_raises,
         import_aliases: _,
+        pattern_infos: _,
+        exhaustive_cases: _,
     } = analyze_with_types(&program);
 
     assert_eq!(named_types.len(), 4);
@@ -241,7 +246,6 @@ fn analysis_metadata_exposes_all_named_results() {
             fluent_calls.len(),
             value_calls.len(),
             record_defaults.len(),
-            scalar_case_bindings.len(),
             closure_infos.len(),
             nested_routine_captures.len(),
             bound_methods.len(),
@@ -251,14 +255,27 @@ fn analysis_metadata_exposes_all_named_results() {
             event_assigned.len(),
             event_raises.len(),
         ],
-        [0; 16]
+        [0; 15]
     );
 }
 
 #[test]
 fn equality_records_with_comparable_fields_are_valid() {
     check_ok(
-        r#"program T;  type Id = record Value: integer; end record;  var A: Id := record Value := 1; end record;  var B: Id := record Value := 1; end record;  var Same: boolean := A = B; begin null; end program;"#,
+        r#"program T;
+
+type Id = record
+  Value: integer;
+end record;
+
+var A: Id := Id(Value := 1);
+var B: Id := Id(Value := 1);
+var Same: boolean := A = B;
+
+begin
+  null;
+end program;
+"#,
     );
 }
 
@@ -351,19 +368,19 @@ fn not_real_error() {
 
 #[test]
 fn array_literal_valid() {
-    check_ok(r#"program T;  var X: array of integer := [1, 2, 3]; begin null; end program;"#);
+    check_ok(r#"program T;  var X: array of (integer) := [1, 2, 3]; begin null; end program;"#);
 }
 
 #[test]
 fn array_literal_mixed_types() {
     check_errors(
-        r#"program T;  var X: array of integer := [1, 2, true]; begin null; end program;"#,
+        r#"program T;  var X: array of (integer) := [1, 2, true]; begin null; end program;"#,
     );
 }
 
 #[test]
 fn empty_array() {
-    check_ok(r#"program T;  var X: array of integer := []; begin null; end program;"#);
+    check_ok(r#"program T;  var X: array of (integer) := []; begin null; end program;"#);
 }
 
 // ── Designator ──────────────────────────────────────────────────

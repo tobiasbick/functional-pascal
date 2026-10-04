@@ -20,7 +20,7 @@ end function;
 
 function RunTasks(Iterations: integer): integer;
 begin
-  mutable var Tasks: array of task := [];
+  mutable var Tasks: array of (task) := [];
   for Index: integer := 1 to Iterations do
     begin
       Arrays.Push(Tasks, go Worker(Index));

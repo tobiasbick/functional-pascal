@@ -9,11 +9,11 @@ uses Std.Console as Console;
 uses Std.Json as Json;
 
 begin
-  var R: result of Json.JsonValue, string := Json.Parse('{"ok":true}');
+  var R: result of (Json.JsonValue, string) := Json.Parse('{"ok":true}');
   case R of
-    when Ok(Value):
+    when Result.Ok(const Value):
       Console.WriteLn(Json.Stringify(Value));
-    when Error(Message):
+    when Result.Error(const Message):
       Console.WriteLn(Message);
   end case;
 end program;
@@ -35,7 +35,7 @@ constructors for new JSON values.
 | Kind | Name | Notes |
 |------|------|-------|
 | type | `JsonValue` | JSON tree representation |
-| function | `Parse(Text: string): Result of JsonValue, string` | parses JSON text; parse failures are `Error(Message)` |
+| function | `Parse(Text: string): Result of (JsonValue, string)` | parses JSON text; parse failures are `Result.Error(Message)` |
 | function | `Stringify(Value: JsonValue): string` | serializes a JSON value to compact JSON text |
 
 ### `JsonValue`
@@ -46,12 +46,12 @@ type JsonValue = enum
   Bool(Value: boolean);
   Number(Value: real);
   String(Value: string);
-  ArrayValue(Items: array of JsonValue);
-  Object(Fields: dict of string to JsonValue);
+  ArrayValue(Items: array of (JsonValue));
+  Object(Fields: dict of (string, JsonValue));
 end enum;
 ```
 
-JSON `null` maps to `JsonValue.NullValue`. Objects use `dict of string to JsonValue`. Arrays use `array of JsonValue`.
+JSON `null` maps to `JsonValue.NullValue`. Objects use `dict of (string, JsonValue)`. Arrays use `array of (JsonValue)`.
 
 ---
 
@@ -60,22 +60,22 @@ JSON `null` maps to `JsonValue.NullValue`. Objects use `dict of string to JsonVa
 ### `Parse`
 
 ```pascal
-function Parse(Text: string): Result of JsonValue, string;
+function Parse(Text: string): Result of (JsonValue, string);
 ```
 
-Object members become dictionary entries in document order. Rejects duplicate object member names with `Error(Message)` identifying the name and its location. Names are compared after decoding escapes and are case-sensitive. Each object has its own name set, including objects nested in arrays.
+Object members become dictionary entries in document order. Rejects duplicate object member names with `Result.Error(Message)` identifying the name and its location. Names are compared after decoding escapes and are case-sensitive. Each object has its own name set, including objects nested in arrays.
 
-Parses JSON text. Accepted JSON returns `Ok(JsonValue)`. Invalid JSON returns `Error(Message)` instead of aborting the program.
+Parses JSON text. Accepted JSON returns `Result.Ok(JsonValue)`. Invalid JSON returns `Result.Error(Message)` instead of aborting the program.
 
 ```pascal
 uses Std.Console as Console;
 uses Std.Json as Json;
 
-var R: result of Json.JsonValue, string := Json.Parse('[1, true, null]');
+var R: result of (Json.JsonValue, string) := Json.Parse('[1, true, null]');
 case R of
-  when Ok(Value):
+  when Result.Ok(const Value):
     Console.WriteLn(Json.Stringify(Value));
-  when Error(Message):
+  when Result.Error(const Message):
     Console.WriteLn('JSON error: ' + Message);
 end case;
 ```
@@ -108,7 +108,7 @@ Console.WriteLn(Json.Stringify(Value)); // [true,null,"hi",1.5]
 
 Malformed runtime payloads, such as an enum value pretending to be `JsonValue`, raise a runtime error. Normal parse failures should be handled through the `Result` returned by `Parse`.
 
-Nesting deeper than **256** levels is rejected: `Parse` returns `Error(Message)` and `Stringify` raises a runtime error.
+Nesting deeper than **256** levels is rejected: `Parse` returns `Result.Error(Message)` and `Stringify` raises a runtime error.
 
 ## Implementation (contributors)
 

@@ -108,11 +108,7 @@ fn program_name_can_match_a_global_or_type() {
         begin if Value <> 42 then panic('global'); end if; end program;",
     );
     run_both_paths(
-        "program Model;
-        type Model = record Value: integer; end record;
-        begin var Item: Model := record Value := 42; end record;
-          if Item.Value <> 42 then panic('type'); end if;
-        end program;",
+        "program Model;\n\ntype Model = record\n  Value: integer;\nend record;\n\nbegin\n  var Item: Model := Model(Value := 42);\n  if Item.Value <> 42 then\n    panic('type');\n  end if;\nend program;\n",
     );
 }
 

@@ -6,33 +6,33 @@ uses Std.Test as Test;
 begin
   var Path: string := Test.ScratchDir() + '/atomic-roundtrip.txt';
   case Fs.WriteText(Path, 'old') of
-    when Ok(Written):
+    when Result.Ok(const Written):
       begin
         null;
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
         Test.Fail(Message);
       end;
   end case;
 
   case Fs.WriteTextAtomic(Path, 'new') of
-    when Ok(Written):
+    when Result.Ok(const Written):
       begin
         null;
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
         Test.Fail(Message);
       end;
   end case;
 
   case Fs.ReadText(Path) of
-    when Ok(Text):
+    when Result.Ok(const Text):
       begin
         Test.AssertEquals('new', Text);
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
         Test.Fail(Message);
       end;

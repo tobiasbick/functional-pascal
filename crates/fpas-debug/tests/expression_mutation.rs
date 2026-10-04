@@ -13,17 +13,16 @@ const SOURCE: &str = r#"program JsonlExpressionMutation;
 
 uses Std.Console as Console;
 
+type Box = record
+  Value: integer;
+  Other: integer;
+end record;
 
-  type Box = record
-    Value: integer;
-    Other: integer;
-  end record;
-  type Container = record
-    Items: array of Box;
-  end record;
+type Container = record
+  Items: array of (Box);
+end record;
 
-
-  mutable var GlobalValue: integer := 5;
+mutable var GlobalValue: integer := 5;
 
 function ChooseIndex(): integer;
 begin
@@ -34,19 +33,11 @@ begin
   mutable var Selected: integer := 0;
   mutable var Counter: integer := 1;
   var Fixed: integer := 2;
-  mutable var State: Container := record
-    Items := [
-      record
-        Value := 10;
-        Other := 11;
-      end record,
-      record
-        Value := 20;
-        Other := 21;
-      end record
-    ];
-  end record;
-  mutable var Scores: dict of string to integer := ['blue': 30];
+  mutable var State: Container := Container(Items := [
+                                                       Box(Value := 10, Other := 11),
+                                                       Box(Value := 20, Other := 21)
+                                                     ]);
+  mutable var Scores: dict of (string, integer) := ['blue': 30];
   mutable var Text: string := 'abc';
   Counter := Counter + Fixed;
   Console.WriteLn(GlobalValue);

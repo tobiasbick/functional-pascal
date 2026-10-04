@@ -19,11 +19,11 @@ begin
   end if;
 
   case Fs.CreateDir(Path) of
-    when Ok(_):
+    when Result.Ok(_):
       begin
         null;
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
         Test.Fail(Message);
       end;
@@ -36,35 +36,35 @@ begin
   EnsureDir(Root + '/src');
   EnsureDir(Root + '/src/ui');
   case Fs.WriteText(Root + '/src/main.fpas', '') of
-    when Ok(_):
+    when Result.Ok(_):
       begin
         null;
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
         Test.Fail(Message);
       end;
   end case;
 
   case Fs.WriteText(Root + '/src/ui/menu.fpas', '') of
-    when Ok(_):
+    when Result.Ok(_):
       begin
         null;
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
         Test.Fail(Message);
       end;
   end case;
 
   case Fs.Glob(Root + '/src/**/*.fpas') of
-    when Ok(Paths):
+    when Result.Ok(const Paths):
       begin
         Test.AssertEquals(2, Arrays.Length(Paths));
         Test.AssertEquals(Root + '/src/main.fpas', Paths[0]);
         Test.AssertEquals(Root + '/src/ui/menu.fpas', Paths[1]);
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
         Test.Fail(Message);
       end;

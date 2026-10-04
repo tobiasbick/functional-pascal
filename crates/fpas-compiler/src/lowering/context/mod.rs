@@ -21,7 +21,7 @@ use fpas_ir::{
     ValueDefinition, ValueId,
 };
 use fpas_lexer::Span;
-use fpas_sema::{ExprTypeMap, ScalarCaseBindingMap, Ty};
+use fpas_sema::{ExprTypeMap, Ty};
 
 use crate::CompileError;
 use crate::error::internal_compiler_error;
@@ -53,8 +53,12 @@ pub(super) struct LoweringContext {
     pub(super) type_table: types::TypeTable,
     pub(super) expr_types: ExprTypeMap,
     pub(super) intrinsic_calls: fpas_sema::IntrinsicCallMap,
-    pub(super) scalar_case_bindings: ScalarCaseBindingMap,
     pub(super) record_defaults: fpas_sema::RecordDefaultsMap,
+    pub(super) record_constructions: std::collections::HashSet<usize>,
+    pub(super) projection_types: ExprTypeMap,
+    pub(super) pattern_infos: fpas_sema::PatternInfoMap,
+    /// Proven complete statement cases keyed by their scrutinee expression identity.
+    pub(super) exhaustive_cases: std::collections::HashSet<usize>,
     pub(super) method_calls: fpas_sema::MethodCallMap,
     pub(super) fluent_calls: fpas_sema::FluentCallMap,
     pub(super) value_calls: fpas_sema::ValueCallMap,

@@ -4,8 +4,8 @@ uses Std.Console as Console;
 uses Std.Arrays as Arrays;
 
 begin
-  var A: array of integer := [1, 2, 3];
-  var R: array of integer := Arrays.Reverse(A);
+  var A: array of (integer) := [1, 2, 3];
+  var R: array of (integer) := Arrays.Reverse(A);
   Console.WriteLn(R[0]);
   Console.WriteLn(R[1]);
   Console.WriteLn(R[2]);

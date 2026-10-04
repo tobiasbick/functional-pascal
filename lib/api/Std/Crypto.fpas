@@ -8,7 +8,7 @@ unit Std.Crypto;
 //
 // Parameters:
 // - `Count`: Number of values to create or process.
-public function RandomBytes(Count: integer): result of array of integer, string;
+public function RandomBytes(Count: integer): Result of (array of (integer), string);
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -18,7 +18,7 @@ end function;
 // Parameters:
 // - `Lo`: `integer` input value used by `RandomInt`.
 // - `Hi`: `integer` input value used by `RandomInt`.
-public function RandomInt(Lo: integer; Hi: integer): result of integer, string;
+public function RandomInt(Lo: integer; Hi: integer): Result of (integer, string);
 begin
   panic('Intrinsic API declaration');
 end function;

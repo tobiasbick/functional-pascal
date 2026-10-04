@@ -18,8 +18,8 @@ begin
   mutable var Total: integer := 0;
   for Index: integer := 1 to Iterations do
     begin
-      var ResultValue: result of integer, string := Ok(Index);
-      var OptionValue: option of integer := Some(Results.Unwrap(ResultValue));
+      var ResultValue: Result of (integer, string) := Result.Ok(Index);
+      var OptionValue: Option of (integer) := Option.Some(Results.Unwrap(ResultValue));
       Total := Total + Options.Unwrap(OptionValue);
     end;
   end for;

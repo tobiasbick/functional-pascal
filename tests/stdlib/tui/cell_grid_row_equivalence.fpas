@@ -13,7 +13,7 @@ procedure CompareRow(
   ClipX: integer;
   ClipWidth: integer;
   OriginX: integer;
-  Cells: array of Tui.TuiCell
+  Cells: array of (Tui.TuiCell)
 );
 begin
   Expected.Clear();

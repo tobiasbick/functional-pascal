@@ -41,8 +41,8 @@ begin
   Console.WriteLn('Apply(Square, 6) = ', Apply(Square, 6));
   var Op: function(X: integer): integer := Double;
   Console.WriteLn('Op(7) = ', Op(7));
-  var Nums: array of integer := [1, 2, 3, 4, 5];
-  var Doubled: array of integer := Arrays.Map(Nums, Double);
+  var Nums: array of (integer) := [1, 2, 3, 4, 5];
+  var Doubled: array of (integer) := Arrays.Map(Nums, Double);
   Console.WriteText('Map double: ');
   for V: integer in Doubled do
     begin
@@ -51,7 +51,7 @@ begin
   end for;
 
   Console.WriteLn('');
-  var Big: array of integer := Arrays.Filter(Nums, IsGreaterThanThree);
+  var Big: array of (integer) := Arrays.Filter(Nums, IsGreaterThanThree);
   Console.WriteText('Filter > 3: ');
   for V: integer in Big do
     begin
@@ -62,8 +62,8 @@ begin
   Console.WriteLn('');
   var Total: integer := Arrays.Reduce(Nums, 0, Sum);
   Console.WriteLn('Reduce sum: ', Total);
-  var Squared: array of integer := Arrays.Map(Nums, Square);
-  var LargeSquares: array of integer := Arrays.Filter(Squared, IsGreaterThanTen);
+  var Squared: array of (integer) := Arrays.Map(Nums, Square);
+  var LargeSquares: array of (integer) := Arrays.Filter(Squared, IsGreaterThanTen);
   Console.WriteText('Squares > 10: ');
   for V: integer in LargeSquares do
     begin

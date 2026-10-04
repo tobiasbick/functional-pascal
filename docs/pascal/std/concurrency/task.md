@@ -62,35 +62,35 @@ Import with `uses Std.Tasks as Tasks;`. Access every exported member through `Ta
 | function | `StartSupervisedTask(Group: TaskGroup; Work: function(Token: CancellationToken): T; RetryLimit: integer; BackoffMillis: integer): task` | starts one group-owned task with bounded retries; also accepts a procedure |
 | function | `GetTaskGroupToken(Group: TaskGroup): CancellationToken` | returns the group-owned cancellation token |
 | function | `CancelTaskGroup(Group: TaskGroup): boolean` | requests cancellation without joining; true only for the first request |
-| function | `CloseTaskGroup(Group: TaskGroup): array of TaskFailure` | cancels, joins registered children, releases their results, and returns failures |
-| function | `CloseTaskGroupWithTimeout(Group: TaskGroup; TimeoutMillis: integer): result of array of TaskFailure, string` | attempts cooperative close with a waiting budget; timeout retains group ownership |
-| function | `TryCloseCompletedTaskGroup(Group: TaskGroup): option of array of TaskFailure` | closes without cancellation only when every child is already terminal |
-| function | `ReceiveCase(Queue: channel of T; Callback: procedure(Outcome: result of T, string)): WaitCase` | describes one receive and its typed delivery callback |
-| function | `SendCase(Queue: channel of T; Value: T; Callback: procedure(Outcome: result of boolean, string)): WaitCase` | describes one send without enqueueing its value |
+| function | `CloseTaskGroup(Group: TaskGroup): array of (TaskFailure)` | cancels, joins registered children, releases their results, and returns failures |
+| function | `CloseTaskGroupWithTimeout(Group: TaskGroup; TimeoutMillis: integer): result of (array of (TaskFailure), string)` | attempts cooperative close with a waiting budget; timeout retains group ownership |
+| function | `TryCloseCompletedTaskGroup(Group: TaskGroup): option of (array of (TaskFailure))` | closes without cancellation only when every child is already terminal |
+| function | `ReceiveCase(Queue: channel of (T); Callback: procedure(Outcome: result of (T, string))): WaitCase` | describes one receive and its typed delivery callback |
+| function | `SendCase(Queue: channel of (T); Value: T; Callback: procedure(Outcome: result of (boolean, string))): WaitCase` | describes one send without enqueueing its value |
 | function | `TaskCase(Handle: task; Callback: procedure()): WaitCase` | describes non-consuming task completion |
 | function | `TimerCase(Milliseconds: integer; Callback: procedure()): WaitCase` | describes a timer relative to `Select` entry |
 | function | `CancellationCase(Token: CancellationToken; Callback: procedure()): WaitCase` | describes observation of cancellation |
-| function | `Select(Cases: array of WaitCase): integer` | commits one operation, runs its callback, then returns its input index |
+| function | `Select(Cases: array of (WaitCase)): integer` | commits one operation, runs its callback, then returns its input index |
 | function | `CloseWaitCase(Handle: WaitCase): boolean` | discards an unused case; false when already closed or selected |
 | function | `CreateCancellationSource(): CancellationSource` | creates an active source |
 | function | `GetCancellationToken(Source: CancellationSource): CancellationToken` | returns a token linked to the source |
 | function | `Cancel(Source: CancellationSource): boolean` | requests cancellation; true only for the first request |
 | function | `IsCancellationRequested(Token: CancellationToken): boolean` | reads the shared cancellation state |
-| function | `CreateChannel(Capacity: integer): channel of T` | creates a VM-owned bounded channel; capacity is `1..=1048576` |
-| function | `Send(Queue: channel of T; Value: T): result of boolean, string` | blocks while full; returns an error after close |
-| function | `TrySend(Queue: channel of T; Value: T): result of boolean, string` | sends immediately; `Ok(false)` means the open channel is full |
-| function | `SendWithCancellation(Queue: channel of T; Value: T; Token: CancellationToken): result of boolean, string` | send that also observes cancellation |
-| function | `SendWithTimeout(Queue: channel of T; Value: T; TimeoutMillis: integer): result of boolean, string` | sends before a relative monotonic deadline |
-| function | `Receive(Queue: channel of T): result of T, string` | blocks while empty and open |
-| function | `TryReceive(Queue: channel of T): result of option of T, string` | receives immediately; `Ok(None)` means the open channel is empty |
-| function | `ReceiveWithCancellation(Queue: channel of T; Token: CancellationToken): result of T, string` | receive that also observes cancellation |
-| function | `ReceiveWithTimeout(Queue: channel of T; TimeoutMillis: integer): result of T, string` | receives before a relative monotonic deadline |
-| function | `CloseChannel(Queue: channel of T): boolean` | closes and wakes waiters; true only for the first close |
+| function | `CreateChannel(Capacity: integer): channel of (T)` | creates a VM-owned bounded channel; capacity is `1..=1048576` |
+| function | `Send(Queue: channel of (T); Value: T): result of (boolean, string)` | blocks while full; returns an error after close |
+| function | `TrySend(Queue: channel of (T); Value: T): result of (boolean, string)` | sends immediately; `Result.Ok(false)` means the open channel is full |
+| function | `SendWithCancellation(Queue: channel of (T); Value: T; Token: CancellationToken): result of (boolean, string)` | send that also observes cancellation |
+| function | `SendWithTimeout(Queue: channel of (T); Value: T; TimeoutMillis: integer): result of (boolean, string)` | sends before a relative monotonic deadline |
+| function | `Receive(Queue: channel of (T)): result of (T, string)` | blocks while empty and open |
+| function | `TryReceive(Queue: channel of (T)): result of (option of (T), string)` | receives immediately; `Result.Ok(Option.None)` means the open channel is empty |
+| function | `ReceiveWithCancellation(Queue: channel of (T); Token: CancellationToken): result of (T, string)` | receive that also observes cancellation |
+| function | `ReceiveWithTimeout(Queue: channel of (T); TimeoutMillis: integer): result of (T, string)` | receives before a relative monotonic deadline |
+| function | `CloseChannel(Queue: channel of (T)): boolean` | closes and wakes waiters; true only for the first close |
 | function | `Wait(Handle: task): T` | blocks until the task finishes; **consumes** the handle’s result once |
-| procedure | `WaitAll(Tasks: array of task)` | blocks until every task has completed; does **not** consume results — you may still `Wait` each handle afterward |
-| function | `WaitAny(Tasks: array of task): integer` | returns the lowest completed input index without consuming results |
-| function | `WaitAnyWithTimeout(Tasks: array of task; TimeoutMillis: integer): result of integer, string` | completion index or a distinct timeout error |
-| function | `WaitAnyWithCancellation(Tasks: array of task; Token: CancellationToken): result of integer, string` | completion index or a distinct cancellation error |
+| procedure | `WaitAll(Tasks: array of (task))` | blocks until every task has completed; does **not** consume results — you may still `Wait` each handle afterward |
+| function | `WaitAny(Tasks: array of (task)): integer` | returns the lowest completed input index without consuming results |
+| function | `WaitAnyWithTimeout(Tasks: array of (task); TimeoutMillis: integer): result of (integer, string)` | completion index or a distinct timeout error |
+| function | `WaitAnyWithCancellation(Tasks: array of (task); Token: CancellationToken): result of (integer, string)` | completion index or a distinct cancellation error |
 
 ---
 
@@ -134,7 +134,7 @@ to see cooperative stop and an ordinary error collected by the same group.
 one child before publishing its task handle. The worker receives the group's `CancellationToken`
 as its only argument and may be a procedure or a function. Captures must be immutable. The task
 retains the routine's result type, so `Wait` retrieves its value using the existing task rules.
-A worker returning a top-level `result of T, E` must use `string` for `E`.
+A worker returning a top-level `result of (T, E)` must use `string` for `E`.
 
 The creator and registered children may start children in an open group. Unrelated tasks may not.
 Ordinary `go` does not implicitly register with a group. Allowing a child's handle binding to leave scope does not
@@ -198,15 +198,15 @@ seals admission, requests cancellation, and attempts the same join and cleanup a
 Invalid arguments or wrong ownership are runtime diagnostics, not timeout results, and do not
 request cancellation or seal an otherwise open group.
 
-- `Ok(Failures)` means every registered child has a terminal outcome and the group has been
+- `Result.Ok(Failures)` means every registered child has a terminal outcome and the group has been
   closed. Failure ordering, result consumption, and token invalidation match `CloseTaskGroup`.
-- `Error('Task group close timed out')` means the waiting budget expired while the group was
+- `Result.Error('Task group close timed out')` means the waiting budget expired while the group was
   observed incomplete. The group remains sealed and cancelled. Its children, retained results,
   failure reports, and cancellation-token storage remain owned and valid. No worker is detached
   or reported as terminated by the timeout.
 - Call either close operation again to finish joining. Each timed call has a new budget; retries
   do not reopen admission or reset cancellation. Successful close is idempotent: later timed
-  closes return `Ok([])` and ordinary closes return `[]`.
+  closes return `Result.Ok([])` and ordinary closes return `[]`.
 - Zero requests cancellation and performs one immediate completion probe without waiting or
   executing a queued child inline. An empty or already completed group closes successfully.
 - One monotonic deadline is captured per invocation, before requesting cancellation. Wakeups and
@@ -231,13 +231,13 @@ the process.
 ### TryCloseCompletedTaskGroup
 
 `TryCloseCompletedTaskGroup` is the non-blocking completion probe for an owned group. It does not
-request cancellation and does not wait. `None` means at least one registered child is still running;
-the group remains open and can still admit work. `Some(Failures)` means every child was already
+request cancellation and does not wait. `Option.None` means at least one registered child is still running;
+the group remains open and can still admit work. `Option.Some(Failures)` means every child was already
 terminal, so the call atomically seals and closes the group, releases retained child results and the
 group token, and returns the same ordered failure records as `CloseTaskGroup`.
 
-An empty group closes immediately as `Some([])`. Repeating the operation after a successful close
-also returns `Some([])`. Only the creating task may call it. It is useful for event loops that must
+An empty group closes immediately as `Option.Some([])`. Repeating the operation after a successful close
+also returns `Option.Some([])`. Only the creating task may call it. It is useful for event loops that must
 collect grouped panic and runtime diagnostics as data without observing a failed child through
 `Wait`, `WaitAny`, or `TaskCase` and without cancelling work merely to poll it.
 
@@ -254,9 +254,9 @@ collect grouped panic and runtime diagnostics as data without observing a failed
 | `Line` | `integer` | runtime source line, or zero for a returned error |
 | `Column` | `integer` | runtime source column, or zero for a returned error |
 
-`ReturnedError` means the worker returned a top-level `Error(Message)`. `Panicked` means it
+`ReturnedError` means the worker returned a top-level `Result.Error(Message)`. `Panicked` means it
 executed `panic`; `RuntimeError` covers other runtime diagnostics; `Cancelled` identifies runtime
-cancellation. An ordinary `Error('cancelled')` remains `ReturnedError`: message text does not
+cancellation. An ordinary `Result.Error('cancelled')` remains `ReturnedError`: message text does not
 determine the category. Successful returns do not produce failure records.
 
 Ordinary error results do not automatically cancel siblings. Group-owned runtime failures are
@@ -278,53 +278,53 @@ because capacity alone cannot infer `T`:
 ```pascal
 uses Std.Tasks as Tasks;
 
-var Messages: channel of string := Tasks.CreateChannel(16);
+var Messages: channel of (string) := Tasks.CreateChannel(16);
 ```
 
 `Send` waits until space is available. `Receive` waits until a value is available. Successful sends
-return `Ok(true)`; successful receives return `Ok(Value)`. Values are received in send order.
+return `Result.Ok(true)`; successful receives return `Result.Ok(Value)`. Values are received in send order.
 
 ```pascal
 uses Std.Console as Console;
 uses Std.Tasks as Tasks;
 
 case Tasks.Send(Messages, 'ready') of
-  when Ok(_):
+  when Result.Ok(_):
     begin
       null;
     end;
-  when Error(Message):
+  when Result.Error(const Message):
     panic(Message);
 end case;
 
 case Tasks.Receive(Messages) of
-  when Ok(Message):
+  when Result.Ok(const Message):
     Console.WriteLn(Message);
-  when Error(Message):
+  when Result.Error(const Message):
     panic(Message);
 end case;
 ```
 
 `CloseChannel` is idempotent: the first close returns `true`, and later closes return `false`.
 Buffered values remain receivable after close. Once drained, `Receive` returns
-`Error('Channel is closed')`; `Send` returns that error immediately. Closing or VM shutdown wakes
+`Result.Error('Channel is closed')`; `Send` returns that error immediately. Closing or VM shutdown wakes
 blocked senders and receivers.
 
 The cancellable variants additionally observe a `CancellationToken`. They return
-`Error('Channel send was cancelled')` or `Error('Channel receive was cancelled')`. Cancellation
+`Result.Error('Channel send was cancelled')` or `Result.Error('Channel receive was cancelled')`. Cancellation
 does not close the channel. If cancellation is already requested when an operation starts, the
 cancellation result takes precedence.
 
-`TrySend` and `TryReceive` never wait. `TrySend` returns `Ok(false)` when the channel is open but
-full. `TryReceive` returns `Ok(None)` when it is open but empty and `Ok(Some(Value))` after receiving
-a value. A closed channel still returns `Error('Channel is closed')`, so closure is distinct from a
+`TrySend` and `TryReceive` never wait. `TrySend` returns `Result.Ok(false)` when the channel is open but
+full. `TryReceive` returns `Result.Ok(Option.None)` when it is open but empty and `Result.Ok(Option.Some(Value))` after receiving
+a value. A closed channel still returns `Result.Error('Channel is closed')`, so closure is distinct from a
 temporary full or empty state.
 
 `SendWithTimeout` and `ReceiveWithTimeout` take a relative, non-negative millisecond duration. The
 runtime converts it to a monotonic deadline once, so wakeups and scheduler work do not restart the
 timeout. A zero timeout performs one immediate attempt. An available slot or buffered value wins
-that attempt; otherwise the operation returns `Error('Channel send timed out')` or
-`Error('Channel receive timed out')`. A timeout does not close or otherwise change the channel.
+that attempt; otherwise the operation returns `Result.Error('Channel send timed out')` or
+`Result.Error('Channel receive timed out')`. A timeout does not close or otherwise change the channel.
 
 Channel handles belong to their creating VM. A channel accepts only its declared element type, and
 task-bound values with mutable captures cannot cross the channel boundary. See
@@ -348,7 +348,7 @@ Console.WriteLn(Tasks.Wait(T));
 
 ---
 
-## `procedure WaitAll(Tasks: array of task)`
+## `procedure WaitAll(Tasks: array of (task))`
 
 Blocks until every task in the array has finished. This is a **barrier only**; it does not pop return values. Typical use: synchronize before reading results with `Wait`, or when you only need to know that all work finished.
 
@@ -367,7 +367,7 @@ An empty array completes immediately.
 
 ---
 
-## `function WaitAny(Tasks: array of task): integer`
+## `function WaitAny(Tasks: array of (task)): integer`
 
 Waits for at least one successful task completion and returns its zero-based input position.
 The array must contain between 1 and 1,048,576 retained task handles. It follows the same
@@ -400,9 +400,9 @@ VM shutdown releases pending waits through the existing task-failure path.
 ## Controlled task-completion waits
 
 `WaitAnyWithTimeout` and `WaitAnyWithCancellation` use the same non-empty bounded task list,
-input ordering, and non-consuming completion policy as `WaitAny`. Success returns `Ok(Index)`.
-Timeout returns `Error('Task wait timed out')`; cancellation returns
-`Error('Task wait was cancelled')`. Neither outcome cancels tasks or consumes their results.
+input ordering, and non-consuming completion policy as `WaitAny`. Success returns `Result.Ok(Index)`.
+Timeout returns `Result.Error('Task wait timed out')`; cancellation returns
+`Result.Error('Task wait was cancelled')`. Neither outcome cancels tasks or consumes their results.
 
 - Timeout milliseconds must be non-negative. One monotonic budget starts after argument validation;
   wakeups and scheduler probes do not reset it. Zero performs one immediate completion observation.
@@ -426,8 +426,8 @@ Construct cases for the events an operation can handle, then pass them to `Selec
 does not send, receive, start tasks, or start timers. Channel constructors check the callback against
 that channel's element type, so one selection can safely combine differently typed channels.
 
-- `ReceiveCase` delivers `Ok(Value)` or `Error('Channel is closed')` after the closed buffer drains.
-- `SendCase` delivers `Ok(true)` after enqueueing its value, or `Error('Channel is closed')`.
+- `ReceiveCase` delivers `Result.Ok(Value)` or `Result.Error('Channel is closed')` after the closed buffer drains.
+- `SendCase` delivers `Result.Ok(true)` after enqueueing its value, or `Result.Error('Channel is closed')`.
   The value must match the channel type and cannot contain a task-bound callable, as with `Send`.
 - `TaskCase` observes completion without consuming its value. The callback or caller can still use
   `Wait` under its existing single-consumption rule. Consumed successful tasks still count as complete.

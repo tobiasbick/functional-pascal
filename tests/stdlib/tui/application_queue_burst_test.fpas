@@ -11,14 +11,16 @@ end function;
 function Update(Value: integer; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): integer;
 begin
   case Msg of
-    when Tui.TuiMsg.Tick(Delta):
+    when Tui.TuiMsg.Tick(const Delta):
       begin
         Test.AssertEquals(Value + 1, Delta);
         return Delta;
       end;
-    else
+    when Tui.TuiMsg.Started, Tui.TuiMsg.Key(_), Tui.TuiMsg.Pointer(_), Tui.TuiMsg.Resize(_), Tui.TuiMsg.FocusChanged(_, _), Tui.TuiMsg.Action(_, _), Tui.TuiMsg.TextChanged(_, _, _, _), Tui.TuiMsg.TextAreaChanged(_, _, _, _, _), Tui.TuiMsg.CheckChanged(_, _, _), Tui.TuiMsg.SelectionChanged(_, _, _), Tui.TuiMsg.ScrollChanged(_, _, _), Tui.TuiMsg.MenuChanged(_, _, _), Tui.TuiMsg.BackgroundFailed(_, _, _, _, _, _), Tui.TuiMsg.QuitRequested:
       begin
-        return Value;
+        begin
+          return Value;
+        end;
       end;
   end case;
 end function;

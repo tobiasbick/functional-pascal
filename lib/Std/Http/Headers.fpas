@@ -20,19 +20,19 @@ end function;
 // Parameters:
 // - `Headers`: Fields to search in wire order.
 // - `Name`: Case-insensitive field name.
-public function Find(Headers: array of Types.Header; Name: string): option of string;
+public function Find(Headers: array of (Types.Header); Name: string): Option of (string);
 begin
   for Index: integer := 0 to Arrays.Length(Headers) - 1 do
     begin
       if IsName(Headers[Index].Name, Name) then
         begin
-          return Some(Headers[Index].Value);
+          return Option.Some(Headers[Index].Value);
         end;
       end if;
     end;
   end for;
 
-  return None;
+  return Option.None;
 end function;
 
 // Reports whether text contains carriage-return or line-feed characters.

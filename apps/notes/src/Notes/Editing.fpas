@@ -16,14 +16,14 @@ end function;
 // Replaces one note while preserving the remaining model state.
 public function NotesWithNote(State: Model.NotesModel; Index: integer; NoteValue: Model.Note): Model.NotesModel;
 begin
-  mutable var Notes: array of Model.Note := State.Notes;
+  mutable var Notes: array of (Model.Note) := State.Notes;
   Notes[Index] := NoteValue;
   mutable var Next: Model.NotesModel := State;
   Next.Notes := Notes;
   return Next;
 end function;
 
-function SameTags(Left: array of string; Right: array of string): boolean;
+function SameTags(Left: array of (string); Right: array of (string)): boolean;
 begin
   if Arrays.Length(Left) <> Arrays.Length(Right) then
     begin
@@ -81,7 +81,7 @@ begin
       Next.TagsText := Text;
       Next.TagsCaret := Caret;
       mutable var NoteValue: Model.Note := Next.Notes[Next.Selected];
-      var Tags: array of string := Model.NoteTagsFromText(Text);
+      var Tags: array of (string) := Model.NoteTagsFromText(Text);
       if SameTags(NoteValue.Tags, Tags) then
         begin
           return Next;

@@ -75,32 +75,7 @@ public type TuiPalette = record
     var AccentStyle: Style2.TuiStyle := Style2.TuiStyle.FromColors(Accent, Background);
     var Buttons: ButtonPalette.TuiButtonPalette := ButtonPalette.TuiButtonPalette.Create(Style2.TuiStyle.FromColors(Text, Surface), Style2.TuiStyle.FromColors(Background, Accent), SelectedStyle, Style2.TuiStyle.FromColors(Muted, Surface), Style2.TuiStyle.FromColors(Accent, Surface), Style2.TuiStyle.FromColors(Background, Accent), Style2.TuiStyle.FromColors(Text, Selected));
     var Inputs: InputPalette.TuiInputPalette := InputPalette.TuiInputPalette.Create(Style2.TuiStyle.FromColors(Text, Surface), Style2.TuiStyle.FromColors(Text, Color.TuiColor.FromRgb(30, 36, 44)), Style2.TuiStyle.FromColors(Muted, Surface), Style2.TuiStyle.FromColors(Background, Accent), Style2.TuiStyle.FromColors(Accent, Surface));
-    return record
-      Normal := NormalStyle;
-      Disabled := Style2.TuiStyle.FromColors(Muted, Background);
-      Focused := SelectedStyle;
-      Selected := SelectedStyle;
-      Shortcut := AccentStyle;
-      Frame := Style2.TuiStyle.FromColors(Border, Background);
-      Title := Style2.TuiStyle.FromColors(Text, Background);
-      MenuNormal := Style2.TuiStyle.FromColors(Text, Surface);
-      MenuDisabled := Style2.TuiStyle.FromColors(Muted, Surface);
-      MenuShortcut := Style2.TuiStyle.FromColors(Accent, Surface);
-      MenuSelected := SelectedStyle;
-      MenuSelectedShortcut := Style2.TuiStyle.FromColors(Text, Selected);
-      StatusNormal := Style2.TuiStyle.FromColors(Text, Surface);
-      StatusDisabled := Style2.TuiStyle.FromColors(Muted, Surface);
-      StatusShortcut := Style2.TuiStyle.FromColors(Accent, Surface);
-      StatusSelected := SelectedStyle;
-      Buttons := Buttons;
-      Inputs := Inputs;
-      Rule := Style2.TuiStyle.FromColors(Border, Background);
-      GaugeTrack := Style2.TuiStyle.FromColors(Border, Background);
-      GaugeFill := Style2.TuiStyle.FromColors(Success, Background);
-      Failure := Style2.TuiStyle.FromColors(Failure, Background);
-      Warning := Style2.TuiStyle.FromColors(Warning, Background);
-      Accent := AccentStyle;
-    end record;
+    return TuiPalette(Normal := NormalStyle, Disabled := Style2.TuiStyle.FromColors(Muted, Background), Focused := SelectedStyle, Selected := SelectedStyle, Shortcut := AccentStyle, Frame := Style2.TuiStyle.FromColors(Border, Background), Title := Style2.TuiStyle.FromColors(Text, Background), MenuNormal := Style2.TuiStyle.FromColors(Text, Surface), MenuDisabled := Style2.TuiStyle.FromColors(Muted, Surface), MenuShortcut := Style2.TuiStyle.FromColors(Accent, Surface), MenuSelected := SelectedStyle, MenuSelectedShortcut := Style2.TuiStyle.FromColors(Text, Selected), StatusNormal := Style2.TuiStyle.FromColors(Text, Surface), StatusDisabled := Style2.TuiStyle.FromColors(Muted, Surface), StatusShortcut := Style2.TuiStyle.FromColors(Accent, Surface), StatusSelected := SelectedStyle, Buttons := Buttons, Inputs := Inputs, Rule := Style2.TuiStyle.FromColors(Border, Background), GaugeTrack := Style2.TuiStyle.FromColors(Border, Background), GaugeFill := Style2.TuiStyle.FromColors(Success, Background), Failure := Style2.TuiStyle.FromColors(Failure, Background), Warning := Style2.TuiStyle.FromColors(Warning, Background), Accent := AccentStyle);
   end function;
 
   // Resolves the concrete style for one semantic role.

@@ -36,6 +36,31 @@ end if;
 `else if` starts a nested conditional, so it needs a second `end if;`. Use `elsif`
 to continue the current conditional with a single closer.
 
+## If expressions
+
+In a required value position, each branch contains one expression and `else` is
+required:
+
+```pascal
+var Sign: string := if X > 0 then 'positive'
+  elsif X = 0 then 'zero'
+  else 'negative'
+end if;
+```
+
+Conditions must be Boolean. They run in written order until one is true, and
+only the selected value runs. Each branch has exactly one expression, with no
+statement terminator before `elsif` or `else`. The surrounding declaration or
+statement supplies its terminator after `end if`.
+
+An expected type constrains every value. Without one, all branches must agree on
+one ordinary type; there is no automatic union type or integer-to-real branch
+conversion. Empty collections and payloadless generic constructors need enough
+context from an annotation or the other branches. A procedure call produces no
+value and cannot be used as a branch; a procedure value can be selected.
+
+In statement position, `if` keeps the statement-list syntax above.
+
 ## See also
 
 - [Case of intro](case-of-intro.md)

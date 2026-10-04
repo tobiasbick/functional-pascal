@@ -7,7 +7,7 @@ uses Std.Tui as Tui;
 
 type RouteModel = record
   Focus: integer;
-  Actions: array of integer;
+  Actions: array of (integer);
   PointerHits: integer;
 end record;
 
@@ -35,51 +35,47 @@ end function;
 
 function ViewRoute(State: RouteModel): Tui.TuiElement;
 begin
-  return Tui.TuiElementBuilders.MakeDesktop(Some(Tui.TuiControlId.Create(State.Focus)), [
-                                                                                          Tui.TuiElementBuilders.MakePanel('Host', [
-                                                                                                                                     Tui.TuiElementBuilders.MakeColumn([
-                                                                                                                                                                         Tui.TuiElementBuilders.MakeLabel('Hello'),
-                                                                                                                                                                         Tui.TuiElementBuilders.MakeButton(Tui.TuiControlId.Create(1), 'Go', Tui.TuiAction.Create(11)),
-                                                                                                                                                                         Tui.TuiElementBuilders.MakeInput(Tui.TuiControlId.Create(2), 'ab', 2, Tui.TuiAction.Create(22))
-                                                                                                                                                                       ])
-                                                                                                                                   ])
-                                                                                        ]);
+  return Tui.TuiElementBuilders.MakeDesktop(Option.Some(Tui.TuiControlId.Create(State.Focus)), [
+                                                                                                 Tui.TuiElementBuilders.MakePanel('Host', [
+                                                                                                                                            Tui.TuiElementBuilders.MakeColumn([
+                                                                                                                                                                                Tui.TuiElementBuilders.MakeLabel('Hello'),
+                                                                                                                                                                                Tui.TuiElementBuilders.MakeButton(Tui.TuiControlId.Create(1), 'Go', Tui.TuiAction.Create(11)),
+                                                                                                                                                                                Tui.TuiElementBuilders.MakeInput(Tui.TuiControlId.Create(2), 'ab', 2, Tui.TuiAction.Create(22))
+                                                                                                                                                                              ])
+                                                                                                                                          ])
+                                                                                               ]);
 end function;
 
 function ViewOverlap(State: RouteModel): Tui.TuiElement;
 begin
-  return Tui.TuiElementBuilders.MakeDesktop(Some(Tui.TuiControlId.Create(State.Focus)), [
-                                                                                          Tui.TuiElementBuilders.MakePanel('Back', [
-                                                                                                                                     Tui.TuiElementBuilders.MakeButton(Tui.TuiControlId.Create(1), 'Back', Tui.TuiAction.Create(11))
-                                                                                                                                   ]),
-                                                                                          Tui.TuiElementBuilders.MakePanel('Top', [
-                                                                                                                                    Tui.TuiElementBuilders.MakeButton(Tui.TuiControlId.Create(3), 'Front', Tui.TuiAction.Create(33))
-                                                                                                                                  ])
-                                                                                        ]);
+  return Tui.TuiElementBuilders.MakeDesktop(Option.Some(Tui.TuiControlId.Create(State.Focus)), [
+                                                                                                 Tui.TuiElementBuilders.MakePanel('Back', [
+                                                                                                                                            Tui.TuiElementBuilders.MakeButton(Tui.TuiControlId.Create(1), 'Back', Tui.TuiAction.Create(11))
+                                                                                                                                          ]),
+                                                                                                 Tui.TuiElementBuilders.MakePanel('Top', [
+                                                                                                                                           Tui.TuiElementBuilders.MakeButton(Tui.TuiControlId.Create(3), 'Front', Tui.TuiAction.Create(33))
+                                                                                                                                         ])
+                                                                                               ]);
 end function;
 
 function UpdateRoute(State: RouteModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): RouteModel;
 begin
   Cmd.Set(Tui.TuiCmd.NoCommand);
   case Msg of
-    when Tui.TuiMsg.FocusChanged(Previous, Current):
+    when Tui.TuiMsg.FocusChanged(const Previous, const Current):
       begin
         case Current of
-          when Some(Id):
+          when Option.Some(const Id):
             begin
-              return record
-                Focus := Id.Value;
-                Actions := State.Actions;
-                PointerHits := State.PointerHits;
-              end record;
+              return RouteModel(Focus := Id.Value, Actions := State.Actions, PointerHits := State.PointerHits);
             end;
-          when None:
+          when Option.None:
             begin
               return State;
             end;
         end case;
       end;
-    when Tui.TuiMsg.Action(Source, Action):
+    when Tui.TuiMsg.Action(const Source, const Action):
       begin
         if Action.Value = 33 then
           begin
@@ -87,35 +83,27 @@ begin
           end;
         end if;
 
-        return record
-          Focus := State.Focus;
-          Actions := Arrays.Concat(State.Actions, [Action.Value]);
-          PointerHits := State.PointerHits;
-        end record;
+        return RouteModel(Focus := State.Focus, Actions := Arrays.Concat(State.Actions, [
+                                                                                          Action.Value
+                                                                                        ]), PointerHits := State.PointerHits);
       end;
-    when Tui.TuiMsg.Pointer(Pointer):
+    when Tui.TuiMsg.Pointer(const Pointer):
       begin
-        return record
-          Focus := State.Focus;
-          Actions := State.Actions;
-          PointerHits := State.PointerHits + 1;
-        end record;
+        return RouteModel(Focus := State.Focus, Actions := State.Actions, PointerHits := State.PointerHits +
+                                                                                         1);
       end;
-    else
+    when Tui.TuiMsg.Started, Tui.TuiMsg.Key(_), Tui.TuiMsg.Tick(_), Tui.TuiMsg.Resize(_), Tui.TuiMsg.TextChanged(_, _, _, _), Tui.TuiMsg.TextAreaChanged(_, _, _, _, _), Tui.TuiMsg.CheckChanged(_, _, _), Tui.TuiMsg.SelectionChanged(_, _, _), Tui.TuiMsg.ScrollChanged(_, _, _), Tui.TuiMsg.MenuChanged(_, _, _), Tui.TuiMsg.BackgroundFailed(_, _, _, _, _, _), Tui.TuiMsg.QuitRequested:
       begin
-        return State;
+        begin
+          return State;
+        end;
       end;
   end case;
 end function;
 
 begin
   mutable var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(20, 8));
-  mutable var Model: RouteModel := record
-    Focus := 1;
-    Actions := [];
-    PointerHits := 0;
-  end record;
-
+  mutable var Model: RouteModel := RouteModel(Focus := 1, Actions := [], PointerHits := 0);
   Model := App.RunIterations(Model, UpdateRoute, ViewRoute, 0, 0);
   var Snapshot: Tui.TuiSurfaceSnapshot := App.SurfaceSnapshot();
   var GoAt: Tui.TuiPoint := FindGlyph(Snapshot, 'Go');
@@ -142,12 +130,7 @@ begin
   Test.AssertEquals(3, Model.PointerHits);
   App.Close();
   mutable var Overlap: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(20, 6));
-  Model := record
-    Focus := 1;
-    Actions := [];
-    PointerHits := 0;
-  end record;
-
+  Model := RouteModel(Focus := 1, Actions := [], PointerHits := 0);
   Model := Overlap.RunIterations(Model, UpdateRoute, ViewOverlap, 0, 0);
   var FrontAt: Tui.TuiPoint := FindGlyph(Overlap.SurfaceSnapshot(), 'Front');
   Overlap.InjectPointerForTest(MakePointer(Tui.TuiPointerAction.Down, FrontAt.X, FrontAt.Y));

@@ -7,7 +7,7 @@ uses Std.Test as Test;
 uses Std.Tui as Tui;
 
 type InjectionModel = record
-  Values: array of integer;
+  Values: array of (integer);
   Starts: integer;
 end record;
 
@@ -16,24 +16,20 @@ begin
   case Msg of
     when Tui.TuiMsg.Started:
       begin
-        return record
-          Values := State.Values;
-          Starts := State.Starts + 1;
-        end record;
+        return InjectionModel(Values := State.Values, Starts := State.Starts + 1);
       end;
-    else
+    when Tui.TuiMsg.Key(_), Tui.TuiMsg.Pointer(_), Tui.TuiMsg.Tick(_), Tui.TuiMsg.Resize(_), Tui.TuiMsg.FocusChanged(_, _), Tui.TuiMsg.Action(_, _), Tui.TuiMsg.TextChanged(_, _, _, _), Tui.TuiMsg.TextAreaChanged(_, _, _, _, _), Tui.TuiMsg.CheckChanged(_, _, _), Tui.TuiMsg.SelectionChanged(_, _, _), Tui.TuiMsg.ScrollChanged(_, _, _), Tui.TuiMsg.MenuChanged(_, _, _), Tui.TuiMsg.BackgroundFailed(_, _, _, _, _, _), Tui.TuiMsg.QuitRequested:
       begin
-        return State;
+        begin
+          return State;
+        end;
       end;
   end case;
 end function;
 
 function UpdateApplication(State: InjectionModel; Message: integer; Cmd: Tui.TuiCmdOutput): InjectionModel;
 begin
-  return record
-    Values := Arrays.Concat(State.Values, [Message]);
-    Starts := State.Starts;
-  end record;
+  return InjectionModel(Values := Arrays.Concat(State.Values, [Message]), Starts := State.Starts);
 end function;
 
 function View(State: InjectionModel): Tui.TuiElement;
@@ -42,15 +38,12 @@ begin
 end function;
 
 begin
-  var Inbox: channel of integer := Tasks.CreateChannel(2);
+  var Inbox: channel of (integer) := Tasks.CreateChannel(2);
   var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(24, 4));
   Test.AssertTrue(Results.Unwrap(App.InjectBackgroundForTest(Inbox, 4)));
   Test.AssertTrue(Results.Unwrap(App.InjectBackgroundForTest(Inbox, 7)));
   Test.AssertFalse(Results.Unwrap(App.InjectBackgroundForTest(Inbox, 9)));
-  var Model: InjectionModel := App.RunBackgroundIterations(record
-    Values := [];
-    Starts := 0;
-  end record, Inbox, UpdateFramework, UpdateApplication, View, 3, 0);
+  var Model: InjectionModel := App.RunBackgroundIterations(InjectionModel(Values := [], Starts := 0), Inbox, UpdateFramework, UpdateApplication, View, 3, 0);
   Test.AssertEquals(1, Model.Starts);
   Test.AssertEquals(2, Arrays.Length(Model.Values));
   Test.AssertEquals(4, Model.Values[0]);

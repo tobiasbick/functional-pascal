@@ -8,19 +8,12 @@ uses Std.Tui as Tui;
 type MenuModel = record
   Focus: integer;
   Menu: Tui.TuiMenuState;
-  Actions: array of integer;
+  Actions: array of (integer);
 end record;
 
 function MakeKey(Kind: Tui.TuiKeyKind; Character: string; Ctrl: boolean; Alt: boolean): Tui.TuiKeyEvent;
 begin
-  return record
-    kind := Kind;
-    ch := Character;
-    shift := false;
-    ctrl := Ctrl;
-    alt := Alt;
-    meta := false;
-  end record;
+  return Tui.TuiKeyEvent(kind := Kind, ch := Character, shift := false, ctrl := Ctrl, alt := Alt, meta := false);
 end function;
 
 function FindGlyph(Snapshot: Tui.TuiSurfaceSnapshot; Glyph: string): Tui.TuiPoint;
@@ -42,91 +35,78 @@ end function;
 procedure AssertActive(Menu: Tui.TuiMenuState; Expected: integer);
 begin
   case Menu.Active of
-    when Some(Id):
+    when Option.Some(const Id):
       begin
         Test.AssertEquals(Expected, Id.Value);
       end;
-    when None:
+    when Option.None:
       begin
         Test.Fail('Expected an active menu node.');
       end;
   end case;
 end procedure;
 
-function MenuNodes(): array of Tui.TuiMenuNode;
+function MenuNodes(): array of (Tui.TuiMenuNode);
 begin
   var FileId: Tui.TuiMenuNodeId := Tui.TuiMenuNodeId.Create(1);
   var OptionsId: Tui.TuiMenuNodeId := Tui.TuiMenuNodeId.Create(2);
   var ThemeId: Tui.TuiMenuNodeId := Tui.TuiMenuNodeId.Create(5);
   return [
-           Tui.TuiMenuNodeBuilders.Submenu(FileId, None, 'File', 'F'),
-           Tui.TuiMenuNodeBuilders.Submenu(OptionsId, None, 'Options', 'O'),
-           Tui.TuiMenuNodeBuilders.CommandWithShortcut(Tui.TuiMenuNodeId.Create(3), Some(FileId), 'Open', 'O', Tui.TuiAction.Create(10), Tui.TuiKeyGesture.Create(Tui.TuiKeyKind.Character, 'o', false, true, false, false, 'Ctrl+O')),
+           Tui.TuiMenuNodeBuilders.Submenu(FileId, Option.None, 'File', 'F'),
+           Tui.TuiMenuNodeBuilders.Submenu(OptionsId, Option.None, 'Options', 'O'),
+           Tui.TuiMenuNodeBuilders.CommandWithShortcut(Tui.TuiMenuNodeId.Create(3), Option.Some(FileId), 'Open', 'O', Tui.TuiAction.Create(10), Tui.TuiKeyGesture.Create(Tui.TuiKeyKind.Character, 'o', false, true, false, false, 'Ctrl+O')),
            Tui.TuiMenuNodeBuilders.Separator(Tui.TuiMenuNodeId.Create(4), FileId),
-           Tui.TuiMenuNodeBuilders.Submenu(ThemeId, Some(OptionsId), 'Theme', 'T'),
-           Tui.TuiMenuNodeBuilders.Command(Tui.TuiMenuNodeId.Create(6), Some(ThemeId), 'Dark', 'D', Tui.TuiAction.Create(20))
+           Tui.TuiMenuNodeBuilders.Submenu(ThemeId, Option.Some(OptionsId), 'Theme', 'T'),
+           Tui.TuiMenuNodeBuilders.Command(Tui.TuiMenuNodeId.Create(6), Option.Some(ThemeId), 'Dark', 'D', Tui.TuiAction.Create(20))
          ];
 end function;
 
 function ViewMenu(State: MenuModel): Tui.TuiElement;
 begin
-  return Tui.TuiElementBuilders.MakeDesktop(Some(Tui.TuiControlId.Create(State.Focus)), [
-                                                                                          Tui.TuiElementBuilders.MakeMenu(Tui.TuiControlId.Create(100), MenuNodes(), State.Menu, Tui.TuiAction.Create(101))
-                                                                                        ]);
+  return Tui.TuiElementBuilders.MakeDesktop(Option.Some(Tui.TuiControlId.Create(State.Focus)), [
+                                                                                                 Tui.TuiElementBuilders.MakeMenu(Tui.TuiControlId.Create(100), MenuNodes(), State.Menu, Tui.TuiAction.Create(101))
+                                                                                               ]);
 end function;
 
 function UpdateMenu(State: MenuModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): MenuModel;
 begin
   Cmd.Set(Tui.TuiCmd.NoCommand);
   case Msg of
-    when Tui.TuiMsg.FocusChanged(Previous, Current):
+    when Tui.TuiMsg.FocusChanged(const Previous, const Current):
       begin
         case Current of
-          when Some(Id):
+          when Option.Some(const Id):
             begin
-              return record
-                Focus := Id.Value;
-                Menu := State.Menu;
-                Actions := State.Actions;
-              end record;
+              return MenuModel(Focus := Id.Value, Menu := State.Menu, Actions := State.Actions);
             end;
-          when None:
+          when Option.None:
             begin
               return State;
             end;
         end case;
       end;
-    when Tui.TuiMsg.MenuChanged(Source, Action, Menu):
+    when Tui.TuiMsg.MenuChanged(const Source, const Action, const Menu):
       begin
-        return record
-          Focus := State.Focus;
-          Menu := Menu;
-          Actions := State.Actions;
-        end record;
+        return MenuModel(Focus := State.Focus, Menu := Menu, Actions := State.Actions);
       end;
-    when Tui.TuiMsg.Action(Source, Action):
+    when Tui.TuiMsg.Action(const Source, const Action):
       begin
-        return record
-          Focus := State.Focus;
-          Menu := State.Menu;
-          Actions := Arrays.Concat(State.Actions, [Action.Value]);
-        end record;
+        return MenuModel(Focus := State.Focus, Menu := State.Menu, Actions := Arrays.Concat(State.Actions, [
+                                                                                                             Action.Value
+                                                                                                           ]));
       end;
-    else
+    when Tui.TuiMsg.Started, Tui.TuiMsg.Key(_), Tui.TuiMsg.Pointer(_), Tui.TuiMsg.Tick(_), Tui.TuiMsg.Resize(_), Tui.TuiMsg.TextChanged(_, _, _, _), Tui.TuiMsg.TextAreaChanged(_, _, _, _, _), Tui.TuiMsg.CheckChanged(_, _, _), Tui.TuiMsg.SelectionChanged(_, _, _), Tui.TuiMsg.ScrollChanged(_, _, _), Tui.TuiMsg.BackgroundFailed(_, _, _, _, _, _), Tui.TuiMsg.QuitRequested:
       begin
-        return State;
+        begin
+          return State;
+        end;
       end;
   end case;
 end function;
 
 begin
   mutable var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(40, 10));
-  mutable var Model: MenuModel := record
-    Focus := 100;
-    Menu := Tui.TuiMenuState.Closed();
-    Actions := [];
-  end record;
-
+  mutable var Model: MenuModel := MenuModel(Focus := 100, Menu := Tui.TuiMenuState.Closed(), Actions := []);
   Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 0, 0);
   Test.AssertTrue(App.SurfaceSnapshot().CellAt(7, 0).Role = Tui.TuiStyleRole.MenuShortcut);
   Test.AssertTrue(App.SurfaceSnapshot().CellAt(11, 0).Role = Tui.TuiStyleRole.MenuNormal);

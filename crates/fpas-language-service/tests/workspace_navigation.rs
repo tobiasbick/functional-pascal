@@ -100,7 +100,7 @@ type Holder = record
 end;
 
 mutable var Value: integer := 1;
-mutable var Pair: Holder := record Item := Value; end;
+mutable var Pair: Holder := Holder(Item := Value);
 
 function ReadValue(Value: integer): integer;
 begin
@@ -182,8 +182,8 @@ end unit;
 uses Demo.Types as Types;
 
 begin
-  var AliasValue: Types.PointAlias := record X := 1; end record;
-  var HolderValue: Types.Holder := record Item := AliasValue; end record;
+  var AliasValue: Types.PointAlias := Types.PointAlias(X := 1);
+  var HolderValue: Types.Holder := Types.Holder(Item := AliasValue);
   var PointValue: Types.Point := HolderValue.Item;
   var SelectedValue: Types.Point := HolderValue.Selected;
   var ResultValue: Types.Point := Types.Echo(PointValue);

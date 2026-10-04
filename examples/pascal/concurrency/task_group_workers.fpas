@@ -3,9 +3,9 @@ program TaskGroupWorkers;
 uses Std.Tasks as Tasks;
 uses Std.Console as Console;
 
-function CheckConfiguration(Token: Tasks.CancellationToken): result of boolean, string;
+function CheckConfiguration(Token: Tasks.CancellationToken): Result of (boolean, string);
 begin
-  return Error('A required setting is missing');
+  return Result.Error('A required setting is missing');
 end function;
 
 begin
@@ -19,7 +19,7 @@ begin
     discard Tasks.Select([Stop]);
   end procedure);
   // Close requests cooperative cancellation and waits for every registered worker.
-  var Failures: array of Tasks.TaskFailure := Tasks.CloseTaskGroup(Workers);
+  var Failures: array of (Tasks.TaskFailure) := Tasks.CloseTaskGroup(Workers);
   for Failure: Tasks.TaskFailure in Failures do
     begin
       Console.WriteLn(Failure.Message);

@@ -27,10 +27,7 @@ public type TuiSize = record
   begin
     discard TuiSizeRequireNonNegative(Width, 'width');
     discard TuiSizeRequireNonNegative(Height, 'height');
-    return record
-      Width := Width;
-      Height := Height;
-    end record;
+    return TuiSize(Width := Width, Height := Height);
   end function;
 
   // Returns whether either extent is zero.

@@ -52,11 +52,6 @@ impl Emitter {
         normalized
     }
 
-    /// Current indent depth in levels (each level is two spaces).
-    pub(crate) fn indent_level(&self) -> usize {
-        self.indent_level
-    }
-
     /// Increases indent depth by one.
     pub(crate) fn indent(&mut self) {
         self.indent_level += 1;

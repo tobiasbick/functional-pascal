@@ -5,74 +5,74 @@ uses Std.Conv as Conv;
 uses Std.Arrays as Arrays;
 uses Std.Options as Options;
 
-function FindFirst(Items: array of integer; Min: integer): option of integer;
+function FindFirst(Items: array of (integer); Min: integer): Option of (integer);
 begin
   for I: integer := 0 to Arrays.Length(Items) - 1 do
     begin
       if Items[I] >= Min then
         begin
-          return Some(Items[I]);
+          return Option.Some(Items[I]);
         end;
       end if;
     end;
   end for;
 
-  return None;
+  return Option.None;
 end function;
 
-function DoubleFirst(Items: array of integer; Min: integer): option of string;
+function DoubleFirst(Items: array of (integer); Min: integer): Option of (string);
 begin
   var V: integer := try FindFirst(Items, Min);
-  return Some((Conv.IntToStr(V) + ' x 2 = ') + Conv.IntToStr(V * 2));
+  return Option.Some((Conv.IntToStr(V) + ' x 2 = ') + Conv.IntToStr(V * 2));
 end function;
 
 begin
-  var Data: array of integer := [3, 7, 15, 42, 8];
-  var Found: option of integer := FindFirst(Data, 10);
+  var Data: array of (integer) := [3, 7, 15, 42, 8];
+  var Found: Option of (integer) := FindFirst(Data, 10);
   Console.WriteLn('IsSome: ', Options.IsSome(Found));
   Console.WriteLn('Value: ', Options.Unwrap(Found));
-  var Missing: option of integer := FindFirst(Data, 100);
+  var Missing: Option of (integer) := FindFirst(Data, 100);
   Console.WriteLn('IsNone: ', Options.IsNone(Missing));
   Console.WriteLn('UnwrapOr: ', Options.UnwrapOr(Missing, 0));
   case FindFirst(Data, 40) of
-    when Some(V):
+    when Option.Some(const V):
       begin
         Console.WriteLn('Found >= 40: ', V);
       end;
-    when None:
+    when Option.None:
       begin
         Console.WriteLn('Nothing >= 40');
       end;
   end case;
 
   case FindFirst(Data, 100) of
-    when Some(V):
+    when Option.Some(const V):
       begin
         Console.WriteLn('Found >= 100: ', V);
       end;
-    when None:
+    when Option.None:
       begin
         Console.WriteLn('Nothing >= 100');
       end;
   end case;
 
   case DoubleFirst(Data, 10) of
-    when Some(S):
+    when Option.Some(const S):
       begin
         Console.WriteLn(S);
       end;
-    when None:
+    when Option.None:
       begin
         Console.WriteLn('No match to double');
       end;
   end case;
 
   case DoubleFirst(Data, 100) of
-    when Some(S):
+    when Option.Some(const S):
       begin
         Console.WriteLn(S);
       end;
-    when None:
+    when Option.None:
       begin
         Console.WriteLn('No match to double');
       end;

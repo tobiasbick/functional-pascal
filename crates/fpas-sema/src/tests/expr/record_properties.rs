@@ -10,22 +10,28 @@ fn read_write_property_ok() {
     check_ok(
         r#"program T;
 
-  type Box = record
-    Value: integer;
-    function GetValue(Self: Box): integer;
-    begin
-      return Self.Value;
-    end function;
-    procedure SetValue(Self: Box; V: integer);
-    begin null;
-    end procedure;
-    property ValueProp: integer read GetValue write SetValue;
-  end record;
+type Box = record
+  Value: integer;
+
+  function GetValue(Self: Box): integer;
+  begin
+    return Self.Value;
+  end function;
+
+  procedure SetValue(Self: Box; V: integer);
+  begin
+    null;
+  end procedure;
+
+  property ValueProp: integer read GetValue write SetValue;
+end record;
+
 begin
-  var B: Box := record Value := 1; end record;
+  var B: Box := Box(Value := 1);
   var X: integer := B.ValueProp;
   B.ValueProp := 2;
-end program;"#,
+end program;
+"#,
     );
 }
 
@@ -34,17 +40,22 @@ fn immutable_binding_can_use_setter() {
     check_ok(
         r#"program T;
 
-  type Handle = record
-    Id: integer;
-    procedure SetLabel(Self: Handle; Value: string);
-    begin null;
-    end procedure;
-    property Label: string write SetLabel;
-  end record;
+type Handle = record
+  Id: integer;
+
+  procedure SetLabel(Self: Handle; Value: string);
+  begin
+    null;
+  end procedure;
+
+  property Label: string write SetLabel;
+end record;
+
 begin
-  var H: Handle := record Id := 1; end record;
+  var H: Handle := Handle(Id := 1);
   H.Label := 'ok';
-end program;"#,
+end program;
+"#,
     );
 }
 
@@ -53,16 +64,20 @@ fn write_only_property_cannot_be_read() {
     let errors = check_errors(
         r#"program T;
 
-  type Box = record
-    procedure SetPassword(Self: Box; Value: string);
-    begin null;
-    end procedure;
-    property Password: string write SetPassword;
-  end record;
+type Box = record
+  procedure SetPassword(Self: Box; Value: string);
+  begin
+    null;
+  end procedure;
+
+  property Password: string write SetPassword;
+end record;
+
 begin
-  var B: Box := record end record;
+  var B: Box := Box();
   var S: string := B.Password;
-end program;"#,
+end program;
+"#,
     );
     assert!(
         errors.iter().any(|e| e.message.contains("write-only")),
@@ -75,17 +90,20 @@ fn read_only_property_cannot_be_written() {
     let errors = check_errors(
         r#"program T;
 
-  type Box = record
-    function GetWidth(Self: Box): integer;
-    begin
-      return 0;
-    end function;
-    property Width: integer read GetWidth;
-  end record;
+type Box = record
+  function GetWidth(Self: Box): integer;
+  begin
+    return 0;
+  end function;
+
+  property Width: integer read GetWidth;
+end record;
+
 begin
-  var B: Box := record end record;
+  var B: Box := Box();
   B.Width := 1;
-end program;"#,
+end program;
+"#,
     );
     assert!(
         errors.iter().any(|e| e.message.contains("read-only")),
@@ -141,17 +159,20 @@ end.";
 fn property_read_records_metadata() {
     let src = r#"program T;
 
-  type Box = record
-    function GetWidth(Self: Box): integer;
-    begin
-      return 0;
-    end function;
-    property Width: integer read GetWidth;
-  end record;
+type Box = record
+  function GetWidth(Self: Box): integer;
+  begin
+    return 0;
+  end function;
+
+  property Width: integer read GetWidth;
+end record;
+
 begin
-  var B: Box := record end record;
+  var B: Box := Box();
   var W: integer := B.Width;
-end program;"#;
+end program;
+"#;
     let (program, parse_errors) = fpas_parser::parse(src);
     assert!(parse_errors.is_empty(), "{parse_errors:#?}");
     let metadata = analyze_with_types(&program);
@@ -207,7 +228,7 @@ fn property_rejects_generic_accessors() {
         r#"program T;
 
   type Box = record
-    function GetValue<T>(Self: Box): integer;
+    function GetValue of (T)(Self: Box): integer;
     begin return 0;
     end function;
     property Value: integer read GetValue;
@@ -227,21 +248,24 @@ fn property_cannot_be_initialized_as_a_record_field() {
     let errors = check_errors(
         r#"program T;
 
-  type Box = record
-    function GetValue(Self: Box): integer;
-    begin
-      return 0;
-    end function;
-    property Value: integer read GetValue;
-  end record;
+type Box = record
+  function GetValue(Self: Box): integer;
+  begin
+    return 0;
+  end function;
+
+  property Value: integer read GetValue;
+end record;
+
 begin
-  var B: Box := record Value := 1; end record;
-end program;"#,
+  var B: Box := Box(Value := 1);
+end program;
+"#,
     );
     assert!(
         errors
             .iter()
-            .any(|error| error.message.contains("cannot be initialized")),
+            .any(|error| error.message == "Record type `Box` has no field `Value`"),
         "{errors:#?}"
     );
 }
@@ -251,17 +275,20 @@ fn property_cannot_be_used_as_a_record_update_field() {
     let errors = check_errors(
         r#"program T;
 
-  type Box = record
-    function GetValue(Self: Box): integer;
-    begin
-      return 0;
-    end function;
-    property Value: integer read GetValue;
-  end record;
+type Box = record
+  function GetValue(Self: Box): integer;
+  begin
+    return 0;
+  end function;
+
+  property Value: integer read GetValue;
+end record;
+
 begin
-  var B: Box := record end record;
+  var B: Box := Box();
   var C: Box := B with Value := 1; end with;
-end program;"#,
+end program;
+"#,
     );
     assert!(
         errors

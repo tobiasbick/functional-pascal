@@ -71,7 +71,7 @@ data-carrying enum variant, the `value` child of `Result.Ok`,
 `Option` values. Visible uninitialized mutable locals and globals can be
 assigned one complete value. Nested combinations use the same
 operation. Complete-value replacements use constructor expressions such as
-`Choice.Pair(1, 2)`, `Ok(3)`, or `None`. The entered value is an FPAS debugger expression and can include a
+`Choice.Pair(1, 2)`, `Result.Ok(3)`, or `Option.None`. The entered value is an FPAS debugger expression and can include a
 controlled deterministic call. Successful edits refresh the Variables view;
 continuing the program observes the new value. If execution later reaches the
 source initializer, that store overwrites the debugger-provided value.

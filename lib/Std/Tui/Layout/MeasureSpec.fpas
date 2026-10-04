@@ -20,10 +20,7 @@ public type TuiMeasureSpec = record
   Height: MeasureConstraint.TuiMeasureConstraint
 ): TuiMeasureSpec;
   begin
-    return record
-      Width := Width;
-      Height := Height;
-    end record;
+    return TuiMeasureSpec(Width := Width, Height := Height);
   end function;
 
   // Both axes unbounded.

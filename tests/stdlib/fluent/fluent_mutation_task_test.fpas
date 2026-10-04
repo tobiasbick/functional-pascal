@@ -11,7 +11,7 @@ begin
 end function;
 
 begin
-  mutable var Items: array of integer := [1, 2];
+  mutable var Items: array of (integer) := [1, 2];
   Arrays.Push(Items, 3);
   Test.AssertEquals(3, Arrays.Pop(Items));
   Test.AssertEquals(2, Arrays.Length(Items));

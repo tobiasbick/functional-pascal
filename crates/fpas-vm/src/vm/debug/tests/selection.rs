@@ -3,66 +3,112 @@
 use super::*;
 
 const SOURCE: &str = r#"program SelectionContinuation;
-uses Std.Tasks as Tasks; uses Std.Time as Time; uses Std.Results as Results;
-function Produce(Q: channel of integer): integer;
+
+uses Std.Tasks as Tasks;
+uses Std.Time as Time;
+uses Std.Results as Results;
+
+function Produce(Q: channel of (integer)): integer;
 begin
   Time.Sleep(2);
   discard Tasks.Send(Q, 123);
   return 1;
 end function;
+
 function Child(): integer;
 begin
   Time.Sleep(2);
   return 7;
 end function;
+
 function Parent(): integer;
 begin
   var T: task := go Child();
   mutable var Seen: integer := 0;
-  var C: Tasks.WaitCase := Tasks.TaskCase(T, procedure()
-  begin
+  var C: Tasks.WaitCase := Tasks.TaskCase(T, procedure() begin
     Time.Sleep(0);
     Time.Sleep(1);
     Seen := Tasks.Wait(T);
   end procedure);
-  if Tasks.Select([C]) <> 0 then panic('task index'); end if;
+  if Tasks.Select([C]) <> 0 then
+    panic('task index');
+  end if;
+
   return Seen;
 end function;
+
 begin
   var T: task := go Parent();
-  var Q: channel of integer := Tasks.CreateChannel(1);
+  var Q: channel of (integer) := Tasks.CreateChannel(1);
   mutable var Seen: integer := 0;
-  var S: Tasks.WaitCase := Tasks.SendCase(Q, 42, procedure(R: result of boolean, string)
-  begin
-    if not Results.Unwrap(R) then panic('send result'); end if;
+  var S: Tasks.WaitCase := Tasks.SendCase(Q, 42, procedure(R: Result of (boolean, string)) begin
+    if not Results.Unwrap(R) then
+      panic('send result');
+    end if;
+
     Time.Sleep(1);
-    var Receive: Tasks.WaitCase := Tasks.ReceiveCase(Q, procedure(V: result of integer, string)
-    begin Seen := Results.Unwrap(V); end procedure);
-    if Tasks.Select([Receive]) <> 0 then panic('nested selection'); end if;
+    var Receive: Tasks.WaitCase := Tasks.ReceiveCase(Q, procedure(V: Result of (integer, string)) begin
+      Seen := Results.Unwrap(V);
+    end procedure);
+    if Tasks.Select([Receive]) <> 0 then
+      panic('nested selection');
+    end if;
   end procedure);
-  if Tasks.Select([S]) <> 0 then panic('send index'); end if;
-  if Seen <> 42 then panic('callback did not complete'); end if;
-  if Tasks.Wait(T) <> 7 then panic('task value lost'); end if;
+  if Tasks.Select([S]) <> 0 then
+    panic('send index');
+  end if;
+
+  if Seen <> 42 then
+    panic('callback did not complete');
+  end if;
+
+  if Tasks.Wait(T) <> 7 then
+    panic('task value lost');
+  end if;
   var Producer: task := go Produce(Q);
-  var Pending: Tasks.WaitCase := Tasks.ReceiveCase(Q, procedure(R: result of integer, string)
-  begin Seen := Results.Unwrap(R); end procedure);
-  var Fallback: Tasks.WaitCase := Tasks.TimerCase(1000, procedure() begin panic('pending receive timed out'); end procedure);
-  if Tasks.Select([Pending, Fallback]) <> 0 then panic('pending receive index'); end if;
-  if Seen <> 123 then panic('pending receive value'); end if;
-  if Tasks.Wait(Producer) <> 1 then panic('producer result'); end if;
-  var Closed: Tasks.WaitCase := Tasks.ReceiveCase(Q, procedure(R: result of integer, string)
-  begin
+  var Pending: Tasks.WaitCase := Tasks.ReceiveCase(Q, procedure(R: Result of (integer, string)) begin
+    Seen := Results.Unwrap(R);
+  end procedure);
+  var Fallback: Tasks.WaitCase := Tasks.TimerCase(1000, procedure() begin
+    panic('pending receive timed out');
+  end procedure);
+  if Tasks.Select([Pending, Fallback]) <> 0 then
+    panic('pending receive index');
+  end if;
+
+  if Seen <> 123 then
+    panic('pending receive value');
+  end if;
+
+  if Tasks.Wait(Producer) <> 1 then
+    panic('producer result');
+  end if;
+  var Closed: Tasks.WaitCase := Tasks.ReceiveCase(Q, procedure(R: Result of (integer, string)) begin
     case R of
-      when Ok(_): panic('closed channel delivered');
-      when Error(Message): if Message <> 'Channel is closed' then panic(Message); end if;
+      when Result.Ok(_):
+        panic('closed channel delivered');
+      when Result.Error(const Message):
+        if Message <> 'Channel is closed' then
+          panic(Message);
+        end if;
     end case;
   end procedure);
   discard Tasks.CloseChannel(Q);
-  if Tasks.Select([Closed]) <> 0 then panic('closed index'); end if;
-  var Timer: Tasks.WaitCase := Tasks.TimerCase(2, procedure() begin Seen := 99; end procedure);
-  if Tasks.Select([Timer]) <> 0 then panic('timer index'); end if;
-  if Seen <> 99 then panic('timer callback'); end if;
-end program;"#;
+  if Tasks.Select([Closed]) <> 0 then
+    panic('closed index');
+  end if;
+  var Timer: Tasks.WaitCase := Tasks.TimerCase(2, procedure() begin
+    Seen := 99;
+  end procedure);
+  if Tasks.Select([Timer]) <> 0 then
+    panic('timer index');
+  end if;
+
+  if Seen <> 99 then
+    panic('timer callback');
+  end if;
+end program;
+"#;
 
 #[test]
 fn selection_callbacks_resume_nested_waits_with_one_worker() {

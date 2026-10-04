@@ -12,7 +12,7 @@ use crate::vm::worker::Worker;
 
 fn image(outcome: &str) -> Arc<VerifiedExecutable> {
     let (program, errors) = fpas_parser::parse(&format!(
-        "program Captures;  uses Std.Tasks as Tasks;\n          type Payload = record Number: integer; end record;\n         begin\n           var Captured: Payload := record Number := 42; end record;\n           var Group: Tasks.TaskGroup := Tasks.CreateTaskGroup();\n           var Child: task := Tasks.StartSupervisedTask(Group, function(Token: Tasks.CancellationToken): result of integer, string\n           begin\n             if Captured.Number <> 42 then panic('capture changed'); end if;\n             return {outcome};\n           end function, 2, 0);\n         end program;"
+        "program Captures;  uses Std.Tasks as Tasks;\n          type Payload = record Number: integer; end record;\n         begin\n           var Captured: Payload := Payload(Number := 42);\n           var Group: Tasks.TaskGroup := Tasks.CreateTaskGroup();\n           var Child: task := Tasks.StartSupervisedTask(Group, function(Token: Tasks.CancellationToken): result of (integer, string)\n           begin\n             if Captured.Number <> 42 then panic('capture changed'); end if;\n             return {outcome};\n           end function, 2, 0);\n         end program;"
     ));
     assert!(errors.is_empty(), "{errors:?}");
     Arc::new(fpas_compiler::compile(&program).expect("capture fixture"))
@@ -83,7 +83,7 @@ fn start(
 
 #[test]
 fn successful_supervision_releases_captures_before_group_close() {
-    let image = image("Ok(42)");
+    let image = image("Result.Ok(42)");
     for _ in 0..100 {
         let (worker, _group, scheduler, weak) = start(Arc::clone(&image), 2, 60000);
         let task = scheduler.try_dequeue().expect("initial attempt");
@@ -106,7 +106,7 @@ fn successful_supervision_releases_captures_before_group_close() {
 
 #[test]
 fn exhausted_supervision_releases_captures_before_group_close() {
-    let image = image("Error('retry')");
+    let image = image("Result.Error('retry')");
     for _ in 0..100 {
         let (worker, _group, scheduler, weak) = start(Arc::clone(&image), 2, 0);
         for attempt in 0..3 {
@@ -120,7 +120,7 @@ fn exhausted_supervision_releases_captures_before_group_close() {
 
 #[test]
 fn cancelled_supervision_releases_captures_without_executing_work() {
-    let image = image("Error('retry')");
+    let image = image("Result.Error('retry')");
     for _ in 0..100 {
         let (mut worker, group, scheduler, weak) = start(Arc::clone(&image), 2, 60000);
         worker
@@ -142,7 +142,7 @@ fn cancelled_supervision_releases_captures_without_executing_work() {
 
 #[test]
 fn shutdown_releases_supervision_captures_parked_in_backoff() {
-    let image = image("Error('retry')");
+    let image = image("Result.Error('retry')");
     for _ in 0..100 {
         let (worker, _group, scheduler, weak) = start(Arc::clone(&image), 2, 60000);
         let task = scheduler.try_dequeue().expect("initial attempt");
@@ -156,7 +156,7 @@ fn shutdown_releases_supervision_captures_parked_in_backoff() {
 
 #[test]
 fn dropping_queued_supervision_releases_captures() {
-    let image = image("Error('retry')");
+    let image = image("Result.Error('retry')");
     for _ in 0..100 {
         let (worker, _group, scheduler, weak) = start(Arc::clone(&image), 2, 0);
         drop(worker);

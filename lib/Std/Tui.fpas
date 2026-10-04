@@ -306,7 +306,7 @@ end function;
 //
 // Parameters:
 // - `Root`: Root of the element tree.
-public function TuiFocusFirst(Root: Element.TuiElement): option of ControlId.TuiControlId;
+public function TuiFocusFirst(Root: Element.TuiElement): Option of (ControlId.TuiControlId);
 begin
   return Helpers.TuiFocusFirst(Root);
 end function;
@@ -316,7 +316,7 @@ end function;
 // Parameters:
 // - `Root`: Root of the element tree.
 // - `Preferred`: Preferred size or focus identifier.
-public function TuiFocusResolve(Root: Element.TuiElement; Preferred: option of ControlId.TuiControlId): option of ControlId.TuiControlId;
+public function TuiFocusResolve(Root: Element.TuiElement; Preferred: Option of (ControlId.TuiControlId)): Option of (ControlId.TuiControlId);
 begin
   return Helpers.TuiFocusResolve(Root, Preferred);
 end function;

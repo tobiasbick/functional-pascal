@@ -5,7 +5,7 @@ uses Std.Tui as Tui;
 
 function ViewTheme(State: integer): Tui.TuiElement;
 begin
-  return Tui.TuiElementBuilders.MakeDesktop(None, [Tui.TuiElementBuilders.MakeLabel('theme')]);
+  return Tui.TuiElementBuilders.MakeDesktop(Option.None, [Tui.TuiElementBuilders.MakeLabel('theme')]);
 end function;
 
 function UpdateTheme(State: integer; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): integer;

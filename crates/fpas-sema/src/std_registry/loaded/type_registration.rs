@@ -24,6 +24,8 @@ pub(super) fn register_enum_type(
         .collect();
     let enum_ty = Ty::Enum(Arc::new(EnumTy {
         name: qualified_name.into(),
+        type_params: Vec::new(),
+        type_args: Vec::new(),
         variants: variants.clone(),
     }));
     checker.scopes.define(
@@ -58,8 +60,25 @@ pub(super) fn register_record_type(
     qualified_name: &str,
     fields: Vec<(String, Ty)>,
 ) -> Ty {
+    register_nominal_type(checker, qualified_name, fields, false)
+}
+
+/// Register a host resource whose identity is created by its owning library.
+pub(super) fn register_resource_type(checker: &mut Checker, qualified_name: &str) -> Ty {
+    register_nominal_type(checker, qualified_name, Vec::new(), true)
+}
+
+fn register_nominal_type(
+    checker: &mut Checker,
+    qualified_name: &str,
+    fields: Vec<(String, Ty)>,
+    is_resource: bool,
+) -> Ty {
     let record_ty = Ty::Record(Arc::new(RecordTy {
         name: qualified_name.into(),
+        type_params: Vec::new(),
+        type_args: Vec::new(),
+        is_resource,
         owner_unit: None,
         private_members: Vec::new(),
         fields,

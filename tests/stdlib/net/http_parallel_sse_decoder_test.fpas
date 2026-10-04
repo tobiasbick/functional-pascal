@@ -10,11 +10,11 @@ uses Std.Test as Test;
 function CreateDecoder(Index: integer): Http.SseDecoder;
 begin
   case Http.CreateSseDecoder(1024) of
-    when Ok(Decoder):
+    when Result.Ok(const Decoder):
       begin
         return Decoder;
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
         panic((('decoder ' + Conv.IntToStr(Index)) + ' failed: ') + Message);
       end;
@@ -22,7 +22,7 @@ begin
 end function;
 
 begin
-  mutable var Tasks: array of task := [];
+  mutable var Tasks: array of (task) := [];
   for Index: integer := 1 to 128 do
     begin
       Arrays.Push(Tasks, go CreateDecoder(Index));
@@ -30,7 +30,7 @@ begin
   end for;
 
   Tasks2.WaitAll(Tasks);
-  mutable var Decoders: array of Http.SseDecoder := [];
+  mutable var Decoders: array of (Http.SseDecoder) := [];
   for Index: integer := 0 to Arrays.Length(Tasks) - 1 do
     begin
       Arrays.Push(Decoders, Tasks2.Wait(Tasks[Index]));
@@ -41,23 +41,23 @@ begin
     begin
       var Expected: string := Conv.IntToStr(Index);
       case Http.FeedSse(Decoders[Index], Utf8.Encode((('data: ' + Expected) + #10) + #10)) of
-        when Ok(Events):
+        when Result.Ok(const Events):
           begin
             Test.AssertEquals(1, Arrays.Length(Events));
             Test.AssertEquals(Expected, Events[0].Data);
           end;
-        when Error(Message):
+        when Result.Error(const Message):
           begin
             panic(Message);
           end;
       end case;
 
       case Http.FinishSse(Decoders[Index]) of
-        when Ok(_):
+        when Result.Ok(_):
           begin
             null;
           end;
-        when Error(Message):
+        when Result.Error(const Message):
           begin
             panic(Message);
           end;

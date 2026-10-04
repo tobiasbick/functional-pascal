@@ -20,7 +20,7 @@ pub(crate) fn run(
         Intrinsic::Dict(DictIntrinsic::ContainsKey) => {
             let key = pop_value(call, location)?;
             let pairs = expect_dict(pop_value(call, location)?, location)?;
-            let found = pairs.iter().any(|(k, _)| k == key);
+            let found = pairs.iter().any(|(k, _)| k.language_equal(key));
             call.push(Value::Boolean(found));
         }
         Intrinsic::Dict(DictIntrinsic::Keys) => {
@@ -36,13 +36,13 @@ pub(crate) fn run(
         Intrinsic::Dict(DictIntrinsic::Remove) => {
             let key = pop_value(call, location)?;
             let mut pairs = pop_dict(pop_value(call, location)?, location)?;
-            pairs.retain(|(k, _)| k != key);
+            pairs.retain(|(k, _)| !k.language_equal(key));
             call.push(Value::dict(pairs));
         }
         Intrinsic::Dict(DictIntrinsic::Get) => {
             let key = pop_value(call, location)?;
             let pairs = expect_dict(pop_value(call, location)?, location)?;
-            let found = pairs.iter().find(|(k, _)| k == key);
+            let found = pairs.iter().find(|(k, _)| k.language_equal(key));
             match found {
                 Some((_, v)) => call.push(Value::option_some(v.clone())),
                 None => call.push(Value::OptionNone),
@@ -52,7 +52,7 @@ pub(crate) fn run(
             let other = pop_dict(pop_value(call, location)?, location)?;
             let mut base = pop_dict(pop_value(call, location)?, location)?;
             for (k, v) in other {
-                if let Some(entry) = base.iter_mut().find(|(ek, _)| ek == &k) {
+                if let Some(entry) = base.iter_mut().find(|(ek, _)| ek.language_equal(&k)) {
                     entry.1 = v;
                 } else {
                     base.push((k, v));

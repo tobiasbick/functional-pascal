@@ -26,7 +26,7 @@ pub(super) fn check_push(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
                 "`{}` first argument must be a simple mutable array variable",
                 s::STD_ARRAY_PUSH
             ),
-            "Use `mutable var N: array of T := [...]` then `Std.Arrays.Push(N, x)`.",
+            "Use `mutable var N: array of (T) := [...]` then `Std.Arrays.Push(N, x)`.",
             span,
         );
         c.check_expr(args[1]);
@@ -36,7 +36,7 @@ pub(super) fn check_push(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
         c.error_with_code(
             SEMA_IMMUTABLE_ASSIGNMENT,
             format!("`{var_name}` must be a `mutable var` of array type"),
-            "Declare with `mutable var Name: array of T := ...`.",
+            "Declare with `mutable var Name: array of (T) := ...`.",
             span,
         );
         c.check_expr(args[1]);
@@ -67,7 +67,7 @@ pub(super) fn check_pop(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
                 "`{}` argument must be a simple mutable array variable",
                 s::STD_ARRAY_POP
             ),
-            "Use `mutable var N: array of T := [...]` then `Std.Arrays.Pop(N)`.",
+            "Use `mutable var N: array of (T) := [...]` then `Std.Arrays.Pop(N)`.",
             span,
         );
         return Ty::Error;
@@ -76,7 +76,7 @@ pub(super) fn check_pop(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
         c.error_with_code(
             SEMA_IMMUTABLE_ASSIGNMENT,
             format!("`{var_name}` must be a `mutable var` of array type"),
-            "Declare with `mutable var Name: array of T := ...`.",
+            "Declare with `mutable var Name: array of (T) := ...`.",
             span,
         );
         return Ty::Error;

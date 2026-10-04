@@ -58,7 +58,7 @@ pub fn analyze_unit_with_interface_support(
         .extend(super::public_signatures::validate(unit));
     checker.report_import_alias_conflicts();
     let interface = if checker.errors.is_empty() {
-        Some(checker.extract_unit_interface(unit)?)
+        Some(checker.extract_unit_interface(unit, interfaces)?)
     } else {
         None
     };

@@ -20,13 +20,15 @@ end function;
 function Update(Value: integer; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): integer;
 begin
   case Msg of
-    when Tui.TuiMsg.Tick(Delta):
+    when Tui.TuiMsg.Tick(const Delta):
       begin
         return Value + Delta;
       end;
-    else
+    when Tui.TuiMsg.Started, Tui.TuiMsg.Key(_), Tui.TuiMsg.Pointer(_), Tui.TuiMsg.Resize(_), Tui.TuiMsg.FocusChanged(_, _), Tui.TuiMsg.Action(_, _), Tui.TuiMsg.TextChanged(_, _, _, _), Tui.TuiMsg.TextAreaChanged(_, _, _, _, _), Tui.TuiMsg.CheckChanged(_, _, _), Tui.TuiMsg.SelectionChanged(_, _, _), Tui.TuiMsg.ScrollChanged(_, _, _), Tui.TuiMsg.MenuChanged(_, _, _), Tui.TuiMsg.BackgroundFailed(_, _, _, _, _, _), Tui.TuiMsg.QuitRequested:
       begin
-        return Value;
+        begin
+          return Value;
+        end;
       end;
   end case;
 end function;
@@ -35,7 +37,7 @@ begin
   var Mode: string := Args.ParamStr(0);
   var Size: integer := Conv.StrToInt(Args.ParamStr(1));
   var Text: string := Str.RepeatStr(Args.ParamStr(2), Size);
-  mutable var Notes: array of Model.Note := [];
+  mutable var Notes: array of (Model.Note) := [];
   for I: integer := 1 to Size do
     begin
       Arrays.Push(Notes, Model.NoteCreate(Conv.IntToStr(I), I));
@@ -49,7 +51,7 @@ begin
       if Mode = 'utf8' then
         begin
           case Utf8.Decode(Utf8.Encode(Text)) of
-            when Ok(Decoded):
+            when Result.Ok(const Decoded):
               begin
                 if Decoded <> Text then
                   begin
@@ -57,7 +59,7 @@ begin
                   end;
                 end if;
               end;
-            when Error(Message):
+            when Result.Error(const Message):
               begin
                 panic(Message);
               end;
@@ -66,7 +68,7 @@ begin
       else
         if Mode = 'notes' then
           begin
-            var Sorted: array of Model.Note := Repository.NotesSort(Notes);
+            var Sorted: array of (Model.Note) := Repository.NotesSort(Notes);
             if Sorted[0].UpdatedMillis <> Size then
               begin
                 panic('sort');

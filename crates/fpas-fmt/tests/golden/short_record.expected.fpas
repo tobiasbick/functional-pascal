@@ -6,8 +6,5 @@ type Point = record
 end record;
 
 begin
-  var A: Point := record
-    X := 3;
-    Y := 4;
-  end record;
+  var A: Point := Point(X := 3, Y := 4);
 end program;

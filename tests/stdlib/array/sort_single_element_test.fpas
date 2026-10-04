@@ -4,7 +4,7 @@ uses Std.Console as Console;
 uses Std.Arrays as Arrays;
 
 begin
-  var A: array of integer := [42];
-  var B: array of integer := Arrays.Sort(A);
+  var A: array of (integer) := [42];
+  var B: array of (integer) := Arrays.Sort(A);
   Console.WriteLn(B[0]);
 end program;

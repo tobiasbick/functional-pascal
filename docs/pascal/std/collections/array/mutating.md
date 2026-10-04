@@ -1,13 +1,13 @@
 # Mutating
 
-## `procedure Push(mutable A: array of T; Value: T)`
+## `procedure Push(mutable A: array of (T); Value: T)`
 
 Appends `Value` to the end of **`A`** (mutates `A`).
 
 ```pascal
 uses Std.Console as Console;
 
-mutable var A: array of integer := [1, 2];
+mutable var A: array of (integer) := [1, 2];
 Push(A, 3);
 A.Push(4);
 Console.WriteLn(Length(A));
@@ -15,14 +15,14 @@ Console.WriteLn(Length(A));
 
 ---
 
-## `function Pop(mutable A: array of T): T`
+## `function Pop(mutable A: array of (T)): T`
 
 Removes the **last** element and returns it. **`A` becomes shorter.** **Runtime error** if `A` is empty.
 
 ```pascal
 uses Std.Console as Console;
 
-mutable var A: array of integer := [1, 2, 3];
+mutable var A: array of (integer) := [1, 2, 3];
 var Last: integer := Pop(A);
 var Next: integer := A.Pop();
 Console.WriteLn(Last);

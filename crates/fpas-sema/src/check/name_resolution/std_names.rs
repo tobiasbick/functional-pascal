@@ -1,31 +1,6 @@
 use super::Checker;
-use crate::scope::canonical_symbol_name;
-use fpas_diagnostics::codes::SEMA_AMBIGUOUS_IMPORTED_NAME;
 
 impl Checker {
-    /// If `name` is an ambiguous short import or enum variant, return a hint listing the candidates.
-    pub(crate) fn ambiguous_hint(&self, name: &str) -> Option<String> {
-        let canonical_name = canonical_symbol_name(name);
-        if let Some(candidates) = self.ambiguous_enum_variants.get(&canonical_name) {
-            return Some(format!(
-                "`{name}` exists in multiple enums: {}. Use the fully qualified variant name to disambiguate.",
-                candidates.join(", ")
-            ));
-        }
-
-        None
-    }
-
-    /// Hint for an ambiguous short routine name in a call with `arg_count` arguments.
-    ///
-    /// With at least one argument, the method form on that argument selects the routine by the
-    /// argument's type, for example `Value.Unwrap()` for an option or a result.
-    pub(crate) fn ambiguous_call_hint(&self, name: &str, arg_count: usize) -> Option<String> {
-        let hint = self.ambiguous_hint(name)?;
-        let _ = arg_count;
-        Some(hint)
-    }
-
     /// Resolves standard call names while preserving lexical shadowing of imported aliases.
     ///
     /// **Documentation:** `docs/pascal/program-structure/units.md`.
@@ -55,16 +30,5 @@ impl Checker {
         }
 
         crate::std_registry::register_single_std_unit(self, unit.as_str());
-    }
-
-    pub(crate) fn report_ambiguous_type_name(&mut self, name: &str, span: fpas_lexer::Span) {
-        if let Some(hint) = self.ambiguous_hint(name) {
-            self.error_with_code(
-                SEMA_AMBIGUOUS_IMPORTED_NAME,
-                format!("Ambiguous type `{name}`"),
-                hint,
-                span,
-            );
-        }
     }
 }

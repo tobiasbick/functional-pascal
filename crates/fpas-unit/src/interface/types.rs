@@ -3,6 +3,8 @@
 /// Built-in constraint attached to a generic parameter.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum TypeConstraint {
+    /// Values support structural equality.
+    Equatable,
     /// Values support equality and ordering comparisons.
     Comparable,
     /// Values support arithmetic operations.
@@ -97,6 +99,12 @@ pub struct EventType {
 pub struct RecordType {
     /// Canonical qualified record name.
     pub name: String,
+    /// Generic parameters in declaration order.
+    pub type_parameters: Vec<GenericParameter>,
+    /// Arguments of a concrete or enclosing-generic application.
+    pub type_arguments: Vec<InterfaceType>,
+    /// Whether the nominal type designates an opaque host resource.
+    pub is_resource: bool,
     /// Canonical source unit that owns private members.
     pub owner_unit: Option<String>,
     /// Names of record members not declared `public`.
@@ -129,6 +137,10 @@ pub struct EnumVariant {
 pub struct EnumType {
     /// Canonical qualified enum name.
     pub name: String,
+    /// Generic parameters in declaration order.
+    pub type_parameters: Vec<GenericParameter>,
+    /// Arguments of a concrete or enclosing-generic application.
+    pub type_arguments: Vec<InterfaceType>,
     /// Variants in declaration/backing-value order.
     pub variants: Vec<EnumVariant>,
 }
@@ -168,6 +180,8 @@ pub enum InterfaceType {
     Enum(Box<EnumType>),
     /// Reference to a canonical named type, including recursive references.
     Named(String),
+    /// Application of a canonical nominal generic type, including recursive references.
+    Applied(String, Vec<Self>),
     /// Generic parameter with its resolved constraint.
     GenericParameter(String, Option<TypeConstraint>),
 }

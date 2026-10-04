@@ -19,14 +19,14 @@ uses Std.Str as Str;
 // Parameters:
 // - `Connection`: Accepted TCP or TLS connection.
 // - `Maximum`: Maximum request-head size in bytes.
-function ReadHead(Connection: Net.Connection; Maximum: integer): result of array of integer, string;
+function ReadHead(Connection: Net.Connection; Maximum: integer): Result of (array of (integer), string);
 begin
-  mutable var Bytes: array of integer := [];
+  mutable var Bytes: array of (integer) := [];
   while Wire.FindSeparator(Bytes, 0) < 0 do
     begin
       if Arrays.Length(Bytes) >= Maximum then
         begin
-          return Error('HTTP request headers exceed MaxHeaderBytes');
+          return Result.Error('HTTP request headers exceed MaxHeaderBytes');
         end;
       end if;
       mutable var ReadMaximum: integer := Maximum - Arrays.Length(Bytes);
@@ -37,60 +37,60 @@ begin
       end if;
 
       case Net.ReceiveBytes(Connection, ReadMaximum) of
-        when Ok(Chunk):
+        when Result.Ok(const Chunk):
           begin
             if Arrays.Length(Chunk) = 0 then
               begin
-                return Error('HTTP request is missing the header terminator');
+                return Result.Error('HTTP request is missing the header terminator');
               end;
             end if;
 
             Bytes := Arrays.Concat(Bytes, Chunk);
           end;
-        when Error(Message):
+        when Result.Error(const Message):
           begin
-            return Error(Message);
+            return Result.Error(Message);
           end;
       end case;
     end;
   end while;
 
-  return Ok(Bytes);
+  return Result.Ok(Bytes);
 end function;
 
 // Parses and validates an HTTP/1.0 or HTTP/1.1 request line.
 //
 // Parameters:
 // - `Line`: Decoded request line.
-function ParseRequestLine(Line: string): result of array of string, string;
+function ParseRequestLine(Line: string): Result of (array of (string), string);
 begin
-  var Parts: array of string := Str.Split(Line, ' ');
+  var Parts: array of (string) := Str.Split(Line, ' ');
   if Arrays.Length(Parts) <> 3 then
     begin
-      return Error('HTTP request line must contain method, target, and version');
+      return Result.Error('HTTP request line must contain method, target, and version');
     end;
   end if;
 
   if not Method2.IsValidToken(Parts[0]) then
     begin
-      return Error('HTTP request method must be a non-empty RFC 9110 token');
+      return Result.Error('HTTP request method must be a non-empty RFC 9110 token');
     end;
   end if;
 
   if ((((not Str.StartsWith(Parts[1], '/')) or Headers2.ContainsUnsafeText(Parts[1])) or Str.Contains(Parts[1], #9)) or Str.Contains(Parts[1], '#')) or
      (not Fields.IsValidValue(Parts[1])) then
     begin
-      return Error('HTTP server supports only safe origin-form request targets');
+      return Result.Error('HTTP server supports only safe origin-form request targets');
     end;
   end if;
 
   if (Parts[2] <> 'HTTP/1.0') and (Parts[2] <> 'HTTP/1.1') then
     begin
-      return Error('HTTP server supports only HTTP/1.0 and HTTP/1.1 requests');
+      return Result.Error('HTTP server supports only HTTP/1.0 and HTTP/1.1 requests');
     end;
   end if;
 
-  return Ok(Parts);
+  return Result.Ok(Parts);
 end function;
 
 // Counts fields with a case-insensitive name.
@@ -98,7 +98,7 @@ end function;
 // Parameters:
 // - `Headers`: Parsed request fields.
 // - `Name`: Case-insensitive field name to count.
-function HeaderCount(Headers: array of Types.Header; Name: string): integer;
+function HeaderCount(Headers: array of (Types.Header); Name: string): integer;
 begin
   mutable var Count: integer := 0;
   for Index: integer := 0 to Arrays.Length(Headers) - 1 do
@@ -120,7 +120,7 @@ end function;
 // - `Connection`: Accepted TCP or TLS connection.
 // - `Initial`: Body bytes already read with the request head.
 // - `Length`: Declared complete body length.
-function ReadBody(Connection: Net.Connection; Initial: array of integer; Length: integer): result of array of integer, string;
+function ReadBody(Connection: Net.Connection; Initial: array of (integer); Length: integer): Result of (array of (integer), string);
 begin
   mutable var InitialLength: integer := Arrays.Length(Initial);
   if Length < InitialLength then
@@ -128,7 +128,7 @@ begin
       InitialLength := Length;
     end;
   end if;
-  mutable var Chunks: array of array of integer := [Arrays.Slice(Initial, 0, InitialLength)];
+  mutable var Chunks: array of (array of (integer)) := [Arrays.Slice(Initial, 0, InitialLength)];
   mutable var Received: integer := InitialLength;
   while Received < Length do
     begin
@@ -140,26 +140,26 @@ begin
       end if;
 
       case Net.ReceiveBytes(Connection, ReadMaximum) of
-        when Ok(Chunk):
+        when Result.Ok(const Chunk):
           begin
             if Arrays.Length(Chunk) = 0 then
               begin
-                return Error('HTTP request body is shorter than Content-Length');
+                return Result.Error('HTTP request body is shorter than Content-Length');
               end;
             end if;
 
             Arrays.Push(Chunks, Chunk);
             Received := Received + Arrays.Length(Chunk);
           end;
-        when Error(Message):
+        when Result.Error(const Message):
           begin
-            return Error(Message);
+            return Result.Error(Message);
           end;
       end case;
     end;
   end while;
 
-  return Ok(Io.JoinChunks(Chunks));
+  return Result.Ok(Io.JoinChunks(Chunks));
 end function;
 
 // Reads and validates one bounded HTTP/1.x request from a connected client.
@@ -168,90 +168,90 @@ end function;
 // - `Connection`: Accepted TCP or TLS connection.
 // - `MaxHeaderBytes`: Maximum request-head size in bytes.
 // - `MaxBodyBytes`: Maximum request-body size in bytes.
-public function ReadRequest(Connection: Net.Connection; MaxHeaderBytes: integer; MaxBodyBytes: integer): result of Types.ServerRequest, string;
+public function ReadRequest(Connection: Net.Connection; MaxHeaderBytes: integer; MaxBodyBytes: integer): Result of (Types.ServerRequest, string);
 begin
   if MaxHeaderBytes < 1 then
     begin
-      return Error('HTTP server MaxHeaderBytes must be positive');
+      return Result.Error('HTTP server MaxHeaderBytes must be positive');
     end;
   end if;
 
   if MaxBodyBytes < 0 then
     begin
-      return Error('HTTP server MaxBodyBytes must not be negative');
+      return Result.Error('HTTP server MaxBodyBytes must not be negative');
     end;
   end if;
-  mutable var Bytes: array of integer := [];
+  mutable var Bytes: array of (integer) := [];
   case ReadHead(Connection, MaxHeaderBytes) of
-    when Ok(Value):
+    when Result.Ok(const Value):
       begin
         Bytes := Value;
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
-        return Error(Message);
+        return Result.Error(Message);
       end;
   end case;
   var Separator: integer := Wire.FindSeparator(Bytes, 0);
-  var HeadBytes: array of integer := Arrays.Slice(Bytes, 0, Separator);
+  var HeadBytes: array of (integer) := Arrays.Slice(Bytes, 0, Separator);
   mutable var HeadText: string := '';
   case Utf8.Decode(HeadBytes) of
-    when Ok(Value):
+    when Result.Ok(const Value):
       begin
         HeadText := Value;
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
-        return Error('HTTP request headers are not valid UTF-8: ' + Message);
+        return Result.Error('HTTP request headers are not valid UTF-8: ' + Message);
       end;
   end case;
-  var Lines: array of string := Str.Split(HeadText, #13 + #10);
+  var Lines: array of (string) := Str.Split(HeadText, #13 + #10);
   if Arrays.Length(Lines) = 0 then
     begin
-      return Error('HTTP request line is missing');
+      return Result.Error('HTTP request line is missing');
     end;
   end if;
-  mutable var RequestLine: array of string := [];
+  mutable var RequestLine: array of (string) := [];
   case ParseRequestLine(Lines[0]) of
-    when Ok(Value):
+    when Result.Ok(const Value):
       begin
         RequestLine := Value;
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
-        return Error(Message);
+        return Result.Error(Message);
       end;
   end case;
-  mutable var Headers: array of Types.Header := [];
+  mutable var Headers: array of (Types.Header) := [];
   case Fields.Parse(HeadText, 'request') of
-    when Ok(Value):
+    when Result.Ok(const Value):
       begin
         Headers := Value;
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
-        return Error(Message);
+        return Result.Error(Message);
       end;
   end case;
 
   if (RequestLine[2] = 'HTTP/1.1') and (HeaderCount(Headers, 'Host') <> 1) then
     begin
-      return Error('HTTP/1.1 request must contain exactly one Host header');
+      return Result.Error('HTTP/1.1 request must contain exactly one Host header');
     end;
   end if;
 
   if RequestLine[2] = 'HTTP/1.1' then
     begin
       case Headers2.Find(Headers, 'Host') of
-        when Some(Value):
+        when Option.Some(const Value):
           begin
             if Str.Trim(Value) = '' then
               begin
-                return Error('HTTP/1.1 Host header must not be empty');
+                return Result.Error('HTTP/1.1 Host header must not be empty');
               end;
             end if;
           end;
-        when None:
+        when Option.None:
           begin
             null;
           end;
@@ -260,11 +260,11 @@ begin
   end if;
   mutable var BodyLength: integer := 0;
   case BodyFraming.Select(Headers) of
-    when Ok(Framing):
+    when Result.Ok(const Framing):
       begin
         if Framing.Mode = 2 then
           begin
-            return Error('HTTP server does not support chunked request bodies');
+            return Result.Error('HTTP server does not support chunked request bodies');
           end;
         end if;
 
@@ -274,56 +274,50 @@ begin
           end;
         end if;
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
-        return Error(Message);
+        return Result.Error(Message);
       end;
   end case;
 
   if BodyLength > MaxBodyBytes then
     begin
-      return Error('HTTP request body exceeds MaxBodyBytes');
+      return Result.Error('HTTP request body exceeds MaxBodyBytes');
     end;
   end if;
-  var InitialBody: array of integer := Arrays.Slice(Bytes, Separator + 4, (Arrays.Length(Bytes) - Separator) -
-                                                                          4);
-  mutable var Body: array of integer := [];
+  var InitialBody: array of (integer) := Arrays.Slice(Bytes, Separator + 4, (Arrays.Length(Bytes) - Separator) -
+                                                                            4);
+  mutable var Body: array of (integer) := [];
   case ReadBody(Connection, InitialBody, BodyLength) of
-    when Ok(Value):
+    when Result.Ok(const Value):
       begin
         Body := Value;
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
-        return Error(Message);
+        return Result.Error(Message);
       end;
   end case;
-  var Output: Types.ServerRequest := record
-    Method := RequestLine[0];
-    Target := RequestLine[1];
-    Headers := Headers;
-    Body := Body;
-  end record;
-
-  return Ok(Output);
+  var Output: Types.ServerRequest := Types.ServerRequest(Method := RequestLine[0], Target := RequestLine[1], Headers := Headers, Body := Body);
+  return Result.Ok(Output);
 end function;
 
 // Validates and serializes one complete HTTP/1.1 response.
 //
 // Parameters:
 // - `ResponseValue`: Complete response to encode.
-function EncodeResponse(ResponseValue: Types.ServerResponse): result of array of integer, string;
+function EncodeResponse(ResponseValue: Types.ServerResponse): Result of (array of (integer), string);
 begin
   if (ResponseValue.StatusCode < 100) or (ResponseValue.StatusCode > 599) then
     begin
-      return Error('HTTP response status code must be in 100..599');
+      return Result.Error('HTTP response status code must be in 100..599');
     end;
   end if;
 
   if (not Fields.IsValidValue(ResponseValue.ReasonPhrase)) or
      Headers2.ContainsUnsafeText(ResponseValue.ReasonPhrase) then
     begin
-      return Error('HTTP response reason phrase contains an invalid control character');
+      return Result.Error('HTTP response reason phrase contains an invalid control character');
     end;
   end if;
   mutable var Head: string := (((('HTTP/1.1 ' + Conv.IntToStr(ResponseValue.StatusCode)) + ' ') + ResponseValue.ReasonPhrase) + #13) +
@@ -336,13 +330,13 @@ begin
       var Field: Types.Header := ResponseValue.Headers[Index];
       if (not Method2.IsValidToken(Field.Name)) or (not Fields.IsValidValue(Field.Value)) then
         begin
-          return Error('HTTP response contains an invalid header');
+          return Result.Error('HTTP response contains an invalid header');
         end;
       end if;
 
       if ((Headers2.IsName(Field.Name, 'Content-Length') or Headers2.IsName(Field.Name, 'Transfer-Encoding')) or Headers2.IsName(Field.Name, 'Connection')) then
         begin
-          return Error('Content-Length, Transfer-Encoding, and Connection are managed by Std.Http');
+          return Result.Error('Content-Length, Transfer-Encoding, and Connection are managed by Std.Http');
         end;
       end if;
 
@@ -351,7 +345,7 @@ begin
   end for;
 
   Head := (Head + #13) + #10;
-  return Ok(Arrays.Concat(Utf8.Encode(Head), ResponseValue.Body));
+  return Result.Ok(Arrays.Concat(Utf8.Encode(Head), ResponseValue.Body));
 end function;
 
 // Writes one complete HTTP/1.1 response without closing the connection.
@@ -359,16 +353,16 @@ end function;
 // Parameters:
 // - `Connection`: Accepted TCP or TLS connection.
 // - `ResponseValue`: Complete response to serialize and write.
-public function WriteResponse(Connection: Net.Connection; ResponseValue: Types.ServerResponse): result of boolean, string;
+public function WriteResponse(Connection: Net.Connection; ResponseValue: Types.ServerResponse): Result of (boolean, string);
 begin
   case EncodeResponse(ResponseValue) of
-    when Ok(Bytes):
+    when Result.Ok(const Bytes):
       begin
         return Io.WriteAll(Connection, Bytes);
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
-        return Error(Message);
+        return Result.Error(Message);
       end;
   end case;
 end function;

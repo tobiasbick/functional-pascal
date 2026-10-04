@@ -50,7 +50,7 @@ pub(super) fn console_cells(
         return Err(worker.runtime_error(
             RUNTIME_VM_OPERAND_TYPE_MISMATCH,
             format!(
-                "Expected array of Std.Console.Cell, got {}",
+                "Expected array of (Std.Console.Cell), got {}",
                 value.type_name()
             ),
             "Pass an array of Cell values.",

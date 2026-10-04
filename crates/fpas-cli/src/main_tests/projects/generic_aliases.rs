@@ -27,7 +27,7 @@ uses Repro.Model as Model2; uses Std.Tui as Tui;
   public type Model = Model2.Model;
 public function NewModel(): Model;
 begin
-  return record Value := 0; end record;
+  return Model(Value := 0);
 end function;
 public function Update(State: Model; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): Model;
 begin

@@ -1,6 +1,6 @@
 # Result and Option helpers
 
-Combinators and accessors for `Result of T, E` and `Option of T`.
+Combinators and accessors for `Result of (T, E)` and `Option of (T)`.
 
 | Unit | Description |
 |------|-------------|

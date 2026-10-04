@@ -125,10 +125,10 @@ impl LoweringContext {
         expression: &Expr,
         expected: TypeId,
     ) -> Result<ValueId, CompileError> {
+        if expected == super::super::types::DYNAMIC {
+            return self.lower_expression(expression);
+        }
         match expression {
-            Expr::RecordLiteral { fields, span } => {
-                self.lower_record_literal_as(fields, expected, *span)
-            }
             Expr::ArrayLiteral(values, span) => {
                 self.lower_array_literal_as(values, expected, *span)
             }

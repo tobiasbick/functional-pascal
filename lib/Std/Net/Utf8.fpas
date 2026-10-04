@@ -6,14 +6,14 @@ uses Std.Conv as Conv;
 uses Std.Str as Str;
 
 // Internal bulk codec implemented by the string runtime.
-function EncodeBytes(Text: string): array of integer;
+function EncodeBytes(Text: string): array of (integer);
 begin
   panic('internal UTF-8 encode intrinsic was not lowered');
 end function;
 
 // Encodes one FPAS string as UTF-8 bytes in one pass.
 // See docs/pascal/std/network/utf8.md.
-public function Encode(Text: string): array of integer;
+public function Encode(Text: string): array of (integer);
 begin
   return EncodeBytes(Text);
 end function;
@@ -23,9 +23,9 @@ end function;
 // Parameters:
 // - `Index`: Byte offset where validation failed.
 // - `Message`: Reason the byte sequence is invalid.
-function Invalid(Index: integer; Message: string): result of string, string;
+function Invalid(Index: integer; Message: string): Result of (string, string);
 begin
-  return Error((('Invalid UTF-8 at byte ' + Conv.IntToStr(Index)) + ': ') + Message);
+  return Result.Error((('Invalid UTF-8 at byte ' + Conv.IntToStr(Index)) + ': ') + Message);
 end function;
 
 // Reports whether an integer is a UTF-8 continuation byte.
@@ -41,9 +41,9 @@ end function;
 //
 // Parameters:
 // - `Bytes`: Integer byte values in `0..255`.
-public function Decode(Bytes: array of integer): result of string, string;
+public function Decode(Bytes: array of (integer)): Result of (string, string);
 begin
-  mutable var Parts: array of string := [];
+  mutable var Parts: array of (string) := [];
   mutable var Index: integer := 0;
   while Index < Arrays.Length(Bytes) do
     begin
@@ -146,7 +146,7 @@ begin
     end;
   end while;
 
-  return Ok(Str.Join(Parts, ''));
+  return Result.Ok(Str.Join(Parts, ''));
 end function;
 
 end unit;

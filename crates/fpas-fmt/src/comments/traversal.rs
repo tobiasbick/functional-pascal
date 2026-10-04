@@ -6,8 +6,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use fpas_lexer::{Span, Token, lex_with_comments};
 use fpas_parser::{
-    CaseArm, CaseLabel, CompilationUnit, Decl, FuncBody, Program, RecordMethod, Stmt, TypeBody,
-    Unit,
+    CaseArm, CompilationUnit, Decl, FuncBody, Program, RecordMethod, Stmt, TypeBody, Unit,
 };
 
 use super::anchors::{EmissionAnchor, span_end, stmt_end, stmt_start};
@@ -21,6 +20,8 @@ pub(crate) struct CollectedAnchors {
     pub bodies: BTreeMap<usize, usize>,
     pub headers: BTreeMap<usize, usize>,
     pub declarations: BTreeSet<usize>,
+    /// First obsolete construction encountered during recursive traversal.
+    pub obsolete_record: Option<Span>,
     semicolons: Vec<EmissionAnchor>,
 }
 
@@ -342,13 +343,8 @@ fn collect_stmt_contents(stmt: &Stmt, begins: &[usize], out: &mut CollectedAncho
 
 fn collect_case_arm(arm: &CaseArm, begins: &[usize], out: &mut CollectedAnchors) {
     push_span(arm.span, out);
-    for label in &arm.labels {
-        if let CaseLabel::Value { start, end, .. } = label {
-            collect_expr(start, begins, out);
-            if let Some(end) = end {
-                collect_expr(end, begins, out);
-            }
-        }
+    for pattern in &arm.labels {
+        pattern.visit_expressions(&mut |expr| collect_expr(expr, begins, out));
     }
     if let Some(guard) = &arm.guard {
         collect_expr(guard, begins, out);

@@ -77,18 +77,22 @@ fn http_client_skips_informational_response_and_follows_relative_redirect() {
         &format!(
             r#"program HttpRelativeRedirect;
 
-uses Std.Console as Console; uses Std.Http as Http;
+uses Std.Console as Console;
+uses Std.Http as Http;
 
 begin
   case Http.Send(Http.Request.Get('http://127.0.0.1:{port}/start')) of
-    when Ok(ResponseValue):
-    begin
-      case Http.BodyText(ResponseValue) of
-        when Ok(Text): Console.WriteLn(Text);
-        when Error(Message): panic(Message);
-      end case;
-    end;
-    when Error(Message): panic(Message);
+    when Result.Ok(const ResponseValue):
+      begin
+        case Http.BodyText(ResponseValue) of
+          when Result.Ok(const Text):
+            Console.WriteLn(Text);
+          when Result.Error(const Message):
+            panic(Message);
+        end case;
+      end;
+    when Result.Error(const Message):
+      panic(Message);
   end case;
 end program;
 "#
@@ -140,19 +144,23 @@ fn cross_origin_303_redirect_changes_post_to_get_and_strips_credentials() {
         &format!(
             r#"program HttpCrossOriginRedirect;
 
-uses Std.Console as Console; uses Std.Http as Http; uses Std.Net.Utf8 as Utf8;
+uses Std.Console as Console;
+uses Std.Http as Http;
+uses Std.Net.Utf8 as Utf8;
 
 begin
   mutable var RequestValue: Http.Request := Http.Request.Post('http://127.0.0.1:{redirect_port}/submit');
   RequestValue.Headers := [
-    Http.Header.Create('Authorization', 'Bearer secret'),
-    Http.Header.Create('Cookie', 'session=secret'),
-    Http.Header.Create('Content-Type', 'text/plain')
-  ];
+                            Http.Header.Create('Authorization', 'Bearer secret'),
+                            Http.Header.Create('Cookie', 'session=secret'),
+                            Http.Header.Create('Content-Type', 'text/plain')
+                          ];
   RequestValue.Body := Utf8.Encode('payload');
   case Http.Send(RequestValue) of
-    when Ok(ResponseValue): Console.WriteLn(ResponseValue.StatusCode);
-    when Error(Message): panic(Message);
+    when Result.Ok(const ResponseValue):
+      Console.WriteLn(ResponseValue.StatusCode);
+    when Result.Error(const Message):
+      panic(Message);
   end case;
 end program;
 "#
@@ -201,27 +209,36 @@ fn http_client_enforces_header_and_redirect_limits() {
         &format!(
             r#"program HttpClientLimits;
 
-uses Std.Console as Console; uses Std.Http as Http; uses Std.Str as Str;
+uses Std.Console as Console;
+uses Std.Http as Http;
+uses Std.Str as Str;
 
 begin
   mutable var HeaderRequest: Http.Request := Http.Request.Get('http://127.0.0.1:{header_port}/');
   HeaderRequest.MaxHeaderBytes := 48;
   case Http.Send(HeaderRequest) of
-    when Ok(_): panic('oversized response head was accepted');
-    when Error(Message):
-    begin
-      if not Str.Contains(Message, 'MaxHeaderBytes') then panic(Message); end if;
-    end;
+    when Result.Ok(_):
+      panic('oversized response head was accepted');
+    when Result.Error(const Message):
+      begin
+        if not Str.Contains(Message, 'MaxHeaderBytes') then
+          panic(Message);
+        end if;
+      end;
   end case;
   mutable var RedirectRequest: Http.Request := Http.Request.Get('http://127.0.0.1:{redirect_port}/');
   RedirectRequest.MaxRedirects := 0;
   case Http.Send(RedirectRequest) of
-    when Ok(_): panic('redirect limit was ignored');
-    when Error(Message):
-    begin
-      if not Str.Contains(Message, 'MaxRedirects') then panic(Message); end if;
-    end;
+    when Result.Ok(_):
+      panic('redirect limit was ignored');
+    when Result.Error(const Message):
+      begin
+        if not Str.Contains(Message, 'MaxRedirects') then
+          panic(Message);
+        end if;
+      end;
   end case;
+
   Console.WriteLn('ok');
 end program;
 "#
@@ -280,16 +297,21 @@ fn http_client_rejects_ambiguous_framing_and_excess_interim_responses() {
         &format!(
             r#"program HttpHostileResponses;
 
-uses Std.Console as Console; uses Std.Http as Http; uses Std.Str as Str;
+uses Std.Console as Console;
+uses Std.Http as Http;
+uses Std.Str as Str;
 
 procedure ExpectError(Url: string; Text: string);
 begin
   case Http.Send(Http.Request.Get(Url)) of
-    when Ok(_): panic('hostile HTTP response was accepted');
-    when Error(Message):
-    begin
-      if not Str.Contains(Message, Text) then panic(Message); end if;
-    end;
+    when Result.Ok(_):
+      panic('hostile HTTP response was accepted');
+    when Result.Error(const Message):
+      begin
+        if not Str.Contains(Message, Text) then
+          panic(Message);
+        end if;
+      end;
   end case;
 end procedure;
 
@@ -332,16 +354,21 @@ fn http_client_rejects_chunk_size_integer_overflow() {
         &format!(
             r#"program HttpChunkSizeOverflow;
 
-uses Std.Console as Console; uses Std.Http as Http; uses Std.Str as Str;
+uses Std.Console as Console;
+uses Std.Http as Http;
+uses Std.Str as Str;
 
 procedure ExpectOverflow(Path: string);
 begin
   case Http.Send(Http.Request.Get('http://127.0.0.1:{port}/' + Path)) of
-    when Ok(_): panic('overflowing HTTP chunk size was accepted');
-    when Error(Message):
-    begin
-      if not Str.Contains(Message, 'exceeds the integer range') then panic(Message); end if;
-    end;
+    when Result.Ok(_):
+      panic('overflowing HTTP chunk size was accepted');
+    when Result.Error(const Message):
+      begin
+        if not Str.Contains(Message, 'exceeds the integer range') then
+          panic(Message);
+        end if;
+      end;
   end case;
 end procedure;
 

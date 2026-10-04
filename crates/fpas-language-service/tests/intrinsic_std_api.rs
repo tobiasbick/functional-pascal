@@ -141,7 +141,7 @@ fn receiver_completion_excludes_imported_collection_routines() {
     let source = r#"program FluentCompletion;
 uses Std.Arrays as Arrays; uses Std.Dictionaries as Dictionaries;
 begin
-  var Items: array of integer := [1];
+  var Items: array of (integer) := [1];
   var N: integer := Items.Len;
 end program;
 "#;
@@ -158,10 +158,10 @@ end program;
 fn receiver_completion_on_returned_and_parenthesized_arrays() {
     let source = r#"program FluentResults;
 uses Std.Arrays as Arrays;
-function Length(Items: array of integer): integer; begin return Arrays.Length(Items); end function;
-function MakeValues(): array of integer; begin return [1]; end function;
+function Length(Items: array of (integer)): integer; begin return Arrays.Length(Items); end function;
+function MakeValues(): array of (integer); begin return [1]; end function;
 begin
-  var Items: array of integer := [2];
+  var Items: array of (integer) := [2];
   var A: integer := MakeValues().Len;
   var B: integer := (Items).Len;
 end program;
@@ -187,7 +187,7 @@ fn receiver_call_definition_and_signature_use_selected_array_routine() {
     let source = r#"program FluentNavigation;
 uses Std.Arrays as Arrays; uses Std.Dictionaries as Dictionaries;
 begin
-  var Items: array of integer := [1, 2];
+  var Items: array of (integer) := [1, 2];
   var N: integer := Arrays.Length(Arrays.Slice(Items, 0, 1));
 end program;
 "#;
@@ -333,7 +333,7 @@ end program;
         .value
         .expect("Array constructor signature");
 
-    assert_eq!(help.signature.parameters, ["Items: array of JsonValue"]);
+    assert_eq!(help.signature.parameters, ["Items: array of (JsonValue)"]);
     assert_eq!(
         help.parameter_documentation,
         [Some(

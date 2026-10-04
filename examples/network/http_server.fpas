@@ -37,11 +37,11 @@ begin
   if (RequestValue.Method = 'POST') and (RequestValue.Target = '/echo') then
     begin
       case Utf8.Decode(RequestValue.Body) of
-        when Ok(Text):
+        when Result.Ok(const Text):
           begin
             return TextResponse(200, 'OK', 'Echo: ' + Text);
           end;
-        when Error(Message):
+        when Result.Error(const Message):
           begin
             return TextResponse(400, 'Bad Request', Message);
           end;
@@ -73,35 +73,35 @@ begin
   end if;
 
   case Net.Listen('127.0.0.1', Port) of
-    when Ok(ListenerValue):
+    when Result.Ok(const ListenerValue):
       begin
         Console.WriteLn('HTTP server listening on http://127.0.0.1:' + Conv.IntToStr(Port));
         mutable var Options: Http.ServerOptions := Http.ServerOptions.Create();
         Options.MaxConcurrentRequests := 1;
         Options.MaxRequests := 3;
         case Http.Serve(ListenerValue, Options, Handle) of
-          when Ok(_):
+          when Result.Ok(_):
             begin
               Console.WriteLn('HTTP server handled 3 requests');
             end;
-          when Error(Message):
+          when Result.Error(const Message):
             begin
               panic(Message);
             end;
         end case;
 
         case Net.CloseListener(ListenerValue) of
-          when Ok(_):
+          when Result.Ok(_):
             begin
               null;
             end;
-          when Error(Message):
+          when Result.Error(const Message):
             begin
               panic(Message);
             end;
         end case;
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
         panic(Message);
       end;

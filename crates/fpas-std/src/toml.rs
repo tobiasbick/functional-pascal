@@ -196,7 +196,7 @@ fn fpas_to_toml_at_depth(
                                 "Std.Toml.TomlValue.Table expects string keys, got {}",
                                 key.type_name()
                             ),
-                            "Use `dict of string to TomlValue` for TOML tables.",
+                            "Use `dict of (string, TomlValue)` for TOML tables.",
                             location,
                         ));
                     };

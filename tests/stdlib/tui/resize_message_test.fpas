@@ -5,7 +5,7 @@ uses Std.Test as Test;
 uses Std.Tui as Tui;
 
 type ResizeModel = record
-  Events: array of string;
+  Events: array of (string);
   ResizeWidth: integer;
   ResizeHeight: integer;
   HostWidthAtResize: integer;
@@ -14,13 +14,7 @@ end record;
 
 function PushEvent(State: ResizeModel; InputEvent: string): ResizeModel;
 begin
-  return record
-    Events := Arrays.Concat(State.Events, [InputEvent]);
-    ResizeWidth := State.ResizeWidth;
-    ResizeHeight := State.ResizeHeight;
-    HostWidthAtResize := State.HostWidthAtResize;
-    HostHeightAtResize := State.HostHeightAtResize;
-  end record;
+  return ResizeModel(Events := Arrays.Concat(State.Events, [InputEvent]), ResizeWidth := State.ResizeWidth, ResizeHeight := State.ResizeHeight, HostWidthAtResize := State.HostWidthAtResize, HostHeightAtResize := State.HostHeightAtResize);
 end function;
 
 begin
@@ -30,18 +24,11 @@ begin
   App.Inject(Tui.TuiMsg.Tick(1));
   App.InjectResizeForTest(Tui.TuiSize.Create(32, 10));
   App.Inject(Tui.TuiMsg.Tick(2));
-  mutable var Model: ResizeModel := record
-    Events := [];
-    ResizeWidth := 0;
-    ResizeHeight := 0;
-    HostWidthAtResize := 0;
-    HostHeightAtResize := 0;
-  end record;
-
+  mutable var Model: ResizeModel := ResizeModel(Events := [], ResizeWidth := 0, ResizeHeight := 0, HostWidthAtResize := 0, HostHeightAtResize := 0);
   Model := App.RunIterations(Model, function(State: ResizeModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): ResizeModel begin
     Cmd.Set(Tui.TuiCmd.NoCommand);
     case Msg of
-      when Tui.TuiMsg.Tick(Delta):
+      when Tui.TuiMsg.Tick(const Delta):
         begin
           if Delta = 1 then
             begin
@@ -51,20 +38,16 @@ begin
 
           return PushEvent(State, 'tick-2');
         end;
-      when Tui.TuiMsg.Resize(Size):
+      when Tui.TuiMsg.Resize(const Size):
         begin
           var Snapshot: Tui.TuiSurfaceSnapshot := App.SurfaceSnapshot();
-          return record
-            Events := Arrays.Concat(State.Events, ['resize']);
-            ResizeWidth := Size.Width;
-            ResizeHeight := Size.Height;
-            HostWidthAtResize := Snapshot.Width;
-            HostHeightAtResize := Snapshot.Height;
-          end record;
+          return ResizeModel(Events := Arrays.Concat(State.Events, ['resize']), ResizeWidth := Size.Width, ResizeHeight := Size.Height, HostWidthAtResize := Snapshot.Width, HostHeightAtResize := Snapshot.Height);
         end;
-      else
+      when Tui.TuiMsg.Started, Tui.TuiMsg.Key(_), Tui.TuiMsg.Pointer(_), Tui.TuiMsg.FocusChanged(_, _), Tui.TuiMsg.Action(_, _), Tui.TuiMsg.TextChanged(_, _, _, _), Tui.TuiMsg.TextAreaChanged(_, _, _, _, _), Tui.TuiMsg.CheckChanged(_, _, _), Tui.TuiMsg.SelectionChanged(_, _, _), Tui.TuiMsg.ScrollChanged(_, _, _), Tui.TuiMsg.MenuChanged(_, _, _), Tui.TuiMsg.BackgroundFailed(_, _, _, _, _, _), Tui.TuiMsg.QuitRequested:
         begin
-          return State;
+          begin
+            return State;
+          end;
         end;
     end case;
   end function, function(State: ResizeModel): Tui.TuiElement begin

@@ -12,7 +12,7 @@ uses Std.Str as Str;
 uses Std.Time as Time;
 uses Std.Tui as Tui;
 
-function NoteIndexById(Notes: array of Model.Note; Id: string): integer;
+function NoteIndexById(Notes: array of (Model.Note); Id: string): integer;
 begin
   for Index: integer := 0 to Arrays.Length(Notes) - 1 do
     begin
@@ -75,7 +75,7 @@ begin
   NoteValue.UpdatedMillis := Time.TimestampMillis();
   NoteValue.Path := Repository.NoteFilePath(Next.Directory, NoteValue);
   case Repository.NotesSave(Next.Directory, NoteValue) of
-    when Ok(Written):
+    when Result.Ok(const Written):
       begin
         Next := Editing.NotesWithNote(Next, Next.Selected, NoteValue);
         Next := ResortSelected(Next, NoteValue.Id);
@@ -90,7 +90,7 @@ begin
 
         return Next;
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
         Next.Overlay := Model.NotesOverlay.SaveFailure;
         Next.ErrorMessage := Message;
@@ -102,7 +102,7 @@ end function;
 
 function SelectedFilteredPosition(State: Model.NotesModel): integer;
 begin
-  var Indices: array of integer := Model.NotesFilteredIndices(State.Notes, State.Search);
+  var Indices: array of (integer) := Model.NotesFilteredIndices(State.Notes, State.Search);
   for Index: integer := 0 to Arrays.Length(Indices) - 1 do
     begin
       if Indices[Index] = State.Selected then
@@ -118,7 +118,7 @@ end function;
 
 function SelectFiltered(State: Model.NotesModel; Position: integer): Model.NotesModel;
 begin
-  var Indices: array of integer := Model.NotesFilteredIndices(State.Notes, State.Search);
+  var Indices: array of (integer) := Model.NotesFilteredIndices(State.Notes, State.Search);
   if (Position < 0) or (Position >= Arrays.Length(Indices)) then
     begin
       return State;
@@ -149,9 +149,9 @@ begin
   mutable var Draft: Model.Note := Repository.NotesCreateDraft(Next.Directory);
   Draft.Path := Repository.NoteFilePath(Next.Directory, Draft);
   case Repository.NotesSave(Next.Directory, Draft) of
-    when Ok(Written):
+    when Result.Ok(const Written):
       begin
-        mutable var Notes: array of Model.Note := Next.Notes;
+        mutable var Notes: array of (Model.Note) := Next.Notes;
         Arrays.Push(Notes, Draft);
         Next.Notes := Notes;
         Next := ResortSelected(Next, Draft.Id);
@@ -161,7 +161,7 @@ begin
         Next.Status := 'Created a new note';
         return Next;
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
         Next.Overlay := Model.NotesOverlay.SaveFailure;
         Next.ErrorMessage := Message;
@@ -189,7 +189,7 @@ end function;
 
 function SelectFirstVisible(State: Model.NotesModel): Model.NotesModel;
 begin
-  var Indices: array of integer := Model.NotesFilteredIndices(State.Notes, State.Search);
+  var Indices: array of (integer) := Model.NotesFilteredIndices(State.Notes, State.Search);
   if Arrays.Length(Indices) = 0 then
     begin
       mutable var Empty: Model.NotesModel := State;
@@ -397,41 +397,41 @@ public function NotesUpdate(State: Model.NotesModel; Msg: Tui.TuiMsg; Cmd: Tui.T
 begin
   Cmd.Set(Tui.TuiCmd.NoCommand);
   case Msg of
-    when Tui.TuiMsg.Key(Key):
+    when Tui.TuiMsg.Key(const Key):
       begin
         return HandleShortcut(State, Key, Cmd);
       end;
-    when Tui.TuiMsg.Resize(Size):
+    when Tui.TuiMsg.Resize(const Size):
       begin
         mutable var Next: Model.NotesModel := State;
         Next.Width := Size.Width;
         Next.Height := Size.Height;
         return Next;
       end;
-    when Tui.TuiMsg.FocusChanged(Previous, Current):
+    when Tui.TuiMsg.FocusChanged(const Previous, const Current):
       begin
         case Current of
-          when Some(CurrentId):
+          when Option.Some(const CurrentId):
             begin
               mutable var Next: Model.NotesModel := State;
               Next.Focus := CurrentId.Value;
               return Next;
             end;
-          when None:
+          when Option.None:
             begin
               return State;
             end;
         end case;
       end;
-    when Tui.TuiMsg.TextChanged(Source, Action, Text, Caret):
+    when Tui.TuiMsg.TextChanged(const Source, const Action, const Text, const Caret):
       begin
         return Editing.NotesEditText(State, Action.Value, Text, Caret);
       end;
-    when Tui.TuiMsg.TextAreaChanged(Source, Action, Text, Caret, Offset):
+    when Tui.TuiMsg.TextAreaChanged(const Source, const Action, const Text, const Caret, const Offset):
       begin
         return Editing.NotesEditBody(State, Action.Value, Text, Caret, Offset);
       end;
-    when Tui.TuiMsg.SelectionChanged(Source, Action, Selected):
+    when Tui.TuiMsg.SelectionChanged(const Source, const Action, const Selected):
       begin
         if Action.Value = Actions.SelectionChangedAction then
           begin
@@ -441,7 +441,7 @@ begin
 
         return State;
       end;
-    when Tui.TuiMsg.Action(Source, Action):
+    when Tui.TuiMsg.Action(const Source, const Action):
       begin
         return HandleAction(State, Action.Value, Cmd);
       end;
@@ -455,29 +455,31 @@ begin
 
         return State;
       end;
-    when Tui.TuiMsg.Pointer(Pointer):
+    when Tui.TuiMsg.Pointer(const Pointer):
       begin
         return State;
       end;
-    when Tui.TuiMsg.Tick(Delta):
+    when Tui.TuiMsg.Tick(const Delta):
       begin
         return State;
       end;
-    when Tui.TuiMsg.CheckChanged(CheckSource, CheckAction, Checked):
+    when Tui.TuiMsg.CheckChanged(const CheckSource, const CheckAction, const Checked):
       begin
         return State;
       end;
-    when Tui.TuiMsg.ScrollChanged(ScrollSource, ScrollAction, ScrollOffset):
+    when Tui.TuiMsg.ScrollChanged(const ScrollSource, const ScrollAction, const ScrollOffset):
       begin
         return State;
       end;
-    when Tui.TuiMsg.MenuChanged(MenuSource, MenuAction, MenuState):
+    when Tui.TuiMsg.MenuChanged(const MenuSource, const MenuAction, const MenuState):
       begin
         return State;
       end;
-    else
+    when Tui.TuiMsg.Started, Tui.TuiMsg.BackgroundFailed(_, _, _, _, _, _):
       begin
-        return State;
+        begin
+          return State;
+        end;
       end;
   end case;
 end function;

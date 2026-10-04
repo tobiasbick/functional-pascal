@@ -4,6 +4,7 @@ mod decl;
 mod display;
 mod expr;
 mod nesting;
+mod patterns;
 mod program;
 mod stmt;
 

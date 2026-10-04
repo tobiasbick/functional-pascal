@@ -1,6 +1,6 @@
 # Split and join
 
-## `function Split(S: string; Delim: string): array of string`
+## `function Split(S: string; Delim: string): array of (string)`
 
 Splits `S` around each occurrence of `Delim`. Returns a new array of segments.
 
@@ -14,7 +14,7 @@ uses Std.Str as Str;
 uses Std.Arrays as Arrays;
 
 begin
-  var Parts: array of string := Str.Split('x,y', ',');
+  var Parts: array of (string) := Str.Split('x,y', ',');
   Console.WriteLn(Arrays.Length(Parts));
 end program;
 ```
@@ -23,7 +23,7 @@ end program;
 
 ---
 
-## `function Join(Parts: array of string; Delim: string): string`
+## `function Join(Parts: array of (string); Delim: string): string`
 
 Concatenates every element of `Parts`, inserting `Delim` between elements.
 

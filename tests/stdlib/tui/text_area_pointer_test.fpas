@@ -13,10 +13,10 @@ end record;
 
 function ViewTextArea(State: PointerModel): Tui.TuiElement;
 begin
-  mutable var Focused: option of Tui.TuiControlId := None;
+  mutable var Focused: Option of (Tui.TuiControlId) := Option.None;
   if State.Focus > 0 then
     begin
-      Focused := Some(Tui.TuiControlId.Create(State.Focus));
+      Focused := Option.Some(Tui.TuiControlId.Create(State.Focus));
     end;
   end if;
 
@@ -29,38 +29,30 @@ function UpdateTextArea(State: PointerModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOut
 begin
   Cmd.Set(Tui.TuiCmd.NoCommand);
   case Msg of
-    when Tui.TuiMsg.FocusChanged(Previous, Current):
+    when Tui.TuiMsg.FocusChanged(const Previous, const Current):
       begin
         case Current of
-          when Some(Id):
+          when Option.Some(const Id):
             begin
-              return record
-                Focus := Id.Value;
-                Text := State.Text;
-                Caret := State.Caret;
-                Offset := State.Offset;
-              end record;
+              return PointerModel(Focus := Id.Value, Text := State.Text, Caret := State.Caret, Offset := State.Offset);
             end;
-          when None:
+          when Option.None:
             begin
               return State;
             end;
         end case;
       end;
-    when Tui.TuiMsg.TextAreaChanged(Source, Action, Text, Caret, Offset):
+    when Tui.TuiMsg.TextAreaChanged(const Source, const Action, const Text, const Caret, const Offset):
       begin
         Test.AssertEquals(1, Source.Value);
         Test.AssertEquals(9, Action.Value);
-        return record
-          Focus := State.Focus;
-          Text := Text;
-          Caret := Caret;
-          Offset := Offset;
-        end record;
+        return PointerModel(Focus := State.Focus, Text := Text, Caret := Caret, Offset := Offset);
       end;
-    else
+    when Tui.TuiMsg.Started, Tui.TuiMsg.Key(_), Tui.TuiMsg.Pointer(_), Tui.TuiMsg.Tick(_), Tui.TuiMsg.Resize(_), Tui.TuiMsg.Action(_, _), Tui.TuiMsg.TextChanged(_, _, _, _), Tui.TuiMsg.CheckChanged(_, _, _), Tui.TuiMsg.SelectionChanged(_, _, _), Tui.TuiMsg.ScrollChanged(_, _, _), Tui.TuiMsg.MenuChanged(_, _, _), Tui.TuiMsg.BackgroundFailed(_, _, _, _, _, _), Tui.TuiMsg.QuitRequested:
       begin
-        return State;
+        begin
+          return State;
+        end;
       end;
   end case;
 end function;
@@ -79,26 +71,15 @@ end function;
 
 begin
   mutable var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(6, 3));
-  mutable var Model: PointerModel := record
-    Focus := 0;
-    Text := (('zero' + Str.Chr(10)) + 'one') + (Str.Chr(10) + 'three');
-    Caret := 0;
-    Offset := Tui.TuiPoint.Create(0, 0);
-  end record;
-
+  mutable var Model: PointerModel := PointerModel(Focus := 0, Text := (('zero' + Str.Chr(10)) + 'one') +
+                                                                      (Str.Chr(10) + 'three'), Caret := 0, Offset := Tui.TuiPoint.Create(0, 0));
   Model := App.RunIterations(Model, UpdateTextArea, ViewTextArea, 0, 0);
   Model := Click(App, Model, 2, 1, 2);
   Test.AssertEquals(1, Model.Focus);
   Test.AssertEquals(7, Model.Caret);
   Model := Click(App, Model, 5, 1, 1);
   Test.AssertEquals(8, Model.Caret);
-  Model := record
-    Focus := 1;
-    Text := Model.Text;
-    Caret := Model.Caret;
-    Offset := Tui.TuiPoint.Create(2, 1);
-  end record;
-
+  Model := PointerModel(Focus := 1, Text := Model.Text, Caret := Model.Caret, Offset := Tui.TuiPoint.Create(2, 1));
   Model := App.RunIterations(Model, UpdateTextArea, ViewTextArea, 0, 0);
   Model := Click(App, Model, 1, 1, 1);
   Test.AssertEquals(12, Model.Caret);

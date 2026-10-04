@@ -10,7 +10,7 @@ begin
   var First: Model.Note := Model.NoteCreate('first', 10);
   var Second: Model.Note := Model.NoteCreate('second', 10);
   var Newest: Model.Note := Model.NoteCreate('newest', 20);
-  var Sorted: array of Model.Note := Repository.NotesSort([First, Newest, Pinned, Second]);
+  var Sorted: array of (Model.Note) := Repository.NotesSort([First, Newest, Pinned, Second]);
   Test.AssertEquals('pinned', Sorted[0].Id);
   Test.AssertEquals('newest', Sorted[1].Id);
   Test.AssertEquals('first', Sorted[2].Id);

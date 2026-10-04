@@ -8,23 +8,17 @@ type Num = record
 
   static function Create(Value: integer): Num;
   begin
-    return record
-      Value := Value;
-    end record;
+    return Num(Value := Value);
   end function;
 
   function Scale(Self: Num; Factor: integer): Num;
   begin
-    return record
-      Value := Self.Value * Factor;
-    end record;
+    return Num(Value := Self.Value * Factor);
   end function;
 
   function Next(Self: Num): Num;
   begin
-    return record
-      Value := Self.Value + 1;
-    end record;
+    return Num(Value := Self.Value + 1);
   end function;
 end record;
 

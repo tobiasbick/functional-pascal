@@ -35,8 +35,8 @@ Requires `uses Std.Str as Str;`.
 | function | `Substring(S: string; Start: integer; Len: integer): string` | slice by index |
 | function | `IndexOf(S: string; Sub: string): integer` | first index or `-1` |
 | function | `Replace(S: string; Old: string; New: string): string` | replace all |
-| function | `Split(S: string; Delim: string): array of string` | split segments |
-| function | `Join(Parts: array of string; Delim: string): string` | join with delimiter |
+| function | `Split(S: string; Delim: string): array of (string)` | split segments |
+| function | `Join(Parts: array of (string); Delim: string): string` | join with delimiter |
 | function | `IsNumeric(S: string): boolean` | parses as number? |
 | function | `RepeatStr(S: string; Count: integer): string` | repeat `S`; `Count <= 0` returns empty string |
 | function | `PadLeft(S: string; Width: integer; Fill: string): string` | left-pad to `Width` |

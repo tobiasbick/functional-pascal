@@ -7,6 +7,13 @@ use std::fmt;
 pub enum FormatError {
     /// `unit` is not the syntax tree produced by parsing `source`.
     SourceMismatch,
+    /// Anonymous record syntax requires a declared constructor before formatting.
+    ObsoleteRecord {
+        /// Start byte offset of the obsolete expression.
+        offset: usize,
+        /// Byte length of the obsolete expression.
+        length: usize,
+    },
     /// An AST span lies outside `source` or splits a UTF-8 code point.
     InvalidSourceSpan {
         /// Start byte offset supplied by the AST.
@@ -21,6 +28,7 @@ pub enum FormatError {
 impl fmt::Display for FormatError {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            Self::ObsoleteRecord { .. } => formatter.write_str("anonymous record literals are obsolete; use `TypeName(Field := Value, ...)` before formatting"),
             Self::SourceMismatch => formatter.write_str(
                 "the parsed unit does not match the source; parse the same source before formatting",
             ),

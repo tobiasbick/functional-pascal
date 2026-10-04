@@ -61,8 +61,8 @@ end record;
 Calling instance methods:
 
 ```pascal
-var A: Point := record X := 0.0; Y := 0.0; end record;
-  var B: Point := record X := 3.0; Y := 4.0; end record;
+var A: Point := Point(X := 0.0, Y := 0.0);
+  var B: Point := Point(X := 3.0, Y := 4.0);
   var Dist: real := A.DistanceTo(B);  // Self = A, Other = B
 
 begin
@@ -99,9 +99,7 @@ type Counter = record
   end function;
 end record;
 
-var C: Counter := record
-  Base := 10;
-end record;
+var C: Counter := Counter(Base := 10);
 var AddTen: function(Value: integer): integer := C.Add;
 
 begin
@@ -140,10 +138,7 @@ type Point = record
 
   static function Create(X: integer; Y: integer): Point;
   begin
-    return record
-      X := X;
-      Y := Y;
-    end record;
+    return Point(X := X, Y := Y);
   end function;
 
   static function Origin(): Point;
@@ -175,10 +170,7 @@ type Point = record
 
   static function Create(X: integer; Y: integer): Point;
   begin
-    return record
-      X := X;
-      Y := Y;
-    end record;
+    return Point(X := X, Y := Y);
   end function;
 
   static function Origin(): Point;

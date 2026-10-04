@@ -17,7 +17,7 @@ end record;
 // Parameters:
 // - `GraceMillis`: `integer` input value used by `CreateLifetime`.
 // - `ForceExit`: `boolean` input value used by `CreateLifetime`.
-public function CreateLifetime(GraceMillis: integer; ForceExit: boolean): result of ServerLifetime, string;
+public function CreateLifetime(GraceMillis: integer; ForceExit: boolean): Result of (ServerLifetime, string);
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -26,7 +26,7 @@ end function;
 //
 // Parameters:
 // - `Lifetime`: `Std.Server.ServerLifetime` input value used by `FinishShutdown`.
-public function FinishShutdown(Lifetime: ServerLifetime): result of boolean, string;
+public function FinishShutdown(Lifetime: ServerLifetime): Result of (boolean, string);
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -62,7 +62,7 @@ end function;
 //
 // Parameters:
 // - `Lifetime`: `Std.Server.ServerLifetime` input value used by `ObserveSignals`.
-public function ObserveSignals(Lifetime: ServerLifetime): result of boolean, string;
+public function ObserveSignals(Lifetime: ServerLifetime): Result of (boolean, string);
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -72,7 +72,7 @@ end function;
 // Parameters:
 // - `Lifetime`: `Std.Server.ServerLifetime` input value used by `OwnListener`.
 // - `Listener`: `Std.Net.Listener` input value used by `OwnListener`.
-public function OwnListener(Lifetime: ServerLifetime; Listener: Net.Listener): result of boolean, string;
+public function OwnListener(Lifetime: ServerLifetime; Listener: Net.Listener): Result of (boolean, string);
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -99,7 +99,7 @@ end function;
 //
 // Parameters:
 // - `Lifetime`: `Std.Server.ServerLifetime` input value used by `ShutdownErrors`.
-public function ShutdownErrors(Lifetime: ServerLifetime): array of string;
+public function ShutdownErrors(Lifetime: ServerLifetime): array of (string);
 begin
   panic('Intrinsic API declaration');
 end function;

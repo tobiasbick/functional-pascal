@@ -8,7 +8,7 @@ public type StreamState = record
   // Underlying TCP or TLS connection.
   public Connection: Net.Connection;
   // Decoded or framing bytes already read from the connection.
-  public Buffer: array of integer;
+  public Buffer: array of (integer);
   // Internal body-framing mode identifier.
   public Mode: integer;
   // Bytes remaining for fixed-length framing.

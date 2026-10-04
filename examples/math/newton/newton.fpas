@@ -17,12 +17,7 @@ type ExplorerState = record
 
   static function Default(): ExplorerState;
   begin
-    return record
-      CenterX := 0.0;
-      CenterY := 0.0;
-      SpanY := 3.0;
-      MaxIter := 48;
-    end record;
+    return ExplorerState(CenterX := 0.0, CenterY := 0.0, SpanY := 3.0, MaxIter := 48);
   end function;
 
   function SpanX(Self: ExplorerState; Width: integer; Height: integer): real;
@@ -147,16 +142,7 @@ begin
   RenderW := RenderWidth();
   RenderH := RenderHeight();
   Console.BeginFrame();
-  Console.FillRect(record
-    x := 1;
-    y := 1;
-    width := Console.ScreenWidth();
-    height := Console.ScreenHeight();
-  end record, record
-    glyph := ' ';
-    foreground := Console.RgbColor(0, 0, 0);
-    background := Console.RgbColor(0, 0, 0);
-  end record);
+  Console.FillRect(Console.rect(x := 1, y := 1, width := Console.ScreenWidth(), height := Console.ScreenHeight()), Console.cell(glyph := ' ', foreground := Console.RgbColor(0, 0, 0), background := Console.RgbColor(0, 0, 0)));
   Render2.Render(State.XMin(RenderW, RenderH), State.XMax(RenderW, RenderH), State.YMin(), State.YMax(), RenderW, RenderH, State.MaxIter);
   DrawHud(State, RenderW, RenderH);
   Console.Present();
@@ -351,11 +337,11 @@ begin
       end if;
 
       case Console.ReadEventTimeout(16) of
-        when Some(E):
+        when Option.Some(const E):
           begin
             HandleEvent(E);
           end;
-        when None:
+        when Option.None:
           begin
             null;
           end;

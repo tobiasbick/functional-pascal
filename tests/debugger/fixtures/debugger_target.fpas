@@ -28,12 +28,9 @@ begin
 end function;
 
 begin
-  var Origin: Point := record
-    X := 3;
-    Y := 4;
-  end record;
+  var Origin: Point := Point(X := 3, Y := 4);
   var Counter: function(): integer := MakeCounter(10);
-  var Values: array of integer := [Origin.X, Origin.Y, Factorial(4)];
+  var Values: array of (integer) := [Origin.X, Origin.Y, Factorial(4)];
   Console.WriteLn(Values);
   Console.WriteLn(Counter());
 end program;

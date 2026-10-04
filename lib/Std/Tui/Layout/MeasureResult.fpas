@@ -39,11 +39,7 @@ public type TuiMeasureResult = record
   public static function Create(Minimum: Size2.TuiSize; Preferred: Size2.TuiSize; Maximum: Size2.TuiSize): TuiMeasureResult;
   begin
     TuiMeasureResultRequireOrdered(Minimum, Preferred, Maximum);
-    return record
-      Minimum := Minimum;
-      Preferred := Preferred;
-      Maximum := Maximum;
-    end record;
+    return TuiMeasureResult(Minimum := Minimum, Preferred := Preferred, Maximum := Maximum);
   end function;
 
   // Creates a fixed measure where all three sizes match.

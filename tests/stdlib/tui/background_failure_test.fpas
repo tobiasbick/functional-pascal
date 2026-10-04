@@ -6,7 +6,7 @@ uses Std.Test as Test;
 uses Std.Tui as Tui;
 
 type FailureModel = record
-  Ready: channel of boolean;
+  Ready: channel of (boolean);
   FailureSeen: boolean;
 end record;
 
@@ -15,26 +15,25 @@ begin
   case Msg of
     when Tui.TuiMsg.Started:
       begin
-        var Ready: channel of boolean := State.Ready;
-        Cmd.StartBackground(19, function(Token: Tasks.CancellationToken): result of boolean, string begin
+        var Ready: channel of (boolean) := State.Ready;
+        Cmd.StartBackground(19, function(Token: Tasks.CancellationToken): Result of (boolean, string) begin
           discard Tasks.Send(Ready, true);
-          return Error('expected background failure');
+          return Result.Error('expected background failure');
         end function);
         return State;
       end;
-    when Tui.TuiMsg.BackgroundFailed(Id, Kind, Message, Code, Line, Column):
+    when Tui.TuiMsg.BackgroundFailed(const Id, const Kind, const Message, const Code, const Line, const Column):
       begin
         Test.AssertEquals(19, Id);
         Test.AssertTrue(Kind = Tasks.TaskFailureKind.ReturnedError);
         Test.AssertEquals('expected background failure', Message);
-        return record
-          Ready := State.Ready;
-          FailureSeen := true;
-        end record;
+        return FailureModel(Ready := State.Ready, FailureSeen := true);
       end;
-    else
+    when Tui.TuiMsg.Key(_), Tui.TuiMsg.Pointer(_), Tui.TuiMsg.Tick(_), Tui.TuiMsg.Resize(_), Tui.TuiMsg.FocusChanged(_, _), Tui.TuiMsg.Action(_, _), Tui.TuiMsg.TextChanged(_, _, _, _), Tui.TuiMsg.TextAreaChanged(_, _, _, _, _), Tui.TuiMsg.CheckChanged(_, _, _), Tui.TuiMsg.SelectionChanged(_, _, _), Tui.TuiMsg.ScrollChanged(_, _, _), Tui.TuiMsg.MenuChanged(_, _, _), Tui.TuiMsg.QuitRequested:
       begin
-        return State;
+        begin
+          return State;
+        end;
       end;
   end case;
 end function;
@@ -50,13 +49,10 @@ begin
 end function;
 
 begin
-  var Inbox: channel of integer := Tasks.CreateChannel(1);
-  var Ready: channel of boolean := Tasks.CreateChannel(1);
+  var Inbox: channel of (integer) := Tasks.CreateChannel(1);
+  var Ready: channel of (boolean) := Tasks.CreateChannel(1);
   var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(24, 4));
-  mutable var Model: FailureModel := App.RunBackgroundIterations(record
-    Ready := Ready;
-    FailureSeen := false;
-  end record, Inbox, UpdateFramework, UpdateApplication, View, 1, 0);
+  mutable var Model: FailureModel := App.RunBackgroundIterations(FailureModel(Ready := Ready, FailureSeen := false), Inbox, UpdateFramework, UpdateApplication, View, 1, 0);
   Test.AssertTrue(Results.Unwrap(Tasks.ReceiveWithTimeout(Ready, 10000)));
   Model := App.RunBackgroundIterations(Model, Inbox, UpdateFramework, UpdateApplication, View, 1, 0);
   Test.AssertTrue(Model.FailureSeen);

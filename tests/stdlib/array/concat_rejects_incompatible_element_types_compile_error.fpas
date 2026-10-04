@@ -3,5 +3,5 @@ program T;
 uses Std.Arrays as Arrays;
 
 begin
-  var C: array of integer := Arrays.Concat([1], [true]);
+  var C: array of (integer) := Arrays.Concat([1], [true]);
 end program;

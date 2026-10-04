@@ -35,7 +35,7 @@ end function;
 //
 // Parameters:
 // - `Segments`: Values combined in their existing order.
-public function Join(Segments: array of string): string;
+public function Join(Segments: array of (string)): string;
 begin
   panic('Intrinsic API declaration');
 end function;

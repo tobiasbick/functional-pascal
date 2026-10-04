@@ -5,15 +5,16 @@ fn record_creation_and_access() {
     let p = parse_ok(
         r#"program Geometry;
 
- type Point = record
+type Point = record
   X: real;
   Y: real;
 end record;
 
 begin
-  var P: Point := record X := 1.0; Y := 2.0; end record;
+  var P: Point := Point(X := 1.0, Y := 2.0);
   var Sum: real := P.X + P.Y;
-end program;"#,
+end program;
+"#,
     );
     assert_eq!(p.declarations.len(), 1);
     assert_eq!(p.body.len(), 2);
@@ -62,7 +63,7 @@ fn array_operations() {
     let p = parse_ok(
         r#"program T;
 begin
-  var Xs: array of integer := [1, 2, 3, 4, 5];
+  var Xs: array of (integer) := [1, 2, 3, 4, 5];
   var First: integer := Xs[0];
   var Last: integer := Xs[4];
 end program;"#,

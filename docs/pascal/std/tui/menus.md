@@ -2,7 +2,7 @@
 
 `TuiElementBuilders.MakeMenu` creates one controlled hierarchical menu. The
 menu is a leaf in the element tree; its hierarchy is a flat array of
-`TuiMenuNode` values linked by `Parent: option of TuiMenuNodeId`. Menu nodes
+`TuiMenuNode` values linked by `Parent: option of (TuiMenuNodeId)`. Menu nodes
 never contain recursive child arrays.
 
 Root nodes must be submenus. Commands, nested submenus, and separators refer to
@@ -12,9 +12,9 @@ their parent by identity:
 uses Std.Tui as Tui;
 
 var FileId: Tui.TuiMenuNodeId := Tui.TuiMenuNodeId.Create(1);
-var Nodes: array of Tui.TuiMenuNode := [
-                                     Tui.TuiMenuNodeBuilders.Submenu(FileId, None, 'File', 'F'),
-                                     Tui.TuiMenuNodeBuilders.CommandWithShortcut(Tui.TuiMenuNodeId.Create(2), Some(FileId), 'Open', 'O', Tui.TuiAction.Create(10), Tui.TuiKeyGesture.Create(Tui.TuiKeyKind.Character, 'o', false, true, false, false, 'Ctrl+O'))
+var Nodes: array of (Tui.TuiMenuNode) := [
+                                     Tui.TuiMenuNodeBuilders.Submenu(FileId, Option.None, 'File', 'F'),
+                                     Tui.TuiMenuNodeBuilders.CommandWithShortcut(Tui.TuiMenuNodeId.Create(2), Option.Some(FileId), 'Open', 'O', Tui.TuiAction.Create(10), Tui.TuiKeyGesture.Create(Tui.TuiKeyKind.Character, 'o', false, true, false, false, 'Ctrl+O'))
                                    ];
 ```
 

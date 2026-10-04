@@ -5,6 +5,6 @@ uses Std.Results as Results;
 uses Std.Options as Options;
 
 begin
-  var R: result of integer, string := Ok(42);
+  var R: Result of (integer, string) := Result.Ok(42);
   Console.WriteLn(Unwrap(R));
 end program;

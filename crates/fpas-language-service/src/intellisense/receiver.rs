@@ -2,6 +2,9 @@
 //!
 //! **Documentation:** `docs/pascal/language/functions/fluent-calls.md`
 
+mod types;
+
+use self::types::accepts;
 use crate::navigation::{NavigationDocument, resolve_qualified, resolve_unqualified};
 use crate::{DocumentSymbol, SymbolKind};
 
@@ -90,75 +93,4 @@ fn parameter_type(parameter: &str) -> Option<String> {
     parameter
         .split_once(':')
         .map(|(_, ty)| ty.trim().to_owned())
-}
-
-fn accepts(expected: &str, actual: &str) -> bool {
-    let generic = expected.chars().all(|ch| ch.is_ascii_uppercase())
-        || expected.len() == 1 && expected.chars().all(|ch| ch.is_ascii_alphabetic());
-    let expected = expected.to_ascii_lowercase();
-    let actual = actual.to_ascii_lowercase();
-    if expected == actual {
-        return true;
-    }
-    if let Some(expected_inner) = expected.strip_prefix("array of ") {
-        return actual
-            .strip_prefix("array of ")
-            .is_some_and(|actual_inner| accepts(expected_inner, actual_inner));
-    }
-    if let Some(expected_inner) = expected.strip_prefix("dict of ") {
-        return structured_pair(expected_inner, &actual, "dict of ", " to ");
-    }
-    if let Some(expected_inner) = expected.strip_prefix("result of ") {
-        return structured_pair(expected_inner, &actual, "result of ", ", ");
-    }
-    if expected.starts_with("option of ") {
-        return actual
-            .strip_prefix("option of ")
-            .is_some_and(|inner| accepts(&expected["option of ".len()..], inner));
-    }
-    if expected.starts_with("channel of ") {
-        return actual
-            .strip_prefix("channel of ")
-            .is_some_and(|inner| accepts(&expected["channel of ".len()..], inner));
-    }
-    if expected == "task" {
-        return actual == "task" || actual.starts_with("task of ");
-    }
-    if let Some(inner) = expected.strip_prefix("task of ") {
-        return actual
-            .strip_prefix("task of ")
-            .is_some_and(|actual| accepts(inner, actual));
-    }
-    generic || expected.rsplit('.').next() == actual.rsplit('.').next()
-}
-
-fn structured_pair(expected: &str, actual: &str, prefix: &str, separator: &str) -> bool {
-    let Some(actual) = actual.strip_prefix(prefix) else {
-        return false;
-    };
-    let Some((left, right)) = expected.split_once(separator) else {
-        return false;
-    };
-    let Some((actual_left, actual_right)) = actual.split_once(separator) else {
-        return false;
-    };
-    accepts(left, actual_left) && accepts(right, actual_right)
-}
-
-#[cfg(test)]
-mod tests {
-    use super::accepts;
-
-    #[test]
-    fn first_parameter_shape_filters_collections() {
-        assert!(accepts("array of T", "array of integer"));
-        assert!(!accepts("array of T", "string"));
-        assert!(accepts("dict of K to V", "dict of string to integer"));
-        assert!(!accepts("dict of K to V", "array of integer"));
-        assert!(!accepts(
-            "dict of string to integer",
-            "dict of integer to integer"
-        ));
-        assert!(!accepts("result of string, E", "result of integer, string"));
-    }
 }

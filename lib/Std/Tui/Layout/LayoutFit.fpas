@@ -29,11 +29,7 @@ public type TuiLayoutFit = record
   // - `Available`: Available terminal size.
   public static function Create(Minimum: Size.TuiSize; Available: Size.TuiSize): TuiLayoutFit;
   begin
-    return record
-      Minimum := Minimum;
-      Available := Available;
-      Overflow := Size.TuiSize.Create(TuiLayoutFitOverflow(Minimum.Width, Available.Width), TuiLayoutFitOverflow(Minimum.Height, Available.Height));
-    end record;
+    return TuiLayoutFit(Minimum := Minimum, Available := Available, Overflow := Size.TuiSize.Create(TuiLayoutFitOverflow(Minimum.Width, Available.Width), TuiLayoutFitOverflow(Minimum.Height, Available.Height)));
   end function;
 
   // Returns whether neither axis overflows.

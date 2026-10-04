@@ -13,18 +13,11 @@ uses Std.Tui as Tui;
 
 function MakeLeftKey(): Tui.TuiKeyEvent;
 begin
-  return record
-    kind := Tui.TuiKeyKind.Left;
-    ch := '';
-    shift := false;
-    ctrl := false;
-    alt := false;
-    meta := false;
-  end record;
+  return Tui.TuiKeyEvent(kind := Tui.TuiKeyKind.Left, ch := '', shift := false, ctrl := false, alt := false, meta := false);
 end function;
 
 begin
-  var Inbox: channel of Render.MandelbrotRenderFrame := Tasks.CreateChannel(4);
+  var Inbox: channel of (Render.MandelbrotRenderFrame) := Tasks.CreateChannel(4);
   var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(9, 15));
   mutable var Model: Model2.MandelbrotModel := Model2.NewMandelbrotModel(Inbox, 9, 15);
   Model := App.RunBackgroundIterations(Model, Inbox, App2.UpdateMandelbrot, App2.UpdateMandelbrotFrame, View.ViewMandelbrot, 1, 0);
@@ -44,8 +37,5 @@ begin
 
   Test.AssertEquals(Model.Grid.Height, Model.RowsRendered);
   App.CloseWithBackground(Inbox);
-  Test.AssertTrue(Results.IsError(Tasks.TrySend(Inbox, record
-    Generation := Model.Generation;
-    Cells := [];
-  end record)));
+  Test.AssertTrue(Results.IsError(Tasks.TrySend(Inbox, Render.MandelbrotRenderFrame(Generation := Model.Generation, Cells := []))));
 end program;

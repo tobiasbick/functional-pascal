@@ -120,7 +120,7 @@ variant, the `value` child of `Result.Ok`, `Result.Error`, and
 It does not advertise inactive variants as virtual children. Visible
 uninitialized mutable locals and globals accept one complete root
 value. Complete-value replacements use constructor expressions such as
-`Choice.Pair(1, 2)`, `Ok(3)`, `Error('failed')`, `Some(4)`, and `None`.
+`Choice.Pair(1, 2)`, `Result.Ok(3)`, `Result.Error('failed')`, `Option.Some(4)`, and `Option.None`.
 Fieldless and multi-field variants can also be built through
 `fpas/variantDescribe` and `fpas/variantConstruct` without writing a
 constructor expression.

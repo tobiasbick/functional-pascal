@@ -10,12 +10,22 @@ fn aliases_preserve_global_value_paths_and_closure_access() {
     write_text(
         &cwd.join("src/state.fpas"),
         r#"unit App.State;
-        public type Model = record public Values: array of integer; end record;
-        public mutable var Count: integer := 2;
-        public mutable var Grid: array of array of integer := [[1, 2], [3, 4]];
-        public mutable var Data: Model := record Values := [5, 6]; end record;
-        public function GetCount(): integer; begin return Count; end function;
-        end unit;"#,
+
+public type Model = record
+  public Values: array of (integer);
+end record;
+
+public mutable var Count: integer := 2;
+public mutable var Grid: array of (array of (integer)) := [[1, 2], [3, 4]];
+public mutable var Data: Model := Model(Values := [5, 6]);
+
+public function GetCount(): integer;
+begin
+  return Count;
+end function;
+
+end unit;
+"#,
     );
     write_text(
         &cwd.join("src/main.fpas"),

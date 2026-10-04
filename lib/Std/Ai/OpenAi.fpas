@@ -21,9 +21,9 @@ public type ChatOptions = Types.ChatOptions;
 // - `Options`: Optional generation controls for this completion.
 public function Complete(
   ClientValue: Types.Client;
-  Messages: array of Types.ChatMessage;
+  Messages: array of (Types.ChatMessage);
   Options: Types.ChatOptions
-): result of string, string;
+): Result of (string, string);
 begin
   return Client2.Complete(ClientValue, Messages, Options);
 end function;

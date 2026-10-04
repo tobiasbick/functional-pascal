@@ -9,7 +9,7 @@ Non-streaming chat completions for configurable OpenAI-compatible HTTP endpoints
 | type | `ChatMessage` | role and text content; `System`, `User`, and `Assistant` constructors |
 | type | `Client` | base URL, model, optional API key, timeout, and response limit |
 | type | `ChatOptions` | optional temperature and maximum token count |
-| function | `Complete(Client; Messages; Options): Result of string, string` | returns the first text choice |
+| function | `Complete(Client; Messages; Options): Result of (string, string)` | returns the first text choice |
 
 ```pascal
 uses Std.Console as Console;
@@ -17,14 +17,14 @@ uses Std.Ai.OpenAi as AiOpenAi;
 
 var ClientValue: AiOpenAi.Client := AiOpenAi.Client.Create('http://127.0.0.1:8080/v1', 'local-model');
 case AiOpenAi.Complete(ClientValue, [AiOpenAi.ChatMessage.User('Hello')], AiOpenAi.ChatOptions.Default()) of
-  when Ok(Content):
+  when Result.Ok(const Content):
     Console.WriteLn(Content);
-  when Error(Message):
+  when Result.Error(const Message):
     panic(Message);
 end case;
 ```
 
-`Complete` posts JSON to `<BaseUrl>/chat/completions` with `stream: false`. When `ApiKey` is `Some(nonEmpty)`, it sends an `Authorization: Bearer` header. Successful responses must contain text at `choices[0].message.content`. Non-2xx responses and malformed response shapes return `Error(message)`.
+`Complete` posts JSON to `<BaseUrl>/chat/completions` with `stream: false`. When `ApiKey` is `Option.Some(nonEmpty)`, it sends an `Authorization: Bearer` header. Successful responses must contain text at `choices[0].message.content`. Non-2xx responses and malformed response shapes return `Result.Error(message)`.
 
 `Complete` remains buffered. Callers that need token delivery can build a streaming request with
 [`Std.Http.OpenStream` and its SSE decoder](../network/http.md#streaming-responses); a dedicated

@@ -5,8 +5,8 @@ uses Std.Dictionaries as Dictionaries;
 uses Std.Arrays as Arrays;
 
 begin
-  var D: dict of string to integer := ['B': 2, 'A': 1];
-  var K: array of string := Dictionaries.Keys(D);
+  var D: dict of (string, integer) := ['B': 2, 'A': 1];
+  var K: array of (string) := Dictionaries.Keys(D);
   Console.WriteLn(K[0]);
   Console.WriteLn(K[1]);
 end program;

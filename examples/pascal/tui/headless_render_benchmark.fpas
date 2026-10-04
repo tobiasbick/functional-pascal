@@ -18,51 +18,51 @@ function UpdateBenchmark(State: integer; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput)
 begin
   Cmd.Set(Tui.TuiCmd.NoCommand);
   case Msg of
-    when Tui.TuiMsg.Tick(Delta):
+    when Tui.TuiMsg.Tick(const Delta):
       begin
         return State + 1;
       end;
-    when Tui.TuiMsg.Key(Key):
+    when Tui.TuiMsg.Key(const Key):
       begin
         return State;
       end;
-    when Tui.TuiMsg.Pointer(Pointer):
+    when Tui.TuiMsg.Pointer(const Pointer):
       begin
         return State;
       end;
-    when Tui.TuiMsg.Resize(Size):
+    when Tui.TuiMsg.Resize(const Size):
       begin
         return State;
       end;
-    when Tui.TuiMsg.FocusChanged(Previous, Current):
+    when Tui.TuiMsg.FocusChanged(const Previous, const Current):
       begin
         return State;
       end;
-    when Tui.TuiMsg.Action(Source, Action):
+    when Tui.TuiMsg.Action(const Source, const Action):
       begin
         return State;
       end;
-    when Tui.TuiMsg.TextChanged(Source, Action, Text, Caret):
+    when Tui.TuiMsg.TextChanged(const Source, const Action, const Text, const Caret):
       begin
         return State;
       end;
-    when Tui.TuiMsg.TextAreaChanged(Source, Action, Text, Caret, TextAreaOffset):
+    when Tui.TuiMsg.TextAreaChanged(const Source, const Action, const Text, const Caret, const TextAreaOffset):
       begin
         return State;
       end;
-    when Tui.TuiMsg.CheckChanged(Source, Action, Checked):
+    when Tui.TuiMsg.CheckChanged(const Source, const Action, const Checked):
       begin
         return State;
       end;
-    when Tui.TuiMsg.SelectionChanged(Source, Action, Selected):
+    when Tui.TuiMsg.SelectionChanged(const Source, const Action, const Selected):
       begin
         return State;
       end;
-    when Tui.TuiMsg.ScrollChanged(Source, Action, Offset):
+    when Tui.TuiMsg.ScrollChanged(const Source, const Action, const Offset):
       begin
         return State;
       end;
-    when Tui.TuiMsg.MenuChanged(MenuSource, MenuAction, MenuState):
+    when Tui.TuiMsg.MenuChanged(const MenuSource, const MenuAction, const MenuState):
       begin
         return State;
       end;
@@ -70,18 +70,20 @@ begin
       begin
         return State;
       end;
-    else
+    when Tui.TuiMsg.Started, Tui.TuiMsg.BackgroundFailed(_, _, _, _, _, _):
       begin
-        return State;
+        begin
+          return State;
+        end;
       end;
   end case;
 end function;
 
 function ViewBenchmark(State: integer): Tui.TuiElement;
 begin
-  mutable var Children: array of Tui.TuiElement := [
-                                                     Tui.TuiElementBuilders.MakeLabel('frame ' + Conv.IntToStr(State))
-                                                   ];
+  mutable var Children: array of (Tui.TuiElement) := [
+                                                       Tui.TuiElementBuilders.MakeLabel('frame ' + Conv.IntToStr(State))
+                                                     ];
   for Index: integer := 2 to 32 do
     begin
       Arrays.Push(Children, Tui.TuiElementBuilders.MakeLabel('row'));
@@ -94,9 +96,9 @@ begin
     end;
   end for;
 
-  return Tui.TuiElementBuilders.MakeDesktop(Some(Tui.TuiControlId.Create(1)), [
-                                                                                Tui.TuiElementBuilders.MakePanel('Headless benchmark', [Tui.TuiElementBuilders.MakeColumn(Children)])
-                                                                              ]);
+  return Tui.TuiElementBuilders.MakeDesktop(Option.Some(Tui.TuiControlId.Create(1)), [
+                                                                                       Tui.TuiElementBuilders.MakePanel('Headless benchmark', [Tui.TuiElementBuilders.MakeColumn(Children)])
+                                                                                     ]);
 end function;
 
 begin

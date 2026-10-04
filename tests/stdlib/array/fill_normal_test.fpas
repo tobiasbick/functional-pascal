@@ -4,7 +4,7 @@ uses Std.Console as Console;
 uses Std.Arrays as Arrays;
 
 begin
-  var A: array of integer := Arrays.Fill(7, 3);
+  var A: array of (integer) := Arrays.Fill(7, 3);
   Console.WriteLn(Arrays.Length(A));
   Console.WriteLn(A[0]);
   Console.WriteLn(A[2]);

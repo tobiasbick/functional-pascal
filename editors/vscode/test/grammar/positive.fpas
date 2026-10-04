@@ -1,13 +1,12 @@
 // Positive syntax-highlighting fixture.
 program HighlightingShowcase;
 
- uses Std.Console as Console;
+uses Std.Console as Console;
 
-
-  type Point = record
-    X: integer;
-    Y: real;
-  end record;
+type Point = record
+  X: integer;
+  Y: real;
+end record;
 
 function Distance(Value: Point): real;
 begin
@@ -16,12 +15,13 @@ end function;
 
 begin
   // Origin value.
-  var Origin: Point := record X := 42; Y := 3.5; end record;
+  var Origin: Point := Point(X := 42, Y := 3.5);
   // Mask value.
   var Mask: integer := 42;
   discard Distance(Origin);
   if Mask >= 1 then
-  begin
-    Console.WriteLn('It''s the origin');
-  end; end if;
+    begin
+      Console.WriteLn('It''s the origin');
+    end;
+  end if;
 end program;

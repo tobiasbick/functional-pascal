@@ -14,7 +14,7 @@ public type TuiInputSpec = record
   // Hint text or style for an empty input.
   public Hint: string;
   // Ordered input-history entries.
-  public History: array of string;
+  public History: array of (string);
   // Editable text retained while browsing input history.
   public HistoryDraft: string;
   // Action emitted when the controlled value changes.
@@ -34,15 +34,7 @@ public type TuiInputSpec = record
   ChangeAction: Action.TuiAction
 ): TuiInputSpec;
   begin
-    return record
-      Id := Id;
-      Text := Text;
-      Caret := Caret;
-      Hint := '';
-      History := [];
-      HistoryDraft := '';
-      ChangeAction := ChangeAction;
-    end record;
+    return TuiInputSpec(Id := Id, Text := Text, Caret := Caret, Hint := '', History := [], HistoryDraft := '', ChangeAction := ChangeAction);
   end function;
 
   // Creates an input that paints a hint while its text is empty.
@@ -61,15 +53,7 @@ public type TuiInputSpec = record
   ChangeAction: Action.TuiAction
 ): TuiInputSpec;
   begin
-    return record
-      Id := Id;
-      Text := Text;
-      Caret := Caret;
-      Hint := Hint;
-      History := [];
-      HistoryDraft := '';
-      ChangeAction := ChangeAction;
-    end record;
+    return TuiInputSpec(Id := Id, Text := Text, Caret := Caret, Hint := Hint, History := [], HistoryDraft := '', ChangeAction := ChangeAction);
   end function;
 
   // Creates an input with oldest-to-newest Up/Down history and a restorable draft.
@@ -87,20 +71,12 @@ public type TuiInputSpec = record
   Text: string;
   Caret: integer;
   Hint: string;
-  History: array of string;
+  History: array of (string);
   HistoryDraft: string;
   ChangeAction: Action.TuiAction
 ): TuiInputSpec;
   begin
-    return record
-      Id := Id;
-      Text := Text;
-      Caret := Caret;
-      Hint := Hint;
-      History := History;
-      HistoryDraft := HistoryDraft;
-      ChangeAction := ChangeAction;
-    end record;
+    return TuiInputSpec(Id := Id, Text := Text, Caret := Caret, Hint := Hint, History := History, HistoryDraft := HistoryDraft, ChangeAction := ChangeAction);
   end function;
 end record;
 

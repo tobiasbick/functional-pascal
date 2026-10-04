@@ -24,6 +24,16 @@ fn lower(
 ) -> Result<DebugExpression, EvaluationParseError> {
     check_budget(expression, depth, limits, budget)?;
     match expression {
+        Expr::If(_) | Expr::Case(_) => Err(unsupported(
+            expression,
+            "value decision",
+            "Decision expressions require compiler branch and pattern metadata; evaluate them in the program and inspect the result.",
+        )),
+        Expr::RecordConstruction { .. } => Err(unsupported(
+            expression,
+            "record construction",
+            "Record constructors require compiler type and default metadata; inspect an existing record value instead.",
+        )),
         Expr::Integer(value, _) => Ok(DebugExpression::Integer(*value)),
         Expr::Real(value, _) => Ok(DebugExpression::Real(*value)),
         Expr::Str(value, _) => Ok(DebugExpression::String(value.clone())),
@@ -106,15 +116,6 @@ fn lower(
                 })
                 .collect::<Result<Vec<_>, EvaluationParseError>>()?,
         )),
-        Expr::RecordLiteral { fields, .. } => Ok(DebugExpression::Record(
-            fields
-                .iter()
-                .map(|field| {
-                    lower(&field.value, depth + 1, limits, budget)
-                        .map(|value| (field.name.clone(), value))
-                })
-                .collect::<Result<Vec<_>, _>>()?,
-        )),
         Expr::ResultOk(value, _) => Ok(DebugExpression::ResultOk(Box::new(lower(
             value,
             depth + 1,
@@ -137,7 +138,7 @@ fn lower(
         Expr::Nil(_) => Err(unsupported(
             expression,
             "event-handler `nil`",
-            "Use `None` for an Option value; debugger evaluation cannot assign event handlers.",
+            "Use `Option.None` for an Option value; debugger evaluation cannot assign event handlers.",
         )),
         Expr::Try(value, _) => Ok(DebugExpression::Try(Box::new(lower(
             value,
@@ -165,7 +166,7 @@ fn lower(
             "closure construction",
             "Use a visible scalar or aggregate value.",
         )),
-        Expr::Error(_) => Err(unsupported(
+        Expr::InvalidRecord(_) | Expr::Error(_) => Err(unsupported(
             expression,
             "recovered parser nodes",
             "Fix the expression syntax before evaluating it.",

@@ -5,7 +5,7 @@ uses Std.Str as Str;
 uses Std.Arrays as Arrays;
 
 begin
-  var Parts: array of string := Str.Split('hello', ',');
+  var Parts: array of (string) := Str.Split('hello', ',');
   Console.WriteLn(Arrays.Length(Parts));
   Console.WriteLn(Parts[0]);
 end program;

@@ -49,7 +49,7 @@ pub(super) fn index(value: &Value, key: &Value) -> Result<Value, ValueOperationE
         }
         Value::Dict(pairs) => pairs
             .iter()
-            .find(|(candidate, _)| candidate == key)
+            .find(|(candidate, _)| candidate.language_equal(key))
             .map(|(_, value)| value.clone())
             .ok_or_else(|| {
                 ValueOperationError::missing_dictionary_key(

@@ -23,15 +23,15 @@ if E.kind = Console.EventKind.Resize then
 end if;
 ```
 
-### `function ReadEventTimeout(Milliseconds: integer): Option of ConsoleEvent`
+### `function ReadEventTimeout(Milliseconds: integer): Option of (ConsoleEvent)`
 
 - **Parameters:** `Milliseconds` — maximum time to wait in milliseconds (`0` = non-blocking poll).
-- **Returns:** `Some(E)` if an event arrived within the timeout; `None` otherwise.
+- **Returns:** `Option.Some(E)` if an event arrived within the timeout; `Option.None` otherwise.
 - **Live terminal input:** call `EnableRawMode()` to poll the live terminal. Queued or buffered events, including injected test events, are returned before raw-mode state is checked.
 
 Terminal key-release notifications are not FPAS events. When one arrives, the
 runtime continues waiting with the remaining deadline instead of returning
-`None`. An immediately ready key press is still returned when the remaining
+`Option.None`. An immediately ready key press is still returned when the remaining
 deadline reaches zero.
 
 ```pascal
@@ -39,23 +39,23 @@ uses Std.Console as Console;
 uses Std.Options as Options;
 
   Console.EnableRawMode();
-  var MaybeEvent: option of Console.ConsoleEvent := Console.ReadEventTimeout(100);
+  var MaybeEvent: option of (Console.ConsoleEvent) := Console.ReadEventTimeout(100);
   case MaybeEvent of
-    when Some(E):
+    when Option.Some(const E):
       begin
         Console.WriteLn(E.kind);
       end;
-    when None:
+    when Option.None:
       begin
         Console.WriteLn('timeout');
       end;
   end case;
 ```
 
-### `function PollEvent(): Option of ConsoleEvent`
+### `function PollEvent(): Option of (ConsoleEvent)`
 
 - **Parameters:** none.
-- **Returns:** `Some(E)` if an event is already available; `None` if the queue is empty.
+- **Returns:** `Option.Some(E)` if an event is already available; `Option.None` if the queue is empty.
 - **Live terminal input:** call `EnableRawMode()` to poll the live terminal. Queued or buffered events, including injected test events, are returned before raw-mode state is checked.
 
 The poll drains immediately ready key-release notifications before deciding
@@ -67,13 +67,13 @@ uses Std.Console as Console;
 uses Std.Options as Options;
 
   Console.EnableRawMode();
-  var MaybeE: option of Console.ConsoleEvent := Console.PollEvent();
+  var MaybeE: option of (Console.ConsoleEvent) := Console.PollEvent();
   case MaybeE of
-    when Some(E):
+    when Option.Some(const E):
       begin
         Console.WriteLn('got event');
       end;
-    when None:
+    when Option.None:
       begin
         Console.WriteLn('nothing pending');
       end;

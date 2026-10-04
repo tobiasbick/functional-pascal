@@ -7,7 +7,7 @@ uses Std.Test as Test;
 
 begin
   case Crypto.RandomBytes(32) of
-    when Ok(Bytes):
+    when Result.Ok(const Bytes):
       begin
         Test.AssertEquals(32, Arrays.Length(Bytes));
         for Index: integer := 0 to Arrays.Length(Bytes) - 1 do
@@ -17,18 +17,18 @@ begin
           end;
         end for;
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
         Test.Fail(Message);
       end;
   end case;
 
   case Crypto.RandomInt(7, 7) of
-    when Ok(Value):
+    when Result.Ok(const Value):
       begin
         Test.AssertEquals(7, Value);
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
         Test.Fail(Message);
       end;

@@ -33,14 +33,7 @@ end function;
 // Creates the Alt+X key event used by the application quit shortcut.
 function QuitKey(): Tui.TuiKeyEvent;
 begin
-  return record
-    kind := Tui.TuiKeyKind.Character;
-    ch := 'x';
-    shift := false;
-    ctrl := false;
-    alt := true;
-    meta := false;
-  end record;
+  return Tui.TuiKeyEvent(kind := Tui.TuiKeyKind.Character, ch := 'x', shift := false, ctrl := false, alt := true, meta := false);
 end function;
 
 begin

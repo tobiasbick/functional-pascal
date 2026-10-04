@@ -3,12 +3,12 @@ program T;
 uses Std.Console as Console;
 uses Std.Arrays as Arrays;
 
-function EmptyArray(X: integer): array of integer;
+function EmptyArray(X: integer): array of (integer);
 begin
   return [];
 end function;
 
 begin
-  var R: array of integer := Arrays.FlatMap([1, 2, 3], EmptyArray);
+  var R: array of (integer) := Arrays.FlatMap([1, 2, 3], EmptyArray);
   Console.WriteLn(Arrays.Length(R));
 end program;

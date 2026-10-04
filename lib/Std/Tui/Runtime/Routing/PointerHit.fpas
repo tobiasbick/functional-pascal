@@ -66,19 +66,21 @@ end enum;
 
 mutable var TuiPointerBestHit: TuiPointerHit := TuiPointerHit.Miss;
 
-function TuiPointerModalChildIndex(Children: array of Element.TuiElement): integer;
+function TuiPointerModalChildIndex(Children: array of (Element.TuiElement)): integer;
 begin
   mutable var LastOverlay: integer := -1;
   for Index: integer := 0 to Arrays.Length(Children) - 1 do
     begin
       case Children[Index] of
-        when Element.TuiElement.Overlay(Title, OverlayChildren):
+        when Element.TuiElement.Overlay(const Title, const OverlayChildren):
           begin
             LastOverlay := Index;
           end;
-        else
+        when Element.TuiElement.Empty, Element.TuiElement.Label(_), Element.TuiElement.Button(_), Element.TuiElement.Input(_), Element.TuiElement.TextArea(_, _, _, _, _), Element.TuiElement.CheckBox(_, _, _, _), Element.TuiElement.List(_, _, _, _), Element.TuiElement.Scroll(_, _, _, _), Element.TuiElement.MenuBar(_), Element.TuiElement.Menu(_, _, _, _), Element.TuiElement.StatusLine(_), Element.TuiElement.CellGrid(_), Element.TuiElement.Rule(_), Element.TuiElement.Gauge(_), Element.TuiElement.Row(_, _), Element.TuiElement.Column(_, _), Element.TuiElement.Layout(_, _), Element.TuiElement.Spacer(_), Element.TuiElement.Panel(_, _), Element.TuiElement.Desktop(_, _):
           begin
-            null;
+            begin
+              null;
+            end;
           end;
       end case;
     end;
@@ -98,7 +100,7 @@ begin
   var Entry: Frame2.TuiArrangedEntry := Frame.EntryAt(Index);
   mutable var Next: integer := Index + 1;
   case Node of
-    when Element.TuiElement.Button(Button):
+    when Element.TuiElement.Button(const Button):
       begin
         mutable var ActiveWidth: integer := Entry.Bounds.Width - 1;
         if ActiveWidth < 0 then
@@ -113,7 +115,7 @@ begin
           end;
         end if;
       end;
-    when Element.TuiElement.Input(Input):
+    when Element.TuiElement.Input(const Input):
       begin
         if AllowHits and Entry.Clip.Contains(Point) then
           begin
@@ -121,7 +123,7 @@ begin
           end;
         end if;
       end;
-    when Element.TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction):
+    when Element.TuiElement.TextArea(const Id, const Text, const Caret, const Offset, const ChangeAction):
       begin
         if AllowHits and Entry.Clip.Contains(Point) then
           begin
@@ -129,7 +131,7 @@ begin
           end;
         end if;
       end;
-    when Element.TuiElement.CheckBox(Id, Text, Checked, ChangeAction):
+    when Element.TuiElement.CheckBox(const Id, const Text, const Checked, const ChangeAction):
       begin
         if AllowHits and Entry.Clip.Contains(Point) then
           begin
@@ -137,7 +139,7 @@ begin
           end;
         end if;
       end;
-    when Element.TuiElement.List(Id, Items, Selected, ChangeAction):
+    when Element.TuiElement.List(const Id, const Items, const Selected, const ChangeAction):
       begin
         if AllowHits and Entry.Clip.Contains(Point) then
           begin
@@ -150,7 +152,7 @@ begin
           end;
         end if;
       end;
-    when Element.TuiElement.MenuBar(Items):
+    when Element.TuiElement.MenuBar(const Items):
       begin
         mutable var Cursor: integer := Entry.Bounds.X;
         for ItemIndex: integer := 0 to Arrays.Length(Items) - 1 do
@@ -168,11 +170,11 @@ begin
           end;
         end for;
       end;
-    when Element.TuiElement.Menu(Id, Nodes, State, ChangeAction):
+    when Element.TuiElement.Menu(const Id, const Nodes, const State, const ChangeAction):
       begin
         null;
       end;
-    when Element.TuiElement.StatusLine(Items):
+    when Element.TuiElement.StatusLine(const Items):
       begin
         mutable var Cursor: integer := Entry.Bounds.X;
         for ItemIndex: integer := 0 to Arrays.Length(Items) - 1 do
@@ -184,16 +186,16 @@ begin
             end if;
 
             case Items[ItemIndex] of
-              when StatusItem.TuiStatusItem.Hint(Text):
+              when StatusItem.TuiStatusItem.Hint(const Text):
                 begin
                   Cursor := Cursor + Console.DisplayWidth(Text);
                 end;
-              when StatusItem.TuiStatusItem.KeyHint(KeyText, Text):
+              when StatusItem.TuiStatusItem.KeyHint(const KeyText, const Text):
                 begin
                   Cursor := ((Cursor + Console.DisplayWidth(KeyText)) + Console.DisplayWidth(Text)) +
                             1;
                 end;
-              when StatusItem.TuiStatusItem.Command(Id, Text, Action, Enabled):
+              when StatusItem.TuiStatusItem.Command(const Id, const Text, const Action, const Enabled):
                 begin
                   var Width: integer := Console.DisplayWidth(Text);
                   var ItemBounds: Rect.TuiRect := Rect.TuiRect.Create(Cursor, Entry.Bounds.Y, Width, 1);
@@ -209,7 +211,7 @@ begin
           end;
         end for;
       end;
-    when Element.TuiElement.Scroll(Id, Offset, ChangeAction, Children):
+    when Element.TuiElement.Scroll(const Id, const Offset, const ChangeAction, const Children):
       begin
         var ScrollAllowsHits: boolean := AllowHits and Entry.Clip.Contains(Point);
         if ScrollAllowsHits then
@@ -224,7 +226,7 @@ begin
           end;
         end for;
       end;
-    when Element.TuiElement.Row(Children, Spacing):
+    when Element.TuiElement.Row(const Children, const Spacing):
       begin
         for ChildIndex: integer := 0 to Arrays.Length(Children) - 1 do
           begin
@@ -232,7 +234,7 @@ begin
           end;
         end for;
       end;
-    when Element.TuiElement.Column(Children, Spacing):
+    when Element.TuiElement.Column(const Children, const Spacing):
       begin
         for ChildIndex: integer := 0 to Arrays.Length(Children) - 1 do
           begin
@@ -240,7 +242,7 @@ begin
           end;
         end for;
       end;
-    when Element.TuiElement.Layout(Settings, Children):
+    when Element.TuiElement.Layout(const Settings, const Children):
       begin
         for ChildIndex: integer := 0 to Arrays.Length(Children) - 1 do
           begin
@@ -248,7 +250,7 @@ begin
           end;
         end for;
       end;
-    when Element.TuiElement.Panel(Title, Children):
+    when Element.TuiElement.Panel(const Title, const Children):
       begin
         for ChildIndex: integer := 0 to Arrays.Length(Children) - 1 do
           begin
@@ -256,7 +258,7 @@ begin
           end;
         end for;
       end;
-    when Element.TuiElement.Overlay(Title, Children):
+    when Element.TuiElement.Overlay(const Title, const Children):
       begin
         for ChildIndex: integer := 0 to Arrays.Length(Children) - 1 do
           begin
@@ -264,7 +266,7 @@ begin
           end;
         end for;
       end;
-    when Element.TuiElement.Desktop(Focused, Children):
+    when Element.TuiElement.Desktop(const Focused, const Children):
       begin
         var ModalIndex: integer := TuiPointerModalChildIndex(Children);
         for ChildIndex: integer := 0 to Arrays.Length(Children) - 1 do
@@ -280,9 +282,11 @@ begin
           end;
         end for;
       end;
-    else
+    when Element.TuiElement.Empty, Element.TuiElement.Label(_), Element.TuiElement.CellGrid(_), Element.TuiElement.Rule(_), Element.TuiElement.Gauge(_), Element.TuiElement.Spacer(_):
       begin
-        null;
+        begin
+          null;
+        end;
       end;
   end case;
 

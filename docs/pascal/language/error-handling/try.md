@@ -1,26 +1,26 @@
 # Try operator
 
-`try` propagates errors automatically. If the expression is `Error` (for `Result`) or `None` (for `Option`), the enclosing function returns that value immediately. Otherwise, the inner value is unwrapped:
+`try` propagates errors automatically. If the expression is `Result.Error` (for `Result`) or `Option.None` (for `Option`), the enclosing function returns that value immediately. Otherwise, the inner value is unwrapped:
 
 Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`try` expression).
 
 ```pascal
 uses Std.Conv as Conv;
 
-function Process(A: integer; B: integer): result of string, string;
+function Process(A: integer; B: integer): result of (string, string);
 begin
   var Quotient: integer := try Divide(A, B);
-  return Ok(Conv.IntToStr(Quotient));
+  return Result.Ok(Conv.IntToStr(Quotient));
 end function;
 ```
 
 `try` also works with `Option`:
 
 ```pascal
-function FirstPositive(Items: array of integer): option of integer;
+function FirstPositive(Items: array of (integer)): option of (integer);
 begin
   var Idx: integer := try FindIndex(Items, 1);
-  return Some(Items[Idx]);
+  return Option.Some(Items[Idx]);
 end function;
 
 ```

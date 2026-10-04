@@ -16,42 +16,28 @@ type Complex = record
 
   public static function Create(Re: real; Im: real): Complex;
   begin
-    return record
-      Re := Re;
-      Im := Im;
-    end record;
+    return Complex(Re := Re, Im := Im);
   end function;
 
   public function Add(Self: Complex; Other: Complex): Complex;
   begin
-    return record
-      Re := Self.Re + Other.Re;
-      Im := Self.Im + Other.Im;
-    end record;
+    return Complex(Re := Self.Re + Other.Re, Im := Self.Im + Other.Im);
   end function;
 
   public function Sub(Self: Complex; Other: Complex): Complex;
   begin
-    return record
-      Re := Self.Re - Other.Re;
-      Im := Self.Im - Other.Im;
-    end record;
+    return Complex(Re := Self.Re - Other.Re, Im := Self.Im - Other.Im);
   end function;
 
   public function Mul(Self: Complex; Other: Complex): Complex;
   begin
-    return record
-      Re := Self.Re * Other.Re - Self.Im * Other.Im;
-      Im := Self.Re * Other.Im + Self.Im * Other.Re;
-    end record;
+    return Complex(Re := Self.Re * Other.Re - Self.Im * Other.Im, Im := Self.Re * Other.Im +
+                                                                        Self.Im * Other.Re);
   end function;
 
   public function Scale(Self: Complex; Factor: real): Complex;
   begin
-    return record
-      Re := Self.Re * Factor;
-      Im := Self.Im * Factor;
-    end record;
+    return Complex(Re := Self.Re * Factor, Im := Self.Im * Factor);
   end function;
 
   public function Sq(Self: Complex): Complex;
@@ -62,10 +48,7 @@ type Complex = record
   public function Inv(Self: Complex): Complex;
   begin
     var Den: real := Self.Re * Self.Re + Self.Im * Self.Im;
-    return record
-      Re := Self.Re / Den;
-      Im := - Self.Im / Den;
-    end record;
+    return Complex(Re := Self.Re / Den, Im := - Self.Im / Den);
   end function;
 
   public function MagSq(Self: Complex): real;
@@ -114,20 +97,14 @@ begin
       var Z2: Complex := Z.Sq();
       if Z2.MagSq() < 0.000000000001 then
         begin
-          return record
-            Root := 0;
-            Shade := 0.0;
-          end record;
+          return PixelSample(Root := 0, Shade := 0.0);
         end;
       end if;
       var Next: Complex := Z.Scale(2.0 / 3.0).Add(Z2.Inv().Scale(1.0 / 3.0));
       if Next.Sub(Z).MagSq() < Tolerance then
         begin
           var Shade: real := 1.0 - (Conv.IntToReal(N) / Conv.IntToReal(Math.Max(MaxIter, 1)));
-          return record
-            Root := ClosestRoot(Next);
-            Shade := Shade;
-          end record;
+          return PixelSample(Root := ClosestRoot(Next), Shade := Shade);
         end;
       end if;
 
@@ -136,10 +113,7 @@ begin
     end;
   end while;
 
-  return record
-    Root := ClosestRoot(Z);
-    Shade := 0.25;
-  end record;
+  return PixelSample(Root := ClosestRoot(Z), Shade := 0.25);
 end function;
 
 function ComputeRow(
@@ -151,7 +125,7 @@ function ComputeRow(
   YMin: real;
   YMax: real;
   MaxIter: integer
-): array of PixelSample;
+): array of (PixelSample);
 begin
   mutable var WidthRange: integer := Width - 1;
   mutable var HeightRange: integer := Height - 1;
@@ -169,7 +143,7 @@ begin
   var Wr: real := Conv.IntToReal(WidthRange);
   var Hr: real := Conv.IntToReal(HeightRange);
   var cy: real := YMax - (Py / Hr) * (YMax - YMin);
-  mutable var Row: array of PixelSample := [];
+  mutable var Row: array of (PixelSample) := [];
   for Px: integer := 0 to Width - 1 do
     begin
       var cx: real := XMin + (Px / Wr) * (XMax - XMin);
@@ -193,22 +167,14 @@ begin
   if Sample.Root = 0 then
     begin
       var CellShade: Console.Color := Color2.InsideColor();
-      return record
-        glyph := ' ';
-        foreground := CellShade;
-        background := CellShade;
-      end record;
+      return Console.Cell(glyph := ' ', foreground := CellShade, background := CellShade);
     end;
   end if;
   var Fg: Console.Color := Color2.RootColor(Sample.Root, Sample.Shade);
-  return record
-    glyph := ShadeGlyph(Sample.Shade);
-    foreground := Fg;
-    background := Console.RgbColor(0, 0, 0);
-  end record;
+  return Console.Cell(glyph := ShadeGlyph(Sample.Shade), foreground := Fg, background := Console.RgbColor(0, 0, 0));
 end function;
 
-procedure DrawRow(Row: array of PixelSample; Width: integer; Y: integer);
+procedure DrawRow(Row: array of (PixelSample); Width: integer; Y: integer);
 begin
   var CurrentWidth: integer := Console.ScreenWidth();
   mutable var DrawWidth: integer := Width;
@@ -223,7 +189,7 @@ begin
       return;
     end;
   end if;
-  mutable var Cells: array of Console.Cell := [];
+  mutable var Cells: array of (Console.Cell) := [];
   for Px: integer := 0 to DrawWidth - 1 do
     begin
       Arrays.Push(Cells, RenderCell(Row[Px]));
@@ -243,7 +209,7 @@ public procedure Render(
   MaxIter: integer
 );
 begin
-  mutable var Tasks: array of task := [];
+  mutable var Tasks: array of (task) := [];
   for Py: integer := 0 to Height - 1 do
     begin
       Arrays.Push(Tasks, go ComputeRow(Py, Width, Height, XMin, XMax, YMin, YMax, MaxIter));
@@ -252,7 +218,7 @@ begin
 
   for Py: integer := 0 to Height - 1 do
     begin
-      var Row: array of PixelSample := Tasks2.Wait(Tasks[Py]);
+      var Row: array of (PixelSample) := Tasks2.Wait(Tasks[Py]);
       if (Py + 1) <= Math.Max(Console.ScreenHeight() - 2, 1) then
         begin
           DrawRow(Row, Width, Py + 1);

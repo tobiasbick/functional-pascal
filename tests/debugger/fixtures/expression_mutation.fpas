@@ -7,19 +7,15 @@ type Box = record
 end record;
 
 type Container = record
-  Items: array of Box;
+  Items: array of (Box);
 end record;
 
 mutable var GlobalValue: integer := 5;
 
 begin
   mutable var Index: integer := 0;
-  mutable var State: Container := record
-    Items := [record
-      Value := 10;
-    end record];
-  end record;
-  mutable var Scores: dict of string to integer := ['blue': 20];
+  mutable var State: Container := Container(Items := [Box(Value := 10)]);
+  mutable var Scores: dict of (string, integer) := ['blue': 20];
   Console.WriteLn(GlobalValue);
   Console.WriteLn(State.Items[Index].Value);
   Console.WriteLn(Scores['blue']);

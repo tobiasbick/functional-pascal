@@ -226,11 +226,10 @@ fn validator_accepts_the_complete_read_only_category_matrix() {
         "Value.Method()",
         "[]",
         "[: ]",
-        "record X := 1; end record",
-        "Ok(1)",
-        "Error('x')",
-        "Some(1)",
-        "None",
+        "Result.Ok(1)",
+        "Result.Error('x')",
+        "Option.Some(1)",
+        "Option.None",
         "Choice.Empty",
         "Choice.Pair(1, 2)",
         "cHoIcE.pAiR(1, 2)",
@@ -272,13 +271,40 @@ fn validator_lowers_qualified_enum_constructors_to_call_and_field_forms() {
 
 #[test]
 fn validator_rejects_every_effectful_or_constructing_category() {
-    let expressions = ["nil", "go Work()", "function(): integer begin return 1 end"];
+    let expressions = [
+        "nil",
+        "go Work()",
+        "function(): integer begin return 1; end function",
+    ];
     for source in expressions {
         let error = parse_debug_expression(source, DebugEvaluationLimits::default())
             .expect_err("unsupported expression category");
-        assert!(!error.code.is_empty(), "stable code for {source}");
+        assert_eq!(error.code, "unsupported_expression", "{source}");
         assert!(!error.hint.is_empty(), "actionable hint for {source}");
     }
+}
+
+#[test]
+fn validator_rejects_decisions_and_named_construction_with_metadata_hints() {
+    for source in [
+        "if true then 1 else 2 end if",
+        "case Value of when Choice.Present(const N): N; when Choice.Empty: 0; end case",
+        "Point(X := 1, Y := 2)",
+    ] {
+        let error = parse_debug_expression(source, DebugEvaluationLimits::default())
+            .expect_err("compiler metadata is required");
+        assert_eq!(error.code, "unsupported_expression", "{source}");
+        assert!(error.hint.contains("compiler"), "{source}: {error:?}");
+        assert_eq!(error.offset, 0, "{source}");
+        assert_eq!(error.length, source.len(), "{source}");
+    }
+
+    let source = "[if true then 1 else 2 end if]";
+    let error = parse_debug_expression(source, DebugEvaluationLimits::default())
+        .expect_err("containers cannot bypass decision validation");
+    assert_eq!(error.code, "unsupported_expression");
+    assert_eq!(error.offset, 1);
+    assert_eq!(error.length, source.len() - 2);
 }
 
 #[test]

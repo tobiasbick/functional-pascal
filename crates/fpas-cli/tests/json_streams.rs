@@ -44,7 +44,7 @@ fn program_source() -> String {
         ("sh", "['-c', 'echo child err >&2']")
     };
     format!(
-        "program Main;\nuses Std.Console as Console; uses Std.Proc as Proc;\nbegin\n  Console.WriteLn('out');\n  case Proc.Run('{command}', {script}) of\n    when Ok(Code): Console.WriteLn(Code);\n    when Error(Message): Console.WriteLn(Message);\n  end case;\n  panic('boom');\nend program;\n"
+        "program Main;\nuses Std.Console as Console; uses Std.Proc as Proc;\nbegin\n  Console.WriteLn('out');\n  case Proc.Run('{command}', {script}) of\n    when Result.Ok(const Code): Console.WriteLn(Code);\n    when Result.Error(const Message): Console.WriteLn(Message);\n  end case;\n  panic('boom');\nend program;\n"
     )
 }
 

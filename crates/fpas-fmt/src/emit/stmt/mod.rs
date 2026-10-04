@@ -2,6 +2,7 @@
 
 mod line;
 mod loops;
+pub(super) use loops::emit_case_labels;
 mod spacing;
 
 use fpas_parser::Stmt;

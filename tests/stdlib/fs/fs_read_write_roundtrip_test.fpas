@@ -6,11 +6,11 @@ uses Std.Test as Test;
 begin
   var Path: string := Test.ScratchDir() + '/roundtrip.txt';
   case Fs.WriteText(Path, 'hello fs') of
-    when Ok(_):
+    when Result.Ok(_):
       begin
         null;
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
         Test.Fail(Message);
       end;
@@ -19,11 +19,11 @@ begin
   Test.AssertTrue(Fs.Exists(Path));
   Test.AssertTrue(Fs.IsFile(Path));
   case Fs.ReadText(Path) of
-    when Ok(Text):
+    when Result.Ok(const Text):
       begin
         Test.AssertEquals('hello fs', Text);
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
         Test.Fail(Message);
       end;

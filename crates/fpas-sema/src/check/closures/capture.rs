@@ -6,9 +6,7 @@ use std::collections::HashSet;
 
 use crate::scope::{ScopeStack, SymbolKind};
 use crate::types::Ty;
-use fpas_parser::{
-    CaseLabel, Decl, Designator, DesignatorPart, Expr, FuncBody, PostfixOperation, Stmt,
-};
+use fpas_parser::{Decl, Designator, DesignatorPart, Expr, FuncBody, PostfixOperation, Stmt};
 
 use super::{ClosureInfoMap, NestedRoutineCaptureMap};
 

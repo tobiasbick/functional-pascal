@@ -13,9 +13,9 @@ uses Std.Time as Time;
 const WarmupIterations: integer := 10000;
 const ArraySize: integer := 10000;
 
-function MakeValues(Count: integer): array of integer;
+function MakeValues(Count: integer): array of (integer);
 begin
-  mutable var Values: array of integer := [];
+  mutable var Values: array of (integer) := [];
   for Index: integer := 1 to Count do
     begin
       Arrays.Push(Values, Index);
@@ -25,7 +25,7 @@ begin
   return Values;
 end function;
 
-function RunLength(Values: array of integer; Iterations: integer): integer;
+function RunLength(Values: array of (integer); Iterations: integer): integer;
 begin
   mutable var Total: integer := 0;
   for Index: integer := 1 to Iterations do
@@ -60,7 +60,7 @@ begin
       end if;
     end;
   end if;
-  var Values: array of integer := MakeValues(ArraySize);
+  var Values: array of (integer) := MakeValues(ArraySize);
   mutable var Total: integer := RunLength(Values, WarmupIterations);
   var Started: integer := Time.MonotonicMillis();
   Total := RunLength(Values, Iterations);

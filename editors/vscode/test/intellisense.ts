@@ -28,7 +28,7 @@ export async function verifyIntelliSense(extensionPath: string): Promise<void> {
     " uses Intellisense.Core as Core;",
     "",
     "begin",
-    "  var CounterValue: Core.Counter := record Amount := 1; end record;",
+    "  var CounterValue: Core.Counter := Core.Counter(Amount := 1);",
     "  var Member: integer := CounterValue.Amount;",
     "  var Sum: integer := Core.Add(1, 2);",
     "  var Imported: integer := UniqueHostValue();",

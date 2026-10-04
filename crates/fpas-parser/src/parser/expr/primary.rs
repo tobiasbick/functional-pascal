@@ -22,6 +22,9 @@ impl Parser {
         }
 
         match self.current_token().clone() {
+            Token::OptionKw | Token::Result => self.parse_builtin_variant(),
+            Token::If => self.parse_if_expression(),
+            Token::Case => self.parse_case_expression(),
             Token::Integer(v) => {
                 let span = self.current_span();
                 self.advance();
@@ -55,23 +58,9 @@ impl Parser {
                 Expr::Paren(Box::new(expr), self.span_from(start))
             }
             Token::LBracket => self.parse_array_or_dict_literal(),
-            Token::Record => self.parse_record_literal(),
-            Token::Ok => {
-                let (inner, span) = self.parse_paren_wrapped_after_keyword();
-                Expr::ResultOk(Box::new(inner), span)
-            }
-            Token::Error => {
-                let (inner, span) = self.parse_paren_wrapped_after_keyword();
-                Expr::ResultError(Box::new(inner), span)
-            }
-            Token::Some => {
-                let (inner, span) = self.parse_paren_wrapped_after_keyword();
-                Expr::OptionSome(Box::new(inner), span)
-            }
-            Token::None => {
-                let span = self.current_span();
-                self.advance();
-                Expr::OptionNone(span)
+            Token::Record => self.recover_obsolete_record(),
+            Token::Ok | Token::Error | Token::Some | Token::None => {
+                self.reject_unqualified_builtin()
             }
             Token::Nil => {
                 let span = self.current_span();
@@ -106,7 +95,8 @@ impl Parser {
         }
     }
 
-    fn parse_paren_wrapped_after_keyword(&mut self) -> (Expr, fpas_lexer::Span) {
+    /// Parse the single positional payload following a builtin variant keyword.
+    pub(super) fn parse_paren_wrapped_after_keyword(&mut self) -> (Expr, fpas_lexer::Span) {
         let start = self.current_span();
         self.advance();
         self.expect(&Token::LParen);
@@ -158,19 +148,17 @@ impl Parser {
         Expr::ArrayLiteral(elements, self.span_from(start))
     }
 
-    fn parse_record_literal(&mut self) -> Expr {
+    fn recover_obsolete_record(&mut self) -> Expr {
         let start = self.current_span();
         self.advance();
-        let fields = self.parse_field_init_list(&Token::Record);
-        Expr::RecordLiteral {
-            fields,
-            span: self.span_from(start),
-        }
+        // Consume the obsolete body for recovery; the expected type supplies the diagnostic.
+        self.parse_field_init_list(&Token::Record);
+        Expr::InvalidRecord(self.span_from(start))
     }
 
     /// Parse `Field := Value;` initializers, then consume their named closer.
     ///
-    /// Shared by record literals and record update expressions.
+    /// Used by record updates and diagnostic recovery for obsolete record syntax.
     fn parse_field_init_list(&mut self, kind: &Token) -> Vec<FieldInit> {
         let mut fields = Vec::new();
         while !self.check(&Token::End) && !self.at_end() {

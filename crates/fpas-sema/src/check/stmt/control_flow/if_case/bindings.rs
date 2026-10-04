@@ -10,7 +10,7 @@ type CaseBindings = Vec<(String, Ty)>;
 
 impl Checker {
     /// Return the common binding signature for one arm after validating every label.
-    pub(super) fn shared_case_arm_bindings(
+    pub(in crate::check) fn shared_case_arm_bindings(
         &mut self,
         binding_sets: Vec<CaseBindings>,
         span: Span,

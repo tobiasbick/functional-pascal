@@ -64,31 +64,27 @@ fn run_cli_static_record_function_via_public_alias_over_private_unit() {
 
 uses Std.Console as Console;
 
+public type PointImpl = record
+  public X: integer;
+  public Y: integer;
 
-  public type PointImpl = record
-    public X: integer;
-    public Y: integer;
+  public static function Create(X: integer; Y: integer): PointImpl;
+  begin
+    return PointImpl(X := X, Y := Y);
+  end function;
 
-    public static function Create(X: integer; Y: integer): PointImpl;
-    begin
-      return record
-        X := X;
-        Y := Y;
-      end record;
-    end function;
+  public static procedure Print(Value: PointImpl);
+  begin
+    Console.WriteLn(Value.Sum());
+  end procedure;
 
-    public static procedure Print(Value: PointImpl);
-    begin
-      Console.WriteLn(Value.Sum());
-    end procedure;
+  public function Sum(Self: PointImpl): integer;
+  begin
+    return Self.X + Self.Y;
+  end function;
+end record;
 
-    public function Sum(Self: PointImpl): integer;
-    begin
-      return Self.X + Self.Y;
-    end function;
-  end record;
 end unit;
-
 "#,
     );
     write_text(

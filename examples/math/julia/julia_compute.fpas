@@ -11,26 +11,17 @@ type Complex = record
 
   public static function Create(Re: real; Im: real): Complex;
   begin
-    return record
-      Re := Re;
-      Im := Im;
-    end record;
+    return Complex(Re := Re, Im := Im);
   end function;
 
   public function Sq(Self: Complex): Complex;
   begin
-    return record
-      Re := Self.Re * Self.Re - Self.Im * Self.Im;
-      Im := (2.0 * Self.Re) * Self.Im;
-    end record;
+    return Complex(Re := Self.Re * Self.Re - Self.Im * Self.Im, Im := (2.0 * Self.Re) * Self.Im);
   end function;
 
   public function Add(Self: Complex; Other: Complex): Complex;
   begin
-    return record
-      Re := Self.Re + Other.Re;
-      Im := Self.Im + Other.Im;
-    end record;
+    return Complex(Re := Self.Re + Other.Re, Im := Self.Im + Other.Im);
   end function;
 
   public function MagSq(Self: Complex): real;
@@ -64,19 +55,13 @@ begin
 
   if N >= MaxIter then
     begin
-      return record
-        IsInside := true;
-        EscapeValue := 0.0;
-      end record;
+      return PixelSample(IsInside := true, EscapeValue := 0.0);
     end;
   end if;
   var MagnitudeSq: real := Math.Max(Z.MagSq(), 4.0);
   var Smooth: real := (Conv.IntToReal(N) + 1.0) -
                       (Math.Log(Math.Log(MagnitudeSq) * 0.5) / Math.Log(2.0));
-  return record
-    IsInside := false;
-    EscapeValue := Smooth;
-  end record;
+  return PixelSample(IsInside := false, EscapeValue := Smooth);
 end function;
 
 // Compute one row, returning an empty array when cancellation is observed.
@@ -92,7 +77,7 @@ public function ComputeRow(
   Jr: real;
   Ji: real;
   Token: Tasks.CancellationToken
-): array of PixelSample;
+): array of (PixelSample);
 begin
   mutable var WidthRange: integer := Width - 1;
   mutable var HeightRange: integer := Height - 1;
@@ -111,7 +96,7 @@ begin
   var Hr: real := Conv.IntToReal(HeightRange);
   var cy: real := YMax - (Py / Hr) * (YMax - YMin);
   var C: Complex := Complex.Create(Jr, Ji);
-  mutable var Row: array of PixelSample := [];
+  mutable var Row: array of (PixelSample) := [];
   for Px: integer := 0 to Width - 1 do
     begin
       if Tasks.IsCancellationRequested(Token) then

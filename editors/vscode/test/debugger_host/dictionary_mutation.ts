@@ -51,7 +51,7 @@ export async function verifyDictionaryMutation(
     " uses Std.Console as Console;",
     "",
     "begin",
-    "  mutable var Scores: dict of string to integer := ['Ada': 1, 'Grace': 2];",
+    "  mutable var Scores: dict of (string, integer) := ['Ada': 1, 'Grace': 2];",
     "  var StopMarker: integer := 0;",
     "  Console.WriteLn(Scores['Hopper']);",
     "  Console.WriteLn(Scores['Bob']);",

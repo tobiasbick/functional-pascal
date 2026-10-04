@@ -152,7 +152,7 @@ collection API only when an actual application requires it.
 - [x] Audit reuse in parser/AST, sema, compiler/IR, VM, generic routines, closures,
   record construction/update, equality, and formatter before extending modules.
 - [x] Implement and test arbitrary callable targets and capture rules first.
-- [ ] Implement generic records/enums and construction, then nested patterns and
+- [x] Implement generic records/enums and construction, then nested patterns and
   exhaustive case expressions; implement if expressions with the same type rules.
 - [ ] Implement bindings, inference, value copying, checked numeric behavior, and
   coordinated explicit caller mutation and default-purity checks; migrate all
@@ -177,14 +177,39 @@ Evidence: [functional-core reuse audit](../audit/functional-core-reuse.md) maps
 pre-implementation owners and gaps. The
 [callable delivery](../audit/functional-core-callables.md) records implemented
 scope, module splits, capture correction, consumer migration and coverage.
+The [generic forwarding correction](../audit/generic-constraints.md) records
+constraint regressions, record-default corrections and their verification.
+The [generic-data delivery](../audit/generic-data.md) records equality rules,
+coverage and the authorized record-default alias correction.
 
-Status: arbitrary callable targets, capture rules and result consumption/discard
-are complete, including the mutable-parameter capture correction, source consumer
-migration, current documentation and positive/negative/edge coverage. Workspace
-format/build/tests, FPAS formatting/suite, application/example checks, editor
-grammar and documentation/diff checks pass. Stage 4 remains open.
+Status: arbitrary callable targets and the generic-data/decision slice are complete.
+Generic records/enums retain concrete arguments, constraints, recursion, defaults
+and nominal identities across compiled units. Named record construction and
+qualified variants share contextual inference with lazy `if`/`case` expressions.
+Both case forms use recursive patterns, explicit bindings and common coverage.
+Structural equality, dictionary key checks and duplicate normalization are verified.
 
-Next: implement generic records/enums and construction, followed by shared
-decision-expression typing. Bindings, caller mutation, purity and default checks
-remain coordinated with stage 5. Member removal follows working ordinary-function
-replacements.
+Canonical conversion covers standard units, applications, examples, FPAS tests,
+Rust test sources, handbook/API examples and editor fixtures. Obsolete builtin
+lists, angle headings, short variants, implicit pattern bindings and executable
+anonymous record paths are removed. Obsolete record diagnostics report the resolved
+target through aliases; formatters reject those expressions. Current grammar,
+handbook, authoring guidance and generated intrinsic declarations are synchronized.
+
+Verification: `cargo fmt`, `cargo build` and the full Rust workspace pass
+(3,649 tests across 188 groups). FPAS formatting and the full suite pass
+(466 passed, one intentional skip, zero failures). All 109 example/application
+programs, 22 project manifests and 56 complete handbook programs pass in their
+appropriate source/project contexts. Editor grammar, the real VS Code extension
+suite, documentation links and the Git diff check pass. The delivery audit records
+positive, negative and boundary coverage and the authorized baseline corrections.
+
+The [task migration boundary](../audit/task-migration-boundary.md) assigns removal
+of bare `task` to coordinated local inference and procedure-task work. There is no
+public unit-result type and no permanent bare-task exception in the target contract.
+This approved dependency does not leave the generic-data slice open.
+
+Next: coordinate stage-5 caller references and purity metadata/checks with the
+next stage-4 binding, inference, value-copying, checked-number and default-purity
+slice. Member removal follows working ordinary-function replacements. The full
+stage remains open.

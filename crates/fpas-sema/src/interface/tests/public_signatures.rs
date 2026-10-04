@@ -40,9 +40,16 @@ fn assert_private_signature_error(source: &str, declaration: &str, private_type:
 fn private_record_function_result_is_rejected() {
     assert_private_signature_error(
         r#"unit Demo.ReturnValue;
-          type Hidden = record Value: integer; end record;
-         public function Make(): Hidden;
-         begin return record Value := 1; end record; end function;
+
+type Hidden = record
+  Value: integer;
+end record;
+
+public function Make(): Hidden;
+begin
+  return Hidden(Value := 1);
+end function;
+
 end unit;
 "#,
         "Make",
@@ -68,8 +75,13 @@ end unit;
 fn private_record_public_global_is_rejected() {
     assert_private_signature_error(
         r#"unit Demo.Global;
-          type Hidden = record Value: integer; end record;
-           public var Current: Hidden := record Value := 1; end record;
+
+type Hidden = record
+  Value: integer;
+end record;
+
+public var Current: Hidden := Hidden(Value := 1);
+
 end unit;
 "#,
         "Current",
@@ -96,7 +108,7 @@ fn private_type_nested_in_callable_collection_is_rejected_once() {
         r#"unit Demo.Nested;
           type Hidden = record Value: integer; end record;
          public procedure Register(
-           Callback: function(Values: array of Hidden): Option of Hidden
+           Callback: function(Values: array of (Hidden)): Option of (Hidden)
          );
          begin null; end procedure;
 end unit;
@@ -138,7 +150,7 @@ fn public_type_in_public_signature_remains_valid() {
         &parse_unit(
             r#"unit Demo.Valid;
                public type Visible = record public Value: integer; end record;
-             public procedure Accept(Values: array of Visible);
+             public procedure Accept(Values: array of (Visible));
              begin null; end procedure;
 end unit;
 "#,

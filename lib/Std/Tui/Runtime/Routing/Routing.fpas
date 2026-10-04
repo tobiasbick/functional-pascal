@@ -20,7 +20,7 @@ public function TuiRouteKey(
   Root: Element.TuiElement;
   Frame: Frame2.TuiArrangedFrame;
   Key: Console.KeyEvent
-): array of Msg.TuiMsg;
+): array of (Msg.TuiMsg);
 begin
   return Key2.TuiRouteKey(Root, Frame, Key);
 end function;
@@ -45,7 +45,7 @@ end procedure;
 //
 // Parameters:
 // - `ApplicationId`: Identifier of the application-owned routing state.
-public function TuiPointerRoutingPressed(ApplicationId: integer): option of ControlId.TuiControlId;
+public function TuiPointerRoutingPressed(ApplicationId: integer): Option of (ControlId.TuiControlId);
 begin
   return Pointer.TuiPointerRoutingPressed(ApplicationId);
 end function;

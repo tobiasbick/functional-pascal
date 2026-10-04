@@ -168,7 +168,17 @@ uses Std.Math as Math;
     #[test]
     fn program_type_then_begin() {
         let formatted = parse_and_format(
-            r#"program T;  type Point = record X: integer; Y: integer; end record; begin var P: Point := record X := 1; Y := 2; end record; end program;"#,
+            r#"program T;
+
+type Point = record
+  X: integer;
+  Y: integer;
+end record;
+
+begin
+  var P: Point := Point(X := 1, Y := 2);
+end program;
+"#,
         );
         assert!(formatted.contains("type Point = record\n"));
         assert!(formatted.contains("end record;\n\nbegin\n"));
@@ -177,7 +187,7 @@ uses Std.Math as Math;
     #[test]
     fn array_literal_short_stays_single_line() {
         let formatted = parse_and_format(
-            r#"program T; begin var Words: array of string := ['red', 'green', 'blue']; end program;"#,
+            r#"program T; begin var Words: array of (string) := ['red', 'green', 'blue']; end program;"#,
         );
         assert!(
             formatted.contains("['red', 'green', 'blue']"),

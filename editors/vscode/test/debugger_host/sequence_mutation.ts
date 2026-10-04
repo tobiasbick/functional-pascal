@@ -52,7 +52,7 @@ export async function verifySequenceMutation(
     " uses Std.Console as Console;",
     "",
     "begin",
-    "  mutable var Numbers: array of integer := [1, 2, 3];",
+    "  mutable var Numbers: array of (integer) := [1, 2, 3];",
     "  mutable var Text: string := 'A😀B';",
     "  var StopMarker: integer := 0;",
     "  Console.WriteLn(Numbers[0]);",

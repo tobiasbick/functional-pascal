@@ -13,15 +13,15 @@ end enum;
 function Eval(E: Expr): integer;
 begin
   case E of
-    when Expr.Num(V):
+    when Expr.Num(const V):
       begin
         return V;
       end;
-    when Expr.Add(L, R):
+    when Expr.Add(const L, const R):
       begin
         return Eval(L) + Eval(R);
       end;
-    when Expr.Mul(L, R):
+    when Expr.Mul(const L, const R):
       begin
         return Eval(L) * Eval(R);
       end;
@@ -31,15 +31,15 @@ end function;
 function Show(E: Expr): string;
 begin
   case E of
-    when Expr.Num(V):
+    when Expr.Num(const V):
       begin
         return Conv.IntToStr(V);
       end;
-    when Expr.Add(L, R):
+    when Expr.Add(const L, const R):
       begin
         return ((('(' + Show(L)) + ' + ') + Show(R)) + ')';
       end;
-    when Expr.Mul(L, R):
+    when Expr.Mul(const L, const R):
       begin
         return ((('(' + Show(L)) + ' * ') + Show(R)) + ')';
       end;

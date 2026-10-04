@@ -131,8 +131,9 @@ impl Worker {
             }
             Value::Dict(mut pairs) => {
                 let key = index;
-                if let Some((_, existing)) =
-                    pairs.iter_mut().find(|(candidate, _)| *candidate == key)
+                if let Some((_, existing)) = pairs
+                    .iter_mut()
+                    .find(|(candidate, _)| candidate.language_equal(&key))
                 {
                     *existing = value;
                 } else {

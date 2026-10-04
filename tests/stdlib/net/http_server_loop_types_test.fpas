@@ -21,12 +21,7 @@ begin
   Test.AssertEquals(8, Options.MaxConcurrentRequests);
   Test.AssertEquals(0, Options.MaxRequests);
   var HandlerValue: Http.RequestHandler := Handle;
-  var RequestValue: Http.ServerRequest := record
-    Method := 'OK';
-    Target := '/';
-    Headers := [];
-    Body := [];
-  end record;
+  var RequestValue: Http.ServerRequest := Http.ServerRequest(Method := 'OK', Target := '/', Headers := [], Body := []);
   var ResponseValue: Http.ServerResponse := HandlerValue(RequestValue);
   Test.AssertEquals(200, ResponseValue.StatusCode);
   Test.AssertEquals('OK', ResponseValue.ReasonPhrase);

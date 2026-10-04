@@ -105,6 +105,9 @@ fn canonicalize_type(ty: &mut InterfaceType) {
         Function(callable) | Procedure(callable) => canonicalize_callable(callable),
         Record(record) => {
             record.name = canonical_name(&record.name);
+            for argument in &mut record.type_arguments {
+                canonicalize_type(argument);
+            }
             record.owner_unit = record.owner_unit.as_deref().map(canonical_name);
             for member in &mut record.private_members {
                 *member = canonical_name(member);
@@ -142,6 +145,9 @@ fn canonicalize_type(ty: &mut InterfaceType) {
         }
         Enum(enum_ty) => {
             enum_ty.name = canonical_name(&enum_ty.name);
+            for argument in &mut enum_ty.type_arguments {
+                canonicalize_type(argument);
+            }
             for variant in &mut enum_ty.variants {
                 for field in &mut variant.fields {
                     canonicalize_type(&mut field.ty);
@@ -152,6 +158,12 @@ fn canonicalize_type(ty: &mut InterfaceType) {
             }
         }
         Named(name) => *name = canonical_name(name),
+        InterfaceType::Applied(name, arguments) => {
+            *name = canonical_name(name);
+            for argument in arguments {
+                canonicalize_type(argument);
+            }
+        }
         GenericParameter(_, _) => {}
         _ => {}
     }

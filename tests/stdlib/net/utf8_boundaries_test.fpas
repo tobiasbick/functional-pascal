@@ -5,14 +5,14 @@ uses Std.Results as Results;
 uses Std.Str as Str;
 uses Std.Test as Test;
 
-procedure Invalid(Bytes: array of integer);
+procedure Invalid(Bytes: array of (integer));
 begin
   case Utf8.Decode(Bytes) of
-    when Ok(_):
+    when Result.Ok(_):
       begin
         Test.Fail('invalid encoding accepted');
       end;
-    when Error(_):
+    when Result.Error(_):
       begin
         null;
       end;

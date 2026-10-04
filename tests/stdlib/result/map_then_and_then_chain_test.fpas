@@ -9,22 +9,22 @@ begin
   return V * 2;
 end function;
 
-function PositiveToStr(V: integer): result of string, string;
+function PositiveToStr(V: integer): Result of (string, string);
 begin
   if V > 0 then
     begin
-      return Ok(Conv.IntToStr(V));
+      return Result.Ok(Conv.IntToStr(V));
     end;
   else
     begin
-      return Error('non-positive');
+      return Result.Error('non-positive');
     end;
   end if;
 end function;
 
 begin
-  var R: result of integer, string := Ok(5);
-  var Doubled: result of integer, string := Results.Map(R, Double);
-  var Final: result of string, string := Results.AndThen(Doubled, PositiveToStr);
+  var R: Result of (integer, string) := Result.Ok(5);
+  var Doubled: Result of (integer, string) := Results.Map(R, Double);
+  var Final: Result of (string, string) := Results.AndThen(Doubled, PositiveToStr);
   Console.WriteLn(Results.Unwrap(Final));
 end program;

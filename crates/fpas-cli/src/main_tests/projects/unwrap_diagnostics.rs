@@ -12,8 +12,18 @@ fn unwrap_namespace_mismatch_reports_a_type_error_before_lowering() {
         .nth(2)
         .expect("repository root");
     for (container, constructor, correct, wrong) in [
-        ("option of Tui.TuiStyle", "Some", "Options", "Results"),
-        ("result of Tui.TuiStyle, string", "Ok", "Results", "Options"),
+        (
+            "option of (Tui.TuiStyle)",
+            "Option.Some",
+            "Options",
+            "Results",
+        ),
+        (
+            "result of (Tui.TuiStyle, string)",
+            "Result.Ok",
+            "Results",
+            "Options",
+        ),
     ] {
         for function in ["Unwrap", "UnwrapOr"] {
             for namespace in [wrong, correct] {

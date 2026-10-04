@@ -20,22 +20,25 @@ fn array_with_elements() {
 }
 
 #[test]
-fn record_literal() {
-    match parse_expr("record X := 1; Y := 2; end record") {
-        Expr::RecordLiteral { fields, .. } => {
+fn named_record_construction() {
+    match parse_expr("Point(X := 1, Y := 2)") {
+        Expr::RecordConstruction {
+            type_name, fields, ..
+        } => {
+            assert!(type_name.parts == ["Point"]);
             assert_eq!(fields.len(), 2);
             assert_eq!(fields[0].name, "X");
             assert_eq!(fields[1].name, "Y");
         }
-        _ => panic!("expected RecordLiteral"),
+        _ => panic!("expected RecordConstruction"),
     }
 }
 
 #[test]
-fn empty_record_literal_remains_valid() {
-    match parse_expr("record end record") {
-        Expr::RecordLiteral { fields, .. } => assert!(fields.is_empty()),
-        _ => panic!("expected RecordLiteral"),
+fn empty_constructor_is_resolved_after_parsing() {
+    match parse_expr("Empty()") {
+        Expr::Call { args, .. } => assert!(args.is_empty()),
+        _ => panic!("expected empty call"),
     }
 }
 
@@ -95,7 +98,7 @@ fn record_update_accepts_nested_contextual_literals_and_parenthesized_chaining()
     for source in [
         "P with Items := []; end with",
         "P with Tags := [:]; end with",
-        "P with Child := record X := 1; end record; end with",
+        "P with Child := Point(X := 1); end with",
         "P with Child := Q with X := 1; end with; end with",
         "(P with X := 1; end with) with Y := 2; end with",
     ] {

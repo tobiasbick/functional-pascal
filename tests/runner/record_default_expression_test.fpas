@@ -1,0 +1,35 @@
+program RecordDefaultExpressionTest;
+
+uses Std.Math as Math;
+uses Std.Test as Test;
+
+type Settings = record
+  Count: integer := (1 + 2) * 3;
+  Scale: real := 1 + 0.5;
+  Label: string := 'de' + 'fault';
+  Enabled: boolean := not false and (1 < 2);
+  Absolute: integer := Math.Abs(-7) + 1;
+end record;
+
+type SettingsAlias = Settings;
+
+type SecondAlias = SettingsAlias;
+
+function Make(): Settings;
+begin
+  return Settings();
+end function;
+
+begin
+  var Value: Settings := Make();
+  var AliasValue: SecondAlias := Settings();
+  var Override: Settings := Settings(Count := 42);
+  Test.AssertEquals(9, Value.Count);
+  Test.AssertEquals(1.5, Value.Scale);
+  Test.AssertEquals('default', Value.Label);
+  Test.AssertTrue(Value.Enabled);
+  Test.AssertEquals(8, Value.Absolute);
+  Test.AssertEquals(42, Override.Count);
+  Test.AssertEquals(9, AliasValue.Count);
+  Test.AssertEquals(8, AliasValue.Absolute);
+end program;

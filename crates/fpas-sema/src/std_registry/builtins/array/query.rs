@@ -26,7 +26,7 @@ pub(super) fn check_length(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
         c.error_with_code(
             SEMA_TYPE_MISMATCH,
             format!("`{}` expects an array", s::STD_ARRAY_LENGTH),
-            "Pass `array of T` (or a variable of array type).",
+            "Pass `array of (T)` (or a variable of array type).",
             span,
         );
         Ty::Error
@@ -45,13 +45,16 @@ pub(super) fn check_sort_or_reverse(c: &mut Checker, name: &str, args: &[&Expr],
         c.error_with_code(
             SEMA_TYPE_MISMATCH,
             format!("`{name}` expects an array"),
-            "Pass `array of T`.",
+            "Pass `array of (T)`.",
             span,
         );
         Ty::Error
     }
 }
 
+/// Check element equality before applying `Contains` or `IndexOf`.
+///
+/// **Documentation:** `docs/pascal/std/collections/array/basics.md`.
 pub(super) fn check_contains_or_index_of(
     c: &mut Checker,
     name: &str,
@@ -74,7 +77,7 @@ pub(super) fn check_contains_or_index_of(
         c.error_with_code(
             SEMA_TYPE_MISMATCH,
             format!("`{name}` first argument must be an array"),
-            "Pass `array of T`.",
+            "Pass `array of (T)`.",
             span,
         );
         c.check_expr(args[1]);
@@ -82,6 +85,15 @@ pub(super) fn check_contains_or_index_of(
     };
     let value_ty = c.check_expr(args[1]);
     c.check_type_compat(&elem_ty, &value_ty, "compared value", span);
+    if !c.supports_equality(&elem_ty) || !c.supports_equality(&value_ty) {
+        c.error_with_code(
+            SEMA_TYPE_MISMATCH,
+            format!("`{name}` requires elements whose components support equality"),
+            "Use value data without resource, task or callable components, or use a predicate-based search such as `Arrays.FindIndex`.",
+            span,
+        );
+        return Ty::Error;
+    }
 
     if name.eq_ignore_ascii_case(s::STD_ARRAY_CONTAINS) {
         Ty::Boolean
@@ -107,7 +119,7 @@ pub(super) fn check_slice(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
         c.error_with_code(
             SEMA_TYPE_MISMATCH,
             format!("`{}` first argument must be an array", s::STD_ARRAY_SLICE),
-            "Pass `array of T`.",
+            "Pass `array of (T)`.",
             span,
         );
         c.check_expr(args[1]);
@@ -141,7 +153,7 @@ pub(super) fn check_concat(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
         c.error_with_code(
             SEMA_TYPE_MISMATCH,
             format!("`{}` first argument must be an array", s::STD_ARRAY_CONCAT),
-            "Pass `array of T` as the first argument.",
+            "Pass `array of (T)` as the first argument.",
             span,
         );
         return Ty::Error;
@@ -151,7 +163,7 @@ pub(super) fn check_concat(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
         c.error_with_code(
             SEMA_TYPE_MISMATCH,
             format!("`{}` second argument must be an array", s::STD_ARRAY_CONCAT),
-            "Pass `array of T` as the second argument.",
+            "Pass `array of (T)` as the second argument.",
             span,
         );
         return Ty::Error;

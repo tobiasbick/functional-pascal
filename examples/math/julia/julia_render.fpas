@@ -12,7 +12,7 @@ uses Julia.Compute as Compute;
 
 public type RenderRow = record
   public Y: integer;
-  public Samples: array of Compute.PixelSample;
+  public Samples: array of (Compute.PixelSample);
 end record;
 
 function EscapeGlyph(EscapeValue: real): string;
@@ -29,23 +29,15 @@ begin
   if Sample.IsInside then
     begin
       var CellShade: Console.Color := Color2.InsideColor();
-      return record
-        glyph := ' ';
-        foreground := CellShade;
-        background := CellShade;
-      end record;
+      return Console.Cell(glyph := ' ', foreground := CellShade, background := CellShade);
     end;
   end if;
 
-  return record
-    glyph := EscapeGlyph(Sample.EscapeValue);
-    foreground := Color2.EscapeColor(Palette, Sample.EscapeValue);
-    background := Console.RgbColor(0, 0, 0);
-  end record;
+  return Console.Cell(glyph := EscapeGlyph(Sample.EscapeValue), foreground := Color2.EscapeColor(Palette, Sample.EscapeValue), background := Console.RgbColor(0, 0, 0));
 end function;
 
 procedure DrawRow(
-  Row: array of Compute.PixelSample;
+  Row: array of (Compute.PixelSample);
   Width: integer;
   Y: integer;
   Palette: Color2.PaletteKind
@@ -64,7 +56,7 @@ begin
       return;
     end;
   end if;
-  mutable var Cells: array of Console.Cell := [];
+  mutable var Cells: array of (Console.Cell) := [];
   for Px: integer := 0 to DrawWidth - 1 do
     begin
       Arrays.Push(Cells, RenderCell(Row[Px], Palette));
@@ -77,7 +69,7 @@ end procedure;
 // A render owns four workers and at most four queued rows.
 public type RenderJob = record
   public Group: Tasks.TaskGroup;
-  public Rows: channel of RenderRow;
+  public Rows: channel of (RenderRow);
   public Width: integer;
   public Palette: Color2.PaletteKind;
 end record;
@@ -97,24 +89,20 @@ public function StartRender(
 ): RenderJob;
 begin
   var Group: Tasks.TaskGroup := Tasks.CreateTaskGroup();
-  var Rows: channel of RenderRow := Tasks.CreateChannel(4);
+  var Rows: channel of (RenderRow) := Tasks.CreateChannel(4);
   for Worker: integer := 0 to 3 do
     begin
       var WorkerHandle: task := Tasks.StartTaskInGroup(Group, procedure(Token: Tasks.CancellationToken) begin
         mutable var Py: integer := Worker;
         while (Py < Height) and not Tasks.IsCancellationRequested(Token) do
           begin
-            var Samples: array of Compute.PixelSample := Compute.ComputeRow(Py, Width, Height, XMin, XMax, YMin, YMax, MaxIter, Jr, Ji, Token);
+            var Samples: array of (Compute.PixelSample) := Compute.ComputeRow(Py, Width, Height, XMin, XMax, YMin, YMax, MaxIter, Jr, Ji, Token);
             if Tasks.IsCancellationRequested(Token) then
               begin
                 return;
               end;
             end if;
-            var Row: RenderRow := record
-              Y := Py;
-              Samples := Samples;
-            end record;
-
+            var Row: RenderRow := RenderRow(Y := Py, Samples := Samples);
             if Results.IsError(Tasks.SendWithCancellation(Rows, Row, Token)) then
               begin
                 return;
@@ -128,12 +116,7 @@ begin
     end;
   end for;
 
-  return record
-    Group := Group;
-    Rows := Rows;
-    Width := Width;
-    Palette := Palette;
-  end record;
+  return RenderJob(Group := Group, Rows := Rows, Width := Width, Palette := Palette);
 end function;
 
 // Draw a bounded batch on the terminal-owning task without waiting for workers.
@@ -142,7 +125,7 @@ begin
   for Index: integer := 1 to 4 do
     begin
       case Results.Unwrap(Tasks.TryReceive(Job.Rows)) of
-        when Some(Row):
+        when Option.Some(const Row):
           begin
             if (Row.Y + 1) <= Math.Max(Console.ScreenHeight() - 3, 1) then
               begin
@@ -150,7 +133,7 @@ begin
               end;
             end if;
           end;
-        when None:
+        when Option.None:
           begin
             return;
           end;
@@ -163,7 +146,7 @@ end procedure;
 // Joining first prevents old rows from appearing in a replacement render.
 public procedure StopRender(Job: RenderJob);
 begin
-  var Failures: array of Tasks.TaskFailure := Tasks.CloseTaskGroup(Job.Group);
+  var Failures: array of (Tasks.TaskFailure) := Tasks.CloseTaskGroup(Job.Group);
   discard Tasks.CloseChannel(Job.Rows);
   if Arrays.Length(Failures) <> 0 then
     begin

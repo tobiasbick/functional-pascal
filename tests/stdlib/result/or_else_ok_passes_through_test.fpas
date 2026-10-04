@@ -3,13 +3,13 @@ program T;
 uses Std.Console as Console;
 uses Std.Results as Results;
 
-function RecoverZero(E: string): result of integer, string;
+function RecoverZero(E: string): Result of (integer, string);
 begin
-  return Ok(0);
+  return Result.Ok(0);
 end function;
 
 begin
-  var R: result of integer, string := Ok(42);
-  var M: result of integer, string := Results.OrElse(R, RecoverZero);
+  var R: Result of (integer, string) := Result.Ok(42);
+  var M: Result of (integer, string) := Results.OrElse(R, RecoverZero);
   Console.WriteLn(Results.Unwrap(M));
 end program;

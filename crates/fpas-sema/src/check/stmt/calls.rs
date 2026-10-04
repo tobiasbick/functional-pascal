@@ -2,9 +2,7 @@ use super::super::Checker;
 use crate::check::expr::MethodCallSite;
 use crate::scope::SymbolKind;
 use crate::types::Ty;
-use fpas_diagnostics::codes::{
-    SEMA_AMBIGUOUS_IMPORTED_NAME, SEMA_TYPE_MISMATCH, SEMA_UNKNOWN_NAME,
-};
+use fpas_diagnostics::codes::{SEMA_TYPE_MISMATCH, SEMA_UNKNOWN_NAME};
 use fpas_lexer::Span;
 use fpas_parser::{Designator, Expr};
 
@@ -91,22 +89,12 @@ impl Checker {
             }
         }
 
-        let (code, message, hint) =
-            if let Some(ambiguous_hint) = self.ambiguous_call_hint(&name, args.len()) {
-                (
-                    SEMA_AMBIGUOUS_IMPORTED_NAME,
-                    format!("Ambiguous imported symbol `{name}`"),
-                    ambiguous_hint,
-                )
-            } else {
-                (
-                    SEMA_UNKNOWN_NAME,
-                    format!("Unknown procedure `{name}`"),
-                    self.hint_unknown_callable(&name),
-                )
-            };
-
-        self.error_with_code(code, message, hint, span);
+        self.error_with_code(
+            SEMA_UNKNOWN_NAME,
+            format!("Unknown procedure `{name}`"),
+            self.hint_unknown_callable(&name),
+            span,
+        );
         self.check_args_only(args);
     }
 }

@@ -151,7 +151,7 @@ uses Demo.Math as Math;
 begin
   var A: integer := Math.Answer();
   var B: integer := Math.Answer();
-  var P: Math.Point := record X := 0; end record;
+  var P: Math.Point := Math.Point(X := 0);
   var C: integer := P.X;
   var D: integer := Hidden();
 end program;

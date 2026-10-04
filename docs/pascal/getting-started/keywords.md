@@ -20,12 +20,12 @@ dict      with      static    property
 event     read      write     comparable
 numeric   printable self      nil
 as        elsif     when      null
-discard
+discard   equatable
 ```
 
 Every word in the table is fully reserved, including after `.` in a qualified name or
 member access. Some keywords are valid only in their dedicated syntax positions: `read`
-and `write` introduce property or event accessors, the three constraint keywords follow
+and `write` introduce property or event accessors, the four constraint keywords follow
 a generic type parameter, and `self` names the first receiver parameter and receiver
 expression of an instance record method.
 

@@ -122,7 +122,7 @@ fn dap_set_variable_and_set_expression_replace_complete_variants() {
         &mut adapter,
         &mut seq,
         "setExpression",
-        json!({"frameId":current,"expression":"Outcome","value":"Error('fail')"}),
+        json!({"frameId":current,"expression":"Outcome","value":"Result.Error('fail')"}),
     );
     assert_eq!(outcome[0]["body"]["value"], "Error(...)", "{outcome:?}");
     assert_eq!(outcome[1]["event"], "invalidated");
@@ -132,7 +132,7 @@ fn dap_set_variable_and_set_expression_replace_complete_variants() {
         &mut adapter,
         &mut seq,
         "setExpression",
-        json!({"frameId":current,"expression":"Optional","value":"None"}),
+        json!({"frameId":current,"expression":"Optional","value":"Option.None"}),
     );
     assert_eq!(optional[0]["body"]["value"], "None", "{optional:?}");
     assert_eq!(optional[1]["event"], "invalidated");
@@ -175,28 +175,28 @@ fn dap_set_variable_and_set_expression_replace_complete_variants() {
         &mut adapter,
         &mut seq,
         "setExpression",
-        json!({"frameId":current,"expression":"Failed","value":"Ok(9)"}),
+        json!({"frameId":current,"expression":"Failed","value":"Result.Ok(9)"}),
     );
     let current = frame(&mut adapter, &mut seq);
     let _ = send(
         &mut adapter,
         &mut seq,
         "setExpression",
-        json!({"frameId":current,"expression":"Missing","value":"Some(8)"}),
+        json!({"frameId":current,"expression":"Missing","value":"Option.Some(8)"}),
     );
     let current = frame(&mut adapter, &mut seq);
     let _ = send(
         &mut adapter,
         &mut seq,
         "setExpression",
-        json!({"frameId":current,"expression":"Packed","value":"Error('pack')"}),
+        json!({"frameId":current,"expression":"Packed","value":"Result.Error('pack')"}),
     );
     let current = frame(&mut adapter, &mut seq);
     let _ = send(
         &mut adapter,
         &mut seq,
         "setExpression",
-        json!({"frameId":current,"expression":"NestedResult","value":"None"}),
+        json!({"frameId":current,"expression":"NestedResult","value":"Option.None"}),
     );
     let current = frame(&mut adapter, &mut seq);
     let _ = send(

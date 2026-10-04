@@ -8,21 +8,27 @@ use fpas_bytecode::{DebugBindingKind, DebugType, Opcode};
 
 use super::parse_ok;
 
+mod type_names;
+
 #[test]
 fn compiler_retains_exact_record_method_mappings_for_debugger_binding() {
     let program = parse_ok(
-        r#"
-program DebugBoundMethod;
- type Counter = record
+        r#"program DebugBoundMethod;
+
+type Counter = record
   Base: integer;
+
   function Add(Self: Counter; Value: integer): integer;
   begin
     return Self.Base + Value;
   end function;
 end record;
+
 begin
-  var C: Counter := record Base := 2; end record;
-  if C.Add(3) <> 5 then panic('wrong'); end if;
+  var C: Counter := Counter(Base := 2);
+  if C.Add(3) <> 5 then
+    panic('wrong');
+  end if;
 end program;
 "#,
     );
@@ -160,23 +166,18 @@ end program;
 #[test]
 fn compiler_retains_structured_debug_types_for_roots_and_aggregate_children() {
     let program = parse_ok(
-        r#"
-program DebugStructuredTypes;
+        r#"program DebugStructuredTypes;
 
+type Box = record
+  Value: integer;
+end record;
 
-  type Box = record
-    Value: integer;
-  end record;
-
-
-  mutable var Scores: dict of string to integer := ['Ada': 1];
+mutable var Scores: dict of (string, integer) := ['Ada': 1];
 
 begin
-  mutable var Item: Box := record
-    Value := 2;
-  end record;
-  mutable var Items: array of integer := [3];
-  var Maybe: option of integer := Some(4);
+  mutable var Item: Box := Box(Value := 2);
+  mutable var Items: array of (integer) := [3];
+  var Maybe: Option of (integer) := Option.Some(4);
 end program;
 "#,
     );

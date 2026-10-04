@@ -20,16 +20,18 @@ end function;
 //
 // Parameters:
 // - `Text`: TOML document text.
-public function ParseTable(Text: string): result of dict of string to Toml.TomlValue, string;
+public function ParseTable(Text: string): Result of (dict of (string, Toml.TomlValue), string);
 begin
   case try Toml.Parse(Text) of
-    when Toml.TomlValue.Table(Fields):
+    when Toml.TomlValue.Table(const Fields):
       begin
-        return Ok(Fields);
+        return Result.Ok(Fields);
       end;
-    else
+    when Toml.TomlValue.String(_), Toml.TomlValue.Integer(_), Toml.TomlValue.Float(_), Toml.TomlValue.Boolean(_), Toml.TomlValue.Datetime(_), Toml.TomlValue.ArrayValue(_):
       begin
-        return Error('TOML root must be a table');
+        begin
+          return Result.Error('TOML root must be a table');
+        end;
       end;
   end case;
 end function;
@@ -39,16 +41,16 @@ end function;
 // Parameters:
 // - `Fields`: Table entries.
 // - `Name`: Required key name.
-public function Field(Fields: dict of string to Toml.TomlValue; Name: string): result of Toml.TomlValue, string;
+public function Field(Fields: dict of (string, Toml.TomlValue); Name: string): Result of (Toml.TomlValue, string);
 begin
   case Dictionaries.Get(Fields, Name) of
-    when Some(Value):
+    when Option.Some(const Value):
       begin
-        return Ok(Value);
+        return Result.Ok(Value);
       end;
-    when None:
+    when Option.None:
       begin
-        return Error('missing field ' + Name);
+        return Result.Error('missing field ' + Name);
       end;
   end case;
 end function;
@@ -58,16 +60,18 @@ end function;
 // Parameters:
 // - `Fields`: Table entries.
 // - `Name`: Required key name.
-public function StringField(Fields: dict of string to Toml.TomlValue; Name: string): result of string, string;
+public function StringField(Fields: dict of (string, Toml.TomlValue); Name: string): Result of (string, string);
 begin
   case try Field(Fields, Name) of
-    when Toml.TomlValue.String(Value):
+    when Toml.TomlValue.String(const Value):
       begin
-        return Ok(Value);
+        return Result.Ok(Value);
       end;
-    else
+    when Toml.TomlValue.Integer(_), Toml.TomlValue.Float(_), Toml.TomlValue.Boolean(_), Toml.TomlValue.Datetime(_), Toml.TomlValue.ArrayValue(_), Toml.TomlValue.Table(_):
       begin
-        return Error(MismatchError(Name, 'a string'));
+        begin
+          return Result.Error(MismatchError(Name, 'a string'));
+        end;
       end;
   end case;
 end function;
@@ -77,16 +81,18 @@ end function;
 // Parameters:
 // - `Fields`: Table entries.
 // - `Name`: Required key name.
-public function IntegerField(Fields: dict of string to Toml.TomlValue; Name: string): result of integer, string;
+public function IntegerField(Fields: dict of (string, Toml.TomlValue); Name: string): Result of (integer, string);
 begin
   case try Field(Fields, Name) of
-    when Toml.TomlValue.Integer(Value):
+    when Toml.TomlValue.Integer(const Value):
       begin
-        return Ok(Value);
+        return Result.Ok(Value);
       end;
-    else
+    when Toml.TomlValue.String(_), Toml.TomlValue.Float(_), Toml.TomlValue.Boolean(_), Toml.TomlValue.Datetime(_), Toml.TomlValue.ArrayValue(_), Toml.TomlValue.Table(_):
       begin
-        return Error(MismatchError(Name, 'an integer'));
+        begin
+          return Result.Error(MismatchError(Name, 'an integer'));
+        end;
       end;
   end case;
 end function;
@@ -96,16 +102,18 @@ end function;
 // Parameters:
 // - `Fields`: Table entries.
 // - `Name`: Required key name.
-public function FloatField(Fields: dict of string to Toml.TomlValue; Name: string): result of real, string;
+public function FloatField(Fields: dict of (string, Toml.TomlValue); Name: string): Result of (real, string);
 begin
   case try Field(Fields, Name) of
-    when Toml.TomlValue.Float(Value):
+    when Toml.TomlValue.Float(const Value):
       begin
-        return Ok(Value);
+        return Result.Ok(Value);
       end;
-    else
+    when Toml.TomlValue.String(_), Toml.TomlValue.Integer(_), Toml.TomlValue.Boolean(_), Toml.TomlValue.Datetime(_), Toml.TomlValue.ArrayValue(_), Toml.TomlValue.Table(_):
       begin
-        return Error(MismatchError(Name, 'a float'));
+        begin
+          return Result.Error(MismatchError(Name, 'a float'));
+        end;
       end;
   end case;
 end function;
@@ -115,16 +123,18 @@ end function;
 // Parameters:
 // - `Fields`: Table entries.
 // - `Name`: Required key name.
-public function BooleanField(Fields: dict of string to Toml.TomlValue; Name: string): result of boolean, string;
+public function BooleanField(Fields: dict of (string, Toml.TomlValue); Name: string): Result of (boolean, string);
 begin
   case try Field(Fields, Name) of
-    when Toml.TomlValue.Boolean(Value):
+    when Toml.TomlValue.Boolean(const Value):
       begin
-        return Ok(Value);
+        return Result.Ok(Value);
       end;
-    else
+    when Toml.TomlValue.String(_), Toml.TomlValue.Integer(_), Toml.TomlValue.Float(_), Toml.TomlValue.Datetime(_), Toml.TomlValue.ArrayValue(_), Toml.TomlValue.Table(_):
       begin
-        return Error(MismatchError(Name, 'a boolean'));
+        begin
+          return Result.Error(MismatchError(Name, 'a boolean'));
+        end;
       end;
   end case;
 end function;
@@ -134,16 +144,18 @@ end function;
 // Parameters:
 // - `Fields`: Table entries.
 // - `Name`: Required key name.
-public function TableField(Fields: dict of string to Toml.TomlValue; Name: string): result of dict of string to Toml.TomlValue, string;
+public function TableField(Fields: dict of (string, Toml.TomlValue); Name: string): Result of (dict of (string, Toml.TomlValue), string);
 begin
   case try Field(Fields, Name) of
-    when Toml.TomlValue.Table(Value):
+    when Toml.TomlValue.Table(const Value):
       begin
-        return Ok(Value);
+        return Result.Ok(Value);
       end;
-    else
+    when Toml.TomlValue.String(_), Toml.TomlValue.Integer(_), Toml.TomlValue.Float(_), Toml.TomlValue.Boolean(_), Toml.TomlValue.Datetime(_), Toml.TomlValue.ArrayValue(_):
       begin
-        return Error(MismatchError(Name, 'a table'));
+        begin
+          return Result.Error(MismatchError(Name, 'a table'));
+        end;
       end;
   end case;
 end function;
@@ -153,16 +165,18 @@ end function;
 // Parameters:
 // - `Fields`: Table entries.
 // - `Name`: Required key name.
-public function ArrayField(Fields: dict of string to Toml.TomlValue; Name: string): result of array of Toml.TomlValue, string;
+public function ArrayField(Fields: dict of (string, Toml.TomlValue); Name: string): Result of (array of (Toml.TomlValue), string);
 begin
   case try Field(Fields, Name) of
-    when Toml.TomlValue.ArrayValue(Items):
+    when Toml.TomlValue.ArrayValue(const Items):
       begin
-        return Ok(Items);
+        return Result.Ok(Items);
       end;
-    else
+    when Toml.TomlValue.String(_), Toml.TomlValue.Integer(_), Toml.TomlValue.Float(_), Toml.TomlValue.Boolean(_), Toml.TomlValue.Datetime(_), Toml.TomlValue.Table(_):
       begin
-        return Error(MismatchError(Name, 'an array'));
+        begin
+          return Result.Error(MismatchError(Name, 'an array'));
+        end;
       end;
   end case;
 end function;
@@ -172,25 +186,27 @@ end function;
 // Parameters:
 // - `Fields`: Table entries.
 // - `Name`: Required key name.
-public function StringArrayField(Fields: dict of string to Toml.TomlValue; Name: string): result of array of string, string;
+public function StringArrayField(Fields: dict of (string, Toml.TomlValue); Name: string): Result of (array of (string), string);
 begin
-  mutable var Values: array of string := [];
+  mutable var Values: array of (string) := [];
   for Item: Toml.TomlValue in try ArrayField(Fields, Name) do
     begin
       case Item of
-        when Toml.TomlValue.String(Value):
+        when Toml.TomlValue.String(const Value):
           begin
             Arrays.Push(Values, Value);
           end;
-        else
+        when Toml.TomlValue.Integer(_), Toml.TomlValue.Float(_), Toml.TomlValue.Boolean(_), Toml.TomlValue.Datetime(_), Toml.TomlValue.ArrayValue(_), Toml.TomlValue.Table(_):
           begin
-            return Error(MismatchError(Name, 'an array of strings'));
+            begin
+              return Result.Error(MismatchError(Name, 'an array of strings'));
+            end;
           end;
       end case;
     end;
   end for;
 
-  return Ok(Values);
+  return Result.Ok(Values);
 end function;
 
 // Rejects the first key whose name is not listed in `Allowed`; missing keys are not checked.
@@ -198,19 +214,19 @@ end function;
 // Parameters:
 // - `Fields`: Table entries.
 // - `Allowed`: Every permitted key name.
-public function RequireOnlyFields(Fields: dict of string to Toml.TomlValue; Allowed: array of string): result of boolean, string;
+public function RequireOnlyFields(Fields: dict of (string, Toml.TomlValue); Allowed: array of (string)): Result of (boolean, string);
 begin
   for Name: string in Dictionaries.Keys(Fields) do
     begin
       if not Arrays.Contains(Allowed, Name) then
         begin
-          return Error('unexpected field ' + Name);
+          return Result.Error('unexpected field ' + Name);
         end;
       end if;
     end;
   end for;
 
-  return Ok(true);
+  return Result.Ok(true);
 end function;
 
 end unit;

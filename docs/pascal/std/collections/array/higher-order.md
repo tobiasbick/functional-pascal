@@ -1,6 +1,6 @@
 # Higher-order
 
-## `function Map(A: array of T; F: function(X: T): U): array of U`
+## `function Map(A: array of (T); F: function(X: T): U): array of (U)`
 
 Returns a new array where each element is the result of calling `F` on the corresponding element of `A`.
 
@@ -10,14 +10,14 @@ begin
   return X * 2;
 end function;
 
-var Nums: array of integer := [1, 2, 3];
-var Doubled: array of integer := Map(Nums, Double);
+var Nums: array of (integer) := [1, 2, 3];
+var Doubled: array of (integer) := Map(Nums, Double);
 
 ```
 
 ---
 
-## `function Filter(A: array of T; F: function(X: T): boolean): array of T`
+## `function Filter(A: array of (T); F: function(X: T): boolean): array of (T)`
 
 Returns a new array containing only elements for which `F` returns `true`.
 
@@ -27,14 +27,14 @@ begin
   return X mod 2 = 0;
 end function;
 
-var Nums: array of integer := [1, 2, 3, 4, 5];
-var Evens: array of integer := Filter(Nums, IsEven);
+var Nums: array of (integer) := [1, 2, 3, 4, 5];
+var Evens: array of (integer) := Filter(Nums, IsEven);
 
 ```
 
 ---
 
-## `function Reduce(A: array of T; Init: U; F: function(Acc: U; V: T): U): U`
+## `function Reduce(A: array of (T); Init: U; F: function(Acc: U; V: T): U): U`
 
 Folds elements left-to-right, starting from `Init`.
 
@@ -44,16 +44,16 @@ begin
   return Acc + V;
 end function;
 
-var Nums: array of integer := [1, 2, 3, 4, 5];
+var Nums: array of (integer) := [1, 2, 3, 4, 5];
 var Total: integer := Reduce(Nums, 0, Sum);
 
 ```
 
 ---
 
-## `function Find(A: array of T; F: function(X: T): boolean): Option of T`
+## `function Find(A: array of (T); F: function(X: T): boolean): Option of (T)`
 
-Returns the **first** element for which `F` returns `true`, wrapped in `Some`. Returns `None` if no element matches. Requires `uses Std.Options as Options;` to work with the result.
+Returns the **first** element for which `F` returns `true`, wrapped in `Option.Some`. Returns `Option.None` if no element matches. Requires `uses Std.Options as Options;` to work with the result.
 
 ```pascal
 function IsAboveThree(X: integer): boolean;
@@ -61,14 +61,14 @@ begin
   return X > 3;
 end function;
 
-var Nums: array of integer := [1, 2, 3, 4, 5];
-var First: option of integer := Find(Nums, IsAboveThree);
+var Nums: array of (integer) := [1, 2, 3, 4, 5];
+var First: option of (integer) := Find(Nums, IsAboveThree);
 
 ```
 
 ---
 
-## `function FindIndex(A: array of T; F: function(X: T): boolean): integer`
+## `function FindIndex(A: array of (T); F: function(X: T): boolean): integer`
 
 Returns the **index** of the first element for which `F` returns `true`, or **`-1`** if none matches.
 
@@ -86,7 +86,7 @@ end function;
 
 ---
 
-## `function Any(A: array of T; F: function(X: T): boolean): boolean`
+## `function Any(A: array of (T); F: function(X: T): boolean): boolean`
 
 Returns `true` if **at least one** element satisfies `F`.
 
@@ -104,7 +104,7 @@ end function;
 
 ---
 
-## `function All(A: array of T; F: function(X: T): boolean): boolean`
+## `function All(A: array of (T); F: function(X: T): boolean): boolean`
 
 Returns `true` if **every** element satisfies `F`.
 

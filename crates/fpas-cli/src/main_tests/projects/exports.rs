@@ -132,16 +132,24 @@ include = ["src/**/*.fpas"]
     write_text(
         &lib_dir.join("src/outcome.fpas"),
         r#"unit Sessions.Outcome;
+
 uses Std.Tasks as Tasks;
-public function Describe(Session: task of result of boolean, string): string;
+
+public function Describe(Session: task of (Result of (boolean, string))): string;
 begin
   case Tasks.Wait(Session) of
-    when Ok(Done): begin return 'ok'; end;
-    when Error(Message): begin return Message; end;
+    when Result.Ok(const Done):
+      begin
+        return 'ok';
+      end;
+    when Result.Error(const Message):
+      begin
+        return Message;
+      end;
   end case;
 end function;
-end unit;
 
+end unit;
 "#,
     );
 
@@ -166,9 +174,9 @@ include = ["src/**/*.fpas"]
         &app_dir.join("src/main.fpas"),
         r#"program App;
 uses Sessions.Outcome as Outcome; uses Std.Console as Console; uses Std.Tasks as Tasks;
-function Session(): result of boolean, string;
+function Session(): result of (boolean, string);
 begin
-  return Error('session failed');
+  return Result.Error('session failed');
 end function;
 begin
   var Job: task := go Session();

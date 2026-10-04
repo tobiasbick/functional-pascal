@@ -178,14 +178,11 @@ pub struct EventRaiseInfo {
 pub type EventRaiseMap = HashMap<usize, EventRaiseInfo>;
 
 /// Maps a named record type to its ordered field list, each entry carrying an optional
-/// cloned default expression. The order matches the type definition.
+/// shared default expression. The order matches the type definition, and sharing preserves
+/// expression identities used by the semantic metadata.
 ///
 /// **Documentation:** `docs/pascal/language/types/records.md` (Default field values)
-pub type RecordDefaultsMap = HashMap<String, Vec<(String, Option<Expr>)>>;
-
-/// Marks `CaseLabel::Value.start` expressions that semantic analysis interpreted
-/// as scalar guard bindings instead of value labels.
-pub type ScalarCaseBindingMap = HashSet<usize>;
+pub type RecordDefaultsMap = HashMap<String, Vec<(String, Option<std::sync::Arc<Expr>>)>>;
 
 /// Compiler-facing diagnostics and lowering metadata produced by semantic analysis.
 ///
@@ -209,10 +206,16 @@ pub struct AnalysisMetadata {
     pub fluent_calls: FluentCallMap,
     /// Checked calls through ordinary callable values and record members.
     pub value_calls: ValueCallMap,
-    /// Named record defaults used while lowering record literals.
+    /// Named record defaults used while lowering record constructions.
     pub record_defaults: RecordDefaultsMap,
-    /// Scalar `case` labels interpreted as guard bindings.
-    pub scalar_case_bindings: ScalarCaseBindingMap,
+    /// Expression identities whose call syntax resolves to record construction.
+    pub record_constructions: HashSet<usize>,
+    /// Concrete result types of field/index projections, keyed by their AST identity.
+    pub projection_types: ExprTypeMap,
+    /// Concrete types and resolved variants for recursive case patterns.
+    pub pattern_infos: super::patterns::PatternInfoMap,
+    /// Statement cases with proven complete coverage, keyed by scrutinee identity.
+    pub exhaustive_cases: HashSet<usize>,
     /// Capture metadata for anonymous closures.
     pub closure_infos: ClosureInfoMap,
     /// Capture metadata for escaping named nested routines.
@@ -253,14 +256,15 @@ pub struct Checker {
     pub(crate) loaded_std_units: HashSet<String>,
     /// All unit names in the current `uses` clause, including source units.
     pub(crate) used_unit_names: HashSet<String>,
-    /// Unqualified enum variant names that map to multiple `Type.Variant` symbols (ambiguous).
-    pub(crate) ambiguous_enum_variants: HashMap<String, Vec<String>>,
-    /// Canonical short enum variant names registered at the program root without ambiguity.
-    pub(crate) enum_short_variant_keys: HashMap<String, String>,
     /// Named record type → ordered (field_name, optional_default_expr) pairs.
     pub(crate) record_defaults: RecordDefaultsMap,
-    /// `case` label expressions that bind the scrutinee for a guarded scalar arm.
-    pub(crate) scalar_case_bindings: ScalarCaseBindingMap,
+    pub(crate) record_constructions: HashSet<usize>,
+    pub(crate) projection_types: ExprTypeMap,
+    pub(crate) pattern_infos: super::patterns::PatternInfoMap,
+    pub(crate) exhaustive_cases: HashSet<usize>,
+    pub(crate) static_constants: crate::interface::ScalarConstants,
+    /// Nesting of initializer groups whose remaining values may supply type context.
+    pub(crate) inference_depth: usize,
     /// Closure expression identity → capture / capability metadata.
     ///
     /// **Documentation:** `docs/pascal/language/functions/closures.md`
@@ -316,10 +320,13 @@ impl Checker {
             prechecked_receivers: ExprTypeMap::new(),
             loaded_std_units: HashSet::new(),
             used_unit_names: HashSet::new(),
-            ambiguous_enum_variants: HashMap::new(),
-            enum_short_variant_keys: HashMap::new(),
             record_defaults: RecordDefaultsMap::new(),
-            scalar_case_bindings: ScalarCaseBindingMap::new(),
+            record_constructions: HashSet::new(),
+            projection_types: ExprTypeMap::new(),
+            pattern_infos: super::patterns::PatternInfoMap::new(),
+            exhaustive_cases: HashSet::new(),
+            static_constants: crate::interface::ScalarConstants::default(),
+            inference_depth: 0,
             closure_infos: ClosureInfoMap::new(),
             nested_routine_captures: NestedRoutineCaptureMap::new(),
             bound_methods: BoundMethodMap::new(),
@@ -345,7 +352,10 @@ impl Checker {
             fluent_calls: self.fluent_calls,
             value_calls: self.value_calls,
             record_defaults: self.record_defaults,
-            scalar_case_bindings: self.scalar_case_bindings,
+            record_constructions: self.record_constructions,
+            projection_types: self.projection_types,
+            pattern_infos: self.pattern_infos,
+            exhaustive_cases: self.exhaustive_cases,
             closure_infos: self.closure_infos,
             nested_routine_captures: self.nested_routine_captures,
             bound_methods: self.bound_methods,

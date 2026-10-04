@@ -167,7 +167,7 @@ pub(crate) fn expect_dict(v: &Value, location: SourceLocation) -> Result<&Shared
         other => Err(std_runtime_error(
             RUNTIME_VM_OPERAND_TYPE_MISMATCH,
             format!("Expected dictionary argument, got {}", other.type_name()),
-            "Pass a `dict of K to V` value.",
+            "Pass a `dict of (K, V)` value.",
             location,
         )),
     }

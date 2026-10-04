@@ -72,8 +72,8 @@ end function;
 function ListPane(State: Model.NotesModel): Tui.TuiElement;
 begin
   var Search: Tui.TuiElement := Tui.TuiElementBuilders.MakeInputWithHint(Tui.TuiControlId.Create(Actions.SearchControl), State.Search, State.SearchCaret, 'Search notes…', Tui.TuiAction.Create(Actions.SearchChangedAction));
-  var Items: array of string := Model.NotesListItems(State.Notes, State.Search, ListPaneWidth(State) -
-                                                                                4);
+  var Items: array of (string) := Model.NotesListItems(State.Notes, State.Search, ListPaneWidth(State) -
+                                                                                  4);
   var NotesList: Tui.TuiElement := Tui.TuiElementBuilders.MakeList(Tui.TuiControlId.Create(Actions.ListControl), Items, Update.NotesSelectedFilteredPosition(State), Tui.TuiAction.Create(Actions.SelectionChangedAction));
   return Tui.TuiElementBuilders.MakePanel('Notes', [
                                                      Search,
@@ -341,24 +341,24 @@ public function NotesView(State: Model.NotesModel): Tui.TuiElement;
 begin
   if (State.Width < 50) or (State.Height < 14) then
     begin
-      return Tui.TuiElementBuilders.MakeDesktop(None, [
-                                                        Tui.TuiElementBuilders.MakePanel('Notes', [
-                                                                                                    Tui.TuiElementBuilders.MakeLabel('Terminal too small'),
-                                                                                                    Tui.TuiElementBuilders.MakeLabel('Use at least 50 × 14 cells.')
-                                                                                                  ])
-                                                      ]);
+      return Tui.TuiElementBuilders.MakeDesktop(Option.None, [
+                                                               Tui.TuiElementBuilders.MakePanel('Notes', [
+                                                                                                           Tui.TuiElementBuilders.MakeLabel('Terminal too small'),
+                                                                                                           Tui.TuiElementBuilders.MakeLabel('Use at least 50 × 14 cells.')
+                                                                                                         ])
+                                                             ]);
     end;
   end if;
-  mutable var Children: array of Tui.TuiElement := [
-                                                     Tui.TuiElementBuilders.MakeColumn([Header(State), Expanding(MainContent(State), 1), Status(State)])
-                                                   ];
+  mutable var Children: array of (Tui.TuiElement) := [
+                                                       Tui.TuiElementBuilders.MakeColumn([Header(State), Expanding(MainContent(State), 1), Status(State)])
+                                                     ];
   if State.Overlay <> Model.NotesOverlay.Closed then
     begin
       Arrays.Push(Children, Overlay(State));
     end;
   end if;
 
-  return Tui.TuiElementBuilders.MakeDesktop(Some(Tui.TuiControlId.Create(OverlayFocus(State))), Children);
+  return Tui.TuiElementBuilders.MakeDesktop(Option.Some(Tui.TuiControlId.Create(OverlayFocus(State))), Children);
 end function;
 
 end unit;

@@ -21,23 +21,29 @@ end program;"#,
     write_text(
         &cwd.join("src/data.fpas"),
         r#"unit App.Data;
-uses Std.Console as Console; uses Std.Conv as Conv;
 
-  public type Counter = record
-    public Base: integer;
-    public function GetValue(Self: Counter): integer;
-    begin
-      return Self.Base;
-    end function;
-    public procedure SetValue(Self: Counter; Value: integer);
-    begin
-      Console.WriteLn('set:' + Conv.IntToStr(Value));
-    end procedure;
-    public property Value: integer read GetValue write SetValue;
-  end record;
-  public var Global: Counter := record Base := 12; end record;
+uses Std.Console as Console;
+uses Std.Conv as Conv;
+
+public type Counter = record
+  public Base: integer;
+
+  public function GetValue(Self: Counter): integer;
+  begin
+    return Self.Base;
+  end function;
+
+  public procedure SetValue(Self: Counter; Value: integer);
+  begin
+    Console.WriteLn('set:' + Conv.IntToStr(Value));
+  end procedure;
+
+  public property Value: integer read GetValue write SetValue;
+end record;
+
+public var Global: Counter := Counter(Base := 12);
+
 end unit;
-
 "#,
     );
 

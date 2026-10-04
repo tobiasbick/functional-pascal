@@ -9,7 +9,7 @@ unit Std.Test;
 // Parameters:
 // - `Expected`: Value consumed or returned by the operation.
 // - `Actual`: Value consumed or returned by the operation.
-public procedure AssertEquals<T>(Expected: T; Actual: T);
+public procedure AssertEquals of (T)(Expected: T; Actual: T);
 begin
   panic('Intrinsic API declaration');
 end procedure;

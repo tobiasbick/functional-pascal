@@ -40,15 +40,7 @@ public type TuiPointerEvent = record
   // - `Position`: Position in terminal-cell coordinates.
   public static function Create(Action: Console.MouseAction; Button: TuiPointerButton; Position: Point.TuiPoint): TuiPointerEvent;
   begin
-    return record
-      Action := Action;
-      Button := Button;
-      Position := Position;
-      Shift := false;
-      Ctrl := false;
-      Alt := false;
-      Meta := false;
-    end record;
+    return TuiPointerEvent(Action := Action, Button := Button, Position := Position, Shift := false, Ctrl := false, Alt := false, Meta := false);
   end function;
 
   // Creates a pointer event with explicit modifiers.
@@ -71,15 +63,7 @@ public type TuiPointerEvent = record
   Meta: boolean
 ): TuiPointerEvent;
   begin
-    return record
-      Action := Action;
-      Button := Button;
-      Position := Position;
-      Shift := Shift;
-      Ctrl := Ctrl;
-      Alt := Alt;
-      Meta := Meta;
-    end record;
+    return TuiPointerEvent(Action := Action, Button := Button, Position := Position, Shift := Shift, Ctrl := Ctrl, Alt := Alt, Meta := Meta);
   end function;
 end record;
 

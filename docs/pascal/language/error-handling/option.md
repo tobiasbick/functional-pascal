@@ -1,10 +1,10 @@
 # Option
 
-`Option of T` represents a value that may be absent:
+`Option of (T)` represents a value that may be absent:
 
 ```pascal
-var O: option of integer := Some(42);
-var N: option of integer := None;
+var O: option of (integer) := Option.Some(42);
+var N: option of (integer) := Option.None;
 
 ```
 
@@ -13,15 +13,15 @@ var N: option of integer := None;
 ```pascal
 uses Std.Arrays as Arrays;
 
-function FindIndex(Items: array of integer; Target: integer): option of integer;
+function FindIndex(Items: array of (integer); Target: integer): option of (integer);
 begin
   for I: integer := 0 to Arrays.Length(Items) - 1 do
     if Items[I] = Target then
-      return Some(I);
+      return Option.Some(I);
     end if;
   end for;
 
-  return None;
+  return Option.None;
 end function;
 
 ```
@@ -32,11 +32,11 @@ end function;
 uses Std.Console as Console;
 uses Std.Conv as Conv;
 
-var Idx: option of integer := FindIndex([10, 20, 30], 20);
+var Idx: option of (integer) := FindIndex([10, 20, 30], 20);
 case Idx of
-  when Some(I):
+  when Option.Some(const I):
     Console.WriteLn('Found at ' + Conv.IntToStr(I));
-  when None:
+  when Option.None:
     Console.WriteLn('Not found');
 end case;
 ```

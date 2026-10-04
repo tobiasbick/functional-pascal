@@ -1,15 +1,15 @@
 //! Call-site generic inference and substitution.
+//!
+//! **Documentation:** `docs/pascal/language/functions/generic-routines.md`.
 
 use super::super::Checker;
-use crate::types::{GenericParamDef, RecordTy, Ty};
+use crate::types::{GenericParamDef, Ty};
 use fpas_diagnostics::codes::SEMA_TYPE_MISMATCH;
 use fpas_lexer::Span;
-use std::collections::{HashMap, HashSet};
-use std::sync::Arc;
+use std::collections::HashMap;
 
 impl Checker {
-    /// Infer type arguments from argument types, enforce consistent reuse, and
-    /// validate constraints.
+    /// Infer caller-supplied type arguments, enforce consistent reuse, and validate constraints.
     pub(crate) fn validate_routine_constraints(
         &mut self,
         type_params: &[GenericParamDef],
@@ -24,14 +24,7 @@ impl Checker {
         let mut inferred = HashMap::new();
 
         for (param, arg_ty) in params.iter().zip(arg_types.iter()) {
-            let mut visited_record_pairs = HashSet::new();
-            self.collect_type_param_bindings(
-                &param.ty,
-                arg_ty,
-                &mut inferred,
-                &mut visited_record_pairs,
-                span,
-            );
+            self.collect_type_param_bindings(&param.ty, arg_ty, &mut inferred, span);
         }
 
         // Build a Vec<GenericParamDef> + Vec<Ty> for only the params we inferred.
@@ -51,69 +44,29 @@ impl Checker {
         inferred
     }
 
-    /// Replace routine-level generic parameters with their call-site inferred types.
+    /// Substitute inferred routine arguments using the shared type operation.
     pub(crate) fn substitute_type_params(ty: &Ty, inferred: &HashMap<String, Ty>) -> Ty {
-        match ty {
-            Ty::GenericParam(name, _) => inferred
-                .get(&name.to_ascii_lowercase())
-                .cloned()
-                .unwrap_or_else(|| ty.clone()),
-            Ty::Array(inner) => Ty::Array(Box::new(Self::substitute_type_params(inner, inferred))),
-            Ty::Channel(inner) => {
-                Ty::Channel(Box::new(Self::substitute_type_params(inner, inferred)))
-            }
-            Ty::Result(ok, err) => Ty::Result(
-                Box::new(Self::substitute_type_params(ok, inferred)),
-                Box::new(Self::substitute_type_params(err, inferred)),
-            ),
-            Ty::Option(inner) => {
-                Ty::Option(Box::new(Self::substitute_type_params(inner, inferred)))
-            }
-            Ty::Dict(key, value) => Ty::Dict(
-                Box::new(Self::substitute_type_params(key, inferred)),
-                Box::new(Self::substitute_type_params(value, inferred)),
-            ),
-            Ty::Task(inner) => Ty::Task(Box::new(Self::substitute_type_params(inner, inferred))),
-            Ty::Function(function_ty) => {
-                let mut substituted = function_ty.clone();
-                for param in &mut substituted.params {
-                    param.ty = Self::substitute_type_params(&param.ty, inferred);
-                }
-                substituted.return_type = Box::new(Self::substitute_type_params(
-                    &substituted.return_type,
-                    inferred,
-                ));
-                Ty::Function(substituted)
-            }
-            Ty::Procedure(procedure_ty) => {
-                let mut substituted = procedure_ty.clone();
-                for param in &mut substituted.params {
-                    param.ty = Self::substitute_type_params(&param.ty, inferred);
-                }
-                Ty::Procedure(substituted)
-            }
-            _ => ty.clone(),
-        }
+        ty.substitute(inferred)
     }
 
-    fn collect_type_param_bindings(
+    /// Extend consistent generic bindings from a declared and actual type pair.
+    pub(crate) fn collect_type_param_bindings(
         &mut self,
         declared: &Ty,
         actual: &Ty,
         inferred: &mut HashMap<String, Ty>,
-        visited_record_pairs: &mut HashSet<(*const RecordTy, *const RecordTy)>,
+
         span: Span,
     ) {
         let declared_visible = self.resolve_visible_type(declared);
         let actual_visible = self.resolve_visible_type(actual);
 
         match (&declared_visible, &actual_visible) {
-            (Ty::GenericParam(name, _), actual_ty)
-                if !actual_ty.is_error() && !matches!(actual_ty, Ty::GenericParam(..)) =>
-            {
+            (Ty::GenericParam(name, _), actual_ty) if !actual_ty.is_error() => {
                 let key = name.to_ascii_lowercase();
                 if let Some(previous) = inferred.get(&key) {
-                    if !previous.compatible_with(actual_ty) || !actual_ty.compatible_with(previous)
+                    if !previous.assignment_compatible_with(actual_ty)
+                        || !actual_ty.assignment_compatible_with(previous)
                     {
                         self.error_with_code(
                             SEMA_TYPE_MISMATCH,
@@ -125,100 +78,43 @@ impl Checker {
                             ),
                             span,
                         );
-                    } else if matches!(
-                        (previous, actual_ty),
-                        (Ty::Record(previous), Ty::Record(actual))
-                            if previous.name == "<anonymous>" && actual.name != "<anonymous>"
-                    ) {
-                        // A later argument can supply the declaration identity that an earlier
-                        // generic record literal did not have context to infer.
-                        inferred.insert(key, actual_ty.clone());
+                    } else {
+                        inferred.insert(key, previous.complete_inference_with(actual_ty));
                     }
                 } else {
                     inferred.insert(key, actual_ty.clone());
                 }
             }
             (Ty::Array(declared_inner), Ty::Array(actual_inner)) => {
-                self.collect_type_param_bindings(
-                    declared_inner,
-                    actual_inner,
-                    inferred,
-                    visited_record_pairs,
-                    span,
-                );
+                self.collect_type_param_bindings(declared_inner, actual_inner, inferred, span);
             }
             (Ty::Channel(declared_inner), Ty::Channel(actual_inner)) => {
-                self.collect_type_param_bindings(
-                    declared_inner,
-                    actual_inner,
-                    inferred,
-                    visited_record_pairs,
-                    span,
-                );
+                self.collect_type_param_bindings(declared_inner, actual_inner, inferred, span);
             }
             (Ty::Dict(declared_key, declared_value), Ty::Dict(actual_key, actual_value)) => {
-                self.collect_type_param_bindings(
-                    declared_key,
-                    actual_key,
-                    inferred,
-                    visited_record_pairs,
-                    span,
-                );
-                self.collect_type_param_bindings(
-                    declared_value,
-                    actual_value,
-                    inferred,
-                    visited_record_pairs,
-                    span,
-                );
+                self.collect_type_param_bindings(declared_key, actual_key, inferred, span);
+                self.collect_type_param_bindings(declared_value, actual_value, inferred, span);
             }
             (Ty::Option(declared_inner), Ty::Option(actual_inner))
             | (Ty::Task(declared_inner), Ty::Task(actual_inner)) => {
-                self.collect_type_param_bindings(
-                    declared_inner,
-                    actual_inner,
-                    inferred,
-                    visited_record_pairs,
-                    span,
-                );
+                self.collect_type_param_bindings(declared_inner, actual_inner, inferred, span);
             }
             (Ty::Result(declared_ok, declared_err), Ty::Result(actual_ok, actual_err)) => {
-                self.collect_type_param_bindings(
-                    declared_ok,
-                    actual_ok,
-                    inferred,
-                    visited_record_pairs,
-                    span,
-                );
-                self.collect_type_param_bindings(
-                    declared_err,
-                    actual_err,
-                    inferred,
-                    visited_record_pairs,
-                    span,
-                );
+                self.collect_type_param_bindings(declared_ok, actual_ok, inferred, span);
+                self.collect_type_param_bindings(declared_err, actual_err, inferred, span);
             }
-            (Ty::Record(declared_record), Ty::Record(actual_record)) => {
-                // Recursive fields can resolve back to the same descriptor pair.
-                // Documentation: docs/pascal/language/types/records.md
-                let record_pair = (Arc::as_ptr(declared_record), Arc::as_ptr(actual_record));
-                if !visited_record_pairs.insert(record_pair) {
-                    return;
+            (Ty::Record(declared), Ty::Record(actual))
+                if declared.name.eq_ignore_ascii_case(&actual.name) =>
+            {
+                for (declared, actual) in declared.type_args.iter().zip(&actual.type_args) {
+                    self.collect_type_param_bindings(declared, actual, inferred, span);
                 }
-                for (field_name, declared_field_ty) in &declared_record.fields {
-                    if let Some((_, actual_field_ty)) = actual_record
-                        .fields
-                        .iter()
-                        .find(|(actual_name, _)| actual_name.eq_ignore_ascii_case(field_name))
-                    {
-                        self.collect_type_param_bindings(
-                            declared_field_ty,
-                            actual_field_ty,
-                            inferred,
-                            visited_record_pairs,
-                            span,
-                        );
-                    }
+            }
+            (Ty::Enum(declared), Ty::Enum(actual))
+                if declared.name.eq_ignore_ascii_case(&actual.name) =>
+            {
+                for (declared, actual) in declared.type_args.iter().zip(&actual.type_args) {
+                    self.collect_type_param_bindings(declared, actual, inferred, span);
                 }
             }
             (Ty::Function(declared_fn), Ty::Function(actual_fn)) => {
@@ -229,7 +125,6 @@ impl Checker {
                         &declared_param.ty,
                         &actual_param.ty,
                         inferred,
-                        visited_record_pairs,
                         span,
                     );
                 }
@@ -237,7 +132,6 @@ impl Checker {
                     &declared_fn.return_type,
                     &actual_fn.return_type,
                     inferred,
-                    visited_record_pairs,
                     span,
                 );
             }
@@ -249,7 +143,6 @@ impl Checker {
                         &declared_param.ty,
                         &actual_param.ty,
                         inferred,
-                        visited_record_pairs,
                         span,
                     );
                 }

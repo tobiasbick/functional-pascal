@@ -13,15 +13,15 @@ uses Std.Tui.Ids.Action as Action2;
 public function TuiMenuNodeIdOf(Node: MenuNode.TuiMenuNode): MenuNode.TuiMenuNodeId;
 begin
   case Node of
-    when MenuNode.TuiMenuNode.Command(Id, Parent, Text, Mnemonic, Action, Enabled, Shortcut):
+    when MenuNode.TuiMenuNode.Command(const Id, const Parent, const Text, const Mnemonic, const Action, const Enabled, const Shortcut):
       begin
         return Id;
       end;
-    when MenuNode.TuiMenuNode.Submenu(Id, Parent, Text, Mnemonic, Enabled):
+    when MenuNode.TuiMenuNode.Submenu(const Id, const Parent, const Text, const Mnemonic, const Enabled):
       begin
         return Id;
       end;
-    when MenuNode.TuiMenuNode.Separator(Id, Parent):
+    when MenuNode.TuiMenuNode.Separator(const Id, const Parent):
       begin
         return Id;
       end;
@@ -32,18 +32,18 @@ end function;
 //
 // Parameters:
 // - `Node`: Element or menu node processed by the operation.
-public function TuiMenuNodeParent(Node: MenuNode.TuiMenuNode): option of MenuNode.TuiMenuNodeId;
+public function TuiMenuNodeParent(Node: MenuNode.TuiMenuNode): Option of (MenuNode.TuiMenuNodeId);
 begin
   case Node of
-    when MenuNode.TuiMenuNode.Command(Id, Parent, Text, Mnemonic, Action, Enabled, Shortcut):
+    when MenuNode.TuiMenuNode.Command(const Id, const Parent, const Text, const Mnemonic, const Action, const Enabled, const Shortcut):
       begin
         return Parent;
       end;
-    when MenuNode.TuiMenuNode.Submenu(Id, Parent, Text, Mnemonic, Enabled):
+    when MenuNode.TuiMenuNode.Submenu(const Id, const Parent, const Text, const Mnemonic, const Enabled):
       begin
         return Parent;
       end;
-    when MenuNode.TuiMenuNode.Separator(Id, Parent):
+    when MenuNode.TuiMenuNode.Separator(const Id, const Parent):
       begin
         return Parent;
       end;
@@ -57,15 +57,15 @@ end function;
 public function TuiMenuNodeText(Node: MenuNode.TuiMenuNode): string;
 begin
   case Node of
-    when MenuNode.TuiMenuNode.Command(Id, Parent, Text, Mnemonic, Action, Enabled, Shortcut):
+    when MenuNode.TuiMenuNode.Command(const Id, const Parent, const Text, const Mnemonic, const Action, const Enabled, const Shortcut):
       begin
         return Text;
       end;
-    when MenuNode.TuiMenuNode.Submenu(Id, Parent, Text, Mnemonic, Enabled):
+    when MenuNode.TuiMenuNode.Submenu(const Id, const Parent, const Text, const Mnemonic, const Enabled):
       begin
         return Text;
       end;
-    when MenuNode.TuiMenuNode.Separator(Id, Parent):
+    when MenuNode.TuiMenuNode.Separator(const Id, const Parent):
       begin
         return '';
       end;
@@ -79,15 +79,15 @@ end function;
 public function TuiMenuNodeMnemonic(Node: MenuNode.TuiMenuNode): string;
 begin
   case Node of
-    when MenuNode.TuiMenuNode.Command(Id, Parent, Text, Mnemonic, Action, Enabled, Shortcut):
+    when MenuNode.TuiMenuNode.Command(const Id, const Parent, const Text, const Mnemonic, const Action, const Enabled, const Shortcut):
       begin
         return Mnemonic;
       end;
-    when MenuNode.TuiMenuNode.Submenu(Id, Parent, Text, Mnemonic, Enabled):
+    when MenuNode.TuiMenuNode.Submenu(const Id, const Parent, const Text, const Mnemonic, const Enabled):
       begin
         return Mnemonic;
       end;
-    when MenuNode.TuiMenuNode.Separator(Id, Parent):
+    when MenuNode.TuiMenuNode.Separator(const Id, const Parent):
       begin
         return '';
       end;
@@ -101,15 +101,15 @@ end function;
 public function TuiMenuNodeSelectable(Node: MenuNode.TuiMenuNode): boolean;
 begin
   case Node of
-    when MenuNode.TuiMenuNode.Command(Id, Parent, Text, Mnemonic, Action, Enabled, Shortcut):
+    when MenuNode.TuiMenuNode.Command(const Id, const Parent, const Text, const Mnemonic, const Action, const Enabled, const Shortcut):
       begin
         return Enabled;
       end;
-    when MenuNode.TuiMenuNode.Submenu(Id, Parent, Text, Mnemonic, Enabled):
+    when MenuNode.TuiMenuNode.Submenu(const Id, const Parent, const Text, const Mnemonic, const Enabled):
       begin
         return Enabled;
       end;
-    when MenuNode.TuiMenuNode.Separator(Id, Parent):
+    when MenuNode.TuiMenuNode.Separator(const Id, const Parent):
       begin
         return false;
       end;
@@ -123,15 +123,15 @@ end function;
 public function TuiMenuNodeIsSubmenu(Node: MenuNode.TuiMenuNode): boolean;
 begin
   case Node of
-    when MenuNode.TuiMenuNode.Submenu(Id, Parent, Text, Mnemonic, Enabled):
+    when MenuNode.TuiMenuNode.Submenu(const Id, const Parent, const Text, const Mnemonic, const Enabled):
       begin
         return true;
       end;
-    when MenuNode.TuiMenuNode.Command(Id, Parent, Text, Mnemonic, Action, Enabled, Shortcut):
+    when MenuNode.TuiMenuNode.Command(const Id, const Parent, const Text, const Mnemonic, const Action, const Enabled, const Shortcut):
       begin
         return false;
       end;
-    when MenuNode.TuiMenuNode.Separator(Id, Parent):
+    when MenuNode.TuiMenuNode.Separator(const Id, const Parent):
       begin
         return false;
       end;
@@ -142,20 +142,20 @@ end function;
 //
 // Parameters:
 // - `Node`: Element or menu node processed by the operation.
-public function TuiMenuNodeAction(Node: MenuNode.TuiMenuNode): option of Action2.TuiAction;
+public function TuiMenuNodeAction(Node: MenuNode.TuiMenuNode): Option of (Action2.TuiAction);
 begin
   case Node of
-    when MenuNode.TuiMenuNode.Command(Id, Parent, Text, Mnemonic, Action, Enabled, Shortcut):
+    when MenuNode.TuiMenuNode.Command(const Id, const Parent, const Text, const Mnemonic, const Action, const Enabled, const Shortcut):
       begin
-        return Some(Action);
+        return Option.Some(Action);
       end;
-    when MenuNode.TuiMenuNode.Submenu(Id, Parent, Text, Mnemonic, Enabled):
+    when MenuNode.TuiMenuNode.Submenu(const Id, const Parent, const Text, const Mnemonic, const Enabled):
       begin
-        return None;
+        return Option.None;
       end;
-    when MenuNode.TuiMenuNode.Separator(Id, Parent):
+    when MenuNode.TuiMenuNode.Separator(const Id, const Parent):
       begin
-        return None;
+        return Option.None;
       end;
   end case;
 end function;
@@ -164,20 +164,20 @@ end function;
 //
 // Parameters:
 // - `Node`: Element or menu node processed by the operation.
-public function TuiMenuNodeShortcut(Node: MenuNode.TuiMenuNode): option of KeyGesture.TuiKeyGesture;
+public function TuiMenuNodeShortcut(Node: MenuNode.TuiMenuNode): Option of (KeyGesture.TuiKeyGesture);
 begin
   case Node of
-    when MenuNode.TuiMenuNode.Command(Id, Parent, Text, Mnemonic, Action, Enabled, Shortcut):
+    when MenuNode.TuiMenuNode.Command(const Id, const Parent, const Text, const Mnemonic, const Action, const Enabled, const Shortcut):
       begin
         return Shortcut;
       end;
-    when MenuNode.TuiMenuNode.Submenu(Id, Parent, Text, Mnemonic, Enabled):
+    when MenuNode.TuiMenuNode.Submenu(const Id, const Parent, const Text, const Mnemonic, const Enabled):
       begin
-        return None;
+        return Option.None;
       end;
-    when MenuNode.TuiMenuNode.Separator(Id, Parent):
+    when MenuNode.TuiMenuNode.Separator(const Id, const Parent):
       begin
-        return None;
+        return Option.None;
       end;
   end case;
 end function;
@@ -187,7 +187,7 @@ end function;
 // Parameters:
 // - `Nodes`: Flat ordered menu-node collection.
 // - `Id`: Identifier assigned to the created or selected value.
-public function TuiMenuFind(Nodes: array of MenuNode.TuiMenuNode; Id: MenuNode.TuiMenuNodeId): integer;
+public function TuiMenuFind(Nodes: array of (MenuNode.TuiMenuNode); Id: MenuNode.TuiMenuNodeId): integer;
 begin
   for Index: integer := 0 to Arrays.Length(Nodes) - 1 do
     begin
@@ -207,30 +207,30 @@ end function;
 // Parameters:
 // - `Node`: Element or menu node processed by the operation.
 // - `Parent`: Optional parent menu-node identifier.
-public function TuiMenuHasParent(Node: MenuNode.TuiMenuNode; Parent: option of MenuNode.TuiMenuNodeId): boolean;
+public function TuiMenuHasParent(Node: MenuNode.TuiMenuNode; Parent: Option of (MenuNode.TuiMenuNodeId)): boolean;
 begin
   case TuiMenuNodeParent(Node) of
-    when Some(NodeParent):
+    when Option.Some(const NodeParent):
       begin
         case Parent of
-          when Some(Expected):
+          when Option.Some(const Expected):
             begin
               return NodeParent.Value = Expected.Value;
             end;
-          when None:
+          when Option.None:
             begin
               return false;
             end;
         end case;
       end;
-    when None:
+    when Option.None:
       begin
         case Parent of
-          when Some(Expected):
+          when Option.Some(const Expected):
             begin
               return false;
             end;
-          when None:
+          when Option.None:
             begin
               return true;
             end;
@@ -245,21 +245,21 @@ end function;
 // - `Nodes`: Flat ordered menu-node collection.
 // - `Parent`: Optional parent menu-node identifier.
 public function TuiMenuFirstSelectable(
-  Nodes: array of MenuNode.TuiMenuNode;
-  Parent: option of MenuNode.TuiMenuNodeId
-): option of MenuNode.TuiMenuNodeId;
+  Nodes: array of (MenuNode.TuiMenuNode);
+  Parent: Option of (MenuNode.TuiMenuNodeId)
+): Option of (MenuNode.TuiMenuNodeId);
 begin
   for Index: integer := 0 to Arrays.Length(Nodes) - 1 do
     begin
       if TuiMenuHasParent(Nodes[Index], Parent) and TuiMenuNodeSelectable(Nodes[Index]) then
         begin
-          return Some(TuiMenuNodeIdOf(Nodes[Index]));
+          return Option.Some(TuiMenuNodeIdOf(Nodes[Index]));
         end;
       end if;
     end;
   end for;
 
-  return None;
+  return Option.None;
 end function;
 
 // Returns the next selectable sibling, wrapping in the requested direction.
@@ -269,19 +269,19 @@ end function;
 // - `Current`: Current extent used by the calculation.
 // - `Direction`: Direction of the requested movement.
 public function TuiMenuNextSelectable(
-  Nodes: array of MenuNode.TuiMenuNode;
+  Nodes: array of (MenuNode.TuiMenuNode);
   Current: MenuNode.TuiMenuNodeId;
   Direction: integer
-): option of MenuNode.TuiMenuNodeId;
+): Option of (MenuNode.TuiMenuNodeId);
 begin
   var CurrentIndex: integer := TuiMenuFind(Nodes, Current);
   if CurrentIndex < 0 then
     begin
-      return None;
+      return Option.None;
     end;
   end if;
-  var Parent: option of MenuNode.TuiMenuNodeId := TuiMenuNodeParent(Nodes[CurrentIndex]);
-  mutable var Siblings: array of MenuNode.TuiMenuNodeId := [];
+  var Parent: Option of (MenuNode.TuiMenuNodeId) := TuiMenuNodeParent(Nodes[CurrentIndex]);
+  mutable var Siblings: array of (MenuNode.TuiMenuNodeId) := [];
   for Index: integer := 0 to Arrays.Length(Nodes) - 1 do
     begin
       if TuiMenuHasParent(Nodes[Index], Parent) and TuiMenuNodeSelectable(Nodes[Index]) then
@@ -294,7 +294,7 @@ begin
 
   if Arrays.Length(Siblings) = 0 then
     begin
-      return None;
+      return Option.None;
     end;
   end if;
   mutable var Position: integer := 0;
@@ -321,7 +321,7 @@ begin
     end if;
   end if;
 
-  return Some(Siblings[Position]);
+  return Option.Some(Siblings[Position]);
 end function;
 
 // Returns the root ancestor of one node.
@@ -329,7 +329,7 @@ end function;
 // Parameters:
 // - `Nodes`: Flat ordered menu-node collection.
 // - `Id`: Identifier assigned to the created or selected value.
-public function TuiMenuRootOf(Nodes: array of MenuNode.TuiMenuNode; Id: MenuNode.TuiMenuNodeId): option of MenuNode.TuiMenuNodeId;
+public function TuiMenuRootOf(Nodes: array of (MenuNode.TuiMenuNode); Id: MenuNode.TuiMenuNodeId): Option of (MenuNode.TuiMenuNodeId);
 begin
   mutable var Current: MenuNode.TuiMenuNodeId := Id;
   mutable var Remaining: integer := Arrays.Length(Nodes) + 1;
@@ -339,24 +339,24 @@ begin
       var Index: integer := TuiMenuFind(Nodes, Current);
       if Index < 0 then
         begin
-          return None;
+          return Option.None;
         end;
       end if;
 
       case TuiMenuNodeParent(Nodes[Index]) of
-        when Some(Parent):
+        when Option.Some(const Parent):
           begin
             Current := Parent;
           end;
-        when None:
+        when Option.None:
           begin
-            return Some(Current);
+            return Option.Some(Current);
           end;
       end case;
     end;
   end while;
 
-  return None;
+  return Option.None;
 end function;
 
 end unit;

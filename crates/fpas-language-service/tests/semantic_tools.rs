@@ -31,13 +31,13 @@ fn semantic_tokens_classify_every_supported_symbol_kind_and_modifier() {
     public Value: integer;
     public property Current: integer read GetCurrent;
     public event Changed: procedure() read ReadChanged write WriteChanged;
-    public function Add<T>(Self: Counter; Amount: T): integer;
+    public function Add of (T)(Self: Counter; Amount: T): integer;
     begin
       return Self.Value;
     end function;
   end record;
 
-public function Identity<T>(Input: T): T;
+public function Identity of (T)(Input: T): T;
 begin
   var Local: T := Input;
   return Local;

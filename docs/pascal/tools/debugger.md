@@ -103,6 +103,9 @@ Visible first-class function values and closures may be called when their
 captures can be detached safely. Aggregate results can be expanded like
 ordinary variables and expire on resume. `go`, newly entered closure syntax,
 statements, declarations, and assignments inside `evaluate` remain rejected.
+Named record construction (`TypeName(Field := Value)`) and value-producing
+`if`/`case` expressions are rejected during stopped expression evaluation.
+Compute the value in program code and inspect the resulting binding or fields.
 
 `setVariable`, DAP `setExpression`, JSONL `variable.set`, and JSONL
 `expression.set` are separate stopped-state operations. Handle-based mutation
@@ -136,8 +139,8 @@ and mutable captures backed by an existing closure cell. A visible
 source-declared mutable local or global that has not yet received a value can
 be assigned one complete replacement through the same operations. Complete mutable enum,
 `Result`, and `Option` values can be replaced with one constructor expression
-such as `Choice.Pair(1, 2)`, `Choice.Empty`, `Ok(3)`, `Error('failed')`,
-`Some(4)`, or `None`. Enum constructors must be fully qualified `Type.Variant`
+such as `Choice.Pair(1, 2)`, `Choice.Empty`, `Result.Ok(3)`, `Result.Error('failed')`,
+`Option.Some(4)`, or `Option.None`. Enum constructors must be fully qualified `Type.Variant`
 names; short variant names are rejected. Record fields, array elements,
 existing dictionary values, named fields of the currently active data-carrying
 enum variant, and the `value` child of `Result.Ok`, `Result.Error`, and
@@ -229,7 +232,7 @@ that pair, and returns the removed value. Key replacement requires an existing
 old key and missing, different new key; it preserves the value and iteration
 position. Each operation addresses a complete dictionary container through the
 same bounded textual target form, validates key and value expressions against
-portable `dict of K to V` metadata, and commits one mutable root atomically.
+portable `dict of (K, V)` metadata, and commits one mutable root atomically.
 The operations support locals, mutable parameters, globals, closure captures,
 nested aggregate paths, and stopped task frames. Success expires all inspection
 references; every failure preserves both live state and existing references.
@@ -304,7 +307,7 @@ expiring handles. Construction requires exactly one expression per declared
 field, evaluates those expressions once in declaration order under one shared
 budget, and commits one complete enum, `Result`, or `Option` value atomically.
 Enum names are fully qualified (`Choice.Pair`); `Result` and `Option` use `Ok`,
-`Error`, `Some`, and `None`. Matching is ASCII-case-insensitive; responses use
+`Error`, `Some`, and `Option.None`. Matching is ASCII-case-insensitive; responses use
 canonical spelling. An uninitialized mutable root may receive the complete
 value; descendants still require existing outer storage. Function, task, and
 capture-cell fields, omitted or extra fields, inactive Variables children, and

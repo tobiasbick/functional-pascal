@@ -4,7 +4,10 @@ use fpas_unit::interface::{InterfaceType, SymbolKind};
 use super::analyze_unit;
 
 mod aliases;
+mod generic_data;
 mod public_signatures;
+mod record_default_aliases;
+mod record_defaults;
 mod short_names;
 
 fn parse_unit(source: &str) -> fpas_parser::Unit {

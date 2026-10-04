@@ -11,7 +11,7 @@ uses Mandelbrot.Render as Render;
 uses Mandelbrot.View as View;
 
 begin
-  var Inbox: channel of Render.MandelbrotRenderFrame := Tasks.CreateChannel(8);
+  var Inbox: channel of (Render.MandelbrotRenderFrame) := Tasks.CreateChannel(8);
   var Initial: Model.MandelbrotModel := Model.NewMandelbrotModel(Inbox, Console.ScreenWidth(), Console.ScreenHeight());
   discard Tui.TuiApplication.RunWithBackground(Initial, Inbox, App.UpdateMandelbrot, App.UpdateMandelbrotFrame, View.ViewMandelbrot);
 end program;

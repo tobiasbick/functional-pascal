@@ -26,7 +26,7 @@ fn property_keyword_cannot_be_a_variable_name() {
 
 #[test]
 fn array_type() {
-    let p = parse_ok(r#"program T;  var Xs: array of integer := []; begin null; end program;"#);
+    let p = parse_ok(r#"program T;  var Xs: array of (integer) := []; begin null; end program;"#);
     match &p.declarations[0] {
         Decl::Var(v) => match &v.type_expr {
             TypeExpr::Array(inner, _) => {
@@ -41,7 +41,7 @@ fn array_type() {
 #[test]
 fn channel_type() {
     let p = parse_ok(
-        r#"program T;  var Messages: channel of string := Value; begin null; end program;"#,
+        r#"program T;  var Messages: channel of (string) := Value; begin null; end program;"#,
     );
     match &p.declarations[0] {
         Decl::Var(v) => match &v.type_expr {
@@ -57,7 +57,7 @@ fn channel_type() {
 #[test]
 fn typed_task_type() {
     let p = parse_ok(
-        r#"program T;  var Job: Task of result of integer, string := Value; begin null; end program;"#,
+        r#"program T;  var Job: Task of (result of (integer, string)) := Value; begin null; end program;"#,
     );
     match &p.declarations[0] {
         Decl::Var(v) => match &v.type_expr {
@@ -102,7 +102,7 @@ fn task_keyword_cannot_be_a_name() {
 #[test]
 fn task_keyword_types_nest_in_other_type_forms() {
     let p = parse_ok(
-        r#"program T;  var Jobs: array of TASK of option of task := []; begin null; end program;"#,
+        r#"program T;  var Jobs: array of (TASK of (option of (task))) := []; begin null; end program;"#,
     );
     match &p.declarations[0] {
         Decl::Var(v) => match &v.type_expr {

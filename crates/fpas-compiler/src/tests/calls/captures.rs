@@ -20,7 +20,7 @@ begin
   if First() <> 1 then panic('first'); end if;
   if (Copy)() <> 2 then panic('copy identity'); end if;
   var Other: Counter := Named(0);
-  var Copies: array of Counter := [Other, Other];
+  var Copies: array of (Counter) := [Other, Other];
   if Copies[0]() <> 1 then panic('named first'); end if;
   if Copies[1]() <> 2 then panic('named identity'); end if;
   if Named(0)() <> 1 then panic('separate activation'); end if;
@@ -59,7 +59,7 @@ program CaptureTraversal;
 type Handler = function(X: integer): integer;
 function Make(): function(): integer;
 begin
-  var Functions: array of Handler := [function(X: integer): integer begin return X + 1; end function];
+  var Functions: array of (Handler) := [function(X: integer): integer begin return X + 1; end function];
   var Index: integer := 0;
   var Value: integer := 41;
   return function(): integer
@@ -82,7 +82,7 @@ type Getter = function(): integer;
 function Zero(): integer; begin return 0; end function;
 procedure Check();
 begin
-  mutable var Functions: array of Getter := [Zero, Zero, Zero];
+  mutable var Functions: array of (Getter) := [Zero, Zero, Zero];
   for I: integer := 0 to 2 do
     Functions[I] := function(): integer begin return I; end function;
   end for;
@@ -102,8 +102,8 @@ fn immutable_nested_value_capture_is_a_snapshot() {
 program CaptureSnapshot;
 procedure Check();
 begin
-  mutable var Original: array of array of integer := [[42]];
-  var Snapshot: array of array of integer := Original;
+  mutable var Original: array of (array of (integer)) := [[42]];
+  var Snapshot: array of (array of (integer)) := Original;
   var GetSnapshot: function(): integer := function(): integer begin return Snapshot[0][0]; end function;
   Original[0][0] := 99;
   if GetSnapshot() <> 42 then panic('immutable nested capture snapshot'); end if;

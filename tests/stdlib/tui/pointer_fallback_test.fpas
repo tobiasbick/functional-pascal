@@ -5,7 +5,7 @@ uses Std.Test as Test;
 uses Std.Tui as Tui;
 
 type PointerModel = record
-  Events: array of string;
+  Events: array of (string);
   X: integer;
   Y: integer;
   Action: Tui.TuiPointerAction;
@@ -14,13 +14,7 @@ end record;
 
 function PushEvent(State: PointerModel; InputEvent: string): PointerModel;
 begin
-  return record
-    Events := Arrays.Concat(State.Events, [InputEvent]);
-    X := State.X;
-    Y := State.Y;
-    Action := State.Action;
-    Button := State.Button;
-  end record;
+  return PointerModel(Events := Arrays.Concat(State.Events, [InputEvent]), X := State.X, Y := State.Y, Action := State.Action, Button := State.Button);
 end function;
 
 begin
@@ -29,18 +23,11 @@ begin
   App.Inject(Tui.TuiMsg.Tick(1));
   App.InjectPointerForTest(Pointer);
   App.Inject(Tui.TuiMsg.Tick(2));
-  mutable var Model: PointerModel := record
-    Events := [];
-    X := -1;
-    Y := -1;
-    Action := Tui.TuiPointerAction.Unknown;
-    Button := Tui.TuiPointerButton.Left;
-  end record;
-
+  mutable var Model: PointerModel := PointerModel(Events := [], X := -1, Y := -1, Action := Tui.TuiPointerAction.Unknown, Button := Tui.TuiPointerButton.Left);
   Model := App.RunIterations(Model, function(State: PointerModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): PointerModel begin
     Cmd.Set(Tui.TuiCmd.NoCommand);
     case Msg of
-      when Tui.TuiMsg.Tick(Delta):
+      when Tui.TuiMsg.Tick(const Delta):
         begin
           if Delta = 1 then
             begin
@@ -50,27 +37,23 @@ begin
 
           return PushEvent(State, 'tick-2');
         end;
-      when Tui.TuiMsg.Pointer(InputEvent):
+      when Tui.TuiMsg.Pointer(const InputEvent):
         begin
-          return record
-            Events := Arrays.Concat(State.Events, ['pointer']);
-            X := InputEvent.Position.X;
-            Y := InputEvent.Position.Y;
-            Action := InputEvent.Action;
-            Button := InputEvent.Button;
-          end record;
+          return PointerModel(Events := Arrays.Concat(State.Events, ['pointer']), X := InputEvent.Position.X, Y := InputEvent.Position.Y, Action := InputEvent.Action, Button := InputEvent.Button);
         end;
-      else
+      when Tui.TuiMsg.Started, Tui.TuiMsg.Key(_), Tui.TuiMsg.Resize(_), Tui.TuiMsg.FocusChanged(_, _), Tui.TuiMsg.Action(_, _), Tui.TuiMsg.TextChanged(_, _, _, _), Tui.TuiMsg.TextAreaChanged(_, _, _, _, _), Tui.TuiMsg.CheckChanged(_, _, _), Tui.TuiMsg.SelectionChanged(_, _, _), Tui.TuiMsg.ScrollChanged(_, _, _), Tui.TuiMsg.MenuChanged(_, _, _), Tui.TuiMsg.BackgroundFailed(_, _, _, _, _, _), Tui.TuiMsg.QuitRequested:
         begin
-          return State;
+          begin
+            return State;
+          end;
         end;
     end case;
   end function, function(State: PointerModel): Tui.TuiElement begin
-    return Tui.TuiElementBuilders.MakeDesktop(Some(Tui.TuiControlId.Create(1)), [
-                                                                                  Tui.TuiElementBuilders.MakePanel('Host', [
-                                                                                                                             Tui.TuiElementBuilders.MakeButton(Tui.TuiControlId.Create(1), 'Go', Tui.TuiAction.Create(1))
-                                                                                                                           ])
-                                                                                ]);
+    return Tui.TuiElementBuilders.MakeDesktop(Option.Some(Tui.TuiControlId.Create(1)), [
+                                                                                         Tui.TuiElementBuilders.MakePanel('Host', [
+                                                                                                                                    Tui.TuiElementBuilders.MakeButton(Tui.TuiControlId.Create(1), 'Go', Tui.TuiAction.Create(1))
+                                                                                                                                  ])
+                                                                                       ]);
   end function, 3, 0);
   Test.AssertEquals(3, Arrays.Length(Model.Events));
   Test.AssertEquals('tick-1', Model.Events[0]);

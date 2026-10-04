@@ -3,7 +3,7 @@ program ListenerAddressTest;
 uses Std.Net as Net;
 uses Std.Test as Test;
 
-function ExerciseListener(): result of boolean, string;
+function ExerciseListener(): Result of (boolean, string);
 begin
   var First: Net.Listener := try Net.Listen('127.0.0.1', 0);
   var Second: Net.Listener := try Net.Listen('127.0.0.1', 0);
@@ -17,7 +17,7 @@ begin
   var Peer: Net.Connection := try Net.Accept(First);
   var Timed: boolean := try Net.SetTimeout(Peer, 2000);
   var Sent: integer := try Net.SendBytes(Client, [42]);
-  var Received: array of integer := try Net.ReceiveBytes(Peer, 1);
+  var Received: array of (integer) := try Net.ReceiveBytes(Peer, 1);
   Test.AssertEquals(1, Sent);
   Test.AssertEquals(42, Received[0]);
   var ClientClosed: boolean := try Net.Close(Client);
@@ -25,26 +25,26 @@ begin
   var FirstClosed: boolean := try Net.CloseListener(First);
   var SecondClosed: boolean := try Net.CloseListener(Second);
   case Net.ListenerLocalAddress(First) of
-    when Ok(_):
+    when Result.Ok(_):
       begin
         panic('Closed listener returned an address');
       end;
-    when Error(_):
+    when Result.Error(_):
       begin
         null;
       end;
   end case;
 
-  return Ok(true);
+  return Result.Ok(true);
 end function;
 
 begin
   case ExerciseListener() of
-    when Ok(_):
+    when Result.Ok(_):
       begin
         null;
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
         panic(Message);
       end;

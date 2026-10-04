@@ -192,9 +192,9 @@ fn callback_panic_keeps_the_committed_send_and_losing_captures_are_already_relea
     let (program, errors) = fpas_parser::parse(
         r#"program CallbackFailure;
 uses Std.Tasks as Tasks;
-procedure FailSelected(Outcome: result of boolean, string);
+procedure FailSelected(Outcome: result of (boolean, string));
 begin panic('selected callback failed'); end procedure;
-begin FailSelected(Ok(true)); end program;"#,
+begin FailSelected(Result.Ok(true)); end program;"#,
     );
     assert!(errors.is_empty(), "{errors:?}");
     let executable = fpas_compiler::compile(&program).unwrap();

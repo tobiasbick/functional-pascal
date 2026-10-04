@@ -20,43 +20,43 @@ end record;
 //
 // Parameters:
 // - `Scheme`: Lowercase URI scheme.
-function DefaultPort(Scheme: string): result of integer, string;
+function DefaultPort(Scheme: string): Result of (integer, string);
 begin
   if Scheme = 'http' then
     begin
-      return Ok(80);
+      return Result.Ok(80);
     end;
   end if;
 
   if Scheme = 'https' then
     begin
-      return Ok(443);
+      return Result.Ok(443);
     end;
   end if;
 
-  return Error('Unsupported URI scheme: ' + Scheme);
+  return Result.Error('Unsupported URI scheme: ' + Scheme);
 end function;
 
 // Parses and validates a decimal TCP port.
 //
 // Parameters:
 // - `Text`: Decimal port text.
-function ParsePort(Text: string): result of integer, string;
+function ParsePort(Text: string): Result of (integer, string);
 begin
   case Decimal.Parse(Text, 65535) of
-    when Ok(Port):
+    when Result.Ok(const Port):
       begin
         if (Port >= 1) and (Port <= 65535) then
           begin
-            return Ok(Port);
+            return Result.Ok(Port);
           end;
         end if;
 
-        return Error('URI port must be in 1..65535');
+        return Result.Error('URI port must be in 1..65535');
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
-        return Error('Invalid URI port: ' + Message);
+        return Result.Error('Invalid URI port: ' + Message);
       end;
   end case;
 end function;
@@ -67,17 +67,17 @@ end function;
 // - `Scheme`: Lowercase supported URI scheme.
 // - `Authority`: Host and optional port text.
 // - `Path`: Origin-form path including an optional query.
-function BuildUri(Scheme: string; Authority: string; Path: string): result of Uri, string;
+function BuildUri(Scheme: string; Authority: string; Path: string): Result of (Uri, string);
 begin
   if Authority = '' then
     begin
-      return Error('URI host must not be empty');
+      return Result.Error('URI host must not be empty');
     end;
   end if;
 
   if Str.Contains(Authority, '@') then
     begin
-      return Error('URI user information is not supported');
+      return Result.Error('URI user information is not supported');
     end;
   end if;
   var SchemePort: integer := try DefaultPort(Scheme);
@@ -89,7 +89,7 @@ begin
       var Closing: integer := Str.IndexOf(Authority, ']');
       if Closing < 0 then
         begin
-          return Error('IPv6 URI host is missing closing bracket');
+          return Result.Error('IPv6 URI host is missing closing bracket');
         end;
       end if;
 
@@ -100,7 +100,7 @@ begin
         begin
           if not Str.StartsWith(Remainder, ':') then
             begin
-              return Error('Unexpected text after IPv6 URI host');
+              return Result.Error('Unexpected text after IPv6 URI host');
             end;
           end if;
 
@@ -124,7 +124,7 @@ begin
 
   if Host = '' then
     begin
-      return Error('URI host must not be empty');
+      return Result.Error('URI host must not be empty');
     end;
   end if;
   mutable var Port: integer := SchemePort;
@@ -134,24 +134,19 @@ begin
     end;
   end if;
 
-  return Ok(record
-    Scheme := Scheme;
-    Host := Host;
-    Port := Port;
-    Path := Path;
-  end record);
+  return Result.Ok(Uri(Scheme := Scheme, Host := Host, Port := Port, Path := Path));
 end function;
 
 // Parses an absolute HTTP or HTTPS URI.
 //
 // Parameters:
 // - `Text`: Absolute URI text to parse.
-public function Parse(Text: string): result of Uri, string;
+public function Parse(Text: string): Result of (Uri, string);
 begin
   var SchemeEnd: integer := Str.IndexOf(Text, '://');
   if SchemeEnd <= 0 then
     begin
-      return Error('URI must be absolute and include ://');
+      return Result.Error('URI must be absolute and include ://');
     end;
   end if;
   var Scheme: string := Str.ToLower(Str.Substring(Text, 0, SchemeEnd));

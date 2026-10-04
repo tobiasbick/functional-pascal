@@ -41,6 +41,12 @@ impl CommentMap {
     pub fn build(source: &str, unit: &CompilationUnit) -> Result<Self, FormatError> {
         let comments = fpas_lexer::collect_comments(source);
         let anchors = traversal::collect(unit, source);
+        if let Some(span) = anchors.obsolete_record {
+            return Err(FormatError::ObsoleteRecord {
+                offset: span.offset,
+                length: span.length,
+            });
+        }
         validate_anchors(source, &anchors)?;
         let mut map = Self::attach(
             source,

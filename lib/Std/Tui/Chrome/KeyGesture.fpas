@@ -40,15 +40,7 @@ public type TuiKeyGesture = record
   Display: string
 ): TuiKeyGesture;
   begin
-    return record
-      Kind := Kind;
-      Character := Character;
-      Shift := Shift;
-      Ctrl := Ctrl;
-      Alt := Alt;
-      Meta := Meta;
-      Display := Display;
-    end record;
+    return TuiKeyGesture(Kind := Kind, Character := Character, Shift := Shift, Ctrl := Ctrl, Alt := Alt, Meta := Meta, Display := Display);
   end function;
 
   // Reports whether a console key event matches this gesture.

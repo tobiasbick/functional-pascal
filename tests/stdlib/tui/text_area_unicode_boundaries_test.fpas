@@ -11,9 +11,9 @@ end record;
 
 function View(State: Model): Tui.TuiElement;
 begin
-  return Tui.TuiElementBuilders.MakeDesktop(Some(Tui.TuiControlId.Create(1)), [
-                                                                                Tui.TuiElementBuilders.MakeTextArea(Tui.TuiControlId.Create(1), State.Text, State.Caret, Tui.TuiPoint.Create(0, 0), Tui.TuiAction.Create(1))
-                                                                              ]);
+  return Tui.TuiElementBuilders.MakeDesktop(Option.Some(Tui.TuiControlId.Create(1)), [
+                                                                                       Tui.TuiElementBuilders.MakeTextArea(Tui.TuiControlId.Create(1), State.Text, State.Caret, Tui.TuiPoint.Create(0, 0), Tui.TuiAction.Create(1))
+                                                                                     ]);
 end function;
 
 function Update(State: Model; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): Model;
@@ -24,10 +24,7 @@ end function;
 
 procedure CheckCaret(App: Tui.TuiApplication; Text: string; Caret: integer; X: integer; Y: integer);
 begin
-  discard App.RunIterations(record
-    Text := Text;
-    Caret := Caret;
-  end record, Update, View, 0, 0);
+  discard App.RunIterations(Model(Text := Text, Caret := Caret), Update, View, 0, 0);
   Test.AssertTrue(App.SurfaceSnapshot().CellAt(X, Y).Role = Tui.TuiStyleRole.Focused);
 end procedure;
 

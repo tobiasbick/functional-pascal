@@ -19,7 +19,7 @@ end record;
 //
 // Parameters:
 // - `Headers`: Parsed message fields used to determine framing.
-public function Select(Headers: array of Types.Header): result of Framing, string;
+public function Select(Headers: array of (Types.Header)): Result of (Framing, string);
 begin
   mutable var TransferEncoding: string := '';
   mutable var TransferEncodingCount: integer := 0;
@@ -37,20 +37,20 @@ begin
       if Headers2.IsName(Headers[Index].Name, 'Content-Length') then
         begin
           case Decimal.Parse(Headers[Index].Value, 9223372036854775807) of
-            when Ok(Length):
+            when Result.Ok(const Length):
               begin
                 if (ContentLengthCount > 0) and (Length <> ContentLength) then
                   begin
-                    return Error('HTTP message contains conflicting Content-Length headers');
+                    return Result.Error('HTTP message contains conflicting Content-Length headers');
                   end;
                 end if;
 
                 ContentLength := Length;
                 ContentLengthCount := ContentLengthCount + 1;
               end;
-            when Error(Message):
+            when Result.Error(const Message):
               begin
-                return Error('Invalid HTTP Content-Length: ' + Message);
+                return Result.Error('Invalid HTTP Content-Length: ' + Message);
               end;
           end case;
         end;
@@ -60,13 +60,13 @@ begin
 
   if TransferEncodingCount > 1 then
     begin
-      return Error('HTTP message contains multiple Transfer-Encoding headers');
+      return Result.Error('HTTP message contains multiple Transfer-Encoding headers');
     end;
   end if;
 
   if (TransferEncodingCount > 0) and (ContentLengthCount > 0) then
     begin
-      return Error('HTTP message contains both Transfer-Encoding and Content-Length');
+      return Result.Error('HTTP message contains both Transfer-Encoding and Content-Length');
     end;
   end if;
 
@@ -74,30 +74,21 @@ begin
     begin
       if TransferEncoding <> 'chunked' then
         begin
-          return Error('Unsupported HTTP Transfer-Encoding: ' + TransferEncoding);
+          return Result.Error('Unsupported HTTP Transfer-Encoding: ' + TransferEncoding);
         end;
       end if;
 
-      return Ok(record
-        Mode := 2;
-        Remaining := 0;
-      end record);
+      return Result.Ok(Framing(Mode := 2, Remaining := 0));
     end;
   end if;
 
   if ContentLengthCount > 0 then
     begin
-      return Ok(record
-        Mode := 1;
-        Remaining := ContentLength;
-      end record);
+      return Result.Ok(Framing(Mode := 1, Remaining := ContentLength));
     end;
   end if;
 
-  return Ok(record
-    Mode := 3;
-    Remaining := 0;
-  end record);
+  return Result.Ok(Framing(Mode := 3, Remaining := 0));
 end function;
 
 end unit;

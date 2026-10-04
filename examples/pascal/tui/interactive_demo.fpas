@@ -16,27 +16,19 @@ begin
       begin
         return State;
       end;
-    when Tui.TuiMsg.BackgroundFailed(Id, Kind, Message, Code, Line, Column):
+    when Tui.TuiMsg.BackgroundFailed(const Id, const Kind, const Message, const Code, const Line, const Column):
       begin
         return State;
       end;
-    when Tui.TuiMsg.TextChanged(Source, Action, Text, Caret):
+    when Tui.TuiMsg.TextChanged(const Source, const Action, const Text, const Caret):
       begin
-        return record
-          Text := Text;
-          Caret := Caret;
-          Confirming := State.Confirming;
-        end record;
+        return DemoModel(Text := Text, Caret := Caret, Confirming := State.Confirming);
       end;
-    when Tui.TuiMsg.Action(Source, Action):
+    when Tui.TuiMsg.Action(const Source, const Action):
       begin
         if Action.Value = 2 then
           begin
-            return record
-              Text := State.Text;
-              Caret := State.Caret;
-              Confirming := true;
-            end record;
+            return DemoModel(Text := State.Text, Caret := State.Caret, Confirming := true);
           end;
         end if;
 
@@ -53,43 +45,43 @@ begin
         Cmd.Set(Tui.TuiCmd.Quit);
         return State;
       end;
-    when Tui.TuiMsg.Key(Key):
+    when Tui.TuiMsg.Key(const Key):
       begin
         return State;
       end;
-    when Tui.TuiMsg.Pointer(Pointer):
+    when Tui.TuiMsg.Pointer(const Pointer):
       begin
         return State;
       end;
-    when Tui.TuiMsg.Tick(Delta):
+    when Tui.TuiMsg.Tick(const Delta):
       begin
         return State;
       end;
-    when Tui.TuiMsg.Resize(Size):
+    when Tui.TuiMsg.Resize(const Size):
       begin
         return State;
       end;
-    when Tui.TuiMsg.FocusChanged(Previous, Current):
+    when Tui.TuiMsg.FocusChanged(const Previous, const Current):
       begin
         return State;
       end;
-    when Tui.TuiMsg.TextAreaChanged(Source, Action, Text, Caret, TextAreaOffset):
+    when Tui.TuiMsg.TextAreaChanged(const Source, const Action, const Text, const Caret, const TextAreaOffset):
       begin
         return State;
       end;
-    when Tui.TuiMsg.CheckChanged(Source, Action, Checked):
+    when Tui.TuiMsg.CheckChanged(const Source, const Action, const Checked):
       begin
         return State;
       end;
-    when Tui.TuiMsg.SelectionChanged(Source, Action, Selected):
+    when Tui.TuiMsg.SelectionChanged(const Source, const Action, const Selected):
       begin
         return State;
       end;
-    when Tui.TuiMsg.ScrollChanged(Source, Action, Offset):
+    when Tui.TuiMsg.ScrollChanged(const Source, const Action, const Offset):
       begin
         return State;
       end;
-    when Tui.TuiMsg.MenuChanged(MenuSource, MenuAction, MenuState):
+    when Tui.TuiMsg.MenuChanged(const MenuSource, const MenuAction, const MenuState):
       begin
         return State;
       end;
@@ -101,14 +93,14 @@ begin
   var Input: Tui.TuiElement := Tui.TuiElementBuilders.MakeInput(Tui.TuiControlId.Create(1), State.Text, State.Caret, Tui.TuiAction.Create(1));
   var Confirm: Tui.TuiElement := Tui.TuiElementBuilders.MakeButton(Tui.TuiControlId.Create(2), 'Confirm', Tui.TuiAction.Create(2));
   var Quit: Tui.TuiElement := Tui.TuiElementBuilders.MakeButton(Tui.TuiControlId.Create(3), 'Quit', Tui.TuiAction.Create(3));
-  mutable var Content: array of Tui.TuiElement := [Input, Confirm, Quit];
-  mutable var Focused: option of Tui.TuiControlId := Some(Tui.TuiControlId.Create(1));
+  mutable var Content: array of (Tui.TuiElement) := [Input, Confirm, Quit];
+  mutable var Focused: Option of (Tui.TuiControlId) := Option.Some(Tui.TuiControlId.Create(1));
   if State.Confirming then
     begin
       Content := [
                    Tui.TuiElementBuilders.MakeOverlay('Confirm', [Tui.TuiElementBuilders.MakeLabel(State.Text), Quit])
                  ];
-      Focused := Some(Tui.TuiControlId.Create(3));
+      Focused := Option.Some(Tui.TuiControlId.Create(3));
     end;
   end if;
 
@@ -124,9 +116,5 @@ begin
 end function;
 
 begin
-  discard Tui.TuiApplication.Run(record
-    Text := '';
-    Caret := 0;
-    Confirming := false;
-  end record, UpdateDemo, ViewDemo);
+  discard Tui.TuiApplication.Run(DemoModel(Text := '', Caret := 0, Confirming := false), UpdateDemo, ViewDemo);
 end program;

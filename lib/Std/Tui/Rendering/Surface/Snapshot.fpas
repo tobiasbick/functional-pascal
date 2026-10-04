@@ -9,7 +9,7 @@ public type TuiSurfaceSnapshot = record
   // Height in terminal cells.
   public Height: integer;
   // Row-major terminal cells.
-  public Cells: array of Cell.TuiCell;
+  public Cells: array of (Cell.TuiCell);
 
   // Returns one leading cell at a zero-based position.
   //

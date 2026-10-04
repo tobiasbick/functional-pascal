@@ -95,7 +95,7 @@ fn std_array_push_requires_mutable_array() {
         r#"program T;
 uses Std.Arrays as Arrays;
 begin
-  var A: array of integer := [1];
+  var A: array of (integer) := [1];
   Arrays.Push(A, 2);
 end program;"#,
     );
@@ -111,7 +111,7 @@ fn std_dict_merge_requires_matching_rhs_dict_type() {
         r#"program T;
 uses Std.Dictionaries as Dictionaries;
 begin
-  var M: dict of integer to integer := Dictionaries.Merge([1: 10], ['x': true]);
+  var M: dict of (integer, integer) := Dictionaries.Merge([1: 10], ['x': true]);
 end program;"#,
     );
     assert!(
@@ -127,7 +127,7 @@ fn std_dict_merge_requires_dict_rhs() {
         r#"program T;
 uses Std.Dictionaries as Dictionaries;
 begin
-  var M: dict of integer to integer := Dictionaries.Merge([1: 10], 42);
+  var M: dict of (integer, integer) := Dictionaries.Merge([1: 10], 42);
 end program;"#,
     );
     assert!(
@@ -143,7 +143,7 @@ fn std_dict_get_requires_matching_key_type() {
         r#"program T;
 uses Std.Dictionaries as Dictionaries;
 begin
-  var V: Option of integer := Dictionaries.Get(['Alice': 1], 42);
+  var V: Option of (integer) := Dictionaries.Get(['Alice': 1], 42);
 end program;"#,
     );
     assert!(
@@ -163,7 +163,7 @@ begin
   return X;
 end function;
 begin
-  var V: Option of integer := Arrays.Find([1, 2, 3], WrongReturn);
+  var V: Option of (integer) := Arrays.Find([1, 2, 3], WrongReturn);
 end program;"#,
     );
     assert!(

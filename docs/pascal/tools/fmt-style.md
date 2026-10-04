@@ -37,6 +37,13 @@ routines with one blank line. Nested routines use the same rules.
 Separate a unit's last declaration from `end unit;` with one blank line. An
 empty unit contains just its header, one blank line, and `end unit;`.
 
+Type applications always emit parentheses after `of`, including one argument:
+`array of (integer)`, `dict of (string, integer)`, `channel of (Message)`,
+`task of (integer)`, `Option of (User)` and `Result of (User, string)`.
+Generic declarations use the same list syntax:
+`function Identity of (T)(Value: T): T;`. Constraint lists retain their declared
+names, such as `of (T: Equatable)`.
+
 ## Statement bodies and semicolons
 
 Every statement ends with `;`, including the final statement before `else`,
@@ -70,9 +77,16 @@ Expression closers have no statement semicolon of their own. Anonymous routines
 close with `end function` or `end procedure` directly before an argument comma,
 closing parenthesis, or the enclosing statement's terminator.
 
-Nonempty record literals always use multiple lines, with a semicolon after each
-field and `end record` aligned with `record`. Empty literals emit
-`record end record`. Record updates close with `end with`.
+Builtin wrapper expressions emit qualified variant names: `Option.Some(Value)`,
+`Option.None`, `Result.Ok(Value)` and `Result.Error(Message)`. Builtin wrapper
+type and variant names use these canonical spellings.
+
+Named record constructors use comma-separated field assignments:
+`Point(X := 3, Y := 4)`. Supplied fields keep their written evaluation order;
+long constructor argument lists follow the ordinary call-wrapping rules.
+
+Obsolete anonymous record syntax is rejected before formatting. Record updates
+retain semicolon-separated assignments and close with `end with`.
 
 Record fields and enum members each keep their trailing semicolon. Insert one
 blank line between the last field and the first record method. Routine modifiers
@@ -145,7 +159,7 @@ begin
 end program;
 ```
 
-### Record declaration and literal
+### Record declaration and construction
 
 ```pascal
 program T;
@@ -156,10 +170,7 @@ type Point = record
 end record;
 
 begin
-  var A: Point := record
-    X := 3;
-    Y := 4;
-  end record;
+  var A: Point := Point(X := 3, Y := 4);
 end program;
 ```
 

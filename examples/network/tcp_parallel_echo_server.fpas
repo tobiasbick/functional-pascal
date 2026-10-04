@@ -11,15 +11,15 @@ uses Std.Results as Results;
 uses Std.Time as Time;
 uses Std.Server as Server;
 
-function Echo(Client: Net.Connection; Token: Tasks.CancellationToken): result of boolean, string;
+function Echo(Client: Net.Connection; Token: Tasks.CancellationToken): Result of (boolean, string);
 begin
   var Configured: boolean := try Net.SetTimeout(Client, 5000);
   while not Tasks.IsCancellationRequested(Token) do
     begin
-      var Bytes: array of integer := try Net.ReceiveBytesWithCancellation(Client, 4096, Token);
+      var Bytes: array of (integer) := try Net.ReceiveBytesWithCancellation(Client, 4096, Token);
       if Arrays.Length(Bytes) = 0 then
         begin
-          return Ok(true);
+          return Result.Ok(true);
         end;
       end if;
       mutable var Offset: integer := 0;
@@ -29,7 +29,7 @@ begin
                                                                                                       Offset), Token);
           if Count <= 0 then
             begin
-              return Error('TCP write made no progress');
+              return Result.Error('TCP write made no progress');
             end;
           end if;
 
@@ -39,7 +39,7 @@ begin
     end;
   end while;
 
-  return Ok(true);
+  return Result.Ok(true);
 end function;
 
 begin
@@ -75,17 +75,17 @@ begin
   var Workers: Tasks.TaskGroup := Server.GetWorkGroup(Life);
   for Index: integer := 1 to 4 do
     begin
-      var StartedTask1: task := Tasks.StartTaskInGroup(Workers, function(Token: Tasks.CancellationToken): result of boolean, string begin
+      var StartedTask1: task := Tasks.StartTaskInGroup(Workers, function(Token: Tasks.CancellationToken): Result of (boolean, string) begin
         while not Tasks.IsCancellationRequested(Token) do
           begin
             case Net.AcceptWithCancellation(ListenerValue, Token) of
-              when Ok(Client):
+              when Result.Ok(const Client):
                 begin
-                  var Outcome: result of boolean, string := Echo(Client, Token);
+                  var Outcome: Result of (boolean, string) := Echo(Client, Token);
                   // Close even on read/write failure. One failed client does not stop admission.
                   var Closed: boolean := try Net.Close(Client);
                   case Outcome of
-                    when Error(Message):
+                    when Result.Error(const Message):
                       begin
                         if not Tasks.IsCancellationRequested(Token) then
                           begin
@@ -93,28 +93,28 @@ begin
                           end;
                         end if;
                       end;
-                    when Ok(_):
+                    when Result.Ok(_):
                       begin
                         null;
                       end;
                   end case;
                 end;
-              when Error(Message):
+              when Result.Error(const Message):
                 begin
                   if Tasks.IsCancellationRequested(Token) then
                     begin
-                      return Ok(true);
+                      return Result.Ok(true);
                     end;
                   end if;
 
                   discard Server.RequestStop(Life);
-                  return Error(Message);
+                  return Result.Error(Message);
                 end;
             end case;
           end;
         end while;
 
-        return Ok(true);
+        return Result.Ok(true);
       end function);
     end;
   end for;
@@ -128,13 +128,13 @@ begin
   end while;
 
   discard Server.RequestStop(Life);
-  mutable var Failures: array of Tasks.TaskFailure := [];
+  mutable var Failures: array of (Tasks.TaskFailure) := [];
   case Tasks.CloseTaskGroupWithTimeout(Workers, Server.RemainingMillis(Life)) of
-    when Ok(Reports):
+    when Result.Ok(const Reports):
       begin
         Failures := Reports;
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
         Console.WriteLn(Message);
         // The independent host watchdog remains armed even if diagnostic output blocks.

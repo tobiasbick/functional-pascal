@@ -90,16 +90,20 @@ impl Parser {
                 .any(|part| matches!(part, DesignatorPart::Index(..)))
                 && self.eat(&Token::LParen)
             {
-                let args = if self.check(&Token::RParen) {
-                    Vec::new()
+                if self.at_named_field() {
+                    self.parse_record_construction(designator, start)
                 } else {
-                    self.parse_arg_list()
-                };
-                self.expect(&Token::RParen);
-                Expr::Call {
-                    designator,
-                    args,
-                    span: self.span_from(start),
+                    let args = if self.check(&Token::RParen) {
+                        Vec::new()
+                    } else {
+                        self.parse_arg_list()
+                    };
+                    self.expect(&Token::RParen);
+                    Expr::Call {
+                        designator,
+                        args,
+                        span: self.span_from(start),
+                    }
                 }
             } else {
                 Expr::Designator(designator)

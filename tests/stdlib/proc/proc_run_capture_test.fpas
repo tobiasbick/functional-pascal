@@ -6,22 +6,22 @@ uses Std.Test as Test;
 
 begin
   case Proc.CurrentExecutable() of
-    when Ok(Executable):
+    when Result.Ok(const Executable):
       begin
         case Proc.RunCapture(Executable, ['--version']) of
-          when Ok(Output):
+          when Result.Ok(const Output):
             begin
               Test.AssertEquals(0, Output.ExitCode);
               Test.AssertTrue(Str.Contains(Output.Stdout, 'fpas'));
               Test.AssertEquals('', Output.Stderr);
             end;
-          when Error(Message):
+          when Result.Error(const Message):
             begin
               Test.Fail(Message);
             end;
         end case;
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
         Test.Fail(Message);
       end;

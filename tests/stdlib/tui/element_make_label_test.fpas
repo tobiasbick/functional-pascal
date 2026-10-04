@@ -6,13 +6,15 @@ uses Std.Test as Test;
 begin
   var Node: Tui.TuiElement := Tui.TuiElementBuilders.MakeLabel('hi');
   case Node of
-    when Tui.TuiElement.Label(Text):
+    when Tui.TuiElement.Label(const Text):
       begin
         Test.AssertEquals('hi', Text);
       end;
-    else
+    when Tui.TuiElement.Empty, Tui.TuiElement.Button(_), Tui.TuiElement.Input(_), Tui.TuiElement.TextArea(_, _, _, _, _), Tui.TuiElement.CheckBox(_, _, _, _), Tui.TuiElement.List(_, _, _, _), Tui.TuiElement.Scroll(_, _, _, _), Tui.TuiElement.MenuBar(_), Tui.TuiElement.Menu(_, _, _, _), Tui.TuiElement.StatusLine(_), Tui.TuiElement.CellGrid(_), Tui.TuiElement.Rule(_), Tui.TuiElement.Gauge(_), Tui.TuiElement.Row(_, _), Tui.TuiElement.Column(_, _), Tui.TuiElement.Layout(_, _), Tui.TuiElement.Spacer(_), Tui.TuiElement.Panel(_, _), Tui.TuiElement.Overlay(_, _), Tui.TuiElement.Desktop(_, _):
       begin
-        panic('expected label element');
+        begin
+          panic('expected label element');
+        end;
       end;
   end case;
 end program;

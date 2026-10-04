@@ -2,6 +2,10 @@
 
 Create semantic names for existing types.
 
+An alias retains the original type identity. Record aliases also retain field
+defaults and visibility, including across unit reexports and inside collection
+aliases. Required fields stay required; an alias cannot expose a private field.
+
 Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`type_def`, `type_expr` — alias form).
 
 ```pascal

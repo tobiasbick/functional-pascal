@@ -6,21 +6,12 @@ uses Std.Test as Test;
 
 function MakeCell(Glyph: string; Foreground: Console.Color; Background: Console.Color): Console.Cell;
 begin
-  return record
-    glyph := Glyph;
-    foreground := Foreground;
-    background := Background;
-  end record;
+  return Console.Cell(glyph := Glyph, foreground := Foreground, background := Background);
 end function;
 
 begin
   Console.BeginFrame();
-  Console.FillRect(record
-    x := 1;
-    y := 1;
-    width := 5;
-    height := 2;
-  end record, MakeCell('.', Console.CrtColor(Console.LightGray), Console.CrtColor(Console.Black)));
+  Console.FillRect(Console.rect(x := 1, y := 1, width := 5, height := 2), MakeCell('.', Console.CrtColor(Console.LightGray), Console.CrtColor(Console.Black)));
   Console.PutCell(2, 1, MakeCell('X', Console.RgbColor(10, 20, 30), Console.Ansi256Color(42)));
   Console.WriteCells(3, 1, [
                              MakeCell('Y', Console.CrtColor(Console.Yellow), Console.CrtColor(Console.Blue)),

@@ -3,25 +3,25 @@ program ChannelsTest;
 uses Std.Tasks as Tasks;
 uses Std.Test as Test;
 
-function SendValues(Messages: channel of integer): boolean;
+function SendValues(Messages: channel of (integer)): boolean;
 begin
   case Tasks.Send(Messages, 10) of
-    when Ok(Sent):
+    when Result.Ok(const Sent):
       begin
         Test.AssertTrue(Sent);
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
         Test.Fail(Message);
       end;
   end case;
 
   case Tasks.Send(Messages, 20) of
-    when Ok(Sent):
+    when Result.Ok(const Sent):
       begin
         Test.AssertTrue(Sent);
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
         Test.Fail(Message);
       end;
@@ -30,14 +30,14 @@ begin
   return Tasks.CloseChannel(Messages);
 end function;
 
-function ReceiveValue(Messages: channel of integer): integer;
+function ReceiveValue(Messages: channel of (integer)): integer;
 begin
   case Tasks.Receive(Messages) of
-    when Ok(Value):
+    when Result.Ok(const Value):
       begin
         return Value;
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
         Test.Fail(Message);
         return 0;
@@ -46,17 +46,17 @@ begin
 end function;
 
 begin
-  var Messages: channel of integer := Tasks.CreateChannel(1);
+  var Messages: channel of (integer) := Tasks.CreateChannel(1);
   var Producer: task := go SendValues(Messages);
   Test.AssertEquals(10, ReceiveValue(Messages));
   Test.AssertEquals(20, ReceiveValue(Messages));
   Test.AssertTrue(Tasks.Wait(Producer));
   case Tasks.Receive(Messages) of
-    when Ok(_):
+    when Result.Ok(_):
       begin
         Test.Fail('closed channel returned an extra value');
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
         Test.AssertEquals('Channel is closed', Message);
       end;

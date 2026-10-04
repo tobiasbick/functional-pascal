@@ -10,8 +10,8 @@ begin
 end function;
 
 begin
-  var A: array of integer := [1, 2, 3, 4, 5];
-  var R: option of integer := Arrays.Find(A, IsGreaterThanThree);
+  var A: array of (integer) := [1, 2, 3, 4, 5];
+  var R: Option of (integer) := Arrays.Find(A, IsGreaterThanThree);
   Console.WriteLn(Options.IsSome(R));
   Console.WriteLn(Options.Unwrap(R));
 end program;

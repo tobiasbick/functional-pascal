@@ -46,7 +46,7 @@ fn register_std_console_cell_api(checker: &mut Checker) {
         ],
     );
     let saved_region =
-        type_registration::register_record_type(checker, s::STD_CONSOLE_SAVED_REGION, Vec::new());
+        type_registration::register_resource_type(checker, s::STD_CONSOLE_SAVED_REGION);
 
     define_func(
         checker,

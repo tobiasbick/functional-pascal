@@ -185,6 +185,10 @@ impl Parser {
             || matches!(
                 self.current_token(),
                 Token::Integer(_)
+                    | Token::If
+                    | Token::Case
+                    | Token::OptionKw
+                    | Token::Result
                     | Token::Real(_)
                     | Token::Str(_)
                     | Token::True

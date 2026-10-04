@@ -30,11 +30,11 @@ begin
   var Constrained: Tui.TuiMeasureResult := Tui.TuiMeasure(TextArea, Tui.TuiMeasureSpec.AtMost(Tui.TuiSize.Create(3, 1)));
   Test.AssertEquals(3, Constrained.Preferred.Width);
   Test.AssertEquals(1, Constrained.Preferred.Height);
-  var Filled: Tui.TuiSurfaceSnapshot := Paint(Tui.TuiElementBuilders.MakeDesktop(None, [
-                                                                                         Tui.TuiElementBuilders.MakeColumn([
-                                                                                                                             Tui.TuiElementBuilders.MakeTextArea(Tui.TuiControlId.Create(1), 'x', 0, Tui.TuiPoint.Create(0, 0), Tui.TuiAction.Create(9)),
-                                                                                                                             Tui.TuiElementBuilders.MakeLabel('tail')
-                                                                                                                           ])
-                                                                                       ]), Tui.TuiSize.Create(8, 4));
+  var Filled: Tui.TuiSurfaceSnapshot := Paint(Tui.TuiElementBuilders.MakeDesktop(Option.None, [
+                                                                                                Tui.TuiElementBuilders.MakeColumn([
+                                                                                                                                    Tui.TuiElementBuilders.MakeTextArea(Tui.TuiControlId.Create(1), 'x', 0, Tui.TuiPoint.Create(0, 0), Tui.TuiAction.Create(9)),
+                                                                                                                                    Tui.TuiElementBuilders.MakeLabel('tail')
+                                                                                                                                  ])
+                                                                                              ]), Tui.TuiSize.Create(8, 4));
   Test.AssertEquals('t', Filled.CellAt(0, 3).Glyph);
 end program;

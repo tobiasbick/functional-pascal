@@ -1,33 +1,33 @@
 # Result and Option patterns
 
-Destructuring `case` arms for `Result of T, E` and `Option of T`:
+Destructuring `case` arms for `Result of (T, E)` and `Option of (T)`:
 
 ```pascal
 uses Std.Console as Console;
 uses Std.Conv as Conv;
 
 case Success of
-  when Ok(Value):
+  when Result.Ok(const Value):
     Console.WriteLn(Conv.IntToStr(Value));
-  when Error(Message):
+  when Result.Error(const Message):
     Console.WriteLn(Message);
 end case;
 
 case Console.Present of
-  when Some(Value):
+  when Option.Some(const Value):
     Console.WriteLn(Conv.IntToStr(Value));
-  when None:
+  when Option.None:
     Console.WriteLn('empty');
 end case;
 ```
 
-Multiple destructure labels in one arm may reuse one binding name:
+Grouped patterns in one arm must introduce the same binding names and types:
 
 ```pascal
 uses Std.Console as Console;
 
 case R of
-  when Ok(Msg), Error(Msg):
+  when Result.Ok(const Msg), Result.Error(const Msg):
     Console.WriteLn(Msg);
 end case;
 ```

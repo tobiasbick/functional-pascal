@@ -5,7 +5,7 @@ uses Std.Dictionaries as Dictionaries;
 uses Std.Arrays as Arrays;
 
 begin
-  var D: dict of string to integer := [:];
-  var K: array of string := Dictionaries.Keys(D);
+  var D: dict of (string, integer) := [:];
+  var K: array of (string) := Dictionaries.Keys(D);
   Console.WriteLn(Arrays.Length(K));
 end program;

@@ -13,8 +13,11 @@ fn tls_listener_reports_an_os_assigned_address() {
     write_text(
         &source,
         &r#"program TlsListenerAddress;
-uses Std.Net as Net; uses Std.Test as Test;
-function ExerciseListener(): result of boolean, string;
+
+uses Std.Net as Net;
+uses Std.Test as Test;
+
+function ExerciseListener(): Result of (boolean, string);
 begin
   var Server: Net.Listener := try Net.ListenTls('127.0.0.1', 0, 'cert.pem', 'key.pem', 2000);
   var Address: Net.NetworkAddress := try Net.ListenerLocalAddress(Server);
@@ -25,31 +28,42 @@ begin
   var ClientClosed: boolean := try Net.Close(Client);
   var ServerClosed: boolean := try Net.CloseListener(Server);
   case Net.ListenerLocalAddress(Server) of
-    when Ok(_): panic('Closed TLS listener returned an address');
-    when Error(_): begin null; end;
+    when Result.Ok(_):
+      panic('Closed TLS listener returned an address');
+    when Result.Error(_):
+      begin
+        null;
+      end;
   end case;
-  return Ok(true);
+
+  return Result.Ok(true);
 end function;
+
 begin
   case ExerciseListener() of
-    when Ok(_): begin null; end;
-    when Error(Message): panic(Message);
+    when Result.Ok(_):
+      begin
+        null;
+      end;
+    when Result.Error(const Message):
+      panic(Message);
   end case;
-end program;"#
-            .replace(
-                "cert.pem",
-                &cwd.join("cert.pem")
-                    .to_string_lossy()
-                    .replace('\\', "/")
-                    .replace('\'', "''"),
-            )
-            .replace(
-                "key.pem",
-                &cwd.join("key.pem")
-                    .to_string_lossy()
-                    .replace('\\', "/")
-                    .replace('\'', "''"),
-            ),
+end program;
+"#
+        .replace(
+            "cert.pem",
+            &cwd.join("cert.pem")
+                .to_string_lossy()
+                .replace('\\', "/")
+                .replace('\'', "''"),
+        )
+        .replace(
+            "key.pem",
+            &cwd.join("key.pem")
+                .to_string_lossy()
+                .replace('\\', "/")
+                .replace('\'', "''"),
+        ),
     );
 
     let (code, _, stderr) = support::run_cli_and_capture_output(&source, &cwd);

@@ -10,7 +10,7 @@ use fpas_parser::{ConstDef, DesignatorPart, Expr};
 impl Checker {
     pub(super) fn check_const_def(&mut self, c: &ConstDef) {
         let declared_ty = self.resolve_type_expr(&c.type_expr);
-        let value_ty = self.check_expr_with_expected_record_literals(&c.value, &declared_ty);
+        let value_ty = self.check_expr_with_expected(&c.value, &declared_ty);
         self.check_type_compat(&declared_ty, &value_ty, "const initializer", c.span);
         if !value_ty.is_error() && !self.const_expr_is_compile_time_known(&c.value) {
             self.error_with_code(
@@ -21,6 +21,7 @@ impl Checker {
             );
         }
 
+        self.static_constants.insert(&c.name, &c.value);
         if !self.scopes.define(
             &c.name,
             Symbol {
@@ -39,8 +40,9 @@ impl Checker {
         }
     }
 
-    fn const_expr_is_compile_time_known(&mut self, expr: &Expr) -> bool {
+    pub(in crate::check) fn const_expr_is_compile_time_known(&mut self, expr: &Expr) -> bool {
         match expr {
+            Expr::If(_) | Expr::Case(_) => false,
             Expr::Integer(..) | Expr::Real(..) | Expr::Str(..) | Expr::Bool(..) => true,
             Expr::Designator(designator) => {
                 if !designator
@@ -80,15 +82,24 @@ impl Checker {
                 self.const_expr_is_compile_time_known(key)
                     && self.const_expr_is_compile_time_known(value)
             }),
-            Expr::RecordLiteral { fields, .. } => fields
-                .iter()
-                .all(|field| self.const_expr_is_compile_time_known(&field.value)),
+            Expr::RecordConstruction { fields, .. } => {
+                self.record_construction_is_static(expr, fields)
+            }
+            Expr::Call { .. }
+                if self
+                    .record_constructions
+                    .contains(&Self::expr_lookup_key(expr)) =>
+            {
+                self.record_construction_is_static(expr, &[])
+            }
             Expr::ResultOk(inner, _) | Expr::ResultError(inner, _) | Expr::OptionSome(inner, _) => {
                 self.const_expr_is_compile_time_known(inner)
             }
             Expr::Try(..) | Expr::Go(..) | Expr::Closure(_) | Expr::Nil(_) => false,
             Expr::OptionNone(_) => true,
-            Expr::Call { .. } | Expr::Postfix { .. } | Expr::Error(_) => false,
+            Expr::Call { .. } | Expr::Postfix { .. } | Expr::InvalidRecord(..) | Expr::Error(_) => {
+                false
+            }
             Expr::RecordUpdate { base, fields, .. } => {
                 self.const_expr_is_compile_time_known(base)
                     && fields
@@ -96,5 +107,38 @@ impl Checker {
                         .all(|f| self.const_expr_is_compile_time_known(&f.value))
             }
         }
+    }
+
+    fn record_construction_is_static(
+        &mut self,
+        expr: &Expr,
+        fields: &[fpas_parser::FieldInit],
+    ) -> bool {
+        if !fields
+            .iter()
+            .all(|field| self.const_expr_is_compile_time_known(&field.value))
+        {
+            return false;
+        }
+        let Some(crate::types::Ty::Record(record)) =
+            self.expr_types.get(&Self::expr_lookup_key(expr)).cloned()
+        else {
+            return false;
+        };
+        let defaults = self
+            .record_defaults
+            .get(&record.name)
+            .cloned()
+            .unwrap_or_default();
+        record.fields.iter().all(|(name, _)| {
+            fields
+                .iter()
+                .any(|field| field.name.eq_ignore_ascii_case(name))
+                || defaults
+                    .iter()
+                    .find(|(field, _)| field.eq_ignore_ascii_case(name))
+                    .and_then(|(_, expression)| expression.as_deref())
+                    .is_some_and(|expression| self.const_expr_is_compile_time_known(expression))
+        })
     }
 }

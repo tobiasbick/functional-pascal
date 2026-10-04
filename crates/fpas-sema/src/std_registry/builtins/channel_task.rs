@@ -174,7 +174,7 @@ fn expect_channel_arg(c: &mut Checker, expr: &Expr) -> Option<Ty> {
             c.error_with_code(
                 SEMA_TYPE_MISMATCH,
                 format!("Type mismatch in channel operation: expected a channel, found `{other}`"),
-                "Pass a value declared with `channel of T`.",
+                "Pass a value declared with `channel of (T)`.",
                 expr.span(),
             );
             None
@@ -271,9 +271,9 @@ fn check_task_wait_all(c: &mut Checker, args: &[&Expr], span: Span, name: &str) 
             c.error_with_code(
                 SEMA_TYPE_MISMATCH,
                 format!(
-                    "Type mismatch in task list: expected `array of task`, found `array of {inner}`"
+                    "Type mismatch in task list: expected `array of (task)`, found `array of ({inner})`"
                 ),
-                "Pass an array of task handles such as `[T1, T2, T3]`.",
+                "Pass an array of (task) handles such as `[T1, T2, T3]`.",
                 args[0].span(),
             );
             Ty::Unit
@@ -282,8 +282,8 @@ fn check_task_wait_all(c: &mut Checker, args: &[&Expr], span: Span, name: &str) 
         other => {
             c.error_with_code(
                 SEMA_TYPE_MISMATCH,
-                format!("Type mismatch in task list: expected `array of task`, found `{other}`"),
-                "Pass an array of task handles such as `[T1, T2, T3]`.",
+                format!("Type mismatch in task list: expected `array of (task)`, found `{other}`"),
+                "Pass an array of (task) handles such as `[T1, T2, T3]`.",
                 args[0].span(),
             );
             Ty::Unit

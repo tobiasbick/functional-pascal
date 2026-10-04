@@ -41,6 +41,33 @@ begin
 end program;
 ```
 
+## Case expressions
+
+In a required value position, `case` selects one expression:
+
+```pascal
+var Message: string := case Status of
+  when 0: 'ok';
+  when 1, 2: 'retry';
+  else 'unknown';
+end case;
+```
+
+Each arm and fallback contains exactly one expression followed by `;`. The
+surrounding declaration or statement has its own terminator after `end case`.
+There is no implicit value from a statement list. The scrutinee runs once; guards
+and selected values run in written order, and unselected values do not run.
+
+All branches must agree on one ordinary type. An expected type supplies context
+for empty collections and generic constructors; otherwise branch inference uses
+all values and does not depend on their order. Incompatible branch types and
+unresolved empty values require a compatible annotation or corrected values.
+A procedure call cannot be a branch value; a stored procedure value can.
+
+Pattern bindings are local to their arm and visible in its guard and value.
+Grouped patterns must introduce identical binding names and types. Coverage and
+fallback rules are described in [Exhaustiveness](exhaustiveness.md).
+
 ## See also
 
 - [Scalar labels](scalar-labels.md)

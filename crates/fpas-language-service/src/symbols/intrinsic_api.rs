@@ -150,7 +150,7 @@ mod tests {
   public type JsonValue = enum
     // `ArrayValue` enum member.
     // `Object` enum member.
-    Object(Fields: dict of string to JsonValue);
+    Object(Fields: dict of (string, JsonValue));
   end enum;
 end unit;
 

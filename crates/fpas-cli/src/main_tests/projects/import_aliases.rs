@@ -37,11 +37,11 @@ fn aliases_preserve_enum_reexports_callable_values_and_task_calls() {
           var Builtin: task := go Numbers.Abs(-2);
           case Api.Message.Number(Tasks.Wait(Job) + Tasks.Wait(Builtin)) of
             when Api.Message.Empty: panic('wrong variant');
-            when Api.Message.Number(Value): Console.WriteLn(Value);
+            when Api.Message.Number(const Value): Console.WriteLn(Value);
           end case;
           case Api.Message.Empty of
             when Api.Message.Empty: null;
-            when Api.Message.Number(Value): panic('wrong empty variant');
+            when Api.Message.Number(_): panic('wrong empty variant');
           end case;
         end program;",
     );

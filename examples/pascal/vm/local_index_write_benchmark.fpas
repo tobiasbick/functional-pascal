@@ -9,7 +9,7 @@ uses Std.Time as Time;
 
 const WarmupIterations: integer := 100;
 
-function RewriteValues(mutable Values: array of integer; Iterations: integer): integer;
+function RewriteValues(mutable Values: array of (integer); Iterations: integer): integer;
 begin
   for Iteration: integer := 1 to Iterations do
     begin
@@ -38,7 +38,7 @@ begin
     end;
   end if;
   mutable var Checksum: integer := RewriteValues(Arrays.Fill(0, Size), WarmupIterations);
-  var Values: array of integer := Arrays.Fill(0, Size);
+  var Values: array of (integer) := Arrays.Fill(0, Size);
   var Started: integer := Time.MonotonicMillis();
   Checksum := RewriteValues(Values, Iterations);
   var Elapsed: integer := Time.ElapsedMillis(Started);

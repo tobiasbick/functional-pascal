@@ -17,11 +17,11 @@ begin
       begin
         return 'zero';
       end;
-    when N if N > 0:
+    when const N if N > 0:
       begin
         return 'positive';
       end;
-    when N if N < 0:
+    when const N if N < 0:
       begin
         return 'negative';
       end;
@@ -33,19 +33,19 @@ end function;
 function DescribeShape(S: Shape): string;
 begin
   case S of
-    when Shape.Circle(R) if R > 10.0:
+    when Shape.Circle(const R) if R > 10.0:
       begin
         return ('Large circle (radius ' + Conv.RealToStr(R)) + ')';
       end;
-    when Shape.Circle(R):
+    when Shape.Circle(const R):
       begin
         return ('Small circle (radius ' + Conv.RealToStr(R)) + ')';
       end;
-    when Shape.Rectangle(W, H) if W = H:
+    when Shape.Rectangle(const W, const H) if W = H:
       begin
         return ('Square (' + Conv.RealToStr(W)) + ')';
       end;
-    when Shape.Rectangle(W, H):
+    when Shape.Rectangle(const W, const H):
       begin
         return ((('Rectangle (' + Conv.RealToStr(W)) + ' x ') + Conv.RealToStr(H)) + ')';
       end;

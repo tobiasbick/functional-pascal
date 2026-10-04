@@ -10,7 +10,7 @@ begin
 end function;
 
 begin
-  var O: option of integer := Some(10);
-  var M: option of string := Options.Map(O, ToStr);
+  var O: Option of (integer) := Option.Some(10);
+  var M: Option of (string) := Options.Map(O, ToStr);
   Console.WriteLn(Options.Unwrap(M));
 end program;

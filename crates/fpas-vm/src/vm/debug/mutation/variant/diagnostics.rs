@@ -11,7 +11,7 @@ pub(in crate::vm::debug) fn not_a_wrapper(type_name: &str) -> DebugSessionError 
         message: format!(
             "debug variant target type `{type_name}` is not an enum, Result, or Option"
         ),
-        hint: "Select a mutable enum, `result of T, E`, or `option of T` target such as `Selected` or `Outcome`."
+        hint: "Select a mutable enum, `result of (T, E)`, or `option of (T)` target such as `Selected` or `Outcome`."
             .to_string(),
     }
 }
@@ -117,10 +117,10 @@ pub(in crate::vm::debug) fn constructor_example(
     field_count: usize,
 ) -> String {
     match (type_name, variant, field_count) {
-        ("Option", "None", _) | (_, "None", 0) => "None".to_string(),
-        ("Option", "Some", _) => "Some(...)".to_string(),
-        ("Result", "Ok", _) => "Ok(...)".to_string(),
-        ("Result", "Error", _) => "Error(...)".to_string(),
+        ("Option", "None", _) => "Option.None".to_string(),
+        ("Option", "Some", _) => "Option.Some(...)".to_string(),
+        ("Result", "Ok", _) => "Result.Ok(...)".to_string(),
+        ("Result", "Error", _) => "Result.Error(...)".to_string(),
         (_, _, 0) => format!("{type_name}.{variant}"),
         (_, _, _) => format!("{type_name}.{variant}(...)"),
     }

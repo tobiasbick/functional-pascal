@@ -13,7 +13,7 @@ public type TuiArrangedEntry = record
   public Clip: Rect.TuiRect;
 end record;
 
-mutable var TuiFrameEntries: array of array of TuiArrangedEntry := [];
+mutable var TuiFrameEntries: array of (array of (TuiArrangedEntry)) := [];
 
 function TuiFrameRequire(Slot: integer): integer;
 begin
@@ -34,11 +34,9 @@ public type TuiArrangedFrame = record
   // Allocates an empty arranged frame.
   public static function Create(): TuiArrangedFrame;
   begin
-    mutable var Empty: array of TuiArrangedEntry := [];
+    mutable var Empty: array of (TuiArrangedEntry) := [];
     TuiFrameEntries := Arrays.Concat(TuiFrameEntries, [Empty]);
-    return record
-      Slot := Arrays.Length(TuiFrameEntries);
-    end record;
+    return TuiArrangedFrame(Slot := Arrays.Length(TuiFrameEntries));
   end function;
 
   // Clears all entries before a fresh arrange pass.
@@ -48,7 +46,7 @@ public type TuiArrangedFrame = record
   public procedure Clear(Self: TuiArrangedFrame);
   begin
     var Slot: integer := TuiFrameRequire(Self.Slot);
-    mutable var Empty: array of TuiArrangedEntry := [];
+    mutable var Empty: array of (TuiArrangedEntry) := [];
     TuiFrameEntries[Slot - 1] := Empty;
   end procedure;
 
@@ -67,14 +65,10 @@ public type TuiArrangedFrame = record
 ): integer;
   begin
     var Slot: integer := TuiFrameRequire(Self.Slot);
-    mutable var Entries: array of TuiArrangedEntry := TuiFrameEntries[Slot - 1];
+    mutable var Entries: array of (TuiArrangedEntry) := TuiFrameEntries[Slot - 1];
     var Index: integer := Arrays.Length(Entries);
     TuiFrameEntries[Slot - 1] := [];
-    Arrays.Push(Entries, record
-      ParentIndex := ParentIndex;
-      Bounds := Bounds;
-      Clip := Clip;
-    end record);
+    Arrays.Push(Entries, TuiArrangedEntry(ParentIndex := ParentIndex, Bounds := Bounds, Clip := Clip));
     TuiFrameEntries[Slot - 1] := Entries;
     return Index;
   end function;
@@ -85,7 +79,7 @@ public type TuiArrangedFrame = record
   // Parameters:
   // - `Self`: Receiver value operated on by the method.
   // - `Entries`: Arranged entries replacing the current frame contents.
-  public procedure ReplaceEntries(Self: TuiArrangedFrame; Entries: array of TuiArrangedEntry);
+  public procedure ReplaceEntries(Self: TuiArrangedFrame; Entries: array of (TuiArrangedEntry));
   begin
     var Slot: integer := TuiFrameRequire(Self.Slot);
     TuiFrameEntries[Slot - 1] := Entries;
@@ -109,7 +103,7 @@ public type TuiArrangedFrame = record
   public function EntryAt(Self: TuiArrangedFrame; Index: integer): TuiArrangedEntry;
   begin
     var Slot: integer := TuiFrameRequire(Self.Slot);
-    var Entries: array of TuiArrangedEntry := TuiFrameEntries[Slot - 1];
+    var Entries: array of (TuiArrangedEntry) := TuiFrameEntries[Slot - 1];
     if (Index < 0) or (Index >= Arrays.Length(Entries)) then
       begin
         panic('Tui arranged frame index is out of range');

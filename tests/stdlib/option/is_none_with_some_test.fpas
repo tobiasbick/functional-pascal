@@ -4,6 +4,6 @@ uses Std.Console as Console;
 uses Std.Options as Options;
 
 begin
-  var O: option of integer := Some(7);
+  var O: Option of (integer) := Option.Some(7);
   Console.WriteLn(Options.IsNone(O));
 end program;

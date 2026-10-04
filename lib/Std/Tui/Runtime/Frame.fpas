@@ -22,7 +22,7 @@ public procedure TuiRenderFrame(
   Surface: Surface2.TuiWorkingSurface;
   Frame: Frame2.TuiArrangedFrame;
   Root: Element.TuiElement;
-  Pressed: option of ControlId.TuiControlId
+  Pressed: Option of (ControlId.TuiControlId)
 );
 begin
   Validate.TuiElementValidate(Root);

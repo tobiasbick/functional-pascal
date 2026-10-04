@@ -39,11 +39,11 @@ export async function verifyVariantReplacement(
     "function ChoiceValue(Item: Choice): integer;",
     "begin",
     "  case Item of",
-    "    when Choice.Count(Value):",
+    "    when Choice.Count(const Value):",
     "    begin",
     "      return Value;",
     "    end;",
-    "    when Choice.Pair(Left, Right):",
+    "    when Choice.Pair(const Left, const Right):",
     "    begin",
     "      return Left + Right;",
     "    end;",
@@ -56,27 +56,27 @@ export async function verifyVariantReplacement(
     "",
     "begin",
     "  mutable var Selected: Choice := Choice.Count(1);",
-    "  mutable var Outcome: Result of integer, string := Ok(2);",
-    "  mutable var Optional: Option of integer := Some(3);",
+    "  mutable var Outcome: Result of (integer, string) := Result.Ok(2);",
+    "  mutable var Optional: Option of (integer) := Option.Some(3);",
     "  var Fixed: Choice := Choice.Count(9);",
     "  var StopMarker: integer := 0;",
     "  Console.WriteLn(ChoiceValue(Selected));",
     "  case Outcome of",
-    "    when Ok(Value):",
+    "    when Result.Ok(const Value):",
     "    begin",
     "      Console.WriteLn(Value);",
     "    end;",
-    "    when Error(Message):",
+    "    when Result.Error(const Message):",
     "    begin",
     "      Console.WriteLn(Message);",
     "    end;",
     "  end case;",
     "  case Optional of",
-    "    when Some(Value):",
+    "    when Option.Some(const Value):",
     "    begin",
     "      Console.WriteLn(Value);",
     "    end;",
-    "    when None:",
+    "    when Option.None:",
     "    begin",
     "      Console.WriteLn(0);",
     "    end;",
@@ -108,8 +108,8 @@ export async function verifyVariantReplacement(
     );
 
     await setLocal(session, "Selected", "Choice.Pair(10, 20)", "Choice.Pair");
-    await setExpression(session, "Outcome", "Error('fail')", "Error(...)");
-    await setExpression(session, "Optional", "None", "None");
+    await setExpression(session, "Outcome", "Result.Error('fail')", "Error(...)");
+    await setExpression(session, "Optional", "Option.None", "None");
 
     const selected = await namedVariable(session, "Locals", "Selected");
     assert.equal(selected.value, "Choice.Pair");

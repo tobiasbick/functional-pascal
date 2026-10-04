@@ -38,7 +38,11 @@ impl TypeTable {
                         type_error(&error.to_string(), synthetic_span(line, column))
                     })?,
                     name: name.clone(),
-                    ty: self.intern(ty, line, column)?,
+                    ty: if record.type_params.is_empty() {
+                        self.intern(ty, line, column)?
+                    } else {
+                        super::DYNAMIC
+                    },
                 })
             })
             .collect::<Result<Vec<_>, CompileError>>()?;
@@ -118,7 +122,16 @@ impl TypeTable {
                 let (field_names, fields): (Vec<_>, Vec<_>) = variant
                     .fields
                     .iter()
-                    .map(|(name, ty)| Ok((name.clone(), self.intern(ty, line, column)?)))
+                    .map(|(name, ty)| {
+                        Ok((
+                            name.clone(),
+                            if enumeration.type_params.is_empty() {
+                                self.intern(ty, line, column)?
+                            } else {
+                                super::DYNAMIC
+                            },
+                        ))
+                    })
                     .collect::<Result<Vec<_>, CompileError>>()?
                     .into_iter()
                     .unzip();

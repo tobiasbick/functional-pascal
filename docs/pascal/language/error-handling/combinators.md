@@ -13,8 +13,8 @@ begin
   return Conv.IntToStr(V * 2);
 end function;
 
-var R: result of integer, string := Ok(21);
-var M: result of string, string := Results.Map(R, DoubleToString);
+var R: result of (integer, string) := Result.Ok(21);
+var M: result of (string, string) := Results.Map(R, DoubleToString);
 
 // M = Ok('42')
 begin
@@ -28,17 +28,17 @@ program Example;
 uses Std.Options as Options;
 uses Std.Conv as Conv;
 
-function PositiveToString(V: integer): option of string;
+function PositiveToString(V: integer): option of (string);
 begin
   if V > 0 then
-    return Some(Conv.IntToStr(V));
+    return Option.Some(Conv.IntToStr(V));
   else
-    return None;
+    return Option.None;
   end if;
 end function;
 
-var O: option of integer := Some(5);
-var M: option of string := Options.AndThen(O, PositiveToString);
+var O: option of (integer) := Option.Some(5);
+var M: option of (string) := Options.AndThen(O, PositiveToString);
 
 // M = Some('5')
 begin
@@ -48,9 +48,9 @@ end program;
 
 | Combinator | Result | Option |
 |------------|--------|--------|
-| `Map(V, F)` | Transform `Ok` value | Transform `Some` value |
+| `Map(V, F)` | Transform `Result.Ok` value | Transform `Option.Some` value |
 | `AndThen(V, F)` | Chain fallible operation | Chain optional lookup |
-| `OrElse(V, F)` | Recover from `Error` | Provide fallback for `None` |
+| `OrElse(V, F)` | Recover from `Result.Error` | Provide fallback for `Option.None` |
 
 ## See also
 

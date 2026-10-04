@@ -8,14 +8,14 @@ uses Std.Conv as Conv;
 type Box = record
   Value: integer;
 
-  function Map<R>(Self: Box; F: function(X: integer): R): R;
+  function Map of (R)(Self: Box; F: function(X: integer): R): R;
   begin
     return F(Self.Value);
   end function;
 end record;
 
 type Accumulator = record
-  function EchoNumeric<T: Numeric>(Self: Accumulator; Extra: T): T;
+  function EchoNumeric of (T: Numeric)(Self: Accumulator; Extra: T): T;
   begin
     return Extra;
   end function;
@@ -27,13 +27,9 @@ begin
 end function;
 
 begin
-  var B: Box := record
-    Value := 42;
-  end record;
-
+  var B: Box := Box(Value := 42);
   Console.WriteLn(B.Map(ToText));
-  var A: Accumulator := record end record;
-
+  var A: Accumulator := Accumulator();
   Console.WriteLn('numeric int: ', Conv.IntToStr(A.EchoNumeric(21)));
   Console.WriteLn('numeric real ok: ', A.EchoNumeric(1.5) > 1.0);
 end program;

@@ -9,33 +9,33 @@ uses Std.Conv as Conv;
 
 begin
   case Parse.TryInt(' +1_024 ') of
-    when Ok(N):
+    when Result.Ok(const N):
       begin
         Console.WriteLn('try int: ', Conv.IntToStr(N));
       end;
-    when Error(M):
+    when Result.Error(const M):
       begin
         Console.WriteLn('try int error: ', M);
       end;
   end case;
 
   case Parse.TryReal('1_024.0e-2') of
-    when Ok(R):
+    when Result.Ok(const R):
       begin
         Console.WriteLn('try real: ', Conv.RealToStr(R));
       end;
-    when Error(M):
+    when Result.Error(const M):
       begin
         Console.WriteLn('try real error: ', M);
       end;
   end case;
 
   case Parse.TryBool(' FALSE ') of
-    when Ok(B):
+    when Result.Ok(const B):
       begin
         Console.WriteLn('try bool: ', Conv.BoolToStr(B));
       end;
-    when Error(M):
+    when Result.Error(const M):
       begin
         Console.WriteLn('try bool error: ', M);
       end;

@@ -7,11 +7,11 @@ uses Std.Results as Results;
 uses Std.Test as Test;
 uses Std.Arrays as Arrays;
 
-function BindListener(): result of Net.Listener, string;
+function BindListener(): Result of (Net.Listener, string);
 begin
   for Port: integer := 28100 to 28199 do
     begin
-      var Opened: result of Net.Listener, string := Net.Listen('127.0.0.1', Port);
+      var Opened: Result of (Net.Listener, string) := Net.Listen('127.0.0.1', Port);
       if Results.IsOk(Opened) then
         begin
           return Opened;
@@ -20,7 +20,7 @@ begin
     end;
   end for;
 
-  return Error('no test port available');
+  return Result.Error('no test port available');
 end function;
 
 begin

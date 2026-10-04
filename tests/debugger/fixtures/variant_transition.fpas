@@ -27,15 +27,15 @@ begin
       begin
         return 0;
       end;
-    when Choice.Count(Value):
+    when Choice.Count(const Value):
       begin
         return Value;
       end;
-    when Choice.Pair(Left, Right):
+    when Choice.Pair(const Left, const Right):
       begin
         return Left + Right;
       end;
-    when Choice.Nested(Item):
+    when Choice.Nested(const Item):
       begin
         return Item.X + Item.Y;
       end;
@@ -43,26 +43,21 @@ begin
 end function;
 
 begin
-  mutable var Origin: Point := record
-    X := 4;
-    Y := 5;
-  end record;
+  mutable var Origin: Point := Point(X := 4, Y := 5);
   mutable var Selected: Choice := Choice.Empty;
   mutable var PairValue: Choice := Choice.Pair(2, 3);
   mutable var EmptyValue: Choice := Choice.Empty;
   mutable var NestedValue: Choice := Choice.Nested(Origin);
-  mutable var Outcome: result of integer, string := Ok(6);
-  mutable var Failed: result of integer, string := Error('old');
-  mutable var Optional: option of integer := Some(7);
-  mutable var Missing: option of integer := None;
-  mutable var Packed: result of array of integer, string := Ok([8, 9]);
-  mutable var NestedOk: result of integer, string := Ok(11);
-  mutable var NestedResult: option of result of integer, string := Some(NestedOk);
-  mutable var PackedHolder: Holder := record
-    Item := Choice.Empty;
-  end record;
-  mutable var Items: array of Choice := [Choice.Empty];
-  mutable var Scores: dict of string to Choice := ['blue': Choice.Empty];
+  mutable var Outcome: Result of (integer, string) := Result.Ok(6);
+  mutable var Failed: Result of (integer, string) := Result.Error('old');
+  mutable var Optional: Option of (integer) := Option.Some(7);
+  mutable var Missing: Option of (integer) := Option.None;
+  mutable var Packed: Result of (array of (integer), string) := Result.Ok([8, 9]);
+  mutable var NestedOk: Result of (integer, string) := Result.Ok(11);
+  mutable var NestedResult: Option of (Result of (integer, string)) := Option.Some(NestedOk);
+  mutable var PackedHolder: Holder := Holder(Item := Choice.Empty);
+  mutable var Items: array of (Choice) := [Choice.Empty];
+  mutable var Scores: dict of (string, Choice) := ['blue': Choice.Empty];
   var Fixed: Choice := Choice.Count(99);
   var StopMarker: integer := 0;
   Console.WriteLn(ChoiceValue(Selected));
@@ -70,75 +65,75 @@ begin
   Console.WriteLn(ChoiceValue(EmptyValue));
   Console.WriteLn(ChoiceValue(NestedValue));
   case Outcome of
-    when Ok(Value):
+    when Result.Ok(const Value):
       begin
         Console.WriteLn(Value);
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
         Console.WriteLn(Message);
       end;
   end case;
 
   case Failed of
-    when Ok(Value):
+    when Result.Ok(const Value):
       begin
         Console.WriteLn(Value);
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
         Console.WriteLn(Message);
       end;
   end case;
 
   case Optional of
-    when Some(Value):
+    when Option.Some(const Value):
       begin
         Console.WriteLn(Value);
       end;
-    when None:
+    when Option.None:
       begin
         Console.WriteLn(0);
       end;
   end case;
 
   case Missing of
-    when Some(Value):
+    when Option.Some(const Value):
       begin
         Console.WriteLn(Value);
       end;
-    when None:
+    when Option.None:
       begin
         Console.WriteLn(0);
       end;
   end case;
 
   case Packed of
-    when Ok(Value):
+    when Result.Ok(const Value):
       begin
         Console.WriteLn(Value[1]);
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
         Console.WriteLn(Message);
       end;
   end case;
 
   case NestedResult of
-    when Some(Inner):
+    when Option.Some(const Inner):
       begin
         case Inner of
-          when Ok(Value):
+          when Result.Ok(const Value):
             begin
               Console.WriteLn(Value);
             end;
-          when Error(Message):
+          when Result.Error(const Message):
             begin
               Console.WriteLn(Message);
             end;
         end case;
       end;
-    when None:
+    when Option.None:
       begin
         Console.WriteLn(0);
       end;

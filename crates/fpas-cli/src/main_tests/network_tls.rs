@@ -42,22 +42,26 @@ fn https_client_rejects_untrusted_server_certificate() {
         &format!(
             r#"program HttpsUntrustedCertificate;
 
-uses Std.Console as Console; uses Std.Http as Http; uses Std.Str as Str;
+uses Std.Console as Console;
+uses Std.Http as Http;
+uses Std.Str as Str;
 
 begin
   case Http.Send(Http.Request.Get('https://localhost:{port}/')) of
-    when Ok(ResponseValue):
-    begin
-      panic('untrusted HTTPS server was accepted');
-    end;
-    when Error(Message):
-    begin
-      if not Str.Contains(Message, 'TLS handshake failed') then
+    when Result.Ok(const ResponseValue):
       begin
-        panic(Message);
-      end; end if;
-    end;
+        panic('untrusted HTTPS server was accepted');
+      end;
+    when Result.Error(const Message):
+      begin
+        if not Str.Contains(Message, 'TLS handshake failed') then
+          begin
+            panic(Message);
+          end;
+        end if;
+      end;
   end case;
+
   Console.WriteLn('ok');
 end program;
 "#

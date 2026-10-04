@@ -1,5 +1,6 @@
 use super::assert_succeeds;
 
+mod generic_forwarding;
 mod std_shadowing;
 
 #[test]
@@ -139,19 +140,21 @@ end program;
 #[test]
 fn record_fields_shadow_short_standard_constant_names() {
     assert_succeeds(
-        r#"
-program FieldConstantShadowing;
+        r#"program FieldConstantShadowing;
+
 uses Std.Console as Console;
 
-  type Channels = record
-    Red: integer;
-    Green: integer;
-    Blue: integer;
-  end record;
+type Channels = record
+  Red: integer;
+  Green: integer;
+  Blue: integer;
+end record;
+
 begin
-  var Value: Channels := record Red := 10; Green := 20; Blue := 30; end record;
+  var Value: Channels := Channels(Red := 10, Green := 20, Blue := 30);
   if Value.Red * 10000 + Value.Green * 100 + Value.Blue <> 102030 then
-    panic('record fields did not shadow standard constants'); end if;
+    panic('record fields did not shadow standard constants');
+  end if;
 end program;
 "#,
     );

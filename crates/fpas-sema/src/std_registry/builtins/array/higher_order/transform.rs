@@ -14,7 +14,7 @@ use super::super::super::callbacks::{
 };
 use super::super::{array_elem_ty, check_argument_count};
 
-/// `Std.Arrays.Map(Arr, F)` → `array of U` where `F: function(V: T): U`.
+/// `Std.Arrays.Map(Arr, F)` → `array of (U)` where `F: function(V: T): U`.
 pub(crate) fn check_map(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
     if !check_argument_count(
         c,
@@ -33,7 +33,7 @@ pub(crate) fn check_map(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
         c.error_with_code(
             SEMA_TYPE_MISMATCH,
             format!("`{}` first argument must be an array", s::STD_ARRAY_MAP),
-            "Pass `array of T`.",
+            "Pass `array of (T)`.",
             span,
         );
         return Ty::Error;
@@ -53,7 +53,7 @@ pub(crate) fn check_map(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
     }
 }
 
-/// `Std.Arrays.Filter(Arr, F)` → `array of T` where `F: function(V: T): boolean`.
+/// `Std.Arrays.Filter(Arr, F)` → `array of (T)` where `F: function(V: T): boolean`.
 pub(crate) fn check_filter(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
     if !check_argument_count(
         c,
@@ -72,7 +72,7 @@ pub(crate) fn check_filter(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
         c.error_with_code(
             SEMA_TYPE_MISMATCH,
             format!("`{}` first argument must be an array", s::STD_ARRAY_FILTER),
-            "Pass `array of T`.",
+            "Pass `array of (T)`.",
             span,
         );
         return Ty::Error;
@@ -114,7 +114,7 @@ pub(crate) fn check_reduce(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
         c.error_with_code(
             SEMA_TYPE_MISMATCH,
             format!("`{}` first argument must be an array", s::STD_ARRAY_REDUCE),
-            "Pass `array of T`.",
+            "Pass `array of (T)`.",
             span,
         );
         return Ty::Error;
@@ -137,14 +137,14 @@ pub(crate) fn check_reduce(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
     }
 }
 
-/// `Std.Arrays.FlatMap(Arr, F)` → `array of U` where `F: function(V: T): array of U`.
+/// `Std.Arrays.FlatMap(Arr, F)` → `array of (U)` where `F: function(V: T): array of (U)`.
 pub(crate) fn check_flat_map(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
     if !check_argument_count(
         c,
         s::STD_ARRAY_FLAT_MAP,
         2,
         args,
-        "Example: Std.Arrays.FlatMap(Arr, function(X: integer): array of integer begin ... end).",
+        "Example: Std.Arrays.FlatMap(Arr, function(X: integer): array of (integer) begin ... end).",
         span,
     ) {
         return Ty::Error;
@@ -159,7 +159,7 @@ pub(crate) fn check_flat_map(c: &mut Checker, args: &[&Expr], span: Span) -> Ty 
                 "`{}` first argument must be an array",
                 s::STD_ARRAY_FLAT_MAP
             ),
-            "Pass `array of T`.",
+            "Pass `array of (T)`.",
             span,
         );
         return Ty::Error;
@@ -171,7 +171,7 @@ pub(crate) fn check_flat_map(c: &mut Checker, args: &[&Expr], span: Span) -> Ty 
         &elem_ty,
         None,
         span,
-        "Pass a function(V: T): array of U.",
+        "Pass a function(V: T): array of (U).",
     ) {
         Some(return_ty) if return_ty.is_error() => Ty::Error,
         Some(return_ty) if array_elem_ty(&return_ty).is_some() => return_ty,
@@ -179,7 +179,7 @@ pub(crate) fn check_flat_map(c: &mut Checker, args: &[&Expr], span: Span) -> Ty 
             c.error_with_code(
                 SEMA_TYPE_MISMATCH,
                 format!("`{}` mapper must return an array", s::STD_ARRAY_FLAT_MAP),
-                "Pass a function(V: T): array of U.",
+                "Pass a function(V: T): array of (U).",
                 span,
             );
             Ty::Error

@@ -117,6 +117,21 @@ Other habits:
 - Control-flow bodies are statement lists with named closers. Explicit plain
   blocks retain `begin ... end;` and introduce a nested local scope.
 - Each conditional branch and each case arm has its own local scope.
+- Parenthesize every `of` list: `array of (T)`, `dict of (K, V)`,
+  `Option of (T)`, `Result of (T, E)` and `Pair of (K, V)`. Routine type
+  parameters use `function Identity of (T)(Value: T): T;`.
+  See [generics](../../../docs/pascal/language/types/generics.md).
+- Construct records with their visible type name and named fields:
+  `Point(X := 1, Y := 2)`. Only record construction accepts named arguments.
+  See [records](../../../docs/pascal/language/types/records.md).
+- Qualify every variant: `Choice.Found(Value)`, `Option.Some(Value)`,
+  `Option.None`, `Result.Ok(Value)` and `Result.Error(Message)`.
+  A payloadless variant is a value without parentheses.
+- Patterns bind with `const Name`; `_` ignores a payload. Plain identifiers
+  compare static constants. Closed enum cases explicitly cover every variant;
+  guards do not establish coverage. See [patterns](../../../docs/pascal/language/pattern-matching/README.md).
+- In value position, `if` and `case` branches contain one expression each.
+  Their result types must agree or satisfy the explicit expected type.
 - Unit declarations and record members are private by default. Write `public`
   directly before each exported declaration or member. `public` is valid in
   **units** only, not `program` files; `private` is an ordinary identifier.

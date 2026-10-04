@@ -1,17 +1,44 @@
 use super::*;
 
 const FACTORY: &str = r#"unit Demo.Factory;
+
 public type Handler = function(Value: integer): integer;
-public type Holder = record Hidden: Handler; public Apply: Handler; public Notify: procedure(); end record;
+
+public type Holder = record
+  Hidden: Handler;
+  public Apply: Handler;
+  public Notify: procedure();
+end record;
+
 public function Make(Base: integer): Handler;
-begin return function(Input: integer): integer begin return Base + Input; end function; end function;
+begin
+  return function(Input: integer): integer begin
+    return Base + Input;
+  end function;
+end function;
+
 public function Counter(mutable Count: integer): function(): integer;
-  function Next(): integer; begin Count := Count + 1; return Count; end function;
-begin return Next; end function;
-procedure Notify(); begin null; end procedure;
+function Next(): integer;
+begin
+  Count := Count + 1;
+  return Count;
+end function;
+begin
+  return Next;
+end function;
+
+procedure Notify();
+begin
+  null;
+end procedure;
+
 public function Create(): Holder;
-begin return record Hidden := Make(0); Apply := Make(30); Notify := Notify; end record; end function;
-end unit;"#;
+begin
+  return Holder(Hidden := Make(0), Apply := Make(30), Notify := Notify);
+end function;
+
+end unit;
+"#;
 
 #[test]
 fn imported_returned_and_field_callables_run_through_the_cli() {
@@ -25,7 +52,7 @@ fn imported_returned_and_field_callables_run_through_the_cli() {
 uses Demo.Factory as Factory; uses Std.Console as Console;
 begin
   Console.WriteLn(Factory.Make(3)(5));
-  var Functions: array of Factory.Handler := [Factory.Make(40)];
+  var Functions: array of (Factory.Handler) := [Factory.Make(40)];
   Console.WriteLn(Functions[0](2));
   Console.WriteLn(Factory.Create().Apply(12));
   (Factory.Create().Notify)();

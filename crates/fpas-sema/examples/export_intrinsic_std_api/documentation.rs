@@ -168,7 +168,7 @@ mod tests {
     fn callback_parameters_are_not_outer_parameters() {
         assert_eq!(
             parameter_names(
-                "Reduce(D: dict of K to V; Init: U; F: function(Acc: U; Key: K; Value: V): U): U"
+                "Reduce(D: dict of (K, V); Init: U; F: function(Acc: U; Key: K; Value: V): U): U"
             ),
             Some(vec!["D".to_owned(), "Init".to_owned(), "F".to_owned()])
         );

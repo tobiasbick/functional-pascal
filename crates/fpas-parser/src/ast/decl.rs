@@ -1,5 +1,6 @@
 use super::{Expr, FunctionDecl, ProcedureDecl, TypeExpr};
 use fpas_lexer::Span;
+use std::sync::Arc;
 
 /// Visibility of a declaration or record member.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -89,6 +90,8 @@ pub struct TypeParam {
 pub struct TypeDef {
     /// The defined type name.
     pub name: String,
+    /// Generic parameters in declaration order.
+    pub type_params: Vec<TypeParam>,
     /// The type body assigned to the name.
     pub body: TypeBody,
     /// The declaration visibility.
@@ -209,9 +212,9 @@ pub struct FieldDef {
     pub type_expr: TypeExpr,
     /// Member visibility; private when no modifier was written.
     pub visibility: Visibility,
-    /// Optional default expression used when the field is omitted from a record literal.
-    /// Only valid on a named record type definition, not on anonymous literals.
-    pub default_value: Option<Expr>,
+    /// Optional default expression used when the field is omitted from a record construction.
+    /// Shared ownership preserves semantic node identities through default expansion.
+    pub default_value: Option<Arc<Expr>>,
     /// The source span covering the field declaration.
     pub span: Span,
 }

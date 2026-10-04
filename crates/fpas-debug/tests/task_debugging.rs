@@ -223,7 +223,7 @@ uses Std.Console as Console; uses Std.Tasks as Tasks;
 
 function Work(): integer;
 begin
-  mutable var Scores: dict of string to integer := ['Seed': 1];
+  mutable var Scores: dict of (string, integer) := ['Seed': 1];
   var Marker: integer := Scores['Seed'];
   return Scores['Added'] + Marker;
 end function;
@@ -291,7 +291,7 @@ begin
   go Detached();
   var First: task := go Work(20);
   var Second: task := go Work(22);
-  var Pending: array of task := [First, Second, First];
+  var Pending: array of (task) := [First, Second, First];
   Tasks.WaitAll(Pending);
   Console.WriteLn(Tasks.Wait(First));
   Console.WriteLn(Tasks.Wait(Second));

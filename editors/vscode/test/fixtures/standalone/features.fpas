@@ -1,13 +1,12 @@
 // Representative valid editor fixture.
 program EditorFeatures;
 
- uses Std.Console as Console;
+uses Std.Console as Console;
 
-
-  type Greeting = record
-    Text: string;
-    Count: integer;
-  end record;
+type Greeting = record
+  Text: string;
+  Count: integer;
+end record;
 
 function RenderGreeting(Value: Greeting): string;
 begin
@@ -16,7 +15,7 @@ end function;
 
 begin
   // Unicode text is valid inside a UTF-8 string.
-  var Message: Greeting := record Text := 'Grüße aus 東京 🙂'; Count := 1; end record;
+  var Message: Greeting := Greeting(Text := 'Grüße aus 東京 🙂', Count := 1);
   // The record and function are intentionally used by the fixture.
   // Keep a line-comment token in the positive fixture.
   Console.WriteLn(RenderGreeting(Message));

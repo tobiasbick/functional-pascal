@@ -8,20 +8,22 @@ function UpdateFrames(State: integer; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): i
 begin
   Cmd.Set(Tui.TuiCmd.NoCommand);
   case Msg of
-    when Tui.TuiMsg.Tick(Delta):
+    when Tui.TuiMsg.Tick(const Delta):
       begin
         return State + 1;
       end;
-    else
+    when Tui.TuiMsg.Started, Tui.TuiMsg.Key(_), Tui.TuiMsg.Pointer(_), Tui.TuiMsg.Resize(_), Tui.TuiMsg.FocusChanged(_, _), Tui.TuiMsg.Action(_, _), Tui.TuiMsg.TextChanged(_, _, _, _), Tui.TuiMsg.TextAreaChanged(_, _, _, _, _), Tui.TuiMsg.CheckChanged(_, _, _), Tui.TuiMsg.SelectionChanged(_, _, _), Tui.TuiMsg.ScrollChanged(_, _, _), Tui.TuiMsg.MenuChanged(_, _, _), Tui.TuiMsg.BackgroundFailed(_, _, _, _, _, _), Tui.TuiMsg.QuitRequested:
       begin
-        return State;
+        begin
+          return State;
+        end;
       end;
   end case;
 end function;
 
 function ViewFrames(State: integer): Tui.TuiElement;
 begin
-  mutable var Children: array of Tui.TuiElement := [];
+  mutable var Children: array of (Tui.TuiElement) := [];
   for Index: integer := 1 to 32 do
     begin
       Arrays.Push(Children, Tui.TuiElementBuilders.MakeLabel('row'));
@@ -34,9 +36,9 @@ begin
     end;
   end for;
 
-  return Tui.TuiElementBuilders.MakeDesktop(Some(Tui.TuiControlId.Create(1)), [
-                                                                                Tui.TuiElementBuilders.MakePanel('Repeated frames', [Tui.TuiElementBuilders.MakeColumn(Children)])
-                                                                              ]);
+  return Tui.TuiElementBuilders.MakeDesktop(Option.Some(Tui.TuiControlId.Create(1)), [
+                                                                                       Tui.TuiElementBuilders.MakePanel('Repeated frames', [Tui.TuiElementBuilders.MakeColumn(Children)])
+                                                                                     ]);
 end function;
 
 begin

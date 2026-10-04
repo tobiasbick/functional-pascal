@@ -34,7 +34,7 @@ fn controlled_wait_any_preserves_worker_failure() {
 
 #[test]
 fn wait_any_rejects_an_empty_task_array() {
-    let error = run_program(r#"program EmptyWaitAny;  uses Std.Tasks as Tasks2; begin var Tasks: array of task := []; discard Tasks2.WaitAny(Tasks); end program;"#).expect_err("empty list");
+    let error = run_program(r#"program EmptyWaitAny;  uses Std.Tasks as Tasks2; begin var Tasks: array of (task) := []; discard Tasks2.WaitAny(Tasks); end program;"#).expect_err("empty list");
     assert_eq!(error.code, fpas_diagnostics::codes::RUNTIME_INVALID_TASK);
     assert!(error.message.contains("between 1 and 1048576"));
 }

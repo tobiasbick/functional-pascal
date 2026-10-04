@@ -5,14 +5,7 @@ uses Std.Tui as Tui;
 
 function MakeKey(Kind: Tui.TuiKeyKind; Character: string): Tui.TuiKeyEvent;
 begin
-  return record
-    kind := Kind;
-    ch := Character;
-    shift := false;
-    ctrl := false;
-    alt := false;
-    meta := false;
-  end record;
+  return Tui.TuiKeyEvent(kind := Kind, ch := Character, shift := false, ctrl := false, alt := false, meta := false);
 end function;
 
 begin
@@ -21,113 +14,119 @@ begin
   mutable var Focus: integer := 1;
   Model := App.RunIterations(Model, function(State: integer; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): integer begin
     case Msg of
-      when Tui.TuiMsg.FocusChanged(Previous, Current):
+      when Tui.TuiMsg.FocusChanged(const Previous, const Current):
         begin
           case Current of
-            when Some(Id):
+            when Option.Some(const Id):
               begin
                 Focus := Id.Value;
                 return State;
               end;
-            when None:
+            when Option.None:
               begin
                 return State;
               end;
           end case;
         end;
-      when Tui.TuiMsg.Action(Source, Action):
+      when Tui.TuiMsg.Action(const Source, const Action):
         begin
           return State + Action.Value;
         end;
-      else
+      when Tui.TuiMsg.Started, Tui.TuiMsg.Key(_), Tui.TuiMsg.Pointer(_), Tui.TuiMsg.Tick(_), Tui.TuiMsg.Resize(_), Tui.TuiMsg.TextChanged(_, _, _, _), Tui.TuiMsg.TextAreaChanged(_, _, _, _, _), Tui.TuiMsg.CheckChanged(_, _, _), Tui.TuiMsg.SelectionChanged(_, _, _), Tui.TuiMsg.ScrollChanged(_, _, _), Tui.TuiMsg.MenuChanged(_, _, _), Tui.TuiMsg.BackgroundFailed(_, _, _, _, _, _), Tui.TuiMsg.QuitRequested:
         begin
-          return State;
+          begin
+            return State;
+          end;
         end;
     end case;
   end function, function(State: integer): Tui.TuiElement begin
-    return Tui.TuiElementBuilders.MakeDesktop(Some(Tui.TuiControlId.Create(Focus)), [
-                                                                                      Tui.TuiElementBuilders.MakePanel('Host', [
-                                                                                                                                 Tui.TuiElementBuilders.MakeRow([
-                                                                                                                                                                  Tui.TuiElementBuilders.MakeButton(Tui.TuiControlId.Create(1), 'One', Tui.TuiAction.Create(1)),
-                                                                                                                                                                  Tui.TuiElementBuilders.MakeButton(Tui.TuiControlId.Create(2), 'Two', Tui.TuiAction.Create(2))
-                                                                                                                                                                ])
-                                                                                                                               ])
-                                                                                    ]);
+    return Tui.TuiElementBuilders.MakeDesktop(Option.Some(Tui.TuiControlId.Create(Focus)), [
+                                                                                             Tui.TuiElementBuilders.MakePanel('Host', [
+                                                                                                                                        Tui.TuiElementBuilders.MakeRow([
+                                                                                                                                                                         Tui.TuiElementBuilders.MakeButton(Tui.TuiControlId.Create(1), 'One', Tui.TuiAction.Create(1)),
+                                                                                                                                                                         Tui.TuiElementBuilders.MakeButton(Tui.TuiControlId.Create(2), 'Two', Tui.TuiAction.Create(2))
+                                                                                                                                                                       ])
+                                                                                                                                      ])
+                                                                                           ]);
   end function, 0, 0);
   Test.AssertEquals(0, Model);
   Test.AssertEquals(1, Focus);
   App.InjectKeyForTest(MakeKey(Tui.TuiKeyKind.Tab, ''));
   Model := App.RunIterations(Model, function(State: integer; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): integer begin
     case Msg of
-      when Tui.TuiMsg.FocusChanged(Previous, Current):
+      when Tui.TuiMsg.FocusChanged(const Previous, const Current):
         begin
           case Current of
-            when Some(Id):
+            when Option.Some(const Id):
               begin
                 Focus := Id.Value;
                 return State;
               end;
-            when None:
+            when Option.None:
               begin
                 return State;
               end;
           end case;
         end;
-      when Tui.TuiMsg.Action(Source, Action):
+      when Tui.TuiMsg.Action(const Source, const Action):
         begin
           return State + Action.Value;
         end;
-      else
+      when Tui.TuiMsg.Started, Tui.TuiMsg.Key(_), Tui.TuiMsg.Pointer(_), Tui.TuiMsg.Tick(_), Tui.TuiMsg.Resize(_), Tui.TuiMsg.TextChanged(_, _, _, _), Tui.TuiMsg.TextAreaChanged(_, _, _, _, _), Tui.TuiMsg.CheckChanged(_, _, _), Tui.TuiMsg.SelectionChanged(_, _, _), Tui.TuiMsg.ScrollChanged(_, _, _), Tui.TuiMsg.MenuChanged(_, _, _), Tui.TuiMsg.BackgroundFailed(_, _, _, _, _, _), Tui.TuiMsg.QuitRequested:
         begin
-          return State;
+          begin
+            return State;
+          end;
         end;
     end case;
   end function, function(State: integer): Tui.TuiElement begin
-    return Tui.TuiElementBuilders.MakeDesktop(Some(Tui.TuiControlId.Create(Focus)), [
-                                                                                      Tui.TuiElementBuilders.MakePanel('Host', [
-                                                                                                                                 Tui.TuiElementBuilders.MakeRow([
-                                                                                                                                                                  Tui.TuiElementBuilders.MakeButton(Tui.TuiControlId.Create(1), 'One', Tui.TuiAction.Create(1)),
-                                                                                                                                                                  Tui.TuiElementBuilders.MakeButton(Tui.TuiControlId.Create(2), 'Two', Tui.TuiAction.Create(2))
-                                                                                                                                                                ])
-                                                                                                                               ])
-                                                                                    ]);
+    return Tui.TuiElementBuilders.MakeDesktop(Option.Some(Tui.TuiControlId.Create(Focus)), [
+                                                                                             Tui.TuiElementBuilders.MakePanel('Host', [
+                                                                                                                                        Tui.TuiElementBuilders.MakeRow([
+                                                                                                                                                                         Tui.TuiElementBuilders.MakeButton(Tui.TuiControlId.Create(1), 'One', Tui.TuiAction.Create(1)),
+                                                                                                                                                                         Tui.TuiElementBuilders.MakeButton(Tui.TuiControlId.Create(2), 'Two', Tui.TuiAction.Create(2))
+                                                                                                                                                                       ])
+                                                                                                                                      ])
+                                                                                           ]);
   end function, 1, 0);
   Test.AssertEquals(2, Focus);
   App.InjectKeyForTest(MakeKey(Tui.TuiKeyKind.Enter, ''));
   Model := App.RunIterations(Model, function(State: integer; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): integer begin
     case Msg of
-      when Tui.TuiMsg.FocusChanged(Previous, Current):
+      when Tui.TuiMsg.FocusChanged(const Previous, const Current):
         begin
           case Current of
-            when Some(Id):
+            when Option.Some(const Id):
               begin
                 Focus := Id.Value;
                 return State;
               end;
-            when None:
+            when Option.None:
               begin
                 return State;
               end;
           end case;
         end;
-      when Tui.TuiMsg.Action(Source, Action):
+      when Tui.TuiMsg.Action(const Source, const Action):
         begin
           return State + Action.Value;
         end;
-      else
+      when Tui.TuiMsg.Started, Tui.TuiMsg.Key(_), Tui.TuiMsg.Pointer(_), Tui.TuiMsg.Tick(_), Tui.TuiMsg.Resize(_), Tui.TuiMsg.TextChanged(_, _, _, _), Tui.TuiMsg.TextAreaChanged(_, _, _, _, _), Tui.TuiMsg.CheckChanged(_, _, _), Tui.TuiMsg.SelectionChanged(_, _, _), Tui.TuiMsg.ScrollChanged(_, _, _), Tui.TuiMsg.MenuChanged(_, _, _), Tui.TuiMsg.BackgroundFailed(_, _, _, _, _, _), Tui.TuiMsg.QuitRequested:
         begin
-          return State;
+          begin
+            return State;
+          end;
         end;
     end case;
   end function, function(State: integer): Tui.TuiElement begin
-    return Tui.TuiElementBuilders.MakeDesktop(Some(Tui.TuiControlId.Create(Focus)), [
-                                                                                      Tui.TuiElementBuilders.MakePanel('Host', [
-                                                                                                                                 Tui.TuiElementBuilders.MakeRow([
-                                                                                                                                                                  Tui.TuiElementBuilders.MakeButton(Tui.TuiControlId.Create(1), 'One', Tui.TuiAction.Create(1)),
-                                                                                                                                                                  Tui.TuiElementBuilders.MakeButton(Tui.TuiControlId.Create(2), 'Two', Tui.TuiAction.Create(2))
-                                                                                                                                                                ])
-                                                                                                                               ])
-                                                                                    ]);
+    return Tui.TuiElementBuilders.MakeDesktop(Option.Some(Tui.TuiControlId.Create(Focus)), [
+                                                                                             Tui.TuiElementBuilders.MakePanel('Host', [
+                                                                                                                                        Tui.TuiElementBuilders.MakeRow([
+                                                                                                                                                                         Tui.TuiElementBuilders.MakeButton(Tui.TuiControlId.Create(1), 'One', Tui.TuiAction.Create(1)),
+                                                                                                                                                                         Tui.TuiElementBuilders.MakeButton(Tui.TuiControlId.Create(2), 'Two', Tui.TuiAction.Create(2))
+                                                                                                                                                                       ])
+                                                                                                                                      ])
+                                                                                           ]);
   end function, 1, 0);
   Test.AssertEquals(2, Model);
   App.Close();

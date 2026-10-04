@@ -2,7 +2,7 @@
 
 Enums define a set of named constants, optionally with explicit integer backing values.
 
-Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`enum_type`, `enum_pattern`).
+Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`enum_type`, `pattern`).
 
 ## Simple enum
 
@@ -17,17 +17,14 @@ end enum;
 Using:
 
 ```pascal
-uses Std.Console as Console;
-
-var C: Console.Color := Console.Color.Red;
+var C: Color := Color.Red;
 ```
 
-Local variant names such as `Red` may also resolve if the short name is unique.
-If two local enums define the same variant name, use qualified names such as
-`Color.Red` and `Status.Red`. A local type declaration with the same short name
-hides the variant's short name; the variant stays reachable as `Type.Variant`.
-Imported types and variants always require their explicit import alias, for
-example `Palette.Color.Red` after `uses App.Palette as Palette;`.
+Every variant reference names its declaring type, such as `Color.Red` or
+`Status.Red`. A plain `Red` never resolves by searching visible enum declarations,
+even when the expected type is known or only one enum declares that name.
+Imported variants use their explicit import alias, for example `Palette.Color.Red`
+after `uses App.Palette as Palette;`. The same names are required in patterns.
 
 ## Enum with backing values
 
@@ -79,6 +76,19 @@ var P: Shape := Shape.Point;
 
 ```
 
+Enums may declare [generic parameters](generics.md#generic-records-and-enums).
+Payloads and the expected type determine their arguments:
+
+```pascal
+type Lookup of (T) = enum Found(Value: T); Missing; end enum;
+var Present: Lookup of (integer) := Lookup.Found(42);
+var Absent: Lookup of (integer) := Lookup.Missing;
+```
+
+Every argument must be determined. A payloadless variant is a value;
+`Lookup.Missing()` is invalid. Generic arguments preserve nominal type identity,
+including when a concrete application is reexported through an alias.
+
 Destructuring uses `case`:
 
 ```pascal
@@ -109,7 +119,7 @@ separate fields rather than terminate the list. Consequently, `Point()` and
 A variant uses either backing values or associated data fields, not both on the same variant.
 
 Variant names must be ordinary identifiers. Reserved words remain reserved after a type
-qualifier, so declarations such as `None` and member expressions such as `KeyKind.End` are
+qualifier, so declarations such as `Option.None` and member expressions such as `KeyKind.End` are
 not valid. Choose an identifier-safe API name such as `NoCommand`, `Empty`, or `EndKey`.
 
 ## See also

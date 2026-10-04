@@ -11,7 +11,7 @@ begin
 end procedure;
 
 begin
-  mutable var Tasks: array of task := [];
+  mutable var Tasks: array of (task) := [];
   var Started: integer := Time.MonotonicMillis();
   for I: integer := 1 to 8 do
     begin

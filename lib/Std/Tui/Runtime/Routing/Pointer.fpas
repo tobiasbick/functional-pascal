@@ -17,9 +17,9 @@ uses Std.Tui.Runtime.Routing.TextArea as TextArea;
 uses Std.Tui.Text.Input as Input2;
 
 function TuiRoutePointerFocusMessages(
-  Previous: option of ControlId.TuiControlId;
+  Previous: Option of (ControlId.TuiControlId);
   Target: ControlId.TuiControlId
-): array of Msg.TuiMsg;
+): array of (Msg.TuiMsg);
 begin
   if Focus.TuiFocusMatches(Previous, Target) then
     begin
@@ -27,10 +27,10 @@ begin
     end;
   end if;
 
-  return [Msg.TuiMsg.FocusChanged(Previous, Some(Target))];
+  return [Msg.TuiMsg.FocusChanged(Previous, Option.Some(Target))];
 end function;
 
-function TuiIdlePointerResult(ApplicationId: integer; Messages: array of Msg.TuiMsg): array of Msg.TuiMsg;
+function TuiIdlePointerResult(ApplicationId: integer; Messages: array of (Msg.TuiMsg)): array of (Msg.TuiMsg);
 begin
   ButtonCapture.TuiButtonCaptureRelease(ApplicationId);
   return Messages;
@@ -38,10 +38,10 @@ end function;
 
 function TuiCapturedPointerResult(
   ApplicationId: integer;
-  Messages: array of Msg.TuiMsg;
+  Messages: array of (Msg.TuiMsg);
   Button: Button2.TuiButtonSpec;
   Inside: boolean
-): array of Msg.TuiMsg;
+): array of (Msg.TuiMsg);
 begin
   ButtonCapture.TuiButtonCaptureSet(ApplicationId, Button, Inside);
   return Messages;
@@ -55,13 +55,15 @@ function TuiPointerInsideCapturedButton(
 ): boolean;
 begin
   case PointerHit.TuiPointerHitAt(Frame, Root, Position) of
-    when PointerHit.TuiPointerHit.ElementButton(Hit):
+    when PointerHit.TuiPointerHit.ElementButton(const Hit):
       begin
         return Hit.Id.Value = Button.Id.Value;
       end;
-    else
+    when PointerHit.TuiPointerHit.Miss, PointerHit.TuiPointerHit.ImmediateButton(_, _), PointerHit.TuiPointerHit.Input(_, _), PointerHit.TuiPointerHit.TextArea(_, _, _, _, _), PointerHit.TuiPointerHit.CheckBox(_, _, _), PointerHit.TuiPointerHit.List(_, _, _, _), PointerHit.TuiPointerHit.Scroll(_):
       begin
-        return false;
+        begin
+          return false;
+        end;
       end;
   end case;
 end function;
@@ -85,7 +87,7 @@ end procedure;
 //
 // Parameters:
 // - `ApplicationId`: Identifier of the application-owned routing state.
-public function TuiPointerRoutingPressed(ApplicationId: integer): option of ControlId.TuiControlId;
+public function TuiPointerRoutingPressed(ApplicationId: integer): Option of (ControlId.TuiControlId);
 begin
   return ButtonCapture.TuiButtonCapturePressed(ApplicationId);
 end function;
@@ -102,7 +104,7 @@ public function TuiRouteApplicationPointer(
   ApplicationId: integer;
   Root: Element.TuiElement;
   Frame: Frame2.TuiArrangedFrame
-): array of Msg.TuiMsg;
+): array of (Msg.TuiMsg);
 begin
   var PointerAction: Console.MouseAction := Pointer.Action;
   var PointerButton: PointerEvent.TuiPointerButton := Pointer.Button;
@@ -113,7 +115,7 @@ begin
   var PointerMeta: boolean := Pointer.Meta;
   Focus.TuiRouteRequireMatchingFrame(Frame, Root);
   case ButtonCapture.TuiButtonCaptureGet(ApplicationId) of
-    when ButtonCapture.TuiButtonPressState.Captured(Button, PreviousInside):
+    when ButtonCapture.TuiButtonPressState.Captured(const Button, const PreviousInside):
       begin
         var Inside: boolean := TuiPointerInsideCapturedButton(Root, Frame, PointerPosition, Button);
         if PointerAction = Console.MouseAction.Up then
@@ -147,11 +149,11 @@ begin
     begin
       case MenuPointer2.TuiRouteMenuPointer(Root, Frame, PointerPosition, PointerAction =
                                                                           Console.MouseAction.Down) of
-        when Some(Messages):
+        when Option.Some(const Messages):
           begin
             return TuiIdlePointerResult(ApplicationId, Messages);
           end;
-        when None:
+        when Option.None:
           begin
             null;
           end;
@@ -167,7 +169,7 @@ begin
                                                  ]);
     end;
   end if;
-  var Previous: option of ControlId.TuiControlId := Focus.TuiRootFocus(Root);
+  var Previous: Option of (ControlId.TuiControlId) := Focus.TuiRootFocus(Root);
   case PointerHit.TuiPointerHitAt(Frame, Root, PointerPosition) of
     when PointerHit.TuiPointerHit.Miss:
       begin
@@ -175,20 +177,20 @@ begin
                                                      Msg.TuiMsg.Pointer(PointerEvent.TuiPointerEvent.WithModifiers(PointerAction, PointerButton, PointerPosition, PointerShift, PointerCtrl, PointerAlt, PointerMeta))
                                                    ]);
       end;
-    when PointerHit.TuiPointerHit.ElementButton(Button):
+    when PointerHit.TuiPointerHit.ElementButton(const Button):
       begin
-        var Messages: array of Msg.TuiMsg := Arrays.Concat(TuiRoutePointerFocusMessages(Previous, Button.Id), [
-                                                                                                                Msg.TuiMsg.Pointer(PointerEvent.TuiPointerEvent.WithModifiers(PointerAction, PointerButton, PointerPosition, PointerShift, PointerCtrl, PointerAlt, PointerMeta))
-                                                                                                              ]);
+        var Messages: array of (Msg.TuiMsg) := Arrays.Concat(TuiRoutePointerFocusMessages(Previous, Button.Id), [
+                                                                                                                  Msg.TuiMsg.Pointer(PointerEvent.TuiPointerEvent.WithModifiers(PointerAction, PointerButton, PointerPosition, PointerShift, PointerCtrl, PointerAlt, PointerMeta))
+                                                                                                                ]);
         return TuiCapturedPointerResult(ApplicationId, Messages, Button, true);
       end;
-    when PointerHit.TuiPointerHit.ImmediateButton(Id, Action):
+    when PointerHit.TuiPointerHit.ImmediateButton(const Id, const Action):
       begin
         return TuiIdlePointerResult(ApplicationId, Arrays.Concat(TuiRoutePointerFocusMessages(Previous, Id), [
                                                                                                                Msg.TuiMsg.Action(Id, Action)
                                                                                                              ]));
       end;
-    when PointerHit.TuiPointerHit.Input(Input, Bounds):
+    when PointerHit.TuiPointerHit.Input(const Input, const Bounds):
       begin
         var Viewport: Input2.TuiInputViewport := Input2.TuiInputViewportFor(Input.Text, Input.Caret, Bounds.Width -
                                                                                                      2);
@@ -198,21 +200,21 @@ begin
                                                                                                                      Msg.TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Input.Text, Caret)
                                                                                                                    ]));
       end;
-    when PointerHit.TuiPointerHit.TextArea(Id, Action, Text, Offset, Bounds):
+    when PointerHit.TuiPointerHit.TextArea(const Id, const Action, const Text, const Offset, const Bounds):
       begin
         return TuiIdlePointerResult(ApplicationId, Arrays.Concat(TuiRoutePointerFocusMessages(Previous, Id), [
                                                                                                                TextArea.TuiRouteTextAreaPointer(Id, Text, Offset, Action, Bounds, PointerPosition)
                                                                                                              ]));
       end;
-    when PointerHit.TuiPointerHit.CheckBox(Id, Action, Checked):
+    when PointerHit.TuiPointerHit.CheckBox(const Id, const Action, const Checked):
       begin
         return TuiIdlePointerResult(ApplicationId, Arrays.Concat(TuiRoutePointerFocusMessages(Previous, Id), [
                                                                                                                Msg.TuiMsg.CheckChanged(Id, Action, not Checked)
                                                                                                              ]));
       end;
-    when PointerHit.TuiPointerHit.List(Id, Action, CurrentSelected, Proposed):
+    when PointerHit.TuiPointerHit.List(const Id, const Action, const CurrentSelected, const Proposed):
       begin
-        var FocusMessages: array of Msg.TuiMsg := TuiRoutePointerFocusMessages(Previous, Id);
+        var FocusMessages: array of (Msg.TuiMsg) := TuiRoutePointerFocusMessages(Previous, Id);
         if Proposed = CurrentSelected then
           begin
             if Arrays.Length(FocusMessages) = 0 then
@@ -231,9 +233,9 @@ begin
                                                                                   Msg.TuiMsg.SelectionChanged(Id, Action, Proposed)
                                                                                 ]));
       end;
-    when PointerHit.TuiPointerHit.Scroll(Id):
+    when PointerHit.TuiPointerHit.Scroll(const Id):
       begin
-        var FocusMessages: array of Msg.TuiMsg := TuiRoutePointerFocusMessages(Previous, Id);
+        var FocusMessages: array of (Msg.TuiMsg) := TuiRoutePointerFocusMessages(Previous, Id);
         if Arrays.Length(FocusMessages) = 0 then
           begin
             return TuiIdlePointerResult(ApplicationId, [

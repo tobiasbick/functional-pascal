@@ -15,6 +15,7 @@ pub(in crate::check) struct TypeCollection {
     pending: HashMap<String, TypeDef>,
     resolving: Vec<(String, bool)>,
     accepted: HashSet<(u32, usize)>,
+    dictionary_keys: Vec<(Ty, fpas_lexer::Span)>,
     /// Whether type bodies are being resolved before ordered declarations.
     pub(in crate::check) collecting: bool,
 }
@@ -56,6 +57,12 @@ impl Checker {
             }
         }
         self.type_collection.collecting = previous;
+        if !previous {
+            for (key, span) in std::mem::take(&mut self.type_collection.dictionary_keys) {
+                self.check_dictionary_key_type(&key, span);
+            }
+        }
+        self.validate_finite_type_headers(declarations);
     }
 
     /// Resolve a collected type lazily, preserving nominal recursion and rejecting alias cycles.
@@ -88,7 +95,9 @@ impl Checker {
             canonical.clone(),
             matches!(definition.body, TypeBody::Alias(_)),
         ));
+        let outer_scopes = self.scopes.suspend_nested_scopes();
         self.check_type_def(&definition);
+        self.scopes.restore_nested_scopes(outer_scopes);
         self.type_collection.resolving.pop();
         self.type_collection.pending.remove(&canonical);
     }
@@ -98,5 +107,42 @@ impl Checker {
         self.type_collection
             .accepted
             .contains(&(definition.span.source_id, definition.span.offset))
+    }
+}
+
+impl TypeCollection {
+    /// Delay component checks until all forward nominal declarations are available.
+    pub(in crate::check) fn defer_dictionary_key(
+        &mut self,
+        key: &Ty,
+        span: fpas_lexer::Span,
+    ) -> bool {
+        if !self.collecting {
+            return false;
+        }
+        self.dictionary_keys.push((key.clone(), span));
+        true
+    }
+
+    /// Expose parameter declarations while a recursive nominal header is pending.
+    pub(in crate::check) fn pending_type_params(
+        &self,
+        name: &str,
+    ) -> Option<Vec<crate::types::GenericParamDef>> {
+        self.pending
+            .get(&name.to_ascii_lowercase())
+            .map(|definition| {
+                definition
+                    .type_params
+                    .iter()
+                    .map(|parameter| crate::types::GenericParamDef {
+                        name: parameter.name.clone(),
+                        constraint: parameter
+                            .constraint
+                            .as_deref()
+                            .and_then(crate::types::TypeConstraint::from_name),
+                    })
+                    .collect()
+            })
     }
 }

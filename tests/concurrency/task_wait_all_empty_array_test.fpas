@@ -4,7 +4,7 @@ uses Std.Console as Console;
 uses Std.Tasks as Tasks2;
 
 begin
-  var Tasks: array of task := [];
+  var Tasks: array of (task) := [];
   Tasks2.WaitAll(Tasks);
   Console.WriteLn('ok');
 end program;

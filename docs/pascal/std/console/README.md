@@ -64,7 +64,7 @@ Everything below requires `uses Std.Console as Console;`.
 | procedure | `BeginFrame()` | begin or nest a deferred screen frame |
 | procedure | `Present()` | complete a frame level; outermost call flushes |
 | procedure | `PutCell(X, Y, Value)` | paint one cell at absolute 1-based coordinates |
-| function | `GetCell(X, Y): Option of Cell` | read a cell; `None` outside the screen or on a wide continuation |
+| function | `GetCell(X, Y): Option of (Cell)` | read a cell; `Option.None` outside the screen or on a wide continuation |
 | procedure | `FillRect(Bounds, Value)` | fill a clipped absolute rectangle |
 | procedure | `WriteCells(X, Y, Values)` | paint a cell array from left to right |
 | function | `SaveRegion(Bounds): SavedRegion` | capture a clipped region in a one-shot handle |
@@ -72,7 +72,7 @@ Everything below requires `uses Std.Console as Console;`.
 | procedure | `DiscardRegion(Region)` | consume a saved region without restoring |
 | function | `DisplayWidth(Text): integer` | Unicode terminal-column width |
 | function | `GraphemeWidth(Glyph): integer` | Validate and measure one renderable grapheme |
-| function | `SplitGraphemes(Text): array of string` | Split text into extended grapheme clusters |
+| function | `SplitGraphemes(Text): array of (string)` | Split text into extended grapheme clusters |
 | procedure | `Sound(Hz)` | emit one terminal bell for positive `Hz` |
 | procedure | `NoSound()` | stop active tone state (no-op) |
 | procedure | `AssignCrt()` | enable CRT mode |
@@ -83,8 +83,8 @@ Everything below requires `uses Std.Console as Console;`.
 | function | `ReadKeyEvent(): KeyEvent` | structured key + modifiers |
 | function | `EventPending(): boolean` | true if `ReadEvent()` has data waiting |
 | function | `ReadEvent(): ConsoleEvent` | unified terminal event for keyboard, mouse, resize, paste, and focus |
-| function | `ReadEventTimeout(Milliseconds: integer): Option of ConsoleEvent` | wait up to N ms for an event; raw mode is required only for live terminal input |
-| function | `PollEvent(): Option of ConsoleEvent` | non-blocking check; queued events are available without raw mode |
+| function | `ReadEventTimeout(Milliseconds: integer): Option of (ConsoleEvent)` | wait up to N ms for an event; raw mode is required only for live terminal input |
+| function | `PollEvent(): Option of (ConsoleEvent)` | non-blocking check; queued events are available without raw mode |
 | procedure | `EnableRawMode()` | explicitly enable terminal raw mode |
 | procedure | `DisableRawMode()` | explicitly disable terminal raw mode |
 | procedure | `EnterAltScreen()` | switch to the alternate terminal screen |
@@ -137,7 +137,7 @@ Programs that own every cell (explorers, animations, custom TUIs) use `Std.Conso
 2. A `mutable var NeedsRedraw` flag; paint proc calls `BeginFrame`, draws with `FillRect`,
    row-oriented `WriteCells`, and calls `Present`
 3. Loop: paint when `NeedsRedraw`, then match `Console.ReadEventTimeout(16)` with
-   `case ... of when Some(E): ...; when None: ...; end case;` for keys, mouse, resize
+   `case ... of when Option.Some(E): ...; when Option.None: ...; end case;` for keys, mouse, resize
 4. Cleanup: reverse the enable calls, `LeaveAltScreen`, `DisableRawMode`, `CursorOn`
 
 Reference: [`examples/math/mandelbrot/mandelbrot.fpas`](../../../../examples/math/mandelbrot/mandelbrot.fpas).

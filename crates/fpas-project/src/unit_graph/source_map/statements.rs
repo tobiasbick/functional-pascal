@@ -151,15 +151,33 @@ fn apply_case_arm_source_id(arm: &mut CaseArm, source_id: u32) {
     apply_span(&mut arm.span, source_id);
 }
 
-fn apply_case_label_source_id(label: &mut CaseLabel, source_id: u32) {
-    match label {
-        CaseLabel::Value { start, end, span } => {
+/// Apply one unit source identity throughout a recursive case pattern.
+pub(super) fn apply_case_label_source_id(label: &mut CaseLabel, source_id: u32) {
+    apply_pattern_source_id(label, source_id);
+}
+
+fn apply_pattern_source_id(pattern: &mut fpas_parser::Pattern, source_id: u32) {
+    use fpas_parser::Pattern;
+    match pattern {
+        Pattern::Value { start, end, span } => {
             apply_expr_source_id(start, source_id);
             if let Some(end) = end {
                 apply_expr_source_id(end, source_id);
             }
             apply_span(span, source_id);
         }
-        CaseLabel::Destructure { span, .. } => apply_span(span, source_id),
+        Pattern::Variant {
+            designator,
+            arguments,
+            span,
+            ..
+        } => {
+            apply_designator_source_id(designator, source_id);
+            for argument in arguments {
+                apply_pattern_source_id(argument, source_id);
+            }
+            apply_span(span, source_id);
+        }
+        Pattern::Binding { span, .. } | Pattern::Wildcard(span) => apply_span(span, source_id),
     }
 }

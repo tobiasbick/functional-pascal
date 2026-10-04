@@ -8,9 +8,7 @@ pub(in crate::check) use methods::MethodCallSite;
 use super::super::Checker;
 use crate::scope::SymbolKind;
 use crate::types::Ty;
-use fpas_diagnostics::codes::{
-    SEMA_AMBIGUOUS_IMPORTED_NAME, SEMA_TYPE_MISMATCH, SEMA_UNKNOWN_NAME,
-};
+use fpas_diagnostics::codes::{SEMA_TYPE_MISMATCH, SEMA_UNKNOWN_NAME};
 use fpas_lexer::Span;
 use fpas_parser::{Designator, Expr};
 
@@ -73,17 +71,6 @@ impl Checker {
             }
         }
 
-        if let Some(hint) = self.ambiguous_call_hint(&name, args.len()) {
-            self.error_with_code(
-                SEMA_AMBIGUOUS_IMPORTED_NAME,
-                format!("Ambiguous imported symbol `{name}`"),
-                hint,
-                span,
-            );
-            self.check_args_only(args);
-            return CallResolution::Failed;
-        }
-
         let hint = self.hint_unknown_callable(&name);
         self.error_with_code(
             SEMA_UNKNOWN_NAME,
@@ -102,6 +89,9 @@ impl Checker {
         args: &[Expr],
         span: Span,
     ) -> Ty {
+        if let Some(ty) = self.try_check_record_construction(call_expr, None) {
+            return ty;
+        }
         if let Some(ty) = self.try_check_assigned_call(call_expr, designator, args, span) {
             return ty;
         }
@@ -132,9 +122,6 @@ impl Checker {
         span: Span,
     ) -> Ty {
         let dispatch = self.builtin_std_dispatch_name(name);
-        if symbol_kind == SymbolKind::EnumVariantConstructor {
-            return self.check_enum_variant_constructor_call(name, &symbol_ty, args, span);
-        }
         if dispatch.starts_with("Std.") {
             self.intrinsic_calls.insert(call_key, dispatch.clone());
         }
@@ -218,64 +205,5 @@ impl Checker {
                 Ty::Error
             }
         }
-    }
-
-    fn check_enum_variant_constructor_call(
-        &mut self,
-        name: &str,
-        enum_ty: &Ty,
-        args: &[Expr],
-        span: Span,
-    ) -> Ty {
-        if let Ty::Enum(enum_def) = enum_ty {
-            let variant_name = name.rsplit('.').next().unwrap_or(name);
-            if let Some(variant) = enum_def
-                .variants
-                .iter()
-                .find(|v| v.name.eq_ignore_ascii_case(variant_name))
-            {
-                if args.len() != variant.fields.len() {
-                    self.error_with_code(
-                        SEMA_TYPE_MISMATCH,
-                        format!(
-                            "`{name}` expects {} argument(s), got {}",
-                            variant.fields.len(),
-                            args.len()
-                        ),
-                        format!(
-                            "Provide values for: {}",
-                            variant
-                                .fields
-                                .iter()
-                                .map(|(field_name, _)| field_name.as_str())
-                                .collect::<Vec<_>>()
-                                .join(", ")
-                        ),
-                        span,
-                    );
-                }
-
-                for (arg, (_field_name, field_ty)) in args.iter().zip(variant.fields.iter()) {
-                    // Record literals inherit their argument type; see
-                    // `docs/pascal/language/types/records.md`.
-                    let arg_ty = self.check_expr_with_expected_record_literals(arg, field_ty);
-                    self.check_type_compat(
-                        field_ty,
-                        &arg_ty,
-                        &format!("`{name}` argument"),
-                        arg.span(),
-                    );
-                }
-
-                for arg in args.iter().skip(variant.fields.len()) {
-                    self.check_expr(arg);
-                }
-
-                return enum_ty.clone();
-            }
-        }
-
-        self.check_args_only(args);
-        enum_ty.clone()
     }
 }

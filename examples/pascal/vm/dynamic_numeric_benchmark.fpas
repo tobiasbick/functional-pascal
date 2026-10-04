@@ -11,7 +11,7 @@ uses Std.Time as Time;
 
 const WarmupIterations: integer := 10000;
 
-function Advance<T: Numeric>(Value: T; Step: T): T;
+function Advance of (T: Numeric)(Value: T; Step: T): T;
 begin
   return Value + Step;
 end function;

@@ -15,6 +15,10 @@ identity; a cycle made only from type aliases is invalid. Constant and variable
 initializers, including record field defaults, still follow declaration order:
 type collection does not make later values available to an earlier initializer.
 
+Generic records and enums use `of (...)` parameters and explicit applications.
+Records and payload enums require a finite representable value: collections,
+Option or an enum base variant may terminate recursion; mandatory cycles cannot.
+
 | Topic | Description |
 |-------|-------------|
 | [Records](records.md) | Declaration, literals, fields, immutability, default values |
@@ -22,14 +26,14 @@ type collection does not make later values available to an earlier initializer.
 | [Record properties](record-properties.md) | Computed properties backed by instance `read` / `write` accessors |
 | [Record events](record-events.md) | Single-handler events with `nil`, `Assigned`, and owner-only raise |
 | [Record update](record-update.md) | `with` copy-and-override expressions |
-| [Result and Option types](result-option-types.md) | `Result of T, E` and `Option of T` type forms |
+| [Result and Option types](result-option-types.md) | `Result of (T, E)` and `Option of (T)` type forms |
 | [Enumerations](enums.md) | Plain, backed, and data-carrying enums |
-| [Arrays](arrays.md) | `array of T`, indexing, mutation |
-| [Channels](channels.md) | `channel of T`, bounded FIFO communication and closure |
-| [Task handles](../concurrency/task-handles.md#typed-task-handles) | `task` and `task of T`, handles whose `Wait` yields `T` |
-| [Dictionaries](dictionaries.md) | `dict of K to V` |
+| [Arrays](arrays.md) | `array of (T)`, indexing, mutation |
+| [Channels](channels.md) | `channel of (T)`, bounded FIFO communication and closure |
+| [Task handles](../concurrency/task-handles.md#typed-task-handles) | `task` and `task of (T)`, handles whose `Wait` yields `T` |
+| [Dictionaries](dictionaries.md) | `dict of (K, V)` |
 | [Type aliases](type-aliases.md) | Semantic names for existing types |
-| [Generics](generics.md) | Type parameters on routines and record methods |
+| [Generics](generics.md) | Type parameters on records, enums, routines and record methods |
 
 ## See also
 

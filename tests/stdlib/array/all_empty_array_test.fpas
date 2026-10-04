@@ -9,6 +9,6 @@ begin
 end function;
 
 begin
-  var A: array of integer := [];
+  var A: array of (integer) := [];
   Console.WriteLn(Arrays.All(A, AlwaysFalse));
 end program;

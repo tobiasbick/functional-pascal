@@ -5,7 +5,7 @@ uses Std.Dictionaries as Dictionaries;
 uses Std.Conv as Conv;
 
 begin
-  var D: dict of string to integer := ['x': 10, 'y': 20];
+  var D: dict of (string, integer) := ['x': 10, 'y': 20];
   for K: string in D do
     begin
       Console.WriteLn((K + '=') + Conv.IntToStr(D[K]));

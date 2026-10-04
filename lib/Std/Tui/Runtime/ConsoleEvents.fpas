@@ -34,38 +34,38 @@ end function;
 //
 // Parameters:
 // - `InputEvent`: Console event to translate.
-public function TuiConsoleEventToHostInput(InputEvent: Console.ConsoleEvent): option of Input.TuiHostInput;
+public function TuiConsoleEventToHostInput(InputEvent: Console.ConsoleEvent): Option of (Input.TuiHostInput);
 begin
   case InputEvent.kind of
     when Console.EventKind.Key:
       begin
-        return Some(Input.TuiHostInput.Key(InputEvent.key));
+        return Option.Some(Input.TuiHostInput.Key(InputEvent.key));
       end;
     when Console.EventKind.Mouse:
       begin
-        return Some(Input.TuiHostInput.Pointer(PointerEvent.TuiPointerEvent.WithModifiers(InputEvent.mouse_action, TuiPointerButtonFromConsole(InputEvent.mouse_button), Point.TuiPoint.Create(InputEvent.mouse_x -
-                                                                                                                                                                                               1, InputEvent.mouse_y -
-                                                                                                                                                                                                  1), InputEvent.shift, InputEvent.ctrl, InputEvent.alt, InputEvent.meta)));
+        return Option.Some(Input.TuiHostInput.Pointer(PointerEvent.TuiPointerEvent.WithModifiers(InputEvent.mouse_action, TuiPointerButtonFromConsole(InputEvent.mouse_button), Point.TuiPoint.Create(InputEvent.mouse_x -
+                                                                                                                                                                                                      1, InputEvent.mouse_y -
+                                                                                                                                                                                                         1), InputEvent.shift, InputEvent.ctrl, InputEvent.alt, InputEvent.meta)));
       end;
     when Console.EventKind.Resize:
       begin
         if (InputEvent.width <= 0) or (InputEvent.height <= 0) then
           begin
-            return None;
+            return Option.None;
           end;
         end if;
 
-        return Some(Input.TuiHostInput.Resize(Size.TuiSize.Create(InputEvent.width, InputEvent.height)));
+        return Option.Some(Input.TuiHostInput.Resize(Size.TuiSize.Create(InputEvent.width, InputEvent.height)));
       end;
     when Console.EventKind.Paste, Console.EventKind.FocusGained, Console.EventKind.FocusLost:
       begin
-        return None;
+        return Option.None;
       end;
   end case;
 end function;
 
 // Blocks for one Console event and maps it to supported Tui host input.
-public function TuiReadConsoleHostInput(): option of Input.TuiHostInput;
+public function TuiReadConsoleHostInput(): Option of (Input.TuiHostInput);
 begin
   return TuiConsoleEventToHostInput(Console.ReadEvent());
 end function;
@@ -74,16 +74,16 @@ end function;
 //
 // Parameters:
 // - `TimeoutMillis`: Non-negative relative wait duration.
-public function TuiReadConsoleHostInputWithTimeout(TimeoutMillis: integer): option of Input.TuiHostInput;
+public function TuiReadConsoleHostInputWithTimeout(TimeoutMillis: integer): Option of (Input.TuiHostInput);
 begin
   case Console.ReadEventTimeout(TimeoutMillis) of
-    when Some(InputEvent):
+    when Option.Some(const InputEvent):
       begin
         return TuiConsoleEventToHostInput(InputEvent);
       end;
-    when None:
+    when Option.None:
       begin
-        return None;
+        return Option.None;
       end;
   end case;
 end function;

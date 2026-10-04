@@ -22,16 +22,18 @@ end program;"#,
         &cwd.join("src/data.fpas"),
         r#"unit App.Data;
 
-  public type Counter = record
-    public Base: integer;
-    public function Add(Self: Counter; Value: integer): integer;
-    begin
-      return Self.Base + Value;
-    end function;
-  end record;
-  public var Global: Counter := record Base := 12; end record;
-end unit;
+public type Counter = record
+  public Base: integer;
 
+  public function Add(Self: Counter; Value: integer): integer;
+  begin
+    return Self.Base + Value;
+  end function;
+end record;
+
+public var Global: Counter := Counter(Base := 12);
+
+end unit;
 "#,
     );
 

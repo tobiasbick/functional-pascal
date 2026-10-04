@@ -169,7 +169,7 @@
         },
         {
           "name": "support.type.constraint.fpas",
-          "match": "(?i:\\b(Comparable|Numeric|Printable)\\b)"
+          "match": "(?i:\\b(Equatable|Comparable|Numeric|Printable)\\b)"
         }
       ]
     },

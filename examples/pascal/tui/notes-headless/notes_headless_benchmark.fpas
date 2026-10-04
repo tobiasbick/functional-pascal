@@ -19,9 +19,9 @@ const WarmupIterations: integer := 25;
 const DeltaMillis: integer := 16;
 const NoteCount: integer := 40;
 
-function BenchmarkNotes(): array of Model2.Note;
+function BenchmarkNotes(): array of (Model2.Note);
 begin
-  mutable var Notes: array of Model2.Note := [];
+  mutable var Notes: array of (Model2.Note) := [];
   for Index: integer := 1 to NoteCount do
     begin
       mutable var NoteValue: Model2.Note := Model2.NoteCreate('benchmark-' + Conv.IntToStr(Index), 1700000000000 +
@@ -62,10 +62,7 @@ begin
       end if;
     end;
   end if;
-  var Loaded: Model2.NotesLoad := record
-    Notes := BenchmarkNotes();
-    Issues := [];
-  end record;
+  var Loaded: Model2.NotesLoad := Model2.NotesLoad(Notes := BenchmarkNotes(), Issues := []);
   mutable var Model: Model2.NotesModel := Model2.NotesModelCreate('.temp-data/bench/notes', Loaded);
   Model.Width := 120;
   Model.Height := 40;

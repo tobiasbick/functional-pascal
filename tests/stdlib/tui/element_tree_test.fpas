@@ -6,19 +6,19 @@ uses Std.Tui as Tui;
 
 function ViewTree(Value: integer): Tui.TuiElement;
 begin
-  return Tui.TuiElementBuilders.MakeDesktop(None, [
-                                                    Tui.TuiElementBuilders.MakePanel('Dashboard', [
-                                                                                                    Tui.TuiElementBuilders.MakeColumnSpaced([
-                                                                                                                                              Tui.TuiElementBuilders.MakeRule('Metrics'),
-                                                                                                                                              Tui.TuiElementBuilders.MakeGauge('Load', 3, 4),
-                                                                                                                                              Tui.TuiElementBuilders.MakeCellGrid(Tui.TuiCellGrid.Create(2, 1, [
-                                                                                                                                                                                                                 Tui.TuiCell.Create('A', Tui.TuiStyleRole.Normal),
-                                                                                                                                                                                                                 Tui.TuiCell.Create('B', Tui.TuiStyleRole.Accent)
-                                                                                                                                                                                                               ]))
-                                                                                                                                            ], 1)
-                                                                                                  ]),
-                                                    Tui.TuiElementBuilders.MakeOverlay('Confirm', [Tui.TuiElementBuilders.MakeLabel('Continue?')])
-                                                  ]);
+  return Tui.TuiElementBuilders.MakeDesktop(Option.None, [
+                                                           Tui.TuiElementBuilders.MakePanel('Dashboard', [
+                                                                                                           Tui.TuiElementBuilders.MakeColumnSpaced([
+                                                                                                                                                     Tui.TuiElementBuilders.MakeRule('Metrics'),
+                                                                                                                                                     Tui.TuiElementBuilders.MakeGauge('Load', 3, 4),
+                                                                                                                                                     Tui.TuiElementBuilders.MakeCellGrid(Tui.TuiCellGrid.Create(2, 1, [
+                                                                                                                                                                                                                        Tui.TuiCell.Create('A', Tui.TuiStyleRole.Normal),
+                                                                                                                                                                                                                        Tui.TuiCell.Create('B', Tui.TuiStyleRole.Accent)
+                                                                                                                                                                                                                      ]))
+                                                                                                                                                   ], 1)
+                                                                                                         ]),
+                                                           Tui.TuiElementBuilders.MakeOverlay('Confirm', [Tui.TuiElementBuilders.MakeLabel('Continue?')])
+                                                         ]);
 end function;
 
 function UpdateTree(State: integer; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): integer;
@@ -30,36 +30,42 @@ end function;
 begin
   var Tree: Tui.TuiElement := ViewTree(0);
   case Tree of
-    when Tui.TuiElement.Desktop(Focused, DesktopChildren):
+    when Tui.TuiElement.Desktop(const Focused, const DesktopChildren):
       begin
         Test.AssertEquals(2, Arrays.Length(DesktopChildren));
         case DesktopChildren[0] of
-          when Tui.TuiElement.Panel(Title, PanelChildren):
+          when Tui.TuiElement.Panel(const Title, const PanelChildren):
             begin
               Test.AssertEquals('Dashboard', Title);
               Test.AssertEquals(1, Arrays.Length(PanelChildren));
             end;
-          else
+          when Tui.TuiElement.Empty, Tui.TuiElement.Label(_), Tui.TuiElement.Button(_), Tui.TuiElement.Input(_), Tui.TuiElement.TextArea(_, _, _, _, _), Tui.TuiElement.CheckBox(_, _, _, _), Tui.TuiElement.List(_, _, _, _), Tui.TuiElement.Scroll(_, _, _, _), Tui.TuiElement.MenuBar(_), Tui.TuiElement.Menu(_, _, _, _), Tui.TuiElement.StatusLine(_), Tui.TuiElement.CellGrid(_), Tui.TuiElement.Rule(_), Tui.TuiElement.Gauge(_), Tui.TuiElement.Row(_, _), Tui.TuiElement.Column(_, _), Tui.TuiElement.Layout(_, _), Tui.TuiElement.Spacer(_), Tui.TuiElement.Overlay(_, _), Tui.TuiElement.Desktop(_, _):
             begin
-              panic('expected panel element');
+              begin
+                panic('expected panel element');
+              end;
             end;
         end case;
 
         case DesktopChildren[1] of
-          when Tui.TuiElement.Overlay(Title, OverlayChildren):
+          when Tui.TuiElement.Overlay(const Title, const OverlayChildren):
             begin
               Test.AssertEquals('Confirm', Title);
               Test.AssertEquals(1, Arrays.Length(OverlayChildren));
             end;
-          else
+          when Tui.TuiElement.Empty, Tui.TuiElement.Label(_), Tui.TuiElement.Button(_), Tui.TuiElement.Input(_), Tui.TuiElement.TextArea(_, _, _, _, _), Tui.TuiElement.CheckBox(_, _, _, _), Tui.TuiElement.List(_, _, _, _), Tui.TuiElement.Scroll(_, _, _, _), Tui.TuiElement.MenuBar(_), Tui.TuiElement.Menu(_, _, _, _), Tui.TuiElement.StatusLine(_), Tui.TuiElement.CellGrid(_), Tui.TuiElement.Rule(_), Tui.TuiElement.Gauge(_), Tui.TuiElement.Row(_, _), Tui.TuiElement.Column(_, _), Tui.TuiElement.Layout(_, _), Tui.TuiElement.Spacer(_), Tui.TuiElement.Panel(_, _), Tui.TuiElement.Desktop(_, _):
             begin
-              panic('expected overlay element');
+              begin
+                panic('expected overlay element');
+              end;
             end;
         end case;
       end;
-    else
+    when Tui.TuiElement.Empty, Tui.TuiElement.Label(_), Tui.TuiElement.Button(_), Tui.TuiElement.Input(_), Tui.TuiElement.TextArea(_, _, _, _, _), Tui.TuiElement.CheckBox(_, _, _, _), Tui.TuiElement.List(_, _, _, _), Tui.TuiElement.Scroll(_, _, _, _), Tui.TuiElement.MenuBar(_), Tui.TuiElement.Menu(_, _, _, _), Tui.TuiElement.StatusLine(_), Tui.TuiElement.CellGrid(_), Tui.TuiElement.Rule(_), Tui.TuiElement.Gauge(_), Tui.TuiElement.Row(_, _), Tui.TuiElement.Column(_, _), Tui.TuiElement.Layout(_, _), Tui.TuiElement.Spacer(_), Tui.TuiElement.Panel(_, _), Tui.TuiElement.Overlay(_, _):
       begin
-        panic('expected desktop element');
+        begin
+          panic('expected desktop element');
+        end;
       end;
   end case;
   mutable var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(30, 10));

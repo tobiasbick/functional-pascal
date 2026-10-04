@@ -234,7 +234,7 @@ impl Parser {
         self.expect(&Token::Colon);
         let type_expr = self.parse_type_expr();
         let default_value = if self.eat(&Token::ColonAssign) {
-            Some(self.parse_expression())
+            Some(std::sync::Arc::new(self.parse_expression()))
         } else {
             None
         };

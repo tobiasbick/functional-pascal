@@ -14,7 +14,7 @@ function MakeAction(): procedure(); begin return Action; end function;
 #[test]
 fn procedure_values_can_be_stored_and_called_without_a_value() {
     check_ok(&format!(
-        "program P; {DECLARATIONS} begin var Actions: array of procedure() := [MakeAction()]; Actions[0](); (Action)(); MakeAction()(); end program;"
+        "program P; {DECLARATIONS} begin var Actions: array of (procedure()) := [MakeAction()]; Actions[0](); (Action)(); MakeAction()(); end program;"
     ));
 }
 
@@ -86,7 +86,7 @@ fn all_function_statements_need_a_consumer() {
 #[test]
 fn discard_accepts_ordinary_values_and_callable_values() {
     check_ok(&format!(
-        "program P; {DECLARATIONS} begin discard 42; discard [1, 2]; discard Some(1); discard Make(); discard Make()(1); discard Action; end program;"
+        "program P; {DECLARATIONS} begin discard 42; discard [1, 2]; discard Option.Some(1); discard Make(); discard Make()(1); discard Action; end program;"
     ));
 }
 
@@ -96,17 +96,18 @@ fn discard_rejects_nested_task_handles() {
         "Handle",
         "Queue",
         "[Handle]",
-        "Some(Handle)",
-        "Ok(Handle)",
+        "Option.Some(Handle)",
+        "Result.Ok(Handle)",
         "['task': Handle]",
-        "record Child := Handle; end record",
+        "Holder(Child := Handle)",
         "Payload.Child(Handle)",
     ] {
         let errors = check_errors(&format!(
             r#"program P; uses Std.Tasks as Tasks;
-type Payload = enum Child(Handle: task of integer); end enum;
+type Holder = record Child: task of (integer); end record;
+type Payload = enum Child(Handle: task of (integer)); end enum;
 function Work(): integer; begin return 1; end function;
-begin var Handle: task := go Work(); var Queue: channel of task of integer := Tasks.CreateChannel(1); discard {value}; end program;"#
+begin var Handle: task := go Work(); var Queue: channel of (task of (integer)) := Tasks.CreateChannel(1); discard {value}; end program;"#
         ));
         assert!(
             errors
@@ -129,7 +130,7 @@ fn postfix_calls_preserve_task_bound_target_checks() {
             r#"program P; begin
 mutable var Count: integer := 0;
 var Action: procedure() := procedure() begin Count := Count + 1; end procedure;
-var Actions: array of procedure() := [Action];
+var Actions: array of (procedure()) := [Action];
 go {call}; end program;"#
         ));
         assert!(

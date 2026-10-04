@@ -9,11 +9,11 @@ uses Std.Results as Results;
 
 begin
   case Proc.Run('fpas', ['--version']) of
-    when Ok(Code):
+    when Result.Ok(const Code):
       begin
         Console.WriteLn('fpas --version exit: ', Conv.IntToStr(Code));
       end;
-    when Error(M):
+    when Result.Error(const M):
       begin
         Console.WriteLn('run error: ', M);
       end;

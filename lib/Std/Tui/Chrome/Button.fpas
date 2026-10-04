@@ -32,14 +32,7 @@ public type TuiButtonSpec = record
   Action: Action2.TuiAction
 ): TuiButtonSpec;
   begin
-    return record
-      Id := Id;
-      Text := Text;
-      Mnemonic := Mnemonic;
-      Action := Action;
-      Default := false;
-      Enabled := true;
-    end record;
+    return TuiButtonSpec(Id := Id, Text := Text, Mnemonic := Mnemonic, Action := Action, Default := false, Enabled := true);
   end function;
 
   // Creates an enabled default button.
@@ -56,14 +49,7 @@ public type TuiButtonSpec = record
   Action: Action2.TuiAction
 ): TuiButtonSpec;
   begin
-    return record
-      Id := Id;
-      Text := Text;
-      Mnemonic := Mnemonic;
-      Action := Action;
-      Default := true;
-      Enabled := true;
-    end record;
+    return TuiButtonSpec(Id := Id, Text := Text, Mnemonic := Mnemonic, Action := Action, Default := true, Enabled := true);
   end function;
 
   // Creates a disabled normal button.
@@ -80,14 +66,7 @@ public type TuiButtonSpec = record
   Action: Action2.TuiAction
 ): TuiButtonSpec;
   begin
-    return record
-      Id := Id;
-      Text := Text;
-      Mnemonic := Mnemonic;
-      Action := Action;
-      Default := false;
-      Enabled := false;
-    end record;
+    return TuiButtonSpec(Id := Id, Text := Text, Mnemonic := Mnemonic, Action := Action, Default := false, Enabled := false);
   end function;
 end record;
 

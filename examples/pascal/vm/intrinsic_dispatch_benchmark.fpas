@@ -16,9 +16,9 @@ const WarmupIterations: integer := 10000;
 const CallsPerIteration: integer := 3;
 
 function RunDispatch(
-  Values: array of integer;
+  Values: array of (integer);
   Text: string;
-  Entries: dict of string to integer;
+  Entries: dict of (string, integer);
   Iterations: integer
 ): integer;
 begin
@@ -57,9 +57,9 @@ begin
       end if;
     end;
   end if;
-  var Values: array of integer := [1, 2, 3];
+  var Values: array of (integer) := [1, 2, 3];
   var Text: string := 'dispatch';
-  var Entries: dict of string to integer := ['value': 1];
+  var Entries: dict of (string, integer) := ['value': 1];
   mutable var Total: integer := RunDispatch(Values, Text, Entries, WarmupIterations);
   var Started: integer := Time.MonotonicMillis();
   Total := RunDispatch(Values, Text, Entries, Iterations);

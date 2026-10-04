@@ -37,7 +37,7 @@ begin
     end;
   end if;
   var Area: Canvas2.TuiCanvas := Canvas.Child(Bounds);
-  var Lines: array of string := Str.Split(Text, Str.Chr(10));
+  var Lines: array of (string) := Str.Split(Text, Str.Chr(10));
   var LineCount: integer := Arrays.Length(Lines);
   for Row: integer := 0 to Bounds.Height - 1 do
     begin

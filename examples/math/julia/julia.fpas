@@ -21,15 +21,7 @@ type ExplorerState = record
 
   static function Default(): ExplorerState;
   begin
-    return record
-      CenterX := 0.0;
-      CenterY := 0.0;
-      SpanY := 2.4;
-      Jr := -0.8;
-      Ji := 0.156;
-      MaxIter := 96;
-      Palette := Color.PaletteKind.DeepOcean;
-    end record;
+    return ExplorerState(CenterX := 0.0, CenterY := 0.0, SpanY := 2.4, Jr := -0.8, Ji := 0.156, MaxIter := 96, Palette := Color.PaletteKind.DeepOcean);
   end function;
 
   function SpanX(Self: ExplorerState; Width: integer; Height: integer): real;
@@ -143,7 +135,7 @@ mutable var RenderW: integer := 1;
 mutable var RenderH: integer := 1;
 mutable var NeedsRedraw: boolean := true;
 mutable var Quit: boolean := false;
-mutable var ActiveRender: option of Render.RenderJob := None;
+mutable var ActiveRender: Option of (Render.RenderJob) := Option.None;
 
 procedure RequestRedraw();
 begin
@@ -153,11 +145,11 @@ end procedure;
 procedure PaintFrame();
 begin
   case ActiveRender of
-    when Some(Job):
+    when Option.Some(const Job):
       begin
         Render.StopRender(Job);
       end;
-    when None:
+    when Option.None:
       begin
         null;
       end;
@@ -166,17 +158,8 @@ begin
   RenderW := RenderWidth();
   RenderH := RenderHeight();
   Console.BeginFrame();
-  Console.FillRect(record
-    x := 1;
-    y := 1;
-    width := Console.ScreenWidth();
-    height := Console.ScreenHeight();
-  end record, record
-    glyph := ' ';
-    foreground := Console.RgbColor(0, 0, 0);
-    background := Console.RgbColor(0, 0, 0);
-  end record);
-  ActiveRender := Some(Render.StartRender(State.XMin(RenderW, RenderH), State.XMax(RenderW, RenderH), State.YMin(), State.YMax(), RenderW, RenderH, State.MaxIter, State.Palette, State.Jr, State.Ji));
+  Console.FillRect(Console.rect(x := 1, y := 1, width := Console.ScreenWidth(), height := Console.ScreenHeight()), Console.cell(glyph := ' ', foreground := Console.RgbColor(0, 0, 0), background := Console.RgbColor(0, 0, 0)));
+  ActiveRender := Option.Some(Render.StartRender(State.XMin(RenderW, RenderH), State.XMax(RenderW, RenderH), State.YMin(), State.YMax(), RenderW, RenderH, State.MaxIter, State.Palette, State.Jr, State.Ji));
   DrawHud(State, RenderW, RenderH);
   Console.Present();
 end procedure;
@@ -412,24 +395,24 @@ begin
       end if;
 
       case ActiveRender of
-        when Some(Job):
+        when Option.Some(const Job):
           begin
             Console.BeginFrame();
             Render.PollRender(Job);
             Console.Present();
           end;
-        when None:
+        when Option.None:
           begin
             null;
           end;
       end case;
 
       case Console.ReadEventTimeout(16) of
-        when Some(E):
+        when Option.Some(const E):
           begin
             HandleEvent(E);
           end;
-        when None:
+        when Option.None:
           begin
             null;
           end;
@@ -438,11 +421,11 @@ begin
   end while;
 
   case ActiveRender of
-    when Some(Job):
+    when Option.Some(const Job):
       begin
         Render.StopRender(Job);
       end;
-    when None:
+    when Option.None:
       begin
         null;
       end;

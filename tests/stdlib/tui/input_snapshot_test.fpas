@@ -12,9 +12,9 @@ end record;
 
 function ViewInput(State: InputSnapshotModel): Tui.TuiElement;
 begin
-  return Tui.TuiElementBuilders.MakeDesktop(Some(Tui.TuiControlId.Create(1)), [
-                                                                                Tui.TuiElementBuilders.MakeInputWithHint(Tui.TuiControlId.Create(1), State.Text, State.Caret, State.Hint, Tui.TuiAction.Create(1))
-                                                                              ]);
+  return Tui.TuiElementBuilders.MakeDesktop(Option.Some(Tui.TuiControlId.Create(1)), [
+                                                                                       Tui.TuiElementBuilders.MakeInputWithHint(Tui.TuiControlId.Create(1), State.Text, State.Caret, State.Hint, Tui.TuiAction.Create(1))
+                                                                                     ]);
 end function;
 
 function UpdateInput(State: InputSnapshotModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): InputSnapshotModel;
@@ -25,34 +25,19 @@ end function;
 
 begin
   mutable var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(10, 2));
-  mutable var Model: InputSnapshotModel := record
-    Text := '';
-    Caret := 0;
-    Hint := 'Path';
-  end record;
-
+  mutable var Model: InputSnapshotModel := InputSnapshotModel(Text := '', Caret := 0, Hint := 'Path');
   Model := App.RunIterations(Model, UpdateInput, ViewInput, 0, 0);
   var HintSurface: Tui.TuiSurfaceSnapshot := App.SurfaceSnapshot();
   Test.AssertTrue(HintSurface.CellAt(1, 0).Role = Tui.TuiStyleRole.InputCursor);
   Test.AssertEquals('P', HintSurface.CellAt(2, 0).Glyph);
   Test.AssertTrue(HintSurface.CellAt(2, 0).Role = Tui.TuiStyleRole.InputHint);
-  Model := record
-    Text := 'abcdefghijk';
-    Caret := 0;
-    Hint := '';
-  end record;
-
+  Model := InputSnapshotModel(Text := 'abcdefghijk', Caret := 0, Hint := '');
   Model := App.RunIterations(Model, UpdateInput, ViewInput, 0, 0);
   var RightSurface: Tui.TuiSurfaceSnapshot := App.SurfaceSnapshot();
   Test.AssertEquals('►', RightSurface.CellAt(9, 0).Glyph);
   Test.AssertTrue(RightSurface.CellAt(9, 0).Role = Tui.TuiStyleRole.InputScroll);
   Test.AssertTrue(RightSurface.CellAt(1, 0).Role = Tui.TuiStyleRole.InputCursor);
-  Model := record
-    Text := 'abcdefghijk';
-    Caret := 11;
-    Hint := '';
-  end record;
-
+  Model := InputSnapshotModel(Text := 'abcdefghijk', Caret := 11, Hint := '');
   Model := App.RunIterations(Model, UpdateInput, ViewInput, 0, 0);
   var LeftSurface: Tui.TuiSurfaceSnapshot := App.SurfaceSnapshot();
   Test.AssertEquals('◄', LeftSurface.CellAt(0, 0).Glyph);

@@ -6,50 +6,50 @@ uses Std.Test as Test;
 
 begin
   case Uri.Parse('http://127.0.0.1:8080/v1/chat?stream=false') of
-    when Ok(Value):
+    when Result.Ok(const Value):
       begin
         Test.AssertEquals('http', Value.Scheme);
         Test.AssertEquals('127.0.0.1', Value.Host);
         Test.AssertEquals(8080, Value.Port);
         Test.AssertEquals('/v1/chat?stream=false', Value.Path);
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
         Test.Fail(Message);
       end;
   end case;
 
   case Uri.Parse('https://example.test') of
-    when Ok(Value):
+    when Result.Ok(const Value):
       begin
         Test.AssertEquals(443, Value.Port);
         Test.AssertEquals('/', Value.Path);
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
         Test.Fail(Message);
       end;
   end case;
 
   case Uri.Parse('http://example.test/path?q=1#section') of
-    when Ok(Value):
+    when Result.Ok(const Value):
       begin
         Test.AssertEquals('example.test', Value.Host);
         Test.AssertEquals('/path?q=1', Value.Path);
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
         Test.Fail(Message);
       end;
   end case;
 
   case Uri.Parse('https://example.test#section') of
-    when Ok(Value):
+    when Result.Ok(const Value):
       begin
         Test.AssertEquals('example.test', Value.Host);
         Test.AssertEquals('/', Value.Path);
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
         Test.Fail(Message);
       end;

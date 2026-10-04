@@ -6,11 +6,11 @@ uses Std.Test as Test;
 procedure Rejected(Text: string);
 begin
   case Uri.Parse(Text) of
-    when Ok(_):
+    when Result.Ok(_):
       begin
         Test.Fail('accepted ' + Text);
       end;
-    when Error(_):
+    when Result.Error(_):
       begin
         null;
       end;
@@ -20,12 +20,12 @@ end procedure;
 procedure Accepted(Text: string; Scheme: string; Port: integer);
 begin
   case Uri.Parse(Text) of
-    when Ok(Value):
+    when Result.Ok(const Value):
       begin
         Test.AssertEquals(Scheme, Value.Scheme);
         Test.AssertEquals(Port, Value.Port);
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
         Test.Fail(Message);
       end;

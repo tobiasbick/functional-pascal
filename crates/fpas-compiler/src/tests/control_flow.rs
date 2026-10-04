@@ -13,7 +13,7 @@ uses Std.Console as Console; uses Std.Conv as Conv; uses Std.Dictionaries as Dic
 begin
   mutable var Sum: integer := 0;
   for Value: integer in [1, 2, 3] do Sum := Sum + Value; end for;
-  var Values: dict of string to integer := ['a': 4, 'b': 5];
+  var Values: dict of (string, integer) := ['a': 4, 'b': 5];
   for Key: string in Values do
   begin
     Console.WriteLn(Conv.IntToStr(Values[Key]));
@@ -75,31 +75,44 @@ end program;"#,
 fn scalar_case_values_ranges_guards_and_else_execute() {
     assert_succeeds(
         r#"program RegisterCase;
+
 begin
   mutable var Score: integer := 0;
   var I: integer := 5;
   case I of
-    when Candidate if Candidate < 0: Score := 99;
-    when 1..3: Score := 1;
-    when 5 if I > 5: Score := 2;
-    when 5: Score := 3;
-  else
-    Score := 4;
+    when const Candidate if Candidate < 0:
+      Score := 99;
+    when 1..3:
+      Score := 1;
+    when 5 if I > 5:
+      Score := 2;
+    when 5:
+      Score := 3;
+    else
+      Score := 4;
   end case;
   var S: string := 'beta';
   case S of
-    when 'alpha': Score := 10;
-    when 'beta': Score := Score + 4;
-  else
-    Score := 20;
+    when 'alpha':
+      Score := 10;
+    when 'beta':
+      Score := Score + 4;
+    else
+      Score := 20;
   end case;
   var Flag: boolean := true;
   case Flag of
-    when false: Score := 100;
-    when true: Score := Score + 5;
+    when false:
+      Score := 100;
+    when true:
+      Score := Score + 5;
   end case;
-  if Score <> 12 then panic('case mismatch'); end if;
-end program;"#,
+
+  if Score <> 12 then
+    panic('case mismatch');
+  end if;
+end program;
+"#,
     );
 }
 

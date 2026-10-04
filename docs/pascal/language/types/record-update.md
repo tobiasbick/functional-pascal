@@ -17,10 +17,7 @@ type Point = record
   Y: integer;
 end record;
 
-var P: Point := record
-  X := 1;
-  Y := 2;
-end record;
+var P: Point := Point(X := 1, Y := 2);
 var Q: Point := P with X := 99; end with;
 
 ```
@@ -44,10 +41,7 @@ var S: Point := (P with X := 5; end with) with Y := 7; end with;
 ```pascal
 function Origin(): Point;
 begin
-  return record
-    X := 0;
-    Y := 0;
-  end record;
+  return Point(X := 0, Y := 0);
 end function;
 
 var T: Point := Origin() with X := 42; end with;

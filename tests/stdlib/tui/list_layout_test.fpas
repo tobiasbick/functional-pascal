@@ -10,11 +10,11 @@ end record;
 
 function ViewList(State: ListModel): Tui.TuiElement;
 begin
-  return Tui.TuiElementBuilders.MakeDesktop(Some(Tui.TuiControlId.Create(1)), [
-                                                                                Tui.TuiElementBuilders.MakePanel('Host', [
-                                                                                                                           Tui.TuiElementBuilders.MakeList(Tui.TuiControlId.Create(1), ['Alpha', 'Beta', 'Gamma'], State.Selected, Tui.TuiAction.Create(5))
-                                                                                                                         ])
-                                                                              ]);
+  return Tui.TuiElementBuilders.MakeDesktop(Option.Some(Tui.TuiControlId.Create(1)), [
+                                                                                       Tui.TuiElementBuilders.MakePanel('Host', [
+                                                                                                                                  Tui.TuiElementBuilders.MakeList(Tui.TuiControlId.Create(1), ['Alpha', 'Beta', 'Gamma'], State.Selected, Tui.TuiAction.Create(5))
+                                                                                                                                ])
+                                                                                     ]);
 end function;
 
 function UpdateList(State: ListModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): ListModel;
@@ -35,10 +35,7 @@ begin
   Test.AssertEquals(2, Empty.Preferred.Width);
   Test.AssertEquals(1, Empty.Preferred.Height);
   mutable var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(24, 8));
-  mutable var Model: ListModel := record
-    Selected := 0;
-  end record;
-
+  mutable var Model: ListModel := ListModel(Selected := 0);
   Model := App.RunIterations(Model, UpdateList, ViewList, 0, 0);
   App.InjectResizeForTest(Tui.TuiSize.Create(16, 5));
   Model := App.RunIterations(Model, UpdateList, ViewList, 1, 0);

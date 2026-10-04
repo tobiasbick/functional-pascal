@@ -10,7 +10,7 @@ begin
 end function;
 
 begin
-  var A: array of integer := [];
-  var R: option of integer := Arrays.Find(A, AlwaysTrue);
+  var A: array of (integer) := [];
+  var R: Option of (integer) := Arrays.Find(A, AlwaysTrue);
   Console.WriteLn(Options.IsNone(R));
 end program;

@@ -5,7 +5,7 @@
 ```pascal
 uses Std.Arrays as Arrays;
 
-function IndexOf(Items: array of string; Target: string): integer;
+function IndexOf(Items: array of (string); Target: string): integer;
 begin
   for I: integer := 0 to Arrays.Length(Items) - 1 do
     begin

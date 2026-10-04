@@ -111,7 +111,9 @@ impl Worker {
                     resolved.push(ResolvedIndex::Array(index));
                 }
                 Value::Dict(pairs) => {
-                    if let Some(position) = pairs.iter().position(|(candidate, _)| candidate == key)
+                    if let Some(position) = pairs
+                        .iter()
+                        .position(|(candidate, _)| candidate.language_equal(key))
                     {
                         current = &pairs[position].1;
                         resolved.push(ResolvedIndex::Dictionary {

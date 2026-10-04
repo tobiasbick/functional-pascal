@@ -1,7 +1,7 @@
 # Record events
 
 Records may declare **events**: specialized computed members whose logical type is a
-function or procedure handler. Storage is always behind `Option of Handler` accessors;
+function or procedure handler. Storage is always behind `Option of (Handler)` accessors;
 the public assignment syntax hides that `Option`.
 
 Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`record_event`).
@@ -26,8 +26,8 @@ file.
 type ClickHandler = procedure(Sender: Button);
 
 type Button = record
-    function ReadOnClick(Self: Button): Option of ClickHandler;
-    procedure WriteOnClick(Self: Button; Handler: Option of ClickHandler);
+    function ReadOnClick(Self: Button): Option of (ClickHandler);
+    procedure WriteOnClick(Self: Button; Handler: Option of (ClickHandler));
 
     event OnClick: ClickHandler read ReadOnClick write WriteOnClick;
   end record;```
@@ -38,9 +38,9 @@ Rules:
 - Both `read` and `write` are required in version 1.
 - The accessors must appear in that order: `read Getter` followed by `write Setter`.
 - The getter is an instance function with signature
-  `function Getter(Self: R): Option of HandlerType`.
+  `function Getter(Self: R): Option of (HandlerType)`.
 - The setter is an instance procedure with signature
-  `procedure Setter(Self: R; Value: Option of HandlerType)`.
+  `procedure Setter(Self: R; Value: Option of (HandlerType))`.
 - Accessors may not be static or generic, may not take extra parameters, and must not
   use `mutable` parameters.
 - Event names share the case-insensitive member namespace with fields, methods, static
@@ -63,10 +63,10 @@ B.OnClick := nil;                   // Setter receives None
 
 Rules:
 
-- A compatible named routine, bound method, or closure is wrapped in `Some` and passed
+- A compatible named routine, bound method, or closure is wrapped in `Option.Some` and passed
   to the setter.
 - `nil` is accepted only as the right-hand side of an event assignment (not for ordinary
-  function variables). Use `None` for `Option` values.
+  function variables). Use `Option.None` for `Option` values.
 - Assignment replaces the previous handler synchronously.
 - The receiver is evaluated once before the handler expression.
 - Assignment through an immutable handle binding is valid (same as properties).
@@ -81,7 +81,7 @@ if Assigned(B.OnClick) then
   …
 ```
 
-It evaluates the getter once and returns whether the result is `Some`. Reading an event
+It evaluates the getter once and returns whether the result is `Option.Some`. Reading an event
 in any other value context is a compile-time error.
 
 ## Raising
@@ -105,7 +105,7 @@ the handler itself may start explicitly safe work when needed.
 
 ## Events versus fields and properties
 
-- record literals cannot initialize an event;
+- record constructors cannot initialize an event;
 - record update expressions cannot name an event;
 - copying a record copies its fields only;
 - bare event reads are forbidden outside `Assigned`, assignment, and owner raise.

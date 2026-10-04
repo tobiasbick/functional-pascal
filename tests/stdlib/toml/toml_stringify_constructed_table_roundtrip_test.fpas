@@ -12,62 +12,72 @@ begin
                                                                                                                                                                                                                                                                                                          Toml.TomlValue.String('windows')
                                                                                                                                                                                                                                                                                                        ])]);
   var Encoded: string := Toml.Stringify(Source);
-  var Parsed: result of Toml.TomlValue, string := Toml.Parse(Encoded);
+  var Parsed: Result of (Toml.TomlValue, string) := Toml.Parse(Encoded);
   case Parsed of
-    when Ok(Value):
+    when Result.Ok(const Value):
       begin
         case Value of
-          when Toml.TomlValue.Table(Fields):
+          when Toml.TomlValue.Table(const Fields):
             begin
               case Options.Unwrap(Dictionaries.Get(Fields, 'project')) of
-                when Toml.TomlValue.Table(Project):
+                when Toml.TomlValue.Table(const Project):
                   begin
                     case Options.Unwrap(Dictionaries.Get(Project, 'name')) of
-                      when Toml.TomlValue.String(Name):
+                      when Toml.TomlValue.String(const Name):
                         begin
                           Test.AssertEquals('demo', Name);
                         end;
-                      else
+                      when Toml.TomlValue.Integer(_), Toml.TomlValue.Float(_), Toml.TomlValue.Boolean(_), Toml.TomlValue.Datetime(_), Toml.TomlValue.ArrayValue(_), Toml.TomlValue.Table(_):
                         begin
-                          Test.Fail('Expected project name string');
+                          begin
+                            Test.Fail('Expected project name string');
+                          end;
                         end;
                     end case;
 
                     case Options.Unwrap(Dictionaries.Get(Project, 'released')) of
-                      when Toml.TomlValue.Datetime(Date):
+                      when Toml.TomlValue.Datetime(const Date):
                         begin
                           Test.AssertEquals('2026-07-14', Date);
                         end;
-                      else
+                      when Toml.TomlValue.String(_), Toml.TomlValue.Integer(_), Toml.TomlValue.Float(_), Toml.TomlValue.Boolean(_), Toml.TomlValue.ArrayValue(_), Toml.TomlValue.Table(_):
                         begin
-                          Test.Fail('Expected project released datetime');
+                          begin
+                            Test.Fail('Expected project released datetime');
+                          end;
                         end;
                     end case;
                   end;
-                else
+                when Toml.TomlValue.String(_), Toml.TomlValue.Integer(_), Toml.TomlValue.Float(_), Toml.TomlValue.Boolean(_), Toml.TomlValue.Datetime(_), Toml.TomlValue.ArrayValue(_):
                   begin
-                    Test.Fail('Expected project table');
+                    begin
+                      Test.Fail('Expected project table');
+                    end;
                   end;
               end case;
 
               case Options.Unwrap(Dictionaries.Get(Fields, 'targets')) of
-                when Toml.TomlValue.ArrayValue(Targets):
+                when Toml.TomlValue.ArrayValue(const Targets):
                   begin
                     Test.AssertEquals(2, Arrays.Length(Targets));
                   end;
-                else
+                when Toml.TomlValue.String(_), Toml.TomlValue.Integer(_), Toml.TomlValue.Float(_), Toml.TomlValue.Boolean(_), Toml.TomlValue.Datetime(_), Toml.TomlValue.Table(_):
                   begin
-                    Test.Fail('Expected targets array');
+                    begin
+                      Test.Fail('Expected targets array');
+                    end;
                   end;
               end case;
             end;
-          else
+          when Toml.TomlValue.String(_), Toml.TomlValue.Integer(_), Toml.TomlValue.Float(_), Toml.TomlValue.Boolean(_), Toml.TomlValue.Datetime(_), Toml.TomlValue.ArrayValue(_):
             begin
-              Test.Fail('Expected TOML table');
+              begin
+                Test.Fail('Expected TOML table');
+              end;
             end;
         end case;
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
         Test.Fail(Message);
       end;

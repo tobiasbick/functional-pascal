@@ -26,46 +26,22 @@ end function;
 
 function MakeKey(Kind: Tui.TuiKeyKind): Tui.TuiKeyEvent;
 begin
-  return record
-    kind := Kind;
-    ch := '';
-    shift := false;
-    ctrl := false;
-    alt := false;
-    meta := false;
-  end record;
+  return Tui.TuiKeyEvent(kind := Kind, ch := '', shift := false, ctrl := false, alt := false, meta := false);
 end function;
 
 function MakeCtrlKey(Character: string): Tui.TuiKeyEvent;
 begin
-  return record
-    kind := Tui.TuiKeyKind.Character;
-    ch := Character;
-    shift := false;
-    ctrl := true;
-    alt := false;
-    meta := false;
-  end record;
+  return Tui.TuiKeyEvent(kind := Tui.TuiKeyKind.Character, ch := Character, shift := false, ctrl := true, alt := false, meta := false);
 end function;
 
 function MakeAltKey(Character: string): Tui.TuiKeyEvent;
 begin
-  return record
-    kind := Tui.TuiKeyKind.Character;
-    ch := Character;
-    shift := false;
-    ctrl := false;
-    alt := true;
-    meta := false;
-  end record;
+  return Tui.TuiKeyEvent(kind := Tui.TuiKeyKind.Character, ch := Character, shift := false, ctrl := false, alt := true, meta := false);
 end function;
 
 begin
   var Directory: string := Test.ScratchDir() + '/notes';
-  var EmptyLoaded: Model2.NotesLoad := record
-    Notes := [];
-    Issues := [];
-  end record;
+  var EmptyLoaded: Model2.NotesLoad := Model2.NotesLoad(Notes := [], Issues := []);
   mutable var EmptyModel: Model2.NotesModel := Model2.NotesModelCreate(Directory, EmptyLoaded);
   var EmptyApp: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(100, 24));
   EmptyModel := EmptyApp.RunIterations(EmptyModel, Update.NotesUpdate, View.NotesView, 0, 0);
@@ -87,10 +63,7 @@ begin
   EmptyApp.Close();
   var First: Model2.Note := Model2.NoteCreate('focus-first', 1);
   var Second: Model2.Note := Model2.NoteCreate('focus-second', 2);
-  var FocusLoaded: Model2.NotesLoad := record
-    Notes := [First, Second];
-    Issues := [];
-  end record;
+  var FocusLoaded: Model2.NotesLoad := Model2.NotesLoad(Notes := [First, Second], Issues := []);
   mutable var FocusModel: Model2.NotesModel := Model2.NotesModelCreate(Directory, FocusLoaded);
   var FocusApp: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(100, 24));
   FocusModel := FocusApp.RunIterations(FocusModel, Update.NotesUpdate, View.NotesView, 0, 0);
@@ -136,14 +109,8 @@ begin
   NoteValue.Title := 'A very long note title that must never resize the notes sidebar';
   NoteValue.Body := ((('first off-screen line' + Str.Chr(10)) + 'second off-screen line') + Str.Chr(10)) +
                     (Str.Chr(65279) + 'visible body text');
-  var Issue: Model2.NoteIssue := record
-    Path := 'broken.note';
-    Message := 'invalid header';
-  end record;
-  var Loaded: Model2.NotesLoad := record
-    Notes := [NoteValue];
-    Issues := [Issue];
-  end record;
+  var Issue: Model2.NoteIssue := Model2.NoteIssue(Path := 'broken.note', Message := 'invalid header');
+  var Loaded: Model2.NotesLoad := Model2.NotesLoad(Notes := [NoteValue], Issues := [Issue]);
   mutable var Model: Model2.NotesModel := Model2.NotesModelCreate(Directory, Loaded);
   mutable var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(100, 24));
   Model := App.RunIterations(Model, Update.NotesUpdate, View.NotesView, 0, 0);

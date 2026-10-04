@@ -21,7 +21,7 @@ type Handler = function(Left: integer; Right: integer): integer;
 function Make(): Handler;
 begin return function(A: integer; B: integer): integer begin return A + B; end function; end function;
 begin
-  var Handlers: array of Handler := [Make()];
+  var Handlers: array of (Handler) := [Make()];
   discard Make()(1, 2);
   discard Handlers[0](3, 4);
   discard (Handlers[0])(5, 6);
@@ -56,7 +56,7 @@ end;
 
 begin
   var Music: string := '𝄞';
-  var Value: Counter := record Amount := 1; Secret := 2; end;
+  var Value: Counter := Counter(Amount := 1, Secret := 2);
   var ResultValue: integer := Value.AmTail
 end.
 "#;
@@ -97,7 +97,7 @@ type Counter = record
 end;
 
 begin
-  var Value: Counter := record Amount := 1; end;
+  var Value: Counter := Counter(Amount := 1);
   // Value.Am
   var Text: string := 'Value.Am';
   Value.Am
@@ -400,7 +400,7 @@ begin
   return Left + Right
 end;
 
-function Identity<T>(Value: T): T;
+function Identity of (T)(Value: T): T;
 begin
   return Value
 end;
@@ -414,7 +414,7 @@ begin
 end;
 
 begin
-  var CounterValue: Counter := record end;
+  var CounterValue: Counter := Counter();
   var Callback: function(Left: integer; Right: integer): integer := Sum;
   var A: integer := Sum(1, Sum(2, 3));
   var B: integer := CounterValue.Add(
@@ -468,7 +468,7 @@ end.
 
     for (call, expected_label) in [
         ("Callback(1, 2)", "function Callback("),
-        ("Identity(1)", "function Identity<T>("),
+        ("Identity(1)", "function Identity of (T)("),
         ("Shape.Circle(2.0, true)", "Circle("),
     ] {
         let cursor = source.find(call).expect("call") + call.find('(').expect("parenthesis") + 1;

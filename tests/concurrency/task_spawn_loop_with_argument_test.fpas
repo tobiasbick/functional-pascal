@@ -10,7 +10,7 @@ begin
 end function;
 
 begin
-  mutable var Tasks: array of task := [];
+  mutable var Tasks: array of (task) := [];
   for Index: integer := 1 to 8 do
     begin
       Arrays.Push(Tasks, go Worker(Index));

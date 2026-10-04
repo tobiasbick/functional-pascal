@@ -283,7 +283,7 @@ end program;
 #[test]
 fn check_cli_validates_directory_of_sources() {
     let cwd = create_temp_dir("check-source-directory");
-    write_text(&cwd.join("ok.fpas"), "program Ok;\nbegin\nend.\n");
+    write_text(&cwd.join("ok.fpas"), "program Result.Ok;\nbegin\nend.\n");
     write_text(
         &cwd.join("bad.fpas"),
         r#"program Bad;

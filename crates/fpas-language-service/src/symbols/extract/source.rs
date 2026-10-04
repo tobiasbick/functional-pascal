@@ -162,7 +162,7 @@ fn type_parameters(parameters: &[fpas_parser::TypeParam]) -> String {
             )
         })
         .collect::<Vec<_>>();
-    format!("<{}>", values.join(", "))
+    format!(" of ({})", values.join(", "))
 }
 
 fn empty_span(full_span: SourceSpan) -> SourceSpan {

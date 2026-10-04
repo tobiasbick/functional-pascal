@@ -13,11 +13,11 @@ end enum;
 function Area(S: Shape): real;
 begin
   case S of
-    when Shape.Circle(R):
+    when Shape.Circle(const R):
       begin
         return (Math.Pi * R) * R;
       end;
-    when Shape.Rectangle(W, H):
+    when Shape.Rectangle(const W, const H):
       begin
         return W * H;
       end;
@@ -31,11 +31,11 @@ end function;
 function Describe(S: Shape): string;
 begin
   case S of
-    when Shape.Circle(R):
+    when Shape.Circle(const R):
       begin
         return 'Circle with radius ' + Conv.RealToStr(R);
       end;
-    when Shape.Rectangle(W, H):
+    when Shape.Rectangle(const W, const H):
       begin
         return (('Rectangle ' + Conv.RealToStr(W)) + ' x ') + Conv.RealToStr(H);
       end;

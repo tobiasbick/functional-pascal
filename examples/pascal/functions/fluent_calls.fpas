@@ -21,7 +21,7 @@ begin
 end function;
 
 begin
-  var Values: array of integer := [1, 2, 3, 4];
+  var Values: array of (integer) := [1, 2, 3, 4];
   var Total: integer := Arrays.Reduce(Arrays.Map(Arrays.Filter(Values, IsEven), Double), 0, Sum);
   Console.WriteLn('Even values doubled: ' + Conv.IntToStr(Total));
   Console.WriteLn(Str.ToUpper(Str.Trim(('  Pascal  '))));

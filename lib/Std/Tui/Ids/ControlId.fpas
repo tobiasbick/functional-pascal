@@ -22,9 +22,7 @@ public type TuiControlId = record
   // - `Value`: Value used to create or update the result.
   public static function Create(Value: integer): TuiControlId;
   begin
-    return record
-      Value := TuiControlIdRequirePositive(Value);
-    end record;
+    return TuiControlId(Value := TuiControlIdRequirePositive(Value));
   end function;
 end record;
 

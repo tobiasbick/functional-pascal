@@ -13,14 +13,14 @@ uses Std.Net.Utf8 as Utf8;
 // Parameters:
 // - `ConnectionValue`: Open TCP connection.
 // - `Bytes`: Complete byte sequence to write.
-procedure WriteAll(ConnectionValue: Net.Connection; Bytes: array of integer);
+procedure WriteAll(ConnectionValue: Net.Connection; Bytes: array of (integer));
 begin
   mutable var Offset: integer := 0;
   while Offset < Arrays.Length(Bytes) do
     begin
-      var Remaining: array of integer := Arrays.Slice(Bytes, Offset, Arrays.Length(Bytes) - Offset);
+      var Remaining: array of (integer) := Arrays.Slice(Bytes, Offset, Arrays.Length(Bytes) - Offset);
       case Net.SendBytes(ConnectionValue, Remaining) of
-        when Ok(Count):
+        when Result.Ok(const Count):
           begin
             if Count <= 0 then
               begin
@@ -30,7 +30,7 @@ begin
 
             Offset := Offset + Count;
           end;
-        when Error(Message):
+        when Result.Error(const Message):
           begin
             panic(Message);
           end;
@@ -45,12 +45,12 @@ end procedure;
 // - `ConnectionValue`: Open TCP connection.
 function ReadToEnd(ConnectionValue: Net.Connection): string;
 begin
-  mutable var Bytes: array of integer := [];
+  mutable var Bytes: array of (integer) := [];
   mutable var Reading: boolean := true;
   while Reading do
     begin
       case Net.ReceiveBytes(ConnectionValue, 4096) of
-        when Ok(Part):
+        when Result.Ok(const Part):
           begin
             if Arrays.Length(Part) = 0 then
               begin
@@ -62,7 +62,7 @@ begin
               end;
             end if;
           end;
-        when Error(Message):
+        when Result.Error(const Message):
           begin
             panic(Message);
           end;
@@ -71,11 +71,11 @@ begin
   end while;
 
   case Utf8.Decode(Bytes) of
-    when Ok(Text):
+    when Result.Ok(const Text):
       begin
         return Text;
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
         panic(Message);
       end;
@@ -97,14 +97,14 @@ begin
   end if;
 
   case Net.Connect('127.0.0.1', Port, 5000) of
-    when Ok(ConnectionValue):
+    when Result.Ok(const ConnectionValue):
       begin
         case Net.SetTimeout(ConnectionValue, 5000) of
-          when Ok(_):
+          when Result.Ok(_):
             begin
               null;
             end;
-          when Error(Message):
+          when Result.Error(const Message):
             begin
               panic(Message);
             end;
@@ -113,17 +113,17 @@ begin
         WriteAll(ConnectionValue, Utf8.Encode('hello over TCP' + #10));
         Console.WriteLn(ReadToEnd(ConnectionValue));
         case Net.Close(ConnectionValue) of
-          when Ok(_):
+          when Result.Ok(_):
             begin
               null;
             end;
-          when Error(Message):
+          when Result.Error(const Message):
             begin
               panic(Message);
             end;
         end case;
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
         panic(Message);
       end;

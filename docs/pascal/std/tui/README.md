@@ -42,7 +42,7 @@ implementation details.
 | `TuiMenuNode` / `TuiMenuState` / `TuiKeyGesture` | Hierarchical controlled menus. |
 | `TuiMenuItem` / `TuiStatusItem` | Flat action-bar and status-line descriptions. |
 | `TuiCmd` / `TuiCmdOutput` | Commands emitted by `Update`. |
-| `TuiBackgroundWork` | Cancellable host-owned work returning `result of boolean, string`. |
+| `TuiBackgroundWork` | Cancellable host-owned work returning `result of (boolean, string)`. |
 | `TuiApplication.OpenForTest(Size)` | Opens a fixed-size headless host. |
 | `App.RunIterations(...)` | Processes a deterministic message budget. |
 | `App.RunBackgroundIterations(...)` | Processes framework and typed application messages headlessly. |

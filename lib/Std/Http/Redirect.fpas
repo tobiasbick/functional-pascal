@@ -87,8 +87,8 @@ begin
       Query := Str.Substring(PathAndQuery, QueryStart, Str.Length(PathAndQuery) - QueryStart);
     end;
   end if;
-  var Parts: array of string := Str.Split(Path, '/');
-  mutable var Segments: array of string := [];
+  var Parts: array of (string) := Str.Split(Path, '/');
+  mutable var Segments: array of (string) := [];
   // The first empty segment belongs to the absolute root. All others are significant.
   for Index: integer := 1 to Arrays.Length(Parts) - 1 do
     begin
@@ -125,11 +125,11 @@ end function;
 // Parameters:
 // - `Base`: Parsed URI of the current request.
 // - `Location`: Location field value from the redirect response.
-function Resolve(Base: Uri2.Uri; Location: string): result of string, string;
+function Resolve(Base: Uri2.Uri; Location: string): Result of (string, string);
 begin
   if Headers2.ContainsUnsafeText(Location) then
     begin
-      return Error('HTTP redirect Location contains CR or LF');
+      return Result.Error('HTTP redirect Location contains CR or LF');
     end;
   end if;
   var Reference: string := WithoutFragment(Str.Trim(Location));
@@ -178,19 +178,19 @@ begin
   end if;
 
   case Uri2.Parse(Target) of
-    when Ok(Parsed):
+    when Result.Ok(const Parsed):
       begin
         if Str.Contains(Reference, '://') or Str.StartsWith(Reference, '//') then
           begin
-            return Ok(Origin(Parsed) + NormalizePath(Parsed.Path));
+            return Result.Ok(Origin(Parsed) + NormalizePath(Parsed.Path));
           end;
         end if;
 
-        return Ok(Target);
+        return Result.Ok(Target);
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
-        return Error('Invalid HTTP redirect Location: ' + Message);
+        return Result.Error('Invalid HTTP redirect Location: ' + Message);
       end;
   end case;
 end function;
@@ -212,9 +212,9 @@ end function;
 // - `Headers`: Current request fields.
 // - `CrossOrigin`: Whether the redirect changes origin.
 // - `DropBody`: Whether redirect semantics discard the request body.
-function FilterHeaders(Headers: array of Types.Header; CrossOrigin: boolean; DropBody: boolean): array of Types.Header;
+function FilterHeaders(Headers: array of (Types.Header); CrossOrigin: boolean; DropBody: boolean): array of (Types.Header);
 begin
-  mutable var Output: array of Types.Header := [];
+  mutable var Output: array of (Types.Header) := [];
   for Index: integer := 0 to Arrays.Length(Headers) - 1 do
     begin
       var Name: string := Headers[Index].Name;
@@ -255,45 +255,39 @@ end function;
 // - `Current`: Request that received the redirect response.
 // - `StatusCode`: Redirect response status code.
 // - `Location`: Location field value from the redirect response.
-public function NextRequest(Current: Types.Request; StatusCode: integer; Location: string): result of Types.Request, string;
+public function NextRequest(Current: Types.Request; StatusCode: integer; Location: string): Result of (Types.Request, string);
 begin
-  mutable var Base: Uri2.Uri := record
-    Scheme := '';
-    Host := '';
-    Port := 0;
-    Path := '';
-  end record;
-
+  mutable var Base: Uri2.Uri := Uri2.Uri(Scheme := '', Host := '', Port := 0, Path := '');
   case Uri2.Parse(Current.Url) of
-    when Ok(Value):
+    when Result.Ok(const Value):
       begin
         Base := Value;
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
-        return Error(Message);
+        return Result.Error(Message);
       end;
   end case;
   mutable var Target: string := '';
   case Resolve(Base, Location) of
-    when Ok(Value):
+    when Result.Ok(const Value):
       begin
         Target := Value;
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
-        return Error(Message);
+        return Result.Error(Message);
       end;
   end case;
   mutable var TargetUri: Uri2.Uri := Base;
   case Uri2.Parse(Target) of
-    when Ok(Value):
+    when Result.Ok(const Value):
       begin
         TargetUri := Value;
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
-        return Error(Message);
+        return Result.Error(Message);
       end;
   end case;
   var DropBody: boolean := ((StatusCode = 303) and (Current.Method <> 'HEAD')) or
@@ -308,7 +302,7 @@ begin
     end;
   end if;
 
-  return Ok(Output);
+  return Result.Ok(Output);
 end function;
 
 end unit;

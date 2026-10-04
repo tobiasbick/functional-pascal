@@ -9,15 +9,10 @@ use fpas_std::std_symbols as s;
 /// Register the `Std.Net` functions made visible by `uses Std.Net`.
 /// See `docs/pascal/std/network/net.md`.
 pub(super) fn register_std_net(checker: &mut Checker) {
-    let connection =
-        type_registration::register_record_type(checker, s::STD_NET_CONNECTION, Vec::new());
-    let listener =
-        type_registration::register_record_type(checker, s::STD_NET_LISTENER, Vec::new());
-    let cancellation_token = type_registration::register_record_type(
-        checker,
-        s::STD_TASK_CANCELLATION_TOKEN,
-        Vec::new(),
-    );
+    let connection = type_registration::register_resource_type(checker, s::STD_NET_CONNECTION);
+    let listener = type_registration::register_resource_type(checker, s::STD_NET_LISTENER);
+    let cancellation_token =
+        type_registration::register_resource_type(checker, s::STD_TASK_CANCELLATION_TOKEN);
     let error = Box::new(Ty::String);
     let address = type_registration::register_record_type(
         checker,

@@ -38,7 +38,7 @@ paint. `TuiCmd` remains a closed scalar command enum; the host-owned
 
 ## Background messages and owned work
 
-A background-enabled application uses a caller-created bounded `channel of TMessage` and a second
+A background-enabled application uses a caller-created bounded `channel of (TMessage)` and a second
 update callback:
 
 ```text
@@ -53,7 +53,7 @@ function UpdateApplication(
 uses Std.Tui as Tui;
 uses Std.Tasks as Tasks;
 
-var Inbox: channel of AppMessage := Tasks.CreateChannel(32);
+var Inbox: channel of (AppMessage) := Tasks.CreateChannel(32);
 var Final: AppModel := Tui.TuiApplication.RunWithBackground(
   Initial, Inbox, Update, UpdateApplication, View
 );
@@ -62,8 +62,8 @@ var Final: AppModel := Tui.TuiApplication.RunWithBackground(
 `RunWithBackgroundAndPalette` adds the same palette argument as `RunWithPalette`. The host takes
 ownership of `Inbox` for the run and closes it during shutdown. A worker normally publishes with
 `SendWithCancellation(Inbox, Message, Token)` so a full queue applies bounded backpressure and
-shutdown wakes a blocked send. `TrySend` provides explicit rejection instead: `Ok(false)` means the
-open queue is full, while `Error` means it is closed. No application message is silently dropped.
+shutdown wakes a blocked send. `TrySend` provides explicit rejection instead: `Result.Ok(false)` means the
+open queue is full, while `Result.Error` means it is closed. No application message is silently dropped.
 
 The initial frame is rendered before the background-enabled host delivers `TuiMsg.Started`.
 `Update` can use that message to queue initial work:
@@ -82,7 +82,7 @@ end case;
 The fixed work signature is:
 
 ```pascal
-function Work(Token: CancellationToken): result of boolean, string
+function Work(Token: CancellationToken): result of (boolean, string)
 ```
 
 The success value is not interpreted. `Cmd.StartBackground(Id, Work)` starts an independent
@@ -96,7 +96,7 @@ operations or overlap the old source. Input, updates, and paint continue while c
 when that id is not active. Each application may own at most 256 simultaneous operations, including
 sources awaiting cancellation. Each source has at most one pending replacement.
 
-Completed successful operations are reaped silently. A returned `Error`, panic, or runtime error is
+Completed successful operations are reaped silently. A returned `Result.Error`, panic, or runtime error is
 delivered on the main application thread as:
 
 ```pascal

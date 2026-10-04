@@ -7,7 +7,7 @@ uses Std.Tasks as Tasks;
 function AcceptWithCancellationSignatureOnly(
   ListenerValue: Net.Listener;
   Token: Tasks.CancellationToken
-): result of Net.Connection, string;
+): Result of (Net.Connection, string);
 begin
   return Net.AcceptWithCancellation(ListenerValue, Token);
 end function;

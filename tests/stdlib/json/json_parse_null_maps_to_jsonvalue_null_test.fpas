@@ -4,22 +4,24 @@ uses Std.Console as Console;
 uses Std.Json as Json;
 
 begin
-  var R: result of Json.JsonValue, string := Json.Parse('null');
+  var R: Result of (Json.JsonValue, string) := Json.Parse('null');
   case R of
-    when Ok(V):
+    when Result.Ok(const V):
       begin
         case V of
           when Json.JsonValue.NullValue:
             begin
               Console.WriteLn('null');
             end;
-          else
+          when Json.JsonValue.Bool(_), Json.JsonValue.Number(_), Json.JsonValue.String(_), Json.JsonValue.ArrayValue(_), Json.JsonValue.Object(_):
             begin
-              Console.WriteLn('not-null');
+              begin
+                Console.WriteLn('not-null');
+              end;
             end;
         end case;
       end;
-    when Error(E):
+    when Result.Error(const E):
       begin
         Console.WriteLn('error: ' + E);
       end;

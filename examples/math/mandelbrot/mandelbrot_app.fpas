@@ -17,8 +17,8 @@ const RenderSubscriptionId: integer := 1;
 procedure QueueRender(State: Model.MandelbrotModel; Cmd: Tui.TuiCmdOutput);
 begin
   var Request: Render.MandelbrotRenderRequest := Model.MandelbrotRequest(State);
-  var Inbox: channel of Render.MandelbrotRenderFrame := State.Inbox;
-  Cmd.ReplaceSubscription(RenderSubscriptionId, function(Token: Tasks.CancellationToken): result of boolean, string begin
+  var Inbox: channel of (Render.MandelbrotRenderFrame) := State.Inbox;
+  Cmd.ReplaceSubscription(RenderSubscriptionId, function(Token: Tasks.CancellationToken): Result of (boolean, string) begin
     return Render.RunBackgroundRender(Request, Inbox, Token);
   end function);
 end procedure;
@@ -45,32 +45,12 @@ end function;
 
 function ToggleHelp(State: Model.MandelbrotModel): Model.MandelbrotModel;
 begin
-  return record
-    Explorer := State.Explorer;
-    TerminalWidth := State.TerminalWidth;
-    TerminalHeight := State.TerminalHeight;
-    Grid := State.Grid;
-    HelpOpen := not State.HelpOpen;
-    Generation := State.Generation;
-    RowsRendered := State.RowsRendered;
-    FailureMessage := State.FailureMessage;
-    Inbox := State.Inbox;
-  end record;
+  return Model.MandelbrotModel(Explorer := State.Explorer, TerminalWidth := State.TerminalWidth, TerminalHeight := State.TerminalHeight, Grid := State.Grid, HelpOpen := not State.HelpOpen, Generation := State.Generation, RowsRendered := State.RowsRendered, FailureMessage := State.FailureMessage, Inbox := State.Inbox);
 end function;
 
 function WithFailure(State: Model.MandelbrotModel; Message: string): Model.MandelbrotModel;
 begin
-  return record
-    Explorer := State.Explorer;
-    TerminalWidth := State.TerminalWidth;
-    TerminalHeight := State.TerminalHeight;
-    Grid := State.Grid;
-    HelpOpen := State.HelpOpen;
-    Generation := State.Generation;
-    RowsRendered := State.RowsRendered;
-    FailureMessage := Message;
-    Inbox := State.Inbox;
-  end record;
+  return Model.MandelbrotModel(Explorer := State.Explorer, TerminalWidth := State.TerminalWidth, TerminalHeight := State.TerminalHeight, Grid := State.Grid, HelpOpen := State.HelpOpen, Generation := State.Generation, RowsRendered := State.RowsRendered, FailureMessage := Message, Inbox := State.Inbox);
 end function;
 
 function ViewportX(State: Model.ExplorerState; Width: integer; Height: integer; CellX: integer): real;
@@ -245,15 +225,15 @@ begin
         QueueRender(State, Cmd);
         return State;
       end;
-    when Tui.TuiMsg.Key(Key):
+    when Tui.TuiMsg.Key(const Key):
       begin
         return UpdateKey(State, Key, Cmd);
       end;
-    when Tui.TuiMsg.Pointer(Pointer):
+    when Tui.TuiMsg.Pointer(const Pointer):
       begin
         return UpdatePointer(State, Pointer, Cmd);
       end;
-    when Tui.TuiMsg.Resize(Size):
+    when Tui.TuiMsg.Resize(const Size):
       begin
         if (Size.Width = State.TerminalWidth) and (Size.Height = State.TerminalHeight) then
           begin
@@ -263,7 +243,7 @@ begin
 
         return RestartRender(State, State.Explorer, Size.Width, Size.Height, Cmd);
       end;
-    when Tui.TuiMsg.BackgroundFailed(Id, Kind, Message, Code, Line, Column):
+    when Tui.TuiMsg.BackgroundFailed(const Id, const Kind, const Message, const Code, const Line, const Column):
       begin
         if Id = RenderSubscriptionId then
           begin
@@ -284,9 +264,11 @@ begin
         Cmd.Set(Tui.TuiCmd.Quit);
         return State;
       end;
-    else
+    when Tui.TuiMsg.Tick(_), Tui.TuiMsg.FocusChanged(_, _), Tui.TuiMsg.Action(_, _), Tui.TuiMsg.TextChanged(_, _, _, _), Tui.TuiMsg.TextAreaChanged(_, _, _, _, _), Tui.TuiMsg.CheckChanged(_, _, _), Tui.TuiMsg.SelectionChanged(_, _, _), Tui.TuiMsg.ScrollChanged(_, _, _), Tui.TuiMsg.MenuChanged(_, _, _):
       begin
-        return State;
+        begin
+          return State;
+        end;
       end;
   end case;
 end function;

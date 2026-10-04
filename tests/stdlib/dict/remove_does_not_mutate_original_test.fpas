@@ -4,8 +4,8 @@ uses Std.Console as Console;
 uses Std.Dictionaries as Dictionaries;
 
 begin
-  var D: dict of string to integer := ['A': 1, 'B': 2];
-  var D2: dict of string to integer := Dictionaries.Remove(D, 'A');
+  var D: dict of (string, integer) := ['A': 1, 'B': 2];
+  var D2: dict of (string, integer) := Dictionaries.Remove(D, 'A');
   Console.WriteLn(Dictionaries.Length(D));
   Console.WriteLn(Dictionaries.Length(D2));
 end program;

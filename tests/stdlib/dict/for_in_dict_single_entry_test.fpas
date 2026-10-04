@@ -4,7 +4,7 @@ uses Std.Console as Console;
 uses Std.Dictionaries as Dictionaries;
 
 begin
-  var D: dict of string to boolean := ['ok': true];
+  var D: dict of (string, boolean) := ['ok': true];
   for K: string in D do
     begin
       Console.WriteLn(K);

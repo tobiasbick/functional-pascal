@@ -15,6 +15,9 @@ impl Parser {
                 .any(|part| matches!(part, DesignatorPart::Index(..)))
         {
             self.advance();
+            if self.at_named_field() {
+                return self.parse_record_construction(designator, start);
+            }
             let args = if self.check(&Token::RParen) {
                 Vec::new()
             } else {

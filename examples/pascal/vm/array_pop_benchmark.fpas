@@ -23,7 +23,7 @@ begin
   var Started: integer := Time.MonotonicMillis();
   for Iteration: integer := 1 to Iterations do
     begin
-      mutable var Values: array of integer := Arrays.Fill(7, Size);
+      mutable var Values: array of (integer) := Arrays.Fill(7, Size);
       for Index: integer := 1 to Size do
         begin
           if Arrays.Pop(Values) <> 7 then

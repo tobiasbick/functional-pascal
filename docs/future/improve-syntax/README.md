@@ -52,7 +52,7 @@ The checklists in each document track work within that stage.
 | [x] | [1. Language contract](language-contract.md) | None | Source audit, grammar/owner mapping, test inventory and bounded sequence recorded; no language implementation claimed |
 | [x] | [2. Diagnostics](stages/02-diagnostics.md) | Stage 1 contract | Coded records for all toolchain failures and warnings; `--diagnostics json` for check/build/run/test, `FPAS_DIAGNOSTICS=json` for native applications, and program-output records |
 | [x] | [3. Syntax and names](stages/03-syntax-and-names.md) | Stages 1 and 2 | Inventory, implemented block/name syntax and operators/bit APIs, source conversion, coordinated documentation, and full positive/negative/edge coverage verified; later constructs retain their stage-4/5 owners |
-| [ ] | [4. Functional core](stages/04-functional-core.md) | Stages 1-3; coordinated mutation/purity work from stage 5 | Callable targets, captures, result consumption/discard and consumer migration verified; generic data/decisions and coordinated mutation/purity work remain |
+| [ ] | [4. Functional core](stages/04-functional-core.md) | Stages 1-3; coordinated mutation/purity work from stage 5 | Callable and generic-data/decision deliveries, canonical consumer conversion and old-path removal verified; bindings/value semantics, coordinated mutation/purity and member removal remain |
 | [ ] | [5. Effects and tasks](stages/05-effects-and-tasks.md) | Stage 4 facilities; contract fixed in stage 1 | Planned |
 | [ ] | [6. Domain types and contracts](stages/06-domain-types-and-contracts.md) | Stages 4 and 5 | Planned |
 
@@ -145,7 +145,11 @@ is complete. Stage 4's [functional-core reuse audit](audit/functional-core-reuse
 is complete, with refreshed owners, module sizes, existing coverage and target gaps.
 The [callable delivery](audit/functional-core-callables.md) records implementation,
 capture correction, consumers, coverage and passed verification.
-Next: implement generic data/decisions,
-followed by coordinated stage-5 references/purity and stage-4 binding/default
-migration in the bounded sequence. Later constructs retain their owning stage's
-migration and test gates.
+The [generic-data delivery](audit/generic-data.md) records generic data/construction,
+recursive patterns, lazy decisions, equality/defaults, canonical consumer conversion,
+old-path removal and complete positive/negative/edge verification. Its owning
+checkbox is complete. The [bare-task migration boundary](audit/task-migration-boundary.md)
+retains removal of bare task annotations in coordinated binding/task work.
+Next: coordinate stage-5 references/purity with stage-4 binding/inference,
+value-copying, checked-number and default-purity migration in the bounded sequence.
+Later constructs retain their owning stage's migration and test gates.

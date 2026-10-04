@@ -13,7 +13,7 @@ public type TuiSurfaceDamage = record
   // First changed horizontal cell coordinate.
   public FirstX: integer;
   // Row-major terminal cells.
-  public Cells: array of Cell.TuiCell;
+  public Cells: array of (Cell.TuiCell);
 end record;
 
 function TuiSurfaceColorEqual(Left: Color.TuiColor; Right: Color.TuiColor): boolean;
@@ -29,32 +29,32 @@ begin
 end function;
 
 function TuiSurfaceConcreteStyleEqual(
-  Left: option of Style.TuiStyle;
-  Right: option of Style.TuiStyle
+  Left: Option of (Style.TuiStyle);
+  Right: Option of (Style.TuiStyle)
 ): boolean;
 begin
   case Left of
-    when Some(LeftStyle):
+    when Option.Some(const LeftStyle):
       begin
         case Right of
-          when Some(RightStyle):
+          when Option.Some(const RightStyle):
             begin
               return TuiSurfaceStyleEqual(LeftStyle, RightStyle);
             end;
-          when None:
+          when Option.None:
             begin
               return false;
             end;
         end case;
       end;
-    when None:
+    when Option.None:
       begin
         case Right of
-          when Some(RightStyle):
+          when Option.Some(const RightStyle):
             begin
               return false;
             end;
-          when None:
+          when Option.None:
             begin
               return true;
             end;
@@ -102,14 +102,14 @@ end function;
 // - `FirstX`: First changed horizontal cell coordinate.
 // - `LastX`: Last changed horizontal cell coordinate.
 public function TuiSurfaceDamageForRange(
-  Cells: array of Cell.TuiCell;
-  Continuations: array of boolean;
+  Cells: array of (Cell.TuiCell);
+  Continuations: array of (boolean);
   Y: integer;
   FirstX: integer;
   LastX: integer
 ): TuiSurfaceDamage;
 begin
-  mutable var ChangedCells: array of Cell.TuiCell := [];
+  mutable var ChangedCells: array of (Cell.TuiCell) := [];
   for X: integer := FirstX to LastX do
     begin
       if not Continuations[X] then
@@ -120,11 +120,7 @@ begin
     end;
   end for;
 
-  return record
-    Y := Y;
-    FirstX := FirstX;
-    Cells := ChangedCells;
-  end record;
+  return TuiSurfaceDamage(Y := Y, FirstX := FirstX, Cells := ChangedCells);
 end function;
 
 end unit;

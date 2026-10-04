@@ -15,10 +15,7 @@ public type ChatMessage = record
   // - `Content`: Text content of the message.
   public static function Create(Role: string; Content: string): ChatMessage;
   begin
-    return record
-      Role := Role;
-      Content := Content;
-    end record;
+    return ChatMessage(Role := Role, Content := Content);
   end function;
 
   // Creates a system instruction message.
@@ -56,7 +53,7 @@ public type Client = record
   // Model identifier sent with each request.
   public Model: string;
   // Optional bearer token used for authorization.
-  public ApiKey: option of string;
+  public ApiKey: Option of (string);
   // TCP, TLS, and response-read timeout in milliseconds.
   public TimeoutMillis: integer;
   // Maximum complete response size in bytes.
@@ -69,30 +66,21 @@ public type Client = record
   // - `Model`: Model identifier sent with chat requests.
   public static function Create(BaseUrl: string; Model: string): Client;
   begin
-    return record
-      BaseUrl := BaseUrl;
-      Model := Model;
-      ApiKey := None;
-      TimeoutMillis := 120000;
-      MaxResponseBytes := 16777216;
-    end record;
+    return Client(BaseUrl := BaseUrl, Model := Model, ApiKey := Option.None, TimeoutMillis := 120000, MaxResponseBytes := 16777216);
   end function;
 end record;
 
 // Optional generation controls sent with a chat completion.
 public type ChatOptions = record
   // Optional sampling temperature.
-  public Temperature: option of real;
+  public Temperature: Option of (real);
   // Optional maximum number of generated tokens.
-  public MaxTokens: option of integer;
+  public MaxTokens: Option of (integer);
 
   // Returns options that omit every optional generation control.
   public static function Default(): ChatOptions;
   begin
-    return record
-      Temperature := None;
-      MaxTokens := None;
-    end record;
+    return ChatOptions(Temperature := Option.None, MaxTokens := Option.None);
   end function;
 end record;
 

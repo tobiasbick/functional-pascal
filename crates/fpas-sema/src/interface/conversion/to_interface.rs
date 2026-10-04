@@ -35,6 +35,13 @@ pub fn ty_to_interface_type(ty: &Ty) -> Result<artifact::InterfaceType, Interfac
         Ty::Record(record) => Output::Record(Box::new(record_to_interface(record)?)),
         Ty::Enum(enum_ty) => Output::Enum(Box::new(enum_to_interface(enum_ty)?)),
         Ty::Named(name) => Output::Named(name.clone()),
+        Ty::Applied(name, arguments) => Output::Applied(
+            name.clone(),
+            arguments
+                .iter()
+                .map(ty_to_interface_reference)
+                .collect::<Result<_, _>>()?,
+        ),
         Ty::GenericParam(name, constraint) => {
             Output::GenericParameter(name.clone(), constraint.map(constraint_to_interface))
         }
@@ -100,6 +107,13 @@ fn record_to_interface(
 ) -> Result<artifact::RecordType, InterfaceConversionError> {
     Ok(artifact::RecordType {
         name: record.name.clone(),
+        type_parameters: generic_parameters_to_interface(&record.type_params),
+        type_arguments: record
+            .type_args
+            .iter()
+            .map(ty_to_interface_reference)
+            .collect::<Result<_, _>>()?,
+        is_resource: record.is_resource,
         owner_unit: record.owner_unit.clone(),
         private_members: record.private_members.clone(),
         fields: record
@@ -179,6 +193,12 @@ fn method_to_interface(
 fn enum_to_interface(enum_ty: &EnumTy) -> Result<artifact::EnumType, InterfaceConversionError> {
     Ok(artifact::EnumType {
         name: enum_ty.name.clone(),
+        type_parameters: generic_parameters_to_interface(&enum_ty.type_params),
+        type_arguments: enum_ty
+            .type_args
+            .iter()
+            .map(ty_to_interface_reference)
+            .collect::<Result<_, _>>()?,
         variants: enum_ty
             .variants
             .iter()
@@ -209,6 +229,22 @@ pub(crate) fn ty_to_interface_reference(
 ) -> Result<artifact::InterfaceType, InterfaceConversionError> {
     use artifact::InterfaceType as Output;
     Ok(match ty {
+        Ty::Record(record) if !record.type_args.is_empty() => Output::Applied(
+            record.name.clone(),
+            record
+                .type_args
+                .iter()
+                .map(ty_to_interface_reference)
+                .collect::<Result<_, _>>()?,
+        ),
+        Ty::Enum(enum_ty) if !enum_ty.type_args.is_empty() => Output::Applied(
+            enum_ty.name.clone(),
+            enum_ty
+                .type_args
+                .iter()
+                .map(ty_to_interface_reference)
+                .collect::<Result<_, _>>()?,
+        ),
         Ty::Record(record) => Output::Named(record.name.clone()),
         Ty::Enum(enum_ty) => Output::Named(enum_ty.name.clone()),
         Ty::Array(inner) => Output::Array(Box::new(ty_to_interface_reference(inner)?)),
@@ -231,6 +267,7 @@ pub(crate) fn ty_to_interface_reference(
 
 fn constraint_to_interface(constraint: TypeConstraint) -> artifact::TypeConstraint {
     match constraint {
+        TypeConstraint::Equatable => artifact::TypeConstraint::Equatable,
         TypeConstraint::Comparable => artifact::TypeConstraint::Comparable,
         TypeConstraint::Numeric => artifact::TypeConstraint::Numeric,
         TypeConstraint::Printable => artifact::TypeConstraint::Printable,

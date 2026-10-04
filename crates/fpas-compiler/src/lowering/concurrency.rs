@@ -42,6 +42,10 @@ impl LoweringContext {
                 } else {
                     self.lower_postfix_callable_member(receiver, last)?
                 };
+                let callable_ty =
+                    self.type_table
+                        .id(&target.callable_ty, span.line, span.column)?;
+                let callee = self.coerce_value_type(callee, callable_ty, span)?;
                 let output = self
                     .type_table
                     .id(&target.result_ty, span.line, span.column)?;

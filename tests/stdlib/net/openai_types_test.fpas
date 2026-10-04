@@ -13,11 +13,11 @@ begin
   Test.AssertEquals('Hello', MessageValue.Content);
   var Options: OpenAi.ChatOptions := OpenAi.ChatOptions.Default();
   case Options.MaxTokens of
-    when Some(Value):
+    when Option.Some(const Value):
       begin
         Test.Fail('unexpected max tokens');
       end;
-    when None:
+    when Option.None:
       begin
         null;
       end;

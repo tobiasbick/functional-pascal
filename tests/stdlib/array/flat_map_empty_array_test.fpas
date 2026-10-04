@@ -3,12 +3,12 @@ program T;
 uses Std.Console as Console;
 uses Std.Arrays as Arrays;
 
-function Wrap(X: integer): array of integer;
+function Wrap(X: integer): array of (integer);
 begin
   return [X];
 end function;
 
 begin
-  var R: array of integer := Arrays.FlatMap([], Wrap);
+  var R: array of (integer) := Arrays.FlatMap([], Wrap);
   Console.WriteLn(Arrays.Length(R));
 end program;

@@ -4,19 +4,19 @@ uses Std.Console as Console;
 uses Std.Conv as Conv;
 
 // In-memory handler slot standing in for a live registry.
-mutable var ClickSlot: option of procedure(Sender: integer) := None;
+mutable var ClickSlot: Option of (procedure(Sender: integer)) := Option.None;
 
 type ClickHandler = procedure(Sender: integer);
 
 type Button = record
   Id: integer;
 
-  function ReadOnClick(Self: Button): option of ClickHandler;
+  function ReadOnClick(Self: Button): Option of (ClickHandler);
   begin
     return ClickSlot;
   end function;
 
-  procedure WriteOnClick(Self: Button; Handler: option of ClickHandler);
+  procedure WriteOnClick(Self: Button; Handler: Option of (ClickHandler));
   begin
     ClickSlot := Handler;
   end procedure;
@@ -43,10 +43,7 @@ begin
 end procedure;
 
 begin
-  var B: Button := record
-    Id := 1;
-  end record;
-
+  var B: Button := Button(Id := 1);
   B.Click();
   B.OnClick := HandleClick;
   B.Click();

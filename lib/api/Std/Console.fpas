@@ -401,12 +401,12 @@ begin
   panic('Intrinsic API declaration');
 end procedure;
 
-// Read a cell; `None` outside the screen or on a wide continuation.
+// Read a cell; `Option.None` outside the screen or on a wide continuation.
 //
 // Parameters:
 // - `X`: Horizontal coordinate.
 // - `Y`: Vertical coordinate.
-public function GetCell(X: integer; Y: integer): option of Cell;
+public function GetCell(X: integer; Y: integer): Option of (Cell);
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -479,7 +479,10 @@ begin
 end procedure;
 
 // Non-blocking check; queued events are available without raw mode.
-public function PollEvent(): option of ConsoleEvent;
+//
+// Parameters:
+// - `)`: Input value used by `PollEvent`.
+public function PollEvent(): Option of (ConsoleEvent);
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -511,7 +514,7 @@ end function;
 //
 // Parameters:
 // - `Milliseconds`: Non-negative duration in milliseconds.
-public function ReadEventTimeout(Milliseconds: integer): option of ConsoleEvent;
+public function ReadEventTimeout(Milliseconds: integer): Option of (ConsoleEvent);
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -609,7 +612,7 @@ end procedure;
 //
 // Parameters:
 // - `Text`: UTF-8 text processed by the operation.
-public function SplitGraphemes(Text: string): array of string;
+public function SplitGraphemes(Text: string): array of (string);
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -728,8 +731,8 @@ end procedure;
 // Parameters:
 // - `X`: Horizontal coordinate.
 // - `Y`: Vertical coordinate.
-// - `Values`: `array of Std.Console.Cell` input value used by `WriteCells`.
-public procedure WriteCells(X: integer; Y: integer; Values: array of Cell);
+// - `Values`: `array of (Std.Console.Cell)` input value used by `WriteCells`.
+public procedure WriteCells(X: integer; Y: integer; Values: array of (Cell));
 begin
   panic('Intrinsic API declaration');
 end procedure;

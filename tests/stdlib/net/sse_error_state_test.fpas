@@ -12,22 +12,22 @@ begin
   for Pass: integer := 1 to 3 do
     begin
       case Http.FeedSse(Decoder, Utf8.Encode(('data: more' + #10) + #10)) of
-        when Ok(_):
+        when Result.Ok(_):
           begin
             Test.Fail('feed after error');
           end;
-        when Error(Message):
+        when Result.Error(const Message):
           begin
             Test.AssertTrue(Str.Contains(Message, 'finished'));
           end;
       end case;
 
       case Http.FinishSse(Decoder) of
-        when Ok(_):
+        when Result.Ok(_):
           begin
             Test.Fail('finish after error');
           end;
-        when Error(Message):
+        when Result.Error(const Message):
           begin
             Test.AssertTrue(Str.Contains(Message, 'finished'));
           end;
@@ -39,11 +39,11 @@ end procedure;
 begin
   var Limited: Http.SseDecoder := Results.Unwrap(Http.CreateSseDecoder(8));
   case Http.FeedSse(Limited, Utf8.Encode(Str.RepeatStr('x', 100000))) of
-    when Ok(_):
+    when Result.Ok(_):
       begin
         Test.Fail('oversized fragment');
       end;
-    when Error(_):
+    when Result.Error(_):
       begin
         null;
       end;
@@ -53,11 +53,11 @@ begin
   var Invalid: Http.SseDecoder := Results.Unwrap(Http.CreateSseDecoder(16));
   Test.AssertEquals(0, Arrays.Length(Results.Unwrap(Http.FeedSse(Invalid, [255]))));
   case Http.FinishSse(Invalid) of
-    when Ok(_):
+    when Result.Ok(_):
       begin
         Test.Fail('invalid final UTF-8');
       end;
-    when Error(_):
+    when Result.Error(_):
       begin
         null;
       end;
@@ -65,8 +65,8 @@ begin
 
   Terminal(Invalid);
   var Many: Http.SseDecoder := Results.Unwrap(Http.CreateSseDecoder(9));
-  var Events: array of Http.SseEvent := Results.Unwrap(Http.FeedSse(Many, Utf8.Encode(Str.RepeatStr((('data:x' + #13) + #10) +
-                                                                                                    #10, 500))));
+  var Events: array of (Http.SseEvent) := Results.Unwrap(Http.FeedSse(Many, Utf8.Encode(Str.RepeatStr((('data:x' + #13) + #10) +
+                                                                                                      #10, 500))));
   Test.AssertEquals(500, Arrays.Length(Events));
   Test.AssertEquals('x', Events[499].Data);
   var Split: Http.SseDecoder := Results.Unwrap(Http.CreateSseDecoder(9));

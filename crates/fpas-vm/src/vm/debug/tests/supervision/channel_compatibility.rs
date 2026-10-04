@@ -4,7 +4,7 @@ const PRODUCER: &str = r#"program ChannelCompatibility;
 uses Std.Tasks as Tasks; uses Std.Results as Results; uses Std.Arrays as Arrays;
 begin
   var Group: Tasks.TaskGroup := Tasks.CreateTaskGroup();
-  var Queue: channel of integer := Tasks.CreateChannel(1);
+  var Queue: channel of (integer) := Tasks.CreateChannel(1);
   var Child: task := Tasks.StartTaskInGroup(Group, procedure(Token: Tasks.CancellationToken)
   begin
     for Item: integer := 1 to 2 do
@@ -13,7 +13,7 @@ begin
   mutable var Total: integer := 0;
   for Item: integer := 1 to 2 do
     discard Tasks.Select([
-      Tasks.ReceiveCase(Queue, procedure(Outcome: result of integer, string)
+      Tasks.ReceiveCase(Queue, procedure(Outcome: result of (integer, string))
         begin Total := Total + Results.Unwrap(Outcome); end procedure),
       Tasks.TimerCase(1000, procedure() begin panic('consumer stalled'); end procedure)
     ]); end for;
@@ -47,7 +47,7 @@ const CONSUMER: &str = r#"program ReceiveCompatibility;
 uses Std.Tasks as Tasks; uses Std.Results as Results; uses Std.Arrays as Arrays;
 begin
   var Group: Tasks.TaskGroup := Tasks.CreateTaskGroup();
-  var Queue: channel of integer := Tasks.CreateChannel(1);
+  var Queue: channel of (integer) := Tasks.CreateChannel(1);
   var Child: task := Tasks.StartTaskInGroup(Group, function(Token: Tasks.CancellationToken): integer
   begin
     mutable var Total: integer := 0;
@@ -55,7 +55,7 @@ begin
     return Total;
   end function);
   for Item: integer := 1 to 2 do
-    discard Tasks.Select([Tasks.SendCase(Queue, Item, procedure(Outcome: result of boolean, string)
+    discard Tasks.Select([Tasks.SendCase(Queue, Item, procedure(Outcome: result of (boolean, string))
       begin discard Results.Unwrap(Outcome); end procedure)]); end for;
   if Tasks.Wait(Child) <> 3 then panic('delivery lost'); end if;
   if Arrays.Length(Tasks.CloseTaskGroup(Group)) <> 0 then panic('worker failed'); end if;

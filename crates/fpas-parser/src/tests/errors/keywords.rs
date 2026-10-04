@@ -98,7 +98,7 @@ fn self_is_rejected_as_a_static_method_parameter_name() {
 #[test]
 fn unknown_generic_constraint_is_rejected_by_the_parser() {
     let (_, errors) = parse_with_errors(
-        "program T; function Identity<T: Nonexistent>(Value: T): T; begin return Value end; begin end.",
+        "program T; function Identity of (T: Nonexistent)(Value: T): T; begin return Value end; begin end.",
     );
     assert!(!errors.is_empty());
 }

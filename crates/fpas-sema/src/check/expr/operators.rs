@@ -148,7 +148,7 @@ impl Checker {
                     self.error_with_code(
                         SEMA_TYPE_MISMATCH,
                         "Equality requires compatible operands whose values all compare",
-                        "Compare scalars, strings, enums, options, results, or records and enums whose fields all compare; arrays, dictionaries, callables, tasks, and channels do not compare.",
+                        "Compare scalars or value data whose components support equality. Resources, tasks and callable values do not compare, including inside records, variants or collections. Use `Equatable` for equality-only generic parameters.",
                         span,
                     );
                     return Ty::Error;
@@ -173,14 +173,26 @@ impl Checker {
             }
 
             BinaryOp::In => match right {
-                Ty::Array(element_ty) if left.compatible_with(element_ty) => Ty::Boolean,
-                Ty::Dict(key_ty, _) if left.compatible_with(key_ty) => Ty::Boolean,
+                Ty::Array(element_ty)
+                    if left.compatible_with(element_ty)
+                        && self.supports_equality(left)
+                        && self.supports_equality(element_ty) =>
+                {
+                    Ty::Boolean
+                }
+                Ty::Dict(key_ty, _)
+                    if left.compatible_with(key_ty)
+                        && self.supports_equality(left)
+                        && self.supports_equality(key_ty) =>
+                {
+                    Ty::Boolean
+                }
                 Ty::String if matches!(left, Ty::String) => Ty::Boolean,
                 _ => {
                     self.error_with_code(
                         SEMA_TYPE_MISMATCH,
                         "Operator `in` requires a value and a compatible array, dict, or string",
-                        "Use `Item in Array`, `Key in Dict`, or `Substring in String`.",
+                        "Use `Item in Array`, `Key in Dict`, or `Substring in String`. Items and keys must support equality without resource, task or callable components.",
                         span,
                     );
                     Ty::Error

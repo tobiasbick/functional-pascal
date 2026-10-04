@@ -26,7 +26,7 @@ pub(in crate::vm::debug) fn resolve<'a>(
             (MutationPath::ArrayIndex(index), Value::Array(array)) => array.get(*index)?,
             (MutationPath::DictionaryValue(key), Value::Dict(dictionary)) => dictionary
                 .iter()
-                .find(|(candidate, _)| candidate == key)
+                .find(|(candidate, _)| candidate.language_equal(key))
                 .map(|(_, value)| value)?,
             (MutationPath::EnumField { variant, index }, Value::Enum(enumeration))
                 if enumeration.body().layout.variant_id == *variant =>
@@ -61,7 +61,7 @@ fn replace_at(
         }
         (MutationPath::DictionaryValue(key), Value::Dict(dictionary)) => dictionary
             .iter_mut()
-            .find(|(candidate, _)| candidate == key)
+            .find(|(candidate, _)| candidate.language_equal(key))
             .map(|(_, value)| value)
             .ok_or_else(path_unavailable)?,
         (MutationPath::EnumField { variant, index }, Value::Enum(enumeration))

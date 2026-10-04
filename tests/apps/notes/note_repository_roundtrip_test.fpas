@@ -12,18 +12,18 @@ begin
   NoteValue.Tags := ['storage'];
   NoteValue.Body := 'Saved atomically';
   case Repository.NotesSave(Directory, NoteValue) of
-    when Ok(Written):
+    when Result.Ok(const Written):
       begin
         null;
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
         Test.Fail(Message);
       end;
   end case;
 
   case Repository.NotesLoadDirectory(Directory) of
-    when Ok(Loaded):
+    when Result.Ok(const Loaded):
       begin
         Test.AssertEquals(1, Arrays.Length(Loaded.Notes));
         Test.AssertEquals(0, Arrays.Length(Loaded.Issues));
@@ -31,7 +31,7 @@ begin
         Test.AssertEquals(NoteValue.Title, Loaded.Notes[0].Title);
         Test.AssertEquals(NoteValue.Body, Loaded.Notes[0].Body);
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
         Test.Fail(Message);
       end;

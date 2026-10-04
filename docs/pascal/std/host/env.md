@@ -31,23 +31,23 @@ Requires `uses Std.Env as Env;`.
 
 | Kind | Name | Notes |
 |------|------|-------|
-| function | `Get(Name: string): Option of string` | returns `Some(Value)` when the variable exists, otherwise `None` |
+| function | `Get(Name: string): Option of (string)` | returns `Option.Some(Value)` when the variable exists, otherwise `Option.None` |
 | function | `Exists(Name: string): boolean` | checks whether the variable is present |
 
 Environment lookup is process-wide and effectful because it reads host process state. `Std.Env` does not mutate environment variables.
 
 ---
 
-## `function Get(Name: string): Option of string`
+## `function Get(Name: string): Option of (string)`
 
-Returns the environment variable named `Name`, or `None` when it is missing.
+Returns the environment variable named `Name`, or `Option.None` when it is missing.
 
 ```pascal
 uses Std.Console as Console;
 uses Std.Env as Env;
 uses Std.Options as Options;
 
-var Home: option of string := Env.Get('HOME');
+var Home: option of (string) := Env.Get('HOME');
 if Options.IsSome(Home) then
   Console.WriteLn(Options.Unwrap(Home));
 end if;

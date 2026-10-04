@@ -95,7 +95,7 @@ keyword         = 'program'   | 'unit'      | 'uses'      | 'const'
                 | 'ok'        | 'error'     | 'some'      | 'none'
                 | 'try'       | 'public'
                 | 'go'        | 'dict'      | 'with'      | 'static' | 'property'
-                | 'event'     | 'read'      | 'write'     | 'comparable'
+                | 'event'     | 'read'      | 'write'     | 'comparable' | 'equatable'
                 | 'numeric'   | 'printable' | 'self'      | 'nil'
                 | 'channel'   | 'task'      | 'as'        | 'elsif'
                 | 'when'      | 'null' ;
@@ -188,31 +188,33 @@ mutable_var_block   = 'mutable' 'var' var_def ;
 
 (* -- Type definitions -- *)
 type_block          = 'type' type_def ;
-type_def            = identifier '=' type_body ';' ;
+type_def            = identifier [ type_params ] '=' type_body ';' ;
 type_body           = record_type
                     | enum_type
                     | type_expr ;
 
-type_params         = '<' type_param { ',' type_param } '>' ;
+type_params         = 'of' '(' type_param { ',' type_param } ')' ;
 type_param          = identifier [ ':' constraint_name ] ;
-constraint_name     = 'Comparable' | 'Numeric' | 'Printable' ;
+constraint_name     = 'Equatable' | 'Comparable' | 'Numeric' | 'Printable' ;
 
 (* ---- 2.3 Type Expressions ------------------------------------- *)
 
 (* Built-in named types (via qualified_id): integer, real, boolean, *)
 (* string. A bare `task` infers its result type from the spawned call; *)
-(* `task of T` declares it. See docs/pascal/language/basics/ and       *)
+(* `task of (T)` declares it. See docs/pascal/language/basics/ and     *)
 (* docs/pascal/language/concurrency/task-handles.md.                   *)
 
-type_expr           = 'array' 'of' type_expr            (* array type     *)
-                    | 'channel' 'of' type_expr          (* channel type   *)
-                    | 'task' [ 'of' type_expr ]         (* task handle    *)
-                    | 'dict' 'of' type_expr 'to' type_expr (* dict type    *)
-                    | 'result' 'of' type_expr ',' type_expr  (* result type *)
-                    | 'option' 'of' type_expr            (* option type    *)
+type_expr           = 'array' 'of' '(' type_expr ')'    (* array type     *)
+                    | 'channel' 'of' '(' type_expr ')'  (* channel type   *)
+                    | 'task' [ 'of' '(' type_expr ')' ] (* task handle    *)
+                    | 'dict' 'of' '(' type_expr ',' type_expr ')' (* dict type *)
+                    | 'result' 'of' '(' type_expr ',' type_expr ')' (* result type *)
+                    | 'option' 'of' '(' type_expr ')'   (* option type    *)
                     | function_type                      (* function type  *)
                     | procedure_type                     (* procedure type *)
-                    | qualified_id ;   (* named / built-in / user type     *)
+                    | qualified_id [ type_arguments ] ; (* named / built-in / user type *)
+
+type_arguments      = 'of' '(' type_expr { ',' type_expr } ')' ;
 
 function_type       = 'function' '(' [ formal_type_list ] ')' ':' type_expr ;
 procedure_type      = 'procedure' '(' [ formal_type_list ] ')' ;
@@ -230,9 +232,9 @@ record_member       = [ public_modifier ]
 field_def           = identifier ':' type_expr [ ':=' expression ] ';' ;
 
 (* ':= expression' is an optional default value for the field.      *)
-(* When a record literal omits a field that has a default, the      *)
+(* When a record construction omits a field that has a default, the      *)
 (* compiler substitutes the default automatically.  Fields without  *)
-(* a default must be supplied in every record literal.              *)
+(* a default must be supplied in every record construction.              *)
 
 record_method       = static_record_method | instance_record_method ;
 static_record_method = 'static' ( function_decl | procedure_decl ) ;
@@ -360,6 +362,10 @@ if_stmt             = 'if' expression 'then' statement_list
                       { 'elsif' expression 'then' statement_list }
                       [ 'else' statement_list ] 'end' 'if' ;
 
+if_expr             = 'if' expression 'then' expression
+                      { 'elsif' expression 'then' expression }
+                      'else' expression 'end' 'if' ;
+
 (* Each branch has its own local scope. 'else if' nests another if;   *)
 (* it requires two closers. Use 'elsif' to continue one conditional. *)
 
@@ -370,45 +376,32 @@ case_stmt           = 'case' expression 'of'
 
 case_arm            = 'when' case_label_list [ 'if' expression ] ':' statement_list ;
 
-case_label_list     = case_label { ',' case_label } ;
-case_label          = destructure_label                  (* Result/Option  *)
-                    | enum_pattern                       (* enum with data *)
-                    | expression [ '..' expression ] ;  (* value/range    *)
+case_expr           = 'case' expression 'of'
+                      case_value_arm { case_value_arm }
+                      [ 'else' expression ';' ] 'end' 'case' ;
+case_value_arm      = 'when' case_label_list
+                      [ 'if' expression ] ':' expression ';' ;
+case_label_list     = pattern { ',' pattern } ;
+case_label          = pattern ;
+pattern             = 'const' identifier
+                    | '_'
+                    | variant_name '(' [ pattern { ',' pattern } ] ')'
+                    | expression [ '..' expression ] ;
+variant_name        = qualified_id
+                    | 'option' '.' ( 'some' | 'none' )
+                    | 'result' '.' ( 'ok' | 'error' ) ;
 
-destructure_label   = ( 'ok' | 'error' | 'some' ) '(' identifier ')'
-                    | 'none' ;
-
-enum_pattern        = qualified_id '(' pattern_arg { ',' pattern_arg } ')'
-                    | qualified_id ;                     (* fieldless variant *)
-
-pattern_arg         = identifier ;                       (* binding only   *)
-
-(* Each field position in an enum pattern is a plain identifier binding. *)
-(* Use a guard clause for additional constraints:                       *)
-(*   when Shape.Circle(R) if R > 10.0: ...                                *)
-(*                                                                  *)
-(* Value labels must be compile-time constants: integer,      *)
-(* string, boolean, or enum literals. Ranges use '..'.              *)
-(*                                                                  *)
-(* Semantic disambiguation for guarded scalar bindings: in a scalar  *)
-(* case arm, `Name if <boolean>:` binds the scrutinee to `Name`     *)
-(* when the arm has exactly one bare identifier label and `Name`    *)
-(* does not resolve to a compile-time constant or enum member.      *)
-(* This shorthand is not valid for ranges or comma-separated label  *)
-(* lists.                                                           *)
-(* Destructure labels bind the inner value of Result/Option.        *)
-(* Enum patterns match a variant and bind its fields positionally:  *)
-(* Shape.Circle(R) binds Radius to R.                               *)
-(*                                                                  *)
-(* Guard clause ('if' expression) on an arm: the arm matches only   *)
-(* when the label matches AND the guard evaluates to true. The      *)
-(* guard expression may reference bindings introduced by the label. *)
-(* Guards do NOT count toward exhaustiveness: a guarded arm for a   *)
-(* variant does not satisfy coverage of that variant.               *)
-(*                                                                  *)
-(* Exhaustiveness: for enum, Result, and Option types, every        *)
-(* variant must be covered or an 'else' branch must be present.     *)
-(* The compiler reports an error for non-exhaustive matches.        *)
+(* Statement and value cases share recursive patterns. `const Name` *)
+(* binds a value; a plain identifier names a static constant. `_` is *)
+(* a payload wildcard. Payloadless variants have no argument list.   *)
+(* Value patterns and range endpoints must be static constants.      *)
+(* A guard runs after the full pattern matches; a false guard moves  *)
+(* to the next arm. Grouped patterns bind the same names and types.   *)
+(* Guards do not establish coverage. Closed enum, Option, and Result  *)
+(* cases require explicit unguarded coverage of variants and payload  *)
+(* alternatives; top-level `_`, `const`, and else are rejected.       *)
+(* Open scalar statement cases may omit else. Value cases need else  *)
+(* unless finite coverage is proven. Value branches agree on one type.*)
 
 (* -- For Loop -- *)
 for_stmt            = 'for' identifier ':' type_expr ':=' expression
@@ -502,17 +495,19 @@ primary_atom        = integer_literal
                     | string_literal
                     | 'true'
                     | 'false'
-                    | 'ok' '(' expression ')'            (* Result Ok      *)
-                    | 'error' '(' expression ')'        (* Result Error   *)
-                    | 'some' '(' expression ')'          (* Option Some    *)
-                    | 'none'                             (* Option None    *)
+                    | 'result' '.' 'ok' '(' expression ')'            (* Result Ok      *)
+                    | 'result' '.' 'error' '(' expression ')'        (* Result Error   *)
+                    | 'option' '.' 'some' '(' expression ')'          (* Option Some    *)
+                    | 'option' '.' 'none'                (* Option None    *)
                     | 'nil'                              (* event clear only; see record-events.md *)
                     | '(' expression ')'
                     | array_literal
                     | dict_literal
-                    | record_literal
+                    | record_construction
                     | 'go' go_call                       (* task handle    *)
                     | closure_expr
+                    | if_expr
+                    | case_expr
                     | designator [ call_args ] ;
 
 (* Anonymous function/procedure expression. Parameter and result types are required. *)
@@ -530,10 +525,10 @@ postfix_suffix      = '.' identifier [ call_args ]
 call_args           = '(' [ arg_list ] ')' ;
 
 (* -- Record construction -- *)
-record_literal      = 'record' { field_init } 'end' 'record' ;
-
-(* Zero field_inits is valid when every field of the target type    *)
-(* has a default value: var P: Point := record end record;                 *)
+record_construction = qualified_id '(' [ named_field { ',' named_field } ] ')' ;
+named_field         = identifier ':=' expression ;
+(* Empty construction requires every declared field to have a default. *)
+(* Named fields are valid only on a declared record construction target. *)
 field_init          = identifier ':=' expression ';' ;
 
 arg_list            = expression { ',' expression } ;

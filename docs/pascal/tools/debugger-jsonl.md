@@ -138,8 +138,8 @@ rejected. `variable.set` does not expose inactive variants as children.
 Replacement expressions use the same parser, detached
 controlled-call policy, and resource limits as `evaluate`. Complete mutable enum,
 `Result`, and `Option` values accept constructor expressions such as
-`Choice.Pair(1, 2)`, `Choice.Empty`, `Ok(3)`, `Error('failed')`, `Some(4)`, and
-`None`. Function-typed targets accept one visible binding that already holds a
+`Choice.Pair(1, 2)`, `Choice.Empty`, `Result.Ok(3)`, `Result.Error('failed')`, `Option.Some(4)`, and
+`Option.None`. Function-typed targets accept one visible binding that already holds a
 compatible function value, for example `Backup`, one unique
 non-capturing executable routine such as `AddTwo`, or a named nested routine
 whose captures are immutable values or existing mutable cells in the selected
@@ -223,7 +223,7 @@ entry value:
 ```
 
 `target` uses the same bounded root/selector grammar as `expression.set`, but
-must resolve to a mutable `dict of K to V`. Insert evaluates and validates a
+must resolve to a mutable `dict of (K, V)`. Insert evaluates and validates a
 missing `key` and `expression`, then appends the pair. Remove requires an
 existing key and adds `removed` to the normal committed dictionary result. Key
 replacement requires an existing old key plus a missing, different `new_key`,

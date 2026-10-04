@@ -8,56 +8,64 @@ uses Std.Conv as Conv;
 uses Std.Arrays as Arrays;
 
 begin
-  var R: result of Json.JsonValue, string := Json.Parse('{"name":"Ada","scores":[1,2],"active":true}');
+  var R: Result of (Json.JsonValue, string) := Json.Parse('{"name":"Ada","scores":[1,2],"active":true}');
   case R of
-    when Ok(V):
+    when Result.Ok(const V):
       begin
         case V of
-          when Json.JsonValue.Object(Fields):
+          when Json.JsonValue.Object(const Fields):
             begin
-              var NameValue: option of Json.JsonValue := Dictionaries.Get(Fields, 'name');
-              var ScoresValue: option of Json.JsonValue := Dictionaries.Get(Fields, 'scores');
-              var ActiveValue: option of Json.JsonValue := Dictionaries.Get(Fields, 'active');
+              var NameValue: Option of (Json.JsonValue) := Dictionaries.Get(Fields, 'name');
+              var ScoresValue: Option of (Json.JsonValue) := Dictionaries.Get(Fields, 'scores');
+              var ActiveValue: Option of (Json.JsonValue) := Dictionaries.Get(Fields, 'active');
               case Options.Unwrap(NameValue) of
-                when Json.JsonValue.String(Name):
+                when Json.JsonValue.String(const Name):
                   begin
                     Console.WriteLn(Name);
                   end;
-                else
+                when Json.JsonValue.NullValue, Json.JsonValue.Bool(_), Json.JsonValue.Number(_), Json.JsonValue.ArrayValue(_), Json.JsonValue.Object(_):
                   begin
-                    Console.WriteLn('bad-name');
+                    begin
+                      Console.WriteLn('bad-name');
+                    end;
                   end;
               end case;
 
               case Options.Unwrap(ScoresValue) of
-                when Json.JsonValue.ArrayValue(Scores):
+                when Json.JsonValue.ArrayValue(const Scores):
                   begin
                     Console.WriteLn(Conv.IntToStr(Arrays.Length(Scores)));
                   end;
-                else
+                when Json.JsonValue.NullValue, Json.JsonValue.Bool(_), Json.JsonValue.Number(_), Json.JsonValue.String(_), Json.JsonValue.Object(_):
                   begin
-                    Console.WriteLn('bad-scores');
+                    begin
+                      Console.WriteLn('bad-scores');
+                    end;
                   end;
               end case;
 
               case Options.Unwrap(ActiveValue) of
-                when Json.JsonValue.Bool(Active):
+                when Json.JsonValue.Bool(const Active):
                   begin
                     Console.WriteLn(Active);
                   end;
-                else
+                when Json.JsonValue.NullValue, Json.JsonValue.Number(_), Json.JsonValue.String(_), Json.JsonValue.ArrayValue(_), Json.JsonValue.Object(_):
                   begin
-                    Console.WriteLn('bad-active');
+                    begin
+                      Console.WriteLn('bad-active');
+                    end;
                   end;
               end case;
             end;
-          else
+          when Json.JsonValue.NullValue, Json.JsonValue.Bool(_), Json.JsonValue.Number(_), Json.JsonValue.String(_), Json.JsonValue.ArrayValue(_):
             begin
-              Console.WriteLn('not-object');
+              begin
+                Console.WriteLn('not-object');
+              end;
             end;
         end case;
       end;
-    when Error(E):
+    when Result.Error(const E):
       begin
         Console.WriteLn('error: ' + E);
       end;

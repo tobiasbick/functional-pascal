@@ -99,12 +99,6 @@ const BLOCKS: &[BlockCase] = &[
         closer: "end with",
         suffix: ", 2); end program;",
     },
-    BlockCase {
-        name: "record literal",
-        prefix: "program P; begin Consume(record X := 1; ",
-        closer: "end record",
-        suffix: "); end program;",
-    },
 ];
 
 fn assert_rejected(name: &str, source: &str, message: &str) {
@@ -205,11 +199,7 @@ fn extra_terminators_do_not_create_empty_bodies_or_expression_statements() {
             &format!("{};{}{}", case.prefix, case.closer, case.suffix),
             if matches!(
                 case.name,
-                "unit"
-                    | "record declaration"
-                    | "enum declaration"
-                    | "record update"
-                    | "record literal"
+                "unit" | "record declaration" | "enum declaration" | "record update"
             ) {
                 "Expected"
             } else {
@@ -243,7 +233,7 @@ fn empty_statement_bodies_require_null_in_every_branch_and_callable() {
     for source in [
         "unit Empty; end unit;",
         "program P; type Empty = record end record; begin null; end program;",
-        "program P; begin Consume(record end record); end program;",
+        "program P; begin Consume(Empty()); end program;",
     ] {
         assert!(parse_compilation_unit(source).1.is_empty(), "{source}");
     }

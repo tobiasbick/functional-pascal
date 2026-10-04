@@ -1,9 +1,12 @@
 mod assignment;
 mod concurrency;
+mod enum_pattern_identity;
 mod exhaustiveness;
 mod flow;
 mod for_loops;
 mod if_stmt;
 mod jumps;
 mod misc;
+mod nested_patterns;
+mod static_labels;
 mod while_repeat;

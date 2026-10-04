@@ -16,12 +16,12 @@ uses Std.Net.Utf8 as Utf8;
 procedure PrintBuffered(LabelText: string; ResponseValue: Http.Response);
 begin
   case Http.BodyText(ResponseValue) of
-    when Ok(Text):
+    when Result.Ok(const Text):
       begin
         Console.WriteLn((((LabelText + ' ') + Conv.IntToStr(ResponseValue.StatusCode)) + ': ') +
                         Text);
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
         panic(Message);
       end;
@@ -36,11 +36,11 @@ end procedure;
 procedure RunBuffered(LabelText: string; RequestValue: Http.Request);
 begin
   case Http.Send(RequestValue) of
-    when Ok(ResponseValue):
+    when Result.Ok(const ResponseValue):
       begin
         PrintBuffered(LabelText, ResponseValue);
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
         panic(Message);
       end;
@@ -53,12 +53,12 @@ end procedure;
 // - `StreamValue`: Open HTTP response-body stream.
 function ReadAll(StreamValue: Http.BodyStream): string;
 begin
-  mutable var Bytes: array of integer := [];
+  mutable var Bytes: array of (integer) := [];
   mutable var Reading: boolean := true;
   while Reading do
     begin
       case Http.ReadStream(StreamValue, 5) of
-        when Ok(Part):
+        when Result.Ok(const Part):
           begin
             if Arrays.Length(Part) = 0 then
               begin
@@ -70,7 +70,7 @@ begin
               end;
             end if;
           end;
-        when Error(Message):
+        when Result.Error(const Message):
           begin
             panic(Message);
           end;
@@ -79,11 +79,11 @@ begin
   end while;
 
   case Utf8.Decode(Bytes) of
-    when Ok(Text):
+    when Result.Ok(const Text):
       begin
         return Text;
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
         panic(Message);
       end;
@@ -110,12 +110,12 @@ begin
   PostRequest.Body := Utf8.Encode('hello from client');
   RunBuffered('POST', PostRequest);
   case Http.OpenStream(Http.Request.Get(BaseUrl + '/stream')) of
-    when Ok(ResponseValue):
+    when Result.Ok(const ResponseValue):
       begin
         Console.WriteLn((('STREAM ' + Conv.IntToStr(ResponseValue.StatusCode)) + ': ') +
                         ReadAll(ResponseValue.Body));
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
         panic(Message);
       end;

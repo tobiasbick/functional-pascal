@@ -33,15 +33,15 @@ begin
       begin
         return 0;
       end;
-    when Choice.Count(Value):
+    when Choice.Count(const Value):
       begin
         return Value;
       end;
-    when Choice.Pair(Left, Right):
+    when Choice.Pair(const Left, const Right):
       begin
         return Left + Right;
       end;
-    when Choice.Nested(Item):
+    when Choice.Nested(const Item):
       begin
         return Item.X + Item.Y;
       end;
@@ -54,28 +54,28 @@ begin
   return Tick;
 end function;
 
-function ResultValue(Item: result of integer, string): integer;
+function ResultValue(Item: Result of (integer, string)): integer;
 begin
   case Item of
-    when Ok(Value):
+    when Result.Ok(const Value):
       begin
         return Value;
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
         return -1;
       end;
   end case;
 end function;
 
-function WrappedChoiceValue(Item: result of Choice, string): integer;
+function WrappedChoiceValue(Item: Result of (Choice, string)): integer;
 begin
   case Item of
-    when Ok(Value):
+    when Result.Ok(const Value):
       begin
         return ChoiceValue(Value);
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
         return -1;
       end;
@@ -85,7 +85,7 @@ end function;
 function OuterChoiceValue(Item: Outer): integer;
 begin
   case Item of
-    when Outer.First(Value), Outer.Second(Value):
+    when Outer.First(const Value), Outer.Second(const Value):
       begin
         return ChoiceValue(Value);
       end;
@@ -93,25 +93,20 @@ begin
 end function;
 
 begin
-  mutable var Origin: Point := record
-    X := 4;
-    Y := 5;
-  end record;
+  mutable var Origin: Point := Point(X := 4, Y := 5);
   mutable var Selected: Choice := Choice.Empty;
   mutable var PairValue: Choice := Choice.Pair(2, 3);
   mutable var EmptyValue: Choice := Choice.Empty;
   mutable var NestedValue: Choice := Choice.Nested(Origin);
-  mutable var Outcome: result of integer, string := Ok(6);
-  mutable var Failed: result of integer, string := Error('old');
-  mutable var Optional: option of integer := Some(7);
-  mutable var Missing: option of integer := None;
-  mutable var PackedHolder: Holder := record
-    Item := Choice.Empty;
-  end record;
-  mutable var Items: array of Choice := [Choice.Empty];
-  mutable var Scores: dict of string to Choice := ['blue': Choice.Empty];
-  mutable var WrappedChoice: result of Choice, string := Ok(Choice.Empty);
-  mutable var WrappedChoices: array of result of Choice, string := [Ok(Choice.Empty)];
+  mutable var Outcome: Result of (integer, string) := Result.Ok(6);
+  mutable var Failed: Result of (integer, string) := Result.Error('old');
+  mutable var Optional: Option of (integer) := Option.Some(7);
+  mutable var Missing: Option of (integer) := Option.None;
+  mutable var PackedHolder: Holder := Holder(Item := Choice.Empty);
+  mutable var Items: array of (Choice) := [Choice.Empty];
+  mutable var Scores: dict of (string, Choice) := ['blue': Choice.Empty];
+  mutable var WrappedChoice: Result of (Choice, string) := Result.Ok(Choice.Empty);
+  mutable var WrappedChoices: array of (Result of (Choice, string)) := [Result.Ok(Choice.Empty)];
   mutable var OuterValue: Outer := Outer.First(Choice.Empty);
   var Fixed: Choice := Choice.Count(99);
   var StopMarker: integer := 0;

@@ -30,27 +30,39 @@ fn call(name: &str, arguments: Vec<DebugExpression>) -> DebugExpression {
 #[test]
 fn methods_properties_static_constructors_records_and_intrinsics_execute() {
     let source = r#"program DebugMembers;
+
 uses Std.Math as Math;
 
-  type Counter = record
-    Value: integer;
-    static function Create(Value: integer): Counter;
-    begin return record Value := Value; end record;
-    end function;
-    function Double(Self: Counter): integer;
-    begin
-      return Self.Value * 2;
-    end function;
-    function ReadNumber(Self: Counter): integer;
-    begin
-      return Self.Value;
-    end function;
-    property Number: integer read ReadNumber;
-  end record;
+type Counter = record
+  Value: integer;
+
+  static function Create(Value: integer): Counter;
+  begin
+    return Counter(Value := Value);
+  end function;
+
+  function Double(Self: Counter): integer;
+  begin
+    return Self.Value * 2;
+  end function;
+
+  function ReadNumber(Self: Counter): integer;
+  begin
+    return Self.Value;
+  end function;
+
+  property Number: integer read ReadNumber;
+end record;
+
 procedure Touch();
-begin null;
+begin
+  null;
 end procedure;
-begin null; end program;"#;
+
+begin
+  null;
+end program;
+"#;
     let mut server = fpas_debug::jsonl::JsonlServer::new(fpas_debug::PreparedDebugTarget::new(
         compile(source),
         Vec::new(),
@@ -69,10 +81,10 @@ begin null; end program;"#;
     let cases = [
         ("Counter.Create(6).Double()", "12"),
         ("Counter.Create(7).Number", "7"),
-        ("(record Value := 8; end record).Double()", "16"),
+        ("Counter.Create(8).Double()", "16"),
         ("Std.Math.Abs(-9)", "9"),
         ("Touch()", "()"),
-        ("try Some(11)", "11"),
+        ("try Option.Some(11)", "11"),
         ("[1, 2, 3][1]", "2"),
     ];
     for (index, (expression, expected)) in cases.into_iter().enumerate() {

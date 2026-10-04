@@ -19,51 +19,33 @@ function UpdateQuit(State: QuitModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): Q
 begin
   Test.AssertTrue(Cmd.Command() = Tui.TuiCmd.NoCommand);
   case Msg of
-    when Tui.TuiMsg.MenuChanged(MenuSource, MenuAction, MenuState):
+    when Tui.TuiMsg.MenuChanged(const MenuSource, const MenuAction, const MenuState):
       begin
         Cmd.Set(Tui.TuiCmd.Quit);
-        return record
-          LabelText := 'SHOULD NOT PAINT';
-          Quit := true;
-          Updates := State.Updates + 1;
-        end record;
+        return QuitModel(LabelText := 'SHOULD NOT PAINT', Quit := true, Updates := State.Updates + 1);
       end;
     when Tui.TuiMsg.QuitRequested:
       begin
         Cmd.Set(Tui.TuiCmd.Quit);
-        return record
-          LabelText := 'SHOULD NOT PAINT';
-          Quit := true;
-          Updates := State.Updates + 1;
-        end record;
+        return QuitModel(LabelText := 'SHOULD NOT PAINT', Quit := true, Updates := State.Updates + 1);
       end;
-    when Tui.TuiMsg.Tick(Delta):
+    when Tui.TuiMsg.Tick(const Delta):
       begin
-        return record
-          LabelText := 'after-tick';
-          Quit := false;
-          Updates := State.Updates + 1;
-        end record;
+        return QuitModel(LabelText := 'after-tick', Quit := false, Updates := State.Updates + 1);
       end;
-    else
+    when Tui.TuiMsg.Started, Tui.TuiMsg.Key(_), Tui.TuiMsg.Pointer(_), Tui.TuiMsg.Resize(_), Tui.TuiMsg.FocusChanged(_, _), Tui.TuiMsg.Action(_, _), Tui.TuiMsg.TextChanged(_, _, _, _), Tui.TuiMsg.TextAreaChanged(_, _, _, _, _), Tui.TuiMsg.CheckChanged(_, _, _), Tui.TuiMsg.SelectionChanged(_, _, _), Tui.TuiMsg.ScrollChanged(_, _, _), Tui.TuiMsg.BackgroundFailed(_, _, _, _, _, _):
       begin
-        return record
-          LabelText := State.LabelText;
-          Quit := State.Quit;
-          Updates := State.Updates + 1;
-        end record;
+        begin
+          return QuitModel(LabelText := State.LabelText, Quit := State.Quit, Updates := State.Updates +
+                                                                                        1);
+        end;
       end;
   end case;
 end function;
 
 begin
   mutable var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(20, 4));
-  mutable var Model: QuitModel := record
-    LabelText := 'before';
-    Quit := false;
-    Updates := 0;
-  end record;
-
+  mutable var Model: QuitModel := QuitModel(LabelText := 'before', Quit := false, Updates := 0);
   Model := App.RunIterations(Model, UpdateQuit, ViewQuit, 0, 0);
   Test.AssertTrue(Str.Contains(App.SurfaceSnapshot().LineAt(0), 'before'));
   App.Inject(Tui.TuiMsg.QuitRequested);

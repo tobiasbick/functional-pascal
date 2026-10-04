@@ -48,7 +48,7 @@ public type SseDecoder = Types.SseDecoder;
 //
 // Parameters:
 // - `RequestValue`: Complete request and its transport limits.
-public function Send(RequestValue: Types.Request): result of Types.Response, string;
+public function Send(RequestValue: Types.Request): Result of (Types.Response, string);
 begin
   return Client.Send(RequestValue);
 end function;
@@ -57,7 +57,7 @@ end function;
 //
 // Parameters:
 // - `RequestValue`: Complete request and its transport limits.
-public function OpenStream(RequestValue: Types.Request): result of Types.StreamResponse, string;
+public function OpenStream(RequestValue: Types.Request): Result of (Types.StreamResponse, string);
 begin
   return Client.OpenStream(RequestValue);
 end function;
@@ -67,7 +67,7 @@ end function;
 // Parameters:
 // - `StreamValue`: Open response-body handle.
 // - `MaxBytes`: Maximum number of decoded bytes to return.
-public function ReadStream(StreamValue: Types.BodyStream; MaxBytes: integer): result of array of integer, string;
+public function ReadStream(StreamValue: Types.BodyStream; MaxBytes: integer): Result of (array of (integer), string);
 begin
   return Stream.ReadBody(StreamValue, MaxBytes);
 end function;
@@ -76,7 +76,7 @@ end function;
 //
 // Parameters:
 // - `StreamValue`: Open response-body handle to close.
-public function CloseStream(StreamValue: Types.BodyStream): result of boolean, string;
+public function CloseStream(StreamValue: Types.BodyStream): Result of (boolean, string);
 begin
   return Stream.CloseBody(StreamValue);
 end function;
@@ -87,7 +87,7 @@ end function;
 // - `Connection`: Accepted TCP or TLS connection.
 // - `MaxHeaderBytes`: Maximum request-head size in bytes.
 // - `MaxBodyBytes`: Maximum request-body size in bytes.
-public function ReadRequest(Connection: Net.Connection; MaxHeaderBytes: integer; MaxBodyBytes: integer): result of Types.ServerRequest, string;
+public function ReadRequest(Connection: Net.Connection; MaxHeaderBytes: integer; MaxBodyBytes: integer): Result of (Types.ServerRequest, string);
 begin
   return Server.ReadRequest(Connection, MaxHeaderBytes, MaxBodyBytes);
 end function;
@@ -97,7 +97,7 @@ end function;
 // Parameters:
 // - `Connection`: Accepted TCP or TLS connection.
 // - `ResponseValue`: Complete response to serialize and write.
-public function WriteResponse(Connection: Net.Connection; ResponseValue: Types.ServerResponse): result of boolean, string;
+public function WriteResponse(Connection: Net.Connection; ResponseValue: Types.ServerResponse): Result of (boolean, string);
 begin
   return Server.WriteResponse(Connection, ResponseValue);
 end function;
@@ -108,7 +108,7 @@ end function;
 // - `Listener`: Open TCP or TLS listener.
 // - `Options`: Request limits and server-loop bounds.
 // - `Handler`: Callback that maps each accepted request to a response.
-public function Serve(Listener: Net.Listener; Options: Types.ServerOptions; Handler: Types.RequestHandler): result of boolean, string;
+public function Serve(Listener: Net.Listener; Options: Types.ServerOptions; Handler: Types.RequestHandler): Result of (boolean, string);
 begin
   return ServerLoop.Serve(Listener, Options, Handler);
 end function;
@@ -117,7 +117,7 @@ end function;
 //
 // Parameters:
 // - `MaxEventBytes`: Maximum buffered bytes for one incomplete event.
-public function CreateSseDecoder(MaxEventBytes: integer): result of Types.SseDecoder, string;
+public function CreateSseDecoder(MaxEventBytes: integer): Result of (Types.SseDecoder, string);
 begin
   return Sse.Create(MaxEventBytes);
 end function;
@@ -127,7 +127,7 @@ end function;
 // Parameters:
 // - `Decoder`: Open incremental SSE decoder.
 // - `Bytes`: Next response-body byte fragment.
-public function FeedSse(Decoder: Types.SseDecoder; Bytes: array of integer): result of array of Types.SseEvent, string;
+public function FeedSse(Decoder: Types.SseDecoder; Bytes: array of (integer)): Result of (array of (Types.SseEvent), string);
 begin
   return Sse.Feed(Decoder, Bytes);
 end function;
@@ -136,7 +136,7 @@ end function;
 //
 // Parameters:
 // - `Decoder`: Open incremental SSE decoder to finish.
-public function FinishSse(Decoder: Types.SseDecoder): result of array of Types.SseEvent, string;
+public function FinishSse(Decoder: Types.SseDecoder): Result of (array of (Types.SseEvent), string);
 begin
   return Sse.Finish(Decoder);
 end function;
@@ -146,7 +146,7 @@ end function;
 // Parameters:
 // - `ResponseValue`: Response whose headers are searched.
 // - `Name`: Case-insensitive header name.
-public function HeaderValue(ResponseValue: Types.Response; Name: string): option of string;
+public function HeaderValue(ResponseValue: Types.Response; Name: string): Option of (string);
 begin
   return Headers.Find(ResponseValue.Headers, Name);
 end function;
@@ -155,7 +155,7 @@ end function;
 //
 // Parameters:
 // - `ResponseValue`: Buffered response whose body is decoded.
-public function BodyText(ResponseValue: Types.Response): result of string, string;
+public function BodyText(ResponseValue: Types.Response): Result of (string, string);
 begin
   return Utf8.Decode(ResponseValue.Body);
 end function;

@@ -74,7 +74,7 @@ impl Checker {
                 self.error_with_code(
                     SEMA_TYPE_MISMATCH,
                     "For-in requires an array or dict expression",
-                    "for X: T in <array of T> do ...  or  for K: K in <dict of K to V> do ...",
+                    "for X: T in <array of (T)> do ...  or  for K: K in <dict of (K, V)> do ...",
                     span,
                 );
             }

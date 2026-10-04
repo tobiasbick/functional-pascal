@@ -10,7 +10,7 @@ begin
 end function;
 
 begin
-  var A: array of integer := [1, 2, 3];
-  var R: option of integer := Arrays.Find(A, IsGreaterThanTen);
+  var A: array of (integer) := [1, 2, 3];
+  var R: Option of (integer) := Arrays.Find(A, IsGreaterThanTen);
   Console.WriteLn(Options.IsNone(R));
 end program;

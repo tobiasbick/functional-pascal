@@ -8,25 +8,25 @@ uses Std.Net.Utf8 as Utf8;
 
 begin
   case Uri.Parse('https://example.com:8443/api/items?limit=2') of
-    when Ok(UriValue):
+    when Result.Ok(const UriValue):
       begin
         Console.WriteLn('scheme: ' + UriValue.Scheme);
         Console.WriteLn('host: ' + UriValue.Host);
         Console.WriteLn('port: ' + Conv.IntToStr(UriValue.Port));
         Console.WriteLn('path: ' + UriValue.Path);
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
         panic(Message);
       end;
   end case;
-  var Bytes: array of integer := Utf8.Encode('Grüße aus FPAS');
+  var Bytes: array of (integer) := Utf8.Encode('Grüße aus FPAS');
   case Utf8.Decode(Bytes) of
-    when Ok(Text):
+    when Result.Ok(const Text):
       begin
         Console.WriteLn('UTF-8: ' + Text);
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
         panic(Message);
       end;

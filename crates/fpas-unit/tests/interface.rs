@@ -47,6 +47,8 @@ fn sample_interface() -> UnitInterface {
                 qualified_name: "Demo.Api.State".to_string(),
                 ty: InterfaceType::Enum(Box::new(EnumType {
                     name: "Demo.Api.State".to_string(),
+                    type_parameters: Vec::new(),
+                    type_arguments: Vec::new(),
                     variants: vec![
                         EnumVariant {
                             name: "Idle".to_string(),
@@ -77,6 +79,9 @@ fn sample_interface() -> UnitInterface {
                 qualified_name: "Demo.Api.Counter".to_string(),
                 ty: InterfaceType::Record(Box::new(RecordType {
                     name: "Demo.Api.Counter".to_string(),
+                    type_parameters: Vec::new(),
+                    type_arguments: Vec::new(),
+                    is_resource: false,
                     owner_unit: Some("Demo.Api".to_string()),
                     private_members: vec!["CreateHidden".to_string(), "Value".to_string()],
                     fields: vec![FieldType {

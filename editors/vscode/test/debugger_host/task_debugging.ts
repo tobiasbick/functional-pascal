@@ -54,7 +54,7 @@ export async function verifyTaskDebugging(
     "begin",
     "  var First: task := go Work(10);",
     "  var Second: task := go Work(20);",
-    "  var Pending: array of task := [First, Second];",
+    "  var Pending: array of (task) := [First, Second];",
     "  Tasks.WaitAll(Pending);",
     "  Console.WriteLn(Tasks.Wait(First));",
     "  Console.WriteLn(Tasks.Wait(Second));",

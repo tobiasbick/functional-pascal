@@ -148,7 +148,15 @@ fn single_use_integer_literals_emit_immediate_operations() {
 
 #[test]
 fn string_ordering_uses_typed_opcodes() {
-    let source = r#"program StringOrdering; begin if not ('a' < 'b') then panic('less'); end if; if not ('b' > 'a') then panic('greater'); end if; if not ('a' <= 'a') then panic('less equal'); end if; if not ('b' >= 'b') then panic('greater equal'); end if; end program;"#;
+    let source = r#"program StringOrdering;
+      procedure Verify(A: string; B: string);
+      begin
+        if not (A < B) then panic('less'); end if;
+        if not (B > A) then panic('greater'); end if;
+        if not (A <= A) then panic('less equal'); end if;
+        if not (B >= B) then panic('greater equal'); end if;
+      end procedure;
+      begin Verify('a', 'b'); end program;"#;
     let program = parse_ok(source);
     let executable = crate::compile(&program).expect("string ordering compiles");
     let code = &executable.executable().code;
@@ -187,7 +195,22 @@ fn string_append_reuses_dead_left_operands() {
 
 #[test]
 fn record_self_update_moves_the_dead_temporary_and_keeps_aliases() {
-    let source = r#"program SelfUpdate;  type P = record A: integer; end record; begin mutable var R: P := record A := 1; end record; var Copy: P := R; R := R with A := 2; end with; if (R.A <> 2) or (Copy.A <> 1) then panic('wrong'); end if; end program;"#;
+    let source = r#"program SelfUpdate;
+
+type P = record
+  A: integer;
+end record;
+
+begin
+  mutable var R: P := P(A := 1);
+  var Copy: P := R;
+  R := R with A := 2; end with;
+
+  if (R.A <> 2) or (Copy.A <> 1) then
+    panic('wrong');
+  end if;
+end program;
+"#;
     let program = parse_ok(source);
     let executable = crate::compile(&program).expect("record update compiles");
     assert!(

@@ -22,7 +22,10 @@ pub(in crate::vm::debug) fn insert(
     let Value::Dict(mut entries) = dictionary else {
         return Err(not_dictionary());
     };
-    if entries.iter().any(|(candidate, _)| candidate == &key) {
+    if entries
+        .iter()
+        .any(|(candidate, _)| candidate.language_equal(&key))
+    {
         return Err(key_exists(&key));
     }
     entries.push((key, value));
@@ -42,7 +45,10 @@ pub(in crate::vm::debug) fn remove(
     let Value::Dict(mut entries) = dictionary else {
         return Err(not_dictionary());
     };
-    let Some(index) = entries.iter().position(|(candidate, _)| candidate == key) else {
+    let Some(index) = entries
+        .iter()
+        .position(|(candidate, _)| candidate.language_equal(key))
+    else {
         return Err(key_missing(key));
     };
     let (_, removed) = entries.remove(index);
@@ -65,18 +71,21 @@ pub(in crate::vm::debug) fn replace_key(
     };
     let Some(index) = entries
         .iter()
-        .position(|(candidate, _)| candidate == old_key)
+        .position(|(candidate, _)| candidate.language_equal(old_key))
     else {
         return Err(key_missing(old_key));
     };
-    if old_key == &new_key {
+    if old_key.language_equal(&new_key) {
         return Err(DebugSessionError {
             kind: DebugErrorKind::DictionaryKeyUnchanged,
             message: format!("debug dictionary key `{old_key}` is unchanged"),
             hint: "Use a different missing key or leave the dictionary unchanged.".to_string(),
         });
     }
-    if entries.iter().any(|(candidate, _)| candidate == &new_key) {
+    if entries
+        .iter()
+        .any(|(candidate, _)| candidate.language_equal(&new_key))
+    {
         return Err(key_exists(&new_key));
     }
     entries[index].0 = new_key.clone();
@@ -92,7 +101,7 @@ fn not_dictionary() -> DebugSessionError {
     DebugSessionError {
         kind: DebugErrorKind::VariablePathUnsupported,
         message: "debug dictionary mutation target is not a dictionary".to_string(),
-        hint: "Select a mutable target whose complete value is `dict of K to V`.".to_string(),
+        hint: "Select a mutable target whose complete value is `dict of (K, V)`.".to_string(),
     }
 }
 

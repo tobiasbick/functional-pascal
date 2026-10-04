@@ -30,7 +30,7 @@ begin
   end if;
 end procedure;
 
-function TuiLoopApplyFramework<TModel>(
+function TuiLoopApplyFramework of (TModel)(
   ApplicationId: integer;
   Model: TModel;
   Msg: Msg2.TuiMsg;
@@ -43,7 +43,7 @@ begin
   return Update(Model, Msg, Cmd);
 end function;
 
-function TuiLoopApplyApplication<TModel, TMessage>(
+function TuiLoopApplyApplication of (TModel, TMessage)(
   ApplicationId: integer;
   Model: TModel;
   Message: TMessage;
@@ -55,7 +55,7 @@ begin
   return UpdateApplication(Model, Message, Cmd);
 end function;
 
-function TuiLoopFinishUpdate<TModel>(
+function TuiLoopFinishUpdate of (TModel)(
   ApplicationId: integer;
   Model: TModel;
   View: function(State: TModel): Element.TuiElement;
@@ -78,18 +78,18 @@ begin
   State2.TuiAppRaiseShutdownFailure(State2.TuiAppCloseApplication(ApplicationId));
 end procedure;
 
-procedure TuiLoopCloseWithInbox<TMessage>(ApplicationId: integer; Inbox: channel of TMessage);
+procedure TuiLoopCloseWithInbox of (TMessage)(ApplicationId: integer; Inbox: channel of (TMessage));
 begin
-  var Failures: array of Msg2.TuiMsg := State2.TuiAppCloseApplication(ApplicationId);
+  var Failures: array of (Msg2.TuiMsg) := State2.TuiAppCloseApplication(ApplicationId);
   discard Tasks.CloseChannel(Inbox);
   State2.TuiAppRaiseShutdownFailure(Failures);
 end procedure;
 
 // Runs a deterministic bounded headless loop with an optional typed inbox.
-public function TuiRunHeadless<TModel, TMessage>(
+public function TuiRunHeadless of (TModel, TMessage)(
   ApplicationId: integer;
   InitialModel: TModel;
-  Inbox: channel of TMessage;
+  Inbox: channel of (TMessage);
   Update: function(State: TModel; Msg: Msg2.TuiMsg; Cmd: Cmd2.TuiCmdOutput): TModel;
   UpdateApplication: function(State: TModel; Message: TMessage; Cmd: Cmd2.TuiCmdOutput): TModel;
   View: function(State: TModel): Element.TuiElement;
@@ -163,7 +163,7 @@ begin
         if BackgroundEnabled then
           begin
             case Results.Unwrap(Tasks.TryReceive(Inbox)) of
-              when Some(Message):
+              when Option.Some(const Message):
                 begin
                   Remaining := Remaining - 1;
                   Model := TuiLoopApplyApplication(ApplicationId, Model, Message, UpdateApplication);
@@ -174,7 +174,7 @@ begin
                     end;
                   end if;
                 end;
-              when None:
+              when Option.None:
                 begin
                   Remaining := Remaining - 1;
                   // The deterministic tick also answers a pending tick request.
@@ -211,10 +211,10 @@ begin
 end function;
 
 // Runs the interactive loop, selecting fairly between Console and application messages.
-public function TuiRunInteractive<TModel, TMessage>(
+public function TuiRunInteractive of (TModel, TMessage)(
   ApplicationId: integer;
   InitialModel: TModel;
-  Inbox: channel of TMessage;
+  Inbox: channel of (TMessage);
   Update: function(State: TModel; Msg: Msg2.TuiMsg; Cmd: Cmd2.TuiCmdOutput): TModel;
   UpdateApplication: function(State: TModel; Message: TMessage; Cmd: Cmd2.TuiCmdOutput): TModel;
   View: function(State: TModel): Element.TuiElement;
@@ -222,9 +222,9 @@ public function TuiRunInteractive<TModel, TMessage>(
 ): TModel;
 begin
   discard State2.TuiAppRequireOpen(ApplicationId);
-  var ConsoleInputs: channel of Input2.TuiHostInput := Tasks.CreateChannel(32);
+  var ConsoleInputs: channel of (Input2.TuiHostInput) := Tasks.CreateChannel(32);
   var InputGroup: Tasks.TaskGroup := Tasks.CreateTaskGroup();
-  var ConsoleInputHandle: task := Tasks.StartTaskInGroup(InputGroup, function(Token: Tasks.CancellationToken): result of boolean, string begin
+  var ConsoleInputHandle: task := Tasks.StartTaskInGroup(InputGroup, function(Token: Tasks.CancellationToken): Result of (boolean, string) begin
     return ConsoleInput2.TuiConsoleInputPump(Token, ConsoleInputs);
   end function);
   mutable var Model: TModel := InitialModel;
@@ -277,16 +277,16 @@ begin
           continue;
         end;
       end if;
-      mutable var ConsoleInput: option of Input2.TuiHostInput := None;
-      mutable var ApplicationInput: option of TMessage := None;
-      mutable var Cases: array of Tasks.WaitCase := [];
-      var ConsoleCase: Tasks.WaitCase := Tasks.ReceiveCase(ConsoleInputs, procedure(Outcome: result of Input2.TuiHostInput, string) begin
+      mutable var ConsoleInput: Option of (Input2.TuiHostInput) := Option.None;
+      mutable var ApplicationInput: Option of (TMessage) := Option.None;
+      mutable var Cases: array of (Tasks.WaitCase) := [];
+      var ConsoleCase: Tasks.WaitCase := Tasks.ReceiveCase(ConsoleInputs, procedure(Outcome: Result of (Input2.TuiHostInput, string)) begin
         case Outcome of
-          when Ok(Input):
+          when Result.Ok(const Input):
             begin
-              ConsoleInput := Some(Input);
+              ConsoleInput := Option.Some(Input);
             end;
-          when Error(Message):
+          when Result.Error(const Message):
             begin
               null;
             end;
@@ -294,13 +294,13 @@ begin
       end procedure);
       if BackgroundEnabled then
         begin
-          var ApplicationCase: Tasks.WaitCase := Tasks.ReceiveCase(Inbox, procedure(Outcome: result of TMessage, string) begin
+          var ApplicationCase: Tasks.WaitCase := Tasks.ReceiveCase(Inbox, procedure(Outcome: Result of (TMessage, string)) begin
             case Outcome of
-              when Ok(Message):
+              when Result.Ok(const Message):
                 begin
-                  ApplicationInput := Some(Message);
+                  ApplicationInput := Option.Some(Message);
                 end;
-              when Error(Failure):
+              when Result.Error(const Failure):
                 begin
                   null;
                 end;
@@ -343,18 +343,18 @@ begin
       discard Tasks.Select(Cases);
       PreferApplication := not PreferApplication;
       case ConsoleInput of
-        when Some(Input):
+        when Option.Some(const Input):
           begin
             State2.TuiAppRouteInput(ApplicationId, Input);
           end;
-        when None:
+        when Option.None:
           begin
             null;
           end;
       end case;
 
       case ApplicationInput of
-        when Some(Message):
+        when Option.Some(const Message):
           begin
             Model := TuiLoopApplyApplication(ApplicationId, Model, Message, UpdateApplication);
             if TuiLoopFinishUpdate(ApplicationId, Model, View, true) then
@@ -366,7 +366,7 @@ begin
               end;
             end if;
           end;
-        when None:
+        when Option.None:
           begin
             null;
           end;

@@ -18,11 +18,7 @@ The [cell drawing API](cells-frames.md) stores foreground and background colors 
 ```pascal
 uses Std.Console as Console;
 
-var Value: Console.Cell := record
-  glyph := 'X';
-  foreground := Console.RgbColor(255, 128, 0);
-  background := Console.Ansi256Color(17);
-end record;
+var Value: Console.Cell := Console.Cell(glyph := 'X', foreground := Console.RgbColor(255, 128, 0), background := Console.Ansi256Color(17));
 
 Console.PutCell(1, 1, Value);
 ```

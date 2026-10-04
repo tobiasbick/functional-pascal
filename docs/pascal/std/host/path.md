@@ -28,7 +28,7 @@ Requires `uses Std.Path as Path;`.
 
 | Kind | Name | Notes |
 |------|------|-------|
-| function | `Join(Segments: array of string): string` | joins segments with the platform path separator |
+| function | `Join(Segments: array of (string)): string` | joins segments with the platform path separator |
 | function | `BaseName(Path: string): string` | returns the final path component |
 | function | `DirName(Path: string): string` | returns the parent path without the final component |
 | function | `Extension(Path: string): string` | returns the final extension without a leading dot |
@@ -46,7 +46,7 @@ Requires `uses Std.Path as Path;`.
 
 ---
 
-## `function Join(Segments: array of string): string`
+## `function Join(Segments: array of (string)): string`
 
 Joins path segments in order using the platform separator.
 
@@ -64,7 +64,7 @@ Console.WriteLn(Path.Join(['home', '/etc/hosts']));
 uses Std.Console as Console;
 uses Std.Path as Path;
 
-var Parts: array of string := ['src', 'main', 'app.txt'];
+var Parts: array of (string) := ['src', 'main', 'app.txt'];
 Console.WriteLn(Path.BaseName(Path.Join(Parts)));
 ```
 

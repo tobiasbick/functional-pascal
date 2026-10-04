@@ -6,11 +6,11 @@ uses Std.Test as Test;
 
 begin
   case Fs.Glob(Test.ScratchDir() + '/no-match/**/*.fpas') of
-    when Ok(Paths):
+    when Result.Ok(const Paths):
       begin
         Test.AssertEquals(0, Arrays.Length(Paths));
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
         Test.Fail(Message);
       end;

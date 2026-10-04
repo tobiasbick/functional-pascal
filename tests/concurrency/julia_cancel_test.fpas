@@ -15,11 +15,7 @@ begin
       var Old: Render.RenderJob := Render.StartRender(-1.0, 1.0, -1.0, 1.0, 8, 100, 2048, Color.PaletteKind.DeepOcean, 0.0, 0.0);
       discard Results.Unwrap(Tasks.ReceiveWithTimeout(Old.Rows, 5000));
       var Token: Tasks.CancellationToken := Tasks.GetTaskGroupToken(Old.Group);
-      var Filler: Render.RenderRow := record
-        Y := 0;
-        Samples := [];
-      end record;
-
+      var Filler: Render.RenderRow := Render.RenderRow(Y := 0, Samples := []);
       while Results.Unwrap(Tasks.TrySend(Old.Rows, Filler)) do
         begin
           null;

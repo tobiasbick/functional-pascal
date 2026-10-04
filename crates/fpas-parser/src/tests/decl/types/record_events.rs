@@ -21,7 +21,7 @@ end unit;
 #[test]
 fn record_event_parses() {
     let p = parse_ok(
-        r#"program T;  type Button = record function ReadOnClick(Self: Button): Option of procedure(); begin return None; end function; procedure WriteOnClick(Self: Button; H: Option of procedure()); begin null; end procedure; event OnClick: procedure() read ReadOnClick write WriteOnClick; end record; begin null; end program;"#,
+        r#"program T;  type Button = record function ReadOnClick(Self: Button): Option of (procedure()); begin return Option.None; end function; procedure WriteOnClick(Self: Button; H: Option of (procedure())); begin null; end procedure; event OnClick: procedure() read ReadOnClick write WriteOnClick; end record; begin null; end program;"#,
     );
     match &p.declarations[0] {
         Decl::TypeDef(td) => match &td.body {
@@ -80,10 +80,7 @@ fn event_without_accessors_is_rejected() {
 #[test]
 fn event_with_only_read_is_rejected() {
     let (_, errors) = parse_with_errors(
-        "program T; type Button = record \
-         function ReadOnClick(Self: Button): Option of procedure(); begin return None end; \
-         event OnClick: procedure() read ReadOnClick; \
-         end; begin end.",
+        "program T; type Button = record function ReadOnClick(Self: Button): Option of (procedure()); begin return Option.None end; event OnClick: procedure() read ReadOnClick; end; begin end.",
     );
     assert!(
         errors
@@ -97,10 +94,7 @@ fn event_with_only_read_is_rejected() {
 #[test]
 fn event_with_only_write_is_rejected() {
     let (_, errors) = parse_with_errors(
-        "program T; type Button = record \
-         procedure WriteOnClick(Self: Button; H: Option of procedure()); begin end; \
-         event OnClick: procedure() write WriteOnClick; \
-         end; begin end.",
+        "program T; type Button = record procedure WriteOnClick(Self: Button; H: Option of (procedure())); begin end; event OnClick: procedure() write WriteOnClick; end; begin end.",
     );
     assert!(
         errors

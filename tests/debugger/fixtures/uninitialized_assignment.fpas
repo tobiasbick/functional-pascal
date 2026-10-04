@@ -12,10 +12,7 @@ mutable var GlobalCount: integer := 99;
 begin
   mutable var Count: integer := 1;
   mutable var Flag: boolean := false;
-  mutable var Origin: Point := record
-    X := 3;
-    Y := 4;
-  end record;
+  mutable var Origin: Point := Point(X := 3, Y := 4);
   var Frozen: integer := 2;
   Console.WriteLn(Count);
   Console.WriteLn(GlobalCount);

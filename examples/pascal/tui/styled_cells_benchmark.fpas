@@ -18,7 +18,7 @@ const FrameHeight: integer := 44;
 // Builds one frame of cells whose colors vary per cell and returns a checksum of its channels.
 function BuildFrame(Frame: integer): integer;
 begin
-  mutable var Cells: array of Tui.TuiCell := [];
+  mutable var Cells: array of (Tui.TuiCell) := [];
   for Y: integer := 0 to FrameHeight - 1 do
     begin
       for X: integer := 0 to FrameWidth - 1 do
@@ -34,11 +34,11 @@ begin
   for Cell: Tui.TuiCell in Cells do
     begin
       case Cell.ConcreteStyle of
-        when Some(Style):
+        when Option.Some(const Style):
           begin
             Checksum := (Checksum + Style.Foreground.Red) + Style.Background.Green;
           end;
-        when None:
+        when Option.None:
           begin
             panic('styled cell lost its style');
           end;

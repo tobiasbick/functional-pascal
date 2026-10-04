@@ -69,7 +69,7 @@ fn check_dict_length(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
         c.error_with_code(
             SEMA_TYPE_MISMATCH,
             format!("`{}` expects a dict", s::STD_DICT_LENGTH),
-            "Pass `dict of K to V`.",
+            "Pass `dict of (K, V)`.",
             span,
         );
         Ty::Error
@@ -102,7 +102,7 @@ fn check_dict_contains_key(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
                 "`{}` expects a dict as first argument",
                 s::STD_DICT_CONTAINS_KEY
             ),
-            "Pass `dict of K to V`.",
+            "Pass `dict of (K, V)`.",
             span,
         );
         Ty::Error
@@ -119,7 +119,7 @@ fn check_dict_keys(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
         c.error_with_code(
             SEMA_TYPE_MISMATCH,
             format!("`{}` expects a dict", s::STD_DICT_KEYS),
-            "Pass `dict of K to V`.",
+            "Pass `dict of (K, V)`.",
             span,
         );
         Ty::Error
@@ -136,7 +136,7 @@ fn check_dict_values(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
         c.error_with_code(
             SEMA_TYPE_MISMATCH,
             format!("`{}` expects a dict", s::STD_DICT_VALUES),
-            "Pass `dict of K to V`.",
+            "Pass `dict of (K, V)`.",
             span,
         );
         Ty::Error
@@ -166,7 +166,7 @@ fn check_dict_remove(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
         c.error_with_code(
             SEMA_TYPE_MISMATCH,
             format!("`{}` expects a dict as first argument", s::STD_DICT_REMOVE),
-            "Pass `dict of K to V`.",
+            "Pass `dict of (K, V)`.",
             span,
         );
         Ty::Error
@@ -199,7 +199,7 @@ fn check_dict_get(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
         c.error_with_code(
             SEMA_TYPE_MISMATCH,
             format!("`{}` expects a dict as first argument", s::STD_DICT_GET),
-            "Pass `dict of K to V`.",
+            "Pass `dict of (K, V)`.",
             span,
         );
         Ty::Error
@@ -226,7 +226,7 @@ fn check_dict_merge(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
         c.error_with_code(
             SEMA_TYPE_MISMATCH,
             format!("`{}` expects a dict as first argument", s::STD_DICT_MERGE),
-            "Pass `dict of K to V`.",
+            "Pass `dict of (K, V)`.",
             span,
         );
         return Ty::Error;
@@ -236,7 +236,7 @@ fn check_dict_merge(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
         c.error_with_code(
             SEMA_TYPE_MISMATCH,
             format!("`{}` expects a dict as second argument", s::STD_DICT_MERGE),
-            "Pass `dict of K to V`.",
+            "Pass `dict of (K, V)`.",
             span,
         );
         return Ty::Error;
@@ -249,7 +249,7 @@ fn check_dict_merge(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
                 "`{}` requires both dictionaries to have the same key and value types",
                 s::STD_DICT_MERGE
             ),
-            "Pass `dict of K to V` and `dict of K to V` with the same K and V types.",
+            "Pass `dict of (K, V)` and `dict of (K, V)` with the same K and V types.",
             span,
         );
         return Ty::Error;
@@ -258,7 +258,7 @@ fn check_dict_merge(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
     Ty::Dict(Box::new(k1), Box::new(v1))
 }
 
-/// `Std.Dictionaries.Map(D, F)` — `F: function(V): V2` → `dict of K to V2`.
+/// `Std.Dictionaries.Map(D, F)` — `F: function(V): V2` → `dict of (K, V2)`.
 fn check_dict_map(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
     if args.len() != 2 {
         c.error_with_code(
@@ -279,7 +279,7 @@ fn check_dict_map(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
         c.error_with_code(
             SEMA_TYPE_MISMATCH,
             format!("`{}` first argument must be a dict", s::STD_DICT_MAP),
-            "Pass `dict of K to V`.",
+            "Pass `dict of (K, V)`.",
             span,
         );
         return Ty::Error;
@@ -322,7 +322,7 @@ fn check_dict_map(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
     Ty::Dict(Box::new(k), Box::new(return_ty))
 }
 
-/// `Std.Dictionaries.Filter(D, F)` — `F: function(K; V): boolean` → `dict of K to V`.
+/// `Std.Dictionaries.Filter(D, F)` — `F: function(K; V): boolean` → `dict of (K, V)`.
 fn check_dict_filter(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
     if args.len() != 2 {
         c.error_with_code(
@@ -343,7 +343,7 @@ fn check_dict_filter(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
         c.error_with_code(
             SEMA_TYPE_MISMATCH,
             format!("`{}` first argument must be a dict", s::STD_DICT_FILTER),
-            "Pass `dict of K to V`.",
+            "Pass `dict of (K, V)`.",
             span,
         );
         return Ty::Error;

@@ -11,39 +11,39 @@ uses Std.Tasks as Tasks2;
 //
 // Parameters:
 // - `Options`: Server-loop limits to validate.
-function ValidateOptions(Options: Types.ServerOptions): result of boolean, string;
+function ValidateOptions(Options: Types.ServerOptions): Result of (boolean, string);
 begin
   if Options.MaxHeaderBytes < 1 then
     begin
-      return Error('HTTP server MaxHeaderBytes must be positive');
+      return Result.Error('HTTP server MaxHeaderBytes must be positive');
     end;
   end if;
 
   if Options.MaxBodyBytes < 0 then
     begin
-      return Error('HTTP server MaxBodyBytes must not be negative');
+      return Result.Error('HTTP server MaxBodyBytes must not be negative');
     end;
   end if;
 
   if Options.ConnectionTimeoutMillis < 1 then
     begin
-      return Error('HTTP server ConnectionTimeoutMillis must be positive');
+      return Result.Error('HTTP server ConnectionTimeoutMillis must be positive');
     end;
   end if;
 
   if Options.MaxConcurrentRequests < 1 then
     begin
-      return Error('HTTP server MaxConcurrentRequests must be positive');
+      return Result.Error('HTTP server MaxConcurrentRequests must be positive');
     end;
   end if;
 
   if Options.MaxRequests < 0 then
     begin
-      return Error('HTTP server MaxRequests must not be negative');
+      return Result.Error('HTTP server MaxRequests must not be negative');
     end;
   end if;
 
-  return Ok(true);
+  return Result.Ok(true);
 end function;
 
 // Closes a connection while deliberately ignoring close errors.
@@ -53,11 +53,11 @@ end function;
 procedure CloseQuietly(Connection: Net.Connection);
 begin
   case Net.Close(Connection) of
-    when Ok(_):
+    when Result.Ok(_):
       begin
         null;
       end;
-    when Error(_):
+    when Result.Error(_):
       begin
         null;
       end;
@@ -72,11 +72,11 @@ procedure WriteBadRequestQuietly(Connection: Net.Connection);
 begin
   var ResponseValue: Types.ServerResponse := Types.ServerResponse.Create(400, 'Bad Request');
   case Server.WriteResponse(Connection, ResponseValue) of
-    when Ok(_):
+    when Result.Ok(_):
       begin
         null;
       end;
-    when Error(_):
+    when Result.Error(_):
       begin
         null;
       end;
@@ -96,29 +96,23 @@ function ServeConnection(
 ): boolean;
 begin
   case Net.SetTimeout(Connection, Options.ConnectionTimeoutMillis) of
-    when Ok(_):
+    when Result.Ok(_):
       begin
         null;
       end;
-    when Error(_):
+    when Result.Error(_):
       begin
         CloseQuietly(Connection);
         return false;
       end;
   end case;
-  mutable var RequestValue: Types.ServerRequest := record
-    Method := '';
-    Target := '';
-    Headers := [];
-    Body := [];
-  end record;
-
+  mutable var RequestValue: Types.ServerRequest := Types.ServerRequest(Method := '', Target := '', Headers := [], Body := []);
   case Server.ReadRequest(Connection, Options.MaxHeaderBytes, Options.MaxBodyBytes) of
-    when Ok(Value):
+    when Result.Ok(const Value):
       begin
         RequestValue := Value;
       end;
-    when Error(_):
+    when Result.Error(_):
       begin
         WriteBadRequestQuietly(Connection);
         CloseQuietly(Connection);
@@ -128,11 +122,11 @@ begin
   var ResponseValue: Types.ServerResponse := Handler(RequestValue);
   mutable var Succeeded: boolean := false;
   case Server.WriteResponse(Connection, ResponseValue) of
-    when Ok(_):
+    when Result.Ok(_):
       begin
         Succeeded := true;
       end;
-    when Error(_):
+    when Result.Error(_):
       begin
         null;
       end;
@@ -160,34 +154,34 @@ end function;
 // - `Listener`: Open TCP or TLS listener.
 // - `Options`: Request limits and server-loop bounds.
 // - `Handler`: Callback that maps each accepted request to a response.
-public function Serve(Listener: Net.Listener; Options: Types.ServerOptions; Handler: Types.RequestHandler): result of boolean, string;
+public function Serve(Listener: Net.Listener; Options: Types.ServerOptions; Handler: Types.RequestHandler): Result of (boolean, string);
 begin
   case ValidateOptions(Options) of
-    when Ok(_):
+    when Result.Ok(_):
       begin
         null;
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
-        return Error(Message);
+        return Result.Error(Message);
       end;
   end case;
   mutable var Accepted: integer := 0;
   while (Options.MaxRequests = 0) or (Accepted < Options.MaxRequests) do
     begin
-      mutable var Tasks: array of task := [];
+      mutable var Tasks: array of (task) := [];
       while HasCapacity(Options, Accepted, Arrays.Length(Tasks)) do
         begin
           case Net.Accept(Listener) of
-            when Ok(Connection):
+            when Result.Ok(const Connection):
               begin
                 Arrays.Push(Tasks, go ServeConnection(Connection, Options, Handler));
                 Accepted := Accepted + 1;
               end;
-            when Error(Message):
+            when Result.Error(const Message):
               begin
                 Tasks2.WaitAll(Tasks);
-                return Error(Message);
+                return Result.Error(Message);
               end;
           end case;
         end;
@@ -197,7 +191,7 @@ begin
     end;
   end while;
 
-  return Ok(true);
+  return Result.Ok(true);
 end function;
 
 end unit;

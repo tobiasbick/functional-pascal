@@ -5,46 +5,13 @@
 use super::super::{check_errors, check_ok};
 
 fn event_prelude() -> &'static str {
-    "\
-program T;
-type
-  Button = record
-    Id: integer;
-    function ReadOnClick(Self: Button): Option of procedure(Sender: Button);
-    begin
-      return None;
-    end function;
-    procedure WriteOnClick(Self: Button; Handler: Option of procedure(Sender: Button));
-    begin
-      null;
-    end procedure;
-    event OnClick: procedure(Sender: Button) read ReadOnClick write WriteOnClick;
-    procedure RaiseClick(Self: Button);
-    begin
-      if Assigned(Self.OnClick) then
-        Self.OnClick(Self);
-      end if;
-    end procedure;
-  end record;
-"
+    "program T;\ntype\n  Button = record\n    Id: integer;\n    function ReadOnClick(Self: Button): Option of (procedure(Sender: Button));\n    begin\n      return Option.None;\n    end function;\n    procedure WriteOnClick(Self: Button; Handler: Option of (procedure(Sender: Button)));\n    begin\n      null;\n    end procedure;\n    event OnClick: procedure(Sender: Button) read ReadOnClick write WriteOnClick;\n    procedure RaiseClick(Self: Button);\n    begin\n      if Assigned(Self.OnClick) then\n        Self.OnClick(Self);\n      end if;\n    end procedure;\n  end record;\n"
 }
 
 #[test]
 fn event_assign_assigned_and_raise_ok() {
     check_ok(&format!(
-        "{}\
-procedure Handle(Sender: Button);
-begin
-  null;
-end procedure;
-begin
-  var B: Button := record Id := 1; end record;
-  B.OnClick := Handle;
-  if Assigned(B.OnClick) then
-    B.RaiseClick();
-  end if;
-  B.OnClick := nil;
-end program;",
+        "{}procedure Handle(Sender: Button);\nbegin\n  null;\nend procedure;\nbegin\n  var B: Button := Button(Id := 1);\n  B.OnClick := Handle;\n  if Assigned(B.OnClick) then\n    B.RaiseClick();\n  end if;\n  B.OnClick := nil;\nend program;",
         event_prelude()
     ));
 }
@@ -52,11 +19,7 @@ end program;",
 #[test]
 fn bare_event_read_is_rejected() {
     let errors = check_errors(&format!(
-        "{}\
-begin
-  var B: Button := record Id := 1; end record;
-  var H: procedure(Sender: Button) := B.OnClick;
-end program;",
+        "{}begin\n  var B: Button := Button(Id := 1);\n  var H: procedure(Sender: Button) := B.OnClick;\nend program;",
         event_prelude()
     ));
     assert!(
@@ -107,10 +70,10 @@ fn event_duplicate_member_name_rejected() {
 
   type Button = record
     OnClick: integer;
-    function ReadOnClick(Self: Button): Option of procedure();
-    begin return None;
+    function ReadOnClick(Self: Button): Option of (procedure());
+    begin return Option.None;
     end function;
-    procedure WriteOnClick(Self: Button; Handler: Option of procedure());
+    procedure WriteOnClick(Self: Button; Handler: Option of (procedure()));
     begin null;
     end procedure;
     event OnClick: procedure() read ReadOnClick write WriteOnClick;
@@ -131,10 +94,10 @@ fn event_rejects_generic_and_mutable_accessors() {
         r#"program T;
 
   type Button = record
-    function ReadOnClick<T>(Self: Button): Option of procedure();
-    begin return None;
+    function ReadOnClick of (T)(Self: Button): Option of (procedure());
+    begin return Option.None;
     end function;
-    procedure WriteOnClick(Self: Button; mutable Handler: Option of procedure());
+    procedure WriteOnClick(Self: Button; mutable Handler: Option of (procedure()));
     begin null;
     end procedure;
     event OnClick: procedure() read ReadOnClick write WriteOnClick;
@@ -158,21 +121,13 @@ begin null; end program;"#,
 #[test]
 fn event_cannot_be_initialized_or_updated_as_a_field() {
     let errors = check_errors(&format!(
-        "{}\
-procedure Handle(Sender: Button);
-begin
-  null;
-end procedure;
-begin
-  var B: Button := record Id := 1; OnClick := Handle; end record;
-  var C: Button := B with OnClick := Handle; end with;
-end program;",
+        "{}procedure Handle(Sender: Button);\nbegin\n  null;\nend procedure;\nbegin\n  var B: Button := Button(Id := 1, OnClick := Handle);\n  var C: Button := B with OnClick := Handle; end with;\nend program;",
         event_prelude()
     ));
     assert!(
         errors
             .iter()
-            .any(|error| error.message.contains("cannot be initialized")),
+            .any(|error| error.message == "Record type `Button` has no field `OnClick`"),
         "{errors:#?}"
     );
     assert!(
@@ -186,11 +141,7 @@ end program;",
 #[test]
 fn event_raise_cannot_cross_task_boundary() {
     let errors = check_errors(&format!(
-        "{}\
-begin
-  var B: Button := record Id := 1; end record;
-  go B.OnClick(B);
-end program;",
+        "{}begin\n  var B: Button := Button(Id := 1);\n  go B.OnClick(B);\nend program;",
         event_prelude()
     ));
     assert!(
@@ -204,11 +155,7 @@ end program;",
 #[test]
 fn parenthesized_nil_clears_event() {
     check_ok(&format!(
-        "{}\
-begin
-  var B: Button := record Id := 1; end record;
-  B.OnClick := (nil);
-end program;",
+        "{}begin\n  var B: Button := Button(Id := 1);\n  B.OnClick := (nil);\nend program;",
         event_prelude()
     ));
 }

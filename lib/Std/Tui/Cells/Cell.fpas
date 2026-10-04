@@ -11,7 +11,7 @@ public type TuiCell = record
   // Semantic style role of the cell.
   public Role: StyleRole.TuiStyleRole;
   // Optional concrete style overriding semantic role resolution.
-  public ConcreteStyle: option of Style2.TuiStyle;
+  public ConcreteStyle: Option of (Style2.TuiStyle);
   // Display width of the glyph in terminal cells.
   public Columns: integer;
 
@@ -22,12 +22,7 @@ public type TuiCell = record
   // - `Role`: Semantic style role used by the operation.
   public static function Create(Glyph: string; Role: StyleRole.TuiStyleRole): TuiCell;
   begin
-    return record
-      Glyph := Glyph;
-      Role := Role;
-      ConcreteStyle := None;
-      Columns := Glyph2.TuiGlyphWidth(Glyph);
-    end record;
+    return TuiCell(Glyph := Glyph, Role := Role, ConcreteStyle := Option.None, Columns := Glyph2.TuiGlyphWidth(Glyph));
   end function;
 
   // Creates a cell with a concrete style that bypasses theme lookup.
@@ -37,12 +32,7 @@ public type TuiCell = record
   // - `Style`: Concrete terminal style.
   public static function Styled(Glyph: string; Style: Style2.TuiStyle): TuiCell;
   begin
-    return record
-      Glyph := Glyph;
-      Role := StyleRole.TuiStyleRole.Normal;
-      ConcreteStyle := Some(Style);
-      Columns := Glyph2.TuiGlyphWidth(Glyph);
-    end record;
+    return TuiCell(Glyph := Glyph, Role := StyleRole.TuiStyleRole.Normal, ConcreteStyle := Option.Some(Style), Columns := Glyph2.TuiGlyphWidth(Glyph));
   end function;
 
   // Returns the terminal-column width of the cell glyph (`1` or `2`).

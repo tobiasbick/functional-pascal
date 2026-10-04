@@ -43,7 +43,7 @@ impl Parser {
             self.error_with_code(
                 PARSE_EXPECTED_TOKEN,
                 "Expected at least one case arm",
-                "Add a case arm such as `1: Value := 1` after `of`.",
+                "Add a case arm such as `when 1: Value := 1;` after `of`.",
                 self.current_span(),
             );
         }
@@ -98,55 +98,12 @@ impl Parser {
         }
     }
 
-    fn parse_case_label_list(&mut self) -> Vec<CaseLabel> {
-        let mut labels = Vec::new();
-        labels.push(self.parse_case_label());
+    /// Parse the same recursive label list for statement and expression cases.
+    pub(in crate::parser) fn parse_case_label_list(&mut self) -> Vec<CaseLabel> {
+        let mut labels = vec![self.parse_pattern()];
         while self.eat(&Token::Comma) {
-            labels.push(self.parse_case_label());
+            labels.push(self.parse_pattern());
         }
         labels
-    }
-
-    fn parse_case_label(&mut self) -> CaseLabel {
-        let start = self.current_span();
-
-        match self.current_token() {
-            Token::Ok | Token::Error | Token::Some | Token::None => {
-                let variant = match self.current_token() {
-                    Token::Ok => DestructureVariant::Ok,
-                    Token::Error => DestructureVariant::Error,
-                    Token::Some => DestructureVariant::Some,
-                    Token::None => DestructureVariant::None,
-                    _ => unreachable!(),
-                };
-                self.advance();
-                let binding = if variant == DestructureVariant::None {
-                    None
-                } else {
-                    self.expect(&Token::LParen);
-                    let binding = self.expect_ident().map(|(name, _)| name);
-                    self.expect(&Token::RParen);
-                    binding
-                };
-                return CaseLabel::Destructure {
-                    variant,
-                    binding,
-                    span: self.span_from(start),
-                };
-            }
-            _ => {}
-        }
-
-        let start_expr = self.parse_expression();
-        let end_expr = if self.eat(&Token::DotDot) {
-            Some(self.parse_expression())
-        } else {
-            None
-        };
-        CaseLabel::Value {
-            start: start_expr,
-            end: end_expr,
-            span: self.span_from(start),
-        }
     }
 }

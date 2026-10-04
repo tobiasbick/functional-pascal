@@ -3,13 +3,13 @@ program T;
 uses Std.Console as Console;
 uses Std.Options as Options;
 
-function AlwaysNone(): option of integer;
+function AlwaysNone(): Option of (integer);
 begin
-  return None;
+  return Option.None;
 end function;
 
 begin
-  var O: option of integer := None;
-  var M: option of integer := Options.OrElse(O, AlwaysNone);
+  var O: Option of (integer) := Option.None;
+  var M: Option of (integer) := Options.OrElse(O, AlwaysNone);
   Console.WriteLn(Options.IsNone(M));
 end program;

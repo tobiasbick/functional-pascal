@@ -1,10 +1,13 @@
 //! Conversion between Sema types and persistent compiled-unit interface types.
 
 mod analysis;
+mod constants;
+pub(crate) use constants::ScalarConstants;
 mod conversion;
 mod export;
 mod install;
 mod public_signatures;
+mod record_defaults;
 #[cfg(test)]
 mod tests;
 

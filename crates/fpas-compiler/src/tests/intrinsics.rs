@@ -31,7 +31,7 @@ fn object_retains_layouts_constructed_by_runtime_intrinsics() {
         r#"program RuntimeLayouts;
 uses Std.Json as Json;
 begin
-  var Parsed: result of Json.JsonValue, string := Json.Parse('null');
+  var Parsed: result of (Json.JsonValue, string) := Json.Parse('null');
 end program;"#,
     );
     let object = crate::compile_program_object_with_support(&program, &[], &[])
@@ -48,18 +48,14 @@ end program;"#,
 #[test]
 fn object_retains_layouts_referenced_by_portable_debug_types() {
     let program = parse_ok(
-        r#"
-program DebugLayout;
+        r#"program DebugLayout;
 
-
-  type Point = record
-    X: integer;
-  end record;
+type Point = record
+  X: integer;
+end record;
 
 begin
-  var Origin: Point := record
-    X := 1;
-  end record;
+  var Origin: Point := Point(X := 1);
   var Marker: integer := Origin.X;
 end program;
 "#,
@@ -148,7 +144,7 @@ begin
 end function;
 
 begin
-  var Values: array of integer := Arrays.Map([2, 3, 4], Double);
+  var Values: array of (integer) := Arrays.Map([2, 3, 4], Double);
   Test.AssertEquals(3, Arrays.Length(Values));
   Test.AssertEquals(6, Values[1]);
 end program;"#,

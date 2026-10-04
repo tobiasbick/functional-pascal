@@ -7,20 +7,15 @@ uses Std.Results as Results;
 uses Std.Test as Test;
 
 type Holder = record
-  Items: array of integer;
-  Tags: dict of string to integer;
-  MaybeItems: option of array of integer;
-  Lookup: result of dict of string to integer, string;
+  Items: array of (integer);
+  Tags: dict of (string, integer);
+  MaybeItems: Option of (array of (integer));
+  Lookup: Result of (dict of (string, integer), string);
 end record;
 
 begin
-  var Original: Holder := record
-    Items := [1, 2];
-    Tags := ['old': 1];
-    MaybeItems := Some([3]);
-    Lookup := Ok(['old': 2]);
-  end record;
-  var Updated: Holder := Original with Items := []; Tags := [:]; MaybeItems := Some([]); Lookup := Ok([:]); end with;
+  var Original: Holder := Holder(Items := [1, 2], Tags := ['old': 1], MaybeItems := Option.Some([3]), Lookup := Result.Ok(['old': 2]));
+  var Updated: Holder := Original with Items := []; Tags := [:]; MaybeItems := Option.Some([]); Lookup := Result.Ok([:]); end with;
 
   Test.AssertEquals(0, Arrays.Length(Updated.Items));
   Test.AssertEquals(0, Dictionaries.Length(Updated.Tags));

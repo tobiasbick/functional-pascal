@@ -31,6 +31,10 @@ impl LoweringContext {
         let result = self
             .type_table
             .id(&target.result_ty, span.line, span.column)?;
+        let callable = self
+            .type_table
+            .id(&target.callable_ty, span.line, span.column)?;
+        let callee = self.coerce_value_type(callee, callable, span)?;
         let value = self.lower_value_call(callee, args, result, span)?;
         Ok(Some((value, result)))
     }

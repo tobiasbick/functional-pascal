@@ -11,45 +11,36 @@ end record;
 
 function ViewCheck(State: CheckModel): Tui.TuiElement;
 begin
-  return Tui.TuiElementBuilders.MakeDesktop(Some(Tui.TuiControlId.Create(State.Focus)), [
-                                                                                          Tui.TuiElementBuilders.MakePanel('Host', [
-                                                                                                                                     Tui.TuiElementBuilders.MakeCheckBox(Tui.TuiControlId.Create(1), 'Flag', State.Checked, Tui.TuiAction.Create(9))
-                                                                                                                                   ])
-                                                                                        ]);
+  return Tui.TuiElementBuilders.MakeDesktop(Option.Some(Tui.TuiControlId.Create(State.Focus)), [
+                                                                                                 Tui.TuiElementBuilders.MakePanel('Host', [
+                                                                                                                                            Tui.TuiElementBuilders.MakeCheckBox(Tui.TuiControlId.Create(1), 'Flag', State.Checked, Tui.TuiAction.Create(9))
+                                                                                                                                          ])
+                                                                                               ]);
 end function;
 
 function UpdateCheck(State: CheckModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): CheckModel;
 begin
   Cmd.Set(Tui.TuiCmd.NoCommand);
   case Msg of
-    when Tui.TuiMsg.CheckChanged(Source, Action, Checked):
+    when Tui.TuiMsg.CheckChanged(const Source, const Action, const Checked):
       begin
-        return record
-          Focus := State.Focus;
-          Checked := Checked;
-        end record;
+        return CheckModel(Focus := State.Focus, Checked := Checked);
       end;
-    else
+    when Tui.TuiMsg.Started, Tui.TuiMsg.Key(_), Tui.TuiMsg.Pointer(_), Tui.TuiMsg.Tick(_), Tui.TuiMsg.Resize(_), Tui.TuiMsg.FocusChanged(_, _), Tui.TuiMsg.Action(_, _), Tui.TuiMsg.TextChanged(_, _, _, _), Tui.TuiMsg.TextAreaChanged(_, _, _, _, _), Tui.TuiMsg.SelectionChanged(_, _, _), Tui.TuiMsg.ScrollChanged(_, _, _), Tui.TuiMsg.MenuChanged(_, _, _), Tui.TuiMsg.BackgroundFailed(_, _, _, _, _, _), Tui.TuiMsg.QuitRequested:
       begin
-        return State;
+        begin
+          return State;
+        end;
       end;
   end case;
 end function;
 
 begin
   mutable var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(24, 6));
-  mutable var Model: CheckModel := record
-    Focus := 1;
-    Checked := false;
-  end record;
-
+  mutable var Model: CheckModel := CheckModel(Focus := 1, Checked := false);
   Model := App.RunIterations(Model, UpdateCheck, ViewCheck, 0, 0);
   Test.AssertTrue(Str.Contains(App.SurfaceSnapshot().LineAt(1), '>[ ] Flag'));
-  Model := record
-    Focus := 1;
-    Checked := true;
-  end record;
-
+  Model := CheckModel(Focus := 1, Checked := true);
   Model := App.RunIterations(Model, UpdateCheck, ViewCheck, 0, 0);
   Test.AssertTrue(Str.Contains(App.SurfaceSnapshot().LineAt(1), '>[x] Flag'));
   App.Close();

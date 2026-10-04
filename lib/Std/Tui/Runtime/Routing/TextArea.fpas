@@ -45,7 +45,7 @@ public function TuiRouteTextAreaKey(
   ChangeAction: Action.TuiAction;
   Viewport: Rect.TuiRect;
   Key: Console.KeyEvent
-): option of Msg.TuiMsg;
+): Option of (Msg.TuiMsg);
 begin
   mutable var NextText: string := Text;
   mutable var NextCaret: integer := Caret;
@@ -164,18 +164,18 @@ begin
 
   if not Handled then
     begin
-      return None;
+      return Option.None;
     end;
   end if;
   var NextOffset: Point2.TuiPoint := TextArea.TuiTextAreaEnsureCaretVisible(NextText, NextCaret, Offset, Size.TuiSize.Create(Viewport.Width, Viewport.Height));
   if (((NextText = Text) and (NextCaret = Caret)) and (NextOffset.X = Offset.X)) and
      (NextOffset.Y = Offset.Y) then
     begin
-      return None;
+      return Option.None;
     end;
   end if;
 
-  return Some(Msg.TuiMsg.TextAreaChanged(Id, ChangeAction, NextText, NextCaret, NextOffset));
+  return Option.Some(Msg.TuiMsg.TextAreaChanged(Id, ChangeAction, NextText, NextCaret, NextOffset));
 end function;
 
 // Routes a pointer position into a complete controlled text-area state proposal.

@@ -26,18 +26,8 @@ function RenderOnce(Paint: boolean): integer;
 begin
   var Width: integer := 152;
   var Height: integer := 35;
-  var Request: Render.MandelbrotRenderRequest := record
-    Generation := 1;
-    XMin := -3.355714285714286;
-    XMax := 1.855714285714286;
-    YMin := -1.2;
-    YMax := 1.2;
-    Width := Width;
-    Height := Height;
-    MaxIter := 160;
-    Palette := Color.PaletteKind.DeepOcean;
-  end record;
-  var Inbox: channel of Render.MandelbrotRenderFrame := Tasks.CreateChannel(8);
+  var Request: Render.MandelbrotRenderRequest := Render.MandelbrotRenderRequest(Generation := 1, XMin := -3.355714285714286, XMax := 1.855714285714286, YMin := -1.2, YMax := 1.2, Width := Width, Height := Height, MaxIter := 160, Palette := Color.PaletteKind.DeepOcean);
+  var Inbox: channel of (Render.MandelbrotRenderFrame) := Tasks.CreateChannel(8);
   var Source: Tasks.CancellationSource := Tasks.CreateCancellationSource();
   var Worker: task := go Render.RunBackgroundRender(Request, Inbox, Tasks.GetCancellationToken(Source));
   var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(Width, Height));

@@ -26,16 +26,18 @@ end function;
 //
 // Parameters:
 // - `Text`: JSON document text.
-public function ParseObject(Text: string): result of dict of string to Json.JsonValue, string;
+public function ParseObject(Text: string): Result of (dict of (string, Json.JsonValue), string);
 begin
   case try Json.Parse(Text) of
-    when Json.JsonValue.Object(Fields):
+    when Json.JsonValue.Object(const Fields):
       begin
-        return Ok(Fields);
+        return Result.Ok(Fields);
       end;
-    else
+    when Json.JsonValue.NullValue, Json.JsonValue.Bool(_), Json.JsonValue.Number(_), Json.JsonValue.String(_), Json.JsonValue.ArrayValue(_):
       begin
-        return Error('JSON root must be an object');
+        begin
+          return Result.Error('JSON root must be an object');
+        end;
       end;
   end case;
 end function;
@@ -45,16 +47,16 @@ end function;
 // Parameters:
 // - `Fields`: Object fields.
 // - `Name`: Required field name.
-public function Field(Fields: dict of string to Json.JsonValue; Name: string): result of Json.JsonValue, string;
+public function Field(Fields: dict of (string, Json.JsonValue); Name: string): Result of (Json.JsonValue, string);
 begin
   case Dictionaries.Get(Fields, Name) of
-    when Some(Value):
+    when Option.Some(const Value):
       begin
-        return Ok(Value);
+        return Result.Ok(Value);
       end;
-    when None:
+    when Option.None:
       begin
-        return Error('missing field ' + Name);
+        return Result.Error('missing field ' + Name);
       end;
   end case;
 end function;
@@ -64,16 +66,18 @@ end function;
 // Parameters:
 // - `Fields`: Object fields.
 // - `Name`: Required field name.
-public function StringField(Fields: dict of string to Json.JsonValue; Name: string): result of string, string;
+public function StringField(Fields: dict of (string, Json.JsonValue); Name: string): Result of (string, string);
 begin
   case try Field(Fields, Name) of
-    when Json.JsonValue.String(Value):
+    when Json.JsonValue.String(const Value):
       begin
-        return Ok(Value);
+        return Result.Ok(Value);
       end;
-    else
+    when Json.JsonValue.NullValue, Json.JsonValue.Bool(_), Json.JsonValue.Number(_), Json.JsonValue.ArrayValue(_), Json.JsonValue.Object(_):
       begin
-        return Error(MismatchError(Name, 'a string'));
+        begin
+          return Result.Error(MismatchError(Name, 'a string'));
+        end;
       end;
   end case;
 end function;
@@ -83,16 +87,18 @@ end function;
 // Parameters:
 // - `Fields`: Object fields.
 // - `Name`: Required field name.
-public function BooleanField(Fields: dict of string to Json.JsonValue; Name: string): result of boolean, string;
+public function BooleanField(Fields: dict of (string, Json.JsonValue); Name: string): Result of (boolean, string);
 begin
   case try Field(Fields, Name) of
-    when Json.JsonValue.Bool(Value):
+    when Json.JsonValue.Bool(const Value):
       begin
-        return Ok(Value);
+        return Result.Ok(Value);
       end;
-    else
+    when Json.JsonValue.NullValue, Json.JsonValue.Number(_), Json.JsonValue.String(_), Json.JsonValue.ArrayValue(_), Json.JsonValue.Object(_):
       begin
-        return Error(MismatchError(Name, 'a boolean'));
+        begin
+          return Result.Error(MismatchError(Name, 'a boolean'));
+        end;
       end;
   end case;
 end function;
@@ -102,16 +108,18 @@ end function;
 // Parameters:
 // - `Fields`: Object fields.
 // - `Name`: Required field name.
-public function NumberField(Fields: dict of string to Json.JsonValue; Name: string): result of real, string;
+public function NumberField(Fields: dict of (string, Json.JsonValue); Name: string): Result of (real, string);
 begin
   case try Field(Fields, Name) of
-    when Json.JsonValue.Number(Value):
+    when Json.JsonValue.Number(const Value):
       begin
-        return Ok(Value);
+        return Result.Ok(Value);
       end;
-    else
+    when Json.JsonValue.NullValue, Json.JsonValue.Bool(_), Json.JsonValue.String(_), Json.JsonValue.ArrayValue(_), Json.JsonValue.Object(_):
       begin
-        return Error(MismatchError(Name, 'a number'));
+        begin
+          return Result.Error(MismatchError(Name, 'a number'));
+        end;
       end;
   end case;
 end function;
@@ -122,22 +130,22 @@ end function;
 // Parameters:
 // - `Fields`: Object fields.
 // - `Name`: Required field name.
-public function IntegerField(Fields: dict of string to Json.JsonValue; Name: string): result of integer, string;
+public function IntegerField(Fields: dict of (string, Json.JsonValue); Name: string): Result of (integer, string);
 begin
   var Value: real := try NumberField(Fields, Name);
   if (Value < IntegerLowerBound) or (Value >= IntegerUpperBound) then
     begin
-      return Error(('field ' + Name) + ' is outside the integer range');
+      return Result.Error(('field ' + Name) + ' is outside the integer range');
     end;
   end if;
   var IntegerValue: integer := Math.Trunc(Value);
   if Conv.IntToReal(IntegerValue) <> Value then
     begin
-      return Error(MismatchError(Name, 'an integer'));
+      return Result.Error(MismatchError(Name, 'an integer'));
     end;
   end if;
 
-  return Ok(IntegerValue);
+  return Result.Ok(IntegerValue);
 end function;
 
 // Returns one required nested object field.
@@ -145,16 +153,18 @@ end function;
 // Parameters:
 // - `Fields`: Object fields.
 // - `Name`: Required field name.
-public function ObjectField(Fields: dict of string to Json.JsonValue; Name: string): result of dict of string to Json.JsonValue, string;
+public function ObjectField(Fields: dict of (string, Json.JsonValue); Name: string): Result of (dict of (string, Json.JsonValue), string);
 begin
   case try Field(Fields, Name) of
-    when Json.JsonValue.Object(Value):
+    when Json.JsonValue.Object(const Value):
       begin
-        return Ok(Value);
+        return Result.Ok(Value);
       end;
-    else
+    when Json.JsonValue.NullValue, Json.JsonValue.Bool(_), Json.JsonValue.Number(_), Json.JsonValue.String(_), Json.JsonValue.ArrayValue(_):
       begin
-        return Error(MismatchError(Name, 'an object'));
+        begin
+          return Result.Error(MismatchError(Name, 'an object'));
+        end;
       end;
   end case;
 end function;
@@ -164,16 +174,18 @@ end function;
 // Parameters:
 // - `Fields`: Object fields.
 // - `Name`: Required field name.
-public function ArrayField(Fields: dict of string to Json.JsonValue; Name: string): result of array of Json.JsonValue, string;
+public function ArrayField(Fields: dict of (string, Json.JsonValue); Name: string): Result of (array of (Json.JsonValue), string);
 begin
   case try Field(Fields, Name) of
-    when Json.JsonValue.ArrayValue(Items):
+    when Json.JsonValue.ArrayValue(const Items):
       begin
-        return Ok(Items);
+        return Result.Ok(Items);
       end;
-    else
+    when Json.JsonValue.NullValue, Json.JsonValue.Bool(_), Json.JsonValue.Number(_), Json.JsonValue.String(_), Json.JsonValue.Object(_):
       begin
-        return Error(MismatchError(Name, 'an array'));
+        begin
+          return Result.Error(MismatchError(Name, 'an array'));
+        end;
       end;
   end case;
 end function;
@@ -183,25 +195,27 @@ end function;
 // Parameters:
 // - `Fields`: Object fields.
 // - `Name`: Required field name.
-public function StringArrayField(Fields: dict of string to Json.JsonValue; Name: string): result of array of string, string;
+public function StringArrayField(Fields: dict of (string, Json.JsonValue); Name: string): Result of (array of (string), string);
 begin
-  mutable var Values: array of string := [];
+  mutable var Values: array of (string) := [];
   for Item: Json.JsonValue in try ArrayField(Fields, Name) do
     begin
       case Item of
-        when Json.JsonValue.String(Value):
+        when Json.JsonValue.String(const Value):
           begin
             Arrays.Push(Values, Value);
           end;
-        else
+        when Json.JsonValue.NullValue, Json.JsonValue.Bool(_), Json.JsonValue.Number(_), Json.JsonValue.ArrayValue(_), Json.JsonValue.Object(_):
           begin
-            return Error(MismatchError(Name, 'an array of strings'));
+            begin
+              return Result.Error(MismatchError(Name, 'an array of strings'));
+            end;
           end;
       end case;
     end;
   end for;
 
-  return Ok(Values);
+  return Result.Ok(Values);
 end function;
 
 // Rejects the first field whose name is not listed in `Allowed`; missing fields are not checked.
@@ -209,19 +223,19 @@ end function;
 // Parameters:
 // - `Fields`: Object fields.
 // - `Allowed`: Every permitted field name.
-public function RequireOnlyFields(Fields: dict of string to Json.JsonValue; Allowed: array of string): result of boolean, string;
+public function RequireOnlyFields(Fields: dict of (string, Json.JsonValue); Allowed: array of (string)): Result of (boolean, string);
 begin
   for Name: string in Dictionaries.Keys(Fields) do
     begin
       if not Arrays.Contains(Allowed, Name) then
         begin
-          return Error('unexpected field ' + Name);
+          return Result.Error('unexpected field ' + Name);
         end;
       end if;
     end;
   end for;
 
-  return Ok(true);
+  return Result.Ok(true);
 end function;
 
 end unit;

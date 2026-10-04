@@ -13,7 +13,7 @@ public type Note = record
   public Title: string;
   public CreatedMillis: integer;
   public UpdatedMillis: integer;
-  public Tags: array of string;
+  public Tags: array of (string);
   public Pinned: boolean;
   public Archived: boolean;
   public Body: string;
@@ -28,8 +28,8 @@ end record;
 
 // Complete result of loading one notes directory.
 public type NotesLoad = record
-  public Notes: array of Note;
-  public Issues: array of NoteIssue;
+  public Notes: array of (Note);
+  public Issues: array of (NoteIssue);
 end record;
 
 // Visible pane in a narrow terminal.
@@ -50,8 +50,8 @@ end enum;
 // Complete immutable application state supplied to the MVU view.
 public type NotesModel = record
   public Directory: string;
-  public Notes: array of Note;
-  public Issues: array of NoteIssue;
+  public Notes: array of (Note);
+  public Issues: array of (NoteIssue);
   public Selected: integer;
   public Search: string;
   public SearchCaret: integer;
@@ -73,17 +73,7 @@ end record;
 // Creates a new unsaved note with stable identity and timestamps.
 public function NoteCreate(Id: string; TimestampMillis: integer): Note;
 begin
-  return record
-    Id := Id;
-    Title := 'Untitled note';
-    CreatedMillis := TimestampMillis;
-    UpdatedMillis := TimestampMillis;
-    Tags := [];
-    Pinned := false;
-    Archived := false;
-    Body := '';
-    Path := '';
-  end record;
+  return Note(Id := Id, Title := 'Untitled note', CreatedMillis := TimestampMillis, UpdatedMillis := TimestampMillis, Tags := [], Pinned := false, Archived := false, Body := '', Path := '');
 end function;
 
 // Creates initial application state from a directory load result.
@@ -113,27 +103,7 @@ begin
     end;
   end if;
 
-  return record
-    Directory := Directory;
-    Notes := Loaded.Notes;
-    Issues := Loaded.Issues;
-    Selected := Selected;
-    Search := '';
-    SearchCaret := 0;
-    TitleCaret := TitleCaret;
-    TagsText := TagsText;
-    TagsCaret := TagsCaret;
-    BodyCaret := 0;
-    BodyOffset := Tui.TuiPoint.Create(0, 0);
-    Focus := Focus;
-    Pane := Pane;
-    Overlay := NotesOverlay.Closed;
-    Dirty := false;
-    Status := Status;
-    ErrorMessage := '';
-    Width := 100;
-    Height := 30;
-  end record;
+  return NotesModel(Directory := Directory, Notes := Loaded.Notes, Issues := Loaded.Issues, Selected := Selected, Search := '', SearchCaret := 0, TitleCaret := TitleCaret, TagsText := TagsText, TagsCaret := TagsCaret, BodyCaret := 0, BodyOffset := Tui.TuiPoint.Create(0, 0), Focus := Focus, Pane := Pane, Overlay := NotesOverlay.Closed, Dirty := false, Status := Status, ErrorMessage := '', Width := 100, Height := 30);
 end function;
 
 // Formats a note's tags for the controlled metadata input.
@@ -143,10 +113,10 @@ begin
 end function;
 
 // Parses, trims, and deduplicates comma-separated tags.
-public function NoteTagsFromText(Text: string): array of string;
+public function NoteTagsFromText(Text: string): array of (string);
 begin
-  mutable var Tags: array of string := [];
-  var Parts: array of string := Str.Split(Text, ',');
+  mutable var Tags: array of (string) := [];
+  var Parts: array of (string) := Str.Split(Text, ',');
   for Index: integer := 0 to Arrays.Length(Parts) - 1 do
     begin
       var Tag: string := Str.Trim(Parts[Index]);
@@ -182,9 +152,9 @@ begin
 end function;
 
 // Returns source-array indices for all visible filtered notes.
-public function NotesFilteredIndices(Notes: array of Note; Search: string): array of integer;
+public function NotesFilteredIndices(Notes: array of (Note); Search: string): array of (integer);
 begin
-  mutable var Indices: array of integer := [];
+  mutable var Indices: array of (integer) := [];
   for Index: integer := 0 to Arrays.Length(Notes) - 1 do
     begin
       if NoteMatches(Notes[Index], Search) then
@@ -238,10 +208,10 @@ begin
 end function;
 
 // Builds width-bounded list labels for all visible filtered notes.
-public function NotesListItems(Notes: array of Note; Search: string; MaximumWidth: integer): array of string;
+public function NotesListItems(Notes: array of (Note); Search: string; MaximumWidth: integer): array of (string);
 begin
-  mutable var Items: array of string := [];
-  var Indices: array of integer := NotesFilteredIndices(Notes, Search);
+  mutable var Items: array of (string) := [];
+  var Indices: array of (integer) := NotesFilteredIndices(Notes, Search);
   for Index: integer := 0 to Arrays.Length(Indices) - 1 do
     begin
       var NoteValue: Note := Notes[Indices[Index]];

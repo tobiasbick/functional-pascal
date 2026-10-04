@@ -16,7 +16,7 @@ public type TuiButtonPressState = enum
   Captured(Button: Button2.TuiButtonSpec; Inside: boolean);
 end enum;
 
-mutable var TuiButtonPressStates: array of TuiButtonPressState := [];
+mutable var TuiButtonPressStates: array of (TuiButtonPressState) := [];
 
 // Allocates idle button-capture state for one application.
 public procedure TuiButtonCaptureOpen();
@@ -70,20 +70,20 @@ end procedure;
 //
 // Parameters:
 // - `ApplicationId`: Identifier of the application-owned routing state.
-public function TuiButtonCapturePressed(ApplicationId: integer): option of ControlId.TuiControlId;
+public function TuiButtonCapturePressed(ApplicationId: integer): Option of (ControlId.TuiControlId);
 begin
   case TuiButtonPressStates[ApplicationId - 1] of
-    when TuiButtonPressState.Captured(Button, Inside) if Inside:
+    when TuiButtonPressState.Captured(const Button, const Inside) if Inside:
       begin
-        return Some(Button.Id);
+        return Option.Some(Button.Id);
       end;
     when TuiButtonPressState.Idle:
       begin
-        return None;
+        return Option.None;
       end;
-    when TuiButtonPressState.Captured(Button, Inside):
+    when TuiButtonPressState.Captured(const Button, const Inside):
       begin
-        return None;
+        return Option.None;
       end;
   end case;
 end function;

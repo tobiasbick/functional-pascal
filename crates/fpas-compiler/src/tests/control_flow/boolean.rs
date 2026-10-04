@@ -98,10 +98,10 @@ fn rhs_try_returns_through_the_correct_continuation() {
         r#"program TryBoolean;
 uses Std.Test as Test;
 uses Std.Results as Results;
-function Bad(): Result of boolean, string;
-begin return Error('failure'); end function;
-function Check(First: boolean): Result of boolean, string;
-begin return Ok(First and try Bad()); end function;
+function Bad(): Result of (boolean, string);
+begin return Result.Error('failure'); end function;
+function Check(First: boolean): Result of (boolean, string);
+begin return Result.Ok(First and try Bad()); end function;
 begin
   Test.AssertEquals(false, Results.Unwrap(Check(false)));
   Test.AssertEquals(true, Results.IsError(Check(true)));

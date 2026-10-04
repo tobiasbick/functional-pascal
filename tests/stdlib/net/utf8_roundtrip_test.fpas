@@ -8,25 +8,25 @@ uses Std.Test as Test;
 
 begin
   var Text: string := 'Hello, Grüße 🌍';
-  var Bytes: array of integer := Utf8.Encode(Text);
+  var Bytes: array of (integer) := Utf8.Encode(Text);
   Test.AssertEquals(19, Arrays.Length(Bytes));
   case Utf8.Decode(Bytes) of
-    when Ok(Decoded):
+    when Result.Ok(const Decoded):
       begin
         Test.AssertEquals(Text, Decoded);
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
         Test.Fail(Message);
       end;
   end case;
 
   case Utf8.Decode([240, 40, 140, 188]) of
-    when Ok(Decoded):
+    when Result.Ok(const Decoded):
       begin
         Test.Fail('invalid UTF-8 decoded as ' + Decoded);
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
         Test.AssertTrue(Str.Contains(Message, 'continuation'));
       end;

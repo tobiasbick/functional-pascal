@@ -10,6 +10,16 @@ impl Checker {
     /// Propagate task-bound closure state through values that can cross task boundaries.
     pub(in crate::check) fn propagate_task_bound_expr(&mut self, expr: &Expr, key: usize) {
         let task_bound = match expr {
+            Expr::If(decision) => std::iter::once(&decision.then_value)
+                .chain(decision.elsif_values.iter().map(|(_, value)| value))
+                .chain(std::iter::once(&decision.else_value))
+                .any(|value| self.expr_is_task_bound(Self::expr_lookup_key(value))),
+            Expr::Case(decision) => decision
+                .arms
+                .iter()
+                .map(|arm| &arm.body)
+                .chain(decision.else_value.iter())
+                .any(|value| self.expr_is_task_bound(Self::expr_lookup_key(value))),
             Expr::Paren(inner, _)
             | Expr::ResultOk(inner, _)
             | Expr::ResultError(inner, _)
@@ -22,7 +32,7 @@ impl Checker {
                 self.expr_is_task_bound(Self::expr_lookup_key(key))
                     || self.expr_is_task_bound(Self::expr_lookup_key(value))
             }),
-            Expr::RecordLiteral { fields, .. } => fields
+            Expr::RecordConstruction { fields, .. } => fields
                 .iter()
                 .any(|field| self.expr_is_task_bound(Self::expr_lookup_key(&field.value))),
             Expr::RecordUpdate { base, fields, .. } => {
@@ -53,51 +63,7 @@ impl Checker {
     }
 
     /// Whether a value type can carry callable capture state through a postfix chain.
-    pub(in crate::check::expr) fn type_can_contain_callable(&self, ty: &Ty) -> bool {
-        self.type_can_contain_callable_inner(ty, &mut std::collections::HashSet::new())
-    }
-
-    fn type_can_contain_callable_inner(
-        &self,
-        ty: &Ty,
-        visited_records: &mut std::collections::HashSet<usize>,
-    ) -> bool {
-        match self.resolve_visible_type(ty) {
-            Ty::Function(_) | Ty::Procedure(_) | Ty::GenericParam(_, _) => true,
-            Ty::Array(inner) | Ty::Option(inner) => {
-                self.type_can_contain_callable_inner(&inner, visited_records)
-            }
-            Ty::Result(ok, error) | Ty::Dict(ok, error) => {
-                self.type_can_contain_callable_inner(&ok, visited_records)
-                    || self.type_can_contain_callable_inner(&error, visited_records)
-            }
-            Ty::Record(record) => {
-                let identity = std::sync::Arc::as_ptr(&record) as usize;
-                if !visited_records.insert(identity) {
-                    return false;
-                }
-                let contains_callable = record
-                    .fields
-                    .iter()
-                    .any(|(_, field)| self.type_can_contain_callable_inner(field, visited_records));
-                visited_records.remove(&identity);
-                contains_callable
-            }
-            Ty::Enum(enumeration) => enumeration.variants.iter().any(|variant| {
-                variant
-                    .fields
-                    .iter()
-                    .any(|(_, field)| self.type_can_contain_callable_inner(field, visited_records))
-            }),
-            Ty::Integer
-            | Ty::Real
-            | Ty::Boolean
-            | Ty::String
-            | Ty::Unit
-            | Ty::Channel(_)
-            | Ty::Named(_)
-            | Ty::Task(_)
-            | Ty::Error => false,
-        }
+    pub(in crate::check) fn type_can_contain_callable(&self, ty: &Ty) -> bool {
+        ty.contains_callable_with(|ty| self.resolve_visible_type(ty))
     }
 }

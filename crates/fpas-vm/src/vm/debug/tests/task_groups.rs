@@ -10,10 +10,10 @@ const LIFECYCLE: &str =
 
 const SOURCE: &str = r#"program GroupFailures;
 uses Std.Tasks as Tasks; uses Std.Time as Time; uses Std.Arrays as Arrays;
-function Ordinary(Token: Tasks.CancellationToken): result of integer, string;
+function Ordinary(Token: Tasks.CancellationToken): result of (integer, string);
 begin
   Time.Sleep(1);
-  return Error('ordinary');
+  return Result.Error('ordinary');
 end function;
 procedure Broken(Token: Tasks.CancellationToken);
 begin
@@ -28,7 +28,7 @@ begin
   var B: task := Tasks.StartTaskInGroup(G, Broken);
   var C: task := Tasks.StartTaskInGroup(G, Successful);
   if Tasks.Wait(C) <> 42 then panic('child value'); end if;
-  var Failures: array of Tasks.TaskFailure := Tasks.CloseTaskGroup(G);
+  var Failures: array of (Tasks.TaskFailure) := Tasks.CloseTaskGroup(G);
   if Arrays.Length(Failures) <> 2 then panic('failure count'); end if;
   if Failures[0].Kind <> Tasks.TaskFailureKind.ReturnedError then panic('ordinary kind'); end if;
   if Failures[0].Message <> 'ordinary' then panic('ordinary message'); end if;
@@ -163,7 +163,7 @@ procedure Work(Token: Tasks.CancellationToken); begin Time.Sleep(1000); end proc
 begin
   var G: Tasks.TaskGroup := Tasks.CreateTaskGroup();
   var WorkerHandle: task := Tasks.StartTaskInGroup(G, Work);
-  var Failures: array of Tasks.TaskFailure := Tasks.CloseTaskGroup(G);
+  var Failures: array of (Tasks.TaskFailure) := Tasks.CloseTaskGroup(G);
   if Arrays.Length(Failures) <> 1 then panic('failure count'); end if;
   if Failures[0].Kind <> Tasks.TaskFailureKind.Cancelled then panic('cancellation kind'); end if;
 end program;"#;
@@ -184,7 +184,7 @@ uses Std.Tasks as Tasks; uses Std.Arrays as Arrays;
 begin
   var G: Tasks.TaskGroup := Tasks.CreateTaskGroup();
   var StartedTask1: task := Tasks.StartTaskInGroup(G, procedure(Token: Tasks.CancellationToken) begin discard Tasks.CloseTaskGroup(G); end procedure);
-  var Failures: array of Tasks.TaskFailure := Tasks.CloseTaskGroup(G);
+  var Failures: array of (Tasks.TaskFailure) := Tasks.CloseTaskGroup(G);
   if Arrays.Length(Failures) <> 1 then panic('failure count'); end if;
   if Failures[0].Kind <> Tasks.TaskFailureKind.RuntimeError then panic('runtime kind'); end if;
 end program;"#;

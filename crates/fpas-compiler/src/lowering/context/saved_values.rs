@@ -17,6 +17,34 @@ pub(in crate::lowering) struct SavedValue {
 }
 
 impl LoweringContext {
+    /// Restore the semantic result type of a field/index access when its layout is erased.
+    pub(in crate::lowering) fn refine_projection(
+        &mut self,
+        value: ValueId,
+        actual: TypeId,
+        key: usize,
+        span: Span,
+    ) -> Result<(ValueId, TypeId), CompileError> {
+        let Some(semantic) = self.projection_types.get(&key) else {
+            return Ok((value, actual));
+        };
+        let expected = self.type_table.id(semantic, span.line, span.column)?;
+        Ok((self.coerce_value_type(value, expected, span)?, expected))
+    }
+    /// Convert a value through typed local storage, including erased generic fields.
+    pub(in crate::lowering) fn coerce_value_type(
+        &mut self,
+        value: ValueId,
+        expected: TypeId,
+        span: Span,
+    ) -> Result<ValueId, CompileError> {
+        if self.lowered_value_type(value) == Some(expected) {
+            return Ok(value);
+        }
+        let local = self.declare_hidden_local(expected, span)?;
+        self.write_local(local, value, span)?;
+        self.emit_value(Operation::ReadLocal(local), expected, span)
+    }
     /// Remembers an operand without adding instructions on the straight-line path.
     pub(in crate::lowering) fn save_value(&self, value: ValueId) -> SavedValue {
         SavedValue {

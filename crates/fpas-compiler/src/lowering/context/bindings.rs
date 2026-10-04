@@ -282,13 +282,6 @@ impl LoweringContext {
         self.type_table.record_fields(layout)
     }
 
-    pub(in crate::lowering) fn record_layout_name(
-        &self,
-        layout: fpas_ir::RecordLayoutId,
-    ) -> Option<&str> {
-        self.type_table.record_layout_name(layout)
-    }
-
     pub(in crate::lowering) fn record_layout_id(
         &self,
         ty: TypeId,

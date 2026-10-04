@@ -63,18 +63,20 @@ begin null; end program;"#,
 fn closure_scalar_case_guard_binding_does_not_capture_shadowed_outer() {
     let (program, parse_errors) = fpas_parser::parse(
         r#"program T;
+
 begin
   mutable var M: integer := 0;
   var N: integer := 1;
-  var F: procedure() :=
-    procedure()
-    begin
-      case N of
-        when M if M > 0: return;
-      end case;
-    end procedure;
+  var F: procedure() := procedure() begin
+    case N of
+      when const M if M > 0:
+        return;
+    end case;
+  end procedure;
+
   go F();
-end program;"#,
+end program;
+"#,
     );
     assert!(parse_errors.is_empty(), "{parse_errors:#?}");
 

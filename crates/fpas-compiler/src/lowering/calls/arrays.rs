@@ -28,12 +28,7 @@ impl LoweringContext {
             Some(fpas_ir::IrType::Array(element)) => element,
             _ => return Err(unsupported(target.span, "mutable array target type")),
         };
-        let value = match value {
-            Expr::RecordLiteral { fields, span } => {
-                self.lower_record_literal_as(fields, element_ty, *span)?
-            }
-            _ => self.lower_expression(value)?,
-        };
+        let value = self.lower_expression_as(value, element_ty)?;
         let [DesignatorPart::Ident(name, _)] = target.parts.as_slice() else {
             return Err(unsupported(target.span, "mutable array target"));
         };

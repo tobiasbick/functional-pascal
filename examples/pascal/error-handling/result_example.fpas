@@ -4,71 +4,72 @@ uses Std.Console as Console;
 uses Std.Conv as Conv;
 uses Std.Results as Results;
 
-function Divide(A: integer; B: integer): result of integer, string;
+function Divide(A: integer; B: integer): Result of (integer, string);
 begin
   if B = 0 then
     begin
-      return Error('Division by zero');
+      return Result.Error('Division by zero');
     end;
   else
     begin
-      return Ok(A div B);
+      return Result.Ok(A div B);
     end;
   end if;
 end function;
 
-function Stringify(A: integer; B: integer): result of string, string;
+function Stringify(A: integer; B: integer): Result of (string, string);
 begin
   var Quotient: integer := try Divide(A, B);
-  return Ok((((Conv.IntToStr(A) + ' / ') + Conv.IntToStr(B)) + ' = ') + Conv.IntToStr(Quotient));
+  return Result.Ok((((Conv.IntToStr(A) + ' / ') + Conv.IntToStr(B)) + ' = ') +
+                   Conv.IntToStr(Quotient));
 end function;
 
 begin
-  var R1: result of integer, string := Divide(10, 3);
+  var R1: Result of (integer, string) := Divide(10, 3);
   Console.WriteLn('IsOk: ', Results.IsOk(R1));
   Console.WriteLn('Value: ', Results.Unwrap(R1));
-  var R2: result of integer, string := Divide(5, 0);
+  var R2: Result of (integer, string) := Divide(5, 0);
   Console.WriteLn('IsError: ', Results.IsError(R2));
   Console.WriteLn('UnwrapOr: ', Results.UnwrapOr(R2, -1));
   case Divide(42, 6) of
-    when Ok(V):
+    when Result.Ok(const V):
       begin
         Console.WriteLn('42 / 6 = ', V);
       end;
-    when Error(E):
+    when Result.Error(const E):
       begin
         Console.WriteLn('Error: ', E);
       end;
   end case;
 
   case Divide(7, 0) of
-    when Ok(V):
+    when Result.Ok(const V):
       begin
         Console.WriteLn('7 / 0 = ', V);
       end;
-    when Error(E):
+    when Result.Error(const E):
       begin
         Console.WriteLn('Error: ', E);
       end;
   end case;
 
   case Stringify(100, 4) of
-    when Ok(S):
+    when Result.Ok(const S):
       begin
         Console.WriteLn(S);
       end;
-    when Error(E):
+    when Result.Error(const E):
       begin
         Console.WriteLn('Failed: ', E);
       end;
   end case;
 
   case Stringify(100, 0) of
-    when Ok(S):
+    when Result.Ok(const S):
       begin
         Console.WriteLn(S);
       end;
-    when Error(E):
+    when Result.Error(const E):
       begin
         Console.WriteLn('Failed: ', E);
       end;

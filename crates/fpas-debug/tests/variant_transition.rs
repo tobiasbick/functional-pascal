@@ -290,21 +290,22 @@ fn jsonl_variant_transitions_commit_atomically_and_continue() {
 fn jsonl_variant_transition_stays_bound_to_the_selected_child_task() {
     const TASK_SOURCE: &str = r#"program TaskVariantTransition;
 
-uses Std.Console as Console; uses Std.Tasks as Tasks;
+uses Std.Console as Console;
+uses Std.Tasks as Tasks;
 
 function Work(): integer;
 begin
-  mutable var Optional: Option of integer := None;
+  mutable var Optional: Option of (integer) := Option.None;
   var Marker: integer := 0;
   case Optional of
-    when Some(Value):
-    begin
-      return Value;
-    end;
-    when None:
-    begin
-      return 0;
-    end;
+    when Option.Some(const Value):
+      begin
+        return Value;
+      end;
+    when Option.None:
+      begin
+        return 0;
+      end;
   end case;
 end function;
 
@@ -318,11 +319,16 @@ end program;
     let executable = fpas_compiler::compile(&program).expect("compile task transition fixture");
     let mut server =
         JsonlServer::new(PreparedDebugTarget::new(executable, Vec::new())).expect("JSONL server");
+    let marker_line = TASK_SOURCE
+        .lines()
+        .position(|line| line.contains("var Marker:"))
+        .expect("task fixture marker")
+        + 1;
     let _ = server.handle_line(&request(1, "initialize", json!({"version":2})));
     let breakpoint = server.handle_line(&request(
         2,
         "breakpoint.set",
-        json!({"source":"<memory>","line":8}),
+        json!({"source":"<memory>","line":marker_line}),
     ));
     assert_eq!(breakpoint[0]["body"]["verified"], true, "{breakpoint:?}");
     let _ = server.handle_line(&request(3, "launch", json!({"stop_on_entry":false})));
@@ -397,27 +403,25 @@ fn qualified(root: &str, fields: &[&str]) -> DebugAssignmentTarget {
 #[test]
 fn variant_transition_supports_mutable_parameters_and_capture_cells() {
     let mut parameter = session(
-        r#"
-program TransitionParameter;
+        r#"program TransitionParameter;
 
-
-  type Choice = enum
-    Empty;
-    Count(Value: integer);
-  end enum;
+type Choice = enum
+  Empty;
+  Count(Value: integer);
+end enum;
 
 function ReadChoice(mutable Item: Choice): integer;
 begin
   var Marker: integer := 0;
   case Item of
     when Choice.Empty:
-    begin
-      return 0;
-    end;
-    when Choice.Count(Value):
-    begin
-      return Value;
-    end;
+      begin
+        return 0;
+      end;
+    when Choice.Count(const Value):
+      begin
+        return Value;
+      end;
   end case;
 end function;
 
@@ -459,14 +463,12 @@ end program;
     );
 
     let mut capture = session(
-        r#"
-program TransitionCapture;
+        r#"program TransitionCapture;
 
-
-  type Choice = enum
-    Empty;
-    Count(Value: integer);
-  end enum;
+type Choice = enum
+  Empty;
+  Count(Value: integer);
+end enum;
 
 function NextChoice(): function(): integer;
 begin
@@ -474,13 +476,13 @@ begin
   return function(): integer begin
     case Selected of
       when Choice.Empty:
-      begin
-        return 0;
-      end;
-      when Choice.Count(Value):
-      begin
-        return Value;
-      end;
+        begin
+          return 0;
+        end;
+      when Choice.Count(const Value):
+        begin
+          return Value;
+        end;
     end case;
   end function;
 end function;
@@ -528,22 +530,19 @@ end program;
 #[test]
 fn explicit_variant_name_wins_over_an_active_payload_field_collision() {
     let mut session = session(
-        r#"
-program TransitionCollision;
+        r#"program TransitionCollision;
 
+type Payload = record
+  Value: integer;
+end record;
 
-  type Payload = record
-    Value: integer;
-  end record;
-  type Choice = enum
-    Holder(Count: Payload);
-    Count(Value: integer);
-  end enum;
+type Choice = enum
+  Holder(Count: Payload);
+  Count(Value: integer);
+end enum;
 
 begin
-  var Initial: Payload := record
-    Value := 1;
-  end record;
+  var Initial: Payload := Payload(Value := 1);
   mutable var Selected: Choice := Choice.Holder(Initial);
   var Marker: integer := 0;
 end program;

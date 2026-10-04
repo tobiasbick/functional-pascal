@@ -76,6 +76,9 @@ pub struct ScopeStack {
     pub function_ctx: Option<FunctionCtx>,
 }
 
+/// Nested lexical scopes temporarily detached while resolving a root declaration.
+pub(crate) struct NestedScopes(Vec<Scope>);
+
 /// Semantic context of the routine whose body is currently checked.
 #[derive(Debug, Clone)]
 pub struct FunctionCtx {
@@ -88,6 +91,23 @@ pub struct FunctionCtx {
 }
 
 impl ScopeStack {
+    /// Resolve a unit-level header without inheriting another header's type parameters.
+    pub(crate) fn suspend_nested_scopes(&mut self) -> NestedScopes {
+        NestedScopes(self.scopes.split_off(1))
+    }
+
+    /// Restore the lexical scopes suspended for one unit-level header.
+    pub(crate) fn restore_nested_scopes(&mut self, nested: NestedScopes) {
+        self.scopes.extend(nested.0);
+    }
+
+    /// Update a collected unit-level declaration without selecting a local shadow.
+    pub(crate) fn lookup_root_mut(&mut self, name: &str) -> Option<&mut Symbol> {
+        self.scopes[0]
+            .symbols
+            .get_mut(&canonical_symbol_name(name))
+            .map(|symbol| &mut symbol.symbol)
+    }
     pub fn new() -> Self {
         Self {
             scopes: vec![Scope::new()],
@@ -175,12 +195,6 @@ impl ScopeStack {
             },
         );
         true
-    }
-
-    /// Remove a symbol from the program root scope when an enum short name becomes ambiguous.
-    pub fn remove_from_root(&mut self, name: &str) -> bool {
-        let canonical_name = canonical_symbol_name(name);
-        self.scopes[0].symbols.remove(&canonical_name).is_some()
     }
 
     /// Remove a symbol from the innermost scope.

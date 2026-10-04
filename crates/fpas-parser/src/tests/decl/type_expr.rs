@@ -30,11 +30,11 @@ fn procedure_type_expr() {
 #[test]
 fn built_in_and_callable_type_forms_parse() {
     for type_expr in [
-        "array of integer",
-        "channel of string",
-        "option of array of integer",
-        "result of integer, string",
-        "dict of string to array of integer",
+        "array of (integer)",
+        "channel of (string)",
+        "option of (array of (integer))",
+        "result of (integer, string)",
+        "dict of (string, array of (integer))",
         "function(X: integer): integer",
         "procedure(X: integer)",
     ] {

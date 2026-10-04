@@ -118,7 +118,7 @@ end function;
 // Parameters:
 // - `Parts`: Values combined in their existing order.
 // - `Delim`: Delimiter used to split or join text.
-public function Join(Parts: array of string; Delim: string): string;
+public function Join(Parts: array of (string); Delim: string): string;
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -251,7 +251,7 @@ end function;
 // Parameters:
 // - `S`: UTF-8 text processed by the operation.
 // - `Delim`: Delimiter used to split or join text.
-public function Split(S: string; Delim: string): array of string;
+public function Split(S: string; Delim: string): array of (string);
 begin
   panic('Intrinsic API declaration');
 end function;

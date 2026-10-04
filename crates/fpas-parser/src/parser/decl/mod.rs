@@ -1,6 +1,7 @@
 mod data;
 mod routines;
 mod type_expr;
+mod type_params;
 
 use super::Parser;
 use crate::ast::*;

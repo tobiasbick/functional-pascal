@@ -15,6 +15,7 @@
 
 #![forbid(unsafe_code)]
 
+pub mod constants;
 mod debug;
 mod function;
 mod id;

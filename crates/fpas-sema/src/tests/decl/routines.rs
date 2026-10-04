@@ -43,7 +43,7 @@ fn function_duplicate_parameter_rejected() {
 #[test]
 fn function_duplicate_type_parameter_rejected() {
     let errors = check_errors(
-        r#"program T; function F<T, t>(Value: T): T; begin return Value; end function; begin null; end program;"#,
+        r#"program T; function F of (T, t)(Value: T): T; begin return Value; end function; begin null; end program;"#,
     );
     assert!(
         errors
@@ -111,56 +111,80 @@ fn mutable_param() {
 #[test]
 fn generic_function_valid() {
     check_ok(
-        r#"program T; function Identity<T>(Value: T): T; begin return Value; end function;  var X: integer := Identity(42); begin null; end program;"#,
+        r#"program T; function Identity of (T)(Value: T): T; begin return Value; end function;  var X: integer := Identity(42); begin null; end program;"#,
     );
 }
 
 #[test]
 fn generic_callback_returning_recursive_record_is_valid() {
     check_ok(
-        r#"program T;  type Element = record Text: string; Children: array of Element; end record; type Model = record Count: integer; end record; function View(State: Model): Element; begin return record Text := 'root'; Children := []; end record; end function; function Render<TModel>(State: TModel; ViewFn: function(State: TModel): Element): Element; begin return ViewFn(State); end function; begin var Root: Element := Render(record Count := 1; end record, View); end program;"#,
+        r#"program T;
+
+type Element = record
+  Text: string;
+  Children: array of (Element);
+end record;
+
+type Model = record
+  Count: integer;
+end record;
+
+function View(State: Model): Element;
+begin
+  return Element(Text := 'root', Children := []);
+end function;
+
+function Render of (TModel)(State: TModel; ViewFn: function(State: TModel): Element): Element;
+begin
+  return ViewFn(State);
+end function;
+
+begin
+  var Root: Element := Render(Model(Count := 1), View);
+end program;
+"#,
     );
 }
 
 #[test]
 fn generic_procedure_valid() {
     check_ok(
-        r#"program T;  uses Std.Console as Console; procedure Print<T>(Value: T); begin Console.WriteLn(Value); end procedure; begin Print(42); end program;"#,
+        r#"program T;  uses Std.Console as Console; procedure Print of (T)(Value: T); begin Console.WriteLn(Value); end procedure; begin Print(42); end program;"#,
     );
 }
 
 #[test]
 fn generic_function_reused_type_param_requires_same_concrete_type() {
     check_errors(
-        r#"program T; function PickFirst<T>(A: T; B: T): T; begin return A; end function; begin var X: integer := PickFirst(1, true); end program;"#,
+        r#"program T; function PickFirst of (T)(A: T; B: T): T; begin return A; end function; begin var X: integer := PickFirst(1, true); end program;"#,
     );
 }
 
 #[test]
 fn generic_function_numeric_constraint_allows_arithmetic() {
     check_ok(
-        r#"program T; function Add<T: Numeric>(A: T; B: T): T; begin return A + B; end function; begin discard Add(1, 2); end program;"#,
+        r#"program T; function Add of (T: Numeric)(A: T; B: T): T; begin return A + B; end function; begin discard Add(1, 2); end program;"#,
     );
 }
 
 #[test]
 fn generic_function_numeric_constraint_allows_negate() {
     check_ok(
-        r#"program T; function Neg<T: Numeric>(X: T): T; begin return -X; end function; begin discard Neg(5); end program;"#,
+        r#"program T; function Neg of (T: Numeric)(X: T): T; begin return -X; end function; begin discard Neg(5); end program;"#,
     );
 }
 
 #[test]
 fn generic_function_comparable_constraint_allows_lt() {
     check_ok(
-        r#"program T; function IsLess<T: Comparable>(A: T; B: T): boolean; begin return A < B; end function; begin discard IsLess(1, 2); end program;"#,
+        r#"program T; function IsLess of (T: Comparable)(A: T; B: T): boolean; begin return A < B; end function; begin discard IsLess(1, 2); end program;"#,
     );
 }
 
 #[test]
 fn generic_function_unconstrained_rejects_arithmetic() {
     let errors = check_errors(
-        r#"program T; function Add<T>(A: T; B: T): T; begin return A + B; end function; begin discard Add(1, 2); end program;"#,
+        r#"program T; function Add of (T)(A: T; B: T): T; begin return A + B; end function; begin discard Add(1, 2); end program;"#,
     );
     assert!(
         errors
@@ -173,7 +197,7 @@ fn generic_function_unconstrained_rejects_arithmetic() {
 #[test]
 fn generic_function_constraint_violation_at_call_site() {
     let errors = check_errors(
-        r#"program T; function Compare<T: Comparable>(A: T; B: T): boolean; begin return A = B; end function; begin Compare([1], [2]); end program;"#,
+        r#"program T; function Compare of (T: Comparable)(A: T; B: T): boolean; begin return A = B; end function; begin Compare([1], [2]); end program;"#,
     );
     assert!(
         errors
@@ -186,7 +210,7 @@ fn generic_function_constraint_violation_at_call_site() {
 #[test]
 fn generic_function_numeric_violation_at_call_site() {
     let errors = check_errors(
-        r#"program T; function Add<T: Numeric>(A: T; B: T): T; begin return A + B; end function; begin Add('a', 'b'); end program;"#,
+        r#"program T; function Add of (T: Numeric)(A: T; B: T): T; begin return A + B; end function; begin Add('a', 'b'); end program;"#,
     );
     assert!(
         errors

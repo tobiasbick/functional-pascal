@@ -103,6 +103,10 @@ impl Checker {
             let procedure_result_is_discarded =
                 allow_final_procedure && index + 1 == operations.len();
             ty = self.check_postfix_operation(&ty, operation, procedure_result_is_discarded);
+            self.projection_types.insert(
+                Self::postfix_operation_lookup_key(operation),
+                self.resolve_visible_type(&ty),
+            );
             task_bound &= self.type_can_contain_callable(&ty);
         }
         ty

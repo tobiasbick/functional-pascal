@@ -9,8 +9,8 @@ var T: task := go ComputeSomething(Data);
 
 ## Typed task handles
 
-Write `task of T` where a declaration has no initializer to infer the result type from, such as a
-parameter, a record field, or an array element type. `Wait` on a `task of T` returns `T`, and a handle
+Write `task of (T)` where a declaration has no initializer to infer the result type from, such as a
+parameter, a record field, or an array element type. `Wait` on a `task of (T)` returns `T`, and a handle
 whose spawned call returns another type is rejected. A bare `task` keeps inferring `T` from its
 initializer. `task` is a reserved word, so it cannot name a variable, field, or unit segment.
 
@@ -20,12 +20,12 @@ are accessed through this alias, like other imported routines.
 ```pascal
 uses Std.Tasks as Tasks;
 
-function Doubled(Job: task of integer): integer;
+function Doubled(Job: task of (integer)): integer;
 begin
   return Tasks.Wait(Job) * 2;
 end function;
 
-var Jobs: array of task of result of boolean, string := [go Connect(), go Serve()];
+var Jobs: array of (task of (result of (boolean, string))) := [go Connect(), go Serve()];
 
 ```
 
@@ -70,7 +70,7 @@ Per-symbol reference (parameters, edge cases, `Wait` vs `WaitAll`, runtime error
 | Function | Signature | Description |
 |----------|-----------|-------------|
 | `Wait` | `(Handle: task): T` | Wait for a task and return its result |
-| `WaitAll` | `(Tasks: array of task)` | Wait for all tasks to complete |
+| `WaitAll` | `(Tasks: array of (task))` | Wait for all tasks to complete |
 
 Here, **`T`** is the return type of the spawned call (unit for a procedure).
 

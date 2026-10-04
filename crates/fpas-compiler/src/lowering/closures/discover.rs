@@ -1,7 +1,7 @@
 //! Nested closure and bound-method discovery over statements and expressions.
 
 use fpas_ir::{CaptureKind, FunctionId};
-use fpas_parser::{CaseLabel, Decl, DesignatorPart, Expr, FuncBody, PostfixOperation, Stmt};
+use fpas_parser::{Decl, DesignatorPart, Expr, FuncBody, PostfixOperation, Stmt, TypeBody};
 use fpas_sema::AnalysisMetadata;
 
 use crate::CompileError;
@@ -35,7 +35,17 @@ impl<'a> ClosureRegistry<'a> {
             let value = match declaration {
                 Decl::Const(definition) => &definition.value,
                 Decl::Var(definition) | Decl::MutableVar(definition) => &definition.value,
-                Decl::TypeDef(_) | Decl::Function(_) | Decl::Procedure(_) => continue,
+                Decl::TypeDef(definition) => {
+                    if let TypeBody::Record(record) = &definition.body {
+                        for field in &record.fields {
+                            if let Some(value) = &field.default_value {
+                                self.visit_expression(value, owner, metadata, types)?;
+                            }
+                        }
+                    }
+                    continue;
+                }
+                Decl::Function(_) | Decl::Procedure(_) => continue,
             };
             self.visit_expression(value, owner, metadata, types)?;
         }
@@ -105,12 +115,11 @@ impl<'a> ClosureRegistry<'a> {
             } => {
                 self.visit_expression(expr, owner, metadata, types)?;
                 for arm in arms {
-                    for label in &arm.labels {
-                        if let CaseLabel::Value { start, end, .. } = label {
-                            self.visit_expression(start, owner, metadata, types)?;
-                            if let Some(end) = end {
-                                self.visit_expression(end, owner, metadata, types)?;
-                            }
+                    for pattern in &arm.labels {
+                        let mut expressions = Vec::new();
+                        pattern.visit_expressions(&mut |expr| expressions.push(expr));
+                        for expression in expressions {
+                            self.visit_expression(expression, owner, metadata, types)?;
                         }
                     }
                     if let Some(guard) = &arm.guard {
@@ -160,6 +169,34 @@ impl<'a> ClosureRegistry<'a> {
         types: &mut types::TypeTable,
     ) -> Result<(), CompileError> {
         match expression {
+            Expr::If(decision) => {
+                self.visit_expression(&decision.condition, owner, metadata, types)?;
+                self.visit_expression(&decision.then_value, owner, metadata, types)?;
+                for (condition, value) in &decision.elsif_values {
+                    self.visit_expression(condition, owner, metadata, types)?;
+                    self.visit_expression(value, owner, metadata, types)?;
+                }
+                self.visit_expression(&decision.else_value, owner, metadata, types)?;
+            }
+            Expr::Case(decision) => {
+                self.visit_expression(&decision.value, owner, metadata, types)?;
+                for arm in &decision.arms {
+                    for label in &arm.labels {
+                        let mut values = Vec::new();
+                        label.visit_expressions(&mut |value| values.push(value));
+                        for value in values {
+                            self.visit_expression(value, owner, metadata, types)?;
+                        }
+                    }
+                    if let Some(guard) = &arm.guard {
+                        self.visit_expression(guard, owner, metadata, types)?;
+                    }
+                    self.visit_expression(&arm.body, owner, metadata, types)?;
+                }
+                if let Some(value) = &decision.else_value {
+                    self.visit_expression(value, owner, metadata, types)?;
+                }
+            }
             Expr::Closure(closure) => {
                 let key = fpas_sema::expr_lookup_key(expression);
                 let info = metadata.closure_infos.get(&key).ok_or_else(|| {
@@ -282,7 +319,7 @@ impl<'a> ClosureRegistry<'a> {
                     self.visit_expression(value, owner, metadata, types)?;
                 }
             }
-            Expr::RecordLiteral { fields, .. } => {
+            Expr::RecordConstruction { fields, .. } => {
                 for field in fields {
                     self.visit_expression(&field.value, owner, metadata, types)?;
                 }
@@ -323,6 +360,7 @@ impl<'a> ClosureRegistry<'a> {
             | Expr::Bool(..)
             | Expr::OptionNone(_)
             | Expr::Nil(_)
+            | Expr::InvalidRecord(..)
             | Expr::Error(_) => {}
         }
         Ok(())

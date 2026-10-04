@@ -12,13 +12,11 @@ function UpdateDemo(State: DemoModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): D
 begin
   Cmd.Set(Tui.TuiCmd.NoCommand);
   case Msg of
-    when Tui.TuiMsg.Tick(Delta):
+    when Tui.TuiMsg.Tick(const Delta):
       begin
-        return record
-          Ticks := State.Ticks + 1;
-        end record;
+        return DemoModel(Ticks := State.Ticks + 1);
       end;
-    when Tui.TuiMsg.MenuChanged(MenuSource, MenuAction, MenuState):
+    when Tui.TuiMsg.MenuChanged(const MenuSource, const MenuAction, const MenuState):
       begin
         Cmd.Set(Tui.TuiCmd.Quit);
         return State;
@@ -28,9 +26,11 @@ begin
         Cmd.Set(Tui.TuiCmd.Quit);
         return State;
       end;
-    else
+    when Tui.TuiMsg.Started, Tui.TuiMsg.Key(_), Tui.TuiMsg.Pointer(_), Tui.TuiMsg.Resize(_), Tui.TuiMsg.FocusChanged(_, _), Tui.TuiMsg.Action(_, _), Tui.TuiMsg.TextChanged(_, _, _, _), Tui.TuiMsg.TextAreaChanged(_, _, _, _, _), Tui.TuiMsg.CheckChanged(_, _, _), Tui.TuiMsg.SelectionChanged(_, _, _), Tui.TuiMsg.ScrollChanged(_, _, _), Tui.TuiMsg.BackgroundFailed(_, _, _, _, _, _):
       begin
-        return State;
+        begin
+          return State;
+        end;
       end;
   end case;
 end function;
@@ -42,24 +42,18 @@ end function;
 
 function UpdateBackground(State: DemoModel; Message: integer; Cmd: Tui.TuiCmdOutput): DemoModel;
 begin
-  return record
-    Ticks := State.Ticks + Message;
-  end record;
+  return DemoModel(Ticks := State.Ticks + Message);
 end function;
 
 function RunSignatureOnly(): DemoModel;
 begin
-  return Tui.TuiApplication.Run(record
-    Ticks := 0;
-  end record, UpdateDemo, ViewDemo);
+  return Tui.TuiApplication.Run(DemoModel(Ticks := 0), UpdateDemo, ViewDemo);
 end function;
 
 function RunBackgroundSignatureOnly(): DemoModel;
 begin
-  var Inbox: channel of integer := Tasks.CreateChannel(4);
-  return Tui.TuiApplication.RunWithBackground(record
-    Ticks := 0;
-  end record, Inbox, UpdateDemo, UpdateBackground, ViewDemo);
+  var Inbox: channel of (integer) := Tasks.CreateChannel(4);
+  return Tui.TuiApplication.RunWithBackground(DemoModel(Ticks := 0), Inbox, UpdateDemo, UpdateBackground, ViewDemo);
 end function;
 
 begin

@@ -12,13 +12,11 @@ function UpdateCounter(State: CounterModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutp
 begin
   Cmd.Set(Tui.TuiCmd.NoCommand);
   case Msg of
-    when Tui.TuiMsg.Tick(Delta):
+    when Tui.TuiMsg.Tick(const Delta):
       begin
-        return record
-          Value := State.Value + 1;
-        end record;
+        return CounterModel(Value := State.Value + 1);
       end;
-    when Tui.TuiMsg.MenuChanged(MenuSource, MenuAction, MenuState):
+    when Tui.TuiMsg.MenuChanged(const MenuSource, const MenuAction, const MenuState):
       begin
         Cmd.Set(Tui.TuiCmd.Quit);
         return State;
@@ -28,9 +26,11 @@ begin
         Cmd.Set(Tui.TuiCmd.Quit);
         return State;
       end;
-    else
+    when Tui.TuiMsg.Started, Tui.TuiMsg.Key(_), Tui.TuiMsg.Pointer(_), Tui.TuiMsg.Resize(_), Tui.TuiMsg.FocusChanged(_, _), Tui.TuiMsg.Action(_, _), Tui.TuiMsg.TextChanged(_, _, _, _), Tui.TuiMsg.TextAreaChanged(_, _, _, _, _), Tui.TuiMsg.CheckChanged(_, _, _), Tui.TuiMsg.SelectionChanged(_, _, _), Tui.TuiMsg.ScrollChanged(_, _, _), Tui.TuiMsg.BackgroundFailed(_, _, _, _, _, _):
       begin
-        return State;
+        begin
+          return State;
+        end;
       end;
   end case;
 end function;
@@ -42,9 +42,7 @@ end function;
 
 begin
   mutable var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(40, 12));
-  var FinalModel: CounterModel := App.RunIterations(record
-    Value := 0;
-  end record, UpdateCounter, ViewCounter, 3, 16);
+  var FinalModel: CounterModel := App.RunIterations(CounterModel(Value := 0), UpdateCounter, ViewCounter, 3, 16);
   Test.AssertEquals(3, FinalModel.Value);
   App.Close();
 end program;

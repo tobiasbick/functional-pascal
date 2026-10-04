@@ -12,7 +12,7 @@ const TuiResizeSettleMilliseconds: integer := 50;
 
 function TuiConsoleInputSend(
   Token: Tasks.CancellationToken;
-  Output: channel of Input2.TuiHostInput;
+  Output: channel of (Input2.TuiHostInput);
   Input: Input2.TuiHostInput
 ): boolean;
 begin
@@ -21,7 +21,7 @@ end function;
 
 function TuiConsoleInputSettleResize(
   Token: Tasks.CancellationToken;
-  Output: channel of Input2.TuiHostInput;
+  Output: channel of (Input2.TuiHostInput);
   InitialSize: Size2.TuiSize
 ): boolean;
 begin
@@ -29,27 +29,29 @@ begin
   while not Tasks.IsCancellationRequested(Token) do
     begin
       case ConsoleEvents.TuiReadConsoleHostInputWithTimeout(TuiResizeSettleMilliseconds) of
-        when Some(Input):
+        when Option.Some(const Input):
           begin
             case Input of
-              when Input2.TuiHostInput.Resize(Size):
+              when Input2.TuiHostInput.Resize(const Size):
                 begin
                   LatestSize := Size;
                   Time.Sleep(0);
                 end;
-              else
+              when Input2.TuiHostInput.Message(_), Input2.TuiHostInput.Key(_), Input2.TuiHostInput.Pointer(_):
                 begin
-                  if TuiConsoleInputSend(Token, Output, Input2.TuiHostInput.Resize(LatestSize)) then
-                    begin
-                      return true;
-                    end;
-                  end if;
+                  begin
+                    if TuiConsoleInputSend(Token, Output, Input2.TuiHostInput.Resize(LatestSize)) then
+                      begin
+                        return true;
+                      end;
+                    end if;
 
-                  return TuiConsoleInputSend(Token, Output, Input);
+                    return TuiConsoleInputSend(Token, Output, Input);
+                  end;
                 end;
             end case;
           end;
-        when None:
+        when Option.None:
           begin
             return TuiConsoleInputSend(Token, Output, Input2.TuiHostInput.Resize(LatestSize));
           end;
@@ -65,33 +67,38 @@ end function;
 // Parameters:
 // - `Token`: Cancellation token owned by the interactive application.
 // - `Output`: Destination for normalized host input.
-public function TuiConsoleInputPump(Token: Tasks.CancellationToken; Output: channel of Input2.TuiHostInput): result of boolean, string;
+public function TuiConsoleInputPump(
+  Token: Tasks.CancellationToken;
+  Output: channel of (Input2.TuiHostInput)
+): Result of (boolean, string);
 begin
   while not Tasks.IsCancellationRequested(Token) do
     begin
       case ConsoleEvents.TuiReadConsoleHostInputWithTimeout(TuiResizeSettleMilliseconds) of
-        when Some(Input):
+        when Option.Some(const Input):
           begin
             case Input of
-              when Input2.TuiHostInput.Resize(Size):
+              when Input2.TuiHostInput.Resize(const Size):
                 begin
                   if TuiConsoleInputSettleResize(Token, Output, Size) then
                     begin
-                      return Ok(true);
+                      return Result.Ok(true);
                     end;
                   end if;
                 end;
-              else
+              when Input2.TuiHostInput.Message(_), Input2.TuiHostInput.Key(_), Input2.TuiHostInput.Pointer(_):
                 begin
-                  if TuiConsoleInputSend(Token, Output, Input) then
-                    begin
-                      return Ok(true);
-                    end;
-                  end if;
+                  begin
+                    if TuiConsoleInputSend(Token, Output, Input) then
+                      begin
+                        return Result.Ok(true);
+                      end;
+                    end if;
+                  end;
                 end;
             end case;
           end;
-        when None:
+        when Option.None:
           begin
             null;
           end;
@@ -102,7 +109,7 @@ begin
     end;
   end while;
 
-  return Ok(true);
+  return Result.Ok(true);
 end function;
 
 end unit;

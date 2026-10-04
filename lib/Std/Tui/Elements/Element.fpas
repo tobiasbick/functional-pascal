@@ -67,7 +67,7 @@ public type TuiElement = enum
   // - `Items`: Ordered items carried by the variant.
   // - `Selected`: Selected item index.
   // - `ChangeAction`: Application action emitted when the value changes.
-  List(Id: ControlId.TuiControlId; Items: array of string; Selected: integer; ChangeAction: Action2.TuiAction);
+  List(Id: ControlId.TuiControlId; Items: array of (string); Selected: integer; ChangeAction: Action2.TuiAction);
   // Represents the `Scroll` variant of `TuiElement`.
   //
   // Parameters:
@@ -75,12 +75,12 @@ public type TuiElement = enum
   // - `Offset`: Scroll offset carried by the variant.
   // - `ChangeAction`: Application action emitted when the value changes.
   // - `Children`: Ordered child elements contained by the variant.
-  Scroll(Id: ControlId.TuiControlId; Offset: Point.TuiPoint; ChangeAction: Action2.TuiAction; Children: array of TuiElement);
+  Scroll(Id: ControlId.TuiControlId; Offset: Point.TuiPoint; ChangeAction: Action2.TuiAction; Children: array of (TuiElement));
   // Represents the `MenuBar` variant of `TuiElement`.
   //
   // Parameters:
   // - `Items`: Ordered items carried by the variant.
-  MenuBar(Items: array of MenuItem.TuiMenuItem);
+  MenuBar(Items: array of (MenuItem.TuiMenuItem));
   // Represents the `Menu` variant of `TuiElement`.
   //
   // Parameters:
@@ -88,12 +88,12 @@ public type TuiElement = enum
   // - `Nodes`: Flat ordered menu-node collection.
   // - `State`: Controlled menu state carried by the variant.
   // - `ChangeAction`: Application action emitted when the value changes.
-  Menu(Id: ControlId.TuiControlId; Nodes: array of MenuNode.TuiMenuNode; State: MenuNode.TuiMenuState; ChangeAction: Action2.TuiAction);
+  Menu(Id: ControlId.TuiControlId; Nodes: array of (MenuNode.TuiMenuNode); State: MenuNode.TuiMenuState; ChangeAction: Action2.TuiAction);
   // Represents the `StatusLine` variant of `TuiElement`.
   //
   // Parameters:
   // - `Items`: Ordered items carried by the variant.
-  StatusLine(Items: array of StatusItem.TuiStatusItem);
+  StatusLine(Items: array of (StatusItem.TuiStatusItem));
   // Represents the `CellGrid` variant of `TuiElement`.
   //
   // Parameters:
@@ -114,19 +114,19 @@ public type TuiElement = enum
   // Parameters:
   // - `Children`: Ordered child elements contained by the variant.
   // - `Spacing`: Number of terminal cells between adjacent children.
-  Row(Children: array of TuiElement; Spacing: integer);
+  Row(Children: array of (TuiElement); Spacing: integer);
   // Represents the `Column` variant of `TuiElement`.
   //
   // Parameters:
   // - `Children`: Ordered child elements contained by the variant.
   // - `Spacing`: Number of terminal cells between adjacent children.
-  Column(Children: array of TuiElement; Spacing: integer);
+  Column(Children: array of (TuiElement); Spacing: integer);
   // Represents the `Layout` variant of `TuiElement`.
   //
   // Parameters:
   // - `Settings`: Layout settings applied to the child elements.
   // - `Children`: Ordered child elements contained by the variant.
-  Layout(Settings: LayoutSettings.TuiLayoutSettings; Children: array of TuiElement);
+  Layout(Settings: LayoutSettings.TuiLayoutSettings; Children: array of (TuiElement));
   // Represents the `Spacer` variant of `TuiElement`.
   //
   // Parameters:
@@ -137,19 +137,19 @@ public type TuiElement = enum
   // Parameters:
   // - `Title`: Title displayed by the container.
   // - `Children`: Ordered child elements contained by the variant.
-  Panel(Title: string; Children: array of TuiElement);
+  Panel(Title: string; Children: array of (TuiElement));
   // Represents the `Overlay` variant of `TuiElement`.
   //
   // Parameters:
   // - `Title`: Title displayed by the container.
   // - `Children`: Ordered child elements contained by the variant.
-  Overlay(Title: string; Children: array of TuiElement);
+  Overlay(Title: string; Children: array of (TuiElement));
   // Represents the `Desktop` variant of `TuiElement`.
   //
   // Parameters:
   // - `Focused`: Focused control identifier.
   // - `Children`: Ordered child elements contained by the variant.
-  Desktop(Focused: option of ControlId.TuiControlId; Children: array of TuiElement);
+  Desktop(Focused: Option of (ControlId.TuiControlId); Children: array of (TuiElement));
 end enum;
 
 // Named constructors for immutable Tui elements.
@@ -282,7 +282,7 @@ public type TuiElementBuilders = record
   TextValue: string;
   CaretValue: integer;
   Hint: string;
-  History: array of string;
+  History: array of (string);
   HistoryDraft: string;
   ChangeAction: Action2.TuiAction
 ): TuiElement;
@@ -335,7 +335,7 @@ public type TuiElementBuilders = record
   // - `ChangeAction`: Application action emitted when the value changes.
   public static function MakeList(
   Id: ControlId.TuiControlId;
-  Items: array of string;
+  Items: array of (string);
   Selected: integer;
   ChangeAction: Action2.TuiAction
 ): TuiElement;
@@ -364,7 +364,7 @@ public type TuiElementBuilders = record
   //
   // Parameters:
   // - `Items`: Ordered child or menu items.
-  public static function MakeMenuBar(Items: array of MenuItem.TuiMenuItem): TuiElement;
+  public static function MakeMenuBar(Items: array of (MenuItem.TuiMenuItem)): TuiElement;
   begin
     return TuiElement.MenuBar(Items);
   end function;
@@ -378,7 +378,7 @@ public type TuiElementBuilders = record
   // - `ChangeAction`: Application action emitted when the value changes.
   public static function MakeMenu(
   Id: ControlId.TuiControlId;
-  Nodes: array of MenuNode.TuiMenuNode;
+  Nodes: array of (MenuNode.TuiMenuNode);
   State: MenuNode.TuiMenuState;
   ChangeAction: Action2.TuiAction
 ): TuiElement;
@@ -390,7 +390,7 @@ public type TuiElementBuilders = record
   //
   // Parameters:
   // - `Items`: Ordered child or menu items.
-  public static function MakeStatusLine(Items: array of StatusItem.TuiStatusItem): TuiElement;
+  public static function MakeStatusLine(Items: array of (StatusItem.TuiStatusItem)): TuiElement;
   begin
     return TuiElement.StatusLine(Items);
   end function;
@@ -428,7 +428,7 @@ public type TuiElementBuilders = record
   //
   // Parameters:
   // - `Items`: Ordered child or menu items.
-  public static function MakeRow(Items: array of TuiElement): TuiElement;
+  public static function MakeRow(Items: array of (TuiElement)): TuiElement;
   begin
     return TuiElement.Row(Items, 0);
   end function;
@@ -438,7 +438,7 @@ public type TuiElementBuilders = record
   // Parameters:
   // - `Items`: Ordered child or menu items.
   // - `Spacing`: Number of terminal cells between adjacent items.
-  public static function MakeRowSpaced(Items: array of TuiElement; Spacing: integer): TuiElement;
+  public static function MakeRowSpaced(Items: array of (TuiElement); Spacing: integer): TuiElement;
   begin
     return TuiElement.Row(Items, TuiElementRequireNonNegativeSpacing(Spacing));
   end function;
@@ -447,7 +447,7 @@ public type TuiElementBuilders = record
   //
   // Parameters:
   // - `Items`: Ordered child or menu items.
-  public static function MakeColumn(Items: array of TuiElement): TuiElement;
+  public static function MakeColumn(Items: array of (TuiElement)): TuiElement;
   begin
     return TuiElement.Column(Items, 0);
   end function;
@@ -457,7 +457,7 @@ public type TuiElementBuilders = record
   // Parameters:
   // - `Items`: Ordered child or menu items.
   // - `Spacing`: Number of terminal cells between adjacent items.
-  public static function MakeColumnSpaced(Items: array of TuiElement; Spacing: integer): TuiElement;
+  public static function MakeColumnSpaced(Items: array of (TuiElement); Spacing: integer): TuiElement;
   begin
     return TuiElement.Column(Items, TuiElementRequireNonNegativeSpacing(Spacing));
   end function;
@@ -486,7 +486,7 @@ public type TuiElementBuilders = record
   // Parameters:
   // - `TitleValue`: Title displayed by the created container.
   // - `Items`: Ordered child or menu items.
-  public static function MakePanel(TitleValue: string; Items: array of TuiElement): TuiElement;
+  public static function MakePanel(TitleValue: string; Items: array of (TuiElement)): TuiElement;
   begin
     return TuiElement.Panel(TitleValue, Items);
   end function;
@@ -496,7 +496,7 @@ public type TuiElementBuilders = record
   // Parameters:
   // - `TitleValue`: Title displayed by the created container.
   // - `Items`: Ordered child or menu items.
-  public static function MakeOverlay(TitleValue: string; Items: array of TuiElement): TuiElement;
+  public static function MakeOverlay(TitleValue: string; Items: array of (TuiElement)): TuiElement;
   begin
     return TuiElement.Overlay(TitleValue, Items);
   end function;
@@ -506,7 +506,7 @@ public type TuiElementBuilders = record
   // Parameters:
   // - `Focused`: Whether the control currently owns focus.
   // - `Items`: Ordered child or menu items.
-  public static function MakeDesktop(Focused: option of ControlId.TuiControlId; Items: array of TuiElement): TuiElement;
+  public static function MakeDesktop(Focused: Option of (ControlId.TuiControlId); Items: array of (TuiElement)): TuiElement;
   begin
     return TuiElement.Desktop(Focused, Items);
   end function;

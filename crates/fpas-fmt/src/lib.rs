@@ -83,6 +83,22 @@ mod tests {
     use fpas_parser::parse_compilation_unit;
 
     #[test]
+    fn obsolete_record_recovery_is_rejected_before_formatting() {
+        for expression in [
+            "record X := 1; end record",
+            "Option.Some(record X := 1; end record)",
+        ] {
+            let source = format!("program T; begin discard {expression}; end program;");
+            let (unit, errors) = parse_compilation_unit(&source);
+            assert!(errors.is_empty(), "{errors:#?}");
+            assert!(matches!(
+                format_source(&source, &unit),
+                Err(FormatError::ObsoleteRecord { .. })
+            ));
+        }
+    }
+
+    #[test]
     fn format_source_preserves_all_comments() {
         let source = "// Unit doc.\nunit Demo;\n\n// field doc\nmutable var Count: integer := 0;\nend unit;\n";
         let (unit, errors) = parse_compilation_unit(source);

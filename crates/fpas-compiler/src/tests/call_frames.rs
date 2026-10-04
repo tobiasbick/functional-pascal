@@ -50,16 +50,16 @@ fn value_returning_callees_are_not_tail_called_from_procedures() {
 fn multi_argument_calls_keep_caller_state_and_array_values() {
     let source = r#"program Windows;  uses Std.Arrays as Arrays;
 function Combine(A: integer; B: integer; C: integer): integer; begin return A * 100 + B * 10 + C; end function;
-function Grow(Values: array of integer; Extra: integer): array of integer;
+function Grow(Values: array of (integer); Extra: integer): array of (integer);
 begin
-  mutable var Local: array of integer := Values;
+  mutable var Local: array of (integer) := Values;
   Arrays.Push(Local, Extra);
   return Local;
 end function;
 begin
   var Keep: integer := 7;
-  var Original: array of integer := [1, 2];
-  var Grown: array of integer := Grow(Original, 3);
+  var Original: array of (integer) := [1, 2];
+  var Grown: array of (integer) := Grow(Original, 3);
   if Combine(1, 2, 3) + Combine(4, 5, 6) <> 579 then panic('arguments'); end if;
   if Keep <> 7 then panic('caller register'); end if;
   if Arrays.Length(Original) <> 2 then panic('caller array changed'); end if;

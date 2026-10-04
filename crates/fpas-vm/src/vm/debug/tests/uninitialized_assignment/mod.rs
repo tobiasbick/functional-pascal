@@ -29,7 +29,7 @@ pub(super) fn assignment_executable() -> VerifiedExecutable {
             "X",
             "Y",
             "G",
-            "array of Integer",
+            "array of (Integer)",
         ]
         .into_iter()
         .map(str::to_string)

@@ -21,9 +21,10 @@ end program;"#,
 fn full_program() {
     let p = parse_ok(
         r#"program Calculator;
+
 uses Std.Console as Console;
 
- type Op = enum
+type Op = enum
   OpAdd;
   OpSub;
   OpMul;
@@ -33,17 +34,22 @@ end enum;
 function Calculate(A: integer; B: integer; Operation: Op): integer;
 begin
   case Operation of
-    when OpAdd: return A + B;
-    when OpSub: return A - B;
-    when OpMul: return A * B;
-    when OpDiv: return A div B;
+    when Op.OpAdd:
+      return A + B;
+    when Op.OpSub:
+      return A - B;
+    when Op.OpMul:
+      return A * B;
+    when Op.OpDiv:
+      return A div B;
   end case;
 end function;
 
 begin
-  var Answer: integer := Calculate(10, 3, OpAdd);
+  var Answer: integer := Calculate(10, 3, Op.OpAdd);
   Console.WriteLn(Answer);
-end program;"#,
+end program;
+"#,
     );
     assert_eq!(p.name, "Calculator");
     assert_eq!(p.declarations.len(), 2);

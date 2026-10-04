@@ -329,7 +329,7 @@ async function verifyWorkspaceNavigation(): Promise<void> {
       '[project]\nname = "navigation-app"\nkind = "program"\nmain = "src/main.fpas"\n\n[dependencies]\nprojects = ["../core/core.fpasprj"]\n\n[sources]\ninclude = ["src/**/*.fpas"]\n'
     );
     const source =
-      "program NavigationApp;\n\n uses Navigation.Core as Core;\n\n  mutable var Counter: integer := 0;\n\nbegin\n  Counter := Counter + 1;\n  var Value: Core.HostPoint := record X := Counter; end record;\nend program;\n";
+      "program NavigationApp;\n\n uses Navigation.Core as Core;\n\n  mutable var Counter: integer := 0;\n\nbegin\n  Counter := Counter + 1;\n  var Value: Core.HostPoint := Core.HostPoint(X := Counter);\nend program;\n";
     await fs.writeFile(appSource, source);
 
     const symbols = await waitForWorkspaceSymbols("HostPoint");

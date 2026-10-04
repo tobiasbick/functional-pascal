@@ -38,7 +38,7 @@ impl Checker {
             return;
         };
 
-        let value_ty = self.check_expr_with_expected_record_literals(value, &property.ty);
+        let value_ty = self.check_expr_with_expected(value, &property.ty);
         self.check_type_compat(&property.ty, &value_ty, "property assignment", span);
 
         let key = crate::designator_lookup_key(target);

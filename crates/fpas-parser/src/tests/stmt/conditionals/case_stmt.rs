@@ -4,6 +4,25 @@ use crate::tests::parse_with_errors;
 use fpas_diagnostics::codes::PARSE_EXPECTED_TOKEN;
 
 #[test]
+fn nested_pattern_nodes_preserve_explicit_bindings_and_payload_wildcards() {
+    let statements = body_stmts(
+        "program Main; begin case Item of
+        when Choice.Present(Option.Some(const Value)), Choice.Present(Option.Some(_)): null;
+        when Choice.Missing: null; end case; end program;",
+    );
+    let Stmt::Case { arms, .. } = &statements[0] else {
+        panic!("case statement");
+    };
+    let Pattern::Variant { arguments, .. } = &arms[0].labels[0] else {
+        panic!("recursive pattern");
+    };
+    let Pattern::Variant { arguments, .. } = &arguments[0] else {
+        panic!("nested option");
+    };
+    assert!(matches!(&arguments[0], Pattern::Binding { name, .. } if name == "Value"));
+}
+
+#[test]
 fn case_basic() {
     let stmts = body_stmts(
         r#"program T; begin case X of when 1: A := 1; when 2: A := 2; end case; end program;"#,
@@ -25,7 +44,7 @@ fn case_with_range() {
         body_stmts(r#"program T; begin case X of when 0..9: A := 1; end case; end program;"#);
     match &stmts[0] {
         Stmt::Case { arms, .. } => match &arms[0].labels[0] {
-            CaseLabel::Value { end, .. } => assert!(end.is_some()),
+            Pattern::Value { end, .. } => assert!(end.is_some()),
             _ => panic!("expected Value label"),
         },
         _ => panic!("expected Case"),
@@ -81,22 +100,16 @@ fn case_multiple_labels() {
 #[test]
 fn case_with_guard_and_enum_pattern() {
     let stmts = body_stmts(
-        r#"program T; begin case S of when Shape.Circle(R) if R > 10.0: A := 1; end case; end program;"#,
+        r#"program T; begin case S of when Shape.Circle(const R) if R > 10.0: A := 1; end case; end program;"#,
     );
     match &stmts[0] {
         Stmt::Case { arms, .. } => {
             assert!(arms[0].guard.is_some());
-            let CaseLabel::Value {
-                start, end: None, ..
-            } = &arms[0].labels[0]
-            else {
-                panic!("expected enum-pattern label");
+            let Pattern::Variant { arguments, .. } = &arms[0].labels[0] else {
+                panic!("expected enum variant pattern");
             };
-            let Expr::Call { args, .. } = start else {
-                panic!("expected enum-pattern call");
-            };
-            assert_eq!(args.len(), 1);
-            assert!(matches!(&args[0], Expr::Designator(_)));
+            assert_eq!(arguments.len(), 1);
+            assert!(matches!(&arguments[0], Pattern::Binding { name, .. } if name == "R"));
         }
         _ => panic!("expected Case"),
     }
@@ -105,15 +118,19 @@ fn case_with_guard_and_enum_pattern() {
 #[test]
 fn case_with_destructure_pattern() {
     let stmts = body_stmts(
-        r#"program T; begin case R of when Ok(V): A := 1; when Error(E): A := 2; end case; end program;"#,
+        r#"program T; begin case R of when Result.Ok(const V): A := 1; when Result.Error(const E): A := 2; end case; end program;"#,
     );
     match &stmts[0] {
         Stmt::Case { arms, .. } => match &arms[0].labels[0] {
-            CaseLabel::Destructure {
-                variant, binding, ..
+            Pattern::Variant {
+                designator,
+                arguments,
+                ..
             } => {
-                assert_eq!(*variant, DestructureVariant::Ok);
-                assert_eq!(binding.as_deref(), Some("V"));
+                assert!(
+                    matches!(&designator.parts[1], DesignatorPart::Ident(name, _) if name == "Ok")
+                );
+                assert!(matches!(&arguments[0], Pattern::Binding { name, .. } if name == "V"));
             }
             _ => panic!("expected destructure label"),
         },

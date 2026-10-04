@@ -14,7 +14,7 @@ use super::super::super::callbacks::{
 };
 use super::super::{array_elem_ty, check_argument_count};
 
-/// `Std.Arrays.Find(Arr, Pred)` → `option of T` where `Pred: function(V: T): boolean`.
+/// `Std.Arrays.Find(Arr, Pred)` → `option of (T)` where `Pred: function(V: T): boolean`.
 pub(crate) fn check_find(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
     if !check_argument_count(
         c,
@@ -33,7 +33,7 @@ pub(crate) fn check_find(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
         c.error_with_code(
             SEMA_TYPE_MISMATCH,
             format!("`{}` first argument must be an array", s::STD_ARRAY_FIND),
-            "Pass `array of T`.",
+            "Pass `array of (T)`.",
             span,
         );
         return Ty::Error;
@@ -76,7 +76,7 @@ pub(crate) fn check_find_index(c: &mut Checker, args: &[&Expr], span: Span) -> T
                 "`{}` first argument must be an array",
                 s::STD_ARRAY_FIND_INDEX
             ),
-            "Pass `array of T`.",
+            "Pass `array of (T)`.",
             span,
         );
         return Ty::Error;
@@ -116,7 +116,7 @@ pub(crate) fn check_any(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
         c.error_with_code(
             SEMA_TYPE_MISMATCH,
             format!("`{}` first argument must be an array", s::STD_ARRAY_ANY),
-            "Pass `array of T`.",
+            "Pass `array of (T)`.",
             span,
         );
         return Ty::Error;
@@ -156,7 +156,7 @@ pub(crate) fn check_all(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
         c.error_with_code(
             SEMA_TYPE_MISMATCH,
             format!("`{}` first argument must be an array", s::STD_ARRAY_ALL),
-            "Pass `array of T`.",
+            "Pass `array of (T)`.",
             span,
         );
         return Ty::Error;
@@ -199,7 +199,7 @@ pub(crate) fn check_for_each(c: &mut Checker, args: &[&Expr], span: Span) -> Ty 
                 "`{}` first argument must be an array",
                 s::STD_ARRAY_FOR_EACH
             ),
-            "Pass `array of T`.",
+            "Pass `array of (T)`.",
             span,
         );
         return Ty::Error;

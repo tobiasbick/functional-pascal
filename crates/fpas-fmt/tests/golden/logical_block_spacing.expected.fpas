@@ -6,14 +6,8 @@ type Point = record
 end record;
 
 begin
-  var A: Point := record
-    X := 3;
-    Y := 4;
-  end record;
-  var B: Point := record
-    X := 10;
-    Y := 20;
-  end record;
+  var A: Point := Point(X := 3, Y := 4);
+  var B: Point := Point(X := 10, Y := 20);
   var UpdatedB: Point := B with X := 11; end with;
 
   A.Print();

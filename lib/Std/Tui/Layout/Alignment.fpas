@@ -26,10 +26,7 @@ public type TuiAlignment = record
   // - `Vertical`: Vertical policy, alignment, or extent.
   public static function Create(Horizontal: TuiAlignmentKind; Vertical: TuiAlignmentKind): TuiAlignment;
   begin
-    return record
-      Horizontal := Horizontal;
-      Vertical := Vertical;
-    end record;
+    return TuiAlignment(Horizontal := Horizontal, Vertical := Vertical);
   end function;
 
   // Leading on both axes.

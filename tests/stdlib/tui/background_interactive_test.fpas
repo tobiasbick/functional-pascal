@@ -6,7 +6,7 @@ uses Std.Test as Test;
 uses Std.Tui as Tui;
 
 type InteractiveModel = record
-  Inbox: channel of integer;
+  Inbox: channel of (integer);
   Received: integer;
 end record;
 
@@ -15,14 +15,16 @@ begin
   case Msg of
     when Tui.TuiMsg.Started:
       begin
-        var Inbox: channel of integer := State.Inbox;
-        Cmd.StartBackground(1, function(Token: Tasks.CancellationToken): result of boolean, string begin
+        var Inbox: channel of (integer) := State.Inbox;
+        Cmd.StartBackground(1, function(Token: Tasks.CancellationToken): Result of (boolean, string) begin
           return Tasks.SendWithCancellation(Inbox, 42, Token);
         end function);
       end;
-    else
+    when Tui.TuiMsg.Key(_), Tui.TuiMsg.Pointer(_), Tui.TuiMsg.Tick(_), Tui.TuiMsg.Resize(_), Tui.TuiMsg.FocusChanged(_, _), Tui.TuiMsg.Action(_, _), Tui.TuiMsg.TextChanged(_, _, _, _), Tui.TuiMsg.TextAreaChanged(_, _, _, _, _), Tui.TuiMsg.CheckChanged(_, _, _), Tui.TuiMsg.SelectionChanged(_, _, _), Tui.TuiMsg.ScrollChanged(_, _, _), Tui.TuiMsg.MenuChanged(_, _, _), Tui.TuiMsg.BackgroundFailed(_, _, _, _, _, _), Tui.TuiMsg.QuitRequested:
       begin
-        null;
+        begin
+          null;
+        end;
       end;
   end case;
 
@@ -43,11 +45,8 @@ begin
 end function;
 
 begin
-  var Inbox: channel of integer := Tasks.CreateChannel(1);
-  var Final: InteractiveModel := Tui.TuiApplication.RunWithBackground(record
-    Inbox := Inbox;
-    Received := 0;
-  end record, Inbox, Update, UpdateMessage, View);
+  var Inbox: channel of (integer) := Tasks.CreateChannel(1);
+  var Final: InteractiveModel := Tui.TuiApplication.RunWithBackground(InteractiveModel(Inbox := Inbox, Received := 0), Inbox, Update, UpdateMessage, View);
   Test.AssertEquals(42, Final.Received);
   Test.AssertTrue(Results.IsError(Tasks.TrySend(Inbox, 1)));
 end program;

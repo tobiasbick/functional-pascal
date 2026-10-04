@@ -29,9 +29,9 @@ begin
   return Acc + Value;
 end function;
 
-function MakeValues(): array of integer;
+function MakeValues(): array of (integer);
 begin
-  mutable var Values: array of integer := [];
+  mutable var Values: array of (integer) := [];
   for Index: integer := 1 to ArraySize do
     begin
       Arrays.Push(Values, Index);
@@ -41,13 +41,13 @@ begin
   return Values;
 end function;
 
-function RunCallbacks(Values: array of integer; Iterations: integer): integer;
+function RunCallbacks(Values: array of (integer); Iterations: integer): integer;
 begin
   mutable var Total: integer := 0;
   for Index: integer := 1 to Iterations do
     begin
-      var Mapped: array of integer := Arrays.Map(Values, Double);
-      var Filtered: array of integer := Arrays.Filter(Mapped, IsEven);
+      var Mapped: array of (integer) := Arrays.Map(Values, Double);
+      var Filtered: array of (integer) := Arrays.Filter(Mapped, IsEven);
       Total := Total + Arrays.Reduce(Filtered, 0, Sum);
     end;
   end for;
@@ -78,7 +78,7 @@ begin
       end if;
     end;
   end if;
-  var Values: array of integer := MakeValues();
+  var Values: array of (integer) := MakeValues();
   mutable var Total: integer := RunCallbacks(Values, WarmupIterations);
   var Started: integer := Time.MonotonicMillis();
   Total := RunCallbacks(Values, Iterations);

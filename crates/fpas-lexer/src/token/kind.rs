@@ -102,6 +102,8 @@ pub enum Token {
     Write,
     /// Restricts a generic type parameter to comparable types.
     Comparable,
+    /// Equality-only generic constraint.
+    Equatable,
     /// Restricts a generic type parameter to numeric types.
     Numeric,
     /// Restricts a generic type parameter to printable types.

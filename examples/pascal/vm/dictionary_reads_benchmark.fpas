@@ -22,7 +22,7 @@ begin
       panic('arguments must be positive');
     end;
   end if;
-  mutable var Values: dict of integer to integer := [0: 0];
+  mutable var Values: dict of (integer, integer) := [0: 0];
   for Index: integer := 0 to Size - 1 do
     begin
       Values[Index] := Index;

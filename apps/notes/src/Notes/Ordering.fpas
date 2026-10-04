@@ -16,7 +16,7 @@ begin
 end function;
 
 // Merge-sorts notes without rebuilding the output for every inserted item.
-public function NotesOrdered(Notes: array of Model.Note): array of Model.Note;
+public function NotesOrdered(Notes: array of (Model.Note)): array of (Model.Note);
 begin
   var Count: integer := Arrays.Length(Notes);
   if Count < 2 then
@@ -25,9 +25,9 @@ begin
     end;
   end if;
   var Middle: integer := Count div 2;
-  var Left: array of Model.Note := NotesOrdered(Arrays.Slice(Notes, 0, Middle));
-  var Right: array of Model.Note := NotesOrdered(Arrays.Slice(Notes, Middle, Count - Middle));
-  mutable var Output: array of Model.Note := [];
+  var Left: array of (Model.Note) := NotesOrdered(Arrays.Slice(Notes, 0, Middle));
+  var Right: array of (Model.Note) := NotesOrdered(Arrays.Slice(Notes, Middle, Count - Middle));
+  mutable var Output: array of (Model.Note) := [];
   mutable var L: integer := 0;
   mutable var R: integer := 0;
   while (L < Arrays.Length(Left)) and (R < Arrays.Length(Right)) do

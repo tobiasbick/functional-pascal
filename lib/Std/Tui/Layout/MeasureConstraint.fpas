@@ -29,10 +29,7 @@ public type TuiMeasureConstraint = record
   // Creates an unbounded axis constraint.
   public static function Unbounded(): TuiMeasureConstraint;
   begin
-    return record
-      Kind := TuiMeasureConstraintKind.Unbounded;
-      Limit := 0;
-    end record;
+    return TuiMeasureConstraint(Kind := TuiMeasureConstraintKind.Unbounded, Limit := 0);
   end function;
 
   // Creates a non-negative upper bound.
@@ -41,10 +38,7 @@ public type TuiMeasureConstraint = record
   // - `Limit`: Upper bound applied by the constraint.
   public static function AtMost(Limit: integer): TuiMeasureConstraint;
   begin
-    return record
-      Kind := TuiMeasureConstraintKind.AtMost;
-      Limit := TuiMeasureConstraintRequireNonNegative(Limit);
-    end record;
+    return TuiMeasureConstraint(Kind := TuiMeasureConstraintKind.AtMost, Limit := TuiMeasureConstraintRequireNonNegative(Limit));
   end function;
 
   // Returns whether the constraint has an upper bound.

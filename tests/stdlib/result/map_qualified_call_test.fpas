@@ -10,7 +10,7 @@ begin
 end function;
 
 begin
-  var R: result of integer, string := Ok(5);
-  var M: result of string, string := Results.Map(R, ToStr);
+  var R: Result of (integer, string) := Result.Ok(5);
+  var M: Result of (string, string) := Results.Map(R, ToStr);
   Console.WriteLn(Results.Unwrap(M));
 end program;

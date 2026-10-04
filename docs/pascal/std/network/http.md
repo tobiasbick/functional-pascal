@@ -11,17 +11,17 @@ An HTTP/1.1 and HTTPS client plus bounded HTTP/1.x server helpers, implemented i
 | type | `Request` | method, URL, headers, byte body, timeout, header/response limits, and redirect limit |
 | static function | `Request.Get/Post/Put/Patch/Delete/Head/Options(Url)` | standard-method request constructors |
 | type | `Response` | status, reason, headers, and byte body |
-| function | `Send(Request): Result of Response, string` | sends and buffers one response |
+| function | `Send(Request): Result of (Response, string)` | sends and buffers one response |
 | type | `StreamResponse` | status, reason, headers, and a `BodyStream` handle |
-| function | `OpenStream(Request): Result of StreamResponse, string` | returns after the response headers are available |
-| function | `ReadStream(BodyStream; MaxBytes): Result of array of integer, string` | pulls decoded body bytes; an empty array means EOF |
-| function | `CloseStream(BodyStream): Result of boolean, string` | closes a response before EOF |
+| function | `OpenStream(Request): Result of (StreamResponse, string)` | returns after the response headers are available |
+| function | `ReadStream(BodyStream; MaxBytes): Result of (array of (integer), string)` | pulls decoded body bytes; an empty array means EOF |
+| function | `CloseStream(BodyStream): Result of (boolean, string)` | closes a response before EOF |
 | type | `SseDecoder`, `SseEvent` | bounded incremental Server-Sent Events decoding |
 | function | `CreateSseDecoder(MaxEventBytes)` | creates a decoder with a per-event byte limit |
 | function | `FeedSse(Decoder; Bytes)` | returns all complete events in one fragment |
 | function | `FinishSse(Decoder)` | flushes the final line and finishes the decoder |
-| function | `HeaderValue(Response; Name: string): Option of string` | case-insensitive first match |
-| function | `BodyText(Response): Result of string, string` | validated UTF-8 decoding |
+| function | `HeaderValue(Response; Name: string): Option of (string)` | case-insensitive first match |
+| function | `BodyText(Response): Result of (string, string)` | validated UTF-8 decoding |
 | type | `ServerRequest` | accepted method, origin-form target, headers, and body |
 | type | `ServerResponse` | status, reason, headers, body, and `Create` constructor |
 | type | `ServerOptions` | request limits, connection timeout, concurrency, and optional request count |
@@ -41,9 +41,9 @@ mutable var RequestValue: Http.Request := Http.Request.Create('POST', 'http://12
 RequestValue.Headers := [Http.Header.Create('Content-Type', 'application/json')];
 RequestValue.Body := Utf8.Encode('{"name":"example"}');
 case Http.Send(RequestValue) of
-  when Ok(ResponseValue):
+  when Result.Ok(const ResponseValue):
     Console.WriteLn(ResponseValue.StatusCode);
-  when Error(Message):
+  when Result.Error(const Message):
     panic(Message);
 end case;
 ```
@@ -66,7 +66,7 @@ Alias-qualified calls thread the request and the explicit `Result` through
 uses Std.Http as Http;
 uses Std.Results as Results;
 
-var TextResult: result of string, string := Results.AndThen(Http.Send(Http.Request.Get('https://example.test/items')), Http.BodyText);
+var TextResult: result of (string, string) := Results.AndThen(Http.Send(Http.Request.Get('https://example.test/items')), Http.BodyText);
 ```
 
 `Method` deliberately remains a string so extension methods are not excluded. For example, a
@@ -113,21 +113,21 @@ uses Std.Http as Http;
 uses Std.Arrays as Arrays;
 
 case Http.OpenStream(Http.Request.Get('https://example.test/events')) of
-  when Ok(ResponseValue):
+  when Result.Ok(const ResponseValue):
     begin
       mutable var Reading: boolean := true;
       while Reading do
         begin
           case Http.ReadStream(ResponseValue.Body, 4096) of
-            when Ok(Bytes):
+            when Result.Ok(const Bytes):
               Reading := Arrays.Length(Bytes) <> 0;
-            when Error(Message):
+            when Result.Error(const Message):
               panic(Message);
           end case;
         end;
       end while;
     end;
-  when Error(Message):
+  when Result.Error(const Message):
     panic(Message);
 end case;
 ```
@@ -175,52 +175,52 @@ uses Std.Net as Net;
 uses Std.Net.Utf8 as Utf8;
 
   case Net.Listen('127.0.0.1', 8080) of
-    when Ok(ListenerValue):
+    when Result.Ok(const ListenerValue):
       begin
         case Net.Accept(ListenerValue) of
-          when Ok(Connection):
+          when Result.Ok(const Connection):
             begin
               case Net.SetTimeout(Connection, 30000) of
-                when Ok(_):
+                when Result.Ok(_):
                   begin
                     null;
                   end;
-                when Error(Message):
+                when Result.Error(const Message):
                   panic(Message);
               end case;
 
               case Http.ReadRequest(Connection, 65536, 1048576) of
-                when Ok(RequestValue):
+                when Result.Ok(const RequestValue):
                   begin
                     mutable var ResponseValue: Http.ServerResponse := Http.ServerResponse.Create(200, 'OK');
                     ResponseValue.Body := Utf8.Encode('Hello');
                     case Http.WriteResponse(Connection, ResponseValue) of
-                      when Ok(_):
+                      when Result.Ok(_):
                         begin
                           null;
                         end;
-                      when Error(Message):
+                      when Result.Error(const Message):
                         panic(Message);
                     end case;
                   end;
-                when Error(Message):
+                when Result.Error(const Message):
                   panic(Message);
               end case;
 
               case Net.Close(Connection) of
-                when Ok(_):
+                when Result.Ok(_):
                   begin
                     null;
                   end;
-                when Error(Message):
+                when Result.Error(const Message):
                   panic(Message);
               end case;
             end;
-          when Error(Message):
+          when Result.Error(const Message):
             panic(Message);
         end case;
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       panic(Message);
   end case;
 ```
@@ -244,20 +244,20 @@ begin
 end function;
 
   case Net.Listen('127.0.0.1', 8080) of
-    when Ok(ListenerValue):
+    when Result.Ok(const ListenerValue):
       begin
         mutable var Options: Http.ServerOptions := Http.ServerOptions.Create();
         Options.MaxConcurrentRequests := 16;
         case Http.Serve(ListenerValue, Options, Handle) of
-          when Ok(_):
+          when Result.Ok(_):
             begin
               null;
             end;
-          when Error(Message):
+          when Result.Error(const Message):
             panic(Message);
         end case;
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       panic(Message);
   end case;
 ```
@@ -271,7 +271,7 @@ mutable captures are rejected by the existing task semantics.
 
 `Serve` owns accepted connections and closes each one after its response. It leaves the listener
 open. A malformed request receives an empty `400 Bad Request`, and connection-level read or write
-failures do not stop other workers. An accept failure returns `Error`. A handler panic follows the
+failures do not stop other workers. An accept failure returns `Result.Error`. A handler panic follows the
 normal task-failure path and stops the server loop.
 
 For HTTPS, replace `Listen` with a certificate-configured TLS listener; the handler and server loop
@@ -282,19 +282,19 @@ uses Std.Http as Http;
 uses Std.Net as Net;
 
 case Net.ListenTls('127.0.0.1', 8443, 'certificate.pem', 'private-key.pem', 10000) of
-  when Ok(ListenerValue):
+  when Result.Ok(const ListenerValue):
     begin
       mutable var Options: Http.ServerOptions := Http.ServerOptions.Create();
       case Http.Serve(ListenerValue, Options, Handle) of
-        when Ok(_):
+        when Result.Ok(_):
           begin
             null;
           end;
-        when Error(Message):
+        when Result.Error(const Message):
           panic(Message);
       end case;
     end;
-  when Error(Message):
+  when Result.Error(const Message):
     panic(Message);
 end case;
 ```

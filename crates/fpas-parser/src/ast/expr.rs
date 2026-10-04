@@ -20,15 +20,18 @@ impl Expr {
             | Self::Nil(span)
             | Self::Try(_, span)
             | Self::Go(_, span)
+            | Self::InvalidRecord(span)
             | Self::Error(span) => *span,
             Self::Designator(d) => d.span,
             Self::Call { span, .. }
             | Self::UnaryOp { span, .. }
             | Self::BinaryOp { span, .. }
-            | Self::RecordLiteral { span, .. }
+            | Self::RecordConstruction { span, .. }
             | Self::RecordUpdate { span, .. }
             | Self::Postfix { span, .. } => *span,
             Self::Closure(closure) => closure.span,
+            Self::If(decision) => decision.span,
+            Self::Case(decision) => decision.span,
         }
     }
 }
@@ -36,6 +39,10 @@ impl Expr {
 /// Parsed expression.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Expr {
+    /// Value selected by Boolean conditions and a required else expression.
+    If(Box<super::IfExpr>),
+    /// Value selected by exhaustive patterns or an open-domain fallback.
+    Case(Box<super::CaseExpr>),
     /// Integer literal and its source span.
     Integer(i64, Span),
     /// Real-number literal and its source span.
@@ -83,20 +90,29 @@ pub enum Expr {
     ///
     /// **Documentation:** `docs/pascal/language/types/dictionaries.md`
     DictLiteral(Vec<(Expr, Expr)>, Span),
-    /// Record literal with explicitly initialized fields.
-    RecordLiteral {
-        /// Field initializers in source order.
+    /// Rejected anonymous record syntax, retained only for a contextual diagnostic.
+    ///
+    /// No field values survive recovery; semantic analysis must reject this node.
+    /// **Documentation:** `docs/pascal/language/types/records.md`.
+    InvalidRecord(Span),
+    /// Named field construction, whose target must resolve to a declared record type.
+    ///
+    /// **Documentation:** `docs/pascal/language/types/records.md`.
+    RecordConstruction {
+        /// Source type name, resolved without evaluating a receiver.
+        type_name: super::QualifiedId,
+        /// Supplied fields in written evaluation order.
         fields: Vec<FieldInit>,
-        /// Source span of the complete record literal.
+        /// Source span of the complete constructor.
         span: Span,
     },
-    /// `Ok(expr)` — wrap value in Result::Ok.
+    /// `Result.Ok(expr)` — wrap value in Result::Ok.
     ResultOk(Box<Expr>, Span),
-    /// `Error(expr)` — wrap value in Result::Error.
+    /// `Result.Error(expr)` — wrap value in Result::Error.
     ResultError(Box<Expr>, Span),
-    /// `Some(expr)` — wrap value in Option::Some.
+    /// `Option.Some(expr)` — wrap value in Option::Some.
     OptionSome(Box<Expr>, Span),
-    /// `None` — Option::None literal.
+    /// `Option.None` — Option::None literal.
     OptionNone(Span),
     /// `nil` — clears an event handler (valid only on event assignment RHS).
     ///

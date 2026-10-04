@@ -13,30 +13,17 @@ const SOURCE: &str = r#"program JsonlDictionaryMutation;
 
 uses Std.Console as Console;
 
+type Row = record
+  Scores: dict of (string, integer);
+end record;
 
-  type Row = record
-    Scores: dict of string to integer;
-  end record;
-
-
-  mutable var GlobalScores: dict of string to integer := ['Root': 7];
+mutable var GlobalScores: dict of (string, integer) := ['Root': 7];
 
 begin
-  mutable var Scores: dict of string to integer := [
-    'Ada': 1,
-    'Grace': 2,
-    'Linus': 3
-  ];
-  var FixedScores: dict of string to integer := ['Fixed': 5];
-  mutable var NestedValues: dict of string to array of integer := [:];
-  mutable var Rows: array of Row := [
-    record
-      Scores := ['Left': 10];
-    end record,
-    record
-      Scores := ['Right': 20];
-    end record
-  ];
+  mutable var Scores: dict of (string, integer) := ['Ada': 1, 'Grace': 2, 'Linus': 3];
+  var FixedScores: dict of (string, integer) := ['Fixed': 5];
+  mutable var NestedValues: dict of (string, array of (integer)) := [:];
+  mutable var Rows: array of (Row) := [Row(Scores := ['Left': 10]), Row(Scores := ['Right': 20])];
   Console.WriteLn(Scores['Hopper']);
   Console.WriteLn(Scores['Bob']);
   Console.WriteLn(Rows[1].Scores['Nested']);

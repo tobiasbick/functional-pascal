@@ -12,7 +12,7 @@ uses Std.Net.Utf8 as Utf8;
 //
 // Parameters:
 // - `Bytes`: Network bytes to inspect.
-function LineFeedIndex(Bytes: array of integer): integer;
+function LineFeedIndex(Bytes: array of (integer)): integer;
 begin
   for Index: integer := 0 to Arrays.Length(Bytes) - 1 do
     begin
@@ -33,12 +33,12 @@ end function;
 // - `ConnectionValue`: Open TCP connection.
 function ReadLine(ConnectionValue: Net.Connection): string;
 begin
-  mutable var Bytes: array of integer := [];
+  mutable var Bytes: array of (integer) := [];
   mutable var LineEnd: integer := -1;
   while LineEnd < 0 do
     begin
       case Net.ReceiveBytes(ConnectionValue, 4096) of
-        when Ok(Part):
+        when Result.Ok(const Part):
           begin
             if Arrays.Length(Part) = 0 then
               begin
@@ -49,7 +49,7 @@ begin
             Bytes := Arrays.Concat(Bytes, Part);
             LineEnd := LineFeedIndex(Bytes);
           end;
-        when Error(Message):
+        when Result.Error(const Message):
           begin
             panic(Message);
           end;
@@ -62,13 +62,13 @@ begin
       panic('TCP echo server accepts exactly one LF-delimited request per connection');
     end;
   end if;
-  var TextBytes: array of integer := Arrays.Slice(Bytes, 0, LineEnd);
+  var TextBytes: array of (integer) := Arrays.Slice(Bytes, 0, LineEnd);
   case Utf8.Decode(TextBytes) of
-    when Ok(Text):
+    when Result.Ok(const Text):
       begin
         return Text;
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
         panic(Message);
       end;
@@ -80,14 +80,14 @@ end function;
 // Parameters:
 // - `ConnectionValue`: Open TCP connection.
 // - `Bytes`: Complete byte sequence to write.
-procedure WriteAll(ConnectionValue: Net.Connection; Bytes: array of integer);
+procedure WriteAll(ConnectionValue: Net.Connection; Bytes: array of (integer));
 begin
   mutable var Offset: integer := 0;
   while Offset < Arrays.Length(Bytes) do
     begin
-      var Remaining: array of integer := Arrays.Slice(Bytes, Offset, Arrays.Length(Bytes) - Offset);
+      var Remaining: array of (integer) := Arrays.Slice(Bytes, Offset, Arrays.Length(Bytes) - Offset);
       case Net.SendBytes(ConnectionValue, Remaining) of
-        when Ok(Count):
+        when Result.Ok(const Count):
           begin
             if Count <= 0 then
               begin
@@ -97,7 +97,7 @@ begin
 
             Offset := Offset + Count;
           end;
-        when Error(Message):
+        when Result.Error(const Message):
           begin
             panic(Message);
           end;
@@ -121,18 +121,18 @@ begin
   end if;
 
   case Net.Listen('127.0.0.1', Port) of
-    when Ok(ListenerValue):
+    when Result.Ok(const ListenerValue):
       begin
         Console.WriteLn('TCP echo server listening on 127.0.0.1:' + Conv.IntToStr(Port));
         case Net.Accept(ListenerValue) of
-          when Ok(ConnectionValue):
+          when Result.Ok(const ConnectionValue):
             begin
               case Net.SetTimeout(ConnectionValue, 5000) of
-                when Ok(_):
+                when Result.Ok(_):
                   begin
                     null;
                   end;
-                when Error(Message):
+                when Result.Error(const Message):
                   begin
                     panic(Message);
                   end;
@@ -140,34 +140,34 @@ begin
               var Text: string := ReadLine(ConnectionValue);
               WriteAll(ConnectionValue, Utf8.Encode('Echo: ' + Text));
               case Net.Close(ConnectionValue) of
-                when Ok(_):
+                when Result.Ok(_):
                   begin
                     null;
                   end;
-                when Error(Message):
+                when Result.Error(const Message):
                   begin
                     panic(Message);
                   end;
               end case;
             end;
-          when Error(Message):
+          when Result.Error(const Message):
             begin
               panic(Message);
             end;
         end case;
 
         case Net.CloseListener(ListenerValue) of
-          when Ok(_):
+          when Result.Ok(_):
             begin
               Console.WriteLn('TCP echo server stopped');
             end;
-          when Error(Message):
+          when Result.Error(const Message):
             begin
               panic(Message);
             end;
         end case;
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
         panic(Message);
       end;

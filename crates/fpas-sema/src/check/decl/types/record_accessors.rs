@@ -36,7 +36,7 @@ impl AccessorOwner {
     fn value_type(self) -> &'static str {
         match self {
             Self::Property => "PropertyType",
-            Self::Event => "Option of Handler",
+            Self::Event => "Option of (Handler)",
         }
     }
 
@@ -44,7 +44,7 @@ impl AccessorOwner {
     fn value_placeholder(self) -> &'static str {
         match self {
             Self::Property => "…",
-            Self::Event => "Option of …",
+            Self::Event => "Option of (...)",
         }
     }
 
@@ -53,7 +53,7 @@ impl AccessorOwner {
             Self::Property => {
                 "Use a non-generic instance function whose result matches the property type."
             }
-            Self::Event => "Use a non-generic instance function returning `Option of Handler`.",
+            Self::Event => "Use a non-generic instance function returning `Option of (Handler)`.",
         }
     }
 
@@ -62,7 +62,7 @@ impl AccessorOwner {
             Self::Property => {
                 "Use a non-generic instance procedure whose value parameter matches the property type."
             }
-            Self::Event => "Use a non-generic instance procedure accepting `Option of Handler`.",
+            Self::Event => "Use a non-generic instance procedure accepting `Option of (Handler)`.",
         }
     }
 
@@ -76,7 +76,7 @@ impl AccessorOwner {
             ),
             Self::Event => (
                 format!("Event getter `{qualified}` must return `Option of` the handler type"),
-                "Declare `function Getter(Self: Record): Option of HandlerType`.",
+                "Declare `function Getter(Self: Record): Option of (HandlerType)`.",
             ),
         }
     }
@@ -93,7 +93,7 @@ impl AccessorOwner {
                 format!(
                     "Event setter `{qualified}` value type must be `Option of` the handler type"
                 ),
-                "Declare `procedure Setter(Self: Record; Value: Option of HandlerType)`.",
+                "Declare `procedure Setter(Self: Record; Value: Option of (HandlerType))`.",
             ),
         }
     }

@@ -22,10 +22,16 @@ fn phase09_navigation_capabilities_and_utf16_results_are_exposed() {
         "src/types.fpas",
         r#"unit Demo.Types;
 
-  public type Point = record public X: integer; end record;
-public function Create(): Point; begin return record X := 1; end record; end function;
-end unit;
+public type Point = record
+  public X: integer;
+end record;
 
+public function Create(): Point;
+begin
+  return Point(X := 1);
+end function;
+
+end unit;
 "#,
     );
     temp.write(

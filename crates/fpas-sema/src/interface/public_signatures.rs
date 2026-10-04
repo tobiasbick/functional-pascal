@@ -26,6 +26,7 @@ pub(super) fn validate(unit: &Unit) -> Vec<SemaError> {
             })
             .collect(),
         unit_name: &unit.name.parts,
+        parameters: HashSet::new(),
     };
 
     unit.declarations
@@ -59,13 +60,31 @@ struct PrivateTypeReference<'a> {
 struct PrivateTypes<'a> {
     names: HashSet<String>,
     unit_name: &'a [String],
+    parameters: HashSet<String>,
 }
 
 impl PrivateTypes<'_> {
+    fn with_parameters(&self, parameters: &[fpas_parser::TypeParam]) -> Self {
+        let mut scoped_parameters = self.parameters.clone();
+        scoped_parameters.extend(
+            parameters
+                .iter()
+                .map(|parameter| canonical_symbol_name(&parameter.name)),
+        );
+        Self {
+            names: self.names.clone(),
+            unit_name: self.unit_name,
+            parameters: scoped_parameters,
+        }
+    }
+
     fn contains(&self, id: &fpas_parser::QualifiedId) -> bool {
         let Some(name) = id.parts.last() else {
             return false;
         };
+        if id.parts.len() == 1 && self.parameters.contains(&canonical_symbol_name(name)) {
+            return false;
+        }
         if !self.names.contains(&canonical_symbol_name(name)) {
             return false;
         }
@@ -82,13 +101,22 @@ fn private_type_in_declaration<'a>(
     declaration: &'a Decl,
     private_types: &PrivateTypes<'_>,
 ) -> Option<PrivateTypeReference<'a>> {
+    let scoped_types = if let Decl::TypeDef(definition) = declaration {
+        private_types.with_parameters(&definition.type_params)
+    } else {
+        private_types.with_parameters(&[])
+    };
+    let private_types = &scoped_types;
     match declaration {
         Decl::Const(definition) => private_type_in(&definition.type_expr, private_types),
         Decl::Var(definition) | Decl::MutableVar(definition) => {
             private_type_in(&definition.type_expr, private_types)
         }
         Decl::Function(function) => private_type_in_function(function, private_types),
-        Decl::Procedure(procedure) => private_type_in_parameters(&procedure.params, private_types),
+        Decl::Procedure(procedure) => private_type_in_parameters(
+            &procedure.params,
+            &private_types.with_parameters(&procedure.type_params),
+        ),
         Decl::TypeDef(definition) => match &definition.body {
             TypeBody::Alias(ty) => private_type_in(ty, private_types),
             TypeBody::Enum(enumeration) => enumeration
@@ -132,6 +160,8 @@ fn private_type_in_function<'a>(
     function: &'a fpas_parser::FunctionDecl,
     private_types: &PrivateTypes<'_>,
 ) -> Option<PrivateTypeReference<'a>> {
+    let scoped_types = private_types.with_parameters(&function.type_params);
+    let private_types = &scoped_types;
     private_type_in_parameters(&function.params, private_types)
         .or_else(|| private_type_in(&function.return_type, private_types))
 }
@@ -150,11 +180,20 @@ fn private_type_in<'a>(
     private_types: &PrivateTypes<'_>,
 ) -> Option<PrivateTypeReference<'a>> {
     match ty {
-        TypeExpr::Named { id, span } => {
+        TypeExpr::Named {
+            id,
+            arguments,
+            span,
+        } => {
             let name = id.parts.last()?;
             private_types
                 .contains(id)
                 .then_some(PrivateTypeReference { name, span: *span })
+                .or_else(|| {
+                    arguments
+                        .iter()
+                        .find_map(|argument| private_type_in(argument, private_types))
+                })
         }
         TypeExpr::Array(inner, _)
         | TypeExpr::Channel(inner, _)

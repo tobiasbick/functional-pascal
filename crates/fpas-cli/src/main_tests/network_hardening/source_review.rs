@@ -69,7 +69,7 @@ fn source_review_redirects_preserve_exact_request_paths() {
     let (exit, _, stderr) = run_program(
         "source-review-redirect",
         &format!(
-            "program RedirectPaths;\nuses Std.Http as Http;\nbegin\n  for Base: string in [{paths}] do\n  begin\n    case Http.Send(Http.Request.Get('http://127.0.0.1:{port}' + Base)) of\n      when Ok(_): begin null; end;\n      when Error(Message): panic(Message);\n    end case;\n  end; end for;\nend program;\n"
+            "program RedirectPaths;\nuses Std.Http as Http;\nbegin\n  for Base: string in [{paths}] do\n  begin\n    case Http.Send(Http.Request.Get('http://127.0.0.1:{port}' + Base)) of\n      when Result.Ok(_): begin null; end;\n      when Result.Error(const Message): panic(Message);\n    end case;\n  end; end for;\nend program;\n"
         ),
     );
     server.join().expect("fixture completed");
@@ -104,7 +104,7 @@ fn source_review_client_rejects_non_decimal_lengths() {
     let (exit, _, stderr) = run_program(
         "source-review-lengths",
         &format!(
-            "program DecimalLengths;\nuses Std.Http as Http; uses Std.Str as Str;\nbegin\n  for I: integer := 1 to {} do\n  begin\n    case Http.Send(Http.Request.Get('http://127.0.0.1:{port}/')) of\n      when Ok(_): panic('invalid Content-Length accepted');\n      when Error(Message): begin\n        if not Str.Contains(Message, 'Content-Length') then panic(Message); end if;\n      end;\n    end case;\n  end; end for;\nend program;\n",
+            "program DecimalLengths;\nuses Std.Http as Http; uses Std.Str as Str;\nbegin\n  for I: integer := 1 to {} do\n  begin\n    case Http.Send(Http.Request.Get('http://127.0.0.1:{port}/')) of\n      when Result.Ok(_): panic('invalid Content-Length accepted');\n      when Result.Error(const Message): begin\n        if not Str.Contains(Message, 'Content-Length') then panic(Message); end if;\n      end;\n    end case;\n  end; end for;\nend program;\n",
             values.len()
         ),
     );

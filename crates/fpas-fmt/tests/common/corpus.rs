@@ -34,9 +34,10 @@ end program;"#,
     (
         "calculator",
         r#"program Calculator;
- uses Std.Console as Console;
 
- type Op = enum
+uses Std.Console as Console;
+
+type Op = enum
   OpAdd;
   OpSub;
   OpMul;
@@ -46,31 +47,37 @@ end enum;
 function Calculate(A: integer; B: integer; Operation: Op): integer;
 begin
   case Operation of
-    when OpAdd: return A + B;
-    when OpSub: return A - B;
-    when OpMul: return A * B;
-    when OpDiv: return A div B;
+    when Op.OpAdd:
+      return A + B;
+    when Op.OpSub:
+      return A - B;
+    when Op.OpMul:
+      return A * B;
+    when Op.OpDiv:
+      return A div B;
   end case;
 end function;
 
 begin
-  var Answer: integer := Calculate(10, 3, OpAdd);
+  var Answer: integer := Calculate(10, 3, Op.OpAdd);
   Console.WriteLn(Answer);
-end program;"#,
+end program;
+"#,
     ),
     (
         "record_creation",
         r#"program Geometry;
 
- type Point = record
+type Point = record
   X: real;
   Y: real;
 end record;
 
 begin
-  var P: Point := record X := 1.0; Y := 2.0; end record;
+  var P: Point := Point(X := 1.0, Y := 2.0);
   var Sum: real := P.X + P.Y;
-end program;"#,
+end program;
+"#,
     ),
     (
         "nested_loops",
@@ -100,7 +107,7 @@ end program;"#,
         "array_operations",
         r#"program T;
 begin
-  var Xs: array of integer := [1, 2, 3, 4, 5];
+  var Xs: array of (integer) := [1, 2, 3, 4, 5];
   var First: integer := Xs[0];
   var Last: integer := Xs[4];
 end program;"#,
@@ -163,7 +170,22 @@ end unit;
     ),
     (
         "record_with_static_function",
-        r#"program T;  type Point = record X: integer; Y: integer; static function Create(X: integer; Y: integer): Point; begin return record X := X; Y := Y; end record; end function; end record; begin null; end program;"#,
+        r#"program T;
+
+type Point = record
+  X: integer;
+  Y: integer;
+
+  static function Create(X: integer; Y: integer): Point;
+  begin
+    return Point(X := X, Y := Y);
+  end function;
+end record;
+
+begin
+  null;
+end program;
+"#,
     ),
     (
         "record_with_static_procedure",
@@ -171,19 +193,35 @@ end unit;
     ),
     (
         "nested_collection_literals",
-        r#"program T; begin var Values: array of dict of string to array of integer := [['a': [1, 2]], [:]]; end program;"#,
+        r#"program T; begin var Values: array of (dict of (string, array of (integer))) := [['a': [1, 2]], [:]]; end program;"#,
     ),
     (
         "nested_record_update",
-        r#"program T;  type Point = record X: integer; Y: integer; end record;  type Pair = record First: Point; Second: Point; end record; begin var P: Pair := record First := record X := 1; Y := 2; end record; Second := record X := 3; Y := 4; end record; end record; var Q: Pair := P with First := P.First with X := 5; end with; end with; end program;"#,
+        r#"program T;
+
+type Point = record
+  X: integer;
+  Y: integer;
+end record;
+
+type Pair = record
+  First: Point;
+  Second: Point;
+end record;
+
+begin
+  var P: Pair := Pair(First := Point(X := 1, Y := 2), Second := Point(X := 3, Y := 4));
+  var Q: Pair := P with First := P.First with X := 5; end with; end with;
+end program;
+"#,
     ),
     (
         "nested_option_result",
-        r#"program T; begin var Value: result of option of array of integer, string := Ok(Some([])); end program;"#,
+        r#"program T; begin var Value: result of (option of (array of (integer)), string) := Result.Ok(Option.Some([])); end program;"#,
     ),
     (
         "case_destructure_with_guard",
-        r#"program T; begin case Value of when Some(Item) if Item > 0: return; when None: return; end case; end program;"#,
+        r#"program T; begin case Value of when Option.Some(const Item) if Item > 0: return; when Option.None: return; end case; end program;"#,
     ),
     (
         "postfix_call_chain",

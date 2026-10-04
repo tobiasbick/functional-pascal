@@ -7,11 +7,11 @@ uses Std.Test as Test;
 begin
   Test.AssertFalse(Env.Exists('__FPAS_ENV_TEST_MISSING_903B5CF4__'));
   case Env.Get('__FPAS_ENV_TEST_MISSING_903B5CF4__') of
-    when Some(_):
+    when Option.Some(_):
       begin
         Test.Fail('expected None for missing environment variable');
       end;
-    when None:
+    when Option.None:
       begin
         null;
       end;

@@ -5,6 +5,7 @@ mod decl;
 mod entry;
 mod expr;
 mod name_resolution;
+mod patterns;
 mod record_visibility;
 mod stmt;
 
@@ -37,4 +38,5 @@ pub use context::PropertyReadMap;
 pub use context::PropertyWriteInfo;
 pub use context::PropertyWriteMap;
 pub use context::RecordDefaultsMap;
-pub use context::ScalarCaseBindingMap;
+/// Concrete metadata for recursive case patterns.
+pub use patterns::{PatternInfo, PatternInfoMap, PatternVariant};

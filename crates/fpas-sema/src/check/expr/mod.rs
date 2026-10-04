@@ -7,13 +7,20 @@
 mod bound_method;
 mod calls;
 mod closure;
+mod construction;
+mod decisions;
 mod designator;
+mod dictionaries;
 mod equality;
 mod event_access;
+mod expected;
+mod literals;
+mod obsolete_records;
 mod operators;
 mod postfix;
 mod record_fields;
 mod task_bound;
+mod try_values;
 
 use super::Checker;
 use crate::types::Ty;
@@ -26,7 +33,15 @@ impl Checker {
         if let Some(ty) = self.prechecked_receivers.get(&Self::expr_lookup_key(expr)) {
             return ty.clone();
         }
+        if let Some(ty) = self.try_check_enum_construction(expr, None) {
+            return ty;
+        }
         let ty = match expr {
+            Expr::If(decision) => self.check_if_expression(decision, None),
+            Expr::Case(decision) => self.check_case_expression(decision, None),
+            Expr::RecordConstruction { .. } => self
+                .try_check_record_construction(expr, None)
+                .unwrap_or(Ty::Error),
             Expr::Integer(_, _) => Ty::Integer,
             Expr::Real(_, _) => Ty::Real,
             Expr::Str(_, _) => Ty::String,
@@ -47,7 +62,7 @@ impl Checker {
             Expr::Paren(inner, _) => self.check_expr(inner),
             Expr::ArrayLiteral(elements, _) => self.check_array_literal(elements),
             Expr::DictLiteral(pairs, _) => self.check_dict_literal(pairs),
-            Expr::RecordLiteral { fields, .. } => self.check_record_literal(fields),
+            Expr::InvalidRecord(span) => self.reject_obsolete_record(*span, None),
             Expr::ResultOk(inner, _) => {
                 let inner_ty = self.check_expr(inner);
                 Ty::Result(Box::new(inner_ty), Box::new(Ty::Error))
@@ -65,7 +80,7 @@ impl Checker {
                 self.error_with_code(
                     fpas_diagnostics::codes::SEMA_TYPE_MISMATCH,
                     "`nil` is only valid when clearing an event",
-                    "Write `Event := nil` to clear a handler, or use `None` for an `Option`.",
+                    "Write `Event := nil` to clear a handler, or use `Option.None` for an `Option`.",
                     *span,
                 );
                 Ty::Error
@@ -190,57 +205,6 @@ impl Checker {
         false
     }
 
-    fn check_array_literal(&mut self, elements: &[Expr]) -> Ty {
-        if elements.is_empty() {
-            return Ty::Array(Box::new(Ty::Error));
-        }
-
-        let first_ty = self.check_expr(&elements[0]);
-        for element in &elements[1..] {
-            let element_ty = self.check_expr(element);
-            self.check_type_compat(&first_ty, &element_ty, "array element", element.span());
-        }
-
-        Ty::Array(Box::new(first_ty))
-    }
-
-    fn check_dict_literal(&mut self, pairs: &[(Expr, Expr)]) -> Ty {
-        if pairs.is_empty() {
-            return Ty::Dict(Box::new(Ty::Error), Box::new(Ty::Error));
-        }
-
-        let first_key_ty = self.check_expr(&pairs[0].0);
-        let first_val_ty = self.check_expr(&pairs[0].1);
-        for (key, val) in &pairs[1..] {
-            let key_ty = self.check_expr(key);
-            self.check_type_compat(&first_key_ty, &key_ty, "dict key", key.span());
-            let val_ty = self.check_expr(val);
-            self.check_type_compat(&first_val_ty, &val_ty, "dict value", val.span());
-        }
-
-        Ty::Dict(Box::new(first_key_ty), Box::new(first_val_ty))
-    }
-
-    fn check_record_literal(&mut self, fields: &[FieldInit]) -> Ty {
-        self.validate_unique_record_fields(fields, "record literal");
-        let field_types = fields
-            .iter()
-            .map(|field| (field.name.clone(), self.check_expr(&field.value)))
-            .collect();
-
-        Ty::Record(std::sync::Arc::new(crate::types::RecordTy {
-            name: "<anonymous>".into(),
-            owner_unit: None,
-            private_members: Vec::new(),
-            fields: field_types,
-            methods: Vec::new(),
-            static_functions: Vec::new(),
-            static_procedures: Vec::new(),
-            properties: Vec::new(),
-            events: Vec::new(),
-        }))
-    }
-
     /// Type-check a record update expression: `base with Field := Value; … end`.
     ///
     /// The base must resolve to a record type. Each override field must exist in
@@ -291,8 +255,7 @@ impl Checker {
                 .iter()
                 .find(|(name, _)| name.eq_ignore_ascii_case(&field_init.name))
             {
-                let value_ty =
-                    self.check_expr_with_expected_record_literals(&field_init.value, field_ty);
+                let value_ty = self.check_expr_with_expected(&field_init.value, field_ty);
                 self.check_type_compat(
                     field_ty,
                     &value_ty,
@@ -346,100 +309,7 @@ impl Checker {
             }
         }
 
-        // Return the same type as the base (named or anonymous).
+        // Preserve the declared record identity of the base.
         base_ty
-    }
-
-    fn check_try_expr(&mut self, inner: &Expr, span: fpas_lexer::Span) -> Ty {
-        let inner_ty = self.check_expr(inner);
-        match &inner_ty {
-            Ty::Result(ok, _) => {
-                self.check_try_context(&inner_ty, span);
-                *ok.clone()
-            }
-            Ty::Option(inner) => {
-                self.check_try_context(&inner_ty, span);
-                *inner.clone()
-            }
-            Ty::Error => Ty::Error,
-            _ => {
-                self.error_with_code(
-                    fpas_diagnostics::codes::SEMA_TYPE_MISMATCH,
-                    format!("try requires Result or Option, found `{inner_ty}`"),
-                    "Use try only on Result or Option values.".to_string(),
-                    span,
-                );
-                Ty::Error
-            }
-        }
-    }
-
-    fn check_try_context(&mut self, inner_ty: &Ty, span: fpas_lexer::Span) {
-        let Some(function_ctx) = self.scopes.function_ctx.clone() else {
-            self.error_with_code(
-                fpas_diagnostics::codes::SEMA_TYPE_MISMATCH,
-                "`try` can only be used inside a function that returns Result or Option",
-                "Wrap the expression in a function that returns `Result of T, E` or `Option of T`.",
-                span,
-            );
-            return;
-        };
-
-        let Some(return_ty) = function_ctx.return_type else {
-            self.error_with_code(
-                fpas_diagnostics::codes::SEMA_TYPE_MISMATCH,
-                format!(
-                    "Procedure `{}` cannot use `try` because it does not return a value",
-                    function_ctx.name
-                ),
-                "Use `try` inside a function that returns `Result of T, E` or `Option of T`.",
-                span,
-            );
-            return;
-        };
-
-        if return_ty.is_error() {
-            return;
-        }
-
-        match (inner_ty, &return_ty) {
-            (Ty::Result(_, inner_err), Ty::Result(_, outer_err)) => {
-                if !outer_err.compatible_with(inner_err) {
-                    self.error_with_code(
-                        fpas_diagnostics::codes::SEMA_TYPE_MISMATCH,
-                        format!(
-                            "`try` propagates `{inner_ty}`, but function `{}` returns `{return_ty}`",
-                            function_ctx.name
-                        ),
-                        "Make the enclosing function return `Result of <value>, <same error type>`.",
-                        span,
-                    );
-                }
-            }
-            (Ty::Option(_), Ty::Option(_)) => {}
-            (Ty::Result(_, _), _) => {
-                self.error_with_code(
-                    fpas_diagnostics::codes::SEMA_TYPE_MISMATCH,
-                    format!(
-                        "`try` propagates `{inner_ty}`, but function `{}` returns `{return_ty}`",
-                        function_ctx.name
-                    ),
-                    "Use `try` on `Result` only inside a function that returns `Result of T, E` with a compatible error type.",
-                    span,
-                );
-            }
-            (Ty::Option(_), _) => {
-                self.error_with_code(
-                    fpas_diagnostics::codes::SEMA_TYPE_MISMATCH,
-                    format!(
-                        "`try` propagates `{inner_ty}`, but function `{}` returns `{return_ty}`",
-                        function_ctx.name
-                    ),
-                    "Use `try` on `Option` only inside a function that returns `Option of T`.",
-                    span,
-                );
-            }
-            _ => {}
-        }
     }
 }

@@ -1,0 +1,45 @@
+program NestedDecisionsTest;
+
+uses Std.Test as Test;
+
+type Choice of (T) = enum
+  Present(Value: T);
+  Missing;
+end enum;
+
+type Pair of (T) = enum
+  Values(First: T; Second: T);
+end enum;
+
+mutable var Trace: integer := 0;
+
+function Mark(Value: integer): boolean;
+begin
+  Trace := Trace * 10 + Value;
+  return Value = 2;
+end function;
+
+function LoadValue(): Choice of (Option of (integer));
+begin
+  Trace := Trace * 10 + 3;
+  return Choice.Present(Option.Some(42));
+end function;
+
+begin
+  var Selected: Choice of (Option of (integer)) := if Mark(1) then Choice.Missing elsif Mark(2) then LoadValue() else Choice.Missing end if;
+  var Answer: integer := case Selected of
+    when Choice.Present(Option.Some(const Number)) if Number < 0: - Number;
+    when Choice.Present(Option.Some(const Number)): Number;
+    when Choice.Present(Option.None): 0;
+    when Choice.Missing: 0;
+  end case;
+  var Values: Pair of (integer) := Pair.Values(Answer, 1);
+  var Saved: function(): integer := case Values of
+    when Pair.Values(const First, const Second): function(): integer begin
+      return First + Second;
+    end function;
+  end case;
+  Test.AssertEquals(42, Answer);
+  Test.AssertEquals(123, Trace);
+  Test.AssertEquals(43, Saved());
+end program;

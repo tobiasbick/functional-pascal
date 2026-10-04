@@ -159,7 +159,7 @@ pub(in crate::vm::debug) fn resolve_assignment(
                         let expected = dictionary_value_type(executable, target.expected_type)?;
                         let Some((key, value)) = entries
                             .iter()
-                            .find(|(candidate, _)| candidate == evaluated)
+                            .find(|(candidate, _)| candidate.language_equal(evaluated))
                             .map(|(key, value)| (key.clone(), value.clone()))
                         else {
                             return Err(unknown_index(
@@ -264,7 +264,7 @@ fn unknown_payload_field(name: &str, active: &str) -> DebugSessionError {
 
 fn unsupported_payload(name: &str, active: &str) -> DebugSessionError {
     let hint = if active == "Option.None" {
-        "Assign `Some.value` to construct `Option.Some`, or replace the complete binding with `Some(...)` or `None`."
+        "Assign `Some.value` to construct `Option.Some`, or replace the complete binding with `Option.Some(...)` or `Option.None`."
             .to_string()
     } else {
         "Use a stored record field, an active enum payload field, `.value` on Result.Ok, Result.Error, or Option.Some, or a qualified single-payload variant such as `Some.value`."

@@ -7,7 +7,7 @@ uses Std.Tui as Tui;
 
 type StatusModel = record
   Focus: integer;
-  Actions: array of integer;
+  Actions: array of (integer);
 end record;
 
 function FindGlyph(Snapshot: Tui.TuiSurfaceSnapshot; Glyph: string): Tui.TuiPoint;
@@ -28,56 +28,50 @@ end function;
 
 function ViewStatus(State: StatusModel): Tui.TuiElement;
 begin
-  return Tui.TuiElementBuilders.MakeDesktop(Some(Tui.TuiControlId.Create(State.Focus)), [
-                                                                                          Tui.TuiElementBuilders.MakeStatusLine([
-                                                                                                                                  Tui.TuiStatusItemBuilders.MakeHint('Ready'),
-                                                                                                                                  Tui.TuiStatusItemBuilders.MakeCommand(Tui.TuiControlId.Create(1), 'Save', Tui.TuiAction.Create(10)),
-                                                                                                                                  Tui.TuiStatusItemBuilders.MakeDisabledCommand(Tui.TuiControlId.Create(2), 'Quit', Tui.TuiAction.Create(20))
-                                                                                                                                ])
-                                                                                        ]);
+  return Tui.TuiElementBuilders.MakeDesktop(Option.Some(Tui.TuiControlId.Create(State.Focus)), [
+                                                                                                 Tui.TuiElementBuilders.MakeStatusLine([
+                                                                                                                                         Tui.TuiStatusItemBuilders.MakeHint('Ready'),
+                                                                                                                                         Tui.TuiStatusItemBuilders.MakeCommand(Tui.TuiControlId.Create(1), 'Save', Tui.TuiAction.Create(10)),
+                                                                                                                                         Tui.TuiStatusItemBuilders.MakeDisabledCommand(Tui.TuiControlId.Create(2), 'Quit', Tui.TuiAction.Create(20))
+                                                                                                                                       ])
+                                                                                               ]);
 end function;
 
 function UpdateStatus(State: StatusModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): StatusModel;
 begin
   Cmd.Set(Tui.TuiCmd.NoCommand);
   case Msg of
-    when Tui.TuiMsg.FocusChanged(Previous, Current):
+    when Tui.TuiMsg.FocusChanged(const Previous, const Current):
       begin
         case Current of
-          when Some(Id):
+          when Option.Some(const Id):
             begin
-              return record
-                Focus := Id.Value;
-                Actions := State.Actions;
-              end record;
+              return StatusModel(Focus := Id.Value, Actions := State.Actions);
             end;
-          when None:
+          when Option.None:
             begin
               return State;
             end;
         end case;
       end;
-    when Tui.TuiMsg.Action(Source, Action):
+    when Tui.TuiMsg.Action(const Source, const Action):
       begin
-        return record
-          Focus := State.Focus;
-          Actions := Arrays.Concat(State.Actions, [Action.Value]);
-        end record;
+        return StatusModel(Focus := State.Focus, Actions := Arrays.Concat(State.Actions, [
+                                                                                           Action.Value
+                                                                                         ]));
       end;
-    else
+    when Tui.TuiMsg.Started, Tui.TuiMsg.Key(_), Tui.TuiMsg.Pointer(_), Tui.TuiMsg.Tick(_), Tui.TuiMsg.Resize(_), Tui.TuiMsg.TextChanged(_, _, _, _), Tui.TuiMsg.TextAreaChanged(_, _, _, _, _), Tui.TuiMsg.CheckChanged(_, _, _), Tui.TuiMsg.SelectionChanged(_, _, _), Tui.TuiMsg.ScrollChanged(_, _, _), Tui.TuiMsg.MenuChanged(_, _, _), Tui.TuiMsg.BackgroundFailed(_, _, _, _, _, _), Tui.TuiMsg.QuitRequested:
       begin
-        return State;
+        begin
+          return State;
+        end;
       end;
   end case;
 end function;
 
 begin
   mutable var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(24, 4));
-  mutable var Model: StatusModel := record
-    Focus := 1;
-    Actions := [];
-  end record;
-
+  mutable var Model: StatusModel := StatusModel(Focus := 1, Actions := []);
   Model := App.RunIterations(Model, UpdateStatus, ViewStatus, 0, 0);
   var SaveAt: Tui.TuiPoint := FindGlyph(App.SurfaceSnapshot(), 'Save');
   App.InjectPointerForTest(Tui.TuiPointerEvent.Create(Tui.TuiPointerAction.Down, Tui.TuiPointerButton.Left, SaveAt));

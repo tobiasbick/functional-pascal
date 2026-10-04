@@ -14,7 +14,7 @@ const WarmupIterations: integer := 100000;
 
 function RunPush(Iterations: integer): integer;
 begin
-  mutable var Values: array of integer := [];
+  mutable var Values: array of (integer) := [];
   for Index: integer := 1 to Iterations do
     begin
       Arrays.Push(Values, Index);

@@ -17,30 +17,26 @@ begin
   Test.AssertEquals('HEAD', Http.Request.Head('http://localhost/head').Method);
   Test.AssertEquals('OPTIONS', Http.Request.Options('http://localhost/options').Method);
   Test.AssertEquals('PROPFIND', Http.Request.Create('PROPFIND', 'http://localhost/webdav').Method);
-  var ResponseValue: Http.Response := record
-    StatusCode := 200;
-    ReasonPhrase := 'OK';
-    Headers := [Http.Header.Create('Content-Type', 'application/json')];
-    Body := Utf8.Encode('{"ok":true}');
-  end record;
-
+  var ResponseValue: Http.Response := Http.Response(StatusCode := 200, ReasonPhrase := 'OK', Headers := [
+                                                                                                          Http.Header.Create('Content-Type', 'application/json')
+                                                                                                        ], Body := Utf8.Encode('{"ok":true}'));
   case Http.BodyText(ResponseValue) of
-    when Ok(Text):
+    when Result.Ok(const Text):
       begin
         Test.AssertEquals('{"ok":true}', Text);
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
         Test.Fail(Message);
       end;
   end case;
 
   case Http.HeaderValue(ResponseValue, 'content-type') of
-    when Some(Value):
+    when Option.Some(const Value):
       begin
         Test.AssertEquals('application/json', Value);
       end;
-    when None:
+    when Option.None:
       begin
         Test.Fail('header lookup failed');
       end;

@@ -32,33 +32,33 @@ end function;
 // - `Options`: Optional generation controls for this completion.
 public function Complete(
   ClientValue: Types.Client;
-  Messages: array of Types.ChatMessage;
+  Messages: array of (Types.ChatMessage);
   Options: Types.ChatOptions
-): result of string, string;
+): Result of (string, string);
 begin
   if ClientValue.BaseUrl = '' then
     begin
-      return Error('OpenAI-compatible BaseUrl must not be empty');
+      return Result.Error('OpenAI-compatible BaseUrl must not be empty');
     end;
   end if;
 
   if ClientValue.Model = '' then
     begin
-      return Error('OpenAI-compatible model name must not be empty');
+      return Result.Error('OpenAI-compatible model name must not be empty');
     end;
   end if;
 
   if Arrays.Length(Messages) = 0 then
     begin
-      return Error('OpenAI-compatible chat requires at least one message');
+      return Result.Error('OpenAI-compatible chat requires at least one message');
     end;
   end if;
-  mutable var Headers: array of Http.Header := [
-                                                 Http.Header.Create('Content-Type', 'application/json'),
-                                                 Http.Header.Create('Accept', 'application/json')
-                                               ];
+  mutable var Headers: array of (Http.Header) := [
+                                                   Http.Header.Create('Content-Type', 'application/json'),
+                                                   Http.Header.Create('Accept', 'application/json')
+                                                 ];
   case ClientValue.ApiKey of
-    when Some(Value):
+    when Option.Some(const Value):
       begin
         if Value <> '' then
           begin
@@ -66,7 +66,7 @@ begin
           end;
         end if;
       end;
-    when None:
+    when Option.None:
       begin
         null;
       end;
@@ -77,29 +77,29 @@ begin
   RequestValue.TimeoutMillis := ClientValue.TimeoutMillis;
   RequestValue.MaxResponseBytes := ClientValue.MaxResponseBytes;
   case Http.Send(RequestValue) of
-    when Ok(ResponseValue):
+    when Result.Ok(const ResponseValue):
       begin
         case Http.BodyText(ResponseValue) of
-          when Ok(Text):
+          when Result.Ok(const Text):
             begin
               if (ResponseValue.StatusCode < 200) or (ResponseValue.StatusCode >= 300) then
                 begin
-                  return Error((('OpenAI-compatible endpoint returned HTTP ' + Conv.IntToStr(ResponseValue.StatusCode)) + ': ') +
-                               Text);
+                  return Result.Error((('OpenAI-compatible endpoint returned HTTP ' + Conv.IntToStr(ResponseValue.StatusCode)) + ': ') +
+                                      Text);
                 end;
               end if;
 
               return Json.DecodeResponse(Text);
             end;
-          when Error(Message):
+          when Result.Error(const Message):
             begin
-              return Error('OpenAI-compatible response body is not UTF-8: ' + Message);
+              return Result.Error('OpenAI-compatible response body is not UTF-8: ' + Message);
             end;
         end case;
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
-        return Error(Message);
+        return Result.Error(Message);
       end;
   end case;
 end function;

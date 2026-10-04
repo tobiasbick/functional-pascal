@@ -24,66 +24,66 @@ begin
   Test.AssertTrue(Settings.Alignment.Horizontal = Tui.TuiAlignmentKind.Fill);
   Test.AssertEquals(0, Settings.Stretch);
   case Settings.Width of
-    when Some(Width):
+    when Option.Some(const Width):
       begin
         Test.Fail('default layout settings must not constrain width');
       end;
-    when None:
+    when Option.None:
       begin
         null;
       end;
   end case;
 
   case Settings.Height of
-    when Some(Height):
+    when Option.Some(const Height):
       begin
         Test.Fail('default layout settings must not constrain height');
       end;
-    when None:
+    when Option.None:
       begin
         null;
       end;
   end case;
   var FixedWidth: Tui.TuiLayoutSettings := Settings.WithFixedWidth(7);
   case FixedWidth.Width of
-    when Some(Width):
+    when Option.Some(const Width):
       begin
         Test.AssertEquals(7, Width);
       end;
-    when None:
+    when Option.None:
       begin
         Test.Fail('fixed-width layout settings must retain their width');
       end;
   end case;
   var FixedHeight: Tui.TuiLayoutSettings := Settings.WithFixedHeight(5);
   case FixedHeight.Height of
-    when Some(Height):
+    when Option.Some(const Height):
       begin
         Test.AssertEquals(5, Height);
       end;
-    when None:
+    when Option.None:
       begin
         Test.Fail('fixed-height layout settings must retain their height');
       end;
   end case;
   var FixedSize: Tui.TuiLayoutSettings := FixedWidth.WithFixedHeight(5);
   case FixedSize.Width of
-    when Some(Width):
+    when Option.Some(const Width):
       begin
         Test.AssertEquals(7, Width);
       end;
-    when None:
+    when Option.None:
       begin
         Test.Fail('fixed-height layout settings must preserve their width');
       end;
   end case;
 
   case FixedSize.Height of
-    when Some(Height):
+    when Option.Some(const Height):
       begin
         Test.AssertEquals(5, Height);
       end;
-    when None:
+    when Option.None:
       begin
         Test.Fail('fixed-size layout settings must retain their height');
       end;
@@ -121,37 +121,43 @@ begin
                                                                        Tui.TuiElementBuilders.MakeLabel('B')
                                                                      ], 2);
   case Spaced of
-    when Tui.TuiElement.Row(Children, Spacing):
+    when Tui.TuiElement.Row(const Children, const Spacing):
       begin
         Test.AssertEquals(2, Spacing);
         Test.AssertEquals(2, Arrays.Length(Children));
       end;
-    else
+    when Tui.TuiElement.Empty, Tui.TuiElement.Label(_), Tui.TuiElement.Button(_), Tui.TuiElement.Input(_), Tui.TuiElement.TextArea(_, _, _, _, _), Tui.TuiElement.CheckBox(_, _, _, _), Tui.TuiElement.List(_, _, _, _), Tui.TuiElement.Scroll(_, _, _, _), Tui.TuiElement.MenuBar(_), Tui.TuiElement.Menu(_, _, _, _), Tui.TuiElement.StatusLine(_), Tui.TuiElement.CellGrid(_), Tui.TuiElement.Rule(_), Tui.TuiElement.Gauge(_), Tui.TuiElement.Column(_, _), Tui.TuiElement.Layout(_, _), Tui.TuiElement.Spacer(_), Tui.TuiElement.Panel(_, _), Tui.TuiElement.Overlay(_, _), Tui.TuiElement.Desktop(_, _):
       begin
-        Test.Fail('expected spaced row');
+        begin
+          Test.Fail('expected spaced row');
+        end;
       end;
   end case;
   var Wrapped: Tui.TuiElement := Tui.TuiElementBuilders.MakeLayout(Settings, Tui.TuiElementBuilders.MakeLabel('X'));
   case Wrapped of
-    when Tui.TuiElement.Layout(WrappedSettings, WrappedChildren):
+    when Tui.TuiElement.Layout(const WrappedSettings, const WrappedChildren):
       begin
         Test.AssertEquals(1, Arrays.Length(WrappedChildren));
         Test.AssertEquals(0, WrappedSettings.Stretch);
       end;
-    else
+    when Tui.TuiElement.Empty, Tui.TuiElement.Label(_), Tui.TuiElement.Button(_), Tui.TuiElement.Input(_), Tui.TuiElement.TextArea(_, _, _, _, _), Tui.TuiElement.CheckBox(_, _, _, _), Tui.TuiElement.List(_, _, _, _), Tui.TuiElement.Scroll(_, _, _, _), Tui.TuiElement.MenuBar(_), Tui.TuiElement.Menu(_, _, _, _), Tui.TuiElement.StatusLine(_), Tui.TuiElement.CellGrid(_), Tui.TuiElement.Rule(_), Tui.TuiElement.Gauge(_), Tui.TuiElement.Row(_, _), Tui.TuiElement.Column(_, _), Tui.TuiElement.Spacer(_), Tui.TuiElement.Panel(_, _), Tui.TuiElement.Overlay(_, _), Tui.TuiElement.Desktop(_, _):
       begin
-        Test.Fail('expected layout wrapper');
+        begin
+          Test.Fail('expected layout wrapper');
+        end;
       end;
   end case;
   var SpacerElement: Tui.TuiElement := Tui.TuiElementBuilders.MakeSpacer(FixedSpacer);
   case SpacerElement of
-    when Tui.TuiElement.Spacer(Value):
+    when Tui.TuiElement.Spacer(const Value):
       begin
         Test.AssertEquals(3, Value.MinimumExtent);
       end;
-    else
+    when Tui.TuiElement.Empty, Tui.TuiElement.Label(_), Tui.TuiElement.Button(_), Tui.TuiElement.Input(_), Tui.TuiElement.TextArea(_, _, _, _, _), Tui.TuiElement.CheckBox(_, _, _, _), Tui.TuiElement.List(_, _, _, _), Tui.TuiElement.Scroll(_, _, _, _), Tui.TuiElement.MenuBar(_), Tui.TuiElement.Menu(_, _, _, _), Tui.TuiElement.StatusLine(_), Tui.TuiElement.CellGrid(_), Tui.TuiElement.Rule(_), Tui.TuiElement.Gauge(_), Tui.TuiElement.Row(_, _), Tui.TuiElement.Column(_, _), Tui.TuiElement.Layout(_, _), Tui.TuiElement.Panel(_, _), Tui.TuiElement.Overlay(_, _), Tui.TuiElement.Desktop(_, _):
       begin
-        Test.Fail('expected spacer element');
+        begin
+          Test.Fail('expected spacer element');
+        end;
       end;
   end case;
 end program;

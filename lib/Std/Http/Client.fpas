@@ -17,7 +17,7 @@ uses Std.Net.Uri as Uri2;
 // Parameters:
 // - `UriValue`: Parsed absolute request URI.
 // - `TimeoutMillis`: Connection and TLS handshake timeout.
-function OpenConnection(UriValue: Uri2.Uri; TimeoutMillis: integer): result of Net.Connection, string;
+function OpenConnection(UriValue: Uri2.Uri; TimeoutMillis: integer): Result of (Net.Connection, string);
 begin
   if UriValue.Scheme = 'http' then
     begin
@@ -31,7 +31,7 @@ begin
     end;
   end if;
 
-  return Error('Std.Http supports only http:// and https:// URLs');
+  return Result.Error('Std.Http supports only http:// and https:// URLs');
 end function;
 
 // Closes a connection while deliberately ignoring close errors.
@@ -41,11 +41,11 @@ end function;
 procedure CloseQuietly(Connection: Net.Connection);
 begin
   case Net.Close(Connection) of
-    when Ok(_):
+    when Result.Ok(_):
       begin
         null;
       end;
-    when Error(_):
+    when Result.Error(_):
       begin
         null;
       end;
@@ -56,71 +56,66 @@ end procedure;
 //
 // Parameters:
 // - `RequestValue`: Complete request and its transport limits.
-function OpenOnce(RequestValue: Types.Request): result of Types.StreamResponse, string;
+function OpenOnce(RequestValue: Types.Request): Result of (Types.StreamResponse, string);
 begin
   var UriValue: Uri2.Uri := try Uri2.Parse(RequestValue.Url);
-  var Encoded: array of integer := try Wire.EncodeRequest(RequestValue, UriValue);
+  var Encoded: array of (integer) := try Wire.EncodeRequest(RequestValue, UriValue);
   case OpenConnection(UriValue, RequestValue.TimeoutMillis) of
-    when Ok(Connection):
+    when Result.Ok(const Connection):
       begin
         case Net.SetTimeout(Connection, RequestValue.TimeoutMillis) of
-          when Ok(Configured):
+          when Result.Ok(const Configured):
             begin
               if not Configured then
                 begin
                   CloseQuietly(Connection);
-                  return Error('Network timeout configuration failed');
+                  return Result.Error('Network timeout configuration failed');
                 end;
               end if;
             end;
-          when Error(Message):
+          when Result.Error(const Message):
             begin
               CloseQuietly(Connection);
-              return Error(Message);
+              return Result.Error(Message);
             end;
         end case;
 
         case Io.WriteAll(Connection, Encoded) of
-          when Ok(Written):
+          when Result.Ok(const Written):
             begin
               null;
             end;
-          when Error(Message):
+          when Result.Error(const Message):
             begin
               CloseQuietly(Connection);
-              return Error(Message);
+              return Result.Error(Message);
             end;
         end case;
 
         case Head.ReadFinal(Connection, RequestValue.MaxHeaderBytes, RequestValue.MaxResponseBytes) of
-          when Ok(FinalHead):
+          when Result.Ok(const FinalHead):
             begin
               case Stream.CreateBody(Connection, FinalHead.InitialBody, FinalHead.Head.Headers, Wire.ResponseHasBody(RequestValue.Method, FinalHead.Head.StatusCode), FinalHead.BytesReceived, RequestValue.MaxResponseBytes) of
-                when Ok(Body):
+                when Result.Ok(const Body):
                   begin
-                    return Ok(record
-                      StatusCode := FinalHead.Head.StatusCode;
-                      ReasonPhrase := FinalHead.Head.ReasonPhrase;
-                      Headers := FinalHead.Head.Headers;
-                      Body := Body;
-                    end record);
+                    return Result.Ok(Types.StreamResponse(StatusCode := FinalHead.Head.StatusCode, ReasonPhrase := FinalHead.Head.ReasonPhrase, Headers := FinalHead.Head.Headers, Body := Body));
                   end;
-                when Error(Message):
+                when Result.Error(const Message):
                   begin
-                    return Error(Message);
+                    return Result.Error(Message);
                   end;
               end case;
             end;
-          when Error(Message):
+          when Result.Error(const Message):
             begin
               CloseQuietly(Connection);
-              return Error(Message);
+              return Result.Error(Message);
             end;
         end case;
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
-        return Error(Message);
+        return Result.Error(Message);
       end;
   end case;
 end function;
@@ -129,23 +124,23 @@ end function;
 //
 // Parameters:
 // - `RequestValue`: Complete request and its transport limits.
-public function OpenStream(RequestValue: Types.Request): result of Types.StreamResponse, string;
+public function OpenStream(RequestValue: Types.Request): Result of (Types.StreamResponse, string);
 begin
   if RequestValue.MaxHeaderBytes < 1 then
     begin
-      return Error('HTTP MaxHeaderBytes must be positive');
+      return Result.Error('HTTP MaxHeaderBytes must be positive');
     end;
   end if;
 
   if RequestValue.MaxResponseBytes < 1 then
     begin
-      return Error('HTTP MaxResponseBytes must be positive');
+      return Result.Error('HTTP MaxResponseBytes must be positive');
     end;
   end if;
 
   if RequestValue.MaxRedirects < 0 then
     begin
-      return Error('HTTP MaxRedirects must not be negative');
+      return Result.Error('HTTP MaxRedirects must not be negative');
     end;
   end if;
   mutable var Current: Types.Request := RequestValue;
@@ -153,58 +148,58 @@ begin
   while true do
     begin
       case OpenOnce(Current) of
-        when Ok(ResponseValue):
+        when Result.Ok(const ResponseValue):
           begin
             if Redirect.IsStatus(ResponseValue.StatusCode) then
               begin
                 case Headers2.Find(ResponseValue.Headers, 'Location') of
-                  when Some(Location):
+                  when Option.Some(const Location):
                     begin
                       if Redirects >= RequestValue.MaxRedirects then
                         begin
                           case Stream.CloseBody(ResponseValue.Body) of
-                            when Ok(_):
+                            when Result.Ok(_):
                               begin
                                 null;
                               end;
-                            when Error(_):
+                            when Result.Error(_):
                               begin
                                 null;
                               end;
                           end case;
 
-                          return Error('HTTP redirect count exceeds MaxRedirects');
+                          return Result.Error('HTTP redirect count exceeds MaxRedirects');
                         end;
                       end if;
                       mutable var Next: Types.Request := Current;
                       case Redirect.NextRequest(Current, ResponseValue.StatusCode, Location) of
-                        when Ok(Value):
+                        when Result.Ok(const Value):
                           begin
                             Next := Value;
                           end;
-                        when Error(Message):
+                        when Result.Error(const Message):
                           begin
                             case Stream.CloseBody(ResponseValue.Body) of
-                              when Ok(_):
+                              when Result.Ok(_):
                                 begin
                                   null;
                                 end;
-                              when Error(_):
+                              when Result.Error(_):
                                 begin
                                   null;
                                 end;
                             end case;
 
-                            return Error(Message);
+                            return Result.Error(Message);
                           end;
                       end case;
 
                       case Stream.CloseBody(ResponseValue.Body) of
-                        when Ok(_):
+                        when Result.Ok(_):
                           begin
                             null;
                           end;
-                        when Error(_):
+                        when Result.Error(_):
                           begin
                             null;
                           end;
@@ -213,81 +208,76 @@ begin
                       Current := Next;
                       Redirects := Redirects + 1;
                     end;
-                  when None:
+                  when Option.None:
                     begin
-                      return Ok(ResponseValue);
+                      return Result.Ok(ResponseValue);
                     end;
                 end case;
               end;
             else
               begin
-                return Ok(ResponseValue);
+                return Result.Ok(ResponseValue);
               end;
             end if;
           end;
-        when Error(Message):
+        when Result.Error(const Message):
           begin
-            return Error(Message);
+            return Result.Error(Message);
           end;
       end case;
     end;
   end while;
 
-  return Error('HTTP redirect loop ended unexpectedly');
+  return Result.Error('HTTP redirect loop ended unexpectedly');
 end function;
 
 // Sends one request, follows bounded redirects, and buffers the final body.
 //
 // Parameters:
 // - `RequestValue`: Complete request and its transport limits.
-public function Send(RequestValue: Types.Request): result of Types.Response, string;
+public function Send(RequestValue: Types.Request): Result of (Types.Response, string);
 begin
   case OpenStream(RequestValue) of
-    when Ok(StreamResponseValue):
+    when Result.Ok(const StreamResponseValue):
       begin
-        mutable var Chunks: array of array of integer := [];
+        mutable var Chunks: array of (array of (integer)) := [];
         while true do
           begin
             case Stream.ReadBody(StreamResponseValue.Body, 65536) of
-              when Ok(Bytes):
+              when Result.Ok(const Bytes):
                 begin
                   if Arrays.Length(Bytes) = 0 then
                     begin
-                      return Ok(record
-                        StatusCode := StreamResponseValue.StatusCode;
-                        ReasonPhrase := StreamResponseValue.ReasonPhrase;
-                        Headers := StreamResponseValue.Headers;
-                        Body := Io.JoinChunks(Chunks);
-                      end record);
+                      return Result.Ok(Types.Response(StatusCode := StreamResponseValue.StatusCode, ReasonPhrase := StreamResponseValue.ReasonPhrase, Headers := StreamResponseValue.Headers, Body := Io.JoinChunks(Chunks)));
                     end;
                   end if;
 
                   Arrays.Push(Chunks, Bytes);
                 end;
-              when Error(Message):
+              when Result.Error(const Message):
                 begin
                   case Stream.CloseBody(StreamResponseValue.Body) of
-                    when Ok(_):
+                    when Result.Ok(_):
                       begin
                         null;
                       end;
-                    when Error(_):
+                    when Result.Error(_):
                       begin
                         null;
                       end;
                   end case;
 
-                  return Error(Message);
+                  return Result.Error(Message);
                 end;
             end case;
           end;
         end while;
 
-        return Error('HTTP response stream ended unexpectedly');
+        return Result.Error('HTTP response stream ended unexpectedly');
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
-        return Error(Message);
+        return Result.Error(Message);
       end;
   end case;
 end function;

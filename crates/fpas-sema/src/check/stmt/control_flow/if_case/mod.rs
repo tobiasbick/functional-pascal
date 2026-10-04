@@ -3,12 +3,11 @@
 //! **Documentation:** `docs/pascal/language/control-flow/README.md`, `docs/pascal/language/pattern-matching/README.md`, `docs/pascal/language/error-handling/README.md` (from the repository root).
 
 mod bindings;
-mod exhaustiveness;
-mod labels;
+mod guards;
 
 use super::super::super::Checker;
 use crate::scope::{Symbol, SymbolKind};
-use crate::types::{EnumTy, Ty};
+use crate::types::Ty;
 use fpas_diagnostics::codes::{
     SEMA_INVALID_PANIC_ARGUMENT, SEMA_NON_BOOLEAN_CONDITION, SEMA_TYPE_MISMATCH,
 };
@@ -53,7 +52,7 @@ impl Checker {
         self.scopes.pop_scope();
     }
 
-    fn check_if_condition(&mut self, condition: &Expr, span: Span) {
+    pub(in crate::check) fn check_if_condition(&mut self, condition: &Expr, span: Span) {
         let condition_ty = self.check_expr(condition);
         if matches!(condition_ty, Ty::GenericParam(..)) {
             self.check_type_compat(&Ty::Boolean, &condition_ty, "if condition", span);
@@ -75,49 +74,13 @@ impl Checker {
         span: Span,
     ) {
         let case_ty = self.check_expr(expr);
-        let is_result_or_option = matches!(&case_ty, Ty::Result(_, _) | Ty::Option(_) | Ty::Error);
-        let is_data_enum = self.resolve_enum_ty(&case_ty).is_some_and(EnumTy::has_data);
-        let is_simple_enum = self
-            .resolve_enum_ty(&case_ty)
-            .is_some_and(|enum_ty| !enum_ty.has_data());
-
-        self.check_case_expression_type(
-            &case_ty,
-            is_result_or_option,
-            is_data_enum,
-            is_simple_enum,
-            span,
-        );
+        self.check_case_expression_type(&case_ty, span);
 
         for arm in arms {
-            if let Some(binding_name) =
-                self.scalar_guard_binding_name(&case_ty, &arm.labels, &arm.guard)
-            {
-                self.mark_scalar_guard_binding(&arm.labels[0]);
-                self.scopes.push_scope();
-                self.scopes.define_with_declaration(
-                    binding_name,
-                    Symbol {
-                        ty: case_ty.clone(),
-                        mutable: false,
-                        kind: SymbolKind::Var,
-                        task_bound: false,
-                    },
-                    arm.span,
-                );
-                self.check_guard(&arm.guard, span);
-                self.check_stmt(&arm.body);
-                self.scopes.pop_scope();
-                continue;
-            }
-
             let binding_sets = arm
                 .labels
                 .iter()
-                .map(|label| {
-                    self.check_case_label(&case_ty, is_result_or_option, is_data_enum, label)
-                        .unwrap_or_default()
-                })
+                .map(|pattern| self.check_pattern(pattern, &case_ty))
                 .collect();
             let bindings = self.shared_case_arm_bindings(binding_sets, arm.span);
 
@@ -130,9 +93,13 @@ impl Checker {
                             ty: ty.clone(),
                             mutable: false,
                             kind: SymbolKind::Var,
-                            task_bound: false,
+                            task_bound: self.expr_is_task_bound(Self::expr_lookup_key(expr))
+                                && self.type_can_contain_callable(ty),
                         },
-                        arm.span,
+                        arm.labels
+                            .first()
+                            .and_then(|pattern| pattern.binding(name).map(|binding| binding.span()))
+                            .unwrap_or(arm.span),
                     );
                 }
             }
@@ -149,22 +116,15 @@ impl Checker {
             self.scopes.pop_scope();
         }
 
-        if else_body.is_none() {
-            self.check_exhaustiveness(&case_ty, arms, span);
+        if self.check_recursive_case_coverage(&case_ty, arms, else_body.is_some(), false, span) {
+            self.exhaustive_cases.insert(Self::expr_lookup_key(expr));
         }
     }
 
-    fn check_case_expression_type(
-        &mut self,
-        case_ty: &Ty,
-        is_result_or_option: bool,
-        is_data_enum: bool,
-        is_simple_enum: bool,
-        span: Span,
-    ) {
-        if is_result_or_option
-            || is_data_enum
-            || is_simple_enum
+    /// Require an ordinal, string, or closed variant type as the case scrutinee.
+    pub(in crate::check) fn check_case_expression_type(&mut self, case_ty: &Ty, span: Span) {
+        let case_ty = self.resolve_visible_type(case_ty);
+        if matches!(case_ty, Ty::Result(..) | Ty::Option(_) | Ty::Enum(_))
             || case_ty.is_ordinal()
             || case_ty.compatible_with(&Ty::String)
             || case_ty.is_error()

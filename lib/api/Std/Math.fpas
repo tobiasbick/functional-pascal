@@ -10,7 +10,7 @@ public const Pi: real := 0.0;
 //
 // Parameters:
 // - `N`: Input value used by `Abs`.
-public function Abs<T>(N: T): T;
+public function Abs of (T)(N: T): T;
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -67,7 +67,7 @@ end function;
 // - `V`: Input value used by `Clamp`.
 // - `Lo`: Input value used by `Clamp`.
 // - `Hi`: Input value used by `Clamp`.
-public function Clamp<T>(V: T; Lo: T; Hi: T): T;
+public function Clamp of (T)(V: T; Lo: T; Hi: T): T;
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -140,7 +140,7 @@ end function;
 // Parameters:
 // - `A`: Input value used by `Max`.
 // - `B`: Input value used by `Max`.
-public function Max<T>(A: T; B: T): T;
+public function Max of (T)(A: T; B: T): T;
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -150,7 +150,7 @@ end function;
 // Parameters:
 // - `A`: Input value used by `Min`.
 // - `B`: Input value used by `Min`.
-public function Min<T>(A: T; B: T): T;
+public function Min of (T)(A: T; B: T): T;
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -178,7 +178,7 @@ end function;
 //
 // Parameters:
 // - `N`: Input value used by `Sign`.
-public function Sign<T>(N: T): integer;
+public function Sign of (T)(N: T): integer;
 begin
   panic('Intrinsic API declaration');
 end function;

@@ -44,7 +44,7 @@ pub use check::PropertyReadMap;
 pub use check::PropertyWriteInfo;
 pub use check::PropertyWriteMap;
 pub use check::RecordDefaultsMap;
-pub use check::ScalarCaseBindingMap;
+pub use check::{PatternInfo, PatternInfoMap, PatternVariant};
 /// Metadata for checked callable-value invocations.
 pub use check::{ValueCallMap, ValueCallTarget};
 pub use error::SemaError;
@@ -119,6 +119,17 @@ pub fn postfix_operation_lookup_key(op: &fpas_parser::PostfixOperation) -> usize
 #[must_use]
 pub fn designator_lookup_key(designator: &fpas_parser::Designator) -> usize {
     std::ptr::from_ref(designator) as usize
+}
+
+/// Return the stable AST identity used for a field or index projection's semantic type.
+pub fn designator_part_lookup_key(part: &fpas_parser::DesignatorPart) -> usize {
+    part as *const fpas_parser::DesignatorPart as usize
+}
+
+/// Return a recursive pattern's stable identity within the immutable input AST.
+#[must_use]
+pub fn pattern_lookup_key(pattern: &fpas_parser::Pattern) -> usize {
+    std::ptr::from_ref(pattern) as usize
 }
 
 #[cfg(test)]

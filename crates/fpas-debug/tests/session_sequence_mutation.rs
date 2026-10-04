@@ -58,7 +58,7 @@ fn sequence_mutation_supports_parameters_and_capture_cells() {
         r#"
 program ArrayParameterMutation;
 
-function ReadAdded(mutable Values: array of integer): integer;
+function ReadAdded(mutable Values: array of (integer)): integer;
 begin
   var Marker: integer := Values[0];
   return Values[1] + Marker;
@@ -146,21 +146,16 @@ end program;
 #[test]
 fn sequence_mutation_supports_global_and_nested_stored_targets() {
     let mut session = session(
-        r#"
-program NestedSequenceMutation;
+        r#"program NestedSequenceMutation;
 
+type Container = record
+  Items: array of (integer);
+end record;
 
-  type Container = record
-    Items: array of integer;
-  end record;
-
-
-  mutable var GlobalValues: array of integer := [4, 6];
+mutable var GlobalValues: array of (integer) := [4, 6];
 
 begin
-  mutable var Nested: Container := record
-    Items := [1, 3];
-  end record;
+  mutable var Nested: Container := Container(Items := [1, 3]);
   var Marker: integer := Nested.Items[0] + GlobalValues[0];
 end program;
 "#,
@@ -245,7 +240,7 @@ begin
 end procedure;
 
 begin
-  mutable var Values: array of integer := [1];
+  mutable var Values: array of (integer) := [1];
   var Marker: integer := Values[0];
 end program;
 "#,

@@ -31,23 +31,28 @@ end program;
 #[test]
 fn repeat_condition_discovers_bound_method_values() {
     assert_succeeds(
-        r#"
-program RepeatMethod;
- type Predicate = record
+        r#"program RepeatMethod;
+
+type Predicate = record
   Value: boolean;
+
   function Evaluate(Self: Predicate): boolean;
   begin
     return Self.Value;
   end function;
 end record;
+
 function Invoke(Check: function(): boolean): boolean;
 begin
   return Check();
 end function;
+
 begin
-  var Check: Predicate := record Value := true; end record;
+  var Check: Predicate := Predicate(Value := true);
   repeat
-    begin null; end;
+    begin
+      null;
+    end;
   until Invoke(Check.Evaluate);
 end program;
 "#,

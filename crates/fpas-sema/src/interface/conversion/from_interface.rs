@@ -62,6 +62,13 @@ pub fn interface_type_to_ty(ty: &artifact::InterfaceType) -> Result<Ty, Interfac
         Input::Record(record) => Ty::Record(Arc::new(interface_to_record(record)?)),
         Input::Enum(enum_ty) => Ty::Enum(Arc::new(interface_to_enum(enum_ty)?)),
         Input::Named(name) => Ty::Named(name.clone()),
+        Input::Applied(name, arguments) => Ty::Applied(
+            name.clone(),
+            arguments
+                .iter()
+                .map(interface_type_to_ty)
+                .collect::<Result<_, _>>()?,
+        ),
         Input::GenericParameter(name, constraint) => {
             Ty::GenericParam(name.clone(), constraint.map(constraint_from_interface))
         }
@@ -153,6 +160,13 @@ fn interface_to_record(
     }
     Ok(RecordTy {
         name: record.name.clone(),
+        type_params: generic_parameters_from_interface(&record.type_parameters),
+        type_args: record
+            .type_arguments
+            .iter()
+            .map(interface_type_to_ty)
+            .collect::<Result<_, _>>()?,
+        is_resource: record.is_resource,
         owner_unit: record.owner_unit.clone(),
         private_members: record.private_members.clone(),
         fields: record
@@ -208,6 +222,12 @@ fn callable_to_method_kind(
 fn interface_to_enum(enum_ty: &artifact::EnumType) -> Result<EnumTy, InterfaceConversionError> {
     Ok(EnumTy {
         name: enum_ty.name.clone(),
+        type_params: generic_parameters_from_interface(&enum_ty.type_parameters),
+        type_args: enum_ty
+            .type_arguments
+            .iter()
+            .map(interface_type_to_ty)
+            .collect::<Result<_, _>>()?,
         variants: enum_ty
             .variants
             .iter()
@@ -228,6 +248,7 @@ fn interface_to_enum(enum_ty: &artifact::EnumType) -> Result<EnumTy, InterfaceCo
 
 fn constraint_from_interface(constraint: artifact::TypeConstraint) -> TypeConstraint {
     match constraint {
+        artifact::TypeConstraint::Equatable => TypeConstraint::Equatable,
         artifact::TypeConstraint::Comparable => TypeConstraint::Comparable,
         artifact::TypeConstraint::Numeric => TypeConstraint::Numeric,
         artifact::TypeConstraint::Printable => TypeConstraint::Printable,

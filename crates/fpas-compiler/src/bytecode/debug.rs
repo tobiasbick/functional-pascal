@@ -214,19 +214,19 @@ fn type_name(program: &Program, ty: TypeId, depth: usize) -> String {
         IrType::String => "string".to_string(),
         IrType::Dynamic => "dynamic".to_string(),
         IrType::Array(element) => {
-            format!("array of {}", type_name(program, *element, depth + 1))
+            format!("array of ({})", type_name(program, *element, depth + 1))
         }
         IrType::Dictionary { key, value } => format!(
-            "dictionary of {}, {}",
+            "dict of ({}, {})",
             type_name(program, *key, depth + 1),
             type_name(program, *value, depth + 1)
         ),
         IrType::Result { ok, error } => format!(
-            "result of {}, {}",
+            "result of ({}, {})",
             type_name(program, *ok, depth + 1),
             type_name(program, *error, depth + 1)
         ),
-        IrType::Option(inner) => format!("option of {}", type_name(program, *inner, depth + 1)),
+        IrType::Option(inner) => format!("option of ({})", type_name(program, *inner, depth + 1)),
         IrType::Function { parameters, result } => {
             let parameters = parameters
                 .iter()
@@ -245,7 +245,7 @@ fn type_name(program: &Program, ty: TypeId, depth: usize) -> String {
             .enum_layout(*layout)
             .map_or_else(|| "enum".to_string(), |layout| layout.name.clone()),
         IrType::Cell(inner) => type_name(program, *inner, depth + 1),
-        IrType::Task(inner) => format!("task of {}", type_name(program, *inner, depth + 1)),
-        IrType::Channel(inner) => format!("channel of {}", type_name(program, *inner, depth + 1)),
+        IrType::Task(inner) => format!("task of ({})", type_name(program, *inner, depth + 1)),
+        IrType::Channel(inner) => format!("channel of ({})", type_name(program, *inner, depth + 1)),
     }
 }

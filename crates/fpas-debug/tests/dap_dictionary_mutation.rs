@@ -12,7 +12,7 @@ use serde_json::{Value, json};
 const SOURCE: &str = r#"program DapDictionaryMutation;
 
 begin
-  mutable var Scores: dict of string to integer := ['Ada': 1, 'Grace': 2];
+  mutable var Scores: dict of (string, integer) := ['Ada': 1, 'Grace': 2];
   var Marker: integer := Scores['Grace'];
 end program;
 "#;

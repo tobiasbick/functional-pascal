@@ -3,22 +3,34 @@ use super::super::assert_succeeds;
 #[test]
 fn local_send_function_shadows_imported_channel_intrinsic() {
     assert_succeeds(
-        r#"
-program SendShadowRepro;
-uses Std.Console as Console; uses Std.Conv as Conv; uses Std.Tasks as Tasks;
+        r#"program SendShadowRepro;
+
+uses Std.Console as Console;
+uses Std.Conv as Conv;
+uses Std.Tasks as Tasks;
+
 function Send(First: integer; Second: integer; Third: integer): integer;
 begin
   return First + Second + Third;
 end function;
+
 begin
-  if Send(1, 2, 3) <> 6 then panic('local Send was not selected'); end if;
+  if Send(1, 2, 3) <> 6 then
+    panic('local Send was not selected');
+  end if;
+
   Console.WriteLn(Conv.IntToStr(Send(1, 2, 3)));
-  var Queue: channel of integer := Tasks.CreateChannel(1);
+  var Queue: channel of (integer) := Tasks.CreateChannel(1);
   discard Tasks.Send(Queue, 42);
   case Tasks.Receive(Queue) of
-    when Ok(Value): if Value <> 42 then panic('qualified channel Send'); end if;
-    when Error(Message): panic(Message);
+    when Result.Ok(const Value):
+      if Value <> 42 then
+        panic('qualified channel Send');
+      end if;
+    when Result.Error(const Message):
+      panic(Message);
   end case;
+
   discard Tasks.CloseChannel(Queue);
 end program;
 "#,

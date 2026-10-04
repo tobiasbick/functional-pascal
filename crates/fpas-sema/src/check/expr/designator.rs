@@ -1,9 +1,7 @@
 use super::super::Checker;
 use crate::scope::SymbolKind;
 use crate::types::Ty;
-use fpas_diagnostics::codes::{
-    SEMA_AMBIGUOUS_IMPORTED_NAME, SEMA_TYPE_MISMATCH, SEMA_UNKNOWN_NAME,
-};
+use fpas_diagnostics::codes::{SEMA_TYPE_MISMATCH, SEMA_UNKNOWN_NAME};
 use fpas_parser::{Designator, DesignatorPart};
 
 impl Checker {
@@ -31,7 +29,7 @@ impl Checker {
                     SEMA_TYPE_MISMATCH,
                     format!("Type `{raw_name}` is not a value"),
                     format!(
-                        "Use a value of type `{raw_name}`, for example a variable or a record literal `record Field := Value; end record`."
+                        "Use a value of type `{raw_name}`, for example a variable or the constructor `{raw_name}(Field := Value)`."
                     ),
                     designator.span,
                 );
@@ -87,17 +85,6 @@ impl Checker {
                         && parts
                             .iter()
                             .all(|part| matches!(part, DesignatorPart::Ident(_, _)));
-
-                    if let Some(ambiguous_hint) = self.ambiguous_hint(first) {
-                        let message = format!("Ambiguous name `{first}`");
-                        self.error_with_code(
-                            SEMA_AMBIGUOUS_IMPORTED_NAME,
-                            message,
-                            ambiguous_hint,
-                            designator.span,
-                        );
-                        return Ty::Error;
-                    }
 
                     if is_qualified_ident_chain
                         && let Some(unit) =
@@ -166,6 +153,10 @@ impl Checker {
                             self.check_index_access(&ty, index_expr, *span)
                         }
                     };
+                    self.projection_types.insert(
+                        crate::designator_part_lookup_key(part),
+                        self.resolve_visible_type(&ty),
+                    );
                 }
                 ty
             }
@@ -211,7 +202,7 @@ impl Checker {
     pub(crate) fn resolve_visible_type(&self, ty: &Ty) -> Ty {
         let mut resolved = ty.clone();
         let mut visited = std::collections::HashSet::new();
-        while let Ty::Named(name) = &resolved {
+        while let Ty::Named(name) | Ty::Applied(name, _) = &resolved {
             let key = crate::scope::canonical_symbol_name(name);
             if !visited.insert(key) {
                 break;
@@ -223,7 +214,11 @@ impl Checker {
             else {
                 break;
             };
-            resolved = symbol.ty.clone();
+            resolved = if let Ty::Applied(_, arguments) = &resolved {
+                symbol.ty.instantiate(arguments).unwrap_or(Ty::Error)
+            } else {
+                symbol.ty.clone()
+            };
         }
         resolved
     }

@@ -162,25 +162,9 @@ impl CaptureCollector<'_> {
                 self.collect_from_expr(expr);
                 for arm in arms {
                     self.push_bound_scope();
-                    // Mirror `check_case_stmt` scalar-guard bindings so a bare
-                    // designator label with a guard does not capture a shadowed
-                    // outer variable of the same name.
-                    self.bind_scalar_guard_name(&arm.labels, &arm.guard);
-                    for label in &arm.labels {
-                        match label {
-                            CaseLabel::Value { start, end, .. } => {
-                                self.bind_pattern_names(start);
-                                self.collect_from_expr(start);
-                                if let Some(end) = end {
-                                    self.collect_from_expr(end);
-                                }
-                            }
-                            CaseLabel::Destructure { binding, .. } => {
-                                if let Some(binding) = binding {
-                                    self.bind_name(binding);
-                                }
-                            }
-                        }
+                    for pattern in &arm.labels {
+                        pattern.visit_expressions(&mut |expr| self.collect_from_expr(expr));
+                        pattern.visit_bindings(&mut |name| self.bind_name(name));
                     }
                     if let Some(guard) = &arm.guard {
                         self.collect_from_expr(guard);
@@ -243,62 +227,42 @@ impl CaptureCollector<'_> {
         }
     }
 
-    fn bind_pattern_names(&mut self, expr: &Expr) {
-        let Expr::Call { args, .. } = expr else {
-            return;
-        };
-        for arg in args {
-            if let Expr::Designator(designator) = arg
-                && let [DesignatorPart::Ident(name, _)] = designator.parts.as_slice()
-            {
-                self.bind_name(name);
-            }
-        }
-    }
-
-    /// Bind a scalar `case` guard label (`m if m > 0`) the same way type checking does.
-    ///
-    /// Without this, a bare designator label is walked as a free reference and can
-    /// spuriously capture an outer variable that the arm actually shadows.
-    ///
-    /// **Documentation:** `docs/pascal/language/functions/closures.md`,
-    /// `docs/pascal/language/pattern-matching/guards.md`
-    fn bind_scalar_guard_name(&mut self, labels: &[CaseLabel], guard: &Option<Expr>) {
-        if guard.is_none() || labels.len() != 1 {
-            return;
-        }
-        let CaseLabel::Value {
-            start, end: None, ..
-        } = &labels[0]
-        else {
-            return;
-        };
-        let Expr::Designator(designator) = start else {
-            return;
-        };
-        if designator.parts.len() != 1 {
-            return;
-        }
-        let DesignatorPart::Ident(name, _) = &designator.parts[0] else {
-            return;
-        };
-        if name == "_" {
-            return;
-        }
-        match self.scopes.lookup(name) {
-            Some(symbol) if matches!(symbol.kind, SymbolKind::Const | SymbolKind::EnumMember) => {}
-            _ => self.bind_name(name),
-        }
-    }
-
     fn collect_from_expr(&mut self, expr: &Expr) {
         match expr {
+            Expr::If(decision) => {
+                self.collect_from_expr(&decision.condition);
+                self.collect_from_expr(&decision.then_value);
+                for (condition, value) in &decision.elsif_values {
+                    self.collect_from_expr(condition);
+                    self.collect_from_expr(value);
+                }
+                self.collect_from_expr(&decision.else_value);
+            }
+            Expr::Case(decision) => {
+                self.collect_from_expr(&decision.value);
+                for arm in &decision.arms {
+                    self.push_bound_scope();
+                    for label in &arm.labels {
+                        label.visit_expressions(&mut |value| self.collect_from_expr(value));
+                        label.visit_bindings(&mut |name| self.bind_name(name));
+                    }
+                    if let Some(guard) = &arm.guard {
+                        self.collect_from_expr(guard);
+                    }
+                    self.collect_from_expr(&arm.body);
+                    self.pop_bound_scope();
+                }
+                if let Some(value) = &decision.else_value {
+                    self.collect_from_expr(value);
+                }
+            }
             Expr::Integer(..)
             | Expr::Real(..)
             | Expr::Str(..)
             | Expr::Bool(..)
             | Expr::OptionNone(_)
             | Expr::Nil(_)
+            | Expr::InvalidRecord(..)
             | Expr::Error(_) => {}
             Expr::Designator(designator) => self.collect_from_designator(designator),
             Expr::Call {
@@ -331,7 +295,7 @@ impl CaptureCollector<'_> {
                     self.collect_from_expr(value);
                 }
             }
-            Expr::RecordLiteral { fields, .. } => {
+            Expr::RecordConstruction { fields, .. } => {
                 for field in fields {
                     self.collect_from_expr(&field.value);
                 }

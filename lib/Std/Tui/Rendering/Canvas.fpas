@@ -28,11 +28,7 @@ public type TuiCanvas = record
   begin
     var Size: Size2.TuiSize := Surface.Size();
     var SurfaceBounds: Rect.TuiRect := Rect.TuiRect.Create(0, 0, Size.Width, Size.Height);
-    return record
-      Surface := Surface;
-      Clip := Bounds.Intersect(SurfaceBounds);
-      Origin := Point.TuiPoint.Create(0, 0);
-    end record;
+    return TuiCanvas(Surface := Surface, Clip := Bounds.Intersect(SurfaceBounds), Origin := Point.TuiPoint.Create(0, 0));
   end function;
 
   // Creates a canvas with an explicit surface origin and local clip rectangle.
@@ -47,11 +43,7 @@ public type TuiCanvas = record
   Clip: Rect.TuiRect
 ): TuiCanvas;
   begin
-    return record
-      Surface := Surface;
-      Clip := Clip;
-      Origin := Origin;
-    end record;
+    return TuiCanvas(Surface := Surface, Clip := Clip, Origin := Origin);
   end function;
 
   // Returns a nested canvas for `LocalBounds` in this canvas's local coordinates.
@@ -291,7 +283,7 @@ end record;
 public procedure TuiCanvasPutCells(
   Canvas: TuiCanvas;
   Position: Point.TuiPoint;
-  Cells: array of Cell2.TuiCell
+  Cells: array of (Cell2.TuiCell)
 );
 begin
   if (Position.Y < Canvas.Clip.Y) or (Position.Y >= Canvas.Clip.Bottom()) then
@@ -319,7 +311,7 @@ begin
       return;
     end;
   end if;
-  mutable var Values: array of Cell2.TuiCell := Arrays.Slice(Cells, SourceX, Count);
+  mutable var Values: array of (Cell2.TuiCell) := Arrays.Slice(Cells, SourceX, Count);
   if (TargetX + Count = Canvas.Clip.Right()) and (Values[Count - 1].Columns = 2) then
     begin
       Values[Count - 1] := Cell2.TuiCell.Create(' ', StyleRole.TuiStyleRole.Normal);

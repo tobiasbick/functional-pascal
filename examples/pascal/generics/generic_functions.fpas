@@ -4,17 +4,17 @@ uses Std.Console as Console;
 uses Std.Arrays as Arrays;
 uses Std.Conv as Conv;
 
-function Identity<T>(Value: T): T;
+function Identity of (T)(Value: T): T;
 begin
   return Value;
 end function;
 
-function Wrap<T>(Value: T): array of T;
+function Wrap of (T)(Value: T): array of (T);
 begin
   return [Value];
 end function;
 
-function FirstElement<T>(Items: array of T): T;
+function FirstElement of (T)(Items: array of (T)): T;
 begin
   return Items[0];
 end function;
@@ -23,9 +23,9 @@ begin
   Console.WriteLn('Identity(integer): ', Identity(42));
   Console.WriteLn('Identity(string): ', Identity('hello'));
   Console.WriteLn('Identity(boolean): ', Identity(true));
-  var Numbers: array of integer := Wrap(99);
+  var Numbers: array of (integer) := Wrap(99);
   Console.WriteLn('Wrapped length: ', Conv.IntToStr(Arrays.Length(Numbers)));
   Console.WriteLn('First wrapped value: ', FirstElement(Numbers));
-  var Words: array of string := ['red', 'green', 'blue'];
+  var Words: array of (string) := ['red', 'green', 'blue'];
   Console.WriteLn('First word: ', FirstElement(Words));
 end program;

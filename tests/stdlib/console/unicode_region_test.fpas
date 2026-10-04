@@ -6,11 +6,7 @@ uses Std.Test as Test;
 
 function CellWith(Glyph: string; Foreground: Console.Color): Console.Cell;
 begin
-  return record
-    glyph := Glyph;
-    foreground := Foreground;
-    background := Console.CrtColor(Console.Black);
-  end record;
+  return Console.Cell(glyph := Glyph, foreground := Foreground, background := Console.CrtColor(Console.Black));
 end function;
 
 begin
@@ -19,12 +15,7 @@ begin
   Console.BeginFrame();
   Console.PutCell(2, 1, CellWith('中', Console.CrtColor(Console.Yellow)));
   Console.Present();
-  var Region: Console.SavedRegion := Console.SaveRegion(record
-    x := 3;
-    y := 1;
-    width := 1;
-    height := 1;
-  end record);
+  var Region: Console.SavedRegion := Console.SaveRegion(Console.rect(x := 3, y := 1, width := 1, height := 1));
   Console.PutCell(3, 1, CellWith('X', Console.CrtColor(Console.White)));
   Console.RestoreRegion(Region);
   Console.Present();

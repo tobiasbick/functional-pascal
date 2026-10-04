@@ -51,7 +51,7 @@ end function;
 
 begin
   var Answer: integer := MakeAdder(3)(5);
-  var Callbacks: array of Handler := [MakeAdder(40)];
+  var Callbacks: array of (Handler) := [MakeAdder(40)];
   var Other: integer := Callbacks[0](2);
   discard (Callbacks[0])(1);
 end program;
@@ -70,7 +70,7 @@ Option/Result and callable values.
 
 ```pascal
 discard MakeAdder(3)(5);
-discard Some(42);
+discard Option.Some(42);
 ```
 
 A procedure call is an action statement, such as `Callbacks[0]();` for an
@@ -96,9 +96,7 @@ type Counter = record
 end record;
 
 begin
-  var C: Counter := record
-    Base := 10;
-  end record;
+  var C: Counter := Counter(Base := 10);
   var AddTen: function(Value: integer): integer := C.Add;
   Console.WriteLn(AddTen(5)); // 15
   Console.WriteLn(AddTen(7)); // 17

@@ -24,7 +24,7 @@ function BlockingRead(ListenerValue: Net.Listener; Token: Tasks.CancellationToke
 begin
   var Client: Net.Connection := Results.Unwrap(Net.Accept(ListenerValue));
   var Configured: boolean := Results.Unwrap(Net.SetTimeout(Client, 1500));
-  var Ignored: result of array of integer, string := Net.ReceiveBytesWithCancellation(Client, 1, Token);
+  var Ignored: result of (array of (integer), string) := Net.ReceiveBytesWithCancellation(Client, 1, Token);
   var Closed: boolean := Results.Unwrap(Net.Close(Client));
   return true;
 end function;
@@ -37,14 +37,14 @@ begin
   var SecondClient: Net.Connection := Results.Unwrap(Net.Connect('127.0.0.1', Results.Unwrap(Net.ListenerLocalAddress(SecondListener)).Port, 1000));
   var First: task := go BlockingRead(FirstListener, Token);
   var Second: task := go BlockingRead(SecondListener, Token);
-  var Events: channel of integer := Tasks.CreateChannel(1);
+  var Events: channel of (integer) := Tasks.CreateChannel(1);
   mutable var Started: integer := Time.TimestampMillis();
-  var Outcome: result of integer, string := Tasks.ReceiveWithTimeout(Events, 100);
+  var Outcome: result of (integer, string) := Tasks.ReceiveWithTimeout(Events, 100);
   if Time.TimestampMillis() - Started > 1000 then panic('timed receive ran a blocking task inline'); end if;
   if Results.IsOk(Outcome) then panic('nothing was sent'); end if;
   Started := Time.TimestampMillis();
   var Full: boolean := Results.Unwrap(Tasks.SendWithTimeout(Events, 1, 100));
-  var Blocked: result of boolean, string := Tasks.SendWithTimeout(Events, 2, 100);
+  var Blocked: result of (boolean, string) := Tasks.SendWithTimeout(Events, 2, 100);
   if Time.TimestampMillis() - Started > 1000 then panic('timed send ran a blocking task inline'); end if;
   if Results.IsOk(Blocked) then panic('the channel was full'); end if;
   if not Tasks.Wait(First) then panic('first'); end if;
@@ -59,7 +59,7 @@ fn untimed_channel_waits_progress_through_the_pool_worker() {
     run_with_one_worker(
         r#"program PoolServesMainChannelWaits;
 uses Std.Results as Results; uses Std.Tasks as Tasks;
-function Doubler(Requests: channel of integer; Replies: channel of integer): integer;
+function Doubler(Requests: channel of (integer); Replies: channel of (integer)): integer;
 begin
   mutable var Count: integer := 0;
   for Index: integer := 1 to 50 do
@@ -71,8 +71,8 @@ begin
   return Count;
 end function;
 begin
-  var Requests: channel of integer := Tasks.CreateChannel(1);
-  var Replies: channel of integer := Tasks.CreateChannel(1);
+  var Requests: channel of (integer) := Tasks.CreateChannel(1);
+  var Replies: channel of (integer) := Tasks.CreateChannel(1);
   var Worker: task := go Doubler(Requests, Replies);
   for Index: integer := 1 to 50 do
   begin
@@ -91,41 +91,53 @@ end program;"#,
 fn task_wait_does_not_run_a_queued_task_that_waits_for_the_main_task() {
     run_with_workers(
         r#"program TaskWaitDoesNotHelp;
-uses Std.Arrays as Arrays; uses Std.Net as Net; uses Std.Results as Results; uses Std.Tasks as Tasks; uses Std.Time as Time;
+
+uses Std.Arrays as Arrays;
+uses Std.Net as Net;
+uses Std.Results as Results;
+uses Std.Tasks as Tasks;
+uses Std.Time as Time;
+
 function Busy(ListenerValue: Net.Listener; Token: Tasks.CancellationToken): boolean;
 begin
   var Client: Net.Connection := Results.Unwrap(Net.Accept(ListenerValue));
   var Configured: boolean := Results.Unwrap(Net.SetTimeout(Client, 1000));
-  var Ignored: result of array of integer, string := Net.ReceiveBytesWithCancellation(Client, 1, Token);
+  var Ignored: Result of (array of (integer), string) := Net.ReceiveBytesWithCancellation(Client, 1, Token);
   return true;
 end function;
+
 function Reader(ListenerValue: Net.Listener; Token: Tasks.CancellationToken): boolean;
 begin
   var Client: Net.Connection := Results.Unwrap(Net.Accept(ListenerValue));
   var Configured: boolean := Results.Unwrap(Net.SetTimeout(Client, 5000));
   case Net.ReceiveBytesWithCancellation(Client, 1, Token) of
-    when Ok(Bytes):
-    begin
-      return Arrays.Length(Bytes) = 1;
-    end;
-    when Error(Message):
-    begin
-      return false;
-    end;
+    when Result.Ok(const Bytes):
+      begin
+        return Arrays.Length(Bytes) = 1;
+      end;
+    when Result.Error(const Message):
+      begin
+        return false;
+      end;
   end case;
 end function;
+
 function Quick(): integer;
 begin
   return 7;
 end function;
+
 function Open(): Net.Listener;
 begin
   return Results.Unwrap(Net.Listen('127.0.0.1', 0));
 end function;
+
 function Join(ListenerValue: Net.Listener): Net.Connection;
 begin
-  return Results.Unwrap(Net.Connect('127.0.0.1', Results.Unwrap(Net.ListenerLocalAddress(ListenerValue)).Port, 1000));
+  return Results.Unwrap(Net.Connect('127.0.0.1', Results.Unwrap(Net.ListenerLocalAddress(ListenerValue))
+                                                   .Port, 1000));
 end function;
+
 begin
   var Source: Tasks.CancellationSource := Tasks.CreateCancellationSource();
   var Token: Tasks.CancellationToken := Tasks.GetCancellationToken(Source);
@@ -140,13 +152,27 @@ begin
   var ReaderTask: task := go Reader(ReaderListener, Token);
   var QuickTask: task := go Quick();
   var Started: integer := Time.TimestampMillis();
-  if Tasks.Wait(QuickTask) <> 7 then panic('quick'); end if;
+  if Tasks.Wait(QuickTask) <> 7 then
+    panic('quick');
+  end if;
   var Sent: integer := Results.Unwrap(Net.SendBytes(ReaderClient, [42]));
-  if not Tasks.Wait(ReaderTask) then panic('the reader did not receive the byte sent after the wait'); end if;
-  if Time.TimestampMillis() - Started > 4000 then panic('the wait ran the reader inline'); end if;
-  if not Tasks.Wait(First) then panic('first'); end if;
-  if not Tasks.Wait(Second) then panic('second'); end if;
-end program;"#,
+  if not Tasks.Wait(ReaderTask) then
+    panic('the reader did not receive the byte sent after the wait');
+  end if;
+
+  if Time.TimestampMillis() - Started > 4000 then
+    panic('the wait ran the reader inline');
+  end if;
+
+  if not Tasks.Wait(First) then
+    panic('first');
+  end if;
+
+  if not Tasks.Wait(Second) then
+    panic('second');
+  end if;
+end program;
+"#,
         2,
     );
 }

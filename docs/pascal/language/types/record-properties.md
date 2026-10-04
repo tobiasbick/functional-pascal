@@ -104,7 +104,7 @@ Button.Text := 'Save'; // Valid — Button is unchanged as a value
 
 Properties are behavior, not stored record data:
 
-- record literals cannot initialize a property;
+- record constructors cannot initialize a property;
 - record update expressions cannot name a property;
 - copying a record copies its fields only;
 - default field values do not apply to properties.

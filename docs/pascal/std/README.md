@@ -82,7 +82,7 @@ uses Std.Console as Console;
 uses Std.Results as Results;
 uses Std.Options as Options;
 
-  var R: result of integer, string := Ok(42);
+  var R: result of (integer, string) := Result.Ok(42);
   Console.WriteLn(Results.Unwrap(R));
 ```
 

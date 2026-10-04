@@ -7,18 +7,18 @@ uses Std.Results as Results;
 begin
   var Workers: Tasks.TaskGroup := Tasks.CreateTaskGroup();
   // This queue models a transient failure followed by a successful operation.
-  var Outcomes: channel of boolean := Tasks.CreateChannel(2);
+  var Outcomes: channel of (boolean) := Tasks.CreateChannel(2);
   discard Tasks.Send(Outcomes, false);
   discard Tasks.Send(Outcomes, true);
-  var Worker: task := Tasks.StartSupervisedTask(Workers, function(Token: Tasks.CancellationToken): result of string, string begin
+  var Worker: task := Tasks.StartSupervisedTask(Workers, function(Token: Tasks.CancellationToken): Result of (string, string) begin
     Console.WriteLn('Starting an attempt');
     if not Results.Unwrap(Tasks.Receive(Outcomes)) then
       begin
-        return Error('temporary failure');
+        return Result.Error('temporary failure');
       end;
     end if;
 
-    return Ok('Worker completed');
+    return Result.Ok('Worker completed');
   end function, 2, 10);
   // Wait retrieves the final result; intermediate failures remain inside the supervisor.
   Console.WriteLn(Results.Unwrap(Tasks.Wait(Worker)));

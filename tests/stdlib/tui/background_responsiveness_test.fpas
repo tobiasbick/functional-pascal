@@ -8,17 +8,17 @@ uses Std.Tui as Tui;
 
 type Model = record
   Generation: integer;
-  Gate: channel of boolean;
-  Started: channel of integer;
-  Painted: channel of integer;
+  Gate: channel of (boolean);
+  Started: channel of (integer);
+  Painted: channel of (integer);
 end record;
 
 procedure Replace(State: Model; Cmd: Tui.TuiCmdOutput);
 begin
   var Generation: integer := State.Generation;
-  var Gate: channel of boolean := State.Gate;
-  var Started: channel of integer := State.Started;
-  Cmd.ReplaceSubscription(1, function(Token: Tasks.CancellationToken): result of boolean, string begin
+  var Gate: channel of (boolean) := State.Gate;
+  var Started: channel of (integer) := State.Started;
+  Cmd.ReplaceSubscription(1, function(Token: Tasks.CancellationToken): Result of (boolean, string) begin
     discard Tasks.Send(Started, Generation);
     if Generation = 0 then
       begin
@@ -27,7 +27,7 @@ begin
       end;
     end if;
 
-    return Ok(true);
+    return Result.Ok(true);
   end function);
 end procedure;
 
@@ -38,7 +38,7 @@ begin
       begin
         Replace(State, Cmd);
       end;
-    when Tui.TuiMsg.Tick(Delta):
+    when Tui.TuiMsg.Tick(const Delta):
       begin
         if Delta > 0 then
           begin
@@ -49,9 +49,11 @@ begin
           end;
         end if;
       end;
-    else
+    when Tui.TuiMsg.Key(_), Tui.TuiMsg.Pointer(_), Tui.TuiMsg.Resize(_), Tui.TuiMsg.FocusChanged(_, _), Tui.TuiMsg.Action(_, _), Tui.TuiMsg.TextChanged(_, _, _, _), Tui.TuiMsg.TextAreaChanged(_, _, _, _, _), Tui.TuiMsg.CheckChanged(_, _, _), Tui.TuiMsg.SelectionChanged(_, _, _), Tui.TuiMsg.ScrollChanged(_, _, _), Tui.TuiMsg.MenuChanged(_, _, _), Tui.TuiMsg.BackgroundFailed(_, _, _, _, _, _), Tui.TuiMsg.QuitRequested:
       begin
-        null;
+        begin
+          null;
+        end;
       end;
   end case;
 
@@ -74,26 +76,21 @@ begin
   return Tui.TuiElementBuilders.MakeLabel('responsive');
 end function;
 
-function ReleaseAfterPaint(Painted: channel of integer; Gate: channel of boolean): boolean;
+function ReleaseAfterPaint(Painted: channel of (integer); Gate: channel of (boolean)): boolean;
 begin
   // A timeout releases the gate even on the old blocking implementation.
-  var Paint: result of integer, string := Tasks.ReceiveWithTimeout(Painted, 3000);
+  var Paint: Result of (integer, string) := Tasks.ReceiveWithTimeout(Painted, 3000);
   discard Tasks.Send(Gate, true);
   return Results.IsOk(Paint);
 end function;
 
 begin
-  var Inbox: channel of integer := Tasks.CreateChannel(1);
-  var Gate: channel of boolean := Tasks.CreateChannel(1);
-  var Started: channel of integer := Tasks.CreateChannel(4);
-  var Painted: channel of integer := Tasks.CreateChannel(1);
+  var Inbox: channel of (integer) := Tasks.CreateChannel(1);
+  var Gate: channel of (boolean) := Tasks.CreateChannel(1);
+  var Started: channel of (integer) := Tasks.CreateChannel(4);
+  var Painted: channel of (integer) := Tasks.CreateChannel(1);
   var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(20, 4));
-  mutable var State: Model := App.RunBackgroundIterations(record
-    Generation := 0;
-    Gate := Gate;
-    Started := Started;
-    Painted := Painted;
-  end record, Inbox, Update, UpdateMessage, View, 1, 0);
+  mutable var State: Model := App.RunBackgroundIterations(Model(Generation := 0, Gate := Gate, Started := Started, Painted := Painted), Inbox, Update, UpdateMessage, View, 1, 0);
   Test.AssertEquals(0, Results.Unwrap(Tasks.ReceiveWithTimeout(Started, 5000)));
   var Observer: task := go ReleaseAfterPaint(Painted, Gate);
   for Index: integer := 1 to 3 do
@@ -105,7 +102,7 @@ begin
   end for;
 
   Test.AssertTrue(Tasks.Wait(Observer));
-  mutable var Replacement: result of integer, string := Tasks.ReceiveWithTimeout(Started, 0);
+  mutable var Replacement: Result of (integer, string) := Tasks.ReceiveWithTimeout(Started, 0);
   var Deadline: integer := Time.MonotonicMillis() + 5000;
   while Results.IsError(Replacement) and (Time.MonotonicMillis() < Deadline) do
     begin

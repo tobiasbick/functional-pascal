@@ -6,6 +6,33 @@ use fpas_parser::{Designator, DesignatorPart, Expr, FieldInit, PostfixOperation}
 
 pub(super) fn apply_expr_source_id(expr: &mut Expr, source_id: u32) {
     match expr {
+        Expr::If(decision) => {
+            apply_expr_source_id(&mut decision.condition, source_id);
+            apply_expr_source_id(&mut decision.then_value, source_id);
+            for (condition, value) in &mut decision.elsif_values {
+                apply_expr_source_id(condition, source_id);
+                apply_expr_source_id(value, source_id);
+            }
+            apply_expr_source_id(&mut decision.else_value, source_id);
+            apply_span(&mut decision.span, source_id);
+        }
+        Expr::Case(decision) => {
+            apply_expr_source_id(&mut decision.value, source_id);
+            for arm in &mut decision.arms {
+                for label in &mut arm.labels {
+                    super::statements::apply_case_label_source_id(label, source_id);
+                }
+                if let Some(guard) = &mut arm.guard {
+                    apply_expr_source_id(guard, source_id);
+                }
+                apply_expr_source_id(&mut arm.body, source_id);
+                apply_span(&mut arm.span, source_id);
+            }
+            if let Some(value) = &mut decision.else_value {
+                apply_expr_source_id(value, source_id);
+            }
+            apply_span(&mut decision.span, source_id);
+        }
         Expr::Integer(_, span)
         | Expr::Real(_, span)
         | Expr::Str(_, span)
@@ -20,6 +47,7 @@ pub(super) fn apply_expr_source_id(expr: &mut Expr, source_id: u32) {
         | Expr::Nil(span)
         | Expr::Try(_, span)
         | Expr::Go(_, span)
+        | Expr::InvalidRecord(span)
         | Expr::Error(span) => {
             apply_span(span, source_id);
         }
@@ -46,7 +74,12 @@ pub(super) fn apply_expr_source_id(expr: &mut Expr, source_id: u32) {
             apply_expr_source_id(right, source_id);
             apply_span(span, source_id);
         }
-        Expr::RecordLiteral { fields, span } => {
+        Expr::RecordConstruction {
+            type_name,
+            fields,
+            span,
+        } => {
+            super::support::apply_qualified_id_source_id(type_name, source_id);
             for field in fields {
                 apply_field_init_source_id(field, source_id);
             }

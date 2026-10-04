@@ -82,7 +82,7 @@ fn apply_record_event_source_id(event: &mut fpas_parser::RecordEvent, source_id:
 fn apply_field_def_source_id(field: &mut FieldDef, source_id: u32) {
     apply_type_expr_source_id(&mut field.type_expr, source_id);
     if let Some(default_value) = &mut field.default_value {
-        apply_expr_source_id(default_value, source_id);
+        apply_expr_source_id(std::sync::Arc::make_mut(default_value), source_id);
     }
     apply_span(&mut field.span, source_id);
 }

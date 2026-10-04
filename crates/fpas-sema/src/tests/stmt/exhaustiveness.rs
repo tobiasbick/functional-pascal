@@ -16,14 +16,33 @@ fn case_enum_missing_variant_is_non_exhaustive() {
 #[test]
 fn case_enum_else_branch_skips_exhaustiveness_check() {
     check_ok(
-        r#"program T;  type Light = enum Red; Yellow; Green; end enum; begin var L: Light := Light.Red; case L of when Light.Red: return; else return; end case; end program;"#,
+        r#"program T;
+
+type Light = enum
+  Red;
+  Yellow;
+  Green;
+end enum;
+
+begin
+  var L: Light := Light.Red;
+  case L of
+    when Light.Red:
+      return;
+    when Light.Yellow, Light.Green:
+      begin
+        return;
+      end;
+  end case;
+end program;
+"#,
     );
 }
 
 #[test]
 fn case_result_missing_variant_is_non_exhaustive() {
     let errors = check_errors(
-        r#"program T; begin var R: Result of integer, string := Ok(1); case R of when Ok(V): return; end case; end program;"#,
+        r#"program T; begin var R: Result of (integer, string) := Result.Ok(1); case R of when Result.Ok(const V): return; end case; end program;"#,
     );
     assert!(
         errors
@@ -36,7 +55,21 @@ fn case_result_missing_variant_is_non_exhaustive() {
 #[test]
 fn case_data_enum_missing_variant_is_non_exhaustive() {
     let errors = check_errors(
-        r#"program T;  type Shape = enum Circle(Radius: real); Point; end enum; begin var S: Shape := Shape.Point; case S of when Shape.Circle(R): return; end case; end program;"#,
+        r#"program T;
+
+type Shape = enum
+  Circle(Radius: real);
+  Point;
+end enum;
+
+begin
+  var S: Shape := Shape.Point;
+  case S of
+    when Shape.Circle(const R):
+      return;
+  end case;
+end program;
+"#,
     );
     assert!(
         errors
@@ -49,7 +82,26 @@ fn case_data_enum_missing_variant_is_non_exhaustive() {
 #[test]
 fn case_on_recursive_enum_binding_is_checked_for_exhaustiveness() {
     let errors = check_errors(
-        r#"program T;  type Tree = enum Leaf; Node(Left: Tree; Right: Tree); end enum; begin var T: Tree := Tree.Leaf; case T of when Tree.Node(L, R): case L of when Tree.Node(A, B): return; end case; when Tree.Leaf: return; end case; end program;"#,
+        r#"program T;
+
+type Tree = enum
+  Leaf;
+  Node(Left: Tree; Right: Tree);
+end enum;
+
+begin
+  var T: Tree := Tree.Leaf;
+  case T of
+    when Tree.Node(const L, const R):
+      case L of
+        when Tree.Node(const A, const B):
+          return;
+      end case;
+    when Tree.Leaf:
+      return;
+  end case;
+end program;
+"#,
     );
     assert!(
         errors

@@ -34,7 +34,7 @@ end function;
 
 function DictionaryWork(): integer;
 begin
-  var Values: dict of string to integer := ['A': 2, 'B': 4];
+  var Values: dict of (string, integer) := ['A': 2, 'B': 4];
   return Dictionaries.Reduce(Values, 1, Sum);
 end function;
 

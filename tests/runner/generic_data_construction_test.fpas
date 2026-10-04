@@ -1,0 +1,39 @@
+program GenericDataConstructionTest;
+
+uses Std.Test as Test;
+
+type Box of (T) = record
+  Value: T;
+  Count: integer := 3;
+end record;
+
+type Choice of (T) = enum
+  Present(Value: T);
+  Missing;
+end enum;
+
+type Node of (T) = record
+  Value: T;
+  Children: array of (Node of (T));
+end record;
+
+function Unbox of (U)(Item: Box of (U)): U;
+begin
+  return Item.Value;
+end function;
+
+begin
+  var Number: Box of (integer) := Box(Value := 42);
+  var Action: Box of (function(Value: integer): integer) := Box(Value := function(Value: integer): integer begin
+    return Value + 1;
+  end function);
+  var PresentValue: Choice of (integer) := Choice.Present(42);
+  var MissingValue: Choice of (integer) := Choice.Missing;
+  var Root: Node of (integer) := Node(Value := 1, Children := [Node(Value := 42, Children := [])]);
+  Test.AssertEquals(42, Unbox(Number));
+  Test.AssertEquals(3, Number.Count);
+  Test.AssertEquals(42, Action.Value(41));
+  Test.AssertTrue(PresentValue = Choice.Present(42));
+  Test.AssertTrue(PresentValue <> MissingValue);
+  Test.AssertEquals(42, Root.Children[0].Value);
+end program;

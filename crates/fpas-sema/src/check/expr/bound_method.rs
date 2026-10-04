@@ -139,9 +139,6 @@ impl Checker {
         {
             return Some(property.clone());
         }
-        if record_ty.name == "<anonymous>" {
-            return None;
-        }
         let symbol = self.scopes.lookup(&record_ty.name)?;
         let Ty::Record(canonical) = &symbol.ty else {
             return None;

@@ -10,7 +10,7 @@ use fpas_std::std_symbols as s;
 
 /// Register the Task unit's handles and task-aware intrinsic declarations.
 pub fn register_std_task(c: &mut Checker) {
-    let case = type_registration::register_record_type(c, s::STD_TASK_WAIT_CASE, Vec::new());
+    let case = type_registration::register_resource_type(c, s::STD_TASK_WAIT_CASE);
     define_func(
         c,
         s::STD_TASK_SELECT,
@@ -23,11 +23,9 @@ pub fn register_std_task(c: &mut Checker) {
         vec![p("Handle", case, false)],
         Ty::Boolean,
     );
-    let source =
-        type_registration::register_record_type(c, s::STD_TASK_CANCELLATION_SOURCE, Vec::new());
-    let token =
-        type_registration::register_record_type(c, s::STD_TASK_CANCELLATION_TOKEN, Vec::new());
-    let group = type_registration::register_record_type(c, s::STD_TASK_TASK_GROUP, Vec::new());
+    let source = type_registration::register_resource_type(c, s::STD_TASK_CANCELLATION_SOURCE);
+    let token = type_registration::register_resource_type(c, s::STD_TASK_CANCELLATION_TOKEN);
+    let group = type_registration::register_resource_type(c, s::STD_TASK_TASK_GROUP);
     let kind = type_registration::register_enum_type(
         c,
         s::STD_TASK_TASK_FAILURE_KIND,

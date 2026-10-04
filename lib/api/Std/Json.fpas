@@ -26,19 +26,19 @@ public type JsonValue = enum
   //
   // Parameters:
   // - `Items`: Array elements stored in the constructed value.
-  ArrayValue(Items: array of JsonValue);
+  ArrayValue(Items: array of (JsonValue));
   // `Object` enum member.
   //
   // Parameters:
-  // - `Fields`: `dict of string to Std.Json.JsonValue` input value used by `Object`.
-  Object(Fields: dict of string to JsonValue);
+  // - `Fields`: `dict of (string, Std.Json.JsonValue)` input value used by `Object`.
+  Object(Fields: dict of (string, JsonValue));
 end enum;
 
-// Parses JSON text; parse failures are `Error(Message)`.
+// Parses JSON text; parse failures are `Result.Error(Message)`.
 //
 // Parameters:
 // - `Text`: UTF-8 text processed by the operation.
-public function Parse(Text: string): result of JsonValue, string;
+public function Parse(Text: string): Result of (JsonValue, string);
 begin
   panic('Intrinsic API declaration');
 end function;

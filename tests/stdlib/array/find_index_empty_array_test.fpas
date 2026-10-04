@@ -9,7 +9,7 @@ begin
 end function;
 
 begin
-  var A: array of integer := [];
+  var A: array of (integer) := [];
   var Idx: integer := Arrays.FindIndex(A, AlwaysTrue);
   Console.WriteLn(Idx);
 end program;

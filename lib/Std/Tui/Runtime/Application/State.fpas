@@ -16,21 +16,21 @@ uses Std.Tui.Runtime.Routing.Pointer as Pointer2;
 uses Std.Tui.Runtime.TerminalSession as TerminalSession;
 uses Std.Time as Time;
 
-public mutable var TuiAppInputHead: array of integer := [];
-public mutable var TuiAppMessageHead: array of integer := [];
-public mutable var TuiAppOpen: array of boolean := [];
-public mutable var TuiAppInputs: array of array of Input2.TuiHostInput := [];
-public mutable var TuiAppMessages: array of array of Msg2.TuiMsg := [];
-public mutable var TuiAppSurfaces: array of Surface.TuiWorkingSurface := [];
-public mutable var TuiAppFrames: array of Frame.TuiArrangedFrame := [];
-public mutable var TuiAppTrees: array of Element.TuiElement := [];
-public mutable var TuiAppCommands: array of Cmd.TuiCmdOutput := [];
-public mutable var TuiAppInteractive: array of boolean := [];
-public mutable var TuiAppPalettes: array of Palette2.TuiPalette := [];
-public mutable var TuiAppStarted: array of boolean := [];
+public mutable var TuiAppInputHead: array of (integer) := [];
+public mutable var TuiAppMessageHead: array of (integer) := [];
+public mutable var TuiAppOpen: array of (boolean) := [];
+public mutable var TuiAppInputs: array of (array of (Input2.TuiHostInput)) := [];
+public mutable var TuiAppMessages: array of (array of (Msg2.TuiMsg)) := [];
+public mutable var TuiAppSurfaces: array of (Surface.TuiWorkingSurface) := [];
+public mutable var TuiAppFrames: array of (Frame.TuiArrangedFrame) := [];
+public mutable var TuiAppTrees: array of (Element.TuiElement) := [];
+public mutable var TuiAppCommands: array of (Cmd.TuiCmdOutput) := [];
+public mutable var TuiAppInteractive: array of (boolean) := [];
+public mutable var TuiAppPalettes: array of (Palette2.TuiPalette) := [];
+public mutable var TuiAppStarted: array of (boolean) := [];
 // Monotonic time of the pending tick request and its due time; negative due means none.
-public mutable var TuiAppTickRequestedAt: array of integer := [];
-public mutable var TuiAppTickDueAt: array of integer := [];
+public mutable var TuiAppTickRequestedAt: array of (integer) := [];
+public mutable var TuiAppTickDueAt: array of (integer) := [];
 
 // Opens application-owned state and returns its stable identifier.
 public function TuiAppOpenApplication(
@@ -59,7 +59,7 @@ begin
 end function;
 
 // Cancels owned work, closes application state, and returns shutdown failures.
-public function TuiAppCloseApplication(ApplicationId: integer): array of Msg2.TuiMsg;
+public function TuiAppCloseApplication(ApplicationId: integer): array of (Msg2.TuiMsg);
 begin
   if (ApplicationId < 1) or (ApplicationId > Arrays.Length(TuiAppOpen)) then
     begin
@@ -72,7 +72,7 @@ begin
       return [];
     end;
   end if;
-  var BackgroundFailures: array of Msg2.TuiMsg := Background.TuiBackgroundCloseApplication(ApplicationId);
+  var BackgroundFailures: array of (Msg2.TuiMsg) := Background.TuiBackgroundCloseApplication(ApplicationId);
   TuiAppOpen[ApplicationId - 1] := false;
   TuiAppInputHead[ApplicationId - 1] := 0;
   TuiAppMessageHead[ApplicationId - 1] := 0;
@@ -90,7 +90,7 @@ begin
 end function;
 
 // Raises the first shutdown failure after application resources have been released.
-public procedure TuiAppRaiseShutdownFailure(Failures: array of Msg2.TuiMsg);
+public procedure TuiAppRaiseShutdownFailure(Failures: array of (Msg2.TuiMsg));
 begin
   if Arrays.Length(Failures) = 0 then
     begin
@@ -99,13 +99,15 @@ begin
   end if;
 
   case Failures[0] of
-    when Msg2.TuiMsg.BackgroundFailed(IgnoredId, Kind, Message, Code, Line, Column):
+    when Msg2.TuiMsg.BackgroundFailed(const IgnoredId, const Kind, const Message, const Code, const Line, const Column):
       begin
         panic(Message);
       end;
-    else
+    when Msg2.TuiMsg.Started, Msg2.TuiMsg.Key(_), Msg2.TuiMsg.Pointer(_), Msg2.TuiMsg.Tick(_), Msg2.TuiMsg.Resize(_), Msg2.TuiMsg.FocusChanged(_, _), Msg2.TuiMsg.Action(_, _), Msg2.TuiMsg.TextChanged(_, _, _, _), Msg2.TuiMsg.TextAreaChanged(_, _, _, _, _), Msg2.TuiMsg.CheckChanged(_, _, _), Msg2.TuiMsg.SelectionChanged(_, _, _), Msg2.TuiMsg.ScrollChanged(_, _, _), Msg2.TuiMsg.MenuChanged(_, _, _), Msg2.TuiMsg.QuitRequested:
       begin
-        panic('Tui background operation failed during shutdown');
+        begin
+          panic('Tui background operation failed during shutdown');
+        end;
       end;
   end case;
 end procedure;
@@ -190,9 +192,9 @@ begin
 end function;
 
 // Enqueues messages in their original order.
-public procedure TuiAppPushMessages(ApplicationId: integer; Messages: array of Msg2.TuiMsg);
+public procedure TuiAppPushMessages(ApplicationId: integer; Messages: array of (Msg2.TuiMsg));
 begin
-  mutable var Queue: array of Msg2.TuiMsg := TuiAppMessages[ApplicationId - 1];
+  mutable var Queue: array of (Msg2.TuiMsg) := TuiAppMessages[ApplicationId - 1];
   TuiAppMessages[ApplicationId - 1] := [];
   for Item: Msg2.TuiMsg in Messages do
     begin
@@ -206,7 +208,7 @@ end procedure;
 // Enqueues one input for the application.
 public procedure TuiAppPushInput(ApplicationId: integer; Input: Input2.TuiHostInput);
 begin
-  mutable var Queue: array of Input2.TuiHostInput := TuiAppInputs[ApplicationId - 1];
+  mutable var Queue: array of (Input2.TuiHostInput) := TuiAppInputs[ApplicationId - 1];
   TuiAppInputs[ApplicationId - 1] := [];
   Arrays.Push(Queue, Input);
   TuiAppInputs[ApplicationId - 1] := Queue;
@@ -232,22 +234,22 @@ end procedure;
 public procedure TuiAppRouteInput(ApplicationId: integer; Input: Input2.TuiHostInput);
 begin
   case Input of
-    when Input2.TuiHostInput.Message(InputMsg):
+    when Input2.TuiHostInput.Message(const InputMsg):
       begin
         TuiAppPushMessages(ApplicationId, [InputMsg]);
       end;
-    when Input2.TuiHostInput.Key(Key):
+    when Input2.TuiHostInput.Key(const Key):
       begin
         TuiAppPushMessages(ApplicationId, Routing.TuiRouteKey(TuiAppTrees[ApplicationId - 1], TuiAppFrames[ApplicationId -
                                                                                                            1], Key));
       end;
-    when Input2.TuiHostInput.Pointer(Pointer):
+    when Input2.TuiHostInput.Pointer(const Pointer):
       begin
         TuiAppPushMessages(ApplicationId, Pointer2.TuiRouteApplicationPointer(Pointer, ApplicationId, TuiAppTrees[ApplicationId -
                                                                                                                   1], TuiAppFrames[ApplicationId -
                                                                                                                                    1]));
       end;
-    when Input2.TuiHostInput.Resize(Size):
+    when Input2.TuiHostInput.Resize(const Size):
       begin
         TuiAppPushMessages(ApplicationId, [Msg2.TuiMsg.Resize(Size)]);
       end;
@@ -257,13 +259,15 @@ end procedure;
 public procedure TuiAppApplyResizeIfNeeded(ApplicationId: integer; Msg: Msg2.TuiMsg);
 begin
   case Msg of
-    when Msg2.TuiMsg.Resize(Size):
+    when Msg2.TuiMsg.Resize(const Size):
       begin
         TuiAppApplyResize(ApplicationId, Size);
       end;
-    else
+    when Msg2.TuiMsg.Started, Msg2.TuiMsg.Key(_), Msg2.TuiMsg.Pointer(_), Msg2.TuiMsg.Tick(_), Msg2.TuiMsg.FocusChanged(_, _), Msg2.TuiMsg.Action(_, _), Msg2.TuiMsg.TextChanged(_, _, _, _), Msg2.TuiMsg.TextAreaChanged(_, _, _, _, _), Msg2.TuiMsg.CheckChanged(_, _, _), Msg2.TuiMsg.SelectionChanged(_, _, _), Msg2.TuiMsg.ScrollChanged(_, _, _), Msg2.TuiMsg.MenuChanged(_, _, _), Msg2.TuiMsg.BackgroundFailed(_, _, _, _, _, _), Msg2.TuiMsg.QuitRequested:
       begin
-        null;
+        begin
+          null;
+        end;
       end;
   end case;
 end procedure;
@@ -282,11 +286,11 @@ begin
     when Cmd.TuiCmd.SetPalette:
       begin
         case Output.ReadPalette() of
-          when Some(Palette):
+          when Option.Some(const Palette):
             begin
               TuiAppPalettes[ApplicationId - 1] := Palette;
             end;
-          when None:
+          when Option.None:
             begin
               panic('Tui SetPalette command requires a palette');
             end;
@@ -297,13 +301,13 @@ begin
   end case;
 
   case Output.ReadTickRequest() of
-    when Some(Delay):
+    when Option.Some(const Delay):
       begin
         var Now: integer := Time.MonotonicMillis();
         TuiAppTickRequestedAt[ApplicationId - 1] := Now;
         TuiAppTickDueAt[ApplicationId - 1] := Now + Delay;
       end;
-    when None:
+    when Option.None:
       begin
         null;
       end;

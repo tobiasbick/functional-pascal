@@ -56,7 +56,7 @@ fn import_collisions_include_every_lexical_binding_kind() {
         "type Text = integer;",
         "procedure TEXT(); begin null; end procedure;",
         "procedure F(Text: integer); begin null; end procedure;",
-        "function F<Text>(X: Text): Text; begin return X; end function;",
+        "function F of (Text)(X: Text): Text; begin return X; end function;",
     ] {
         let source =
             format!("program P; uses Std.Str as Text; {declaration} begin null; end program;");
@@ -99,8 +99,8 @@ fn forward_types_work_in_signatures_fields_aliases_and_initializers() {
     for source in [
         "program P; function F(X: Later): Later; begin return X; end function; type Later = integer; begin var I: Later := F(1); end program;",
         "program P; type First = Later; var I: First := 1; type Later = integer; begin null; end program;",
-        "program P; type Outer = record Item: Later; end record; type Later = integer; begin var V: Outer := record Item := 1; end record; end program;",
-        "program P; type Node = record Children: array of Node; end record; begin var N: Node := record Children := []; end record; end program;",
+        "program P;\n\ntype Outer = record\n  Item: Later;\nend record;\n\ntype Later = integer;\n\nbegin\n  var V: Outer := Outer(Item := 1);\nend program;\n",
+        "program P;\n\ntype Node = record\n  Children: array of (Node);\nend record;\n\nbegin\n  var N: Node := Node(Children := []);\nend program;\n",
         "program P; type A = B; type B = C; type C = integer; begin var I: A := 1; end program;",
     ] {
         let errors = errors(source);
@@ -120,7 +120,7 @@ fn initializer_order_unknown_types_and_alias_cycles_are_rejected() {
     ] {
         assert!(!errors(source).is_empty(), "unexpectedly accepted {source}");
     }
-    assert!(errors("program P; const Earlier: integer := 1; type R = record X: integer := Earlier; end record; begin var V: R := record end record; end program;").is_empty());
+    assert!(errors("program P;\n\nconst Earlier: integer := 1;\n\ntype R = record\n  X: integer := Earlier;\nend record;\n\nbegin\n  var V: R := R();\nend program;\n").is_empty());
 }
 
 #[test]
@@ -195,7 +195,7 @@ fn source_unit_imports_keep_types_variants_and_private_members_distinct() {
 #[test]
 fn aliases_preserve_private_record_fields_and_factory_access() {
     let (CompilationUnit::Unit(unit), diagnostics) = fpas_parser::parse_compilation_unit(
-        "unit Library.Values; public type Boxed = record Hidden: integer; public Open: integer; end record; function Secret(): integer; begin return 1; end function; public function Create(): Boxed; begin return record Hidden := Secret(); Open := 2; end record; end function; end unit;",
+        "unit Library.Values;\n\npublic type Boxed = record\n  Hidden: integer;\n  public Open: integer;\nend record;\n\nfunction Secret(): integer;\nbegin\n  return 1;\nend function;\n\npublic function Create(): Boxed;\nbegin\n  return Boxed(Hidden := Secret(), Open := 2);\nend function;\n\nend unit;\n",
     ) else {
         panic!("expected unit");
     };
@@ -225,7 +225,7 @@ fn aliases_preserve_private_record_fields_and_factory_access() {
             false,
         ),
         (
-            "var Box: Values.Boxed := record Hidden := 1; Open := 2; end record;",
+            "var Box: Values.Boxed := Values.Boxed(Hidden := 1, Open := 2);",
             false,
         ),
     ] {
@@ -261,7 +261,7 @@ fn case_arm_declarations_are_local_even_without_pattern_bindings() {
         "case 1 of when 1: var Hidden: integer := 1; else null; end case; var X: integer := Hidden;",
         "case 1 of when 1: var Hidden: integer := 1; when 2: var X: integer := Hidden; end case;",
         "case 1 of when 1: null; else var Hidden: integer := 1; end case; var X: integer := Hidden;",
-        "case Some(1) of when Some(Value): null; else var Hidden: integer := 1; end case; var X: integer := Hidden;",
+        "case Option.Some(1) of when Option.Some(const Value): null; when Option.None: var Hidden: integer := 1; end case; var X: integer := Hidden;",
     ] {
         let diagnostics = errors(&format!("program P; begin {body} end program;"));
         assert!(
@@ -276,25 +276,25 @@ fn case_arm_declarations_are_local_even_without_pattern_bindings() {
 #[test]
 fn case_pattern_bindings_reserve_import_aliases_and_stay_in_their_arm() {
     for body in [
-        "case Some(1) of when Some(tExT): null; else null; end case;",
-        "case 1 of when TEXT if TEXT > 0: null; else null; end case;",
+        "case Option.Some(1) of when Option.Some(const tExT): null; when Option.None: null; end case;",
+        "case 1 of when const TEXT if TEXT > 0: null; else null; end case;",
     ] {
         let diagnostics = errors(&format!(
             "program P; uses Std.Str as Text; begin {body} end program;"
         ));
         assert!(
-            diagnostics
-                .iter()
-                .any(|error| error.message.contains("import alias")),
+            diagnostics.iter().any(|error| error.code
+                == fpas_diagnostics::codes::SEMA_DUPLICATE_DECLARATION
+                && error.message.contains("import qualifier")),
             "{body}: {diagnostics:#?}"
         );
     }
-    let valid = "case Some(1) of when Some(Value) if Value > 0: var Local: integer := Value; else var Value: string := 'fallback'; end case; var Value: boolean := true;";
+    let valid = "case Option.Some(1) of when Option.Some(const Value) if Value > 0: var Local: integer := Value; when Option.Some(_), Option.None: var Value: string := 'fallback'; end case; var Value: boolean := true;";
     assert!(errors(&format!("program P; begin {valid} end program;")).is_empty());
     for body in [
-        "case Some(1) of when Some(Value): null; when None if Value > 0: null; else null; end case;",
-        "case Some(1) of when Some(Value): null; else var X: integer := Value; end case;",
-        "case 1 of when Value if Value > 0: null; else null; end case; var X: integer := Value;",
+        "case Option.Some(1) of when Option.Some(const Value): null; when Option.None if Value > 0: null; when Option.None: null; end case;",
+        "case Option.Some(1) of when Option.Some(const Value): null; when Option.None: var X: integer := Value; end case;",
+        "case 1 of when const Value if Value > 0: null; else null; end case; var X: integer := Value;",
     ] {
         let diagnostics = errors(&format!("program P; begin {body} end program;"));
         assert!(

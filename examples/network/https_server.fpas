@@ -34,35 +34,35 @@ begin
   end if;
 
   case Net.ListenTls('127.0.0.1', Port, Args.ParamStr(0), Args.ParamStr(1), 10000) of
-    when Ok(ListenerValue):
+    when Result.Ok(const ListenerValue):
       begin
         Console.WriteLn('HTTPS server listening on https://127.0.0.1:' + Conv.IntToStr(Port));
         mutable var Options: Http.ServerOptions := Http.ServerOptions.Create();
         Options.MaxConcurrentRequests := 1;
         Options.MaxRequests := 1;
         case Http.Serve(ListenerValue, Options, Handle) of
-          when Ok(_):
+          when Result.Ok(_):
             begin
               null;
             end;
-          when Error(Message):
+          when Result.Error(const Message):
             begin
               panic(Message);
             end;
         end case;
 
         case Net.CloseListener(ListenerValue) of
-          when Ok(_):
+          when Result.Ok(_):
             begin
               Console.WriteLn('HTTPS server handled 1 request');
             end;
-          when Error(Message):
+          when Result.Error(const Message):
             begin
               panic(Message);
             end;
         end case;
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
         panic(Message);
       end;

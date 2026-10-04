@@ -90,8 +90,8 @@ fn procedure_completion_survives_each_named_statement_closer() {
         "for I: integer := 0 to 1 do null; end for;",
         "while false do null; end while;",
         "case 1 of when 1: null; end case;",
-        "var R: Point := record X := 1; end record;",
-        "var R: Point := record X := 1; end record with X := 2; end with;",
+        "var R: Point := Point(X := 1);",
+        "var R: Point := Point(X := 1) with X := 2; end with;",
     ] {
         let source = format!(
             "program P; type Point = record X: integer; end record;

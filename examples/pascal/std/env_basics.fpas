@@ -9,11 +9,11 @@ uses Std.Options as Options;
 begin
   Console.WriteLn('PATH set: ', Env.Exists('PATH'));
   case Env.Get('PATH') of
-    when Some(_):
+    when Option.Some(_):
       begin
         Console.WriteLn('PATH lookup: some');
       end;
-    when None:
+    when Option.None:
       begin
         Console.WriteLn('PATH lookup: none');
       end;

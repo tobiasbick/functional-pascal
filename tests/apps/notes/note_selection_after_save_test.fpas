@@ -8,10 +8,7 @@ uses Std.Tui as Tui;
 begin
   var Target: Model2.Note := Model2.NoteCreate('target', 2);
   var Edited: Model2.Note := Model2.NoteCreate('edited', 1);
-  var Loaded: Model2.NotesLoad := record
-    Notes := [Target, Edited];
-    Issues := [];
-  end record;
+  var Loaded: Model2.NotesLoad := Model2.NotesLoad(Notes := [Target, Edited], Issues := []);
   mutable var Model: Model2.NotesModel := Model2.NotesModelCreate(Test.ScratchDir() + '/notes', Loaded);
   Model.Selected := 1;
   Model.Dirty := true;

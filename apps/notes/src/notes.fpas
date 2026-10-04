@@ -25,14 +25,14 @@ begin
   Random.Randomize();
   var Directory: string := NotesDirectory();
   case Repository.NotesLoadDirectory(Directory) of
-    when Ok(Loaded):
+    when Result.Ok(const Loaded):
       begin
         mutable var Initial: Model.NotesModel := Model.NotesModelCreate(Directory, Loaded);
         Initial.Width := Console.ScreenWidth();
         Initial.Height := Console.ScreenHeight();
         discard Tui.TuiApplication.RunWithPalette(Initial, Update.NotesUpdate, View.NotesView, Theme.NotesPalette());
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
         Console.WriteLn('Could not open notes: ' + Message);
       end;

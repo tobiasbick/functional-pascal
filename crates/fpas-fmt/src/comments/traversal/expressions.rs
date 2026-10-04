@@ -6,6 +6,34 @@ use super::{CollectedAnchors, collect_body, collect_decls, collect_stmts};
 
 pub(super) fn collect_expr(expr: &Expr, begins: &[usize], out: &mut CollectedAnchors) {
     match expr {
+        Expr::InvalidRecord(span) => {
+            out.obsolete_record.get_or_insert(*span);
+        }
+        Expr::If(decision) => {
+            collect_expr(&decision.condition, begins, out);
+            collect_expr(&decision.then_value, begins, out);
+            for (condition, value) in &decision.elsif_values {
+                collect_expr(condition, begins, out);
+                collect_expr(value, begins, out);
+            }
+            collect_expr(&decision.else_value, begins, out);
+        }
+        Expr::Case(decision) => {
+            collect_expr(&decision.value, begins, out);
+            for arm in &decision.arms {
+                super::push_span(arm.span, out);
+                for label in &arm.labels {
+                    label.visit_expressions(&mut |value| collect_expr(value, begins, out));
+                }
+                if let Some(guard) = &arm.guard {
+                    collect_expr(guard, begins, out);
+                }
+                collect_expr(&arm.body, begins, out);
+            }
+            if let Some(value) = &decision.else_value {
+                collect_expr(value, begins, out);
+            }
+        }
         Expr::Designator(designator) => collect_designator(designator, begins, out),
         Expr::Call {
             designator, args, ..
@@ -37,7 +65,7 @@ pub(super) fn collect_expr(expr: &Expr, begins: &[usize], out: &mut CollectedAnc
                 collect_expr(value, begins, out);
             }
         }
-        Expr::RecordLiteral { fields, .. } => {
+        Expr::RecordConstruction { fields, .. } => {
             for field in fields {
                 collect_expr(&field.value, begins, out);
             }

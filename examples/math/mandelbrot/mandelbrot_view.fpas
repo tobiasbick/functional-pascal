@@ -20,14 +20,14 @@ begin
     end;
   end if;
   var Detail: string := Str.Format('center=(%f, %f)  zoom=%f  palette=%s  %s', State.Explorer.CenterX, State.Explorer.CenterY, State.Explorer.Zoom, Color.PaletteName(State.Explorer.Palette), Status);
-  mutable var MainChildren: array of Tui.TuiElement := [
-                                                         Tui.TuiElementBuilders.MakePanel('Mandelbrot Explorer', [
-                                                                                                                   Tui.TuiElementBuilders.MakeCellGrid(State.Grid)
-                                                                                                                 ]),
-                                                         Tui.TuiElementBuilders.MakeRule(Detail),
-                                                         Tui.TuiElementBuilders.MakeGauge('Iterations', State.Explorer.MaxIter, 2048),
-                                                         Tui.TuiElementBuilders.MakeGauge('Zoom', Math.Min(Math.Trunc(State.Explorer.Zoom * 10.0), 1000), 1000)
-                                                       ];
+  mutable var MainChildren: array of (Tui.TuiElement) := [
+                                                           Tui.TuiElementBuilders.MakePanel('Mandelbrot Explorer', [
+                                                                                                                     Tui.TuiElementBuilders.MakeCellGrid(State.Grid)
+                                                                                                                   ]),
+                                                           Tui.TuiElementBuilders.MakeRule(Detail),
+                                                           Tui.TuiElementBuilders.MakeGauge('Iterations', State.Explorer.MaxIter, 2048),
+                                                           Tui.TuiElementBuilders.MakeGauge('Zoom', Math.Min(Math.Trunc(State.Explorer.Zoom * 10.0), 1000), 1000)
+                                                         ];
   if Str.Length(State.FailureMessage) > 0 then
     begin
       Arrays.Push(MainChildren, Tui.TuiElementBuilders.MakeRule('render failed: ' +
@@ -43,7 +43,7 @@ begin
                                                                     Tui.TuiStatusItemBuilders.MakeKeyHint('Esc', 'quit')
                                                                   ]));
   var Main: Tui.TuiElement := Tui.TuiElementBuilders.MakeColumn(MainChildren);
-  mutable var Children: array of Tui.TuiElement := [Main];
+  mutable var Children: array of (Tui.TuiElement) := [Main];
   if State.HelpOpen then
     begin
       Arrays.Push(Children, Tui.TuiElementBuilders.MakeOverlay('Controls', [
@@ -59,7 +59,7 @@ begin
     end;
   end if;
 
-  return Tui.TuiElementBuilders.MakeDesktop(None, Children);
+  return Tui.TuiElementBuilders.MakeDesktop(Option.None, Children);
 end function;
 
 end unit;

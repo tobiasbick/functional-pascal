@@ -278,6 +278,7 @@ fn fixed_declaration(name: &str, ty: &Ty, force_procedure: bool) -> String {
 fn contains_error(ty: &Ty) -> bool {
     match ty {
         Ty::Error => true,
+        Ty::Applied(_, arguments) => arguments.iter().any(contains_error),
         Ty::Array(inner) | Ty::Channel(inner) | Ty::Option(inner) | Ty::Task(inner) => {
             contains_error(inner)
         }
@@ -319,12 +320,12 @@ fn parameters(parameters: &[ParamTy]) -> String {
 fn polymorphic_declaration(name: &str, documentation: Option<&DocumentationRow>) -> Option<String> {
     let row = documentation?;
     let signature = match name.rsplit('.').next().unwrap_or(name) {
-        "Abs" => "Abs<T>(N: T): T",
-        "Min" => "Min<T>(A: T; B: T): T",
-        "Max" => "Max<T>(A: T; B: T): T",
-        "Sign" => "Sign<T>(N: T): integer",
-        "Clamp" => "Clamp<T>(V: T; Lo: T; Hi: T): T",
-        "AssertEquals" => "AssertEquals<T>(Expected: T; Actual: T)",
+        "Abs" => "Abs of (T)(N: T): T",
+        "Min" => "Min of (T)(A: T; B: T): T",
+        "Max" => "Max of (T)(A: T; B: T): T",
+        "Sign" => "Sign of (T)(N: T): integer",
+        "Clamp" => "Clamp of (T)(V: T; Lo: T; Hi: T): T",
+        "AssertEquals" => "AssertEquals of (T)(Expected: T; Actual: T)",
         _ => &row.signature,
     };
     let kind = if row.kind == "procedure" {

@@ -49,7 +49,7 @@ end record;
 | `BeginFrame()` | — | Begin or nest a deferred frame. |
 | `Present()` | — | End one frame level and flush the outermost frame. |
 | `PutCell(X, Y, Value)` | — | Paint one logical glyph. |
-| `GetCell(X, Y)` | `Option of Cell` | Read one logical glyph. |
+| `GetCell(X, Y)` | `Option of (Cell)` | Read one logical glyph. |
 | `FillRect(Bounds, Value)` | — | Fill a clipped rectangle with a one-column glyph. |
 | `WriteCells(X, Y, Values)` | — | Paint an array of cells from left to right. |
 | `SaveRegion(Bounds)` | `SavedRegion` | Capture a clipped region in a one-shot handle. |
@@ -57,7 +57,7 @@ end record;
 | `DiscardRegion(Region)` | — | Consume a saved region without restoring it. |
 | `DisplayWidth(Text)` | `integer` | Return the terminal-column width of Unicode text by extended grapheme cluster. |
 | `GraphemeWidth(Glyph)` | `integer` | Validate one renderable extended grapheme cluster and return its width. |
-| `SplitGraphemes(Text)` | `array of string` | Split text into extended grapheme clusters. |
+| `SplitGraphemes(Text)` | `array of (string)` | Split text into extended grapheme clusters. |
 
 ## Colors and cells
 
@@ -67,11 +67,7 @@ Use the constructors instead of assembling a `Color` record by hand:
 uses Std.Console as Console;
 
 var Accent: Console.Color := Console.RgbColor(255, 160, 32);
-var Tile: Console.Cell := record
-  glyph := 'A';
-  foreground := Accent;
-  background := Console.CrtColor(Console.Black);
-end record;
+var Tile: Console.Cell := Console.Cell(glyph := 'A', foreground := Accent, background := Console.CrtColor(Console.Black));
 ```
 
 `CrtColor` accepts `0..15`, including the named CRT constants such as `Black`, `LightGray`, and
@@ -110,23 +106,15 @@ at the screen edge. A wide glyph reserves its following column as a continuation
 ```pascal
 uses Std.Console as Console;
 
-var Cells: array of Console.Cell := [record
-  glyph := 'A';
-  foreground := Console.CrtColor(Console.White);
-  background := Console.CrtColor(Console.Black);
-end record, record
-  glyph := '中';
-  foreground := Console.RgbColor(80, 200, 255);
-  background := Console.CrtColor(Console.Black);
-end record];
+var Cells: array of (Console.Cell) := [Console.Cell(glyph := 'A', foreground := Console.CrtColor(Console.White), background := Console.CrtColor(Console.Black)), Console.Cell(glyph := '中', foreground := Console.RgbColor(80, 200, 255), background := Console.CrtColor(Console.Black))];
 Console.WriteCells(1, 1, Cells);
 ```
 
 `GetCell` returns:
 
-- `Some(Cell)` at the leading column of a painted glyph;
-- `None` outside the screen;
-- `None` at a continuation column reserved by a wide glyph.
+- `Option.Some(Cell)` at the leading column of a painted glyph;
+- `Option.None` outside the screen;
+- `Option.None` at a continuation column reserved by a wide glyph.
 
 Overwriting either part of a wide glyph repairs the affected columns so no stale continuation
 remains.
@@ -140,16 +128,7 @@ screen changes until `Present`, reducing visible tearing in fullscreen redraws:
 uses Std.Console as Console;
 
 Console.BeginFrame();
-Console.FillRect(record
-  x := 1;
-  y := 1;
-  width := Console.ScreenWidth();
-  height := Console.ScreenHeight();
-end record, record
-  glyph := ' ';
-  foreground := Console.CrtColor(Console.LightGray);
-  background := Console.CrtColor(Console.Black);
-end record);
+Console.FillRect(Console.Rect(x := 1, y := 1, width := Console.ScreenWidth(), height := Console.ScreenHeight()), Console.Cell(glyph := ' ', foreground := Console.CrtColor(Console.LightGray), background := Console.CrtColor(Console.Black)));
 Console.WriteCells(1, 1, Cells);
 Console.Present();
 ```
@@ -171,22 +150,8 @@ Each handle is one-shot:
 ```pascal
 uses Std.Console as Console;
 
-var Underlay: Console.SavedRegion := Console.SaveRegion(record
-  x := 10;
-  y := 4;
-  width := 24;
-  height := 5;
-end record);
-Console.FillRect(record
-  x := 10;
-  y := 4;
-  width := 24;
-  height := 5;
-end record, record
-  glyph := ' ';
-  foreground := Console.CrtColor(Console.White);
-  background := Console.Ansi256Color(24);
-end record);
+var Underlay: Console.SavedRegion := Console.SaveRegion(Console.Rect(x := 10, y := 4, width := 24, height := 5));
+Console.FillRect(Console.Rect(x := 10, y := 4, width := 24, height := 5), Console.Cell(glyph := ' ', foreground := Console.CrtColor(Console.White), background := Console.Ansi256Color(24)));
 Console.RestoreRegion(Underlay);
 ```
 

@@ -20,10 +20,7 @@ type Counter = record
 end record;
 
 begin
-  var C: Counter := record
-    Base := 10;
-  end record;
-
+  var C: Counter := Counter(Base := 10);
   Console.WriteLn('Stored value: ' + Conv.IntToStr(C.Value));
   // The setter receives Self by value, so this records the request but does not mutate C.
   C.Value := 20;

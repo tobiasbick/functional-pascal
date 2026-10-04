@@ -65,6 +65,16 @@ pub(super) fn emit_type_def(emitter: &mut Emitter, def: &TypeDef, comments: &Com
     emit_visibility(emitter, def.visibility);
     emitter.write("type ");
     emitter.write(&def.name);
+    if !def.type_params.is_empty() {
+        emitter.write(" of (");
+        for (index, parameter) in def.type_params.iter().enumerate() {
+            if index > 0 {
+                emitter.write(", ");
+            }
+            super::super::types::emit_type_param(emitter, parameter);
+        }
+        emitter.write(")");
+    }
     emitter.write(" = ");
     emit_type_body(emitter, &def.body, comments);
     finish_decl_line(emitter, comments, def.span.offset);

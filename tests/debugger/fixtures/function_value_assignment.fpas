@@ -57,9 +57,7 @@ begin
   var Captured: Handler := MakeAdder(10);
   var Frozen: Handler := AddOne;
   mutable var WrongSignature: NoArgHandler := Answer;
-  var Receiver: Counter := record
-    Base := 10;
-  end record;
+  var Receiver: Counter := Counter(Base := 10);
   var StopMarker: integer := 0;
   Console.WriteLn(Current(1));
   Console.WriteLn(Captured(1));

@@ -8,6 +8,6 @@ begin
 end function;
 
 begin
-  var Values: dict of string to integer := ['A': 1];
+  var Values: dict of (string, integer) := ['A': 1];
   var Total: integer := Dictionaries.Reduce(Values, 0, Wrong);
 end program;

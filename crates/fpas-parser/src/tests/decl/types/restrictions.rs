@@ -3,7 +3,7 @@ use super::*;
 #[test]
 fn generic_record_type_params_not_allowed() {
     let (_, errors) =
-        parse_with_errors("program T; type Box<T> = record Value: integer; end; begin end.");
+        parse_with_errors("program T; type Box of (T) = record Value: integer; end; begin end.");
     assert!(
         !errors.is_empty(),
         "expected parse error for generic type definition"
@@ -13,7 +13,7 @@ fn generic_record_type_params_not_allowed() {
 #[test]
 fn generic_enum_type_params_not_allowed() {
     let (_, errors) =
-        parse_with_errors("program T; type Maybe<T> = enum Just; Nothing; end; begin end.");
+        parse_with_errors("program T; type Maybe of (T) = enum Just; Nothing; end; begin end.");
     assert!(
         !errors.is_empty(),
         "expected parse error for generic enum definition"

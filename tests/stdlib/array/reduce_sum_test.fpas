@@ -9,7 +9,7 @@ begin
 end function;
 
 begin
-  var Nums: array of integer := [1, 2, 3, 4, 5];
+  var Nums: array of (integer) := [1, 2, 3, 4, 5];
   var Sum: integer := Arrays.Reduce(Nums, 0, AddAcc);
   Console.WriteLn(Sum);
 end program;

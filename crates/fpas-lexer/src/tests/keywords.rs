@@ -3,12 +3,7 @@ use crate::Token;
 
 #[test]
 fn reserved_keywords_and_retired_shift_identifiers() {
-    let input = "program unit uses const var mutable function procedure begin end return \
-                 if then else case of for to downto in in do while \
-                 repeat until and or not xor div mod shl shr \
-                 true false type record enum array channel task panic break continue \
-                 public result option ok error some none try \
-                 go dict with static property event read write comparable numeric printable self nil";
+    let input = "program unit uses const var mutable function procedure begin end return if then else case of for to downto in in do while repeat until and or not xor div mod shl shr true false type record enum array channel task panic break continue public result option ok error some none try go dict with static property event read write comparable equatable numeric printable self nil";
     let tokens = toks(input);
     assert_eq!(
         tokens,
@@ -74,6 +69,7 @@ fn reserved_keywords_and_retired_shift_identifiers() {
             Token::Read,
             Token::Write,
             Token::Comparable,
+            Token::Equatable,
             Token::Numeric,
             Token::Printable,
             Token::SelfKw,

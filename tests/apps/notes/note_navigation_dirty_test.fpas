@@ -10,10 +10,7 @@ begin
   NoteValue.Title := 'Title';
   NoteValue.Body := 'Body';
   NoteValue.Tags := ['one'];
-  var Loaded: Model.NotesLoad := record
-    Notes := [NoteValue];
-    Issues := [];
-  end record;
+  var Loaded: Model.NotesLoad := Model.NotesLoad(Notes := [NoteValue], Issues := []);
   mutable var State: Model.NotesModel := Model.NotesModelCreate(Test.ScratchDir(), Loaded);
   var Cmd: Tui.TuiCmdOutput := Tui.TuiCmdOutput.Create();
   for Caret: integer := 0 to 4 do

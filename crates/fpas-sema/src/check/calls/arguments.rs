@@ -139,24 +139,27 @@ impl Checker {
         }
 
         let mut arg_types = Vec::with_capacity(args.len());
+        let unresolved = type_params
+            .iter()
+            .map(|parameter| (parameter.name.to_ascii_lowercase(), Ty::Error))
+            .collect::<HashMap<_, _>>();
+        self.inference_depth += 1;
         for (index, arg) in args.iter().enumerate() {
             let arg_ty = if let Some(param) = params.get(index) {
-                self.check_expr_with_expected_record_literals(arg, &param.ty)
+                let expected = param.ty.substitute(&unresolved);
+                self.check_expr_with_expected(arg, &expected)
             } else {
                 self.check_expr(arg)
             };
             arg_types.push(arg_ty);
         }
 
+        self.inference_depth -= 1;
         let inferred = self.validate_routine_constraints(type_params, params, &arg_types, span);
         for (index, ((param, arg_ty), arg)) in params.iter().zip(&arg_types).zip(args).enumerate() {
             let expected = Self::substitute_type_params(&param.ty, &inferred);
-            let actual = if matches!(
-                (&expected, arg_ty),
-                (Ty::Record(expected), Ty::Record(actual))
-                    if expected.name != "<anonymous>" && actual.name == "<anonymous>"
-            ) {
-                self.check_expr_with_expected_record_literals(arg, &expected)
+            let actual = if arg_ty.has_inference_holes() {
+                self.check_expr_with_expected(arg, &expected)
             } else {
                 arg_ty.clone()
             };

@@ -74,7 +74,7 @@ pub(crate) fn run(
         Intrinsic::Array(ArrayIntrinsic::Contains) => {
             let needle = pop_value(call, location)?;
             let arr = expect_array(pop_value(call, location)?, location)?;
-            let found = arr.iter().any(|e| e == needle);
+            let found = arr.iter().any(|e| e.language_equal(needle));
             call.push(Value::Boolean(found));
         }
         Intrinsic::Array(ArrayIntrinsic::IndexOf) => {
@@ -82,7 +82,7 @@ pub(crate) fn run(
             let arr = expect_array(pop_value(call, location)?, location)?;
             let idx = arr
                 .iter()
-                .position(|e| e == needle)
+                .position(|e| e.language_equal(needle))
                 .map(|i| i as i64)
                 .unwrap_or(-1);
             call.push(Value::Integer(idx));

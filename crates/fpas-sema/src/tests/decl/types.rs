@@ -54,23 +54,36 @@ fn enum_duplicate_member_rejected() {
 }
 
 #[test]
-fn enum_members_in_scope() {
+fn enum_qualified_members_in_scope() {
     check_ok(
-        r#"program T;  type Color = enum Red; Green; Blue; end enum;  var C: Color := Red; begin null; end program;"#,
+        r#"program T;
+
+type Color = enum
+  Red;
+  Green;
+  Blue;
+end enum;
+
+var C: Color := Color.Red;
+
+begin
+  null;
+end program;
+"#,
     );
 }
 
 #[test]
-fn enum_shared_variant_name_becomes_ambiguous_at_use_site() {
+fn enum_short_variant_names_are_unknown_even_with_an_expected_type() {
     let errors = check_errors(
         r#"program T;  type Color = enum Red; Green; end enum;  type Status = enum Red; Ready; end enum; begin var C: Color := Red; end program;"#,
     );
     assert!(
         errors.iter().any(|error| {
-            error.code == fpas_diagnostics::codes::SEMA_AMBIGUOUS_IMPORTED_NAME
-                && error.message.contains("Ambiguous name `Red`")
+            error.code == fpas_diagnostics::codes::SEMA_UNKNOWN_NAME
+                && error.message.contains("Undefined identifier `Red`")
         }),
-        "expected ambiguous short enum variant at use site, got: {errors:#?}"
+        "expected rejection of unqualified variant, got: {errors:#?}"
     );
 }
 
@@ -132,7 +145,25 @@ fn enum_data_fieldless_construct_valid() {
 #[test]
 fn enum_data_case_destructure_valid() {
     check_ok(
-        r#"program T;  uses Std.Console as Console;  type Shape = enum Circle(Radius: real); Dot; end enum; begin var S: Shape := Shape.Circle(1.0); case S of when Shape.Circle(R): Console.WriteLn(R); when Shape.Dot: Console.WriteLn('dot'); end case; end program;"#,
+        r#"program T;
+
+uses Std.Console as Console;
+
+type Shape = enum
+  Circle(Radius: real);
+  Dot;
+end enum;
+
+begin
+  var S: Shape := Shape.Circle(1.0);
+  case S of
+    when Shape.Circle(const R):
+      Console.WriteLn(R);
+    when Shape.Dot:
+      Console.WriteLn('dot');
+  end case;
+end program;
+"#,
     );
 }
 
@@ -201,9 +232,21 @@ fn value_name_cannot_be_used_as_type() {
 }
 
 #[test]
-fn record_literal_field_names_are_case_insensitive() {
+fn record_construction_field_names_are_case_insensitive() {
     check_ok(
-        r#"program T;  type Point = record X: integer; Y: integer; end record;  var P: Point := record x := 1; y := 2; end record; begin null; end program;"#,
+        r#"program T;
+
+type Point = record
+  X: integer;
+  Y: integer;
+end record;
+
+var P: Point := Point(x := 1, y := 2);
+
+begin
+  null;
+end program;
+"#,
     );
 }
 
@@ -215,33 +258,57 @@ fn duplicate_record_field_errors(source: &str) -> Vec<crate::SemaError> {
 }
 
 #[test]
-fn anonymous_record_literal_rejects_exact_duplicate_fields() {
+fn record_construction_rejects_exact_duplicate_fields() {
     let errors = duplicate_record_field_errors(
-        r#"program T;  var N: integer := record Value := 1; Value := 2; end record; begin null; end program;"#,
+        r#"program T; type Box = record Value: integer; end record; var N: Box := Box(Value := 1, Value := 2); begin null; end program;"#,
     );
     assert_eq!(errors.len(), 1, "unexpected diagnostics: {errors:#?}");
 }
 
 #[test]
-fn anonymous_record_literal_rejects_case_only_duplicate_fields() {
+fn record_construction_rejects_case_only_duplicate_fields() {
     let errors = duplicate_record_field_errors(
-        r#"program T;  var N: integer := record Value := 1; value := 2; end record; begin null; end program;"#,
+        r#"program T; type Box = record Value: integer; end record; var N: Box := Box(Value := 1, value := 2); begin null; end program;"#,
     );
     assert_eq!(errors.len(), 1, "unexpected diagnostics: {errors:#?}");
 }
 
 #[test]
-fn typed_record_literal_rejects_exact_duplicate_fields() {
+fn typed_record_construction_rejects_exact_duplicate_fields() {
     let errors = duplicate_record_field_errors(
-        r#"program T;  type Point = record X: integer; Y: integer; end record;  var P: Point := record X := 1; X := 2; Y := 3; end record; begin null; end program;"#,
+        r#"program T;
+
+type Point = record
+  X: integer;
+  Y: integer;
+end record;
+
+var P: Point := Point(X := 1, X := 2, Y := 3);
+
+begin
+  null;
+end program;
+"#,
     );
     assert_eq!(errors.len(), 1, "unexpected diagnostics: {errors:#?}");
 }
 
 #[test]
-fn typed_record_literal_rejects_case_only_duplicate_fields() {
+fn typed_record_construction_rejects_case_only_duplicate_fields() {
     let errors = duplicate_record_field_errors(
-        r#"program T;  type Point = record X: integer; Y: integer; end record;  var P: Point := record X := 1; x := 2; Y := 3; end record; begin null; end program;"#,
+        r#"program T;
+
+type Point = record
+  X: integer;
+  Y: integer;
+end record;
+
+var P: Point := Point(X := 1, x := 2, Y := 3);
+
+begin
+  null;
+end program;
+"#,
     );
     assert_eq!(errors.len(), 1, "unexpected diagnostics: {errors:#?}");
 }
@@ -249,7 +316,20 @@ fn typed_record_literal_rejects_case_only_duplicate_fields() {
 #[test]
 fn record_update_rejects_exact_duplicate_fields() {
     let errors = duplicate_record_field_errors(
-        r#"program T;  type Point = record X: integer; Y: integer; end record;  var P: Point := record X := 1; Y := 2; end record;  var Q: Point := P with X := 3; X := 4; end with; begin null; end program;"#,
+        r#"program T;
+
+type Point = record
+  X: integer;
+  Y: integer;
+end record;
+
+var P: Point := Point(X := 1, Y := 2);
+var Q: Point := P with X := 3; X := 4; end with;
+
+begin
+  null;
+end program;
+"#,
     );
     assert_eq!(errors.len(), 1, "unexpected diagnostics: {errors:#?}");
 }
@@ -257,7 +337,20 @@ fn record_update_rejects_exact_duplicate_fields() {
 #[test]
 fn record_update_rejects_case_only_duplicate_fields() {
     let errors = duplicate_record_field_errors(
-        r#"program T;  type Point = record X: integer; Y: integer; end record;  var P: Point := record X := 1; Y := 2; end record;  var Q: Point := P with X := 3; x := 4; end with; begin null; end program;"#,
+        r#"program T;
+
+type Point = record
+  X: integer;
+  Y: integer;
+end record;
+
+var P: Point := Point(X := 1, Y := 2);
+var Q: Point := P with X := 3; x := 4; end with;
+
+begin
+  null;
+end program;
+"#,
     );
     assert_eq!(errors.len(), 1, "unexpected diagnostics: {errors:#?}");
 }
@@ -278,14 +371,49 @@ fn record_duplicate_field_rejected() {
 #[test]
 fn record_method_valid() {
     check_ok(
-        r#"program T;  uses Std.Console as Console;  type Point = record X: integer; Y: integer; function Sum(Self: Point): integer; begin return Self.X + Self.Y; end function; end record; begin var P: Point := record X := 3; Y := 7; end record; Console.WriteLn(P.Sum()); end program;"#,
+        r#"program T;
+
+uses Std.Console as Console;
+
+type Point = record
+  X: integer;
+  Y: integer;
+
+  function Sum(Self: Point): integer;
+  begin
+    return Self.X + Self.Y;
+  end function;
+end record;
+
+begin
+  var P: Point := Point(X := 3, Y := 7);
+  Console.WriteLn(P.Sum());
+end program;
+"#,
     );
 }
 
 #[test]
 fn record_method_names_are_case_insensitive() {
     check_ok(
-        r#"program T;  uses Std.Console as Console;  type Point = record X: integer; function Sum(Self: Point): integer; begin return Self.X; end function; end record; begin var P: Point := record X := 3; end record; Console.WriteLn(P.sum()); end program;"#,
+        r#"program T;
+
+uses Std.Console as Console;
+
+type Point = record
+  X: integer;
+
+  function Sum(Self: Point): integer;
+  begin
+    return Self.X;
+  end function;
+end record;
+
+begin
+  var P: Point := Point(X := 3);
+  Console.WriteLn(P.sum());
+end program;
+"#,
     );
 }
 
@@ -305,28 +433,100 @@ fn record_duplicate_method_rejected() {
 #[test]
 fn static_record_function_valid() {
     check_ok(
-        r#"program T;  uses Std.Console as Console;  type Point = record X: integer; Y: integer; static function Create(X: integer; Y: integer): Point; begin return record X := X; Y := Y; end record; end function; end record; begin var P: Point := Point.Create(3, 4); Console.WriteLn(P.X); end program;"#,
+        r#"program T;
+
+uses Std.Console as Console;
+
+type Point = record
+  X: integer;
+  Y: integer;
+
+  static function Create(X: integer; Y: integer): Point;
+  begin
+    return Point(X := X, Y := Y);
+  end function;
+end record;
+
+begin
+  var P: Point := Point.Create(3, 4);
+  Console.WriteLn(P.X);
+end program;
+"#,
     );
 }
 
 #[test]
 fn static_record_function_case_insensitive() {
     check_ok(
-        r#"program T;  uses Std.Console as Console;  type Point = record X: integer; Y: integer; static function Create(X: integer; Y: integer): Point; begin return record X := X; Y := Y; end record; end function; end record; begin var P: Point := point.create(1, 2); Console.WriteLn(P.X); end program;"#,
+        r#"program T;
+
+uses Std.Console as Console;
+
+type Point = record
+  X: integer;
+  Y: integer;
+
+  static function Create(X: integer; Y: integer): Point;
+  begin
+    return Point(X := X, Y := Y);
+  end function;
+end record;
+
+begin
+  var P: Point := point.create(1, 2);
+  Console.WriteLn(P.X);
+end program;
+"#,
     );
 }
 
 #[test]
 fn static_record_function_via_alias() {
     check_ok(
-        r#"program T;  uses Std.Console as Console;  type Point = record X: integer; Y: integer; static function Create(X: integer; Y: integer): Point; begin return record X := X; Y := Y; end record; end function; end record;  type Alias = Point; begin var P: Alias := Alias.Create(5, 6); Console.WriteLn(P.X); end program;"#,
+        r#"program T;
+
+uses Std.Console as Console;
+
+type Point = record
+  X: integer;
+  Y: integer;
+
+  static function Create(X: integer; Y: integer): Point;
+  begin
+    return Point(X := X, Y := Y);
+  end function;
+end record;
+
+type Alias = Point;
+
+begin
+  var P: Alias := Alias.Create(5, 6);
+  Console.WriteLn(P.X);
+end program;
+"#,
     );
 }
 
 #[test]
 fn static_call_through_value_rejected() {
     let errors = check_errors(
-        r#"program T;  type Point = record X: integer; Y: integer; static function Create(X: integer; Y: integer): Point; begin return record X := X; Y := Y; end record; end function; end record; begin var P: Point := record X := 0; Y := 0; end record; var Q: Point := P.Create(1, 2); end program;"#,
+        r#"program T;
+
+type Point = record
+  X: integer;
+  Y: integer;
+
+  static function Create(X: integer; Y: integer): Point;
+  begin
+    return Point(X := X, Y := Y);
+  end function;
+end record;
+
+begin
+  var P: Point := Point(X := 0, Y := 0);
+  var Q: Point := P.Create(1, 2);
+end program;
+"#,
     );
     assert!(
         errors.iter().any(|error| {
@@ -340,7 +540,23 @@ fn static_call_through_value_rejected() {
 #[test]
 fn instance_call_through_type_rejected() {
     let errors = check_errors(
-        r#"program T;  type Point = record X: integer; Y: integer; function Sum(Self: Point): integer; begin return Self.X + Self.Y; end function; end record; begin var P: Point := record X := 1; Y := 2; end record; var N: integer := Point.Sum(P); end program;"#,
+        r#"program T;
+
+type Point = record
+  X: integer;
+  Y: integer;
+
+  function Sum(Self: Point): integer;
+  begin
+    return Self.X + Self.Y;
+  end function;
+end record;
+
+begin
+  var P: Point := Point(X := 1, Y := 2);
+  var N: integer := Point.Sum(P);
+end program;
+"#,
     );
     assert!(
         errors.iter().any(|error| {
@@ -367,7 +583,7 @@ fn static_and_instance_duplicate_name_rejected() {
 #[test]
 fn static_overload_attempt_rejected() {
     let errors = check_errors(
-        r#"program T;  type Point = record X: integer; static function Create(X: integer): Point; begin return record X := X; end record; end function; static function Create(X: integer; Y: integer): Point; begin return record X := X; end record; end function; end record; begin null; end program;"#,
+        r#"program T;  type Point = record X: integer; static function Create(X: integer): Point; begin return Point(X := X); end function; static function Create(X: integer; Y: integer): Point; begin return Point(X := X); end function; end record; begin null; end program;"#,
     );
     assert!(
         errors
@@ -380,7 +596,7 @@ fn static_overload_attempt_rejected() {
 #[test]
 fn static_generic_function_valid() {
     check_ok(
-        r#"program T;  uses Std.Console as Console;  type Box = record Value: integer; static function Wrap<T>(V: T): T; begin return V; end function; end record; begin Console.WriteLn(Box.Wrap(42)); end program;"#,
+        r#"program T;  uses Std.Console as Console;  type Box = record Value: integer; static function Wrap of (T)(V: T): T; begin return V; end function; end record; begin Console.WriteLn(Box.Wrap(42)); end program;"#,
     );
 }
 
@@ -401,7 +617,22 @@ fn static_record_procedure_via_alias() {
 #[test]
 fn static_procedure_call_through_value_rejected() {
     let errors = check_errors(
-        r#"program T;  type Counter = record Value: integer; static procedure Reset(); begin null; end procedure; end record; begin var Value: Counter := record Value := 1; end record; Value.Reset(); end program;"#,
+        r#"program T;
+
+type Counter = record
+  Value: integer;
+
+  static procedure Reset();
+  begin
+    null;
+  end procedure;
+end record;
+
+begin
+  var Value: Counter := Counter(Value := 1);
+  Value.Reset();
+end program;
+"#,
     );
     assert!(
         errors.iter().any(|error| {

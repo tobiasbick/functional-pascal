@@ -11,10 +11,10 @@ uses Std.Tui as Tui;
 begin
   var Blocked: string := Test.ScratchDir() + '/blocked';
   Test.AssertTrue(Results.Unwrap(Fs.WriteText(Blocked, 'file, not directory')));
-  var Loaded: Model.NotesLoad := record
-    Notes := [Model.NoteCreate('one', 1), Model.NoteCreate('two', 2)];
-    Issues := [];
-  end record;
+  var Loaded: Model.NotesLoad := Model.NotesLoad(Notes := [
+                                                            Model.NoteCreate('one', 1),
+                                                            Model.NoteCreate('two', 2)
+                                                          ], Issues := []);
   mutable var State: Model.NotesModel := Model.NotesModelCreate(Blocked, Loaded);
   State.Dirty := true;
   State := Update.NotesPersistCurrent(State);

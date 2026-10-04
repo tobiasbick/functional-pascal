@@ -29,9 +29,13 @@ Equality (`=` and `<>`) accepts compatible scalar values (`integer`, `real`, `bo
 and simple enums) plus compatible `Option` and `Result` values. Records and enums with associated
 data compare structurally when every field compares: two records are equal when all their fields
 are equal, and two enum values are equal when they have the same variant and equal fields. Both
-operands must have the same type. Arrays, dictionaries, callables, tasks, and channels have no
-whole-value equality, and neither does a record or enum that contains one; compare their relevant
-fields or contents explicitly. Ordering operators (`<`, `>`, `<=`, `>=`) never apply to records or
+operands must have compatible types. Arrays compare their elements in order.
+Dictionaries with distinct keys compare the same key/value mapping, independently
+of insertion
+order. Equality checks every nested component, including Option and Result
+payloads; resource handles, tasks and callables have no whole-value equality,
+and neither does data containing them. Real components use scalar equality:
+NaN differs from itself, and positive and negative zero compare equal. Ordering operators (`<`, `>`, `<=`, `>=`) never apply to records or
 enums with data.
 
 `in` returns `boolean`. It tests whether an array contains a value, whether a dictionary contains a key, or whether a string contains a substring (or a single-character string):

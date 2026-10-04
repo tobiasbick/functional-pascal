@@ -14,17 +14,17 @@ uses Std.Str as Str;
 uses Std.Time as Time;
 
 // Creates the notes directory or validates that it already exists.
-public function NotesEnsureDirectory(Directory: string): result of boolean, string;
+public function NotesEnsureDirectory(Directory: string): Result of (boolean, string);
 begin
   if Fs.Exists(Directory) then
     begin
       if Fs.IsDir(Directory) then
         begin
-          return Ok(true);
+          return Result.Ok(true);
         end;
       end if;
 
-      return Error('Notes path exists but is not a directory: ' + Directory);
+      return Result.Error('Notes path exists but is not a directory: ' + Directory);
     end;
   end if;
 
@@ -44,7 +44,7 @@ begin
 end function;
 
 // Sorts pinned notes first, then by descending timestamp; ties keep input order.
-public function NotesSort(Notes: array of Model.Note): array of Model.Note;
+public function NotesSort(Notes: array of (Model.Note)): array of (Model.Note);
 begin
   return Ordering.NotesOrdered(Notes);
 end function;
@@ -67,21 +67,21 @@ begin
 end function;
 
 // Loads valid notes and preserves invalid files as visible issues.
-public function NotesLoadDirectory(Directory: string): result of Model.NotesLoad, string;
+public function NotesLoadDirectory(Directory: string): Result of (Model.NotesLoad, string);
 begin
   var DirectoryReady: boolean := try NotesEnsureDirectory(Directory);
-  var Paths: array of string := try Fs.Glob(NoteDirectoryPattern(Directory));
-  mutable var Notes: array of Model.Note := [];
-  mutable var IdCounts: dict of string to integer := [:];
-  mutable var Issues: array of Model.NoteIssue := [];
+  var Paths: array of (string) := try Fs.Glob(NoteDirectoryPattern(Directory));
+  mutable var Notes: array of (Model.Note) := [];
+  mutable var IdCounts: dict of (string, integer) := [:];
+  mutable var Issues: array of (Model.NoteIssue) := [];
   for Index: integer := 0 to Arrays.Length(Paths) - 1 do
     begin
       var Path: string := Paths[Index];
       case Fs.ReadText(Path) of
-        when Ok(Text):
+        when Result.Ok(const Text):
           begin
             case Format.NoteParse(Text) of
-              when Ok(NoteValue):
+              when Result.Ok(const NoteValue):
                 begin
                   mutable var Loaded: Model.Note := NoteValue;
                   Loaded.Path := Path;
@@ -96,34 +96,26 @@ begin
                     end;
                   end if;
                 end;
-              when Error(Message):
+              when Result.Error(const Message):
                 begin
-                  Arrays.Push(Issues, record
-                    Path := Path;
-                    Message := Message;
-                  end record);
+                  Arrays.Push(Issues, Model.NoteIssue(Path := Path, Message := Message));
                 end;
             end case;
           end;
-        when Error(Message):
+        when Result.Error(const Message):
           begin
-            Arrays.Push(Issues, record
-              Path := Path;
-              Message := Message;
-            end record);
+            Arrays.Push(Issues, Model.NoteIssue(Path := Path, Message := Message));
           end;
       end case;
     end;
   end for;
-  mutable var Unique: array of Model.Note := [];
+  mutable var Unique: array of (Model.Note) := [];
   for Loaded: Model.Note in Notes do
     begin
       if IdCounts[Loaded.Id] > 1 then
         begin
-          Arrays.Push(Issues, record
-            Path := Loaded.Path;
-            Message := ('Duplicate note ID: ' + Loaded.Id) + '. Give each file a unique ID before editing.';
-          end record);
+          Arrays.Push(Issues, Model.NoteIssue(Path := Loaded.Path, Message := ('Duplicate note ID: ' + Loaded.Id) +
+                                                                              '. Give each file a unique ID before editing.'));
         end;
       else
         begin
@@ -133,14 +125,11 @@ begin
     end;
   end for;
 
-  return Ok(record
-    Notes := NotesSort(Unique);
-    Issues := Issues;
-  end record);
+  return Result.Ok(Model.NotesLoad(Notes := NotesSort(Unique), Issues := Issues));
 end function;
 
 // Atomically writes one note to its stable file path.
-public function NotesSave(Directory: string; NoteValue: Model.Note): result of boolean, string;
+public function NotesSave(Directory: string; NoteValue: Model.Note): Result of (boolean, string);
 begin
   var DirectoryReady: boolean := try NotesEnsureDirectory(Directory);
   return Fs.WriteTextAtomic(NoteFilePath(Directory, NoteValue), Format.NoteStringify(NoteValue));

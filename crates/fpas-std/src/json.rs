@@ -237,7 +237,7 @@ fn fpas_to_json_at_depth(
                                     "Std.Json.JsonValue.Object expects string keys, got {}",
                                     other.type_name()
                                 ),
-                                "Use `dict of string to Std.Json.JsonValue` for JSON objects.",
+                                "Use `dict of (string, Std.Json.JsonValue)` for JSON objects.",
                                 location,
                             ));
                         }

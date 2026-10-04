@@ -7,15 +7,15 @@ uses Std.Json.Fields as Fields2;
 uses Std.Results as Results;
 uses Std.Test as Test;
 
-function ErrorText<T>(Value: result of T, string): string;
+function ErrorText of (T)(Value: Result of (T, string)): string;
 begin
   case Value of
-    when Ok(_):
+    when Result.Ok(_):
       begin
         Test.Fail('expected an error result');
         return '';
       end;
-    when Error(Message):
+    when Result.Error(const Message):
       begin
         return Message;
       end;
@@ -23,7 +23,7 @@ begin
 end function;
 
 begin
-  var Fields: dict of string to Json.JsonValue := Results.Unwrap(Fields2.ParseObject('{"s":"x","b":true,"n":2.5,"i":-7,"big":1e300,"o":{"k":1},"rows":["a","b"],"mixed":["a",1]}'));
+  var Fields: dict of (string, Json.JsonValue) := Results.Unwrap(Fields2.ParseObject('{"s":"x","b":true,"n":2.5,"i":-7,"big":1e300,"o":{"k":1},"rows":["a","b"],"mixed":["a",1]}'));
   Test.AssertEquals('x', Results.Unwrap(Fields2.StringField(Fields, 's')));
   Test.AssertTrue(Results.Unwrap(Fields2.BooleanField(Fields, 'b')));
   Test.AssertEquals(2.5, Results.Unwrap(Fields2.NumberField(Fields, 'n')));

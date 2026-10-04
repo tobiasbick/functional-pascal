@@ -24,11 +24,7 @@ begin
 end function;
 
 begin
-  var Item: Box := record
-    Value := 3;
-    Callback := Double;
-  end record;
-
+  var Item: Box := Box(Value := 3, Callback := Double);
   Test.AssertEquals(5, Item.Add(2));
   Test.AssertEquals(5, Item.ValueOf() + 2);
   Test.AssertEquals(4, Item.Callback(2));

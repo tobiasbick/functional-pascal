@@ -7,8 +7,8 @@ uses Std.Console as Console;
 uses Std.Arrays as Arrays;
 
 begin
-  var Jobs: channel of integer := Tasks.CreateChannel(2);
-  var Results: channel of integer := Tasks.CreateChannel(2);
+  var Jobs: channel of (integer) := Tasks.CreateChannel(2);
+  var Results: channel of (integer) := Tasks.CreateChannel(2);
   var Group: Tasks.TaskGroup := Tasks.CreateTaskGroup();
   var StartedTask1: task := Tasks.StartTaskInGroup(Group, procedure(Token: Tasks.CancellationToken) begin
     for Value: integer := 1 to 12 do
@@ -29,7 +29,7 @@ begin
         while not Tasks.IsCancellationRequested(Token) do
           begin
             case Tasks.ReceiveWithCancellation(Jobs, Token) of
-              when Ok(Value):
+              when Result.Ok(const Value):
                 begin
                   if Results2.IsError(Tasks.SendWithCancellation(Results, Value * Value, Token)) then
                     begin
@@ -37,7 +37,7 @@ begin
                     end;
                   end if;
                 end;
-              when Error(_):
+              when Result.Error(_):
                 begin
                   return;
                 end;
@@ -56,7 +56,7 @@ begin
   end for;
 
   case Tasks.CloseTaskGroupWithTimeout(Group, 1000) of
-    when Ok(Failures):
+    when Result.Ok(const Failures):
       begin
         if Arrays.Length(Failures) <> 0 then
           begin
@@ -64,7 +64,7 @@ begin
           end;
         end if;
       end;
-    when Error(_):
+    when Result.Error(_):
       begin
         // A timeout retains ownership. Joining is still required, not a forced kill.
         if Arrays.Length(Tasks.CloseTaskGroup(Group)) <> 0 then

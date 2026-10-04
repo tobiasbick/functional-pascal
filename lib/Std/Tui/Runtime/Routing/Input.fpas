@@ -96,11 +96,11 @@ begin
   return -1;
 end function;
 
-function TuiInputHistoryKey(Input: Input2.TuiInputSpec; Key: Console.KeyEvent): option of Msg.TuiMsg;
+function TuiInputHistoryKey(Input: Input2.TuiInputSpec; Key: Console.KeyEvent): Option of (Msg.TuiMsg);
 begin
   if Arrays.Length(Input.History) = 0 then
     begin
-      return None;
+      return Option.None;
     end;
   end if;
   var Index: integer := TuiInputHistoryIndex(Input);
@@ -109,18 +109,18 @@ begin
       if Index < 0 then
         begin
           var Text: string := Input.History[Arrays.Length(Input.History) - 1];
-          return Some(Msg.TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Text, Str.Length(Text)));
+          return Option.Some(Msg.TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Text, Str.Length(Text)));
         end;
       end if;
 
       if Index > 0 then
         begin
           var Text: string := Input.History[Index - 1];
-          return Some(Msg.TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Text, Str.Length(Text)));
+          return Option.Some(Msg.TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Text, Str.Length(Text)));
         end;
       end if;
 
-      return Some(Msg.TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Input.Text, Input.Caret));
+      return Option.Some(Msg.TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Input.Text, Input.Caret));
     end;
   end if;
 
@@ -128,22 +128,22 @@ begin
     begin
       if Index < 0 then
         begin
-          return Some(Msg.TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Input.Text, Input.Caret));
+          return Option.Some(Msg.TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Input.Text, Input.Caret));
         end;
       end if;
 
       if Index < Arrays.Length(Input.History) - 1 then
         begin
           var Text: string := Input.History[Index + 1];
-          return Some(Msg.TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Text, Str.Length(Text)));
+          return Option.Some(Msg.TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Text, Str.Length(Text)));
         end;
       end if;
 
-      return Some(Msg.TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Input.HistoryDraft, Str.Length(Input.HistoryDraft)));
+      return Option.Some(Msg.TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Input.HistoryDraft, Str.Length(Input.HistoryDraft)));
     end;
   end if;
 
-  return None;
+  return Option.None;
 end function;
 
 // Routes one key when the supplied input owns focus.
@@ -156,25 +156,25 @@ public function TuiRouteInputKey(
   Input: Input2.TuiInputSpec;
   Target: ControlId.TuiControlId;
   Key: Console.KeyEvent
-): option of Msg.TuiMsg;
+): Option of (Msg.TuiMsg);
 begin
   if Input.Id.Value <> Target.Value then
     begin
-      return None;
+      return Option.None;
     end;
   end if;
 
   if ((Key.kind = Console.KeyKind.Character) and not Key.ctrl) and (not Key.alt and not Key.meta) then
     begin
-      return Some(Msg.TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Str.Insert(Input.Text, Input.Caret, Key.ch), Input.Caret +
-                                                                                                                    Str.Length(Key.ch)));
+      return Option.Some(Msg.TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Str.Insert(Input.Text, Input.Caret, Key.ch), Input.Caret +
+                                                                                                                           Str.Length(Key.ch)));
     end;
   end if;
 
   if ((Key.kind = Console.KeyKind.Space) and not Key.ctrl) and (not Key.alt and not Key.meta) then
     begin
-      return Some(Msg.TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Str.Insert(Input.Text, Input.Caret, ' '), Input.Caret +
-                                                                                                                 1));
+      return Option.Some(Msg.TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Str.Insert(Input.Text, Input.Caret, ' '), Input.Caret +
+                                                                                                                        1));
     end;
   end if;
 
@@ -187,8 +187,8 @@ begin
         end;
       end if;
 
-      return Some(Msg.TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Str.Delete(Input.Text, Start, Input.Caret -
-                                                                                                     Start), Start));
+      return Option.Some(Msg.TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Str.Delete(Input.Text, Start, Input.Caret -
+                                                                                                            Start), Start));
     end;
   end if;
 
@@ -201,8 +201,8 @@ begin
         end;
       end if;
 
-      return Some(Msg.TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Str.Delete(Input.Text, Input.Caret, EndIndex -
-                                                                                                           Input.Caret), Input.Caret));
+      return Option.Some(Msg.TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Str.Delete(Input.Text, Input.Caret, EndIndex -
+                                                                                                                  Input.Caret), Input.Caret));
     end;
   end if;
 
@@ -215,7 +215,7 @@ begin
         end;
       end if;
 
-      return Some(Msg.TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Input.Text, Caret));
+      return Option.Some(Msg.TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Input.Text, Caret));
     end;
   end if;
 
@@ -228,19 +228,19 @@ begin
         end;
       end if;
 
-      return Some(Msg.TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Input.Text, Caret));
+      return Option.Some(Msg.TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Input.Text, Caret));
     end;
   end if;
 
   if Key.kind = Console.KeyKind.Home then
     begin
-      return Some(Msg.TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Input.Text, 0));
+      return Option.Some(Msg.TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Input.Text, 0));
     end;
   end if;
 
   if Key.kind = Console.KeyKind.EndKey then
     begin
-      return Some(Msg.TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Input.Text, Str.Length(Input.Text)));
+      return Option.Some(Msg.TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Input.Text, Str.Length(Input.Text)));
     end;
   end if;
 
@@ -250,7 +250,7 @@ begin
     end;
   end if;
 
-  return None;
+  return Option.None;
 end function;
 
 end unit;

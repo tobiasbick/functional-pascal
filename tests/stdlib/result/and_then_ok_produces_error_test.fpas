@@ -3,21 +3,21 @@ program T;
 uses Std.Console as Console;
 uses Std.Results as Results;
 
-function PositiveOk(V: integer): result of string, string;
+function PositiveOk(V: integer): Result of (string, string);
 begin
   if V > 0 then
     begin
-      return Ok('ok');
+      return Result.Ok('ok');
     end;
   else
     begin
-      return Error('non-positive');
+      return Result.Error('non-positive');
     end;
   end if;
 end function;
 
 begin
-  var R: result of integer, string := Ok(-1);
-  var M: result of string, string := Results.AndThen(R, PositiveOk);
+  var R: Result of (integer, string) := Result.Ok(-1);
+  var M: Result of (string, string) := Results.AndThen(R, PositiveOk);
   Console.WriteLn(Results.IsError(M));
 end program;

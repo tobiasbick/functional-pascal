@@ -2,6 +2,7 @@
 
 mod binary;
 mod closure;
+mod decisions;
 mod literal;
 mod postfix;
 
@@ -13,7 +14,7 @@ use super::Emitter;
 use super::wrap::{exceeds_width, measure_emit, text_width};
 use binary::{binary_op_spaced, binary_prec, emit_binary_with_break};
 use literal::{
-    emit_array_literal, emit_record_field_inits, emit_record_fields, format_real, format_string,
+    emit_array_literal, emit_record_field_inits, format_real, format_string,
     needs_space_after_negate,
 };
 use postfix::emit_postfix;
@@ -51,6 +52,8 @@ pub(super) fn emit_expr_impl(
     }
 
     match expr {
+        Expr::If(decision) => decisions::emit_if_expression(emitter, decision, comments),
+        Expr::Case(decision) => decisions::emit_case_expression(emitter, decision, comments),
         Expr::Integer(value, ..) => emitter.write(&value.to_string()),
         Expr::Real(value, ..) => emitter.write(&format_real(*value)),
         Expr::Str(value, ..) => emitter.write(&format_string(value)),
@@ -62,6 +65,21 @@ pub(super) fn emit_expr_impl(
             emit_designator(emitter, designator, comments);
             emitter.write("(");
             emit_arg_list(emitter, args, comments);
+            emitter.write(")");
+        }
+        Expr::RecordConstruction {
+            type_name, fields, ..
+        } => {
+            super::types::emit_qualified_id(emitter, type_name);
+            emitter.write("(");
+            for (index, field) in fields.iter().enumerate() {
+                if index > 0 {
+                    emitter.write(", ");
+                }
+                emitter.write(&field.name);
+                emitter.write(" := ");
+                emit_expr(emitter, &field.value, 0, comments);
+            }
             emitter.write(")");
         }
         Expr::UnaryOp { op, operand, .. } => {
@@ -128,7 +146,6 @@ pub(super) fn emit_expr_impl(
             }
             emitter.write("]");
         }
-        Expr::RecordLiteral { fields, .. } => emit_record_fields(emitter, fields, comments),
         Expr::RecordUpdate { base, fields, .. } => {
             emit_expr(emitter, base, 0, comments);
             emitter.write(" with ");
@@ -140,21 +157,21 @@ pub(super) fn emit_expr_impl(
             });
         }
         Expr::ResultOk(inner, ..) => {
-            emitter.write("Ok(");
+            emitter.write("Result.Ok(");
             emit_expr(emitter, inner, 0, comments);
             emitter.write(")");
         }
         Expr::ResultError(inner, ..) => {
-            emitter.write("Error(");
+            emitter.write("Result.Error(");
             emit_expr(emitter, inner, 0, comments);
             emitter.write(")");
         }
         Expr::OptionSome(inner, ..) => {
-            emitter.write("Some(");
+            emitter.write("Option.Some(");
             emit_expr(emitter, inner, 0, comments);
             emitter.write(")");
         }
-        Expr::OptionNone(..) => emitter.write("None"),
+        Expr::OptionNone(..) => emitter.write("Option.None"),
         Expr::Nil(..) => emitter.write("nil"),
         Expr::Try(inner, ..) => {
             emitter.write("try ");
@@ -176,7 +193,7 @@ pub(super) fn emit_expr_impl(
             closure.span.offset,
             comments,
         ),
-        Expr::Error(..) => emitter.write("<error>"),
+        Expr::InvalidRecord(..) | Expr::Error(..) => emitter.write("<error>"),
     }
 }
 
@@ -280,48 +297,77 @@ mod tests {
     fn aggregates_and_wrappers() {
         assert_eq!(
             expr_from_body(
-                r#"program T; begin var X: array of integer := [1, 2, 3]; end program;"#
+                r#"program T; begin var X: array of (integer) := [1, 2, 3]; end program;"#
             ),
             "[1, 2, 3]"
         );
         assert_eq!(
             expr_from_body(
-                r#"program T; begin var X: dict of string to integer := ['a': 1]; end program;"#
+                r#"program T; begin var X: dict of (string, integer) := ['a': 1]; end program;"#
             ),
             "['a': 1]"
         );
         assert_eq!(
             expr_from_body(
-                r#"program T;  type Point = record X: integer; Y: integer; end record; begin var X: Point := record X := 1; Y := 2; end record; end program;"#
+                r#"program T;
+
+type Point = record
+  X: integer;
+  Y: integer;
+end record;
+
+begin
+  var X: Point := Point(X := 1, Y := 2);
+end program;
+"#
             ),
-            "record\n  X := 1;\n  Y := 2;\nend record"
+            "Point(X := 1, Y := 2)"
         );
         assert_eq!(
             expr_from_body(
-                r#"program T; begin var X: result of integer, string := Ok(42); end program;"#
+                r#"program T; begin var X: Result of (integer, string) := Result.Ok(42); end program;"#
             ),
-            "Ok(42)"
+            "Result.Ok(42)"
         );
         assert_eq!(
-            expr_from_body(r#"program T; begin var X: option of integer := None; end program;"#),
-            "None"
+            expr_from_body(
+                r#"program T; begin var X: Option of (integer) := Option.None; end program;"#
+            ),
+            "Option.None"
         );
     }
 
     #[test]
-    fn nonempty_record_literal_is_multiline() {
+    fn named_record_construction_formats_supplied_fields() {
         let formatted = expr_from_body(
-            r#"program T;  type Point = record X: integer; end record; begin var Value: Point := record X := 1; end record; end program;"#,
+            r#"program T;
+
+type Point = record
+  X: integer;
+end record;
+
+begin
+  var Value: Point := Point(X := 1);
+end program;
+"#,
         );
-        assert_eq!(formatted, "record\n  X := 1;\nend record");
+        assert_eq!(formatted, "Point(X := 1)");
     }
 
     #[test]
-    fn empty_record_literal_has_one_space() {
+    fn empty_record_construction_has_an_empty_argument_list() {
         let formatted = expr_from_body(
-            r#"program T;  type Empty = record end record; begin var Value: Empty := record  end record; end program;"#,
+            r#"program T;
+
+type Empty = record
+end record;
+
+begin
+  var Value: Empty := Empty();
+end program;
+"#,
         );
-        assert_eq!(formatted, "record end record");
+        assert_eq!(formatted, "Empty()");
     }
 
     #[test]
@@ -333,29 +379,45 @@ mod tests {
     }
 
     #[test]
-    fn nested_record_literal_indents_from_its_field() {
+    fn nested_record_construction_keeps_each_target() {
         let formatted = expr_from_body(
-            r#"program T;  type Inner = record X: integer; end record; type Outer = record Item: Inner; end record; begin var Value: Outer := record Item := record X := 1; end record; end record; end program;"#,
+            r#"program T;
+
+type Inner = record
+  X: integer;
+end record;
+
+type Outer = record
+  Item: Inner;
+end record;
+
+begin
+  var Value: Outer := Outer(Item := Inner(X := 1));
+end program;
+"#,
         );
-        assert_eq!(
-            formatted,
-            "record\n  Item := record\n    X := 1;\n  end record;\nend record"
-        );
+        assert_eq!(formatted, "Outer(Item := Inner(X := 1))");
     }
 
     #[test]
-    fn record_literal_inside_array_continues_from_the_opening_line() {
+    fn record_construction_inside_array_preserves_its_argument_list() {
         let formatted = expr_from_body(
-            r#"program T;  type Item = record Value: integer; end record; type Box = record Items: array of Item; end record; begin var Value: Box := record Items := [record Value := 10; end record]; end record; end program;"#,
+            r#"program T;
+
+type Item = record
+  Value: integer;
+end record;
+
+type Box = record
+  Items: array of (Item);
+end record;
+
+begin
+  var Value: Box := Box(Items := [Item(Value := 10)]);
+end program;
+"#,
         );
-        assert_eq!(
-            formatted,
-            "record
-  Items := [record
-    Value := 10;
-  end record];
-end record"
-        );
+        assert_eq!(formatted, "Box(Items := [Item(Value := 10)])");
     }
 
     #[test]

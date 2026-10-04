@@ -9,8 +9,8 @@ begin
 end function;
 
 begin
-  var Nums: array of integer := [1, 2, 3];
-  var Doubled: array of integer := Arrays.Map(Nums, Double);
+  var Nums: array of (integer) := [1, 2, 3];
+  var Doubled: array of (integer) := Arrays.Map(Nums, Double);
   Console.WriteLn(Doubled[0]);
   Console.WriteLn(Doubled[1]);
   Console.WriteLn(Doubled[2]);

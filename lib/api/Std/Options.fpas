@@ -9,7 +9,7 @@ unit Std.Options;
 // Parameters:
 // - `O`: Input value used by `AndThen`.
 // - `F`: Callback invoked by the higher-order operation.
-public function AndThen(O: option of T; F: function(V: T): option of U): option of U;
+public function AndThen(O: Option of (T); F: function(V: T): Option of (U)): Option of (U);
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -18,7 +18,7 @@ end function;
 //
 // Parameters:
 // - `O`: Input value used by `IsNone`.
-public function IsNone(O: option of T): boolean;
+public function IsNone(O: Option of (T)): boolean;
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -27,7 +27,7 @@ end function;
 //
 // Parameters:
 // - `O`: Input value used by `IsSome`.
-public function IsSome(O: option of T): boolean;
+public function IsSome(O: Option of (T)): boolean;
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -37,7 +37,7 @@ end function;
 // Parameters:
 // - `O`: Input value used by `Map`.
 // - `F`: Callback invoked by the higher-order operation.
-public function Map(O: option of T; F: function(V: T): U): option of U;
+public function Map(O: Option of (T); F: function(V: T): U): Option of (U);
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -47,7 +47,7 @@ end function;
 // Parameters:
 // - `O`: Input value used by `OrElse`.
 // - `F`: Callback invoked by the higher-order operation.
-public function OrElse(O: option of T; F: function(): option of T): option of T;
+public function OrElse(O: Option of (T); F: function(): Option of (T)): Option of (T);
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -56,7 +56,7 @@ end function;
 //
 // Parameters:
 // - `O`: Input value used by `Unwrap`.
-public function Unwrap(O: option of T): T;
+public function Unwrap(O: Option of (T)): T;
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -66,7 +66,7 @@ end function;
 // Parameters:
 // - `O`: Input value used by `UnwrapOr`.
 // - `Default`: Value consumed or returned by the operation.
-public function UnwrapOr(O: option of T; Default: T): T;
+public function UnwrapOr(O: Option of (T); Default: T): T;
 begin
   panic('Intrinsic API declaration');
 end function;

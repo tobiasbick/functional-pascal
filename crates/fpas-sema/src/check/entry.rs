@@ -10,6 +10,7 @@ impl Checker {
     pub fn check_program(&mut self, program: &Program) {
         self.prepare_program(program);
         self.register_import_aliases(&program.uses);
+        self.static_constants.install(&[], &self.import_aliases);
         self.collect_unit_types(&program.declarations);
 
         for decl in &program.declarations {
@@ -44,6 +45,8 @@ impl Checker {
         self.install_supporting_interface_types(supporting_interfaces)?;
         self.install_interfaces(program, interfaces)?;
         self.register_import_aliases(&program.uses);
+        self.static_constants
+            .install(interfaces, &self.import_aliases);
         self.collect_unit_types(&program.declarations);
 
         for decl in &program.declarations {
@@ -79,6 +82,8 @@ impl Checker {
         self.install_supporting_interface_types(supporting_interfaces)?;
         self.install_interfaces_for_declarations(&unit.declarations, interfaces)?;
         self.register_import_aliases(&unit.uses);
+        self.static_constants
+            .install(interfaces, &self.import_aliases);
 
         let previous_context = self.scopes.function_ctx.take();
         self.scopes.function_ctx = Some(FunctionCtx {
@@ -104,8 +109,6 @@ impl Checker {
             .map(|used| used.parts.join(".").to_ascii_lowercase())
             .collect();
         self.loaded_std_units.clear();
-        self.ambiguous_enum_variants.clear();
-        self.enum_short_variant_keys.clear();
         for u in uses {
             match canonical_unit_from_uses_clause(u) {
                 Ok(canon) => {

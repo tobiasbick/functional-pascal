@@ -8,7 +8,7 @@ uses Std.Str as Str;
 uses Std.Test as Test;
 
 begin
-  var Tags: array of string := Model.NoteTagsFromText(' FPAS, tui, FPAS, ');
+  var Tags: array of (string) := Model.NoteTagsFromText(' FPAS, tui, FPAS, ');
   Test.AssertEquals(2, Arrays.Length(Tags));
   Test.AssertEquals('FPAS', Tags[0]);
   Test.AssertEquals('tui', Tags[1]);
@@ -27,11 +27,11 @@ begin
   Test.AssertFalse(Model.NoteMatches(Older, 'compiler'));
   Older.Archived := false;
   Older.Pinned := true;
-  var Sorted: array of Model.Note := Repository.NotesSort([Newer, Older]);
+  var Sorted: array of (Model.Note) := Repository.NotesSort([Newer, Older]);
   Test.AssertEquals('older', Sorted[0].Id);
   Test.AssertEquals('newer', Sorted[1].Id);
   Newer.Title := 'Terminal 👩‍💻 interface with a long title';
-  var Items: array of string := Model.NotesListItems([Newer], '', 14);
+  var Items: array of (string) := Model.NotesListItems([Newer], '', 14);
   Test.AssertEquals(1, Arrays.Length(Items));
   Test.AssertEquals(14, Console.DisplayWidth(Items[0]));
   Test.AssertTrue(Str.Contains(Items[0], '👩‍💻'));

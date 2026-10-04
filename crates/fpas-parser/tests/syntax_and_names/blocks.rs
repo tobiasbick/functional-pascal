@@ -31,7 +31,7 @@ fn every_available_named_body_and_plain_block_parses() {
         "repeat null; until true;",
         "var F: function(): integer := function(): integer begin return 1; end function;",
         "Consume(function(): integer begin return 1; end function, procedure() begin null; end procedure);",
-        "var P: Point := record X := 1; end record; P := P with X := 2; end with;",
+        "var P: Point := Point(X := 1); P := P with X := 2; end with;",
     ];
     for body in bodies {
         accepted(&format!("program T; begin {body} end program;"));
@@ -155,7 +155,7 @@ fn expression_closers_leave_argument_and_statement_delimiters_to_the_caller() {
         "Expected `)`",
     );
     accepted(
-        "program T; begin Consume(record X := record Y := 2; end record; end record with X := record Y := 3; end record; end with, 4); end program;",
+        "program T; begin Consume(Outer(X := Inner(Y := 2)) with X := Inner(Y := 3); end with, 4); end program;",
     );
 }
 
@@ -202,7 +202,7 @@ fn truncated_and_wrong_outer_closers_terminate_recovery() {
         "program T; begin if true then",
         "program T; begin if true then null; end program;",
         "program T; begin while false do if true then null; end while; end program;",
-        "program T; begin Consume(record X := 1;",
+        "program T; begin Consume(Point(X := 1,",
         "unit App; type R = record",
     ] {
         let (_, errors) = parse_compilation_unit(source);

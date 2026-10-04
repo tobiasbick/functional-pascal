@@ -49,7 +49,7 @@ export async function verifyVariantConstruction(
     "    begin",
     "      return 0;",
     "    end;",
-    "    when Choice.Pair(Left, Right):",
+    "    when Choice.Pair(const Left, const Right):",
     "    begin",
     "      return Left + Right;",
     "    end;",

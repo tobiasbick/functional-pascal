@@ -4,7 +4,7 @@ uses Std.Console as Console;
 uses Std.Dictionaries as Dictionaries;
 
 begin
-  var D: dict of string to integer := ['C': 3, 'A': 1, 'B': 2];
+  var D: dict of (string, integer) := ['C': 3, 'A': 1, 'B': 2];
   for K: string in D do
     begin
       Console.WriteLn(K);

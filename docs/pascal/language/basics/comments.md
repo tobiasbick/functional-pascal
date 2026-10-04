@@ -7,7 +7,7 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (Part 1 — comment
 
 ```pascal
 // This is a comment.
-var Count: integer := 1; // This is also a comment.
+const Count: integer := 1; // This is also a comment.
 
 ```
 
@@ -16,7 +16,7 @@ For multiple comment lines, prefix every line with `//`:
 ```pascal
 // The next value is displayed in the status line.
 // It is measured in seconds.
-var ElapsedSeconds: integer := 0;
+const ElapsedSeconds: integer := 0;
 
 ```
 
@@ -54,7 +54,7 @@ A blank source line detaches a comment from the following declaration:
 ```pascal
 // This comment is not declaration documentation.
 
-var Count: integer := 1;
+const Count: integer := 1;
 
 ```
 

@@ -1,7 +1,6 @@
 //! AST and semantic-metadata lowering to typed IR.
 
 mod aggregates;
-mod builtin_constants;
 mod calls;
 mod case;
 mod closures;
@@ -9,11 +8,12 @@ mod concurrency;
 mod context;
 mod control_flow;
 mod debug;
+mod defaults;
 mod expr;
 mod globals;
 mod imports;
 mod intrinsic_signatures;
-mod members;
+mod references;
 mod routines;
 mod stmt;
 mod type_names;
@@ -153,8 +153,22 @@ fn lower_analyzed_root(
         &metadata,
     )
     .map_err(|error| vec![error])?;
-    let first_import_id = u32::try_from(routines.len().saturating_add(1))
+    let first_default_id = u32::try_from(routines.len().saturating_add(1))
         .map_err(|_| vec![context::unsupported(span, "function identifier overflow")])?;
+    let default_initializers = defaults::collect(
+        declarations,
+        &metadata,
+        &mut type_table,
+        &mut callables,
+        first_default_id,
+    )
+    .map_err(|error| vec![error])?;
+    let first_import_id = first_default_id
+        .checked_add(
+            u32::try_from(default_initializers.len())
+                .map_err(|_| vec![context::unsupported(span, "function identifier overflow")])?,
+        )
+        .ok_or_else(|| vec![context::unsupported(span, "function identifier overflow")])?;
     let (imports, imported_stubs) = imports::install(
         imports::InterfaceSet {
             direct: interfaces,
@@ -179,6 +193,13 @@ fn lower_analyzed_root(
         .ok_or_else(|| vec![context::unsupported(span, "function identifier overflow")])?;
     let mut closures = closures::ClosureRegistry::new(first_closure_id, callables.clone(), name);
     closures.seed_named_nested_cells(&routine_owners, &runtime_names, &callables);
+    defaults::discover(
+        &default_initializers,
+        &mut closures,
+        &metadata,
+        &mut type_table,
+    )
+    .map_err(|error| vec![error])?;
     closures
         .discover_declaration_initializers(
             declarations,
@@ -199,6 +220,7 @@ fn lower_analyzed_root(
             .discover_statements(routine.statements(), id, &metadata, &mut type_table)
             .map_err(|error| vec![error])?;
     }
+    closures.extend_array_callables(&mut callables);
     let mut context = LoweringContext::new(FunctionInput {
         name,
         source_name: name,
@@ -211,7 +233,6 @@ fn lower_analyzed_root(
         metadata: &metadata,
         callables: callables.clone(),
         closure_targets: closures.targets.clone(),
-        bound_method_targets: closures.bound_targets.clone(),
         intrinsic_task_targets: closures.intrinsic_task_targets.clone(),
         cell_names: closures
             .cell_names
@@ -230,15 +251,21 @@ fn lower_analyzed_root(
             fpas_parser::Decl::Var(definition) => {
                 (&definition.name, &definition.value, definition.span)
             }
-            fpas_parser::Decl::MutableVar(definition) => {
-                (&definition.name, &definition.value, definition.span)
-            }
             _ => continue,
         };
-        let value = context
+        let mut value = context
             .lower_expression(value)
             .map_err(|error| vec![error])?;
-        let global = global_bindings[&name.to_ascii_lowercase()].id;
+        let binding = global_bindings[&name.to_ascii_lowercase()];
+        if binding.cell {
+            let ty = context
+                .cell_type(binding.ty, span)
+                .map_err(|error| vec![error])?;
+            value = context
+                .emit_storage_cell(value, ty, span)
+                .map_err(|error| vec![error])?;
+        }
+        let global = binding.id;
         let location = context
             .emit_effect_with_location(Operation::StoreGlobal { global, value }, span)
             .map_err(|error| vec![error])?;
@@ -280,9 +307,36 @@ fn lower_analyzed_root(
                 globals: &global_bindings,
                 constants: &constants,
                 closure_targets: closures.targets.clone(),
-                bound_method_targets: closures.bound_targets.clone(),
                 intrinsic_task_targets: closures.intrinsic_task_targets.clone(),
                 cell_names: closures.cell_names.get(&id).cloned().unwrap_or_default(),
+            },
+        )
+        .map_err(|error| vec![error])?;
+        type_table = updated_types;
+        functions.push(function);
+    }
+    for initializer in &default_initializers {
+        let (function, updated_types) = defaults::lower(
+            initializer,
+            FunctionInput {
+                name: &initializer.name,
+                source_name: name,
+                id: initializer.id,
+                result: initializer.result,
+                parameters: &[],
+                captures: &[],
+                globals: global_bindings.clone(),
+                constants: constants.clone(),
+                metadata: &metadata,
+                callables: callables.clone(),
+                closure_targets: closures.targets.clone(),
+                intrinsic_task_targets: closures.intrinsic_task_targets.clone(),
+                cell_names: closures
+                    .cell_names
+                    .get(&initializer.id)
+                    .cloned()
+                    .unwrap_or_default(),
+                type_table: type_table.clone(),
             },
         )
         .map_err(|error| vec![error])?;
@@ -304,19 +358,6 @@ fn lower_analyzed_root(
         type_table = updated_types;
         functions.push(function);
     }
-    for routine in &closures.bound_routines {
-        let (function, updated_types) = closures
-            .lower_bound(
-                routine,
-                &metadata,
-                &mut type_table,
-                &global_bindings,
-                &constants,
-            )
-            .map_err(|error| vec![error])?;
-        type_table = updated_types;
-        functions.push(function);
-    }
     for routine in &closures.intrinsic_task_routines {
         let (function, updated_types) = closures
             .lower_intrinsic_task(
@@ -330,6 +371,12 @@ fn lower_analyzed_root(
         type_table = updated_types;
         functions.push(function);
     }
+    functions.extend(
+        closures
+            .array_mutation_routines
+            .iter()
+            .map(|routine| routine.lower()),
+    );
     functions.sort_by_key(|function| function.id);
     let mut owner_map = HashMap::new();
     for (index, owner) in routine_owners.iter().copied().enumerate() {
@@ -340,9 +387,6 @@ fn lower_analyzed_root(
         owner_map.insert(id, owner);
     }
     for routine in &closures.routines {
-        owner_map.insert(routine.id, routine.owner);
-    }
-    for routine in &closures.bound_routines {
         owner_map.insert(routine.id, routine.owner);
     }
     for routine in &closures.intrinsic_task_routines {

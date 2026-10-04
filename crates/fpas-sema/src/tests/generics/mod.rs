@@ -1,7 +1,9 @@
 mod bodies;
+mod callable_values;
 mod construction;
 mod data_types;
 mod dictionary_keys;
 mod equality;
 mod forwarding;
-mod methods;
+mod identity;
+mod record_functions;

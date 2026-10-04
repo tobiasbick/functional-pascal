@@ -23,22 +23,13 @@ impl Parser {
 
     pub(super) fn parse_var_stmt(&mut self, mutable: bool) -> Stmt {
         let start = self.current_span();
-        if mutable {
-            self.advance();
-        }
         self.advance();
-        let (name, type_expr, value) = self.parse_typed_init_fields(start);
-        let var_def = VarDef {
-            name,
-            type_expr,
-            value,
-            visibility: Visibility::default(),
-            span: self.span_from(start),
-        };
+        let mut var_def = self.parse_binding_definition(true, mutable, Visibility::default());
+        var_def.span = self.span_from(start);
         if mutable {
-            Stmt::MutableVar(var_def)
-        } else {
             Stmt::Var(var_def)
+        } else {
+            Stmt::Const(var_def)
         }
     }
 

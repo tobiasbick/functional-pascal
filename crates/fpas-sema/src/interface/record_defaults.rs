@@ -9,7 +9,7 @@ use std::sync::Arc;
 
 use crate::check::Checker;
 
-use super::constants::ScalarConstants;
+use super::constants::to_interface;
 use super::conversion::InterfaceConversionError;
 
 impl Checker {
@@ -17,7 +17,6 @@ impl Checker {
     pub(super) fn export_record_defaults(
         &self,
         ty: &mut artifact::InterfaceType,
-        constants: &ScalarConstants,
     ) -> Result<(), InterfaceConversionError> {
         use artifact::InterfaceType as Type;
         match ty {
@@ -29,23 +28,37 @@ impl Checker {
                     field.default_value = defaults
                         .iter()
                         .find(|(name, _)| name.eq_ignore_ascii_case(&field.name))
-                        .and_then(|(_, default)| default.as_deref())
-                        .map(|expression| {
-                            constants.value(expression).ok_or_else(|| {
-                                InterfaceConversionError::new(
-                                    "exported record field defaults must be scalar constant expressions",
-                                )
-                            })
-                        })
-                        .transpose()?;
+                        .and_then(|(_, default)| default.as_ref())
+                        .map(|default| match default {
+                            crate::RecordDefault::Initializer(name) => {
+                                artifact::FieldDefault::Initializer {
+                                    name: name.clone(),
+                                    pure_parameters: self
+                                        .default_type_requirements(&record.name, &field.name),
+                                }
+                            }
+                            crate::RecordDefault::Expression(expression) => self
+                                .evaluate_static_expression(expression)
+                                .and_then(to_interface)
+                                .map(artifact::FieldDefault::Constant)
+                                .unwrap_or_else(|| artifact::FieldDefault::Initializer {
+                                    name: artifact::record_default_initializer(
+                                        &record.name,
+                                        record.owner_unit.as_deref(),
+                                        &field.name,
+                                    ),
+                                    pure_parameters: self
+                                        .default_type_requirements(&record.name, &field.name),
+                                }),
+                        });
                 }
             }
             Type::Array(inner) | Type::Channel(inner) | Type::Option(inner) | Type::Task(inner) => {
-                self.export_record_defaults(inner, constants)?;
+                self.export_record_defaults(inner)?;
             }
             Type::Dictionary(left, right) | Type::Result(left, right) => {
-                self.export_record_defaults(left, constants)?;
-                self.export_record_defaults(right, constants)?;
+                self.export_record_defaults(left)?;
+                self.export_record_defaults(right)?;
             }
             // Other nominal components are persisted as qualified references.
             _ => {}
@@ -53,7 +66,7 @@ impl Checker {
         Ok(())
     }
 
-    /// Install scalar defaults with direct and supporting record definitions.
+    /// Install scalar defaults or internal calls with supporting record definitions.
     pub(super) fn install_imported_record_defaults(&mut self, ty: &artifact::InterfaceType) {
         use artifact::InterfaceType as Type;
         match ty {
@@ -71,10 +84,24 @@ impl Checker {
                     .map(|field| {
                         (
                             field.name.clone(),
-                            field
-                                .default_value
-                                .as_ref()
-                                .map(|value| Arc::new(constant_value_to_expr(value))),
+                            field.default_value.as_ref().map(|value| match value {
+                                artifact::FieldDefault::Constant(value) => {
+                                    crate::RecordDefault::Expression(Arc::new(
+                                        constant_value_to_expr(value),
+                                    ))
+                                }
+                                artifact::FieldDefault::Initializer {
+                                    name,
+                                    pure_parameters,
+                                } => {
+                                    self.install_default_type_requirements(
+                                        &record.name,
+                                        &field.name,
+                                        pure_parameters,
+                                    );
+                                    crate::RecordDefault::Initializer(name.clone())
+                                }
+                            }),
                         )
                     })
                     .collect();

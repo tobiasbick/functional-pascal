@@ -3,7 +3,9 @@ use crate::ParseDiagnostic;
 use crate::ast::*;
 use fpas_diagnostics::codes::PARSE_EXPECTED_TOKEN;
 
+mod bindings;
 mod program;
+mod purity;
 mod routines;
 mod type_expr;
 mod types;

@@ -34,6 +34,7 @@ pub(super) fn apply_type_expr_source_id(type_expr: &mut TypeExpr, source_id: u32
             params,
             return_type,
             span,
+            ..
         } => {
             for param in params {
                 apply_formal_param_source_id(param, source_id);

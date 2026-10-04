@@ -158,5 +158,6 @@ fn value_type_name(v: &Value) -> &'static str {
         Value::Cell(_) => "cell",
         Value::Task(_) => "task",
         Value::OpaqueHandle(_) => "opaque handle",
+        Value::Reference(_) => "var reference",
     }
 }

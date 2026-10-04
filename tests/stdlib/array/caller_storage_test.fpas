@@ -1,0 +1,30 @@
+program ArrayCallerStorageTest;
+
+uses Std.Arrays as Arrays;
+uses Std.Test as Test;
+
+type Box = record
+  Items: array of (integer);
+end record;
+
+procedure Append(var Items: array of (integer));
+begin
+  Arrays.Push(var Items, Items[0]);
+end procedure;
+
+begin
+  var Data: Box := Box(Items := [3]);
+  const Copy: Box := Data;
+  Append(var Data.Items);
+  Test.AssertEquals(3, Arrays.Pop(var Data.Items));
+  Test.AssertEquals(1, Arrays.Length(Copy.Items));
+  var Nested: array of (array of (integer)) := [[4]];
+  const Original: array of (array of (integer)) := Nested;
+  Arrays.Push(var Nested[if true then 0 else 1 end if], 5);
+  Test.AssertEquals(2, Arrays.Length(Nested[0]));
+  Test.AssertEquals(1, Arrays.Length(Original[0]));
+  var Mapping: dict of (string, array of (integer)) := ['key': [6]];
+  Arrays.Push(var Mapping['key'], 7);
+  Test.AssertEquals(7, Arrays.Pop(var Mapping['key']));
+  Test.AssertEquals(6, Arrays.Pop(var Mapping['key']));
+end program;

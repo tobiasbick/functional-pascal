@@ -81,7 +81,7 @@ line_comment    = '//' { (* any character except CR or LF *) } ;
 (* ---- Keywords (case-insensitive) ------------------------------- *)
 
 keyword         = 'program'   | 'unit'      | 'uses'      | 'const'
-                | 'var'       | 'mutable'   | 'function'  | 'procedure'
+                | 'var'       | 'function'  | 'procedure' | 'pure'
                 | 'begin'     | 'end'       | 'return'    | 'if'
                 | 'discard'
                 | 'then'      | 'else'      | 'case'      | 'of'
@@ -94,9 +94,8 @@ keyword         = 'program'   | 'unit'      | 'uses'      | 'const'
                 | 'break'     | 'continue'  | 'result'    | 'option'
                 | 'ok'        | 'error'     | 'some'      | 'none'
                 | 'try'       | 'public'
-                | 'go'        | 'dict'      | 'with'      | 'static' | 'property'
-                | 'event'     | 'read'      | 'write'     | 'comparable' | 'equatable'
-                | 'numeric'   | 'printable' | 'self'      | 'nil'
+                | 'go'        | 'dict'      | 'with'      | 'comparable'
+                | 'equatable' | 'numeric'   | 'printable'
                 | 'channel'   | 'task'      | 'as'        | 'elsif'
                 | 'when'      | 'null' ;
 
@@ -158,7 +157,6 @@ main_block          = 'begin' statement_list 'end' 'program' ';' ;
 
 program_declaration = const_block
                     | var_block
-                    | mutable_var_block
                     | type_block
                     | function_decl
                     | procedure_decl ;
@@ -175,16 +173,12 @@ public_modifier     = 'public' ;
 const_block         = 'const' const_def ;
 const_def           = identifier ':' type_expr ':=' expression ';' ;
 
-(* The initializer must be compile-time known. Syntax allows a general *)
-(* expression here; the semantic checker restricts it to literals,     *)
-(* other constants, enum members, and pure operator combinations.      *)
-
-(* -- Immutable variables -- *)
-var_block           = 'var' var_def ;
-var_def             = identifier ':' type_expr ':=' expression ';' ;
+(* Const initializers may be computed. Static contexts separately     *)
+(* require literal/operator expressions or static constant references. *)
 
 (* -- Mutable variables -- *)
-mutable_var_block   = 'mutable' 'var' var_def ;
+var_block           = 'var' var_def ;
+var_def             = identifier ':' type_expr ':=' expression ';' ;
 
 (* -- Type definitions -- *)
 type_block          = 'type' type_def ;
@@ -216,11 +210,11 @@ type_expr           = 'array' 'of' '(' type_expr ')'    (* array type     *)
 
 type_arguments      = 'of' '(' type_expr { ',' type_expr } ')' ;
 
-function_type       = 'function' '(' [ formal_type_list ] ')' ':' type_expr ;
+function_type       = [ 'pure' ] 'function' '(' [ formal_type_list ] ')' ':' type_expr ;
 procedure_type      = 'procedure' '(' [ formal_type_list ] ')' ;
 
 formal_type_list    = formal_type_param { ';' formal_type_param } ;
-formal_type_param   = [ 'mutable' ] identifier ':' type_expr ;
+formal_type_param   = [ 'var' ] identifier ':' type_expr ;
 
 (* ---- 2.4 Record & Enum Types ---------------------------------- *)
 
@@ -228,7 +222,7 @@ record_type         = 'record'
                       { record_member }
                       'end' 'record' ;
 record_member       = [ public_modifier ]
-                      ( field_def | record_method | record_property | record_event ) ;
+                      field_def ;
 field_def           = identifier ':' type_expr [ ':=' expression ] ';' ;
 
 (* ':= expression' is an optional default value for the field.      *)
@@ -236,50 +230,7 @@ field_def           = identifier ':' type_expr [ ':=' expression ] ';' ;
 (* compiler substitutes the default automatically.  Fields without  *)
 (* a default must be supplied in every record construction.              *)
 
-record_method       = static_record_method | instance_record_method ;
-static_record_method = 'static' ( function_decl | procedure_decl ) ;
-instance_record_method = instance_function_decl | instance_procedure_decl ;
-instance_function_decl = instance_function_heading ';'
-                         { nested_decl } 'begin' statement_list 'end' 'function' ';' ;
-instance_function_heading = 'function' identifier [ type_params ]
-                            '(' [ instance_param_list ] ')' ':' type_expr ;
-instance_procedure_decl = instance_procedure_heading ';'
-                          { nested_decl } 'begin' statement_list 'end' 'procedure' ';' ;
-instance_procedure_heading = 'procedure' identifier [ type_params ]
-                             '(' [ instance_param_list ] ')' ;
-instance_param_list = instance_first_param { ';' param_group } ;
-instance_first_param = [ 'mutable' ] ( 'self' | identifier ) ':' type_expr ;
-
-(* Record member visibility is available only in unit files. The    *)
-(* modifier is written before each field, property, event, or routine; *)
-(* there are no visibility sections.                                 *)
-
-(* Instance record methods must declare Self as the first parameter, *)
-(* typed as the enclosing record. Callers use value dot notation;    *)
-(* Self is passed implicitly: A.DistanceTo(B) → Point.DistanceTo(A, B). *)
-(*                                                                   *)
-(* `static function` has no Self parameter and is called through the *)
-(* type: Point.Create(X, Y). Static procedures likewise have no Self *)
-(* parameter and are called as statements through the type.          *)
-(* Static and instance names share one case-insensitive name set.    *)
-(* Record methods may declare their own type_params via the shared   *)
-(* function_decl / procedure_decl grammar.                           *)
-
-(* Computed properties are backed by instance accessors. `read` and  *)
-(* `write` are reserved keywords. At least one accessor is required. *)
-(* See docs/pascal/language/types/                                   *)
-(* record-properties.md.                                             *)
-record_property     = 'property' identifier ':' type_expr
-                      property_accessor { property_accessor } ';' ;
-property_accessor   = 'read' identifier
-                    | 'write' identifier ;
-
-(* Events are specialized properties whose logical type is a callable. *)
-(* Both accessors are required and deal in Option of HandlerType.      *)
-(* See docs/pascal/language/types/record-events.md.                    *)
-(* Events require both accessors in fixed read-then-write order.     *)
-record_event        = 'event' identifier ':' type_expr
-                      'read' identifier 'write' identifier ';' ;
+(* Field visibility is available only in unit files, before each field. *)
 
 enum_type           = 'enum' enum_member { enum_member } 'end' 'enum' ;
 enum_member         = identifier [ enum_fields | '=' integer_literal ] ';' ;
@@ -297,7 +248,7 @@ enum_field          = identifier ':' type_expr ;
 function_decl       = function_heading ';'
                       { nested_decl } 'begin' statement_list 'end' 'function' ';' ;
 
-function_heading    = 'function' identifier [ type_params ]
+function_heading    = [ 'pure' ] 'function' identifier [ type_params ]
                       '(' [ param_list ] ')' ':' type_expr ;
 
 procedure_decl      = procedure_heading ';'
@@ -307,7 +258,7 @@ procedure_heading   = 'procedure' identifier [ type_params ]
                       '(' [ param_list ] ')' ;
 
 param_list          = param_group { ';' param_group } ;
-param_group         = [ 'mutable' ] identifier ':' type_expr ;
+param_group         = [ 'var' ] identifier ':' type_expr ;
 
 nested_decl         = function_decl
                     | procedure_decl ;
@@ -317,8 +268,8 @@ nested_decl         = function_decl
 statement_list      = statement ';' { statement ';' } ;
 
 statement           = block
+                    | const_stmt
                     | var_stmt
-                    | mutable_var_stmt
                     | assignment_stmt
                     | return_stmt
                     | discard_stmt
@@ -340,9 +291,9 @@ null_stmt           = 'null' ;
 
 block               = 'begin' statement_list 'end' ;
 
-(* -- Inline variable declarations -- *)
-var_stmt            = 'var' identifier ':' type_expr ':=' expression ;
-mutable_var_stmt    = 'mutable' 'var' identifier ':' type_expr ':=' expression ;
+(* -- Local initialized bindings; inference never uses later statements -- *)
+const_stmt          = 'const' identifier [ ':' type_expr ] ':=' expression ;
+var_stmt            = 'var' identifier [ ':' type_expr ] ':=' expression ;
 
 (* -- Assignment -- *)
 assignment_stmt     = designator ':=' expression ;
@@ -499,7 +450,6 @@ primary_atom        = integer_literal
                     | 'result' '.' 'error' '(' expression ')'        (* Result Error   *)
                     | 'option' '.' 'some' '(' expression ')'          (* Option Some    *)
                     | 'option' '.' 'none'                (* Option None    *)
-                    | 'nil'                              (* event clear only; see record-events.md *)
                     | '(' expression ')'
                     | array_literal
                     | dict_literal
@@ -512,7 +462,7 @@ primary_atom        = integer_literal
 
 (* Anonymous function/procedure expression. Parameter and result types are required. *)
 (* Documentation: docs/pascal/language/functions/closures.md *)
-closure_expr        = 'function' '(' [ param_list ] ')' ':' type_expr
+closure_expr        = [ 'pure' ] 'function' '(' [ param_list ] ')' ':' type_expr
                         [ nested_decl { nested_decl } ] 'begin' statement_list 'end' 'function'
                     | 'procedure' '(' [ param_list ] ')'
                         [ nested_decl { nested_decl } ] 'begin' statement_list 'end' 'procedure' ;
@@ -531,7 +481,8 @@ named_field         = identifier ':=' expression ;
 (* Named fields are valid only on a declared record construction target. *)
 field_init          = identifier ':=' expression ';' ;
 
-arg_list            = expression { ',' expression } ;
+arg_list            = actual_argument { ',' actual_argument } ;
+actual_argument     = expression | 'var' designator ;
 
 (* -- Array literal -- *)
 array_literal       = '[' [ expression { ',' expression } ] ']' ;

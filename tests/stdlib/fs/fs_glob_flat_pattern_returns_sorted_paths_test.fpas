@@ -5,7 +5,7 @@ uses Std.Fs as Fs;
 uses Std.Test as Test;
 
 begin
-  var Prefix: string := Test.ScratchDir() + '/glob-flat-';
+  const Prefix: string := Test.ScratchDir() + '/glob-flat-';
   case Fs.WriteText(Prefix + 'b.txt', '') of
     when Result.Ok(_):
       begin

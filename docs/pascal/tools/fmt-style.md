@@ -24,7 +24,7 @@ The header has one following blank line. Each import appears on its own line:
 `uses Unit.Name as Alias;`. Imports are not sorted. A blank line separates imports
 from the following declarations or main block.
 
-Each `type`, `const`, `var`, and `mutable var` declaration repeats its keyword.
+Each `type`, `const`, `const`, and `var` declaration repeats its keyword.
 Top-level declarations start in column zero. A record or enum body is indented
 one level; the closer aligns with the declaration. Exported declarations and
 record members retain their `public` modifier. Private declarations have no
@@ -88,9 +88,7 @@ long constructor argument lists follow the ordinary call-wrapping rules.
 Obsolete anonymous record syntax is rejected before formatting. Record updates
 retain semicolon-separated assignments and close with `end with`.
 
-Record fields and enum members each keep their trailing semicolon. Insert one
-blank line between the last field and the first record method. Routine modifiers
-appear before `static`.
+Record fields and enum members each keep their trailing semicolon.
 
 ## Spacing and wrapping
 
@@ -153,7 +151,7 @@ begin
     null;
   else
     begin
-      var Value: integer := 1;
+      const Value: integer := 1;
     end;
   end if;
 end program;
@@ -170,7 +168,7 @@ type Point = record
 end record;
 
 begin
-  var A: Point := Point(X := 3, Y := 4);
+  const A: Point := Point(X := 3, Y := 4);
 end program;
 ```
 

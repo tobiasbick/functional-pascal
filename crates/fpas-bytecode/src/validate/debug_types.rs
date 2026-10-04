@@ -59,6 +59,7 @@ fn validate_node(executable: &crate::Executable, ty: &DebugType) -> Result<(), V
         DebugType::Array(inner)
         | DebugType::Option(inner)
         | DebugType::Cell(inner)
+        | DebugType::Reference(inner)
         | DebugType::Task(inner)
         | DebugType::Channel(inner) => {
             validate_type_reference(executable, *inner, "debug type child")
@@ -159,6 +160,7 @@ fn direct_children(ty: &DebugType) -> Vec<DebugTypeId> {
         DebugType::Array(inner)
         | DebugType::Option(inner)
         | DebugType::Cell(inner)
+        | DebugType::Reference(inner)
         | DebugType::Task(inner)
         | DebugType::Channel(inner) => vec![*inner],
         DebugType::Dictionary { key, value } => vec![*key, *value],

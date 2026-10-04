@@ -4,7 +4,7 @@ use super::*;
 fn identical_source_produces_deterministic_ir_and_bytecode() {
     let source = r#"program RegisterDeterministic;
 begin
-  mutable var X: integer := 1;
+   var X: integer := 1;
   if X = 1 then X := X + 2; end if;
   if X <> 3 then panic('bad'); end if;
 end program;"#;
@@ -37,8 +37,8 @@ fn small_program_has_register_style_instruction_count() {
     let program = parse_ok(
         r#"program RegisterCount;
 begin
-  var A: integer := 1;
-  mutable var B: integer := 2;
+  const A: integer := 1;
+   var B: integer := 2;
   B := A + B;
 end program;"#,
     );
@@ -77,7 +77,7 @@ fn repeated_temporaries_reuse_the_lowest_free_registers() {
     let program = parse_ok(
         r#"program RegisterReuse;
 begin
-  mutable var X: integer := 0;
+   var X: integer := 0;
   X := 1 + 2;
   X := 3 + 4;
   X := 5 + 6;
@@ -95,7 +95,7 @@ fn every_emitted_register_operand_passes_verifier_admission() {
     let program = parse_ok(
         r#"program RegisterVerified;
 begin
-  mutable var X: integer := 0;
+   var X: integer := 0;
   while X < 10 do X := X + 1; end while;
 end program;"#,
     );
@@ -111,7 +111,7 @@ end program;"#,
 #[test]
 fn integer_loops_emit_fused_comparison_and_for_loop() {
     let program = parse_ok(
-        r#"program FusedLoop; begin mutable var Total: integer := 0; for I: integer := 1 to 4 do Total := Total + I; end for; if Total <> 10 then panic('wrong'); end if; end program;"#,
+        r#"program FusedLoop; begin  var Total: integer := 0; for I: integer := 1 to 4 do Total := Total + I; end for; if Total <> 10 then panic('wrong'); end if; end program;"#,
     );
     let executable = crate::compile(&program).expect("loop compiles");
     let code = &executable.executable().code;
@@ -131,7 +131,7 @@ fn integer_loops_emit_fused_comparison_and_for_loop() {
 
 #[test]
 fn single_use_integer_literals_emit_immediate_operations() {
-    let source = r#"program ImmediateInteger; begin mutable var X: integer := 5; X := X + 7; X := X div 3; X := X + (-3); if X <> 1 then panic('wrong'); end if; end program;"#;
+    let source = r#"program ImmediateInteger; begin  var X: integer := 5; X := X + 7; X := X div 3; X := X + (-3); if X <> 1 then panic('wrong'); end if; end program;"#;
     let program = parse_ok(source);
     let executable = crate::compile(&program).expect("immediate arithmetic compiles");
     let code = &executable.executable().code;
@@ -173,7 +173,7 @@ fn string_ordering_uses_typed_opcodes() {
 
 #[test]
 fn string_append_reuses_dead_left_operands() {
-    let source = r#"program Append; begin mutable var S: string := ''; for I: integer := 1 to 3 do S := S + 'x'; end for; var T: string := ('a' + S) + 'b'; if T <> 'axxxb' then panic('wrong'); end if; end program;"#;
+    let source = r#"program Append; begin  var S: string := ''; for I: integer := 1 to 3 do S := S + 'x'; end for; const T: string := ('a' + S) + 'b'; if T <> 'axxxb' then panic('wrong'); end if; end program;"#;
     let program = parse_ok(source);
     let executable = crate::compile(&program).expect("string append compiles");
     let concatenations = executable
@@ -202,8 +202,8 @@ type P = record
 end record;
 
 begin
-  mutable var R: P := P(A := 1);
-  var Copy: P := R;
+   var R: P := P(A := 1);
+  const Copy: P := R;
   R := R with A := 2; end with;
 
   if (R.A <> 2) or (Copy.A <> 1) then

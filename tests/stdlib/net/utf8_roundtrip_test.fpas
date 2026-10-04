@@ -7,8 +7,8 @@ uses Std.Str as Str;
 uses Std.Test as Test;
 
 begin
-  var Text: string := 'Hello, Grüße 🌍';
-  var Bytes: array of (integer) := Utf8.Encode(Text);
+  const Text: string := 'Hello, Grüße 🌍';
+  const Bytes: array of (integer) := Utf8.Encode(Text);
   Test.AssertEquals(19, Arrays.Length(Bytes));
   case Utf8.Decode(Bytes) of
     when Result.Ok(const Decoded):

@@ -8,8 +8,8 @@ uses Std.Test as Test;
 uses Std.Toml as Toml;
 
 begin
-  var Parsed: Result of (Toml.TomlValue, string) := Toml.Parse(((((((((((((('title = ''TOML''' + Str.Chr(10)) + 'integer = -42') + Str.Chr(10)) + 'float = 1.5') + Str.Chr(10)) + 'enabled = true') + Str.Chr(10)) + 'when = 1979-05-27T07:32:00Z') + Str.Chr(10)) + 'items = [''a'', 2]') + Str.Chr(10)) + '[nested]') + Str.Chr(10)) +
-                                                               'value = ''ok''');
+  const Parsed: Result of (Toml.TomlValue, string) := Toml.Parse(((((((((((((('title = ''TOML''' + Str.Chr(10)) + 'integer = -42') + Str.Chr(10)) + 'float = 1.5') + Str.Chr(10)) + 'enabled = true') + Str.Chr(10)) + 'when = 1979-05-27T07:32:00Z') + Str.Chr(10)) + 'items = [''a'', 2]') + Str.Chr(10)) + '[nested]') + Str.Chr(10)) +
+                                                                 'value = ''ok''');
   case Parsed of
     when Result.Ok(const Value):
       begin

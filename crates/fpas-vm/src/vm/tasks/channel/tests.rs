@@ -20,31 +20,39 @@ fn timed_channel_wait_does_not_run_a_blocking_queued_task_inline() {
     run_with_one_worker(
         r#"program TimedWaitDoesNotHelp;
 uses Std.Net as Net; uses Std.Results as Results; uses Std.Tasks as Tasks; uses Std.Time as Time;
+function Require of (T)(Outcome: Result of (T, string)): T;
+begin
+  case Outcome of
+    when Result.Ok(const Value): return Value;
+    when Result.Error(const Message): panic(Message);
+  end case;
+end function;
+
 function BlockingRead(ListenerValue: Net.Listener; Token: Tasks.CancellationToken): boolean;
 begin
-  var Client: Net.Connection := Results.Unwrap(Net.Accept(ListenerValue));
-  var Configured: boolean := Results.Unwrap(Net.SetTimeout(Client, 1500));
-  var Ignored: result of (array of (integer), string) := Net.ReceiveBytesWithCancellation(Client, 1, Token);
-  var Closed: boolean := Results.Unwrap(Net.Close(Client));
+  const Client: Net.Connection := Require(Net.Accept(ListenerValue));
+  const Configured: boolean := Results.Unwrap(Net.SetTimeout(Client, 1500));
+  const Ignored: result of (array of (integer), string) := Net.ReceiveBytesWithCancellation(Client, 1, Token);
+  const Closed: boolean := Results.Unwrap(Net.Close(Client));
   return true;
 end function;
 begin
-  var Source: Tasks.CancellationSource := Tasks.CreateCancellationSource();
-  var Token: Tasks.CancellationToken := Tasks.GetCancellationToken(Source);
-  var FirstListener: Net.Listener := Results.Unwrap(Net.Listen('127.0.0.1', 0));
-  var SecondListener: Net.Listener := Results.Unwrap(Net.Listen('127.0.0.1', 0));
-  var FirstClient: Net.Connection := Results.Unwrap(Net.Connect('127.0.0.1', Results.Unwrap(Net.ListenerLocalAddress(FirstListener)).Port, 1000));
-  var SecondClient: Net.Connection := Results.Unwrap(Net.Connect('127.0.0.1', Results.Unwrap(Net.ListenerLocalAddress(SecondListener)).Port, 1000));
-  var First: task := go BlockingRead(FirstListener, Token);
-  var Second: task := go BlockingRead(SecondListener, Token);
-  var Events: channel of (integer) := Tasks.CreateChannel(1);
-  mutable var Started: integer := Time.TimestampMillis();
-  var Outcome: result of (integer, string) := Tasks.ReceiveWithTimeout(Events, 100);
+  const Source: Tasks.CancellationSource := Tasks.CreateCancellationSource();
+  const Token: Tasks.CancellationToken := Tasks.GetCancellationToken(Source);
+  const FirstListener: Net.Listener := Require(Net.Listen('127.0.0.1', 0));
+  const SecondListener: Net.Listener := Require(Net.Listen('127.0.0.1', 0));
+  const FirstClient: Net.Connection := Require(Net.Connect('127.0.0.1', Results.Unwrap(Net.ListenerLocalAddress(FirstListener)).Port, 1000));
+  const SecondClient: Net.Connection := Require(Net.Connect('127.0.0.1', Results.Unwrap(Net.ListenerLocalAddress(SecondListener)).Port, 1000));
+  const First: task := go BlockingRead(FirstListener, Token);
+  const Second: task := go BlockingRead(SecondListener, Token);
+  const Events: channel of (integer) := Tasks.CreateChannel(1);
+   var Started: integer := Time.TimestampMillis();
+  const Outcome: result of (integer, string) := Tasks.ReceiveWithTimeout(Events, 100);
   if Time.TimestampMillis() - Started > 1000 then panic('timed receive ran a blocking task inline'); end if;
   if Results.IsOk(Outcome) then panic('nothing was sent'); end if;
   Started := Time.TimestampMillis();
-  var Full: boolean := Results.Unwrap(Tasks.SendWithTimeout(Events, 1, 100));
-  var Blocked: result of (boolean, string) := Tasks.SendWithTimeout(Events, 2, 100);
+  const Full: boolean := Results.Unwrap(Tasks.SendWithTimeout(Events, 1, 100));
+  const Blocked: result of (boolean, string) := Tasks.SendWithTimeout(Events, 2, 100);
   if Time.TimestampMillis() - Started > 1000 then panic('timed send ran a blocking task inline'); end if;
   if Results.IsOk(Blocked) then panic('the channel was full'); end if;
   if not Tasks.Wait(First) then panic('first'); end if;
@@ -61,22 +69,22 @@ fn untimed_channel_waits_progress_through_the_pool_worker() {
 uses Std.Results as Results; uses Std.Tasks as Tasks;
 function Doubler(Requests: channel of (integer); Replies: channel of (integer)): integer;
 begin
-  mutable var Count: integer := 0;
+   var Count: integer := 0;
   for Index: integer := 1 to 50 do
   begin
-    var Value: integer := Results.Unwrap(Tasks.Receive(Requests));
-    var Sent: boolean := Results.Unwrap(Tasks.Send(Replies, Value * 2));
+    const Value: integer := Results.Unwrap(Tasks.Receive(Requests));
+    const Sent: boolean := Results.Unwrap(Tasks.Send(Replies, Value * 2));
     Count := Count + 1;
   end; end for;
   return Count;
 end function;
 begin
-  var Requests: channel of (integer) := Tasks.CreateChannel(1);
-  var Replies: channel of (integer) := Tasks.CreateChannel(1);
-  var Worker: task := go Doubler(Requests, Replies);
+  const Requests: channel of (integer) := Tasks.CreateChannel(1);
+  const Replies: channel of (integer) := Tasks.CreateChannel(1);
+  const Worker: task := go Doubler(Requests, Replies);
   for Index: integer := 1 to 50 do
   begin
-    var Sent: boolean := Results.Unwrap(Tasks.Send(Requests, Index));
+    const Sent: boolean := Results.Unwrap(Tasks.Send(Requests, Index));
     if Results.Unwrap(Tasks.Receive(Replies)) <> Index * 2 then panic('reply'); end if;
   end; end for;
   if Tasks.Wait(Worker) <> 50 then panic('count'); end if;
@@ -98,18 +106,26 @@ uses Std.Results as Results;
 uses Std.Tasks as Tasks;
 uses Std.Time as Time;
 
+function Require of (T)(Outcome: Result of (T, string)): T;
+begin
+  case Outcome of
+    when Result.Ok(const Value): return Value;
+    when Result.Error(const Message): panic(Message);
+  end case;
+end function;
+
 function Busy(ListenerValue: Net.Listener; Token: Tasks.CancellationToken): boolean;
 begin
-  var Client: Net.Connection := Results.Unwrap(Net.Accept(ListenerValue));
-  var Configured: boolean := Results.Unwrap(Net.SetTimeout(Client, 1000));
-  var Ignored: Result of (array of (integer), string) := Net.ReceiveBytesWithCancellation(Client, 1, Token);
+  const Client: Net.Connection := Require(Net.Accept(ListenerValue));
+  const Configured: boolean := Results.Unwrap(Net.SetTimeout(Client, 1000));
+  const Ignored: Result of (array of (integer), string) := Net.ReceiveBytesWithCancellation(Client, 1, Token);
   return true;
 end function;
 
 function Reader(ListenerValue: Net.Listener; Token: Tasks.CancellationToken): boolean;
 begin
-  var Client: Net.Connection := Results.Unwrap(Net.Accept(ListenerValue));
-  var Configured: boolean := Results.Unwrap(Net.SetTimeout(Client, 5000));
+  const Client: Net.Connection := Require(Net.Accept(ListenerValue));
+  const Configured: boolean := Results.Unwrap(Net.SetTimeout(Client, 5000));
   case Net.ReceiveBytesWithCancellation(Client, 1, Token) of
     when Result.Ok(const Bytes):
       begin
@@ -129,33 +145,33 @@ end function;
 
 function Open(): Net.Listener;
 begin
-  return Results.Unwrap(Net.Listen('127.0.0.1', 0));
+  return Require(Net.Listen('127.0.0.1', 0));
 end function;
 
 function Join(ListenerValue: Net.Listener): Net.Connection;
 begin
-  return Results.Unwrap(Net.Connect('127.0.0.1', Results.Unwrap(Net.ListenerLocalAddress(ListenerValue))
+  return Require(Net.Connect('127.0.0.1', Results.Unwrap(Net.ListenerLocalAddress(ListenerValue))
                                                    .Port, 1000));
 end function;
 
 begin
-  var Source: Tasks.CancellationSource := Tasks.CreateCancellationSource();
-  var Token: Tasks.CancellationToken := Tasks.GetCancellationToken(Source);
-  var FirstBusy: Net.Listener := Open();
-  var SecondBusy: Net.Listener := Open();
-  var ReaderListener: Net.Listener := Open();
-  var FirstClient: Net.Connection := Join(FirstBusy);
-  var SecondClient: Net.Connection := Join(SecondBusy);
-  var ReaderClient: Net.Connection := Join(ReaderListener);
-  var First: task := go Busy(FirstBusy, Token);
-  var Second: task := go Busy(SecondBusy, Token);
-  var ReaderTask: task := go Reader(ReaderListener, Token);
-  var QuickTask: task := go Quick();
-  var Started: integer := Time.TimestampMillis();
+  const Source: Tasks.CancellationSource := Tasks.CreateCancellationSource();
+  const Token: Tasks.CancellationToken := Tasks.GetCancellationToken(Source);
+  const FirstBusy: Net.Listener := Open();
+  const SecondBusy: Net.Listener := Open();
+  const ReaderListener: Net.Listener := Open();
+  const FirstClient: Net.Connection := Join(FirstBusy);
+  const SecondClient: Net.Connection := Join(SecondBusy);
+  const ReaderClient: Net.Connection := Join(ReaderListener);
+  const First: task := go Busy(FirstBusy, Token);
+  const Second: task := go Busy(SecondBusy, Token);
+  const ReaderTask: task := go Reader(ReaderListener, Token);
+  const QuickTask: task := go Quick();
+  const Started: integer := Time.TimestampMillis();
   if Tasks.Wait(QuickTask) <> 7 then
     panic('quick');
   end if;
-  var Sent: integer := Results.Unwrap(Net.SendBytes(ReaderClient, [42]));
+  const Sent: integer := Results.Unwrap(Net.SendBytes(ReaderClient, [42]));
   if not Tasks.Wait(ReaderTask) then
     panic('the reader did not receive the byte sent after the wait');
   end if;

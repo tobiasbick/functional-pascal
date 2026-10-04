@@ -6,7 +6,7 @@ uses Std.Test as Test;
 uses Std.Toml as Toml;
 
 begin
-  var Parsed: Result of (Toml.TomlValue, string) := Toml.Parse(('name = ''one''' + Str.Chr(10)) +
-                                                               'name = ''two''');
+  const Parsed: Result of (Toml.TomlValue, string) := Toml.Parse(('name = ''one''' + Str.Chr(10)) +
+                                                                 'name = ''two''');
   Test.AssertTrue(Results.IsError(Parsed));
 end program;

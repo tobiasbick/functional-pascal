@@ -27,10 +27,10 @@ type RootType = record
   public Child: Branch;
 end;
 
-var Root: RootType;
+const Root: RootType;
 
 begin
-  var Result: integer := Root.Child.Child.Value
+  const Result: integer := Root.Child.Child.Value
 end.
 "#;
     let path = temp.write("repeated.fpas", source);
@@ -109,7 +109,14 @@ end unit;
 "#,
         );
         let main_source = format!(
-            "program App;\n\n{uses}\n\nbegin\n  var Value: integer := Second.Target();\nend program;\n"
+            r#"program App;
+
+{uses}
+
+begin
+  const Value: integer := Second.Target();
+end program;
+"#
         );
         let main = temp.write("src/main.fpas", &main_source);
         let mut service = LanguageService::load(&manifest);
@@ -142,7 +149,7 @@ end unit;
         "src/ab.fpas",
         r#"unit A.B;
 
-  public var C: integer := 1;
+  public const C: integer := 1;
 end unit;
 
 "#,
@@ -152,7 +159,7 @@ end unit;
 uses A as A2; uses A.B as B;
 
 begin
-  var Value: integer := A2.B.C;
+  const Value: integer := A2.B.C;
 end program;
 "#;
     let main = temp.write("src/main.fpas", main_source);

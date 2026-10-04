@@ -7,7 +7,7 @@ uses Std.Conv as Conv;
 
 public function DescribeClamp(Value: integer): string;
 begin
-  var Clamped: integer := Math.Clamp(Value, 0, 100);
+  const Clamped: integer := Math.Clamp(Value, 0, 100);
   return (('input=' + Conv.IntToStr(Value)) + ', clamped=') + Conv.IntToStr(Clamped);
 end function;
 

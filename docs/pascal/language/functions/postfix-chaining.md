@@ -15,7 +15,6 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`primary_expr`,
 | `.Field` | Record field access |
 | `[Index]` | Array, dictionary, or string index |
 | `(Arguments)` | Invoke the preceding callable value with explicit positional arguments |
-| `.Method(Arguments)` | Record instance method or receiver call to a visible callable |
 
 Suffixes evaluate left to right. Each step receives the value and static type of
 the previous step. The base expression and every argument are evaluated exactly
@@ -23,19 +22,19 @@ once in source order. When a generic call infers a concrete return type from its
 arguments, later suffixes use that concrete type.
 
 ```pascal
-var Green: integer := BuildPalette().ForRole(TuiStyleRole.Normal).Foreground.Green;
-var First: string := LoadItems()[0];
-var Scaled: integer := Num.Create(3).Scale(2).Next().Value;
+const Green: integer := BuildPalette().Normal.Foreground.Green;
+const First: string := LoadItems()[0];
+const Mapped: integer := MakeCallbacks().Transform(3);
 ```
 
 Qualified root calls such as `Math.Sqrt(4.0)` after `uses Std.Math as Math;` remain ordinary calls. Only
 suffixes that follow a completed primary become postfix operations:
 
 ```pascal
-Factory.Create().Value
-Factory.Create().Transform(2).Value
-Factory.Create()[0]
-(Factory.Create()).Value
+CreateRecord().Value
+MakeCallbacks().Transform(2)
+CreateItems()[0]
+(CreateRecord()).Value
 MakeAdder(3)(5)
 Callbacks[0](42)
 (Callback)(42)
@@ -45,22 +44,15 @@ Callbacks[0](42)
 
 `(Arguments)` calls the preceding function or procedure value. Callable record
 fields also use their own declared signature when called as `.Field(Arguments)`;
-no receiver argument is inserted. This differs from a declared record method or
-receiver call, whose existing rules are described below.
-
-`.Method(...)` on a record value first resolves a record member. When no member
-has that name, the compiler can select a visible function, procedure, or
-callable value whose first parameter accepts the receiver. The same lookup
-works on arrays, dictionaries, strings, scalars, `Option`, and `Result` values.
-See [receiver calls](fluent-calls.md). Static record functions stay callable
-only through a type designator (`Point.Create(...)`).
+no receiver argument is inserted. Ordinary routines receive all arguments
+explicitly, for example `Transform(Value, Amount)`.
 
 Procedures may appear only as the final call of a postfix chain used as
 a statement. A procedure call produces no value:
 
 ```pascal
-Views.AsView(Container).Destroy();
-Factory.Create().Configure().Start();
+MakeHandlers().OnDone();
+Callbacks[0]();
 ```
 
 Every earlier step must still produce a value. A procedure cannot appear in the
@@ -84,10 +76,10 @@ Postfix `[Index]` follows the same rules as designator indexing:
 
 Short chains stay on one line. When a chain exceeds the 100-column limit, the
 formatter breaks before each suffix and indents continuations by two spaces from
-the expression base column. See [`fmt-style.md`](../../tools/fmt-style.md).
+the expression base column. A call immediately following a field stays attached
+to that field, as in `.Transform(2)`. See [`fmt-style.md`](../../tools/fmt-style.md).
 
 ## See also
 
 - [Functions](README.md)
-- [Record methods](../types/record-methods.md)
 - [Parameters](parameters.md)

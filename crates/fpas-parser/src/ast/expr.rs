@@ -17,12 +17,12 @@ impl Expr {
             | Self::ResultError(_, span)
             | Self::OptionSome(_, span)
             | Self::OptionNone(span)
-            | Self::Nil(span)
             | Self::Try(_, span)
             | Self::Go(_, span)
             | Self::InvalidRecord(span)
             | Self::Error(span) => *span,
             Self::Designator(d) => d.span,
+            Self::VarArgument(_, span) => *span,
             Self::Call { span, .. }
             | Self::UnaryOp { span, .. }
             | Self::BinaryOp { span, .. }
@@ -53,6 +53,8 @@ pub enum Expr {
     Bool(bool, Span),
     /// Variable, field, or indexed-value designator.
     Designator(Designator),
+    /// Explicit caller storage, permitted only as a positional `var` argument.
+    VarArgument(Designator, Span),
     /// Direct call through a designator.
     Call {
         /// Designator that identifies the callable value.
@@ -114,10 +116,6 @@ pub enum Expr {
     OptionSome(Box<Expr>, Span),
     /// `Option.None` — Option::None literal.
     OptionNone(Span),
-    /// `nil` — clears an event handler (valid only on event assignment RHS).
-    ///
-    /// **Documentation:** `docs/pascal/language/types/record-events.md`
-    Nil(Span),
     /// `try expr` — unwrap Result/Option or propagate error.
     Try(Box<Expr>, Span),
 
@@ -175,6 +173,8 @@ pub enum Expr {
 /// **Documentation:** `docs/pascal/language/functions/closures.md`
 #[derive(Debug, Clone, PartialEq)]
 pub struct ClosureExpr {
+    /// Whether the function explicitly guarantees pure evaluation.
+    pub pure: bool,
     /// `true` for `function(...) : T … end`, `false` for `procedure(...) … end`.
     pub is_function: bool,
     /// Formal parameters in declaration order.
@@ -210,15 +210,6 @@ pub enum PostfixOperation {
     Index {
         /// Index expression enclosed by the brackets.
         index: Box<Expr>,
-        /// Source span of this suffix.
-        span: Span,
-    },
-    /// `.Method(args)` instance call on the preceding value.
-    MethodCall {
-        /// Called method name.
-        name: String,
-        /// Arguments in source order.
-        args: Vec<Expr>,
         /// Source span of this suffix.
         span: Span,
     },

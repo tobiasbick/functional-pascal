@@ -241,6 +241,7 @@ impl LanguageService {
             && let Ok(analysis) = self.analyze_document(path)
             && analysis.snapshot().revision() == target.revision()
         {
+            documents[index].roots = analysis.symbols().entries().to_vec();
             documents[index].analysis = Some(analysis);
         }
         Ok(NavigationContext {

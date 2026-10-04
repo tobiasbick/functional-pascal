@@ -20,10 +20,10 @@ begin
 end procedure;
 
 begin
-  mutable var P: Point := Point();
+   var P: Point := Point();
   P := Point(X := 1);
   Draw(Point(Y := 2));
-  var Points: array of (Point) := [Point(X := 3)];
+  const Points: array of (Point) := [Point(X := 3)];
 end program;
 "#;
 
@@ -43,7 +43,7 @@ type Point = record
 end record;
 
 begin
-  var P: Point := Point(Y := 1);
+  const P: Point := Point(Y := 1);
 end program;
 "#,
     );

@@ -15,7 +15,11 @@ impl Checker {
         actual: &Ty,
         range_endpoint: bool,
     ) {
-        if actual.is_error() || self.const_expr_is_compile_time_known(expression) {
+        if actual.is_error() {
+            return;
+        }
+        if self.const_expr_is_compile_time_known(expression) {
+            self.validate_static_operations(expression);
             return;
         }
         let (message, help) = if range_endpoint {

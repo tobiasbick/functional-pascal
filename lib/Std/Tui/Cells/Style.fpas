@@ -16,27 +16,28 @@ public type TuiStyle = record
   public Underline: boolean;
   // Whether inverse rendering is enabled.
   public Inverse: boolean;
+end record;
 
-  // Creates a style with colors and no text attributes.
-  //
-  // Parameters:
-  // - `Foreground`: Foreground color.
-  // - `Background`: Background color.
-  public static function FromColors(Foreground: Color.TuiColor; Background: Color.TuiColor): TuiStyle;
-  begin
-    return TuiStyle(Foreground := Foreground, Background := Background, Bold := false, Dim := false, Underline := false, Inverse := false);
-  end function;
+// Creates a style with colors and no text attributes.
+//
+// Parameters:
+// - `Foreground`: Foreground color.
+// - `Background`: Background color.
+public function TuiStyleFromColors(Foreground: Color.TuiColor; Background: Color.TuiColor): TuiStyle;
+begin
+  return TuiStyle(Foreground := Foreground, Background := Background, Bold := false, Dim := false, Underline := false, Inverse := false);
+end function;
 
-  // Creates a style with colors and explicit text attributes.
-  //
-  // Parameters:
-  // - `Foreground`: Foreground color.
-  // - `Background`: Background color.
-  // - `Bold`: Whether bold text rendering is enabled.
-  // - `Dim`: Whether dim text rendering is enabled.
-  // - `Underline`: Whether underlined text rendering is enabled.
-  // - `Inverse`: Whether inverse text rendering is enabled.
-  public static function Create(
+// Creates a style with colors and explicit text attributes.
+//
+// Parameters:
+// - `Foreground`: Foreground color.
+// - `Background`: Background color.
+// - `Bold`: Whether bold text rendering is enabled.
+// - `Dim`: Whether dim text rendering is enabled.
+// - `Underline`: Whether underlined text rendering is enabled.
+// - `Inverse`: Whether inverse text rendering is enabled.
+public function TuiStyleCreate(
   Foreground: Color.TuiColor;
   Background: Color.TuiColor;
   Bold: boolean;
@@ -44,9 +45,8 @@ public type TuiStyle = record
   Underline: boolean;
   Inverse: boolean
 ): TuiStyle;
-  begin
-    return TuiStyle(Foreground := Foreground, Background := Background, Bold := Bold, Dim := Dim, Underline := Underline, Inverse := Inverse);
-  end function;
-end record;
+begin
+  return TuiStyle(Foreground := Foreground, Background := Background, Bold := Bold, Dim := Dim, Underline := Underline, Inverse := Inverse);
+end function;
 
 end unit;

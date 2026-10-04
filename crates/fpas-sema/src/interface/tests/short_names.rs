@@ -122,8 +122,8 @@ end unit;
 uses Demo.Frames as Frames; uses Demo.Signals as Signals;
          public function Run(): integer;
          begin
-           var F: Frames.Frame := Frames.Frame(X := 1);
-           var S: Signals.Signal := Signals.Signal.Frame(2);
+           const F: Frames.Frame := Frames.Frame(X := 1);
+           const S: Signals.Signal := Signals.Signal.Frame(2);
            return F.X;
          end function;
 end unit;

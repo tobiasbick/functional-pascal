@@ -44,6 +44,6 @@ begin
 end procedure;
 
 begin
-  var Initial: Camera.ExplorerCamera := Camera.ExplorerCamera(CenterX := -0.45, CenterY := -0.55, SpanY := 2.8, MaxIter := 160, Palette := 2);
+  const Initial: Camera.ExplorerCamera := Camera.ExplorerCamera(CenterX := -0.45, CenterY := -0.55, SpanY := 2.8, MaxIter := 160, Palette := 2);
   Explorer.RunExplorer('Functional Pascal Burning Ship', Initial, Draw, Label);
 end program;

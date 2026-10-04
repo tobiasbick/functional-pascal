@@ -4,7 +4,7 @@ All keywords are case-insensitive, following traditional Pascal convention:
 
 ```
 program   unit      uses      const
-var       mutable   function  procedure
+var       function  procedure
 begin     end       return    if
 then      else      case      of
 for       to        downto    in
@@ -16,18 +16,17 @@ enum      array     channel   task
 panic     break     continue  result
 option    ok        error     some
 none      try       public    go
-dict      with      static    property
-event     read      write     comparable
-numeric   printable self      nil
+dict      with      comparable
+numeric   printable
 as        elsif     when      null
-discard   equatable
+discard   equatable pure
 ```
 
 Every word in the table is fully reserved, including after `.` in a qualified name or
-member access. Some keywords are valid only in their dedicated syntax positions: `read`
-and `write` introduce property or event accessors, the four constraint keywords follow
-a generic type parameter, and `self` names the first receiver parameter and receiver
-expression of an instance record method.
+member access. The four constraint keywords follow a generic type parameter.
+
+`static`, `property`, `event`, `read`, `write`, `Self`, `nil` and `Assigned`
+are ordinary identifiers.
 
 `private` is not a keyword. Unit declarations and record members without
 `public` are private by default, so `private` remains available as an ordinary

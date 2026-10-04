@@ -149,22 +149,6 @@ pub(super) fn encode_records(executable: &Executable) -> Result<EncodedSection, 
             write_u32(&mut bytes, field.name.get());
             write_u32(&mut bytes, field.ty.get());
         }
-        write_u32(
-            &mut bytes,
-            checked_u32("record_properties", record.properties.len())?,
-        );
-        for property in &record.properties {
-            write_u32(&mut bytes, property.name.get());
-            write_u32(&mut bytes, property.getter.get());
-        }
-        write_u32(
-            &mut bytes,
-            checked_u32("record_methods", record.methods.len())?,
-        );
-        for method in &record.methods {
-            write_u32(&mut bytes, method.name.get());
-            write_u32(&mut bytes, method.routine.get());
-        }
     }
     Ok(EncodedSection {
         tag: TAGS[4],
@@ -230,6 +214,10 @@ pub(super) fn encode_functions(executable: &Executable) -> Result<EncodedSection
         write_u32(&mut bytes, function.code.start.get());
         write_u32(&mut bytes, function.code.end.get());
         write_u8(&mut bytes, function.arity);
+        write_u8(&mut bytes, function.var_parameters.len() as u8);
+        for position in &function.var_parameters {
+            write_u8(&mut bytes, *position);
+        }
         write_u16(&mut bytes, function.capture_count);
         write_u16(&mut bytes, function.register_count);
         write_u8(

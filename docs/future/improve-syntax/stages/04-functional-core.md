@@ -154,14 +154,14 @@ collection API only when an actual application requires it.
 - [x] Implement and test arbitrary callable targets and capture rules first.
 - [x] Implement generic records/enums and construction, then nested patterns and
   exhaustive case expressions; implement if expressions with the same type rules.
-- [ ] Implement bindings, inference, value copying, checked numeric behavior, and
+- [x] Implement bindings, inference, value copying, checked numeric behavior, and
   coordinated explicit caller mutation and default-purity checks; migrate all
   affected standard APIs.
-- [ ] Replace member mechanisms only after their ordinary-function replacements
+- [x] Replace member mechanisms only after their ordinary-function replacements
   work. Remove dead resolution, AST, runtime, formatter, and editor paths.
-- [ ] Update grammar and current function/type/pattern/binding/error pages;
+- [x] Update grammar and current function/type/pattern/binding/error pages;
   remove obsolete method/property/event/fluent-call pages and repair their links.
-- [ ] Verify generic nesting/recursion, private construction, defaults, inference
+- [x] Verify generic nesting/recursion, private construction, defaults, inference
   ambiguity, callable fields, mutation modes, structural equality, coverage,
   evaluation order, integer boundaries, and migrated application behavior.
 
@@ -209,7 +209,95 @@ of bare `task` to coordinated local inference and procedure-task work. There is 
 public unit-result type and no permanent bare-task exception in the target contract.
 This approved dependency does not leave the generic-data slice open.
 
-Next: coordinate stage-5 caller references and purity metadata/checks with the
-next stage-4 binding, inference, value-copying, checked-number and default-purity
-slice. Member removal follows working ordinary-function replacements. The full
-stage remains open.
+In progress: the [bindings/effects audit](../audit/bindings-effects.md) records
+the implemented storage-root reservation, exclusivity and reborrow foundation,
+checked selected field/index paths, IR/bytecode and invocation integration, VM
+cell access checks, mode-preserving artifact/linking support, coverage and
+remaining source/signature work. This
+foundation does not close the binding/mutation/purity acceptance item.
+
+The audit's baseline string-index assignment error is corrected with the user's
+authorization: semantic checking reports read-only string indices as F2005 before
+compiler lowering, with direct, nested and imported-path regressions. This
+correction does not close a stage-4 implementation item.
+
+The next source-mode audit found a separate baseline error: immutable imported
+storage was rejected only at runtime. The user-authorized correction shares
+qualified storage-root resolution between typing and assignment permissions.
+Scalar, nested field/element, interface round-trip and real CLI regressions verify
+compile-time F2005, while mutable roots and independent snapshots remain valid.
+The bindings/effects audit records the reproduction and correction. The affected
+standard-unit, example, application and FPAS-test consumers now use explicit local
+copies in place of locally mutable formal parameters. Compiler/CLI closure fixtures
+and debugger storage-mutation programs use the same form. Legacy syntax-validation
+fixtures remain until the corresponding parser/signature/member paths are replaced.
+The following source-mode integration builds on that consumer migration.
+
+Source `var` modes now pass through parser/AST, semantic signatures, callable
+values, formatter/editor displays, compiler references and compiled units.
+Selected caller storage preserves writable roots, frozen paths, written argument
+order, snapshot reads, exclusivity and forwarding. Source regressions also cover
+forbidden escapes and debugger mutation/inspection. `Std.Arrays.Push/Pop` require
+explicit var arguments, support stored fields/elements and use ordinary var-call
+activation and cleanup. Their consumers, handbook and generated declarations are
+migrated. The bindings/effects audit records delivery and verification; bindings,
+inference, checked numbers and purity still keep the acceptance item open.
+
+The [binding initializer delivery](../audit/binding-initializers.md) implements
+computed const, writable var, initializer-only local inference, lexical static
+classification and consumer migration. Nested value-copy, resource/closure
+identity, imported storage and inferred editor details have dedicated regressions.
+Its full verification passes, including 3,778 Rust tests, the complete FPAS bundle,
+consumers, handbook and real editor host. It does not close the coordinated
+acceptance item. Checked numbers and stage-5 purity/default checks are next, followed by
+member removal with working ordinary-function replacements. The full stage
+remains open.
+
+The [checked-number delivery](../audit/checked-numbers.md) implements checked
+integer operations, static F2020 diagnostics and IEEE real division/comparison.
+Focused tests and full verification pass. Its artifact audit found a
+pre-existing compiler-fingerprint omission for `fpas-ir`. A manual static-aggregate
+comparison also exposed a missing F2020 in the new checker. Both corrections are
+authorized and implemented, including static aggregate values across compiled-unit
+reuse and regressions for evaluated/skipped operands. Verification passes with
+3,807 Rust tests, the full FPAS bundle, source/project consumers, handbook examples,
+release numeric checks and the real editor host. A further aggregate guard using
+`Std.Math.Pi` exposed missing standard constant values in semantic evaluation.
+The authorized correction shares their values through standard-library metadata
+and verifies static guards, runtime agreement and compiled-unit defaults/reuse.
+Its CLI regression exposed a separate imported-global/alias name collision in
+compiler storage resolution. The standing permission to fix pre-existing bugs
+covers its correction: imported globals now use canonical unit identities only.
+CLI regressions verify alias/member collisions, field/index paths, snapshots,
+var calls, standard aliases and reused artifacts. Coordinated purity/default
+checking follows; stage acceptance remains open. The audit records the
+reproductions and corrections.
+
+The preparatory purity audit found a pre-existing collision between independently
+declared generic parameters with the same name. The
+[generic parameter identity correction](../audit/generic-parameter-identity.md)
+retains declaration identities through inference, substitution and compiled-unit
+interfaces. Its positive closure regression also exposed a baseline lexical
+sibling-call failure; anonymous runtime names retain their owner paths and
+referenced sibling environments. Contextual generic callable instantiation,
+concrete container typing and erased runtime result restoration have regressions.
+Full verification passes with 3,835 Rust tests, 470 FPAS tests and one intentional
+skip, source/project consumers, handbook programs, formatting and documentation
+links. These corrections do not close the coordinated acceptance item.
+The user approved option 1 in the
+[default-purity boundary](../audit/default-purity-boundary.md): default evaluation
+must be pure, but the field result type need not satisfy pure-function result
+capabilities. The coordinated implementation is complete.
+The [purity/default integration audit](../audit/purity-and-defaults.md) records
+the shared capability checker, declaration-scoped default initializers, compiled
+interfaces, selected generic-default obligations and consumer migration. Full
+verification passes with 3,869 Rust tests, 470 FPAS tests and one intentional skip,
+source/project consumers, handbook programs, formatting and the real editor host.
+This closes the coordinated binding/mutation/default-purity item. The
+[member-removal delivery](../audit/member-functions.md) replaces methods,
+properties, events and fluent calls with ordinary functions and stored callables,
+removes their AST/resolution/runtime/editor paths, and updates current grammar
+and documentation. Final verification passes: 3,787 Rust tests, 470 FPAS tests
+and one intentional skip, all 22 projects, 109 program entries and 54 complete
+handbook programs in their proper contexts, plus the real VS Code host.
+Stage 4 is complete; the approved bare-task migration remains with stage 5.

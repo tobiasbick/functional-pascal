@@ -26,13 +26,13 @@ TuiElement.Overlay(Title, Children)
 TuiElement.Desktop(Focused, Children)
 ```
 
-`MakeRow` and `MakeColumn` use spacing `0`; use `MakeRowSpaced` and
-`MakeColumnSpaced` for gaps. `MakeLayout` and `MakeScroll` wrap exactly one
+`Elements.TuiElementMakeRow` and `Elements.TuiElementMakeColumn` use spacing `0`; use `Elements.TuiElementMakeRowSpaced` and
+`Elements.TuiElementMakeColumnSpaced` for gaps. `Elements.TuiElementMakeLayout` and `Elements.TuiElementMakeScroll` wrap exactly one
 child. `MenuBar` is the simple flat action bar and uses `TuiMenuItem`.
 `Menu` is the controlled hierarchical menu described in
-[Menus](menus.md); `StatusLine` uses `TuiStatusItem`. `MakeHint(Text)` paints
-ordinary status text, while `MakeKeyHint(KeyText, Text)` paints a display-only
-shortcut and its description with separate semantic roles. `MakeCommand`
+[Menus](menus.md); `StatusLine` uses `TuiStatusItem`. `Chrome.TuiStatusItemMakeHint(Text)` paints
+ordinary status text, while `Chrome.TuiStatusItemMakeKeyHint(KeyText, Text)` paints a display-only
+shortcut and its description with separate semantic roles. `Chrome.TuiStatusItemMakeCommand`
 creates the focusable, actionable status item. Status lines containing only
 hints and key hints are not focusable.
 
@@ -40,11 +40,11 @@ hints and key hints are not focusable.
 one-character mnemonic, action, default state, and enabled state. Prefer the
 builders:
 
-- `MakeButton` creates an enabled ordinary button without a mnemonic;
-- `MakeButtonWithMnemonic` creates an enabled ordinary button;
-- `MakeDefaultButton` creates the action selected by Enter when no focused
+- `Elements.TuiElementMakeButton` creates an enabled ordinary button without a mnemonic;
+- `Elements.TuiElementMakeButtonWithMnemonic` creates an enabled ordinary button;
+- `Elements.TuiElementMakeDefaultButton` creates the action selected by Enter when no focused
   control handles Enter;
-- `MakeDisabledButton` creates a non-focusable, non-actionable button.
+- `Elements.TuiElementMakeDisabledButton` creates a non-focusable, non-actionable button.
 
 The mnemonic must occur in the button text, ignoring case. Buttons are compact
 one-row controls. Focus, default state, disabled state, and mnemonics are
@@ -55,9 +55,9 @@ markers.
 hint text, optional oldest-to-newest history, a restorable history draft, and
 the source/action identities. Prefer:
 
-- `MakeInput` for a plain controlled input;
-- `MakeInputWithHint` for placeholder text shown while the value is empty;
-- `MakeHistoryInput` when Up/Down should traverse explicit history.
+- `Elements.TuiElementMakeInput` for a plain controlled input;
+- `Elements.TuiElementMakeInputWithHint` for placeholder text shown while the value is empty;
+- `Elements.TuiElementMakeHistoryInput` when Up/Down should traverse explicit history.
 
 One-line input content starts one cell inside the field, `◄` and `►` mark hidden
 text, and the viewport follows the caret. A focused input paints a block cursor.
@@ -67,15 +67,15 @@ Ctrl+Backspace/Ctrl+Delete remove one such word. Up/Down remains unhandled for
 plain inputs. For history inputs, Up moves toward older entries and Down toward
 newer entries, finally restoring `HistoryDraft`.
 
-`MakePanel` creates ordinary bordered content. `MakeOverlay` creates fixed,
+`Elements.TuiElementMakePanel` creates ordinary bordered content. `Elements.TuiElementMakeOverlay` creates fixed,
 centered modal content when placed directly under `Desktop`. The last overlay
 is the active key, menu, focus, and pointer subtree. Overlays are intentionally
 not movable and do not paint shadows.
 
-`MakeCellGrid` accepts a flat row-major `TuiCellGrid`. It is the escape hatch
+`Elements.TuiElementMakeCellGrid` accepts a flat row-major `TuiCellGrid`. It is the escape hatch
 for truecolor dashboards, plots, and visualizations while keeping layout and
-terminal lifecycle inside `Std.Tui`. `MakeRule` paints a thin separator with
-optional text. `MakeGauge` paints a label, bounded bar, and percentage;
+terminal lifecycle inside `Std.Tui`. `Elements.TuiElementMakeRule` paints a thin separator with
+optional text. `Elements.TuiElementMakeGauge` paints a label, bounded bar, and percentage;
 validation requires `Maximum > 0` and `0 <= Value <= Maximum`.
 
 `Scroll` has a one-cell minimum on each axis while retaining its child's
@@ -83,7 +83,7 @@ preferred content size. A constrained parent can therefore create a viewport
 smaller than the complete content.
 
 Interactive variants require typed control and action identities.
-`TuiControlId.Create` and `TuiAction.Create` require positive values. Repeated
+`Ids.TuiControlIdCreate` and `Ids.TuiActionCreate` require positive values. Repeated
 action identities are valid, while every control identity must be unique in one
 rendered tree.
 

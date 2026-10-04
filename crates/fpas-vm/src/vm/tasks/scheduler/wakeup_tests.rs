@@ -56,6 +56,7 @@ fn queued_work_wakes_a_registered_helper_without_consuming_the_task() {
         registers: vec![],
         register_initialized: vec![],
         frames: vec![],
+        reference_scopes: crate::vm::calls::references::ReferenceScopes::default(),
         retain_result: false,
         instruction_count: 0,
         suppressed_initializers: vec![],

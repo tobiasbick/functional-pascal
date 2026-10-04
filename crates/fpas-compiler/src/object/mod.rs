@@ -1,5 +1,6 @@
 //! Relocatable-object compilation and symbolic import extraction.
 
+mod defaults;
 mod imports;
 
 use std::collections::{BTreeMap, BTreeSet};
@@ -155,28 +156,18 @@ fn qualify_unit_definitions(
     object.define_all_private()?;
     let mut public = BTreeSet::new();
     for symbol in &interface.symbols {
+        defaults::collect(&symbol.ty, &mut public);
         if matches!(
             symbol.kind,
             InterfaceSymbolKind::Function
                 | InterfaceSymbolKind::Procedure
                 | InterfaceSymbolKind::Variable
                 | InterfaceSymbolKind::MutableVariable
+                | InterfaceSymbolKind::Constant(None)
+                | InterfaceSymbolKind::AggregateConstant(_)
                 | InterfaceSymbolKind::Type
         ) {
             public.insert(symbol.qualified_name.to_ascii_lowercase());
-        }
-        let fpas_unit::interface::InterfaceType::Record(record) = &symbol.ty else {
-            continue;
-        };
-        for method in record.methods.iter().chain(&record.static_routines) {
-            if record
-                .private_members
-                .iter()
-                .any(|private| private.eq_ignore_ascii_case(&method.name))
-            {
-                continue;
-            }
-            public.insert(format!("{}.{}", record.name, method.name).to_ascii_lowercase());
         }
     }
     for definition in &mut object.definitions {

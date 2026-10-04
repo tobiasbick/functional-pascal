@@ -65,7 +65,7 @@ end unit;
 uses Demo.Base as Base;
          public function Compute(X: integer): integer;
          begin
-           var P: Base.Point := Base.Make(X);
+           const P: Base.Point := Base.Make(X);
            return P.X;
          end function;
 end unit;

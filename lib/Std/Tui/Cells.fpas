@@ -1,0 +1,153 @@
+// Public cells functions.
+unit Std.Tui.Cells;
+
+uses Std.Tui.Cells.ButtonPalette as ButtonPalette;
+uses Std.Tui.Cells.Cell as Cell;
+uses Std.Tui.Cells.Color as Color;
+uses Std.Tui.Cells.InputPalette as InputPalette;
+uses Std.Tui.Cells.Palette as Palette;
+uses Std.Tui.Cells.Style as Style2;
+uses Std.Tui.Cells.StyleRole as StyleRole;
+
+// Creates a complete button palette.
+public function TuiButtonPaletteCreate(
+  Normal: Style2.TuiStyle;
+  Default: Style2.TuiStyle;
+  Selected: Style2.TuiStyle;
+  Disabled: Style2.TuiStyle;
+  Shortcut: Style2.TuiStyle;
+  DefaultShortcut: Style2.TuiStyle;
+  SelectedShortcut: Style2.TuiStyle
+): ButtonPalette.TuiButtonPalette;
+begin
+  return ButtonPalette.TuiButtonPaletteCreate(Normal, Default, Selected, Disabled, Shortcut, DefaultShortcut, SelectedShortcut);
+end function;
+
+// Resolves one button role.
+public function TuiButtonPaletteForRole(
+  Receiver: ButtonPalette.TuiButtonPalette;
+  Role: StyleRole.TuiStyleRole
+): Style2.TuiStyle;
+begin
+  return ButtonPalette.TuiButtonPaletteForRole(Receiver, Role);
+end function;
+
+// Returns a copy with one button role replaced.
+public function TuiButtonPaletteWithRole(
+  Receiver: ButtonPalette.TuiButtonPalette;
+  Role: StyleRole.TuiStyleRole;
+  Style: Style2.TuiStyle
+): ButtonPalette.TuiButtonPalette;
+begin
+  return ButtonPalette.TuiButtonPaletteWithRole(Receiver, Role, Style);
+end function;
+
+// Creates a style with colors and no text attributes.
+public function TuiStyleFromColors(Foreground: Color.TuiColor; Background: Color.TuiColor): Style2.TuiStyle;
+begin
+  return Style2.TuiStyleFromColors(Foreground, Background);
+end function;
+
+// Creates a style with colors and explicit text attributes.
+public function TuiStyleCreate(
+  Foreground: Color.TuiColor;
+  Background: Color.TuiColor;
+  Bold: boolean;
+  Dim: boolean;
+  Underline: boolean;
+  Inverse: boolean
+): Style2.TuiStyle;
+begin
+  return Style2.TuiStyleCreate(Foreground, Background, Bold, Dim, Underline, Inverse);
+end function;
+
+// Creates a theme-resolved cell; the glyph must be one non-zero-width grapheme cluster.
+public function TuiCellCreate(Glyph: string; Role: StyleRole.TuiStyleRole): Cell.TuiCell;
+begin
+  return Cell.TuiCellCreate(Glyph, Role);
+end function;
+
+// Creates a cell with a concrete style that bypasses theme lookup.
+public function TuiCellStyled(Glyph: string; Style: Style2.TuiStyle): Cell.TuiCell;
+begin
+  return Cell.TuiCellStyled(Glyph, Style);
+end function;
+
+// Returns the terminal-column width of the cell glyph (`1` or `2`).
+public function TuiCellWidth(Receiver: Cell.TuiCell): integer;
+begin
+  return Cell.TuiCellWidth(Receiver);
+end function;
+
+// Creates a complete one-line input palette.
+public function TuiInputPaletteCreate(
+  Normal: Style2.TuiStyle;
+  Focused: Style2.TuiStyle;
+  Hint: Style2.TuiStyle;
+  Cursor: Style2.TuiStyle;
+  Scroll: Style2.TuiStyle
+): InputPalette.TuiInputPalette;
+begin
+  return InputPalette.TuiInputPaletteCreate(Normal, Focused, Hint, Cursor, Scroll);
+end function;
+
+// Resolves one input role.
+public function TuiInputPaletteForRole(
+  Receiver: InputPalette.TuiInputPalette;
+  Role: StyleRole.TuiStyleRole
+): Style2.TuiStyle;
+begin
+  return InputPalette.TuiInputPaletteForRole(Receiver, Role);
+end function;
+
+// Returns a copy with one input role replaced.
+public function TuiInputPaletteWithRole(
+  Receiver: InputPalette.TuiInputPalette;
+  Role: StyleRole.TuiStyleRole;
+  Style: Style2.TuiStyle
+): InputPalette.TuiInputPalette;
+begin
+  return InputPalette.TuiInputPaletteWithRole(Receiver, Role, Style);
+end function;
+
+// Creates a CRT color (`0..15`).
+public function TuiColorFromCrt(Index: integer): Color.TuiColor;
+begin
+  return Color.TuiColorFromCrt(Index);
+end function;
+
+// Creates an ANSI-256 color (`0..255`).
+public function TuiColorFromAnsi256(Index: integer): Color.TuiColor;
+begin
+  return Color.TuiColorFromAnsi256(Index);
+end function;
+
+// Creates an RGB color; each channel is `0..255`.
+public function TuiColorFromRgb(Red: integer; Green: integer; Blue: integer): Color.TuiColor;
+begin
+  return Color.TuiColorFromRgb(Red, Green, Blue);
+end function;
+
+// Returns the modern dark default palette.
+public function TuiPaletteDefault(): Palette.TuiPalette;
+begin
+  return Palette.TuiPaletteDefault();
+end function;
+
+// Resolves the concrete style for one semantic role.
+public function TuiPaletteForRole(Receiver: Palette.TuiPalette; Role: StyleRole.TuiStyleRole): Style2.TuiStyle;
+begin
+  return Palette.TuiPaletteForRole(Receiver, Role);
+end function;
+
+// Returns a copy with one semantic role replaced.
+public function TuiPaletteWithRole(
+  Receiver: Palette.TuiPalette;
+  Role: StyleRole.TuiStyleRole;
+  Style: Style2.TuiStyle
+): Palette.TuiPalette;
+begin
+  return Palette.TuiPaletteWithRole(Receiver, Role, Style);
+end function;
+
+end unit;

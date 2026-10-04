@@ -143,6 +143,13 @@ pub enum ValidationErrorKind {
     MissingResult,
     /// A side-effect-only operation unexpectedly defines a result value.
     UnexpectedResult,
+    /// A synchronous reference appears in retained storage or an escaping signature.
+    ReferenceEscape {
+        /// Storage or transport boundary that would retain the authority.
+        context: &'static str,
+        /// Raw type identifier containing the reference.
+        ty: u32,
+    },
     /// A direct call does not match its target signature.
     DirectCallSignature {
         /// Expected number of arguments.

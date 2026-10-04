@@ -1,8 +1,8 @@
 use fpas_bytecode::{
     CodeRange, Constant, DebugType, DebugTypeId, EnumLayout, EnumTypeId, EnumVariant, Executable,
     FunctionFlags, FunctionId, FunctionInfo, GlobalInfo, Instruction, InstructionAddress,
-    Intrinsic, NO_REGISTER, Opcode, RecordField, RecordLayout, RecordProperty, ReturnConvention,
-    SourceId, SourceMap, SourceRun, StringId, StringTable, intrinsic::ConsoleIntrinsic,
+    Intrinsic, NO_REGISTER, Opcode, RecordField, RecordLayout, ReturnConvention, SourceId,
+    SourceMap, SourceRun, StringId, StringTable, intrinsic::ConsoleIntrinsic,
 };
 
 pub fn abc(opcode: Opcode, a: u16, b: u16, c: u16, auxiliary: u8) -> Instruction {
@@ -24,6 +24,7 @@ pub fn minimal_executable() -> Executable {
             name: StringId::new(0),
             code: CodeRange::new(InstructionAddress::new(0), InstructionAddress::new(1)),
             arity: 0,
+            var_parameters: Vec::new(),
             capture_count: 0,
             register_count: 0,
             return_convention: ReturnConvention::Unit,
@@ -106,6 +107,7 @@ pub fn all_opcodes_executable() -> Executable {
                     InstructionAddress::new(callee_start),
                 ),
                 arity: 0,
+                var_parameters: Vec::new(),
                 capture_count: 0,
                 register_count: 16,
                 return_convention: ReturnConvention::Unit,
@@ -121,6 +123,7 @@ pub fn all_opcodes_executable() -> Executable {
                     InstructionAddress::new(code_end),
                 ),
                 arity: 0,
+                var_parameters: Vec::new(),
                 capture_count: 0,
                 register_count: 0,
                 return_convention: ReturnConvention::Unit,
@@ -149,11 +152,6 @@ pub fn all_opcodes_executable() -> Executable {
                 name: StringId::new(4),
                 ty: DebugTypeId::new(0),
             }],
-            properties: vec![RecordProperty {
-                name: StringId::new(4),
-                getter: StringId::new(1),
-            }],
-            methods: Vec::new(),
         }],
         enums: vec![EnumLayout {
             name: StringId::new(5),
@@ -209,7 +207,11 @@ fn valid_instruction(opcode: Opcode, next_address: u32) -> Instruction {
         | Opcode::UnwrapOk
         | Opcode::UnwrapError
         | Opcode::UnwrapSome => abc(opcode, 0, 1, 0, 0),
-        Opcode::CellWrite => abc(opcode, 0, 1, 0, 0),
+        Opcode::CellWrite | Opcode::WriteReference => abc(opcode, 0, 1, 0, 0),
+        Opcode::ReserveReference | Opcode::ReadReference => abc(opcode, 0, 1, 0, 0),
+        Opcode::SelectReferenceField => abc(opcode, 0, 0, 0, 0),
+        Opcode::SelectReferenceIndex => abc(opcode, 0, 1, 2, 0),
+        Opcode::ReleaseReference => abc(opcode, 0, 0, 0, 0),
         Opcode::Return => return_unit(),
         Opcode::Panic => abc(opcode, 0, 0, 0, 0),
         Opcode::CallDirect | Opcode::TailCall => abc(opcode, NO_REGISTER, 1, 0, 0),

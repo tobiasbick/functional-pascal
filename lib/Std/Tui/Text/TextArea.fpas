@@ -34,7 +34,7 @@ end function;
 // - `Line`: Zero-based logical line index.
 public function TuiTextAreaLineText(Text: string; Line: integer): string;
 begin
-  var Lines: array of (string) := Str.Split(Text, Str.Chr(10));
+  const Lines: array of (string) := Str.Split(Text, Str.Chr(10));
   if (Line < 0) or (Line >= Arrays.Length(Lines)) then
     begin
       panic('Tui text area line must be within its text');
@@ -46,7 +46,7 @@ end function;
 
 function TuiTextAreaLineStartAt(Lines: array of (string); Line: integer): integer;
 begin
-  mutable var Target: integer := Line;
+  var Target: integer := Line;
   if Target < 0 then
     begin
       Target := 0;
@@ -58,7 +58,7 @@ begin
       Target := Arrays.Length(Lines) - 1;
     end;
   end if;
-  mutable var Start: integer := 0;
+  var Start: integer := 0;
   for Index: integer := 0 to Target - 1 do
     begin
       Start := (Start + Str.Length(Lines[Index])) + 1;
@@ -80,14 +80,14 @@ begin
       panic('Tui text area caret must be within its text');
     end;
   end if;
-  var Lines: array of (string) := Str.Split(Text, Str.Chr(10));
-  mutable var LineStart: integer := 0;
+  const Lines: array of (string) := Str.Split(Text, Str.Chr(10));
+  var LineStart: integer := 0;
   for Line: integer := 0 to Arrays.Length(Lines) - 1 do
     begin
-      var LineEnd: integer := LineStart + Str.Length(Lines[Line]);
+      const LineEnd: integer := LineStart + Str.Length(Lines[Line]);
       if Caret <= LineEnd then
         begin
-          var Prefix: string := Str.Substring(Lines[Line], 0, Caret - LineStart);
+          const Prefix: string := Str.Substring(Lines[Line], 0, Caret - LineStart);
           return TuiTextAreaPosition(Line := Line, LineStart := LineStart, LineEnd := LineEnd, DisplayColumn := Console.DisplayWidth(Prefix));
         end;
       end if;
@@ -107,25 +107,25 @@ end function;
 // - `DisplayColumn`: Requested zero-based terminal display column.
 public function TuiTextAreaCaretAtDisplayColumn(Text: string; Line: integer; DisplayColumn: integer): integer;
 begin
-  mutable var TargetColumn: integer := DisplayColumn;
+  var TargetColumn: integer := DisplayColumn;
   if TargetColumn < 0 then
     begin
       TargetColumn := 0;
     end;
   end if;
-  var Lines: array of (string) := Str.Split(Text, Str.Chr(10));
+  const Lines: array of (string) := Str.Split(Text, Str.Chr(10));
   if (Line < 0) or (Line >= Arrays.Length(Lines)) then
     begin
       panic('Tui text area line must be within its text');
     end;
   end if;
-  var Start: integer := TuiTextAreaLineStartAt(Lines, Line);
-  var LineText: string := Lines[Line];
-  mutable var Column: integer := 0;
-  mutable var Characters: integer := 0;
+  const Start: integer := TuiTextAreaLineStartAt(Lines, Line);
+  const LineText: string := Lines[Line];
+  var Column: integer := 0;
+  var Characters: integer := 0;
   for Grapheme: string in Console.SplitGraphemes(LineText) do
     begin
-      var Width: integer := Console.DisplayWidth(Grapheme);
+      const Width: integer := Console.DisplayWidth(Grapheme);
       // Console display width caps each cluster at two cells. Its final width may
       // be narrower than a prefix (for example an emoji followed by VS15).
       if Column + 2 > TargetColumn then
@@ -157,11 +157,11 @@ end function;
 // - `Text`: Text processed or displayed by the operation.
 public function TuiTextAreaContentSize(Text: string): Size.TuiSize;
 begin
-  var Lines: array of (string) := Str.Split(Text, Str.Chr(10));
-  mutable var Width: integer := 1;
+  const Lines: array of (string) := Str.Split(Text, Str.Chr(10));
+  var Width: integer := 1;
   for Index: integer := 0 to Arrays.Length(Lines) - 1 do
     begin
-      var LineWidth: integer := Console.DisplayWidth(Lines[Index]);
+      const LineWidth: integer := Console.DisplayWidth(Lines[Index]);
       if LineWidth > Width then
         begin
           Width := LineWidth;
@@ -170,7 +170,7 @@ begin
     end;
   end for;
 
-  return Size.TuiSize.Create(Width, Arrays.Length(Lines));
+  return Size.TuiSizeCreate(Width, Arrays.Length(Lines));
 end function;
 
 // Adjusts a non-negative model offset only as much as needed to reveal the caret.
@@ -187,13 +187,13 @@ public function TuiTextAreaEnsureCaretVisible(
   Viewport: Size.TuiSize
 ): Point.TuiPoint;
 begin
-  mutable var Next: Point.TuiPoint := Offset;
+  var Next: Point.TuiPoint := Offset;
   if (Viewport.Width <= 0) and (Viewport.Height <= 0) then
     begin
       return Next;
     end;
   end if;
-  var Position: TuiTextAreaPosition := TuiTextAreaLocate(Text, Caret);
+  const Position: TuiTextAreaPosition := TuiTextAreaLocate(Text, Caret);
   if Viewport.Width > 0 then
     begin
       if Position.DisplayColumn < Next.X then

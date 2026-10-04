@@ -33,7 +33,7 @@ begin
 end function;
 
 begin
-  var T: task := go N();
+  const T: task := go N();
   Console.WriteLn(Tasks.Wait(T));
 end program;
 ```
@@ -108,8 +108,8 @@ operations observe tokens while their interruptible network phases are pending.
 uses Std.Console as Console;
 uses Std.Tasks as Tasks;
 
-var Source: Tasks.CancellationSource := Tasks.CreateCancellationSource();
-var Token: Tasks.CancellationToken := Tasks.GetCancellationToken(Source);
+const Source: Tasks.CancellationSource := Tasks.CreateCancellationSource();
+const Token: Tasks.CancellationToken := Tasks.GetCancellationToken(Source);
 discard Tasks.Cancel(Source);
 if Tasks.IsCancellationRequested(Token) then
   begin
@@ -278,7 +278,7 @@ because capacity alone cannot infer `T`:
 ```pascal
 uses Std.Tasks as Tasks;
 
-var Messages: channel of (string) := Tasks.CreateChannel(16);
+const Messages: channel of (string) := Tasks.CreateChannel(16);
 ```
 
 `Send` waits until space is available. `Receive` waits until a value is available. Successful sends
@@ -340,7 +340,7 @@ Blocks until the spawned call completes, then returns its value. The task result
 uses Std.Console as Console;
 uses Std.Tasks as Tasks;
 
-var T: task := go Square(6);
+const T: task := go Square(6);
 Console.WriteLn(Tasks.Wait(T));
 ```
 
@@ -355,8 +355,8 @@ Blocks until every task in the array has finished. This is a **barrier only**; i
 ```pascal
 uses Std.Tasks as Tasks;
 
-var Ta: task := go Work(1);
-var Tb: task := go Work(2);
+const Ta: task := go Work(1);
+const Tb: task := go Work(2);
 Tasks.WaitAll([Ta, Tb]);
 // Work returns an ordinary value; consume each result explicitly:
 discard Tasks.Wait(Ta);
@@ -386,7 +386,7 @@ Existing runtime-wide worker-failure handling remains active.
 ```pascal
 uses Std.Tasks as Tasks;
 
-var First: integer := Tasks.WaitAny([Ta, Tb]);
+const First: integer := Tasks.WaitAny([Ta, Tb]);
 // Both ordinary results still belong to their task handles.
 Tasks.WaitAll([Ta, Tb]);
 discard Tasks.Wait(Ta);

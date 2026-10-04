@@ -218,8 +218,15 @@ Operation::StoreLocalIndex {
         Operation::MakeCell(value) => validate_cell_make(scope, *value, result),
         Operation::CellRead(cell) => validate_cell_read(scope, *cell, result),
         Operation::CellWrite { cell, value } => validate_cell_write(scope, *cell, *value),
-        Operation::SpawnTask { callee, arguments } => validate_spawn(scope, *callee, arguments, result),
-        Operation::SpawnDetachedTask { callee, arguments } => validate_call_value(scope, *callee, arguments, None),
+        Operation::Reference(operation) => validate_reference_operation(scope, operation, result),
+        Operation::SpawnTask { callee, arguments } => {
+            reject_spawn_references(scope, *callee)?;
+            validate_spawn(scope, *callee, arguments, result)
+        }
+        Operation::SpawnDetachedTask { callee, arguments } => {
+            reject_spawn_references(scope, *callee)?;
+            validate_call_value(scope, *callee, arguments, None)
+        }
         Operation::Yield => Ok(()),
     }
 }

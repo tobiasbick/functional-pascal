@@ -38,7 +38,7 @@ fn compiled_metadata_records_cell_enclosing_and_mixed_captures() {
 #[test]
 fn direct_cell_capture_shares_the_original_handle_and_is_task_owned() {
     let mut session = DebugSession::new(compile_fixture()).expect("debug session");
-    let frame = run_to(&mut session, "var CellStop: integer := 0;");
+    let frame = run_to(&mut session, "const CellStop: integer := 0;");
     let original = runtime(&session, &name("Original"), frame);
     let updated = session
         .set_expression(&root("Current"), &name("AddCell"), Some(frame))
@@ -68,7 +68,7 @@ fn direct_cell_capture_shares_the_original_handle_and_is_task_owned() {
 #[test]
 fn mixed_value_and_cell_captures_keep_abi_order() {
     let mut session = DebugSession::new(compile_fixture()).expect("debug session");
-    let frame = run_to(&mut session, "var MixStop: integer := 0;");
+    let frame = run_to(&mut session, "const MixStop: integer := 0;");
     session
         .set_expression(&root("Current"), &name("MixBoth"), Some(frame))
         .expect("mixed captures");
@@ -92,7 +92,7 @@ fn mixed_value_and_cell_captures_keep_abi_order() {
 #[test]
 fn enclosing_cell_capture_reuses_the_transitive_handle() {
     let mut session = DebugSession::new(compile_fixture()).expect("debug session");
-    let frame = run_to(&mut session, "var EnclosingStop: integer := 0;");
+    let frame = run_to(&mut session, "const EnclosingStop: integer := 0;");
     let original = runtime(&session, &name("Original"), frame);
     session
         .set_expression(&root("Current"), &name("AddEnclosed"), Some(frame))
@@ -108,7 +108,7 @@ fn enclosing_cell_capture_reuses_the_transitive_handle() {
 #[test]
 fn continuation_observes_shared_writes_through_original_and_assigned() {
     let mut session = DebugSession::new(compile_fixture()).expect("debug session");
-    let frame = run_to(&mut session, "var CellStop: integer := 0;");
+    let frame = run_to(&mut session, "const CellStop: integer := 0;");
     session
         .set_expression(&root("Current"), &name("AddCell"), Some(frame))
         .expect("assign AddCell");
@@ -128,7 +128,7 @@ fn continuation_observes_shared_writes_through_original_and_assigned() {
 #[test]
 fn selected_recursive_activation_supplies_its_own_cell() {
     let mut inner = DebugSession::new(compile_fixture()).expect("inner walk");
-    let frame = run_to_hit(&mut inner, "var WalkStop: integer := 0;", 3);
+    let frame = run_to_hit(&mut inner, "const WalkStop: integer := 0;", 3);
     inner
         .set_expression(&root("Current"), &name("AddAcc"), Some(frame))
         .expect("innermost Acc");
@@ -136,7 +136,7 @@ fn selected_recursive_activation_supplies_its_own_cell() {
     assert_eq!(rendered(&mut inner, call("Current", 0), frame), "1");
 
     let mut outer = DebugSession::new(compile_fixture()).expect("outer walk");
-    let _ = run_to_hit(&mut outer, "var WalkStop: integer := 0;", 3);
+    let _ = run_to_hit(&mut outer, "const WalkStop: integer := 0;", 3);
     let outer_frame = outer.stack(0, 8).expect("walk stack").items[2].id;
     outer
         .set_expression(&root("Current"), &name("AddAcc"), Some(outer_frame))
@@ -148,7 +148,7 @@ fn selected_recursive_activation_supplies_its_own_cell() {
 #[test]
 fn shadowed_local_cannot_replace_the_owner_cell() {
     let mut session = DebugSession::new(compile_fixture()).expect("debug session");
-    let frame = run_to(&mut session, "var ShadowStop: integer := 0;");
+    let frame = run_to(&mut session, "const ShadowStop: integer := 0;");
     session
         .set_expression(&root("Current"), &name("AddOffset"), Some(frame))
         .expect("owner Offset cell");
@@ -157,9 +157,9 @@ fn shadowed_local_cannot_replace_the_owner_cell() {
 }
 
 #[test]
-fn uninitialized_local_and_mutable_parameter_registers_accept_task_owned_routines() {
+fn uninitialized_local_and_parameter_copy_registers_accept_task_owned_routines() {
     let mut pending = DebugSession::new(compile_fixture()).expect("pending dest");
-    let frame = run_to(&mut pending, "var PendingStop: integer := 0;");
+    let frame = run_to(&mut pending, "const PendingStop: integer := 0;");
     let locals = scope_reference(&mut pending, "Locals");
     assert_eq!(
         named(
@@ -177,11 +177,11 @@ fn uninitialized_local_and_mutable_parameter_registers_accept_task_owned_routine
         "<function pendingdest.addpending>"
     );
 
-    let mut apply = DebugSession::new(compile_fixture()).expect("parameter dest");
-    let frame = run_to(&mut apply, "var ParamStop: integer := 0;");
+    let mut apply = DebugSession::new(compile_fixture()).expect("parameter copy dest");
+    let frame = run_to(&mut apply, "const ParamStop: integer := 0;");
     apply
         .set_expression(&root("Current"), &name("AddParam"), Some(frame))
-        .expect("mutable parameter");
+        .expect("mutable parameter copy");
     let frame = apply.stack(0, 1).expect("fresh").items[0].id;
     let assigned_value = runtime(&apply, &name("Current"), frame);
     let assigned = as_function(&assigned_value);
@@ -192,7 +192,7 @@ fn uninitialized_local_and_mutable_parameter_registers_accept_task_owned_routine
 #[test]
 fn copying_the_constructed_task_owned_function_preserves_identity_and_cells() {
     let mut session = DebugSession::new(compile_fixture()).expect("debug session");
-    let frame = run_to(&mut session, "var CellStop: integer := 0;");
+    let frame = run_to(&mut session, "const CellStop: integer := 0;");
     session
         .set_expression(&root("Current"), &name("AddCell"), Some(frame))
         .expect("construct");

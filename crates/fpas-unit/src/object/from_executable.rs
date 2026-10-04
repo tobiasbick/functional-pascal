@@ -7,8 +7,8 @@ use super::{
     OBJECT_VERSION, ObjectConstant, ObjectDebugBinding, ObjectDebugBindingKind,
     ObjectDebugLocation, ObjectDebugScope, ObjectEnumLayout, ObjectEnumVariant, ObjectError,
     ObjectFunction, ObjectFunctionDebugInfo, ObjectGlobal, ObjectInitializer, ObjectRecordLayout,
-    ObjectRecordMethod, ObjectRecordProperty, ObjectReturn, ObjectSequencePoint, ObjectSourceRun,
-    RelocatableObject, Relocation, SymbolReference, canonical,
+    ObjectReturn, ObjectSequencePoint, ObjectSourceRun, RelocatableObject, Relocation,
+    SymbolReference, canonical,
 };
 
 impl RelocatableObject {
@@ -102,26 +102,6 @@ impl RelocatableObject {
                         .map(|field| strings(field.name))
                         .collect::<Result<Vec<_>, _>>()?,
                     field_types: record.fields.iter().map(|field| field.ty.get()).collect(),
-                    properties: record
-                        .properties
-                        .iter()
-                        .map(|property| {
-                            Ok(ObjectRecordProperty {
-                                name: strings(property.name)?,
-                                getter: strings(property.getter)?,
-                            })
-                        })
-                        .collect::<Result<Vec<_>, ObjectError>>()?,
-                    methods: record
-                        .methods
-                        .iter()
-                        .map(|method| {
-                            Ok(ObjectRecordMethod {
-                                name: strings(method.name)?,
-                                routine: strings(method.routine)?,
-                            })
-                        })
-                        .collect::<Result<Vec<_>, ObjectError>>()?,
                 })
             })
             .collect::<Result<Vec<_>, ObjectError>>()?;
@@ -290,6 +270,7 @@ impl RelocatableObject {
                 name: strings(function.name)?,
                 code: local_code,
                 arity: function.arity,
+                var_parameters: function.var_parameters.clone(),
                 capture_count: function.capture_count,
                 register_count: function.register_count,
                 returns: match function.return_convention {

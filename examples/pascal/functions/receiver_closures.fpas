@@ -1,0 +1,46 @@
+program ReceiverClosuresExample;
+
+uses Std.Console as Console;
+uses Std.Conv as Conv;
+
+type Counter = record
+  Base: integer;
+end record;
+
+function CounterAdd(Receiver: Counter; Value: integer): integer;
+begin
+  return Receiver.Base + Value;
+end function;
+
+procedure CounterShow(Receiver: Counter);
+begin
+  Console.WriteLn('Base: ' + Conv.IntToStr(Receiver.Base));
+end procedure;
+
+function CounterMake(Base: integer): Counter;
+begin
+  return Counter(Base := Base);
+end function;
+
+function Apply(F: function(Value: integer): integer; Value: integer): integer;
+begin
+  return F(Value);
+end function;
+
+begin
+  var C: Counter := Counter(Base := 10);
+  const AddReceiver := C;
+  const AddTen: function(Value: integer): integer := function(Value: integer): integer begin
+    return CounterAdd(AddReceiver, Value);
+  end function;
+
+  C := Counter(Base := 99);
+  Console.WriteLn(Conv.IntToStr(AddTen(5)));
+  Console.WriteLn(Conv.IntToStr(Apply(AddTen, 7)));
+  const ShowReceiver := CounterMake(3);
+  const ShowBase: procedure() := procedure() begin
+    CounterShow(ShowReceiver);
+  end procedure;
+
+  ShowBase();
+end program;

@@ -4,13 +4,13 @@ uses Std.Console as Console;
 uses Std.Arrays as Arrays;
 uses Std.Options as Options;
 
-function AlwaysTrue(X: integer): boolean;
+pure function AlwaysTrue(X: integer): boolean;
 begin
   return true;
 end function;
 
 begin
-  var A: array of (integer) := [];
-  var R: Option of (integer) := Arrays.Find(A, AlwaysTrue);
+  const A: array of (integer) := [];
+  const R: Option of (integer) := Arrays.Find(A, AlwaysTrue);
   Console.WriteLn(Options.IsNone(R));
 end program;

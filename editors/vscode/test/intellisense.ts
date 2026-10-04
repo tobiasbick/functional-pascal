@@ -28,10 +28,10 @@ export async function verifyIntelliSense(extensionPath: string): Promise<void> {
     " uses Intellisense.Core as Core;",
     "",
     "begin",
-    "  var CounterValue: Core.Counter := Core.Counter(Amount := 1);",
-    "  var Member: integer := CounterValue.Amount;",
-    "  var Sum: integer := Core.Add(1, 2);",
-    "  var Imported: integer := UniqueHostValue();",
+    "  const CounterValue := Core.Counter(Amount := 1);",
+    "  const Member: integer := CounterValue.Amount;",
+    "  const Sum: integer := Core.Add(1, 2);",
+    "  const Imported: integer := UniqueHostValue();",
     "end program;",
     ""
   ].join("\n");

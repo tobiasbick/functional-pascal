@@ -9,6 +9,7 @@ use super::support;
 use std::path::{Path, PathBuf};
 
 mod concurrency;
+mod values;
 
 fn repo_root() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -106,19 +107,19 @@ example_run_tests! {
     (example_for_in, "examples/pascal/for-in/for_in_example.fpas"),
     (example_mutable_nested_functions, "examples/pascal/functions/mutable_nested_functions.fpas"),
     (example_nested_functions, "examples/pascal/functions/nested_functions.fpas"),
-    (example_fluent_calls, "examples/pascal/functions/fluent_calls.fpas"),
+    (example_function_composition, "examples/pascal/functions/function_composition.fpas"),
     (example_go_statement, "examples/pascal/concurrency/go_statement_example.fpas"),
     (example_concurrency_select_events, "examples/pascal/concurrency/select_events.fpas"),
     (example_concurrency_task_group_workers, "examples/pascal/concurrency/task_group_workers.fpas"),
     (example_concurrency_supervised_worker, "examples/pascal/concurrency/supervised_worker.fpas"),
     (example_generic_functions, "examples/pascal/generics/generic_functions.fpas"),
-    (example_generic_record_methods, "examples/pascal/generics/generic_record_methods.fpas"),
+    (example_generic_record_functions, "examples/pascal/generics/generic_record_functions.fpas"),
     (example_higher_order_functions, "examples/pascal/higher-order-functions/higher_order_functions.fpas"),
     (example_pattern_exhaustiveness, "examples/pascal/pattern-matching/exhaustiveness.fpas"),
     (example_pattern_guards, "examples/pascal/pattern-matching/guards.fpas"),
-    (example_record_counter, "examples/pascal/record-methods/counter.fpas"),
-    (example_record_point, "examples/pascal/record-methods/point.fpas"),
-    (example_record_rectangle, "examples/pascal/record-methods/rectangle.fpas"),
+    (example_record_counter, "examples/pascal/functions/record_counter.fpas"),
+    (example_record_point, "examples/pascal/functions/record_point.fpas"),
+    (example_record_rectangle, "examples/pascal/functions/record_rectangle.fpas"),
     (example_record_defaults_update, "examples/pascal/records/defaults_with_update.fpas"),
     (example_array_basics, "examples/pascal/std/array_basics.fpas"),
     (example_args_basics, "examples/pascal/std/args_basics.fpas", "alpha", "beta"),

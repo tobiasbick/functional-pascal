@@ -9,7 +9,7 @@ uses Std.Tui.Runtime.Msg as Msg;
 
 function TuiInputPreviousWord(Text: string; Caret: integer): integer;
 begin
-  mutable var Index: integer := Caret;
+  var Index: integer := Caret;
   while Index > 0 do
     begin
       if Str.CharAt(Text, Index - 1) = ' ' then
@@ -43,7 +43,7 @@ end function;
 
 function TuiInputNextWord(Text: string; Caret: integer): integer;
 begin
-  mutable var Index: integer := Caret;
+  var Index: integer := Caret;
   while Index < Str.Length(Text) do
     begin
       if Str.CharAt(Text, Index) <> ' ' then
@@ -103,19 +103,19 @@ begin
       return Option.None;
     end;
   end if;
-  var Index: integer := TuiInputHistoryIndex(Input);
+  const Index: integer := TuiInputHistoryIndex(Input);
   if Key.kind = Console.KeyKind.Up then
     begin
       if Index < 0 then
         begin
-          var Text: string := Input.History[Arrays.Length(Input.History) - 1];
+          const Text: string := Input.History[Arrays.Length(Input.History) - 1];
           return Option.Some(Msg.TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Text, Str.Length(Text)));
         end;
       end if;
 
       if Index > 0 then
         begin
-          var Text: string := Input.History[Index - 1];
+          const Text: string := Input.History[Index - 1];
           return Option.Some(Msg.TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Text, Str.Length(Text)));
         end;
       end if;
@@ -134,7 +134,7 @@ begin
 
       if Index < Arrays.Length(Input.History) - 1 then
         begin
-          var Text: string := Input.History[Index + 1];
+          const Text: string := Input.History[Index + 1];
           return Option.Some(Msg.TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Text, Str.Length(Text)));
         end;
       end if;
@@ -180,7 +180,7 @@ begin
 
   if (Key.kind = Console.KeyKind.Backspace) and (Input.Caret > 0) then
     begin
-      mutable var Start: integer := Input.Caret - 1;
+      var Start: integer := Input.Caret - 1;
       if Key.ctrl then
         begin
           Start := TuiInputPreviousWord(Input.Text, Input.Caret);
@@ -194,7 +194,7 @@ begin
 
   if (Key.kind = Console.KeyKind.Delete) and (Input.Caret < Str.Length(Input.Text)) then
     begin
-      mutable var EndIndex: integer := Input.Caret + 1;
+      var EndIndex: integer := Input.Caret + 1;
       if Key.ctrl then
         begin
           EndIndex := TuiInputNextWord(Input.Text, Input.Caret);
@@ -208,7 +208,7 @@ begin
 
   if (Key.kind = Console.KeyKind.Left) and (Input.Caret > 0) then
     begin
-      mutable var Caret: integer := Input.Caret - 1;
+      var Caret: integer := Input.Caret - 1;
       if Key.ctrl then
         begin
           Caret := TuiInputPreviousWord(Input.Text, Input.Caret);
@@ -221,7 +221,7 @@ begin
 
   if (Key.kind = Console.KeyKind.Right) and (Input.Caret < Str.Length(Input.Text)) then
     begin
-      mutable var Caret: integer := Input.Caret + 1;
+      var Caret: integer := Input.Caret + 1;
       if Key.ctrl then
         begin
           Caret := TuiInputNextWord(Input.Text, Input.Caret);

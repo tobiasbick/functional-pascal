@@ -3,13 +3,13 @@ program T;
 uses Std.Console as Console;
 uses Std.Results as Results;
 
-function ReplaceError(E: string): Result of (integer, string);
+pure function ReplaceError(E: string): Result of (integer, string);
 begin
   return Result.Error('second');
 end function;
 
 begin
-  var R: Result of (integer, string) := Result.Error('first');
-  var M: Result of (integer, string) := Results.OrElse(R, ReplaceError);
+  const R: Result of (integer, string) := Result.Error('first');
+  const M: Result of (integer, string) := Results.OrElse(R, ReplaceError);
   Console.WriteLn(Results.IsError(M));
 end program;

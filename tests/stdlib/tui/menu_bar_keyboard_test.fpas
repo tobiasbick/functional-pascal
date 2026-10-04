@@ -3,6 +3,11 @@ program TuiMenuBarKeyboardTest;
 uses Std.Arrays as Arrays;
 uses Std.Test as Test;
 uses Std.Tui as Tui;
+uses Std.Tui.Chrome as Chrome;
+uses Std.Tui.Elements as Elements;
+uses Std.Tui.Geometry as Geometry;
+uses Std.Tui.Ids as Ids;
+uses Std.Tui.Runtime as Runtime;
 
 type MenuModel = record
   Focus: integer;
@@ -16,18 +21,18 @@ end function;
 
 function ViewMenu(State: MenuModel): Tui.TuiElement;
 begin
-  return Tui.TuiElementBuilders.MakeDesktop(Option.Some(Tui.TuiControlId.Create(State.Focus)), [
-                                                                                                 Tui.TuiElementBuilders.MakeMenuBar([
-                                                                                                                                      Tui.TuiMenuItem.Create(Tui.TuiControlId.Create(1), 'Open', Tui.TuiAction.Create(10)),
-                                                                                                                                      Tui.TuiMenuItem.Disabled(Tui.TuiControlId.Create(2), 'Save', Tui.TuiAction.Create(20)),
-                                                                                                                                      Tui.TuiMenuItem.WithShortcut(Tui.TuiControlId.Create(3), 'Quit', Tui.TuiAction.Create(30), 'Ctrl+Q')
-                                                                                                                                    ])
-                                                                                               ]);
+  return Elements.TuiElementMakeDesktop(Option.Some(Ids.TuiControlIdCreate(State.Focus)), [
+                                                                                            Elements.TuiElementMakeMenuBar([
+                                                                                                                             Chrome.TuiMenuItemCreate(Ids.TuiControlIdCreate(1), 'Open', Ids.TuiActionCreate(10)),
+                                                                                                                             Chrome.TuiMenuItemDisabled(Ids.TuiControlIdCreate(2), 'Save', Ids.TuiActionCreate(20)),
+                                                                                                                             Chrome.TuiMenuItemWithShortcut(Ids.TuiControlIdCreate(3), 'Quit', Ids.TuiActionCreate(30), 'Ctrl+Q')
+                                                                                                                           ])
+                                                                                          ]);
 end function;
 
 function UpdateMenu(State: MenuModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): MenuModel;
 begin
-  Cmd.Set(Tui.TuiCmd.NoCommand);
+  Runtime.TuiCmdOutputSet(Cmd, Tui.TuiCmd.NoCommand);
   case Msg of
     when Tui.TuiMsg.FocusChanged(const Previous, const Current):
       begin
@@ -58,19 +63,19 @@ begin
 end function;
 
 begin
-  mutable var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(24, 4));
-  mutable var Model: MenuModel := MenuModel(Focus := 1, Actions := []);
-  Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 0, 0);
-  App.InjectKeyForTest(MakeKey(Tui.TuiKeyKind.Enter));
-  Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 1, 0);
+  var App: Tui.TuiApplication := Runtime.TuiApplicationOpenForTest(Geometry.TuiSizeCreate(24, 4));
+  var Model: MenuModel := MenuModel(Focus := 1, Actions := []);
+  Model := Runtime.TuiApplicationRunIterations(App, Model, UpdateMenu, ViewMenu, 0, 0);
+  Runtime.TuiApplicationInjectKeyForTest(App, MakeKey(Tui.TuiKeyKind.Enter));
+  Model := Runtime.TuiApplicationRunIterations(App, Model, UpdateMenu, ViewMenu, 1, 0);
   Test.AssertEquals(1, Arrays.Length(Model.Actions));
   Test.AssertEquals(10, Model.Actions[0]);
-  App.InjectKeyForTest(MakeKey(Tui.TuiKeyKind.Tab));
-  Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 1, 0);
+  Runtime.TuiApplicationInjectKeyForTest(App, MakeKey(Tui.TuiKeyKind.Tab));
+  Model := Runtime.TuiApplicationRunIterations(App, Model, UpdateMenu, ViewMenu, 1, 0);
   Test.AssertEquals(3, Model.Focus);
-  App.InjectKeyForTest(MakeKey(Tui.TuiKeyKind.Space));
-  Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 1, 0);
+  Runtime.TuiApplicationInjectKeyForTest(App, MakeKey(Tui.TuiKeyKind.Space));
+  Model := Runtime.TuiApplicationRunIterations(App, Model, UpdateMenu, ViewMenu, 1, 0);
   Test.AssertEquals(2, Arrays.Length(Model.Actions));
   Test.AssertEquals(30, Model.Actions[1]);
-  App.Close();
+  Runtime.TuiApplicationClose(App);
 end program;

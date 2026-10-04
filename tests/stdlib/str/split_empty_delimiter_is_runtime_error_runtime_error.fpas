@@ -4,5 +4,5 @@ uses Std.Console as Console;
 uses Std.Str as Str;
 
 begin
-  var Parts: array of (string) := Str.Split('abc', '');
+  const Parts: array of (string) := Str.Split('abc', '');
 end program;

@@ -1,4 +1,5 @@
 mod array;
+mod callback_context;
 mod callbacks;
 mod channel_task;
 mod dict;
@@ -13,14 +14,44 @@ use crate::check::Checker;
 use crate::types::Ty;
 use fpas_diagnostics::codes::{INTERNAL_COMPILER_INVARIANT_FAILURE, SEMA_WRONG_ARGUMENT_COUNT};
 use fpas_lexer::Span;
-use fpas_parser::{DesignatorPart, Expr};
+use fpas_parser::Expr;
 
 pub fn check_builtin_std_call(c: &mut Checker, name: &str, args: &[Expr], span: Span) -> Ty {
     check_builtin_std_call_refs(c, name, &args.iter().collect::<Vec<_>>(), span)
 }
 
-/// Check an intrinsic using the original argument nodes, including an implicit receiver.
+/// Check an intrinsic using the original argument nodes, preserving explicit source arguments.
 pub fn check_builtin_std_call_refs(c: &mut Checker, name: &str, args: &[&Expr], span: Span) -> Ty {
+    let pure = fpas_std::intrinsic_std_function_is_pure(name);
+    if !pure {
+        c.reject_impure_operation(&format!("call ordinary routine `{name}`"), span);
+    }
+    let previous = callback_context::prepare(c, name, args);
+    let result = check_builtin_operation(c, name, args, span);
+    callback_context::restore(c, previous);
+    if pure {
+        for (index, arg) in args.iter().enumerate() {
+            if let Some(ty) = c.expr_types.get(&Checker::expr_lookup_key(arg))
+                && !c.is_pure_data(ty)
+            {
+                c.error_with_code(fpas_diagnostics::codes::SEMA_TYPE_MISMATCH,
+                    format!("Argument {} of pure intrinsic `{name}` is not resource-free data or a pure callable", index + 1),
+                    "Use resource-free data and explicitly pure function callbacks; use action APIs for effects.", arg.span());
+            }
+        }
+        if !c.is_pure_data(&result) {
+            c.error_with_code(
+                fpas_diagnostics::codes::SEMA_TYPE_MISMATCH,
+                format!("Pure intrinsic `{name}` cannot return `{result}`"),
+                "Use resource-free data or pure callable results.",
+                span,
+            );
+        }
+    }
+    result
+}
+
+fn check_builtin_operation(c: &mut Checker, name: &str, args: &[&Expr], span: Span) -> Ty {
     if let Some(ty) = array::check_array_builtin_std_call(c, name, args, span) {
         return ty;
     }
@@ -70,30 +101,6 @@ fn check_argument_count(
         span,
     );
     false
-}
-
-pub(super) fn simple_var_name(expr: &Expr) -> Option<String> {
-    let Expr::Designator(d) = expr else {
-        return None;
-    };
-    if d.parts.len() != 1 {
-        return None;
-    }
-    match &d.parts[0] {
-        DesignatorPart::Ident(name, _) => Some(name.clone()),
-        _ => None,
-    }
-}
-
-pub(super) fn mutable_array_elem_ty(c: &Checker, name: &str) -> Option<Ty> {
-    let sym = c.scopes.lookup(name)?;
-    if !sym.mutable {
-        return None;
-    }
-    match &sym.ty {
-        Ty::Array(elem) => Some(*elem.clone()),
-        _ => None,
-    }
 }
 
 pub(super) fn array_elem_ty(ty: &Ty) -> Option<Ty> {

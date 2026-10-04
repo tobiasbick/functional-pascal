@@ -6,7 +6,7 @@ uses Std.Console as Console;
 uses Std.Conv as Conv;
 
 begin
-  mutable var Sum: integer := 0;
+  var Sum: integer := 0;
   for I: integer := 5 downto 1 do
     begin
       Sum := Sum + I;

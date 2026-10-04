@@ -50,76 +50,88 @@ fn program_and_function_names_can_match_in_any_case() {
 #[test]
 fn program_and_procedure_names_can_match() {
     run_both_paths(
-        "program Touch;
-        mutable var Value: integer := 0;
+        r#"program Touch;
+         var Value: integer := 0;
         procedure touch(); begin Value := 42; end procedure;
-        begin TOUCH(); if Value <> 42 then panic('procedure'); end if; end program;",
+        begin TOUCH(); if Value <> 42 then panic('procedure'); end if; end program;"#,
     );
 }
 
 #[test]
 fn matching_routine_keeps_recursion_and_function_values() {
     run_both_paths(
-        "program Count;
+        r#"program Count;
         function Count(N: integer): integer;
         begin if N = 0 then return 0; else return Count(N - 1) + 1; end if; end function;
-        begin var F: function(N: integer): integer := Count;
+        begin const F: function(N: integer): integer := Count;
           if F(4) <> 4 then panic('recursive function value'); end if;
-        end program;",
+        end program;"#,
     );
 }
 
 #[test]
 fn matching_routine_keeps_closure_captures() {
     run_both_paths(
-        "program Counter;
+        r#"program Counter;
         function Counter(): function(): integer;
         begin
-          mutable var Value: integer := 0;
+           var Value: integer := 0;
           return function(): integer
           begin Value := Value + 1; return Value; end function;
         end function;
-        begin var Next: function(): integer := Counter();
+        begin const Next: function(): integer := Counter();
           if Next() <> 1 then panic('first capture'); end if;
           if Next() <> 2 then panic('second capture'); end if;
-        end program;",
+        end program;"#,
     );
 }
 
 #[test]
 fn matching_routine_keeps_nested_routine_resolution() {
     run_both_paths(
-        "program MakeAdder;
+        r#"program MakeAdder;
         function MakeAdder(Base: integer): function(Value: integer): integer;
           function Add(Value: integer): integer;
           begin return Base + Value; end function;
         begin return Add; end function;
-        begin var AddForty: function(Value: integer): integer := MakeAdder(40);
+        begin const AddForty: function(Value: integer): integer := MakeAdder(40);
           if AddForty(2) <> 42 then panic('nested routine'); end if;
-        end program;",
+        end program;"#,
     );
 }
 
 #[test]
 fn program_name_can_match_a_global_or_type() {
     run_both_paths(
-        "program Value;
-        mutable var Value: integer := 42;
-        begin if Value <> 42 then panic('global'); end if; end program;",
+        r#"program Value;
+         var Value: integer := 42;
+        begin if Value <> 42 then panic('global'); end if; end program;"#,
     );
     run_both_paths(
-        "program Model;\n\ntype Model = record\n  Value: integer;\nend record;\n\nbegin\n  var Item: Model := Model(Value := 42);\n  if Item.Value <> 42 then\n    panic('type');\n  end if;\nend program;\n",
+        r#"program Model;
+
+type Model = record
+  Value: integer;
+end record;
+
+begin
+  const Item: Model := Model(Value := 42);
+  if Item.Value <> 42 then
+    panic('type');
+  end if;
+end program;
+"#,
     );
 }
 
 #[test]
 fn unit_initializer_and_same_named_routines_keep_distinct_link_identities() {
     let (unit, errors) = fpas_parser::parse_compilation_unit(
-        "unit Greet;
+        r#"unit Greet;
         public function Greet(): integer;
         begin return 41; end function;
-        public var Seed: integer := Greet();
-        end unit;",
+        public const Seed: integer := Greet();
+        end unit;"#,
     );
     assert!(errors.is_empty(), "{errors:#?}");
     let fpas_parser::CompilationUnit::Unit(unit) = unit else {
@@ -197,15 +209,15 @@ fn actual_duplicate_routines_still_report_a_semantic_error() {
 #[test]
 fn debugger_preserves_program_display_and_breaks_only_in_declared_routine() {
     let executable = linked(
-        "program Greet;
+        r#"program Greet;
 function Greet(N: integer): integer;
 begin
   return N + 1;
 end function;
 begin
-  var Answer: integer := Greet(41);
+  const Answer: integer := Greet(41);
   if Answer <> 42 then panic('answer'); end if;
-end program;",
+end program;"#,
     );
     assert_eq!(
         DebugRecordingEnvelope::from_executable(&executable)

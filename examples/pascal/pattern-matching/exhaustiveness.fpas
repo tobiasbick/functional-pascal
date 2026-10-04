@@ -50,7 +50,7 @@ begin
   Console.WriteLn(TrafficAdvice(Light.Yellow));
   Console.WriteLn(TrafficAdvice(Light.Green));
   Console.WriteLn('--- Option exhaustiveness ---');
-  var Idx: Option of (integer) := SafeLookup([10, 20, 30], 20);
+  const Idx: Option of (integer) := SafeLookup([10, 20, 30], 20);
   case Idx of
     when Option.Some(const I):
       begin
@@ -63,7 +63,7 @@ begin
   end case;
 
   Console.WriteLn('--- Result exhaustiveness ---');
-  var R: Result of (integer, string) := Result.Ok(42);
+  const R: Result of (integer, string) := Result.Ok(42);
   case R of
     when Result.Ok(const V):
       begin

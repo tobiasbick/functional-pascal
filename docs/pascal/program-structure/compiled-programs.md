@@ -72,9 +72,9 @@ layouts, source maps, and the entry function before the VM can execute the image
 
 ## Format validation
 
-The sectioned envelope uses program format version 10 and register-bytecode version 10. A producer
-that changes either wire contract must increment the corresponding version; related program and
-bytecode changes use matching versions. Readers reject unsupported versions before execution, and
+The sectioned envelope uses program format version 16 and register-bytecode version 17. A producer
+that changes either wire contract must increment its corresponding version. The envelope and
+bytecode have separate version numbers. Readers reject unsupported versions before execution, and
 `fpas run` tells the user to rebuild from project sources. Source-backed project builds replace
 incompatible artifacts automatically. A source-less incompatible `.fpascp` cannot run and must be
 rebuilt from its sources.

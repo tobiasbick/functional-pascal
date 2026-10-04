@@ -46,8 +46,8 @@ begin
 end function;
 
 begin
-  var Messages: channel of (integer) := Tasks.CreateChannel(1);
-  var Producer: task := go SendValues(Messages);
+  const Messages: channel of (integer) := Tasks.CreateChannel(1);
+  const Producer: task := go SendValues(Messages);
   Test.AssertEquals(10, ReceiveValue(Messages));
   Test.AssertEquals(20, ReceiveValue(Messages));
   Test.AssertTrue(Tasks.Wait(Producer));

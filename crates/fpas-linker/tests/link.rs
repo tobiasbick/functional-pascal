@@ -313,6 +313,7 @@ fn private_missing_wrong_kind_and_incompatible_callable_imports_are_rejected() {
 
     let mut wrong_arity = program();
     wrong_arity.imports[0].shape = ImportShape::Function {
+        var_parameters: Vec::new(),
         arity: 1,
         capture_count: 0,
         returns_value: false,

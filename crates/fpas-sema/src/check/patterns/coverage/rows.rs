@@ -32,11 +32,11 @@ impl Checker {
     }
 
     fn coverage_value(&self, expression: &Expr, end: Option<&Expr>) -> RowPattern {
-        let value = self.static_constants.evaluate(expression);
+        let value = self.evaluate_static_expression(expression);
         let tag = match value {
             Some(Constant::Integer(value)) => {
                 let end = end
-                    .and_then(|end| self.static_constants.evaluate(end))
+                    .and_then(|end| self.evaluate_static_expression(end))
                     .and_then(|end| match end {
                         Constant::Integer(value) => Some(value),
                         _ => None,
@@ -47,7 +47,7 @@ impl Checker {
             Some(Constant::Boolean(value)) => Tag::Boolean(value),
             Some(Constant::String(value)) => {
                 let upper = end
-                    .and_then(|end| self.static_constants.evaluate(end))
+                    .and_then(|end| self.evaluate_static_expression(end))
                     .and_then(|end| match end {
                         Constant::String(value) => Some(value),
                         _ => None,

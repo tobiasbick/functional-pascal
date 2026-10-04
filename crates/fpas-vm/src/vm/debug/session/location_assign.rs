@@ -100,7 +100,10 @@ impl DebugSession {
         Ok(MutationTarget {
             root: MutationRoot::Global(index),
             path: Vec::new(),
-            expected_type: global.ty,
+            expected_type: super::super::inspection::logical_global_type(
+                self.executable.executable(),
+                global.ty,
+            ),
             generation,
             frame_id: None,
             initialized,

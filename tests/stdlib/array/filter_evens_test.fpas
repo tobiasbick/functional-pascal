@@ -3,14 +3,14 @@ program T;
 uses Std.Console as Console;
 uses Std.Arrays as Arrays;
 
-function IsEven(X: integer): boolean;
+pure function IsEven(X: integer): boolean;
 begin
   return X mod 2 = 0;
 end function;
 
 begin
-  var Nums: array of (integer) := [1, 2, 3, 4, 5];
-  var Evens: array of (integer) := Arrays.Filter(Nums, IsEven);
+  const Nums: array of (integer) := [1, 2, 3, 4, 5];
+  const Evens: array of (integer) := Arrays.Filter(Nums, IsEven);
   Console.WriteLn(Arrays.Length(Evens));
   Console.WriteLn(Evens[0]);
   Console.WriteLn(Evens[1]);

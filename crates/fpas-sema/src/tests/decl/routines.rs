@@ -84,14 +84,14 @@ fn nested_function_scope() {
 #[test]
 fn nested_function_captures_enclosing_body_local() {
     check_ok(
-        r#"program T; function Make(): function(Value: integer): integer; function Add(Value: integer): integer; begin return Value + Offset; end function; begin var Offset: integer := 7; return Add; end function; begin null; end program;"#,
+        r#"program T; function Make(): function(Value: integer): integer; function Add(Value: integer): integer; begin return Value + Offset; end function; begin const Offset: integer := 7; return Add; end function; begin null; end program;"#,
     );
 }
 
 #[test]
 fn nested_function_does_not_see_inner_block_locals() {
     let errors = check_errors(
-        r#"program T; function Outer(): integer; function Inner(): integer; begin return Hidden; end function; begin begin var Hidden: integer := 1; return Inner(); end; end function; begin null; end program;"#,
+        r#"program T; function Outer(): integer; function Inner(): integer; begin return Hidden; end function; begin begin const Hidden: integer := 1; return Inner(); end; end function; begin null; end program;"#,
     );
     assert!(
         errors
@@ -102,16 +102,16 @@ fn nested_function_does_not_see_inner_block_locals() {
 }
 
 #[test]
-fn mutable_param() {
+fn parameter_with_explicit_local_copy() {
     check_ok(
-        r#"program T; procedure Inc(mutable X: integer); begin X := X + 1; end procedure; begin null; end program;"#,
+        r#"program T; procedure Inc(InitialX: integer); begin  var X: integer := InitialX; X := X + 1; end procedure; begin null; end program;"#,
     );
 }
 
 #[test]
 fn generic_function_valid() {
     check_ok(
-        r#"program T; function Identity of (T)(Value: T): T; begin return Value; end function;  var X: integer := Identity(42); begin null; end program;"#,
+        r#"program T; function Identity of (T)(Value: T): T; begin return Value; end function;  const X: integer := Identity(42); begin null; end program;"#,
     );
 }
 
@@ -140,7 +140,7 @@ begin
 end function;
 
 begin
-  var Root: Element := Render(Model(Count := 1), View);
+  const Root: Element := Render(Model(Count := 1), View);
 end program;
 "#,
     );
@@ -156,7 +156,7 @@ fn generic_procedure_valid() {
 #[test]
 fn generic_function_reused_type_param_requires_same_concrete_type() {
     check_errors(
-        r#"program T; function PickFirst of (T)(A: T; B: T): T; begin return A; end function; begin var X: integer := PickFirst(1, true); end program;"#,
+        r#"program T; function PickFirst of (T)(A: T; B: T): T; begin return A; end function; begin const X: integer := PickFirst(1, true); end program;"#,
     );
 }
 

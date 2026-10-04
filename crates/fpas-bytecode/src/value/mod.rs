@@ -6,6 +6,8 @@ mod equal;
 mod function;
 mod managed_heap;
 mod payload;
+mod reference_transport;
+mod references;
 mod string;
 
 pub use aggregate::{
@@ -17,6 +19,10 @@ use equal::values_equal;
 pub use function::{FunctionValue, SharedFunction};
 pub use managed_heap::managed_value_buffer;
 pub use payload::ValuePayload;
+pub use references::{
+    CellBorrow, ReferenceError, ReferencePathError, ReferenceRegistry, ReferenceStep,
+    SelectedReference,
+};
 pub use string::SharedStr;
 
 /// Runtime value in the VM.
@@ -66,6 +72,8 @@ pub enum Value {
     ///
     /// **Documentation:** `docs/pascal/language/functions/closures.md`
     Cell(std::sync::Arc<std::sync::Mutex<Value>>),
+    /// Synchronous selected storage authority; copies retain the same call-bound reference.
+    Reference(std::sync::Arc<SelectedReference>),
     /// Task handle (runtime id).
     ///
     /// **Documentation:** `docs/pascal/language/concurrency/README.md`
@@ -117,6 +125,7 @@ impl Value {
             Self::OptionSome(value) => Self::OptionSome(value.clone()),
             Self::Function(value) => Self::Function(value.clone()),
             Self::Cell(value) => Self::Cell(value.clone()),
+            Self::Reference(value) => Self::Reference(value.clone()),
             Self::Integer(_)
             | Self::Real(_)
             | Self::Boolean(_)
@@ -163,15 +172,6 @@ impl Value {
         Self::Function(SharedFunction::unbound(function, name, captures))
     }
 
-    /// Create a first-class method value bound to one immutable receiver snapshot.
-    pub fn bound_function(
-        function: crate::FunctionId,
-        name: impl Into<std::sync::Arc<str>>,
-        receiver: Value,
-    ) -> Self {
-        Self::Function(SharedFunction::bound(function, name, receiver))
-    }
-
     /// Create a task-bound function owned by one runtime task.
     ///
     /// The owner token is runtime-only and is never stored in program artifacts.
@@ -204,6 +204,7 @@ impl Value {
             Value::OptionNone => "Option.None",
             Value::Function(_) => "function",
             Value::Cell(_) => "cell",
+            Value::Reference(_) => "var reference",
             Value::Task(_) => "task",
             Value::OpaqueHandle(_) => "opaque handle",
         }

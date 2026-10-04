@@ -28,20 +28,20 @@ fn if_else_non_boolean_condition() {
 #[test]
 fn if_comparison_condition() {
     check_ok(
-        r#"program T;  var X: integer := 5; begin if X > 0 then return; end if; end program;"#,
+        r#"program T;  const X: integer := 5; begin if X > 0 then return; end if; end program;"#,
     );
 }
 
 #[test]
 fn if_else_if_chain_ok() {
     check_ok(
-        r#"program T;  var X: integer := 5; begin if X > 10 then return; else if X > 0 then return; else return; end if; end if; end program;"#,
+        r#"program T;  const X: integer := 5; begin if X > 10 then return; else if X > 0 then return; else return; end if; end if; end program;"#,
     );
 }
 
 #[test]
 fn if_with_block_ok() {
     check_ok(
-        r#"program T;   mutable var X: integer := 5; begin if X > 0 then begin X := 1; end; else begin X := 2; end; end if; end program;"#,
+        r#"program T;    var X: integer := 5; begin if X > 0 then begin X := 1; end; else begin X := 2; end; end if; end program;"#,
     );
 }

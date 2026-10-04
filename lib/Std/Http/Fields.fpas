@@ -14,7 +14,7 @@ public function IsValidValue(Value: string): boolean;
 begin
   for Index: integer := 0 to Str.Length(Value) - 1 do
     begin
-      var Code: integer := Str.Ord(Str.CharAt(Value, Index));
+      const Code: integer := Str.Ord(Str.CharAt(Value, Index));
       if ((Code < 32) and (Code <> 9)) or (Code = 127) then
         begin
           return false;
@@ -33,19 +33,19 @@ end function;
 // - `MessageKind`: Message label used in diagnostics.
 public function Parse(Text: string; MessageKind: string): Result of (array of (Types.Header), string);
 begin
-  var Lines: array of (string) := Str.Split(Text, #13 + #10);
-  mutable var Headers: array of (Types.Header) := [];
+  const Lines: array of (string) := Str.Split(Text, #13 + #10);
+  var Headers: array of (Types.Header) := [];
   for Index: integer := 1 to Arrays.Length(Lines) - 1 do
     begin
-      var Colon: integer := Str.IndexOf(Lines[Index], ':');
+      const Colon: integer := Str.IndexOf(Lines[Index], ':');
       if Colon <= 0 then
         begin
           return Result.Error((('Invalid HTTP ' + MessageKind) + ' header: ') + Lines[Index]);
         end;
       end if;
-      var Name: string := Str.Substring(Lines[Index], 0, Colon);
-      var Value: string := Str.Trim(Str.Substring(Lines[Index], Colon + 1, (Str.Length(Lines[Index]) - Colon) -
-                                                                           1));
+      const Name: string := Str.Substring(Lines[Index], 0, Colon);
+      const Value: string := Str.Trim(Str.Substring(Lines[Index], Colon + 1, (Str.Length(Lines[Index]) - Colon) -
+                                                                             1));
       if not Method.IsValidToken(Name) then
         begin
           return Result.Error((('Invalid HTTP ' + MessageKind) + ' header name: ') + Name);
@@ -59,7 +59,7 @@ begin
         end;
       end if;
 
-      Arrays.Push(Headers, Types.Header.Create(Name, Value));
+      Arrays.Push(var Headers, Types.HeaderCreate(Name, Value));
     end;
   end for;
 

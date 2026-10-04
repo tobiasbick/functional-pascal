@@ -2,8 +2,10 @@
 
 use crate::{FunctionDebugInfo, InstructionAddress, StringId};
 
+mod parameters;
 mod source_entry;
 
+pub use parameters::var_parameters_are_valid;
 pub use source_entry::{entry_source_name, program_entry_name, unit_initializer_name};
 
 /// Half-open instruction range owned by one function.
@@ -67,6 +69,8 @@ pub struct FunctionInfo {
     pub code: CodeRange,
     /// Number of parameter registers at the start of the frame.
     pub arity: u8,
+    /// Strictly increasing argument positions requiring synchronous var references.
+    pub var_parameters: Vec<u8>,
     /// Number of capture registers immediately following parameters.
     pub capture_count: u16,
     /// Total initialized register window size, excluding the sentinel.

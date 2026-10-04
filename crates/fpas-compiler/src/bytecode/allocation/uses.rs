@@ -5,6 +5,7 @@ use fpas_ir::{Operation, Terminator, ValueId};
 /// Values read by `operation`, in operand order.
 pub(super) fn operation_values(operation: &Operation) -> Vec<ValueId> {
     match operation {
+        Operation::Reference(reference) => reference.operands(),
         Operation::Const(_)
         | Operation::ReadLocal(_)
         | Operation::ArrayPop { .. }

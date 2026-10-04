@@ -3,8 +3,8 @@
 `Result of (T, E)` represents either a success (`Result.Ok`) or a failure (`Result.Error`):
 
 ```pascal
-var R: result of (integer, string) := Result.Ok(42);
-var E: result of (integer, string) := Result.Error('not found');
+const R: result of (integer, string) := Result.Ok(42);
+const E: result of (integer, string) := Result.Error('not found');
 
 ```
 
@@ -30,7 +30,7 @@ Use `case of` with destructuring to handle both branches:
 uses Std.Console as Console;
 uses Std.Conv as Conv;
 
-var R: result of (integer, string) := Divide(10, 0);
+const R: result of (integer, string) := Divide(10, 0);
 case R of
   when Result.Ok(const V):
     Console.WriteLn('Value: ' + Conv.IntToStr(V));

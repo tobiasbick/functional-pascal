@@ -37,7 +37,13 @@ impl LoweringContext {
                     span.column,
                 )
             })?;
-        self.emit_value(Operation::LoadGlobal(global.id), global.ty, span)
+        if global.cell {
+            let storage_ty = self.cell_type(global.ty, span)?;
+            let cell = self.emit_value(Operation::LoadGlobal(global.id), storage_ty, span)?;
+            self.emit_value(Operation::CellRead(cell), global.ty, span)
+        } else {
+            self.emit_value(Operation::LoadGlobal(global.id), global.ty, span)
+        }
     }
 
     /// Emits a write to a resolved global slot.
@@ -59,6 +65,11 @@ impl LoweringContext {
                     span.column,
                 )
             })?;
+        if global.cell {
+            let storage_ty = self.cell_type(global.ty, span)?;
+            let cell = self.emit_value(Operation::LoadGlobal(global.id), storage_ty, span)?;
+            return self.emit_effect(Operation::CellWrite { cell, value }, span);
+        }
         self.emit_effect(
             Operation::StoreGlobal {
                 global: global.id,
@@ -104,6 +115,22 @@ impl LoweringContext {
     pub(in crate::lowering) fn global_index_path_uses_u16_slot(&self, name: &str) -> bool {
         self.globals
             .get(&self.qualified_import_name(name).to_ascii_lowercase())
-            .is_some_and(|global| u16::try_from(global.id.get()).is_ok())
+            .is_some_and(|global| !global.cell && u16::try_from(global.id.get()).is_ok())
+    }
+
+    /// Obtain a mutable global's stable root before reserving caller storage.
+    pub(in crate::lowering) fn read_global_storage_root(
+        &mut self,
+        name: &str,
+        span: Span,
+    ) -> Result<ValueId, CompileError> {
+        let global = self
+            .globals
+            .get(&self.qualified_import_name(name).to_ascii_lowercase())
+            .copied()
+            .filter(|global| global.cell)
+            .ok_or_else(|| super::unsupported(span, "var global without writable cell storage"))?;
+        let storage_ty = self.cell_type(global.ty, span)?;
+        self.emit_value(Operation::LoadGlobal(global.id), storage_ty, span)
     }
 }

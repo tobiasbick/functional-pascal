@@ -1,6 +1,10 @@
 program InvalidElementControlIdRuntimeError;
 
 uses Std.Tui as Tui;
+uses Std.Tui.Chrome as Chrome;
+uses Std.Tui.Geometry as Geometry;
+uses Std.Tui.Ids as Ids;
+uses Std.Tui.Runtime as Runtime;
 
 function Update(State: integer; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): integer;
 begin
@@ -9,11 +13,11 @@ end function;
 
 function View(State: integer): Tui.TuiElement;
 begin
-  var InvalidId: Tui.TuiControlId := Tui.TuiControlId(Value := 0);
-  return Tui.TuiElement.Button(Tui.TuiButtonSpec.Normal(InvalidId, 'Invalid', '', Tui.TuiAction.Create(10)));
+  const InvalidId: Tui.TuiControlId := Tui.TuiControlId(Value := 0);
+  return Tui.TuiElement.Button(Chrome.TuiButtonSpecNormal(InvalidId, 'Invalid', '', Ids.TuiActionCreate(10)));
 end function;
 
 begin
-  mutable var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(20, 4));
-  discard App.RunIterations(0, Update, View, 0, 0);
+  var App: Tui.TuiApplication := Runtime.TuiApplicationOpenForTest(Geometry.TuiSizeCreate(20, 4));
+  discard Runtime.TuiApplicationRunIterations(App, 0, Update, View, 0, 0);
 end program;

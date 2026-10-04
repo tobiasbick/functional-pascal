@@ -1,3 +1,4 @@
+mod bindings;
 mod decisions;
 mod decl;
 mod expr;
@@ -7,6 +8,7 @@ mod routines;
 mod stmt;
 mod types;
 
+pub use bindings::*;
 pub use decisions::*;
 pub use decl::*;
 pub use expr::*;

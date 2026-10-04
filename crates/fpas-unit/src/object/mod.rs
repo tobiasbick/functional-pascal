@@ -22,8 +22,7 @@ pub use metadata::{
     ObjectCaptureKind, ObjectCaptureSource, ObjectConstant, ObjectDebugBinding,
     ObjectDebugBindingKind, ObjectDebugLocation, ObjectDebugScope, ObjectDebugType,
     ObjectEnumLayout, ObjectEnumVariant, ObjectFunctionDebugInfo, ObjectGlobal, ObjectInitializer,
-    ObjectRecordLayout, ObjectRecordMethod, ObjectRecordProperty, ObjectSequencePoint,
-    ObjectSourceRun,
+    ObjectRecordLayout, ObjectSequencePoint, ObjectSourceRun,
 };
 pub use relocation::{Relocation, RelocationKind};
 pub use symbol::{
@@ -36,7 +35,7 @@ use validation::{
 };
 
 /// Schema version embedded in every encoded register object payload.
-pub const OBJECT_VERSION: u16 = 7;
+pub const OBJECT_VERSION: u16 = 8;
 
 /// Independently compiled register-bytecode object with symbolic external references.
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
@@ -213,6 +212,7 @@ impl RelocatableObject {
             self.validate_relocation(relocation)?;
         }
         for (function_index, function) in self.functions.iter().enumerate() {
+            validation::validate_parameter_modes(function.arity, &function.var_parameters)?;
             if function.code.is_empty() {
                 return Err(ObjectError::EmptyFunction {
                     function: function.name.clone(),

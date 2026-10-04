@@ -3,9 +3,7 @@
 use std::collections::BTreeMap;
 
 use fpas_ir::{Function, FunctionId, TypeId};
-use fpas_parser::{
-    Decl, FormalParam, FuncBody, FunctionDecl, ProcedureDecl, RecordMethod, TypeBody,
-};
+use fpas_parser::{Decl, FormalParam, FuncBody, FunctionDecl, ProcedureDecl};
 use fpas_sema::AnalysisMetadata;
 
 use crate::CompileError;
@@ -16,8 +14,6 @@ use super::types;
 pub(super) enum Routine<'a> {
     Function(&'a FunctionDecl),
     Procedure(&'a ProcedureDecl),
-    RecordFunction(&'a str, &'a FunctionDecl),
-    RecordProcedure(&'a str, &'a ProcedureDecl),
 }
 
 pub(super) struct LoweringInput<'a> {
@@ -29,39 +25,37 @@ pub(super) struct LoweringInput<'a> {
     pub globals: &'a BTreeMap<String, super::context::GlobalBinding>,
     pub constants: &'a BTreeMap<String, fpas_ir::Constant>,
     pub closure_targets: std::collections::HashMap<usize, super::context::ClosureTarget>,
-    pub bound_method_targets: std::collections::HashMap<usize, super::context::BoundMethodTarget>,
-    pub intrinsic_task_targets: std::collections::HashMap<usize, super::context::BoundMethodTarget>,
+    pub intrinsic_task_targets:
+        std::collections::HashMap<usize, super::context::IntrinsicTaskTarget>,
     pub cell_names: std::collections::BTreeSet<String>,
 }
 
 impl Routine<'_> {
     fn name(&self) -> &str {
         match self {
-            Self::Function(function) | Self::RecordFunction(_, function) => &function.name,
-            Self::Procedure(procedure) | Self::RecordProcedure(_, procedure) => &procedure.name,
+            Self::Function(function) => &function.name,
+            Self::Procedure(procedure) => &procedure.name,
         }
     }
 
     fn params(&self) -> &[FormalParam] {
         match self {
-            Self::Function(function) | Self::RecordFunction(_, function) => &function.params,
-            Self::Procedure(procedure) | Self::RecordProcedure(_, procedure) => &procedure.params,
+            Self::Function(function) => &function.params,
+            Self::Procedure(procedure) => &procedure.params,
         }
     }
 
     fn type_params(&self) -> &[fpas_parser::TypeParam] {
         match self {
-            Self::Function(function) | Self::RecordFunction(_, function) => &function.type_params,
-            Self::Procedure(procedure) | Self::RecordProcedure(_, procedure) => {
-                &procedure.type_params
-            }
+            Self::Function(function) => &function.type_params,
+            Self::Procedure(procedure) => &procedure.type_params,
         }
     }
 
     fn body(&self) -> &FuncBody {
         match self {
-            Self::Function(function) | Self::RecordFunction(_, function) => &function.body,
-            Self::Procedure(procedure) | Self::RecordProcedure(_, procedure) => &procedure.body,
+            Self::Function(function) => &function.body,
+            Self::Procedure(procedure) => &procedure.body,
         }
     }
 
@@ -72,36 +66,28 @@ impl Routine<'_> {
 
     fn result(&self, types: &mut types::TypeTable) -> Result<TypeId, CompileError> {
         match self {
-            Self::Function(function) | Self::RecordFunction(_, function) => {
+            Self::Function(function) => {
                 types.type_expr_with_params(&function.return_type, &function.type_params)
             }
-            Self::Procedure(_) | Self::RecordProcedure(_, _) => Ok(types::UNIT),
+            Self::Procedure(_) => Ok(types::UNIT),
         }
     }
 
     fn span(&self) -> fpas_lexer::Span {
         match self {
-            Self::Function(function) | Self::RecordFunction(_, function) => function.span,
-            Self::Procedure(procedure) | Self::RecordProcedure(_, procedure) => procedure.span,
+            Self::Function(function) => function.span,
+            Self::Procedure(procedure) => procedure.span,
         }
     }
 
     fn runtime_name(&self) -> String {
-        match self {
-            Self::RecordFunction(owner, function) => format!("{owner}.{}", function.name),
-            Self::RecordProcedure(owner, procedure) => format!("{owner}.{}", procedure.name),
-            _ => self.name().to_string(),
-        }
+        self.name().to_string()
     }
 
     fn capture_key(&self) -> usize {
         match self {
-            Self::Function(function) | Self::RecordFunction(_, function) => {
-                fpas_sema::function_decl_lookup_key(function)
-            }
-            Self::Procedure(procedure) | Self::RecordProcedure(_, procedure) => {
-                fpas_sema::procedure_decl_lookup_key(procedure)
-            }
+            Self::Function(function) => fpas_sema::function_decl_lookup_key(function),
+            Self::Procedure(procedure) => fpas_sema::procedure_decl_lookup_key(procedure),
         }
     }
 }
@@ -138,28 +124,7 @@ pub(super) fn collect<'a>(
                 let FuncBody::Block { nested, .. } = &procedure.body;
                 collect(nested, routines, owners, names, id, &name);
             }
-            Decl::TypeDef(definition) => {
-                if let TypeBody::Record(record) = &definition.body {
-                    for method in &record.methods {
-                        match method {
-                            RecordMethod::Function(function)
-                            | RecordMethod::StaticFunction(function) => {
-                                routines.push(Routine::RecordFunction(&definition.name, function));
-                                owners.push(parent);
-                                names.push(format!("{}.{}", definition.name, function.name));
-                            }
-                            RecordMethod::Procedure(procedure)
-                            | RecordMethod::StaticProcedure(procedure) => {
-                                routines
-                                    .push(Routine::RecordProcedure(&definition.name, procedure));
-                                owners.push(parent);
-                                names.push(format!("{}.{}", definition.name, procedure.name));
-                            }
-                        }
-                    }
-                }
-            }
-            Decl::Const(_) | Decl::Var(_) | Decl::MutableVar(_) => {}
+            Decl::TypeDef(_) | Decl::Const(_) | Decl::Var(_) => {}
         }
     }
 }
@@ -190,9 +155,7 @@ pub(super) fn callable_table(
         let parameters = routine
             .params()
             .iter()
-            .map(|parameter| {
-                types.type_expr_with_params(&parameter.type_expr, routine.type_params())
-            })
+            .map(|parameter| types.formal_type(parameter, routine.type_params()))
             .collect::<Result<Vec<_>, _>>()?;
         let result = routine.result(types)?;
         let value_type = types.function_type(parameters.clone(), result, routine.span())?;
@@ -273,7 +236,6 @@ pub(super) fn lower(
         globals,
         constants,
         closure_targets,
-        bound_method_targets,
         intrinsic_task_targets,
         cell_names,
     } = input;
@@ -287,7 +249,7 @@ pub(super) fn lower(
         .iter()
         .map(|parameter| {
             types
-                .type_expr_with_params(&parameter.type_expr, routine.type_params())
+                .formal_type(parameter, routine.type_params())
                 .map(|ty| ParameterInput {
                     name: parameter.name.clone(),
                     ty,
@@ -307,7 +269,6 @@ pub(super) fn lower(
         metadata,
         callables: callables.clone(),
         closure_targets,
-        bound_method_targets,
         intrinsic_task_targets,
         cell_names,
         type_table: types.clone(),

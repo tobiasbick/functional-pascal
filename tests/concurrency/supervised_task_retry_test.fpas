@@ -6,13 +6,13 @@ uses Std.Results as Results;
 uses Std.Test as Test;
 
 begin
-  var Group: Tasks.TaskGroup := Tasks.CreateTaskGroup();
-  var Attempts: channel of (integer) := Tasks.CreateChannel(3);
+  const Group: Tasks.TaskGroup := Tasks.CreateTaskGroup();
+  const Attempts: channel of (integer) := Tasks.CreateChannel(3);
   discard Tasks.Send(Attempts, 0);
   discard Tasks.Send(Attempts, 1);
   discard Tasks.Send(Attempts, 2);
-  var Child: task := Tasks.StartSupervisedTask(Group, function(Token: Tasks.CancellationToken): Result of (integer, string) begin
-    var Attempt: integer := Results.Unwrap(Tasks.Receive(Attempts));
+  const Child: task := Tasks.StartSupervisedTask(Group, function(Token: Tasks.CancellationToken): Result of (integer, string) begin
+    const Attempt: integer := Results.Unwrap(Tasks.Receive(Attempts));
     if Attempt = 0 then
       begin
         return Result.Error('retryable error');

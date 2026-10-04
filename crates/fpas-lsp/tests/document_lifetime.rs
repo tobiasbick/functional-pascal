@@ -33,7 +33,7 @@ end program;
             1,
             r#"program Second;
 begin
-  var Broken: integer := 'text';
+  const Broken: integer := 'text';
 end program;
 "#,
         )),

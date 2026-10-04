@@ -46,9 +46,9 @@ fn procedure_declaration() {
 }
 
 #[test]
-fn mutable_param() {
+fn var_param() {
     let p = parse_ok(
-        r#"program T; procedure Inc(mutable X: integer); begin X := X + 1; end procedure; begin null; end program;"#,
+        r#"program T; procedure Inc(var X: integer); begin X := X + 1; end procedure; begin null; end program;"#,
     );
     match &p.declarations[0] {
         Decl::Procedure(proc) => {
@@ -56,6 +56,14 @@ fn mutable_param() {
         }
         _ => panic!("expected Procedure"),
     }
+}
+
+#[test]
+fn obsolete_locally_mutable_parameter_requests_an_explicit_copy() {
+    let (_, errors) = parse_with_errors(
+        "program T; procedure Use(mutable Value: integer); begin null; end procedure; begin null; end program;",
+    );
+    assert!(errors.iter().any(|diagnostic| matches!(diagnostic, crate::ParseDiagnostic::Parser(error) if error.message.contains("Obsolete") && error.help.as_ref().is_some_and(|help| help.contains("local")))), "{errors:#?}");
 }
 
 #[test]

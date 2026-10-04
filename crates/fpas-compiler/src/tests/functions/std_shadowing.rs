@@ -20,7 +20,7 @@ begin
   end if;
 
   Console.WriteLn(Conv.IntToStr(Send(1, 2, 3)));
-  var Queue: channel of (integer) := Tasks.CreateChannel(1);
+  const Queue: channel of (integer) := Tasks.CreateChannel(1);
   discard Tasks.Send(Queue, 42);
   case Tasks.Receive(Queue) of
     when Result.Ok(const Value):
@@ -43,7 +43,7 @@ fn local_send_procedure_shadows_intrinsic_with_several_std_units() {
         r#"
 program SendProcedure;
 uses Std.Tasks as Tasks; uses Std.Console as Console;
-  mutable var Total: integer := 0;
+   var Total: integer := 0;
 procedure Send(First: integer; Second: integer; Third: integer);
 begin
   Total := First + Second + Third;
@@ -70,7 +70,7 @@ begin
   return IntToStr(42);
 end function;
 begin
-  var Send: function(Value: integer): integer := function(Value: integer): integer
+  const Send: function(Value: integer): integer := function(Value: integer): integer
   begin
     return Value + 1;
   end function;

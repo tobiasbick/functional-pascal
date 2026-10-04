@@ -8,7 +8,7 @@ unit Std.Conv;
 //
 // Parameters:
 // - `B`: `boolean` input value used by `BoolToStr`.
-public function BoolToStr(B: boolean): string;
+public pure function BoolToStr(B: boolean): string;
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -17,7 +17,7 @@ end function;
 //
 // Parameters:
 // - `S`: UTF-8 text processed by the operation.
-public function HexToInt(S: string): integer;
+public pure function HexToInt(S: string): integer;
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -27,7 +27,7 @@ end function;
 // Parameters:
 // - `N`: `integer` input value used by `IntToHex`.
 // - `Digits`: `integer` input value used by `IntToHex`.
-public function IntToHex(N: integer; Digits: integer): string;
+public pure function IntToHex(N: integer; Digits: integer): string;
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -36,7 +36,7 @@ end function;
 //
 // Parameters:
 // - `N`: `integer` input value used by `IntToReal`.
-public function IntToReal(N: integer): real;
+public pure function IntToReal(N: integer): real;
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -45,7 +45,7 @@ end function;
 //
 // Parameters:
 // - `N`: `integer` input value used by `IntToStr`.
-public function IntToStr(N: integer): string;
+public pure function IntToStr(N: integer): string;
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -54,7 +54,7 @@ end function;
 //
 // Parameters:
 // - `R`: `real` input value used by `RealToStr`.
-public function RealToStr(R: real): string;
+public pure function RealToStr(R: real): string;
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -63,7 +63,7 @@ end function;
 //
 // Parameters:
 // - `S`: UTF-8 text processed by the operation.
-public function StrToBool(S: string): boolean;
+public pure function StrToBool(S: string): boolean;
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -72,7 +72,7 @@ end function;
 //
 // Parameters:
 // - `S`: UTF-8 text processed by the operation.
-public function StrToInt(S: string): integer;
+public pure function StrToInt(S: string): integer;
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -81,7 +81,7 @@ end function;
 //
 // Parameters:
 // - `S`: UTF-8 text processed by the operation.
-public function StrToReal(S: string): real;
+public pure function StrToReal(S: string): real;
 begin
   panic('Intrinsic API declaration');
 end function;

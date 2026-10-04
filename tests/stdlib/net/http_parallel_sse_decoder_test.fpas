@@ -22,25 +22,25 @@ begin
 end function;
 
 begin
-  mutable var Tasks: array of (task) := [];
+  var Tasks: array of (task) := [];
   for Index: integer := 1 to 128 do
     begin
-      Arrays.Push(Tasks, go CreateDecoder(Index));
+      Arrays.Push(var Tasks, go CreateDecoder(Index));
     end;
   end for;
 
   Tasks2.WaitAll(Tasks);
-  mutable var Decoders: array of (Http.SseDecoder) := [];
-  for Index: integer := 0 to Arrays.Length(Tasks) - 1 do
+  var Decoders: array of (Http.SseDecoder) := [];
+  for Handle: task in Tasks do
     begin
-      Arrays.Push(Decoders, Tasks2.Wait(Tasks[Index]));
+      Arrays.Push(var Decoders, Tasks2.Wait(Handle));
     end;
   end for;
-
-  for Index: integer := 0 to Arrays.Length(Decoders) - 1 do
+  var Index: integer := 0;
+  for Decoder: Http.SseDecoder in Decoders do
     begin
-      var Expected: string := Conv.IntToStr(Index);
-      case Http.FeedSse(Decoders[Index], Utf8.Encode((('data: ' + Expected) + #10) + #10)) of
+      const Expected: string := Conv.IntToStr(Index);
+      case Http.FeedSse(Decoder, Utf8.Encode((('data: ' + Expected) + #10) + #10)) of
         when Result.Ok(const Events):
           begin
             Test.AssertEquals(1, Arrays.Length(Events));
@@ -52,7 +52,8 @@ begin
           end;
       end case;
 
-      case Http.FinishSse(Decoders[Index]) of
+      Index := Index + 1;
+      case Http.FinishSse(Decoder) of
         when Result.Ok(_):
           begin
             null;

@@ -1,0 +1,84 @@
+program BindingValueCopiesTest;
+
+uses Std.Arrays as Arrays;
+uses Std.Tasks as Tasks;
+uses Std.Test as Test;
+
+type Box of (T) = record
+  Values: array of (T);
+end record;
+
+type Resources = record
+  Messages: channel of (integer);
+  Next: function(): integer;
+end record;
+
+var Calls: integer := 0;
+
+function Next(): integer;
+begin
+  Calls := Calls + 1;
+  return Calls;
+end function;
+
+const First: integer := Next();
+const Second: integer := Next();
+
+function Edit(Value: Box of (integer)): Box of (integer);
+begin
+  var Copy := Value;
+  Copy.Values[0] := 9;
+  return Copy;
+end function;
+
+begin
+  const Third := Next();
+  Test.AssertEquals(1, First);
+  Test.AssertEquals(2, Second);
+  Test.AssertEquals(3, Third);
+  Test.AssertEquals(3, Calls);
+  const Original := Box(Values := [1, 2]);
+  const Changed := Edit(Original);
+  Test.AssertEquals(1, Original.Values[0]);
+  Test.AssertEquals(9, Changed.Values[0]);
+  var Mapping := ['one': [Original]];
+  const Snapshot := Mapping;
+  Mapping['one'][0].Values[1] := 7;
+  Arrays.Push(var Mapping['one'][0].Values, 3);
+  Test.AssertEquals(2, Snapshot['one'][0].Values[1]);
+  Test.AssertEquals(2, Arrays.Length(Snapshot['one'][0].Values));
+  Test.AssertEquals(7, Mapping['one'][0].Values[1]);
+  Test.AssertEquals(3, Arrays.Pop(var Mapping['one'][0].Values));
+  const Decision := if true then Changed else Original end if;
+  var DecisionCopy := Decision;
+  DecisionCopy.Values[0] := 10;
+  Test.AssertEquals(9, Decision.Values[0]);
+  Test.AssertEquals(10, DecisionCopy.Values[0]);
+  var Count := 0;
+  const Increment := function(): integer begin
+    Count := Count + 1;
+    return Count;
+  end function;
+  const Messages: channel of (integer) := Tasks.CreateChannel(1);
+  const Shared := Resources(Messages := Messages, Next := Increment);
+  const SharedCopy := Shared;
+  Test.AssertEquals(1, Shared.Next());
+  Test.AssertEquals(2, SharedCopy.Next());
+  Test.AssertEquals(2, Count);
+  case Tasks.Send(Shared.Messages, 42) of
+    when Result.Ok(const Sent):
+      Test.AssertTrue(Sent);
+    when Result.Error(const Message):
+      Test.Fail(Message);
+  end case;
+
+  case Tasks.Receive(SharedCopy.Messages) of
+    when Result.Ok(const Value):
+      Test.AssertEquals(42, Value);
+    when Result.Error(const Message):
+      Test.Fail(Message);
+  end case;
+
+  Test.AssertTrue(Tasks.CloseChannel(SharedCopy.Messages));
+  Test.AssertFalse(Tasks.CloseChannel(Shared.Messages));
+end program;

@@ -70,7 +70,7 @@ end procedure;
 // - `Connection`: Connection that supplied a malformed request.
 procedure WriteBadRequestQuietly(Connection: Net.Connection);
 begin
-  var ResponseValue: Types.ServerResponse := Types.ServerResponse.Create(400, 'Bad Request');
+  const ResponseValue: Types.ServerResponse := Types.ServerResponseCreate(400, 'Bad Request');
   case Server.WriteResponse(Connection, ResponseValue) of
     when Result.Ok(_):
       begin
@@ -106,7 +106,7 @@ begin
         return false;
       end;
   end case;
-  mutable var RequestValue: Types.ServerRequest := Types.ServerRequest(Method := '', Target := '', Headers := [], Body := []);
+  var RequestValue: Types.ServerRequest := Types.ServerRequest(Method := '', Target := '', Headers := [], Body := []);
   case Server.ReadRequest(Connection, Options.MaxHeaderBytes, Options.MaxBodyBytes) of
     when Result.Ok(const Value):
       begin
@@ -119,8 +119,8 @@ begin
         return false;
       end;
   end case;
-  var ResponseValue: Types.ServerResponse := Handler(RequestValue);
-  mutable var Succeeded: boolean := false;
+  const ResponseValue: Types.ServerResponse := Handler(RequestValue);
+  var Succeeded: boolean := false;
   case Server.WriteResponse(Connection, ResponseValue) of
     when Result.Ok(_):
       begin
@@ -166,16 +166,18 @@ begin
         return Result.Error(Message);
       end;
   end case;
-  mutable var Accepted: integer := 0;
+  var Accepted: integer := 0;
   while (Options.MaxRequests = 0) or (Accepted < Options.MaxRequests) do
     begin
-      mutable var Tasks: array of (task) := [];
-      while HasCapacity(Options, Accepted, Arrays.Length(Tasks)) do
+      var Tasks: array of (task) := [];
+      var BatchLength: integer := 0;
+      while HasCapacity(Options, Accepted, BatchLength) do
         begin
           case Net.Accept(Listener) of
             when Result.Ok(const Connection):
               begin
-                Arrays.Push(Tasks, go ServeConnection(Connection, Options, Handler));
+                Arrays.Push(var Tasks, go ServeConnection(Connection, Options, Handler));
+                BatchLength := BatchLength + 1;
                 Accepted := Accepted + 1;
               end;
             when Result.Error(const Message):

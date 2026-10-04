@@ -19,6 +19,7 @@ pub(super) struct Binding {
 #[derive(Debug, Clone, Copy)]
 pub(super) enum BindingStorage {
     Local(LocalId),
+    Reference(LocalId),
 }
 
 #[derive(Debug, Clone)]
@@ -63,9 +64,12 @@ pub(crate) struct ClosureTarget {
     pub captures: Vec<CaptureInput>,
 }
 
+/// Callable entry generated for one intrinsic task invocation.
 #[derive(Debug, Clone)]
-pub(crate) struct BoundMethodTarget {
+pub(crate) struct IntrinsicTaskTarget {
+    /// Generated task entry.
     pub function: FunctionId,
+    /// Concrete callable signature.
     pub value_type: TypeId,
 }
 
@@ -88,14 +92,18 @@ pub(crate) struct FunctionInput<'a> {
     pub metadata: &'a AnalysisMetadata,
     pub callables: BTreeMap<String, Callable>,
     pub closure_targets: HashMap<usize, ClosureTarget>,
-    pub bound_method_targets: HashMap<usize, BoundMethodTarget>,
-    pub intrinsic_task_targets: HashMap<usize, BoundMethodTarget>,
+    pub intrinsic_task_targets: HashMap<usize, IntrinsicTaskTarget>,
     pub cell_names: BTreeSet<String>,
     pub type_table: types::TypeTable,
 }
 
 #[derive(Debug, Clone, Copy)]
+/// A global's logical value type and stable writable-root representation.
 pub(crate) struct GlobalBinding {
+    /// Executable global slot.
     pub id: GlobalId,
+    /// Source value type, without storage indirection.
     pub ty: TypeId,
+    /// Whether the global holds a stable cell containing its logical value.
+    pub cell: bool,
 }

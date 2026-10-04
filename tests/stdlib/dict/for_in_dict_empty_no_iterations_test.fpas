@@ -4,8 +4,8 @@ uses Std.Console as Console;
 uses Std.Dictionaries as Dictionaries;
 
 begin
-  var D: dict of (string, integer) := [:];
-  mutable var Count: integer := 0;
+  const D: dict of (string, integer) := [:];
+  var Count: integer := 0;
   for K: string in D do
     begin
       Count := Count + 1;

@@ -47,7 +47,7 @@ uses Std.Console as Console;
 uses Std.Env as Env;
 uses Std.Options as Options;
 
-var Home: option of (string) := Env.Get('HOME');
+const Home: option of (string) := Env.Get('HOME');
 if Options.IsSome(Home) then
   Console.WriteLn(Options.Unwrap(Home));
 end if;

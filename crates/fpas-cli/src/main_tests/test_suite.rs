@@ -36,6 +36,7 @@ macro_rules! fpas_suite_tests {
 fpas_suite_tests! {
     (fpas_suite_stdlib_array, "tests/stdlib/array/"),
     (fpas_suite_stdlib_closures, "tests/stdlib/closures/"),
+    (fpas_suite_stdlib_composition, "tests/stdlib/composition/"),
     (fpas_suite_stdlib_console, "tests/stdlib/console/"),
     (fpas_suite_stdlib_conv, "tests/stdlib/conv/"),
     (fpas_suite_stdlib_dict, "tests/stdlib/dict/"),

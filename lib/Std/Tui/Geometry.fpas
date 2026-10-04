@@ -1,0 +1,92 @@
+// Public geometry functions.
+unit Std.Tui.Geometry;
+
+uses Std.Tui.Geometry.Point as Point2;
+uses Std.Tui.Geometry.Rect as Rect;
+uses Std.Tui.Geometry.Size as Size2;
+
+// Creates a point. All integer coordinates are accepted.
+public function TuiPointCreate(X: integer; Y: integer): Point2.TuiPoint;
+begin
+  return Point2.TuiPointCreate(X, Y);
+end function;
+
+// Creates a rectangle and rejects negative or overflowing extents.
+public function TuiRectCreate(X: integer; Y: integer; Width: integer; Height: integer): Rect.TuiRect;
+begin
+  return Rect.TuiRectCreate(X, Y, Width, Height);
+end function;
+
+// Creates a rectangle from exclusive edges.
+public function TuiRectFromEdges(Left: integer; Top: integer; Right: integer; Bottom: integer): Rect.TuiRect;
+begin
+  return Rect.TuiRectFromEdges(Left, Top, Right, Bottom);
+end function;
+
+// Creates a rectangle from a point and size.
+public function TuiRectFromPointSize(Position: Point2.TuiPoint; Size: Size2.TuiSize): Rect.TuiRect;
+begin
+  return Rect.TuiRectFromPointSize(Position, Size);
+end function;
+
+// Creates a rectangle from exclusive corners.
+public function TuiRectFromCorners(TopLeft: Point2.TuiPoint; BottomRight: Point2.TuiPoint): Rect.TuiRect;
+begin
+  return Rect.TuiRectFromCorners(TopLeft, BottomRight);
+end function;
+
+// Returns the first column after the rectangle.
+public function TuiRectRight(Receiver: Rect.TuiRect): integer;
+begin
+  return Rect.TuiRectRight(Receiver);
+end function;
+
+// Returns the first row after the rectangle.
+public function TuiRectBottom(Receiver: Rect.TuiRect): integer;
+begin
+  return Rect.TuiRectBottom(Receiver);
+end function;
+
+// Returns whether the rectangle has no drawable cells.
+public function TuiRectIsEmpty(Receiver: Rect.TuiRect): boolean;
+begin
+  return Rect.TuiRectIsEmpty(Receiver);
+end function;
+
+// Returns whether the half-open rectangle contains the point.
+public function TuiRectContains(Receiver: Rect.TuiRect; Point: Point2.TuiPoint): boolean;
+begin
+  return Rect.TuiRectContains(Receiver, Point);
+end function;
+
+// Returns whether two rectangles share any cell.
+public function TuiRectIntersects(Receiver: Rect.TuiRect; Other: Rect.TuiRect): boolean;
+begin
+  return Rect.TuiRectIntersects(Receiver, Other);
+end function;
+
+// Returns the overlapping rectangle, or an empty rectangle at the clamped origin.
+public function TuiRectIntersect(Receiver: Rect.TuiRect; Other: Rect.TuiRect): Rect.TuiRect;
+begin
+  return Rect.TuiRectIntersect(Receiver, Other);
+end function;
+
+// Returns a rectangle inset by one cell on every side.
+public function TuiRectInset(Receiver: Rect.TuiRect): Rect.TuiRect;
+begin
+  return Rect.TuiRectInset(Receiver);
+end function;
+
+// Creates a validated extent.
+public function TuiSizeCreate(Width: integer; Height: integer): Size2.TuiSize;
+begin
+  return Size2.TuiSizeCreate(Width, Height);
+end function;
+
+// Returns whether either extent is zero.
+public function TuiSizeIsEmpty(Receiver: Size2.TuiSize): boolean;
+begin
+  return Size2.TuiSizeIsEmpty(Receiver);
+end function;
+
+end unit;

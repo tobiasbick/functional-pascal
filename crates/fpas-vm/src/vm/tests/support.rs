@@ -50,6 +50,7 @@ pub(super) fn unverified(
                 InstructionAddress::new(code_len),
             ),
             arity: 0,
+            var_parameters: Vec::new(),
             capture_count: 0,
             register_count,
             return_convention: ReturnConvention::Unit,

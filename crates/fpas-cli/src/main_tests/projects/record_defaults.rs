@@ -23,7 +23,14 @@ fn exported_record_default_expressions_execute_and_reuse_compiled_units() {
     );
     write_text(
         &cwd.join("main.fpas"),
-        "program Main; uses Demo.Model as Model; uses Std.Console as Console;\n         begin\n           var Value: Model.Settings := Model.Settings();\n           Console.WriteLn(Value.Count); Console.WriteLn(Value.Scale);\n           Console.WriteLn(Value.Label); Console.WriteLn(Value.Enabled);\n           var Override: Model.Settings := Model.Settings(Count := 42);\n           Console.WriteLn(Override.Count);\n         end program;",
+        r#"program Main; uses Demo.Model as Model; uses Std.Console as Console;
+         begin
+           const Value: Model.Settings := Model.Settings();
+           Console.WriteLn(Value.Count); Console.WriteLn(Value.Scale);
+           Console.WriteLn(Value.Label); Console.WriteLn(Value.Enabled);
+           const Override: Model.Settings := Model.Settings(Count := 42);
+           Console.WriteLn(Override.Count);
+         end program;"#,
     );
     for _ in 0..2 {
         let (exit, stdout, stderr) = support::run_cli_and_capture_output(&project, &cwd);

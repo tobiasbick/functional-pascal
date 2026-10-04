@@ -43,7 +43,15 @@ fn unknown_call_after_an_alias_reference_has_a_located_diagnostic() {
         "unit Semantic.Core; public const ExistingText: string := 'ok'; end unit;",
     );
     temp.write("src/importable.fpas", "unit Semantic.Importable; public function UniqueValue(): integer; begin return 42; end function; end unit;");
-    let source = "program SemanticHost;\n\nuses Semantic.Core as Core;\n\nbegin\n  var Music: string := '𝄞' + Core.ExistingText;\n  var Value: integer := UniqueValue();\nend program;\n";
+    let source = r#"program SemanticHost;
+
+uses Semantic.Core as Core;
+
+begin
+  const Music: string := '𝄞' + Core.ExistingText;
+  const Value: integer := UniqueValue();
+end program;
+"#;
     let path = temp.write("src/main.fpas", source);
     let mut service = LanguageService::load(&path);
     let result = service
@@ -66,9 +74,9 @@ fn rename_cannot_shadow_an_import_alias_in_a_nested_scope() {
         "model.fpas",
         "unit App.Model; public const Answer: integer := 42; end unit;",
     );
-    let source = "program P; uses App.Model as Model; function F(): integer;
-        begin var Local: integer := 1; return Local; end function;
-        begin var Value: integer := F(); end program;";
+    let source = r#"program P; uses App.Model as Model; function F(): integer;
+        begin const Local: integer := 1; return Local; end function;
+        begin const Value: integer := F(); end program;"#;
     let path = temp.write("main.fpas", source);
     let mut service = LanguageService::load(&path);
     let error = service

@@ -4,11 +4,11 @@ uses Std.Console as Console;
 uses Std.Arrays as Arrays;
 
 begin
-  var Scores: array of (integer) := [12, 45, 3, 67, 29, 88, 51, 7, 93, 34];
+  const Scores: array of (integer) := [12, 45, 3, 67, 29, 88, 51, 7, 93, 34];
   Console.WriteLn('Filtered scores:');
   for I: integer := 0 to Arrays.Length(Scores) - 1 do
     begin
-      var S: integer := Scores[I];
+      const S: integer := Scores[I];
       if S > 90 then
         begin
           Console.WriteLn('Stopping — score above 90 found');

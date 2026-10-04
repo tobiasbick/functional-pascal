@@ -42,7 +42,7 @@ In a required value position, each branch contains one expression and `else` is
 required:
 
 ```pascal
-var Sign: string := if X > 0 then 'positive'
+const Sign: string := if X > 0 then 'positive'
   elsif X = 0 then 'zero'
   else 'negative'
 end if;

@@ -8,8 +8,8 @@ uses Std.Test as Test;
 uses Std.Toml as Toml;
 
 begin
-  var Parsed: Result of (Toml.TomlValue, string) := Toml.Parse(((((((((((((('empty = []' + Str.Chr(10)) + 'special = nan') + Str.Chr(10)) + 'point.x = 1') + Str.Chr(10)) + 'point.y = 2') + Str.Chr(10)) + '[[products]]') + Str.Chr(10)) + 'name = ''Hammer''') + Str.Chr(10)) + '[[products]]') + Str.Chr(10)) +
-                                                               'name = ''Nail''');
+  const Parsed: Result of (Toml.TomlValue, string) := Toml.Parse(((((((((((((('empty = []' + Str.Chr(10)) + 'special = nan') + Str.Chr(10)) + 'point.x = 1') + Str.Chr(10)) + 'point.y = 2') + Str.Chr(10)) + '[[products]]') + Str.Chr(10)) + 'name = ''Hammer''') + Str.Chr(10)) + '[[products]]') + Str.Chr(10)) +
+                                                                 'name = ''Nail''');
   case Parsed of
     when Result.Ok(const Value):
       begin

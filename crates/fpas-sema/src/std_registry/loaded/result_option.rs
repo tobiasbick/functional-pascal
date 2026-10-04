@@ -39,6 +39,7 @@ pub(super) fn register_std_option(checker: &mut Checker) {
 
 fn register_builtin_std_placeholders(checker: &mut Checker, names: &[&str]) {
     let placeholder = Ty::Function(FunctionTy {
+        pure: false,
         type_params: Vec::new(),
         params: vec![],
         return_type: Box::new(Ty::Error),

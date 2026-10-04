@@ -3,43 +3,11 @@
 //! **Documentation:** `docs/pascal/language/basics/constants.md` (from the repository root).
 
 use super::Checker;
-use crate::scope::{Symbol, SymbolKind};
-use fpas_diagnostics::codes::{SEMA_DUPLICATE_DECLARATION, SEMA_NON_CONSTANT_EXPRESSION};
-use fpas_parser::{ConstDef, DesignatorPart, Expr};
+use crate::scope::SymbolKind;
+use fpas_parser::{DesignatorPart, Expr};
 
 impl Checker {
-    pub(super) fn check_const_def(&mut self, c: &ConstDef) {
-        let declared_ty = self.resolve_type_expr(&c.type_expr);
-        let value_ty = self.check_expr_with_expected(&c.value, &declared_ty);
-        self.check_type_compat(&declared_ty, &value_ty, "const initializer", c.span);
-        if !value_ty.is_error() && !self.const_expr_is_compile_time_known(&c.value) {
-            self.error_with_code(
-                SEMA_NON_CONSTANT_EXPRESSION,
-                format!("Constant `{}` requires a compile-time known initializer", c.name),
-                "Use literals, other constants, and pure operators in `const` initializers. Function calls and variables are not allowed.",
-                c.span,
-            );
-        }
-
-        self.static_constants.insert(&c.name, &c.value);
-        if !self.scopes.define(
-            &c.name,
-            Symbol {
-                ty: declared_ty,
-                mutable: false,
-                kind: SymbolKind::Const,
-                task_bound: false,
-            },
-        ) {
-            self.error_with_code(
-                SEMA_DUPLICATE_DECLARATION,
-                format!("Duplicate constant `{}`", c.name),
-                "Each name must be unique in the same scope.",
-                c.span,
-            );
-        }
-    }
-
+    /// Classify static expressions separately from binding immutability.
     pub(in crate::check) fn const_expr_is_compile_time_known(&mut self, expr: &Expr) -> bool {
         match expr {
             Expr::If(_) | Expr::Case(_) => false,
@@ -59,10 +27,8 @@ impl Checker {
                 self.scopes
                     .lookup(&full_name)
                     .or_else(|| {
-                        designator.parts.first().and_then(|part| match part {
-                            DesignatorPart::Ident(name, _) => self.scopes.lookup(name),
-                            DesignatorPart::Index(..) => None,
-                        })
+                        self.designator_root_symbol(&designator.parts)
+                            .map(|(symbol, _)| symbol)
                     })
                     .is_some_and(|symbol| {
                         matches!(symbol.kind, SymbolKind::Const | SymbolKind::EnumMember)
@@ -95,7 +61,7 @@ impl Checker {
             Expr::ResultOk(inner, _) | Expr::ResultError(inner, _) | Expr::OptionSome(inner, _) => {
                 self.const_expr_is_compile_time_known(inner)
             }
-            Expr::Try(..) | Expr::Go(..) | Expr::Closure(_) | Expr::Nil(_) => false,
+            Expr::Try(..) | Expr::Go(..) | Expr::Closure(_) | Expr::VarArgument(..) => false,
             Expr::OptionNone(_) => true,
             Expr::Call { .. } | Expr::Postfix { .. } | Expr::InvalidRecord(..) | Expr::Error(_) => {
                 false
@@ -137,7 +103,7 @@ impl Checker {
                 || defaults
                     .iter()
                     .find(|(field, _)| field.eq_ignore_ascii_case(name))
-                    .and_then(|(_, expression)| expression.as_deref())
+                    .and_then(|(_, default)| default.as_ref()?.expression())
                     .is_some_and(|expression| self.const_expr_is_compile_time_known(expression))
         })
     }

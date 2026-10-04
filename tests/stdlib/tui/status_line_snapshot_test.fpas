@@ -3,39 +3,51 @@ program TuiStatusLineSnapshotTest;
 uses Std.Str as Str;
 uses Std.Test as Test;
 uses Std.Tui as Tui;
+uses Std.Tui.Chrome as Chrome;
+uses Std.Tui.Elements as Elements;
+uses Std.Tui.Geometry as Geometry;
+uses Std.Tui.Ids as Ids;
+uses Std.Tui.Rendering as Rendering;
+uses Std.Tui.Runtime as Runtime;
 
 type StatusModel = record
 end record;
 
 function ViewStatus(State: StatusModel): Tui.TuiElement;
 begin
-  return Tui.TuiElementBuilders.MakeDesktop(Option.Some(Tui.TuiControlId.Create(1)), [
-                                                                                       Tui.TuiElementBuilders.MakeStatusLine([
-                                                                                                                               Tui.TuiStatusItemBuilders.MakeHint('Ready'),
-                                                                                                                               Tui.TuiStatusItemBuilders.MakeKeyHint('F2', 'Save'),
-                                                                                                                               Tui.TuiStatusItemBuilders.MakeCommand(Tui.TuiControlId.Create(1), 'Open', Tui.TuiAction.Create(10)),
-                                                                                                                               Tui.TuiStatusItemBuilders.MakeDisabledCommand(Tui.TuiControlId.Create(2), 'Quit', Tui.TuiAction.Create(20))
-                                                                                                                             ])
-                                                                                     ]);
+  return Elements.TuiElementMakeDesktop(Option.Some(Ids.TuiControlIdCreate(1)), [
+                                                                                  Elements.TuiElementMakeStatusLine([
+                                                                                                                      Chrome.TuiStatusItemMakeHint('Ready'),
+                                                                                                                      Chrome.TuiStatusItemMakeKeyHint('F2', 'Save'),
+                                                                                                                      Chrome.TuiStatusItemMakeCommand(Ids.TuiControlIdCreate(1), 'Open', Ids.TuiActionCreate(10)),
+                                                                                                                      Chrome.TuiStatusItemMakeDisabledCommand(Ids.TuiControlIdCreate(2), 'Quit', Ids.TuiActionCreate(20))
+                                                                                                                    ])
+                                                                                ]);
 end function;
 
 function UpdateStatus(State: StatusModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): StatusModel;
 begin
-  Cmd.Set(Tui.TuiCmd.NoCommand);
+  Runtime.TuiCmdOutputSet(Cmd, Tui.TuiCmd.NoCommand);
   return State;
 end function;
 
 begin
-  mutable var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(24, 3));
-  mutable var Model: StatusModel := StatusModel();
-  Model := App.RunIterations(Model, UpdateStatus, ViewStatus, 0, 0);
-  var Surface: Tui.TuiSurfaceSnapshot := App.SurfaceSnapshot();
-  Test.AssertTrue(Str.Contains(Surface.LineAt(0), 'Ready F2 Save Open Quit'));
-  Test.AssertTrue(Surface.CellAt(0, 0).Role = Tui.TuiStyleRole.StatusNormal);
-  Test.AssertTrue(Surface.CellAt(6, 0).Role = Tui.TuiStyleRole.StatusShortcut);
-  Test.AssertTrue(Surface.CellAt(9, 0).Role = Tui.TuiStyleRole.StatusNormal);
-  Test.AssertTrue(Surface.CellAt(14, 0).Role = Tui.TuiStyleRole.StatusSelected);
-  Test.AssertTrue(Surface.CellAt(19, 0).Role = Tui.TuiStyleRole.StatusDisabled);
-  Test.AssertTrue(Surface.CellAt(23, 0).Role = Tui.TuiStyleRole.StatusNormal);
-  App.Close();
+  var App: Tui.TuiApplication := Runtime.TuiApplicationOpenForTest(Geometry.TuiSizeCreate(24, 3));
+  var Model: StatusModel := StatusModel();
+  Model := Runtime.TuiApplicationRunIterations(App, Model, UpdateStatus, ViewStatus, 0, 0);
+  const Surface: Tui.TuiSurfaceSnapshot := Runtime.TuiApplicationSurfaceSnapshot(App);
+  Test.AssertTrue(Str.Contains(Rendering.TuiSurfaceSnapshotLineAt(Surface, 0), 'Ready F2 Save Open Quit'));
+  Test.AssertTrue(Rendering.TuiSurfaceSnapshotCellAt(Surface, 0, 0).Role =
+                  Tui.TuiStyleRole.StatusNormal);
+  Test.AssertTrue(Rendering.TuiSurfaceSnapshotCellAt(Surface, 6, 0).Role =
+                  Tui.TuiStyleRole.StatusShortcut);
+  Test.AssertTrue(Rendering.TuiSurfaceSnapshotCellAt(Surface, 9, 0).Role =
+                  Tui.TuiStyleRole.StatusNormal);
+  Test.AssertTrue(Rendering.TuiSurfaceSnapshotCellAt(Surface, 14, 0).Role =
+                  Tui.TuiStyleRole.StatusSelected);
+  Test.AssertTrue(Rendering.TuiSurfaceSnapshotCellAt(Surface, 19, 0).Role =
+                  Tui.TuiStyleRole.StatusDisabled);
+  Test.AssertTrue(Rendering.TuiSurfaceSnapshotCellAt(Surface, 23, 0).Role =
+                  Tui.TuiStyleRole.StatusNormal);
+  Runtime.TuiApplicationClose(App);
 end program;

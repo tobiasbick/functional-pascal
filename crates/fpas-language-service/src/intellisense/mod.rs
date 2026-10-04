@@ -3,7 +3,6 @@
 mod auto_import;
 mod completion;
 mod context;
-mod receiver;
 mod signature_help;
 
 use std::path::PathBuf;

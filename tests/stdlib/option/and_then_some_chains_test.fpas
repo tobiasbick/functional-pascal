@@ -4,7 +4,7 @@ uses Std.Console as Console;
 uses Std.Options as Options;
 uses Std.Conv as Conv;
 
-function PositiveToStr(V: integer): Option of (string);
+pure function PositiveToStr(V: integer): Option of (string);
 begin
   if V > 0 then
     begin
@@ -18,7 +18,7 @@ begin
 end function;
 
 begin
-  var O: Option of (integer) := Option.Some(5);
-  var M: Option of (string) := Options.AndThen(O, PositiveToStr);
+  const O: Option of (integer) := Option.Some(5);
+  const M: Option of (string) := Options.AndThen(O, PositiveToStr);
   Console.WriteLn(Options.Unwrap(M));
 end program;

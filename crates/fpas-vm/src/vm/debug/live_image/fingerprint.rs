@@ -142,8 +142,12 @@ const fn capture_kind_name(kind: DebugCaptureKind) -> &'static str {
     }
 }
 
-pub(super) fn signature_identity(function: &FunctionInfo) -> (u8, ReturnConvention) {
-    (function.arity, function.return_convention)
+pub(super) fn signature_identity(function: &FunctionInfo) -> (u8, &[u8], ReturnConvention) {
+    (
+        function.arity,
+        &function.var_parameters,
+        function.return_convention,
+    )
 }
 
 pub(super) fn debug_identity(image: &Executable, function: &FunctionInfo) -> String {
@@ -209,35 +213,7 @@ pub(super) fn record_layouts(image: &Executable) -> Vec<String> {
                     )
                 })
                 .collect();
-            let properties: Vec<String> = record
-                .properties
-                .iter()
-                .map(|property| {
-                    format!(
-                        "{}:{}",
-                        string_at(image, property.name),
-                        string_at(image, property.getter)
-                    )
-                })
-                .collect();
-            let methods: Vec<String> = record
-                .methods
-                .iter()
-                .map(|method| {
-                    format!(
-                        "{}:{}",
-                        string_at(image, method.name),
-                        string_at(image, method.routine)
-                    )
-                })
-                .collect();
-            format!(
-                "{}|{}|{}|{}",
-                string_at(image, record.name),
-                fields.join(","),
-                properties.join(","),
-                methods.join(",")
-            )
+            format!("{}|{}", string_at(image, record.name), fields.join(","))
         })
         .collect()
 }
@@ -426,6 +402,9 @@ fn type_key_inner(image: &Executable, id: DebugTypeId, depth: u8) -> String {
         }
         Some(DebugType::Task(inner)) => {
             format!("task<{}>", type_key_inner(image, *inner, depth + 1))
+        }
+        Some(DebugType::Reference(inner)) => {
+            format!("var<{}>", type_key_inner(image, *inner, depth + 1))
         }
         Some(DebugType::Channel(inner)) => {
             format!("channel<{}>", type_key_inner(image, *inner, depth + 1))

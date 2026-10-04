@@ -4,6 +4,11 @@ uses Std.Arrays as Arrays;
 uses Std.Str as Str;
 uses Std.Test as Test;
 uses Std.Tui as Tui;
+uses Std.Tui.Elements as Elements;
+uses Std.Tui.Geometry as Geometry;
+uses Std.Tui.Ids as Ids;
+uses Std.Tui.Rendering as Rendering;
+uses Std.Tui.Runtime as Runtime;
 
 type ListModel = record
   Focus: integer;
@@ -12,18 +17,18 @@ end record;
 
 function MakePointer(X: integer; Y: integer): Tui.TuiPointerEvent;
 begin
-  return Tui.TuiPointerEvent.Create(Tui.TuiPointerAction.Down, Tui.TuiPointerButton.Left, Tui.TuiPoint.Create(X, Y));
+  return Runtime.TuiPointerEventCreate(Tui.TuiPointerAction.Down, Tui.TuiPointerButton.Left, Geometry.TuiPointCreate(X, Y));
 end function;
 
 function FindGlyph(Snapshot: Tui.TuiSurfaceSnapshot; Glyph: string): Tui.TuiPoint;
 begin
   for Y: integer := 0 to Snapshot.Height - 1 do
     begin
-      var Line: string := Snapshot.LineAt(Y);
-      var Index: integer := Str.IndexOf(Line, Glyph);
+      const Line: string := Rendering.TuiSurfaceSnapshotLineAt(Snapshot, Y);
+      const Index: integer := Str.IndexOf(Line, Glyph);
       if Index >= 0 then
         begin
-          return Tui.TuiPoint.Create(Index, Y);
+          return Geometry.TuiPointCreate(Index, Y);
         end;
       end if;
     end;
@@ -34,16 +39,16 @@ end function;
 
 function ViewList(State: ListModel): Tui.TuiElement;
 begin
-  return Tui.TuiElementBuilders.MakeDesktop(Option.Some(Tui.TuiControlId.Create(State.Focus)), [
-                                                                                                 Tui.TuiElementBuilders.MakePanel('Host', [
-                                                                                                                                            Tui.TuiElementBuilders.MakeList(Tui.TuiControlId.Create(1), ['Alpha', 'Beta', 'Gamma'], State.Selected, Tui.TuiAction.Create(5))
-                                                                                                                                          ])
-                                                                                               ]);
+  return Elements.TuiElementMakeDesktop(Option.Some(Ids.TuiControlIdCreate(State.Focus)), [
+                                                                                            Elements.TuiElementMakePanel('Host', [
+                                                                                                                                   Elements.TuiElementMakeList(Ids.TuiControlIdCreate(1), ['Alpha', 'Beta', 'Gamma'], State.Selected, Ids.TuiActionCreate(5))
+                                                                                                                                 ])
+                                                                                          ]);
 end function;
 
 function UpdateList(State: ListModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): ListModel;
 begin
-  Cmd.Set(Tui.TuiCmd.NoCommand);
+  Runtime.TuiCmdOutputSet(Cmd, Tui.TuiCmd.NoCommand);
   case Msg of
     when Tui.TuiMsg.FocusChanged(const Previous, const Current):
       begin
@@ -72,12 +77,12 @@ begin
 end function;
 
 begin
-  mutable var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(24, 8));
-  mutable var Model: ListModel := ListModel(Focus := 1, Selected := 0);
-  Model := App.RunIterations(Model, UpdateList, ViewList, 0, 0);
-  var BetaAt: Tui.TuiPoint := FindGlyph(App.SurfaceSnapshot(), 'Beta');
-  App.InjectPointerForTest(MakePointer(BetaAt.X, BetaAt.Y));
-  Model := App.RunIterations(Model, UpdateList, ViewList, 1, 0);
+  var App: Tui.TuiApplication := Runtime.TuiApplicationOpenForTest(Geometry.TuiSizeCreate(24, 8));
+  var Model: ListModel := ListModel(Focus := 1, Selected := 0);
+  Model := Runtime.TuiApplicationRunIterations(App, Model, UpdateList, ViewList, 0, 0);
+  const BetaAt: Tui.TuiPoint := FindGlyph(Runtime.TuiApplicationSurfaceSnapshot(App), 'Beta');
+  Runtime.TuiApplicationInjectPointerForTest(App, MakePointer(BetaAt.X, BetaAt.Y));
+  Model := Runtime.TuiApplicationRunIterations(App, Model, UpdateList, ViewList, 1, 0);
   Test.AssertEquals(1, Model.Selected);
-  App.Close();
+  Runtime.TuiApplicationClose(App);
 end program;

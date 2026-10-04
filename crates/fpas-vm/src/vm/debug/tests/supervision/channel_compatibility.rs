@@ -3,14 +3,14 @@
 const PRODUCER: &str = r#"program ChannelCompatibility;
 uses Std.Tasks as Tasks; uses Std.Results as Results; uses Std.Arrays as Arrays;
 begin
-  var Group: Tasks.TaskGroup := Tasks.CreateTaskGroup();
-  var Queue: channel of (integer) := Tasks.CreateChannel(1);
-  var Child: task := Tasks.StartTaskInGroup(Group, procedure(Token: Tasks.CancellationToken)
+  const Group: Tasks.TaskGroup := Tasks.CreateTaskGroup();
+  const Queue: channel of (integer) := Tasks.CreateChannel(1);
+  const Child: task := Tasks.StartTaskInGroup(Group, procedure(Token: Tasks.CancellationToken)
   begin
     for Item: integer := 1 to 2 do
       discard Results.Unwrap(SEND_OPERATION); end for;
   end procedure);
-  mutable var Total: integer := 0;
+   var Total: integer := 0;
   for Item: integer := 1 to 2 do
     discard Tasks.Select([
       Tasks.ReceiveCase(Queue, procedure(Outcome: result of (integer, string))
@@ -46,11 +46,11 @@ fn timed_send_cooperates_with_a_select_consumer() {
 const CONSUMER: &str = r#"program ReceiveCompatibility;
 uses Std.Tasks as Tasks; uses Std.Results as Results; uses Std.Arrays as Arrays;
 begin
-  var Group: Tasks.TaskGroup := Tasks.CreateTaskGroup();
-  var Queue: channel of (integer) := Tasks.CreateChannel(1);
-  var Child: task := Tasks.StartTaskInGroup(Group, function(Token: Tasks.CancellationToken): integer
+  const Group: Tasks.TaskGroup := Tasks.CreateTaskGroup();
+  const Queue: channel of (integer) := Tasks.CreateChannel(1);
+  const Child: task := Tasks.StartTaskInGroup(Group, function(Token: Tasks.CancellationToken): integer
   begin
-    mutable var Total: integer := 0;
+     var Total: integer := 0;
     for Item: integer := 1 to 2 do Total := Total + Results.Unwrap(RECEIVE_OPERATION); end for;
     return Total;
   end function);
@@ -86,9 +86,9 @@ fn timed_receive_cooperates_with_a_select_producer() {
 fn nested_task_barriers_release_the_consumers_stack() {
     let source = PRODUCER.replace(
         "for Item: integer := 1 to 2 do\n      discard Results.Unwrap(SEND_OPERATION); end for;",
-        "var Grandchild: task := Tasks.StartTaskInGroup(Group, procedure(ChildToken: Tasks.CancellationToken)
+        r#"const Grandchild: task := Tasks.StartTaskInGroup(Group, procedure(ChildToken: Tasks.CancellationToken)
          begin discard Tasks.Send(Queue, 1); discard Tasks.Send(Queue, 2); end procedure);
-         WAIT_OPERATION;",
+         WAIT_OPERATION;"#,
     );
     for operation in [
         "Tasks.Wait(Grandchild)",
@@ -105,10 +105,10 @@ fn nested_task_barriers_release_the_consumers_stack() {
 fn closing_a_nested_group_releases_the_consumers_stack() {
     let source = PRODUCER.replace(
         "for Item: integer := 1 to 2 do\n      discard Results.Unwrap(SEND_OPERATION); end for;",
-        "var Nested: Tasks.TaskGroup := Tasks.CreateTaskGroup();
-         var NestedChild: task := Tasks.StartTaskInGroup(Nested, procedure(ChildToken: Tasks.CancellationToken)
+        r#"const Nested: Tasks.TaskGroup := Tasks.CreateTaskGroup();
+         const NestedChild: task := Tasks.StartTaskInGroup(Nested, procedure(ChildToken: Tasks.CancellationToken)
            begin discard Tasks.Send(Queue, 1); discard Tasks.Send(Queue, 2); end procedure);
-         if Arrays.Length(Tasks.CloseTaskGroup(Nested)) <> 0 then panic('nested child failed'); end if;",
+         if Arrays.Length(Tasks.CloseTaskGroup(Nested)) <> 0 then panic('nested child failed'); end if;"#,
     );
     super::run_with_children(&source, 2);
 }

@@ -16,8 +16,8 @@ begin
 end function;
 
 begin
-  var Group: Tasks.TaskGroup := Tasks.CreateTaskGroup();
-  var Child: task := Tasks.StartSupervisedTask(Group, Work, 1023, 0);
+  const Group: Tasks.TaskGroup := Tasks.CreateTaskGroup();
+  const Child: task := Tasks.StartSupervisedTask(Group, Work, 1023, 0);
   case Tasks.Wait(Child) of
     when Result.Ok(_):
       panic('forced error lost');
@@ -26,7 +26,7 @@ begin
         panic('wrong forced error');
       end if;
   end case;
-  var Failures: array of (Tasks.TaskFailure) := Tasks.CloseTaskGroup(Group);
+  const Failures: array of (Tasks.TaskFailure) := Tasks.CloseTaskGroup(Group);
   if Arrays.Length(Failures) <> 1 then
     panic('wrong report count');
   end if;

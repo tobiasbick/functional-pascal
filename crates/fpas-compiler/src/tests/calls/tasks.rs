@@ -17,10 +17,10 @@ begin
 end function;
 
 begin
-  var Returned: task := go Make(40)(2);
-  var Functions: array of (Handler) := [Make(30)];
-  var Indexed: task := go Functions[0](12);
-  var Parenthesized: task := go (Functions[0])(12);
+  const Returned: task := go Make(40)(2);
+  const Functions: array of (Handler) := [Make(30)];
+  const Indexed: task := go Functions[0](12);
+  const Parenthesized: task := go (Functions[0])(12);
   if Tasks.Wait(Returned) <> 42 then
     panic('returned task target');
   end if;
@@ -32,11 +32,11 @@ begin
   if Tasks.Wait(Parenthesized) <> 42 then
     panic('parenthesized task target');
   end if;
-  var Messages: channel of (integer) := Tasks.CreateChannel(1);
-  var Actions: array of (procedure(Value: integer)) := [procedure(Value: integer) begin
+  const Messages: channel of (integer) := Tasks.CreateChannel(1);
+  const Actions: array of (procedure(Value: integer)) := [procedure(Value: integer) begin
     discard Tasks.Send(Messages, Value);
   end procedure];
-  var ProcedureTask: task := go Actions[0](42);
+  const ProcedureTask: task := go Actions[0](42);
   Tasks.Wait(ProcedureTask);
   case Tasks.Receive(Messages) of
     when Result.Ok(const Value):
@@ -59,10 +59,10 @@ fn computed_targets_retain_dynamic_task_bound_protection() {
 program ComputedTaskBound;
 function Make(): function(): integer;
 begin
-  mutable var Count: integer := 0;
+   var Count: integer := 0;
   return function(): integer begin Count := Count + 1; return Count; end function;
 end function;
-begin var Handle: task := go {call}; end program;
+begin const Handle: task := go {call}; end program;
 "#
         );
         let error = run_program(&source).expect_err("task-bound target must be rejected");

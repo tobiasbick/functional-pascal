@@ -73,6 +73,13 @@ procedures. Do not create duplicate pure/impure overloads of the same routine.
 
 Standard-library purity metadata must be audited against implementations. Record
 defaults may invoke only pure operations and obey stage 1's evaluation rules.
+Default evaluation shares pure read/capture checks, but its field result type
+does not inherit the pure-function parameter/result restriction. Absent options
+and empty collections may therefore initialize ordinary handler/resource fields.
+Closure captures are checked at creation; the body uses its declared capability.
+Internal default initializers retain field result types without exposing a source
+pure callable guarantee. See the approved
+[default-purity boundary](../audit/default-purity-boundary.md).
 Contracts in stage 6 use this same checker, not a separate whitelist of calls.
 
 ## Structured task scopes
@@ -146,11 +153,11 @@ escape hatch. Supervision/retry is an ordinary policy inside an owning scope.
 
 ## Work and acceptance
 
-- [ ] Audit mutation intrinsics, mutable-parameter behavior, alias paths, callback
+- [x] Audit mutation intrinsics, mutable-parameter behavior, alias paths, callback
   captures, and exception/error exits; coordinate the binding migration.
-- [ ] Implement var modes through signatures, callable types, lowering, runtime
+- [x] Implement var modes through signatures, callable types, lowering, runtime
   references, diagnostics, and every caller-mutating standard API.
-- [ ] Implement pure declarations/types, transitive capture checks, and verified
+- [x] Implement pure declarations/types, transitive capture checks, and verified
   standard-library metadata; cover higher-order and generic instantiation cases.
 - [ ] Audit all spawn APIs and task transport. Implement scope ownership, helper
   escape analysis, observation, cancellation, joining, and failure arbitration.
@@ -170,6 +177,18 @@ completed scope has joined its children. Results and panics follow separate rule
 Owners: sema and callable metadata, compiler/IR/bytecode, VM task scheduling and
 host integration, `fpas-std`, std source/registries, CLI runner, formatter, and LSP.
 
-Status: contracts specified; implementation and migration pending.
-Next: audit existing mutation paths with stage 4, then test one pure higher-order
-routine and one scope through the actual compiler/VM path before broad migration.
+Status: the coordinated mutation and purity slices are delivered with stage 4.
+The [bindings/effects audit](../audit/bindings-effects.md) records storage-root
+authority, checked selected paths, signature/IR/bytecode modes, invocation
+cleanup, VM cell access and standard array mutation. Source callers, compiled
+units, debugger access and higher-order calls use the same explicit contract.
+The [purity/default audit](../audit/purity-and-defaults.md) records pure callable
+capabilities, generic instantiation, transitive captures, verified intrinsic
+metadata and declaration-scoped defaults with complete consumer verification.
+
+Stage 5 remains open for structured task ownership, transport, observation,
+cancellation and joining; the combined documentation and task acceptance gates
+remain unchecked. Bare-task removal follows the separately approved
+[task migration boundary](../audit/task-migration-boundary.md). Next, audit every
+spawn API and verify one lexical task scope through the compiler/VM before
+migrating detached and group-based consumers.

@@ -11,7 +11,7 @@ type Pair of (T) = enum
   Values(First: T; Second: T);
 end enum;
 
-mutable var Trace: integer := 0;
+var Trace: integer := 0;
 
 function Mark(Value: integer): boolean;
 begin
@@ -26,15 +26,15 @@ begin
 end function;
 
 begin
-  var Selected: Choice of (Option of (integer)) := if Mark(1) then Choice.Missing elsif Mark(2) then LoadValue() else Choice.Missing end if;
-  var Answer: integer := case Selected of
+  const Selected: Choice of (Option of (integer)) := if Mark(1) then Choice.Missing elsif Mark(2) then LoadValue() else Choice.Missing end if;
+  const Answer: integer := case Selected of
     when Choice.Present(Option.Some(const Number)) if Number < 0: - Number;
     when Choice.Present(Option.Some(const Number)): Number;
     when Choice.Present(Option.None): 0;
     when Choice.Missing: 0;
   end case;
-  var Values: Pair of (integer) := Pair.Values(Answer, 1);
-  var Saved: function(): integer := case Values of
+  const Values: Pair of (integer) := Pair.Values(Answer, 1);
+  const Saved: function(): integer := case Values of
     when Pair.Values(const First, const Second): function(): integer begin
       return First + Second;
     end function;

@@ -9,9 +9,10 @@ uses Mandelbrot.App as App;
 uses Mandelbrot.Model as Model;
 uses Mandelbrot.Render as Render;
 uses Mandelbrot.View as View;
+uses Std.Tui.Runtime as Runtime;
 
 begin
-  var Inbox: channel of (Render.MandelbrotRenderFrame) := Tasks.CreateChannel(8);
-  var Initial: Model.MandelbrotModel := Model.NewMandelbrotModel(Inbox, Console.ScreenWidth(), Console.ScreenHeight());
-  discard Tui.TuiApplication.RunWithBackground(Initial, Inbox, App.UpdateMandelbrot, App.UpdateMandelbrotFrame, View.ViewMandelbrot);
+  const Inbox: channel of (Render.MandelbrotRenderFrame) := Tasks.CreateChannel(8);
+  const Initial: Model.MandelbrotModel := Model.NewMandelbrotModel(Inbox, Console.ScreenWidth(), Console.ScreenHeight());
+  discard Runtime.TuiApplicationRunWithBackground(Initial, Inbox, App.UpdateMandelbrot, App.UpdateMandelbrotFrame, View.ViewMandelbrot);
 end program;

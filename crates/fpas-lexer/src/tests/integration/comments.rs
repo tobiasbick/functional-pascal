@@ -9,7 +9,7 @@ mutable var Count: integer := 0; // start at zero";
     assert_eq!(
         toks(src),
         vec![
-            Token::Mutable,
+            Token::Ident("mutable".into()),
             Token::Var,
             Token::Ident("Count".into()),
             Token::Colon,

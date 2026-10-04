@@ -8,26 +8,26 @@ uses Std.Dictionaries as Dictionaries;
 uses Std.Options as Options;
 uses Std.Arrays as Arrays;
 
-function DoubleScore(V: integer): integer;
+pure function DoubleScore(V: integer): integer;
 begin
   return V * 2;
 end function;
 
-function IsHighScore(K: string; V: integer): boolean;
+pure function IsHighScore(K: string; V: integer): boolean;
 begin
   return V >= 90;
 end function;
 
-function SumScores(Acc: integer; Key: string; Value: integer): integer;
+pure function SumScores(Acc: integer; Key: string; Value: integer): integer;
 begin
   return Acc + Value;
 end function;
 
 begin
-  var Scores: dict of (string, integer) := ['Ada': 95, 'Bob': 72, 'Cara': 91];
+  const Scores: dict of (string, integer) := ['Ada': 95, 'Bob': 72, 'Cara': 91];
   Console.WriteLn('length: ', Conv.IntToStr(Dictionaries.Length(Scores)));
   Console.WriteLn('has Ada: ', Dictionaries.ContainsKey(Scores, 'Ada'));
-  var Merged: dict of (string, integer) := Dictionaries.Merge(Scores, ['Bob': 88, 'Dan': 70]);
+  const Merged: dict of (string, integer) := Dictionaries.Merge(Scores, ['Bob': 88, 'Dan': 70]);
   Console.WriteLn('merged Bob: ', Conv.IntToStr(Merged['Bob']));
   case Dictionaries.Get(Merged, 'Eve') of
     when Option.Some(const V):
@@ -39,11 +39,11 @@ begin
         Console.WriteLn('get missing: none (ok)');
       end;
   end case;
-  var Doubled: dict of (string, integer) := Dictionaries.Map(Merged, DoubleScore);
+  const Doubled: dict of (string, integer) := Dictionaries.Map(Merged, DoubleScore);
   Console.WriteLn('map Ada doubled: ', Conv.IntToStr(Doubled['Ada']));
-  var Top: dict of (string, integer) := Dictionaries.Filter(Merged, IsHighScore);
+  const Top: dict of (string, integer) := Dictionaries.Filter(Merged, IsHighScore);
   Console.WriteLn('filter len: ', Conv.IntToStr(Dictionaries.Length(Top)));
-  var Ks: array of (string) := Dictionaries.Keys(Top);
+  const Ks: array of (string) := Dictionaries.Keys(Top);
   Console.WriteLn('keys array len: ', Conv.IntToStr(Arrays.Length(Ks)));
   Console.WriteLn('score total: ', Conv.IntToStr(Dictionaries.Reduce(Scores, 0, SumScores)));
 end program;

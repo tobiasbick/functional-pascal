@@ -24,8 +24,8 @@ begin
 end function;
 
 begin
-  var Music: string := '𝄞';
-  var Total: integer := Add(1);
+  const Music: string := '𝄞';
+  const Total: integer := Add(1);
 end program;
 "#;
     let add_use = source.rfind("Add(1)").expect("function use");

@@ -14,17 +14,18 @@ uses Std.Tui.Rendering.Canvas as Canvas2;
 // - `Text`: Text processed or displayed by the operation.
 public procedure TuiPaintRule(Canvas: Canvas2.TuiCanvas; Bounds: Rect.TuiRect; Text: string);
 begin
-  if Bounds.IsEmpty() then
+  if Rect.TuiRectIsEmpty(Bounds) then
     begin
       return;
     end;
   end if;
 
-  Canvas.DrawHorizontalLine(Bounds.X, Bounds.Y, Bounds.Width, StyleRole.TuiStyleRole.Rule);
+  Canvas2.TuiCanvasDrawHorizontalLine(Canvas, Bounds.X, Bounds.Y, Bounds.Width, StyleRole.TuiStyleRole.Rule);
   if (Text <> '') and (Bounds.Width > 4) then
     begin
-      Canvas.Child(Rect.TuiRect.Create(Bounds.X + 2, Bounds.Y, Bounds.Width - 4, 1))
-        .WriteText(Point.TuiPoint.Create(0, 0), (' ' + Text) + ' ', StyleRole.TuiStyleRole.Title);
+      Canvas2.TuiCanvasWriteText(Canvas2.TuiCanvasChild(Canvas, Rect.TuiRectCreate(Bounds.X + 2, Bounds.Y, Bounds.Width -
+                                                                                                           4, 1)), Point.TuiPointCreate(0, 0), (' ' + Text) +
+                                                                                                                                               ' ', StyleRole.TuiStyleRole.Title);
     end;
   end if;
 end procedure;

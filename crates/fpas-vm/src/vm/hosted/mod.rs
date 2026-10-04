@@ -65,6 +65,7 @@ impl Worker {
 
 /// Console, input, network, and process-argument state for one VM instance.
 pub(super) struct HostedState {
+    pub(in crate::vm) references: fpas_bytecode::ReferenceRegistry,
     pub(in crate::vm) servers: server::ServerRegistry,
     pub program_args: Vec<String>,
     pub console: Arc<Mutex<Console>>,
@@ -85,6 +86,7 @@ pub(super) struct HostedState {
 impl HostedState {
     pub(super) fn new(console: Console, program_args: Vec<String>) -> Self {
         Self {
+            references: Default::default(),
             servers: Default::default(),
             program_args,
             console: Arc::new(Mutex::new(console)),
@@ -110,6 +112,7 @@ impl HostedState {
         program_args: Vec<String>,
     ) -> Self {
         Self {
+            references: Default::default(),
             servers: Default::default(),
             program_args,
             console,

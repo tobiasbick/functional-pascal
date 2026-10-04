@@ -5,9 +5,9 @@ uses Std.Test as Test;
 
 begin
   Random2.SetSeed(-17);
-  var FirstInteger: integer := Random2.RandomInt(-1000000, 1000000);
-  var FirstReal: real := Random2.Random();
-  var SecondInteger: integer := Random2.RandomInt(-1000000, 1000000);
+  const FirstInteger: integer := Random2.RandomInt(-1000000, 1000000);
+  const FirstReal: real := Random2.Random();
+  const SecondInteger: integer := Random2.RandomInt(-1000000, 1000000);
   Test.AssertEquals(436834, FirstInteger);
   Test.AssertEquals(0.018693080316887545, FirstReal);
   Test.AssertEquals(-809256, SecondInteger);

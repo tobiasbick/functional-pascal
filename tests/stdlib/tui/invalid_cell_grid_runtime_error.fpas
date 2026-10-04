@@ -1,7 +1,9 @@
 program TuiInvalidCellGridRuntimeError;
 
 uses Std.Tui as Tui;
+uses Std.Tui.Cells as Cells;
+uses Std.Tui.Chrome as Chrome;
 
 begin
-  discard Tui.TuiCellGrid.Create(2, 1, [Tui.TuiCell.Create('X', Tui.TuiStyleRole.Normal)]);
+  discard Chrome.TuiCellGridCreate(2, 1, [Cells.TuiCellCreate('X', Tui.TuiStyleRole.Normal)]);
 end program;

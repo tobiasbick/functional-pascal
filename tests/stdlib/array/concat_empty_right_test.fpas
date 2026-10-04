@@ -4,6 +4,6 @@ uses Std.Console as Console;
 uses Std.Arrays as Arrays;
 
 begin
-  var C: array of (integer) := Arrays.Concat([1, 2], []);
+  const C: array of (integer) := Arrays.Concat([1, 2], []);
   Console.WriteLn(Arrays.Length(C));
 end program;

@@ -3,7 +3,7 @@ program StringHigherOrderTest;
 uses Std.Str as Str;
 uses Std.Test as Test;
 
-function ReplaceFace(C: string): string;
+pure function ReplaceFace(C: string): string;
 begin
   if C = '😀' then
     begin
@@ -14,23 +14,23 @@ begin
   return C;
 end function;
 
-function KeepBase(C: string): boolean;
+pure function KeepBase(C: string): boolean;
 begin
   return (C <> '́') and (C <> ' ');
 end function;
 
-function Count(Acc: integer; C: string): integer;
+pure function Count(Acc: integer; C: string): integer;
 begin
   return Acc + 1;
 end function;
 
-function Prepend(Acc: string; C: string): string;
+pure function Prepend(Acc: string; C: string): string;
 begin
   return C + Acc;
 end function;
 
 begin
-  var Text: string := 'a😀éb';
+  const Text: string := 'a😀éb';
   Test.AssertEquals(5, Str.Length(Text));
   Test.AssertEquals('aßéb', Str.Map(Text, ReplaceFace));
   Test.AssertEquals(5, Str.Length(Str.Map(Text, ReplaceFace)));
@@ -38,14 +38,11 @@ begin
   Test.AssertEquals('ab', Str.Filter('a ́b', KeepBase));
   Test.AssertEquals(5, Str.Reduce(Text, 0, Count));
   Test.AssertEquals('b́e😀a', Str.Reduce(Text, '', Prepend));
-  mutable var Calls: integer := 0;
-  var Observe: function(C: string): string := function(C: string): string begin
-    Calls := Calls + 1;
-    return C;
+  const Observe: pure function(C: string): string := pure function(C: string): string begin
+    panic('empty map invoked its callback');
   end function;
 
   Test.AssertEquals('', Str.Map('', Observe));
   Test.AssertEquals('', Str.Filter('', KeepBase));
   Test.AssertEquals(42, Str.Reduce('', 42, Count));
-  Test.AssertEquals(0, Calls);
 end program;

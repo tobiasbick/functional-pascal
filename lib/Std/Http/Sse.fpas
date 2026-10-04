@@ -63,7 +63,7 @@ end procedure;
 // - `Decoder`: Decoder handle to resolve.
 function DecoderIndex(Decoder: Types.SseDecoder): Result of (integer, string);
 begin
-  var Slot: integer := Handles.SseDecoderSlot(Decoder);
+  const Slot: integer := Handles.SseDecoderSlot(Decoder);
   if (Slot < 1) or (not HasState(Slot)) then
     begin
       return Result.Error('SSE decoder handle is invalid');
@@ -123,19 +123,20 @@ begin
 end function;
 
 // Appends the pending event without adding input bytes.
-function EmitEvent(State: DecoderState; mutable Events: array of (Types.SseEvent)): array of (Types.SseEvent);
+function EmitEvent(State: DecoderState; InitialEvents: array of (Types.SseEvent)): array of (Types.SseEvent);
 begin
+  var Events: array of (Types.SseEvent) := InitialEvents;
   if State.Data <> '' then
     begin
-      mutable var EventType: string := State.EventType;
+      var EventType: string := State.EventType;
       if EventType = '' then
         begin
           EventType := 'message';
         end;
       end if;
 
-      Arrays.Push(Events, Types.SseEvent(EventType := EventType, Data := Str.Substring(State.Data, 0, Str.Length(State.Data) -
-                                                                                                      1), Id := State.LastEventId));
+      Arrays.Push(var Events, Types.SseEvent(EventType := EventType, Data := Str.Substring(State.Data, 0, Str.Length(State.Data) -
+                                                                                                          1), Id := State.LastEventId));
     end;
   end if;
 
@@ -145,14 +146,15 @@ end function;
 // Consumes complete SSE lines and returns updated state plus emitted events.
 //
 // Parameters:
-// - `State`: Decoder state updated while parsing buffered lines.
-function Process(mutable State: DecoderState; Final: boolean): Result of (DecoderProcess, string);
+// - `InitialState`: Decoder state copied before parsing buffered lines.
+function Process(InitialState: DecoderState; Final: boolean): Result of (DecoderProcess, string);
 begin
-  mutable var Events: array of (Types.SseEvent) := [];
-  mutable var EndValue: array of (integer) := LineEnd(State.Buffer, Final);
+  var State: DecoderState := InitialState;
+  var Events: array of (Types.SseEvent) := [];
+  var EndValue: array of (integer) := LineEnd(State.Buffer, Final);
   while EndValue[0] >= 0 do
     begin
-      var LineBytes: array of (integer) := Arrays.Slice(State.Buffer, 0, EndValue[0]);
+      const LineBytes: array of (integer) := Arrays.Slice(State.Buffer, 0, EndValue[0]);
       State.EventBytes := (State.EventBytes + EndValue[0]) + EndValue[1];
       if State.EventBytes > State.Maximum then
         begin
@@ -175,9 +177,9 @@ begin
             else
               if not Str.StartsWith(Line, ':') then
                 begin
-                  mutable var Name: string := Line;
-                  mutable var Value: string := '';
-                  var Colon: integer := Str.IndexOf(Line, ':');
+                  var Name: string := Line;
+                  var Value: string := '';
+                  const Colon: integer := Str.IndexOf(Line, ':');
                   if Colon >= 0 then
                     begin
                       Name := Str.Substring(Line, 0, Colon);
@@ -236,13 +238,14 @@ begin
       State.Finished := true;
     end;
   end if;
-  var Output: DecoderProcess := DecoderProcess(State := State, Events := Events);
+  const Output: DecoderProcess := DecoderProcess(State := State, Events := Events);
   return Result.Ok(Output);
 end function;
 
 // Discards all retained input after an error and prevents further decoding.
-function FailedState(mutable State: DecoderState): DecoderState;
+function FailedState(InitialState: DecoderState): DecoderState;
 begin
+  var State: DecoderState := InitialState;
   State.Buffer := [];
   State.Data := '';
   State.EventType := '';
@@ -263,8 +266,8 @@ begin
       return Result.Error('SSE MaxEventBytes must be positive');
     end;
   end if;
-  var State: DecoderState := DecoderState(Buffer := [], Data := '', EventType := '', LastEventId := '', EventBytes := 0, Maximum := MaxEventBytes, Finished := false);
-  var Slot: integer := ReserveState(State);
+  const State: DecoderState := DecoderState(Buffer := [], Data := '', EventType := '', LastEventId := '', EventBytes := 0, Maximum := MaxEventBytes, Finished := false);
+  const Slot: integer := ReserveState(State);
   return Result.Ok(Handles.NewSseDecoder(Slot));
 end function;
 
@@ -278,19 +281,19 @@ begin
   case DecoderIndex(Decoder) of
     when Result.Ok(const Index):
       begin
-        mutable var State: DecoderState := LoadState(Index);
+        var State: DecoderState := LoadState(Index);
         if State.Finished then
           begin
             return Result.Error('SSE decoder is already finished');
           end;
         end if;
-        mutable var Events: array of (Types.SseEvent) := [];
-        mutable var Offset: integer := 0;
+        var Events: array of (Types.SseEvent) := [];
+        var Offset: integer := 0;
         while Offset < Arrays.Length(Bytes) do
           begin
-            var Available: integer := (State.Maximum - State.EventBytes) -
-                                      Arrays.Length(State.Buffer);
-            mutable var Count: integer := Arrays.Length(Bytes) - Offset;
+            const Available: integer := (State.Maximum - State.EventBytes) -
+                                        Arrays.Length(State.Buffer);
+            var Count: integer := Arrays.Length(Bytes) - Offset;
             if Count > 1024 then
               begin
                 Count := 1024;
@@ -311,7 +314,7 @@ begin
                   State := Output.State;
                   for Item: Types.SseEvent in Output.Events do
                     begin
-                      Arrays.Push(Events, Item);
+                      Arrays.Push(var Events, Item);
                     end;
                   end for;
                 end;
@@ -345,7 +348,7 @@ begin
   case DecoderIndex(Decoder) of
     when Result.Ok(const Index):
       begin
-        var State: DecoderState := LoadState(Index);
+        const State: DecoderState := LoadState(Index);
         if State.Finished then
           begin
             return Result.Error('SSE decoder is already finished');

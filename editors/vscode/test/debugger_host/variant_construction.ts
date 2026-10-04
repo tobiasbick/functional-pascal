@@ -57,14 +57,14 @@ export async function verifyVariantConstruction(
     "end function;",
     "",
     "begin",
-    "  mutable var Selected: Choice := Choice.Empty;",
-    "  var StopMarker: integer := 0;",
+    "   var Selected: Choice := Choice.Empty;",
+    "  const StopMarker: integer := 0;",
     "  Console.WriteLn(ChoiceValue(Selected));",
     "end program;",
     ""
   ];
   const sourcePath = await writeSource(workspaceRoot, "variant-construction", lines);
-  const stopLine = lines.indexOf("  var StopMarker: integer := 0;");
+  const stopLine = lines.indexOf("  const StopMarker: integer := 0;");
   const breakpoint = new vscode.SourceBreakpoint(
     new vscode.Location(vscode.Uri.file(sourcePath), new vscode.Position(stopLine, 2))
   );

@@ -6,6 +6,9 @@ uses Std.Console as Console;
 uses Std.Conv as Conv;
 uses Std.Time as Time;
 uses Std.Tui as Tui;
+uses Std.Tui.Cells as Cells;
+uses Std.Tui.Geometry as Geometry;
+uses Std.Tui.Rendering as Rendering;
 
 begin
   if Args.ParamCount() <> 1 then
@@ -13,31 +16,31 @@ begin
       panic('usage: partial_fill_benchmark.fpas -- ITERATIONS');
     end;
   end if;
-  var Iterations: integer := Conv.StrToInt(Args.ParamStr(0));
+  const Iterations: integer := Conv.StrToInt(Args.ParamStr(0));
   if Iterations < 1 then
     begin
       panic('ITERATIONS must be positive');
     end;
   end if;
-  var Surface: Tui.TuiWorkingSurface := Tui.TuiWorkingSurface.Create(Tui.TuiSize.Create(98, 32));
-  var Canvas: Tui.TuiCanvas := Tui.TuiCanvas.Create(Surface, Tui.TuiRect.Create(0, 0, 98, 32));
-  var Bounds: Tui.TuiRect := Tui.TuiRect.Create(4, 3, 90, 26);
-  var Cell: Tui.TuiCell := Tui.TuiCell.Create('#', Tui.TuiStyleRole.Accent);
+  const Surface: Tui.TuiWorkingSurface := Rendering.TuiWorkingSurfaceCreate(Geometry.TuiSizeCreate(98, 32));
+  const Canvas: Tui.TuiCanvas := Rendering.TuiCanvasCreate(Surface, Geometry.TuiRectCreate(0, 0, 98, 32));
+  const Bounds: Tui.TuiRect := Geometry.TuiRectCreate(4, 3, 90, 26);
+  const Cell: Tui.TuiCell := Cells.TuiCellCreate('#', Tui.TuiStyleRole.Accent);
   for Warmup: integer := 1 to 5 do
     begin
-      Canvas.FillRect(Bounds, Cell);
+      Rendering.TuiCanvasFillRect(Canvas, Bounds, Cell);
     end;
   end for;
-  var Started: integer := Time.MonotonicMillis();
+  const Started: integer := Time.MonotonicMillis();
   for Iteration: integer := 1 to Iterations do
     begin
-      Canvas.FillRect(Bounds, Cell);
+      Rendering.TuiCanvasFillRect(Canvas, Bounds, Cell);
     end;
   end for;
-  var Elapsed: integer := Time.ElapsedMillis(Started);
-  var Snapshot: Tui.TuiSurfaceSnapshot := Surface.Snapshot();
-  if (((Snapshot.CellAt(4, 3).Glyph <> '#') or (Snapshot.CellAt(93, 28).Glyph <> '#')) or (Snapshot.CellAt(3, 3).Glyph <> ' ')) or
-     (Snapshot.CellAt(94, 28).Glyph <> ' ') then
+  const Elapsed: integer := Time.ElapsedMillis(Started);
+  const Snapshot: Tui.TuiSurfaceSnapshot := Rendering.TuiWorkingSurfaceSnapshot(Surface);
+  if (((Rendering.TuiSurfaceSnapshotCellAt(Snapshot, 4, 3).Glyph <> '#') or (Rendering.TuiSurfaceSnapshotCellAt(Snapshot, 93, 28).Glyph <> '#')) or (Rendering.TuiSurfaceSnapshotCellAt(Snapshot, 3, 3).Glyph <> ' ')) or
+     (Rendering.TuiSurfaceSnapshotCellAt(Snapshot, 94, 28).Glyph <> ' ') then
     begin
       panic('partial fill snapshot mismatch');
     end;

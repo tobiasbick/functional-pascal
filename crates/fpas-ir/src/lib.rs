@@ -37,9 +37,11 @@ pub use id::{
     BlockId, DebugBindingId, EnumLayoutId, FieldId, FunctionId, GlobalId, IdConversionError,
     IntrinsicId, LocalId, RecordLayoutId, TypeId, ValueId, VariantId, checked_count,
 };
-pub use instruction::{BinaryOperation, Constant, Instruction, Operation, UnaryOperation};
+pub use instruction::{
+    BinaryOperation, Constant, Instruction, Operation, ReferenceOperation, UnaryOperation,
+};
 pub use program::{
     EnumLayout, EnumVariant, Global, GlobalInitializer, IntrinsicSignature, IrType, Program,
-    RecordField, RecordLayout, RecordMethod, RecordProperty, TypeDefinition,
+    RecordField, RecordLayout, TypeDefinition,
 };
 pub use terminator::{BlockTarget, Terminator};

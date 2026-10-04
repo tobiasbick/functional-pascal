@@ -3,6 +3,11 @@ program TuiScrollSnapshotTest;
 uses Std.Str as Str;
 uses Std.Test as Test;
 uses Std.Tui as Tui;
+uses Std.Tui.Elements as Elements;
+uses Std.Tui.Geometry as Geometry;
+uses Std.Tui.Ids as Ids;
+uses Std.Tui.Rendering as Rendering;
+uses Std.Tui.Runtime as Runtime;
 
 type ScrollModel = record
   Offset: Tui.TuiPoint;
@@ -10,18 +15,18 @@ end record;
 
 function ViewScroll(State: ScrollModel): Tui.TuiElement;
 begin
-  return Tui.TuiElementBuilders.MakeDesktop(Option.Some(Tui.TuiControlId.Create(1)), [
-                                                                                       Tui.TuiElementBuilders.MakeScroll(Tui.TuiControlId.Create(1), State.Offset, Tui.TuiAction.Create(7), Tui.TuiElementBuilders.MakeColumn([
-                                                                                                                                                                                                                                Tui.TuiElementBuilders.MakeLabel('First'),
-                                                                                                                                                                                                                                Tui.TuiElementBuilders.MakeLabel('Second'),
-                                                                                                                                                                                                                                Tui.TuiElementBuilders.MakeLabel('Third')
-                                                                                                                                                                                                                              ]))
-                                                                                     ]);
+  return Elements.TuiElementMakeDesktop(Option.Some(Ids.TuiControlIdCreate(1)), [
+                                                                                  Elements.TuiElementMakeScroll(Ids.TuiControlIdCreate(1), State.Offset, Ids.TuiActionCreate(7), Elements.TuiElementMakeColumn([
+                                                                                                                                                                                                                 Elements.TuiElementMakeLabel('First'),
+                                                                                                                                                                                                                 Elements.TuiElementMakeLabel('Second'),
+                                                                                                                                                                                                                 Elements.TuiElementMakeLabel('Third')
+                                                                                                                                                                                                               ]))
+                                                                                ]);
 end function;
 
 function UpdateScroll(State: ScrollModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): ScrollModel;
 begin
-  Cmd.Set(Tui.TuiCmd.NoCommand);
+  Runtime.TuiCmdOutputSet(Cmd, Tui.TuiCmd.NoCommand);
   case Msg of
     when Tui.TuiMsg.ScrollChanged(const Source, const Action, const Offset):
       begin
@@ -37,13 +42,13 @@ begin
 end function;
 
 begin
-  mutable var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(12, 2));
-  mutable var Model: ScrollModel := ScrollModel(Offset := Tui.TuiPoint.Create(0, 0));
-  Model := App.RunIterations(Model, UpdateScroll, ViewScroll, 0, 0);
-  Test.AssertTrue(Str.Contains(App.SurfaceSnapshot().LineAt(0), 'First'));
-  App.Inject(Tui.TuiMsgScrollChanged(Tui.TuiControlId.Create(1), Tui.TuiAction.Create(7), Tui.TuiPoint.Create(0, 1)));
-  Model := App.RunIterations(Model, UpdateScroll, ViewScroll, 1, 0);
-  Test.AssertTrue(Str.Contains(App.SurfaceSnapshot().LineAt(0), 'Second'));
-  Test.AssertFalse(Str.Contains(App.SurfaceSnapshot().LineAt(0), 'First'));
-  App.Close();
+  var App: Tui.TuiApplication := Runtime.TuiApplicationOpenForTest(Geometry.TuiSizeCreate(12, 2));
+  var Model: ScrollModel := ScrollModel(Offset := Geometry.TuiPointCreate(0, 0));
+  Model := Runtime.TuiApplicationRunIterations(App, Model, UpdateScroll, ViewScroll, 0, 0);
+  Test.AssertTrue(Str.Contains(Rendering.TuiSurfaceSnapshotLineAt(Runtime.TuiApplicationSurfaceSnapshot(App), 0), 'First'));
+  Runtime.TuiApplicationInject(App, Tui.TuiMsgScrollChanged(Ids.TuiControlIdCreate(1), Ids.TuiActionCreate(7), Geometry.TuiPointCreate(0, 1)));
+  Model := Runtime.TuiApplicationRunIterations(App, Model, UpdateScroll, ViewScroll, 1, 0);
+  Test.AssertTrue(Str.Contains(Rendering.TuiSurfaceSnapshotLineAt(Runtime.TuiApplicationSurfaceSnapshot(App), 0), 'Second'));
+  Test.AssertFalse(Str.Contains(Rendering.TuiSurfaceSnapshotLineAt(Runtime.TuiApplicationSurfaceSnapshot(App), 0), 'First'));
+  Runtime.TuiApplicationClose(App);
 end program;

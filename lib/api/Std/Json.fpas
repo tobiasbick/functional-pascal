@@ -38,7 +38,7 @@ end enum;
 //
 // Parameters:
 // - `Text`: UTF-8 text processed by the operation.
-public function Parse(Text: string): Result of (JsonValue, string);
+public pure function Parse(Text: string): Result of (JsonValue, string);
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -47,7 +47,7 @@ end function;
 //
 // Parameters:
 // - `Value`: Value consumed or returned by the operation.
-public function Stringify(Value: JsonValue): string;
+public pure function Stringify(Value: JsonValue): string;
 begin
   panic('Intrinsic API declaration');
 end function;

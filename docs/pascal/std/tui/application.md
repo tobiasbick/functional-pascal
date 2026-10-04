@@ -18,11 +18,12 @@ Set a command explicitly when needed:
 
 ```pascal
 uses Std.Tui as Tui;
+uses Std.Tui.Runtime as Runtime;
 
 case Message of
   when Tui.TuiMsg.QuitRequested:
 begin
-  Cmd.Set(Tui.TuiCmd.Quit);
+  Runtime.TuiCmdOutputSet(Cmd, Tui.TuiCmd.Quit);
   return State;
 end;
 end case;
@@ -32,7 +33,7 @@ end case;
 `NoCommand` before every `Update`, reads it immediately afterwards, and stops
 on `Quit` before calling `View` or painting again.
 
-`Cmd.SetPalette(Palette)` replaces the active color palette before the next
+`Runtime.TuiCmdOutputSetPalette(Cmd, Palette)` replaces the active color palette before the next
 paint. `TuiCmd` remains a closed scalar command enum; the host-owned
 `TuiCmdOutput` carries the palette payload separately.
 
@@ -52,14 +53,15 @@ function UpdateApplication(
 ```pascal
 uses Std.Tui as Tui;
 uses Std.Tasks as Tasks;
+uses Std.Tui.Runtime as Runtime;
 
-var Inbox: channel of (AppMessage) := Tasks.CreateChannel(32);
-var Final: AppModel := Tui.TuiApplication.RunWithBackground(
+const Inbox: channel of (AppMessage) := Tasks.CreateChannel(32);
+const Final: AppModel := Runtime.TuiApplicationRunWithBackground(
   Initial, Inbox, Update, UpdateApplication, View
 );
 ```
 
-`RunWithBackgroundAndPalette` adds the same palette argument as `RunWithPalette`. The host takes
+`Runtime.TuiApplicationRunWithBackgroundAndPalette` adds the same palette argument as `Runtime.TuiApplicationRunWithPalette`. The host takes
 ownership of `Inbox` for the run and closes it during shutdown. A worker normally publishes with
 `SendWithCancellation(Inbox, Message, Token)` so a full queue applies bounded backpressure and
 shutdown wakes a blocked send. `TrySend` provides explicit rejection instead: `Result.Ok(false)` means the
@@ -70,11 +72,12 @@ The initial frame is rendered before the background-enabled host delivers `TuiMs
 
 ```pascal
 uses Std.Tui as Tui;
+uses Std.Tui.Runtime as Runtime;
 
 case Message of
   when Tui.TuiMsg.Started:
 begin
-  Cmd.StartBackground(1, LoadData);
+  Runtime.TuiCmdOutputStartBackground(Cmd, 1, LoadData);
 end;
 end case;
 ```
@@ -85,14 +88,14 @@ The fixed work signature is:
 function Work(Token: CancellationToken): result of (boolean, string)
 ```
 
-The success value is not interpreted. `Cmd.StartBackground(Id, Work)` starts an independent
+The success value is not interpreted. `Runtime.TuiCmdOutputStartBackground(Cmd, Id, Work)` starts an independent
 one-shot operation after `Update` returns. Multiple one-shot operations may use the same id; the id
-correlates failures. `Cmd.ReplaceSubscription(Id, Work)` gives a long-lived source a unique positive
+correlates failures. `Runtime.TuiCmdOutputReplaceSubscription(Cmd, Id, Work)` gives a long-lived source a unique positive
 id. Replacement requests cancellation immediately and returns control to the host without waiting
 for the old source. The host joins it once complete, then starts the latest pending replacement.
 Further replacements for that id overwrite the pending work; they do not start intermediate
 operations or overlap the old source. Input, updates, and paint continue while cancellation is pending.
-`Cmd.CancelSubscription(Id)` requests cancellation, clears any pending replacement, and is a no-op
+`Runtime.TuiCmdOutputCancelSubscription(Cmd, Id)` requests cancellation, clears any pending replacement, and is a no-op
 when that id is not active. Each application may own at most 256 simultaneous operations, including
 sources awaiting cancellation. Each source has at most one pending replacement.
 
@@ -130,38 +133,38 @@ uses cancellable waits can delay shutdown.
 
 ## Headless execution
 
-`TuiApplication.OpenForTest(Size)` opens a fixed-size host.
-`OpenForTestWithPalette(Size, Palette)` supplies a custom initial palette, and
-`App.Palette()` returns the current value for assertions.
-`RunIterations` renders an initial frame before consuming its iteration budget;
-one processed message consumes one iteration. `SurfaceSnapshot` is the explicit
+`Runtime.TuiApplicationOpenForTest(Size)` opens a fixed-size host.
+`Runtime.TuiApplicationOpenForTestWithPalette(Size, Palette)` supplies a custom initial palette, and
+`Runtime.TuiApplicationPalette(App)` returns the current value for assertions.
+`Runtime.TuiApplicationRunIterations` renders an initial frame before consuming its iteration budget;
+one processed message consumes one iteration. `Runtime.TuiApplicationSurfaceSnapshot` is the explicit
 copying boundary for assertions, including semantic cell roles.
 
-The host owns the working surface and clears pending work when `Close()` is
+The host owns the working surface and clears pending work when `Runtime.TuiApplicationClose(App)` is
 called.
 
-For a typed inbox, `RunBackgroundIterations` uses the same two update callbacks and delivers
+For a typed inbox, `Runtime.TuiApplicationRunBackgroundIterations` uses the same two update callbacks and delivers
 `TuiMsg.Started` once after its first frame. A framework message already queued by routing or task
 failure wins the next iteration; otherwise one available application message is consumed; otherwise
-the iteration receives `TuiMsg.Tick`. `InjectBackgroundForTest(Inbox, Message)` delegates to
+the iteration receives `TuiMsg.Tick`. `Runtime.TuiApplicationInjectBackgroundForTest(App, Inbox, Message)` delegates to
 `TrySend`, preserving the same FIFO, queue-full, and closed results as production. Call
-`CloseWithBackground(Inbox)` to cancel and join owned work before closing the inbox. A later send is
+`Runtime.TuiApplicationCloseWithBackground(App, Inbox)` to cancel and join owned work before closing the inbox. A later send is
 rejected.
 
 ## Interactive terminal
 
-`TuiApplication.Run(InitialModel, Update, View)` owns one process terminal for
+`Runtime.TuiApplicationRun(InitialModel, Update, View)` owns one process terminal for
 its duration. It uses the same initial-render and update ordering as the
 headless driver, presents completed frames through `Std.Console`, and blocks
 for terminal input when no routed messages remain. Idle applications do not
 receive implicit ticks and do not rebuild or repaint their view.
 
 `TuiMsg.Tick` remains available for explicitly injected messages and for
-deterministic time steps produced by `RunIterations`. The interactive host does
+deterministic time steps produced by `Runtime.TuiApplicationRunIterations`. The interactive host does
 not assume that every application needs an animation timer.
 
 An application that animates asks for its next frame explicitly.
-`Cmd.RequestTick(DelayMilliseconds)` schedules one `TuiMsg.Tick(Elapsed)` after
+`Runtime.TuiCmdOutputRequestTick(Cmd, DelayMilliseconds)` schedules one `TuiMsg.Tick(Elapsed)` after
 the delay, where `Elapsed` is the number of milliseconds actually passed since
 the request and is never less than the delay. The request is one-shot: `Update`
 requests the following tick while it handles the current one, and stops
@@ -171,22 +174,23 @@ paint continue while a tick is pending. A negative delay is a runtime error.
 
 ```pascal
 uses Std.Tui as Tui;
+uses Std.Tui.Runtime as Runtime;
 
 case Message of
-  when Tui.TuiMsg.Tick(Elapsed):
+  when Tui.TuiMsg.Tick(const Elapsed):
 begin
   Next.Animation := Advance(State.Animation, Elapsed);
   if Next.Animation.Running then
   begin
-    Cmd.RequestTick(40);
+    Runtime.TuiCmdOutputRequestTick(Cmd, 40);
   end;
   end if;
 end;
 end case;
 ```
 
-Headless runs keep their deterministic time steps: `RunIterations` and
-`RunBackgroundIterations` deliver `TuiMsg.Tick(DeltaMilliseconds)` on every
+Headless runs keep their deterministic time steps: `Runtime.TuiApplicationRunIterations` and
+`Runtime.TuiApplicationRunBackgroundIterations` deliver `TuiMsg.Tick(DeltaMilliseconds)` on every
 otherwise idle iteration, which also answers a pending request.
 
 Keyboard, mouse, and positive resize events are normalized before routing;
@@ -198,7 +202,7 @@ ordering is preserved. Intermediate resize frames are not painted.
 `Std.Console` owns raw mode, alternate-screen, input features, and cursor
 rollback for the interactive session.
 
-`TuiApplication.RunWithPalette(InitialModel, Update, View, Palette)` has the
+`Runtime.TuiApplicationRunWithPalette(InitialModel, Update, View, Palette)` has the
 same lifecycle with a caller-defined initial palette.
 
 The first terminal frame transfers the complete logical surface. Later frames
@@ -230,7 +234,7 @@ inside the active modal subtree. Escape produces `QuitRequested`.
 
 Focused one-line inputs support Home/End, Ctrl+Left/Ctrl+Right word movement,
 and Ctrl+Backspace/Ctrl+Delete word removal. Up/Down produces ordinary
-`TuiMsg.Key` for a plain input; an input built with `MakeHistoryInput` instead
+`TuiMsg.Key` for a plain input; an input built with `Elements.TuiElementMakeHistoryInput` instead
 uses those keys to traverse its explicit history and restore its draft.
 
 Left-button pointer downs hit-test the previous arranged frame. Ordinary
@@ -251,7 +255,7 @@ An open hierarchical menu handles Escape before the application-level quit
 request. Menu shortcuts, F10, mnemonics, arrows, and popup pointer hits are
 described in [Menus](menus.md).
 
-`InjectResizeForTest` replaces the host surface size before `TuiMsg.Resize`
+`Runtime.TuiApplicationInjectResizeForTest` replaces the host surface size before `TuiMsg.Resize`
 reaches `Update`. When an overlay is present directly under the desktop, key
 and pointer targeting is limited to the last overlay subtree.
 

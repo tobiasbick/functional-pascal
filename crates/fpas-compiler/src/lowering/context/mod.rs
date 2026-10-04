@@ -3,6 +3,7 @@
 mod bindings;
 mod block_order;
 mod blocks;
+mod callables;
 mod debug;
 mod descriptors;
 mod designators;
@@ -31,7 +32,7 @@ use super::types;
 use self::descriptors::{Binding, BindingStorage};
 
 pub(crate) use self::descriptors::{
-    BoundMethodTarget, Callable, CaptureInput, ClosureTarget, FunctionInput, GlobalBinding,
+    Callable, CaptureInput, ClosureTarget, FunctionInput, GlobalBinding, IntrinsicTaskTarget,
     LoopTargets, ParameterInput,
 };
 
@@ -44,8 +45,7 @@ pub(super) struct LoweringContext {
     captures: Vec<fpas_ir::CaptureDeclaration>,
     callables: BTreeMap<String, Callable>,
     closure_targets: HashMap<usize, ClosureTarget>,
-    pub(super) bound_method_targets: HashMap<usize, BoundMethodTarget>,
-    pub(super) intrinsic_task_targets: HashMap<usize, BoundMethodTarget>,
+    pub(super) intrinsic_task_targets: HashMap<usize, IntrinsicTaskTarget>,
     cell_names: BTreeSet<String>,
     globals: BTreeMap<String, GlobalBinding>,
     constants: BTreeMap<String, fpas_ir::Constant>,
@@ -59,15 +59,7 @@ pub(super) struct LoweringContext {
     pub(super) pattern_infos: fpas_sema::PatternInfoMap,
     /// Proven complete statement cases keyed by their scrutinee expression identity.
     pub(super) exhaustive_cases: std::collections::HashSet<usize>,
-    pub(super) method_calls: fpas_sema::MethodCallMap,
-    pub(super) fluent_calls: fpas_sema::FluentCallMap,
     pub(super) value_calls: fpas_sema::ValueCallMap,
-    pub(super) bound_methods: fpas_sema::BoundMethodMap,
-    pub(super) property_reads: fpas_sema::PropertyReadMap,
-    pub(super) property_writes: fpas_sema::PropertyWriteMap,
-    pub(super) event_writes: fpas_sema::EventWriteMap,
-    pub(super) event_assigned: fpas_sema::EventAssignedMap,
-    pub(super) event_raises: fpas_sema::EventRaiseMap,
     blocks: Vec<BasicBlock>,
     current: BlockId,
     locals: Vec<Local>,
@@ -108,10 +100,15 @@ impl LoweringContext {
         expression: &fpas_parser::Expr,
     ) -> Result<TypeId, CompileError> {
         let span = expression.span();
-        if let fpas_parser::Expr::Call { designator, .. } = expression {
+        // Source calls retain their checked instantiation instead of the erased runtime signature.
+        if !self
+            .expr_types
+            .contains_key(&fpas_sema::expr_lookup_key(expression))
+            && let fpas_parser::Expr::Call { designator, .. } = expression
+        {
             let key = fpas_sema::expr_lookup_key(expression);
             if !self.intrinsic_calls.contains_key(&key) {
-                if let Some(result) = self.member_call_result(key) {
+                if let Some(result) = self.value_call_result(key) {
                     return Ok(result);
                 }
                 let qualified = designator
@@ -202,6 +199,31 @@ impl LoweringContext {
         ty: TypeId,
         span: Span,
     ) -> Result<ValueId, CompileError> {
+        self.emit_value_with_source(
+            operation,
+            ty,
+            span,
+            Some(span.diagnostic_span_or_synthetic()),
+        )
+    }
+
+    /// Create compiler-owned storage without adding a source debugger stop.
+    pub(super) fn emit_storage_cell(
+        &mut self,
+        value: ValueId,
+        ty: TypeId,
+        span: Span,
+    ) -> Result<ValueId, CompileError> {
+        self.emit_value_with_source(Operation::MakeCell(value), ty, span, None)
+    }
+
+    fn emit_value_with_source(
+        &mut self,
+        operation: Operation,
+        ty: TypeId,
+        span: Span,
+        source: Option<fpas_ir::SourceSpan>,
+    ) -> Result<ValueId, CompileError> {
         let value = ValueId::new(self.next_value);
         self.next_value = self.next_value.checked_add(1).ok_or_else(|| {
             internal_compiler_error(
@@ -211,14 +233,15 @@ impl LoweringContext {
                 span.column,
             )
         })?;
-        let source = span.diagnostic_span_or_synthetic();
         let instruction = self.current_block_mut()?.instructions.len();
         self.current_block_mut()?.instructions.push(Instruction {
-            source: Some(source),
+            source,
             result: Some(ValueDefinition { id: value, ty }),
             operation,
         });
-        self.record_sequence_point(instruction, source);
+        if let Some(source) = source {
+            self.record_sequence_point(instruction, source);
+        }
         Ok(value)
     }
 

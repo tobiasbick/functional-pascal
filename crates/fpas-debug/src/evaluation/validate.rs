@@ -39,6 +39,11 @@ fn lower(
         Expr::Str(value, _) => Ok(DebugExpression::String(value.clone())),
         Expr::Bool(value, _) => Ok(DebugExpression::Boolean(*value)),
         Expr::Designator(designator) => lower_designator(designator, depth, limits, budget),
+        Expr::VarArgument(_, _) => Err(unsupported(
+            expression,
+            "caller storage with `var`",
+            "Detached debugger evaluation cannot borrow caller storage; inspect a value snapshot instead.",
+        )),
         Expr::UnaryOp { op, operand, .. } => Ok(DebugExpression::Unary {
             operation: match op {
                 UnaryOp::Not => DebugUnaryOperation::Not,
@@ -76,16 +81,6 @@ fn lower(
                         base: Box::new(lowered),
                         index: Box::new(lower(index, depth + 1, limits, budget)?),
                     },
-                    PostfixOperation::MethodCall { name, args, .. } => {
-                        DebugExpression::MethodCall {
-                            receiver: Box::new(lowered),
-                            name: name.clone(),
-                            arguments: args
-                                .iter()
-                                .map(|argument| lower(argument, depth + 1, limits, budget))
-                                .collect::<Result<Vec<_>, _>>()?,
-                        }
-                    }
                 };
             }
             Ok(lowered)
@@ -135,11 +130,6 @@ fn lower(
             budget,
         )?))),
         Expr::OptionNone(_) => Ok(DebugExpression::OptionNone),
-        Expr::Nil(_) => Err(unsupported(
-            expression,
-            "event-handler `nil`",
-            "Use `Option.None` for an Option value; debugger evaluation cannot assign event handlers.",
-        )),
         Expr::Try(value, _) => Ok(DebugExpression::Try(Box::new(lower(
             value,
             depth + 1,

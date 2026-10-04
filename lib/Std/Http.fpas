@@ -160,4 +160,70 @@ begin
   return Utf8.Decode(ResponseValue.Body);
 end function;
 
+// Creates one HTTP field.
+public function HeaderCreate(Name: string; Value: string): Types.Header;
+begin
+  return Types.HeaderCreate(Name, Value);
+end function;
+
+// Creates a request with explicit method and default limits.
+public function RequestCreate(Method: string; Url: string): Types.Request;
+begin
+  return Types.RequestCreate(Method, Url);
+end function;
+
+// Creates a GET request with default transport limits.
+public function RequestGet(Url: string): Types.Request;
+begin
+  return Types.RequestGet(Url);
+end function;
+
+// Creates a POST request with default transport limits.
+public function RequestPost(Url: string): Types.Request;
+begin
+  return Types.RequestPost(Url);
+end function;
+
+// Creates a PUT request with default transport limits.
+public function RequestPut(Url: string): Types.Request;
+begin
+  return Types.RequestPut(Url);
+end function;
+
+// Creates a PATCH request with default transport limits.
+public function RequestPatch(Url: string): Types.Request;
+begin
+  return Types.RequestPatch(Url);
+end function;
+
+// Creates a DELETE request with default transport limits.
+public function RequestDelete(Url: string): Types.Request;
+begin
+  return Types.RequestDelete(Url);
+end function;
+
+// Creates a HEAD request with default transport limits.
+public function RequestHead(Url: string): Types.Request;
+begin
+  return Types.RequestHead(Url);
+end function;
+
+// Creates an OPTIONS request with default transport limits.
+public function RequestOptions(Url: string): Types.Request;
+begin
+  return Types.RequestOptions(Url);
+end function;
+
+// Creates an empty response with an explicit status.
+public function ServerResponseCreate(StatusCode: integer; ReasonPhrase: string): Types.ServerResponse;
+begin
+  return Types.ServerResponseCreate(StatusCode, ReasonPhrase);
+end function;
+
+// Returns the default bounded server-loop configuration.
+public function ServerOptionsCreate(): Types.ServerOptions;
+begin
+  return Types.ServerOptionsCreate();
+end function;
+
 end unit;

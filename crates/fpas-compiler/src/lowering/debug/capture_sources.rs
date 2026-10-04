@@ -38,9 +38,6 @@ fn sources_for(
     if function.captures.is_empty() {
         return Ok((None, Vec::new()));
     }
-    if function.name.starts_with("$bound_") {
-        return bound_method_sources(function);
-    }
     let owner_id = owners.get(&function.id).copied().ok_or_else(|| {
         internal_compiler_error(
             format!(
@@ -94,46 +91,6 @@ fn sources_for(
         });
     }
     Ok((Some(owner_id), sources))
-}
-
-fn bound_method_sources(
-    function: &Function,
-) -> Result<(Option<FunctionId>, Vec<DebugCaptureSource>), CompileError> {
-    let capture_bindings = function
-        .debug
-        .bindings
-        .iter()
-        .enumerate()
-        .filter(|(_, binding)| binding.kind == DebugBindingKind::Capture)
-        .collect::<Vec<_>>();
-    if capture_bindings.len() != function.captures.len() {
-        return Err(internal_compiler_error(
-            format!(
-                "Bound method `{}` capture bindings do not match capture declarations.",
-                function.name
-            ),
-            "This is an internal compiler error. Re-run compilation and report the source program.",
-            1,
-            1,
-        ));
-    }
-    let mut sources = Vec::with_capacity(function.captures.len());
-    for (declaration, (index, _)) in function.captures.iter().zip(capture_bindings) {
-        let binding = DebugBindingId::try_from_index(index).map_err(|error| {
-            internal_compiler_error(
-                error.to_string(),
-                "Split the routine into smaller functions.",
-                1,
-                1,
-            )
-        })?;
-        sources.push(DebugCaptureSource {
-            binding,
-            ty: declaration.ty,
-            kind: declaration.kind,
-        });
-    }
-    Ok((Some(function.id), sources))
 }
 
 fn resolve_owner_binding(

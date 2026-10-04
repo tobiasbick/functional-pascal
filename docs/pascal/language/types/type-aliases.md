@@ -25,7 +25,7 @@ uses Std.Console as Console;
 
 type PaletteColor = Console.Color;
 
-var Value: PaletteColor := PaletteColor.Green;
+const Value: PaletteColor := PaletteColor.Green;
 ```
 
 ## See also

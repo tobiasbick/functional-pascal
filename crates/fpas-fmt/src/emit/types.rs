@@ -62,10 +62,14 @@ pub(crate) fn emit_type_expr(emitter: &mut Emitter, ty: &TypeExpr) {
             emitter.write(")");
         }
         TypeExpr::FunctionType {
+            pure,
             params,
             return_type,
             ..
         } => {
+            if *pure {
+                emitter.write("pure ");
+            }
             let return_text = format_type_expr(return_type);
             emit_formal_params_in_parens(emitter, "function(", params, &format!(": {return_text}"));
         }
@@ -133,7 +137,7 @@ pub(crate) fn emit_formal_params_in_parens(
 
 fn emit_formal_param(emitter: &mut Emitter, param: &FormalParam) {
     if param.mutable {
-        emitter.write("mutable ");
+        emitter.write("var ");
     }
     emitter.write(&param.name);
     emitter.write(": ");
@@ -150,24 +154,24 @@ mod tests {
 
         let (program, errors) = parse(source);
         assert!(errors.is_empty(), "{errors:?}");
-        let Stmt::Var(var) = &program.body[0] else {
+        let Stmt::Const(var) = &program.body[0] else {
             panic!("expected var stmt");
         };
-        format_type_expr(&var.type_expr)
+        format_type_expr(var.type_expr.as_ref().expect("explicit test annotation"))
     }
 
     #[test]
     fn named_and_array_types() {
         assert_eq!(
-            type_from_var(r#"program T; begin var X: integer := 0; end program;"#),
+            type_from_var(r#"program T; begin const X: integer := 0; end program;"#),
             "integer"
         );
         assert_eq!(
-            type_from_var(r#"program T; begin var X: MyLib.Utils.Id := 0; end program;"#),
+            type_from_var(r#"program T; begin const X: MyLib.Utils.Id := 0; end program;"#),
             "MyLib.Utils.Id"
         );
         assert_eq!(
-            type_from_var(r#"program T; begin var X: array of (integer) := []; end program;"#),
+            type_from_var(r#"program T; begin const X: array of (integer) := []; end program;"#),
             "array of (integer)"
         );
     }
@@ -176,34 +180,36 @@ mod tests {
     fn result_option_dict_types() {
         assert_eq!(
             type_from_var(
-                r#"program T; begin var X: result of (integer, string) := Result.Ok(0); end program;"#
+                r#"program T; begin const X: result of (integer, string) := Result.Ok(0); end program;"#
             ),
             "Result of (integer, string)"
         );
         assert_eq!(
             type_from_var(
-                r#"program T; begin var X: option of (integer) := Option.None; end program;"#
+                r#"program T; begin const X: option of (integer) := Option.None; end program;"#
             ),
             "Option of (integer)"
         );
         assert_eq!(
             type_from_var(
-                r#"program T; begin var X: dict of (string, integer) := [:]; end program;"#
+                r#"program T; begin const X: dict of (string, integer) := [:]; end program;"#
             ),
             "dict of (string, integer)"
         );
         assert_eq!(
-            type_from_var(r#"program T; begin var X: channel of (string) := Value; end program;"#),
+            type_from_var(
+                r#"program T; begin const X: channel of (string) := Value; end program;"#
+            ),
             "channel of (string)"
         );
         assert_eq!(
             type_from_var(
-                r#"program T; begin var X: array of (TASK OF (result of (integer, string))) := []; end program;"#
+                r#"program T; begin const X: array of (TASK OF (result of (integer, string))) := []; end program;"#
             ),
             "array of (task of (Result of (integer, string)))"
         );
         assert_eq!(
-            type_from_var(r#"program T; begin var X: task := Value; end program;"#),
+            type_from_var(r#"program T; begin const X: task := Value; end program;"#),
             "task"
         );
     }
@@ -212,21 +218,21 @@ mod tests {
     fn function_and_procedure_types() {
         assert_eq!(
             type_from_var(
-                r#"program T; begin var F: function(X: integer): integer := Add; end program;"#
+                r#"program T; begin const F: function(X: integer): integer := Add; end program;"#
             ),
             "function(X: integer): integer"
         );
         assert_eq!(
             type_from_var(
-                r#"program T; begin var P: procedure(Msg: string) := WriteLn; end program;"#
+                r#"program T; begin const P: procedure(Msg: string) := WriteLn; end program;"#
             ),
             "procedure(Msg: string)"
         );
         assert_eq!(
             type_from_var(
-                r#"program T; begin var F: function(A: integer; mutable B: integer): boolean := Check; end program;"#
+                r#"program T; begin const F: function(A: integer; var B: integer): boolean := Check; end program;"#
             ),
-            "function(A: integer; mutable B: integer): boolean"
+            "function(A: integer; var B: integer): boolean"
         );
     }
 
@@ -234,7 +240,7 @@ mod tests {
     fn long_formal_param_list_wraps() {
         assert_eq!(
             type_from_var(
-                r#"program T; begin var F: function(AlphaParameter: integer; BetaParameter: integer; GammaParameter: integer; DeltaParameter: integer): boolean := Check; end program;"#,
+                r#"program T; begin const F: function(AlphaParameter: integer; BetaParameter: integer; GammaParameter: integer; DeltaParameter: integer): boolean := Check; end program;"#,
             ),
             "function(\n  AlphaParameter: integer;\n  BetaParameter: integer;\n  GammaParameter: integer;\n  DeltaParameter: integer\n): boolean"
         );

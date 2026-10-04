@@ -2,11 +2,11 @@ program T;
 
 uses Std.Arrays as Arrays;
 
-function Identity(V: integer): integer;
+pure function Identity(V: integer): integer;
 begin
   return V;
 end function;
 
 begin
-  var X: integer := Arrays.FlatMap([1, 2], Identity);
+  const X: integer := Arrays.FlatMap([1, 2], Identity);
 end program;

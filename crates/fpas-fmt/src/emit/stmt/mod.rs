@@ -45,8 +45,8 @@ fn emit_stmt_in_block(emitter: &mut Emitter, stmt: &Stmt, comments: &CommentMap)
             emitter.writeln("end");
             finish_stmt_after_newline(emitter, comments, stmt);
         }
+        Stmt::Const(var) => line::emit_var_stmt(emitter, "const", var, comments),
         Stmt::Var(var) => line::emit_var_stmt(emitter, "var", var, comments),
-        Stmt::MutableVar(var) => line::emit_var_stmt(emitter, "mutable var", var, comments),
         Stmt::Assign { target, value, .. } => {
             write_indented(emitter);
             emit_designator(emitter, target, comments);
@@ -223,7 +223,7 @@ end program;"#,
     fn var_assign_call_return() {
         let formatted = format_body(
             r#"program T; begin
-  var X: integer := 1;
+  const X: integer := 1;
   X := 2;
   WriteLn('hi');
   return X;
@@ -231,7 +231,7 @@ end program;"#,
         );
         assert_eq!(
             formatted,
-            "var X: integer := 1;\n\
+            "const X: integer := 1;\n\
              X := 2;\n\
              WriteLn('hi');\n\
              return X;\n"

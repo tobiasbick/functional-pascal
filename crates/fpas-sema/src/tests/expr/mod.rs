@@ -1,46 +1,49 @@
 use super::{check_errors, check_ok};
 use crate::analyze_with_types;
 
+mod array_references;
 mod bits;
-mod bound_methods;
+mod builtin_constants;
 mod callable_targets;
 mod closures;
 mod decisions;
 mod equality;
-mod fluent;
+mod numeric_rules;
 mod obsolete_records;
+mod ordinary_calls;
 mod postfix;
+mod record_closures;
 mod record_context;
-mod record_events;
-mod record_properties;
 mod record_updates;
+mod references;
+mod retired_names;
 mod std_shadowing;
 
 // ── Literals ────────────────────────────────────────────────────
 
 #[test]
 fn integer_literal() {
-    check_ok(r#"program T;  var X: integer := 42; begin null; end program;"#);
+    check_ok(r#"program T;  const X: integer := 42; begin null; end program;"#);
 }
 
 #[test]
 fn real_literal() {
-    check_ok(r#"program T;  var X: real := 3.14; begin null; end program;"#);
+    check_ok(r#"program T;  const X: real := 3.14; begin null; end program;"#);
 }
 
 #[test]
 fn string_literal() {
-    check_ok(r#"program T;  var X: string := 'hello'; begin null; end program;"#);
+    check_ok(r#"program T;  const X: string := 'hello'; begin null; end program;"#);
 }
 
 #[test]
 fn single_character_string_literal_defaults_to_string() {
     let (program, parse_errors) =
-        fpas_parser::parse(r#"program T;  var X: string := 'A'; begin null; end program;"#);
+        fpas_parser::parse(r#"program T;  const X: string := 'A'; begin null; end program;"#);
     assert!(parse_errors.is_empty(), "{parse_errors:#?}");
 
     let value = match &program.declarations[0] {
-        fpas_parser::Decl::Var(var_def) => &var_def.value,
+        fpas_parser::Decl::Const(var_def) => &var_def.value,
         other => panic!("expected variable declaration, got {other:?}"),
     };
 
@@ -53,25 +56,25 @@ fn single_character_string_literal_defaults_to_string() {
 
 #[test]
 fn bool_literal() {
-    check_ok(r#"program T;  var X: boolean := true; begin null; end program;"#);
+    check_ok(r#"program T;  const X: boolean := true; begin null; end program;"#);
 }
 
 // ── Arithmetic ──────────────────────────────────────────────────
 
 #[test]
 fn add_integers() {
-    check_ok(r#"program T;  var X: integer := 1 + 2; begin null; end program;"#);
+    check_ok(r#"program T;  const X: integer := 1 + 2; begin null; end program;"#);
 }
 
 #[test]
 fn add_reals() {
-    check_ok(r#"program T;  var X: real := 1.0 + 2.0; begin null; end program;"#);
+    check_ok(r#"program T;  const X: real := 1.0 + 2.0; begin null; end program;"#);
 }
 
 #[test]
 fn analyze_with_types_records_expression_types() {
     let (program, parse_errors) =
-        fpas_parser::parse(r#"program T;  var X: real := 1.0 + 2.0; begin null; end program;"#);
+        fpas_parser::parse(r#"program T;  const X: real := 1.0 + 2.0; begin null; end program;"#);
     assert!(parse_errors.is_empty());
     let metadata = analyze_with_types(&program);
     assert!(metadata.errors.is_empty(), "{:?}", metadata.errors);
@@ -84,92 +87,92 @@ fn analyze_with_types_records_expression_types() {
 #[test]
 fn mixed_numeric() {
     // integer + real → real (promotion)
-    check_ok(r#"program T;  var X: real := 1 + 2.0; begin null; end program;"#);
+    check_ok(r#"program T;  const X: real := 1 + 2.0; begin null; end program;"#);
 }
 
 #[test]
 fn add_strings() {
-    check_ok(r#"program T;  var X: string := 'a' + 'b'; begin null; end program;"#);
+    check_ok(r#"program T;  const X: string := 'a' + 'b'; begin null; end program;"#);
 }
 
 #[test]
 fn add_type_error() {
-    check_errors(r#"program T;  var X: integer := 1 + true; begin null; end program;"#);
+    check_errors(r#"program T;  const X: integer := 1 + true; begin null; end program;"#);
 }
 
 #[test]
 fn int_div_valid() {
-    check_ok(r#"program T;  var X: integer := 10 div 3; begin null; end program;"#);
+    check_ok(r#"program T;  const X: integer := 10 div 3; begin null; end program;"#);
 }
 
 #[test]
 fn real_div_is_real_even_for_integer_operands() {
-    check_ok(r#"program T;  var X: real := (80 - 42) / 2; begin null; end program;"#);
-    check_errors(r#"program T;  var X: integer := (80 - 42) / 2; begin null; end program;"#);
+    check_ok(r#"program T;  const X: real := (80 - 42) / 2; begin null; end program;"#);
+    check_errors(r#"program T;  const X: integer := (80 - 42) / 2; begin null; end program;"#);
 }
 
 #[test]
 fn int_div_with_real_error() {
-    check_errors(r#"program T;  var X: integer := 10 div 3.0; begin null; end program;"#);
+    check_errors(r#"program T;  const X: integer := 10 div 3.0; begin null; end program;"#);
 }
 
 #[test]
 fn mod_valid() {
-    check_ok(r#"program T;  var X: integer := 10 mod 3; begin null; end program;"#);
+    check_ok(r#"program T;  const X: integer := 10 mod 3; begin null; end program;"#);
 }
 
 // ── Logical ─────────────────────────────────────────────────────
 
 #[test]
 fn and_booleans() {
-    check_ok(r#"program T;  var X: boolean := true and false; begin null; end program;"#);
+    check_ok(r#"program T;  const X: boolean := true and false; begin null; end program;"#);
 }
 
 #[test]
 fn or_booleans() {
-    check_ok(r#"program T;  var X: boolean := true or false; begin null; end program;"#);
+    check_ok(r#"program T;  const X: boolean := true or false; begin null; end program;"#);
 }
 
 #[test]
 fn and_integers_rejected() {
-    check_errors(r#"program T;  var X: integer := 5 and 3; begin null; end program;"#);
+    check_errors(r#"program T;  const X: integer := 5 and 3; begin null; end program;"#);
 }
 
 #[test]
 fn not_boolean() {
-    check_ok(r#"program T;  var X: boolean := not true; begin null; end program;"#);
+    check_ok(r#"program T;  const X: boolean := not true; begin null; end program;"#);
 }
 
 #[test]
 fn negate_integer() {
-    check_ok(r#"program T;  var X: integer := -42; begin null; end program;"#);
+    check_ok(r#"program T;  const X: integer := -42; begin null; end program;"#);
 }
 
 #[test]
 fn negate_non_numeric_error() {
-    check_errors(r#"program T;  var X: integer := -true; begin null; end program;"#);
+    check_errors(r#"program T;  const X: integer := -true; begin null; end program;"#);
 }
 
 // ── Comparison ──────────────────────────────────────────────────
 
 #[test]
 fn compare_integers() {
-    check_ok(r#"program T;  var X: boolean := 1 < 2; begin null; end program;"#);
+    check_ok(r#"program T;  const X: boolean := 1 < 2; begin null; end program;"#);
 }
 
 #[test]
 fn compare_strings() {
-    check_ok(r#"program T;  var X: boolean := 'a' < 'b'; begin null; end program;"#);
+    check_ok(r#"program T;  const X: boolean := 'a' < 'b'; begin null; end program;"#);
 }
 
 #[test]
 fn equality_same_type() {
-    check_ok(r#"program T;  var X: boolean := 1 = 1; begin null; end program;"#);
+    check_ok(r#"program T;  const X: boolean := 1 = 1; begin null; end program;"#);
 }
 
 #[test]
 fn equality_type_mismatch() {
-    check_errors(r#"program T;  var X: boolean := 1 = true; begin null; end program;"#);
+    check_errors(r#"program T;  const X: boolean := 1 = true; begin null; end program;"#);
 }
 
 #[test]
@@ -215,22 +218,15 @@ fn analysis_metadata_exposes_all_named_results() {
     let crate::AnalysisMetadata {
         errors,
         expr_types,
+        binding_types: _,
         intrinsic_calls,
         named_types,
-        method_calls,
-        fluent_calls,
         value_calls,
         record_defaults,
         record_constructions: _,
         projection_types: _,
         closure_infos,
         nested_routine_captures,
-        bound_methods,
-        property_reads,
-        property_writes,
-        event_writes,
-        event_assigned,
-        event_raises,
         import_aliases: _,
         pattern_infos: _,
         exhaustive_cases: _,
@@ -242,20 +238,12 @@ fn analysis_metadata_exposes_all_named_results() {
             errors.len(),
             expr_types.len(),
             intrinsic_calls.len(),
-            method_calls.len(),
-            fluent_calls.len(),
             value_calls.len(),
             record_defaults.len(),
             closure_infos.len(),
             nested_routine_captures.len(),
-            bound_methods.len(),
-            property_reads.len(),
-            property_writes.len(),
-            event_writes.len(),
-            event_assigned.len(),
-            event_raises.len(),
         ],
-        [0; 15]
+        [0; 7]
     );
 }
 
@@ -268,9 +256,9 @@ type Id = record
   Value: integer;
 end record;
 
-var A: Id := Id(Value := 1);
-var B: Id := Id(Value := 1);
-var Same: boolean := A = B;
+const A: Id := Id(Value := 1);
+const B: Id := Id(Value := 1);
+const Same: boolean := A = B;
 
 begin
   null;
@@ -284,103 +272,103 @@ end program;
 #[test]
 fn shl_valid() {
     check_ok(
-        r#"program T; uses Std.Bits as Bits; var X: integer := Bits.ShiftLeft(1, 4); begin null; end program;"#,
+        r#"program T; uses Std.Bits as Bits; const X: integer := Bits.ShiftLeft(1, 4); begin null; end program;"#,
     );
 }
 
 #[test]
 fn shr_valid() {
     check_ok(
-        r#"program T; uses Std.Bits as Bits; var X: integer := Bits.ShiftRight(16, 4); begin null; end program;"#,
+        r#"program T; uses Std.Bits as Bits; const X: integer := Bits.ShiftRight(16, 4); begin null; end program;"#,
     );
 }
 
 #[test]
 fn shl_with_real_error() {
     check_errors(
-        r#"program T; uses Std.Bits as Bits; var X: integer := Bits.ShiftLeft(1, 2.0); begin null; end program;"#,
+        r#"program T; uses Std.Bits as Bits; const X: integer := Bits.ShiftLeft(1, 2.0); begin null; end program;"#,
     );
 }
 
 #[test]
 fn shr_with_real_error() {
     check_errors(
-        r#"program T; uses Std.Bits as Bits; var X: integer := Bits.ShiftRight(16, 1.5); begin null; end program;"#,
+        r#"program T; uses Std.Bits as Bits; const X: integer := Bits.ShiftRight(16, 1.5); begin null; end program;"#,
     );
 }
 
 #[test]
 fn mod_with_real_error() {
-    check_errors(r#"program T;  var X: integer := 10 mod 3.0; begin null; end program;"#);
+    check_errors(r#"program T;  const X: integer := 10 mod 3.0; begin null; end program;"#);
 }
 
 #[test]
 fn xor_booleans() {
-    check_ok(r#"program T;  var X: boolean := true xor false; begin null; end program;"#);
+    check_ok(r#"program T;  const X: boolean := true xor false; begin null; end program;"#);
 }
 
 #[test]
 fn xor_integers_rejected() {
-    check_errors(r#"program T;  var X: integer := 5 xor 3; begin null; end program;"#);
+    check_errors(r#"program T;  const X: integer := 5 xor 3; begin null; end program;"#);
 }
 
 #[test]
 fn xor_with_string_error() {
-    check_errors(r#"program T;  var X: boolean := 'a' xor 'b'; begin null; end program;"#);
+    check_errors(r#"program T;  const X: boolean := 'a' xor 'b'; begin null; end program;"#);
 }
 
 #[test]
 fn and_with_string_error() {
-    check_errors(r#"program T;  var X: boolean := 'a' and 'b'; begin null; end program;"#);
+    check_errors(r#"program T;  const X: boolean := 'a' and 'b'; begin null; end program;"#);
 }
 
 #[test]
 fn or_with_string_error() {
-    check_errors(r#"program T;  var X: boolean := 'a' or 'b'; begin null; end program;"#);
+    check_errors(r#"program T;  const X: boolean := 'a' or 'b'; begin null; end program;"#);
 }
 
 #[test]
 fn not_string_error() {
-    check_errors(r#"program T;  var X: boolean := not 'hello'; begin null; end program;"#);
+    check_errors(r#"program T;  const X: boolean := not 'hello'; begin null; end program;"#);
 }
 
 #[test]
 fn not_integer_rejected() {
-    check_errors(r#"program T;  var X: integer := not 0; begin null; end program;"#);
+    check_errors(r#"program T;  const X: integer := not 0; begin null; end program;"#);
 }
 
 #[test]
 fn compare_incompatible_types_error() {
-    check_errors(r#"program T;  var X: boolean := 1 < 'hello'; begin null; end program;"#);
+    check_errors(r#"program T;  const X: boolean := 1 < 'hello'; begin null; end program;"#);
 }
 
 #[test]
 fn negate_real() {
-    check_ok(r#"program T;  var X: real := -3.14; begin null; end program;"#);
+    check_ok(r#"program T;  const X: real := -3.14; begin null; end program;"#);
 }
 
 #[test]
 fn not_real_error() {
-    check_errors(r#"program T;  var X: real := not 3.14; begin null; end program;"#);
+    check_errors(r#"program T;  const X: real := not 3.14; begin null; end program;"#);
 }
 
 // ── Array literal ───────────────────────────────────────────────
 
 #[test]
 fn array_literal_valid() {
-    check_ok(r#"program T;  var X: array of (integer) := [1, 2, 3]; begin null; end program;"#);
+    check_ok(r#"program T;  const X: array of (integer) := [1, 2, 3]; begin null; end program;"#);
 }
 
 #[test]
 fn array_literal_mixed_types() {
     check_errors(
-        r#"program T;  var X: array of (integer) := [1, 2, true]; begin null; end program;"#,
+        r#"program T;  const X: array of (integer) := [1, 2, true]; begin null; end program;"#,
     );
 }
 
 #[test]
 fn empty_array() {
-    check_ok(r#"program T;  var X: array of (integer) := []; begin null; end program;"#);
+    check_ok(r#"program T;  const X: array of (integer) := []; begin null; end program;"#);
 }
 
 // ── Designator ──────────────────────────────────────────────────
@@ -395,13 +383,13 @@ fn undefined_variable() {
 #[test]
 fn call_function() {
     check_ok(
-        r#"program T; function Add(A: integer; B: integer): integer; begin return A + B; end function; begin var X: integer := Add(1, 2); end program;"#,
+        r#"program T; function Add(A: integer; B: integer): integer; begin return A + B; end function; begin const X: integer := Add(1, 2); end program;"#,
     );
 }
 
 #[test]
 fn call_wrong_arg_count() {
     check_errors(
-        r#"program T; function Add(A: integer; B: integer): integer; begin return A + B; end function; begin var X: integer := Add(1); end program;"#,
+        r#"program T; function Add(A: integer; B: integer): integer; begin return A + B; end function; begin const X: integer := Add(1); end program;"#,
     );
 }

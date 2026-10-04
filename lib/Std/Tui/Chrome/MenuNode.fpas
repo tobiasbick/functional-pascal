@@ -8,22 +8,22 @@ uses Std.Tui.Ids.Action as Action2;
 public type TuiMenuNodeId = record
   // Validated scalar value represented by the record.
   public Value: integer;
-
-  // Creates a validated menu-node identity.
-  //
-  // Parameters:
-  // - `Value`: Value used to create or update the result.
-  public static function Create(Value: integer): TuiMenuNodeId;
-  begin
-    if Value <= 0 then
-      begin
-        panic('Tui menu node id must be positive');
-      end;
-    end if;
-
-    return TuiMenuNodeId(Value := Value);
-  end function;
 end record;
+
+// Creates a validated menu-node identity.
+//
+// Parameters:
+// - `Value`: Value used to create or update the result.
+public function TuiMenuNodeIdCreate(Value: integer): TuiMenuNodeId;
+begin
+  if Value <= 0 then
+    begin
+      panic('Tui menu node id must be positive');
+    end;
+  end if;
+
+  return TuiMenuNodeId(Value := Value);
+end function;
 
 // One flat menu node. Parent ids form the hierarchy without recursive arrays.
 public type TuiMenuNode = enum
@@ -61,71 +61,69 @@ public type TuiMenuState = record
   public Open: boolean;
   // Currently active menu-node identifier.
   public Active: Option of (TuiMenuNodeId);
-
-  // Creates a closed menu state.
-  public static function Closed(): TuiMenuState;
-  begin
-    return TuiMenuState(Open := false, Active := Option.None);
-  end function;
-
-  // Creates an open menu state with one active node.
-  //
-  // Parameters:
-  // - `Id`: Identifier assigned to the created or selected value.
-  public static function OpenAt(Id: TuiMenuNodeId): TuiMenuState;
-  begin
-    return TuiMenuState(Open := true, Active := Option.Some(Id));
-  end function;
 end record;
 
-// Named constructors for flat menu nodes.
-public type TuiMenuNodeBuilders = record
-  // Creates an enabled submenu.
-  //
-  // Parameters:
-  // - `Id`: Identifier assigned to the created or selected value.
-  // - `Parent`: Optional parent menu-node identifier.
-  // - `Text`: Text processed or displayed by the operation.
-  // - `Mnemonic`: Keyboard mnemonic used to activate the item.
-  public static function Submenu(
+// Creates a closed menu state.
+public function TuiMenuStateClosed(): TuiMenuState;
+begin
+  return TuiMenuState(Open := false, Active := Option.None);
+end function;
+
+// Creates an open menu state with one active node.
+//
+// Parameters:
+// - `Id`: Identifier assigned to the created or selected value.
+public function TuiMenuStateOpenAt(Id: TuiMenuNodeId): TuiMenuState;
+begin
+  return TuiMenuState(Open := true, Active := Option.Some(Id));
+end function;
+
+// Creates an enabled submenu.
+//
+// Parameters:
+// - `Id`: Identifier assigned to the created or selected value.
+// - `Parent`: Optional parent menu-node identifier.
+// - `Text`: Text processed or displayed by the operation.
+// - `Mnemonic`: Keyboard mnemonic used to activate the item.
+public function TuiMenuNodeSubmenu(
   Id: TuiMenuNodeId;
   Parent: Option of (TuiMenuNodeId);
   Text: string;
   Mnemonic: string
 ): TuiMenuNode;
-  begin
-    return TuiMenuNode.Submenu(Id, Parent, Text, Mnemonic, true);
-  end function;
+begin
+  return TuiMenuNode.Submenu(Id, Parent, Text, Mnemonic, true);
+end function;
 
-  // Creates an enabled command without a shortcut.
-  //
-  // Parameters:
-  // - `Id`: Identifier assigned to the created or selected value.
-  // - `Parent`: Optional parent menu-node identifier.
-  // - `Text`: Text processed or displayed by the operation.
-  // - `Mnemonic`: Keyboard mnemonic used to activate the item.
-  // - `Action`: Application action associated with the control or emitted message.
-  public static function Command(
+// Creates an enabled command without a shortcut.
+//
+// Parameters:
+// - `Id`: Identifier assigned to the created or selected value.
+// - `Parent`: Optional parent menu-node identifier.
+// - `Text`: Text processed or displayed by the operation.
+// - `Mnemonic`: Keyboard mnemonic used to activate the item.
+// - `Action`: Application action associated with the control or emitted message.
+public function TuiMenuNodeCommand(
   Id: TuiMenuNodeId;
   Parent: Option of (TuiMenuNodeId);
   Text: string;
   Mnemonic: string;
   Action: Action2.TuiAction
 ): TuiMenuNode;
-  begin
-    return TuiMenuNode.Command(Id, Parent, Text, Mnemonic, Action, true, Option.None);
-  end function;
+begin
+  return TuiMenuNode.Command(Id, Parent, Text, Mnemonic, Action, true, Option.None);
+end function;
 
-  // Creates an enabled command with a structural shortcut.
-  //
-  // Parameters:
-  // - `Id`: Identifier assigned to the created or selected value.
-  // - `Parent`: Optional parent menu-node identifier.
-  // - `Text`: Text processed or displayed by the operation.
-  // - `Mnemonic`: Keyboard mnemonic used to activate the item.
-  // - `Action`: Application action associated with the control or emitted message.
-  // - `Shortcut`: Shortcut gesture or display text.
-  public static function CommandWithShortcut(
+// Creates an enabled command with a structural shortcut.
+//
+// Parameters:
+// - `Id`: Identifier assigned to the created or selected value.
+// - `Parent`: Optional parent menu-node identifier.
+// - `Text`: Text processed or displayed by the operation.
+// - `Mnemonic`: Keyboard mnemonic used to activate the item.
+// - `Action`: Application action associated with the control or emitted message.
+// - `Shortcut`: Shortcut gesture or display text.
+public function TuiMenuNodeCommandWithShortcut(
   Id: TuiMenuNodeId;
   Parent: Option of (TuiMenuNodeId);
   Text: string;
@@ -133,38 +131,37 @@ public type TuiMenuNodeBuilders = record
   Action: Action2.TuiAction;
   Shortcut: KeyGesture.TuiKeyGesture
 ): TuiMenuNode;
-  begin
-    return TuiMenuNode.Command(Id, Parent, Text, Mnemonic, Action, true, Option.Some(Shortcut));
-  end function;
+begin
+  return TuiMenuNode.Command(Id, Parent, Text, Mnemonic, Action, true, Option.Some(Shortcut));
+end function;
 
-  // Creates a disabled command.
-  //
-  // Parameters:
-  // - `Id`: Identifier assigned to the created or selected value.
-  // - `Parent`: Optional parent menu-node identifier.
-  // - `Text`: Text processed or displayed by the operation.
-  // - `Mnemonic`: Keyboard mnemonic used to activate the item.
-  // - `Action`: Application action associated with the control or emitted message.
-  public static function DisabledCommand(
+// Creates a disabled command.
+//
+// Parameters:
+// - `Id`: Identifier assigned to the created or selected value.
+// - `Parent`: Optional parent menu-node identifier.
+// - `Text`: Text processed or displayed by the operation.
+// - `Mnemonic`: Keyboard mnemonic used to activate the item.
+// - `Action`: Application action associated with the control or emitted message.
+public function TuiMenuNodeDisabledCommand(
   Id: TuiMenuNodeId;
   Parent: Option of (TuiMenuNodeId);
   Text: string;
   Mnemonic: string;
   Action: Action2.TuiAction
 ): TuiMenuNode;
-  begin
-    return TuiMenuNode.Command(Id, Parent, Text, Mnemonic, Action, false, Option.None);
-  end function;
+begin
+  return TuiMenuNode.Command(Id, Parent, Text, Mnemonic, Action, false, Option.None);
+end function;
 
-  // Creates a separator under one submenu.
-  //
-  // Parameters:
-  // - `Id`: Identifier assigned to the created or selected value.
-  // - `Parent`: Optional parent menu-node identifier.
-  public static function Separator(Id: TuiMenuNodeId; Parent: TuiMenuNodeId): TuiMenuNode;
-  begin
-    return TuiMenuNode.Separator(Id, Option.Some(Parent));
-  end function;
-end record;
+// Creates a separator under one submenu.
+//
+// Parameters:
+// - `Id`: Identifier assigned to the created or selected value.
+// - `Parent`: Optional parent menu-node identifier.
+public function TuiMenuNodeSeparator(Id: TuiMenuNodeId; Parent: TuiMenuNodeId): TuiMenuNode;
+begin
+  return TuiMenuNode.Separator(Id, Option.Some(Parent));
+end function;
 
 end unit;

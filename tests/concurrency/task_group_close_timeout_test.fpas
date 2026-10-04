@@ -6,13 +6,13 @@ uses Std.Arrays as Arrays;
 uses Std.Test as Test;
 
 begin
-  var Empty: Tasks.TaskGroup := Tasks.CreateTaskGroup();
+  const Empty: Tasks.TaskGroup := Tasks.CreateTaskGroup();
   Test.AssertEquals(0, Arrays.Length(Results.Unwrap(Tasks.CloseTaskGroupWithTimeout(Empty, 0))));
   Test.AssertEquals(0, Arrays.Length(Results.Unwrap(Tasks.CloseTaskGroupWithTimeout(Empty, 0))));
-  var Group: Tasks.TaskGroup := Tasks.CreateTaskGroup();
-  var Token: Tasks.CancellationToken := Tasks.GetTaskGroupToken(Group);
-  var Gate: channel of (integer) := Tasks.CreateChannel(1);
-  var Child: task := Tasks.StartTaskInGroup(Group, function(Stop: Tasks.CancellationToken): Result of (integer, string) begin
+  const Group: Tasks.TaskGroup := Tasks.CreateTaskGroup();
+  const Token: Tasks.CancellationToken := Tasks.GetTaskGroupToken(Group);
+  const Gate: channel of (integer) := Tasks.CreateChannel(1);
+  const Child: task := Tasks.StartTaskInGroup(Group, function(Stop: Tasks.CancellationToken): Result of (integer, string) begin
     discard Results.Unwrap(Tasks.Receive(Gate));
     if not Tasks.IsCancellationRequested(Stop) then
       begin
@@ -22,7 +22,7 @@ begin
 
     return Result.Error('retained worker failure');
   end function);
-  var First: Result of (array of (Tasks.TaskFailure), string) := Tasks.CloseTaskGroupWithTimeout(Group, 2);
+  const First: Result of (array of (Tasks.TaskFailure), string) := Tasks.CloseTaskGroupWithTimeout(Group, 2);
   case First of
     when Result.Error(const Message):
       begin
@@ -37,7 +37,7 @@ begin
   Test.AssertTrue(Tasks.IsCancellationRequested(Token));
   Test.AssertTrue(Results.IsError(Tasks.CloseTaskGroupWithTimeout(Group, 0)));
   discard Results.Unwrap(Tasks.Send(Gate, 1));
-  var Reports: array of (Tasks.TaskFailure) := Results.Unwrap(Tasks.CloseTaskGroupWithTimeout(Group, 1000));
+  const Reports: array of (Tasks.TaskFailure) := Results.Unwrap(Tasks.CloseTaskGroupWithTimeout(Group, 1000));
   Test.AssertEquals(1, Arrays.Length(Reports));
   Test.AssertTrue(Reports[0].Kind = Tasks.TaskFailureKind.ReturnedError);
   Test.AssertEquals('retained worker failure', Reports[0].Message);

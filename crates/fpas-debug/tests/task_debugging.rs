@@ -17,13 +17,13 @@ uses Std.Console as Console; uses Std.Tasks as Tasks;
 
 function Work(): integer;
 begin
-  mutable var Value: integer := 40;
+   var Value: integer := 40;
   Value := Value + 2;
   return Value;
 end function;
 
 begin
-  var Pending: task := go Work();
+  const Pending: task := go Work();
   Console.WriteLn(Tasks.Wait(Pending));
 end program;
 "#;
@@ -223,13 +223,13 @@ uses Std.Console as Console; uses Std.Tasks as Tasks;
 
 function Work(): integer;
 begin
-  mutable var Scores: dict of (string, integer) := ['Seed': 1];
-  var Marker: integer := Scores['Seed'];
+   var Scores: dict of (string, integer) := ['Seed': 1];
+  const Marker: integer := Scores['Seed'];
   return Scores['Added'] + Marker;
 end function;
 
 begin
-  var Pending: task := go Work();
+  const Pending: task := go Work();
   Console.WriteLn(Tasks.Wait(Pending));
 end program;
 "#;
@@ -289,9 +289,9 @@ end procedure;
 
 begin
   go Detached();
-  var First: task := go Work(20);
-  var Second: task := go Work(22);
-  var Pending: array of (task) := [First, Second, First];
+  const First: task := go Work(20);
+  const Second: task := go Work(22);
+  const Pending: array of (task) := [First, Second, First];
   Tasks.WaitAll(Pending);
   Console.WriteLn(Tasks.Wait(First));
   Console.WriteLn(Tasks.Wait(Second));
@@ -308,12 +308,12 @@ end function;
 
 function Parent(): integer;
 begin
-  var Child: task := go Leaf(41);
+  const Child: task := go Leaf(41);
   return Tasks.Wait(Child) + 1;
 end function;
 
 begin
-  var Pending: task := go Parent();
+  const Pending: task := go Parent();
   Console.WriteLn(Tasks.Wait(Pending));
 end program;
 "#;
@@ -364,7 +364,7 @@ begin
 end procedure;
 
 begin
-  var Pending: task := go Explode();
+  const Pending: task := go Explode();
   Tasks.Wait(Pending);
 end program;
 "#;

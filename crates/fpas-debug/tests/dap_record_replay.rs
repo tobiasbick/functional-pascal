@@ -184,7 +184,7 @@ end program;
 const RANDOM_ASSIGN: &str = r#"program QuietRandom;
 uses Std.Random as Random;
 begin
-  mutable var X: integer := 0;
+   var X: integer := 0;
   X := Random.RandomInt(1, 1);
 end program;
 "#;

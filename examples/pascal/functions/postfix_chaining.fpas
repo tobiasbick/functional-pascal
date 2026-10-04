@@ -5,25 +5,25 @@ uses Std.Conv as Conv;
 
 type Num = record
   Value: integer;
-
-  static function Create(Value: integer): Num;
-  begin
-    return Num(Value := Value);
-  end function;
-
-  function Scale(Self: Num; Factor: integer): Num;
-  begin
-    return Num(Value := Self.Value * Factor);
-  end function;
-
-  function Next(Self: Num): Num;
-  begin
-    return Num(Value := Self.Value + 1);
-  end function;
 end record;
 
+function NumCreate(Value: integer): Num;
 begin
-  Console.WriteLn(Conv.IntToStr(Num.Create(3).Scale(2).Next().Value));
+  return Num(Value := Value);
+end function;
+
+function NumScale(Receiver: Num; Factor: integer): Num;
+begin
+  return Num(Value := Receiver.Value * Factor);
+end function;
+
+function NumNext(Receiver: Num): Num;
+begin
+  return Num(Value := Receiver.Value + 1);
+end function;
+
+begin
+  Console.WriteLn(Conv.IntToStr(NumNext(NumScale(NumCreate(3), 2)).Value));
   Console.WriteLn(Conv.IntToStr([10, 20, 30][1]));
   Console.WriteLn(('ab')[0]);
 end program;

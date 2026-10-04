@@ -3,13 +3,13 @@ program T;
 uses Std.Console as Console;
 uses Std.Arrays as Arrays;
 
-function AddOne(X: integer): integer;
+pure function AddOne(X: integer): integer;
 begin
   return X + 1;
 end function;
 
 begin
-  var A: array of (integer) := [];
-  var B: array of (integer) := Arrays.Map(A, AddOne);
+  const A: array of (integer) := [];
+  const B: array of (integer) := Arrays.Map(A, AddOne);
   Console.WriteLn(Arrays.Length(B));
 end program;

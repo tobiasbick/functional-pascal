@@ -3,17 +3,17 @@ program StringMapMultipleResultInTaskRuntimeError;
 uses Std.Str as Str;
 uses Std.Tasks as Tasks;
 
-function Expand(C: string): string;
+pure function Expand(C: string): string;
 begin
   return 'ab';
 end function;
 
-function Work(): string;
+pure function Work(): string;
 begin
   return Str.Map('x', Expand);
 end function;
 
 begin
-  var Job: task := go Work();
-  var Mapped: string := Tasks.Wait(Job);
+  const Job: task := go Work();
+  const Mapped: string := Tasks.Wait(Job);
 end program;

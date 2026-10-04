@@ -21,7 +21,7 @@ end record;
 ## Creating a record
 
 ```pascal
-var P: Point := Point(X := 0.0, Y := 5.0);
+const P: Point := Point(X := 0.0, Y := 5.0);
 
 ```
 
@@ -55,9 +55,9 @@ end record;
 
 type PointAlias = Point;
 
-var P: Point := Point(X := 1, Y := 2);
-var A: PointAlias := P; // Valid: PointAlias names the Point declaration.
-var S: Size := P;
+const P: Point := Point(X := 1, Y := 2);
+const A: PointAlias := P; // Valid: PointAlias names the Point declaration.
+const S: Size := P;
 
 ```
 
@@ -74,7 +74,7 @@ constructor rather than guessing a type from visible fields.
 ## Accessing fields
 
 ```pascal
-var PosX: real := P.X;
+const PosX: real := P.X;
 
 ```
 
@@ -101,24 +101,21 @@ Code in `MyApp.Counters` may read and write `Value`. Importing units may use
 meaning for that field.
 
 A named record with at least one private field can be constructed only inside its declaring unit, even if all private fields have default
-values. Importers obtain such values from public functions or static functions.
+values. Importers obtain such values from public functions.
 They may copy received values and use record updates for public fields; private
 fields are preserved and cannot be named in an update.
 
-Record member visibility is valid only for records declared in unit files.
-Functions, procedures, properties, and events use the same private-default
-rule.
+Record field visibility is valid only for records declared in unit files.
+Functions and procedures are declared outside records and receive record values
+as explicit parameters.
 
 ## Immutability
 
-Record instances follow the same immutability rules as variables. A `mutable var` record allows field reassignment:
+Record instances follow the same immutability rules as variables. A `var` record allows field reassignment:
 
 ```pascal
-mutable var P: Point := Point(X := 1.0, Y := 2.0);
-
-begin
-  P.X := 10.0;  // Valid — P is mutable
-end;
+var P: Point := Point(X := 1.0, Y := 2.0);
+P.X := 10.0; // Valid inside a statement body: P is mutable.
 ```
 
 ## Default field values
@@ -128,10 +125,27 @@ A field declaration may include a default value using `:=`. When a constructor o
 Defaults are expressions checked against the field type, including nested record
 and collection values, calls and callable values. An omitted field evaluates its
 default when constructing the record; an explicit value skips that default.
-For public records imported from another unit, scalar constant defaults may use
-arithmetic, comparisons, boolean operators and string concatenation, as well as
-local constants and directly imported scalar constants. Their evaluated values
-are stored in the compiled-unit interface.
+Default evaluation is pure: it calls only explicitly pure functions and reads or
+captures only immutable resource-free data or pure callables. Other fields and
+mutable enclosing bindings cannot supply defaults. Closure captures are checked
+when the closure is created; its body follows its own declared callable capability.
+
+The field result type does not have to satisfy a pure-function result restriction.
+For example, `OnClick: Option of (procedure()) := Option.None` and empty arrays of
+resource handles are valid defaults. Reading an existing ordinary callable or
+resource handle to initialize that field is still forbidden.
+
+Imported records support the same defaults as local records. Defaults execute in
+their declaration context, including private pure helpers and captured constants;
+names in the constructing routine cannot shadow those declarations. Scalar static
+defaults retain their values in the compiled-unit interface. Other defaults use
+internal initializers and preserve their checked expression and closure metadata.
+
+For a generic record, pure operations used by a selected default must also be
+valid for the concrete type arguments. These requirements follow nested defaults
+and compiled-unit aliases. Supplying the field explicitly skips both that default
+and its evaluation requirements. Empty resource-bearing fields remain valid when
+their defaults contain no operation that requires resource-free type arguments.
 
 Type aliases retain the declaring record's defaults, including when another unit
 reexports an alias or a collection of that record type. Fields without defaults
@@ -150,15 +164,15 @@ end record;
 Omitting defaulted fields:
 
 ```pascal
-var C: Config := Config(); // Host='localhost', Port=8080, Debug=false
-var D: Config := Config(Port := 9000);
+const C: Config := Config(); // Host='localhost', Port=8080, Debug=false
+const D: Config := Config(Port := 9000);
 
 ```
 
 Explicitly providing a value overrides the default:
 
 ```pascal
-var E: Config := Config(Host := 'example.com', Port := 443, Debug := true);
+const E: Config := Config(Host := 'example.com', Port := 443, Debug := true);
 
 ```
 
@@ -171,15 +185,12 @@ type Vertex = record
   Y: integer := 0; // Optional
 end record;
 
-var V: Vertex := Vertex(Id := 7);
+const V: Vertex := Vertex(Id := 7);
 
 ```
 
 ## See also
 
-- [Record methods](record-methods.md)
 - [Visibility](../../program-structure/visibility.md)
-- [Record properties](record-properties.md)
-- [Record events](record-events.md)
 - [Record update](record-update.md)
-- [Mutable parameters](../functions/mutable-parameters.md)
+- [Var parameters](../functions/var-parameters.md)

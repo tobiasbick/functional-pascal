@@ -19,14 +19,14 @@ uses Std.Test as Test;
 
 function ExerciseListener(): Result of (boolean, string);
 begin
-  var Server: Net.Listener := try Net.ListenTls('127.0.0.1', 0, 'cert.pem', 'key.pem', 2000);
-  var Address: Net.NetworkAddress := try Net.ListenerLocalAddress(Server);
+  const Server: Net.Listener := try Net.ListenTls('127.0.0.1', 0, 'cert.pem', 'key.pem', 2000);
+  const Address: Net.NetworkAddress := try Net.ListenerLocalAddress(Server);
   Test.AssertEquals('127.0.0.1', Address.Host);
   Test.AssertTrue(Address.Port > 0);
   Test.AssertTrue(Address.Port <= 65535);
-  var Client: Net.Connection := try Net.Connect(Address.Host, Address.Port, 2000);
-  var ClientClosed: boolean := try Net.Close(Client);
-  var ServerClosed: boolean := try Net.CloseListener(Server);
+  const Client: Net.Connection := try Net.Connect(Address.Host, Address.Port, 2000);
+  const ClientClosed: boolean := try Net.Close(Client);
+  const ServerClosed: boolean := try Net.CloseListener(Server);
   case Net.ListenerLocalAddress(Server) of
     when Result.Ok(_):
       panic('Closed TLS listener returned an address');

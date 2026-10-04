@@ -38,7 +38,7 @@ Calling `Random` or `RandomInt` before either seeding procedure automatically in
 Returns a pseudo-random real number in `[0.0, 1.0)`.
 
 ```pascal
-var R: real := Random();
+const R: real := Random();
 ```
 
 ## `function RandomInt(Lo: integer; Hi: integer): integer`
@@ -48,7 +48,7 @@ Returns an unbiased pseudo-random integer in `[Lo, Hi]`, including either bound.
 ```pascal
 uses Std.Random as Random;
 
-var Die: integer := Random.RandomInt(1, 6);
+const Die: integer := Random.RandomInt(1, 6);
 ```
 
 ## `procedure Randomize()`
@@ -69,9 +69,9 @@ Replaces the current VM's pseudo-random state with the repeatable sequence selec
 uses Std.Random as Random;
 
 Random.SetSeed(17);
-var First: integer := Random.RandomInt(1, 100);
+const First: integer := Random.RandomInt(1, 100);
 Random.SetSeed(17);
-var Repeated: integer := Random.RandomInt(1, 100);
+const Repeated: integer := Random.RandomInt(1, 100);
 ```
 
 ## Implementation (contributors)

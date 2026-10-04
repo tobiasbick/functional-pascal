@@ -1,6 +1,6 @@
 //! Synthetic task entry functions for calls to standard intrinsics.
 //!
-//! **Documentation:** `docs/pascal/language/functions/fluent-calls.md`
+//! **Documentation:** `docs/pascal/language/concurrency/README.md`
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -10,7 +10,7 @@ use fpas_sema::AnalysisMetadata;
 
 use crate::CompileError;
 use crate::lowering::context::{
-    BoundMethodTarget, FunctionInput, GlobalBinding, LoweringContext, ParameterInput, unsupported,
+    FunctionInput, GlobalBinding, IntrinsicTaskTarget, LoweringContext, ParameterInput, unsupported,
 };
 use crate::lowering::types;
 
@@ -31,9 +31,7 @@ impl ClosureRegistry<'_> {
                 let Some(last) = operations.last() else {
                     return Ok(());
                 };
-                let (PostfixOperation::MethodCall { args, .. }
-                | PostfixOperation::Call { args, .. }) = last
-                else {
+                let PostfixOperation::Call { args, .. } = last else {
                     return Ok(());
                 };
                 (
@@ -44,35 +42,22 @@ impl ClosureRegistry<'_> {
             _ => return Ok(()),
         };
         let span = expression.span();
-        let (name, receiver_ty, result_ty) = if let Some(target) = metadata.fluent_calls.get(&key) {
-            (
-                target.name.as_str(),
-                Some(&target.receiver_ty),
-                &target.result_ty,
-            )
-        } else if let Some(name) = metadata.intrinsic_calls.get(&key) {
-            let result = metadata
-                .expr_types
-                .get(&fpas_sema::expr_lookup_key(expression))
-                .ok_or_else(|| unsupported(span, "intrinsic task result type"))?;
-            (name.as_str(), None, result)
-        } else {
+        let Some(name) = metadata.intrinsic_calls.get(&key) else {
             return Ok(());
         };
-        let first_ty = receiver_ty.or_else(|| {
-            args.first().and_then(|argument| {
-                metadata
-                    .expr_types
-                    .get(&fpas_sema::expr_lookup_key(argument))
-            })
+        let result_ty = metadata
+            .expr_types
+            .get(&fpas_sema::expr_lookup_key(expression))
+            .ok_or_else(|| unsupported(span, "intrinsic task result type"))?;
+        let first_ty = args.first().and_then(|argument| {
+            metadata
+                .expr_types
+                .get(&fpas_sema::expr_lookup_key(argument))
         });
         let Some(intrinsic) = crate::intrinsic_catalog::resolve(name, first_ty) else {
             return Ok(());
         };
         let mut parameters = Vec::new();
-        if let Some(receiver_ty) = receiver_ty {
-            parameters.push(types.intern(receiver_ty, span.line, span.column)?);
-        }
         for argument in args {
             let ty = metadata
                 .expr_types
@@ -89,7 +74,7 @@ impl ClosureRegistry<'_> {
             .ok_or_else(|| unsupported(span, "function identifier overflow"))?;
         self.intrinsic_task_targets.insert(
             key,
-            BoundMethodTarget {
+            IntrinsicTaskTarget {
                 function: id,
                 value_type,
             },
@@ -137,7 +122,6 @@ impl ClosureRegistry<'_> {
             metadata,
             callables: self.callables.clone(),
             closure_targets: self.targets.clone(),
-            bound_method_targets: self.bound_targets.clone(),
             intrinsic_task_targets: self.intrinsic_task_targets.clone(),
             cell_names: BTreeSet::new(),
             type_table: types.clone(),

@@ -13,6 +13,12 @@ impl Worker {
     #[inline(always)]
     pub(super) fn execute(&mut self, instruction: DecodedInstruction) -> Result<Flow, VmError> {
         match instruction.opcode() {
+            Opcode::ReserveReference => self.reserve_reference(instruction.abc())?,
+            Opcode::SelectReferenceField => self.select_reference_field(instruction.abc())?,
+            Opcode::SelectReferenceIndex => self.select_reference_index(instruction.abc())?,
+            Opcode::ReadReference => self.read_reference(instruction.abc())?,
+            Opcode::WriteReference => self.write_reference(instruction.abc())?,
+            Opcode::ReleaseReference => self.release_reference(instruction.abc())?,
             Opcode::LoadConstant => {
                 let operands = instruction.abx();
                 let value = self.load_constant(operands.bx)?;

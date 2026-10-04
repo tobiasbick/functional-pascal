@@ -87,7 +87,14 @@ impl Checker {
         if let Some(ty) = contextual {
             return self.annotate_expected_expression(expr, ty);
         }
-        self.check_expr(expr)
+        let actual = self.check_expr(expr);
+        if let Some(instantiated) =
+            self.instantiate_callable_with_expected(&actual, &resolved, expr.span())
+        {
+            self.annotate_expected_expression(expr, instantiated)
+        } else {
+            actual
+        }
     }
 
     fn annotate_expected_expression(&mut self, expr: &Expr, ty: Ty) -> Ty {

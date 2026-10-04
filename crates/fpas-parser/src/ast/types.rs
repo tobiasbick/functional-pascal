@@ -27,6 +27,8 @@ pub enum TypeExpr {
     Task(Box<TypeExpr>, Span),
     /// A function type with parameter and return types.
     FunctionType {
+        /// Whether the callable requires an explicit purity guarantee.
+        pure: bool,
         /// The formal parameter declarations.
         params: Vec<FormalParam>,
         /// The function's return type.
@@ -90,7 +92,7 @@ impl TypeExpr {
 /// Parsed formal parameter.
 #[derive(Debug, Clone, PartialEq)]
 pub struct FormalParam {
-    /// Whether the parameter is declared `mutable`.
+    /// Whether the parameter is declared `var` and borrows caller storage.
     pub mutable: bool,
     /// The parameter name.
     pub name: String,

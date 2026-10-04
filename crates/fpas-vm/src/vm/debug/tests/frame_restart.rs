@@ -12,13 +12,13 @@ uses Std.Console as Console;
 
 function Branch(Value: integer): integer;
 begin
-  mutable var Local: integer := Value + 10;
+   var Local: integer := Value + 10;
   Console.WriteLn('effect');
   return Local;
 end function;
 
 begin
-  var Answer: integer := Branch(1);
+  const Answer: integer := Branch(1);
   Console.WriteLn(Answer);
 end program;
 "#;
@@ -141,7 +141,7 @@ end function;
 
 function Branch(Value: integer): integer;
 begin
-  var Local: integer := Value + 10;
+  const Local: integer := Value + 10;
   return Leaf(Local);
 end function;
 
@@ -191,7 +191,7 @@ function Outer(Start: integer): integer;
     return Counter;
   end function;
 begin
-  mutable var Counter: integer := Start;
+   var Counter: integer := Start;
   return Inner();
 end function;
 
@@ -256,7 +256,7 @@ begin
 end function;
 
 begin
-  var Pending: task := go Work();
+  const Pending: task := go Work();
   discard Tasks.Wait(Pending);
 end program;
 "#;

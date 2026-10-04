@@ -8,14 +8,15 @@ use super::super::closures::{
 };
 use super::Checker;
 use crate::scope::{FunctionCtx, Symbol, SymbolKind};
-use crate::types::{FunctionTy, ParamTy, ProcedureTy, Ty, TypeConstraint};
+use crate::types::{FunctionTy, ParamTy, ProcedureTy, Ty};
 use fpas_diagnostics::codes::SEMA_DUPLICATE_DECLARATION;
 use fpas_lexer::Span;
-use fpas_parser::{FuncBody, FunctionDecl, ProcedureDecl, Stmt};
+use fpas_parser::{FuncBody, FunctionDecl, ProcedureDecl};
 
 impl Checker {
     /// Check function declarations against `docs/pascal/language/functions/README.md`.
     pub(super) fn check_function_decl(&mut self, f: &FunctionDecl) {
+        let previous_proofs = self.add_pure_parameter_proofs(&f.type_params, true);
         self.check_unique_formal_param_names(&f.params);
 
         let has_type_params = !f.type_params.is_empty();
@@ -23,11 +24,18 @@ impl Checker {
             self.push_type_param_scope(&f.type_params, f.span);
         }
 
-        let type_param_defs = Self::resolve_type_params(&f.type_params);
+        let type_param_defs = self.resolve_type_params(&f.type_params);
         let return_ty = self.resolve_type_expr(&f.return_type);
         let params: Vec<ParamTy> = self.resolve_formal_params(&f.params);
 
+        if !f.pure {
+            self.retain_signature_proofs(&f.type_params, &params, Some(&return_ty));
+        }
+        if f.pure {
+            self.check_pure_signature(&params, &return_ty, f.span);
+        }
         let func_ty = Ty::Function(FunctionTy {
+            pure: f.pure,
             type_params: type_param_defs,
             params: params.clone(),
             return_type: Box::new(return_ty.clone()),
@@ -53,7 +61,10 @@ impl Checker {
             &f.params,
             Some(return_ty),
             &f.body,
+            f.pure,
+            f.span,
         );
+        self.pure_parameters = previous_proofs;
         if is_nested {
             self.record_nested_routine_captures(
                 &f.name,
@@ -65,6 +76,7 @@ impl Checker {
 
     /// Check procedure declarations against `docs/pascal/language/functions/README.md`.
     pub(super) fn check_procedure_decl(&mut self, p: &ProcedureDecl) {
+        let previous_proofs = self.add_pure_parameter_proofs(&p.type_params, true);
         self.check_unique_formal_param_names(&p.params);
 
         let has_type_params = !p.type_params.is_empty();
@@ -72,9 +84,10 @@ impl Checker {
             self.push_type_param_scope(&p.type_params, p.span);
         }
 
-        let type_param_defs = Self::resolve_type_params(&p.type_params);
+        let type_param_defs = self.resolve_type_params(&p.type_params);
         let params: Vec<ParamTy> = self.resolve_formal_params(&p.params);
 
+        self.retain_signature_proofs(&p.type_params, &params, None);
         let proc_ty = Ty::Procedure(ProcedureTy {
             type_params: type_param_defs,
             variadic: false,
@@ -100,7 +113,10 @@ impl Checker {
             &p.params,
             None,
             &p.body,
+            false,
+            p.span,
         );
+        self.pure_parameters = previous_proofs;
         if is_nested {
             self.record_nested_routine_captures(
                 &p.name,
@@ -135,21 +151,25 @@ impl Checker {
         source_params: &[fpas_parser::FormalParam],
         return_type: Option<Ty>,
         body: &FuncBody,
+        pure: bool,
+        span: Span,
     ) -> Vec<CaptureBinding> {
         let FuncBody::Block { nested, stmts } = body;
 
         self.scopes.push_scope();
         let routine_scope_index = self.scopes.scope_count() - 1;
+        let previous_evaluation = self.pure_evaluation.take();
+        if pure {
+            self.pure_evaluation = Some(crate::check::purity::PureEvaluation {
+                scope_index: routine_scope_index,
+            });
+        }
 
         for tp in type_params {
-            let constraint = tp
-                .constraint
-                .as_ref()
-                .and_then(|c| TypeConstraint::from_name(c));
             self.scopes.define(
                 &tp.name,
                 Symbol {
-                    ty: Ty::GenericParam(tp.name.clone(), constraint),
+                    ty: Ty::GenericParam(std::sync::Arc::new(self.resolve_type_param(tp))),
                     mutable: false,
                     kind: SymbolKind::Type,
                     task_bound: false,
@@ -163,7 +183,11 @@ impl Checker {
                 Symbol {
                     ty: p.ty.clone(),
                     mutable: p.mutable,
-                    kind: SymbolKind::Param,
+                    kind: if p.mutable {
+                        SymbolKind::VarParam
+                    } else {
+                        SymbolKind::Param
+                    },
                     task_bound: false,
                 },
                 source.span,
@@ -182,7 +206,7 @@ impl Checker {
             owner_unit,
         });
 
-        let hoisted = self.hoist_body_locals(stmts);
+        let hoisted = self.hoist_body_locals(stmts, nested);
         for decl in nested {
             self.check_decl(decl);
         }
@@ -201,41 +225,15 @@ impl Checker {
             &self.nested_routine_captures,
         );
 
+        self.reject_var_parameter_captures(&captures);
+        if pure || previous_evaluation.is_some() {
+            self.check_pure_captures(&captures, span);
+        }
+        self.pure_evaluation = previous_evaluation;
+
         self.scopes.function_ctx = prev_ctx;
         self.scopes.pop_scope();
         captures
-    }
-
-    /// Make function-body locals visible to nested routine bodies without changing
-    /// sequential sibling visibility in the enclosing body.
-    ///
-    /// Nested declarations are checked before body statements, but
-    /// `docs/pascal/language/functions/closures.md` lets named nested routines capture
-    /// enclosing locals. Locals nested inside inner `begin` blocks stay hidden.
-    fn hoist_body_locals(&mut self, stmts: &[Stmt]) -> Vec<String> {
-        let mut names = Vec::new();
-        for stmt in stmts {
-            let (variable, mutable) = match stmt {
-                Stmt::Var(variable) => (variable, false),
-                Stmt::MutableVar(variable) => (variable, true),
-                _ => continue,
-            };
-            let ty = self.resolve_type_expr(&variable.type_expr);
-            let defined = self.scopes.define_with_declaration(
-                &variable.name,
-                Symbol {
-                    ty,
-                    mutable,
-                    kind: SymbolKind::Var,
-                    task_bound: false,
-                },
-                variable.span,
-            );
-            if defined {
-                names.push(variable.name.clone());
-            }
-        }
-        names
     }
 
     fn record_nested_routine_captures(
@@ -259,7 +257,7 @@ impl Checker {
 
     fn register_routine_symbol(&mut self, name: &str, symbol: Symbol, body: &FuncBody, span: Span) {
         match body {
-            FuncBody::Block { .. } => match self.install_routine_symbol(name, symbol) {
+            FuncBody::Block { .. } => match self.install_routine_symbol(name, symbol, span) {
                 RoutineInstall::Installed => {}
                 RoutineInstall::Duplicate => {
                     self.error_with_code(
@@ -273,8 +271,8 @@ impl Checker {
         }
     }
 
-    fn install_routine_symbol(&mut self, name: &str, symbol: Symbol) -> RoutineInstall {
-        if self.scopes.define(name, symbol.clone()) {
+    fn install_routine_symbol(&mut self, name: &str, symbol: Symbol, span: Span) -> RoutineInstall {
+        if self.scopes.define_with_declaration(name, symbol, span) {
             return RoutineInstall::Installed;
         }
 

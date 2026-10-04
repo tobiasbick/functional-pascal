@@ -10,6 +10,7 @@ uses Std.Console as Console;
 uses Std.Conv as Conv;
 uses Std.Time as Time;
 uses Std.Tui as Tui;
+uses Std.Tui.Cells as Cells2;
 
 // One 128 by 44 cell frame of half-block pixels.
 const FrameWidth: integer := 128;
@@ -18,19 +19,19 @@ const FrameHeight: integer := 44;
 // Builds one frame of cells whose colors vary per cell and returns a checksum of its channels.
 function BuildFrame(Frame: integer): integer;
 begin
-  mutable var Cells: array of (Tui.TuiCell) := [];
+  var Cells: array of (Tui.TuiCell) := [];
   for Y: integer := 0 to FrameHeight - 1 do
     begin
       for X: integer := 0 to FrameWidth - 1 do
         begin
-          var Upper: Tui.TuiColor := Tui.TuiColor.FromRgb((X + Frame) mod 256, Y mod 256, 40);
-          var Lower: Tui.TuiColor := Tui.TuiColor.FromRgb(X mod 256, (Y + Frame) mod 256, 80);
-          Arrays.Push(Cells, Tui.TuiCell.Styled('▀', Tui.TuiStyle.FromColors(Upper, Lower)));
+          const Upper: Tui.TuiColor := Cells2.TuiColorFromRgb((X + Frame) mod 256, Y mod 256, 40);
+          const Lower: Tui.TuiColor := Cells2.TuiColorFromRgb(X mod 256, (Y + Frame) mod 256, 80);
+          Arrays.Push(var Cells, Cells2.TuiCellStyled('▀', Cells2.TuiStyleFromColors(Upper, Lower)));
         end;
       end for;
     end;
   end for;
-  mutable var Checksum: integer := 0;
+  var Checksum: integer := 0;
   for Cell: Tui.TuiCell in Cells do
     begin
       case Cell.ConcreteStyle of
@@ -51,7 +52,7 @@ end function;
 
 function RunFrames(Frames: integer): integer;
 begin
-  mutable var Total: integer := 0;
+  var Total: integer := 0;
   for Frame: integer := 1 to Frames do
     begin
       Total := Total + BuildFrame(Frame);
@@ -67,13 +68,13 @@ begin
       panic('usage: styled_cells_benchmark.fpas -- FRAMES [MAX_MILLIS]');
     end;
   end if;
-  var Frames: integer := Conv.StrToInt(Args.ParamStr(0));
+  const Frames: integer := Conv.StrToInt(Args.ParamStr(0));
   if Frames < 1 then
     begin
       panic('FRAMES must be positive');
     end;
   end if;
-  mutable var MaxMillis: integer := 0;
+  var MaxMillis: integer := 0;
   if Args.ParamCount() = 2 then
     begin
       MaxMillis := Conv.StrToInt(Args.ParamStr(1));
@@ -84,10 +85,10 @@ begin
       end if;
     end;
   end if;
-  var Warmup: integer := RunFrames(2);
-  var Started: integer := Time.MonotonicMillis();
-  var Checksum: integer := RunFrames(Frames);
-  var Elapsed: integer := Time.ElapsedMillis(Started);
+  const Warmup: integer := RunFrames(2);
+  const Started: integer := Time.MonotonicMillis();
+  const Checksum: integer := RunFrames(Frames);
+  const Elapsed: integer := Time.ElapsedMillis(Started);
   if (Warmup <= 0) or (Checksum <= 0) then
     begin
       panic('styled cell checksum mismatch');

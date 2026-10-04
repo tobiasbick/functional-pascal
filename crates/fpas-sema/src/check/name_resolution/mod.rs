@@ -8,7 +8,10 @@ mod types;
 
 impl Checker {
     pub(crate) fn hint_unknown_callable(&self, name: &str) -> String {
-        if let Some(hint) = self.import_name_hint(name) {
+        if let Some(hint) = self.import_name_hint(name).or_else(|| {
+            name.split_once('.')
+                .and_then(|(root, _)| self.import_name_hint(root))
+        }) {
             return hint;
         }
         if let Some((unit, _)) = name.rsplit_once('.')

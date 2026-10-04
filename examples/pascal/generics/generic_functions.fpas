@@ -23,9 +23,9 @@ begin
   Console.WriteLn('Identity(integer): ', Identity(42));
   Console.WriteLn('Identity(string): ', Identity('hello'));
   Console.WriteLn('Identity(boolean): ', Identity(true));
-  var Numbers: array of (integer) := Wrap(99);
+  const Numbers: array of (integer) := Wrap(99);
   Console.WriteLn('Wrapped length: ', Conv.IntToStr(Arrays.Length(Numbers)));
   Console.WriteLn('First wrapped value: ', FirstElement(Numbers));
-  var Words: array of (string) := ['red', 'green', 'blue'];
+  const Words: array of (string) := ['red', 'green', 'blue'];
   Console.WriteLn('First word: ', FirstElement(Words));
 end program;

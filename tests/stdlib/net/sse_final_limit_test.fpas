@@ -9,10 +9,10 @@ uses Std.Test as Test;
 
 procedure CheckFinal(Text: string; Maximum: integer; Expected: string);
 begin
-  var Decoder: Http.SseDecoder := Results.Unwrap(Http.CreateSseDecoder(Maximum));
-  var Before: array of (Http.SseEvent) := Results.Unwrap(Http.FeedSse(Decoder, Utf8.Encode(Text)));
+  const Decoder: Http.SseDecoder := Results.Unwrap(Http.CreateSseDecoder(Maximum));
+  const Before: array of (Http.SseEvent) := Results.Unwrap(Http.FeedSse(Decoder, Utf8.Encode(Text)));
   Test.AssertEquals(0, Arrays.Length(Before));
-  var Events: array of (Http.SseEvent) := Results.Unwrap(Http.FinishSse(Decoder));
+  const Events: array of (Http.SseEvent) := Results.Unwrap(Http.FinishSse(Decoder));
   Test.AssertEquals(1, Arrays.Length(Events));
   Test.AssertEquals(Expected, Events[0].Data);
   case Http.FeedSse(Decoder, []) of
@@ -36,7 +36,7 @@ begin
 
   CheckFinal('data: x' + #13, 8, 'x');
   CheckFinal('data: x' + #10, 8, 'x');
-  var Small: Http.SseDecoder := Results.Unwrap(Http.CreateSseDecoder(6));
+  const Small: Http.SseDecoder := Results.Unwrap(Http.CreateSseDecoder(6));
   case Http.FeedSse(Small, Utf8.Encode('data: x')) of
     when Result.Ok(_):
       begin
@@ -47,7 +47,7 @@ begin
         null;
       end;
   end case;
-  var Empty: Http.SseDecoder := Results.Unwrap(Http.CreateSseDecoder(1));
-  var Events: array of (Http.SseEvent) := Results.Unwrap(Http.FinishSse(Empty));
+  const Empty: Http.SseDecoder := Results.Unwrap(Http.CreateSseDecoder(1));
+  const Events: array of (Http.SseEvent) := Results.Unwrap(Http.FinishSse(Empty));
   Test.AssertEquals(0, Arrays.Length(Events));
 end program;

@@ -50,8 +50,8 @@ end program;
 }
 
 #[test]
-fn run_cli_static_record_function_via_public_alias_over_private_unit() {
-    let cwd = create_temp_dir("run-static-alias-facade");
+fn run_cli_ordinary_factories_via_public_facade_over_private_unit() {
+    let cwd = create_temp_dir("run-function-alias-facade");
     let lib_dir = cwd.join("geom");
     let app_dir = cwd.join("app");
     let lib_project = lib_dir.join("geom.fpasprj");
@@ -65,24 +65,24 @@ fn run_cli_static_record_function_via_public_alias_over_private_unit() {
 uses Std.Console as Console;
 
 public type PointImpl = record
-  public X: integer;
-  public Y: integer;
+  X: integer;
+  Y: integer;
+end record;
 
-  public static function Create(X: integer; Y: integer): PointImpl;
+  public function PointCreate(X: integer; Y: integer): PointImpl;
   begin
     return PointImpl(X := X, Y := Y);
   end function;
 
-  public static procedure Print(Value: PointImpl);
+  public function PointSum(Receiver: PointImpl): integer;
   begin
-    Console.WriteLn(Value.Sum());
-  end procedure;
-
-  public function Sum(Self: PointImpl): integer;
-  begin
-    return Self.X + Self.Y;
+    return Receiver.X + Receiver.Y;
   end function;
-end record;
+
+  public procedure PointPrint(Value: PointImpl);
+  begin
+    Console.WriteLn(PointSum(Value));
+  end procedure;
 
 end unit;
 "#,
@@ -95,6 +95,10 @@ uses Geom.Internal as Internal;
 
 
   public type Point = Internal.PointImpl;
+public function PointCreate(X: integer; Y: integer): Point;
+begin return Internal.PointCreate(X, Y); end function;
+public procedure PointPrint(Value: Point);
+begin Internal.PointPrint(Value); end procedure;
 end unit;
 
 "#,
@@ -111,8 +115,8 @@ end unit;
         r#"program App;
 uses Geom.Api as Api;
 begin
-  var P: Api.Point := Api.Point.Create(3, 4);
-  Api.Point.Print(P);
+  const P: Api.Point := Api.PointCreate(3, 4);
+  Api.PointPrint(P);
 end program;
 "#,
     );

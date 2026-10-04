@@ -11,9 +11,9 @@ fn for_in_array_and_dictionary_execute() {
         r#"program RegisterForIn;
 uses Std.Console as Console; uses Std.Conv as Conv; uses Std.Dictionaries as Dictionaries;
 begin
-  mutable var Sum: integer := 0;
+   var Sum: integer := 0;
   for Value: integer in [1, 2, 3] do Sum := Sum + Value; end for;
-  var Values: dict of (string, integer) := ['a': 4, 'b': 5];
+  const Values: dict of (string, integer) := ['a': 4, 'b': 5];
   for Key: string in Values do
   begin
     Console.WriteLn(Conv.IntToStr(Values[Key]));
@@ -29,10 +29,10 @@ fn scalar_locals_temporaries_and_operations_execute() {
     let execution = assert_succeeds(
         r#"program RegisterScalars;
 begin
-  mutable var I: integer := 7;
-  mutable var R: real := 1.5;
-  mutable var S: string := 'ab';
-  mutable var B: boolean := true;
+   var I: integer := 7;
+   var R: real := 1.5;
+   var S: string := 'ab';
+   var B: boolean := true;
   I := ((I * 3) - 1) div 2;
   R := (R + 2) / 2;
   S := S + 'cd';
@@ -49,8 +49,8 @@ fn nested_while_repeat_for_break_and_continue_execute() {
     assert_succeeds(
         r#"program RegisterLoops;
 begin
-  mutable var Sum: integer := 0;
-  mutable var I: integer := 0;
+   var Sum: integer := 0;
+   var I: integer := 0;
   while I < 4 do
   begin
     I := I + 1;
@@ -77,8 +77,8 @@ fn scalar_case_values_ranges_guards_and_else_execute() {
         r#"program RegisterCase;
 
 begin
-  mutable var Score: integer := 0;
-  var I: integer := 5;
+   var Score: integer := 0;
+  const I: integer := 5;
   case I of
     when const Candidate if Candidate < 0:
       Score := 99;
@@ -91,7 +91,7 @@ begin
     else
       Score := 4;
   end case;
-  var S: string := 'beta';
+  const S: string := 'beta';
   case S of
     when 'alpha':
       Score := 10;
@@ -100,7 +100,7 @@ begin
     else
       Score := 20;
   end case;
-  var Flag: boolean := true;
+  const Flag: boolean := true;
   case Flag of
     when false:
       Score := 100;
@@ -122,11 +122,11 @@ fn mixed_numeric_comparisons_and_integer_edges_execute() {
         r#"program RegisterNumeric;
 uses Std.Bits as BitOps;
 begin
-  mutable var X: integer := 9223372036854775807;
+   var X: integer := 9223372036854775806;
   X := X + 1;
-  var Bits: integer := BitOps.BitOr(BitOps.BitAnd(12, 10), BitOps.BitXor(3, 1));
-  var Shifted: integer := BitOps.ShiftRight(BitOps.ShiftLeft(1, 5), 2);
-  if (X <> -9223372036854775807 - 1) or (Bits <> 10) or (Shifted <> 8) then
+  const Bits: integer := BitOps.BitOr(BitOps.BitAnd(12, 10), BitOps.BitXor(3, 1));
+  const Shifted: integer := BitOps.ShiftRight(BitOps.ShiftLeft(1, 5), 2);
+  if (X <> 9223372036854775807) or (Bits <> 10) or (Shifted <> 8) then
     panic('integer mismatch'); end if;
   if not (2 < 2.5) then panic('mixed comparison mismatch'); end if;
 end program;"#,

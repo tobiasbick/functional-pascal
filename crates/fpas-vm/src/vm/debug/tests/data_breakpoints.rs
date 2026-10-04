@@ -4,11 +4,11 @@ use super::*;
 
 const SOURCE: &str = r#"program DataBreakpoints;
 
-  mutable var Flag: integer := 0;
+   var Flag: integer := 0;
 
 procedure Inner();
 begin
-  mutable var Nested: integer := 1;
+   var Nested: integer := 1;
   Nested := Nested + Flag;
 end procedure;
 
@@ -183,6 +183,38 @@ fn read_and_frame_watches_stay_unverified() {
             assert_ne!(stop.reason, DebugStopReason::DataBreakpoint);
             assert!(stop.breakpoint_ids.is_empty());
         }
+    }
+}
+
+#[test]
+fn global_change_watch_tracks_writes_through_active_var_parameters() {
+    let source = r#"program VarWatch;  var Flag: integer := 0;
+procedure Change(var Value: integer); begin Value := 1; Value := 1; Value := 2; end procedure;
+begin Change(var Flag); end program;"#;
+    let (program, errors) = fpas_parser::parse(source);
+    assert!(errors.is_empty(), "{errors:#?}");
+    let mut session =
+        DebugSession::new(fpas_compiler::compile(&program).expect("compile")).expect("session");
+    session
+        .set_breakpoint(SourceBreakpoint {
+            source: "<memory>".to_owned(),
+            line: 3,
+            column: None,
+        })
+        .expect("call breakpoint");
+    let _ = stopped(session.continue_execution().expect("call stop"));
+    let identity = global_identity(&mut session);
+    let watches = session
+        .replace_data_breakpoints(vec![DataBreakpoint {
+            identity,
+            access: DataBreakpointAccess::Change,
+        }])
+        .expect("change watch");
+    assert!(watches[0].verified);
+    for _ in 0..2 {
+        let event = stopped(session.continue_execution().expect("reference write"));
+        assert_eq!(event.reason, DebugStopReason::DataBreakpoint);
+        assert_eq!(event.breakpoint_ids, vec![watches[0].id]);
     }
 }
 

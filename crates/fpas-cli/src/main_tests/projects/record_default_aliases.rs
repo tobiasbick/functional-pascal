@@ -11,7 +11,7 @@ fn obsolete_record_hint_uses_the_original_imported_alias_identity() {
     let project = write_alias_project(&cwd);
     write_text(
         &cwd.join("main.fpas"),
-        "program Main; uses Demo.Second as Api; begin var Value: Api.Settings := record Required := 1; end record; end program;",
+        r#"program Main; uses Demo.Second as Api; begin const Value: Api.Settings := record Required := 1; end record; end program;"#,
     );
     let args = ["check", "--diagnostics", "json", &project.to_string_lossy()].map(str::to_owned);
     let (exit, stdout, stderr) = support::run_cli_args_and_capture_output(&args, &cwd);
@@ -67,7 +67,17 @@ fn alias_chains_and_collection_aliases_execute_defaults_and_reuse_sidecars() {
     let project = write_alias_project(&cwd);
     write_text(
         &cwd.join("main.fpas"),
-        "program Main; uses Demo.Second as Second; uses Demo.Facade as Facade;\n         uses Std.Console as Console;\n         begin\n           var Value: Second.Settings := Second.Settings(Required := 1);\n           Console.WriteLn(Value.Count);\n           var Items: Second.SettingsList := [Second.Settings(Required := 2)];\n           Console.WriteLn(Items[0].Count);\n           Console.WriteLn(Facade.CountOf(Facade.Settings(Required := 3)));\n           var Override: Second.Settings := Second.Settings(Required := 4, Count := 42);\n           Console.WriteLn(Override.Count);\n         end program;",
+        r#"program Main; uses Demo.Second as Second; uses Demo.Facade as Facade;
+         uses Std.Console as Console;
+         begin
+           const Value: Second.Settings := Second.Settings(Required := 1);
+           Console.WriteLn(Value.Count);
+           const Items: Second.SettingsList := [Second.Settings(Required := 2)];
+           Console.WriteLn(Items[0].Count);
+           Console.WriteLn(Facade.CountOf(Facade.Settings(Required := 3)));
+           const Override: Second.Settings := Second.Settings(Required := 4, Count := 42);
+           Console.WriteLn(Override.Count);
+         end program;"#,
     );
     for _ in 0..2 {
         let (exit, stdout, stderr) = support::run_cli_and_capture_output(&project, &cwd);
@@ -85,7 +95,11 @@ fn alias_preserves_the_required_field_diagnostic() {
     let project = write_alias_project(&cwd);
     write_text(
         &cwd.join("main.fpas"),
-        "program Main;\nuses Demo.Second as Second;\nbegin\nvar Value: Second.Settings := Second.Settings();\nend program;",
+        r#"program Main;
+uses Demo.Second as Second;
+begin
+const Value: Second.Settings := Second.Settings();
+end program;"#,
     );
     let args = ["check", "--diagnostics", "json", &project.to_string_lossy()].map(str::to_owned);
     let (exit, stdout, stderr) = support::run_cli_args_and_capture_output(&args, &cwd);
@@ -122,7 +136,11 @@ fn alias_defaults_do_not_allow_private_record_construction() {
     );
     write_text(
         &cwd.join("main.fpas"),
-        "program Main;\nuses Demo.Second as Second;\nbegin\nvar Value: Second.Settings := Second.Settings();\nend program;",
+        r#"program Main;
+uses Demo.Second as Second;
+begin
+const Value: Second.Settings := Second.Settings();
+end program;"#,
     );
     let args = ["check", "--diagnostics", "json", &project.to_string_lossy()].map(str::to_owned);
     let (exit, stdout, stderr) = support::run_cli_args_and_capture_output(&args, &cwd);

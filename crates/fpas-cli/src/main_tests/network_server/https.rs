@@ -22,7 +22,38 @@ fn fpas_https_server_serves_one_verified_request() {
     let server = spawn_server(
         &cwd,
         format!(
-            "program HttpsServer;\n\nuses Std.Console as Console; uses Std.Http as Http; uses Std.Net as Net; uses Std.Net.Utf8 as Utf8;\n\nfunction Handle(RequestValue: Http.ServerRequest): Http.ServerResponse;\nbegin\n  mutable var ResponseValue: Http.ServerResponse := Http.ServerResponse.Create(200, 'OK');\n  ResponseValue.Body := Utf8.Encode('secure ' + RequestValue.Target);\n  return ResponseValue;\nend function;\n\nbegin\n  case Net.ListenTls('127.0.0.1', {port}, '{certificate_source}', '{private_key_source}', 2000) of\n    when Result.Ok(const ListenerValue):\n    begin\n      mutable var Options: Http.ServerOptions := Http.ServerOptions.Create();\n      Options.MaxRequests := 1;\n      case Http.Serve(ListenerValue, Options, Handle) of\n        when Result.Ok(_):\n        begin null;\n        end;\n        when Result.Error(const Message): panic(Message);\n      end case;\n      case Net.CloseListener(ListenerValue) of\n        when Result.Ok(_): Console.WriteLn('served https');\n        when Result.Error(const Message): panic(Message);\n      end case;\n    end;\n    when Result.Error(const Message): panic(Message);\n  end case;\nend program;\n"
+            r#"program HttpsServer;
+
+uses Std.Console as Console; uses Std.Http as Http; uses Std.Net as Net; uses Std.Net.Utf8 as Utf8;
+
+function Handle(RequestValue: Http.ServerRequest): Http.ServerResponse;
+begin
+   var ResponseValue: Http.ServerResponse := Http.ServerResponseCreate(200, 'OK');
+  ResponseValue.Body := Utf8.Encode('secure ' + RequestValue.Target);
+  return ResponseValue;
+end function;
+
+begin
+  case Net.ListenTls('127.0.0.1', {port}, '{certificate_source}', '{private_key_source}', 2000) of
+    when Result.Ok(const ListenerValue):
+    begin
+       var Options: Http.ServerOptions := Http.ServerOptionsCreate();
+      Options.MaxRequests := 1;
+      case Http.Serve(ListenerValue, Options, Handle) of
+        when Result.Ok(_):
+        begin null;
+        end;
+        when Result.Error(const Message): panic(Message);
+      end case;
+      case Net.CloseListener(ListenerValue) of
+        when Result.Ok(_): Console.WriteLn('served https');
+        when Result.Error(const Message): panic(Message);
+      end case;
+    end;
+    when Result.Error(const Message): panic(Message);
+  end case;
+end program;
+"#
         ),
     );
 

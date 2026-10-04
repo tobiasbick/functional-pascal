@@ -4,12 +4,12 @@ uses Std.Console as Console;
 uses Std.Results as Results;
 uses Std.Conv as Conv;
 
-function Double(V: integer): integer;
+pure function Double(V: integer): integer;
 begin
   return V * 2;
 end function;
 
-function PositiveToStr(V: integer): Result of (string, string);
+pure function PositiveToStr(V: integer): Result of (string, string);
 begin
   if V > 0 then
     begin
@@ -23,8 +23,8 @@ begin
 end function;
 
 begin
-  var R: Result of (integer, string) := Result.Ok(5);
-  var Doubled: Result of (integer, string) := Results.Map(R, Double);
-  var Final: Result of (string, string) := Results.AndThen(Doubled, PositiveToStr);
+  const R: Result of (integer, string) := Result.Ok(5);
+  const Doubled: Result of (integer, string) := Results.Map(R, Double);
+  const Final: Result of (string, string) := Results.AndThen(Doubled, PositiveToStr);
   Console.WriteLn(Results.Unwrap(Final));
 end program;

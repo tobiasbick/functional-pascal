@@ -8,7 +8,7 @@ unit Std.Path;
 //
 // Parameters:
 // - `Path`: File or directory path processed by the operation.
-public function BaseName(Path: string): string;
+public pure function BaseName(Path: string): string;
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -17,7 +17,7 @@ end function;
 //
 // Parameters:
 // - `Path`: File or directory path processed by the operation.
-public function DirName(Path: string): string;
+public pure function DirName(Path: string): string;
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -26,7 +26,7 @@ end function;
 //
 // Parameters:
 // - `Path`: File or directory path processed by the operation.
-public function Extension(Path: string): string;
+public pure function Extension(Path: string): string;
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -35,7 +35,7 @@ end function;
 //
 // Parameters:
 // - `Segments`: Values combined in their existing order.
-public function Join(Segments: array of (string)): string;
+public pure function Join(Segments: array of (string)): string;
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -44,7 +44,7 @@ end function;
 //
 // Parameters:
 // - `Path`: File or directory path processed by the operation.
-public function Normalize(Path: string): string;
+public pure function Normalize(Path: string): string;
 begin
   panic('Intrinsic API declaration');
 end function;

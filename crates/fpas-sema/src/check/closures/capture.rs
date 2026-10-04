@@ -30,7 +30,7 @@ pub struct CaptureBinding {
 
 /// Collect lexical captures referenced by `body`.
 ///
-/// A name is captured when it resolves to a `Var`, `Param`, or `ForVar` in a non-root scope
+/// A name is captured when it resolves to local storage or a named routine in a non-root scope
 /// outside the closure's own scope frame (`closure_scope_index`). Captures required only by a
 /// nested closure or named routine are propagated from that routine's analyzed metadata, which
 /// preserves its own parameter and local shadowing.

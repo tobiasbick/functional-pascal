@@ -11,14 +11,16 @@ uses Std.Tui as Tui;
 uses Mandelbrot.Color as Color;
 uses Mandelbrot.Model as Model;
 uses Mandelbrot.Render as Render;
+uses Std.Tui.Chrome as Chrome;
+uses Std.Tui.Runtime as Runtime;
 
 const RenderSubscriptionId: integer := 1;
 
 procedure QueueRender(State: Model.MandelbrotModel; Cmd: Tui.TuiCmdOutput);
 begin
-  var Request: Render.MandelbrotRenderRequest := Model.MandelbrotRequest(State);
-  var Inbox: channel of (Render.MandelbrotRenderFrame) := State.Inbox;
-  Cmd.ReplaceSubscription(RenderSubscriptionId, function(Token: Tasks.CancellationToken): Result of (boolean, string) begin
+  const Request: Render.MandelbrotRenderRequest := Model.MandelbrotRequest(State);
+  const Inbox: channel of (Render.MandelbrotRenderFrame) := State.Inbox;
+  Runtime.TuiCmdOutputReplaceSubscription(Cmd, RenderSubscriptionId, function(Token: Tasks.CancellationToken): Result of (boolean, string) begin
     return Render.RunBackgroundRender(Request, Inbox, Token);
   end function);
 end procedure;
@@ -31,8 +33,8 @@ function RestartRender(
   Cmd: Tui.TuiCmdOutput
 ): Model.MandelbrotModel;
 begin
-  mutable var Next: Model.MandelbrotModel := Model.CreateMandelbrotModel(Explorer, TerminalWidth, TerminalHeight, State.HelpOpen, State.Generation +
-                                                                                                                                  1, State.Inbox);
+  var Next: Model.MandelbrotModel := Model.CreateMandelbrotModel(Explorer, TerminalWidth, TerminalHeight, State.HelpOpen, State.Generation +
+                                                                                                                          1, State.Inbox);
   if (Next.Grid.Width = State.Grid.Width) and (Next.Grid.Height = State.Grid.Height) then
     begin
       Next.Grid := State.Grid;
@@ -55,22 +57,23 @@ end function;
 
 function ViewportX(State: Model.ExplorerState; Width: integer; Height: integer; CellX: integer): real;
 begin
-  return State.XMin(Width, Height) +
-         (Conv.IntToReal(CellX) / Conv.IntToReal(Math.Max(Width - 1, 1))) * (State.XMax(Width, Height) - State.XMin(Width, Height));
+  return Model.ExplorerStateXMin(State, Width, Height) +
+         (Conv.IntToReal(CellX) / Conv.IntToReal(Math.Max(Width - 1, 1))) * (Model.ExplorerStateXMax(State, Width, Height) - Model.ExplorerStateXMin(State, Width, Height));
 end function;
 
 function ViewportY(State: Model.ExplorerState; Height: integer; CellY: integer): real;
 begin
-  return State.YMax() -
-         (Conv.IntToReal(CellY) / Conv.IntToReal(Math.Max(Height - 1, 1))) * (State.YMax() - State.YMin());
+  return Model.ExplorerStateYMax(State) -
+         (Conv.IntToReal(CellY) / Conv.IntToReal(Math.Max(Height - 1, 1))) * (Model.ExplorerStateYMax(State) - Model.ExplorerStateYMin(State));
 end function;
 
 function UpdateKey(State: Model.MandelbrotModel; Key: Tui.TuiKeyEvent; Cmd: Tui.TuiCmdOutput): Model.MandelbrotModel;
 begin
-  mutable var Explorer: Model.ExplorerState := State.Explorer;
-  mutable var Changed: boolean := false;
-  var StepX: real := Explorer.SpanX(State.Grid.Width, State.Grid.Height) * 0.14;
-  var StepY: real := Explorer.SpanY * 0.14;
+  var Explorer: Model.ExplorerState := State.Explorer;
+  var Changed: boolean := false;
+  const StepX: real := Model.ExplorerStateSpanX(Explorer, State.Grid.Width, State.Grid.Height) *
+                       0.14;
+  const StepY: real := Explorer.SpanY * 0.14;
   if Key.kind = Console.KeyKind.Left then
     begin
       Explorer.CenterX := Explorer.CenterX - StepX;
@@ -137,7 +140,7 @@ begin
                       end;
                     when 'r', 'R':
                       begin
-                        Explorer := Model.ExplorerState.Default();
+                        Explorer := Model.ExplorerStateDefault();
                         Changed := true;
                       end;
                     when 'h', 'H':
@@ -169,8 +172,8 @@ function UpdatePointer(
   Cmd: Tui.TuiCmdOutput
 ): Model.MandelbrotModel;
 begin
-  mutable var Explorer: Model.ExplorerState := State.Explorer;
-  mutable var Changed: boolean := false;
+  var Explorer: Model.ExplorerState := State.Explorer;
+  var Changed: boolean := false;
   if Pointer.Action = Console.MouseAction.ScrollUp then
     begin
       Explorer.SpanY := Math.Max(Explorer.SpanY * 0.88, 0.000001);
@@ -196,7 +199,7 @@ begin
           else
             if Pointer.Button = Tui.TuiPointerButton.Middle then
               begin
-                Explorer := Model.ExplorerState.Default();
+                Explorer := Model.ExplorerStateDefault();
                 Changed := true;
               end;
             end if;
@@ -218,7 +221,7 @@ end function;
 // Handles framework input and owns the render subscription lifecycle.
 public function UpdateMandelbrot(State: Model.MandelbrotModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): Model.MandelbrotModel;
 begin
-  Cmd.Set(Tui.TuiCmd.NoCommand);
+  Runtime.TuiCmdOutputSet(Cmd, Tui.TuiCmd.NoCommand);
   case Msg of
     when Tui.TuiMsg.Started:
       begin
@@ -261,7 +264,7 @@ begin
           end;
         end if;
 
-        Cmd.Set(Tui.TuiCmd.Quit);
+        Runtime.TuiCmdOutputSet(Cmd, Tui.TuiCmd.Quit);
         return State;
       end;
     when Tui.TuiMsg.Tick(_), Tui.TuiMsg.FocusChanged(_, _), Tui.TuiMsg.Action(_, _), Tui.TuiMsg.TextChanged(_, _, _, _), Tui.TuiMsg.TextAreaChanged(_, _, _, _, _), Tui.TuiMsg.CheckChanged(_, _, _), Tui.TuiMsg.SelectionChanged(_, _, _), Tui.TuiMsg.ScrollChanged(_, _, _), Tui.TuiMsg.MenuChanged(_, _, _):
@@ -280,15 +283,15 @@ public function UpdateMandelbrotFrame(
   Cmd: Tui.TuiCmdOutput
 ): Model.MandelbrotModel;
 begin
-  Cmd.Set(Tui.TuiCmd.NoCommand);
+  Runtime.TuiCmdOutputSet(Cmd, Tui.TuiCmd.NoCommand);
   if (Message.Generation <> State.Generation) or
      (Arrays.Length(Message.Cells) <> State.Grid.Width * State.Grid.Height) then
     begin
       return State;
     end;
   end if;
-  mutable var Next: Model.MandelbrotModel := State;
-  Next.Grid := Tui.TuiCellGrid.Create(State.Grid.Width, State.Grid.Height, Message.Cells);
+  var Next: Model.MandelbrotModel := State;
+  Next.Grid := Chrome.TuiCellGridCreate(State.Grid.Width, State.Grid.Height, Message.Cells);
   Next.RowsRendered := State.Grid.Height;
   return Next;
 end function;

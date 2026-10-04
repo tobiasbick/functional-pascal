@@ -248,7 +248,15 @@ fn render_routine(
             symbol.kind == IntrinsicStdSymbolKind::Procedure,
         )
     };
-    let _ = writeln!(output, "{indent}public {static_prefix}{declaration};");
+    let pure_prefix = if matches!(&symbol.ty, Ty::Function(function) if function.pure) {
+        "pure "
+    } else {
+        ""
+    };
+    let _ = writeln!(
+        output,
+        "{indent}public {static_prefix}{pure_prefix}{declaration};"
+    );
     let _ = writeln!(output, "{indent}begin");
     let _ = writeln!(output, "{indent}  panic('Intrinsic API declaration');");
     let kind = if declaration.starts_with("procedure ") {
@@ -302,7 +310,7 @@ fn contains_error(ty: &Ty) -> bool {
         | Ty::String
         | Ty::Unit
         | Ty::Named(_)
-        | Ty::GenericParam(_, _) => false,
+        | Ty::GenericParam(_) => false,
     }
 }
 
@@ -310,7 +318,7 @@ fn parameters(parameters: &[ParamTy]) -> String {
     parameters
         .iter()
         .map(|parameter| {
-            let mutable = if parameter.mutable { "mutable " } else { "" };
+            let mutable = if parameter.mutable { "var " } else { "" };
             format!("{mutable}{}: {}", parameter.name, parameter.ty)
         })
         .collect::<Vec<_>>()

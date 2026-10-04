@@ -3,6 +3,8 @@ program TuiInteractiveRunSignatureTest;
 uses Std.Tasks as Tasks;
 uses Std.Test as Test;
 uses Std.Tui as Tui;
+uses Std.Tui.Elements as Elements;
+uses Std.Tui.Runtime as Runtime;
 
 type DemoModel = record
   Ticks: integer;
@@ -10,7 +12,7 @@ end record;
 
 function UpdateDemo(State: DemoModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): DemoModel;
 begin
-  Cmd.Set(Tui.TuiCmd.NoCommand);
+  Runtime.TuiCmdOutputSet(Cmd, Tui.TuiCmd.NoCommand);
   case Msg of
     when Tui.TuiMsg.Tick(const Delta):
       begin
@@ -18,12 +20,12 @@ begin
       end;
     when Tui.TuiMsg.MenuChanged(const MenuSource, const MenuAction, const MenuState):
       begin
-        Cmd.Set(Tui.TuiCmd.Quit);
+        Runtime.TuiCmdOutputSet(Cmd, Tui.TuiCmd.Quit);
         return State;
       end;
     when Tui.TuiMsg.QuitRequested:
       begin
-        Cmd.Set(Tui.TuiCmd.Quit);
+        Runtime.TuiCmdOutputSet(Cmd, Tui.TuiCmd.Quit);
         return State;
       end;
     when Tui.TuiMsg.Started, Tui.TuiMsg.Key(_), Tui.TuiMsg.Pointer(_), Tui.TuiMsg.Resize(_), Tui.TuiMsg.FocusChanged(_, _), Tui.TuiMsg.Action(_, _), Tui.TuiMsg.TextChanged(_, _, _, _), Tui.TuiMsg.TextAreaChanged(_, _, _, _, _), Tui.TuiMsg.CheckChanged(_, _, _), Tui.TuiMsg.SelectionChanged(_, _, _), Tui.TuiMsg.ScrollChanged(_, _, _), Tui.TuiMsg.BackgroundFailed(_, _, _, _, _, _):
@@ -37,7 +39,7 @@ end function;
 
 function ViewDemo(State: DemoModel): Tui.TuiElement;
 begin
-  return Tui.TuiElementBuilders.MakeLabel('interactive');
+  return Elements.TuiElementMakeLabel('interactive');
 end function;
 
 function UpdateBackground(State: DemoModel; Message: integer; Cmd: Tui.TuiCmdOutput): DemoModel;
@@ -47,13 +49,13 @@ end function;
 
 function RunSignatureOnly(): DemoModel;
 begin
-  return Tui.TuiApplication.Run(DemoModel(Ticks := 0), UpdateDemo, ViewDemo);
+  return Runtime.TuiApplicationRun(DemoModel(Ticks := 0), UpdateDemo, ViewDemo);
 end function;
 
 function RunBackgroundSignatureOnly(): DemoModel;
 begin
-  var Inbox: channel of (integer) := Tasks.CreateChannel(4);
-  return Tui.TuiApplication.RunWithBackground(DemoModel(Ticks := 0), Inbox, UpdateDemo, UpdateBackground, ViewDemo);
+  const Inbox: channel of (integer) := Tasks.CreateChannel(4);
+  return Runtime.TuiApplicationRunWithBackground(DemoModel(Ticks := 0), Inbox, UpdateDemo, UpdateBackground, ViewDemo);
 end function;
 
 begin

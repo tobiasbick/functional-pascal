@@ -18,7 +18,7 @@ type Holder = record
   Item: Choice;
 end record;
 
-mutable var GlobalChoice: Choice := Choice.Empty;
+var GlobalChoice: Choice := Choice.Empty;
 
 function ChoiceValue(Item: Choice): integer;
 begin
@@ -43,23 +43,23 @@ begin
 end function;
 
 begin
-  mutable var Origin: Point := Point(X := 4, Y := 5);
-  mutable var Selected: Choice := Choice.Empty;
-  mutable var PairValue: Choice := Choice.Pair(2, 3);
-  mutable var EmptyValue: Choice := Choice.Empty;
-  mutable var NestedValue: Choice := Choice.Nested(Origin);
-  mutable var Outcome: Result of (integer, string) := Result.Ok(6);
-  mutable var Failed: Result of (integer, string) := Result.Error('old');
-  mutable var Optional: Option of (integer) := Option.Some(7);
-  mutable var Missing: Option of (integer) := Option.None;
-  mutable var Packed: Result of (array of (integer), string) := Result.Ok([8, 9]);
-  mutable var NestedOk: Result of (integer, string) := Result.Ok(11);
-  mutable var NestedResult: Option of (Result of (integer, string)) := Option.Some(NestedOk);
-  mutable var PackedHolder: Holder := Holder(Item := Choice.Empty);
-  mutable var Items: array of (Choice) := [Choice.Empty];
-  mutable var Scores: dict of (string, Choice) := ['blue': Choice.Empty];
-  var Fixed: Choice := Choice.Count(99);
-  var StopMarker: integer := 0;
+  var Origin: Point := Point(X := 4, Y := 5);
+  var Selected: Choice := Choice.Empty;
+  var PairValue: Choice := Choice.Pair(2, 3);
+  var EmptyValue: Choice := Choice.Empty;
+  var NestedValue: Choice := Choice.Nested(Origin);
+  var Outcome: Result of (integer, string) := Result.Ok(6);
+  var Failed: Result of (integer, string) := Result.Error('old');
+  var Optional: Option of (integer) := Option.Some(7);
+  var Missing: Option of (integer) := Option.None;
+  var Packed: Result of (array of (integer), string) := Result.Ok([8, 9]);
+  var NestedOk: Result of (integer, string) := Result.Ok(11);
+  var NestedResult: Option of (Result of (integer, string)) := Option.Some(NestedOk);
+  var PackedHolder: Holder := Holder(Item := Choice.Empty);
+  var Items: array of (Choice) := [Choice.Empty];
+  var Scores: dict of (string, Choice) := ['blue': Choice.Empty];
+  const Fixed: Choice := Choice.Count(99);
+  const StopMarker: integer := 0;
   Console.WriteLn(ChoiceValue(Selected));
   Console.WriteLn(ChoiceValue(PairValue));
   Console.WriteLn(ChoiceValue(EmptyValue));

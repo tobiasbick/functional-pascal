@@ -75,7 +75,7 @@ fix the compile error in my.fpas
 Expected behavior:
 
 - Read the diagnostic; common fixes: `return` instead of `FuncName :=`, add
-  `mutable var`, declare the required `uses Unit.Name as Alias;`, qualify imported
+  `var` for writable storage, declare the required `uses Unit.Name as Alias;`, qualify imported
   names through that alias, and use the matching named closer and statement `;`.
 - Re-check with `fpas check my.fpas`.
 - Grep a similar working file under `tests/` or `examples/` before guessing syntax.

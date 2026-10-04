@@ -1,7 +1,7 @@
-//! Nested closure and bound-method discovery over statements and expressions.
+//! Nested closure discovery over statements and expressions.
 
 use fpas_ir::{CaptureKind, FunctionId};
-use fpas_parser::{Decl, DesignatorPart, Expr, FuncBody, PostfixOperation, Stmt, TypeBody};
+use fpas_parser::{Decl, DesignatorPart, Expr, FuncBody, PostfixOperation, Stmt};
 use fpas_sema::AnalysisMetadata;
 
 use crate::CompileError;
@@ -11,6 +11,16 @@ use super::super::types;
 use super::{ClosureRegistry, ClosureRoutine};
 
 impl<'a> ClosureRegistry<'a> {
+    /// Discover closures inside one declaration-scoped default expression.
+    pub(in crate::lowering) fn discover_expression(
+        &mut self,
+        expression: &'a Expr,
+        owner: FunctionId,
+        metadata: &AnalysisMetadata,
+        types: &mut types::TypeTable,
+    ) -> Result<(), CompileError> {
+        self.visit_expression(expression, owner, metadata, types)
+    }
     pub fn discover_statements(
         &mut self,
         statements: &'a [Stmt],
@@ -33,18 +43,8 @@ impl<'a> ClosureRegistry<'a> {
     ) -> Result<(), CompileError> {
         for declaration in declarations {
             let value = match declaration {
-                Decl::Const(definition) => &definition.value,
-                Decl::Var(definition) | Decl::MutableVar(definition) => &definition.value,
-                Decl::TypeDef(definition) => {
-                    if let TypeBody::Record(record) = &definition.body {
-                        for field in &record.fields {
-                            if let Some(value) = &field.default_value {
-                                self.visit_expression(value, owner, metadata, types)?;
-                            }
-                        }
-                    }
-                    continue;
-                }
+                Decl::Const(definition) | Decl::Var(definition) => &definition.value,
+                Decl::TypeDef(_) => continue,
                 Decl::Function(_) | Decl::Procedure(_) => continue,
             };
             self.visit_expression(value, owner, metadata, types)?;
@@ -69,7 +69,7 @@ impl<'a> ClosureRegistry<'a> {
                 self.discover_statements(body, owner, metadata, types)?;
                 self.visit_expression(condition, owner, metadata, types)?;
             }
-            Stmt::Var(definition) | Stmt::MutableVar(definition) => {
+            Stmt::Const(definition) | Stmt::Var(definition) => {
                 self.visit_expression(&definition.value, owner, metadata, types)?;
             }
             Stmt::Assign { target, value, .. } => {
@@ -149,8 +149,17 @@ impl<'a> ClosureRegistry<'a> {
                 self.visit_statement(body, owner, metadata, types)?;
             }
             Stmt::Call {
-                designator, args, ..
+                designator,
+                args,
+                span,
             } => {
+                self.register_array_mutation(
+                    fpas_sema::designator_lookup_key(designator),
+                    args,
+                    *span,
+                    metadata,
+                    types,
+                )?;
                 self.visit_designator(&designator.parts, owner, metadata, types)?;
                 for argument in args {
                     self.visit_expression(argument, owner, metadata, types)?;
@@ -270,23 +279,34 @@ impl<'a> ClosureRegistry<'a> {
                 self.routines.push(ClosureRoutine {
                     expression,
                     id,
-                    name: info.synthetic_name.clone(),
+                    name: self.lexical_closure_name(owner, &info.synthetic_name, closure.span)?,
                     captures,
                     owner,
                 });
                 let FuncBody::Block { stmts, .. } = &closure.body;
                 self.discover_statements(stmts, id, metadata, types)?;
             }
-            Expr::Designator(designator) => {
-                let key = fpas_sema::designator_lookup_key(designator);
-                if let Some(info) = metadata.bound_methods.get(&key) {
-                    self.register_bound_method(key, info, owner, designator.span, types)?;
+            Expr::Designator(designator) | Expr::VarArgument(designator, _) => {
+                if matches!(expression, Expr::VarArgument(_, _))
+                    && let Some(DesignatorPart::Ident(name, _)) = designator.parts.first()
+                {
+                    self.cell_names
+                        .entry(owner)
+                        .or_default()
+                        .insert(name.to_ascii_lowercase());
                 }
                 self.visit_designator(&designator.parts, owner, metadata, types)?
             }
             Expr::Call {
                 designator, args, ..
             } => {
+                self.register_array_mutation(
+                    fpas_sema::expr_lookup_key(expression),
+                    args,
+                    expression.span(),
+                    metadata,
+                    types,
+                )?;
                 self.visit_designator(&designator.parts, owner, metadata, types)?;
                 for argument in args {
                     self.visit_expression(argument, owner, metadata, types)?;
@@ -339,18 +359,12 @@ impl<'a> ClosureRegistry<'a> {
                         PostfixOperation::Index { index, .. } => {
                             self.visit_expression(index, owner, metadata, types)?
                         }
-                        PostfixOperation::MethodCall { args, .. }
-                        | PostfixOperation::Call { args, .. } => {
+                        PostfixOperation::Call { args, .. } => {
                             for argument in args {
                                 self.visit_expression(argument, owner, metadata, types)?;
                             }
                         }
-                        PostfixOperation::Field { span, .. } => {
-                            let key = fpas_sema::postfix_operation_lookup_key(operation);
-                            if let Some(info) = metadata.bound_methods.get(&key) {
-                                self.register_bound_method(key, info, owner, *span, types)?;
-                            }
-                        }
+                        PostfixOperation::Field { .. } => {}
                     }
                 }
             }
@@ -359,7 +373,6 @@ impl<'a> ClosureRegistry<'a> {
             | Expr::Str(..)
             | Expr::Bool(..)
             | Expr::OptionNone(_)
-            | Expr::Nil(_)
             | Expr::InvalidRecord(..)
             | Expr::Error(_) => {}
         }

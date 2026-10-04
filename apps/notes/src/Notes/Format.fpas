@@ -99,13 +99,13 @@ begin
         case Value of
           when Toml.TomlValue.ArrayValue(const Items):
             begin
-              mutable var Tags: array of (string) := [];
+              var Tags: array of (string) := [];
               for Index: integer := 0 to Arrays.Length(Items) - 1 do
                 begin
                   case Items[Index] of
                     when Toml.TomlValue.String(const Tag):
                       begin
-                        Arrays.Push(Tags, Tag);
+                        Arrays.Push(var Tags, Tag);
                       end;
                     when Toml.TomlValue.Integer(_), Toml.TomlValue.Float(_), Toml.TomlValue.Boolean(_), Toml.TomlValue.Datetime(_), Toml.TomlValue.ArrayValue(_), Toml.TomlValue.Table(_):
                       begin
@@ -134,22 +134,22 @@ end function;
 
 function ParseFields(Fields: dict of (string, Toml.TomlValue); Body: string): Result of (Model.Note, string);
 begin
-  var Version: integer := try FieldInteger(Fields, 'format');
+  const Version: integer := try FieldInteger(Fields, 'format');
   if Version <> NoteFormatVersion then
     begin
       return Result.Error(('Unsupported note format version ' + Conv.IntToStr(Version)) +
                           '; expected 1');
     end;
   end if;
-  var Id: string := try FieldString(Fields, 'id');
+  const Id: string := try FieldString(Fields, 'id');
   if Str.Trim(Id) = '' then
     begin
       return Result.Error('Note field `id` must not be empty');
     end;
   end if;
-  var Title: string := try FieldString(Fields, 'title');
-  var Created: integer := try FieldInteger(Fields, 'created_ms');
-  var Updated: integer := try FieldInteger(Fields, 'updated_ms');
+  const Title: string := try FieldString(Fields, 'title');
+  const Created: integer := try FieldInteger(Fields, 'created_ms');
+  const Updated: integer := try FieldInteger(Fields, 'updated_ms');
   if (Created < 0) or (Updated < 0) then
     begin
       return Result.Error('Note timestamps must not be negative');
@@ -162,26 +162,26 @@ end function;
 // Parses one UTF-8 `.note` document with TOML frontmatter.
 public function NoteParse(Text: string): Result of (Model.Note, string);
 begin
-  var NewLine: string := Str.Chr(10);
-  var Source: string := Str.Replace(Str.Replace(Text, Str.Chr(13) + NewLine, NewLine), Str.Chr(13), NewLine);
-  var Prefix: string := '+++' + NewLine;
+  const NewLine: string := Str.Chr(10);
+  const Source: string := Str.Replace(Str.Replace(Text, Str.Chr(13) + NewLine, NewLine), Str.Chr(13), NewLine);
+  const Prefix: string := '+++' + NewLine;
   if not Str.StartsWith(Source, Prefix) then
     begin
       return Result.Error('A .note file must start with a `+++` TOML header');
     end;
   end if;
-  var Remaining: string := Str.Substring(Source, Str.Length(Prefix), Str.Length(Source) -
-                                                                     Str.Length(Prefix));
-  var Boundary: string := (NewLine + '+++') + NewLine;
-  var BoundaryIndex: integer := Str.IndexOf(Remaining, Boundary);
+  const Remaining: string := Str.Substring(Source, Str.Length(Prefix), Str.Length(Source) -
+                                                                       Str.Length(Prefix));
+  const Boundary: string := (NewLine + '+++') + NewLine;
+  const BoundaryIndex: integer := Str.IndexOf(Remaining, Boundary);
   if BoundaryIndex < 0 then
     begin
       return Result.Error('A .note file must close its TOML header with `+++`');
     end;
   end if;
-  var Header: string := Str.Substring(Remaining, 0, BoundaryIndex);
-  var BodyStart: integer := BoundaryIndex + Str.Length(Boundary);
-  var Body: string := Str.Substring(Remaining, BodyStart, Str.Length(Remaining) - BodyStart);
+  const Header: string := Str.Substring(Remaining, 0, BoundaryIndex);
+  const BodyStart: integer := BoundaryIndex + Str.Length(Boundary);
+  const Body: string := Str.Substring(Remaining, BodyStart, Str.Length(Remaining) - BodyStart);
   case Toml.Parse(Header) of
     when Result.Ok(const Value):
       begin
@@ -208,14 +208,14 @@ end function;
 // Encodes one note as deterministic TOML frontmatter and Markdown body text.
 public function NoteStringify(NoteValue: Model.Note): string;
 begin
-  mutable var TagValues: array of (Toml.TomlValue) := [];
+  var TagValues: array of (Toml.TomlValue) := [];
   for Index: integer := 0 to Arrays.Length(NoteValue.Tags) - 1 do
     begin
-      Arrays.Push(TagValues, Toml.TomlValue.String(NoteValue.Tags[Index]));
+      Arrays.Push(var TagValues, Toml.TomlValue.String(NoteValue.Tags[Index]));
     end;
   end for;
-  var Header: Toml.TomlValue := Toml.TomlValue.Table(['format': Toml.TomlValue.Integer(NoteFormatVersion), 'id': Toml.TomlValue.String(NoteValue.Id), 'title': Toml.TomlValue.String(NoteValue.Title), 'created_ms': Toml.TomlValue.Integer(NoteValue.CreatedMillis), 'updated_ms': Toml.TomlValue.Integer(NoteValue.UpdatedMillis), 'tags': Toml.TomlValue.ArrayValue(TagValues), 'pinned': Toml.TomlValue.Boolean(NoteValue.Pinned), 'archived': Toml.TomlValue.Boolean(NoteValue.Archived)]);
-  var NewLine: string := Str.Chr(10);
+  const Header: Toml.TomlValue := Toml.TomlValue.Table(['format': Toml.TomlValue.Integer(NoteFormatVersion), 'id': Toml.TomlValue.String(NoteValue.Id), 'title': Toml.TomlValue.String(NoteValue.Title), 'created_ms': Toml.TomlValue.Integer(NoteValue.CreatedMillis), 'updated_ms': Toml.TomlValue.Integer(NoteValue.UpdatedMillis), 'tags': Toml.TomlValue.ArrayValue(TagValues), 'pinned': Toml.TomlValue.Boolean(NoteValue.Pinned), 'archived': Toml.TomlValue.Boolean(NoteValue.Archived)]);
+  const NewLine: string := Str.Chr(10);
   return ((((('+++' + NewLine) + Str.TrimRight(Toml.Stringify(Header))) + NewLine) + '+++') + NewLine) +
          NoteValue.Body;
 end function;

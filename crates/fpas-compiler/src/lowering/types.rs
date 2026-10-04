@@ -2,6 +2,7 @@
 
 mod expressions;
 mod layouts;
+mod parameters;
 mod task;
 
 use fpas_ir::{
@@ -93,10 +94,6 @@ impl TypeTable {
             }
             let _ = table.intern(ty, 1, 1)?;
         }
-        for call in metadata.fluent_calls.values() {
-            let _ = table.intern(&call.receiver_ty, 1, 1)?;
-            let _ = table.intern(&call.result_ty, 1, 1)?;
-        }
         for target in metadata.value_calls.values() {
             let _ = table.intern(&target.callable_ty, 1, 1)?;
             let _ = table.intern(&target.result_ty, 1, 1)?;
@@ -165,7 +162,7 @@ impl TypeTable {
                 parameters: function
                     .params
                     .iter()
-                    .map(|parameter| self.intern(&parameter.ty, line, column))
+                    .map(|parameter| self.parameter_type(parameter, line, column))
                     .collect::<Result<Vec<_>, _>>()?,
                 result: self.intern(&function.return_type, line, column)?,
             },
@@ -173,7 +170,7 @@ impl TypeTable {
                 parameters: procedure
                     .params
                     .iter()
-                    .map(|parameter| self.intern(&parameter.ty, line, column))
+                    .map(|parameter| self.parameter_type(parameter, line, column))
                     .collect::<Result<Vec<_>, _>>()?,
                 result: UNIT,
             },

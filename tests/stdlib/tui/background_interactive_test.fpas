@@ -4,6 +4,8 @@ uses Std.Results as Results;
 uses Std.Tasks as Tasks;
 uses Std.Test as Test;
 uses Std.Tui as Tui;
+uses Std.Tui.Elements as Elements;
+uses Std.Tui.Runtime as Runtime;
 
 type InteractiveModel = record
   Inbox: channel of (integer);
@@ -15,8 +17,8 @@ begin
   case Msg of
     when Tui.TuiMsg.Started:
       begin
-        var Inbox: channel of (integer) := State.Inbox;
-        Cmd.StartBackground(1, function(Token: Tasks.CancellationToken): Result of (boolean, string) begin
+        const Inbox: channel of (integer) := State.Inbox;
+        Runtime.TuiCmdOutputStartBackground(Cmd, 1, function(Token: Tasks.CancellationToken): Result of (boolean, string) begin
           return Tasks.SendWithCancellation(Inbox, 42, Token);
         end function);
       end;
@@ -33,20 +35,20 @@ end function;
 
 function UpdateMessage(State: InteractiveModel; Message: integer; Cmd: Tui.TuiCmdOutput): InteractiveModel;
 begin
-  Cmd.Set(Tui.TuiCmd.Quit);
-  mutable var Next: InteractiveModel := State;
+  Runtime.TuiCmdOutputSet(Cmd, Tui.TuiCmd.Quit);
+  var Next: InteractiveModel := State;
   Next.Received := Message;
   return Next;
 end function;
 
 function View(State: InteractiveModel): Tui.TuiElement;
 begin
-  return Tui.TuiElementBuilders.MakeLabel('background wakeup');
+  return Elements.TuiElementMakeLabel('background wakeup');
 end function;
 
 begin
-  var Inbox: channel of (integer) := Tasks.CreateChannel(1);
-  var Final: InteractiveModel := Tui.TuiApplication.RunWithBackground(InteractiveModel(Inbox := Inbox, Received := 0), Inbox, Update, UpdateMessage, View);
+  const Inbox: channel of (integer) := Tasks.CreateChannel(1);
+  const Final: InteractiveModel := Runtime.TuiApplicationRunWithBackground(InteractiveModel(Inbox := Inbox, Received := 0), Inbox, Update, UpdateMessage, View);
   Test.AssertEquals(42, Final.Received);
   Test.AssertTrue(Results.IsError(Tasks.TrySend(Inbox, 1)));
 end program;

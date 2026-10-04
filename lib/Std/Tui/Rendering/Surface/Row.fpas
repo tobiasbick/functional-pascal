@@ -22,13 +22,13 @@ public function TuiSurfaceWriteRow(
   Values: array of (Cell.TuiCell)
 ): TuiSurfaceRow;
 begin
-  mutable var NextCells: array of (Cell.TuiCell) := Cells;
-  mutable var NextContinuations: array of (boolean) := Continuations;
-  var Blank: Cell.TuiCell := Cell.TuiCell.Create(' ', StyleRole.TuiStyleRole.Normal);
-  var RightX: integer := Arrays.Length(Cells);
+  var NextCells: array of (Cell.TuiCell) := Cells;
+  var NextContinuations: array of (boolean) := Continuations;
+  const Blank: Cell.TuiCell := Cell.TuiCellCreate(' ', StyleRole.TuiStyleRole.Normal);
+  const RightX: integer := Arrays.Length(Cells);
   for Offset: integer := 0 to Arrays.Length(Values) - 1 do
     begin
-      var X: integer := FirstX + Offset;
+      const X: integer := FirstX + Offset;
       if NextContinuations[X] then
         begin
           NextCells[X - 1] := Blank;
@@ -44,7 +44,7 @@ begin
       end if;
 
       NextCells[X] := Blank;
-      var Value: Cell.TuiCell := Values[Offset];
+      const Value: Cell.TuiCell := Values[Offset];
       if (Value.Columns = 2) and (X + 1 >= RightX) then
         begin
           continue;

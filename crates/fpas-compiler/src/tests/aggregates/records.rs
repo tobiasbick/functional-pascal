@@ -25,11 +25,11 @@ begin
 end procedure;
 
 begin
-  mutable var P: Point := Point();
+   var P: Point := Point();
   P := Point(X := 1);
   Draw(Point(Y := 2));
-  var Points: array of (Point) := [Point(X := 3)];
-  var Returned: Point := Origin();
+  const Points: array of (Point) := [Point(X := 3)];
+  const Returned: Point := Origin();
   if (P.X <> 1) or (P.Y <> 0) or (Points[0].X <> 3) or (Points[0].Y <> 0) or (Returned.X <> 4) or (Returned.Y <> 0) or (OriginPoint.X <> 0) or
      (OriginPoint.Y <> 0) then
     panic('contextual record defaults');
@@ -50,9 +50,9 @@ type Point = record
 end record;
 
 begin
-  var Original: Point := Point(X := 1);
-  var Updated: Point := Original with X := 9; end with;
-  mutable var Items: array of (Point) := [Original, Updated];
+  const Original: Point := Point(X := 1);
+  const Updated: Point := Original with X := 9; end with;
+   var Items: array of (Point) := [Original, Updated];
   Items[0].Y := 7;
   if (Original.X <> 1) or (Original.Y <> 2) or (Updated.X <> 9) then
     panic('record copy mismatch');
@@ -127,7 +127,7 @@ program RecordInitializerOrder;
   First: integer;
   Second: integer := 7;
 end record;
-  mutable var Calls: integer := 0;
+   var Calls: integer := 0;
 function Next(): integer;
 begin
   Calls := Calls + 1;
@@ -136,7 +136,7 @@ end function;
 begin
   if Pair(First := Next(), Second := Next()).Second <> 2 then
     panic('record initializer order'); end if;
-  var Typed: Pair := Pair(First := Next());
+  const Typed: Pair := Pair(First := Next());
   if (Typed.First <> 3) or (Typed.Second <> 7) or (Calls <> 3) then
     panic('record initializer order'); end if;
 end program;
@@ -161,9 +161,9 @@ begin
   return Value;
 end function;
 begin
-  var P: Point := Identity(Point(X := 8));
+  const P: Point := Identity(Point(X := 8));
   if P.X <> 8 then panic('generic record mismatch'); end if;
-  var C: Choice := Identity(Choice.Number(9));
+  const C: Choice := Identity(Choice.Number(9));
   case C of
     when Choice.Number(const Value): if Value <> 9 then panic('generic enum payload mismatch'); end if;
     when Choice.Empty: panic('generic enum variant mismatch');

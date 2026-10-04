@@ -13,13 +13,13 @@ function TuiRouteFrameMatchesNode(
   ParentIndex: integer
 ): integer;
 begin
-  if Frame.EntryAt(Index).ParentIndex <> ParentIndex then
+  if Frame2.TuiArrangedFrameEntryAt(Frame, Index).ParentIndex <> ParentIndex then
     begin
       panic('Tui routing received a frame for a different element tree');
     end;
   end if;
-  mutable var Next: integer := Index + 1;
-  mutable var Descendants: array of (Element.TuiElement) := [];
+  var Next: integer := Index + 1;
+  var Descendants: array of (Element.TuiElement) := [];
   case Node of
     when Element.TuiElement.Scroll(const Id, const Offset, const ChangeAction, const ScrollChildren):
       begin
@@ -73,13 +73,13 @@ end function;
 // - `Root`: Root of the element tree.
 public procedure TuiRouteRequireMatchingFrame(Frame: Frame2.TuiArrangedFrame; Root: Element.TuiElement);
 begin
-  if Frame.Count() = 0 then
+  if Frame2.TuiArrangedFrameCount(Frame) = 0 then
     begin
       panic('Tui routing requires a successfully painted frame');
     end;
   end if;
 
-  if TuiRouteFrameMatchesNode(Frame, Root, 0, -1) <> Frame.Count() then
+  if TuiRouteFrameMatchesNode(Frame, Root, 0, -1) <> Frame2.TuiArrangedFrameCount(Frame) then
     begin
       panic('Tui routing received a frame for a different element tree');
     end;
@@ -92,7 +92,7 @@ end procedure;
 // - `Node`: Element or menu node processed by the operation.
 public function TuiFocusableControls(Node: Element.TuiElement): array of (ControlId.TuiControlId);
 begin
-  mutable var Descendants: array of (Element.TuiElement) := [];
+  var Descendants: array of (Element.TuiElement) := [];
   case Node of
     when Element.TuiElement.Button(const Button):
       begin
@@ -128,7 +128,7 @@ begin
       end;
     when Element.TuiElement.Scroll(const Id, const Offset, const ChangeAction, const Children):
       begin
-        mutable var Controls: array of (ControlId.TuiControlId) := [Id];
+        var Controls: array of (ControlId.TuiControlId) := [Id];
         for Index: integer := 0 to Arrays.Length(Children) - 1 do
           begin
             Controls := Arrays.Concat(Controls, TuiFocusableControls(Children[Index]));
@@ -139,7 +139,7 @@ begin
       end;
     when Element.TuiElement.MenuBar(const Items):
       begin
-        mutable var Controls: array of (ControlId.TuiControlId) := [];
+        var Controls: array of (ControlId.TuiControlId) := [];
         for Index: integer := 0 to Arrays.Length(Items) - 1 do
           begin
             if Items[Index].Enabled then
@@ -154,7 +154,7 @@ begin
       end;
     when Element.TuiElement.StatusLine(const Items):
       begin
-        mutable var Controls: array of (ControlId.TuiControlId) := [];
+        var Controls: array of (ControlId.TuiControlId) := [];
         for Index: integer := 0 to Arrays.Length(Items) - 1 do
           begin
             case Items[Index] of
@@ -200,7 +200,7 @@ begin
       end;
     when Element.TuiElement.Desktop(const Focused, const Children):
       begin
-        mutable var LastOverlay: integer := -1;
+        var LastOverlay: integer := -1;
         for Index: integer := 0 to Arrays.Length(Children) - 1 do
           begin
             case Children[Index] of
@@ -224,7 +224,7 @@ begin
           end;
         else
           begin
-            mutable var Controls: array of (ControlId.TuiControlId) := [];
+            var Controls: array of (ControlId.TuiControlId) := [];
             for Index: integer := 0 to Arrays.Length(Children) - 1 do
               begin
                 Controls := Arrays.Concat(Controls, TuiFocusableControls(Children[Index]));
@@ -242,7 +242,7 @@ begin
         end;
       end;
   end case;
-  mutable var Controls: array of (ControlId.TuiControlId) := [];
+  var Controls: array of (ControlId.TuiControlId) := [];
   for Index: integer := 0 to Arrays.Length(Descendants) - 1 do
     begin
       Controls := Arrays.Concat(Controls, TuiFocusableControls(Descendants[Index]));

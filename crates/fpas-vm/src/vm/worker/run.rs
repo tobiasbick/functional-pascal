@@ -18,6 +18,7 @@ impl Worker {
                 .as_ref()
                 .is_some_and(|scheduler| scheduler.is_aborted())
             {
+                self.reference_scopes.clear();
                 return Ok(None);
             }
             let scheduled = self.task_id != 0;
@@ -54,6 +55,7 @@ impl Worker {
                 .as_ref()
                 .is_some_and(|scheduler| scheduler.is_aborted())
             {
+                self.reference_scopes.clear();
                 return Err(diagnostics::at_address(
                     self.executable.executable(),
                     self.current_address,
@@ -65,6 +67,7 @@ impl Worker {
             match self.dispatch_batch::<false>(ABORT_CHECK_INTERVAL)?.step {
                 DispatchStep::Continue => {}
                 DispatchStep::Suspend => {
+                    self.reference_scopes.clear();
                     return Err(diagnostics::internal(
                         self.executable.executable(),
                         self.current_address,

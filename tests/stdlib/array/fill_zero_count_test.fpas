@@ -4,6 +4,6 @@ uses Std.Console as Console;
 uses Std.Arrays as Arrays;
 
 begin
-  var A: array of (integer) := Arrays.Fill(7, 0);
+  const A: array of (integer) := Arrays.Fill(7, 0);
   Console.WriteLn(Arrays.Length(A));
 end program;

@@ -13,11 +13,15 @@ impl Parser {
     /// requiring `(` immediately after `function` / `procedure`.
     pub(super) fn parse_closure_expr(&mut self) -> Expr {
         let start = self.current_span();
+        let pure = self.eat(&Token::Pure);
+        if pure && !self.check(&Token::Function) {
+            self.expect(&Token::Function);
+        }
         let is_function = self.check(&Token::Function);
         self.advance(); // function | procedure
 
         self.expect(&Token::LParen);
-        let params = self.parse_formal_param_list(false);
+        let params = self.parse_formal_param_list();
         self.expect(&Token::RParen);
 
         let return_type = if is_function {
@@ -33,6 +37,7 @@ impl Parser {
             &Token::Procedure
         });
         Expr::Closure(Box::new(ClosureExpr {
+            pure,
             is_function,
             params,
             return_type,
@@ -52,7 +57,8 @@ impl Parser {
 
     /// True when the current token starts an anonymous routine expression.
     pub(in crate::parser) fn at_closure_expr_start(&self) -> bool {
-        matches!(self.current_token(), Token::Function | Token::Procedure)
-            && self.peek_token() == &Token::LParen
+        self.check(&Token::Pure)
+            || (matches!(self.current_token(), Token::Function | Token::Procedure)
+                && self.peek_token() == &Token::LParen)
     }
 }

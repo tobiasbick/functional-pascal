@@ -11,7 +11,7 @@ pub enum SymbolKind {
     Program,
     /// Unit compilation-unit declaration.
     Unit,
-    /// Compile-time constant.
+    /// Immutable const binding, including computed initializers.
     Constant,
     /// Immutable variable.
     Variable,
@@ -25,18 +25,12 @@ pub enum SymbolKind {
     Function,
     /// Procedure declaration.
     Procedure,
-    /// Record method declaration.
-    Method,
     /// Generic routine type parameter.
     TypeParameter,
     /// Formal routine or closure parameter.
     Parameter,
     /// Record field.
     Field,
-    /// Record computed property.
-    Property,
-    /// Record event.
-    Event,
     /// Enum member.
     EnumMember,
     /// Loop-local binding.
@@ -109,6 +103,11 @@ impl DocumentSymbols {
         let mut symbols = Self::from_snapshot(snapshot);
         super::intrinsic_api::add_registry_symbols(snapshot, &mut symbols);
         symbols
+    }
+
+    /// Fill inferred local binding details using checked declaration metadata.
+    pub(crate) fn apply_binding_types(&mut self, types: &fpas_sema::BindingTypeMap) {
+        super::inference::apply(self, types);
     }
 
     /// Returns the program or unit owner name.

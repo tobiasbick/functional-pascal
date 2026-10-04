@@ -58,7 +58,7 @@ program Demo;
 uses Std.Console as Console;
 
 begin
-  var E: Console.KeyEvent := Console.ReadKeyEvent();
+  const E: Console.KeyEvent := Console.ReadKeyEvent();
   if E.kind = Console.KeyKind.Escape then
     Console.WriteLn('escape');
   else
@@ -120,7 +120,7 @@ The language represents the underlying ordinal as an integer index in the **fixe
 ```pascal
 uses Std.Console as Console;
 
-var K: Console.KeyKind := Console.KeyKind.Space;
+const K: Console.KeyKind := Console.KeyKind.Space;
 if K = Console.KeyKind.F1 then
   Console.WriteLn('F1');
 end if;

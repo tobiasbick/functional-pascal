@@ -25,8 +25,8 @@ end function;
 
 function RunCalls(Iterations: integer): integer;
 begin
-  var AddCaptured: function(Value: integer): integer := MakeAdder(1);
-  mutable var Value: integer := 0;
+  const AddCaptured: function(Value: integer): integer := MakeAdder(1);
+  var Value: integer := 0;
   for Index: integer := 1 to Iterations do
     begin
       Value := Increment(Value);
@@ -43,13 +43,13 @@ begin
       panic('usage: function_call_benchmark.fpas -- ITERATIONS [MAX_MILLIS]');
     end;
   end if;
-  var Iterations: integer := Conv.StrToInt(Args.ParamStr(0));
+  const Iterations: integer := Conv.StrToInt(Args.ParamStr(0));
   if Iterations < 1 then
     begin
       panic('ITERATIONS must be positive');
     end;
   end if;
-  mutable var MaxMillis: integer := 0;
+  var MaxMillis: integer := 0;
   if Args.ParamCount() = 2 then
     begin
       MaxMillis := Conv.StrToInt(Args.ParamStr(1));
@@ -60,12 +60,12 @@ begin
       end if;
     end;
   end if;
-  mutable var Value: integer := RunCalls(WarmupIterations);
-  var Started: integer := Time.MonotonicMillis();
+  var Value: integer := RunCalls(WarmupIterations);
+  const Started: integer := Time.MonotonicMillis();
   Value := RunCalls(Iterations);
-  var Elapsed: integer := Time.ElapsedMillis(Started);
-  var Calls: integer := Iterations * 2;
-  mutable var OpsPerSecond: integer := 0;
+  const Elapsed: integer := Time.ElapsedMillis(Started);
+  const Calls: integer := Iterations * 2;
+  var OpsPerSecond: integer := 0;
   if Elapsed > 0 then
     begin
       OpsPerSecond := (Calls * 1000) div Elapsed;

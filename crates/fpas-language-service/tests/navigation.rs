@@ -18,18 +18,18 @@ fn document_symbols_cover_roots_types_routines_parameters_members_and_variables(
 
 type Point = record
   public X: integer;
-  property LabelText: string read GetLabel;
-end;
+  LabelText: string;
+end record;
 
 function Add(Value: integer): integer;
 begin
-  var Local: integer := Value;
-  return Local
-end;
+  const Local: integer := Value;
+  return Local;
+end function;
 
 begin
-  mutable var Current: integer := 1
-end.
+   var Current: integer := 1;
+end program;
 "#;
     let path = temp.write("symbols.fpas", source);
     let mut service = LanguageService::new(WorkspaceContext::loose(temp.path()));
@@ -42,11 +42,11 @@ end.
     let point = child(root, "Point");
     assert_eq!(point.kind, SymbolKind::Type);
     assert_eq!(child(point, "X").kind, SymbolKind::Field);
-    assert_eq!(child(point, "LabelText").kind, SymbolKind::Property);
+    assert_eq!(child(point, "LabelText").kind, SymbolKind::Field);
     let add = child(root, "Add");
     assert_eq!(add.kind, SymbolKind::Function);
     assert_eq!(child(add, "Value").kind, SymbolKind::Parameter);
-    assert_eq!(child(add, "Local").kind, SymbolKind::Variable);
+    assert_eq!(child(add, "Local").kind, SymbolKind::Constant);
     assert_eq!(child(root, "Current").kind, SymbolKind::MutableVariable);
     for symbol in all_symbols(root) {
         assert_eq!(
@@ -63,19 +63,19 @@ fn hover_and_definition_follow_lexical_shadowing_and_ignore_non_identifiers() {
     let temp = TempDirectory::new("navigation-local");
     let source = r#"program Local;
 
- var Value: integer := 1;
+ const Value: integer := 1;
 
 // Reads a value with **local** shadowing.
 function ReadValue(Value: integer): integer;
 begin
-  var Other: integer := Value;
+  const Other: integer := Value;
   return Other;
 end function;
 
 begin
   // Value in a comment
-  var Text: string := 'Value';
-  var Output: integer := ReadValue(Value);
+  const Text: string := 'Value';
+  const Output: integer := ReadValue(Value);
 end program;
 "#;
     let path = temp.write("local.fpas", source);
@@ -149,11 +149,11 @@ end unit;
 uses Demo.Math as Math;
 
 begin
-  var A: integer := Math.Answer();
-  var B: integer := Math.Answer();
-  var P: Math.Point := Math.Point(X := 0);
-  var C: integer := P.X;
-  var D: integer := Hidden();
+  const A: integer := Math.Answer();
+  const B: integer := Math.Answer();
+  const P: Math.Point := Math.Point(X := 0);
+  const C: integer := P.X;
+  const D: integer := Hidden();
 end program;
 "#;
     std::fs::write(&main, main_source).expect("replace main fixture");
@@ -428,7 +428,7 @@ include = ["src/**/*.fpas"]
 uses Demo.Internal as Internal;
 
 begin
-  var Value: integer := Internal.Hidden();
+  const Value: integer := Internal.Hidden();
 end program;
 "#,
     );

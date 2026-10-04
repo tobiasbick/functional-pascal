@@ -13,15 +13,15 @@ begin
       panic('expected ITERATIONS SIZE');
     end;
   end if;
-  var Iterations: integer := Conv.StrToInt(Args.ParamStr(0));
-  var Size: integer := Conv.StrToInt(Args.ParamStr(1));
+  const Iterations: integer := Conv.StrToInt(Args.ParamStr(0));
+  const Size: integer := Conv.StrToInt(Args.ParamStr(1));
   if (Iterations < 1) or (Size < 1) then
     begin
       panic('arguments must be positive');
     end;
   end if;
-  var Values: array of (integer) := Arrays.Fill(7, Size);
-  var Started: integer := Time.MonotonicMillis();
+  const Values: array of (integer) := Arrays.Fill(7, Size);
+  const Started: integer := Time.MonotonicMillis();
   for Iteration: integer := 1 to Iterations do
     begin
       if Arrays.Contains(Values, 8) then

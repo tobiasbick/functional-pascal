@@ -7,14 +7,14 @@
 mod api;
 mod builtins;
 mod loaded;
-mod receiver;
+mod type_support;
+pub(crate) use type_support::intrinsic_type;
 
 pub use api::{
     IntrinsicStdSymbol, IntrinsicStdSymbolKind, intrinsic_std_symbols, intrinsic_std_units,
 };
-pub use builtins::{check_builtin_std_call, check_builtin_std_call_refs};
+pub use builtins::check_builtin_std_call;
 pub use loaded::{register_loaded_std, register_single_std_unit};
-pub(crate) use receiver::builtin_accepts_receiver;
 
 use crate::check::Checker;
 use crate::scope::{Symbol, SymbolKind};
@@ -33,6 +33,7 @@ fn define_func(c: &mut Checker, q: &str, params: Vec<ParamTy>, ret: Ty) {
         q,
         Symbol {
             ty: Ty::Function(FunctionTy {
+                pure: fpas_std::intrinsic_std_function_is_pure(q),
                 type_params: Vec::new(),
                 params,
                 return_type: Box::new(ret),
@@ -50,6 +51,7 @@ fn define_func_variadic(c: &mut Checker, q: &str, params: Vec<ParamTy>, ret: Ty)
         q,
         Symbol {
             ty: Ty::Function(FunctionTy {
+                pure: fpas_std::intrinsic_std_function_is_pure(q),
                 type_params: Vec::new(),
                 params,
                 return_type: Box::new(ret),
@@ -106,7 +108,10 @@ fn define_const(c: &mut Checker, q: &str, ty: Ty) {
     );
 }
 
-fn define_builtin_std(c: &mut Checker, q: &str, placeholder: Ty) {
+fn define_builtin_std(c: &mut Checker, q: &str, mut placeholder: Ty) {
+    if let Ty::Function(function) = &mut placeholder {
+        function.pure = fpas_std::intrinsic_std_function_is_pure(q);
+    }
     c.scopes.define(
         q,
         Symbol {

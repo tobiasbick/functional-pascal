@@ -7,6 +7,7 @@ license.workspace = true
 repository.workspace = true
 
 [dependencies]
+fpas-bytecode = { path = "../fpas-bytecode" }
 fpas-diagnostics = { path = "../fpas-diagnostics" }
 fpas-ir = { path = "../fpas-ir" }
 fpas-lexer = { path = "../fpas-lexer" }

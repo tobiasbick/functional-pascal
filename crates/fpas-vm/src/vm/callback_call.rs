@@ -9,7 +9,6 @@ use super::worker::Worker;
 use super::{VmError, diagnostics};
 
 struct CallbackInputs<'a> {
-    bound_receiver: Option<&'a Value>,
     arguments: &'a [Value],
     captures: &'a [Value],
 }
@@ -64,15 +63,7 @@ impl Worker {
                     "Callback target is outside the function table",
                 )
             })?;
-        let visible_arity = usize::from(info.arity)
-            .checked_sub(usize::from(function.bound_receiver.is_some()))
-            .ok_or_else(|| {
-                diagnostics::internal(
-                    self.executable.executable(),
-                    self.current_address,
-                    "Bound callback target has no receiver parameter",
-                )
-            })?;
+        let visible_arity = usize::from(info.arity);
         if argument_count != visible_arity {
             return Err(diagnostics::at_address(
                 self.executable.executable(),
@@ -102,7 +93,6 @@ impl Worker {
                 info.code.start,
                 info.register_count,
                 CallbackInputs {
-                    bound_receiver: function.bound_receiver.as_ref(),
                     arguments,
                     captures: &function.captures,
                 },
@@ -110,16 +100,10 @@ impl Worker {
             )?;
             callback
         } else {
-            let call_arguments = function
-                .bound_receiver
-                .iter()
-                .chain(arguments)
-                .cloned()
-                .collect::<Vec<_>>();
             let mut callback = Self::for_function_with_captures(
                 Arc::clone(&self.executable),
                 target,
-                &call_arguments,
+                arguments,
                 &function.captures,
                 Arc::clone(&self.globals),
                 Arc::clone(&self.layouts),
@@ -148,6 +132,12 @@ impl Worker {
         inputs: CallbackInputs<'_>,
         task_id: u64,
     ) -> Result<(), VmError> {
+        self.reference_scopes.clear();
+        let references =
+            self.activate_reference_arguments(target, inputs.arguments, inputs.captures)?;
+        for reference in references {
+            self.reference_scopes.reserve(reference);
+        }
         self.function = target;
         self.ip = usize::try_from(start.get()).map_err(|_| {
             diagnostics::internal(
@@ -158,13 +148,7 @@ impl Worker {
         })?;
         self.base = 0;
         self.reset_registers(usize::from(register_count));
-        for (index, value) in inputs
-            .bound_receiver
-            .into_iter()
-            .chain(inputs.arguments)
-            .chain(inputs.captures)
-            .enumerate()
-        {
+        for (index, value) in inputs.arguments.iter().chain(inputs.captures).enumerate() {
             self.store_register(index, value.clone())?;
         }
         self.call_stack.clear();

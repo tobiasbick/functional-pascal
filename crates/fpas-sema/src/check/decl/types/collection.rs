@@ -61,6 +61,21 @@ impl Checker {
             for (key, span) in std::mem::take(&mut self.type_collection.dictionary_keys) {
                 self.check_dictionary_key_type(&key, span);
             }
+            for declaration in declarations {
+                let Decl::TypeDef(definition) = declaration else {
+                    continue;
+                };
+                if !self.has_collected_type(definition) {
+                    continue;
+                }
+                let Some(symbol) = self.scopes.lookup_root(&definition.name) else {
+                    continue;
+                };
+                let ty = symbol.ty.clone();
+                self.with_type_params(&definition.type_params, definition.span, |checker| {
+                    checker.check_nested_pure_signatures(&ty, definition.span);
+                });
+            }
         }
         self.validate_finite_type_headers(declarations);
     }
@@ -128,21 +143,9 @@ impl TypeCollection {
     pub(in crate::check) fn pending_type_params(
         &self,
         name: &str,
-    ) -> Option<Vec<crate::types::GenericParamDef>> {
+    ) -> Option<&[fpas_parser::TypeParam]> {
         self.pending
             .get(&name.to_ascii_lowercase())
-            .map(|definition| {
-                definition
-                    .type_params
-                    .iter()
-                    .map(|parameter| crate::types::GenericParamDef {
-                        name: parameter.name.clone(),
-                        constraint: parameter
-                            .constraint
-                            .as_deref()
-                            .and_then(crate::types::TypeConstraint::from_name),
-                    })
-                    .collect()
-            })
+            .map(|definition| definition.type_params.as_slice())
     }
 }

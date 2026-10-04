@@ -6,9 +6,9 @@ type Point = record
 end record;
 
 begin
-  var A: Point := Point(X := 3, Y := 4);
-  var B: Point := Point(X := 10, Y := 20);
-  var UpdatedB: Point := B with X := 11; end with;
+  const A: Point := Point(X := 3, Y := 4);
+  const B: Point := Point(X := 10, Y := 20);
+  const UpdatedB: Point := B with X := 11; end with;
 
   A.Print();
   if Ready then
@@ -20,7 +20,7 @@ begin
   if NeedsCount then
     Prepare();
   end if;
-  var Count: integer := 1;
+  const Count: integer := 1;
   WriteLn(Count);
   if Done then
     Finish();

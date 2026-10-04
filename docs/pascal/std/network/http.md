@@ -7,9 +7,11 @@ An HTTP/1.1 and HTTPS client plus bounded HTTP/1.x server helpers, implemented i
 
 | Kind | Name | Notes |
 |------|------|-------|
-| type | `Header` | field `Name`, field `Value`, and `Create` constructor |
+| type | `Header` | fields `Name` and `Value` |
+| function | `HeaderCreate(Name; Value)` | constructs a header |
 | type | `Request` | method, URL, headers, byte body, timeout, header/response limits, and redirect limit |
-| static function | `Request.Get/Post/Put/Patch/Delete/Head/Options(Url)` | standard-method request constructors |
+| function | `RequestCreate(Method; Url)` | constructs a request with default limits |
+| function | `RequestGet`, `RequestPost`, `RequestPut`, `RequestPatch`, `RequestDelete`, `RequestHead`, `RequestOptions` | standard-method request constructors; each takes `Url` |
 | type | `Response` | status, reason, headers, and byte body |
 | function | `Send(Request): Result of (Response, string)` | sends and buffers one response |
 | type | `StreamResponse` | status, reason, headers, and a `BodyStream` handle |
@@ -23,8 +25,10 @@ An HTTP/1.1 and HTTPS client plus bounded HTTP/1.x server helpers, implemented i
 | function | `HeaderValue(Response; Name: string): Option of (string)` | case-insensitive first match |
 | function | `BodyText(Response): Result of (string, string)` | validated UTF-8 decoding |
 | type | `ServerRequest` | accepted method, origin-form target, headers, and body |
-| type | `ServerResponse` | status, reason, headers, body, and `Create` constructor |
+| type | `ServerResponse` | status, reason, headers and body |
+| function | `ServerResponseCreate(StatusCode; ReasonPhrase)` | constructs a server response |
 | type | `ServerOptions` | request limits, connection timeout, concurrency, and optional request count |
+| function | `ServerOptionsCreate()` | supplies default server limits |
 | type | `RequestHandler` | maps one `ServerRequest` to one `ServerResponse` |
 | function | `ReadRequest(Connection; MaxHeaderBytes; MaxBodyBytes)` | reads one bounded request |
 | function | `WriteResponse(Connection; ServerResponse)` | writes one complete response |
@@ -36,9 +40,10 @@ Create a request with defaults, then replace the fields needed by the caller:
 uses Std.Console as Console;
 uses Std.Http as Http;
 uses Std.Net as Net;
+uses Std.Net.Utf8 as Utf8;
 
-mutable var RequestValue: Http.Request := Http.Request.Create('POST', 'http://127.0.0.1:8080/v1/items');
-RequestValue.Headers := [Http.Header.Create('Content-Type', 'application/json')];
+ var RequestValue: Http.Request := Http.RequestCreate('POST', 'http://127.0.0.1:8080/v1/items');
+RequestValue.Headers := [Http.HeaderCreate('Content-Type', 'application/json')];
 RequestValue.Body := Utf8.Encode('{"name":"example"}');
 case Http.Send(RequestValue) of
   when Result.Ok(const ResponseValue):
@@ -53,28 +58,32 @@ Standard methods have short constructors:
 ```pascal
 uses Std.Http as Http;
 uses Std.Net as Net;
+uses Std.Net.Utf8 as Utf8;
 
-var GetRequest: Http.Request := Http.Request.Get('http://127.0.0.1:8080/items');
-mutable var PutRequest: Http.Request := Http.Request.Put('http://127.0.0.1:8080/items/42');
+const GetRequest: Http.Request := Http.RequestGet('http://127.0.0.1:8080/items');
+ var PutRequest: Http.Request := Http.RequestPut('http://127.0.0.1:8080/items/42');
 PutRequest.Body := Utf8.Encode('{"name":"updated"}');
 ```
 
-Alias-qualified calls thread the request and the explicit `Result` through
-`Http.Send` and `Results.AndThen` without unwrapping implicitly:
+An ordinary function can propagate request failures with `try` before decoding
+the response body:
 
 ```pascal
 uses Std.Http as Http;
-uses Std.Results as Results;
 
-var TextResult: result of (string, string) := Results.AndThen(Http.Send(Http.Request.Get('https://example.test/items')), Http.BodyText);
+function FetchText(Url: string): Result of (string, string);
+begin
+  const ResponseValue: Http.Response := try Http.Send(Http.RequestGet(Url));
+  return Http.BodyText(ResponseValue);
+end function;
 ```
 
 `Method` deliberately remains a string so extension methods are not excluded. For example, a
-WebDAV request can use `Request.Create('PROPFIND', 'http://127.0.0.1:8080/documents')`. Method names
+WebDAV request can use `RequestCreate('PROPFIND', 'http://127.0.0.1:8080/documents')`. Method names
 must be non-empty RFC 9110 tokens; whitespace, control characters, and token separators are rejected
 before a connection is opened.
 
-`Request.Create` defaults to a 30-second timeout, a 64 KiB response-head limit, a 16 MiB maximum
+`RequestCreate` defaults to a 30-second timeout, a 64 KiB response-head limit, a 16 MiB maximum
 response, and five redirects. Set `MaxHeaderBytes`, `MaxResponseBytes`, or `MaxRedirects` on the
 request to tighten those limits. Requests write `Host`, `Content-Length`, and `Connection: close`;
 callers cannot override those fields or `Transfer-Encoding`. Invalid header-name tokens and control
@@ -112,10 +121,10 @@ Independent streams may be opened and consumed by different tasks. Calls that mu
 uses Std.Http as Http;
 uses Std.Arrays as Arrays;
 
-case Http.OpenStream(Http.Request.Get('https://example.test/events')) of
+case Http.OpenStream(Http.RequestGet('https://example.test/events')) of
   when Result.Ok(const ResponseValue):
     begin
-      mutable var Reading: boolean := true;
+       var Reading: boolean := true;
       while Reading do
         begin
           case Http.ReadStream(ResponseValue.Body, 4096) of
@@ -192,7 +201,7 @@ uses Std.Net.Utf8 as Utf8;
               case Http.ReadRequest(Connection, 65536, 1048576) of
                 when Result.Ok(const RequestValue):
                   begin
-                    mutable var ResponseValue: Http.ServerResponse := Http.ServerResponse.Create(200, 'OK');
+                     var ResponseValue: Http.ServerResponse := Http.ServerResponseCreate(200, 'OK');
                     ResponseValue.Body := Utf8.Encode('Hello');
                     case Http.WriteResponse(Connection, ResponseValue) of
                       when Result.Ok(_):
@@ -238,7 +247,7 @@ uses Std.Net.Utf8 as Utf8;
 
 function Handle(RequestValue: Http.ServerRequest): Http.ServerResponse;
 begin
-  mutable var ResponseValue: Http.ServerResponse := Http.ServerResponse.Create(200, 'OK');
+   var ResponseValue: Http.ServerResponse := Http.ServerResponseCreate(200, 'OK');
   ResponseValue.Body := Utf8.Encode('Path: ' + RequestValue.Target);
   return ResponseValue;
 end function;
@@ -246,7 +255,7 @@ end function;
   case Net.Listen('127.0.0.1', 8080) of
     when Result.Ok(const ListenerValue):
       begin
-        mutable var Options: Http.ServerOptions := Http.ServerOptions.Create();
+         var Options: Http.ServerOptions := Http.ServerOptionsCreate();
         Options.MaxConcurrentRequests := 16;
         case Http.Serve(ListenerValue, Options, Handle) of
           when Result.Ok(_):
@@ -262,7 +271,7 @@ end function;
   end case;
 ```
 
-`ServerOptions.Create` defaults to a 64 KiB request-head limit, a 1 MiB request-body limit, a
+`ServerOptionsCreate` defaults to a 64 KiB request-head limit, a 1 MiB request-body limit, a
 30-second connection timeout, and eight concurrent requests. `MaxRequests = 0` keeps accepting;
 a positive value returns after that many accepted connections. `MaxConcurrentRequests` sets the
 batch size. Each connection runs on a `go` task, so handlers must obey the normal task-transfer
@@ -284,7 +293,7 @@ uses Std.Net as Net;
 case Net.ListenTls('127.0.0.1', 8443, 'certificate.pem', 'private-key.pem', 10000) of
   when Result.Ok(const ListenerValue):
     begin
-      mutable var Options: Http.ServerOptions := Http.ServerOptions.Create();
+       var Options: Http.ServerOptions := Http.ServerOptionsCreate();
       case Http.Serve(ListenerValue, Options, Handle) of
         when Result.Ok(_):
           begin

@@ -297,17 +297,17 @@ fn grouped_names_teach_one_declaration_per_name() {
     for (name, source, example) in [
         (
             "variable",
-            "program P; var A, B: integer := 1; begin null; end program;",
+            r#"program P; var A, B: integer := 1; begin null; end program;"#,
             "`var A: integer := 0; var B: integer := 0;`",
         ),
         (
             "constant",
             "program P; const A, B: integer := 1; begin null; end program;",
-            "`var A: integer := 0; var B: integer := 0;`",
+            "`const A: integer := 0; const B: integer := 0;`",
         ),
         (
             "local variable",
-            "program P; begin var A, B, C: integer := 1; end program;",
+            r#"program P; begin var A, B, C: integer := 1; end program;"#,
             "`var A: integer := 0; var B: integer := 0; var C: integer := 0;`",
         ),
         (

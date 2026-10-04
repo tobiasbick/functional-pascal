@@ -5,7 +5,7 @@
 mod symbols;
 mod units;
 
-pub use symbols::std_symbols;
+pub use symbols::{intrinsic_std_constant_value, intrinsic_std_function_is_pure, std_symbols};
 pub use units::{
     STD_ROOT_SEGMENT, STD_UNIT_ARGS, STD_UNIT_ARRAY, STD_UNIT_BITS, STD_UNIT_CONSOLE,
     STD_UNIT_CONV, STD_UNIT_CRYPTO, STD_UNIT_DICT, STD_UNIT_ENV, STD_UNIT_FS, STD_UNIT_JSON,

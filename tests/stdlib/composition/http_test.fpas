@@ -1,0 +1,57 @@
+program HttpCompositionTest;
+
+uses Std.Conv as Conv;
+uses Std.Http as Http;
+uses Std.Net as Net;
+uses Std.Net.Utf8 as Utf8;
+uses Std.Results as Results;
+uses Std.Tasks as Tasks;
+uses Std.Test as Test;
+
+function FetchText(Url: string): Result of (string, string);
+begin
+  const ResponseValue: Http.Response := try Http.Send(Http.RequestGet(Url));
+  return Http.BodyText(ResponseValue);
+end function;
+
+function Handle(RequestValue: Http.ServerRequest): Http.ServerResponse;
+begin
+  var ResponseValue: Http.ServerResponse := Http.ServerResponseCreate(200, 'OK');
+  if (RequestValue.Method <> 'GET') or (RequestValue.Target <> '/fluent') then
+    begin
+      ResponseValue.Body := Utf8.Encode('unexpected request');
+      return ResponseValue;
+    end;
+  end if;
+
+  ResponseValue.Body := Utf8.Encode('hello fluent');
+  return ResponseValue;
+end function;
+
+function ExerciseHttp(): Result of (boolean, string);
+begin
+  const ListenerValue: Net.Listener := try Net.Listen('127.0.0.1', 0);
+  const Address: Net.NetworkAddress := try Net.ListenerLocalAddress(ListenerValue);
+  var Options: Http.ServerOptions := Http.ServerOptionsCreate();
+  Options.MaxRequests := 1;
+  const ServerTask: task := go Http.Serve(ListenerValue, Options, Handle);
+  const Url: string := ('http://127.0.0.1:' + Conv.IntToStr(Address.Port)) + '/fluent';
+  const Text: string := try FetchText(Url);
+  Test.AssertEquals('hello fluent', Text);
+  const Served: boolean := try Tasks.Wait(ServerTask);
+  const Closed: boolean := try Net.CloseListener(ListenerValue);
+  return Result.Ok(Served and Closed);
+end function;
+
+begin
+  case ExerciseHttp() of
+    when Result.Ok(const Succeeded):
+      begin
+        Test.AssertTrue(Succeeded);
+      end;
+    when Result.Error(const Message):
+      begin
+        Test.Fail(Message);
+      end;
+  end case;
+end program;

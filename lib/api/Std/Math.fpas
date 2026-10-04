@@ -10,7 +10,7 @@ public const Pi: real := 0.0;
 //
 // Parameters:
 // - `N`: Input value used by `Abs`.
-public function Abs of (T)(N: T): T;
+public pure function Abs of (T)(N: T): T;
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -19,7 +19,7 @@ end function;
 //
 // Parameters:
 // - `R`: `real` input value used by `ArcCos`.
-public function ArcCos(R: real): real;
+public pure function ArcCos(R: real): real;
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -28,7 +28,7 @@ end function;
 //
 // Parameters:
 // - `R`: `real` input value used by `ArcSin`.
-public function ArcSin(R: real): real;
+public pure function ArcSin(R: real): real;
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -37,7 +37,7 @@ end function;
 //
 // Parameters:
 // - `R`: `real` input value used by `ArcTan`.
-public function ArcTan(R: real): real;
+public pure function ArcTan(R: real): real;
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -56,7 +56,7 @@ end function;
 //
 // Parameters:
 // - `R`: `real` input value used by `Ceil`.
-public function Ceil(R: real): integer;
+public pure function Ceil(R: real): integer;
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -67,7 +67,7 @@ end function;
 // - `V`: Input value used by `Clamp`.
 // - `Lo`: Input value used by `Clamp`.
 // - `Hi`: Input value used by `Clamp`.
-public function Clamp of (T)(V: T; Lo: T; Hi: T): T;
+public pure function Clamp of (T)(V: T; Lo: T; Hi: T): T;
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -76,7 +76,7 @@ end function;
 //
 // Parameters:
 // - `R`: `real` input value used by `Cos`.
-public function Cos(R: real): real;
+public pure function Cos(R: real): real;
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -85,7 +85,7 @@ end function;
 //
 // Parameters:
 // - `R`: `real` input value used by `Exp`.
-public function Exp(R: real): real;
+public pure function Exp(R: real): real;
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -94,7 +94,7 @@ end function;
 //
 // Parameters:
 // - `R`: `real` input value used by `Floor`.
-public function Floor(R: real): integer;
+public pure function Floor(R: real): integer;
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -103,7 +103,7 @@ end function;
 //
 // Parameters:
 // - `R`: `real` input value used by `Frac`.
-public function Frac(R: real): real;
+public pure function Frac(R: real): real;
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -112,7 +112,7 @@ end function;
 //
 // Parameters:
 // - `R`: `real` input value used by `Log`.
-public function Log(R: real): real;
+public pure function Log(R: real): real;
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -140,7 +140,7 @@ end function;
 // Parameters:
 // - `A`: Input value used by `Max`.
 // - `B`: Input value used by `Max`.
-public function Max of (T)(A: T; B: T): T;
+public pure function Max of (T)(A: T; B: T): T;
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -150,7 +150,7 @@ end function;
 // Parameters:
 // - `A`: Input value used by `Min`.
 // - `B`: Input value used by `Min`.
-public function Min of (T)(A: T; B: T): T;
+public pure function Min of (T)(A: T; B: T): T;
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -160,7 +160,7 @@ end function;
 // Parameters:
 // - `Base`: `real` input value used by `Pow`.
 // - `Exp`: `real` input value used by `Pow`.
-public function Pow(Base: real; Exp: real): real;
+public pure function Pow(Base: real; Exp: real): real;
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -169,7 +169,7 @@ end function;
 //
 // Parameters:
 // - `R`: `real` input value used by `Round`.
-public function Round(R: real): integer;
+public pure function Round(R: real): integer;
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -178,7 +178,7 @@ end function;
 //
 // Parameters:
 // - `N`: Input value used by `Sign`.
-public function Sign of (T)(N: T): integer;
+public pure function Sign of (T)(N: T): integer;
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -187,7 +187,7 @@ end function;
 //
 // Parameters:
 // - `R`: `real` input value used by `Sin`.
-public function Sin(R: real): real;
+public pure function Sin(R: real): real;
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -196,7 +196,7 @@ end function;
 //
 // Parameters:
 // - `R`: `real` input value used by `Sqrt`.
-public function Sqrt(R: real): real;
+public pure function Sqrt(R: real): real;
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -205,7 +205,7 @@ end function;
 //
 // Parameters:
 // - `R`: `real` input value used by `Tan`.
-public function Tan(R: real): real;
+public pure function Tan(R: real): real;
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -214,7 +214,7 @@ end function;
 //
 // Parameters:
 // - `R`: `real` input value used by `Trunc`.
-public function Trunc(R: real): integer;
+public pure function Trunc(R: real): integer;
 begin
   panic('Intrinsic API declaration');
 end function;

@@ -1,7 +1,8 @@
 //! Emission for [`Expr::Postfix`] chains.
 //!
 //! Compact chains stay on one line. When the rendered chain exceeds the formatter width limit,
-//! break before each suffix and indent continuations by two spaces from the expression base column.
+//! break before each suffix, keeping a field's invocation attached, and indent continuations
+//! by two spaces from the expression base column.
 //!
 //! **Documentation:** `docs/pascal/tools/fmt-style.md`
 
@@ -12,7 +13,7 @@ use crate::comments::CommentMap;
 use super::super::wrap::{exceeds_width, measure_emit, text_width};
 use super::{Emitter, emit_arg_list, emit_expr, emit_expr_impl};
 
-/// Emit `base` followed by each `.Field`, `[index]`, or `.Method(args)` suffix.
+/// Emit `base` followed by each `.Field`, `[index]`, or `(args)` suffix.
 pub(super) fn emit_postfix(
     emitter: &mut Emitter,
     base: &Expr,
@@ -53,9 +54,14 @@ fn emit_postfix_wrapped(
 ) {
     emit_expr_impl(emitter, base, 0, false, comments);
     let indent = " ".repeat(base_column.saturating_add(2));
-    for op in operations {
-        emitter.write("\n");
-        emitter.write(&indent);
+    for (index, op) in operations.iter().enumerate() {
+        let field_call = matches!(op, PostfixOperation::Call { .. })
+            && index > 0
+            && matches!(operations[index - 1], PostfixOperation::Field { .. });
+        if !field_call {
+            emitter.write("\n");
+            emitter.write(&indent);
+        }
         emit_postfix_operation(emitter, op, comments);
     }
 }
@@ -75,13 +81,6 @@ fn emit_postfix_operation(emitter: &mut Emitter, op: &PostfixOperation, comments
             emitter.write("[");
             emit_expr(emitter, index, 0, comments);
             emitter.write("]");
-        }
-        PostfixOperation::MethodCall { name, args, .. } => {
-            emitter.write(".");
-            emitter.write(name);
-            emitter.write("(");
-            emit_arg_list(emitter, args, comments);
-            emitter.write(")");
         }
     }
 }

@@ -1,8 +1,8 @@
 //! Individual declaration emission (const, var, type, routines).
 
 use fpas_parser::{
-    ConstDef, Decl, EnumMember, EnumType, FieldDef, FuncBody, FunctionDecl, ProcedureDecl,
-    RecordEvent, RecordMethod, RecordProperty, RecordType, TypeBody, TypeDef, VarDef, Visibility,
+    BindingDef, Decl, EnumMember, EnumType, FieldDef, FuncBody, FunctionDecl, ProcedureDecl,
+    RecordType, TypeBody, TypeDef, Visibility,
 };
 
 use crate::comments::{CommentMap, emit_leading_comments, emit_trailing_comments};
@@ -15,9 +15,8 @@ use super::super::types::{emit_formal_params_in_parens, emit_type_expr, format_t
 pub(crate) fn emit_decl(emitter: &mut Emitter, decl: &Decl, comments: &CommentMap) {
     emit_leading_comments(emitter, comments, crate::span::decl_span(decl), true);
     match decl {
-        Decl::Const(def) => emit_const_def(emitter, def, comments),
+        Decl::Const(def) => emit_var_def(emitter, "const", def, comments),
         Decl::Var(def) => emit_var_def(emitter, "var", def, comments),
-        Decl::MutableVar(def) => emit_var_def(emitter, "mutable var", def, comments),
         Decl::TypeDef(def) => emit_type_def(emitter, def, comments),
         Decl::Function(function) => emit_function_decl(emitter, function, comments),
         Decl::Procedure(procedure) => emit_procedure_decl(emitter, procedure, comments),
@@ -30,22 +29,10 @@ fn emit_visibility(emitter: &mut Emitter, visibility: Visibility) {
     }
 }
 
-pub(super) fn emit_const_def(emitter: &mut Emitter, def: &ConstDef, comments: &CommentMap) {
-    emitter.write_current_indent();
-    emit_visibility(emitter, def.visibility);
-    emitter.write("const ");
-    emitter.write(&def.name);
-    emitter.write(": ");
-    emit_type_expr(emitter, &def.type_expr);
-    emitter.write(" := ");
-    emit_expr(emitter, &def.value, 0, comments);
-    finish_decl_line(emitter, comments, def.span.offset);
-}
-
 pub(super) fn emit_var_def(
     emitter: &mut Emitter,
     keyword: &str,
-    def: &VarDef,
+    def: &BindingDef,
     comments: &CommentMap,
 ) {
     emitter.write_current_indent();
@@ -53,8 +40,10 @@ pub(super) fn emit_var_def(
     emitter.write(keyword);
     emitter.write(" ");
     emitter.write(&def.name);
-    emitter.write(": ");
-    emit_type_expr(emitter, &def.type_expr);
+    if let Some(annotation) = &def.type_expr {
+        emitter.write(": ");
+        emit_type_expr(emitter, annotation);
+    }
     emitter.write(" := ");
     emit_expr(emitter, &def.value, 0, comments);
     finish_decl_line(emitter, comments, def.span.offset);
@@ -94,33 +83,6 @@ fn emit_record_type(emitter: &mut Emitter, record: &RecordType, comments: &Comme
         for field in &record.fields {
             emit_field_def(inner, field, comments);
         }
-        if !record.fields.is_empty() && !record.methods.is_empty() {
-            inner.write("\n");
-        }
-        for (index, method) in record.methods.iter().enumerate() {
-            if index > 0 {
-                inner.write("\n");
-            }
-            emit_record_method(inner, method, comments);
-        }
-        let need_property_gap = (!record.fields.is_empty() || !record.methods.is_empty())
-            && !record.properties.is_empty();
-        if need_property_gap {
-            inner.write("\n");
-        }
-        for property in &record.properties {
-            emit_record_property(inner, property, comments);
-        }
-        let need_event_gap = (!record.fields.is_empty()
-            || !record.methods.is_empty()
-            || !record.properties.is_empty())
-            && !record.events.is_empty();
-        if need_event_gap {
-            inner.write("\n");
-        }
-        for event in &record.events {
-            emit_record_event(inner, event, comments);
-        }
     });
     emitter.write_current_indent();
     emitter.write("end record");
@@ -138,127 +100,6 @@ fn emit_field_def(emitter: &mut Emitter, field: &FieldDef, comments: &CommentMap
         emit_expr(emitter, default_value, 0, comments);
     }
     finish_decl_line(emitter, comments, field.span.offset);
-}
-
-fn emit_record_method(emitter: &mut Emitter, method: &RecordMethod, comments: &CommentMap) {
-    match method {
-        RecordMethod::Function(function) => {
-            emit_leading_comments(emitter, comments, function.span.offset, true);
-            emitter.write_current_indent();
-            emit_visibility(emitter, function.visibility);
-            emit_function_header(
-                emitter,
-                &function.name,
-                &function.type_params,
-                &function.params,
-            );
-            emitter.write(": ");
-            emit_type_expr(emitter, &function.return_type);
-            finish_routine_header_line(emitter, comments, function.span.offset);
-            emit_func_body(
-                emitter,
-                function.span.offset,
-                &function.body,
-                "function",
-                comments,
-            );
-        }
-        RecordMethod::StaticFunction(function) => {
-            emit_leading_comments(emitter, comments, function.span.offset, true);
-            emitter.write_current_indent();
-            emit_visibility(emitter, function.visibility);
-            emitter.write("static ");
-            emit_function_header(
-                emitter,
-                &function.name,
-                &function.type_params,
-                &function.params,
-            );
-            emitter.write(": ");
-            emit_type_expr(emitter, &function.return_type);
-            finish_routine_header_line(emitter, comments, function.span.offset);
-            emit_func_body(
-                emitter,
-                function.span.offset,
-                &function.body,
-                "function",
-                comments,
-            );
-        }
-        RecordMethod::StaticProcedure(procedure) => {
-            emit_leading_comments(emitter, comments, procedure.span.offset, true);
-            emitter.write_current_indent();
-            emit_visibility(emitter, procedure.visibility);
-            emitter.write("static ");
-            emit_procedure_header(
-                emitter,
-                &procedure.name,
-                &procedure.type_params,
-                &procedure.params,
-            );
-            finish_routine_header_line(emitter, comments, procedure.span.offset);
-            emit_func_body(
-                emitter,
-                procedure.span.offset,
-                &procedure.body,
-                "procedure",
-                comments,
-            );
-        }
-        RecordMethod::Procedure(procedure) => {
-            emit_leading_comments(emitter, comments, procedure.span.offset, true);
-            emitter.write_current_indent();
-            emit_visibility(emitter, procedure.visibility);
-            emit_procedure_header(
-                emitter,
-                &procedure.name,
-                &procedure.type_params,
-                &procedure.params,
-            );
-            finish_routine_header_line(emitter, comments, procedure.span.offset);
-            emit_func_body(
-                emitter,
-                procedure.span.offset,
-                &procedure.body,
-                "procedure",
-                comments,
-            );
-        }
-    }
-}
-
-fn emit_record_property(emitter: &mut Emitter, property: &RecordProperty, comments: &CommentMap) {
-    emit_leading_comments(emitter, comments, property.span.offset, false);
-    emitter.write_current_indent();
-    emit_visibility(emitter, property.visibility);
-    emitter.write("property ");
-    emitter.write(&property.name);
-    emitter.write(": ");
-    emit_type_expr(emitter, &property.type_expr);
-    if let Some(getter) = &property.read {
-        emitter.write(" read ");
-        emitter.write(getter);
-    }
-    if let Some(setter) = &property.write {
-        emitter.write(" write ");
-        emitter.write(setter);
-    }
-    finish_decl_line(emitter, comments, property.span.offset);
-}
-
-fn emit_record_event(emitter: &mut Emitter, event: &RecordEvent, comments: &CommentMap) {
-    emit_leading_comments(emitter, comments, event.span.offset, false);
-    emitter.write_current_indent();
-    emit_visibility(emitter, event.visibility);
-    emitter.write("event ");
-    emitter.write(&event.name);
-    emitter.write(": ");
-    emit_type_expr(emitter, &event.type_expr);
-    emitter.write(" read ");
-    emitter.write(&event.read);
-    emitter.write(" write ");
-    emitter.write(&event.write);
-    finish_decl_line(emitter, comments, event.span.offset);
 }
 
 fn emit_enum_type(emitter: &mut Emitter, enum_type: &EnumType, comments: &CommentMap) {
@@ -297,6 +138,9 @@ fn emit_enum_member(emitter: &mut Emitter, member: &EnumMember, comments: &Comme
 fn emit_function_decl(emitter: &mut Emitter, function: &FunctionDecl, comments: &CommentMap) {
     emitter.write_current_indent();
     emit_visibility(emitter, function.visibility);
+    if function.pure {
+        emitter.write("pure ");
+    }
     emit_function_header(
         emitter,
         &function.name,

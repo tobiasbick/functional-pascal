@@ -24,7 +24,9 @@ pub(in crate::vm::debug) fn require_empty_root(
     }
     match target.root {
         MutationRoot::FrameRegister(_) | MutationRoot::Global(_) => Ok(()),
-        MutationRoot::ClosureCell(_) => Err(diagnostics::unsupported_capture(&assignment.root)),
+        MutationRoot::ClosureCell(_) | MutationRoot::Reference(_) => {
+            Err(diagnostics::unsupported_capture(&assignment.root))
+        }
     }
 }
 
@@ -73,7 +75,7 @@ pub(in crate::vm::debug) fn live_root_is_empty(
                 .map_err(|_| diagnostics::unavailable())?;
             Ok(globals.get(*global).is_some_and(Option::is_none))
         }
-        MutationRoot::ClosureCell(_) => Ok(false),
+        MutationRoot::ClosureCell(_) | MutationRoot::Reference(_) => Ok(false),
     }
 }
 
@@ -128,7 +130,7 @@ fn walk_identity(value: &Value, max_depth: usize, depth: usize) -> Result<(), De
         Value::Function(_) => Err(diagnostics::identity_bearing(
             "function values are not portable empty-storage seeds",
         )),
-        Value::Cell(_) => Err(diagnostics::identity_bearing(
+        Value::Cell(_) | Value::Reference(_) => Err(diagnostics::identity_bearing(
             "capture cells are not portable empty-storage seeds",
         )),
         Value::Task(_) => Err(diagnostics::identity_bearing(

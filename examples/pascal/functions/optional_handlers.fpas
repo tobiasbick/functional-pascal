@@ -1,0 +1,35 @@
+program OptionalHandlersExample;
+
+uses Std.Console as Console;
+uses Std.Conv as Conv;
+
+type ClickHandler = procedure(Sender: integer);
+
+type Button = record
+  Id: integer;
+  OnClick: Option of (ClickHandler) := Option.None;
+end record;
+
+procedure ButtonClick(Value: Button);
+begin
+  case Value.OnClick of
+    when Option.Some(const Handler):
+      Handler(Value.Id);
+    when Option.None:
+      Console.WriteLn('no handler');
+  end case;
+end procedure;
+
+procedure HandleClick(Sender: integer);
+begin
+  Console.WriteLn('clicked ' + Conv.IntToStr(Sender));
+end procedure;
+
+begin
+  var B := Button(Id := 1);
+  ButtonClick(B);
+  B.OnClick := Option.Some(HandleClick);
+  ButtonClick(B);
+  B.OnClick := Option.None;
+  ButtonClick(B);
+end program;

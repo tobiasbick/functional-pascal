@@ -27,12 +27,12 @@ end record;
 // - `MaxResponseBytes`: Maximum total response bytes.
 public function ReadFinal(Connection: Net.Connection; MaxHeaderBytes: integer; MaxResponseBytes: integer): Result of (FinalHead, string);
 begin
-  mutable var Buffer: array of (integer) := [];
-  mutable var BytesReceived: integer := 0;
-  mutable var InterimResponses: integer := 0;
+  var Buffer: array of (integer) := [];
+  var BytesReceived: integer := 0;
+  var InterimResponses: integer := 0;
   while true do
     begin
-      mutable var Separator: integer := Wire.FindSeparator(Buffer, 0);
+      var Separator: integer := Wire.FindSeparator(Buffer, 0);
       while Separator < 0 do
         begin
           if Arrays.Length(Buffer) >= MaxHeaderBytes then
@@ -40,13 +40,13 @@ begin
               return Result.Error('HTTP response headers exceed MaxHeaderBytes');
             end;
           end if;
-          var ResponseAvailable: integer := MaxResponseBytes - BytesReceived;
+          const ResponseAvailable: integer := MaxResponseBytes - BytesReceived;
           if ResponseAvailable < 1 then
             begin
               return Result.Error('HTTP response exceeds MaxResponseBytes');
             end;
           end if;
-          mutable var ReadMaximum: integer := MaxHeaderBytes - Arrays.Length(Buffer);
+          var ReadMaximum: integer := MaxHeaderBytes - Arrays.Length(Buffer);
           if ResponseAvailable < ReadMaximum then
             begin
               ReadMaximum := ResponseAvailable;
@@ -110,8 +110,8 @@ begin
               end;
             else
               begin
-                var Output: FinalHead := FinalHead(Head := Head, InitialBody := Arrays.Slice(Buffer, Head.BodyOffset, Arrays.Length(Buffer) -
-                                                                                                                      Head.BodyOffset), BytesReceived := BytesReceived);
+                const Output: FinalHead := FinalHead(Head := Head, InitialBody := Arrays.Slice(Buffer, Head.BodyOffset, Arrays.Length(Buffer) -
+                                                                                                                        Head.BodyOffset), BytesReceived := BytesReceived);
                 return Result.Ok(Output);
               end;
             end if;

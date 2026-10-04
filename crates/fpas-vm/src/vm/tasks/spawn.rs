@@ -39,6 +39,7 @@ impl Worker {
                 )
             })?)?
             .clone();
+        self.require_value_data(&callee)?;
         let Value::Function(function) = callee else {
             return Err(self.task_type_error("function", &callee));
         };
@@ -67,15 +68,10 @@ impl Worker {
                     "Task target is outside the function table",
                 )
             })?;
-        let visible_arity = usize::from(info.arity)
-            .checked_sub(usize::from(function.bound_receiver.is_some()))
-            .ok_or_else(|| {
-                diagnostics::internal(
-                    self.executable.executable(),
-                    self.current_address,
-                    "Bound task target has no receiver parameter",
-                )
-            })?;
+        if !info.var_parameters.is_empty() {
+            return Err(self.reference_transport_error("A task cannot invoke var parameters"));
+        }
+        let visible_arity = usize::from(info.arity);
         if visible_arity != usize::from(operands.auxiliary) {
             return Err(diagnostics::at_address(
                 self.executable.executable(),

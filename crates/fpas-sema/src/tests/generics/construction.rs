@@ -7,15 +7,17 @@ use fpas_diagnostics::codes::{
 
 #[test]
 fn constructors_infer_supplied_fields_and_use_expected_arguments() {
-    check_ok("program Main;
+    check_ok(
+        r#"program Main;
         type Pair of (K, V) = record Key: K; Value: V; Count: integer := 3; end record;
         type Marker of (T) = record Count: integer := 3; end record;
         type IntegerPair = Pair of (integer, string);
         function Make(): Pair of (integer, string); begin return Pair(Key := 1, Value := 'one'); end function;
         function MakeMarker(): Marker of (integer); begin return Marker(); end function;
         procedure Accept(Item: Pair of (integer, string)); begin null; end procedure;
-        var Item: IntegerPair := IntegerPair(Key := 1, Value := 'one');
-        begin Accept(Pair(Value := 'one', Key := 1)); discard MakeMarker(); end program;");
+        const Item: IntegerPair := IntegerPair(Key := 1, Value := 'one');
+        begin Accept(Pair(Value := 'one', Key := 1)); discard MakeMarker(); end program;"#,
+    );
 }
 
 #[test]
@@ -31,20 +33,22 @@ fn constructors_forward_enclosing_generic_parameters() {
 
 #[test]
 fn enum_constructors_infer_payloads_and_contextual_missing_arguments() {
-    check_ok("program Main;
+    check_ok(
+        r#"program Main;
         type Lookup of (T, E) = enum Found(Value: T); Missing; Failed(Message: E); end enum;
         function Make of (U)(Value: U): Lookup of (U, string); begin return Lookup.Found(Value); end function;
-        var Present: Lookup of (integer, string) := Lookup.Found(42);
-        var Absent: Lookup of (integer, string) := Lookup.Missing;
-        var FailureValue: Lookup of (integer, string) := Lookup.Failed('failure');
-        begin discard Make(42); end program;");
+        const Present: Lookup of (integer, string) := Lookup.Found(42);
+        const Absent: Lookup of (integer, string) := Lookup.Missing;
+        const FailureValue: Lookup of (integer, string) := Lookup.Failed('failure');
+        begin discard Make(42); end program;"#,
+    );
     check_ok(
-        "program Main;
+        r#"program Main;
         type Choice of (T) = enum Present(Value: T); Missing; end enum;
         type Box of (T) = record Value: T; end record;
-        var Converted: Choice of (real) := Choice.Present(42.0);
-        var RecordValue: Box of (real) := Box(Value := 42.0);
-        begin discard Choice.Present('inferred'); end program;",
+        const Converted: Choice of (real) := Choice.Present(42.0);
+        const RecordValue: Box of (real) := Box(Value := 42.0);
+        begin discard Choice.Present('inferred'); end program;"#,
     );
 }
 
@@ -88,10 +92,10 @@ fn enum_construction_requires_complete_arguments_and_positional_payloads() {
         "{errors:#?}"
     );
     let errors = check_errors(
-        "program Main;
+        r#"program Main;
         type Choice of (T) = enum Present(Value: T); Missing; end enum;
-        var Item: Choice of (real) := Choice.Present(42);
-        begin null; end program;",
+        const Item: Choice of (real) := Choice.Present(42);
+        begin null; end program;"#,
     );
     assert!(
         errors.iter().any(|error| error.code == SEMA_TYPE_MISMATCH),
@@ -118,7 +122,11 @@ fn unresolved_constructor_arguments_request_an_annotation() {
 #[test]
 fn contextual_fields_and_empty_components_constrain_constructor_arguments() {
     check_ok(
-        "program Main;\n        type Box of (T) = record Value: T; end record;\n        type Pair of (T) = record First: T; Second: T; end record;\n        var Item: Box of (Option of (integer)) := Box(Value := Option.None);\n        begin discard Pair(First := Option.None, Second := Option.Some(42)); end program;",
+        r#"program Main;
+        type Box of (T) = record Value: T; end record;
+        type Pair of (T) = record First: T; Second: T; end record;
+        const Item: Box of (Option of (integer)) := Box(Value := Option.None);
+        begin discard Pair(First := Option.None, Second := Option.Some(42)); end program;"#,
     );
 }
 

@@ -19,7 +19,7 @@ fn batched_rows_match_individual_cells_across_clips_and_wide_glyphs() {
 name = "tui-row-test"
 kind = "library"
 [exports]
-units = ["Std.Tui", "Std.Version", "Std.Tui.Rendering.Canvas"]
+units = ["Std.Tui", "Std.Tui.Cells", "Std.Tui.Geometry", "Std.Tui.Rendering", "Std.Version", "Std.Tui.Rendering.Canvas"]
 [sources]
 include = ["{source_glob}"]
 "#

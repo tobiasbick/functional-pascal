@@ -4,6 +4,6 @@ uses Std.Console as Console;
 uses Std.Arrays as Arrays;
 
 begin
-  var A: array of (integer) := [1, 2];
-  var C: array of (integer) := Arrays.Slice(A, 0, 10);
+  const A: array of (integer) := [1, 2];
+  const C: array of (integer) := Arrays.Slice(A, 0, 10);
 end program;

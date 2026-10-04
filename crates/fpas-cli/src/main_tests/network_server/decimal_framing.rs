@@ -19,7 +19,39 @@ fn source_review_server_checks_decimal_lengths_and_boundaries() {
     let (cwd, server) = start_server(
         "source-review-server-decimal",
         format!(
-            "program DecimalServer;\nuses Std.Http as Http; uses Std.Net as Net; uses Std.Net.Utf8 as Utf8; uses Std.Results as Results; uses Std.Str as Str;\nbegin\n  var ListenerValue: Net.Listener := Results.Unwrap(Net.Listen('127.0.0.1', {port}));\n  for I: integer := 1 to {} do\n  begin\n    var ConnectionValue: Net.Connection := Results.Unwrap(Net.Accept(ListenerValue));\n    discard Results.Unwrap(Net.SetTimeout(ConnectionValue, 2000));\n    mutable var Text: string := 'accepted';\n    case Http.ReadRequest(ConnectionValue, 4096, 16) of\n      when Result.Ok(_): begin null; end;\n      when Result.Error(const Message): begin\n        if I = {} then\n        begin if not Str.Contains(Message, 'MaxBodyBytes') then panic(Message); end if; end;\n        else begin if not Str.Contains(Message, 'Content-Length') then panic(Message); end if; end; end if;\n        Text := 'rejected';\n      end;\n    end case;\n    mutable var ResponseValue: Http.ServerResponse := Http.ServerResponse.Create(200, 'OK');\n    ResponseValue.Body := Utf8.Encode(Text);\n    discard Results.Unwrap(Http.WriteResponse(ConnectionValue, ResponseValue));\n    discard Results.Unwrap(Net.Close(ConnectionValue));\n  end; end for;\n  discard Results.Unwrap(Net.CloseListener(ListenerValue));\nend program;\n",
+            r#"program DecimalServer;
+uses Std.Http as Http; uses Std.Net as Net; uses Std.Net.Utf8 as Utf8; uses Std.Results as Results; uses Std.Str as Str;
+function Require of (T)(Outcome: Result of (T, string)): T;
+begin
+  case Outcome of
+    when Result.Ok(const Value): return Value;
+    when Result.Error(const Message): panic(Message);
+  end case;
+end function;
+begin
+  const ListenerValue: Net.Listener := Require(Net.Listen('127.0.0.1', {port}));
+  for I: integer := 1 to {} do
+  begin
+    const ConnectionValue: Net.Connection := Require(Net.Accept(ListenerValue));
+    discard Results.Unwrap(Net.SetTimeout(ConnectionValue, 2000));
+     var Text: string := 'accepted';
+    case Http.ReadRequest(ConnectionValue, 4096, 16) of
+      when Result.Ok(_): begin null; end;
+      when Result.Error(const Message): begin
+        if I = {} then
+        begin if not Str.Contains(Message, 'MaxBodyBytes') then panic(Message); end if; end;
+        else begin if not Str.Contains(Message, 'Content-Length') then panic(Message); end if; end; end if;
+        Text := 'rejected';
+      end;
+    end case;
+     var ResponseValue: Http.ServerResponse := Http.ServerResponseCreate(200, 'OK');
+    ResponseValue.Body := Utf8.Encode(Text);
+    discard Results.Unwrap(Http.WriteResponse(ConnectionValue, ResponseValue));
+    discard Results.Unwrap(Net.Close(ConnectionValue));
+  end; end for;
+  discard Results.Unwrap(Net.CloseListener(ListenerValue));
+end program;
+"#,
             cases.len(),
             cases.len()
         ),

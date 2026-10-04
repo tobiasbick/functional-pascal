@@ -44,7 +44,7 @@ fn lifecycle_is_machine_readable_and_deterministic() {
     serve_script(
         script.as_bytes(),
         &mut output,
-        server(r#"program Main; begin var X: integer := 1; end program;"#),
+        server(r#"program Main; begin const X: integer := 1; end program;"#),
     )
     .expect("serve script");
     let records = String::from_utf8(output).expect("UTF-8 records");
@@ -172,7 +172,7 @@ fn broken_protocol_writer_is_returned_as_transport_failure() {
 #[test]
 fn evaluate_parses_one_read_only_expression_and_reports_stable_errors() {
     let mut server = server(
-        r#"program Main; function Double(X: integer): integer; begin return X * 2; end function; begin var X: integer := 1; end program;"#,
+        r#"program Main; function Double(X: integer): integer; begin return X * 2; end function; begin const X: integer := 1; end program;"#,
     );
     let _ = server.handle_line(&request(1, "initialize", json!({"version":2})));
     let _ = server.handle_line(&request(2, "launch", json!({"stop_on_entry":true})));
@@ -302,7 +302,7 @@ fn logpoints_interpolate_without_stopping_and_shared_locations_log_before_stop()
 #[test]
 fn conditions_and_logpoints_use_detached_controlled_calls() {
     let source = r#"program Main;
-  mutable var Probe: integer := 0;
+   var Probe: integer := 0;
 function Matches(Value: integer): boolean;
 begin
 Probe := Probe + 1;
@@ -313,7 +313,7 @@ begin
 return Value + 10;
 end function;
 begin
-mutable var I: integer := 0;
+ var I: integer := 0;
 while I < 3 do
 begin
 I := I + 1;
@@ -386,7 +386,7 @@ fn loop_server() -> JsonlServer {
     server(
         r#"program Main;
 begin
-mutable var I: integer := 0;
+ var I: integer := 0;
 while I < 5 do
 begin
 I := I + 1;

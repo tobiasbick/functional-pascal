@@ -48,6 +48,7 @@ impl DebugTaskRuntime {
             registers: vec![fpas_bytecode::Value::Unit; register_count],
             register_initialized: vec![false; register_count],
             frames: Vec::new(),
+            reference_scopes: crate::vm::calls::references::ReferenceScopes::default(),
             retain_result: false,
             instruction_count: 0,
             suppressed_initializers: Vec::new(),

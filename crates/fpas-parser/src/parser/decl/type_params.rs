@@ -38,7 +38,7 @@ impl Parser {
     }
 
     fn parse_single_type_param(&mut self) -> crate::TypeParam {
-        let (name, _) = self
+        let (name, span) = self
             .expect_ident()
             .unwrap_or_else(|| self.error_ident(self.current_span()));
         let constraint = if self.eat(&Token::Colon) {
@@ -51,7 +51,7 @@ impl Parser {
                     self.error_with_code(PARSE_EXPECTED_TOKEN,
                         "Expected generic constraint `Equatable`, `Comparable`, `Numeric`, or `Printable`",
                         "Use one of the supported generic constraints.", self.current_span());
-                    return crate::TypeParam { name, constraint: None };
+                    return crate::TypeParam { name, constraint: None, span };
                 }
             }.to_owned();
             self.advance();
@@ -59,6 +59,10 @@ impl Parser {
         } else {
             None
         };
-        crate::TypeParam { name, constraint }
+        crate::TypeParam {
+            name,
+            constraint,
+            span,
+        }
     }
 }

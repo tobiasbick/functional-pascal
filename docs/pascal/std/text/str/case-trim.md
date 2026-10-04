@@ -7,7 +7,7 @@ Returns how many characters are in `S` (scalar count).
 ```pascal
 uses Std.Console as Console;
 
-var N: integer := Length('café');
+const N: integer := Length('café');
 Console.WriteLn(N);
 ```
 

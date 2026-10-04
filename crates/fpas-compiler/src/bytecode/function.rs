@@ -155,6 +155,18 @@ pub(super) fn compile_function(
             name,
             code: CodeRange::new(code_start, code_end),
             arity,
+            var_parameters: function
+                .parameters
+                .iter()
+                .enumerate()
+                .filter_map(|(position, parameter)| {
+                    matches!(
+                        program.ty(parameter.ty).map(|ty| &ty.kind),
+                        Some(IrType::Reference(_))
+                    )
+                    .then_some(position as u8)
+                })
+                .collect(),
             capture_count,
             register_count: allocation.register_count,
             return_convention,

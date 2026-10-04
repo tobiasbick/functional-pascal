@@ -53,24 +53,27 @@ fn root(name: &str) -> DebugAssignmentTarget {
 }
 
 #[test]
-fn sequence_mutation_supports_parameters_and_capture_cells() {
+fn sequence_mutation_supports_parameter_copies_and_capture_cells() {
     let mut parameter = session(
         r#"
 program ArrayParameterMutation;
 
-function ReadAdded(mutable Values: array of (integer)): integer;
+function ReadAdded(InitialValues: array of (integer)): integer;
 begin
-  var Marker: integer := Values[0];
+  var Values: array of (integer) := InitialValues;
+  const Marker: integer := Values[0];
   return Values[1] + Marker;
 end function;
 
 begin
-  var OutputValue: integer := ReadAdded([1]);
-  var Marker: integer := OutputValue;
+  const OutputValue: integer := ReadAdded([1]);
+  const Marker: integer := OutputValue;
 end program;
 "#,
     );
-    let parameter_frame = frame_with_scope(&mut parameter, "Parameters");
+    frame_with_scope(&mut parameter, "Parameters");
+    step(&mut parameter);
+    let parameter_frame = parameter.stack(0, 1).expect("parameter copy stack").items[0].id;
     parameter
         .insert_array_element(
             &root("Values"),
@@ -78,7 +81,7 @@ end program;
             &DebugExpression::Integer(8),
             Some(parameter_frame),
         )
-        .expect("insert into mutable array parameter");
+        .expect("insert into mutable array parameter copy");
     assert!(matches!(
         parameter
             .step_out()
@@ -103,17 +106,17 @@ program StringCaptureMutation;
 
 function Reader(): function(): string;
 begin
-  mutable var Text: string := 'A😀B';
+   var Text: string := 'A😀B';
   return function(): string begin
-    var Marker: string := Text;
+    const Marker: string := Text;
     return Text;
   end function;
 end function;
 
 begin
-  var ReadValue: function(): string := Reader();
-  var OutputValue: string := ReadValue();
-  var Marker: string := OutputValue;
+  const ReadValue: function(): string := Reader();
+  const OutputValue: string := ReadValue();
+  const Marker: string := OutputValue;
 end program;
 "#,
     );
@@ -152,11 +155,11 @@ type Container = record
   Items: array of (integer);
 end record;
 
-mutable var GlobalValues: array of (integer) := [4, 6];
+ var GlobalValues: array of (integer) := [4, 6];
 
 begin
-  mutable var Nested: Container := Container(Items := [1, 3]);
-  var Marker: integer := Nested.Items[0] + GlobalValues[0];
+   var Nested: Container := Container(Items := [1, 3]);
+  const Marker: integer := Nested.Items[0] + GlobalValues[0];
 end program;
 "#,
     );
@@ -240,8 +243,8 @@ begin
 end procedure;
 
 begin
-  mutable var Values: array of (integer) := [1];
-  var Marker: integer := Values[0];
+   var Values: array of (integer) := [1];
+  const Marker: integer := Values[0];
 end program;
 "#,
     );

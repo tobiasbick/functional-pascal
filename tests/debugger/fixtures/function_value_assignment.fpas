@@ -6,28 +6,41 @@ type Handler = function(Value: integer): integer;
 
 type NoArgHandler = function(): integer;
 
-type Math = record
-  static function Transform(Value: integer): integer;
-  begin
-    return Value + 3;
-  end function;
-end record;
+function Math(): Handler;
+function Transform(Value: integer): integer;
+begin
+  return Value + 3;
+end function;
+begin
+  return Transform;
+end function;
 
-type Stats = record
-  static function Transform(Value: integer): integer;
-  begin
-    return Value + 4;
-  end function;
-end record;
+function Stats(): Handler;
+function Transform(Value: integer): integer;
+begin
+  return Value + 4;
+end function;
+begin
+  return Transform;
+end function;
 
 type Counter = record
   Base: integer;
-
-  function Add(Self: Counter; Value: integer): integer;
-  begin
-    return Self.Base + Value;
-  end function;
 end record;
+
+function CounterAdd(Receiver: Counter; Value: integer): integer;
+begin
+  return Receiver.Base + Value;
+end function;
+
+function BindCounter(Receiver: Counter): Handler;
+function Add(Value: integer): integer;
+begin
+  return CounterAdd(Receiver, Value);
+end function;
+begin
+  return Add;
+end function;
 
 function AddOne(Value: integer): integer;
 begin
@@ -52,13 +65,14 @@ begin
 end function;
 
 begin
-  mutable var Current: Handler := AddOne;
-  var Backup: Handler := AddTwo;
-  var Captured: Handler := MakeAdder(10);
-  var Frozen: Handler := AddOne;
-  mutable var WrongSignature: NoArgHandler := Answer;
-  var Receiver: Counter := Counter(Base := 10);
-  var StopMarker: integer := 0;
+  var Current: Handler := AddOne;
+  const Backup: Handler := AddTwo;
+  const Captured: Handler := MakeAdder(10);
+  const Frozen: Handler := AddOne;
+  var WrongSignature: NoArgHandler := Answer;
+  const Receiver: Counter := Counter(Base := 10);
+  const ReceiverAdder: Handler := BindCounter(Receiver);
+  const StopMarker: integer := 0;
   Console.WriteLn(Current(1));
   Console.WriteLn(Captured(1));
 end program;

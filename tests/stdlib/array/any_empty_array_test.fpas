@@ -3,12 +3,12 @@ program T;
 uses Std.Console as Console;
 uses Std.Arrays as Arrays;
 
-function AlwaysTrue(X: integer): boolean;
+pure function AlwaysTrue(X: integer): boolean;
 begin
   return true;
 end function;
 
 begin
-  var A: array of (integer) := [];
+  const A: array of (integer) := [];
   Console.WriteLn(Arrays.Any(A, AlwaysTrue));
 end program;

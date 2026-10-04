@@ -1,14 +1,35 @@
 use crate::analyze_with_types;
 
 #[test]
+fn closure_capturing_a_stateful_named_routine_stays_task_bound() {
+    let errors = crate::tests::check_errors(
+        "program Main;
+        procedure Make();
+          procedure Increment(); begin Count := Count + 1; end procedure;
+        begin
+          var Count := 0;
+          const Run := procedure() begin Increment(); end procedure;
+          go Run();
+        end procedure;
+        begin Make(); end program;",
+    );
+    assert!(
+        errors
+            .iter()
+            .any(|error| error.code == fpas_diagnostics::codes::SEMA_TASK_BOUND_CALLABLE),
+        "{errors:#?}"
+    );
+}
+
+#[test]
 fn nested_closure_parameter_does_not_capture_shadowed_outer_binding() {
     let (program, parse_errors) = fpas_parser::parse(
         r#"program T;
 function Make(): function(): integer;
-begin mutable var Count: integer := 10;
+begin  var Count: integer := 10;
   return function(): integer
   begin
-    var Invoke: function(Count: integer): integer :=
+    const Invoke: function(Count: integer): integer :=
       function(Count: integer): integer
       begin
         return Count;
@@ -35,12 +56,12 @@ fn closure_block_local_does_not_capture_shadowed_outer_binding() {
     let (program, parse_errors) = fpas_parser::parse(
         r#"program T;
 function Make(): function(): integer;
-begin mutable var Count: integer := 10;
+begin  var Count: integer := 10;
   return function(): integer
   begin
     begin
-      var Count: integer := 5;
-      var Copy: integer := Count;
+      const Count: integer := 5;
+      const Copy: integer := Count;
     end;
     return 0;
   end function;
@@ -65,9 +86,9 @@ fn closure_scalar_case_guard_binding_does_not_capture_shadowed_outer() {
         r#"program T;
 
 begin
-  mutable var M: integer := 0;
-  var N: integer := 1;
-  var F: procedure() := procedure() begin
+   var M: integer := 0;
+  const N: integer := 1;
+  const F: procedure() := procedure() begin
     case N of
       when const M if M > 0:
         return;
@@ -102,13 +123,13 @@ fn nested_closure_capturing_task_bound_callable_is_task_bound() {
     let (program, parse_errors) = fpas_parser::parse(
         r#"program T;
 begin
-  mutable var Count: integer := 0;
-  var Inc: procedure() :=
+   var Count: integer := 0;
+  const Inc: procedure() :=
     procedure()
     begin
       Count := Count + 1;
     end procedure;
-  var Outer: procedure() :=
+  const Outer: procedure() :=
     procedure()
     begin
       Inc();

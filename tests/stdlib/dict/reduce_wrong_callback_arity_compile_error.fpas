@@ -2,12 +2,12 @@ program DictionaryReduceWrongCallbackArityCompileError;
 
 uses Std.Dictionaries as Dictionaries;
 
-function Wrong(Acc: integer; Value: integer): integer;
+pure function Wrong(Acc: integer; Value: integer): integer;
 begin
   return Acc + Value;
 end function;
 
 begin
-  var Values: dict of (string, integer) := ['A': 1];
-  var Total: integer := Dictionaries.Reduce(Values, 0, Wrong);
+  const Values: dict of (string, integer) := ['A': 1];
+  const Total: integer := Dictionaries.Reduce(Values, 0, Wrong);
 end program;

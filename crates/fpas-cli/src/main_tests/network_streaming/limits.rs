@@ -46,7 +46,45 @@ fn close_delimited_response_limit_includes_exact_boundary_and_empty_body() {
     write_text(
         &source,
         &format!(
-            "\nprogram HttpExactLimit;\nuses Std.Arrays as Arrays; uses Std.Http as Http; uses Std.Results as Results; uses Std.Test as Test;\nfunction Fetch(RequestValue: Http.Request; Streaming: boolean): result of (integer, string);\nbegin\n  if not Streaming then\n  begin\n    var ResponseValue: Http.Response := try Http.Send(RequestValue);\n    return Result.Ok(Arrays.Length(ResponseValue.Body));\n  end; end if;\n  var ResponseValue: Http.StreamResponse := try Http.OpenStream(RequestValue);\n  mutable var Count: integer := 0;\n  mutable var Reading: boolean := true;\n  while Reading do\n  begin\n    var Bytes: array of (integer) := try Http.ReadStream(ResponseValue.Body, 2);\n    Count := Count + Arrays.Length(Bytes);\n    Reading := Arrays.Length(Bytes) > 0;\n  end; end while;\n  return Result.Ok(Count);\nend function;\nbegin\n  for BodyIndex: integer := 0 to 1 do\n  begin\n    for Streaming: boolean := false to true do\n    begin\n      for Delta: integer := -1 to 1 do\n      begin\n        mutable var RequestValue: Http.Request := Http.Request.Get('http://127.0.0.1:{port}/');\n        RequestValue.MaxResponseBytes := {head_len} + BodyIndex * 3 + Delta;\n        RequestValue.TimeoutMillis := 1000;\n        var Received: result of (integer, string) := Fetch(RequestValue, Streaming);\n        Test.AssertEquals(Delta >= 0, Results.IsOk(Received));\n        if Delta >= 0 then Test.AssertEquals(BodyIndex * 3, Results.Unwrap(Received)); end if;\n      end; end for;\n    end; end for;\n  end; end for;\nend program;\n",
+            r#"
+program HttpExactLimit;
+uses Std.Arrays as Arrays; uses Std.Http as Http; uses Std.Results as Results; uses Std.Test as Test;
+function Fetch(RequestValue: Http.Request; Streaming: boolean): result of (integer, string);
+begin
+  if not Streaming then
+  begin
+    const ResponseValue: Http.Response := try Http.Send(RequestValue);
+    return Result.Ok(Arrays.Length(ResponseValue.Body));
+  end; end if;
+  const ResponseValue: Http.StreamResponse := try Http.OpenStream(RequestValue);
+   var Count: integer := 0;
+   var Reading: boolean := true;
+  while Reading do
+  begin
+    const Bytes: array of (integer) := try Http.ReadStream(ResponseValue.Body, 2);
+    Count := Count + Arrays.Length(Bytes);
+    Reading := Arrays.Length(Bytes) > 0;
+  end; end while;
+  return Result.Ok(Count);
+end function;
+begin
+  for BodyIndex: integer := 0 to 1 do
+  begin
+    for Streaming: boolean := false to true do
+    begin
+      for Delta: integer := -1 to 1 do
+      begin
+         var RequestValue: Http.Request := Http.RequestGet('http://127.0.0.1:{port}/');
+        RequestValue.MaxResponseBytes := {head_len} + BodyIndex * 3 + Delta;
+        RequestValue.TimeoutMillis := 1000;
+        const Received: result of (integer, string) := Fetch(RequestValue, Streaming);
+        Test.AssertEquals(Delta >= 0, Results.IsOk(Received));
+        if Delta >= 0 then Test.AssertEquals(BodyIndex * 3, Results.Unwrap(Received)); end if;
+      end; end for;
+    end; end for;
+  end; end for;
+end program;
+"#,
             head_len = head.len()
         ),
     );

@@ -22,18 +22,12 @@ pub enum SemanticTokenKind {
     Variable,
     /// Record field.
     Field,
-    /// Computed record property.
-    Property,
-    /// Record event.
-    Event,
     /// Enum member or associated-data constructor.
     EnumMember,
     /// Function declaration or reference.
     Function,
     /// Procedure declaration or reference.
     Procedure,
-    /// Record method declaration or reference.
-    Method,
     /// Compile-time constant.
     Constant,
 }

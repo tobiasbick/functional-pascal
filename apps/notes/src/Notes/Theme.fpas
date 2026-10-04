@@ -1,38 +1,39 @@
 unit Notes.Theme;
 
 uses Std.Tui as Tui;
+uses Std.Tui.Cells as Cells;
 
 // Returns the dark cyan-and-amber truecolor palette used by Notes.
 public function NotesPalette(): Tui.TuiPalette;
 begin
-  var Background: Tui.TuiColor := Tui.TuiColor.FromRgb(10, 15, 23);
-  var Surface: Tui.TuiColor := Tui.TuiColor.FromRgb(17, 24, 35);
-  var SurfaceFocused: Tui.TuiColor := Tui.TuiColor.FromRgb(24, 39, 53);
-  var Text: Tui.TuiColor := Tui.TuiColor.FromRgb(216, 226, 236);
-  var Muted: Tui.TuiColor := Tui.TuiColor.FromRgb(126, 145, 160);
-  var Border: Tui.TuiColor := Tui.TuiColor.FromRgb(42, 61, 75);
-  var Accent: Tui.TuiColor := Tui.TuiColor.FromRgb(70, 211, 196);
-  var Amber: Tui.TuiColor := Tui.TuiColor.FromRgb(245, 184, 76);
-  var Coral: Tui.TuiColor := Tui.TuiColor.FromRgb(244, 112, 106);
-  mutable var Palette: Tui.TuiPalette := Tui.TuiPalette.Default();
-  Palette.Normal := Tui.TuiStyle.FromColors(Text, Background);
-  Palette.Disabled := Tui.TuiStyle.FromColors(Muted, Background);
-  Palette.Focused := Tui.TuiStyle.FromColors(Text, SurfaceFocused);
-  Palette.Selected := Tui.TuiStyle.FromColors(Text, SurfaceFocused);
-  Palette.Shortcut := Tui.TuiStyle.Create(Accent, Background, true, false, false, false);
-  Palette.Frame := Tui.TuiStyle.FromColors(Border, Background);
-  Palette.Title := Tui.TuiStyle.Create(Text, Background, true, false, false, false);
-  Palette.StatusNormal := Tui.TuiStyle.FromColors(Text, Surface);
-  Palette.StatusShortcut := Tui.TuiStyle.Create(Accent, Surface, true, false, false, false);
-  Palette.StatusSelected := Tui.TuiStyle.FromColors(Background, Accent);
-  Palette.Rule := Tui.TuiStyle.FromColors(Border, Background);
-  Palette.Failure := Tui.TuiStyle.FromColors(Coral, Background);
-  Palette.Warning := Tui.TuiStyle.FromColors(Amber, Background);
-  Palette.Accent := Tui.TuiStyle.Create(Accent, Background, true, false, false, false);
-  Palette.Inputs := Palette.Inputs.WithRole(Tui.TuiStyleRole.InputNormal, Tui.TuiStyle.FromColors(Text, Surface));
-  Palette.Inputs := Palette.Inputs.WithRole(Tui.TuiStyleRole.InputFocused, Tui.TuiStyle.FromColors(Text, SurfaceFocused));
-  Palette.Inputs := Palette.Inputs.WithRole(Tui.TuiStyleRole.InputHint, Tui.TuiStyle.FromColors(Muted, Surface));
-  Palette.Inputs := Palette.Inputs.WithRole(Tui.TuiStyleRole.InputCursor, Tui.TuiStyle.FromColors(Background, Accent));
+  const Background: Tui.TuiColor := Cells.TuiColorFromRgb(10, 15, 23);
+  const Surface: Tui.TuiColor := Cells.TuiColorFromRgb(17, 24, 35);
+  const SurfaceFocused: Tui.TuiColor := Cells.TuiColorFromRgb(24, 39, 53);
+  const Text: Tui.TuiColor := Cells.TuiColorFromRgb(216, 226, 236);
+  const Muted: Tui.TuiColor := Cells.TuiColorFromRgb(126, 145, 160);
+  const Border: Tui.TuiColor := Cells.TuiColorFromRgb(42, 61, 75);
+  const Accent: Tui.TuiColor := Cells.TuiColorFromRgb(70, 211, 196);
+  const Amber: Tui.TuiColor := Cells.TuiColorFromRgb(245, 184, 76);
+  const Coral: Tui.TuiColor := Cells.TuiColorFromRgb(244, 112, 106);
+  var Palette: Tui.TuiPalette := Cells.TuiPaletteDefault();
+  Palette.Normal := Cells.TuiStyleFromColors(Text, Background);
+  Palette.Disabled := Cells.TuiStyleFromColors(Muted, Background);
+  Palette.Focused := Cells.TuiStyleFromColors(Text, SurfaceFocused);
+  Palette.Selected := Cells.TuiStyleFromColors(Text, SurfaceFocused);
+  Palette.Shortcut := Cells.TuiStyleCreate(Accent, Background, true, false, false, false);
+  Palette.Frame := Cells.TuiStyleFromColors(Border, Background);
+  Palette.Title := Cells.TuiStyleCreate(Text, Background, true, false, false, false);
+  Palette.StatusNormal := Cells.TuiStyleFromColors(Text, Surface);
+  Palette.StatusShortcut := Cells.TuiStyleCreate(Accent, Surface, true, false, false, false);
+  Palette.StatusSelected := Cells.TuiStyleFromColors(Background, Accent);
+  Palette.Rule := Cells.TuiStyleFromColors(Border, Background);
+  Palette.Failure := Cells.TuiStyleFromColors(Coral, Background);
+  Palette.Warning := Cells.TuiStyleFromColors(Amber, Background);
+  Palette.Accent := Cells.TuiStyleCreate(Accent, Background, true, false, false, false);
+  Palette.Inputs := Cells.TuiInputPaletteWithRole(Palette.Inputs, Tui.TuiStyleRole.InputNormal, Cells.TuiStyleFromColors(Text, Surface));
+  Palette.Inputs := Cells.TuiInputPaletteWithRole(Palette.Inputs, Tui.TuiStyleRole.InputFocused, Cells.TuiStyleFromColors(Text, SurfaceFocused));
+  Palette.Inputs := Cells.TuiInputPaletteWithRole(Palette.Inputs, Tui.TuiStyleRole.InputHint, Cells.TuiStyleFromColors(Muted, Surface));
+  Palette.Inputs := Cells.TuiInputPaletteWithRole(Palette.Inputs, Tui.TuiStyleRole.InputCursor, Cells.TuiStyleFromColors(Background, Accent));
   return Palette;
 end function;
 

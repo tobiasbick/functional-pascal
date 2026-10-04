@@ -3,7 +3,7 @@
 //! **Documentation:** `docs/pascal/language/types/type-aliases.md`.
 
 use super::*;
-use fpas_unit::interface::ConstantValue;
+use fpas_unit::interface::{ConstantValue, FieldDefault};
 
 fn model() -> fpas_unit::interface::UnitInterface {
     analyze_unit(
@@ -42,11 +42,13 @@ fn local_aliases_export_the_original_defaults_and_required_fields() {
         assert_eq!(record.fields[0].default_value, None);
         assert_eq!(
             record.fields[1].default_value,
-            Some(ConstantValue::Integer(6))
+            Some(FieldDefault::Constant(ConstantValue::Integer(6)))
         );
         assert_eq!(
             record.fields[2].default_value,
-            Some(ConstantValue::String("default".into()))
+            Some(FieldDefault::Constant(ConstantValue::String(
+                "default".into()
+            )))
         );
     }
 }
@@ -163,7 +165,7 @@ fn defaulted_private_fields_remain_inaccessible_through_an_alias() {
     };
     assert_eq!(
         record.fields[0].default_value,
-        Some(ConstantValue::Integer(3))
+        Some(FieldDefault::Constant(ConstantValue::Integer(3)))
     );
     assert_eq!(record.owner_unit.as_deref(), Some("demo.secret"));
     assert_eq!(record.private_members, ["count"]);

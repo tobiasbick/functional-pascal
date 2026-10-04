@@ -20,7 +20,7 @@ end record;
 
 function RunUpdates(Iterations: integer): integer;
 begin
-  mutable var State: BenchmarkState := BenchmarkState(A := 1, B := 2, C := 3, D := 4);
+  var State: BenchmarkState := BenchmarkState(A := 1, B := 2, C := 3, D := 4);
   for Index: integer := 1 to Iterations do
     begin
       State := State with A := State.A + 1; C := State.C + State.B; end with;
@@ -36,13 +36,13 @@ begin
       panic('usage: record_update_benchmark.fpas -- ITERATIONS [MAX_MILLIS]');
     end;
   end if;
-  var Iterations: integer := Conv.StrToInt(Args.ParamStr(0));
+  const Iterations: integer := Conv.StrToInt(Args.ParamStr(0));
   if Iterations < 1 then
     begin
       panic('ITERATIONS must be positive');
     end;
   end if;
-  mutable var MaxMillis: integer := 0;
+  var MaxMillis: integer := 0;
   if Args.ParamCount() = 2 then
     begin
       MaxMillis := Conv.StrToInt(Args.ParamStr(1));
@@ -53,11 +53,11 @@ begin
       end if;
     end;
   end if;
-  mutable var Checksum: integer := RunUpdates(WarmupIterations);
-  var Started: integer := Time.MonotonicMillis();
+  var Checksum: integer := RunUpdates(WarmupIterations);
+  const Started: integer := Time.MonotonicMillis();
   Checksum := RunUpdates(Iterations);
-  var Elapsed: integer := Time.ElapsedMillis(Started);
-  mutable var OpsPerSecond: integer := 0;
+  const Elapsed: integer := Time.ElapsedMillis(Started);
+  var OpsPerSecond: integer := 0;
   if Elapsed > 0 then
     begin
       OpsPerSecond := (Iterations * 1000) div Elapsed;

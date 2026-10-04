@@ -1,0 +1,59 @@
+program CollectionCompositionTest;
+
+uses Std.Arrays as Arrays;
+uses Std.Dictionaries as Dictionaries;
+uses Std.Json as Json;
+uses Std.Options as Options;
+uses Std.Results as Results;
+uses Std.Str as Str;
+uses Std.Test as Test;
+
+pure function IsEven(X: integer): boolean;
+begin
+  return X mod 2 = 0;
+end function;
+
+pure function Double(X: integer): integer;
+begin
+  return X * 2;
+end function;
+
+pure function Sum(Acc: integer; X: integer): integer;
+begin
+  return Acc + X;
+end function;
+
+pure function AddEntry(Acc: integer; Key: string; Value: integer): integer;
+begin
+  return Acc + Value;
+end function;
+
+pure function Upper(C: string): string;
+begin
+  return Str.ToUpper(C);
+end function;
+
+function MakeNumbers(): array of (integer);
+begin
+  return [1, 2];
+end function;
+
+function Apply(X: integer; Operation: function(Value: integer): integer): integer;
+begin
+  return Operation(X);
+end function;
+
+begin
+  const Numbers: array of (integer) := [1, 2, 3, 4];
+  Test.AssertEquals(12, Arrays.Reduce(Arrays.Map(Arrays.Filter(Numbers, IsEven), Double), 0, Sum));
+  Test.AssertEquals(4, Double((2)));
+  const Scores: dict of (string, integer) := ['A': 2, 'B': 3];
+  Test.AssertEquals(5, Dictionaries.Reduce(Scores, 0, AddEntry));
+  Test.AssertTrue(Options.IsSome(Dictionaries.Get(Scores, 'A')));
+  Test.AssertEquals('AB', Str.Map(('ab'), Upper));
+  Test.AssertEquals(2, Arrays.Length(MakeNumbers()));
+  Test.AssertTrue(Results.IsOk(Json.Parse('1')));
+  const DoubleValue: function(X: integer): integer := Double;
+  Test.AssertEquals(6, DoubleValue((3)));
+  Test.AssertEquals(8, Apply(4, Double));
+end program;

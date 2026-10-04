@@ -108,10 +108,18 @@ impl TypeTable {
                 params,
                 return_type,
                 span,
+                ..
             } => {
                 let parameters = params
                     .iter()
-                    .map(|parameter| self.type_expr_with_generics(&parameter.type_expr, generics))
+                    .map(|parameter| {
+                        let value = self.type_expr_with_generics(&parameter.type_expr, generics)?;
+                        if parameter.mutable {
+                            self.reference_type(value, parameter.span)
+                        } else {
+                            Ok(value)
+                        }
+                    })
                     .collect::<Result<Vec<_>, _>>()?;
                 let result = self.type_expr_with_generics(return_type, generics)?;
                 self.intern_kind(IrType::Function { parameters, result }, *span)
@@ -119,7 +127,14 @@ impl TypeTable {
             TypeExpr::ProcedureType { params, span } => {
                 let parameters = params
                     .iter()
-                    .map(|parameter| self.type_expr_with_generics(&parameter.type_expr, generics))
+                    .map(|parameter| {
+                        let value = self.type_expr_with_generics(&parameter.type_expr, generics)?;
+                        if parameter.mutable {
+                            self.reference_type(value, parameter.span)
+                        } else {
+                            Ok(value)
+                        }
+                    })
                     .collect::<Result<Vec<_>, _>>()?;
                 self.intern_kind(
                     IrType::Function {

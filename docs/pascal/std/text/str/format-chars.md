@@ -34,7 +34,7 @@ Returns the character at the 0-based `Index`. **Runtime error** if out of bounds
 ```pascal
 uses Std.Console as Console;
 
-var C: string := CharAt('Hello', 0);
+const C: string := CharAt('Hello', 0);
 Console.WriteLn(C); // H
 ```
 
@@ -83,9 +83,9 @@ Returns a new string by substituting format specifiers in `Template` with the su
 `Template` is mandatory. `Format()` without a template string is a compile error.
 
 ```pascal
-var Status: string := Format('Zoom: %fx Center: (%f, %f)', Zoom, CX, CY);
-var Msg: string := Format('Item %d: %s', Index, Name);
-var Pct: string := Format('100%%');
+const Status: string := Format('Zoom: %fx Center: (%f, %f)', Zoom, CX, CY);
+const Msg: string := Format('Item %d: %s', Index, Name);
+const Pct: string := Format('100%%');
 
 ```
 

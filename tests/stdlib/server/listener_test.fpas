@@ -7,12 +7,25 @@ uses Std.Results as Results;
 uses Std.Test as Test;
 uses Std.Arrays as Arrays;
 
+function Require of (T)(Outcome: Result of (T, string)): T;
+begin
+  case Outcome of
+    when Result.Ok(const Value):
+      return Value;
+    when Result.Error(const Message):
+      panic(Message);
+  end case;
+end function;
+
 function BindListener(): Result of (Net.Listener, string);
 begin
   for Port: integer := 28100 to 28199 do
     begin
-      var Opened: Result of (Net.Listener, string) := Net.Listen('127.0.0.1', Port);
-      if Results.IsOk(Opened) then
+      const Opened: Result of (Net.Listener, string) := Net.Listen('127.0.0.1', Port);
+      if (case Opened of
+        when Result.Ok(_): true;
+        when Result.Error(_): false;
+      end case) then
         begin
           return Opened;
         end;
@@ -24,14 +37,17 @@ begin
 end function;
 
 begin
-  var Life: Server.ServerLifetime := Results.Unwrap(Server.CreateLifetime(1000, false));
-  var Other: Server.ServerLifetime := Results.Unwrap(Server.CreateLifetime(1000, false));
-  var Listener: Net.Listener := Results.Unwrap(BindListener());
+  const Life: Server.ServerLifetime := Require(Server.CreateLifetime(1000, false));
+  const Other: Server.ServerLifetime := Require(Server.CreateLifetime(1000, false));
+  const Listener: Net.Listener := Require(BindListener());
   Test.AssertTrue(Results.Unwrap(Server.OwnListener(Life, Listener)));
   Test.AssertTrue(not Results.Unwrap(Server.OwnListener(Life, Listener)));
   Test.AssertTrue(Results.IsError(Server.OwnListener(Other, Listener)));
   Test.AssertTrue(Server.RequestStop(Life));
-  Test.AssertTrue(Results.IsError(Net.Accept(Listener)));
+  Test.AssertTrue((case Net.Accept(Listener) of
+    when Result.Ok(_): false;
+    when Result.Error(_): true;
+  end case));
   Test.AssertTrue(Results.IsError(Server.OwnListener(Life, Listener)));
   Test.AssertEquals(0, Arrays.Length(Tasks.CloseTaskGroup(Server.GetWorkGroup(Life))));
   Test.AssertTrue(Results.Unwrap(Server.FinishShutdown(Life)));

@@ -3,7 +3,7 @@ use super::super::{check_errors, check_ok};
 #[test]
 fn case_enum_missing_variant_is_non_exhaustive() {
     let errors = check_errors(
-        r#"program T;  type Light = enum Red; Yellow; Green; end enum; begin var L: Light := Light.Red; case L of when Light.Red: return; when Light.Green: return; end case; end program;"#,
+        r#"program T;  type Light = enum Red; Yellow; Green; end enum; begin const L: Light := Light.Red; case L of when Light.Red: return; when Light.Green: return; end case; end program;"#,
     );
     assert!(
         errors
@@ -25,7 +25,7 @@ type Light = enum
 end enum;
 
 begin
-  var L: Light := Light.Red;
+  const L: Light := Light.Red;
   case L of
     when Light.Red:
       return;
@@ -42,7 +42,7 @@ end program;
 #[test]
 fn case_result_missing_variant_is_non_exhaustive() {
     let errors = check_errors(
-        r#"program T; begin var R: Result of (integer, string) := Result.Ok(1); case R of when Result.Ok(const V): return; end case; end program;"#,
+        r#"program T; begin const R: Result of (integer, string) := Result.Ok(1); case R of when Result.Ok(const V): return; end case; end program;"#,
     );
     assert!(
         errors
@@ -63,7 +63,7 @@ type Shape = enum
 end enum;
 
 begin
-  var S: Shape := Shape.Point;
+  const S: Shape := Shape.Point;
   case S of
     when Shape.Circle(const R):
       return;
@@ -90,7 +90,7 @@ type Tree = enum
 end enum;
 
 begin
-  var T: Tree := Tree.Leaf;
+  const T: Tree := Tree.Leaf;
   case T of
     when Tree.Node(const L, const R):
       case L of
@@ -114,7 +114,7 @@ end program;
 #[test]
 fn shadowed_variant_name_does_not_count_toward_exhaustiveness() {
     let errors = check_errors(
-        r#"program T;  type Color = enum Red; Green; Blue; end enum; begin var C: Color := Color.Red; var Red: Color := Color.Blue; case C of when Red, Color.Green, Color.Blue: return; end case; end program;"#,
+        r#"program T;  type Color = enum Red; Green; Blue; end enum; begin const C: Color := Color.Red; const Red: Color := Color.Blue; case C of when Red, Color.Green, Color.Blue: return; end case; end program;"#,
     );
 
     assert!(
@@ -128,6 +128,6 @@ fn shadowed_variant_name_does_not_count_toward_exhaustiveness() {
 #[test]
 fn qualified_enum_variants_still_satisfy_exhaustiveness() {
     check_ok(
-        r#"program T;  type Color = enum Red; Green; Blue; end enum; begin var C: Color := Color.Red; case C of when Color.Red, Color.Green, Color.Blue: return; end case; end program;"#,
+        r#"program T;  type Color = enum Red; Green; Blue; end enum; begin const C: Color := Color.Red; case C of when Color.Red, Color.Green, Color.Blue: return; end case; end program;"#,
     );
 }

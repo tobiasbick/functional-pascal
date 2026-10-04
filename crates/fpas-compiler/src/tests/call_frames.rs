@@ -41,7 +41,7 @@ fn unit_tail_calls_return_to_the_original_caller() {
 
 #[test]
 fn value_returning_callees_are_not_tail_called_from_procedures() {
-    let source = r#"program Mixed; function Value(N: integer): integer; begin return N; end function; procedure IgnoreValue(N: integer); begin discard Value(N); end procedure; begin IgnoreValue(1); var Done: boolean := true; end program;"#;
+    let source = r#"program Mixed; function Value(N: integer): integer; begin return N; end function; procedure IgnoreValue(N: integer); begin discard Value(N); end procedure; begin IgnoreValue(1); const Done: boolean := true; end program;"#;
     assert!(!opcodes(source).contains(&Opcode::TailCall));
     assert_succeeds(source);
 }
@@ -52,14 +52,14 @@ fn multi_argument_calls_keep_caller_state_and_array_values() {
 function Combine(A: integer; B: integer; C: integer): integer; begin return A * 100 + B * 10 + C; end function;
 function Grow(Values: array of (integer); Extra: integer): array of (integer);
 begin
-  mutable var Local: array of (integer) := Values;
-  Arrays.Push(Local, Extra);
+   var Local: array of (integer) := Values;
+  Arrays.Push(var Local, Extra);
   return Local;
 end function;
 begin
-  var Keep: integer := 7;
-  var Original: array of (integer) := [1, 2];
-  var Grown: array of (integer) := Grow(Original, 3);
+  const Keep: integer := 7;
+  const Original: array of (integer) := [1, 2];
+  const Grown: array of (integer) := Grow(Original, 3);
   if Combine(1, 2, 3) + Combine(4, 5, 6) <> 579 then panic('arguments'); end if;
   if Keep <> 7 then panic('caller register'); end if;
   if Arrays.Length(Original) <> 2 then panic('caller array changed'); end if;
@@ -70,7 +70,7 @@ end program;"#;
 
 #[test]
 fn tail_calls_through_function_values_reuse_the_frame() {
-    let source = r#"program ValueTail; function Countdown(N: integer): integer; begin if N = 0 then return 0; end if; var Next: function(N: integer): integer := Countdown; return Next(N - 1); end function; begin if Countdown(100000) <> 0 then panic('wrong'); end if; end program;"#;
+    let source = r#"program ValueTail; function Countdown(N: integer): integer; begin if N = 0 then return 0; end if; const Next: function(N: integer): integer := Countdown; return Next(N - 1); end function; begin if Countdown(100000) <> 0 then panic('wrong'); end if; end program;"#;
     assert!(opcodes(source).contains(&Opcode::TailCallValue));
     assert_succeeds(source);
 }

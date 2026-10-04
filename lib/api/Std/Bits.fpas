@@ -9,7 +9,7 @@ unit Std.Bits;
 // Parameters:
 // - `Left`: `integer` input value used by `BitAnd`.
 // - `Right`: `integer` input value used by `BitAnd`.
-public function BitAnd(Left: integer; Right: integer): integer;
+public pure function BitAnd(Left: integer; Right: integer): integer;
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -18,7 +18,7 @@ end function;
 //
 // Parameters:
 // - `Value`: Value consumed or returned by the operation.
-public function BitNot(Value: integer): integer;
+public pure function BitNot(Value: integer): integer;
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -28,7 +28,7 @@ end function;
 // Parameters:
 // - `Left`: `integer` input value used by `BitOr`.
 // - `Right`: `integer` input value used by `BitOr`.
-public function BitOr(Left: integer; Right: integer): integer;
+public pure function BitOr(Left: integer; Right: integer): integer;
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -38,7 +38,7 @@ end function;
 // Parameters:
 // - `Left`: `integer` input value used by `BitXor`.
 // - `Right`: `integer` input value used by `BitXor`.
-public function BitXor(Left: integer; Right: integer): integer;
+public pure function BitXor(Left: integer; Right: integer): integer;
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -48,7 +48,7 @@ end function;
 // Parameters:
 // - `Value`: Value consumed or returned by the operation.
 // - `Count`: Number of values to create or process.
-public function ShiftLeft(Value: integer; Count: integer): integer;
+public pure function ShiftLeft(Value: integer; Count: integer): integer;
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -58,7 +58,7 @@ end function;
 // Parameters:
 // - `Value`: Value consumed or returned by the operation.
 // - `Count`: Number of values to create or process.
-public function ShiftRight(Value: integer; Count: integer): integer;
+public pure function ShiftRight(Value: integer; Count: integer): integer;
 begin
   panic('Intrinsic API declaration');
 end function;

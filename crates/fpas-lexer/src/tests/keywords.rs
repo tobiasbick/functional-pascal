@@ -13,7 +13,7 @@ fn reserved_keywords_and_retired_shift_identifiers() {
             Token::Uses,
             Token::Const,
             Token::Var,
-            Token::Mutable,
+            Token::Ident("mutable".into()),
             Token::Function,
             Token::Procedure,
             Token::Begin,
@@ -63,17 +63,17 @@ fn reserved_keywords_and_retired_shift_identifiers() {
             Token::Go,
             Token::Dict,
             Token::With,
-            Token::Static,
-            Token::Property,
-            Token::Event,
-            Token::Read,
-            Token::Write,
+            Token::Ident("static".into()),
+            Token::Ident("property".into()),
+            Token::Ident("event".into()),
+            Token::Ident("read".into()),
+            Token::Ident("write".into()),
             Token::Comparable,
             Token::Equatable,
             Token::Numeric,
             Token::Printable,
-            Token::SelfKw,
-            Token::Nil,
+            Token::Ident("self".into()),
+            Token::Ident("nil".into()),
         ]
     );
 }
@@ -110,7 +110,7 @@ fn case_insensitive_mixed() {
     assert_eq!(toks("tRuE"), vec![Token::True]);
     assert_eq!(toks("FaLsE"), vec![Token::False]);
     assert_eq!(toks("ReTuRn"), vec![Token::Return]);
-    assert_eq!(toks("SeLf"), vec![Token::SelfKw]);
+    assert_eq!(toks("SeLf"), vec![Token::Ident("SeLf".into())]);
     assert_eq!(toks("CoMpArAbLe"), vec![Token::Comparable]);
 }
 

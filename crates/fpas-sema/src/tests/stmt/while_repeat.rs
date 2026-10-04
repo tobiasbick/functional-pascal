@@ -18,14 +18,14 @@ fn while_string_condition() {
 #[test]
 fn while_comparison_condition() {
     check_ok(
-        r#"program T;  var X: integer := 5; begin while X > 0 do return; end while; end program;"#,
+        r#"program T;  const X: integer := 5; begin while X > 0 do return; end while; end program;"#,
     );
 }
 
 #[test]
 fn while_complex_boolean_condition() {
     check_ok(
-        r#"program T;  var X: integer := 5; begin while (X > 0) and (X < 10) do return; end while; end program;"#,
+        r#"program T;  const X: integer := 5; begin while (X > 0) and (X < 10) do return; end while; end program;"#,
     );
 }
 
@@ -47,7 +47,7 @@ fn while_false_literal() {
 #[test]
 fn while_not_expression_condition() {
     check_ok(
-        r#"program T;  var Done: boolean := false; begin while not Done do return; end while; end program;"#,
+        r#"program T;  const Done: boolean := false; begin while not Done do return; end while; end program;"#,
     );
 }
 
@@ -74,14 +74,14 @@ fn repeat_real_condition() {
 #[test]
 fn repeat_comparison_condition() {
     check_ok(
-        r#"program T;   mutable var X: integer := 0; begin repeat X := X + 1; until X > 5; end program;"#,
+        r#"program T;    var X: integer := 0; begin repeat X := X + 1; until X > 5; end program;"#,
     );
 }
 
 #[test]
 fn repeat_complex_boolean_condition() {
     check_ok(
-        r#"program T;   mutable var X: integer := 0; begin repeat X := X + 1; until (X > 0) and (X < 10); end program;"#,
+        r#"program T;    var X: integer := 0; begin repeat X := X + 1; until (X > 0) and (X < 10); end program;"#,
     );
 }
 
@@ -93,14 +93,14 @@ fn repeat_false_literal() {
 #[test]
 fn repeat_not_expression_condition() {
     check_ok(
-        r#"program T;   mutable var Done: boolean := false; begin repeat Done := true; until not Done; end program;"#,
+        r#"program T;    var Done: boolean := false; begin repeat Done := true; until not Done; end program;"#,
     );
 }
 
 #[test]
 fn repeat_condition_cannot_use_body_local() {
     let errs =
-        check_errors(r#"program T; begin repeat var X: integer := 1; until X = 1; end program;"#);
+        check_errors(r#"program T; begin repeat const X: integer := 1; until X = 1; end program;"#);
     assert!(
         errs.iter()
             .any(|err| err.message.contains("Undefined identifier `X`")),

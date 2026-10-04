@@ -39,14 +39,10 @@ end unit;
 `Point` and `Distance` are public. `Square` is private because it has no
 `public` modifier.
 
-The modifier applies to `function`, `procedure`, `type`, `const`, `var`, and
-`mutable var` declarations in units. On records declared in units it also
-applies directly to individual fields, functions, procedures, properties, and
-events. Every such record member is private unless it is declared `public`.
-See [Records](../language/types/records.md#field-visibility),
-[Record methods](../language/types/record-methods.md#routine-visibility),
-[Record properties](../language/types/record-properties.md#visibility), and
-[Record events](../language/types/record-events.md#visibility).
+The modifier applies to `function`, `procedure`, `type`, `const`, and `var`
+declarations in units. On records declared in units it also
+applies directly to individual fields. Every field is private unless it is
+declared `public`. See [Records](../language/types/records.md#field-visibility).
 
 Every type referenced by a public unit declaration must also be public when it
 is declared in that unit. This applies recursively to parameters, results,

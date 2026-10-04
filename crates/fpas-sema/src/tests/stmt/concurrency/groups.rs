@@ -29,7 +29,7 @@ fn group_operations_reject_wrong_handles_and_worker_signatures() {
         "Workers.StartTaskInGroup(G, function(T: Workers.CancellationToken): result of (integer, integer) begin return Result.Error(1); end function)",
     ] {
         let source = format!(
-            "program T; uses Std.Tasks as Workers; procedure Work(Token: Workers.CancellationToken); begin null; end procedure; begin var G: Workers.TaskGroup := Workers.CreateTaskGroup(); {call}; end program;"
+            r#"program T; uses Std.Tasks as Workers; procedure Work(Token: Workers.CancellationToken); begin null; end procedure; begin const G: Workers.TaskGroup := Workers.CreateTaskGroup(); {call}; end program;"#
         );
         assert!(
             !check_errors(&source).is_empty(),
@@ -44,8 +44,8 @@ fn group_worker_rejects_mutable_captures() {
         r#"program T;
 uses Std.Tasks as Tasks;
 begin
-  mutable var Count: integer := 0;
-  var G: Tasks.TaskGroup := Tasks.CreateTaskGroup();
+   var Count: integer := 0;
+  const G: Tasks.TaskGroup := Tasks.CreateTaskGroup();
   Tasks.StartTaskInGroup(G, procedure(Token: Tasks.CancellationToken) begin Count := Count + 1; end procedure);
 end program;"#,
     );
@@ -66,13 +66,13 @@ procedure NoValue(Token: Tasks.CancellationToken); begin null; end procedure;
 function Number(Token: Tasks.CancellationToken): integer; begin return 42; end function;
 function Outcome(Token: Tasks.CancellationToken): result of (integer, string); begin return Result.Error('failed'); end function;
 begin
-  var G: Tasks.TaskGroup := Tasks.CreateTaskGroup();
-  var A: task := Tasks.StartTaskInGroup(G, NoValue);
-  var B: task := Tasks.StartTaskInGroup(G, Number);
-  var C: task := Tasks.StartTaskInGroup(G, Outcome);
+  const G: Tasks.TaskGroup := Tasks.CreateTaskGroup();
+  const A: task := Tasks.StartTaskInGroup(G, NoValue);
+  const B: task := Tasks.StartTaskInGroup(G, Number);
+  const C: task := Tasks.StartTaskInGroup(G, Outcome);
   Tasks.Wait(A);
-  var N: integer := Tasks.Wait(B);
-  var R: result of (integer, string) := Tasks.Wait(C);
+  const N: integer := Tasks.Wait(B);
+  const R: result of (integer, string) := Tasks.Wait(C);
   discard Tasks.CloseTaskGroup(G);
 end program;"#,
     );
@@ -85,9 +85,9 @@ fn group_worker_does_not_erase_its_result_type() {
 uses Std.Tasks as Tasks;
 function Work(Token: Tasks.CancellationToken): integer; begin return 7; end function;
 begin
-  var G: Tasks.TaskGroup := Tasks.CreateTaskGroup();
-  var Child: task := Tasks.StartTaskInGroup(G, Work);
-  var Wrong: string := Tasks.Wait(Child);
+  const G: Tasks.TaskGroup := Tasks.CreateTaskGroup();
+  const Child: task := Tasks.StartTaskInGroup(G, Work);
+  const Wrong: string := Tasks.Wait(Child);
 end program;"#,
     );
     assert!(!errors.is_empty(), "worker result was erased");
@@ -96,19 +96,19 @@ end program;"#,
 #[test]
 fn timed_group_close_preserves_result_and_failure_record_types() {
     check_ok(
-        r#"program T;  uses Std.Tasks as Tasks; uses Std.Results as Results; begin var G: Tasks.TaskGroup := Tasks.CreateTaskGroup(); var R: result of (array of (Tasks.TaskFailure), string) := Tasks.CloseTaskGroupWithTimeout(G, 0); var Reports: array of (Tasks.TaskFailure) := Results.Unwrap(R); end program;"#,
+        r#"program T;  uses Std.Tasks as Tasks; uses Std.Results as Results; begin const G: Tasks.TaskGroup := Tasks.CreateTaskGroup(); const R: result of (array of (Tasks.TaskFailure), string) := Tasks.CloseTaskGroupWithTimeout(G, 0); const Reports: array of (Tasks.TaskFailure) := Results.Unwrap(R); end program;"#,
     );
-    assert!(!check_errors(r#"program T;  uses Std.Tasks as Tasks; begin var G: Tasks.TaskGroup := Tasks.CreateTaskGroup(); var Wrong: boolean := Tasks.CloseTaskGroupWithTimeout(G, 0); end program;"#).is_empty());
+    assert!(!check_errors(r#"program T;  uses Std.Tasks as Tasks; begin const G: Tasks.TaskGroup := Tasks.CreateTaskGroup(); const Wrong: boolean := Tasks.CloseTaskGroupWithTimeout(G, 0); end program;"#).is_empty());
 }
 
 #[test]
 fn completed_group_probe_preserves_optional_failure_report_type() {
     check_ok(
-        r#"program T;  uses Std.Tasks as Tasks; begin var G: Tasks.TaskGroup := Tasks.CreateTaskGroup(); var R: option of (array of (Tasks.TaskFailure)) := Tasks.TryCloseCompletedTaskGroup(G); end program;"#,
+        r#"program T;  uses Std.Tasks as Tasks; begin const G: Tasks.TaskGroup := Tasks.CreateTaskGroup(); const R: option of (array of (Tasks.TaskFailure)) := Tasks.TryCloseCompletedTaskGroup(G); end program;"#,
     );
     assert!(
         !check_errors(
-            r#"program T;  uses Std.Tasks as Tasks; begin var G: Tasks.TaskGroup := Tasks.CreateTaskGroup(); var Wrong: boolean := Tasks.TryCloseCompletedTaskGroup(G); end program;"#
+            r#"program T;  uses Std.Tasks as Tasks; begin const G: Tasks.TaskGroup := Tasks.CreateTaskGroup(); const Wrong: boolean := Tasks.TryCloseCompletedTaskGroup(G); end program;"#
         )
         .is_empty()
     );

@@ -23,6 +23,7 @@ end unit;
         &cwd.join("src/facade.fpas"),
         r#"unit Repro.Facade;
 uses Repro.Model as Model2; uses Std.Tui as Tui;
+uses Std.Tui.Elements as Elements;
 
   public type Model = Model2.Model;
 public function NewModel(): Model;
@@ -35,7 +36,7 @@ begin
 end function;
 public function View(State: Model): Tui.TuiElement;
 begin
-  return Tui.TuiElementBuilders.MakeLabel('value');
+  return Elements.TuiElementMakeLabel('value');
 end function;
 end unit;
 "#,
@@ -44,12 +45,14 @@ end unit;
         &cwd.join("src/main.fpas"),
         r#"program GenericAliasRepro;
 uses Repro.Facade as Facade; uses Std.Tui as Tui; uses Std.Test as Test;
+uses Std.Tui.Geometry as Geometry;
+uses Std.Tui.Runtime as Runtime;
 begin
-  var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(20, 4));
-  mutable var State: Facade.Model := Facade.NewModel();
-  State := App.RunIterations(State, Facade.Update, Facade.View, 0, 0);
+  const App: Tui.TuiApplication := Runtime.TuiApplicationOpenForTest(Geometry.TuiSizeCreate(20, 4));
+   var State: Facade.Model := Facade.NewModel();
+  State := Runtime.TuiApplicationRunIterations(App, State, Facade.Update, Facade.View, 0, 0);
   Test.AssertEquals(0, State.Value);
-  App.Close();
+  Runtime.TuiApplicationClose(App);
 end program;"#,
     );
     let root = Path::new(env!("CARGO_MANIFEST_DIR"))

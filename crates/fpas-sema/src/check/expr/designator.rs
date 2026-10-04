@@ -1,8 +1,10 @@
 use super::super::Checker;
 use crate::scope::SymbolKind;
 use crate::types::Ty;
-use fpas_diagnostics::codes::{SEMA_TYPE_MISMATCH, SEMA_UNKNOWN_NAME};
+use fpas_diagnostics::codes::{SEMA_IMMUTABLE_ASSIGNMENT, SEMA_TYPE_MISMATCH, SEMA_UNKNOWN_NAME};
 use fpas_parser::{Designator, DesignatorPart};
+
+mod roots;
 
 impl Checker {
     pub(crate) fn check_designator_expr(&mut self, designator: &Designator) -> Ty {
@@ -11,7 +13,7 @@ impl Checker {
 
     /// Type-check a designator that stands alone as a value expression.
     ///
-    /// Type names may prefix static calls and variant constructors, but are not values themselves.
+    /// Type names may prefix variant constructors, but are not values themselves.
     pub(crate) fn check_designator_value_expr(&mut self, designator: &Designator) -> Ty {
         if designator
             .parts
@@ -40,12 +42,14 @@ impl Checker {
     }
 
     /// Type-check a leading portion of a designator without cloning its index expressions.
+    /// Imported storage roots retain the same alias-only policy before index projection.
     pub(crate) fn check_designator_prefix_expr(
         &mut self,
         designator: &Designator,
         part_count: usize,
     ) -> Ty {
         let parts = &designator.parts[..part_count.min(designator.parts.len())];
+        self.check_pure_designator(parts, designator.span);
         let only_ident_chain = parts
             .iter()
             .all(|p| matches!(p, DesignatorPart::Ident(_, _)));
@@ -57,6 +61,9 @@ impl Checker {
             if let Some(symbol) = self.scopes.lookup(&full_name) {
                 return symbol.ty.clone();
             }
+        } else if let Some((_, consumed)) = self.designator_root_symbol(parts) {
+            let raw_root = Self::resolve_designator_parts_name(&parts[..consumed]);
+            self.resolve_source_name(&raw_root, designator.span);
         }
         self.check_designator_path(designator, parts)
     }
@@ -77,8 +84,8 @@ impl Checker {
                 Ty::Error
             }
             DesignatorPart::Ident(first, _) => {
-                let resolved_base = self.resolve_designator_base(parts);
-                let Some((mut ty, base_part_count)) = resolved_base else {
+                let resolved_base = self.designator_root_symbol(parts);
+                let Some((root, base_part_count)) = resolved_base else {
                     let raw_name = Self::resolve_designator_parts_name(parts);
                     let full_name = self.resolve_source_name(&raw_name, designator.span);
                     let is_qualified_ident_chain = parts.len() > 1
@@ -127,27 +134,13 @@ impl Checker {
                     return Ty::Error;
                 };
 
-                let designator_key = crate::designator_lookup_key(designator);
-                let trailing = parts.len().saturating_sub(base_part_count);
-                for (offset, part) in parts[base_part_count..].iter().enumerate() {
+                let mut ty = root.ty.clone();
+                for part in &parts[base_part_count..] {
                     ty = self.resolve_visible_type(&ty);
 
                     ty = match part {
                         DesignatorPart::Ident(field, span) => {
-                            let is_last = offset + 1 == trailing;
-                            let property_key = Some((designator_key, base_part_count + offset));
-                            let bound_key = if is_last {
-                                Some((designator_key, parts.len() - 1))
-                            } else {
-                                None
-                            };
-                            self.check_record_member_access(
-                                &ty,
-                                field,
-                                *span,
-                                property_key,
-                                bound_key,
-                            )
+                            self.check_record_field_access(&ty, field, *span)
                         }
                         DesignatorPart::Index(index_expr, span) => {
                             self.check_index_access(&ty, index_expr, *span)
@@ -176,29 +169,6 @@ impl Checker {
         result
     }
 
-    fn resolve_designator_base(&self, parts: &[DesignatorPart]) -> Option<(Ty, usize)> {
-        let mut qualified = String::new();
-        let mut resolved = None;
-        for (index, part) in parts.iter().enumerate() {
-            let DesignatorPart::Ident(name, _) = part else {
-                break;
-            };
-            if !qualified.is_empty() {
-                qualified.push('.');
-            }
-            qualified.push_str(name);
-            if let Some(symbol) = self.scopes.lookup(&self.qualified_import_name(&qualified))
-                && matches!(
-                    symbol.kind,
-                    SymbolKind::Const | SymbolKind::Var | SymbolKind::Param | SymbolKind::ForVar
-                )
-            {
-                resolved = Some((symbol.ty.clone(), index + 1));
-            }
-        }
-        resolved
-    }
-
     pub(crate) fn resolve_visible_type(&self, ty: &Ty) -> Ty {
         let mut resolved = ty.clone();
         let mut visited = std::collections::HashSet::new();
@@ -207,17 +177,19 @@ impl Checker {
             if !visited.insert(key) {
                 break;
             }
-            let Some(symbol) = self
+            let Some(definition) = self
                 .scopes
                 .lookup(name)
                 .filter(|symbol| matches!(symbol.kind, SymbolKind::Type))
+                .map(|symbol| symbol.ty.clone())
+                .or_else(|| crate::std_registry::intrinsic_type(name))
             else {
                 break;
             };
             resolved = if let Ty::Applied(_, arguments) = &resolved {
-                symbol.ty.instantiate(arguments).unwrap_or(Ty::Error)
+                definition.instantiate(arguments).unwrap_or(Ty::Error)
             } else {
-                symbol.ty.clone()
+                definition
             };
         }
         resolved
@@ -278,15 +250,36 @@ impl Checker {
         }
     }
 
-    pub(crate) fn designator_is_mutable_target(&self, designator: &Designator) -> bool {
-        match designator.parts.first() {
-            Some(DesignatorPart::Ident(base, _)) => {
-                let Some(symbol) = self.scopes.lookup(base) else {
-                    return false;
-                };
-                symbol.mutable && matches!(symbol.kind, SymbolKind::Var | SymbolKind::Param)
+    /// Reject writes through a string index in an already type-checked target.
+    ///
+    /// Projection types preserve the receiver at each step without checking index
+    /// expressions again. String indices read character values, not writable storage.
+    /// **Documentation:** `docs/pascal/language/basics/operators.md#string-indexing`
+    pub(crate) fn reject_string_index_assignment(&mut self, designator: &Designator) -> bool {
+        let Some((root, base_part_count)) = self.designator_root_symbol(&designator.parts) else {
+            return false;
+        };
+        let mut ty = root.ty.clone();
+        for part in &designator.parts[base_part_count..] {
+            if matches!(self.resolve_visible_type(&ty), Ty::String)
+                && let DesignatorPart::Index(_, span) = part
+            {
+                self.error_with_code(
+                    SEMA_IMMUTABLE_ASSIGNMENT,
+                    "String indices are read-only",
+                    "Read characters with Text[0]. To change text, assign a whole string to a mutable binding, field, or collection element.",
+                    *span,
+                );
+                return true;
             }
-            _ => false,
+            let Some(projected) = self
+                .projection_types
+                .get(&crate::designator_part_lookup_key(part))
+            else {
+                return false;
+            };
+            ty = projected.clone();
         }
+        false
     }
 }

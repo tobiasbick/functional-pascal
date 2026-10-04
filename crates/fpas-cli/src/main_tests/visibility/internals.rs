@@ -177,7 +177,7 @@ end program;
         r#"unit App.Lib;
 
 
-  mutable var Counter: integer := -1;
+   var Counter: integer := -1;
 
 public function GetCounter(): integer;
 begin
@@ -285,16 +285,15 @@ end program;
 fn public_visibility_in_program_is_rejected() {
     let (exit_code, _, stderr_output) = support::run_source_and_capture_output(
         "public_program_visibility.fpas",
-        "\
-program Main;
+        r#"program Main;
 
-public var
+public const
   X: integer := 1;
 
 begin
   WriteLn(X)
 end.
-",
+"#,
     );
 
     assert_eq!(exit_code, 1);

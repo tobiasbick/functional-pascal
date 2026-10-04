@@ -59,6 +59,10 @@ pub(super) fn emit_expr_impl(
         Expr::Str(value, ..) => emitter.write(&format_string(value)),
         Expr::Bool(value, ..) => emitter.write(if *value { "true" } else { "false" }),
         Expr::Designator(designator) => emit_designator(emitter, designator, comments),
+        Expr::VarArgument(designator, _) => {
+            emitter.write("var ");
+            emit_designator(emitter, designator, comments);
+        }
         Expr::Call {
             designator, args, ..
         } => {
@@ -172,7 +176,6 @@ pub(super) fn emit_expr_impl(
             emitter.write(")");
         }
         Expr::OptionNone(..) => emitter.write("Option.None"),
-        Expr::Nil(..) => emitter.write("nil"),
         Expr::Try(inner, ..) => {
             emitter.write("try ");
             emit_expr(emitter, inner, 6, comments);
@@ -187,6 +190,7 @@ pub(super) fn emit_expr_impl(
         Expr::Closure(closure) => closure::emit_closure(
             emitter,
             closure.is_function,
+            closure.pure,
             &closure.params,
             &closure.return_type,
             &closure.body,
@@ -239,7 +243,7 @@ mod tests {
     fn expr_from_body(source: &str) -> String {
         let (program, errors) = parse(source);
         assert!(errors.is_empty(), "{errors:?}");
-        let Stmt::Var(var) = &program.body[0] else {
+        let Stmt::Const(var) = &program.body[0] else {
             panic!("expected var stmt");
         };
         format_expr(&var.value)
@@ -248,24 +252,24 @@ mod tests {
     #[test]
     fn literals_and_designators() {
         assert_eq!(
-            expr_from_body(r#"program T; begin var X: integer := 42; end program;"#),
+            expr_from_body(r#"program T; begin const X: integer := 42; end program;"#),
             "42"
         );
         assert_eq!(
-            expr_from_body(r#"program T; begin var X: real := 3.14; end program;"#),
+            expr_from_body(r#"program T; begin const X: real := 3.14; end program;"#),
             "3.14"
         );
         assert_eq!(
-            expr_from_body(r#"program T; begin var X: string := 'hi'; end program;"#),
+            expr_from_body(r#"program T; begin const X: string := 'hi'; end program;"#),
             "'hi'"
         );
         assert_eq!(
-            expr_from_body(r#"program T; begin var X: boolean := true; end program;"#),
+            expr_from_body(r#"program T; begin const X: boolean := true; end program;"#),
             "true"
         );
         assert_eq!(
             expr_from_body(
-                r#"program T; begin var X: procedure(Msg: string) := Std.Console.WriteLn; end program;"#
+                r#"program T; begin const X: procedure(Msg: string) := Std.Console.WriteLn; end program;"#
             ),
             "Std.Console.WriteLn"
         );
@@ -274,20 +278,20 @@ mod tests {
     #[test]
     fn operators_and_calls() {
         assert_eq!(
-            expr_from_body(r#"program T; begin var X: integer := 1 + 2 * 3; end program;"#),
+            expr_from_body(r#"program T; begin const X: integer := 1 + 2 * 3; end program;"#),
             "1 + 2 * 3"
         );
         assert_eq!(
-            expr_from_body(r#"program T; begin var X: string := IntToStr(42); end program;"#),
+            expr_from_body(r#"program T; begin const X: string := IntToStr(42); end program;"#),
             "IntToStr(42)"
         );
         assert_eq!(
-            expr_from_body(r#"program T; begin var X: boolean := not true; end program;"#),
+            expr_from_body(r#"program T; begin const X: boolean := not true; end program;"#),
             "not true"
         );
         assert_eq!(
             expr_from_body(
-                r#"program T; begin var X: integer := Scene[0].resolved.rect.x; end program;"#
+                r#"program T; begin const X: integer := Scene[0].resolved.rect.x; end program;"#
             ),
             "Scene[0].resolved.rect.x"
         );
@@ -297,13 +301,13 @@ mod tests {
     fn aggregates_and_wrappers() {
         assert_eq!(
             expr_from_body(
-                r#"program T; begin var X: array of (integer) := [1, 2, 3]; end program;"#
+                r#"program T; begin const X: array of (integer) := [1, 2, 3]; end program;"#
             ),
             "[1, 2, 3]"
         );
         assert_eq!(
             expr_from_body(
-                r#"program T; begin var X: dict of (string, integer) := ['a': 1]; end program;"#
+                r#"program T; begin const X: dict of (string, integer) := ['a': 1]; end program;"#
             ),
             "['a': 1]"
         );
@@ -317,7 +321,7 @@ type Point = record
 end record;
 
 begin
-  var X: Point := Point(X := 1, Y := 2);
+  const X: Point := Point(X := 1, Y := 2);
 end program;
 "#
             ),
@@ -325,13 +329,13 @@ end program;
         );
         assert_eq!(
             expr_from_body(
-                r#"program T; begin var X: Result of (integer, string) := Result.Ok(42); end program;"#
+                r#"program T; begin const X: Result of (integer, string) := Result.Ok(42); end program;"#
             ),
             "Result.Ok(42)"
         );
         assert_eq!(
             expr_from_body(
-                r#"program T; begin var X: Option of (integer) := Option.None; end program;"#
+                r#"program T; begin const X: Option of (integer) := Option.None; end program;"#
             ),
             "Option.None"
         );
@@ -347,7 +351,7 @@ type Point = record
 end record;
 
 begin
-  var Value: Point := Point(X := 1);
+  const Value: Point := Point(X := 1);
 end program;
 "#,
         );
@@ -363,7 +367,7 @@ type Empty = record
 end record;
 
 begin
-  var Value: Empty := Empty();
+  const Value: Empty := Empty();
 end program;
 "#,
         );
@@ -373,7 +377,7 @@ end program;
     #[test]
     fn nonempty_record_update_formats_field_assignment() {
         let formatted = expr_from_body(
-            r#"program T;  type Point = record X: integer; end record; begin var Value: Point := Base with X := 1; end with; end program;"#,
+            r#"program T;  type Point = record X: integer; end record; begin const Value: Point := Base with X := 1; end with; end program;"#,
         );
         assert_eq!(formatted, "Base with X := 1; end with");
     }
@@ -392,7 +396,7 @@ type Outer = record
 end record;
 
 begin
-  var Value: Outer := Outer(Item := Inner(X := 1));
+  const Value: Outer := Outer(Item := Inner(X := 1));
 end program;
 "#,
         );
@@ -413,7 +417,7 @@ type Box = record
 end record;
 
 begin
-  var Value: Box := Box(Items := [Item(Value := 10)]);
+  const Value: Box := Box(Items := [Item(Value := 10)]);
 end program;
 "#,
         );
@@ -423,7 +427,7 @@ end program;
     #[test]
     fn long_binary_chain_wraps() {
         let formatted = expr_from_body(
-            r#"program T; begin var X: boolean := VeryLongIdentifierAlpha + VeryLongIdentifierBeta + VeryLongIdentifierGamma + VeryLongIdentifierDelta + VeryLongIdentifierEpsilon; end program;"#,
+            r#"program T; begin const X: boolean := VeryLongIdentifierAlpha + VeryLongIdentifierBeta + VeryLongIdentifierGamma + VeryLongIdentifierDelta + VeryLongIdentifierEpsilon; end program;"#,
         );
         assert!(formatted.contains(" +\n"), "formatted: {formatted}");
     }

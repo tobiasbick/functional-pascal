@@ -1,3 +1,4 @@
+mod arguments;
 mod builtin_variants;
 mod closure;
 mod construction;
@@ -41,13 +42,9 @@ impl Parser {
         let start = self.current_span();
         let mut parts = Vec::new();
 
-        let (name, name_span) = if self.check(&Token::SelfKw) {
-            let span = self.advance().span;
-            ("Self".to_owned(), span)
-        } else {
-            self.expect_ident()
-                .unwrap_or_else(|| self.error_ident(start))
-        };
+        let (name, name_span) = self
+            .expect_ident()
+            .unwrap_or_else(|| self.error_ident(start));
         parts.push(DesignatorPart::Ident(name, name_span));
 
         loop {
@@ -71,14 +68,5 @@ impl Parser {
             parts,
             span: self.span_from(start),
         }
-    }
-
-    pub(crate) fn parse_arg_list(&mut self) -> Vec<Expr> {
-        let mut args = Vec::new();
-        args.push(self.parse_expression());
-        while self.eat(&Token::Comma) {
-            args.push(self.parse_expression());
-        }
-        args
     }
 }

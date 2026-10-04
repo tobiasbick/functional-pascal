@@ -47,8 +47,8 @@ default. Keyboard, mouse, paste, focus, and resize events are forwarded to
 `debugConsole` to retain non-interactive output-only behavior. Logpoint text
 and structured runtime failures appear in the Debug Console. Log messages use
 `{expression}` interpolation and `{{`/`}}` for literal braces. Debugger-side
-calls may invoke deterministic functions, procedures, record methods,
-constructors, readable properties, visible closures, and pure `Std.*`
+calls may invoke deterministic functions, procedures,
+constructors, visible closures, and pure `Std.*`
 intrinsics. They run against a detached copy of stopped state; writes are
 discarded, and calls involving output, files, processes, environment, time,
 randomness, blocking, tasks, or unknown dynamic effects are rejected.

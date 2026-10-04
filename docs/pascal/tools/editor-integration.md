@@ -155,9 +155,7 @@ mutable cells. Constructed cell-capturing functions are task-bound to the
 selected task and may be stored only in a mutable local or parameter register
 of that owner frame. An already materialized task-bound function may be copied
 only within that selected owner task and frame; the copy preserves its exact
-function and cell handles. `Receiver.Method` binds one evaluated record
-snapshot using compiler-retained method identity and exact signature checks;
-no editor-specific command or name inference is used. A simple name prefers a visible binding; anonymous
+function and cell handles. A simple name prefers a visible binding; anonymous
 closure syntax, escaping or foreign-task task-bound copies, and
 inactive-variant function payloads remain rejected. A task-typed Variables or Watch target can be replaced by copying one
 visible binding that already holds a compatible task handle, for example
@@ -345,7 +343,7 @@ including when unit names share a hierarchical prefix. Raw unit names and
 unqualified imported members are not source access paths.
 
 **Go to Type Definition** follows the named source type of variables,
-parameters, record fields and properties, function results, and aliases. It
+parameters, record fields, function results, and aliases. It
 uses the same import, qualification, visibility, and record-member resolution
 as definition navigation. Intrinsic `Std.*` types navigate to their editor-only
 declarations. Primitive, unknown, or inaccessible types have no source target
@@ -396,11 +394,9 @@ Import aliases are offered in the lexical completion list. After `Alias.`,
 completion offers that unit's public members. Private, shadowed, and non-exported
 declarations are excluded.
 
-After a value receiver and `.`, completion includes local callables whose first
-parameter accepts the receiver's type. Existing record members take priority
-over same-named free callables. Definition and hover resolve a complete
-receiver call to the selected callable, and signature help shows only its
-remaining explicit parameters because the receiver supplies the first one.
+After a record value and `.`, completion offers its visible stored fields.
+Callable fields use their declared parameters. Ordinary functions receive all
+arguments explicitly, including any record argument.
 
 When an unresolved identifier maps to exactly one public declaration in one
 accessible unit, completion inserts a separate `uses Unit as Alias;` declaration
@@ -409,7 +405,7 @@ identifiers and reserved words. The diagnostic quick fix applies both changes
 and formats the result. Ambiguous, inaccessible, or already imported units
 receive no auto-import suggestion.
 
-Signature help covers functions, procedures, record methods, nested routines,
+Signature help covers functions, procedures, nested routines,
 function values, enum constructors with associated values, and generic calls.
 It tracks the active argument through nested and multiline expressions and
 shows the callable Markdown plus the matching `Parameters:` entry. The
@@ -432,8 +428,8 @@ for the new state.
 ## Semantic highlighting and quick fixes
 
 The server emits full-document semantic tokens for resolved units, types,
-enums, type parameters, functions, procedures, methods, parameters, variables,
-fields, properties, events, enum members, and constants. Declaration,
+enums, type parameters, functions, procedures, parameters, variables,
+fields, enum members, and constants. Declaration,
 read-only, and public modifiers are emitted only when the resolved declaration
 proves them. Token ranges use UTF-16 positions, preserve lexical ordering, and
 remain non-overlapping. Recovered malformed source can return a safe partial

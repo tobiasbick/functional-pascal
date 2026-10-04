@@ -9,7 +9,7 @@ unit Std.Dictionaries;
 // Parameters:
 // - `D`: Input value used by `ContainsKey`.
 // - `Key`: Lookup key or keyboard event, according to the operation.
-public function ContainsKey(D: dict of (K, V); Key: K): boolean;
+public pure function ContainsKey(D: dict of (K, V); Key: K): boolean;
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -19,7 +19,7 @@ end function;
 // Parameters:
 // - `D`: Input value used by `Filter`.
 // - `F`: Callback invoked by the higher-order operation.
-public function Filter(D: dict of (K, V); F: function(K: K; V: V): boolean): dict of (K, V);
+public pure function Filter(D: dict of (K, V); F: pure function(K: K; V: V): boolean): dict of (K, V);
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -29,7 +29,7 @@ end function;
 // Parameters:
 // - `D`: Input value used by `Get`.
 // - `Key`: Lookup key or keyboard event, according to the operation.
-public function Get(D: dict of (K, V); Key: K): Option of (V);
+public pure function Get(D: dict of (K, V); Key: K): Option of (V);
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -38,7 +38,7 @@ end function;
 //
 // Parameters:
 // - `D`: Input value used by `Keys`.
-public function Keys(D: dict of (K, V)): array of (K);
+public pure function Keys(D: dict of (K, V)): array of (K);
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -47,7 +47,7 @@ end function;
 //
 // Parameters:
 // - `D`: Input value used by `Length`.
-public function Length(D: dict of (K, V)): integer;
+public pure function Length(D: dict of (K, V)): integer;
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -57,7 +57,7 @@ end function;
 // Parameters:
 // - `D`: Input value used by `Map`.
 // - `F`: Callback invoked by the higher-order operation.
-public function Map(D: dict of (K, V); F: function(V: V): V2): dict of (K, V2);
+public pure function Map(D: dict of (K, V); F: pure function(V: V): V2): dict of (K, V2);
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -67,7 +67,7 @@ end function;
 // Parameters:
 // - `D1`: Input value used by `Merge`.
 // - `D2`: Input value used by `Merge`.
-public function Merge(D1: dict of (K, V); D2: dict of (K, V)): dict of (K, V);
+public pure function Merge(D1: dict of (K, V); D2: dict of (K, V)): dict of (K, V);
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -78,7 +78,7 @@ end function;
 // - `D`: Input value used by `Reduce`.
 // - `Init`: Input value used by `Reduce`.
 // - `F`: Callback invoked by the higher-order operation.
-public function Reduce(D: dict of (K, V); Init: U; F: function(Acc: U; Key: K; Value: V): U): U;
+public pure function Reduce(D: dict of (K, V); Init: U; F: pure function(Acc: U; Key: K; Value: V): U): U;
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -88,7 +88,7 @@ end function;
 // Parameters:
 // - `D`: Input value used by `Remove`.
 // - `Key`: Lookup key or keyboard event, according to the operation.
-public function Remove(D: dict of (K, V); Key: K): dict of (K, V);
+public pure function Remove(D: dict of (K, V); Key: K): dict of (K, V);
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -97,7 +97,7 @@ end function;
 //
 // Parameters:
 // - `D`: Input value used by `Values`.
-public function Values(D: dict of (K, V)): array of (V);
+public pure function Values(D: dict of (K, V)): array of (V);
 begin
   panic('Intrinsic API declaration');
 end function;

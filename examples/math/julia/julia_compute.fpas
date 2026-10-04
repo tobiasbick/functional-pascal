@@ -8,27 +8,28 @@ uses Std.Arrays as Arrays;
 type Complex = record
   public Re: real;
   public Im: real;
-
-  public static function Create(Re: real; Im: real): Complex;
-  begin
-    return Complex(Re := Re, Im := Im);
-  end function;
-
-  public function Sq(Self: Complex): Complex;
-  begin
-    return Complex(Re := Self.Re * Self.Re - Self.Im * Self.Im, Im := (2.0 * Self.Re) * Self.Im);
-  end function;
-
-  public function Add(Self: Complex; Other: Complex): Complex;
-  begin
-    return Complex(Re := Self.Re + Other.Re, Im := Self.Im + Other.Im);
-  end function;
-
-  public function MagSq(Self: Complex): real;
-  begin
-    return Self.Re * Self.Re + Self.Im * Self.Im;
-  end function;
 end record;
+
+function ComplexCreate(Re: real; Im: real): Complex;
+begin
+  return Complex(Re := Re, Im := Im);
+end function;
+
+function ComplexSq(Receiver: Complex): Complex;
+begin
+  return Complex(Re := Receiver.Re * Receiver.Re - Receiver.Im * Receiver.Im, Im := (2.0 * Receiver.Re) *
+                                                                                    Receiver.Im);
+end function;
+
+function ComplexAdd(Receiver: Complex; Other: Complex): Complex;
+begin
+  return Complex(Re := Receiver.Re + Other.Re, Im := Receiver.Im + Other.Im);
+end function;
+
+function ComplexMagSq(Receiver: Complex): real;
+begin
+  return Receiver.Re * Receiver.Re + Receiver.Im * Receiver.Im;
+end function;
 
 public type PixelSample = record
   public IsInside: boolean;
@@ -37,10 +38,10 @@ end record;
 
 function Iterate(Z0: Complex; C: Complex; MaxIter: integer; Token: Tasks.CancellationToken): PixelSample;
 begin
-  var EscapeRadiusSq: real := 256.0;
-  mutable var Z: Complex := Z0;
-  mutable var N: integer := 0;
-  while (N < MaxIter) and (Z.MagSq() <= EscapeRadiusSq) do
+  const EscapeRadiusSq: real := 256.0;
+  var Z: Complex := Z0;
+  var N: integer := 0;
+  while (N < MaxIter) and (ComplexMagSq(Z) <= EscapeRadiusSq) do
     begin
       if (N mod 32 = 0) and Tasks.IsCancellationRequested(Token) then
         begin
@@ -48,7 +49,7 @@ begin
         end;
       end if;
 
-      Z := Z.Sq().Add(C);
+      Z := ComplexAdd(ComplexSq(Z), C);
       N := N + 1;
     end;
   end while;
@@ -58,9 +59,9 @@ begin
       return PixelSample(IsInside := true, EscapeValue := 0.0);
     end;
   end if;
-  var MagnitudeSq: real := Math.Max(Z.MagSq(), 4.0);
-  var Smooth: real := (Conv.IntToReal(N) + 1.0) -
-                      (Math.Log(Math.Log(MagnitudeSq) * 0.5) / Math.Log(2.0));
+  const MagnitudeSq: real := Math.Max(ComplexMagSq(Z), 4.0);
+  const Smooth: real := (Conv.IntToReal(N) + 1.0) -
+                        (Math.Log(Math.Log(MagnitudeSq) * 0.5) / Math.Log(2.0));
   return PixelSample(IsInside := false, EscapeValue := Smooth);
 end function;
 
@@ -79,8 +80,8 @@ public function ComputeRow(
   Token: Tasks.CancellationToken
 ): array of (PixelSample);
 begin
-  mutable var WidthRange: integer := Width - 1;
-  mutable var HeightRange: integer := Height - 1;
+  var WidthRange: integer := Width - 1;
+  var HeightRange: integer := Height - 1;
   if WidthRange < 1 then
     begin
       WidthRange := 1;
@@ -92,11 +93,11 @@ begin
       HeightRange := 1;
     end;
   end if;
-  var Wr: real := Conv.IntToReal(WidthRange);
-  var Hr: real := Conv.IntToReal(HeightRange);
-  var cy: real := YMax - (Py / Hr) * (YMax - YMin);
-  var C: Complex := Complex.Create(Jr, Ji);
-  mutable var Row: array of (PixelSample) := [];
+  const Wr: real := Conv.IntToReal(WidthRange);
+  const Hr: real := Conv.IntToReal(HeightRange);
+  const cy: real := YMax - (Py / Hr) * (YMax - YMin);
+  const C: Complex := ComplexCreate(Jr, Ji);
+  var Row: array of (PixelSample) := [];
   for Px: integer := 0 to Width - 1 do
     begin
       if Tasks.IsCancellationRequested(Token) then
@@ -104,8 +105,8 @@ begin
           return [];
         end;
       end if;
-      var cx: real := XMin + (Px / Wr) * (XMax - XMin);
-      Arrays.Push(Row, Iterate(Complex.Create(cx, cy), C, MaxIter, Token));
+      const cx: real := XMin + (Px / Wr) * (XMax - XMin);
+      Arrays.Push(var Row, Iterate(ComplexCreate(cx, cy), C, MaxIter, Token));
     end;
   end for;
 

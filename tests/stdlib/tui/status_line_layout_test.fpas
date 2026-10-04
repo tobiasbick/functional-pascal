@@ -2,13 +2,17 @@ program TuiStatusLineLayoutTest;
 
 uses Std.Test as Test;
 uses Std.Tui as Tui;
+uses Std.Tui.Chrome as Chrome;
+uses Std.Tui.Elements as Elements;
+uses Std.Tui.Ids as Ids;
+uses Std.Tui.Layout as Layout;
 
 begin
-  var Measured: Tui.TuiMeasureResult := Tui.TuiMeasure(Tui.TuiElementBuilders.MakeStatusLine([
-                                                                                               Tui.TuiStatusItemBuilders.MakeHint('Ready'),
-                                                                                               Tui.TuiStatusItemBuilders.MakeCommand(Tui.TuiControlId.Create(1), 'Save', Tui.TuiAction.Create(10)),
-                                                                                               Tui.TuiStatusItemBuilders.MakeDisabledCommand(Tui.TuiControlId.Create(2), 'Quit', Tui.TuiAction.Create(20))
-                                                                                             ]), Tui.TuiMeasureSpec.Unbounded());
+  const Measured: Tui.TuiMeasureResult := Tui.TuiMeasure(Elements.TuiElementMakeStatusLine([
+                                                                                             Chrome.TuiStatusItemMakeHint('Ready'),
+                                                                                             Chrome.TuiStatusItemMakeCommand(Ids.TuiControlIdCreate(1), 'Save', Ids.TuiActionCreate(10)),
+                                                                                             Chrome.TuiStatusItemMakeDisabledCommand(Ids.TuiControlIdCreate(2), 'Quit', Ids.TuiActionCreate(20))
+                                                                                           ]), Layout.TuiMeasureSpecUnbounded());
   Test.AssertEquals(15, Measured.Preferred.Width);
   Test.AssertEquals(1, Measured.Preferred.Height);
 end program;

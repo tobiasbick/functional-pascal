@@ -10,7 +10,7 @@ uses Std.Crypto as Crypto;
 uses Std.Results as Results;
 
 begin
-  var Token: array of (integer) := Results.Unwrap(Crypto.RandomBytes(32));
+  const Token: array of (integer) := Results.Unwrap(Crypto.RandomBytes(32));
 end program;
 ```
 

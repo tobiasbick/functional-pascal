@@ -2,7 +2,56 @@ use super::super::assert_succeeds;
 
 fn check_expression(body: &str) {
     assert_succeeds(&format!(
-        "\nprogram TryExpressions;\nuses Std.Tasks as Tasks;\n  mutable var Written: integer := 0;\n  mutable var Grid: array of (array of (integer)) := [[0, 0, 0], [0, 0, 0]];\n  mutable var Handler: Option of (function(X: integer; Y: integer): integer) := Option.None;\n\n  type Binary = function(X: integer; Y: integer): integer;\n  type Bucket = record Items: array of (integer); end record;\n  type Counter = record\n    Base: integer;\n    function Add(Self: Counter; X: integer; Y: integer): integer;\n    begin return Self.Base + X * 10 + Y; end function;\n    procedure WriteNumber(Self: Counter; Value: integer);\n    begin Written := Self.Base + Value; end procedure;\n    property Number: integer write WriteNumber;\n    function ReadHandler(Self: Counter): Option of (Binary);\n    begin return Handler; end function;\n    procedure WriteHandler(Self: Counter; Value: Option of (Binary));\n    begin Handler := Value; end procedure;\n    event OnValue: function(X: integer; Y: integer): integer read ReadHandler write WriteHandler;\n  end record;\n  type Message = enum Move(X: integer; Y: integer); end enum;\n  type Pair = record First: integer; Second: integer; end record;\n  mutable var Trace: integer := 0;\nfunction ReadValue(Value: integer; FailAt: integer): result of (integer, string);\nbegin\n  Trace := Trace * 10 + Value;\n  if Value = FailAt then return Result.Error('expected'); end if;\n  return Result.Ok(Value);\nend function;\nfunction Combine(X: integer; Y: integer): integer;\nbegin\n  return X * 10 + Y;\nend function;\nfunction ReadHandler(FailAt: integer): result of (Binary, string);\nbegin\n  var X: integer := try ReadValue(1, FailAt);\n  var Y: integer := try ReadValue(2, FailAt);\n  return Result.Ok(Combine);\nend function;\nfunction Probe(FailAt: integer): result of (integer, string);\nbegin\n  {body}\nend function;\nbegin\n  if Probe(0) <> Result.Ok(12) then panic('success value'); end if;\n  if Trace <> 12 then panic('success evaluation order'); end if;\n  Trace := 0;\n  if Probe(1) <> Result.Error('expected') then panic('first error'); end if;\n  if Trace <> 1 then panic('evaluated after first error'); end if;\n  Trace := 0;\n  if Probe(2) <> Result.Error('expected') then panic('second error'); end if;\n  if Trace <> 12 then panic('second error evaluation order'); end if;\nend program;\n"
+        r#"
+program TryExpressions;
+uses Std.Tasks as Tasks;
+   var Written: integer := 0;
+   var Grid: array of (array of (integer)) := [[0, 0, 0], [0, 0, 0]];
+
+  type Binary = function(X: integer; Y: integer): integer;
+  type Bucket = record Items: array of (integer); end record;
+  type Counter = record
+    Base: integer;
+    OnValue: Option of (Binary) := Option.None;
+  end record;
+  type Message = enum Move(X: integer; Y: integer); end enum;
+  type Pair = record First: integer; Second: integer; end record;
+   var Trace: integer := 0;
+function CounterAdd(Receiver: Counter; X: integer; Y: integer): integer;
+begin return Receiver.Base + X * 10 + Y; end function;
+procedure CounterWriteNumber(Receiver: Counter; Value: integer);
+begin Written := Receiver.Base + Value; end procedure;
+function ReadValue(Value: integer; FailAt: integer): result of (integer, string);
+begin
+  Trace := Trace * 10 + Value;
+  if Value = FailAt then return Result.Error('expected'); end if;
+  return Result.Ok(Value);
+end function;
+function Combine(X: integer; Y: integer): integer;
+begin
+  return X * 10 + Y;
+end function;
+function ReadHandler(FailAt: integer): result of (Binary, string);
+begin
+  const X: integer := try ReadValue(1, FailAt);
+  const Y: integer := try ReadValue(2, FailAt);
+  return Result.Ok(Combine);
+end function;
+function Probe(FailAt: integer): result of (integer, string);
+begin
+  {body}
+end function;
+begin
+  if Probe(0) <> Result.Ok(12) then panic('success value'); end if;
+  if Trace <> 12 then panic('success evaluation order'); end if;
+  Trace := 0;
+  if Probe(1) <> Result.Error('expected') then panic('first error'); end if;
+  if Trace <> 1 then panic('evaluated after first error'); end if;
+  Trace := 0;
+  if Probe(2) <> Result.Error('expected') then panic('second error'); end if;
+  if Trace <> 12 then panic('second error evaluation order'); end if;
+end program;
+"#
     ));
 }
 
@@ -72,7 +121,7 @@ fn index_read_preserves_collection_across_try() {
 #[test]
 fn nested_index_write_preserves_path_and_replacement_across_try() {
     check_expression(
-        "mutable var Values: array of (array of (integer)) := [[0, 0, 0], [0, 0, 0]]; Values[try ReadValue(1, FailAt)][try ReadValue(2, FailAt)] := 12; return Result.Ok(Values[1][2]);",
+        "var Values: array of (array of (integer)) := [[0, 0, 0], [0, 0, 0]]; Values[try ReadValue(1, FailAt)][try ReadValue(2, FailAt)] := 12; return Result.Ok(Values[1][2]);",
     );
 }
 
@@ -93,7 +142,7 @@ fn membership_preserves_value_across_try() {
 #[test]
 fn counting_loop_preserves_start_across_try_bound() {
     check_expression(
-        "mutable var Total: integer := 0; for I: integer := try ReadValue(1, FailAt) to try ReadValue(2, FailAt) do Total := Total * 10 + I; end for; return Result.Ok(Total);",
+        "var Total: integer := 0; for I: integer := try ReadValue(1, FailAt) to try ReadValue(2, FailAt) do Total := Total * 10 + I; end for; return Result.Ok(Total);",
     );
 }
 
@@ -112,44 +161,44 @@ fn case_guard_preserves_subject_across_try() {
 }
 
 #[test]
-fn method_preserves_receiver_and_arguments_across_try() {
+fn record_argument_preserves_earlier_values_across_try() {
     check_expression(
-        "var C: Counter := Counter(Base := 0); return Result.Ok(C.Add(try ReadValue(1, FailAt), try ReadValue(2, FailAt)));",
+        "var C: Counter := Counter(Base := 0); return Result.Ok(CounterAdd(C, try ReadValue(1, FailAt), try ReadValue(2, FailAt)));",
     );
 }
 
 #[test]
-fn postfix_method_preserves_receiver_across_try() {
+fn constructed_record_argument_survives_try() {
     check_expression(
-        "var C: Counter := Counter(Base := 0); return Result.Ok((C).Add(try ReadValue(1, FailAt), try ReadValue(2, FailAt)));",
+        "return Result.Ok(CounterAdd(Counter(Base := 0), try ReadValue(1, FailAt), try ReadValue(2, FailAt)));",
     );
 }
 
 #[test]
-fn property_write_preserves_receiver_across_try() {
+fn procedure_record_argument_survives_try() {
     check_expression(
-        "var C: Counter := Counter(Base := 0); C.Number := (try ReadValue(1, FailAt)) * 10 + (try ReadValue(2, FailAt)); return Result.Ok(Written);",
+        "var C: Counter := Counter(Base := 0); CounterWriteNumber(C, (try ReadValue(1, FailAt)) * 10 + (try ReadValue(2, FailAt))); return Result.Ok(Written);",
     );
 }
 
 #[test]
-fn event_raise_preserves_handler_and_arguments_across_try() {
+fn optional_handler_preserves_arguments_across_try() {
     check_expression(
-        "var C: Counter := Counter(Base := 0); C.OnValue := Combine; return Result.Ok(C.OnValue(try ReadValue(1, FailAt), try ReadValue(2, FailAt)));",
+        "var C: Counter := Counter(Base := 0); C.OnValue := Option.Some(Combine); case C.OnValue of when Option.Some(const Handler): return Result.Ok(Handler(try ReadValue(1, FailAt), try ReadValue(2, FailAt))); when Option.None: return Result.Ok(0); end case;",
     );
 }
 
 #[test]
-fn event_write_preserves_receiver_across_try() {
+fn optional_handler_field_write_preserves_record_across_try() {
     check_expression(
-        "var C: Counter := Counter(Base := 0); C.OnValue := try ReadHandler(FailAt); return Result.Ok(C.OnValue(1, 2));",
+        "var C: Counter := Counter(Base := 0); C.OnValue := Option.Some(try ReadHandler(FailAt)); case C.OnValue of when Option.Some(const Handler): return Result.Ok(Handler(1, 2)); when Option.None: return Result.Ok(0); end case;",
     );
 }
 
 #[test]
 fn record_field_write_preserves_parent_across_try_index() {
     check_expression(
-        "mutable var Value: Bucket := Bucket(Items := [0, 0]); Value.Items[try ReadValue(1, FailAt)] := 12; var Ignored: integer := try ReadValue(2, FailAt); return Result.Ok(Value.Items[1]);",
+        "var Value: Bucket := Bucket(Items := [0, 0]); Value.Items[try ReadValue(1, FailAt)] := 12; var Ignored: integer := try ReadValue(2, FailAt); return Result.Ok(Value.Items[1]);",
     );
 }
 
@@ -158,7 +207,7 @@ fn option_try_preserves_arguments_and_stops_at_none() {
     assert_succeeds(
         r#"
 program OptionArguments;
-  mutable var Trace: integer := 0;
+   var Trace: integer := 0;
 function ReadValue(Value: integer; FailAt: integer): Option of (integer);
 begin
   Trace := Trace * 10 + Value;
@@ -188,7 +237,7 @@ fn saved_operands_retain_snapshots_across_mutation_and_loop_iterations() {
     assert_succeeds(
         r#"
 program Snapshots;
-  mutable var Values: array of (integer) := [12, 99];
+   var Values: array of (integer) := [12, 99];
 function Change(): result of (integer, string);
 begin Values := [77, 88]; return Result.Ok(0); end function;
 function Probe(): result of (integer, string);
@@ -197,8 +246,8 @@ begin
   begin
     Values := [12, 99];
     if Values[try Change()] <> 12 then panic('collection snapshot'); end if;
-    mutable var X: integer := I;
-    var Update: function(): result of (integer, string) := function(): result of (integer, string)
+     var X: integer := I;
+    const Update: function(): result of (integer, string) := function(): result of (integer, string)
     begin X := 99; return Result.Ok(10); end function;
     if X + (try Update()) <> I + 10 then panic('local snapshot'); end if;
     if X <> 99 then panic('mutation missing'); end if;
@@ -241,8 +290,8 @@ end function;
 
 function Probe(Fail: boolean): Result of (integer, string);
 begin
-  var Values: array of (integer) := try Tagged(MakeValues());
-  var Number: integer := try Tagged(MakeInt(Fail));
+  const Values: array of (integer) := try Tagged(MakeValues());
+  const Number: integer := try Tagged(MakeInt(Fail));
   return Result.Ok(Number * 10 + Values[0] + Values[1]);
 end function;
 
@@ -273,7 +322,7 @@ begin
 end function;
 function Probe(Present: boolean): Option of (integer);
 begin
-  var Number: integer := try Wrapped(Lookup(Present));
+  const Number: integer := try Wrapped(Lookup(Present));
   return Option.Some(Number + 2);
 end function;
 begin

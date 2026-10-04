@@ -99,13 +99,13 @@ type Holder = record
   public Item: integer;
 end;
 
-mutable var Value: integer := 1;
-mutable var Pair: Holder := Holder(Item := Value);
+ var Value: integer := 1;
+ var Pair: Holder := Holder(Item := Value);
 
 function ReadValue(Value: integer): integer;
 begin
   // Value is ignored
-  var Text: string := 'Value';
+  const Text: string := 'Value';
   return Value
 end;
 
@@ -164,8 +164,10 @@ end record;
 
   public type Holder = record
   public Item: Point;
-  public property Selected: Point read Item;
 end record;
+
+public function HolderSelected(Receiver: Holder): Point;
+begin return Receiver.Item; end function;
 
  type Secret = Point;
 
@@ -182,12 +184,12 @@ end unit;
 uses Demo.Types as Types;
 
 begin
-  var AliasValue: Types.PointAlias := Types.PointAlias(X := 1);
-  var HolderValue: Types.Holder := Types.Holder(Item := AliasValue);
-  var PointValue: Types.Point := HolderValue.Item;
-  var SelectedValue: Types.Point := HolderValue.Selected;
-  var ResultValue: Types.Point := Types.Echo(PointValue);
-  var HiddenValue: Secret := PointValue;
+  const AliasValue: Types.PointAlias := Types.PointAlias(X := 1);
+  const HolderValue: Types.Holder := Types.Holder(Item := AliasValue);
+  const PointValue: Types.Point := HolderValue.Item;
+  const SelectedValue: Types.Point := Types.HolderSelected(HolderValue);
+  const ResultValue: Types.Point := Types.Echo(PointValue);
+  const HiddenValue: Secret := PointValue;
 end program;
 "#;
     let main = temp.write("src/main.fpas", main_source);
@@ -207,13 +209,12 @@ end program;
         .value;
     assert_eq!(member_target[0].symbol.name, "Point");
 
-    let property =
-        main_source.find("HolderValue.Selected").expect("property") + "HolderValue.".len();
-    let property_target = service
-        .type_definitions(&main, property)
-        .expect("property type")
+    let accessor = main_source.find("Types.HolderSelected").expect("accessor") + "Types.".len();
+    let accessor_target = service
+        .type_definitions(&main, accessor)
+        .expect("accessor result type")
         .value;
-    assert_eq!(property_target[0].symbol.name, "Point");
+    assert_eq!(accessor_target[0].symbol.name, "Point");
 
     let unit_source = std::fs::read_to_string(&unit).expect("unit source");
     let alias_decl = unit_source.find("PointAlias =").expect("alias declaration");
@@ -256,7 +257,12 @@ end program;
 #[test]
 fn unknown_type_definition_and_malformed_selection_are_safe() {
     let temp = TempDirectory::new("navigation-negative-selection");
-    let source = "program Broken;\n\nbegin\n  var Music: string := '𝄞';\n  Missing(\nend.";
+    let source = r#"program Broken;
+
+begin
+  const Music: string := '𝄞';
+  Missing(
+end."#;
     let path = temp.write("broken.fpas", source);
     let mut service = LanguageService::new(WorkspaceContext::loose(temp.path()));
     let missing = source.find("Missing").expect("unknown symbol");
@@ -291,7 +297,7 @@ begin
 end function;
 
 begin
-  var ResultValue: integer := ReadValue(1);
+  const ResultValue: integer := ReadValue(1);
 end program;
 "#;
     let path = temp.write("select.fpas", source);
@@ -326,7 +332,7 @@ fn workspace_symbol_kinds_remain_editor_facing() {
     let temp = TempDirectory::new("workspace-symbol-kind");
     let path = temp.write(
         "kind.fpas",
-        r#"program Kinds; begin var Value: integer := 1; end program;"#,
+        r#"program Kinds; begin const Value: integer := 1; end program;"#,
     );
     let mut service = LanguageService::new(WorkspaceContext::loose(temp.path()));
     service
@@ -334,12 +340,12 @@ fn workspace_symbol_kinds_remain_editor_facing() {
         .open_document(
             &path,
             1,
-            r#"program Kinds; begin var Value: integer := 1; end program;"#,
+            r#"program Kinds; begin const Value: integer := 1; end program;"#,
         )
         .expect("open loose document");
 
     let symbols = service.workspace_symbols("Value").expect("symbol kind");
 
-    assert_eq!(symbols[0].symbol.kind, SymbolKind::Variable);
+    assert_eq!(symbols[0].symbol.kind, SymbolKind::Constant);
     assert_eq!(symbols[0].path, path);
 }

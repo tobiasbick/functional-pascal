@@ -9,15 +9,8 @@ fn call(name: &str, value: i64) -> DebugExpression {
     }
 }
 
-fn bound_add() -> DebugExpression {
-    DebugExpression::Field {
-        base: Box::new(name("Box")),
-        name: "Add".to_string(),
-    }
-}
-
 #[test]
-fn synthetic_capture_and_receiver_children_are_not_assignable() {
+fn synthetic_capture_children_are_not_assignable_but_complete_values_can_be_copied() {
     let mut session = DebugSession::new(assignment_executable()).expect("debug session");
     stop_with_functions(&mut session);
     let locals = scope_reference(&mut session, "Locals");
@@ -61,39 +54,14 @@ fn synthetic_capture_and_receiver_children_are_not_assignable() {
     );
 
     session
-        .set_expression(&root("Current"), &bound_add(), Some(frame))
-        .expect("complete bound-method replacement remains supported");
-    let locals = scope_reference(&mut session, "Locals");
-    let generation = locals;
-    let locals_page = session.variables(locals, 0, 30).expect("bound local");
-    let current = named(&locals_page.items, "Current");
-    assert_ne!(current.variables_reference, 0);
-    let receiver_handle = current.variables_reference;
-    let children = session
-        .variables(receiver_handle, 0, 8)
-        .expect("receiver children");
-    assert!(
-        children.items.iter().any(|child| child.name == "receiver"),
-        "{children:?}"
-    );
-
-    let receiver = session
-        .set_variable(receiver_handle, "receiver", &name("Box"))
-        .expect_err("synthetic receiver child");
-    assert_eq!(receiver.kind, DebugErrorKind::VariablePathUnsupported);
-    assert!(receiver.message.contains("not assignable"), "{receiver:?}");
-
-    let preserved = session
-        .variables(generation, 0, 30)
-        .expect("generation survives receiver-child rejection")
-        .items;
-    assert_eq!(named(&preserved, "Current").value, "<function Holder.Add>");
-    let frame = session.stack(0, 1).expect("bound frame").items[0].id;
+        .set_expression(&root("Current"), &name("Captured"), Some(frame))
+        .expect("complete closure replacement remains supported");
+    let frame = session.stack(0, 1).expect("updated frame").items[0].id;
     assert_eq!(
         session
             .evaluate(&call("Current", 5), Some(frame))
-            .expect("complete bound replacement still invokes")
+            .expect("copied closure still invokes")
             .value,
-        "8"
+        "15"
     );
 }

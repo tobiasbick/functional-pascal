@@ -8,23 +8,23 @@ uses Std.Test as Test;
 begin
   for Round: integer := 1 to 4 do
     begin
-      var Group: Tasks.TaskGroup := Tasks.CreateTaskGroup();
-      var Token: Tasks.CancellationToken := Tasks.GetTaskGroupToken(Group);
-      var Output: channel of (integer) := Tasks.CreateChannel(1);
-      mutable var Children: array of (task) := [];
-      mutable var Seen: array of (integer) := [];
+      const Group: Tasks.TaskGroup := Tasks.CreateTaskGroup();
+      const Token: Tasks.CancellationToken := Tasks.GetTaskGroupToken(Group);
+      const Output: channel of (integer) := Tasks.CreateChannel(1);
+      var Children: array of (task) := [];
+      var Seen: array of (integer) := [];
       for Item: integer := 0 to 255 do
         begin
-          Arrays.Push(Seen, 0);
+          Arrays.Push(var Seen, 0);
         end;
       end for;
 
       for Producer: integer := 0 to 7 do
         begin
-          var Attempts: channel of (boolean) := Tasks.CreateChannel(2);
+          const Attempts: channel of (boolean) := Tasks.CreateChannel(2);
           discard Tasks.Send(Attempts, false);
           discard Tasks.Send(Attempts, true);
-          Arrays.Push(Children, Tasks.StartSupervisedTask(Group, function(WorkerToken: Tasks.CancellationToken): Result of (integer, string) begin
+          Arrays.Push(var Children, Tasks.StartSupervisedTask(Group, function(WorkerToken: Tasks.CancellationToken): Result of (integer, string) begin
             if not Results.Unwrap(Tasks.Receive(Attempts)) then
               begin
                 return Result.Error('transient startup failure');
@@ -54,7 +54,7 @@ begin
         begin
           Test.AssertEquals(0, Tasks.Select([
                                               Tasks.ReceiveCase(Output, procedure(Outcome: Result of (integer, string)) begin
-                                                var Number: integer := Results.Unwrap(Outcome);
+                                                const Number: integer := Results.Unwrap(Outcome);
                                                 Test.AssertTrue((Number >= 0) and (Number < 256));
                                                 Seen[Number] := Seen[Number] + 1;
                                               end procedure),

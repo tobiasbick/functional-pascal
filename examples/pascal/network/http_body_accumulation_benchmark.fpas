@@ -15,18 +15,18 @@ begin
       panic('expected ITERATIONS SIZE URL');
     end;
   end if;
-  var Iterations: integer := Conv.StrToInt(Args.ParamStr(0));
-  var Size: integer := Conv.StrToInt(Args.ParamStr(1));
-  var Url: string := Args.ParamStr(2);
+  const Iterations: integer := Conv.StrToInt(Args.ParamStr(0));
+  const Size: integer := Conv.StrToInt(Args.ParamStr(1));
+  const Url: string := Args.ParamStr(2);
   if (Iterations < 1) or (Size < 1) then
     begin
       panic('arguments must be positive');
     end;
   end if;
-  var Started: integer := Time.MonotonicMillis();
+  const Started: integer := Time.MonotonicMillis();
   for Iteration: integer := 1 to Iterations do
     begin
-      var ResponseValue: Http.Response := Results.Unwrap(Http.Send(Http.Request.Get(Url)));
+      const ResponseValue: Http.Response := Results.Unwrap(Http.Send(Http.RequestGet(Url)));
       if Arrays.Length(ResponseValue.Body) <> Size * 128 then
         begin
           panic('body length');

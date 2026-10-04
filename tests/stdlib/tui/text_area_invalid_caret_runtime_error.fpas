@@ -1,6 +1,10 @@
 program TuiTextAreaInvalidCaretRuntimeError;
 
 uses Std.Tui as Tui;
+uses Std.Tui.Elements as Elements;
+uses Std.Tui.Geometry as Geometry;
+uses Std.Tui.Ids as Ids;
+uses Std.Tui.Runtime as Runtime;
 
 function Update(State: integer; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): integer;
 begin
@@ -9,10 +13,10 @@ end function;
 
 function View(State: integer): Tui.TuiElement;
 begin
-  return Tui.TuiElementBuilders.MakeTextArea(Tui.TuiControlId.Create(1), 'x', 2, Tui.TuiPoint.Create(0, 0), Tui.TuiAction.Create(9));
+  return Elements.TuiElementMakeTextArea(Ids.TuiControlIdCreate(1), 'x', 2, Geometry.TuiPointCreate(0, 0), Ids.TuiActionCreate(9));
 end function;
 
 begin
-  mutable var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(10, 3));
-  discard App.RunIterations(0, Update, View, 0, 0);
+  var App: Tui.TuiApplication := Runtime.TuiApplicationOpenForTest(Geometry.TuiSizeCreate(10, 3));
+  discard Runtime.TuiApplicationRunIterations(App, 0, Update, View, 0, 0);
 end program;

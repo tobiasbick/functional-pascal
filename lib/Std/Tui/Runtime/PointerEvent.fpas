@@ -31,29 +31,34 @@ public type TuiPointerEvent = record
   public Alt: boolean;
   // Whether the Meta modifier is active.
   public Meta: boolean;
+end record;
 
-  // Creates a pointer event with no modifiers.
-  //
-  // Parameters:
-  // - `Action`: Application action associated with the control or emitted message.
-  // - `Button`: Button specification used by the operation.
-  // - `Position`: Position in terminal-cell coordinates.
-  public static function Create(Action: Console.MouseAction; Button: TuiPointerButton; Position: Point.TuiPoint): TuiPointerEvent;
-  begin
-    return TuiPointerEvent(Action := Action, Button := Button, Position := Position, Shift := false, Ctrl := false, Alt := false, Meta := false);
-  end function;
+// Creates a pointer event with no modifiers.
+//
+// Parameters:
+// - `Action`: Application action associated with the control or emitted message.
+// - `Button`: Button specification used by the operation.
+// - `Position`: Position in terminal-cell coordinates.
+public function TuiPointerEventCreate(
+  Action: Console.MouseAction;
+  Button: TuiPointerButton;
+  Position: Point.TuiPoint
+): TuiPointerEvent;
+begin
+  return TuiPointerEvent(Action := Action, Button := Button, Position := Position, Shift := false, Ctrl := false, Alt := false, Meta := false);
+end function;
 
-  // Creates a pointer event with explicit modifiers.
-  //
-  // Parameters:
-  // - `Action`: Application action associated with the control or emitted message.
-  // - `Button`: Button specification used by the operation.
-  // - `Position`: Position in terminal-cell coordinates.
-  // - `Shift`: Whether the Shift modifier is active.
-  // - `Ctrl`: Whether the Ctrl modifier is active.
-  // - `Alt`: Whether the Alt modifier is active.
-  // - `Meta`: Whether the Meta modifier is active.
-  public static function WithModifiers(
+// Creates a pointer event with explicit modifiers.
+//
+// Parameters:
+// - `Action`: Application action associated with the control or emitted message.
+// - `Button`: Button specification used by the operation.
+// - `Position`: Position in terminal-cell coordinates.
+// - `Shift`: Whether the Shift modifier is active.
+// - `Ctrl`: Whether the Ctrl modifier is active.
+// - `Alt`: Whether the Alt modifier is active.
+// - `Meta`: Whether the Meta modifier is active.
+public function TuiPointerEventWithModifiers(
   Action: Console.MouseAction;
   Button: TuiPointerButton;
   Position: Point.TuiPoint;
@@ -62,9 +67,8 @@ public type TuiPointerEvent = record
   Alt: boolean;
   Meta: boolean
 ): TuiPointerEvent;
-  begin
-    return TuiPointerEvent(Action := Action, Button := Button, Position := Position, Shift := Shift, Ctrl := Ctrl, Alt := Alt, Meta := Meta);
-  end function;
-end record;
+begin
+  return TuiPointerEvent(Action := Action, Button := Button, Position := Position, Shift := Shift, Ctrl := Ctrl, Alt := Alt, Meta := Meta);
+end function;
 
 end unit;

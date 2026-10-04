@@ -43,7 +43,7 @@ begin
   while not Console.EventPending() do
   begin null;
   end; end while;
-  var InputEvent: Console.ConsoleEvent := Console.ReadEvent();
+  const InputEvent: Console.ConsoleEvent := Console.ReadEvent();
   Console.WriteLn(InputEvent.key.ch);
   if Console.KeyPressed() then
   begin

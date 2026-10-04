@@ -204,12 +204,6 @@ fn matching_layout_definition(
                             (right_object, *right_type),
                         )
                     })
-                && named_routines_match(&left_layout.properties, &right_layout.properties, |item| {
-                    (&item.name, &item.getter)
-                })
-                && named_routines_match(&left_layout.methods, &right_layout.methods, |item| {
-                    (&item.name, &item.routine)
-                })
         }
         (DefinitionTarget::Enum(left_index), DefinitionTarget::Enum(right_index)) => {
             let Some(left_layout) = objects[left.0].enums.get(left_index as usize) else {
@@ -247,16 +241,6 @@ fn matching_layout_definition(
     }
 }
 
-fn named_routines_match<T>(left: &[T], right: &[T], fields: impl Fn(&T) -> (&str, &str)) -> bool {
-    left.len() == right.len()
-        && left.iter().zip(right).all(|(left, right)| {
-            let (left_name, left_routine) = fields(left);
-            let (right_name, right_routine) = fields(right);
-            left_name.eq_ignore_ascii_case(right_name)
-                && left_routine.eq_ignore_ascii_case(right_routine)
-        })
-}
-
 fn validate_shape(
     object: &RelocatableObject,
     definition: &ObjectDefinition,
@@ -267,6 +251,7 @@ fn validate_shape(
             DefinitionTarget::Function(index),
             ImportShape::Function {
                 arity,
+                var_parameters,
                 capture_count,
                 returns_value,
             },
@@ -277,14 +262,15 @@ fn validate_shape(
                 .ok_or_else(|| "definition has no callable implementation".to_string())?;
             let actual_returns = matches!(function.returns, fpas_unit::object::ObjectReturn::Value);
             if function.arity == *arity
+                && function.var_parameters == *var_parameters
                 && function.capture_count == *capture_count
                 && actual_returns == *returns_value
             {
                 Ok(())
             } else {
                 Err(format!(
-                    "callable ABI is ({}, {}, value={actual_returns}), expected ({arity}, {capture_count}, value={returns_value})",
-                    function.arity, function.capture_count
+                    "callable ABI is ({}, {}, var={:?}, value={actual_returns}), expected ({arity}, {capture_count}, var={var_parameters:?}, value={returns_value})",
+                    function.arity, function.capture_count, function.var_parameters
                 ))
             }
         }

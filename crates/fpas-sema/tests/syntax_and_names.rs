@@ -15,7 +15,7 @@ fn errors(source: &str) -> Vec<fpas_sema::SemaError> {
 #[test]
 fn aliases_are_case_insensitive_and_dispatch_to_canonical_units() {
     let ast = program(
-        "program P; uses Std.Str as Text; uses Std.Math as Numbers; begin var S: string := tExT.Trim(' a '); var I: integer := NUMBERS.Abs(-1); end program;",
+        r#"program P; uses Std.Str as Text; uses Std.Math as Numbers; begin const S: string := tExT.Trim(' a '); const I: integer := NUMBERS.Abs(-1); end program;"#,
     );
     let metadata = fpas_sema::analyze_with_types(&ast);
     assert!(metadata.errors.is_empty(), "{:#?}", metadata.errors);
@@ -25,11 +25,10 @@ fn aliases_are_case_insensitive_and_dispatch_to_canonical_units() {
 #[test]
 fn imports_expose_only_the_declared_alias() {
     for source in [
-        "program P; uses Std.Str as Text; begin var S: string := Trim(' a '); end program;",
-        "program P; uses Std.Str as Text; begin var S: string := Std.Str.Trim(' a '); end program;",
-        "program P; uses Std.Str as Text; begin var S: string := Str.Trim(' a '); end program;",
-        "program P; uses Std.Str as Text; begin var S: string := (' a ').Trim(); end program;",
-        "program P; uses Std.Json as Json; begin var V: JsonValue := Json.JsonValue.NullValue; end program;",
+        r#"program P; uses Std.Str as Text; begin const S: string := Trim(' a '); end program;"#,
+        r#"program P; uses Std.Str as Text; begin const S: string := Std.Str.Trim(' a '); end program;"#,
+        r#"program P; uses Std.Str as Text; begin const S: string := Str.Trim(' a '); end program;"#,
+        r#"program P; uses Std.Json as Json; begin const V: JsonValue := Json.JsonValue.NullValue; end program;"#,
     ] {
         let errors = errors(source);
         assert!(!errors.is_empty(), "unexpectedly accepted {source}");
@@ -45,7 +44,7 @@ fn imports_expose_only_the_declared_alias() {
 
 #[test]
 fn imports_do_not_steal_lexical_names() {
-    assert!(errors("program P; uses Std.Str as Text; function Trim(S: string): string; begin return S; end function; begin var S: string := Trim('a'); end program;").is_empty());
+    assert!(errors(r#"program P; uses Std.Str as Text; function Trim(S: string): string; begin return S; end function; begin const S: string := Trim('a'); end program;"#).is_empty());
 }
 
 #[test]
@@ -69,10 +68,10 @@ fn import_collisions_include_every_lexical_binding_kind() {
     }
     for statement in [
         "var Text: integer := 1;",
-        "begin var Text: integer := 1; end;",
+        r#"begin const Text: integer := 1; end;"#,
         "for Text: integer := 0 to 1 do null; end for;",
         "for Text: integer in [1] do null; end for;",
-        "var F: procedure(Text: integer) := procedure(Text: integer) begin null; end procedure;",
+        r#"const F: procedure(Text: integer) := procedure(Text: integer) begin null; end procedure;"#,
     ] {
         let source = format!("program P; uses Std.Str as Text; begin {statement} end program;");
         assert!(
@@ -97,11 +96,31 @@ fn duplicate_units_and_aliases_are_rejected_case_insensitively() {
 #[test]
 fn forward_types_work_in_signatures_fields_aliases_and_initializers() {
     for source in [
-        "program P; function F(X: Later): Later; begin return X; end function; type Later = integer; begin var I: Later := F(1); end program;",
-        "program P; type First = Later; var I: First := 1; type Later = integer; begin null; end program;",
-        "program P;\n\ntype Outer = record\n  Item: Later;\nend record;\n\ntype Later = integer;\n\nbegin\n  var V: Outer := Outer(Item := 1);\nend program;\n",
-        "program P;\n\ntype Node = record\n  Children: array of (Node);\nend record;\n\nbegin\n  var N: Node := Node(Children := []);\nend program;\n",
-        "program P; type A = B; type B = C; type C = integer; begin var I: A := 1; end program;",
+        r#"program P; function F(X: Later): Later; begin return X; end function; type Later = integer; begin const I: Later := F(1); end program;"#,
+        r#"program P; type First = Later; const I: First := 1; type Later = integer; begin null; end program;"#,
+        r#"program P;
+
+type Outer = record
+  Item: Later;
+end record;
+
+type Later = integer;
+
+begin
+  const V: Outer := Outer(Item := 1);
+end program;
+"#,
+        r#"program P;
+
+type Node = record
+  Children: array of (Node);
+end record;
+
+begin
+  const N: Node := Node(Children := []);
+end program;
+"#,
+        r#"program P; type A = B; type B = C; type C = integer; begin const I: A := 1; end program;"#,
     ] {
         let errors = errors(source);
         assert!(errors.is_empty(), "{source}\n{errors:#?}");
@@ -111,7 +130,7 @@ fn forward_types_work_in_signatures_fields_aliases_and_initializers() {
 #[test]
 fn initializer_order_unknown_types_and_alias_cycles_are_rejected() {
     for source in [
-        "program P; var A: integer := B; var B: integer := 1; begin null; end program;",
+        r#"program P; const A: integer := B; const B: integer := 1; begin null; end program;"#,
         "program P; const A: integer := B; const B: integer := 1; begin null; end program;",
         "program P; type A = Missing; begin null; end program;",
         "program P; type A = B; type B = A; begin null; end program;",
@@ -120,7 +139,23 @@ fn initializer_order_unknown_types_and_alias_cycles_are_rejected() {
     ] {
         assert!(!errors(source).is_empty(), "unexpectedly accepted {source}");
     }
-    assert!(errors("program P;\n\nconst Earlier: integer := 1;\n\ntype R = record\n  X: integer := Earlier;\nend record;\n\nbegin\n  var V: R := R();\nend program;\n").is_empty());
+    assert!(
+        errors(
+            r#"program P;
+
+const Earlier: integer := 1;
+
+type R = record
+  X: integer := Earlier;
+end record;
+
+begin
+  const V: R := R();
+end program;
+"#
+        )
+        .is_empty()
+    );
 }
 
 #[test]
@@ -141,12 +176,12 @@ fn type_and_routine_collisions_are_independent_of_order() {
 
 #[test]
 fn each_branch_has_a_distinct_local_scope() {
-    assert!(errors("program P; begin if true then var X: integer := 1; elsif false then var X: string := 's'; else var X: boolean := false; end if; var X: integer := 2; end program;").is_empty());
+    assert!(errors(r#"program P; begin if true then const X: integer := 1; elsif false then const X: string := 's'; else const X: boolean := false; end if; const X: integer := 2; end program;"#).is_empty());
     for statements in [
         "if true then var X: integer := 1; else var Y: integer := X; end if;",
         "if true then var X: integer := 1; elsif X = 1 then null; end if;",
         "if true then var X: integer := 1; end if; var Y: integer := X;",
-        "if true then begin var X: integer := 1; end; var Y: integer := X; end if;",
+        r#"if true then begin const X: integer := 1; end; const Y: integer := X; end if;"#,
     ] {
         assert!(!errors(&format!("program P; begin {statements} end program;")).is_empty());
     }
@@ -256,7 +291,7 @@ fn aliases_preserve_private_record_fields_and_factory_access() {
 
 #[test]
 fn case_arm_declarations_are_local_even_without_pattern_bindings() {
-    assert!(errors("program P; begin var X: integer := 1; case 1 of when 0: var X: string := 'zero'; when 1: var X: boolean := true; else var X: real := 2.0; end case; var Y: integer := X; end program;").is_empty());
+    assert!(errors(r#"program P; begin const X: integer := 1; case 1 of when 0: const X: string := 'zero'; when 1: const X: boolean := true; else const X: real := 2.0; end case; const Y: integer := X; end program;"#).is_empty());
     for body in [
         "case 1 of when 1: var Hidden: integer := 1; else null; end case; var X: integer := Hidden;",
         "case 1 of when 1: var Hidden: integer := 1; when 2: var X: integer := Hidden; end case;",
@@ -311,9 +346,9 @@ fn loop_and_closure_locals_do_not_escape_and_nested_aliases_cannot_shadow() {
     for body in [
         "for I: integer := 1 to 2 do null; end for; var X: integer := I;",
         "for Item: integer in [1] do null; end for; var X: integer := Item;",
-        "while false do begin var Hidden: integer := 1; end; end while; var X: integer := Hidden;",
+        r#"while false do begin const Hidden: integer := 1; end; end while; const X: integer := Hidden;"#,
         "repeat var Hidden: integer := 1; until Hidden = 1;",
-        "var F: procedure() := procedure() begin var Hidden: integer := 1; end procedure; var X: integer := Hidden;",
+        r#"const F: procedure() := procedure() begin const Hidden: integer := 1; end procedure; const X: integer := Hidden;"#,
     ] {
         let diagnostics = errors(&format!("program P; begin {body} end program;"));
         assert!(
@@ -332,7 +367,7 @@ fn loop_and_closure_locals_do_not_escape_and_nested_aliases_cannot_shadow() {
             .any(|error| error.message.contains("import alias")),
         "{diagnostics:#?}"
     );
-    assert!(errors("program P; var Hidden: integer := 1; begin repeat var Hidden: string := 'local'; until Hidden = 1; end program;").is_empty());
+    assert!(errors(r#"program P; const Hidden: integer := 1; begin repeat const Hidden: string := 'local'; until Hidden = 1; end program;"#).is_empty());
 }
 
 #[test]
@@ -362,9 +397,9 @@ fn an_import_alias_cannot_open_a_nested_unit_namespace() {
         ("Root.Branch.Leaf.Answer", false),
     ] {
         let ast = program(&format!(
-            "program P; uses Library.Root as Root;
+            r#"program P; uses Library.Root as Root;
             uses Library.Root.Nested as Nested;
-            uses Library.Root.Branch.Leaf as Leaf; begin var Value: integer := {name}; end program;"
+            uses Library.Root.Branch.Leaf as Leaf; begin const Value: integer := {name}; end program;"#
         ));
         let metadata = fpas_sema::analyze_program_with_interfaces(&ast, &interfaces).unwrap();
         assert_eq!(metadata.errors.is_empty(), valid, "{:#?}", metadata.errors);
@@ -406,7 +441,7 @@ fn import_hints_keep_the_alias_and_member_spelling() {
         "{short:#?}"
     );
     let qualified = errors(
-        "program P; uses Std.Str as Text; begin var S: string := Std.Str.Trim(' a '); end program;",
+        r#"program P; uses Std.Str as Text; begin const S: string := Std.Str.Trim(' a '); end program;"#,
     );
     assert!(
         qualified.iter().any(|error| error
@@ -421,7 +456,7 @@ fn import_hints_keep_the_alias_and_member_spelling() {
 fn type_names_are_not_values() {
     for value in ["R", "R with X := 1; end with"] {
         let source = format!(
-            "program P; type R = record X: integer; end record; begin var V: R := {value}; end program;"
+            r#"program P; type R = record X: integer; end record; begin const V: R := {value}; end program;"#
         );
         let errors = errors(&source);
         assert!(

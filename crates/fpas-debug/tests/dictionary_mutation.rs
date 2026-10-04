@@ -17,13 +17,13 @@ type Row = record
   Scores: dict of (string, integer);
 end record;
 
-mutable var GlobalScores: dict of (string, integer) := ['Root': 7];
+ var GlobalScores: dict of (string, integer) := ['Root': 7];
 
 begin
-  mutable var Scores: dict of (string, integer) := ['Ada': 1, 'Grace': 2, 'Linus': 3];
-  var FixedScores: dict of (string, integer) := ['Fixed': 5];
-  mutable var NestedValues: dict of (string, array of (integer)) := [:];
-  mutable var Rows: array of (Row) := [Row(Scores := ['Left': 10]), Row(Scores := ['Right': 20])];
+   var Scores: dict of (string, integer) := ['Ada': 1, 'Grace': 2, 'Linus': 3];
+  const FixedScores: dict of (string, integer) := ['Fixed': 5];
+   var NestedValues: dict of (string, array of (integer)) := [:];
+   var Rows: array of (Row) := [Row(Scores := ['Left': 10]), Row(Scores := ['Right': 20])];
   Console.WriteLn(Scores['Hopper']);
   Console.WriteLn(Scores['Bob']);
   Console.WriteLn(Rows[1].Scores['Nested']);

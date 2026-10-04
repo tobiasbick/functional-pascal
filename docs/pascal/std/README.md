@@ -40,6 +40,21 @@ not compiled and do not implement runtime behavior. Regenerate them after an
 intrinsic API or handbook change with
 `cargo run -p fpas-sema --example export_intrinsic_std_api`.
 
+## Pure intrinsic functions
+
+Intrinsic functions in `Std.Math`, `Std.Bits`, `Std.Str`, `Std.Conv`, `Std.Parse`,
+`Std.Path`, `Std.Json` and `Std.Toml` have explicit purity metadata. The functional
+operations in `Std.Arrays`, `Std.Dictionaries`, `Std.Options` and `Std.Results`
+also require resource-free parameter/result components and explicitly pure
+function callbacks. This applies in ordinary code too, including empty containers
+whose declared element type is a resource or ordinary callable. Use pattern
+matching and ordinary loops when working with such containers.
+
+`Std.Arrays.Push`, `Pop` and `ForEach` remain ordinary action operations. `ForEach`
+accepts an ordinary procedure with a value parameter. Clock, random, I/O and task
+operations have no purity guarantee. See [function types](../language/functions/function-types.md)
+for the recursive data and callable rules.
+
 ## Areas
 
 | Area | Hub | Units / topics |
@@ -82,7 +97,7 @@ uses Std.Console as Console;
 uses Std.Results as Results;
 uses Std.Options as Options;
 
-  var R: result of (integer, string) := Result.Ok(42);
+  const R: result of (integer, string) := Result.Ok(42);
   Console.WriteLn(Results.Unwrap(R));
 ```
 

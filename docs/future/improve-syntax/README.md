@@ -52,8 +52,8 @@ The checklists in each document track work within that stage.
 | [x] | [1. Language contract](language-contract.md) | None | Source audit, grammar/owner mapping, test inventory and bounded sequence recorded; no language implementation claimed |
 | [x] | [2. Diagnostics](stages/02-diagnostics.md) | Stage 1 contract | Coded records for all toolchain failures and warnings; `--diagnostics json` for check/build/run/test, `FPAS_DIAGNOSTICS=json` for native applications, and program-output records |
 | [x] | [3. Syntax and names](stages/03-syntax-and-names.md) | Stages 1 and 2 | Inventory, implemented block/name syntax and operators/bit APIs, source conversion, coordinated documentation, and full positive/negative/edge coverage verified; later constructs retain their stage-4/5 owners |
-| [ ] | [4. Functional core](stages/04-functional-core.md) | Stages 1-3; coordinated mutation/purity work from stage 5 | Callable and generic-data/decision deliveries, canonical consumer conversion and old-path removal verified; bindings/value semantics, coordinated mutation/purity and member removal remain |
-| [ ] | [5. Effects and tasks](stages/05-effects-and-tasks.md) | Stage 4 facilities; contract fixed in stage 1 | Planned |
+| [x] | [4. Functional core](stages/04-functional-core.md) | Stages 1-3; coordinated mutation/purity work from stage 5 | Callable values, generic data/decisions, bindings/inference, checked numbers, explicit mutation, purity/defaults and member removal delivered; full compiler/runtime, consumer and editor verification passes |
+| [ ] | [5. Effects and tasks](stages/05-effects-and-tasks.md) | Stage 4 facilities; contract fixed in stage 1 | Coordinated mutation and purity delivered; structured task ownership and migration remain |
 | [ ] | [6. Domain types and contracts](stages/06-domain-types-and-contracts.md) | Stages 4 and 5 | Planned |
 
 Stage numbers describe integration order, not six indivisible commits. Stage 1
@@ -83,8 +83,9 @@ Read-only inspection found the following reusable foundations and differences:
 - [Expression parsing](../../../crates/fpas-parser/src/parser/expr/precedence.rs)
   still places logical operators above comparisons and already rejects chained
   comparisons. Preserve useful checks while replacing the precedence rules.
-- The [binding documentation](../../pascal/language/basics/variables.md) still
-  describes immutable `var` and mutable `mutable var`.
+- The initial [binding documentation](../../pascal/language/basics/variables.md)
+  described immutable `var` and mutable `mutable var`; the binding delivery
+  replaces those forms with computed const and writable var bindings.
 - [Closures](../../pascal/language/functions/closures.md), generic routines,
   record updates, pattern matching, and typed tasks already provide foundations.
   Audit their exact behavior before extending or replacing them.
@@ -150,6 +151,34 @@ recursive patterns, lazy decisions, equality/defaults, canonical consumer conver
 old-path removal and complete positive/negative/edge verification. Its owning
 checkbox is complete. The [bare-task migration boundary](audit/task-migration-boundary.md)
 retains removal of bare task annotations in coordinated binding/task work.
-Next: coordinate stage-5 references/purity with stage-4 binding/inference,
-value-copying, checked-number and default-purity migration in the bounded sequence.
+The [binding delivery](audit/binding-initializers.md) verifies computed const,
+writable var, initializer-only local inference, static classification, value-copy
+and identity behavior, imported storage, consumers and editor inference. Explicit
+caller references and native array var modes are integrated. The
+[checked-number delivery](audit/checked-numbers.md) implements numeric rules and
+records the IR omission in compiler artifact identity and a static-aggregate
+checking gap. Both corrections are authorized and implemented, including
+static aggregate metadata across compiled-unit reuse. Numeric verification
+passes. The authorized standard-constant correction shares values between checker
+and compiler and covers guards, defaults and artifact reuse. The separate imported
+storage/alias collision found in its CLI regression is also corrected under the
+standing permission for pre-existing bugs. Imported globals use canonical unit
+identities; alias/member paths, snapshots, var calls and reuse have regressions.
+Coordinated stage-5 purity/default checking is also delivered.
+Its preparatory audit found a baseline generic parameter collision and a sibling
+routine lookup failure in anonymous closures. The
+[generic parameter identity correction](audit/generic-parameter-identity.md)
+records identity-based typing/substitution, lexical closure ownership, compiled
+interfaces and focused regressions. Full verification passes with 3,835 Rust tests
+and the complete FPAS bundle, consumers and handbook examples. The
+[default-purity boundary](audit/default-purity-boundary.md) is approved: defaults
+require pure evaluation, without restricting their declared field result types.
+The coordinated purity/default implementation is complete.
+Its [integration audit](audit/purity-and-defaults.md) records the checker,
+compiled-unit defaults, consumer migration and passed verification. The
+[member-removal delivery](audit/member-functions.md) completes ordinary-function
+migration, removes obsolete compiler/runtime/editor mechanisms and updates the
+grammar and current handbook. Stage 4 is complete after full verification.
+Next: stage 5 structured task ownership, transport, observation, cancellation and
+joining, including the approved bare-task migration.
 Later constructs retain their owning stage's migration and test gates.

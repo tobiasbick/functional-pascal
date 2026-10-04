@@ -1,7 +1,7 @@
+mod bindings;
 mod consts;
 mod routines;
 pub(in crate::check) mod types;
-mod vars;
 
 use super::Checker;
 use crate::scope::canonical_symbol_name;
@@ -13,9 +13,8 @@ use std::collections::HashSet;
 impl Checker {
     pub(crate) fn check_decl(&mut self, decl: &Decl) {
         match decl {
-            Decl::Const(c) => self.check_const_def(c),
-            Decl::Var(v) => self.check_var_def(v, false),
-            Decl::MutableVar(v) => self.check_var_def(v, true),
+            Decl::Const(v) => self.check_binding(v, false),
+            Decl::Var(v) => self.check_binding(v, true),
             Decl::TypeDef(td) => self.check_type_def(td),
             Decl::Function(f) => self.check_function_decl(f),
             Decl::Procedure(p) => self.check_procedure_decl(p),
@@ -30,10 +29,16 @@ impl Checker {
         span: fpas_lexer::Span,
     ) {
         if !expected.assignment_compatible_with(actual) {
+            let hint = if matches!((expected, actual), (Ty::GenericParam(left), Ty::GenericParam(right)) if left.identity != right.identity)
+            {
+                "These type parameters belong to different declarations. Use a value of the expected parameter's type.".to_owned()
+            } else {
+                format!("The {context} must match the declared type.")
+            };
             self.error_with_code(
                 SEMA_TYPE_MISMATCH,
                 format!("Type mismatch in {context}: expected `{expected}`, found `{actual}`"),
-                format!("The {context} must match the declared type."),
+                hint,
                 span,
             );
         }

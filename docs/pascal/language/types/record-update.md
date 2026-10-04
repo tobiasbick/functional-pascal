@@ -17,22 +17,22 @@ type Point = record
   Y: integer;
 end record;
 
-var P: Point := Point(X := 1, Y := 2);
-var Q: Point := P with X := 99; end with;
+const P: Point := Point(X := 1, Y := 2);
+const Q: Point := P with X := 99; end with;
 
 ```
 
 Multiple fields can be updated in one expression:
 
 ```pascal
-var R: Point := P with X := 10; Y := 20; end with;
+const R: Point := P with X := 10; Y := 20; end with;
 
 ```
 
 Updates may be chained by wrapping the inner expression in parentheses:
 
 ```pascal
-var S: Point := (P with X := 5; end with) with Y := 7; end with;
+const S: Point := (P with X := 5; end with) with Y := 7; end with;
 
 ```
 
@@ -44,7 +44,7 @@ begin
   return Point(X := 0, Y := 0);
 end function;
 
-var T: Point := Origin() with X := 42; end with;
+const T: Point := Origin() with X := 42; end with;
 
 ```
 

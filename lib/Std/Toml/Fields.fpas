@@ -188,13 +188,13 @@ end function;
 // - `Name`: Required key name.
 public function StringArrayField(Fields: dict of (string, Toml.TomlValue); Name: string): Result of (array of (string), string);
 begin
-  mutable var Values: array of (string) := [];
+  var Values: array of (string) := [];
   for Item: Toml.TomlValue in try ArrayField(Fields, Name) do
     begin
       case Item of
         when Toml.TomlValue.String(const Value):
           begin
-            Arrays.Push(Values, Value);
+            Arrays.Push(var Values, Value);
           end;
         when Toml.TomlValue.Integer(_), Toml.TomlValue.Float(_), Toml.TomlValue.Boolean(_), Toml.TomlValue.Datetime(_), Toml.TomlValue.ArrayValue(_), Toml.TomlValue.Table(_):
           begin

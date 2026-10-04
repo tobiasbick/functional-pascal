@@ -1,7 +1,7 @@
 //! Scalar declarations, assignments, blocks, returns, and panic lowering.
 
 use fpas_ir::{Operation, Terminator};
-use fpas_parser::{DesignatorPart, Stmt, VarDef};
+use fpas_parser::{BindingDef, DesignatorPart, Stmt};
 
 use crate::CompileError;
 
@@ -28,20 +28,13 @@ impl LoweringContext {
                 self.end_scope();
                 Ok(())
             }
-            Stmt::Var(definition) => self.lower_variable(definition, false),
-            Stmt::MutableVar(definition) => self.lower_variable(definition, true),
+            Stmt::Const(definition) => self.lower_variable(definition, false),
+            Stmt::Var(definition) => self.lower_variable(definition, true),
             Stmt::Assign {
                 target,
                 value,
                 span,
             } => {
-                let key = fpas_sema::designator_lookup_key(target);
-                if let Some(info) = self.event_writes.get(&key).cloned() {
-                    return self.lower_event_write(target, value, &info, *span);
-                }
-                if let Some(info) = self.property_writes.get(&key).cloned() {
-                    return self.lower_property_write(target, value, &info, *span);
-                }
                 let value = match self.designator_type(target) {
                     Some(expected) => self.lower_expression_as(value, expected)?,
                     None => self.lower_expression(value)?,
@@ -89,14 +82,10 @@ impl LoweringContext {
                 span,
             } => {
                 let call_key = fpas_sema::designator_lookup_key(designator);
-                if let Some(info) = self.event_raises.get(&call_key).cloned() {
-                    let _ = self.lower_event_raise(designator, args, &info, *span)?;
-                    return Ok(());
-                }
                 let result = if self.intrinsic_calls.contains_key(&call_key) {
                     Some(super::types::UNIT)
                 } else {
-                    self.member_call_result(call_key).or_else(|| {
+                    self.value_call_result(call_key).or_else(|| {
                         let qualified = designator
                             .parts
                             .iter()
@@ -125,8 +114,16 @@ impl LoweringContext {
         Ok(())
     }
 
-    fn lower_variable(&mut self, definition: &VarDef, mutable: bool) -> Result<(), CompileError> {
-        let declared = self.declared_type(&definition.type_expr)?;
+    fn lower_variable(
+        &mut self,
+        definition: &BindingDef,
+        mutable: bool,
+    ) -> Result<(), CompileError> {
+        let declared = if let Some(annotation) = &definition.type_expr {
+            self.declared_type(annotation)?
+        } else {
+            self.expression_ir_type(&definition.value)?
+        };
         let ty = if self.is_bare_task_binding(declared) {
             let inferred = self.expression_ir_type(&definition.value)?;
             self.specialize_task_binding(declared, inferred)

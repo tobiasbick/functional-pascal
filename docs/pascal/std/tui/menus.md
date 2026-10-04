@@ -1,6 +1,6 @@
 # `Std.Tui` menus
 
-`TuiElementBuilders.MakeMenu` creates one controlled hierarchical menu. The
+`Elements.TuiElementMakeMenu` creates one controlled hierarchical menu. The
 menu is a leaf in the element tree; its hierarchy is a flat array of
 `TuiMenuNode` values linked by `Parent: option of (TuiMenuNodeId)`. Menu nodes
 never contain recursive child arrays.
@@ -10,11 +10,13 @@ their parent by identity:
 
 ```pascal
 uses Std.Tui as Tui;
+uses Std.Tui.Chrome as Chrome;
+uses Std.Tui.Ids as Ids;
 
-var FileId: Tui.TuiMenuNodeId := Tui.TuiMenuNodeId.Create(1);
-var Nodes: array of (Tui.TuiMenuNode) := [
-                                     Tui.TuiMenuNodeBuilders.Submenu(FileId, Option.None, 'File', 'F'),
-                                     Tui.TuiMenuNodeBuilders.CommandWithShortcut(Tui.TuiMenuNodeId.Create(2), Option.Some(FileId), 'Open', 'O', Tui.TuiAction.Create(10), Tui.TuiKeyGesture.Create(Tui.TuiKeyKind.Character, 'o', false, true, false, false, 'Ctrl+O'))
+const FileId: Tui.TuiMenuNodeId := Chrome.TuiMenuNodeIdCreate(1);
+const Nodes: array of (Tui.TuiMenuNode) := [
+                                     Chrome.TuiMenuNodeSubmenu(FileId, Option.None, 'File', 'F'),
+                                     Chrome.TuiMenuNodeCommandWithShortcut(Chrome.TuiMenuNodeIdCreate(2), Option.Some(FileId), 'Open', 'O', Ids.TuiActionCreate(10), Chrome.TuiKeyGestureCreate(Tui.TuiKeyKind.Character, 'o', false, true, false, false, 'Ctrl+O'))
                                    ];
 ```
 
@@ -29,8 +31,9 @@ and change action:
 
 ```pascal
 uses Std.Tui as Tui;
+uses Std.Tui.Elements as Elements;
 
-Tui.TuiElementBuilders.MakeMenu(MenuId, Nodes, Model.Menu, MenuChangedAction);
+Elements.TuiElementMakeMenu(MenuId, Nodes, Model.Menu, MenuChangedAction);
 ```
 
 Routing proposes changes through:

@@ -3,9 +3,7 @@
 //! **Documentation:** `docs/pascal/language/functions/postfix-chaining.md`
 
 use super::super::Checker;
-use super::calls::FluentCall;
-use crate::check::MethodCallTarget;
-use crate::types::{MethodKind, Ty};
+use crate::types::Ty;
 use fpas_diagnostics::codes::SEMA_TYPE_MISMATCH;
 use fpas_lexer::Span;
 use fpas_parser::{Expr, PostfixOperation};
@@ -40,10 +38,7 @@ impl Checker {
             self.check_expr(expr);
             return;
         };
-        if !matches!(
-            operations.last(),
-            Some(PostfixOperation::MethodCall { .. } | PostfixOperation::Call { .. })
-        ) {
+        if !matches!(operations.last(), Some(PostfixOperation::Call { .. })) {
             self.error_with_code(
                 SEMA_TYPE_MISMATCH,
                 "Postfix expression statement must end with a call",
@@ -67,10 +62,7 @@ impl Checker {
         operations: &[PostfixOperation],
         span: Span,
     ) -> Ty {
-        if !matches!(
-            operations.last(),
-            Some(PostfixOperation::MethodCall { .. } | PostfixOperation::Call { .. })
-        ) {
+        if !matches!(operations.last(), Some(PostfixOperation::Call { .. })) {
             self.error_with_code(
                 SEMA_TYPE_MISMATCH,
                 "`go` requires a final call",
@@ -92,12 +84,7 @@ impl Checker {
         let mut ty = self.check_expr(base);
         let mut task_bound = self.expr_is_task_bound(Self::expr_lookup_key(base));
         for (index, operation) in operations.iter().enumerate() {
-            if task_bound
-                && matches!(
-                    operation,
-                    PostfixOperation::Call { .. } | PostfixOperation::MethodCall { .. }
-                )
-            {
+            if task_bound && matches!(operation, PostfixOperation::Call { .. }) {
                 self.mark_expr_task_bound(Self::postfix_operation_lookup_key(operation));
             }
             let procedure_result_is_discarded =
@@ -124,9 +111,7 @@ impl Checker {
                 PostfixOperation::Index { index, .. } => {
                     self.check_expr(index);
                 }
-                PostfixOperation::MethodCall { args, .. } | PostfixOperation::Call { args, .. } => {
-                    self.check_args_only(args)
-                }
+                PostfixOperation::Call { args, .. } => self.check_args_only(args),
             }
             return Ty::Error;
         }
@@ -142,220 +127,10 @@ impl Checker {
                 procedure_result_is_discarded,
             ),
             PostfixOperation::Field { name, span } => {
-                let key = Self::postfix_operation_lookup_key(operation);
-                self.check_record_member_access(
-                    &resolved,
-                    name,
-                    *span,
-                    Some((key, 0)),
-                    Some((key, 0)),
-                )
+                self.check_record_field_access(&resolved, name, *span)
             }
             PostfixOperation::Index { index, span } => {
                 self.check_index_access(&resolved, index, *span)
-            }
-            PostfixOperation::MethodCall { name, args, span } => self.check_postfix_method_call(
-                &resolved,
-                name,
-                args,
-                *span,
-                operation,
-                procedure_result_is_discarded,
-            ),
-        }
-    }
-
-    fn check_postfix_method_call(
-        &mut self,
-        receiver_ty: &Ty,
-        method_name: &str,
-        args: &[Expr],
-        span: Span,
-        operation: &PostfixOperation,
-        procedure_result_is_discarded: bool,
-    ) -> Ty {
-        let Ty::Record(record_ty) = receiver_ty else {
-            let receiver = Expr::Error(span);
-            return self.check_fluent_call(FluentCall {
-                call_key: Self::postfix_operation_lookup_key(operation),
-                receiver: &receiver,
-                receiver_ty,
-                name: method_name,
-                args,
-                span,
-                call_span: span,
-                allow_procedure_result: procedure_result_is_discarded,
-                receiver_reads: Vec::new(),
-            });
-        };
-
-        if self.reject_private_record_member(record_ty, method_name, span) {
-            self.check_args_only(args);
-            return Ty::Error;
-        }
-
-        let qualified = format!("{}.{}", record_ty.name, method_name);
-        let op_key = Self::postfix_operation_lookup_key(operation);
-
-        if record_ty
-            .fields
-            .iter()
-            .any(|(name, _)| name.eq_ignore_ascii_case(method_name))
-            || record_ty
-                .properties
-                .iter()
-                .any(|(name, _)| name.eq_ignore_ascii_case(method_name))
-        {
-            let member_ty = self.check_record_member_access(
-                receiver_ty,
-                method_name,
-                span,
-                Some((op_key, 0)),
-                None,
-            );
-            return self.check_value_call(
-                op_key,
-                method_name,
-                &member_ty,
-                args,
-                span,
-                procedure_result_is_discarded,
-            );
-        }
-
-        if let Some(routine_kind) = self.static_routine_kind_on_record(record_ty, method_name) {
-            self.error_with_code(
-                SEMA_TYPE_MISMATCH,
-                format!(
-                    "`{method_name}` is a static {routine_kind} and must be called through the type `{}.{}`",
-                    record_ty.name, method_name
-                ),
-                format!(
-                    "Write `{}.{}(...)` instead of calling it on a value.",
-                    record_ty.name, method_name
-                ),
-                span,
-            );
-            self.check_args_only(args);
-            return Ty::Error;
-        }
-
-        let Some(method_kind) = self.resolve_method_kind(record_ty, method_name, &qualified) else {
-            if record_ty
-                .fields
-                .iter()
-                .any(|(name, _)| name.eq_ignore_ascii_case(method_name))
-                || record_ty
-                    .properties
-                    .iter()
-                    .any(|(name, _)| name.eq_ignore_ascii_case(method_name))
-            {
-                let member_ty = self.check_record_member_access(
-                    receiver_ty,
-                    method_name,
-                    span,
-                    Some((op_key, 0)),
-                    None,
-                );
-                return self.check_value_call(
-                    op_key,
-                    method_name,
-                    &member_ty,
-                    args,
-                    span,
-                    procedure_result_is_discarded,
-                );
-            }
-            if record_ty
-                .events
-                .iter()
-                .any(|(name, _)| name.eq_ignore_ascii_case(method_name))
-            {
-                self.error_with_code(
-                    SEMA_TYPE_MISMATCH,
-                    format!(
-                        "Record member `{method_name}` takes priority over receiver-call lookup"
-                    ),
-                    "Call the member with its declared arguments or use a qualified free routine.",
-                    span,
-                );
-                self.check_args_only(args);
-                return Ty::Error;
-            }
-            let receiver = Expr::Error(span);
-            return self.check_fluent_call(FluentCall {
-                call_key: op_key,
-                receiver: &receiver,
-                receiver_ty,
-                name: method_name,
-                args,
-                span,
-                call_span: span,
-                allow_procedure_result: procedure_result_is_discarded,
-                receiver_reads: Vec::new(),
-            });
-        };
-
-        self.method_calls.insert(
-            op_key,
-            MethodCallTarget::Instance {
-                qualified_name: qualified.clone(),
-                receiver_reads: Vec::new(),
-            },
-        );
-
-        match method_kind {
-            MethodKind::Function(func_ty) => {
-                let Some(visible_params) = func_ty.params.get(1..) else {
-                    self.error_with_code(
-                        SEMA_TYPE_MISMATCH,
-                        format!(
-                            "Record method `{qualified}` must declare `Self` as its first parameter"
-                        ),
-                        "Declare the method as `function Name(Self: RecordType; ...)`.",
-                        span,
-                    );
-                    return Ty::Error;
-                };
-                let inferred = self.check_method_call_args(
-                    &qualified,
-                    &func_ty.type_params,
-                    visible_params,
-                    args,
-                    span,
-                );
-                Self::substitute_type_params(&func_ty.return_type, &inferred)
-            }
-            MethodKind::Procedure(proc_ty) => {
-                let Some(visible_params) = proc_ty.params.get(1..) else {
-                    self.error_with_code(
-                        SEMA_TYPE_MISMATCH,
-                        format!(
-                            "Record method `{qualified}` must declare `Self` as its first parameter"
-                        ),
-                        "Declare the method as `procedure Name(Self: RecordType; ...)`.",
-                        span,
-                    );
-                    return Ty::Error;
-                };
-                self.check_method_call_args(
-                    &qualified,
-                    &proc_ty.type_params,
-                    visible_params,
-                    args,
-                    span,
-                );
-                if procedure_result_is_discarded {
-                    Ty::Unit
-                } else {
-                    self.error_with_code(
-                        SEMA_TYPE_MISMATCH,
-                        format!("Method procedure `{qualified}` does not return a value"),
-                        "Use a method function instead if you need a return value, or make the procedure the final call of a statement.",
-                        span,
-                    );
-                    Ty::Error
-                }
             }
         }
     }

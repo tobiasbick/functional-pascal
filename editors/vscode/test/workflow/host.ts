@@ -53,7 +53,7 @@ export async function verifyWorkflowHost(
     );
     await fs.writeFile(
       mainPath,
-      "program Workflow; begin var Value:integer:=MissingCall(); end program;"
+      "program Workflow; begin const Value:integer:=MissingCall(); end program;"
     );
     await fs.writeFile(
       testsManifest,
@@ -73,7 +73,7 @@ export async function verifyWorkflowHost(
     );
     await fs.writeFile(
       testPaths.compile,
-      "program CompileTest;\n\nbegin\n  var Value: MissingType := 1;\nend program;\n"
+      "program CompileTest;\n\nbegin\n  const Value: MissingType := 1;\nend program;\n"
     );
     await fs.writeFile(
       testPaths.runtime,
@@ -81,7 +81,7 @@ export async function verifyWorkflowHost(
     );
     await fs.writeFile(
       testPaths.timeout,
-      "program TimeoutTest;\n\nbegin\n  mutable var Value: integer := 0;\n  while true do\n  begin\n    Value := Value + 1;\n  end; end while;\nend program;\n"
+      "program TimeoutTest;\n\nbegin\n   var Value: integer := 0;\n  while true do\n  begin\n    Value := Value + 1;\n  end; end while;\nend program;\n"
     );
     await fs.writeFile(invalidManifest, "not valid toml");
 
@@ -96,7 +96,7 @@ export async function verifyWorkflowHost(
           diagnostic.code === "F2003" &&
           diagnostic.severity === vscode.DiagnosticSeverity.Error &&
           diagnostic.range.start.line === 0 &&
-          diagnostic.range.start.character === 43 &&
+          diagnostic.range.start.character === 45 &&
           diagnostic.message.includes("Help:")
       ),
       JSON.stringify({ problems, operation: api.workflow.lastOperation() })
@@ -111,7 +111,7 @@ export async function verifyWorkflowHost(
     await vscode.commands.executeCommand(FORMAT_COMMAND, programUri);
     assert.equal(
       await fs.readFile(mainPath, "utf8"),
-      "program Workflow;\n\nbegin\n  var Value: integer := MissingCall();\nend program;\n"
+      "program Workflow;\n\nbegin\n  const Value: integer := MissingCall();\nend program;\n"
     );
 
     const terminalsBefore = vscode.window.terminals.length;

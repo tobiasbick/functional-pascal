@@ -110,7 +110,7 @@ pub(in crate::vm::debug) fn describe_target(
                 }
             }),
         },
-        MutationRoot::ClosureCell(_) => DebugDataLocation {
+        MutationRoot::ClosureCell(_) | MutationRoot::Reference(_) => DebugDataLocation {
             kind: DebugDataLocationKind::ClosureCell,
             lifetime: DebugDataLocationLifetime::UnregisteredAlias,
             descendant,

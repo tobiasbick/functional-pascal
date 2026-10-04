@@ -4,6 +4,11 @@ uses Std.Arrays as Arrays;
 uses Std.Str as Str;
 uses Std.Test as Test;
 uses Std.Tui as Tui;
+uses Std.Tui.Elements as Elements;
+uses Std.Tui.Geometry as Geometry;
+uses Std.Tui.Ids as Ids;
+uses Std.Tui.Rendering as Rendering;
+uses Std.Tui.Runtime as Runtime;
 
 type ModalModel = record
   Focus: integer;
@@ -14,7 +19,7 @@ end record;
 
 function MakePointer(Action: Tui.TuiPointerAction; X: integer; Y: integer): Tui.TuiPointerEvent;
 begin
-  return Tui.TuiPointerEvent.Create(Action, Tui.TuiPointerButton.Left, Tui.TuiPoint.Create(X, Y));
+  return Runtime.TuiPointerEventCreate(Action, Tui.TuiPointerButton.Left, Geometry.TuiPointCreate(X, Y));
 end function;
 
 function MakeKey(Kind: Tui.TuiKeyKind; Character: string): Tui.TuiKeyEvent;
@@ -26,11 +31,11 @@ function FindGlyph(Snapshot: Tui.TuiSurfaceSnapshot; Glyph: string): Tui.TuiPoin
 begin
   for Y: integer := 0 to Snapshot.Height - 1 do
     begin
-      var Line: string := Snapshot.LineAt(Y);
-      var Index: integer := Str.IndexOf(Line, Glyph);
+      const Line: string := Rendering.TuiSurfaceSnapshotLineAt(Snapshot, Y);
+      const Index: integer := Str.IndexOf(Line, Glyph);
       if Index >= 0 then
         begin
-          return Tui.TuiPoint.Create(Index, Y);
+          return Geometry.TuiPointCreate(Index, Y);
         end;
       end if;
     end;
@@ -41,29 +46,29 @@ end function;
 
 function ViewModal(State: ModalModel): Tui.TuiElement;
 begin
-  mutable var Overlay: Tui.TuiElement := Tui.TuiElementBuilders.MakeEmpty();
+  var Overlay: Tui.TuiElement := Elements.TuiElementMakeEmpty();
   if State.ConfirmOpen then
     begin
-      Overlay := Tui.TuiElementBuilders.MakeOverlay('Confirm', [
-                                                                 Tui.TuiElementBuilders.MakeRow([
-                                                                                                  Tui.TuiElementBuilders.MakeButton(Tui.TuiControlId.Create(3), 'Yes', Tui.TuiAction.Create(30)),
-                                                                                                  Tui.TuiElementBuilders.MakeButton(Tui.TuiControlId.Create(4), 'No', Tui.TuiAction.Create(40))
-                                                                                                ])
-                                                               ]);
+      Overlay := Elements.TuiElementMakeOverlay('Confirm', [
+                                                             Elements.TuiElementMakeRow([
+                                                                                          Elements.TuiElementMakeButton(Ids.TuiControlIdCreate(3), 'Yes', Ids.TuiActionCreate(30)),
+                                                                                          Elements.TuiElementMakeButton(Ids.TuiControlIdCreate(4), 'No', Ids.TuiActionCreate(40))
+                                                                                        ])
+                                                           ]);
     end;
   end if;
 
-  return Tui.TuiElementBuilders.MakeDesktop(Option.Some(Tui.TuiControlId.Create(State.Focus)), [
-                                                                                                 Tui.TuiElementBuilders.MakePanel('Host', [
-                                                                                                                                            Tui.TuiElementBuilders.MakeButton(Tui.TuiControlId.Create(1), 'Save', Tui.TuiAction.Create(10))
-                                                                                                                                          ]),
-                                                                                                 Overlay
-                                                                                               ]);
+  return Elements.TuiElementMakeDesktop(Option.Some(Ids.TuiControlIdCreate(State.Focus)), [
+                                                                                            Elements.TuiElementMakePanel('Host', [
+                                                                                                                                   Elements.TuiElementMakeButton(Ids.TuiControlIdCreate(1), 'Save', Ids.TuiActionCreate(10))
+                                                                                                                                 ]),
+                                                                                            Overlay
+                                                                                          ]);
 end function;
 
 function UpdateModal(State: ModalModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): ModalModel;
 begin
-  Cmd.Set(Tui.TuiCmd.NoCommand);
+  Runtime.TuiCmdOutputSet(Cmd, Tui.TuiCmd.NoCommand);
   case Msg of
     when Tui.TuiMsg.FocusChanged(const Previous, const Current):
       begin
@@ -107,38 +112,38 @@ begin
 end function;
 
 begin
-  mutable var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(40, 12));
-  mutable var Model: ModalModel := ModalModel(Focus := 1, ConfirmOpen := false, Actions := [], PointerHits := 0);
-  Model := App.RunIterations(Model, UpdateModal, ViewModal, 0, 0);
-  var SaveAt: Tui.TuiPoint := FindGlyph(App.SurfaceSnapshot(), 'Save');
-  App.InjectPointerForTest(MakePointer(Tui.TuiPointerAction.Down, SaveAt.X, SaveAt.Y));
-  Model := App.RunIterations(Model, UpdateModal, ViewModal, 1, 0);
-  App.InjectPointerForTest(MakePointer(Tui.TuiPointerAction.Up, SaveAt.X, SaveAt.Y));
-  Model := App.RunIterations(Model, UpdateModal, ViewModal, 1, 0);
+  var App: Tui.TuiApplication := Runtime.TuiApplicationOpenForTest(Geometry.TuiSizeCreate(40, 12));
+  var Model: ModalModel := ModalModel(Focus := 1, ConfirmOpen := false, Actions := [], PointerHits := 0);
+  Model := Runtime.TuiApplicationRunIterations(App, Model, UpdateModal, ViewModal, 0, 0);
+  const SaveAt: Tui.TuiPoint := FindGlyph(Runtime.TuiApplicationSurfaceSnapshot(App), 'Save');
+  Runtime.TuiApplicationInjectPointerForTest(App, MakePointer(Tui.TuiPointerAction.Down, SaveAt.X, SaveAt.Y));
+  Model := Runtime.TuiApplicationRunIterations(App, Model, UpdateModal, ViewModal, 1, 0);
+  Runtime.TuiApplicationInjectPointerForTest(App, MakePointer(Tui.TuiPointerAction.Up, SaveAt.X, SaveAt.Y));
+  Model := Runtime.TuiApplicationRunIterations(App, Model, UpdateModal, ViewModal, 1, 0);
   Test.AssertTrue(Model.ConfirmOpen);
   Test.AssertEquals(10, Model.Actions[0]);
   Test.AssertEquals(3, Model.Focus);
-  App.InjectKeyForTest(MakeKey(Tui.TuiKeyKind.Down, ''));
-  Model := App.RunIterations(Model, UpdateModal, ViewModal, 1, 0);
+  Runtime.TuiApplicationInjectKeyForTest(App, MakeKey(Tui.TuiKeyKind.Down, ''));
+  Model := Runtime.TuiApplicationRunIterations(App, Model, UpdateModal, ViewModal, 1, 0);
   Test.AssertEquals(4, Model.Focus);
-  App.InjectKeyForTest(MakeKey(Tui.TuiKeyKind.Up, ''));
-  Model := App.RunIterations(Model, UpdateModal, ViewModal, 1, 0);
+  Runtime.TuiApplicationInjectKeyForTest(App, MakeKey(Tui.TuiKeyKind.Up, ''));
+  Model := Runtime.TuiApplicationRunIterations(App, Model, UpdateModal, ViewModal, 1, 0);
   Test.AssertEquals(3, Model.Focus);
-  App.InjectPointerForTest(MakePointer(Tui.TuiPointerAction.Down, SaveAt.X, SaveAt.Y));
-  Model := App.RunIterations(Model, UpdateModal, ViewModal, 1, 0);
+  Runtime.TuiApplicationInjectPointerForTest(App, MakePointer(Tui.TuiPointerAction.Down, SaveAt.X, SaveAt.Y));
+  Model := Runtime.TuiApplicationRunIterations(App, Model, UpdateModal, ViewModal, 1, 0);
   Test.AssertEquals(2, Model.PointerHits);
   Test.AssertEquals(1, Arrays.Length(Model.Actions));
   Test.AssertTrue(Model.ConfirmOpen);
-  var YesAt: Tui.TuiPoint := FindGlyph(App.SurfaceSnapshot(), 'Yes');
-  App.InjectPointerForTest(MakePointer(Tui.TuiPointerAction.Down, YesAt.X, YesAt.Y));
-  Model := App.RunIterations(Model, UpdateModal, ViewModal, 1, 0);
-  App.InjectPointerForTest(MakePointer(Tui.TuiPointerAction.Up, YesAt.X, YesAt.Y));
-  Model := App.RunIterations(Model, UpdateModal, ViewModal, 1, 0);
+  const YesAt: Tui.TuiPoint := FindGlyph(Runtime.TuiApplicationSurfaceSnapshot(App), 'Yes');
+  Runtime.TuiApplicationInjectPointerForTest(App, MakePointer(Tui.TuiPointerAction.Down, YesAt.X, YesAt.Y));
+  Model := Runtime.TuiApplicationRunIterations(App, Model, UpdateModal, ViewModal, 1, 0);
+  Runtime.TuiApplicationInjectPointerForTest(App, MakePointer(Tui.TuiPointerAction.Up, YesAt.X, YesAt.Y));
+  Model := Runtime.TuiApplicationRunIterations(App, Model, UpdateModal, ViewModal, 1, 0);
   Test.AssertFalse(Model.ConfirmOpen);
   Test.AssertEquals(2, Arrays.Length(Model.Actions));
   Test.AssertEquals(30, Model.Actions[1]);
-  App.InjectKeyForTest(MakeKey(Tui.TuiKeyKind.Tab, ''));
-  Model := App.RunIterations(Model, UpdateModal, ViewModal, 1, 0);
+  Runtime.TuiApplicationInjectKeyForTest(App, MakeKey(Tui.TuiKeyKind.Tab, ''));
+  Model := Runtime.TuiApplicationRunIterations(App, Model, UpdateModal, ViewModal, 1, 0);
   Test.AssertEquals(1, Model.Focus);
-  App.Close();
+  Runtime.TuiApplicationClose(App);
 end program;

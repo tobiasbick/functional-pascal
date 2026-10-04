@@ -7,10 +7,10 @@ const TYPES: &str = "program T;\ntype Point = record X: integer; Y: real; end re
 
 fn errors_for(declarations: &str, condition: &str) -> Vec<crate::SemaError> {
     check_errors(&format!(
-        "{TYPES}{declarations}
+        r#"{TYPES}{declarations}
 begin
-  var Same: boolean := {condition};
-end program;"
+  const Same: boolean := {condition};
+end program;"#
     ))
 }
 
@@ -34,10 +34,10 @@ fn records_and_payload_enums_with_comparable_fields_support_equality() {
         ("var H: Holder := Holder.Empty;", "H = Holder.Empty"),
     ] {
         check_ok(&format!(
-            "{TYPES}{declarations}
+            r#"{TYPES}{declarations}
 begin
-  var Same: boolean := {condition};
-end program;"
+  const Same: boolean := {condition};
+end program;"#
         ));
     }
 }
@@ -45,7 +45,7 @@ end program;"
 #[test]
 fn aggregates_with_non_comparable_fields_reject_equality() {
     for (declarations, condition) in [(
-        "var C: Callback := Callback(Run := function(): integer begin return 1; end function);",
+        r#"const C: Callback := Callback(Run := function(): integer begin return 1; end function);"#,
         "C <> C",
     )] {
         let errors = errors_for(declarations, condition);
@@ -92,8 +92,8 @@ fn option_result_and_collections_reject_callable_and_resource_components() {
         ("", "option of (task of (integer))", "Option.None"),
     ] {
         let errors = check_errors(&format!(
-            "program Main; {imports}
-            begin var Value: {ty} := {value}; var Same: boolean := Value = Value; end program;"
+            r#"program Main; {imports}
+            begin const Value: {ty} := {value}; const Same: boolean := Value = Value; end program;"#
         ));
         assert!(
             errors

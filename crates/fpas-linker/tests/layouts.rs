@@ -28,8 +28,6 @@ fn many_layouts_keep_canonical_name_order_with_unrelated_definitions() {
             name: name.clone(),
             fields: Vec::new(),
             field_types: Vec::new(),
-            properties: Vec::new(),
-            methods: Vec::new(),
         });
         library.definitions.push(ObjectDefinition {
             name,
@@ -61,8 +59,6 @@ fn matching_private_layout_copies_share_one_canonical_type_id() {
         name: "std.console.keyevent".to_string(),
         fields: vec!["kind".to_string(), "character".to_string()],
         field_types: vec![0, 0],
-        properties: Vec::new(),
-        methods: Vec::new(),
     });
     first.definitions.push(ObjectDefinition {
         name: "std.console.keyevent".to_string(),
@@ -85,8 +81,6 @@ fn matching_private_layout_copies_share_one_canonical_type_id() {
         name: "std.console.keyevent".to_string(),
         fields: vec!["kind".to_string(), "character".to_string()],
         field_types: vec![0, 0],
-        properties: Vec::new(),
-        methods: Vec::new(),
     });
     second.definitions.push(ObjectDefinition {
         name: "std.console.keyevent".to_string(),
@@ -174,40 +168,6 @@ fn recursive_nested_layout_types_terminate_and_coalesce() {
 }
 
 #[test]
-fn record_layout_copies_compare_properties_and_methods() {
-    let mut left_layout = one_field_record(0);
-    left_layout
-        .properties
-        .push(fpas_unit::object::ObjectRecordProperty {
-            name: "Value".to_string(),
-            getter: "shared.node.getvalue".to_string(),
-        });
-    left_layout
-        .methods
-        .push(fpas_unit::object::ObjectRecordMethod {
-            name: "Reset".to_string(),
-            routine: "shared.node.reset".to_string(),
-        });
-    let mut right_layout = left_layout.clone();
-    right_layout.properties[0].getter = "shared.node.getother".to_string();
-    let left = private_record_copy(
-        "library.unit",
-        vec![fpas_unit::object::ObjectDebugType::Integer],
-        left_layout,
-    );
-    let right = private_record_copy(
-        "other.unit",
-        vec![fpas_unit::object::ObjectDebugType::Integer],
-        right_layout,
-    );
-
-    assert!(matches!(
-        link_objects(&[left, right], &program()),
-        Err(LinkError::IncompatibleLayoutCopies { name, .. }) if name == "shared.node"
-    ));
-}
-
-#[test]
 fn enum_layout_copies_compare_variant_field_types() {
     let mut left = unit(false);
     left.enums.push(fpas_unit::object::ObjectEnumLayout {
@@ -251,8 +211,6 @@ fn incompatible_record_layout_import_is_rejected_before_relocation() {
         name: "library.unit.point".to_string(),
         fields: vec!["x".to_string(), "y".to_string()],
         field_types: vec![0, 0],
-        properties: Vec::new(),
-        methods: Vec::new(),
     });
     library.definitions.push(ObjectDefinition {
         name: "library.unit.point".to_string(),
@@ -298,11 +256,6 @@ fn imported_global_record_and_enum_references_become_dense_numeric_ids() {
         name: "library.unit.point".to_string(),
         fields: vec!["x".to_string()],
         field_types: vec![0],
-        properties: Vec::new(),
-        methods: vec![fpas_unit::object::ObjectRecordMethod {
-            name: "translate".to_string(),
-            routine: "library.unit.alpha".to_string(),
-        }],
     });
     library.enums.push(fpas_unit::object::ObjectEnumLayout {
         name: "library.unit.choice".to_string(),
@@ -402,15 +355,6 @@ fn imported_global_record_and_enum_references_become_dense_numeric_ids() {
     let linked = link_objects(&[library], &root).expect("layout link");
     assert_eq!(linked.executable().globals.len(), 1);
     assert_eq!(linked.executable().records.len(), 1);
-    let method = linked.executable().records[0].methods[0];
-    assert_eq!(
-        linked.executable().strings.get(method.name),
-        Some("translate")
-    );
-    assert_eq!(
-        linked.executable().strings.get(method.routine),
-        Some("library.unit.alpha")
-    );
     assert_eq!(linked.executable().enums.len(), 1);
     assert_eq!(linked.executable().enum_variants.len(), 1);
     assert_eq!(

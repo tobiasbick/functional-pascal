@@ -8,10 +8,10 @@ fn error_recovery_continues() {
 }
 
 #[test]
-fn invalid_mutable_statement_reports_statement_start_and_recovers() {
+fn invalid_public_statement_reports_statement_start_and_recovers() {
     use fpas_diagnostics::codes::PARSE_INVALID_STATEMENT_START;
 
-    let (_, errs) = parse_with_errors("program T; begin mutable X := X - 10; end program;");
+    let (_, errs) = parse_with_errors("program T; begin public X := X - 10; end program;");
     let parse_errors = errs
         .iter()
         .filter_map(|err| match err {
@@ -29,18 +29,18 @@ fn invalid_mutable_statement_reports_statement_start_and_recovers() {
 }
 
 #[test]
-fn invalid_mutable_statement_recovery_keeps_following_statement() {
+fn invalid_public_statement_recovery_keeps_following_statement() {
     let (program, errs) =
-        parse_with_errors("program T; begin mutable X := X - 10; Y := 1; end program;");
+        parse_with_errors("program T; begin public X := X - 10; Y := 1; end program;");
     assert!(!errs.is_empty());
     assert_eq!(program.body.len(), 2);
     assert!(matches!(program.body[1], crate::Stmt::Assign { .. }));
 }
 
 #[test]
-fn multiple_invalid_mutable_statements_recover_until_final_valid_statement() {
+fn multiple_invalid_public_statements_recover_until_final_valid_statement() {
     let (program, errs) =
-        parse_with_errors("program T; begin mutable X := 1; mutable Y := 2; Z := 3; end program;");
+        parse_with_errors("program T; begin public X := 1; public Y := 2; Z := 3; end program;");
     assert!(!errs.is_empty());
     assert_eq!(program.body.len(), 3);
     assert!(matches!(program.body[0], crate::Stmt::Null(_)));
@@ -146,13 +146,13 @@ fn empty_declaration_sections_report_errors_and_recover() {
 }
 
 #[test]
-fn empty_const_section_keeps_following_var_declaration() {
+fn empty_const_section_keeps_following_binding_declaration() {
     let (program, errors) =
-        parse_with_errors("program T; const var X: integer := 1; begin null; end program;");
+        parse_with_errors(r#"program T; const const X: integer := 1; begin null; end program;"#);
 
     assert!(!errors.is_empty());
     assert_eq!(program.declarations.len(), 1);
-    assert!(matches!(program.declarations[0], crate::Decl::Var(_)));
+    assert!(matches!(program.declarations[0], crate::Decl::Const(_)));
 }
 
 #[test]

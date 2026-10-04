@@ -53,8 +53,8 @@ end procedure;
 // - `StreamValue`: Open HTTP response-body stream.
 function ReadAll(StreamValue: Http.BodyStream): string;
 begin
-  mutable var Bytes: array of (integer) := [];
-  mutable var Reading: boolean := true;
+  var Bytes: array of (integer) := [];
+  var Reading: boolean := true;
   while Reading do
     begin
       case Http.ReadStream(StreamValue, 5) of
@@ -91,7 +91,7 @@ begin
 end function;
 
 begin
-  mutable var Port: integer := 18080;
+  var Port: integer := 18080;
   if Args.ParamCount() = 1 then
     begin
       Port := Conv.StrToInt(Args.ParamStr(0));
@@ -103,13 +103,13 @@ begin
       end;
     end if;
   end if;
-  var BaseUrl: string := 'http://127.0.0.1:' + Conv.IntToStr(Port);
-  RunBuffered('GET', Http.Request.Get(BaseUrl + '/hello'));
-  mutable var PostRequest: Http.Request := Http.Request.Post(BaseUrl + '/echo');
-  PostRequest.Headers := [Http.Header.Create('Content-Type', 'text/plain; charset=utf-8')];
+  const BaseUrl: string := 'http://127.0.0.1:' + Conv.IntToStr(Port);
+  RunBuffered('GET', Http.RequestGet(BaseUrl + '/hello'));
+  var PostRequest: Http.Request := Http.RequestPost(BaseUrl + '/echo');
+  PostRequest.Headers := [Http.HeaderCreate('Content-Type', 'text/plain; charset=utf-8')];
   PostRequest.Body := Utf8.Encode('hello from client');
   RunBuffered('POST', PostRequest);
-  case Http.OpenStream(Http.Request.Get(BaseUrl + '/stream')) of
+  case Http.OpenStream(Http.RequestGet(BaseUrl + '/stream')) of
     when Result.Ok(const ResponseValue):
       begin
         Console.WriteLn((('STREAM ' + Conv.IntToStr(ResponseValue.StatusCode)) + ': ') +

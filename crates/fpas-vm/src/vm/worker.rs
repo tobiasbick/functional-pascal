@@ -29,6 +29,7 @@ pub(super) struct Worker {
     pub layouts: Arc<RuntimeLayouts>,
     pub hosted: Arc<HostedState>,
     pub call_stack: Vec<CallFrame>,
+    pub(in crate::vm) reference_scopes: super::calls::references::ReferenceScopes,
     pub instruction_count: u64,
     pub(super) callback_instruction_count: Cell<u64>,
     pub(super) callback_worker: RefCell<Option<Box<Worker>>>,
@@ -145,7 +146,7 @@ impl Worker {
             usize::from(register_count),
             arguments.iter().chain(captures).cloned(),
         );
-        Ok(Self {
+        let mut worker = Self {
             supervision: None,
             executable,
             function: entry,
@@ -158,6 +159,7 @@ impl Worker {
             layouts,
             hosted,
             call_stack: Vec::new(),
+            reference_scopes: super::calls::references::ReferenceScopes::default(),
             instruction_count: 0,
             callback_instruction_count: Cell::new(0),
             callback_worker: RefCell::new(None),
@@ -173,7 +175,12 @@ impl Worker {
             task_suspension: None,
             task_clock: Some(Arc::new(TaskClock::realtime())),
             suppressed_initializers: Vec::new(),
-        })
+        };
+        let references = worker.activate_reference_arguments(entry, arguments, captures)?;
+        for reference in references {
+            worker.reference_scopes.reserve(reference);
+        }
+        Ok(worker)
     }
 
     pub(super) fn with_scheduler(mut self, scheduler: Option<Arc<TaskScheduler>>) -> Self {
@@ -214,6 +221,7 @@ impl Worker {
             layouts: Arc::clone(&self.layouts),
             hosted: Arc::clone(&self.hosted),
             call_stack: Vec::new(),
+            reference_scopes: super::calls::references::ReferenceScopes::default(),
             instruction_count: 0,
             callback_instruction_count: Cell::new(0),
             callback_worker: RefCell::new(None),
@@ -251,6 +259,7 @@ impl Worker {
             layouts: Arc::clone(&self.layouts),
             hosted: Arc::clone(&self.hosted),
             call_stack: task.frames,
+            reference_scopes: task.reference_scopes,
             instruction_count: task.instruction_count,
             callback_instruction_count: Cell::new(0),
             callback_worker: RefCell::new(None),
@@ -280,6 +289,7 @@ impl Worker {
             registers: std::mem::take(&mut self.registers),
             register_initialized: std::mem::take(&mut self.register_initialized),
             frames: std::mem::take(&mut self.call_stack),
+            reference_scopes: std::mem::take(&mut self.reference_scopes),
             retain_result: self.retain_result,
             instruction_count: self.instruction_count,
             suppressed_initializers: std::mem::take(&mut self.suppressed_initializers),

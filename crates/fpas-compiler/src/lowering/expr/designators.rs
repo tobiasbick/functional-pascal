@@ -15,13 +15,6 @@ impl LoweringContext {
         designator: &Designator,
         expression: &Expr,
     ) -> Result<ValueId, CompileError> {
-        let designator_key = fpas_sema::designator_lookup_key(designator);
-        if self.bound_method_targets.contains_key(&designator_key) {
-            return self.lower_bound_method(designator, designator_key);
-        }
-        if let Some(reads) = self.property_reads.get(&designator_key).cloned() {
-            return self.lower_property_read(designator, &reads);
-        }
         let qualified = designator
             .parts
             .iter()
@@ -97,7 +90,7 @@ impl LoweringContext {
                 })
                 .is_some_and(|root| !self.has_binding(root) && !self.has_global(root))
             && let Some(value) =
-                super::super::builtin_constants::value(&self.qualified_import_name(name))
+                fpas_std::intrinsic_std_constant_value(&self.qualified_import_name(name))
         {
             let (constant, ty) = match value {
                 fpas_bytecode::Value::Integer(value) => (Constant::Integer(value), types::INTEGER),
@@ -110,21 +103,11 @@ impl LoweringContext {
             return self.lower_designator_read(designator);
         }
         if let Some(name) = qualified.as_deref()
-            && let Some(callable) = self.resolve_callable(name)
+            && self.resolve_callable(name).is_some()
         {
-            let captures = callable
-                .captures
-                .iter()
-                .map(|capture| self.read_capture(&capture.name, designator.span))
-                .collect::<Result<Vec<_>, _>>()?;
-            self.emit_value(
-                Operation::MakeClosure {
-                    function: callable.function,
-                    captures,
-                },
-                callable.value_type,
-                designator.span,
-            )
+            let value = self.read_callable_value(name, designator.span)?;
+            let expected = self.expression_ir_type(expression)?;
+            self.coerce_value_type(value, expected, designator.span)
         } else {
             Err(unsupported(
                 designator.span,

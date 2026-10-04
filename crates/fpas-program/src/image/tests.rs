@@ -30,6 +30,7 @@ fn executable() -> VerifiedExecutable {
             name: StringId::new(0),
             code: CodeRange::new(InstructionAddress::new(0), InstructionAddress::new(1)),
             arity: 0,
+            var_parameters: Vec::new(),
             capture_count: 0,
             register_count: 0,
             return_convention: ReturnConvention::Unit,

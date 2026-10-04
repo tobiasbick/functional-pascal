@@ -15,7 +15,7 @@ fn format(source: &str) -> String {
 
 #[test]
 fn wrapped_array_has_no_blank_line_before_closing_bracket() {
-    let source = r#"program T; begin var Values: array of (string) := ['aaaaaaaaaaaaaaaaaaaa', 'bbbbbbbbbbbbbbbbbbbb', 'cccccccccccccccccccc', 'dddddddddddddddddddd']; end program;"#;
+    let source = r#"program T; begin const Values: array of (string) := ['aaaaaaaaaaaaaaaaaaaa', 'bbbbbbbbbbbbbbbbbbbb', 'cccccccccccccccccccc', 'dddddddddddddddddddd']; end program;"#;
     let formatted = format(source);
 
     assert!(formatted.contains("[\n"), "array should wrap:\n{formatted}");
@@ -32,7 +32,7 @@ type Point = record
 end record;
 
 begin
-  var Values: array of (Point) := [Point(X := 1), Point(X := 2)];
+  const Values: array of (Point) := [Point(X := 1), Point(X := 2)];
 end program;
 "#;
     let record_formatted = format(record_source);
@@ -43,7 +43,7 @@ end program;
     assert!(!record_formatted.contains("\n\n  ]"), "{record_formatted}");
     common::assert_round_trip("record array", &record_formatted);
 
-    let closure_source = r#"program T; begin var Values: array of (procedure()) := [procedure() begin WriteLn('first'); end procedure, procedure() begin WriteLn('second'); end procedure]; end program;"#;
+    let closure_source = r#"program T; begin const Values: array of (procedure()) := [procedure() begin WriteLn('first'); end procedure, procedure() begin WriteLn('second'); end procedure]; end program;"#;
     let closure_formatted = format(closure_source);
     let closure_array = closure_formatted
         .split_once(":= [")
@@ -56,12 +56,12 @@ end program;
 
 #[test]
 fn var_and_mutable_var_eol_comments_keep_existing_output_shape() {
-    let source = r#"program T; begin var A: integer := 1; // immutable
-mutable var B: integer := 2; // mutable
+    let source = r#"program T; begin const A: integer := 1; // immutable
+ var B: integer := 2; // mutable
 end program;"#;
     let formatted = format(source);
 
-    assert!(formatted.contains("var A: integer := 1; // immutable\n"));
-    assert!(formatted.contains("mutable var B: integer := 2; // mutable\n"));
+    assert!(formatted.contains("const A: integer := 1; // immutable\n"));
+    assert!(formatted.contains("var B: integer := 2; // mutable\n"));
     common::assert_round_trip("variable comments", &formatted);
 }

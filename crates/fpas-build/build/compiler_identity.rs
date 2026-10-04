@@ -6,6 +6,7 @@ const COMPILER_CRATES: &[&str] = &[
     "fpas-build",
     "fpas-bytecode",
     "fpas-compiler",
+    "fpas-ir",
     "fpas-lexer",
     "fpas-linker",
     "fpas-parser",
@@ -16,7 +17,18 @@ const COMPILER_CRATES: &[&str] = &[
     "fpas-unit",
 ];
 
+/// Emit Cargo dependencies and the source fingerprint used by derived artifacts.
 pub(crate) fn emit(manifest_dir: &Path) -> io::Result<()> {
+    let (sources, identity) = fingerprint(manifest_dir)?;
+    for source in sources {
+        println!("cargo:rerun-if-changed={}", source.display());
+    }
+    println!("cargo:rustc-env=FPAS_COMPILER_BUILD_ID={identity}");
+    Ok(())
+}
+
+/// Hash compiler sources using workspace-relative paths and deterministic ordering.
+pub(crate) fn fingerprint(manifest_dir: &Path) -> io::Result<(Vec<PathBuf>, String)> {
     let workspace_root = manifest_dir
         .parent()
         .and_then(Path::parent)
@@ -46,8 +58,7 @@ pub(crate) fn emit(manifest_dir: &Path) -> io::Result<()> {
     sources.sort();
 
     let mut hasher = blake3::Hasher::new();
-    for source in sources {
-        println!("cargo:rerun-if-changed={}", source.display());
+    for source in &sources {
         let relative = source.strip_prefix(workspace_root).map_err(|_| {
             io::Error::other("compiler identity source must be inside the workspace")
         })?;
@@ -59,11 +70,7 @@ pub(crate) fn emit(manifest_dir: &Path) -> io::Result<()> {
         hasher.update(&bytes);
     }
 
-    println!(
-        "cargo:rustc-env=FPAS_COMPILER_BUILD_ID=source-{}",
-        hasher.finalize().to_hex()
-    );
-    Ok(())
+    Ok((sources, format!("source-{}", hasher.finalize().to_hex())))
 }
 
 fn collect_rust_sources(directory: &Path, sources: &mut Vec<PathBuf>) -> io::Result<()> {

@@ -76,19 +76,12 @@ impl ValueDetacher {
             Value::OptionSome(value) => Ok(Value::option_some(self.detach(value)?)),
             Value::OptionNone => Ok(Value::OptionNone),
             Value::Function(function) => {
-                let bound_receiver = function
-                    .bound_receiver
-                    .as_ref()
-                    .map(|receiver| self.detach(receiver))
-                    .transpose()?;
                 let captures = function
                     .captures
                     .iter()
                     .map(|value| self.detach(value))
                     .collect::<Result<Vec<_>, _>>()?;
-                Ok(if let Some(receiver) = bound_receiver {
-                    Value::bound_function(function.function, function.name.clone(), receiver)
-                } else if function.task_bound {
+                Ok(if function.task_bound {
                     Value::task_owned_function(
                         function.function,
                         function.name.clone(),
@@ -100,6 +93,11 @@ impl ValueDetacher {
                 })
             }
             Value::Cell(cell) => self.detach_cell(cell),
+            Value::Reference(_) => Err(error(
+                DebugErrorKind::UnavailableValue,
+                "debug calls cannot detach var references",
+                "Read a value snapshot before evaluating a detached call.",
+            )),
             Value::Task(_) => Err(error(
                 DebugErrorKind::UnavailableValue,
                 "debug calls cannot detach task handles",

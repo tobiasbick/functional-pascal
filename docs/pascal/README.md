@@ -9,7 +9,7 @@ Planned features: [`docs/future/`](../future/).
 ## Design Principles
 
 - **Function First** — Functions are the primary abstraction. No classical classes or object hierarchies.
-- **Immutable by Default** — Variables require `mutable var` declarations to allow reassignment.
+- **Immutable by Default** — Use `const` for immutable bindings and `var` for writable storage.
 - **Safe by Design** — No pointers, no unsafe operations. The VM handles memory.
 - **Explicit Types** — Variable and parameter declarations explicitly state their types.
 - **Case-Insensitive** — Keywords and identifiers are case-insensitive, as in classical Pascal.

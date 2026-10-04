@@ -18,7 +18,7 @@ fn debug_jsonl_script_emits_only_json_records() {
     let commands = cwd.join("commands.jsonl");
     write_text(
         &source,
-        r#"program Main; begin var X: integer := 1; end program;
+        r#"program Main; begin const X: integer := 1; end program;
 "#,
     );
     write_text(

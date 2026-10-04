@@ -20,6 +20,8 @@ pub struct ObjectFunction {
     pub code: Vec<u64>,
     /// Positional argument count.
     pub arity: u8,
+    /// Strictly increasing positions of synchronous var-reference arguments.
+    pub var_parameters: Vec<u8>,
     /// Captured register count immediately following parameters.
     pub capture_count: u16,
     /// Total register window size.

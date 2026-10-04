@@ -32,27 +32,26 @@ export async function verifyDebuggerEvaluation(
     "  type Point = record",
     "    X: integer;",
     "    Y: integer;",
-    "    static function Create(X: integer; Y: integer): Point;",
+    "  end record;",
+    "    function PointCreate(X: integer; Y: integer): Point;",
     "    begin",
     "      return Point(X := X, Y := Y);",
     "    end function;",
-    "    function Sum(Self: Point): integer;",
+    "    function PointSum(Receiver: Point): integer;",
     "    begin",
-    "      return Self.X + Self.Y;",
+    "      return Receiver.X + Receiver.Y;",
     "    end function;",
-    "    function ReadFirst(Self: Point): integer;",
+    "    function PointReadFirst(Receiver: Point): integer;",
     "    begin",
-    "      return Self.X;",
+    "      return Receiver.X;",
     "    end function;",
-    "    property First: integer read ReadFirst;",
-    "  end record;",
     "",
     "begin",
-    "  var Origin: Point := Point(",
+    "  const Origin: Point := Point(",
     "    X := 3,",
     "    Y := 4",
     "  );",
-    "  var Offset: integer := 2;",
+    "  const Offset: integer := 2;",
     "  Console.WriteLn(Offset);",
     "end program;",
     ""
@@ -85,7 +84,7 @@ export async function verifyDebuggerEvaluation(
     assert.ok(frameId, "evaluation stop exposes a frame");
     for (const context of ["watch", "repl", "hover", "variables"]) {
       const result = await session.customRequest("evaluate", {
-        expression: "Point.Create(Offset, Origin.X).Sum()",
+        expression: "PointSum(PointCreate(Offset, Origin.X))",
         frameId,
         context
       }) as EvaluateResult;
@@ -105,12 +104,12 @@ export async function verifyDebuggerEvaluation(
       ["X", "3"],
       ["Y", "4"]
     ]);
-    const property = await session.customRequest("evaluate", {
-      expression: "Point.Create(6, 7).First",
+    const accessor = await session.customRequest("evaluate", {
+      expression: "PointReadFirst(PointCreate(6, 7))",
       frameId,
       context: "hover"
     }) as EvaluateResult;
-    assert.equal(property.result, "6", "compiler property metadata resolves the exact getter");
+    assert.equal(accessor.result, "6", "ordinary accessor calls preserve record arguments");
     const activeSession = session;
     await assert.rejects(
       async () => activeSession.customRequest("evaluate", {

@@ -3,6 +3,11 @@ program TuiTextAreaSnapshotTest;
 uses Std.Str as Str;
 uses Std.Test as Test;
 uses Std.Tui as Tui;
+uses Std.Tui.Elements as Elements;
+uses Std.Tui.Geometry as Geometry;
+uses Std.Tui.Ids as Ids;
+uses Std.Tui.Rendering as Rendering;
+uses Std.Tui.Runtime as Runtime;
 
 type SnapshotModel = record
   Focused: boolean;
@@ -10,35 +15,35 @@ end record;
 
 function ViewTextArea(State: SnapshotModel): Tui.TuiElement;
 begin
-  mutable var Focus: Option of (Tui.TuiControlId) := Option.None;
+  var Focus: Option of (Tui.TuiControlId) := Option.None;
   if State.Focused then
     begin
-      Focus := Option.Some(Tui.TuiControlId.Create(1));
+      Focus := Option.Some(Ids.TuiControlIdCreate(1));
     end;
   end if;
-  var Text: string := (('012345' + Str.Chr(10)) + 'alpha') + (Str.Chr(10) + 'omega');
-  return Tui.TuiElementBuilders.MakeDesktop(Focus, [
-                                                     Tui.TuiElementBuilders.MakeTextArea(Tui.TuiControlId.Create(1), Text, 9, Tui.TuiPoint.Create(1, 1), Tui.TuiAction.Create(9))
-                                                   ]);
+  const Text: string := (('012345' + Str.Chr(10)) + 'alpha') + (Str.Chr(10) + 'omega');
+  return Elements.TuiElementMakeDesktop(Focus, [
+                                                 Elements.TuiElementMakeTextArea(Ids.TuiControlIdCreate(1), Text, 9, Geometry.TuiPointCreate(1, 1), Ids.TuiActionCreate(9))
+                                               ]);
 end function;
 
 function UpdateTextArea(State: SnapshotModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): SnapshotModel;
 begin
-  Cmd.Set(Tui.TuiCmd.NoCommand);
+  Runtime.TuiCmdOutputSet(Cmd, Tui.TuiCmd.NoCommand);
   return State;
 end function;
 
 begin
-  mutable var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(4, 2));
-  discard App.RunIterations(SnapshotModel(Focused := true), UpdateTextArea, ViewTextArea, 0, 0);
-  var Focused: Tui.TuiSurfaceSnapshot := App.SurfaceSnapshot();
-  Test.AssertEquals('l▏ha', Focused.LineAt(0));
-  Test.AssertEquals('mega', Focused.LineAt(1));
-  Test.AssertTrue(Focused.CellAt(1, 0).Role = Tui.TuiStyleRole.Focused);
-  discard App.RunIterations(SnapshotModel(Focused := false), UpdateTextArea, ViewTextArea, 0, 0);
-  var Unfocused: Tui.TuiSurfaceSnapshot := App.SurfaceSnapshot();
-  Test.AssertEquals('lpha', Unfocused.LineAt(0));
-  Test.AssertEquals('mega', Unfocused.LineAt(1));
-  Test.AssertTrue(Unfocused.CellAt(1, 0).Role = Tui.TuiStyleRole.Normal);
-  App.Close();
+  var App: Tui.TuiApplication := Runtime.TuiApplicationOpenForTest(Geometry.TuiSizeCreate(4, 2));
+  discard Runtime.TuiApplicationRunIterations(App, SnapshotModel(Focused := true), UpdateTextArea, ViewTextArea, 0, 0);
+  const Focused: Tui.TuiSurfaceSnapshot := Runtime.TuiApplicationSurfaceSnapshot(App);
+  Test.AssertEquals('l▏ha', Rendering.TuiSurfaceSnapshotLineAt(Focused, 0));
+  Test.AssertEquals('mega', Rendering.TuiSurfaceSnapshotLineAt(Focused, 1));
+  Test.AssertTrue(Rendering.TuiSurfaceSnapshotCellAt(Focused, 1, 0).Role = Tui.TuiStyleRole.Focused);
+  discard Runtime.TuiApplicationRunIterations(App, SnapshotModel(Focused := false), UpdateTextArea, ViewTextArea, 0, 0);
+  const Unfocused: Tui.TuiSurfaceSnapshot := Runtime.TuiApplicationSurfaceSnapshot(App);
+  Test.AssertEquals('lpha', Rendering.TuiSurfaceSnapshotLineAt(Unfocused, 0));
+  Test.AssertEquals('mega', Rendering.TuiSurfaceSnapshotLineAt(Unfocused, 1));
+  Test.AssertTrue(Rendering.TuiSurfaceSnapshotCellAt(Unfocused, 1, 0).Role = Tui.TuiStyleRole.Normal);
+  Runtime.TuiApplicationClose(App);
 end program;

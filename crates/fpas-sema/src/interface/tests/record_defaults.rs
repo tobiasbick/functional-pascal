@@ -2,7 +2,7 @@
 //!
 //! **Documentation:** `docs/pascal/language/types/records.md`.
 
-use fpas_unit::interface::{ConstantValue as Value, InterfaceType, SymbolKind};
+use fpas_unit::interface::{ConstantValue as Value, FieldDefault, InterfaceType, SymbolKind};
 
 use super::{analyze_unit, parse_unit};
 
@@ -49,6 +49,7 @@ fn exported_record_defaults_fold_scalar_operators_and_constant_references() {
             Some(Value::Boolean(true)),
             Some(Value::Boolean(true))
         ]
+        .map(|value| value.map(FieldDefault::Constant))
     );
     let scale = interface
         .symbols
@@ -84,7 +85,10 @@ fn exported_record_defaults_resolve_import_aliases_and_private_constants() {
     let InterfaceType::Record(settings) = &interface.symbols[0].ty else {
         panic!("record");
     };
-    assert_eq!(settings.fields[0].default_value, Some(Value::Integer(7)));
+    assert_eq!(
+        settings.fields[0].default_value,
+        Some(FieldDefault::Constant(Value::Integer(7)))
+    );
 }
 
 #[test]

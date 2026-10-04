@@ -58,6 +58,6 @@ begin null; end program;"#,
 #[test]
 fn missing_begin_recovers() {
     let (_program, errors) =
-        parse_with_errors("program T; begin var F: procedure() := procedure() end; end.");
+        parse_with_errors(r#"program T; begin const F: procedure() := procedure() end; end."#);
     assert!(!errors.is_empty());
 }

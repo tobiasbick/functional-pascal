@@ -6,7 +6,7 @@ use fpas_unit::interface as artifact;
 use crate::check;
 use crate::scope::canonical_symbol_name;
 
-use super::constants::ScalarConstants;
+use super::constants::StaticConstants;
 use super::conversion::{
     InterfaceConversionError, ty_to_interface_reference, ty_to_interface_type,
 };
@@ -16,7 +16,7 @@ impl check::Checker {
     pub(super) fn extract_unit_interface(
         &self,
         unit: &Unit,
-        interfaces: &[artifact::UnitInterface],
+        _interfaces: &[artifact::UnitInterface],
     ) -> Result<artifact::UnitInterface, InterfaceConversionError> {
         let unit_name = unit.name.parts.join(".");
         let own_types: std::collections::HashSet<String> = unit
@@ -28,7 +28,6 @@ impl check::Checker {
             })
             .collect();
         let mut symbols = Vec::new();
-        let constants = ScalarConstants::collect(unit, interfaces, &self.import_aliases);
         for declaration in &unit.declarations {
             if declaration.visibility() == Visibility::Private {
                 continue;
@@ -44,13 +43,17 @@ impl check::Checker {
             } else {
                 ty_to_interface_reference(&symbol.ty)?
             };
-            self.export_record_defaults(&mut ty, &constants)?;
+            self.export_record_defaults(&mut ty)?;
             qualify_owned_type(&mut ty, &unit_name, &own_types);
             symbols.push(artifact::InterfaceSymbol {
                 name: name.to_string(),
                 qualified_name: format!("{unit_name}.{name}"),
                 ty,
-                kind: exported_symbol_kind(declaration, &constants),
+                kind: exported_symbol_kind(
+                    declaration,
+                    &self.static_constants,
+                    symbol.kind == crate::scope::SymbolKind::Const,
+                ),
             });
         }
         Ok(artifact::UnitInterface { unit_name, symbols }.canonicalized())
@@ -60,21 +63,22 @@ impl check::Checker {
 /// Return the declared source name of a top-level declaration.
 pub(super) fn declaration_name(declaration: &Decl) -> &str {
     match declaration {
-        Decl::Const(value) => &value.name,
-        Decl::Var(value) | Decl::MutableVar(value) => &value.name,
+        Decl::Const(value) | Decl::Var(value) => &value.name,
         Decl::TypeDef(value) => &value.name,
         Decl::Function(value) => &value.name,
         Decl::Procedure(value) => &value.name,
     }
 }
 
-fn exported_symbol_kind(declaration: &Decl, constants: &ScalarConstants) -> artifact::SymbolKind {
+fn exported_symbol_kind(
+    declaration: &Decl,
+    constants: &StaticConstants,
+    is_static: bool,
+) -> artifact::SymbolKind {
     match declaration {
-        Decl::Const(definition) => {
-            artifact::SymbolKind::Constant(constants.named_value(&definition.name))
-        }
-        Decl::Var(_) => artifact::SymbolKind::Variable,
-        Decl::MutableVar(_) => artifact::SymbolKind::MutableVariable,
+        Decl::Const(definition) if is_static => constants.binding_interface_kind(definition.span),
+        Decl::Const(_) => artifact::SymbolKind::Variable,
+        Decl::Var(_) => artifact::SymbolKind::MutableVariable,
         Decl::Function(_) => artifact::SymbolKind::Function,
         Decl::Procedure(_) => artifact::SymbolKind::Procedure,
         Decl::TypeDef(_) => artifact::SymbolKind::Type,
@@ -105,7 +109,7 @@ fn qualify_owned_type(
             for argument in &mut record.type_arguments {
                 qualify_owned_type(argument, unit_name, own_types);
             }
-            // Transparent aliases retain their declaration owner, including event visibility.
+            // Transparent aliases retain their declaration owner, including field visibility.
             // Documentation: docs/pascal/language/types/type-aliases.md
             let owned = own_types.contains(&canonical_symbol_name(&record.name));
             record.name = qualify_owned_name(&record.name, unit_name, own_types);
@@ -114,32 +118,6 @@ fn qualify_owned_type(
             }
             for field in &mut record.fields {
                 qualify_owned_type(&mut field.ty, unit_name, own_types);
-            }
-            for method in record
-                .methods
-                .iter_mut()
-                .chain(record.static_routines.iter_mut())
-            {
-                qualify_callable(&mut method.callable, unit_name, own_types);
-            }
-            for property in &mut record.properties {
-                qualify_owned_type(&mut property.ty, unit_name, own_types);
-                property.getter = property
-                    .getter
-                    .take()
-                    .map(|name| qualify_member_name(&name, unit_name, own_types));
-                property.setter = property
-                    .setter
-                    .take()
-                    .map(|name| qualify_member_name(&name, unit_name, own_types));
-            }
-            for event in &mut record.events {
-                qualify_owned_type(&mut event.handler, unit_name, own_types);
-                event.getter = qualify_member_name(&event.getter, unit_name, own_types);
-                event.setter = qualify_member_name(&event.setter, unit_name, own_types);
-                if owned {
-                    event.owner_unit = Some(unit_name.to_string());
-                }
             }
         }
         Enum(enum_ty) => {
@@ -160,7 +138,7 @@ fn qualify_owned_type(
                 qualify_owned_type(argument, unit_name, own_types);
             }
         }
-        GenericParameter(_, _) => {}
+        GenericParameter(_) => {}
         _ => {}
     }
 }
@@ -184,19 +162,6 @@ fn qualify_owned_name(
     own_types: &std::collections::HashSet<String>,
 ) -> String {
     if own_types.contains(&canonical_symbol_name(name)) {
-        format!("{unit_name}.{name}")
-    } else {
-        name.to_string()
-    }
-}
-
-fn qualify_member_name(
-    name: &str,
-    unit_name: &str,
-    own_types: &std::collections::HashSet<String>,
-) -> String {
-    let owner = name.split('.').next().unwrap_or(name);
-    if own_types.contains(&canonical_symbol_name(owner)) {
         format!("{unit_name}.{name}")
     } else {
         name.to_string()

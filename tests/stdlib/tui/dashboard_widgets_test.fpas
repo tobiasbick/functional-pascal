@@ -2,34 +2,40 @@ program TuiDashboardWidgetsTest;
 
 uses Std.Test as Test;
 uses Std.Tui as Tui;
+uses Std.Tui.Cells as Cells;
+uses Std.Tui.Chrome as Chrome;
+uses Std.Tui.Elements as Elements;
+uses Std.Tui.Geometry as Geometry;
+uses Std.Tui.Rendering as Rendering;
+uses Std.Tui.Runtime as Runtime;
 
 function ViewDashboard(State: integer): Tui.TuiElement;
 begin
-  var Concrete: Tui.TuiStyle := Tui.TuiStyle.FromColors(Tui.TuiColor.FromRgb(1, 2, 3), Tui.TuiColor.FromRgb(4, 5, 6));
-  return Tui.TuiElementBuilders.MakeDesktop(Option.None, [
-                                                           Tui.TuiElementBuilders.MakeColumn([
-                                                                                               Tui.TuiElementBuilders.MakeCellGrid(Tui.TuiCellGrid.Create(2, 1, [
-                                                                                                                                                                  Tui.TuiCell.Styled('A', Concrete),
-                                                                                                                                                                  Tui.TuiCell.Create('B', Tui.TuiStyleRole.Accent)
-                                                                                                                                                                ])),
-                                                                                               Tui.TuiElementBuilders.MakeRule('Metrics'),
-                                                                                               Tui.TuiElementBuilders.MakeGauge('Load', 3, 4)
-                                                                                             ])
-                                                         ]);
+  const Concrete: Tui.TuiStyle := Cells.TuiStyleFromColors(Cells.TuiColorFromRgb(1, 2, 3), Cells.TuiColorFromRgb(4, 5, 6));
+  return Elements.TuiElementMakeDesktop(Option.None, [
+                                                       Elements.TuiElementMakeColumn([
+                                                                                       Elements.TuiElementMakeCellGrid(Chrome.TuiCellGridCreate(2, 1, [
+                                                                                                                                                        Cells.TuiCellStyled('A', Concrete),
+                                                                                                                                                        Cells.TuiCellCreate('B', Tui.TuiStyleRole.Accent)
+                                                                                                                                                      ])),
+                                                                                       Elements.TuiElementMakeRule('Metrics'),
+                                                                                       Elements.TuiElementMakeGauge('Load', 3, 4)
+                                                                                     ])
+                                                     ]);
 end function;
 
 function UpdateDashboard(State: integer; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): integer;
 begin
-  Cmd.Set(Tui.TuiCmd.NoCommand);
+  Runtime.TuiCmdOutputSet(Cmd, Tui.TuiCmd.NoCommand);
   return State;
 end function;
 
 begin
-  mutable var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(24, 4));
-  discard App.RunIterations(0, UpdateDashboard, ViewDashboard, 0, 0);
-  var Snapshot: Tui.TuiSurfaceSnapshot := App.SurfaceSnapshot();
-  Test.AssertEquals('A', Snapshot.CellAt(0, 0).Glyph);
-  case Snapshot.CellAt(0, 0).ConcreteStyle of
+  var App: Tui.TuiApplication := Runtime.TuiApplicationOpenForTest(Geometry.TuiSizeCreate(24, 4));
+  discard Runtime.TuiApplicationRunIterations(App, 0, UpdateDashboard, ViewDashboard, 0, 0);
+  const Snapshot: Tui.TuiSurfaceSnapshot := Runtime.TuiApplicationSurfaceSnapshot(App);
+  Test.AssertEquals('A', Rendering.TuiSurfaceSnapshotCellAt(Snapshot, 0, 0).Glyph);
+  case Rendering.TuiSurfaceSnapshotCellAt(Snapshot, 0, 0).ConcreteStyle of
     when Option.Some(const Style):
       begin
         Test.AssertEquals(2, Style.Foreground.Green);
@@ -41,8 +47,9 @@ begin
       end;
   end case;
 
-  Test.AssertTrue(Snapshot.CellAt(1, 0).Role = Tui.TuiStyleRole.Accent);
-  Test.AssertTrue(Snapshot.CellAt(0, 1).Role = Tui.TuiStyleRole.Rule);
-  Test.AssertTrue(Snapshot.CellAt(7, 2).Role = Tui.TuiStyleRole.GaugeFill);
-  App.Close();
+  Test.AssertTrue(Rendering.TuiSurfaceSnapshotCellAt(Snapshot, 1, 0).Role = Tui.TuiStyleRole.Accent);
+  Test.AssertTrue(Rendering.TuiSurfaceSnapshotCellAt(Snapshot, 0, 1).Role = Tui.TuiStyleRole.Rule);
+  Test.AssertTrue(Rendering.TuiSurfaceSnapshotCellAt(Snapshot, 7, 2).Role =
+                  Tui.TuiStyleRole.GaugeFill);
+  Runtime.TuiApplicationClose(App);
 end program;

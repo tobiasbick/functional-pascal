@@ -5,6 +5,9 @@ uses Std.Options as Options;
 uses Std.Test as Test;
 uses Std.Tui as Tui;
 uses Std.Tui.Rendering.Canvas as Canvas;
+uses Std.Tui.Cells as Cells2;
+uses Std.Tui.Geometry as Geometry;
+uses Std.Tui.Rendering as Rendering2;
 
 procedure CompareRow(
   Expected: Tui.TuiWorkingSurface;
@@ -16,41 +19,44 @@ procedure CompareRow(
   Cells: array of (Tui.TuiCell)
 );
 begin
-  Expected.Clear();
-  Actual.Clear();
-  var Wide: Tui.TuiCell := Tui.TuiCell.Create('中', Tui.TuiStyleRole.Accent);
-  Expected.PutCell(Tui.TuiPoint.Create(0, 0), Wide);
-  Expected.PutCell(Tui.TuiPoint.Create(3, 0), Wide);
-  Actual.PutCell(Tui.TuiPoint.Create(0, 0), Wide);
-  Actual.PutCell(Tui.TuiPoint.Create(3, 0), Wide);
-  var Clip: Tui.TuiRect := Tui.TuiRect.Create(ClipX, 0, ClipWidth, 1);
-  var Origin: Tui.TuiPoint := Tui.TuiPoint.Create(OriginX, 0);
-  var Reference: Tui.TuiCanvas := Tui.TuiCanvas.CreateLocal(Expected, Origin, Clip);
-  var Batch: Tui.TuiCanvas := Tui.TuiCanvas.CreateLocal(Actual, Origin, Clip);
+  Rendering2.TuiWorkingSurfaceClear(Expected);
+  Rendering2.TuiWorkingSurfaceClear(Actual);
+  const Wide: Tui.TuiCell := Cells2.TuiCellCreate('中', Tui.TuiStyleRole.Accent);
+  Rendering2.TuiWorkingSurfacePutCell(Expected, Geometry.TuiPointCreate(0, 0), Wide);
+  Rendering2.TuiWorkingSurfacePutCell(Expected, Geometry.TuiPointCreate(3, 0), Wide);
+  Rendering2.TuiWorkingSurfacePutCell(Actual, Geometry.TuiPointCreate(0, 0), Wide);
+  Rendering2.TuiWorkingSurfacePutCell(Actual, Geometry.TuiPointCreate(3, 0), Wide);
+  const Clip: Tui.TuiRect := Geometry.TuiRectCreate(ClipX, 0, ClipWidth, 1);
+  const Origin: Tui.TuiPoint := Geometry.TuiPointCreate(OriginX, 0);
+  const Reference: Tui.TuiCanvas := Rendering2.TuiCanvasCreateLocal(Expected, Origin, Clip);
+  const Batch: Tui.TuiCanvas := Rendering2.TuiCanvasCreateLocal(Actual, Origin, Clip);
   for X: integer := 0 to Arrays.Length(Cells) - 1 do
     begin
-      Reference.PutCell(Tui.TuiPoint.Create(StartX + X, 0), Cells[X]);
+      Rendering2.TuiCanvasPutCell(Reference, Geometry.TuiPointCreate(StartX + X, 0), Cells[X]);
     end;
   end for;
 
-  Canvas.TuiCanvasPutCells(Batch, Tui.TuiPoint.Create(StartX, 0), Cells);
-  Canvas.TuiCanvasPutCells(Batch, Tui.TuiPoint.Create(StartX, 1), Cells);
+  Canvas.TuiCanvasPutCells(Batch, Geometry.TuiPointCreate(StartX, 0), Cells);
+  Canvas.TuiCanvasPutCells(Batch, Geometry.TuiPointCreate(StartX, 1), Cells);
   for X: integer := 0 to 6 do
     begin
-      var Point: Tui.TuiPoint := Tui.TuiPoint.Create(X, 0);
-      Test.AssertTrue(Options.IsNone(Expected.TryCellAt(Point)) =
-                      Options.IsNone(Actual.TryCellAt(Point)));
-      Test.AssertEquals(Expected.Snapshot().CellAt(X, 0).Glyph, Actual.Snapshot().CellAt(X, 0).Glyph);
-      Test.AssertTrue(Expected.Snapshot().CellAt(X, 0).Role = Actual.Snapshot().CellAt(X, 0).Role);
+      const Point: Tui.TuiPoint := Geometry.TuiPointCreate(X, 0);
+      Test.AssertTrue(Options.IsNone(Rendering2.TuiWorkingSurfaceTryCellAt(Expected, Point)) =
+                      Options.IsNone(Rendering2.TuiWorkingSurfaceTryCellAt(Actual, Point)));
+      Test.AssertEquals(Rendering2.TuiSurfaceSnapshotCellAt(Rendering2.TuiWorkingSurfaceSnapshot(Expected), X, 0)
+                          .Glyph, Rendering2.TuiSurfaceSnapshotCellAt(Rendering2.TuiWorkingSurfaceSnapshot(Actual), X, 0)
+                                    .Glyph);
+      Test.AssertTrue(Rendering2.TuiSurfaceSnapshotCellAt(Rendering2.TuiWorkingSurfaceSnapshot(Expected), X, 0).Role =
+                      Rendering2.TuiSurfaceSnapshotCellAt(Rendering2.TuiWorkingSurfaceSnapshot(Actual), X, 0).Role);
     end;
   end for;
 end procedure;
 
 begin
-  var Expected: Tui.TuiWorkingSurface := Tui.TuiWorkingSurface.Create(Tui.TuiSize.Create(7, 1));
-  var Actual: Tui.TuiWorkingSurface := Tui.TuiWorkingSurface.Create(Tui.TuiSize.Create(7, 1));
-  var Wide: Tui.TuiCell := Tui.TuiCell.Create('中', Tui.TuiStyleRole.Accent);
-  var Narrow: Tui.TuiCell := Tui.TuiCell.Create('X', Tui.TuiStyleRole.Title);
+  const Expected: Tui.TuiWorkingSurface := Rendering2.TuiWorkingSurfaceCreate(Geometry.TuiSizeCreate(7, 1));
+  const Actual: Tui.TuiWorkingSurface := Rendering2.TuiWorkingSurfaceCreate(Geometry.TuiSizeCreate(7, 1));
+  const Wide: Tui.TuiCell := Cells2.TuiCellCreate('中', Tui.TuiStyleRole.Accent);
+  const Narrow: Tui.TuiCell := Cells2.TuiCellCreate('X', Tui.TuiStyleRole.Title);
   for StartX: integer := -2 to 8 do
     begin
       for ClipX: integer := 0 to 2 do

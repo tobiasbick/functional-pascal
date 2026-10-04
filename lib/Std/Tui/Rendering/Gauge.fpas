@@ -18,28 +18,28 @@ uses Std.Tui.Rendering.Canvas as Canvas2;
 // - `Gauge`: Gauge specification to paint.
 public procedure TuiPaintGauge(Canvas: Canvas2.TuiCanvas; Bounds: Rect.TuiRect; Gauge: Gauge2.TuiGauge);
 begin
-  if Bounds.IsEmpty() then
+  if Rect.TuiRectIsEmpty(Bounds) then
     begin
       return;
     end;
   end if;
-  var LabelWidth: integer := Console.DisplayWidth(Gauge.LabelText);
-  var Percent: integer := (Gauge.Value * 100) div Gauge.Maximum;
-  var PercentText: string := Conv.IntToStr(Percent) + '%';
-  var PercentWidth: integer := Console.DisplayWidth(PercentText);
-  mutable var BarWidth: integer := ((Bounds.Width - LabelWidth) - PercentWidth) - 4;
+  const LabelWidth: integer := Console.DisplayWidth(Gauge.LabelText);
+  const Percent: integer := (Gauge.Value * 100) div Gauge.Maximum;
+  const PercentText: string := Conv.IntToStr(Percent) + '%';
+  const PercentWidth: integer := Console.DisplayWidth(PercentText);
+  var BarWidth: integer := ((Bounds.Width - LabelWidth) - PercentWidth) - 4;
   if BarWidth < 1 then
     begin
       BarWidth := 1;
     end;
   end if;
-  var BarX: integer := (Bounds.X + LabelWidth) + 2;
-  var FillWidth: integer := (BarWidth * Gauge.Value) div Gauge.Maximum;
-  Canvas.FillRect(Bounds, Cell.TuiCell.Create(' ', StyleRole.TuiStyleRole.Normal));
-  Canvas.WriteText(Point.TuiPoint.Create(Bounds.X, Bounds.Y), Gauge.LabelText, StyleRole.TuiStyleRole.Normal);
-  Canvas.DrawHorizontalLine(BarX, Bounds.Y, BarWidth, StyleRole.TuiStyleRole.GaugeTrack);
-  Canvas.DrawHorizontalLine(BarX, Bounds.Y, FillWidth, StyleRole.TuiStyleRole.GaugeFill);
-  Canvas.WriteText(Point.TuiPoint.Create(Bounds.Right() - PercentWidth, Bounds.Y), PercentText, StyleRole.TuiStyleRole.Accent);
+  const BarX: integer := (Bounds.X + LabelWidth) + 2;
+  const FillWidth: integer := (BarWidth * Gauge.Value) div Gauge.Maximum;
+  Canvas2.TuiCanvasFillRect(Canvas, Bounds, Cell.TuiCellCreate(' ', StyleRole.TuiStyleRole.Normal));
+  Canvas2.TuiCanvasWriteText(Canvas, Point.TuiPointCreate(Bounds.X, Bounds.Y), Gauge.LabelText, StyleRole.TuiStyleRole.Normal);
+  Canvas2.TuiCanvasDrawHorizontalLine(Canvas, BarX, Bounds.Y, BarWidth, StyleRole.TuiStyleRole.GaugeTrack);
+  Canvas2.TuiCanvasDrawHorizontalLine(Canvas, BarX, Bounds.Y, FillWidth, StyleRole.TuiStyleRole.GaugeFill);
+  Canvas2.TuiCanvasWriteText(Canvas, Point.TuiPointCreate(Rect.TuiRectRight(Bounds) - PercentWidth, Bounds.Y), PercentText, StyleRole.TuiStyleRole.Accent);
 end procedure;
 
 end unit;

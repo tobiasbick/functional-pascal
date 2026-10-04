@@ -148,6 +148,7 @@ pub(in crate::vm::debug) fn structurally_equal(
             (DebugType::Array(left), DebugType::Array(right))
             | (DebugType::Option(left), DebugType::Option(right))
             | (DebugType::Cell(left), DebugType::Cell(right))
+            | (DebugType::Reference(left), DebugType::Reference(right))
             | (DebugType::Task(left), DebugType::Task(right))
             | (DebugType::Channel(left), DebugType::Channel(right)) => structurally_equal(
                 types,

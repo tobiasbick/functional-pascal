@@ -66,8 +66,8 @@ uses Std.Http as Http;
 uses Std.Net.Utf8 as Utf8;
 
 begin
-  mutable var RequestValue: Http.Request := Http.Request.Create('POST', 'http://127.0.0.1:{port}/v1/chat');
-  RequestValue.Headers := [Http.Header.Create('X-Test', 'yes')];
+   var RequestValue: Http.Request := Http.RequestCreate('POST', 'http://127.0.0.1:{port}/v1/chat');
+  RequestValue.Headers := [Http.HeaderCreate('X-Test', 'yes')];
   RequestValue.Body := Utf8.Encode('ping');
   case Http.Send(RequestValue) of
     when Result.Ok(const ResponseValue):
@@ -188,16 +188,16 @@ begin
 end procedure;
 
 begin
-  var BaseUrl: string := 'http://127.0.0.1:{port}';
-  Expect(Http.Request.Get(BaseUrl + '/get'), 2);
-  Expect(Http.Request.Post(BaseUrl + '/post'), 2);
-  Expect(Http.Request.Put(BaseUrl + '/put'), 2);
-  Expect(Http.Request.Patch(BaseUrl + '/patch'), 2);
-  Expect(Http.Request.Delete(BaseUrl + '/delete'), 2);
-  Expect(Http.Request.Head(BaseUrl + '/head'), 0);
-  Expect(Http.Request.Options(BaseUrl + '/options'), 2);
-  Expect(Http.Request.Create('PROPFIND', BaseUrl + '/webdav'), 2);
-  case Http.Send(Http.Request.Create('BAD@METHOD', BaseUrl + '/invalid')) of
+  const BaseUrl: string := 'http://127.0.0.1:{port}';
+  Expect(Http.RequestGet(BaseUrl + '/get'), 2);
+  Expect(Http.RequestPost(BaseUrl + '/post'), 2);
+  Expect(Http.RequestPut(BaseUrl + '/put'), 2);
+  Expect(Http.RequestPatch(BaseUrl + '/patch'), 2);
+  Expect(Http.RequestDelete(BaseUrl + '/delete'), 2);
+  Expect(Http.RequestHead(BaseUrl + '/head'), 0);
+  Expect(Http.RequestOptions(BaseUrl + '/options'), 2);
+  Expect(Http.RequestCreate('PROPFIND', BaseUrl + '/webdav'), 2);
+  case Http.Send(Http.RequestCreate('BAD@METHOD', BaseUrl + '/invalid')) of
     when Result.Ok(const ResponseValue):
       begin
         panic('invalid HTTP method was accepted');
@@ -284,15 +284,15 @@ uses Std.Ai.OpenAi as OpenAi;
 uses Std.Console as Console;
 
 begin
-  mutable var ClientValue: OpenAi.Client := OpenAi.Client.Create('http://127.0.0.1:{port}/v1', 'local-model');
+   var ClientValue: OpenAi.Client := OpenAi.ClientCreate('http://127.0.0.1:{port}/v1', 'local-model');
   ClientValue.ApiKey := Option.Some('test-key');
   ClientValue.TimeoutMillis := 5000;
-  mutable var Options: OpenAi.ChatOptions := OpenAi.ChatOptions.Default();
+   var Options: OpenAi.ChatOptions := OpenAi.ChatOptionsDefault();
   Options.Temperature := Option.Some(0.25);
   Options.MaxTokens := Option.Some(64);
   case OpenAi.Complete(ClientValue, [
-                                      OpenAi.ChatMessage.System('Be concise'),
-                                      OpenAi.ChatMessage.User('Hello locally')
+                                      OpenAi.ChatMessageSystem('Be concise'),
+                                      OpenAi.ChatMessageUser('Hello locally')
                                     ], Options) of
     when Result.Ok(const Content):
       Console.WriteLn(Content);

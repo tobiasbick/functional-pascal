@@ -3,32 +3,37 @@ program ElementTreeTest;
 uses Std.Arrays as Arrays;
 uses Std.Test as Test;
 uses Std.Tui as Tui;
+uses Std.Tui.Cells as Cells;
+uses Std.Tui.Chrome as Chrome;
+uses Std.Tui.Elements as Elements;
+uses Std.Tui.Geometry as Geometry;
+uses Std.Tui.Runtime as Runtime;
 
 function ViewTree(Value: integer): Tui.TuiElement;
 begin
-  return Tui.TuiElementBuilders.MakeDesktop(Option.None, [
-                                                           Tui.TuiElementBuilders.MakePanel('Dashboard', [
-                                                                                                           Tui.TuiElementBuilders.MakeColumnSpaced([
-                                                                                                                                                     Tui.TuiElementBuilders.MakeRule('Metrics'),
-                                                                                                                                                     Tui.TuiElementBuilders.MakeGauge('Load', 3, 4),
-                                                                                                                                                     Tui.TuiElementBuilders.MakeCellGrid(Tui.TuiCellGrid.Create(2, 1, [
-                                                                                                                                                                                                                        Tui.TuiCell.Create('A', Tui.TuiStyleRole.Normal),
-                                                                                                                                                                                                                        Tui.TuiCell.Create('B', Tui.TuiStyleRole.Accent)
-                                                                                                                                                                                                                      ]))
-                                                                                                                                                   ], 1)
-                                                                                                         ]),
-                                                           Tui.TuiElementBuilders.MakeOverlay('Confirm', [Tui.TuiElementBuilders.MakeLabel('Continue?')])
-                                                         ]);
+  return Elements.TuiElementMakeDesktop(Option.None, [
+                                                       Elements.TuiElementMakePanel('Dashboard', [
+                                                                                                   Elements.TuiElementMakeColumnSpaced([
+                                                                                                                                         Elements.TuiElementMakeRule('Metrics'),
+                                                                                                                                         Elements.TuiElementMakeGauge('Load', 3, 4),
+                                                                                                                                         Elements.TuiElementMakeCellGrid(Chrome.TuiCellGridCreate(2, 1, [
+                                                                                                                                                                                                          Cells.TuiCellCreate('A', Tui.TuiStyleRole.Normal),
+                                                                                                                                                                                                          Cells.TuiCellCreate('B', Tui.TuiStyleRole.Accent)
+                                                                                                                                                                                                        ]))
+                                                                                                                                       ], 1)
+                                                                                                 ]),
+                                                       Elements.TuiElementMakeOverlay('Confirm', [Elements.TuiElementMakeLabel('Continue?')])
+                                                     ]);
 end function;
 
 function UpdateTree(State: integer; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): integer;
 begin
-  Cmd.Set(Tui.TuiCmd.NoCommand);
+  Runtime.TuiCmdOutputSet(Cmd, Tui.TuiCmd.NoCommand);
   return State;
 end function;
 
 begin
-  var Tree: Tui.TuiElement := ViewTree(0);
+  const Tree: Tui.TuiElement := ViewTree(0);
   case Tree of
     when Tui.TuiElement.Desktop(const Focused, const DesktopChildren):
       begin
@@ -68,7 +73,7 @@ begin
         end;
       end;
   end case;
-  mutable var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(30, 10));
-  Test.AssertEquals(0, App.RunIterations(0, UpdateTree, ViewTree, 0, 0));
-  App.Close();
+  var App: Tui.TuiApplication := Runtime.TuiApplicationOpenForTest(Geometry.TuiSizeCreate(30, 10));
+  Test.AssertEquals(0, Runtime.TuiApplicationRunIterations(App, 0, UpdateTree, ViewTree, 0, 0));
+  Runtime.TuiApplicationClose(App);
 end program;

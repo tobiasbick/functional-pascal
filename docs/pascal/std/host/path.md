@@ -64,7 +64,7 @@ Console.WriteLn(Path.Join(['home', '/etc/hosts']));
 uses Std.Console as Console;
 uses Std.Path as Path;
 
-var Parts: array of (string) := ['src', 'main', 'app.txt'];
+const Parts: array of (string) := ['src', 'main', 'app.txt'];
 Console.WriteLn(Path.BaseName(Path.Join(Parts)));
 ```
 

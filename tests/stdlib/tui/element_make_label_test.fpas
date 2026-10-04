@@ -2,9 +2,10 @@ program ElementMakeLabelTest;
 
 uses Std.Tui as Tui;
 uses Std.Test as Test;
+uses Std.Tui.Elements as Elements;
 
 begin
-  var Node: Tui.TuiElement := Tui.TuiElementBuilders.MakeLabel('hi');
+  const Node: Tui.TuiElement := Elements.TuiElementMakeLabel('hi');
   case Node of
     when Tui.TuiElement.Label(const Text):
       begin

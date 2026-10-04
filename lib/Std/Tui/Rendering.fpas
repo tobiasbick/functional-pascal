@@ -1,0 +1,177 @@
+// Public rendering functions.
+unit Std.Tui.Rendering;
+
+uses Std.Tui.Cells.Cell as Cell2;
+uses Std.Tui.Cells.StyleRole as StyleRole;
+uses Std.Tui.Geometry.Point as Point;
+uses Std.Tui.Geometry.Rect as Rect;
+uses Std.Tui.Geometry.Size as Size2;
+uses Std.Tui.Rendering.Canvas as Canvas;
+uses Std.Tui.Rendering.Surface as Surface2;
+uses Std.Tui.Rendering.Surface.Snapshot as Snapshot;
+
+// Creates a canvas clipped to `Bounds` intersected with the surface.
+public function TuiCanvasCreate(Surface: Surface2.TuiWorkingSurface; Bounds: Rect.TuiRect): Canvas.TuiCanvas;
+begin
+  return Canvas.TuiCanvasCreate(Surface, Bounds);
+end function;
+
+// Creates a canvas with an explicit surface origin and local clip rectangle.
+public function TuiCanvasCreateLocal(
+  Surface: Surface2.TuiWorkingSurface;
+  Origin: Point.TuiPoint;
+  Clip: Rect.TuiRect
+): Canvas.TuiCanvas;
+begin
+  return Canvas.TuiCanvasCreateLocal(Surface, Origin, Clip);
+end function;
+
+// Returns a nested canvas for `LocalBounds` in this canvas's local coordinates.
+public function TuiCanvasChild(Receiver: Canvas.TuiCanvas; LocalBounds: Rect.TuiRect): Canvas.TuiCanvas;
+begin
+  return Canvas.TuiCanvasChild(Receiver, LocalBounds);
+end function;
+
+// Paints one cell in local coordinates; clipped and wide-glyph aware.
+public procedure TuiCanvasPutCell(
+  Receiver: Canvas.TuiCanvas;
+  Position: Point.TuiPoint;
+  Cell: Cell2.TuiCell
+);
+begin
+  Canvas.TuiCanvasPutCell(Receiver, Position, Cell);
+end procedure;
+
+// Paints one glyph with the normal role.
+public procedure TuiCanvasPutGlyph(Receiver: Canvas.TuiCanvas; X: integer; Y: integer; Glyph: string);
+begin
+  Canvas.TuiCanvasPutGlyph(Receiver, X, Y, Glyph);
+end procedure;
+
+// Fills the visible intersection with a one-column cell.
+public procedure TuiCanvasFillRect(Receiver: Canvas.TuiCanvas; Bounds: Rect.TuiRect; Cell: Cell2.TuiCell);
+begin
+  Canvas.TuiCanvasFillRect(Receiver, Bounds, Cell);
+end procedure;
+
+// Draws one logical line of text; stops before a newline.
+public procedure TuiCanvasWriteText(
+  Receiver: Canvas.TuiCanvas;
+  Position: Point.TuiPoint;
+  Text: string;
+  Role: StyleRole.TuiStyleRole
+);
+begin
+  Canvas.TuiCanvasWriteText(Receiver, Position, Text, Role);
+end procedure;
+
+// Draws a horizontal box-drawing line.
+public procedure TuiCanvasDrawHorizontalLine(
+  Receiver: Canvas.TuiCanvas;
+  X: integer;
+  Y: integer;
+  Width: integer;
+  Role: StyleRole.TuiStyleRole
+);
+begin
+  Canvas.TuiCanvasDrawHorizontalLine(Receiver, X, Y, Width, Role);
+end procedure;
+
+// Draws a vertical box-drawing line.
+public procedure TuiCanvasDrawVerticalLine(
+  Receiver: Canvas.TuiCanvas;
+  X: integer;
+  Y: integer;
+  Height: integer;
+  Role: StyleRole.TuiStyleRole
+);
+begin
+  Canvas.TuiCanvasDrawVerticalLine(Receiver, X, Y, Height, Role);
+end procedure;
+
+// Draws a box frame using Unicode box-drawing glyphs.
+public procedure TuiCanvasDrawFrame(
+  Receiver: Canvas.TuiCanvas;
+  Bounds: Rect.TuiRect;
+  Role: StyleRole.TuiStyleRole
+);
+begin
+  Canvas.TuiCanvasDrawFrame(Receiver, Bounds, Role);
+end procedure;
+
+// Allocates one working grid for a headless application.
+public function TuiWorkingSurfaceCreate(Size: Size2.TuiSize): Surface2.TuiWorkingSurface;
+begin
+  return Surface2.TuiWorkingSurfaceCreate(Size);
+end function;
+
+// Replaces the working grid while preserving this surface's storage slot.
+public procedure TuiWorkingSurfaceResize(Receiver: Surface2.TuiWorkingSurface; Size: Size2.TuiSize);
+begin
+  Surface2.TuiWorkingSurfaceResize(Receiver, Size);
+end procedure;
+
+// Returns the current surface size.
+public function TuiWorkingSurfaceSize(Receiver: Surface2.TuiWorkingSurface): Size2.TuiSize;
+begin
+  return Surface2.TuiWorkingSurfaceSize(Receiver);
+end function;
+
+// Returns whether the zero-based position lies inside the surface.
+public function TuiWorkingSurfaceContains(Receiver: Surface2.TuiWorkingSurface; Position: Point.TuiPoint): boolean;
+begin
+  return Surface2.TuiWorkingSurfaceContains(Receiver, Position);
+end function;
+
+// Returns the leading cell at a position, or `None` outside the grid or on a continuation.
+public function TuiWorkingSurfaceTryCellAt(Receiver: Surface2.TuiWorkingSurface; Position: Point.TuiPoint): Option of (Cell2.TuiCell);
+begin
+  return Surface2.TuiWorkingSurfaceTryCellAt(Receiver, Position);
+end function;
+
+// Clears the surface by sharing one blank row across every line.
+public procedure TuiWorkingSurfaceClear(Receiver: Surface2.TuiWorkingSurface);
+begin
+  Surface2.TuiWorkingSurfaceClear(Receiver);
+end procedure;
+
+// Paints one validated cell; out-of-bounds writes are ignored.
+public procedure TuiWorkingSurfacePutCell(
+  Receiver: Surface2.TuiWorkingSurface;
+  Position: Point.TuiPoint;
+  Cell: Cell2.TuiCell
+);
+begin
+  Surface2.TuiWorkingSurfacePutCell(Receiver, Position, Cell);
+end procedure;
+
+// Paints one glyph with the normal style role; out-of-bounds writes are ignored.
+public procedure TuiWorkingSurfacePutGlyph(
+  Receiver: Surface2.TuiWorkingSurface;
+  X: integer;
+  Y: integer;
+  Glyph: string
+);
+begin
+  Surface2.TuiWorkingSurfacePutGlyph(Receiver, X, Y, Glyph);
+end procedure;
+
+// Copies the current leading glyphs for explicit test inspection.
+public function TuiWorkingSurfaceSnapshot(Receiver: Surface2.TuiWorkingSurface): Surface2.TuiSurfaceSnapshot;
+begin
+  return Surface2.TuiWorkingSurfaceSnapshot(Receiver);
+end function;
+
+// Returns one leading cell at a zero-based position.
+public function TuiSurfaceSnapshotCellAt(Receiver: Snapshot.TuiSurfaceSnapshot; X: integer; Y: integer): Cell2.TuiCell;
+begin
+  return Snapshot.TuiSurfaceSnapshotCellAt(Receiver, X, Y);
+end function;
+
+// Returns one complete row as text.
+public function TuiSurfaceSnapshotLineAt(Receiver: Snapshot.TuiSurfaceSnapshot; Y: integer): string;
+begin
+  return Snapshot.TuiSurfaceSnapshotLineAt(Receiver, Y);
+end function;
+
+end unit;

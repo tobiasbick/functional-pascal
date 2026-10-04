@@ -84,6 +84,9 @@ fn unrelated_caller_type_parameters_do_not_unify() {
 #[test]
 fn unconstrained_identity_forwarding_preserves_the_caller_type() {
     check_ok(
-        "program Main;\n         function Identity of (T)(Value: T): T; begin return Value; end function;\n         function Forward of (U)(Value: U): U; begin return Identity(Value); end function;\n         begin var Text: string := Forward('x'); end program;",
+        r#"program Main;
+         function Identity of (T)(Value: T): T; begin return Value; end function;
+         function Forward of (U)(Value: U): U; begin return Identity(Value); end function;
+         begin const Text: string := Forward('x'); end program;"#,
     );
 }

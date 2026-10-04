@@ -18,8 +18,8 @@ begin
 end function;
 
 begin
-  var R: integer := Apply(Double, 5); // 10
-  var Op: function(X: integer): integer := Double;
+  const R: integer := Apply(Double, 5); // 10
+  const Op: function(X: integer): integer := Double;
   Console.WriteLn(Op(7)); // 14
 end program;
 ```
@@ -50,9 +50,9 @@ begin
 end function;
 
 begin
-  var Answer: integer := MakeAdder(3)(5);
-  var Callbacks: array of (Handler) := [MakeAdder(40)];
-  var Other: integer := Callbacks[0](2);
+  const Answer: integer := MakeAdder(3)(5);
+  const Callbacks: array of (Handler) := [MakeAdder(40)];
+  const Other: integer := Callbacks[0](2);
   discard (Callbacks[0])(1);
 end program;
 ```
@@ -79,36 +79,41 @@ of `discard`. A task handle cannot be discarded, nor can a value whose type
 contains task handles in a record, enum, collection, Option or Result. Wait
 for the task explicitly, then use or discard its ordinary result.
 
-## Bound record methods
+## Capturing record values
+
+An ordinary closure can retain a record snapshot and pass it explicitly to a
+function:
 
 ```pascal
-program Example;
+program RecordClosure;
 
 uses Std.Console as Console;
 
 type Counter = record
   Base: integer;
-
-  function Add(Self: Counter; Value: integer): integer;
-  begin
-    return Self.Base + Value;
-  end function;
 end record;
 
+function CounterAdd(Receiver: Counter; Value: integer): integer;
 begin
-  var C: Counter := Counter(Base := 10);
-  var AddTen: function(Value: integer): integer := C.Add;
+  return Receiver.Base + Value;
+end function;
+
+begin
+  const C := Counter(Base := 10);
+  const AddTen := function(Value: integer): integer
+  begin
+    return CounterAdd(C, Value);
+  end function;
   Console.WriteLn(AddTen(5)); // 15
-  Console.WriteLn(AddTen(7)); // 17
 end program;
 ```
 
-`C.Add` captures `C` by value once; calling `AddTen` supplies only the remaining
-parameters. See [Record methods](../types/record-methods.md#bound-methods-as-values).
+For an optional handler, store `Option of (procedure(...))` in a field,
+match `Option.Some(const Handler)` or `Option.None`, and call the selected
+handler with its explicit arguments.
 
 ## See also
 
 - [Function types](function-types.md)
 - [Capturing closures](closures.md)
-- [Record methods](../types/record-methods.md)
 - [`Std.Arrays`](../../std/collections/array/README.md) — `Map`, `Filter`, and other higher-order helpers

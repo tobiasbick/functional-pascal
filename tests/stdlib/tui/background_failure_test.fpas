@@ -4,6 +4,9 @@ uses Std.Results as Results;
 uses Std.Tasks as Tasks;
 uses Std.Test as Test;
 uses Std.Tui as Tui;
+uses Std.Tui.Elements as Elements;
+uses Std.Tui.Geometry as Geometry;
+uses Std.Tui.Runtime as Runtime;
 
 type FailureModel = record
   Ready: channel of (boolean);
@@ -15,8 +18,8 @@ begin
   case Msg of
     when Tui.TuiMsg.Started:
       begin
-        var Ready: channel of (boolean) := State.Ready;
-        Cmd.StartBackground(19, function(Token: Tasks.CancellationToken): Result of (boolean, string) begin
+        const Ready: channel of (boolean) := State.Ready;
+        Runtime.TuiCmdOutputStartBackground(Cmd, 19, function(Token: Tasks.CancellationToken): Result of (boolean, string) begin
           discard Tasks.Send(Ready, true);
           return Result.Error('expected background failure');
         end function);
@@ -45,17 +48,17 @@ end function;
 
 function View(State: FailureModel): Tui.TuiElement;
 begin
-  return Tui.TuiElementBuilders.MakeLabel('failure');
+  return Elements.TuiElementMakeLabel('failure');
 end function;
 
 begin
-  var Inbox: channel of (integer) := Tasks.CreateChannel(1);
-  var Ready: channel of (boolean) := Tasks.CreateChannel(1);
-  var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(24, 4));
-  mutable var Model: FailureModel := App.RunBackgroundIterations(FailureModel(Ready := Ready, FailureSeen := false), Inbox, UpdateFramework, UpdateApplication, View, 1, 0);
+  const Inbox: channel of (integer) := Tasks.CreateChannel(1);
+  const Ready: channel of (boolean) := Tasks.CreateChannel(1);
+  const App: Tui.TuiApplication := Runtime.TuiApplicationOpenForTest(Geometry.TuiSizeCreate(24, 4));
+  var Model: FailureModel := Runtime.TuiApplicationRunBackgroundIterations(App, FailureModel(Ready := Ready, FailureSeen := false), Inbox, UpdateFramework, UpdateApplication, View, 1, 0);
   Test.AssertTrue(Results.Unwrap(Tasks.ReceiveWithTimeout(Ready, 10000)));
-  Model := App.RunBackgroundIterations(Model, Inbox, UpdateFramework, UpdateApplication, View, 1, 0);
+  Model := Runtime.TuiApplicationRunBackgroundIterations(App, Model, Inbox, UpdateFramework, UpdateApplication, View, 1, 0);
   Test.AssertTrue(Model.FailureSeen);
-  App.CloseWithBackground(Inbox);
+  Runtime.TuiApplicationCloseWithBackground(App, Inbox);
   discard Tasks.CloseChannel(Ready);
 end program;

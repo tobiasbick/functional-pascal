@@ -4,7 +4,7 @@ use std::collections::HashSet;
 
 use fpas_diagnostics::codes::SEMA_PRIVATE_TYPE_IN_PUBLIC_SIGNATURE;
 use fpas_lexer::Span;
-use fpas_parser::{Decl, RecordMethod, TypeBody, TypeExpr, Unit, Visibility};
+use fpas_parser::{Decl, TypeBody, TypeExpr, Unit, Visibility};
 
 use crate::SemaError;
 use crate::error::sema_error;
@@ -108,10 +108,10 @@ fn private_type_in_declaration<'a>(
     };
     let private_types = &scoped_types;
     match declaration {
-        Decl::Const(definition) => private_type_in(&definition.type_expr, private_types),
-        Decl::Var(definition) | Decl::MutableVar(definition) => {
-            private_type_in(&definition.type_expr, private_types)
-        }
+        Decl::Const(definition) | Decl::Var(definition) => definition
+            .type_expr
+            .as_ref()
+            .and_then(|annotation| private_type_in(annotation, private_types)),
         Decl::Function(function) => private_type_in_function(function, private_types),
         Decl::Procedure(procedure) => private_type_in_parameters(
             &procedure.params,
@@ -127,31 +127,7 @@ fn private_type_in_declaration<'a>(
             TypeBody::Record(record) => record
                 .fields
                 .iter()
-                .find_map(|field| private_type_in(&field.type_expr, private_types))
-                .or_else(|| {
-                    record.methods.iter().find_map(|method| match method {
-                        RecordMethod::Function(function)
-                        | RecordMethod::StaticFunction(function) => {
-                            private_type_in_function(function, private_types)
-                        }
-                        RecordMethod::Procedure(procedure)
-                        | RecordMethod::StaticProcedure(procedure) => {
-                            private_type_in_parameters(&procedure.params, private_types)
-                        }
-                    })
-                })
-                .or_else(|| {
-                    record
-                        .properties
-                        .iter()
-                        .find_map(|property| private_type_in(&property.type_expr, private_types))
-                })
-                .or_else(|| {
-                    record
-                        .events
-                        .iter()
-                        .find_map(|event| private_type_in(&event.type_expr, private_types))
-                }),
+                .find_map(|field| private_type_in(&field.type_expr, private_types)),
         },
     }
 }

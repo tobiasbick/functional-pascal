@@ -197,6 +197,7 @@ fn validator_accepts_the_complete_read_only_category_matrix() {
         "true",
         "'text'",
         "VisibleName",
+        "nil",
         "(VisibleName)",
         "-1",
         "not false",
@@ -272,7 +273,6 @@ fn validator_lowers_qualified_enum_constructors_to_call_and_field_forms() {
 #[test]
 fn validator_rejects_every_effectful_or_constructing_category() {
     let expressions = [
-        "nil",
         "go Work()",
         "function(): integer begin return 1; end function",
     ];

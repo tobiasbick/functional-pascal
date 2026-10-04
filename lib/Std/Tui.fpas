@@ -147,14 +147,8 @@ public type TuiMenuNode = MenuNode.TuiMenuNode;
 // Model-owned open and active menu state.
 public type TuiMenuState = MenuNode.TuiMenuState;
 
-// Named constructors for flat menu nodes.
-public type TuiMenuNodeBuilders = MenuNode.TuiMenuNodeBuilders;
-
 // Immutable display or action item in a status line.
 public type TuiStatusItem = StatusItem.TuiStatusItem;
-
-// Constructors for immutable status-line items.
-public type TuiStatusItemBuilders = StatusItem.TuiStatusItemBuilders;
 
 // Runtime command returned through Update's mutable output parameter.
 public type TuiCmd = Cmd.TuiCmd;
@@ -179,9 +173,6 @@ public type TuiPointerAction = Console.MouseAction;
 
 // Immutable element-tree node.
 public type TuiElement = Element.TuiElement;
-
-// Named element constructors.
-public type TuiElementBuilders = Element.TuiElementBuilders;
 
 // Explicit copy of the last painted headless surface.
 public type TuiSurfaceSnapshot = Surface2.TuiSurfaceSnapshot;

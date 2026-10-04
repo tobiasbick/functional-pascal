@@ -17,11 +17,16 @@ begin
 end function;
 
 begin
-  var R: integer := Clamp(150, 0, 100);  // 100
+  const R: integer := Clamp(150, 0, 100);  // 100
 end program;
 ```
+
+Ordinary parameters are read-only snapshots. To reassign a local copy, declare
+`var Local: Type := Parameter;` inside the body. Explicit
+[var parameters](var-parameters.md) instead update the caller's selected storage
+and require a matching `var` marker at the call site.
 
 ## See also
 
 - [Declarations](declarations.md)
-- [Mutable parameters](mutable-parameters.md)
+- [Var parameters](var-parameters.md)

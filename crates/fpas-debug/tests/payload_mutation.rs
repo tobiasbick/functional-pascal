@@ -263,8 +263,8 @@ uses Std.Tasks as Tasks;
 
 function Work(): integer;
 begin
-  mutable var Optional: Option of (integer) := Option.Some(1);
-  var Marker: integer := 0;
+   var Optional: Option of (integer) := Option.Some(1);
+  const Marker: integer := 0;
   case Optional of
     when Option.Some(const Value):
       begin
@@ -278,7 +278,7 @@ begin
 end function;
 
 begin
-  var Pending: task := go Work();
+  const Pending: task := go Work();
   Console.WriteLn(Tasks.Wait(Pending));
 end program;
 "#;
@@ -289,7 +289,7 @@ end program;
         JsonlServer::new(PreparedDebugTarget::new(executable, Vec::new())).expect("JSONL server");
     let marker_line = TASK_SOURCE
         .lines()
-        .position(|line| line.contains("var Marker:"))
+        .position(|line| line.contains("const Marker:"))
         .expect("task fixture marker")
         + 1;
     let _ = server.handle_line(&request(1, "initialize", json!({"version":2})));

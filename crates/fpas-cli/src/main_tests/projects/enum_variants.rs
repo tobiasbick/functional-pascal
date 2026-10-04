@@ -68,12 +68,12 @@ fn payload_patterns_resolve_full_local_and_imported_variant_identity() {
     );
     write_text(
         &cwd.join("main.fpas"),
-        "program Main; uses Demo.Facade as Api; uses Std.Console as Console;
-        var Item: Api.IntegerChoice := Api.IntegerChoice.Present(42);
+        r#"program Main; uses Demo.Facade as Api; uses Std.Console as Console;
+        const Item: Api.IntegerChoice := Api.IntegerChoice.Present(42);
         begin case Item of
           when Api.IntegerChoice.Present(const Value): Console.WriteLn(Value + 0);
           when Api.IntegerChoice.Missing: null;
-        end case; end program;",
+        end case; end program;"#,
     );
     for _ in 0..2 {
         let (exit, stdout, stderr) = support::run_cli_and_capture_output(&project, &cwd);
@@ -88,7 +88,14 @@ fn payload_patterns_resolve_full_local_and_imported_variant_identity() {
         write_text(
             &cwd.join("main.fpas"),
             &format!(
-                "program Main;\nuses Demo.Facade as Api;\nvar Item: Api.IntegerChoice := Api.IntegerChoice.Present(42);\nbegin case Item of\nwhen {pattern}: null;\nwhen Api.IntegerChoice.Present(const Value): null;\nwhen Api.IntegerChoice.Missing: null;\nend case; end program;"
+                r#"program Main;
+uses Demo.Facade as Api;
+const Item: Api.IntegerChoice := Api.IntegerChoice.Present(42);
+begin case Item of
+when {pattern}: null;
+when Api.IntegerChoice.Present(const Value): null;
+when Api.IntegerChoice.Missing: null;
+end case; end program;"#
             ),
         );
         let args =
@@ -141,8 +148,8 @@ begin
 end function;
 
 begin
-  var Initial: Point := Point(X := 1, Y := 7);
-  var Outcome: State := Moved(Initial);
+  const Initial: Point := Point(X := 1, Y := 7);
+  const Outcome: State := Moved(Initial);
   case Outcome.Player of
     when Position.At(const Value):
       Console.WriteLn(Value.X, ',', Value.Y);
@@ -176,7 +183,15 @@ fn enum_record_payload_rejects_incompatible_arguments() {
         write_text(
             &source,
             &format!(
-                "program InvalidEnumRecordPayload;\n\n  type Point = record X: integer; Y: integer; end record;\n  type Size = record X: integer; Y: integer; end record;\n  type Position = enum At(Value: Point); end enum;\nbegin\n  var Other: Size := Size(X := 1, Y := 2);\n  var Value: Position := Position.At({argument});\nend program;"
+                r#"program InvalidEnumRecordPayload;
+
+  type Point = record X: integer; Y: integer; end record;
+  type Size = record X: integer; Y: integer; end record;
+  type Position = enum At(Value: Point); end enum;
+begin
+  const Other: Size := Size(X := 1, Y := 2);
+  const Value: Position := Position.At({argument});
+end program;"#
             ),
         );
         let (code, _, stderr) = support::run_cli_args_and_capture_output(

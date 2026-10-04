@@ -1,6 +1,6 @@
 # Generic routines
 
-Functions and procedures can declare type parameters in angle brackets after the name:
+Functions and procedures declare type parameters with `of (...)` after the name:
 
 Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`type_params` on `function_heading` and `procedure_heading`).
 
@@ -19,6 +19,17 @@ end procedure;
 ```
 
 Type arguments are inferred from the call-site arguments:
+
+Every declared type parameter must receive one complete argument type. A result
+annotation does not supply routine type arguments, and unused type parameters
+cannot be inferred.
+
+A `pure function` additionally requires every concrete type argument to contain
+only resource-free data or pure callables. An ordinary generic routine can require
+a pure callback in its explicit signature; type parameters used by that callback
+inherit its parameter/result requirements. This requirement also applies through
+generic record fields and aliases. Contextual instantiation of a generic callable
+preserves its declared purity and checks these requirements before it can be stored.
 
 Empty collections and the absent type component of an Option or Result
 constructor receive context from the other arguments, including inside nested
@@ -57,7 +68,7 @@ end function;
 
 ```
 
-See [Generics](../types/generics.md) for constraints and method-level generics on record methods.
+See [Generics](../types/generics.md) for constraints and generic records and enums.
 
 ## Forwarding generic arguments
 
@@ -84,6 +95,24 @@ compile-time constraint error even when the caller is never instantiated.
 `Comparable` guarantees `Equatable` and `Printable`, and `Equatable` guarantees
 `Printable`. Independent caller type parameters remain distinct even when they
 have the same constraint.
+
+Nested generic declarations may reuse a type parameter name. The inner parameter
+belongs to the inner declaration and cannot accept an outer parameter's value
+merely because both are spelled `T`. Captured values and previously resolved
+signatures keep their enclosing types. Inferring an inner call replaces only
+its declared parameters, including in collections and returned callable types.
+
+A generic routine value can receive a concrete callable signature from an
+explicit binding annotation or a callback parameter. Its parameters are
+instantiated from that signature and must satisfy their declared constraints.
+An unresolved generic callback does not determine a caller's type arguments;
+the other arguments must supply enough context, or the callback needs an explicit
+callable annotation. Callable parameter names do not affect this matching.
+
+The same requirement applies inside arrays, dictionaries, records and variants.
+For example, `const Callbacks := [Identity];` needs an annotation such as
+`array of (function(Value: integer): integer)`. Later invocations cannot make the
+stored generic routine polymorphic.
 
 ## See also
 

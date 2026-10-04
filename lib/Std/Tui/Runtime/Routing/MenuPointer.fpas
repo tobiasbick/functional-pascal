@@ -28,7 +28,7 @@ public type TuiPointerMenu = record
   public Bounds: Rect.TuiRect;
 end record;
 
-mutable var TuiPointerMenus: array of (TuiPointerMenu) := [];
+var TuiPointerMenus: array of (TuiPointerMenu) := [];
 
 function TuiPointerMenuWalk(
   Frame: Frame2.TuiArrangedFrame;
@@ -37,23 +37,23 @@ function TuiPointerMenuWalk(
   AllowMenu: boolean
 ): integer;
 begin
-  mutable var Next: integer := Index + 1;
+  var Next: integer := Index + 1;
   case Node of
     when Element.TuiElement.Menu(const Id, const Nodes, const State, const ChangeAction):
       begin
         if AllowMenu then
           begin
-            mutable var Menus: array of (TuiPointerMenu) := TuiPointerMenus;
+            var Menus: array of (TuiPointerMenu) := TuiPointerMenus;
             TuiPointerMenus := [];
-            Arrays.Push(Menus, TuiPointerMenu(Id := Id, Nodes := Nodes, State := State, ChangeAction := ChangeAction, Bounds := Frame.EntryAt(Index)
-                                                                                                                                  .Bounds));
+            Arrays.Push(var Menus, TuiPointerMenu(Id := Id, Nodes := Nodes, State := State, ChangeAction := ChangeAction, Bounds := Frame2.TuiArrangedFrameEntryAt(Frame, Index)
+                                                                                                                                      .Bounds));
             TuiPointerMenus := Menus;
           end;
         end if;
       end;
     when Element.TuiElement.Desktop(const Focused, const Children):
       begin
-        mutable var ModalIndex: integer := -1;
+        var ModalIndex: integer := -1;
         for ChildIndex: integer := 0 to Arrays.Length(Children) - 1 do
           begin
             case Children[ChildIndex] of
@@ -139,7 +139,7 @@ end function;
 
 function TuiPointerMenuFocus(Root: Element.TuiElement; Menu: TuiPointerMenu): array of (Msg.TuiMsg);
 begin
-  var Previous: Option of (ControlId.TuiControlId) := Focus.TuiRootFocus(Root);
+  const Previous: Option of (ControlId.TuiControlId) := Focus.TuiRootFocus(Root);
   if Focus.TuiFocusMatches(Previous, Menu.Id) then
     begin
       return [];
@@ -166,7 +166,7 @@ begin
       end;
   end case;
 
-  return [Msg.TuiMsg.MenuChanged(Menu.Id, Menu.ChangeAction, MenuNode.TuiMenuState.OpenAt(Id))];
+  return [Msg.TuiMsg.MenuChanged(Menu.Id, Menu.ChangeAction, MenuNode.TuiMenuStateOpenAt(Id))];
 end function;
 
 function TuiPointerMenuBarHit(
@@ -176,12 +176,12 @@ function TuiPointerMenuBarHit(
   Activate: boolean
 ): Option of (array of (Msg.TuiMsg));
 begin
-  if not Rect.TuiRect.Create(Menu.Bounds.X, Menu.Bounds.Y, Menu.Bounds.Width, 1).Contains(Point) then
+  if not Rect.TuiRectContains(Rect.TuiRectCreate(Menu.Bounds.X, Menu.Bounds.Y, Menu.Bounds.Width, 1), Point) then
     begin
       return Option.None;
     end;
   end if;
-  mutable var X: integer := Menu.Bounds.X;
+  var X: integer := Menu.Bounds.X;
   for Index: integer := 0 to Arrays.Length(Menu.Nodes) - 1 do
     begin
       case MenuQuery.TuiMenuNodeParent(Menu.Nodes[Index]) of
@@ -191,9 +191,9 @@ begin
           end;
         when Option.None:
           begin
-            var Width: integer := Console.DisplayWidth(MenuQuery.TuiMenuNodeText(Menu.Nodes[Index])) +
-                                  2;
-            if Rect.TuiRect.Create(X, Menu.Bounds.Y, Width, 1).Contains(Point) and
+            const Width: integer := Console.DisplayWidth(MenuQuery.TuiMenuNodeText(Menu.Nodes[Index])) +
+                                    2;
+            if Rect.TuiRectContains(Rect.TuiRectCreate(X, Menu.Bounds.Y, Width, 1), Point) and
                MenuQuery.TuiMenuNodeSelectable(Menu.Nodes[Index]) then
               begin
                 if not Activate then
@@ -203,7 +203,7 @@ begin
                 end if;
 
                 return Option.Some(Arrays.Concat(TuiPointerMenuFocus(Root, Menu), [
-                                                                                    Msg.TuiMsg.MenuChanged(Menu.Id, Menu.ChangeAction, MenuNode.TuiMenuState.OpenAt(MenuQuery.TuiMenuNodeIdOf(Menu.Nodes[Index])))
+                                                                                    Msg.TuiMsg.MenuChanged(Menu.Id, Menu.ChangeAction, MenuNode.TuiMenuStateOpenAt(MenuQuery.TuiMenuNodeIdOf(Menu.Nodes[Index])))
                                                                                   ]));
               end;
             end if;
@@ -224,18 +224,18 @@ function TuiPointerMenuPopupHit(
   Activate: boolean
 ): Option of (array of (Msg.TuiMsg));
 begin
-  var Popups: array of (MenuGeometry.TuiMenuPopup) := MenuGeometry.TuiMenuPopupGeometry(Menu.Nodes, Menu.State, Menu.Bounds, TerminalBounds);
+  const Popups: array of (MenuGeometry.TuiMenuPopup) := MenuGeometry.TuiMenuPopupGeometry(Menu.Nodes, Menu.State, Menu.Bounds, TerminalBounds);
   for PopupIndex: integer := Arrays.Length(Popups) - 1 downto 0 do
     begin
-      if Popups[PopupIndex].Bounds.Contains(Point) then
+      if Rect.TuiRectContains(Popups[PopupIndex].Bounds, Point) then
         begin
-          var Row: integer := (Point.Y - Popups[PopupIndex].Bounds.Y) - 1;
+          const Row: integer := (Point.Y - Popups[PopupIndex].Bounds.Y) - 1;
           if (Row < 0) or (Row >= Popups[PopupIndex].Bounds.Height - 2) then
             begin
               return Option.Some([]);
             end;
           end if;
-          mutable var ChildRow: integer := 0;
+          var ChildRow: integer := 0;
           for Index: integer := 0 to Arrays.Length(Menu.Nodes) - 1 do
             begin
               if MenuQuery.TuiMenuHasParent(Menu.Nodes[Index], Option.Some(Popups[PopupIndex].Parent)) then
@@ -257,7 +257,7 @@ begin
                           end if;
 
                           return Option.Some([
-                                               Msg.TuiMsg.MenuChanged(Menu.Id, Menu.ChangeAction, MenuNode.TuiMenuState.OpenAt(MenuQuery.TuiMenuNodeIdOf(Menu.Nodes[Index])))
+                                               Msg.TuiMsg.MenuChanged(Menu.Id, Menu.ChangeAction, MenuNode.TuiMenuStateOpenAt(MenuQuery.TuiMenuNodeIdOf(Menu.Nodes[Index])))
                                              ]);
                         end;
                       end if;
@@ -272,7 +272,7 @@ begin
                         when Option.Some(const Action):
                           begin
                             return Option.Some([
-                                                 Msg.TuiMsg.MenuChanged(Menu.Id, Menu.ChangeAction, MenuNode.TuiMenuState.Closed()),
+                                                 Msg.TuiMsg.MenuChanged(Menu.Id, Menu.ChangeAction, MenuNode.TuiMenuStateClosed()),
                                                  Msg.TuiMsg.Action(Menu.Id, Action)
                                                ]);
                           end;
@@ -314,7 +314,7 @@ public function TuiRouteMenuPointer(
 ): Option of (array of (Msg.TuiMsg));
 begin
   TuiPointerMenus := [];
-  if TuiPointerMenuWalk(Frame, Root, 0, true) <> Frame.Count() then
+  if TuiPointerMenuWalk(Frame, Root, 0, true) <> Frame2.TuiArrangedFrameCount(Frame) then
     begin
       panic('Tui menu pointer routing did not consume the complete arranged frame');
     end;
@@ -325,7 +325,7 @@ begin
       return Option.None;
     end;
   end if;
-  var Menu: TuiPointerMenu := TuiPointerMenus[0];
+  const Menu: TuiPointerMenu := TuiPointerMenus[0];
   if not Activate and not Menu.State.Open then
     begin
       return Option.None;
@@ -345,7 +345,7 @@ begin
 
   if Menu.State.Open then
     begin
-      case TuiPointerMenuPopupHit(Menu, Point, Frame.EntryAt(0).Bounds, Activate) of
+      case TuiPointerMenuPopupHit(Menu, Point, Frame2.TuiArrangedFrameEntryAt(Frame, 0).Bounds, Activate) of
         when Option.Some(const Messages):
           begin
             return Option.Some(Messages);
@@ -359,7 +359,7 @@ begin
             end if;
 
             return Option.Some([
-                                 Msg.TuiMsg.MenuChanged(Menu.Id, Menu.ChangeAction, MenuNode.TuiMenuState.Closed())
+                                 Msg.TuiMsg.MenuChanged(Menu.Id, Menu.ChangeAction, MenuNode.TuiMenuStateClosed())
                                ]);
           end;
       end case;

@@ -148,9 +148,13 @@ impl Checker {
         }
         let mut result = expected.cloned().unwrap_or_else(|| types[0].clone());
         for actual in types {
-            if !result.assignment_compatible_with(actual)
-                || !actual.assignment_compatible_with(&result)
+            if expected.is_none()
+                && actual.assignment_compatible_with(&result)
+                && !result.assignment_compatible_with(actual)
             {
+                result = actual.clone();
+            }
+            if !result.assignment_compatible_with(actual) {
                 self.error_with_code(SEMA_TYPE_MISMATCH, format!("Decision branches have incompatible types `{result}` and `{actual}`"),
                     "Make every branch return the same ordinary type, or supply an explicit compatible annotation.", span);
                 return Ty::Error;

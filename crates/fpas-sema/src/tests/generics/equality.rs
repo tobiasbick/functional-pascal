@@ -45,7 +45,13 @@ fn equatable_forwarding_checks_capabilities_independently_of_names() {
 #[test]
 fn equatable_rejects_nested_callable_types() {
     let errors = check_errors(
-        "program Main;\n        function Same of (T: Equatable)(A: T; B: T): boolean;\n        begin return A = B; end function;\n        begin\n          var Values: array of (option of (procedure())) := [Option.None];\n          discard Same(Values, Values);\n        end program;",
+        r#"program Main;
+        function Same of (T: Equatable)(A: T; B: T): boolean;
+        begin return A = B; end function;
+        begin
+          const Values: array of (option of (procedure())) := [Option.None];
+          discard Same(Values, Values);
+        end program;"#,
     );
     assert!(
         errors
@@ -97,7 +103,12 @@ fn empty_arguments_cannot_hide_resource_components_from_constraints() {
         "Same([Handle], [Option.None])",
     ] {
         let errors = check_errors(&format!(
-            "program Main; uses Std.Net as Net;\n             function Same of (T: Equatable)(A: T; B: T): boolean;\n             begin return A = B; end function;\n             begin var Handle: option of (Net.Connection) := Option.None;\n               discard {call};\n             end program;"
+            r#"program Main; uses Std.Net as Net;
+             function Same of (T: Equatable)(A: T; B: T): boolean;
+             begin return A = B; end function;
+             begin const Handle: option of (Net.Connection) := Option.None;
+               discard {call};
+             end program;"#
         ));
         assert!(
             errors

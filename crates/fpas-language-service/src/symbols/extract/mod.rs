@@ -89,35 +89,31 @@ pub(super) fn declaration_symbol(
             SymbolKind::Constant,
             value.span,
             value.visibility,
-            named_type(&value.type_expr),
+            value.type_expr.as_ref().and_then(named_type),
             format!(
                 "const {}: {}",
                 value.name,
-                type_text(snapshot, &value.type_expr)
+                value
+                    .type_expr
+                    .as_ref()
+                    .map(|annotation| type_text(snapshot, annotation))
+                    .unwrap_or_else(|| "inferred".into())
             ),
         ),
         Decl::Var(value) => (
             &value.name,
-            SymbolKind::Variable,
-            value.span,
-            value.visibility,
-            named_type(&value.type_expr),
-            format!(
-                "var {}: {}",
-                value.name,
-                type_text(snapshot, &value.type_expr)
-            ),
-        ),
-        Decl::MutableVar(value) => (
-            &value.name,
             SymbolKind::MutableVariable,
             value.span,
             value.visibility,
-            named_type(&value.type_expr),
+            value.type_expr.as_ref().and_then(named_type),
             format!(
-                "mutable var {}: {}",
+                "var {}: {}",
                 value.name,
-                type_text(snapshot, &value.type_expr)
+                value
+                    .type_expr
+                    .as_ref()
+                    .map(|annotation| type_text(snapshot, annotation))
+                    .unwrap_or_else(|| "inferred".into())
             ),
         ),
         Decl::TypeDef(value) => (
@@ -155,10 +151,10 @@ pub(super) fn declaration_symbol(
     let full_span = span.diagnostic_span_or_synthetic();
     let qualified_name = format!("{owner}.{name}");
     let callable = match declaration {
-        Decl::Const(value) => type_callable_signature(snapshot, name, &value.type_expr),
-        Decl::Var(value) | Decl::MutableVar(value) => {
-            type_callable_signature(snapshot, name, &value.type_expr)
-        }
+        Decl::Const(value) | Decl::Var(value) => value
+            .type_expr
+            .as_ref()
+            .and_then(|annotation| type_callable_signature(snapshot, name, annotation)),
         Decl::Function(value) => Some(function_signature(snapshot, value, 0)),
         Decl::Procedure(value) => Some(procedure_signature(snapshot, value, 0)),
         Decl::TypeDef(_) => None,

@@ -17,10 +17,10 @@ fn std_console_read_readkey_keypressed() {
         r#"program T;
 uses Std.Console as Console;
 begin
-  var C: string := Console.ReadText();
-  var K: string := Console.ReadKey();
-  var P: boolean := Console.KeyPressed();
-  var S: string := Console.ReadLn();
+  const C: string := Console.ReadText();
+  const K: string := Console.ReadKey();
+  const P: boolean := Console.KeyPressed();
+  const S: string := Console.ReadLn();
   Console.WriteLn(C);
   Console.WriteLn(K);
   Console.WriteLn(P);
@@ -35,7 +35,7 @@ fn std_console_read_key_event_and_fields() {
         r#"program T;
 uses Std.Console as Console;
 begin
-  var E: Console.KeyEvent := Console.ReadKeyEvent();
+  const E: Console.KeyEvent := Console.ReadKeyEvent();
   Console.WriteLn(E.kind = Console.KeyKind.Space);
   Console.WriteLn(E.shift);
 end program;"#,
@@ -57,8 +57,8 @@ begin
   Console.Delay(0);
   Console.ClrEol();
   Console.ClrScr();
-  var X: integer := Console.WhereX();
-  var Y: integer := Console.WhereY();
+  const X: integer := Console.WhereX();
+  const Y: integer := Console.WhereY();
   Console.WriteLn(X);
   Console.WriteLn(Y);
 end program;"#,
@@ -71,8 +71,8 @@ fn std_console_unified_event_api_and_session_calls() {
         r#"program T;
 uses Std.Console as Console;
 begin
-  var Pending: boolean := Console.EventPending();
-  var E: Console.ConsoleEvent := Console.ReadEvent();
+  const Pending: boolean := Console.EventPending();
+  const E: Console.ConsoleEvent := Console.ReadEvent();
   Console.WriteLn(Pending);
   Console.WriteLn(E.kind = Console.EventKind.Resize);
   Console.WriteLn(E.mouse_button = Console.MouseButton.Left);
@@ -112,7 +112,7 @@ fn std_console_read_key_event_wrong_arg_in_expr() {
         r#"program T;
 uses Std.Console as Console;
 begin
-  var E: Console.KeyEvent := Console.ReadKeyEvent(0);
+  const E: Console.KeyEvent := Console.ReadKeyEvent(0);
 end program;"#,
     );
     assert!(
@@ -128,7 +128,7 @@ fn std_console_key_event_unknown_field() {
         r#"program T;
 uses Std.Console as Console;
 begin
-  var E: Console.KeyEvent := Console.ReadKeyEvent();
+  const E: Console.KeyEvent := Console.ReadKeyEvent();
   Console.WriteLn(E.not_a_field);
 end program;"#,
     );
@@ -144,7 +144,7 @@ fn std_console_key_kind_unknown_member() {
         r#"program T;
 uses Std.Console as Console;
 begin
-  var E: Console.KeyEvent := Console.ReadKeyEvent();
+  const E: Console.KeyEvent := Console.ReadKeyEvent();
   Console.WriteLn(E.kind = Console.KeyKind.NotAKind);
 end program;"#,
     );

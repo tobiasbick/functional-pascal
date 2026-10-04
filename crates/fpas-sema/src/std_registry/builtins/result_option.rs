@@ -20,11 +20,19 @@ pub(super) fn check_result_option_builtin_std_call(
         s::STD_RESULT_UNWRAP => check_one_arg(c, name, args, span, |c, ty| {
             unwrap_result_ok(c, name, ty, span)
         }),
-        s::STD_RESULT_UNWRAP_OR => check_two_args(c, name, args, span, |c, ty, _| {
-            unwrap_result_ok(c, name, ty, span)
+        s::STD_RESULT_UNWRAP_OR => check_two_args(c, name, args, span, |c, ty, fallback| {
+            let inner = unwrap_result_ok(c, name, ty, span);
+            c.check_type_compat(&inner, &fallback, "Result fallback", span);
+            inner
         }),
         s::STD_RESULT_IS_OK | s::STD_RESULT_IS_ERR => {
-            check_one_arg(c, name, args, span, |_, _| Ty::Boolean)
+            check_one_arg(c, name, args, span, |c, ty| {
+                if unwrap_result_ok(c, name, ty, span).is_error() {
+                    Ty::Error
+                } else {
+                    Ty::Boolean
+                }
+            })
         }
         s::STD_RESULT_MAP => check_result_map(c, args, span),
         s::STD_RESULT_AND_THEN => check_result_and_then(c, args, span),
@@ -32,11 +40,19 @@ pub(super) fn check_result_option_builtin_std_call(
         s::STD_OPTION_UNWRAP => check_one_arg(c, name, args, span, |c, ty| {
             unwrap_option(c, name, ty, span)
         }),
-        s::STD_OPTION_UNWRAP_OR => check_two_args(c, name, args, span, |c, ty, _| {
-            unwrap_option(c, name, ty, span)
+        s::STD_OPTION_UNWRAP_OR => check_two_args(c, name, args, span, |c, ty, fallback| {
+            let inner = unwrap_option(c, name, ty, span);
+            c.check_type_compat(&inner, &fallback, "Option fallback", span);
+            inner
         }),
         s::STD_OPTION_IS_SOME | s::STD_OPTION_IS_NONE => {
-            check_one_arg(c, name, args, span, |_, _| Ty::Boolean)
+            check_one_arg(c, name, args, span, |c, ty| {
+                if unwrap_option(c, name, ty, span).is_error() {
+                    Ty::Error
+                } else {
+                    Ty::Boolean
+                }
+            })
         }
         s::STD_OPTION_MAP => check_option_map(c, args, span),
         s::STD_OPTION_AND_THEN => check_option_and_then(c, args, span),

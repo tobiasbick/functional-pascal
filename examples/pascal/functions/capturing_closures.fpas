@@ -5,7 +5,7 @@ uses Std.Conv as Conv;
 
 function Counter(): function(): integer;
 begin
-  mutable var Value: integer := 0;
+  var Value: integer := 0;
   return function(): integer begin
     Value := Value + 1;
     return Value;
@@ -22,16 +22,16 @@ begin
 end function;
 
 begin
-  var Next: function(): integer := Counter();
+  const Next: function(): integer := Counter();
   Console.WriteLn('counter: ', Conv.IntToStr(Next()), ', ', Conv.IntToStr(Next()));
-  mutable var Count: integer := 0;
-  var Increment: procedure() := procedure() begin
+  var Count: integer := 0;
+  const Increment: procedure() := procedure() begin
     Count := Count + 1;
   end procedure;
 
   Increment();
   Increment();
   Console.WriteLn('shared count: ', Conv.IntToStr(Count));
-  var AddTen: function(Value: integer): integer := MakeAdder(10);
+  const AddTen: function(Value: integer): integer := MakeAdder(10);
   Console.WriteLn('named escape: ', Conv.IntToStr(AddTen(5)));
 end program;

@@ -181,7 +181,7 @@ mod tests {
         assert_eq!(
             parameter_documentation(
                 documentation,
-                &["Path: string".to_owned(), "mutable Text: string".to_owned()]
+                &["Path: string".to_owned(), "var Text: string".to_owned()]
             ),
             [
                 Some("Destination path.".to_owned()),

@@ -5,8 +5,8 @@ uses Std.Test as Test;
 
 begin
   Random.SetSeed(42);
-  var Minimum: integer := -9223372036854775807 - 1;
-  var Value: integer := Random.RandomInt(Minimum, 9223372036854775807);
+  const Minimum: integer := -9223372036854775807 - 1;
+  const Value: integer := Random.RandomInt(Minimum, 9223372036854775807);
   Test.AssertEquals(-6337836286886086126, Value);
   Random.SetSeed(42);
   Test.AssertEquals(Value, Random.RandomInt(Minimum, 9223372036854775807));

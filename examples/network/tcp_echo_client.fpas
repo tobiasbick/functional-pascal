@@ -15,10 +15,11 @@ uses Std.Net.Utf8 as Utf8;
 // - `Bytes`: Complete byte sequence to write.
 procedure WriteAll(ConnectionValue: Net.Connection; Bytes: array of (integer));
 begin
-  mutable var Offset: integer := 0;
+  var Offset: integer := 0;
   while Offset < Arrays.Length(Bytes) do
     begin
-      var Remaining: array of (integer) := Arrays.Slice(Bytes, Offset, Arrays.Length(Bytes) - Offset);
+      const Remaining: array of (integer) := Arrays.Slice(Bytes, Offset, Arrays.Length(Bytes) -
+                                                                         Offset);
       case Net.SendBytes(ConnectionValue, Remaining) of
         when Result.Ok(const Count):
           begin
@@ -45,8 +46,8 @@ end procedure;
 // - `ConnectionValue`: Open TCP connection.
 function ReadToEnd(ConnectionValue: Net.Connection): string;
 begin
-  mutable var Bytes: array of (integer) := [];
-  mutable var Reading: boolean := true;
+  var Bytes: array of (integer) := [];
+  var Reading: boolean := true;
   while Reading do
     begin
       case Net.ReceiveBytes(ConnectionValue, 4096) of
@@ -83,7 +84,7 @@ begin
 end function;
 
 begin
-  mutable var Port: integer := 18081;
+  var Port: integer := 18081;
   if Args.ParamCount() = 1 then
     begin
       Port := Conv.StrToInt(Args.ParamStr(0));

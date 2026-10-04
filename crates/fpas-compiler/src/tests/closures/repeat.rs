@@ -11,7 +11,7 @@ begin
 end function;
 procedure Check();
 begin
-  mutable var Count: integer := 0;
+   var Count: integer := 0;
   repeat
     Count := Count + 1;
   until Evaluate(function(): boolean begin return Count = 3; end function);
@@ -29,18 +29,19 @@ end program;
 }
 
 #[test]
-fn repeat_condition_discovers_bound_method_values() {
+fn repeat_condition_discovers_closures_with_record_captures() {
     assert_succeeds(
-        r#"program RepeatMethod;
+        r#"program RepeatRecord;
 
 type Predicate = record
   Value: boolean;
 
-  function Evaluate(Self: Predicate): boolean;
-  begin
-    return Self.Value;
-  end function;
 end record;
+
+function PredicateEvaluate(Receiver: Predicate): boolean;
+begin
+  return Receiver.Value;
+end function;
 
 function Invoke(Check: function(): boolean): boolean;
 begin
@@ -48,12 +49,12 @@ begin
 end function;
 
 begin
-  var Check: Predicate := Predicate(Value := true);
+  const Check: Predicate := Predicate(Value := true);
   repeat
     begin
       null;
     end;
-  until Invoke(Check.Evaluate);
+  until Invoke(function(): boolean begin return PredicateEvaluate(Check); end function);
 end program;
 "#,
     );

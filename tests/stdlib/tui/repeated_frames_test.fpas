@@ -3,10 +3,14 @@ program RepeatedFramesTest;
 uses Std.Arrays as Arrays;
 uses Std.Tui as Tui;
 uses Std.Test as Test;
+uses Std.Tui.Elements as Elements;
+uses Std.Tui.Geometry as Geometry;
+uses Std.Tui.Ids as Ids;
+uses Std.Tui.Runtime as Runtime;
 
 function UpdateFrames(State: integer; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): integer;
 begin
-  Cmd.Set(Tui.TuiCmd.NoCommand);
+  Runtime.TuiCmdOutputSet(Cmd, Tui.TuiCmd.NoCommand);
   case Msg of
     when Tui.TuiMsg.Tick(const Delta):
       begin
@@ -23,33 +27,33 @@ end function;
 
 function ViewFrames(State: integer): Tui.TuiElement;
 begin
-  mutable var Children: array of (Tui.TuiElement) := [];
+  var Children: array of (Tui.TuiElement) := [];
   for Index: integer := 1 to 32 do
     begin
-      Arrays.Push(Children, Tui.TuiElementBuilders.MakeLabel('row'));
+      Arrays.Push(var Children, Elements.TuiElementMakeLabel('row'));
     end;
   end for;
-  var SharedAction: Tui.TuiAction := Tui.TuiAction.Create(100);
+  const SharedAction: Tui.TuiAction := Ids.TuiActionCreate(100);
   for Index: integer := 1 to 8 do
     begin
-      Arrays.Push(Children, Tui.TuiElementBuilders.MakeButton(Tui.TuiControlId.Create(Index), 'action', SharedAction));
+      Arrays.Push(var Children, Elements.TuiElementMakeButton(Ids.TuiControlIdCreate(Index), 'action', SharedAction));
     end;
   end for;
 
-  return Tui.TuiElementBuilders.MakeDesktop(Option.Some(Tui.TuiControlId.Create(1)), [
-                                                                                       Tui.TuiElementBuilders.MakePanel('Repeated frames', [Tui.TuiElementBuilders.MakeColumn(Children)])
-                                                                                     ]);
+  return Elements.TuiElementMakeDesktop(Option.Some(Ids.TuiControlIdCreate(1)), [
+                                                                                  Elements.TuiElementMakePanel('Repeated frames', [Elements.TuiElementMakeColumn(Children)])
+                                                                                ]);
 end function;
 
 begin
-  mutable var Small: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(40, 12));
-  var SmallResult: integer := Small.RunIterations(0, UpdateFrames, ViewFrames, 100, 16);
+  var Small: Tui.TuiApplication := Runtime.TuiApplicationOpenForTest(Geometry.TuiSizeCreate(40, 12));
+  const SmallResult: integer := Runtime.TuiApplicationRunIterations(Small, 0, UpdateFrames, ViewFrames, 100, 16);
   Test.AssertEquals(100, SmallResult);
-  Test.AssertEquals(40, Small.SurfaceSnapshot().Width);
-  Small.Close();
-  mutable var Large: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(120, 40));
-  var LargeResult: integer := Large.RunIterations(0, UpdateFrames, ViewFrames, 100, 16);
+  Test.AssertEquals(40, Runtime.TuiApplicationSurfaceSnapshot(Small).Width);
+  Runtime.TuiApplicationClose(Small);
+  var Large: Tui.TuiApplication := Runtime.TuiApplicationOpenForTest(Geometry.TuiSizeCreate(120, 40));
+  const LargeResult: integer := Runtime.TuiApplicationRunIterations(Large, 0, UpdateFrames, ViewFrames, 100, 16);
   Test.AssertEquals(100, LargeResult);
-  Test.AssertEquals(120, Large.SurfaceSnapshot().Width);
-  Large.Close();
+  Test.AssertEquals(120, Runtime.TuiApplicationSurfaceSnapshot(Large).Width);
+  Runtime.TuiApplicationClose(Large);
 end program;

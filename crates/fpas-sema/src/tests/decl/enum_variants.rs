@@ -6,8 +6,7 @@ use super::{check_errors, check_ok};
 fn unique_enum_variants_do_not_create_short_names() {
     for expression in ["Empty", "Full(42)"] {
         let errors = check_errors(&format!(
-            "program Variants; type Choice = enum Empty; Full(Value: integer); end enum; \
-             begin var Value: Choice := {expression}; end program;"
+            r#"program Variants; type Choice = enum Empty; Full(Value: integer); end enum; begin const Value: Choice := {expression}; end program;"#
         ));
         assert!(
             errors
@@ -28,8 +27,8 @@ begin
   return Value + 1;
 end function;
 begin
-  var Selected: Choice := Choice.Full(42);
-  var Number: integer := Full(42);
+  const Selected: Choice := Choice.Full(42);
+  const Number: integer := Full(42);
   case Selected of
     when Choice.Empty: null;
     when Choice.Full(const Value):

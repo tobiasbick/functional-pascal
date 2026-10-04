@@ -5,9 +5,7 @@ mod expressions;
 use std::collections::{BTreeMap, BTreeSet};
 
 use fpas_lexer::{Span, Token, lex_with_comments};
-use fpas_parser::{
-    CaseArm, CompilationUnit, Decl, FuncBody, Program, RecordMethod, Stmt, TypeBody, Unit,
-};
+use fpas_parser::{CaseArm, CompilationUnit, Decl, FuncBody, Program, Stmt, TypeBody, Unit};
 
 use super::anchors::{EmissionAnchor, span_end, stmt_end, stmt_start};
 use expressions::{collect_designator, collect_expr};
@@ -115,11 +113,7 @@ fn collect_decls(decls: &[Decl], begins: &[usize], out: &mut CollectedAnchors) {
         out.leading.push(start);
         out.declarations.insert(start);
         match decl {
-            Decl::Const(def) => {
-                push_span(def.span, out);
-                collect_expr(&def.value, begins, out);
-            }
-            Decl::Var(def) | Decl::MutableVar(def) => {
+            Decl::Const(def) | Decl::Var(def) => {
                 push_span(def.span, out);
                 collect_expr(&def.value, begins, out);
             }
@@ -134,28 +128,6 @@ fn collect_decls(decls: &[Decl], begins: &[usize], out: &mut CollectedAnchors) {
                             if let Some(value) = &field.default_value {
                                 collect_expr(value, begins, out);
                             }
-                        }
-                        for method in &record.methods {
-                            match method {
-                                RecordMethod::Function(function)
-                                | RecordMethod::StaticFunction(function) => {
-                                    collect_routine(function.span, &function.body, begins, out);
-                                }
-                                RecordMethod::Procedure(procedure)
-                                | RecordMethod::StaticProcedure(procedure) => {
-                                    collect_routine(procedure.span, &procedure.body, begins, out);
-                                }
-                            }
-                        }
-                        for property in &record.properties {
-                            out.leading.push(property.span.offset);
-                            out.declarations.insert(property.span.offset);
-                            push_span(property.span, out);
-                        }
-                        for event in &record.events {
-                            out.leading.push(event.span.offset);
-                            out.declarations.insert(event.span.offset);
-                            push_span(event.span, out);
                         }
                     }
                     TypeBody::Enum(enum_type) => {
@@ -234,7 +206,7 @@ fn collect_stmts(stmts: &[Stmt], begins: &[usize], out: &mut CollectedAnchors) {
 
 fn collect_nested_stmt(stmt: &Stmt, begins: &[usize], out: &mut CollectedAnchors) {
     out.leading.push(stmt_start(stmt));
-    if matches!(stmt, Stmt::Var(_) | Stmt::MutableVar(_)) {
+    if matches!(stmt, Stmt::Const(_) | Stmt::Var(_)) {
         out.declarations.insert(stmt_start(stmt));
     }
     out.emission.push(EmissionAnchor {
@@ -259,7 +231,7 @@ fn collect_stmt_contents(stmt: &Stmt, begins: &[usize], out: &mut CollectedAncho
     match stmt {
         Stmt::Block(stmts, _) | Stmt::StatementList(stmts, _) => collect_stmts(stmts, begins, out),
         Stmt::Null(_) => {}
-        Stmt::Var(var) | Stmt::MutableVar(var) => collect_expr(&var.value, begins, out),
+        Stmt::Const(var) | Stmt::Var(var) => collect_expr(&var.value, begins, out),
         Stmt::Assign { target, value, .. } => {
             collect_designator(target, begins, out);
             collect_expr(value, begins, out);
@@ -375,8 +347,7 @@ fn push_uses_span(span: Span, source: &str, out: &mut CollectedAnchors) {
 
 fn decl_end(decl: &Decl) -> usize {
     match decl {
-        Decl::Const(def) => span_end(def.span),
-        Decl::Var(def) | Decl::MutableVar(def) => span_end(def.span),
+        Decl::Const(def) | Decl::Var(def) => span_end(def.span),
         Decl::TypeDef(def) => span_end(def.span),
         Decl::Function(function) => span_end(function.span),
         Decl::Procedure(procedure) => span_end(procedure.span),

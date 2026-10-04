@@ -128,16 +128,10 @@ fn compare<'a>(a: &'a Value, b: &'a Value, mode: Mode) -> bool {
                             continue;
                         }
                         push_pairs(&mut pairs, &a.captures, &b.captures);
-                        match (&a.bound_receiver, &b.bound_receiver) {
-                            (Some(left), Some(right)) => pairs.push((left, right)),
-                            (None, None) => {}
-                            _ => {
-                                equal = false;
-                                continue;
-                            }
-                        }
                     }
                     (Value::Cell(a), Value::Cell(b))
+                        if mode == Mode::Representation && std::sync::Arc::ptr_eq(a, b) => {}
+                    (Value::Reference(a), Value::Reference(b))
                         if mode == Mode::Representation && std::sync::Arc::ptr_eq(a, b) => {}
                     (Value::Task(a), Value::Task(b)) if mode == Mode::Representation && a == b => {}
                     (Value::OpaqueHandle(a), Value::OpaqueHandle(b))

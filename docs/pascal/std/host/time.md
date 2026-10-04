@@ -9,7 +9,7 @@ uses Std.Console as Console;
 uses Std.Time as Time;
 
 begin
-  var Start: integer := Time.MonotonicMillis();
+  const Start: integer := Time.MonotonicMillis();
   Time.Sleep(100);
   Console.WriteLn(Time.ElapsedMillis(Start));
 end program;
@@ -52,7 +52,7 @@ Requires `uses Std.Time as Time;`.
 `go` task, the VM suspends that task in its cooperative timer queue and immediately releases the
 pool worker to run other ready tasks. After the deadline, the timer driver places the suspended task
 back on the shared ready queue. The same rule applies inside synchronous hosted callbacks such as
-`Std.Arrays.Map`: the VM retains the callback and collection-operation state as part of the owner task,
+`Std.Arrays.ForEach`: the VM retains the callback and collection-operation state as part of the owner task,
 suspends that owner, and resumes the callback without repeating completed elements.
 
 ---
@@ -77,7 +77,7 @@ Returns monotonic milliseconds since runtime initialization.
 ```pascal
 uses Std.Time as Time;
 
-var Start: integer := Time.MonotonicMillis();
+const Start: integer := Time.MonotonicMillis();
 ```
 
 ---
@@ -90,7 +90,7 @@ Returns monotonic milliseconds elapsed since `Start`, a value from `MonotonicMil
 uses Std.Console as Console;
 uses Std.Time as Time;
 
-var Start: integer := Time.MonotonicMillis();
+const Start: integer := Time.MonotonicMillis();
 Time.Sleep(50);
 Console.WriteLn(Time.ElapsedMillis(Start));
 ```

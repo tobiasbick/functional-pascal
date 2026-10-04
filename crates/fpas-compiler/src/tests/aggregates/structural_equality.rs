@@ -19,14 +19,62 @@ fn equality_inference_completes_empty_constructor_and_collection_components() {
 #[test]
 fn scalar_and_nested_real_equality_share_nan_and_signed_zero_rules() {
     assert_succeeds(
-        "program Main;\n\nuses Std.Math as Math;\nuses Std.Arrays as Arrays;\n\ntype Data = record\n  Value: real;\nend record;\n\nbegin\n  var Nan: real := Math.Pow(-1.0, 0.5);\n  var Wrapped: Option of (real) := Option.Some(Nan);\n  var RecordValue: Data := Data(Value := Nan);\n  if (Nan = Nan) or (Wrapped = Wrapped) or (RecordValue = RecordValue) or ([Nan] = [Nan]) or\n     (['a': Nan] = ['a': Nan]) then\n    panic('NaN equality');\n  end if;\n\n  if not ([0.0] = [-0.0]) then\n    panic('signed zero');\n  end if;\n\n  if not (['a': 0.0] = ['a': -0.0]) then\n    panic('dict signed zero');\n  end if;\n\n  if (Nan in [Nan]) or Arrays.Contains([Nan], Nan) then\n    panic('NaN membership');\n  end if;\n\n  if Arrays.IndexOf([Nan], Nan) <> -1 then\n    panic('NaN index');\n  end if;\nend program;\n",
+        r#"program Main;
+
+uses Std.Math as Math;
+uses Std.Arrays as Arrays;
+
+type Data = record
+  Value: real;
+end record;
+
+begin
+  const Nan: real := Math.Pow(-1.0, 0.5);
+  const Wrapped: Option of (real) := Option.Some(Nan);
+  const RecordValue: Data := Data(Value := Nan);
+  if (Nan = Nan) or (Wrapped = Wrapped) or (RecordValue = RecordValue) or ([Nan] = [Nan]) or
+     (['a': Nan] = ['a': Nan]) then
+    panic('NaN equality');
+  end if;
+
+  if not ([0.0] = [-0.0]) then
+    panic('signed zero');
+  end if;
+
+  if not (['a': 0.0] = ['a': -0.0]) then
+    panic('dict signed zero');
+  end if;
+
+  if (Nan in [Nan]) or Arrays.Contains([Nan], Nan) then
+    panic('NaN membership');
+  end if;
+
+  if Arrays.IndexOf([Nan], Nan) <> -1 then
+    panic('NaN index');
+  end if;
+end program;
+"#,
     );
 }
 
 #[test]
 fn dictionary_keys_use_structural_equality_for_lookup_updates_and_helpers() {
     assert_succeeds(
-        "program Main; uses Std.Dictionaries as Dictionaries; uses Std.Options as Options;\n        begin\n          var Key: dict of (string, integer) := ['a': 1, 'b': 2];\n          var Reordered: dict of (string, integer) := ['b': 2, 'a': 1];\n          mutable var Values: dict of (dict of (string, integer), integer) := [Key: 1];\n          if Values[Reordered] <> 1 then panic('lookup'); end if;\n          Values[Reordered] := 42;\n          if Dictionaries.Length(Values) <> 1 then panic('update appended'); end if;\n          if not (Reordered in Values) then panic('membership'); end if;\n          if not Dictionaries.ContainsKey(Values, Reordered) then panic('contains'); end if;\n          if Options.Unwrap(Dictionaries.Get(Values, Reordered)) <> 42 then panic('get'); end if;\n          var Merged: dict of (dict of (string, integer), integer) := Dictionaries.Merge(Values, [Reordered: 7]);\n          if (Dictionaries.Length(Merged) <> 1) or (Merged[Key] <> 7) then panic('merge'); end if;\n          if Dictionaries.Length(Dictionaries.Remove(Values, Reordered)) <> 0 then panic('remove'); end if;\n        end program;",
+        r#"program Main; uses Std.Dictionaries as Dictionaries; uses Std.Options as Options;
+        begin
+          const Key: dict of (string, integer) := ['a': 1, 'b': 2];
+          const Reordered: dict of (string, integer) := ['b': 2, 'a': 1];
+           var Values: dict of (dict of (string, integer), integer) := [Key: 1];
+          if Values[Reordered] <> 1 then panic('lookup'); end if;
+          Values[Reordered] := 42;
+          if Dictionaries.Length(Values) <> 1 then panic('update appended'); end if;
+          if not (Reordered in Values) then panic('membership'); end if;
+          if not Dictionaries.ContainsKey(Values, Reordered) then panic('contains'); end if;
+          if Options.Unwrap(Dictionaries.Get(Values, Reordered)) <> 42 then panic('get'); end if;
+          const Merged: dict of (dict of (string, integer), integer) := Dictionaries.Merge(Values, [Reordered: 7]);
+          if (Dictionaries.Length(Merged) <> 1) or (Merged[Key] <> 7) then panic('merge'); end if;
+          if Dictionaries.Length(Dictionaries.Remove(Values, Reordered)) <> 0 then panic('remove'); end if;
+        end program;"#,
     );
 }
 
@@ -60,18 +108,18 @@ begin
 end procedure;
 
 begin
-  var A: Point := Point(X := 1, Y := 2.0);
-  var B: Point := Point(X := 1, Y := 2.0);
-  var C: Point := A with Y := 2.5; end with;
+  const A: Point := Point(X := 1, Y := 2.0);
+  const B: Point := Point(X := 1, Y := 2.0);
+  const C: Point := A with Y := 2.5; end with;
 
   Check('same fields', A = B, true);
   Check('updated field', A = C, false);
   Check('not equal', A <> C, true);
-  var Box1: Box := Box(Corner := A, Label := 'a', Tag := Option.Some(B));
-  var Box2: Box := Box(Corner := B, Label := 'a', Tag := Option.Some(A));
+  const Box1: Box := Box(Corner := A, Label := 'a', Tag := Option.Some(B));
+  const Box2: Box := Box(Corner := B, Label := 'a', Tag := Option.Some(A));
   Check('nested', Box1 = Box2, true);
   Check('nested differs', Box1 = (Box2 with Tag := Option.None; end with), false);
-  var S1: Shape := Shape.Circle(A, 3);
+  const S1: Shape := Shape.Circle(A, 3);
   Check('same variant payload', S1 = Shape.Circle(B, 3), true);
   Check('same variant other payload', S1 = Shape.Circle(A, 4), false);
   Check('other variant', S1 = Shape.Square(3), false);

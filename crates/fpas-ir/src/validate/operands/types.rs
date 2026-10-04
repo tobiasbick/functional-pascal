@@ -273,7 +273,7 @@ fn validate_ir_type(program: &Program, ty: &IrType) -> Result<(), ValidationErro
                 id: layout.get(),
             }))
         }
-        IrType::Cell(inner) | IrType::Task(inner) | IrType::Channel(inner) => {
+        IrType::Cell(inner) | IrType::Reference(inner) | IrType::Task(inner) | IrType::Channel(inner) => {
             require_type(program, *inner)
         }
         _ => Ok(()),
@@ -288,7 +288,8 @@ fn validate_signature_types(
     for parameter in parameters {
         require_type(program, *parameter)?;
     }
-    require_type(program, result)
+    require_type(program, result)?;
+    reject_reference_storage(program, result, "callable result")
 }
 
 fn require_type(program: &Program, ty: TypeId) -> Result<(), ValidationError> {

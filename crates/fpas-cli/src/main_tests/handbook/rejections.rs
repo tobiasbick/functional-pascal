@@ -42,7 +42,10 @@ fn documented_alias_and_case_scope_rules_reject_unqualified_or_escaping_names() 
             "Unknown procedure `WriteLn`",
         ),
         (
-            case.replace("var Status: integer := 1;", "var console: integer := 1;"),
+            case.replace(
+                "const Status: integer := 1;",
+                "const console: integer := 1;",
+            ),
             "F2002",
             "Declaration `console` conflicts with an import alias",
         ),

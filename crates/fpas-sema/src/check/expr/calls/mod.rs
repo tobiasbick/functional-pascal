@@ -1,9 +1,6 @@
-mod fluent;
-mod methods;
+mod projections;
+mod qualified;
 mod values;
-
-pub(in crate::check) use fluent::FluentCall;
-pub(in crate::check) use methods::MethodCallSite;
 
 use super::super::Checker;
 use crate::scope::SymbolKind;
@@ -16,14 +13,14 @@ use fpas_parser::{Designator, Expr};
 pub(in crate::check::expr) enum CallResolution {
     /// Resolved to a known symbol (kind + type).
     Symbol { kind: SymbolKind, ty: Ty },
-    /// Resolved as a method call — the return type is already fully checked.
-    MethodResult(Ty),
+    /// Resolved as a callable value; the result type is already checked.
+    ValueResult(Ty),
     /// Resolution failed (error already reported, args already checked).
     Failed,
 }
 
 impl Checker {
-    /// Resolve a call target: symbol lookup → method fallback → ambiguous/unknown error.
+    /// Resolve a call target: symbol lookup, projected callable value, or unknown name.
     pub(in crate::check::expr) fn resolve_call_target(
         &mut self,
         call_expr: &Expr,
@@ -38,36 +35,23 @@ impl Checker {
         if let Some(symbol) = self.scopes.lookup(&name) {
             let kind = symbol.kind;
             let ty = symbol.ty.clone();
-            if self.reject_instance_method_through_type(designator, span) {
-                self.check_args_only(args);
-                return CallResolution::Failed;
-            }
             return CallResolution::Symbol { kind, ty };
         }
 
         if !self.designator_has_unit_prefix(designator) {
             let previous_error_count = self.errors.len();
-            let method_result = if allow_procedure_result {
-                self.try_check_method_go_call(call_expr, designator, args, span)
-            } else {
-                self.try_check_method_call(call_expr, designator, args, span)
-            };
-            if let Some(result) = method_result {
-                return CallResolution::MethodResult(result);
-            }
-            if self.errors.len() != previous_error_count {
-                self.check_args_only(args);
-                return CallResolution::Failed;
-            }
-
-            if let Some(result) = self.try_check_fluent_designator(
+            if let Some(result) = self.try_check_projected_call(
                 Self::expr_lookup_key(call_expr),
                 designator,
                 args,
                 span,
                 allow_procedure_result,
             ) {
-                return CallResolution::MethodResult(result);
+                return CallResolution::ValueResult(result);
+            }
+            if self.errors.len() != previous_error_count {
+                self.check_args_only(args);
+                return CallResolution::Failed;
             }
         }
 
@@ -92,9 +76,6 @@ impl Checker {
         if let Some(ty) = self.try_check_record_construction(call_expr, None) {
             return ty;
         }
-        if let Some(ty) = self.try_check_assigned_call(call_expr, designator, args, span) {
-            return ty;
-        }
         match self.resolve_call_target(call_expr, designator, args, span, false) {
             CallResolution::Symbol { kind, ty } => {
                 let name = self.resolve_designator_name(designator);
@@ -107,7 +88,7 @@ impl Checker {
                     span,
                 )
             }
-            CallResolution::MethodResult(ty) => ty,
+            CallResolution::ValueResult(ty) => ty,
             CallResolution::Failed => Ty::Error,
         }
     }
@@ -176,7 +157,7 @@ impl Checker {
                 format!(
                     "`go` requires a function or procedure call, but `{name}` constructs a value"
                 ),
-                "Spawn a named function, procedure, method call, or callable variable.",
+                "Spawn a named function, procedure, or callable value.",
                 span,
             );
             self.check_args_only(args);

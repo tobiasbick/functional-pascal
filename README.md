@@ -205,7 +205,7 @@ begin
 end function;
 
 begin
-  var Op: function(X: integer): integer := Double;
+  const Op: function(X: integer): integer := Double;
   Console.WriteLn(Apply(Op, 10)); // 20
 end program;
 ```

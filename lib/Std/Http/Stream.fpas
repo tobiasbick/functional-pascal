@@ -41,7 +41,7 @@ end procedure;
 // - `StreamValue`: Body-stream handle to resolve.
 function StateIndex(StreamValue: Types2.BodyStream): Result of (integer, string);
 begin
-  var Slot: integer := Handles.BodyStreamSlot(StreamValue);
+  const Slot: integer := Handles.BodyStreamSlot(StreamValue);
   if (Slot < 1) or (not HasState(Slot)) then
     begin
       return Result.Error('HTTP body stream handle is invalid');
@@ -57,7 +57,7 @@ end function;
 // - `Index`: One-based stream-state slot.
 procedure CloseAt(Index: integer);
 begin
-  mutable var State: Types.StreamState := LoadState(Index);
+  var State: Types.StreamState := LoadState(Index);
   if State.Open then
     begin
       case Net.Close(State.Connection) of
@@ -85,7 +85,7 @@ end procedure;
 // - `Index`: One-based stream-state slot.
 function ReadNetwork(Index: integer): Result of (boolean, string);
 begin
-  mutable var State: Types.StreamState := LoadState(Index);
+  var State: Types.StreamState := LoadState(Index);
   if not State.Open then
     begin
       return Result.Ok(false);
@@ -150,14 +150,14 @@ end function;
 // - `Maximum`: Maximum bytes to remove.
 function TakeBuffer(Index: integer; Maximum: integer): array of (integer);
 begin
-  mutable var State: Types.StreamState := LoadState(Index);
-  mutable var Count: integer := Arrays.Length(State.Buffer);
+  var State: Types.StreamState := LoadState(Index);
+  var Count: integer := Arrays.Length(State.Buffer);
   if Maximum < Count then
     begin
       Count := Maximum;
     end;
   end if;
-  var Bytes: array of (integer) := Arrays.Slice(State.Buffer, 0, Count);
+  const Bytes: array of (integer) := Arrays.Slice(State.Buffer, 0, Count);
   State.Buffer := Arrays.Slice(State.Buffer, Count, Arrays.Length(State.Buffer) - Count);
   StoreState(Index, State);
   return Bytes;
@@ -196,14 +196,14 @@ begin
       end case;
     end;
   end if;
-  mutable var Count: integer := Maximum;
+  var Count: integer := Maximum;
   if LoadState(Index).Remaining < Count then
     begin
       Count := LoadState(Index).Remaining;
     end;
   end if;
-  var Bytes: array of (integer) := TakeBuffer(Index, Count);
-  mutable var State: Types.StreamState := LoadState(Index);
+  const Bytes: array of (integer) := TakeBuffer(Index, Count);
+  var State: Types.StreamState := LoadState(Index);
   State.Remaining := State.Remaining - Arrays.Length(Bytes);
   StoreState(Index, State);
   if State.Remaining = 0 then
@@ -251,7 +251,7 @@ end function;
 // - `Index`: One-based stream-state slot.
 function ReadChunkSize(Index: integer): Result of (integer, string);
 begin
-  mutable var LineEnd: integer := Wire.FindLineEnd(LoadState(Index).Buffer, 0);
+  var LineEnd: integer := Wire.FindLineEnd(LoadState(Index).Buffer, 0);
   while LineEnd < 0 do
     begin
       case ReadNetwork(Index) of
@@ -273,8 +273,8 @@ begin
       LineEnd := Wire.FindLineEnd(LoadState(Index).Buffer, 0);
     end;
   end while;
-  mutable var State: Types.StreamState := LoadState(Index);
-  var LineBytes: array of (integer) := Arrays.Slice(State.Buffer, 0, LineEnd);
+  var State: Types.StreamState := LoadState(Index);
+  const LineBytes: array of (integer) := Arrays.Slice(State.Buffer, 0, LineEnd);
   State.Buffer := Arrays.Slice(State.Buffer, LineEnd + 2, (Arrays.Length(State.Buffer) - LineEnd) -
                                                           2);
   StoreState(Index, State);
@@ -320,14 +320,14 @@ begin
               end case;
             end;
           end if;
-          mutable var Count: integer := Maximum;
+          var Count: integer := Maximum;
           if LoadState(Index).ChunkRemaining < Count then
             begin
               Count := LoadState(Index).ChunkRemaining;
             end;
           end if;
-          var Bytes: array of (integer) := TakeBuffer(Index, Count);
-          mutable var DataState: Types.StreamState := LoadState(Index);
+          const Bytes: array of (integer) := TakeBuffer(Index, Count);
+          var DataState: Types.StreamState := LoadState(Index);
           DataState.ChunkRemaining := DataState.ChunkRemaining - Arrays.Length(Bytes);
           if DataState.ChunkRemaining = 0 then
             begin
@@ -357,7 +357,7 @@ begin
                 return Result.Error(Message);
               end;
           end case;
-          mutable var TerminatorState: Types.StreamState := LoadState(Index);
+          var TerminatorState: Types.StreamState := LoadState(Index);
           if (TerminatorState.Buffer[0] <> 13) or (TerminatorState.Buffer[1] <> 10) then
             begin
               CloseAt(Index);
@@ -388,7 +388,7 @@ begin
                 return Result.Error('HTTP chunk exceeds MaxResponseBytes');
               end;
             end if;
-            mutable var SizeState: Types.StreamState := LoadState(Index);
+            var SizeState: Types.StreamState := LoadState(Index);
             SizeState.ChunkRemaining := Size;
             StoreState(Index, SizeState);
           end;
@@ -422,8 +422,8 @@ public function CreateBody(
   Maximum: integer
 ): Result of (Types2.BodyStream, string);
 begin
-  mutable var Mode: integer := 0;
-  mutable var Remaining: integer := 0;
+  var Mode: integer := 0;
+  var Remaining: integer := 0;
   if HasBody then
     begin
       case BodyFraming.Select(Headers) of
@@ -450,8 +450,8 @@ begin
       end case;
     end;
   end if;
-  var State: Types.StreamState := Types.StreamState(Connection := Connection, Buffer := InitialBody, Mode := Mode, Remaining := Remaining, ChunkRemaining := 0, NeedChunkTerminator := false, BytesReceived := BytesReceived, Maximum := Maximum, Finished := false, Open := true);
-  var Index: integer := ReserveState(State);
+  const State: Types.StreamState := Types.StreamState(Connection := Connection, Buffer := InitialBody, Mode := Mode, Remaining := Remaining, ChunkRemaining := 0, NeedChunkTerminator := false, BytesReceived := BytesReceived, Maximum := Maximum, Finished := false, Open := true);
+  const Index: integer := ReserveState(State);
   if (not HasBody) or ((Mode = 1) and (Remaining = 0)) then
     begin
       CloseAt(Index);

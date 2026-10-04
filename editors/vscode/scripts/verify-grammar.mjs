@@ -135,6 +135,10 @@ async function verifyPositiveScopes(grammar) {
     "entity.name.function.fpas"
   );
   assertScope(
+    tokenAt(fixture, "pure function Distance", "pure"),
+    "keyword.declaration.fpas"
+  );
+  assertScope(
     tokenAt(fixture, "discard Distance(Origin)", "discard"),
     "keyword.control.fpas"
   );
@@ -187,8 +191,10 @@ async function verifyPositiveScopes(grammar) {
 async function verifyNegativeScopes(grammar) {
   const fixture = await tokenizeFixture(grammar, "negative.fpas");
 
-  assertNoKeywordScope(tokenAt(fixture, "var shl: integer", "shl"));
-  assertNoKeywordScope(tokenAt(fixture, "var shr: integer", "shr"));
+  assertNoKeywordScope(tokenAt(fixture, "const shl: integer", "shl"));
+  assertNoKeywordScope(tokenAt(fixture, "const shr: integer", "shr"));
+  assertNoKeywordScope(tokenAt(fixture, "var Mutable :=", "Mutable"));
+  assertScope(tokenAt(fixture, "var Mutable :=", "Mutable"), "variable.other.definition.fpas");
 
   assertNoKeywordScope(
     tokenAt(fixture, "beginValue: string", "beginValue")
@@ -260,9 +266,21 @@ async function verifyEdgeScopes(grammar) {
   );
 }
 
+function verifyOrdinaryMemberNames(grammar) {
+  for (const name of ["static", "Property", "EVENT", "read", "write", "Self", "nil", "Assigned"]) {
+    const line = `const ${name}: integer := 1;`;
+    const result = grammar.tokenizeLine(line, INITIAL);
+    const token = result.tokens.find(token => token.startIndex <= 6 && token.endIndex > 6);
+    assert.ok(token, `${name} has a token`);
+    assertNoKeywordScope(token);
+    assert.ok(!token.scopes.includes("constant.language.fpas"), `${name} is an ordinary name`);
+  }
+}
+
 /** Loads the grammar and verifies positive, negative, and edge-case scopes. */
 export async function verifyGrammar() {
   const grammar = await createGrammar();
+  verifyOrdinaryMemberNames(grammar);
   await verifyPositiveScopes(grammar);
   await verifyNegativeScopes(grammar);
   await verifyEdgeScopes(grammar);

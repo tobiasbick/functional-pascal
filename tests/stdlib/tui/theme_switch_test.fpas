@@ -2,27 +2,29 @@ program TuiThemeSwitchTest;
 
 uses Std.Test as Test;
 uses Std.Tui as Tui;
+uses Std.Tui.Cells as Cells;
+uses Std.Tui.Elements as Elements;
+uses Std.Tui.Geometry as Geometry;
+uses Std.Tui.Runtime as Runtime;
 
 function ViewTheme(State: integer): Tui.TuiElement;
 begin
-  return Tui.TuiElementBuilders.MakeDesktop(Option.None, [Tui.TuiElementBuilders.MakeLabel('theme')]);
+  return Elements.TuiElementMakeDesktop(Option.None, [Elements.TuiElementMakeLabel('theme')]);
 end function;
 
 function UpdateTheme(State: integer; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): integer;
 begin
-  Cmd.SetPalette(Tui.TuiPalette.Default()
-                   .WithRole(Tui.TuiStyleRole.Normal, Tui.TuiStyle.FromColors(Tui.TuiColor.FromRgb(1, 2, 3), Tui.TuiColor.FromRgb(4, 5, 6))));
+  Runtime.TuiCmdOutputSetPalette(Cmd, Cells.TuiPaletteWithRole(Cells.TuiPaletteDefault(), Tui.TuiStyleRole.Normal, Cells.TuiStyleFromColors(Cells.TuiColorFromRgb(1, 2, 3), Cells.TuiColorFromRgb(4, 5, 6))));
   return State;
 end function;
 
 begin
-  var Initial: Tui.TuiPalette := Tui.TuiPalette.Default()
-                                   .WithRole(Tui.TuiStyleRole.Normal, Tui.TuiStyle.FromColors(Tui.TuiColor.FromRgb(10, 20, 30), Tui.TuiColor.FromRgb(40, 50, 60)));
-  var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTestWithPalette(Tui.TuiSize.Create(10, 2), Initial);
-  Test.AssertEquals(10, App.Palette().Normal.Foreground.Red);
-  App.Inject(Tui.TuiMsg.Tick(0));
-  var _: integer := App.RunIterations(0, UpdateTheme, ViewTheme, 1, 0);
-  Test.AssertEquals(1, App.Palette().Normal.Foreground.Red);
-  Test.AssertEquals(6, App.Palette().Normal.Background.Blue);
-  App.Close();
+  const Initial: Tui.TuiPalette := Cells.TuiPaletteWithRole(Cells.TuiPaletteDefault(), Tui.TuiStyleRole.Normal, Cells.TuiStyleFromColors(Cells.TuiColorFromRgb(10, 20, 30), Cells.TuiColorFromRgb(40, 50, 60)));
+  const App: Tui.TuiApplication := Runtime.TuiApplicationOpenForTestWithPalette(Geometry.TuiSizeCreate(10, 2), Initial);
+  Test.AssertEquals(10, Runtime.TuiApplicationPalette(App).Normal.Foreground.Red);
+  Runtime.TuiApplicationInject(App, Tui.TuiMsg.Tick(0));
+  const _: integer := Runtime.TuiApplicationRunIterations(App, 0, UpdateTheme, ViewTheme, 1, 0);
+  Test.AssertEquals(1, Runtime.TuiApplicationPalette(App).Normal.Foreground.Red);
+  Test.AssertEquals(6, Runtime.TuiApplicationPalette(App).Normal.Background.Blue);
+  Runtime.TuiApplicationClose(App);
 end program;

@@ -4,8 +4,8 @@ uses Std.Tasks as Tasks;
 uses Std.Test as Test;
 
 begin
-  var Source: Tasks.CancellationSource := Tasks.CreateCancellationSource();
-  var Token: Tasks.CancellationToken := Tasks.GetCancellationToken(Source);
+  const Source: Tasks.CancellationSource := Tasks.CreateCancellationSource();
+  const Token: Tasks.CancellationToken := Tasks.GetCancellationToken(Source);
   Test.AssertFalse(Tasks.IsCancellationRequested(Token));
   Test.AssertTrue(Tasks.Cancel(Source));
   Test.AssertTrue(Tasks.IsCancellationRequested(Token));

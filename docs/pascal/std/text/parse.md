@@ -10,7 +10,7 @@ uses Std.Parse as Parse;
 uses Std.Results as Results;
 
 begin
-  var Parsed: result of (integer, string) := Parse.TryInt('42');
+  const Parsed: result of (integer, string) := Parse.TryInt('42');
   Console.WriteLn(Results.UnwrapOr(Parsed, 0));
 end program;
 ```
@@ -40,7 +40,7 @@ Parses Pascal integer text. Returns `Result.Ok(Value)` on success or `Result.Err
 uses Std.Console as Console;
 uses Std.Parse as Parse;
 
-var R: result of (integer, string) := Parse.TryInt(' +1_024 ');
+const R: result of (integer, string) := Parse.TryInt(' +1_024 ');
 Console.WriteLn(UnwrapOr(R, 0)); // 1024
 ```
 
@@ -54,7 +54,7 @@ Parses Pascal real text. The text must include a fractional part; `1.0`, `-2.5`,
 uses Std.Console as Console;
 uses Std.Parse as Parse;
 
-var R: result of (real, string) := Parse.TryReal('1_024.0e-2');
+const R: result of (real, string) := Parse.TryReal('1_024.0e-2');
 Console.WriteLn(UnwrapOr(R, 0.0)); // 10.24
 ```
 
@@ -68,7 +68,7 @@ Parses boolean text. Leading and trailing whitespace is ignored; casing does not
 uses Std.Console as Console;
 uses Std.Parse as Parse;
 
-var R: result of (boolean, string) := Parse.TryBool(' FALSE ');
+const R: result of (boolean, string) := Parse.TryBool(' FALSE ');
 Console.WriteLn(UnwrapOr(R, true)); // false
 ```
 

@@ -21,7 +21,7 @@ uses Std.Str as Str;
 // - `Maximum`: Maximum request-head size in bytes.
 function ReadHead(Connection: Net.Connection; Maximum: integer): Result of (array of (integer), string);
 begin
-  mutable var Bytes: array of (integer) := [];
+  var Bytes: array of (integer) := [];
   while Wire.FindSeparator(Bytes, 0) < 0 do
     begin
       if Arrays.Length(Bytes) >= Maximum then
@@ -29,7 +29,7 @@ begin
           return Result.Error('HTTP request headers exceed MaxHeaderBytes');
         end;
       end if;
-      mutable var ReadMaximum: integer := Maximum - Arrays.Length(Bytes);
+      var ReadMaximum: integer := Maximum - Arrays.Length(Bytes);
       if ReadMaximum > 65536 then
         begin
           ReadMaximum := 65536;
@@ -64,7 +64,7 @@ end function;
 // - `Line`: Decoded request line.
 function ParseRequestLine(Line: string): Result of (array of (string), string);
 begin
-  var Parts: array of (string) := Str.Split(Line, ' ');
+  const Parts: array of (string) := Str.Split(Line, ' ');
   if Arrays.Length(Parts) <> 3 then
     begin
       return Result.Error('HTTP request line must contain method, target, and version');
@@ -100,7 +100,7 @@ end function;
 // - `Name`: Case-insensitive field name to count.
 function HeaderCount(Headers: array of (Types.Header); Name: string): integer;
 begin
-  mutable var Count: integer := 0;
+  var Count: integer := 0;
   for Index: integer := 0 to Arrays.Length(Headers) - 1 do
     begin
       if Headers2.IsName(Headers[Index].Name, Name) then
@@ -122,17 +122,17 @@ end function;
 // - `Length`: Declared complete body length.
 function ReadBody(Connection: Net.Connection; Initial: array of (integer); Length: integer): Result of (array of (integer), string);
 begin
-  mutable var InitialLength: integer := Arrays.Length(Initial);
+  var InitialLength: integer := Arrays.Length(Initial);
   if Length < InitialLength then
     begin
       InitialLength := Length;
     end;
   end if;
-  mutable var Chunks: array of (array of (integer)) := [Arrays.Slice(Initial, 0, InitialLength)];
-  mutable var Received: integer := InitialLength;
+  var Chunks: array of (array of (integer)) := [Arrays.Slice(Initial, 0, InitialLength)];
+  var Received: integer := InitialLength;
   while Received < Length do
     begin
-      mutable var ReadMaximum: integer := Length - Received;
+      var ReadMaximum: integer := Length - Received;
       if ReadMaximum > 1048576 then
         begin
           ReadMaximum := 1048576;
@@ -148,7 +148,7 @@ begin
               end;
             end if;
 
-            Arrays.Push(Chunks, Chunk);
+            Arrays.Push(var Chunks, Chunk);
             Received := Received + Arrays.Length(Chunk);
           end;
         when Result.Error(const Message):
@@ -181,7 +181,7 @@ begin
       return Result.Error('HTTP server MaxBodyBytes must not be negative');
     end;
   end if;
-  mutable var Bytes: array of (integer) := [];
+  var Bytes: array of (integer) := [];
   case ReadHead(Connection, MaxHeaderBytes) of
     when Result.Ok(const Value):
       begin
@@ -192,9 +192,9 @@ begin
         return Result.Error(Message);
       end;
   end case;
-  var Separator: integer := Wire.FindSeparator(Bytes, 0);
-  var HeadBytes: array of (integer) := Arrays.Slice(Bytes, 0, Separator);
-  mutable var HeadText: string := '';
+  const Separator: integer := Wire.FindSeparator(Bytes, 0);
+  const HeadBytes: array of (integer) := Arrays.Slice(Bytes, 0, Separator);
+  var HeadText: string := '';
   case Utf8.Decode(HeadBytes) of
     when Result.Ok(const Value):
       begin
@@ -205,13 +205,13 @@ begin
         return Result.Error('HTTP request headers are not valid UTF-8: ' + Message);
       end;
   end case;
-  var Lines: array of (string) := Str.Split(HeadText, #13 + #10);
+  const Lines: array of (string) := Str.Split(HeadText, #13 + #10);
   if Arrays.Length(Lines) = 0 then
     begin
       return Result.Error('HTTP request line is missing');
     end;
   end if;
-  mutable var RequestLine: array of (string) := [];
+  var RequestLine: array of (string) := [];
   case ParseRequestLine(Lines[0]) of
     when Result.Ok(const Value):
       begin
@@ -222,7 +222,7 @@ begin
         return Result.Error(Message);
       end;
   end case;
-  mutable var Headers: array of (Types.Header) := [];
+  var Headers: array of (Types.Header) := [];
   case Fields.Parse(HeadText, 'request') of
     when Result.Ok(const Value):
       begin
@@ -258,7 +258,7 @@ begin
       end case;
     end;
   end if;
-  mutable var BodyLength: integer := 0;
+  var BodyLength: integer := 0;
   case BodyFraming.Select(Headers) of
     when Result.Ok(const Framing):
       begin
@@ -285,9 +285,9 @@ begin
       return Result.Error('HTTP request body exceeds MaxBodyBytes');
     end;
   end if;
-  var InitialBody: array of (integer) := Arrays.Slice(Bytes, Separator + 4, (Arrays.Length(Bytes) - Separator) -
-                                                                            4);
-  mutable var Body: array of (integer) := [];
+  const InitialBody: array of (integer) := Arrays.Slice(Bytes, Separator + 4, (Arrays.Length(Bytes) - Separator) -
+                                                                              4);
+  var Body: array of (integer) := [];
   case ReadBody(Connection, InitialBody, BodyLength) of
     when Result.Ok(const Value):
       begin
@@ -298,7 +298,7 @@ begin
         return Result.Error(Message);
       end;
   end case;
-  var Output: Types.ServerRequest := Types.ServerRequest(Method := RequestLine[0], Target := RequestLine[1], Headers := Headers, Body := Body);
+  const Output: Types.ServerRequest := Types.ServerRequest(Method := RequestLine[0], Target := RequestLine[1], Headers := Headers, Body := Body);
   return Result.Ok(Output);
 end function;
 
@@ -320,14 +320,14 @@ begin
       return Result.Error('HTTP response reason phrase contains an invalid control character');
     end;
   end if;
-  mutable var Head: string := (((('HTTP/1.1 ' + Conv.IntToStr(ResponseValue.StatusCode)) + ' ') + ResponseValue.ReasonPhrase) + #13) +
-                              #10;
+  var Head: string := (((('HTTP/1.1 ' + Conv.IntToStr(ResponseValue.StatusCode)) + ' ') + ResponseValue.ReasonPhrase) + #13) +
+                      #10;
   Head := ((Head + 'Connection: close') + #13) + #10;
   Head := (((Head + 'Content-Length: ') + Conv.IntToStr(Arrays.Length(ResponseValue.Body))) + #13) +
           #10;
   for Index: integer := 0 to Arrays.Length(ResponseValue.Headers) - 1 do
     begin
-      var Field: Types.Header := ResponseValue.Headers[Index];
+      const Field: Types.Header := ResponseValue.Headers[Index];
       if (not Method2.IsValidToken(Field.Name)) or (not Fields.IsValidValue(Field.Value)) then
         begin
           return Result.Error('HTTP response contains an invalid header');

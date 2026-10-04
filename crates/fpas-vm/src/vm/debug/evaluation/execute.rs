@@ -112,17 +112,7 @@ fn evaluate_with_qualified_fallback(
                 }
                 Err(error) => return Err(error),
             };
-            match value_ops::field(&base, name) {
-                Ok(value) => value,
-                Err(_error) if matches!(base, Value::Record(_)) => invoke(
-                    DebugCallTarget::Property {
-                        receiver: base,
-                        name: name.clone(),
-                    },
-                    Vec::new(),
-                )?,
-                Err(error) => return Err(operation_error(error)),
-            }
+            value_ops::field(&base, name).map_err(operation_error)?
         }
         DebugExpression::Index { base, index } => {
             count_traversal(budget, limits)?;
@@ -132,6 +122,23 @@ fn evaluate_with_qualified_fallback(
         }
         DebugExpression::Call { callee, arguments } => {
             let target = match callee.as_ref() {
+                DebugExpression::Callable(name) if name.contains('.') => {
+                    let mut parts = name.split('.');
+                    let root = parts.next().unwrap_or(name);
+                    match resolve(root) {
+                        Ok(mut value) => {
+                            for field in parts {
+                                count_traversal(budget, limits)?;
+                                value = value_ops::field(&value, field).map_err(operation_error)?;
+                            }
+                            DebugCallTarget::Value(value)
+                        }
+                        Err(error) if error.kind == DebugErrorKind::UnknownName => {
+                            DebugCallTarget::Named(name.clone())
+                        }
+                        Err(error) => return Err(error),
+                    }
+                }
                 DebugExpression::Callable(name) => DebugCallTarget::Named(name.clone()),
                 DebugExpression::Name(name) => match resolve(name) {
                     Ok(value) => DebugCallTarget::Value(value),
@@ -151,21 +158,6 @@ fn evaluate_with_qualified_fallback(
             };
             let arguments = evaluate_arguments(arguments, depth, limits, budget, resolve, invoke)?;
             invoke(target, arguments)?
-        }
-        DebugExpression::MethodCall {
-            receiver,
-            name,
-            arguments,
-        } => {
-            let receiver = evaluate(receiver, depth + 1, limits, budget, resolve, invoke)?;
-            let arguments = evaluate_arguments(arguments, depth, limits, budget, resolve, invoke)?;
-            invoke(
-                DebugCallTarget::Method {
-                    receiver,
-                    name: name.clone(),
-                },
-                arguments,
-            )?
         }
         DebugExpression::Array(elements) => Value::Array(
             evaluate_arguments(elements, depth, limits, budget, resolve, invoke)?.into(),

@@ -1,8 +1,10 @@
 //! Anonymous-closure discovery, capture typing, and body lowering.
 
-mod bound_methods;
+/// Native array entries that use ordinary reference-call authority.
+pub(super) mod array_mutation;
 mod discover;
 mod intrinsic_tasks;
+mod lexical_scope;
 
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 
@@ -13,7 +15,7 @@ use fpas_sema::AnalysisMetadata;
 use crate::CompileError;
 
 use super::context::{
-    BoundMethodTarget, Callable, CaptureInput, ClosureTarget, FunctionInput, LoweringContext,
+    Callable, CaptureInput, ClosureTarget, FunctionInput, IntrinsicTaskTarget, LoweringContext,
     ParameterInput, unsupported,
 };
 use super::types;
@@ -23,17 +25,6 @@ pub(super) struct ClosureRoutine<'a> {
     pub id: FunctionId,
     pub(super) name: String,
     pub(super) captures: Vec<CaptureInput>,
-    pub owner: FunctionId,
-}
-
-pub(super) struct BoundMethodRoutine {
-    pub id: FunctionId,
-    name: String,
-    target: FunctionId,
-    receiver_ty: fpas_ir::TypeId,
-    parameters: Vec<fpas_ir::TypeId>,
-    result: fpas_ir::TypeId,
-    span: fpas_lexer::Span,
     pub owner: FunctionId,
 }
 
@@ -51,10 +42,10 @@ pub(super) struct IntrinsicTaskRoutine {
 pub(super) struct ClosureRegistry<'a> {
     pub routines: Vec<ClosureRoutine<'a>>,
     pub targets: HashMap<usize, ClosureTarget>,
-    pub bound_routines: Vec<BoundMethodRoutine>,
-    pub bound_targets: HashMap<usize, BoundMethodTarget>,
     pub intrinsic_task_routines: Vec<IntrinsicTaskRoutine>,
-    pub intrinsic_task_targets: HashMap<usize, BoundMethodTarget>,
+    pub intrinsic_task_targets: HashMap<usize, IntrinsicTaskTarget>,
+    /// Native array entries with concrete caller-storage signatures.
+    pub array_mutation_routines: Vec<array_mutation::ArrayMutationRoutine>,
     pub cell_names: HashMap<FunctionId, BTreeSet<String>>,
     callables: BTreeMap<String, Callable>,
     source_name: String,
@@ -66,10 +57,9 @@ impl<'a> ClosureRegistry<'a> {
         Self {
             routines: Vec::new(),
             targets: HashMap::new(),
-            bound_routines: Vec::new(),
-            bound_targets: HashMap::new(),
             intrinsic_task_routines: Vec::new(),
             intrinsic_task_targets: HashMap::new(),
+            array_mutation_routines: Vec::new(),
             cell_names: HashMap::new(),
             callables,
             source_name: source_name.to_string(),
@@ -125,13 +115,11 @@ impl<'a> ClosureRegistry<'a> {
             .params
             .iter()
             .map(|parameter| {
-                types
-                    .type_expr(&parameter.type_expr)
-                    .map(|ty| ParameterInput {
-                        name: parameter.name.clone(),
-                        ty,
-                        declaration: Some(parameter.span.diagnostic_span_or_synthetic()),
-                    })
+                types.formal_type(parameter, &[]).map(|ty| ParameterInput {
+                    name: parameter.name.clone(),
+                    ty,
+                    declaration: Some(parameter.span.diagnostic_span_or_synthetic()),
+                })
             })
             .collect::<Result<Vec<_>, _>>()?;
         let result = closure
@@ -152,7 +140,6 @@ impl<'a> ClosureRegistry<'a> {
             metadata,
             callables: callables.clone(),
             closure_targets: self.targets.clone(),
-            bound_method_targets: self.bound_targets.clone(),
             intrinsic_task_targets: self.intrinsic_task_targets.clone(),
             cell_names: self
                 .cell_names

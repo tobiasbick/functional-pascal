@@ -7,10 +7,10 @@ use fpas_diagnostics::codes::SEMA_NON_CONSTANT_EXPRESSION;
 fn scalar_labels_reject_variables_calls_and_each_dynamic_range_endpoint() {
     for label in ["Lower", "Next()", "Lower..3", "1..Upper", "Next()..Next()"] {
         let errors = check_errors(&format!(
-            "program Main;
+            r#"program Main;
             var Lower: integer := 1; var Upper: integer := 3;
             function Next(): integer; begin return 1; end function;
-            begin case 2 of when {label}: null; else null; end case; end program;"
+            begin case 2 of when {label}: null; else null; end case; end program;"#
         ));
         assert!(
             errors
@@ -47,13 +47,13 @@ fn try_and_decision_values_are_rejected_in_scalar_and_nested_value_patterns() {
         );
     }
     let errors = check_errors(
-        "program Main;
+        r#"program Main;
         type Choice = enum Present(Value: integer); Missing; end enum;
         function Next(): integer; begin return 1; end function;
-        begin var Value: Choice := Choice.Present(1);
+        begin const Value: Choice := Choice.Present(1);
           case Value of when Choice.Present((Next())): null;
             when Choice.Present(_): null; when Choice.Missing: null; end case;
-        end program;",
+        end program;"#,
     );
     assert!(
         errors

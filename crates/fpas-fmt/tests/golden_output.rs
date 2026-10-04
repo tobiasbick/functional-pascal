@@ -42,21 +42,23 @@ fn record_member_visibility() {
 public type Counter = record
   Value: integer;
   public Step: integer;
-
-  function Hidden(Self: Counter): integer;
-  begin
-    return Self.Value;
-  end function;
-
-  public static function Create(): Counter;
-  begin
-    return Counter(Value := 0, Step := 1);
-  end function;
-
-  public property Current: integer read Hidden;
-
-  public event Changed: procedure() read ReadChanged write WriteChanged;
+  public Changed: Option of (procedure()) := Option.None;
 end record;
+
+function Hidden(Receiver: Counter): integer;
+begin
+  return Receiver.Value;
+end function;
+
+public function CounterCreate(): Counter;
+begin
+  return Counter(Value := 0, Step := 1);
+end function;
+
+public function CounterCurrent(Receiver: Counter): integer;
+begin
+  return Hidden(Receiver);
+end function;
 
 end unit;
 "#,
@@ -85,7 +87,7 @@ type Point = record
 end record;
 
 begin
-  var A: Point := Point(X := 3, Y := 4);
+  const A: Point := Point(X := 3, Y := 4);
 end program;
 "#,
         include_str!("golden/short_record.expected.fpas"),
@@ -104,9 +106,9 @@ type Point = record
 end record;
 
 begin
-  var A: Point := Point(X := 3, Y := 4);
-  var B: Point := Point(X := 10, Y := 20);
-  var UpdatedB: Point := B with X := 11; end with;
+  const A: Point := Point(X := 3, Y := 4);
+  const B: Point := Point(X := 10, Y := 20);
+  const UpdatedB: Point := B with X := 11; end with;
 
   A.Print();
   if Ready then
@@ -118,7 +120,7 @@ begin
   if NeedsCount then
     Prepare();
   end if;
-  var Count: integer := 1;
+  const Count: integer := 1;
   WriteLn(Count);
   if Done then
     Finish();
@@ -133,12 +135,12 @@ end program;
 fn wrapped_parenthesized_comparisons_preserve_full_expression() {
     common::assert_golden(
         "wrapped_parenthesized_comparisons",
-        r#"program T; begin var InsideHorizontalBounds: boolean := (MouseEvent.mouse_x > ButtonBounds.x) and (MouseEvent.mouse_x <= ButtonBounds.x + ButtonBounds.width); end program;"#,
+        r#"program T; begin const InsideHorizontalBounds: boolean := (MouseEvent.mouse_x > ButtonBounds.x) and (MouseEvent.mouse_x <= ButtonBounds.x + ButtonBounds.width); end program;"#,
         r#"program T;
 
 begin
-  var InsideHorizontalBounds: boolean := (MouseEvent.mouse_x > ButtonBounds.x) and
-                                         (MouseEvent.mouse_x <= ButtonBounds.x + ButtonBounds.width);
+  const InsideHorizontalBounds: boolean := (MouseEvent.mouse_x > ButtonBounds.x) and
+                                           (MouseEvent.mouse_x <= ButtonBounds.x + ButtonBounds.width);
 end program;
 "#,
     );
@@ -148,7 +150,13 @@ end program;
 fn comments_unit_declaration_docs() {
     common::assert_golden(
         "comments_unit",
-        "// Unit doc.\nunit Demo;\n\n// field doc\nmutable var Count: integer := 0;\nend unit;\n",
+        r#"// Unit doc.
+unit Demo;
+
+// field doc
+ var Count: integer := 0;
+end unit;
+"#,
         include_str!("golden/comments_unit.expected.fpas"),
     );
 }
@@ -188,18 +196,18 @@ end program;"#,
 fn postfix_chaining_compact() {
     common::assert_golden(
         "postfix_chaining",
-        r#"program CompactPostfix; begin var X: integer := Factory.Create().Transform(2).Value; end program;"#,
+        r#"program CompactPostfix; begin const X: integer := Factory.Create().Transform(2).Value; end program;"#,
         include_str!("golden/postfix_chaining.expected.fpas"),
     );
     common::assert_round_trip(
         "postfix_chaining_round_trip",
-        r#"program CompactPostfix; begin var X: integer := Factory.Create().Transform(2).Value; end program;"#,
+        r#"program CompactPostfix; begin const X: integer := Factory.Create().Transform(2).Value; end program;"#,
     );
 }
 
 #[test]
 fn postfix_chaining_wraps_long_chain() {
-    let source = r#"program T; begin var X: integer := VeryLongFactoryName.CreateVeryLongThing().TransformWithVeryLongName(VeryLongArgumentAlpha).ScaleWithAnotherLongName(VeryLongArgumentBeta).Value; end program;"#;
+    let source = r#"program T; begin const X: integer := VeryLongFactoryName.CreateVeryLongThing().TransformWithVeryLongName(VeryLongArgumentAlpha).ScaleWithAnotherLongName(VeryLongArgumentBeta).Value; end program;"#;
     let (unit, errors) = fpas_parser::parse_compilation_unit(source);
     assert!(errors.is_empty(), "{errors:?}");
     let formatted = fpas_fmt::format_source(source, &unit).expect("matching source and AST");
@@ -213,6 +221,14 @@ fn postfix_chaining_wraps_long_chain() {
             .any(|line| line.trim_start().starts_with('.')),
         "expected continuation line starting with `.`: {formatted}"
     );
+    assert!(
+        formatted.contains(".TransformWithVeryLongName(VeryLongArgumentAlpha)"),
+        "{formatted}"
+    );
+    assert!(
+        formatted.contains(".ScaleWithAnotherLongName(VeryLongArgumentBeta)"),
+        "{formatted}"
+    );
     common::assert_round_trip("postfix_chaining_wrapped", &formatted);
 }
 
@@ -220,13 +236,13 @@ fn postfix_chaining_wraps_long_chain() {
 fn closure_literal_round_trips() {
     common::assert_round_trip(
         "closure_compact",
-        r#"program T; begin var F: procedure() := procedure() begin null; end procedure; end program;"#,
+        r#"program T; begin const F: procedure() := procedure() begin null; end procedure; end program;"#,
     );
     common::assert_round_trip(
         "closure_multiline",
         r#"program T;
 begin
-  var Add: function(Value: integer): integer :=
+  const Add: function(Value: integer): integer :=
     function(Value: integer): integer
     begin
       return Value + 1;
@@ -239,6 +255,6 @@ end program;"#,
 fn postfix_chaining_round_trips_field_index_mixture() {
     common::assert_round_trip(
         "postfix_field_index_mixture",
-        r#"program T; begin var X: integer := Factory.Create().Items[0].Value; end program;"#,
+        r#"program T; begin const X: integer := Factory.Create().Items[0].Value; end program;"#,
     );
 }

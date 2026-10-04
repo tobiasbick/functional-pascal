@@ -23,6 +23,7 @@ const ENUM: u8 = 12;
 const CELL: u8 = 13;
 const TASK: u8 = 14;
 const CHANNEL: u8 = 15;
+const REFERENCE: u8 = 16;
 
 pub(super) fn encode(types: &[DebugType], tag: u16) -> Result<EncodedSection, FormatError> {
     check_limit(
@@ -78,6 +79,10 @@ pub(super) fn encode(types: &[DebugType], tag: u16) -> Result<EncodedSection, Fo
             }
             DebugType::Cell(inner) => {
                 write_u8(&mut bytes, CELL);
+                write_u32(&mut bytes, inner.get());
+            }
+            DebugType::Reference(inner) => {
+                write_u8(&mut bytes, REFERENCE);
                 write_u32(&mut bytes, inner.get());
             }
             DebugType::Task(inner) => {
@@ -144,6 +149,7 @@ pub(super) fn decode(section: DecodedSection<'_>) -> Result<Vec<DebugType>, Form
             RECORD => DebugType::Record(RecordTypeId::new(reader.u16("debug_record_type")?)),
             ENUM => DebugType::Enum(EnumTypeId::new(reader.u16("debug_enum_type")?)),
             CELL => DebugType::Cell(read_id(&mut reader, "cell_inner_type")?),
+            REFERENCE => DebugType::Reference(read_id(&mut reader, "reference_inner_type")?),
             TASK => DebugType::Task(read_id(&mut reader, "task_result_type")?),
             CHANNEL => DebugType::Channel(read_id(&mut reader, "channel_element_type")?),
             value => {

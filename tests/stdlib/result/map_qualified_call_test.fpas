@@ -4,13 +4,13 @@ uses Std.Console as Console;
 uses Std.Results as Results;
 uses Std.Conv as Conv;
 
-function ToStr(V: integer): string;
+pure function ToStr(V: integer): string;
 begin
   return Conv.IntToStr(V);
 end function;
 
 begin
-  var R: Result of (integer, string) := Result.Ok(5);
-  var M: Result of (string, string) := Results.Map(R, ToStr);
+  const R: Result of (integer, string) := Result.Ok(5);
+  const M: Result of (string, string) := Results.Map(R, ToStr);
   Console.WriteLn(Results.Unwrap(M));
 end program;

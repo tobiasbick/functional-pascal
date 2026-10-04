@@ -1,0 +1,44 @@
+program RectangleExample;
+
+uses Std.Console as Console;
+uses Std.Conv as Conv;
+
+type Rectangle = record
+  W: integer;
+  H: integer;
+end record;
+
+function RectangleArea(Receiver: Rectangle): integer;
+begin
+  return Receiver.W * Receiver.H;
+end function;
+
+function RectanglePerimeter(Receiver: Rectangle): integer;
+begin
+  return 2 * (Receiver.W + Receiver.H);
+end function;
+
+function RectangleIsSquare(Receiver: Rectangle): boolean;
+begin
+  return Receiver.W = Receiver.H;
+end function;
+
+procedure RectangleDescribe(Receiver: Rectangle);
+begin
+  var Kind: string := 'Rectangle';
+  if RectangleIsSquare(Receiver) then
+    begin
+      Kind := 'Square';
+    end;
+  end if;
+
+  Console.WriteLn((((((((Kind + ' ') + Conv.IntToStr(Receiver.W)) + 'x') + Conv.IntToStr(Receiver.H)) + ' area=') + Conv.IntToStr(RectangleArea(Receiver))) + ' perimeter=') +
+                  Conv.IntToStr(RectanglePerimeter(Receiver)));
+end procedure;
+
+begin
+  const R: Rectangle := Rectangle(W := 5, H := 3);
+  RectangleDescribe(R);
+  const S: Rectangle := Rectangle(W := 4, H := 4);
+  RectangleDescribe(S);
+end program;

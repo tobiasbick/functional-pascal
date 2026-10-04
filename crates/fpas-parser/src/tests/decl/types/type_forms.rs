@@ -13,22 +13,10 @@ fn type_alias() {
 }
 
 #[test]
-fn event_keyword_cannot_be_a_type_name() {
-    let (_, errors) = parse_with_errors("program T; type Event = string; begin end.");
-    assert!(!errors.is_empty());
-}
-
-#[test]
-fn property_keyword_cannot_be_a_variable_name() {
-    let (_, errors) = parse_with_errors("program T; var Property: integer := 1; begin end.");
-    assert!(!errors.is_empty());
-}
-
-#[test]
 fn array_type() {
-    let p = parse_ok(r#"program T;  var Xs: array of (integer) := []; begin null; end program;"#);
+    let p = parse_ok(r#"program T;  const Xs: array of (integer) := []; begin null; end program;"#);
     match &p.declarations[0] {
-        Decl::Var(v) => match &v.type_expr {
+        Decl::Const(v) => match v.type_expr.as_ref().unwrap() {
             TypeExpr::Array(inner, _) => {
                 assert!(matches!(inner.as_ref(), TypeExpr::Named { .. }));
             }
@@ -41,10 +29,10 @@ fn array_type() {
 #[test]
 fn channel_type() {
     let p = parse_ok(
-        r#"program T;  var Messages: channel of (string) := Value; begin null; end program;"#,
+        r#"program T;  const Messages: channel of (string) := Value; begin null; end program;"#,
     );
     match &p.declarations[0] {
-        Decl::Var(v) => match &v.type_expr {
+        Decl::Const(v) => match v.type_expr.as_ref().unwrap() {
             TypeExpr::Channel(inner, _) => {
                 assert!(matches!(inner.as_ref(), TypeExpr::Named { .. }));
             }
@@ -57,10 +45,10 @@ fn channel_type() {
 #[test]
 fn typed_task_type() {
     let p = parse_ok(
-        r#"program T;  var Job: Task of (result of (integer, string)) := Value; begin null; end program;"#,
+        r#"program T;  const Job: Task of (result of (integer, string)) := Value; begin null; end program;"#,
     );
     match &p.declarations[0] {
-        Decl::Var(v) => match &v.type_expr {
+        Decl::Const(v) => match v.type_expr.as_ref().unwrap() {
             TypeExpr::Task(inner, _) => {
                 assert!(matches!(inner.as_ref(), TypeExpr::Result { .. }));
             }
@@ -72,9 +60,12 @@ fn typed_task_type() {
 
 #[test]
 fn bare_task_remains_a_named_type() {
-    let p = parse_ok(r#"program T;  var Job: task := Value; begin null; end program;"#);
+    let p = parse_ok(r#"program T;  const Job: task := Value; begin null; end program;"#);
     match &p.declarations[0] {
-        Decl::Var(v) => assert!(matches!(&v.type_expr, TypeExpr::Named { .. })),
+        Decl::Const(v) => assert!(matches!(
+            v.type_expr.as_ref().unwrap(),
+            TypeExpr::Named { .. }
+        )),
         _ => panic!("expected Var"),
     }
 }
@@ -82,7 +73,7 @@ fn bare_task_remains_a_named_type() {
 #[test]
 fn other_named_types_still_reject_generic_arguments() {
     let (_, errors) =
-        parse_with_errors("program T; var Items: Queue of integer := Value; begin end.");
+        parse_with_errors(r#"program T; const Items: Queue of integer := Value; begin end."#);
     assert!(!errors.is_empty());
 }
 
@@ -102,10 +93,10 @@ fn task_keyword_cannot_be_a_name() {
 #[test]
 fn task_keyword_types_nest_in_other_type_forms() {
     let p = parse_ok(
-        r#"program T;  var Jobs: array of (TASK of (option of (task))) := []; begin null; end program;"#,
+        r#"program T;  const Jobs: array of (TASK of (option of (task))) := []; begin null; end program;"#,
     );
     match &p.declarations[0] {
-        Decl::Var(v) => match &v.type_expr {
+        Decl::Const(v) => match v.type_expr.as_ref().unwrap() {
             TypeExpr::Array(inner, _) => match inner.as_ref() {
                 TypeExpr::Task(result, _) => match result.as_ref() {
                     TypeExpr::Option { inner_type, .. } => {

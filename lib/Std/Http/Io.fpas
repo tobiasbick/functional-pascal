@@ -5,9 +5,9 @@ uses Std.Arrays as Arrays;
 uses Std.Net as Net;
 
 // Materializes ordered response or request fragments as one byte array.
-public function JoinChunks(Chunks: array of (array of (integer))): array of (integer);
+public pure function JoinChunks(Chunks: array of (array of (integer))): array of (integer);
 begin
-  return Arrays.FlatMap(Chunks, function(Chunk: array of (integer)): array of (integer) begin
+  return Arrays.FlatMap(Chunks, pure function(Chunk: array of (integer)): array of (integer) begin
     return Chunk;
   end function);
 end function;
@@ -20,7 +20,7 @@ begin
       return Result.Error('HTTP response exceeds MaxResponseBytes');
     end;
   end if;
-  mutable var Count: integer := Available;
+  var Count: integer := Available;
   if Count > 65536 then
     begin
       Count := 65536;
@@ -58,16 +58,16 @@ end function;
 // - `Bytes`: Complete byte sequence to write.
 public function WriteAll(Connection: Net.Connection; Bytes: array of (integer)): Result of (boolean, string);
 begin
-  mutable var Offset: integer := 0;
+  var Offset: integer := 0;
   while Offset < Arrays.Length(Bytes) do
     begin
-      mutable var Count: integer := Arrays.Length(Bytes) - Offset;
+      var Count: integer := Arrays.Length(Bytes) - Offset;
       if Count > 1048576 then
         begin
           Count := 1048576;
         end;
       end if;
-      var Remaining: array of (integer) := Arrays.Slice(Bytes, Offset, Count);
+      const Remaining: array of (integer) := Arrays.Slice(Bytes, Offset, Count);
       case Net.SendBytes(Connection, Remaining) of
         when Result.Ok(const Count):
           begin

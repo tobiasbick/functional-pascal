@@ -14,7 +14,7 @@ function MakeAction(): procedure(); begin return Action; end function;
 #[test]
 fn procedure_values_can_be_stored_and_called_without_a_value() {
     check_ok(&format!(
-        "program P; {DECLARATIONS} begin var Actions: array of (procedure()) := [MakeAction()]; Actions[0](); (Action)(); MakeAction()(); end program;"
+        r#"program P; {DECLARATIONS} begin const Actions: array of (procedure()) := [MakeAction()]; Actions[0](); (Action)(); MakeAction()(); end program;"#
     ));
 }
 
@@ -107,7 +107,7 @@ fn discard_rejects_nested_task_handles() {
 type Holder = record Child: task of (integer); end record;
 type Payload = enum Child(Handle: task of (integer)); end enum;
 function Work(): integer; begin return 1; end function;
-begin var Handle: task := go Work(); var Queue: channel of (task of (integer)) := Tasks.CreateChannel(1); discard {value}; end program;"#
+begin const Handle: task := go Work(); const Queue: channel of (task of (integer)) := Tasks.CreateChannel(1); discard {value}; end program;"#
         ));
         assert!(
             errors
@@ -128,9 +128,9 @@ fn postfix_calls_preserve_task_bound_target_checks() {
     ] {
         let errors = check_errors(&format!(
             r#"program P; begin
-mutable var Count: integer := 0;
-var Action: procedure() := procedure() begin Count := Count + 1; end procedure;
-var Actions: array of (procedure()) := [Action];
+ var Count: integer := 0;
+const Action: procedure() := procedure() begin Count := Count + 1; end procedure;
+const Actions: array of (procedure()) := [Action];
 go {call}; end program;"#
         ));
         assert!(

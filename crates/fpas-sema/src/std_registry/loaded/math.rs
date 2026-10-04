@@ -117,6 +117,7 @@ pub(super) fn register_std_math(checker: &mut Checker) {
         checker,
         s::STD_MATH_ABS,
         Ty::Function(FunctionTy {
+            pure: false,
             type_params: Vec::new(),
             params: vec![],
             return_type: Box::new(Ty::Error),
@@ -127,6 +128,7 @@ pub(super) fn register_std_math(checker: &mut Checker) {
         checker,
         s::STD_MATH_MIN,
         Ty::Function(FunctionTy {
+            pure: false,
             type_params: Vec::new(),
             params: vec![],
             return_type: Box::new(Ty::Error),
@@ -137,6 +139,7 @@ pub(super) fn register_std_math(checker: &mut Checker) {
         checker,
         s::STD_MATH_MAX,
         Ty::Function(FunctionTy {
+            pure: false,
             type_params: Vec::new(),
             params: vec![],
             return_type: Box::new(Ty::Error),
@@ -147,6 +150,7 @@ pub(super) fn register_std_math(checker: &mut Checker) {
         checker,
         s::STD_MATH_SIGN,
         Ty::Function(FunctionTy {
+            pure: false,
             type_params: Vec::new(),
             params: vec![],
             return_type: Box::new(Ty::Error),
@@ -157,6 +161,7 @@ pub(super) fn register_std_math(checker: &mut Checker) {
         checker,
         s::STD_MATH_CLAMP,
         Ty::Function(FunctionTy {
+            pure: false,
             type_params: Vec::new(),
             params: vec![],
             return_type: Box::new(Ty::Error),

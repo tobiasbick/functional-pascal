@@ -48,6 +48,8 @@ pub enum DebugType {
     Enum(EnumTypeId),
     /// Shared mutable capture cell.
     Cell(DebugTypeId),
+    /// Synchronous selected caller storage with a logical value type.
+    Reference(DebugTypeId),
     /// Task handle result type.
     Task(DebugTypeId),
     /// Typed channel handle element type.

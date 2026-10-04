@@ -7,12 +7,25 @@ uses Std.Results as Results;
 uses Std.Test as Test;
 uses Std.Arrays as Arrays;
 
+function Require of (T)(Outcome: Result of (T, string)): T;
+begin
+  case Outcome of
+    when Result.Ok(const Value):
+      return Value;
+    when Result.Error(const Message):
+      panic(Message);
+  end case;
+end function;
+
 function BindListener(): Result of (Net.Listener, string);
 begin
   for Port: integer := 28200 to 28299 do
     begin
-      var Opened: Result of (Net.Listener, string) := Net.Listen('127.0.0.1', Port);
-      if Results.IsOk(Opened) then
+      const Opened: Result of (Net.Listener, string) := Net.Listen('127.0.0.1', Port);
+      if (case Opened of
+        when Result.Ok(_): true;
+        when Result.Error(_): false;
+      end case) then
         begin
           return Opened;
         end;
@@ -24,17 +37,17 @@ begin
 end function;
 
 begin
-  var Life: Server.ServerLifetime := Results.Unwrap(Server.CreateLifetime(1000, false));
-  var Group: Tasks.TaskGroup := Server.GetWorkGroup(Life);
-  var Worker: task := Tasks.StartTaskInGroup(Group, function(Token: Tasks.CancellationToken): Result of (boolean, string) begin
+  const Life: Server.ServerLifetime := Require(Server.CreateLifetime(1000, false));
+  const Group: Tasks.TaskGroup := Server.GetWorkGroup(Life);
+  const Worker: task := Tasks.StartTaskInGroup(Group, function(Token: Tasks.CancellationToken): Result of (boolean, string) begin
     return Result.Error('session failed');
   end function);
-  var Listener: Net.Listener := Results.Unwrap(BindListener());
+  const Listener: Net.Listener := Require(BindListener());
   discard Server.OwnListener(Life, Listener);
   // Deliberate ownership misuse: cleanup must preserve this failure.
   discard Net.CloseListener(Listener);
   discard Server.RequestStop(Life);
-  var Failures: array of (Tasks.TaskFailure) := Tasks.CloseTaskGroup(Group);
+  const Failures: array of (Tasks.TaskFailure) := Tasks.CloseTaskGroup(Group);
   Test.AssertEquals(1, Arrays.Length(Failures));
   Test.AssertEquals('session failed', Failures[0].Message);
   Test.AssertEquals(1, Arrays.Length(Server.ShutdownErrors(Life)));

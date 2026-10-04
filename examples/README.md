@@ -194,9 +194,9 @@ See [pascal/monorepo/README.md](pascal/monorepo/README.md) and [docs/pascal/prog
 | `pascal/vm/unicode_char_at_benchmark.fpas` | `Std.Str.CharAt` throughput over multi-byte Unicode text |
 | `pascal/vm/wrapper_payload_benchmark.fpas` | `Result` and `Option` payload construction and unwrap throughput |
 | `pascal/generics/generic_functions.fpas` | Generic functions |
-| `pascal/generics/generic_record_methods.fpas` | Method-level generics and constraints on record methods |
+| `pascal/generics/generic_record_functions.fpas` | Generic ordinary functions over records |
 | `pascal/pattern-matching/` | Guards and exhaustiveness |
-| `pascal/record-methods/` | Record methods |
+| `pascal/functions/` | Ordinary functions, record operations, closures and optional handlers |
 | `pascal/records/defaults_with_update.fpas` | Default fields and `with` updates |
 | `pascal/std/args_basics.fpas` | `Std.Args` — arguments passed after `--` |
 | `pascal/std/console_cells_basics.fpas` | `Std.Console` — framed cell fill/write/read-back and saved-region restore |

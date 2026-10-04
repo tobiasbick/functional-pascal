@@ -3,8 +3,7 @@
 use fpas_bytecode::{
     CodeRange, Constant, DebugTypeId, EnumLayout, EnumTypeId, EnumVariant, FunctionFlags,
     FunctionId, FunctionInfo, GlobalInfo, GlobalInitializer, Instruction, InstructionAddress,
-    RecordField, RecordLayout, RecordProperty, ReturnConvention, SourceId, SourceRun, StringId,
-    StringTable,
+    RecordField, RecordLayout, ReturnConvention, SourceId, SourceRun, StringId, StringTable,
 };
 
 use super::super::debug::{self, DebugCounts};
@@ -135,7 +134,7 @@ pub(super) fn decode_records(
         fpas_bytecode::limits::MAX_RECORD_LAYOUTS,
     )?;
     let mut reader = SectionReader::new(section.bytes, "record section");
-    reader.ensure_entries(section.item_count, 16, "record_name")?;
+    reader.ensure_entries(section.item_count, 8, "record_name")?;
     let mut records = Vec::new();
     for _ in 0..section.item_count {
         let name = StringId::new(reader.u32("record_name")?);
@@ -149,40 +148,7 @@ pub(super) fn decode_records(
                 ty: DebugTypeId::new(reader.u32("record_field_type")?),
             });
         }
-        let property_count = reader.u32("record_property_count")? as usize;
-        check_count(
-            section.tag,
-            property_count,
-            fpas_bytecode::limits::MAX_LAYOUT_FIELDS,
-        )?;
-        reader.ensure_entries(property_count, 8, "record_property_name")?;
-        let mut properties = Vec::with_capacity(property_count);
-        for _ in 0..property_count {
-            properties.push(RecordProperty {
-                name: StringId::new(reader.u32("record_property_name")?),
-                getter: StringId::new(reader.u32("record_property_getter")?),
-            });
-        }
-        let method_count = reader.u32("record_method_count")? as usize;
-        check_count(
-            section.tag,
-            method_count,
-            fpas_bytecode::limits::MAX_LAYOUT_FIELDS,
-        )?;
-        reader.ensure_entries(method_count, 8, "record_method_name")?;
-        let mut methods = Vec::with_capacity(method_count);
-        for _ in 0..method_count {
-            methods.push(fpas_bytecode::RecordMethod {
-                name: StringId::new(reader.u32("record_method_name")?),
-                routine: StringId::new(reader.u32("record_method_routine")?),
-            });
-        }
-        records.push(RecordLayout {
-            name,
-            fields,
-            properties,
-            methods,
-        });
+        records.push(RecordLayout { name, fields });
     }
     reader.finish()?;
     Ok(records)
@@ -250,7 +216,7 @@ pub(super) fn decode_functions(
         fpas_bytecode::limits::MAX_FUNCTIONS,
     )?;
     let mut reader = SectionReader::new(section.bytes, "function section");
-    reader.ensure_entries(section.item_count, 20, "function_name")?;
+    reader.ensure_entries(section.item_count, 21, "function_name")?;
     let mut functions = Vec::new();
     let mut debug_counts = DebugCounts::default();
     for _ in 0..section.item_count {
@@ -258,6 +224,12 @@ pub(super) fn decode_functions(
         let start = InstructionAddress::new(reader.u32("function_code_start")?);
         let end = InstructionAddress::new(reader.u32("function_code_end")?);
         let arity = reader.u8("function_arity")?;
+        let var_count = usize::from(reader.u8("function_var_parameter_count")?);
+        reader.ensure_entries(var_count, 1, "function_var_parameter")?;
+        let mut var_parameters = Vec::with_capacity(var_count);
+        for _ in 0..var_count {
+            var_parameters.push(reader.u8("function_var_parameter")?);
+        }
         let capture_count = reader.u16("function_capture_count")?;
         let register_count = reader.u16("function_register_count")?;
         let return_convention = match reader.u8("function_return_convention")? {
@@ -281,6 +253,7 @@ pub(super) fn decode_functions(
             name,
             code: CodeRange::new(start, end),
             arity,
+            var_parameters,
             capture_count,
             register_count,
             return_convention,

@@ -21,12 +21,21 @@ impl Display for Ty {
                 write_application(f, &enumeration.name, &enumeration.type_args)
             }
             Ty::Function(function) => {
+                if function.pure {
+                    write!(f, "pure ")?;
+                }
                 write!(f, "function(")?;
                 for (index, parameter) in function.params.iter().enumerate() {
                     if index > 0 {
                         write!(f, "; ")?;
                     }
-                    write!(f, "{}: {}", parameter.name, parameter.ty)?;
+                    write!(
+                        f,
+                        "{}{}: {}",
+                        if parameter.mutable { "var " } else { "" },
+                        parameter.name,
+                        parameter.ty
+                    )?;
                 }
                 write!(f, "): {}", function.return_type)
             }
@@ -36,7 +45,13 @@ impl Display for Ty {
                     if index > 0 {
                         write!(f, "; ")?;
                     }
-                    write!(f, "{}: {}", parameter.name, parameter.ty)?;
+                    write!(
+                        f,
+                        "{}{}: {}",
+                        if parameter.mutable { "var " } else { "" },
+                        parameter.name,
+                        parameter.ty
+                    )?;
                 }
                 write!(f, ")")
             }
@@ -44,7 +59,7 @@ impl Display for Ty {
             Ty::Applied(name, arguments) => write_application(f, name, arguments),
             Ty::Result(ok, error) => write!(f, "Result of ({ok}, {error})"),
             Ty::Option(inner) => write!(f, "Option of ({inner})"),
-            Ty::GenericParam(name, _) => write!(f, "{name}"),
+            Ty::GenericParam(parameter) => write!(f, "{}", parameter.name),
             Ty::Dict(key, value) => write!(f, "dict of ({key}, {value})"),
             Ty::Task(inner) => write!(f, "task of ({inner})"),
             Ty::Error => write!(f, "<error>"),

@@ -14,8 +14,8 @@ uses Std.Net.Utf8 as Utf8;
 // - `_RequestValue`: Validated request accepted over TLS.
 function Handle(_RequestValue: Http.ServerRequest): Http.ServerResponse;
 begin
-  mutable var ResponseValue: Http.ServerResponse := Http.ServerResponse.Create(200, 'OK');
-  ResponseValue.Headers := [Http.Header.Create('Content-Type', 'text/plain; charset=utf-8')];
+  var ResponseValue: Http.ServerResponse := Http.ServerResponseCreate(200, 'OK');
+  ResponseValue.Headers := [Http.HeaderCreate('Content-Type', 'text/plain; charset=utf-8')];
   ResponseValue.Body := Utf8.Encode('Hello over HTTPS from FPAS');
   return ResponseValue;
 end function;
@@ -26,7 +26,7 @@ begin
       panic('usage: https_server.fpas -- CERTIFICATE_PEM PRIVATE_KEY_PEM [PORT]');
     end;
   end if;
-  mutable var Port: integer := 18443;
+  var Port: integer := 18443;
   if Args.ParamCount() = 3 then
     begin
       Port := Conv.StrToInt(Args.ParamStr(2));
@@ -37,7 +37,7 @@ begin
     when Result.Ok(const ListenerValue):
       begin
         Console.WriteLn('HTTPS server listening on https://127.0.0.1:' + Conv.IntToStr(Port));
-        mutable var Options: Http.ServerOptions := Http.ServerOptions.Create();
+        var Options: Http.ServerOptions := Http.ServerOptionsCreate();
         Options.MaxConcurrentRequests := 1;
         Options.MaxRequests := 1;
         case Http.Serve(ListenerValue, Options, Handle) of

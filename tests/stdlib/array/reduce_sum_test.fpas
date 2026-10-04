@@ -3,13 +3,13 @@ program T;
 uses Std.Console as Console;
 uses Std.Arrays as Arrays;
 
-function AddAcc(Acc: integer; V: integer): integer;
+pure function AddAcc(Acc: integer; V: integer): integer;
 begin
   return Acc + V;
 end function;
 
 begin
-  var Nums: array of (integer) := [1, 2, 3, 4, 5];
-  var Sum: integer := Arrays.Reduce(Nums, 0, AddAcc);
+  const Nums: array of (integer) := [1, 2, 3, 4, 5];
+  const Sum: integer := Arrays.Reduce(Nums, 0, AddAcc);
   Console.WriteLn(Sum);
 end program;

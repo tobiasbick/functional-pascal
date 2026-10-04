@@ -13,8 +13,6 @@ mod transition;
 mod validate;
 mod variant;
 
-use std::sync::TryLockError;
-
 use fpas_bytecode::{Value, VerifiedExecutable};
 
 use super::inspection::{MutationRoot, MutationTarget};
@@ -25,8 +23,7 @@ pub(in crate::vm::debug) use dictionary::{DictionaryTransformation, insert, remo
 pub use empty_storage::DebugStorageInitializationResult;
 pub(in crate::vm::debug) use function_value::{
     AssignmentContext as FunctionAssignmentContext, FunctionSource, inactive_function_payload,
-    is_function_type, prepare as prepare_function_value,
-    prepare_bound_method as prepare_bound_method_value, prepare_routine as prepare_routine_value,
+    is_function_type, prepare as prepare_function_value, prepare_routine as prepare_routine_value,
     source as function_value_source,
 };
 pub use model::{
@@ -108,8 +105,43 @@ pub(in crate::vm::debug) fn commit(
         MutationRoot::Global(global) => {
             let mut globals = worker.globals.write().map_err(|_| unavailable())?;
             let slot = globals.get_mut(*global).ok_or_else(unavailable)?;
+            if let Some(Value::Cell(cell)) = slot {
+                let current = worker
+                    .hosted
+                    .references
+                    .read(cell)
+                    .map_err(|_| unavailable())?;
+                let updated = replace::descendant(current, &target.path, replacement)?;
+                worker
+                    .hosted
+                    .references
+                    .write(cell, updated.clone())
+                    .map_err(|_| unavailable())?;
+                return Ok(replaced_value(&updated, &target.path).unwrap_or(updated));
+            }
             if target.path.is_empty() {
-                *slot = Some(replacement.clone());
+                let cell_backed = worker
+                    .executable
+                    .executable()
+                    .globals
+                    .get(*global)
+                    .is_some_and(|info| {
+                        matches!(
+                            worker
+                                .executable
+                                .executable()
+                                .debug_types
+                                .get(info.ty.get() as usize),
+                            Some(fpas_bytecode::DebugType::Cell(_))
+                        )
+                    });
+                *slot = Some(if cell_backed {
+                    Value::Cell(std::sync::Arc::new(std::sync::Mutex::new(
+                        replacement.clone(),
+                    )))
+                } else {
+                    replacement.clone()
+                });
                 return Ok(replacement);
             }
             let current = slot.as_mut().ok_or_else(uninitialized_path)?;
@@ -118,14 +150,25 @@ pub(in crate::vm::debug) fn commit(
             Ok(replaced_value(&updated, &target.path).unwrap_or(updated))
         }
         MutationRoot::ClosureCell(cell) => {
-            let mut inner = match cell.try_lock() {
-                Ok(inner) => inner,
-                Err(TryLockError::WouldBlock | TryLockError::Poisoned(_)) => {
-                    return Err(unavailable());
-                }
-            };
-            let updated = replace::descendant(inner.clone(), &target.path, replacement)?;
-            *inner = updated.clone();
+            let current = worker
+                .hosted
+                .references
+                .read(cell)
+                .map_err(|_| unavailable())?;
+            let updated = replace::descendant(current, &target.path, replacement)?;
+            worker
+                .hosted
+                .references
+                .write(cell, updated.clone())
+                .map_err(|_| unavailable())?;
+            Ok(replaced_value(&updated, &target.path).unwrap_or(updated))
+        }
+        MutationRoot::Reference(reference) => {
+            let current = reference.read().map_err(|_| unavailable())?;
+            let updated = replace::descendant(current, &target.path, replacement)?;
+            reference
+                .write(updated.clone())
+                .map_err(|_| unavailable())?;
             Ok(replaced_value(&updated, &target.path).unwrap_or(updated))
         }
     }

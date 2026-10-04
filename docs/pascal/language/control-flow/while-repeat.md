@@ -5,7 +5,7 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`while_stmt`, `rep
 ## While loop
 
 ```pascal
-mutable var Count: integer := 0;
+ var Count: integer := 0;
 while Count < 10 do
   Console.WriteLn(Count);
   Count := Count + 1;
@@ -22,7 +22,7 @@ an outer name, the condition still uses the outer binding, including after
 The body executes at least once:
 
 ```pascal
-mutable var Input: string := '';
+ var Input: string := '';
 repeat
   Input := Console.ReadLn();
 until Input = 'quit';

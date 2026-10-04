@@ -1,47 +1,56 @@
-# Variables
+# Bindings
 
-Variables are **immutable by default**. Use `mutable var` to allow reassignment.
-Both forms work as top-level declarations and as inline statements in a body.
-Repeat `var` or `mutable var` for each binding; declaration groups are invalid.
+`const` binds a value once. `var` creates writable storage. Both accept computed
+initializers, evaluated once when the declaration is reached. Repeat the keyword
+for each binding; grouped declarations are invalid.
 
-Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`var_block`, `var_stmt`, `mutable_var_block`, and `mutable_var_stmt`).
+Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`const_block`,
+`var_block`, `const_stmt`, `var_stmt`).
 
 ```pascal
-var Name: string := 'Alice'; // Immutable — cannot be reassigned
-mutable var Age: integer := 30;
-
+const Name: string := 'Alice';
+var Age: integer := 30;
 ```
 
-Reassigning an immutable variable is a compile-time error:
+Unit/program declarations require an explicit type. Local bindings may infer
+their type from the initializer. An annotation constrains that initializer; later
+uses and assignments never determine a binding's type.
 
 ```pascal
-var X: integer := 10;
-
+function NextAge(Current: integer): integer;
 begin
-  X := 20;  // Error: cannot assign to immutable variable 'X'
-end;
+  const Next := Current + 1;
+  var Result := Next;
+  Result := Result + 1;
+  return Result;
+end function;
 ```
 
-Mutable variables can be reassigned freely:
+A const binding cannot be reassigned, and its stored fields, array elements and
+dictionary entries cannot be replaced. Imported bindings have the same rule;
+their declared alias preserves the original binding's permissions.
+
+Assigning or passing records and collections copies their values. Changes to a
+separate var binding preserve earlier snapshots, including nested collections.
+Resource handles retain their resource identity, and stateful closure copies share
+their mutable capture environment.
 
 ```pascal
-mutable var Count: integer := 0;
-
+procedure Demonstrate();
 begin
-  Count := Count + 1;  // Valid mutable assignment
-end;
+  const Original := [[1, 2]];
+  var Copy := Original;
+  Copy[0][1] := 9;
+  // Original[0][1] remains 2.
+end procedure;
 ```
 
-Inline mutable variables use the same syntax:
-
-```pascal
-begin
-mutable var Count: integer := 0;
-Count := Count + 1;
-end;
-```
+Caller mutation uses an explicit [var parameter](../functions/var-parameters.md)
+and a `var` argument. A value parameter is a read-only snapshot; create a local var
+copy when only the routine's own value needs to change.
 
 ## See also
 
-- [Local variables](local-variables.md)
-- [Records — immutability](../types/records.md#immutability)
+- [Constants and static expressions](constants.md)
+- [Local inference](local-variables.md)
+- [Records and value copying](../types/records.md#immutability)

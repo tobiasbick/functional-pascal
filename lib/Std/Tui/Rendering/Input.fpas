@@ -24,36 +24,36 @@ public procedure TuiPaintInput(
   Focused: boolean
 );
 begin
-  if Bounds.IsEmpty() then
+  if Rect.TuiRectIsEmpty(Bounds) then
     begin
       return;
     end;
   end if;
-  mutable var Role: StyleRole.TuiStyleRole := StyleRole.TuiStyleRole.InputNormal;
+  var Role: StyleRole.TuiStyleRole := StyleRole.TuiStyleRole.InputNormal;
   if Focused then
     begin
       Role := StyleRole.TuiStyleRole.InputFocused;
     end;
   end if;
 
-  Canvas.FillRect(Bounds, Cell.TuiCell.Create(' ', Role));
+  Canvas2.TuiCanvasFillRect(Canvas, Bounds, Cell.TuiCellCreate(' ', Role));
   if Bounds.Width <= 2 then
     begin
       if Focused then
         begin
-          Canvas.WriteText(Point.TuiPoint.Create(Bounds.X, Bounds.Y), ' ', StyleRole.TuiStyleRole.InputCursor);
+          Canvas2.TuiCanvasWriteText(Canvas, Point.TuiPointCreate(Bounds.X, Bounds.Y), ' ', StyleRole.TuiStyleRole.InputCursor);
         end;
       end if;
 
       return;
     end;
   end if;
-  var ContentWidth: integer := Bounds.Width - 2;
-  var Viewport: Input3.TuiInputViewport := Input3.TuiInputViewportFor(Input.Text, Input.Caret, ContentWidth);
+  const ContentWidth: integer := Bounds.Width - 2;
+  const Viewport: Input3.TuiInputViewport := Input3.TuiInputViewportFor(Input.Text, Input.Caret, ContentWidth);
   if Input.Text = '' then
     begin
-      mutable var HintX: integer := Bounds.X + 1;
-      mutable var HintWidth: integer := ContentWidth;
+      var HintX: integer := Bounds.X + 1;
+      var HintWidth: integer := ContentWidth;
       if Focused and (HintWidth > 1) then
         begin
           HintX := HintX + 1;
@@ -61,45 +61,43 @@ begin
         end;
       end if;
 
-      Canvas.Child(Rect.TuiRect.Create(HintX, Bounds.Y, HintWidth, 1))
-        .WriteText(Point.TuiPoint.Create(0, 0), Input.Hint, StyleRole.TuiStyleRole.InputHint);
+      Canvas2.TuiCanvasWriteText(Canvas2.TuiCanvasChild(Canvas, Rect.TuiRectCreate(HintX, Bounds.Y, HintWidth, 1)), Point.TuiPointCreate(0, 0), Input.Hint, StyleRole.TuiStyleRole.InputHint);
     end;
   else
     begin
-      Canvas.Child(Rect.TuiRect.Create(Bounds.X + 1, Bounds.Y, ContentWidth, 1))
-        .WriteText(Point.TuiPoint.Create(0, 0), Str.Substring(Input.Text, Viewport.Start, Viewport.EndIndex -
-                                                                                          Viewport.Start), Role);
+      Canvas2.TuiCanvasWriteText(Canvas2.TuiCanvasChild(Canvas, Rect.TuiRectCreate(Bounds.X + 1, Bounds.Y, ContentWidth, 1)), Point.TuiPointCreate(0, 0), Str.Substring(Input.Text, Viewport.Start, Viewport.EndIndex -
+                                                                                                                                                                                                    Viewport.Start), Role);
     end;
   end if;
 
   if Viewport.LeftClipped then
     begin
-      Canvas.WriteText(Point.TuiPoint.Create(Bounds.X, Bounds.Y), '◄', StyleRole.TuiStyleRole.InputScroll);
+      Canvas2.TuiCanvasWriteText(Canvas, Point.TuiPointCreate(Bounds.X, Bounds.Y), '◄', StyleRole.TuiStyleRole.InputScroll);
     end;
   end if;
 
   if Viewport.RightClipped then
     begin
-      Canvas.WriteText(Point.TuiPoint.Create(Bounds.Right() - 1, Bounds.Y), '►', StyleRole.TuiStyleRole.InputScroll);
+      Canvas2.TuiCanvasWriteText(Canvas, Point.TuiPointCreate(Rect.TuiRectRight(Bounds) - 1, Bounds.Y), '►', StyleRole.TuiStyleRole.InputScroll);
     end;
   end if;
 
   if Focused then
     begin
-      mutable var CursorX: integer := (Bounds.X + 1) + Viewport.CaretColumn;
-      if CursorX >= Bounds.Right() - 1 then
+      var CursorX: integer := (Bounds.X + 1) + Viewport.CaretColumn;
+      if CursorX >= Rect.TuiRectRight(Bounds) - 1 then
         begin
-          CursorX := Bounds.Right() - 2;
+          CursorX := Rect.TuiRectRight(Bounds) - 2;
         end;
       end if;
-      mutable var CursorGlyph: string := ' ';
+      var CursorGlyph: string := ' ';
       if Input.Caret < Str.Length(Input.Text) then
         begin
           CursorGlyph := Str.CharAt(Input.Text, Input.Caret);
         end;
       end if;
 
-      Canvas.WriteText(Point.TuiPoint.Create(CursorX, Bounds.Y), CursorGlyph, StyleRole.TuiStyleRole.InputCursor);
+      Canvas2.TuiCanvasWriteText(Canvas, Point.TuiPointCreate(CursorX, Bounds.Y), CursorGlyph, StyleRole.TuiStyleRole.InputCursor);
     end;
   end if;
 end procedure;

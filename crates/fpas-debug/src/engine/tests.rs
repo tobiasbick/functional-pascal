@@ -11,7 +11,7 @@ use crate::PreparedDebugTarget;
 const SOURCE: &str = r#"program EngineSurface;
 
 begin
-  mutable var Value: integer := 40;
+   var Value: integer := 40;
   Value := Value + 2;
 end program;
 "#;

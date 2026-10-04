@@ -51,8 +51,8 @@ end unit;
 uses Actions.Core as Core;
 
 begin
-  var Music: string := '𝄞' + Core.ExistingText;
-  var Value: integer := UniqueValue();
+  const Music: string := '𝄞' + Core.ExistingText;
+  const Value: integer := UniqueValue();
 end program;
 "#;
     let main_path = temp.write("src/main.fpas", source);
@@ -112,12 +112,9 @@ end program;
             "parameter",
             "variable",
             "field",
-            "property",
-            "event",
             "enumMember",
             "function",
             "procedure",
-            "method",
             "constant"
         ])
     );
@@ -163,7 +160,7 @@ end program;
         &decoded,
         utf16_position,
         "ExistingText".encode_utf16().count(),
-        13,
+        10,
     );
     assert!(
         decoded.windows(2).all(|pair| pair[0].0 < pair[1].0

@@ -2,10 +2,9 @@
 //!
 //! **Documentation:** `docs/pascal/language/types/generics.md`.
 
-use std::collections::HashMap;
 use std::sync::Arc;
 
-use super::{GenericParamDef, Ty};
+use super::{GenericParamDef, Ty, TypeArguments};
 
 impl Ty {
     /// Return the declared parameters of an unapplied nominal generic type.
@@ -26,7 +25,7 @@ impl Ty {
         let bindings = parameters
             .iter()
             .zip(arguments)
-            .map(|(parameter, argument)| (parameter.name.to_ascii_lowercase(), argument.clone()))
+            .map(|(parameter, argument)| (parameter.identity.clone(), argument.clone()))
             .collect();
         let mut instantiated = self.substitute(&bindings);
         match &mut instantiated {
@@ -38,11 +37,11 @@ impl Ty {
     }
 
     /// Replace parameters throughout a type, leaving recursive references deferred.
-    pub(crate) fn substitute(&self, bindings: &HashMap<String, Ty>) -> Ty {
+    pub(crate) fn substitute(&self, bindings: &TypeArguments) -> Ty {
         let substitute = |ty: &Ty| ty.substitute(bindings);
         match self {
-            Ty::GenericParam(name, _) => bindings
-                .get(&name.to_ascii_lowercase())
+            Ty::GenericParam(parameter) => bindings
+                .get(&parameter.identity)
                 .cloned()
                 .unwrap_or_else(|| self.clone()),
             Ty::Applied(name, arguments) => {

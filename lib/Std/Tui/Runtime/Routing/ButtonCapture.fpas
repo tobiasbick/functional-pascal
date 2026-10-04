@@ -16,7 +16,7 @@ public type TuiButtonPressState = enum
   Captured(Button: Button2.TuiButtonSpec; Inside: boolean);
 end enum;
 
-mutable var TuiButtonPressStates: array of (TuiButtonPressState) := [];
+var TuiButtonPressStates: array of (TuiButtonPressState) := [];
 
 // Allocates idle button-capture state for one application.
 public procedure TuiButtonCaptureOpen();

@@ -29,7 +29,7 @@ fn every_available_named_body_and_plain_block_parses() {
         "for Item: integer in [1, 2] do null; end for;",
         "while false do null; end while;",
         "repeat null; until true;",
-        "var F: function(): integer := function(): integer begin return 1; end function;",
+        r#"const F: function(): integer := function(): integer begin return 1; end function;"#,
         "Consume(function(): integer begin return 1; end function, procedure() begin null; end procedure);",
         "var P: Point := Point(X := 1); P := P with X := 2; end with;",
     ];
@@ -40,7 +40,7 @@ fn every_available_named_body_and_plain_block_parses() {
         "unit App.Model; uses Std.Str as Text; public type Point = record X: integer; end record; type Color = enum Red; Blue; end enum; public function F(): integer; procedure P(); begin null; end procedure; begin P(); return 1; end function; end unit;",
     );
     accepted(
-        "program T; type R = record static function Create(): integer; begin return 1; end function; procedure Touch(Self: R); begin null; end procedure; end record; begin null; end program;",
+        "program T; type R = record Value: integer; end record; function Create(): integer; begin return 1; end function; procedure Touch(Receiver: R); begin null; end procedure; begin null; end program;",
     );
 }
 
@@ -162,7 +162,7 @@ fn expression_closers_leave_argument_and_statement_delimiters_to_the_caller() {
 #[test]
 fn declaration_keywords_and_aliases_are_individual() {
     let CompilationUnit::Unit(unit) = accepted(
-        "unit App; uses Std.Str as Text; uses Std.Console as Console; public const A: integer := 1; const B: integer := 2; public var C: integer := 3; var D: integer := 4; type E = integer; type F = string; end unit;",
+        r#"unit App; uses Std.Str as Text; uses Std.Console as Console; public const A: integer := 1; const B: integer := 2; public const C: integer := 3; const D: integer := 4; type E = integer; type F = string; end unit;"#,
     ) else {
         panic!("expected unit")
     };
@@ -192,7 +192,8 @@ fn declaration_keywords_and_aliases_are_individual() {
 #[test]
 fn comments_case_and_keyword_prefixes_do_not_change_boundaries() {
     accepted(
-        "PrOgRaM T; uses Std.Str aS Text; BeGiN // end if;\n var nullValue: integer := 1; IF true THEN Text.Length('end program; null;'); ElSiF false THEN null; ELSE null; END IF; EnD PrOgRaM;",
+        r#"PrOgRaM T; uses Std.Str aS Text; BeGiN // end if;
+ const nullValue: integer := 1; IF true THEN Text.Length('end program; null;'); ElSiF false THEN null; ELSE null; END IF; EnD PrOgRaM;"#,
     );
 }
 

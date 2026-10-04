@@ -14,8 +14,10 @@ type Holder = record
 end record;
 
 begin
-  var Original: Holder := Holder(Items := [1, 2], Tags := ['old': 1], MaybeItems := Option.Some([3]), Lookup := Result.Ok(['old': 2]));
-  var Updated: Holder := Original with Items := []; Tags := [:]; MaybeItems := Option.Some([]); Lookup := Result.Ok([:]); end with;
+  const Original: Holder := Holder(Items := [1, 2], Tags := ['old': 1], MaybeItems := Option.Some([
+                                                                                                    3
+                                                                                                  ]), Lookup := Result.Ok(['old': 2]));
+  const Updated: Holder := Original with Items := []; Tags := [:]; MaybeItems := Option.Some([]); Lookup := Result.Ok([:]); end with;
 
   Test.AssertEquals(0, Arrays.Length(Updated.Items));
   Test.AssertEquals(0, Dictionaries.Length(Updated.Tags));

@@ -77,7 +77,7 @@ fn symbol_kind(kind: SymbolKind) -> Option<IntrinsicStdSymbolKind> {
         SymbolKind::EnumMember | SymbolKind::EnumVariantConstructor => {
             Some(IntrinsicStdSymbolKind::EnumMember)
         }
-        SymbolKind::Var | SymbolKind::Param | SymbolKind::ForVar => None,
+        SymbolKind::Var | SymbolKind::Param | SymbolKind::VarParam | SymbolKind::ForVar => None,
     }
 }
 

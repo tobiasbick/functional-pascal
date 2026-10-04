@@ -6,9 +6,11 @@
 use super::{Ty, TypeConstraint};
 use std::collections::HashMap;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 enum ComponentRule {
     Equality,
+    PureData,
+    PureSignatures,
     Callable,
     Task,
     Finite,
@@ -16,15 +18,36 @@ enum ComponentRule {
 
 impl ComponentRule {
     fn combines_all(self) -> bool {
-        matches!(self, Self::Equality | Self::Finite)
+        matches!(
+            self,
+            Self::Equality | Self::PureData | Self::PureSignatures | Self::Finite
+        )
     }
 
     fn backedge(self) -> bool {
-        matches!(self, Self::Equality)
+        matches!(self, Self::Equality | Self::PureData | Self::PureSignatures)
     }
 }
 
 impl Ty {
+    /// Validate nested explicitly pure signatures without restricting surrounding data.
+    pub(crate) fn has_valid_pure_signatures_with(&self, resolve: impl Fn(&Ty) -> Ty) -> bool {
+        check(
+            self,
+            ComponentRule::PureSignatures,
+            &resolve,
+            &mut ComponentStates::default(),
+        )
+    }
+    /// Check recursively for resource-free data and pure callable values.
+    pub(crate) fn is_pure_data_with(&self, resolve: impl Fn(&Ty) -> Ty) -> bool {
+        check(
+            self,
+            ComponentRule::PureData,
+            &resolve,
+            &mut ComponentStates::default(),
+        )
+    }
     /// Check whether the type can represent a value of finite size.
     pub(crate) fn has_finite_value_with(&self, resolve: impl Fn(&Ty) -> Ty) -> bool {
         check(
@@ -65,7 +88,7 @@ pub(super) fn supports_equality(ty: &Ty, resolve: impl Fn(&Ty) -> Ty) -> bool {
     )
 }
 
-type StateKey = (String, Vec<bool>);
+type StateKey = (ComponentRule, String, Vec<bool>);
 
 #[derive(Default)]
 struct ComponentStates {
@@ -94,14 +117,40 @@ fn check(
     match resolve(ty) {
         Ty::Error => rule.combines_all(),
         Ty::Integer | Ty::Real | Ty::Boolean | Ty::String => rule.combines_all(),
-        Ty::GenericParam(_, constraint) => match rule {
-            ComponentRule::Equality => {
-                constraint.is_some_and(|constraint| constraint.implies(TypeConstraint::Equatable))
-            }
+        Ty::GenericParam(parameter) => match rule {
+            ComponentRule::Equality | ComponentRule::PureData => parameter
+                .constraint
+                .is_some_and(|constraint| constraint.implies(TypeConstraint::Equatable)),
             ComponentRule::Callable => true,
             ComponentRule::Task => false,
-            ComponentRule::Finite => true,
+            ComponentRule::Finite | ComponentRule::PureSignatures => true,
         },
+        Ty::Function(function) if matches!(rule, ComponentRule::PureSignatures) => {
+            let inner_rule = if function.pure {
+                ComponentRule::PureData
+            } else {
+                rule
+            };
+            function.params.iter().all(|p| {
+                (!function.pure || !p.mutable) && check(&p.ty, inner_rule, resolve, visiting)
+            }) && check(&function.return_type, inner_rule, resolve, visiting)
+        }
+        Ty::Procedure(procedure) if matches!(rule, ComponentRule::PureSignatures) => procedure
+            .params
+            .iter()
+            .all(|p| check(&p.ty, rule, resolve, visiting)),
+        Ty::Task(inner) | Ty::Channel(inner) if matches!(rule, ComponentRule::PureSignatures) => {
+            check(&inner, rule, resolve, visiting)
+        }
+        Ty::Unit if matches!(rule, ComponentRule::PureSignatures) => true,
+        Ty::Function(function) if matches!(rule, ComponentRule::PureData) => {
+            function.pure
+                && function
+                    .params
+                    .iter()
+                    .all(|p| !p.mutable && check(&p.ty, rule, resolve, visiting))
+                && check(&function.return_type, rule, resolve, visiting)
+        }
         Ty::Function(_) | Ty::Procedure(_) => {
             matches!(rule, ComponentRule::Callable | ComponentRule::Finite)
         }
@@ -126,7 +175,9 @@ fn check(
             }
         }
         Ty::Record(record) => {
-            if record.is_resource && matches!(rule, ComponentRule::Equality) {
+            if record.is_resource
+                && matches!(rule, ComponentRule::Equality | ComponentRule::PureData)
+            {
                 return false;
             }
             if record.is_resource && matches!(rule, ComponentRule::Finite) {
@@ -214,22 +265,40 @@ fn state_key(
     rule: ComponentRule,
     resolve: &impl Fn(&Ty) -> Ty,
     visiting: &mut ComponentStates,
-) -> (String, Vec<bool>) {
+) -> StateKey {
     (
+        rule,
         name.to_ascii_lowercase(),
         arguments
             .iter()
-            .map(|argument| {
+            .flat_map(|argument| {
                 // Deferred aliases can recur inside arguments before a nominal state
                 // has been computed. Their source type identity bounds that recursion.
                 let key = argument.to_string().to_ascii_lowercase();
                 if visiting.arguments.contains(&key) {
-                    return rule.backedge();
+                    return vec![
+                        rule.backedge();
+                        if rule == ComponentRule::PureSignatures {
+                            2
+                        } else {
+                            1
+                        }
+                    ];
                 }
                 visiting.arguments.push(key);
                 let result = check(argument, rule, resolve, visiting);
+                // A recursive signature may inspect this argument as pure data on
+                // the next edge, even when the argument has no callable signature.
+                let capabilities = if rule == ComponentRule::PureSignatures {
+                    vec![
+                        result,
+                        check(argument, ComponentRule::PureData, resolve, visiting),
+                    ]
+                } else {
+                    vec![result]
+                };
                 visiting.arguments.pop();
-                result
+                capabilities
             })
             .collect(),
     )

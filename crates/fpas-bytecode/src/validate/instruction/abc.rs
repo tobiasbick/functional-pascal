@@ -81,6 +81,7 @@ pub(super) fn validate_abc(
         | Opcode::BranchIfLessEqualInteger
         | Opcode::BranchIfGreaterEqualInteger
         | Opcode::IndexGet
+        | Opcode::SelectReferenceIndex
         | Opcode::IndexSet
         | Opcode::Contains => {
             validate_registers(site, &[("destination", a), ("left", b), ("right", c)])?;
@@ -115,6 +116,8 @@ pub(super) fn validate_abc(
         | Opcode::IntegerToReal
         | Opcode::MakeCell
         | Opcode::CellRead
+        | Opcode::ReserveReference
+        | Opcode::ReadReference
         | Opcode::MakeOk
         | Opcode::MakeError
         | Opcode::MakeSome
@@ -140,7 +143,7 @@ pub(super) fn validate_abc(
             canonical_u16(site, "B", b, 0)?;
             canonical_tail(site, c, auxiliary)
         }
-        Opcode::CellWrite => {
+        Opcode::CellWrite | Opcode::WriteReference => {
             validate_registers(site, &[("cell", a), ("value", b)])?;
             canonical_tail(site, c, auxiliary)
         }
@@ -153,6 +156,33 @@ pub(super) fn validate_abc(
             validate_register(site, "panic value", a)?;
             canonical_u16(site, "B", b, 0)?;
             canonical_tail(site, c, auxiliary)
+        }
+        Opcode::ReleaseReference => {
+            validate_register(site, "reference", a)?;
+            canonical_u16(site, "B", b, 0)?;
+            canonical_tail(site, c, auxiliary)
+        }
+        Opcode::SelectReferenceField => {
+            validate_register(site, "reference", a)?;
+            let layout = executable.records.get(usize::from(b)).ok_or_else(|| {
+                table_u16_error(
+                    site,
+                    "record layouts",
+                    "record layout",
+                    b,
+                    executable.records.len(),
+                )
+            })?;
+            if usize::from(c) >= layout.fields.len() {
+                return Err(table_u16_error(
+                    site,
+                    "record fields",
+                    "record field",
+                    c,
+                    layout.fields.len(),
+                ));
+            }
+            canonical_u8(site, "auxiliary", auxiliary, 0)
         }
         Opcode::CallDirect | Opcode::TailCall => validate_call(
             site,

@@ -14,46 +14,44 @@ type ExplorerState = record
   CenterY: real;
   SpanY: real;
   MaxIter: integer;
-
-  static function Default(): ExplorerState;
-  begin
-    return ExplorerState(CenterX := 0.0, CenterY := 0.0, SpanY := 3.0, MaxIter := 48);
-  end function;
-
-  function SpanX(Self: ExplorerState; Width: integer; Height: integer): real;
-  begin
-    var SafeWidth: integer := Math.Max(Width, 1);
-    var SafeHeight: integer := Math.Max(Height, 1);
-    return (Self.SpanY * (Conv.IntToReal(SafeWidth) / Conv.IntToReal(SafeHeight))) * 0.5;
-  end function;
-
-  function XMin(Self: ExplorerState; Width: integer; Height: integer): real;
-  begin
-    return Self.CenterX - (Self.SpanX(Width, Height) * 0.5);
-  end function;
-
-  function XMax(Self: ExplorerState; Width: integer; Height: integer): real;
-  begin
-    return Self.CenterX + (Self.SpanX(Width, Height) * 0.5);
-  end function;
-
-  function YMin(Self: ExplorerState): real;
-  begin
-    return Self.CenterY - (Self.SpanY * 0.5);
-  end function;
-
-  function YMax(Self: ExplorerState): real;
-  begin
-    return Self.CenterY + (Self.SpanY * 0.5);
-  end function;
-
-  function GetZoom(Self: ExplorerState): real;
-  begin
-    return 3.0 / Self.SpanY;
-  end function;
-
-  property Zoom: real read GetZoom;
 end record;
+
+function ExplorerStateDefault(): ExplorerState;
+begin
+  return ExplorerState(CenterX := 0.0, CenterY := 0.0, SpanY := 3.0, MaxIter := 48);
+end function;
+
+function ExplorerStateSpanX(Receiver: ExplorerState; Width: integer; Height: integer): real;
+begin
+  const SafeWidth: integer := Math.Max(Width, 1);
+  const SafeHeight: integer := Math.Max(Height, 1);
+  return (Receiver.SpanY * (Conv.IntToReal(SafeWidth) / Conv.IntToReal(SafeHeight))) * 0.5;
+end function;
+
+function ExplorerStateXMin(Receiver: ExplorerState; Width: integer; Height: integer): real;
+begin
+  return Receiver.CenterX - (ExplorerStateSpanX(Receiver, Width, Height) * 0.5);
+end function;
+
+function ExplorerStateXMax(Receiver: ExplorerState; Width: integer; Height: integer): real;
+begin
+  return Receiver.CenterX + (ExplorerStateSpanX(Receiver, Width, Height) * 0.5);
+end function;
+
+function ExplorerStateYMin(Receiver: ExplorerState): real;
+begin
+  return Receiver.CenterY - (Receiver.SpanY * 0.5);
+end function;
+
+function ExplorerStateYMax(Receiver: ExplorerState): real;
+begin
+  return Receiver.CenterY + (Receiver.SpanY * 0.5);
+end function;
+
+function ExplorerStateGetZoom(Receiver: ExplorerState): real;
+begin
+  return 3.0 / Receiver.SpanY;
+end function;
 
 function RenderWidth(): integer;
 begin
@@ -67,23 +65,23 @@ end function;
 
 function ViewportCX(State: ExplorerState; W: integer; H: integer; CellX: integer): real;
 begin
-  var Wr: integer := Math.Max(W - 1, 1);
-  return State.XMin(W, H) +
-         (Conv.IntToReal(CellX - 1) / Conv.IntToReal(Wr)) * (State.XMax(W, H) - State.XMin(W, H));
+  const Wr: integer := Math.Max(W - 1, 1);
+  return ExplorerStateXMin(State, W, H) +
+         (Conv.IntToReal(CellX - 1) / Conv.IntToReal(Wr)) * (ExplorerStateXMax(State, W, H) - ExplorerStateXMin(State, W, H));
 end function;
 
 function ViewportCY(State: ExplorerState; W: integer; H: integer; CellY: integer): real;
 begin
-  var Hr: integer := Math.Max(H - 1, 1);
-  return State.YMax() -
-         (Conv.IntToReal(CellY - 1) / Conv.IntToReal(Hr)) * (State.YMax() - State.YMin());
+  const Hr: integer := Math.Max(H - 1, 1);
+  return ExplorerStateYMax(State) -
+         (Conv.IntToReal(CellY - 1) / Conv.IntToReal(Hr)) * (ExplorerStateYMax(State) - ExplorerStateYMin(State));
 end function;
 
 procedure WriteHudText(Text: string; Width: integer);
 begin
   if Width > 0 then
     begin
-      var TextLength: integer := Math.Min(Str.Length(Text), Width);
+      const TextLength: integer := Math.Min(Str.Length(Text), Width);
       if TextLength > 0 then
         begin
           Console.WriteText(Str.Substring(Text, 0, TextLength));
@@ -96,13 +94,13 @@ end procedure;
 procedure DrawHud(S: ExplorerState; Width: integer; Height: integer);
 begin
   Console.Window(1, 1, Console.ScreenWidth(), Console.ScreenHeight());
-  var HudTop: integer := Math.Max(Console.ScreenHeight() - 2, 1);
+  const HudTop: integer := Math.Max(Console.ScreenHeight() - 2, 1);
   Console.Window(1, HudTop, Console.ScreenWidth(), Console.ScreenHeight());
   Console.NormVideo();
   Console.ClrScr();
   Console.GotoXY(1, 1);
   Console.TextColorRGB(255, 220, 120);
-  var Title: string := 'Functional Pascal Newton z^3-1';
+  const Title: string := 'Functional Pascal Newton z^3-1';
   WriteHudText(Title, Width);
   Console.TextColorRGB(156, 204, 255);
   WriteHudText('  tasks | units | records | postfix | truecolor', Math.Max(Width - Str.Length(Title), 0));
@@ -110,7 +108,7 @@ begin
     begin
       Console.GotoXY(1, 2);
       Console.NormVideo();
-      WriteHudText(Str.Format('size=%dx%d  center=(%f, %f)  zoom=%f  iter=%d', Width, Height, S.CenterX, S.CenterY, S.Zoom, S.MaxIter), Width);
+      WriteHudText(Str.Format('size=%dx%d  center=(%f, %f)  zoom=%f  iter=%d', Width, Height, S.CenterX, S.CenterY, ExplorerStateGetZoom(S), S.MaxIter), Width);
     end;
   end if;
 
@@ -126,11 +124,11 @@ begin
   Console.Window(1, 1, Width, Height);
 end procedure;
 
-mutable var State: ExplorerState := ExplorerState.Default();
-mutable var RenderW: integer := 1;
-mutable var RenderH: integer := 1;
-mutable var NeedsRedraw: boolean := true;
-mutable var Quit: boolean := false;
+var State: ExplorerState := ExplorerStateDefault();
+var RenderW: integer := 1;
+var RenderH: integer := 1;
+var NeedsRedraw: boolean := true;
+var Quit: boolean := false;
 
 procedure RequestRedraw();
 begin
@@ -143,15 +141,15 @@ begin
   RenderH := RenderHeight();
   Console.BeginFrame();
   Console.FillRect(Console.rect(x := 1, y := 1, width := Console.ScreenWidth(), height := Console.ScreenHeight()), Console.cell(glyph := ' ', foreground := Console.RgbColor(0, 0, 0), background := Console.RgbColor(0, 0, 0)));
-  Render2.Render(State.XMin(RenderW, RenderH), State.XMax(RenderW, RenderH), State.YMin(), State.YMax(), RenderW, RenderH, State.MaxIter);
+  Render2.Render(ExplorerStateXMin(State, RenderW, RenderH), ExplorerStateXMax(State, RenderW, RenderH), ExplorerStateYMin(State), ExplorerStateYMax(State), RenderW, RenderH, State.MaxIter);
   DrawHud(State, RenderW, RenderH);
   Console.Present();
 end procedure;
 
 function HandleKey(Key: Console.KeyEvent): boolean;
 begin
-  var StepX: real := State.SpanX(RenderW, RenderH) * 0.14;
-  var StepY: real := State.SpanY * 0.14;
+  const StepX: real := ExplorerStateSpanX(State, RenderW, RenderH) * 0.14;
+  const StepY: real := State.SpanY * 0.14;
   if Key.kind = Console.KeyKind.Escape then
     begin
       Quit := true;
@@ -217,7 +215,7 @@ begin
                         end;
                       when 'r', 'R':
                         begin
-                          State := ExplorerState.Default();
+                          State := ExplorerStateDefault();
                           RequestRedraw();
                           return true;
                         end;
@@ -237,8 +235,8 @@ end function;
 
 procedure HandleMouse(InputEvent: Console.ConsoleEvent);
 begin
-  var InView: boolean := (((InputEvent.mouse_x >= 1) and (InputEvent.mouse_x <= RenderW)) and (InputEvent.mouse_y >= 1)) and
-                         (InputEvent.mouse_y <= RenderH);
+  const InView: boolean := (((InputEvent.mouse_x >= 1) and (InputEvent.mouse_x <= RenderW)) and (InputEvent.mouse_y >= 1)) and
+                           (InputEvent.mouse_y <= RenderH);
   if InputEvent.mouse_action = Console.MouseAction.ScrollUp then
     begin
       State.SpanY := Math.Max(State.SpanY * 0.88, 0.000001);
@@ -262,7 +260,7 @@ begin
           else
             if InputEvent.mouse_button = Console.MouseButton.Middle then
               begin
-                State := ExplorerState.Default();
+                State := ExplorerStateDefault();
                 RequestRedraw();
               end;
             end if;
@@ -275,8 +273,8 @@ end procedure;
 
 procedure HandleResize(Width: integer; Height: integer);
 begin
-  var NewW: integer := Math.Max(Width, 1);
-  var NewH: integer := Math.Max(Height - 2, 1);
+  const NewW: integer := Math.Max(Width, 1);
+  const NewH: integer := Math.Max(Height - 2, 1);
   if (NewW <> RenderW) or (NewH <> RenderH) then
     begin
       RenderW := NewW;

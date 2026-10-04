@@ -66,8 +66,8 @@ Use the constructors instead of assembling a `Color` record by hand:
 ```pascal
 uses Std.Console as Console;
 
-var Accent: Console.Color := Console.RgbColor(255, 160, 32);
-var Tile: Console.Cell := Console.Cell(glyph := 'A', foreground := Accent, background := Console.CrtColor(Console.Black));
+const Accent: Console.Color := Console.RgbColor(255, 160, 32);
+const Tile: Console.Cell := Console.Cell(glyph := 'A', foreground := Accent, background := Console.CrtColor(Console.Black));
 ```
 
 `CrtColor` accepts `0..15`, including the named CRT constants such as `Black`, `LightGray`, and
@@ -106,7 +106,7 @@ at the screen edge. A wide glyph reserves its following column as a continuation
 ```pascal
 uses Std.Console as Console;
 
-var Cells: array of (Console.Cell) := [Console.Cell(glyph := 'A', foreground := Console.CrtColor(Console.White), background := Console.CrtColor(Console.Black)), Console.Cell(glyph := '中', foreground := Console.RgbColor(80, 200, 255), background := Console.CrtColor(Console.Black))];
+const Cells: array of (Console.Cell) := [Console.Cell(glyph := 'A', foreground := Console.CrtColor(Console.White), background := Console.CrtColor(Console.Black)), Console.Cell(glyph := '中', foreground := Console.RgbColor(80, 200, 255), background := Console.CrtColor(Console.Black))];
 Console.WriteCells(1, 1, Cells);
 ```
 
@@ -150,7 +150,7 @@ Each handle is one-shot:
 ```pascal
 uses Std.Console as Console;
 
-var Underlay: Console.SavedRegion := Console.SaveRegion(Console.Rect(x := 10, y := 4, width := 24, height := 5));
+const Underlay: Console.SavedRegion := Console.SaveRegion(Console.Rect(x := 10, y := 4, width := 24, height := 5));
 Console.FillRect(Console.Rect(x := 10, y := 4, width := 24, height := 5), Console.Cell(glyph := ' ', foreground := Console.CrtColor(Console.White), background := Console.Ansi256Color(24)));
 Console.RestoreRegion(Underlay);
 ```

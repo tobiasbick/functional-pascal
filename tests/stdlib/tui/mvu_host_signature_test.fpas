@@ -3,6 +3,9 @@ program MvuHostSignatureTest;
 // Phase 0: prove the exact generic RunIterations / Update / View callable pattern.
 uses Std.Tui as Tui;
 uses Std.Test as Test;
+uses Std.Tui.Elements as Elements;
+uses Std.Tui.Geometry as Geometry;
+uses Std.Tui.Runtime as Runtime;
 
 type CounterModel = record
   Value: integer;
@@ -10,7 +13,7 @@ end record;
 
 function UpdateCounter(State: CounterModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): CounterModel;
 begin
-  Cmd.Set(Tui.TuiCmd.NoCommand);
+  Runtime.TuiCmdOutputSet(Cmd, Tui.TuiCmd.NoCommand);
   case Msg of
     when Tui.TuiMsg.Tick(const Delta):
       begin
@@ -18,12 +21,12 @@ begin
       end;
     when Tui.TuiMsg.MenuChanged(const MenuSource, const MenuAction, const MenuState):
       begin
-        Cmd.Set(Tui.TuiCmd.Quit);
+        Runtime.TuiCmdOutputSet(Cmd, Tui.TuiCmd.Quit);
         return State;
       end;
     when Tui.TuiMsg.QuitRequested:
       begin
-        Cmd.Set(Tui.TuiCmd.Quit);
+        Runtime.TuiCmdOutputSet(Cmd, Tui.TuiCmd.Quit);
         return State;
       end;
     when Tui.TuiMsg.Started, Tui.TuiMsg.Key(_), Tui.TuiMsg.Pointer(_), Tui.TuiMsg.Resize(_), Tui.TuiMsg.FocusChanged(_, _), Tui.TuiMsg.Action(_, _), Tui.TuiMsg.TextChanged(_, _, _, _), Tui.TuiMsg.TextAreaChanged(_, _, _, _, _), Tui.TuiMsg.CheckChanged(_, _, _), Tui.TuiMsg.SelectionChanged(_, _, _), Tui.TuiMsg.ScrollChanged(_, _, _), Tui.TuiMsg.BackgroundFailed(_, _, _, _, _, _):
@@ -37,12 +40,12 @@ end function;
 
 function ViewCounter(State: CounterModel): Tui.TuiElement;
 begin
-  return Tui.TuiElementBuilders.MakeLabel('count');
+  return Elements.TuiElementMakeLabel('count');
 end function;
 
 begin
-  mutable var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(40, 12));
-  var FinalModel: CounterModel := App.RunIterations(CounterModel(Value := 0), UpdateCounter, ViewCounter, 3, 16);
+  var App: Tui.TuiApplication := Runtime.TuiApplicationOpenForTest(Geometry.TuiSizeCreate(40, 12));
+  const FinalModel: CounterModel := Runtime.TuiApplicationRunIterations(App, CounterModel(Value := 0), UpdateCounter, ViewCounter, 3, 16);
   Test.AssertEquals(3, FinalModel.Value);
-  App.Close();
+  Runtime.TuiApplicationClose(App);
 end program;

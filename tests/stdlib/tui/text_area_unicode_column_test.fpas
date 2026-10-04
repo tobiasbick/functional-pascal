@@ -4,6 +4,10 @@ uses Std.Console as Console;
 uses Std.Str as Str;
 uses Std.Test as Test;
 uses Std.Tui as Tui;
+uses Std.Tui.Elements as Elements;
+uses Std.Tui.Geometry as Geometry;
+uses Std.Tui.Ids as Ids;
+uses Std.Tui.Runtime as Runtime;
 
 type TextAreaModel = record
   Text: string;
@@ -18,14 +22,14 @@ end function;
 
 function ViewTextArea(State: TextAreaModel): Tui.TuiElement;
 begin
-  return Tui.TuiElementBuilders.MakeDesktop(Option.Some(Tui.TuiControlId.Create(1)), [
-                                                                                       Tui.TuiElementBuilders.MakeTextArea(Tui.TuiControlId.Create(1), State.Text, State.Caret, State.Offset, Tui.TuiAction.Create(9))
-                                                                                     ]);
+  return Elements.TuiElementMakeDesktop(Option.Some(Ids.TuiControlIdCreate(1)), [
+                                                                                  Elements.TuiElementMakeTextArea(Ids.TuiControlIdCreate(1), State.Text, State.Caret, State.Offset, Ids.TuiActionCreate(9))
+                                                                                ]);
 end function;
 
 function UpdateTextArea(State: TextAreaModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): TextAreaModel;
 begin
-  Cmd.Set(Tui.TuiCmd.NoCommand);
+  Runtime.TuiCmdOutputSet(Cmd, Tui.TuiCmd.NoCommand);
   case Msg of
     when Tui.TuiMsg.TextAreaChanged(const Source, const Action, const Text, const Caret, const Offset):
       begin
@@ -49,8 +53,8 @@ function Press(
   Character: string
 ): TextAreaModel;
 begin
-  App.InjectKeyForTest(MakeKey(Kind, Character));
-  return App.RunIterations(State, UpdateTextArea, ViewTextArea, 1, 0);
+  Runtime.TuiApplicationInjectKeyForTest(App, MakeKey(Kind, Character));
+  return Runtime.TuiApplicationRunIterations(App, State, UpdateTextArea, ViewTextArea, 1, 0);
 end function;
 
 // Reference the original scalar-prefix contract only for short correctness fixtures.
@@ -70,7 +74,7 @@ begin
 end function;
 
 begin
-  var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(4, 2));
+  const App: Tui.TuiApplication := Runtime.TuiApplicationOpenForTest(Geometry.TuiSizeCreate(4, 2));
   for Line: string in [
                         (Str.Chr(9800) + Str.Chr(65038)) + 'x',
                         '',
@@ -84,13 +88,13 @@ begin
     begin
       for Column: integer := 0 to 6 do
         begin
-          var State: TextAreaModel := TextAreaModel(Text := (('xxxxxx' + #10) + Line) + #10, Caret := Column, Offset := Tui.TuiPoint.Create(3, 0));
-          var Moved: TextAreaModel := Press(App, State, Tui.TuiKeyKind.Down, '');
+          const State: TextAreaModel := TextAreaModel(Text := (('xxxxxx' + #10) + Line) + #10, Caret := Column, Offset := Geometry.TuiPointCreate(3, 0));
+          const Moved: TextAreaModel := Press(App, State, Tui.TuiKeyKind.Down, '');
           Test.AssertEquals(7 + Expected(Line, Column), Moved.Caret);
         end;
       end for;
     end;
   end for;
 
-  App.Close();
+  Runtime.TuiApplicationClose(App);
 end program;

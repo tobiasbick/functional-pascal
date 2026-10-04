@@ -104,32 +104,7 @@ pub(super) fn compile_program(
                         })
                 })
                 .collect::<Result<Vec<_>, _>>()?;
-            let properties = layout
-                .properties
-                .iter()
-                .map(|property| {
-                    Ok(fpas_bytecode::RecordProperty {
-                        name: metadata.intern_string(&property.name)?,
-                        getter: metadata.intern_string(&property.getter)?,
-                    })
-                })
-                .collect::<Result<Vec<_>, CompileError>>()?;
-            let methods = layout
-                .methods
-                .iter()
-                .map(|method| {
-                    Ok(fpas_bytecode::RecordMethod {
-                        name: metadata.intern_string(&method.name)?,
-                        routine: metadata.intern_string(&method.routine)?,
-                    })
-                })
-                .collect::<Result<Vec<_>, CompileError>>()?;
-            Ok(fpas_bytecode::RecordLayout {
-                name,
-                fields,
-                properties,
-                methods,
-            })
+            Ok(fpas_bytecode::RecordLayout { name, fields })
         })
         .collect::<Result<Vec<_>, CompileError>>()?;
     let mut enums = Vec::new();

@@ -4,6 +4,10 @@ unit LocalChat.View;
 uses LocalChat.Model as Model;
 uses Std.Options as Options;
 uses Std.Tui as Tui;
+uses Std.Tui.Chrome as Chrome;
+uses Std.Tui.Elements as Elements;
+uses Std.Tui.Ids as Ids;
+uses Std.Tui.Layout as Layout2;
 
 // Identifier of the prompt input control.
 const PromptControl: integer := 1;
@@ -23,13 +27,13 @@ const SendAction: integer := 10;
 // - `Stretch`: Relative space assigned by the parent layout.
 function Expanding(Child: Tui.TuiElement; Stretch: integer): Tui.TuiElement;
 begin
-  return Tui.TuiElementBuilders.MakeLayout(Tui.TuiLayoutSettings.Create(Tui.TuiMargins.Uniform(0), Tui.TuiSizePolicy.Expanding(), Tui.TuiAlignment.Fill(), Stretch), Child);
+  return Elements.TuiElementMakeLayout(Layout2.TuiLayoutSettingsCreate(Layout2.TuiMarginsUniform(0), Layout2.TuiSizePolicyExpanding(), Layout2.TuiAlignmentFill(), Stretch), Child);
 end function;
 
 // Builds the application header rule.
 function Header(): Tui.TuiElement;
 begin
-  return Tui.TuiElementBuilders.MakeRule(' LOCAL CHAT  ·  llama.cpp  ·  one prompt per request ');
+  return Elements.TuiElementMakeRule(' LOCAL CHAT  ·  llama.cpp  ·  one prompt per request ');
 end function;
 
 // Builds the read-only transcript panel.
@@ -38,8 +42,8 @@ end function;
 // - `State`: Current application state rendered by the panel.
 function Transcript(State: Model.LocalChatModel): Tui.TuiElement;
 begin
-  var Content: Tui.TuiElement := Tui.TuiElementBuilders.MakeTextArea(Tui.TuiControlId.Create(TranscriptControl), Model.LocalChatTranscript(State), State.TranscriptCaret, State.TranscriptOffset, Tui.TuiAction.Create(TranscriptChangedAction));
-  return Tui.TuiElementBuilders.MakePanel('Conversation', [Expanding(Content, 1)]);
+  const Content: Tui.TuiElement := Elements.TuiElementMakeTextArea(Ids.TuiControlIdCreate(TranscriptControl), Model.LocalChatTranscript(State), State.TranscriptCaret, State.TranscriptOffset, Ids.TuiActionCreate(TranscriptChangedAction));
+  return Elements.TuiElementMakePanel('Conversation', [Expanding(Content, 1)]);
 end function;
 
 // Builds the prompt input and send-button panel.
@@ -48,11 +52,11 @@ end function;
 // - `State`: Current application state rendered by the composer.
 function Composer(State: Model.LocalChatModel): Tui.TuiElement;
 begin
-  var Prompt: Tui.TuiElement := Tui.TuiElementBuilders.MakeInputWithHint(Tui.TuiControlId.Create(PromptControl), State.Draft, State.DraftCaret, 'Message the local model…', Tui.TuiAction.Create(PromptChangedAction));
-  var Send: Tui.TuiElement := Tui.TuiElementBuilders.MakeDefaultButton(Tui.TuiControlId.Create(3), 'Send', 'S', Tui.TuiAction.Create(SendAction));
-  return Tui.TuiElementBuilders.MakePanel('Message', [
-                                                       Tui.TuiElementBuilders.MakeRow([Expanding(Prompt, 1), Send])
-                                                     ]);
+  const Prompt: Tui.TuiElement := Elements.TuiElementMakeInputWithHint(Ids.TuiControlIdCreate(PromptControl), State.Draft, State.DraftCaret, 'Message the local model…', Ids.TuiActionCreate(PromptChangedAction));
+  const Send: Tui.TuiElement := Elements.TuiElementMakeDefaultButton(Ids.TuiControlIdCreate(3), 'Send', 'S', Ids.TuiActionCreate(SendAction));
+  return Elements.TuiElementMakePanel('Message', [
+                                                   Elements.TuiElementMakeRow([Expanding(Prompt, 1), Send])
+                                                 ]);
 end function;
 
 // Builds the footer status line and keyboard hints.
@@ -61,12 +65,12 @@ end function;
 // - `State`: Current application state providing status text.
 function Status(State: Model.LocalChatModel): Tui.TuiElement;
 begin
-  return Tui.TuiElementBuilders.MakeStatusLine([
-                                                 Tui.TuiStatusItemBuilders.MakeHint(State.Status),
-                                                 Tui.TuiStatusItemBuilders.MakeKeyHint('Enter', 'send'),
-                                                 Tui.TuiStatusItemBuilders.MakeKeyHint('Tab', 'focus'),
-                                                 Tui.TuiStatusItemBuilders.MakeKeyHint('Alt+X', 'quit')
-                                               ]);
+  return Elements.TuiElementMakeStatusLine([
+                                             Chrome.TuiStatusItemMakeHint(State.Status),
+                                             Chrome.TuiStatusItemMakeKeyHint('Enter', 'send'),
+                                             Chrome.TuiStatusItemMakeKeyHint('Tab', 'focus'),
+                                             Chrome.TuiStatusItemMakeKeyHint('Alt+X', 'quit')
+                                           ]);
 end function;
 
 // Builds the responsive Local Chat element tree for one model state.
@@ -77,23 +81,23 @@ public function LocalChatView(State: Model.LocalChatModel): Tui.TuiElement;
 begin
   if (State.Width < 50) or (State.Height < 14) then
     begin
-      return Tui.TuiElementBuilders.MakeDesktop(Option.None, [
-                                                               Tui.TuiElementBuilders.MakePanel('Local Chat', [
-                                                                                                                Tui.TuiElementBuilders.MakeLabel('Terminal too small'),
-                                                                                                                Tui.TuiElementBuilders.MakeLabel('Use at least 50 × 14 cells.')
-                                                                                                              ])
-                                                             ]);
+      return Elements.TuiElementMakeDesktop(Option.None, [
+                                                           Elements.TuiElementMakePanel('Local Chat', [
+                                                                                                        Elements.TuiElementMakeLabel('Terminal too small'),
+                                                                                                        Elements.TuiElementMakeLabel('Use at least 50 × 14 cells.')
+                                                                                                      ])
+                                                         ]);
     end;
   end if;
 
-  return Tui.TuiElementBuilders.MakeDesktop(Option.Some(Tui.TuiControlId.Create(State.Focus)), [
-                                                                                                 Tui.TuiElementBuilders.MakeColumn([
-                                                                                                                                     Header(),
-                                                                                                                                     Expanding(Transcript(State), 1),
-                                                                                                                                     Composer(State),
-                                                                                                                                     Status(State)
-                                                                                                                                   ])
-                                                                                               ]);
+  return Elements.TuiElementMakeDesktop(Option.Some(Ids.TuiControlIdCreate(State.Focus)), [
+                                                                                            Elements.TuiElementMakeColumn([
+                                                                                                                            Header(),
+                                                                                                                            Expanding(Transcript(State), 1),
+                                                                                                                            Composer(State),
+                                                                                                                            Status(State)
+                                                                                                                          ])
+                                                                                          ]);
 end function;
 
 end unit;

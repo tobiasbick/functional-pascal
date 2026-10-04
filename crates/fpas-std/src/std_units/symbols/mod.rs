@@ -1,5 +1,11 @@
 //! Std.* symbol name constants and per-unit registry groups.
 
+mod constants;
+mod purity;
+pub use purity::intrinsic_std_function_is_pure;
+
+pub use constants::intrinsic_std_constant_value;
+
 /// Fully qualified names used by intrinsic dispatch and registration.
 pub mod std_symbols;
 

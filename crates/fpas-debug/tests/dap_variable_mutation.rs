@@ -11,7 +11,7 @@ use serde_json::{Value, json};
 fn server() -> DapServer {
     let source = r#"program Main;
 begin
-  mutable var X: integer := 1;
+   var X: integer := 1;
   X := X + 1;
 end program;"#;
     let (program, diagnostics) = fpas_parser::parse(source);

@@ -6,6 +6,7 @@ use super::analyze_unit;
 mod aliases;
 mod generic_data;
 mod public_signatures;
+mod purity;
 mod record_default_aliases;
 mod record_defaults;
 mod short_names;
@@ -91,7 +92,7 @@ end unit;
 uses Demo.Api as Api;
          public function Run(Value: integer): integer;
          begin
-           var Current: Api.State := Api.State.Ready;
+           const Current: Api.State := Api.State.Ready;
            return Api.Next(Value);
          end function;
 end unit;

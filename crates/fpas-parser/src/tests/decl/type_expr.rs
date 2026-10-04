@@ -4,11 +4,14 @@ use fpas_diagnostics::codes::PARSE_EXPECTED_TOKEN;
 #[test]
 fn function_type_expr() {
     let p = parse_ok(
-        r#"program T;  var F: function(X: integer): integer := Add; begin null; end program;"#,
+        r#"program T;  const F: function(X: integer): integer := Add; begin null; end program;"#,
     );
     match &p.declarations[0] {
-        Decl::Var(v) => {
-            assert!(matches!(v.type_expr, TypeExpr::FunctionType { .. }));
+        Decl::Const(v) => {
+            assert!(matches!(
+                v.type_expr.as_ref().unwrap(),
+                TypeExpr::FunctionType { .. }
+            ));
         }
         _ => panic!("expected Var"),
     }
@@ -17,11 +20,14 @@ fn function_type_expr() {
 #[test]
 fn procedure_type_expr() {
     let p = parse_ok(
-        r#"program T;  var P: procedure(X: integer) := DoStuff; begin null; end program;"#,
+        r#"program T;  const P: procedure(X: integer) := DoStuff; begin null; end program;"#,
     );
     match &p.declarations[0] {
-        Decl::Var(v) => {
-            assert!(matches!(v.type_expr, TypeExpr::ProcedureType { .. }));
+        Decl::Const(v) => {
+            assert!(matches!(
+                v.type_expr.as_ref().unwrap(),
+                TypeExpr::ProcedureType { .. }
+            ));
         }
         _ => panic!("expected Var"),
     }
@@ -38,7 +44,8 @@ fn built_in_and_callable_type_forms_parse() {
         "function(X: integer): integer",
         "procedure(X: integer)",
     ] {
-        let source = format!("program T; var Value: {type_expr} := nil; begin null; end program;");
+        let source =
+            format!(r#"program T; const Value: {type_expr} := nil; begin null; end program;"#);
         let (_, errors) = parse_with_errors(&source);
         assert!(errors.is_empty(), "{type_expr}: {errors:#?}");
     }
@@ -56,7 +63,8 @@ fn built_in_and_callable_type_forms_require_their_separators() {
         "function(X: integer) integer",
         "procedure(X: integer",
     ] {
-        let source = format!("program T; var Value: {type_expr} := nil; begin null; end program;");
+        let source =
+            format!(r#"program T; const Value: {type_expr} := nil; begin null; end program;"#);
         let (_, errors) = parse_with_errors(&source);
         assert!(
             errors.iter().any(|error| error

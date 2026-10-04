@@ -13,7 +13,7 @@ begin
     end;
   end if;
 
-  case Http.Send(Http.Request.Get(Args.ParamStr(0))) of
+  case Http.Send(Http.RequestGet(Args.ParamStr(0))) of
     when Result.Ok(const ResponseValue):
       begin
         Console.WriteLn('HTTPS status: ' + Conv.IntToStr(ResponseValue.StatusCode));

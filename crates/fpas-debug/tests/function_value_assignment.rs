@@ -188,10 +188,10 @@ fn jsonl_function_values_copy_atomically_and_continue() {
         &mut server,
         &mut id,
         "expression.set",
-        json!({"frame_id":current,"target":"Current","expression":"Receiver.Add"}),
+        json!({"frame_id":current,"target":"Current","expression":"ReceiverAdder"}),
     );
     assert_eq!(bound[0]["success"], true, "{bound:?}");
-    assert_eq!(bound[0]["body"]["result"], "<function Counter.Add>");
+    assert_eq!(bound[0]["body"]["result"], "<function bindcounter.add>");
     let current = frame(&mut server, &mut id);
     let bound_call = send(
         &mut server,
@@ -220,7 +220,7 @@ fn jsonl_function_values_copy_atomically_and_continue() {
         ),
         ("Current", "1", "variable_value_type"),
         ("Current", "Receiver.Missing", "unknown_name"),
-        ("WrongSignature", "Receiver.Add", "variable_value_type"),
+        ("WrongSignature", "ReceiverAdder", "variable_value_type"),
         ("Current", "MissingRoutine", "unknown_name"),
     ];
     for (target, expression, code) in failures {
@@ -278,14 +278,14 @@ end function;
 
 function Work(): integer;
 begin
-  mutable var Current: Handler := AddOne;
-  var Backup: Handler := AddTwo;
-  var Marker: integer := 0;
+   var Current: Handler := AddOne;
+  const Backup: Handler := AddTwo;
+  const Marker: integer := 0;
   return Current(1);
 end function;
 
 begin
-  var Pending: task := go Work();
+  const Pending: task := go Work();
   Console.WriteLn(Tasks.Wait(Pending));
 end program;
 "#;
@@ -298,7 +298,7 @@ end program;
     let _ = send(&mut server, &mut id, "initialize", json!({"version":2}));
     let marker_line = TASK_SOURCE
         .lines()
-        .position(|line| line.contains("var Marker: integer := 0;"))
+        .position(|line| line.contains("const Marker: integer := 0;"))
         .expect("marker line")
         + 1;
     let breakpoint = send(
@@ -403,7 +403,7 @@ fn jsonl_synthetic_function_children_stay_non_assignable() {
         &mut server,
         &mut id,
         "expression.set",
-        json!({"frame_id":current,"target":"Current","expression":"Receiver.Add"}),
+        json!({"frame_id":current,"target":"Current","expression":"ReceiverAdder"}),
     );
     assert_eq!(bound[0]["success"], true, "{bound:?}");
     let current = frame(&mut server, &mut id);
@@ -412,14 +412,14 @@ fn jsonl_synthetic_function_children_stay_non_assignable() {
     let receiver_handle = child_handle(&locals_page, "Current", "variables_reference");
     let children = listed_variables(&mut server, &mut id, receiver_handle);
     assert!(
-        children.iter().any(|child| child["name"] == "receiver"),
+        children.iter().any(|child| child["name"] == "capture[0]"),
         "{children:?}"
     );
     let rejected = send(
         &mut server,
         &mut id,
         "variable.set",
-        json!({"variables_reference":receiver_handle,"name":"receiver","expression":"Receiver"}),
+        json!({"variables_reference":receiver_handle,"name":"capture[0]","expression":"Receiver"}),
     );
     assert_eq!(rejected[0]["success"], false, "{rejected:?}");
     assert_eq!(rejected[0]["error"]["code"], "variable_path_unsupported");

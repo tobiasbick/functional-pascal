@@ -1,3 +1,3 @@
-mod const_var;
-mod record_members;
+mod bindings;
+mod record_fields;
 mod type_defs;

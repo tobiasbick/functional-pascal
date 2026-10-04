@@ -5,22 +5,22 @@ uses Std.Str as Str;
 uses Std.Tasks as Tasks;
 uses Std.Test as Test;
 
-function Identity(C: string): string;
+pure function Identity(C: string): string;
 begin
   return C;
 end function;
 
-function KeepFace(C: string): boolean;
+pure function KeepFace(C: string): boolean;
 begin
   return C = '😀';
 end function;
 
-function Count(Acc: integer; C: string): integer;
+pure function Count(Acc: integer; C: string): integer;
 begin
   return Acc + 1;
 end function;
 
-function Sum(Acc: integer; Key: string; Value: integer): integer;
+pure function Sum(Acc: integer; Key: string; Value: integer): integer;
 begin
   return Acc + Value;
 end function;
@@ -34,13 +34,13 @@ end function;
 
 function DictionaryWork(): integer;
 begin
-  var Values: dict of (string, integer) := ['A': 2, 'B': 4];
+  const Values: dict of (string, integer) := ['A': 2, 'B': 4];
   return Dictionaries.Reduce(Values, 1, Sum);
 end function;
 
 begin
-  var StringTask: task := go StringWork();
-  var DictionaryTask: task := go DictionaryWork();
+  const StringTask: task := go StringWork();
+  const DictionaryTask: task := go DictionaryWork();
   Test.AssertEquals(3, Tasks.Wait(StringTask));
   Test.AssertEquals(7, Tasks.Wait(DictionaryTask));
 end program;

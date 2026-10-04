@@ -9,57 +9,58 @@ uses Std.Str as Str;
 uses Std.Tui as Tui;
 uses Mandelbrot.Color as Color;
 uses Mandelbrot.Model as Model;
+uses Std.Tui.Chrome as Chrome;
+uses Std.Tui.Elements as Elements;
 
 // Builds the Tui view while keeping the previous image visible during rendering.
 public function ViewMandelbrot(State: Model.MandelbrotModel): Tui.TuiElement;
 begin
-  mutable var Status: string := 'rendering';
+  var Status: string := 'rendering';
   if State.RowsRendered = State.Grid.Height then
     begin
       Status := 'ready';
     end;
   end if;
-  var Detail: string := Str.Format('center=(%f, %f)  zoom=%f  palette=%s  %s', State.Explorer.CenterX, State.Explorer.CenterY, State.Explorer.Zoom, Color.PaletteName(State.Explorer.Palette), Status);
-  mutable var MainChildren: array of (Tui.TuiElement) := [
-                                                           Tui.TuiElementBuilders.MakePanel('Mandelbrot Explorer', [
-                                                                                                                     Tui.TuiElementBuilders.MakeCellGrid(State.Grid)
-                                                                                                                   ]),
-                                                           Tui.TuiElementBuilders.MakeRule(Detail),
-                                                           Tui.TuiElementBuilders.MakeGauge('Iterations', State.Explorer.MaxIter, 2048),
-                                                           Tui.TuiElementBuilders.MakeGauge('Zoom', Math.Min(Math.Trunc(State.Explorer.Zoom * 10.0), 1000), 1000)
-                                                         ];
+  const Detail: string := Str.Format('center=(%f, %f)  zoom=%f  palette=%s  %s', State.Explorer.CenterX, State.Explorer.CenterY, Model.ExplorerStateGetZoom(State.Explorer), Color.PaletteName(State.Explorer.Palette), Status);
+  var MainChildren: array of (Tui.TuiElement) := [
+                                                   Elements.TuiElementMakePanel('Mandelbrot Explorer', [Elements.TuiElementMakeCellGrid(State.Grid)]),
+                                                   Elements.TuiElementMakeRule(Detail),
+                                                   Elements.TuiElementMakeGauge('Iterations', State.Explorer.MaxIter, 2048),
+                                                   Elements.TuiElementMakeGauge('Zoom', Math.Min(Math.Trunc(Model.ExplorerStateGetZoom(State.Explorer) *
+                                                                                                            10.0), 1000), 1000)
+                                                 ];
   if Str.Length(State.FailureMessage) > 0 then
     begin
-      Arrays.Push(MainChildren, Tui.TuiElementBuilders.MakeRule('render failed: ' +
+      Arrays.Push(var MainChildren, Elements.TuiElementMakeRule('render failed: ' +
                                                                 State.FailureMessage));
     end;
   end if;
 
-  Arrays.Push(MainChildren, Tui.TuiElementBuilders.MakeStatusLine([
-                                                                    Tui.TuiStatusItemBuilders.MakeKeyHint('Arrows', 'pan'),
-                                                                    Tui.TuiStatusItemBuilders.MakeKeyHint('+/-', 'zoom'),
-                                                                    Tui.TuiStatusItemBuilders.MakeKeyHint('1/2/3', 'palette'),
-                                                                    Tui.TuiStatusItemBuilders.MakeKeyHint('H', 'help'),
-                                                                    Tui.TuiStatusItemBuilders.MakeKeyHint('Esc', 'quit')
+  Arrays.Push(var MainChildren, Elements.TuiElementMakeStatusLine([
+                                                                    Chrome.TuiStatusItemMakeKeyHint('Arrows', 'pan'),
+                                                                    Chrome.TuiStatusItemMakeKeyHint('+/-', 'zoom'),
+                                                                    Chrome.TuiStatusItemMakeKeyHint('1/2/3', 'palette'),
+                                                                    Chrome.TuiStatusItemMakeKeyHint('H', 'help'),
+                                                                    Chrome.TuiStatusItemMakeKeyHint('Esc', 'quit')
                                                                   ]));
-  var Main: Tui.TuiElement := Tui.TuiElementBuilders.MakeColumn(MainChildren);
-  mutable var Children: array of (Tui.TuiElement) := [Main];
+  const Main: Tui.TuiElement := Elements.TuiElementMakeColumn(MainChildren);
+  var Children: array of (Tui.TuiElement) := [Main];
   if State.HelpOpen then
     begin
-      Arrays.Push(Children, Tui.TuiElementBuilders.MakeOverlay('Controls', [
-                                                                             Tui.TuiElementBuilders.MakeColumnSpaced([
-                                                                                                                       Tui.TuiElementBuilders.MakeLabel('Arrow keys or click: pan and center'),
-                                                                                                                       Tui.TuiElementBuilders.MakeLabel('+ / - or wheel: zoom'),
-                                                                                                                       Tui.TuiElementBuilders.MakeLabel('PageUp / PageDown: iterations'),
-                                                                                                                       Tui.TuiElementBuilders.MakeLabel('1 / 2 / 3: color palette'),
-                                                                                                                       Tui.TuiElementBuilders.MakeLabel('R or middle click: reset'),
-                                                                                                                       Tui.TuiElementBuilders.MakeLabel('Esc: close this overlay')
-                                                                                                                     ], 1)
+      Arrays.Push(var Children, Elements.TuiElementMakeOverlay('Controls', [
+                                                                             Elements.TuiElementMakeColumnSpaced([
+                                                                                                                   Elements.TuiElementMakeLabel('Arrow keys or click: pan and center'),
+                                                                                                                   Elements.TuiElementMakeLabel('+ / - or wheel: zoom'),
+                                                                                                                   Elements.TuiElementMakeLabel('PageUp / PageDown: iterations'),
+                                                                                                                   Elements.TuiElementMakeLabel('1 / 2 / 3: color palette'),
+                                                                                                                   Elements.TuiElementMakeLabel('R or middle click: reset'),
+                                                                                                                   Elements.TuiElementMakeLabel('Esc: close this overlay')
+                                                                                                                 ], 1)
                                                                            ]));
     end;
   end if;
 
-  return Tui.TuiElementBuilders.MakeDesktop(Option.None, Children);
+  return Elements.TuiElementMakeDesktop(Option.None, Children);
 end function;
 
 end unit;

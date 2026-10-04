@@ -183,6 +183,18 @@ entries still retain the artifact's known main path.
 | Project, build, CLI and test runner | F5001–F5999 |
 | Internal | F9001–F9999 and otherwise unassigned values |
 
+Runtime code F4026 reports a conflicting storage-root reservation, exclusive
+reference access, or an invalid attempt to retain or transport synchronous storage
+authority. The diagnostic includes the failing operation's source position and a
+corrective hint. Invalid selected array indices and missing dictionary keys retain
+their ordinary bounds/key diagnostics.
+
+F2020 reports an invalid statically evaluated integer operation (overflow,
+division by zero or modulo by zero). Runtime integer overflow reports F4012;
+runtime `div 0` and `mod 0` retain F4001 and F4002. Real arithmetic follows IEEE
+rules, including infinity and unordered NaN comparisons; see
+[operators](../language/basics/operators.md).
+
 Project, build, linker, CLI and test-runner codes:
 
 | Code | Meaning |

@@ -1,0 +1,15 @@
+program OrdinaryProcedureTest;
+
+uses Std.Test as Test;
+
+procedure VerifierVerify(Value: integer);
+begin
+  Test.AssertEquals(42, Value);
+end procedure;
+
+const VerifyAlias: procedure(Value: integer) := VerifierVerify;
+
+begin
+  VerifierVerify(42);
+  VerifyAlias(42);
+end program;

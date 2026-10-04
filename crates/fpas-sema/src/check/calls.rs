@@ -2,6 +2,7 @@
 
 mod arguments;
 mod inference;
+mod references;
 mod targets;
 
 /// Metadata for checked callable-value invocations.

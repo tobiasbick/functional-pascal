@@ -63,7 +63,7 @@ fn parser_and_semantic_errors_publish_and_a_fixed_version_clears_them() {
             2,
             r#"program Semantic;
 begin
-  var Value: integer := 'wrong';
+  const Value: integer := 'wrong';
 end program;
 "#,
         )),
@@ -73,7 +73,7 @@ end program;
             3,
             r#"program Fixed;
 begin
-  var Value: integer := 1;
+  const Value: integer := 1;
 end program;
 "#,
         )),
@@ -139,7 +139,7 @@ fn rapid_changes_publish_only_the_latest_document_version() {
             2,
             r#"program Second;
 begin
-  var Value: integer := 'wrong';
+  const Value: integer := 'wrong';
 end program;
 "#,
         )),
@@ -148,7 +148,7 @@ end program;
             3,
             r#"program Latest;
 begin
-  var Value: integer := 1;
+  const Value: integer := 1;
 end program;
 "#,
         )),
@@ -173,7 +173,12 @@ fn multiple_diagnostics_keep_distinct_ranges() {
         TranscriptStep::Message(open(
             uri,
             1,
-            "program Multi\nbegin\n  if then\n  var :=\nend.\n",
+            r#"program Multi
+begin
+  if then
+  const :=
+end.
+"#,
         )),
         TranscriptStep::Wait(ANALYSIS_WAIT),
         TranscriptStep::Message(shutdown(2)),
@@ -221,7 +226,7 @@ include = ["src/**/*.fpas"]
 uses Demo.Math as Math;
 
 begin
-  var Value: integer := Math.Answer();
+  const Value: integer := Math.Answer();
 end program;
 "#,
     );
@@ -283,7 +288,7 @@ include = ["src/**/*.fpas"]
 uses Demo.Math as Math;
 
 begin
-  var Value: integer := Math.Answer();
+  const Value: integer := Math.Answer();
 end program;
 "#;
     let unit_source = r#"unit Demo.Math;
@@ -473,7 +478,7 @@ include = ["main.fpas"]
 uses Std.Tui as Tui;
 
 begin
-  var Palette: Tui.TuiPalette := 1;
+  const Palette: Tui.TuiPalette := 1;
 end program;
 "#;
     temp.write("external/main.fpas", source);

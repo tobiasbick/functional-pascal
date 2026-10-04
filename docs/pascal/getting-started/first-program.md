@@ -13,7 +13,7 @@ begin
 end function;
 
 begin
-  var Message: string := Greet('Pascal');
+  const Message: string := Greet('Pascal');
   Console.WriteLn(Message);
 end program;
 ```
@@ -32,7 +32,7 @@ uses Std.Console as Console;
 const MaxItems: integer := 100;
 // variable declarations
 
-var Counter: integer := 0;
+const Counter: integer := 0;
 
 // function declarations
 function Add(A: integer; B: integer): integer;

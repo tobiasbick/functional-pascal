@@ -18,28 +18,28 @@ end function;
 // Merge-sorts notes without rebuilding the output for every inserted item.
 public function NotesOrdered(Notes: array of (Model.Note)): array of (Model.Note);
 begin
-  var Count: integer := Arrays.Length(Notes);
+  const Count: integer := Arrays.Length(Notes);
   if Count < 2 then
     begin
       return Notes;
     end;
   end if;
-  var Middle: integer := Count div 2;
-  var Left: array of (Model.Note) := NotesOrdered(Arrays.Slice(Notes, 0, Middle));
-  var Right: array of (Model.Note) := NotesOrdered(Arrays.Slice(Notes, Middle, Count - Middle));
-  mutable var Output: array of (Model.Note) := [];
-  mutable var L: integer := 0;
-  mutable var R: integer := 0;
+  const Middle: integer := Count div 2;
+  const Left: array of (Model.Note) := NotesOrdered(Arrays.Slice(Notes, 0, Middle));
+  const Right: array of (Model.Note) := NotesOrdered(Arrays.Slice(Notes, Middle, Count - Middle));
+  var Output: array of (Model.Note) := [];
+  var L: integer := 0;
+  var R: integer := 0;
   while (L < Arrays.Length(Left)) and (R < Arrays.Length(Right)) do
     begin
       if Before(Right[R], Left[L]) then
         begin
-          Arrays.Push(Output, Right[R]);
+          Arrays.Push(var Output, Right[R]);
           R := R + 1;
         end;
       else
         begin
-          Arrays.Push(Output, Left[L]);
+          Arrays.Push(var Output, Left[L]);
           L := L + 1;
         end;
       end if;
@@ -48,14 +48,14 @@ begin
 
   while L < Arrays.Length(Left) do
     begin
-      Arrays.Push(Output, Left[L]);
+      Arrays.Push(var Output, Left[L]);
       L := L + 1;
     end;
   end while;
 
   while R < Arrays.Length(Right) do
     begin
-      Arrays.Push(Output, Right[R]);
+      Arrays.Push(var Output, Right[R]);
       R := R + 1;
     end;
   end while;

@@ -13,7 +13,7 @@ Keyboard input is **separate** from the `ReadText` / `ReadLn` buffer. Enabling r
 ```pascal
 uses Std.Console as Console;
 
-var C: string := Console.ReadKey();
+const C: string := Console.ReadKey();
 Console.WriteLn(C);
 ```
 
@@ -31,7 +31,7 @@ uses Std.Console as Console;
 
 if Console.KeyPressed() then
   begin
-    var C: string := Console.ReadKey();
+    const C: string := Console.ReadKey();
     Console.WriteLn(C);
   end;
 end if;
@@ -58,7 +58,7 @@ uses Std.Console as Console;
 
 if Console.KeyPressed() then
   begin
-    var E: Console.KeyEvent := Console.ReadKeyEvent();
+    const E: Console.KeyEvent := Console.ReadKeyEvent();
     if E.kind = Console.KeyKind.Escape then
       Console.WriteLn('quit');
     else

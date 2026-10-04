@@ -109,12 +109,12 @@ public function TuiSurfaceDamageForRange(
   LastX: integer
 ): TuiSurfaceDamage;
 begin
-  mutable var ChangedCells: array of (Cell.TuiCell) := [];
+  var ChangedCells: array of (Cell.TuiCell) := [];
   for X: integer := FirstX to LastX do
     begin
       if not Continuations[X] then
         begin
-          Arrays.Push(ChangedCells, Cells[X]);
+          Arrays.Push(var ChangedCells, Cells[X]);
         end;
       end if;
     end;

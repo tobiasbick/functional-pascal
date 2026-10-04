@@ -4,13 +4,13 @@ uses Std.Console as Console;
 uses Std.Options as Options;
 uses Std.Conv as Conv;
 
-function ToStr(V: integer): string;
+pure function ToStr(V: integer): string;
 begin
   return Conv.IntToStr(V);
 end function;
 
 begin
-  var O: Option of (integer) := Option.Some(10);
-  var M: Option of (string) := Options.Map(O, ToStr);
+  const O: Option of (integer) := Option.Some(10);
+  const M: Option of (string) := Options.Map(O, ToStr);
   Console.WriteLn(Options.Unwrap(M));
 end program;

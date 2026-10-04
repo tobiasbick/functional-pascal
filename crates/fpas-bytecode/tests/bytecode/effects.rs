@@ -36,6 +36,7 @@ fn direct_call_effects_close_transitively_across_recursive_graphs() {
             name: StringId::new(name),
             code: CodeRange::new(InstructionAddress::new(start), InstructionAddress::new(end)),
             arity: 0,
+            var_parameters: Vec::new(),
             capture_count: 0,
             register_count: registers,
             return_convention: ReturnConvention::Unit,

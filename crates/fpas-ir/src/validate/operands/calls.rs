@@ -132,6 +132,8 @@ fn types_compatible(program: &Program, expected: TypeId, actual: TypeId) -> bool
         program.ty(expected).map(|item| &item.kind),
         program.ty(actual).map(|item| &item.kind),
     ) {
+        (Some(IrType::Reference(a)), Some(IrType::Reference(b))) => types_compatible(program, *a, *b),
+        (Some(IrType::Reference(_)), _) | (_, Some(IrType::Reference(_))) => false,
         (Some(IrType::Dynamic), _) | (_, Some(IrType::Dynamic)) => true,
         (Some(IrType::Array(a)), Some(IrType::Array(b)))
         | (Some(IrType::Option(a)), Some(IrType::Option(b)))

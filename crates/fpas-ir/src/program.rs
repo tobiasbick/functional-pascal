@@ -113,6 +113,8 @@ pub enum IrType {
     Enum(EnumLayoutId),
     /// A mutable capture cell containing a value of this type.
     Cell(TypeId),
+    /// A synchronous var reference to caller-owned storage of the selected value type.
+    Reference(TypeId),
     /// A task handle whose result type is known to the compiler.
     Task(TypeId),
 }
@@ -159,28 +161,6 @@ pub struct RecordLayout {
     pub name: String,
     /// Field declarations in declaration order.
     pub fields: Vec<RecordField>,
-    /// Readable properties and their exact compiler-resolved getter names.
-    pub properties: Vec<RecordProperty>,
-    /// Instance methods and their exact compiler-resolved routine names.
-    pub methods: Vec<RecordMethod>,
-}
-
-/// Readable property mapping retained for debugger-side exact binding.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct RecordProperty {
-    /// Public source property name.
-    pub name: String,
-    /// Canonical qualified getter routine name.
-    pub getter: String,
-}
-
-/// Instance-method mapping retained for debugger-side bound receiver values.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct RecordMethod {
-    /// Public source member spelling.
-    pub name: String,
-    /// Canonical qualified routine name resolved by semantic analysis.
-    pub routine: String,
 }
 
 /// A field inside a record layout.

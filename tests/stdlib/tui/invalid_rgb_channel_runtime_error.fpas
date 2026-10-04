@@ -1,7 +1,8 @@
 program TuiInvalidRgbChannelRuntimeError;
 
 uses Std.Tui as Tui;
+uses Std.Tui.Cells as Cells;
 
 begin
-  discard Tui.TuiColor.FromRgb(0, 256, 0);
+  discard Cells.TuiColorFromRgb(0, 256, 0);
 end program;

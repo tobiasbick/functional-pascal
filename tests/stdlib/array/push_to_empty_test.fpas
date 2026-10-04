@@ -4,8 +4,8 @@ uses Std.Console as Console;
 uses Std.Arrays as Arrays;
 
 begin
-  mutable var A: array of (integer) := [];
-  Arrays.Push(A, 42);
+  var A: array of (integer) := [];
+  Arrays.Push(var A, 42);
   Console.WriteLn(Arrays.Length(A));
   Console.WriteLn(A[0]);
 end program;

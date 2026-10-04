@@ -54,9 +54,9 @@ Requires `uses Std.Str as Str;`.
 | function | `TrimRight(S: string): string` | strip trailing whitespace |
 | function | `LastIndexOf(S: string; Sub: string): integer` | last index or `-1` |
 | function | `Format(Template: string; ...): string` | printf-style string formatting |
-| function | `Map(S: string; F: function(C: string): string): string` | transform each Unicode scalar into one scalar |
-| function | `Filter(S: string; F: function(C: string): boolean): string` | keep selected Unicode scalars |
-| function | `Reduce(S: string; Init: U; F: function(Acc: U; C: string): U): U` | fold scalars left to right |
+| function | `Map(S: string; F: pure function(C: string): string): string` | transform each Unicode scalar into one scalar |
+| function | `Filter(S: string; F: pure function(C: string): boolean): string` | keep selected Unicode scalars |
+| function | `Reduce(S: string; Init: U; F: pure function(Acc: U; C: string): U): U` | fold scalars left to right |
 
 **Indexing:** all “character index” parameters are in **Unicode scalar** units (user-visible characters), not UTF-8 bytes.
 

@@ -13,6 +13,13 @@ impl Worker {
         policy: Option<RetryPolicy>,
     ) -> Result<Value, VmError> {
         let function = self.validate_callback(work, 1)?;
+        self.require_value_data(work)?;
+        let info = &self.executable.executable().functions[usize::from(function.function.get())];
+        if !info.var_parameters.is_empty() {
+            return Err(
+                self.reference_transport_error("A task-group worker cannot invoke var parameters")
+            );
+        }
         if function.task_bound {
             return Err(self.group_error("Cannot start a task-bound worker in another task"));
         }
@@ -22,7 +29,6 @@ impl Worker {
             .groups
             .enroll(group, self.task_id, id)
             .map_err(|e| self.group_error(e))?;
-        let info = &self.executable.executable().functions[usize::from(function.function.get())];
         scheduler.register_result(id);
         let mut task = TaskState::entry(id, function, info, [Value::OpaqueHandle(token)], true);
         task.supervision =

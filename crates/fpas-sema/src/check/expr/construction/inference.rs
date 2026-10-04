@@ -6,7 +6,7 @@ use fpas_diagnostics::codes::SEMA_TYPE_MISMATCH;
 use fpas_lexer::Span;
 
 use crate::check::Checker;
-use crate::types::Ty;
+use crate::types::{Ty, TypeArguments};
 
 impl Checker {
     /// Provide concrete payload context without leaking unresolved declaration parameters.
@@ -14,12 +14,12 @@ impl Checker {
         &self,
         template: &Ty,
         declared: &Ty,
-        inferred: &HashMap<String, Ty>,
+        inferred: &TypeArguments,
     ) -> Ty {
         let mut context = template
             .type_parameters()
             .iter()
-            .map(|parameter| (parameter.name.to_ascii_lowercase(), Ty::Error))
+            .map(|parameter| (parameter.identity.clone(), Ty::Error))
             .collect::<HashMap<_, _>>();
         context.extend(inferred.clone());
         declared.substitute(&context)
@@ -30,7 +30,7 @@ impl Checker {
         &self,
         template: &Ty,
         expected: Option<&Ty>,
-    ) -> HashMap<String, Ty> {
+    ) -> TypeArguments {
         let arguments = match (template, expected.map(|ty| self.resolve_visible_type(ty))) {
             (Ty::Record(template), Some(Ty::Record(expected)))
                 if template.name.eq_ignore_ascii_case(&expected.name) =>
@@ -49,7 +49,7 @@ impl Checker {
             .iter()
             .zip(arguments)
             .filter(|(_, argument)| !argument.has_inference_holes())
-            .map(|(parameter, argument)| (parameter.name.to_ascii_lowercase(), argument))
+            .map(|(parameter, argument)| (parameter.identity.clone(), argument))
             .collect()
     }
 
@@ -57,7 +57,7 @@ impl Checker {
     pub(super) fn finish_data_construction(
         &mut self,
         template: &Ty,
-        inferred: &HashMap<String, Ty>,
+        inferred: &TypeArguments,
         source_name: &str,
         span: Span,
     ) -> Ty {
@@ -66,7 +66,7 @@ impl Checker {
             .iter()
             .map(|parameter| {
                 inferred
-                    .get(&parameter.name.to_ascii_lowercase())
+                    .get(&parameter.identity)
                     .cloned()
                     .unwrap_or(Ty::Error)
             })

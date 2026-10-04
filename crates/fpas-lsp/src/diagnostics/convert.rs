@@ -127,13 +127,19 @@ mod tests {
 
     #[test]
     fn preserves_code_severity_utf16_range_and_help() {
-        let snapshot = snapshot("program Demo;\nbegin\n  var Text := '𝄞'\nend.\n");
+        let snapshot = snapshot(
+            r#"program Demo;
+begin
+  const Text := '𝄞'
+end.
+"#,
+        );
         let offset = snapshot.source().find("'𝄞'").expect("string offset");
         let diagnostic = Diagnostic::warning(
             DiagnosticCode::new(5),
             "Character warning",
             Some("Use a supported character.".to_owned()),
-            SourceSpan::new(offset, "'𝄞'".len(), 3, 15),
+            SourceSpan::new(offset, "'𝄞'".len(), 3, 17),
         );
 
         let converted = diagnostic_to_lsp(&snapshot, &diagnostic).expect("LSP diagnostic");
@@ -145,7 +151,7 @@ mod tests {
         );
         assert_eq!(
             converted.range,
-            Range::new(Position::new(2, 14), Position::new(2, 18))
+            Range::new(Position::new(2, 16), Position::new(2, 20))
         );
         assert_eq!(
             converted.message,

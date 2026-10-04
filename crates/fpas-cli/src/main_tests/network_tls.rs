@@ -47,7 +47,7 @@ uses Std.Http as Http;
 uses Std.Str as Str;
 
 begin
-  case Http.Send(Http.Request.Get('https://localhost:{port}/')) of
+  case Http.Send(Http.RequestGet('https://localhost:{port}/')) of
     when Result.Ok(const ResponseValue):
       begin
         panic('untrusted HTTPS server was accepted');

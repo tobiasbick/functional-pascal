@@ -3,13 +3,13 @@ program T;
 uses Std.Console as Console;
 uses Std.Results as Results;
 
-function AlwaysOk(V: integer): string;
+pure function AlwaysOk(V: integer): string;
 begin
   return 'ok';
 end function;
 
 begin
-  var R: Result of (integer, string) := Result.Error('fail');
-  var M: Result of (string, string) := Results.Map(R, AlwaysOk);
+  const R: Result of (integer, string) := Result.Error('fail');
+  const M: Result of (string, string) := Results.Map(R, AlwaysOk);
   Console.WriteLn(Results.IsError(M));
 end program;

@@ -72,17 +72,20 @@ fn bare_qualified_zero_argument_call_requires_parentheses() {
 }
 
 #[test]
-fn postfix_method_chain_is_expression_statement() {
+fn postfix_callable_field_chain_is_expression_statement() {
     let stmts = body_stmts(r#"program T; begin Factory.Create().Destroy(); end program;"#);
     match &stmts[0] {
         Stmt::Expression {
             expr: Expr::Postfix { operations, .. },
             ..
         } => {
-            assert_eq!(operations.len(), 1);
+            assert_eq!(operations.len(), 2);
+            assert!(
+                matches!(&operations[1], PostfixOperation::Call { args, .. } if args.is_empty())
+            );
             assert!(matches!(
                 &operations[0],
-                PostfixOperation::MethodCall { name, .. } if name == "Destroy"
+                PostfixOperation::Field { name, .. } if name == "Destroy"
             ));
         }
         other => panic!("expected postfix expression statement, got {other:?}"),
@@ -90,7 +93,7 @@ fn postfix_method_chain_is_expression_statement() {
 }
 
 #[test]
-fn parenthesized_postfix_method_chain_is_expression_statement() {
+fn parenthesized_postfix_callable_field_chain_is_expression_statement() {
     let stmts = body_stmts(r#"program T; begin (Factory.Create()).Destroy(); end program;"#);
     assert!(matches!(
         &stmts[0],

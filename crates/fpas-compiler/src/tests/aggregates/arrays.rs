@@ -6,8 +6,8 @@ fn local_dictionary_writes_preserve_aliases_and_insert_keys() {
         r#"
 program LocalDictionary;
 begin
-  mutable var Values: dict of (string, integer) := ['a': 1];
-  var Original: dict of (string, integer) := Values;
+   var Values: dict of (string, integer) := ['a': 1];
+  const Original: dict of (string, integer) := Values;
   Values['a'] := 9;
   Values['b'] := Values['a'] + 1;
   if Original['a'] <> 1 then panic('alias changed'); end if;
@@ -25,15 +25,15 @@ fn local_index_fallback_preserves_captured_root_snapshot_and_rhs_order() {
 program LocalIndexOrder;
 procedure Check();
 begin
-  mutable var Values: array of (integer) := [1, 2];
-  mutable var Order: integer := 0;
-  var Index: function(): integer := function(): integer
+   var Values: array of (integer) := [1, 2];
+   var Order: integer := 0;
+  const Index: function(): integer := function(): integer
   begin
     Order := Order * 10 + 2;
     Values := [7, 8];
     return 0;
   end function;
-  var Replacement: function(): integer := function(): integer
+  const Replacement: function(): integer := function(): integer
   begin
     Order := Order * 10 + 1;
     return 9;
@@ -56,9 +56,9 @@ fn array_push_uses_direct_opcode_and_preserves_value_aliases() {
     let source = r#"program RegisterArrayPush;
 uses Std.Arrays as Arrays;
 begin
-  mutable var A: array of (integer) := [1];
-  var Original: array of (integer) := A;
-  Arrays.Push(A, 2);
+   var A: array of (integer) := [1];
+  const Original: array of (integer) := A;
+  Arrays.Push(var A, 2);
   if Arrays.Length(Original) <> 1 then panic('array alias changed'); end if;
   if Arrays.Length(A) <> 2 then panic('array push length mismatch'); end if;
   if A[1] <> 2 then panic('array push value mismatch'); end if;
@@ -81,21 +81,21 @@ fn array_pop_uses_direct_opcode_and_preserves_value_aliases() {
     let source = r#"
 program RegisterArrayPop;
 uses Std.Arrays as Arrays;
-  mutable var Global: array of (integer) := [4, 5];
+   var Global: array of (integer) := [4, 5];
 begin
-  mutable var A: array of (integer) := [1, 2];
-  var Original: array of (integer) := A;
-  if Arrays.Pop(A) <> 2 then panic('last value'); end if;
+   var A: array of (integer) := [1, 2];
+  const Original: array of (integer) := A;
+  if Arrays.Pop(var A) <> 2 then panic('last value'); end if;
   if Arrays.Length(Original) <> 2 then panic('alias length'); end if;
   if Original[1] <> 2 then panic('alias value'); end if;
-  if Arrays.Pop(A) <> 1 then panic('first value'); end if;
+  if Arrays.Pop(var A) <> 1 then panic('first value'); end if;
   if Arrays.Length(A) <> 0 then panic('empty length'); end if;
-  if Arrays.Pop(Global) <> 5 then panic('global value'); end if;
+  if Arrays.Pop(var Global) <> 5 then panic('global value'); end if;
   if Arrays.Length(Global) <> 1 then panic('global length'); end if;
-  mutable var Captured: array of (integer) := [7, 8];
-  var Take: function(): integer := function(): integer
+   var Captured: array of (integer) := [7, 8];
+  const Take: function(): integer := function(): integer
   begin
-    return Arrays.Pop(Captured);
+    return Arrays.Pop(var Captured);
   end function;
   if Take() <> 8 then panic('capture value'); end if;
   if Arrays.Length(Captured) <> 1 then panic('capture length'); end if;
@@ -116,8 +116,8 @@ fn local_index_write_mutates_its_local_register_without_a_collection_move() {
     let source = r#"
 program RegisterLocalIndexWrite;
 begin
-  mutable var Values: array of (integer) := [1, 2];
-  var Original: array of (integer) := Values;
+   var Values: array of (integer) := [1, 2];
+  const Original: array of (integer) := Values;
   Values[1] := 9;
   if Original[1] <> 2 then panic('array alias changed'); end if;
   if Values[1] <> 9 then panic('array value mismatch'); end if;

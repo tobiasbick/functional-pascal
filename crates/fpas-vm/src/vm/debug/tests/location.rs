@@ -7,11 +7,11 @@ use crate::vm::debug::{
 
 const SOURCE: &str = r#"program DataLocation;
 
-  mutable var Flag: integer := 0;
+   var Flag: integer := 0;
 
 procedure Inner();
 begin
-  mutable var Nested: integer := 1;
+   var Nested: integer := 1;
   Nested := Nested + Flag;
 end procedure;
 

@@ -1,4 +1,4 @@
-use super::{array_elem_ty, check_argument_count, mutable_array_elem_ty, simple_var_name};
+use super::{array_elem_ty, check_argument_count};
 use crate::check::Checker;
 use crate::types::Ty;
 use fpas_lexer::Span;

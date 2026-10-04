@@ -4,9 +4,9 @@ This audit records a sequencing dependency found while removing old type forms
 from the generic-data work in [stage 4](../stages/04-functional-core.md). It does
 not change the [language contract](../language-contract.md).
 
-## Reproductions
+## Reproductions at the generic-data checkpoint
 
-Three standalone CLI checks isolate the current behavior:
+Three standalone CLI checks isolated the behavior before local binding inference:
 
 | Source form | Check result | Current owner |
 |-------------|--------------|---------------|
@@ -49,3 +49,6 @@ migration boundary. Other generic-data syntax conversion and removal may proceed
 The other generic-data changes and their verification are complete in the
 [generic-data delivery](generic-data.md). Its owning checkbox is closed; removal
 of bare task syntax remains required at the later coordinated boundary.
+
+Local initializer inference is now delivered in stage 4. The remaining dependency
+is stage 5 procedure spawning without handles and its structured task migration.

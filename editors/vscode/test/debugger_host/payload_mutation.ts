@@ -50,13 +50,13 @@ export async function verifyPayloadMutation(
     "end function;",
     "",
     "begin",
-    "  mutable var Selected: Choice := Choice.Count(1);",
-    "  mutable var Outcome: Result of (integer, string) := Result.Ok(2);",
-    "  mutable var Optional: Option of (integer) := Option.Some(3);",
-    "  mutable var Missing: Option of (integer) := Option.None;",
-    "  mutable var Packed: Result of (array of (integer), string) := Result.Ok([4, 5]);",
-    "  var Fixed: Choice := Choice.Count(9);",
-    "  var StopMarker: integer := 0;",
+    "   var Selected: Choice := Choice.Count(1);",
+    "   var Outcome: Result of (integer, string) := Result.Ok(2);",
+    "   var Optional: Option of (integer) := Option.Some(3);",
+    "   var Missing: Option of (integer) := Option.None;",
+    "   var Packed: Result of (array of (integer), string) := Result.Ok([4, 5]);",
+    "  const Fixed: Choice := Choice.Count(9);",
+    "  const StopMarker: integer := 0;",
     "  Console.WriteLn(ChoiceValue(Selected));",
     "  case Outcome of",
     "    when Result.Ok(const Value):",
@@ -93,7 +93,7 @@ export async function verifyPayloadMutation(
     ""
   ];
   const sourcePath = await writeSource(workspaceRoot, "payload-mutation", lines);
-  const stopLine = lines.indexOf("  var StopMarker: integer := 0;");
+  const stopLine = lines.indexOf("  const StopMarker: integer := 0;");
   const breakpoint = new vscode.SourceBreakpoint(
     new vscode.Location(vscode.Uri.file(sourcePath), new vscode.Position(stopLine, 2))
   );

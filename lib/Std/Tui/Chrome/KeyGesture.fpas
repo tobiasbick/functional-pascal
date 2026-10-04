@@ -19,18 +19,19 @@ public type TuiKeyGesture = record
   public Meta: boolean;
   // Human-readable representation of the gesture.
   public Display: string;
+end record;
 
-  // Creates a keyboard gesture and its menu display label.
-  //
-  // Parameters:
-  // - `Kind`: Variant kind assigned to the value.
-  // - `Character`: Character used by the drawing operation.
-  // - `Shift`: Whether the Shift modifier is active.
-  // - `Ctrl`: Whether the Ctrl modifier is active.
-  // - `Alt`: Whether the Alt modifier is active.
-  // - `Meta`: Whether the Meta modifier is active.
-  // - `Display`: Text displayed by the element.
-  public static function Create(
+// Creates a keyboard gesture and its menu display label.
+//
+// Parameters:
+// - `Kind`: Variant kind assigned to the value.
+// - `Character`: Character used by the drawing operation.
+// - `Shift`: Whether the Shift modifier is active.
+// - `Ctrl`: Whether the Ctrl modifier is active.
+// - `Alt`: Whether the Alt modifier is active.
+// - `Meta`: Whether the Meta modifier is active.
+// - `Display`: Text displayed by the element.
+public function TuiKeyGestureCreate(
   Kind: Console.KeyKind;
   Character: string;
   Shift: boolean;
@@ -39,32 +40,31 @@ public type TuiKeyGesture = record
   Meta: boolean;
   Display: string
 ): TuiKeyGesture;
-  begin
-    return TuiKeyGesture(Kind := Kind, Character := Character, Shift := Shift, Ctrl := Ctrl, Alt := Alt, Meta := Meta, Display := Display);
-  end function;
+begin
+  return TuiKeyGesture(Kind := Kind, Character := Character, Shift := Shift, Ctrl := Ctrl, Alt := Alt, Meta := Meta, Display := Display);
+end function;
 
-  // Reports whether a console key event matches this gesture.
-  //
-  // Parameters:
-  // - `Self`: Receiver value operated on by the method.
-  // - `Key`: Console key event to route or match.
-  public function Matches(Self: TuiKeyGesture; Key: Console.KeyEvent): boolean;
-  begin
-    if ((((Self.Kind <> Key.kind) or (Self.Shift <> Key.shift)) or (Self.Ctrl <> Key.ctrl)) or (Self.Alt <> Key.alt)) or
-       (Self.Meta <> Key.meta) then
-      begin
-        return false;
-      end;
-    end if;
+// Reports whether a console key event matches this gesture.
+//
+// Parameters:
+// - `Receiver`: Value processed by the function.
+// - `Key`: Console key event to route or match.
+public function TuiKeyGestureMatches(Receiver: TuiKeyGesture; Key: Console.KeyEvent): boolean;
+begin
+  if ((((Receiver.Kind <> Key.kind) or (Receiver.Shift <> Key.shift)) or (Receiver.Ctrl <> Key.ctrl)) or (Receiver.Alt <> Key.alt)) or
+     (Receiver.Meta <> Key.meta) then
+    begin
+      return false;
+    end;
+  end if;
 
-    if Self.Kind = Console.KeyKind.Character then
-      begin
-        return Str.ToLower(Self.Character) = Str.ToLower(Key.ch);
-      end;
-    end if;
+  if Receiver.Kind = Console.KeyKind.Character then
+    begin
+      return Str.ToLower(Receiver.Character) = Str.ToLower(Key.ch);
+    end;
+  end if;
 
-    return true;
-  end function;
-end record;
+  return true;
+end function;
 
 end unit;

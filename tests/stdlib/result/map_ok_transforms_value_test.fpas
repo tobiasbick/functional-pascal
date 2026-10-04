@@ -4,13 +4,13 @@ uses Std.Console as Console;
 uses Std.Results as Results;
 uses Std.Conv as Conv;
 
-function DoubleToStr(V: integer): string;
+pure function DoubleToStr(V: integer): string;
 begin
   return Conv.IntToStr(V * 2);
 end function;
 
 begin
-  var R: Result of (integer, string) := Result.Ok(21);
-  var M: Result of (string, string) := Results.Map(R, DoubleToStr);
+  const R: Result of (integer, string) := Result.Ok(21);
+  const M: Result of (string, string) := Results.Map(R, DoubleToStr);
   Console.WriteLn(Results.Unwrap(M));
 end program;

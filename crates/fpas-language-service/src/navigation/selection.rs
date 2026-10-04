@@ -4,7 +4,7 @@ use std::path::Path;
 use std::sync::Arc;
 
 use fpas_diagnostics::SourceSpan;
-use fpas_parser::{CompilationUnit, Decl, FuncBody, RecordMethod, Stmt, TypeBody};
+use fpas_parser::{CompilationUnit, Decl, FuncBody, Stmt};
 
 use crate::{DocumentSnapshot, DocumentSymbols, LanguageService, LanguageServiceError};
 
@@ -113,23 +113,7 @@ fn collect_declarations(declarations: &[Decl], offset: usize, spans: &mut Vec<So
         match declaration {
             Decl::Function(function) => collect_body(&function.body, offset, spans),
             Decl::Procedure(procedure) => collect_body(&procedure.body, offset, spans),
-            Decl::TypeDef(definition) => {
-                if let TypeBody::Record(record) = &definition.body {
-                    for method in &record.methods {
-                        match method {
-                            RecordMethod::Function(function)
-                            | RecordMethod::StaticFunction(function) => {
-                                collect_body(&function.body, offset, spans);
-                            }
-                            RecordMethod::Procedure(procedure)
-                            | RecordMethod::StaticProcedure(procedure) => {
-                                collect_body(&procedure.body, offset, spans);
-                            }
-                        }
-                    }
-                }
-            }
-            Decl::Const(_) | Decl::Var(_) | Decl::MutableVar(_) => {}
+            Decl::TypeDef(_) | Decl::Const(_) | Decl::Var(_) => {}
         }
     }
 }
@@ -180,8 +164,8 @@ fn collect_statements(statements: &[Stmt], offset: usize, spans: &mut Vec<Source
             }
             Stmt::Repeat { body, .. } => collect_statements(body, offset, spans),
             Stmt::Null(_)
+            | Stmt::Const(_)
             | Stmt::Var(_)
-            | Stmt::MutableVar(_)
             | Stmt::Assign { .. }
             | Stmt::Return(_, _)
             | Stmt::Discard(..)

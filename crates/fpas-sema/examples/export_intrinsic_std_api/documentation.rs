@@ -153,7 +153,7 @@ fn parameter_names(signature: &str) -> Option<Vec<String>> {
 fn parameter_name(parameter: &str) -> Option<String> {
     let before_type = parameter.split(':').next()?.trim();
     let name = before_type
-        .trim_start_matches("mutable ")
+        .trim_start_matches("var ")
         .split(',')
         .next_back()?
         .trim();
@@ -171,6 +171,14 @@ mod tests {
                 "Reduce(D: dict of (K, V); Init: U; F: function(Acc: U; Key: K; Value: V): U): U"
             ),
             Some(vec!["D".to_owned(), "Init".to_owned(), "F".to_owned()])
+        );
+    }
+
+    #[test]
+    fn var_markers_are_not_part_of_documented_parameter_names() {
+        assert_eq!(
+            parameter_names("Push(var A: array of (T); Value: T)"),
+            Some(vec!["A".to_owned(), "Value".to_owned()])
         );
     }
 }

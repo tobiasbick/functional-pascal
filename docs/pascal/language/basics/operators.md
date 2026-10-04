@@ -13,6 +13,21 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (expression precede
 | `div`    | Integer division | `A div B`   |
 | `mod`    | Modulo           | `A mod B`   |
 
+`integer` is signed 64-bit. Addition, subtraction, multiplication and unary
+negation are checked, as are `div` and `mod`. Overflow produces runtime panic
+F4012 in every build mode. Integer division truncates toward zero; remainder has
+the dividend's sign. A zero divisor produces F4001 for `div` and F4002 for `mod`.
+The minimum integer divided by `-1`, or used with `mod -1`, also produces F4012.
+Integer failures reached by [static evaluation](constants.md) are compile-time
+errors F2020. Optimization preserves runtime failures for non-static expressions.
+
+`real` uses IEEE binary64 arithmetic. `/` produces a real even for integer
+operands. Division by positive or negative zero can produce signed infinity;
+`0.0 / 0.0` produces NaN. Real arithmetic may produce infinity or NaN without an
+integer-domain panic. NaN compares unequal to every value, including itself;
+ordered comparisons involving NaN return false. Positive and negative zero
+compare equal. These rules also apply to constant evaluation.
+
 ## Comparison
 
 | Operator | Description       | Example    |
@@ -87,20 +102,25 @@ rejected with migration guidance.
 Individual characters can be read by 0-based integer index using bracket notation. The result type is `string` (a single-character string).
 
 ```pascal
-var S: string := 'Hello';
-var C: string := S[0]; // 'H'
-var L: string := S[4];
+const S: string := 'Hello';
+const C: string := S[0]; // 'H'
+const L: string := S[4];
 
 ```
 
 Accessing an out-of-bounds index is a **runtime error**. The index must be an `integer`; non-integer indices are a compile-time error.
+
+String indices are read-only. An assignment such as `S[0] := 'h'` is a
+compile-time error, including when the string is a record field or collection
+element. To change text, assign a whole replacement string to a mutable binding,
+field, or collection element, for example `S := 'hello'` or `Items[0] := 'hello'`.
 
 ```pascal
 uses Std.Console as Console;
 uses Std.Str as Str;
 
 // iterate over characters
-mutable var I: integer := 0;
+ var I: integer := 0;
 while I < Str.Length(S) do
   begin
     Console.WriteLn(S[I]);
@@ -112,7 +132,7 @@ end while;
 ## String concatenation
 
 ```pascal
-var Full: string := ('Hello' + ' ') + 'World';
+const Full: string := ('Hello' + ' ') + 'World';
 
 ```
 

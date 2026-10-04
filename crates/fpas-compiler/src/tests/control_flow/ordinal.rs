@@ -16,9 +16,9 @@ fn boolean_counting_loops_preserve_values_in_both_directions() {
     ] {
         for tail in ["", "continue;"] {
             assert_succeeds(&format!(
-                "program BooleanBounds; begin
-                  mutable var Count: integer := 0;
-                  mutable var Values: integer := 0;
+                r#"program BooleanBounds; begin
+                   var Count: integer := 0;
+                   var Values: integer := 0;
                   for B: boolean := {start} {direction} {end} do
                   begin
                     Count := Count + 1;
@@ -27,7 +27,7 @@ fn boolean_counting_loops_preserve_values_in_both_directions() {
                     else Values := Values * 10 + 1; end if; {tail}
                   end; end for;
                   if Values <> {expected} then panic('wrong boolean values or direction'); end if;
-                end program;"
+                end program;"#
             ));
         }
     }
@@ -37,8 +37,8 @@ fn boolean_counting_loops_preserve_values_in_both_directions() {
 fn boolean_counting_bound_can_shadow_an_outer_boolean() {
     assert_succeeds(
         r#"program BooleanShadow; begin
-          var B: boolean := true;
-          mutable var Count: integer := 0;
+          const B: boolean := true;
+           var Count: integer := 0;
           for B: boolean := false to B do Count := Count + 1; end for;
           if (Count <> 2) or not B then panic('boolean bound or outer value changed'); end if;
         end program;"#,
@@ -51,8 +51,8 @@ fn simple_enum_counting_loops_keep_their_ordinal_values() {
         r#"program EnumBounds;
          type Color = enum Red; Green; Blue; end enum;
         begin
-          mutable var Count: integer := 0;
-          mutable var Greens: integer := 0;
+           var Count: integer := 0;
+           var Greens: integer := 0;
           for C: Color := Color.Red to Color.Blue do
           begin
             Count := Count + 1;

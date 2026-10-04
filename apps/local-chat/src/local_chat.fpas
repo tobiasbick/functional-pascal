@@ -7,8 +7,9 @@ uses LocalChat.Update as Update;
 uses LocalChat.View as View;
 uses Std.Console as Console;
 uses Std.Tui as Tui;
+uses Std.Tui.Runtime as Runtime;
 
 begin
-  var Initial: Model.LocalChatModel := Model.LocalChatModelCreate(Console.ScreenWidth(), Console.ScreenHeight());
-  discard Tui.TuiApplication.RunWithPalette(Initial, Update.LocalChatUpdate, View.LocalChatView, Theme.LocalChatPalette());
+  const Initial: Model.LocalChatModel := Model.LocalChatModelCreate(Console.ScreenWidth(), Console.ScreenHeight());
+  discard Runtime.TuiApplicationRunWithPalette(Initial, Update.LocalChatUpdate, View.LocalChatView, Theme.LocalChatPalette());
 end program;

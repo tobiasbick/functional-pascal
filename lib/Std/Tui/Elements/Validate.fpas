@@ -84,7 +84,7 @@ end function;
 
 function TuiElementValidateAndCollect(Node: Element.TuiElement): array of (integer);
 begin
-  mutable var Seen: array of (integer) := [];
+  var Seen: array of (integer) := [];
   case Node of
     when Element.TuiElement.Button(const Button):
       begin
@@ -103,7 +103,7 @@ begin
           end;
         end if;
 
-        Arrays.Push(Seen, Button.Id.Value);
+        Arrays.Push(var Seen, Button.Id.Value);
       end;
     when Element.TuiElement.Input(const Input):
       begin
@@ -115,7 +115,7 @@ begin
           end;
         end if;
 
-        Arrays.Push(Seen, Input.Id.Value);
+        Arrays.Push(var Seen, Input.Id.Value);
       end;
     when Element.TuiElement.TextArea(const Id, const Text, const Caret, const Offset, const ChangeAction):
       begin
@@ -133,19 +133,19 @@ begin
           end;
         end if;
 
-        Arrays.Push(Seen, Id.Value);
+        Arrays.Push(var Seen, Id.Value);
       end;
     when Element.TuiElement.CheckBox(const Id, const Text, const Checked, const ChangeAction):
       begin
         TuiElementValidateControl(Id);
         TuiElementValidateAction(ChangeAction);
-        Arrays.Push(Seen, Id.Value);
+        Arrays.Push(var Seen, Id.Value);
       end;
     when Element.TuiElement.List(const Id, const Items, const Selected, const ChangeAction):
       begin
         TuiElementValidateControl(Id);
         TuiElementValidateAction(ChangeAction);
-        var Count: integer := Arrays.Length(Items);
+        const Count: integer := Arrays.Length(Items);
         if Count = 0 then
           begin
             if Selected <> -1 then
@@ -162,7 +162,7 @@ begin
           end if;
         end if;
 
-        Arrays.Push(Seen, Id.Value);
+        Arrays.Push(var Seen, Id.Value);
       end;
     when Element.TuiElement.Scroll(const Id, const Offset, const ChangeAction, const Children):
       begin
@@ -180,7 +180,7 @@ begin
           end;
         end if;
 
-        Arrays.Push(Seen, Id.Value);
+        Arrays.Push(var Seen, Id.Value);
       end;
     when Element.TuiElement.MenuBar(const Items):
       begin
@@ -195,7 +195,7 @@ begin
               end;
             end if;
 
-            Arrays.Push(Seen, Items[Index].Id.Value);
+            Arrays.Push(var Seen, Items[Index].Id.Value);
           end;
         end for;
       end;
@@ -204,7 +204,7 @@ begin
         TuiElementValidateControl(Id);
         TuiElementValidateAction(ChangeAction);
         MenuValidate.TuiMenuValidate(Nodes, State);
-        Arrays.Push(Seen, Id.Value);
+        Arrays.Push(var Seen, Id.Value);
       end;
     when Element.TuiElement.Gauge(const Gauge):
       begin
@@ -235,7 +235,7 @@ begin
                     end;
                   end if;
 
-                  Arrays.Push(Seen, Id.Value);
+                  Arrays.Push(var Seen, Id.Value);
                 end;
               when StatusItem.TuiStatusItem.Hint(_), StatusItem.TuiStatusItem.KeyHint(_, _):
                 begin
@@ -270,10 +270,10 @@ begin
         end;
       end;
   end case;
-  var Children: array of (Element.TuiElement) := TuiElementChildren(Node);
+  const Children: array of (Element.TuiElement) := TuiElementChildren(Node);
   for ChildIndex: integer := 0 to Arrays.Length(Children) - 1 do
     begin
-      var ChildIds: array of (integer) := TuiElementValidateAndCollect(Children[ChildIndex]);
+      const ChildIds: array of (integer) := TuiElementValidateAndCollect(Children[ChildIndex]);
       for IdIndex: integer := 0 to Arrays.Length(ChildIds) - 1 do
         begin
           if TuiElementControlSeen(Seen, ChildIds[IdIndex]) then
@@ -282,7 +282,7 @@ begin
             end;
           end if;
 
-          Arrays.Push(Seen, ChildIds[IdIndex]);
+          Arrays.Push(var Seen, ChildIds[IdIndex]);
         end;
       end for;
     end;

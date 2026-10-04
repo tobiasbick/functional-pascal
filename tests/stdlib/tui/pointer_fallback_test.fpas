@@ -3,6 +3,10 @@ program TuiPointerFallbackTest;
 uses Std.Arrays as Arrays;
 uses Std.Test as Test;
 uses Std.Tui as Tui;
+uses Std.Tui.Elements as Elements;
+uses Std.Tui.Geometry as Geometry;
+uses Std.Tui.Ids as Ids;
+uses Std.Tui.Runtime as Runtime;
 
 type PointerModel = record
   Events: array of (string);
@@ -18,14 +22,14 @@ begin
 end function;
 
 begin
-  mutable var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(24, 8));
-  var Pointer: Tui.TuiPointerEvent := Tui.TuiPointerEvent.Create(Tui.TuiPointerAction.Move, Tui.TuiPointerButton.NoButton, Tui.TuiPoint.Create(3, 4));
-  App.Inject(Tui.TuiMsg.Tick(1));
-  App.InjectPointerForTest(Pointer);
-  App.Inject(Tui.TuiMsg.Tick(2));
-  mutable var Model: PointerModel := PointerModel(Events := [], X := -1, Y := -1, Action := Tui.TuiPointerAction.Unknown, Button := Tui.TuiPointerButton.Left);
-  Model := App.RunIterations(Model, function(State: PointerModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): PointerModel begin
-    Cmd.Set(Tui.TuiCmd.NoCommand);
+  var App: Tui.TuiApplication := Runtime.TuiApplicationOpenForTest(Geometry.TuiSizeCreate(24, 8));
+  const Pointer: Tui.TuiPointerEvent := Runtime.TuiPointerEventCreate(Tui.TuiPointerAction.Move, Tui.TuiPointerButton.NoButton, Geometry.TuiPointCreate(3, 4));
+  Runtime.TuiApplicationInject(App, Tui.TuiMsg.Tick(1));
+  Runtime.TuiApplicationInjectPointerForTest(App, Pointer);
+  Runtime.TuiApplicationInject(App, Tui.TuiMsg.Tick(2));
+  var Model: PointerModel := PointerModel(Events := [], X := -1, Y := -1, Action := Tui.TuiPointerAction.Unknown, Button := Tui.TuiPointerButton.Left);
+  Model := Runtime.TuiApplicationRunIterations(App, Model, function(State: PointerModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): PointerModel begin
+    Runtime.TuiCmdOutputSet(Cmd, Tui.TuiCmd.NoCommand);
     case Msg of
       when Tui.TuiMsg.Tick(const Delta):
         begin
@@ -49,11 +53,11 @@ begin
         end;
     end case;
   end function, function(State: PointerModel): Tui.TuiElement begin
-    return Tui.TuiElementBuilders.MakeDesktop(Option.Some(Tui.TuiControlId.Create(1)), [
-                                                                                         Tui.TuiElementBuilders.MakePanel('Host', [
-                                                                                                                                    Tui.TuiElementBuilders.MakeButton(Tui.TuiControlId.Create(1), 'Go', Tui.TuiAction.Create(1))
-                                                                                                                                  ])
-                                                                                       ]);
+    return Elements.TuiElementMakeDesktop(Option.Some(Ids.TuiControlIdCreate(1)), [
+                                                                                    Elements.TuiElementMakePanel('Host', [
+                                                                                                                           Elements.TuiElementMakeButton(Ids.TuiControlIdCreate(1), 'Go', Ids.TuiActionCreate(1))
+                                                                                                                         ])
+                                                                                  ]);
   end function, 3, 0);
   Test.AssertEquals(3, Arrays.Length(Model.Events));
   Test.AssertEquals('tick-1', Model.Events[0]);
@@ -63,5 +67,5 @@ begin
   Test.AssertEquals(4, Model.Y);
   Test.AssertTrue(Model.Action = Tui.TuiPointerAction.Move);
   Test.AssertTrue(Model.Button = Tui.TuiPointerButton.NoButton);
-  App.Close();
+  Runtime.TuiApplicationClose(App);
 end program;

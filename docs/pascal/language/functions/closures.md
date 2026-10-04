@@ -9,11 +9,11 @@ Parameter and result annotations are mandatory. The final `end function` or
 separator. Body statements still require their own semicolons.
 
 ```pascal
-mutable var Count: integer := 0;
-var Increment: procedure() := procedure() begin
+ var Count: integer := 0;
+const Increment: procedure() := procedure() begin
   Count := Count + 1;
 end procedure;
-var AddBase: function(Value: integer): integer := function(Value: integer): integer begin
+const AddBase: function(Value: integer): integer := function(Value: integer): integer begin
   return Count + Value;
 end function;
 
@@ -58,16 +58,17 @@ a local, parameter, or enclosing capture that is not declared by the closure its
 | Binding | Capture behavior |
 | --- | --- |
 | Immutable local or value parameter | Capture its value when the closure is created. |
-| `mutable var` local or `mutable` parameter | Capture one shared mutable cell. |
+| `var` local | Capture one shared mutable cell. |
+| `var` parameter | Capture is rejected; capture a local value snapshot instead. |
 | Enclosing closure capture | Reuse the same value or mutable cell. |
 | Unit or program variable | Resolve normally; not stored in the closure environment. |
 | Routine, static record routine, or constant | Resolve normally; not stored as runtime data. |
 
 All closures created by one activation and capturing the same mutable local observe
 the same cell. The cell survives until the final closure that references it is released.
-Captured mutable parameters use the same cell storage. Reassigning such a parameter
-changes the activation's local value and its captures; it does not change the caller's
-binding. Each activation creates its own cells.
+Explicit local parameter copies use the same cell storage when captured. Changing
+that copy affects its captures while the caller's value remains unchanged. Each
+activation creates its own cells.
 
 An immutable captured collection is a value snapshot, including nested collections.
 Copying a stateful callable shares its environment and mutable cells. Loop-variable
@@ -78,7 +79,7 @@ ordinary operands; inner parameters and local bindings retain lexical shadowing.
 ```pascal
 function Counter(): function(): integer;
 begin
-  mutable var Value: integer := 0;
+   var Value: integer := 0;
   return function(): integer begin
     Value := Value + 1;
     return Value;
@@ -114,6 +115,11 @@ Escaping named and anonymous routines use the same value/cell capture rules and
 declaration identities. They can be invoked directly after a factory call:
 `MakeAdder(3)(5)`.
 
+A closure may call a sibling nested routine. It retains that routine's callable
+value and capture environment, even when a closure parameter has the same name
+as a variable captured by the sibling. Mutable cells reached through the sibling
+remain shared, and make the capturing closure task-bound.
+
 ## Lifetime and equality
 
 Creating or copying a closure copies the callable value and shares its environment.
@@ -134,20 +140,20 @@ also makes the outer closure task-bound (the mutable cells are still reachable).
 
 ```pascal
 // Accepted: immutable capture
-var N: integer := 3;
-var Work: function(): integer := function(): integer begin
+const N: integer := 3;
+const Work: function(): integer := function(): integer begin
   return N * 2;
 end function;
-var Handle: task := go Work();
+const Handle: task := go Work();
 // Rejected: mutable capture
-mutable var Count: integer := 0;
-var Inc: procedure() := procedure() begin
+ var Count: integer := 0;
+const Inc: procedure() := procedure() begin
   Count := Count + 1;
 end procedure;
 
 go Inc(); // Compile-time error
 // Rejected: nested task-bound capture
-var Outer: procedure() := procedure() begin
+const Outer: procedure() := procedure() begin
   Inc();
 end procedure;
 

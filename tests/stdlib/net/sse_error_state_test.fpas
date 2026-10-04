@@ -37,7 +37,7 @@ begin
 end procedure;
 
 begin
-  var Limited: Http.SseDecoder := Results.Unwrap(Http.CreateSseDecoder(8));
+  const Limited: Http.SseDecoder := Results.Unwrap(Http.CreateSseDecoder(8));
   case Http.FeedSse(Limited, Utf8.Encode(Str.RepeatStr('x', 100000))) of
     when Result.Ok(_):
       begin
@@ -50,7 +50,7 @@ begin
   end case;
 
   Terminal(Limited);
-  var Invalid: Http.SseDecoder := Results.Unwrap(Http.CreateSseDecoder(16));
+  const Invalid: Http.SseDecoder := Results.Unwrap(Http.CreateSseDecoder(16));
   Test.AssertEquals(0, Arrays.Length(Results.Unwrap(Http.FeedSse(Invalid, [255]))));
   case Http.FinishSse(Invalid) of
     when Result.Ok(_):
@@ -64,12 +64,12 @@ begin
   end case;
 
   Terminal(Invalid);
-  var Many: Http.SseDecoder := Results.Unwrap(Http.CreateSseDecoder(9));
-  var Events: array of (Http.SseEvent) := Results.Unwrap(Http.FeedSse(Many, Utf8.Encode(Str.RepeatStr((('data:x' + #13) + #10) +
-                                                                                                      #10, 500))));
+  const Many: Http.SseDecoder := Results.Unwrap(Http.CreateSseDecoder(9));
+  const Events: array of (Http.SseEvent) := Results.Unwrap(Http.FeedSse(Many, Utf8.Encode(Str.RepeatStr((('data:x' + #13) + #10) +
+                                                                                                        #10, 500))));
   Test.AssertEquals(500, Arrays.Length(Events));
   Test.AssertEquals('x', Events[499].Data);
-  var Split: Http.SseDecoder := Results.Unwrap(Http.CreateSseDecoder(9));
+  const Split: Http.SseDecoder := Results.Unwrap(Http.CreateSseDecoder(9));
   Test.AssertEquals(0, Arrays.Length(Results.Unwrap(Http.FeedSse(Split, Utf8.Encode('data:x' + #13)))));
   Test.AssertEquals(1, Arrays.Length(Results.Unwrap(Http.FeedSse(Split, [10, 10]))));
   Test.AssertEquals(0, Arrays.Length(Results.Unwrap(Http.FinishSse(Split))));

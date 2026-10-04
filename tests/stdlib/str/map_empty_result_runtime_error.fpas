@@ -2,11 +2,11 @@ program StringMapEmptyResultRuntimeError;
 
 uses Std.Str as Str;
 
-function Empty(C: string): string;
+pure function Empty(C: string): string;
 begin
   return '';
 end function;
 
 begin
-  var Mapped: string := Str.Map('abc', Empty);
+  const Mapped: string := Str.Map('abc', Empty);
 end program;

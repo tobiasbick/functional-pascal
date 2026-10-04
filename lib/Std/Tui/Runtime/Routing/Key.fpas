@@ -38,8 +38,8 @@ end function;
 
 function TuiRouteSubtreeEnd(Node: Element.TuiElement; Index: integer): integer;
 begin
-  mutable var Next: integer := Index + 1;
-  mutable var Descendants: array of (Element.TuiElement) := [];
+  var Next: integer := Index + 1;
+  var Descendants: array of (Element.TuiElement) := [];
   case Node of
     when Element.TuiElement.Scroll(const Id, const Offset, const ChangeAction, const Children):
       begin
@@ -94,7 +94,7 @@ function TuiRouteTarget(
   Key: Console.KeyEvent
 ): Option of (Msg2.TuiMsg);
 begin
-  mutable var Descendants: array of (Element.TuiElement) := [];
+  var Descendants: array of (Element.TuiElement) := [];
   case Node of
     when Element.TuiElement.Button(const Button):
       begin
@@ -112,7 +112,7 @@ begin
           end;
         end if;
 
-        return TextArea.TuiRouteTextAreaKey(Id, Text, Caret, Offset, ChangeAction, Frame.EntryAt(Index)
+        return TextArea.TuiRouteTextAreaKey(Id, Text, Caret, Offset, ChangeAction, Frame2.TuiArrangedFrameEntryAt(Frame, Index)
                                                                                      .Bounds, Key);
       end;
     when Element.TuiElement.CheckBox(const Id, const Text, const Checked, const ChangeAction):
@@ -138,13 +138,13 @@ begin
             return Option.None;
           end;
         end if;
-        var Count: integer := Arrays.Length(Items);
+        const Count: integer := Arrays.Length(Items);
         if Count = 0 then
           begin
             return Option.None;
           end;
         end if;
-        mutable var NextSelected: integer := Selected;
+        var NextSelected: integer := Selected;
         if Key.kind = Console.KeyKind.Up then
           begin
             NextSelected := Selected - 1;
@@ -250,16 +250,16 @@ begin
       begin
         if Id.Value = Target.Value then
           begin
-            mutable var Content: Size.TuiSize := Size.TuiSize.Create(0, 0);
+            var Content: Size.TuiSize := Size.TuiSizeCreate(0, 0);
             if Arrays.Length(Children) = 1 then
               begin
-                Content := Measure.TuiMeasure(Children[0], MeasureSpec.TuiMeasureSpec.Unbounded())
+                Content := Measure.TuiMeasure(Children[0], MeasureSpec.TuiMeasureSpecUnbounded())
                              .Preferred;
               end;
             end if;
-            var Viewport: Frame2.TuiArrangedEntry := Frame.EntryAt(Index);
-            mutable var MaximumX: integer := Content.Width - Viewport.Bounds.Width;
-            mutable var MaximumY: integer := Content.Height - Viewport.Bounds.Height;
+            const Viewport: Frame2.TuiArrangedEntry := Frame2.TuiArrangedFrameEntryAt(Frame, Index);
+            var MaximumX: integer := Content.Width - Viewport.Bounds.Width;
+            var MaximumY: integer := Content.Height - Viewport.Bounds.Height;
             if MaximumX < 0 then
               begin
                 MaximumX := 0;
@@ -271,7 +271,7 @@ begin
                 MaximumY := 0;
               end;
             end if;
-            mutable var NextOffset: Point.TuiPoint := Offset;
+            var NextOffset: Point.TuiPoint := Offset;
             if Key.kind = Console.KeyKind.Left then
               begin
                 NextOffset.X := TuiScrollClamp(Offset.X - 1, MaximumX);
@@ -367,7 +367,7 @@ begin
         end;
       end;
   end case;
-  mutable var Next: integer := Index + 1;
+  var Next: integer := Index + 1;
   for ChildIndex: integer := 0 to Arrays.Length(Descendants) - 1 do
     begin
       case TuiRouteTarget(Frame, Descendants[ChildIndex], Next, Target, Key) of
@@ -428,14 +428,14 @@ begin
         null;
       end;
   end case;
-  var Controls: array of (ControlId.TuiControlId) := Focus.TuiFocusableControls(Root);
+  const Controls: array of (ControlId.TuiControlId) := Focus.TuiFocusableControls(Root);
   if Arrays.Length(Controls) = 0 then
     begin
       return [Msg2.TuiMsg.Key(Key)];
     end;
   end if;
-  var Previous: Option of (ControlId.TuiControlId) := Focus.TuiRootFocus(Root);
-  mutable var CurrentIndex: integer := -1;
+  const Previous: Option of (ControlId.TuiControlId) := Focus.TuiRootFocus(Root);
+  var CurrentIndex: integer := -1;
   case Previous of
     when Option.Some(const Id):
       begin
@@ -446,15 +446,15 @@ begin
         null;
       end;
   end case;
-  mutable var Routed: array of (Msg2.TuiMsg) := [];
-  mutable var Target: ControlId.TuiControlId := Controls[0];
+  var Routed: array of (Msg2.TuiMsg) := [];
+  var Target: ControlId.TuiControlId := Controls[0];
   if CurrentIndex >= 0 then
     begin
       Target := Controls[CurrentIndex];
     end;
   else
     begin
-      Arrays.Push(Routed, Msg2.TuiMsg.FocusChanged(Previous, Option.Some(Target)));
+      Arrays.Push(var Routed, Msg2.TuiMsg.FocusChanged(Previous, Option.Some(Target)));
     end;
   end if;
 
@@ -474,7 +474,7 @@ begin
           end case;
         end;
       end if;
-      mutable var NextIndex: integer := CurrentIndex + 1;
+      var NextIndex: integer := CurrentIndex + 1;
       if NextIndex >= Arrays.Length(Controls) then
         begin
           NextIndex := 0;
@@ -499,7 +499,7 @@ begin
   case TuiRouteTarget(Frame, Root, 0, Target, Key) of
     when Option.Some(const Msg):
       begin
-        Arrays.Push(Routed, Msg);
+        Arrays.Push(var Routed, Msg);
       end;
     when Option.None:
       begin
@@ -508,7 +508,7 @@ begin
             case Button2.TuiRouteDefaultButtonEnter(Root) of
               when Option.Some(const Msg):
                 begin
-                  Arrays.Push(Routed, Msg);
+                  Arrays.Push(var Routed, Msg);
                   return Routed;
                 end;
               when Option.None:
@@ -519,7 +519,7 @@ begin
           end;
         end if;
 
-        Arrays.Push(Routed, Msg2.TuiMsg.Key(Key));
+        Arrays.Push(var Routed, Msg2.TuiMsg.Key(Key));
       end;
   end case;
 

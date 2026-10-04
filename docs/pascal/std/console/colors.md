@@ -18,7 +18,7 @@ The [cell drawing API](cells-frames.md) stores foreground and background colors 
 ```pascal
 uses Std.Console as Console;
 
-var Value: Console.Cell := Console.Cell(glyph := 'X', foreground := Console.RgbColor(255, 128, 0), background := Console.Ansi256Color(17));
+const Value: Console.Cell := Console.Cell(glyph := 'X', foreground := Console.RgbColor(255, 128, 0), background := Console.Ansi256Color(17));
 
 Console.PutCell(1, 1, Value);
 ```
@@ -39,7 +39,9 @@ next section, such as `White` and `Black`.
 - **Effect:** changes the foreground/background color used for subsequent writes.
 - **Errors:** runtime error if the color index is outside `0..15`.
 
-The following CRT-style constants are available after `uses Std.Console as Console;`:
+The following CRT-style constants are available after `uses Std.Console as Console;`.
+Their integer values participate in static expressions, including case labels,
+aggregate comparisons and lazy Boolean guards:
 
 | Value | Constant |
 |------:|----------|

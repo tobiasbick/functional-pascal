@@ -226,7 +226,9 @@ impl LoweringContext {
         let mut value = self.lower_expression(base)?;
         let mut ty = self.expression_ir_type(base)?;
         for operation in operations {
-            if let Some((member_value, member_ty)) = self.lower_postfix_member(value, operation)? {
+            if let Some((member_value, member_ty)) =
+                self.lower_postfix_value_call(value, operation)?
+            {
                 value = member_value;
                 ty = member_ty;
                 continue;
@@ -240,7 +242,7 @@ impl LoweringContext {
                     let part = DesignatorPart::Index((**index).clone(), *span);
                     (value, ty) = self.lower_designator_part(value, ty, &part)?;
                 }
-                PostfixOperation::MethodCall { .. } | PostfixOperation::Call { .. } => {
+                PostfixOperation::Call { .. } => {
                     return Err(unsupported(span, "postfix method call"));
                 }
             }

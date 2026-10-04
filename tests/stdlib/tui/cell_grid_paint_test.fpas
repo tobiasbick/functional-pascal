@@ -3,38 +3,47 @@ program TuiCellGridPaintTest;
 uses Std.Options as Options;
 uses Std.Test as Test;
 uses Std.Tui as Tui;
+uses Std.Tui.Cells as Cells;
+uses Std.Tui.Chrome as Chrome;
+uses Std.Tui.Elements as Elements;
+uses Std.Tui.Geometry as Geometry;
+uses Std.Tui.Rendering as Rendering;
+uses Std.Tui.Runtime as Runtime;
 
 function ViewGrid(State: integer): Tui.TuiElement;
 begin
-  var Concrete: Tui.TuiStyle := Tui.TuiStyle.FromColors(Tui.TuiColor.FromRgb(1, 2, 3), Tui.TuiColor.FromRgb(4, 5, 6));
-  return Tui.TuiElementBuilders.MakeCellGrid(Tui.TuiCellGrid.Create(4, 2, [
-                                                                            Tui.TuiCell.Create('A', Tui.TuiStyleRole.Accent),
-                                                                            Tui.TuiCell.Styled('B', Concrete),
-                                                                            Tui.TuiCell.Create('C', Tui.TuiStyleRole.Title),
-                                                                            Tui.TuiCell.Create('D', Tui.TuiStyleRole.Normal),
-                                                                            Tui.TuiCell.Create('E', Tui.TuiStyleRole.Normal),
-                                                                            Tui.TuiCell.Create('F', Tui.TuiStyleRole.Normal),
-                                                                            Tui.TuiCell.Create('中', Tui.TuiStyleRole.Accent),
-                                                                            Tui.TuiCell.Create('H', Tui.TuiStyleRole.Normal)
-                                                                          ]));
+  const Concrete: Tui.TuiStyle := Cells.TuiStyleFromColors(Cells.TuiColorFromRgb(1, 2, 3), Cells.TuiColorFromRgb(4, 5, 6));
+  return Elements.TuiElementMakeCellGrid(Chrome.TuiCellGridCreate(4, 2, [
+                                                                          Cells.TuiCellCreate('A', Tui.TuiStyleRole.Accent),
+                                                                          Cells.TuiCellStyled('B', Concrete),
+                                                                          Cells.TuiCellCreate('C', Tui.TuiStyleRole.Title),
+                                                                          Cells.TuiCellCreate('D', Tui.TuiStyleRole.Normal),
+                                                                          Cells.TuiCellCreate('E', Tui.TuiStyleRole.Normal),
+                                                                          Cells.TuiCellCreate('F', Tui.TuiStyleRole.Normal),
+                                                                          Cells.TuiCellCreate('中', Tui.TuiStyleRole.Accent),
+                                                                          Cells.TuiCellCreate('H', Tui.TuiStyleRole.Normal)
+                                                                        ]));
 end function;
 
 function UpdateGrid(State: integer; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): integer;
 begin
-  Cmd.Set(Tui.TuiCmd.NoCommand);
+  Runtime.TuiCmdOutputSet(Cmd, Tui.TuiCmd.NoCommand);
   return State;
 end function;
 
 begin
-  var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(3, 2));
-  discard App.RunIterations(0, UpdateGrid, ViewGrid, 0, 0);
-  var Snapshot: Tui.TuiSurfaceSnapshot := App.SurfaceSnapshot();
-  Test.AssertEquals('A', Snapshot.CellAt(0, 0).Glyph);
-  Test.AssertEquals('B', Snapshot.CellAt(1, 0).Glyph);
-  Test.AssertEquals(2, Options.Unwrap(Snapshot.CellAt(1, 0).ConcreteStyle).Foreground.Green);
-  Test.AssertEquals('C', Snapshot.CellAt(2, 0).Glyph);
-  Test.AssertEquals('E', Snapshot.CellAt(0, 1).Glyph);
-  Test.AssertEquals('F', Snapshot.CellAt(1, 1).Glyph);
-  Test.AssertEquals(' ', Snapshot.CellAt(2, 1).Glyph);
-  App.Close();
+  const App: Tui.TuiApplication := Runtime.TuiApplicationOpenForTest(Geometry.TuiSizeCreate(3, 2));
+  discard Runtime.TuiApplicationRunIterations(App, 0, UpdateGrid, ViewGrid, 0, 0);
+  const Snapshot: Tui.TuiSurfaceSnapshot := Runtime.TuiApplicationSurfaceSnapshot(App);
+  Test.AssertEquals('A', Rendering.TuiSurfaceSnapshotCellAt(Snapshot, 0, 0).Glyph);
+  Test.AssertEquals('B', Rendering.TuiSurfaceSnapshotCellAt(Snapshot, 1, 0).Glyph);
+  Test.AssertEquals(2, Options.Unwrap(Rendering.TuiSurfaceSnapshotCellAt(Snapshot, 1, 0)
+                                        .ConcreteStyle)
+                         .Foreground
+                         .Green);
+  Test.AssertEquals('C', Rendering.TuiSurfaceSnapshotCellAt(Snapshot, 2, 0).Glyph);
+  Test.AssertEquals('E', Rendering.TuiSurfaceSnapshotCellAt(Snapshot, 0, 1).Glyph);
+  Test.AssertEquals('F', Rendering.TuiSurfaceSnapshotCellAt(Snapshot, 1, 1).Glyph);
+  Test.AssertEquals(' ', Rendering.TuiSurfaceSnapshotCellAt(Snapshot, 2, 1).Glyph);
+  Runtime.TuiApplicationClose(App);
 end program;

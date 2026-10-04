@@ -2,7 +2,7 @@ program StringMapCallbackFailureRuntimeError;
 
 uses Std.Str as Str;
 
-function FailOnSecond(C: string): string;
+pure function FailOnSecond(C: string): string;
 begin
   if C = 'b' then
     begin
@@ -20,5 +20,5 @@ begin
 end function;
 
 begin
-  var Mapped: string := Str.Map('abc', FailOnSecond);
+  const Mapped: string := Str.Map('abc', FailOnSecond);
 end program;

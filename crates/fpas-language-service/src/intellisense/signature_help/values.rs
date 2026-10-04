@@ -41,7 +41,7 @@ pub(super) fn signature_help(
         .map(|param| {
             format!(
                 "{}{}: {}",
-                if param.mutable { "mutable " } else { "" },
+                if param.mutable { "var " } else { "" },
                 param.name,
                 param.ty
             )

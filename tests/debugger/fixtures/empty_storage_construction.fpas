@@ -37,8 +37,8 @@ begin
   return Holder(Count := 1, Nested := Point(X := 2, Y := 3), Items := [10, 20, 30], Scores := ['blue': 4], Item := Choice.Count(5), Outcome := Result.Ok(6), Optional := Option.Some(7));
 end function;
 
-mutable var Tick: integer := 0;
-mutable var GlobalState: Holder := MakeInitialState();
+var Tick: integer := 0;
+var GlobalState: Holder := MakeInitialState();
 
 function Next(): integer;
 begin
@@ -47,17 +47,17 @@ begin
 end function;
 
 begin
-  mutable var Callback: function(): integer := Identity;
-  mutable var State: Holder := MakeInitialState();
-  mutable var Origin: Point := Point(X := 8, Y := 9);
-  mutable var Items: array of (integer) := [1, 2, 3];
-  mutable var Scores: dict of (string, integer) := ['red': 1];
-  mutable var Selected: Choice := Choice.Empty;
-  mutable var Outcome: Result of (integer, string) := Result.Ok(1);
-  mutable var Optional: Option of (integer) := Option.Some(1);
-  mutable var Boxed: BoxFn := BoxFn(Action := Identity);
-  var Frozen: integer := 1;
-  var StopMarker: integer := 0;
+  var Callback: function(): integer := Identity;
+  var State: Holder := MakeInitialState();
+  var Origin: Point := Point(X := 8, Y := 9);
+  var Items: array of (integer) := [1, 2, 3];
+  var Scores: dict of (string, integer) := ['red': 1];
+  var Selected: Choice := Choice.Empty;
+  var Outcome: Result of (integer, string) := Result.Ok(1);
+  var Optional: Option of (integer) := Option.Some(1);
+  var Boxed: BoxFn := BoxFn(Action := Identity);
+  const Frozen: integer := 1;
+  const StopMarker: integer := 0;
   Console.WriteLn(State.Count);
   Console.WriteLn(State.Nested.X);
   Console.WriteLn(GlobalState.Count);

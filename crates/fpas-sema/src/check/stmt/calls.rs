@@ -1,5 +1,4 @@
 use super::super::Checker;
-use crate::check::expr::MethodCallSite;
 use crate::scope::SymbolKind;
 use crate::types::Ty;
 use fpas_diagnostics::codes::{SEMA_TYPE_MISMATCH, SEMA_UNKNOWN_NAME};
@@ -16,11 +15,6 @@ impl Checker {
         if let Some(symbol) = self.scopes.lookup(&name) {
             let kind = symbol.kind;
             let ty = symbol.ty.clone();
-            if self.reject_instance_method_through_type(designator, span) {
-                self.check_args_only(args);
-                return;
-            }
-
             let dispatch = self.builtin_std_dispatch_name(&name);
             if dispatch.starts_with("Std.") {
                 self.intrinsic_calls
@@ -62,20 +56,7 @@ impl Checker {
 
         if !self.designator_has_unit_prefix(designator) {
             let previous_error_count = self.errors.len();
-            if let Some(result) =
-                self.try_check_method_call_like(MethodCallSite::Statement, designator, args, span)
-            {
-                if self.errors.len() == previous_error_count {
-                    self.require_consumed_call_result(&result, span);
-                }
-                return;
-            }
-            if self.errors.len() != previous_error_count {
-                self.check_args_only(args);
-                return;
-            }
-
-            if let Some(result) = self.try_check_fluent_designator(
+            if let Some(result) = self.try_check_projected_call(
                 crate::designator_lookup_key(designator),
                 designator,
                 args,
@@ -85,6 +66,10 @@ impl Checker {
                 if self.errors.len() == previous_error_count {
                     self.require_consumed_call_result(&result, span);
                 }
+                return;
+            }
+            if self.errors.len() != previous_error_count {
+                self.check_args_only(args);
                 return;
             }
         }

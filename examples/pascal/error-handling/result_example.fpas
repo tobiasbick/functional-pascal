@@ -19,16 +19,16 @@ end function;
 
 function Stringify(A: integer; B: integer): Result of (string, string);
 begin
-  var Quotient: integer := try Divide(A, B);
+  const Quotient: integer := try Divide(A, B);
   return Result.Ok((((Conv.IntToStr(A) + ' / ') + Conv.IntToStr(B)) + ' = ') +
                    Conv.IntToStr(Quotient));
 end function;
 
 begin
-  var R1: Result of (integer, string) := Divide(10, 3);
+  const R1: Result of (integer, string) := Divide(10, 3);
   Console.WriteLn('IsOk: ', Results.IsOk(R1));
   Console.WriteLn('Value: ', Results.Unwrap(R1));
-  var R2: Result of (integer, string) := Divide(5, 0);
+  const R2: Result of (integer, string) := Divide(5, 0);
   Console.WriteLn('IsError: ', Results.IsError(R2));
   Console.WriteLn('UnwrapOr: ', Results.UnwrapOr(R2, -1));
   case Divide(42, 6) of

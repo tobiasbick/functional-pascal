@@ -9,7 +9,7 @@ uses Std.Console as Console;
 uses Std.Results as Results;
 
 begin
-  var R: result of (integer, string) := Result.Ok(42);
+  const R: result of (integer, string) := Result.Ok(42);
   Console.WriteLn(Results.Unwrap(R));
 end program;
 ```
@@ -33,9 +33,9 @@ Explicit aliases keep names from different units distinct. Imported routines use
 | function | `UnwrapOr(R: Result of (T, E); Default: T): T` | returns Default if Error |
 | function | `IsOk(R: Result of (T, E)): boolean` | true if Ok |
 | function | `IsError(R: Result of (T, E)): boolean` | true if Error |
-| function | `Map(R: Result of (T, E); F: function(V: T): U): Result of (U, E)` | transform Ok value |
-| function | `AndThen(R: Result of (T, E); F: function(V: T): Result of (U, E)): Result of (U, E)` | chain fallible operations |
-| function | `OrElse(R: Result of (T, E); F: function(Err: E): Result of (T, F)): Result of (T, F)` | recover from Error |
+| function | `Map(R: Result of (T, E); F: pure function(V: T): U): Result of (U, E)` | transform Ok value |
+| function | `AndThen(R: Result of (T, E); F: pure function(V: T): Result of (U, E)): Result of (U, E)` | chain fallible operations |
+| function | `OrElse(R: Result of (T, E); F: pure function(Err: E): Result of (T, F)): Result of (T, F)` | recover from Error |
 
 ---
 
@@ -43,7 +43,7 @@ Examples pass named helper functions whose types match each callback parameter.
 
 ---
 
-## `function Unwrap(R: Result of (T, E)): T`
+## `pure function Unwrap(R: Result of (T, E)): T`
 
 Extracts the value from `Result.Ok(value)`. **Runtime error** if `R` is `Result.Error`.
 
@@ -51,13 +51,13 @@ Extracts the value from `Result.Ok(value)`. **Runtime error** if `R` is `Result.
 uses Std.Console as Console;
 uses Std.Results as Results;
 
-var R: result of (integer, string) := Result.Ok(42);
+const R: result of (integer, string) := Result.Ok(42);
 Console.WriteLn(Results.Unwrap(R)); // 42
 ```
 
 ---
 
-## `function UnwrapOr(R: Result of (T, E); Default: T): T`
+## `pure function UnwrapOr(R: Result of (T, E); Default: T): T`
 
 Extracts the value from `Result.Ok(value)`, or returns `Default` if `R` is `Result.Error`.
 
@@ -65,13 +65,13 @@ Extracts the value from `Result.Ok(value)`, or returns `Default` if `R` is `Resu
 uses Std.Console as Console;
 uses Std.Results as Results;
 
-var R: result of (integer, string) := Result.Error('oops');
+const R: result of (integer, string) := Result.Error('oops');
 Console.WriteLn(Results.UnwrapOr(R, 0)); // 0
 ```
 
 ---
 
-## `function IsOk(R: Result of (T, E)): boolean`
+## `pure function IsOk(R: Result of (T, E)): boolean`
 
 Returns `true` if `R` is an `Result.Ok` variant.
 
@@ -79,13 +79,13 @@ Returns `true` if `R` is an `Result.Ok` variant.
 uses Std.Console as Console;
 uses Std.Results as Results;
 
-var R: result of (integer, string) := Result.Ok(42);
+const R: result of (integer, string) := Result.Ok(42);
 Console.WriteLn(Results.IsOk(R)); // true
 ```
 
 ---
 
-## `function IsError(R: Result of (T, E)): boolean`
+## `pure function IsError(R: Result of (T, E)): boolean`
 
 Returns `true` if `R` is an `Result.Error` variant.
 
@@ -93,13 +93,13 @@ Returns `true` if `R` is an `Result.Error` variant.
 uses Std.Console as Console;
 uses Std.Results as Results;
 
-var R: result of (integer, string) := Result.Error('fail');
+const R: result of (integer, string) := Result.Error('fail');
 Console.WriteLn(Results.IsError(R)); // true
 ```
 
 ---
 
-## `function Map(R: Result of (T, E); F: function(V: T): U): Result of (U, E)`
+## `pure function Map(R: Result of (T, E); F: pure function(V: T): U): Result of (U, E)`
 
 Transforms the `Result.Ok` value with `F`. If `R` is `Result.Error`, returns it unchanged.
 
@@ -107,18 +107,18 @@ Transforms the `Result.Ok` value with `F`. If `R` is `Result.Error`, returns it 
 uses Std.Conv as Conv;
 uses Std.Results as Results;
 
-function DoubleToString(V: integer): string;
+pure function DoubleToString(V: integer): string;
 begin
   return Conv.IntToStr(V * 2);
 end function;
 
-var R: result of (integer, string) := Result.Ok(21);
-var M: result of (string, string) := Results.Map(R, DoubleToString);
+const R: result of (integer, string) := Result.Ok(21);
+const M: result of (string, string) := Results.Map(R, DoubleToString);
 ```
 
 ---
 
-## `function AndThen(R: Result of (T, E); F: function(V: T): Result of (U, E)): Result of (U, E)`
+## `pure function AndThen(R: Result of (T, E); F: pure function(V: T): Result of (U, E)): Result of (U, E)`
 
 Calls `F` with the `Result.Ok` value. `F` returns a new `Result`, enabling chained fallible operations. If `R` is `Result.Error`, returns it unchanged.
 
@@ -126,7 +126,7 @@ Calls `F` with the `Result.Ok` value. `F` returns a new `Result`, enabling chain
 uses Std.Conv as Conv;
 uses Std.Results as Results;
 
-function PositiveToResult(V: integer): result of (string, string);
+pure function PositiveToResult(V: integer): result of (string, string);
 begin
   if V > 0 then
     return Result.Ok(Conv.IntToStr(V));
@@ -135,26 +135,26 @@ begin
   end if;
 end function;
 
-var R: result of (integer, string) := Result.Ok(10);
-var M: result of (string, string) := Results.AndThen(R, PositiveToResult);
+const R: result of (integer, string) := Result.Ok(10);
+const M: result of (string, string) := Results.AndThen(R, PositiveToResult);
 ```
 
 ---
 
-## `function OrElse(R: Result of (T, E); F: function(Err: E): Result of (T, F)): Result of (T, F)`
+## `pure function OrElse(R: Result of (T, E); F: pure function(Err: E): Result of (T, F)): Result of (T, F)`
 
 Calls `F` with the `Result.Error` value to attempt recovery. If `R` is `Result.Ok`, returns it unchanged.
 
 ```pascal
 uses Std.Results as Results;
 
-function RecoverToZero(E: string): result of (integer, string);
+pure function RecoverToZero(E: string): result of (integer, string);
 begin
   return Result.Ok(0);
 end function;
 
-var R: result of (integer, string) := Result.Error('oops');
-var M: result of (integer, string) := Results.OrElse(R, RecoverToZero);
+const R: result of (integer, string) := Result.Error('oops');
+const M: result of (integer, string) := Results.OrElse(R, RecoverToZero);
 ```
 
 ---

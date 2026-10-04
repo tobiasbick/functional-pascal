@@ -12,11 +12,6 @@ fn cloning_record_type_shares_immutable_descriptor() {
         owner_unit: None,
         private_members: Vec::new(),
         fields: vec![("X".to_string(), Ty::Integer)],
-        methods: Vec::new(),
-        static_functions: Vec::new(),
-        static_procedures: Vec::new(),
-        properties: Vec::new(),
-        events: Vec::new(),
     }));
 
     let cloned = ty.clone();
@@ -72,6 +67,7 @@ fn procedure_types_require_matching_variadic_flag_and_param_count() {
 #[test]
 fn function_types_require_matching_variadic_flag() {
     let fixed = Ty::Function(FunctionTy {
+        pure: false,
         type_params: Vec::new(),
         params: vec![ParamTy {
             mutable: false,
@@ -82,6 +78,7 @@ fn function_types_require_matching_variadic_flag() {
         variadic: false,
     });
     let variadic = Ty::Function(FunctionTy {
+        pure: false,
         type_params: Vec::new(),
         params: vec![ParamTy {
             mutable: false,

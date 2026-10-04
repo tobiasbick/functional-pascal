@@ -7,7 +7,11 @@ fn unwrap_rejects_non_containers_without_cascading_argument_errors() {
             for argument in ["42", "MissingValue"] {
                 let fallback = if function == "UnwrapOr" { ", 0" } else { "" };
                 let errs = check_errors(&format!(
-                    "program T;\nuses Std.{namespace} as {namespace};\nbegin\n  var N: integer := {namespace}.{function}({argument}{fallback});\nend program;"
+                    r#"program T;
+uses Std.{namespace} as {namespace};
+begin
+  const N: integer := {namespace}.{function}({argument}{fallback});
+end program;"#
                 ));
                 assert_eq!(errs.len(), 1, "{errs:#?}");
                 if argument == "42" {
@@ -44,7 +48,7 @@ fn std_conv_str_to_int_type_mismatch() {
         r#"program T;
 uses Std.Conv as Conv;
 begin
-  var N: integer := Conv.StrToInt(42);
+  const N: integer := Conv.StrToInt(42);
 end program;"#,
     );
     assert!(
@@ -63,7 +67,7 @@ fn std_str_format_requires_template_argument() {
         r#"program T;
 uses Std.Str as Str;
 begin
-  var S: string := Str.Format();
+  const S: string := Str.Format();
 end program;"#,
     );
     assert!(
@@ -79,7 +83,7 @@ fn std_str_format_checks_template_type() {
         r#"program T;
 uses Std.Str as Str;
 begin
-  var S: string := Str.Format(42);
+  const S: string := Str.Format(42);
 end program;"#,
     );
     assert!(
@@ -95,12 +99,13 @@ fn std_array_push_requires_mutable_array() {
         r#"program T;
 uses Std.Arrays as Arrays;
 begin
-  var A: array of (integer) := [1];
-  Arrays.Push(A, 2);
+  const A: array of (integer) := [1];
+  Arrays.Push(var A, 2);
 end program;"#,
     );
     assert!(
-        errs.iter().any(|e| e.message.contains("mutable var")),
+        errs.iter()
+            .any(|e| e.code == fpas_diagnostics::codes::SEMA_IMMUTABLE_ASSIGNMENT),
         "{errs:#?}"
     );
 }
@@ -111,7 +116,7 @@ fn std_dict_merge_requires_matching_rhs_dict_type() {
         r#"program T;
 uses Std.Dictionaries as Dictionaries;
 begin
-  var M: dict of (integer, integer) := Dictionaries.Merge([1: 10], ['x': true]);
+  const M: dict of (integer, integer) := Dictionaries.Merge([1: 10], ['x': true]);
 end program;"#,
     );
     assert!(
@@ -127,7 +132,7 @@ fn std_dict_merge_requires_dict_rhs() {
         r#"program T;
 uses Std.Dictionaries as Dictionaries;
 begin
-  var M: dict of (integer, integer) := Dictionaries.Merge([1: 10], 42);
+  const M: dict of (integer, integer) := Dictionaries.Merge([1: 10], 42);
 end program;"#,
     );
     assert!(
@@ -143,7 +148,7 @@ fn std_dict_get_requires_matching_key_type() {
         r#"program T;
 uses Std.Dictionaries as Dictionaries;
 begin
-  var V: Option of (integer) := Dictionaries.Get(['Alice': 1], 42);
+  const V: Option of (integer) := Dictionaries.Get(['Alice': 1], 42);
 end program;"#,
     );
     assert!(
@@ -163,7 +168,7 @@ begin
   return X;
 end function;
 begin
-  var V: Option of (integer) := Arrays.Find([1, 2, 3], WrongReturn);
+  const V: Option of (integer) := Arrays.Find([1, 2, 3], WrongReturn);
 end program;"#,
     );
     assert!(

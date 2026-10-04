@@ -18,7 +18,8 @@ end program;
 
 Import with `uses Std.Math as Math;`. Access every exported member through `Math`, for example `Math.Sqrt(...)`. Imports open no short names.
 
-Collisions with your own identifiers are resolved like ordinary scope rules: a **local** name (e.g. a variable `Pi`) **hides** the short import; use `Std.Math.Pi` if you need the library constant anyway.
+Imports open no short names, so a local binding named `Pi` is independent of
+`Math.Pi`. Import aliases cannot be shadowed by declarations in any lexical scope.
 
 ---
 
@@ -63,13 +64,15 @@ result is non-finite or outside the signed 64-bit integer range. In particular,
 
 - **Type:** `real`
 - **Value:** the mathematical constant π.
-- **Note:** provided via compile-time lowering for `Std.Math.Pi` (and short `Pi` when imported).
+- **Note:** access it through the declared import alias, such as `Math.Pi`.
+  Its value is available to static expression checking and compiler lowering,
+  including aggregate comparisons, lazy Boolean guards and record defaults.
 
 ```pascal
 uses Std.Console as Console;
 uses Std.Math as Math;
 
-var R: real := Math.Pi;
+const R: real := Math.Pi;
 Console.WriteLn(Math.Round(R));
 ```
 
@@ -362,6 +365,7 @@ Console.WriteLn(Math.Clamp(1.5, 0.0, 1.0)); // 1.0
 | Concern | Location |
 |---------|-----------|
 | Runtime intrinsics | [`math.rs`](../../../../crates/fpas-std/src/math.rs) |
+| Shared constant values | [`std_units/symbols/constants.rs`](../../../../crates/fpas-std/src/std_units/symbols/constants.rs) |
 | Compiler intrinsic catalog | [`intrinsic_catalog.rs`](../../../../crates/fpas-compiler/src/intrinsic_catalog.rs) |
 | Registration | [`std_registry/mod.rs`](../../../../crates/fpas-sema/src/std_registry/mod.rs) |
 

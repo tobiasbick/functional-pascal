@@ -8,17 +8,17 @@ public type TuiGauge = record
   public Value: integer;
   // Maximum value or size.
   public Maximum: integer;
-
-  // Creates a gauge; validation rejects invalid ranges during rendering.
-  //
-  // Parameters:
-  // - `LabelText`: Text displayed as the label.
-  // - `Value`: Value used to create or update the result.
-  // - `Maximum`: Maximum accepted value or extent.
-  public static function Create(LabelText: string; Value: integer; Maximum: integer): TuiGauge;
-  begin
-    return TuiGauge(LabelText := LabelText, Value := Value, Maximum := Maximum);
-  end function;
 end record;
+
+// Creates a gauge; validation rejects invalid ranges during rendering.
+//
+// Parameters:
+// - `LabelText`: Text displayed as the label.
+// - `Value`: Value used to create or update the result.
+// - `Maximum`: Maximum accepted value or extent.
+public function TuiGaugeCreate(LabelText: string; Value: integer; Maximum: integer): TuiGauge;
+begin
+  return TuiGauge(LabelText := LabelText, Value := Value, Maximum := Maximum);
+end function;
 
 end unit;

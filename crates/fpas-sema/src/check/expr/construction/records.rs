@@ -129,7 +129,13 @@ impl Checker {
             return Some(Ty::Error);
         }
         for (parameter, actual) in parameters.iter().zip(&actual_types) {
-            self.collect_type_param_bindings(&parameter.ty, actual, &mut inferred, span);
+            self.collect_type_param_bindings(
+                &parameter.ty,
+                actual,
+                &mut inferred,
+                symbol.ty.type_parameters(),
+                span,
+            );
         }
         let constructed = self.finish_data_construction(&symbol.ty, &inferred, &source_name, span);
         if let Ty::Record(record) = &constructed {

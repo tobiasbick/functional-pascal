@@ -211,6 +211,7 @@ fn capturing_executable() -> fpas_bytecode::Executable {
         name: StringId::new(0),
         code: CodeRange::new(InstructionAddress::new(1), InstructionAddress::new(2)),
         arity: 0,
+        var_parameters: Vec::new(),
         capture_count: 1,
         register_count: 1,
         return_convention: ReturnConvention::Unit,
@@ -724,12 +725,12 @@ fn string_constant_and_layout_metadata_references_are_rejected() {
         }
     ));
 
-    let mut property = all_opcodes_executable();
-    property.records[0].properties[0].getter = StringId::new(99);
+    let mut field = all_opcodes_executable();
+    field.records[0].fields[0].name = StringId::new(99);
     assert!(matches!(
-        error_kind(property),
+        error_kind(field),
         ValidationErrorKind::StringReference {
-            owner: "record property getter",
+            owner: "record field name",
             ..
         }
     ));

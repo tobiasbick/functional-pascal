@@ -53,7 +53,7 @@ pub(in crate::vm::debug) fn reject_declared_category(
             "forced return does not support channel-handle results",
             "Use a non-channel result type for forced return.",
         )),
-        DebugType::Cell(_) => Err(unsupported(
+        DebugType::Cell(_) | DebugType::Reference(_) => Err(unsupported(
             "forced return does not support capture-cell results",
             "Use a non-cell result type for forced return.",
         )),
@@ -79,7 +79,11 @@ pub(in crate::vm::debug) fn prepare_return_value(
     max_depth: usize,
 ) -> Result<(), DebugSessionError> {
     match value {
-        Value::Function(_) | Value::Task(_) | Value::Cell(_) | Value::OpaqueHandle(_) => {
+        Value::Function(_)
+        | Value::Task(_)
+        | Value::Cell(_)
+        | Value::Reference(_)
+        | Value::OpaqueHandle(_) => {
             return Err(unsupported(
                 format!(
                     "forced return does not support {} results",

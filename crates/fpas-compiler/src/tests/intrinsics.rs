@@ -31,7 +31,7 @@ fn object_retains_layouts_constructed_by_runtime_intrinsics() {
         r#"program RuntimeLayouts;
 uses Std.Json as Json;
 begin
-  var Parsed: result of (Json.JsonValue, string) := Json.Parse('null');
+  const Parsed: result of (Json.JsonValue, string) := Json.Parse('null');
 end program;"#,
     );
     let object = crate::compile_program_object_with_support(&program, &[], &[])
@@ -55,8 +55,8 @@ type Point = record
 end record;
 
 begin
-  var Origin: Point := Point(X := 1);
-  var Marker: integer := Origin.X;
+  const Origin: Point := Point(X := 1);
+  const Marker: integer := Origin.X;
 end program;
 "#,
     );
@@ -81,10 +81,10 @@ fn borrowed_standard_intrinsics_execute() {
         r#"program RegisterIntrinsics;
 uses Std.Str as Str; uses Std.Math as Math; uses Std.Conv as Conv; uses Std.Test as Test;
 begin
-  var Text: string := Str.ToUpper('fpas');
-  var Root: real := Math.Sqrt(81.0);
-  var Number: string := Conv.IntToStr(42);
-  var Formatted: string := Str.Format('n=%d %s', 42, 'ok');
+  const Text: string := Str.ToUpper('fpas');
+  const Root: real := Math.Sqrt(81.0);
+  const Number: string := Conv.IntToStr(42);
+  const Formatted: string := Str.Format('n=%d %s', 42, 'ok');
   Test.AssertEquals('FPAS', Text);
   Test.AssertEquals(9.0, Root);
   Test.AssertEquals('42', Number);
@@ -138,13 +138,13 @@ fn higher_order_intrinsics_invoke_numeric_callbacks() {
         r#"program RegisterCallbacks;
 uses Std.Arrays as Arrays; uses Std.Test as Test;
 
-function Double(Value: integer): integer;
+pure function Double(Value: integer): integer;
 begin
   return Value * 2;
 end function;
 
 begin
-  var Values: array of (integer) := Arrays.Map([2, 3, 4], Double);
+  const Values: array of (integer) := Arrays.Map([2, 3, 4], Double);
   Test.AssertEquals(3, Arrays.Length(Values));
   Test.AssertEquals(6, Values[1]);
 end program;"#,
@@ -158,7 +158,7 @@ fn intrinsic_temporaries_do_not_clobber_loop_state() {
         r#"program RegisterIntrinsicLoop;
 uses Std.Str as Str; uses Std.Test as Test;
 begin
-  mutable var Total: integer := 0;
+   var Total: integer := 0;
   for Index: integer := 1 to 3 do
   begin
     Total := Total + Str.Length('abc');

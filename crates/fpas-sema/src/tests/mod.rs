@@ -29,4 +29,5 @@ mod decl;
 mod expr;
 mod generics;
 mod integration;
+mod purity;
 mod stmt;

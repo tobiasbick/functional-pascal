@@ -13,8 +13,8 @@ uses Std.Json.Fields as JsonFields;
 
 function ReadPort(Text: string): result of (integer, string);
 begin
-  var Fields: dict of (string, Json.JsonValue) := try JsonFields.ParseObject(Text);
-  var Allowed: boolean := try JsonFields.RequireOnlyFields(Fields, ['host', 'port']);
+  const Fields: dict of (string, Json.JsonValue) := try JsonFields.ParseObject(Text);
+  const Allowed: boolean := try JsonFields.RequireOnlyFields(Fields, ['host', 'port']);
   return JsonFields.IntegerField(Fields, 'port');
 end function;
 

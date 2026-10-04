@@ -27,8 +27,8 @@ end unit;
         r#"program Main;
 uses Demo.Types as Types; uses Std.Console as Console;
 begin
-  var Original: Types.Holder := Types.Holder(Position := Types.Point(X := 1, Y := 2), Points := [Types.Point(X := 5, Y := 6)]);
-  var Changed: Types.Holder := Original with
+  const Original: Types.Holder := Types.Holder(Position := Types.Point(X := 1, Y := 2), Points := [Types.Point(X := 5, Y := 6)]);
+  const Changed: Types.Holder := Original with
     Position := Types.Point(X := 3, Y := 4);
     Points := [Types.Point(X := 7, Y := 8)];
   end with;

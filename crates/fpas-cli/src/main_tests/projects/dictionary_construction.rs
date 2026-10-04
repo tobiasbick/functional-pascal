@@ -12,11 +12,14 @@ fn imported_record_keys_normalize_with_reused_layouts_and_sidecars() {
         public type IntegerKey = Key of (integer);
         public function Make(Value: integer): IntegerKey; begin return IntegerKey(Value := Value); end function;
         end unit;");
-    write_text(&cwd.join("main.fpas"), "program Main;
+    write_text(
+        &cwd.join("main.fpas"),
+        r#"program Main;
         uses Demo.Model as Model; uses Std.Console as Console; uses Std.Dictionaries as Dictionaries;
-        begin var Values: dict of (Model.IntegerKey, integer) := [Model.Make(1): 1, Model.IntegerKey(Value := 1): 42];
+        begin const Values: dict of (Model.IntegerKey, integer) := [Model.Make(1): 1, Model.IntegerKey(Value := 1): 42];
           Console.WriteLn(Dictionaries.Length(Values)); Console.WriteLn(Values[Model.Make(1)]);
-        end program;");
+        end program;"#,
+    );
     for _ in 0..2 {
         let (exit, stdout, stderr) = support::run_cli_and_capture_output(&project, &cwd);
         assert_eq!((exit, stdout.as_str(), stderr.as_str()), (0, "1\n42\n", ""));
@@ -37,7 +40,11 @@ fn imported_aliases_cannot_hide_unsupported_key_components() {
     );
     write_text(
         &cwd.join("main.fpas"),
-        "program Main;\nuses Demo.Model as Model;\nvar Values: dict of (Model.Alias, integer) := [:];\nbegin null; end program;\n",
+        r#"program Main;
+uses Demo.Model as Model;
+const Values: dict of (Model.Alias, integer) := [:];
+begin null; end program;
+"#,
     );
     let args = ["check", "--diagnostics", "json", &project.to_string_lossy()].map(str::to_owned);
     let (exit, stdout, stderr) = support::run_cli_args_and_capture_output(&args, &cwd);

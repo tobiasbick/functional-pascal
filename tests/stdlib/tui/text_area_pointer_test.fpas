@@ -3,6 +3,10 @@ program TuiTextAreaPointerTest;
 uses Std.Str as Str;
 uses Std.Test as Test;
 uses Std.Tui as Tui;
+uses Std.Tui.Elements as Elements;
+uses Std.Tui.Geometry as Geometry;
+uses Std.Tui.Ids as Ids;
+uses Std.Tui.Runtime as Runtime;
 
 type PointerModel = record
   Focus: integer;
@@ -13,21 +17,21 @@ end record;
 
 function ViewTextArea(State: PointerModel): Tui.TuiElement;
 begin
-  mutable var Focused: Option of (Tui.TuiControlId) := Option.None;
+  var Focused: Option of (Tui.TuiControlId) := Option.None;
   if State.Focus > 0 then
     begin
-      Focused := Option.Some(Tui.TuiControlId.Create(State.Focus));
+      Focused := Option.Some(Ids.TuiControlIdCreate(State.Focus));
     end;
   end if;
 
-  return Tui.TuiElementBuilders.MakeDesktop(Focused, [
-                                                       Tui.TuiElementBuilders.MakeTextArea(Tui.TuiControlId.Create(1), State.Text, State.Caret, State.Offset, Tui.TuiAction.Create(9))
-                                                     ]);
+  return Elements.TuiElementMakeDesktop(Focused, [
+                                                   Elements.TuiElementMakeTextArea(Ids.TuiControlIdCreate(1), State.Text, State.Caret, State.Offset, Ids.TuiActionCreate(9))
+                                                 ]);
 end function;
 
 function UpdateTextArea(State: PointerModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): PointerModel;
 begin
-  Cmd.Set(Tui.TuiCmd.NoCommand);
+  Runtime.TuiCmdOutputSet(Cmd, Tui.TuiCmd.NoCommand);
   case Msg of
     when Tui.TuiMsg.FocusChanged(const Previous, const Current):
       begin
@@ -65,25 +69,25 @@ function Click(
   Iterations: integer
 ): PointerModel;
 begin
-  App.InjectPointerForTest(Tui.TuiPointerEvent.Create(Tui.TuiPointerAction.Down, Tui.TuiPointerButton.Left, Tui.TuiPoint.Create(X, Y)));
-  return App.RunIterations(State, UpdateTextArea, ViewTextArea, Iterations, 0);
+  Runtime.TuiApplicationInjectPointerForTest(App, Runtime.TuiPointerEventCreate(Tui.TuiPointerAction.Down, Tui.TuiPointerButton.Left, Geometry.TuiPointCreate(X, Y)));
+  return Runtime.TuiApplicationRunIterations(App, State, UpdateTextArea, ViewTextArea, Iterations, 0);
 end function;
 
 begin
-  mutable var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(6, 3));
-  mutable var Model: PointerModel := PointerModel(Focus := 0, Text := (('zero' + Str.Chr(10)) + 'one') +
-                                                                      (Str.Chr(10) + 'three'), Caret := 0, Offset := Tui.TuiPoint.Create(0, 0));
-  Model := App.RunIterations(Model, UpdateTextArea, ViewTextArea, 0, 0);
+  var App: Tui.TuiApplication := Runtime.TuiApplicationOpenForTest(Geometry.TuiSizeCreate(6, 3));
+  var Model: PointerModel := PointerModel(Focus := 0, Text := (('zero' + Str.Chr(10)) + 'one') +
+                                                              (Str.Chr(10) + 'three'), Caret := 0, Offset := Geometry.TuiPointCreate(0, 0));
+  Model := Runtime.TuiApplicationRunIterations(App, Model, UpdateTextArea, ViewTextArea, 0, 0);
   Model := Click(App, Model, 2, 1, 2);
   Test.AssertEquals(1, Model.Focus);
   Test.AssertEquals(7, Model.Caret);
   Model := Click(App, Model, 5, 1, 1);
   Test.AssertEquals(8, Model.Caret);
-  Model := PointerModel(Focus := 1, Text := Model.Text, Caret := Model.Caret, Offset := Tui.TuiPoint.Create(2, 1));
-  Model := App.RunIterations(Model, UpdateTextArea, ViewTextArea, 0, 0);
+  Model := PointerModel(Focus := 1, Text := Model.Text, Caret := Model.Caret, Offset := Geometry.TuiPointCreate(2, 1));
+  Model := Runtime.TuiApplicationRunIterations(App, Model, UpdateTextArea, ViewTextArea, 0, 0);
   Model := Click(App, Model, 1, 1, 1);
   Test.AssertEquals(12, Model.Caret);
   Test.AssertEquals(2, Model.Offset.X);
   Test.AssertEquals(1, Model.Offset.Y);
-  App.Close();
+  Runtime.TuiApplicationClose(App);
 end program;

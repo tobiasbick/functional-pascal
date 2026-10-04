@@ -4,6 +4,6 @@ uses Std.Console as Console;
 uses Std.Results as Results;
 
 begin
-  var R: Result of (integer, string) := Result.Error('fail');
+  const R: Result of (integer, string) := Result.Error('fail');
   Console.WriteLn(Results.UnwrapOr(R, 0));
 end program;

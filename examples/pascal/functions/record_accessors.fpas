@@ -1,0 +1,26 @@
+program RecordAccessorsExample;
+
+uses Std.Console as Console;
+uses Std.Conv as Conv;
+
+type Counter = record
+  Base: integer;
+end record;
+
+function CounterGetBase(Receiver: Counter): integer;
+begin
+  return Receiver.Base;
+end function;
+
+procedure CounterSetBase(Receiver: Counter; Value: integer);
+begin
+  Console.WriteLn('Setter received: ' + Conv.IntToStr(Value));
+end procedure;
+
+begin
+  const C: Counter := Counter(Base := 10);
+  Console.WriteLn('Stored value: ' + Conv.IntToStr(CounterGetBase(C)));
+  // The function receives the record by value, so this records the request but does not mutate C.
+  CounterSetBase(C, 20);
+  Console.WriteLn('Stored value after setter: ' + Conv.IntToStr(CounterGetBase(C)));
+end program;

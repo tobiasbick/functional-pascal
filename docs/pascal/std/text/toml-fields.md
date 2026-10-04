@@ -14,8 +14,8 @@ uses Std.Toml.Fields as TomlFields;
 
 function ReadPort(Text: string): result of (integer, string);
 begin
-  var Fields: dict of (string, Toml.TomlValue) := try TomlFields.ParseTable(Text);
-  var Allowed: boolean := try TomlFields.RequireOnlyFields(Fields, ['host', 'port']);
+  const Fields: dict of (string, Toml.TomlValue) := try TomlFields.ParseTable(Text);
+  const Allowed: boolean := try TomlFields.RequireOnlyFields(Fields, ['host', 'port']);
   return TomlFields.IntegerField(Fields, 'port');
 end function;
 

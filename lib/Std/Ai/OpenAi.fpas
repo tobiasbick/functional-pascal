@@ -28,4 +28,40 @@ begin
   return Client2.Complete(ClientValue, Messages, Options);
 end function;
 
+// Creates a message with an explicit role.
+public function ChatMessageCreate(Role: string; Content: string): Types.ChatMessage;
+begin
+  return Types.ChatMessageCreate(Role, Content);
+end function;
+
+// Creates a system instruction message.
+public function ChatMessageSystem(Content: string): Types.ChatMessage;
+begin
+  return Types.ChatMessageSystem(Content);
+end function;
+
+// Creates a user message.
+public function ChatMessageUser(Content: string): Types.ChatMessage;
+begin
+  return Types.ChatMessageUser(Content);
+end function;
+
+// Creates an assistant message.
+public function ChatMessageAssistant(Content: string): Types.ChatMessage;
+begin
+  return Types.ChatMessageAssistant(Content);
+end function;
+
+// Creates client settings with default limits and no API key.
+public function ClientCreate(BaseUrl: string; Model: string): Types.Client;
+begin
+  return Types.ClientCreate(BaseUrl, Model);
+end function;
+
+// Returns options that omit every optional generation control.
+public function ChatOptionsDefault(): Types.ChatOptions;
+begin
+  return Types.ChatOptionsDefault();
+end function;
+
 end unit;

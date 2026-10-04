@@ -82,11 +82,6 @@ fn register_nominal_type(
         owner_unit: None,
         private_members: Vec::new(),
         fields,
-        methods: Vec::new(),
-        static_functions: Vec::new(),
-        static_procedures: Vec::new(),
-        properties: Vec::new(),
-        events: Vec::new(),
     }));
     checker.scopes.define(
         qualified_name,

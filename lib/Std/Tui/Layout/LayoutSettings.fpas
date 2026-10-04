@@ -29,61 +29,61 @@ public type TuiLayoutSettings = record
   public Width: Option of (integer);
   // Height in terminal cells.
   public Height: Option of (integer);
+end record;
 
-  // Creates validated layout settings.
-  //
-  // Parameters:
-  // - `Margins`: Outer margins applied during layout.
-  // - `SizePolicy`: Horizontal and vertical size policy.
-  // - `Alignment`: Alignment applied within the available area.
-  // - `Stretch`: Whether the element stretches across the available extent.
-  public static function Create(
+// Creates validated layout settings.
+//
+// Parameters:
+// - `Margins`: Outer margins applied during layout.
+// - `SizePolicy`: Horizontal and vertical size policy.
+// - `Alignment`: Alignment applied within the available area.
+// - `Stretch`: Whether the element stretches across the available extent.
+public function TuiLayoutSettingsCreate(
   Margins: Margins2.TuiMargins;
   SizePolicy: SizePolicy2.TuiSizePolicy;
   Alignment: Alignment2.TuiAlignment;
   Stretch: integer
 ): TuiLayoutSettings;
-  begin
-    return TuiLayoutSettings(Margins := Margins, SizePolicy := SizePolicy, Alignment := Alignment, Stretch := TuiLayoutSettingsRequireNonNegativeStretch(Stretch), Width := Option.None, Height := Option.None);
-  end function;
+begin
+  return TuiLayoutSettings(Margins := Margins, SizePolicy := SizePolicy, Alignment := Alignment, Stretch := TuiLayoutSettingsRequireNonNegativeStretch(Stretch), Width := Option.None, Height := Option.None);
+end function;
 
-  // Returns a copy constrained to one total width; negative widths panic.
-  //
-  // Parameters:
-  // - `Self`: Receiver value operated on by the method.
-  // - `Width`: Width in terminal cells.
-  public function WithFixedWidth(Self: TuiLayoutSettings; Width: integer): TuiLayoutSettings;
-  begin
-    if Width < 0 then
-      begin
-        panic('Tui fixed layout width must not be negative');
-      end;
-    end if;
+// Returns a copy constrained to one total width; negative widths panic.
+//
+// Parameters:
+// - `Receiver`: Value processed by the function.
+// - `Width`: Width in terminal cells.
+public function TuiLayoutSettingsWithFixedWidth(Receiver: TuiLayoutSettings; Width: integer): TuiLayoutSettings;
+begin
+  if Width < 0 then
+    begin
+      panic('Tui fixed layout width must not be negative');
+    end;
+  end if;
 
-    return TuiLayoutSettings(Margins := Self.Margins, SizePolicy := Self.SizePolicy, Alignment := Self.Alignment, Stretch := Self.Stretch, Width := Option.Some(Width), Height := Self.Height);
-  end function;
+  return TuiLayoutSettings(Margins := Receiver.Margins, SizePolicy := Receiver.SizePolicy, Alignment := Receiver.Alignment, Stretch := Receiver.Stretch, Width := Option.Some(Width), Height := Receiver.Height);
+end function;
 
-  // Returns a copy constrained to one total height; negative heights panic.
-  //
-  // Parameters:
-  // - `Self`: Receiver value operated on by the method.
-  // - `Height`: Height in terminal cells.
-  public function WithFixedHeight(Self: TuiLayoutSettings; Height: integer): TuiLayoutSettings;
-  begin
-    if Height < 0 then
-      begin
-        panic('Tui fixed layout height must not be negative');
-      end;
-    end if;
+// Returns a copy constrained to one total height; negative heights panic.
+//
+// Parameters:
+// - `Receiver`: Value processed by the function.
+// - `Height`: Height in terminal cells.
+public function TuiLayoutSettingsWithFixedHeight(Receiver: TuiLayoutSettings; Height: integer): TuiLayoutSettings;
+begin
+  if Height < 0 then
+    begin
+      panic('Tui fixed layout height must not be negative');
+    end;
+  end if;
 
-    return TuiLayoutSettings(Margins := Self.Margins, SizePolicy := Self.SizePolicy, Alignment := Self.Alignment, Stretch := Self.Stretch, Width := Self.Width, Height := Option.Some(Height));
-  end function;
+  return TuiLayoutSettings(Margins := Receiver.Margins, SizePolicy := Receiver.SizePolicy, Alignment := Receiver.Alignment, Stretch := Receiver.Stretch, Width := Receiver.Width, Height := Option.Some(Height));
+end function;
 
-  // Zero margins, preferred policy, fill alignment, and stretch zero.
-  public static function Default(): TuiLayoutSettings;
-  begin
-    return TuiLayoutSettings.Create(Margins2.TuiMargins.Uniform(0), SizePolicy2.TuiSizePolicy.Preferred(), Alignment2.TuiAlignment.Fill(), 0);
-  end function;
-end record;
+// Zero margins, preferred policy, fill alignment, and stretch zero.
+public function TuiLayoutSettingsDefault(): TuiLayoutSettings;
+begin
+  return TuiLayoutSettingsCreate(Margins2.TuiMarginsUniform(0), SizePolicy2.TuiSizePolicyPreferred(), Alignment2.TuiAlignmentFill(), 0);
+end function;
 
 end unit;

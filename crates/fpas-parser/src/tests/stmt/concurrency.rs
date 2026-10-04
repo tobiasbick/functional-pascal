@@ -57,11 +57,11 @@ begin null; end program;"#,
 #[test]
 fn go_as_expression_in_var_decl() {
     let stmts = body_stmts(
-        r#"program T; function Work(): integer; begin return 1; end function; begin var T: task := go Work(); end program;"#,
+        r#"program T; function Work(): integer; begin return 1; end function; begin const T: task := go Work(); end program;"#,
     );
 
     match &stmts[0] {
-        Stmt::Var(def) => {
+        Stmt::Const(def) => {
             assert!(matches!(def.value, Expr::Go(_, _)));
         }
         _ => panic!("expected var with go expression, got {:?}", stmts[0]),
@@ -102,7 +102,7 @@ fn go_statement_rejects_bare_designator() {
 fn go_expression_rejects_non_call_expression() {
     use fpas_diagnostics::codes::PARSE_EXPECTED_EXPRESSION;
 
-    let (_, errs) = parse_with_errors("program T; begin var T: task := go 1 end.");
+    let (_, errs) = parse_with_errors(r#"program T; begin const T: task := go 1 end."#);
     let parse_err = errs.iter().find_map(|err| match err {
         ParseDiagnostic::Parser(diagnostic) if diagnostic.code == PARSE_EXPECTED_EXPRESSION => {
             Some(diagnostic)

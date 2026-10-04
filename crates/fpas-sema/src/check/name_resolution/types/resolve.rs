@@ -24,11 +24,12 @@ impl Checker {
             TypeExpr::Channel(inner, _) => Ty::Channel(Box::new(self.resolve_type_expr(inner))),
             TypeExpr::Task(inner, _) => Ty::Task(Box::new(self.resolve_type_expr(inner))),
             TypeExpr::FunctionType {
+                pure,
                 params,
                 return_type,
                 ..
             } => {
-                let param_tys = params
+                let param_tys: Vec<ParamTy> = params
                     .iter()
                     .map(|param| ParamTy {
                         mutable: param.mutable,
@@ -37,7 +38,11 @@ impl Checker {
                     })
                     .collect();
                 let return_ty = self.resolve_type_expr(return_type);
+                if *pure && !self.type_collection.collecting {
+                    self.check_pure_signature(&param_tys, &return_ty, type_expr.span());
+                }
                 Ty::Function(FunctionTy {
+                    pure: *pure,
                     type_params: Vec::new(),
                     params: param_tys,
                     return_type: Box::new(return_ty),
@@ -45,7 +50,7 @@ impl Checker {
                 })
             }
             TypeExpr::ProcedureType { params, .. } => {
-                let param_tys = params
+                let param_tys: Vec<ParamTy> = params
                     .iter()
                     .map(|param| ParamTy {
                         mutable: param.mutable,

@@ -16,8 +16,8 @@ uses Std.Net.Utf8 as Utf8;
 // - `Text`: UTF-8 response body.
 function TextResponse(StatusCode: integer; ReasonPhrase: string; Text: string): Http.ServerResponse;
 begin
-  mutable var ResponseValue: Http.ServerResponse := Http.ServerResponse.Create(StatusCode, ReasonPhrase);
-  ResponseValue.Headers := [Http.Header.Create('Content-Type', 'text/plain; charset=utf-8')];
+  var ResponseValue: Http.ServerResponse := Http.ServerResponseCreate(StatusCode, ReasonPhrase);
+  ResponseValue.Headers := [Http.HeaderCreate('Content-Type', 'text/plain; charset=utf-8')];
   ResponseValue.Body := Utf8.Encode(Text);
   return ResponseValue;
 end function;
@@ -59,7 +59,7 @@ begin
 end function;
 
 begin
-  mutable var Port: integer := 18080;
+  var Port: integer := 18080;
   if Args.ParamCount() = 1 then
     begin
       Port := Conv.StrToInt(Args.ParamStr(0));
@@ -76,7 +76,7 @@ begin
     when Result.Ok(const ListenerValue):
       begin
         Console.WriteLn('HTTP server listening on http://127.0.0.1:' + Conv.IntToStr(Port));
-        mutable var Options: Http.ServerOptions := Http.ServerOptions.Create();
+        var Options: Http.ServerOptions := Http.ServerOptionsCreate();
         Options.MaxConcurrentRequests := 1;
         Options.MaxRequests := 3;
         case Http.Serve(ListenerValue, Options, Handle) of

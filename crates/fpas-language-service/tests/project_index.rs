@@ -22,7 +22,7 @@ fn folder_catalog_refreshes_dependencies_and_is_open_order_independent() {
 uses Demo.Core as Core;
 
 begin
-  var Value: integer := Core.Answer();
+  const Value: integer := Core.Answer();
 end program;
 "#,
     );
@@ -36,7 +36,7 @@ begin
 end function;
 
 begin
-  var Value: integer := Answer();
+  const Value: integer := Answer();
 end program;
 "#,
     );
@@ -201,7 +201,7 @@ end unit;
 
 uses Demo.Core as Core;
 
-begin var Value: integer := Core.Answer(); end program;
+begin const Value: integer := Core.Answer(); end program;
 "#,
     );
     let mut service = LanguageService::load(temp.path());
@@ -263,7 +263,7 @@ end unit;
 
 uses Demo.Core as Core;
 
-begin var Value: integer := Core.Answer(); end program;
+begin const Value: integer := Core.Answer(); end program;
 "#,
     );
     let offset = std::fs::read_to_string(&declaration)

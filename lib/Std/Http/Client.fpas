@@ -58,8 +58,8 @@ end procedure;
 // - `RequestValue`: Complete request and its transport limits.
 function OpenOnce(RequestValue: Types.Request): Result of (Types.StreamResponse, string);
 begin
-  var UriValue: Uri2.Uri := try Uri2.Parse(RequestValue.Url);
-  var Encoded: array of (integer) := try Wire.EncodeRequest(RequestValue, UriValue);
+  const UriValue: Uri2.Uri := try Uri2.Parse(RequestValue.Url);
+  const Encoded: array of (integer) := try Wire.EncodeRequest(RequestValue, UriValue);
   case OpenConnection(UriValue, RequestValue.TimeoutMillis) of
     when Result.Ok(const Connection):
       begin
@@ -143,8 +143,8 @@ begin
       return Result.Error('HTTP MaxRedirects must not be negative');
     end;
   end if;
-  mutable var Current: Types.Request := RequestValue;
-  mutable var Redirects: integer := 0;
+  var Current: Types.Request := RequestValue;
+  var Redirects: integer := 0;
   while true do
     begin
       case OpenOnce(Current) of
@@ -171,7 +171,7 @@ begin
                           return Result.Error('HTTP redirect count exceeds MaxRedirects');
                         end;
                       end if;
-                      mutable var Next: Types.Request := Current;
+                      var Next: Types.Request := Current;
                       case Redirect.NextRequest(Current, ResponseValue.StatusCode, Location) of
                         when Result.Ok(const Value):
                           begin
@@ -240,7 +240,7 @@ begin
   case OpenStream(RequestValue) of
     when Result.Ok(const StreamResponseValue):
       begin
-        mutable var Chunks: array of (array of (integer)) := [];
+        var Chunks: array of (array of (integer)) := [];
         while true do
           begin
             case Stream.ReadBody(StreamResponseValue.Body, 65536) of
@@ -252,7 +252,7 @@ begin
                     end;
                   end if;
 
-                  Arrays.Push(Chunks, Bytes);
+                  Arrays.Push(var Chunks, Bytes);
                 end;
               when Result.Error(const Message):
                 begin

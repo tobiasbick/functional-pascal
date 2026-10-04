@@ -1,0 +1,276 @@
+// Public runtime functions.
+unit Std.Tui.Runtime;
+
+uses Std.Console as Console;
+uses Std.Tui.Cells.Palette as Palette2;
+uses Std.Tui.Elements.Element as Element;
+uses Std.Tui.Geometry.Point as Point;
+uses Std.Tui.Geometry.Size as Size2;
+uses Std.Tui.Rendering.Surface as Surface;
+uses Std.Tui.Runtime.Application as Application;
+uses Std.Tui.Runtime.Application.Background as Background;
+uses Std.Tui.Runtime.Cmd as Cmd;
+uses Std.Tui.Runtime.Msg as Msg2;
+uses Std.Tui.Runtime.PointerEvent as PointerEvent;
+
+// Allocates one reusable command output.
+public function TuiCmdOutputCreate(): Cmd.TuiCmdOutput;
+begin
+  return Cmd.TuiCmdOutputCreate();
+end function;
+
+// Resets the output before one Update call.
+public procedure TuiCmdOutputReset(Receiver: Cmd.TuiCmdOutput);
+begin
+  Cmd.TuiCmdOutputReset(Receiver);
+end procedure;
+
+// Asks the interactive host for one `TuiMsg.Tick` after DelayMilliseconds.
+public procedure TuiCmdOutputRequestTick(Receiver: Cmd.TuiCmdOutput; DelayMilliseconds: integer);
+begin
+  Cmd.TuiCmdOutputRequestTick(Receiver, DelayMilliseconds);
+end procedure;
+
+// Returns the tick delay requested by the current Update call, if any.
+public function TuiCmdOutputReadTickRequest(Receiver: Cmd.TuiCmdOutput): Option of (integer);
+begin
+  return Cmd.TuiCmdOutputReadTickRequest(Receiver);
+end function;
+
+// Starts one operation after Update returns. The host owns it until completion or shutdown.
+public procedure TuiCmdOutputStartBackground(
+  Receiver: Cmd.TuiCmdOutput;
+  Id: integer;
+  Work: Background.TuiBackgroundWork
+);
+begin
+  Cmd.TuiCmdOutputStartBackground(Receiver, Id, Work);
+end procedure;
+
+// Requests cancellation and starts the latest replacement after the previous operation ends.
+public procedure TuiCmdOutputReplaceSubscription(
+  Receiver: Cmd.TuiCmdOutput;
+  Id: integer;
+  Work: Background.TuiBackgroundWork
+);
+begin
+  Cmd.TuiCmdOutputReplaceSubscription(Receiver, Id, Work);
+end procedure;
+
+// Requests cancellation after Update returns; the host joins it when complete or at shutdown.
+public procedure TuiCmdOutputCancelSubscription(Receiver: Cmd.TuiCmdOutput; Id: integer);
+begin
+  Cmd.TuiCmdOutputCancelSubscription(Receiver, Id);
+end procedure;
+
+// Sets the command returned by the current Update call.
+public procedure TuiCmdOutputSet(Receiver: Cmd.TuiCmdOutput; Value: Cmd.TuiCmd);
+begin
+  Cmd.TuiCmdOutputSet(Receiver, Value);
+end procedure;
+
+// Requests an immediate palette change after Update returns.
+public procedure TuiCmdOutputSetPalette(Receiver: Cmd.TuiCmdOutput; Palette: Palette2.TuiPalette);
+begin
+  Cmd.TuiCmdOutputSetPalette(Receiver, Palette);
+end procedure;
+
+// Reads the command after Update returns.
+public function TuiCmdOutputCommand(Receiver: Cmd.TuiCmdOutput): Cmd.TuiCmd;
+begin
+  return Cmd.TuiCmdOutputCommand(Receiver);
+end function;
+
+// Returns the palette attached to a SetPalette command.
+public function TuiCmdOutputReadPalette(Receiver: Cmd.TuiCmdOutput): Option of (Palette2.TuiPalette);
+begin
+  return Cmd.TuiCmdOutputReadPalette(Receiver);
+end function;
+
+// Returns background commands emitted by the current Update call.
+public function TuiCmdOutputReadBackground(Receiver: Cmd.TuiCmdOutput): array of (Background.TuiBackgroundCommand);
+begin
+  return Cmd.TuiCmdOutputReadBackground(Receiver);
+end function;
+
+// Creates a pointer event with no modifiers.
+public function TuiPointerEventCreate(
+  Action: Console.MouseAction;
+  Button: PointerEvent.TuiPointerButton;
+  Position: Point.TuiPoint
+): PointerEvent.TuiPointerEvent;
+begin
+  return PointerEvent.TuiPointerEventCreate(Action, Button, Position);
+end function;
+
+// Creates a pointer event with explicit modifiers.
+public function TuiPointerEventWithModifiers(
+  Action: Console.MouseAction;
+  Button: PointerEvent.TuiPointerButton;
+  Position: Point.TuiPoint;
+  Shift: boolean;
+  Ctrl: boolean;
+  Alt: boolean;
+  Meta: boolean
+): PointerEvent.TuiPointerEvent;
+begin
+  return PointerEvent.TuiPointerEventWithModifiers(Action, Button, Position, Shift, Ctrl, Alt, Meta);
+end function;
+
+// Opens a headless application with a fixed terminal size.
+public function TuiApplicationOpenForTest(Size: Size2.TuiSize): Application.TuiApplication;
+begin
+  return Application.TuiApplicationOpenForTest(Size);
+end function;
+
+// Opens a headless application with a caller-defined palette.
+public function TuiApplicationOpenForTestWithPalette(Size: Size2.TuiSize; Palette: Palette2.TuiPalette): Application.TuiApplication;
+begin
+  return Application.TuiApplicationOpenForTestWithPalette(Size, Palette);
+end function;
+
+// Closes the host and discards all pending input and messages.
+public procedure TuiApplicationClose(Receiver: Application.TuiApplication);
+begin
+  Application.TuiApplicationClose(Receiver);
+end procedure;
+
+// Closes owned work before closing the application message inbox.
+public procedure TuiApplicationCloseWithBackground of (TMessage)(
+  Receiver: Application.TuiApplication;
+  Inbox: channel of (TMessage)
+);
+begin
+  Application.TuiApplicationCloseWithBackground(Receiver, Inbox);
+end procedure;
+
+// Injects an already constructed framework message in FIFO order.
+public procedure TuiApplicationInject(Receiver: Application.TuiApplication; Msg: Msg2.TuiMsg);
+begin
+  Application.TuiApplicationInject(Receiver, Msg);
+end procedure;
+
+// Injects a key that will be routed through focus and controlled elements.
+public procedure TuiApplicationInjectKeyForTest(
+  Receiver: Application.TuiApplication;
+  Key: Console.KeyEvent
+);
+begin
+  Application.TuiApplicationInjectKeyForTest(Receiver, Key);
+end procedure;
+
+// Injects a pointer event in zero-based application coordinates.
+public procedure TuiApplicationInjectPointerForTest(
+  Receiver: Application.TuiApplication;
+  Pointer: PointerEvent.TuiPointerEvent
+);
+begin
+  Application.TuiApplicationInjectPointerForTest(Receiver, Pointer);
+end procedure;
+
+// Injects a resize that updates host size before the Resize message reaches Update.
+public procedure TuiApplicationInjectResizeForTest(
+  Receiver: Application.TuiApplication;
+  Size: Size2.TuiSize
+);
+begin
+  Application.TuiApplicationInjectResizeForTest(Receiver, Size);
+end procedure;
+
+// Tries to inject one application-defined message without waiting for queue capacity.
+public function TuiApplicationInjectBackgroundForTest of (TMessage)(
+  Receiver: Application.TuiApplication;
+  Inbox: channel of (TMessage);
+  Message: TMessage
+): Result of (boolean, string);
+begin
+  return Application.TuiApplicationInjectBackgroundForTest(Receiver, Inbox, Message);
+end function;
+
+// Returns an explicit immutable copy of the last painted surface.
+public function TuiApplicationSurfaceSnapshot(Receiver: Application.TuiApplication): Surface.TuiSurfaceSnapshot;
+begin
+  return Application.TuiApplicationSurfaceSnapshot(Receiver);
+end function;
+
+// Returns the application's current palette.
+public function TuiApplicationPalette(Receiver: Application.TuiApplication): Palette2.TuiPalette;
+begin
+  return Application.TuiApplicationPalette(Receiver);
+end function;
+
+// Runs a deterministic number of message-processing iterations.
+public function TuiApplicationRunIterations of (TModel)(
+  Receiver: Application.TuiApplication;
+  InitialModel: TModel;
+  Update: function(State: TModel; Msg: Msg2.TuiMsg; Cmd: Cmd.TuiCmdOutput): TModel;
+  View: function(State: TModel): Element.TuiElement;
+  IterationCount: integer;
+  DeltaMilliseconds: integer
+): TModel;
+begin
+  return Application.TuiApplicationRunIterations(Receiver, InitialModel, Update, View, IterationCount, DeltaMilliseconds);
+end function;
+
+// Runs deterministic framework and application-defined message iterations.
+public function TuiApplicationRunBackgroundIterations of (TModel, TMessage)(
+  Receiver: Application.TuiApplication;
+  InitialModel: TModel;
+  Inbox: channel of (TMessage);
+  Update: function(State: TModel; Msg: Msg2.TuiMsg; Cmd: Cmd.TuiCmdOutput): TModel;
+  UpdateApplication: function(State: TModel; Message: TMessage; Cmd: Cmd.TuiCmdOutput): TModel;
+  View: function(State: TModel): Element.TuiElement;
+  IterationCount: integer;
+  DeltaMilliseconds: integer
+): TModel;
+begin
+  return Application.TuiApplicationRunBackgroundIterations(Receiver, InitialModel, Inbox, Update, UpdateApplication, View, IterationCount, DeltaMilliseconds);
+end function;
+
+// Runs one interactive Tui application until Update returns `TuiCmd.Quit`.
+public function TuiApplicationRun of (TModel)(
+  InitialModel: TModel;
+  Update: function(State: TModel; Msg: Msg2.TuiMsg; Cmd: Cmd.TuiCmdOutput): TModel;
+  View: function(State: TModel): Element.TuiElement
+): TModel;
+begin
+  return Application.TuiApplicationRun(InitialModel, Update, View);
+end function;
+
+// Runs one interactive Tui application with a caller-defined initial palette.
+public function TuiApplicationRunWithPalette of (TModel)(
+  InitialModel: TModel;
+  Update: function(State: TModel; Msg: Msg2.TuiMsg; Cmd: Cmd.TuiCmdOutput): TModel;
+  View: function(State: TModel): Element.TuiElement;
+  Palette: Palette2.TuiPalette
+): TModel;
+begin
+  return Application.TuiApplicationRunWithPalette(InitialModel, Update, View, Palette);
+end function;
+
+// Runs one interactive application with a bounded typed background inbox.
+public function TuiApplicationRunWithBackground of (TModel, TMessage)(
+  InitialModel: TModel;
+  Inbox: channel of (TMessage);
+  Update: function(State: TModel; Msg: Msg2.TuiMsg; Cmd: Cmd.TuiCmdOutput): TModel;
+  UpdateApplication: function(State: TModel; Message: TMessage; Cmd: Cmd.TuiCmdOutput): TModel;
+  View: function(State: TModel): Element.TuiElement
+): TModel;
+begin
+  return Application.TuiApplicationRunWithBackground(InitialModel, Inbox, Update, UpdateApplication, View);
+end function;
+
+// Runs one interactive background-enabled application with a caller-defined palette.
+public function TuiApplicationRunWithBackgroundAndPalette of (TModel, TMessage)(
+  InitialModel: TModel;
+  Inbox: channel of (TMessage);
+  Update: function(State: TModel; Msg: Msg2.TuiMsg; Cmd: Cmd.TuiCmdOutput): TModel;
+  UpdateApplication: function(State: TModel; Message: TMessage; Cmd: Cmd.TuiCmdOutput): TModel;
+  View: function(State: TModel): Element.TuiElement;
+  Palette: Palette2.TuiPalette
+): TModel;
+begin
+  return Application.TuiApplicationRunWithBackgroundAndPalette(InitialModel, Inbox, Update, UpdateApplication, View, Palette);
+end function;
+
+end unit;

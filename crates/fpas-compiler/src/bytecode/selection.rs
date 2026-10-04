@@ -5,6 +5,7 @@ mod consuming_moves;
 mod intrinsics;
 mod local_moves;
 mod operators;
+mod references;
 
 use self::operators::unary_opcode;
 
@@ -76,6 +77,9 @@ impl<'a> Selector<'a> {
             .checked_sub(1)
             .and_then(|index| block.instructions.get(index));
         let result = instruction.result.map(|value| value.id);
+        if let Operation::Reference(reference) = &instruction.operation {
+            return self.select_reference(reference, result);
+        }
         if let Some(selected) = self.select_aggregate(&instruction.operation, result, metadata)? {
             return Ok(selected);
         }

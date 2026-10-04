@@ -50,7 +50,7 @@ fn type_mismatch_has_correct_code() {
     let errs = check_errors(
         r#"program T;
 begin
-  var N: integer := 'hello';
+  const N: integer := 'hello';
 end program;"#,
     );
     assert!(

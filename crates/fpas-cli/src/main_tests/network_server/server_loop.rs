@@ -8,7 +8,39 @@ fn fpas_http_server_loop_dispatches_multiple_requests() {
     let (cwd, server) = start_server(
         "http-server-loop",
         format!(
-            "program HttpServerLoop;\n\nuses Std.Console as Console; uses Std.Http as Http; uses Std.Net as Net; uses Std.Net.Utf8 as Utf8;\n\nfunction Handle(RequestValue: Http.ServerRequest): Http.ServerResponse;\nbegin\n  mutable var ResponseValue: Http.ServerResponse := Http.ServerResponse.Create(200, 'OK');\n  ResponseValue.Body := Utf8.Encode(RequestValue.Target);\n  return ResponseValue;\nend function;\n\nbegin\n  case Net.Listen('127.0.0.1', {port}) of\n    when Result.Ok(const ListenerValue):\n    begin\n      mutable var Options: Http.ServerOptions := Http.ServerOptions.Create();\n      Options.MaxConcurrentRequests := 2;\n      Options.MaxRequests := 2;\n      case Http.Serve(ListenerValue, Options, Handle) of\n        when Result.Ok(_):\n        begin null;\n        end;\n        when Result.Error(const Message): panic(Message);\n      end case;\n      case Net.CloseListener(ListenerValue) of\n        when Result.Ok(_): Console.WriteLn('served');\n        when Result.Error(const Message): panic(Message);\n      end case;\n    end;\n    when Result.Error(const Message): panic(Message);\n  end case;\nend program;\n"
+            r#"program HttpServerLoop;
+
+uses Std.Console as Console; uses Std.Http as Http; uses Std.Net as Net; uses Std.Net.Utf8 as Utf8;
+
+function Handle(RequestValue: Http.ServerRequest): Http.ServerResponse;
+begin
+   var ResponseValue: Http.ServerResponse := Http.ServerResponseCreate(200, 'OK');
+  ResponseValue.Body := Utf8.Encode(RequestValue.Target);
+  return ResponseValue;
+end function;
+
+begin
+  case Net.Listen('127.0.0.1', {port}) of
+    when Result.Ok(const ListenerValue):
+    begin
+       var Options: Http.ServerOptions := Http.ServerOptionsCreate();
+      Options.MaxConcurrentRequests := 2;
+      Options.MaxRequests := 2;
+      case Http.Serve(ListenerValue, Options, Handle) of
+        when Result.Ok(_):
+        begin null;
+        end;
+        when Result.Error(const Message): panic(Message);
+      end case;
+      case Net.CloseListener(ListenerValue) of
+        when Result.Ok(_): Console.WriteLn('served');
+        when Result.Error(const Message): panic(Message);
+      end case;
+    end;
+    when Result.Error(const Message): panic(Message);
+  end case;
+end program;
+"#
         ),
     );
 
@@ -41,7 +73,39 @@ fn fpas_http_server_loop_isolates_malformed_requests() {
     let (cwd, server) = start_server(
         "http-server-loop-invalid-request",
         format!(
-            "program HttpServerLoopInvalidRequest;\n\nuses Std.Http as Http; uses Std.Net as Net;\n\nfunction Handle(_RequestValue: Http.ServerRequest): Http.ServerResponse;\nbegin\n  return Http.ServerResponse.Create(204, 'No Content');\nend function;\n\nbegin\n  case Net.Listen('127.0.0.1', {port}) of\n    when Result.Ok(const ListenerValue):\n    begin\n      mutable var Options: Http.ServerOptions := Http.ServerOptions.Create();\n      Options.MaxConcurrentRequests := 2;\n      Options.MaxRequests := 2;\n      case Http.Serve(ListenerValue, Options, Handle) of\n        when Result.Ok(_):\n        begin null;\n        end;\n        when Result.Error(const Message): panic(Message);\n      end case;\n      case Net.CloseListener(ListenerValue) of\n        when Result.Ok(_):\n        begin null;\n        end;\n        when Result.Error(const Message): panic(Message);\n      end case;\n    end;\n    when Result.Error(const Message): panic(Message);\n  end case;\nend program;\n"
+            r#"program HttpServerLoopInvalidRequest;
+
+uses Std.Http as Http; uses Std.Net as Net;
+
+function Handle(_RequestValue: Http.ServerRequest): Http.ServerResponse;
+begin
+  return Http.ServerResponseCreate(204, 'No Content');
+end function;
+
+begin
+  case Net.Listen('127.0.0.1', {port}) of
+    when Result.Ok(const ListenerValue):
+    begin
+       var Options: Http.ServerOptions := Http.ServerOptionsCreate();
+      Options.MaxConcurrentRequests := 2;
+      Options.MaxRequests := 2;
+      case Http.Serve(ListenerValue, Options, Handle) of
+        when Result.Ok(_):
+        begin null;
+        end;
+        when Result.Error(const Message): panic(Message);
+      end case;
+      case Net.CloseListener(ListenerValue) of
+        when Result.Ok(_):
+        begin null;
+        end;
+        when Result.Error(const Message): panic(Message);
+      end case;
+    end;
+    when Result.Error(const Message): panic(Message);
+  end case;
+end program;
+"#
         ),
     );
 
@@ -71,7 +135,40 @@ fn fpas_http_server_loop_rejects_invalid_options_before_accepting() {
     let (cwd, server) = start_server(
         "http-server-loop-invalid-options",
         format!(
-            "program HttpServerLoopInvalidOptions;\n\nuses Std.Console as Console; uses Std.Http as Http; uses Std.Net as Net; uses Std.Str as Str;\n\nfunction Handle(_RequestValue: Http.ServerRequest): Http.ServerResponse;\nbegin\n  return Http.ServerResponse.Create(204, 'No Content');\nend function;\n\nbegin\n  case Net.Listen('127.0.0.1', {port}) of\n    when Result.Ok(const ListenerValue):\n    begin\n      mutable var Options: Http.ServerOptions := Http.ServerOptions.Create();\n      Options.MaxConcurrentRequests := 0;\n      case Http.Serve(ListenerValue, Options, Handle) of\n        when Result.Ok(_): panic('invalid server options were accepted');\n        when Result.Error(const Message):\n        begin\n          if not Str.Contains(Message, 'MaxConcurrentRequests') then\n          begin\n            panic(Message);\n          end; end if;\n        end;\n      end case;\n      case Net.CloseListener(ListenerValue) of\n        when Result.Ok(_): Console.WriteLn('rejected');\n        when Result.Error(const Message): panic(Message);\n      end case;\n    end;\n    when Result.Error(const Message): panic(Message);\n  end case;\nend program;\n"
+            r#"program HttpServerLoopInvalidOptions;
+
+uses Std.Console as Console; uses Std.Http as Http; uses Std.Net as Net; uses Std.Str as Str;
+
+function Handle(_RequestValue: Http.ServerRequest): Http.ServerResponse;
+begin
+  return Http.ServerResponseCreate(204, 'No Content');
+end function;
+
+begin
+  case Net.Listen('127.0.0.1', {port}) of
+    when Result.Ok(const ListenerValue):
+    begin
+       var Options: Http.ServerOptions := Http.ServerOptionsCreate();
+      Options.MaxConcurrentRequests := 0;
+      case Http.Serve(ListenerValue, Options, Handle) of
+        when Result.Ok(_): panic('invalid server options were accepted');
+        when Result.Error(const Message):
+        begin
+          if not Str.Contains(Message, 'MaxConcurrentRequests') then
+          begin
+            panic(Message);
+          end; end if;
+        end;
+      end case;
+      case Net.CloseListener(ListenerValue) of
+        when Result.Ok(_): Console.WriteLn('rejected');
+        when Result.Error(const Message): panic(Message);
+      end case;
+    end;
+    when Result.Error(const Message): panic(Message);
+  end case;
+end program;
+"#
         ),
     );
 

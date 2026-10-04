@@ -33,6 +33,9 @@ pub(in crate::vm::debug) fn apply_prepared(
     value: Value,
 ) {
     worker.call_stack.truncate(prepared.new_call_stack_len);
+    worker
+        .reference_scopes
+        .truncate(prepared.new_call_stack_len + 1);
     worker.release_registers(prepared.selected_base);
     worker.restore_caller_window(&prepared.caller);
     worker.function = prepared.caller.function;

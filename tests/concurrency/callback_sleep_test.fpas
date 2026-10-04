@@ -5,16 +5,14 @@ uses Std.Tasks as Tasks;
 uses Std.Test as Test;
 uses Std.Time as Time;
 
-function SleepAndDouble(Value: integer): integer;
-begin
-  Time.Sleep(25);
-  return Value * 2;
-end function;
-
 function MapValue(): integer;
 begin
-  var Values: array of (integer) := Arrays.Map([21], SleepAndDouble);
-  return Values[0];
+  var Value: integer := 0;
+  Arrays.ForEach([21], procedure(Item: integer) begin
+    Time.Sleep(25);
+    Value := Item * 2;
+  end procedure);
+  return Value;
 end function;
 
 function PeerValue(): integer;
@@ -23,8 +21,8 @@ begin
 end function;
 
 begin
-  var Mapper: task := go MapValue();
-  var Peer: task := go PeerValue();
+  const Mapper: task := go MapValue();
+  const Peer: task := go PeerValue();
   Test.AssertEquals(7, Tasks.Wait(Peer));
   Test.AssertEquals(42, Tasks.Wait(Mapper));
 end program;

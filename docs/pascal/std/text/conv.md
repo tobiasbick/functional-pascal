@@ -72,7 +72,7 @@ Converts integer to `real` (exact for integers in the representable range).
 uses Std.Console as Console;
 uses Std.Conv as Conv;
 
-var X: real := Conv.IntToReal(3);
+const X: real := Conv.IntToReal(3);
 Console.WriteLn(X);
 ```
 

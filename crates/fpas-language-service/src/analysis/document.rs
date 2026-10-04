@@ -98,7 +98,8 @@ pub(crate) fn semantic_document(
     metadata: AnalysisMetadata,
 ) -> DocumentAnalysis {
     let diagnostics = merged_diagnostics(&snapshot, metadata.errors.iter().cloned()).into();
-    let symbols = DocumentSymbols::from_snapshot(&snapshot);
+    let mut symbols = DocumentSymbols::from_snapshot(&snapshot);
+    symbols.apply_binding_types(&metadata.binding_types);
     DocumentAnalysis {
         snapshot,
         diagnostics,

@@ -3,7 +3,7 @@
 use std::path::Path;
 
 use fpas_diagnostics::SourceSpan;
-use fpas_parser::{CompilationUnit, Decl, DesignatorPart, FuncBody, RecordMethod, Stmt, TypeBody};
+use fpas_parser::{CompilationUnit, Decl, DesignatorPart, FuncBody, Stmt};
 
 use super::{find_references, resolve_target};
 use crate::{CancellationToken, LanguageService, LanguageServiceError, NavigationResult};
@@ -85,18 +85,7 @@ fn declarations_write(declarations: &[Decl], span: SourceSpan) -> bool {
     declarations.iter().any(|declaration| match declaration {
         Decl::Function(function) => body_writes(&function.body, span),
         Decl::Procedure(procedure) => body_writes(&procedure.body, span),
-        Decl::TypeDef(definition) => match &definition.body {
-            TypeBody::Record(record) => record.methods.iter().any(|method| match method {
-                RecordMethod::Function(function) | RecordMethod::StaticFunction(function) => {
-                    body_writes(&function.body, span)
-                }
-                RecordMethod::Procedure(procedure) | RecordMethod::StaticProcedure(procedure) => {
-                    body_writes(&procedure.body, span)
-                }
-            }),
-            TypeBody::Alias(_) | TypeBody::Enum(_) => false,
-        },
-        Decl::Const(_) | Decl::Var(_) | Decl::MutableVar(_) => false,
+        Decl::TypeDef(_) | Decl::Const(_) | Decl::Var(_) => false,
     })
 }
 
@@ -136,8 +125,8 @@ fn statements_write(statements: &[Stmt], span: SourceSpan) -> bool {
             statements_write(std::slice::from_ref(body), span)
         }
         Stmt::Repeat { body, .. } => statements_write(body, span),
-        Stmt::Null(_) | Stmt::Var(_)
-        | Stmt::MutableVar(_)
+        Stmt::Null(_) | Stmt::Const(_)
+        | Stmt::Var(_)
         | Stmt::Return(_, _)
         | Stmt::Discard(..)
         | Stmt::Panic(_, _)

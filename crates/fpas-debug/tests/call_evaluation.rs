@@ -28,31 +28,30 @@ fn call(name: &str, arguments: Vec<DebugExpression>) -> DebugExpression {
 }
 
 #[test]
-fn methods_properties_static_constructors_records_and_intrinsics_execute() {
-    let source = r#"program DebugMembers;
+fn ordinary_record_functions_factories_and_intrinsics_execute() {
+    let source = r#"program DebugRecordCalls;
 
 uses Std.Math as Math;
 
 type Counter = record
   Value: integer;
+end record;
 
-  static function Create(Value: integer): Counter;
+  function CounterCreate(Value: integer): Counter;
   begin
     return Counter(Value := Value);
   end function;
 
-  function Double(Self: Counter): integer;
+  function CounterDouble(Receiver: Counter): integer;
   begin
-    return Self.Value * 2;
+    return Receiver.Value * 2;
   end function;
 
-  function ReadNumber(Self: Counter): integer;
+  function CounterReadNumber(Receiver: Counter): integer;
   begin
-    return Self.Value;
+    return Receiver.Value;
   end function;
 
-  property Number: integer read ReadNumber;
-end record;
 
 procedure Touch();
 begin
@@ -79,9 +78,9 @@ end program;
     );
 
     let cases = [
-        ("Counter.Create(6).Double()", "12"),
-        ("Counter.Create(7).Number", "7"),
-        ("Counter.Create(8).Double()", "16"),
+        ("CounterDouble(CounterCreate(6))", "12"),
+        ("CounterReadNumber(CounterCreate(7))", "7"),
+        ("CounterCreate(8).Value", "8"),
         ("Std.Math.Abs(-9)", "9"),
         ("Touch()", "()"),
         ("try Option.Some(11)", "11"),
@@ -131,14 +130,14 @@ begin null; end program;"#;
 #[test]
 fn detached_global_writes_roll_back_and_stop_identity_survives() {
     let source = r#"program DebugRollback;
-  mutable var Counter: integer := 5;
+   var Counter: integer := 5;
 function Increment(): integer;
 begin
   Counter := Counter + 1;
   return Counter;
 end function;
 begin
-  mutable var Anchor: integer := Counter;
+   var Anchor: integer := Counter;
   Anchor := Anchor + 1;
 end program;"#;
     let mut session = DebugSession::new(compile(source)).expect("debug session");
@@ -172,13 +171,13 @@ end program;"#;
 fn visible_first_class_closure_uses_detached_mutable_captures() {
     let source = r#"program DebugClosure;
 begin
-  mutable var Base: integer := 10;
-  var AddBase: function(Value: integer): integer :=
+   var Base: integer := 10;
+  const AddBase: function(Value: integer): integer :=
     function(Value: integer): integer
     begin
       return Base + Value;
     end function;
-  mutable var Marker: integer := 0;
+   var Marker: integer := 0;
   Marker := Marker + 1;
 end program;"#;
     let mut session = DebugSession::new(compile(source)).expect("debug session");
@@ -247,4 +246,67 @@ begin null; end program;"#;
         .expect_err("cooperative cancellation");
     cancellation.join().expect("cancellation thread");
     assert_eq!(failure.kind, DebugErrorKind::CallCancelled);
+}
+
+#[test]
+fn callable_fields_use_visible_storage_before_the_routine_catalog() {
+    let source = "program StoredCall;
+        type Box = record Apply: function(X: integer): integer; end record;
+        function Add(X: integer): integer; begin return X + 1; end function;
+        begin
+          const Holder := Box(Apply := Add);
+          while true do null; end while;
+        end program;";
+    let mut server = fpas_debug::jsonl::JsonlServer::new(fpas_debug::PreparedDebugTarget::new(
+        compile(source),
+        Vec::new(),
+    ))
+    .expect("JSONL server");
+    let request = |id, command: &str, arguments: serde_json::Value| {
+        serde_json::json!({"type":"request","id":id,"command":command,"arguments":arguments})
+            .to_string()
+    };
+    let _ = server.handle_line(&request(1, "initialize", serde_json::json!({"version":2})));
+    let _ = server.handle_line(&request(
+        2,
+        "launch",
+        serde_json::json!({"stop_on_entry":true}),
+    ));
+    for id in 3..6 {
+        let _ = server.handle_line(&request(id, "step_over", serde_json::json!({})));
+        let _ = server.wait();
+    }
+    let stack = server.handle_line(&request(6, "stack", serde_json::json!({})));
+    let frame = stack[0]["body"]["frames"][0]["frame_id"]
+        .as_u64()
+        .expect("frame");
+    for (id, expression) in [
+        "Holder.Apply(2)",
+        "(Holder.Apply)(2)",
+        "[Holder][0].Apply(2)",
+    ]
+    .into_iter()
+    .enumerate()
+    {
+        let records = server.handle_line(&request(
+            10 + id,
+            "evaluate",
+            serde_json::json!({"frame_id":frame,"expression":expression}),
+        ));
+        assert_eq!(
+            records[0]["body"]["result"], "3",
+            "{expression}: {records:?}"
+        );
+    }
+    for (id, expression) in ["Holder.Missing(2)", "Holder.Apply()", "Holder.Apply('x')"]
+        .into_iter()
+        .enumerate()
+    {
+        let records = server.handle_line(&request(
+            20 + id,
+            "evaluate",
+            serde_json::json!({"frame_id":frame,"expression":expression}),
+        ));
+        assert_eq!(records[0]["success"], false, "{expression}: {records:?}");
+    }
 }

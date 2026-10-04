@@ -6,7 +6,7 @@ fn program_declarations_default_to_private() {
         r#"program App;
 
 
-  var X: integer := 1;
+  const X: integer := 1;
 
 begin null;
 end program;
@@ -20,15 +20,14 @@ end program;
 #[test]
 fn public_in_program_is_rejected() {
     let (program, errors) = parse_with_errors(
-        "\
-program App;
+        r#"program App;
 
-public var
+public const
   X: integer := 1;
 
 begin
 end.
-",
+"#,
     );
 
     assert_eq!(program.declarations.len(), 1);

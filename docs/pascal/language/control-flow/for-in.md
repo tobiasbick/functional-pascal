@@ -9,7 +9,7 @@ Iterates over each element of an array. The loop variable is immutable.
 ```pascal
 uses Std.Console as Console;
 
-var Names: array of (string) := ['Alice', 'Bob', 'Charlie'];
+const Names: array of (string) := ['Alice', 'Bob', 'Charlie'];
 for Name: string in Names do
   Console.WriteLn(Name);
 end for;
@@ -20,7 +20,7 @@ The element type must match the array's element type:
 ```pascal
 uses Std.Console as Console;
 
-var Scores: array of (integer) := [10, 20, 30];
+const Scores: array of (integer) := [10, 20, 30];
 for S: integer in Scores do
   Console.WriteLn(S);
 end for;
@@ -39,7 +39,7 @@ uses Std.Console as Console;
 uses Std.Dictionaries as Dictionaries;
 uses Std.Conv as Conv;
 
-  var Ages: dict of (string, integer) := ['Alice': 30, 'Bob': 25];
+  const Ages: dict of (string, integer) := ['Alice': 30, 'Bob': 25];
   for Name: string in Ages do
     Console.WriteLn((Name + ': ') + Conv.IntToStr(Ages[Name]));
   end for;

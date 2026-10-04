@@ -129,6 +129,16 @@ fn validate_frame(
     function_id: FunctionId,
     function: &FunctionInfo,
 ) -> Result<(), ValidationError> {
+    if !crate::var_parameters_are_valid(function.arity, &function.var_parameters) {
+        return Err(ValidationError::function(
+            executable,
+            function_id,
+            ValidationErrorKind::ParameterModes {
+                arity: function.arity,
+                positions: function.var_parameters.clone(),
+            },
+        ));
+    }
     let required = usize::from(function.arity).checked_add(usize::from(function.capture_count));
     if usize::from(function.register_count) > limits::MAX_REGISTERS_PER_FUNCTION
         || usize::from(function.capture_count) > limits::MAX_CLOSURE_CAPTURES

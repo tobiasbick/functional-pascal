@@ -17,7 +17,7 @@ begin
   Test.AssertFalse(Same(Result.Error('failed'), Result.Ok(1)));
   Test.AssertTrue(Same([Option.None, Option.Some(1)], [Option.None, Option.Some(1)]));
   Test.AssertTrue(Same(['a': Option.None, 'b': Option.Some(1)], ['b': Option.Some(1), 'a': Option.None]));
-  var Nan: real := Math.Pow(-1.0, 0.5);
+  const Nan: real := Math.Pow(-1.0, 0.5);
   Test.AssertFalse(Same([Nan], [Nan]));
   Test.AssertTrue(Same([0.0], [-0.0]));
 end program;

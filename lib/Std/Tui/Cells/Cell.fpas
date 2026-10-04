@@ -14,35 +14,35 @@ public type TuiCell = record
   public ConcreteStyle: Option of (Style2.TuiStyle);
   // Display width of the glyph in terminal cells.
   public Columns: integer;
-
-  // Creates a theme-resolved cell; the glyph must be one non-zero-width grapheme cluster.
-  //
-  // Parameters:
-  // - `Glyph`: Single renderable grapheme.
-  // - `Role`: Semantic style role used by the operation.
-  public static function Create(Glyph: string; Role: StyleRole.TuiStyleRole): TuiCell;
-  begin
-    return TuiCell(Glyph := Glyph, Role := Role, ConcreteStyle := Option.None, Columns := Glyph2.TuiGlyphWidth(Glyph));
-  end function;
-
-  // Creates a cell with a concrete style that bypasses theme lookup.
-  //
-  // Parameters:
-  // - `Glyph`: Single renderable grapheme.
-  // - `Style`: Concrete terminal style.
-  public static function Styled(Glyph: string; Style: Style2.TuiStyle): TuiCell;
-  begin
-    return TuiCell(Glyph := Glyph, Role := StyleRole.TuiStyleRole.Normal, ConcreteStyle := Option.Some(Style), Columns := Glyph2.TuiGlyphWidth(Glyph));
-  end function;
-
-  // Returns the terminal-column width of the cell glyph (`1` or `2`).
-  //
-  // Parameters:
-  // - `Self`: Receiver value operated on by the method.
-  public function Width(Self: TuiCell): integer;
-  begin
-    return Self.Columns;
-  end function;
 end record;
+
+// Creates a theme-resolved cell; the glyph must be one non-zero-width grapheme cluster.
+//
+// Parameters:
+// - `Glyph`: Single renderable grapheme.
+// - `Role`: Semantic style role used by the operation.
+public function TuiCellCreate(Glyph: string; Role: StyleRole.TuiStyleRole): TuiCell;
+begin
+  return TuiCell(Glyph := Glyph, Role := Role, ConcreteStyle := Option.None, Columns := Glyph2.TuiGlyphWidth(Glyph));
+end function;
+
+// Creates a cell with a concrete style that bypasses theme lookup.
+//
+// Parameters:
+// - `Glyph`: Single renderable grapheme.
+// - `Style`: Concrete terminal style.
+public function TuiCellStyled(Glyph: string; Style: Style2.TuiStyle): TuiCell;
+begin
+  return TuiCell(Glyph := Glyph, Role := StyleRole.TuiStyleRole.Normal, ConcreteStyle := Option.Some(Style), Columns := Glyph2.TuiGlyphWidth(Glyph));
+end function;
+
+// Returns the terminal-column width of the cell glyph (`1` or `2`).
+//
+// Parameters:
+// - `Receiver`: Value processed by the function.
+public function TuiCellWidth(Receiver: TuiCell): integer;
+begin
+  return Receiver.Columns;
+end function;
 
 end unit;

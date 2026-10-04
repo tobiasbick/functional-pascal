@@ -17,7 +17,7 @@ begin
       return 0;
     end;
   end if;
-  var Last: integer := TextArea.TuiTextAreaLineCount(Text) - 1;
+  const Last: integer := TextArea.TuiTextAreaLineCount(Text) - 1;
   if Line > Last then
     begin
       return Last;
@@ -47,10 +47,10 @@ public function TuiRouteTextAreaKey(
   Key: Console.KeyEvent
 ): Option of (Msg.TuiMsg);
 begin
-  mutable var NextText: string := Text;
-  mutable var NextCaret: integer := Caret;
-  mutable var Handled: boolean := true;
-  var Position: TextArea.TuiTextAreaPosition := TextArea.TuiTextAreaLocate(Text, Caret);
+  var NextText: string := Text;
+  var NextCaret: integer := Caret;
+  var Handled: boolean := true;
+  const Position: TextArea.TuiTextAreaPosition := TextArea.TuiTextAreaLocate(Text, Caret);
   if (((Key.kind = Console.KeyKind.Character) and not Key.ctrl) and not Key.alt) and not Key.meta then
     begin
       NextText := Str.Insert(Text, Caret, Key.ch);
@@ -98,13 +98,13 @@ begin
                 else
                   if Key.kind = Console.KeyKind.Up then
                     begin
-                      var TargetLine: integer := TuiTextAreaClampLine(Text, Position.Line - 1);
+                      const TargetLine: integer := TuiTextAreaClampLine(Text, Position.Line - 1);
                       NextCaret := TextArea.TuiTextAreaCaretAtDisplayColumn(Text, TargetLine, Position.DisplayColumn);
                     end;
                   else
                     if Key.kind = Console.KeyKind.Down then
                       begin
-                        var TargetLine: integer := TuiTextAreaClampLine(Text, Position.Line + 1);
+                        const TargetLine: integer := TuiTextAreaClampLine(Text, Position.Line + 1);
                         NextCaret := TextArea.TuiTextAreaCaretAtDisplayColumn(Text, TargetLine, Position.DisplayColumn);
                       end;
                     else
@@ -120,27 +120,27 @@ begin
                         else
                           if Key.kind = Console.KeyKind.PageUp then
                             begin
-                              mutable var Page: integer := Viewport.Height;
+                              var Page: integer := Viewport.Height;
                               if Page < 1 then
                                 begin
                                   Page := 1;
                                 end;
                               end if;
-                              var TargetLine: integer := TuiTextAreaClampLine(Text, Position.Line -
-                                                                                    Page);
+                              const TargetLine: integer := TuiTextAreaClampLine(Text, Position.Line -
+                                                                                      Page);
                               NextCaret := TextArea.TuiTextAreaCaretAtDisplayColumn(Text, TargetLine, Position.DisplayColumn);
                             end;
                           else
                             if Key.kind = Console.KeyKind.PageDown then
                               begin
-                                mutable var Page: integer := Viewport.Height;
+                                var Page: integer := Viewport.Height;
                                 if Page < 1 then
                                   begin
                                     Page := 1;
                                   end;
                                 end if;
-                                var TargetLine: integer := TuiTextAreaClampLine(Text, Position.Line +
-                                                                                      Page);
+                                const TargetLine: integer := TuiTextAreaClampLine(Text, Position.Line +
+                                                                                        Page);
                                 NextCaret := TextArea.TuiTextAreaCaretAtDisplayColumn(Text, TargetLine, Position.DisplayColumn);
                               end;
                             else
@@ -167,7 +167,7 @@ begin
       return Option.None;
     end;
   end if;
-  var NextOffset: Point2.TuiPoint := TextArea.TuiTextAreaEnsureCaretVisible(NextText, NextCaret, Offset, Size.TuiSize.Create(Viewport.Width, Viewport.Height));
+  const NextOffset: Point2.TuiPoint := TextArea.TuiTextAreaEnsureCaretVisible(NextText, NextCaret, Offset, Size.TuiSizeCreate(Viewport.Width, Viewport.Height));
   if (((NextText = Text) and (NextCaret = Caret)) and (NextOffset.X = Offset.X)) and
      (NextOffset.Y = Offset.Y) then
     begin
@@ -196,10 +196,10 @@ public function TuiRouteTextAreaPointer(
   Point: Point2.TuiPoint
 ): Msg.TuiMsg;
 begin
-  var Line: integer := TuiTextAreaClampLine(Text, Offset.Y + (Point.Y - Viewport.Y));
-  var Column: integer := Offset.X + (Point.X - Viewport.X);
-  var Caret: integer := TextArea.TuiTextAreaCaretAtDisplayColumn(Text, Line, Column);
-  var NextOffset: Point2.TuiPoint := TextArea.TuiTextAreaEnsureCaretVisible(Text, Caret, Offset, Size.TuiSize.Create(Viewport.Width, Viewport.Height));
+  const Line: integer := TuiTextAreaClampLine(Text, Offset.Y + (Point.Y - Viewport.Y));
+  const Column: integer := Offset.X + (Point.X - Viewport.X);
+  const Caret: integer := TextArea.TuiTextAreaCaretAtDisplayColumn(Text, Line, Column);
+  const NextOffset: Point2.TuiPoint := TextArea.TuiTextAreaEnsureCaretVisible(Text, Caret, Offset, Size.TuiSizeCreate(Viewport.Width, Viewport.Height));
   return Msg.TuiMsg.TextAreaChanged(Id, ChangeAction, Text, Caret, NextOffset);
 end function;
 

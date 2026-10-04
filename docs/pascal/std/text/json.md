@@ -9,7 +9,7 @@ uses Std.Console as Console;
 uses Std.Json as Json;
 
 begin
-  var R: result of (Json.JsonValue, string) := Json.Parse('{"ok":true}');
+  const R: result of (Json.JsonValue, string) := Json.Parse('{"ok":true}');
   case R of
     when Result.Ok(const Value):
       Console.WriteLn(Json.Stringify(Value));
@@ -71,7 +71,7 @@ Parses JSON text. Accepted JSON returns `Result.Ok(JsonValue)`. Invalid JSON ret
 uses Std.Console as Console;
 uses Std.Json as Json;
 
-var R: result of (Json.JsonValue, string) := Json.Parse('[1, true, null]');
+const R: result of (Json.JsonValue, string) := Json.Parse('[1, true, null]');
 case R of
   when Result.Ok(const Value):
     Console.WriteLn(Json.Stringify(Value));
@@ -97,7 +97,7 @@ real value.
 uses Std.Console as Console;
 uses Std.Json as Json;
 
-var Value: Json.JsonValue := Json.JsonValue.ArrayValue([
+const Value: Json.JsonValue := Json.JsonValue.ArrayValue([
                                                Json.JsonValue.Bool(true),
                                                Json.JsonValue.NullValue,
                                                Json.JsonValue.String('hi'),

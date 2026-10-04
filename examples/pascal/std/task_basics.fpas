@@ -13,15 +13,15 @@ begin
 end function;
 
 begin
-  var One: task := go Square(6);
+  const One: task := go Square(6);
   Console.WriteLn('wait one: ', Conv.IntToStr(Tasks.Wait(One)));
-  mutable var Jobs: array of (task) := [];
-  Arrays.Push(Jobs, go Square(3));
-  Arrays.Push(Jobs, go Square(4));
+  var Jobs: array of (task) := [];
+  Arrays.Push(var Jobs, go Square(3));
+  Arrays.Push(var Jobs, go Square(4));
   Console.WriteLn('wait [0]: ', Conv.IntToStr(Tasks.Wait(Jobs[0])));
   Console.WriteLn('wait [1]: ', Conv.IntToStr(Tasks.Wait(Jobs[1])));
-  var Ta: task := go Square(2);
-  var Tb: task := go Square(3);
+  const Ta: task := go Square(2);
+  const Tb: task := go Square(3);
   Tasks.WaitAll([Ta, Tb]);
   Console.WriteLn('after waitall: ', Conv.IntToStr(Tasks.Wait(Ta) + Tasks.Wait(Tb)));
 end program;

@@ -65,7 +65,7 @@ define_codes!(PARSE_ALLOCATED_CODES => {
 
     /// The `public` visibility modifier was used outside a `unit` file.
     PARSE_INVALID_VISIBILITY = 1007;
-    /// `static` used outside a supported static record routine.
+    /// Obsolete `static` modifier before an ordinary routine.
     PARSE_INVALID_STATIC_PLACEMENT = 1008;
     /// Parser recursion exceeded the compiler's shared nesting budget.
     ///
@@ -75,10 +75,6 @@ define_codes!(PARSE_ALLOCATED_CODES => {
     ///
     /// **Documentation:** `docs/pascal/language/types/record-update.md`
     PARSE_EMPTY_RECORD_UPDATE = 1010;
-    /// An event declaration places its `write` accessor before its `read` accessor.
-    ///
-    /// **Documentation:** `docs/pascal/language/types/record-events.md`
-    PARSE_INVALID_EVENT_ACCESSOR_ORDER = 1011;
     /// An enum variant declares an empty associated-data field list.
     ///
     /// **Documentation:** `docs/pascal/language/types/enums.md`
@@ -129,6 +125,11 @@ define_codes!(SEMA_ALLOCATED_CODES => {
     ///
     /// **Documentation:** `docs/pascal/program-structure/visibility.md`
     SEMA_PRIVATE_TYPE_IN_PUBLIC_SIGNATURE = 2019;
+
+    /// A statically evaluated integer operation overflows or has a zero divisor.
+    ///
+    /// **Documentation:** `docs/pascal/language/basics/constants.md`
+    SEMA_INVALID_STATIC_OPERATION = 2020;
 });
 
 define_codes!(COMPILE_ALLOCATED_CODES => {
@@ -181,6 +182,9 @@ define_codes!(RUNTIME_ALLOCATED_CODES => {
 
     /// The operating system could not supply random bytes.
     RUNTIME_RANDOM_SOURCE_FAILURE = 4025;
+
+    /// A storage-root reservation or exclusive caller reference rejects an alias access.
+    RUNTIME_STORAGE_REFERENCE_CONFLICT = 4026;
 });
 
 define_codes!(PROJECT_ALLOCATED_CODES => {

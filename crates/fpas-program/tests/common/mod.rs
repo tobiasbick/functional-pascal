@@ -11,8 +11,8 @@ use fpas_bytecode::{
     CodeRange, Constant, DebugBinding, DebugBindingKind, DebugScope, DebugSourceLocation,
     EnumLayout, EnumTypeId, EnumVariant, Executable, FunctionDebugInfo, FunctionFlags, FunctionId,
     FunctionInfo, GlobalInfo, Instruction, InstructionAddress, NO_REGISTER, Opcode, RecordField,
-    RecordLayout, RecordMethod, RecordProperty, Register, ReturnConvention, SequencePoint,
-    SourceId, SourceMap, SourceRun, StringId, StringTable,
+    RecordLayout, Register, ReturnConvention, SequencePoint, SourceId, SourceMap, SourceRun,
+    StringId, StringTable,
 };
 use fpas_program::{Digest, LinkedUnitIdentity, ProgramIdentity, ProgramImage};
 
@@ -49,6 +49,7 @@ pub fn program_image() -> ProgramImage {
                 name: StringId::new(0),
                 code: CodeRange::new(InstructionAddress::new(0), InstructionAddress::new(4)),
                 arity: 0,
+                var_parameters: Vec::new(),
                 capture_count: 0,
                 register_count: 1,
                 return_convention: ReturnConvention::Unit,
@@ -92,6 +93,7 @@ pub fn program_image() -> ProgramImage {
                 name: StringId::new(11),
                 code: CodeRange::new(InstructionAddress::new(4), InstructionAddress::new(5)),
                 arity: 0,
+                var_parameters: Vec::new(),
                 capture_count: 1,
                 register_count: 1,
                 return_convention: ReturnConvention::Value,
@@ -138,14 +140,6 @@ pub fn program_image() -> ProgramImage {
             fields: vec![RecordField {
                 name: StringId::new(5),
                 ty: fpas_bytecode::DebugTypeId::new(2),
-            }],
-            properties: vec![RecordProperty {
-                name: StringId::new(10),
-                getter: StringId::new(0),
-            }],
-            methods: vec![RecordMethod {
-                name: StringId::new(12),
-                routine: StringId::new(13),
             }],
         }],
         enums: vec![EnumLayout {

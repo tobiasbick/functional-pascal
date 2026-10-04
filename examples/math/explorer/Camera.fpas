@@ -16,47 +16,44 @@ public type ExplorerCamera = record
   public MaxIter: integer;
   // Example palette number (1 through 3).
   public Palette: integer;
-
-  // Horizontal span adjusted for terminal cell proportions.
-  public function SpanX(Self: ExplorerCamera; Width: integer; Height: integer): real;
-  begin
-    var SafeWidth: integer := Math.Max(Width, 1);
-    var SafeHeight: integer := Math.Max(Height, 1);
-    return (Self.SpanY * (Conv.IntToReal(SafeWidth) / Conv.IntToReal(SafeHeight))) * 0.5;
-  end function;
-
-  // Left viewport boundary.
-  public function XMin(Self: ExplorerCamera; Width: integer; Height: integer): real;
-  begin
-    return Self.CenterX - (Self.SpanX(Width, Height) * 0.5);
-  end function;
-
-  // Right viewport boundary.
-  public function XMax(Self: ExplorerCamera; Width: integer; Height: integer): real;
-  begin
-    return Self.CenterX + (Self.SpanX(Width, Height) * 0.5);
-  end function;
-
-  // Bottom viewport boundary.
-  public function YMin(Self: ExplorerCamera): real;
-  begin
-    return Self.CenterY - (Self.SpanY * 0.5);
-  end function;
-
-  // Top viewport boundary.
-  public function YMax(Self: ExplorerCamera): real;
-  begin
-    return Self.CenterY + (Self.SpanY * 0.5);
-  end function;
-
-  // Zoom relative to the initial vertical span.
-  public function GetZoom(Self: ExplorerCamera): real;
-  begin
-    return 2.8 / Self.SpanY;
-  end function;
-
-  // Current relative zoom factor.
-  public property Zoom: real read GetZoom;
 end record;
+
+// Horizontal span adjusted for terminal cell proportions.
+public function ExplorerCameraSpanX(Receiver: ExplorerCamera; Width: integer; Height: integer): real;
+begin
+  const SafeWidth: integer := Math.Max(Width, 1);
+  const SafeHeight: integer := Math.Max(Height, 1);
+  return (Receiver.SpanY * (Conv.IntToReal(SafeWidth) / Conv.IntToReal(SafeHeight))) * 0.5;
+end function;
+
+// Left viewport boundary.
+public function ExplorerCameraXMin(Receiver: ExplorerCamera; Width: integer; Height: integer): real;
+begin
+  return Receiver.CenterX - (ExplorerCameraSpanX(Receiver, Width, Height) * 0.5);
+end function;
+
+// Right viewport boundary.
+public function ExplorerCameraXMax(Receiver: ExplorerCamera; Width: integer; Height: integer): real;
+begin
+  return Receiver.CenterX + (ExplorerCameraSpanX(Receiver, Width, Height) * 0.5);
+end function;
+
+// Bottom viewport boundary.
+public function ExplorerCameraYMin(Receiver: ExplorerCamera): real;
+begin
+  return Receiver.CenterY - (Receiver.SpanY * 0.5);
+end function;
+
+// Top viewport boundary.
+public function ExplorerCameraYMax(Receiver: ExplorerCamera): real;
+begin
+  return Receiver.CenterY + (Receiver.SpanY * 0.5);
+end function;
+
+// Zoom relative to the initial vertical span.
+public function ExplorerCameraGetZoom(Receiver: ExplorerCamera): real;
+begin
+  return 2.8 / Receiver.SpanY;
+end function;
 
 end unit;

@@ -8,6 +8,7 @@ uses Std.Console as Console;
 uses Std.Options as Options;
 uses Std.Str as Str;
 uses Std.Tui as Tui;
+uses Std.Tui.Runtime as Runtime;
 
 // Identifier of the prompt input control.
 const PromptControl: integer := 1;
@@ -25,9 +26,9 @@ const SendAction: integer := 10;
 // - `Entry`: Entry to append to the conversation.
 function AppendEntry(State: Model.LocalChatModel; Entry: Model.ChatEntry): Model.LocalChatModel;
 begin
-  mutable var Next: Model.LocalChatModel := State;
-  mutable var Entries: array of (Model.ChatEntry) := Next.Entries;
-  Arrays.Push(Entries, Entry);
+  var Next: Model.LocalChatModel := State;
+  var Entries: array of (Model.ChatEntry) := Next.Entries;
+  Arrays.Push(var Entries, Entry);
   Next.Entries := Entries;
   return Next;
 end function;
@@ -38,27 +39,27 @@ end function;
 // - `State`: Current application state containing the draft.
 function SendPrompt(State: Model.LocalChatModel): Model.LocalChatModel;
 begin
-  var Prompt: string := Str.Trim(State.Draft);
+  const Prompt: string := Str.Trim(State.Draft);
   if Prompt = '' then
     begin
-      mutable var Empty: Model.LocalChatModel := State;
+      var Empty: Model.LocalChatModel := State;
       Empty.Status := 'Enter a message first';
       return Empty;
     end;
   end if;
-  mutable var Next: Model.LocalChatModel := AppendEntry(State, Model.ChatEntry.User(Prompt));
+  var Next: Model.LocalChatModel := AppendEntry(State, Model.ChatEntryUser(Prompt));
   Next.Draft := '';
   Next.DraftCaret := 0;
   Next.Status := 'Contacting local model…';
   case Service.LocalChatRequest(Prompt) of
     when Result.Ok(const Content):
       begin
-        Next := AppendEntry(Next, Model.ChatEntry.Assistant(Content));
+        Next := AppendEntry(Next, Model.ChatEntryAssistant(Content));
         Next.Status := 'Ready';
       end;
     when Result.Error(const Message):
       begin
-        Next := AppendEntry(Next, Model.ChatEntry.Failure(Message));
+        Next := AppendEntry(Next, Model.ChatEntryFailure(Message));
         Next.Status := 'Request failed';
       end;
   end case;
@@ -85,13 +86,13 @@ end function;
 // - `Cmd`: Command output updated when the message requests a host action.
 public function LocalChatUpdate(State: Model.LocalChatModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): Model.LocalChatModel;
 begin
-  Cmd.Set(Tui.TuiCmd.NoCommand);
+  Runtime.TuiCmdOutputSet(Cmd, Tui.TuiCmd.NoCommand);
   case Msg of
     when Tui.TuiMsg.TextChanged(const Source, const Action, const Text, const Caret):
       begin
         if Action.Value = PromptChangedAction then
           begin
-            mutable var Next: Model.LocalChatModel := State;
+            var Next: Model.LocalChatModel := State;
             Next.Draft := Text;
             Next.DraftCaret := Caret;
             Next.Status := 'Ready';
@@ -105,7 +106,7 @@ begin
       begin
         if Action.Value = TranscriptChangedAction then
           begin
-            mutable var Next: Model.LocalChatModel := State;
+            var Next: Model.LocalChatModel := State;
             Next.TranscriptCaret := Caret;
             Next.TranscriptOffset := Offset;
             return Next;
@@ -128,7 +129,7 @@ begin
       begin
         if IsQuitShortcut(Key) then
           begin
-            Cmd.Set(Tui.TuiCmd.Quit);
+            Runtime.TuiCmdOutputSet(Cmd, Tui.TuiCmd.Quit);
           end;
         end if;
 
@@ -136,7 +137,7 @@ begin
       end;
     when Tui.TuiMsg.Resize(const Size):
       begin
-        mutable var Next: Model.LocalChatModel := State;
+        var Next: Model.LocalChatModel := State;
         Next.Width := Size.Width;
         Next.Height := Size.Height;
         return Model.LocalChatScrollToEnd(Next);
@@ -146,7 +147,7 @@ begin
         case Current of
           when Option.Some(const CurrentId):
             begin
-              mutable var Next: Model.LocalChatModel := State;
+              var Next: Model.LocalChatModel := State;
               Next.Focus := CurrentId.Value;
               return Next;
             end;

@@ -1,4 +1,4 @@
-//! Lexical bindings, callable lookup, and capture-cell access.
+//! Lexical value storage and capture-cell access.
 
 use fpas_ir::{Local, LocalId, Operation, TypeId, ValueId};
 use fpas_lexer::Span;
@@ -6,7 +6,7 @@ use fpas_lexer::Span;
 use crate::CompileError;
 use crate::error::internal_compiler_error;
 
-use super::{Binding, BindingStorage, Callable, ClosureTarget, LoweringContext};
+use super::{Binding, BindingStorage, ClosureTarget, LoweringContext};
 
 impl LoweringContext {
     pub(in crate::lowering) fn declare_local(
@@ -86,6 +86,15 @@ impl LoweringContext {
         let (storage, ty) = self.resolve_local(name, span)?;
         let cell = self.binding_is_cell(name);
         match storage {
+            BindingStorage::Reference(local) => {
+                let storage_ty = self.reference_type(ty, span)?;
+                let reference = self.emit_value(Operation::ReadLocal(local), storage_ty, span)?;
+                self.emit_value(
+                    Operation::Reference(fpas_ir::ReferenceOperation::Read(reference)),
+                    ty,
+                    span,
+                )
+            }
             BindingStorage::Local(local) => {
                 let storage_ty = if cell { self.cell_type(ty, span)? } else { ty };
                 let value = self.emit_value(Operation::ReadLocal(local), storage_ty, span)?;
@@ -106,6 +115,9 @@ impl LoweringContext {
         let (storage, ty) = self.resolve_local(name, span)?;
         let cell = self.binding_is_cell(name);
         match storage {
+            BindingStorage::Reference(_) => {
+                Err(super::unsupported(span, "capturing a var parameter"))
+            }
             BindingStorage::Local(local) => {
                 let storage_ty = if cell { self.cell_type(ty, span)? } else { ty };
                 self.emit_value(Operation::ReadLocal(local), storage_ty, span)
@@ -121,6 +133,14 @@ impl LoweringContext {
     ) -> Result<(), CompileError> {
         let (storage, ty) = self.resolve_local(name, span)?;
         match (storage, self.binding_is_cell(name)) {
+            (BindingStorage::Reference(local), _) => {
+                let reference_ty = self.reference_type(ty, span)?;
+                let reference = self.emit_value(Operation::ReadLocal(local), reference_ty, span)?;
+                self.emit_effect(
+                    Operation::Reference(fpas_ir::ReferenceOperation::Write { reference, value }),
+                    span,
+                )
+            }
             (BindingStorage::Local(local), false) => self.write_local(local, value, span),
             (BindingStorage::Local(local), true) => {
                 let cell_ty = self.cell_type(ty, span)?;
@@ -151,9 +171,11 @@ impl LoweringContext {
             .rev()
             .find(|binding| binding.name.eq_ignore_ascii_case(name))
         {
+            let BindingStorage::Local(local) = binding.storage else {
+                return;
+            };
             binding.ty = logical_ty;
             binding.cell = true;
-            let BindingStorage::Local(local) = binding.storage;
             if let Some(debug) = self
                 .debug
                 .bindings
@@ -174,33 +196,39 @@ impl LoweringContext {
         self.type_table.cell_type(ty, span)
     }
 
+    pub(in crate::lowering) fn reference_type(
+        &mut self,
+        ty: TypeId,
+        span: Span,
+    ) -> Result<TypeId, CompileError> {
+        self.type_table.reference_type(ty, span)
+    }
+
+    pub(in crate::lowering) fn read_local_storage_root(
+        &mut self,
+        name: &str,
+        span: Span,
+    ) -> Result<ValueId, CompileError> {
+        let (storage, ty) = self.resolve_local(name, span)?;
+        match storage {
+            BindingStorage::Reference(local) => {
+                let reference_ty = self.reference_type(ty, span)?;
+                self.emit_value(Operation::ReadLocal(local), reference_ty, span)
+            }
+            BindingStorage::Local(_) if self.binding_is_cell(name) => self.read_capture(name, span),
+            BindingStorage::Local(_) => Err(super::unsupported(
+                span,
+                "var root without stable cell storage",
+            )),
+        }
+    }
+
     pub(in crate::lowering) fn array_type(
         &mut self,
         element: TypeId,
         span: Span,
     ) -> Result<TypeId, CompileError> {
         self.type_table.array_type(element, span)
-    }
-
-    pub(in crate::lowering) fn resolve_callable(&self, name: &str) -> Option<Callable> {
-        let canonical = self.qualified_import_name(name).to_ascii_lowercase();
-        if let Some(callable) = self.callables.get(&canonical) {
-            return Some(callable.clone());
-        }
-        let mut scope = self.program_name.as_str();
-        loop {
-            let child = format!("{scope}.{canonical}");
-            if let Some(callable) = self.callables.get(&child) {
-                return Some(callable.clone());
-            }
-            let (parent, tail) = scope.rsplit_once('.')?;
-            if tail == canonical
-                && let Some(callable) = self.callables.get(scope)
-            {
-                return Some(callable.clone());
-            }
-            scope = parent;
-        }
     }
 
     pub(in crate::lowering) fn has_binding(&self, name: &str) -> bool {
@@ -219,35 +247,14 @@ impl LoweringContext {
             .iter()
             .rev()
             .find(|binding| binding.name.eq_ignore_ascii_case(name))
-            .map(|binding| match binding.storage {
-                BindingStorage::Local(local) => local,
+            .and_then(|binding| match binding.storage {
+                BindingStorage::Local(local) => Some(local),
+                BindingStorage::Reference(_) => None,
             })
-    }
-
-    pub(in crate::lowering) fn binding_type(&self, name: &str) -> Option<TypeId> {
-        self.bindings
-            .iter()
-            .rev()
-            .find(|binding| binding.name.eq_ignore_ascii_case(name))
-            .map(|binding| binding.ty)
     }
 
     pub(in crate::lowering) fn current_result_type(&self) -> TypeId {
         self.result_type
-    }
-
-    pub(in crate::lowering) fn call_result_type(&self, name: &str) -> Option<TypeId> {
-        self.bindings
-            .iter()
-            .rev()
-            .find(|binding| binding.name.eq_ignore_ascii_case(name))
-            .and_then(|binding| self.type_table.function_result(binding.ty))
-            .or_else(|| {
-                self.globals
-                    .get(&self.qualified_import_name(name).to_ascii_lowercase())
-                    .and_then(|global| self.type_table.function_result(global.ty))
-            })
-            .or_else(|| self.resolve_callable(name).map(|callable| callable.result))
     }
 
     pub(in crate::lowering) fn root_type(&self, name: &str) -> Option<TypeId> {

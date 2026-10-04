@@ -30,7 +30,7 @@ begin
 end function;
 
 begin
-  var Functions: array of (Handler) := [Make(10), Make(20)];
+  const Functions: array of (Handler) := [Make(10), Make(20)];
   if Make(3)(5) <> 8 then
     panic('returned target');
   end if;
@@ -38,7 +38,7 @@ begin
   if Functions[1](2) <> 22 then
     panic('indexed target');
   end if;
-  var Lookup: dict of (string, Handler) := ['answer': Make(40)];
+  const Lookup: dict of (string, Handler) := ['answer': Make(40)];
   if Lookup['answer'](2) <> 42 then
     panic('dictionary target');
   end if;
@@ -65,7 +65,7 @@ begin
   (procedure() begin
     null;
   end procedure)();
-  var Actions: array of (procedure()) := [Notify];
+  const Actions: array of (procedure()) := [Notify];
   Actions[0]();
   discard Make(1)(2);
 end program;
@@ -78,7 +78,7 @@ fn target_arguments_and_body_execute_once_in_order() {
     assert_succeeds(
         r#"
 program Order;
-mutable var Trace: string := '';
+ var Trace: string := '';
 type Handler = function(A: integer; B: integer): integer;
 function Make(): Handler;
 begin
@@ -106,7 +106,7 @@ fn try_arguments_preserve_target_and_earlier_arguments_across_blocks() {
     assert_succeeds(
         r#"
 program TryOrder;
-mutable var Trace: string := '';
+ var Trace: string := '';
 type Handler = function(A: integer; B: integer): integer;
 function Make(): Handler;
 begin Trace := Trace + 'T';

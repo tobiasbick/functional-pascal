@@ -4,6 +4,11 @@ uses Std.Arrays as Arrays;
 uses Std.Str as Str;
 uses Std.Test as Test;
 uses Std.Tui as Tui;
+uses Std.Tui.Elements as Elements;
+uses Std.Tui.Geometry as Geometry;
+uses Std.Tui.Ids as Ids;
+uses Std.Tui.Rendering as Rendering;
+uses Std.Tui.Runtime as Runtime;
 
 type ButtonPointerModel = record
   Actions: integer;
@@ -12,14 +17,14 @@ end record;
 
 function ViewButton(State: ButtonPointerModel): Tui.TuiElement;
 begin
-  return Tui.TuiElementBuilders.MakeDesktop(Option.None, [
-                                                           Tui.TuiElementBuilders.MakeButtonWithMnemonic(Tui.TuiControlId.Create(1), 'Go', 'G', Tui.TuiAction.Create(10))
-                                                         ]);
+  return Elements.TuiElementMakeDesktop(Option.None, [
+                                                       Elements.TuiElementMakeButtonWithMnemonic(Ids.TuiControlIdCreate(1), 'Go', 'G', Ids.TuiActionCreate(10))
+                                                     ]);
 end function;
 
 function UpdateButton(State: ButtonPointerModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): ButtonPointerModel;
 begin
-  Cmd.Set(Tui.TuiCmd.NoCommand);
+  Runtime.TuiCmdOutputSet(Cmd, Tui.TuiCmd.NoCommand);
   case Msg of
     when Tui.TuiMsg.Action(const Source, const Action):
       begin
@@ -40,38 +45,40 @@ end function;
 
 function Pointer(Action: Tui.TuiPointerAction; Position: Tui.TuiPoint): Tui.TuiPointerEvent;
 begin
-  return Tui.TuiPointerEvent.Create(Action, Tui.TuiPointerButton.Left, Position);
+  return Runtime.TuiPointerEventCreate(Action, Tui.TuiPointerButton.Left, Position);
 end function;
 
 begin
-  var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(16, 4));
-  mutable var Model: ButtonPointerModel := ButtonPointerModel(Actions := 0, PointerEvents := 0);
-  Model := App.RunIterations(Model, UpdateButton, ViewButton, 0, 0);
-  var GoX: integer := Str.IndexOf(App.SurfaceSnapshot().LineAt(0), 'G');
-  var Inside: Tui.TuiPoint := Tui.TuiPoint.Create(GoX, 0);
-  Test.AssertTrue(App.SurfaceSnapshot().CellAt(GoX, 0).Role = Tui.TuiStyleRole.ButtonShortcut);
-  App.InjectPointerForTest(Pointer(Tui.TuiPointerAction.Down, Inside));
-  Model := App.RunIterations(Model, UpdateButton, ViewButton, 2, 0);
+  const App: Tui.TuiApplication := Runtime.TuiApplicationOpenForTest(Geometry.TuiSizeCreate(16, 4));
+  var Model: ButtonPointerModel := ButtonPointerModel(Actions := 0, PointerEvents := 0);
+  Model := Runtime.TuiApplicationRunIterations(App, Model, UpdateButton, ViewButton, 0, 0);
+  const GoX: integer := Str.IndexOf(Rendering.TuiSurfaceSnapshotLineAt(Runtime.TuiApplicationSurfaceSnapshot(App), 0), 'G');
+  const Inside: Tui.TuiPoint := Geometry.TuiPointCreate(GoX, 0);
+  Test.AssertTrue(Rendering.TuiSurfaceSnapshotCellAt(Runtime.TuiApplicationSurfaceSnapshot(App), GoX, 0).Role =
+                  Tui.TuiStyleRole.ButtonShortcut);
+  Runtime.TuiApplicationInjectPointerForTest(App, Pointer(Tui.TuiPointerAction.Down, Inside));
+  Model := Runtime.TuiApplicationRunIterations(App, Model, UpdateButton, ViewButton, 2, 0);
   Test.AssertEquals(0, Model.Actions);
   Test.AssertEquals(1, Model.PointerEvents);
-  Test.AssertTrue(App.SurfaceSnapshot().CellAt(GoX, 0).Role =
+  Test.AssertTrue(Rendering.TuiSurfaceSnapshotCellAt(Runtime.TuiApplicationSurfaceSnapshot(App), GoX, 0).Role =
                   Tui.TuiStyleRole.ButtonSelectedShortcut);
-  App.InjectPointerForTest(Pointer(Tui.TuiPointerAction.Drag, Tui.TuiPoint.Create(15, 3)));
-  Model := App.RunIterations(Model, UpdateButton, ViewButton, 1, 0);
-  Test.AssertTrue(App.SurfaceSnapshot().CellAt(GoX, 0).Role = Tui.TuiStyleRole.ButtonShortcut);
-  App.InjectPointerForTest(Pointer(Tui.TuiPointerAction.Up, Tui.TuiPoint.Create(15, 3)));
-  Model := App.RunIterations(Model, UpdateButton, ViewButton, 1, 0);
+  Runtime.TuiApplicationInjectPointerForTest(App, Pointer(Tui.TuiPointerAction.Drag, Geometry.TuiPointCreate(15, 3)));
+  Model := Runtime.TuiApplicationRunIterations(App, Model, UpdateButton, ViewButton, 1, 0);
+  Test.AssertTrue(Rendering.TuiSurfaceSnapshotCellAt(Runtime.TuiApplicationSurfaceSnapshot(App), GoX, 0).Role =
+                  Tui.TuiStyleRole.ButtonShortcut);
+  Runtime.TuiApplicationInjectPointerForTest(App, Pointer(Tui.TuiPointerAction.Up, Geometry.TuiPointCreate(15, 3)));
+  Model := Runtime.TuiApplicationRunIterations(App, Model, UpdateButton, ViewButton, 1, 0);
   Test.AssertEquals(0, Model.Actions);
-  App.InjectPointerForTest(Pointer(Tui.TuiPointerAction.Down, Inside));
-  Model := App.RunIterations(Model, UpdateButton, ViewButton, 2, 0);
-  App.InjectPointerForTest(Pointer(Tui.TuiPointerAction.Drag, Tui.TuiPoint.Create(15, 3)));
-  Model := App.RunIterations(Model, UpdateButton, ViewButton, 1, 0);
-  App.InjectPointerForTest(Pointer(Tui.TuiPointerAction.Drag, Inside));
-  Model := App.RunIterations(Model, UpdateButton, ViewButton, 1, 0);
-  Test.AssertTrue(App.SurfaceSnapshot().CellAt(GoX, 0).Role =
+  Runtime.TuiApplicationInjectPointerForTest(App, Pointer(Tui.TuiPointerAction.Down, Inside));
+  Model := Runtime.TuiApplicationRunIterations(App, Model, UpdateButton, ViewButton, 2, 0);
+  Runtime.TuiApplicationInjectPointerForTest(App, Pointer(Tui.TuiPointerAction.Drag, Geometry.TuiPointCreate(15, 3)));
+  Model := Runtime.TuiApplicationRunIterations(App, Model, UpdateButton, ViewButton, 1, 0);
+  Runtime.TuiApplicationInjectPointerForTest(App, Pointer(Tui.TuiPointerAction.Drag, Inside));
+  Model := Runtime.TuiApplicationRunIterations(App, Model, UpdateButton, ViewButton, 1, 0);
+  Test.AssertTrue(Rendering.TuiSurfaceSnapshotCellAt(Runtime.TuiApplicationSurfaceSnapshot(App), GoX, 0).Role =
                   Tui.TuiStyleRole.ButtonSelectedShortcut);
-  App.InjectPointerForTest(Pointer(Tui.TuiPointerAction.Up, Inside));
-  Model := App.RunIterations(Model, UpdateButton, ViewButton, 1, 0);
+  Runtime.TuiApplicationInjectPointerForTest(App, Pointer(Tui.TuiPointerAction.Up, Inside));
+  Model := Runtime.TuiApplicationRunIterations(App, Model, UpdateButton, ViewButton, 1, 0);
   Test.AssertEquals(1, Model.Actions);
-  App.Close();
+  Runtime.TuiApplicationClose(App);
 end program;

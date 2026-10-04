@@ -30,7 +30,7 @@ pub enum Token {
     As,
     Const,
     Var,
-    Mutable,
+    Pure,
     Function,
     Procedure,
     Begin,
@@ -83,23 +83,6 @@ pub enum Token {
     Go,
     Dict,
     With,
-    /// Marks a static record routine: `static function Create(...): T` or
-    /// `static procedure Reset(...)`.
-    ///
-    /// **Documentation:** `docs/pascal/language/types/record-methods.md`
-    Static,
-    /// Marks a computed record property: `property Text: string read GetText write SetText`.
-    ///
-    /// **Documentation:** `docs/pascal/language/types/record-properties.md`
-    Property,
-    /// Marks a record event: `event OnClick: Handler read Get write Set`.
-    ///
-    /// **Documentation:** `docs/pascal/language/types/record-events.md`
-    Event,
-    /// Introduces a readable property or event accessor.
-    Read,
-    /// Introduces a writable property or event accessor.
-    Write,
     /// Restricts a generic type parameter to comparable types.
     Comparable,
     /// Equality-only generic constraint.
@@ -108,13 +91,6 @@ pub enum Token {
     Numeric,
     /// Restricts a generic type parameter to printable types.
     Printable,
-    /// Names the receiver parameter and expression inside an instance record method.
-    SelfKw,
-    /// Clears an event handler: `Button.OnClick := nil`.
-    ///
-    /// **Documentation:** `docs/pascal/language/types/record-events.md`
-    Nil,
-
     // Literals
     Integer(i64),
     Real(f64),

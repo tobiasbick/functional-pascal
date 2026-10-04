@@ -8,6 +8,7 @@ uses Std.Conv as Conv;
 uses Std.Http as Http;
 uses Std.Net.Utf8 as Utf8;
 uses Std.Str as Str;
+uses Std.Http.Types as Types2;
 
 // Appends the chat-completions path to a base API URL.
 //
@@ -53,16 +54,16 @@ begin
       return Result.Error('OpenAI-compatible chat requires at least one message');
     end;
   end if;
-  mutable var Headers: array of (Http.Header) := [
-                                                   Http.Header.Create('Content-Type', 'application/json'),
-                                                   Http.Header.Create('Accept', 'application/json')
-                                                 ];
+  var Headers: array of (Http.Header) := [
+                                           Types2.HeaderCreate('Content-Type', 'application/json'),
+                                           Types2.HeaderCreate('Accept', 'application/json')
+                                         ];
   case ClientValue.ApiKey of
     when Option.Some(const Value):
       begin
         if Value <> '' then
           begin
-            Arrays.Push(Headers, Http.Header.Create('Authorization', 'Bearer ' + Value));
+            Arrays.Push(var Headers, Types2.HeaderCreate('Authorization', 'Bearer ' + Value));
           end;
         end if;
       end;
@@ -71,7 +72,7 @@ begin
         null;
       end;
   end case;
-  mutable var RequestValue: Http.Request := Http.Request.Create('POST', CompletionUrl(ClientValue.BaseUrl));
+  var RequestValue: Http.Request := Types2.RequestCreate('POST', CompletionUrl(ClientValue.BaseUrl));
   RequestValue.Headers := Headers;
   RequestValue.Body := Utf8.Encode(Json.EncodeRequest(ClientValue.Model, Messages, Options));
   RequestValue.TimeoutMillis := ClientValue.TimeoutMillis;

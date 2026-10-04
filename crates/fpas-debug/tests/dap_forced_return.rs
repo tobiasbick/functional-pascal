@@ -21,7 +21,7 @@ begin
 end function;
 
 begin
-  var Value: integer := Fail();
+  const Value: integer := Fail();
   Console.WriteLn(Value);
 end program;
 "#;

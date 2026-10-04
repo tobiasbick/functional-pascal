@@ -3,6 +3,10 @@
 /// `(label, source)` pairs that must parse and survive format → re-parse.
 pub const SOURCES: &[(&str, &str)] = &[
     (
+        "explicit_var_modes",
+        "program T; type Action = procedure(var Value: integer); procedure Change(var Value: integer); begin Value := Value + 1; end procedure; begin var Items: array of (integer) := [1]; const F: Action := Change; F(var Items[0]); end program;",
+    ),
+    (
         "minimal_program",
         r#"program Hello; begin null; end program;"#,
     ),
@@ -16,11 +20,11 @@ pub const SOURCES: &[(&str, &str)] = &[
     ),
     (
         "program_with_var",
-        r#"program T;  var X: integer := 42; begin null; end program;"#,
+        r#"program T;  const X: integer := 42; begin null; end program;"#,
     ),
     (
         "program_with_mutable_var",
-        r#"program T;   mutable var Count: integer := 0; begin null; end program;"#,
+        r#"program T;    var Count: integer := 0; begin null; end program;"#,
     ),
     (
         "hello_world",
@@ -59,7 +63,7 @@ begin
 end function;
 
 begin
-  var Answer: integer := Calculate(10, 3, Op.OpAdd);
+  const Answer: integer := Calculate(10, 3, Op.OpAdd);
   Console.WriteLn(Answer);
 end program;
 "#,
@@ -74,8 +78,8 @@ type Point = record
 end record;
 
 begin
-  var P: Point := Point(X := 1.0, Y := 2.0);
-  var Sum: real := P.X + P.Y;
+  const P: Point := Point(X := 1.0, Y := 2.0);
+  const Sum: real := P.X + P.Y;
 end program;
 "#,
     ),
@@ -86,7 +90,7 @@ begin
   for I: integer := 0 to 9 do
     for J: integer := 0 to 9 do
       begin
-        var X: integer := I * 10 + J;
+        const X: integer := I * 10 + J;
         if X mod 2 = 0 then
           continue; end if;
       end; end for; end for;
@@ -96,7 +100,7 @@ end program;"#,
         "repeat_with_break",
         r#"program T;
 begin
-  mutable var X: integer := 0;
+   var X: integer := 0;
   repeat
     X := X + 1;
     if X = 10 then break; end if;
@@ -107,9 +111,9 @@ end program;"#,
         "array_operations",
         r#"program T;
 begin
-  var Xs: array of (integer) := [1, 2, 3, 4, 5];
-  var First: integer := Xs[0];
-  var Last: integer := Xs[4];
+  const Xs: array of (integer) := [1, 2, 3, 4, 5];
+  const First: integer := Xs[0];
+  const Last: integer := Xs[4];
 end program;"#,
     ),
     (
@@ -165,22 +169,22 @@ end unit;
         r#"program T;  type Color = enum Red; Green; Blue; end enum; begin null; end program;"#,
     ),
     (
-        "record_with_method",
-        r#"program T;  type Point = record X: integer; Y: integer; function Sum(Self: Point): integer; begin return Self.X + Self.Y; end function; end record; begin null; end program;"#,
+        "record_function",
+        r#"program T; type Point = record X: integer; Y: integer; end record; function PointSum(Receiver: Point): integer; begin return Receiver.X + Receiver.Y; end function; begin null; end program;"#,
     ),
     (
-        "record_with_static_function",
+        "record_factory",
         r#"program T;
 
 type Point = record
   X: integer;
   Y: integer;
+end record;
 
-  static function Create(X: integer; Y: integer): Point;
+  function PointCreate(X: integer; Y: integer): Point;
   begin
     return Point(X := X, Y := Y);
   end function;
-end record;
 
 begin
   null;
@@ -188,12 +192,12 @@ end program;
 "#,
     ),
     (
-        "record_with_static_procedure",
-        r#"program T;  type Point = record X: integer; static procedure Print(Value: Point); begin Std.Console.WriteLn(Value.X); end procedure; end record; begin null; end program;"#,
+        "record_procedure",
+        r#"program T; uses Std.Console as Console; type Point = record X: integer; end record; procedure PointPrint(Value: Point); begin Console.WriteLn(Value.X); end procedure; begin null; end program;"#,
     ),
     (
         "nested_collection_literals",
-        r#"program T; begin var Values: array of (dict of (string, array of (integer))) := [['a': [1, 2]], [:]]; end program;"#,
+        r#"program T; begin const Values: array of (dict of (string, array of (integer))) := [['a': [1, 2]], [:]]; end program;"#,
     ),
     (
         "nested_record_update",
@@ -210,14 +214,14 @@ type Pair = record
 end record;
 
 begin
-  var P: Pair := Pair(First := Point(X := 1, Y := 2), Second := Point(X := 3, Y := 4));
-  var Q: Pair := P with First := P.First with X := 5; end with; end with;
+  const P: Pair := Pair(First := Point(X := 1, Y := 2), Second := Point(X := 3, Y := 4));
+  const Q: Pair := P with First := P.First with X := 5; end with; end with;
 end program;
 "#,
     ),
     (
         "nested_option_result",
-        r#"program T; begin var Value: result of (option of (array of (integer)), string) := Result.Ok(Option.Some([])); end program;"#,
+        r#"program T; begin const Value: result of (option of (array of (integer)), string) := Result.Ok(Option.Some([])); end program;"#,
     ),
     (
         "case_destructure_with_guard",
@@ -229,6 +233,6 @@ end program;
     ),
     (
         "procedure_literal",
-        r#"program T; begin var Action: procedure() := procedure() begin return; end procedure; end program;"#,
+        r#"program T; begin const Action: procedure() := procedure() begin return; end procedure; end program;"#,
     ),
 ];

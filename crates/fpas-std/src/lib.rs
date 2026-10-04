@@ -63,8 +63,9 @@ pub use std_units::{
     STD_UNIT_OPTION, STD_UNIT_PARSE, STD_UNIT_PATH, STD_UNIT_PROC, STD_UNIT_RANDOM,
     STD_UNIT_RESULT, STD_UNIT_SERVER, STD_UNIT_STR, STD_UNIT_TASK, STD_UNIT_TEST, STD_UNIT_TIME,
     STD_UNIT_TOML, STD_UNIT_TUI, STD_UNITS_INTRINSIC, STD_UNITS_KNOWN,
-    canonical_std_unit_from_segments, canonical_std_unit_from_tail, is_std_root_segment,
-    std_symbols, std_unit_symbols, std_units_list_for_hint,
+    canonical_std_unit_from_segments, canonical_std_unit_from_tail, intrinsic_std_constant_value,
+    intrinsic_std_function_is_pure, is_std_root_segment, std_symbols, std_unit_symbols,
+    std_units_list_for_hint,
 };
 pub use test::{assert_screen_cell, assert_screen_line, reset_test_skip_state, test_was_skipped};
 

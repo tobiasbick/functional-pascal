@@ -4,10 +4,10 @@ uses Std.Bits as Bits;
 uses Std.Test as Test;
 
 begin
-  var Min: integer := -9223372036854775807 - 1;
-  var Max: integer := 9223372036854775807;
-  mutable var LeftExpected: integer := 1;
-  mutable var RightExpected: integer := Max;
+  const Min: integer := -9223372036854775807 - 1;
+  const Max: integer := 9223372036854775807;
+  var LeftExpected: integer := 1;
+  var RightExpected: integer := Max;
   for Count: integer := 0 to 63 do
     Test.AssertEquals(LeftExpected, Bits.ShiftLeft(1, Count));
     if Count = 0 then

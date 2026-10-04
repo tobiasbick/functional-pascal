@@ -2,19 +2,23 @@ program TuiFocusHelpersTest;
 
 uses Std.Test as Test;
 uses Std.Tui as Tui;
+uses Std.Tui.Elements as Elements;
+uses Std.Tui.Geometry as Geometry;
+uses Std.Tui.Ids as Ids;
+uses Std.Tui.Layout as Layout;
 
 begin
-  var Tree: Tui.TuiElement := Tui.TuiElementBuilders.MakeDesktop(Option.Some(Tui.TuiControlId.Create(2)), [
-                                                                                                            Tui.TuiElementBuilders.MakePanel('Host', [
-                                                                                                                                                       Tui.TuiElementBuilders.MakeColumn([
-                                                                                                                                                                                           Tui.TuiElementBuilders.MakeButton(Tui.TuiControlId.Create(1), 'One', Tui.TuiAction.Create(1)),
-                                                                                                                                                                                           Tui.TuiElementBuilders.MakeTextArea(Tui.TuiControlId.Create(2), 'Two', 0, Tui.TuiPoint.Create(0, 0), Tui.TuiAction.Create(2))
-                                                                                                                                                                                         ])
-                                                                                                                                                     ]),
-                                                                                                            Tui.TuiElementBuilders.MakeOverlay('Modal', [
-                                                                                                                                                          Tui.TuiElementBuilders.MakeButton(Tui.TuiControlId.Create(3), 'Yes', Tui.TuiAction.Create(3))
-                                                                                                                                                        ])
-                                                                                                          ]);
+  const Tree: Tui.TuiElement := Elements.TuiElementMakeDesktop(Option.Some(Ids.TuiControlIdCreate(2)), [
+                                                                                                         Elements.TuiElementMakePanel('Host', [
+                                                                                                                                                Elements.TuiElementMakeColumn([
+                                                                                                                                                                                Elements.TuiElementMakeButton(Ids.TuiControlIdCreate(1), 'One', Ids.TuiActionCreate(1)),
+                                                                                                                                                                                Elements.TuiElementMakeTextArea(Ids.TuiControlIdCreate(2), 'Two', 0, Geometry.TuiPointCreate(0, 0), Ids.TuiActionCreate(2))
+                                                                                                                                                                              ])
+                                                                                                                                              ]),
+                                                                                                         Elements.TuiElementMakeOverlay('Modal', [
+                                                                                                                                                   Elements.TuiElementMakeButton(Ids.TuiControlIdCreate(3), 'Yes', Ids.TuiActionCreate(3))
+                                                                                                                                                 ])
+                                                                                                       ]);
   case Tui.TuiFocusFirst(Tree) of
     when Option.Some(const Id):
       begin
@@ -26,7 +30,7 @@ begin
       end;
   end case;
 
-  case Tui.TuiFocusResolve(Tree, Option.Some(Tui.TuiControlId.Create(1))) of
+  case Tui.TuiFocusResolve(Tree, Option.Some(Ids.TuiControlIdCreate(1))) of
     when Option.Some(const Id):
       begin
         Test.AssertEquals(3, Id.Value);
@@ -37,7 +41,7 @@ begin
       end;
   end case;
 
-  case Tui.TuiFocusResolve(Tree, Option.Some(Tui.TuiControlId.Create(3))) of
+  case Tui.TuiFocusResolve(Tree, Option.Some(Ids.TuiControlIdCreate(3))) of
     when Option.Some(const Id):
       begin
         Test.AssertEquals(3, Id.Value);
@@ -47,13 +51,13 @@ begin
         panic('expected kept modal focus');
       end;
   end case;
-  var HostOnly: Tui.TuiElement := Tui.TuiElementBuilders.MakeDesktop(Option.Some(Tui.TuiControlId.Create(2)), [
-                                                                                                                Tui.TuiElementBuilders.MakePanel('Host', [
-                                                                                                                                                           Tui.TuiElementBuilders.MakeButton(Tui.TuiControlId.Create(1), 'One', Tui.TuiAction.Create(1)),
-                                                                                                                                                           Tui.TuiElementBuilders.MakeButton(Tui.TuiControlId.Create(2), 'Two', Tui.TuiAction.Create(2))
-                                                                                                                                                         ])
-                                                                                                              ]);
-  case Tui.TuiFocusResolve(HostOnly, Option.Some(Tui.TuiControlId.Create(2))) of
+  const HostOnly: Tui.TuiElement := Elements.TuiElementMakeDesktop(Option.Some(Ids.TuiControlIdCreate(2)), [
+                                                                                                             Elements.TuiElementMakePanel('Host', [
+                                                                                                                                                    Elements.TuiElementMakeButton(Ids.TuiControlIdCreate(1), 'One', Ids.TuiActionCreate(1)),
+                                                                                                                                                    Elements.TuiElementMakeButton(Ids.TuiControlIdCreate(2), 'Two', Ids.TuiActionCreate(2))
+                                                                                                                                                  ])
+                                                                                                           ]);
+  case Tui.TuiFocusResolve(HostOnly, Option.Some(Ids.TuiControlIdCreate(2))) of
     when Option.Some(const Id):
       begin
         Test.AssertEquals(2, Id.Value);
@@ -64,7 +68,7 @@ begin
       end;
   end case;
 
-  case Tui.TuiFocusResolve(HostOnly, Option.Some(Tui.TuiControlId.Create(9))) of
+  case Tui.TuiFocusResolve(HostOnly, Option.Some(Ids.TuiControlIdCreate(9))) of
     when Option.Some(const Id):
       begin
         Test.AssertEquals(1, Id.Value);
@@ -74,6 +78,6 @@ begin
         panic('expected fallback focus');
       end;
   end case;
-  var Fit: Tui.TuiLayoutFit := Tui.TuiLayoutFitFor(HostOnly, Tui.TuiSize.Create(80, 24));
-  Test.AssertTrue(Fit.Fits());
+  const Fit: Tui.TuiLayoutFit := Tui.TuiLayoutFitFor(HostOnly, Geometry.TuiSizeCreate(80, 24));
+  Test.AssertTrue(Layout.TuiLayoutFitFits(Fit));
 end program;

@@ -35,6 +35,7 @@ impl Worker {
 
     pub fn store_global(&mut self, o: AbxOperands) -> Result<(), VmError> {
         let value = self.read(register(o.a)?)?.clone();
+        self.require_value_data(&value)?;
         let index = usize::try_from(o.bx).map_err(|_| self.bad_slot("global", o.bx))?;
         let mutable = self
             .executable
@@ -100,6 +101,8 @@ impl Worker {
         let destination = register(o.a)?;
         let index = self.read(register(o.b)?)?.clone();
         let value = self.read(register(o.c)?)?.clone();
+        self.require_value_data(&index)?;
+        self.require_value_data(&value)?;
         let array_index = match self.read(destination)? {
             Value::Array(values) => {
                 let index = self.array_index(&index)?;
@@ -201,6 +204,7 @@ impl Worker {
 
     pub fn wrap(&mut self, o: AbcOperands, constructor: fn(Value) -> Value) -> Result<(), VmError> {
         let value = self.read(register(o.b)?)?.clone();
+        self.require_value_data(&value)?;
         self.write(register(o.a)?, constructor(value))
     }
     pub fn none(&mut self, o: AbcOperands) -> Result<(), VmError> {
@@ -244,6 +248,7 @@ impl Worker {
                 .ok_or_else(|| {
                     self.bad_slot("register window", u32::try_from(slot).unwrap_or(u32::MAX))
                 })?;
+            self.require_value_data(&value)?;
             values.push(value);
         }
         Ok(values)

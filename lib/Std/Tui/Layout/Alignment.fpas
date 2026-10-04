@@ -18,40 +18,40 @@ public type TuiAlignment = record
   public Horizontal: TuiAlignmentKind;
   // Vertical policy, alignment, or extent.
   public Vertical: TuiAlignmentKind;
-
-  // Creates a mixed-axis alignment.
-  //
-  // Parameters:
-  // - `Horizontal`: Horizontal policy, alignment, or extent.
-  // - `Vertical`: Vertical policy, alignment, or extent.
-  public static function Create(Horizontal: TuiAlignmentKind; Vertical: TuiAlignmentKind): TuiAlignment;
-  begin
-    return TuiAlignment(Horizontal := Horizontal, Vertical := Vertical);
-  end function;
-
-  // Leading on both axes.
-  public static function Leading(): TuiAlignment;
-  begin
-    return TuiAlignment.Create(TuiAlignmentKind.Leading, TuiAlignmentKind.Leading);
-  end function;
-
-  // Centered on both axes.
-  public static function Center(): TuiAlignment;
-  begin
-    return TuiAlignment.Create(TuiAlignmentKind.Center, TuiAlignmentKind.Center);
-  end function;
-
-  // Trailing on both axes.
-  public static function Trailing(): TuiAlignment;
-  begin
-    return TuiAlignment.Create(TuiAlignmentKind.Trailing, TuiAlignmentKind.Trailing);
-  end function;
-
-  // Fill on both axes.
-  public static function Fill(): TuiAlignment;
-  begin
-    return TuiAlignment.Create(TuiAlignmentKind.Fill, TuiAlignmentKind.Fill);
-  end function;
 end record;
+
+// Creates a mixed-axis alignment.
+//
+// Parameters:
+// - `Horizontal`: Horizontal policy, alignment, or extent.
+// - `Vertical`: Vertical policy, alignment, or extent.
+public function TuiAlignmentCreate(Horizontal: TuiAlignmentKind; Vertical: TuiAlignmentKind): TuiAlignment;
+begin
+  return TuiAlignment(Horizontal := Horizontal, Vertical := Vertical);
+end function;
+
+// Leading on both axes.
+public function TuiAlignmentLeading(): TuiAlignment;
+begin
+  return TuiAlignmentCreate(TuiAlignmentKind.Leading, TuiAlignmentKind.Leading);
+end function;
+
+// Centered on both axes.
+public function TuiAlignmentCenter(): TuiAlignment;
+begin
+  return TuiAlignmentCreate(TuiAlignmentKind.Center, TuiAlignmentKind.Center);
+end function;
+
+// Trailing on both axes.
+public function TuiAlignmentTrailing(): TuiAlignment;
+begin
+  return TuiAlignmentCreate(TuiAlignmentKind.Trailing, TuiAlignmentKind.Trailing);
+end function;
+
+// Fill on both axes.
+public function TuiAlignmentFill(): TuiAlignment;
+begin
+  return TuiAlignmentCreate(TuiAlignmentKind.Fill, TuiAlignmentKind.Fill);
+end function;
 
 end unit;

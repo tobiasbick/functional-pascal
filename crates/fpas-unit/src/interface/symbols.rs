@@ -27,8 +27,10 @@ pub enum ConstantValue {
 /// Runtime and semantic category of an exported symbol.
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum SymbolKind {
-    /// Compile-time constant.
+    /// Static constant; non-scalar values use immutable runtime global storage.
     Constant(Option<ConstantValue>),
+    /// Static aggregate metadata accompanying immutable runtime global storage.
+    AggregateConstant(super::StaticValue),
     /// Immutable module variable.
     Variable,
     /// Mutable module variable.
@@ -105,6 +107,9 @@ fn canonicalize_type(ty: &mut InterfaceType) {
         Function(callable) | Procedure(callable) => canonicalize_callable(callable),
         Record(record) => {
             record.name = canonical_name(&record.name);
+            for parameter in &mut record.type_parameters {
+                parameter.canonicalize();
+            }
             for argument in &mut record.type_arguments {
                 canonicalize_type(argument);
             }
@@ -117,34 +122,15 @@ fn canonicalize_type(ty: &mut InterfaceType) {
             for field in &mut record.fields {
                 canonicalize_type(&mut field.ty);
                 if let Some(value) = &mut field.default_value {
-                    canonicalize_constant(value);
+                    canonicalize_default(value);
                 }
             }
-            for method in record
-                .methods
-                .iter_mut()
-                .chain(record.static_routines.iter_mut())
-            {
-                canonicalize_callable(&mut method.callable);
-            }
-            for property in &mut record.properties {
-                canonicalize_type(&mut property.ty);
-                property.getter = property.getter.as_deref().map(canonical_name);
-                property.setter = property.setter.as_deref().map(canonical_name);
-            }
-            for event in &mut record.events {
-                canonicalize_type(&mut event.handler);
-                event.getter = canonical_name(&event.getter);
-                event.setter = canonical_name(&event.setter);
-                event.owner_unit = event.owner_unit.as_deref().map(canonical_name);
-            }
-            sort_named(&mut record.methods, |value| &value.name);
-            sort_named(&mut record.static_routines, |value| &value.name);
-            sort_named(&mut record.properties, |value| &value.name);
-            sort_named(&mut record.events, |value| &value.name);
         }
         Enum(enum_ty) => {
             enum_ty.name = canonical_name(&enum_ty.name);
+            for parameter in &mut enum_ty.type_parameters {
+                parameter.canonicalize();
+            }
             for argument in &mut enum_ty.type_arguments {
                 canonicalize_type(argument);
             }
@@ -152,7 +138,7 @@ fn canonicalize_type(ty: &mut InterfaceType) {
                 for field in &mut variant.fields {
                     canonicalize_type(&mut field.ty);
                     if let Some(value) = &mut field.default_value {
-                        canonicalize_constant(value);
+                        canonicalize_default(value);
                     }
                 }
             }
@@ -164,7 +150,7 @@ fn canonicalize_type(ty: &mut InterfaceType) {
                 canonicalize_type(argument);
             }
         }
-        GenericParameter(_, _) => {}
+        GenericParameter(parameter) => parameter.canonicalize(),
         _ => {}
     }
 }
@@ -174,11 +160,36 @@ fn canonicalize_symbol_kind(kind: &mut SymbolKind) {
         SymbolKind::Constant(Some(value)) | SymbolKind::EnumMember(value) => {
             canonicalize_constant(value);
         }
+        SymbolKind::AggregateConstant(value) => value.canonicalize(),
         _ => {}
     }
 }
 
-fn canonicalize_constant(value: &mut ConstantValue) {
+/// Normalize nominal names in scalar enum metadata.
+fn canonicalize_default(value: &mut super::FieldDefault) {
+    match value {
+        super::FieldDefault::Constant(value) => canonicalize_constant(value),
+        super::FieldDefault::Initializer {
+            name,
+            pure_parameters,
+        } => {
+            *name = canonical_name(name);
+            for parameter in pure_parameters.iter_mut() {
+                parameter.unit = parameter.unit.as_deref().map(canonical_name);
+            }
+            pure_parameters.sort_by_key(|parameter| {
+                (
+                    parameter.unit.clone(),
+                    parameter.source_id,
+                    parameter.offset,
+                )
+            });
+            pure_parameters.dedup();
+        }
+    }
+}
+
+pub(super) fn canonicalize_constant(value: &mut ConstantValue) {
     if let ConstantValue::EnumValue {
         enum_name,
         variant_name,
@@ -191,18 +202,13 @@ fn canonicalize_constant(value: &mut ConstantValue) {
 }
 
 fn canonicalize_callable(callable: &mut super::CallableType) {
+    for parameter in &mut callable.type_parameters {
+        parameter.canonicalize();
+    }
     for parameter in &mut callable.parameters {
         canonicalize_type(&mut parameter.ty);
     }
     if let Some(result) = &mut callable.result {
         canonicalize_type(result);
     }
-}
-
-fn sort_named<T>(values: &mut [T], name: impl Fn(&T) -> &str) {
-    values.sort_by(|left, right| {
-        canonical_name(name(left))
-            .cmp(&canonical_name(name(right)))
-            .then_with(|| name(left).cmp(name(right)))
-    });
 }

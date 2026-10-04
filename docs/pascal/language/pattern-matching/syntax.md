@@ -27,13 +27,13 @@ program StatusExample;
 uses Std.Console as Console;
 
 begin
-  var Status: integer := 1;
+  const Status: integer := 1;
   case Status of
     when 0:
-      var Message: string := 'ok';
+      const Message: string := 'ok';
       Console.WriteLn(Message);
     when 1, 2:
-      var Message: string := 'retry';
+      const Message: string := 'retry';
       Console.WriteLn(Message);
     else
       null;
@@ -46,7 +46,7 @@ end program;
 In a required value position, `case` selects one expression:
 
 ```pascal
-var Message: string := case Status of
+const Message: string := case Status of
   when 0: 'ok';
   when 1, 2: 'retry';
   else 'unknown';

@@ -37,10 +37,10 @@ end record;
 type PointAlias = Point;
 
 begin
-  var PointValue: Point := Point(X := 1, Y := 2);
-  var SameType: Point := PointValue;
-  var AliasValue: PointAlias := PointValue;
-  var ContextualLiteral: PointAlias := Point(X := 3, Y := 4);
+  const PointValue: Point := Point(X := 1, Y := 2);
+  const SameType: Point := PointValue;
+  const AliasValue: PointAlias := PointValue;
+  const ContextualLiteral: PointAlias := Point(X := 3, Y := 4);
 end program;
 "#,
     );
@@ -62,8 +62,8 @@ type Size = record
 end record;
 
 begin
-  var SizeValue: Size := Size(X := 1, Y := 2);
-  var PointValue: Point := SizeValue;
+  const SizeValue: Size := Size(X := 1, Y := 2);
+  const PointValue: Point := SizeValue;
 end program;
 "#,
     );
@@ -152,9 +152,9 @@ begin
 end function;
 
 begin
-  var LeftValue: Left := Left(Value := 1);
-  var RightValue: Right := Right(Value := 2);
-  var ResultValue: Left := Pick(Left(Value := 0), LeftValue, RightValue);
+  const LeftValue: Left := Left(Value := 1);
+  const RightValue: Right := Right(Value := 2);
+  const ResultValue: Left := Pick(Left(Value := 0), LeftValue, RightValue);
 end program;
 "#,
     );

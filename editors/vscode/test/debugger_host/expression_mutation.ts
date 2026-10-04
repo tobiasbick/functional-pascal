@@ -43,24 +43,24 @@ export async function verifyExpressionMutation(
     "  end record;",
     "",
     " ",
-    "  mutable var GlobalValue: integer := 5;",
+    "   var GlobalValue: integer := 5;",
     "",
     "begin",
-    "  mutable var Scalar: integer := 1;",
-    "  var Fixed: integer := 2;",
-    "  mutable var Origin: Point := Point(",
+    "   var Scalar: integer := 1;",
+    "  const Fixed: integer := 2;",
+    "   var Origin: Point := Point(",
     "    X := 3,",
     "    Y := 4",
     "  );",
-    "  mutable var Items: array of (integer) := [6, 7];",
-    "  mutable var Scores: dict of (string, integer) := ['Ada': 8];",
-    "  var StopMarker: integer := Fixed;",
+    "   var Items: array of (integer) := [6, 7];",
+    "   var Scores: dict of (string, integer) := ['Ada': 8];",
+    "  const StopMarker: integer := Fixed;",
     "  Console.WriteLn(Scalar + Origin.X + Items[1] + Scores['Ada'] + GlobalValue);",
     "end program;",
     ""
   ];
   const sourcePath = await writeSource(workspaceRoot, "expression-mutation", lines);
-  const stopLine = lines.indexOf("  var StopMarker: integer := Fixed;");
+  const stopLine = lines.indexOf("  const StopMarker: integer := Fixed;");
   const breakpoint = new vscode.SourceBreakpoint(
     new vscode.Location(vscode.Uri.file(sourcePath), new vscode.Position(stopLine, 2))
   );

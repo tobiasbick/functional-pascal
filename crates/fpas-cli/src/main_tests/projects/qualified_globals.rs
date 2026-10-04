@@ -15,9 +15,9 @@ public type Model = record
   public Values: array of (integer);
 end record;
 
-public mutable var Count: integer := 2;
-public mutable var Grid: array of (array of (integer)) := [[1, 2], [3, 4]];
-public mutable var Data: Model := Model(Values := [5, 6]);
+public  var Count: integer := 2;
+public  var Grid: array of (array of (integer)) := [[1, 2], [3, 4]];
+public  var Data: Model := Model(Values := [5, 6]);
 
 public function GetCount(): integer;
 begin
@@ -36,7 +36,7 @@ uses Std.Console as Console;
           Store.Count := Store.Count + 1;
           Store.Grid[1][0] := Store.Count;
           Store.Data.Values[0] := Store.Grid[1][0] + 4;
-          var Reader: function(): integer := function(): integer
+          const Reader: function(): integer := function(): integer
             begin return sToRe.GetCount() + Store.Data.Values[0]; end function;
           Console.WriteLn(Reader());
           Console.WriteLn(Store.Grid[0][1]);

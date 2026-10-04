@@ -15,11 +15,11 @@ begin
   Console.BeginFrame();
   Console.PutCell(2, 1, CellWith('中', Console.CrtColor(Console.Yellow)));
   Console.Present();
-  var Region: Console.SavedRegion := Console.SaveRegion(Console.rect(x := 3, y := 1, width := 1, height := 1));
+  const Region: Console.SavedRegion := Console.SaveRegion(Console.rect(x := 3, y := 1, width := 1, height := 1));
   Console.PutCell(3, 1, CellWith('X', Console.CrtColor(Console.White)));
   Console.RestoreRegion(Region);
   Console.Present();
-  var WideCell: Console.Cell := Options.Unwrap(Console.GetCell(2, 1));
+  const WideCell: Console.Cell := Options.Unwrap(Console.GetCell(2, 1));
   Test.AssertEquals('中', WideCell.glyph);
   Test.AssertTrue(Options.IsNone(Console.GetCell(3, 1)));
 end program;

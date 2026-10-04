@@ -5,7 +5,7 @@ uses Std.Http as Http;
 uses Std.Test as Test;
 
 begin
-  mutable var RequestValue: Http.Request := Http.Request.Get('http://localhost/');
+  var RequestValue: Http.Request := Http.RequestGet('http://localhost/');
   Test.AssertEquals(65536, RequestValue.MaxHeaderBytes);
   Test.AssertEquals(16777216, RequestValue.MaxResponseBytes);
   Test.AssertEquals(5, RequestValue.MaxRedirects);

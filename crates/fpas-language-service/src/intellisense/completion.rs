@@ -5,7 +5,6 @@ use std::path::Path;
 
 use super::auto_import::auto_import_candidates;
 use super::context::completion_context;
-use super::receiver::receiver_callable_candidates;
 use super::{CompletionCandidate, CompletionDocumentation, CompletionKind, CompletionSource};
 use crate::navigation::{
     NavigationDocument, NavigationResult, find_type, resolve_qualified, resolve_unqualified,
@@ -46,15 +45,7 @@ fn complete(
     context: super::context::CompletionContext,
 ) -> Vec<CompletionCandidate> {
     let symbols = if let Some(receiver) = &context.receiver {
-        let mut members = member_candidates(documents, target_index, receiver, offset);
-        members.extend(receiver_callable_candidates(
-            documents,
-            target_index,
-            receiver,
-            offset,
-            &members,
-        ));
-        members
+        member_candidates(documents, target_index, receiver, offset)
     } else {
         visible_candidates(documents, target_index, offset)
     };
@@ -253,19 +244,11 @@ fn declaration_candidate(
 fn keyword_candidates(context: &super::context::CompletionContext) -> Vec<CompletionCandidate> {
     let keywords: &[&str] = if context.statements {
         &[
-            "begin", "case", "false", "for", "go", "if", "elsif", "when", "mutable", "nil", "null",
-            "panic", "repeat", "true", "var", "while",
+            "begin", "case", "const", "discard", "false", "for", "go", "if", "elsif", "when",
+            "null", "panic", "repeat", "true", "var", "while",
         ]
     } else {
-        &[
-            "const",
-            "function",
-            "mutable",
-            "procedure",
-            "public",
-            "type",
-            "var",
-        ]
+        &["const", "function", "procedure", "public", "type", "var"]
     };
     keywords
         .iter()
@@ -305,11 +288,7 @@ fn starts_with(name: &str, prefix: &str) -> bool {
 fn unqualified_kind(kind: SymbolKind) -> bool {
     !matches!(
         kind,
-        SymbolKind::Program
-            | SymbolKind::Unit
-            | SymbolKind::Field
-            | SymbolKind::Property
-            | SymbolKind::Event
+        SymbolKind::Program | SymbolKind::Unit | SymbolKind::Field
     )
 }
 

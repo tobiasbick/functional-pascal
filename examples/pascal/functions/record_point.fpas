@@ -1,0 +1,37 @@
+program PointExample;
+
+uses Std.Console as Console;
+uses Std.Conv as Conv;
+
+type Point = record
+  X: integer;
+  Y: integer;
+end record;
+
+function PointSum(Receiver: Point): integer;
+begin
+  return Receiver.X + Receiver.Y;
+end function;
+
+function PointAdd(Receiver: Point; Other: Point): Point;
+begin
+  const RX: integer := Receiver.X + Other.X;
+  const RY: integer := Receiver.Y + Other.Y;
+  return Point(X := RX, Y := RY);
+end function;
+
+procedure PointPrint(Receiver: Point);
+begin
+  Console.WriteLn(((('(' + Conv.IntToStr(Receiver.X)) + ', ') + Conv.IntToStr(Receiver.Y)) + ')');
+end procedure;
+
+begin
+  const A: Point := Point(X := 3, Y := 4);
+  const B: Point := Point(X := 10, Y := 20);
+  PointPrint(A);
+  PointPrint(B);
+  Console.WriteLn('Sum of A: ' + Conv.IntToStr(PointSum(A)));
+  const C: Point := PointAdd(A, B);
+  Console.WriteLn('A + B =');
+  PointPrint(C);
+end program;

@@ -44,6 +44,7 @@ impl LoweringContext {
             fields,
             &field_types,
             &defaults,
+            &record,
         )
     }
 
@@ -54,7 +55,8 @@ impl LoweringContext {
         span: fpas_lexer::Span,
         supplied: &[FieldInit],
         declared: &[(String, TypeId)],
-        defaults: &[(String, Option<std::sync::Arc<Expr>>)],
+        defaults: &[(String, Option<fpas_sema::RecordDefault>)],
+        record: &fpas_sema::RecordTy,
     ) -> Result<ValueId, CompileError> {
         let mut staged = HashMap::new();
         for field in supplied {
@@ -77,15 +79,39 @@ impl LoweringContext {
             if staged.contains_key(&key) {
                 continue;
             }
-            let expression = defaults
+            let default = defaults
                 .iter()
                 .find(|(field, _)| field.eq_ignore_ascii_case(name))
-                .and_then(|(_, expression)| expression.as_deref())
+                .and_then(|(_, default)| default.as_ref())
                 .ok_or_else(|| unsupported(span, "missing record field"))?;
-            let value = self.lower_expression_as(expression, *field_ty)?;
-            let local = self.declare_hidden_local(*field_ty, expression.span())?;
-            self.write_local(local, value, expression.span())?;
-            staged.insert(key, (local, *field_ty, expression.span()));
+            let initializer = match default {
+                fpas_sema::RecordDefault::Initializer(name) => name.clone(),
+                fpas_sema::RecordDefault::Expression(_) => {
+                    fpas_unit::interface::record_default_initializer(
+                        &record.name,
+                        record.owner_unit.as_deref(),
+                        name,
+                    )
+                }
+            };
+            let value = if let Some(callable) = self.resolve_callable(&initializer) {
+                let value = self.emit_value(
+                    Operation::CallDirect {
+                        function: callable.function,
+                        arguments: Vec::new(),
+                    },
+                    callable.result,
+                    span,
+                )?;
+                self.coerce_value_type(value, *field_ty, span)?
+            } else if let Some(expression) = default.expression() {
+                self.lower_expression_as(expression, *field_ty)?
+            } else {
+                return Err(unsupported(span, "record default initializer import"));
+            };
+            let local = self.declare_hidden_local(*field_ty, span)?;
+            self.write_local(local, value, span)?;
+            staged.insert(key, (local, *field_ty, span));
         }
         let values = declared
             .iter()

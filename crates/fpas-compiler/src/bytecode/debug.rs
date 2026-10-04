@@ -174,6 +174,7 @@ fn lower_type(ty: &IrType) -> Result<DebugType, CompileError> {
                 .map_err(|_| super::compile_error("enum debug type exceeds u16"))?,
         )),
         IrType::Cell(inner) => DebugType::Cell(id(*inner)),
+        IrType::Reference(inner) => DebugType::Reference(id(*inner)),
         IrType::Task(inner) => DebugType::Task(id(*inner)),
         IrType::Channel(inner) => DebugType::Channel(id(*inner)),
     })
@@ -244,7 +245,7 @@ fn type_name(program: &Program, ty: TypeId, depth: usize) -> String {
         IrType::Enum(layout) => program
             .enum_layout(*layout)
             .map_or_else(|| "enum".to_string(), |layout| layout.name.clone()),
-        IrType::Cell(inner) => type_name(program, *inner, depth + 1),
+        IrType::Cell(inner) | IrType::Reference(inner) => type_name(program, *inner, depth + 1),
         IrType::Task(inner) => format!("task of ({})", type_name(program, *inner, depth + 1)),
         IrType::Channel(inner) => format!("channel of ({})", type_name(program, *inner, depth + 1)),
     }

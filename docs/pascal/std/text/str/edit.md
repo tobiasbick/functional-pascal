@@ -95,7 +95,7 @@ Returns the character at the 0-based `Index`. **Runtime error** if out of bounds
 uses Std.Console as Console;
 uses Std.Str as Str;
 
-var C: string := Str.CharAt('Hello', 0);
+const C: string := Str.CharAt('Hello', 0);
 Console.WriteLn(C); // H
 ```
 

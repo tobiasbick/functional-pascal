@@ -22,7 +22,7 @@ type Container = record
   Items: array of (Box);
 end record;
 
-mutable var GlobalValue: integer := 5;
+ var GlobalValue: integer := 5;
 
 function ChooseIndex(): integer;
 begin
@@ -30,15 +30,15 @@ begin
 end function;
 
 begin
-  mutable var Selected: integer := 0;
-  mutable var Counter: integer := 1;
-  var Fixed: integer := 2;
-  mutable var State: Container := Container(Items := [
+   var Selected: integer := 0;
+   var Counter: integer := 1;
+  const Fixed: integer := 2;
+   var State: Container := Container(Items := [
                                                        Box(Value := 10, Other := 11),
                                                        Box(Value := 20, Other := 21)
                                                      ]);
-  mutable var Scores: dict of (string, integer) := ['blue': 30];
-  mutable var Text: string := 'abc';
+   var Scores: dict of (string, integer) := ['blue': 30];
+   var Text: string := 'abc';
   Counter := Counter + Fixed;
   Console.WriteLn(GlobalValue);
   Console.WriteLn(Counter);

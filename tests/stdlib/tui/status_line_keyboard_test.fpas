@@ -3,6 +3,11 @@ program TuiStatusLineKeyboardTest;
 uses Std.Arrays as Arrays;
 uses Std.Test as Test;
 uses Std.Tui as Tui;
+uses Std.Tui.Chrome as Chrome;
+uses Std.Tui.Elements as Elements;
+uses Std.Tui.Geometry as Geometry;
+uses Std.Tui.Ids as Ids;
+uses Std.Tui.Runtime as Runtime;
 
 type StatusModel = record
   Focus: integer;
@@ -16,18 +21,18 @@ end function;
 
 function ViewStatus(State: StatusModel): Tui.TuiElement;
 begin
-  return Tui.TuiElementBuilders.MakeDesktop(Option.Some(Tui.TuiControlId.Create(State.Focus)), [
-                                                                                                 Tui.TuiElementBuilders.MakeStatusLine([
-                                                                                                                                         Tui.TuiStatusItemBuilders.MakeHint('Ready'),
-                                                                                                                                         Tui.TuiStatusItemBuilders.MakeDisabledCommand(Tui.TuiControlId.Create(2), 'Save', Tui.TuiAction.Create(20)),
-                                                                                                                                         Tui.TuiStatusItemBuilders.MakeCommand(Tui.TuiControlId.Create(3), 'Quit', Tui.TuiAction.Create(30))
-                                                                                                                                       ])
-                                                                                               ]);
+  return Elements.TuiElementMakeDesktop(Option.Some(Ids.TuiControlIdCreate(State.Focus)), [
+                                                                                            Elements.TuiElementMakeStatusLine([
+                                                                                                                                Chrome.TuiStatusItemMakeHint('Ready'),
+                                                                                                                                Chrome.TuiStatusItemMakeDisabledCommand(Ids.TuiControlIdCreate(2), 'Save', Ids.TuiActionCreate(20)),
+                                                                                                                                Chrome.TuiStatusItemMakeCommand(Ids.TuiControlIdCreate(3), 'Quit', Ids.TuiActionCreate(30))
+                                                                                                                              ])
+                                                                                          ]);
 end function;
 
 function UpdateStatus(State: StatusModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): StatusModel;
 begin
-  Cmd.Set(Tui.TuiCmd.NoCommand);
+  Runtime.TuiCmdOutputSet(Cmd, Tui.TuiCmd.NoCommand);
   case Msg of
     when Tui.TuiMsg.FocusChanged(const Previous, const Current):
       begin
@@ -58,15 +63,15 @@ begin
 end function;
 
 begin
-  mutable var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(24, 4));
-  mutable var Model: StatusModel := StatusModel(Focus := 3, Actions := []);
-  Model := App.RunIterations(Model, UpdateStatus, ViewStatus, 0, 0);
-  App.InjectKeyForTest(MakeKey(Tui.TuiKeyKind.Enter));
-  Model := App.RunIterations(Model, UpdateStatus, ViewStatus, 1, 0);
+  var App: Tui.TuiApplication := Runtime.TuiApplicationOpenForTest(Geometry.TuiSizeCreate(24, 4));
+  var Model: StatusModel := StatusModel(Focus := 3, Actions := []);
+  Model := Runtime.TuiApplicationRunIterations(App, Model, UpdateStatus, ViewStatus, 0, 0);
+  Runtime.TuiApplicationInjectKeyForTest(App, MakeKey(Tui.TuiKeyKind.Enter));
+  Model := Runtime.TuiApplicationRunIterations(App, Model, UpdateStatus, ViewStatus, 1, 0);
   Test.AssertEquals(1, Arrays.Length(Model.Actions));
   Test.AssertEquals(30, Model.Actions[0]);
-  App.InjectKeyForTest(MakeKey(Tui.TuiKeyKind.Tab));
-  Model := App.RunIterations(Model, UpdateStatus, ViewStatus, 1, 0);
+  Runtime.TuiApplicationInjectKeyForTest(App, MakeKey(Tui.TuiKeyKind.Tab));
+  Model := Runtime.TuiApplicationRunIterations(App, Model, UpdateStatus, ViewStatus, 1, 0);
   Test.AssertEquals(3, Model.Focus);
-  App.Close();
+  Runtime.TuiApplicationClose(App);
 end program;

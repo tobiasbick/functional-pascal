@@ -6,18 +6,18 @@ uses Std.Console as Console;
 uses Std.Conv as Conv;
 uses Std.Arrays as Arrays;
 
-function IsEven(X: integer): boolean;
+pure function IsEven(X: integer): boolean;
 begin
   return (X mod 2) = 0;
 end function;
 
-function IsPositive(V: integer): boolean;
+pure function IsPositive(V: integer): boolean;
 begin
   return V > 0;
 end function;
 
 begin
-  var Nums: array of (integer) := [3, 1, 4, 1, 5];
+  const Nums: array of (integer) := [3, 1, 4, 1, 5];
   Console.WriteLn('length: ', Conv.IntToStr(Arrays.Length(Nums)));
   Console.WriteLn('sorted: ', Conv.IntToStr(Arrays.IndexOf(Arrays.Sort(Nums), 4)));
   Console.WriteLn('any even: ', Arrays.Any(Nums, IsEven));

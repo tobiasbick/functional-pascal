@@ -1,0 +1,19 @@
+// Public ids functions.
+unit Std.Tui.Ids;
+
+uses Std.Tui.Ids.Action as Action;
+uses Std.Tui.Ids.ControlId as ControlId;
+
+// Creates a validated positive action identity.
+public function TuiActionCreate(Value: integer): Action.TuiAction;
+begin
+  return Action.TuiActionCreate(Value);
+end function;
+
+// Creates a validated positive identity.
+public function TuiControlIdCreate(Value: integer): ControlId.TuiControlId;
+begin
+  return ControlId.TuiControlIdCreate(Value);
+end function;
+
+end unit;

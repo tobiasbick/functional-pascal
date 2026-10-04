@@ -52,7 +52,7 @@ pub(super) fn relocation_category(
         Opcode::LoadGlobal | Opcode::StoreGlobal | Opcode::StoreGlobalIndexPath => {
             Some(RelocationCategory::Global)
         }
-        Opcode::MakeRecord => Some(RelocationCategory::Record),
+        Opcode::MakeRecord | Opcode::SelectReferenceField => Some(RelocationCategory::Record),
         Opcode::LoadField | Opcode::StoreField => Some(RelocationCategory::RecordField),
         Opcode::MakeEnum | Opcode::TestVariant => Some(RelocationCategory::EnumVariant),
         Opcode::LoadEnumField => Some(RelocationCategory::EnumField),
@@ -224,7 +224,22 @@ pub(super) fn validate_import_shape(shape: &ImportShape) -> Result<(), ObjectErr
             }
             Ok(())
         }
-        ImportShape::Function { .. } | ImportShape::Global { .. } => Ok(()),
+        ImportShape::Function {
+            arity,
+            var_parameters,
+            ..
+        } => validate_parameter_modes(*arity, var_parameters),
+        ImportShape::Global { .. } => Ok(()),
+    }
+}
+
+pub(super) fn validate_parameter_modes(arity: u8, positions: &[u8]) -> Result<(), ObjectError> {
+    if fpas_bytecode::var_parameters_are_valid(arity, positions) {
+        Ok(())
+    } else {
+        Err(ObjectError::InvalidTableReference(
+            "var parameter positions",
+        ))
     }
 }
 

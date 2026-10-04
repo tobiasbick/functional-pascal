@@ -12,9 +12,9 @@ begin
   return Value;
 end function;
 begin
-  var A: task := go Work(11);
-  var B: task := go Work(22);
-  var Winner: integer := Tasks.WaitAny([A, B]);
+  const A: task := go Work(11);
+  const B: task := go Work(22);
+  const Winner: integer := Tasks.WaitAny([A, B]);
   if (Winner < 0) or (Winner > 1) then panic('index'); end if;
   Tasks.WaitAll([A, B]);
   if Tasks.WaitAny([B, A]) <> 0 then panic('order'); end if;

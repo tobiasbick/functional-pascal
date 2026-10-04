@@ -181,9 +181,10 @@ fn loose_program_analysis_resolves_the_source_standard_library() {
         r#"program Standalone;
 
 uses Std.Tui as Tui;
+uses Std.Tui.Cells as Cells;
 
 begin
-  var Palette: Tui.TuiPalette := Tui.TuiPalette.Default();
+  const Palette: Tui.TuiPalette := Cells.TuiPaletteDefault();
 end program;
 "#,
     );
@@ -279,7 +280,7 @@ include = ["src/**/*.fpas"]
 uses Demo.Api as Api;
 
 begin
-  var Value: integer := Api.Answer();
+  const Value: integer := Api.Answer();
 end program;
 "#,
     );
@@ -355,7 +356,7 @@ fn loose_files_remain_analyzable_after_a_nested_project_is_loaded() {
         r#"program Loose;
 
 begin
-  var Value: integer := 1;
+  const Value: integer := 1;
 end program;
 "#,
     );

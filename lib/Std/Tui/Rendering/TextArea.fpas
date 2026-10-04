@@ -31,20 +31,20 @@ public procedure TuiPaintTextArea(
   FocusedRole: StyleRole.TuiStyleRole
 );
 begin
-  if Bounds.IsEmpty() then
+  if Rect.TuiRectIsEmpty(Bounds) then
     begin
       return;
     end;
   end if;
-  var Area: Canvas2.TuiCanvas := Canvas.Child(Bounds);
-  var Lines: array of (string) := Str.Split(Text, Str.Chr(10));
-  var LineCount: integer := Arrays.Length(Lines);
+  const Area: Canvas2.TuiCanvas := Canvas2.TuiCanvasChild(Canvas, Bounds);
+  const Lines: array of (string) := Str.Split(Text, Str.Chr(10));
+  const LineCount: integer := Arrays.Length(Lines);
   for Row: integer := 0 to Bounds.Height - 1 do
     begin
-      var Line: integer := Offset.Y + Row;
+      const Line: integer := Offset.Y + Row;
       if Line < LineCount then
         begin
-          Area.WriteText(Point.TuiPoint.Create(- Offset.X, Row), Lines[Line], NormalRole);
+          Canvas2.TuiCanvasWriteText(Area, Point.TuiPointCreate(- Offset.X, Row), Lines[Line], NormalRole);
         end;
       end if;
     end;
@@ -52,13 +52,13 @@ begin
 
   if Focused then
     begin
-      var Position: TextArea.TuiTextAreaPosition := TextArea.TuiTextAreaLocate(Text, Caret);
-      var CaretX: integer := Position.DisplayColumn - Offset.X;
-      var CaretY: integer := Position.Line - Offset.Y;
+      const Position: TextArea.TuiTextAreaPosition := TextArea.TuiTextAreaLocate(Text, Caret);
+      const CaretX: integer := Position.DisplayColumn - Offset.X;
+      const CaretY: integer := Position.Line - Offset.Y;
       if (((CaretX >= 0) and (CaretX < Bounds.Width)) and (CaretY >= 0)) and
          (CaretY < Bounds.Height) then
         begin
-          Area.PutCell(Point.TuiPoint.Create(CaretX, CaretY), Cell.TuiCell.Create('▏', FocusedRole));
+          Canvas2.TuiCanvasPutCell(Area, Point.TuiPointCreate(CaretX, CaretY), Cell.TuiCellCreate('▏', FocusedRole));
         end;
       end if;
     end;

@@ -25,6 +25,7 @@ fn task_function(
         name: StringId::new(name),
         code: CodeRange::new(InstructionAddress::new(start), InstructionAddress::new(end)),
         arity: 0,
+        var_parameters: Vec::new(),
         capture_count: 0,
         register_count,
         return_convention: ReturnConvention::Unit,

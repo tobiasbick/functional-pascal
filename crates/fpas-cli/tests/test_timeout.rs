@@ -89,7 +89,10 @@ fn timeout_terminates_processes_started_by_the_test() {
     write(
         &test_file,
         &format!(
-            "program ProcessTest;\nuses Std.Proc as Proc;\n  mutable var Status: Result of (integer, string) := Result.Error('not started');\nbegin Status := Proc.Run('{command}', [{arguments}]); end program;"
+            r#"program ProcessTest;
+uses Std.Proc as Proc;
+   var Status: Result of (integer, string) := Result.Error('not started');
+begin Status := Proc.Run('{command}', [{arguments}]); end program;"#
         ),
     );
 

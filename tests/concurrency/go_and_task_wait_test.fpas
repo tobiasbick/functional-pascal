@@ -9,6 +9,6 @@ begin
 end function;
 
 begin
-  var T: task := go Worker();
+  const T: task := go Worker();
   Test.AssertEquals(42, Tasks.Wait(T));
 end program;

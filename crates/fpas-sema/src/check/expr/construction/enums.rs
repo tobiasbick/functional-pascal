@@ -87,7 +87,13 @@ impl Checker {
         for ((_, declared), actual) in variant.fields.iter().zip(&actual_types) {
             // Context supplies final arguments; ordinary field conversions are checked below.
             let declared = declared.substitute(&contextual);
-            self.collect_type_param_bindings(&declared, actual, &mut inferred, span);
+            self.collect_type_param_bindings(
+                &declared,
+                actual,
+                &mut inferred,
+                symbol.ty.type_parameters(),
+                span,
+            );
         }
         self.check_args_only(&arguments[variant.fields.len().min(arguments.len())..]);
         let constructed = self.finish_data_construction(&symbol.ty, &inferred, &source_name, span);

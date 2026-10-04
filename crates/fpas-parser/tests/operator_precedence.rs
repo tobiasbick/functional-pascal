@@ -172,7 +172,7 @@ fn migration_diagnostics_recover_without_duplicating_effects() {
 #[test]
 fn shift_words_are_ordinary_identifiers_and_partial_expressions_terminate() {
     let (_, errors) = parse(
-        "program T; var shl: integer := 1; var SHR: integer := shl; begin null; end program;",
+        r#"program T; const shl: integer := 1; const SHR: integer := shl; begin null; end program;"#,
     );
     assert!(errors.is_empty(), "{errors:?}");
     for bad in ["not", "A and", "A <", "A shl", "not (", "A and or B"] {

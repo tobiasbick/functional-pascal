@@ -68,6 +68,8 @@ pub enum ImportShape {
     Function {
         /// Positional argument count.
         arity: u8,
+        /// Strictly increasing argument positions requiring synchronous var references.
+        var_parameters: Vec<u8>,
         /// Captured register count.
         capture_count: u16,
         /// Whether the callable returns a value.

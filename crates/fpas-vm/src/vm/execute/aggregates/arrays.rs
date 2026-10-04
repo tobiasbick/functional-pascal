@@ -13,6 +13,7 @@ impl Worker {
     /// Consumes the source array and appends with copy-on-write isolation.
     pub fn array_push(&mut self, o: AbcOperands) -> Result<(), VmError> {
         let value = self.read(register(o.c)?)?.clone();
+        self.require_value_data(&value)?;
         let array = self.take(register(o.b)?)?;
         let Value::Array(mut array) = array else {
             return Err(self.type_mismatch("array", &array));

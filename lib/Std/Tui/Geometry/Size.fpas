@@ -17,27 +17,27 @@ public type TuiSize = record
   public Width: integer;
   // Height in terminal cells.
   public Height: integer;
-
-  // Creates a validated extent.
-  //
-  // Parameters:
-  // - `Width`: Width in terminal cells.
-  // - `Height`: Height in terminal cells.
-  public static function Create(Width: integer; Height: integer): TuiSize;
-  begin
-    discard TuiSizeRequireNonNegative(Width, 'width');
-    discard TuiSizeRequireNonNegative(Height, 'height');
-    return TuiSize(Width := Width, Height := Height);
-  end function;
-
-  // Returns whether either extent is zero.
-  //
-  // Parameters:
-  // - `Self`: Receiver value operated on by the method.
-  public function IsEmpty(Self: TuiSize): boolean;
-  begin
-    return (Self.Width = 0) or (Self.Height = 0);
-  end function;
 end record;
+
+// Creates a validated extent.
+//
+// Parameters:
+// - `Width`: Width in terminal cells.
+// - `Height`: Height in terminal cells.
+public function TuiSizeCreate(Width: integer; Height: integer): TuiSize;
+begin
+  discard TuiSizeRequireNonNegative(Width, 'width');
+  discard TuiSizeRequireNonNegative(Height, 'height');
+  return TuiSize(Width := Width, Height := Height);
+end function;
+
+// Returns whether either extent is zero.
+//
+// Parameters:
+// - `Receiver`: Value processed by the function.
+public function TuiSizeIsEmpty(Receiver: TuiSize): boolean;
+begin
+  return (Receiver.Width = 0) or (Receiver.Height = 0);
+end function;
 
 end unit;

@@ -45,10 +45,10 @@ fn timed_group_close_returns_while_a_running_pool_worker_ignores_cancellation() 
         r#"program NonCooperativeWorker;
 uses Std.Tasks as Tasks; uses Std.Results as Results; uses Std.Options as Options; uses Std.Arrays as Arrays;
 begin
-  var Group: Tasks.TaskGroup := Tasks.CreateTaskGroup();
-  var Ready: channel of (boolean) := Tasks.CreateChannel(1);
-  var Release: channel of (boolean) := Tasks.CreateChannel(1);
-  var Child: task := Tasks.StartTaskInGroup(Group, function(Token: Tasks.CancellationToken): integer
+  const Group: Tasks.TaskGroup := Tasks.CreateTaskGroup();
+  const Ready: channel of (boolean) := Tasks.CreateChannel(1);
+  const Release: channel of (boolean) := Tasks.CreateChannel(1);
+  const Child: task := Tasks.StartTaskInGroup(Group, function(Token: Tasks.CancellationToken): integer
   begin
     discard Tasks.Send(Ready, true);
     while Options.IsNone(Results.Unwrap(Tasks.TryReceive(Release))) do begin null; end; end while;
@@ -83,13 +83,13 @@ fn child_timed_group_close_yields_to_its_waiting_parent() {
         r#"program NestedClose;
 uses Std.Tasks as Tasks; uses Std.Results as Results; uses Std.Arrays as Arrays;
 begin
-  var Outer: Tasks.TaskGroup := Tasks.CreateTaskGroup();
-  var Ready: channel of (boolean) := Tasks.CreateChannel(1);
-  var Gate: channel of (integer) := Tasks.CreateChannel(1);
-  var Parent: task := Tasks.StartTaskInGroup(Outer, procedure(Token: Tasks.CancellationToken)
+  const Outer: Tasks.TaskGroup := Tasks.CreateTaskGroup();
+  const Ready: channel of (boolean) := Tasks.CreateChannel(1);
+  const Gate: channel of (integer) := Tasks.CreateChannel(1);
+  const Parent: task := Tasks.StartTaskInGroup(Outer, procedure(Token: Tasks.CancellationToken)
   begin
-    var Inner: Tasks.TaskGroup := Tasks.CreateTaskGroup();
-    var Child: task := Tasks.StartTaskInGroup(Inner, function(Stop: Tasks.CancellationToken): integer
+    const Inner: Tasks.TaskGroup := Tasks.CreateTaskGroup();
+    const Child: task := Tasks.StartTaskInGroup(Inner, function(Stop: Tasks.CancellationToken): integer
       begin return Results.Unwrap(Tasks.Receive(Gate)); end function);
     if not Results.IsError(Tasks.CloseTaskGroupWithTimeout(Inner, 2)) then panic('premature close'); end if;
     discard Results.Unwrap(Tasks.Send(Ready, true));

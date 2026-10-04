@@ -2,7 +2,8 @@
 
 Public layout values are `TuiSizePolicy`, `TuiAlignment`, `TuiMargins`,
 `TuiLayoutSettings`, `TuiMeasureSpec`, `TuiMeasureResult`, `TuiSpacer`, and
-`TuiLayoutFit`. `TuiMeasure(Node, Spec)` is pure.
+`TuiLayoutFit`. `Tui.TuiMeasure(Node, Spec)` computes minimum and preferred sizes.
+Import `Std.Tui.Layout as Layout` for constructors and operations on layout values.
 
 Arrangement creates an internal host-owned frame containing preorder parent
 indices, bounds, and clips. Applications cannot create, retain, or inspect this
@@ -16,7 +17,7 @@ child order toward preferred extents, then distribute remaining cells through
 aligns its child independently per axis with `Leading`, `Center`, `Trailing`, or
 `Fill`. `Expanding` raises the wrapper's maximum on the selected axes; combined
 with `Fill`, the child consumes the corresponding allocated content area.
-`Settings.WithFixedWidth(Width)` and `Settings.WithFixedHeight(Height)` return
+`Layout.TuiLayoutSettingsWithFixedWidth(Settings, Width)` and `Layout.TuiLayoutSettingsWithFixedHeight(Settings, Height)` return
 copies whose total horizontal or vertical extent, including margins, is fixed
 to the supplied non-negative cell count. Fixed axes do not receive remaining
 space from a `Row` or `Column`; negative extents panic.

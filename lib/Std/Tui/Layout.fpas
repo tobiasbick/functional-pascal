@@ -1,0 +1,228 @@
+// Public layout functions.
+unit Std.Tui.Layout;
+
+uses Std.Tui.Geometry.Size as Size2;
+uses Std.Tui.Layout.Alignment as Alignment2;
+uses Std.Tui.Layout.LayoutFit as LayoutFit;
+uses Std.Tui.Layout.LayoutSettings as LayoutSettings;
+uses Std.Tui.Layout.Margins as Margins2;
+uses Std.Tui.Layout.MeasureConstraint as MeasureConstraint;
+uses Std.Tui.Layout.MeasureResult as MeasureResult;
+uses Std.Tui.Layout.MeasureSpec as MeasureSpec;
+uses Std.Tui.Layout.SizePolicy as SizePolicy2;
+uses Std.Tui.Layout.Spacer as Spacer;
+
+// Creates a fit report from minimum and available sizes.
+public function TuiLayoutFitCreate(Minimum: Size2.TuiSize; Available: Size2.TuiSize): LayoutFit.TuiLayoutFit;
+begin
+  return LayoutFit.TuiLayoutFitCreate(Minimum, Available);
+end function;
+
+// Returns whether neither axis overflows.
+public function TuiLayoutFitFits(Receiver: LayoutFit.TuiLayoutFit): boolean;
+begin
+  return LayoutFit.TuiLayoutFitFits(Receiver);
+end function;
+
+// Creates an ordered measure result.
+public function TuiMeasureResultCreate(
+  Minimum: Size2.TuiSize;
+  Preferred: Size2.TuiSize;
+  Maximum: Size2.TuiSize
+): MeasureResult.TuiMeasureResult;
+begin
+  return MeasureResult.TuiMeasureResultCreate(Minimum, Preferred, Maximum);
+end function;
+
+// Creates a fixed measure where all three sizes match.
+public function TuiMeasureResultFixed(Size: Size2.TuiSize): MeasureResult.TuiMeasureResult;
+begin
+  return MeasureResult.TuiMeasureResultFixed(Size);
+end function;
+
+// Creates a fixed spacer with a non-negative extent.
+public function TuiSpacerFixed(Extent: integer): Spacer.TuiSpacer;
+begin
+  return Spacer.TuiSpacerFixed(Extent);
+end function;
+
+// Creates an expanding spacer with a non-negative minimum extent.
+public function TuiSpacerExpanding(MinimumExtent: integer): Spacer.TuiSpacer;
+begin
+  return Spacer.TuiSpacerExpanding(MinimumExtent);
+end function;
+
+// Creates validated layout settings.
+public function TuiLayoutSettingsCreate(
+  Margins: Margins2.TuiMargins;
+  SizePolicy: SizePolicy2.TuiSizePolicy;
+  Alignment: Alignment2.TuiAlignment;
+  Stretch: integer
+): LayoutSettings.TuiLayoutSettings;
+begin
+  return LayoutSettings.TuiLayoutSettingsCreate(Margins, SizePolicy, Alignment, Stretch);
+end function;
+
+// Returns a copy constrained to one total width; negative widths panic.
+public function TuiLayoutSettingsWithFixedWidth(Receiver: LayoutSettings.TuiLayoutSettings; Width: integer): LayoutSettings.TuiLayoutSettings;
+begin
+  return LayoutSettings.TuiLayoutSettingsWithFixedWidth(Receiver, Width);
+end function;
+
+// Returns a copy constrained to one total height; negative heights panic.
+public function TuiLayoutSettingsWithFixedHeight(
+  Receiver: LayoutSettings.TuiLayoutSettings;
+  Height: integer
+): LayoutSettings.TuiLayoutSettings;
+begin
+  return LayoutSettings.TuiLayoutSettingsWithFixedHeight(Receiver, Height);
+end function;
+
+// Zero margins, preferred policy, fill alignment, and stretch zero.
+public function TuiLayoutSettingsDefault(): LayoutSettings.TuiLayoutSettings;
+begin
+  return LayoutSettings.TuiLayoutSettingsDefault();
+end function;
+
+// Creates a two-axis measure specification.
+public function TuiMeasureSpecCreate(
+  Width: MeasureConstraint.TuiMeasureConstraint;
+  Height: MeasureConstraint.TuiMeasureConstraint
+): MeasureSpec.TuiMeasureSpec;
+begin
+  return MeasureSpec.TuiMeasureSpecCreate(Width, Height);
+end function;
+
+// Both axes unbounded.
+public function TuiMeasureSpecUnbounded(): MeasureSpec.TuiMeasureSpec;
+begin
+  return MeasureSpec.TuiMeasureSpecUnbounded();
+end function;
+
+// Both axes capped by the given size.
+public function TuiMeasureSpecAtMost(Size: Size2.TuiSize): MeasureSpec.TuiMeasureSpec;
+begin
+  return MeasureSpec.TuiMeasureSpecAtMost(Size);
+end function;
+
+// Creates a mixed-axis alignment.
+public function TuiAlignmentCreate(
+  Horizontal: Alignment2.TuiAlignmentKind;
+  Vertical: Alignment2.TuiAlignmentKind
+): Alignment2.TuiAlignment;
+begin
+  return Alignment2.TuiAlignmentCreate(Horizontal, Vertical);
+end function;
+
+// Leading on both axes.
+public function TuiAlignmentLeading(): Alignment2.TuiAlignment;
+begin
+  return Alignment2.TuiAlignmentLeading();
+end function;
+
+// Centered on both axes.
+public function TuiAlignmentCenter(): Alignment2.TuiAlignment;
+begin
+  return Alignment2.TuiAlignmentCenter();
+end function;
+
+// Trailing on both axes.
+public function TuiAlignmentTrailing(): Alignment2.TuiAlignment;
+begin
+  return Alignment2.TuiAlignmentTrailing();
+end function;
+
+// Fill on both axes.
+public function TuiAlignmentFill(): Alignment2.TuiAlignment;
+begin
+  return Alignment2.TuiAlignmentFill();
+end function;
+
+// Creates validated margins.
+public function TuiMarginsCreate(Left: integer; Top: integer; Right: integer; Bottom: integer): Margins2.TuiMargins;
+begin
+  return Margins2.TuiMarginsCreate(Left, Top, Right, Bottom);
+end function;
+
+// Creates equal margins on every side.
+public function TuiMarginsUniform(Value: integer): Margins2.TuiMargins;
+begin
+  return Margins2.TuiMarginsUniform(Value);
+end function;
+
+// Creates symmetric horizontal and vertical margins.
+public function TuiMarginsSymmetric(Horizontal: integer; Vertical: integer): Margins2.TuiMargins;
+begin
+  return Margins2.TuiMarginsSymmetric(Horizontal, Vertical);
+end function;
+
+// Returns left plus right.
+public function TuiMarginsHorizontal(Receiver: Margins2.TuiMargins): integer;
+begin
+  return Margins2.TuiMarginsHorizontal(Receiver);
+end function;
+
+// Returns top plus bottom.
+public function TuiMarginsVertical(Receiver: Margins2.TuiMargins): integer;
+begin
+  return Margins2.TuiMarginsVertical(Receiver);
+end function;
+
+// Creates an unbounded axis constraint.
+public function TuiMeasureConstraintUnbounded(): MeasureConstraint.TuiMeasureConstraint;
+begin
+  return MeasureConstraint.TuiMeasureConstraintUnbounded();
+end function;
+
+// Creates a non-negative upper bound.
+public function TuiMeasureConstraintAtMost(Limit: integer): MeasureConstraint.TuiMeasureConstraint;
+begin
+  return MeasureConstraint.TuiMeasureConstraintAtMost(Limit);
+end function;
+
+// Returns whether the constraint has an upper bound.
+public function TuiMeasureConstraintIsBounded(Receiver: MeasureConstraint.TuiMeasureConstraint): boolean;
+begin
+  return MeasureConstraint.TuiMeasureConstraintIsBounded(Receiver);
+end function;
+
+// Creates a mixed-axis size policy.
+public function TuiSizePolicyCreate(
+  Horizontal: SizePolicy2.TuiSizePolicyKind;
+  Vertical: SizePolicy2.TuiSizePolicyKind
+): SizePolicy2.TuiSizePolicy;
+begin
+  return SizePolicy2.TuiSizePolicyCreate(Horizontal, Vertical);
+end function;
+
+// Both axes fixed to preferred size.
+public function TuiSizePolicyFixed(): SizePolicy2.TuiSizePolicy;
+begin
+  return SizePolicy2.TuiSizePolicyFixed();
+end function;
+
+// Both axes use preferred as the minimum.
+public function TuiSizePolicyMinimum(): SizePolicy2.TuiSizePolicy;
+begin
+  return SizePolicy2.TuiSizePolicyMinimum();
+end function;
+
+// Both axes use preferred as the maximum.
+public function TuiSizePolicyMaximum(): SizePolicy2.TuiSizePolicy;
+begin
+  return SizePolicy2.TuiSizePolicyMaximum();
+end function;
+
+// Both axes treat preferred as ideal with grow and shrink.
+public function TuiSizePolicyPreferred(): SizePolicy2.TuiSizePolicy;
+begin
+  return SizePolicy2.TuiSizePolicyPreferred();
+end function;
+
+// Both axes request additional space beyond preferred.
+public function TuiSizePolicyExpanding(): SizePolicy2.TuiSizePolicy;
+begin
+  return SizePolicy2.TuiSizePolicyExpanding();
+end function;
+
+end unit;

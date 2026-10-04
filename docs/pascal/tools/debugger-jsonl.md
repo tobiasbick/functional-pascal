@@ -164,7 +164,7 @@ selectors (`.Field`) and index selectors (`[expression]`). Field selectors
 address record fields, active enum payload fields, wrapper `.value`, and an
 explicit inactive single-payload variant suffix such as `Some.value`,
 `Ok.value`, `Error.value`, or `Count.Value`. Parenthesized or
-computed bases, calls as the root/path, properties, assignments, declarations,
+computed bases, calls as the root/path, assignments, declarations,
 and statements are rejected. A supplied current `frame_id` selects that
 frame's task and lexical scope. An omitted frame searches globals only and
 never falls back to the selected or main frame. Array indexes must be in range;
@@ -188,14 +188,11 @@ parameter register of that owner frame. A task-bound source may be copied only
 within its selected owner task and frame; global, descendant, capture-cell,
 foreign-task, and stale destinations fail without mutation. A simple name uses
 lexical lookup first and falls back to the executable catalog only after an
-unknown name. `Receiver.Method` constructs a bound method from the receiver's
-exact runtime record layout and compiler-retained method mapping. The receiver
-is evaluated once, its method signature must match the destination, and live or
-opaque identities inside the receiver graph are rejected. An identifier-only
-chain falls back to the routine catalog only when its receiver name is unknown.
-Anonymous closure syntax, non-method computed expressions, escaping or foreign-task
+unknown name. Qualified callable paths prefer visible stored fields and fall back to the
+executable catalog only for an unknown root.
+Anonymous closure syntax, computed expressions, escaping or foreign-task
 copies of materialized task-bound functions, synthetic function children such as
-`receiver` and `capture[i]`, and
+`capture[i]`, and
 inactive-variant function payloads remain rejected. A task-typed target accepts
 one visible source binding that already holds a compatible task handle, for
 example `Current := Pending`. The request copies the exact runtime ID through
@@ -346,9 +343,8 @@ not become ordinary mutation. Failure leaves empty storage and inspection
 handles unchanged. A later source initializer still overwrites the debugger
 value. Initialize advertises `storage_initialize`.
 
-`evaluate` may call exact executable routines, record methods and readable
-properties, visible first-class functions, and deterministic `Std.*`
-intrinsics. Calls use a detached copy of globals, arguments, receivers,
+`evaluate` may call exact executable routines, visible first-class functions, and deterministic `Std.*`
+intrinsics. Calls use a detached copy of globals, arguments,
 captures, cells, and aggregates, so accepted writes never change the stopped
 program. Host I/O, nondeterminism, blocking, task operations, opaque resources,
 and unknown dynamic effects are denied. The accepted expression forms and

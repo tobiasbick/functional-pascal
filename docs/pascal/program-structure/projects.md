@@ -70,6 +70,8 @@ Rules:
 - Library sources are linked only when reachable through `uses` from the program entry point (see [Units](units.md)).
 - Missing, stale, corrupt, or compiler/bytecode-incompatible `.fpascu` files are rebuilt
   automatically beside their `.fpas` sources.
+- Compiler identity includes a source fingerprint of compilation components,
+  including shared IR evaluation. Implementation changes invalidate derived artifacts.
 - `.fpascu` is a derived build artifact, not a dependency syntax and not a source-less package
   format. The `.fpasprj` manifest and `.fpas` sources remain required and authoritative.
 

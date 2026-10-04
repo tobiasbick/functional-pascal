@@ -2,57 +2,61 @@ program TuiLayoutArrangeTest;
 
 uses Std.Test as Test;
 uses Std.Tui as Tui;
+uses Std.Tui.Elements as Elements;
+uses Std.Tui.Geometry as Geometry;
+uses Std.Tui.Layout as Layout;
+uses Std.Tui.Rendering as Rendering;
+uses Std.Tui.Runtime as Runtime;
 
 function Paint(Tree: Tui.TuiElement; Size: Tui.TuiSize): Tui.TuiSurfaceSnapshot;
 begin
-  var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Size);
-  discard App.RunIterations(Tree, function(State: Tui.TuiElement; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): Tui.TuiElement begin
+  const App: Tui.TuiApplication := Runtime.TuiApplicationOpenForTest(Size);
+  discard Runtime.TuiApplicationRunIterations(App, Tree, function(State: Tui.TuiElement; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): Tui.TuiElement begin
     return State;
   end function, function(State: Tui.TuiElement): Tui.TuiElement begin
     return State;
   end function, 0, 0);
-  var Snapshot: Tui.TuiSurfaceSnapshot := App.SurfaceSnapshot();
-  App.Close();
+  const Snapshot: Tui.TuiSurfaceSnapshot := Runtime.TuiApplicationSurfaceSnapshot(App);
+  Runtime.TuiApplicationClose(App);
   return Snapshot;
 end function;
 
 begin
-  var Row: Tui.TuiSurfaceSnapshot := Paint(Tui.TuiElementBuilders.MakeDesktop(Option.None, [
-                                                                                             Tui.TuiElementBuilders.MakeRowSpaced([
-                                                                                                                                    Tui.TuiElementBuilders.MakeLayout(Tui.TuiLayoutSettings.Create(Tui.TuiMargins.Uniform(0), Tui.TuiSizePolicy.Preferred(), Tui.TuiAlignment.Leading(), 2), Tui.TuiElementBuilders.MakeLabel('A')),
-                                                                                                                                    Tui.TuiElementBuilders.MakeLayout(Tui.TuiLayoutSettings.Create(Tui.TuiMargins.Uniform(0), Tui.TuiSizePolicy.Preferred(), Tui.TuiAlignment.Leading(), 1), Tui.TuiElementBuilders.MakeLabel('B'))
-                                                                                                                                  ], 1)
-                                                                                           ]), Tui.TuiSize.Create(13, 1));
-  Test.AssertEquals('A', Row.CellAt(0, 0).Glyph);
-  Test.AssertEquals('B', Row.CellAt(9, 0).Glyph);
-  var Trailing: Tui.TuiSurfaceSnapshot := Paint(Tui.TuiElementBuilders.MakeDesktop(Option.None, [
-                                                                                                  Tui.TuiElementBuilders.MakeLayout(Tui.TuiLayoutSettings.Create(Tui.TuiMargins.Uniform(1), Tui.TuiSizePolicy.Preferred(), Tui.TuiAlignment.Trailing(), 0), Tui.TuiElementBuilders.MakeLabel('X'))
-                                                                                                ]), Tui.TuiSize.Create(10, 4));
-  Test.AssertEquals('X', Trailing.CellAt(8, 2).Glyph);
-  var Window: Tui.TuiSurfaceSnapshot := Paint(Tui.TuiElementBuilders.MakeDesktop(Option.None, [
-                                                                                                Tui.TuiElementBuilders.MakePanel('Title', [Tui.TuiElementBuilders.MakeLabel('Body')])
-                                                                                              ]), Tui.TuiSize.Create(12, 5));
-  Test.AssertEquals('B', Window.CellAt(1, 1).Glyph);
-  var FixedWidth: Tui.TuiSurfaceSnapshot := Paint(Tui.TuiElementBuilders.MakeDesktop(Option.None, [
-                                                                                                    Tui.TuiElementBuilders.MakeRow([
-                                                                                                                                     Tui.TuiElementBuilders.MakeLayout(Tui.TuiLayoutSettings.Create(Tui.TuiMargins.Uniform(0), Tui.TuiSizePolicy.Expanding(), Tui.TuiAlignment.Fill(), 0)
-                                                                                                                                                                         .WithFixedWidth(5), Tui.TuiElementBuilders.MakeLabel('L')),
-                                                                                                                                     Tui.TuiElementBuilders.MakeLayout(Tui.TuiLayoutSettings.Create(Tui.TuiMargins.Uniform(0), Tui.TuiSizePolicy.Expanding(), Tui.TuiAlignment.Fill(), 1), Tui.TuiElementBuilders.MakeLabel('R'))
-                                                                                                                                   ])
-                                                                                                  ]), Tui.TuiSize.Create(12, 1));
-  Test.AssertEquals('L', FixedWidth.CellAt(0, 0).Glyph);
-  Test.AssertEquals('R', FixedWidth.CellAt(5, 0).Glyph);
-  var Filled: Tui.TuiSurfaceSnapshot := Paint(Tui.TuiElementBuilders.MakeDesktop(Option.None, [
-                                                                                                Tui.TuiElementBuilders.MakeLayout(Tui.TuiLayoutSettings.Create(Tui.TuiMargins.Uniform(0), Tui.TuiSizePolicy.Expanding(), Tui.TuiAlignment.Fill(), 1), Tui.TuiElementBuilders.MakePanel('Fill', [
-                                                                                                                                                                                                                                                                                                 Tui.TuiElementBuilders.MakeLabel('Body')
-                                                                                                                                                                                                                                                                                               ]))
-                                                                                              ]), Tui.TuiSize.Create(12, 5));
-  Test.AssertEquals('╯', Filled.CellAt(11, 4).Glyph);
-  var Undersized: Tui.TuiSurfaceSnapshot := Paint(Tui.TuiElementBuilders.MakeDesktop(Option.None, [
-                                                                                                    Tui.TuiElementBuilders.MakeRowSpaced([
-                                                                                                                                           Tui.TuiElementBuilders.MakeLabel('ABCDEFGH'),
-                                                                                                                                           Tui.TuiElementBuilders.MakeLabel('IJK')
-                                                                                                                                         ], 1)
-                                                                                                  ]), Tui.TuiSize.Create(5, 1));
-  Test.AssertEquals('A', Undersized.CellAt(0, 0).Glyph);
+  const Row: Tui.TuiSurfaceSnapshot := Paint(Elements.TuiElementMakeDesktop(Option.None, [
+                                                                                           Elements.TuiElementMakeRowSpaced([
+                                                                                                                              Elements.TuiElementMakeLayout(Layout.TuiLayoutSettingsCreate(Layout.TuiMarginsUniform(0), Layout.TuiSizePolicyPreferred(), Layout.TuiAlignmentLeading(), 2), Elements.TuiElementMakeLabel('A')),
+                                                                                                                              Elements.TuiElementMakeLayout(Layout.TuiLayoutSettingsCreate(Layout.TuiMarginsUniform(0), Layout.TuiSizePolicyPreferred(), Layout.TuiAlignmentLeading(), 1), Elements.TuiElementMakeLabel('B'))
+                                                                                                                            ], 1)
+                                                                                         ]), Geometry.TuiSizeCreate(13, 1));
+  Test.AssertEquals('A', Rendering.TuiSurfaceSnapshotCellAt(Row, 0, 0).Glyph);
+  Test.AssertEquals('B', Rendering.TuiSurfaceSnapshotCellAt(Row, 9, 0).Glyph);
+  const Trailing: Tui.TuiSurfaceSnapshot := Paint(Elements.TuiElementMakeDesktop(Option.None, [
+                                                                                                Elements.TuiElementMakeLayout(Layout.TuiLayoutSettingsCreate(Layout.TuiMarginsUniform(1), Layout.TuiSizePolicyPreferred(), Layout.TuiAlignmentTrailing(), 0), Elements.TuiElementMakeLabel('X'))
+                                                                                              ]), Geometry.TuiSizeCreate(10, 4));
+  Test.AssertEquals('X', Rendering.TuiSurfaceSnapshotCellAt(Trailing, 8, 2).Glyph);
+  const Window: Tui.TuiSurfaceSnapshot := Paint(Elements.TuiElementMakeDesktop(Option.None, [
+                                                                                              Elements.TuiElementMakePanel('Title', [Elements.TuiElementMakeLabel('Body')])
+                                                                                            ]), Geometry.TuiSizeCreate(12, 5));
+  Test.AssertEquals('B', Rendering.TuiSurfaceSnapshotCellAt(Window, 1, 1).Glyph);
+  const FixedWidth: Tui.TuiSurfaceSnapshot := Paint(Elements.TuiElementMakeDesktop(Option.None, [
+                                                                                                  Elements.TuiElementMakeRow([
+                                                                                                                               Elements.TuiElementMakeLayout(Layout.TuiLayoutSettingsWithFixedWidth(Layout.TuiLayoutSettingsCreate(Layout.TuiMarginsUniform(0), Layout.TuiSizePolicyExpanding(), Layout.TuiAlignmentFill(), 0), 5), Elements.TuiElementMakeLabel('L')),
+                                                                                                                               Elements.TuiElementMakeLayout(Layout.TuiLayoutSettingsCreate(Layout.TuiMarginsUniform(0), Layout.TuiSizePolicyExpanding(), Layout.TuiAlignmentFill(), 1), Elements.TuiElementMakeLabel('R'))
+                                                                                                                             ])
+                                                                                                ]), Geometry.TuiSizeCreate(12, 1));
+  Test.AssertEquals('L', Rendering.TuiSurfaceSnapshotCellAt(FixedWidth, 0, 0).Glyph);
+  Test.AssertEquals('R', Rendering.TuiSurfaceSnapshotCellAt(FixedWidth, 5, 0).Glyph);
+  const Filled: Tui.TuiSurfaceSnapshot := Paint(Elements.TuiElementMakeDesktop(Option.None, [
+                                                                                              Elements.TuiElementMakeLayout(Layout.TuiLayoutSettingsCreate(Layout.TuiMarginsUniform(0), Layout.TuiSizePolicyExpanding(), Layout.TuiAlignmentFill(), 1), Elements.TuiElementMakePanel('Fill', [
+                                                                                                                                                                                                                                                                                               Elements.TuiElementMakeLabel('Body')
+                                                                                                                                                                                                                                                                                             ]))
+                                                                                            ]), Geometry.TuiSizeCreate(12, 5));
+  Test.AssertEquals('╯', Rendering.TuiSurfaceSnapshotCellAt(Filled, 11, 4).Glyph);
+  const Undersized: Tui.TuiSurfaceSnapshot := Paint(Elements.TuiElementMakeDesktop(Option.None, [
+                                                                                                  Elements.TuiElementMakeRowSpaced([
+                                                                                                                                     Elements.TuiElementMakeLabel('ABCDEFGH'),
+                                                                                                                                     Elements.TuiElementMakeLabel('IJK')
+                                                                                                                                   ], 1)
+                                                                                                ]), Geometry.TuiSizeCreate(5, 1));
+  Test.AssertEquals('A', Rendering.TuiSurfaceSnapshotCellAt(Undersized, 0, 0).Glyph);
 end program;

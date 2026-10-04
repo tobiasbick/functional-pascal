@@ -8,16 +8,16 @@ uses Std.Conv as Conv;
 uses Std.Arrays as Arrays;
 
 begin
-  var R: Result of (Json.JsonValue, string) := Json.Parse('{"name":"Ada","scores":[1,2],"active":true}');
+  const R: Result of (Json.JsonValue, string) := Json.Parse('{"name":"Ada","scores":[1,2],"active":true}');
   case R of
     when Result.Ok(const V):
       begin
         case V of
           when Json.JsonValue.Object(const Fields):
             begin
-              var NameValue: Option of (Json.JsonValue) := Dictionaries.Get(Fields, 'name');
-              var ScoresValue: Option of (Json.JsonValue) := Dictionaries.Get(Fields, 'scores');
-              var ActiveValue: Option of (Json.JsonValue) := Dictionaries.Get(Fields, 'active');
+              const NameValue: Option of (Json.JsonValue) := Dictionaries.Get(Fields, 'name');
+              const ScoresValue: Option of (Json.JsonValue) := Dictionaries.Get(Fields, 'scores');
+              const ActiveValue: Option of (Json.JsonValue) := Dictionaries.Get(Fields, 'active');
               case Options.Unwrap(NameValue) of
                 when Json.JsonValue.String(const Name):
                   begin

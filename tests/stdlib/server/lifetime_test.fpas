@@ -7,13 +7,29 @@ uses Std.Results as Results;
 uses Std.Test as Test;
 uses Std.Arrays as Arrays;
 
+function Require of (T)(Outcome: Result of (T, string)): T;
 begin
-  Test.AssertTrue(Results.IsError(Server.CreateLifetime(-1, false)));
-  Test.AssertTrue(Results.IsError(Server.CreateLifetime(86400001, false)));
-  var Life: Server.ServerLifetime := Results.Unwrap(Server.CreateLifetime(20, false));
-  var Group: Tasks.TaskGroup := Server.GetWorkGroup(Life);
-  var Gate: channel of (boolean) := Tasks.CreateChannel(1);
-  var Worker: task := Tasks.StartTaskInGroup(Group, function(Token: Tasks.CancellationToken): boolean begin
+  case Outcome of
+    when Result.Ok(const Value):
+      return Value;
+    when Result.Error(const Message):
+      panic(Message);
+  end case;
+end function;
+
+begin
+  Test.AssertTrue((case Server.CreateLifetime(-1, false) of
+    when Result.Ok(_): false;
+    when Result.Error(_): true;
+  end case));
+  Test.AssertTrue((case Server.CreateLifetime(86400001, false) of
+    when Result.Ok(_): false;
+    when Result.Error(_): true;
+  end case));
+  const Life: Server.ServerLifetime := Require(Server.CreateLifetime(20, false));
+  const Group: Tasks.TaskGroup := Server.GetWorkGroup(Life);
+  const Gate: channel of (boolean) := Tasks.CreateChannel(1);
+  const Worker: task := Tasks.StartTaskInGroup(Group, function(Token: Tasks.CancellationToken): boolean begin
     return Results.Unwrap(Tasks.Receive(Gate));
   end function);
   Test.AssertTrue(Server.IsReady(Life));

@@ -170,7 +170,7 @@ fn prepared_string_constants_stay_unchanged_after_concatenation() {
 }
 
 #[test]
-fn typed_real_division_retains_zero_diagnostic() {
+fn typed_real_division_produces_infinity_for_zero_divisor() {
     let executable = verified(
         vec![
             abx(Opcode::LoadConstant, 0, 0),
@@ -185,12 +185,12 @@ fn typed_real_division_retains_zero_diagnostic() {
         vec!["root", "test.fpas"],
         3,
     );
-    let error = execute(executable).expect_err("division by zero must fail");
-    assert!(error.message.contains("Division by zero"));
+    let (_, registers, _) = execute(executable).expect("IEEE division succeeds");
+    assert_eq!(registers[2], Value::Real(f64::INFINITY));
 }
 
 #[test]
-fn typed_real_ordering_retains_nan_diagnostic() {
+fn typed_real_ordering_returns_false_for_nan() {
     let executable = verified(
         vec![
             abx(Opcode::LoadConstant, 0, 0),
@@ -205,8 +205,8 @@ fn typed_real_ordering_retains_nan_diagnostic() {
         vec!["root", "test.fpas"],
         3,
     );
-    let error = execute(executable).expect_err("NaN ordering must fail");
-    assert!(error.message.contains("Ordered comparison"));
+    let (_, registers, _) = execute(executable).expect("IEEE ordering succeeds");
+    assert_eq!(registers[2], Value::Boolean(false));
 }
 
 #[test]

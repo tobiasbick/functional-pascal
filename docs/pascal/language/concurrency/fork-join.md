@@ -14,8 +14,8 @@ begin
 end function;
 
 begin
-  var T1: task := go Compute(3);
-  var T2: task := go Compute(4);
+  const T1: task := go Compute(3);
+  const T2: task := go Compute(4);
   Console.WriteLn(Tasks.Wait(T1) + Tasks.Wait(T2));
 end program;
 ```

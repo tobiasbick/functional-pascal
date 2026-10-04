@@ -132,7 +132,7 @@ include = ["src/**/*.fpas"]
     );
     write_text(
         &main,
-        r#"program Main; begin var Value:integer:=1; end program;"#,
+        r#"program Main; begin const Value:integer:=1; end program;"#,
     );
 
     let (exit_code, _, stderr_output) = run_cli_args_and_capture_output(
@@ -148,7 +148,7 @@ include = ["src/**/*.fpas"]
         r#"program Main;
 
 begin
-  var Value: integer := 1;
+  const Value: integer := 1;
 end program;
 "#
     );

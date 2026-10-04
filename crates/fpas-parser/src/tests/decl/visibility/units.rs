@@ -5,8 +5,8 @@ fn unit_declarations_default_to_private() {
     let unit = parse_unit_ok(
         r#"unit MyApp.Core;
           const Secret: integer := 1;
-          var State: integer := 2;
-           mutable var Counter: integer := 3;
+          const State: integer := 2;
+            var Counter: integer := 3;
           type InternalId = integer;
          function Helper(): integer; begin return 1; end function;
          procedure Reset(); begin null; end procedure;
@@ -27,8 +27,8 @@ fn public_applies_to_every_supported_declaration_kind() {
     let unit = parse_unit_ok(
         r#"unit MyApp.Core;
            public const Answer: integer := 42;
-           public var State: integer := 2;
-            public mutable var Counter: integer := 3;
+           public const State: integer := 2;
+            public  var Counter: integer := 3;
            public type PublicId = integer;
          public function ReadValue(): integer; begin return Answer; end function;
          public procedure Reset(); begin null; end procedure;

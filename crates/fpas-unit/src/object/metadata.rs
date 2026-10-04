@@ -56,28 +56,6 @@ pub struct ObjectRecordLayout {
     pub fields: Vec<String>,
     /// Object-local debugger types for fields in declaration order.
     pub field_types: Vec<u32>,
-    /// Readable properties and canonical getter routine names.
-    pub properties: Vec<ObjectRecordProperty>,
-    /// Instance methods and canonical routine names.
-    pub methods: Vec<ObjectRecordMethod>,
-}
-
-/// Relocatable property-to-getter mapping.
-#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-pub struct ObjectRecordProperty {
-    /// Public source property name.
-    pub name: String,
-    /// Canonical qualified getter routine name.
-    pub getter: String,
-}
-
-/// Relocatable method-to-routine mapping.
-#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-pub struct ObjectRecordMethod {
-    /// Source method member name.
-    pub name: String,
-    /// Canonical qualified routine name.
-    pub routine: String,
 }
 
 /// One enum variant and its associated fields.
@@ -137,6 +115,8 @@ pub enum ObjectDebugType {
     Enum(String),
     /// Mutable cell inner type.
     Cell(u32),
+    /// Synchronous caller-reference value type.
+    Reference(u32),
     /// Task result type.
     Task(u32),
     /// Typed channel element type.

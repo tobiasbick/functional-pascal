@@ -89,10 +89,10 @@ uses Std.Net as Net;
 
 function InspectListener(): result of (Net.NetworkAddress, string);
 begin
-  var Server: Net.Listener := try Net.Listen('127.0.0.1', 0);
-  var Address: Net.NetworkAddress := try Net.ListenerLocalAddress(Server);
+  const Server: Net.Listener := try Net.Listen('127.0.0.1', 0);
+  const Address: Net.NetworkAddress := try Net.ListenerLocalAddress(Server);
   // Address.Host is '127.0.0.1'; Address.Port is the assigned nonzero port.
-  var Closed: boolean := try Net.CloseListener(Server);
+  const Closed: boolean := try Net.CloseListener(Server);
   return Result.Ok(Address);
 end function;
 ```

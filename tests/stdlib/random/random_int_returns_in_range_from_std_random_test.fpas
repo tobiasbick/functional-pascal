@@ -4,6 +4,6 @@ uses Std.Console as Console;
 uses Std.Random as Random;
 
 begin
-  var N: integer := Random.RandomInt(1, 1);
+  const N: integer := Random.RandomInt(1, 1);
   Console.WriteLn(N);
 end program;

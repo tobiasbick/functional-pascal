@@ -11,35 +11,50 @@ use super::parse_ok;
 mod type_names;
 
 #[test]
-fn compiler_retains_exact_record_method_mappings_for_debugger_binding() {
+fn compiler_retains_record_fields_and_explicit_parameter_types_for_debugger_calls() {
     let program = parse_ok(
-        r#"program DebugBoundMethod;
+        r#"program DebugRecordCall;
 
 type Counter = record
   Base: integer;
 
-  function Add(Self: Counter; Value: integer): integer;
-  begin
-    return Self.Base + Value;
-  end function;
 end record;
 
+function CounterAdd(Receiver: Counter; Value: integer): integer;
 begin
-  var C: Counter := Counter(Base := 2);
-  if C.Add(3) <> 5 then
+  return Receiver.Base + Value;
+end function;
+
+begin
+  const C: Counter := Counter(Base := 2);
+  if CounterAdd(C, 3) <> 5 then
     panic('wrong');
   end if;
 end program;
 "#,
     );
-    let executable = crate::compile(&program).expect("record method source should compile");
+    let executable = crate::compile(&program).expect("record call source should compile");
     let image = executable.executable();
     let record = image.records.first().expect("Counter layout");
-    let method = record.methods.first().expect("Counter.Add mapping");
-
     assert_eq!(image.strings.get(record.name), Some("Counter"));
-    assert_eq!(image.strings.get(method.name), Some("Add"));
-    assert_eq!(image.strings.get(method.routine), Some("Counter.Add"));
+    assert_eq!(record.fields.len(), 1);
+    assert_eq!(image.strings.get(record.fields[0].name), Some("Base"));
+    let routine = image
+        .functions
+        .iter()
+        .find(|routine| image.strings.get(routine.name) == Some("counteradd"))
+        .expect("ordinary record function");
+    let receiver = routine
+        .debug
+        .bindings
+        .iter()
+        .find(|binding| image.strings.get(binding.name) == Some("Receiver"))
+        .expect("explicit record parameter");
+    assert_eq!(receiver.kind, DebugBindingKind::Parameter);
+    assert!(matches!(
+        image.debug_types.get(receiver.ty.get() as usize),
+        Some(DebugType::Record(_))
+    ));
 }
 
 #[test]
@@ -50,9 +65,9 @@ program DebugMetadata;
 
 function Add(Value: integer): integer;
 begin
-  var Offset: integer := 1;
+  const Offset: integer := 1;
   begin
-    var Nested: integer := Value + Offset;
+    const Nested: integer := Value + Offset;
     if Nested < 0 then
       panic('unreachable'); end if;
   end;
@@ -60,7 +75,7 @@ begin
 end function;
 
 begin
-  var Answer: integer := Add(41);
+  const Answer: integer := Add(41);
   if Answer <> 42 then
     panic('wrong answer'); end if;
 end program;
@@ -124,7 +139,7 @@ program DebugCaptureMetadata;
 
 function Counter(): function(): integer;
 begin
-  mutable var Value: integer := 0;
+   var Value: integer := 0;
   return function(): integer begin
     Value := Value + 1;
     return Value;
@@ -132,7 +147,7 @@ begin
 end function;
 
 begin
-  var Next: function(): integer := Counter();
+  const Next: function(): integer := Counter();
   for Index: integer := 1 to 2 do
     discard Next(); end for;
 end program;
@@ -172,12 +187,12 @@ type Box = record
   Value: integer;
 end record;
 
-mutable var Scores: dict of (string, integer) := ['Ada': 1];
+ var Scores: dict of (string, integer) := ['Ada': 1];
 
 begin
-  mutable var Item: Box := Box(Value := 2);
-  mutable var Items: array of (integer) := [3];
-  var Maybe: Option of (integer) := Option.Some(4);
+   var Item: Box := Box(Value := 2);
+   var Items: array of (integer) := [3];
+  const Maybe: Option of (integer) := Option.Some(4);
 end program;
 "#,
     );
@@ -215,8 +230,11 @@ end program;
     let instruction = image.code[initializer.instruction.get() as usize];
     assert_eq!(initializer.function, image.entry);
     assert_eq!(instruction.opcode(), Ok(Opcode::StoreGlobal));
+    let Some(DebugType::Cell(inner)) = image.debug_types.get(global.ty.get() as usize) else {
+        panic!("mutable global must retain stable cell storage");
+    };
     assert!(matches!(
-        image.debug_types.get(global.ty.get() as usize),
+        image.debug_types.get(inner.get() as usize),
         Some(DebugType::Dictionary { .. })
     ));
 }
@@ -228,9 +246,9 @@ fn compiler_retains_shadowed_bindings_and_same_line_sequence_columns() {
 program DebugShadowMetadata;
 
 begin
-  var Value: integer := 1;
+  const Value: integer := 1;
   begin
-    var Value: integer := 2; var Other: integer := Value + 1;
+    const Value: integer := 2; const Other: integer := Value + 1;
     if Other <> 3 then panic('wrong inner value'); end if;
   end;
   if Value <> 1 then panic('wrong outer value'); end if;
@@ -280,12 +298,12 @@ begin
   return 'nope';
 end function;
 
- var GlobalCurrent: task := go Seven();
- var GlobalWrong: task := go Label();
+ const GlobalCurrent: task := go Seven();
+ const GlobalWrong: task := go Label();
 
 begin
-  var Current: task := go Seven();
-  var Wrong: task := go Label();
+  const Current: task := go Seven();
+  const Wrong: task := go Label();
 end program;
 "#,
     );
@@ -359,7 +377,7 @@ function Outer(Offset: integer): integer;
   end function;
 begin
   begin
-    var Offset: integer := 99;
+    const Offset: integer := 99;
     return AddOffset(1);
   end;
 end function;
@@ -371,7 +389,7 @@ function Mutating(): Handler;
     return Value + Cell;
   end function;
 begin
-  mutable var Cell: integer := 1;
+   var Cell: integer := 1;
   return AddCell;
 end function;
 
@@ -383,19 +401,19 @@ function OuterCell(): Handler;
       return Value + Cell;
     end function;
   begin
-    var Keep: integer := Cell;
+    const Keep: integer := Cell;
     return AddEnclosed;
   end function;
 begin
-  mutable var Cell: integer := 1;
+   var Cell: integer := 1;
   return Mid();
 end function;
 
 begin
-  var First: Handler := MakeAdder(10);
-  var Answer: integer := Outer(7);
-  var Next: Handler := Mutating();
-  var Enclosed: Handler := OuterCell();
+  const First: Handler := MakeAdder(10);
+  const Answer: integer := Outer(7);
+  const Next: Handler := Mutating();
+  const Enclosed: Handler := OuterCell();
 end program;
 "#,
     );
@@ -488,8 +506,8 @@ begin
 end function;
 
 begin
-  var First: Handler := FactoryA(1);
-  var Second: Handler := FactoryB(2);
+  const First: Handler := FactoryA(1);
+  const Second: Handler := FactoryB(2);
 end program;
 "#,
     );

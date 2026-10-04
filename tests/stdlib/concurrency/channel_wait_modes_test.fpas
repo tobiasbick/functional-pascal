@@ -4,7 +4,7 @@ uses Std.Tasks as Tasks;
 uses Std.Test as Test;
 
 begin
-  var Messages: channel of (integer) := Tasks.CreateChannel(1);
+  const Messages: channel of (integer) := Tasks.CreateChannel(1);
   case Tasks.TryReceive(Messages) of
     when Result.Ok(const MaybeValue):
       begin

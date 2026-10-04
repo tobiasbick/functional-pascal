@@ -5,12 +5,12 @@ uses Notes.Repository as Repository;
 uses Std.Test as Test;
 
 begin
-  mutable var Pinned: Model.Note := Model.NoteCreate('pinned', 1);
+  var Pinned: Model.Note := Model.NoteCreate('pinned', 1);
   Pinned.Pinned := true;
-  var First: Model.Note := Model.NoteCreate('first', 10);
-  var Second: Model.Note := Model.NoteCreate('second', 10);
-  var Newest: Model.Note := Model.NoteCreate('newest', 20);
-  var Sorted: array of (Model.Note) := Repository.NotesSort([First, Newest, Pinned, Second]);
+  const First: Model.Note := Model.NoteCreate('first', 10);
+  const Second: Model.Note := Model.NoteCreate('second', 10);
+  const Newest: Model.Note := Model.NoteCreate('newest', 20);
+  const Sorted: array of (Model.Note) := Repository.NotesSort([First, Newest, Pinned, Second]);
   Test.AssertEquals('pinned', Sorted[0].Id);
   Test.AssertEquals('newest', Sorted[1].Id);
   Test.AssertEquals('first', Sorted[2].Id);

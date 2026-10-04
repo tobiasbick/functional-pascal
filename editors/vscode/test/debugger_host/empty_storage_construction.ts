@@ -58,7 +58,7 @@ export async function verifyEmptyStorageConstruction(
     "end function;",
     "",
     "begin",
-    "  mutable var State: Holder := MakeInitialState();",
+    "   var State: Holder := MakeInitialState();",
     "  Console.WriteLn(State.Count);",
     "  Console.WriteLn(State.Nested.X);",
     "end program;",

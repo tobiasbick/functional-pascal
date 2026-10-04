@@ -5,8 +5,9 @@ program MutableNestedFunctions;
 uses Std.Console as Console;
 uses Std.Conv as Conv;
 
-procedure ClampToRange(mutable Value: integer; Min: integer; Max: integer);
+procedure ClampToRange(InitialValue: integer; Min: integer; Max: integer);
 begin
+  var Value: integer := InitialValue;
   if Value < Min then
     begin
       Value := Min;
@@ -48,7 +49,7 @@ begin
 end function;
 
 begin
-  var Original: integer := 15;
+  const Original: integer := 15;
   ClampToRange(Original, 0, 10);
   Console.WriteLn('caller unchanged: ', Conv.IntToStr(Original));
   Console.WriteLn('is even 8: ', IsEven(8));

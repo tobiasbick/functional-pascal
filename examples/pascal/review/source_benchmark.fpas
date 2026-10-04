@@ -11,10 +11,13 @@ uses Std.Net.Utf8 as Utf8;
 uses Std.Str as Str;
 uses Std.Time as Time;
 uses Std.Tui as Tui;
+uses Std.Tui.Elements as Elements;
+uses Std.Tui.Geometry as Geometry;
+uses Std.Tui.Runtime as Runtime;
 
 function View(Value: integer): Tui.TuiElement;
 begin
-  return Tui.TuiElementBuilders.MakeEmpty();
+  return Elements.TuiElementMakeEmpty();
 end function;
 
 function Update(Value: integer; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): integer;
@@ -34,18 +37,18 @@ begin
 end function;
 
 begin
-  var Mode: string := Args.ParamStr(0);
-  var Size: integer := Conv.StrToInt(Args.ParamStr(1));
-  var Text: string := Str.RepeatStr(Args.ParamStr(2), Size);
-  mutable var Notes: array of (Model.Note) := [];
+  const Mode: string := Args.ParamStr(0);
+  const Size: integer := Conv.StrToInt(Args.ParamStr(1));
+  const Text: string := Str.RepeatStr(Args.ParamStr(2), Size);
+  var Notes: array of (Model.Note) := [];
   for I: integer := 1 to Size do
     begin
-      Arrays.Push(Notes, Model.NoteCreate(Conv.IntToStr(I), I));
+      Arrays.Push(var Notes, Model.NoteCreate(Conv.IntToStr(I), I));
     end;
   end for;
-  var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(1, 1));
-  mutable var Sum: integer := 0;
-  var Started: integer := Time.MonotonicMillis();
+  const App: Tui.TuiApplication := Runtime.TuiApplicationOpenForTest(Geometry.TuiSizeCreate(1, 1));
+  var Sum: integer := 0;
+  const Started: integer := Time.MonotonicMillis();
   for Pass: integer := 1 to 10 do
     begin
       if Mode = 'utf8' then
@@ -68,7 +71,7 @@ begin
       else
         if Mode = 'notes' then
           begin
-            var Sorted: array of (Model.Note) := Repository.NotesSort(Notes);
+            const Sorted: array of (Model.Note) := Repository.NotesSort(Notes);
             if Sorted[0].UpdatedMillis <> Size then
               begin
                 panic('sort');
@@ -80,11 +83,11 @@ begin
             begin
               for I: integer := 1 to Size do
                 begin
-                  App.Inject(Tui.TuiMsg.Tick(1));
+                  Runtime.TuiApplicationInject(App, Tui.TuiMsg.Tick(1));
                 end;
               end for;
 
-              Sum := App.RunIterations(0, Update, View, Size, 0);
+              Sum := Runtime.TuiApplicationRunIterations(App, 0, Update, View, Size, 0);
               if Sum <> Size then
                 begin
                   panic('queue');
@@ -102,5 +105,5 @@ begin
   end for;
 
   Console.WriteLn(('elapsed: ' + Conv.IntToStr(Time.ElapsedMillis(Started))) + ' ms');
-  App.Close();
+  Runtime.TuiApplicationClose(App);
 end program;

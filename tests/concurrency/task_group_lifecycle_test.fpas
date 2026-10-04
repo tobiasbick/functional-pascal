@@ -7,14 +7,14 @@ uses Std.Test as Test;
 
 procedure VerifyClose(RequestFirst: boolean);
 begin
-  var Group: Tasks.TaskGroup := Tasks.CreateTaskGroup();
-  var Ready: channel of (boolean) := Tasks.CreateChannel(1);
-  var Empty: channel of (integer) := Tasks.CreateChannel(1);
-  var Finished: channel of (boolean) := Tasks.CreateChannel(1);
+  const Group: Tasks.TaskGroup := Tasks.CreateTaskGroup();
+  const Ready: channel of (boolean) := Tasks.CreateChannel(1);
+  const Empty: channel of (integer) := Tasks.CreateChannel(1);
+  const Finished: channel of (boolean) := Tasks.CreateChannel(1);
   // Leaving the start bindings behind must not release group ownership.
   begin
-    var WorkerHandle: task := Tasks.StartTaskInGroup(Group, procedure(Token: Tasks.CancellationToken) begin
-      var StartedTask1: task := Tasks.StartTaskInGroup(Group, procedure(ChildToken: Tasks.CancellationToken) begin
+    const WorkerHandle: task := Tasks.StartTaskInGroup(Group, procedure(Token: Tasks.CancellationToken) begin
+      const StartedTask1: task := Tasks.StartTaskInGroup(Group, procedure(ChildToken: Tasks.CancellationToken) begin
         case Tasks.ReceiveWithCancellation(Empty, ChildToken) of
           when Result.Ok(_):
             begin

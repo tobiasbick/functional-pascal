@@ -101,6 +101,13 @@ pub enum ValidationErrorKind {
         /// Encoded return convention.
         return_convention: ReturnConvention,
     },
+    /// Var-parameter positions are duplicated, unordered, or outside the signature.
+    ParameterModes {
+        /// Number of positional parameters.
+        arity: u8,
+        /// Encoded positions that failed validation.
+        positions: Vec<u8>,
+    },
     /// A metadata string identifier does not exist.
     StringReference {
         /// Metadata concern containing the reference.

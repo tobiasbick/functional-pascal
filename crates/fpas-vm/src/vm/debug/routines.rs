@@ -92,6 +92,7 @@ mod tests {
             name,
             code: CodeRange::new(InstructionAddress::new(start), InstructionAddress::new(end)),
             arity: 0,
+            var_parameters: Vec::new(),
             capture_count: 0,
             register_count: 1,
             return_convention: ReturnConvention::Unit,

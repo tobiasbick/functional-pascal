@@ -208,16 +208,6 @@ impl DebugSession {
             super::super::super::mutation::FunctionSource::Routine(_) => {
                 self.prepare_catalog_routine(task_id, expression, destination, frame_id, limits)
             }
-            super::super::super::mutation::FunctionSource::BoundReceiver { member, .. } => {
-                let receiver = evaluated.ok_or_else(super::replacement_unavailable)?;
-                super::super::super::mutation::prepare_bound_method_value(
-                    &self.executable,
-                    receiver,
-                    &member,
-                    expected,
-                    limits,
-                )
-            }
         }
     }
 

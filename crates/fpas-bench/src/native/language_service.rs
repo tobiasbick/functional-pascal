@@ -22,7 +22,10 @@ pub(super) fn run(queries: usize, functions: usize) -> Result<(), String> {
         )
         .map_err(|error| error.to_string())?;
     }
-    source.push_str("begin var Value: integer := F0(1); end program;\n");
+    source.push_str(
+        r#"begin const Value: integer := F0(1); end program;
+"#,
+    );
     let mut service = LanguageService::new(WorkspaceContext::loose(&root));
     service
         .documents_mut()

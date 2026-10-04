@@ -115,7 +115,7 @@ fn intrinsic_std_definition_targets_the_editor_api_declaration() {
 uses Std.Console as Console;
 
 begin
-  var Value: Console.Color := Console.CrtColor(1);
+  const Value: Console.Color := Console.CrtColor(1);
 end program;
 "#;
     let (_temp, path, mut service) = intrinsic_std_fixture(source);
@@ -141,8 +141,8 @@ fn receiver_completion_excludes_imported_collection_routines() {
     let source = r#"program FluentCompletion;
 uses Std.Arrays as Arrays; uses Std.Dictionaries as Dictionaries;
 begin
-  var Items: array of (integer) := [1];
-  var N: integer := Items.Len;
+  const Items: array of (integer) := [1];
+  const N: integer := Items.Len;
 end program;
 "#;
     let (_temp, path, mut service) = intrinsic_std_fixture(source);
@@ -155,15 +155,15 @@ end program;
 }
 
 #[test]
-fn receiver_completion_on_returned_and_parenthesized_arrays() {
+fn field_completion_does_not_offer_ordinary_routines_for_arrays() {
     let source = r#"program FluentResults;
 uses Std.Arrays as Arrays;
 function Length(Items: array of (integer)): integer; begin return Arrays.Length(Items); end function;
 function MakeValues(): array of (integer); begin return [1]; end function;
 begin
-  var Items: array of (integer) := [2];
-  var A: integer := MakeValues().Len;
-  var B: integer := (Items).Len;
+  const Items: array of (integer) := [2];
+  const A: integer := MakeValues().Len;
+  const B: integer := (Items).Len;
 end program;
 "#;
     let (_temp, path, mut service) = intrinsic_std_fixture(source);
@@ -173,26 +173,21 @@ end program;
             .completions(&path, offset)
             .expect("receiver completion")
             .value;
-        assert!(
-            candidates
-                .iter()
-                .any(|item| item.qualified_name == "FluentResults.Length"),
-            "{needle}: {candidates:#?}"
-        );
+        assert!(candidates.is_empty(), "{needle}: {candidates:#?}");
     }
 }
 
 #[test]
-fn receiver_call_definition_and_signature_use_selected_array_routine() {
+fn qualified_call_definition_and_signature_use_selected_array_routine() {
     let source = r#"program FluentNavigation;
 uses Std.Arrays as Arrays; uses Std.Dictionaries as Dictionaries;
 begin
-  var Items: array of (integer) := [1, 2];
-  var N: integer := Arrays.Length(Arrays.Slice(Items, 0, 1));
+  const Items: array of (integer) := [1, 2];
+  const N: integer := Arrays.Length(Arrays.Slice(Items, 0, 1));
 end program;
 "#;
     let (_temp, path, mut service) = intrinsic_std_fixture(source);
-    let offset = source.find("Length(").expect("fluent name");
+    let offset = source.find("Length(").expect("qualified name");
     let definitions = service
         .definitions(&path, offset)
         .expect("receiver definition")
@@ -284,7 +279,7 @@ fn intrinsic_std_enum_member_has_hover_and_definition() {
 uses Std.Json as Json;
 
 begin
-  var Value: Json.JsonValue := Json.JsonValue.ArrayValue([]);
+  const Value: Json.JsonValue := Json.JsonValue.ArrayValue([]);
 end program;
 "#;
     let (_temp, path, mut service) = intrinsic_std_fixture(source);
@@ -321,7 +316,7 @@ fn intrinsic_std_enum_constructor_has_signature_help() {
 uses Std.Json as Json;
 
 begin
-  var Value: Json.JsonValue := Json.JsonValue.ArrayValue([]);
+  const Value: Json.JsonValue := Json.JsonValue.ArrayValue([]);
 end program;
 "#;
     let (_temp, path, mut service) = intrinsic_std_fixture(source);
@@ -411,10 +406,7 @@ end program;
         };
         if !matches!(
             location.symbol.kind,
-            SymbolKind::Function
-                | SymbolKind::Procedure
-                | SymbolKind::Method
-                | SymbolKind::EnumMember
+            SymbolKind::Function | SymbolKind::Procedure | SymbolKind::EnumMember
         ) {
             continue;
         }
@@ -474,7 +466,7 @@ end program;
 
 #[test]
 fn bits_alias_hover_uses_generated_integer_signature_and_documentation() {
-    let source = "program T; uses Std.Bits as Flags; begin var X: integer := Flags.ShiftRight(-1, 63); end program;";
+    let source = r#"program T; uses Std.Bits as Flags; begin const X: integer := Flags.ShiftRight(-1, 63); end program;"#;
     let (_temp, path, mut service) = intrinsic_std_fixture(source);
     let hover = service
         .hover(&path, source.find("ShiftRight").expect("call"))

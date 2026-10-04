@@ -19,30 +19,17 @@ mod std_units;
 mod types;
 
 pub use check::AnalysisMetadata;
-pub use check::BoundMethodInfo;
-pub use check::BoundMethodMap;
+pub use check::BindingTypeMap;
 pub use check::CaptureBinding;
 pub use check::ClosureInfo;
 pub use check::ClosureInfoMap;
-pub use check::EventAssignedInfo;
-pub use check::EventAssignedMap;
-pub use check::EventRaiseInfo;
-pub use check::EventRaiseMap;
-pub use check::EventWriteInfo;
-pub use check::EventWriteMap;
 pub use check::ExprTypeMap;
-pub use check::FluentCallMap;
-pub use check::FluentCallTarget;
 pub use check::IntrinsicCallMap;
-pub use check::MethodCallMap;
-pub use check::MethodCallTarget;
 pub use check::NamedTypeMap;
 pub use check::NestedRoutineCaptureInfo;
 pub use check::NestedRoutineCaptureMap;
-pub use check::PropertyReadInfo;
-pub use check::PropertyReadMap;
-pub use check::PropertyWriteInfo;
-pub use check::PropertyWriteMap;
+/// Original default expressions and imported implementation identities.
+pub use check::RecordDefault;
 pub use check::RecordDefaultsMap;
 pub use check::{PatternInfo, PatternInfoMap, PatternVariant};
 /// Metadata for checked callable-value invocations.
@@ -100,7 +87,7 @@ pub fn procedure_decl_lookup_key(procedure: &fpas_parser::ProcedureDecl) -> usiz
     std::ptr::from_ref(procedure) as usize
 }
 
-/// Stable key for looking up [`MethodCallMap`] entries for a postfix method operation.
+/// Stable key for callable metadata belonging to one postfix invocation.
 ///
 /// Uses the memory address of the [`fpas_parser::PostfixOperation`] in the AST. Same soundness
 /// rationale as [`expr_lookup_key`]: the AST is immutable for the compile pipeline, so keys must
@@ -115,7 +102,7 @@ pub fn postfix_operation_lookup_key(op: &fpas_parser::PostfixOperation) -> usize
 /// Stable key for call-statement method resolution (address of the call's
 /// [`Designator`](fpas_parser::Designator) in the AST).
 ///
-/// **Documentation:** `docs/pascal/language/functions/README.md` (record method calls; from the repository root).
+/// **Documentation:** `docs/pascal/language/functions/README.md` (callable values; from the repository root).
 #[must_use]
 pub fn designator_lookup_key(designator: &fpas_parser::Designator) -> usize {
     std::ptr::from_ref(designator) as usize

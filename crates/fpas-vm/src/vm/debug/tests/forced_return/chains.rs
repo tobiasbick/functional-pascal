@@ -262,6 +262,7 @@ fn named_routine(
         name: StringId::new(name),
         code: CodeRange::new(InstructionAddress::new(start), InstructionAddress::new(end)),
         arity,
+        var_parameters: Vec::new(),
         capture_count: 0,
         register_count: registers,
         return_convention: convention,

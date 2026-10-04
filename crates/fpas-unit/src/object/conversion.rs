@@ -45,9 +45,9 @@ pub(super) fn relocation_for_instruction(
         Opcode::CallDirect | Opcode::TailCall | Opcode::MakeClosure => Some(
             RelocationKind::Function(SymbolReference::Local(u32::from(operands.b))),
         ),
-        Opcode::MakeRecord => Some(RelocationKind::Record(SymbolReference::Local(u32::from(
-            operands.b,
-        )))),
+        Opcode::MakeRecord | Opcode::SelectReferenceField => Some(RelocationKind::Record(
+            SymbolReference::Local(u32::from(operands.b)),
+        )),
         Opcode::LoadField => Some(RelocationKind::RecordField(operands.c)),
         Opcode::StoreField => Some(RelocationKind::RecordField(operands.b)),
         Opcode::MakeEnum | Opcode::TestVariant => {
@@ -159,6 +159,7 @@ pub(super) fn object_debug_type(
             ObjectDebugType::Enum(super::canonical(&layout_name(enumeration.name)?))
         }
         DebugType::Cell(inner) => ObjectDebugType::Cell(id(*inner)),
+        DebugType::Reference(inner) => ObjectDebugType::Reference(id(*inner)),
         DebugType::Task(inner) => ObjectDebugType::Task(id(*inner)),
         DebugType::Channel(inner) => ObjectDebugType::Channel(id(*inner)),
     })

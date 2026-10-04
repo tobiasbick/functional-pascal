@@ -44,6 +44,6 @@ begin
 end procedure;
 
 begin
-  var Initial: Camera.ExplorerCamera := Camera.ExplorerCamera(CenterX := 0.0, CenterY := 0.0, SpanY := 2.8, MaxIter := 160, Palette := 3);
+  const Initial: Camera.ExplorerCamera := Camera.ExplorerCamera(CenterX := 0.0, CenterY := 0.0, SpanY := 2.8, MaxIter := 160, Palette := 3);
   Explorer.RunExplorer('Functional Pascal Tricorn', Initial, Draw, Label);
 end program;

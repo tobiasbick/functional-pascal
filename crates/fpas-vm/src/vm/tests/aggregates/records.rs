@@ -21,8 +21,6 @@ fn positional_record_clones_share_layout_and_detach_values() {
             name: StringId::new(3),
             ty: fpas_bytecode::DebugTypeId::new(0),
         }],
-        properties: Vec::new(),
-        methods: Vec::new(),
     }];
     let (_, registers, _) = execute(image.verify().expect("record image must verify"))
         .expect("record program must run");
@@ -56,8 +54,6 @@ fn store_field_reuses_unique_storage() {
             name: StringId::new(3),
             ty: fpas_bytecode::DebugTypeId::new(0),
         }],
-        properties: Vec::new(),
-        methods: Vec::new(),
     }];
     let mut worker =
         crate::vm::worker::Worker::new(Arc::new(image.verify().expect("record image")))
@@ -94,8 +90,6 @@ fn point_image(
             name: StringId::new(3),
             ty: fpas_bytecode::DebugTypeId::new(0),
         }],
-        properties: Vec::new(),
-        methods: Vec::new(),
     }];
     image.verify().expect("record image must verify")
 }

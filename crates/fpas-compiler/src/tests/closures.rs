@@ -21,7 +21,7 @@ fn program_level_closure_initializer_is_discovered_before_lowering() {
     assert_succeeds(
         r#"
 program ClosureInit;
- var F: procedure() := procedure()
+ const F: procedure() := procedure()
 begin null;
 end procedure;
 begin
@@ -44,7 +44,7 @@ begin
   end function;
 end function;
 begin
-  var AddForty: function(Value: integer): integer := MakeAdder(40);
+  const AddForty: function(Value: integer): integer := MakeAdder(40);
   if AddForty(2) <> 42 then
     panic('immutable closure mismatch'); end if;
 end program;
@@ -59,7 +59,7 @@ fn mutable_anonymous_capture_shares_cell_with_repeated_calls() {
 program MutableClosure;
 function MakeCounter(): function(): integer;
 begin
-  mutable var Count: integer := 40;
+   var Count: integer := 40;
   return function(): integer
   begin
     Count := Count + 1;
@@ -67,7 +67,7 @@ begin
   end function;
 end function;
 begin
-  var Next: function(): integer := MakeCounter();
+  const Next: function(): integer := MakeCounter();
   discard Next();
   if Next() <> 42 then
     panic('mutable closure mismatch'); end if;
@@ -90,7 +90,7 @@ begin
   return Add;
 end function;
 begin
-  var AddForty: function(Value: integer): integer := MakeAdder(40);
+  const AddForty: function(Value: integer): integer := MakeAdder(40);
   if AddForty(2) <> 42 then
     panic('named nested closure mismatch'); end if;
 end program;

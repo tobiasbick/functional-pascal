@@ -17,10 +17,10 @@ end record;
 
 function EscapeGlyph(EscapeValue: real): string;
 begin
-  var Ramp: string := ' ░▒▓█';
-  var Count: integer := Str.Length(Ramp);
-  var Phase: real := Math.Frac(EscapeValue * 0.08);
-  var Index: integer := Math.Clamp(Math.Trunc(Phase * Conv.IntToReal(Count)), 0, Count - 1);
+  const Ramp: string := ' ░▒▓█';
+  const Count: integer := Str.Length(Ramp);
+  const Phase: real := Math.Frac(EscapeValue * 0.08);
+  const Index: integer := Math.Clamp(Math.Trunc(Phase * Conv.IntToReal(Count)), 0, Count - 1);
   return Str.CharAt(Ramp, Index);
 end function;
 
@@ -28,7 +28,7 @@ function RenderCell(Sample: Compute.PixelSample; Palette: Color2.PaletteKind): C
 begin
   if Sample.IsInside then
     begin
-      var CellShade: Console.Color := Color2.InsideColor();
+      const CellShade: Console.Color := Color2.InsideColor();
       return Console.Cell(glyph := ' ', foreground := CellShade, background := CellShade);
     end;
   end if;
@@ -43,8 +43,8 @@ procedure DrawRow(
   Palette: Color2.PaletteKind
 );
 begin
-  var CurrentWidth: integer := Console.ScreenWidth();
-  mutable var DrawWidth: integer := Width;
+  const CurrentWidth: integer := Console.ScreenWidth();
+  var DrawWidth: integer := Width;
   if DrawWidth > CurrentWidth then
     begin
       DrawWidth := CurrentWidth;
@@ -56,10 +56,10 @@ begin
       return;
     end;
   end if;
-  mutable var Cells: array of (Console.Cell) := [];
+  var Cells: array of (Console.Cell) := [];
   for Px: integer := 0 to DrawWidth - 1 do
     begin
-      Arrays.Push(Cells, RenderCell(Row[Px], Palette));
+      Arrays.Push(var Cells, RenderCell(Row[Px], Palette));
     end;
   end for;
 
@@ -88,21 +88,21 @@ public function StartRender(
   Ji: real
 ): RenderJob;
 begin
-  var Group: Tasks.TaskGroup := Tasks.CreateTaskGroup();
-  var Rows: channel of (RenderRow) := Tasks.CreateChannel(4);
+  const Group: Tasks.TaskGroup := Tasks.CreateTaskGroup();
+  const Rows: channel of (RenderRow) := Tasks.CreateChannel(4);
   for Worker: integer := 0 to 3 do
     begin
-      var WorkerHandle: task := Tasks.StartTaskInGroup(Group, procedure(Token: Tasks.CancellationToken) begin
-        mutable var Py: integer := Worker;
+      const WorkerHandle: task := Tasks.StartTaskInGroup(Group, procedure(Token: Tasks.CancellationToken) begin
+        var Py: integer := Worker;
         while (Py < Height) and not Tasks.IsCancellationRequested(Token) do
           begin
-            var Samples: array of (Compute.PixelSample) := Compute.ComputeRow(Py, Width, Height, XMin, XMax, YMin, YMax, MaxIter, Jr, Ji, Token);
+            const Samples: array of (Compute.PixelSample) := Compute.ComputeRow(Py, Width, Height, XMin, XMax, YMin, YMax, MaxIter, Jr, Ji, Token);
             if Tasks.IsCancellationRequested(Token) then
               begin
                 return;
               end;
             end if;
-            var Row: RenderRow := RenderRow(Y := Py, Samples := Samples);
+            const Row: RenderRow := RenderRow(Y := Py, Samples := Samples);
             if Results.IsError(Tasks.SendWithCancellation(Rows, Row, Token)) then
               begin
                 return;
@@ -146,7 +146,7 @@ end procedure;
 // Joining first prevents old rows from appearing in a replacement render.
 public procedure StopRender(Job: RenderJob);
 begin
-  var Failures: array of (Tasks.TaskFailure) := Tasks.CloseTaskGroup(Job.Group);
+  const Failures: array of (Tasks.TaskFailure) := Tasks.CloseTaskGroup(Job.Group);
   discard Tasks.CloseChannel(Job.Rows);
   if Arrays.Length(Failures) <> 0 then
     begin

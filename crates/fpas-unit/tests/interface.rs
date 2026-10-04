@@ -8,9 +8,23 @@
 
 use fpas_unit::interface::{
     CallableType, ConstantValue, EnumType, EnumVariant, FieldType, GenericParameter,
-    InterfaceSymbol, InterfaceType, MethodType, ParameterType, RecordType, SymbolKind,
+    GenericParameterId, InterfaceSymbol, InterfaceType, ParameterType, RecordType, SymbolKind,
     TypeConstraint, UnitInterface, decode_interface, encode_interface,
 };
+
+#[path = "interface/static_values.rs"]
+mod static_values;
+
+#[path = "interface/generic_identity.rs"]
+mod generic_identity;
+
+fn parameter_id() -> GenericParameterId {
+    GenericParameterId {
+        unit: Some("demo.api".to_owned()),
+        source_id: 0,
+        offset: 40,
+    }
+}
 
 fn sample_interface() -> UnitInterface {
     UnitInterface {
@@ -20,23 +34,27 @@ fn sample_interface() -> UnitInterface {
                 name: "Transform".to_string(),
                 qualified_name: "Demo.Api.Transform".to_string(),
                 ty: InterfaceType::Function(CallableType {
+                    pure: false,
                     type_parameters: vec![GenericParameter {
                         name: "T".to_string(),
                         constraint: Some(TypeConstraint::Comparable),
+                        identity: parameter_id(),
                     }],
                     parameters: vec![ParameterType {
                         name: "Value".to_string(),
                         mutable: true,
-                        ty: InterfaceType::GenericParameter(
-                            "T".to_string(),
-                            Some(TypeConstraint::Comparable),
-                        ),
+                        ty: InterfaceType::GenericParameter(GenericParameter {
+                            name: "T".to_string(),
+                            constraint: Some(TypeConstraint::Comparable),
+                            identity: parameter_id(),
+                        }),
                     }],
                     result: Some(Box::new(InterfaceType::Array(Box::new(
-                        InterfaceType::GenericParameter(
-                            "T".to_string(),
-                            Some(TypeConstraint::Comparable),
-                        ),
+                        InterfaceType::GenericParameter(GenericParameter {
+                            name: "T".to_string(),
+                            constraint: Some(TypeConstraint::Comparable),
+                            identity: parameter_id(),
+                        }),
                     )))),
                     variadic: false,
                 }),
@@ -83,26 +101,14 @@ fn sample_interface() -> UnitInterface {
                     type_arguments: Vec::new(),
                     is_resource: false,
                     owner_unit: Some("Demo.Api".to_string()),
-                    private_members: vec!["CreateHidden".to_string(), "Value".to_string()],
+                    private_members: vec!["Value".to_string()],
                     fields: vec![FieldType {
                         name: "Value".to_string(),
                         ty: InterfaceType::Integer,
-                        default_value: Some(ConstantValue::Integer(0)),
+                        default_value: Some(fpas_unit::interface::FieldDefault::Constant(
+                            ConstantValue::Integer(0),
+                        )),
                     }],
-                    methods: Vec::new(),
-                    static_routines: vec![MethodType {
-                        name: "CreateHidden".to_string(),
-                        callable: CallableType {
-                            type_parameters: Vec::new(),
-                            parameters: Vec::new(),
-                            result: Some(Box::new(InterfaceType::Named(
-                                "Demo.Api.Counter".to_string(),
-                            ))),
-                            variadic: false,
-                        },
-                    }],
-                    properties: Vec::new(),
-                    events: Vec::new(),
                 })),
                 kind: SymbolKind::Type,
             },
@@ -162,6 +168,7 @@ fn observable_signature_and_value_changes_change_hash() {
     let original = sample_interface();
     let mut signature = sample_interface();
     signature.symbols[0].ty = InterfaceType::Procedure(CallableType {
+        pure: false,
         type_parameters: Vec::new(),
         parameters: Vec::new(),
         result: None,

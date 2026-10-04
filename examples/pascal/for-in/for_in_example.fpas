@@ -3,7 +3,7 @@ program ForInExample;
 uses Std.Console as Console;
 
 begin
-  var Scores: array of (integer) := [12, 45, 3, 67, 29, 88, 51, 7, 93, 34];
+  const Scores: array of (integer) := [12, 45, 3, 67, 29, 88, 51, 7, 93, 34];
   Console.WriteLn('Filtered scores:');
   for S: integer in Scores do
     begin

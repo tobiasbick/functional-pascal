@@ -38,10 +38,10 @@ pub(super) fn require_frame_register(
                 "Assign onto a mutable local or parameter in the selected owner frame. Globals can escape the owning task.",
             ));
         }
-        MutationRoot::ClosureCell(_) => {
+        MutationRoot::ClosureCell(_) | MutationRoot::Reference(_) => {
             return Err(type_error(
-                "task-bound function assignment rejects a capture-cell destination",
-                "Assign onto a mutable local or parameter register, not a captured mutable cell.",
+                "task-bound function assignment rejects a capture-cell or caller-reference destination",
+                "Assign onto a mutable local in the selected owner frame; captured cells and caller storage can escape that frame.",
             ));
         }
     }

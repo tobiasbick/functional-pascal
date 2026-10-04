@@ -5,25 +5,30 @@ Integers support decimal and hexadecimal notation. Underscores are allowed as vi
 Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`integer_literal`, `real_literal`).
 
 ```pascal
-var A: integer := 1000000; // One million
-var B: integer := 255; // 255 hexadecimal
-var C: integer := 65535;
+const A: integer := 1000000; // One million
+const B: integer := 255; // 255 hexadecimal
+const C: integer := 65535;
 
 ```
 
 Real literals require digits on both sides of the decimal point. Scientific notation is supported:
 
 ```pascal
-var X: real := 3.14;
-var Y: real := 15000000000.0; // Scientific notation
-var Z: real := 0.0003; // 0.0003
-var W: real := 0.5;
+const X: real := 3.14;
+const Y: real := 15000000000.0; // Scientific notation
+const Z: real := 0.0003; // 0.0003
+const W: real := 0.5;
 
 ```
 
 `.5` and `5.` are **not** valid — always write `0.5` or `5.0`. Integer literals must fit in a signed 64-bit range (`9223372036854775807` max). Real literals that overflow to infinity **or underflow a non-zero mantissa to zero** (for example `1.0e-9999`) are rejected as out of range; a zero mantissa such as `0.0e-9999` is fine.
 
 Negative numbers are parsed as unary minus + literal: `-42` is `-(42)`.
+
+The minimum integer value can be expressed as `-9223372036854775807 - 1`.
+Arithmetic expressions use [checked integer and IEEE real rules](operators.md);
+real operations may produce infinity or NaN even though out-of-range literal
+spellings are rejected.
 
 Identifiers use ASCII letters, digits, and `_` only (see the grammar `identifier` rule). A UTF-8 BOM
 (`U+FEFF`) is ignored only when it is the first scalar in a source file. A later `U+FEFF` is an

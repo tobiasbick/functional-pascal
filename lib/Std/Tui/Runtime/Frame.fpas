@@ -26,7 +26,7 @@ public procedure TuiRenderFrame(
 );
 begin
   Validate.TuiElementValidate(Root);
-  Arrange.TuiArrange(Frame, Root, Rect.TuiRectForSize(Surface.Size()));
+  Arrange.TuiArrange(Frame, Root, Rect.TuiRectForSize(Surface2.TuiWorkingSurfaceSize(Surface)));
   Paint.TuiPaintView(Surface, Frame, Root, Pressed);
 end procedure;
 

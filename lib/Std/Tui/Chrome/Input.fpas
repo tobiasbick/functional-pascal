@@ -19,54 +19,55 @@ public type TuiInputSpec = record
   public HistoryDraft: string;
   // Action emitted when the controlled value changes.
   public ChangeAction: Action.TuiAction;
+end record;
 
-  // Creates an input without a hint or history.
-  //
-  // Parameters:
-  // - `Id`: Identifier assigned to the created or selected value.
-  // - `Text`: Text processed or displayed by the operation.
-  // - `Caret`: Zero-based character index of the caret.
-  // - `ChangeAction`: Application action emitted when the value changes.
-  public static function Create(
+// Creates an input without a hint or history.
+//
+// Parameters:
+// - `Id`: Identifier assigned to the created or selected value.
+// - `Text`: Text processed or displayed by the operation.
+// - `Caret`: Zero-based character index of the caret.
+// - `ChangeAction`: Application action emitted when the value changes.
+public function TuiInputSpecCreate(
   Id: ControlId.TuiControlId;
   Text: string;
   Caret: integer;
   ChangeAction: Action.TuiAction
 ): TuiInputSpec;
-  begin
-    return TuiInputSpec(Id := Id, Text := Text, Caret := Caret, Hint := '', History := [], HistoryDraft := '', ChangeAction := ChangeAction);
-  end function;
+begin
+  return TuiInputSpec(Id := Id, Text := Text, Caret := Caret, Hint := '', History := [], HistoryDraft := '', ChangeAction := ChangeAction);
+end function;
 
-  // Creates an input that paints a hint while its text is empty.
-  //
-  // Parameters:
-  // - `Id`: Identifier assigned to the created or selected value.
-  // - `Text`: Text processed or displayed by the operation.
-  // - `Caret`: Zero-based character index of the caret.
-  // - `Hint`: Hint text displayed for an empty input.
-  // - `ChangeAction`: Application action emitted when the value changes.
-  public static function WithHint(
+// Creates an input that paints a hint while its text is empty.
+//
+// Parameters:
+// - `Id`: Identifier assigned to the created or selected value.
+// - `Text`: Text processed or displayed by the operation.
+// - `Caret`: Zero-based character index of the caret.
+// - `Hint`: Hint text displayed for an empty input.
+// - `ChangeAction`: Application action emitted when the value changes.
+public function TuiInputSpecWithHint(
   Id: ControlId.TuiControlId;
   Text: string;
   Caret: integer;
   Hint: string;
   ChangeAction: Action.TuiAction
 ): TuiInputSpec;
-  begin
-    return TuiInputSpec(Id := Id, Text := Text, Caret := Caret, Hint := Hint, History := [], HistoryDraft := '', ChangeAction := ChangeAction);
-  end function;
+begin
+  return TuiInputSpec(Id := Id, Text := Text, Caret := Caret, Hint := Hint, History := [], HistoryDraft := '', ChangeAction := ChangeAction);
+end function;
 
-  // Creates an input with oldest-to-newest Up/Down history and a restorable draft.
-  //
-  // Parameters:
-  // - `Id`: Identifier assigned to the created or selected value.
-  // - `Text`: Text processed or displayed by the operation.
-  // - `Caret`: Zero-based character index of the caret.
-  // - `Hint`: Hint text displayed for an empty input.
-  // - `History`: Ordered input-history entries.
-  // - `HistoryDraft`: Current editable text retained while browsing history.
-  // - `ChangeAction`: Application action emitted when the value changes.
-  public static function WithHistory(
+// Creates an input with oldest-to-newest Up/Down history and a restorable draft.
+//
+// Parameters:
+// - `Id`: Identifier assigned to the created or selected value.
+// - `Text`: Text processed or displayed by the operation.
+// - `Caret`: Zero-based character index of the caret.
+// - `Hint`: Hint text displayed for an empty input.
+// - `History`: Ordered input-history entries.
+// - `HistoryDraft`: Current editable text retained while browsing history.
+// - `ChangeAction`: Application action emitted when the value changes.
+public function TuiInputSpecWithHistory(
   Id: ControlId.TuiControlId;
   Text: string;
   Caret: integer;
@@ -75,9 +76,8 @@ public type TuiInputSpec = record
   HistoryDraft: string;
   ChangeAction: Action.TuiAction
 ): TuiInputSpec;
-  begin
-    return TuiInputSpec(Id := Id, Text := Text, Caret := Caret, Hint := Hint, History := History, HistoryDraft := HistoryDraft, ChangeAction := ChangeAction);
-  end function;
-end record;
+begin
+  return TuiInputSpec(Id := Id, Text := Text, Caret := Caret, Hint := Hint, History := History, HistoryDraft := HistoryDraft, ChangeAction := ChangeAction);
+end function;
 
 end unit;

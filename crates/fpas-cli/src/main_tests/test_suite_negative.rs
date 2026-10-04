@@ -35,7 +35,7 @@ fn run_file_expect_failure(rel_path: &str, stderr_contains: Option<&str>) {
 fn record_update_requires_separator_between_fields() {
     let (exit_code, _stdout, stderr) = support::run_source_and_capture_output(
         "record_update_missing_separator.fpas",
-        "program T; type Point = record X: integer; Y: integer; end record; begin var P: Point := Point(X := 1, Y := 2); var Q: Point := P with X := 3 Y := 4; end with; end program;",
+        r#"program T; type Point = record X: integer; Y: integer; end record; begin const P: Point := Point(X := 1, Y := 2); const Q: Point := P with X := 3 Y := 4; end with; end program;"#,
     );
     assert_ne!(exit_code, 0, "malformed record update was accepted");
     assert!(stderr.contains("Expected `;`"), "{stderr}");

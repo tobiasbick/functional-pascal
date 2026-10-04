@@ -5,14 +5,14 @@ uses Std.Results as Results;
 uses Std.Test as Test;
 
 begin
-  var Root: string := Test.ScratchDir() + '/create-dir-all';
-  var Leaf: string := Root + '/parent/leaf';
+  const Root: string := Test.ScratchDir() + '/create-dir-all';
+  const Leaf: string := Root + '/parent/leaf';
   Test.AssertTrue(Results.Unwrap(Fs.CreateDirAll(Leaf)));
   Test.AssertTrue(Fs.IsDir(Leaf));
   // An existing directory is success, unlike CreateDir.
   Test.AssertTrue(Results.Unwrap(Fs.CreateDirAll(Leaf)));
   Test.AssertTrue(Results.IsError(Fs.CreateDir(Leaf)));
-  var Blocking: string := Root + '/blocking-file';
+  const Blocking: string := Root + '/blocking-file';
   Test.AssertTrue(Results.Unwrap(Fs.WriteText(Blocking, 'not a directory')));
   Test.AssertTrue(Results.IsError(Fs.CreateDirAll(Blocking)));
   Test.AssertTrue(Results.IsError(Fs.CreateDirAll(Blocking + '/child')));

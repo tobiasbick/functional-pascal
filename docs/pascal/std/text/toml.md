@@ -10,7 +10,7 @@ uses Std.Str as Str;
 uses Std.Toml as Toml;
 
 begin
-  var Parsed: result of (Toml.TomlValue, string) := Toml.Parse(('[project]' + Str.Chr(10)) +
+  const Parsed: result of (Toml.TomlValue, string) := Toml.Parse(('[project]' + Str.Chr(10)) +
                                                              'name = ''demo''');
   case Parsed of
     when Result.Ok(const Value):
@@ -65,7 +65,7 @@ All TOML 1.0 value kinds are represented: strings, signed 64-bit integers, float
 uses Std.Console as Console;
 uses Std.Toml as Toml;
 
-var Parsed: result of (Toml.TomlValue, string) := Toml.Parse(
+const Parsed: result of (Toml.TomlValue, string) := Toml.Parse(
   'title = ''example''' + Chr(10) +
   'enabled = true' + Chr(10) +
   '[server]' + Chr(10) +
@@ -89,7 +89,7 @@ Encodes a `TomlValue` tree as TOML. The supplied root must be a table because TO
 uses Std.Console as Console;
 uses Std.Toml as Toml;
 
-var Value: Toml.TomlValue := Toml.TomlValue.Table(['project': Toml.TomlValue.Table(['name': Toml.TomlValue.String('demo'), 'version': Toml.TomlValue.Integer(1)])]);
+const Value: Toml.TomlValue := Toml.TomlValue.Table(['project': Toml.TomlValue.Table(['name': Toml.TomlValue.String('demo'), 'version': Toml.TomlValue.Integer(1)])]);
 Console.WriteLn(Toml.Stringify(Value));
 ```
 

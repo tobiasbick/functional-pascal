@@ -3,7 +3,7 @@
 The `task` type represents a handle to a running task. Assign the result of a **`go` expression** to capture it. For type checking, the handle carries the spawned call’s result type **`T`** (for a procedure spawn, **`T`** is the empty / unit result); at runtime the value is an opaque task id.
 
 ```pascal
-var T: task := go ComputeSomething(Data);
+const T: task := go ComputeSomething(Data);
 
 ```
 
@@ -25,7 +25,7 @@ begin
   return Tasks.Wait(Job) * 2;
 end function;
 
-var Jobs: array of (task of (result of (boolean, string))) := [go Connect(), go Serve()];
+const Jobs: array of (task of (result of (boolean, string))) := [go Connect(), go Serve()];
 
 ```
 
@@ -41,8 +41,8 @@ while pool workers run queued work. See [Waiting and execution](../../std/concur
 ```pascal
 uses Std.Tasks as Tasks;
 
-var T: task := go Compute(100);
-var TaskValue: integer := Tasks.Wait(T);
+const T: task := go Compute(100);
+const TaskValue: integer := Tasks.Wait(T);
 
 ```
 

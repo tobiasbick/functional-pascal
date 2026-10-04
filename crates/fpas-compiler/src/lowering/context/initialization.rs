@@ -20,7 +20,6 @@ impl LoweringContext {
             metadata,
             callables,
             closure_targets,
-            bound_method_targets,
             intrinsic_task_targets,
             cell_names,
             type_table,
@@ -55,6 +54,11 @@ impl LoweringContext {
         };
         let mut entry = empty_block(BlockId::new(0));
         for (input, parameter) in parameter_types.iter().zip(&parameters) {
+            let referenced = match type_table.kind(input.ty) {
+                Some(fpas_ir::IrType::Reference(inner)) => Some(*inner),
+                _ => None,
+            };
+            let logical_ty = referenced.unwrap_or(input.ty);
             let local = LocalId::try_from_index(locals.len()).map_err(|error| {
                 internal_compiler_error(
                     error.to_string(),
@@ -73,8 +77,8 @@ impl LoweringContext {
                 local,
                 name: input.name.clone(),
                 kind: fpas_ir::DebugBindingKind::Parameter,
-                ty: input.ty,
-                mutable: true,
+                ty: logical_ty,
+                mutable: referenced.is_some(),
                 scope: 0,
                 declaration: input.declaration,
                 hidden: false,
@@ -83,12 +87,16 @@ impl LoweringContext {
             });
             bindings.push(Binding {
                 name: input.name.to_ascii_lowercase(),
-                storage: BindingStorage::Local(local),
-                ty: input.ty,
+                storage: if referenced.is_some() {
+                    BindingStorage::Reference(local)
+                } else {
+                    BindingStorage::Local(local)
+                },
+                ty: logical_ty,
                 depth: 0,
                 cell: false,
             });
-            if !cell_names.contains(&input.name.to_ascii_lowercase()) {
+            if referenced.is_some() || !cell_names.contains(&input.name.to_ascii_lowercase()) {
                 entry.instructions.push(Instruction {
                     source: None,
                     result: None,
@@ -150,7 +158,6 @@ impl LoweringContext {
                 .collect(),
             callables,
             closure_targets,
-            bound_method_targets,
             intrinsic_task_targets,
             cell_names,
             globals,
@@ -164,15 +171,7 @@ impl LoweringContext {
             projection_types: metadata.projection_types.clone(),
             pattern_infos: metadata.pattern_infos.clone(),
             exhaustive_cases: metadata.exhaustive_cases.clone(),
-            method_calls: metadata.method_calls.clone(),
-            fluent_calls: metadata.fluent_calls.clone(),
             value_calls: metadata.value_calls.clone(),
-            bound_methods: metadata.bound_methods.clone(),
-            property_reads: metadata.property_reads.clone(),
-            property_writes: metadata.property_writes.clone(),
-            event_writes: metadata.event_writes.clone(),
-            event_assigned: metadata.event_assigned.clone(),
-            event_raises: metadata.event_raises.clone(),
             blocks: vec![entry],
             current: BlockId::new(0),
             locals,
@@ -204,7 +203,12 @@ impl LoweringContext {
         inputs: &[ParameterInput],
     ) -> Result<(), CompileError> {
         for (index, input) in inputs.iter().enumerate() {
-            if !self.is_cell_backed(&input.name) {
+            if !self.is_cell_backed(&input.name)
+                || matches!(
+                    self.type_kind(input.ty),
+                    Some(fpas_ir::IrType::Reference(_))
+                )
+            {
                 continue;
             }
             let span = input.declaration.map(Span::from).unwrap_or(Span {

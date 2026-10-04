@@ -21,25 +21,25 @@ public type TuiLayoutFit = record
   public Available: Size.TuiSize;
   // Amount by which the minimum size exceeds the available size.
   public Overflow: Size.TuiSize;
-
-  // Creates a fit report from minimum and available sizes.
-  //
-  // Parameters:
-  // - `Minimum`: Minimum accepted value or extent.
-  // - `Available`: Available terminal size.
-  public static function Create(Minimum: Size.TuiSize; Available: Size.TuiSize): TuiLayoutFit;
-  begin
-    return TuiLayoutFit(Minimum := Minimum, Available := Available, Overflow := Size.TuiSize.Create(TuiLayoutFitOverflow(Minimum.Width, Available.Width), TuiLayoutFitOverflow(Minimum.Height, Available.Height)));
-  end function;
-
-  // Returns whether neither axis overflows.
-  //
-  // Parameters:
-  // - `Self`: Receiver value operated on by the method.
-  public function Fits(Self: TuiLayoutFit): boolean;
-  begin
-    return (Self.Overflow.Width = 0) and (Self.Overflow.Height = 0);
-  end function;
 end record;
+
+// Creates a fit report from minimum and available sizes.
+//
+// Parameters:
+// - `Minimum`: Minimum accepted value or extent.
+// - `Available`: Available terminal size.
+public function TuiLayoutFitCreate(Minimum: Size.TuiSize; Available: Size.TuiSize): TuiLayoutFit;
+begin
+  return TuiLayoutFit(Minimum := Minimum, Available := Available, Overflow := Size.TuiSizeCreate(TuiLayoutFitOverflow(Minimum.Width, Available.Width), TuiLayoutFitOverflow(Minimum.Height, Available.Height)));
+end function;
+
+// Returns whether neither axis overflows.
+//
+// Parameters:
+// - `Receiver`: Value processed by the function.
+public function TuiLayoutFitFits(Receiver: TuiLayoutFit): boolean;
+begin
+  return (Receiver.Overflow.Width = 0) and (Receiver.Overflow.Height = 0);
+end function;
 
 end unit;

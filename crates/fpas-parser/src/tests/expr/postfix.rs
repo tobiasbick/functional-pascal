@@ -71,51 +71,6 @@ fn call_result_followed_by_index() {
 }
 
 #[test]
-fn call_result_followed_by_method_call() {
-    match parse_expr("Foo().Transform(2)") {
-        Expr::Postfix {
-            base, operations, ..
-        } => {
-            assert!(matches!(*base, Expr::Call { .. }));
-            assert_eq!(operations.len(), 1);
-            match &operations[0] {
-                PostfixOperation::MethodCall { name, args, .. } => {
-                    assert_eq!(name, "Transform");
-                    assert_eq!(args.len(), 1);
-                }
-                other => panic!("expected MethodCall, got {other:?}"),
-            }
-        }
-        other => panic!("expected Postfix, got {other:?}"),
-    }
-}
-
-#[test]
-fn two_method_calls_followed_by_field() {
-    match parse_expr("Foo().Transform(2).Scale(3).Value") {
-        Expr::Postfix {
-            base, operations, ..
-        } => {
-            assert!(matches!(*base, Expr::Call { .. }));
-            assert_eq!(operations.len(), 3);
-            assert!(matches!(
-                &operations[0],
-                PostfixOperation::MethodCall { name, .. } if name == "Transform"
-            ));
-            assert!(matches!(
-                &operations[1],
-                PostfixOperation::MethodCall { name, .. } if name == "Scale"
-            ));
-            assert!(matches!(
-                &operations[2],
-                PostfixOperation::Field { name, .. } if name == "Value"
-            ));
-        }
-        other => panic!("expected Postfix, got {other:?}"),
-    }
-}
-
-#[test]
 fn parenthesized_call_result_followed_by_field() {
     match parse_expr("(Factory.Create()).Value") {
         Expr::Postfix {
@@ -164,4 +119,26 @@ fn missing_rbracket_recovers() {
         !errors.is_empty(),
         "expected parser diagnostic for missing `]`"
     );
+}
+
+#[test]
+fn calls_through_returned_fields_have_separate_projection_and_invocation_steps() {
+    let Expr::Postfix {
+        base, operations, ..
+    } = parse_expr("Foo().Transform(2).Scale(3).Value")
+    else {
+        panic!("expected postfix chain");
+    };
+    assert!(matches!(*base, Expr::Call { .. }));
+    assert_eq!(operations.len(), 5);
+    for (index, expected) in [(0, "Transform"), (2, "Scale"), (4, "Value")] {
+        assert!(
+            matches!(&operations[index], PostfixOperation::Field { name, .. } if name == expected)
+        );
+    }
+    for index in [1, 3] {
+        assert!(
+            matches!(&operations[index], PostfixOperation::Call { args, .. } if args.len() == 1)
+        );
+    }
 }

@@ -78,12 +78,6 @@ fn real_divide(left: &Value, right: &Value) -> Result<Value, ValueOperationError
     let (Some(left), Some(right)) = (numeric(left), numeric(right)) else {
         return Err(numeric_type_error(left, right));
     };
-    if right == 0.0 {
-        return Err(ValueOperationError::division_by_zero(
-            "Division by zero",
-            "Check the right-hand side before using `/`.",
-        ));
-    }
     Ok(Value::Real(left / right))
 }
 

@@ -3,25 +3,25 @@ program ArrayHigherOrderCallbacksTest;
 uses Std.Arrays as Arrays;
 uses Std.Test as Test;
 
-function Double(Value: integer): integer;
+pure function Double(Value: integer): integer;
 begin
   return Value * 2;
 end function;
 
-function IsAboveFour(Value: integer): boolean;
+pure function IsAboveFour(Value: integer): boolean;
 begin
   return Value > 4;
 end function;
 
-function Sum(Accumulator: integer; Value: integer): integer;
+pure function Sum(Accumulator: integer; Value: integer): integer;
 begin
   return Accumulator + Value;
 end function;
 
 begin
-  var Values: array of (integer) := [1, 2, 3, 4];
-  var Mapped: array of (integer) := Arrays.Map(Values, Double);
-  var Filtered: array of (integer) := Arrays.Filter(Mapped, IsAboveFour);
+  const Values: array of (integer) := [1, 2, 3, 4];
+  const Mapped: array of (integer) := Arrays.Map(Values, Double);
+  const Filtered: array of (integer) := Arrays.Filter(Mapped, IsAboveFour);
   Test.AssertEquals(4, Arrays.Length(Mapped));
   Test.AssertEquals(2, Mapped[0]);
   Test.AssertEquals(8, Mapped[3]);

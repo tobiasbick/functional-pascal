@@ -5,6 +5,7 @@ uses Std.Arrays as Arrays;
 uses Std.Console as Console;
 uses Std.Str as Str;
 uses Std.Tui as Tui;
+uses Std.Tui.Geometry as Geometry;
 
 // Origin of one visible local chat entry.
 public type ChatRole = enum
@@ -22,34 +23,34 @@ public type ChatEntry = record
   public Role: ChatRole;
   // Entry text displayed in the transcript.
   public Text: string;
-
-  // Creates a user entry.
-  //
-  // Parameters:
-  // - `Text`: Prompt text submitted by the user.
-  public static function User(Text: string): ChatEntry;
-  begin
-    return ChatEntry(Role := ChatRole.User, Text := Text);
-  end function;
-
-  // Creates an assistant entry.
-  //
-  // Parameters:
-  // - `Text`: Completion text returned by the model.
-  public static function Assistant(Text: string): ChatEntry;
-  begin
-    return ChatEntry(Role := ChatRole.Assistant, Text := Text);
-  end function;
-
-  // Creates a failed-request entry.
-  //
-  // Parameters:
-  // - `Text`: Error text returned by the request service.
-  public static function Failure(Text: string): ChatEntry;
-  begin
-    return ChatEntry(Role := ChatRole.Failure, Text := Text);
-  end function;
 end record;
+
+// Creates a user entry.
+//
+// Parameters:
+// - `Text`: Prompt text submitted by the user.
+public function ChatEntryUser(Text: string): ChatEntry;
+begin
+  return ChatEntry(Role := ChatRole.User, Text := Text);
+end function;
+
+// Creates an assistant entry.
+//
+// Parameters:
+// - `Text`: Completion text returned by the model.
+public function ChatEntryAssistant(Text: string): ChatEntry;
+begin
+  return ChatEntry(Role := ChatRole.Assistant, Text := Text);
+end function;
+
+// Creates a failed-request entry.
+//
+// Parameters:
+// - `Text`: Error text returned by the request service.
+public function ChatEntryFailure(Text: string): ChatEntry;
+begin
+  return ChatEntry(Role := ChatRole.Failure, Text := Text);
+end function;
 
 // Complete immutable state supplied to the Local Chat MVU view.
 public type LocalChatModel = record
@@ -80,7 +81,7 @@ end record;
 // - `Height`: Initial terminal height in cells.
 public function LocalChatModelCreate(Width: integer; Height: integer): LocalChatModel;
 begin
-  return LocalChatModel(Entries := [], Draft := '', DraftCaret := 0, TranscriptCaret := 0, TranscriptOffset := Tui.TuiPoint.Create(0, 0), Focus := 1, Status := 'Ready', Width := Width, Height := Height);
+  return LocalChatModel(Entries := [], Draft := '', DraftCaret := 0, TranscriptCaret := 0, TranscriptOffset := Geometry.TuiPointCreate(0, 0), Focus := 1, Status := 'Ready', Width := Width, Height := Height);
 end function;
 
 // Wraps text at grapheme boundaries for a cell-width limit.
@@ -95,9 +96,9 @@ begin
       return '';
     end;
   end if;
-  mutable var Wrapped: string := '';
-  mutable var LineWidth: integer := 0;
-  var NewLine: string := Str.Chr(10);
+  var Wrapped: string := '';
+  var LineWidth: integer := 0;
+  const NewLine: string := Str.Chr(10);
   for Grapheme: string in Console.SplitGraphemes(Text) do
     begin
       if Grapheme = NewLine then
@@ -107,7 +108,7 @@ begin
         end;
       else
         begin
-          var GraphemeWidth: integer := Console.DisplayWidth(Grapheme);
+          const GraphemeWidth: integer := Console.DisplayWidth(Grapheme);
           if (LineWidth > 0) and (LineWidth + GraphemeWidth > MaximumWidth) then
             begin
               Wrapped := Wrapped + NewLine;
@@ -158,14 +159,14 @@ begin
       return ('No messages yet.' + Str.Chr(10)) + 'Type below and press Enter.';
     end;
   end if;
-  mutable var MaximumWidth: integer := State.Width - 6;
+  var MaximumWidth: integer := State.Width - 6;
   if MaximumWidth < 1 then
     begin
       MaximumWidth := 1;
     end;
   end if;
-  mutable var Transcript: string := '';
-  var NewLine: string := Str.Chr(10);
+  var Transcript: string := '';
+  const NewLine: string := Str.Chr(10);
   for Index: integer := 0 to Arrays.Length(State.Entries) - 1 do
     begin
       if Transcript <> '' then
@@ -188,24 +189,24 @@ end function;
 // - `State`: Current application state to scroll.
 public function LocalChatScrollToEnd(State: LocalChatModel): LocalChatModel;
 begin
-  mutable var Next: LocalChatModel := State;
-  var Transcript: string := LocalChatTranscript(Next);
+  var Next: LocalChatModel := State;
+  const Transcript: string := LocalChatTranscript(Next);
   Next.TranscriptCaret := Str.Length(Transcript);
-  mutable var VisibleLines: integer := Next.Height - 7;
+  var VisibleLines: integer := Next.Height - 7;
   if VisibleLines < 1 then
     begin
       VisibleLines := 1;
     end;
   end if;
-  var LineCount: integer := Arrays.Length(Str.Split(Transcript, Str.Chr(10)));
-  mutable var OffsetY: integer := LineCount - VisibleLines;
+  const LineCount: integer := Arrays.Length(Str.Split(Transcript, Str.Chr(10)));
+  var OffsetY: integer := LineCount - VisibleLines;
   if OffsetY < 0 then
     begin
       OffsetY := 0;
     end;
   end if;
 
-  Next.TranscriptOffset := Tui.TuiPoint.Create(0, OffsetY);
+  Next.TranscriptOffset := Geometry.TuiPointCreate(0, OffsetY);
   return Next;
 end function;
 

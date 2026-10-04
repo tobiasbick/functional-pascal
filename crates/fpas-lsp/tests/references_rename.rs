@@ -30,8 +30,8 @@ begin
 end function;
 
 begin
-  var Music: string := '𝄞';
-  var Total: integer := Add(1);
+  const Music: string := '𝄞';
+  const Total: integer := Add(1);
 end program;
 "#;
     temp.write("navigation.fpas", source);
@@ -137,7 +137,7 @@ end unit;
 
 uses Demo.Core as Core;
 
-begin var Value: integer := Core.Answer(); end program;
+begin const Value: integer := Core.Answer(); end program;
 "#;
     temp.write("src/main.fpas", source);
     let root_uri = temp.uri(".");
@@ -173,7 +173,12 @@ begin var Value: integer := Core.Answer(); end program;
 #[test]
 fn clients_without_document_changes_receive_no_unversioned_edits() {
     let temp = TempDirectory::new("rename-capability");
-    let source = "program Capability;\n\nvar Value: integer;\n\nbegin Value := 1 end.\n";
+    let source = r#"program Capability;
+
+const Value: integer;
+
+begin Value := 1 end.
+"#;
     temp.write("main.fpas", source);
     let root_uri = temp.uri(".");
     let uri = temp.uri("main.fpas");
@@ -220,7 +225,7 @@ end unit;
 
 uses Demo.Core as Core;
 
-begin var Value: integer := Core.Answer(); end program;
+begin const Value: integer := Core.Answer(); end program;
 "#,
     );
     let library_uri = temp.uri("core/src/core.fpas");

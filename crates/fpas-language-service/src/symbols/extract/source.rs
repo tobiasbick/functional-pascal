@@ -54,7 +54,8 @@ pub(crate) fn function_signature(
     let parameters = parameter_labels(snapshot, &value.params, implicit_parameters);
     CallableSignature {
         label: format!(
-            "function {}{}({}): {}",
+            "{}function {}{}({}): {}",
+            if value.pure { "pure " } else { "" },
             value.name,
             type_parameters(&value.type_params),
             parameters.join("; "),
@@ -88,6 +89,7 @@ pub(crate) fn type_callable_signature(
 ) -> Option<CallableSignature> {
     match value {
         TypeExpr::FunctionType {
+            pure,
             params,
             return_type,
             ..
@@ -95,7 +97,8 @@ pub(crate) fn type_callable_signature(
             let parameters = parameter_labels(snapshot, params, 0);
             Some(CallableSignature {
                 label: format!(
-                    "function {name}({}): {}",
+                    "{}function {name}({}): {}",
+                    if *pure { "pure " } else { "" },
                     parameters.join("; "),
                     type_text(snapshot, return_type)
                 ),
@@ -141,7 +144,7 @@ fn parameter_labels(
         .map(|param| {
             format!(
                 "{}{}: {}",
-                if param.mutable { "mutable " } else { "" },
+                if param.mutable { "var " } else { "" },
                 param.name,
                 type_text(snapshot, &param.type_expr)
             )

@@ -1,0 +1,56 @@
+program NumericRulesTest;
+
+uses Std.Bits as Bits;
+uses Std.Math as Math;
+uses Std.Test as Test;
+
+function Add(Left: integer; Right: integer): integer;
+begin
+  return Left + Right;
+end function;
+
+function Divide(Left: real; Right: real): real;
+begin
+  return Left / Right;
+end function;
+
+begin
+  const Maximum := 9223372036854775807;
+  const Minimum := -9223372036854775807 - 1;
+  Test.AssertEquals(Maximum, Add(Maximum, 0));
+  Test.AssertEquals(Minimum, Add(Minimum, 0));
+  Test.AssertEquals(-2, -7 div 3);
+  Test.AssertEquals(-1, -7 mod 3);
+  Test.AssertEquals(2, 7 div 3);
+  Test.AssertEquals(1, 7 mod 3);
+  var Visits := 0;
+  for Counter: integer := Maximum to Maximum do
+    Visits := Visits + 1;
+  end for;
+
+  for Counter: integer := Minimum downto Minimum do
+    Visits := Visits + 1;
+  end for;
+
+  Test.AssertEquals(2, Visits);
+  const Infinite := 1 / 0;
+  const Nan := 0 / 0;
+  Test.AssertTrue(Infinite >
+                  1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000.0);
+  Test.AssertTrue(Divide(1.0, -0.0) <
+                  -1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000.0);
+  Test.AssertTrue(Nan <> Nan);
+  Test.AssertFalse(Nan = Nan);
+  Test.AssertFalse(Nan < Infinite);
+  Test.AssertFalse(Nan <= Infinite);
+  Test.AssertFalse(Nan > Infinite);
+  Test.AssertFalse(Nan >= Infinite);
+  const RuntimeNan := Divide(0.0, 0.0);
+  Test.AssertTrue(RuntimeNan <> RuntimeNan);
+  Test.AssertTrue(0.0 = -0.0);
+  Test.AssertEquals(Minimum, Math.Trunc(-9223372036854776000.0));
+  Test.AssertEquals(9223372036854774784, Math.Trunc(9223372036854775000.0));
+  Test.AssertEquals(Minimum, Bits.ShiftLeft(1, 63));
+  Test.AssertEquals(1, Bits.ShiftRight(-1, 63));
+  Test.AssertEquals(-1, Bits.ShiftRight(-1, 0));
+end program;

@@ -7,6 +7,12 @@ uses Std.Console as Console;
 uses Std.Conv as Conv;
 uses Std.Time as Time;
 uses Std.Tui as Tui;
+uses Std.Tui.Cells as Cells;
+uses Std.Tui.Chrome as Chrome;
+uses Std.Tui.Elements as Elements;
+uses Std.Tui.Geometry as Geometry;
+uses Std.Tui.Rendering as Rendering;
+uses Std.Tui.Runtime as Runtime;
 
 const GridWidth: integer := 98;
 const GridHeight: integer := 32;
@@ -19,12 +25,12 @@ end function;
 
 function View(Grid: Tui.TuiCellGrid): Tui.TuiElement;
 begin
-  return Tui.TuiElementBuilders.MakeCellGrid(Grid);
+  return Elements.TuiElementMakeCellGrid(Grid);
 end function;
 
 function PaintOnce(App: Tui.TuiApplication; Grid: Tui.TuiCellGrid): Tui.TuiCellGrid;
 begin
-  return App.RunIterations(Grid, Update, View, 0, 0);
+  return Runtime.TuiApplicationRunIterations(App, Grid, Update, View, 0, 0);
 end function;
 
 begin
@@ -33,33 +39,33 @@ begin
       panic('usage: cell_grid_headless_benchmark.fpas -- ITERATIONS');
     end;
   end if;
-  var Iterations: integer := Conv.StrToInt(Args.ParamStr(0));
+  const Iterations: integer := Conv.StrToInt(Args.ParamStr(0));
   if Iterations < 1 then
     begin
       panic('ITERATIONS must be positive');
     end;
   end if;
-  var Style: Tui.TuiStyle := Tui.TuiStyle.FromColors(Tui.TuiColor.FromRgb(214, 218, 224), Tui.TuiColor.FromRgb(18, 22, 28));
-  var Cell: Tui.TuiCell := Tui.TuiCell.Styled('#', Style);
-  mutable var Grid: Tui.TuiCellGrid := Tui.TuiCellGrid.Create(GridWidth, GridHeight, Arrays.Fill(Cell, GridWidth *
-                                                                                                       GridHeight));
-  var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(GridWidth, GridHeight));
+  const Style: Tui.TuiStyle := Cells.TuiStyleFromColors(Cells.TuiColorFromRgb(214, 218, 224), Cells.TuiColorFromRgb(18, 22, 28));
+  const Cell: Tui.TuiCell := Cells.TuiCellStyled('#', Style);
+  var Grid: Tui.TuiCellGrid := Chrome.TuiCellGridCreate(GridWidth, GridHeight, Arrays.Fill(Cell, GridWidth *
+                                                                                                 GridHeight));
+  const App: Tui.TuiApplication := Runtime.TuiApplicationOpenForTest(Geometry.TuiSizeCreate(GridWidth, GridHeight));
   for Warmup: integer := 1 to WarmupIterations do
     begin
       Grid := PaintOnce(App, Grid);
     end;
   end for;
-  var Started: integer := Time.MonotonicMillis();
+  const Started: integer := Time.MonotonicMillis();
   for Iteration: integer := 1 to Iterations do
     begin
       Grid := PaintOnce(App, Grid);
     end;
   end for;
-  var Elapsed: integer := Time.ElapsedMillis(Started);
-  var Snapshot: Tui.TuiSurfaceSnapshot := App.SurfaceSnapshot();
-  App.Close();
+  const Elapsed: integer := Time.ElapsedMillis(Started);
+  const Snapshot: Tui.TuiSurfaceSnapshot := Runtime.TuiApplicationSurfaceSnapshot(App);
+  Runtime.TuiApplicationClose(App);
   if ((Snapshot.Width <> GridWidth) or (Snapshot.Height <> GridHeight)) or
-     (Snapshot.CellAt(GridWidth - 1, GridHeight - 1).Glyph <> '#') then
+     (Rendering.TuiSurfaceSnapshotCellAt(Snapshot, GridWidth - 1, GridHeight - 1).Glyph <> '#') then
     begin
       panic('cell grid headless benchmark snapshot mismatch');
     end;

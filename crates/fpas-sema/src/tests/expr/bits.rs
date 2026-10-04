@@ -11,7 +11,7 @@ fn bit_calls_require_explicit_alias_and_integer_signatures() {
         ("ShiftRight(-1, 63)", "integer"),
     ] {
         check_ok(&format!(
-            "program T; uses Std.Bits as Flags; var X: {result} := Flags.{call}; begin null; end program;"
+            r#"program T; uses Std.Bits as Flags; const X: {result} := Flags.{call}; begin null; end program;"#
         ));
     }
     for call in [
@@ -23,11 +23,11 @@ fn bit_calls_require_explicit_alias_and_integer_signatures() {
         "Std.Bits.BitNot(1)",
     ] {
         check_errors(&format!(
-            "program T; uses Std.Bits as Bits; var X: integer := {call}; begin null; end program;"
+            r#"program T; uses Std.Bits as Bits; const X: integer := {call}; begin null; end program;"#
         ));
     }
-    check_errors("program T; var X: integer := Bits.BitNot(1); begin null; end program;");
-    check_errors(
+    check_errors(r#"program T; const X: integer := Bits.BitNot(1); begin null; end program;"#);
+    check_ok(
         "program T; uses Std.Bits as Bits; const X: integer := Bits.BitNot(1); begin null; end program;",
     );
 }
@@ -43,8 +43,8 @@ fn logical_operators_reject_integers_even_in_unreachable_operands() {
         "true or 1",
     ] {
         check_errors(&format!(
-            "program T; var X: boolean := {expr}; begin null; end program;"
+            r#"program T; const X: boolean := {expr}; begin null; end program;"#
         ));
     }
-    check_ok("program T; var X: boolean := not 3 > 2 and 1 < 2; begin null; end program;");
+    check_ok(r#"program T; const X: boolean := not 3 > 2 and 1 < 2; begin null; end program;"#);
 }

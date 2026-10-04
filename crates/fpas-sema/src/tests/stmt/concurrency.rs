@@ -10,9 +10,9 @@ fn selection_send_rejects_task_bound_values() {
         r#"program T;
 uses Std.Tasks as Tasks;
 begin
-  mutable var Count: integer := 0;
-  var Work: procedure() := procedure() begin Count := Count + 1; end procedure;
-  var Q: channel of (procedure()) := Tasks.CreateChannel(1);
+   var Count: integer := 0;
+  const Work: procedure() := procedure() begin Count := Count + 1; end procedure;
+  const Q: channel of (procedure()) := Tasks.CreateChannel(1);
   Tasks.SendCase(Q, Work, procedure(R: result of (boolean, string)) begin null; end procedure);
 end program;"#,
     );
@@ -38,7 +38,7 @@ fn selection_cases_reject_wrong_payload_callback_and_control_types() {
         "Tasks.CloseWaitCase(Tasks.CreateCancellationSource())",
     ] {
         let source = format!(
-            "program T; uses Std.Tasks as Tasks; begin var Q: channel of (integer) := Tasks.CreateChannel(1); {call}; end program;"
+            r#"program T; uses Std.Tasks as Tasks; begin const Q: channel of (integer) := Tasks.CreateChannel(1); {call}; end program;"#
         );
         assert!(
             !check_errors(&source).is_empty(),
@@ -56,7 +56,7 @@ fn controlled_wait_any_checks_control_types_and_arity() {
         "Workers.WaitAnyWithCancellation([1, 2], Workers.GetCancellationToken(Workers.CreateCancellationSource()))",
     ] {
         let source = format!(
-            "program T; uses Std.Tasks as Workers; begin var Handles: array of (task) := []; {call}; end program;"
+            r#"program T; uses Std.Tasks as Workers; begin const Handles: array of (task) := []; {call}; end program;"#
         );
         assert!(!check_errors(&source).is_empty(), "{call}");
     }
@@ -111,7 +111,7 @@ begin null;
 end procedure;
 
 begin
-  var Tsk: task := go LogAnswer();
+  const Tsk: task := go LogAnswer();
   Tasks.Wait(Tsk);
 end program;"#,
     );
@@ -120,11 +120,10 @@ end program;"#,
 #[test]
 fn go_requires_a_call_expression() {
     let (_, errors) = parse(
-        "\
-program T;
+        r#"program T;
 begin
-  var Tsk: task := go 1
-end.",
+  const Tsk: task := go 1
+end."#,
     );
 
     assert!(
@@ -150,8 +149,8 @@ begin
 end function;
 
 begin
-  var Tsk: task := go Answer();
-  var Value: integer := Tasks.Wait(Tsk);
+  const Tsk: task := go Answer();
+  const Value: integer := Tasks.Wait(Tsk);
 end program;"#,
     );
 }
@@ -168,15 +167,15 @@ begin
 end function;
 
 begin
-  var Tsk: task := go Answer();
-  var Value: string := Tasks.Wait(Tsk);
+  const Tsk: task := go Answer();
+  const Value: string := Tasks.Wait(Tsk);
 end program;"#,
     );
 
     assert!(
         errors.iter().any(|error| error
             .message
-            .contains("Type mismatch in variable initializer")),
+            .contains("Type mismatch in binding initializer")),
         "errors: {errors:#?}"
     );
 }
@@ -187,8 +186,8 @@ fn go_rejects_task_bound_mutable_closure() {
         r#"program T;
 uses Std.Tasks as Tasks;
 begin
-  mutable var Count: integer := 0;
-  var Inc: procedure() :=
+   var Count: integer := 0;
+  const Inc: procedure() :=
     procedure()
     begin
       Count := Count + 1;
@@ -212,9 +211,9 @@ fn typed_channel_operations_preserve_the_element_type() {
         r#"program T;
 uses Std.Tasks as Tasks;
 begin
-  var Messages: channel of (integer) := Tasks.CreateChannel(1);
-  var Sent: result of (boolean, string) := Tasks.Send(Messages, 42);
-  var Received: result of (integer, string) := Tasks.Receive(Messages);
+  const Messages: channel of (integer) := Tasks.CreateChannel(1);
+  const Sent: result of (boolean, string) := Tasks.Send(Messages, 42);
+  const Received: result of (integer, string) := Tasks.Receive(Messages);
   discard Tasks.CloseChannel(Messages);
 end program;"#,
     );
@@ -226,7 +225,7 @@ fn channel_send_rejects_the_wrong_element_type() {
         r#"program T;
 uses Std.Tasks as Tasks;
 begin
-  var Messages: channel of (integer) := Tasks.CreateChannel(1);
+  const Messages: channel of (integer) := Tasks.CreateChannel(1);
   Tasks.Send(Messages, 'wrong');
 end program;"#,
     );
@@ -245,8 +244,8 @@ fn channel_wait_modes_preserve_element_and_timeout_types() {
         r#"program T;
 uses Std.Tasks as Tasks;
 begin
-  var Messages: channel of (integer) := Tasks.CreateChannel(1);
-  var Pending: result of (option of (integer), string) := Tasks.TryReceive(Messages);
+  const Messages: channel of (integer) := Tasks.CreateChannel(1);
+  const Pending: result of (option of (integer), string) := Tasks.TryReceive(Messages);
   Tasks.TrySend(Messages, 'wrong');
   Tasks.SendWithTimeout(Messages, 1, 'soon');
   Tasks.ReceiveWithTimeout(Messages, 'soon');
@@ -269,9 +268,9 @@ fn channel_send_rejects_task_bound_values() {
         r#"program T;
 uses Std.Tasks as Tasks;
 begin
-  mutable var Count: integer := 0;
-  var Work: procedure() := procedure() begin Count := Count + 1; end procedure;
-  var Queue: channel of (procedure()) := Tasks.CreateChannel(1);
+   var Count: integer := 0;
+  const Work: procedure() := procedure() begin Count := Count + 1; end procedure;
+  const Queue: channel of (procedure()) := Tasks.CreateChannel(1);
   Tasks.Send(Queue, Work);
 end program;"#,
     );
@@ -296,14 +295,14 @@ type WorkBox = record
 end record;
 
 begin
-  mutable var Count: integer := 0;
-  var Work: procedure() := procedure() begin
+   var Count: integer := 0;
+  const Work: procedure() := procedure() begin
     Count := Count + 1;
   end procedure;
-  var ArrayQueue: channel of (array of (procedure())) := Tasks.CreateChannel(1);
-  var RecordQueue: channel of (WorkBox) := Tasks.CreateChannel(1);
-  var ResultQueue: channel of (Result of (procedure(), string)) := Tasks.CreateChannel(1);
-  var OptionQueue: channel of (Option of (procedure())) := Tasks.CreateChannel(1);
+  const ArrayQueue: channel of (array of (procedure())) := Tasks.CreateChannel(1);
+  const RecordQueue: channel of (WorkBox) := Tasks.CreateChannel(1);
+  const ResultQueue: channel of (Result of (procedure(), string)) := Tasks.CreateChannel(1);
+  const OptionQueue: channel of (Option of (procedure())) := Tasks.CreateChannel(1);
   Tasks.Send(ArrayQueue, [Work]);
   Tasks.Send(RecordQueue, WorkBox(Work := Work));
   Tasks.Send(ResultQueue, Result.Ok(Work));
@@ -335,13 +334,13 @@ type WorkBox = record
 end record;
 
 begin
-  mutable var Count: integer := 0;
-  var Work: procedure() := procedure() begin
+   var Count: integer := 0;
+  const Work: procedure() := procedure() begin
     Count := Count + 1;
   end procedure;
-  var Boxed: WorkBox := WorkBox(Work := Work, Safe := 7);
-  var WorkQueue: channel of (procedure()) := Tasks.CreateChannel(1);
-  var SafeQueue: channel of (integer) := Tasks.CreateChannel(1);
+  const Boxed: WorkBox := WorkBox(Work := Work, Safe := 7);
+  const WorkQueue: channel of (procedure()) := Tasks.CreateChannel(1);
+  const SafeQueue: channel of (integer) := Tasks.CreateChannel(1);
   Tasks.Send(WorkQueue, Boxed.Work);
   discard Tasks.Send(SafeQueue, Boxed.Safe);
 end program;
@@ -376,9 +375,9 @@ begin
   return Tasks.Wait(Jobs[Tasks.WaitAny(Jobs)]);
 end function;
 begin
-  var Job: task of (integer) := go Seven();
-  var Inferred: task := go Seven();
-  var Total: integer := Doubled(Job) + First([Inferred]);
+  const Job: task of (integer) := go Seven();
+  const Inferred: task := go Seven();
+  const Total: integer := Doubled(Job) + First([Inferred]);
 end program;"#,
     );
 }
@@ -386,8 +385,8 @@ end program;"#,
 #[test]
 fn typed_tasks_reject_a_different_result_type() {
     for source in [
-        r#"program T;  uses Std.Tasks as Tasks; function Seven(): integer; begin return 7; end function; begin var Job: task of (string) := go Seven(); end program;"#,
-        r#"program T;  uses Std.Tasks as Tasks; function Seven(): integer; begin return 7; end function; function Name(Job: task of (string)): string; begin return Tasks.Wait(Job); end function; begin var Job: task := go Seven(); var Text: string := Name(Job); end program;"#,
+        r#"program T;  uses Std.Tasks as Tasks; function Seven(): integer; begin return 7; end function; begin const Job: task of (string) := go Seven(); end program;"#,
+        r#"program T;  uses Std.Tasks as Tasks; function Seven(): integer; begin return 7; end function; function Name(Job: task of (string)): string; begin return Tasks.Wait(Job); end function; begin const Job: task := go Seven(); const Text: string := Name(Job); end program;"#,
         r#"program T;  uses Std.Tasks as Tasks; function Count(Job: task of (integer)): string; begin return Tasks.Wait(Job); end function; begin null; end program;"#,
     ] {
         assert!(!check_errors(source).is_empty(), "{source}");

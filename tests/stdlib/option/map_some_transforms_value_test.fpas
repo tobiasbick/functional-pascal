@@ -4,13 +4,13 @@ uses Std.Console as Console;
 uses Std.Options as Options;
 uses Std.Conv as Conv;
 
-function TripleToStr(V: integer): string;
+pure function TripleToStr(V: integer): string;
 begin
   return Conv.IntToStr(V * 3);
 end function;
 
 begin
-  var O: Option of (integer) := Option.Some(7);
-  var M: Option of (string) := Options.Map(O, TripleToStr);
+  const O: Option of (integer) := Option.Some(7);
+  const M: Option of (string) := Options.Map(O, TripleToStr);
   Console.WriteLn(Options.Unwrap(M));
 end program;

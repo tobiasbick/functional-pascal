@@ -92,7 +92,7 @@ uses Std.Console as Console;
 uses Std.Proc as Proc;
 uses Std.Results as Results;
 
-var Status: result of (integer, string) := Proc.Run('fpas', ['--version']);
+const Status: result of (integer, string) := Proc.Run('fpas', ['--version']);
 if Results.IsError(Status) then
   Console.WriteLn(Results.UnwrapOr(Status, -1));
 end if;

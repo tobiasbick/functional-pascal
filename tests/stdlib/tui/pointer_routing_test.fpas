@@ -4,6 +4,11 @@ uses Std.Arrays as Arrays;
 uses Std.Str as Str;
 uses Std.Test as Test;
 uses Std.Tui as Tui;
+uses Std.Tui.Elements as Elements;
+uses Std.Tui.Geometry as Geometry;
+uses Std.Tui.Ids as Ids;
+uses Std.Tui.Rendering as Rendering;
+uses Std.Tui.Runtime as Runtime;
 
 type RouteModel = record
   Focus: integer;
@@ -13,18 +18,18 @@ end record;
 
 function MakePointer(Action: Tui.TuiPointerAction; X: integer; Y: integer): Tui.TuiPointerEvent;
 begin
-  return Tui.TuiPointerEvent.Create(Action, Tui.TuiPointerButton.Left, Tui.TuiPoint.Create(X, Y));
+  return Runtime.TuiPointerEventCreate(Action, Tui.TuiPointerButton.Left, Geometry.TuiPointCreate(X, Y));
 end function;
 
 function FindGlyph(Snapshot: Tui.TuiSurfaceSnapshot; Glyph: string): Tui.TuiPoint;
 begin
   for Y: integer := 0 to Snapshot.Height - 1 do
     begin
-      var Line: string := Snapshot.LineAt(Y);
-      var Index: integer := Str.IndexOf(Line, Glyph);
+      const Line: string := Rendering.TuiSurfaceSnapshotLineAt(Snapshot, Y);
+      const Index: integer := Str.IndexOf(Line, Glyph);
       if Index >= 0 then
         begin
-          return Tui.TuiPoint.Create(Index, Y);
+          return Geometry.TuiPointCreate(Index, Y);
         end;
       end if;
     end;
@@ -35,32 +40,32 @@ end function;
 
 function ViewRoute(State: RouteModel): Tui.TuiElement;
 begin
-  return Tui.TuiElementBuilders.MakeDesktop(Option.Some(Tui.TuiControlId.Create(State.Focus)), [
-                                                                                                 Tui.TuiElementBuilders.MakePanel('Host', [
-                                                                                                                                            Tui.TuiElementBuilders.MakeColumn([
-                                                                                                                                                                                Tui.TuiElementBuilders.MakeLabel('Hello'),
-                                                                                                                                                                                Tui.TuiElementBuilders.MakeButton(Tui.TuiControlId.Create(1), 'Go', Tui.TuiAction.Create(11)),
-                                                                                                                                                                                Tui.TuiElementBuilders.MakeInput(Tui.TuiControlId.Create(2), 'ab', 2, Tui.TuiAction.Create(22))
-                                                                                                                                                                              ])
-                                                                                                                                          ])
-                                                                                               ]);
+  return Elements.TuiElementMakeDesktop(Option.Some(Ids.TuiControlIdCreate(State.Focus)), [
+                                                                                            Elements.TuiElementMakePanel('Host', [
+                                                                                                                                   Elements.TuiElementMakeColumn([
+                                                                                                                                                                   Elements.TuiElementMakeLabel('Hello'),
+                                                                                                                                                                   Elements.TuiElementMakeButton(Ids.TuiControlIdCreate(1), 'Go', Ids.TuiActionCreate(11)),
+                                                                                                                                                                   Elements.TuiElementMakeInput(Ids.TuiControlIdCreate(2), 'ab', 2, Ids.TuiActionCreate(22))
+                                                                                                                                                                 ])
+                                                                                                                                 ])
+                                                                                          ]);
 end function;
 
 function ViewOverlap(State: RouteModel): Tui.TuiElement;
 begin
-  return Tui.TuiElementBuilders.MakeDesktop(Option.Some(Tui.TuiControlId.Create(State.Focus)), [
-                                                                                                 Tui.TuiElementBuilders.MakePanel('Back', [
-                                                                                                                                            Tui.TuiElementBuilders.MakeButton(Tui.TuiControlId.Create(1), 'Back', Tui.TuiAction.Create(11))
-                                                                                                                                          ]),
-                                                                                                 Tui.TuiElementBuilders.MakePanel('Top', [
-                                                                                                                                           Tui.TuiElementBuilders.MakeButton(Tui.TuiControlId.Create(3), 'Front', Tui.TuiAction.Create(33))
-                                                                                                                                         ])
-                                                                                               ]);
+  return Elements.TuiElementMakeDesktop(Option.Some(Ids.TuiControlIdCreate(State.Focus)), [
+                                                                                            Elements.TuiElementMakePanel('Back', [
+                                                                                                                                   Elements.TuiElementMakeButton(Ids.TuiControlIdCreate(1), 'Back', Ids.TuiActionCreate(11))
+                                                                                                                                 ]),
+                                                                                            Elements.TuiElementMakePanel('Top', [
+                                                                                                                                  Elements.TuiElementMakeButton(Ids.TuiControlIdCreate(3), 'Front', Ids.TuiActionCreate(33))
+                                                                                                                                ])
+                                                                                          ]);
 end function;
 
 function UpdateRoute(State: RouteModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): RouteModel;
 begin
-  Cmd.Set(Tui.TuiCmd.NoCommand);
+  Runtime.TuiCmdOutputSet(Cmd, Tui.TuiCmd.NoCommand);
   case Msg of
     when Tui.TuiMsg.FocusChanged(const Previous, const Current):
       begin
@@ -102,46 +107,46 @@ begin
 end function;
 
 begin
-  mutable var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(20, 8));
-  mutable var Model: RouteModel := RouteModel(Focus := 1, Actions := [], PointerHits := 0);
-  Model := App.RunIterations(Model, UpdateRoute, ViewRoute, 0, 0);
-  var Snapshot: Tui.TuiSurfaceSnapshot := App.SurfaceSnapshot();
-  var GoAt: Tui.TuiPoint := FindGlyph(Snapshot, 'Go');
-  var InputAt: Tui.TuiPoint := FindGlyph(Snapshot, 'ab');
-  var HelloAt: Tui.TuiPoint := FindGlyph(Snapshot, 'Hello');
-  App.InjectPointerForTest(MakePointer(Tui.TuiPointerAction.Down, GoAt.X, GoAt.Y));
-  Model := App.RunIterations(Model, UpdateRoute, ViewRoute, 1, 0);
-  App.InjectPointerForTest(MakePointer(Tui.TuiPointerAction.Up, GoAt.X, GoAt.Y));
-  Model := App.RunIterations(Model, UpdateRoute, ViewRoute, 1, 0);
+  var App: Tui.TuiApplication := Runtime.TuiApplicationOpenForTest(Geometry.TuiSizeCreate(20, 8));
+  var Model: RouteModel := RouteModel(Focus := 1, Actions := [], PointerHits := 0);
+  Model := Runtime.TuiApplicationRunIterations(App, Model, UpdateRoute, ViewRoute, 0, 0);
+  const Snapshot: Tui.TuiSurfaceSnapshot := Runtime.TuiApplicationSurfaceSnapshot(App);
+  const GoAt: Tui.TuiPoint := FindGlyph(Snapshot, 'Go');
+  const InputAt: Tui.TuiPoint := FindGlyph(Snapshot, 'ab');
+  const HelloAt: Tui.TuiPoint := FindGlyph(Snapshot, 'Hello');
+  Runtime.TuiApplicationInjectPointerForTest(App, MakePointer(Tui.TuiPointerAction.Down, GoAt.X, GoAt.Y));
+  Model := Runtime.TuiApplicationRunIterations(App, Model, UpdateRoute, ViewRoute, 1, 0);
+  Runtime.TuiApplicationInjectPointerForTest(App, MakePointer(Tui.TuiPointerAction.Up, GoAt.X, GoAt.Y));
+  Model := Runtime.TuiApplicationRunIterations(App, Model, UpdateRoute, ViewRoute, 1, 0);
   Test.AssertEquals(1, Arrays.Length(Model.Actions));
   Test.AssertEquals(11, Model.Actions[0]);
   Test.AssertEquals(1, Model.Focus);
   Test.AssertEquals(1, Model.PointerHits);
-  App.InjectPointerForTest(MakePointer(Tui.TuiPointerAction.Down, InputAt.X, InputAt.Y));
-  Model := App.RunIterations(Model, UpdateRoute, ViewRoute, 2, 0);
+  Runtime.TuiApplicationInjectPointerForTest(App, MakePointer(Tui.TuiPointerAction.Down, InputAt.X, InputAt.Y));
+  Model := Runtime.TuiApplicationRunIterations(App, Model, UpdateRoute, ViewRoute, 2, 0);
   Test.AssertEquals(2, Model.Focus);
   Test.AssertEquals(1, Arrays.Length(Model.Actions));
   Test.AssertEquals(1, Model.PointerHits);
-  App.InjectPointerForTest(MakePointer(Tui.TuiPointerAction.Down, HelloAt.X, HelloAt.Y));
-  Model := App.RunIterations(Model, UpdateRoute, ViewRoute, 1, 0);
+  Runtime.TuiApplicationInjectPointerForTest(App, MakePointer(Tui.TuiPointerAction.Down, HelloAt.X, HelloAt.Y));
+  Model := Runtime.TuiApplicationRunIterations(App, Model, UpdateRoute, ViewRoute, 1, 0);
   Test.AssertEquals(2, Model.PointerHits);
-  App.InjectPointerForTest(MakePointer(Tui.TuiPointerAction.Down, 0, 0));
-  Model := App.RunIterations(Model, UpdateRoute, ViewRoute, 1, 0);
+  Runtime.TuiApplicationInjectPointerForTest(App, MakePointer(Tui.TuiPointerAction.Down, 0, 0));
+  Model := Runtime.TuiApplicationRunIterations(App, Model, UpdateRoute, ViewRoute, 1, 0);
   Test.AssertEquals(3, Model.PointerHits);
-  App.Close();
-  mutable var Overlap: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(20, 6));
+  Runtime.TuiApplicationClose(App);
+  var Overlap: Tui.TuiApplication := Runtime.TuiApplicationOpenForTest(Geometry.TuiSizeCreate(20, 6));
   Model := RouteModel(Focus := 1, Actions := [], PointerHits := 0);
-  Model := Overlap.RunIterations(Model, UpdateRoute, ViewOverlap, 0, 0);
-  var FrontAt: Tui.TuiPoint := FindGlyph(Overlap.SurfaceSnapshot(), 'Front');
-  Overlap.InjectPointerForTest(MakePointer(Tui.TuiPointerAction.Down, FrontAt.X, FrontAt.Y));
-  Model := Overlap.RunIterations(Model, UpdateRoute, ViewOverlap, 2, 0);
+  Model := Runtime.TuiApplicationRunIterations(Overlap, Model, UpdateRoute, ViewOverlap, 0, 0);
+  const FrontAt: Tui.TuiPoint := FindGlyph(Runtime.TuiApplicationSurfaceSnapshot(Overlap), 'Front');
+  Runtime.TuiApplicationInjectPointerForTest(Overlap, MakePointer(Tui.TuiPointerAction.Down, FrontAt.X, FrontAt.Y));
+  Model := Runtime.TuiApplicationRunIterations(Overlap, Model, UpdateRoute, ViewOverlap, 2, 0);
   Test.AssertEquals(3, Model.Focus);
-  Overlap.InjectPointerForTest(MakePointer(Tui.TuiPointerAction.Up, FrontAt.X, FrontAt.Y));
-  Model := Overlap.RunIterations(Model, UpdateRoute, ViewOverlap, 1, 0);
+  Runtime.TuiApplicationInjectPointerForTest(Overlap, MakePointer(Tui.TuiPointerAction.Up, FrontAt.X, FrontAt.Y));
+  Model := Runtime.TuiApplicationRunIterations(Overlap, Model, UpdateRoute, ViewOverlap, 1, 0);
   Test.AssertEquals(1, Arrays.Length(Model.Actions));
   Test.AssertEquals(33, Model.Actions[0]);
-  Overlap.InjectPointerForTest(MakePointer(Tui.TuiPointerAction.Down, 19, FrontAt.Y));
-  Model := Overlap.RunIterations(Model, UpdateRoute, ViewOverlap, 1, 0);
+  Runtime.TuiApplicationInjectPointerForTest(Overlap, MakePointer(Tui.TuiPointerAction.Down, 19, FrontAt.Y));
+  Model := Runtime.TuiApplicationRunIterations(Overlap, Model, UpdateRoute, ViewOverlap, 1, 0);
   Test.AssertEquals(2, Model.PointerHits);
-  Overlap.Close();
+  Runtime.TuiApplicationClose(Overlap);
 end program;

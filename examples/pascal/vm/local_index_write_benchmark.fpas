@@ -9,8 +9,9 @@ uses Std.Time as Time;
 
 const WarmupIterations: integer := 100;
 
-function RewriteValues(mutable Values: array of (integer); Iterations: integer): integer;
+function RewriteValues(InitialValues: array of (integer); Iterations: integer): integer;
 begin
+  var Values: array of (integer) := InitialValues;
   for Iteration: integer := 1 to Iterations do
     begin
       for Index: integer := 0 to Arrays.Length(Values) - 1 do
@@ -30,18 +31,18 @@ begin
       panic('usage: local_index_write_benchmark.fpas -- ITERATIONS SIZE');
     end;
   end if;
-  var Iterations: integer := Conv.StrToInt(Args.ParamStr(0));
-  var Size: integer := Conv.StrToInt(Args.ParamStr(1));
+  const Iterations: integer := Conv.StrToInt(Args.ParamStr(0));
+  const Size: integer := Conv.StrToInt(Args.ParamStr(1));
   if (Iterations < 1) or (Size < 1) then
     begin
       panic('ITERATIONS and SIZE must be positive');
     end;
   end if;
-  mutable var Checksum: integer := RewriteValues(Arrays.Fill(0, Size), WarmupIterations);
-  var Values: array of (integer) := Arrays.Fill(0, Size);
-  var Started: integer := Time.MonotonicMillis();
+  var Checksum: integer := RewriteValues(Arrays.Fill(0, Size), WarmupIterations);
+  const Values: array of (integer) := Arrays.Fill(0, Size);
+  const Started: integer := Time.MonotonicMillis();
   Checksum := RewriteValues(Values, Iterations);
-  var Elapsed: integer := Time.ElapsedMillis(Started);
+  const Elapsed: integer := Time.ElapsedMillis(Started);
   if Checksum <> ((Iterations * 2) + Size) - 1 then
     begin
       panic('local index write benchmark checksum mismatch');

@@ -33,7 +33,7 @@ function TuiStatusWrite(
   Role: StyleRole.TuiStyleRole
 ): integer;
 begin
-  Canvas.WriteText(Point.TuiPoint.Create(X, Y), Text, Role);
+  Canvas2.TuiCanvasWriteText(Canvas, Point.TuiPointCreate(X, Y), Text, Role);
   return X + Console.DisplayWidth(Text);
 end function;
 
@@ -51,8 +51,8 @@ public procedure TuiPaintStatusLine(
   Focused: Option of (ControlId.TuiControlId)
 );
 begin
-  Canvas.FillRect(Bounds, Cell.TuiCell.Create(' ', StyleRole.TuiStyleRole.StatusNormal));
-  mutable var X: integer := Bounds.X;
+  Canvas2.TuiCanvasFillRect(Canvas, Bounds, Cell.TuiCellCreate(' ', StyleRole.TuiStyleRole.StatusNormal));
+  var X: integer := Bounds.X;
   for Index: integer := 0 to Arrays.Length(Items) - 1 do
     begin
       if Index > 0 then
@@ -74,7 +74,7 @@ begin
           end;
         when StatusItem.TuiStatusItem.Command(const Id, const Text, const Action, const Enabled):
           begin
-            mutable var Role: StyleRole.TuiStyleRole := StyleRole.TuiStyleRole.StatusNormal;
+            var Role: StyleRole.TuiStyleRole := StyleRole.TuiStyleRole.StatusNormal;
             if not Enabled then
               begin
                 Role := StyleRole.TuiStyleRole.StatusDisabled;

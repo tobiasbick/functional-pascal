@@ -2,12 +2,16 @@ program TuiMenuBarLayoutTest;
 
 uses Std.Test as Test;
 uses Std.Tui as Tui;
+uses Std.Tui.Chrome as Chrome;
+uses Std.Tui.Elements as Elements;
+uses Std.Tui.Ids as Ids;
+uses Std.Tui.Layout as Layout;
 
 begin
-  var Measured: Tui.TuiMeasureResult := Tui.TuiMeasure(Tui.TuiElementBuilders.MakeMenuBar([
-                                                                                            Tui.TuiMenuItem.Create(Tui.TuiControlId.Create(1), 'Open', Tui.TuiAction.Create(10)),
-                                                                                            Tui.TuiMenuItem.Disabled(Tui.TuiControlId.Create(2), 'Save', Tui.TuiAction.Create(20))
-                                                                                          ]), Tui.TuiMeasureSpec.Unbounded());
+  const Measured: Tui.TuiMeasureResult := Tui.TuiMeasure(Elements.TuiElementMakeMenuBar([
+                                                                                          Chrome.TuiMenuItemCreate(Ids.TuiControlIdCreate(1), 'Open', Ids.TuiActionCreate(10)),
+                                                                                          Chrome.TuiMenuItemDisabled(Ids.TuiControlIdCreate(2), 'Save', Ids.TuiActionCreate(20))
+                                                                                        ]), Layout.TuiMeasureSpecUnbounded());
   Test.AssertEquals(12, Measured.Preferred.Width);
   Test.AssertEquals(1, Measured.Preferred.Height);
 end program;

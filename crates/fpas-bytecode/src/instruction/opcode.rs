@@ -231,20 +231,33 @@ pub enum Opcode {
     ForLoop = 104,
     /// Call a numeric function target whose result the following `Return` word returns.
     ///
-    /// The callee reuses the current frame. Debugger-owned execution runs it as `CallDirect`
-    /// followed by that `Return`, so debug stacks keep every frame.
+    /// The callee reuses the current frame when no synchronous references need frame ownership.
+    /// Otherwise, and in debugger-owned execution, it runs as `CallDirect` followed by that
+    /// `Return`, preserving reference cleanup and debug stacks.
     TailCall = 105,
     /// Call a first-class function value whose result the following `Return` word returns.
     ///
-    /// The callee reuses the current frame when both functions use the same return convention;
-    /// otherwise, and in debugger-owned execution, it runs as `CallValue` followed by that
-    /// `Return`.
+    /// The callee reuses the frame when return conventions match and no synchronous references
+    /// need frame ownership. Otherwise, and in debugger-owned execution, it runs as `CallValue`
+    /// followed by that `Return`.
     TailCallValue = 106,
+    /// Reserve root B, or reborrow active var parameter B, and write the reference to A.
+    ReserveReference = 107,
+    /// Select field C in record layout B from reference A, replacing A with the selected path.
+    SelectReferenceField = 108,
+    /// Select evaluated index C from reference B and write its retained path to A.
+    SelectReferenceIndex = 109,
+    /// Read selected reference B into value snapshot A.
+    ReadReference = 110,
+    /// Replace selected reference A immediately with value B.
+    WriteReference = 111,
+    /// Release reference A's authority, including any retained copies.
+    ReleaseReference = 112,
 }
 
 impl Opcode {
     /// Exhaustive opcode inventory used by format and verifier tests.
-    pub const ALL: [Self; 107] = [
+    pub const ALL: [Self; 113] = [
         Self::LoadConstant,
         Self::LoadUnit,
         Self::Move,
@@ -352,6 +365,12 @@ impl Opcode {
         Self::ForLoop,
         Self::TailCall,
         Self::TailCallValue,
+        Self::ReserveReference,
+        Self::SelectReferenceField,
+        Self::SelectReferenceIndex,
+        Self::ReadReference,
+        Self::WriteReference,
+        Self::ReleaseReference,
     ];
 
     /// Return the physical payload form assigned to this opcode.

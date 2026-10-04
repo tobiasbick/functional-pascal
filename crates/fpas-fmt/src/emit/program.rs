@@ -176,7 +176,7 @@ type Point = record
 end record;
 
 begin
-  var P: Point := Point(X := 1, Y := 2);
+  const P: Point := Point(X := 1, Y := 2);
 end program;
 "#,
         );
@@ -187,7 +187,7 @@ end program;
     #[test]
     fn array_literal_short_stays_single_line() {
         let formatted = parse_and_format(
-            r#"program T; begin var Words: array of (string) := ['red', 'green', 'blue']; end program;"#,
+            r#"program T; begin const Words: array of (string) := ['red', 'green', 'blue']; end program;"#,
         );
         assert!(
             formatted.contains("['red', 'green', 'blue']"),

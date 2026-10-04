@@ -15,7 +15,7 @@ begin
       return;
     end;
   end if;
-  mutable var ClientValue: OpenAi.Client := OpenAi.Client.Create(Args.ParamStr(0), Args.ParamStr(1));
+  var ClientValue: OpenAi.Client := OpenAi.ClientCreate(Args.ParamStr(0), Args.ParamStr(1));
   case Env.Get('OPENAI_API_KEY') of
     when Option.Some(const Value):
       begin
@@ -26,13 +26,13 @@ begin
         null;
       end;
   end case;
-  mutable var Messages: array of (OpenAi.ChatMessage) := [];
-  var Options: OpenAi.ChatOptions := OpenAi.ChatOptions.Default();
+  var Messages: array of (OpenAi.ChatMessage) := [];
+  const Options: OpenAi.ChatOptions := OpenAi.ChatOptionsDefault();
   Console.WriteLn('OpenAI-compatible FPAS chat. Enter /exit to quit.');
   while true do
     begin
       Console.WriteText('you> ');
-      var Prompt: string := Console.ReadLn();
+      const Prompt: string := Console.ReadLn();
       if Prompt = '/exit' then
         begin
           break;
@@ -41,14 +41,14 @@ begin
 
       if Prompt <> '' then
         begin
-          mutable var RequestMessages: array of (OpenAi.ChatMessage) := Messages;
-          Arrays.Push(RequestMessages, OpenAi.ChatMessage.User(Prompt));
+          var RequestMessages: array of (OpenAi.ChatMessage) := Messages;
+          Arrays.Push(var RequestMessages, OpenAi.ChatMessageUser(Prompt));
           case OpenAi.Complete(ClientValue, RequestMessages, Options) of
             when Result.Ok(const Content):
               begin
                 Console.WriteLn('assistant> ' + Content);
-                Arrays.Push(Messages, OpenAi.ChatMessage.User(Prompt));
-                Arrays.Push(Messages, OpenAi.ChatMessage.Assistant(Content));
+                Arrays.Push(var Messages, OpenAi.ChatMessageUser(Prompt));
+                Arrays.Push(var Messages, OpenAi.ChatMessageAssistant(Content));
               end;
             when Result.Error(const Message):
               begin

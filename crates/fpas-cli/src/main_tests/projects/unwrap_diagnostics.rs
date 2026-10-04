@@ -31,7 +31,16 @@ fn unwrap_namespace_mismatch_reports_a_type_error_before_lowering() {
                 write_text(
                     &cwd.join("src/main.fpas"),
                     &format!(
-                        "program UnwrapRepro;\nuses Std.Options as Options; uses Std.Results as Results; uses Std.Tui as Tui; uses Std.Test as Test;\nbegin\n  var Base: Tui.TuiStyle := Tui.TuiStyle.FromColors(\n    Tui.TuiColor.FromRgb(1, 2, 3), Tui.TuiColor.FromRgb(4, 5, 6));\n  var Style: {container} := {constructor}(Base);\n  var Red: integer := {namespace}.{function}(Style{fallback}).Background.Red;\n  Test.AssertEquals(4, Red);\nend program;"
+                        r#"program UnwrapRepro;
+uses Std.Options as Options; uses Std.Results as Results; uses Std.Tui as Tui; uses Std.Test as Test;
+uses Std.Tui.Cells as Cells;
+begin
+  const Base: Tui.TuiStyle := Cells.TuiStyleFromColors(
+    Cells.TuiColorFromRgb(1, 2, 3), Cells.TuiColorFromRgb(4, 5, 6));
+  const Style: {container} := {constructor}(Base);
+  const Red: integer := {namespace}.{function}(Style{fallback}).Background.Red;
+  Test.AssertEquals(4, Red);
+end program;"#
                     ),
                 );
                 let command = if namespace == correct { "run" } else { "check" };

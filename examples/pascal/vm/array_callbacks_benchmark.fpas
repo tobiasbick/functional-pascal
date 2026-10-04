@@ -14,27 +14,27 @@ const WarmupIterations: integer := 20;
 const ArraySize: integer := 64;
 const CallbacksPerElement: integer := 3;
 
-function Double(Value: integer): integer;
+pure function Double(Value: integer): integer;
 begin
   return Value * 2;
 end function;
 
-function IsEven(Value: integer): boolean;
+pure function IsEven(Value: integer): boolean;
 begin
   return Value mod 2 = 0;
 end function;
 
-function Sum(Acc: integer; Value: integer): integer;
+pure function Sum(Acc: integer; Value: integer): integer;
 begin
   return Acc + Value;
 end function;
 
 function MakeValues(): array of (integer);
 begin
-  mutable var Values: array of (integer) := [];
+  var Values: array of (integer) := [];
   for Index: integer := 1 to ArraySize do
     begin
-      Arrays.Push(Values, Index);
+      Arrays.Push(var Values, Index);
     end;
   end for;
 
@@ -43,11 +43,11 @@ end function;
 
 function RunCallbacks(Values: array of (integer); Iterations: integer): integer;
 begin
-  mutable var Total: integer := 0;
+  var Total: integer := 0;
   for Index: integer := 1 to Iterations do
     begin
-      var Mapped: array of (integer) := Arrays.Map(Values, Double);
-      var Filtered: array of (integer) := Arrays.Filter(Mapped, IsEven);
+      const Mapped: array of (integer) := Arrays.Map(Values, Double);
+      const Filtered: array of (integer) := Arrays.Filter(Mapped, IsEven);
       Total := Total + Arrays.Reduce(Filtered, 0, Sum);
     end;
   end for;
@@ -61,13 +61,13 @@ begin
       panic('usage: array_callbacks_benchmark.fpas -- ITERATIONS [MAX_MILLIS]');
     end;
   end if;
-  var Iterations: integer := Conv.StrToInt(Args.ParamStr(0));
+  const Iterations: integer := Conv.StrToInt(Args.ParamStr(0));
   if Iterations < 1 then
     begin
       panic('ITERATIONS must be positive');
     end;
   end if;
-  mutable var MaxMillis: integer := 0;
+  var MaxMillis: integer := 0;
   if Args.ParamCount() = 2 then
     begin
       MaxMillis := Conv.StrToInt(Args.ParamStr(1));
@@ -78,13 +78,13 @@ begin
       end if;
     end;
   end if;
-  var Values: array of (integer) := MakeValues();
-  mutable var Total: integer := RunCallbacks(Values, WarmupIterations);
-  var Started: integer := Time.MonotonicMillis();
+  const Values: array of (integer) := MakeValues();
+  var Total: integer := RunCallbacks(Values, WarmupIterations);
+  const Started: integer := Time.MonotonicMillis();
   Total := RunCallbacks(Values, Iterations);
-  var Elapsed: integer := Time.ElapsedMillis(Started);
-  var Callbacks: integer := (Iterations * ArraySize) * CallbacksPerElement;
-  mutable var OpsPerSecond: integer := 0;
+  const Elapsed: integer := Time.ElapsedMillis(Started);
+  const Callbacks: integer := (Iterations * ArraySize) * CallbacksPerElement;
+  var OpsPerSecond: integer := 0;
   if Elapsed > 0 then
     begin
       OpsPerSecond := (Callbacks * 1000) div Elapsed;

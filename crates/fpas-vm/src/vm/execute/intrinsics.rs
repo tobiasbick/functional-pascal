@@ -33,6 +33,9 @@ impl Worker {
             return Err(self.intrinsic_window_error(operands));
         }
         let location = self.intrinsic_location();
+        for argument in &self.registers[start..end] {
+            self.require_value_data(argument)?;
+        }
         let destination = (operands.a != NO_REGISTER)
             .then(|| register(operands.a))
             .transpose()?;

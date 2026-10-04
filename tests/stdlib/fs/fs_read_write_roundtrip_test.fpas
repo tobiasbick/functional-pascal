@@ -4,7 +4,7 @@ uses Std.Fs as Fs;
 uses Std.Test as Test;
 
 begin
-  var Path: string := Test.ScratchDir() + '/roundtrip.txt';
+  const Path: string := Test.ScratchDir() + '/roundtrip.txt';
   case Fs.WriteText(Path, 'hello fs') of
     when Result.Ok(_):
       begin

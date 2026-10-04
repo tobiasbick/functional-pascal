@@ -13,8 +13,8 @@ type Bag = record
 end record;
 
 begin
-  var Full: Bag := Bag(Items := [1, 2, 3], Names := ['a']);
-  var Emptied: Bag := Full with Items := []; end with;
+  const Full: Bag := Bag(Items := [1, 2, 3], Names := ['a']);
+  const Emptied: Bag := Full with Items := []; end with;
 
   if Arrays.Length(Emptied.Items) <> 0 then
     panic('items not emptied');
@@ -27,7 +27,7 @@ begin
   if Arrays.Length(Full.Items) <> 3 then
     panic('base mutated');
   end if;
-  var Refilled: Bag := Emptied with Items := [4]; end with;
+  const Refilled: Bag := Emptied with Items := [4]; end with;
 
   if Refilled.Items[0] <> 4 then
     panic('refill');
@@ -60,13 +60,13 @@ type Holder = record
 end record;
 
 begin
-  var Full: Holder := Holder(Tags := ['a': 1], Origin := Point(X := 1, Y := 2), Label := Option.Some('named'), Grid := [
+  const Full: Holder := Holder(Tags := ['a': 1], Origin := Point(X := 1, Y := 2), Label := Option.Some('named'), Grid := [
                                                                                                                          [1],
                                                                                                                          [2, 3]
                                                                                                                        ], Scores := ['a': [
                                                                                                                                             1
                                                                                                                                           ]]);
-  var Reset: Holder := Full with Tags := [:]; Origin := Point(X := 7, Y := 8); Label := Option.None; Grid := [
+  const Reset: Holder := Full with Tags := [:]; Origin := Point(X := 7, Y := 8); Label := Option.None; Grid := [
                                                                                                                []
                                                                                                              ]; Scores := ['b': []]; end with;
 
@@ -110,8 +110,8 @@ type Holder = record
 end record;
 
 begin
-  var Original: Holder := Holder(Values := Option.Some([1]), Lookup := Result.Ok(['a': 1]));
-  var Updated: Holder := Original with Values := Option.Some([]); Lookup := Result.Ok([:]); end with;
+  const Original: Holder := Holder(Values := Option.Some([1]), Lookup := Result.Ok(['a': 1]));
+  const Updated: Holder := Original with Values := Option.Some([]); Lookup := Result.Ok([:]); end with;
 
   if Arrays.Length(Options.Unwrap(Updated.Values)) <> 0 then
     panic('option payload');

@@ -22,23 +22,23 @@ end function;
 
 function ViewportCX(State: Camera.ExplorerCamera; W: integer; H: integer; CellX: integer): real;
 begin
-  var Wr: integer := Math.Max(W - 1, 1);
-  return State.XMin(W, H) +
-         (Conv.IntToReal(CellX - 1) / Conv.IntToReal(Wr)) * (State.XMax(W, H) - State.XMin(W, H));
+  const Wr: integer := Math.Max(W - 1, 1);
+  return Camera.ExplorerCameraXMin(State, W, H) +
+         (Conv.IntToReal(CellX - 1) / Conv.IntToReal(Wr)) * (Camera.ExplorerCameraXMax(State, W, H) - Camera.ExplorerCameraXMin(State, W, H));
 end function;
 
 function ViewportCY(State: Camera.ExplorerCamera; W: integer; H: integer; CellY: integer): real;
 begin
-  var Hr: integer := Math.Max(H - 1, 1);
-  return State.YMax() -
-         (Conv.IntToReal(CellY - 1) / Conv.IntToReal(Hr)) * (State.YMax() - State.YMin());
+  const Hr: integer := Math.Max(H - 1, 1);
+  return Camera.ExplorerCameraYMax(State) -
+         (Conv.IntToReal(CellY - 1) / Conv.IntToReal(Hr)) * (Camera.ExplorerCameraYMax(State) - Camera.ExplorerCameraYMin(State));
 end function;
 
 procedure WriteHudText(Text: string; Width: integer);
 begin
   if Width > 0 then
     begin
-      var TextLength: integer := Math.Min(Str.Length(Text), Width);
+      const TextLength: integer := Math.Min(Str.Length(Text), Width);
       if TextLength > 0 then
         begin
           Console.WriteText(Str.Substring(Text, 0, TextLength));
@@ -57,7 +57,7 @@ procedure DrawHud(
 );
 begin
   Console.Window(1, 1, Console.ScreenWidth(), Console.ScreenHeight());
-  var HudTop: integer := Math.Max(Console.ScreenHeight() - 2, 1);
+  const HudTop: integer := Math.Max(Console.ScreenHeight() - 2, 1);
   Console.Window(1, HudTop, Console.ScreenWidth(), Console.ScreenHeight());
   Console.NormVideo();
   Console.ClrScr();
@@ -71,7 +71,7 @@ begin
     begin
       Console.GotoXY(1, 2);
       Console.NormVideo();
-      WriteHudText(Str.Format('size=%dx%d  center=(%f, %f)  zoom=%f  iter=%d  palette=%s', Width, Height, S.CenterX, S.CenterY, S.Zoom, S.MaxIter, PaletteLabel(S.Palette)), Width);
+      WriteHudText(Str.Format('size=%dx%d  center=(%f, %f)  zoom=%f  iter=%d  palette=%s', Width, Height, S.CenterX, S.CenterY, Camera.ExplorerCameraGetZoom(S), S.MaxIter, PaletteLabel(S.Palette)), Width);
     end;
   end if;
 
@@ -87,12 +87,12 @@ begin
   Console.Window(1, 1, Width, Height);
 end procedure;
 
-mutable var ResetCamera: Camera.ExplorerCamera := Camera.ExplorerCamera(CenterX := 0.0, CenterY := 0.0, SpanY := 2.8, MaxIter := 160, Palette := 1);
-mutable var State: Camera.ExplorerCamera := ResetCamera;
-mutable var RenderW: integer := 1;
-mutable var RenderH: integer := 1;
-mutable var NeedsRedraw: boolean := true;
-mutable var Quit: boolean := false;
+var ResetCamera: Camera.ExplorerCamera := Camera.ExplorerCamera(CenterX := 0.0, CenterY := 0.0, SpanY := 2.8, MaxIter := 160, Palette := 1);
+var State: Camera.ExplorerCamera := ResetCamera;
+var RenderW: integer := 1;
+var RenderH: integer := 1;
+var NeedsRedraw: boolean := true;
+var Quit: boolean := false;
 
 procedure RequestRedraw();
 begin
@@ -118,15 +118,15 @@ begin
   RenderH := RenderHeight();
   Console.BeginFrame();
   Console.FillRect(Console.rect(x := 1, y := 1, width := Console.ScreenWidth(), height := Console.ScreenHeight()), Console.cell(glyph := ' ', foreground := Console.RgbColor(0, 0, 0), background := Console.RgbColor(0, 0, 0)));
-  RenderFrame(State.XMin(RenderW, RenderH), State.XMax(RenderW, RenderH), State.YMin(), State.YMax(), RenderW, RenderH, State.MaxIter, State.Palette);
+  RenderFrame(Camera.ExplorerCameraXMin(State, RenderW, RenderH), Camera.ExplorerCameraXMax(State, RenderW, RenderH), Camera.ExplorerCameraYMin(State), Camera.ExplorerCameraYMax(State), RenderW, RenderH, State.MaxIter, State.Palette);
   DrawHud(State, RenderW, RenderH, Title, PaletteLabel);
   Console.Present();
 end procedure;
 
 function HandleKey(Key: Console.KeyEvent): boolean;
 begin
-  var StepX: real := State.SpanX(RenderW, RenderH) * 0.14;
-  var StepY: real := State.SpanY * 0.14;
+  const StepX: real := Camera.ExplorerCameraSpanX(State, RenderW, RenderH) * 0.14;
+  const StepY: real := State.SpanY * 0.14;
   if Key.kind = Console.KeyKind.Escape then
     begin
       Quit := true;
@@ -230,8 +230,8 @@ end function;
 
 procedure HandleMouse(InputEvent: Console.ConsoleEvent);
 begin
-  var InView: boolean := (((InputEvent.mouse_x >= 1) and (InputEvent.mouse_x <= RenderW)) and (InputEvent.mouse_y >= 1)) and
-                         (InputEvent.mouse_y <= RenderH);
+  const InView: boolean := (((InputEvent.mouse_x >= 1) and (InputEvent.mouse_x <= RenderW)) and (InputEvent.mouse_y >= 1)) and
+                           (InputEvent.mouse_y <= RenderH);
   if InputEvent.mouse_action = Console.MouseAction.ScrollUp then
     begin
       State.SpanY := Math.Max(State.SpanY * 0.88, 0.000001);
@@ -268,8 +268,8 @@ end procedure;
 
 procedure HandleResize(Width: integer; Height: integer);
 begin
-  var NewW: integer := Math.Max(Width, 1);
-  var NewH: integer := Math.Max(Height - 2, 1);
+  const NewW: integer := Math.Max(Width, 1);
+  const NewH: integer := Math.Max(Height - 2, 1);
   if (NewW <> RenderW) or (NewH <> RenderH) then
     begin
       RenderW := NewW;

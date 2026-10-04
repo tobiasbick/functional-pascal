@@ -1,0 +1,246 @@
+// Public chrome functions.
+unit Std.Tui.Chrome;
+
+uses Std.Console as Console;
+uses Std.Tui.Cells.Cell as Cell;
+uses Std.Tui.Chrome.Button as Button;
+uses Std.Tui.Chrome.CellGrid as CellGrid;
+uses Std.Tui.Chrome.Gauge as Gauge;
+uses Std.Tui.Chrome.Input as Input;
+uses Std.Tui.Chrome.KeyGesture as KeyGesture;
+uses Std.Tui.Chrome.MenuItem as MenuItem;
+uses Std.Tui.Chrome.MenuNode as MenuNode;
+uses Std.Tui.Chrome.StatusItem as StatusItem;
+uses Std.Tui.Ids.Action as Action2;
+uses Std.Tui.Ids.ControlId as ControlId;
+
+// Creates a row-major cell grid.
+public function TuiCellGridCreate(Width: integer; Height: integer; Cells: array of (Cell.TuiCell)): CellGrid.TuiCellGrid;
+begin
+  return CellGrid.TuiCellGridCreate(Width, Height, Cells);
+end function;
+
+// Creates a keyboard gesture and its menu display label.
+public function TuiKeyGestureCreate(
+  Kind: Console.KeyKind;
+  Character: string;
+  Shift: boolean;
+  Ctrl: boolean;
+  Alt: boolean;
+  Meta: boolean;
+  Display: string
+): KeyGesture.TuiKeyGesture;
+begin
+  return KeyGesture.TuiKeyGestureCreate(Kind, Character, Shift, Ctrl, Alt, Meta, Display);
+end function;
+
+// Reports whether a console key event matches this gesture.
+public function TuiKeyGestureMatches(Receiver: KeyGesture.TuiKeyGesture; Key: Console.KeyEvent): boolean;
+begin
+  return KeyGesture.TuiKeyGestureMatches(Receiver, Key);
+end function;
+
+// Creates a validated menu-node identity.
+public function TuiMenuNodeIdCreate(Value: integer): MenuNode.TuiMenuNodeId;
+begin
+  return MenuNode.TuiMenuNodeIdCreate(Value);
+end function;
+
+// Creates a closed menu state.
+public function TuiMenuStateClosed(): MenuNode.TuiMenuState;
+begin
+  return MenuNode.TuiMenuStateClosed();
+end function;
+
+// Creates an open menu state with one active node.
+public function TuiMenuStateOpenAt(Id: MenuNode.TuiMenuNodeId): MenuNode.TuiMenuState;
+begin
+  return MenuNode.TuiMenuStateOpenAt(Id);
+end function;
+
+// Creates an enabled submenu.
+public function TuiMenuNodeSubmenu(
+  Id: MenuNode.TuiMenuNodeId;
+  Parent: Option of (MenuNode.TuiMenuNodeId);
+  Text: string;
+  Mnemonic: string
+): MenuNode.TuiMenuNode;
+begin
+  return MenuNode.TuiMenuNodeSubmenu(Id, Parent, Text, Mnemonic);
+end function;
+
+// Creates an enabled command without a shortcut.
+public function TuiMenuNodeCommand(
+  Id: MenuNode.TuiMenuNodeId;
+  Parent: Option of (MenuNode.TuiMenuNodeId);
+  Text: string;
+  Mnemonic: string;
+  Action: Action2.TuiAction
+): MenuNode.TuiMenuNode;
+begin
+  return MenuNode.TuiMenuNodeCommand(Id, Parent, Text, Mnemonic, Action);
+end function;
+
+// Creates an enabled command with a structural shortcut.
+public function TuiMenuNodeCommandWithShortcut(
+  Id: MenuNode.TuiMenuNodeId;
+  Parent: Option of (MenuNode.TuiMenuNodeId);
+  Text: string;
+  Mnemonic: string;
+  Action: Action2.TuiAction;
+  Shortcut: KeyGesture.TuiKeyGesture
+): MenuNode.TuiMenuNode;
+begin
+  return MenuNode.TuiMenuNodeCommandWithShortcut(Id, Parent, Text, Mnemonic, Action, Shortcut);
+end function;
+
+// Creates a disabled command.
+public function TuiMenuNodeDisabledCommand(
+  Id: MenuNode.TuiMenuNodeId;
+  Parent: Option of (MenuNode.TuiMenuNodeId);
+  Text: string;
+  Mnemonic: string;
+  Action: Action2.TuiAction
+): MenuNode.TuiMenuNode;
+begin
+  return MenuNode.TuiMenuNodeDisabledCommand(Id, Parent, Text, Mnemonic, Action);
+end function;
+
+// Creates a separator under one submenu.
+public function TuiMenuNodeSeparator(Id: MenuNode.TuiMenuNodeId; Parent: MenuNode.TuiMenuNodeId): MenuNode.TuiMenuNode;
+begin
+  return MenuNode.TuiMenuNodeSeparator(Id, Parent);
+end function;
+
+// Creates a gauge; validation rejects invalid ranges during rendering.
+public function TuiGaugeCreate(LabelText: string; Value: integer; Maximum: integer): Gauge.TuiGauge;
+begin
+  return Gauge.TuiGaugeCreate(LabelText, Value, Maximum);
+end function;
+
+// Creates an enabled normal button.
+public function TuiButtonSpecNormal(
+  Id: ControlId.TuiControlId;
+  Text: string;
+  Mnemonic: string;
+  Action: Action2.TuiAction
+): Button.TuiButtonSpec;
+begin
+  return Button.TuiButtonSpecNormal(Id, Text, Mnemonic, Action);
+end function;
+
+// Creates an enabled default button.
+public function TuiButtonSpecDefaultButton(
+  Id: ControlId.TuiControlId;
+  Text: string;
+  Mnemonic: string;
+  Action: Action2.TuiAction
+): Button.TuiButtonSpec;
+begin
+  return Button.TuiButtonSpecDefaultButton(Id, Text, Mnemonic, Action);
+end function;
+
+// Creates a disabled normal button.
+public function TuiButtonSpecDisabled(
+  Id: ControlId.TuiControlId;
+  Text: string;
+  Mnemonic: string;
+  Action: Action2.TuiAction
+): Button.TuiButtonSpec;
+begin
+  return Button.TuiButtonSpecDisabled(Id, Text, Mnemonic, Action);
+end function;
+
+// Creates an input without a hint or history.
+public function TuiInputSpecCreate(
+  Id: ControlId.TuiControlId;
+  Text: string;
+  Caret: integer;
+  ChangeAction: Action2.TuiAction
+): Input.TuiInputSpec;
+begin
+  return Input.TuiInputSpecCreate(Id, Text, Caret, ChangeAction);
+end function;
+
+// Creates an input that paints a hint while its text is empty.
+public function TuiInputSpecWithHint(
+  Id: ControlId.TuiControlId;
+  Text: string;
+  Caret: integer;
+  Hint: string;
+  ChangeAction: Action2.TuiAction
+): Input.TuiInputSpec;
+begin
+  return Input.TuiInputSpecWithHint(Id, Text, Caret, Hint, ChangeAction);
+end function;
+
+// Creates an input with oldest-to-newest Up/Down history and a restorable draft.
+public function TuiInputSpecWithHistory(
+  Id: ControlId.TuiControlId;
+  Text: string;
+  Caret: integer;
+  Hint: string;
+  History: array of (string);
+  HistoryDraft: string;
+  ChangeAction: Action2.TuiAction
+): Input.TuiInputSpec;
+begin
+  return Input.TuiInputSpecWithHistory(Id, Text, Caret, Hint, History, HistoryDraft, ChangeAction);
+end function;
+
+// Creates an enabled menu item without a shortcut hint.
+public function TuiMenuItemCreate(Id: ControlId.TuiControlId; Text: string; Action: Action2.TuiAction): MenuItem.TuiMenuItem;
+begin
+  return MenuItem.TuiMenuItemCreate(Id, Text, Action);
+end function;
+
+// Creates a disabled menu item without a shortcut hint.
+public function TuiMenuItemDisabled(Id: ControlId.TuiControlId; Text: string; Action: Action2.TuiAction): MenuItem.TuiMenuItem;
+begin
+  return MenuItem.TuiMenuItemDisabled(Id, Text, Action);
+end function;
+
+// Creates an enabled menu item with a display-only shortcut hint.
+public function TuiMenuItemWithShortcut(
+  Id: ControlId.TuiControlId;
+  Text: string;
+  Action: Action2.TuiAction;
+  Shortcut: string
+): MenuItem.TuiMenuItem;
+begin
+  return MenuItem.TuiMenuItemWithShortcut(Id, Text, Action, Shortcut);
+end function;
+
+// Creates a display-only status hint.
+public function TuiStatusItemMakeHint(Text: string): StatusItem.TuiStatusItem;
+begin
+  return StatusItem.TuiStatusItemMakeHint(Text);
+end function;
+
+// Creates a display-only shortcut and description pair.
+public function TuiStatusItemMakeKeyHint(KeyText: string; Text: string): StatusItem.TuiStatusItem;
+begin
+  return StatusItem.TuiStatusItemMakeKeyHint(KeyText, Text);
+end function;
+
+// Creates an enabled status-line command.
+public function TuiStatusItemMakeCommand(
+  Id: ControlId.TuiControlId;
+  Text: string;
+  Action: Action2.TuiAction
+): StatusItem.TuiStatusItem;
+begin
+  return StatusItem.TuiStatusItemMakeCommand(Id, Text, Action);
+end function;
+
+// Creates a disabled status-line command.
+public function TuiStatusItemMakeDisabledCommand(
+  Id: ControlId.TuiControlId;
+  Text: string;
+  Action: Action2.TuiAction
+): StatusItem.TuiStatusItem;
+begin
+  return StatusItem.TuiStatusItemMakeDisabledCommand(Id, Text, Action);
+end function;
+
+end unit;

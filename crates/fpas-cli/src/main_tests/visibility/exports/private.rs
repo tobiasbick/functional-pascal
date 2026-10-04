@@ -205,7 +205,7 @@ include = ["src/*.fpas"]
         r#"program Main;
 uses App.Lib as Lib;
 begin
-  var P: SecretPoint := SecretPoint(X := 1, Y := 2);
+  const P: SecretPoint := SecretPoint(X := 1, Y := 2);
 end program;
 "#,
     );
@@ -253,7 +253,7 @@ include = ["src/*.fpas"]
         r#"program Main;
 uses App.Lib as Lib;
 begin
-  var P: Lib.SecretPoint := Lib.SecretPoint(X := 1, Y := 2);
+  const P: Lib.SecretPoint := Lib.SecretPoint(X := 1, Y := 2);
 end program;
 "#,
     );
@@ -310,7 +310,7 @@ end program;
         r#"unit App.Lib;
 
 
-  var Secret: integer := 42;
+  const Secret: integer := 42;
 end unit;
 
 "#,
@@ -355,7 +355,7 @@ end program;
         r#"unit App.Lib;
 
 
-  mutable var Counter: integer := 0;
+   var Counter: integer := 0;
 end unit;
 
 "#,
@@ -400,7 +400,7 @@ end program;
         r#"unit App.Lib;
 
 
-  var Secret: integer := 42;
+  const Secret: integer := 42;
 end unit;
 
 "#,

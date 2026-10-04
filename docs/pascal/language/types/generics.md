@@ -1,7 +1,6 @@
 # Generics
 
 Records, enums, functions and procedures declare type parameters with `of (...)`.
-Record methods may declare type parameters on the method itself.
 
 Every `of` list is parenthesized, including a single item. This applies to
 builtins such as `array of (integer)`, `Result of (integer, string)` and
@@ -9,6 +8,13 @@ builtins such as `array of (integer)`, `Result of (integer, string)` and
 declaration headings. Angle-bracket headings and dictionary `to` syntax are
 rejected. The existing bare `task` annotation still infers a spawned result;
 explicit task result types use `task of (T)`.
+
+Each type parameter belongs to its declaring type or routine. An inner routine
+may declare another `T`, but that parameter differs from an enclosing `T` even
+when both have the same constraint. References already resolved in the outer
+scope retain the outer parameter. Calls infer only the called declaration's
+parameters; they cannot replace an enclosing routine's parameters. Imported
+signatures preserve these distinctions when compiled units are reused.
 
 Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`type_params`, `type_param`, `constraint_name`).
 
@@ -31,47 +37,28 @@ end procedure;
 Type arguments are inferred from the call-site arguments — no explicit instantiation is needed:
 
 ```pascal
-var X: integer := Identity(42); // T inferred as integer
-var S: string := Identity('hi');
+const X: integer := Identity(42); // T inferred as integer
+const S: string := Identity('hi');
 
 ```
 
-## Generic record methods
+## Functions over record values
 
-Record methods declare type parameters in the method header; those parameters are scoped to the method.
+Generic functions accept records as ordinary explicit parameters:
 
 ```pascal
-uses Std.Conv as Conv;
-
 type Box = record
   Value: integer;
-
-  function Map of (R)(Self: Box; F: function(X: integer): R): R;
-  begin
-    return F(Self.Value);
-  end function;
 end record;
 
-function ToText(X: integer): string;
+function BoxMap of (R)(Receiver: Box; F: function(X: integer): R): R;
 begin
-  return 'value=' + Conv.IntToStr(X);
+  return F(Receiver.Value);
 end function;
-
-var B: Box := Box(Value := 42);
-var S: string := B.Map(ToText);
 ```
 
-Method-level type parameters may also use constraints:
-
-```pascal
-type Accumulator = record
-  function Add of (T: Numeric)(Self: Accumulator; Extra: T): T;
-  begin
-    return Extra;
-  end function;
-end record;
-
-```
+`BoxMap(B, ToText)` infers `R` from the callback signature. The record argument
+obeys the same value-copy rules as every other read-only parameter.
 
 ## Implementation
 
@@ -89,9 +76,9 @@ type Lookup of (T) = enum
   Missing;
 end enum;
 
-var Item: Box of (integer) := Box(Value := 42);
-var Present: Lookup of (integer) := Lookup.Found(42);
-var Absent: Lookup of (integer) := Lookup.Missing;
+const Item: Box of (integer) := Box(Value := 42);
+const Present: Lookup of (integer) := Lookup.Found(42);
+const Absent: Lookup of (integer) := Lookup.Missing;
 ```
 
 A type application supplies every argument. Nested applications use the same
@@ -160,11 +147,10 @@ parameter supplies no constrained guarantee. See
 [forwarding generic arguments](../functions/generic-routines.md#forwarding-generic-arguments).
 
 ```pascal
-var M: integer := Max(3, 7);
+const M: integer := Max(3, 7);
 
 ```
 
 ## See also
 
-- [Record methods](record-methods.md)
 - [Generic routines](../functions/generic-routines.md)

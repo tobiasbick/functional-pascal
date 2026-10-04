@@ -99,6 +99,7 @@ pub fn analyze_debug_effects(executable: &VerifiedExecutable) -> Vec<FunctionEff
                     Err(_) => local[index] = local[index].union(DebugEffectSet::UNKNOWN),
                 },
                 Opcode::CellWrite
+                | Opcode::WriteReference
                 | Opcode::StoreGlobal
                 | Opcode::IndexSet
                 | Opcode::StoreField
@@ -110,6 +111,12 @@ pub fn analyze_debug_effects(executable: &VerifiedExecutable) -> Vec<FunctionEff
                 }
                 Opcode::SpawnTask | Opcode::SpawnDetachedTask | Opcode::Yield => {
                     local[index] = local[index].union(DebugEffectSet::TASK);
+                }
+                Opcode::ReserveReference
+                | Opcode::SelectReferenceField
+                | Opcode::SelectReferenceIndex
+                | Opcode::ReleaseReference => {
+                    local[index] = local[index].union(DebugEffectSet::SANDBOX_WRITE);
                 }
                 _ => {}
             }

@@ -6,6 +6,7 @@ uses Std.Console as Console;
 uses Std.Conv as Conv;
 uses Std.Str as Str;
 uses Std.Tui as Tui;
+uses Std.Tui.Geometry as Geometry;
 
 // One persisted `.note` document and its source path.
 public type Note = record
@@ -79,13 +80,13 @@ end function;
 // Creates initial application state from a directory load result.
 public function NotesModelCreate(Directory: string; Loaded: NotesLoad): NotesModel;
 begin
-  mutable var Selected: integer := -1;
-  mutable var Focus: integer := 1;
-  mutable var Pane: NotesPane := NotesPane.List;
-  mutable var Status: string := 'Ready';
-  mutable var TitleCaret: integer := 0;
-  mutable var TagsText: string := '';
-  mutable var TagsCaret: integer := 0;
+  var Selected: integer := -1;
+  var Focus: integer := 1;
+  var Pane: NotesPane := NotesPane.List;
+  var Status: string := 'Ready';
+  var TitleCaret: integer := 0;
+  var TagsText: string := '';
+  var TagsCaret: integer := 0;
   if Arrays.Length(Loaded.Notes) > 0 then
     begin
       Selected := 0;
@@ -103,7 +104,7 @@ begin
     end;
   end if;
 
-  return NotesModel(Directory := Directory, Notes := Loaded.Notes, Issues := Loaded.Issues, Selected := Selected, Search := '', SearchCaret := 0, TitleCaret := TitleCaret, TagsText := TagsText, TagsCaret := TagsCaret, BodyCaret := 0, BodyOffset := Tui.TuiPoint.Create(0, 0), Focus := Focus, Pane := Pane, Overlay := NotesOverlay.Closed, Dirty := false, Status := Status, ErrorMessage := '', Width := 100, Height := 30);
+  return NotesModel(Directory := Directory, Notes := Loaded.Notes, Issues := Loaded.Issues, Selected := Selected, Search := '', SearchCaret := 0, TitleCaret := TitleCaret, TagsText := TagsText, TagsCaret := TagsCaret, BodyCaret := 0, BodyOffset := Geometry.TuiPointCreate(0, 0), Focus := Focus, Pane := Pane, Overlay := NotesOverlay.Closed, Dirty := false, Status := Status, ErrorMessage := '', Width := 100, Height := 30);
 end function;
 
 // Formats a note's tags for the controlled metadata input.
@@ -115,14 +116,14 @@ end function;
 // Parses, trims, and deduplicates comma-separated tags.
 public function NoteTagsFromText(Text: string): array of (string);
 begin
-  mutable var Tags: array of (string) := [];
-  var Parts: array of (string) := Str.Split(Text, ',');
+  var Tags: array of (string) := [];
+  const Parts: array of (string) := Str.Split(Text, ',');
   for Index: integer := 0 to Arrays.Length(Parts) - 1 do
     begin
-      var Tag: string := Str.Trim(Parts[Index]);
+      const Tag: string := Str.Trim(Parts[Index]);
       if (Tag <> '') and (not Arrays.Contains(Tags, Tag)) then
         begin
-          Arrays.Push(Tags, Tag);
+          Arrays.Push(var Tags, Tag);
         end;
       end if;
     end;
@@ -134,7 +135,7 @@ end function;
 // Reports whether an active note matches a case-insensitive query.
 public function NoteMatches(NoteValue: Note; Search: string): boolean;
 begin
-  var Query: string := Str.ToLower(Str.Trim(Search));
+  const Query: string := Str.ToLower(Str.Trim(Search));
   if Query = '' then
     begin
       return not NoteValue.Archived;
@@ -154,12 +155,12 @@ end function;
 // Returns source-array indices for all visible filtered notes.
 public function NotesFilteredIndices(Notes: array of (Note); Search: string): array of (integer);
 begin
-  mutable var Indices: array of (integer) := [];
+  var Indices: array of (integer) := [];
   for Index: integer := 0 to Arrays.Length(Notes) - 1 do
     begin
       if NoteMatches(Notes[Index], Search) then
         begin
-          Arrays.Push(Indices, Index);
+          Arrays.Push(var Indices, Index);
         end;
       end if;
     end;
@@ -187,12 +188,12 @@ begin
       return '…';
     end;
   end if;
-  mutable var Clipped: string := '';
-  mutable var Width: integer := 0;
-  var ContentWidth: integer := MaximumWidth - 1;
+  var Clipped: string := '';
+  var Width: integer := 0;
+  const ContentWidth: integer := MaximumWidth - 1;
   for Grapheme: string in Console.SplitGraphemes(Text) do
     begin
-      var GraphemeWidth: integer := Console.DisplayWidth(Grapheme);
+      const GraphemeWidth: integer := Console.DisplayWidth(Grapheme);
       if Width + GraphemeWidth > ContentWidth then
         begin
           return Clipped + '…';
@@ -210,25 +211,25 @@ end function;
 // Builds width-bounded list labels for all visible filtered notes.
 public function NotesListItems(Notes: array of (Note); Search: string; MaximumWidth: integer): array of (string);
 begin
-  mutable var Items: array of (string) := [];
-  var Indices: array of (integer) := NotesFilteredIndices(Notes, Search);
+  var Items: array of (string) := [];
+  const Indices: array of (integer) := NotesFilteredIndices(Notes, Search);
   for Index: integer := 0 to Arrays.Length(Indices) - 1 do
     begin
-      var NoteValue: Note := Notes[Indices[Index]];
-      mutable var Prefix: string := '  ';
+      const NoteValue: Note := Notes[Indices[Index]];
+      var Prefix: string := '  ';
       if NoteValue.Pinned then
         begin
           Prefix := '★ ';
         end;
       end if;
-      mutable var Tags: string := NoteTagsText(NoteValue);
+      var Tags: string := NoteTagsText(NoteValue);
       if Tags <> '' then
         begin
           Tags := '  ·  ' + Tags;
         end;
       end if;
 
-      Arrays.Push(Items, ClipListText((Prefix + NoteValue.Title) + Tags, MaximumWidth));
+      Arrays.Push(var Items, ClipListText((Prefix + NoteValue.Title) + Tags, MaximumWidth));
     end;
   end for;
 

@@ -77,7 +77,7 @@ A case expression must produce a value, so it requires `else` unless finite
 coverage is proven:
 
 ```pascal
-var Description: string := case Number of
+const Description: string := case Number of
   when 0: 'zero';
   when 1..9: 'single digit';
   else 'other';

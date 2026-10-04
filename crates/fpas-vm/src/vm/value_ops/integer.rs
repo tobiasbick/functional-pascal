@@ -1,4 +1,6 @@
 //! Integer arithmetic, bitwise, shift, and comparison primitives.
+//!
+//! **Documentation:** `docs/pascal/language/basics/operators.md`.
 
 use fpas_bytecode::Value;
 
@@ -24,9 +26,9 @@ pub(super) fn binary(
     right: i64,
 ) -> Result<Value, ValueOperationError> {
     match operation {
-        BinaryOperation::Add => Ok(Value::Integer(left.wrapping_add(right))),
-        BinaryOperation::Subtract => Ok(Value::Integer(left.wrapping_sub(right))),
-        BinaryOperation::Multiply => Ok(Value::Integer(left.wrapping_mul(right))),
+        BinaryOperation::Add => checked_result(left.checked_add(right), "addition"),
+        BinaryOperation::Subtract => checked_result(left.checked_sub(right), "subtraction"),
+        BinaryOperation::Multiply => checked_result(left.checked_mul(right), "multiplication"),
         BinaryOperation::IntegerDivide => integer_divide(left, right),
         BinaryOperation::Modulo => modulo(left, right),
         BinaryOperation::And => Ok(Value::Integer(left & right)),
@@ -45,11 +47,20 @@ pub(super) fn binary(
     }
 }
 
+fn checked_result(value: Option<i64>, operation: &str) -> Result<Value, ValueOperationError> {
+    value.map(Value::Integer).ok_or_else(|| {
+        ValueOperationError::domain(
+            format!("Integer {operation} overflow"),
+            "Keep integer arithmetic within the signed 64-bit range.",
+        )
+    })
+}
+
 fn integer_divide(left: i64, right: i64) -> Result<Value, ValueOperationError> {
     if right == 0 {
         return Err(ValueOperationError::division_by_zero(
             "Division by zero",
-            "Check the right-hand side before using `div` or `/`.",
+            "Check the right-hand side before using `div`.",
         ));
     }
     left.checked_div(right).map(Value::Integer).ok_or_else(|| {

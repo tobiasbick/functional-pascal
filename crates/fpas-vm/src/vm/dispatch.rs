@@ -51,6 +51,17 @@ impl Worker {
         &mut self,
         budget: u32,
     ) -> Result<DispatchBatch, VmError> {
+        let result = self.dispatch_batch_inner::<SUPPRESS_INITIALIZERS>(budget);
+        if result.is_err() {
+            self.reference_scopes.clear();
+        }
+        result
+    }
+
+    fn dispatch_batch_inner<const SUPPRESS_INITIALIZERS: bool>(
+        &mut self,
+        budget: u32,
+    ) -> Result<DispatchBatch, VmError> {
         if !self.callback_continuations.is_empty() && self.resume_callback_continuation()? {
             return Ok(DispatchBatch {
                 step: DispatchStep::Continue,

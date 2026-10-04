@@ -88,7 +88,7 @@ end unit;
 fn closure_comments_survive_expression_emission() {
     let source = r#"program T;
 begin
-  var Handler: procedure() := procedure()
+  const Handler: procedure() := procedure()
   // closure body
   begin
     // setup
@@ -117,12 +117,12 @@ fn record_enum_and_routine_eol_comments_remain_on_member_lines() {
 end enum;
 type Counter = record
   Value: integer; // field
-  function ReadValue(Self: Counter): integer;
-  begin return Self.Value;
-  end function; // method
-  property Current: integer read ReadValue; // property
-  event Changed: procedure() read ReadChanged write WriteChanged; // event
+  Current: function(): integer; // callable field
+  Changed: Option of (procedure()) := Option.None; // optional handler
 end record;
+function CounterReadValue(Receiver: Counter): integer;
+begin return Receiver.Value;
+end function; // accessor
 function Top(): integer;
 begin
   return 1;
@@ -135,9 +135,9 @@ begin null; end program;"#;
         "Valued = 2; // valued",
         "Circle(Radius: real); // payload",
         "Value: integer; // field",
-        "end function; // method",
-        "property Current: integer read ReadValue; // property",
-        "event Changed: procedure() read ReadChanged write WriteChanged; // event",
+        "end function; // accessor",
+        "Current: function(): integer; // callable field",
+        "Changed: Option of (procedure()) := Option.None; // optional handler",
         "end function; // top routine",
     ] {
         assert!(formatted.contains(line), "missing `{line}`:\n{formatted}");
@@ -205,11 +205,11 @@ end unit;
 
 #[test]
 fn eol_comment_stays_on_its_code_line() {
-    let source = r#"program T; begin var A: integer := 1; // value
+    let source = r#"program T; begin const A: integer := 1; // value
 WriteLn(A); end program;"#;
     let formatted = format_idempotently(source);
 
-    assert!(formatted.contains("var A: integer := 1; // value\n"));
+    assert!(formatted.contains("const A: integer := 1; // value\n"));
 }
 
 #[test]

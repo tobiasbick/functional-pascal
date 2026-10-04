@@ -56,10 +56,10 @@ fn program_with_multiple_consts() {
 
 #[test]
 fn program_with_var() {
-    let p = parse_ok(r#"program T;  var X: integer := 42; begin null; end program;"#);
+    let p = parse_ok(r#"program T;  const X: integer := 42; begin null; end program;"#);
     assert_eq!(p.declarations.len(), 1);
     match &p.declarations[0] {
-        Decl::Var(v) => {
+        Decl::Const(v) => {
             assert_eq!(v.name, "X");
             assert!(matches!(v.value, Expr::Integer(42, _)));
         }
@@ -69,7 +69,7 @@ fn program_with_var() {
 
 #[test]
 fn program_with_mutable_var() {
-    let p = parse_ok(r#"program T;   mutable var Count: integer := 0; begin null; end program;"#);
+    let p = parse_ok(r#"program T;    var Count: integer := 0; begin null; end program;"#);
     assert_eq!(p.declarations.len(), 1);
-    assert!(matches!(&p.declarations[0], Decl::MutableVar(_)));
+    assert!(matches!(&p.declarations[0], Decl::Var(_)));
 }

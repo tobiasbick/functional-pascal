@@ -6,16 +6,16 @@ with `for-in`.
 Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`type_expr` — `dict of`, dict literals, indexing).
 
 ```pascal
-var Ages: dict of (string, integer) := ['Alice': 30, 'Bob': 25];
-var Empty: dict of (string, integer) := [:];
-var AliceAge: integer := Ages['Alice'];
+const Ages: dict of (string, integer) := ['Alice': 30, 'Bob': 25];
+const Empty: dict of (string, integer) := [:];
+const AliceAge: integer := Ages['Alice'];
 
 ```
 
 Dictionary writes require a mutable binding:
 
 ```pascal
-mutable var Counts: dict of (string, integer) := ['A': 1];
+ var Counts: dict of (string, integer) := ['A': 1];
 
 begin
   Counts['A'] := 2;
@@ -45,7 +45,7 @@ When several keys compare equal, their first position is retained and the last
 value replaces earlier values:
 
 ```pascal
-var Values: dict of (string, integer) := ['A': 1, 'B': 2, 'A': 42];
+const Values: dict of (string, integer) := ['A': 1, 'B': 2, 'A': 42];
 // Values contains A = 42 followed by B = 2.
 ```
 

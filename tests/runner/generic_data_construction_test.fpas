@@ -23,13 +23,13 @@ begin
 end function;
 
 begin
-  var Number: Box of (integer) := Box(Value := 42);
-  var Action: Box of (function(Value: integer): integer) := Box(Value := function(Value: integer): integer begin
+  const Number: Box of (integer) := Box(Value := 42);
+  const Action: Box of (function(Value: integer): integer) := Box(Value := function(Value: integer): integer begin
     return Value + 1;
   end function);
-  var PresentValue: Choice of (integer) := Choice.Present(42);
-  var MissingValue: Choice of (integer) := Choice.Missing;
-  var Root: Node of (integer) := Node(Value := 1, Children := [Node(Value := 42, Children := [])]);
+  const PresentValue: Choice of (integer) := Choice.Present(42);
+  const MissingValue: Choice of (integer) := Choice.Missing;
+  const Root: Node of (integer) := Node(Value := 1, Children := [Node(Value := 42, Children := [])]);
   Test.AssertEquals(42, Unbox(Number));
   Test.AssertEquals(3, Number.Count);
   Test.AssertEquals(42, Action.Value(41));

@@ -26,9 +26,17 @@ fn vm(source: &str) -> Vm {
 #[test]
 fn embedding_does_not_implicitly_authorize_process_control() {
     vm(
-        r#"program Test;  uses Std.Server as Server; uses Std.Results as Results; uses Std.Tasks as Tasks; uses Std.Test as Test2; begin
-      Test2.AssertTrue(Results.IsError(Server.CreateLifetime(10, true)));
-      var Life: Server.ServerLifetime := Results.Unwrap(Server.CreateLifetime(10, false));
+        r#"program Test;  uses Std.Server as Server; uses Std.Results as Results; uses Std.Tasks as Tasks; uses Std.Test as Test2;
+function Require of (T)(Outcome: Result of (T, string)): T;
+begin
+  case Outcome of
+    when Result.Ok(const Value): return Value;
+    when Result.Error(const Message): panic(Message);
+  end case;
+end function;
+begin
+      Test2.AssertTrue((case Server.CreateLifetime(10, true) of when Result.Ok(_): false; when Result.Error(_): true; end case));
+      const Life: Server.ServerLifetime := Require(Server.CreateLifetime(10, false));
       Test2.AssertTrue(Results.IsError(Server.ObserveSignals(Life)));
       discard Server.RequestStop(Life); discard Tasks.CloseTaskGroup(Server.GetWorkGroup(Life));
       Test2.AssertTrue(Results.IsOk(Server.FinishShutdown(Life))); end program;"#,
@@ -39,10 +47,18 @@ fn embedding_does_not_implicitly_authorize_process_control() {
 
 #[test]
 fn stop_rejects_new_group_work() {
-    let error = vm(r#"program Test;  uses Std.Server as Server; uses Std.Results as Results; uses Std.Tasks as Tasks; begin
-      var Life: Server.ServerLifetime := Results.Unwrap(Server.CreateLifetime(10, false));
+    let error = vm(r#"program Test;  uses Std.Server as Server; uses Std.Results as Results; uses Std.Tasks as Tasks;
+function Require of (T)(Outcome: Result of (T, string)): T;
+begin
+  case Outcome of
+    when Result.Ok(const Value): return Value;
+    when Result.Error(const Message): panic(Message);
+  end case;
+end function;
+begin
+      const Life: Server.ServerLifetime := Require(Server.CreateLifetime(10, false));
       discard Server.RequestStop(Life);
-      var WorkerHandle: task := Tasks.StartTaskInGroup(Server.GetWorkGroup(Life), function(Token: Tasks.CancellationToken): boolean begin return true; end function);
+      const WorkerHandle: task := Tasks.StartTaskInGroup(Server.GetWorkGroup(Life), function(Token: Tasks.CancellationToken): boolean begin return true; end function);
       end program;"#).run().unwrap_err();
     assert!(
         error.message.contains("closing or cancelled"),
@@ -54,8 +70,16 @@ fn stop_rejects_new_group_work() {
 #[test]
 fn returning_without_explicit_cleanup_reports_incomplete_shutdown() {
     let error = vm(
-        r#"program Test;  uses Std.Server as Server; uses Std.Results as Results; begin
-      discard Results.Unwrap(Server.CreateLifetime(0, false)); end program;"#,
+        r#"program Test;  uses Std.Server as Server; uses Std.Results as Results;
+function Require of (T)(Outcome: Result of (T, string)): T;
+begin
+  case Outcome of
+    when Result.Ok(const Value): return Value;
+    when Result.Error(const Message): panic(Message);
+  end case;
+end function;
+begin
+      discard Require(Server.CreateLifetime(0, false)); end program;"#,
     )
     .run()
     .unwrap_err();
@@ -166,7 +190,15 @@ fn server_lifecycle_child() {
         "discard Server.RequestStop(Life); Console.WriteLn('output');"
     };
     let source = format!(
-        "program Child;  uses Std.Server as Server; uses Std.Results as Results; uses Std.Tasks as Tasks; uses Std.Time as Time; uses Std.Console as Console; uses Std.Test as Test;\n        begin var Life: Server.ServerLifetime := Results.Unwrap(Server.CreateLifetime(50, true)); {body} end program;"
+        r#"program Child;  uses Std.Server as Server; uses Std.Results as Results; uses Std.Tasks as Tasks; uses Std.Time as Time; uses Std.Console as Console; uses Std.Test as Test;
+function Require of (T)(Outcome: Result of (T, string)): T;
+begin
+  case Outcome of
+    when Result.Ok(const Value): return Value;
+    when Result.Error(const Message): panic(Message);
+  end case;
+end function;
+begin const Life: Server.ServerLifetime := Require(Server.CreateLifetime(50, true)); {body} end program;"#
     );
     let (program, errors) = fpas_parser::parse(&source);
     assert!(errors.is_empty(), "{errors:?}");

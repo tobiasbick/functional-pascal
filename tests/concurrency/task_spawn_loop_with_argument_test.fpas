@@ -10,19 +10,22 @@ begin
 end function;
 
 begin
-  mutable var Tasks: array of (task) := [];
+  var Tasks: array of (task) := [];
   for Index: integer := 1 to 8 do
     begin
-      Arrays.Push(Tasks, go Worker(Index));
+      Arrays.Push(var Tasks, go Worker(Index));
     end;
   end for;
 
   Tasks2.WaitAll(Tasks);
-  Test.AssertEquals(8, Arrays.Length(Tasks));
-  for Index: integer := 0 to Arrays.Length(Tasks) - 1 do
+  var Index: integer := 0;
+  for Handle: task in Tasks do
     begin
-      var WorkerResult: integer := Tasks2.Wait(Tasks[Index]);
+      const WorkerResult: integer := Tasks2.Wait(Handle);
       Test.AssertEquals(Index + 2, WorkerResult);
+      Index := Index + 1;
     end;
   end for;
+
+  Test.AssertEquals(8, Index);
 end program;

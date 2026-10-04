@@ -324,7 +324,13 @@ mod tests {
 
     #[test]
     fn attaches_line_comments_to_following_declarations() -> Result<(), String> {
-        let source = "// Unit doc.\nunit Demo;\n\n// field doc\nmutable var Count: integer := 0;\nend unit;\n";
+        let source = r#"// Unit doc.
+unit Demo;
+
+// field doc
+ var Count: integer := 0;
+end unit;
+"#;
         let (unit, errors) = parse_compilation_unit(source);
         assert!(errors.is_empty(), "{errors:?}");
         let map = CommentMap::build(source, &unit).map_err(|error| error.to_string())?;

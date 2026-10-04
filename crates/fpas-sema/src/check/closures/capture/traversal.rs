@@ -26,8 +26,25 @@ impl CaptureCollector<'_> {
         }
         if !matches!(
             symbol.kind,
-            SymbolKind::Var | SymbolKind::Param | SymbolKind::ForVar
+            SymbolKind::Const
+                | SymbolKind::Var
+                | SymbolKind::Param
+                | SymbolKind::VarParam
+                | SymbolKind::ForVar
+                | SymbolKind::Function
+                | SymbolKind::Procedure
         ) {
+            return;
+        }
+        if matches!(symbol.kind, SymbolKind::Function | SymbolKind::Procedure)
+            && self.scopes.function_ctx.as_ref().is_some_and(|context| {
+                context
+                    .name
+                    .rsplit('.')
+                    .next()
+                    .is_some_and(|own_name| own_name.eq_ignore_ascii_case(name))
+            })
+        {
             return;
         }
         let Some(declaration) = declaration else {
@@ -59,7 +76,7 @@ impl CaptureCollector<'_> {
     fn collect_statement_list(&mut self, stmts: &[Stmt]) {
         for stmt in stmts {
             self.collect_from_stmt(stmt);
-            if let Stmt::Var(var) | Stmt::MutableVar(var) = stmt {
+            if let Stmt::Const(var) | Stmt::Var(var) = stmt {
                 self.bind_name(&var.name);
             }
         }
@@ -73,10 +90,7 @@ impl CaptureCollector<'_> {
 
     fn collect_from_decl(&mut self, decl: &Decl) {
         match decl {
-            Decl::Var(var) | Decl::MutableVar(var) => {
-                self.collect_from_expr(&var.value);
-            }
-            Decl::Const(var) => {
+            Decl::Const(var) | Decl::Var(var) => {
                 self.collect_from_expr(&var.value);
             }
             Decl::Function(function) => {
@@ -117,7 +131,7 @@ impl CaptureCollector<'_> {
                 self.collect_statement_list(stmts);
                 self.pop_bound_scope();
             }
-            Stmt::Var(var) | Stmt::MutableVar(var) => self.collect_from_expr(&var.value),
+            Stmt::Const(var) | Stmt::Var(var) => self.collect_from_expr(&var.value),
             Stmt::Assign { target, value, .. } => {
                 self.collect_from_designator(target);
                 self.collect_from_expr(value);
@@ -261,10 +275,11 @@ impl CaptureCollector<'_> {
             | Expr::Str(..)
             | Expr::Bool(..)
             | Expr::OptionNone(_)
-            | Expr::Nil(_)
             | Expr::InvalidRecord(..)
             | Expr::Error(_) => {}
-            Expr::Designator(designator) => self.collect_from_designator(designator),
+            Expr::Designator(designator) | Expr::VarArgument(designator, _) => {
+                self.collect_from_designator(designator)
+            }
             Expr::Call {
                 designator, args, ..
             } => {
@@ -314,8 +329,7 @@ impl CaptureCollector<'_> {
                     match operation {
                         PostfixOperation::Field { .. } => {}
                         PostfixOperation::Index { index, .. } => self.collect_from_expr(index),
-                        PostfixOperation::MethodCall { args, .. }
-                        | PostfixOperation::Call { args, .. } => {
+                        PostfixOperation::Call { args, .. } => {
                             for arg in args {
                                 self.collect_from_expr(arg);
                             }

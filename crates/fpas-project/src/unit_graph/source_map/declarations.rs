@@ -4,18 +4,13 @@ use super::support::apply_span;
 use super::types::{apply_formal_param_source_id, apply_type_expr_source_id};
 
 use fpas_parser::{
-    Decl, EnumMember, EnumMemberField, FieldDef, FuncBody, FunctionDecl, ProcedureDecl,
-    RecordMethod, RecordType, TypeBody, TypeDef, VarDef,
+    BindingDef, Decl, EnumMember, EnumMemberField, FieldDef, FuncBody, FunctionDecl, ProcedureDecl,
+    RecordType, TypeBody, TypeDef,
 };
 
 pub(super) fn apply_decl_source_id(decl: &mut Decl, source_id: u32) {
     match decl {
-        Decl::Const(const_def) => {
-            apply_type_expr_source_id(&mut const_def.type_expr, source_id);
-            apply_expr_source_id(&mut const_def.value, source_id);
-            apply_span(&mut const_def.span, source_id);
-        }
-        Decl::Var(var_def) | Decl::MutableVar(var_def) => {
+        Decl::Const(var_def) | Decl::Var(var_def) => {
             apply_var_def_source_id(var_def, source_id);
         }
         Decl::TypeDef(type_def) => {
@@ -26,8 +21,10 @@ pub(super) fn apply_decl_source_id(decl: &mut Decl, source_id: u32) {
     }
 }
 
-pub(super) fn apply_var_def_source_id(var_def: &mut VarDef, source_id: u32) {
-    apply_type_expr_source_id(&mut var_def.type_expr, source_id);
+pub(super) fn apply_var_def_source_id(var_def: &mut BindingDef, source_id: u32) {
+    if let Some(annotation) = &mut var_def.type_expr {
+        apply_type_expr_source_id(annotation, source_id);
+    }
     apply_expr_source_id(&mut var_def.value, source_id);
     apply_span(&mut var_def.span, source_id);
 }
@@ -50,33 +47,7 @@ fn apply_record_type_source_id(record: &mut RecordType, source_id: u32) {
     for field in &mut record.fields {
         apply_field_def_source_id(field, source_id);
     }
-    for method in &mut record.methods {
-        match method {
-            RecordMethod::Function(function) | RecordMethod::StaticFunction(function) => {
-                apply_function_source_id(function, source_id)
-            }
-            RecordMethod::Procedure(procedure) | RecordMethod::StaticProcedure(procedure) => {
-                apply_procedure_source_id(procedure, source_id)
-            }
-        }
-    }
-    for property in &mut record.properties {
-        apply_record_property_source_id(property, source_id);
-    }
-    for event in &mut record.events {
-        apply_record_event_source_id(event, source_id);
-    }
     apply_span(&mut record.span, source_id);
-}
-
-fn apply_record_property_source_id(property: &mut fpas_parser::RecordProperty, source_id: u32) {
-    apply_type_expr_source_id(&mut property.type_expr, source_id);
-    apply_span(&mut property.span, source_id);
-}
-
-fn apply_record_event_source_id(event: &mut fpas_parser::RecordEvent, source_id: u32) {
-    apply_type_expr_source_id(&mut event.type_expr, source_id);
-    apply_span(&mut event.span, source_id);
 }
 
 fn apply_field_def_source_id(field: &mut FieldDef, source_id: u32) {

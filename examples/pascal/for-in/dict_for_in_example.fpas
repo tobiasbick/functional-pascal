@@ -5,7 +5,7 @@ uses Std.Conv as Conv;
 uses Std.Dictionaries as Dictionaries;
 
 begin
-  var Ages: dict of (string, integer) := ['Alice': 30, 'Bob': 25, 'Cara': 31];
+  const Ages: dict of (string, integer) := ['Alice': 30, 'Bob': 25, 'Cara': 31];
   Console.WriteLn('for Name in Ages (insertion order):');
   for Name: string in Ages do
     begin

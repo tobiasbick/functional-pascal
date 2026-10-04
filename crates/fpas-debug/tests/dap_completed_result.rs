@@ -18,7 +18,7 @@ begin
 end function;
 
 begin
-  var Pending: task := go Work();
+  const Pending: task := go Work();
   Console.WriteLn(Tasks.Wait(Pending));
 end program;
 "#;

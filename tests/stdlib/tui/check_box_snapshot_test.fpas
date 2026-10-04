@@ -3,6 +3,11 @@ program TuiCheckBoxSnapshotTest;
 uses Std.Str as Str;
 uses Std.Test as Test;
 uses Std.Tui as Tui;
+uses Std.Tui.Elements as Elements;
+uses Std.Tui.Geometry as Geometry;
+uses Std.Tui.Ids as Ids;
+uses Std.Tui.Rendering as Rendering;
+uses Std.Tui.Runtime as Runtime;
 
 type CheckModel = record
   Focus: integer;
@@ -11,16 +16,16 @@ end record;
 
 function ViewCheck(State: CheckModel): Tui.TuiElement;
 begin
-  return Tui.TuiElementBuilders.MakeDesktop(Option.Some(Tui.TuiControlId.Create(State.Focus)), [
-                                                                                                 Tui.TuiElementBuilders.MakePanel('Host', [
-                                                                                                                                            Tui.TuiElementBuilders.MakeCheckBox(Tui.TuiControlId.Create(1), 'Flag', State.Checked, Tui.TuiAction.Create(9))
-                                                                                                                                          ])
-                                                                                               ]);
+  return Elements.TuiElementMakeDesktop(Option.Some(Ids.TuiControlIdCreate(State.Focus)), [
+                                                                                            Elements.TuiElementMakePanel('Host', [
+                                                                                                                                   Elements.TuiElementMakeCheckBox(Ids.TuiControlIdCreate(1), 'Flag', State.Checked, Ids.TuiActionCreate(9))
+                                                                                                                                 ])
+                                                                                          ]);
 end function;
 
 function UpdateCheck(State: CheckModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): CheckModel;
 begin
-  Cmd.Set(Tui.TuiCmd.NoCommand);
+  Runtime.TuiCmdOutputSet(Cmd, Tui.TuiCmd.NoCommand);
   case Msg of
     when Tui.TuiMsg.CheckChanged(const Source, const Action, const Checked):
       begin
@@ -36,12 +41,12 @@ begin
 end function;
 
 begin
-  mutable var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(24, 6));
-  mutable var Model: CheckModel := CheckModel(Focus := 1, Checked := false);
-  Model := App.RunIterations(Model, UpdateCheck, ViewCheck, 0, 0);
-  Test.AssertTrue(Str.Contains(App.SurfaceSnapshot().LineAt(1), '>[ ] Flag'));
+  var App: Tui.TuiApplication := Runtime.TuiApplicationOpenForTest(Geometry.TuiSizeCreate(24, 6));
+  var Model: CheckModel := CheckModel(Focus := 1, Checked := false);
+  Model := Runtime.TuiApplicationRunIterations(App, Model, UpdateCheck, ViewCheck, 0, 0);
+  Test.AssertTrue(Str.Contains(Rendering.TuiSurfaceSnapshotLineAt(Runtime.TuiApplicationSurfaceSnapshot(App), 1), '>[ ] Flag'));
   Model := CheckModel(Focus := 1, Checked := true);
-  Model := App.RunIterations(Model, UpdateCheck, ViewCheck, 0, 0);
-  Test.AssertTrue(Str.Contains(App.SurfaceSnapshot().LineAt(1), '>[x] Flag'));
-  App.Close();
+  Model := Runtime.TuiApplicationRunIterations(App, Model, UpdateCheck, ViewCheck, 0, 0);
+  Test.AssertTrue(Str.Contains(Rendering.TuiSurfaceSnapshotLineAt(Runtime.TuiApplicationSurfaceSnapshot(App), 1), '>[x] Flag'));
+  Runtime.TuiApplicationClose(App);
 end program;

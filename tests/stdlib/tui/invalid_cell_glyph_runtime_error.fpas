@@ -1,7 +1,8 @@
 program TuiInvalidCellGlyphRuntimeError;
 
 uses Std.Tui as Tui;
+uses Std.Tui.Cells as Cells;
 
 begin
-  discard Tui.TuiCell.Create('', Tui.TuiStyleRole.Normal);
+  discard Cells.TuiCellCreate('', Tui.TuiStyleRole.Normal);
 end program;

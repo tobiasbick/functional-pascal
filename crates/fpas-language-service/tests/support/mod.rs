@@ -65,7 +65,7 @@ include = ["src/**/*.fpas"]
 uses Demo.Math as Math;
 
 begin
-  var Value: integer := Math.Answer();
+  const Value: integer := Math.Answer();
 end program;
 "#,
     );

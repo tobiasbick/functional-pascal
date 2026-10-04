@@ -1,0 +1,22 @@
+program MutationTaskCompositionTest;
+
+uses Std.Arrays as Arrays;
+uses Std.Math as Math;
+uses Std.Tasks as Tasks;
+uses Std.Test as Test;
+
+function Add(X: integer; Y: integer): integer;
+begin
+  return X + Y;
+end function;
+
+begin
+  var Items: array of (integer) := [1, 2];
+  Arrays.Push(var Items, 3);
+  Test.AssertEquals(3, Arrays.Pop(var Items));
+  Test.AssertEquals(2, Arrays.Length(Items));
+  const Job: task := go Add((20), 22);
+  Test.AssertEquals(42, Tasks.Wait(Job));
+  const IntrinsicTask: task := go Math.Abs((-2));
+  Test.AssertEquals(2, Tasks.Wait(IntrinsicTask));
+end program;

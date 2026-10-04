@@ -8,7 +8,7 @@ fn timeout_session() -> DebugSession {
 uses Std.Tasks as Tasks;
 
 begin
-  var Messages: channel of (integer) := Tasks.CreateChannel(1);
+  const Messages: channel of (integer) := Tasks.CreateChannel(1);
   case Tasks.ReceiveWithTimeout(Messages, 25) of
     when Result.Ok(_):
       panic('empty channel did not time out');

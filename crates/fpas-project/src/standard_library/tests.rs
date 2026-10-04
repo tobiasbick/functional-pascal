@@ -44,7 +44,7 @@ end unit;
         r#"program Main;
 uses Std.Sample as Sample;
 begin
-  var Answer: integer := Value;
+  const Answer: integer := Value;
 end program;
 "#,
     );
@@ -96,7 +96,7 @@ end unit;
         r#"program Main;
 uses Std.Sample as Sample;
 begin
-  var Answer: integer := Value;
+  const Answer: integer := Value;
 end program;
 "#,
     );

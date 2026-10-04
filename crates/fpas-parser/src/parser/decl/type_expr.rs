@@ -51,15 +51,17 @@ impl Parser {
                     span: start,
                 }
             }
-            Token::Function => {
+            Token::Pure | Token::Function => {
                 let start = self.current_span();
-                self.advance();
+                let pure = self.eat(&Token::Pure);
+                self.expect(&Token::Function);
                 self.expect(&Token::LParen);
-                let params = self.parse_formal_param_list(false);
+                let params = self.parse_formal_param_list();
                 self.expect(&Token::RParen);
                 self.expect(&Token::Colon);
                 let return_type = self.parse_type_expr();
                 TypeExpr::FunctionType {
+                    pure,
                     params,
                     return_type: Box::new(return_type),
                     span: self.span_from(start),
@@ -69,7 +71,7 @@ impl Parser {
                 let start = self.current_span();
                 self.advance();
                 self.expect(&Token::LParen);
-                let params = self.parse_formal_param_list(false);
+                let params = self.parse_formal_param_list();
                 self.expect(&Token::RParen);
                 TypeExpr::ProcedureType {
                     params,

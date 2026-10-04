@@ -113,7 +113,7 @@ fn test_cli_uses_manifest_script_override() {
         r#"program P;
 uses Std.Console as Console; uses Std.Test as Test;
 begin
-  var Name: string := Console.ReadLn();
+  const Name: string := Console.ReadLn();
   Test.AssertTrue(Name = 'Alice');
 end program;"#,
     );

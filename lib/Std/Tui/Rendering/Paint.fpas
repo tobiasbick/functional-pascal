@@ -44,13 +44,13 @@ procedure TuiPaintTextInBounds(
   Role: StyleRole.TuiStyleRole
 );
 begin
-  if Bounds.IsEmpty() then
+  if Rect.TuiRectIsEmpty(Bounds) then
     begin
       return;
     end;
   end if;
 
-  Canvas.Child(Bounds).WriteText(Point.TuiPoint.Create(0, 0), Text, Role);
+  Canvas2.TuiCanvasWriteText(Canvas2.TuiCanvasChild(Canvas, Bounds), Point.TuiPointCreate(0, 0), Text, Role);
 end procedure;
 
 // Paints one arranged node and returns the next unused frame index.
@@ -63,9 +63,9 @@ function TuiPaintArranged(
   Pressed: Option of (ControlId.TuiControlId)
 ): integer;
 begin
-  var Entry: Frame2.TuiArrangedEntry := Frame.EntryAt(Index);
-  mutable var Next: integer := Index + 1;
-  var Clipped: Canvas2.TuiCanvas := Canvas2.TuiCanvas.CreateLocal(Canvas.Surface, Point.TuiPoint.Create(0, 0), Entry.Clip);
+  const Entry: Frame2.TuiArrangedEntry := Frame2.TuiArrangedFrameEntryAt(Frame, Index);
+  var Next: integer := Index + 1;
+  const Clipped: Canvas2.TuiCanvas := Canvas2.TuiCanvasCreateLocal(Canvas.Surface, Point.TuiPointCreate(0, 0), Entry.Clip);
   case Node of
     when Element.TuiElement.Empty:
       begin
@@ -93,7 +93,7 @@ begin
       end;
     when Element.TuiElement.CheckBox(const Id, const Text, const Checked, const ChangeAction):
       begin
-        mutable var Mark: string := ' ';
+        var Mark: string := ' ';
         if Checked then
           begin
             Mark := 'x';
@@ -112,7 +112,7 @@ begin
       end;
     when Element.TuiElement.List(const Id, const Items, const Selected, const ChangeAction):
       begin
-        mutable var RowLimit: integer := Entry.Bounds.Height;
+        var RowLimit: integer := Entry.Bounds.Height;
         if RowLimit > Arrays.Length(Items) then
           begin
             RowLimit := Arrays.Length(Items);
@@ -121,25 +121,25 @@ begin
 
         for Row: integer := 0 to RowLimit - 1 do
           begin
-            mutable var Prefix: string := '  ';
+            var Prefix: string := '  ';
             if Row = Selected then
               begin
                 Prefix := '> ';
               end;
             end if;
 
-            TuiPaintTextInBounds(Clipped, Rect.TuiRect.Create(Entry.Bounds.X, Entry.Bounds.Y + Row, Entry.Bounds.Width, 1), Prefix +
-                                                                                                                            Items[Row], StyleRole.TuiStyleRole.Normal);
+            TuiPaintTextInBounds(Clipped, Rect.TuiRectCreate(Entry.Bounds.X, Entry.Bounds.Y + Row, Entry.Bounds.Width, 1), Prefix +
+                                                                                                                           Items[Row], StyleRole.TuiStyleRole.Normal);
           end;
         end for;
       end;
     when Element.TuiElement.MenuBar(const Items):
       begin
-        Clipped.FillRect(Entry.Bounds, Cell.TuiCell.Create(' ', StyleRole.TuiStyleRole.MenuNormal));
-        mutable var X: integer := Entry.Bounds.X;
+        Canvas2.TuiCanvasFillRect(Clipped, Entry.Bounds, Cell.TuiCellCreate(' ', StyleRole.TuiStyleRole.MenuNormal));
+        var X: integer := Entry.Bounds.X;
         for ItemIndex: integer := 0 to Arrays.Length(Items) - 1 do
           begin
-            mutable var Role: StyleRole.TuiStyleRole := StyleRole.TuiStyleRole.MenuNormal;
+            var Role: StyleRole.TuiStyleRole := StyleRole.TuiStyleRole.MenuNormal;
             if Items[ItemIndex].Enabled and TuiPaintFocused(Focused, Items[ItemIndex].Id) then
               begin
                 Role := StyleRole.TuiStyleRole.MenuSelected;
@@ -151,8 +151,8 @@ begin
                 end;
               end if;
             end if;
-            var ItemText: string := (' ' + Items[ItemIndex].Text) + ' ';
-            Clipped.WriteText(Point.TuiPoint.Create(X, Entry.Bounds.Y), ItemText, Role);
+            const ItemText: string := (' ' + Items[ItemIndex].Text) + ' ';
+            Canvas2.TuiCanvasWriteText(Clipped, Point.TuiPointCreate(X, Entry.Bounds.Y), ItemText, Role);
             X := X + Console.DisplayWidth(ItemText);
           end;
         end for;
@@ -239,19 +239,19 @@ function TuiPaintMenuOverlays(
   AllowMenu: boolean
 ): integer;
 begin
-  mutable var Next: integer := Index + 1;
+  var Next: integer := Index + 1;
   case Node of
     when Element.TuiElement.Menu(const Id, const Nodes, const State, const ChangeAction):
       begin
         if AllowMenu and State.Open then
           begin
-            Menu.TuiPaintMenuPopups(Canvas, Frame.EntryAt(Index).Bounds, Nodes, State);
+            Menu.TuiPaintMenuPopups(Canvas, Frame2.TuiArrangedFrameEntryAt(Frame, Index).Bounds, Nodes, State);
           end;
         end if;
       end;
     when Element.TuiElement.Desktop(const Focused, const Children):
       begin
-        mutable var ModalIndex: integer := -1;
+        var ModalIndex: integer := -1;
         for ChildIndex: integer := 0 to Arrays.Length(Children) - 1 do
           begin
             case Children[ChildIndex] of
@@ -349,16 +349,16 @@ public procedure TuiPaintView(
   Pressed: Option of (ControlId.TuiControlId)
 );
 begin
-  Surface.Clear();
-  var Canvas: Canvas2.TuiCanvas := Canvas2.TuiCanvas.Create(Surface, Rect.TuiRectForSize(Surface.Size()));
-  var NextIndex: integer := TuiPaintArranged(Canvas, Frame, Root, 0, Option.None, Pressed);
-  if NextIndex <> Frame.Count() then
+  Surface2.TuiWorkingSurfaceClear(Surface);
+  const Canvas: Canvas2.TuiCanvas := Canvas2.TuiCanvasCreate(Surface, Rect.TuiRectForSize(Surface2.TuiWorkingSurfaceSize(Surface)));
+  const NextIndex: integer := TuiPaintArranged(Canvas, Frame, Root, 0, Option.None, Pressed);
+  if NextIndex <> Frame2.TuiArrangedFrameCount(Frame) then
     begin
       panic('Tui paint did not consume the complete arranged frame');
     end;
   end if;
 
-  if TuiPaintMenuOverlays(Canvas, Frame, Root, 0, true) <> Frame.Count() then
+  if TuiPaintMenuOverlays(Canvas, Frame, Root, 0, true) <> Frame2.TuiArrangedFrameCount(Frame) then
     begin
       panic('Tui menu overlay paint did not consume the complete arranged frame');
     end;
@@ -371,29 +371,29 @@ end procedure;
 // - `Surface`: Working surface affected by the operation.
 public procedure TuiPaintTooSmallOverlay(Surface: Surface2.TuiWorkingSurface);
 begin
-  Surface.Clear();
-  var Size: Size2.TuiSize := Surface.Size();
-  if Size.IsEmpty() then
+  Surface2.TuiWorkingSurfaceClear(Surface);
+  const Size: Size2.TuiSize := Surface2.TuiWorkingSurfaceSize(Surface);
+  if Size2.TuiSizeIsEmpty(Size) then
     begin
       return;
     end;
   end if;
-  var Canvas: Canvas2.TuiCanvas := Canvas2.TuiCanvas.Create(Surface, Rect.TuiRectForSize(Size));
-  var Message: string := 'Terminal too small';
-  mutable var X: integer := 0;
+  const Canvas: Canvas2.TuiCanvas := Canvas2.TuiCanvasCreate(Surface, Rect.TuiRectForSize(Size));
+  const Message: string := 'Terminal too small';
+  var X: integer := 0;
   if Size.Width > Console.DisplayWidth(Message) then
     begin
       X := (Size.Width - Console.DisplayWidth(Message)) div 2;
     end;
   end if;
-  mutable var Y: integer := 0;
+  var Y: integer := 0;
   if Size.Height > 1 then
     begin
       Y := Size.Height div 2;
     end;
   end if;
 
-  Canvas.WriteText(Point.TuiPoint.Create(X, Y), Message, StyleRole.TuiStyleRole.Warning);
+  Canvas2.TuiCanvasWriteText(Canvas, Point.TuiPointCreate(X, Y), Message, StyleRole.TuiStyleRole.Warning);
 end procedure;
 
 end unit;

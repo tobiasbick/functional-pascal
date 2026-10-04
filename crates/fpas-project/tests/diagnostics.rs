@@ -26,7 +26,11 @@ use fpas_project::{
     load_standard_library_project, resolve_library_units,
 };
 
-const INVALID_PROGRAM: &str = "program Broken\nbegin\n  var X := ;\n  §\nend.";
+const INVALID_PROGRAM: &str = r#"program Broken
+begin
+  const X := ;
+  §
+end."#;
 const INVALID_UNIT: &str = "unit Broken\npublic const A: integer := ;\n§";
 
 struct Fixture(PathBuf);

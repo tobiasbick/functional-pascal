@@ -15,7 +15,7 @@ use support::{exit, initialize, initialized, response, run, shutdown};
 #[test]
 fn formatting_matches_the_canonical_fpas_formatter_for_the_unsaved_buffer() {
     let uri = "file:///phase5/format-parity.fpas";
-    let source = r#"program Messy; begin var Value:integer:=1; end program;"#;
+    let source = r#"program Messy; begin const Value:integer:=1; end program;"#;
     let (unit, diagnostics) = fpas_parser::parse_compilation_unit(source);
     assert!(diagnostics.is_empty(), "{diagnostics:?}");
     let expected = fpas_fmt::format_source(source, &unit).expect("matching source and AST");
@@ -145,11 +145,11 @@ fn operator_formatting_matches_cli_formatter_and_rejects_ambiguous_chains() {
     let uri = "file:///operators.fpas";
     for (source, valid) in [
         (
-            "program T; begin var X:boolean:=not 1>2 and 3<4; end program;",
+            r#"program T; begin const X:boolean:=not 1>2 and 3<4; end program;"#,
             true,
         ),
         (
-            "program T; begin var X:boolean:=true and false or true; end program;",
+            r#"program T; begin const X:boolean:=true and false or true; end program;"#,
             false,
         ),
     ] {

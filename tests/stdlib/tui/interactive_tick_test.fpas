@@ -6,6 +6,8 @@ uses Std.Tasks as Tasks;
 uses Std.Test as Test;
 uses Std.Time as Time;
 uses Std.Tui as Tui;
+uses Std.Tui.Elements as Elements;
+uses Std.Tui.Runtime as Runtime;
 
 type TickModel = record
   Inbox: channel of (integer);
@@ -17,15 +19,15 @@ end record;
 
 function Update(State: TickModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): TickModel;
 begin
-  mutable var Next: TickModel := State;
+  var Next: TickModel := State;
   case Msg of
     when Tui.TuiMsg.Started:
       begin
         // A far request that the background message below replaces.
-        Cmd.RequestTick(600000);
+        Runtime.TuiCmdOutputRequestTick(Cmd, 600000);
         Next.Started := Time.MonotonicMillis();
-        var Inbox: channel of (integer) := State.Inbox;
-        Cmd.StartBackground(1, function(Token: Tasks.CancellationToken): Result of (boolean, string) begin
+        const Inbox: channel of (integer) := State.Inbox;
+        Runtime.TuiCmdOutputStartBackground(Cmd, 1, function(Token: Tasks.CancellationToken): Result of (boolean, string) begin
           return Tasks.SendWithCancellation(Inbox, 1, Token);
         end function);
       end;
@@ -40,11 +42,11 @@ begin
 
         if Next.Ticks < 3 then
           begin
-            Cmd.RequestTick(20);
+            Runtime.TuiCmdOutputRequestTick(Cmd, 20);
           end;
         else
           begin
-            Cmd.Set(Tui.TuiCmd.Quit);
+            Runtime.TuiCmdOutputSet(Cmd, Tui.TuiCmd.Quit);
           end;
         end if;
       end;
@@ -61,18 +63,18 @@ end function;
 
 function UpdateMessage(State: TickModel; Message: integer; Cmd: Tui.TuiCmdOutput): TickModel;
 begin
-  Cmd.RequestTick(20);
+  Runtime.TuiCmdOutputRequestTick(Cmd, 20);
   return State with Replaced := true; end with;
 end function;
 
 function View(State: TickModel): Tui.TuiElement;
 begin
-  return Tui.TuiElementBuilders.MakeLabel('ticks');
+  return Elements.TuiElementMakeLabel('ticks');
 end function;
 
 begin
-  var Inbox: channel of (integer) := Tasks.CreateChannel(1);
-  var Final: TickModel := Tui.TuiApplication.RunWithBackground(TickModel(Inbox := Inbox, Ticks := 0, ShortestTick := -1, Started := 0, Replaced := false), Inbox, Update, UpdateMessage, View);
+  const Inbox: channel of (integer) := Tasks.CreateChannel(1);
+  const Final: TickModel := Runtime.TuiApplicationRunWithBackground(TickModel(Inbox := Inbox, Ticks := 0, ShortestTick := -1, Started := 0, Replaced := false), Inbox, Update, UpdateMessage, View);
   Test.AssertTrue(Final.Replaced);
   Test.AssertEquals(3, Final.Ticks);
   // Every tick waited at least its requested delay.

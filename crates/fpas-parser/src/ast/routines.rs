@@ -5,6 +5,8 @@ use fpas_lexer::Span;
 /// Parsed named function declaration.
 #[derive(Debug, Clone, PartialEq)]
 pub struct FunctionDecl {
+    /// Whether the function explicitly guarantees pure evaluation.
+    pub pure: bool,
     /// Declared function name.
     pub name: String,
     /// Generic type parameters in declaration order.

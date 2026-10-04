@@ -51,9 +51,14 @@
     "description": "Declare a record type"
   },
   "Mutable variable": {
-    "prefix": "mutable var",
-    "body": "mutable var ${1:Value}: ${2:integer} := ${3:0};",
+    "prefix": "var",
+    "body": "var ${1:Value}: ${2:integer} := ${3:0};",
     "description": "Declare a mutable variable"
+  },
+  "Immutable binding": {
+    "prefix": "const",
+    "body": "const ${1:Value}: ${2:integer} := ${3:0};",
+    "description": "Declare an immutable binding"
   },
   "If statement": {
     "prefix": "if",
@@ -96,7 +101,7 @@
     "body": [
       "case ${1:Value} of",
       "  when ${2:0}:",
-      "    var ${3:Match}: ${4:integer} := ${1:Value}$0;",
+      "    const ${3:Match}: ${4:integer} := ${1:Value}$0;",
       "end case;"
     ],
     "description": "Insert a case statement"

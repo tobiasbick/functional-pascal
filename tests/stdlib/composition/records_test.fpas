@@ -1,0 +1,45 @@
+program CallableRecordCompositionTest;
+
+uses Std.Tasks as Tasks;
+uses Std.Test as Test;
+
+function Double(X: integer): integer;
+begin
+  return X * 2;
+end function;
+
+type Box = record
+  Value: integer;
+  Callback: function(X: integer): integer;
+end record;
+
+function BoxAdd(Receiver: Box; X: integer): integer;
+begin
+  return Receiver.Value + X;
+end function;
+
+function ValueOf(B: Box): integer;
+begin
+  return B.Value;
+end function;
+
+begin
+  const Item: Box := Box(Value := 3, Callback := Double);
+  Test.AssertEquals(5, BoxAdd(Item, 2));
+  Test.AssertEquals(5, ValueOf(Item) + 2);
+  Test.AssertEquals(4, Item.Callback(2));
+  Test.AssertEquals(6, (Item).Callback(3));
+  const Bound: function(X: integer): integer := function(X: integer): integer begin
+    return BoxAdd(Item, X);
+  end function;
+
+  Test.AssertEquals(5, Bound((2)));
+  const NamedTask: task := go BoxAdd(Item, 4);
+  Test.AssertEquals(7, Tasks.Wait(NamedTask));
+  const PostfixTask: task := go BoxAdd((Item), 5);
+  Test.AssertEquals(8, Tasks.Wait(PostfixTask));
+  const FieldTask: task := go Item.Callback(6);
+  Test.AssertEquals(12, Tasks.Wait(FieldTask));
+  const PostfixFieldTask: task := go (Item).Callback(7);
+  Test.AssertEquals(14, Tasks.Wait(PostfixFieldTask));
+end program;

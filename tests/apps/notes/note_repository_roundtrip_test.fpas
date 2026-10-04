@@ -6,8 +6,8 @@ uses Std.Arrays as Arrays;
 uses Std.Test as Test;
 
 begin
-  var Directory: string := Test.ScratchDir() + '/notes';
-  mutable var NoteValue: Model.Note := Model.NoteCreate('repository-roundtrip', 1700000000000);
+  const Directory: string := Test.ScratchDir() + '/notes';
+  var NoteValue: Model.Note := Model.NoteCreate('repository-roundtrip', 1700000000000);
   NoteValue.Title := 'Repository roundtrip';
   NoteValue.Tags := ['storage'];
   NoteValue.Body := 'Saved atomically';

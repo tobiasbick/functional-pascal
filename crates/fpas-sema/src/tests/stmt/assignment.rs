@@ -1,18 +1,21 @@
 use super::super::{check_errors, check_ok};
 
+mod qualified_roots;
+mod string_indices;
+
 #[test]
 fn assign_mutable() {
-    check_ok(r#"program T;   mutable var X: integer := 0; begin X := 1; end program;"#);
+    check_ok(r#"program T;    var X: integer := 0; begin X := 1; end program;"#);
 }
 
 #[test]
 fn assign_immutable_error() {
-    check_errors(r#"program T;  var X: integer := 0; begin X := 1; end program;"#);
+    check_errors(r#"program T;  const X: integer := 0; begin X := 1; end program;"#);
 }
 
 #[test]
 fn assign_type_mismatch() {
-    check_errors(r#"program T;   mutable var X: integer := 0; begin X := true; end program;"#);
+    check_errors(r#"program T;    var X: integer := 0; begin X := true; end program;"#);
 }
 
 #[test]
@@ -36,6 +39,6 @@ fn member_assign_undefined_receiver_reports_once() {
 #[test]
 fn assign_to_array_element_ok() {
     check_ok(
-        r#"program T; begin mutable var A: array of (integer) := [1, 2, 3]; A[0] := 99; end program;"#,
+        r#"program T; begin  var A: array of (integer) := [1, 2, 3]; A[0] := 99; end program;"#,
     );
 }

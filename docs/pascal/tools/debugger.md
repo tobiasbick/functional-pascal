@@ -96,7 +96,7 @@ Evaluation is available only at a stable stop. It accepts FPAS literals,
 visible names, parentheses, unary `-` and `not`, arithmetic, Boolean,
 shift, comparison and `in` operators, stored record/enum fields, and read-only
 array, dictionary, or string indexes. It also accepts controlled calls,
-readable properties, instance and static record methods, array/dictionary/record/Result/Option construction, fully qualified enum
+array/dictionary/record/Result/Option construction, fully qualified enum
 constructors, record updates, and `try`. Names are ASCII
 case-insensitive; the innermost parameter/local/capture wins, then globals.
 Visible first-class function values and closures may be called when their
@@ -134,7 +134,11 @@ ASCII case-insensitive. Omitting a frame deliberately searches globals only;
 a local, parameter, or capture requires a current frame and is resolved with
 normal lexical shadowing.
 
-Both forms accept mutable source locals, mutable parameters, mutable globals,
+Writes through a var parameter use its selected caller storage. Reads and writes
+through another alias to an exclusively borrowed root are unavailable. Debugger
+inspection shows `<unavailable>` for that alias until the call releases it.
+
+Both forms accept mutable source locals, var parameters, mutable globals,
 and mutable captures backed by an existing closure cell. A visible
 source-declared mutable local or global that has not yet received a value can
 be assigned one complete replacement through the same operations. Complete mutable enum,
@@ -166,13 +170,6 @@ routine such as `Current := AddTwo`, `Current := Math.Transform`, or a named
 nested routine whose captures are the recorded immutable values and existing
 mutable cells in the exact selected live lexical-owner frame, for example
 `Current := AddBase`, `Current := MakeAdder.AddBase`, or `Current := AddCell`.
-An instance method can be bound to one evaluated record receiver snapshot, for
-example `Current := Receiver.Add`. The record layout supplies the exact method
-mapping retained by the compiler; the debugger does not infer a method from a
-rendered type or function name. The method's receiver parameter and remaining
-portable signature must match the exact runtime record layout and destination
-function type. Receiver graphs containing cells, task handles, opaque handles,
-or task-bound functions are rejected before mutation.
 Copying a binding shares the exact existing function and capture storage and
 does not reconstruct its environment. An already materialized task-bound
 function can be copied only within its selected owner task, onto a mutable
@@ -189,15 +186,14 @@ local or parameter register in that same frame; globals, capture-cell roots,
 aggregate descendants, and Dynamic endpoints remain rejected for those values.
 A simple name uses ordinary lexical lookup first;
 the executable catalog is consulted only after that lookup reports an unknown
-name. For `Receiver.Method`, the receiver expression is evaluated once first;
-an identifier-only chain falls back to the executable catalog only when its
-receiver name is unknown. Matching is
+name. Qualified callable paths first resolve a visible value and its stored fields;
+only an unknown root falls back to the executable catalog. Matching is
 ASCII-case-insensitive, an unqualified short name is accepted only when exactly
 one executable routine has that final component, and the stored value uses
 canonical spelling. Nested routines are stored under their enclosing-routine
 path, so `AddBase` and `MakeAdder.AddBase` identify the same unique nested
 function. The routine signature is proven from portable parameter and
-result metadata; anonymous closure syntax, non-method computed function
+result metadata; anonymous closure syntax, computed function
 expressions, Dynamic endpoints, foreign-task or escaping task-bound copies,
 and inactive-variant function payloads remain rejected. An entered anonymous
 closure would add an executable-local function identity while its value could
@@ -233,7 +229,7 @@ old key and missing, different new key; it preserves the value and iteration
 position. Each operation addresses a complete dictionary container through the
 same bounded textual target form, validates key and value expressions against
 portable `dict of (K, V)` metadata, and commits one mutable root atomically.
-The operations support locals, mutable parameters, globals, closure captures,
+The operations support locals, var parameters, globals, closure captures,
 nested aggregate paths, and stopped task frames. Success expires all inspection
 references; every failure preserves both live state and existing references.
 
@@ -247,7 +243,7 @@ JSONL, matching DAP custom requests, and three Functional Pascal VS Code
 commands. An unchanged character is rejected without writing.
 
 Immutable bindings, compiler-hidden storage,
-evaluation-only results, synthetic function children such as `receiver` and
+evaluation-only results, synthetic function children such as
 `capture[i]`, function captures,
 and opaque hosted values are not
 writable. Function values are writable by copying an already
@@ -291,7 +287,7 @@ and clients must request variables again. Existing `setVariable` and
 clients use the explicit dictionary operations instead. Standard `setVariable`
 and `setExpression` still cannot resize arrays or address string characters;
 clients use the explicit sequence operations instead. Mutation cannot invoke a
-property setter or otherwise change control flow. Executables without exact
+call or otherwise change control flow. Executables without exact
 initializer metadata retain the conservative behavior: the mutation succeeds,
 but a later ordinary source store can overwrite it. Parameters and captures do
 not have suppressible declaration stores and remain unavailable while
@@ -375,7 +371,7 @@ Temporary registers are reused, so a same-function sequence-point destination
 cannot be shown to preserve initialization, operand types, or lexical state.
 Use stepping, a source breakpoint, or frame restart instead.
 
-Every call runs in a separate detached sandbox. Arguments, receivers, globals,
+Every call runs in a separate detached sandbox. Arguments, globals,
 aggregates, and closure cells are deep-cloned while preserving sharing and
 cycles inside the clone. Writes performed by an otherwise accepted function or
 procedure are discarded when evaluation ends. The debugger derives transitive

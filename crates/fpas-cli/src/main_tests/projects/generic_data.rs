@@ -26,17 +26,17 @@ fn generic_data_and_concrete_aliases_link_and_reuse_sidecars() {
     );
     write_text(
         &cwd.join("main.fpas"),
-        "program Main; uses Demo.Data as Data; uses Demo.Facade as Facade;
+        r#"program Main; uses Demo.Data as Data; uses Demo.Facade as Facade;
         uses Std.Console as Console;
-        var Number: Facade.IntegerBox := Facade.IntegerBox(Value := 42);
-        var Text: Facade.TextBox := Data.Make('value');
-        var Choice: Facade.IntegerChoice := Facade.IntegerChoice.Present(42);
-        var MissingChoice: Facade.IntegerChoice := Facade.IntegerChoice.Missing;
+        const Number: Facade.IntegerBox := Facade.IntegerBox(Value := 42);
+        const Text: Facade.TextBox := Data.Make('value');
+        const Choice: Facade.IntegerChoice := Facade.IntegerChoice.Present(42);
+        const MissingChoice: Facade.IntegerChoice := Facade.IntegerChoice.Missing;
         begin
             Console.WriteLn(Data.Get(Number)); Console.WriteLn(Number.Count);
             Console.WriteLn(Data.Get(Text)); Console.WriteLn(Text.Count);
             Console.WriteLn(Choice = Data.Wrap(42)); Console.WriteLn(MissingChoice <> Choice);
-        end program;",
+        end program;"#,
     );
     for _ in 0..2 {
         let (exit, stdout, stderr) = support::run_cli_and_capture_output(&project, &cwd);
@@ -57,17 +57,20 @@ fn nested_decisions_link_imported_generic_payloads_static_constants_and_reused_s
         &cwd.join("model.fpas"),
         "unit Demo.Model;\n        public type Choice of (T) = enum Present(Value: T); Missing; end enum;\n        public const Enabled: boolean := not false;\n        public function Make(): Choice of (Option of (integer)); begin return Choice.Present(Option.Some(42)); end function;\n        end unit;",
     );
-    write_text(&cwd.join("main.fpas"), "program Main; uses Demo.Model as Model; uses Std.Console as Console;
+    write_text(
+        &cwd.join("main.fpas"),
+        r#"program Main; uses Demo.Model as Model; uses Std.Console as Console;
         begin
-          var Value: integer := case Model.Make() of
+          const Value: integer := case Model.Make() of
             when Model.Choice.Present(Option.Some(const Number)): if Number > 0 then Number else 0 end if;
             when Model.Choice.Present(Option.None): 0;
             when Model.Choice.Missing: 0;
           end case;
-          var Flag: Model.Choice of (boolean) := Model.Choice.Present(true);
+          const Flag: Model.Choice of (boolean) := Model.Choice.Present(true);
           Console.WriteLn(Value);
           Console.WriteLn(case Flag of when Model.Choice.Present(Model.Enabled): 42; when Model.Choice.Present(false): 0; when Model.Choice.Missing: 0; end case);
-        end program;");
+        end program;"#,
+    );
     for _ in 0..2 {
         let (exit, stdout, stderr) = support::run_cli_and_capture_output(&project, &cwd);
         assert_eq!(
@@ -77,7 +80,14 @@ fn nested_decisions_link_imported_generic_payloads_static_constants_and_reused_s
     }
     write_text(
         &cwd.join("main.fpas"),
-        "program Main;\nuses Demo.Model as Model;\nbegin\nvar Value: integer := case Model.Make() of\nwhen Model.Choice.Present(Option.Some(const Number)): Number;\nwhen Model.Choice.Missing: 0;\nend case;\nend program;",
+        r#"program Main;
+uses Demo.Model as Model;
+begin
+const Value: integer := case Model.Make() of
+when Model.Choice.Present(Option.Some(const Number)): Number;
+when Model.Choice.Missing: 0;
+end case;
+end program;"#,
     );
     let args = ["check", "--diagnostics", "json", &project.to_string_lossy()].map(str::to_owned);
     let (exit, stdout, stderr) = support::run_cli_args_and_capture_output(&args, &cwd);

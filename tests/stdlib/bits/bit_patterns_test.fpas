@@ -4,7 +4,7 @@ uses Std.Bits as Bits;
 uses Std.Test as Test;
 
 begin
-  var Min: integer := -9223372036854775807 - 1;
+  const Min: integer := -9223372036854775807 - 1;
   Test.AssertEquals(8, Bits.BitAnd(12, 10));
   Test.AssertEquals(14, Bits.BitOr(12, 10));
   Test.AssertEquals(6, Bits.BitXor(12, 10));

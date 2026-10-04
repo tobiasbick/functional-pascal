@@ -16,9 +16,9 @@ end function;
 // Replaces one note while preserving the remaining model state.
 public function NotesWithNote(State: Model.NotesModel; Index: integer; NoteValue: Model.Note): Model.NotesModel;
 begin
-  mutable var Notes: array of (Model.Note) := State.Notes;
+  var Notes: array of (Model.Note) := State.Notes;
   Notes[Index] := NoteValue;
-  mutable var Next: Model.NotesModel := State;
+  var Next: Model.NotesModel := State;
   Next.Notes := Notes;
   return Next;
 end function;
@@ -47,7 +47,7 @@ end function;
 // Applies a single-line proposal, preserving clean state for caret-only changes.
 public function NotesEditText(State: Model.NotesModel; Action: integer; Text: string; Caret: integer): Model.NotesModel;
 begin
-  mutable var Next: Model.NotesModel := State;
+  var Next: Model.NotesModel := State;
   if Action = Actions.SearchChangedAction then
     begin
       Next.Search := Text;
@@ -60,7 +60,7 @@ begin
 
   if (Action = Actions.TitleChangedAction) and NotesHasSelection(Next) then
     begin
-      mutable var NoteValue: Model.Note := Next.Notes[Next.Selected];
+      var NoteValue: Model.Note := Next.Notes[Next.Selected];
       Next.TitleCaret := Caret;
       if NoteValue.Title = Text then
         begin
@@ -80,8 +80,8 @@ begin
     begin
       Next.TagsText := Text;
       Next.TagsCaret := Caret;
-      mutable var NoteValue: Model.Note := Next.Notes[Next.Selected];
-      var Tags: array of (string) := Model.NoteTagsFromText(Text);
+      var NoteValue: Model.Note := Next.Notes[Next.Selected];
+      const Tags: array of (string) := Model.NoteTagsFromText(Text);
       if SameTags(NoteValue.Tags, Tags) then
         begin
           return Next;
@@ -108,10 +108,10 @@ public function NotesEditBody(
   Offset: Tui.TuiPoint
 ): Model.NotesModel;
 begin
-  mutable var Next: Model.NotesModel := State;
+  var Next: Model.NotesModel := State;
   if (Action = Actions.BodyChangedAction) and NotesHasSelection(Next) then
     begin
-      mutable var NoteValue: Model.Note := Next.Notes[Next.Selected];
+      var NoteValue: Model.Note := Next.Notes[Next.Selected];
       Next.BodyCaret := Caret;
       Next.BodyOffset := Offset;
       if NoteValue.Body = Text then

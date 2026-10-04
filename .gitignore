@@ -46,6 +46,7 @@ __pycache__/
 .temp-data/
 _temp.fpas
 _temp.pas
+.vscode-test/
 
 # Local data directory used by the Notes example application
 /notes/

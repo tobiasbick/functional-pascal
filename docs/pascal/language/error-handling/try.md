@@ -9,7 +9,7 @@ uses Std.Conv as Conv;
 
 function Process(A: integer; B: integer): result of (string, string);
 begin
-  var Quotient: integer := try Divide(A, B);
+  const Quotient: integer := try Divide(A, B);
   return Result.Ok(Conv.IntToStr(Quotient));
 end function;
 ```
@@ -19,7 +19,7 @@ end function;
 ```pascal
 function FirstPositive(Items: array of (integer)): option of (integer);
 begin
-  var Idx: integer := try FindIndex(Items, 1);
+  const Idx: integer := try FindIndex(Items, 1);
   return Option.Some(Items[Idx]);
 end function;
 

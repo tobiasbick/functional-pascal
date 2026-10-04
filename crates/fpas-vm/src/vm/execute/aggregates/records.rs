@@ -30,6 +30,7 @@ impl Worker {
     /// Updates a validated field, reusing uniquely owned record storage.
     pub fn store_field(&mut self, o: AbcOperands) -> Result<(), VmError> {
         let value = self.read(register(o.c)?)?.clone();
+        self.require_value_data(&value)?;
         let destination = register(o.a)?;
         let field = usize::from(o.b);
         match self.read(destination)? {
@@ -64,6 +65,7 @@ impl Worker {
             return Err(self.bad_slot("register window", u32::from(o.b)));
         };
         for pair in overrides.chunks_exact(2) {
+            self.require_value_data(&pair[1])?;
             let Value::Integer(field) = &pair[0] else {
                 return Err(self.type_mismatch("integer record field slot", &pair[0]));
             };

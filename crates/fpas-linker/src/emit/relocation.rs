@@ -178,6 +178,7 @@ fn replace_abc(
         | Opcode::TailCall
         | Opcode::MakeClosure
         | Opcode::MakeRecord
+        | Opcode::SelectReferenceField
         | Opcode::MakeEnum => (operands.a, mapped, operands.c),
         Opcode::StoreGlobalIndexPath => (operands.a, mapped, operands.c),
         Opcode::LoadField | Opcode::TestVariant | Opcode::LoadEnumField => {

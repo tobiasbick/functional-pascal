@@ -4,7 +4,7 @@
 //! `docs/pascal/language/error-handling/README.md`, and
 //! `docs/pascal/language/types/channels.md` (from the repository root).
 
-mod bound_method;
+mod callable_instantiation;
 mod calls;
 mod closure;
 mod construction;
@@ -12,13 +12,14 @@ mod decisions;
 mod designator;
 mod dictionaries;
 mod equality;
-mod event_access;
 mod expected;
+mod field_access;
 mod literals;
 mod obsolete_records;
 mod operators;
 mod postfix;
 mod record_fields;
+mod static_operations;
 mod task_bound;
 mod try_values;
 
@@ -26,11 +27,9 @@ use super::Checker;
 use crate::types::Ty;
 use fpas_parser::*;
 
-pub(in crate::check) use calls::MethodCallSite;
-
 impl Checker {
     pub(crate) fn check_expr(&mut self, expr: &Expr) -> Ty {
-        if let Some(ty) = self.prechecked_receivers.get(&Self::expr_lookup_key(expr)) {
+        if let Some(ty) = self.prechecked_arguments.get(&Self::expr_lookup_key(expr)) {
             return ty.clone();
         }
         if let Some(ty) = self.try_check_enum_construction(expr, None) {
@@ -47,6 +46,7 @@ impl Checker {
             Expr::Str(_, _) => Ty::String,
             Expr::Bool(_, _) => Ty::Boolean,
             Expr::Designator(designator) => self.check_designator_value_expr(designator),
+            Expr::VarArgument(_, span) => self.reject_var_argument_value(*span),
             Expr::Call {
                 designator,
                 args,
@@ -76,17 +76,11 @@ impl Checker {
                 Ty::Option(Box::new(inner_ty))
             }
             Expr::OptionNone(_) => Ty::Option(Box::new(Ty::Error)),
-            Expr::Nil(span) => {
-                self.error_with_code(
-                    fpas_diagnostics::codes::SEMA_TYPE_MISMATCH,
-                    "`nil` is only valid when clearing an event",
-                    "Write `Event := nil` to clear a handler, or use `Option.None` for an `Option`.",
-                    *span,
-                );
-                Ty::Error
-            }
             Expr::Try(inner, span) => self.check_try_expr(inner, *span),
-            Expr::Go(inner, span) => self.check_go_expr(inner, *span),
+            Expr::Go(inner, span) => {
+                self.reject_impure_operation("spawn a task", *span);
+                self.check_go_expr(inner, *span)
+            }
             Expr::RecordUpdate { base, fields, span } => {
                 self.check_record_update(base, fields, *span)
             }
@@ -96,6 +90,7 @@ impl Checker {
             Expr::Closure(closure) => self.check_closure_expr(
                 expr,
                 closure.is_function,
+                closure.pure,
                 &closure.params,
                 closure.return_type.as_ref(),
                 &closure.body,
@@ -111,6 +106,27 @@ impl Checker {
 
     /// Check a spawned call using the same target rules in both go positions.
     pub(in crate::check) fn check_go_expr(&mut self, inner: &Expr, span: fpas_lexer::Span) -> Ty {
+        let args = match inner {
+            Expr::Call { args, .. } => Some(args.as_slice()),
+            Expr::Postfix { operations, .. } => {
+                operations.last().and_then(|operation| match operation {
+                    PostfixOperation::Call { args, .. } => Some(args.as_slice()),
+                    _ => None,
+                })
+            }
+            _ => None,
+        };
+        if args.is_some_and(|args| {
+            args.iter()
+                .any(|arg| matches!(arg, Expr::VarArgument(_, _)))
+        }) {
+            self.error_with_code(
+                fpas_diagnostics::codes::SEMA_TYPE_MISMATCH,
+                "A var argument cannot cross a task boundary",
+                "Invoke var routines synchronously; pass value snapshots to tasks.",
+                span,
+            );
+        }
         let inner_ty = match inner {
             Expr::Call {
                 designator,
@@ -130,7 +146,7 @@ impl Checker {
                         }
                         self.check_known_go_call_symbol(&name, kind, ty, args, *call_span)
                     }
-                    CallResolution::MethodResult(ty) => ty,
+                    CallResolution::ValueResult(ty) => ty,
                     CallResolution::Failed => Ty::Error,
                 }
             }
@@ -151,7 +167,6 @@ impl Checker {
 
         let inner_key = Self::expr_lookup_key(inner);
         self.expr_types.insert(inner_key, inner_ty.clone());
-        self.reject_spawned_event_raise(inner_key, span);
         if self.callable_expr_is_task_bound(inner) {
             self.error_with_code(
                 fpas_diagnostics::codes::SEMA_TASK_BOUND_CALLABLE,
@@ -165,25 +180,11 @@ impl Checker {
 
     pub(crate) fn callable_expr_is_task_bound(&self, expr: &Expr) -> bool {
         match expr {
-            Expr::Call { designator, .. } => {
-                self.fluent_calls
-                    .get(&Self::expr_lookup_key(expr))
-                    .and_then(|target| self.scopes.lookup(&target.name))
-                    .is_some_and(|symbol| symbol.task_bound)
-                    || self.designator_refers_to_task_bound(designator)
-            }
+            Expr::Call { designator, .. } => self.designator_refers_to_task_bound(designator),
             Expr::Postfix { operations, .. } => {
                 operations.last().is_some_and(|operation| {
                     self.expr_is_task_bound(Self::postfix_operation_lookup_key(operation))
-                }) || operations
-                    .last()
-                    .and_then(|operation| {
-                        self.fluent_calls
-                            .get(&Self::postfix_operation_lookup_key(operation))
-                    })
-                    .and_then(|target| self.scopes.lookup(&target.name))
-                    .is_some_and(|symbol| symbol.task_bound)
-                    || self.expr_is_task_bound(Self::expr_lookup_key(expr))
+                }) || self.expr_is_task_bound(Self::expr_lookup_key(expr))
             }
             other => self.expr_is_task_bound(Self::expr_lookup_key(other)),
         }
@@ -262,35 +263,6 @@ impl Checker {
                     &format!("field update `{}`", field_init.name),
                     span,
                 );
-            } else if record_ty
-                .properties
-                .iter()
-                .any(|(name, _)| name.eq_ignore_ascii_case(&field_init.name))
-            {
-                self.error_with_code(
-                    fpas_diagnostics::codes::SEMA_UNKNOWN_NAME,
-                    format!(
-                        "Record type `{}` property `{}` cannot be set in a `with` update",
-                        record_ty.name, field_init.name
-                    ),
-                    "Properties are not record fields. Assign to the property with `Value.Prop := …` instead.",
-                    span,
-                );
-                let _ = self.check_expr(&field_init.value);
-            } else if self
-                .find_record_event_on_type(&record_ty, &field_init.name)
-                .is_some()
-            {
-                self.error_with_code(
-                    fpas_diagnostics::codes::SEMA_UNKNOWN_NAME,
-                    format!(
-                        "Record type `{}` event `{}` cannot be set in a `with` update",
-                        record_ty.name, field_init.name
-                    ),
-                    "Events are not record fields. Assign with `Value.Event := Handler` or `:= nil`.",
-                    span,
-                );
-                let _ = self.check_expr(&field_init.value);
             } else {
                 let known: Vec<&str> = record_ty.fields.iter().map(|(n, _)| n.as_str()).collect();
                 self.error_with_code(

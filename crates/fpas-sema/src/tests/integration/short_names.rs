@@ -17,7 +17,7 @@ fn short_name_console_keypressed() {
         r#"program T;
 uses Std.Console as Console;
 begin
-  var P: boolean := Console.KeyPressed();
+  const P: boolean := Console.KeyPressed();
 end program;"#,
     );
 }
@@ -33,8 +33,8 @@ begin
   Console.TextColor(Console.Yellow);
   Console.TextBackground(Console.Blue);
   Console.ClrScr();
-  var X: integer := Console.WhereX();
-  var Y: integer := Console.WhereY();
+  const X: integer := Console.WhereX();
+  const Y: integer := Console.WhereY();
 end program;"#,
     );
 }
@@ -45,7 +45,7 @@ fn short_name_math_sqrt() {
         r#"program T;
 uses Std.Math as Math;
 begin
-  var R: real := Math.Sqrt(4.0);
+  const R: real := Math.Sqrt(4.0);
 end program;"#,
     );
 }
@@ -56,7 +56,7 @@ fn short_name_math_pi_const() {
         r#"program T;
 uses Std.Math as Math;
 begin
-  var R: real := Math.Pi;
+  const R: real := Math.Pi;
 end program;"#,
     );
 }
@@ -67,7 +67,7 @@ fn short_name_conv_int_to_str() {
         r#"program T;
 uses Std.Conv as Conv;
 begin
-  var S: string := Conv.IntToStr(42);
+  const S: string := Conv.IntToStr(42);
 end program;"#,
     );
 }
@@ -78,7 +78,7 @@ fn short_name_console_key_event_type() {
         r#"program T;
 uses Std.Console as Console;
 begin
-  var E: Console.KeyEvent := Console.ReadKeyEvent();
+  const E: Console.KeyEvent := Console.ReadKeyEvent();
   Console.WriteLn(E.kind = Console.KeyKind.Space);
   Console.WriteLn(E.shift);
 end program;"#,
@@ -99,7 +99,12 @@ end program;"#,
 #[test]
 fn unknown_call_hint_suggests_explicit_aliases() {
     let errs = check_errors(
-        "program T;\nuses Std.Options as Options; uses Std.Results as Results;\nbegin\n  var O: option of (integer) := Option.Some(3);\n  var X: integer := Unwrap(O);\nend program;",
+        r#"program T;
+uses Std.Options as Options; uses Std.Results as Results;
+begin
+  const O: option of (integer) := Option.Some(3);
+  const X: integer := Unwrap(O);
+end program;"#,
     );
     assert_eq!(errs.len(), 1, "{errs:#?}");
     let hint = errs[0].help.as_deref().unwrap_or("");
@@ -112,9 +117,9 @@ fn unknown_call_hint_suggests_explicit_aliases() {
         r#"program T;
 uses Std.Options as Options; uses Std.Results as Results;
 begin
-  var O: option of (integer) := Option.Some(3);
-  var R: result of (integer, string) := Result.Ok(4);
-  var X: integer := Options.Unwrap(O) + Results.Unwrap(R);
+  const O: option of (integer) := Option.Some(3);
+  const R: result of (integer, string) := Result.Ok(4);
+  const X: integer := Options.Unwrap(O) + Results.Unwrap(R);
 end program;"#,
     );
 }
@@ -122,7 +127,11 @@ end program;"#,
 #[test]
 fn unqualified_length_error() {
     let errs = check_errors(
-        "program T;\nuses Std.Str as Str; uses Std.Arrays as Arrays;\nbegin\n  var L: integer := Length('hi');\nend program;",
+        r#"program T;
+uses Std.Str as Str; uses Std.Arrays as Arrays;
+begin
+  const L: integer := Length('hi');
+end program;"#,
     );
     assert!(
         errs.iter().any(|e| e.message.contains("Unknown")),
@@ -137,7 +146,11 @@ fn unqualified_length_error() {
 
 #[test]
 fn unqualified_length_hint_has_stable_alias_order() {
-    let source = "program T;\nuses Std.Str as Str; uses Std.Arrays as Arrays;\nbegin\n  var L: integer := Length('hi');\nend program;";
+    let source = r#"program T;
+uses Std.Str as Str; uses Std.Arrays as Arrays;
+begin
+  const L: integer := Length('hi');
+end program;"#;
     let expected = "Imports open no short names. Use `Arrays.Length` or `Str.Length`.";
 
     for _ in 0..64 {
@@ -153,7 +166,11 @@ fn unqualified_length_hint_has_stable_alias_order() {
 #[test]
 fn unqualified_contains_error() {
     let errs = check_errors(
-        "program T;\nuses Std.Str as Str; uses Std.Arrays as Arrays;\nbegin\n  var B: boolean := Contains('hello', 'h');\nend program;",
+        r#"program T;
+uses Std.Str as Str; uses Std.Arrays as Arrays;
+begin
+  const B: boolean := Contains('hello', 'h');
+end program;"#,
     );
     assert!(
         errs.iter().any(|e| e.message.contains("Unknown")),
@@ -167,8 +184,8 @@ fn ambiguous_fallback_to_qualified() {
         r#"program T;
 uses Std.Str as Str; uses Std.Arrays as Arrays;
 begin
-  var L: integer := Str.Length('hi');
-  var L2: integer := Arrays.Length([1, 2]);
+  const L: integer := Str.Length('hi');
+  const L2: integer := Arrays.Length([1, 2]);
 end program;"#,
     );
 }
@@ -179,7 +196,7 @@ fn no_ambiguity_single_unit() {
         r#"program T;
 uses Std.Str as Str;
 begin
-  var L: integer := Str.Length('hello');
+  const L: integer := Str.Length('hello');
 end program;"#,
     );
 }
@@ -192,9 +209,9 @@ fn qualified_std_name_without_uses_is_rejected() {
         r#"program T;
 uses Std.Str as Str;
 begin
-  var A: array of (integer) := [1];
-  var L1: integer := Std.Arrays.Length(A);
-  var L2: integer := Str.Length('hi');
+  const A: array of (integer) := [1];
+  const L1: integer := Std.Arrays.Length(A);
+  const L2: integer := Str.Length('hi');
 end program;"#,
     );
     assert_eq!(errs.len(), 1, "{errs:#?}");
@@ -212,9 +229,9 @@ fn qualified_names_disambiguate_imported_std_units() {
         r#"program T;
 uses Std.Str as Str; uses Std.Arrays as Arrays;
 begin
-  var A: array of (integer) := [1];
-  var L1: integer := Arrays.Length(A);
-  var L2: integer := Str.Length('hi');
+  const A: array of (integer) := [1];
+  const L1: integer := Arrays.Length(A);
+  const L2: integer := Str.Length('hi');
 end program;"#,
     );
 }

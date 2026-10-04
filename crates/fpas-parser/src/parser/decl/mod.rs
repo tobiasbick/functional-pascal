@@ -1,4 +1,5 @@
 mod data;
+mod names;
 mod routines;
 mod type_expr;
 mod type_params;
@@ -14,22 +15,25 @@ impl Parser {
         loop {
             let visibility = self.parse_visibility(allow_visibility);
             match self.current_token() {
-                Token::Const => decls.extend(self.parse_const_block(visibility)),
-                Token::Var => decls.extend(self.parse_var_block(false, visibility)),
-                Token::Mutable if self.is_mutable_var_start() => {
-                    decls.extend(self.parse_var_block(true, visibility));
+                Token::Const => decls.extend(self.parse_binding_declaration(false, visibility)),
+                Token::Var => decls.extend(self.parse_binding_declaration(true, visibility)),
+                Token::Ident(_) if self.is_mutable_var_start() => {
+                    self.reject_mutable_binding_keyword();
+                    decls.extend(self.parse_binding_declaration(true, visibility));
                 }
-                Token::Mutable => break,
                 Token::Type => {
                     decls.extend(self.parse_type_block(visibility, allow_visibility));
                 }
-                Token::Function => {
+                Token::Pure | Token::Function => {
                     decls.push(Decl::Function(self.parse_function_decl(visibility)));
                 }
                 Token::Procedure => {
                     decls.push(Decl::Procedure(self.parse_procedure_decl(visibility)));
                 }
-                Token::Static => {
+                Token::Ident(name)
+                    if name.eq_ignore_ascii_case("static")
+                        && matches!(self.peek_token(), Token::Function | Token::Procedure) =>
+                {
                     if let Some(decl) = self.recover_invalid_static_decl() {
                         decls.push(decl);
                     }
@@ -52,13 +56,13 @@ impl Parser {
         decls
     }
 
-    /// `static` is only valid on a function or procedure inside a record type body.
+    /// Diagnose an obsolete routine modifier and recover the ordinary declaration.
     fn recover_invalid_static_decl(&mut self) -> Option<Decl> {
         let span = self.current_span();
         self.error_with_code(
             PARSE_INVALID_STATIC_PLACEMENT,
-            "`static` is only valid on a function or procedure declared inside a record",
-            "Move the routine into a `record … end` body and write `static function Name(...): T;` or `static procedure Name(...);`.",
+            "Obsolete `static` routine modifier",
+            "Remove `static` and declare the function or procedure at unit scope.",
             span,
         );
         self.advance(); // consume `static`

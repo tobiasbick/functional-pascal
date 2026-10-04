@@ -5,7 +5,7 @@ uses Std.Results as Results;
 uses Std.Test as Test;
 
 begin
-  var Path: string := Test.ScratchDir() + '/delete-file.txt';
+  const Path: string := Test.ScratchDir() + '/delete-file.txt';
   Test.AssertTrue(Results.Unwrap(Fs.WriteTextAtomic(Path, 'obsolete')));
   Test.AssertTrue(Results.Unwrap(Fs.DeleteFile(Path)));
   Test.AssertFalse(Fs.Exists(Path));

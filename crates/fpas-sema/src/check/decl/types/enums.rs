@@ -66,7 +66,7 @@ impl Checker {
 
         let ty = Ty::Enum(Arc::new(EnumTy {
             name: td.name.clone(),
-            type_params: Self::resolve_type_params(&td.type_params),
+            type_params: self.resolve_type_params(&td.type_params),
             type_args: Vec::new(),
             variants: variants.clone(),
         }));

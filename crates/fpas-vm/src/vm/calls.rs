@@ -1,6 +1,7 @@
 //! Numeric calls and frame transitions.
 
 mod closures;
+pub(in crate::vm) mod references;
 mod tail_call;
 
 use std::sync::{Arc, Mutex};
@@ -26,7 +27,7 @@ struct PreparedCall {
 impl Worker {
     pub(super) fn call_direct(&mut self, operands: AbcOperands) -> Result<(), VmError> {
         let target = FunctionId::new(operands.b);
-        self.enter_call(target, operands.a, operands.c, operands.auxiliary, &[], &[])
+        self.enter_call(target, operands.a, operands.c, operands.auxiliary, &[])
     }
 
     pub(super) fn call_value(&mut self, operands: AbcOperands) -> Result<(), VmError> {
@@ -36,13 +37,11 @@ impl Worker {
         };
         self.require_function_task_owner(&function)?;
         let target = function.function;
-        let receiver = function.bound_receiver.as_ref().map(std::slice::from_ref);
         self.enter_call(
             target,
             operands.a,
             operands.c,
             operands.auxiliary,
-            receiver.unwrap_or_default(),
             &function.captures,
         )
     }
@@ -67,6 +66,8 @@ impl Worker {
     }
 
     pub(super) fn return_from_call(&mut self, value: Value) -> Result<DispatchStep, VmError> {
+        self.require_value_data(&value)?;
+        self.reference_scopes.leave();
         let callback_return = self.callback_accepts_return();
         let Some(frame) = self.call_stack.pop() else {
             return Ok(DispatchStep::Return(value));
@@ -90,7 +91,6 @@ impl Worker {
         destination: u16,
         argument_base: u16,
         argument_count: u8,
-        prefix_arguments: &[Value],
         captures: &[Value],
     ) -> Result<(), VmError> {
         let argument_start = self
@@ -113,15 +113,18 @@ impl Worker {
                     "Call argument window left the active frame",
                 )
             })?;
-        let actual_argument_count =
-            usize::from(argument_count).saturating_add(prefix_arguments.len());
+        let actual_argument_count = usize::from(argument_count);
         let prepared =
             self.prepare_call(target, destination, actual_argument_count, captures.len())?;
+        let references = self.activate_reference_arguments(
+            target,
+            &self.registers[argument_start..argument_end],
+            captures,
+        )?;
+        self.reference_scopes.enter(references);
         // Arguments that end the caller's frame already sit where the callee's parameters go:
         // the callee frame starts on them instead of copying (overlapping register windows).
-        let overlapping = prefix_arguments.is_empty()
-            && argument_count > 0
-            && argument_end == self.active_register_count();
+        let overlapping = argument_count > 0 && argument_end == self.active_register_count();
         let callee_base = if overlapping {
             argument_start
         } else {
@@ -129,14 +132,8 @@ impl Worker {
         };
         self.activate_call(&prepared, callee_base)?;
         if !overlapping {
-            for (index, value) in prefix_arguments.iter().enumerate() {
-                self.store_register(self.base + index, value.clone())?;
-            }
             for (index, source) in (argument_start..argument_end).enumerate() {
-                self.store_register(
-                    self.base + prefix_arguments.len() + index,
-                    self.registers[source].clone(),
-                )?;
+                self.store_register(self.base + index, self.registers[source].clone())?;
             }
         }
         for (index, value) in captures.iter().enumerate() {
@@ -153,23 +150,19 @@ impl Worker {
         function: &SharedFunction,
         arguments: &[Value],
     ) -> Result<(), VmError> {
-        let argument_count = arguments
-            .len()
-            .saturating_add(usize::from(function.bound_receiver.is_some()));
+        let argument_count = arguments.len();
         let prepared = self.prepare_call(
             function.function,
             fpas_bytecode::NO_REGISTER,
             argument_count,
             function.captures.len(),
         )?;
+        let references =
+            self.activate_reference_arguments(function.function, arguments, &function.captures)?;
+        self.reference_scopes.enter(references);
         self.activate_call(&prepared, self.active_register_count())?;
-        let mut next = 0;
-        if let Some(receiver) = &function.bound_receiver {
-            self.store_register(self.base, receiver.clone())?;
-            next = 1;
-        }
         for (index, value) in arguments.iter().enumerate() {
-            self.store_register(self.base + next + index, value.clone())?;
+            self.store_register(self.base + index, value.clone())?;
         }
         for (index, value) in function.captures.iter().enumerate() {
             self.store_register(self.base + prepared.argument_count + index, value.clone())?;
@@ -296,17 +289,23 @@ impl Worker {
         })?;
         self.registers
             .get(start..end)
-            .map(<[Value]>::to_vec)
+            .map(|values| {
+                for value in values {
+                    self.require_value_data(value)?;
+                }
+                Ok(values.to_vec())
+            })
             .ok_or_else(|| {
                 diagnostics::internal(
                     self.executable.executable(),
                     self.current_address,
                     "Register window left the active frame",
                 )
-            })
+            })?
     }
 
-    fn operand_type_error(&self, expected: &str, actual: &Value) -> VmError {
+    /// Report an incorrect runtime operand kind with a concrete corrective hint.
+    pub(in crate::vm) fn operand_type_error(&self, expected: &str, actual: &Value) -> VmError {
         diagnostics::at_address(
             self.executable.executable(),
             self.current_address,

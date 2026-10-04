@@ -1,37 +1,38 @@
 # `Std.Tui` cells and styles
 
-`TuiColor` has distinct constructors for each representation. `FromCrt` accepts
-`0..15`; `FromAnsi256` and every `FromRgb` channel accept `0..255`.
+`TuiColor` has distinct constructors for each representation. `Cells.TuiColorFromCrt` accepts
+`0..15`; `Cells.TuiColorFromAnsi256` and every `Cells.TuiColorFromRgb` channel accept `0..255`.
 
 ```pascal
 uses Std.Tui as Tui;
+uses Std.Tui.Cells as Cells;
 
-var Foreground: Tui.TuiColor := Tui.TuiColor.FromCrt(14);
-var Background: Tui.TuiColor := Tui.TuiColor.FromRgb(10, 20, 30);
-var Style: Tui.TuiStyle := Tui.TuiStyle.FromColors(Foreground, Background);
-var Cell: Tui.TuiCell := Tui.TuiCell.Create('X', Tui.TuiStyleRole.Focused);
-var TruecolorCell: Tui.TuiCell := Tui.TuiCell.Styled('▓', Style);
+const Foreground: Tui.TuiColor := Cells.TuiColorFromCrt(14);
+const Background: Tui.TuiColor := Cells.TuiColorFromRgb(10, 20, 30);
+const Style: Tui.TuiStyle := Cells.TuiStyleFromColors(Foreground, Background);
+const Cell: Tui.TuiCell := Cells.TuiCellCreate('X', Tui.TuiStyleRole.Focused);
+const TruecolorCell: Tui.TuiCell := Cells.TuiCellStyled('▓', Style);
 ```
 
-`TuiStyle.Create` additionally accepts `Bold`, `Dim`, `Underline`, and
-`Inverse` flags. `TuiCell.Create` requires exactly one non-zero-width extended
+`Cells.TuiStyleCreate` additionally accepts `Bold`, `Dim`, `Underline`, and
+`Inverse` flags. `Cells.TuiCellCreate` requires exactly one non-zero-width extended
 grapheme cluster and stores its terminal column width (`1` or `2`).
-`Width()` returns that stored value.
+`Cells.TuiCellWidth(Cell)` returns that stored value.
 
-`TuiCell.Create` stores a semantic `TuiStyleRole`; palette lookup supplies
-concrete colors. `TuiCell.Styled` stores a concrete style that bypasses palette
+`Cells.TuiCellCreate` stores a semantic `TuiStyleRole`; palette lookup supplies
+concrete colors. `Cells.TuiCellStyled` stores a concrete style that bypasses palette
 lookup. This is useful inside `TuiCellGrid` for plots and images whose colors
 are data rather than theme roles. Continuation cells for wide glyphs remain
 private surface state and are not part of the public cell value.
 
-`TuiWorkingSurface.Resize(Size)` replaces the mutable grid with a blank grid of
+`Rendering.TuiWorkingSurfaceResize(Surface, Size)` replaces the mutable grid with a blank grid of
 the requested size while preserving the surface handle. Existing snapshots stay
 immutable, and resizing one surface does not affect other surfaces.
 
 ## `TuiPalette`
 
-`TuiPalette.Default()` provides the standard semantic colors. `ForRole` resolves
-one style and `WithRole` returns a copy with one replacement, leaving the
+`Cells.TuiPaletteDefault()` provides the standard semantic colors. `Cells.TuiPaletteForRole` resolves
+one style and `Cells.TuiPaletteWithRole` returns a copy with one replacement, leaving the
 original palette unchanged.
 
 The RGB default palette uses a dark terminal background, restrained borders,
@@ -46,40 +47,42 @@ their chrome remains distinct from the desktop.
 Buttons use `ButtonNormal`, `ButtonDefault`, `ButtonSelected`,
 `ButtonDisabled`, `ButtonShortcut`, `ButtonDefaultShortcut`,
 and `ButtonSelectedShortcut`. The corresponding styles are grouped in
-`TuiPalette.Buttons` as `TuiButtonPalette`. `TuiButtonPalette.WithRole` returns
-a copy with one button role replaced, while `ForRole` resolves one button role.
+`TuiPalette.Buttons` as `TuiButtonPalette`. `Cells.TuiButtonPaletteWithRole` returns
+a copy with one button role replaced, while `Cells.TuiButtonPaletteForRole` resolves one button role.
 
 `Rule`, `GaugeTrack`, and `GaugeFill` style the dashboard primitives.
 
 One-line inputs use `InputNormal`, `InputFocused`, `InputHint`, `InputCursor`,
 and `InputScroll`, grouped in `TuiPalette.Inputs` as `TuiInputPalette`. Themes
 should keep these roles on a common field background while changing foreground
-or inverse cursor colors. `TuiInputPalette.WithRole` returns a copy with one
-input role replaced, while `ForRole` resolves one input role.
+or inverse cursor colors. `Cells.TuiInputPaletteWithRole` returns a copy with one
+input role replaced, while `Cells.TuiInputPaletteForRole` resolves one input role.
 
 ```pascal
 uses Std.Tui as Tui;
+uses Std.Tui.Cells as Cells;
 
-var Palette: Tui.TuiPalette := Tui.TuiPalette.Default();
-var Warning: Tui.TuiStyle := Palette.ForRole(Tui.TuiStyleRole.Warning);
-var Custom: Tui.TuiStyle := Tui.TuiStyle.FromColors(Tui.TuiColor.FromRgb(255, 128, 0), Tui.TuiColor.FromCrt(0));
-var Updated: Tui.TuiPalette := Palette.WithRole(Tui.TuiStyleRole.Accent, Custom);
+const Palette: Tui.TuiPalette := Cells.TuiPaletteDefault();
+const Warning: Tui.TuiStyle := Cells.TuiPaletteForRole(Palette, Tui.TuiStyleRole.Warning);
+const Custom: Tui.TuiStyle := Cells.TuiStyleFromColors(Cells.TuiColorFromRgb(255, 128, 0), Cells.TuiColorFromCrt(0));
+const Updated: Tui.TuiPalette := Cells.TuiPaletteWithRole(Palette, Tui.TuiStyleRole.Accent, Custom);
 ```
 
 A palette is ordinary public FPAS data. Applications start from
-`TuiPalette.Default()` and replace the roles they need with `WithRole`. This is
+`Cells.TuiPaletteDefault()` and replace the roles they need with `Cells.TuiPaletteWithRole`. This is
 the theme extension boundary; no theme registry or fixed set of color names is
 required.
 
-Use `OpenForTestWithPalette` or `RunWithPalette` to select the initial palette.
+Use `Runtime.TuiApplicationOpenForTestWithPalette` or `Runtime.TuiApplicationRunWithPalette` to select the initial palette.
 An Update function can switch it immediately:
 
 ```pascal
-Cmd.SetPalette(MyPalette);
+uses Std.Tui.Runtime as Runtime;
+Runtime.TuiCmdOutputSetPalette(Cmd, MyPalette);
 ```
 
 The next interactive frame is fully recolored even when its glyphs and
-semantic roles did not change. `App.Palette()` exposes the active palette for
+semantic roles did not change. `Runtime.TuiApplicationPalette(App)` exposes the active palette for
 headless assertions.
 
 ## See also

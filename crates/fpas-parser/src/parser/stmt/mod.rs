@@ -93,9 +93,12 @@ impl Parser {
         match self.current_token() {
             Token::Null => Stmt::Null(self.advance().span),
             Token::Begin => self.parse_block(),
-            Token::Var => self.parse_var_stmt(false),
-            Token::Mutable if self.is_mutable_var_start() => self.parse_var_stmt(true),
-            Token::Mutable => self.parse_invalid_statement_start(),
+            Token::Const => self.parse_var_stmt(false),
+            Token::Var => self.parse_var_stmt(true),
+            Token::Ident(_) if self.is_mutable_var_start() => {
+                self.reject_mutable_binding_keyword();
+                self.parse_var_stmt(true)
+            }
             Token::Return => self.parse_return_stmt(),
             Token::Discard => self.parse_discard_stmt(),
             Token::Panic => self.parse_panic_stmt(),
@@ -115,7 +118,7 @@ impl Parser {
                 Stmt::Continue(span)
             }
             Token::Go => self.parse_go_stmt(),
-            Token::Ident(_) | Token::SelfKw => self.parse_call_or_assign(),
+            Token::Ident(_) => self.parse_call_or_assign(),
             _ if self.can_start_expression() => self.parse_expression_stmt(),
             _ => self.parse_invalid_statement_start(),
         }
@@ -127,7 +130,7 @@ impl Parser {
             Token::Begin
                 | Token::Null
                 | Token::Var
-                | Token::Mutable
+                | Token::Const
                 | Token::Discard
                 | Token::Return
                 | Token::Panic
@@ -149,7 +152,7 @@ impl Parser {
                 "Unexpected token `{}` at start of statement",
                 super::token_display(self.current_token())
             ),
-            "Expected a statement: var, if, while, for, begin, return, etc.",
+            r#"Expected a statement: const, if, while, for, begin, return, etc."#,
             span,
         );
         while !self.at_end() && !self.check(&Token::Semicolon) && !self.is_stmt_list_end() {
@@ -165,7 +168,7 @@ impl Parser {
         let expr = self.parse_expression();
         if matches!(expr, Expr::Call { .. })
             || matches!(&expr, Expr::Postfix { operations, .. }
-                if matches!(operations.last(), Some(crate::ast::PostfixOperation::MethodCall { .. } | crate::ast::PostfixOperation::Call { .. })))
+                if matches!(operations.last(), Some(crate::ast::PostfixOperation::Call { .. })))
         {
             expr
         } else {
@@ -202,7 +205,6 @@ impl Parser {
                     | Token::Error
                     | Token::Some
                     | Token::None
-                    | Token::Nil
                     | Token::Try
                     | Token::Go
             )

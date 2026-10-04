@@ -35,11 +35,7 @@ fn reexported_record_alias_preserves_its_owner_across_facades() {
             r#"unit Repro.Model;
   public type Model = record
   public Value: integer;
-  function ReadChanged(Self: Model): Option of (procedure(Value: integer));
-  begin return Option.None; end function;
-  procedure WriteChanged(Self: Model; Handler: Option of (procedure(Value: integer)));
-  begin null; end procedure;
-  public event Changed: procedure(Value: integer) read ReadChanged write WriteChanged;
+  public Changed: Option of (procedure(Value: integer)) := Option.None;
 end record;
 end unit;
 "#,

@@ -6,7 +6,7 @@ uses Std.Console as Console;
 uses Std.Conv as Conv;
 uses Std.Str as Str;
 
-function ReplaceStar(C: string): string;
+pure function ReplaceStar(C: string): string;
 begin
   if C = '*' then
     begin
@@ -17,22 +17,22 @@ begin
   return C;
 end function;
 
-function KeepLetter(C: string): boolean;
+pure function KeepLetter(C: string): boolean;
 begin
   return C <> ' ';
 end function;
 
-function Count(Acc: integer; C: string): integer;
+pure function Count(Acc: integer; C: string): integer;
 begin
   return Acc + 1;
 end function;
 
 begin
-  var S: string := '  Hello, World!  ';
+  const S: string := '  Hello, World!  ';
   Console.WriteLn('trim: ', Str.Trim(S));
   Console.WriteLn('upper: ', Str.ToUpper('fpas'));
   Console.WriteLn('split+join: ', Str.Join(Str.Split('a,b,c', ','), '|'));
-  var Msg: string := Str.Format('n=%d upper=%s', 42, Str.ToUpper('ok'));
+  const Msg: string := Str.Format('n=%d upper=%s', 42, Str.ToUpper('ok'));
   Console.WriteLn('format: ', Msg);
   Console.WriteLn('contains b: ', Str.Contains('abc', 'b'));
   Console.WriteLn('substring: ', Str.Substring('Hello', 0, 3));

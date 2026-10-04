@@ -3,20 +3,22 @@ unit Demo.Counter;
 public type Counter = record
   Value: integer;
   public Step: integer;
-
-  function Hidden(Self: Counter): integer;
-  begin
-    return Self.Value;
-  end function;
-
-  public static function Create(): Counter;
-  begin
-    return Counter(Value := 0, Step := 1);
-  end function;
-
-  public property Current: integer read Hidden;
-
-  public event Changed: procedure() read ReadChanged write WriteChanged;
+  public Changed: Option of (procedure()) := Option.None;
 end record;
+
+function Hidden(Receiver: Counter): integer;
+begin
+  return Receiver.Value;
+end function;
+
+public function CounterCreate(): Counter;
+begin
+  return Counter(Value := 0, Step := 1);
+end function;
+
+public function CounterCurrent(Receiver: Counter): integer;
+begin
+  return Hidden(Receiver);
+end function;
 
 end unit;

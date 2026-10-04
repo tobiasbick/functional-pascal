@@ -52,8 +52,10 @@ impl TypeConstraint {
 
     /// Check a capability while resolving recursive nominal type references.
     pub(crate) fn satisfied_by_with(self, ty: &Ty, resolve: impl Fn(&Ty) -> Ty) -> bool {
-        if let Ty::GenericParam(_, constraint) = ty {
-            return constraint.is_some_and(|actual| actual.implies(self));
+        if let Ty::GenericParam(parameter) = ty {
+            return parameter
+                .constraint
+                .is_some_and(|actual| actual.implies(self));
         }
         match self {
             Self::Equatable => super::components::supports_equality(ty, resolve),

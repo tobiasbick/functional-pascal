@@ -55,7 +55,7 @@ program Flags;
 uses Std.Bits as Bits;
 uses Std.Console as Console;
 begin
-  var Flags: integer := Bits.BitOr(1, 4);
+  const Flags: integer := Bits.BitOr(1, 4);
   Console.WriteLn(Bits.BitAnd(Flags, 4) <> 0);
 end program;
 ```

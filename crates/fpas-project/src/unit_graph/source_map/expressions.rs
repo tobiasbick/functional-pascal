@@ -6,6 +6,10 @@ use fpas_parser::{Designator, DesignatorPart, Expr, FieldInit, PostfixOperation}
 
 pub(super) fn apply_expr_source_id(expr: &mut Expr, source_id: u32) {
     match expr {
+        Expr::VarArgument(target, span) => {
+            apply_designator_source_id(target, source_id);
+            apply_span(span, source_id);
+        }
         Expr::If(decision) => {
             apply_expr_source_id(&mut decision.condition, source_id);
             apply_expr_source_id(&mut decision.then_value, source_id);
@@ -44,7 +48,6 @@ pub(super) fn apply_expr_source_id(expr: &mut Expr, source_id: u32) {
         | Expr::ResultError(_, span)
         | Expr::OptionSome(_, span)
         | Expr::OptionNone(span)
-        | Expr::Nil(span)
         | Expr::Try(_, span)
         | Expr::Go(_, span)
         | Expr::InvalidRecord(span)
@@ -145,8 +148,7 @@ fn apply_postfix_operations_source_id(operations: &mut [PostfixOperation], sourc
                 apply_expr_source_id(index, source_id);
                 apply_span(span, source_id);
             }
-            PostfixOperation::MethodCall { args, span, .. }
-            | PostfixOperation::Call { args, span } => {
+            PostfixOperation::Call { args, span } => {
                 for arg in args {
                     apply_expr_source_id(arg, source_id);
                 }

@@ -3,13 +3,13 @@ program T;
 uses Std.Console as Console;
 uses Std.Arrays as Arrays;
 
-function IsGreaterThanHundred(X: integer): boolean;
+pure function IsGreaterThanHundred(X: integer): boolean;
 begin
   return X > 100;
 end function;
 
 begin
-  var A: array of (integer) := [1, 2, 3];
-  var Idx: integer := Arrays.FindIndex(A, IsGreaterThanHundred);
+  const A: array of (integer) := [1, 2, 3];
+  const Idx: integer := Arrays.FindIndex(A, IsGreaterThanHundred);
   Console.WriteLn(Idx);
 end program;

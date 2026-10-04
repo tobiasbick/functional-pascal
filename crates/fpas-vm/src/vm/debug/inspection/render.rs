@@ -41,7 +41,11 @@ pub(super) fn render_with_executable(
 ) -> RenderedValue {
     let Some(runtime) = &value.value else {
         return RenderedValue {
-            summary: "<uninitialized>".to_string(),
+            summary: if value.presentation_hint.as_deref() == Some("unavailable") {
+                "<unavailable>".to_string()
+            } else {
+                "<uninitialized>".to_string()
+            },
             type_name: value.type_name.clone(),
             children: Vec::new(),
             named_children: 0,
@@ -194,22 +198,29 @@ pub(super) fn render_with_executable(
             format!("<function {}>", function.name),
             value.type_name.clone(),
             function
-                .bound_receiver
-                .iter()
-                .map(|receiver| child_value("receiver".to_string(), receiver, value, None))
-                .chain(function.captures.iter().enumerate().map(|(index, child)| {
-                    child_value(format!("capture[{index}]"), child, value, None)
-                }))
-                .collect(),
-            function
                 .captures
-                .len()
-                .saturating_add(usize::from(function.bound_receiver.is_some())),
+                .iter()
+                .enumerate()
+                .map(|(index, child)| child_value(format!("capture[{index}]"), child, value, None))
+                .collect(),
+            function.captures.len(),
             0,
             value.presentation_hint.clone(),
             limits,
         ),
         Value::Cell(cell) => render_cell(cell, value, limits, executable),
+        Value::Reference(reference) => match reference.read() {
+            Ok(snapshot) => {
+                let mut child = child_value("value".to_string(), &snapshot, value, None);
+                child.mutation = MutationAccess::Unsupported;
+                render_with_executable(&child, limits, executable)
+            }
+            Err(error) => leaf(
+                format!("<var reference: {error}>"),
+                value.type_name.clone(),
+                Some("unavailable".to_string()),
+            ),
+        },
     }
 }
 

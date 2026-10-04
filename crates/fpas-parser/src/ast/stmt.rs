@@ -1,4 +1,4 @@
-use super::{Designator, Expr, TypeExpr, VarDef};
+use super::{BindingDef, Designator, Expr, TypeExpr};
 use fpas_lexer::Span;
 
 impl Stmt {
@@ -14,7 +14,7 @@ impl Stmt {
             | Self::Discard(_, span)
             | Self::Break(span)
             | Self::Continue(span) => *span,
-            Self::Var(value) | Self::MutableVar(value) => value.span,
+            Self::Const(value) | Self::Var(value) => value.span,
             Self::Assign { span, .. }
             | Self::If { span, .. }
             | Self::Case { span, .. }
@@ -38,10 +38,10 @@ pub enum Stmt {
     StatementList(Vec<Stmt>, Span),
     /// Explicit no-action statement `null;`.
     Null(Span),
-    /// Immutable local variable declaration.
-    Var(VarDef),
-    /// Mutable local variable declaration.
-    MutableVar(VarDef),
+    /// Immutable local binding declaration.
+    Const(BindingDef),
+    /// Mutable local binding declaration.
+    Var(BindingDef),
     /// Assignment to a variable, field, or indexed element.
     Assign {
         /// Designator that receives the assigned value.

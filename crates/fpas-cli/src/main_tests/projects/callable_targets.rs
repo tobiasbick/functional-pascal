@@ -17,13 +17,14 @@ begin
   end function;
 end function;
 
-public function Counter(mutable Count: integer): function(): integer;
+public function Counter(InitialCount: integer): function(): integer;
 function Next(): integer;
 begin
   Count := Count + 1;
   return Count;
 end function;
 begin
+   var Count: integer := InitialCount;
   return Next;
 end function;
 
@@ -52,12 +53,12 @@ fn imported_returned_and_field_callables_run_through_the_cli() {
 uses Demo.Factory as Factory; uses Std.Console as Console;
 begin
   Console.WriteLn(Factory.Make(3)(5));
-  var Functions: array of (Factory.Handler) := [Factory.Make(40)];
+  const Functions: array of (Factory.Handler) := [Factory.Make(40)];
   Console.WriteLn(Functions[0](2));
   Console.WriteLn(Factory.Create().Apply(12));
   (Factory.Create().Notify)();
   discard Factory.Make(0)(1);
-  var Next: function(): integer := Factory.Counter(40);
+  const Next: function(): integer := Factory.Counter(40);
   Console.WriteLn((Next)());
   Console.WriteLn((Next)());
 end program;"#,

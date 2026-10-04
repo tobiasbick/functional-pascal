@@ -5,28 +5,28 @@ fn short_circuit_and_xor_preserve_left_to_right_effects() {
     assert_succeeds(
         r#"program Order;
 uses Std.Test as Test;
-mutable var Trace: integer := 0;
+ var Trace: integer := 0;
 function Mark(Digit: integer; Value: boolean): boolean;
 begin
   Trace := Trace * 10 + Digit;
   return Value;
 end function;
 begin
-  var A: boolean := Mark(1, false) and Mark(2, true);
+  const A: boolean := Mark(1, false) and Mark(2, true);
   Test.AssertEquals(1, Trace);
   Trace := 0;
-  var B: boolean := Mark(1, true) or Mark(2, false);
+  const B: boolean := Mark(1, true) or Mark(2, false);
   Test.AssertEquals(1, Trace);
   Trace := 0;
-  var C: boolean := Mark(1, false) xor Mark(2, true) xor Mark(3, true);
+  const C: boolean := Mark(1, false) xor Mark(2, true) xor Mark(3, true);
   Test.AssertEquals(123, Trace);
   Test.AssertEquals(false, C);
   Trace := 0;
-  var D: boolean := Mark(1, true) and (Mark(2, false) or Mark(3, true));
+  const D: boolean := Mark(1, true) and (Mark(2, false) or Mark(3, true));
   Test.AssertEquals(123, Trace);
   Test.AssertEquals(true, D);
   Trace := 0;
-  var E: boolean := (Mark(1, false) and Mark(2, true)) or Mark(3, true);
+  const E: boolean := (Mark(1, false) and Mark(2, true)) or Mark(3, true);
   Test.AssertEquals(13, Trace);
   Test.AssertEquals(true, E);
 end program;"#,
@@ -38,23 +38,23 @@ fn same_operator_chains_stop_at_the_first_decisive_operand() {
     assert_succeeds(
         r#"program ChainOrder;
 uses Std.Test as Test;
-mutable var Trace: integer := 0;
+ var Trace: integer := 0;
 function Mark(Digit: integer; Value: boolean): boolean;
 begin Trace := Trace * 10 + Digit; return Value; end function;
 begin
-  var A: boolean := Mark(1, true) and Mark(2, false) and Mark(3, true);
+  const A: boolean := Mark(1, true) and Mark(2, false) and Mark(3, true);
   Test.AssertEquals(false, A);
   Test.AssertEquals(12, Trace);
   Trace := 0;
-  var B: boolean := Mark(1, false) or Mark(2, true) or Mark(3, false);
+  const B: boolean := Mark(1, false) or Mark(2, true) or Mark(3, false);
   Test.AssertEquals(true, B);
   Test.AssertEquals(12, Trace);
   Trace := 0;
-  var C: boolean := Mark(1, true) and Mark(2, true) and Mark(3, true);
+  const C: boolean := Mark(1, true) and Mark(2, true) and Mark(3, true);
   Test.AssertEquals(true, C);
   Test.AssertEquals(123, Trace);
   Trace := 0;
-  var D: boolean := Mark(1, false) or Mark(2, false) or Mark(3, false);
+  const D: boolean := Mark(1, false) or Mark(2, false) or Mark(3, false);
   Test.AssertEquals(false, D);
   Test.AssertEquals(123, Trace);
 end program;"#,
@@ -85,7 +85,7 @@ end program;"#,
         "false xor (1 div 0 = 0)",
     ] {
         let error = run_program(&format!(
-            "program T; begin var X: boolean := {expression}; end program;"
+            r#"program T; begin var X: boolean := {expression}; end program;"#
         ))
         .unwrap_err();
         assert!(error.message.contains("zero"), "{error:?}");
@@ -115,7 +115,7 @@ fn bit_call_arguments_execute_once_in_written_order() {
         r#"program BitOrder;
 uses Std.Bits as Bits;
 uses Std.Test as Test;
-mutable var Trace: integer := 0;
+ var Trace: integer := 0;
 function Next(Digit: integer): integer;
 begin Trace := Trace * 10 + Digit; return Digit; end function;
 begin
@@ -132,7 +132,7 @@ end program;"#,
 fn shift_count_runtime_failures_retain_call_locations() {
     for name in ["ShiftLeft", "ShiftRight"] {
         for count in [-1, 64, 65] {
-            let error = run_program(&format!("program T; uses Std.Bits as Bits; begin var X: integer := Bits.{name}(0, {count}); end program;")).unwrap_err();
+            let error = run_program(&format!(r#"program T; uses Std.Bits as Bits; begin const X: integer := Bits.{name}(0, {count}); end program;"#)).unwrap_err();
             assert!(error.message.contains("0..63"), "{error:?}");
         }
     }
@@ -141,7 +141,7 @@ fn shift_count_runtime_failures_retain_call_locations() {
 #[test]
 fn short_circuit_ir_is_valid_before_and_after_optimization() {
     let program = parse_ok(
-        "program T; mutable var X: boolean := true; begin X := X and (false or X); end program;",
+        r#"program T;  var X: boolean := true; begin X := X and (false or X); end program;"#,
     );
     let mut ir = crate::lower(&program).unwrap();
     ir.validate().unwrap();

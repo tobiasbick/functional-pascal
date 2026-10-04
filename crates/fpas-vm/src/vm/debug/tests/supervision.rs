@@ -70,19 +70,19 @@ fn supervision_retries_a_panic_observed_when_a_parked_selection_resumes() {
         r#"program ResumeFailure;
 uses Std.Tasks as Tasks; uses Std.Arrays as Arrays; uses Std.Results as Results; uses Std.Time as Time;
 begin
-  var Group: Tasks.TaskGroup := Tasks.CreateTaskGroup();
-  var Attempts: channel of (boolean) := Tasks.CreateChannel(2);
+  const Group: Tasks.TaskGroup := Tasks.CreateTaskGroup();
+  const Attempts: channel of (boolean) := Tasks.CreateChannel(2);
   discard Tasks.Send(Attempts, false); discard Tasks.Send(Attempts, true);
-  var Parent: task := Tasks.StartSupervisedTask(Group, function(Token: Tasks.CancellationToken): result of (integer, string)
+  const Parent: task := Tasks.StartSupervisedTask(Group, function(Token: Tasks.CancellationToken): result of (integer, string)
   begin
     if Results.Unwrap(Tasks.Receive(Attempts)) then return Result.Ok(42); end if;
-    var Child: task := Tasks.StartTaskInGroup(Group, procedure(ChildToken: Tasks.CancellationToken)
+    const Child: task := Tasks.StartTaskInGroup(Group, procedure(ChildToken: Tasks.CancellationToken)
       begin Time.Sleep(2); panic('owned child panic'); end procedure);
     discard Tasks.Select([Tasks.TaskCase(Child, procedure() begin panic('failed task selected'); end procedure)]);
     return Result.Error('unreachable');
   end function, 1, 1);
   if Results.Unwrap(Tasks.Wait(Parent)) <> 42 then panic('resume failure was not retried'); end if;
-  var Failures: array of (Tasks.TaskFailure) := Tasks.CloseTaskGroup(Group);
+  const Failures: array of (Tasks.TaskFailure) := Tasks.CloseTaskGroup(Group);
   if Arrays.Length(Failures) <> 1 then panic('wrong group failure count'); end if;
   if Failures[0].Kind <> Tasks.TaskFailureKind.Panicked then panic('child failure lost'); end if;
   discard Tasks.CloseChannel(Attempts);
@@ -97,14 +97,14 @@ fn selection_producer_yields_to_its_waiting_consumer() {
         r#"program ProducerConsumer;
 uses Std.Tasks as Tasks; uses Std.Results as Results; uses Std.Arrays as Arrays;
 begin
-  var Group: Tasks.TaskGroup := Tasks.CreateTaskGroup();
-  var Queue: channel of (integer) := Tasks.CreateChannel(1);
-  var Child: task := Tasks.StartTaskInGroup(Group, procedure(Token: Tasks.CancellationToken)
+  const Group: Tasks.TaskGroup := Tasks.CreateTaskGroup();
+  const Queue: channel of (integer) := Tasks.CreateChannel(1);
+  const Child: task := Tasks.StartTaskInGroup(Group, procedure(Token: Tasks.CancellationToken)
   begin
     for Item: integer := 1 to 2 do
       discard Tasks.Select([Tasks.SendCase(Queue, Item, procedure(Outcome: result of (boolean, string)) begin null; end procedure)]); end for;
   end procedure);
-  mutable var Total: integer := 0;
+   var Total: integer := 0;
   for Item: integer := 1 to 2 do
     discard Tasks.Select([Tasks.ReceiveCase(Queue, procedure(Outcome: result of (integer, string))
       begin Total := Total + Results.Unwrap(Outcome); end procedure)]); end for;
@@ -130,14 +130,14 @@ fn supervision_retries_keep_nested_children_in_the_original_group() {
         r#"program NestedAttempts;
 uses Std.Tasks as Tasks; uses Std.Arrays as Arrays; uses Std.Results as Results; uses Std.Time as Time;
 begin
-  var G: Tasks.TaskGroup := Tasks.CreateTaskGroup();
-  var Steps: channel of (boolean) := Tasks.CreateChannel(2);
+  const G: Tasks.TaskGroup := Tasks.CreateTaskGroup();
+  const Steps: channel of (boolean) := Tasks.CreateChannel(2);
   discard Tasks.Send(Steps, false); discard Tasks.Send(Steps, true);
-  var Parent: task := Tasks.StartSupervisedTask(G, function(Token: Tasks.CancellationToken): result of (integer, string)
+  const Parent: task := Tasks.StartSupervisedTask(G, function(Token: Tasks.CancellationToken): result of (integer, string)
   begin
-    var Child: task := Tasks.StartTaskInGroup(G, function(ChildToken: Tasks.CancellationToken): integer
+    const Child: task := Tasks.StartTaskInGroup(G, function(ChildToken: Tasks.CancellationToken): integer
     begin Time.Sleep(1); return 42; end function);
-    var Answer: integer := Tasks.Wait(Child);
+    const Answer: integer := Tasks.Wait(Child);
     if not Results.Unwrap(Tasks.Receive(Steps)) then return Result.Error('retry parent'); end if;
     return Result.Ok(Answer);
   end function, 1, 1);
@@ -160,9 +160,9 @@ uses Std.Arrays as Arrays;
 uses Std.Results as Results;
 
 begin
-  var G: Tasks.TaskGroup := Tasks.CreateTaskGroup();
-  var Attempts: channel of (integer) := Tasks.CreateChannel(2);
-  var Child: task := Tasks.StartSupervisedTask(G, procedure(Token: Tasks.CancellationToken) begin
+  const G: Tasks.TaskGroup := Tasks.CreateTaskGroup();
+  const Attempts: channel of (integer) := Tasks.CreateChannel(2);
+  const Child: task := Tasks.StartSupervisedTask(G, procedure(Token: Tasks.CancellationToken) begin
     discard Tasks.Send(Attempts, 1);
   end procedure, 1023, 60000);
   Tasks.Wait(Child);
@@ -195,8 +195,8 @@ fn supervision_successful_value_is_terminal_even_after_worker_requests_cancellat
         r#"program SuccessfulCancellation;
 uses Std.Tasks as Tasks; uses Std.Arrays as Arrays;
 begin
-  var G: Tasks.TaskGroup := Tasks.CreateTaskGroup();
-  var Child: task := Tasks.StartSupervisedTask(G, function(Token: Tasks.CancellationToken): integer
+  const G: Tasks.TaskGroup := Tasks.CreateTaskGroup();
+  const Child: task := Tasks.StartSupervisedTask(G, function(Token: Tasks.CancellationToken): integer
   begin discard Tasks.CancelTaskGroup(G); return 42; end function, 1023, 60000);
   if Tasks.Wait(Child) <> 42 then panic('successful value lost'); end if;
   if Arrays.Length(Tasks.CloseTaskGroup(G)) <> 0 then panic('success replaced with cancellation'); end if;
@@ -210,22 +210,22 @@ fn supervision_retries_errors_and_panics_then_delivers_one_successful_task() {
         r#"program RecoverWorker;
 uses Std.Tasks as Tasks; uses Std.Arrays as Arrays; uses Std.Results as Results;
 begin
-  var G: Tasks.TaskGroup := Tasks.CreateTaskGroup();
-  var Steps: channel of (integer) := Tasks.CreateChannel(3);
+  const G: Tasks.TaskGroup := Tasks.CreateTaskGroup();
+  const Steps: channel of (integer) := Tasks.CreateChannel(3);
   discard Tasks.Send(Steps, 0); discard Tasks.Send(Steps, 1); discard Tasks.Send(Steps, 2);
-  var Original: array of (integer) := [0];
-  var Child: task := Tasks.StartSupervisedTask(G, function(Token: Tasks.CancellationToken): result of (integer, string)
+  const Original: array of (integer) := [0];
+  const Child: task := Tasks.StartSupervisedTask(G, function(Token: Tasks.CancellationToken): result of (integer, string)
   begin
-    mutable var Local: array of (integer) := Original;
+     var Local: array of (integer) := Original;
     Local[0] := Local[0] + 1;
     if Local[0] <> 1 then panic('attempt capture leaked'); end if;
-    var Step: integer := Results.Unwrap(Tasks.Receive(Steps));
+    const Step: integer := Results.Unwrap(Tasks.Receive(Steps));
     if Step = 0 then return Result.Error('retryable'); end if;
     if Step = 1 then panic('retryable panic'); end if;
     return Result.Ok(42);
   end function, 2, 1);
-  mutable var Seen: boolean := false;
-  var Ready: Tasks.WaitCase := Tasks.TaskCase(Child, procedure() begin Seen := true; end procedure);
+   var Seen: boolean := false;
+  const Ready: Tasks.WaitCase := Tasks.TaskCase(Child, procedure() begin Seen := true; end procedure);
   if Tasks.Select([Ready]) <> 0 then panic('completion index'); end if;
   if not Seen then panic('missing completion'); end if;
   if Results.Unwrap(Tasks.Wait(Child)) <> 42 then panic('result lost'); end if;
@@ -246,9 +246,9 @@ uses Std.Arrays as Arrays;
 uses Std.Results as Results;
 
 begin
-  var G: Tasks.TaskGroup := Tasks.CreateTaskGroup();
-  var Attempts: channel of (integer) := Tasks.CreateChannel(3);
-  var Child: task := Tasks.StartSupervisedTask(G, function(Token: Tasks.CancellationToken): Result of (integer, string) begin
+  const G: Tasks.TaskGroup := Tasks.CreateTaskGroup();
+  const Attempts: channel of (integer) := Tasks.CreateChannel(3);
+  const Child: task := Tasks.StartSupervisedTask(G, function(Token: Tasks.CancellationToken): Result of (integer, string) begin
     discard Tasks.Send(Attempts, 1);
     return Result.Error('last failure');
   end function, 2, 0);
@@ -260,7 +260,7 @@ begin
         panic('wrong final error');
       end if;
   end case;
-  var Failures: array of (Tasks.TaskFailure) := Tasks.CloseTaskGroup(G);
+  const Failures: array of (Tasks.TaskFailure) := Tasks.CloseTaskGroup(G);
   if Arrays.Length(Failures) <> 1 then
     panic('attempts became children');
   end if;
@@ -287,12 +287,12 @@ fn supervision_panic_exhaustion_is_contained_and_keeps_the_last_diagnostic() {
         r#"program ExhaustPanic;
 uses Std.Tasks as Tasks; uses Std.Arrays as Arrays; uses Std.Results as Results;
 begin
-  var G: Tasks.TaskGroup := Tasks.CreateTaskGroup();
-  var Attempts: channel of (integer) := Tasks.CreateChannel(1);
-  var StartedTask1: task := Tasks.StartSupervisedTask(G, procedure(Token: Tasks.CancellationToken)
+  const G: Tasks.TaskGroup := Tasks.CreateTaskGroup();
+  const Attempts: channel of (integer) := Tasks.CreateChannel(1);
+  const StartedTask1: task := Tasks.StartSupervisedTask(G, procedure(Token: Tasks.CancellationToken)
   begin discard Tasks.Send(Attempts, 1); panic('last panic'); end procedure, 2, 1);
   for I: integer := 1 to 3 do discard Results.Unwrap(Tasks.Receive(Attempts)); end for;
-  var Failures: array of (Tasks.TaskFailure) := Tasks.CloseTaskGroup(G);
+  const Failures: array of (Tasks.TaskFailure) := Tasks.CloseTaskGroup(G);
   if Arrays.Length(Failures) <> 1 then panic('failure count'); end if;
   if Failures[0].Kind <> Tasks.TaskFailureKind.Panicked then panic('panic category'); end if;
   if Failures[0].Message <> 'panic: last panic' then panic('panic message'); end if;
@@ -307,14 +307,14 @@ fn supervision_cancel_interrupts_a_long_backoff() {
         r#"program CancelBackoff;
 uses Std.Tasks as Tasks; uses Std.Arrays as Arrays; uses Std.Results as Results;
 begin
-  var G: Tasks.TaskGroup := Tasks.CreateTaskGroup();
-  var Attempts: channel of (boolean) := Tasks.CreateChannel(1);
-  var StartedTask2: task := Tasks.StartSupervisedTask(G, function(Token: Tasks.CancellationToken): result of (integer, string)
+  const G: Tasks.TaskGroup := Tasks.CreateTaskGroup();
+  const Attempts: channel of (boolean) := Tasks.CreateChannel(1);
+  const StartedTask2: task := Tasks.StartSupervisedTask(G, function(Token: Tasks.CancellationToken): result of (integer, string)
   begin discard Tasks.Send(Attempts, true); return Result.Error('retry later'); end function, 3, 60000);
   discard Results.Unwrap(Tasks.Receive(Attempts));
   discard Tasks.Select([Tasks.TimerCase(2, procedure() begin null; end procedure)]);
   discard Tasks.CancelTaskGroup(G);
-  var Failures: array of (Tasks.TaskFailure) := Tasks.CloseTaskGroup(G);
+  const Failures: array of (Tasks.TaskFailure) := Tasks.CloseTaskGroup(G);
   if Arrays.Length(Failures) <> 1 then panic('failure count'); end if;
   if Failures[0].Kind <> Tasks.TaskFailureKind.Cancelled then panic('not cancelled'); end if;
   discard Tasks.CloseChannel(Attempts);
@@ -328,12 +328,12 @@ fn supervision_does_not_retry_other_runtime_errors() {
         r#"program InvalidWorkerOperation;
 uses Std.Tasks as Tasks; uses Std.Arrays as Arrays; uses Std.Results as Results;
 begin
-  var G: Tasks.TaskGroup := Tasks.CreateTaskGroup();
-  var Started: channel of (boolean) := Tasks.CreateChannel(1);
-  var StartedTask3: task := Tasks.StartSupervisedTask(G, procedure(Token: Tasks.CancellationToken)
+  const G: Tasks.TaskGroup := Tasks.CreateTaskGroup();
+  const Started: channel of (boolean) := Tasks.CreateChannel(1);
+  const StartedTask3: task := Tasks.StartSupervisedTask(G, procedure(Token: Tasks.CancellationToken)
   begin discard Tasks.Send(Started, true); discard Tasks.CloseTaskGroup(G); end procedure, 3, 60000);
   discard Results.Unwrap(Tasks.Receive(Started));
-  var Failures: array of (Tasks.TaskFailure) := Tasks.CloseTaskGroup(G);
+  const Failures: array of (Tasks.TaskFailure) := Tasks.CloseTaskGroup(G);
   if Arrays.Length(Failures) <> 1 then panic('failure count'); end if;
   if Failures[0].Kind <> Tasks.TaskFailureKind.RuntimeError then panic('runtime error was retried'); end if;
   discard Tasks.CloseChannel(Started);
@@ -350,8 +350,8 @@ uses Std.Tasks as Tasks;
 uses Std.Arrays as Arrays;
 
 begin
-  var G: Tasks.TaskGroup := Tasks.CreateTaskGroup();
-  var Child: task := Tasks.StartSupervisedTask(G, function(Token: Tasks.CancellationToken): Result of (integer, string) begin
+  const G: Tasks.TaskGroup := Tasks.CreateTaskGroup();
+  const Child: task := Tasks.StartSupervisedTask(G, function(Token: Tasks.CancellationToken): Result of (integer, string) begin
     return Result.Error('cancelled');
   end function, 0, 60000);
   case Tasks.Wait(Child) of
@@ -362,7 +362,7 @@ begin
         null;
       end;
   end case;
-  var Failures: array of (Tasks.TaskFailure) := Tasks.CloseTaskGroup(G);
+  const Failures: array of (Tasks.TaskFailure) := Tasks.CloseTaskGroup(G);
   if Arrays.Length(Failures) <> 1 then
     panic('failure count');
   end if;

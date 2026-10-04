@@ -20,9 +20,9 @@ begin
   Console.Present();
   Test.AssertScreenLine('.XYZ.', 1);
   Test.AssertScreenLine('.....', 2);
-  var ReadBack: Console.Cell := Options.Unwrap(Console.GetCell(2, 1));
-  var Foreground: Console.Color := ReadBack.foreground;
-  var Background: Console.Color := ReadBack.background;
+  const ReadBack: Console.Cell := Options.Unwrap(Console.GetCell(2, 1));
+  const Foreground: Console.Color := ReadBack.foreground;
+  const Background: Console.Color := ReadBack.background;
   Test.AssertEquals('X', ReadBack.glyph);
   Test.AssertTrue(Foreground.kind = Console.ColorKind.Rgb);
   Test.AssertEquals(10, Foreground.red);

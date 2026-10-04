@@ -11,36 +11,39 @@ uses Std.Tasks as Tasks2;
 uses Std.Time as Time;
 uses Std.Tui as Tui;
 uses Mandelbrot.Color as Color;
+uses Std.Tui.Cells as Cells2;
+uses Std.Tui.Chrome as Chrome;
 
 public type Complex = record
   public Re: real;
   public Im: real;
-
-  public static function Zero(): Complex;
-  begin
-    return Complex(Re := 0.0, Im := 0.0);
-  end function;
-
-  public static function Create(Re: real; Im: real): Complex;
-  begin
-    return Complex(Re := Re, Im := Im);
-  end function;
-
-  public function Sq(Self: Complex): Complex;
-  begin
-    return Complex(Re := Self.Re * Self.Re - Self.Im * Self.Im, Im := (2.0 * Self.Re) * Self.Im);
-  end function;
-
-  public function Add(Self: Complex; Other: Complex): Complex;
-  begin
-    return Complex(Re := Self.Re + Other.Re, Im := Self.Im + Other.Im);
-  end function;
-
-  public function MagSq(Self: Complex): real;
-  begin
-    return Self.Re * Self.Re + Self.Im * Self.Im;
-  end function;
 end record;
+
+public function ComplexZero(): Complex;
+begin
+  return Complex(Re := 0.0, Im := 0.0);
+end function;
+
+public function ComplexCreate(Re: real; Im: real): Complex;
+begin
+  return Complex(Re := Re, Im := Im);
+end function;
+
+public function ComplexSq(Receiver: Complex): Complex;
+begin
+  return Complex(Re := Receiver.Re * Receiver.Re - Receiver.Im * Receiver.Im, Im := (2.0 * Receiver.Re) *
+                                                                                    Receiver.Im);
+end function;
+
+public function ComplexAdd(Receiver: Complex; Other: Complex): Complex;
+begin
+  return Complex(Re := Receiver.Re + Other.Re, Im := Receiver.Im + Other.Im);
+end function;
+
+public function ComplexMagSq(Receiver: Complex): real;
+begin
+  return Receiver.Re * Receiver.Re + Receiver.Im * Receiver.Im;
+end function;
 
 public type PixelSample = record
   public IsInside: boolean;
@@ -72,18 +75,18 @@ begin
       return PixelSample(IsInside := true, EscapeValue := 0.0);
     end;
   end if;
-  var MagnitudeSq: real := Math.Max(Z.MagSq(), 4.0);
+  const MagnitudeSq: real := Math.Max(ComplexMagSq(Z), 4.0);
   return PixelSample(IsInside := false, EscapeValue := (Conv.IntToReal(Iterations) + 1.0) -
                                                        (Math.Log(Math.Log(MagnitudeSq) * 0.5) / Math.Log(2.0)));
 end function;
 
 function Iterate(C: Complex; MaxIter: integer): PixelSample;
 begin
-  mutable var Z: Complex := Complex.Zero();
-  mutable var N: integer := 0;
-  while (N < MaxIter) and (Z.MagSq() <= 256.0) do
+  var Z: Complex := ComplexZero();
+  var N: integer := 0;
+  while (N < MaxIter) and (ComplexMagSq(Z) <= 256.0) do
     begin
-      Z := Z.Sq().Add(C);
+      Z := ComplexAdd(ComplexSq(Z), C);
       N := N + 1;
     end;
   end while;
@@ -98,19 +101,19 @@ function IterateCancellable(
   WorkerToken: Tasks2.CancellationToken
 ): PixelSample;
 begin
-  mutable var Z: Complex := Complex.Zero();
-  mutable var N: integer := 0;
-  while (N < MaxIter) and (Z.MagSq() <= 256.0) do
+  var Z: Complex := ComplexZero();
+  var N: integer := 0;
+  while (N < MaxIter) and (ComplexMagSq(Z) <= 256.0) do
     begin
       if Tasks2.IsCancellationRequested(HostToken) or Tasks2.IsCancellationRequested(WorkerToken) then
         begin
           break;
         end;
       end if;
-      var ChunkEnd: integer := Math.Min(N + 128, MaxIter);
-      while (N < ChunkEnd) and (Z.MagSq() <= 256.0) do
+      const ChunkEnd: integer := Math.Min(N + 128, MaxIter);
+      while (N < ChunkEnd) and (ComplexMagSq(Z) <= 256.0) do
         begin
-          Z := Z.Sq().Add(C);
+          Z := ComplexAdd(ComplexSq(Z), C);
           N := N + 1;
         end;
       end while;
@@ -132,14 +135,14 @@ public function ComputeRow(
   MaxIter: integer
 ): array of (PixelSample);
 begin
-  var WidthRange: integer := Math.Max(Width - 1, 1);
-  var HeightRange: integer := Math.Max(Height - 1, 1);
-  var Cy: real := YMax - (Py / Conv.IntToReal(HeightRange)) * (YMax - YMin);
-  mutable var Row: array of (PixelSample) := [];
+  const WidthRange: integer := Math.Max(Width - 1, 1);
+  const HeightRange: integer := Math.Max(Height - 1, 1);
+  const Cy: real := YMax - (Py / Conv.IntToReal(HeightRange)) * (YMax - YMin);
+  var Row: array of (PixelSample) := [];
   for Px: integer := 0 to Width - 1 do
     begin
-      var Cx: real := XMin + (Px / Conv.IntToReal(WidthRange)) * (XMax - XMin);
-      Arrays.Push(Row, Iterate(Complex.Create(Cx, Cy), MaxIter));
+      const Cx: real := XMin + (Px / Conv.IntToReal(WidthRange)) * (XMax - XMin);
+      Arrays.Push(var Row, Iterate(ComplexCreate(Cx, Cy), MaxIter));
     end;
   end for;
 
@@ -159,11 +162,11 @@ function ComputeRowCancellable(
   WorkerToken: Tasks2.CancellationToken
 ): array of (PixelSample);
 begin
-  var WidthRange: integer := Math.Max(Width - 1, 1);
-  var HeightRange: integer := Math.Max(Height - 1, 1);
-  var Cy: real := YMax - (Py / Conv.IntToReal(HeightRange)) * (YMax - YMin);
-  mutable var Row: array of (PixelSample) := [];
-  mutable var NextYield: integer := Time.MonotonicMillis() + 8;
+  const WidthRange: integer := Math.Max(Width - 1, 1);
+  const HeightRange: integer := Math.Max(Height - 1, 1);
+  const Cy: real := YMax - (Py / Conv.IntToReal(HeightRange)) * (YMax - YMin);
+  var Row: array of (PixelSample) := [];
+  var NextYield: integer := Time.MonotonicMillis() + 8;
   for Px: integer := 0 to Width - 1 do
     begin
       if ((Px > 0) and (Px mod 16 = 0)) and (Time.MonotonicMillis() >= NextYield) then
@@ -179,8 +182,8 @@ begin
           return [];
         end;
       end if;
-      var Cx: real := XMin + (Px / Conv.IntToReal(WidthRange)) * (XMax - XMin);
-      Arrays.Push(Row, IterateCancellable(Complex.Create(Cx, Cy), MaxIter, HostToken, WorkerToken));
+      const Cx: real := XMin + (Px / Conv.IntToReal(WidthRange)) * (XMax - XMin);
+      Arrays.Push(var Row, IterateCancellable(ComplexCreate(Cx, Cy), MaxIter, HostToken, WorkerToken));
     end;
   end for;
 
@@ -195,32 +198,32 @@ end function;
 
 function EscapeGlyph(EscapeValue: real): string;
 begin
-  var Ramp: string := ' ░▒▓█';
-  var Count: integer := Str.Length(Ramp);
-  var Index: integer := Math.Clamp(Math.Trunc(Math.Frac(EscapeValue * 0.08) * Conv.IntToReal(Count)), 0, Count -
-                                                                                                         1);
+  const Ramp: string := ' ░▒▓█';
+  const Count: integer := Str.Length(Ramp);
+  const Index: integer := Math.Clamp(Math.Trunc(Math.Frac(EscapeValue * 0.08) *
+                                                Conv.IntToReal(Count)), 0, Count - 1);
   return Str.CharAt(Ramp, Index);
 end function;
 
 function RenderCell(Sample: PixelSample; Palette: Color.PaletteKind): Tui.TuiCell;
 begin
-  var Background: Tui.TuiColor := Tui.TuiColor.FromRgb(0, 0, 0);
+  const Background: Tui.TuiColor := Cells2.TuiColorFromRgb(0, 0, 0);
   if Sample.IsInside then
     begin
-      var Shade: Tui.TuiColor := Color.InsideColor();
-      return Tui.TuiCell.Styled(' ', Tui.TuiStyle.FromColors(Shade, Shade));
+      const Shade: Tui.TuiColor := Color.InsideColor();
+      return Cells2.TuiCellStyled(' ', Cells2.TuiStyleFromColors(Shade, Shade));
     end;
   end if;
 
-  return Tui.TuiCell.Styled(EscapeGlyph(Sample.EscapeValue), Tui.TuiStyle.FromColors(Color.EscapeColor(Palette, Sample.EscapeValue), Background));
+  return Cells2.TuiCellStyled(EscapeGlyph(Sample.EscapeValue), Cells2.TuiStyleFromColors(Color.EscapeColor(Palette, Sample.EscapeValue), Background));
 end function;
 
 function RenderSamples(Samples: array of (PixelSample); Palette: Color.PaletteKind): array of (Tui.TuiCell);
 begin
-  mutable var Cells: array of (Tui.TuiCell) := [];
+  var Cells: array of (Tui.TuiCell) := [];
   for Sample: PixelSample in Samples do
     begin
-      Arrays.Push(Cells, RenderCell(Sample, Palette));
+      Arrays.Push(var Cells, RenderCell(Sample, Palette));
     end;
   end for;
 
@@ -254,16 +257,16 @@ public function RenderGrid(
   Palette: Color.PaletteKind
 ): Tui.TuiCellGrid;
 begin
-  var Request: MandelbrotRenderRequest := MandelbrotRenderRequest(Generation := 0, XMin := XMin, XMax := XMax, YMin := YMin, YMax := YMax, Width := Width, Height := Height, MaxIter := MaxIter, Palette := Palette);
-  mutable var Cells: array of (Tui.TuiCell) := [];
+  const Request: MandelbrotRenderRequest := MandelbrotRenderRequest(Generation := 0, XMin := XMin, XMax := XMax, YMin := YMin, YMax := YMax, Width := Width, Height := Height, MaxIter := MaxIter, Palette := Palette);
+  var Cells: array of (Tui.TuiCell) := [];
   for Py: integer := 0 to Height - 1 do
     begin
-      var Row: array of (Tui.TuiCell) := RenderRowCells(Request, Py);
+      const Row: array of (Tui.TuiCell) := RenderRowCells(Request, Py);
       Cells := Arrays.Concat(Cells, Row);
     end;
   end for;
 
-  return Tui.TuiCellGrid.Create(Width, Height, Cells);
+  return Chrome.TuiCellGridCreate(Width, Height, Cells);
 end function;
 
 // Runs one task per row on the VM pool and publishes one complete image.
@@ -273,8 +276,8 @@ public function RunBackgroundRender(
   HostToken: Tasks2.CancellationToken
 ): Result of (boolean, string);
 begin
-  var Group: Tasks2.TaskGroup := Tasks2.CreateTaskGroup();
-  mutable var Tasks: array of (task) := [];
+  const Group: Tasks2.TaskGroup := Tasks2.CreateTaskGroup();
+  var Tasks: array of (task) := [];
   for Py: integer := 0 to Request.Height - 1 do
     begin
       if Tasks2.IsCancellationRequested(HostToken) then
@@ -283,20 +286,21 @@ begin
         end;
       end if;
 
-      Arrays.Push(Tasks, Tasks2.StartTaskInGroup(Group, function(WorkerToken: Tasks2.CancellationToken): array of (Tui.TuiCell) begin
+      Arrays.Push(var Tasks, Tasks2.StartTaskInGroup(Group, function(WorkerToken: Tasks2.CancellationToken): array of (Tui.TuiCell) begin
         return RenderRowCellsCancellable(Request, Py, HostToken, WorkerToken);
       end function));
     end;
   end for;
-  mutable var Cells: array of (Tui.TuiCell) := [];
-  for Py: integer := 0 to Arrays.Length(Tasks) - 1 do
+  var Cells: array of (Tui.TuiCell) := [];
+  var CompletedRows: integer := 0;
+  for Handle: task in Tasks do
     begin
-      if Results.IsError(Tasks2.WaitAnyWithCancellation([Tasks[Py]], HostToken)) then
+      if Results.IsError(Tasks2.WaitAnyWithCancellation([Handle], HostToken)) then
         begin
           break;
         end;
       end if;
-      var Row: array of (Tui.TuiCell) := Tasks2.Wait(Tasks[Py]);
+      const Row: array of (Tui.TuiCell) := Tasks2.Wait(Handle);
       if Tasks2.IsCancellationRequested(HostToken) then
         begin
           break;
@@ -304,7 +308,8 @@ begin
       end if;
 
       Cells := Arrays.Concat(Cells, Row);
-      if Py = Request.Height - 1 then
+      CompletedRows := CompletedRows + 1;
+      if CompletedRows = Request.Height then
         begin
           if Results.IsError(Tasks2.SendWithCancellation(Inbox, MandelbrotRenderFrame(Generation := Request.Generation, Cells := Cells), HostToken)) then
             begin
@@ -315,7 +320,7 @@ begin
       end if;
     end;
   end for;
-  var Failures: array of (Tasks2.TaskFailure) := Tasks2.CloseTaskGroup(Group);
+  const Failures: array of (Tasks2.TaskFailure) := Tasks2.CloseTaskGroup(Group);
   for Failure: Tasks2.TaskFailure in Failures do
     begin
       if Failure.Kind <> Tasks2.TaskFailureKind.Cancelled then

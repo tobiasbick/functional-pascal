@@ -1,4 +1,6 @@
 //! Frame/global capture and lexical visibility for one stopped generation.
+//!
+//! **Documentation:** `docs/pascal/language/functions/var-parameters.md`
 
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
@@ -113,7 +115,7 @@ impl InspectionSnapshot {
             }
             let name = image.strings.get(binding.name).unwrap_or("<binding>");
             let type_name = image.strings.get(binding.type_name).unwrap_or("dynamic");
-            let mutation = binding_mutation(
+            let mut mutation = binding_mutation(
                 binding,
                 value.as_ref(),
                 initialized,
@@ -129,11 +131,22 @@ impl InspectionSnapshot {
                         instruction,
                     }),
             );
+            let snapshot = value
+                .as_ref()
+                .and_then(|value| super::storage::snapshot(worker, value));
+            let inaccessible = value.is_some() && snapshot.is_none();
+            if inaccessible {
+                mutation = MutationAccess::Unavailable;
+            }
             let retained = RetainedValue {
                 name: name.to_string(),
-                value,
+                value: snapshot,
                 type_name: type_name.to_string(),
-                presentation_hint: binding.cell_backed.then(|| "captured mutable".to_string()),
+                presentation_hint: if inaccessible {
+                    Some("unavailable".to_string())
+                } else {
+                    binding.cell_backed.then(|| "captured mutable".to_string())
+                },
                 depth: 0,
                 visited_cells: HashSet::new(),
                 debug_type: Some(binding.ty),
@@ -214,7 +227,9 @@ fn binding_mutation(
     {
         return MutationAccess::Unavailable;
     }
-    let root = if binding.cell_backed {
+    let root = if let Some(Value::Reference(reference)) = value {
+        MutationRoot::Reference(Arc::clone(reference))
+    } else if binding.cell_backed {
         match value {
             Some(Value::Cell(cell)) => MutationRoot::ClosureCell(Arc::clone(cell)),
             _ => return MutationAccess::Unavailable,
@@ -264,7 +279,11 @@ fn capture_globals(worker: &Worker, generation: u32) -> Vec<RetainedValue> {
         .iter()
         .enumerate()
         .map(|(index, global)| {
-            let value = globals.get(index).cloned().flatten();
+            let stored = globals.get(index).cloned().flatten();
+            let value = stored
+                .as_ref()
+                .and_then(|value| super::storage::snapshot(worker, value));
+            let logical_ty = super::storage::logical_global_type(image, global.ty);
             RetainedValue {
                 name: image
                     .strings
@@ -273,19 +292,22 @@ fn capture_globals(worker: &Worker, generation: u32) -> Vec<RetainedValue> {
                     .to_string(),
                 value: value.clone(),
                 type_name: "dynamic".to_string(),
-                presentation_hint: None,
+                presentation_hint: (stored.is_some() && value.is_none())
+                    .then(|| "unavailable".to_string()),
                 depth: 0,
                 visited_cells: HashSet::new(),
-                debug_type: Some(global.ty),
-                mutation: if global.mutable {
+                debug_type: Some(logical_ty),
+                mutation: if stored.is_some() && value.is_none() {
+                    MutationAccess::Unavailable
+                } else if global.mutable {
                     MutationAccess::Writable(MutationTarget {
                         root: MutationRoot::Global(index),
                         path: Vec::new(),
-                        expected_type: global.ty,
+                        expected_type: logical_ty,
                         generation,
                         frame_id: None,
-                        initialized: value.is_some(),
-                        initializer: value
+                        initialized: stored.is_some(),
+                        initializer: stored
                             .is_none()
                             .then_some(global.initializer)
                             .flatten()

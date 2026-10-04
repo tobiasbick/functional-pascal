@@ -10,8 +10,8 @@ uses Std.Results as Results;
 uses Std.Tasks as Tasks;
 
 begin
-  var ReadJob: task := go Fs.ReadText('input.txt');
-  var Text: string := Results.Unwrap(Tasks.Wait(ReadJob));
+  const ReadJob: task := go Fs.ReadText('input.txt');
+  const Text: string := Results.Unwrap(Tasks.Wait(ReadJob));
 end program;
 ```
 
@@ -75,7 +75,7 @@ uses Std.Console as Console;
 uses Std.Fs as Fs;
 uses Std.Results as Results;
 
-var Content: result of (string, string) := Fs.ReadText('notes.txt');
+const Content: result of (string, string) := Fs.ReadText('notes.txt');
 if Results.IsOk(Content) then
   Console.WriteLn(Results.Unwrap(Content));
 end if;

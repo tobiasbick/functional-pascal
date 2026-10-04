@@ -25,7 +25,7 @@ fn local_value(session: &mut DebugSession, name: &str) -> String {
 const RANDOM_ASSIGN: &str = r#"program QuietRandom;
 uses Std.Random as Random;
 begin
-  mutable var X: integer := 0;
+   var X: integer := 0;
   X := Random.RandomInt(1, 1);
 end program;
 "#;
@@ -177,7 +177,7 @@ fn continue_after_record_captures_the_next_all_stop() {
     let mut session = compile_session(
         r#"program CaptureStop;
 begin
-  mutable var Flag: integer := 0;
+   var Flag: integer := 0;
   Flag := 1;
 end program;
 "#,

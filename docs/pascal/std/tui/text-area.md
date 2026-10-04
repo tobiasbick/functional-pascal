@@ -5,8 +5,9 @@ complete state and supplies it again on every `View`:
 
 ```pascal
 uses Std.Tui as Tui;
+uses Std.Tui.Elements as Elements;
 
-Tui.TuiElementBuilders.MakeTextArea(Id, Text, Caret, Offset, ChangeAction);
+Elements.TuiElementMakeTextArea(Id, Text, Caret, Offset, ChangeAction);
 ```
 
 `Id` and `ChangeAction` must be positive typed identities. `Caret` is a

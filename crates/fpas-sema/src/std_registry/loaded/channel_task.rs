@@ -107,6 +107,7 @@ pub fn register_std_task(c: &mut Checker) {
     );
 
     let placeholder = Ty::Function(FunctionTy {
+        pure: false,
         type_params: Vec::new(),
         params: vec![],
         return_type: Box::new(Ty::Error),

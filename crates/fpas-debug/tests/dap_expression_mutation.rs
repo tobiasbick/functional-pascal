@@ -15,12 +15,12 @@ type Box = record
   Value: integer;
 end record;
 
-mutable var GlobalValue: integer := 5;
+ var GlobalValue: integer := 5;
 
 begin
-  mutable var Index: integer := 0;
-  mutable var Counter: integer := 1;
-  mutable var Items: array of (Box) := [Box(Value := 10)];
+   var Index: integer := 0;
+   var Counter: integer := 1;
+   var Items: array of (Box) := [Box(Value := 10)];
   Counter := Counter + 1;
   GlobalValue := GlobalValue + Items[Index].Value;
 end program;

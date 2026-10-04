@@ -7,8 +7,8 @@ uses Std.Net.Utf8 as Utf8;
 uses Std.Test as Test;
 
 begin
-  mutable var ResponseValue: Http.ServerResponse := Http.ServerResponse.Create(201, 'Created');
-  ResponseValue.Headers := [Http.Header.Create('Content-Type', 'text/plain')];
+  var ResponseValue: Http.ServerResponse := Http.ServerResponseCreate(201, 'Created');
+  ResponseValue.Headers := [Http.HeaderCreate('Content-Type', 'text/plain')];
   ResponseValue.Body := Utf8.Encode('ok');
   Test.AssertEquals(201, ResponseValue.StatusCode);
   Test.AssertEquals('Created', ResponseValue.ReasonPhrase);

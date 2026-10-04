@@ -6,7 +6,7 @@ use super::Ty;
 use std::sync::Arc;
 
 impl Ty {
-    /// Return whether construction still contains unresolved empty-value type components.
+    /// Return whether a value still needs empty-value or generic callable context.
     pub(crate) fn has_inference_holes(&self) -> bool {
         match self {
             Ty::Error => true,
@@ -20,16 +20,20 @@ impl Ty {
             Ty::Record(record) => record.type_args.iter().any(Ty::has_inference_holes),
             Ty::Enum(enumeration) => enumeration.type_args.iter().any(Ty::has_inference_holes),
             Ty::Function(function) => {
-                function
-                    .params
-                    .iter()
-                    .any(|param| param.ty.has_inference_holes())
+                !function.type_params.is_empty()
+                    || function
+                        .params
+                        .iter()
+                        .any(|param| param.ty.has_inference_holes())
                     || function.return_type.has_inference_holes()
             }
-            Ty::Procedure(procedure) => procedure
-                .params
-                .iter()
-                .any(|param| param.ty.has_inference_holes()),
+            Ty::Procedure(procedure) => {
+                !procedure.type_params.is_empty()
+                    || procedure
+                        .params
+                        .iter()
+                        .any(|param| param.ty.has_inference_holes())
+            }
             _ => false,
         }
     }

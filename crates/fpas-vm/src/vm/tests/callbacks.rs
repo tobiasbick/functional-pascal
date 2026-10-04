@@ -26,6 +26,7 @@ fn callback_image() -> fpas_bytecode::VerifiedExecutable {
                 name: StringId::new(0),
                 code: CodeRange::new(InstructionAddress::new(0), InstructionAddress::new(1)),
                 arity: 0,
+                var_parameters: Vec::new(),
                 capture_count: 0,
                 register_count: 0,
                 return_convention: ReturnConvention::Unit,
@@ -36,6 +37,7 @@ fn callback_image() -> fpas_bytecode::VerifiedExecutable {
                 name: StringId::new(1),
                 code: CodeRange::new(InstructionAddress::new(1), InstructionAddress::new(3)),
                 arity: 1,
+                var_parameters: Vec::new(),
                 capture_count: 0,
                 register_count: 2,
                 return_convention: ReturnConvention::Value,
@@ -46,6 +48,7 @@ fn callback_image() -> fpas_bytecode::VerifiedExecutable {
                 name: StringId::new(2),
                 code: CodeRange::new(InstructionAddress::new(3), InstructionAddress::new(5)),
                 arity: 0,
+                var_parameters: Vec::new(),
                 capture_count: 0,
                 register_count: 1,
                 return_convention: ReturnConvention::Unit,
@@ -156,21 +159,53 @@ fn hosted_callback_rejects_a_task_owned_function_from_a_foreign_task() {
 }
 
 #[test]
-fn reused_hosted_callback_keeps_bound_receiver_before_visible_arguments() {
-    let worker = Worker::new(Arc::new(callback_image())).expect("worker");
-    let function = Value::bound_function(
+fn reused_hosted_callback_keeps_immutable_captures() {
+    let mut executable = image(
+        vec![
+            abc(Opcode::Return, fpas_bytecode::NO_REGISTER, 0, 0, 0),
+            abc(Opcode::AddInteger, 1, 0, 0, 0),
+            abc(Opcode::Return, 1, 0, 0, 0),
+        ],
+        Vec::new(),
+        &[
+            FunctionSpec {
+                start: 0,
+                end: 1,
+                arity: 0,
+                captures: 0,
+                registers: 1,
+                returns: ReturnConvention::Unit,
+            },
+            FunctionSpec {
+                start: 1,
+                end: 3,
+                arity: 0,
+                captures: 1,
+                registers: 2,
+                returns: ReturnConvention::Value,
+            },
+        ],
+    )
+    .executable()
+    .clone();
+    executable.functions[0].debug.bindings[0].cell_backed = false;
+    executable.functions[0].debug.bindings[0].mutable = false;
+    executable.functions[1].debug.capture_sources[0].kind = fpas_bytecode::DebugCaptureKind::Value;
+    let worker =
+        Worker::new(Arc::new(executable.verify().expect("capture image"))).expect("worker");
+    let function = Value::function(
         FunctionId::new(1),
-        "Counter.Double".to_string(),
-        Value::Integer(3),
+        "DoubleCaptured",
+        vec![Value::Integer(3)],
     );
 
     let output = [
         worker
             .call_callback_sync(&function, &[])
-            .expect("bound callback"),
+            .expect("capturing callback"),
         worker
             .call_callback_sync(&function, &[])
-            .expect("reused bound callback"),
+            .expect("reused capturing callback"),
     ];
 
     assert_eq!(output, [Value::Integer(6), Value::Integer(6)]);

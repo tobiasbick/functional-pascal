@@ -1,42 +1,42 @@
 # Combine and iterate
 
-## `function Concat(A: array of (T); B: array of (T)): array of (T)`
+## `pure function Concat(A: array of (T); B: array of (T)): array of (T)`
 
 Returns a **new** array containing all elements of `A` followed by all elements of `B`.
 
 ```pascal
 uses Std.Console as Console;
 
-var C: array of (integer) := Concat([1, 2], [3, 4]);
+const C: array of (integer) := Concat([1, 2], [3, 4]);
 Console.WriteLn(Length(C)); // 4
 ```
 
 ---
 
-## `function FlatMap(A: array of (T); F: function(X: T): array of (U)): array of (U)`
+## `pure function FlatMap(A: array of (T); F: pure function(X: T): array of (U)): array of (U)`
 
 Applies `F` to each element (producing an array), then flattens all results into a single array.
 
 ```pascal
-function ExpandPair(X: integer): array of (integer);
+pure function ExpandPair(X: integer): array of (integer);
 begin
   return [X, X * 10];
 end function;
 
-var Output: array of (integer) := FlatMap([1, 2, 3], ExpandPair);
+const Output: array of (integer) := FlatMap([1, 2, 3], ExpandPair);
 
 ```
 
 ---
 
-## `function Fill(Value: T; Count: integer): array of (T)`
+## `pure function Fill(Value: T; Count: integer): array of (T)`
 
 Creates a new array containing `Count` copies of `Value`.
 
 ```pascal
 uses Std.Console as Console;
 
-var Zeros: array of (integer) := Fill(0, 5);
+const Zeros: array of (integer) := Fill(0, 5);
 Console.WriteLn(Length(Zeros)); // 5
 ```
 

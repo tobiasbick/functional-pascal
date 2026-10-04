@@ -20,7 +20,7 @@ begin
         panic(Message);
       end;
   end case;
-  var Bytes: array of (integer) := Utf8.Encode('Grüße aus FPAS');
+  const Bytes: array of (integer) := Utf8.Encode('Grüße aus FPAS');
   case Utf8.Decode(Bytes) of
     when Result.Ok(const Text):
       begin

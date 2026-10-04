@@ -41,7 +41,7 @@ fn generic_body_accepts_same_type_parameter_and_call_site_inference() {
         r#"program T;
          function Identity of (T)(X: T): T;
          begin return X; end function;
-          var Value: integer := Identity(42);
+          const Value: integer := Identity(42);
          begin null; end program;"#,
     );
 }
@@ -52,7 +52,7 @@ fn generic_function_value_does_not_coerce_to_concrete_signature() {
         r#"program T;
          function Identity of (T)(X: T): T;
          begin return X; end function;
-          var Concrete: function(X: integer): string := Identity;
+          const Concrete: function(X: integer): string := Identity;
          begin null; end program;"#,
     );
     assert!(

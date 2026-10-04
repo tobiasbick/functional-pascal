@@ -59,8 +59,9 @@ Procedures use bare `return` to exit early without a value:
 ```pascal
 uses Std.Console as Console;
 
-procedure LogIfPositive(mutable Count: integer; Value: integer);
+procedure LogIfPositive(InitialCount: integer; Value: integer);
 begin
+   var Count: integer := InitialCount;
   if Value <= 0 then
     return;
   end if;

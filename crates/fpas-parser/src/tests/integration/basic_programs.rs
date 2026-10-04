@@ -46,7 +46,7 @@ begin
 end function;
 
 begin
-  var Answer: integer := Calculate(10, 3, Op.OpAdd);
+  const Answer: integer := Calculate(10, 3, Op.OpAdd);
   Console.WriteLn(Answer);
 end program;
 "#,

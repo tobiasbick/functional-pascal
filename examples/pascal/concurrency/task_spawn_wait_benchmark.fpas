@@ -20,15 +20,21 @@ end function;
 
 function RunTasks(Iterations: integer): integer;
 begin
-  mutable var Tasks: array of (task) := [];
+  var Tasks: array of (task) := [];
   for Index: integer := 1 to Iterations do
     begin
-      Arrays.Push(Tasks, go Worker(Index));
+      Arrays.Push(var Tasks, go Worker(Index));
     end;
   end for;
 
   Tasks2.WaitAll(Tasks);
-  return Arrays.Length(Tasks);
+  var Completed: integer := 0;
+  for Handle: task in Tasks do
+    discard Tasks2.Wait(Handle);
+    Completed := Completed + 1;
+  end for;
+
+  return Completed;
 end function;
 
 begin
@@ -37,13 +43,13 @@ begin
       panic('usage: task_spawn_wait_benchmark.fpas -- ITERATIONS [MAX_MILLIS]');
     end;
   end if;
-  var Iterations: integer := Conv.StrToInt(Args.ParamStr(0));
+  const Iterations: integer := Conv.StrToInt(Args.ParamStr(0));
   if Iterations < 1 then
     begin
       panic('ITERATIONS must be positive');
     end;
   end if;
-  mutable var MaxMillis: integer := 0;
+  var MaxMillis: integer := 0;
   if Args.ParamCount() = 2 then
     begin
       MaxMillis := Conv.StrToInt(Args.ParamStr(1));
@@ -54,11 +60,11 @@ begin
       end if;
     end;
   end if;
-  mutable var Completed: integer := RunTasks(WarmupIterations);
-  var Started: integer := Time.MonotonicMillis();
+  var Completed: integer := RunTasks(WarmupIterations);
+  const Started: integer := Time.MonotonicMillis();
   Completed := RunTasks(Iterations);
-  var Elapsed: integer := Time.ElapsedMillis(Started);
-  mutable var OpsPerSecond: integer := 0;
+  const Elapsed: integer := Time.ElapsedMillis(Started);
+  var OpsPerSecond: integer := 0;
   if Elapsed > 0 then
     begin
       OpsPerSecond := (Iterations * 1000) div Elapsed;

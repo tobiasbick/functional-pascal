@@ -15,7 +15,7 @@ fn operator_and_bit_errors_use_the_real_cli_json_stream() {
         write(
             &root.join("main.fpas"),
             &format!(
-                "program Main; uses Std.Bits as Bits; begin var X: integer := {expression}; end program;"
+                r#"program Main; uses Std.Bits as Bits; begin const X: integer := {expression}; end program;"#
             ),
         );
         let output = Command::new(env!("CARGO_BIN_EXE_fpas"))
@@ -49,7 +49,7 @@ fn invalid_shift_counts_report_the_numeric_domain_code_through_the_cli() {
             write(
                 &root.join("main.fpas"),
                 &format!(
-                    "program Main; uses Std.Bits as Bits; begin var X: integer := Bits.{name}(0, {count}); end program;"
+                    r#"program Main; uses Std.Bits as Bits; begin const X: integer := Bits.{name}(0, {count}); end program;"#
                 ),
             );
             let output = Command::new(env!("CARGO_BIN_EXE_fpas"))

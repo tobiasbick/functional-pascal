@@ -32,7 +32,7 @@ pub use executable::{Executable, VerifiedExecutable};
 pub use fpas_diagnostics::SourceLocation;
 pub use function::{
     CodeRange, FunctionFlags, FunctionInfo, ReturnConvention, entry_source_name,
-    program_entry_name, unit_initializer_name,
+    program_entry_name, unit_initializer_name, var_parameters_are_valid,
 };
 pub use instruction::{
     AbcOperands, AbxOperands, Instruction, InstructionError, InstructionForm, Opcode,
@@ -46,7 +46,7 @@ pub use intrinsic::{
 };
 pub use metadata::{
     Constant, EnumLayout, EnumVariant, GlobalInfo, GlobalInitializer, RecordField, RecordLayout,
-    RecordMethod, RecordProperty, SourceMap, SourceRun, StringTable,
+    SourceMap, SourceRun, StringTable,
 };
 pub use operand::{
     ConstantId, DebugBindingId, DebugTypeId, EnumTypeId, EnumVariantId, FunctionId, GlobalId,
@@ -55,9 +55,11 @@ pub use operand::{
 };
 pub use validate::{ValidationError, ValidationErrorKind};
 pub use value::{
-    EnumValue, FunctionValue, RecordValue, RuntimeEnumLayout, RuntimeRecordLayout, SharedArray,
-    SharedDict, SharedEnum, SharedFunction, SharedRecord, SharedStr, Value, managed_value_buffer,
+    CellBorrow, EnumValue, FunctionValue, RecordValue, ReferenceError, ReferencePathError,
+    ReferenceRegistry, ReferenceStep, RuntimeEnumLayout, RuntimeRecordLayout, SelectedReference,
+    SharedArray, SharedDict, SharedEnum, SharedFunction, SharedRecord, SharedStr, Value,
+    managed_value_buffer,
 };
 
 /// Persistent register instruction-set version recorded in compiled artifacts.
-pub const BYTECODE_VERSION: u32 = 15;
+pub const BYTECODE_VERSION: u32 = 17;

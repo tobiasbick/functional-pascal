@@ -21,7 +21,7 @@ type Handler = function(Left: integer; Right: integer): integer;
 function Make(): Handler;
 begin return function(A: integer; B: integer): integer begin return A + B; end function; end function;
 begin
-  var Handlers: array of (Handler) := [Make()];
+  const Handlers: array of (Handler) := [Make()];
   discard Make()(1, 2);
   discard Handlers[0](3, 4);
   discard (Handlers[0])(5, 6);
@@ -55,9 +55,9 @@ type Counter = record
 end;
 
 begin
-  var Music: string := '𝄞';
-  var Value: Counter := Counter(Amount := 1, Secret := 2);
-  var ResultValue: integer := Value.AmTail
+  const Music: string := '𝄞';
+  const Value: Counter := Counter(Amount := 1, Secret := 2);
+  const ResultValue: integer := Value.AmTail
 end.
 "#;
     let path = temp.write("complete.fpas", source);
@@ -97,9 +97,9 @@ type Counter = record
 end;
 
 begin
-  var Value: Counter := Counter(Amount := 1);
+  const Value: Counter := Counter(Amount := 1);
   // Value.Am
-  var Text: string := 'Value.Am';
+  const Text: string := 'Value.Am';
   Value.Am
 end.
 "#;
@@ -135,7 +135,7 @@ fn completion_excludes_shadowed_and_private_declarations_and_adds_keywords() {
     let temp = TempDirectory::new("intellisense-scope");
     let source = r#"program Scope;
 
-var Value: string := 'global';
+const Value: string := 'global';
 
 function ReadValue(Value: integer): integer;
 begin
@@ -313,7 +313,7 @@ end unit;
 uses Demo.Core as Core;
 
 begin
-  var Value: integer := UniqueValue;
+  const Value: integer := UniqueValue;
 end program;
 "#;
     let main = temp.write("src/main.fpas", source);
@@ -380,50 +380,52 @@ end program;
 }
 
 #[test]
-fn signature_help_tracks_nested_multiline_generic_method_and_callable_value_arguments() {
+fn signature_help_tracks_nested_multiline_record_generic_and_callable_value_arguments() {
     let temp = TempDirectory::new("intellisense-signatures");
     let source = r#"program Signatures;
 
 type Counter = record
-  public function Add(Self: Counter; Amount: integer; LabelText: string): integer;
+  Base: integer := 0;
+end record;
+  function CounterAdd(Receiver: Counter; Amount: integer; LabelText: string): integer;
   begin
-    return Amount
-  end;
-end;
+    return Receiver.Base + Amount;
+  end function;
 
 type Shape = enum
   Circle(Radius: real; Filled: boolean);
-end;
+end enum;
 
 function Sum(Left: integer; Right: integer): integer;
 begin
-  return Left + Right
-end;
+  return Left + Right;
+end function;
 
 function Identity of (T)(Value: T): T;
 begin
-  return Value
-end;
+  return Value;
+end function;
 
 procedure Outer();
   procedure Inner(Value: integer; Flag: boolean);
   begin
-  end;
+    null;
+  end procedure;
 begin
-  Inner(1, true)
-end;
+  Inner(1, true);
+end procedure;
 
 begin
-  var CounterValue: Counter := Counter();
-  var Callback: function(Left: integer; Right: integer): integer := Sum;
-  var A: integer := Sum(1, Sum(2, 3));
-  var B: integer := CounterValue.Add(
+  const CounterValue: Counter := Counter();
+  const Callback: function(Left: integer; Right: integer): integer := Sum;
+  const A: integer := Sum(1, Sum(2, 3));
+  const B: integer := CounterAdd(CounterValue,
     1,
     'two');
-  var C: integer := Callback(1, 2);
-  var D: integer := Identity(1);
-  var E: Shape := Shape.Circle(2.0, true)
-end.
+  const C: integer := Callback(1, 2);
+  const D: integer := Identity(1);
+  const E: Shape := Shape.Circle(2.0, true);
+end program;
 "#;
     let path = temp.write("signatures.fpas", source);
     let mut service = LanguageService::new(WorkspaceContext::loose(temp.path()));
@@ -437,17 +439,17 @@ end.
     assert_eq!(nested.signature.parameters.len(), 2);
     assert_eq!(nested.active_parameter, Some(1));
 
-    let method_cursor = source.find("    'two'").expect("multiline argument");
-    let method = service
-        .signature_help(&path, method_cursor)
-        .expect("method signature")
+    let record_cursor = source.find("    'two'").expect("multiline argument");
+    let record_call = service
+        .signature_help(&path, record_cursor)
+        .expect("record function signature")
         .value
-        .expect("method callable");
+        .expect("record function");
     assert_eq!(
-        method.signature.parameters,
-        ["Amount: integer", "LabelText: string"]
+        record_call.signature.parameters,
+        ["Receiver: Counter", "Amount: integer", "LabelText: string"]
     );
-    assert_eq!(method.active_parameter, Some(1));
+    assert_eq!(record_call.active_parameter, Some(2));
 
     let nested_procedure_cursor = source
         .find("Inner(1, true)")

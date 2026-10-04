@@ -33,47 +33,46 @@ public type TuiColor = record
   public Green: integer;
   // Blue RGB channel.
   public Blue: integer;
-
-  // Creates a CRT color (`0..15`).
-  //
-  // Parameters:
-  // - `Index`: Zero-based index used by the operation.
-  public static function FromCrt(Index: integer): TuiColor;
-  begin
-    discard TuiColorRequireRange(Index, 0, 15, 'CRT color index');
-    return TuiColor(Kind := TuiColorKind.Crt, Index := Index, Red := 0, Green := 0, Blue := 0);
-  end function;
-
-  // Creates an ANSI-256 color (`0..255`).
-  //
-  // Parameters:
-  // - `Index`: Zero-based index used by the operation.
-  public static function FromAnsi256(Index: integer): TuiColor;
-  begin
-    discard TuiColorRequireRange(Index, 0, 255, 'ANSI-256 color index');
-    return TuiColor(Kind := TuiColorKind.Ansi256, Index := Index, Red := 0, Green := 0, Blue := 0);
-  end function;
-
-  // Creates an RGB color; each channel is `0..255`.
-  //
-  // Parameters:
-  // - `Red`: Red RGB channel in the range `0..255`.
-  // - `Green`: Green RGB channel in the range `0..255`.
-  // - `Blue`: Blue RGB channel in the range `0..255`.
-  public static function FromRgb(Red: integer; Green: integer; Blue: integer): TuiColor;
-  begin
-    // One combined check keeps the per-cell hot path cheap; failures still name the channel.
-    if (((Red < 0) or (Red > 255)) or ((Green < 0) or (Green > 255))) or
-       ((Blue < 0) or (Blue > 255)) then
-      begin
-        discard TuiColorRequireRange(Red, 0, 255, 'red channel');
-        discard TuiColorRequireRange(Green, 0, 255, 'green channel');
-        discard TuiColorRequireRange(Blue, 0, 255, 'blue channel');
-      end;
-    end if;
-
-    return TuiColor(Kind := TuiColorKind.Rgb, Index := 0, Red := Red, Green := Green, Blue := Blue);
-  end function;
 end record;
+
+// Creates a CRT color (`0..15`).
+//
+// Parameters:
+// - `Index`: Zero-based index used by the operation.
+public function TuiColorFromCrt(Index: integer): TuiColor;
+begin
+  discard TuiColorRequireRange(Index, 0, 15, 'CRT color index');
+  return TuiColor(Kind := TuiColorKind.Crt, Index := Index, Red := 0, Green := 0, Blue := 0);
+end function;
+
+// Creates an ANSI-256 color (`0..255`).
+//
+// Parameters:
+// - `Index`: Zero-based index used by the operation.
+public function TuiColorFromAnsi256(Index: integer): TuiColor;
+begin
+  discard TuiColorRequireRange(Index, 0, 255, 'ANSI-256 color index');
+  return TuiColor(Kind := TuiColorKind.Ansi256, Index := Index, Red := 0, Green := 0, Blue := 0);
+end function;
+
+// Creates an RGB color; each channel is `0..255`.
+//
+// Parameters:
+// - `Red`: Red RGB channel in the range `0..255`.
+// - `Green`: Green RGB channel in the range `0..255`.
+// - `Blue`: Blue RGB channel in the range `0..255`.
+public function TuiColorFromRgb(Red: integer; Green: integer; Blue: integer): TuiColor;
+begin
+  // One combined check keeps the per-cell hot path cheap; failures still name the channel.
+  if (((Red < 0) or (Red > 255)) or ((Green < 0) or (Green > 255))) or ((Blue < 0) or (Blue > 255)) then
+    begin
+      discard TuiColorRequireRange(Red, 0, 255, 'red channel');
+      discard TuiColorRequireRange(Green, 0, 255, 'green channel');
+      discard TuiColorRequireRange(Blue, 0, 255, 'blue channel');
+    end;
+  end if;
+
+  return TuiColor(Kind := TuiColorKind.Rgb, Index := 0, Red := Red, Green := Green, Blue := Blue);
+end function;
 
 end unit;

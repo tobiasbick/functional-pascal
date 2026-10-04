@@ -97,7 +97,7 @@ Do **not** assume Delphi/Free Pascal:
 | Wrong (other Pascal) | FPAS |
 |----------------------|------|
 | `FuncName := value` return | `return value` only |
-| `var x: Integer` mutable by default | `var` immutable; use `mutable var` to reassign |
+| `mutable var` for writable storage | Use `const` for immutable bindings and `var` for writable storage; both require an initializer |
 | Omitting the last statement semicolon | Every statement ends with `;`, including before `else`, `elsif`, `when`, `until`, and closers |
 | `uses Unit1, Unit2` and bare imported names | One `uses Unit.Name as Alias;` per import; use only `Alias.Member` |
 | untyped lambda shorthand | use an anonymous `function` / `procedure` expression with explicit parameter and result types; use a named nested routine for implicit recursion |

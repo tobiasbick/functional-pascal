@@ -15,12 +15,16 @@ use super::super::types::{emit_formal_params_in_parens, emit_type_expr};
 pub(super) fn emit_closure(
     emitter: &mut Emitter,
     is_function: bool,
+    pure: bool,
     params: &[FormalParam],
     return_type: &Option<TypeExpr>,
     body: &FuncBody,
     owner_start: usize,
     comments: &CommentMap,
 ) {
+    if pure {
+        emitter.write("pure ");
+    }
     if is_function {
         emit_formal_params_in_parens(emitter, "function(", params, "");
         emitter.write(": ");

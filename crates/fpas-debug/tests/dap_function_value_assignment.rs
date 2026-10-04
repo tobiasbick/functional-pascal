@@ -239,10 +239,10 @@ fn dap_set_variable_and_set_expression_copy_function_values() {
         &mut adapter,
         &mut seq,
         "setExpression",
-        json!({"frameId":current,"expression":"Current","value":"Receiver.Add"}),
+        json!({"frameId":current,"expression":"Current","value":"ReceiverAdder"}),
     );
     assert_eq!(bound[0]["success"], true, "{bound:?}");
-    assert_eq!(bound[0]["body"]["value"], "<function Counter.Add>");
+    assert_eq!(bound[0]["body"]["value"], "<function bindcounter.add>");
     assert_eq!(bound[1]["event"], "invalidated");
     let current = frame(&mut adapter, &mut seq);
     let bound_call = evaluate(&mut adapter, &mut seq, current, "Current(1)");
@@ -260,7 +260,7 @@ fn dap_set_variable_and_set_expression_copy_function_values() {
         &mut adapter,
         &mut seq,
         "setExpression",
-        json!({"frameId":current,"expression":"WrongSignature","value":"Receiver.Add"}),
+        json!({"frameId":current,"expression":"WrongSignature","value":"ReceiverAdder"}),
     );
     assert_eq!(wrong_signature.len(), 1, "{wrong_signature:?}");
     assert_eq!(wrong_signature[0]["success"], false);
@@ -421,7 +421,7 @@ fn dap_synthetic_function_children_stay_non_assignable_without_invalidation() {
         &mut adapter,
         &mut seq,
         "setExpression",
-        json!({"frameId":current,"expression":"Current","value":"Receiver.Add"}),
+        json!({"frameId":current,"expression":"Current","value":"ReceiverAdder"}),
     );
     assert_eq!(bound[0]["success"], true, "{bound:?}");
     assert_eq!(bound[1]["event"], "invalidated");
@@ -431,14 +431,14 @@ fn dap_synthetic_function_children_stay_non_assignable_without_invalidation() {
     let receiver_handle = child_handle(&locals_page, "Current");
     let children = listed_variables(&mut adapter, &mut seq, receiver_handle);
     assert!(
-        children.iter().any(|child| child["name"] == "receiver"),
+        children.iter().any(|child| child["name"] == "capture[0]"),
         "{children:?}"
     );
     let rejected = send(
         &mut adapter,
         &mut seq,
         "setVariable",
-        json!({"variablesReference":receiver_handle,"name":"receiver","value":"Receiver"}),
+        json!({"variablesReference":receiver_handle,"name":"capture[0]","value":"Receiver"}),
     );
     assert_eq!(rejected.len(), 1, "{rejected:?}");
     assert_eq!(rejected[0]["success"], false);

@@ -4,6 +4,7 @@ unit Mandelbrot.Color;
 
 uses Std.Math as Math;
 uses Std.Tui as Tui;
+uses Std.Tui.Cells as Cells;
 
 public type PaletteKind = enum
   DeepOcean;
@@ -36,58 +37,58 @@ end function;
 
 public function EscapeColor(Kind: PaletteKind; EscapeValue: real): Tui.TuiColor;
 begin
-  var Band: integer := BandIndex(EscapeValue);
+  const Band: integer := BandIndex(EscapeValue);
   case Kind of
     when PaletteKind.DeepOcean:
       begin
         case Band of
           when 0:
             begin
-              return Tui.TuiColor.FromRgb(5, 16, 37);
+              return Cells.TuiColorFromRgb(5, 16, 37);
             end;
           when 1:
             begin
-              return Tui.TuiColor.FromRgb(11, 31, 70);
+              return Cells.TuiColorFromRgb(11, 31, 70);
             end;
           when 2:
             begin
-              return Tui.TuiColor.FromRgb(16, 51, 106);
+              return Cells.TuiColorFromRgb(16, 51, 106);
             end;
           when 3:
             begin
-              return Tui.TuiColor.FromRgb(20, 74, 138);
+              return Cells.TuiColorFromRgb(20, 74, 138);
             end;
           when 4:
             begin
-              return Tui.TuiColor.FromRgb(26, 99, 167);
+              return Cells.TuiColorFromRgb(26, 99, 167);
             end;
           when 5:
             begin
-              return Tui.TuiColor.FromRgb(34, 127, 193);
+              return Cells.TuiColorFromRgb(34, 127, 193);
             end;
           when 6:
             begin
-              return Tui.TuiColor.FromRgb(46, 156, 207);
+              return Cells.TuiColorFromRgb(46, 156, 207);
             end;
           when 7:
             begin
-              return Tui.TuiColor.FromRgb(76, 183, 216);
+              return Cells.TuiColorFromRgb(76, 183, 216);
             end;
           when 8:
             begin
-              return Tui.TuiColor.FromRgb(112, 208, 219);
+              return Cells.TuiColorFromRgb(112, 208, 219);
             end;
           when 9:
             begin
-              return Tui.TuiColor.FromRgb(161, 224, 216);
+              return Cells.TuiColorFromRgb(161, 224, 216);
             end;
           when 10:
             begin
-              return Tui.TuiColor.FromRgb(212, 237, 232);
+              return Cells.TuiColorFromRgb(212, 237, 232);
             end;
           else
             begin
-              return Tui.TuiColor.FromRgb(242, 248, 255);
+              return Cells.TuiColorFromRgb(242, 248, 255);
             end;
         end case;
       end;
@@ -96,51 +97,51 @@ begin
         case Band of
           when 0:
             begin
-              return Tui.TuiColor.FromRgb(64, 0, 0);
+              return Cells.TuiColorFromRgb(64, 0, 0);
             end;
           when 1:
             begin
-              return Tui.TuiColor.FromRgb(106, 10, 0);
+              return Cells.TuiColorFromRgb(106, 10, 0);
             end;
           when 2:
             begin
-              return Tui.TuiColor.FromRgb(138, 30, 0);
+              return Cells.TuiColorFromRgb(138, 30, 0);
             end;
           when 3:
             begin
-              return Tui.TuiColor.FromRgb(176, 58, 0);
+              return Cells.TuiColorFromRgb(176, 58, 0);
             end;
           when 4:
             begin
-              return Tui.TuiColor.FromRgb(212, 90, 0);
+              return Cells.TuiColorFromRgb(212, 90, 0);
             end;
           when 5:
             begin
-              return Tui.TuiColor.FromRgb(240, 122, 0);
+              return Cells.TuiColorFromRgb(240, 122, 0);
             end;
           when 6:
             begin
-              return Tui.TuiColor.FromRgb(255, 159, 26);
+              return Cells.TuiColorFromRgb(255, 159, 26);
             end;
           when 7:
             begin
-              return Tui.TuiColor.FromRgb(255, 190, 74);
+              return Cells.TuiColorFromRgb(255, 190, 74);
             end;
           when 8:
             begin
-              return Tui.TuiColor.FromRgb(255, 217, 120);
+              return Cells.TuiColorFromRgb(255, 217, 120);
             end;
           when 9:
             begin
-              return Tui.TuiColor.FromRgb(255, 231, 166);
+              return Cells.TuiColorFromRgb(255, 231, 166);
             end;
           when 10:
             begin
-              return Tui.TuiColor.FromRgb(255, 241, 204);
+              return Cells.TuiColorFromRgb(255, 241, 204);
             end;
           else
             begin
-              return Tui.TuiColor.FromRgb(255, 248, 232);
+              return Cells.TuiColorFromRgb(255, 248, 232);
             end;
         end case;
       end;
@@ -149,51 +150,51 @@ begin
         case Band of
           when 0:
             begin
-              return Tui.TuiColor.FromRgb(4, 16, 32);
+              return Cells.TuiColorFromRgb(4, 16, 32);
             end;
           when 1:
             begin
-              return Tui.TuiColor.FromRgb(10, 46, 72);
+              return Cells.TuiColorFromRgb(10, 46, 72);
             end;
           when 2:
             begin
-              return Tui.TuiColor.FromRgb(16, 77, 106);
+              return Cells.TuiColorFromRgb(16, 77, 106);
             end;
           when 3:
             begin
-              return Tui.TuiColor.FromRgb(20, 104, 134);
+              return Cells.TuiColorFromRgb(20, 104, 134);
             end;
           when 4:
             begin
-              return Tui.TuiColor.FromRgb(25, 124, 143);
+              return Cells.TuiColorFromRgb(25, 124, 143);
             end;
           when 5:
             begin
-              return Tui.TuiColor.FromRgb(35, 142, 124);
+              return Cells.TuiColorFromRgb(35, 142, 124);
             end;
           when 6:
             begin
-              return Tui.TuiColor.FromRgb(52, 169, 104);
+              return Cells.TuiColorFromRgb(52, 169, 104);
             end;
           when 7:
             begin
-              return Tui.TuiColor.FromRgb(100, 191, 100);
+              return Cells.TuiColorFromRgb(100, 191, 100);
             end;
           when 8:
             begin
-              return Tui.TuiColor.FromRgb(148, 217, 118);
+              return Cells.TuiColorFromRgb(148, 217, 118);
             end;
           when 9:
             begin
-              return Tui.TuiColor.FromRgb(200, 230, 138);
+              return Cells.TuiColorFromRgb(200, 230, 138);
             end;
           when 10:
             begin
-              return Tui.TuiColor.FromRgb(234, 240, 180);
+              return Cells.TuiColorFromRgb(234, 240, 180);
             end;
           else
             begin
-              return Tui.TuiColor.FromRgb(248, 248, 224);
+              return Cells.TuiColorFromRgb(248, 248, 224);
             end;
         end case;
       end;
@@ -202,7 +203,7 @@ end function;
 
 public function InsideColor(): Tui.TuiColor;
 begin
-  return Tui.TuiColor.FromRgb(0, 0, 0);
+  return Cells.TuiColorFromRgb(0, 0, 0);
 end function;
 
 end unit;

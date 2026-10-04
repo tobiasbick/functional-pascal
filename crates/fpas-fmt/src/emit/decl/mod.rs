@@ -62,25 +62,26 @@ mod tests {
     }
 
     #[test]
-    fn record_with_defaults_and_methods() {
+    fn record_with_defaults_and_ordinary_function() {
         let formatted = format_program_decls(
             r#"program T;
 
   type Point = record
-    X: integer;
-    Y: integer;
-    function Sum(Self: Point): integer;
-    begin return Self.X + Self.Y;
-    end function;
+    X: integer := 0;
+    Y: integer := 0;
   end record;
+  function PointSum(Receiver: Point): integer;
+  begin return Receiver.X + Receiver.Y;
+  end function;
 begin null; end program;"#,
         );
         assert!(
-            formatted.contains("X: integer;\n  Y: integer;\n\n  function Sum"),
+            formatted
+                .contains("X: integer := 0;\n  Y: integer := 0;\nend record;\n\nfunction PointSum"),
             "formatted:\n{formatted}"
         );
-        assert!(formatted.contains("return Self.X + Self.Y"));
-        assert!(formatted.contains("end function;\nend record;\n"));
+        assert!(formatted.contains("return Receiver.X + Receiver.Y"));
+        assert!(formatted.ends_with("end function;\n"));
     }
 
     #[test]
@@ -106,11 +107,11 @@ end unit;
     #[test]
     fn unit_default_private_vars_and_consts_repeat_each_declaration_keyword() {
         let formatted = format_unit_decls(
-            r#"unit U;   mutable var A: integer := 1;   mutable var B: integer := 2;  const C: integer := 3;  const D: integer := 4;
+            r#"unit U;    var A: integer := 1;    var B: integer := 2;  const C: integer := 3;  const D: integer := 4;
 end unit;
 "#,
         );
-        assert!(formatted.contains("mutable var A: integer := 1;\nmutable var B: integer := 2;\n"));
+        assert!(formatted.contains("var A: integer := 1;\nvar B: integer := 2;\n"));
         assert!(formatted.contains("const C: integer := 3;\nconst D: integer := 4;\n"));
     }
 

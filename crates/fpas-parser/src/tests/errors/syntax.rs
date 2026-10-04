@@ -75,7 +75,7 @@ fn repeat_empty_body_missing_until() {
 
 #[test]
 fn missing_colon_assign() {
-    let (_, errs) = parse_with_errors("program T; begin var X: integer 42 end program;");
+    let (_, errs) = parse_with_errors(r#"program T; begin const X: integer 42 end program;"#);
     assert!(!errs.is_empty());
 }
 
@@ -95,13 +95,13 @@ fn null_body_allowed() {
 
 #[test]
 fn leading_dot_real_literal_is_rejected() {
-    let (_, errs) = parse_with_errors("program T; begin var X: real := .5 end program;");
+    let (_, errs) = parse_with_errors(r#"program T; begin const X: real := .5 end program;"#);
     assert!(!errs.is_empty());
 }
 
 #[test]
 fn trailing_dot_real_literal_is_rejected() {
-    let (_, errs) = parse_with_errors("program T; begin var X: real := 5. end program;");
+    let (_, errs) = parse_with_errors(r#"program T; begin const X: real := 5. end program;"#);
     assert!(!errs.is_empty());
 }
 

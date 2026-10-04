@@ -22,7 +22,7 @@ type Other = enum
 end enum;
 
 begin
-  var S: Shape := Shape.Point;
+  const S: Shape := Shape.Point;
   case S of
     when Other.Square(const Size):
       return;
@@ -43,7 +43,7 @@ end program;
 #[test]
 fn case_data_enum_rejects_foreign_nested_variant() {
     let errors = check_errors(
-        r#"program T;  type Inner = enum A(X: integer); end enum;  type Other = enum B(X: integer); end enum;  type Outer = enum Wrap(Value: Inner); Empty; end enum; begin var V: Outer := Outer.Empty; case V of when Outer.Wrap(Other.B(X)): return; when Outer.Empty: return; end case; end program;"#,
+        r#"program T;  type Inner = enum A(X: integer); end enum;  type Other = enum B(X: integer); end enum;  type Outer = enum Wrap(Value: Inner); Empty; end enum; begin const V: Outer := Outer.Empty; case V of when Outer.Wrap(Other.B(X)): return; when Outer.Empty: return; end case; end program;"#,
     );
     assert!(
         errors
@@ -56,7 +56,7 @@ fn case_data_enum_rejects_foreign_nested_variant() {
 #[test]
 fn case_data_enum_pattern_literal_must_match_field_type() {
     let errors = check_errors(
-        r#"program T;  type Shape = enum Circle(Radius: real); Point; end enum; begin var S: Shape := Shape.Point; case S of when Shape.Circle('big'): return; when Shape.Point: return; end case; end program;"#,
+        r#"program T;  type Shape = enum Circle(Radius: real); Point; end enum; begin const S: Shape := Shape.Point; case S of when Shape.Circle('big'): return; when Shape.Point: return; end case; end program;"#,
     );
     assert!(
         errors
@@ -69,7 +69,7 @@ fn case_data_enum_pattern_literal_must_match_field_type() {
 #[test]
 fn case_option_rejects_result_patterns() {
     let errors = check_errors(
-        r#"program T; begin var O: Option of (integer) := Option.None; case O of when Result.Ok(const V): return; when Option.None: return; end case; end program;"#,
+        r#"program T; begin const O: Option of (integer) := Option.None; case O of when Result.Ok(const V): return; when Option.None: return; end case; end program;"#,
     );
     assert!(
         errors
@@ -87,7 +87,7 @@ fn case_result_multi_label_shared_binding_valid() {
 uses Std.Console as Console;
 
 begin
-  var R: Result of (string, string) := Result.Ok('hello');
+  const R: Result of (string, string) := Result.Ok('hello');
   case R of
     when Result.Ok(const Msg), Result.Error(const Msg):
       Console.WriteLn(Msg);
@@ -105,7 +105,7 @@ fn case_result_multi_label_binding_names_are_case_insensitive() {
 uses Std.Console as Console;
 
 begin
-  var R: Result of (string, string) := Result.Ok('hello');
+  const R: Result of (string, string) := Result.Ok('hello');
   case R of
     when Result.Ok(const Message), Result.Error(const message):
       Console.WriteLn(Message);
@@ -118,13 +118,13 @@ end program;
 #[test]
 fn case_result_multi_label_checks_shared_body_once() {
     let errors = check_errors(
-        r#"program T; begin var R: Result of (string, string) := Result.Ok('hello'); case R of when Result.Ok(const Message), Result.Error(message): var Invalid: integer := 'not an integer'; end case; end program;"#,
+        r#"program T; begin const R: Result of (string, string) := Result.Ok('hello'); case R of when Result.Ok(const Message), Result.Error(const message): const Invalid: integer := 'not an integer'; end case; end program;"#,
     );
     let body_errors = errors
         .iter()
         .filter(|error| {
             error.code == fpas_diagnostics::codes::SEMA_TYPE_MISMATCH
-                && error.message.contains("variable initializer")
+                && error.message.contains("binding initializer")
         })
         .count();
     assert_eq!(body_errors, 1, "expected one body diagnostic: {errors:#?}");
@@ -133,7 +133,7 @@ fn case_result_multi_label_checks_shared_body_once() {
 #[test]
 fn case_result_multi_label_rejects_incompatible_binding_types() {
     let errors = check_errors(
-        r#"program T; begin var R: Result of (integer, string) := Result.Ok(1); case R of when Result.Ok(const Value), Result.Error(Value): return; end case; end program;"#,
+        r#"program T; begin const R: Result of (integer, string) := Result.Ok(1); case R of when Result.Ok(const Value), Result.Error(const Value): return; end case; end program;"#,
     );
     assert!(
         errors.iter().any(|error| {
@@ -147,7 +147,7 @@ fn case_result_multi_label_rejects_incompatible_binding_types() {
 #[test]
 fn case_result_multi_label_rejects_different_binding_names() {
     let errors = check_errors(
-        r#"program T; begin var R: Result of (string, string) := Result.Ok('value'); case R of when Result.Ok(const Value), Result.Error(Message): return; end case; end program;"#,
+        r#"program T; begin const R: Result of (string, string) := Result.Ok('value'); case R of when Result.Ok(const Value), Result.Error(Message): return; end case; end program;"#,
     );
     assert!(
         errors.iter().any(|error| {
@@ -168,7 +168,7 @@ type Pair = enum
 end enum;
 
 begin
-  var P: Pair := Pair.Values(1, 2);
+  const P: Pair := Pair.Values(1, 2);
   case P of
     when Pair.Values(const Value, const value):
       return;

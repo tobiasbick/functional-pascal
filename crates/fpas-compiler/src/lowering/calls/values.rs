@@ -9,6 +9,12 @@ use fpas_lexer::Span;
 use fpas_parser::{Designator, Expr, PostfixOperation};
 
 impl LoweringContext {
+    /// Return the checked result type of a call through stored callable data.
+    pub(in crate::lowering) fn value_call_result(&self, key: usize) -> Option<TypeId> {
+        let call = self.value_calls.get(&key)?;
+        self.type_table.id(&call.result_ty, 1, 1).ok()
+    }
+
     /// Invoke an ordinary value or callable member from a postfix chain.
     pub(in crate::lowering) fn lower_postfix_value_call(
         &mut self,
@@ -21,11 +27,6 @@ impl LoweringContext {
         };
         let (callee, args, span) = match operation {
             PostfixOperation::Call { args, span } => (value, args, *span),
-            PostfixOperation::MethodCall { args, span, .. } => (
-                self.lower_postfix_callable_member(value, operation)?,
-                args,
-                *span,
-            ),
             _ => return Err(unsupported(target.call_span, "value invocation suffix")),
         };
         let result = self
@@ -47,12 +48,7 @@ impl LoweringContext {
         result: TypeId,
         span: fpas_lexer::Span,
     ) -> Result<ValueId, CompileError> {
-        let key = fpas_sema::designator_lookup_key(designator);
-        let callee = if let Some(reads) = self.property_reads.get(&key).cloned() {
-            self.lower_property_read(designator, &reads)?
-        } else {
-            self.lower_designator_read(designator)?
-        };
+        let callee = self.lower_designator_read(designator)?;
         self.lower_value_call(callee, arguments, result, span)
     }
 

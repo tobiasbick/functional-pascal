@@ -3,6 +3,14 @@
 mod common;
 
 #[test]
+fn explicit_purity_survives_routine_type_and_closure_round_trip() {
+    common::assert_round_trip(
+        "pure callables",
+        "unit Demo; public pure function Factory(): pure function(): integer; begin return pure function(): integer begin return 42; end function; end function; end unit;",
+    );
+}
+
+#[test]
 fn arbitrary_invocation_and_discard_preserve_comments_and_round_trip() {
     for source in [
         "program P; begin discard Make()(1, 2); // result\n end program;",

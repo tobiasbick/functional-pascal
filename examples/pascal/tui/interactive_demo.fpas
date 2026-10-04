@@ -1,6 +1,10 @@
 program TuiInteractiveDemo;
 
 uses Std.Tui as Tui;
+uses Std.Tui.Chrome as Chrome;
+uses Std.Tui.Elements as Elements;
+uses Std.Tui.Ids as Ids;
+uses Std.Tui.Runtime as Runtime;
 
 type DemoModel = record
   Text: string;
@@ -10,7 +14,7 @@ end record;
 
 function UpdateDemo(State: DemoModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): DemoModel;
 begin
-  Cmd.Set(Tui.TuiCmd.NoCommand);
+  Runtime.TuiCmdOutputSet(Cmd, Tui.TuiCmd.NoCommand);
   case Msg of
     when Tui.TuiMsg.Started:
       begin
@@ -34,7 +38,7 @@ begin
 
         if Action.Value = 3 then
           begin
-            Cmd.Set(Tui.TuiCmd.Quit);
+            Runtime.TuiCmdOutputSet(Cmd, Tui.TuiCmd.Quit);
           end;
         end if;
 
@@ -42,7 +46,7 @@ begin
       end;
     when Tui.TuiMsg.QuitRequested:
       begin
-        Cmd.Set(Tui.TuiCmd.Quit);
+        Runtime.TuiCmdOutputSet(Cmd, Tui.TuiCmd.Quit);
         return State;
       end;
     when Tui.TuiMsg.Key(const Key):
@@ -90,31 +94,29 @@ end function;
 
 function ViewDemo(State: DemoModel): Tui.TuiElement;
 begin
-  var Input: Tui.TuiElement := Tui.TuiElementBuilders.MakeInput(Tui.TuiControlId.Create(1), State.Text, State.Caret, Tui.TuiAction.Create(1));
-  var Confirm: Tui.TuiElement := Tui.TuiElementBuilders.MakeButton(Tui.TuiControlId.Create(2), 'Confirm', Tui.TuiAction.Create(2));
-  var Quit: Tui.TuiElement := Tui.TuiElementBuilders.MakeButton(Tui.TuiControlId.Create(3), 'Quit', Tui.TuiAction.Create(3));
-  mutable var Content: array of (Tui.TuiElement) := [Input, Confirm, Quit];
-  mutable var Focused: Option of (Tui.TuiControlId) := Option.Some(Tui.TuiControlId.Create(1));
+  const Input: Tui.TuiElement := Elements.TuiElementMakeInput(Ids.TuiControlIdCreate(1), State.Text, State.Caret, Ids.TuiActionCreate(1));
+  const Confirm: Tui.TuiElement := Elements.TuiElementMakeButton(Ids.TuiControlIdCreate(2), 'Confirm', Ids.TuiActionCreate(2));
+  const Quit: Tui.TuiElement := Elements.TuiElementMakeButton(Ids.TuiControlIdCreate(3), 'Quit', Ids.TuiActionCreate(3));
+  var Content: array of (Tui.TuiElement) := [Input, Confirm, Quit];
+  var Focused: Option of (Tui.TuiControlId) := Option.Some(Ids.TuiControlIdCreate(1));
   if State.Confirming then
     begin
       Content := [
-                   Tui.TuiElementBuilders.MakeOverlay('Confirm', [Tui.TuiElementBuilders.MakeLabel(State.Text), Quit])
+                   Elements.TuiElementMakeOverlay('Confirm', [Elements.TuiElementMakeLabel(State.Text), Quit])
                  ];
-      Focused := Option.Some(Tui.TuiControlId.Create(3));
+      Focused := Option.Some(Ids.TuiControlIdCreate(3));
     end;
   end if;
 
-  return Tui.TuiElementBuilders.MakeDesktop(Focused, [
-                                                       Tui.TuiElementBuilders.MakeMenuBar([
-                                                                                            Tui.TuiMenuItem.WithShortcut(Tui.TuiControlId.Create(4), 'File', Tui.TuiAction.Create(3), 'F')
-                                                                                          ]),
-                                                       Tui.TuiElementBuilders.MakePanel('Tui interactive demo', Content),
-                                                       Tui.TuiElementBuilders.MakeStatusLine([
-                                                                                               Tui.TuiStatusItemBuilders.MakeHint('Type, confirm, then quit')
-                                                                                             ])
-                                                     ]);
+  return Elements.TuiElementMakeDesktop(Focused, [
+                                                   Elements.TuiElementMakeMenuBar([
+                                                                                    Chrome.TuiMenuItemWithShortcut(Ids.TuiControlIdCreate(4), 'File', Ids.TuiActionCreate(3), 'F')
+                                                                                  ]),
+                                                   Elements.TuiElementMakePanel('Tui interactive demo', Content),
+                                                   Elements.TuiElementMakeStatusLine([Chrome.TuiStatusItemMakeHint('Type, confirm, then quit')])
+                                                 ]);
 end function;
 
 begin
-  discard Tui.TuiApplication.Run(DemoModel(Text := '', Caret := 0, Confirming := false), UpdateDemo, ViewDemo);
+  discard Runtime.TuiApplicationRun(DemoModel(Text := '', Caret := 0, Confirming := false), UpdateDemo, ViewDemo);
 end program;

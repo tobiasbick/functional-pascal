@@ -24,4 +24,5 @@ blake3 = { workspace = true }
 workspace = true
 
 [dev-dependencies]
+blake3 = { workspace = true }
 fpas-vm = { path = "../fpas-vm" }

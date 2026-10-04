@@ -8,15 +8,14 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`function_decl`, `
 |-------|-------------|
 | [Declarations](declarations.md) | `function` / `procedure` shape and early exit |
 | [Parameters](parameters.md) | Parameter lists and call syntax |
-| [Mutable parameters](mutable-parameters.md) | `mutable` on parameters |
+| [Var parameters](var-parameters.md) | Explicit synchronous caller storage |
 | [Function types](function-types.md) | Callable type expressions |
 | [First-class functions](first-class.md) | Variables and higher-order calls |
 | [Nested functions](nested.md) | Local helpers and mutual recursion |
 | [Capturing closures](closures.md) | Anonymous callables with lexical environments |
 | [Generic routines](generic-routines.md) | Type parameters on routines |
 | [Early return](early-return.md) | `return` exits immediately |
-| [Postfix chaining](postfix-chaining.md) | `.Field`, `[Index]`, and `.Method(args)` on expression results |
-| [Receiver calls](fluent-calls.md) | Call a visible routine with the receiver as its first argument |
+| [Postfix chaining](postfix-chaining.md) | `.Field`, `[Index]`, and `(Arguments)` on expression results |
 
 ## Runtime recursion limit
 
@@ -26,10 +25,10 @@ host memory. Reduce the recursion depth or rewrite the processing as a loop when
 
 A direct call whose result the routine returns immediately (`return F(X)`, or a procedure ending
 with a call to another procedure) reuses the current frame and does not count toward this limit.
-The debugger keeps such frames visible and therefore still applies the limit.
+Calls with active caller references preserve their frames for authority cleanup.
+The debugger keeps frames visible and therefore still applies the limit.
 
 ## See also
 
 - [Types — generics](../types/generics.md)
 - [Basics](../basics/README.md)
-- [Record methods](../types/record-methods.md)

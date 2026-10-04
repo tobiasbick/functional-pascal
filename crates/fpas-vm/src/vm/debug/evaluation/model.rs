@@ -96,15 +96,6 @@ pub enum DebugExpression {
         /// Arguments in source order.
         arguments: Vec<Self>,
     },
-    /// Controlled instance method invocation.
-    MethodCall {
-        /// Receiver value.
-        receiver: Box<Self>,
-        /// Exact source member name.
-        name: String,
-        /// Explicit arguments in source order.
-        arguments: Vec<Self>,
-    },
     /// Side-effect-free array construction.
     Array(Vec<Self>),
     /// Side-effect-free dictionary construction.
@@ -137,20 +128,6 @@ pub(in crate::vm::debug) enum DebugCallTarget {
     Named(String),
     /// First-class callable value.
     Value(fpas_bytecode::Value),
-    /// Exact member on a runtime record receiver.
-    Method {
-        /// Receiver passed as the implicit first argument.
-        receiver: fpas_bytecode::Value,
-        /// Source member name.
-        name: String,
-    },
-    /// Property getter fallback after no stored field matched.
-    Property {
-        /// Receiver passed to the getter.
-        receiver: fpas_bytecode::Value,
-        /// Source property name.
-        name: String,
-    },
     /// Construct a record whose layout exactly matches these field names.
     Record {
         /// Field names in source order.

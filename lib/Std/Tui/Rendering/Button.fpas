@@ -18,18 +18,18 @@ procedure TuiPaintButtonText(
   ShortcutRole: StyleRole.TuiStyleRole
 );
 begin
-  mutable var X: integer := Position.X;
+  var X: integer := Position.X;
   for Index: integer := 0 to Str.Length(Button.Text) - 1 do
     begin
-      var Glyph: string := Str.CharAt(Button.Text, Index);
-      mutable var GlyphRole: StyleRole.TuiStyleRole := Role;
+      const Glyph: string := Str.CharAt(Button.Text, Index);
+      var GlyphRole: StyleRole.TuiStyleRole := Role;
       if (Button.Mnemonic <> '') and (Str.ToLower(Glyph) = Str.ToLower(Button.Mnemonic)) then
         begin
           GlyphRole := ShortcutRole;
         end;
       end if;
 
-      Canvas.WriteText(Point.TuiPoint.Create(X, Position.Y), Glyph, GlyphRole);
+      Canvas2.TuiCanvasWriteText(Canvas, Point.TuiPointCreate(X, Position.Y), Glyph, GlyphRole);
       X := X + Console.DisplayWidth(Glyph);
     end;
   end for;
@@ -97,16 +97,16 @@ public procedure TuiPaintButton(
   Pressed: boolean
 );
 begin
-  if Bounds.IsEmpty() then
+  if Rect.TuiRectIsEmpty(Bounds) then
     begin
       return;
     end;
   end if;
-  mutable var Role: StyleRole.TuiStyleRole := TuiButtonRole(Button, Focused);
-  mutable var ShortcutRole: StyleRole.TuiStyleRole := TuiButtonShortcutRole(Button, Focused);
-  var ContentWidth: integer := Bounds.Width;
-  var TextWidth: integer := Console.DisplayWidth(Button.Text);
-  mutable var TextX: integer := Bounds.X + ((ContentWidth - TextWidth) div 2);
+  var Role: StyleRole.TuiStyleRole := TuiButtonRole(Button, Focused);
+  var ShortcutRole: StyleRole.TuiStyleRole := TuiButtonShortcutRole(Button, Focused);
+  const ContentWidth: integer := Bounds.Width;
+  const TextWidth: integer := Console.DisplayWidth(Button.Text);
+  var TextX: integer := Bounds.X + ((ContentWidth - TextWidth) div 2);
   if TextX < Bounds.X + 1 then
     begin
       TextX := Bounds.X + 1;
@@ -120,11 +120,11 @@ begin
     end;
   end if;
 
-  Canvas.FillRect(Bounds, Cell.TuiCell.Create(' ', Role));
-  TuiPaintButtonText(Canvas, Point.TuiPoint.Create(TextX, Bounds.Y), Button, Role, ShortcutRole);
+  Canvas2.TuiCanvasFillRect(Canvas, Bounds, Cell.TuiCellCreate(' ', Role));
+  TuiPaintButtonText(Canvas, Point.TuiPointCreate(TextX, Bounds.Y), Button, Role, ShortcutRole);
   if ((Button.Enabled and Button.Default) and not Focused) and not Pressed then
     begin
-      Canvas.WriteText(Point.TuiPoint.Create(Bounds.X + 1, Bounds.Y), '•', Role);
+      Canvas2.TuiCanvasWriteText(Canvas, Point.TuiPointCreate(Bounds.X + 1, Bounds.Y), '•', Role);
     end;
   end if;
 end procedure;

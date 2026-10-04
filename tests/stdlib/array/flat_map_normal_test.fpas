@@ -3,13 +3,13 @@ program T;
 uses Std.Console as Console;
 uses Std.Arrays as Arrays;
 
-function Expand(X: integer): array of (integer);
+pure function Expand(X: integer): array of (integer);
 begin
   return [X, X * 10];
 end function;
 
 begin
-  var R: array of (integer) := Arrays.FlatMap([1, 2, 3], Expand);
+  const R: array of (integer) := Arrays.FlatMap([1, 2, 3], Expand);
   Console.WriteLn(Arrays.Length(R));
   Console.WriteLn(R[0]);
   Console.WriteLn(R[1]);

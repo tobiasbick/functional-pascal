@@ -34,7 +34,9 @@ pub(super) fn collect_expr(expr: &Expr, begins: &[usize], out: &mut CollectedAnc
                 collect_expr(value, begins, out);
             }
         }
-        Expr::Designator(designator) => collect_designator(designator, begins, out),
+        Expr::Designator(designator) | Expr::VarArgument(designator, _) => {
+            collect_designator(designator, begins, out)
+        }
         Expr::Call {
             designator, args, ..
         } => {
@@ -83,8 +85,7 @@ pub(super) fn collect_expr(expr: &Expr, begins: &[usize], out: &mut CollectedAnc
             for operation in operations {
                 match operation {
                     PostfixOperation::Index { index, .. } => collect_expr(index, begins, out),
-                    PostfixOperation::MethodCall { args, .. }
-                    | PostfixOperation::Call { args, .. } => {
+                    PostfixOperation::Call { args, .. } => {
                         for arg in args {
                             collect_expr(arg, begins, out);
                         }
@@ -111,7 +112,6 @@ pub(super) fn collect_expr(expr: &Expr, begins: &[usize], out: &mut CollectedAnc
         | Expr::Str(..)
         | Expr::Bool(..)
         | Expr::OptionNone(..)
-        | Expr::Nil(..)
         | Expr::Error(..) => {}
     }
 }

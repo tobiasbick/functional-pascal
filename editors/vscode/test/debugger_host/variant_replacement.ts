@@ -55,11 +55,11 @@ export async function verifyVariantReplacement(
     "end function;",
     "",
     "begin",
-    "  mutable var Selected: Choice := Choice.Count(1);",
-    "  mutable var Outcome: Result of (integer, string) := Result.Ok(2);",
-    "  mutable var Optional: Option of (integer) := Option.Some(3);",
-    "  var Fixed: Choice := Choice.Count(9);",
-    "  var StopMarker: integer := 0;",
+    "   var Selected: Choice := Choice.Count(1);",
+    "   var Outcome: Result of (integer, string) := Result.Ok(2);",
+    "   var Optional: Option of (integer) := Option.Some(3);",
+    "  const Fixed: Choice := Choice.Count(9);",
+    "  const StopMarker: integer := 0;",
     "  Console.WriteLn(ChoiceValue(Selected));",
     "  case Outcome of",
     "    when Result.Ok(const Value):",
@@ -86,7 +86,7 @@ export async function verifyVariantReplacement(
     ""
   ];
   const sourcePath = await writeSource(workspaceRoot, "variant-replacement", lines);
-  const stopLine = lines.indexOf("  var StopMarker: integer := 0;");
+  const stopLine = lines.indexOf("  const StopMarker: integer := 0;");
   const breakpoint = new vscode.SourceBreakpoint(
     new vscode.Location(vscode.Uri.file(sourcePath), new vscode.Position(stopLine, 2))
   );

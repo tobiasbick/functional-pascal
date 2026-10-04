@@ -105,6 +105,9 @@ impl DebugSession {
             .globals
             .read()
             .unwrap_or_else(|poisoned| poisoned.into_inner());
-        globals.get(index).cloned().flatten()
+        match globals.get(index)?.as_ref()? {
+            Value::Cell(cell) => cell.try_lock().ok().map(|value| value.clone()),
+            value => Some(value.clone()),
+        }
     }
 }

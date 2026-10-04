@@ -6,7 +6,7 @@ type is part of the static type: `channel of (integer)` and `channel of (string)
 ```pascal
 uses Std.Tasks as Tasks;
 
-var Messages: channel of (string) := Tasks.CreateChannel(16);
+const Messages: channel of (string) := Tasks.CreateChannel(16);
 ```
 
 ## Type rules

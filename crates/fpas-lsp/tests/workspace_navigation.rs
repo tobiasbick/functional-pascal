@@ -47,11 +47,11 @@ end unit;
 
 uses Demo.Types as Types; uses Demo.Other as Other;
 
-  mutable var Value: integer := 1;
+   var Value: integer := 1;
 
 begin
-  var Music: string := '𝄞'; Value := Value + 1;
-  var Item: Types.Point := Types.Create();
+  const Music: string := '𝄞'; Value := Value + 1;
+  const Item: Types.Point := Types.Create();
 end program;
 "#;
     temp.write("src/main.fpas", source);

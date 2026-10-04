@@ -34,7 +34,7 @@ impl Parser {
         }
     }
 
-    /// Apply zero or more `.Field` / `.Method(args)` / `[index]` / `(args)` suffixes to a primary atom.
+    /// Apply zero or more `.Field` / `[index]` / `(args)` suffixes to a primary atom.
     ///
     /// Returns `base` unchanged when no suffix is present. Never emits an empty operation list.
     ///
@@ -54,25 +54,10 @@ impl Parser {
                     .expect_ident()
                     .unwrap_or_else(|| self.error_ident(self.current_span()));
 
-                if self.check(&Token::LParen) {
-                    self.advance();
-                    let args = if self.check(&Token::RParen) {
-                        Vec::new()
-                    } else {
-                        self.parse_arg_list()
-                    };
-                    self.expect(&Token::RParen);
-                    operations.push(PostfixOperation::MethodCall {
-                        name,
-                        args,
-                        span: self.span_from(op_start),
-                    });
-                } else {
-                    operations.push(PostfixOperation::Field {
-                        name,
-                        span: self.span_from(op_start),
-                    });
-                }
+                operations.push(PostfixOperation::Field {
+                    name,
+                    span: self.span_from(op_start),
+                });
             } else if self.check(&Token::LBracket) {
                 let op_start = self.current_span();
                 self.advance();

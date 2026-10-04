@@ -3,7 +3,7 @@
 use fpas_parser::{Expr, Stmt};
 
 pub(super) fn needs_blank_line(previous: &Stmt, next: &Stmt) -> bool {
-    !matches!(next, Stmt::Var(_) | Stmt::MutableVar(_)) && statement_ends_with_end(previous)
+    !matches!(next, Stmt::Const(_) | Stmt::Var(_)) && statement_ends_with_end(previous)
 }
 
 fn statement_ends_with_end(stmt: &Stmt) -> bool {
@@ -15,7 +15,7 @@ fn statement_ends_with_end(stmt: &Stmt) -> bool {
         | Stmt::For { .. }
         | Stmt::ForIn { .. }
         | Stmt::While { .. } => true,
-        Stmt::Var(var) | Stmt::MutableVar(var) => expression_ends_with_end(&var.value),
+        Stmt::Const(var) | Stmt::Var(var) => expression_ends_with_end(&var.value),
         Stmt::Assign { value, .. } => expression_ends_with_end(value),
         Stmt::Return(Some(value), ..)
         | Stmt::Expression { expr: value, .. }

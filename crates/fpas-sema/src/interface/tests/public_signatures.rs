@@ -80,7 +80,7 @@ type Hidden = record
   Value: integer;
 end record;
 
-public var Current: Hidden := Hidden(Value := 1);
+public const Current: Hidden := Hidden(Value := 1);
 
 end unit;
 "#,

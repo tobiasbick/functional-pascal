@@ -134,7 +134,7 @@ Extended color procedures (`TextColorRGB`, `TextBackgroundRGB`, `TextColor256`, 
 Programs that own every cell (explorers, animations, custom TUIs) use `Std.Console` with raw mode, alternate screen, and structured events. Typical setup:
 
 1. `EnableRawMode`, `EnterAltScreen`, optional `EnableMouse` / `EnableFocus` / `EnablePaste`, `CursorOff`
-2. A `mutable var NeedsRedraw` flag; paint proc calls `BeginFrame`, draws with `FillRect`,
+2. A `var NeedsRedraw` flag; paint proc calls `BeginFrame`, draws with `FillRect`,
    row-oriented `WriteCells`, and calls `Present`
 3. Loop: paint when `NeedsRedraw`, then match `Console.ReadEventTimeout(16)` with
    `case ... of when Option.Some(E): ...; when Option.None: ...; end case;` for keys, mouse, resize

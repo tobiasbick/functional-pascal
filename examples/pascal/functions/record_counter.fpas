@@ -1,0 +1,34 @@
+program CounterExample;
+
+uses Std.Console as Console;
+uses Std.Conv as Conv;
+
+type Counter = record
+  Value: integer;
+  Step: integer;
+end record;
+
+function CounterIncrement(Receiver: Counter): Counter;
+begin
+  const NewValue: integer := Receiver.Value + Receiver.Step;
+  return Counter(Value := NewValue, Step := Receiver.Step);
+end function;
+
+function CounterReset(Receiver: Counter): Counter;
+begin
+  return Counter(Value := 0, Step := Receiver.Step);
+end function;
+
+procedure CounterShow(Receiver: Counter);
+begin
+  Console.WriteLn('Counter: ' + Conv.IntToStr(Receiver.Value));
+end procedure;
+
+begin
+  const C: Counter := Counter(Value := 0, Step := 5);
+  CounterShow(C);
+  Console.WriteLn('Counter: ' +
+                  Conv.IntToStr(CounterIncrement(CounterIncrement(CounterIncrement(C))).Value));
+  const Cleared: Counter := CounterReset(CounterIncrement(CounterIncrement(C)));
+  CounterShow(Cleared);
+end program;

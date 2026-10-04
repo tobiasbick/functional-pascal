@@ -3,6 +3,7 @@ mod components;
 mod constraints;
 mod data;
 mod display;
+mod generics;
 mod inference;
 mod substitution;
 
@@ -13,18 +14,13 @@ pub use callables::{FunctionTy, ParamTy, ProcedureTy};
 pub use constraints::TypeConstraint;
 
 /// Nominal value descriptors and record member metadata.
-pub use data::{EnumTy, EnumVariantTy, EventTy, MethodKind, PropertyTy, RecordTy};
+pub use data::{EnumTy, EnumVariantTy, RecordTy};
+
+pub(crate) use generics::TypeArguments;
+/// Generic declaration identities and capability requirements.
+pub use generics::{GenericParamDef, GenericParameterId};
 
 use std::sync::Arc;
-
-/// A resolved generic type parameter with optional constraint.
-///
-/// **Documentation:** `docs/pascal/language/types/generics.md` (Generics — Constraints)
-#[derive(Debug, Clone, PartialEq)]
-pub struct GenericParamDef {
-    pub name: String,
-    pub constraint: Option<TypeConstraint>,
-}
 
 /// Resolved type representation used during semantic analysis.
 ///
@@ -65,7 +61,7 @@ pub enum Ty {
     Option(Box<Ty>),
     /// A generic type parameter (e.g. `T` in `function Identity of (T)`),
     /// optionally carrying its constraint for operator checking inside generic bodies.
-    GenericParam(String, Option<TypeConstraint>),
+    GenericParam(Arc<GenericParamDef>),
     /// `dict of (K, V)` — key-value collection.
     ///
     /// **Documentation:** `docs/pascal/language/types/dictionaries.md`
@@ -99,9 +95,7 @@ impl Ty {
             return true;
         }
         match (self, other) {
-            (Ty::GenericParam(left, _), Ty::GenericParam(right, _)) => {
-                left.eq_ignore_ascii_case(right)
-            }
+            (Ty::GenericParam(left), Ty::GenericParam(right)) => left.identity == right.identity,
             (Ty::GenericParam(..), _) | (_, Ty::GenericParam(..)) => generic_wildcard,
             // Named type matches the concrete type with the same name (recursive enums).
             (Ty::Named(n), Ty::Enum(e)) | (Ty::Enum(e), Ty::Named(n)) => {
@@ -128,7 +122,10 @@ impl Ty {
             }
             // Array with Error element type is compatible with any array
             (Ty::Array(a), Ty::Array(b)) => a.compatible_with_mode(b, generic_wildcard),
-            (Ty::Channel(a), Ty::Channel(b)) => a.compatible_with_mode(b, generic_wildcard),
+            (Ty::Channel(a), Ty::Channel(b)) => {
+                a.compatible_with_mode(b, generic_wildcard)
+                    && b.compatible_with_mode(a, generic_wildcard)
+            }
             // Named type matches the concrete record with the same name (recursive records).
             (Ty::Named(n), Ty::Record(r)) | (Ty::Record(r), Ty::Named(n)) => {
                 n.eq_ignore_ascii_case(&r.name)
@@ -168,6 +165,9 @@ impl Ty {
             // at call sites (e.g., `function(X: T): R` vs `function(X: integer): string`
             // when T=integer, R=string).
             (Ty::Function(a), Ty::Function(b)) => {
+                if a.pure && !b.pure {
+                    return false;
+                }
                 if a.variadic != b.variadic || a.params.len() != b.params.len() {
                     return false;
                 }
@@ -175,7 +175,8 @@ impl Ty {
                     .compatible_with_mode(&b.return_type, generic_wildcard)
                     && a.params.iter().zip(b.params.iter()).all(|(pa, pb)| {
                         pa.mutable == pb.mutable
-                            && pa.ty.compatible_with_mode(&pb.ty, generic_wildcard)
+                            && pb.ty.compatible_with_mode(&pa.ty, generic_wildcard)
+                            && (!pa.mutable || pa.ty.compatible_with_mode(&pb.ty, generic_wildcard))
                     })
             }
             (Ty::Procedure(a), Ty::Procedure(b)) => {
@@ -183,7 +184,9 @@ impl Ty {
                     return false;
                 }
                 a.params.iter().zip(b.params.iter()).all(|(pa, pb)| {
-                    pa.mutable == pb.mutable && pa.ty.compatible_with_mode(&pb.ty, generic_wildcard)
+                    pa.mutable == pb.mutable
+                        && pb.ty.compatible_with_mode(&pa.ty, generic_wildcard)
+                        && (!pa.mutable || pa.ty.compatible_with_mode(&pb.ty, generic_wildcard))
                 })
             }
             _ => self == other,
@@ -197,26 +200,15 @@ impl Ty {
 
     /// True for numeric types (integer, real), or a generic param with Numeric constraint.
     pub fn is_numeric(&self) -> bool {
-        matches!(
-            self,
-            Ty::Integer | Ty::Real | Ty::GenericParam(_, Some(TypeConstraint::Numeric))
-        )
+        matches!(self, Ty::Integer | Ty::Real)
+            || matches!(self, Ty::GenericParam(parameter) if parameter.constraint == Some(TypeConstraint::Numeric))
     }
 
     /// True for types that satisfy the Comparable constraint, including generic
     /// params with Comparable (or Numeric, since Numeric ⊂ Comparable).
     pub fn is_comparable(&self) -> bool {
-        matches!(
-            self,
-            Ty::Integer
-                | Ty::Real
-                | Ty::Boolean
-                | Ty::String
-                | Ty::GenericParam(
-                    _,
-                    Some(TypeConstraint::Comparable | TypeConstraint::Numeric)
-                )
-        )
+        matches!(self, Ty::Integer | Ty::Real | Ty::Boolean | Ty::String)
+            || matches!(self, Ty::GenericParam(parameter) if matches!(parameter.constraint, Some(TypeConstraint::Comparable | TypeConstraint::Numeric)))
     }
 
     /// True for ordinal types (integer, boolean, simple enum without data).
@@ -226,10 +218,10 @@ impl Ty {
 
     fn arguments_compatible(left: &[Ty], right: &[Ty], generic_wildcard: bool) -> bool {
         left.len() == right.len()
-            && left
-                .iter()
-                .zip(right)
-                .all(|(left, right)| left.compatible_with_mode(right, generic_wildcard))
+            && left.iter().zip(right).all(|(left, right)| {
+                left.compatible_with_mode(right, generic_wildcard)
+                    && right.compatible_with_mode(left, generic_wildcard)
+            })
     }
 }
 

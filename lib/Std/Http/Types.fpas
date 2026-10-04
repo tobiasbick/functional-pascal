@@ -9,17 +9,17 @@ public type Header = record
   public Name: string;
   // Field value without surrounding whitespace.
   public Value: string;
-
-  // Creates one HTTP field.
-  //
-  // Parameters:
-  // - `Name`: HTTP field name.
-  // - `Value`: HTTP field value.
-  public static function Create(Name: string; Value: string): Header;
-  begin
-    return Header(Name := Name, Value := Value);
-  end function;
 end record;
+
+// Creates one HTTP field.
+//
+// Parameters:
+// - `Name`: HTTP field name.
+// - `Value`: HTTP field value.
+public function HeaderCreate(Name: string; Value: string): Header;
+begin
+  return Header(Name := Name, Value := Value);
+end function;
 
 // One HTTP request with transport limits shared by buffered and streaming sends.
 public type Request = record
@@ -39,80 +39,80 @@ public type Request = record
   public MaxResponseBytes: integer;
   // Maximum number of redirects to follow.
   public MaxRedirects: integer;
-
-  // Creates a request with explicit method and default limits.
-  //
-  // Parameters:
-  // - `Method`: HTTP method token.
-  // - `Url`: Absolute HTTP or HTTPS URL.
-  public static function Create(Method: string; Url: string): Request;
-  begin
-    return Request(Method := Method, Url := Url, Headers := [], Body := [], TimeoutMillis := 30000, MaxHeaderBytes := 65536, MaxResponseBytes := 16777216, MaxRedirects := 5);
-  end function;
-
-  // Creates a GET request with default transport limits.
-  //
-  // Parameters:
-  // - `Url`: Absolute HTTP or HTTPS URL.
-  public static function Get(Url: string): Request;
-  begin
-    return Request.Create('GET', Url);
-  end function;
-
-  // Creates a POST request with default transport limits.
-  //
-  // Parameters:
-  // - `Url`: Absolute HTTP or HTTPS URL.
-  public static function Post(Url: string): Request;
-  begin
-    return Request.Create('POST', Url);
-  end function;
-
-  // Creates a PUT request with default transport limits.
-  //
-  // Parameters:
-  // - `Url`: Absolute HTTP or HTTPS URL.
-  public static function Put(Url: string): Request;
-  begin
-    return Request.Create('PUT', Url);
-  end function;
-
-  // Creates a PATCH request with default transport limits.
-  //
-  // Parameters:
-  // - `Url`: Absolute HTTP or HTTPS URL.
-  public static function Patch(Url: string): Request;
-  begin
-    return Request.Create('PATCH', Url);
-  end function;
-
-  // Creates a DELETE request with default transport limits.
-  //
-  // Parameters:
-  // - `Url`: Absolute HTTP or HTTPS URL.
-  public static function Delete(Url: string): Request;
-  begin
-    return Request.Create('DELETE', Url);
-  end function;
-
-  // Creates a HEAD request with default transport limits.
-  //
-  // Parameters:
-  // - `Url`: Absolute HTTP or HTTPS URL.
-  public static function Head(Url: string): Request;
-  begin
-    return Request.Create('HEAD', Url);
-  end function;
-
-  // Creates an OPTIONS request with default transport limits.
-  //
-  // Parameters:
-  // - `Url`: Absolute HTTP or HTTPS URL.
-  public static function Options(Url: string): Request;
-  begin
-    return Request.Create('OPTIONS', Url);
-  end function;
 end record;
+
+// Creates a request with explicit method and default limits.
+//
+// Parameters:
+// - `Method`: HTTP method token.
+// - `Url`: Absolute HTTP or HTTPS URL.
+public function RequestCreate(Method: string; Url: string): Request;
+begin
+  return Request(Method := Method, Url := Url, Headers := [], Body := [], TimeoutMillis := 30000, MaxHeaderBytes := 65536, MaxResponseBytes := 16777216, MaxRedirects := 5);
+end function;
+
+// Creates a GET request with default transport limits.
+//
+// Parameters:
+// - `Url`: Absolute HTTP or HTTPS URL.
+public function RequestGet(Url: string): Request;
+begin
+  return RequestCreate('GET', Url);
+end function;
+
+// Creates a POST request with default transport limits.
+//
+// Parameters:
+// - `Url`: Absolute HTTP or HTTPS URL.
+public function RequestPost(Url: string): Request;
+begin
+  return RequestCreate('POST', Url);
+end function;
+
+// Creates a PUT request with default transport limits.
+//
+// Parameters:
+// - `Url`: Absolute HTTP or HTTPS URL.
+public function RequestPut(Url: string): Request;
+begin
+  return RequestCreate('PUT', Url);
+end function;
+
+// Creates a PATCH request with default transport limits.
+//
+// Parameters:
+// - `Url`: Absolute HTTP or HTTPS URL.
+public function RequestPatch(Url: string): Request;
+begin
+  return RequestCreate('PATCH', Url);
+end function;
+
+// Creates a DELETE request with default transport limits.
+//
+// Parameters:
+// - `Url`: Absolute HTTP or HTTPS URL.
+public function RequestDelete(Url: string): Request;
+begin
+  return RequestCreate('DELETE', Url);
+end function;
+
+// Creates a HEAD request with default transport limits.
+//
+// Parameters:
+// - `Url`: Absolute HTTP or HTTPS URL.
+public function RequestHead(Url: string): Request;
+begin
+  return RequestCreate('HEAD', Url);
+end function;
+
+// Creates an OPTIONS request with default transport limits.
+//
+// Parameters:
+// - `Url`: Absolute HTTP or HTTPS URL.
+public function RequestOptions(Url: string): Request;
+begin
+  return RequestCreate('OPTIONS', Url);
+end function;
 
 // One complete non-streaming HTTP response.
 public type Response = record
@@ -175,17 +175,17 @@ public type ServerResponse = record
   public Headers: array of (Header);
   // Complete response-body bytes.
   public Body: array of (integer);
-
-  // Creates an empty response with an explicit status.
-  //
-  // Parameters:
-  // - `StatusCode`: Three-digit HTTP status code.
-  // - `ReasonPhrase`: HTTP reason phrase written in the status line.
-  public static function Create(StatusCode: integer; ReasonPhrase: string): ServerResponse;
-  begin
-    return ServerResponse(StatusCode := StatusCode, ReasonPhrase := ReasonPhrase, Headers := [], Body := []);
-  end function;
 end record;
+
+// Creates an empty response with an explicit status.
+//
+// Parameters:
+// - `StatusCode`: Three-digit HTTP status code.
+// - `ReasonPhrase`: HTTP reason phrase written in the status line.
+public function ServerResponseCreate(StatusCode: integer; ReasonPhrase: string): ServerResponse;
+begin
+  return ServerResponse(StatusCode := StatusCode, ReasonPhrase := ReasonPhrase, Headers := [], Body := []);
+end function;
 
 // Limits and concurrency used by the HTTP server loop.
 public type ServerOptions = record
@@ -199,13 +199,13 @@ public type ServerOptions = record
   public MaxConcurrentRequests: integer;
   // Accepted-connection limit, or zero for no limit.
   public MaxRequests: integer;
-
-  // Returns the default bounded server-loop configuration.
-  public static function Create(): ServerOptions;
-  begin
-    return ServerOptions(MaxHeaderBytes := 65536, MaxBodyBytes := 1048576, ConnectionTimeoutMillis := 30000, MaxConcurrentRequests := 8, MaxRequests := 0);
-  end function;
 end record;
+
+// Returns the default bounded server-loop configuration.
+public function ServerOptionsCreate(): ServerOptions;
+begin
+  return ServerOptions(MaxHeaderBytes := 65536, MaxBodyBytes := 1048576, ConnectionTimeoutMillis := 30000, MaxConcurrentRequests := 8, MaxRequests := 0);
+end function;
 
 // Maps one accepted request to its complete response.
 //

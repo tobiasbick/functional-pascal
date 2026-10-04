@@ -26,9 +26,9 @@ end unit;
 uses Demo.Math as Math;
 
 begin
-  var A: integer := Math.Answer();
-  var B: integer := Math.Answer();
-  var Text: string := 'Answer';
+  const A: integer := Math.Answer();
+  const B: integer := Math.Answer();
+  const Text: string := 'Answer';
   // Answer()
 end program;
 "#;
@@ -59,7 +59,19 @@ end program;
 #[test]
 fn references_preserve_lexical_shadowing() {
     let temp = TempDirectory::new("references-shadowing");
-    let source = "program Local;\n\nvar Value: integer := 1;\n\nfunction ReadValue(Value: integer): integer;\nbegin\n  return Value\nend;\n\nbegin\n  var Result: integer := Value\nend.\n";
+    let source = r#"program Local;
+
+const Value: integer := 1;
+
+function ReadValue(Value: integer): integer;
+begin
+  return Value
+end;
+
+begin
+  const Result: integer := Value
+end.
+"#;
     let path = temp.write("local.fpas", source);
     let mut service = LanguageService::new(WorkspaceContext::loose(temp.path()));
     let parameter_use = source.find("return Value").expect("parameter reference") + 7;
@@ -90,8 +102,8 @@ end unit;
 uses Demo.Math as Math;
 
 begin
-  var A: integer := Math.Answer();
-  var B: integer := Math.Answer();
+  const A: integer := Math.Answer();
+  const B: integer := Math.Answer();
 end program;
 "#;
     std::fs::write(&unit, unit_source).expect("write unit");
@@ -124,7 +136,7 @@ end unit;
 
 uses Demo.Math as Math;
 
-begin var Value: integer := Math.Answer(); end program;
+begin const Value: integer := Math.Answer(); end program;
 "#;
     std::fs::write(&unit, unit_source).expect("write unit");
     std::fs::write(&main, main_source).expect("write program");
@@ -168,7 +180,15 @@ begin var Value: integer := Math.Answer(); end program;
 #[test]
 fn rename_rejects_keywords_and_same_scope_conflicts() {
     let temp = TempDirectory::new("rename-validation");
-    let source = "program Validation;\n\nvar Value: integer := 1;\nvar Other: integer := 2;\n\nbegin\n  var Result: integer := Value\nend.\n";
+    let source = r#"program Validation;
+
+const Value: integer := 1;
+const Other: integer := 2;
+
+begin
+  const Result: integer := Value
+end.
+"#;
     let path = temp.write("validation.fpas", source);
     let mut service = LanguageService::new(WorkspaceContext::loose(temp.path()));
     let offset = source.rfind("Value").expect("value reference");
@@ -196,7 +216,14 @@ fn rename_rejects_keywords_and_same_scope_conflicts() {
 #[test]
 fn rename_rejects_non_ascii_identifiers() {
     let temp = TempDirectory::new("rename-non-ascii");
-    let source = "program Validation;\n\nvar Value: integer := 1;\n\nbegin\n  var Result: integer := Value\nend.\n";
+    let source = r#"program Validation;
+
+const Value: integer := 1;
+
+begin
+  const Result: integer := Value
+end.
+"#;
     let path = temp.write("validation.fpas", source);
     let mut service = LanguageService::new(WorkspaceContext::loose(temp.path()));
     let offset = source.rfind("Value").expect("value reference");
@@ -238,7 +265,7 @@ end unit;
 uses Demo.Math as Math;
 
 begin
-  var Value: integer := Math.Answer();
+  const Value: integer := Math.Answer();
 end program;
 "#;
     let main = temp.write("app/src/main.fpas", main_source);
@@ -286,7 +313,7 @@ end unit;
 uses Demo.Math as Math;
 
 begin
-  var Value: integer := Math.Answer();
+  const Value: integer := Math.Answer();
 end program;
 "#,
     );

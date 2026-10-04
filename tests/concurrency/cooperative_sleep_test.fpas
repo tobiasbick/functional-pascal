@@ -11,16 +11,16 @@ begin
 end procedure;
 
 begin
-  mutable var Tasks: array of (task) := [];
-  var Started: integer := Time.MonotonicMillis();
+  var Tasks: array of (task) := [];
+  const Started: integer := Time.MonotonicMillis();
   for I: integer := 1 to 8 do
     begin
-      Arrays.Push(Tasks, go Sleeper());
+      Arrays.Push(var Tasks, go Sleeper());
     end;
   end for;
 
   Tasks2.WaitAll(Tasks);
-  var Elapsed: integer := Time.ElapsedMillis(Started);
+  const Elapsed: integer := Time.ElapsedMillis(Started);
   Test.AssertTrue(Elapsed >= 40);
   Test.AssertTrue(Elapsed < 1000);
 end program;

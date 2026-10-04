@@ -5,13 +5,13 @@ uses Std.Ai.OpenAi as OpenAi;
 uses Std.Test as Test;
 
 begin
-  var ClientValue: OpenAi.Client := OpenAi.Client.Create('http://localhost:8080/v1', 'local-model');
+  const ClientValue: OpenAi.Client := OpenAi.ClientCreate('http://localhost:8080/v1', 'local-model');
   Test.AssertEquals('http://localhost:8080/v1', ClientValue.BaseUrl);
   Test.AssertEquals('local-model', ClientValue.Model);
-  var MessageValue: OpenAi.ChatMessage := OpenAi.ChatMessage.User('Hello');
+  const MessageValue: OpenAi.ChatMessage := OpenAi.ChatMessageUser('Hello');
   Test.AssertEquals('user', MessageValue.Role);
   Test.AssertEquals('Hello', MessageValue.Content);
-  var Options: OpenAi.ChatOptions := OpenAi.ChatOptions.Default();
+  const Options: OpenAi.ChatOptions := OpenAi.ChatOptionsDefault();
   case Options.MaxTokens of
     when Option.Some(const Value):
       begin

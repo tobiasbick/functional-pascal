@@ -3,54 +3,80 @@ program TuiSurfaceWideGlyphTest;
 uses Std.Options as Options;
 uses Std.Test as Test;
 uses Std.Tui as Tui;
+uses Std.Tui.Cells as Cells;
+uses Std.Tui.Geometry as Geometry;
+uses Std.Tui.Rendering as Rendering;
 
 begin
-  var Surface: Tui.TuiWorkingSurface := Tui.TuiWorkingSurface.Create(Tui.TuiSize.Create(4, 2));
-  var Wide: Tui.TuiCell := Tui.TuiCell.Create('中', Tui.TuiStyleRole.Accent);
-  Surface.PutCell(Tui.TuiPoint.Create(1, 0), Wide);
-  Test.AssertEquals('中', Options.Unwrap(Surface.TryCellAt(Tui.TuiPoint.Create(1, 0))).Glyph);
-  Test.AssertTrue(Options.Unwrap(Surface.TryCellAt(Tui.TuiPoint.Create(1, 0))).Role =
+  const Surface: Tui.TuiWorkingSurface := Rendering.TuiWorkingSurfaceCreate(Geometry.TuiSizeCreate(4, 2));
+  const Wide: Tui.TuiCell := Cells.TuiCellCreate('中', Tui.TuiStyleRole.Accent);
+  Rendering.TuiWorkingSurfacePutCell(Surface, Geometry.TuiPointCreate(1, 0), Wide);
+  Test.AssertEquals('中', Options.Unwrap(Rendering.TuiWorkingSurfaceTryCellAt(Surface, Geometry.TuiPointCreate(1, 0)))
+                            .Glyph);
+  Test.AssertTrue(Options.Unwrap(Rendering.TuiWorkingSurfaceTryCellAt(Surface, Geometry.TuiPointCreate(1, 0))).Role =
                   Tui.TuiStyleRole.Accent);
-  Test.AssertTrue(Options.IsNone(Surface.TryCellAt(Tui.TuiPoint.Create(2, 0))));
-  Test.AssertEquals('中', Surface.Snapshot().CellAt(1, 0).Glyph);
-  Test.AssertEquals(' ', Surface.Snapshot().CellAt(2, 0).Glyph);
-  Surface.PutCell(Tui.TuiPoint.Create(2, 0), Tui.TuiCell.Create('X', Tui.TuiStyleRole.Normal));
-  Test.AssertEquals(' ', Options.Unwrap(Surface.TryCellAt(Tui.TuiPoint.Create(1, 0))).Glyph);
-  Test.AssertEquals('X', Options.Unwrap(Surface.TryCellAt(Tui.TuiPoint.Create(2, 0))).Glyph);
-  Surface.PutCell(Tui.TuiPoint.Create(0, 1), Wide);
-  Test.AssertEquals('中', Options.Unwrap(Surface.TryCellAt(Tui.TuiPoint.Create(0, 1))).Glyph);
-  Test.AssertTrue(Options.IsNone(Surface.TryCellAt(Tui.TuiPoint.Create(1, 1))));
-  Surface.PutCell(Tui.TuiPoint.Create(1, 1), Tui.TuiCell.Create('Y', Tui.TuiStyleRole.Title));
-  Test.AssertEquals(' ', Options.Unwrap(Surface.TryCellAt(Tui.TuiPoint.Create(0, 1))).Glyph);
-  Test.AssertEquals('Y', Options.Unwrap(Surface.TryCellAt(Tui.TuiPoint.Create(1, 1))).Glyph);
-  Surface.PutCell(Tui.TuiPoint.Create(3, 0), Wide);
-  Test.AssertEquals(' ', Options.Unwrap(Surface.TryCellAt(Tui.TuiPoint.Create(3, 0))).Glyph);
-  Test.AssertTrue(Options.IsNone(Surface.TryCellAt(Tui.TuiPoint.Create(4, 0))));
-  Surface.PutCell(Tui.TuiPoint.Create(2, 0), Wide);
-  Surface.PutCell(Tui.TuiPoint.Create(1, 0), Wide);
-  Test.AssertEquals('中', Options.Unwrap(Surface.TryCellAt(Tui.TuiPoint.Create(1, 0))).Glyph);
-  Test.AssertTrue(Options.IsNone(Surface.TryCellAt(Tui.TuiPoint.Create(2, 0))));
-  Test.AssertEquals(' ', Options.Unwrap(Surface.TryCellAt(Tui.TuiPoint.Create(3, 0))).Glyph);
-  Surface.PutCell(Tui.TuiPoint.Create(2, 1), Tui.TuiCell.Create('é', Tui.TuiStyleRole.Normal));
-  Test.AssertEquals(1, Options.Unwrap(Surface.TryCellAt(Tui.TuiPoint.Create(2, 1))).Width());
-  Test.AssertEquals('é', Options.Unwrap(Surface.TryCellAt(Tui.TuiPoint.Create(2, 1))).Glyph);
-  var FillSurface: Tui.TuiWorkingSurface := Tui.TuiWorkingSurface.Create(Tui.TuiSize.Create(5, 1));
-  var FillCanvas: Tui.TuiCanvas := Tui.TuiCanvas.Create(FillSurface, Tui.TuiRect.Create(0, 0, 5, 1));
-  FillSurface.PutCell(Tui.TuiPoint.Create(1, 0), Wide);
-  FillCanvas.FillRect(Tui.TuiRect.Create(2, 0, 2, 1), Tui.TuiCell.Create('#', Tui.TuiStyleRole.Accent));
-  Test.AssertEquals(' ', Options.Unwrap(FillSurface.TryCellAt(Tui.TuiPoint.Create(1, 0))).Glyph);
-  Test.AssertEquals('#', Options.Unwrap(FillSurface.TryCellAt(Tui.TuiPoint.Create(2, 0))).Glyph);
-  Test.AssertEquals('#', Options.Unwrap(FillSurface.TryCellAt(Tui.TuiPoint.Create(3, 0))).Glyph);
-  FillSurface.PutCell(Tui.TuiPoint.Create(3, 0), Wide);
-  FillCanvas.FillRect(Tui.TuiRect.Create(2, 0, 2, 1), Tui.TuiCell.Create('@', Tui.TuiStyleRole.Title));
-  Test.AssertEquals('@', Options.Unwrap(FillSurface.TryCellAt(Tui.TuiPoint.Create(2, 0))).Glyph);
-  Test.AssertEquals('@', Options.Unwrap(FillSurface.TryCellAt(Tui.TuiPoint.Create(3, 0))).Glyph);
-  Test.AssertEquals(' ', Options.Unwrap(FillSurface.TryCellAt(Tui.TuiPoint.Create(4, 0))).Glyph);
-  FillSurface.PutCell(Tui.TuiPoint.Create(1, 0), Wide);
-  FillCanvas.FillRect(Tui.TuiRect.Create(0, 0, 5, 1), Tui.TuiCell.Create('*', Tui.TuiStyleRole.Accent));
-  Test.AssertEquals('*', Options.Unwrap(FillSurface.TryCellAt(Tui.TuiPoint.Create(0, 0))).Glyph);
-  Test.AssertEquals('*', Options.Unwrap(FillSurface.TryCellAt(Tui.TuiPoint.Create(1, 0))).Glyph);
-  Test.AssertEquals('*', Options.Unwrap(FillSurface.TryCellAt(Tui.TuiPoint.Create(2, 0))).Glyph);
-  Test.AssertEquals('*', Options.Unwrap(FillSurface.TryCellAt(Tui.TuiPoint.Create(3, 0))).Glyph);
-  Test.AssertEquals('*', Options.Unwrap(FillSurface.TryCellAt(Tui.TuiPoint.Create(4, 0))).Glyph);
+  Test.AssertTrue(Options.IsNone(Rendering.TuiWorkingSurfaceTryCellAt(Surface, Geometry.TuiPointCreate(2, 0))));
+  Test.AssertEquals('中', Rendering.TuiSurfaceSnapshotCellAt(Rendering.TuiWorkingSurfaceSnapshot(Surface), 1, 0)
+                            .Glyph);
+  Test.AssertEquals(' ', Rendering.TuiSurfaceSnapshotCellAt(Rendering.TuiWorkingSurfaceSnapshot(Surface), 2, 0)
+                           .Glyph);
+  Rendering.TuiWorkingSurfacePutCell(Surface, Geometry.TuiPointCreate(2, 0), Cells.TuiCellCreate('X', Tui.TuiStyleRole.Normal));
+  Test.AssertEquals(' ', Options.Unwrap(Rendering.TuiWorkingSurfaceTryCellAt(Surface, Geometry.TuiPointCreate(1, 0)))
+                           .Glyph);
+  Test.AssertEquals('X', Options.Unwrap(Rendering.TuiWorkingSurfaceTryCellAt(Surface, Geometry.TuiPointCreate(2, 0)))
+                           .Glyph);
+  Rendering.TuiWorkingSurfacePutCell(Surface, Geometry.TuiPointCreate(0, 1), Wide);
+  Test.AssertEquals('中', Options.Unwrap(Rendering.TuiWorkingSurfaceTryCellAt(Surface, Geometry.TuiPointCreate(0, 1)))
+                            .Glyph);
+  Test.AssertTrue(Options.IsNone(Rendering.TuiWorkingSurfaceTryCellAt(Surface, Geometry.TuiPointCreate(1, 1))));
+  Rendering.TuiWorkingSurfacePutCell(Surface, Geometry.TuiPointCreate(1, 1), Cells.TuiCellCreate('Y', Tui.TuiStyleRole.Title));
+  Test.AssertEquals(' ', Options.Unwrap(Rendering.TuiWorkingSurfaceTryCellAt(Surface, Geometry.TuiPointCreate(0, 1)))
+                           .Glyph);
+  Test.AssertEquals('Y', Options.Unwrap(Rendering.TuiWorkingSurfaceTryCellAt(Surface, Geometry.TuiPointCreate(1, 1)))
+                           .Glyph);
+  Rendering.TuiWorkingSurfacePutCell(Surface, Geometry.TuiPointCreate(3, 0), Wide);
+  Test.AssertEquals(' ', Options.Unwrap(Rendering.TuiWorkingSurfaceTryCellAt(Surface, Geometry.TuiPointCreate(3, 0)))
+                           .Glyph);
+  Test.AssertTrue(Options.IsNone(Rendering.TuiWorkingSurfaceTryCellAt(Surface, Geometry.TuiPointCreate(4, 0))));
+  Rendering.TuiWorkingSurfacePutCell(Surface, Geometry.TuiPointCreate(2, 0), Wide);
+  Rendering.TuiWorkingSurfacePutCell(Surface, Geometry.TuiPointCreate(1, 0), Wide);
+  Test.AssertEquals('中', Options.Unwrap(Rendering.TuiWorkingSurfaceTryCellAt(Surface, Geometry.TuiPointCreate(1, 0)))
+                            .Glyph);
+  Test.AssertTrue(Options.IsNone(Rendering.TuiWorkingSurfaceTryCellAt(Surface, Geometry.TuiPointCreate(2, 0))));
+  Test.AssertEquals(' ', Options.Unwrap(Rendering.TuiWorkingSurfaceTryCellAt(Surface, Geometry.TuiPointCreate(3, 0)))
+                           .Glyph);
+  Rendering.TuiWorkingSurfacePutCell(Surface, Geometry.TuiPointCreate(2, 1), Cells.TuiCellCreate('é', Tui.TuiStyleRole.Normal));
+  Test.AssertEquals(1, Cells.TuiCellWidth(Options.Unwrap(Rendering.TuiWorkingSurfaceTryCellAt(Surface, Geometry.TuiPointCreate(2, 1)))));
+  Test.AssertEquals('é', Options.Unwrap(Rendering.TuiWorkingSurfaceTryCellAt(Surface, Geometry.TuiPointCreate(2, 1)))
+                           .Glyph);
+  const FillSurface: Tui.TuiWorkingSurface := Rendering.TuiWorkingSurfaceCreate(Geometry.TuiSizeCreate(5, 1));
+  const FillCanvas: Tui.TuiCanvas := Rendering.TuiCanvasCreate(FillSurface, Geometry.TuiRectCreate(0, 0, 5, 1));
+  Rendering.TuiWorkingSurfacePutCell(FillSurface, Geometry.TuiPointCreate(1, 0), Wide);
+  Rendering.TuiCanvasFillRect(FillCanvas, Geometry.TuiRectCreate(2, 0, 2, 1), Cells.TuiCellCreate('#', Tui.TuiStyleRole.Accent));
+  Test.AssertEquals(' ', Options.Unwrap(Rendering.TuiWorkingSurfaceTryCellAt(FillSurface, Geometry.TuiPointCreate(1, 0)))
+                           .Glyph);
+  Test.AssertEquals('#', Options.Unwrap(Rendering.TuiWorkingSurfaceTryCellAt(FillSurface, Geometry.TuiPointCreate(2, 0)))
+                           .Glyph);
+  Test.AssertEquals('#', Options.Unwrap(Rendering.TuiWorkingSurfaceTryCellAt(FillSurface, Geometry.TuiPointCreate(3, 0)))
+                           .Glyph);
+  Rendering.TuiWorkingSurfacePutCell(FillSurface, Geometry.TuiPointCreate(3, 0), Wide);
+  Rendering.TuiCanvasFillRect(FillCanvas, Geometry.TuiRectCreate(2, 0, 2, 1), Cells.TuiCellCreate('@', Tui.TuiStyleRole.Title));
+  Test.AssertEquals('@', Options.Unwrap(Rendering.TuiWorkingSurfaceTryCellAt(FillSurface, Geometry.TuiPointCreate(2, 0)))
+                           .Glyph);
+  Test.AssertEquals('@', Options.Unwrap(Rendering.TuiWorkingSurfaceTryCellAt(FillSurface, Geometry.TuiPointCreate(3, 0)))
+                           .Glyph);
+  Test.AssertEquals(' ', Options.Unwrap(Rendering.TuiWorkingSurfaceTryCellAt(FillSurface, Geometry.TuiPointCreate(4, 0)))
+                           .Glyph);
+  Rendering.TuiWorkingSurfacePutCell(FillSurface, Geometry.TuiPointCreate(1, 0), Wide);
+  Rendering.TuiCanvasFillRect(FillCanvas, Geometry.TuiRectCreate(0, 0, 5, 1), Cells.TuiCellCreate('*', Tui.TuiStyleRole.Accent));
+  Test.AssertEquals('*', Options.Unwrap(Rendering.TuiWorkingSurfaceTryCellAt(FillSurface, Geometry.TuiPointCreate(0, 0)))
+                           .Glyph);
+  Test.AssertEquals('*', Options.Unwrap(Rendering.TuiWorkingSurfaceTryCellAt(FillSurface, Geometry.TuiPointCreate(1, 0)))
+                           .Glyph);
+  Test.AssertEquals('*', Options.Unwrap(Rendering.TuiWorkingSurfaceTryCellAt(FillSurface, Geometry.TuiPointCreate(2, 0)))
+                           .Glyph);
+  Test.AssertEquals('*', Options.Unwrap(Rendering.TuiWorkingSurfaceTryCellAt(FillSurface, Geometry.TuiPointCreate(3, 0)))
+                           .Glyph);
+  Test.AssertEquals('*', Options.Unwrap(Rendering.TuiWorkingSurfaceTryCellAt(FillSurface, Geometry.TuiPointCreate(4, 0)))
+                           .Glyph);
 end program;

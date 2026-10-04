@@ -22,16 +22,16 @@ end function;
 
 function DoubleFirst(Items: array of (integer); Min: integer): Option of (string);
 begin
-  var V: integer := try FindFirst(Items, Min);
+  const V: integer := try FindFirst(Items, Min);
   return Option.Some((Conv.IntToStr(V) + ' x 2 = ') + Conv.IntToStr(V * 2));
 end function;
 
 begin
-  var Data: array of (integer) := [3, 7, 15, 42, 8];
-  var Found: Option of (integer) := FindFirst(Data, 10);
+  const Data: array of (integer) := [3, 7, 15, 42, 8];
+  const Found: Option of (integer) := FindFirst(Data, 10);
   Console.WriteLn('IsSome: ', Options.IsSome(Found));
   Console.WriteLn('Value: ', Options.Unwrap(Found));
-  var Missing: Option of (integer) := FindFirst(Data, 100);
+  const Missing: Option of (integer) := FindFirst(Data, 100);
   Console.WriteLn('IsNone: ', Options.IsNone(Missing));
   Console.WriteLn('UnwrapOr: ', Options.UnwrapOr(Missing, 0));
   case FindFirst(Data, 40) of

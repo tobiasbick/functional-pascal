@@ -15,18 +15,19 @@ uses Std.Tui.Rendering.Canvas as Canvas2;
 // - `Title`: Title displayed by the panel.
 public procedure TuiPaintPanel(Canvas: Canvas2.TuiCanvas; Bounds: Rect.TuiRect; Title: string);
 begin
-  if Bounds.IsEmpty() then
+  if Rect.TuiRectIsEmpty(Bounds) then
     begin
       return;
     end;
   end if;
 
-  Canvas.FillRect(Bounds, Cell.TuiCell.Create(' ', StyleRole.TuiStyleRole.Normal));
-  Canvas.DrawFrame(Bounds, StyleRole.TuiStyleRole.Frame);
+  Canvas2.TuiCanvasFillRect(Canvas, Bounds, Cell.TuiCellCreate(' ', StyleRole.TuiStyleRole.Normal));
+  Canvas2.TuiCanvasDrawFrame(Canvas, Bounds, StyleRole.TuiStyleRole.Frame);
   if (Title <> '') and (Bounds.Width > 6) then
     begin
-      Canvas.Child(Rect.TuiRect.Create(Bounds.X + 2, Bounds.Y, Bounds.Width - 4, 1))
-        .WriteText(Point.TuiPoint.Create(0, 0), (' ' + Title) + ' ', StyleRole.TuiStyleRole.Title);
+      Canvas2.TuiCanvasWriteText(Canvas2.TuiCanvasChild(Canvas, Rect.TuiRectCreate(Bounds.X + 2, Bounds.Y, Bounds.Width -
+                                                                                                           4, 1)), Point.TuiPointCreate(0, 0), (' ' + Title) +
+                                                                                                                                               ' ', StyleRole.TuiStyleRole.Title);
     end;
   end if;
 end procedure;

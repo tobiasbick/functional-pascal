@@ -78,14 +78,14 @@ begin
 end procedure;
 
 begin
-  case Http.OpenStream(Http.Request.Get('http://127.0.0.1:{port}/events')) of
+  case Http.OpenStream(Http.RequestGet('http://127.0.0.1:{port}/events')) of
     when Result.Ok(const ResponseValue):
       begin
         Console.WriteLn(ResponseValue.StatusCode);
         case Http.CreateSseDecoder(4096) of
           when Result.Ok(const Decoder):
             begin
-              mutable var Reading: boolean := true;
+               var Reading: boolean := true;
               while Reading do
                 begin
                   case Http.ReadStream(ResponseValue.Body, 3) of
@@ -141,9 +141,8 @@ end program;
         &cwd,
     );
     std::fs::remove_dir_all(&cwd).expect("temporary directory must be removed");
-    server.join().expect("streaming fixture must finish");
-
     assert_eq!(exit, 0, "stderr: {stderr}");
+    server.join().expect("streaming fixture must finish");
     assert_eq!(stdout, "200\ntoken:hello\nmessage:world\n");
 }
 
@@ -179,7 +178,7 @@ uses Std.Http as Http;
 uses Std.Str as Str;
 
 begin
-  case Http.OpenStream(Http.Request.Get('http://127.0.0.1:{port}/truncated')) of
+  case Http.OpenStream(Http.RequestGet('http://127.0.0.1:{port}/truncated')) of
     when Result.Ok(const ResponseValue):
       begin
         case Http.ReadStream(ResponseValue.Body, 8) of
@@ -228,8 +227,7 @@ end program;
         &cwd,
     );
     std::fs::remove_dir_all(&cwd).expect("temporary directory must be removed");
-    server.join().expect("truncated fixture must finish");
-
     assert_eq!(exit, 0, "stderr: {stderr}");
+    server.join().expect("truncated fixture must finish");
     assert_eq!(stdout, "ok\n");
 }

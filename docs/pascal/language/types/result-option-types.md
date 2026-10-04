@@ -6,10 +6,10 @@
 Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`type_expr` — `result` / `option`).
 
 ```pascal
-var Success: result of (integer, string) := Result.Ok(42);
-var Failure: result of (integer, string) := Result.Error('not found');
-var Present: option of (integer) := Option.Some(7);
-var Missing: option of (integer) := Option.None;
+const Success: result of (integer, string) := Result.Ok(42);
+const Failure: result of (integer, string) := Result.Error('not found');
+const Present: option of (integer) := Option.Some(7);
+const Missing: option of (integer) := Option.None;
 ```
 
 Use `case` destructuring to handle both forms:

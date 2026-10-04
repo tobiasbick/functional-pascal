@@ -21,7 +21,7 @@ fn semantic_tokens_classify_every_supported_symbol_kind_and_modifier() {
     let source = r#"unit Semantic.Sample;
 
   public const Answer: integer := 42;
-  public var LabelText: string := 'sample';
+  public const LabelText: string := 'sample';
 
 
   public type Choice = enum
@@ -29,23 +29,22 @@ fn semantic_tokens_classify_every_supported_symbol_kind_and_modifier() {
   end enum;
   public type Counter = record
     public Value: integer;
-    public property Current: integer read GetCurrent;
-    public event Changed: procedure() read ReadChanged write WriteChanged;
-    public function Add of (T)(Self: Counter; Amount: T): integer;
-    begin
-      return Self.Value;
-    end function;
+    public Changed: Option of (procedure()) := Option.None;
   end record;
+    public function CounterAdd of (T)(Receiver: Counter; Amount: T): integer;
+    begin
+      return Receiver.Value;
+    end function;
 
 public function Identity of (T)(Input: T): T;
 begin
-  var Local: T := Input;
+  const Local: T := Input;
   return Local;
 end function;
 
 public procedure Notify(MessageText: string);
 begin
-  mutable var CopyText: string := MessageText;
+   var CopyText: string := MessageText;
 end procedure;
 end unit;
 
@@ -72,14 +71,14 @@ end unit;
         ("Choice", SemanticTokenKind::Enum),
         ("T", SemanticTokenKind::TypeParameter),
         ("Input", SemanticTokenKind::Parameter),
-        ("Local", SemanticTokenKind::Variable),
+        ("Local", SemanticTokenKind::Constant),
+        ("CopyText", SemanticTokenKind::Variable),
         ("Value", SemanticTokenKind::Field),
-        ("Current", SemanticTokenKind::Property),
-        ("Changed", SemanticTokenKind::Event),
+        ("Changed", SemanticTokenKind::Field),
         ("First", SemanticTokenKind::EnumMember),
         ("Identity", SemanticTokenKind::Function),
         ("Notify", SemanticTokenKind::Procedure),
-        ("Add", SemanticTokenKind::Method),
+        ("CounterAdd", SemanticTokenKind::Function),
         ("Answer", SemanticTokenKind::Constant),
     ] {
         assert!(
@@ -102,7 +101,7 @@ fn semantic_tokens_follow_shadowing_and_return_partial_malformed_results() {
     let temp = TempDirectory::new("semantic-token-shadowing");
     let source = r#"program Shadowing;
 
-var Value: integer := 1;
+const Value: integer := 1;
 
 function ReadValue(Value: integer): integer;
 begin
@@ -110,7 +109,7 @@ begin
 end;
 
 begin
-  var Broken: integer := ReadValue(Value
+  const Broken: integer := ReadValue(Value
 end.
 "#;
     let path = temp.write("shadowing.fpas", source);
@@ -127,7 +126,7 @@ end.
         token.span.offset() == parameter_reference && token.kind == SemanticTokenKind::Parameter
     }));
     assert!(tokens.iter().any(|token| {
-        token.span.offset() == global_reference && token.kind == SemanticTokenKind::Variable
+        token.span.offset() == global_reference && token.kind == SemanticTokenKind::Constant
     }));
     assert!(
         tokens
@@ -203,7 +202,7 @@ end unit;
 uses Actions.Core as Core;
 
 begin
-  var Value: UniqueType := 1;
+  const Value: UniqueType := 1;
 end program;
 "#;
     let main = temp.write("src/main.fpas", source);
@@ -352,7 +351,12 @@ fn import_action_rejects_an_inaccessible_private_declaration() {
 #[test]
 fn explanatory_parser_help_does_not_become_a_code_action() {
     let temp = TempDirectory::new("semantic-explanatory-help");
-    let source = "program Broken;\n\nbegin\n  var Value integer := 1\nend.\n";
+    let source = r#"program Broken;
+
+begin
+  const Value integer := 1
+end.
+"#;
     let path = temp.write("broken.fpas", source);
     let mut service = LanguageService::new(WorkspaceContext::loose(temp.path()));
     let analysis = service
@@ -419,7 +423,14 @@ end unit;
 "#,
     );
     let source = format!(
-        "program Actions;\n\nuses Actions.Core as Core;\n\nbegin\n  var Value: integer := {name}();\nend program;\n"
+        r#"program Actions;
+
+uses Actions.Core as Core;
+
+begin
+  const Value: integer := {name}();
+end program;
+"#
     );
     let main = temp.write("src/main.fpas", &source);
     ImportFixture {

@@ -53,6 +53,10 @@ checks. Their rules refine this contract; they must not introduce competing form
 - A record's supplied fields evaluate in written order; omitted defaults then
   evaluate in declaration order, once per construction. Defaults must be pure
   and cannot refer to other fields or to mutable enclosing bindings.
+  This restricts default evaluation, not the declared field result type: absent
+  options and empty collections of ordinary handlers or resources are allowed.
+  Reads/captures still require immutable resource-free data or pure callables.
+  Compiler-generated default initializers do not expose a source pure callable.
 - Non-public fields remain non-public. Outside the declaring unit, structural
   construction requires every field to be public, even omitted defaulted fields.
   Otherwise use an ordinary public factory. Field reads and updates obey visibility.

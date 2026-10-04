@@ -148,7 +148,8 @@ impl Parser {
     }
 
     pub(crate) fn is_mutable_var_start(&self) -> bool {
-        matches!(self.current_token(), Token::Mutable) && self.peek_token() == &Token::Var
+        matches!(self.current_token(), Token::Ident(name) if name.eq_ignore_ascii_case("mutable"))
+            && self.peek_token() == &Token::Var
     }
 
     pub(crate) fn expect_ident(&mut self) -> Option<(String, Span)> {
@@ -171,7 +172,7 @@ impl Parser {
 
     /// True when the current token can start an identifier designator.
     pub(crate) fn is_ident_designator_start(&self) -> bool {
-        matches!(self.current_token(), Token::Ident(_) | Token::SelfKw)
+        matches!(self.current_token(), Token::Ident(_))
     }
 
     /// Returns whether the current token belongs to the parent construct of a missing expression.

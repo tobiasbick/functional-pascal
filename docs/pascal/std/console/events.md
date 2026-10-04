@@ -17,7 +17,7 @@ another event follows the burst, it remains next in FIFO order. Test-injected
 ```pascal
 uses Std.Console as Console;
 
-var E: Console.ConsoleEvent := Console.ReadEvent();
+const E: Console.ConsoleEvent := Console.ReadEvent();
 if E.kind = Console.EventKind.Resize then
   Console.WriteLn(E.width, 'x', E.height);
 end if;
@@ -39,7 +39,7 @@ uses Std.Console as Console;
 uses Std.Options as Options;
 
   Console.EnableRawMode();
-  var MaybeEvent: option of (Console.ConsoleEvent) := Console.ReadEventTimeout(100);
+  const MaybeEvent: option of (Console.ConsoleEvent) := Console.ReadEventTimeout(100);
   case MaybeEvent of
     when Option.Some(const E):
       begin
@@ -67,7 +67,7 @@ uses Std.Console as Console;
 uses Std.Options as Options;
 
   Console.EnableRawMode();
-  var MaybeE: option of (Console.ConsoleEvent) := Console.PollEvent();
+  const MaybeE: option of (Console.ConsoleEvent) := Console.PollEvent();
   case MaybeE of
     when Option.Some(const E):
       begin

@@ -46,7 +46,7 @@ end enum;
 //
 // Parameters:
 // - `Text`: UTF-8 text processed by the operation.
-public function Parse(Text: string): Result of (TomlValue, string);
+public pure function Parse(Text: string): Result of (TomlValue, string);
 begin
   panic('Intrinsic API declaration');
 end function;
@@ -55,7 +55,7 @@ end function;
 //
 // Parameters:
 // - `Value`: Value consumed or returned by the operation.
-public function Stringify(Value: TomlValue): string;
+public pure function Stringify(Value: TomlValue): string;
 begin
   panic('Intrinsic API declaration');
 end function;

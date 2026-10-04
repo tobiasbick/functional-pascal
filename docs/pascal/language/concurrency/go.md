@@ -19,8 +19,8 @@ begin
 end function;
 
 begin
-  var T: task := go Worker();
-  var R: integer := Tasks.Wait(T);
+  const T: task := go Worker();
+  const R: integer := Tasks.Wait(T);
   Console.WriteLn(R);
 end program;
 ```

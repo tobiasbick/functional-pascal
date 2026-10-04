@@ -238,7 +238,7 @@ fn constructor_and_replacement_failures_are_atomic() {
     );
     assert_eq!(
         session
-            .evaluate(&enum_call("Missing.Empty", Vec::new()), Some(frame))
+            .evaluate(&enum_call("UnknownOwner.Empty", Vec::new()), Some(frame))
             .expect_err("unknown owner")
             .kind,
         DebugErrorKind::UnknownCallable

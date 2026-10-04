@@ -3,8 +3,7 @@
 use fpas_unit::interface as artifact;
 
 use crate::types::{
-    EnumTy, FunctionTy, GenericParamDef, MethodKind, ParamTy, ProcedureTy, RecordTy, Ty,
-    TypeConstraint,
+    EnumTy, FunctionTy, GenericParamDef, ParamTy, ProcedureTy, RecordTy, Ty, TypeConstraint,
 };
 
 use super::InterfaceConversionError;
@@ -42,8 +41,8 @@ pub fn ty_to_interface_type(ty: &Ty) -> Result<artifact::InterfaceType, Interfac
                 .map(ty_to_interface_reference)
                 .collect::<Result<_, _>>()?,
         ),
-        Ty::GenericParam(name, constraint) => {
-            Output::GenericParameter(name.clone(), constraint.map(constraint_to_interface))
+        Ty::GenericParam(parameter) => {
+            Output::GenericParameter(generic_parameter_to_interface(parameter))
         }
         Ty::Error => {
             return Err(InterfaceConversionError::new(
@@ -57,6 +56,7 @@ fn function_to_interface(
     function: &FunctionTy,
 ) -> Result<artifact::CallableType, InterfaceConversionError> {
     Ok(artifact::CallableType {
+        pure: function.pure,
         type_parameters: generic_parameters_to_interface(&function.type_params),
         parameters: parameters_to_interface(&function.params)?,
         result: Some(Box::new(ty_to_interface_reference(&function.return_type)?)),
@@ -68,6 +68,7 @@ fn procedure_to_interface(
     procedure: &ProcedureTy,
 ) -> Result<artifact::CallableType, InterfaceConversionError> {
     Ok(artifact::CallableType {
+        pure: false,
         type_parameters: generic_parameters_to_interface(&procedure.type_params),
         parameters: parameters_to_interface(&procedure.params)?,
         result: None,
@@ -95,11 +96,16 @@ fn generic_parameters_to_interface(
 ) -> Vec<artifact::GenericParameter> {
     parameters
         .iter()
-        .map(|parameter| artifact::GenericParameter {
-            name: parameter.name.clone(),
-            constraint: parameter.constraint.map(constraint_to_interface),
-        })
+        .map(generic_parameter_to_interface)
         .collect()
+}
+
+fn generic_parameter_to_interface(parameter: &GenericParamDef) -> artifact::GenericParameter {
+    artifact::GenericParameter {
+        name: parameter.name.clone(),
+        constraint: parameter.constraint.map(constraint_to_interface),
+        identity: parameter.identity.clone(),
+    }
 }
 
 fn record_to_interface(
@@ -127,66 +133,6 @@ fn record_to_interface(
                 })
             })
             .collect::<Result<_, InterfaceConversionError>>()?,
-        methods: record
-            .methods
-            .iter()
-            .map(|(name, method)| method_to_interface(name, method))
-            .collect::<Result<_, _>>()?,
-        static_routines: record
-            .static_functions
-            .iter()
-            .map(|(name, function)| {
-                Ok(artifact::MethodType {
-                    name: name.clone(),
-                    callable: function_to_interface(function)?,
-                })
-            })
-            .chain(record.static_procedures.iter().map(|(name, procedure)| {
-                Ok(artifact::MethodType {
-                    name: name.clone(),
-                    callable: procedure_to_interface(procedure)?,
-                })
-            }))
-            .collect::<Result<_, InterfaceConversionError>>()?,
-        properties: record
-            .properties
-            .iter()
-            .map(|(name, property)| {
-                Ok(artifact::PropertyType {
-                    name: name.clone(),
-                    ty: ty_to_interface_reference(&property.ty)?,
-                    getter: property.getter.clone(),
-                    setter: property.setter.clone(),
-                })
-            })
-            .collect::<Result<_, InterfaceConversionError>>()?,
-        events: record
-            .events
-            .iter()
-            .map(|(name, event)| {
-                Ok(artifact::EventType {
-                    name: name.clone(),
-                    handler: ty_to_interface_reference(&event.handler_ty)?,
-                    getter: event.getter.clone(),
-                    setter: event.setter.clone(),
-                    owner_unit: event.owner_unit.clone(),
-                })
-            })
-            .collect::<Result<_, InterfaceConversionError>>()?,
-    })
-}
-
-fn method_to_interface(
-    name: &str,
-    method: &MethodKind,
-) -> Result<artifact::MethodType, InterfaceConversionError> {
-    let callable = match method {
-        MethodKind::Function(function) => function_to_interface(function)?,
-        MethodKind::Procedure(procedure) => procedure_to_interface(procedure)?,
-    };
-    Ok(artifact::MethodType {
-        name: name.to_string(),
-        callable,
     })
 }
 

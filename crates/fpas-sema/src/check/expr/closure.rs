@@ -16,15 +16,19 @@ impl Checker {
         &mut self,
         expr: &Expr,
         is_function: bool,
+        pure: bool,
         params: &[FormalParam],
         return_type: Option<&TypeExpr>,
         body: &FuncBody,
-        _span: Span,
+        span: Span,
     ) -> Ty {
         self.check_unique_formal_param_names(params);
         let params_ty = self.resolve_formal_params(params);
         let return_ty = return_type.map(|te| self.resolve_type_expr(te));
 
+        if pure {
+            self.check_pure_signature(&params_ty, return_ty.as_ref().unwrap_or(&Ty::Error), span);
+        }
         let key = Self::expr_lookup_key(expr);
         let synthetic_name = format!("$closure_{key}");
 
@@ -35,6 +39,8 @@ impl Checker {
             params,
             return_ty.clone(),
             body,
+            pure,
+            span,
         );
         let info = closure_info_from_captures(synthetic_name, captures);
         if info.task_bound {
@@ -44,6 +50,7 @@ impl Checker {
 
         if is_function {
             Ty::Function(FunctionTy {
+                pure,
                 type_params: Vec::new(),
                 params: params_ty,
                 return_type: Box::new(return_ty.unwrap_or(Ty::Error)),

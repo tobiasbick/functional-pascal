@@ -6,7 +6,28 @@ use fpas_diagnostics::codes::{SEMA_CONSTRAINT_VIOLATION, SEMA_TYPE_MISMATCH};
 #[test]
 fn generic_records_resolve_fields_and_forward_routine_arguments() {
     check_ok(
-        "program Main;\n\ntype Box of (T) = record\n  Value: T;\nend record;\n\nfunction ReadBox of (T)(Value: Box of (T)): T;\nbegin\n  return Value.Value;\nend function;\n\nfunction Forward of (U)(Value: Box of (U)): U;\nbegin\n  return ReadBox(Value);\nend function;\n\nvar Item: Box of (integer) := Box(Value := 42);\n\nbegin\n  discard Forward(Item);\nend program;\n",
+        r#"program Main;
+
+type Box of (T) = record
+  Value: T;
+end record;
+
+function ReadBox of (T)(Value: Box of (T)): T;
+begin
+  return Value.Value;
+end function;
+
+function Forward of (U)(Value: Box of (U)): U;
+begin
+  return ReadBox(Value);
+end function;
+
+const Item: Box of (integer) := Box(Value := 42);
+
+begin
+  discard Forward(Item);
+end program;
+"#,
     );
 }
 
@@ -26,7 +47,18 @@ fn applications_resolve_independently_of_declaration_order() {
 #[test]
 fn generic_records_preserve_nominal_argument_identity() {
     let errors = check_errors(
-        "program Main;\n\ntype Marker of (T) = record\nend record;\n\nvar First: Marker of (integer) := Marker();\nvar Second: Marker of (string) := First;\n\nbegin\n  null;\nend program;\n",
+        r#"program Main;
+
+type Marker of (T) = record
+end record;
+
+const First: Marker of (integer) := Marker();
+const Second: Marker of (string) := First;
+
+begin
+  null;
+end program;
+"#,
     );
     assert!(
         errors.iter().any(|error| error.code == SEMA_TYPE_MISMATCH),

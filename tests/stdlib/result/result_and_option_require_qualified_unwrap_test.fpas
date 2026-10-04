@@ -5,8 +5,8 @@ uses Std.Results as Results;
 uses Std.Options as Options;
 
 begin
-  var R: Result of (integer, string) := Result.Ok(42);
-  var O: Option of (integer) := Option.Some(7);
+  const R: Result of (integer, string) := Result.Ok(42);
+  const O: Option of (integer) := Option.Some(7);
   Console.WriteLn(Results.Unwrap(R));
   Console.WriteLn(Options.Unwrap(O));
 end program;

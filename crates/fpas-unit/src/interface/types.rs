@@ -1,5 +1,7 @@
 //! Serialization-oriented semantic type descriptions.
 
+use super::GenericParameter;
+
 /// Built-in constraint attached to a generic parameter.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum TypeConstraint {
@@ -11,15 +13,6 @@ pub enum TypeConstraint {
     Numeric,
     /// Values can be rendered as text.
     Printable,
-}
-
-/// One generic parameter in a callable signature.
-#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-pub struct GenericParameter {
-    /// Source spelling of the parameter name.
-    pub name: String,
-    /// Optional built-in constraint.
-    pub constraint: Option<TypeConstraint>,
 }
 
 /// One callable parameter.
@@ -36,6 +29,8 @@ pub struct ParameterType {
 /// Function or procedure signature.
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct CallableType {
+    /// Whether the function explicitly guarantees pure evaluation.
+    pub pure: bool,
     /// Generic parameters in declaration order.
     pub type_parameters: Vec<GenericParameter>,
     /// Formal parameters in declaration order.
@@ -53,48 +48,11 @@ pub struct FieldType {
     pub name: String,
     /// Resolved field type.
     pub ty: InterfaceType,
-    /// Canonical scalar default value, when the field may be omitted.
-    pub default_value: Option<super::ConstantValue>,
+    /// Checked default used when the field is omitted from construction.
+    pub default_value: Option<super::FieldDefault>,
 }
 
-/// An instance method and its callable signature.
-#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-pub struct MethodType {
-    /// Source spelling of the method.
-    pub name: String,
-    /// Callable signature including the explicit `Self` parameter used internally.
-    pub callable: CallableType,
-}
-
-/// A computed record property.
-#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-pub struct PropertyType {
-    /// Source spelling of the property.
-    pub name: String,
-    /// Declared property type.
-    pub ty: InterfaceType,
-    /// Qualified getter definition, when readable.
-    pub getter: Option<String>,
-    /// Qualified setter definition, when writable.
-    pub setter: Option<String>,
-}
-
-/// A record event.
-#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-pub struct EventType {
-    /// Source spelling of the event.
-    pub name: String,
-    /// Declared handler callable type.
-    pub handler: InterfaceType,
-    /// Qualified getter definition.
-    pub getter: String,
-    /// Qualified setter definition.
-    pub setter: String,
-    /// Canonical unit owning the declaring record.
-    pub owner_unit: Option<String>,
-}
-
-/// Exported record layout and members.
+/// Exported record layout and field visibility.
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct RecordType {
     /// Canonical qualified record name.
@@ -111,14 +69,6 @@ pub struct RecordType {
     pub private_members: Vec<String>,
     /// Fields in layout order.
     pub fields: Vec<FieldType>,
-    /// Instance methods in canonical name order.
-    pub methods: Vec<MethodType>,
-    /// Static routines in canonical name order.
-    pub static_routines: Vec<MethodType>,
-    /// Properties in canonical name order.
-    pub properties: Vec<PropertyType>,
-    /// Events in canonical name order.
-    pub events: Vec<EventType>,
 }
 
 /// One enum variant.
@@ -183,5 +133,5 @@ pub enum InterfaceType {
     /// Application of a canonical nominal generic type, including recursive references.
     Applied(String, Vec<Self>),
     /// Generic parameter with its resolved constraint.
-    GenericParameter(String, Option<TypeConstraint>),
+    GenericParameter(GenericParameter),
 }

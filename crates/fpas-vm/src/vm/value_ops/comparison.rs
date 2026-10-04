@@ -19,10 +19,10 @@ pub(super) fn binary(
     let result = match operation {
         BinaryOperation::Equal => equality(left, right),
         BinaryOperation::NotEqual => !equality(left, right),
-        BinaryOperation::Less => ordering(left, right)?.is_lt(),
-        BinaryOperation::LessEqual => ordering(left, right)?.is_le(),
-        BinaryOperation::Greater => ordering(left, right)?.is_gt(),
-        BinaryOperation::GreaterEqual => ordering(left, right)?.is_ge(),
+        BinaryOperation::Less => ordering(left, right)?.is_some_and(Ordering::is_lt),
+        BinaryOperation::LessEqual => ordering(left, right)?.is_some_and(Ordering::is_le),
+        BinaryOperation::Greater => ordering(left, right)?.is_some_and(Ordering::is_gt),
+        BinaryOperation::GreaterEqual => ordering(left, right)?.is_some_and(Ordering::is_ge),
         BinaryOperation::In => membership(left, right)?,
         _ => unreachable!("scalar operation routed to comparison value operations"),
     };
@@ -33,25 +33,24 @@ fn equality(left: &Value, right: &Value) -> bool {
     left.language_equal(right)
 }
 
-fn ordering(left: &Value, right: &Value) -> Result<Ordering, ValueOperationError> {
-    match (left, right) {
+fn ordering(left: &Value, right: &Value) -> Result<Option<Ordering>, ValueOperationError> {
+    Ok(match (left, right) {
         (Value::Integer(left), Value::Integer(right)) => Some(left.cmp(right)),
         (Value::Boolean(left), Value::Boolean(right)) => Some(left.cmp(right)),
         (Value::Str(left), Value::Str(right)) => Some(left.cmp(right)),
         (Value::Integer(left), Value::Real(right)) => (*left as f64).partial_cmp(right),
         (Value::Real(left), Value::Integer(right)) => left.partial_cmp(&(*right as f64)),
         (Value::Real(left), Value::Real(right)) => left.partial_cmp(right),
-        _ => None,
-    }
-    .ok_or_else(|| {
-        ValueOperationError::type_mismatch(
-            format!(
-                "Ordered comparison requires compatible scalar operands, got {} and {}",
-                left.type_name(),
-                right.type_name()
-            ),
-            "Compare two numeric, Boolean, or string values.",
-        )
+        _ => {
+            return Err(ValueOperationError::type_mismatch(
+                format!(
+                    "Ordered comparison requires compatible scalar operands, got {} and {}",
+                    left.type_name(),
+                    right.type_name()
+                ),
+                "Compare two numeric, Boolean, or string values.",
+            ));
+        }
     })
 }
 

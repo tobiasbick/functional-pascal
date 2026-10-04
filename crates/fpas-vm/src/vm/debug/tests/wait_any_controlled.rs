@@ -21,7 +21,7 @@ begin
 end function;
 
 begin
-  var T: task := go Work();
+  const T: task := go Work();
   case Tasks.WaitAnyWithTimeout([T], 0) of
     when Result.Ok(_):
       panic('pending task ready');
@@ -39,8 +39,8 @@ begin
         panic(Message);
       end if;
   end case;
-  var Source: Tasks.CancellationSource := Tasks.CreateCancellationSource();
-  var Canceller: task := go CancelLater(Source);
+  const Source: Tasks.CancellationSource := Tasks.CreateCancellationSource();
+  const Canceller: task := go CancelLater(Source);
   case Tasks.WaitAnyWithCancellation([T], Tasks.GetCancellationToken(Source)) of
     when Result.Ok(_):
       panic('not cancelled');
@@ -75,7 +75,7 @@ begin
         panic(Message);
       end if;
   end case;
-  var Active: Tasks.CancellationSource := Tasks.CreateCancellationSource();
+  const Active: Tasks.CancellationSource := Tasks.CreateCancellationSource();
   case Tasks.WaitAnyWithCancellation([T], Tasks.GetCancellationToken(Active)) of
     when Result.Ok(const Index):
       if Index <> 0 then
@@ -113,7 +113,7 @@ begin
 end function;
 
 begin
-  var T: task := go Work();
+  const T: task := go Work();
   Tasks.WaitAll([T]);
   case Tasks.WaitAnyWithTimeout([T], 0) of
     when Result.Ok(const Index):
@@ -123,7 +123,7 @@ begin
     when Result.Error(const Message):
       panic(Message);
   end case;
-  var Source: Tasks.CancellationSource := Tasks.CreateCancellationSource();
+  const Source: Tasks.CancellationSource := Tasks.CreateCancellationSource();
   discard Tasks.Cancel(Source);
   case Tasks.WaitAnyWithCancellation([T], Tasks.GetCancellationToken(Source)) of
     when Result.Ok(_):

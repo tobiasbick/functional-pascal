@@ -1,10 +1,6 @@
 //! Record type checking.
 //!
-//! **Documentation:** `docs/pascal/language/types/records.md`,
-//! `docs/pascal/language/types/record-methods.md`
-
-mod methods;
-mod signatures;
+//! **Documentation:** `docs/pascal/language/types/records.md`
 
 use super::Checker;
 use crate::scope::{Symbol, SymbolKind, canonical_symbol_name};
@@ -44,7 +40,7 @@ impl Checker {
                 self.error_with_code(
                     SEMA_DUPLICATE_DECLARATION,
                     format!("Duplicate record member `{}`", field.name),
-                    "Each field, method, static routine, property, and event name must be unique within the record type.",
+                    "Each field name must be unique within the record type.",
                     field.span,
                 );
                 continue;
@@ -54,23 +50,42 @@ impl Checker {
         }
 
         // Validate default values and build the defaults map entry.
-        let defaults_entry: Vec<(String, Option<Arc<fpas_parser::Expr>>)> = field_indexes
+        let defaults_entry: Vec<(String, Option<crate::RecordDefault>)> = field_indexes
             .iter()
             .map(|field_index| &record.fields[*field_index])
             .zip(fields.iter())
             .map(|(field_def, (_, field_ty))| {
                 if let Some(default_expr) = &field_def.default_value {
                     if self.type_collection.collecting {
-                        return (field_def.name.clone(), Some(default_expr.clone()));
+                        return (
+                            field_def.name.clone(),
+                            Some(crate::RecordDefault::Expression(default_expr.clone())),
+                        );
                     }
+                    let previous =
+                        self.pure_evaluation
+                            .replace(crate::check::purity::PureEvaluation {
+                                scope_index: self.scopes.scope_count(),
+                            });
+                    let previous_default =
+                        self.begin_default_purity(&td.name, &field_def.name, &td.type_params);
                     let default_ty = self.check_expr_with_expected(default_expr, field_ty);
+                    self.finish_default_purity(previous_default);
+                    self.pure_evaluation = previous;
                     self.check_type_compat(
                         field_ty,
                         &default_ty,
                         &format!("default value for field `{}`", field_def.name),
                         field_def.span,
                     );
-                    (field_def.name.clone(), Some(default_expr.clone()))
+                    if !default_ty.is_error() && self.const_expr_is_compile_time_known(default_expr)
+                    {
+                        self.validate_static_operations(default_expr);
+                    }
+                    (
+                        field_def.name.clone(),
+                        Some(crate::RecordDefault::Expression(default_expr.clone())),
+                    )
                 } else {
                     (field_def.name.clone(), None)
                 }
@@ -94,87 +109,23 @@ impl Checker {
                 .iter()
                 .filter(|field| field.visibility == Visibility::Private)
                 .map(|field| field.name.clone())
-                .chain(
-                    record
-                        .methods
-                        .iter()
-                        .filter(|method| method.visibility() == Visibility::Private)
-                        .map(|method| method.name().to_string()),
-                )
-                .chain(
-                    record
-                        .properties
-                        .iter()
-                        .filter(|property| property.visibility == Visibility::Private)
-                        .map(|property| property.name.clone()),
-                )
-                .chain(
-                    record
-                        .events
-                        .iter()
-                        .filter(|event| event.visibility == Visibility::Private)
-                        .map(|event| event.name.clone()),
-                )
                 .collect()
         } else {
             Vec::new()
         };
         let record_ty = RecordTy {
             name: td.name.clone(),
-            type_params: Self::resolve_type_params(&td.type_params),
+            type_params: self.resolve_type_params(&td.type_params),
             type_args: Vec::new(),
             is_resource: false,
             owner_unit,
             private_members,
             fields,
-            methods: Vec::new(),
-            static_functions: Vec::new(),
-            static_procedures: Vec::new(),
-            properties: Vec::new(),
-            events: Vec::new(),
         };
-        let mut ty = Ty::Record(Arc::new(record_ty));
-
-        let (members, pending_bodies) =
-            self.check_record_methods(&td.name, &ty, &record.methods, &mut seen_members);
-
-        if let Ty::Record(record_ty) = &mut ty {
-            let record_ty = Arc::make_mut(record_ty);
-            record_ty.methods = members.instance_methods;
-            record_ty.static_functions = members.static_functions;
-            record_ty.static_procedures = members.static_procedures;
-        }
-
-        let properties =
-            self.check_record_properties(&td.name, &ty, &record.properties, &mut seen_members);
-        if let Ty::Record(record_ty) = &mut ty {
-            let record_ty = Arc::make_mut(record_ty);
-            record_ty.properties = properties;
-        }
-
-        let events = self.check_record_events(&td.name, &ty, &record.events, &mut seen_members);
-        if let Ty::Record(record_ty) = &mut ty {
-            let record_ty = Arc::make_mut(record_ty);
-            record_ty.events = events;
-        }
+        let ty = Ty::Record(Arc::new(record_ty));
 
         if let Some(existing) = self.scopes.lookup_root_mut(&td.name) {
             *existing.ty_mut() = ty;
-        }
-
-        // Method bodies run after properties and events are visible on the type symbol.
-        for pending in pending_bodies {
-            if self.type_collection.collecting {
-                continue;
-            }
-            self.check_method_body(
-                &pending.qualified_name,
-                pending.type_params,
-                &pending.params,
-                &pending.param_spans,
-                pending.return_type,
-                pending.body,
-            );
         }
     }
 }

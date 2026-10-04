@@ -92,16 +92,6 @@ pub(super) fn validate_resources(executable: &crate::Executable) -> Result<(), V
             record.fields.len(),
             limits::MAX_LAYOUT_FIELDS,
         )?;
-        limit(
-            "record properties",
-            record.properties.len(),
-            limits::MAX_LAYOUT_FIELDS,
-        )?;
-        limit(
-            "record methods",
-            record.methods.len(),
-            limits::MAX_LAYOUT_FIELDS,
-        )?;
     }
     for variant in &executable.enum_variants {
         limit(

@@ -7,10 +7,10 @@ uses Std.Console as Console;
 uses Std.Arrays as Arrays;
 
 begin
-  var Jobs: channel of (integer) := Tasks.CreateChannel(2);
-  var Results: channel of (integer) := Tasks.CreateChannel(2);
-  var Group: Tasks.TaskGroup := Tasks.CreateTaskGroup();
-  var StartedTask1: task := Tasks.StartTaskInGroup(Group, procedure(Token: Tasks.CancellationToken) begin
+  const Jobs: channel of (integer) := Tasks.CreateChannel(2);
+  const Results: channel of (integer) := Tasks.CreateChannel(2);
+  const Group: Tasks.TaskGroup := Tasks.CreateTaskGroup();
+  const StartedTask1: task := Tasks.StartTaskInGroup(Group, procedure(Token: Tasks.CancellationToken) begin
     for Value: integer := 1 to 12 do
       begin
         if Results2.IsError(Tasks.SendWithCancellation(Jobs, Value, Token)) then
@@ -25,7 +25,7 @@ begin
   end procedure);
   for Worker: integer := 1 to 3 do
     begin
-      var WorkerHandle: task := Tasks.StartTaskInGroup(Group, procedure(Token: Tasks.CancellationToken) begin
+      const WorkerHandle: task := Tasks.StartTaskInGroup(Group, procedure(Token: Tasks.CancellationToken) begin
         while not Tasks.IsCancellationRequested(Token) do
           begin
             case Tasks.ReceiveWithCancellation(Jobs, Token) of
@@ -48,7 +48,7 @@ begin
     end;
   end for;
   // Collect while the producer runs: filling Jobs first could deadlock the pipeline.
-  mutable var Total: integer := 0;
+  var Total: integer := 0;
   for Index: integer := 1 to 12 do
     begin
       Total := Total + Results2.Unwrap(Tasks.Receive(Results));

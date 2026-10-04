@@ -49,7 +49,7 @@ begin
   return Ordering.NotesOrdered(Notes);
 end function;
 
-function AppendEscapedPattern(Acc: string; Character: string): string;
+pure function AppendEscapedPattern(Acc: string; Character: string): string;
 begin
   if (((Character = '[') or (Character = ']')) or (Character = '*')) or (Character = '?') then
     begin
@@ -69,23 +69,23 @@ end function;
 // Loads valid notes and preserves invalid files as visible issues.
 public function NotesLoadDirectory(Directory: string): Result of (Model.NotesLoad, string);
 begin
-  var DirectoryReady: boolean := try NotesEnsureDirectory(Directory);
-  var Paths: array of (string) := try Fs.Glob(NoteDirectoryPattern(Directory));
-  mutable var Notes: array of (Model.Note) := [];
-  mutable var IdCounts: dict of (string, integer) := [:];
-  mutable var Issues: array of (Model.NoteIssue) := [];
+  const DirectoryReady: boolean := try NotesEnsureDirectory(Directory);
+  const Paths: array of (string) := try Fs.Glob(NoteDirectoryPattern(Directory));
+  var Notes: array of (Model.Note) := [];
+  var IdCounts: dict of (string, integer) := [:];
+  var Issues: array of (Model.NoteIssue) := [];
   for Index: integer := 0 to Arrays.Length(Paths) - 1 do
     begin
-      var Path: string := Paths[Index];
+      const Path: string := Paths[Index];
       case Fs.ReadText(Path) of
         when Result.Ok(const Text):
           begin
             case Format.NoteParse(Text) of
               when Result.Ok(const NoteValue):
                 begin
-                  mutable var Loaded: Model.Note := NoteValue;
+                  var Loaded: Model.Note := NoteValue;
                   Loaded.Path := Path;
-                  Arrays.Push(Notes, Loaded);
+                  Arrays.Push(var Notes, Loaded);
                   if Dictionaries.ContainsKey(IdCounts, Loaded.Id) then
                     begin
                       IdCounts[Loaded.Id] := IdCounts[Loaded.Id] + 1;
@@ -98,28 +98,28 @@ begin
                 end;
               when Result.Error(const Message):
                 begin
-                  Arrays.Push(Issues, Model.NoteIssue(Path := Path, Message := Message));
+                  Arrays.Push(var Issues, Model.NoteIssue(Path := Path, Message := Message));
                 end;
             end case;
           end;
         when Result.Error(const Message):
           begin
-            Arrays.Push(Issues, Model.NoteIssue(Path := Path, Message := Message));
+            Arrays.Push(var Issues, Model.NoteIssue(Path := Path, Message := Message));
           end;
       end case;
     end;
   end for;
-  mutable var Unique: array of (Model.Note) := [];
+  var Unique: array of (Model.Note) := [];
   for Loaded: Model.Note in Notes do
     begin
       if IdCounts[Loaded.Id] > 1 then
         begin
-          Arrays.Push(Issues, Model.NoteIssue(Path := Loaded.Path, Message := ('Duplicate note ID: ' + Loaded.Id) +
-                                                                              '. Give each file a unique ID before editing.'));
+          Arrays.Push(var Issues, Model.NoteIssue(Path := Loaded.Path, Message := ('Duplicate note ID: ' + Loaded.Id) +
+                                                                                  '. Give each file a unique ID before editing.'));
         end;
       else
         begin
-          Arrays.Push(Unique, Loaded);
+          Arrays.Push(var Unique, Loaded);
         end;
       end if;
     end;
@@ -131,14 +131,14 @@ end function;
 // Atomically writes one note to its stable file path.
 public function NotesSave(Directory: string; NoteValue: Model.Note): Result of (boolean, string);
 begin
-  var DirectoryReady: boolean := try NotesEnsureDirectory(Directory);
+  const DirectoryReady: boolean := try NotesEnsureDirectory(Directory);
   return Fs.WriteTextAtomic(NoteFilePath(Directory, NoteValue), Format.NoteStringify(NoteValue));
 end function;
 
 // Generates an unused timestamp-and-random identity in one directory.
 public function NotesCreateId(Directory: string; TimestampMillis: integer): string;
 begin
-  mutable var Candidate: string := '';
+  var Candidate: string := '';
   repeat
     Candidate := (Conv.IntToStr(TimestampMillis) + '-') +
                  Conv.IntToStr(Random.RandomInt(100000, 999999));
@@ -149,7 +149,7 @@ end function;
 // Creates an in-memory draft with a new identity and current timestamp.
 public function NotesCreateDraft(Directory: string): Model.Note;
 begin
-  var Now: integer := Time.TimestampMillis();
+  const Now: integer := Time.TimestampMillis();
   return Model.NoteCreate(NotesCreateId(Directory, Now), Now);
 end function;
 

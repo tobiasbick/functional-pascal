@@ -1,6 +1,8 @@
 use super::*;
 
+mod immutable_imports;
 mod json;
+mod string_indices;
 
 #[test]
 fn cli_renders_lex_stage_output() {

@@ -14,7 +14,7 @@ uses Std.Console as Console;
 
 function Branch(Value: integer): integer;
 begin
-  mutable var Local: integer := Value + 10;
+   var Local: integer := Value + 10;
   Console.WriteLn('effect');
   return Local;
 end function;

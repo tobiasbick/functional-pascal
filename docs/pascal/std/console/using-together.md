@@ -15,11 +15,11 @@ uses Std.Console as Console;
 
 begin
   Console.WriteText('Name: ');
-  var Name: string := Console.ReadLn();
+  const Name: string := Console.ReadLn();
   Console.WriteLn('Hello, ', Name);
 
   Console.WriteLn('Press Escape or any printable key.');
-  var Key: Console.KeyEvent := Console.ReadKeyEvent();
+  const Key: Console.KeyEvent := Console.ReadKeyEvent();
   if Key.kind = Console.KeyKind.Escape then
     Console.WriteLn('escape');
   else

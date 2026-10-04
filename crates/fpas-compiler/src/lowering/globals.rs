@@ -31,18 +31,14 @@ pub(super) fn collect(
                 &definition.type_expr,
                 &definition.value,
                 definition.span,
-                false,
-            ),
-            Decl::MutableVar(definition) => (
-                &definition.name,
-                &definition.type_expr,
-                &definition.value,
-                definition.span,
                 true,
             ),
             _ => continue,
         };
-        let declared = type_table.type_expr(type_expr)?;
+        let annotation = type_expr
+            .as_ref()
+            .ok_or_else(|| context::unsupported(span, "missing unit/program binding annotation"))?;
+        let declared = type_table.type_expr(annotation)?;
         let ty = type_table.specialize_task_binding_from_sema(
             declared,
             metadata.expr_types.get(&fpas_sema::expr_lookup_key(value)),
@@ -54,11 +50,22 @@ pub(super) fn collect(
         globals.push(Global {
             id,
             name: name.clone(),
-            ty,
+            ty: if mutable {
+                type_table.cell_type(ty, span)?
+            } else {
+                ty
+            },
             mutable,
             initializer: None,
         });
-        bindings.insert(name.to_ascii_lowercase(), GlobalBinding { id, ty });
+        bindings.insert(
+            name.to_ascii_lowercase(),
+            GlobalBinding {
+                id,
+                ty,
+                cell: mutable,
+            },
+        );
     }
     Ok((globals, bindings))
 }

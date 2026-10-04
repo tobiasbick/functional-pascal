@@ -5,6 +5,9 @@ uses Std.Results as Results;
 uses Std.Tasks as Tasks;
 uses Std.Test as Test;
 uses Std.Tui as Tui;
+uses Std.Tui.Elements as Elements;
+uses Std.Tui.Geometry as Geometry;
+uses Std.Tui.Runtime as Runtime;
 
 type InjectionModel = record
   Values: array of (integer);
@@ -34,20 +37,20 @@ end function;
 
 function View(State: InjectionModel): Tui.TuiElement;
 begin
-  return Tui.TuiElementBuilders.MakeLabel('background');
+  return Elements.TuiElementMakeLabel('background');
 end function;
 
 begin
-  var Inbox: channel of (integer) := Tasks.CreateChannel(2);
-  var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(24, 4));
-  Test.AssertTrue(Results.Unwrap(App.InjectBackgroundForTest(Inbox, 4)));
-  Test.AssertTrue(Results.Unwrap(App.InjectBackgroundForTest(Inbox, 7)));
-  Test.AssertFalse(Results.Unwrap(App.InjectBackgroundForTest(Inbox, 9)));
-  var Model: InjectionModel := App.RunBackgroundIterations(InjectionModel(Values := [], Starts := 0), Inbox, UpdateFramework, UpdateApplication, View, 3, 0);
+  const Inbox: channel of (integer) := Tasks.CreateChannel(2);
+  const App: Tui.TuiApplication := Runtime.TuiApplicationOpenForTest(Geometry.TuiSizeCreate(24, 4));
+  Test.AssertTrue(Results.Unwrap(Runtime.TuiApplicationInjectBackgroundForTest(App, Inbox, 4)));
+  Test.AssertTrue(Results.Unwrap(Runtime.TuiApplicationInjectBackgroundForTest(App, Inbox, 7)));
+  Test.AssertFalse(Results.Unwrap(Runtime.TuiApplicationInjectBackgroundForTest(App, Inbox, 9)));
+  const Model: InjectionModel := Runtime.TuiApplicationRunBackgroundIterations(App, InjectionModel(Values := [], Starts := 0), Inbox, UpdateFramework, UpdateApplication, View, 3, 0);
   Test.AssertEquals(1, Model.Starts);
   Test.AssertEquals(2, Arrays.Length(Model.Values));
   Test.AssertEquals(4, Model.Values[0]);
   Test.AssertEquals(7, Model.Values[1]);
-  App.CloseWithBackground(Inbox);
+  Runtime.TuiApplicationCloseWithBackground(App, Inbox);
   Test.AssertTrue(Results.IsError(Tasks.TrySend(Inbox, 11)));
 end program;

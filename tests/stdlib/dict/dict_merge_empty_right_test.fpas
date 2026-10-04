@@ -4,8 +4,8 @@ uses Std.Console as Console;
 uses Std.Dictionaries as Dictionaries;
 
 begin
-  var A: dict of (string, integer) := ['X': 1];
-  var B: dict of (string, integer) := [:];
-  var M: dict of (string, integer) := Dictionaries.Merge(A, B);
+  const A: dict of (string, integer) := ['X': 1];
+  const B: dict of (string, integer) := [:];
+  const M: dict of (string, integer) := Dictionaries.Merge(A, B);
   Console.WriteLn(Dictionaries.Length(M));
 end program;

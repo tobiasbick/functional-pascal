@@ -15,103 +15,107 @@ public type TuiInputPalette = record
   public Cursor: Style2.TuiStyle;
   // Style used for input scroll indicators.
   public Scroll: Style2.TuiStyle;
+end record;
 
-  // Creates a complete one-line input palette.
-  //
-  // Parameters:
-  // - `Normal`: Normal-state style.
-  // - `Focused`: Whether the control currently owns focus.
-  // - `Hint`: Hint text displayed for an empty input.
-  // - `Cursor`: Current layout or drawing cursor.
-  // - `Scroll`: Whether scrolling behavior is enabled.
-  public static function Create(
+// Creates a complete one-line input palette.
+//
+// Parameters:
+// - `Normal`: Normal-state style.
+// - `Focused`: Whether the control currently owns focus.
+// - `Hint`: Hint text displayed for an empty input.
+// - `Cursor`: Current layout or drawing cursor.
+// - `Scroll`: Whether scrolling behavior is enabled.
+public function TuiInputPaletteCreate(
   Normal: Style2.TuiStyle;
   Focused: Style2.TuiStyle;
   Hint: Style2.TuiStyle;
   Cursor: Style2.TuiStyle;
   Scroll: Style2.TuiStyle
 ): TuiInputPalette;
-  begin
-    return TuiInputPalette(Normal := Normal, Focused := Focused, Hint := Hint, Cursor := Cursor, Scroll := Scroll);
-  end function;
+begin
+  return TuiInputPalette(Normal := Normal, Focused := Focused, Hint := Hint, Cursor := Cursor, Scroll := Scroll);
+end function;
 
-  // Resolves one input role.
-  //
-  // Parameters:
-  // - `Self`: Receiver value operated on by the method.
-  // - `Role`: Semantic style role used by the operation.
-  public function ForRole(Self: TuiInputPalette; Role: StyleRole.TuiStyleRole): Style2.TuiStyle;
-  begin
-    case Role of
-      when StyleRole.TuiStyleRole.InputNormal:
+// Resolves one input role.
+//
+// Parameters:
+// - `Receiver`: Value processed by the function.
+// - `Role`: Semantic style role used by the operation.
+public function TuiInputPaletteForRole(Receiver: TuiInputPalette; Role: StyleRole.TuiStyleRole): Style2.TuiStyle;
+begin
+  case Role of
+    when StyleRole.TuiStyleRole.InputNormal:
+      begin
+        return Receiver.Normal;
+      end;
+    when StyleRole.TuiStyleRole.InputFocused:
+      begin
+        return Receiver.Focused;
+      end;
+    when StyleRole.TuiStyleRole.InputHint:
+      begin
+        return Receiver.Hint;
+      end;
+    when StyleRole.TuiStyleRole.InputCursor:
+      begin
+        return Receiver.Cursor;
+      end;
+    when StyleRole.TuiStyleRole.InputScroll:
+      begin
+        return Receiver.Scroll;
+      end;
+    when StyleRole.TuiStyleRole.Normal, StyleRole.TuiStyleRole.Disabled, StyleRole.TuiStyleRole.Focused, StyleRole.TuiStyleRole.Selected, StyleRole.TuiStyleRole.Shortcut, StyleRole.TuiStyleRole.Frame, StyleRole.TuiStyleRole.Title, StyleRole.TuiStyleRole.MenuNormal, StyleRole.TuiStyleRole.MenuDisabled, StyleRole.TuiStyleRole.MenuShortcut, StyleRole.TuiStyleRole.MenuSelected, StyleRole.TuiStyleRole.MenuSelectedShortcut, StyleRole.TuiStyleRole.StatusNormal, StyleRole.TuiStyleRole.StatusDisabled, StyleRole.TuiStyleRole.StatusShortcut, StyleRole.TuiStyleRole.StatusSelected, StyleRole.TuiStyleRole.ButtonNormal, StyleRole.TuiStyleRole.ButtonDefault, StyleRole.TuiStyleRole.ButtonSelected, StyleRole.TuiStyleRole.ButtonDisabled, StyleRole.TuiStyleRole.ButtonShortcut, StyleRole.TuiStyleRole.ButtonDefaultShortcut, StyleRole.TuiStyleRole.ButtonSelectedShortcut, StyleRole.TuiStyleRole.Rule, StyleRole.TuiStyleRole.GaugeTrack, StyleRole.TuiStyleRole.GaugeFill, StyleRole.TuiStyleRole.Failure, StyleRole.TuiStyleRole.Warning, StyleRole.TuiStyleRole.Accent:
+      begin
         begin
-          return Self.Normal;
+          panic('Tui input palette requires an input style role');
         end;
-      when StyleRole.TuiStyleRole.InputFocused:
-        begin
-          return Self.Focused;
-        end;
-      when StyleRole.TuiStyleRole.InputHint:
-        begin
-          return Self.Hint;
-        end;
-      when StyleRole.TuiStyleRole.InputCursor:
-        begin
-          return Self.Cursor;
-        end;
-      when StyleRole.TuiStyleRole.InputScroll:
-        begin
-          return Self.Scroll;
-        end;
-      when StyleRole.TuiStyleRole.Normal, StyleRole.TuiStyleRole.Disabled, StyleRole.TuiStyleRole.Focused, StyleRole.TuiStyleRole.Selected, StyleRole.TuiStyleRole.Shortcut, StyleRole.TuiStyleRole.Frame, StyleRole.TuiStyleRole.Title, StyleRole.TuiStyleRole.MenuNormal, StyleRole.TuiStyleRole.MenuDisabled, StyleRole.TuiStyleRole.MenuShortcut, StyleRole.TuiStyleRole.MenuSelected, StyleRole.TuiStyleRole.MenuSelectedShortcut, StyleRole.TuiStyleRole.StatusNormal, StyleRole.TuiStyleRole.StatusDisabled, StyleRole.TuiStyleRole.StatusShortcut, StyleRole.TuiStyleRole.StatusSelected, StyleRole.TuiStyleRole.ButtonNormal, StyleRole.TuiStyleRole.ButtonDefault, StyleRole.TuiStyleRole.ButtonSelected, StyleRole.TuiStyleRole.ButtonDisabled, StyleRole.TuiStyleRole.ButtonShortcut, StyleRole.TuiStyleRole.ButtonDefaultShortcut, StyleRole.TuiStyleRole.ButtonSelectedShortcut, StyleRole.TuiStyleRole.Rule, StyleRole.TuiStyleRole.GaugeTrack, StyleRole.TuiStyleRole.GaugeFill, StyleRole.TuiStyleRole.Failure, StyleRole.TuiStyleRole.Warning, StyleRole.TuiStyleRole.Accent:
-        begin
-          begin
-            panic('Tui input palette requires an input style role');
-          end;
-        end;
-    end case;
-  end function;
+      end;
+  end case;
+end function;
 
-  // Returns a copy with one input role replaced.
-  //
-  // Parameters:
-  // - `Self`: Receiver value operated on by the method.
-  // - `Role`: Semantic style role used by the operation.
-  // - `Style`: Concrete terminal style.
-  public function WithRole(Self: TuiInputPalette; Role: StyleRole.TuiStyleRole; Style: Style2.TuiStyle): TuiInputPalette;
-  begin
-    mutable var Updated: TuiInputPalette := Self;
-    case Role of
-      when StyleRole.TuiStyleRole.InputNormal:
+// Returns a copy with one input role replaced.
+//
+// Parameters:
+// - `Receiver`: Value processed by the function.
+// - `Role`: Semantic style role used by the operation.
+// - `Style`: Concrete terminal style.
+public function TuiInputPaletteWithRole(
+  Receiver: TuiInputPalette;
+  Role: StyleRole.TuiStyleRole;
+  Style: Style2.TuiStyle
+): TuiInputPalette;
+begin
+  var Updated: TuiInputPalette := Receiver;
+  case Role of
+    when StyleRole.TuiStyleRole.InputNormal:
+      begin
+        Updated.Normal := Style;
+      end;
+    when StyleRole.TuiStyleRole.InputFocused:
+      begin
+        Updated.Focused := Style;
+      end;
+    when StyleRole.TuiStyleRole.InputHint:
+      begin
+        Updated.Hint := Style;
+      end;
+    when StyleRole.TuiStyleRole.InputCursor:
+      begin
+        Updated.Cursor := Style;
+      end;
+    when StyleRole.TuiStyleRole.InputScroll:
+      begin
+        Updated.Scroll := Style;
+      end;
+    when StyleRole.TuiStyleRole.Normal, StyleRole.TuiStyleRole.Disabled, StyleRole.TuiStyleRole.Focused, StyleRole.TuiStyleRole.Selected, StyleRole.TuiStyleRole.Shortcut, StyleRole.TuiStyleRole.Frame, StyleRole.TuiStyleRole.Title, StyleRole.TuiStyleRole.MenuNormal, StyleRole.TuiStyleRole.MenuDisabled, StyleRole.TuiStyleRole.MenuShortcut, StyleRole.TuiStyleRole.MenuSelected, StyleRole.TuiStyleRole.MenuSelectedShortcut, StyleRole.TuiStyleRole.StatusNormal, StyleRole.TuiStyleRole.StatusDisabled, StyleRole.TuiStyleRole.StatusShortcut, StyleRole.TuiStyleRole.StatusSelected, StyleRole.TuiStyleRole.ButtonNormal, StyleRole.TuiStyleRole.ButtonDefault, StyleRole.TuiStyleRole.ButtonSelected, StyleRole.TuiStyleRole.ButtonDisabled, StyleRole.TuiStyleRole.ButtonShortcut, StyleRole.TuiStyleRole.ButtonDefaultShortcut, StyleRole.TuiStyleRole.ButtonSelectedShortcut, StyleRole.TuiStyleRole.Rule, StyleRole.TuiStyleRole.GaugeTrack, StyleRole.TuiStyleRole.GaugeFill, StyleRole.TuiStyleRole.Failure, StyleRole.TuiStyleRole.Warning, StyleRole.TuiStyleRole.Accent:
+      begin
         begin
-          Updated.Normal := Style;
+          panic('Tui input palette requires an input style role');
         end;
-      when StyleRole.TuiStyleRole.InputFocused:
-        begin
-          Updated.Focused := Style;
-        end;
-      when StyleRole.TuiStyleRole.InputHint:
-        begin
-          Updated.Hint := Style;
-        end;
-      when StyleRole.TuiStyleRole.InputCursor:
-        begin
-          Updated.Cursor := Style;
-        end;
-      when StyleRole.TuiStyleRole.InputScroll:
-        begin
-          Updated.Scroll := Style;
-        end;
-      when StyleRole.TuiStyleRole.Normal, StyleRole.TuiStyleRole.Disabled, StyleRole.TuiStyleRole.Focused, StyleRole.TuiStyleRole.Selected, StyleRole.TuiStyleRole.Shortcut, StyleRole.TuiStyleRole.Frame, StyleRole.TuiStyleRole.Title, StyleRole.TuiStyleRole.MenuNormal, StyleRole.TuiStyleRole.MenuDisabled, StyleRole.TuiStyleRole.MenuShortcut, StyleRole.TuiStyleRole.MenuSelected, StyleRole.TuiStyleRole.MenuSelectedShortcut, StyleRole.TuiStyleRole.StatusNormal, StyleRole.TuiStyleRole.StatusDisabled, StyleRole.TuiStyleRole.StatusShortcut, StyleRole.TuiStyleRole.StatusSelected, StyleRole.TuiStyleRole.ButtonNormal, StyleRole.TuiStyleRole.ButtonDefault, StyleRole.TuiStyleRole.ButtonSelected, StyleRole.TuiStyleRole.ButtonDisabled, StyleRole.TuiStyleRole.ButtonShortcut, StyleRole.TuiStyleRole.ButtonDefaultShortcut, StyleRole.TuiStyleRole.ButtonSelectedShortcut, StyleRole.TuiStyleRole.Rule, StyleRole.TuiStyleRole.GaugeTrack, StyleRole.TuiStyleRole.GaugeFill, StyleRole.TuiStyleRole.Failure, StyleRole.TuiStyleRole.Warning, StyleRole.TuiStyleRole.Accent:
-        begin
-          begin
-            panic('Tui input palette requires an input style role');
-          end;
-        end;
-    end case;
+      end;
+  end case;
 
-    return Updated;
-  end function;
-end record;
+  return Updated;
+end function;
 
 end unit;

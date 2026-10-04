@@ -9,34 +9,34 @@ public type TuiMeasureSpec = record
   public Width: MeasureConstraint.TuiMeasureConstraint;
   // Height in terminal cells.
   public Height: MeasureConstraint.TuiMeasureConstraint;
+end record;
 
-  // Creates a two-axis measure specification.
-  //
-  // Parameters:
-  // - `Width`: Width in terminal cells.
-  // - `Height`: Height in terminal cells.
-  public static function Create(
+// Creates a two-axis measure specification.
+//
+// Parameters:
+// - `Width`: Width in terminal cells.
+// - `Height`: Height in terminal cells.
+public function TuiMeasureSpecCreate(
   Width: MeasureConstraint.TuiMeasureConstraint;
   Height: MeasureConstraint.TuiMeasureConstraint
 ): TuiMeasureSpec;
-  begin
-    return TuiMeasureSpec(Width := Width, Height := Height);
-  end function;
+begin
+  return TuiMeasureSpec(Width := Width, Height := Height);
+end function;
 
-  // Both axes unbounded.
-  public static function Unbounded(): TuiMeasureSpec;
-  begin
-    return TuiMeasureSpec.Create(MeasureConstraint.TuiMeasureConstraint.Unbounded(), MeasureConstraint.TuiMeasureConstraint.Unbounded());
-  end function;
+// Both axes unbounded.
+public function TuiMeasureSpecUnbounded(): TuiMeasureSpec;
+begin
+  return TuiMeasureSpecCreate(MeasureConstraint.TuiMeasureConstraintUnbounded(), MeasureConstraint.TuiMeasureConstraintUnbounded());
+end function;
 
-  // Both axes capped by the given size.
-  //
-  // Parameters:
-  // - `Size`: Size in terminal cells.
-  public static function AtMost(Size: Size2.TuiSize): TuiMeasureSpec;
-  begin
-    return TuiMeasureSpec.Create(MeasureConstraint.TuiMeasureConstraint.AtMost(Size.Width), MeasureConstraint.TuiMeasureConstraint.AtMost(Size.Height));
-  end function;
-end record;
+// Both axes capped by the given size.
+//
+// Parameters:
+// - `Size`: Size in terminal cells.
+public function TuiMeasureSpecAtMost(Size: Size2.TuiSize): TuiMeasureSpec;
+begin
+  return TuiMeasureSpecCreate(MeasureConstraint.TuiMeasureConstraintAtMost(Size.Width), MeasureConstraint.TuiMeasureConstraintAtMost(Size.Height));
+end function;
 
 end unit;

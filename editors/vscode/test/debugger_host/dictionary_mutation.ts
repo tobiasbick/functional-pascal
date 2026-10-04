@@ -51,15 +51,15 @@ export async function verifyDictionaryMutation(
     " uses Std.Console as Console;",
     "",
     "begin",
-    "  mutable var Scores: dict of (string, integer) := ['Ada': 1, 'Grace': 2];",
-    "  var StopMarker: integer := 0;",
+    "   var Scores: dict of (string, integer) := ['Ada': 1, 'Grace': 2];",
+    "  const StopMarker: integer := 0;",
     "  Console.WriteLn(Scores['Hopper']);",
     "  Console.WriteLn(Scores['Bob']);",
     "end program;",
     ""
   ];
   const sourcePath = await writeSource(workspaceRoot, "dictionary-mutation", lines);
-  const stopLine = lines.indexOf("  var StopMarker: integer := 0;");
+  const stopLine = lines.indexOf("  const StopMarker: integer := 0;");
   const breakpoint = new vscode.SourceBreakpoint(
     new vscode.Location(vscode.Uri.file(sourcePath), new vscode.Position(stopLine, 2))
   );

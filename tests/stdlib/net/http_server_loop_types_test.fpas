@@ -10,19 +10,19 @@ uses Std.Test as Test;
 // - `RequestValue`: Request supplied through the handler type.
 function Handle(RequestValue: Http.ServerRequest): Http.ServerResponse;
 begin
-  return Http.ServerResponse.Create(200, RequestValue.Method);
+  return Http.ServerResponseCreate(200, RequestValue.Method);
 end function;
 
 begin
-  var Options: Http.ServerOptions := Http.ServerOptions.Create();
+  const Options: Http.ServerOptions := Http.ServerOptionsCreate();
   Test.AssertEquals(65536, Options.MaxHeaderBytes);
   Test.AssertEquals(1048576, Options.MaxBodyBytes);
   Test.AssertEquals(30000, Options.ConnectionTimeoutMillis);
   Test.AssertEquals(8, Options.MaxConcurrentRequests);
   Test.AssertEquals(0, Options.MaxRequests);
-  var HandlerValue: Http.RequestHandler := Handle;
-  var RequestValue: Http.ServerRequest := Http.ServerRequest(Method := 'OK', Target := '/', Headers := [], Body := []);
-  var ResponseValue: Http.ServerResponse := HandlerValue(RequestValue);
+  const HandlerValue: Http.RequestHandler := Handle;
+  const RequestValue: Http.ServerRequest := Http.ServerRequest(Method := 'OK', Target := '/', Headers := [], Body := []);
+  const ResponseValue: Http.ServerResponse := HandlerValue(RequestValue);
   Test.AssertEquals(200, ResponseValue.StatusCode);
   Test.AssertEquals('OK', ResponseValue.ReasonPhrase);
 end program;

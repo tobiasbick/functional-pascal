@@ -28,10 +28,10 @@ fn result_option_and_data_enum_construction_execute() {
     Empty;
   end enum;
 begin
-  var A: Result of (integer, string) := Result.Ok(5);
-  var B: Option of (integer) := Option.Some(6);
-  var C: Option of (integer) := Option.None;
-  var D: Choice := Choice.Number(7);
+  const A: Result of (integer, string) := Result.Ok(5);
+  const B: Option of (integer) := Option.Some(6);
+  const C: Option of (integer) := Option.None;
+  const D: Choice := Choice.Number(7);
   if (A <> Result.Ok(5)) or (B <> Option.Some(6)) or (C <> Option.None) then
     panic('variant mismatch'); end if;
 end program;"#,
@@ -49,7 +49,7 @@ type Pair = record
 end record;
 
 begin
-  mutable var VALUE: Pair := Pair(Left := 1, Right := 2);
+   var VALUE: Pair := Pair(Left := 1, Right := 2);
   value.lEfT := VALUE.right;
   if Value.Left <> 2 then
     panic('case mismatch');
@@ -66,12 +66,12 @@ fn try_unwraps_and_returns_early_for_result_and_option() {
         r#"program RegisterTry;
 function ResultValue(Input: Result of (integer, string)): Result of (integer, string);
 begin
-  var Value: integer := try Input;
+  const Value: integer := try Input;
   return Result.Ok(Value + 1);
 end function;
 function OptionValue(Input: Option of (integer)): Option of (integer);
 begin
-  var Value: integer := try Input;
+  const Value: integer := try Input;
   return Option.Some(Value + 1);
 end function;
 begin
@@ -94,22 +94,22 @@ type Shape = enum
 end enum;
 
 begin
-  mutable var Sum: integer := 0;
-  var ResultValue: Result of (integer, string) := Result.Ok(3);
+   var Sum: integer := 0;
+  const ResultValue: Result of (integer, string) := Result.Ok(3);
   case ResultValue of
     when Result.Ok(const Value):
       Sum := Sum + Value;
     when Result.Error(const Message):
       Sum := 99;
   end case;
-  var OptionValue: Option of (integer) := Option.Some(4);
+  const OptionValue: Option of (integer) := Option.Some(4);
   case OptionValue of
     when Option.Some(const Value):
       Sum := Sum + Value;
     when Option.None:
       Sum := 99;
   end case;
-  var ShapeValue: Shape := Shape.Pair(5, 6);
+  const ShapeValue: Shape := Shape.Pair(5, 6);
   case ShapeValue of
     when Shape.Point:
       Sum := 99;
@@ -137,9 +137,9 @@ fn simple_enum_values_keep_backing_numbers_and_case_insensitivity() {
   end enum;
   type StateAlias = State;
 begin
-  var Value: State := state.rUnNiNg;
-  var AliasValue: StateAlias := StateAlias.Done;
-  mutable var Number: integer := 0;
+  const Value: State := state.rUnNiNg;
+  const AliasValue: StateAlias := StateAlias.Done;
+   var Number: integer := 0;
   case Value of
     when State.Ready: Number := 4;
     when State.Running: Number := 5;
@@ -157,7 +157,7 @@ begin
     when State.Done: Number := Number + 1;
   end case;
   if Number <> 7 then panic('alias enum backing mismatch'); end if;
-  var Selected: integer := case Value of
+  const Selected: integer := case Value of
     when State.Ready: 4;
     when State.Running: 5;
     when State.Done: 9;

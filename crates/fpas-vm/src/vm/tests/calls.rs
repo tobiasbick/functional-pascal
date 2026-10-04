@@ -46,6 +46,7 @@ pub(super) fn image(
                 InstructionAddress::new(spec.end),
             ),
             arity: spec.arity,
+            var_parameters: Vec::new(),
             capture_count: spec.captures,
             register_count: spec.registers,
             return_convention: spec.returns,
@@ -274,7 +275,7 @@ fn numeric_function_value_calls_without_name_lookup() {
 }
 
 #[test]
-fn bound_function_value_prepends_receiver_before_visible_arguments() {
+fn function_value_keeps_captures_after_explicit_arguments() {
     let executable = image(
         vec![
             abc(Opcode::Return, fpas_bytecode::NO_REGISTER, 0, 0, 0),
@@ -304,23 +305,23 @@ fn bound_function_value_prepends_receiver_before_visible_arguments() {
             FunctionSpec {
                 start: 3,
                 end: 5,
-                arity: 2,
-                captures: 0,
+                arity: 1,
+                captures: 1,
                 registers: 3,
                 returns: ReturnConvention::Value,
             },
         ],
     );
-    let bound = Value::bound_function(
+    let bound = Value::function(
         FunctionId::new(2),
-        "Counter.Add".to_string(),
-        Value::Integer(10),
+        "AddCaptured".to_string(),
+        vec![Value::Integer(10)],
     );
 
     assert_eq!(
         Vm::new(executable)
             .call(FunctionId::new(1), vec![bound, Value::Integer(5)])
-            .expect("bound value call should succeed")
+            .expect("capturing value call should succeed")
             .value,
         Value::Integer(15)
     );

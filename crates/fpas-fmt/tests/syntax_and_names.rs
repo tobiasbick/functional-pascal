@@ -4,15 +4,17 @@ mod common;
 
 #[test]
 fn canonical_generics_and_builtin_variants_round_trip() {
-    common::assert_round_trip("canonical type applications",
-        "program Main; function Identity of (T: Equatable)(Value: T): T; begin return Value; end function;
-        begin var Value: array of (Result of (Option of (integer), string)) := [Result.Ok(Option.Some(42)), Result.Error('failed')]; end program;");
+    common::assert_round_trip(
+        "canonical type applications",
+        r#"program Main; function Identity of (T: Equatable)(Value: T): T; begin return Value; end function;
+        begin const Value: array of (Result of (Option of (integer), string)) := [Result.Ok(Option.Some(42)), Result.Error('failed')]; end program;"#,
+    );
 }
 
 #[test]
 fn decision_values_round_trip_in_nested_expression_and_callable_positions() {
     for source in [
-        "program Main; begin var Value: integer := if true then 42 elsif false then 1 else 0 end if; end program;",
+        r#"program Main; begin const Value: integer := if true then 42 elsif false then 1 else 0 end if; end program;"#,
         "program Main; begin return case Item of // selected value\n when Choice.Present(const Value): if Value > 0 then Value else 0 end if; when Choice.Missing: 0; end case; end program;",
         "program Main; begin (if true then First else Second end if)(); end program;",
     ] {
@@ -37,13 +39,29 @@ fn nested_patterns_round_trip_with_qualified_variants_and_explicit_bindings() {
 #[test]
 fn named_blocks_imports_and_individual_declarations_round_trip() {
     for source in [
-        "program P; uses Std.Str as Text; // import\n uses Std.Math as Math; type I = integer; const N: integer := 1; var V: I := N; begin null; end program; // tail",
+        r#"program P; uses Std.Str as Text; // import
+ uses Std.Math as Math; type I = integer; const N: integer := 1; const V: I := N; begin null; end program; // tail"#,
         "unit Example; public type R = record public X: integer; end record; public type E = enum A; B; end enum; public procedure P(); begin null; end procedure; end unit;",
         "program P; begin if true then // then\n null; elsif false then // elsif\n null; else // else\n if false then null; end if; end if; end program;",
         "program P; begin case 1 of when 1: // arm\n null; when 2: null; else null; end case; end program;",
         "program P; begin for I: integer := 0 to 1 do null; end for; for I: integer in [1] do null; end for; while false do null; end while; repeat null; until true; begin null; end; end program;",
-        "program P;\n\ntype R = record\n  X: integer;\nend record;\n\nbegin\n  var R1: R := R(X := 1);\n  var R2: R := R1 with X := 2; end with;\n  var F: function(X: integer): integer := function(X: integer): integer begin\n    return X;\n  end function;\n\n  F(1);\nend program;\n",
-        "program P; begin var S: string := 'Span { offset: 123 }'; null; end program;",
+        r#"program P;
+
+type R = record
+  X: integer;
+end record;
+
+begin
+  const R1: R := R(X := 1);
+  const R2: R := R1 with X := 2; end with;
+  const F: function(X: integer): integer := function(X: integer): integer begin
+    return X;
+  end function;
+
+  F(1);
+end program;
+"#,
+        r#"program P; begin const S: string := 'Span { offset: 123 }'; null; end program;"#,
     ] {
         common::assert_round_trip("named syntax", source);
     }

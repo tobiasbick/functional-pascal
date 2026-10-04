@@ -14,6 +14,8 @@ uses Std.Conv as Conv;
 uses Std.Str as Str;
 uses Std.Time as Time;
 uses Std.Tui as Tui;
+uses Std.Tui.Geometry as Geometry;
+uses Std.Tui.Runtime as Runtime;
 
 const WarmupIterations: integer := 25;
 const DeltaMillis: integer := 16;
@@ -21,18 +23,18 @@ const NoteCount: integer := 40;
 
 function BenchmarkNotes(): array of (Model2.Note);
 begin
-  mutable var Notes: array of (Model2.Note) := [];
+  var Notes: array of (Model2.Note) := [];
   for Index: integer := 1 to NoteCount do
     begin
-      mutable var NoteValue: Model2.Note := Model2.NoteCreate('benchmark-' + Conv.IntToStr(Index), 1700000000000 +
-                                                                                                   Index);
+      var NoteValue: Model2.Note := Model2.NoteCreate('benchmark-' + Conv.IntToStr(Index), 1700000000000 +
+                                                                                           Index);
       NoteValue.Title := ('Performance note ' + Conv.IntToStr(Index)) +
                          ' with a representative title';
       NoteValue.Tags := ['performance', 'tui', 'benchmark'];
       NoteValue.Pinned := (Index mod 7) = 0;
       NoteValue.Body := ((('This is a representative note body for frame ' + Conv.IntToStr(Index)) + '.') + Str.Chr(10)) +
                         'It keeps the editor, list, metadata, and layout paths active.';
-      Arrays.Push(Notes, NoteValue);
+      Arrays.Push(var Notes, NoteValue);
     end;
   end for;
 
@@ -45,13 +47,13 @@ begin
       panic('usage: notes-headless-benchmark.fpasprj -- ITERATIONS [MAX_MILLIS]');
     end;
   end if;
-  var Iterations: integer := Conv.StrToInt(Args.ParamStr(0));
+  const Iterations: integer := Conv.StrToInt(Args.ParamStr(0));
   if Iterations < 1 then
     begin
       panic('ITERATIONS must be positive');
     end;
   end if;
-  mutable var MaxMillis: integer := 0;
+  var MaxMillis: integer := 0;
   if Args.ParamCount() = 2 then
     begin
       MaxMillis := Conv.StrToInt(Args.ParamStr(1));
@@ -62,17 +64,17 @@ begin
       end if;
     end;
   end if;
-  var Loaded: Model2.NotesLoad := Model2.NotesLoad(Notes := BenchmarkNotes(), Issues := []);
-  mutable var Model: Model2.NotesModel := Model2.NotesModelCreate('.temp-data/bench/notes', Loaded);
+  const Loaded: Model2.NotesLoad := Model2.NotesLoad(Notes := BenchmarkNotes(), Issues := []);
+  var Model: Model2.NotesModel := Model2.NotesModelCreate('.temp-data/bench/notes', Loaded);
   Model.Width := 120;
   Model.Height := 40;
-  mutable var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(120, 40));
-  Model := App.RunIterations(Model, Update.NotesUpdate, View.NotesView, WarmupIterations, DeltaMillis);
-  var Started: integer := Time.MonotonicMillis();
-  Model := App.RunIterations(Model, Update.NotesUpdate, View.NotesView, Iterations, DeltaMillis);
-  var Elapsed: integer := Time.ElapsedMillis(Started);
-  App.Close();
-  mutable var FramesPerSecond: integer := 0;
+  var App: Tui.TuiApplication := Runtime.TuiApplicationOpenForTest(Geometry.TuiSizeCreate(120, 40));
+  Model := Runtime.TuiApplicationRunIterations(App, Model, Update.NotesUpdate, View.NotesView, WarmupIterations, DeltaMillis);
+  const Started: integer := Time.MonotonicMillis();
+  Model := Runtime.TuiApplicationRunIterations(App, Model, Update.NotesUpdate, View.NotesView, Iterations, DeltaMillis);
+  const Elapsed: integer := Time.ElapsedMillis(Started);
+  Runtime.TuiApplicationClose(App);
+  var FramesPerSecond: integer := 0;
   if Elapsed > 0 then
     begin
       FramesPerSecond := (Iterations * 1000) div Elapsed;

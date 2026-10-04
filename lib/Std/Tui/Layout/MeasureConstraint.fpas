@@ -25,30 +25,30 @@ public type TuiMeasureConstraint = record
   public Kind: TuiMeasureConstraintKind;
   // Maximum extent of a bounded constraint.
   public Limit: integer;
-
-  // Creates an unbounded axis constraint.
-  public static function Unbounded(): TuiMeasureConstraint;
-  begin
-    return TuiMeasureConstraint(Kind := TuiMeasureConstraintKind.Unbounded, Limit := 0);
-  end function;
-
-  // Creates a non-negative upper bound.
-  //
-  // Parameters:
-  // - `Limit`: Upper bound applied by the constraint.
-  public static function AtMost(Limit: integer): TuiMeasureConstraint;
-  begin
-    return TuiMeasureConstraint(Kind := TuiMeasureConstraintKind.AtMost, Limit := TuiMeasureConstraintRequireNonNegative(Limit));
-  end function;
-
-  // Returns whether the constraint has an upper bound.
-  //
-  // Parameters:
-  // - `Self`: Receiver value operated on by the method.
-  public function IsBounded(Self: TuiMeasureConstraint): boolean;
-  begin
-    return Self.Kind = TuiMeasureConstraintKind.AtMost;
-  end function;
 end record;
+
+// Creates an unbounded axis constraint.
+public function TuiMeasureConstraintUnbounded(): TuiMeasureConstraint;
+begin
+  return TuiMeasureConstraint(Kind := TuiMeasureConstraintKind.Unbounded, Limit := 0);
+end function;
+
+// Creates a non-negative upper bound.
+//
+// Parameters:
+// - `Limit`: Upper bound applied by the constraint.
+public function TuiMeasureConstraintAtMost(Limit: integer): TuiMeasureConstraint;
+begin
+  return TuiMeasureConstraint(Kind := TuiMeasureConstraintKind.AtMost, Limit := TuiMeasureConstraintRequireNonNegative(Limit));
+end function;
+
+// Returns whether the constraint has an upper bound.
+//
+// Parameters:
+// - `Receiver`: Value processed by the function.
+public function TuiMeasureConstraintIsBounded(Receiver: TuiMeasureConstraint): boolean;
+begin
+  return Receiver.Kind = TuiMeasureConstraintKind.AtMost;
+end function;
 
 end unit;

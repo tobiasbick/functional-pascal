@@ -32,6 +32,8 @@ pub enum SymbolKind {
     Const,
     Var,
     Param,
+    /// A synchronous `var` parameter backed by caller storage.
+    VarParam,
     Function,
     Procedure,
     /// Polymorphic standard-library call (`Std.Math.Abs`, `Std.Arrays.Push`, …).

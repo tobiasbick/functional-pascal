@@ -188,14 +188,14 @@ end function;
 
 function Work(): integer;
 begin
-  var Backup: task := go Seven();
-  mutable var Current: task := go Nine();
-  var Marker: integer := 0;
+  const Backup: task := go Seven();
+   var Current: task := go Nine();
+  const Marker: integer := 0;
   return Tasks.Wait(Current);
 end function;
 
 begin
-  var Pending: task := go Work();
+  const Pending: task := go Work();
   Console.WriteLn(Tasks.Wait(Pending));
 end program;
 "#;
@@ -204,7 +204,7 @@ end program;
     let _ = send(&mut server, &mut id, "initialize", json!({"version":2}));
     let marker_line = TASK_SOURCE
         .lines()
-        .position(|line| line.contains("var Marker: integer := 0;"))
+        .position(|line| line.contains("const Marker: integer := 0;"))
         .expect("marker line")
         + 1;
     let breakpoint = send(

@@ -3,38 +3,44 @@ program TuiTextAreaLayoutTest;
 uses Std.Str as Str;
 uses Std.Test as Test;
 uses Std.Tui as Tui;
+uses Std.Tui.Elements as Elements;
+uses Std.Tui.Geometry as Geometry;
+uses Std.Tui.Ids as Ids;
+uses Std.Tui.Layout as Layout;
+uses Std.Tui.Rendering as Rendering;
+uses Std.Tui.Runtime as Runtime;
 
 function Paint(Tree: Tui.TuiElement; Size: Tui.TuiSize): Tui.TuiSurfaceSnapshot;
 begin
-  var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Size);
-  discard App.RunIterations(Tree, function(State: Tui.TuiElement; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): Tui.TuiElement begin
+  const App: Tui.TuiApplication := Runtime.TuiApplicationOpenForTest(Size);
+  discard Runtime.TuiApplicationRunIterations(App, Tree, function(State: Tui.TuiElement; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): Tui.TuiElement begin
     return State;
   end function, function(State: Tui.TuiElement): Tui.TuiElement begin
     return State;
   end function, 0, 0);
-  var Snapshot: Tui.TuiSurfaceSnapshot := App.SurfaceSnapshot();
-  App.Close();
+  const Snapshot: Tui.TuiSurfaceSnapshot := Runtime.TuiApplicationSurfaceSnapshot(App);
+  Runtime.TuiApplicationClose(App);
   return Snapshot;
 end function;
 
 begin
-  var TextArea: Tui.TuiElement := Tui.TuiElementBuilders.MakeTextArea(Tui.TuiControlId.Create(1), ('abc' + Str.Chr(10)) +
-                                                                                                  '12345', 0, Tui.TuiPoint.Create(0, 0), Tui.TuiAction.Create(9));
-  var Measured: Tui.TuiMeasureResult := Tui.TuiMeasure(TextArea, Tui.TuiMeasureSpec.Unbounded());
+  const TextArea: Tui.TuiElement := Elements.TuiElementMakeTextArea(Ids.TuiControlIdCreate(1), ('abc' + Str.Chr(10)) +
+                                                                                               '12345', 0, Geometry.TuiPointCreate(0, 0), Ids.TuiActionCreate(9));
+  const Measured: Tui.TuiMeasureResult := Tui.TuiMeasure(TextArea, Layout.TuiMeasureSpecUnbounded());
   Test.AssertEquals(1, Measured.Minimum.Width);
   Test.AssertEquals(1, Measured.Minimum.Height);
   Test.AssertEquals(5, Measured.Preferred.Width);
   Test.AssertEquals(2, Measured.Preferred.Height);
   Test.AssertTrue(Measured.Maximum.Width > Measured.Preferred.Width);
   Test.AssertTrue(Measured.Maximum.Height > Measured.Preferred.Height);
-  var Constrained: Tui.TuiMeasureResult := Tui.TuiMeasure(TextArea, Tui.TuiMeasureSpec.AtMost(Tui.TuiSize.Create(3, 1)));
+  const Constrained: Tui.TuiMeasureResult := Tui.TuiMeasure(TextArea, Layout.TuiMeasureSpecAtMost(Geometry.TuiSizeCreate(3, 1)));
   Test.AssertEquals(3, Constrained.Preferred.Width);
   Test.AssertEquals(1, Constrained.Preferred.Height);
-  var Filled: Tui.TuiSurfaceSnapshot := Paint(Tui.TuiElementBuilders.MakeDesktop(Option.None, [
-                                                                                                Tui.TuiElementBuilders.MakeColumn([
-                                                                                                                                    Tui.TuiElementBuilders.MakeTextArea(Tui.TuiControlId.Create(1), 'x', 0, Tui.TuiPoint.Create(0, 0), Tui.TuiAction.Create(9)),
-                                                                                                                                    Tui.TuiElementBuilders.MakeLabel('tail')
-                                                                                                                                  ])
-                                                                                              ]), Tui.TuiSize.Create(8, 4));
-  Test.AssertEquals('t', Filled.CellAt(0, 3).Glyph);
+  const Filled: Tui.TuiSurfaceSnapshot := Paint(Elements.TuiElementMakeDesktop(Option.None, [
+                                                                                              Elements.TuiElementMakeColumn([
+                                                                                                                              Elements.TuiElementMakeTextArea(Ids.TuiControlIdCreate(1), 'x', 0, Geometry.TuiPointCreate(0, 0), Ids.TuiActionCreate(9)),
+                                                                                                                              Elements.TuiElementMakeLabel('tail')
+                                                                                                                            ])
+                                                                                            ]), Geometry.TuiSizeCreate(8, 4));
+  Test.AssertEquals('t', Rendering.TuiSurfaceSnapshotCellAt(Filled, 0, 3).Glyph);
 end program;

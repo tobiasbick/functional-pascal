@@ -214,6 +214,7 @@ pub(super) fn register_std_str(checker: &mut Checker) {
         Ty::String,
     );
     let callback_placeholder = Ty::Function(FunctionTy {
+        pure: false,
         type_params: Vec::new(),
         params: Vec::new(),
         return_type: Box::new(Ty::Error),

@@ -118,7 +118,7 @@ mod tests {
         write_text(
             &helper,
             r#"unit Suite.Helper;
-  public var Answer: integer := 42;
+  public const Answer: integer := 42;
 public function GetAnswer(): integer;
 begin return Answer; end function;
 end unit;
@@ -177,7 +177,7 @@ end unit;
             write_text(
                 path,
                 &format!(
-                    "program {name}; uses Std.Test as Test; var Value: integer := {value}; begin Test.AssertEquals({value}, Value); end program;"
+                    r#"program {name}; uses Std.Test as Test; const Value: integer := {value}; begin Test.AssertEquals({value}, Value); end program;"#
                 ),
             );
         }

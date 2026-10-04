@@ -4,8 +4,8 @@ uses Std.Console as Console;
 uses Std.Arrays as Arrays;
 
 begin
-  mutable var A: array of (integer) := [1, 2, 3];
-  var Last: integer := Arrays.Pop(A);
+  var A: array of (integer) := [1, 2, 3];
+  const Last: integer := Arrays.Pop(var A);
   Console.WriteLn(Last);
   Console.WriteLn(Arrays.Length(A));
 end program;

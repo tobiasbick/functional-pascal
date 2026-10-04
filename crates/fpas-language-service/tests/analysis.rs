@@ -20,7 +20,7 @@ fn loose_file_analysis_is_cached_and_formats_the_snapshot() {
     let temp = TempDirectory::new("analysis-loose");
     let path = temp.write(
         "loose.fpas",
-        r#"program Loose; begin var Value: integer := 1; end program;"#,
+        r#"program Loose; begin const Value: integer := 1; end program;"#,
     );
     let mut service = LanguageService::new(WorkspaceContext::loose(temp.path()));
 
@@ -40,7 +40,7 @@ fn loose_file_analysis_is_cached_and_formats_the_snapshot() {
             r#"program Loose;
 
 begin
-  var Value: integer := 1;
+  const Value: integer := 1;
 end program;
 "#
         )
@@ -174,7 +174,7 @@ end program;
             1,
             r#"program Reopened;
 begin
-  var Broken: integer := 'text';
+  const Broken: integer := 'text';
 end program;
 "#,
         )
@@ -301,7 +301,7 @@ include = ["src/**/*.fpas"]
 uses Demo.Math as Math;
 
 begin
-  var Value: integer := Math.Answer();
+  const Value: integer := Math.Answer();
 end program;
 "#,
     );
@@ -406,7 +406,7 @@ end unit;
 uses Demo.Math as Math;
 
 begin
-  var Value: integer := Math.Answer();
+  const Value: integer := Math.Answer();
 end program;
 "#,
         )

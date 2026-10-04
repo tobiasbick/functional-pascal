@@ -6,7 +6,7 @@ Formal syntax: [`grammar.ebnf`](../../specs/grammar.ebnf) (`unit`, `program`, `u
 
 ## Unit declaration
 
-A unit file starts with a `unit` declaration followed by declarations (functions, procedures, types, constants, `var`, and `mutable var`). There is no main block.
+A unit file starts with a `unit` declaration followed by functions, procedures, types, and `const` or `var` bindings. There is no main block.
 
 ```pascal
 unit MyApp.Utils;
@@ -49,7 +49,7 @@ uses MyApp.Utils as Utils;
 uses Std.Console as Console;
 
 begin
-  var Clamped: integer := Utils.Clamp(150, 0, 100);
+  const Clamped: integer := Utils.Clamp(150, 0, 100);
   Console.WriteLn(Clamped);
 end program;
 ```
@@ -59,6 +59,11 @@ After `uses Std.Str as Text;`, call `Text.Trim(' value ')`. Neither `Trim(...)`,
 constants, variables, routines, and enum members use the same alias prefix.
 An imported type may expose record members using its ordinary member syntax.
 Import aliases do not re-export the imported unit's names.
+
+An alias may have the same name as an exported member of its unit. For example,
+after `uses Demo.Data as Values;`, `Values.Values` accesses the public member
+`Values` in that unit. The alias is a namespace, not an imported storage binding;
+field/index paths continue from the selected member.
 
 An alias names exactly its imported unit. For example, `uses Std.Net as Net;`
 does not expose the separate unit `Std.Net.Utf8` as `Net.Utf8`. Import it with

@@ -152,132 +152,134 @@ public type TuiElement = enum
   Desktop(Focused: Option of (ControlId.TuiControlId); Children: array of (TuiElement));
 end enum;
 
-// Named constructors for immutable Tui elements.
-public type TuiElementBuilders = record
-  // Creates an element that occupies no layout space.
-  public static function MakeEmpty(): TuiElement;
-  begin
-    return TuiElement.Empty;
-  end function;
+// Creates an element that occupies no layout space.
+public function TuiElementMakeEmpty(): TuiElement;
+begin
+  return TuiElement.Empty;
+end function;
 
-  // Creates a one-line text label.
-  //
-  // Parameters:
-  // - `TextValue`: Text displayed by the created element.
-  public static function MakeLabel(TextValue: string): TuiElement;
-  begin
-    return TuiElement.Label(TextValue);
-  end function;
+// Creates a one-line text label.
+//
+// Parameters:
+// - `TextValue`: Text displayed by the created element.
+public function TuiElementMakeLabel(TextValue: string): TuiElement;
+begin
+  return TuiElement.Label(TextValue);
+end function;
 
-  // Creates a focusable button that emits the supplied action.
-  //
-  // Parameters:
-  // - `Id`: Identifier assigned to the created or selected value.
-  // - `TextValue`: Text displayed by the created element.
-  // - `Action`: Application action associated with the control or emitted message.
-  public static function MakeButton(Id: ControlId.TuiControlId; TextValue: string; Action: Action2.TuiAction): TuiElement;
-  begin
-    return TuiElement.Button(Button2.TuiButtonSpec.Normal(Id, TextValue, '', Action));
-  end function;
+// Creates a focusable button that emits the supplied action.
+//
+// Parameters:
+// - `Id`: Identifier assigned to the created or selected value.
+// - `TextValue`: Text displayed by the created element.
+// - `Action`: Application action associated with the control or emitted message.
+public function TuiElementMakeButton(
+  Id: ControlId.TuiControlId;
+  TextValue: string;
+  Action: Action2.TuiAction
+): TuiElement;
+begin
+  return TuiElement.Button(Button2.TuiButtonSpecNormal(Id, TextValue, '', Action));
+end function;
 
-  // Creates an enabled normal button with a keyboard mnemonic.
-  //
-  // Parameters:
-  // - `Id`: Identifier assigned to the created or selected value.
-  // - `TextValue`: Text displayed by the created element.
-  // - `Mnemonic`: Keyboard mnemonic used to activate the item.
-  // - `Action`: Application action associated with the control or emitted message.
-  public static function MakeButtonWithMnemonic(
+// Creates an enabled normal button with a keyboard mnemonic.
+//
+// Parameters:
+// - `Id`: Identifier assigned to the created or selected value.
+// - `TextValue`: Text displayed by the created element.
+// - `Mnemonic`: Keyboard mnemonic used to activate the item.
+// - `Action`: Application action associated with the control or emitted message.
+public function TuiElementMakeButtonWithMnemonic(
   Id: ControlId.TuiControlId;
   TextValue: string;
   Mnemonic: string;
   Action: Action2.TuiAction
 ): TuiElement;
-  begin
-    return TuiElement.Button(Button2.TuiButtonSpec.Normal(Id, TextValue, Mnemonic, Action));
-  end function;
+begin
+  return TuiElement.Button(Button2.TuiButtonSpecNormal(Id, TextValue, Mnemonic, Action));
+end function;
 
-  // Creates an enabled default button with a keyboard mnemonic.
-  //
-  // Parameters:
-  // - `Id`: Identifier assigned to the created or selected value.
-  // - `TextValue`: Text displayed by the created element.
-  // - `Mnemonic`: Keyboard mnemonic used to activate the item.
-  // - `Action`: Application action associated with the control or emitted message.
-  public static function MakeDefaultButton(
+// Creates an enabled default button with a keyboard mnemonic.
+//
+// Parameters:
+// - `Id`: Identifier assigned to the created or selected value.
+// - `TextValue`: Text displayed by the created element.
+// - `Mnemonic`: Keyboard mnemonic used to activate the item.
+// - `Action`: Application action associated with the control or emitted message.
+public function TuiElementMakeDefaultButton(
   Id: ControlId.TuiControlId;
   TextValue: string;
   Mnemonic: string;
   Action: Action2.TuiAction
 ): TuiElement;
-  begin
-    return TuiElement.Button(Button2.TuiButtonSpec.DefaultButton(Id, TextValue, Mnemonic, Action));
-  end function;
+begin
+  return TuiElement.Button(Button2.TuiButtonSpecDefaultButton(Id, TextValue, Mnemonic, Action));
+end function;
 
-  // Creates a disabled button with an optional display mnemonic.
-  //
-  // Parameters:
-  // - `Id`: Identifier assigned to the created or selected value.
-  // - `TextValue`: Text displayed by the created element.
-  // - `Mnemonic`: Keyboard mnemonic used to activate the item.
-  // - `Action`: Application action associated with the control or emitted message.
-  public static function MakeDisabledButton(
+// Creates a disabled button with an optional display mnemonic.
+//
+// Parameters:
+// - `Id`: Identifier assigned to the created or selected value.
+// - `TextValue`: Text displayed by the created element.
+// - `Mnemonic`: Keyboard mnemonic used to activate the item.
+// - `Action`: Application action associated with the control or emitted message.
+public function TuiElementMakeDisabledButton(
   Id: ControlId.TuiControlId;
   TextValue: string;
   Mnemonic: string;
   Action: Action2.TuiAction
 ): TuiElement;
-  begin
-    return TuiElement.Button(Button2.TuiButtonSpec.Disabled(Id, TextValue, Mnemonic, Action));
-  end function;
+begin
+  return TuiElement.Button(Button2.TuiButtonSpecDisabled(Id, TextValue, Mnemonic, Action));
+end function;
 
-  // Creates a controlled one-line input.
-  //
-  // Parameters:
-  // - `Id`: Identifier assigned to the created or selected value.
-  // - `TextValue`: Text displayed by the created element.
-  // - `CaretValue`: Proposed zero-based caret index.
-  // - `ChangeAction`: Application action emitted when the value changes.
-  public static function MakeInput(
+// Creates a controlled one-line input.
+//
+// Parameters:
+// - `Id`: Identifier assigned to the created or selected value.
+// - `TextValue`: Text displayed by the created element.
+// - `CaretValue`: Proposed zero-based caret index.
+// - `ChangeAction`: Application action emitted when the value changes.
+public function TuiElementMakeInput(
   Id: ControlId.TuiControlId;
   TextValue: string;
   CaretValue: integer;
   ChangeAction: Action2.TuiAction
 ): TuiElement;
-  begin
-    return TuiElement.Input(Input2.TuiInputSpec.Create(Id, TextValue, CaretValue, ChangeAction));
-  end function;
+begin
+  return TuiElement.Input(Input2.TuiInputSpecCreate(Id, TextValue, CaretValue, ChangeAction));
+end function;
 
-  // Creates a controlled one-line input with placeholder text.
-  //
-  // Parameters:
-  // - `Id`: Identifier assigned to the created or selected value.
-  // - `TextValue`: Text displayed by the created element.
-  // - `CaretValue`: Proposed zero-based caret index.
-  // - `Hint`: Hint text displayed for an empty input.
-  // - `ChangeAction`: Application action emitted when the value changes.
-  public static function MakeInputWithHint(
+// Creates a controlled one-line input with placeholder text.
+//
+// Parameters:
+// - `Id`: Identifier assigned to the created or selected value.
+// - `TextValue`: Text displayed by the created element.
+// - `CaretValue`: Proposed zero-based caret index.
+// - `Hint`: Hint text displayed for an empty input.
+// - `ChangeAction`: Application action emitted when the value changes.
+public function TuiElementMakeInputWithHint(
   Id: ControlId.TuiControlId;
   TextValue: string;
   CaretValue: integer;
   Hint: string;
   ChangeAction: Action2.TuiAction
 ): TuiElement;
-  begin
-    return TuiElement.Input(Input2.TuiInputSpec.WithHint(Id, TextValue, CaretValue, Hint, ChangeAction));
-  end function;
+begin
+  return TuiElement.Input(Input2.TuiInputSpecWithHint(Id, TextValue, CaretValue, Hint, ChangeAction));
+end function;
 
-  // Creates a controlled input with oldest-to-newest Up/Down history.
-  //
-  // Parameters:
-  // - `Id`: Identifier assigned to the created or selected value.
-  // - `TextValue`: Text displayed by the created element.
-  // - `CaretValue`: Proposed zero-based caret index.
-  // - `Hint`: Hint text displayed for an empty input.
-  // - `History`: Ordered input-history entries.
-  // - `HistoryDraft`: Current editable text retained while browsing history.
-  // - `ChangeAction`: Application action emitted when the value changes.
-  public static function MakeHistoryInput(
+// Creates a controlled input with oldest-to-newest Up/Down history.
+//
+// Parameters:
+// - `Id`: Identifier assigned to the created or selected value.
+// - `TextValue`: Text displayed by the created element.
+// - `CaretValue`: Proposed zero-based caret index.
+// - `Hint`: Hint text displayed for an empty input.
+// - `History`: Ordered input-history entries.
+// - `HistoryDraft`: Current editable text retained while browsing history.
+// - `ChangeAction`: Application action emitted when the value changes.
+public function TuiElementMakeHistoryInput(
   Id: ControlId.TuiControlId;
   TextValue: string;
   CaretValue: integer;
@@ -286,230 +288,232 @@ public type TuiElementBuilders = record
   HistoryDraft: string;
   ChangeAction: Action2.TuiAction
 ): TuiElement;
-  begin
-    return TuiElement.Input(Input2.TuiInputSpec.WithHistory(Id, TextValue, CaretValue, Hint, History, HistoryDraft, ChangeAction));
-  end function;
+begin
+  return TuiElement.Input(Input2.TuiInputSpecWithHistory(Id, TextValue, CaretValue, Hint, History, HistoryDraft, ChangeAction));
+end function;
 
-  // Creates a controlled multiline text area with model-owned caret and offset.
-  //
-  // Parameters:
-  // - `Id`: Identifier assigned to the created or selected value.
-  // - `TextValue`: Text displayed by the created element.
-  // - `CaretValue`: Proposed zero-based caret index.
-  // - `OffsetValue`: Proposed scroll offset.
-  // - `ChangeAction`: Application action emitted when the value changes.
-  public static function MakeTextArea(
+// Creates a controlled multiline text area with model-owned caret and offset.
+//
+// Parameters:
+// - `Id`: Identifier assigned to the created or selected value.
+// - `TextValue`: Text displayed by the created element.
+// - `CaretValue`: Proposed zero-based caret index.
+// - `OffsetValue`: Proposed scroll offset.
+// - `ChangeAction`: Application action emitted when the value changes.
+public function TuiElementMakeTextArea(
   Id: ControlId.TuiControlId;
   TextValue: string;
   CaretValue: integer;
   OffsetValue: Point.TuiPoint;
   ChangeAction: Action2.TuiAction
 ): TuiElement;
-  begin
-    return TuiElement.TextArea(Id, TextValue, CaretValue, OffsetValue, ChangeAction);
-  end function;
+begin
+  return TuiElement.TextArea(Id, TextValue, CaretValue, OffsetValue, ChangeAction);
+end function;
 
-  // Creates a controlled check box that proposes the inverted checked value.
-  //
-  // Parameters:
-  // - `Id`: Identifier assigned to the created or selected value.
-  // - `TextValue`: Text displayed by the created element.
-  // - `Checked`: Proposed checked state.
-  // - `ChangeAction`: Application action emitted when the value changes.
-  public static function MakeCheckBox(
+// Creates a controlled check box that proposes the inverted checked value.
+//
+// Parameters:
+// - `Id`: Identifier assigned to the created or selected value.
+// - `TextValue`: Text displayed by the created element.
+// - `Checked`: Proposed checked state.
+// - `ChangeAction`: Application action emitted when the value changes.
+public function TuiElementMakeCheckBox(
   Id: ControlId.TuiControlId;
   TextValue: string;
   Checked: boolean;
   ChangeAction: Action2.TuiAction
 ): TuiElement;
-  begin
-    return TuiElement.CheckBox(Id, TextValue, Checked, ChangeAction);
-  end function;
+begin
+  return TuiElement.CheckBox(Id, TextValue, Checked, ChangeAction);
+end function;
 
-  // Creates a controlled list with model-owned selection.
-  //
-  // Parameters:
-  // - `Id`: Identifier assigned to the created or selected value.
-  // - `Items`: Ordered child or menu items.
-  // - `Selected`: Selected item index.
-  // - `ChangeAction`: Application action emitted when the value changes.
-  public static function MakeList(
+// Creates a controlled list with model-owned selection.
+//
+// Parameters:
+// - `Id`: Identifier assigned to the created or selected value.
+// - `Items`: Ordered child or menu items.
+// - `Selected`: Selected item index.
+// - `ChangeAction`: Application action emitted when the value changes.
+public function TuiElementMakeList(
   Id: ControlId.TuiControlId;
   Items: array of (string);
   Selected: integer;
   ChangeAction: Action2.TuiAction
 ): TuiElement;
-  begin
-    return TuiElement.List(Id, Items, Selected, ChangeAction);
-  end function;
+begin
+  return TuiElement.List(Id, Items, Selected, ChangeAction);
+end function;
 
-  // Creates a controlled single-child scroll viewport.
-  //
-  // Parameters:
-  // - `Id`: Identifier assigned to the created or selected value.
-  // - `Offset`: Scroll offset or position applied by the operation.
-  // - `ChangeAction`: Application action emitted when the value changes.
-  // - `Child`: Child element wrapped by the operation.
-  public static function MakeScroll(
+// Creates a controlled single-child scroll viewport.
+//
+// Parameters:
+// - `Id`: Identifier assigned to the created or selected value.
+// - `Offset`: Scroll offset or position applied by the operation.
+// - `ChangeAction`: Application action emitted when the value changes.
+// - `Child`: Child element wrapped by the operation.
+public function TuiElementMakeScroll(
   Id: ControlId.TuiControlId;
   Offset: Point.TuiPoint;
   ChangeAction: Action2.TuiAction;
   Child: TuiElement
 ): TuiElement;
-  begin
-    return TuiElement.Scroll(Id, Offset, ChangeAction, [Child]);
-  end function;
+begin
+  return TuiElement.Scroll(Id, Offset, ChangeAction, [Child]);
+end function;
 
-  // Creates a flat menu action bar.
-  //
-  // Parameters:
-  // - `Items`: Ordered child or menu items.
-  public static function MakeMenuBar(Items: array of (MenuItem.TuiMenuItem)): TuiElement;
-  begin
-    return TuiElement.MenuBar(Items);
-  end function;
+// Creates a flat menu action bar.
+//
+// Parameters:
+// - `Items`: Ordered child or menu items.
+public function TuiElementMakeMenuBar(Items: array of (MenuItem.TuiMenuItem)): TuiElement;
+begin
+  return TuiElement.MenuBar(Items);
+end function;
 
-  // Creates a controlled hierarchical menu from flat parent-linked nodes.
-  //
-  // Parameters:
-  // - `Id`: Identifier assigned to the created or selected value.
-  // - `Nodes`: Flat ordered menu-node collection.
-  // - `State`: Controlled state used by the operation.
-  // - `ChangeAction`: Application action emitted when the value changes.
-  public static function MakeMenu(
+// Creates a controlled hierarchical menu from flat parent-linked nodes.
+//
+// Parameters:
+// - `Id`: Identifier assigned to the created or selected value.
+// - `Nodes`: Flat ordered menu-node collection.
+// - `State`: Controlled state used by the operation.
+// - `ChangeAction`: Application action emitted when the value changes.
+public function TuiElementMakeMenu(
   Id: ControlId.TuiControlId;
   Nodes: array of (MenuNode.TuiMenuNode);
   State: MenuNode.TuiMenuState;
   ChangeAction: Action2.TuiAction
 ): TuiElement;
-  begin
-    return TuiElement.Menu(Id, Nodes, State, ChangeAction);
-  end function;
+begin
+  return TuiElement.Menu(Id, Nodes, State, ChangeAction);
+end function;
 
-  // Creates a status line of display and command items.
-  //
-  // Parameters:
-  // - `Items`: Ordered child or menu items.
-  public static function MakeStatusLine(Items: array of (StatusItem.TuiStatusItem)): TuiElement;
-  begin
-    return TuiElement.StatusLine(Items);
-  end function;
+// Creates a status line of display and command items.
+//
+// Parameters:
+// - `Items`: Ordered child or menu items.
+public function TuiElementMakeStatusLine(Items: array of (StatusItem.TuiStatusItem)): TuiElement;
+begin
+  return TuiElement.StatusLine(Items);
+end function;
 
-  // Creates a rectangular grid of terminal cells.
-  //
-  // Parameters:
-  // - `Value`: Value used to create or update the result.
-  public static function MakeCellGrid(Value: CellGrid2.TuiCellGrid): TuiElement;
-  begin
-    return TuiElement.CellGrid(Value);
-  end function;
+// Creates a rectangular grid of terminal cells.
+//
+// Parameters:
+// - `Value`: Value used to create or update the result.
+public function TuiElementMakeCellGrid(Value: CellGrid2.TuiCellGrid): TuiElement;
+begin
+  return TuiElement.CellGrid(Value);
+end function;
 
-  // Creates a one-row separator with optional text.
-  //
-  // Parameters:
-  // - `TextValue`: Text displayed by the created element.
-  public static function MakeRule(TextValue: string): TuiElement;
-  begin
-    return TuiElement.Rule(TextValue);
-  end function;
+// Creates a one-row separator with optional text.
+//
+// Parameters:
+// - `TextValue`: Text displayed by the created element.
+public function TuiElementMakeRule(TextValue: string): TuiElement;
+begin
+  return TuiElement.Rule(TextValue);
+end function;
 
-  // Creates a compact bounded-value gauge.
-  //
-  // Parameters:
-  // - `LabelText`: Text displayed as the label.
-  // - `Value`: Value used to create or update the result.
-  // - `Maximum`: Maximum accepted value or extent.
-  public static function MakeGauge(LabelText: string; Value: integer; Maximum: integer): TuiElement;
-  begin
-    return TuiElement.Gauge(Gauge2.TuiGauge.Create(LabelText, Value, Maximum));
-  end function;
+// Creates a compact bounded-value gauge.
+//
+// Parameters:
+// - `LabelText`: Text displayed as the label.
+// - `Value`: Value used to create or update the result.
+// - `Maximum`: Maximum accepted value or extent.
+public function TuiElementMakeGauge(LabelText: string; Value: integer; Maximum: integer): TuiElement;
+begin
+  return TuiElement.Gauge(Gauge2.TuiGaugeCreate(LabelText, Value, Maximum));
+end function;
 
-  // Creates a horizontal layout node with zero spacing.
-  //
-  // Parameters:
-  // - `Items`: Ordered child or menu items.
-  public static function MakeRow(Items: array of (TuiElement)): TuiElement;
-  begin
-    return TuiElement.Row(Items, 0);
-  end function;
+// Creates a horizontal layout node with zero spacing.
+//
+// Parameters:
+// - `Items`: Ordered child or menu items.
+public function TuiElementMakeRow(Items: array of (TuiElement)): TuiElement;
+begin
+  return TuiElement.Row(Items, 0);
+end function;
 
-  // Creates a horizontal layout node with validated spacing.
-  //
-  // Parameters:
-  // - `Items`: Ordered child or menu items.
-  // - `Spacing`: Number of terminal cells between adjacent items.
-  public static function MakeRowSpaced(Items: array of (TuiElement); Spacing: integer): TuiElement;
-  begin
-    return TuiElement.Row(Items, TuiElementRequireNonNegativeSpacing(Spacing));
-  end function;
+// Creates a horizontal layout node with validated spacing.
+//
+// Parameters:
+// - `Items`: Ordered child or menu items.
+// - `Spacing`: Number of terminal cells between adjacent items.
+public function TuiElementMakeRowSpaced(Items: array of (TuiElement); Spacing: integer): TuiElement;
+begin
+  return TuiElement.Row(Items, TuiElementRequireNonNegativeSpacing(Spacing));
+end function;
 
-  // Creates a vertical layout node with zero spacing.
-  //
-  // Parameters:
-  // - `Items`: Ordered child or menu items.
-  public static function MakeColumn(Items: array of (TuiElement)): TuiElement;
-  begin
-    return TuiElement.Column(Items, 0);
-  end function;
+// Creates a vertical layout node with zero spacing.
+//
+// Parameters:
+// - `Items`: Ordered child or menu items.
+public function TuiElementMakeColumn(Items: array of (TuiElement)): TuiElement;
+begin
+  return TuiElement.Column(Items, 0);
+end function;
 
-  // Creates a vertical layout node with validated spacing.
-  //
-  // Parameters:
-  // - `Items`: Ordered child or menu items.
-  // - `Spacing`: Number of terminal cells between adjacent items.
-  public static function MakeColumnSpaced(Items: array of (TuiElement); Spacing: integer): TuiElement;
-  begin
-    return TuiElement.Column(Items, TuiElementRequireNonNegativeSpacing(Spacing));
-  end function;
+// Creates a vertical layout node with validated spacing.
+//
+// Parameters:
+// - `Items`: Ordered child or menu items.
+// - `Spacing`: Number of terminal cells between adjacent items.
+public function TuiElementMakeColumnSpaced(Items: array of (TuiElement); Spacing: integer): TuiElement;
+begin
+  return TuiElement.Column(Items, TuiElementRequireNonNegativeSpacing(Spacing));
+end function;
 
-  // Creates a single-child layout wrapper with settings.
-  //
-  // Parameters:
-  // - `Settings`: Layout settings applied to the child.
-  // - `Child`: Child element wrapped by the operation.
-  public static function MakeLayout(Settings: LayoutSettings.TuiLayoutSettings; Child: TuiElement): TuiElement;
-  begin
-    return TuiElement.Layout(Settings, [Child]);
-  end function;
+// Creates a single-child layout wrapper with settings.
+//
+// Parameters:
+// - `Settings`: Layout settings applied to the child.
+// - `Child`: Child element wrapped by the operation.
+public function TuiElementMakeLayout(Settings: LayoutSettings.TuiLayoutSettings; Child: TuiElement): TuiElement;
+begin
+  return TuiElement.Layout(Settings, [Child]);
+end function;
 
-  // Creates a fixed or expanding spacer element.
-  //
-  // Parameters:
-  // - `Value`: Value used to create or update the result.
-  public static function MakeSpacer(Value: Spacer2.TuiSpacer): TuiElement;
-  begin
-    return TuiElement.Spacer(Value);
-  end function;
+// Creates a fixed or expanding spacer element.
+//
+// Parameters:
+// - `Value`: Value used to create or update the result.
+public function TuiElementMakeSpacer(Value: Spacer2.TuiSpacer): TuiElement;
+begin
+  return TuiElement.Spacer(Value);
+end function;
 
-  // Creates an ordinary bordered content panel.
-  //
-  // Parameters:
-  // - `TitleValue`: Title displayed by the created container.
-  // - `Items`: Ordered child or menu items.
-  public static function MakePanel(TitleValue: string; Items: array of (TuiElement)): TuiElement;
-  begin
-    return TuiElement.Panel(TitleValue, Items);
-  end function;
+// Creates an ordinary bordered content panel.
+//
+// Parameters:
+// - `TitleValue`: Title displayed by the created container.
+// - `Items`: Ordered child or menu items.
+public function TuiElementMakePanel(TitleValue: string; Items: array of (TuiElement)): TuiElement;
+begin
+  return TuiElement.Panel(TitleValue, Items);
+end function;
 
-  // Creates a fixed centered modal overlay.
-  //
-  // Parameters:
-  // - `TitleValue`: Title displayed by the created container.
-  // - `Items`: Ordered child or menu items.
-  public static function MakeOverlay(TitleValue: string; Items: array of (TuiElement)): TuiElement;
-  begin
-    return TuiElement.Overlay(TitleValue, Items);
-  end function;
+// Creates a fixed centered modal overlay.
+//
+// Parameters:
+// - `TitleValue`: Title displayed by the created container.
+// - `Items`: Ordered child or menu items.
+public function TuiElementMakeOverlay(TitleValue: string; Items: array of (TuiElement)): TuiElement;
+begin
+  return TuiElement.Overlay(TitleValue, Items);
+end function;
 
-  // Creates the root element and declares the model-controlled focus.
-  //
-  // Parameters:
-  // - `Focused`: Whether the control currently owns focus.
-  // - `Items`: Ordered child or menu items.
-  public static function MakeDesktop(Focused: Option of (ControlId.TuiControlId); Items: array of (TuiElement)): TuiElement;
-  begin
-    return TuiElement.Desktop(Focused, Items);
-  end function;
-end record;
+// Creates the root element and declares the model-controlled focus.
+//
+// Parameters:
+// - `Focused`: Whether the control currently owns focus.
+// - `Items`: Ordered child or menu items.
+public function TuiElementMakeDesktop(
+  Focused: Option of (ControlId.TuiControlId);
+  Items: array of (TuiElement)
+): TuiElement;
+begin
+  return TuiElement.Desktop(Focused, Items);
+end function;
 
 end unit;

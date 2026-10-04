@@ -1,6 +1,10 @@
 program DuplicateControlIdRuntimeError;
 
 uses Std.Tui as Tui;
+uses Std.Tui.Elements as Elements;
+uses Std.Tui.Geometry as Geometry;
+uses Std.Tui.Ids as Ids;
+uses Std.Tui.Runtime as Runtime;
 
 function Update(State: integer; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): integer;
 begin
@@ -9,15 +13,15 @@ end function;
 
 function View(State: integer): Tui.TuiElement;
 begin
-  var Id: Tui.TuiControlId := Tui.TuiControlId.Create(1);
-  var Action: Tui.TuiAction := Tui.TuiAction.Create(10);
-  return Tui.TuiElementBuilders.MakeRow([
-                                          Tui.TuiElementBuilders.MakeButton(Id, 'First', Action),
-                                          Tui.TuiElementBuilders.MakeButton(Id, 'Second', Action)
-                                        ]);
+  const Id: Tui.TuiControlId := Ids.TuiControlIdCreate(1);
+  const Action: Tui.TuiAction := Ids.TuiActionCreate(10);
+  return Elements.TuiElementMakeRow([
+                                      Elements.TuiElementMakeButton(Id, 'First', Action),
+                                      Elements.TuiElementMakeButton(Id, 'Second', Action)
+                                    ]);
 end function;
 
 begin
-  mutable var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(20, 4));
-  discard App.RunIterations(0, Update, View, 0, 0);
+  var App: Tui.TuiApplication := Runtime.TuiApplicationOpenForTest(Geometry.TuiSizeCreate(20, 4));
+  discard Runtime.TuiApplicationRunIterations(App, 0, Update, View, 0, 0);
 end program;

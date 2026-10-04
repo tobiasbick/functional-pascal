@@ -23,6 +23,7 @@ pub fn function(name: &str) -> ObjectFunction {
         name: name.to_string(),
         code: vec![return_unit()],
         arity: 0,
+        var_parameters: Vec::new(),
         capture_count: 0,
         register_count: 0,
         returns: ObjectReturn::Unit,
@@ -84,6 +85,7 @@ pub fn program() -> RelocatableObject {
             name: "demo".to_string(),
             code: vec![call, return_unit()],
             arity: 0,
+            var_parameters: Vec::new(),
             capture_count: 0,
             register_count: 0,
             returns: ObjectReturn::Unit,
@@ -113,6 +115,7 @@ pub fn program() -> RelocatableObject {
         imports: vec![ObjectImport {
             name: "library.unit.zed".to_string(),
             shape: ImportShape::Function {
+                var_parameters: Vec::new(),
                 arity: 0,
                 capture_count: 0,
                 returns_value: false,
@@ -160,7 +163,5 @@ pub fn one_field_record(field_type: u32) -> fpas_unit::object::ObjectRecordLayou
         name: "shared.node".to_string(),
         fields: vec!["value".to_string()],
         field_types: vec![field_type],
-        properties: Vec::new(),
-        methods: Vec::new(),
     }
 }

@@ -1,0 +1,250 @@
+// Public elements functions.
+unit Std.Tui.Elements;
+
+uses Std.Tui.Chrome.CellGrid as CellGrid;
+uses Std.Tui.Chrome.MenuItem as MenuItem;
+uses Std.Tui.Chrome.MenuNode as MenuNode;
+uses Std.Tui.Chrome.StatusItem as StatusItem;
+uses Std.Tui.Elements.Element as Element;
+uses Std.Tui.Geometry.Point as Point;
+uses Std.Tui.Ids.Action as Action2;
+uses Std.Tui.Ids.ControlId as ControlId;
+uses Std.Tui.Layout.LayoutSettings as LayoutSettings;
+uses Std.Tui.Layout.Spacer as Spacer;
+
+// Creates an element that occupies no layout space.
+public function TuiElementMakeEmpty(): Element.TuiElement;
+begin
+  return Element.TuiElementMakeEmpty();
+end function;
+
+// Creates a one-line text label.
+public function TuiElementMakeLabel(TextValue: string): Element.TuiElement;
+begin
+  return Element.TuiElementMakeLabel(TextValue);
+end function;
+
+// Creates a focusable button that emits the supplied action.
+public function TuiElementMakeButton(
+  Id: ControlId.TuiControlId;
+  TextValue: string;
+  Action: Action2.TuiAction
+): Element.TuiElement;
+begin
+  return Element.TuiElementMakeButton(Id, TextValue, Action);
+end function;
+
+// Creates an enabled normal button with a keyboard mnemonic.
+public function TuiElementMakeButtonWithMnemonic(
+  Id: ControlId.TuiControlId;
+  TextValue: string;
+  Mnemonic: string;
+  Action: Action2.TuiAction
+): Element.TuiElement;
+begin
+  return Element.TuiElementMakeButtonWithMnemonic(Id, TextValue, Mnemonic, Action);
+end function;
+
+// Creates an enabled default button with a keyboard mnemonic.
+public function TuiElementMakeDefaultButton(
+  Id: ControlId.TuiControlId;
+  TextValue: string;
+  Mnemonic: string;
+  Action: Action2.TuiAction
+): Element.TuiElement;
+begin
+  return Element.TuiElementMakeDefaultButton(Id, TextValue, Mnemonic, Action);
+end function;
+
+// Creates a disabled button with an optional display mnemonic.
+public function TuiElementMakeDisabledButton(
+  Id: ControlId.TuiControlId;
+  TextValue: string;
+  Mnemonic: string;
+  Action: Action2.TuiAction
+): Element.TuiElement;
+begin
+  return Element.TuiElementMakeDisabledButton(Id, TextValue, Mnemonic, Action);
+end function;
+
+// Creates a controlled one-line input.
+public function TuiElementMakeInput(
+  Id: ControlId.TuiControlId;
+  TextValue: string;
+  CaretValue: integer;
+  ChangeAction: Action2.TuiAction
+): Element.TuiElement;
+begin
+  return Element.TuiElementMakeInput(Id, TextValue, CaretValue, ChangeAction);
+end function;
+
+// Creates a controlled one-line input with placeholder text.
+public function TuiElementMakeInputWithHint(
+  Id: ControlId.TuiControlId;
+  TextValue: string;
+  CaretValue: integer;
+  Hint: string;
+  ChangeAction: Action2.TuiAction
+): Element.TuiElement;
+begin
+  return Element.TuiElementMakeInputWithHint(Id, TextValue, CaretValue, Hint, ChangeAction);
+end function;
+
+// Creates a controlled input with oldest-to-newest Up/Down history.
+public function TuiElementMakeHistoryInput(
+  Id: ControlId.TuiControlId;
+  TextValue: string;
+  CaretValue: integer;
+  Hint: string;
+  History: array of (string);
+  HistoryDraft: string;
+  ChangeAction: Action2.TuiAction
+): Element.TuiElement;
+begin
+  return Element.TuiElementMakeHistoryInput(Id, TextValue, CaretValue, Hint, History, HistoryDraft, ChangeAction);
+end function;
+
+// Creates a controlled multiline text area with model-owned caret and offset.
+public function TuiElementMakeTextArea(
+  Id: ControlId.TuiControlId;
+  TextValue: string;
+  CaretValue: integer;
+  OffsetValue: Point.TuiPoint;
+  ChangeAction: Action2.TuiAction
+): Element.TuiElement;
+begin
+  return Element.TuiElementMakeTextArea(Id, TextValue, CaretValue, OffsetValue, ChangeAction);
+end function;
+
+// Creates a controlled check box that proposes the inverted checked value.
+public function TuiElementMakeCheckBox(
+  Id: ControlId.TuiControlId;
+  TextValue: string;
+  Checked: boolean;
+  ChangeAction: Action2.TuiAction
+): Element.TuiElement;
+begin
+  return Element.TuiElementMakeCheckBox(Id, TextValue, Checked, ChangeAction);
+end function;
+
+// Creates a controlled list with model-owned selection.
+public function TuiElementMakeList(
+  Id: ControlId.TuiControlId;
+  Items: array of (string);
+  Selected: integer;
+  ChangeAction: Action2.TuiAction
+): Element.TuiElement;
+begin
+  return Element.TuiElementMakeList(Id, Items, Selected, ChangeAction);
+end function;
+
+// Creates a controlled single-child scroll viewport.
+public function TuiElementMakeScroll(
+  Id: ControlId.TuiControlId;
+  Offset: Point.TuiPoint;
+  ChangeAction: Action2.TuiAction;
+  Child: Element.TuiElement
+): Element.TuiElement;
+begin
+  return Element.TuiElementMakeScroll(Id, Offset, ChangeAction, Child);
+end function;
+
+// Creates a flat menu action bar.
+public function TuiElementMakeMenuBar(Items: array of (MenuItem.TuiMenuItem)): Element.TuiElement;
+begin
+  return Element.TuiElementMakeMenuBar(Items);
+end function;
+
+// Creates a controlled hierarchical menu from flat parent-linked nodes.
+public function TuiElementMakeMenu(
+  Id: ControlId.TuiControlId;
+  Nodes: array of (MenuNode.TuiMenuNode);
+  State: MenuNode.TuiMenuState;
+  ChangeAction: Action2.TuiAction
+): Element.TuiElement;
+begin
+  return Element.TuiElementMakeMenu(Id, Nodes, State, ChangeAction);
+end function;
+
+// Creates a status line of display and command items.
+public function TuiElementMakeStatusLine(Items: array of (StatusItem.TuiStatusItem)): Element.TuiElement;
+begin
+  return Element.TuiElementMakeStatusLine(Items);
+end function;
+
+// Creates a rectangular grid of terminal cells.
+public function TuiElementMakeCellGrid(Value: CellGrid.TuiCellGrid): Element.TuiElement;
+begin
+  return Element.TuiElementMakeCellGrid(Value);
+end function;
+
+// Creates a one-row separator with optional text.
+public function TuiElementMakeRule(TextValue: string): Element.TuiElement;
+begin
+  return Element.TuiElementMakeRule(TextValue);
+end function;
+
+// Creates a compact bounded-value gauge.
+public function TuiElementMakeGauge(LabelText: string; Value: integer; Maximum: integer): Element.TuiElement;
+begin
+  return Element.TuiElementMakeGauge(LabelText, Value, Maximum);
+end function;
+
+// Creates a horizontal layout node with zero spacing.
+public function TuiElementMakeRow(Items: array of (Element.TuiElement)): Element.TuiElement;
+begin
+  return Element.TuiElementMakeRow(Items);
+end function;
+
+// Creates a horizontal layout node with validated spacing.
+public function TuiElementMakeRowSpaced(Items: array of (Element.TuiElement); Spacing: integer): Element.TuiElement;
+begin
+  return Element.TuiElementMakeRowSpaced(Items, Spacing);
+end function;
+
+// Creates a vertical layout node with zero spacing.
+public function TuiElementMakeColumn(Items: array of (Element.TuiElement)): Element.TuiElement;
+begin
+  return Element.TuiElementMakeColumn(Items);
+end function;
+
+// Creates a vertical layout node with validated spacing.
+public function TuiElementMakeColumnSpaced(Items: array of (Element.TuiElement); Spacing: integer): Element.TuiElement;
+begin
+  return Element.TuiElementMakeColumnSpaced(Items, Spacing);
+end function;
+
+// Creates a single-child layout wrapper with settings.
+public function TuiElementMakeLayout(Settings: LayoutSettings.TuiLayoutSettings; Child: Element.TuiElement): Element.TuiElement;
+begin
+  return Element.TuiElementMakeLayout(Settings, Child);
+end function;
+
+// Creates a fixed or expanding spacer element.
+public function TuiElementMakeSpacer(Value: Spacer.TuiSpacer): Element.TuiElement;
+begin
+  return Element.TuiElementMakeSpacer(Value);
+end function;
+
+// Creates an ordinary bordered content panel.
+public function TuiElementMakePanel(TitleValue: string; Items: array of (Element.TuiElement)): Element.TuiElement;
+begin
+  return Element.TuiElementMakePanel(TitleValue, Items);
+end function;
+
+// Creates a fixed centered modal overlay.
+public function TuiElementMakeOverlay(TitleValue: string; Items: array of (Element.TuiElement)): Element.TuiElement;
+begin
+  return Element.TuiElementMakeOverlay(TitleValue, Items);
+end function;
+
+// Creates the root element and declares the model-controlled focus.
+public function TuiElementMakeDesktop(
+  Focused: Option of (ControlId.TuiControlId);
+  Items: array of (Element.TuiElement)
+): Element.TuiElement;
+begin
+  return Element.TuiElementMakeDesktop(Focused, Items);
+end function;
+
+end unit;

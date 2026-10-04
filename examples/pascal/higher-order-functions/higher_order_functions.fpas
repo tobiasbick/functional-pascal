@@ -5,27 +5,27 @@ uses Std.Arrays as Arrays;
 
 // First-class named functions
 
-function Square(X: integer): integer;
+pure function Square(X: integer): integer;
 begin
   return X * X;
 end function;
 
-function Double(X: integer): integer;
+pure function Double(X: integer): integer;
 begin
   return X * 2;
 end function;
 
-function IsGreaterThanThree(X: integer): boolean;
+pure function IsGreaterThanThree(X: integer): boolean;
 begin
   return X > 3;
 end function;
 
-function IsGreaterThanTen(X: integer): boolean;
+pure function IsGreaterThanTen(X: integer): boolean;
 begin
   return X > 10;
 end function;
 
-function Sum(Acc: integer; V: integer): integer;
+pure function Sum(Acc: integer; V: integer): integer;
 begin
   return Acc + V;
 end function;
@@ -39,10 +39,10 @@ end function;
 
 begin
   Console.WriteLn('Apply(Square, 6) = ', Apply(Square, 6));
-  var Op: function(X: integer): integer := Double;
+  const Op: function(X: integer): integer := Double;
   Console.WriteLn('Op(7) = ', Op(7));
-  var Nums: array of (integer) := [1, 2, 3, 4, 5];
-  var Doubled: array of (integer) := Arrays.Map(Nums, Double);
+  const Nums: array of (integer) := [1, 2, 3, 4, 5];
+  const Doubled: array of (integer) := Arrays.Map(Nums, Double);
   Console.WriteText('Map double: ');
   for V: integer in Doubled do
     begin
@@ -51,7 +51,7 @@ begin
   end for;
 
   Console.WriteLn('');
-  var Big: array of (integer) := Arrays.Filter(Nums, IsGreaterThanThree);
+  const Big: array of (integer) := Arrays.Filter(Nums, IsGreaterThanThree);
   Console.WriteText('Filter > 3: ');
   for V: integer in Big do
     begin
@@ -60,10 +60,10 @@ begin
   end for;
 
   Console.WriteLn('');
-  var Total: integer := Arrays.Reduce(Nums, 0, Sum);
+  const Total: integer := Arrays.Reduce(Nums, 0, Sum);
   Console.WriteLn('Reduce sum: ', Total);
-  var Squared: array of (integer) := Arrays.Map(Nums, Square);
-  var LargeSquares: array of (integer) := Arrays.Filter(Squared, IsGreaterThanTen);
+  const Squared: array of (integer) := Arrays.Map(Nums, Square);
+  const LargeSquares: array of (integer) := Arrays.Filter(Squared, IsGreaterThanTen);
   Console.WriteText('Squares > 10: ');
   for V: integer in LargeSquares do
     begin

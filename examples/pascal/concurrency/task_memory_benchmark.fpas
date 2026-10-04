@@ -26,7 +26,7 @@ begin
       panic('usage: task_memory_benchmark.fpas -- TASK_COUNT');
     end;
   end if;
-  var TaskCount: integer := Conv.StrToInt(Args.ParamStr(0));
+  const TaskCount: integer := Conv.StrToInt(Args.ParamStr(0));
   if TaskCount < 1 then
     begin
       panic('TASK_COUNT must be positive');
@@ -34,11 +34,11 @@ begin
   end if;
 
   Console.WriteLn(('spawning ' + Conv.IntToStr(TaskCount)) + ' tasks');
-  var Started: integer := Time.MonotonicMillis();
-  mutable var Tasks: array of (task) := [];
+  const Started: integer := Time.MonotonicMillis();
+  var Tasks: array of (task) := [];
   for I: integer := 1 to TaskCount do
     begin
-      Arrays.Push(Tasks, go Worker());
+      Arrays.Push(var Tasks, go Worker());
       if I mod ProgressEvery = 0 then
         begin
           Console.WriteLn('spawned ' + Conv.IntToStr(I));

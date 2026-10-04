@@ -1,0 +1,65 @@
+program CallerReferencesTest;
+
+uses Std.Test as Test;
+
+type Box = record
+  Items: array of (integer);
+end record;
+
+type Action = procedure(var Value: integer);
+
+var Global: integer := 1;
+
+procedure Increase(var Value: integer);
+begin
+  Value := Value + 1;
+end procedure;
+
+procedure Forward(var Value: integer);
+begin
+  Increase(var Value);
+  Value := Value + 10;
+end procedure;
+
+function Select(): Action;
+begin
+  return Increase;
+end function;
+
+function Replace of (T)(var Value: T; NewValue: T): T;
+begin
+  const Before: T := Value;
+  Value := NewValue;
+  return Before;
+end function;
+
+procedure AddSnapshot(var Value: integer; Snapshot: array of (integer));
+begin
+  Value := Value + Snapshot[0];
+end procedure;
+
+begin
+  var Count: integer := 1;
+  const Old: integer := Count;
+  Forward(var Count);
+  Test.AssertEquals(12, Count);
+  Test.AssertEquals(1, Old);
+  Increase(var Global);
+  Test.AssertEquals(2, Global);
+  const Actions: array of (Action) := [Select()];
+  Actions[0](var Count);
+  Select()(var Count);
+  Test.AssertEquals(14, Count);
+  var Data: Box := Box(Items := [1, 2]);
+  const Snapshot: Box := Data;
+  Increase(var Data.Items[if true then 0 else 1 end if]);
+  AddSnapshot(var Data.Items[1], Data.Items);
+  Test.AssertEquals(2, Data.Items[0]);
+  Test.AssertEquals(4, Data.Items[1]);
+  Test.AssertEquals(1, Snapshot.Items[0]);
+  Test.AssertEquals(2, Snapshot.Items[1]);
+  var Names: dict of (string, string) := ['key': 'before'];
+  const Before: string := Replace(var Names['key'], 'after');
+  Test.AssertEquals('before', Before);
+  Test.AssertEquals('after', Names['key']);
+end program;

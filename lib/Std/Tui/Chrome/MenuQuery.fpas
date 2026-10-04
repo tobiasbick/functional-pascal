@@ -274,19 +274,19 @@ public function TuiMenuNextSelectable(
   Direction: integer
 ): Option of (MenuNode.TuiMenuNodeId);
 begin
-  var CurrentIndex: integer := TuiMenuFind(Nodes, Current);
+  const CurrentIndex: integer := TuiMenuFind(Nodes, Current);
   if CurrentIndex < 0 then
     begin
       return Option.None;
     end;
   end if;
-  var Parent: Option of (MenuNode.TuiMenuNodeId) := TuiMenuNodeParent(Nodes[CurrentIndex]);
-  mutable var Siblings: array of (MenuNode.TuiMenuNodeId) := [];
+  const Parent: Option of (MenuNode.TuiMenuNodeId) := TuiMenuNodeParent(Nodes[CurrentIndex]);
+  var Siblings: array of (MenuNode.TuiMenuNodeId) := [];
   for Index: integer := 0 to Arrays.Length(Nodes) - 1 do
     begin
       if TuiMenuHasParent(Nodes[Index], Parent) and TuiMenuNodeSelectable(Nodes[Index]) then
         begin
-          Arrays.Push(Siblings, TuiMenuNodeIdOf(Nodes[Index]));
+          Arrays.Push(var Siblings, TuiMenuNodeIdOf(Nodes[Index]));
         end;
       end if;
     end;
@@ -297,7 +297,7 @@ begin
       return Option.None;
     end;
   end if;
-  mutable var Position: integer := 0;
+  var Position: integer := 0;
   for Index: integer := 0 to Arrays.Length(Siblings) - 1 do
     begin
       if Siblings[Index].Value = Current.Value then
@@ -331,12 +331,12 @@ end function;
 // - `Id`: Identifier assigned to the created or selected value.
 public function TuiMenuRootOf(Nodes: array of (MenuNode.TuiMenuNode); Id: MenuNode.TuiMenuNodeId): Option of (MenuNode.TuiMenuNodeId);
 begin
-  mutable var Current: MenuNode.TuiMenuNodeId := Id;
-  mutable var Remaining: integer := Arrays.Length(Nodes) + 1;
+  var Current: MenuNode.TuiMenuNodeId := Id;
+  var Remaining: integer := Arrays.Length(Nodes) + 1;
   while Remaining > 0 do
     begin
       Remaining := Remaining - 1;
-      var Index: integer := TuiMenuFind(Nodes, Current);
+      const Index: integer := TuiMenuFind(Nodes, Current);
       if Index < 0 then
         begin
           return Option.None;

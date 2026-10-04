@@ -23,9 +23,9 @@ end function;
 
 function Parent(): integer;
 begin
-  var T: task := go Child();
-  mutable var Seen: integer := 0;
-  var C: Tasks.WaitCase := Tasks.TaskCase(T, procedure() begin
+  const T: task := go Child();
+   var Seen: integer := 0;
+  const C: Tasks.WaitCase := Tasks.TaskCase(T, procedure() begin
     Time.Sleep(0);
     Time.Sleep(1);
     Seen := Tasks.Wait(T);
@@ -38,16 +38,16 @@ begin
 end function;
 
 begin
-  var T: task := go Parent();
-  var Q: channel of (integer) := Tasks.CreateChannel(1);
-  mutable var Seen: integer := 0;
-  var S: Tasks.WaitCase := Tasks.SendCase(Q, 42, procedure(R: Result of (boolean, string)) begin
+  const T: task := go Parent();
+  const Q: channel of (integer) := Tasks.CreateChannel(1);
+   var Seen: integer := 0;
+  const S: Tasks.WaitCase := Tasks.SendCase(Q, 42, procedure(R: Result of (boolean, string)) begin
     if not Results.Unwrap(R) then
       panic('send result');
     end if;
 
     Time.Sleep(1);
-    var Receive: Tasks.WaitCase := Tasks.ReceiveCase(Q, procedure(V: Result of (integer, string)) begin
+    const Receive: Tasks.WaitCase := Tasks.ReceiveCase(Q, procedure(V: Result of (integer, string)) begin
       Seen := Results.Unwrap(V);
     end procedure);
     if Tasks.Select([Receive]) <> 0 then
@@ -65,11 +65,11 @@ begin
   if Tasks.Wait(T) <> 7 then
     panic('task value lost');
   end if;
-  var Producer: task := go Produce(Q);
-  var Pending: Tasks.WaitCase := Tasks.ReceiveCase(Q, procedure(R: Result of (integer, string)) begin
+  const Producer: task := go Produce(Q);
+  const Pending: Tasks.WaitCase := Tasks.ReceiveCase(Q, procedure(R: Result of (integer, string)) begin
     Seen := Results.Unwrap(R);
   end procedure);
-  var Fallback: Tasks.WaitCase := Tasks.TimerCase(1000, procedure() begin
+  const Fallback: Tasks.WaitCase := Tasks.TimerCase(1000, procedure() begin
     panic('pending receive timed out');
   end procedure);
   if Tasks.Select([Pending, Fallback]) <> 0 then
@@ -83,7 +83,7 @@ begin
   if Tasks.Wait(Producer) <> 1 then
     panic('producer result');
   end if;
-  var Closed: Tasks.WaitCase := Tasks.ReceiveCase(Q, procedure(R: Result of (integer, string)) begin
+  const Closed: Tasks.WaitCase := Tasks.ReceiveCase(Q, procedure(R: Result of (integer, string)) begin
     case R of
       when Result.Ok(_):
         panic('closed channel delivered');
@@ -97,7 +97,7 @@ begin
   if Tasks.Select([Closed]) <> 0 then
     panic('closed index');
   end if;
-  var Timer: Tasks.WaitCase := Tasks.TimerCase(2, procedure() begin
+  const Timer: Tasks.WaitCase := Tasks.TimerCase(2, procedure() begin
     Seen := 99;
   end procedure);
   if Tasks.Select([Timer]) <> 0 then
@@ -140,8 +140,8 @@ uses Std.Tasks as Tasks;
 function Other(C: Tasks.WaitCase): integer;
 begin return Tasks.Select([C]); end function;
 begin
-  var C: Tasks.WaitCase := Tasks.TimerCase(0, procedure() begin null; end procedure);
-  var T: task := go Other(C);
+  const C: Tasks.WaitCase := Tasks.TimerCase(0, procedure() begin null; end procedure);
+  const T: task := go Other(C);
   discard Tasks.Wait(T);
 end program;"#,
     );

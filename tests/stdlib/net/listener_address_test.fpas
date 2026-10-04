@@ -5,25 +5,25 @@ uses Std.Test as Test;
 
 function ExerciseListener(): Result of (boolean, string);
 begin
-  var First: Net.Listener := try Net.Listen('127.0.0.1', 0);
-  var Second: Net.Listener := try Net.Listen('127.0.0.1', 0);
-  var Address: Net.NetworkAddress := try Net.ListenerLocalAddress(First);
-  var Other: Net.NetworkAddress := try Net.ListenerLocalAddress(Second);
+  const First: Net.Listener := try Net.Listen('127.0.0.1', 0);
+  const Second: Net.Listener := try Net.Listen('127.0.0.1', 0);
+  const Address: Net.NetworkAddress := try Net.ListenerLocalAddress(First);
+  const Other: Net.NetworkAddress := try Net.ListenerLocalAddress(Second);
   Test.AssertEquals('127.0.0.1', Address.Host);
   Test.AssertTrue(Address.Port > 0);
   Test.AssertTrue(Address.Port <= 65535);
   Test.AssertTrue(Address.Port <> Other.Port);
-  var Client: Net.Connection := try Net.Connect(Address.Host, Address.Port, 2000);
-  var Peer: Net.Connection := try Net.Accept(First);
-  var Timed: boolean := try Net.SetTimeout(Peer, 2000);
-  var Sent: integer := try Net.SendBytes(Client, [42]);
-  var Received: array of (integer) := try Net.ReceiveBytes(Peer, 1);
+  const Client: Net.Connection := try Net.Connect(Address.Host, Address.Port, 2000);
+  const Peer: Net.Connection := try Net.Accept(First);
+  const Timed: boolean := try Net.SetTimeout(Peer, 2000);
+  const Sent: integer := try Net.SendBytes(Client, [42]);
+  const Received: array of (integer) := try Net.ReceiveBytes(Peer, 1);
   Test.AssertEquals(1, Sent);
   Test.AssertEquals(42, Received[0]);
-  var ClientClosed: boolean := try Net.Close(Client);
-  var PeerClosed: boolean := try Net.Close(Peer);
-  var FirstClosed: boolean := try Net.CloseListener(First);
-  var SecondClosed: boolean := try Net.CloseListener(Second);
+  const ClientClosed: boolean := try Net.Close(Client);
+  const PeerClosed: boolean := try Net.Close(Peer);
+  const FirstClosed: boolean := try Net.CloseListener(First);
+  const SecondClosed: boolean := try Net.CloseListener(Second);
   case Net.ListenerLocalAddress(First) of
     when Result.Ok(_):
       begin

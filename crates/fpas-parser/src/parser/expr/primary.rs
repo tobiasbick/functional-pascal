@@ -62,18 +62,13 @@ impl Parser {
             Token::Ok | Token::Error | Token::Some | Token::None => {
                 self.reject_unqualified_builtin()
             }
-            Token::Nil => {
-                let span = self.current_span();
-                self.advance();
-                Expr::Nil(span)
-            }
             Token::Go => {
                 let start = self.current_span();
                 self.advance();
                 let inner = self.parse_go_call_expression(start);
                 Expr::Go(Box::new(inner), self.span_from(start))
             }
-            Token::Function | Token::Procedure if self.at_closure_expr_start() => {
+            Token::Pure | Token::Function | Token::Procedure if self.at_closure_expr_start() => {
                 self.parse_closure_expr()
             }
             _ => {

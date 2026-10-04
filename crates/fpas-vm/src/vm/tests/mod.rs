@@ -6,6 +6,8 @@ mod calls;
 mod dispatch_budget;
 mod global_index_path;
 mod intrinsics;
+mod numeric_rules;
+mod references;
 mod register_initialization;
 mod register_stack;
 mod runtime;

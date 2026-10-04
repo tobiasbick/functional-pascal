@@ -17,24 +17,20 @@ impl Worker {
         let left = self.read_operand(operands.b)?;
         let right = self.read_operand(operands.c)?;
         let result = match (left, right) {
-            (Value::Real(left), Value::Real(right))
-                if operation != BinaryOperation::RealDivide || *right != 0.0 =>
-            {
-                Value::Real(match operation {
-                    BinaryOperation::Add => left + right,
-                    BinaryOperation::Subtract => left - right,
-                    BinaryOperation::Multiply => left * right,
-                    BinaryOperation::RealDivide => left / right,
-                    _ => unreachable!("real arithmetic opcode"),
-                })
-            }
+            (Value::Real(left), Value::Real(right)) => Value::Real(match operation {
+                BinaryOperation::Add => left + right,
+                BinaryOperation::Subtract => left - right,
+                BinaryOperation::Multiply => left * right,
+                BinaryOperation::RealDivide => left / right,
+                _ => unreachable!("real arithmetic opcode"),
+            }),
             _ => value_ops::binary(operation, left, right)
                 .map_err(|error| self.runtime_error(error.code, error.message, error.hint))?,
         };
         self.write_operand(operands.a, result)
     }
 
-    /// Compare typed real operands directly while preserving generic NaN diagnostics.
+    /// Compare typed real operands with IEEE unordered NaN behavior.
     #[inline(always)]
     pub(in crate::vm) fn execute_real_comparison(
         &mut self,
@@ -44,7 +40,7 @@ impl Worker {
         let left = self.read_operand(operands.b)?;
         let right = self.read_operand(operands.c)?;
         let result = match (left, right) {
-            (Value::Real(left), Value::Real(right)) if !left.is_nan() && !right.is_nan() => {
+            (Value::Real(left), Value::Real(right)) => {
                 Value::Boolean(compare(operation, *left, *right))
             }
             _ => value_ops::binary(operation, left, right)

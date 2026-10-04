@@ -13,7 +13,7 @@ fn formatting_preserves_scopes_branch_ownership_comments_and_evaluation() {
     let source = r#"program Meaning;
 uses Std.Console as Console; // explicit alias
 uses Std.Bits as Bits;
-mutable var Trace: integer := 0;
+ var Trace: integer := 0;
 function Next(Digit: integer): integer;
 begin Trace := Trace * 10 + Digit; return Digit; end function;
 function Check(Digit: integer): boolean;
@@ -21,26 +21,26 @@ begin return Next(Digit) = 2; end function;
 function Apply(F: function(Value: integer): integer; Value: integer): integer;
 begin return F(Value); end function;
 begin
-  var Label: string := 'outer';
+  const Label: string := 'outer';
   if Check(1) then panic('wrong outer branch');
   else // nested conditional keeps its own closer
     if Check(2) then
-      var Label: string := 'inner'; Console.WriteLn(Label);
+      const Label: string := 'inner'; Console.WriteLn(Label);
     else panic('wrong nested branch'); end if;
   end if;
   begin // explicit block keeps its local binding
-    var Label: string := 'block'; Console.WriteLn(Label);
+    const Label: string := 'block'; Console.WriteLn(Label);
   end;
   case 2 of
     when 1: panic('wrong arm');
-    when 2: var Label: string := 'arm'; Console.WriteLn(Label);
+    when 2: const Label: string := 'arm'; Console.WriteLn(Label);
     else panic('wrong fallback');
   end case;
   Console.WriteLn(Label);
   Console.WriteLn(Apply(function(Value: integer): integer
     begin return Bits.BitOr(Value, Next(4)); end function, Next(3)));
-  var Skipped: boolean := false and Check(5);
-  var Eager: boolean := Check(6) xor Check(7);
+  const Skipped: boolean := false and Check(5);
+  const Eager: boolean := Check(6) xor Check(7);
   Console.WriteLn(Trace);
   Console.WriteLn(not 3 < 2 and 2 + 3 * 4 = 14);
   // old syntax in a comment: end. uses Std.Str; 1 shl 2
@@ -114,11 +114,11 @@ fn formatting_rejects_ambiguous_and_obsolete_syntax_without_rewriting_source() {
     let path = cwd.join("main.fpas");
     for (source, hint) in [
         (
-            "program P; begin var X: boolean := true and false or true; end program;",
+            r#"program P; begin const X: boolean := true and false or true; end program;"#,
             "Mixed logical",
         ),
         (
-            "program P; begin var X: boolean := 1 < Next() < 3; end program;",
+            r#"program P; begin const X: boolean := 1 < Next() < 3; end program;"#,
             "Chained comparison",
         ),
         (
@@ -131,7 +131,7 @@ fn formatting_rejects_ambiguous_and_obsolete_syntax_without_rewriting_source() {
         ),
         ("program P; begin null; end.", "end program"),
         (
-            "program P; begin var X: integer := 1 shl 2; end program;",
+            r#"program P; begin const X: integer := 1 shl 2; end program;"#,
             "Std.Bits",
         ),
         (
@@ -160,7 +160,7 @@ fn semantic_check_rejects_unresolved_ownership_and_alias_collisions() {
     for (body, hint) in [
         ("var S: string := Trim(' a ');", "Text."),
         ("var S: string := Std.Str.Trim(' a ');", "Text.Trim"),
-        ("begin var TEXT: integer := 1; end;", "import alias"),
+        (r#"begin const TEXT: integer := 1; end;"#, "import alias"),
         (
             "if true then var Local: integer := 1; else Local := 2; end if;",
             "Local",

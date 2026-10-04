@@ -66,6 +66,8 @@ impl Checker {
                     ),
                     span,
                 );
+            } else {
+                self.record_default_use(record_ty, field_name, span);
             }
         }
     }

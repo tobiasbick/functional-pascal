@@ -3,6 +3,12 @@ program TuiCheckBoxLayoutTest;
 uses Std.Str as Str;
 uses Std.Test as Test;
 uses Std.Tui as Tui;
+uses Std.Tui.Elements as Elements;
+uses Std.Tui.Geometry as Geometry;
+uses Std.Tui.Ids as Ids;
+uses Std.Tui.Layout as Layout;
+uses Std.Tui.Rendering as Rendering;
+uses Std.Tui.Runtime as Runtime;
 
 type CheckModel = record
   Checked: boolean;
@@ -10,34 +16,34 @@ end record;
 
 function ViewCheck(State: CheckModel): Tui.TuiElement;
 begin
-  return Tui.TuiElementBuilders.MakeDesktop(Option.Some(Tui.TuiControlId.Create(1)), [
-                                                                                       Tui.TuiElementBuilders.MakePanel('Host', [
-                                                                                                                                  Tui.TuiElementBuilders.MakeCheckBox(Tui.TuiControlId.Create(1), 'Flag', State.Checked, Tui.TuiAction.Create(9))
-                                                                                                                                ])
-                                                                                     ]);
+  return Elements.TuiElementMakeDesktop(Option.Some(Ids.TuiControlIdCreate(1)), [
+                                                                                  Elements.TuiElementMakePanel('Host', [
+                                                                                                                         Elements.TuiElementMakeCheckBox(Ids.TuiControlIdCreate(1), 'Flag', State.Checked, Ids.TuiActionCreate(9))
+                                                                                                                       ])
+                                                                                ]);
 end function;
 
 function UpdateCheck(State: CheckModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): CheckModel;
 begin
-  Cmd.Set(Tui.TuiCmd.NoCommand);
+  Runtime.TuiCmdOutputSet(Cmd, Tui.TuiCmd.NoCommand);
   return State;
 end function;
 
 begin
-  var Unchecked: Tui.TuiMeasureResult := Tui.TuiMeasure(Tui.TuiElementBuilders.MakeCheckBox(Tui.TuiControlId.Create(1), 'Flag', false, Tui.TuiAction.Create(1)), Tui.TuiMeasureSpec.Unbounded());
+  const Unchecked: Tui.TuiMeasureResult := Tui.TuiMeasure(Elements.TuiElementMakeCheckBox(Ids.TuiControlIdCreate(1), 'Flag', false, Ids.TuiActionCreate(1)), Layout.TuiMeasureSpecUnbounded());
   Test.AssertEquals(8, Unchecked.Preferred.Width);
   Test.AssertEquals(1, Unchecked.Preferred.Height);
   Test.AssertEquals(8, Unchecked.Minimum.Width);
-  var CheckedSize: Tui.TuiMeasureResult := Tui.TuiMeasure(Tui.TuiElementBuilders.MakeCheckBox(Tui.TuiControlId.Create(1), 'Flag', true, Tui.TuiAction.Create(1)), Tui.TuiMeasureSpec.Unbounded());
+  const CheckedSize: Tui.TuiMeasureResult := Tui.TuiMeasure(Elements.TuiElementMakeCheckBox(Ids.TuiControlIdCreate(1), 'Flag', true, Ids.TuiActionCreate(1)), Layout.TuiMeasureSpecUnbounded());
   Test.AssertEquals(8, CheckedSize.Preferred.Width);
-  mutable var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(24, 6));
-  mutable var Model: CheckModel := CheckModel(Checked := false);
-  Model := App.RunIterations(Model, UpdateCheck, ViewCheck, 0, 0);
-  Test.AssertTrue(Str.Contains(App.SurfaceSnapshot().LineAt(1), 'Flag'));
-  App.InjectResizeForTest(Tui.TuiSize.Create(12, 4));
-  Model := App.RunIterations(Model, UpdateCheck, ViewCheck, 1, 0);
-  Test.AssertEquals(12, App.SurfaceSnapshot().Width);
-  Test.AssertEquals(4, App.SurfaceSnapshot().Height);
-  Test.AssertTrue(Str.Contains(App.SurfaceSnapshot().LineAt(1), 'Fla'));
-  App.Close();
+  var App: Tui.TuiApplication := Runtime.TuiApplicationOpenForTest(Geometry.TuiSizeCreate(24, 6));
+  var Model: CheckModel := CheckModel(Checked := false);
+  Model := Runtime.TuiApplicationRunIterations(App, Model, UpdateCheck, ViewCheck, 0, 0);
+  Test.AssertTrue(Str.Contains(Rendering.TuiSurfaceSnapshotLineAt(Runtime.TuiApplicationSurfaceSnapshot(App), 1), 'Flag'));
+  Runtime.TuiApplicationInjectResizeForTest(App, Geometry.TuiSizeCreate(12, 4));
+  Model := Runtime.TuiApplicationRunIterations(App, Model, UpdateCheck, ViewCheck, 1, 0);
+  Test.AssertEquals(12, Runtime.TuiApplicationSurfaceSnapshot(App).Width);
+  Test.AssertEquals(4, Runtime.TuiApplicationSurfaceSnapshot(App).Height);
+  Test.AssertTrue(Str.Contains(Rendering.TuiSurfaceSnapshotLineAt(Runtime.TuiApplicationSurfaceSnapshot(App), 1), 'Fla'));
+  Runtime.TuiApplicationClose(App);
 end program;

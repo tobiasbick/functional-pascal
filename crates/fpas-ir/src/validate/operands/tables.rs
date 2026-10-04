@@ -57,9 +57,13 @@ pub(crate) fn validate_program_tables(program: &Program) -> Result<(), Validatio
 
     for definition in &program.types {
         validate_ir_type(program, &definition.kind)?;
+        if !matches!(definition.kind, IrType::Reference(_) | IrType::Function { .. }) {
+            reject_reference_storage(program, definition.id, "stored value type")?;
+        }
     }
     for global in &program.globals {
         require_type(program, global.ty)?;
+        reject_reference_storage(program, global.ty, "global")?;
     }
     for layout in &program.record_layouts {
         validate_unique(
@@ -174,9 +178,13 @@ fn validate_function_declarations(
     }
     for local in &function.locals {
         require_type_at(program, function.id, None, None, local.ty)?;
+        if local.capture.is_some() || !matches!(program.ty(local.ty).map(|ty| &ty.kind), Some(IrType::Reference(_))) {
+            reject_reference_storage(program, local.ty, "local storage")?;
+        }
     }
     for capture in &function.captures {
         require_type_at(program, function.id, None, None, capture.ty)?;
+        reject_reference_storage(program, capture.ty, "closure capture")?;
     }
     for block in &function.blocks {
         for parameter in &block.parameters {

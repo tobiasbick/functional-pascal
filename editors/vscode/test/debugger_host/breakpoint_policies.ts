@@ -23,7 +23,7 @@ export async function verifyBreakpointPolicies(
     " uses Std.Console as Console;",
     "",
     "begin",
-    "  mutable var Counter: integer := 0;",
+    "   var Counter: integer := 0;",
     "  while Counter < 4 do",
     "  begin",
     "    Counter := Counter + 1;",

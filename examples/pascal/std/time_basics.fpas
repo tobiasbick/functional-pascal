@@ -7,7 +7,7 @@ uses Std.Conv as Conv;
 uses Std.Time as Time;
 
 begin
-  var Start: integer := Time.MonotonicMillis();
+  const Start: integer := Time.MonotonicMillis();
   Time.Sleep(25);
   Console.WriteLn('elapsed ms: ', Conv.IntToStr(Time.ElapsedMillis(Start)));
   Console.WriteLn('timestamp ms: ', Conv.IntToStr(Time.TimestampMillis()));

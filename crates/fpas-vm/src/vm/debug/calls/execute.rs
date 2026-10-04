@@ -86,7 +86,6 @@ impl CallSandbox {
             DebugCallTarget::Named(name) => self.invoke_named(&name, arguments),
             DebugCallTarget::Value(Value::Function(function)) => self.invoke_function(
                 function.function,
-                function.bound_receiver.as_ref(),
                 &function.captures,
                 arguments,
                 &function.name,
@@ -99,12 +98,6 @@ impl CallSandbox {
                 ),
                 "Call a named function, procedure, method, or visible function value.",
             )),
-            DebugCallTarget::Method { receiver, name } => {
-                self.invoke_member(receiver, &name, arguments, false)
-            }
-            DebugCallTarget::Property { receiver, name } => {
-                self.invoke_member(receiver, &name, arguments, true)
-            }
             DebugCallTarget::Record { fields } => self.construct_record(&fields, arguments),
         }
     }
@@ -148,9 +141,7 @@ impl CallSandbox {
         arguments: Vec<Value>,
     ) -> Result<Value, DebugSessionError> {
         match resolve_named(&self.executable, &self.layouts, name)? {
-            NamedTarget::Function(function) => {
-                self.invoke_function(function, None, &[], arguments, name)
-            }
+            NamedTarget::Function(function) => self.invoke_function(function, &[], arguments, name),
             NamedTarget::EnumConstructor(layout) => enum_constructor::construct(
                 &self.executable,
                 layout,
@@ -185,63 +176,11 @@ impl CallSandbox {
             .map_err(|diagnostic| runtime_error(*diagnostic))
     }
 
-    fn invoke_member(
-        &mut self,
-        receiver: Value,
-        member: &str,
-        mut arguments: Vec<Value>,
-        property: bool,
-    ) -> Result<Value, DebugSessionError> {
-        let Value::Record(record) = &receiver else {
-            return Err(error(
-                DebugErrorKind::EvaluationType,
-                format!(
-                    "debug member call requires record receiver, got {}",
-                    receiver.type_name()
-                ),
-                "Call instance members on record values.",
-            ));
-        };
-        let name = if property {
-            let getter = self
-                .executable
-                .executable()
-                .records
-                .get(usize::from(record.body().layout.record.get()))
-                .and_then(|layout| {
-                    layout.properties.iter().find(|property| {
-                        self.executable
-                            .executable()
-                            .strings
-                            .get(property.name)
-                            .is_some_and(|name| name.eq_ignore_ascii_case(member))
-                    })
-                })
-                .and_then(|property| self.executable.executable().strings.get(property.getter))
-                .ok_or_else(|| {
-                    error(
-                        DebugErrorKind::UnknownCallable,
-                        format!(
-                            "record `{}` has no readable property `{member}`",
-                            record.body().layout.type_name
-                        ),
-                        "Use a stored field or a readable property from the executable metadata.",
-                    )
-                })?;
-            getter.to_string()
-        } else {
-            format!("{}.{}", record.body().layout.type_name, member)
-        };
-        arguments.insert(0, receiver);
-        self.invoke_named(&name, arguments)
-    }
-
     fn invoke_function(
         &mut self,
         function: FunctionId,
-        bound_receiver: Option<&Value>,
         captures: &[Value],
-        mut arguments: Vec<Value>,
+        arguments: Vec<Value>,
         display_name: &str,
     ) -> Result<Value, DebugSessionError> {
         let info = self
@@ -256,15 +195,7 @@ impl CallSandbox {
                     "Rebuild the executable with the current compiler.",
                 )
             })?;
-        let visible_arity = usize::from(info.arity)
-            .checked_sub(usize::from(bound_receiver.is_some()))
-            .ok_or_else(|| {
-                error(
-                    DebugErrorKind::CallArity,
-                    format!("debug callable `{display_name}` has no receiver parameter"),
-                    "Rebuild the executable with current bound-method metadata.",
-                )
-            })?;
+        let visible_arity = usize::from(info.arity);
         if visible_arity != arguments.len() {
             return Err(error(
                 DebugErrorKind::CallArity,
@@ -293,9 +224,6 @@ impl CallSandbox {
             .copied()
             .unwrap_or(DebugEffectSet::UNKNOWN);
         self.require_safe(display_name, effects)?;
-        if let Some(receiver) = bound_receiver {
-            arguments.insert(0, receiver.clone());
-        }
         let arguments = self.detach_values(&arguments)?;
         let captures = self.detach_values(captures)?;
         let mut worker = Worker::for_function_with_captures(

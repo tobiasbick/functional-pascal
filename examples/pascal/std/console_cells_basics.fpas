@@ -6,15 +6,15 @@ uses Std.Console as Console;
 uses Std.Options as Options;
 
 begin
-  var Bounds: Console.Rect := Console.Rect(x := 1, y := 1, width := 6, height := 1);
-  var Underlay: Console.SavedRegion := Console.SaveRegion(Bounds);
+  const Bounds: Console.Rect := Console.Rect(x := 1, y := 1, width := 6, height := 1);
+  const Underlay: Console.SavedRegion := Console.SaveRegion(Bounds);
   Console.BeginFrame();
   Console.FillRect(Bounds, Console.Cell(glyph := ' ', foreground := Console.CrtColor(Console.White), background := Console.Ansi256Color(24)));
-  var First: Console.Cell := Console.Cell(glyph := 'O', foreground := Console.RgbColor(255, 220, 120), background := Console.Ansi256Color(24));
-  var Second: Console.Cell := Console.Cell(glyph := 'K', foreground := Console.RgbColor(156, 204, 255), background := Console.Ansi256Color(24));
-  var LabelCells: array of (Console.Cell) := [First, Second];
+  const First: Console.Cell := Console.Cell(glyph := 'O', foreground := Console.RgbColor(255, 220, 120), background := Console.Ansi256Color(24));
+  const Second: Console.Cell := Console.Cell(glyph := 'K', foreground := Console.RgbColor(156, 204, 255), background := Console.Ansi256Color(24));
+  const LabelCells: array of (Console.Cell) := [First, Second];
   Console.WriteCells(2, 1, LabelCells);
-  var ReadBack: Option of (Console.Cell) := Console.GetCell(2, 1);
+  const ReadBack: Option of (Console.Cell) := Console.GetCell(2, 1);
   Console.Present();
   Console.BeginFrame();
   Console.RestoreRegion(Underlay);

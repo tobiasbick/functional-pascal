@@ -13,7 +13,7 @@ These share one **line-oriented** buffer: typed text and test “stdin” lines 
 ```pascal
 uses Std.Console as Console;
 
-var Line: string := Console.ReadLn();
+const Line: string := Console.ReadLn();
 Console.WriteLn(Line);
 ```
 
@@ -28,7 +28,7 @@ Console.WriteLn(Line);
 ```pascal
 uses Std.Console as Console;
 
-var C: string := Console.ReadText();
+const C: string := Console.ReadText();
 Console.WriteLn(C);
 ```
 

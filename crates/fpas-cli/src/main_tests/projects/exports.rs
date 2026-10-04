@@ -179,7 +179,7 @@ begin
   return Result.Error('session failed');
 end function;
 begin
-  var Job: task := go Session();
+  const Job: task := go Session();
   Console.WriteLn(Outcome.Describe(Job));
 end program;
 "#,

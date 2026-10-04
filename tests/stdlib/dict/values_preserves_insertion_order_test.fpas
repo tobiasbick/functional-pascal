@@ -4,8 +4,8 @@ uses Std.Console as Console;
 uses Std.Dictionaries as Dictionaries;
 
 begin
-  var D: dict of (string, integer) := ['A': 10, 'B': 20];
-  var V: array of (integer) := Dictionaries.Values(D);
+  const D: dict of (string, integer) := ['A': 10, 'B': 20];
+  const V: array of (integer) := Dictionaries.Values(D);
   Console.WriteLn(V[0]);
   Console.WriteLn(V[1]);
 end program;

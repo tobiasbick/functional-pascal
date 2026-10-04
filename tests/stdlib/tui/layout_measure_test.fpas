@@ -2,62 +2,65 @@ program TuiLayoutMeasureTest;
 
 uses Std.Test as Test;
 uses Std.Tui as Tui;
+uses Std.Tui.Elements as Elements;
+uses Std.Tui.Geometry as Geometry;
+uses Std.Tui.Ids as Ids;
+uses Std.Tui.Layout as Layout;
 
 begin
-  var LabelSize: Tui.TuiMeasureResult := Tui.TuiMeasure(Tui.TuiElementBuilders.MakeLabel('Hi'), Tui.TuiMeasureSpec.Unbounded());
+  const LabelSize: Tui.TuiMeasureResult := Tui.TuiMeasure(Elements.TuiElementMakeLabel('Hi'), Layout.TuiMeasureSpecUnbounded());
   Test.AssertEquals(2, LabelSize.Preferred.Width);
   Test.AssertEquals(1, LabelSize.Preferred.Height);
-  var ButtonSize: Tui.TuiMeasureResult := Tui.TuiMeasure(Tui.TuiElementBuilders.MakeButton(Tui.TuiControlId.Create(1), 'Ok', Tui.TuiAction.Create(1)), Tui.TuiMeasureSpec.Unbounded());
+  const ButtonSize: Tui.TuiMeasureResult := Tui.TuiMeasure(Elements.TuiElementMakeButton(Ids.TuiControlIdCreate(1), 'Ok', Ids.TuiActionCreate(1)), Layout.TuiMeasureSpecUnbounded());
   Test.AssertEquals(6, ButtonSize.Preferred.Width);
   Test.AssertEquals(1, ButtonSize.Preferred.Height);
-  var EmptyIgnored: Tui.TuiMeasureResult := Tui.TuiMeasure(Tui.TuiElementBuilders.MakeRow([
-                                                                                            Tui.TuiElementBuilders.MakeEmpty(),
-                                                                                            Tui.TuiElementBuilders.MakeLabel('A'),
-                                                                                            Tui.TuiElementBuilders.MakeEmpty(),
-                                                                                            Tui.TuiElementBuilders.MakeLabel('B')
-                                                                                          ]), Tui.TuiMeasureSpec.Unbounded());
+  const EmptyIgnored: Tui.TuiMeasureResult := Tui.TuiMeasure(Elements.TuiElementMakeRow([
+                                                                                          Elements.TuiElementMakeEmpty(),
+                                                                                          Elements.TuiElementMakeLabel('A'),
+                                                                                          Elements.TuiElementMakeEmpty(),
+                                                                                          Elements.TuiElementMakeLabel('B')
+                                                                                        ]), Layout.TuiMeasureSpecUnbounded());
   Test.AssertEquals(2, EmptyIgnored.Preferred.Width);
   Test.AssertEquals(1, EmptyIgnored.Preferred.Height);
-  var Spaced: Tui.TuiMeasureResult := Tui.TuiMeasure(Tui.TuiElementBuilders.MakeRowSpaced([
-                                                                                            Tui.TuiElementBuilders.MakeLabel('A'),
-                                                                                            Tui.TuiElementBuilders.MakeLabel('B')
-                                                                                          ], 3), Tui.TuiMeasureSpec.Unbounded());
+  const Spaced: Tui.TuiMeasureResult := Tui.TuiMeasure(Elements.TuiElementMakeRowSpaced([
+                                                                                          Elements.TuiElementMakeLabel('A'),
+                                                                                          Elements.TuiElementMakeLabel('B')
+                                                                                        ], 3), Layout.TuiMeasureSpecUnbounded());
   Test.AssertEquals(5, Spaced.Preferred.Width);
-  var Nested: Tui.TuiMeasureResult := Tui.TuiMeasure(Tui.TuiElementBuilders.MakeColumnSpaced([
-                                                                                               Tui.TuiElementBuilders.MakeLabel('One'),
-                                                                                               Tui.TuiElementBuilders.MakeRowSpaced([
-                                                                                                                                      Tui.TuiElementBuilders.MakeLabel('AB'),
-                                                                                                                                      Tui.TuiElementBuilders.MakeLabel('CD')
-                                                                                                                                    ], 1)
-                                                                                             ], 2), Tui.TuiMeasureSpec.Unbounded());
+  const Nested: Tui.TuiMeasureResult := Tui.TuiMeasure(Elements.TuiElementMakeColumnSpaced([
+                                                                                             Elements.TuiElementMakeLabel('One'),
+                                                                                             Elements.TuiElementMakeRowSpaced([
+                                                                                                                                Elements.TuiElementMakeLabel('AB'),
+                                                                                                                                Elements.TuiElementMakeLabel('CD')
+                                                                                                                              ], 1)
+                                                                                           ], 2), Layout.TuiMeasureSpecUnbounded());
   Test.AssertEquals(5, Nested.Preferred.Width);
   Test.AssertEquals(4, Nested.Preferred.Height);
-  var Margins: Tui.TuiLayoutSettings := Tui.TuiLayoutSettings.Create(Tui.TuiMargins.Uniform(2), Tui.TuiSizePolicy.Preferred(), Tui.TuiAlignment.Fill(), 0);
-  var Wrapped: Tui.TuiMeasureResult := Tui.TuiMeasure(Tui.TuiElementBuilders.MakeLayout(Margins, Tui.TuiElementBuilders.MakeLabel('X')), Tui.TuiMeasureSpec.Unbounded());
+  const Margins: Tui.TuiLayoutSettings := Layout.TuiLayoutSettingsCreate(Layout.TuiMarginsUniform(2), Layout.TuiSizePolicyPreferred(), Layout.TuiAlignmentFill(), 0);
+  const Wrapped: Tui.TuiMeasureResult := Tui.TuiMeasure(Elements.TuiElementMakeLayout(Margins, Elements.TuiElementMakeLabel('X')), Layout.TuiMeasureSpecUnbounded());
   Test.AssertEquals(5, Wrapped.Preferred.Width);
   Test.AssertEquals(5, Wrapped.Preferred.Height);
   Test.AssertEquals(5, Wrapped.Minimum.Width);
-  var FixedWidth: Tui.TuiMeasureResult := Tui.TuiMeasure(Tui.TuiElementBuilders.MakeLayout(Tui.TuiLayoutSettings.Default()
-                                                                                             .WithFixedWidth(7), Tui.TuiElementBuilders.MakeLabel('A very long label')), Tui.TuiMeasureSpec.AtMost(Tui.TuiSize.Create(4, 2)));
+  const FixedWidth: Tui.TuiMeasureResult := Tui.TuiMeasure(Elements.TuiElementMakeLayout(Layout.TuiLayoutSettingsWithFixedWidth(Layout.TuiLayoutSettingsDefault(), 7), Elements.TuiElementMakeLabel('A very long label')), Layout.TuiMeasureSpecAtMost(Geometry.TuiSizeCreate(4, 2)));
   Test.AssertEquals(7, FixedWidth.Minimum.Width);
   Test.AssertEquals(7, FixedWidth.Preferred.Width);
   Test.AssertEquals(7, FixedWidth.Maximum.Width);
-  var Expanding: Tui.TuiMeasureResult := Tui.TuiMeasure(Tui.TuiElementBuilders.MakeLayout(Tui.TuiLayoutSettings.Create(Tui.TuiMargins.Uniform(0), Tui.TuiSizePolicy.Expanding(), Tui.TuiAlignment.Fill(), 1), Tui.TuiElementBuilders.MakeLabel('X')), Tui.TuiMeasureSpec.AtMost(Tui.TuiSize.Create(10, 4)));
+  const Expanding: Tui.TuiMeasureResult := Tui.TuiMeasure(Elements.TuiElementMakeLayout(Layout.TuiLayoutSettingsCreate(Layout.TuiMarginsUniform(0), Layout.TuiSizePolicyExpanding(), Layout.TuiAlignmentFill(), 1), Elements.TuiElementMakeLabel('X')), Layout.TuiMeasureSpecAtMost(Geometry.TuiSizeCreate(10, 4)));
   Test.AssertEquals(10, Expanding.Maximum.Width);
   Test.AssertEquals(4, Expanding.Maximum.Height);
-  var WindowSize: Tui.TuiMeasureResult := Tui.TuiMeasure(Tui.TuiElementBuilders.MakePanel('Title', [
-                                                                                                     Tui.TuiElementBuilders.MakeLabel('Body')
-                                                                                                   ]), Tui.TuiMeasureSpec.Unbounded());
+  const WindowSize: Tui.TuiMeasureResult := Tui.TuiMeasure(Elements.TuiElementMakePanel('Title', [
+                                                                                                   Elements.TuiElementMakeLabel('Body')
+                                                                                                 ]), Layout.TuiMeasureSpecUnbounded());
   Test.AssertEquals(11, WindowSize.Preferred.Width);
   Test.AssertEquals(3, WindowSize.Preferred.Height);
-  var FixedSpacer: Tui.TuiMeasureResult := Tui.TuiMeasure(Tui.TuiElementBuilders.MakeSpacer(Tui.TuiSpacer.Fixed(4)), Tui.TuiMeasureSpec.Unbounded());
+  const FixedSpacer: Tui.TuiMeasureResult := Tui.TuiMeasure(Elements.TuiElementMakeSpacer(Layout.TuiSpacerFixed(4)), Layout.TuiMeasureSpecUnbounded());
   Test.AssertEquals(4, FixedSpacer.Preferred.Width);
   Test.AssertEquals(0, FixedSpacer.Preferred.Height);
-  var Constrained: Tui.TuiMeasureResult := Tui.TuiMeasure(Tui.TuiElementBuilders.MakeLabel('ABCDEFGH'), Tui.TuiMeasureSpec.AtMost(Tui.TuiSize.Create(3, 1)));
+  const Constrained: Tui.TuiMeasureResult := Tui.TuiMeasure(Elements.TuiElementMakeLabel('ABCDEFGH'), Layout.TuiMeasureSpecAtMost(Geometry.TuiSizeCreate(3, 1)));
   Test.AssertEquals(8, Constrained.Minimum.Width);
   Test.AssertEquals(8, Constrained.Preferred.Width);
   Test.AssertEquals(1, Constrained.Minimum.Height);
-  var Undersized: Tui.TuiLayoutFit := Tui.TuiLayoutFit.Create(WindowSize.Minimum, Tui.TuiSize.Create(4, 2));
-  Test.AssertFalse(Undersized.Fits());
+  const Undersized: Tui.TuiLayoutFit := Layout.TuiLayoutFitCreate(WindowSize.Minimum, Geometry.TuiSizeCreate(4, 2));
+  Test.AssertFalse(Layout.TuiLayoutFitFits(Undersized));
   Test.AssertTrue(Undersized.Overflow.Width > 0);
 end program;

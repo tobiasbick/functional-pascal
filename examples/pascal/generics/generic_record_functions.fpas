@@ -1,0 +1,36 @@
+// Spec: docs/pascal/language/types/generics.md (from repository root).
+
+program GenericRecordFunctions;
+
+uses Std.Console as Console;
+uses Std.Conv as Conv;
+
+type Box = record
+  Value: integer;
+end record;
+
+function BoxMap of (R)(Receiver: Box; F: function(X: integer): R): R;
+begin
+  return F(Receiver.Value);
+end function;
+
+type Accumulator = record
+end record;
+
+function AccumulatorEchoNumeric of (T: Numeric)(Receiver: Accumulator; Extra: T): T;
+begin
+  return Extra;
+end function;
+
+function ToText(X: integer): string;
+begin
+  return 'value=' + Conv.IntToStr(X);
+end function;
+
+begin
+  const B: Box := Box(Value := 42);
+  Console.WriteLn(BoxMap(B, ToText));
+  const A: Accumulator := Accumulator();
+  Console.WriteLn('numeric int: ', Conv.IntToStr(AccumulatorEchoNumeric(A, 21)));
+  Console.WriteLn('numeric real ok: ', AccumulatorEchoNumeric(A, 1.5) > 1.0);
+end program;

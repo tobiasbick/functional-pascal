@@ -15,15 +15,15 @@ end function;
 public type TuiControlId = record
   // Validated scalar value represented by the record.
   public Value: integer;
-
-  // Creates a validated positive identity.
-  //
-  // Parameters:
-  // - `Value`: Value used to create or update the result.
-  public static function Create(Value: integer): TuiControlId;
-  begin
-    return TuiControlId(Value := TuiControlIdRequirePositive(Value));
-  end function;
 end record;
+
+// Creates a validated positive identity.
+//
+// Parameters:
+// - `Value`: Value used to create or update the result.
+public function TuiControlIdCreate(Value: integer): TuiControlId;
+begin
+  return TuiControlId(Value := TuiControlIdRequirePositive(Value));
+end function;
 
 end unit;

@@ -17,7 +17,7 @@ end enum;
 Using:
 
 ```pascal
-var C: Color := Color.Red;
+const C: Color := Color.Red;
 ```
 
 Every variant reference names its declaring type, such as `Color.Red` or
@@ -70,9 +70,9 @@ end enum;
 Variants with fields are constructed by calling the variant with positional arguments:
 
 ```pascal
-var S: Shape := Shape.Circle(5.0);
-var R: Shape := Shape.Rectangle(10.0, 20.0);
-var P: Shape := Shape.Point;
+const S: Shape := Shape.Circle(5.0);
+const R: Shape := Shape.Rectangle(10.0, 20.0);
+const P: Shape := Shape.Point;
 
 ```
 
@@ -81,8 +81,8 @@ Payloads and the expected type determine their arguments:
 
 ```pascal
 type Lookup of (T) = enum Found(Value: T); Missing; end enum;
-var Present: Lookup of (integer) := Lookup.Found(42);
-var Absent: Lookup of (integer) := Lookup.Missing;
+const Present: Lookup of (integer) := Lookup.Found(42);
+const Absent: Lookup of (integer) := Lookup.Missing;
 ```
 
 Every argument must be determined. A payloadless variant is a value;

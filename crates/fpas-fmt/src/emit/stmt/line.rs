@@ -1,6 +1,6 @@
 //! Statement line layout helpers and simple `var` statements.
 
-use fpas_parser::{Stmt, VarDef};
+use fpas_parser::{BindingDef, Stmt};
 
 use crate::comments::{CommentMap, emit_trailing_comments, stmt_start};
 
@@ -11,15 +11,17 @@ use super::super::types::emit_type_expr;
 pub(super) fn emit_var_stmt(
     emitter: &mut Emitter,
     keyword: &str,
-    var: &VarDef,
+    var: &BindingDef,
     comments: &CommentMap,
 ) {
     write_indented(emitter);
     emitter.write(keyword);
     emitter.write(" ");
     emitter.write(&var.name);
-    emitter.write(": ");
-    emit_type_expr(emitter, &var.type_expr);
+    if let Some(annotation) = &var.type_expr {
+        emitter.write(": ");
+        emit_type_expr(emitter, annotation);
+    }
     emitter.write(" := ");
     emit_expr(emitter, &var.value, 0, comments);
     finish_stmt_line_at(emitter, comments, var.span.offset);

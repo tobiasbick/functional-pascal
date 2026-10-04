@@ -20,6 +20,8 @@ pub(in crate::vm) struct TaskState {
     /// Parallel initialized/uninitialized bits for `registers`.
     pub register_initialized: Vec<bool>,
     pub frames: Vec<CallFrame>,
+    /// Invocation authority retained across suspension on another pool worker.
+    pub reference_scopes: crate::vm::calls::references::ReferenceScopes,
     pub retain_result: bool,
     pub instruction_count: u64,
     pub suppressed_initializers: Vec<SourceInitializerTarget>,
@@ -28,7 +30,7 @@ pub(in crate::vm) struct TaskState {
 }
 
 impl TaskState {
-    /// Build a fresh task with receiver, explicit arguments, then immutable captures.
+    /// Build a fresh task with explicit arguments followed by immutable captures.
     pub(in crate::vm::tasks) fn entry(
         id: u64,
         function: &FunctionValue,
@@ -38,11 +40,8 @@ impl TaskState {
     ) -> Self {
         let (registers, register_initialized) = crate::vm::worker::Worker::register_window(
             usize::from(info.register_count),
-            function
-                .bound_receiver
-                .iter()
-                .cloned()
-                .chain(arguments)
+            arguments
+                .into_iter()
                 .chain(function.captures.iter().cloned()),
         );
         Self {
@@ -55,6 +54,7 @@ impl TaskState {
             registers,
             register_initialized,
             frames: Vec::new(),
+            reference_scopes: crate::vm::calls::references::ReferenceScopes::default(),
             retain_result,
             instruction_count: 0,
             suppressed_initializers: Vec::new(),

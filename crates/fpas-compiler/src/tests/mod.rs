@@ -17,6 +17,7 @@ fn assert_succeeds(source: &str) -> fpas_vm::Execution {
 }
 
 mod aggregates;
+mod bindings;
 mod call_frames;
 mod calls;
 mod closures;
@@ -26,5 +27,7 @@ mod debug;
 mod diagnostics;
 mod functions;
 mod intrinsics;
+mod numeric_rules;
 mod optimization;
+mod references;
 mod structure;

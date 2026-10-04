@@ -4,6 +4,6 @@ uses Std.Console as Console;
 uses Std.Str as Str;
 
 begin
-  var Empty: array of (string) := [];
+  const Empty: array of (string) := [];
   Console.WriteLn(Str.Join(Empty, ','));
 end program;

@@ -9,6 +9,7 @@ uses Std.Args as Args;
 uses Std.Console as Console;
 uses Std.Random as Random;
 uses Std.Tui as Tui;
+uses Std.Tui.Runtime as Runtime;
 
 function NotesDirectory(): string;
 begin
@@ -23,14 +24,14 @@ end function;
 
 begin
   Random.Randomize();
-  var Directory: string := NotesDirectory();
+  const Directory: string := NotesDirectory();
   case Repository.NotesLoadDirectory(Directory) of
     when Result.Ok(const Loaded):
       begin
-        mutable var Initial: Model.NotesModel := Model.NotesModelCreate(Directory, Loaded);
+        var Initial: Model.NotesModel := Model.NotesModelCreate(Directory, Loaded);
         Initial.Width := Console.ScreenWidth();
         Initial.Height := Console.ScreenHeight();
-        discard Tui.TuiApplication.RunWithPalette(Initial, Update.NotesUpdate, View.NotesView, Theme.NotesPalette());
+        discard Runtime.TuiApplicationRunWithPalette(Initial, Update.NotesUpdate, View.NotesView, Theme.NotesPalette());
       end;
     when Result.Error(const Message):
       begin

@@ -35,6 +35,8 @@ pub(in crate::vm::debug) enum MutationRoot {
     FrameRegister(usize),
     Global(usize),
     ClosureCell(Arc<Mutex<Value>>),
+    /// Selected storage authorized by the current synchronous var parameter.
+    Reference(Arc<fpas_bytecode::SelectedReference>),
 }
 
 #[derive(Clone, Debug, PartialEq)]

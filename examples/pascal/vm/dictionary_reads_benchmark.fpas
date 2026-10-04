@@ -15,20 +15,20 @@ begin
       panic('expected ITERATIONS SIZE');
     end;
   end if;
-  var Iterations: integer := Conv.StrToInt(Args.ParamStr(0));
-  var Size: integer := Conv.StrToInt(Args.ParamStr(1));
+  const Iterations: integer := Conv.StrToInt(Args.ParamStr(0));
+  const Size: integer := Conv.StrToInt(Args.ParamStr(1));
   if (Iterations < 1) or (Size < 1) then
     begin
       panic('arguments must be positive');
     end;
   end if;
-  mutable var Values: dict of (integer, integer) := [0: 0];
+  var Values: dict of (integer, integer) := [0: 0];
   for Index: integer := 0 to Size - 1 do
     begin
       Values[Index] := Index;
     end;
   end for;
-  var Started: integer := Time.MonotonicMillis();
+  const Started: integer := Time.MonotonicMillis();
   for Iteration: integer := 1 to Iterations do
     begin
       if Dictionaries.Length(Values) <> Size then

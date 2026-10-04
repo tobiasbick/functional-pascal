@@ -21,10 +21,10 @@ end record;
 // - `Headers`: Parsed message fields used to determine framing.
 public function Select(Headers: array of (Types.Header)): Result of (Framing, string);
 begin
-  mutable var TransferEncoding: string := '';
-  mutable var TransferEncodingCount: integer := 0;
-  mutable var ContentLength: integer := 0;
-  mutable var ContentLengthCount: integer := 0;
+  var TransferEncoding: string := '';
+  var TransferEncodingCount: integer := 0;
+  var ContentLength: integer := 0;
+  var ContentLengthCount: integer := 0;
   for Index: integer := 0 to Arrays.Length(Headers) - 1 do
     begin
       if Headers2.IsName(Headers[Index].Name, 'Transfer-Encoding') then

@@ -16,6 +16,7 @@ impl Checker {
         let parameters = if let Ty::Named(name) = &ty {
             self.type_collection
                 .pending_type_params(name)
+                .map(|parameters| self.resolve_type_params(parameters))
                 .unwrap_or_default()
         } else {
             ty.type_parameters().to_vec()
@@ -51,7 +52,11 @@ impl Checker {
         if let Ty::Named(name) = ty {
             Ty::Applied(name, arguments)
         } else {
-            ty.instantiate(&arguments).unwrap_or(Ty::Error)
+            let instantiated = ty.instantiate(&arguments).unwrap_or(Ty::Error);
+            if !self.type_collection.collecting {
+                self.check_nested_pure_signatures(&instantiated, span);
+            }
+            instantiated
         }
     }
 }

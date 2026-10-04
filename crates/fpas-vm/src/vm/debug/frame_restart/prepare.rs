@@ -60,6 +60,12 @@ pub(in crate::vm::debug) fn prepare(
             )
         })?;
     let prefix_count = usize::from(info.arity).saturating_add(usize::from(info.capture_count));
+    if !info.var_parameters.is_empty() {
+        return Err(unsupported(
+            "frame restart cannot replay an invocation with active var parameters",
+            "Continue or return from this invocation before restarting its caller.",
+        ));
+    }
     let register_count = usize::from(info.register_count);
     if prefix_count > register_count {
         return Err(unsupported(
@@ -117,6 +123,7 @@ pub(in crate::vm::debug) fn prepare(
 /// Apply one fully validated restart without executing bytecode or returning an error.
 pub(in crate::vm::debug) fn apply(worker: &mut Worker, prepared: PreparedFrameRestart) {
     worker.call_stack.truncate(prepared.new_call_stack_len);
+    worker.reference_scopes.restart(prepared.new_call_stack_len);
     worker.release_registers(prepared.base);
     worker.activate_registers(prepared.register_end);
     for (offset, value) in prepared.prefix.into_iter().enumerate() {

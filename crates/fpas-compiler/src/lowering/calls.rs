@@ -1,7 +1,6 @@
 //! Direct and first-class call lowering.
 
 mod arrays;
-mod fluent;
 mod values;
 
 use fpas_ir::{Constant, IntrinsicId, Operation, TypeId, ValueId};
@@ -24,17 +23,8 @@ impl LoweringContext {
         if self.value_calls.contains_key(&call_key) {
             return self.lower_member_value_call(designator, arguments, result, span);
         }
-        if let Some(target) = self.fluent_calls.get(&call_key).cloned() {
-            return self.lower_fluent_designator(designator, arguments, &target, result, span);
-        }
         if let Some(name) = self.intrinsic_calls.get(&call_key).cloned() {
             return self.lower_intrinsic_call(&name, arguments, result, span);
-        }
-        if let Some(target) = self.method_calls.get(&call_key).cloned() {
-            if crate::intrinsic_catalog::resolve(target.qualified_name(), None).is_some() {
-                return self.lower_intrinsic_call(target.qualified_name(), arguments, result, span);
-            }
-            return self.lower_method_call(designator, arguments, &target, result, span);
         }
         let qualified = designator
             .parts
@@ -79,8 +69,7 @@ impl LoweringContext {
                 );
             }
         }
-        let qualified =
-            qualified.ok_or_else(|| unsupported(designator.span, "method or qualified call"))?;
+        let qualified = qualified.ok_or_else(|| unsupported(designator.span, "qualified call"))?;
         let name = qualified.as_str();
         if self.has_binding(name) || self.has_global(name) {
             let callee = if self.has_binding(name) {
@@ -100,7 +89,8 @@ impl LoweringContext {
                 span,
             )
         } else {
-            self.lower_named_call(name, designator, arguments, span)
+            let value = self.lower_named_call(name, designator, arguments, span)?;
+            self.coerce_value_type(value, result, span)
         }
     }
 
@@ -243,8 +233,8 @@ impl LoweringContext {
         if crate::intrinsic_catalog::resolve(&intrinsic_name, None).is_some() {
             return self.lower_intrinsic_call(&intrinsic_name, arguments, callable.result, span);
         }
-        let values = self.lower_call_arguments(arguments, span)?;
         if callable.captures.is_empty() {
+            let values = self.lower_call_arguments(arguments, span)?;
             return self.emit_value(
                 Operation::CallDirect {
                     function: callable.function,
@@ -257,7 +247,7 @@ impl LoweringContext {
         let captures = callable
             .captures
             .iter()
-            .map(|capture| self.read_capture(&capture.name, designator.span))
+            .map(|capture| self.read_closure_capture(capture, designator.span))
             .collect::<Result<Vec<_>, _>>()?;
         let callee = self.emit_value(
             Operation::MakeClosure {
@@ -267,6 +257,9 @@ impl LoweringContext {
             callable.value_type,
             designator.span,
         )?;
+        let callee = self.save_value(callee);
+        let values = self.lower_call_arguments(arguments, span)?;
+        let callee = self.restore_value(callee, span)?;
         self.emit_value(
             Operation::CallValue {
                 callee,

@@ -21,9 +21,9 @@ begin
 end function;
 
 begin
-  var Value: Settings := Make();
-  var AliasValue: SecondAlias := Settings();
-  var Override: Settings := Settings(Count := 42);
+  const Value: Settings := Make();
+  const AliasValue: SecondAlias := Settings();
+  const Override: Settings := Settings(Count := 42);
   Test.AssertEquals(9, Value.Count);
   Test.AssertEquals(1.5, Value.Scale);
   Test.AssertEquals('default', Value.Label);

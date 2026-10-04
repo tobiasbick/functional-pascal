@@ -4,8 +4,8 @@ use fpas_bytecode::{
     CodeRange, Constant, DebugBinding, DebugBindingId, DebugBindingKind, DebugCaptureKind,
     DebugCaptureSource, DebugScope, DebugType, DebugTypeId, Executable, FunctionDebugInfo,
     FunctionFlags, FunctionId, FunctionInfo, GlobalInfo, Instruction, InstructionAddress,
-    NO_REGISTER, Opcode, RecordField, RecordLayout, RecordMethod, Register, ReturnConvention,
-    SourceId, SourceMap, SourceRun, StringId, StringTable, VerifiedExecutable,
+    NO_REGISTER, Opcode, RecordField, RecordLayout, Register, ReturnConvention, SourceId,
+    SourceMap, SourceRun, StringId, StringTable, VerifiedExecutable,
 };
 
 pub(super) use super::*;
@@ -49,8 +49,8 @@ pub(super) fn assignment_executable() -> VerifiedExecutable {
             "Math.Transform",
             "Stats.Transform",
             "backup",
-            "Holder.Add",
-            "Self",
+            "HolderAdd",
+            "Receiver",
             "Add",
         ]
         .into_iter()
@@ -129,7 +129,7 @@ pub(super) fn assignment_executable() -> VerifiedExecutable {
         result_type: Some(DebugTypeId::new(0)),
         ..Default::default()
     };
-    let method_debug = FunctionDebugInfo {
+    let record_parameter_debug = FunctionDebugInfo {
         scopes: vec![DebugScope {
             id: 0,
             parent: None,
@@ -145,6 +145,7 @@ pub(super) fn assignment_executable() -> VerifiedExecutable {
         name: StringId::new(name),
         code: CodeRange::new(InstructionAddress::new(start), InstructionAddress::new(end)),
         arity,
+        var_parameters: Vec::new(),
         capture_count: captures,
         register_count: registers,
         return_convention: convention,
@@ -200,7 +201,7 @@ pub(super) fn assignment_executable() -> VerifiedExecutable {
             Instruction::abx(Opcode::LoadConstant, 1, 10).expect("backup +100"),
             abc(Opcode::AddInteger, 2, 0, 1),
             abc(Opcode::Return, 2, 0, 0),
-            Instruction::abx(Opcode::LoadConstant, 2, 8).expect("method +3"),
+            Instruction::abx(Opcode::LoadConstant, 2, 8).expect("record function +3"),
             abc(Opcode::AddInteger, 3, 1, 2),
             abc(Opcode::Return, 3, 0, 0),
         ],
@@ -268,7 +269,16 @@ pub(super) fn assignment_executable() -> VerifiedExecutable {
                 integer_param.clone(),
             ),
             routine(35, 44, 47, 1, 0, 3, ReturnConvention::Value, integer_param),
-            routine(36, 47, 50, 2, 0, 4, ReturnConvention::Value, method_debug),
+            routine(
+                36,
+                47,
+                50,
+                2,
+                0,
+                4,
+                ReturnConvention::Value,
+                record_parameter_debug,
+            ),
         ],
         constants: vec![
             Constant::Function {
@@ -301,11 +311,6 @@ pub(super) fn assignment_executable() -> VerifiedExecutable {
             fields: vec![RecordField {
                 name: StringId::new(28),
                 ty: DebugTypeId::new(2),
-            }],
-            properties: Vec::new(),
-            methods: vec![RecordMethod {
-                name: StringId::new(38),
-                routine: StringId::new(36),
             }],
         }],
         enums: Vec::new(),

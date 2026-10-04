@@ -81,7 +81,7 @@ uses Std.Console as Console;
 uses Std.Http as Http;
 
 begin
-  case Http.Send(Http.Request.Get('http://127.0.0.1:{port}/start')) of
+  case Http.Send(Http.RequestGet('http://127.0.0.1:{port}/start')) of
     when Result.Ok(const ResponseValue):
       begin
         case Http.BodyText(ResponseValue) of
@@ -149,11 +149,11 @@ uses Std.Http as Http;
 uses Std.Net.Utf8 as Utf8;
 
 begin
-  mutable var RequestValue: Http.Request := Http.Request.Post('http://127.0.0.1:{redirect_port}/submit');
+   var RequestValue: Http.Request := Http.RequestPost('http://127.0.0.1:{redirect_port}/submit');
   RequestValue.Headers := [
-                            Http.Header.Create('Authorization', 'Bearer secret'),
-                            Http.Header.Create('Cookie', 'session=secret'),
-                            Http.Header.Create('Content-Type', 'text/plain')
+                            Http.HeaderCreate('Authorization', 'Bearer secret'),
+                            Http.HeaderCreate('Cookie', 'session=secret'),
+                            Http.HeaderCreate('Content-Type', 'text/plain')
                           ];
   RequestValue.Body := Utf8.Encode('payload');
   case Http.Send(RequestValue) of
@@ -214,7 +214,7 @@ uses Std.Http as Http;
 uses Std.Str as Str;
 
 begin
-  mutable var HeaderRequest: Http.Request := Http.Request.Get('http://127.0.0.1:{header_port}/');
+   var HeaderRequest: Http.Request := Http.RequestGet('http://127.0.0.1:{header_port}/');
   HeaderRequest.MaxHeaderBytes := 48;
   case Http.Send(HeaderRequest) of
     when Result.Ok(_):
@@ -226,7 +226,7 @@ begin
         end if;
       end;
   end case;
-  mutable var RedirectRequest: Http.Request := Http.Request.Get('http://127.0.0.1:{redirect_port}/');
+   var RedirectRequest: Http.Request := Http.RequestGet('http://127.0.0.1:{redirect_port}/');
   RedirectRequest.MaxRedirects := 0;
   case Http.Send(RedirectRequest) of
     when Result.Ok(_):
@@ -303,7 +303,7 @@ uses Std.Str as Str;
 
 procedure ExpectError(Url: string; Text: string);
 begin
-  case Http.Send(Http.Request.Get(Url)) of
+  case Http.Send(Http.RequestGet(Url)) of
     when Result.Ok(_):
       panic('hostile HTTP response was accepted');
     when Result.Error(const Message):
@@ -360,7 +360,7 @@ uses Std.Str as Str;
 
 procedure ExpectOverflow(Path: string);
 begin
-  case Http.Send(Http.Request.Get('http://127.0.0.1:{port}/' + Path)) of
+  case Http.Send(Http.RequestGet('http://127.0.0.1:{port}/' + Path)) of
     when Result.Ok(_):
       panic('overflowing HTTP chunk size was accepted');
     when Result.Error(const Message):

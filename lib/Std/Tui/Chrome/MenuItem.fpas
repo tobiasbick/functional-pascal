@@ -15,45 +15,45 @@ public type TuiMenuItem = record
   public Enabled: boolean;
   // Shortcut text, gesture, or style.
   public Shortcut: string;
+end record;
 
-  // Creates an enabled menu item without a shortcut hint.
-  //
-  // Parameters:
-  // - `Id`: Identifier assigned to the created or selected value.
-  // - `Text`: Text processed or displayed by the operation.
-  // - `Action`: Application action associated with the control or emitted message.
-  public static function Create(Id: ControlId.TuiControlId; Text: string; Action: Action2.TuiAction): TuiMenuItem;
-  begin
-    return TuiMenuItem(Id := Id, Text := Text, Action := Action, Enabled := true, Shortcut := '');
-  end function;
+// Creates an enabled menu item without a shortcut hint.
+//
+// Parameters:
+// - `Id`: Identifier assigned to the created or selected value.
+// - `Text`: Text processed or displayed by the operation.
+// - `Action`: Application action associated with the control or emitted message.
+public function TuiMenuItemCreate(Id: ControlId.TuiControlId; Text: string; Action: Action2.TuiAction): TuiMenuItem;
+begin
+  return TuiMenuItem(Id := Id, Text := Text, Action := Action, Enabled := true, Shortcut := '');
+end function;
 
-  // Creates a disabled menu item without a shortcut hint.
-  //
-  // Parameters:
-  // - `Id`: Identifier assigned to the created or selected value.
-  // - `Text`: Text processed or displayed by the operation.
-  // - `Action`: Application action associated with the control or emitted message.
-  public static function Disabled(Id: ControlId.TuiControlId; Text: string; Action: Action2.TuiAction): TuiMenuItem;
-  begin
-    return TuiMenuItem(Id := Id, Text := Text, Action := Action, Enabled := false, Shortcut := '');
-  end function;
+// Creates a disabled menu item without a shortcut hint.
+//
+// Parameters:
+// - `Id`: Identifier assigned to the created or selected value.
+// - `Text`: Text processed or displayed by the operation.
+// - `Action`: Application action associated with the control or emitted message.
+public function TuiMenuItemDisabled(Id: ControlId.TuiControlId; Text: string; Action: Action2.TuiAction): TuiMenuItem;
+begin
+  return TuiMenuItem(Id := Id, Text := Text, Action := Action, Enabled := false, Shortcut := '');
+end function;
 
-  // Creates an enabled menu item with a display-only shortcut hint.
-  //
-  // Parameters:
-  // - `Id`: Identifier assigned to the created or selected value.
-  // - `Text`: Text processed or displayed by the operation.
-  // - `Action`: Application action associated with the control or emitted message.
-  // - `Shortcut`: Shortcut gesture or display text.
-  public static function WithShortcut(
+// Creates an enabled menu item with a display-only shortcut hint.
+//
+// Parameters:
+// - `Id`: Identifier assigned to the created or selected value.
+// - `Text`: Text processed or displayed by the operation.
+// - `Action`: Application action associated with the control or emitted message.
+// - `Shortcut`: Shortcut gesture or display text.
+public function TuiMenuItemWithShortcut(
   Id: ControlId.TuiControlId;
   Text: string;
   Action: Action2.TuiAction;
   Shortcut: string
 ): TuiMenuItem;
-  begin
-    return TuiMenuItem(Id := Id, Text := Text, Action := Action, Enabled := true, Shortcut := Shortcut);
-  end function;
-end record;
+begin
+  return TuiMenuItem(Id := Id, Text := Text, Action := Action, Enabled := true, Shortcut := Shortcut);
+end function;
 
 end unit;

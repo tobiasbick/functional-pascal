@@ -17,6 +17,7 @@ impl LoweringContext {
     /// Lowers an expression to a value available in its final continuation block.
     pub(super) fn lower_expression(&mut self, expression: &Expr) -> Result<ValueId, CompileError> {
         match expression {
+            Expr::VarArgument(target, span) => self.lower_var_argument(target, *span),
             Expr::If(decision) => {
                 let result = self.expression_ir_type(expression)?;
                 self.lower_if_expression(decision, result)
@@ -58,12 +59,6 @@ impl LoweringContext {
                 if self.record_constructions.contains(&call_key) {
                     return self.lower_record_construction(&[], expression);
                 }
-                if let Some(info) = self.event_assigned.get(&call_key).cloned() {
-                    return self.lower_event_assigned(args, &info, *span);
-                }
-                if let Some(info) = self.event_raises.get(&call_key).cloned() {
-                    return self.lower_event_raise(designator, args, &info, *span);
-                }
                 let result = self.expression_ir_type(expression)?;
                 self.lower_call(designator, args, result, *span, call_key)
             }
@@ -85,7 +80,7 @@ impl LoweringContext {
                 let captures = target
                     .captures
                     .iter()
-                    .map(|capture| self.read_capture(&capture.name, expression.span()))
+                    .map(|capture| self.read_closure_capture(capture, expression.span()))
                     .collect::<Result<Vec<_>, _>>()?;
                 self.emit_value(
                     Operation::MakeClosure {

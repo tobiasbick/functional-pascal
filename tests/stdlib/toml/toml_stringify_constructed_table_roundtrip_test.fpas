@@ -7,12 +7,12 @@ uses Std.Test as Test;
 uses Std.Toml as Toml;
 
 begin
-  var Source: Toml.TomlValue := Toml.TomlValue.Table(['project': Toml.TomlValue.Table(['name': Toml.TomlValue.String('demo'), 'version': Toml.TomlValue.Integer(1), 'released': Toml.TomlValue.Datetime('2026-07-14')]), 'enabled': Toml.TomlValue.Boolean(true), 'targets': Toml.TomlValue.ArrayValue([
-                                                                                                                                                                                                                                                                                                         Toml.TomlValue.String('linux'),
-                                                                                                                                                                                                                                                                                                         Toml.TomlValue.String('windows')
-                                                                                                                                                                                                                                                                                                       ])]);
-  var Encoded: string := Toml.Stringify(Source);
-  var Parsed: Result of (Toml.TomlValue, string) := Toml.Parse(Encoded);
+  const Source: Toml.TomlValue := Toml.TomlValue.Table(['project': Toml.TomlValue.Table(['name': Toml.TomlValue.String('demo'), 'version': Toml.TomlValue.Integer(1), 'released': Toml.TomlValue.Datetime('2026-07-14')]), 'enabled': Toml.TomlValue.Boolean(true), 'targets': Toml.TomlValue.ArrayValue([
+                                                                                                                                                                                                                                                                                                           Toml.TomlValue.String('linux'),
+                                                                                                                                                                                                                                                                                                           Toml.TomlValue.String('windows')
+                                                                                                                                                                                                                                                                                                         ])]);
+  const Encoded: string := Toml.Stringify(Source);
+  const Parsed: Result of (Toml.TomlValue, string) := Toml.Parse(Encoded);
   case Parsed of
     when Result.Ok(const Value):
       begin

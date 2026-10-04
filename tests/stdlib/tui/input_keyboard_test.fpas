@@ -2,6 +2,10 @@ program TuiInputKeyboardTest;
 
 uses Std.Test as Test;
 uses Std.Tui as Tui;
+uses Std.Tui.Elements as Elements;
+uses Std.Tui.Geometry as Geometry;
+uses Std.Tui.Ids as Ids;
+uses Std.Tui.Runtime as Runtime;
 
 type InputKeyboardModel = record
   Text: string;
@@ -17,22 +21,22 @@ end function;
 
 function ViewInput(State: InputKeyboardModel): Tui.TuiElement;
 begin
-  mutable var Input: Tui.TuiElement := Tui.TuiElementBuilders.MakeInputWithHint(Tui.TuiControlId.Create(1), State.Text, State.Caret, 'Command', Tui.TuiAction.Create(1));
+  var Input: Tui.TuiElement := Elements.TuiElementMakeInputWithHint(Ids.TuiControlIdCreate(1), State.Text, State.Caret, 'Command', Ids.TuiActionCreate(1));
   if State.UseHistory then
     begin
-      Input := Tui.TuiElementBuilders.MakeHistoryInput(Tui.TuiControlId.Create(1), State.Text, State.Caret, 'Command', [
-                                                                                                                         'first',
-                                                                                                                         'second'
-                                                                                                                       ], 'draft', Tui.TuiAction.Create(1));
+      Input := Elements.TuiElementMakeHistoryInput(Ids.TuiControlIdCreate(1), State.Text, State.Caret, 'Command', [
+                                                                                                                    'first',
+                                                                                                                    'second'
+                                                                                                                  ], 'draft', Ids.TuiActionCreate(1));
     end;
   end if;
 
-  return Tui.TuiElementBuilders.MakeDesktop(Option.Some(Tui.TuiControlId.Create(1)), [Input]);
+  return Elements.TuiElementMakeDesktop(Option.Some(Ids.TuiControlIdCreate(1)), [Input]);
 end function;
 
 function UpdateInput(State: InputKeyboardModel; Msg: Tui.TuiMsg; Cmd: Tui.TuiCmdOutput): InputKeyboardModel;
 begin
-  Cmd.Set(Tui.TuiCmd.NoCommand);
+  Runtime.TuiCmdOutputSet(Cmd, Tui.TuiCmd.NoCommand);
   case Msg of
     when Tui.TuiMsg.TextChanged(const Source, const Action, const Text, const Caret):
       begin
@@ -59,28 +63,28 @@ function Press(
   Ctrl: boolean
 ): InputKeyboardModel;
 begin
-  App.InjectKeyForTest(MakeKey(Kind, Ctrl));
-  return App.RunIterations(State, UpdateInput, ViewInput, 1, 0);
+  Runtime.TuiApplicationInjectKeyForTest(App, MakeKey(Kind, Ctrl));
+  return Runtime.TuiApplicationRunIterations(App, State, UpdateInput, ViewInput, 1, 0);
 end function;
 
 begin
-  mutable var App: Tui.TuiApplication := Tui.TuiApplication.OpenForTest(Tui.TuiSize.Create(20, 2));
-  mutable var Model: InputKeyboardModel := InputKeyboardModel(Text := 'alpha beta', Caret := 10, UseHistory := false, KeyHits := 0);
-  Model := App.RunIterations(Model, UpdateInput, ViewInput, 0, 0);
+  var App: Tui.TuiApplication := Runtime.TuiApplicationOpenForTest(Geometry.TuiSizeCreate(20, 2));
+  var Model: InputKeyboardModel := InputKeyboardModel(Text := 'alpha beta', Caret := 10, UseHistory := false, KeyHits := 0);
+  Model := Runtime.TuiApplicationRunIterations(App, Model, UpdateInput, ViewInput, 0, 0);
   Model := Press(App, Model, Tui.TuiKeyKind.Left, true);
   Test.AssertEquals(6, Model.Caret);
   Model := Press(App, Model, Tui.TuiKeyKind.Backspace, true);
   Test.AssertEquals('beta', Model.Text);
   Test.AssertEquals(0, Model.Caret);
   Model := InputKeyboardModel(Text := 'alpha beta', Caret := 0, UseHistory := false, KeyHits := 0);
-  Model := App.RunIterations(Model, UpdateInput, ViewInput, 0, 0);
+  Model := Runtime.TuiApplicationRunIterations(App, Model, UpdateInput, ViewInput, 0, 0);
   Model := Press(App, Model, Tui.TuiKeyKind.Delete, true);
   Test.AssertEquals('beta', Model.Text);
   Test.AssertEquals(0, Model.Caret);
   Model := Press(App, Model, Tui.TuiKeyKind.Up, false);
   Test.AssertEquals(1, Model.KeyHits);
   Model := InputKeyboardModel(Text := 'draft', Caret := 5, UseHistory := true, KeyHits := 0);
-  Model := App.RunIterations(Model, UpdateInput, ViewInput, 0, 0);
+  Model := Runtime.TuiApplicationRunIterations(App, Model, UpdateInput, ViewInput, 0, 0);
   Model := Press(App, Model, Tui.TuiKeyKind.Up, false);
   Test.AssertEquals('second', Model.Text);
   Model := Press(App, Model, Tui.TuiKeyKind.Up, false);
@@ -96,5 +100,5 @@ begin
   Model := Press(App, Model, Tui.TuiKeyKind.Down, false);
   Test.AssertEquals('draft', Model.Text);
   Test.AssertEquals(0, Model.KeyHits);
-  App.Close();
+  Runtime.TuiApplicationClose(App);
 end program;

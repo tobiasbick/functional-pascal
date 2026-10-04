@@ -14,7 +14,7 @@ uses Std.Str as Str;
 uses Std.Arrays as Arrays;
 
 begin
-  var Parts: array of (string) := Str.Split('x,y', ',');
+  const Parts: array of (string) := Str.Split('x,y', ',');
   Console.WriteLn(Arrays.Length(Parts));
 end program;
 ```

@@ -7,44 +7,44 @@ public type ChatMessage = record
   public Role: string;
   // Text content of the message.
   public Content: string;
-
-  // Creates a message with an explicit role.
-  //
-  // Parameters:
-  // - `Role`: OpenAI-compatible role name.
-  // - `Content`: Text content of the message.
-  public static function Create(Role: string; Content: string): ChatMessage;
-  begin
-    return ChatMessage(Role := Role, Content := Content);
-  end function;
-
-  // Creates a system instruction message.
-  //
-  // Parameters:
-  // - `Content`: System instruction text.
-  public static function System(Content: string): ChatMessage;
-  begin
-    return ChatMessage.Create('system', Content);
-  end function;
-
-  // Creates a user message.
-  //
-  // Parameters:
-  // - `Content`: User message text.
-  public static function User(Content: string): ChatMessage;
-  begin
-    return ChatMessage.Create('user', Content);
-  end function;
-
-  // Creates an assistant message.
-  //
-  // Parameters:
-  // - `Content`: Assistant message text.
-  public static function Assistant(Content: string): ChatMessage;
-  begin
-    return ChatMessage.Create('assistant', Content);
-  end function;
 end record;
+
+// Creates a message with an explicit role.
+//
+// Parameters:
+// - `Role`: OpenAI-compatible role name.
+// - `Content`: Text content of the message.
+public function ChatMessageCreate(Role: string; Content: string): ChatMessage;
+begin
+  return ChatMessage(Role := Role, Content := Content);
+end function;
+
+// Creates a system instruction message.
+//
+// Parameters:
+// - `Content`: System instruction text.
+public function ChatMessageSystem(Content: string): ChatMessage;
+begin
+  return ChatMessageCreate('system', Content);
+end function;
+
+// Creates a user message.
+//
+// Parameters:
+// - `Content`: User message text.
+public function ChatMessageUser(Content: string): ChatMessage;
+begin
+  return ChatMessageCreate('user', Content);
+end function;
+
+// Creates an assistant message.
+//
+// Parameters:
+// - `Content`: Assistant message text.
+public function ChatMessageAssistant(Content: string): ChatMessage;
+begin
+  return ChatMessageCreate('assistant', Content);
+end function;
 
 // Connection and model settings for an OpenAI-compatible endpoint.
 public type Client = record
@@ -58,17 +58,17 @@ public type Client = record
   public TimeoutMillis: integer;
   // Maximum complete response size in bytes.
   public MaxResponseBytes: integer;
-
-  // Creates client settings with default limits and no API key.
-  //
-  // Parameters:
-  // - `BaseUrl`: Base URL of the OpenAI-compatible API.
-  // - `Model`: Model identifier sent with chat requests.
-  public static function Create(BaseUrl: string; Model: string): Client;
-  begin
-    return Client(BaseUrl := BaseUrl, Model := Model, ApiKey := Option.None, TimeoutMillis := 120000, MaxResponseBytes := 16777216);
-  end function;
 end record;
+
+// Creates client settings with default limits and no API key.
+//
+// Parameters:
+// - `BaseUrl`: Base URL of the OpenAI-compatible API.
+// - `Model`: Model identifier sent with chat requests.
+public function ClientCreate(BaseUrl: string; Model: string): Client;
+begin
+  return Client(BaseUrl := BaseUrl, Model := Model, ApiKey := Option.None, TimeoutMillis := 120000, MaxResponseBytes := 16777216);
+end function;
 
 // Optional generation controls sent with a chat completion.
 public type ChatOptions = record
@@ -76,12 +76,12 @@ public type ChatOptions = record
   public Temperature: Option of (real);
   // Optional maximum number of generated tokens.
   public MaxTokens: Option of (integer);
-
-  // Returns options that omit every optional generation control.
-  public static function Default(): ChatOptions;
-  begin
-    return ChatOptions(Temperature := Option.None, MaxTokens := Option.None);
-  end function;
 end record;
+
+// Returns options that omit every optional generation control.
+public function ChatOptionsDefault(): ChatOptions;
+begin
+  return ChatOptions(Temperature := Option.None, MaxTokens := Option.None);
+end function;
 
 end unit;

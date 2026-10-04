@@ -7,7 +7,7 @@ uses Std.Math as Math;
 
 public function RootColor(Root: integer; Shade: real): Console.Color;
 begin
-  var T: real := Math.Clamp(Shade, 0.2, 1.0);
+  const T: real := Math.Clamp(Shade, 0.2, 1.0);
   if Root = 1 then
     begin
       return Console.RgbColor(Math.Trunc(T * 220.0), Math.Trunc(T * 64.0), Math.Trunc(T * 72.0));

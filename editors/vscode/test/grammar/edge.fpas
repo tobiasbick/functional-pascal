@@ -1,8 +1,8 @@
 program HighlightingEdges;
 
 begin
-  var Text: string := 'It''s Grüße aus 東京 🙂';
-  var HexValue: integer := $2A;
+  const Text: string := 'It''s Grüße aus 東京 🙂';
+  const HexValue: integer := $2A;
   // outer { inner } AfterBrace: integer := 1;
   // outer (* inner *) AfterParen: integer := 2;
   if true then

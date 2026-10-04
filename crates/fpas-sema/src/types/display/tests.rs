@@ -30,6 +30,7 @@ fn displayed_container_types_parse_as_canonical_annotations() {
 #[test]
 fn displayed_callable_types_preserve_nested_type_boundaries() {
     let ty = Ty::Function(FunctionTy {
+        pure: false,
         type_params: Vec::new(),
         params: vec![ParamTy {
             mutable: false,

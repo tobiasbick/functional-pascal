@@ -9,6 +9,6 @@ begin
 end function;
 
 begin
-  var T: task := go Greet();
+  const T: task := go Greet();
   Test.AssertEquals('hello', Tasks.Wait(T));
 end program;

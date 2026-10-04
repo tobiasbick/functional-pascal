@@ -20,13 +20,13 @@ public function EncodeRequest(
   Options: Types.ChatOptions
 ): string;
 begin
-  mutable var MessageValues: array of (Json.JsonValue) := [];
+  var MessageValues: array of (Json.JsonValue) := [];
   for Index: integer := 0 to Arrays.Length(Messages) - 1 do
     begin
-      Arrays.Push(MessageValues, Json.JsonValue.Object(['role': Json.JsonValue.String(Messages[Index].Role), 'content': Json.JsonValue.String(Messages[Index].Content)]));
+      Arrays.Push(var MessageValues, Json.JsonValue.Object(['role': Json.JsonValue.String(Messages[Index].Role), 'content': Json.JsonValue.String(Messages[Index].Content)]));
     end;
   end for;
-  mutable var Fields: dict of (string, Json.JsonValue) := ['model': Json.JsonValue.String(Model), 'messages': Json.JsonValue.ArrayValue(MessageValues), 'stream': Json.JsonValue.Bool(false)];
+  var Fields: dict of (string, Json.JsonValue) := ['model': Json.JsonValue.String(Model), 'messages': Json.JsonValue.ArrayValue(MessageValues), 'stream': Json.JsonValue.Bool(false)];
   case Options.Temperature of
     when Option.Some(const Value):
       begin

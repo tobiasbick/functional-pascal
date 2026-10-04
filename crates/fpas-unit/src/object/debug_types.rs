@@ -121,6 +121,7 @@ fn debug_type_children(ty: &ObjectDebugType) -> Vec<u32> {
         ObjectDebugType::Array(inner)
         | ObjectDebugType::Option(inner)
         | ObjectDebugType::Cell(inner)
+        | ObjectDebugType::Reference(inner)
         | ObjectDebugType::Task(inner)
         | ObjectDebugType::Channel(inner) => vec![*inner],
         ObjectDebugType::Dictionary { key, value }

@@ -3,8 +3,8 @@
 `Option of (T)` represents a value that may be absent:
 
 ```pascal
-var O: option of (integer) := Option.Some(42);
-var N: option of (integer) := Option.None;
+const O: option of (integer) := Option.Some(42);
+const N: option of (integer) := Option.None;
 
 ```
 
@@ -32,7 +32,7 @@ end function;
 uses Std.Console as Console;
 uses Std.Conv as Conv;
 
-var Idx: option of (integer) := FindIndex([10, 20, 30], 20);
+const Idx: option of (integer) := FindIndex([10, 20, 30], 20);
 case Idx of
   when Option.Some(const I):
     Console.WriteLn('Found at ' + Conv.IntToStr(I));

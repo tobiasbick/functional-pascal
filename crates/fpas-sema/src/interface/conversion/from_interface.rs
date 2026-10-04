@@ -6,8 +6,8 @@ use fpas_unit::interface as artifact;
 
 use crate::scope::{Symbol, SymbolKind as SemaSymbolKind};
 use crate::types::{
-    EnumTy, EnumVariantTy, EventTy, FunctionTy, GenericParamDef, MethodKind, ParamTy, ProcedureTy,
-    PropertyTy, RecordTy, Ty, TypeConstraint,
+    EnumTy, EnumVariantTy, FunctionTy, GenericParamDef, ParamTy, ProcedureTy, RecordTy, Ty,
+    TypeConstraint,
 };
 
 use super::InterfaceConversionError;
@@ -17,7 +17,9 @@ pub(crate) fn interface_symbol_to_sema(
     exported: &artifact::InterfaceSymbol,
 ) -> Result<Symbol, InterfaceConversionError> {
     let (kind, mutable) = match &exported.kind {
-        artifact::SymbolKind::Constant(_) => (SemaSymbolKind::Const, false),
+        artifact::SymbolKind::Constant(_) | artifact::SymbolKind::AggregateConstant(_) => {
+            (SemaSymbolKind::Const, false)
+        }
         artifact::SymbolKind::Variable => (SemaSymbolKind::Var, false),
         artifact::SymbolKind::MutableVariable => (SemaSymbolKind::Var, true),
         artifact::SymbolKind::Function => (SemaSymbolKind::Function, false),
@@ -69,8 +71,8 @@ pub fn interface_type_to_ty(ty: &artifact::InterfaceType) -> Result<Ty, Interfac
                 .map(interface_type_to_ty)
                 .collect::<Result<_, _>>()?,
         ),
-        Input::GenericParameter(name, constraint) => {
-            Ty::GenericParam(name.clone(), constraint.map(constraint_from_interface))
+        Input::GenericParameter(parameter) => {
+            Ty::GenericParam(Arc::new(generic_parameter_from_interface(parameter)))
         }
     })
 }
@@ -84,6 +86,7 @@ fn interface_to_function(
         ));
     };
     Ok(FunctionTy {
+        pure: callable.pure,
         type_params: generic_parameters_from_interface(&callable.type_parameters),
         params: parameters_from_interface(&callable.parameters)?,
         return_type: Box::new(interface_type_to_ty(result)?),
@@ -94,6 +97,9 @@ fn interface_to_function(
 fn interface_to_procedure(
     callable: &artifact::CallableType,
 ) -> Result<ProcedureTy, InterfaceConversionError> {
+    if callable.pure {
+        return Err(InterfaceConversionError::new("a procedure cannot be pure"));
+    }
     if callable.result.is_some() {
         return Err(InterfaceConversionError::new(
             "a procedure signature unexpectedly has a result type",
@@ -126,38 +132,21 @@ fn generic_parameters_from_interface(
 ) -> Vec<GenericParamDef> {
     parameters
         .iter()
-        .map(|parameter| GenericParamDef {
-            name: parameter.name.clone(),
-            constraint: parameter.constraint.map(constraint_from_interface),
-        })
+        .map(generic_parameter_from_interface)
         .collect()
+}
+
+fn generic_parameter_from_interface(parameter: &artifact::GenericParameter) -> GenericParamDef {
+    GenericParamDef {
+        name: parameter.name.clone(),
+        constraint: parameter.constraint.map(constraint_from_interface),
+        identity: parameter.identity.clone(),
+    }
 }
 
 fn interface_to_record(
     record: &artifact::RecordType,
 ) -> Result<RecordTy, InterfaceConversionError> {
-    let mut methods = Vec::new();
-    for method in &record.methods {
-        methods.push((
-            method.name.clone(),
-            callable_to_method_kind(&method.callable)?,
-        ));
-    }
-    let mut static_functions = Vec::new();
-    let mut static_procedures = Vec::new();
-    for routine in &record.static_routines {
-        if routine.callable.result.is_some() {
-            static_functions.push((
-                routine.name.clone(),
-                interface_to_function(&routine.callable)?,
-            ));
-        } else {
-            static_procedures.push((
-                routine.name.clone(),
-                interface_to_procedure(&routine.callable)?,
-            ));
-        }
-    }
     Ok(RecordTy {
         name: record.name.clone(),
         type_params: generic_parameters_from_interface(&record.type_parameters),
@@ -174,49 +163,7 @@ fn interface_to_record(
             .iter()
             .map(|field| Ok((field.name.clone(), interface_type_to_ty(&field.ty)?)))
             .collect::<Result<_, InterfaceConversionError>>()?,
-        methods,
-        static_functions,
-        static_procedures,
-        properties: record
-            .properties
-            .iter()
-            .map(|property| {
-                Ok((
-                    property.name.clone(),
-                    PropertyTy {
-                        ty: interface_type_to_ty(&property.ty)?,
-                        getter: property.getter.clone(),
-                        setter: property.setter.clone(),
-                    },
-                ))
-            })
-            .collect::<Result<_, InterfaceConversionError>>()?,
-        events: record
-            .events
-            .iter()
-            .map(|event| {
-                Ok((
-                    event.name.clone(),
-                    EventTy {
-                        handler_ty: interface_type_to_ty(&event.handler)?,
-                        getter: event.getter.clone(),
-                        setter: event.setter.clone(),
-                        owner_unit: event.owner_unit.clone(),
-                    },
-                ))
-            })
-            .collect::<Result<_, InterfaceConversionError>>()?,
     })
-}
-
-fn callable_to_method_kind(
-    callable: &artifact::CallableType,
-) -> Result<MethodKind, InterfaceConversionError> {
-    if callable.result.is_some() {
-        Ok(MethodKind::Function(interface_to_function(callable)?))
-    } else {
-        Ok(MethodKind::Procedure(interface_to_procedure(callable)?))
-    }
 }
 
 fn interface_to_enum(enum_ty: &artifact::EnumType) -> Result<EnumTy, InterfaceConversionError> {

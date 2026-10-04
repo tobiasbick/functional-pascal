@@ -2,8 +2,6 @@ mod assignment;
 mod calls;
 mod control_flow;
 mod discard;
-mod event_assignment;
-mod property_assignment;
 
 use super::Checker;
 use fpas_parser::*;
@@ -25,8 +23,8 @@ impl Checker {
                 self.scopes.pop_scope();
             }
 
-            Stmt::Var(var_def) => self.check_var_def(var_def, false),
-            Stmt::MutableVar(var_def) => self.check_var_def(var_def, true),
+            Stmt::Const(var_def) => self.check_binding(var_def, false),
+            Stmt::Var(var_def) => self.check_binding(var_def, true),
 
             Stmt::Assign {
                 target,

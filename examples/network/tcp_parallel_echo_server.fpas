@@ -11,22 +11,42 @@ uses Std.Results as Results;
 uses Std.Time as Time;
 uses Std.Server as Server;
 
+function OpenListener(Port: integer): Net.Listener;
+begin
+  case Net.Listen('127.0.0.1', Port) of
+    when Result.Ok(const Listener):
+      return Listener;
+    when Result.Error(const Message):
+      panic(Message);
+  end case;
+end function;
+
+function CreateLifetime(): Server.ServerLifetime;
+begin
+  case Server.CreateLifetime(1000, true) of
+    when Result.Ok(const Lifetime):
+      return Lifetime;
+    when Result.Error(const Message):
+      panic(Message);
+  end case;
+end function;
+
 function Echo(Client: Net.Connection; Token: Tasks.CancellationToken): Result of (boolean, string);
 begin
-  var Configured: boolean := try Net.SetTimeout(Client, 5000);
+  const Configured: boolean := try Net.SetTimeout(Client, 5000);
   while not Tasks.IsCancellationRequested(Token) do
     begin
-      var Bytes: array of (integer) := try Net.ReceiveBytesWithCancellation(Client, 4096, Token);
+      const Bytes: array of (integer) := try Net.ReceiveBytesWithCancellation(Client, 4096, Token);
       if Arrays.Length(Bytes) = 0 then
         begin
           return Result.Ok(true);
         end;
       end if;
-      mutable var Offset: integer := 0;
+      var Offset: integer := 0;
       while Offset < Arrays.Length(Bytes) do
         begin
-          var Count: integer := try Net.SendBytesWithCancellation(Client, Arrays.Slice(Bytes, Offset, Arrays.Length(Bytes) -
-                                                                                                      Offset), Token);
+          const Count: integer := try Net.SendBytesWithCancellation(Client, Arrays.Slice(Bytes, Offset, Arrays.Length(Bytes) -
+                                                                                                        Offset), Token);
           if Count <= 0 then
             begin
               return Result.Error('TCP write made no progress');
@@ -43,8 +63,8 @@ begin
 end function;
 
 begin
-  mutable var Port: integer := 18082;
-  mutable var LifetimeMillis: integer := 10000;
+  var Port: integer := 18082;
+  var LifetimeMillis: integer := 10000;
   if Args.ParamCount() > 2 then
     begin
       panic('usage: tcp_parallel_echo_server.fpas -- [PORT [LIFETIME_MS]]');
@@ -68,22 +88,22 @@ begin
       panic('LIFETIME_MS must be 1..300000');
     end;
   end if;
-  var ListenerValue: Net.Listener := Results.Unwrap(Net.Listen('127.0.0.1', Port));
-  var Life: Server.ServerLifetime := Results.Unwrap(Server.CreateLifetime(1000, true));
+  const ListenerValue: Net.Listener := OpenListener(Port);
+  const Life: Server.ServerLifetime := CreateLifetime();
   discard Results.Unwrap(Server.OwnListener(Life, ListenerValue));
   discard Results.Unwrap(Server.ObserveSignals(Life));
-  var Workers: Tasks.TaskGroup := Server.GetWorkGroup(Life);
+  const Workers: Tasks.TaskGroup := Server.GetWorkGroup(Life);
   for Index: integer := 1 to 4 do
     begin
-      var StartedTask1: task := Tasks.StartTaskInGroup(Workers, function(Token: Tasks.CancellationToken): Result of (boolean, string) begin
+      const StartedTask1: task := Tasks.StartTaskInGroup(Workers, function(Token: Tasks.CancellationToken): Result of (boolean, string) begin
         while not Tasks.IsCancellationRequested(Token) do
           begin
             case Net.AcceptWithCancellation(ListenerValue, Token) of
               when Result.Ok(const Client):
                 begin
-                  var Outcome: Result of (boolean, string) := Echo(Client, Token);
+                  const Outcome: Result of (boolean, string) := Echo(Client, Token);
                   // Close even on read/write failure. One failed client does not stop admission.
-                  var Closed: boolean := try Net.Close(Client);
+                  const Closed: boolean := try Net.Close(Client);
                   case Outcome of
                     when Result.Error(const Message):
                       begin
@@ -120,7 +140,7 @@ begin
   end for;
 
   Console.WriteLn('Parallel TCP echo ready');
-  var Started: integer := Time.MonotonicMillis();
+  const Started: integer := Time.MonotonicMillis();
   while Server.IsReady(Life) and (Time.ElapsedMillis(Started) < LifetimeMillis) do
     begin
       Time.Sleep(10);
@@ -128,7 +148,7 @@ begin
   end while;
 
   discard Server.RequestStop(Life);
-  mutable var Failures: array of (Tasks.TaskFailure) := [];
+  var Failures: array of (Tasks.TaskFailure) := [];
   case Tasks.CloseTaskGroupWithTimeout(Workers, Server.RemainingMillis(Life)) of
     when Result.Ok(const Reports):
       begin

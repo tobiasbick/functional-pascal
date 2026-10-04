@@ -12,15 +12,6 @@ pub(in crate::vm::debug) enum FunctionSource {
     BindingOrRoutine(String),
     /// An identifier-only qualified chain resolved only through the routine catalog.
     Routine(String),
-    /// A receiver expression plus one method member, with an optional catalog fallback.
-    BoundReceiver {
-        /// Expression evaluated once before mutation preparation.
-        receiver: Box<DebugExpression>,
-        /// Source method member name.
-        member: String,
-        /// Identifier-only full spelling when catalog fallback is possible.
-        catalog_name: Option<String>,
-    },
 }
 
 impl FunctionSource {
@@ -28,11 +19,6 @@ impl FunctionSource {
     pub(in crate::vm::debug) fn requested(&self) -> &str {
         match self {
             Self::BindingOrRoutine(name) | Self::Routine(name) => name,
-            Self::BoundReceiver {
-                member,
-                catalog_name,
-                ..
-            } => catalog_name.as_deref().unwrap_or(member),
         }
     }
 
@@ -42,7 +28,6 @@ impl FunctionSource {
             Self::BindingOrRoutine(name) | Self::Routine(name) => {
                 DebugExpression::Name(name.clone())
             }
-            Self::BoundReceiver { receiver, .. } => receiver.as_ref().clone(),
         }
     }
 
@@ -50,7 +35,6 @@ impl FunctionSource {
     pub(in crate::vm::debug) fn allows_catalog_fallback(&self) -> bool {
         match self {
             Self::BindingOrRoutine(_) | Self::Routine(_) => true,
-            Self::BoundReceiver { catalog_name, .. } => catalog_name.is_some(),
         }
     }
 }
@@ -60,17 +44,6 @@ pub(in crate::vm::debug) fn extract(
     expression: &DebugExpression,
     limits: DebugEvaluationLimits,
 ) -> Result<FunctionSource, DebugSessionError> {
-    if let DebugExpression::Field { base, name } = expression {
-        if !is_identifier(name) {
-            return Err(unsupported_source());
-        }
-        let catalog_name = identifier_chain(expression, limits)?.map(|parts| parts.join("."));
-        return Ok(FunctionSource::BoundReceiver {
-            receiver: base.clone(),
-            member: name.clone(),
-            catalog_name,
-        });
-    }
     let Some(parts) = identifier_chain(expression, limits)? else {
         return Err(unsupported_source());
     };

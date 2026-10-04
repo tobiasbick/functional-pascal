@@ -9,6 +9,18 @@ impl Worker {
     /// its destination, so no argument is overwritten before it moves. The saved caller frame and
     /// its return destination stay as they are, so the callee returns straight to them.
     pub(in crate::vm) fn tail_call(&mut self, operands: AbcOperands) -> Result<(), VmError> {
+        if self.reference_scopes.current_has_leases()
+            || self.executable.executable().functions[usize::from(operands.b)]
+                .var_parameters
+                .len()
+                > 0
+            || self.registers[self.base + usize::from(operands.c)
+                ..self.base + usize::from(operands.c) + usize::from(operands.auxiliary)]
+                .iter()
+                .any(Value::contains_reference)
+        {
+            return self.call_direct(operands);
+        }
         let target = FunctionId::new(operands.b);
         let image = self.executable.executable();
         let info = image
@@ -87,12 +99,19 @@ impl Worker {
                 "Tail-call function metadata is missing",
             ));
         };
-        if info.return_convention != current.return_convention {
+        if info.return_convention != current.return_convention
+            || !info.var_parameters.is_empty()
+            || self.reference_scopes.current_has_leases()
+            || self.registers[self.base + usize::from(operands.c)
+                ..self.base + usize::from(operands.c) + usize::from(operands.auxiliary)]
+                .iter()
+                .any(Value::contains_reference)
+            || function.captures.iter().any(Value::contains_reference)
+        {
             return self.call_value(operands);
         }
-        let receiver = usize::from(function.bound_receiver.is_some());
         let count = usize::from(operands.auxiliary);
-        if count + receiver != usize::from(info.arity)
+        if count != usize::from(info.arity)
             || function.captures.len() != usize::from(info.capture_count)
         {
             return Err(diagnostics::internal(
@@ -102,7 +121,7 @@ impl Worker {
                     "Tail-call signature mismatch: expected {} arguments and {} captures, got {} arguments and {} captures",
                     info.arity,
                     info.capture_count,
-                    count + receiver,
+                    count,
                     function.captures.len()
                 ),
             ));
@@ -135,11 +154,8 @@ impl Worker {
         }
         self.release_registers(self.base);
         self.activate_registers(frame_end);
-        let values = function
-            .bound_receiver
-            .iter()
-            .cloned()
-            .chain(arguments)
+        let values = arguments
+            .into_iter()
             .chain(function.captures.iter().cloned());
         for (offset, value) in values.enumerate() {
             self.store_register(self.base + offset, value)?;

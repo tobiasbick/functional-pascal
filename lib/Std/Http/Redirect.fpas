@@ -14,7 +14,7 @@ uses Std.Str as Str;
 // - `UriValue`: Parsed absolute URI.
 function Authority(UriValue: Uri2.Uri): string;
 begin
-  mutable var Host: string := UriValue.Host;
+  var Host: string := UriValue.Host;
   if Str.Contains(Host, ':') then
     begin
       Host := ('[' + Host) + ']';
@@ -46,7 +46,7 @@ end function;
 // - `Text`: URI reference that may contain a fragment.
 function WithoutFragment(Text: string): string;
 begin
-  var Fragment: integer := Str.IndexOf(Text, '#');
+  const Fragment: integer := Str.IndexOf(Text, '#');
   if Fragment < 0 then
     begin
       return Text;
@@ -62,7 +62,7 @@ end function;
 // - `Path`: URI path that may contain a query.
 function PathWithoutQuery(Path: string): string;
 begin
-  var Query: integer := Str.IndexOf(Path, '?');
+  const Query: integer := Str.IndexOf(Path, '?');
   if Query < 0 then
     begin
       return Path;
@@ -78,21 +78,21 @@ end function;
 // - `PathAndQuery`: Absolute path with an optional query.
 function NormalizePath(PathAndQuery: string): string;
 begin
-  mutable var Path: string := PathAndQuery;
-  mutable var Query: string := '';
-  var QueryStart: integer := Str.IndexOf(PathAndQuery, '?');
+  var Path: string := PathAndQuery;
+  var Query: string := '';
+  const QueryStart: integer := Str.IndexOf(PathAndQuery, '?');
   if QueryStart >= 0 then
     begin
       Path := Str.Substring(PathAndQuery, 0, QueryStart);
       Query := Str.Substring(PathAndQuery, QueryStart, Str.Length(PathAndQuery) - QueryStart);
     end;
   end if;
-  var Parts: array of (string) := Str.Split(Path, '/');
-  mutable var Segments: array of (string) := [];
+  const Parts: array of (string) := Str.Split(Path, '/');
+  var Segments: array of (string) := [];
   // The first empty segment belongs to the absolute root. All others are significant.
   for Index: integer := 1 to Arrays.Length(Parts) - 1 do
     begin
-      var Part: string := Parts[Index];
+      const Part: string := Parts[Index];
       if Part = '..' then
         begin
           if Arrays.Length(Segments) > 0 then
@@ -104,19 +104,19 @@ begin
       else
         if Part <> '.' then
           begin
-            Arrays.Push(Segments, Part);
+            Arrays.Push(var Segments, Part);
           end;
         end if;
       end if;
 
       if ((Part = '.') or (Part = '..')) and (Index = Arrays.Length(Parts) - 1) then
         begin
-          Arrays.Push(Segments, '');
+          Arrays.Push(var Segments, '');
         end;
       end if;
     end;
   end for;
-  var Output: string := '/' + Str.Join(Segments, '/');
+  const Output: string := '/' + Str.Join(Segments, '/');
   return Output + Query;
 end function;
 
@@ -132,8 +132,8 @@ begin
       return Result.Error('HTTP redirect Location contains CR or LF');
     end;
   end if;
-  var Reference: string := WithoutFragment(Str.Trim(Location));
-  mutable var Target: string := '';
+  const Reference: string := WithoutFragment(Str.Trim(Location));
+  var Target: string := '';
   if Reference = '' then
     begin
       Target := Origin(Base) + Base.Path;
@@ -160,9 +160,9 @@ begin
             end;
           else
             begin
-              var BasePath: string := PathWithoutQuery(Base.Path);
-              var LastSlash: integer := Str.LastIndexOf(BasePath, '/');
-              mutable var Directory: string := '/';
+              const BasePath: string := PathWithoutQuery(Base.Path);
+              const LastSlash: integer := Str.LastIndexOf(BasePath, '/');
+              var Directory: string := '/';
               if LastSlash >= 0 then
                 begin
                   Directory := Str.Substring(BasePath, 0, LastSlash + 1);
@@ -214,10 +214,10 @@ end function;
 // - `DropBody`: Whether redirect semantics discard the request body.
 function FilterHeaders(Headers: array of (Types.Header); CrossOrigin: boolean; DropBody: boolean): array of (Types.Header);
 begin
-  mutable var Output: array of (Types.Header) := [];
+  var Output: array of (Types.Header) := [];
   for Index: integer := 0 to Arrays.Length(Headers) - 1 do
     begin
-      var Name: string := Headers[Index].Name;
+      const Name: string := Headers[Index].Name;
       if CrossOrigin and
          ((Headers2.IsName(Name, 'Authorization') or Headers2.IsName(Name, 'Proxy-Authorization')) or Headers2.IsName(Name, 'Cookie')) then
         begin
@@ -232,7 +232,7 @@ begin
         end;
       end if;
 
-      Arrays.Push(Output, Headers[Index]);
+      Arrays.Push(var Output, Headers[Index]);
     end;
   end for;
 
@@ -257,7 +257,7 @@ end function;
 // - `Location`: Location field value from the redirect response.
 public function NextRequest(Current: Types.Request; StatusCode: integer; Location: string): Result of (Types.Request, string);
 begin
-  mutable var Base: Uri2.Uri := Uri2.Uri(Scheme := '', Host := '', Port := 0, Path := '');
+  var Base: Uri2.Uri := Uri2.Uri(Scheme := '', Host := '', Port := 0, Path := '');
   case Uri2.Parse(Current.Url) of
     when Result.Ok(const Value):
       begin
@@ -268,7 +268,7 @@ begin
         return Result.Error(Message);
       end;
   end case;
-  mutable var Target: string := '';
+  var Target: string := '';
   case Resolve(Base, Location) of
     when Result.Ok(const Value):
       begin
@@ -279,7 +279,7 @@ begin
         return Result.Error(Message);
       end;
   end case;
-  mutable var TargetUri: Uri2.Uri := Base;
+  var TargetUri: Uri2.Uri := Base;
   case Uri2.Parse(Target) of
     when Result.Ok(const Value):
       begin
@@ -290,9 +290,9 @@ begin
         return Result.Error(Message);
       end;
   end case;
-  var DropBody: boolean := ((StatusCode = 303) and (Current.Method <> 'HEAD')) or
-                           (((StatusCode = 301) or (StatusCode = 302)) and (Current.Method = 'POST'));
-  mutable var Output: Types.Request := Current;
+  const DropBody: boolean := ((StatusCode = 303) and (Current.Method <> 'HEAD')) or
+                             (((StatusCode = 301) or (StatusCode = 302)) and (Current.Method = 'POST'));
+  var Output: Types.Request := Current;
   Output.Url := Target;
   Output.Headers := FilterHeaders(Current.Headers, not SameOrigin(Base, TargetUri), DropBody);
   if DropBody then

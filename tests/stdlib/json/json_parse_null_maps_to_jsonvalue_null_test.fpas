@@ -4,7 +4,7 @@ uses Std.Console as Console;
 uses Std.Json as Json;
 
 begin
-  var R: Result of (Json.JsonValue, string) := Json.Parse('null');
+  const R: Result of (Json.JsonValue, string) := Json.Parse('null');
   case R of
     when Result.Ok(const V):
       begin

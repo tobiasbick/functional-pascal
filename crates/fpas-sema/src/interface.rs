@@ -2,7 +2,7 @@
 
 mod analysis;
 mod constants;
-pub(crate) use constants::ScalarConstants;
+pub(crate) use constants::{StaticConstants, StaticEvaluationError, StaticRecord, to_scalar};
 mod conversion;
 mod export;
 mod install;

@@ -216,8 +216,6 @@ fn record_and_enum_slots_are_positional() {
             name: StringId::new(3),
             ty: fpas_bytecode::DebugTypeId::new(0),
         }],
-        properties: Vec::new(),
-        methods: Vec::new(),
     }];
     image.enums = vec![EnumLayout {
         name: StringId::new(4),

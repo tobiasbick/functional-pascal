@@ -50,14 +50,22 @@ fn main() {
     let cwd = match env::current_dir() {
         Ok(cwd) => cwd,
         Err(e) => {
-            eprintln!("Error reading current directory: {e}");
-            process::exit(1);
+            let mut stderr = std::io::stderr().lock();
+            let mut reporter = cli_output::Reporter::new(
+                cli_output::DiagnosticFormat::requested(&args),
+                &mut stderr,
+            );
+            process::exit(reporter.failure(&cli_output::CliFailure::new(
+                fpas_diagnostics::codes::PROJECT_DIRECTORY_READ_FAILED,
+                format!("Error reading current directory: {e}"),
+            )));
         }
     };
 
     cli_run::authorize_process_lifecycle();
     let stdout: Box<dyn std::io::Write + Send> = Box::new(std::io::stdout());
-    let mut stderr = std::io::stderr().lock();
+    // Unlocked: program-output events from VM tasks write to the same stream.
+    let mut stderr = std::io::stderr();
     let exit_code = run_cli(&args, &cwd, stdout, &mut stderr);
     if exit_code != 0 {
         process::exit(exit_code);

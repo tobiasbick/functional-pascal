@@ -70,7 +70,7 @@ export async function run(): Promise<void> {
     (diagnostics) => diagnostics.length > 0
   );
   assert.ok(
-    parserDiagnostics.some((diagnostic) => diagnostic.code === "F1001"),
+    parserDiagnostics.some((diagnostic) => diagnostic.code === "FP2001"),
     JSON.stringify(parserDiagnostics)
   );
 

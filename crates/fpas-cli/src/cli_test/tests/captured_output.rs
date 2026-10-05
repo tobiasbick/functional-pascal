@@ -1,7 +1,7 @@
 //! Captured standard output of test programs in the runner's result lines.
 
 use crate::cli_input::TestCliConfig;
-use crate::cli_test::test_cli;
+use crate::cli_test::test_cli_with_stderr;
 use crate::test_support::{create_temp_dir, write_text};
 use std::path::PathBuf;
 use std::time::Duration;
@@ -25,6 +25,7 @@ fn config(
         jobs,
         strict: false,
         show_output,
+        diagnostics: Default::default(),
         standard_library: None,
     }
 }
@@ -41,7 +42,7 @@ fn run(name: &str, show_output: bool, timeout: Option<Duration>, jobs: usize) ->
     );
     let mut stdout = Vec::new();
     let mut stderr = Vec::new();
-    let exit = test_cli(
+    let exit = test_cli_with_stderr(
         config(cwd, show_output, timeout, jobs),
         &mut stdout,
         &mut stderr,

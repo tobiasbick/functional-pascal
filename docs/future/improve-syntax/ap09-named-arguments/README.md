@@ -29,10 +29,14 @@ mappings receive concrete diagnostics.
 CopyFile(Source := InputPath, Destination := BackupPath, Overwrite := false);
 Start(Host := 'localhost', Options := ServerOptions(Port := 9000));
 
-var F: function(Value: integer): integer := Double;
-F(3);            // valid
-F(Value := 3);   // error: named arguments need a declared routine
+const F: function(Value: integer): integer := Double;
+const Answer: integer := F(3);         // valid: result consumed
+const Bad: integer := F(Value := 3);   // error: named arguments need a declared routine
 ```
+
+Function results are consumed here to match
+[AP04](../ap04-discarded-function-values/README.md); the invalid call isolates
+the named-argument restriction.
 
 ## Dependencies
 

@@ -55,7 +55,7 @@ bounded by `--timeout`, `--instruction-limit`, and `--output-limit`. Queued
 program input is also bounded by the advertised `debuggee_input_bytes` limit
 (default 1,048,576). Programs
 may spawn retained and detached tasks. Attach, non-stop task execution, reverse
-execution, replay, debugger task creation, task restart, retained execution history, and arbitrary instruction-pointer changes remain unsupported. Recording is off until JSONL `record` or DAP `fpas/record`; those commands capture later all-stop events and queued `ReadText`/`ReadLn` lines without resuming or enabling reverse playback. Capture stays in session memory, keeps at most 4,096 events, writes no recording files, and retains no recording snapshots. Later events are dropped and `recording.describe` / `fpas/recordingDescribe` report `truncated`. JSONL `recording.describe` and DAP `fpas/recordingDescribe` name the current program, portable sources, whether capture is on, the event ceiling, captured events, and `replayable: false`. While capturing, `Std.Random`, wall-clock `Std.Time` other than `Sleep`, `Std.Fs`, `Std.Env`, `Std.Proc`, `Std.Args`, and console host effects other than `ReadText`/`ReadLn`/`WriteText`/`WriteLn` stop with runtime diagnostic `F4024` before the intrinsic runs. Execution without `record` is unchanged. JSONL `reload` / `image.replace` and DAP `fpas/reload` rebuild the exact launch target and atomically install changes limited to inactive function bodies. Unchanged candidates do nothing; active bodies, layouts, globals, captures, task identity, function sets, entry points, anonymous closures, and incompatible debug metadata are rejected before the live image changes. Each successful commit increments a monotonic image version, rebinds breakpoints and source content, invalidates stale inspections, and retains exactly one preceding image. JSONL `image.rollback` and DAP `fpas/reloadRollback` restore that image as another version. Recording capture rejects real commits and is not a live-image snapshot store. JSONL `reload.classify` and DAP `fpas/reloadClassify` rebuild and classify without applying. VS Code exposes **Debug: Reload Compatible Changes** and **Debug: Roll Back Last Reload**. This is FPAS source-level reload inside the owned debug session; it does not debug or hot-swap the native Rust VM implementation. Frame
+execution, replay, debugger task creation, task restart, retained execution history, and arbitrary instruction-pointer changes remain unsupported. Recording is off until JSONL `record` or DAP `fpas/record`; those commands capture later all-stop events and queued `ReadText`/`ReadLn` lines without resuming or enabling reverse playback. Capture stays in session memory, keeps at most 4,096 events, writes no recording files, and retains no recording snapshots. Later events are dropped and `recording.describe` / `fpas/recordingDescribe` report `truncated`. JSONL `recording.describe` and DAP `fpas/recordingDescribe` name the current program, portable sources, whether capture is on, the event ceiling, captured events, and `replayable: false`. While capturing, `Std.Random`, wall-clock `Std.Time` other than `Sleep`, `Std.Fs`, `Std.Env`, `Std.Proc`, `Std.Args`, and console host effects other than `ReadText`/`ReadLn`/`WriteText`/`WriteLn` stop with runtime diagnostic `FP5024` before the intrinsic runs. Execution without `record` is unchanged. JSONL `reload` / `image.replace` and DAP `fpas/reload` rebuild the exact launch target and atomically install changes limited to inactive function bodies. Unchanged candidates do nothing; active bodies, layouts, globals, captures, task identity, function sets, entry points, anonymous closures, and incompatible debug metadata are rejected before the live image changes. Each successful commit increments a monotonic image version, rebinds breakpoints and source content, invalidates stale inspections, and retains exactly one preceding image. JSONL `image.rollback` and DAP `fpas/reloadRollback` restore that image as another version. Recording capture rejects real commits and is not a live-image snapshot store. JSONL `reload.classify` and DAP `fpas/reloadClassify` rebuild and classify without applying. VS Code exposes **Debug: Reload Compatible Changes** and **Debug: Roll Back Last Reload**. This is FPAS source-level reload inside the owned debug session; it does not debug or hot-swap the native Rust VM implementation. Frame
 restart reconstructs a selected live frame at its function entry; it is not a
 general `goto`.
 
@@ -75,14 +75,14 @@ reject without mutation. Newly admitted tasks start unpaused. Stepping a paused
 task rejects. If continue cannot make progress without running a paused task,
 the session stops immediately with pause. A stopped-state per-task cancel names
 one live non-root task, marks it cancelled, and stores runtime diagnostic
-`F4016` for retained waiters. It does not run bytecode, drain spawns, or wake
+`FP5016` for retained waiters. It does not run bytecode, drain spawns, or wake
 waiters; those waiters observe the stored failure on the next continue. The
 main task cannot be cancelled this way; disconnect the session instead.
 Debugger task creation and task restart are rejected. Use `go` in the program,
 or restart a selected frame. While stopped, JSONL `io.input` and DAP
 `fpas/input` queue one line for hosted `ReadText`/`ReadLn`. Continue consumes
 queued lines in order. An empty queue or a closed input stream is runtime
-diagnostic `F4011`. EOF and cancel are separate commands; protocol stdin is
+diagnostic `FP5011`. EOF and cancel are separate commands; protocol stdin is
 never program input. Step in, over, and out target the
 selected task; when it is waiting, the driver may run unpaused dependencies in
 stable task-ID order until the selected task becomes runnable. A breakpoint, runtime
@@ -416,7 +416,7 @@ same Boolean conditions and exact positive hit counts as source breakpoints;
 log messages and assignments are not accepted.
 
 Runtime failures stop for inspection by default. A client may instead replace
-the session filter with exact advertised diagnostic codes such as `F4001`, or
+the session filter with exact advertised diagnostic codes such as `FP5001`, or
 with the single filter `all`. An empty selection stops on no runtime failures.
 A nonmatching failure is still reported as a structured diagnostic, then the
 session terminates unsuccessfully without exposing a stopped state. Unknown,
@@ -429,7 +429,7 @@ or limit is observed at the next source/instruction boundary after that call
 returns, including `Std.Time.Sleep`. `ReadText`/`ReadLn`
 consume lines that were queued at a previous stop. They do not wait for a later
 `io.input` while already blocked inside the intrinsic; an empty queue fails with
-`F4011` instead of hanging. `ReadEvent` and `PollEvent` likewise run only when
+`FP5011` instead of hanging. `ReadEvent` and `PollEvent` likewise run only when
 bytecode resumes; they do not run during stack, variable,
 or evaluate requests.
 

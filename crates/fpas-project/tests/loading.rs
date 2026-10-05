@@ -104,8 +104,11 @@ fn project_path_dependency_rejects_a_program_project() {
 
     let error = load_project(&consumer).expect_err("program dependency must be rejected");
     fs::remove_dir_all(&dir).ok();
-    assert!(error.contains("must be a library project"), "{error}");
-    assert!(error.contains("kind = \"library\""), "{error}");
+    assert!(
+        error.to_string().contains("must be a library project"),
+        "{error}"
+    );
+    assert!(error.to_string().contains("kind = \"library\""), "{error}");
 }
 
 #[test]
@@ -137,8 +140,11 @@ fn workspace_dependency_rejects_a_program_member() {
 
     let error = load_project(&consumer).expect_err("program member must be rejected");
     fs::remove_dir_all(&dir).ok();
-    assert!(error.contains("must be a library project"), "{error}");
-    assert!(error.contains("kind = \"library\""), "{error}");
+    assert!(
+        error.to_string().contains("must be a library project"),
+        "{error}"
+    );
+    assert!(error.to_string().contains("kind = \"library\""), "{error}");
 }
 
 #[test]
@@ -367,7 +373,7 @@ include = ["lib.fpas"]
     let error = discover_run_project_in_workspace(&workspace).expect_err("must fail");
     fs::remove_dir_all(&dir).ok();
 
-    assert!(error.contains("No `program` projects found"));
+    assert!(error.to_string().contains("No `program` projects found"));
 }
 
 #[test]
@@ -394,7 +400,7 @@ include = ["src/**/*.fpas"]
     fs::remove_dir_all(&dir).ok();
 
     assert!(
-        error.contains("exports.units") && error.contains("unknown unit"),
+        error.to_string().contains("exports.units") && error.to_string().contains("unknown unit"),
         "got: {error}"
     );
 }

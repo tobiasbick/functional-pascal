@@ -5,10 +5,10 @@ import * as vscode from "vscode";
 import type { ParsedWorkflowDiagnostic } from "./model";
 
 const DIAGNOSTIC_HEADER =
-  /^(.*):(\d+):(\d+): (error|warning)\[(F\d{4})\]: (.*)$/u;
+  /^(.*):(\d+):(\d+): (error|warning)\[(FP\d{4})\]: (.*)$/u;
 const WRAPPED_BUILD_ERROR = /^Cannot build [^`]+`([^`]+)`: (.*)$/u;
 const PATHLESS_DIAGNOSTIC =
-  /^(\d+):(\d+): (error|warning)\[(F\d{4})\]: (.*)$/u;
+  /^(\d+):(\d+): (error|warning)\[(FP\d{4})\]: (.*)$/u;
 
 /** Parses stable compiler diagnostics while preserving optional help lines. */
 export function parseWorkflowDiagnostics(

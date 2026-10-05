@@ -82,7 +82,7 @@ fn array_index_out_of_bounds_is_runtime_error() {
 fn flat_map_rejects_scalar_mapper_result_is_compile_error() {
     run_file_expect_failure(
         "tests/stdlib/array/flat_map_rejects_scalar_mapper_result_compile_error.fpas",
-        Some("error[F2006]: `Std.Arrays.FlatMap` mapper must return an array"),
+        Some("error[FP3006]: `Std.Arrays.FlatMap` mapper must return an array"),
     );
 }
 
@@ -170,7 +170,7 @@ fn slice_out_of_bounds_is_runtime_error() {
 fn writeln_without_uses_is_compile_error() {
     run_file_expect_failure(
         "tests/stdlib/console/writeln_without_uses_is_error_compile_error.fpas",
-        Some("error[F2003]: Unknown procedure `WriteLn`"),
+        Some("error[FP3003]: Unknown procedure `WriteLn`"),
     );
 }
 
@@ -386,7 +386,7 @@ fn insert_out_of_bounds() {
 fn set_char_at_out_of_bounds_reports_index_and_length() {
     run_file_expect_failure(
         "tests/stdlib/str/set_char_at_out_of_bounds_runtime_error.fpas",
-        Some("error[F4021]: SetCharAt index 10 out of range (length 2)"),
+        Some("error[FP5021]: SetCharAt index 10 out of range (length 2)"),
     );
 }
 
@@ -434,7 +434,7 @@ fn pad_center_negative_width_is_runtime_error() {
 fn result_and_option_unqualified_unwrap_is_ambiguous_compile_error() {
     run_file_expect_failure(
         "tests/stdlib/result/result_and_option_unqualified_unwrap_is_ambiguous_compile_error.fpas",
-        Some("error[F2004]: Ambiguous imported symbol `Unwrap`"),
+        Some("error[FP3004]: Ambiguous imported symbol `Unwrap`"),
     );
 }
 

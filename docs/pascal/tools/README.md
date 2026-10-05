@@ -4,6 +4,7 @@ Compiler and editor tooling for Functional Pascal projects.
 
 | Tool | Description |
 |------|-------------|
+| [Shared diagnostics](diagnostics.md) | Codes, source positions and Rust text/JSON rendering |
 | [Formatter style](fmt-style.md) | Normative output rules for `fpas fmt` |
 | [Debugger](debugger.md) | Source debugging through JSONL, DAP, and VS Code |
 | [Debugger JSONL protocol](debugger-jsonl.md) | Versioned machine-facing debugger contract |

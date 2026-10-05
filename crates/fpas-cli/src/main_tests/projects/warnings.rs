@@ -21,7 +21,7 @@ fn run_cli_emits_warning_for_program_source_file_and_still_runs() {
 
     assert_eq!(exit_code, 0, "stderr: {stderr_output}");
     assert_eq!(stdout_output, "42\n");
-    assert!(stderr_output.contains("warning:"));
+    assert!(stderr_output.contains("warning[FP4136]:"));
     assert!(stderr_output.contains("declares `program Tool` and was skipped"));
 }
 
@@ -49,5 +49,5 @@ fn run_cli_emits_warning_for_duplicate_source_file_and_still_runs() {
 
     assert_eq!(exit_code, 0, "stderr: {stderr_output}");
     assert_eq!(stdout_output, "7\n");
-    assert!(stderr_output.contains("warning: Duplicate source file"));
+    assert!(stderr_output.contains("warning[FP4135]: Duplicate source file"));
 }

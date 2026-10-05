@@ -7,7 +7,10 @@ use std::path::Path;
 use fpas_parser::CompilationUnit;
 
 use crate::loading::parse_cache::ParsedSourceCache;
-use crate::source::{qualified_id_to_string, validate_user_unit_name};
+use crate::source::{
+    duplicate_unit_error, program_source_skipped, qualified_id_to_string, validate_user_unit_name,
+};
+use fpas_diagnostics::FileDiagnostic;
 use std::collections::HashMap;
 use std::path::PathBuf;
 
@@ -23,9 +26,9 @@ pub fn is_test_source_file(path: &Path) -> bool {
 /// Validates unit sources and `*_test.fpas` program entry files for test projects.
 pub(crate) fn validate_project_test_sources(
     source_files: Vec<PathBuf>,
-    warnings: &mut Vec<String>,
+    warnings: &mut Vec<FileDiagnostic>,
     parse_cache: &mut ParsedSourceCache,
-) -> Result<Vec<PathBuf>, String> {
+) -> Result<Vec<PathBuf>, crate::ProjectError> {
     let mut validated = Vec::new();
     let mut seen_unit_names = HashMap::<String, PathBuf>::new();
 
@@ -38,10 +41,10 @@ pub(crate) fn validate_project_test_sources(
                 if is_test_source_file(&source_path) {
                     validated.push(source_path);
                 } else {
-                    warnings.push(format!(
-                        "Source file `{}` declares `program {}` and was skipped. Test projects keep only `*_test.fpas` program files and `unit` sources.",
-                        source_path.to_string_lossy(),
-                        program.name
+                    warnings.push(program_source_skipped(
+                        &source_path,
+                        &program.name,
+                        "Test projects keep only `*_test.fpas` program files and `unit` sources.",
                     ));
                 }
             }
@@ -50,11 +53,7 @@ pub(crate) fn validate_project_test_sources(
                 let unit_name = qualified_id_to_string(&unit.name);
                 let key = unit_name.to_ascii_lowercase();
                 if let Some(first_path) = seen_unit_names.get(&key) {
-                    return Err(format!(
-                        "Duplicate unit name `{unit_name}` found in `{}` and `{}`.\n  help: Use a unique `unit` namespace per source file.",
-                        first_path.to_string_lossy(),
-                        source_path.to_string_lossy()
-                    ));
+                    return Err(duplicate_unit_error(&unit_name, first_path, &source_path));
                 }
                 seen_unit_names.insert(key, source_path.clone());
                 validated.push(source_path);

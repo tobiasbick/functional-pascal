@@ -18,7 +18,12 @@ are drafts, not current-language examples.
   or other angle-bracket type applications.
 - Where Pascal or Delphi has an established spelling for a planned concept
   (subranges, distinct types, `var` parameters), use it unless a recorded
-  decision says otherwise. Recorded exceptions: `distinct` (AP19, Q12).
+  decision says otherwise. Recorded exceptions: `distinct`
+  ([AP19, Q12](../ap19-distinct-domain-types/README.md)).
+- Generic routine type-parameter declarations keep angle brackets, such as
+  `function Identity<T>(Value: T): T;`; calls infer their type arguments.
+  This is not a type application
+  ([AP24](../ap24-generic-data-structures/README.md)).
 - A formatter change is not required for this package.
 
 ## Dependencies
@@ -38,3 +43,11 @@ AP01.1 establishes the reference examples; AP01.2 checks the plan against them.
 
 The reference examples state a consistent Pascal-oriented form without
 presenting unresolved grammar as implemented behavior.
+
+## Delivery
+
+The [reference style](reference-style.md) provides ten annotated draft examples.
+The [spelling review](spelling-review.md) records the plan-wide checks,
+corrections, and decisions left with the owning packages. Both work packages
+are delivered locally; their completion checkboxes await merge under the
+[development process](../development-process.md#status-tracking).

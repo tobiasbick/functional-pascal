@@ -65,8 +65,8 @@ pub(super) fn reject_diagnostics(
                 .help
                 .clone()
                 .unwrap_or_else(|| "Use one complete FPAS expression.".to_string()),
-            offset: diagnostic.span.offset(),
-            length: diagnostic.span.length(),
+            offset: diagnostic.span.map_or(0, |span| span.offset()),
+            length: diagnostic.span.map_or(0, |span| span.length()),
         });
     }
     Ok(expression)

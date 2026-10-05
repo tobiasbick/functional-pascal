@@ -6,14 +6,17 @@ mod hook_exec;
 mod load;
 pub(in crate::cli_test) mod program;
 
-use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::Duration;
 
+use fpas_diagnostics::codes::TEST_RUNNER_FAILED;
 use fpas_project as project;
 
+use crate::cli_output::{DiagnosticFormat, Reporter};
+
 use super::hooks::TestHooks;
+use super::log;
 use super::report::TestOutcome;
 use super::scratch::TestScratch;
 
@@ -30,6 +33,8 @@ pub(super) struct TestRunSettings<'a> {
     pub timeout: Option<Duration>,
     /// Print captured standard output of passing tests too.
     pub show_output: bool,
+    /// Diagnostic stream format for captured per-test output.
+    pub diagnostics: DiagnosticFormat,
 }
 
 /// Project sources used when linking a test program with local units.
@@ -63,6 +68,7 @@ pub(super) fn run_single_test_capture(
             script_override,
             timeout,
             show_output: false,
+            diagnostics: DiagnosticFormat::Text,
         },
         None,
     )
@@ -75,7 +81,8 @@ pub(super) fn run_single_test_capture_prepared(
     compiled: Option<&CompiledTestProgram>,
 ) -> (TestOutcome, Vec<u8>) {
     let mut buffer = Vec::new();
-    let outcome = run_single_test_prepared(path, link, settings, &mut buffer, compiled);
+    let mut reporter = Reporter::new(settings.diagnostics, &mut buffer);
+    let outcome = run_single_test_prepared(path, link, settings, &mut reporter, compiled);
     (outcome, buffer)
 }
 
@@ -83,20 +90,21 @@ pub(super) fn run_single_test_prepared(
     path: &Path,
     link: Option<&LinkContext>,
     settings: TestRunSettings<'_>,
-    stderr: &mut dyn Write,
+    reporter: &mut Reporter<'_>,
     compiled: Option<&CompiledTestProgram>,
 ) -> TestOutcome {
     let TestRunSettings {
         script_override,
         timeout,
         show_output,
+        diagnostics: _,
     } = settings;
     let display = test_display_path(path);
     let scratch = match TestScratch::create(path) {
         Ok(scratch) => scratch,
         Err(message) => {
-            let _ = writeln!(stderr, "  FAIL  {display}");
-            let _ = writeln!(stderr, "        {message}");
+            log::banner(reporter, "FAIL", &display);
+            log::message(reporter, TEST_RUNNER_FAILED, &message);
             return TestOutcome::RuntimeError;
         }
     };
@@ -115,10 +123,10 @@ pub(super) fn run_single_test_prepared(
                 display: &display,
                 scratch_dir: scratch.path(),
             },
-            stderr,
+            reporter,
         );
         if outcome.is_failure() {
-            let _ = run_optional_teardown(link, path, timeout, stderr, &display, scratch.path());
+            let _ = run_optional_teardown(link, path, timeout, reporter, &display, scratch.path());
             return outcome;
         }
     }
@@ -133,7 +141,7 @@ pub(super) fn run_single_test_prepared(
     let outcome = run_test_program(
         path,
         link,
-        stderr,
+        reporter,
         ProgramRunOptions {
             script_override,
             timeout,
@@ -147,7 +155,7 @@ pub(super) fn run_single_test_prepared(
 
     if let Some(link) = link
         && let Some(teardown_outcome) =
-            run_optional_teardown(link, path, timeout, stderr, &display, scratch.path())
+            run_optional_teardown(link, path, timeout, reporter, &display, scratch.path())
         && outcome == TestOutcome::Pass
         && teardown_outcome.is_failure()
     {
@@ -155,7 +163,7 @@ pub(super) fn run_single_test_prepared(
     }
 
     if has_teardown && outcome == TestOutcome::Pass {
-        let _ = writeln!(stderr, "  PASS  {display}");
+        log::banner(reporter, "PASS", &display);
     }
 
     outcome

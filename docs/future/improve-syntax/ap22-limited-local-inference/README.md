@@ -23,6 +23,9 @@ and stable.
 - AP27 may rely on this limited form after its implementation; it must not
   broaden inference implicitly. AP27 is retained as optional (Q21).
 
+Draft local bindings inside a routine or a plain scoping block; the surrounding
+code supplies the referenced types and values:
+
 ```pascal
 const P := Point(X := 1, Y := 2);
 const Limit := 100;

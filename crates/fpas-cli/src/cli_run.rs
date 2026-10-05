@@ -1,13 +1,19 @@
 //! Run compile and VM from CLI-resolved input.
 //!
-//! Spec: [Projects & CLI](../../../docs/pascal/program-structure/cli.md).
+//! Spec: [Projects & CLI](../../../docs/pascal/program-structure/cli.md);
+//! diagnostics: [shared diagnostics](../../../docs/pascal/tools/diagnostics.md).
 
 use std::fs;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
+use crate::cli_output::{CliFailure, DiagnosticFormat, Reporter, locate};
 use crate::{CliInput, ResolvedCli, resolve_cli_config};
-use fpas_diagnostics::DiagnosticSeverity;
+use fpas_diagnostics::codes::{
+    BUILD_ARTIFACT_ENCODING_FAILED, BUILD_ARTIFACT_IO_FAILED, CLI_ARGUMENTS_INVALID,
+    CLI_INPUT_UNSUPPORTED,
+};
+use fpas_diagnostics::{DiagnosticSeverity, FileDiagnostic};
 use fpas_project as project;
 
 static PROCESS_LIFECYCLE_AUTHORIZED: std::sync::atomic::AtomicBool =
@@ -27,8 +33,8 @@ pub(crate) fn run_cli(
     let resolved = match resolve_cli_config(args, cwd) {
         Ok(resolved) => resolved,
         Err(message) => {
-            let _ = writeln!(stderr, "{message}");
-            return 1;
+            let mut reporter = Reporter::new(DiagnosticFormat::requested(args), stderr);
+            return reporter.failure(&CliFailure::from_message(CLI_ARGUMENTS_INVALID, &message));
         }
     };
 
@@ -61,70 +67,92 @@ pub(crate) fn run_cli(
         }
         ResolvedCli::Lsp => crate::cli_lsp::run_language_server(cwd, stderr),
         ResolvedCli::Build(config) => {
+            let mut reporter = Reporter::new(config.diagnostics, stderr);
             let library = match crate::standard_library::resolve_standard_library(
                 config.standard_library.as_deref(),
             ) {
                 Ok(library) => library,
-                Err(message) => {
-                    let _ = writeln!(stderr, "{message}");
-                    return 1;
-                }
+                Err(failure) => return reporter.failure(&failure),
             };
-            crate::cli_build::build_cli(config, library.as_ref(), stdout.as_mut(), stderr)
+            crate::cli_build::build_cli(config, library.as_ref(), stdout.as_mut(), &mut reporter)
         }
         ResolvedCli::Check(config) => {
+            let mut reporter = Reporter::new(config.diagnostics, stderr);
             let library = match crate::standard_library::resolve_standard_library(
                 config.standard_library.as_deref(),
             ) {
                 Ok(library) => library,
-                Err(message) => {
-                    let _ = writeln!(stderr, "{message}");
-                    return 1;
-                }
+                Err(failure) => return reporter.failure(&failure),
             };
-            crate::cli_check::check_cli(config, library.as_ref(), stderr)
+            crate::cli_check::check_cli(config, library.as_ref(), &mut reporter)
         }
         ResolvedCli::Fmt(config) => crate::cli_fmt::format_cli(config, stdout.as_mut(), stderr),
-        ResolvedCli::Test(config) => crate::cli_test::test_cli(config, stdout.as_mut(), stderr),
+        ResolvedCli::Test(config) => {
+            let mut reporter = Reporter::new(config.diagnostics, stderr);
+            crate::cli_test::test_cli(config, stdout.as_mut(), &mut reporter)
+        }
         ResolvedCli::Debug(config) => crate::cli_debug::debug_cli(config, stdout, stderr),
         ResolvedCli::Run(config) => {
-            let input = match config.input {
-                CliInput::CompiledProgramFile(path) => {
-                    return run_compiled_program_file(&path, config.program_args, stdout, stderr);
-                }
-                input => input,
+            let mut reporter = Reporter::new(config.diagnostics, stderr);
+            run_input(config, stdout, &mut reporter)
+        }
+    }
+}
+
+fn run_input(
+    config: crate::cli_input::CliConfig,
+    stdout: Box<dyn Write + Send>,
+    reporter: &mut Reporter<'_>,
+) -> i32 {
+    let input = match config.input {
+        CliInput::CompiledProgramFile(path) => {
+            return run_compiled_program_file(&path, config.program_args, stdout, reporter);
+        }
+        input => input,
+    };
+    let library =
+        match crate::standard_library::resolve_standard_library(config.standard_library.as_deref())
+        {
+            Ok(library) => library,
+            Err(failure) => return reporter.failure(&failure),
+        };
+    match input {
+        CliInput::SourceFile(path) if path.is_dir() => reporter.failure(
+            &CliFailure::new(
+                CLI_INPUT_UNSUPPORTED,
+                format!("Cannot run directory `{}`.", path.display()),
+            )
+            .with_help("Pass a `.fpas` program file or a `.fpasprj` project path."),
+        ),
+        CliInput::SourceFile(path) => run_source_file(
+            &path,
+            library.as_ref(),
+            config.program_args,
+            stdout,
+            reporter,
+        ),
+        CliInput::ProjectFile(path) => run_project_file(
+            &path,
+            library.as_ref(),
+            config.program_args,
+            stdout,
+            reporter,
+        ),
+        CliInput::WorkspaceFile(path) => {
+            let project_path = match project::discover_run_project_in_workspace(&path) {
+                Ok(project_path) => project_path,
+                Err(error) => return reporter.failure(&error.into()),
             };
-            let library = match crate::standard_library::resolve_standard_library(
-                config.standard_library.as_deref(),
-            ) {
-                Ok(library) => library,
-                Err(message) => {
-                    let _ = writeln!(stderr, "{message}");
-                    return 1;
-                }
-            };
-            match input {
-                CliInput::SourceFile(path) if path.is_dir() => {
-                    let _ = writeln!(
-                        stderr,
-                        "Cannot run directory `{}`.\n  help: Pass a `.fpas` program file or a `.fpasprj` project path.",
-                        path.display()
-                    );
-                    1
-                }
-                CliInput::SourceFile(path) => {
-                    run_source_file(&path, library.as_ref(), config.program_args, stdout, stderr)
-                }
-                CliInput::ProjectFile(path) => {
-                    run_project_file(&path, library.as_ref(), config.program_args, stdout, stderr)
-                }
-                CliInput::WorkspaceFile(path) => {
-                    run_workspace_file(&path, library.as_ref(), config.program_args, stdout, stderr)
-                }
-                CliInput::CompiledProgramFile(_) => {
-                    unreachable!("handled before standard library resolution")
-                }
-            }
+            run_project_file(
+                &project_path,
+                library.as_ref(),
+                config.program_args,
+                stdout,
+                reporter,
+            )
+        }
+        CliInput::CompiledProgramFile(_) => {
+            unreachable!("handled before standard library resolution")
         }
     }
 }
@@ -134,13 +162,12 @@ fn run_source_file(
     standard_library: Option<&project::StandardLibrary>,
     program_args: Vec<String>,
     stdout: Box<dyn Write + Send>,
-    stderr: &mut dyn Write,
+    reporter: &mut Reporter<'_>,
 ) -> i32 {
     let source = match fs::read_to_string(path) {
         Ok(source) => source,
         Err(error) => {
-            let _ = writeln!(stderr, "Error reading `{}`: {error}", path.display());
-            return 1;
+            return reporter.failure(&crate::project_build::source_read_failure(path, &error));
         }
     };
 
@@ -152,23 +179,18 @@ fn run_source_file(
             Some(standard_library),
         ) {
             Ok(built) => built,
-            Err(message) => {
-                let _ = writeln!(stderr, "{message}");
-                return 1;
-            }
+            Err(failure) => return reporter.failure(&failure),
         };
-        let path_text = path.to_string_lossy();
         return run_executable(
-            path_text.as_ref(),
+            path,
             built.executable,
             Some(&built.source_paths),
             program_args,
             stdout,
-            stderr,
+            reporter,
         );
     }
-    let path_text = path.to_string_lossy();
-    run_source_impl(path_text.as_ref(), &source, program_args, stdout, stderr)
+    run_source_impl(path, &source, program_args, stdout, reporter)
 }
 
 fn run_project_file(
@@ -176,19 +198,13 @@ fn run_project_file(
     standard_library: Option<&project::StandardLibrary>,
     program_args: Vec<String>,
     stdout: Box<dyn Write + Send>,
-    stderr: &mut dyn Write,
+    reporter: &mut Reporter<'_>,
 ) -> i32 {
     let loaded = match project::load_project(path) {
         Ok(loaded) => loaded,
-        Err(message) => {
-            let _ = writeln!(stderr, "{message}");
-            return 1;
-        }
+        Err(error) => return reporter.failure(&error.into()),
     };
-
-    for warning in &loaded.warnings {
-        let _ = writeln!(stderr, "warning: {warning}");
-    }
+    reporter.records(&loaded.warnings);
 
     match loaded.kind {
         project::ProjectKind::Program => {
@@ -196,89 +212,62 @@ fn run_project_file(
                 match crate::project_build::build_program_artifact(path, &loaded, standard_library)
                 {
                     Ok(artifact) => artifact,
-                    Err(message) => {
-                        let _ = writeln!(stderr, "{message}");
-                        return 1;
-                    }
+                    Err(failure) => return reporter.failure(&failure),
                 };
-
-            let artifact_path = artifact.path.to_string_lossy();
             run_executable(
-                artifact_path.as_ref(),
+                &artifact.path,
                 artifact.executable,
                 Some(&artifact.source_paths),
                 program_args,
                 stdout,
-                stderr,
+                reporter,
             )
         }
-        project::ProjectKind::Library => {
-            let _ = writeln!(
-                stderr,
-                "Library projects are not executable.\n  help: Use a `program` project to run code with the CLI."
-            );
-            1
-        }
-        project::ProjectKind::Test => {
-            let _ = writeln!(
-                stderr,
-                "Test projects are not executable with `fpas run`.\n  help: Use `fpas test {}` to run `*_test.fpas` programs.",
+        project::ProjectKind::Library => reporter.failure(
+            &CliFailure::new(
+                CLI_INPUT_UNSUPPORTED,
+                "Library projects are not executable.",
+            )
+            .with_help("Use a `program` project to run code with the CLI."),
+        ),
+        project::ProjectKind::Test => reporter.failure(
+            &CliFailure::new(
+                CLI_INPUT_UNSUPPORTED,
+                "Test projects are not executable with `fpas run`.",
+            )
+            .with_help(format!(
+                "Use `fpas test {}` to run `*_test.fpas` programs.",
                 path.display()
-            );
-            1
-        }
+            )),
+        ),
     }
-}
-
-fn run_workspace_file(
-    path: &Path,
-    standard_library: Option<&project::StandardLibrary>,
-    program_args: Vec<String>,
-    stdout: Box<dyn Write + Send>,
-    stderr: &mut dyn Write,
-) -> i32 {
-    let project_path = match project::discover_run_project_in_workspace(path) {
-        Ok(project_path) => project_path,
-        Err(message) => {
-            let _ = writeln!(stderr, "{message}");
-            return 1;
-        }
-    };
-    run_project_file(
-        &project_path,
-        standard_library,
-        program_args,
-        stdout,
-        stderr,
-    )
 }
 
 fn run_compiled_program_file(
     path: &Path,
     program_args: Vec<String>,
     stdout: Box<dyn Write + Send>,
-    stderr: &mut dyn Write,
+    reporter: &mut Reporter<'_>,
 ) -> i32 {
     let bytes = match fs::read(path) {
         Ok(bytes) => bytes,
         Err(error) => {
-            let _ = writeln!(
-                stderr,
-                "Cannot read compiled program `{}`: {error}",
-                path.display()
-            );
-            return 1;
+            return reporter.failure(&CliFailure::new(
+                BUILD_ARTIFACT_IO_FAILED,
+                format!("Cannot read compiled program `{}`: {error}", path.display()),
+            ));
         }
     };
     let image = match fpas_program::decode(&bytes) {
         Ok(image) => image,
         Err(error) => {
-            let _ = writeln!(
-                stderr,
-                "Cannot run compiled program `{}`: {error}\n  help: Rebuild the `.fpascp` from its project sources with `fpas build`.",
-                path.display()
+            return reporter.failure(
+                &CliFailure::new(
+                    BUILD_ARTIFACT_ENCODING_FAILED,
+                    format!("Cannot run compiled program `{}`: {error}", path.display()),
+                )
+                .with_help("Rebuild the `.fpascp` from its project sources with `fpas build`."),
             );
-            return 1;
         }
     };
     let source_paths = image
@@ -286,23 +275,22 @@ fn run_compiled_program_file(
         .iter()
         .map(PathBuf::from)
         .collect::<Vec<_>>();
-    let path_text = path.to_string_lossy();
     run_executable(
-        path_text.as_ref(),
+        path,
         image.into_executable(),
         Some(&source_paths),
         program_args,
         stdout,
-        stderr,
+        reporter,
     )
 }
 
 fn run_source_impl(
-    path: &str,
+    path: &Path,
     source: &str,
     program_args: Vec<String>,
     stdout: Box<dyn Write + Send>,
-    stderr: &mut dyn Write,
+    reporter: &mut Reporter<'_>,
 ) -> i32 {
     let (program, parse_errors) = fpas_parser::parse(source);
     let has_errors = parse_errors
@@ -310,14 +298,24 @@ fn run_source_impl(
         .any(|diagnostic| diagnostic.as_diagnostic().severity == DiagnosticSeverity::Error);
 
     for diagnostic in &parse_errors {
-        emit_diagnostic(path, None, diagnostic.as_diagnostic(), stderr);
+        reporter.record(&FileDiagnostic::new(
+            diagnostic.as_diagnostic().clone(),
+            Some(path.to_path_buf()),
+        ));
     }
 
     if has_errors {
         return 1;
     }
 
-    run_compiled_program(path, &program, None, program_args, stdout, stderr)
+    let executable = match fpas_compiler::compile(&program) {
+        Ok(executable) => executable,
+        Err(diagnostics) => {
+            return reporter.failure(&CliFailure::from_diagnostics(path, &diagnostics));
+        }
+    };
+
+    run_executable(path, executable, None, program_args, stdout, reporter)
 }
 
 #[cfg(test)]
@@ -327,65 +325,34 @@ pub(crate) fn run_source(
     stdout: Box<dyn Write + Send>,
     stderr: &mut dyn Write,
 ) -> i32 {
-    run_source_impl(path, source, Vec::new(), stdout, stderr)
-}
-
-fn run_compiled_program(
-    path: &str,
-    program: &fpas_parser::Program,
-    source_paths: Option<&[PathBuf]>,
-    program_args: Vec<String>,
-    stdout: Box<dyn Write + Send>,
-    stderr: &mut dyn Write,
-) -> i32 {
-    let executable = match fpas_compiler::compile(program) {
-        Ok(executable) => executable,
-        Err(diagnostics) => {
-            for diagnostic in &diagnostics {
-                emit_diagnostic(path, source_paths, diagnostic, stderr);
-            }
-            return 1;
-        }
-    };
-
-    run_executable(path, executable, source_paths, program_args, stdout, stderr)
+    let mut reporter = Reporter::new(DiagnosticFormat::Text, stderr);
+    run_source_impl(Path::new(path), source, Vec::new(), stdout, &mut reporter)
 }
 
 fn run_executable(
-    path: &str,
+    path: &Path,
     executable: fpas_bytecode::VerifiedExecutable,
     source_paths: Option<&[PathBuf]>,
     program_args: Vec<String>,
     stdout: Box<dyn Write + Send>,
-    stderr: &mut dyn Write,
+    reporter: &mut Reporter<'_>,
 ) -> i32 {
     // Runtime diagnostics carry linked source IDs; callers pass paths indexed by graph source.
     let source_paths =
         source_paths.map(|paths| fpas_build::linked_source_paths(&executable, paths));
-    let source_paths = source_paths.as_deref();
     let mut vm = fpas_vm::Vm::with_writer_and_args(executable, stdout, program_args);
     if PROCESS_LIFECYCLE_AUTHORIZED.load(std::sync::atomic::Ordering::Acquire) {
         vm.allow_process_lifecycle();
     }
+    if let Some(receiver) = crate::cli_output::program_stderr_receiver(reporter.format()) {
+        vm.set_program_stderr(receiver);
+    }
     if let Err(diagnostic) = vm.run() {
-        emit_diagnostic(path, source_paths, &diagnostic, stderr);
+        reporter.record(&locate(path, source_paths.as_deref(), &diagnostic));
         return 2;
     }
 
     0
-}
-
-fn emit_diagnostic(
-    path: &str,
-    source_paths: Option<&[PathBuf]>,
-    diagnostic: &fpas_diagnostics::Diagnostic,
-    stderr: &mut dyn Write,
-) {
-    let _ = writeln!(
-        stderr,
-        "{}",
-        render_cli_diagnostic_with_sources(path, source_paths, diagnostic)
-    );
 }
 
 pub(crate) fn render_cli_diagnostic(
@@ -395,21 +362,11 @@ pub(crate) fn render_cli_diagnostic(
     fpas_diagnostics::render(path, diagnostic)
 }
 
+#[cfg(test)]
 pub(crate) fn render_cli_diagnostic_with_sources(
     fallback_path: &str,
     source_paths: Option<&[PathBuf]>,
     diagnostic: &fpas_diagnostics::Diagnostic,
 ) -> String {
-    let Some(path) = source_paths
-        .and_then(|paths| {
-            usize::try_from(diagnostic.span.source_id())
-                .ok()
-                .and_then(|index| paths.get(index))
-        })
-        .map(|path| path.to_string_lossy().into_owned())
-    else {
-        return render_cli_diagnostic(fallback_path, diagnostic);
-    };
-
-    fpas_diagnostics::render(&path, diagnostic)
+    locate(Path::new(fallback_path), source_paths, diagnostic).to_string()
 }

@@ -14,7 +14,7 @@ use crate::ProjectLinkMeta;
 pub fn build_unit_graph_from_parsed_sources(
     sources: Vec<(PathBuf, Unit)>,
     link_meta: &ProjectLinkMeta,
-) -> Result<UnitGraph, String> {
+) -> Result<UnitGraph, crate::ProjectError> {
     build_from_parsed_sources(sources, link_meta, Vec::new())
 }
 
@@ -25,7 +25,7 @@ pub fn build_unit_graph_for_program_from_parsed_sources(
     main_path: &Path,
     sources: Vec<(PathBuf, Unit)>,
     link_meta: &ProjectLinkMeta,
-) -> Result<UnitGraph, String> {
+) -> Result<UnitGraph, crate::ProjectError> {
     build_from_parsed_sources(sources, link_meta, vec![main_path.to_path_buf()])
 }
 
@@ -33,7 +33,7 @@ fn build_from_parsed_sources(
     sources: Vec<(PathBuf, Unit)>,
     link_meta: &ProjectLinkMeta,
     mut source_paths: Vec<PathBuf>,
-) -> Result<UnitGraph, String> {
+) -> Result<UnitGraph, crate::ProjectError> {
     let mut nodes = std::collections::HashMap::new();
     for (path, unit) in sources {
         let validate_name = !link_meta.is_trusted_standard_library_source(&path);

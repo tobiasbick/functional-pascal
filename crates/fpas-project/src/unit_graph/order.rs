@@ -2,13 +2,16 @@
 
 use std::collections::{HashMap, HashSet};
 
+use fpas_diagnostics::codes::PROJECT_UNIT_CYCLE;
+
 use super::model::{ResolvedUnitGraph, UnitGraph};
 use super::{canonical_unit_key, display_unit_key, internal_graph_error, is_intrinsic_std_unit};
+use crate::ProjectError;
 
 pub(super) fn resolve_order(
     reachable: &HashSet<String>,
     graph: &UnitGraph,
-) -> Result<ResolvedUnitGraph, String> {
+) -> Result<ResolvedUnitGraph, ProjectError> {
     let mut order = Vec::<String>::new();
     let mut state = HashMap::<String, VisitState>::new();
     let mut stack = Vec::<String>::new();
@@ -40,7 +43,7 @@ fn topo_visit(
     state: &mut HashMap<String, VisitState>,
     stack: &mut Vec<String>,
     order: &mut Vec<String>,
-) -> Result<(), String> {
+) -> Result<(), ProjectError> {
     match state.get(key) {
         Some(VisitState::Done) => return Ok(()),
         Some(VisitState::Visiting) => {
@@ -55,10 +58,14 @@ fn topo_visit(
                 .map(|unit_key| display_unit_key(unit_key))
                 .collect::<Vec<_>>()
                 .join(" -> ");
-            return Err(format!(
-                "Cyclic unit dependency detected: {cycle} -> {}.\n  help: Break the cycle by extracting shared declarations into a separate unit.",
-                display_unit_key(key)
-            ));
+            return Err(ProjectError::new(
+                PROJECT_UNIT_CYCLE,
+                format!(
+                    "Cyclic unit dependency detected: {cycle} -> {}.",
+                    display_unit_key(key)
+                ),
+            )
+            .with_help("Break the cycle by extracting shared declarations into a separate unit."));
         }
         None => {}
     }

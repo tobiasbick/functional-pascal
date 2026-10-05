@@ -9,9 +9,20 @@ use crate::intrinsic_args::{IntrinsicCall, pop_array, pop_string, pop_value};
 use crate::std_symbols as s;
 use fpas_bytecode::{Intrinsic, ProcIntrinsic, SourceLocation, Value};
 use std::env;
-use std::process::Command;
+use std::io::{self, BufRead, BufReader};
+use std::process::{Command, ExitStatus, Stdio};
+use std::sync::Arc;
+
+/// Receives each standard-error line of a child started by `Std.Proc.Run`.
+///
+/// Lines arrive without their line ending. A host installs a receiver when the
+/// child's standard error must not reach the parent's stderr directly, for
+/// example to wrap it as program-output events in a JSON diagnostic stream.
+pub type ProgramStderr = Arc<dyn Fn(&str) + Send + Sync>;
 
 /// Execute a `Std.Proc` intrinsic and return `None` when another unit should handle it.
+///
+/// `Std.Proc.Run` is hosted by the VM, which passes its stderr receiver to [`run_process`].
 pub(crate) fn run(
     intrinsic: Intrinsic,
     call: &mut IntrinsicCall<'_>,
@@ -20,11 +31,6 @@ pub(crate) fn run(
     match intrinsic {
         Intrinsic::Proc(ProcIntrinsic::CurrentExecutable) => {
             call.push(current_executable());
-        }
-        Intrinsic::Proc(ProcIntrinsic::Run) => {
-            let args = pop_string_array(pop_value(call, location)?, location)?;
-            let command = pop_string(pop_value(call, location)?, location)?;
-            call.push(run_process(&command, &args));
         }
         Intrinsic::Proc(ProcIntrinsic::RunCapture) => {
             let args = pop_string_array(pop_value(call, location)?, location)?;
@@ -37,6 +43,31 @@ pub(crate) fn run(
     Ok(Some(()))
 }
 
+/// Decodes the `(command, args)` arguments of `Std.Proc.Run`.
+///
+/// # Errors
+/// Returns a runtime diagnostic when an argument has the wrong runtime type.
+pub fn run_process_arguments(
+    arguments: &[Value],
+    location: SourceLocation,
+) -> Result<(String, Vec<String>), StdError> {
+    let [command, args] = arguments else {
+        return Err(crate::error::std_runtime_error(
+            fpas_diagnostics::codes::RUNTIME_INTRINSIC_STACK_STATE_ERROR,
+            format!(
+                "`Std.Proc.Run` expected 2 arguments, got {}",
+                arguments.len()
+            ),
+            "Check the compiler intrinsic signature and register argument count.",
+            location,
+        ));
+    };
+    Ok((
+        pop_string(command, location)?,
+        pop_string_array(args, location)?,
+    ))
+}
+
 fn pop_string_array(value: &Value, location: SourceLocation) -> Result<Vec<String>, StdError> {
     pop_array(value, location)?
         .into_iter()
@@ -44,8 +75,17 @@ fn pop_string_array(value: &Value, location: SourceLocation) -> Result<Vec<Strin
         .collect()
 }
 
-fn run_process(command: &str, args: &[String]) -> Value {
-    match Command::new(command).args(args).status() {
+/// Runs `Std.Proc.Run`: the child inherits stdin and stdout; its stderr goes to
+/// `stderr` line by line when a receiver is installed and is inherited otherwise.
+///
+/// Returns `Ok(exit code)` or `Error(message)` as an FPAS result value.
+#[must_use]
+pub fn run_process(command: &str, args: &[String], stderr: Option<&ProgramStderr>) -> Value {
+    let status = match stderr {
+        Some(receiver) => run_forwarding_stderr(command, args, receiver),
+        None => Command::new(command).args(args).status(),
+    };
+    match status {
         Ok(status) => match status.code() {
             Some(code) => Value::result_ok(Value::Integer(i64::from(code))),
             None => {
@@ -54,6 +94,32 @@ fn run_process(command: &str, args: &[String]) -> Value {
         },
         Err(error) => Value::result_error(Value::Str(error.to_string().into())),
     }
+}
+
+fn run_forwarding_stderr(
+    command: &str,
+    args: &[String],
+    receiver: &ProgramStderr,
+) -> io::Result<ExitStatus> {
+    let mut child = Command::new(command)
+        .args(args)
+        .stderr(Stdio::piped())
+        .spawn()?;
+    let forwarded = child.stderr.take().map_or(Ok(()), |stderr| {
+        let mut reader = BufReader::new(stderr);
+        let mut line = Vec::new();
+        loop {
+            line.clear();
+            if reader.read_until(b'\n', &mut line)? == 0 {
+                return Ok(());
+            }
+            let text = String::from_utf8_lossy(&line);
+            receiver(text.trim_end_matches('\n').trim_end_matches('\r'));
+        }
+    });
+    // The pipe is closed here, so a child still writing cannot block `wait`.
+    let status = child.wait()?;
+    forwarded.map(|()| status)
 }
 
 fn current_executable() -> Value {
@@ -96,11 +162,6 @@ mod tests {
         SourceLocation::new(1, 1)
     }
 
-    fn run_proc(stack: &mut Vec<Value>) {
-        crate::execute_test_intrinsic(Intrinsic::Proc(ProcIntrinsic::Run), stack, test_location())
-            .unwrap();
-    }
-
     fn run_capture(stack: &mut Vec<Value>) {
         crate::execute_test_intrinsic(
             Intrinsic::Proc(ProcIntrinsic::RunCapture),
@@ -113,39 +174,50 @@ mod tests {
     #[test]
     fn run_returns_exit_code_for_successful_process() {
         let (command, args) = successful_process_fixture();
-        let mut stack = vec![Value::Str(command.into()), Value::Array(args.into())];
 
-        run_proc(&mut stack);
+        assert_eq!(
+            run_process(&command, &args, None),
+            Value::result_ok(Value::Integer(0))
+        );
+    }
 
-        assert_eq!(stack, vec![Value::result_ok(Value::Integer(0))]);
+    #[test]
+    fn run_forwards_each_stderr_line_to_the_installed_receiver() {
+        let (command, args) = capture_process_fixture(3);
+        let lines = Arc::new(std::sync::Mutex::new(Vec::<String>::new()));
+        let sink = Arc::clone(&lines);
+        let receiver: ProgramStderr = Arc::new(move |line| {
+            sink.lock().expect("receiver lock").push(line.to_owned());
+        });
+        let args = args
+            .iter()
+            .map(|value| match value {
+                Value::Str(text) => text.to_string(),
+                _ => unreachable!("fixture arguments are strings"),
+            })
+            .collect::<Vec<_>>();
+
+        let result = run_process(&command, &args, Some(&receiver));
+
+        assert_eq!(result, Value::result_ok(Value::Integer(3)));
+        assert_eq!(*lines.lock().expect("lines"), ["captured stderr"]);
     }
 
     #[cfg(windows)]
-    fn successful_process_fixture() -> (String, Vec<Value>) {
-        (
-            "cmd".into(),
-            vec![Value::Str("/C".into()), Value::Str("exit 0".into())],
-        )
+    fn successful_process_fixture() -> (String, Vec<String>) {
+        ("cmd".into(), vec!["/C".into(), "exit 0".into()])
     }
 
     #[cfg(not(windows))]
-    fn successful_process_fixture() -> (String, Vec<Value>) {
-        (
-            "sh".into(),
-            vec![Value::Str("-c".into()), Value::Str("exit 0".into())],
-        )
+    fn successful_process_fixture() -> (String, Vec<String>) {
+        ("sh".into(), vec!["-c".into(), "exit 0".into()])
     }
 
     #[test]
     fn run_returns_error_for_missing_command() {
-        let mut stack = vec![
-            Value::Str("__fpas_proc_missing_command_8f21d2f4__".into()),
-            Value::Array(Vec::new().into()),
-        ];
+        let result = run_process("__fpas_proc_missing_command_8f21d2f4__", &[], None);
 
-        run_proc(&mut stack);
-
-        assert!(matches!(stack[0], Value::ResultError(_)));
+        assert!(matches!(result, Value::ResultError(_)));
     }
 
     #[test]

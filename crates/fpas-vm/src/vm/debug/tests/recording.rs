@@ -223,7 +223,7 @@ fn capturing_rejects_random_before_the_intrinsic_runs() {
     let stop = stopped(session.continue_execution().expect("capture random"));
     assert_eq!(session.state(), DebugSessionState::Failed);
     assert_eq!(stop.reason, DebugStopReason::RuntimeError);
-    let diagnostic = stop.diagnostic.expect("F4024");
+    let diagnostic = stop.diagnostic.expect("FP5024");
     assert_eq!(
         diagnostic.code,
         fpas_diagnostics::codes::RUNTIME_RECORDING_UNSUPPORTED_EFFECT

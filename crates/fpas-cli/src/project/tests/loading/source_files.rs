@@ -1,4 +1,5 @@
 use super::*;
+use fpas_diagnostics::codes::{PROJECT_DUPLICATE_SOURCE_FILE, PROJECT_PROGRAM_SOURCE_SKIPPED};
 
 #[test]
 fn duplicate_sources_are_ignored_with_warning() {
@@ -25,7 +26,7 @@ include = ["src/util.fpas", "src/*.fpas", "src/util.fpas"]
         loaded
             .warnings
             .iter()
-            .any(|warning| warning.contains("Duplicate source file"))
+            .any(|warning| warning.diagnostic.code == PROJECT_DUPLICATE_SOURCE_FILE)
     );
 }
 
@@ -91,7 +92,7 @@ include = ["src/main.fpas", "{main_path_text}", "src/util.fpas"]
         loaded
             .warnings
             .iter()
-            .any(|warning| warning.contains("Duplicate source file"))
+            .any(|warning| warning.diagnostic.code == PROJECT_DUPLICATE_SOURCE_FILE)
     );
 }
 
@@ -147,12 +148,9 @@ include = ["src/*.fpas"]
 
     assert_eq!(loaded.source_files.len(), 1);
     assert!(loaded.source_files[0].ends_with("util.fpas"));
-    assert!(
-        loaded
-            .warnings
-            .iter()
-            .any(|warning| warning.contains("declares `program Tool` and was skipped"))
-    );
+    assert!(loaded.warnings.iter().any(|warning| warning.diagnostic.code
+        == PROJECT_PROGRAM_SOURCE_SKIPPED
+        && warning.diagnostic.message.contains("`program Tool`")));
 }
 
 #[test]
@@ -186,7 +184,7 @@ include = ["src/util.fpas", "./src/util.fpas", "src/../src/util.fpas", "{util_pa
         loaded
             .warnings
             .iter()
-            .filter(|warning| warning.contains("Duplicate source file"))
+            .filter(|warning| warning.diagnostic.code == PROJECT_DUPLICATE_SOURCE_FILE)
             .count(),
         3
     );

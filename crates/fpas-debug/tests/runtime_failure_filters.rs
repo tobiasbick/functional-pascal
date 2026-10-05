@@ -41,7 +41,7 @@ fn run(server: &mut JsonlServer) -> Vec<Value> {
 
 #[test]
 fn default_and_exact_matching_filters_keep_runtime_failures_inspectable() {
-    for filters in [None, Some(json!(["F4001"]))] {
+    for filters in [None, Some(json!(["FP5001"]))] {
         let mut server = server();
         let initialized = server.handle_line(&request(1, "initialize", json!({})));
         assert_eq!(
@@ -64,7 +64,7 @@ fn default_and_exact_matching_filters_keep_runtime_failures_inspectable() {
         let records = run(&mut server);
         assert!(
             records.iter().any(|record| {
-                record["event"] == "runtime_error" && record["body"]["code"] == "F4001"
+                record["event"] == "runtime_error" && record["body"]["code"] == "FP5001"
             }),
             "{records:?}"
         );
@@ -85,7 +85,7 @@ fn nonmatching_filter_reports_diagnostic_then_failed_termination_without_stop() 
     let configured = server.handle_line(&request(
         2,
         "runtime_failures.replace",
-        json!({"filters":["F4010"]}),
+        json!({"filters":["FP5010"]}),
     ));
     assert_eq!(configured[0]["success"], true);
 
@@ -102,7 +102,7 @@ fn nonmatching_filter_reports_diagnostic_then_failed_termination_without_stop() 
     assert!(!records.iter().any(|record| record["event"] == "stopped"));
     assert_eq!(records[terminated]["body"]["reason"], "runtime_error");
     assert_eq!(records[terminated]["body"]["exit_code"], 1);
-    assert_eq!(records[terminated]["body"]["diagnostic_code"], "F4001");
+    assert_eq!(records[terminated]["body"]["diagnostic_code"], "FP5001");
     assert_eq!(server.status(), ServerStatus::Terminated);
 }
 
@@ -110,13 +110,13 @@ fn nonmatching_filter_reports_diagnostic_then_failed_termination_without_stop() 
 fn invalid_replacement_is_atomic() {
     let excessive = Value::Array(
         (0..65)
-            .map(|_| Value::String("F4001".to_string()))
+            .map(|_| Value::String("FP5001".to_string()))
             .collect(),
     );
     for invalid in [
-        json!(["F4017"]),
-        json!(["F4001", "F4001"]),
-        json!(["all", "F4001"]),
+        json!(["FP5017"]),
+        json!(["FP5001", "FP5001"]),
+        json!(["all", "FP5001"]),
         excessive,
     ] {
         let mut server = server();

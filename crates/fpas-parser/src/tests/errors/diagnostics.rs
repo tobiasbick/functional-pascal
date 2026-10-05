@@ -34,7 +34,17 @@ fn expected_token_has_correct_code() {
     let parse_err = errs.iter().find_map(ParseDiagnostic::as_parser_error);
     let d = parse_err.expect("expected a parser diagnostic");
     assert_eq!(d.code, PARSE_EXPECTED_TOKEN, "wrong diagnostic code");
-    assert_eq!(d.span.line(), 1, "wrong line");
+    assert_eq!(d.expected.as_deref(), Some(";"));
+    assert_eq!(d.found.as_deref(), Some("begin"));
+    let json =
+        fpas_diagnostics::render_json(Some("parse.fpas"), Some("program Hello begin end."), d)
+            .expect("structured parser diagnostic");
+    assert!(json.contains("\"expected\":\";\",\"found\":\"begin\""));
+    assert_eq!(
+        d.span.expect("source diagnostic span").line(),
+        1,
+        "wrong line"
+    );
     assert!(
         d.help.as_deref().is_some_and(|h| !h.is_empty()),
         "help text must be present"

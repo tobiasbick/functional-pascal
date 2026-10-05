@@ -46,12 +46,12 @@ end."
                     assert_eq!(code, 0, "{namespace}.{function}: {stderr}");
                 } else {
                     assert_ne!(code, 0, "{namespace}.{function}");
-                    assert!(stderr.contains("F2006"), "{stderr}");
+                    assert!(stderr.contains("FP3006"), "{stderr}");
                     assert!(
                         stderr.contains(&format!("Std.{namespace}.{function}")),
                         "{stderr}"
                     );
-                    assert!(!stderr.contains("F9001"), "{stderr}");
+                    assert!(!stderr.contains("FP9001"), "{stderr}");
                 }
             }
         }

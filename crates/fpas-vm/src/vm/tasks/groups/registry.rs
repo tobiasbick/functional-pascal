@@ -72,8 +72,8 @@ impl GroupFailure {
             kind,
             message: error.message.chars().take(4096).collect(),
             code: error.code.value(),
-            line: error.span.line(),
-            column: error.span.column(),
+            line: error.span.map_or(0, |span| span.line()),
+            column: error.span.map_or(0, |span| span.column()),
         }
     }
 }

@@ -2,6 +2,11 @@
 //!
 //! Documentation: `docs/pascal/program-structure/projects.md`
 
+use fpas_diagnostics::codes::{
+    PROJECT_DEPENDENCY_CYCLE, PROJECT_DEPENDENCY_NOT_LIBRARY, PROJECT_SOURCE_OWNERSHIP_CONFLICT,
+};
+
+use super::ProjectError;
 use super::loading::own::{load_own_project, validate_project_source_units};
 use super::loading::parse_cache::ParsedSourceCache;
 use super::model::{
@@ -9,7 +14,7 @@ use super::model::{
 };
 use super::paths::{
     canonical_project_path, canonical_source_path, merge_source_files,
-    resolve_project_dependency_path, same_file,
+    resolve_project_dependency_path, same_file, unresolvable_root_error,
 };
 use super::test_sources::validate_project_test_sources;
 use super::workspace::resolve_workspace_dependency_paths;
@@ -26,7 +31,7 @@ pub(super) fn load_project_with_dependencies(
     visiting: &mut Vec<PathBuf>,
     cache: &mut HashMap<PathBuf, LoadedProject>,
     parse_cache: &mut ParsedSourceCache,
-) -> Result<LoadedProject, String> {
+) -> Result<LoadedProject, crate::ProjectError> {
     let canonical = canonical_project_path(path);
     if let Some(cached) = cache.get(&canonical) {
         return Ok(cached.clone());
@@ -94,13 +99,10 @@ fn resolve_all_dependency_paths(
     consumer_project: &Path,
     project_paths: &[String],
     workspace_names: &[String],
-) -> Result<Vec<PathBuf>, String> {
-    let root_dir = consumer_project.parent().ok_or_else(|| {
-        format!(
-            "Cannot resolve project root for `{}`.\n  help: Use a normal file path inside a directory.",
-            consumer_project.to_string_lossy()
-        )
-    })?;
+) -> Result<Vec<PathBuf>, crate::ProjectError> {
+    let root_dir = consumer_project
+        .parent()
+        .ok_or_else(|| unresolvable_root_error("project", consumer_project))?;
 
     let mut resolved = Vec::new();
     let mut seen = HashSet::<PathBuf>::new();
@@ -133,7 +135,7 @@ fn merge_dependency_link_meta(
     consumer: &mut ProjectLinkMeta,
     dependency_path: &Path,
     dependency_loaded: &LoadedProject,
-) -> Result<(), String> {
+) -> Result<(), crate::ProjectError> {
     let dependency_canonical = canonical_project_path(dependency_path);
     consumer.library_export_policies.insert(
         dependency_canonical.clone(),
@@ -169,7 +171,7 @@ fn reject_library_source_overlap(
     link_meta: &ProjectLinkMeta,
     source_path: &Path,
     incoming_origin: &SourceOrigin,
-) -> Result<(), String> {
+) -> Result<(), crate::ProjectError> {
     let SourceOrigin::Library(incoming_owner) = incoming_origin else {
         return Ok(());
     };
@@ -191,7 +193,7 @@ fn reject_own_source_overlap(
     project_path: &Path,
     own_source_paths: &[PathBuf],
     link_meta: &ProjectLinkMeta,
-) -> Result<(), String> {
+) -> Result<(), crate::ProjectError> {
     for source_path in own_source_paths {
         let Some(library_owner) = library_owner_for_source(link_meta, source_path) else {
             continue;
@@ -228,24 +230,35 @@ fn source_ownership_conflict_error(
     source_path: &Path,
     first_project: &Path,
     conflicting_project: &Path,
-) -> String {
-    format!(
-        "Source file `{}` is owned by more than one project.\n  first project: `{}`\n  conflicting project: `{}`\n  help: Keep the file in one project's `[sources]`; consume it from other projects through that library dependency.",
-        canonical_source_path(source_path).to_string_lossy(),
-        first_project.to_string_lossy(),
-        conflicting_project.to_string_lossy()
+) -> ProjectError {
+    ProjectError::new(
+        PROJECT_SOURCE_OWNERSHIP_CONFLICT,
+        format!(
+            "Source file `{}` is owned by more than one project: first project `{}`, conflicting project `{}`.",
+            canonical_source_path(source_path).to_string_lossy(),
+            first_project.to_string_lossy(),
+            conflicting_project.to_string_lossy()
+        ),
     )
+    .with_help("Keep the file in one project's `[sources]`; consume it from other projects through that library dependency.")
 }
 
-fn ensure_library_dependency(path: &Path, loaded: &LoadedProject) -> Result<(), String> {
+fn ensure_library_dependency(
+    path: &Path,
+    loaded: &LoadedProject,
+) -> Result<(), crate::ProjectError> {
     if loaded.kind == ProjectKind::Library {
         return Ok(());
     }
 
-    Err(format!(
-        "Project dependency `{}` must be a library project (`kind = \"library\"`).\n  help: Point `dependencies.projects` at a `.fpasprj` with `kind = \"library\"`, or change the dependency to a program-only local include.",
-        path.to_string_lossy()
-    ))
+    Err(ProjectError::new(
+        PROJECT_DEPENDENCY_NOT_LIBRARY,
+        format!(
+            "Project dependency `{}` must be a library project (`kind = \"library\"`).",
+            path.to_string_lossy()
+        ),
+    )
+    .with_help("Point `dependencies.projects` at a `.fpasprj` with `kind = \"library\"`, or change the dependency to a program-only local include."))
 }
 
 fn prune_link_meta_origins(link_meta: &mut ProjectLinkMeta, source_files: &[PathBuf]) {
@@ -274,14 +287,15 @@ fn mark_own_source_origins(
     }
 }
 
-fn cyclic_project_dependency_error(visiting: &[PathBuf], path: &Path) -> String {
+fn cyclic_project_dependency_error(visiting: &[PathBuf], path: &Path) -> ProjectError {
     let mut cycle = visiting
         .iter()
         .map(|entry| format!("`{}`", entry.to_string_lossy()))
         .collect::<Vec<_>>();
     cycle.push(format!("`{}`", path.to_string_lossy()));
-    format!(
-        "Cyclic project dependency detected: {}.\n  help: Remove or reorder `dependencies.projects` so library projects do not depend on each other in a cycle.",
-        cycle.join(" -> ")
+    ProjectError::new(
+        PROJECT_DEPENDENCY_CYCLE,
+        format!("Cyclic project dependency detected: {}.", cycle.join(" -> ")),
     )
+    .with_help("Remove or reorder `dependencies.projects` so library projects do not depend on each other in a cycle.")
 }

@@ -213,7 +213,7 @@ fn jsonl_recording_off_random_terminates_without_f4024() {
     }
     assert!(
         !records.iter().any(|record| {
-            record["event"] == "runtime_error" && record["body"]["code"] == "F4024"
+            record["event"] == "runtime_error" && record["body"]["code"] == "FP5024"
         }),
         "{records:?}"
     );
@@ -231,7 +231,7 @@ fn jsonl_capturing_rejects_random_without_claiming_replay() {
     let records = server.wait();
     assert!(
         records.iter().any(|record| {
-            record["event"] == "runtime_error" && record["body"]["code"] == "F4024"
+            record["event"] == "runtime_error" && record["body"]["code"] == "FP5024"
         }),
         "{records:?}"
     );

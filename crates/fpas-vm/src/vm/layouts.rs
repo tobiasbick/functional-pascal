@@ -137,7 +137,7 @@ fn missing_layout(kind: &str, name: &str, location: SourceLocation) -> fpas_std:
         fpas_diagnostics::codes::INTERNAL_VM_INVARIANT_FAILURE,
         format!("Verified {kind} layout `{name}` is unavailable"),
         Some("Recompile the program and report this compiler/runtime layout mismatch.".into()),
-        fpas_diagnostics::SourceSpan::new(0, 1, location.line(), location.column()),
+        fpas_diagnostics::SourceSpan::synthetic_from_location(location),
     )
 }
 
@@ -151,7 +151,7 @@ fn layout_arity_error(
         fpas_diagnostics::codes::INTERNAL_VM_INVARIANT_FAILURE,
         format!("Aggregate `{name}` expects {expected} fields, received {actual}"),
         Some("Recompile the program and report this compiler/runtime layout mismatch.".into()),
-        fpas_diagnostics::SourceSpan::new(0, 1, location.line(), location.column()),
+        fpas_diagnostics::SourceSpan::synthetic_from_location(location),
     )
 }
 

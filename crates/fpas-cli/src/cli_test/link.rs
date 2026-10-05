@@ -9,7 +9,10 @@ use std::sync::Arc;
 use super::hooks;
 use super::run::LinkContext;
 use crate::cli_paths::{PROJECT_FILE_EXTENSION, has_extension};
+use fpas_diagnostics::codes::{PROJECT_DISCOVERY_FAILED, PROJECT_PATH_INVALID, TEST_RUNNER_FAILED};
 use fpas_project as project;
+
+use crate::cli_output::CliFailure;
 
 /// Caches loaded project link contexts while a test run walks many files.
 #[derive(Default)]
@@ -30,7 +33,10 @@ impl LinkContextCache {
     }
 
     /// Returns the enclosing project context for `path`, loading each project at most once.
-    pub(super) fn context_for_test(&mut self, path: &Path) -> Result<Option<LinkContext>, String> {
+    pub(super) fn context_for_test(
+        &mut self,
+        path: &Path,
+    ) -> Result<Option<LinkContext>, CliFailure> {
         let Some(project_file) = find_enclosing_project(path)? else {
             if let Some(context) = &self.unscoped {
                 return Ok(Some(context.clone()));
@@ -63,7 +69,8 @@ impl LinkContextCache {
             .into_iter()
             .filter(|path| !project::is_test_source_file(path))
             .collect::<Vec<_>>();
-        let hooks = hooks::discover_test_hooks(&source_files)?;
+        let hooks = hooks::discover_test_hooks(&source_files)
+            .map_err(|message| CliFailure::from_message(TEST_RUNNER_FAILED, &message))?;
         let program_graph = project::prepare_program_unit_graph(
             &source_files,
             &loaded.link_meta,
@@ -80,13 +87,16 @@ impl LinkContextCache {
     }
 }
 
-fn find_enclosing_project(start: &Path) -> Result<Option<PathBuf>, String> {
+fn find_enclosing_project(start: &Path) -> Result<Option<PathBuf>, CliFailure> {
     let mut dir = start
         .parent()
         .ok_or_else(|| {
-            format!(
-                "Cannot resolve enclosing project for `{}`.",
-                start.display()
+            CliFailure::new(
+                PROJECT_PATH_INVALID,
+                format!(
+                    "Cannot resolve enclosing project for `{}`.",
+                    start.display()
+                ),
             )
         })?
         .to_path_buf();
@@ -110,9 +120,15 @@ fn find_enclosing_project(start: &Path) -> Result<Option<PathBuf>, String> {
                     .map(|path| path.display().to_string())
                     .collect::<Vec<_>>()
                     .join(", ");
-                return Err(format!(
-                    "Found multiple `.fpasprj` files in `{}`: {entries}.\n  help: Keep one project manifest per directory or pass an explicit `.fpasprj` path.",
-                    dir.display()
+                return Err(CliFailure::new(
+                    PROJECT_DISCOVERY_FAILED,
+                    format!(
+                        "Found multiple `.fpasprj` files in `{}`: {entries}.",
+                        dir.display()
+                    ),
+                )
+                .with_help(
+                    "Keep one project manifest per directory or pass an explicit `.fpasprj` path.",
                 ));
             }
         }

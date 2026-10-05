@@ -5,6 +5,7 @@ use fpas_diagnostics::codes::INTERNAL_COMPILER_INVARIANT_FAILURE;
 pub type CompileError = Diagnostic;
 
 #[must_use]
+/// Creates an internal compiler diagnostic when only a source point is known.
 pub fn internal_compiler_error(
     message: impl Into<String>,
     hint: impl Into<String>,
@@ -15,6 +16,8 @@ pub fn internal_compiler_error(
         INTERNAL_COMPILER_INVARIANT_FAILURE,
         message,
         Some(hint.into()),
-        fpas_diagnostics::SourceSpan::new(0, 0, line, column),
+        fpas_diagnostics::SourceSpan::synthetic_from_location(
+            fpas_diagnostics::SourceLocation::new(line, column),
+        ),
     )
 }

@@ -94,8 +94,10 @@ fn run_cli_reports_unit_sema_errors_with_the_unit_path() {
     fs::remove_dir_all(&cwd).expect("temp directory must be removed");
 
     assert_eq!(exit_code, 1);
-    assert!(stderr_output.contains("util.fpas:4:10: error[F2003]: Undefined identifier `Missing`"));
-    assert!(!stderr_output.contains("main.fpas:4:10: error[F2003]"));
+    assert!(
+        stderr_output.contains("util.fpas:4:10: error[FP3003]: Undefined identifier `Missing`")
+    );
+    assert!(!stderr_output.contains("main.fpas:4:10: error[FP3003]"));
 }
 
 #[test]
@@ -116,8 +118,8 @@ fn run_cli_reports_unit_runtime_errors_with_the_unit_path() {
     fs::remove_dir_all(&cwd).expect("temp directory must be removed");
 
     assert_eq!(exit_code, 2);
-    assert!(stderr_output.contains("util.fpas:4:21: error[F4001]: Division by zero"));
-    assert!(!stderr_output.contains("main.fpas:4:21: error[F4001]"));
+    assert!(stderr_output.contains("util.fpas:4:21: error[FP5001]: Division by zero"));
+    assert!(!stderr_output.contains("main.fpas:4:21: error[FP5001]"));
 }
 
 #[test]

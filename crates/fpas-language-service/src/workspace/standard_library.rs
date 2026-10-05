@@ -22,7 +22,7 @@ pub(crate) struct StandardLibraryContext {
 
 impl StandardLibraryContext {
     pub(crate) fn load(root: &Path) -> Result<Self, String> {
-        let project = load_standard_library_project(root)?;
+        let project = load_standard_library_project(root).map_err(|error| error.to_string())?;
         let mut editor_api_sources = Vec::new();
         collect_editor_api_sources(&root.join("api/Std"), &mut editor_api_sources)?;
         editor_api_sources.sort();

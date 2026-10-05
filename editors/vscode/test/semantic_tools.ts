@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import * as vscode from "vscode";
 
-const DIAGNOSTIC_CODE = "F2003";
+const DIAGNOSTIC_CODE = "FP3003";
 
 interface SemanticTokensLegendResult {
   readonly tokenTypes: readonly string[];

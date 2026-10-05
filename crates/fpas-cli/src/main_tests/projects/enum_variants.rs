@@ -75,8 +75,8 @@ end."
             &cwd,
         );
         assert_ne!(code, 0, "accepted {argument}");
-        assert!(stderr.contains("error[F2"), "{argument}: {stderr}");
-        assert!(!stderr.contains("F9001"), "{argument}: {stderr}");
+        assert!(stderr.contains("error[FP3"), "{argument}: {stderr}");
+        assert!(!stderr.contains("FP9001"), "{argument}: {stderr}");
     }
     fs::remove_dir_all(&cwd).expect("remove fixture");
 }

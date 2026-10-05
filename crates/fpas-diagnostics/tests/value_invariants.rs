@@ -25,20 +25,21 @@ fn dynamic_diagnostic_codes_accept_the_full_range_and_reject_overflow() {
 #[test]
 fn stage_boundaries_are_derived_from_the_code() {
     for (value, expected) in [
-        (13, DiagnosticStage::Lex),
-        (14, DiagnosticStage::Internal),
-        (1001, DiagnosticStage::Parse),
-        (1999, DiagnosticStage::Parse),
-        (2000, DiagnosticStage::Internal),
-        (2001, DiagnosticStage::Sema),
-        (2999, DiagnosticStage::Sema),
-        (3000, DiagnosticStage::Internal),
-        (3001, DiagnosticStage::Compile),
-        (3999, DiagnosticStage::Compile),
-        (4000, DiagnosticStage::Internal),
-        (4001, DiagnosticStage::Runtime),
-        (4999, DiagnosticStage::Runtime),
-        (5000, DiagnosticStage::Internal),
+        (999, DiagnosticStage::Internal),
+        (1000, DiagnosticStage::Lex),
+        (1999, DiagnosticStage::Lex),
+        (2000, DiagnosticStage::Parse),
+        (2001, DiagnosticStage::Parse),
+        (2999, DiagnosticStage::Parse),
+        (3000, DiagnosticStage::Sema),
+        (3999, DiagnosticStage::Sema),
+        (4000, DiagnosticStage::Compile),
+        (4099, DiagnosticStage::Compile),
+        (4100, DiagnosticStage::Project),
+        (4999, DiagnosticStage::Project),
+        (5000, DiagnosticStage::Runtime),
+        (5999, DiagnosticStage::Runtime),
+        (6000, DiagnosticStage::Internal),
     ] {
         assert_eq!(DiagnosticCode::new(value).stage(), expected);
     }

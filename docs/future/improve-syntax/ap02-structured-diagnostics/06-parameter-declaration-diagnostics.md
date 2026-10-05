@@ -38,3 +38,10 @@ may mention the diagnostic hint.
 
 - Parser tests for both invalid forms in functions, procedures, methods, and
   anonymous routines, and for the valid canonical form.
+
+## Result
+
+Parameter parsing now lives in the focused `decl/parameters.rs` module.
+FP2014 covers both invalid forms, including callable types, without changing
+accepted grammar. Validation also exposed and fixed a non-progress loop in
+record initializer recovery; see the [implementation audit](implementation-audit.md).

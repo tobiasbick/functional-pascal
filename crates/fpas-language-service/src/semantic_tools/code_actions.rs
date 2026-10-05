@@ -21,9 +21,11 @@ impl LanguageService {
         let Some(current) = analysis.diagnostics().iter().find(|diagnostic| {
             diagnostic.code == trigger.code
                 && diagnostic.message == trigger.message
-                && diagnostic.span.offset() == trigger.span.offset()
-                && diagnostic.span.length() == trigger.span.length()
-                && diagnostic.span.source_id() == 0
+                && diagnostic.span.is_some_and(|span| {
+                    span.offset() == trigger.span.offset()
+                        && span.length() == trigger.span.length()
+                        && span.source_id() == 0
+                })
         }) else {
             return Ok(ResultWithSnapshot {
                 snapshot,
@@ -33,7 +35,7 @@ impl LanguageService {
         let identity = DiagnosticIdentity {
             code: current.code,
             message: current.message.clone(),
-            span: current.span,
+            span: trigger.span,
         };
         let value = import_action(self, path, &snapshot, &identity)
             .into_iter()

@@ -7,6 +7,7 @@ mod delimiters;
 mod diagnostics;
 mod keywords;
 mod nesting;
+mod parameters;
 mod recovery;
 mod statement_separators;
 mod syntax;

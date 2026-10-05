@@ -1,5 +1,5 @@
 use crate::cli_input::TestCliConfig;
-use crate::cli_test::test_cli;
+use crate::cli_test::test_cli_with_stderr;
 use crate::test_support::{create_temp_dir, write_text};
 use std::time::Duration;
 
@@ -13,7 +13,7 @@ fn test_cli_timeout_aborts_infinite_loop() {
 
     let mut stdout = Vec::new();
     let mut stderr = Vec::new();
-    let exit = test_cli(
+    let exit = test_cli_with_stderr(
         TestCliConfig {
             input: crate::CliInput::SourceFile(cwd.join("hang_test.fpas")),
             cwd: cwd.clone(),
@@ -27,6 +27,7 @@ fn test_cli_timeout_aborts_infinite_loop() {
             jobs: 1,
             strict: false,
             show_output: false,
+            diagnostics: Default::default(),
             standard_library: None,
         },
         &mut stdout,

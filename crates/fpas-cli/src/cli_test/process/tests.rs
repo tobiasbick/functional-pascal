@@ -1,6 +1,7 @@
 use std::io::Write;
 
-use super::{CappedBuffer, run_worker_from_args};
+use super::output::CappedBuffer;
+use super::run_worker_from_args;
 
 #[test]
 fn capped_worker_output_reports_overflow() {

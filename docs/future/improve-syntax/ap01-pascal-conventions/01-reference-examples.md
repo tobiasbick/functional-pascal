@@ -40,3 +40,10 @@ Planning documentation only. `docs/pascal/` stays unchanged.
   with the owning package.
 - No example contradicts a recorded decision in another package.
 - Relative links resolve.
+
+## Result
+
+[Reference style](reference-style.md) supplies ten examples covering every
+requested construct. Each separates current forms from draft forms and names
+the owning packages. The examples retain explicit types and avoid deciding
+open grammar details. Delivery is local; the completion checkbox awaits merge.

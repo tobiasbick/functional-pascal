@@ -41,7 +41,7 @@ fn invalid_comment_form_publishes_one_actionable_lexer_diagnostic() {
         .as_array()
         .expect("diagnostic array");
     assert_eq!(diagnostics.len(), 1, "{diagnostics:?}");
-    assert_eq!(diagnostics[0]["code"], json!("F0013"));
+    assert_eq!(diagnostics[0]["code"], json!("FP1013"));
     assert!(
         diagnostics[0]["message"]
             .as_str()
@@ -84,7 +84,7 @@ fn parser_and_semantic_errors_publish_and_a_fixed_version_clears_them() {
             .iter()
             .any(|diagnostic| diagnostic["code"]
                 .as_str()
-                .is_some_and(|code| code.starts_with("F1"))),
+                .is_some_and(|code| code.starts_with("FP2"))),
         "{version_1:?}"
     );
     assert!(
@@ -107,7 +107,7 @@ fn parser_and_semantic_errors_publish_and_a_fixed_version_clears_them() {
             .any(|diagnostic| {
                 diagnostic["code"]
                     .as_str()
-                    .is_some_and(|code| code.starts_with("F2"))
+                    .is_some_and(|code| code.starts_with("FP3"))
                     && diagnostic["severity"] == json!(1)
             }),
         "{version_2:?}"
@@ -227,7 +227,7 @@ include = ["src/**/*.fpas"]
         diagnostics.iter().any(|diagnostic| {
             diagnostic["code"]
                 .as_str()
-                .is_some_and(|code| code.starts_with("F2"))
+                .is_some_and(|code| code.starts_with("FP3"))
                 && diagnostic["range"]["start"]["line"] == json!(4)
         }),
         "{diagnostics:?}"
@@ -295,7 +295,7 @@ include = ["src/**/*.fpas"]
     assert!(
         version_2.iter().any(|diagnostic| diagnostic["code"]
             .as_str()
-            .is_some_and(|code| code.starts_with("F1"))),
+            .is_some_and(|code| code.starts_with("FP2"))),
         "{version_2:?}"
     );
     assert_eq!(

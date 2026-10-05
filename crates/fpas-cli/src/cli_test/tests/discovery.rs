@@ -1,5 +1,5 @@
 use crate::cli_input::TestCliConfig;
-use crate::cli_test::test_cli;
+use crate::cli_test::test_cli_with_stderr;
 use crate::test_support::{FailingWriter, create_temp_dir, write_text};
 
 #[test]
@@ -17,7 +17,7 @@ fn test_cli_runs_matching_tests_in_directory() {
 
     let mut stdout = Vec::new();
     let mut stderr = Vec::new();
-    let exit = test_cli(
+    let exit = test_cli_with_stderr(
         TestCliConfig {
             input: crate::CliInput::SourceFile(cwd.clone()),
             cwd: cwd.clone(),
@@ -31,6 +31,7 @@ fn test_cli_runs_matching_tests_in_directory() {
             jobs: 1,
             strict: false,
             show_output: false,
+            diagnostics: Default::default(),
             standard_library: None,
         },
         &mut stdout,
@@ -54,7 +55,7 @@ fn test_cli_list_only_prints_paths_without_running() {
 
     let mut stdout = Vec::new();
     let mut stderr = Vec::new();
-    let exit = test_cli(
+    let exit = test_cli_with_stderr(
         TestCliConfig {
             input: crate::CliInput::SourceFile(cwd.clone()),
             cwd,
@@ -68,6 +69,7 @@ fn test_cli_list_only_prints_paths_without_running() {
             jobs: 1,
             strict: false,
             show_output: false,
+            diagnostics: Default::default(),
             standard_library: None,
         },
         &mut stdout,
@@ -91,7 +93,7 @@ fn test_cli_list_only_fails_when_stdout_cannot_be_written() {
     );
     for mut stdout in [FailingWriter::immediately(), FailingWriter::after(8)] {
         let mut stderr = Vec::new();
-        let exit = test_cli(
+        let exit = test_cli_with_stderr(
             TestCliConfig {
                 input: crate::CliInput::SourceFile(cwd.clone()),
                 cwd: cwd.clone(),
@@ -105,6 +107,7 @@ fn test_cli_list_only_fails_when_stdout_cannot_be_written() {
                 jobs: 1,
                 strict: false,
                 show_output: false,
+                diagnostics: Default::default(),
                 standard_library: None,
             },
             &mut stdout,
@@ -135,7 +138,7 @@ fn test_cli_filter_runs_matching_tests_only() {
 
     let mut stdout = Vec::new();
     let mut stderr = Vec::new();
-    let exit = test_cli(
+    let exit = test_cli_with_stderr(
         TestCliConfig {
             input: crate::CliInput::SourceFile(cwd.clone()),
             cwd,
@@ -149,6 +152,7 @@ fn test_cli_filter_runs_matching_tests_only() {
             jobs: 1,
             strict: false,
             show_output: false,
+            diagnostics: Default::default(),
             standard_library: None,
         },
         &mut stdout,
@@ -174,7 +178,7 @@ fn test_cli_jobs_runs_tests_in_parallel_mode() {
 
     let mut stdout = Vec::new();
     let mut stderr = Vec::new();
-    let exit = test_cli(
+    let exit = test_cli_with_stderr(
         TestCliConfig {
             input: crate::CliInput::SourceFile(cwd.clone()),
             cwd,
@@ -188,6 +192,7 @@ fn test_cli_jobs_runs_tests_in_parallel_mode() {
             jobs: 2,
             strict: false,
             show_output: false,
+            diagnostics: Default::default(),
             standard_library: None,
         },
         &mut stdout,
@@ -217,7 +222,7 @@ fn test_cli_fail_fast_records_not_run_tests() {
 
     let mut stdout = Vec::new();
     let mut stderr = Vec::new();
-    let exit = test_cli(
+    let exit = test_cli_with_stderr(
         TestCliConfig {
             input: crate::CliInput::SourceFile(cwd.clone()),
             cwd: cwd.clone(),
@@ -231,6 +236,7 @@ fn test_cli_fail_fast_records_not_run_tests() {
             jobs: 1,
             strict: false,
             show_output: false,
+            diagnostics: Default::default(),
             standard_library: None,
         },
         &mut stdout,
@@ -265,7 +271,7 @@ fn parallel_fail_fast_stops_after_a_link_context_error() {
 
     let mut stdout = Vec::new();
     let mut stderr = Vec::new();
-    let exit = test_cli(
+    let exit = test_cli_with_stderr(
         TestCliConfig {
             input: crate::CliInput::SourceFile(cwd.clone()),
             cwd,
@@ -279,6 +285,7 @@ fn parallel_fail_fast_stops_after_a_link_context_error() {
             jobs: 2,
             strict: false,
             show_output: false,
+            diagnostics: Default::default(),
             standard_library: None,
         },
         &mut stdout,

@@ -14,7 +14,7 @@ the canonical spelling.
 
 - Use stable numeric diagnostic codes with ranges per phase: `FP1xxx` for
   lexer errors, `FP2xxx` for parser errors, `FP3xxx` for semantic checks,
-  `FP4xxx` for project/build diagnostics, and `FP5xxx` for runtime diagnostics.
+  `FP4xxx` for compiler/project/build diagnostics, and `FP5xxx` for runtime diagnostics.
 - Show the codes in both human-readable and machine-readable output.
 - Add `--diagnostics json` to `check`, `build`, `run`, and `test`, emitting
   one JSON object per line with code, severity, file, line, column, end position,
@@ -29,15 +29,19 @@ superseded or commonly expected form (classic Pascal, Delphi, or other
 mainstream habits) and names the canonical replacement in the diagnostic. That
 diagnostic ships with the owning work package, not with AP02.
 
-## Open decisions
+## Resolved decisions
 
-- **Code numbering versus existing codes.** The checkout already has stable
-  `Fxxxx` codes in `crates/fpas-diagnostics/src/codes.rs` with different phase
-  ranges (`F0xxx` lexer, `F1xxx` parser, `F2xxx` semantic, `F3xxx` compiler,
-  `F4xxx` runtime, `F9xxx` internal). Q01 implies renumbering them. The
-  reference branch `codex/syntax-changes` kept the existing `Fxxxx` identities
-  and added a project/build range instead. Confirm before AP02.2 whether Q01's
-  `FPnxxx` scheme replaces the existing codes.
+- **Code numbering:** the user confirmed Q01's `FPnxxx` scheme.
+  It replaces the old `Fxxxx` identifiers in code, tools, tests and current docs.
+- **FP4xxx allocation:** compiler codes use FP4000–FP4099; project, build,
+  linker, CLI and test-runner codes use FP4100–FP4999. Internal invariants
+  use FP9xxx. These subranges retain distinct compiler/project phase values.
+- **Transport:** the shared `Diagnostic` holds the code, severity, message,
+  optional byte span and expected/found/hint. `FileDiagnostic` carries the
+  authoritative path. JSON exposes that path as `source`, and one-based scalar
+  coordinates as `location.start` and exclusive `location.end`.
+
+There are no remaining open decisions for AP02.
 
 ## Dependencies
 
@@ -63,3 +67,10 @@ documents the catalog. AP02.6 is independent of AP02.3–AP02.5.
 Tools can locate a representative error and determine its cause without
 parsing explanatory prose, and superseded forms produce a hint with the
 canonical spelling.
+
+## Delivery
+
+All six slices are implemented locally on `codex/syntax-changes-2`. The
+[implementation audit](implementation-audit.md) records the producer inventory,
+code mapping, file layout and verification. Completion checkboxes await merge
+under the [development process](../development-process.md#status-tracking).

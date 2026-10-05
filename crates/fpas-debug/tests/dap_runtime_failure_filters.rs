@@ -32,7 +32,7 @@ fn configure_and_run(filters: Value) -> (DapServer, Vec<Value>) {
             .iter()
             .any(|filter| filter["filter"] == "all" && filter["default"] == true)
     );
-    assert!(advertised.iter().any(|filter| filter["filter"] == "F4001"));
+    assert!(advertised.iter().any(|filter| filter["filter"] == "FP5001"));
     let _ = server.handle(request(2, "launch", json!({"stopOnEntry":false})));
     let configured = server.handle(request(
         3,
@@ -49,7 +49,7 @@ fn configure_and_run(filters: Value) -> (DapServer, Vec<Value>) {
 
 #[test]
 fn matching_exception_filter_stops_with_standard_exception_reason() {
-    let (server, messages) = configure_and_run(json!(["F4001"]));
+    let (server, messages) = configure_and_run(json!(["FP5001"]));
     assert!(!server.is_terminated());
     assert!(
         messages.iter().any(|message| {
@@ -67,7 +67,7 @@ fn matching_exception_filter_stops_with_standard_exception_reason() {
 
 #[test]
 fn nonmatching_exception_filter_exits_nonzero_without_stopped_event() {
-    let (server, messages) = configure_and_run(json!(["F4010"]));
+    let (server, messages) = configure_and_run(json!(["FP5010"]));
     assert!(server.is_terminated());
     assert!(!messages.iter().any(|message| message["event"] == "stopped"));
     let output = messages

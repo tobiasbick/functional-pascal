@@ -18,9 +18,9 @@ For multiple comment lines, prefix every line with `//`:
 var ElapsedSeconds: integer := 0;
 ```
 
-`{...}` and `(*...*)` are not valid comment syntax. The lexer reports `F0013` and suggests the
+`{...}` and `(*...*)` are not valid comment syntax. The lexer reports `FP1013` and suggests the
 valid `//` form. A sequence starting with `{$` remains an invalid compiler-directive sequence and
-reports `F0010`.
+reports `FP1010`.
 
 ## Markdown documentation
 

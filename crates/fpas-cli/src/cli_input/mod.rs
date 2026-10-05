@@ -112,6 +112,7 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
     }
 
     let options = parse_options(mode, cli_args)?;
+    let diagnostics = options.diagnostics.unwrap_or_default();
     let positional = options.positional;
 
     if mode == CliMode::Fmt {
@@ -219,11 +220,13 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
             standard_library: options.standard_library,
             executable: options.executable,
             name: options.application_name,
+            diagnostics,
         }),
         CliMode::Run => ResolvedCli::Run(CliConfig {
             input,
             program_args,
             standard_library: options.standard_library,
+            diagnostics,
         }),
         CliMode::Debug => ResolvedCli::Debug(DebugCliConfig {
             cwd: cwd.to_path_buf(),
@@ -244,6 +247,7 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
             input,
             program_args,
             standard_library: options.standard_library,
+            diagnostics,
         }),
         CliMode::Fmt => unreachable!("fmt mode handled above"),
         CliMode::Test => ResolvedCli::Test(TestCliConfig {
@@ -259,6 +263,7 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
             jobs: options.jobs.unwrap_or(1),
             strict: options.strict,
             show_output: options.show_output,
+            diagnostics,
             standard_library: options.standard_library,
         }),
         CliMode::Env | CliMode::Lsp => {

@@ -15,6 +15,7 @@ mod console_args;
 mod crypto;
 mod http_handles;
 mod net;
+mod proc;
 mod random;
 pub(in crate::vm) mod server;
 mod test_host;
@@ -42,6 +43,7 @@ impl Worker {
             Intrinsic::Http(_) => self.execute_http_state_intrinsic(intrinsic, arguments, location),
             Intrinsic::Random(_) => self.execute_random_intrinsic(intrinsic, arguments, location),
             Intrinsic::Crypto(_) => self.execute_crypto_intrinsic(intrinsic, arguments, location),
+            Intrinsic::Proc(_) => self.execute_proc_intrinsic(intrinsic, arguments, location),
             Intrinsic::Test(_) => self.execute_test_host_intrinsic(intrinsic, arguments, location),
             _ => {
                 return Err(diagnostics::internal(
@@ -76,6 +78,8 @@ pub(super) struct HostedState {
     pub(in crate::vm) channels: ChannelRegistry,
     pub(in crate::vm) cases: super::tasks::selection::CaseRegistry,
     pub(super) test_scratch_dir: Mutex<PathBuf>,
+    /// Receiver for stderr lines of `Std.Proc.Run` children; inherited when `None`.
+    pub(super) program_stderr: Mutex<Option<fpas_std::ProgramStderr>>,
 }
 
 impl HostedState {
@@ -94,6 +98,7 @@ impl HostedState {
             channels: ChannelRegistry::new(),
             cases: Default::default(),
             test_scratch_dir: Mutex::new(PathBuf::from(".temp-data")),
+            program_stderr: Mutex::new(None),
         }
     }
 
@@ -118,6 +123,7 @@ impl HostedState {
             channels: ChannelRegistry::new(),
             cases: Default::default(),
             test_scratch_dir: Mutex::new(PathBuf::from(".temp-data")),
+            program_stderr: Mutex::new(None),
         }
     }
 

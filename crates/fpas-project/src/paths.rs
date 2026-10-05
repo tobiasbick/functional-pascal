@@ -2,8 +2,13 @@ use std::collections::HashSet;
 use std::fs;
 use std::path::{Path, PathBuf, absolute};
 
-use crate::source::validate_non_empty;
-use crate::{PathGlobError, expand_path_glob};
+use fpas_diagnostics::codes::{
+    PROJECT_DUPLICATE_SOURCE_FILE, PROJECT_PATH_INVALID, PROJECT_PATTERN_INVALID,
+};
+use fpas_diagnostics::{Diagnostic, FileDiagnostic};
+
+use crate::source::{validate_non_empty, validate_non_empty_entry};
+use crate::{PathGlobError, ProjectError, expand_path_glob};
 
 const SOURCE_FILE_EXTENSION: &str = "fpas";
 
@@ -14,7 +19,7 @@ pub(super) fn resolve_source_files(
     include: &[String],
     exclude: &[String],
     root_dir: &Path,
-) -> Result<(Vec<PathBuf>, Vec<String>), String> {
+) -> Result<(Vec<PathBuf>, Vec<FileDiagnostic>), ProjectError> {
     let (mut files, warnings) = expand_include_entries(include, root_dir)?;
     if !exclude.is_empty() {
         let excluded = expand_exclude_entries(exclude, root_dir)?;
@@ -30,9 +35,9 @@ pub(super) fn resolve_source_files(
 fn expand_include_entries(
     entries: &[String],
     root_dir: &Path,
-) -> Result<(Vec<PathBuf>, Vec<String>), String> {
+) -> Result<(Vec<PathBuf>, Vec<FileDiagnostic>), ProjectError> {
     let mut files = Vec::<PathBuf>::new();
-    let mut warnings = Vec::<String>::new();
+    let mut warnings = Vec::<FileDiagnostic>::new();
     let mut seen = HashSet::<PathBuf>::new();
 
     for entry in entries {
@@ -45,7 +50,10 @@ fn expand_include_entries(
     Ok((files, warnings))
 }
 
-fn expand_exclude_entries(entries: &[String], root_dir: &Path) -> Result<HashSet<PathBuf>, String> {
+fn expand_exclude_entries(
+    entries: &[String],
+    root_dir: &Path,
+) -> Result<HashSet<PathBuf>, ProjectError> {
     let mut seen = HashSet::<PathBuf>::new();
 
     for entry in entries {
@@ -62,13 +70,10 @@ fn expand_source_pattern(
     entry: &str,
     root_dir: &Path,
     require_glob_match: bool,
-) -> Result<Vec<PathBuf>, String> {
+) -> Result<Vec<PathBuf>, ProjectError> {
     let entry = entry.trim();
-    if entry.is_empty() {
-        return Err(format!(
-            "A `{field_name}` entry is empty.\n  help: Remove empty entries or provide a file path/pattern."
-        ));
-    }
+    validate_non_empty_entry(field_name, entry)
+        .map_err(|error| error.with_help("Remove empty entries or provide a file path/pattern."))?;
 
     let resolved_path = resolve_path(entry, root_dir);
     if resolved_path.is_file() {
@@ -77,22 +82,28 @@ fn expand_source_pattern(
 
     if is_glob_pattern(entry) {
         let normalized_entry = entry.replace('\\', "/");
-        let mut matches = expand_path_glob(root_dir, &normalized_entry).map_err(|error| {
-            match error {
-                PathGlobError::InvalidPattern(error) => format!(
-                    "Invalid glob pattern `{entry}` in `{field_name}`.\n  help: Use a valid glob such as `src/**/*.fpas`.\n  details: {error}"
+        let mut matches =
+            expand_path_glob(root_dir, &normalized_entry).map_err(|error| match error {
+                PathGlobError::InvalidPattern(error) => ProjectError::new(
+                    PROJECT_PATTERN_INVALID,
+                    format!("Invalid glob pattern `{entry}` in `{field_name}`: {error}"),
+                )
+                .with_help("Use a valid glob such as `src/**/*.fpas`."),
+                error => ProjectError::new(
+                    PROJECT_PATTERN_INVALID,
+                    format!(
+                        "Error while evaluating glob pattern `{entry}` in `{field_name}`: {error}"
+                    ),
                 ),
-                error => format!(
-                    "Error while evaluating glob pattern `{entry}` in `{field_name}`.\n  details: {error}"
-                ),
-            }
-        })?;
+            })?;
         matches.retain(|matched| matched.is_file());
 
         if require_glob_match && matches.is_empty() {
-            return Err(format!(
-                "Pattern `{entry}` in `{field_name}` matched no files.\n  help: Check the path or pattern relative to the project directory."
-            ));
+            return Err(ProjectError::new(
+                PROJECT_PATTERN_INVALID,
+                format!("Pattern `{entry}` in `{field_name}` matched no files."),
+            )
+            .with_help("Check the path or pattern relative to the project directory."));
         }
 
         return Ok(matches);
@@ -105,13 +116,25 @@ fn expand_source_pattern(
 const PROJECT_FILE_EXTENSION: &str = "fpasprj";
 
 /// Absolute manifest path used at public project-loading boundaries.
-pub(crate) fn absolute_project_path(path: &Path) -> Result<PathBuf, String> {
+pub(crate) fn absolute_project_path(path: &Path) -> Result<PathBuf, ProjectError> {
     absolute(path).map_err(|error| {
-        format!(
-            "Cannot resolve absolute project path for `{}`: {error}",
-            path.display()
+        ProjectError::new(
+            PROJECT_PATH_INVALID,
+            format!(
+                "Cannot resolve absolute project path for `{}`: {error}",
+                path.display()
+            ),
         )
     })
+}
+
+/// Rejects a manifest path whose parent directory cannot serve as a project root.
+pub(crate) fn unresolvable_root_error(kind: &str, path: &Path) -> ProjectError {
+    ProjectError::new(
+        PROJECT_PATH_INVALID,
+        format!("Cannot resolve {kind} root for `{}`.", path.display()),
+    )
+    .with_help("Use a normal file path inside a directory.")
 }
 
 /// Canonical path used for project dependency graphs and deduplication.
@@ -137,13 +160,18 @@ pub(super) fn merge_source_files(target: &mut Vec<PathBuf>, incoming: Vec<PathBu
 pub(super) fn resolve_project_dependency_path(
     value: &str,
     root_dir: &Path,
-) -> Result<PathBuf, String> {
+) -> Result<PathBuf, ProjectError> {
     let path = resolve_explicit_file_path("dependencies.projects", value, root_dir)?;
-    validate_project_file_extension(&path, "dependencies.projects")?;
+    validate_project_file_extension(&path, "dependencies.projects")
+        .map_err(|error| error.with_help("Point each dependency at a library project manifest."))?;
     Ok(path)
 }
 
-fn validate_project_file_extension(path: &Path, field_name: &str) -> Result<(), String> {
+/// Requires a `.fpasprj` manifest path in the named manifest field.
+pub(crate) fn validate_project_file_extension(
+    path: &Path,
+    field_name: &str,
+) -> Result<(), ProjectError> {
     if path
         .extension()
         .and_then(|value| value.to_str())
@@ -152,9 +180,12 @@ fn validate_project_file_extension(path: &Path, field_name: &str) -> Result<(), 
         return Ok(());
     }
 
-    Err(format!(
-        "`{field_name}` must reference a `.fpasprj` file: `{}`.\n  help: Point each dependency at a library project manifest.",
-        path.to_string_lossy()
+    Err(ProjectError::new(
+        PROJECT_PATH_INVALID,
+        format!(
+            "`{field_name}` must reference a `.fpasprj` file: `{}`.",
+            path.to_string_lossy()
+        ),
     ))
 }
 
@@ -162,7 +193,7 @@ fn insert_unique_source_file(
     path: PathBuf,
     files: &mut Vec<PathBuf>,
     seen: &mut HashSet<PathBuf>,
-    warnings: &mut Vec<String>,
+    warnings: &mut Vec<FileDiagnostic>,
 ) {
     let key = canonical_or_original(path.as_path());
     if seen.insert(key) {
@@ -170,9 +201,13 @@ fn insert_unique_source_file(
         return;
     }
 
-    warnings.push(format!(
-        "Duplicate source file `{}` was ignored; the first occurrence was retained.",
-        path.to_string_lossy()
+    warnings.push(FileDiagnostic::new(
+        Diagnostic::warning_without_source(
+            PROJECT_DUPLICATE_SOURCE_FILE,
+            "Duplicate source file was ignored; the first occurrence was retained.",
+            Some("List each source file once in `[sources].include`.".to_owned()),
+        ),
+        Some(path),
     ));
 }
 
@@ -180,20 +215,28 @@ pub(super) fn resolve_explicit_file_path(
     field_name: &str,
     value: &str,
     root_dir: &Path,
-) -> Result<PathBuf, String> {
+) -> Result<PathBuf, ProjectError> {
     validate_non_empty(field_name, value)?;
     let path = resolve_path(value, root_dir);
     if !path.exists() {
-        return Err(format!(
-            "`{field_name}` path does not exist: `{}`.\n  help: Use an existing file path.",
-            path.to_string_lossy()
-        ));
+        return Err(ProjectError::new(
+            PROJECT_PATH_INVALID,
+            format!(
+                "`{field_name}` path does not exist: `{}`.",
+                path.to_string_lossy()
+            ),
+        )
+        .with_help("Use an existing file path."));
     }
     if !path.is_file() {
-        return Err(format!(
-            "`{field_name}` must point to a file: `{}`.\n  help: Use a file path instead of a directory.",
-            path.to_string_lossy()
-        ));
+        return Err(ProjectError::new(
+            PROJECT_PATH_INVALID,
+            format!(
+                "`{field_name}` must point to a file: `{}`.",
+                path.to_string_lossy()
+            ),
+        )
+        .with_help("Use a file path instead of a directory."));
     }
 
     Ok(path)
@@ -218,15 +261,19 @@ fn has_source_extension(path: &Path) -> bool {
         .is_some_and(|value| value.eq_ignore_ascii_case(SOURCE_FILE_EXTENSION))
 }
 
-pub(super) fn validate_source_extension(path: &Path, field_name: &str) -> Result<(), String> {
+pub(super) fn validate_source_extension(path: &Path, field_name: &str) -> Result<(), ProjectError> {
     if has_source_extension(path) {
         return Ok(());
     }
 
-    Err(format!(
-        "`{field_name}` must reference a `.fpas` file: `{}`.\n  help: Use a `.fpas` source file path.",
-        path.to_string_lossy()
-    ))
+    Err(ProjectError::new(
+        PROJECT_PATH_INVALID,
+        format!(
+            "`{field_name}` must reference a `.fpas` file: `{}`.",
+            path.to_string_lossy()
+        ),
+    )
+    .with_help("Use a `.fpas` source file path."))
 }
 
 pub(super) fn canonical_source_path(path: &Path) -> PathBuf {

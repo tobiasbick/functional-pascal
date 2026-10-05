@@ -35,6 +35,13 @@ Planning documentation only.
 
 ## Verification
 
-- A search for `<` type applications in draft code finds only routine
-  type-parameter declarations.
+- A search for angle brackets in positive draft code finds only routine
+  type-parameter declarations, apart from comparison operators. Deliberately
+  rejected spellings and current/legacy migration input remain labelled.
 - Every remaining exception is linked to a recorded decision.
+
+## Result
+
+[Spelling review](spelling-review.md) covers all package and work package
+documents, records the corrections, and links the existing decision gates.
+Delivery is local; the completion checkbox awaits merge.

@@ -45,7 +45,7 @@ export async function verifyRuntimeFailureFilters(
     );
     const configurationMarker = received.length;
     const response = await session.customRequest("setExceptionBreakpoints", {
-      filters: ["F4010"]
+      filters: ["FP5010"]
     }) as Record<string, never>;
     assert.deepEqual(response, {});
     const configured = received.slice(configurationMarker).find(
@@ -53,7 +53,7 @@ export async function verifyRuntimeFailureFilters(
     );
     assert.deepEqual(
       (configured?.arguments as { filters?: string[] } | undefined)?.filters,
-      ["F4010"]
+      ["FP5010"]
     );
 
     const continuation = sent.length;

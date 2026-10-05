@@ -22,7 +22,7 @@ __pycache__/
 /editors/vscode/server/
 /editors/vscode/cli/
 /editors/vscode/standard-library/
-/editors/vscode/.vscode-test/
+.vscode-test/
 
 # Cursor — ignore local state; keep shared plans and rules
 .cursor/**

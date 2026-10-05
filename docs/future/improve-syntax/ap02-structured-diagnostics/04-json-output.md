@@ -43,3 +43,10 @@ None.
 - Real-process tests for all four commands in text and JSON mode: lexer,
   parser, semantic, project, runtime, multiple, imported, and no-location
   errors; Unicode columns; program stderr; runner startup failures; exit codes.
+
+## Result
+
+Delivered with the other AP02 slices. Program stderr is routed through the
+test worker's separate bounded program-output buffer as well as the direct
+CLI/native-runner stream. Capture overflow emits one truncation event without
+changing the outcome or stdout report; see the [implementation audit](implementation-audit.md).

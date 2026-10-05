@@ -4,9 +4,11 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
+use fpas_diagnostics::codes::PROJECT_SOURCE_CHANGED;
 use fpas_parser::{QualifiedId, Unit};
 use fpas_unit::Digest;
 
+use crate::ProjectError;
 use crate::model::{ProjectLinkMeta, SourceOrigin};
 use crate::source::qualified_id_to_string;
 
@@ -111,14 +113,14 @@ impl UnitNode {
     ///
     /// Returns an error when the bytes are invalid source, no longer declare a unit, or declare a
     /// different unit name than the graph node.
-    pub fn parse_source_snapshot(&self, source: &[u8]) -> Result<Unit, String> {
+    pub fn parse_source_snapshot(&self, source: &[u8]) -> Result<Unit, crate::ProjectError> {
         let (parsed, _) =
             crate::source::parse_compilation_unit_source(&self.path, source, self.source_id)?;
         let fpas_parser::CompilationUnit::Unit(unit) = parsed else {
-            return Err(format!(
+            return Err(changed_source_error(format!(
                 "Source file `{}` no longer declares a unit.",
                 self.path.display()
-            ));
+            )));
         };
         if !unit
             .name
@@ -126,15 +128,20 @@ impl UnitNode {
             .join(".")
             .eq_ignore_ascii_case(&self.display_name)
         {
-            return Err(format!(
+            return Err(changed_source_error(format!(
                 "Source file `{}` declares unit `{}`, but the build graph names `{}`.",
                 self.path.display(),
                 unit.name.parts.join("."),
                 self.display_name
-            ));
+            )));
         }
         Ok(unit)
     }
+}
+
+fn changed_source_error(message: String) -> ProjectError {
+    ProjectError::new(PROJECT_SOURCE_CHANGED, message)
+        .with_help("Reload the project and retry the build.")
 }
 
 /// Parsed project units plus metadata needed to resolve imports and reachability.

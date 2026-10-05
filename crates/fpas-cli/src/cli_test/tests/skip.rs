@@ -1,5 +1,5 @@
 use crate::cli_input::TestCliConfig;
-use crate::cli_test::test_cli;
+use crate::cli_test::test_cli_with_stderr;
 use crate::test_support::{create_temp_dir, write_text};
 use std::time::Duration;
 
@@ -13,7 +13,7 @@ fn test_cli_reports_skipped_tests_without_strict() {
 
     let mut stdout = Vec::new();
     let mut stderr = Vec::new();
-    let exit = test_cli(
+    let exit = test_cli_with_stderr(
         TestCliConfig {
             input: crate::CliInput::SourceFile(cwd.clone()),
             cwd,
@@ -27,6 +27,7 @@ fn test_cli_reports_skipped_tests_without_strict() {
             jobs: 1,
             strict: false,
             show_output: false,
+            diagnostics: Default::default(),
             standard_library: None,
         },
         &mut stdout,
@@ -49,7 +50,7 @@ fn test_cli_reports_skipped_tests_with_timeout() {
 
     let mut stdout = Vec::new();
     let mut stderr = Vec::new();
-    let exit = test_cli(
+    let exit = test_cli_with_stderr(
         TestCliConfig {
             input: crate::CliInput::SourceFile(cwd.clone()),
             cwd,
@@ -63,6 +64,7 @@ fn test_cli_reports_skipped_tests_with_timeout() {
             jobs: 1,
             strict: false,
             show_output: false,
+            diagnostics: Default::default(),
             standard_library: None,
         },
         &mut stdout,
@@ -85,7 +87,7 @@ fn test_cli_strict_fails_when_tests_are_skipped() {
 
     let mut stdout = Vec::new();
     let mut stderr = Vec::new();
-    let exit = test_cli(
+    let exit = test_cli_with_stderr(
         TestCliConfig {
             input: crate::CliInput::SourceFile(cwd.clone()),
             cwd,
@@ -99,6 +101,7 @@ fn test_cli_strict_fails_when_tests_are_skipped() {
             jobs: 1,
             strict: true,
             show_output: false,
+            diagnostics: Default::default(),
             standard_library: None,
         },
         &mut stdout,

@@ -39,6 +39,7 @@ the source debugger and in-process test hosts do not grant this authority automa
   - Other extensions — error.
 - `fpas run` with more than one positional path argument — usage error.
 - `fpas check [<path>]` — type-check a `.fpas`, directory of `.fpas` files, `.fpasprj`, or `.fpasworkspace` without running. With no path, discovers `.fpasworkspace` or `.fpasprj` in the current directory.
+- `--diagnostics <text | json>` — accepted by `check`, `build`, `run`, and `test`; selects the stderr diagnostic format (see [Machine-readable diagnostics](#machine-readable-diagnostics)).
 - `fpas test [<path>]` — run `*_test.fpas` programs and print a pass/fail/skip summary. With no path, discovers a workspace or `.fpasprj` like `fpas check`. Flags: `--list`, `--fail-fast`, `--strict` (exit `1` when any test called `Skip`), `--show-output` (print captured standard output of passing tests too), `--filter <pattern>`, repeatable `--file <path>` (select an exact discovered file, relative to the current directory), `--report json`, `--timeout <secs>` (default: `300`), `--jobs <n>` (`0` = available CPU parallelism), `--script <path>`. Sidecars beside each test file (all optional): `<test>.script.toml` (scripted input), `<test>.expect.stdout`, and `<test>.expect.screen` (TUI). See [`Std.Test`](../std/testing/test.md). `--list` and `--report json` write results to stdout; JSON test entries identify their full source paths, including nested directories. Progress lines stay on stderr. A failing test's captured standard output is always printed below its result line; `--show-output` does the same for passing tests. A write failure on contracted stdout or summary output returns nonzero instead of reporting success. Each test's timeout budget starts before its isolated worker is spawned and covers worker preparation and VM execution. Tests run in a terminable process tree, so blocking startup, VM, or host calls cannot extend the timeout indefinitely.
 - `fpas debug [<path>] --protocol <jsonl | dap>` — run a source, program
   project, workspace, or verified compiled image under the source debugger;
@@ -207,13 +208,13 @@ deterministic, skips `target` directories and symbolic links, and aborts with th
 directory entry cannot be read. `fpas fmt` and `fpas test` use the same traversal policy.
 
 The parser shares a nesting budget of 128 levels across expressions, statements, type expressions,
-and routine declarations. Source that exceeds the budget stops parsing with diagnostic `F1009`
+and routine declarations. Source that exceeds the budget stops parsing with diagnostic `FP2009`
 instead of exhausting the compiler's native stack.
 
 ## Terminal diagnostics
 
 Compiler and runtime diagnostics use the stable form
-`path:line:column: severity[Fxxxx]: message`. When no source path is available, the location starts
+`path:line:column: severity[FPnxxx]: message`. When no source path is available, the location starts
 with `line:column`. Printable Unicode and Windows path separators are preserved. Control characters
 in paths and non-line-ending control characters in messages or help text are rendered as visible
 escapes, so diagnostic content cannot inject terminal control sequences or synthetic location
@@ -222,6 +223,51 @@ lines.
 `CRLF`, bare `CR`, and `LF` inside messages or help text are normalized as logical line breaks.
 Every continuation is explicit: message continuations use `  message: ` and every help line uses
 `  help: `. A source path always remains on one physical output line.
+
+Every diagnostic has a stable `FPnxxx` code, including project, build, linker, argument and test
+runner failures; positionless records omit the `line:column` part, for example
+`error[FP4137]: Unknown option `--bogus`.`.
+
+### Machine-readable diagnostics
+
+`fpas check`, `fpas build`, `fpas run`, and `fpas test` accept `--diagnostics <text | json>`
+(default `text`). With `--diagnostics json`, every stderr line is one UTF-8 JSON record:
+a diagnostic as described in [shared diagnostics](../tools/diagnostics.md#rust-json-rendering-api)
+or a program-output event as described below. Progress lines, result banners, test summaries, and captured test output are
+omitted. Warnings use the same records with `"severity":"warning"`. Standard output is unchanged:
+program output, build status lines, `--list`, and `--report json` still go to stdout. Exit codes
+are the same as in text mode (`2` for a runtime error in `fpas run`). Argument errors also use JSON
+when the arguments before `--` contain `--diagnostics json`.
+
+```text
+fpas check --diagnostics json src/main.fpas
+{"kind":"diagnostic","code":"FP3003","severity":"error","phase":"sema","source":"/work/app/src/main.fpas","location":{"source_id":0,"start":{"line":3,"column":3},"end":{"line":3,"column":16}},"message":"Unknown procedure `MissingCall`","expected":null,"found":null,"hint":"Declare the function or procedure before use, or check the spelling."}
+```
+
+`source` is the resolved path of the source file for parse, compile and project records. Runtime records of a program project or `.fpascp` name the portable source path stored in the compiled image, relative to the project directory, as in text mode. Runtime records have a known start and a `null` end.
+
+In `fpas run` and `fpas test` with `--diagnostics json`, standard error of child processes started with
+`Std.Proc.Run` is not inherited. Each of its lines becomes a program-output record, so program text
+cannot be mistaken for a diagnostic:
+
+```text
+{"kind":"program-output","stream":"stderr","text":"child err"}
+```
+
+`text` is one line without its line ending. Records keep the order in which they are written.
+Test workers buffer these records and forward them before the test's runtime diagnostic,
+including when `--jobs` runs tests in parallel. Program-stderr records have a separate
+8 MiB capture budget. At its limit the worker keeps complete records and emits one
+program-output event with `text` equal to
+`Program stderr was truncated at the 8 MiB capture limit.` Further program-stderr
+records are omitted. Truncation does not change the test outcome, exit code or
+stdout report, and does not consume the diagnostic output budget.
+`Std.Proc.RunCapture` keeps its normal captured result.
+
+A native application built with `fpas build --executable` keeps every command-line argument for the
+program. Set the environment variable `FPAS_DIAGNOSTICS=json` to select the same JSON stderr stream
+for its runtime records, startup failures and program-output records; any other value or no value
+keeps text output.
 
 ## Formatting project sources
 

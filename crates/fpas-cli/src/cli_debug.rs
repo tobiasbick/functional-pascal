@@ -23,7 +23,7 @@ pub(crate) fn debug_cli(
         match crate::standard_library::resolve_standard_library(config.standard_library.as_deref())
         {
             Ok(library) => library,
-            Err(message) => return fail(stderr, message),
+            Err(failure) => return fail(stderr, failure.to_string()),
         };
     let target = match prepare_target(&config, library.as_ref()) {
         Ok(target) => target,
@@ -107,7 +107,8 @@ fn prepare_executable(
         CliInput::SourceFile(path) => prepare_source(path, &config.cwd, standard_library)?,
         CliInput::ProjectFile(path) => prepare_project(path, standard_library)?,
         CliInput::WorkspaceFile(path) => {
-            let project = fpas_project::discover_run_project_in_workspace(path)?;
+            let project = fpas_project::discover_run_project_in_workspace(path)
+                .map_err(|error| error.to_string())?;
             prepare_project(&project, standard_library)?
         }
         CliInput::CompiledProgramFile(path) => prepare_image(path, config.source_root.as_deref())?,
@@ -135,7 +136,8 @@ fn prepare_source(
             &[],
             &fpas_project::ProjectLinkMeta::default(),
             standard_library,
-        )?;
+        )
+        .map_err(|failure| failure.to_string())?;
         return install_debug_sources(built.executable, &built.source_paths, Some(cwd));
     }
     let source = fs::read_to_string(path)
@@ -165,14 +167,15 @@ fn prepare_project(
     path: &Path,
     standard_library: Option<&fpas_project::StandardLibrary>,
 ) -> Result<PreparedExecutable, String> {
-    let loaded = fpas_project::load_project(path)?;
+    let loaded = fpas_project::load_project(path).map_err(|error| error.to_string())?;
     if loaded.kind != fpas_project::ProjectKind::Program {
         return Err(format!(
             "Project `{}` is not an executable program.\n  help: Debug a project with `kind = \"program\"`.",
             path.display()
         ));
     }
-    let built = crate::project_build::build_program(&loaded, standard_library)?;
+    let built = crate::project_build::build_program(&loaded, standard_library)
+        .map_err(|failure| failure.to_string())?;
     install_debug_sources(built.executable, &built.source_paths, path.parent())
 }
 

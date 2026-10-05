@@ -124,7 +124,7 @@ pub(super) fn parse_string_array(
                 EngineFailure::new(
                     "invalid_request",
                     format!("Runtime failure filter at index {index} must be a string."),
-                    "Use `all` or exact advertised codes such as `F4001`.",
+                    "Use `all` or exact advertised codes such as `FP5001`.",
                 )
             })
         })

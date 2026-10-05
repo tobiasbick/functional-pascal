@@ -18,7 +18,13 @@ end.";
             .to_ascii_lowercase()
             .contains("division by zero")
     );
-    assert_eq!((error.span.line(), error.span.column()), (3, 21));
+    assert_eq!(
+        (
+            error.span.expect("source diagnostic span").line(),
+            error.span.expect("source diagnostic span").column()
+        ),
+        (3, 21)
+    );
 }
 
 #[test]
@@ -31,5 +37,11 @@ end.";
     let error = run_program(source).expect_err("panic should fail");
     assert_eq!(error.code, fpas_diagnostics::codes::RUNTIME_PROGRAM_PANIC);
     assert!(error.message.contains("expected failure"));
-    assert_eq!((error.span.line(), error.span.column()), (3, 3));
+    assert_eq!(
+        (
+            error.span.expect("source diagnostic span").line(),
+            error.span.expect("source diagnostic span").column()
+        ),
+        (3, 3)
+    );
 }

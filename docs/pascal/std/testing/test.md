@@ -43,23 +43,23 @@ Requires `uses Std.Test;`.
 
 ### `procedure AssertTrue(Cond: boolean)`
 
-Fail with diagnostic **F4023** when `Cond` is false.
+Fail with diagnostic **FP5023** when `Cond` is false.
 
 ### `procedure AssertFalse(Cond: boolean)`
 
-Fail with **F4023** when `Cond` is true.
+Fail with **FP5023** when `Cond` is true.
 
 ### `procedure AssertEquals(Expected; Actual)`
 
-Fail with **F4023** when operands differ. Both arguments must have the same type: `integer`, `boolean`, `string`, or `real`. Message includes expected and actual values (strings are quoted).
+Fail with **FP5023** when operands differ. Both arguments must have the same type: `integer`, `boolean`, `string`, or `real`. Message includes expected and actual values (strings are quoted).
 
 ### `procedure Fail(Msg: string)`
 
-Unconditional failure with **F4023** and user message.
+Unconditional failure with **FP5023** and user message.
 
 ### `procedure Skip(Msg: string)`
 
-Mark the current test as skipped and continue. Does not raise **F4023**. The `fpas test` runner records the test as **skipped** (`SKIP` line, included in summary). Skipped tests do not fail the run unless you pass `--strict` (exit code `1` when any test was skipped).
+Mark the current test as skipped and continue. Does not raise **FP5023**. The `fpas test` runner records the test as **skipped** (`SKIP` line, included in summary). Skipped tests do not fail the run unless you pass `--strict` (exit code `1` when any test was skipped).
 
 ### `procedure PushReadLn(Line: string)`
 
@@ -74,11 +74,11 @@ directly with `fpas run` receives `.temp-data` as the fallback and manages its o
 
 ### `procedure AssertScreenLine(Expected: string; Y: integer)`
 
-Fail with **F4023** when row `Y` (one-based) of the virtual CRT back buffer does not equal `Expected`. Use after drawing with `Std.Console`. Requires `uses Std.Console`.
+Fail with **FP5023** when row `Y` (one-based) of the virtual CRT back buffer does not equal `Expected`. Use after drawing with `Std.Console`. Requires `uses Std.Console`.
 
 ### `procedure AssertScreenCell(X, Y: integer; Ch: string; Fg, Bg: integer)`
 
-Fail with **F4023** when cell `(X, Y)` (one-based) does not match the expected character and packed CRT colors. Use `Std.Console` color constants (for example `Red`, `Black`) for `Fg` and `Bg`.
+Fail with **FP5023** when cell `(X, Y)` (one-based) does not match the expected character and packed CRT colors. Use `Std.Console` color constants (for example `Red`, `Black`) for `Fg` and `Bg`.
 
 ---
 

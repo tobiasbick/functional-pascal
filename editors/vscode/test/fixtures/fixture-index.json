@@ -29,7 +29,7 @@
       "path": "standalone/malformed_syntax.fpas",
       "expected": "diagnostic",
       "diagnostics": [
-        "F1001"
+        "FP2001"
       ],
       "covers": [
         "malformed-syntax"
@@ -39,7 +39,7 @@
       "path": "standalone/unicode_identifier.fpas",
       "expected": "diagnostic",
       "diagnostics": [
-        "F0012"
+        "FP1012"
       ],
       "covers": [
         "unicode-identifiers"

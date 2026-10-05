@@ -1,6 +1,26 @@
 use super::*;
 
 #[test]
+fn record_initializers_preserve_recovery_boundaries_without_repeating_errors() {
+    for expression in [
+        "record then end",
+        "record ) end",
+        "P with then end",
+        "P with ) end",
+    ] {
+        let source = format!("program P; begin var Value: integer := {expression} end.");
+        let (_, diagnostics) = parse_with_errors(&source);
+        assert!(!diagnostics.is_empty(), "{source}");
+        assert!(diagnostics.len() < 16, "{source}: {diagnostics:#?}");
+    }
+    for expression in ["record X := 1; end", "P with X := 1; end"] {
+        let source = format!("program P; begin var Value: integer := {expression} end.");
+        let (_, diagnostics) = parse_with_errors(&source);
+        assert!(diagnostics.is_empty(), "{source}: {diagnostics:#?}");
+    }
+}
+
+#[test]
 fn error_recovery_continues() {
     let (prog, errs) = parse_with_errors("program T; begin X := 1; Y := end.");
     assert!(!errs.is_empty());

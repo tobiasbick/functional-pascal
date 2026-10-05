@@ -32,7 +32,7 @@ pub fn prepare_program_unit_graph(
     source_files: &[PathBuf],
     link_meta: &ProjectLinkMeta,
     standard_library: Option<&StandardLibrary>,
-) -> Result<ProgramUnitGraph, String> {
+) -> Result<ProgramUnitGraph, crate::ProjectError> {
     let template = build_unit_graph_with_base(
         source_files,
         link_meta,

@@ -20,7 +20,7 @@ impl fmt::Display for InvalidDiagnosticCode {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             formatter,
-            "diagnostic code {} is outside the F0000..F9999 range",
+            "diagnostic code {} is outside the FP0000..FP9999 range",
             self.value
         )
     }
@@ -28,7 +28,7 @@ impl fmt::Display for InvalidDiagnosticCode {
 
 impl std::error::Error for InvalidDiagnosticCode {}
 
-/// A stable FPAS diagnostic code in the `F0000` to `F9999` range.
+/// A stable FPAS diagnostic code in the `FP0000` to `FP9999` range.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DiagnosticCode(u16);
 
@@ -47,7 +47,7 @@ impl DiagnosticCode {
     pub const fn new(value: u16) -> Self {
         assert!(
             value <= Self::MAX_VALUE,
-            "diagnostic code must fit the F0000..F9999 range",
+            "diagnostic code must fit the FP0000..FP9999 range",
         );
         Self(value)
     }
@@ -82,7 +82,7 @@ impl TryFrom<u16> for DiagnosticCode {
 
 impl core::fmt::Display for DiagnosticCode {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        write!(f, "F{:04}", self.0)
+        write!(f, "FP{:04}", self.0)
     }
 }
 
@@ -92,12 +92,12 @@ mod tests {
 
     #[test]
     fn diagnostic_code_formats_as_fxxxx() {
-        assert_eq!(DiagnosticCode::new(1).to_string(), "F0001");
-        assert_eq!(DiagnosticCode::new(9999).to_string(), "F9999");
+        assert_eq!(DiagnosticCode::new(1001).to_string(), "FP1001");
+        assert_eq!(DiagnosticCode::new(9999).to_string(), "FP9999");
     }
 
     #[test]
-    #[should_panic(expected = "diagnostic code must fit the F0000..F9999 range")]
+    #[should_panic(expected = "diagnostic code must fit the FP0000..FP9999 range")]
     fn diagnostic_code_rejects_out_of_range_values() {
         let _ = DiagnosticCode::new(10000);
     }

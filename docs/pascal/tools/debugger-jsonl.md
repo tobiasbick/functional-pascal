@@ -33,7 +33,7 @@ response precedes events caused by that request.
 | `breakpoint.set` | initialized/stopped | `source`, `line`; optional `column`, `condition`, `hit_condition`, `log_message`, `assign` | logical breakpoint and verification |
 | `breakpoint.clear` | initialized/stopped | `breakpoint_id` | removal confirmation |
 | `function_breakpoints.replace` | initialized/stopped | `breakpoints`: array of `name` with optional `condition`, `hit_condition` | replace-all logical function breakpoints and verification |
-| `runtime_failures.replace` | initialized/stopped | `filters`: `all` alone or exact advertised `Fdddd` codes | replace-all runtime-failure stop selection |
+| `runtime_failures.replace` | initialized/stopped | `filters`: `all` alone or exact advertised `FPdddd` codes | replace-all runtime-failure stop selection |
 | `launch` | initialized | optional `stop_on_entry` | starts or stops at entry |
 | `attach` | any | none | always rejected; capability `attach` is `false` |
 | `step_back`, `reverse_continue` | any | none | always rejected; capability `reverse_execution` is `false` |
@@ -50,7 +50,7 @@ response precedes events caused by that request.
 | `tasks` | stopped | optional `start`, `count` | bounded task catalog |
 | `task.pause` | stopped | `task_id` | hold one live task; later continue and peer steps skip it |
 | `task.resume` | stopped | `task_id` | clear one task hold without resuming the session |
-| `task.cancel` | stopped | `task_id` | cancel one live non-root task; retained waiters observe `F4016` on the next continue |
+| `task.cancel` | stopped | `task_id` | cancel one live non-root task; retained waiters observe `FP5016` on the next continue |
 | `task.create` | stopped | none | always rejected; capability `task_create` is `false` |
 | `task.restart` | stopped | optional `task_id` | always rejected; capability `task_restart` is `false` |
 | `io.input` | stopped | required `text` | queues one `ReadText`/`ReadLn` line; capability `live_input` is `true` |
@@ -122,7 +122,7 @@ cancelled tasks are catalog-visible for lifecycle reporting but reject stack
 inspection. `task.pause` and `task.resume` name a current runtime `task_id` and
 change only that hold; they do not dispatch or expire inspection IDs.
 `task.cancel` names a current non-root `task_id`, marks it `cancelled`, emits
-`task`/`exited`, and stores `F4016` when the task retains a result. It does not
+`task`/`exited`, and stores `FP5016` when the task retains a result. It does not
 dispatch or wake waiters. Root, unknown, completed, cancelled, and failed
 identities reject without mutation. `task.create` and `task.restart` always
 fail with `task_create_unsupported` and `task_restart_unsupported`.
@@ -365,7 +365,9 @@ point. Policy order is condition, hit test, then log-or-stop. Log templates use
 ## Events and capabilities
 
 Events are `initialized`, `breakpoint`, `output`, `task`, `stopped`,
-`runtime_error`, `terminated`, and fatal `protocol_error`. Task events report
+`runtime_error`, `terminated`, and fatal `protocol_error`. In a `runtime_error`,
+`line`, `column`, and `source_id` are null when no source mapping is available;
+known positions retain their one-based coordinates. Task events report
 `started` or `exited` with a stable `task_id`. Every stopped event reports the
 responsible `task_id` and `all_tasks_stopped: true`, including pause, step,
 breakpoint, and inspectable runtime-error stops; runtime errors also carry
@@ -393,7 +395,7 @@ capturing all-stop events and queued `ReadText`/`ReadLn` lines without resuming;
 `recording.describe` names versioned program identity, portable sources,
 whether capture is on, whether later events were dropped, the event ceiling,
 captured events, and `replayable: false`. While capturing, unsupported host
-effects such as `Std.Random` stop with `F4024` before the intrinsic runs.
+effects such as `Std.Random` stop with `FP5024` before the intrinsic runs.
 Execution without `record` is unchanged. Capture keeps at most 4,096 events, writes no recording
 files, and retains no recording snapshots. Replay and reverse-step stay
 rejected. Initialized or stopped `reload` and `image.replace` rebuild the exact

@@ -5,6 +5,10 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
+use fpas_diagnostics::codes::{TEST_RUNNER_FAILED, TEST_STDOUT_MISMATCH};
+
+use crate::cli_output::CliFailure;
+
 /// Returns the default golden stdout path for a test file (`*_test.fpas` → `*.expect.stdout`).
 pub(super) fn expect_stdout_path_for_test(test_path: &Path) -> PathBuf {
     test_path.with_extension("expect.stdout")
@@ -37,31 +41,41 @@ pub(super) fn parse_expect_stdout_lines(text: &str) -> Vec<String> {
 }
 
 /// Compares captured VM stdout lines against an optional golden file beside `test_path`.
-pub(super) fn compare_stdout(test_path: &Path, actual: &[String]) -> Result<(), String> {
+///
+/// A mismatch carries the expected and actual output in the record's
+/// expected/found fields and as a line listing in the message.
+pub(super) fn compare_stdout(test_path: &Path, actual: &[String]) -> Result<(), CliFailure> {
     let expect_path = expect_stdout_path_for_test(test_path);
-    let Some(expected) = load_expect_stdout(&expect_path)? else {
+    let Some(expected) = load_expect_stdout(&expect_path)
+        .map_err(|message| CliFailure::from_message(TEST_RUNNER_FAILED, &message))?
+    else {
         return Ok(());
     };
     if actual == expected.as_slice() {
         return Ok(());
     }
-    Err(format_stdout_mismatch(&expect_path, &expected, actual))
+    Err(stdout_mismatch(test_path, &expect_path, &expected, actual))
 }
 
-fn format_stdout_mismatch(expect_path: &Path, expected: &[String], actual: &[String]) -> String {
-    let mut message = format!(
-        "stdout mismatch (see `{}`).\n  help: Update the golden file if the new output is correct.",
-        expect_path.display()
-    );
-    message.push_str(&format!("\n        expected ({} lines):", expected.len()));
+fn stdout_mismatch(
+    test_path: &Path,
+    expect_path: &Path,
+    expected: &[String],
+    actual: &[String],
+) -> CliFailure {
+    let mut message = format!("stdout mismatch (see `{}`).", expect_path.display());
+    message.push_str(&format!("\nexpected ({} lines):", expected.len()));
     for line in expected {
-        message.push_str(&format!("\n          {line}"));
+        message.push_str(&format!("\n  {line}"));
     }
-    message.push_str(&format!("\n        actual ({} lines):", actual.len()));
+    message.push_str(&format!("\nactual ({} lines):", actual.len()));
     for line in actual {
-        message.push_str(&format!("\n          {line}"));
+        message.push_str(&format!("\n  {line}"));
     }
-    message
+    CliFailure::new(TEST_STDOUT_MISMATCH, message)
+        .with_help("Update the golden file if the new output is correct.")
+        .with_expected_found(expected.join("\n"), actual.join("\n"))
+        .in_file(test_path)
 }
 
 #[cfg(test)]
@@ -99,7 +113,8 @@ mod tests {
         write_text(&expect_stdout_path_for_test(&test_path), "Hello\n");
 
         let err = compare_stdout(&test_path, &["Hi".into()]).expect_err("mismatch must fail");
-        assert!(err.contains("stdout mismatch"));
+        let err = err.to_string();
+        assert!(err.contains("error[FP4140]: stdout mismatch"));
         assert!(err.contains("expected (1 lines)"));
         assert!(err.contains("actual (1 lines)"));
     }

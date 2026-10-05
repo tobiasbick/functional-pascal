@@ -93,7 +93,7 @@ export async function verifyWorkflowHost(
       problems.some(
         (diagnostic) =>
           diagnostic.source === "fpas workflow" &&
-          diagnostic.code === "F2003" &&
+          diagnostic.code === "FP3003" &&
           diagnostic.severity === vscode.DiagnosticSeverity.Error &&
           diagnostic.range.start.line === 0 &&
           diagnostic.range.start.character === 43 &&
@@ -162,7 +162,7 @@ export async function verifyWorkflowHost(
     assert.ok(
       compileProblems.some(
         (diagnostic) =>
-          diagnostic.source === "fpas workflow" && diagnostic.code === "F2001"
+          diagnostic.source === "fpas workflow" && diagnostic.code === "FP3001"
       ),
       "test compilation diagnostics should remain available in Problems"
     );

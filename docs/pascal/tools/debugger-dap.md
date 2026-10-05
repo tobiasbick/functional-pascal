@@ -103,7 +103,7 @@ memory, keeps at most 4,096 events, writes no recording files, and retains no
 recording snapshots. `fpas/recordingDescribe` names versioned program identity,
 portable sources, whether capture is on, whether later events were dropped,
 the event ceiling, captured events, and `replayable: false`. While capturing,
-unsupported host effects such as `Std.Random` stop with `F4024` before the
+unsupported host effects such as `Std.Random` stop with `FP5024` before the
 intrinsic runs. Execution without `fpas/record` is unchanged. The accepted expression subset and limits are documented in
 [Source debugger](debugger.md). Controlled calls execute asynchronously in a
 detached sandbox so standard DAP `cancel` and `disconnect` requests can reach
@@ -293,7 +293,7 @@ breakpoint policy. Function logpoints, assignments, and adapter-local name
 inference are not implemented.
 
 `setExceptionBreakpoints` accepts the advertised `all` filter by itself or
-exact advertised codes such as `F4001`; an empty array selects no runtime
+exact advertised codes such as `FP5001`; an empty array selects no runtime
 failure stops. The default `all` selection preserves inspectable exception
 stops. For a nonmatching code the adapter emits diagnostic `output`, then
 `exited` with code `1` and `terminated`, without a `stopped` event. Invalid,

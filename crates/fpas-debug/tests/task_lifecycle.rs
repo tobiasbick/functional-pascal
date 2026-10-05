@@ -136,11 +136,9 @@ fn cancel_child_emits_exit_and_continue_observes_waiter_failure() {
     assert!(stopped.iter().any(|record| {
         record["event"] == "stopped" && record["body"]["reason"] == "runtime_error"
     }));
-    assert!(
-        stopped.iter().any(|record| {
-            record["event"] == "runtime_error" && record["body"]["code"] == "F4016"
-        })
-    );
+    assert!(stopped.iter().any(|record| {
+        record["event"] == "runtime_error" && record["body"]["code"] == "FP5016"
+    }));
 }
 
 #[test]

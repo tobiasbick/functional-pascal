@@ -23,7 +23,8 @@ pub(crate) fn diagnostic_identity(
         return Ok(None);
     };
     let Some(code) = code
-        .strip_prefix('F')
+        .strip_prefix("FP")
+        .filter(|digits| digits.len() == 4 && digits.bytes().all(|byte| byte.is_ascii_digit()))
         .and_then(|value| value.parse::<u16>().ok())
         .and_then(|value| DiagnosticCode::try_new(value).ok())
     else {

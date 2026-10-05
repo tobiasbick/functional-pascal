@@ -15,7 +15,7 @@ desktop editors. The implemented editor features are:
 - rich visibility-aware completion with lazy declaration documentation
 - signature help, repository snippets, and unambiguous auto-import completion
 - compiler-backed semantic highlighting with TextMate fallback
-- deterministic import quick fixes for eligible `F2001` and `F2003` diagnostics
+- deterministic import quick fixes for eligible `FP3001` and `FP3003` diagnostics
 - project check, build, run, test, format, and format-check workflows
 - Problems, Testing view, cancellation, active-project status, and terminal runs
 - source debugging with breakpoints, task threads, stepping, inspection,
@@ -58,7 +58,7 @@ and supported variable edits. Stops are all-thread stops. Continue and Pause
 apply to the complete session even if a thread is selected. **Debug: Pause Task**
 and **Debug: Resume Task** hold or release one selected task without leaving
 all-stop; a held task appears as `[paused]` in Threads. **Debug: Cancel Task**
-cancels one live non-root task; waiters observe diagnostic `F4016` on the next
+cancels one live non-root task; waiters observe diagnostic `FP5016` on the next
 continue. Debugger task creation and task restart are not contributed. Step Into, Step
 Over, and Step Out target the selected task. A breakpoint or runtime failure
 in another task interrupts a pending step and selects the responsible task.
@@ -233,7 +233,7 @@ programs retain their normal host interaction. Program arguments are entered as 
 and forwarded after `--`.
 
 Compiler output becomes a dedicated `fpas workflow` Problems collection with
-the real source URI, source position, severity, stable `Fxxxx` code, message,
+the real source URI, source position, severity, stable `FPnxxx` code, message,
 and help. The Testing view discovers cases through `fpas test --list` and runs
 them through the versioned `fpas test --report json` contract. Run, rerun, all,
 and selected/filtered runs preserve pass, assertion failure, skip, compile
@@ -247,7 +247,7 @@ Opening or changing a local `.fpas` document analyzes the in-memory editor
 version. The server publishes lexer/parser diagnostics and, when parsing is
 sufficiently valid, semantic diagnostics.
 
-Each diagnostic preserves its stable `Fxxxx` code, error or warning severity,
+Each diagnostic preserves its stable `FPnxxx` code, error or warning severity,
 UTF-16 editor range, and compiler help text. Analysis is briefly debounced
 during typing. Results carry the exact document version, and work for inactive document versions
 is discarded. Correcting the source or closing the document clears stale
@@ -434,8 +434,8 @@ remain non-overlapping. Recovered malformed source can return a safe partial
 result. The TextMate grammar remains active before server startup and whenever
 semantic analysis has no token for a source region.
 
-**Quick Fix** (`Ctrl+.`) can add a unit to `uses` for an unknown type (`F2001`)
-or unknown callable (`F2003`) when the project contains exactly one accessible
+**Quick Fix** (`Ctrl+.`) can add a unit to `uses` for an unknown type (`FP3001`)
+or unknown callable (`FP3003`) when the project contains exactly one accessible
 public declaration that supplies it. The action is associated with the current
 diagnostic and is offered only if the edit still matches that diagnostic and
 produces parseable, canonically formatted source. Applying it re-analyzes the

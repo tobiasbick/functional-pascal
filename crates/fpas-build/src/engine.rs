@@ -1,12 +1,15 @@
 //! Dependency-first incremental build and final object linking.
 
 mod backend;
+mod error;
 mod interfaces;
 
+pub use error::BuildError;
+
 use std::collections::HashMap;
-use std::fmt;
 
 use fpas_bytecode::VerifiedExecutable;
+use fpas_diagnostics::codes::{BUILD_ARTIFACT_ENCODING_FAILED, INTERNAL_PROJECT_INVARIANT_FAILURE};
 use fpas_parser::Program;
 use fpas_program::LinkedUnitIdentity;
 use fpas_project::{ResolvedUnitGraph, UnitGraph};
@@ -14,32 +17,10 @@ use fpas_unit::interface::{UnitInterface, encode_interface};
 use fpas_unit::object::RelocatableObject;
 use fpas_unit::{CompiledUnit, Digest, ExpectedUnitIdentity, UnitIdentity, write_sidecar};
 
-use self::backend::{Backend, UnitBackend};
+use self::backend::{Backend, UnitBackend, sidecar_error};
 use self::interfaces::{InterfaceRegistry, direct_interfaces_from_map};
 use crate::source_snapshot::UnitSourceSnapshot;
 use crate::{BuildCounters, BuildEvent, BuildEventKind, BuildOptions};
-
-/// Incremental build failure.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct BuildError {
-    detail: String,
-}
-
-impl BuildError {
-    pub(crate) fn new(detail: impl Into<String>) -> Self {
-        Self {
-            detail: detail.into(),
-        }
-    }
-}
-
-impl fmt::Display for BuildError {
-    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        formatter.write_str(&self.detail)
-    }
-}
-
-impl std::error::Error for BuildError {}
 
 /// Dependency-first compiled units and their build activity.
 pub struct BuiltUnits {
@@ -149,9 +130,10 @@ fn compile_units<Backend: UnitBackend>(
 
     for unit_name in selection.order() {
         let node = graph.get(unit_name).ok_or_else(|| {
-            BuildError::new(format!(
-                "internal build graph error: selected unit `{unit_name}` is missing"
-            ))
+            BuildError::new(
+                INTERNAL_PROJECT_INVARIANT_FAILURE,
+                format!("internal build graph error: selected unit `{unit_name}` is missing"),
+            )
         })?;
         let dependencies = interfaces.direct_dependency_identities(node.direct_uses());
         let source = UnitSourceSnapshot::read(node)?;
@@ -179,18 +161,24 @@ fn compile_units<Backend: UnitBackend>(
             let direct_interfaces = interfaces.direct_interfaces(node.direct_uses());
             let parsed = node
                 .parse_source_snapshot(source.bytes())
-                .map_err(BuildError::new)?;
-            let (interface, object) =
-                Backend::compile(&parsed, &direct_interfaces, interfaces.all()).map_err(
-                    |diagnostics| {
-                        BuildError::new(format_diagnostics(Some(node.path()), &diagnostics))
-                    },
-                )?;
+                .map_err(BuildError::from)?;
+            let (interface, object) = Backend::compile(
+                &parsed,
+                &direct_interfaces,
+                interfaces.all(),
+            )
+            .map_err(|diagnostics| {
+                BuildError::from_diagnostics(diagnostics, Some((node.source_id(), node.path())))
+            })?;
             events.push(event(unit_name, BuildEventKind::InterfaceAnalyzed));
             events.push(event(unit_name, BuildEventKind::ImplementationAnalyzed));
             events.push(event(unit_name, BuildEventKind::Compiled));
-            let interface_bytes =
-                encode_interface(&interface).map_err(|error| BuildError::new(error.to_string()))?;
+            let interface_bytes = encode_interface(&interface).map_err(|error| {
+                BuildError::new(
+                    BUILD_ARTIFACT_ENCODING_FAILED,
+                    format!("cannot encode interface of unit `{unit_name}`: {error}"),
+                )
+            })?;
             let interface_hash = Digest::of(&interface_bytes);
             let object_bytes = Backend::encode(&object)?;
             let object_hash = Digest::of(&object_bytes);
@@ -211,10 +199,13 @@ fn compile_units<Backend: UnitBackend>(
             if sidecar_publication == SidecarPublication::Enabled {
                 source.ensure_current(node)?;
                 write_sidecar(node.path(), &sidecar).map_err(|error| {
-                    BuildError::new(format!(
-                        "cannot publish compiled unit beside `{}`: {error}",
-                        node.path().display()
-                    ))
+                    sidecar_error(
+                        error,
+                        &format!(
+                            "cannot publish compiled unit beside `{}`",
+                            node.path().display()
+                        ),
+                    )
                 })?;
             }
             (interface, object, interface_hash, object_hash)
@@ -239,7 +230,7 @@ pub fn build_program(
     options: &BuildOptions,
 ) -> Result<BuiltProgram, BuildError> {
     let units = build_library_units(graph, selection, options)?;
-    link_program(units, program)
+    link_program(units, program, None)
 }
 
 /// Compile and link a program without publishing newly compiled unit sidecars.
@@ -256,12 +247,13 @@ pub fn check_program(
     options: &BuildOptions,
 ) -> Result<BuiltProgram, BuildError> {
     let units = check_library_units(graph, selection, options)?;
-    link_program(units, program)
+    link_program(units, program, None)
 }
 
 pub(crate) fn link_program(
     mut units: BuiltUnits,
     program: &Program,
+    source_path: Option<&std::path::Path>,
 ) -> Result<BuiltProgram, BuildError> {
     let root_interfaces = direct_interfaces_from_map(&program.uses, &units.interfaces);
     let mut program_object = fpas_compiler::compile_program_object_with_support(
@@ -269,10 +261,10 @@ pub(crate) fn link_program(
         &root_interfaces,
         units.supporting_interfaces(),
     )
-    .map_err(|diagnostics| BuildError::new(format_diagnostics(None, &diagnostics)))?;
+    .map_err(|diagnostics| BuildError::from_program_diagnostics(diagnostics, source_path))?;
     normalize_sources(&mut program_object, 0);
-    let executable = fpas_linker::link_objects(&units.objects, &program_object)
-        .map_err(|error| BuildError::new(error.to_string()))?;
+    let executable =
+        fpas_linker::link_objects(&units.objects, &program_object).map_err(BuildError::from)?;
     units
         .events
         .push(event(&program.name, BuildEventKind::Relinked));
@@ -292,28 +284,6 @@ fn event(owner: &str, kind: BuildEventKind) -> BuildEvent {
     BuildEvent {
         owner: owner.to_string(),
         kind,
-    }
-}
-
-fn format_diagnostics(
-    path: Option<&std::path::Path>,
-    diagnostics: &[fpas_compiler::CompileError],
-) -> String {
-    diagnostics
-        .iter()
-        .map(|diagnostic| format_diagnostic(path, diagnostic))
-        .collect::<Vec<_>>()
-        .join("\n")
-}
-
-fn format_diagnostic(
-    path: Option<&std::path::Path>,
-    diagnostic: &fpas_compiler::CompileError,
-) -> String {
-    if let Some(path) = path {
-        fpas_diagnostics::render(path.to_string_lossy().as_ref(), diagnostic)
-    } else {
-        fpas_diagnostics::render_without_path(diagnostic)
     }
 }
 

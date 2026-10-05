@@ -14,7 +14,11 @@ end.",
         .iter()
         .find(|e| e.code == SEMA_UNKNOWN_NAME)
         .expect("expected SEMA_UNKNOWN_NAME");
-    assert_eq!(e.span.line(), 3, "wrong line");
+    assert_eq!(
+        e.span.expect("source diagnostic span").line(),
+        3,
+        "wrong line"
+    );
     assert!(
         e.help.as_deref().is_some_and(|h| !h.is_empty()),
         "help text must be present"
@@ -56,4 +60,9 @@ end.",
         errs.iter().any(|e| e.code == SEMA_TYPE_MISMATCH),
         "expected SEMA_TYPE_MISMATCH; got: {errs:#?}"
     );
+    let diagnostic = errs.iter().find(|e| e.code == SEMA_TYPE_MISMATCH).unwrap();
+    assert_eq!(diagnostic.expected.as_deref(), Some("integer"));
+    assert_eq!(diagnostic.found.as_deref(), Some("string"));
+    let json = fpas_diagnostics::render_json(None, None, diagnostic).unwrap();
+    assert!(json.contains("\"expected\":\"integer\",\"found\":\"string\""));
 }

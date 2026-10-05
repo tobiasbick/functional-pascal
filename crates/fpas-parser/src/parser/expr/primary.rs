@@ -174,6 +174,7 @@ impl Parser {
     fn parse_field_init_list(&mut self) -> Vec<FieldInit> {
         let mut fields = Vec::new();
         while !self.check(&Token::End) && !self.at_end() {
+            let field_position = self.pos;
             let field_start = self.current_span();
             let (name, _) = self
                 .expect_ident()
@@ -186,6 +187,11 @@ impl Parser {
                 value,
                 span: self.span_from(field_start),
             });
+            // Missing expressions can leave a parent delimiter untouched. Let
+            // the caller recover instead of repeating diagnostics at that token.
+            if self.pos == field_position {
+                break;
+            }
         }
         self.expect(&Token::End);
         fields

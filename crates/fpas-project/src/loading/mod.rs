@@ -18,7 +18,7 @@ use std::path::Path;
 ///
 /// This implements project-file handling from `docs/pascal/program-structure/projects.md`
 /// and validates user-unit naming rules from `docs/pascal/program-structure/units.md`.
-pub fn load_project(path: &Path) -> Result<LoadedProject, String> {
+pub fn load_project(path: &Path) -> Result<LoadedProject, crate::ProjectError> {
     let path = absolute_project_path(path)?;
     let mut visiting = Vec::new();
     let mut project_cache = HashMap::new();

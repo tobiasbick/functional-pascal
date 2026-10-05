@@ -12,8 +12,10 @@
 
 mod code;
 mod diagnostic;
+mod file_diagnostic;
 mod location;
 mod render;
+mod source_range;
 mod span;
 
 /// Stable diagnostic code catalog used across all FPAS stages.
@@ -21,6 +23,8 @@ pub mod codes;
 
 pub use code::{DiagnosticCode, InvalidDiagnosticCode};
 pub use diagnostic::{Diagnostic, DiagnosticSeverity, DiagnosticStage};
+pub use file_diagnostic::FileDiagnostic;
 pub use location::{SourceLocation, SourceLocationError};
-pub use render::{render, render_without_path};
+pub use render::{render, render_json, render_program_stderr_json, render_without_path};
+pub use source_range::{SourcePosition, SourceRange};
 pub use span::{SourceSpan, SourceSpanError};

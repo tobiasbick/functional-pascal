@@ -10,7 +10,7 @@ anything new. Do not create a parallel error system.
 
 ## Prerequisites
 
-- The open decision on code numbering in the [package README](README.md).
+- The confirmed Q01 numbering decision in the [package README](README.md).
 
 ## Implementation
 
@@ -47,3 +47,10 @@ Update any current page that cites a code. The full reference follows in AP02.5.
 - Tests for each improved representative error assert the code, position,
   expected/found details, and hint.
 - Required checks from the [process](../development-process.md#required-checks).
+
+## Result
+
+Delivered together with the remaining AP02 slices so code identity, transport
+and consumers agree. The producer inventory and FP4xxx subranges are recorded
+in the [implementation audit](implementation-audit.md). Merge status remains
+in the package checklist.

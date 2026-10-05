@@ -24,7 +24,7 @@ impl DebugSession {
     ///
     /// Recording is off until this is called. The current stop is recorded once
     /// when capture starts. Reverse execution stays unsupported. Later resume
-    /// rejects unsupported host effects with `F4024` before they run.
+    /// rejects unsupported host effects with `FP5024` before they run.
     ///
     /// **Documentation:** `docs/pascal/tools/debugger.md`
     pub fn start_recording(&mut self) {

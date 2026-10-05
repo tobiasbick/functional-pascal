@@ -30,11 +30,14 @@ impl Checker {
         span: fpas_lexer::Span,
     ) {
         if !expected.assignment_compatible_with(actual) {
-            self.error_with_code(
-                SEMA_TYPE_MISMATCH,
-                format!("Type mismatch in {context}: expected `{expected}`, found `{actual}`"),
-                format!("The {context} must match the declared type."),
-                span,
+            self.errors.push(
+                crate::error::sema_error(
+                    SEMA_TYPE_MISMATCH,
+                    format!("Type mismatch in {context}: expected `{expected}`, found `{actual}`"),
+                    format!("The {context} must match the declared type."),
+                    span,
+                )
+                .with_expected_found(expected.to_string(), actual.to_string()),
             );
         }
     }

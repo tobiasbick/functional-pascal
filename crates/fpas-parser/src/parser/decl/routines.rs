@@ -151,49 +151,4 @@ impl Parser {
         }
         decls
     }
-
-    pub(in crate::parser) fn parse_formal_param_list(
-        &mut self,
-        allow_self_receiver: bool,
-    ) -> Vec<FormalParam> {
-        let mut params = Vec::new();
-        if self.check(&Token::RParen) {
-            return params;
-        }
-        params.push(self.parse_formal_param(allow_self_receiver));
-        while self.eat(&Token::Semicolon) {
-            if self.check(&Token::RParen) {
-                let span = self.current_span();
-                self.error_with_code(
-                    fpas_diagnostics::codes::PARSE_EXPECTED_TOKEN,
-                    "Unexpected `;` before `)` in a parameter list",
-                    "Remove the trailing semicolon, or add another parameter before `)`.",
-                    span,
-                );
-                break;
-            }
-            params.push(self.parse_formal_param(false));
-        }
-        params
-    }
-
-    fn parse_formal_param(&mut self, allow_self_receiver: bool) -> FormalParam {
-        let start = self.current_span();
-        let mutable = self.eat(&Token::Mutable);
-        let (name, _) = if allow_self_receiver && self.check(&Token::SelfKw) {
-            let span = self.advance().span;
-            ("Self".to_owned(), span)
-        } else {
-            self.expect_ident()
-                .unwrap_or_else(|| self.error_ident(start))
-        };
-        self.expect(&Token::Colon);
-        let type_expr = self.parse_type_expr();
-        FormalParam {
-            mutable,
-            name,
-            type_expr,
-            span: self.span_from(start),
-        }
-    }
 }

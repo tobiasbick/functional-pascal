@@ -37,3 +37,10 @@ This work package is the documentation.
 
 - The catalog test fails when a code is missing from the reference.
 - Sample wrong examples produce the documented code.
+
+## Result
+
+The reference covers all 120 allocated codes. Compiler/linker invariant rows
+use invalid artifact or host-state examples where no accepted FPAS source can
+directly trigger the failure. Delivery is recorded in the
+[implementation audit](implementation-audit.md).

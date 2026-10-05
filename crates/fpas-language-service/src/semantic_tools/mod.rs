@@ -63,7 +63,7 @@ pub struct SemanticToken {
 /// Stable identity of one compiler diagnostic in a specific source snapshot.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct DiagnosticIdentity {
-    /// Stable `Fxxxx` code.
+    /// Stable `FPnxxx` code.
     pub code: DiagnosticCode,
     /// Compiler message without protocol-specific help rendering.
     pub message: String,

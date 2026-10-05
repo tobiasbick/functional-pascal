@@ -1,5 +1,7 @@
 use super::*;
 
+mod json;
+
 #[test]
 fn cli_renders_lex_stage_output() {
     let source = "program LexFail;\nbegin\n  @\nend.\n";
@@ -8,7 +10,7 @@ fn cli_renders_lex_stage_output() {
     assert_eq!(exit_code, 1);
     assert_eq!(
         stderr_output,
-        "lex.fpas:3:3: error[F0001]: Unexpected character `@`\n  help: Remove this character or replace it with a valid Pascal token such as `:=`, `;`, `(`, or an identifier.\n"
+        "lex.fpas:3:3: error[FP1001]: Unexpected character `@`\n  help: Remove this character or replace it with a valid Pascal token such as `:=`, `;`, `(`, or an identifier.\n"
     );
 }
 
@@ -20,7 +22,7 @@ fn cli_renders_parse_stage_output() {
     assert_eq!(exit_code, 1);
     assert_eq!(
         stderr_output,
-        "parse.fpas:2:1: error[F1001]: Expected `;`, found `begin`\n  help: Insert `;` here.\n"
+        "parse.fpas:2:1: error[FP2001]: Expected `;`, found `begin`\n  help: Insert `;` here.\n"
     );
 }
 
@@ -62,7 +64,7 @@ fn cli_renders_sema_stage_output() {
     assert_eq!(exit_code, 1);
     assert_eq!(
         stderr_output,
-        "sema.fpas:3:3: error[F2003]: Undefined identifier `x`\n  help: Check spelling or declare the variable or constant.\n"
+        "sema.fpas:3:3: error[FP3003]: Undefined identifier `x`\n  help: Check spelling or declare the variable or constant.\n"
     );
 }
 
@@ -78,7 +80,7 @@ fn cli_renders_compile_stage_output() {
     let rendered = render_cli_diagnostic("compile.fpas", &diagnostic);
     assert_eq!(
         rendered,
-        "compile.fpas:4:9: error[F3003]: Std.Console.ReadLn takes no arguments\n  help: Remove all arguments from this call."
+        "compile.fpas:4:9: error[FP4003]: Std.Console.ReadLn takes no arguments\n  help: Remove all arguments from this call."
     );
 }
 
@@ -90,7 +92,7 @@ fn cli_renders_runtime_stage_output() {
     assert_eq!(exit_code, 2);
     assert_eq!(
         stderr_output,
-        "runtime.fpas:3:3: error[F4010]: panic: boom\n  help: Remove the panic or guard the failing condition before calling panic.\n"
+        "runtime.fpas:3:3: error[FP5010]: panic: boom\n  help: Remove the panic or guard the failing condition before calling panic.\n"
     );
 }
 
@@ -104,7 +106,7 @@ fn cli_reports_compiler_directive_syntax_as_lex_error() {
     assert!(stdout_output.is_empty());
     assert_eq!(
         stderr_output,
-        "directive.fpas:2:1: error[F0010]: `{$...}` is not valid source syntax\n  help: Remove this sequence. Put shared declarations in another `.fpas` file and import the unit with `uses`.\n"
+        "directive.fpas:2:1: error[FP1010]: `{$...}` is not valid source syntax\n  help: Remove this sequence. Put shared declarations in another `.fpas` file and import the unit with `uses`.\n"
     );
 }
 
@@ -118,6 +120,6 @@ fn cli_reports_invalid_comment_form_with_the_valid_syntax() {
     assert!(stdout_output.is_empty());
     assert_eq!(
         stderr_output,
-        "comment.fpas:2:1: error[F0013]: `{...}` is not valid comment syntax\n  help: Use `// comment`. For multiple lines, prefix each line with `//`.\n"
+        "comment.fpas:2:1: error[FP1013]: `{...}` is not valid comment syntax\n  help: Use `// comment`. For multiple lines, prefix each line with `//`.\n"
     );
 }

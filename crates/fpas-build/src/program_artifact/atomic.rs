@@ -5,25 +5,34 @@ use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 
 use atomic_write_file::AtomicWriteFile;
+use fpas_diagnostics::codes::{BUILD_ARTIFACT_ENCODING_FAILED, BUILD_ARTIFACT_IO_FAILED};
+
+use crate::BuildError;
 
 #[cfg(test)]
-pub(super) fn replace(path: &Path, bytes: &[u8]) -> Result<(), String> {
+pub(super) fn replace(path: &Path, bytes: &[u8]) -> Result<(), BuildError> {
     PublicationLock::acquire(path)?.prepare(bytes)?.commit()
 }
 
-fn validate_image(path: &Path, bytes: &[u8]) -> Result<(), String> {
+fn validate_image(path: &Path, bytes: &[u8]) -> Result<(), BuildError> {
     fpas_program::decode(bytes).map(|_| ()).map_err(|error| {
-        format!(
-            "temporary compiled program `{}` is invalid: {error}",
-            path.display()
+        BuildError::new(
+            BUILD_ARTIFACT_ENCODING_FAILED,
+            format!(
+                "temporary compiled program `{}` is invalid: {error}",
+                path.display()
+            ),
         )
     })
 }
 
-fn io_error(operation: &str, path: &Path, error: io::Error) -> String {
-    format!(
-        "failed to {operation} compiled program `{}`: {error}",
-        path.display()
+fn io_error(operation: &str, path: &Path, error: io::Error) -> BuildError {
+    BuildError::new(
+        BUILD_ARTIFACT_IO_FAILED,
+        format!(
+            "failed to {operation} compiled program `{}`: {error}",
+            path.display()
+        ),
     )
 }
 
@@ -35,7 +44,7 @@ pub(super) struct PublicationLock {
 
 impl PublicationLock {
     /// Acquires the persistent sidecar lock associated with `path`.
-    pub(super) fn acquire(path: &Path) -> Result<Self, String> {
+    pub(super) fn acquire(path: &Path) -> Result<Self, BuildError> {
         let lock_path = append_suffix(path, ".lock");
         let file = OpenOptions::new()
             .read(true)
@@ -53,7 +62,7 @@ impl PublicationLock {
     }
 
     /// Reads the current image while retaining exclusive publication ownership.
-    pub(super) fn read(&self) -> Result<Option<Vec<u8>>, String> {
+    pub(super) fn read(&self) -> Result<Option<Vec<u8>>, BuildError> {
         match fs::read(&self.path) {
             Ok(bytes) => Ok(Some(bytes)),
             Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(None),
@@ -62,7 +71,7 @@ impl PublicationLock {
     }
 
     /// Validates and writes a temporary image while retaining the lock.
-    pub(super) fn prepare(&self, bytes: &[u8]) -> Result<PendingReplacement<'_>, String> {
+    pub(super) fn prepare(&self, bytes: &[u8]) -> Result<PendingReplacement<'_>, BuildError> {
         validate_image(&self.path, bytes)?;
         let mut replacement = AtomicWriteFile::open(&self.path)
             .map_err(|error| io_error("create temporary for", &self.path, error))?;
@@ -84,7 +93,7 @@ pub(super) struct PendingReplacement<'a> {
 
 impl PendingReplacement<'_> {
     /// Atomically commits the prepared image while its publication lock is held.
-    pub(super) fn commit(self) -> Result<(), String> {
+    pub(super) fn commit(self) -> Result<(), BuildError> {
         self.replacement
             .commit()
             .map_err(|error| io_error("replace", &self.publication.path, error))

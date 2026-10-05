@@ -52,4 +52,11 @@ landed yet.
 
 The reference branch `codex/syntax-changes` implemented this slice with
 `fpas-diagnostics/src/source_range.rs` and `tests/structured_output.rs`.
-Reuse its findings, not its code numbering, unless the open decision says so.
+Reuse its transport implementation with the confirmed Q01 code numbering.
+
+## Result
+
+The reference transport was reused with Q01 numbering. FileDiagnostic carries
+the authoritative path; the shared span retains source identity and optional
+positions. This slice ships with the remaining AP02 slices, as recorded in the
+[implementation audit](implementation-audit.md).

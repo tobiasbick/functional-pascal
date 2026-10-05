@@ -21,7 +21,7 @@ Expected:
 <observable expected result>
 
 Actual:
-<observable result and Fxxxx diagnostic codes>
+<observable result and FPnxxx diagnostic codes>
 
 Minimal FPAS source:
 <small self-contained source or project layout>

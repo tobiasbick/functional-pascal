@@ -5,8 +5,11 @@
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
+use fpas_diagnostics::codes::PROJECT_DUPLICATE_ENTRY;
 use serde::Deserialize;
 
+use crate::ProjectError;
+use crate::manifest::invalid_value;
 use crate::model::ProjectKind;
 use crate::paths::resolve_explicit_file_path;
 use crate::test_sources::is_test_source_file;
@@ -54,15 +57,18 @@ pub(super) fn parse_test_section(
     source_files: &[PathBuf],
     project_root: &Path,
     project_path: &Path,
-) -> Result<TestManifest, String> {
+) -> Result<TestManifest, ProjectError> {
     let Some(section) = section else {
         return Ok(TestManifest::default());
     };
 
     if !matches!(kind, ProjectKind::Test) {
-        return Err(format!(
-            "Project `{}` must not define `[test]`.\n  help: `[test]` overrides are only allowed in `kind = \"test\"` projects.",
-            project_path.to_string_lossy()
+        return Err(invalid_value(
+            format!(
+                "Project `{}` must not define `[test]`.",
+                project_path.to_string_lossy()
+            ),
+            "`[test]` overrides are only allowed in `kind = \"test\"` projects.",
         ));
     }
 
@@ -74,9 +80,11 @@ pub(super) fn parse_test_section(
     for key in section.overrides.keys() {
         let normalized = key.trim();
         if !normalized_names.insert(normalized.to_ascii_lowercase()) {
-            return Err(format!(
-                "Duplicate `[test.overrides]` entry for `{normalized}`.\n  help: Define each test file override once."
-            ));
+            return Err(ProjectError::new(
+                PROJECT_DUPLICATE_ENTRY,
+                format!("Duplicate `[test.overrides]` entry for `{normalized}`."),
+            )
+            .with_help("Define each test file override once."));
         }
     }
 
@@ -84,16 +92,17 @@ pub(super) fn parse_test_section(
     for (key, raw) in section.overrides {
         let normalized = key.trim();
         if normalized.is_empty() {
-            return Err(
-                "`[test.overrides]` contains an empty test file key.\n  help: Use a basename such as `menu_test.fpas`."
-                    .to_string(),
-            );
+            return Err(invalid_value(
+                "`[test.overrides]` contains an empty test file key.".to_string(),
+                "Use a basename such as `menu_test.fpas`.",
+            ));
         }
 
         let key_path = PathBuf::from(normalized);
         if !is_test_source_file(&key_path) {
-            return Err(format!(
-                "`[test.overrides]` key `{normalized}` is not a test file name.\n  help: Keys must end with `_test.fpas`."
+            return Err(invalid_value(
+                format!("`[test.overrides]` key `{normalized}` is not a test file name."),
+                "Keys must end with `_test.fpas`.",
             ));
         }
 
@@ -103,14 +112,18 @@ pub(super) fn parse_test_section(
                 .and_then(|name| name.to_str())
                 .is_some_and(|name| name.eq_ignore_ascii_case(normalized))
         }) {
-            return Err(format!(
-                "`[test.overrides]` key `{normalized}` does not match any project source file.\n  help: Add the test file to `[sources].include` first."
+            return Err(invalid_value(
+                format!(
+                    "`[test.overrides]` key `{normalized}` does not match any project source file."
+                ),
+                "Add the test file to `[sources].include` first.",
             ));
         }
 
         if raw.script.is_none() {
-            return Err(format!(
-                "`[test.overrides.{normalized}]` must set `script`.\n  help: Remove empty override tables or add a script path."
+            return Err(invalid_value(
+                format!("`[test.overrides.{normalized}]` must set `script`."),
+                "Remove empty override tables or add a script path.",
             ));
         }
 
@@ -184,7 +197,9 @@ mod tests {
             Path::new("demo.fpasprj"),
         );
 
-        assert!(matches!(result, Err(error) if error.contains("must not define `[test]`")));
+        assert!(
+            matches!(result, Err(error) if error.to_string().contains("must not define `[test]`"))
+        );
     }
 
     #[test]
@@ -214,7 +229,7 @@ mod tests {
         );
 
         assert!(
-            matches!(result, Err(error) if error.contains("Duplicate `[test.overrides]` entry"))
+            matches!(result, Err(error) if error.to_string().contains("Duplicate `[test.overrides]` entry"))
         );
     }
 }

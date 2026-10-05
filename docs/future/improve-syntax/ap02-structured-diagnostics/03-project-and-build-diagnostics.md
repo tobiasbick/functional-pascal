@@ -40,3 +40,10 @@ Add the new codes to the diagnostics page (AP02.5 or the page started in AP02.2)
 - Tests for failures in imported units, missing units, cyclic graphs, invalid
   manifests, and linker failures assert codes and source paths.
 - Multiple diagnostics from one build stay separate records.
+
+## Result
+
+Delivered with the other AP02 slices. Native project/build/linker errors retain
+their categories; source and manifest failures retain their authoritative file
+paths, including dependency manifests. See the
+[implementation audit](implementation-audit.md).

@@ -64,8 +64,11 @@ fn bom_in_the_middle_is_an_unexpected_character() {
     );
     assert_eq!(errors.len(), 1);
     assert_eq!(errors[0].code, LEX_UNEXPECTED_CHARACTER);
-    assert_eq!(errors[0].span.offset(), 3);
-    assert_eq!(errors[0].span.length(), '\u{FEFF}'.len_utf8());
+    assert_eq!(errors[0].span.expect("source diagnostic span").offset(), 3);
+    assert_eq!(
+        errors[0].span.expect("source diagnostic span").length(),
+        '\u{FEFF}'.len_utf8()
+    );
 }
 
 #[test]

@@ -48,7 +48,7 @@ fpas test tests/runner/assert_basics_test.fpas
 
 Test files are named `*_test.fpas`. `Skip` tests are reported as skipped (use `--strict` to fail the run). See [`docs/pascal/std/testing/test.md`](../docs/pascal/std/testing/test.md).
 
-`tests/manual/assert_fail_demo.fpas` is a manual failure demo (not `*_test.fpas`); run it with `fpas run tests/manual/assert_fail_demo.fpas` to inspect **F4023** output.
+`tests/manual/assert_fail_demo.fpas` is a manual failure demo (not `*_test.fpas`); run it with `fpas run tests/manual/assert_fail_demo.fpas` to inspect **FP5023** output.
 
 Expected failures (runtime/compile errors, CLI args) are exercised from `test_suite_negative.rs`.
 

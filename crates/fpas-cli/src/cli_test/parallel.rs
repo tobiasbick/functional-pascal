@@ -6,14 +6,17 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread;
-use std::time::Duration;
 
+use fpas_diagnostics::codes::TEST_RUNNER_FAILED;
+
+use super::log;
 use super::report::TestOutcome;
 #[cfg(test)]
 use super::run::run_single_test_capture;
 use super::run::{
     CompiledTestProgram, LinkContext, TestRunSettings, run_single_test_capture_prepared,
 };
+use crate::cli_output::{CliFailure, DiagnosticFormat, Reporter};
 
 /// One test ready to execute on a worker thread.
 #[derive(Clone)]
@@ -48,9 +51,7 @@ pub(super) fn effective_job_count(requested: usize, test_count: usize) -> usize 
 pub(super) fn run_tests_parallel(
     prepared: Vec<PreparedTest>,
     jobs: usize,
-    script_override: Option<&Path>,
-    timeout: Option<Duration>,
-    show_output: bool,
+    settings: TestRunSettings<'_>,
     fail_fast: bool,
 ) -> Vec<IndexedTestResult> {
     if prepared.is_empty() {
@@ -59,17 +60,28 @@ pub(super) fn run_tests_parallel(
 
     let worker_count = effective_job_count(jobs, prepared.len());
     if worker_count <= 1 {
-        return run_tests_sequential(prepared, script_override, timeout, show_output, fail_fast);
+        return run_tests_sequential(prepared, settings, fail_fast);
     }
 
-    let script_path = script_override.map(Path::to_path_buf);
+    let script_path = settings.script_override.map(Path::to_path_buf);
+    let TestRunSettings {
+        timeout,
+        show_output,
+        diagnostics,
+        ..
+    } = settings;
     let stop = Arc::new(AtomicBool::new(false));
     let mut results = Vec::with_capacity(prepared.len());
     let mut batch_start = 0_usize;
 
     while batch_start < prepared.len() {
         if fail_fast && stop.load(Ordering::Relaxed) {
-            results.extend(prepared[batch_start..].iter().cloned().map(not_run_result));
+            results.extend(
+                prepared[batch_start..]
+                    .iter()
+                    .cloned()
+                    .map(|test| not_run_result(test, diagnostics)),
+            );
             break;
         }
 
@@ -81,9 +93,17 @@ pub(super) fn run_tests_parallel(
             let stop = Arc::clone(&stop);
             let handle = thread::spawn(move || {
                 if fail_fast && stop.load(Ordering::Relaxed) {
-                    return not_run_result(test);
+                    return not_run_result(test, diagnostics);
                 }
-                let result = run_prepared_test(test, script_path.as_deref(), timeout, show_output);
+                let result = run_prepared_test(
+                    test,
+                    TestRunSettings {
+                        script_override: script_path.as_deref(),
+                        timeout,
+                        show_output,
+                        diagnostics,
+                    },
+                );
                 if fail_fast && result.outcome.is_failure() {
                     stop.store(true, Ordering::Relaxed);
                 }
@@ -95,8 +115,8 @@ pub(super) fn run_tests_parallel(
         for ((index, display), handle) in handles {
             results.push(collect_worker_result(
                 handle,
-                index,
-                display,
+                (index, display),
+                diagnostics,
                 fail_fast,
                 stop.as_ref(),
             ));
@@ -111,19 +131,17 @@ pub(super) fn run_tests_parallel(
 
 fn run_tests_sequential(
     prepared: Vec<PreparedTest>,
-    script_override: Option<&Path>,
-    timeout: Option<Duration>,
-    show_output: bool,
+    settings: TestRunSettings<'_>,
     fail_fast: bool,
 ) -> Vec<IndexedTestResult> {
     let mut results = Vec::<IndexedTestResult>::with_capacity(prepared.len());
     let mut stop = false;
     for test in prepared {
         if fail_fast && stop {
-            results.push(not_run_result(test));
+            results.push(not_run_result(test, settings.diagnostics));
             continue;
         }
-        let result = run_prepared_test(test, script_override, timeout, show_output);
+        let result = run_prepared_test(test, settings);
         if fail_fast && result.outcome.is_failure() {
             stop = true;
         }
@@ -132,22 +150,42 @@ fn run_tests_sequential(
     results
 }
 
-fn not_run_result(test: PreparedTest) -> IndexedTestResult {
-    not_run_result_for(test.index, test.display)
+/// Renders buffered per-test output in the selected diagnostic format.
+pub(super) fn render_output(
+    format: DiagnosticFormat,
+    write: impl FnOnce(&mut Reporter<'_>),
+) -> String {
+    let mut buffer = Vec::new();
+    write(&mut Reporter::new(format, &mut buffer));
+    String::from_utf8_lossy(&buffer).into_owned()
 }
 
-pub(super) fn not_run_result_for(index: usize, display: String) -> IndexedTestResult {
+fn not_run_result(test: PreparedTest, format: DiagnosticFormat) -> IndexedTestResult {
+    not_run_result_for(test.index, test.display, format)
+}
+
+pub(super) fn not_run_result_for(
+    index: usize,
+    display: String,
+    format: DiagnosticFormat,
+) -> IndexedTestResult {
     IndexedTestResult {
         index,
         outcome: TestOutcome::NotRun,
-        output: format!("  ---  {display} (not run, --fail-fast)\n"),
+        output: render_output(format, |reporter| {
+            log::banner(
+                reporter,
+                "---",
+                &format!("{display} (not run, --fail-fast)"),
+            );
+        }),
     }
 }
 
 fn collect_worker_result(
     handle: thread::JoinHandle<IndexedTestResult>,
-    index: usize,
-    display: String,
+    (index, display): (usize, String),
+    format: DiagnosticFormat,
     fail_fast: bool,
     stop: &AtomicBool,
 ) -> IndexedTestResult {
@@ -159,29 +197,25 @@ fn collect_worker_result(
             }
             IndexedTestResult {
                 index,
-                output: format!(
-                    "  FAIL  {display}\n        test worker panicked unexpectedly.\n  help: Re-run under a debugger or report a compiler/runtime bug.\n"
-                ),
+                output: render_output(format, |reporter| {
+                    log::banner(reporter, "FAIL", &display);
+                    log::failure(
+                        reporter,
+                        &CliFailure::new(TEST_RUNNER_FAILED, "test worker panicked unexpectedly.")
+                            .with_help("Re-run under a debugger or report a compiler/runtime bug."),
+                    );
+                }),
                 outcome: TestOutcome::RuntimeError,
             }
         }
     }
 }
 
-fn run_prepared_test(
-    test: PreparedTest,
-    script_override: Option<&Path>,
-    timeout: Option<Duration>,
-    show_output: bool,
-) -> IndexedTestResult {
+fn run_prepared_test(test: PreparedTest, settings: TestRunSettings<'_>) -> IndexedTestResult {
     let (outcome, output_bytes) = run_single_test_capture_prepared(
         &test.path,
         test.link.as_ref(),
-        TestRunSettings {
-            script_override,
-            timeout,
-            show_output,
-        },
+        settings,
         test.compiled.as_ref(),
     );
     IndexedTestResult {
@@ -195,6 +229,15 @@ fn run_prepared_test(
 mod tests {
     use super::*;
     use crate::test_support::{create_temp_dir, write_text};
+
+    fn text_settings() -> TestRunSettings<'static> {
+        TestRunSettings {
+            script_override: None,
+            timeout: None,
+            show_output: false,
+            diagnostics: DiagnosticFormat::Text,
+        }
+    }
     use std::thread;
 
     #[test]
@@ -212,7 +255,13 @@ mod tests {
         let stop = AtomicBool::new(false);
         let handle = thread::spawn(|| -> IndexedTestResult { panic!("worker panic") });
 
-        let result = collect_worker_result(handle, 4, "panic_test.fpas".to_string(), true, &stop);
+        let result = collect_worker_result(
+            handle,
+            (4, "panic_test.fpas".to_string()),
+            DiagnosticFormat::Text,
+            true,
+            &stop,
+        );
 
         assert_eq!(result.index, 4);
         assert_eq!(result.outcome, TestOutcome::RuntimeError);
@@ -274,7 +323,7 @@ mod tests {
             },
         ];
 
-        let results = run_tests_parallel(prepared, 2, None, None, false, false);
+        let results = run_tests_parallel(prepared, 2, text_settings(), false);
         assert_eq!(results.len(), 2);
         assert!(
             results
@@ -326,7 +375,7 @@ mod tests {
             },
         ];
 
-        let results = run_tests_parallel(prepared, 1, None, None, false, true);
+        let results = run_tests_parallel(prepared, 1, text_settings(), true);
         assert_eq!(results.len(), 3);
         assert_eq!(results[0].outcome, TestOutcome::Pass);
         assert_eq!(results[1].outcome, TestOutcome::AssertFailed);

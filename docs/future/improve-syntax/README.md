@@ -43,6 +43,10 @@ against the checkout before implementing each work package.
 
 ## Package status
 
+AP01 and AP02 are delivered locally on `codex/syntax-changes-2`; their package
+READMEs record the results. Their merge completion checkboxes remain open under
+the [status-tracking rule](development-process.md#status-tracking).
+
 Effort estimates are preliminary, based on the design rather than a code audit.
 Dependencies name the packages a package needs; the real prerequisites per work
 package are listed in each work package file.
@@ -184,6 +188,8 @@ agreement. Do not add a feature solely because an inspiration language has it.
 ## Document map
 
 - Package directories `apNN-*/`: one README plus one file per work package.
+- [AP01 reference style](ap01-pascal-conventions/reference-style.md): canonical
+  draft examples and the distinction between current and planned forms.
 - [development-process.md](development-process.md): branches, merges, status
   tracking, migration rules, required checks.
 - [shared-constraints.md](shared-constraints.md): cross-package rules,
@@ -196,7 +202,7 @@ Implemented behavior remains in the [current handbook](../../pascal/README.md).
 
 The branch `codex/syntax-changes` is a reference only: it carries an earlier,
 functional-first redesign with its own stage plan and several implemented
-slices. Where it diverges from a decision recorded here (notably AP05's
-alias-only imports and AP06's removal of record methods), the decision here
-wins. Package READMEs note the reusable findings from that branch under
+slices. Its alias-only imports and removal of record methods diverge from
+the decisions recorded in AP05 and AP06 here; the decisions here win.
+Package READMEs note the reusable findings from that branch under
 **Reference**.

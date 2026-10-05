@@ -34,7 +34,7 @@ impl RuntimeFailurePolicy {
                 return Err(RuntimeFailureFilterError {
                     message: "runtime failure filter `all` cannot be combined with exact codes"
                         .to_string(),
-                    hint: "Send only `all`, or send only exact codes such as `F4001`.".to_string(),
+                    hint: "Send only `all`, or send only exact codes such as `FP5001`.".to_string(),
                 });
             }
             let code = parse_code(filter)?;
@@ -71,7 +71,7 @@ pub(crate) struct RuntimeFailureFilterError {
 }
 
 fn parse_code(filter: &str) -> Result<DiagnosticCode, RuntimeFailureFilterError> {
-    let Some(digits) = filter.strip_prefix('F') else {
+    let Some(digits) = filter.strip_prefix("FP") else {
         return Err(invalid_code(filter));
     };
     if digits.len() != 4 || !digits.bytes().all(|byte| byte.is_ascii_digit()) {
@@ -83,8 +83,8 @@ fn parse_code(filter: &str) -> Result<DiagnosticCode, RuntimeFailureFilterError>
 
 fn invalid_code(filter: &str) -> RuntimeFailureFilterError {
     RuntimeFailureFilterError {
-        message: format!("runtime failure filter `{filter}` is not an exact Fdddd code"),
-        hint: "Use `all` or an advertised code such as `F4001`.".to_string(),
+        message: format!("runtime failure filter `{filter}` is not an exact FPdddd code"),
+        hint: "Use `all` or an advertised code such as `FP5001`.".to_string(),
     }
 }
 
@@ -104,7 +104,7 @@ mod tests {
                 .should_stop(fpas_diagnostics::codes::RUNTIME_PROGRAM_PANIC)
         );
         assert!(
-            RuntimeFailurePolicy::parse(&["F4010".to_string()])
+            RuntimeFailurePolicy::parse(&["FP5010".to_string()])
                 .expect("exact")
                 .should_stop(fpas_diagnostics::codes::RUNTIME_PROGRAM_PANIC)
         );
@@ -113,10 +113,10 @@ mod tests {
                 .expect("empty")
                 .should_stop(fpas_diagnostics::codes::RUNTIME_PROGRAM_PANIC)
         );
-        for invalid in ["f4010", "F410", "F4017", "F9999", "all,F4010"] {
+        for invalid in ["F4010", "fp5010", "FP510", "FP5017", "FP9999", "all,FP5010"] {
             assert!(RuntimeFailurePolicy::parse(&[invalid.to_string()]).is_err());
         }
-        assert!(RuntimeFailurePolicy::parse(&["all".to_string(), "F4010".to_string()]).is_err());
+        assert!(RuntimeFailurePolicy::parse(&["all".to_string(), "FP5010".to_string()]).is_err());
         for code in RUNTIME_ALLOCATED_CODES {
             let policy = RuntimeFailurePolicy::parse(&[code.to_string()]).expect("allocated code");
             assert!(policy.should_stop(*code));

@@ -16,6 +16,7 @@
 
 mod dependencies;
 mod loading;
+mod manifest;
 mod model;
 mod path_glob;
 mod paths;
@@ -29,6 +30,7 @@ mod workspace;
 pub use loading::load_project;
 pub use model::{LibraryExportPolicy, LoadedProject, ProjectKind, ProjectLinkMeta, SourceOrigin};
 pub use path_glob::{PathGlobError, expand_path_glob};
+pub use source::ProjectError;
 pub use standard_library::{StandardLibrary, load_standard_library, load_standard_library_project};
 pub use test_manifest::{TestFileOverride, TestManifest};
 pub use test_sources::is_test_source_file;

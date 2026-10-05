@@ -476,6 +476,14 @@ fn source_changed_after_graph_creation_is_rejected_without_relabelling_sidecar()
         .expect("stale graph must fail");
 
     assert!(error.to_string().contains("changed after the build graph"));
+    let [record] = error.diagnostics() else {
+        panic!("a stale source has exactly one record");
+    };
+    assert_eq!(
+        record.diagnostic.code,
+        fpas_diagnostics::codes::PROJECT_SOURCE_CHANGED
+    );
+    assert!(record.path.is_some());
     assert_eq!(
         fs::read(&sidecar).expect("preserved sidecar"),
         previous,

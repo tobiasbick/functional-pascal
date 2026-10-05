@@ -47,7 +47,9 @@ fn load_project_rejects_cyclic_project_dependency() {
     fs::remove_dir_all(&dir).ok();
 
     assert!(
-        error.contains("Cyclic project dependency detected"),
+        error
+            .to_string()
+            .contains("Cyclic project dependency detected"),
         "{error}"
     );
 }
@@ -73,10 +75,10 @@ fn load_project_rejects_source_owned_by_consumer_and_dependency() {
     fs::remove_dir_all(&dir).ok();
 
     assert!(
-        error.contains("owned by more than one project")
-            && error.contains("internal.fpas")
-            && error.contains("lib.fpasprj")
-            && error.contains("app.fpasprj"),
+        error.to_string().contains("owned by more than one project")
+            && error.to_string().contains("internal.fpas")
+            && error.to_string().contains("lib.fpasprj")
+            && error.to_string().contains("app.fpasprj"),
         "{error}"
     );
 }
@@ -100,7 +102,10 @@ fn load_project_rejects_lexical_alias_of_dependency_source() {
     let error = load_project(&consumer).expect_err("source alias ownership must fail");
     fs::remove_dir_all(&dir).ok();
 
-    assert!(error.contains("owned by more than one project"), "{error}");
+    assert!(
+        error.to_string().contains("owned by more than one project"),
+        "{error}"
+    );
 }
 
 #[test]
@@ -129,7 +134,10 @@ fn load_project_rejects_symlink_alias_of_dependency_source() {
     let error = load_project(&consumer).expect_err("source symlink ownership must fail");
     fs::remove_dir_all(&dir).ok();
 
-    assert!(error.contains("owned by more than one project"), "{error}");
+    assert!(
+        error.to_string().contains("owned by more than one project"),
+        "{error}"
+    );
 }
 
 #[test]
@@ -157,9 +165,9 @@ fn load_project_rejects_source_owned_by_two_libraries() {
     fs::remove_dir_all(&dir).ok();
 
     assert!(
-        error.contains("owned by more than one project")
-            && error.contains("a.fpasprj")
-            && error.contains("b.fpasprj"),
+        error.to_string().contains("owned by more than one project")
+            && error.to_string().contains("a.fpasprj")
+            && error.to_string().contains("b.fpasprj"),
         "{error}"
     );
 }
@@ -212,7 +220,10 @@ fn load_workspace_rejects_duplicate_member_paths() {
     let error = load_workspace(&workspace).expect_err("duplicate members must fail");
     fs::remove_dir_all(&dir).ok();
 
-    assert!(error.contains("Duplicate workspace member"), "{error}");
+    assert!(
+        error.to_string().contains("Duplicate workspace member"),
+        "{error}"
+    );
 }
 
 #[cfg(unix)]

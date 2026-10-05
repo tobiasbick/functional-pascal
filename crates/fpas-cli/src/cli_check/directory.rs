@@ -1,42 +1,41 @@
 //! Shared source-set validation for `fpas check <directory>`.
 
 use std::fs;
-use std::io::Write;
 use std::path::PathBuf;
 
-use fpas_diagnostics::DiagnosticSeverity;
+use fpas_diagnostics::FileDiagnostic;
 use fpas_parser::{CompilationUnit, parse_compilation_unit};
 use fpas_project::{ProjectLinkMeta, StandardLibrary};
+
+use crate::cli_output::Reporter;
 
 /// Checks all programs and units discovered in one directory tree as one source set.
 pub(super) fn check_source_set(
     files: &[PathBuf],
     standard_library: Option<&StandardLibrary>,
-    stderr: &mut dyn Write,
+    reporter: &mut Reporter<'_>,
 ) -> i32 {
-    let Some((programs, units)) = classify_sources(files, stderr) else {
+    let Some((programs, units)) = classify_sources(files, reporter) else {
         return 1;
     };
     let link_meta = ProjectLinkMeta::default();
 
     if !units.is_empty()
-        && let Err(message) =
+        && let Err(failure) =
             crate::project_build::check_source_units(&units, &link_meta, standard_library)
     {
-        let _ = writeln!(stderr, "{message}");
-        return 1;
+        return reporter.failure(&failure);
     }
 
     let mut exit_code = 0;
     for program in programs {
-        if let Err(message) = crate::project_build::check_source_program(
+        if let Err(failure) = crate::project_build::check_source_program(
             &program,
             &units,
             &link_meta,
             standard_library,
         ) {
-            let _ = writeln!(stderr, "{message}");
-            exit_code = 1;
+            exit_code = reporter.failure(&failure);
         }
     }
     exit_code
@@ -44,7 +43,7 @@ pub(super) fn check_source_set(
 
 fn classify_sources(
     files: &[PathBuf],
-    stderr: &mut dyn Write,
+    reporter: &mut Reporter<'_>,
 ) -> Option<(Vec<PathBuf>, Vec<PathBuf>)> {
     let mut programs = Vec::new();
     let mut units = Vec::new();
@@ -54,22 +53,20 @@ fn classify_sources(
         let source = match fs::read_to_string(path) {
             Ok(source) => source,
             Err(error) => {
-                let _ = writeln!(stderr, "Error reading `{}`: {error}", path.display());
+                reporter.failure(&crate::project_build::source_read_failure(path, &error));
                 has_errors = true;
                 continue;
             }
         };
         let (parsed, diagnostics) = parse_compilation_unit(&source);
-        let path_text = path.to_string_lossy();
+        let mut file_has_errors = false;
         for diagnostic in &diagnostics {
             let diagnostic = diagnostic.as_diagnostic();
-            has_errors |= diagnostic.severity == DiagnosticSeverity::Error;
-            super::emit_check_diagnostic(path_text.as_ref(), None, diagnostic, stderr);
+            file_has_errors |= diagnostic.is_error();
+            reporter.record(&FileDiagnostic::new(diagnostic.clone(), Some(path.clone())));
         }
-        if diagnostics
-            .iter()
-            .any(|diagnostic| diagnostic.as_diagnostic().severity == DiagnosticSeverity::Error)
-        {
+        if file_has_errors {
+            has_errors = true;
             continue;
         }
         match parsed {

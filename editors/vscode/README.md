@@ -11,8 +11,8 @@ definition, syntax-aware selection expansion, validated project-wide rename,
 rich visibility-aware completion, lazy completion documentation, signature
 help, checked FPAS snippets, and safe unambiguous auto-imports. The repository
 builds and tests the extension without a Marketplace. Compiler-backed semantic
-tokens distinguish resolved declarations and references, and an `F2001` or
-`F2003` diagnostic can offer a safe import quick fix when exactly one public,
+tokens distinguish resolved declarations and references, and an `FP3001` or
+`FP3003` diagnostic can offer a safe import quick fix when exactly one public,
 accessible unit provides the missing type or callable.
 The extension resolves `fpas` from `functionalPascal.executablePath` or `PATH`
 for project check, build, run, test, format, and format-check commands, Problems
@@ -174,7 +174,7 @@ Open a `.fpas` file and confirm the status bar identifies the language as
 **Functional Pascal Project** and can be launched with **F5**. Syntax highlighting works before the extension's
 TypeScript entry point is activated.
 
-Introduce a syntax or type error and confirm the editor reports an `Fxxxx`
+Introduce a syntax or type error and confirm the editor reports an `FPnxxx`
 diagnostic for the unsaved buffer. Run **Format Document** and confirm the
 result matches `fpas fmt`. The editor's standard `editor.formatOnSave` setting
 uses the same formatter without an FPAS-specific setting.

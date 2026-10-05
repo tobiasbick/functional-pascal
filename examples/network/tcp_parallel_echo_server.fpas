@@ -2,7 +2,8 @@
 program ParallelTcpEchoServer;
 
 uses
-  Std.Args, Std.Conv, Std.Arrays, Std.Console, Std.Net, Std.Tasks, Std.Results, Std.Time, Std.Server;
+  Std.Args, Std.Conv, Std.Arrays, Std.Console, Std.Net, Std.Tasks, Std.Results, Std.Time,
+  Std.Server;
 
 function Echo(Client: Connection; Token: CancellationToken): result of boolean, string;
 begin

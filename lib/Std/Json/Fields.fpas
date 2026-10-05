@@ -6,8 +6,8 @@ uses Std.Arrays, Std.Conv, Std.Dictionaries, Std.Json, Std.Math;
 
 const
   // Exclusive upper and inclusive lower real bounds of the 64-bit integer range.
-  IntegerUpperBound: real := 9223372036854775808.0;
-  IntegerLowerBound: real := -9223372036854775808.0;
+  IntegerUpperBound: real := 9223372036854776000.0;
+  IntegerLowerBound: real := -9223372036854776000.0;
 
 // Builds the type-mismatch error for one field.
 //

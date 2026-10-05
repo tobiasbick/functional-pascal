@@ -26,7 +26,6 @@ begin
   AssertEquals(1, Std.Dictionaries.Length(Unwrap(ObjectField(Fields, 'o'))));
   AssertEquals(2, Unwrap(ArrayField(Fields, 'mixed')).Length());
   AssertEquals(2, Unwrap(StringArrayField(Fields, 'rows')).Length());
-
   AssertEquals('missing field absent', ErrorText(Field(Fields, 'absent')));
   AssertEquals('field n must be a string', ErrorText(StringField(Fields, 'n')));
   AssertEquals('field n must be an integer', ErrorText(IntegerField(Fields, 'n')));
@@ -35,9 +34,11 @@ begin
   AssertEquals('field big is outside the integer range', ErrorText(IntegerField(Fields, 'big')));
   AssertEquals('field mixed must be an array of strings', ErrorText(StringArrayField(Fields, 'mixed')));
   AssertEquals('field s must be an object', ErrorText(ObjectField(Fields, 's')));
-
   AssertTrue(Unwrap(RequireOnlyFields(Unwrap(ParseObject('{"a":1}')), ['a', 'b'])));
-  AssertEquals('unexpected field c', ErrorText(RequireOnlyFields(Unwrap(ParseObject('{"a":1,"c":2}')), ['a', 'b'])));
+  AssertEquals('unexpected field c', ErrorText(RequireOnlyFields(Unwrap(ParseObject('{"a":1,"c":2}')), [
+                                                                                                         'a',
+                                                                                                         'b'
+                                                                                                       ])));
   AssertEquals('JSON root must be an object', ErrorText(ParseObject('[1]')));
   AssertTrue(IsError(ParseObject('{')))
 end.

@@ -121,14 +121,14 @@ kept in their current theme; unrelated restructuring is outside AP02.
 | `cargo clippy --all-targets --all-features --locked -- -D warnings` | Passed |
 | `fpas test tests/suite.fpasprj --report json` | 459 total: 458 passed, one skipped, no failures |
 | `fpas fmt --check tests/manual/assert_fail_demo.fpas` | Passed for the changed FPAS source |
-| `fpas fmt --check --list lib apps examples tests` | Eight existing deviations in untouched files; listed below |
+| `fpas fmt --check --list lib apps examples tests` | Passed after canonical formatting of the eight sources listed below |
 | VS Code `compile.mjs`, `verify-contracts.mjs`, `run-tests.mjs` | Passed, including extension-host diagnostics, workflows and runtime-code filters |
 | Diagnostic catalog/reference tests | 120 unique allocations, each documented once with cause/wrong/corrected columns |
 | Executed reference samples | Wrong/corrected pairs for FP1007, FP1011, FP2001, FP2012, FP2013, FP2014, FP3005, FP3006 and FP3009 produce the expected code/pass check |
 | Relative Markdown links and `git diff --check` | Passed |
 | Added-content privacy and temporary-instrumentation scan | No findings |
 
-The global formatter reports these pre-existing, unmodified sources:
+The formatting cleanup applies canonical formatter output to these sources:
 
 - `examples/math/mandelbrot/mandelbrot_app.fpas`
 - `examples/network/tcp_parallel_echo_server.fpas`
@@ -139,8 +139,12 @@ The global formatter reports these pre-existing, unmodified sources:
 - `tests/stdlib/json/json_fields_typed_access_test.fpas`
 - `tests/stdlib/toml/toml_fields_typed_access_test.fpas`
 
-These files have no working-tree changes. The formatter itself was unchanged;
-AP02 leaves their unrelated formatting outside its delivery.
+The formatter itself is unchanged. The existing formatter round-trip test binary
+passes all four tests for the parser corpus and the examples, tests and apps
+trees. Real literal normalization preserves the exact binary64 integer bounds
+in `Std.Json.Fields`. The three formatted regression tests and the TUI host
+signature test also pass with `--std-lib lib`, using the current repository
+standard-library sources.
 
 ## Changed paths
 

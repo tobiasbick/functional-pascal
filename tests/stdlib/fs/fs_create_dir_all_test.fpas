@@ -10,7 +10,6 @@ begin
   // An existing directory is success, unlike CreateDir.
   AssertTrue(Unwrap(CreateDirAll(Leaf)));
   AssertTrue(IsError(CreateDir(Leaf)));
-
   var Blocking: string := Root + '/blocking-file';
   AssertTrue(Unwrap(WriteText(Blocking, 'not a directory')));
   AssertTrue(IsError(CreateDirAll(Blocking)));

@@ -26,7 +26,7 @@ begin
   var Configured: boolean := Std.Results.Unwrap(SetTimeout(Client, 1500));
   var Ignored: result of array of integer, string := ReceiveBytesWithCancellation(Client, 1, Token);
   var Closed: boolean := Std.Results.Unwrap(Close(Client));
-  return true
+  return true;
 end;
 begin
   var Source: CancellationSource := CreateCancellationSource();
@@ -48,7 +48,7 @@ begin
   if TimestampMillis() - Started > 1000 then panic('timed send ran a blocking task inline');
   if Std.Results.IsOk(Blocked) then panic('the channel was full');
   if not Wait(First) then panic('first');
-  if not Wait(Second) then panic('second')
+  if not Wait(Second) then panic('second');
 end."#,
     );
 }
@@ -66,9 +66,9 @@ begin
   begin
     var Value: integer := Std.Results.Unwrap(Receive(Requests));
     var Sent: boolean := Std.Results.Unwrap(Send(Replies, Value * 2));
-    Count := Count + 1
+    Count := Count + 1;
   end;
-  return Count
+  return Count;
 end;
 begin
   var Requests: channel of integer := CreateChannel(1);
@@ -77,9 +77,9 @@ begin
   for Index: integer := 1 to 50 do
   begin
     var Sent: boolean := Std.Results.Unwrap(Send(Requests, Index));
-    if Std.Results.Unwrap(Receive(Replies)) <> Index * 2 then panic('reply')
+    if Std.Results.Unwrap(Receive(Replies)) <> Index * 2 then panic('reply');
   end;
-  if Wait(Worker) <> 50 then panic('count')
+  if Wait(Worker) <> 50 then panic('count');
 end."#,
     );
 }
@@ -97,7 +97,7 @@ begin
   var Client: Connection := Std.Results.Unwrap(Accept(ListenerValue));
   var Configured: boolean := Std.Results.Unwrap(SetTimeout(Client, 1000));
   var Ignored: result of array of integer, string := ReceiveBytesWithCancellation(Client, 1, Token);
-  return true
+  return true;
 end;
 function Reader(ListenerValue: Listener; Token: CancellationToken): boolean;
 begin
@@ -106,25 +106,25 @@ begin
   case ReceiveBytesWithCancellation(Client, 1, Token) of
     Ok(Bytes):
     begin
-      return Bytes.Length() = 1
+      return Bytes.Length() = 1;
     end;
     Error(Message):
     begin
-      return false
-    end
-  end
+      return false;
+    end;
+  end;
 end;
 function Quick(): integer;
 begin
-  return 7
+  return 7;
 end;
 function Open(): Listener;
 begin
-  return Std.Results.Unwrap(Listen('127.0.0.1', 0))
+  return Std.Results.Unwrap(Listen('127.0.0.1', 0));
 end;
 function Join(ListenerValue: Listener): Connection;
 begin
-  return Std.Results.Unwrap(Connect('127.0.0.1', Std.Results.Unwrap(ListenerLocalAddress(ListenerValue)).Port, 1000))
+  return Std.Results.Unwrap(Connect('127.0.0.1', Std.Results.Unwrap(ListenerLocalAddress(ListenerValue)).Port, 1000));
 end;
 begin
   var Source: CancellationSource := CreateCancellationSource();
@@ -145,7 +145,7 @@ begin
   if not Wait(ReaderTask) then panic('the reader did not receive the byte sent after the wait');
   if TimestampMillis() - Started > 4000 then panic('the wait ran the reader inline');
   if not Wait(First) then panic('first');
-  if not Wait(Second) then panic('second')
+  if not Wait(Second) then panic('second');
 end."#,
         2,
     );

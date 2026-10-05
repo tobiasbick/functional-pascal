@@ -62,7 +62,7 @@ fn enum_shared_variant_name_becomes_ambiguous_at_use_site() {
          type Color = enum Red; Green; end; \
          type Status = enum Red; Ready; end; \
          begin \
-           var C: Color := Red \
+           var C: Color := Red; \
          end.",
     );
     assert!(
@@ -92,7 +92,7 @@ fn enum_qualified_variant_names_remain_unambiguous() {
          type Status = enum Red; Ready; end; \
          begin \
            var C: Color := Color.Red; \
-           var S: Status := Status.Red \
+           var S: Status := Status.Red; \
          end.",
     );
 }
@@ -159,8 +159,8 @@ fn enum_data_case_destructure_valid() {
            var S: Shape := Shape.Circle(1.0); \
            case S of \
              Shape.Circle(R): WriteLn(R); \
-             Shape.Dot: WriteLn('dot') \
-           end \
+             Shape.Dot: WriteLn('dot'); \
+           end; \
          end.",
     );
 }
@@ -353,11 +353,11 @@ fn record_method_valid() {
          type Point = record \
            X: integer; Y: integer; \
            function Sum(Self: Point): integer; \
-           begin return Self.X + Self.Y end; \
+           begin return Self.X + Self.Y; end; \
          end; \
          begin \
            var P: Point := record X := 3; Y := 7; end; \
-           WriteLn(P.Sum()) \
+           WriteLn(P.Sum()); \
          end.",
     );
 }
@@ -369,11 +369,11 @@ fn record_method_names_are_case_insensitive() {
                  type Point = record \
                      X: integer; \
                      function Sum(Self: Point): integer; \
-                     begin return Self.X end; \
+                     begin return Self.X; end; \
                  end; \
                  begin \
                      var P: Point := record X := 3; end; \
-                     WriteLn(P.sum()) \
+                     WriteLn(P.sum()); \
                  end.",
     );
 }
@@ -385,9 +385,9 @@ fn record_duplicate_method_rejected() {
          type Point = record \
            X: integer; \
            function Sum(Self: Point): integer; \
-           begin return Self.X end; \
+           begin return Self.X; end; \
            function sum(Self: Point): integer; \
-           begin return Self.X end; \
+           begin return Self.X; end; \
          end; \
          begin end.",
     );
@@ -406,11 +406,11 @@ fn static_record_function_valid() {
          type Point = record \
            X: integer; Y: integer; \
            static function Create(X: integer; Y: integer): Point; \
-           begin return record X := X; Y := Y; end end; \
+           begin return record X := X; Y := Y; end; end; \
          end; \
          begin \
            var P: Point := Point.Create(3, 4); \
-           WriteLn(P.X) \
+           WriteLn(P.X); \
          end.",
     );
 }
@@ -422,11 +422,11 @@ fn static_record_function_case_insensitive() {
          type Point = record \
            X: integer; Y: integer; \
            static function Create(X: integer; Y: integer): Point; \
-           begin return record X := X; Y := Y; end end; \
+           begin return record X := X; Y := Y; end; end; \
          end; \
          begin \
            var P: Point := point.create(1, 2); \
-           WriteLn(P.X) \
+           WriteLn(P.X); \
          end.",
     );
 }
@@ -438,12 +438,12 @@ fn static_record_function_via_alias() {
          type Point = record \
            X: integer; Y: integer; \
            static function Create(X: integer; Y: integer): Point; \
-           begin return record X := X; Y := Y; end end; \
+           begin return record X := X; Y := Y; end; end; \
          end; \
          type Alias = Point; \
          begin \
            var P: Alias := Alias.Create(5, 6); \
-           WriteLn(P.X) \
+           WriteLn(P.X); \
          end.",
     );
 }
@@ -455,11 +455,11 @@ fn static_call_through_value_rejected() {
          type Point = record \
            X: integer; Y: integer; \
            static function Create(X: integer; Y: integer): Point; \
-           begin return record X := X; Y := Y; end end; \
+           begin return record X := X; Y := Y; end; end; \
          end; \
          begin \
            var P: Point := record X := 0; Y := 0; end; \
-           var Q: Point := P.Create(1, 2) \
+           var Q: Point := P.Create(1, 2); \
          end.",
     );
     assert!(
@@ -478,11 +478,11 @@ fn instance_call_through_type_rejected() {
          type Point = record \
            X: integer; Y: integer; \
            function Sum(Self: Point): integer; \
-           begin return Self.X + Self.Y end; \
+           begin return Self.X + Self.Y; end; \
          end; \
          begin \
            var P: Point := record X := 1; Y := 2; end; \
-           var N: integer := Point.Sum(P) \
+           var N: integer := Point.Sum(P); \
          end.",
     );
     assert!(
@@ -501,9 +501,9 @@ fn static_and_instance_duplicate_name_rejected() {
          type Point = record \
            X: integer; \
            static function Sum(X: integer): integer; \
-           begin return X end; \
+           begin return X; end; \
            function Sum(Self: Point): integer; \
-           begin return Self.X end; \
+           begin return Self.X; end; \
          end; \
          begin end.",
     );
@@ -522,9 +522,9 @@ fn static_overload_attempt_rejected() {
          type Point = record \
            X: integer; \
            static function Create(X: integer): Point; \
-           begin return record X := X; end end; \
+           begin return record X := X; end; end; \
            static function Create(X: integer; Y: integer): Point; \
-           begin return record X := X; end end; \
+           begin return record X := X; end; end; \
          end; \
          begin end.",
     );
@@ -543,10 +543,10 @@ fn static_generic_function_valid() {
          type Box = record \
            Value: integer; \
            static function Wrap<T>(V: T): T; \
-           begin return V end; \
+           begin return V; end; \
          end; \
          begin \
-           WriteLn(Box.Wrap(42)) \
+           WriteLn(Box.Wrap(42)); \
          end.",
     );
 }
@@ -557,10 +557,10 @@ fn static_record_procedure_valid() {
         "program T; uses Std.Console; \
          type Counter = record \
            static procedure Print(Value: integer); \
-           begin WriteLn(Value) end; \
+           begin WriteLn(Value); end; \
          end; \
          begin \
-           Counter.Print(4) \
+           Counter.Print(4); \
          end.",
     );
 }
@@ -575,7 +575,7 @@ fn static_record_procedure_via_alias() {
          end; \
          type Alias = Counter; \
          begin \
-           Alias.Reset(4) \
+           Alias.Reset(4); \
          end.",
     );
 }
@@ -590,7 +590,7 @@ fn static_procedure_call_through_value_rejected() {
          end; \
          begin \
            var Value: Counter := record Value := 1; end; \
-           Value.Reset() \
+           Value.Reset(); \
          end.",
     );
     assert!(
@@ -609,7 +609,7 @@ fn static_procedure_cannot_be_used_as_expression() {
          type Counter = record \
            static procedure Reset(); begin end; \
          end; \
-         begin var Value: integer := Counter.Reset() end.",
+         begin var Value: integer := Counter.Reset(); end.",
     );
     assert!(
         errors.iter().any(|error| {

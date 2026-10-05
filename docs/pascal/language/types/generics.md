@@ -9,12 +9,12 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`type_params`, `ty
 ```pascal
 function Identity<T>(Value: T): T;
 begin
-  return Value
+  return Value;
 end;
 
 procedure PrintValue<T>(Value: T);
 begin
-  WriteLn(Value)
+  WriteLn(Value);
 end;
 ```
 
@@ -37,13 +37,13 @@ type
 
     function Map<R>(Self: Box; F: function(X: integer): R): R;
     begin
-      return F(Self.Value)
+      return F(Self.Value);
     end;
   end;
 
 function ToText(X: integer): string;
 begin
-  return 'value=' + IntToStr(X)
+  return 'value=' + IntToStr(X);
 end;
 
 var
@@ -58,7 +58,7 @@ type
   Accumulator = record
     function Add<T: Numeric>(Self: Accumulator; Extra: T): T;
     begin
-      return Extra
+      return Extra;
     end;
   end;
 ```
@@ -87,12 +87,12 @@ Type parameters can be constrained to require specific capabilities from the con
 ```pascal
 function Max<T: Comparable>(A: T; B: T): T;
 begin
-  if A > B then return A else return B
+  if A > B then return A; else return B;
 end;
 
 function Add<T: Numeric>(A: T; B: T): T;
 begin
-  return A + B
+  return A + B;
 end;
 ```
 

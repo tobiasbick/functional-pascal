@@ -56,11 +56,11 @@ uses Std.Console;
 begin
   var E: KeyEvent := ReadKeyEvent();
   if E.kind = KeyKind.Escape then
-    WriteLn('escape')
+    WriteLn('escape');
   else if E.kind = KeyKind.Character then
-    WriteLn(E.ch)
+    WriteLn(E.ch);
   else
-    WriteLn('other')
+    WriteLn('other');
 end.
 ```
 

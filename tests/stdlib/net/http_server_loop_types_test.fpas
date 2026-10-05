@@ -9,7 +9,7 @@ uses Std.Http, Std.Test;
 // - `RequestValue`: Request supplied through the handler type.
 function Handle(RequestValue: ServerRequest): ServerResponse;
 begin
-  return ServerResponse.Create(200, RequestValue.Method)
+  return ServerResponse.Create(200, RequestValue.Method);
 end;
 
 begin
@@ -28,5 +28,5 @@ begin
   end;
   var ResponseValue: ServerResponse := HandlerValue(RequestValue);
   AssertEquals(200, ResponseValue.StatusCode);
-  AssertEquals('OK', ResponseValue.ReasonPhrase)
+  AssertEquals('OK', ResponseValue.ReasonPhrase);
 end.

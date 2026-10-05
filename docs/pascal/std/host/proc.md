@@ -11,10 +11,10 @@ begin
     Ok(Output):
     begin
       WriteLn(Output.Stdout);
-      WriteLn('exit code: ', Output.ExitCode)
+      WriteLn('exit code: ', Output.ExitCode);
     end;
-    Error(Message): WriteLn(Message)
-  end
+    Error(Message): WriteLn(Message);
+  end;
 end.
 ```
 
@@ -88,7 +88,7 @@ Starts `Command` with `Args`, waits for the process to exit, and returns `Ok(exi
 ```pascal
 var Status: Result of integer, string := Run('fpas', ['--version']);
 if Std.Results.IsError(Status) then
-  WriteLn(Std.Results.UnwrapOr(Status, -1))
+  WriteLn(Std.Results.UnwrapOr(Status, -1));
 ```
 
 If the process cannot be started, returns `Error(message)`. If the host reports that the process ended without an exit code, returns `Error('process terminated without an exit code')`.
@@ -111,10 +111,10 @@ case RunCapture('fpas', ['check', 'main.fpas']) of
   Ok(Output):
   begin
     WriteLn(Output.Stdout);
-    WriteLn(Output.Stderr)
+    WriteLn(Output.Stderr);
   end;
-  Error(Message): WriteLn(Message)
-end
+  Error(Message): WriteLn(Message);
+end;
 ```
 
 A non-zero exit code is a completed process and therefore remains `Ok`; inspect

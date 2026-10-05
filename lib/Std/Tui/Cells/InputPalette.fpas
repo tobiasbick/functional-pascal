@@ -38,7 +38,7 @@ public type
         Hint := Hint;
         Cursor := Cursor;
         Scroll := Scroll;
-      end
+      end;
     end;
 
     // Resolves one input role.
@@ -51,29 +51,29 @@ public type
       case Role of
         TuiStyleRole.InputNormal:
         begin
-          return Self.Normal
+          return Self.Normal;
         end;
         TuiStyleRole.InputFocused:
         begin
-          return Self.Focused
+          return Self.Focused;
         end;
         TuiStyleRole.InputHint:
         begin
-          return Self.Hint
+          return Self.Hint;
         end;
         TuiStyleRole.InputCursor:
         begin
-          return Self.Cursor
+          return Self.Cursor;
         end;
         TuiStyleRole.InputScroll:
         begin
-          return Self.Scroll
-        end
+          return Self.Scroll;
+        end;
         else
         begin
-          panic('Tui input palette requires an input style role')
-        end
-      end
+          panic('Tui input palette requires an input style role');
+        end;
+      end;
     end;
 
     // Returns a copy with one input role replaced.
@@ -88,30 +88,30 @@ public type
       case Role of
         TuiStyleRole.InputNormal:
         begin
-          Updated.Normal := Style
+          Updated.Normal := Style;
         end;
         TuiStyleRole.InputFocused:
         begin
-          Updated.Focused := Style
+          Updated.Focused := Style;
         end;
         TuiStyleRole.InputHint:
         begin
-          Updated.Hint := Style
+          Updated.Hint := Style;
         end;
         TuiStyleRole.InputCursor:
         begin
-          Updated.Cursor := Style
+          Updated.Cursor := Style;
         end;
         TuiStyleRole.InputScroll:
         begin
-          Updated.Scroll := Style
-        end
+          Updated.Scroll := Style;
+        end;
         else
         begin
-          panic('Tui input palette requires an input style role')
-        end
+          panic('Tui input palette requires an input style role');
+        end;
       end;
 
-      return Updated
+      return Updated;
     end;
   end;

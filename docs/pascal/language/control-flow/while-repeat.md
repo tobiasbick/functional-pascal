@@ -4,6 +4,9 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`while_stmt`, `rep
 
 ## While loop
 
+The body is one terminated statement. Its final `;` also terminates the loop.
+Inside a compound body, every statement ends with `;` before `end;`.
+
 ```pascal
 mutable var
   Count: integer := 0;
@@ -22,7 +25,8 @@ repeat body are not visible in that condition. If a body-local variable shadows
 an outer name, the condition still uses the outer binding, including after
 `continue`.
 
-The body executes at least once:
+The body executes at least once. Every body statement ends with `;`, including
+the last one before `until`; the condition also ends with `;`:
 
 ```pascal
 mutable var

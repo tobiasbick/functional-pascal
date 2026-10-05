@@ -18,5 +18,5 @@ begin
   var Total: Score := BigScore + HexMask;
   WriteLn('total: ', IntToStr(Total));
   WriteLn('first: ', First);
-  WriteLn('last: ', Last)
+  WriteLn('last: ', Last);
 end.

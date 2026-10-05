@@ -6,5 +6,5 @@ begin
   var C: array of integer := Concat([1, 2], [3, 4]);
   WriteLn(Length(C));
   WriteLn(C[0]);
-  WriteLn(C[3])
+  WriteLn(C[3]);
 end.

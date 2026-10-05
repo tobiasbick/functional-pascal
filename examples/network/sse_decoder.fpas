@@ -13,8 +13,8 @@ begin
   begin
     WriteLn('event: ' + Events[Index].EventType);
     WriteLn('id: ' + Events[Index].Id);
-    WriteLn('data: ' + Events[Index].Data)
-  end
+    WriteLn('data: ' + Events[Index].Data);
+  end;
 end;
 
 begin
@@ -25,39 +25,39 @@ begin
                                                 'data: hel')) of
         Ok(Events):
         begin
-          PrintEvents(Events)
+          PrintEvents(Events);
         end;
         Error(Message):
         begin
-          panic(Message)
-        end
+          panic(Message);
+        end;
       end;
 
       case FeedSse(Decoder, Std.Net.Utf8.Encode(('lo from FPAS' + #10) + #10)) of
         Ok(Events):
         begin
-          PrintEvents(Events)
+          PrintEvents(Events);
         end;
         Error(Message):
         begin
-          panic(Message)
-        end
+          panic(Message);
+        end;
       end;
 
       case FinishSse(Decoder) of
         Ok(Events):
         begin
-          PrintEvents(Events)
+          PrintEvents(Events);
         end;
         Error(Message):
         begin
-          panic(Message)
-        end
-      end
+          panic(Message);
+        end;
+      end;
     end;
     Error(Message):
     begin
-      panic(Message)
-    end
-  end
+      panic(Message);
+    end;
+  end;
 end.

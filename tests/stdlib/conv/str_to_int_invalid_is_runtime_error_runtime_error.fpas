@@ -3,5 +3,5 @@ program T;
 uses Std.Console, Std.Conv;
 
 begin
-  WriteLn(StrToInt('abc'))
+  WriteLn(StrToInt('abc'));
 end.

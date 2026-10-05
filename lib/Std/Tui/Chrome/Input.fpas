@@ -37,7 +37,7 @@ public type
         History := [];
         HistoryDraft := '';
         ChangeAction := ChangeAction;
-      end
+      end;
     end;
 
     // Creates an input that paints a hint while its text is empty.
@@ -64,7 +64,7 @@ public type
         History := [];
         HistoryDraft := '';
         ChangeAction := ChangeAction;
-      end
+      end;
     end;
 
     // Creates an input with oldest-to-newest Up/Down history and a restorable draft.
@@ -95,6 +95,6 @@ public type
         History := History;
         HistoryDraft := HistoryDraft;
         ChangeAction := ChangeAction;
-      end
+      end;
     end;
   end;

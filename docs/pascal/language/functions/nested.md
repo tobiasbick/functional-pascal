@@ -24,15 +24,15 @@ function IsEven(N: integer): boolean;
   function IsOdd(X: integer): boolean;
   begin
     if X = 0 then
-      return false
+      return false;
     else
-      return IsEven(X - 1)
+      return IsEven(X - 1);
   end;
 begin
   if N = 0 then
-    return true
+    return true;
   else
-    return IsOdd(N - 1)
+    return IsOdd(N - 1);
 end;
 ```
 

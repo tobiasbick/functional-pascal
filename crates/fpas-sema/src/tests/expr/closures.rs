@@ -12,10 +12,10 @@ begin
     var Invoke: function(Count: integer): integer :=
       function(Count: integer): integer
       begin
-        return Count
+        return Count;
       end;
-    return Invoke(5)
-  end
+    return Invoke(5);
+  end;
 end;
 begin
 end.",
@@ -43,10 +43,10 @@ begin
   begin
     begin
       var Count: integer := 5;
-      var Copy: integer := Count
+      var Copy: integer := Count;
     end;
-    return 0
-  end
+    return 0;
+  end;
 end;
 begin
 end.",
@@ -74,10 +74,10 @@ begin
     procedure()
     begin
       case N of
-        M if M > 0: return
-      end
+        M if M > 0: return;
+      end;
     end;
-  go F()
+  go F();
 end.",
     );
     assert!(parse_errors.is_empty(), "{parse_errors:#?}");
@@ -108,14 +108,14 @@ begin
   var Inc: procedure() :=
     procedure()
     begin
-      Count := Count + 1
+      Count := Count + 1;
     end;
   var Outer: procedure() :=
     procedure()
     begin
-      Inc()
+      Inc();
     end;
-  go Outer()
+  go Outer();
 end.",
     );
     assert!(parse_errors.is_empty(), "{parse_errors:#?}");

@@ -99,7 +99,7 @@ public type
         Failure := TuiStyle.FromColors(Failure, Background);
         Warning := TuiStyle.FromColors(Warning, Background);
         Accent := AccentStyle;
-      end
+      end;
     end;
 
     // Resolves the concrete style for one semantic role.
@@ -112,101 +112,101 @@ public type
       case Role of
         TuiStyleRole.Normal:
         begin
-          return Self.Normal
+          return Self.Normal;
         end;
         TuiStyleRole.Disabled:
         begin
-          return Self.Disabled
+          return Self.Disabled;
         end;
         TuiStyleRole.Focused:
         begin
-          return Self.Focused
+          return Self.Focused;
         end;
         TuiStyleRole.Selected:
         begin
-          return Self.Selected
+          return Self.Selected;
         end;
         TuiStyleRole.Shortcut:
         begin
-          return Self.Shortcut
+          return Self.Shortcut;
         end;
         TuiStyleRole.Frame:
         begin
-          return Self.Frame
+          return Self.Frame;
         end;
         TuiStyleRole.Title:
         begin
-          return Self.Title
+          return Self.Title;
         end;
         TuiStyleRole.MenuNormal:
         begin
-          return Self.MenuNormal
+          return Self.MenuNormal;
         end;
         TuiStyleRole.MenuDisabled:
         begin
-          return Self.MenuDisabled
+          return Self.MenuDisabled;
         end;
         TuiStyleRole.MenuShortcut:
         begin
-          return Self.MenuShortcut
+          return Self.MenuShortcut;
         end;
         TuiStyleRole.MenuSelected:
         begin
-          return Self.MenuSelected
+          return Self.MenuSelected;
         end;
         TuiStyleRole.MenuSelectedShortcut:
         begin
-          return Self.MenuSelectedShortcut
+          return Self.MenuSelectedShortcut;
         end;
         TuiStyleRole.StatusNormal:
         begin
-          return Self.StatusNormal
+          return Self.StatusNormal;
         end;
         TuiStyleRole.StatusDisabled:
         begin
-          return Self.StatusDisabled
+          return Self.StatusDisabled;
         end;
         TuiStyleRole.StatusShortcut:
         begin
-          return Self.StatusShortcut
+          return Self.StatusShortcut;
         end;
         TuiStyleRole.StatusSelected:
         begin
-          return Self.StatusSelected
+          return Self.StatusSelected;
         end;
         TuiStyleRole.ButtonNormal, TuiStyleRole.ButtonDefault, TuiStyleRole.ButtonSelected, TuiStyleRole.ButtonDisabled, TuiStyleRole.ButtonShortcut, TuiStyleRole.ButtonDefaultShortcut, TuiStyleRole.ButtonSelectedShortcut:
         begin
-          return Self.Buttons.ForRole(Role)
+          return Self.Buttons.ForRole(Role);
         end;
         TuiStyleRole.InputNormal, TuiStyleRole.InputFocused, TuiStyleRole.InputHint, TuiStyleRole.InputCursor, TuiStyleRole.InputScroll:
         begin
-          return Self.Inputs.ForRole(Role)
+          return Self.Inputs.ForRole(Role);
         end;
         TuiStyleRole.Rule:
         begin
-          return Self.Rule
+          return Self.Rule;
         end;
         TuiStyleRole.GaugeTrack:
         begin
-          return Self.GaugeTrack
+          return Self.GaugeTrack;
         end;
         TuiStyleRole.GaugeFill:
         begin
-          return Self.GaugeFill
+          return Self.GaugeFill;
         end;
         TuiStyleRole.Failure:
         begin
-          return Self.Failure
+          return Self.Failure;
         end;
         TuiStyleRole.Warning:
         begin
-          return Self.Warning
+          return Self.Warning;
         end;
         TuiStyleRole.Accent:
         begin
-          return Self.Accent
-        end
-      end
+          return Self.Accent;
+        end;
+      end;
     end;
 
     // Returns a copy with one semantic role replaced.
@@ -221,102 +221,102 @@ public type
       case Role of
         TuiStyleRole.Normal:
         begin
-          Updated.Normal := Style
+          Updated.Normal := Style;
         end;
         TuiStyleRole.Disabled:
         begin
-          Updated.Disabled := Style
+          Updated.Disabled := Style;
         end;
         TuiStyleRole.Focused:
         begin
-          Updated.Focused := Style
+          Updated.Focused := Style;
         end;
         TuiStyleRole.Selected:
         begin
-          Updated.Selected := Style
+          Updated.Selected := Style;
         end;
         TuiStyleRole.Shortcut:
         begin
-          Updated.Shortcut := Style
+          Updated.Shortcut := Style;
         end;
         TuiStyleRole.Frame:
         begin
-          Updated.Frame := Style
+          Updated.Frame := Style;
         end;
         TuiStyleRole.Title:
         begin
-          Updated.Title := Style
+          Updated.Title := Style;
         end;
         TuiStyleRole.MenuNormal:
         begin
-          Updated.MenuNormal := Style
+          Updated.MenuNormal := Style;
         end;
         TuiStyleRole.MenuDisabled:
         begin
-          Updated.MenuDisabled := Style
+          Updated.MenuDisabled := Style;
         end;
         TuiStyleRole.MenuShortcut:
         begin
-          Updated.MenuShortcut := Style
+          Updated.MenuShortcut := Style;
         end;
         TuiStyleRole.MenuSelected:
         begin
-          Updated.MenuSelected := Style
+          Updated.MenuSelected := Style;
         end;
         TuiStyleRole.MenuSelectedShortcut:
         begin
-          Updated.MenuSelectedShortcut := Style
+          Updated.MenuSelectedShortcut := Style;
         end;
         TuiStyleRole.StatusNormal:
         begin
-          Updated.StatusNormal := Style
+          Updated.StatusNormal := Style;
         end;
         TuiStyleRole.StatusDisabled:
         begin
-          Updated.StatusDisabled := Style
+          Updated.StatusDisabled := Style;
         end;
         TuiStyleRole.StatusShortcut:
         begin
-          Updated.StatusShortcut := Style
+          Updated.StatusShortcut := Style;
         end;
         TuiStyleRole.StatusSelected:
         begin
-          Updated.StatusSelected := Style
+          Updated.StatusSelected := Style;
         end;
         TuiStyleRole.ButtonNormal, TuiStyleRole.ButtonDefault, TuiStyleRole.ButtonSelected, TuiStyleRole.ButtonDisabled, TuiStyleRole.ButtonShortcut, TuiStyleRole.ButtonDefaultShortcut, TuiStyleRole.ButtonSelectedShortcut:
         begin
-          Updated.Buttons := Updated.Buttons.WithRole(Role, Style)
+          Updated.Buttons := Updated.Buttons.WithRole(Role, Style);
         end;
         TuiStyleRole.InputNormal, TuiStyleRole.InputFocused, TuiStyleRole.InputHint, TuiStyleRole.InputCursor, TuiStyleRole.InputScroll:
         begin
-          Updated.Inputs := Updated.Inputs.WithRole(Role, Style)
+          Updated.Inputs := Updated.Inputs.WithRole(Role, Style);
         end;
         TuiStyleRole.Rule:
         begin
-          Updated.Rule := Style
+          Updated.Rule := Style;
         end;
         TuiStyleRole.GaugeTrack:
         begin
-          Updated.GaugeTrack := Style
+          Updated.GaugeTrack := Style;
         end;
         TuiStyleRole.GaugeFill:
         begin
-          Updated.GaugeFill := Style
+          Updated.GaugeFill := Style;
         end;
         TuiStyleRole.Failure:
         begin
-          Updated.Failure := Style
+          Updated.Failure := Style;
         end;
         TuiStyleRole.Warning:
         begin
-          Updated.Warning := Style
+          Updated.Warning := Style;
         end;
         TuiStyleRole.Accent:
         begin
-          Updated.Accent := Style
-        end
+          Updated.Accent := Style;
+        end;
       end;
 
-      return Updated
+      return Updated;
     end;
   end;

@@ -12,7 +12,7 @@ fn test_cli_json_report_writes_summary_to_stdout() {
     let cwd = create_temp_dir("fpas-test-json");
     write_text(
         &cwd.join("ok_test.fpas"),
-        "program O;\nuses Std.Test;\nbegin AssertTrue(true) end.",
+        "program O;\nuses Std.Test;\nbegin AssertTrue(true); end.",
     );
 
     let mut stdout = Vec::new();
@@ -58,7 +58,7 @@ fn json_program_stderr_is_retained_without_worker_isolation() {
         write_text(
             &cwd.join(name),
             &format!(
-                "program P; uses Std.Proc, Std.Console; begin case Run('{command}', {arguments}) of Ok(Code): WriteLn(Code); Error(Message): WriteLn(Message) end end."
+                "program P; uses Std.Proc, Std.Console; begin case Run('{command}', {arguments}) of Ok(Code): WriteLn(Code); Error(Message): WriteLn(Message); end; end."
             ),
         );
     }

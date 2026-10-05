@@ -11,7 +11,7 @@ fn valid_expression_delimiters_parse_without_diagnostics() {
         "record X := 1; end",
         "Some([:])",
     ] {
-        let source = format!("program T; begin return {expression} end.");
+        let source = format!("program T; begin return {expression}; end.");
         let (_, errors) = parse_with_errors(&source);
         assert!(errors.is_empty(), "{expression}: {errors:#?}");
     }
@@ -26,7 +26,7 @@ fn trailing_delimiters_and_missing_record_separator_are_rejected() {
         ("record X := 1 end", PARSE_EXPECTED_TOKEN),
         ("Some()", PARSE_EXPECTED_EXPRESSION),
     ] {
-        let source = format!("program T; begin return {expression} end.");
+        let source = format!("program T; begin return {expression}; end.");
         let (_, errors) = parse_with_errors(&source);
         assert!(
             errors.iter().any(|error| matches!(error, ParseDiagnostic::Parser(diagnostic) if diagnostic.code == expected_code)),

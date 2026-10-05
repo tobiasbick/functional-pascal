@@ -18,7 +18,7 @@ begin
     ctrl := Ctrl;
     alt := Alt;
     meta := false;
-  end
+  end;
 end;
 
 function FindGlyph(Snapshot: TuiSurfaceSnapshot; Glyph: string): TuiPoint;
@@ -28,11 +28,11 @@ begin
     var X: integer := Std.Str.IndexOf(Snapshot.LineAt(Y), Glyph);
     if X >= 0 then
     begin
-      return TuiPoint.Create(X, Y)
-    end
+      return TuiPoint.Create(X, Y);
+    end;
   end;
 
-  panic('glyph not found in menu snapshot: ' + Glyph)
+  panic('glyph not found in menu snapshot: ' + Glyph);
 end;
 
 procedure AssertActive(Menu: TuiMenuState; Expected: integer);
@@ -40,13 +40,13 @@ begin
   case Menu.Active of
     Some(Id):
     begin
-      AssertEquals(Expected, Id.Value)
+      AssertEquals(Expected, Id.Value);
     end;
     None:
     begin
-      Fail('Expected an active menu node.')
-    end
-  end
+      Fail('Expected an active menu node.');
+    end;
+  end;
 end;
 
 function MenuNodes(): array of TuiMenuNode;
@@ -61,14 +61,14 @@ begin
            TuiMenuNodeBuilders.Separator(TuiMenuNodeId.Create(4), FileId),
            TuiMenuNodeBuilders.Submenu(ThemeId, Some(OptionsId), 'Theme', 'T'),
            TuiMenuNodeBuilders.Command(TuiMenuNodeId.Create(6), Some(ThemeId), 'Dark', 'D', TuiAction.Create(20))
-         ]
+         ];
 end;
 
 function ViewMenu(State: MenuModel): TuiElement;
 begin
   return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(State.Focus)), [
                                                                                   TuiElementBuilders.MakeMenu(TuiControlId.Create(100), MenuNodes(), State.Menu, TuiAction.Create(101))
-                                                                                ])
+                                                                                ]);
 end;
 
 function UpdateMenu(State: MenuModel; Msg: TuiMsg; Cmd: TuiCmdOutput): MenuModel;
@@ -84,13 +84,13 @@ begin
             Focus := Id.Value;
             Menu := State.Menu;
             Actions := State.Actions;
-          end
+          end;
         end;
         None:
         begin
-          return State
-        end
-      end
+          return State;
+        end;
+      end;
     end;
     TuiMsg.MenuChanged(Source, Action, Menu):
     begin
@@ -98,7 +98,7 @@ begin
         Focus := State.Focus;
         Menu := Menu;
         Actions := State.Actions;
-      end
+      end;
     end;
     TuiMsg.Action(Source, Action):
     begin
@@ -106,13 +106,13 @@ begin
         Focus := State.Focus;
         Menu := State.Menu;
         Actions := Std.Arrays.Concat(State.Actions, [Action.Value]);
-      end
-    end
+      end;
+    end;
     else
     begin
-      return State
-    end
-  end
+      return State;
+    end;
+  end;
 end;
 
 begin
@@ -186,5 +186,5 @@ begin
   AssertFalse(Model.Menu.Open);
   AssertEquals(4, Std.Arrays.Length(Model.Actions));
   AssertEquals(20, Model.Actions[3]);
-  App.Close()
+  App.Close();
 end.

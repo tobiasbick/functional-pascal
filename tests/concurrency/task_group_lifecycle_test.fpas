@@ -14,24 +14,24 @@ begin
       case ReceiveWithCancellation(Empty, ChildToken) of
         Ok(_):
         begin
-          panic('empty channel unexpectedly delivered')
+          panic('empty channel unexpectedly delivered');
         end;
         Error(_):
         begin
-          AssertTrue(IsCancellationRequested(ChildToken))
-        end
+          AssertTrue(IsCancellationRequested(ChildToken));
+        end;
       end;
 
-      Send(Finished, true)
+      Send(Finished, true);
     end);
-    Send(Ready, true)
+    Send(Ready, true);
   end);
   AssertTrue(Unwrap(Receive(Ready)));
   if RequestFirst then
   begin
     AssertTrue(CancelTaskGroup(Group));
     AssertFalse(CancelTaskGroup(Group));
-    AssertTrue(IsCancellationRequested(GetTaskGroupToken(Group)))
+    AssertTrue(IsCancellationRequested(GetTaskGroupToken(Group)));
   end;
 
   AssertEquals(0, Length(CloseTaskGroup(Group)));
@@ -40,10 +40,10 @@ begin
   AssertEquals(0, Length(CloseTaskGroup(Group)));
   CloseChannel(Ready);
   CloseChannel(Empty);
-  CloseChannel(Finished)
+  CloseChannel(Finished);
 end;
 
 begin
   VerifyClose(false);
-  VerifyClose(true)
+  VerifyClose(true);
 end.

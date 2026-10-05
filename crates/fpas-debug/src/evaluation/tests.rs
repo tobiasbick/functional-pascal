@@ -272,7 +272,11 @@ fn validator_lowers_qualified_enum_constructors_to_call_and_field_forms() {
 
 #[test]
 fn validator_rejects_every_effectful_or_constructing_category() {
-    let expressions = ["nil", "go Work()", "function(): integer begin return 1 end"];
+    let expressions = [
+        "nil",
+        "go Work()",
+        "function(): integer begin return 1; end",
+    ];
     for source in expressions {
         let error = parse_debug_expression(source, DebugEvaluationLimits::default())
             .expect_err("unsupported expression category");

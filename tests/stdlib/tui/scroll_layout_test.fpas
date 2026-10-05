@@ -15,20 +15,20 @@ begin
                                          TuiElementBuilders.MakeLabel('Three'),
                                          TuiElementBuilders.MakeLabel('Four'),
                                          TuiElementBuilders.MakeLabel('Five')
-                                       ])
+                                       ]);
 end;
 
 function ViewScroll(State: ScrollModel): TuiElement;
 begin
   return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(1)), [
                                                                         TuiElementBuilders.MakeScroll(TuiControlId.Create(1), State.Offset, TuiAction.Create(7), ScrollChild())
-                                                                      ])
+                                                                      ]);
 end;
 
 function UpdateScroll(State: ScrollModel; Msg: TuiMsg; Cmd: TuiCmdOutput): ScrollModel;
 begin
   Cmd.Set(TuiCmd.NoCommand);
-  return State
+  return State;
 end;
 
 begin
@@ -58,5 +58,5 @@ begin
   Model := App.RunIterations(Model, UpdateScroll, ViewScroll, 1, 0);
   AssertEquals(12, App.SurfaceSnapshot().Width);
   AssertTrue(Std.Str.Contains(App.SurfaceSnapshot().LineAt(0), 'Four'));
-  App.Close()
+  App.Close();
 end.

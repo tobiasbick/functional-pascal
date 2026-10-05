@@ -9,7 +9,7 @@ begin
   var Group: TaskGroup := GetWorkGroup(Life);
   var Gate: channel of boolean := CreateChannel(1);
   var Worker: task := StartTaskInGroup(Group, function(Token: CancellationToken): boolean begin
-    return Std.Results.Unwrap(Receive(Gate))
+    return Std.Results.Unwrap(Receive(Gate));
   end);
   AssertTrue(IsReady(Life));
   AssertTrue(not IsCancellationRequested(GetStopToken(Life)));
@@ -28,5 +28,5 @@ begin
   AssertTrue(Std.Results.Unwrap(FinishShutdown(Life)));
   AssertTrue(Std.Results.Unwrap(FinishShutdown(Life)));
   AssertEquals(0, Std.Arrays.Length(ShutdownErrors(Life)));
-  CloseChannel(Gate)
+  CloseChannel(Gate);
 end.

@@ -24,7 +24,7 @@ begin
   mutable var Entries: array of ChatEntry := Next.Entries;
   Std.Arrays.Push(Entries, Entry);
   Next.Entries := Entries;
-  return Next
+  return Next;
 end;
 
 // Sends the current non-empty draft and records its result.
@@ -38,7 +38,7 @@ begin
   begin
     mutable var Empty: LocalChatModel := State;
     Empty.Status := 'Enter a message first';
-    return Empty
+    return Empty;
   end;
   mutable var Next: LocalChatModel := AppendEntry(State, ChatEntry.User(Prompt));
   Next.Draft := '';
@@ -48,17 +48,17 @@ begin
     Ok(Content):
     begin
       Next := AppendEntry(Next, ChatEntry.Assistant(Content));
-      Next.Status := 'Ready'
+      Next.Status := 'Ready';
     end;
     Error(Message):
     begin
       Next := AppendEntry(Next, ChatEntry.Failure(Message));
-      Next.Status := 'Request failed'
-    end
+      Next.Status := 'Request failed';
+    end;
   end;
 
   Next.Focus := PromptControl;
-  return LocalChatScrollToEnd(Next)
+  return LocalChatScrollToEnd(Next);
 end;
 
 // Reports whether a key event is the Alt+X quit shortcut.
@@ -68,7 +68,7 @@ end;
 function IsQuitShortcut(Key: TuiKeyEvent): boolean;
 begin
   return ((((Key.kind = Std.Console.KeyKind.Character) and Key.alt) and (not Key.ctrl)) and (not Key.meta)) and
-         ((Key.ch = 'x') or (Key.ch = 'X'))
+         ((Key.ch = 'x') or (Key.ch = 'X'));
 end;
 
 // Applies one routed TUI message to the Local Chat application model.
@@ -89,10 +89,10 @@ begin
         Next.Draft := Text;
         Next.DraftCaret := Caret;
         Next.Status := 'Ready';
-        return Next
+        return Next;
       end;
 
-      return State
+      return State;
     end;
     TuiMsg.TextAreaChanged(Source, Action, Text, Caret, Offset):
     begin
@@ -101,35 +101,35 @@ begin
         mutable var Next: LocalChatModel := State;
         Next.TranscriptCaret := Caret;
         Next.TranscriptOffset := Offset;
-        return Next
+        return Next;
       end;
 
-      return State
+      return State;
     end;
     TuiMsg.Action(Source, Action):
     begin
       if Action.Value = SendAction then
       begin
-        return SendPrompt(State)
+        return SendPrompt(State);
       end;
 
-      return State
+      return State;
     end;
     TuiMsg.Key(Key):
     begin
       if IsQuitShortcut(Key) then
       begin
-        Cmd.Set(TuiCmd.Quit)
+        Cmd.Set(TuiCmd.Quit);
       end;
 
-      return State
+      return State;
     end;
     TuiMsg.Resize(Size):
     begin
       mutable var Next: LocalChatModel := State;
       Next.Width := Size.Width;
       Next.Height := Size.Height;
-      return LocalChatScrollToEnd(Next)
+      return LocalChatScrollToEnd(Next);
     end;
     TuiMsg.FocusChanged(Previous, Current):
     begin
@@ -138,45 +138,45 @@ begin
         begin
           mutable var Next: LocalChatModel := State;
           Next.Focus := CurrentId.Value;
-          return Next
+          return Next;
         end;
         None:
         begin
-          return State
-        end
-      end
+          return State;
+        end;
+      end;
     end;
     TuiMsg.QuitRequested:
     begin
-      return State
+      return State;
     end;
     TuiMsg.Pointer(Pointer):
     begin
-      return State
+      return State;
     end;
     TuiMsg.Tick(Delta):
     begin
-      return State
+      return State;
     end;
     TuiMsg.SelectionChanged(Source, Action, Selected):
     begin
-      return State
+      return State;
     end;
     TuiMsg.CheckChanged(CheckSource, CheckAction, Checked):
     begin
-      return State
+      return State;
     end;
     TuiMsg.ScrollChanged(ScrollSource, ScrollAction, ScrollOffset):
     begin
-      return State
+      return State;
     end;
     TuiMsg.MenuChanged(MenuSource, MenuAction, MenuState):
     begin
-      return State
-    end
+      return State;
+    end;
     else
     begin
-      return State
-    end
-  end
+      return State;
+    end;
+  end;
 end;

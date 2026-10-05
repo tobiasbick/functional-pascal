@@ -4,7 +4,7 @@ uses Std.Tasks, Std.Test;
 
 function Double(X: integer): integer;
 begin
-  return X * 2
+  return X * 2;
 end;
 
 type
@@ -14,13 +14,13 @@ type
 
     function Add(Self: Box; X: integer): integer;
     begin
-      return Self.Value + X
+      return Self.Value + X;
     end;
   end;
 
 function ValueOf(B: Box): integer;
 begin
-  return B.Value
+  return B.Value;
 end;
 
 begin
@@ -42,5 +42,5 @@ begin
   var FieldTask: task := go Item.Callback(6);
   AssertEquals(12, Wait(FieldTask));
   var PostfixFieldTask: task := go (Item).Callback(7);
-  AssertEquals(14, Wait(PostfixFieldTask))
+  AssertEquals(14, Wait(PostfixFieldTask));
 end.

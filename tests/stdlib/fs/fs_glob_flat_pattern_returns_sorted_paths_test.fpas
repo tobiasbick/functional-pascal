@@ -10,8 +10,8 @@ begin
     end;
     Error(Message):
     begin
-      Fail(Message)
-    end
+      Fail(Message);
+    end;
   end;
 
   case WriteText(Prefix + 'a.txt', '') of
@@ -20,8 +20,8 @@ begin
     end;
     Error(Message):
     begin
-      Fail(Message)
-    end
+      Fail(Message);
+    end;
   end;
 
   case Glob(Prefix + '*.txt') of
@@ -29,11 +29,11 @@ begin
     begin
       AssertEquals(2, Std.Arrays.Length(Paths));
       AssertEquals(Prefix + 'a.txt', Paths[0]);
-      AssertEquals(Prefix + 'b.txt', Paths[1])
+      AssertEquals(Prefix + 'b.txt', Paths[1]);
     end;
     Error(Message):
     begin
-      Fail(Message)
-    end
-  end
+      Fail(Message);
+    end;
+  end;
 end.

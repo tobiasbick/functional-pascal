@@ -7,7 +7,7 @@ program Example;
 uses Std.Console, Std.Options;
 begin
   var O: Option of integer := Some(7);
-  WriteLn(Unwrap(O))
+  WriteLn(Unwrap(O));
 end.
 ```
 
@@ -46,7 +46,7 @@ Extracts the value from `Some(value)`. **Runtime error** if `O` is `None`.
 
 ```pascal
 var O: Option of integer := Some(7);
-WriteLn(Unwrap(O))                             // 7
+WriteLn(Unwrap(O));                             // 7
 ```
 
 ---
@@ -57,7 +57,7 @@ Extracts the value from `Some(value)`, or returns `Default` if `O` is `None`.
 
 ```pascal
 var O: Option of integer := None;
-WriteLn(UnwrapOr(O, -1))                      // -1
+WriteLn(UnwrapOr(O, -1));                      // -1
 ```
 
 ---
@@ -68,7 +68,7 @@ Returns `true` if `O` is a `Some` variant.
 
 ```pascal
 var O: Option of integer := Some(7);
-WriteLn(IsSome(O))                             // true
+WriteLn(IsSome(O));                             // true
 ```
 
 ---
@@ -79,7 +79,7 @@ Returns `true` if `O` is `None`.
 
 ```pascal
 var O: Option of integer := None;
-WriteLn(IsNone(O))                             // true
+WriteLn(IsNone(O));                             // true
 ```
 
 ---
@@ -91,7 +91,7 @@ Transforms the `Some` value with `F`. If `O` is `None`, returns `None`.
 ```pascal
 function TripleToString(V: integer): string;
 begin
-  return IntToStr(V * 3)
+  return IntToStr(V * 3);
 end;
 
 var O: Option of integer := Some(7);
@@ -108,8 +108,8 @@ Calls `F` with the `Some` value. `F` returns a new `Option`, enabling chained lo
 ```pascal
 function PositiveToOptionString(V: integer): Option of string;
 begin
-  if V > 0 then return Some(IntToStr(V))
-  else return None
+  if V > 0 then return Some(IntToStr(V));
+  else return None;
 end;
 
 var O: Option of integer := Some(5);
@@ -126,7 +126,7 @@ Calls `F` to provide a fallback when `O` is `None`. If `O` is `Some`, returns it
 ```pascal
 function Fallback99(): Option of integer;
 begin
-  return Some(99)
+  return Some(99);
 end;
 
 var O: Option of integer := None;

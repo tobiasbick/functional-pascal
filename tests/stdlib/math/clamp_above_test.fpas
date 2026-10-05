@@ -3,5 +3,5 @@ program T;
 uses Std.Console, Std.Math;
 
 begin
-  WriteLn(Clamp(150, 0, 100))
+  WriteLn(Clamp(150, 0, 100));
 end.

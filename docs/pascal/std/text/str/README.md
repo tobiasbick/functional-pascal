@@ -6,7 +6,7 @@ String helpers: measure, search, transform, split, and join. This page lists **e
 program Example;
 uses Std.Console, Std.Str;
 begin
-  WriteLn(Length('hello'))
+  WriteLn(Length('hello'));
 end.
 ```
 

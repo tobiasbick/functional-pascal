@@ -5,8 +5,8 @@ fn nested_if_in_then_branch() {
     let stmts = body_stmts(
         "program T; begin \
          if A then \
-           if B then X := 1 \
-           else X := 2 \
+           if B then X := 1; \
+           else X := 2; \
          end.",
     );
     match &stmts[0] {
@@ -31,11 +31,11 @@ fn nested_if_in_then_branch() {
 fn deeply_chained_else_if() {
     let stmts = body_stmts(
         "program T; begin \
-         if X = 1 then A := 1 \
-         else if X = 2 then A := 2 \
-         else if X = 3 then A := 3 \
-         else if X = 4 then A := 4 \
-         else A := 0 \
+         if X = 1 then A := 1; \
+         else if X = 2 then A := 2; \
+         else if X = 3 then A := 3; \
+         else if X = 4 then A := 4; \
+         else A := 0; \
          end.",
     );
 

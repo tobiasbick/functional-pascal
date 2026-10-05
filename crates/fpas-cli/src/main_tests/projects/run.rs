@@ -27,14 +27,14 @@ fn run_cli_rebuilds_stale_program_artifact_before_execution() {
     support::write_program_project_file(&project_file, "src/main.fpas", &["src/**/*.fpas"]);
     write_text(
         &main_file,
-        "program Main;\nuses Std.Console;\nbegin\n  WriteLn(1)\nend.\n",
+        "program Main;\nuses Std.Console;\nbegin\n  WriteLn(1);\nend.\n",
     );
 
     let first = support::run_cli_and_capture_output(&project_file, &cwd);
     let first_artifact = fs::read(&artifact_file).expect("first run must publish artifact");
     write_text(
         &main_file,
-        "program Main;\nuses Std.Console;\nbegin\n  WriteLn(2)\nend.\n",
+        "program Main;\nuses Std.Console;\nbegin\n  WriteLn(2);\nend.\n",
     );
     let second = support::run_cli_and_capture_output(&project_file, &cwd);
     let second_artifact = fs::read(&artifact_file).expect("second run must retain artifact");
@@ -55,7 +55,7 @@ fn run_cli_executes_compiled_program_without_project_sources() {
     support::write_program_project_file(&project_file, "src/main.fpas", &["src/**/*.fpas"]);
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses Std.Console;\nbegin\n  WriteLn('from image')\nend.\n",
+        "program Main;\nuses Std.Console;\nbegin\n  WriteLn('from image');\nend.\n",
     );
 
     let build = support::run_cli_args_and_capture_output(
@@ -138,15 +138,15 @@ fn run_cli_executes_multi_file_project_end_to_end() {
     support::write_program_project_file(&project_file, "src/main.fpas", &["src/*.fpas"]);
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Util, Std.Console;\nbegin\n  WriteLn(Double(3))\nend.\n",
+        "program Main;\nuses App.Util, Std.Console;\nbegin\n  WriteLn(Double(3));\nend.\n",
     );
     write_text(
         &cwd.join("src/util.fpas"),
-        "unit App.Util;\nuses App.Math;\npublic function Double(X: integer): integer;\nbegin\n  return Add(X, X)\nend;\n",
+        "unit App.Util;\nuses App.Math;\npublic function Double(X: integer): integer;\nbegin\n  return Add(X, X);\nend;\n",
     );
     write_text(
         &cwd.join("src/math.fpas"),
-        "unit App.Math;\npublic function Add(A: integer; B: integer): integer;\nbegin\n  return A + B\nend;\n",
+        "unit App.Math;\npublic function Add(A: integer; B: integer): integer;\nbegin\n  return A + B;\nend;\n",
     );
 
     let (exit_code, stdout_output, stderr_output) =
@@ -165,7 +165,7 @@ fn run_cli_shares_constants_via_unit_instead_of_include() {
     support::write_program_project_file(&project_file, "src/main.fpas", &["src/*.fpas"]);
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Parts, Std.Console;\nbegin\n  WriteLn(Message)\nend.\n",
+        "program Main;\nuses App.Parts, Std.Console;\nbegin\n  WriteLn(Message);\nend.\n",
     );
     write_text(
         &cwd.join("src/parts.fpas"),

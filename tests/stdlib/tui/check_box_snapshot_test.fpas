@@ -14,7 +14,7 @@ begin
                                                                                   TuiElementBuilders.MakePanel('Host', [
                                                                                                                          TuiElementBuilders.MakeCheckBox(TuiControlId.Create(1), 'Flag', State.Checked, TuiAction.Create(9))
                                                                                                                        ])
-                                                                                ])
+                                                                                ]);
 end;
 
 function UpdateCheck(State: CheckModel; Msg: TuiMsg; Cmd: TuiCmdOutput): CheckModel;
@@ -26,13 +26,13 @@ begin
       return record
         Focus := State.Focus;
         Checked := Checked;
-      end
-    end
+      end;
+    end;
     else
     begin
-      return State
-    end
-  end
+      return State;
+    end;
+  end;
 end;
 
 begin
@@ -51,5 +51,5 @@ begin
 
   Model := App.RunIterations(Model, UpdateCheck, ViewCheck, 0, 0);
   AssertTrue(Std.Str.Contains(App.SurfaceSnapshot().LineAt(1), '>[x] Flag'));
-  App.Close()
+  App.Close();
 end.

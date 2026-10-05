@@ -10,22 +10,22 @@ begin
       WriteLn('scheme: ' + UriValue.Scheme);
       WriteLn('host: ' + UriValue.Host);
       WriteLn('port: ' + IntToStr(UriValue.Port));
-      WriteLn('path: ' + UriValue.Path)
+      WriteLn('path: ' + UriValue.Path);
     end;
     Error(Message):
     begin
-      panic(Message)
-    end
+      panic(Message);
+    end;
   end;
   var Bytes: array of integer := Std.Net.Utf8.Encode('Grüße aus FPAS');
   case Std.Net.Utf8.Decode(Bytes) of
     Ok(Text):
     begin
-      WriteLn('UTF-8: ' + Text)
+      WriteLn('UTF-8: ' + Text);
     end;
     Error(Message):
     begin
-      panic(Message)
-    end
-  end
+      panic(Message);
+    end;
+  end;
 end.

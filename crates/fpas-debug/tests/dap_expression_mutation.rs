@@ -26,7 +26,7 @@ begin
     Value := 10;
   end];
   Counter := Counter + 1;
-  GlobalValue := GlobalValue + Items[Index].Value
+  GlobalValue := GlobalValue + Items[Index].Value;
 end.
 "#;
 

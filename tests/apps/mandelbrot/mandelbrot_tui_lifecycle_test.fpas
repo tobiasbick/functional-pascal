@@ -13,7 +13,7 @@ begin
     ctrl := false;
     alt := false;
     meta := false;
-  end
+  end;
 end;
 
 begin
@@ -31,7 +31,7 @@ begin
   begin
     Sleep(1);
     Model := App.RunBackgroundIterations(Model, Inbox, UpdateMandelbrot, UpdateMandelbrotFrame, ViewMandelbrot, 1, 0);
-    Attempts := Attempts + 1
+    Attempts := Attempts + 1;
   end;
 
   AssertEquals(Model.Grid.Height, Model.RowsRendered);
@@ -39,5 +39,5 @@ begin
   AssertTrue(IsError(TrySend(Inbox, record
     Generation := Model.Generation;
     Cells := [];
-  end)))
+  end)));
 end.

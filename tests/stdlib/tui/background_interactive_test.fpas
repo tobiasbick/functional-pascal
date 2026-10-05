@@ -15,15 +15,15 @@ begin
     begin
       var Inbox: channel of integer := State.Inbox;
       Cmd.StartBackground(1, function(Token: CancellationToken): result of boolean, string begin
-        return SendWithCancellation(Inbox, 42, Token)
-      end)
-    end
+        return SendWithCancellation(Inbox, 42, Token);
+      end);
+    end;
     else
     begin
-    end
+    end;
   end;
 
-  return State
+  return State;
 end;
 
 function UpdateMessage(State: InteractiveModel; Message: integer; Cmd: TuiCmdOutput): InteractiveModel;
@@ -31,12 +31,12 @@ begin
   Cmd.Set(TuiCmd.Quit);
   mutable var Next: InteractiveModel := State;
   Next.Received := Message;
-  return Next
+  return Next;
 end;
 
 function View(State: InteractiveModel): TuiElement;
 begin
-  return TuiElementBuilders.MakeLabel('background wakeup')
+  return TuiElementBuilders.MakeLabel('background wakeup');
 end;
 
 begin
@@ -46,5 +46,5 @@ begin
     Received := 0;
   end, Inbox, Update, UpdateMessage, View);
   AssertEquals(42, Final.Received);
-  AssertTrue(IsError(TrySend(Inbox, 1)))
+  AssertTrue(IsError(TrySend(Inbox, 1)));
 end.

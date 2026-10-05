@@ -31,7 +31,7 @@ fn check_emits_located_compile_records_with_unicode_columns() {
     let main = cwd.join("main.fpas");
     write_text(
         &main,
-        "program Broken;\nuses Std.Console;\nbegin\n  WriteLn('ä😀'); MissingCall()\nend.\n",
+        "program Broken;\nuses Std.Console;\nbegin\n  WriteLn('ä😀'); MissingCall();\nend.\n",
     );
 
     let (exit_code, stdout, stderr) = support::run_cli_args_and_capture_output(
@@ -144,11 +144,11 @@ fn test_command_emits_only_records_and_keeps_the_json_report_on_stdout() {
     let cwd = create_temp_dir("json-test");
     write_text(
         &cwd.join("fail_test.fpas"),
-        "program F;\nuses Std.Test;\nbegin\n  AssertTrue(false)\nend.\n",
+        "program F;\nuses Std.Test;\nbegin\n  AssertTrue(false);\nend.\n",
     );
     write_text(
         &cwd.join("pass_test.fpas"),
-        "program P;\nuses Std.Test;\nbegin\n  AssertTrue(true)\nend.\n",
+        "program P;\nuses Std.Test;\nbegin\n  AssertTrue(true);\nend.\n",
     );
 
     for jobs in ["1", "2"] {
@@ -210,7 +210,7 @@ fn argument_errors_use_the_requested_format() {
 fn text_and_json_report_the_same_code_and_message() {
     let cwd = create_temp_dir("json-parity");
     let main = cwd.join("main.fpas");
-    write_text(&main, "program Broken;\nbegin\n  MissingCall()\nend.\n");
+    write_text(&main, "program Broken;\nbegin\n  MissingCall();\nend.\n");
     let path = main.to_string_lossy().into_owned();
 
     let (_, _, text) = support::run_cli_args_and_capture_output(&args(&["check", &path]), &cwd);

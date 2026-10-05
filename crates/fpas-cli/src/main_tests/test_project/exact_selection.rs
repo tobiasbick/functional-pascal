@@ -12,7 +12,7 @@ fn exact_test_selection_preserves_nested_identity_and_project_linking() {
     );
     write_text(
         &cwd.join("support.fpas"),
-        "unit Shared; public function Value(): integer; begin return 42 end;",
+        "unit Shared; public function Value(): integer; begin return 42; end;",
     );
     for file in [
         "a/same_test.fpas",
@@ -21,7 +21,7 @@ fn exact_test_selection_preserves_nested_identity_and_project_linking() {
     ] {
         write_text(
             &cwd.join(file),
-            "program Nested; uses Shared, Std.Test; begin AssertEquals(42, Value()) end.",
+            "program Nested; uses Shared, Std.Test; begin AssertEquals(42, Value()); end.",
         );
     }
     for jobs in ["1", "2"] {

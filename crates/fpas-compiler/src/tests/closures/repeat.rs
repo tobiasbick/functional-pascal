@@ -7,22 +7,22 @@ fn repeat_condition_discovers_anonymous_closures_and_mutable_captures() {
 program RepeatClosures;
 function Evaluate(Predicate: function(): boolean): boolean;
 begin
-  return Predicate()
+  return Predicate();
 end;
 procedure Check();
 begin
   mutable var Count: integer := 0;
   repeat
-    Count := Count + 1
-  until Evaluate(function(): boolean begin return Count = 3 end);
+    Count := Count + 1;
+  until Evaluate(function(): boolean begin return Count = 3; end);
   if Count <> 3 then panic('repeat capture mismatch');
   repeat
-    Count := Count + 1
-  until Evaluate(function(): boolean begin return true end);
-  if Count <> 4 then panic('repeat closure mismatch')
+    Count := Count + 1;
+  until Evaluate(function(): boolean begin return true; end);
+  if Count <> 4 then panic('repeat closure mismatch');
 end;
 begin
-  Check()
+  Check();
 end.
 "#,
     );
@@ -37,18 +37,18 @@ type Predicate = record
   Value: boolean;
   function Evaluate(Self: Predicate): boolean;
   begin
-    return Self.Value
+    return Self.Value;
   end;
 end;
 function Invoke(Check: function(): boolean): boolean;
 begin
-  return Check()
+  return Check();
 end;
 begin
   var Check: Predicate := record Value := true; end;
   repeat
-    begin end
-  until Invoke(Check.Evaluate)
+    begin end;
+  until Invoke(Check.Evaluate);
 end.
 "#,
     );

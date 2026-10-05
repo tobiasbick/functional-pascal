@@ -7,12 +7,12 @@ uses
 
 function Update(Grid: TuiCellGrid; Msg: TuiMsg; Cmd: TuiCmdOutput): TuiCellGrid;
 begin
-  return Grid
+  return Grid;
 end;
 
 function View(Grid: TuiCellGrid): TuiElement;
 begin
-  return TuiElementBuilders.MakeCellGrid(Grid)
+  return TuiElementBuilders.MakeCellGrid(Grid);
 end;
 
 function RenderOnce(Paint: boolean): integer;
@@ -44,18 +44,18 @@ begin
     if Paint then
     begin
       Grid := TuiCellGrid.Create(Width, Height, Message.Cells);
-      Grid := App.RunIterations(Grid, Update, View, 1, 0)
-    end
+      Grid := App.RunIterations(Grid, Update, View, 1, 0);
+    end;
   end;
 
   if not IsOk(Wait(Worker)) then
   begin
-    panic('render failed')
+    panic('render failed');
   end;
 
   App.Close();
   CloseChannel(Inbox);
-  return Count
+  return Count;
 end;
 
 begin
@@ -63,20 +63,20 @@ begin
   var Paint: boolean := ParamStr(1) = 'paint';
   if Iterations < 1 then
   begin
-    panic('iterations must be positive')
+    panic('iterations must be positive');
   end;
   mutable var Checksum: integer := RenderOnce(Paint);
   var Started: integer := MonotonicMillis();
   for Iteration: integer := 1 to Iterations do
   begin
-    Checksum := Checksum + RenderOnce(Paint)
+    Checksum := Checksum + RenderOnce(Paint);
   end;
   var Elapsed: integer := ElapsedMillis(Started);
   if Checksum <> ((Iterations + 1) * 152) * 35 then
   begin
-    panic('incomplete render')
+    panic('incomplete render');
   end;
 
   WriteLn(('elapsed: ' + IntToStr(Elapsed)) + ' ms');
-  WriteLn('checksum: ' + IntToStr(Checksum))
+  WriteLn('checksum: ' + IntToStr(Checksum));
 end.

@@ -5,7 +5,7 @@ fn division_by_zero_preserves_code_message_and_source_location() {
     let source = "\
 program RegisterDivisionError;
 begin
-  var X: integer := 7 div 0
+  var X: integer := 7 div 0;
 end.";
     let error = run_program(source).expect_err("division should fail");
     assert_eq!(
@@ -32,7 +32,7 @@ fn explicit_panic_preserves_diagnostic_contract() {
     let source = "\
 program RegisterPanic;
 begin
-  panic('expected failure')
+  panic('expected failure');
 end.";
     let error = run_program(source).expect_err("panic should fail");
     assert_eq!(error.code, fpas_diagnostics::codes::RUNTIME_PROGRAM_PANIC);

@@ -10,19 +10,19 @@ begin
   case Focused of
     Some(Value):
     begin
-      return Value.Value = Id.Value
+      return Value.Value = Id.Value;
     end;
     None:
     begin
-      return false
-    end
-  end
+      return false;
+    end;
+  end;
 end;
 
 function TuiStatusWrite(Canvas: TuiCanvas; X: integer; Y: integer; Text: string; Role: TuiStyleRole): integer;
 begin
   Canvas.WriteText(TuiPoint.Create(X, Y), Text, Role);
-  return X + Std.Console.DisplayWidth(Text)
+  return X + Std.Console.DisplayWidth(Text);
 end;
 
 // Paints one complete status row, including its unused background cells.
@@ -45,34 +45,34 @@ begin
   begin
     if Index > 0 then
     begin
-      X := TuiStatusWrite(Canvas, X, Bounds.Y, ' ', TuiStyleRole.StatusNormal)
+      X := TuiStatusWrite(Canvas, X, Bounds.Y, ' ', TuiStyleRole.StatusNormal);
     end;
 
     case Items[Index] of
       TuiStatusItem.Hint(Text):
       begin
-        X := TuiStatusWrite(Canvas, X, Bounds.Y, Text, TuiStyleRole.StatusNormal)
+        X := TuiStatusWrite(Canvas, X, Bounds.Y, Text, TuiStyleRole.StatusNormal);
       end;
       TuiStatusItem.KeyHint(KeyText, Text):
       begin
         X := TuiStatusWrite(Canvas, X, Bounds.Y, KeyText, TuiStyleRole.StatusShortcut);
         X := TuiStatusWrite(Canvas, X, Bounds.Y, ' ', TuiStyleRole.StatusNormal);
-        X := TuiStatusWrite(Canvas, X, Bounds.Y, Text, TuiStyleRole.StatusNormal)
+        X := TuiStatusWrite(Canvas, X, Bounds.Y, Text, TuiStyleRole.StatusNormal);
       end;
       TuiStatusItem.Command(Id, Text, Action, Enabled):
       begin
         mutable var Role: TuiStyleRole := TuiStyleRole.StatusNormal;
         if not Enabled then
         begin
-          Role := TuiStyleRole.StatusDisabled
-        end
+          Role := TuiStyleRole.StatusDisabled;
+        end;
         else if TuiStatusFocused(Focused, Id) then
         begin
-          Role := TuiStyleRole.StatusSelected
+          Role := TuiStyleRole.StatusSelected;
         end;
 
-        X := TuiStatusWrite(Canvas, X, Bounds.Y, Text, Role)
-      end
-    end
-  end
+        X := TuiStatusWrite(Canvas, X, Bounds.Y, Text, Role);
+      end;
+    end;
+  end;
 end;

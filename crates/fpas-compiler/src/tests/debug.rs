@@ -17,12 +17,12 @@ type Counter = record
   Base: integer;
   function Add(Self: Counter; Value: integer): integer;
   begin
-    return Self.Base + Value
+    return Self.Base + Value;
   end;
 end;
 begin
   var C: Counter := record Base := 2; end;
-  if C.Add(3) <> 5 then panic('wrong')
+  if C.Add(3) <> 5 then panic('wrong');
 end.
 "#,
     );
@@ -48,15 +48,15 @@ begin
   begin
     var Nested: integer := Value + Offset;
     if Nested < 0 then
-      panic('unreachable')
+      panic('unreachable');
   end;
-  return Value + Offset
+  return Value + Offset;
 end;
 
 begin
   var Answer: integer := Add(41);
   if Answer <> 42 then
-    panic('wrong answer')
+    panic('wrong answer');
 end.
 "#,
     );
@@ -121,14 +121,14 @@ begin
   mutable var Value: integer := 0;
   return function(): integer begin
     Value := Value + 1;
-    return Value
-  end
+    return Value;
+  end;
 end;
 
 begin
   var Next: function(): integer := Counter();
   for Index: integer := 1 to 2 do
-    Next()
+    Next();
 end.
 "#,
     );
@@ -176,7 +176,7 @@ begin
     Value := 2;
   end;
   mutable var Items: array of integer := [3];
-  var Maybe: option of integer := Some(4)
+  var Maybe: option of integer := Some(4);
 end.
 "#,
     );
@@ -230,9 +230,9 @@ begin
   var Value: integer := 1;
   begin
     var Value: integer := 2; var Other: integer := Value + 1;
-    if Other <> 3 then panic('wrong inner value')
+    if Other <> 3 then panic('wrong inner value');
   end;
-  if Value <> 1 then panic('wrong outer value')
+  if Value <> 1 then panic('wrong outer value');
 end.
 "#,
     );
@@ -271,12 +271,12 @@ uses Std.Tasks;
 
 function Seven(): integer;
 begin
-  return 7
+  return 7;
 end;
 
 function Label(): string;
 begin
-  return 'nope'
+  return 'nope';
 end;
 
 var GlobalCurrent: task := go Seven();
@@ -284,7 +284,7 @@ var GlobalWrong: task := go Label();
 
 begin
   var Current: task := go Seven();
-  var Wrong: task := go Label()
+  var Wrong: task := go Label();
 end.
 "#,
     );
@@ -345,33 +345,33 @@ type
 function MakeAdder(Base: integer): Handler;
   function AddBase(Value: integer): integer;
   begin
-    return Base + Value
+    return Base + Value;
   end;
 begin
-  return AddBase
+  return AddBase;
 end;
 
 function Outer(Offset: integer): integer;
   function AddOffset(Value: integer): integer;
   begin
-    return Value + Offset
+    return Value + Offset;
   end;
 begin
   begin
     var Offset: integer := 99;
-    return AddOffset(1)
-  end
+    return AddOffset(1);
+  end;
 end;
 
 function Mutating(): Handler;
   function AddCell(Value: integer): integer;
   begin
     Cell := Cell + 1;
-    return Value + Cell
+    return Value + Cell;
   end;
 begin
   mutable var Cell: integer := 1;
-  return AddCell
+  return AddCell;
 end;
 
 function OuterCell(): Handler;
@@ -379,22 +379,22 @@ function OuterCell(): Handler;
     function AddEnclosed(Value: integer): integer;
     begin
       Cell := Cell + 1;
-      return Value + Cell
+      return Value + Cell;
     end;
   begin
     var Keep: integer := Cell;
-    return AddEnclosed
+    return AddEnclosed;
   end;
 begin
   mutable var Cell: integer := 1;
-  return Mid()
+  return Mid();
 end;
 
 begin
   var First: Handler := MakeAdder(10);
   var Answer: integer := Outer(7);
   var Next: Handler := Mutating();
-  var Enclosed: Handler := OuterCell()
+  var Enclosed: Handler := OuterCell();
 end.
 "#,
     );
@@ -471,24 +471,24 @@ type
 function FactoryA(A: integer): Handler;
   function Apply(Value: integer): integer;
   begin
-    return A + Value
+    return A + Value;
   end;
 begin
-  return Apply
+  return Apply;
 end;
 
 function FactoryB(B: integer): Handler;
   function Apply(Value: integer): integer;
   begin
-    return B + Value
+    return B + Value;
   end;
 begin
-  return Apply
+  return Apply;
 end;
 
 begin
   var First: Handler := FactoryA(1);
-  var Second: Handler := FactoryB(2)
+  var Second: Handler := FactoryB(2);
 end.
 "#,
     );

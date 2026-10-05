@@ -30,27 +30,27 @@ begin
   case Item of
     Choice.Empty:
     begin
-      return 0
+      return 0;
     end;
     Choice.Count(Value):
     begin
-      return Value
+      return Value;
     end;
     Choice.Pair(Left, Right):
     begin
-      return Left + Right
+      return Left + Right;
     end;
     Choice.Nested(Item):
     begin
-      return Item.X + Item.Y
-    end
-  end
+      return Item.X + Item.Y;
+    end;
+  end;
 end;
 
 function Next(): integer;
 begin
   Tick := Tick + 1;
-  return Tick
+  return Tick;
 end;
 
 function ResultValue(Item: result of integer, string): integer;
@@ -58,13 +58,13 @@ begin
   case Item of
     Ok(Value):
     begin
-      return Value
+      return Value;
     end;
     Error(Message):
     begin
-      return -1
-    end
-  end
+      return -1;
+    end;
+  end;
 end;
 
 function WrappedChoiceValue(Item: result of Choice, string): integer;
@@ -72,13 +72,13 @@ begin
   case Item of
     Ok(Value):
     begin
-      return ChoiceValue(Value)
+      return ChoiceValue(Value);
     end;
     Error(Message):
     begin
-      return -1
-    end
-  end
+      return -1;
+    end;
+  end;
 end;
 
 function OuterChoiceValue(Item: Outer): integer;
@@ -86,9 +86,9 @@ begin
   case Item of
     Outer.First(Value), Outer.Second(Value):
     begin
-      return ChoiceValue(Value)
-    end
-  end
+      return ChoiceValue(Value);
+    end;
+  end;
 end;
 
 begin
@@ -123,5 +123,5 @@ begin
   WriteLn(WrappedChoiceValue(WrappedChoice));
   WriteLn(WrappedChoiceValue(WrappedChoices[0]));
   WriteLn(OuterChoiceValue(OuterValue));
-  WriteLn(ChoiceValue(Fixed))
+  WriteLn(ChoiceValue(Fixed));
 end.

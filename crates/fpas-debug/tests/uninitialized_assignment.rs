@@ -195,12 +195,12 @@ function Work(): integer;
 begin
   mutable var Count: integer := 1;
   var Marker: integer := 0;
-  return Count
+  return Count;
 end;
 
 begin
   var Pending: task := go Work();
-  WriteLn(Wait(Pending))
+  WriteLn(Wait(Pending));
 end.
 "#;
     let (program, diagnostics) = fpas_parser::parse(TASK_SOURCE);

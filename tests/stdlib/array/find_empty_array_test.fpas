@@ -4,11 +4,11 @@ uses Std.Console, Std.Arrays, Std.Options;
 
 function AlwaysTrue(X: integer): boolean;
 begin
-  return true
+  return true;
 end;
 
 begin
   var A: array of integer := [];
   var R: option of integer := Find(A, AlwaysTrue);
-  WriteLn(IsNone(R))
+  WriteLn(IsNone(R));
 end.

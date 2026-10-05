@@ -8,17 +8,17 @@ begin
   begin
     if Items[I] >= Min then
     begin
-      return Some(Items[I])
-    end
+      return Some(Items[I]);
+    end;
   end;
 
-  return None
+  return None;
 end;
 
 function DoubleFirst(Items: array of integer; Min: integer): option of string;
 begin
   var V: integer := try FindFirst(Items, Min);
-  return Some((IntToStr(V) + ' x 2 = ') + IntToStr(V * 2))
+  return Some((IntToStr(V) + ' x 2 = ') + IntToStr(V * 2));
 end;
 
 begin
@@ -32,44 +32,44 @@ begin
   case FindFirst(Data, 40) of
     Some(V):
     begin
-      WriteLn('Found >= 40: ', V)
+      WriteLn('Found >= 40: ', V);
     end;
     None:
     begin
-      WriteLn('Nothing >= 40')
-    end
+      WriteLn('Nothing >= 40');
+    end;
   end;
 
   case FindFirst(Data, 100) of
     Some(V):
     begin
-      WriteLn('Found >= 100: ', V)
+      WriteLn('Found >= 100: ', V);
     end;
     None:
     begin
-      WriteLn('Nothing >= 100')
-    end
+      WriteLn('Nothing >= 100');
+    end;
   end;
 
   case DoubleFirst(Data, 10) of
     Some(S):
     begin
-      WriteLn(S)
+      WriteLn(S);
     end;
     None:
     begin
-      WriteLn('No match to double')
-    end
+      WriteLn('No match to double');
+    end;
   end;
 
   case DoubleFirst(Data, 100) of
     Some(S):
     begin
-      WriteLn(S)
+      WriteLn(S);
     end;
     None:
     begin
-      WriteLn('No match to double')
-    end
-  end
+      WriteLn('No match to double');
+    end;
+  end;
 end.

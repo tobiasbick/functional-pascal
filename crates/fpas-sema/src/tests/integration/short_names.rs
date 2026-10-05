@@ -7,7 +7,7 @@ fn short_name_console_writeln() {
 program T;
 uses Std.Console;
 begin
-  WriteLn('Hello')
+  WriteLn('Hello');
 end.",
     );
 }
@@ -19,7 +19,7 @@ fn short_name_console_keypressed() {
 program T;
 uses Std.Console;
 begin
-  var P: boolean := KeyPressed()
+  var P: boolean := KeyPressed();
 end.",
     );
 }
@@ -37,7 +37,7 @@ begin
   TextBackground(Blue);
   ClrScr();
   var X: integer := WhereX();
-  var Y: integer := WhereY()
+  var Y: integer := WhereY();
 end.",
     );
 }
@@ -49,7 +49,7 @@ fn short_name_math_sqrt() {
 program T;
 uses Std.Math;
 begin
-  var R: real := Sqrt(4.0)
+  var R: real := Sqrt(4.0);
 end.",
     );
 }
@@ -61,7 +61,7 @@ fn short_name_math_pi_const() {
 program T;
 uses Std.Math;
 begin
-  var R: real := Pi
+  var R: real := Pi;
 end.",
     );
 }
@@ -73,7 +73,7 @@ fn short_name_conv_int_to_str() {
 program T;
 uses Std.Conv;
 begin
-  var S: string := IntToStr(42)
+  var S: string := IntToStr(42);
 end.",
     );
 }
@@ -87,7 +87,7 @@ uses Std.Console;
 begin
   var E: KeyEvent := ReadKeyEvent();
   WriteLn(E.kind = KeyKind.Space);
-  WriteLn(E.shift)
+  WriteLn(E.shift);
 end.",
     );
 }
@@ -99,7 +99,7 @@ fn short_name_mixed_with_qualified() {
 program T;
 uses Std.Console, Std.Math;
 begin
-  WriteLn(Std.Math.Sqrt(Pi))
+  WriteLn(Std.Math.Sqrt(Pi));
 end.",
     );
 }
@@ -112,7 +112,7 @@ program T;
 uses Std.Options, Std.Results;
 begin
   var O: option of integer := Some(3);
-  var X: integer := Unwrap(O)
+  var X: integer := Unwrap(O);
 end.",
     );
     assert_eq!(errs.len(), 1, "{errs:#?}");
@@ -126,7 +126,7 @@ uses Std.Options, Std.Results;
 begin
   var O: option of integer := Some(3);
   var R: result of integer, string := Ok(4);
-  var X: integer := O.Unwrap() + R.Unwrap()
+  var X: integer := O.Unwrap() + R.Unwrap();
 end.",
     );
 }
@@ -138,7 +138,7 @@ fn ambiguous_length_error() {
 program T;
 uses Std.Str, Std.Arrays;
 begin
-  var L: integer := Length('hi')
+  var L: integer := Length('hi');
 end.",
     );
     assert!(
@@ -158,7 +158,7 @@ fn ambiguous_length_hint_has_canonical_candidate_order() {
 program T;
 uses Std.Str, Std.Arrays;
 begin
-  var L: integer := Length('hi')
+  var L: integer := Length('hi');
 end.";
     let expected = "`Length` exists in multiple imported units: Std.Arrays.Length, Std.Str.Length. Use the fully qualified name to disambiguate. Or write `Length(Value, ...)` as `Value.Length(...)`: the method form selects the routine by the type of `Value`.";
 
@@ -179,7 +179,7 @@ fn ambiguous_contains_error() {
 program T;
 uses Std.Str, Std.Arrays;
 begin
-  var B: boolean := Contains('hello', 'h')
+  var B: boolean := Contains('hello', 'h');
 end.",
     );
     assert!(
@@ -196,7 +196,7 @@ program T;
 uses Std.Str, Std.Arrays;
 begin
   var L: integer := Std.Str.Length('hi');
-  var L2: integer := Std.Arrays.Length([1, 2])
+  var L2: integer := Std.Arrays.Length([1, 2]);
 end.",
     );
 }
@@ -208,7 +208,7 @@ fn no_ambiguity_single_unit() {
 program T;
 uses Std.Str;
 begin
-  var L: integer := Length('hello')
+  var L: integer := Length('hello');
 end.",
     );
 }
@@ -224,7 +224,7 @@ uses Std.Str;
 begin
   var A: array of integer := [1];
   var L1: integer := Std.Arrays.Length(A);
-  var L2: integer := Length('hi')
+  var L2: integer := Length('hi');
 end.",
     );
     assert_eq!(errs.len(), 1, "{errs:#?}");
@@ -245,7 +245,7 @@ uses Std.Str, Std.Arrays;
 begin
   var A: array of integer := [1];
   var L1: integer := Std.Arrays.Length(A);
-  var L2: integer := Std.Str.Length('hi')
+  var L2: integer := Std.Str.Length('hi');
 end.",
     );
 }

@@ -11,7 +11,7 @@ fn output_session() -> DebugSession {
 uses Std.Console;
 
 begin
-  WriteLn('hello-raw')
+  WriteLn('hello-raw');
 end.
 "#,
     )
@@ -25,7 +25,7 @@ uses Std.Console;
 
 begin
   WriteLn(ReadLn());
-  WriteLn(ReadLn())
+  WriteLn(ReadLn());
 end.
 "#,
     )
@@ -133,7 +133,7 @@ fn input_limit_rejects_without_mutation() {
 uses Std.Console;
 
 begin
-  WriteLn(ReadLn())
+  WriteLn(ReadLn());
 end.
 "#;
             let (program, diagnostics) = fpas_parser::parse(source);

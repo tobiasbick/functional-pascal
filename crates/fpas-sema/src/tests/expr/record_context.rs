@@ -9,7 +9,7 @@ end;
 const OriginPoint: Point := record X := 0; end;
 function Origin(): Point;
 begin
-  return record X := 0; end
+  return record X := 0; end;
 end;
 procedure Draw(P: Point);
 begin
@@ -18,7 +18,7 @@ begin
   mutable var P: Point := record end;
   P := record X := 1; end;
   Draw(record Y := 2; end);
-  var Points: array of Point := [record X := 3; end]
+  var Points: array of Point := [record X := 3; end];
 end.
 "#;
 
@@ -32,7 +32,7 @@ fn contextual_record_literal_still_requires_non_defaulted_fields() {
     let errors = check_errors(
         "program T; \
          type Point = record X: integer; Y: integer := 0; end; \
-         begin var P: Point := record Y := 1; end end.",
+         begin var P: Point := record Y := 1; end; end.",
     );
 
     assert!(

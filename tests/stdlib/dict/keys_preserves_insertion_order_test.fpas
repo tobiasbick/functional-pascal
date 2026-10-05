@@ -6,5 +6,5 @@ begin
   var D: dict of string to integer := ['B': 2, 'A': 1];
   var K: array of string := Std.Dictionaries.Keys(D);
   WriteLn(K[0]);
-  WriteLn(K[1])
+  WriteLn(K[1]);
 end.

@@ -48,7 +48,7 @@ public type
         Shortcut := Shortcut;
         DefaultShortcut := DefaultShortcut;
         SelectedShortcut := SelectedShortcut;
-      end
+      end;
     end;
 
     // Resolves one button role.
@@ -61,37 +61,37 @@ public type
       case Role of
         TuiStyleRole.ButtonNormal:
         begin
-          return Self.Normal
+          return Self.Normal;
         end;
         TuiStyleRole.ButtonDefault:
         begin
-          return Self.Default
+          return Self.Default;
         end;
         TuiStyleRole.ButtonSelected:
         begin
-          return Self.Selected
+          return Self.Selected;
         end;
         TuiStyleRole.ButtonDisabled:
         begin
-          return Self.Disabled
+          return Self.Disabled;
         end;
         TuiStyleRole.ButtonShortcut:
         begin
-          return Self.Shortcut
+          return Self.Shortcut;
         end;
         TuiStyleRole.ButtonDefaultShortcut:
         begin
-          return Self.DefaultShortcut
+          return Self.DefaultShortcut;
         end;
         TuiStyleRole.ButtonSelectedShortcut:
         begin
-          return Self.SelectedShortcut
-        end
+          return Self.SelectedShortcut;
+        end;
         else
         begin
-          panic('Tui button palette requires a button style role')
-        end
-      end
+          panic('Tui button palette requires a button style role');
+        end;
+      end;
     end;
 
     // Returns a copy with one button role replaced.
@@ -106,38 +106,38 @@ public type
       case Role of
         TuiStyleRole.ButtonNormal:
         begin
-          Updated.Normal := Style
+          Updated.Normal := Style;
         end;
         TuiStyleRole.ButtonDefault:
         begin
-          Updated.Default := Style
+          Updated.Default := Style;
         end;
         TuiStyleRole.ButtonSelected:
         begin
-          Updated.Selected := Style
+          Updated.Selected := Style;
         end;
         TuiStyleRole.ButtonDisabled:
         begin
-          Updated.Disabled := Style
+          Updated.Disabled := Style;
         end;
         TuiStyleRole.ButtonShortcut:
         begin
-          Updated.Shortcut := Style
+          Updated.Shortcut := Style;
         end;
         TuiStyleRole.ButtonDefaultShortcut:
         begin
-          Updated.DefaultShortcut := Style
+          Updated.DefaultShortcut := Style;
         end;
         TuiStyleRole.ButtonSelectedShortcut:
         begin
-          Updated.SelectedShortcut := Style
-        end
+          Updated.SelectedShortcut := Style;
+        end;
         else
         begin
-          panic('Tui button palette requires a button style role')
-        end
+          panic('Tui button palette requires a button style role');
+        end;
       end;
 
-      return Updated
+      return Updated;
     end;
   end;

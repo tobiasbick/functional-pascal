@@ -32,17 +32,17 @@ begin
       Ok(_): begin end;
       Error(Message): begin
         if I = {} then
-        begin if not Std.Str.Contains(Message, 'MaxBodyBytes') then panic(Message) end
-        else begin if not Std.Str.Contains(Message, 'Content-Length') then panic(Message) end;
-        Text := 'rejected'
-      end
+        begin if not Std.Str.Contains(Message, 'MaxBodyBytes') then panic(Message); end;
+        else begin if not Std.Str.Contains(Message, 'Content-Length') then panic(Message); end;
+        Text := 'rejected';
+      end;
     end;
     mutable var ResponseValue: ServerResponse := ServerResponse.Create(200, 'OK');
     ResponseValue.Body := Std.Net.Utf8.Encode(Text);
     Unwrap(WriteResponse(ConnectionValue, ResponseValue));
-    Unwrap(Close(ConnectionValue))
+    Unwrap(Close(ConnectionValue));
   end;
-  Unwrap(CloseListener(ListenerValue))
+  Unwrap(CloseListener(ListenerValue));
 end.
 "#,
             cases.len(),

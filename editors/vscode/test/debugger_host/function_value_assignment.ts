@@ -34,12 +34,12 @@ export async function verifyFunctionValueAssignment(
     "",
     "function AddOne(Value: integer): integer;",
     "begin",
-    "  return Value + 1",
+    "  return Value + 1;",
     "end;",
     "",
     "function AddTwo(Value: integer): integer;",
     "begin",
-    "  return Value + 2",
+    "  return Value + 2;",
     "end;",
     "",
     "begin",
@@ -48,12 +48,12 @@ export async function verifyFunctionValueAssignment(
     "  var Frozen: Handler := AddOne;",
     "  mutable var StopMarker: integer := 0;",
     "  StopMarker := StopMarker + 1;",
-    "  WriteLn(Current(1))",
+    "  WriteLn(Current(1));",
     "end.",
     ""
   ];
   const sourcePath = await writeSource(workspaceRoot, "function-value-assignment", lines);
-  const stopLine = lines.findIndex((line) => line.includes("mutable var StopMarker: integer := 0"));
+  const stopLine = lines.findIndex((line) => line.includes("mutable var StopMarker: integer := 0;"));
   assert.ok(stopLine >= 0, "compact program includes StopMarker");
   const breakpoint = new vscode.SourceBreakpoint(
     new vscode.Location(vscode.Uri.file(sourcePath), new vscode.Position(stopLine, 0)),

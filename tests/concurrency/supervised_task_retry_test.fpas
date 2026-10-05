@@ -12,18 +12,18 @@ begin
     var Attempt: integer := Unwrap(Receive(Attempts));
     if Attempt = 0 then
     begin
-      return Error('retryable error')
+      return Error('retryable error');
     end;
 
     if Attempt = 1 then
     begin
-      panic('retryable panic')
+      panic('retryable panic');
     end;
 
-    return Ok(42)
+    return Ok(42);
   end, 2, 1);
   AssertEquals(0, WaitAny([Child]));
   AssertEquals(42, Unwrap(Wait(Child)));
   AssertEquals(0, Length(CloseTaskGroup(Group)));
-  CloseChannel(Attempts)
+  CloseChannel(Attempts);
 end.

@@ -5,5 +5,5 @@ uses Std.Console;
 begin
   WriteText('a');
   WriteText('b');
-  WriteLn()
+  WriteLn();
 end.

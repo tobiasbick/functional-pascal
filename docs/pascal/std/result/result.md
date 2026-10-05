@@ -7,7 +7,7 @@ program Example;
 uses Std.Console, Std.Results;
 begin
   var R: Result of integer, string := Ok(42);
-  WriteLn(Unwrap(R))
+  WriteLn(Unwrap(R));
 end.
 ```
 
@@ -46,7 +46,7 @@ Extracts the value from `Ok(value)`. **Runtime error** if `R` is `Error`.
 
 ```pascal
 var R: Result of integer, string := Ok(42);
-WriteLn(Unwrap(R))                             // 42
+WriteLn(Unwrap(R));                             // 42
 ```
 
 ---
@@ -57,7 +57,7 @@ Extracts the value from `Ok(value)`, or returns `Default` if `R` is `Error`.
 
 ```pascal
 var R: Result of integer, string := Error('oops');
-WriteLn(UnwrapOr(R, 0))                       // 0
+WriteLn(UnwrapOr(R, 0));                       // 0
 ```
 
 ---
@@ -68,7 +68,7 @@ Returns `true` if `R` is an `Ok` variant.
 
 ```pascal
 var R: Result of integer, string := Ok(42);
-WriteLn(IsOk(R))                               // true
+WriteLn(IsOk(R));                               // true
 ```
 
 ---
@@ -79,7 +79,7 @@ Returns `true` if `R` is an `Error` variant.
 
 ```pascal
 var R: Result of integer, string := Error('fail');
-WriteLn(IsError(R))                              // true
+WriteLn(IsError(R));                              // true
 ```
 
 ---
@@ -91,7 +91,7 @@ Transforms the `Ok` value with `F`. If `R` is `Error`, returns it unchanged.
 ```pascal
 function DoubleToString(V: integer): string;
 begin
-  return IntToStr(V * 2)
+  return IntToStr(V * 2);
 end;
 
 var R: Result of integer, string := Ok(21);
@@ -108,8 +108,8 @@ Calls `F` with the `Ok` value. `F` returns a new `Result`, enabling chained fall
 ```pascal
 function PositiveToResult(V: integer): Result of string, string;
 begin
-  if V > 0 then return Ok(IntToStr(V))
-  else return Error('non-positive')
+  if V > 0 then return Ok(IntToStr(V));
+  else return Error('non-positive');
 end;
 
 var R: Result of integer, string := Ok(10);
@@ -126,7 +126,7 @@ Calls `F` with the `Error` value to attempt recovery. If `R` is `Ok`, returns it
 ```pascal
 function RecoverToZero(E: string): Result of integer, string;
 begin
-  return Ok(0)
+  return Ok(0);
 end;
 
 var R: Result of integer, string := Error('oops');

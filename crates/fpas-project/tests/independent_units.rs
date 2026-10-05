@@ -48,7 +48,7 @@ include = ["src/**/*.fpas"]
         "unit Demo.Base;
          public type Point = record public X: integer := 1; end;
          public function Make(X: integer): Point;
-         begin return record X := X; end end;",
+         begin return record X := X; end; end;",
     );
     write(
         &root.join("src/math.fpas"),
@@ -57,7 +57,7 @@ include = ["src/**/*.fpas"]
          public function Compute(X: integer): integer;
          begin
            var P: Point := Make(X);
-           return P.X
+           return P.X;
          end;",
     );
     write(
@@ -66,7 +66,7 @@ include = ["src/**/*.fpas"]
          uses Demo.Math;
          public function Run(): integer;
          begin
-           return Compute(7)
+           return Compute(7);
          end;",
     );
 

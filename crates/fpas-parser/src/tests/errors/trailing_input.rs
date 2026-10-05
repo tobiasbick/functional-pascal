@@ -37,7 +37,7 @@ fn second_program_after_terminator_is_rejected_once() {
 
 #[test]
 fn literal_after_program_terminator_is_rejected() {
-    let (program, errors) = parse_with_errors("program T; begin X := 1 end. 42");
+    let (program, errors) = parse_with_errors("program T; begin X := 1; end. 42");
     let parser_errors: Vec<_> = errors
         .iter()
         .filter_map(ParseDiagnostic::as_parser_error)

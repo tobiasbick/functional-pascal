@@ -9,7 +9,7 @@ uses Std.Console, Std.Version;
 
 begin
   WriteLn(CompilerVersion);
-  WriteLn(LibraryVersion)
+  WriteLn(LibraryVersion);
 end.
 ```
 

@@ -42,7 +42,7 @@ public type
 // - `Text`: UTF-8 text processed by the operation.
 public function Parse(Text: string): result of Std.Json.JsonValue, string;
 begin
-  panic('Intrinsic API declaration')
+  panic('Intrinsic API declaration');
 end;
 
 // Serializes a JSON value to compact JSON text.
@@ -51,5 +51,5 @@ end;
 // - `Value`: Value consumed or returned by the operation.
 public function Stringify(Value: Std.Json.JsonValue): string;
 begin
-  panic('Intrinsic API declaration')
+  panic('Intrinsic API declaration');
 end;

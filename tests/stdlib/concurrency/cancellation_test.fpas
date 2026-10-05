@@ -8,5 +8,5 @@ begin
   AssertFalse(IsCancellationRequested(Token));
   AssertTrue(Cancel(Source));
   AssertTrue(IsCancellationRequested(Token));
-  AssertFalse(Cancel(Source))
+  AssertFalse(Cancel(Source));
 end.

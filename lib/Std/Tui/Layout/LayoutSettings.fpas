@@ -6,10 +6,10 @@ function TuiLayoutSettingsRequireNonNegativeStretch(Value: integer): integer;
 begin
   if Value < 0 then
   begin
-    panic('Tui layout stretch must not be negative')
+    panic('Tui layout stretch must not be negative');
   end;
 
-  return Value
+  return Value;
 end;
 
 public type
@@ -49,7 +49,7 @@ public type
         Stretch := TuiLayoutSettingsRequireNonNegativeStretch(Stretch);
         Width := None;
         Height := None;
-      end
+      end;
     end;
 
     // Returns a copy constrained to one total width; negative widths panic.
@@ -61,7 +61,7 @@ public type
     begin
       if Width < 0 then
       begin
-        panic('Tui fixed layout width must not be negative')
+        panic('Tui fixed layout width must not be negative');
       end;
 
       return record
@@ -71,7 +71,7 @@ public type
         Stretch := Self.Stretch;
         Width := Some(Width);
         Height := Self.Height;
-      end
+      end;
     end;
 
     // Returns a copy constrained to one total height; negative heights panic.
@@ -83,7 +83,7 @@ public type
     begin
       if Height < 0 then
       begin
-        panic('Tui fixed layout height must not be negative')
+        panic('Tui fixed layout height must not be negative');
       end;
 
       return record
@@ -93,12 +93,12 @@ public type
         Stretch := Self.Stretch;
         Width := Self.Width;
         Height := Some(Height);
-      end
+      end;
     end;
 
     // Zero margins, preferred policy, fill alignment, and stretch zero.
     public static function Default(): TuiLayoutSettings;
     begin
-      return TuiLayoutSettings.Create(TuiMargins.Uniform(0), TuiSizePolicy.Preferred(), TuiAlignment.Fill(), 0)
+      return TuiLayoutSettings.Create(TuiMargins.Uniform(0), TuiSizePolicy.Preferred(), TuiAlignment.Fill(), 0);
     end;
   end;

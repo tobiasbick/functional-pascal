@@ -16,7 +16,7 @@ const
 // - `Expectation`: Required JSON kind, such as `a string`.
 function MismatchError(Name: string; Expectation: string): string;
 begin
-  return (('field ' + Name) + ' must be ') + Expectation
+  return (('field ' + Name) + ' must be ') + Expectation;
 end;
 
 // Parses JSON text whose root must be an object and returns its fields.
@@ -28,13 +28,13 @@ begin
   case try Std.Json.Parse(Text) of
     JsonValue.Object(Fields):
     begin
-      return Ok(Fields)
-    end
+      return Ok(Fields);
+    end;
     else
     begin
-      return Error('JSON root must be an object')
-    end
-  end
+      return Error('JSON root must be an object');
+    end;
+  end;
 end;
 
 // Returns one present field of any JSON kind.
@@ -47,13 +47,13 @@ begin
   case Std.Dictionaries.Get(Fields, Name) of
     Some(Value):
     begin
-      return Ok(Value)
+      return Ok(Value);
     end;
     None:
     begin
-      return Error('missing field ' + Name)
-    end
-  end
+      return Error('missing field ' + Name);
+    end;
+  end;
 end;
 
 // Returns one required string field.
@@ -66,13 +66,13 @@ begin
   case try Field(Fields, Name) of
     JsonValue.String(Value):
     begin
-      return Ok(Value)
-    end
+      return Ok(Value);
+    end;
     else
     begin
-      return Error(MismatchError(Name, 'a string'))
-    end
-  end
+      return Error(MismatchError(Name, 'a string'));
+    end;
+  end;
 end;
 
 // Returns one required boolean field.
@@ -85,13 +85,13 @@ begin
   case try Field(Fields, Name) of
     JsonValue.Bool(Value):
     begin
-      return Ok(Value)
-    end
+      return Ok(Value);
+    end;
     else
     begin
-      return Error(MismatchError(Name, 'a boolean'))
-    end
-  end
+      return Error(MismatchError(Name, 'a boolean'));
+    end;
+  end;
 end;
 
 // Returns one required number field as a real value.
@@ -104,13 +104,13 @@ begin
   case try Field(Fields, Name) of
     JsonValue.Number(Value):
     begin
-      return Ok(Value)
-    end
+      return Ok(Value);
+    end;
     else
     begin
-      return Error(MismatchError(Name, 'a number'))
-    end
-  end
+      return Error(MismatchError(Name, 'a number'));
+    end;
+  end;
 end;
 
 // Returns one required number field that holds an exact integer in the 64-bit range.
@@ -124,15 +124,15 @@ begin
   var Value: real := try NumberField(Fields, Name);
   if (Value < IntegerLowerBound) or (Value >= IntegerUpperBound) then
   begin
-    return Error(('field ' + Name) + ' is outside the integer range')
+    return Error(('field ' + Name) + ' is outside the integer range');
   end;
   var IntegerValue: integer := Trunc(Value);
   if Std.Conv.IntToReal(IntegerValue) <> Value then
   begin
-    return Error(MismatchError(Name, 'an integer'))
+    return Error(MismatchError(Name, 'an integer'));
   end;
 
-  return Ok(IntegerValue)
+  return Ok(IntegerValue);
 end;
 
 // Returns one required nested object field.
@@ -145,13 +145,13 @@ begin
   case try Field(Fields, Name) of
     JsonValue.Object(Value):
     begin
-      return Ok(Value)
-    end
+      return Ok(Value);
+    end;
     else
     begin
-      return Error(MismatchError(Name, 'an object'))
-    end
-  end
+      return Error(MismatchError(Name, 'an object'));
+    end;
+  end;
 end;
 
 // Returns one required array field without checking element kinds.
@@ -164,13 +164,13 @@ begin
   case try Field(Fields, Name) of
     JsonValue.ArrayValue(Items):
     begin
-      return Ok(Items)
-    end
+      return Ok(Items);
+    end;
     else
     begin
-      return Error(MismatchError(Name, 'an array'))
-    end
-  end
+      return Error(MismatchError(Name, 'an array'));
+    end;
+  end;
 end;
 
 // Returns one required array field whose elements must all be strings.
@@ -186,16 +186,16 @@ begin
     case Item of
       JsonValue.String(Value):
       begin
-        Std.Arrays.Push(Values, Value)
-      end
+        Std.Arrays.Push(Values, Value);
+      end;
       else
       begin
-        return Error(MismatchError(Name, 'an array of strings'))
-      end
-    end
+        return Error(MismatchError(Name, 'an array of strings'));
+      end;
+    end;
   end;
 
-  return Ok(Values)
+  return Ok(Values);
 end;
 
 // Rejects the first field whose name is not listed in `Allowed`; missing fields are not checked.
@@ -209,9 +209,9 @@ begin
   begin
     if not Std.Arrays.Contains(Allowed, Name) then
     begin
-      return Error('unexpected field ' + Name)
-    end
+      return Error('unexpected field ' + Name);
+    end;
   end;
 
-  return Ok(true)
+  return Ok(true);
 end;

@@ -4,10 +4,10 @@ uses Std.Tasks, Std.Test;
 
 function Greet(): string;
 begin
-  return 'hello'
+  return 'hello';
 end;
 
 begin
   var T: task := go Greet();
-  AssertEquals('hello', Std.Tasks.Wait(T))
+  AssertEquals('hello', Std.Tasks.Wait(T));
 end.

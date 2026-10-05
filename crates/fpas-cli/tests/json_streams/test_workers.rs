@@ -18,7 +18,7 @@ fn oversized_program_stderr_keeps_test_outcomes_and_reports_in_both_modes() {
         ("panic('boom')", 3, Some("FP5010")),
     ] {
         let source = format!(
-            "program P; uses Std.Proc, Std.Test; begin var Status: Result of integer, string := Run('{command}', {arguments}); {ending} end."
+            "program P; uses Std.Proc, Std.Test; begin var Status: Result of integer, string := Run('{command}', {arguments}); {ending}; end."
         );
         for name in ["first_test.fpas", "second_test.fpas"] {
             write(&root.join(name), &source);

@@ -45,7 +45,7 @@ include = ["src/**/*.fpas"]
     );
     write_text(
         &app_project.parent().unwrap().join("src/main.fpas"),
-        "program Hello;\nuses Demo.Greet, Std.Console;\nbegin\n  WriteLn(Message)\nend.\n",
+        "program Hello;\nuses Demo.Greet, Std.Console;\nbegin\n  WriteLn(Message);\nend.\n",
     );
 
     let (exit_code, stdout_output, stderr_output) =
@@ -72,7 +72,7 @@ members = ["app/app.fpasprj"]
     support::write_program_project_file(&app_project, "src/main.fpas", &["src/**/*.fpas"]);
     write_text(
         &cwd.join("app/src/main.fpas"),
-        "program Main;\nuses Std.Console;\nbegin\n  WriteLn('workspace')\nend.\n",
+        "program Main;\nuses Std.Console;\nbegin\n  WriteLn('workspace');\nend.\n",
     );
 
     let (exit_code, stdout_output, stderr_output) =

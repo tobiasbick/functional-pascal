@@ -16,13 +16,13 @@ begin
                                                                                                                                 ], 1)
                                                                                           ]),
                                                 TuiElementBuilders.MakeOverlay('Confirm', [TuiElementBuilders.MakeLabel('Continue?')])
-                                              ])
+                                              ]);
 end;
 
 function UpdateTree(State: integer; Msg: TuiMsg; Cmd: TuiCmdOutput): integer;
 begin
   Cmd.Set(TuiCmd.NoCommand);
-  return State
+  return State;
 end;
 
 begin
@@ -35,32 +35,32 @@ begin
         TuiElement.Panel(Title, PanelChildren):
         begin
           AssertEquals('Dashboard', Title);
-          AssertEquals(1, Std.Arrays.Length(PanelChildren))
-        end
+          AssertEquals(1, Std.Arrays.Length(PanelChildren));
+        end;
         else
         begin
-          panic('expected panel element')
-        end
+          panic('expected panel element');
+        end;
       end;
 
       case DesktopChildren[1] of
         TuiElement.Overlay(Title, OverlayChildren):
         begin
           AssertEquals('Confirm', Title);
-          AssertEquals(1, Std.Arrays.Length(OverlayChildren))
-        end
+          AssertEquals(1, Std.Arrays.Length(OverlayChildren));
+        end;
         else
         begin
-          panic('expected overlay element')
-        end
-      end
-    end
+          panic('expected overlay element');
+        end;
+      end;
+    end;
     else
     begin
-      panic('expected desktop element')
-    end
+      panic('expected desktop element');
+    end;
   end;
   mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(30, 10));
   AssertEquals(0, App.RunIterations(0, UpdateTree, ViewTree, 0, 0));
-  App.Close()
+  App.Close();
 end.

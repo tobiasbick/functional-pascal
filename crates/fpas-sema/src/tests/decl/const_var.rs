@@ -20,7 +20,7 @@ fn const_initializer_must_be_compile_time_known() {
     let errors = check_errors(
         "program T; \
          function FortyTwo(): integer; \
-         begin return 42 end; \
+         begin return 42; end; \
          const X: integer := FortyTwo(); \
          begin end.",
     );

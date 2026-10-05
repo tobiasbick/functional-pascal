@@ -8,13 +8,13 @@ begin
     Ok(_):
     begin
       Fail('expected an error result');
-      return ''
+      return '';
     end;
     Error(Message):
     begin
-      return Message
-    end
-  end
+      return Message;
+    end;
+  end;
 end;
 
 begin
@@ -40,5 +40,5 @@ begin
                                                                                                          'b'
                                                                                                        ])));
   AssertEquals('JSON root must be an object', ErrorText(ParseObject('[1]')));
-  AssertTrue(IsError(ParseObject('{')))
+  AssertTrue(IsError(ParseObject('{')));
 end.

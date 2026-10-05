@@ -24,7 +24,7 @@ fn source_and_std_short_names_are_ambiguous_even_with_different_arity() {
     let sender = interface_of(
         "unit Demo.Sender;
          public function Send(A: integer; B: integer; C: integer): integer;
-         begin return A + B + C end;",
+         begin return A + B + C; end;",
     );
     let interfaces = [sender];
 
@@ -32,7 +32,7 @@ fn source_and_std_short_names_are_ambiguous_even_with_different_arity() {
         "unit Demo.Short;
          uses Demo.Sender, Std.Tasks;
          public function Run(): integer;
-         begin return Send(1, 2, 3) end;",
+         begin return Send(1, 2, 3); end;",
         &interfaces,
     );
     assert_eq!(short.len(), 1, "{short:#?}");
@@ -45,7 +45,7 @@ fn source_and_std_short_names_are_ambiguous_even_with_different_arity() {
         "unit Demo.Qualified;
          uses Demo.Sender, Std.Tasks;
          public function Run(): integer;
-         begin return Demo.Sender.Send(1, 2, 3) end;",
+         begin return Demo.Sender.Send(1, 2, 3); end;",
         &interfaces,
     );
     assert!(qualified.is_empty(), "{qualified:#?}");
@@ -54,7 +54,7 @@ fn source_and_std_short_names_are_ambiguous_even_with_different_arity() {
         "unit Demo.WithoutStd;
          uses Demo.Sender;
          public function Run(): integer;
-         begin return Send(1, 2, 3) end;",
+         begin return Send(1, 2, 3); end;",
         &interfaces,
     );
     assert!(without_std.is_empty(), "{without_std:#?}");
@@ -65,19 +65,19 @@ fn qualified_std_use_keeps_source_short_name_ambiguity() {
     let first = interface_of(
         "unit Demo.First;
          public function Value(): integer;
-         begin return 1 end;",
+         begin return 1; end;",
     );
     let second = interface_of(
         "unit Demo.Second;
          public function Value(): integer;
-         begin return 2 end;",
+         begin return 2; end;",
     );
     // Registering the qualified `Std.Math` symbols on first use rebuilds the short names.
     let messages = error_messages(
         "unit Demo.Lazy;
          uses Demo.First, Demo.Second, Std.Math;
          public function Run(): integer;
-         begin return Std.Math.Abs(-1) + Value() end;",
+         begin return Std.Math.Abs(-1) + Value(); end;",
         &[first, second],
     );
     assert_eq!(messages.len(), 1, "{messages:#?}");
@@ -107,7 +107,7 @@ fn imported_type_hides_imported_enum_variant_short_name() {
          begin
            var F: Frame := record X := 1; end;
            var S: Signal := Signal.Frame(2);
-           return F.X
+           return F.X;
          end;",
         &interfaces,
     );
@@ -117,7 +117,7 @@ fn imported_type_hides_imported_enum_variant_short_name() {
         "unit Demo.VariantShort;
          uses Demo.Frames, Demo.Signals;
          public function Run(): Signal;
-         begin return Frame(2) end;",
+         begin return Frame(2); end;",
         &interfaces,
     );
     assert_eq!(variant_short.len(), 1, "{variant_short:#?}");
@@ -128,7 +128,7 @@ fn imported_routine_and_enum_variant_short_names_stay_ambiguous() {
     let routines = interface_of(
         "unit Demo.Routines;
          public function Frame(X: integer): integer;
-         begin return X end;",
+         begin return X; end;",
     );
     let signals = interface_of(
         "unit Demo.Signals;
@@ -138,7 +138,7 @@ fn imported_routine_and_enum_variant_short_names_stay_ambiguous() {
         "unit Demo.Mixed;
          uses Demo.Routines, Demo.Signals;
          public function Run(): integer;
-         begin return Frame(2) end;",
+         begin return Frame(2); end;",
         &[routines, signals],
     );
     assert_eq!(messages.len(), 1, "{messages:#?}");

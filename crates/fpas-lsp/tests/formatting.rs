@@ -15,7 +15,7 @@ use support::{exit, initialize, initialized, response, run, shutdown};
 #[test]
 fn formatting_matches_the_canonical_fpas_formatter_for_the_unsaved_buffer() {
     let uri = "file:///phase5/format-parity.fpas";
-    let source = "program Messy; begin var Value:integer:=1 end.";
+    let source = "program Messy; begin var Value:integer:=1; end.";
     let (unit, diagnostics) = fpas_parser::parse_compilation_unit(source);
     assert!(diagnostics.is_empty(), "{diagnostics:?}");
     let expected = fpas_fmt::format_source(source, &unit).expect("matching source and AST");
@@ -80,7 +80,7 @@ fn malformed_unsaved_input_returns_no_destructive_edit() {
     let transcript = run(&[
         initialize(1),
         initialized(),
-        open(uri, 1, "program Broken;\nbegin\n  if then\nend.\n"),
+        open(uri, 1, "program Broken;\nbegin\n  if then;\nend.\n"),
         formatting_request(2, uri),
         shutdown(3),
         exit(),

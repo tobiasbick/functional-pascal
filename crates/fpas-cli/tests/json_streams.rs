@@ -41,7 +41,7 @@ fn program_source() -> String {
         ("sh", "['-c', 'echo child err >&2']")
     };
     format!(
-        "program Main;\nuses Std.Console, Std.Proc, Std.Args;\nbegin\n  WriteLn('out');\n  if ParamCount() > 0 then WriteLn(ParamStr(0));\n  case Run('{command}', {script}) of\n    Ok(Code): WriteLn(Code);\n    Error(Message): WriteLn(Message)\n  end;\n  panic('boom')\nend.\n"
+        "program Main;\nuses Std.Console, Std.Proc, Std.Args;\nbegin\n  WriteLn('out');\n  if ParamCount() > 0 then WriteLn(ParamStr(0));\n  case Run('{command}', {script}) of\n    Ok(Code): WriteLn(Code);\n    Error(Message): WriteLn(Message);\n  end;\n  panic('boom');\nend.\n"
     )
 }
 
@@ -157,13 +157,13 @@ fn all_four_commands_preserve_source_failures_in_text_and_json() {
     for (source, expected) in [
         ("program P; begin @ end.", "FP1001"),
         ("program P begin end.", "FP2001"),
-        ("program P; begin var N: integer := 'hello' end.", "FP3006"),
+        ("program P; begin var N: integer := 'hello'; end.", "FP3006"),
         (
             "program P; procedure Print(A, B: integer); begin end; begin end.",
             "FP2014",
         ),
         (
-            "program P; uses Std.Console; begin WriteLn('ä😀'); MissingCall() end.",
+            "program P; uses Std.Console; begin WriteLn('ä😀'); MissingCall(); end.",
             "FP3003",
         ),
     ] {

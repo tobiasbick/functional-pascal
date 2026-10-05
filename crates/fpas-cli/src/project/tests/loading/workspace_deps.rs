@@ -40,7 +40,7 @@ include = ["src/**/*.fpas"]
     );
     write_text(
         &app_project.parent().unwrap().join("src/main.fpas"),
-        "program Hello;\nuses Demo.Greet, Std.Console;\nbegin\n  WriteLn(Message)\nend.\n",
+        "program Hello;\nuses Demo.Greet, Std.Console;\nbegin\n  WriteLn(Message);\nend.\n",
     );
 
     let loaded = load_project_ok(&app_project);

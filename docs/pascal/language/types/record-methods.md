@@ -46,12 +46,12 @@ type
     begin
       var DX: real := Other.X - Self.X;
       var DY: real := Other.Y - Self.Y;
-      return Sqrt(DX * DX + DY * DY)
+      return Sqrt(DX * DX + DY * DY);
     end;
 
     procedure Print(Self: Point);
     begin
-      WriteLn('(' + RealToStr(Self.X) + ', ' + RealToStr(Self.Y) + ')')
+      WriteLn('(' + RealToStr(Self.X) + ', ' + RealToStr(Self.Y) + ')');
     end;
   end;
 ```
@@ -65,7 +65,7 @@ var
   Dist: real := A.DistanceTo(B);  // Self = A, Other = B
 
 begin
-  A.Print()  // Self = A
+  A.Print();  // Self = A
 end.
 ```
 
@@ -90,7 +90,7 @@ type
 
     function Add(Self: Counter; Value: integer): integer;
     begin
-      return Self.Base + Value
+      return Self.Base + Value;
     end;
   end;
 
@@ -134,22 +134,22 @@ type
       return record
         X := X;
         Y := Y;
-      end
+      end;
     end;
 
     static function Origin(): Point;
     begin
-      return Point.Create(0, 0)
+      return Point.Create(0, 0);
     end;
 
     static procedure Print(Value: Point);
     begin
-      WriteLn('(' + IntToStr(Value.X) + ', ' + IntToStr(Value.Y) + ')')
+      WriteLn('(' + IntToStr(Value.X) + ', ' + IntToStr(Value.Y) + ')');
     end;
 
     function Sum(Self: Point): integer;
     begin
-      return Self.X + Self.Y
+      return Self.X + Self.Y;
     end;
   end;
 ```
@@ -160,7 +160,7 @@ var
   O: Point := Point.Origin();
 begin
   Point.Print(P);
-  WriteLn(P.Sum())  // 7
+  WriteLn(P.Sum());  // 7
 end.
 ```
 
@@ -183,7 +183,7 @@ instead of overloads:
 
 ```pascal
 TuiRect.Create(X, Y, Width, Height)
-TuiRect.FromEdges(Left, Top, Right, Bottom)
+TuiRect.FromEdges(Left, Top, Right, Bottom);
 ```
 
 Copying a record does not need a static function; records have value semantics:
@@ -199,7 +199,7 @@ Free-standing functions work equally well for operations on records:
 ```pascal
 function PointToString(P: Point): string;
 begin
-  return '(' + RealToStr(P.X) + ', ' + RealToStr(P.Y) + ')'
+  return '(' + RealToStr(P.X) + ', ' + RealToStr(P.Y) + ')';
 end;
 ```
 

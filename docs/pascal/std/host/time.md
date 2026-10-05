@@ -8,7 +8,7 @@ uses Std.Console, Std.Time;
 begin
   var Start: integer := MonotonicMillis();
   Sleep(100);
-  WriteLn(ElapsedMillis(Start))
+  WriteLn(ElapsedMillis(Start));
 end.
 ```
 
@@ -59,7 +59,7 @@ suspends that owner, and resumes the callback without repeating completed elemen
 Returns UTC milliseconds since `1970-01-01T00:00:00Z`.
 
 ```pascal
-WriteLn(TimestampMillis())
+WriteLn(TimestampMillis());
 ```
 
 ---
@@ -81,7 +81,7 @@ Returns monotonic milliseconds elapsed since `Start`, a value from `MonotonicMil
 ```pascal
 var Start: integer := MonotonicMillis();
 Sleep(50);
-WriteLn(ElapsedMillis(Start))
+WriteLn(ElapsedMillis(Start));
 ```
 
 ---
@@ -93,7 +93,7 @@ callbacks, wait cooperatively without pinning a pool worker. Negative values pro
 error.
 
 ```pascal
-Sleep(250)
+Sleep(250);
 ```
 
 ---

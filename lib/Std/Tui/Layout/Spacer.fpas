@@ -23,13 +23,13 @@ public type
     begin
       if Extent < 0 then
       begin
-        panic('Tui fixed spacer extent must not be negative')
+        panic('Tui fixed spacer extent must not be negative');
       end;
 
       return record
         Kind := TuiSpacerKind.Fixed;
         MinimumExtent := Extent;
-      end
+      end;
     end;
 
     // Creates an expanding spacer with a non-negative minimum extent.
@@ -40,12 +40,12 @@ public type
     begin
       if MinimumExtent < 0 then
       begin
-        panic('Tui expanding spacer minimum extent must not be negative')
+        panic('Tui expanding spacer minimum extent must not be negative');
       end;
 
       return record
         Kind := TuiSpacerKind.Expanding;
         MinimumExtent := MinimumExtent;
-      end
+      end;
     end;
   end;

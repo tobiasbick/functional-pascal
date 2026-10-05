@@ -4,11 +4,11 @@ uses Std.Console, Std.Options, Std.Conv;
 
 function ToStr(V: integer): string;
 begin
-  return IntToStr(V)
+  return IntToStr(V);
 end;
 
 begin
   var O: option of integer := Some(10);
   var M: option of string := Std.Options.Map(O, ToStr);
-  WriteLn(Unwrap(M))
+  WriteLn(Unwrap(M));
 end.

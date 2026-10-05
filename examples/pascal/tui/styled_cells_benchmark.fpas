@@ -21,8 +21,8 @@ begin
     begin
       var Upper: TuiColor := TuiColor.FromRgb((X + Frame) mod 256, Y mod 256, 40);
       var Lower: TuiColor := TuiColor.FromRgb(X mod 256, (Y + Frame) mod 256, 80);
-      Std.Arrays.Push(Cells, TuiCell.Styled('▀', TuiStyle.FromColors(Upper, Lower)))
-    end
+      Std.Arrays.Push(Cells, TuiCell.Styled('▀', TuiStyle.FromColors(Upper, Lower)));
+    end;
   end;
   mutable var Checksum: integer := 0;
   for Cell: TuiCell in Cells do
@@ -30,16 +30,16 @@ begin
     case Cell.ConcreteStyle of
       Some(Style):
       begin
-        Checksum := (Checksum + Style.Foreground.Red) + Style.Background.Green
+        Checksum := (Checksum + Style.Foreground.Red) + Style.Background.Green;
       end;
       None:
       begin
-        panic('styled cell lost its style')
-      end
-    end
+        panic('styled cell lost its style');
+      end;
+    end;
   end;
 
-  return Checksum
+  return Checksum;
 end;
 
 function RunFrames(Frames: integer): integer;
@@ -47,21 +47,21 @@ begin
   mutable var Total: integer := 0;
   for Frame: integer := 1 to Frames do
   begin
-    Total := Total + BuildFrame(Frame)
+    Total := Total + BuildFrame(Frame);
   end;
 
-  return Total
+  return Total;
 end;
 
 begin
   if (ParamCount() < 1) or (ParamCount() > 2) then
   begin
-    panic('usage: styled_cells_benchmark.fpas -- FRAMES [MAX_MILLIS]')
+    panic('usage: styled_cells_benchmark.fpas -- FRAMES [MAX_MILLIS]');
   end;
   var Frames: integer := StrToInt(ParamStr(0));
   if Frames < 1 then
   begin
-    panic('FRAMES must be positive')
+    panic('FRAMES must be positive');
   end;
   mutable var MaxMillis: integer := 0;
   if ParamCount() = 2 then
@@ -69,8 +69,8 @@ begin
     MaxMillis := StrToInt(ParamStr(1));
     if MaxMillis < 1 then
     begin
-      panic('MAX_MILLIS must be positive')
-    end
+      panic('MAX_MILLIS must be positive');
+    end;
   end;
   var Warmup: integer := RunFrames(2);
   var Started: integer := MonotonicMillis();
@@ -78,13 +78,13 @@ begin
   var Elapsed: integer := ElapsedMillis(Started);
   if (Warmup <= 0) or (Checksum <= 0) then
   begin
-    panic('styled cell checksum mismatch')
+    panic('styled cell checksum mismatch');
   end;
 
   WriteLn(('elapsed: ' + IntToStr(Elapsed)) + ' ms');
   WriteLn('checksum: ' + IntToStr(Checksum));
   if (MaxMillis > 0) and (Elapsed > MaxMillis) then
   begin
-    panic('styled cells benchmark exceeded MAX_MILLIS')
-  end
+    panic('styled cells benchmark exceeded MAX_MILLIS');
+  end;
 end.

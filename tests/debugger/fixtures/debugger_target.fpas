@@ -12,10 +12,10 @@ function Factorial(Value: integer): integer;
 begin
   if Value <= 1 then
   begin
-    return 1
+    return 1;
   end;
 
-  return Value * Factorial(Value - 1)
+  return Value * Factorial(Value - 1);
 end;
 
 function MakeCounter(Start: integer): function(): integer;
@@ -23,8 +23,8 @@ begin
   mutable var Current: integer := Start;
   return function(): integer begin
     Current := Current + 1;
-    return Current
-  end
+    return Current;
+  end;
 end;
 
 begin
@@ -35,5 +35,5 @@ begin
   var Counter: function(): integer := MakeCounter(10);
   var Values: array of integer := [Origin.X, Origin.Y, Factorial(4)];
   WriteLn(Values);
-  WriteLn(Counter())
+  WriteLn(Counter());
 end.

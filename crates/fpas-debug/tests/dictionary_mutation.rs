@@ -41,7 +41,7 @@ begin
   WriteLn(Scores['Bob']);
   WriteLn(Rows[1].Scores['Nested']);
   WriteLn(GlobalScores['Zed']);
-  WriteLn(FixedScores['Fixed'])
+  WriteLn(FixedScores['Fixed']);
 end.
 "#;
 

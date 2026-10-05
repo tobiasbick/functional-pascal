@@ -7,5 +7,5 @@ begin
   WriteLn(Std.Arrays.Length(Parts));
   WriteLn(Parts[0]);
   WriteLn(Parts[1]);
-  WriteLn(Parts[2])
+  WriteLn(Parts[2]);
 end.

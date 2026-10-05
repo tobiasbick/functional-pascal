@@ -3,5 +3,5 @@ program T;
 uses Std.Console, Std.Conv;
 
 begin
-  WriteLn(HexToInt('FF'))
+  WriteLn(HexToInt('FF'));
 end.

@@ -32,7 +32,7 @@ fn base_source(hidden_body: &str) -> String {
          function Hidden(Value: integer): integer;
          begin {hidden_body} end;
          public function AddOne(Value: integer): integer;
-         begin return Value + 1 end;"
+         begin return Value + 1; end;"
     )
 }
 
@@ -62,19 +62,19 @@ main = "src/main.fpas"
 include = ["src/**/*.fpas"]
 "#,
         );
-        write(&base, &base_source("return Value"));
+        write(&base, &base_source("return Value;"));
         write(
             &root.join("src/consumer.fpas"),
             "unit Demo.Consumer;
              uses Demo.Base;
              public function Run(): integer;
-             begin return AddOne(41) end;",
+             begin return AddOne(41); end;",
         );
         write(
             &main,
             "program Demo;
              uses Demo.Consumer, Std.Console;
-             begin Std.Console.WriteLn(Run()) end.",
+             begin Std.Console.WriteLn(Run()); end.",
         );
         Self {
             root,
@@ -171,7 +171,7 @@ fn main_source_change_relinks_the_program() {
     fixture.build().expect("initial build");
     let changed = b"program Demo;
                     uses Demo.Consumer, Std.Console;
-                    begin Std.Console.WriteLn(Run() + 1) end.";
+                    begin Std.Console.WriteLn(Run() + 1); end.";
     write(
         &fixture.main,
         std::str::from_utf8(changed).expect("changed source"),
@@ -190,7 +190,7 @@ fn main_source_change_relinks_the_program() {
 fn unit_implementation_change_relinks_without_rebuilding_consumers() {
     let fixture = Fixture::create();
     fixture.build().expect("initial build");
-    write(&fixture.base, &base_source("return Value + 100"));
+    write(&fixture.base, &base_source("return Value + 100;"));
 
     let rebuilt = fixture.build().expect("unit implementation rebuild");
 
@@ -246,7 +246,7 @@ fn failed_program_rebuild_preserves_the_previous_artifact() {
     let previous = fs::read(&fixture.artifact).expect("initial artifact");
     let invalid = b"program Demo;
                     uses Demo.Consumer, Std.Console;
-                    begin Std.Console.WriteLn(Missing()) end.";
+                    begin Std.Console.WriteLn(Missing()); end.";
 
     assert!(fixture.build_source(invalid).is_err());
     assert_eq!(

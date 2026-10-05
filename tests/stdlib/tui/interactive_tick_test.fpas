@@ -23,43 +23,43 @@ begin
       Next.Started := MonotonicMillis();
       var Inbox: channel of integer := State.Inbox;
       Cmd.StartBackground(1, function(Token: CancellationToken): result of boolean, string begin
-        return SendWithCancellation(Inbox, 1, Token)
-      end)
+        return SendWithCancellation(Inbox, 1, Token);
+      end);
     end;
     TuiMsg.Tick(Elapsed):
     begin
       Next.Ticks := State.Ticks + 1;
       if (State.ShortestTick < 0) or (Elapsed < State.ShortestTick) then
       begin
-        Next.ShortestTick := Elapsed
+        Next.ShortestTick := Elapsed;
       end;
 
       if Next.Ticks < 3 then
       begin
-        Cmd.RequestTick(20)
-      end
+        Cmd.RequestTick(20);
+      end;
       else
       begin
-        Cmd.Set(TuiCmd.Quit)
-      end
-    end
+        Cmd.Set(TuiCmd.Quit);
+      end;
+    end;
     else
     begin
-    end
+    end;
   end;
 
-  return Next
+  return Next;
 end;
 
 function UpdateMessage(State: TickModel; Message: integer; Cmd: TuiCmdOutput): TickModel;
 begin
   Cmd.RequestTick(20);
-  return State with Replaced := true; end
+  return State with Replaced := true; end;
 end;
 
 function View(State: TickModel): TuiElement;
 begin
-  return TuiElementBuilders.MakeLabel('ticks')
+  return TuiElementBuilders.MakeLabel('ticks');
 end;
 
 begin
@@ -76,5 +76,5 @@ begin
   // Every tick waited at least its requested delay.
   AssertTrue(Final.ShortestTick >= 20);
   // The replaced 600 s request never delayed the run.
-  AssertTrue(ElapsedMillis(Final.Started) < 60000)
+  AssertTrue(ElapsedMillis(Final.Started) < 60000);
 end.

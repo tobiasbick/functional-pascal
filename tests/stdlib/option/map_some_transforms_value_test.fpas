@@ -4,11 +4,11 @@ uses Std.Console, Std.Options, Std.Conv;
 
 function TripleToStr(V: integer): string;
 begin
-  return IntToStr(V * 3)
+  return IntToStr(V * 3);
 end;
 
 begin
   var O: option of integer := Some(7);
   var M: option of string := Map(O, TripleToStr);
-  WriteLn(Unwrap(M))
+  WriteLn(Unwrap(M));
 end.

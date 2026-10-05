@@ -54,13 +54,13 @@ export async function verifyEmptyStorageConstruction(
     "      X := 2;",
     "      Y := 3;",
     "    end;",
-    "  end",
+    "  end;",
     "end;",
     "",
     "begin",
     "  mutable var State: Holder := MakeInitialState();",
     "  WriteLn(State.Count);",
-    "  WriteLn(State.Nested.X)",
+    "  WriteLn(State.Nested.X);",
     "end.",
     ""
   ];

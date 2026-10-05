@@ -13,14 +13,14 @@ function ReadPort(Text: string): result of integer, string;
 begin
   var Fields: dict of string to JsonValue := try ParseObject(Text);
   var Allowed: boolean := try RequireOnlyFields(Fields, ['host', 'port']);
-  return IntegerField(Fields, 'port')
+  return IntegerField(Fields, 'port');
 end;
 
 begin
   case ReadPort('{"host":"localhost","port":8080}') of
     Ok(Port): WriteLn(Port);
-    Error(Message): WriteLn('invalid configuration: ' + Message)
-  end
+    Error(Message): WriteLn('invalid configuration: ' + Message);
+  end;
 end.
 ```
 

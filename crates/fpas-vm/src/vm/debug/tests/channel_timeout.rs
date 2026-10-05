@@ -12,17 +12,17 @@ begin
   case ReceiveWithTimeout(Messages, 25) of
     Ok(_): panic('empty channel did not time out');
     Error(Message):
-      if Message <> 'Channel receive timed out' then panic(Message)
+      if Message <> 'Channel receive timed out' then panic(Message);
   end;
   case Send(Messages, 1) of
     Ok(_): begin end;
-    Error(Message): panic(Message)
+    Error(Message): panic(Message);
   end;
   case SendWithTimeout(Messages, 2, 25) of
     Ok(_): panic('full channel did not time out');
     Error(Message):
-      if Message <> 'Channel send timed out' then panic(Message)
-  end
+      if Message <> 'Channel send timed out' then panic(Message);
+  end;
 end.
 "#;
     let (program, diagnostics) = fpas_parser::parse(SOURCE);

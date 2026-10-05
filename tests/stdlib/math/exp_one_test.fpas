@@ -3,5 +3,5 @@ program T;
 uses Std.Console, Std.Math;
 
 begin
-  WriteLn(Round(Exp(1.0) * 1000.0))
+  WriteLn(Round(Exp(1.0) * 1000.0));
 end.

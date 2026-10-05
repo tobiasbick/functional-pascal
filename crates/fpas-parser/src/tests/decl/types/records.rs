@@ -87,7 +87,7 @@ fn invalid_record_field_recovery_preserves_following_function_declaration() {
     let (p, errors) = parse_with_errors(
         "program T; \
          type Point = record X: real; 123; end; \
-         function Answer(): integer; begin return 42 end; \
+         function Answer(): integer; begin return 42; end; \
          begin end.",
     );
     assert!(!errors.is_empty());

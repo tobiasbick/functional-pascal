@@ -8,7 +8,7 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`try` expression).
 function Process(A: integer; B: integer): Result of string, string;
 begin
   var Quotient: integer := try Divide(A, B);
-  return Ok(IntToStr(Quotient))
+  return Ok(IntToStr(Quotient));
 end;
 ```
 
@@ -18,7 +18,7 @@ end;
 function FirstPositive(Items: array of integer): Option of integer;
 begin
   var Idx: integer := try FindIndex(Items, 1);
-  return Some(Items[Idx])
+  return Some(Items[Idx]);
 end;
 ```
 

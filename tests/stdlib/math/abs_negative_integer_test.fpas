@@ -3,5 +3,5 @@ program T;
 uses Std.Console, Std.Math;
 
 begin
-  WriteLn(Abs(-7))
+  WriteLn(Abs(-7));
 end.

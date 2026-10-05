@@ -4,7 +4,7 @@ uses Std.Console, Std.Arrays;
 
 function Expand(X: integer): array of integer;
 begin
-  return [X, X * 10]
+  return [X, X * 10];
 end;
 
 begin
@@ -13,5 +13,5 @@ begin
   WriteLn(R[0]);
   WriteLn(R[1]);
   WriteLn(R[4]);
-  WriteLn(R[5])
+  WriteLn(R[5]);
 end.

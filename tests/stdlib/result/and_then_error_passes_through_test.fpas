@@ -4,11 +4,11 @@ uses Std.Console, Std.Results;
 
 function AlwaysOk(V: integer): result of string, string;
 begin
-  return Ok('ok')
+  return Ok('ok');
 end;
 
 begin
   var R: result of integer, string := Error('original');
   var M: result of string, string := AndThen(R, AlwaysOk);
-  WriteLn(IsError(M))
+  WriteLn(IsError(M));
 end.

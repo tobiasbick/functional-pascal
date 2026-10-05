@@ -10,7 +10,7 @@ fn reexported_record_alias_preserves_its_owner_across_facades() {
 public type Model = record
   public Value: integer;
   function ReadChanged(Self: Model): Option of procedure(Value: integer);
-  begin return None end;
+  begin return None; end;
   procedure WriteChanged(Self: Model; Handler: Option of procedure(Value: integer));
   begin end;
   public event Changed: procedure(Value: integer) read ReadChanged write WriteChanged;

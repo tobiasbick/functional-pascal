@@ -26,7 +26,7 @@ const RANDOM_ASSIGN: &str = r#"program QuietRandom;
 uses Std.Random;
 begin
   mutable var X: integer := 0;
-  X := RandomInt(1, 1)
+  X := RandomInt(1, 1);
 end.
 "#;
 
@@ -129,7 +129,7 @@ fn start_recording_captures_current_stop_and_later_input() {
         r#"program CaptureInput;
 uses Std.Console;
 begin
-  WriteLn(ReadLn())
+  WriteLn(ReadLn());
 end.
 "#,
     );
@@ -178,7 +178,7 @@ fn continue_after_record_captures_the_next_all_stop() {
         r#"program CaptureStop;
 begin
   mutable var Flag: integer := 0;
-  Flag := 1
+  Flag := 1;
 end.
 "#,
     );

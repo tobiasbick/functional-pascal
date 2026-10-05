@@ -17,12 +17,12 @@ uses Std.Console;
 function Fail(): integer;
 begin
   panic('boom');
-  return 1
+  return 1;
 end;
 
 begin
   var Value: integer := Fail();
-  WriteLn(Value)
+  WriteLn(Value);
 end.
 "#;
 
@@ -244,18 +244,18 @@ uses Std.Console, Std.Tasks, Std.Time;
 function Work(): integer;
 begin
   Sleep(30000);
-  return 1
+  return 1;
 end;
 
 function Compute(Value: integer): integer;
 begin
-  return Value + 1
+  return Value + 1;
 end;
 
 begin
   var Pending: task := go Work();
   var Answer: integer := Compute(41);
-  WriteLn(Answer)
+  WriteLn(Answer);
 end.
 "#;
     let (program, diagnostics) = fpas_parser::parse(TASK_SOURCE);

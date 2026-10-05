@@ -59,7 +59,7 @@ Create `hello.fpas`:
 program Hello;
 uses Std.Console;
 begin
-  WriteLn('Hello, World!')
+  WriteLn('Hello, World!');
 end.
 ```
 
@@ -140,15 +140,15 @@ uses Std.Console;
 function Fib(N: integer): integer;
 begin
   if N <= 1 then
-    return N
+    return N;
   else
-    return Fib(N - 1) + Fib(N - 2)
+    return Fib(N - 1) + Fib(N - 2);
 end;
 
 begin
   WriteLn('Fibonacci sequence:');
   for I: integer := 0 to 9 do
-    WriteLn(Fib(I))
+    WriteLn(Fib(I));
 end.
 ```
 
@@ -170,12 +170,12 @@ begin
   case L of
     Light.Red:    return 'Stop';
     Light.Yellow: return 'Caution';
-    Light.Green:  return 'Go'
-  end
+    Light.Green:  return 'Go';
+  end;
 end;
 
 begin
-  WriteLn(TrafficAdvice(Light.Red))
+  WriteLn(TrafficAdvice(Light.Red));
 end.
 ```
 
@@ -187,17 +187,17 @@ uses Std.Console;
 
 function Double(X: integer): integer;
 begin
-  return X * 2
+  return X * 2;
 end;
 
 function Apply(F: function(X: integer): integer; Value: integer): integer;
 begin
-  return F(Value)
+  return F(Value);
 end;
 
 begin
   var Op: function(X: integer): integer := Double;
-  WriteLn(Apply(Op, 10)) // 20
+  WriteLn(Apply(Op, 10)); // 20
 end.
 ```
 
@@ -212,14 +212,14 @@ begin
   for I: integer := 0 to Length(Items) - 1 do
     if Items[I] >= Min then
       return Some(Items[I]);
-  return None
+  return None;
 end;
 
 begin
   case FindFirst([3, 7, 15, 42], 10) of
     Some(V): WriteLn('Found: ', V);
-    None:    WriteLn('Not found')
-  end
+    None:    WriteLn('Not found');
+  end;
 end.
 ```
 

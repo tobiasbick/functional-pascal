@@ -37,13 +37,13 @@ The application model owns `TuiMenuState`. Render it with a stable menu control
 and change action:
 
 ```pascal
-TuiElementBuilders.MakeMenu(MenuId, Nodes, Model.Menu, MenuChangedAction)
+TuiElementBuilders.MakeMenu(MenuId, Nodes, Model.Menu, MenuChangedAction);
 ```
 
 Routing proposes changes through:
 
 ```pascal
-TuiMsg.MenuChanged(Source, Action, State)
+TuiMsg.MenuChanged(Source, Action, State);
 ```
 
 Accept the message by copying `State` into the model. Commands emit

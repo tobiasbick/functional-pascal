@@ -12,10 +12,10 @@ begin
       if Button.Enabled and
          ((RequireDefault and Button.Default) or ((Mnemonic <> '') and (Std.Str.ToLower(Button.Mnemonic) = Std.Str.ToLower(Mnemonic)))) then
       begin
-        return Some(Button)
+        return Some(Button);
       end;
 
-      return None
+      return None;
     end;
     TuiElement.Desktop(Focused, Children):
     begin
@@ -25,17 +25,17 @@ begin
         case Children[Index] of
           TuiElement.Overlay(Title, OverlayChildren):
           begin
-            ModalIndex := Index
-          end
+            ModalIndex := Index;
+          end;
           else
           begin
-          end
-        end
+          end;
+        end;
       end;
 
       if ModalIndex >= 0 then
       begin
-        return TuiButtonFind(Children[ModalIndex], RequireDefault, Mnemonic)
+        return TuiButtonFind(Children[ModalIndex], RequireDefault, Mnemonic);
       end;
 
       for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
@@ -43,15 +43,15 @@ begin
         case TuiButtonFind(Children[Index], RequireDefault, Mnemonic) of
           Some(Button):
           begin
-            return Some(Button)
+            return Some(Button);
           end;
           None:
           begin
-          end
-        end
+          end;
+        end;
       end;
 
-      return None
+      return None;
     end;
     TuiElement.Scroll(Id, Offset, ChangeAction, Children):
     begin
@@ -60,15 +60,15 @@ begin
         case TuiButtonFind(Children[Index], RequireDefault, Mnemonic) of
           Some(Button):
           begin
-            return Some(Button)
+            return Some(Button);
           end;
           None:
           begin
-          end
-        end
+          end;
+        end;
       end;
 
-      return None
+      return None;
     end;
     TuiElement.Row(Children, Spacing):
     begin
@@ -77,15 +77,15 @@ begin
         case TuiButtonFind(Children[Index], RequireDefault, Mnemonic) of
           Some(Button):
           begin
-            return Some(Button)
+            return Some(Button);
           end;
           None:
           begin
-          end
-        end
+          end;
+        end;
       end;
 
-      return None
+      return None;
     end;
     TuiElement.Column(Children, Spacing):
     begin
@@ -94,15 +94,15 @@ begin
         case TuiButtonFind(Children[Index], RequireDefault, Mnemonic) of
           Some(Button):
           begin
-            return Some(Button)
+            return Some(Button);
           end;
           None:
           begin
-          end
-        end
+          end;
+        end;
       end;
 
-      return None
+      return None;
     end;
     TuiElement.Layout(Settings, Children):
     begin
@@ -111,15 +111,15 @@ begin
         case TuiButtonFind(Children[Index], RequireDefault, Mnemonic) of
           Some(Button):
           begin
-            return Some(Button)
+            return Some(Button);
           end;
           None:
           begin
-          end
-        end
+          end;
+        end;
       end;
 
-      return None
+      return None;
     end;
     TuiElement.Panel(Title, Children):
     begin
@@ -128,15 +128,15 @@ begin
         case TuiButtonFind(Children[Index], RequireDefault, Mnemonic) of
           Some(Button):
           begin
-            return Some(Button)
+            return Some(Button);
           end;
           None:
           begin
-          end
-        end
+          end;
+        end;
       end;
 
-      return None
+      return None;
     end;
     TuiElement.Overlay(Title, Children):
     begin
@@ -145,21 +145,21 @@ begin
         case TuiButtonFind(Children[Index], RequireDefault, Mnemonic) of
           Some(Button):
           begin
-            return Some(Button)
+            return Some(Button);
           end;
           None:
           begin
-          end
-        end
+          end;
+        end;
       end;
 
-      return None
-    end
+      return None;
+    end;
     else
     begin
-      return None
-    end
-  end
+      return None;
+    end;
+  end;
 end;
 
 // Returns the first enabled default button in the active modal or full tree.
@@ -168,7 +168,7 @@ end;
 // - `Root`: Root of the element tree.
 public function TuiFindDefaultButton(Root: TuiElement): option of TuiButtonSpec;
 begin
-  return TuiButtonFind(Root, true, '')
+  return TuiButtonFind(Root, true, '');
 end;
 
 // Returns the first enabled button matching an Alt mnemonic in the active modal or full tree.
@@ -180,10 +180,10 @@ public function TuiFindMnemonicButton(Root: TuiElement; Mnemonic: string): optio
 begin
   if Mnemonic = '' then
   begin
-    return None
+    return None;
   end;
 
-  return TuiButtonFind(Root, false, Mnemonic)
+  return TuiButtonFind(Root, false, Mnemonic);
 end;
 
 // Routes one Alt mnemonic to an enabled button action.
@@ -195,19 +195,19 @@ public function TuiRouteButtonMnemonicKey(Root: TuiElement; Key: Std.Console.Key
 begin
   if (Key.kind <> Std.Console.KeyKind.Character) or not Key.alt then
   begin
-    return None
+    return None;
   end;
 
   case TuiFindMnemonicButton(Root, Key.ch) of
     Some(Button):
     begin
-      return Some([TuiMsg.Action(Button.Id, Button.Action)])
+      return Some([TuiMsg.Action(Button.Id, Button.Action)]);
     end;
     None:
     begin
-      return None
-    end
-  end
+      return None;
+    end;
+  end;
 end;
 
 // Routes Enter or Space when an enabled button owns keyboard focus.
@@ -224,16 +224,16 @@ public function TuiRouteFocusedButtonKey(
 begin
   if Button.Id.Value <> Target.Value then
   begin
-    return None
+    return None;
   end;
 
   if Button.Enabled and
      ((Key.kind = Std.Console.KeyKind.Enter) or (Key.kind = Std.Console.KeyKind.Space)) then
   begin
-    return Some(TuiMsg.Action(Button.Id, Button.Action))
+    return Some(TuiMsg.Action(Button.Id, Button.Action));
   end;
 
-  return None
+  return None;
 end;
 
 // Returns the enabled default button action for Enter.
@@ -245,11 +245,11 @@ begin
   case TuiFindDefaultButton(Root) of
     Some(Button):
     begin
-      return Some(TuiMsg.Action(Button.Id, Button.Action))
+      return Some(TuiMsg.Action(Button.Id, Button.Action));
     end;
     None:
     begin
-      return None
-    end
-  end
+      return None;
+    end;
+  end;
 end;

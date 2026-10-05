@@ -6,11 +6,11 @@ begin
   case Glob('[unclosed') of
     Ok(_):
     begin
-      Fail('Expected invalid glob pattern to fail')
+      Fail('Expected invalid glob pattern to fail');
     end;
     Error(Message):
     begin
-      AssertTrue(Contains(Message, 'Invalid glob pattern'))
-    end
-  end
+      AssertTrue(Contains(Message, 'Invalid glob pattern'));
+    end;
+  end;
 end.

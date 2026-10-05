@@ -15,7 +15,7 @@ fn run_cli_binds_method_from_unit_global_record() {
 uses App.Data, Std.Console, Std.Conv;
 begin
   var AddTwelve: function(Value: integer): integer := Global.Add;
-  WriteLn(IntToStr(AddTwelve(3)))
+  WriteLn(IntToStr(AddTwelve(3)));
 end.",
     );
     write_text(
@@ -26,7 +26,7 @@ public type
     public Base: integer;
     public function Add(Self: Counter; Value: integer): integer;
     begin
-      return Self.Base + Value
+      return Self.Base + Value;
     end;
   end;
 public var Global: Counter := record Base := 12; end;

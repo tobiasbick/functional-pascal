@@ -31,36 +31,36 @@ public type
       return record
         Horizontal := Horizontal;
         Vertical := Vertical;
-      end
+      end;
     end;
 
     // Both axes fixed to preferred size.
     public static function Fixed(): TuiSizePolicy;
     begin
-      return TuiSizePolicy.Create(TuiSizePolicyKind.Fixed, TuiSizePolicyKind.Fixed)
+      return TuiSizePolicy.Create(TuiSizePolicyKind.Fixed, TuiSizePolicyKind.Fixed);
     end;
 
     // Both axes use preferred as the minimum.
     public static function Minimum(): TuiSizePolicy;
     begin
-      return TuiSizePolicy.Create(TuiSizePolicyKind.Minimum, TuiSizePolicyKind.Minimum)
+      return TuiSizePolicy.Create(TuiSizePolicyKind.Minimum, TuiSizePolicyKind.Minimum);
     end;
 
     // Both axes use preferred as the maximum.
     public static function Maximum(): TuiSizePolicy;
     begin
-      return TuiSizePolicy.Create(TuiSizePolicyKind.Maximum, TuiSizePolicyKind.Maximum)
+      return TuiSizePolicy.Create(TuiSizePolicyKind.Maximum, TuiSizePolicyKind.Maximum);
     end;
 
     // Both axes treat preferred as ideal with grow and shrink.
     public static function Preferred(): TuiSizePolicy;
     begin
-      return TuiSizePolicy.Create(TuiSizePolicyKind.Preferred, TuiSizePolicyKind.Preferred)
+      return TuiSizePolicy.Create(TuiSizePolicyKind.Preferred, TuiSizePolicyKind.Preferred);
     end;
 
     // Both axes request additional space beyond preferred.
     public static function Expanding(): TuiSizePolicy;
     begin
-      return TuiSizePolicy.Create(TuiSizePolicyKind.Expanding, TuiSizePolicyKind.Expanding)
+      return TuiSizePolicy.Create(TuiSizePolicyKind.Expanding, TuiSizePolicyKind.Expanding);
     end;
   end;

@@ -19,7 +19,7 @@ begin
     Y := State.Y;
     Action := State.Action;
     Button := State.Button;
-  end
+  end;
 end;
 
 begin
@@ -43,10 +43,10 @@ begin
       begin
         if Delta = 1 then
         begin
-          return PushEvent(State, 'tick-1')
+          return PushEvent(State, 'tick-1');
         end;
 
-        return PushEvent(State, 'tick-2')
+        return PushEvent(State, 'tick-2');
       end;
       TuiMsg.Pointer(InputEvent):
       begin
@@ -56,19 +56,19 @@ begin
           Y := InputEvent.Position.Y;
           Action := InputEvent.Action;
           Button := InputEvent.Button;
-        end
-      end
+        end;
+      end;
       else
       begin
-        return State
-      end
-    end
+        return State;
+      end;
+    end;
   end, function(State: PointerModel): TuiElement begin
     return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(1)), [
                                                                           TuiElementBuilders.MakePanel('Host', [
                                                                                                                  TuiElementBuilders.MakeButton(TuiControlId.Create(1), 'Go', TuiAction.Create(1))
                                                                                                                ])
-                                                                        ])
+                                                                        ]);
   end, 3, 0);
   AssertEquals(3, Std.Arrays.Length(Model.Events));
   AssertEquals('tick-1', Model.Events[0]);
@@ -78,5 +78,5 @@ begin
   AssertEquals(4, Model.Y);
   AssertTrue(Model.Action = TuiPointerAction.Move);
   AssertTrue(Model.Button = TuiPointerButton.NoButton);
-  App.Close()
+  App.Close();
 end.

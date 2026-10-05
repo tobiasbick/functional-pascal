@@ -19,19 +19,19 @@ begin
       Cmd.StartBackground(7, function(Token: CancellationToken): result of boolean, string begin
         if IsError(SendWithCancellation(Target, 42, Token)) then
         begin
-          return Ok(true)
+          return Ok(true);
         end;
 
         Send(Ready, true);
-        return Ok(true)
+        return Ok(true);
       end);
-      return State
-    end
+      return State;
+    end;
     else
     begin
-      return State
-    end
-  end
+      return State;
+    end;
+  end;
 end;
 
 function UpdateApplication(State: CommandModel; Message: integer; Cmd: TuiCmdOutput): CommandModel;
@@ -40,12 +40,12 @@ begin
     Inbox := State.Inbox;
     Ready := State.Ready;
     Value := Message;
-  end
+  end;
 end;
 
 function View(State: CommandModel): TuiElement;
 begin
-  return TuiElementBuilders.MakeLabel('command')
+  return TuiElementBuilders.MakeLabel('command');
 end;
 
 begin
@@ -61,5 +61,5 @@ begin
   Model := App.RunBackgroundIterations(Model, Inbox, UpdateFramework, UpdateApplication, View, 1, 0);
   AssertEquals(42, Model.Value);
   App.CloseWithBackground(Inbox);
-  CloseChannel(Ready)
+  CloseChannel(Ready);
 end.

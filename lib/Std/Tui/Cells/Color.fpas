@@ -15,10 +15,10 @@ function TuiColorRequireRange(Value: integer; Minimum: integer; Maximum: integer
 begin
   if (Value < Minimum) or (Value > Maximum) then
   begin
-    panic(('Tui ' + Name) + ' is outside its supported range')
+    panic(('Tui ' + Name) + ' is outside its supported range');
   end;
 
-  return Value
+  return Value;
 end;
 
 public type
@@ -48,7 +48,7 @@ public type
         Red := 0;
         Green := 0;
         Blue := 0;
-      end
+      end;
     end;
 
     // Creates an ANSI-256 color (`0..255`).
@@ -64,7 +64,7 @@ public type
         Red := 0;
         Green := 0;
         Blue := 0;
-      end
+      end;
     end;
 
     // Creates an RGB color; each channel is `0..255`.
@@ -81,7 +81,7 @@ public type
       begin
         TuiColorRequireRange(Red, 0, 255, 'red channel');
         TuiColorRequireRange(Green, 0, 255, 'green channel');
-        TuiColorRequireRange(Blue, 0, 255, 'blue channel')
+        TuiColorRequireRange(Blue, 0, 255, 'blue channel');
       end;
 
       return record
@@ -90,6 +90,6 @@ public type
         Red := Red;
         Green := Green;
         Blue := Blue;
-      end
+      end;
     end;
   end;

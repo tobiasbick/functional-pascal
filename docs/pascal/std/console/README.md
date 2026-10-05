@@ -7,7 +7,7 @@ screen control plus structured key and event APIs).
 program Example;
 uses Std.Console;
 begin
-  WriteLn('ok')
+  WriteLn('ok');
 end.
 ```
 

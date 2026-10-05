@@ -15,7 +15,7 @@ mutable var Flag: integer := 0;
 
 begin
   Flag := 1;
-  Flag := 2
+  Flag := 2;
 end.
 "#;
 

@@ -36,9 +36,9 @@ and the declaration.
 function Max(Left: integer; Right: integer): integer;
 begin
   if Left >= Right then
-    return Left
+    return Left;
   else
-    return Right
+    return Right;
 end;
 ```
 

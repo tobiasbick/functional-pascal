@@ -10,7 +10,7 @@ fn unwrap_rejects_non_containers_without_cascading_argument_errors() {
                     "program T;
 uses Std.{namespace};
 begin
-  var N: integer := Std.{namespace}.{function}({argument}{fallback})
+  var N: integer := Std.{namespace}.{function}({argument}{fallback});
 end."
                 ));
                 assert_eq!(errs.len(), 1, "{errs:#?}");
@@ -33,7 +33,7 @@ fn std_math_sqrt_wrong_arg_count() {
 program T;
 uses Std.Math;
 begin
-  Std.Math.Sqrt(1.0, 2.0)
+  Std.Math.Sqrt(1.0, 2.0);
 end.",
     );
     assert!(
@@ -50,7 +50,7 @@ fn std_conv_str_to_int_type_mismatch() {
 program T;
 uses Std.Conv;
 begin
-  var N: integer := Std.Conv.StrToInt(42)
+  var N: integer := Std.Conv.StrToInt(42);
 end.",
     );
     assert!(
@@ -70,7 +70,7 @@ fn std_str_format_requires_template_argument() {
 program T;
 uses Std.Str;
 begin
-  var S: string := Std.Str.Format()
+  var S: string := Std.Str.Format();
 end.",
     );
     assert!(
@@ -87,7 +87,7 @@ fn std_str_format_checks_template_type() {
 program T;
 uses Std.Str;
 begin
-  var S: string := Std.Str.Format(42)
+  var S: string := Std.Str.Format(42);
 end.",
     );
     assert!(
@@ -105,7 +105,7 @@ program T;
 uses Std.Arrays;
 begin
   var A: array of integer := [1];
-  Std.Arrays.Push(A, 2)
+  Std.Arrays.Push(A, 2);
 end.",
     );
     assert!(
@@ -121,7 +121,7 @@ fn std_dict_merge_requires_matching_rhs_dict_type() {
 program T;
 uses Std.Dictionaries;
 begin
-  var M: dict of integer to integer := Std.Dictionaries.Merge([1: 10], ['x': true])
+  var M: dict of integer to integer := Std.Dictionaries.Merge([1: 10], ['x': true]);
 end.",
     );
     assert!(
@@ -138,7 +138,7 @@ fn std_dict_merge_requires_dict_rhs() {
 program T;
 uses Std.Dictionaries;
 begin
-  var M: dict of integer to integer := Std.Dictionaries.Merge([1: 10], 42)
+  var M: dict of integer to integer := Std.Dictionaries.Merge([1: 10], 42);
 end.",
     );
     assert!(
@@ -155,7 +155,7 @@ fn std_dict_get_requires_matching_key_type() {
 program T;
 uses Std.Dictionaries;
 begin
-  var V: Option of integer := Std.Dictionaries.Get(['Alice': 1], 42)
+  var V: Option of integer := Std.Dictionaries.Get(['Alice': 1], 42);
 end.",
     );
     assert!(
@@ -173,10 +173,10 @@ program T;
 uses Std.Arrays;
 function WrongReturn(X: integer): integer;
 begin
-  return X
+  return X;
 end;
 begin
-  var V: Option of integer := Std.Arrays.Find([1, 2, 3], WrongReturn)
+  var V: Option of integer := Std.Arrays.Find([1, 2, 3], WrongReturn);
 end.",
     );
     assert!(
@@ -194,10 +194,10 @@ program T;
 uses Std.Arrays;
 function NotAProcedure(X: integer): integer;
 begin
-  return X
+  return X;
 end;
 begin
-  Std.Arrays.ForEach([1, 2, 3], NotAProcedure)
+  Std.Arrays.ForEach([1, 2, 3], NotAProcedure);
 end.",
     );
     assert!(

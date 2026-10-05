@@ -6,7 +6,7 @@ uses Std.Args, Std.Conv, Std.Console, Std.Http;
 begin
   if ParamCount() <> 1 then
   begin
-    panic('usage: https_client.fpas -- URL')
+    panic('usage: https_client.fpas -- URL');
   end;
 
   case Send(Request.Get(ParamStr(0))) of
@@ -16,17 +16,17 @@ begin
       case BodyText(ResponseValue) of
         Ok(Text):
         begin
-          WriteLn(Text)
+          WriteLn(Text);
         end;
         Error(Message):
         begin
-          panic(Message)
-        end
-      end
+          panic(Message);
+        end;
+      end;
     end;
     Error(Message):
     begin
-      panic(Message)
-    end
-  end
+      panic(Message);
+    end;
+  end;
 end.

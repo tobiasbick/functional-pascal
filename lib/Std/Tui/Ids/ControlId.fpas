@@ -4,10 +4,10 @@ function TuiControlIdRequirePositive(Value: integer): integer;
 begin
   if Value <= 0 then
   begin
-    panic('Tui control id must be positive')
+    panic('Tui control id must be positive');
   end;
 
-  return Value
+  return Value;
 end;
 
 public type
@@ -24,6 +24,6 @@ public type
     begin
       return record
         Value := TuiControlIdRequirePositive(Value);
-      end
+      end;
     end;
   end;

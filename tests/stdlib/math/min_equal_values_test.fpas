@@ -3,5 +3,5 @@ program T;
 uses Std.Console, Std.Math;
 
 begin
-  WriteLn(Min(5, 5))
+  WriteLn(Min(5, 5));
 end.

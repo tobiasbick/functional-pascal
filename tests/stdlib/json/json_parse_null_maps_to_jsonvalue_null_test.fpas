@@ -10,17 +10,17 @@ begin
       case V of
         JsonValue.NullValue:
         begin
-          WriteLn('null')
-        end
+          WriteLn('null');
+        end;
         else
         begin
-          WriteLn('not-null')
-        end
-      end
+          WriteLn('not-null');
+        end;
+      end;
     end;
     Error(E):
     begin
-      WriteLn('error: ' + E)
-    end
-  end
+      WriteLn('error: ' + E);
+    end;
+  end;
 end.

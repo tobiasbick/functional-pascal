@@ -4,5 +4,5 @@ uses Std.Results, Std.Str, Std.Test, Std.Toml;
 
 begin
   var Parsed: result of TomlValue, string := Parse(('name = ''one''' + Chr(10)) + 'name = ''two''');
-  AssertTrue(IsError(Parsed))
+  AssertTrue(IsError(Parsed));
 end.

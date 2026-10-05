@@ -38,11 +38,11 @@ begin
   case ReadBack of
     Some(Value):
     begin
-      WriteLn('ReadText back: ' + Value.glyph)
+      WriteLn('ReadText back: ' + Value.glyph);
     end;
     None:
     begin
-      WriteLn('No cell')
-    end
-  end
+      WriteLn('No cell');
+    end;
+  end;
 end.

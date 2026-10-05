@@ -4,10 +4,10 @@ uses Std.Console, Std.Arrays;
 
 procedure PrintValue(X: integer);
 begin
-  WriteLn(X)
+  WriteLn(X);
 end;
 
 begin
   ForEach([], PrintValue);
-  WriteLn('done')
+  WriteLn('done');
 end.

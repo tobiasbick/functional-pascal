@@ -133,37 +133,37 @@ mod tests {
 
     #[test]
     fn minimal_program() {
-        let formatted = parse_and_format("program Hello; begin WriteLn('Hello, World!') end.");
+        let formatted = parse_and_format("program Hello; begin WriteLn('Hello, World!'); end.");
         assert_eq!(
             formatted,
-            "program Hello;\n\nbegin\n  WriteLn('Hello, World!')\nend.\n"
+            "program Hello;\n\nbegin\n  WriteLn('Hello, World!');\nend.\n"
         );
     }
 
     #[test]
     fn program_with_uses() {
         let formatted = parse_and_format(
-            "program Hello; uses Std.Console; begin WriteLn('Hello, World!') end.",
+            "program Hello; uses Std.Console; begin WriteLn('Hello, World!'); end.",
         );
         assert_eq!(
             formatted,
-            "program Hello;\n\nuses Std.Console;\n\nbegin\n  WriteLn('Hello, World!')\nend.\n"
+            "program Hello;\n\nuses Std.Console;\n\nbegin\n  WriteLn('Hello, World!');\nend.\n"
         );
     }
 
     #[test]
     fn unit_clamp_expands_branch_blocks() {
-        let source = "unit MyApp.Utils; uses Std.Math; function Clamp(Value: integer; Min: integer; Max: integer): integer; begin if Value < Min then return Min else if Value > Max then return Max else return Value end; function IsBlank(S: string): boolean; begin return Length(Trim(S)) = 0 end;";
+        let source = "unit MyApp.Utils; uses Std.Math; function Clamp(Value: integer; Min: integer; Max: integer): integer; begin if Value < Min then return Min; else if Value > Max then return Max; else return Value; end; function IsBlank(S: string): boolean; begin return Length(Trim(S)) = 0; end;";
         let formatted = parse_and_format(source);
         assert!(formatted.starts_with("unit MyApp.Utils;\n\nuses Std.Math;\n\n"));
-        assert!(formatted.contains("if Value < Min then\n  begin\n    return Min\n  end"));
+        assert!(formatted.contains("if Value < Min then\n  begin\n    return Min;\n  end;"));
         assert!(formatted.contains("function IsBlank"));
     }
 
     #[test]
     fn program_type_then_begin() {
         let formatted = parse_and_format(
-            "program T; type Point = record X: integer; Y: integer; end; begin var P: Point := record X := 1; Y := 2; end end.",
+            "program T; type Point = record X: integer; Y: integer; end; begin var P: Point := record X := 1; Y := 2; end; end.",
         );
         assert!(formatted.contains("type\n  Point = record\n"));
         assert!(formatted.contains("end;\n\nbegin\n"));
@@ -183,7 +183,7 @@ mod tests {
     #[test]
     fn long_uses_clause_wraps() {
         let formatted = parse_and_format(
-            "program LongUses; uses Std.Console, Std.Conv, Std.Arrays, Std.Dictionaries, Std.Options, Std.Results, Std.String, MyApp.Very.Long.Namespace.One, MyApp.Very.Long.Namespace.Two; begin WriteLn('ok') end.",
+            "program LongUses; uses Std.Console, Std.Conv, Std.Arrays, Std.Dictionaries, Std.Options, Std.Results, Std.String, MyApp.Very.Long.Namespace.One, MyApp.Very.Long.Namespace.Two; begin WriteLn('ok'); end.",
         );
         assert!(formatted.contains("uses\n"));
         assert!(formatted.contains("MyApp.Very.Long.Namespace.Two"));
@@ -191,7 +191,8 @@ mod tests {
 
     #[test]
     fn round_trip_hello() {
-        let source = "program Hello;\nuses Std.Console;\nbegin\n  WriteLn('Hello, World!')\nend.\n";
+        let source =
+            "program Hello;\nuses Std.Console;\nbegin\n  WriteLn('Hello, World!');\nend.\n";
         let formatted = parse_and_format(source);
         let (_, errors) = parse_compilation_unit(&formatted);
         assert!(errors.is_empty(), "{errors:?}");
@@ -204,7 +205,7 @@ mod tests {
     #[test]
     fn unit_qualified_name() {
         let formatted = parse_and_format(
-            "unit App.Math; function Scale(Value: integer): integer; begin return Value * 2 end;",
+            "unit App.Math; function Scale(Value: integer): integer; begin return Value * 2; end;",
         );
         assert!(formatted.starts_with("unit App.Math;\n\n"));
         assert!(formatted.contains("function Scale"));

@@ -7,45 +7,45 @@ uses Std.Tasks, Std.Time;
 function Work(): integer;
 begin
   Sleep(30);
-  return 7
+  return 7;
 end;
 function CancelLater(Source: CancellationSource): integer;
 begin
   Sleep(1);
   Cancel(Source);
-  return 0
+  return 0;
 end;
 begin
   var T: task := go Work();
   case WaitAnyWithTimeout([T], 0) of
     Ok(_): panic('pending task ready');
-    Error(Message): if Message <> 'Task wait timed out' then panic(Message)
+    Error(Message): if Message <> 'Task wait timed out' then panic(Message);
   end;
   case WaitAnyWithTimeout([T], 1) of
     Ok(_): panic('deadline extended');
-    Error(Message): if Message <> 'Task wait timed out' then panic(Message)
+    Error(Message): if Message <> 'Task wait timed out' then panic(Message);
   end;
   var Source: CancellationSource := CreateCancellationSource();
   var Canceller: task := go CancelLater(Source);
   case WaitAnyWithCancellation([T], GetCancellationToken(Source)) of
     Ok(_): panic('not cancelled');
-    Error(Message): if Message <> 'Task wait was cancelled' then panic(Message)
+    Error(Message): if Message <> 'Task wait was cancelled' then panic(Message);
   end;
   if Wait(Canceller) <> 0 then panic('canceller result');
   if Wait(T) <> 7 then panic('result lost');
   case WaitAnyWithTimeout([T], 0) of
     Ok(Index): if Index <> 0 then panic('index');
-    Error(Message): panic(Message)
+    Error(Message): panic(Message);
   end;
   case WaitAnyWithCancellation([T], GetCancellationToken(Source)) of
     Ok(_): panic('pre-cancellation lost');
-    Error(Message): if Message <> 'Task wait was cancelled' then panic(Message)
+    Error(Message): if Message <> 'Task wait was cancelled' then panic(Message);
   end;
   var Active: CancellationSource := CreateCancellationSource();
   case WaitAnyWithCancellation([T], GetCancellationToken(Active)) of
     Ok(Index): if Index <> 0 then panic('index');
-    Error(Message): panic(Message)
-  end
+    Error(Message): panic(Message);
+  end;
 end."#;
 
 #[test]
@@ -68,22 +68,22 @@ fn controlled_wait_any_preserves_results_with_one_worker() {
 uses Std.Tasks;
 function Work(): integer;
 begin
-  return 7
+  return 7;
 end;
 begin
   var T: task := go Work();
   WaitAll([T]);
   case WaitAnyWithTimeout([T], 0) of
     Ok(Index): if Index <> 0 then panic('index');
-    Error(Message): panic(Message)
+    Error(Message): panic(Message);
   end;
   var Source: CancellationSource := CreateCancellationSource();
   Cancel(Source);
   case WaitAnyWithCancellation([T], GetCancellationToken(Source)) of
     Ok(_): panic('pre-cancellation lost');
-    Error(Message): if Message <> 'Task wait was cancelled' then panic(Message)
+    Error(Message): if Message <> 'Task wait was cancelled' then panic(Message);
   end;
-  if Wait(T) <> 7 then panic('result consumed')
+  if Wait(T) <> 7 then panic('result consumed');
 end."#,
     );
     assert!(errors.is_empty(), "{errors:?}");

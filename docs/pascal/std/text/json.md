@@ -9,8 +9,8 @@ begin
   var R: Result of JsonValue, string := Parse('{"ok":true}');
   case R of
     Ok(Value): WriteLn(Stringify(Value));
-    Error(Message): WriteLn(Message)
-  end
+    Error(Message): WriteLn(Message);
+  end;
 end.
 ```
 
@@ -66,8 +66,8 @@ Parses JSON text. Accepted JSON returns `Ok(JsonValue)`. Invalid JSON returns `E
 var R: Result of JsonValue, string := Std.Json.Parse('[1, true, null]');
 case R of
   Ok(Value): WriteLn(Std.Json.Stringify(Value));
-  Error(Message): WriteLn('JSON error: ' + Message)
-end
+  Error(Message): WriteLn('JSON error: ' + Message);
+end;
 ```
 
 ### `Stringify`
@@ -90,7 +90,7 @@ var Value: JsonValue := JsonValue.ArrayValue([
   JsonValue.String('hi'),
   JsonValue.Number(1.5)
 ]);
-WriteLn(Std.Json.Stringify(Value))  // [true,null,"hi",1.5]
+WriteLn(Std.Json.Stringify(Value));  // [true,null,"hi",1.5]
 ```
 
 Malformed runtime payloads, such as an enum value pretending to be `JsonValue`, raise a runtime error. Normal parse failures should be handled through the `Result` returned by `Parse`.

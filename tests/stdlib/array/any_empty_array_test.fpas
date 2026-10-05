@@ -4,10 +4,10 @@ uses Std.Console, Std.Arrays;
 
 function AlwaysTrue(X: integer): boolean;
 begin
-  return true
+  return true;
 end;
 
 begin
   var A: array of integer := [];
-  WriteLn(Any(A, AlwaysTrue))
+  WriteLn(Any(A, AlwaysTrue));
 end.

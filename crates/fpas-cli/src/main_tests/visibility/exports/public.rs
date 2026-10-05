@@ -17,11 +17,11 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Lib, Std.Console;\nbegin\n  WriteLn(GetValue())\nend.\n",
+        "program Main;\nuses App.Lib, Std.Console;\nbegin\n  WriteLn(GetValue());\nend.\n",
     );
     write_text(
         &cwd.join("src/lib.fpas"),
-        "unit App.Lib;\n\npublic function GetValue(): integer;\nbegin\n  return 42\nend;\n",
+        "unit App.Lib;\n\npublic function GetValue(): integer;\nbegin\n  return 42;\nend;\n",
     );
 
     let (exit_code, stdout_output, _) = support::run_cli_and_capture_output(&project_file, &cwd);
@@ -48,11 +48,11 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Lib, Std.Console;\nbegin\n  WriteLn(GetValue())\nend.\n",
+        "program Main;\nuses App.Lib, Std.Console;\nbegin\n  WriteLn(GetValue());\nend.\n",
     );
     write_text(
         &cwd.join("src/lib.fpas"),
-        "unit App.Lib;\n\nfunction GetValue(): integer;\nbegin\n  return 99\nend;\n",
+        "unit App.Lib;\n\nfunction GetValue(): integer;\nbegin\n  return 99;\nend;\n",
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);
@@ -82,7 +82,7 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Config, Std.Console;\nbegin\n  WriteLn(MaxSize)\nend.\n",
+        "program Main;\nuses App.Config, Std.Console;\nbegin\n  WriteLn(MaxSize);\nend.\n",
     );
     write_text(
         &cwd.join("src/config.fpas"),
@@ -114,11 +114,11 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Lib, Std.Console;\nbegin\n  WriteLn(GetValue())\nend.\n",
+        "program Main;\nuses App.Lib, Std.Console;\nbegin\n  WriteLn(GetValue());\nend.\n",
     );
     write_text(
         &cwd.join("src/lib.fpas"),
-        "unit App.Lib;\n\npublic function GetValue(): integer;\nbegin\n  return 88\nend;\n",
+        "unit App.Lib;\n\npublic function GetValue(): integer;\nbegin\n  return 88;\nend;\n",
     );
 
     let (exit_code, stdout_output, stderr_output) =

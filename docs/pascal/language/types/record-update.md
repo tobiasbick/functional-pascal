@@ -39,7 +39,7 @@ var
 ```pascal
 function Origin(): Point;
 begin
-  return record X := 0; Y := 0; end
+  return record X := 0; Y := 0; end;
 end;
 
 var

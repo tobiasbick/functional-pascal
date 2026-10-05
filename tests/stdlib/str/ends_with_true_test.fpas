@@ -3,5 +3,5 @@ program T;
 uses Std.Console, Std.Str;
 
 begin
-  WriteLn(EndsWith('hello', 'llo'))
+  WriteLn(EndsWith('hello', 'llo'));
 end.

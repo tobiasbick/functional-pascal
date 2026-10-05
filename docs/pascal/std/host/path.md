@@ -6,7 +6,7 @@ Pure path manipulation without filesystem access. This page is the full API for 
 program Example;
 uses Std.Console, Std.Path;
 begin
-  WriteLn(BaseName(Normalize('dir/nested/../file.txt')))
+  WriteLn(BaseName(Normalize('dir/nested/../file.txt')));
 end.
 ```
 
@@ -51,12 +51,12 @@ An absolute segment replaces earlier segments (host `PathBuf::push` semantics):
 
 ```pascal
 // Unix example: result is '/etc/hosts', not 'home/etc/hosts'
-WriteLn(Join(['home', '/etc/hosts']))
+WriteLn(Join(['home', '/etc/hosts']));
 ```
 
 ```pascal
 var Parts: array of string := ['src', 'main', 'app.txt'];
-WriteLn(BaseName(Join(Parts)))
+WriteLn(BaseName(Join(Parts)));
 ```
 
 ---
@@ -66,7 +66,7 @@ WriteLn(BaseName(Join(Parts)))
 Returns the final component of `Path`.
 
 ```pascal
-WriteLn(BaseName('dir/nested/file.txt'))  // file.txt
+WriteLn(BaseName('dir/nested/file.txt'));  // file.txt
 ```
 
 Trailing separators follow host `std::path::Path` rules and may differ between Windows and Unix.
@@ -79,7 +79,7 @@ Returns the parent path without the final component.
 
 ```pascal
 WriteLn(DirName('dir/nested/file.txt'))  // dir/nested
-WriteLn(DirName('file.txt'))             // ''
+WriteLn(DirName('file.txt'));             // ''
 ```
 
 ---
@@ -90,7 +90,7 @@ Returns the final extension without a leading dot.
 
 ```pascal
 WriteLn(Extension('archive.tar.gz'))  // gz
-WriteLn(Extension('README'))            // ''
+WriteLn(Extension('README'));            // ''
 ```
 
 ---
@@ -107,12 +107,12 @@ Parent components cannot climb above a rooted path's root, including a Windows U
 // Windows examples:
 WriteLn(Normalize('D:/projects/demo'))       // D:\projects\demo
 WriteLn(Normalize('D:\projects\..\demo'))   // D:\demo
-WriteLn(Normalize('D:projects\..\demo'))     // D:demo (drive-relative)
+WriteLn(Normalize('D:projects\..\demo'));     // D:demo (drive-relative)
 ```
 
 ```pascal
 WriteLn(Normalize('a/b/../c'))
-WriteLn(BaseName(Normalize('dir/nested/../file.txt')))
+WriteLn(BaseName(Normalize('dir/nested/../file.txt')));
 ```
 
 ---

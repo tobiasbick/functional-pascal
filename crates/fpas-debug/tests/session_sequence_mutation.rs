@@ -61,12 +61,12 @@ program ArrayParameterMutation;
 function ReadAdded(mutable Values: array of integer): integer;
 begin
   var Marker: integer := Values[0];
-  return Values[1] + Marker
+  return Values[1] + Marker;
 end;
 
 begin
   var OutputValue: integer := ReadAdded([1]);
-  var Marker: integer := OutputValue
+  var Marker: integer := OutputValue;
 end.
 "#,
     );
@@ -106,14 +106,14 @@ begin
   mutable var Text: string := 'A😀B';
   return function(): string begin
     var Marker: string := Text;
-    return Text
-  end
+    return Text;
+  end;
 end;
 
 begin
   var ReadValue: function(): string := Reader();
   var OutputValue: string := ReadValue();
-  var Marker: string := OutputValue
+  var Marker: string := OutputValue;
 end.
 "#,
     );
@@ -161,7 +161,7 @@ begin
   mutable var Nested: Container := record
     Items := [1, 3];
   end;
-  var Marker: integer := Nested.Items[0] + GlobalValues[0]
+  var Marker: integer := Nested.Items[0] + GlobalValues[0];
 end.
 "#,
     );
@@ -236,17 +236,17 @@ uses Std.Console;
 function Forever(): integer;
 begin
   while true do begin end;
-  return 0
+  return 0;
 end;
 
 procedure Emit();
 begin
-  WriteLn('not live')
+  WriteLn('not live');
 end;
 
 begin
   mutable var Values: array of integer := [1];
-  var Marker: integer := Values[0]
+  var Marker: integer := Values[0];
 end.
 "#,
     );

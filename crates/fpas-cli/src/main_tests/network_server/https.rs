@@ -30,7 +30,7 @@ function Handle(RequestValue: ServerRequest): ServerResponse;
 begin
   mutable var ResponseValue: ServerResponse := ServerResponse.Create(200, 'OK');
   ResponseValue.Body := Std.Net.Utf8.Encode('secure ' + RequestValue.Target);
-  return ResponseValue
+  return ResponseValue;
 end;
 
 begin
@@ -43,15 +43,15 @@ begin
         Ok(_):
         begin
         end;
-        Error(Message): panic(Message)
+        Error(Message): panic(Message);
       end;
       case CloseListener(ListenerValue) of
         Ok(_): WriteLn('served https');
-        Error(Message): panic(Message)
-      end
+        Error(Message): panic(Message);
+      end;
     end;
-    Error(Message): panic(Message)
-  end
+    Error(Message): panic(Message);
+  end;
 end.
 "#
         ),

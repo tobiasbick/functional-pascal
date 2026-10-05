@@ -10,61 +10,61 @@ begin
       case MaybeValue of
         Some(_):
         begin
-          Fail('empty channel produced a value')
+          Fail('empty channel produced a value');
         end;
         None:
         begin
-        end
-      end
+        end;
+      end;
     end;
     Error(Message):
     begin
-      Fail(Message)
-    end
+      Fail(Message);
+    end;
   end;
 
   case TrySend(Messages, 7) of
     Ok(Sent):
     begin
-      AssertTrue(Sent)
+      AssertTrue(Sent);
     end;
     Error(Message):
     begin
-      Fail(Message)
-    end
+      Fail(Message);
+    end;
   end;
 
   case TrySend(Messages, 8) of
     Ok(Sent):
     begin
-      AssertFalse(Sent)
+      AssertFalse(Sent);
     end;
     Error(Message):
     begin
-      Fail(Message)
-    end
+      Fail(Message);
+    end;
   end;
 
   case ReceiveWithTimeout(Messages, 0) of
     Ok(Value):
     begin
-      AssertEquals(7, Value)
+      AssertEquals(7, Value);
     end;
     Error(Message):
     begin
-      Fail(Message)
-    end
+      Fail(Message);
+    end;
   end;
 
   case ReceiveWithTimeout(Messages, 1) of
     Ok(_):
     begin
-      Fail('empty channel did not time out')
+      Fail('empty channel did not time out');
     end;
     Error(Message):
     begin
-      AssertEquals('Channel receive timed out', Message)
-    end
+      AssertEquals('Channel receive timed out', Message);
+    end;
   end;
 
   case Send(Messages, 9) of
@@ -73,18 +73,18 @@ begin
     end;
     Error(Message):
     begin
-      Fail(Message)
-    end
+      Fail(Message);
+    end;
   end;
 
   case SendWithTimeout(Messages, 10, 1) of
     Ok(_):
     begin
-      Fail('full channel did not time out')
+      Fail('full channel did not time out');
     end;
     Error(Message):
     begin
-      AssertEquals('Channel send timed out', Message)
-    end
-  end
+      AssertEquals('Channel send timed out', Message);
+    end;
+  end;
 end.

@@ -53,7 +53,7 @@ fn mixed_routine_and_statement_nesting_shares_one_budget() {
 #[test]
 fn excessive_statement_nesting_reports_the_shared_limit() {
     let source = format!(
-        "program T; begin {}Value := 1 end.",
+        "program T; begin {}Value := 1; end.",
         "if true then ".repeat(MAX_PARSER_NESTING_DEPTH + 1)
     );
 

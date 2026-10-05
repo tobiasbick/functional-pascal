@@ -20,17 +20,17 @@ begin
       begin
         if Count <= 0 then
         begin
-          panic('TCP connection stopped while writing')
+          panic('TCP connection stopped while writing');
         end;
 
-        Offset := Offset + Count
+        Offset := Offset + Count;
       end;
       Error(Message):
       begin
-        panic(Message)
-      end
-    end
-  end
+        panic(Message);
+      end;
+    end;
+  end;
 end;
 
 // Reads response fragments until the server closes its side of the connection.
@@ -48,41 +48,41 @@ begin
       begin
         if Std.Arrays.Length(Part) = 0 then
         begin
-          Reading := false
-        end
+          Reading := false;
+        end;
         else
         begin
-          Bytes := Std.Arrays.Concat(Bytes, Part)
-        end
+          Bytes := Std.Arrays.Concat(Bytes, Part);
+        end;
       end;
       Error(Message):
       begin
-        panic(Message)
-      end
-    end
+        panic(Message);
+      end;
+    end;
   end;
 
   case Std.Net.Utf8.Decode(Bytes) of
     Ok(Text):
     begin
-      return Text
+      return Text;
     end;
     Error(Message):
     begin
-      panic(Message)
-    end
-  end
+      panic(Message);
+    end;
+  end;
 end;
 
 begin
   mutable var Port: integer := 18081;
   if ParamCount() = 1 then
   begin
-    Port := StrToInt(ParamStr(0))
-  end
+    Port := StrToInt(ParamStr(0));
+  end;
   else if ParamCount() <> 0 then
   begin
-    panic('usage: tcp_echo_client.fpas -- [PORT]')
+    panic('usage: tcp_echo_client.fpas -- [PORT]');
   end;
 
   case Connect('127.0.0.1', Port, 5000) of
@@ -94,8 +94,8 @@ begin
         end;
         Error(Message):
         begin
-          panic(Message)
-        end
+          panic(Message);
+        end;
       end;
 
       WriteAll(ConnectionValue, Std.Net.Utf8.Encode('hello over TCP' + #10));
@@ -106,13 +106,13 @@ begin
         end;
         Error(Message):
         begin
-          panic(Message)
-        end
-      end
+          panic(Message);
+        end;
+      end;
     end;
     Error(Message):
     begin
-      panic(Message)
-    end
-  end
+      panic(Message);
+    end;
+  end;
 end.

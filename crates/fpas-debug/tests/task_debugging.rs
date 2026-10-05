@@ -19,12 +19,12 @@ function Work(): integer;
 begin
   mutable var Value: integer := 40;
   Value := Value + 2;
-  return Value
+  return Value;
 end;
 
 begin
   var Pending: task := go Work();
-  WriteLn(Wait(Pending))
+  WriteLn(Wait(Pending));
 end.
 "#;
 
@@ -225,12 +225,12 @@ function Work(): integer;
 begin
   mutable var Scores: dict of string to integer := ['Seed': 1];
   var Marker: integer := Scores['Seed'];
-  return Scores['Added'] + Marker
+  return Scores['Added'] + Marker;
 end;
 
 begin
   var Pending: task := go Work();
-  WriteLn(Wait(Pending))
+  WriteLn(Wait(Pending));
 end.
 "#;
     let mut server = server_for(DICTIONARY_TASK);
@@ -280,7 +280,7 @@ uses Std.Console, Std.Tasks, Std.Time;
 function Work(Value: integer): integer;
 begin
   Sleep(1);
-  return Value
+  return Value;
 end;
 
 procedure Detached();
@@ -294,7 +294,7 @@ begin
   var Pending: array of task := [First, Second, First];
   WaitAll(Pending);
   WriteLn(Wait(First));
-  WriteLn(Wait(Second))
+  WriteLn(Wait(Second));
 end.
 "#;
     const NESTED: &str = r#"program NestedTasks;
@@ -303,18 +303,18 @@ uses Std.Console, Std.Tasks;
 
 function Leaf(Value: integer): integer;
 begin
-  return Value
+  return Value;
 end;
 
 function Parent(): integer;
 begin
   var Child: task := go Leaf(41);
-  return Wait(Child) + 1
+  return Wait(Child) + 1;
 end;
 
 begin
   var Pending: task := go Parent();
-  WriteLn(Wait(Pending))
+  WriteLn(Wait(Pending));
 end.
 "#;
 
@@ -360,12 +360,12 @@ uses Std.Tasks;
 
 procedure Explode();
 begin
-  panic('child boom')
+  panic('child boom');
 end;
 
 begin
   var Pending: task := go Explode();
-  Wait(Pending)
+  Wait(Pending);
 end.
 "#;
     const SHUTDOWN: &str = r#"program DetachedShutdown;
@@ -375,11 +375,11 @@ uses Std.Console, Std.Tasks, Std.Time;
 procedure Later();
 begin
   Sleep(1000);
-  WriteLn('too late')
+  WriteLn('too late');
 end;
 
 begin
-  go Later()
+  go Later();
 end.
 "#;
 

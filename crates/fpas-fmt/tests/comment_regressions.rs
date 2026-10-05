@@ -36,7 +36,7 @@ fn nested_routine_body_comments_use_structural_owners() {
 
 #[test]
 fn closure_comments_survive_expression_emission() {
-    let source = "program T;\nbegin\n  var Handler: procedure() := procedure()\n  // closure body\n  begin\n    // setup\n    WriteLn('ok') // closure trail\n  end;\n  Handler()\nend.";
+    let source = "program T;\nbegin\n  var Handler: procedure() := procedure()\n  // closure body\n  begin\n    // setup\n    WriteLn('ok'); // closure trail\n  end;\n  Handler();\nend.";
     let formatted = format_idempotently(source);
 
     for comment in ["// closure body", "// setup", "// closure trail"] {
@@ -49,7 +49,7 @@ fn closure_comments_survive_expression_emission() {
 
 #[test]
 fn record_enum_and_routine_eol_comments_remain_on_member_lines() {
-    let source = "program T;\ntype Shape = enum\n  // leading member\n  Plain; // plain\n  Valued = 2; // valued\n  Circle(Radius: real); // payload\nend;\nCounter = record\n  Value: integer; // field\n  function ReadValue(Self: Counter): integer;\n  begin\n    return Self.Value\n  end; // method\n  property Current: integer read ReadValue; // property\n  event Changed: procedure() read ReadChanged write WriteChanged; // event\nend;\nfunction Top(): integer;\nbegin\n  return 1\nend; // top routine\nbegin\nend.";
+    let source = "program T;\ntype Shape = enum\n  // leading member\n  Plain; // plain\n  Valued = 2; // valued\n  Circle(Radius: real); // payload\nend;\nCounter = record\n  Value: integer; // field\n  function ReadValue(Self: Counter): integer;\n  begin\n    return Self.Value;\n  end; // method\n  property Current: integer read ReadValue; // property\n  event Changed: procedure() read ReadChanged write WriteChanged; // event\nend;\nfunction Top(): integer;\nbegin\n  return 1;\nend; // top routine\nbegin\nend.";
     let formatted = format_idempotently(source);
 
     for line in [
@@ -69,7 +69,7 @@ fn record_enum_and_routine_eol_comments_remain_on_member_lines() {
 
 #[test]
 fn explicit_block_eol_comment_precedes_the_statement_separator() {
-    let source = "program T; begin if true then begin WriteLn('yes') end; // block tail\nWriteLn('done') end.";
+    let source = "program T; begin if true then begin WriteLn('yes'); end; // block tail\nWriteLn('done'); end.";
     let formatted = format_idempotently(source);
 
     assert!(formatted.contains("end; // block tail\n"), "{formatted}");
@@ -78,17 +78,17 @@ fn explicit_block_eol_comment_precedes_the_statement_separator() {
 
 #[test]
 fn cr_only_input_preserves_comment_line_ownership() {
-    let source = "program T;\rbegin\r  // setup\r  WriteLn('ok') // trail\rend. // tail\r";
+    let source = "program T;\rbegin\r  // setup\r  WriteLn('ok'); // trail\rend. // tail\r";
     let formatted = format_idempotently(source);
 
     assert!(!formatted.contains('\r'));
-    assert!(formatted.contains("// setup\n  WriteLn('ok') // trail\n"));
+    assert!(formatted.contains("// setup\n  WriteLn('ok'); // trail\n"));
     assert!(formatted.contains("end. // tail\n"));
 }
 
 #[test]
 fn branch_comments_survive_single_and_explicit_block_bodies() {
-    let source = "program T; begin if true then // single branch\nWriteLn('single'); if false then\n// explicit block\nbegin WriteLn('block') end end.";
+    let source = "program T; begin if true then // single branch\nWriteLn('single'); if false then\n// explicit block\nbegin WriteLn('block'); end; end.";
     let formatted = format_idempotently(source);
 
     assert!(formatted.contains("// single branch\n    WriteLn('single')"));
@@ -112,7 +112,7 @@ fn compilation_and_routine_header_comments_stay_on_header_lines() {
 
 #[test]
 fn eol_comment_stays_on_its_code_line() {
-    let source = "program T; begin var A: integer := 1; // value\nWriteLn(A) end.";
+    let source = "program T; begin var A: integer := 1; // value\nWriteLn(A); end.";
     let formatted = format_idempotently(source);
 
     assert!(formatted.contains("var A: integer := 1; // value\n"));

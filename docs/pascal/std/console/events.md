@@ -17,7 +17,7 @@ another event follows the burst, it remains next in FIFO order. Test-injected
 ```pascal
 var E: ConsoleEvent := ReadEvent();
 if E.kind = EventKind.Resize then
-  WriteLn(E.width, 'x', E.height)
+  WriteLn(E.width, 'x', E.height);
 ```
 
 ### `function ReadEventTimeout(Milliseconds: integer): Option of ConsoleEvent`

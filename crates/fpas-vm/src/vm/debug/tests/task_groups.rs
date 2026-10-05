@@ -13,15 +13,15 @@ uses Std.Tasks, Std.Time, Std.Arrays;
 function Ordinary(Token: CancellationToken): result of integer, string;
 begin
   Sleep(1);
-  return Error('ordinary')
+  return Error('ordinary');
 end;
 procedure Broken(Token: CancellationToken);
 begin
   Sleep(2);
-  panic('owned panic')
+  panic('owned panic');
 end;
 function Successful(Token: CancellationToken): integer;
-begin return 42 end;
+begin return 42; end;
 begin
   var G: TaskGroup := CreateTaskGroup();
   var A: task := StartTaskInGroup(G, Ordinary);
@@ -34,7 +34,7 @@ begin
   if Failures[0].Message <> 'ordinary' then panic('ordinary message');
   if Failures[1].Kind <> TaskFailureKind.Panicked then panic('panic kind');
   if Failures[1].Line <= 0 then panic('panic location');
-  if Length(CloseTaskGroup(G)) <> 0 then panic('repeat close')
+  if Length(CloseTaskGroup(G)) <> 0 then panic('repeat close');
 end."#;
 
 #[test]
@@ -97,7 +97,7 @@ fn stop_before_close(source: &str) -> DebugSession {
     let source = source
         .replace(
             "\nbegin\n  var G:",
-            "\nprocedure BeforeClose(); begin Sleep(0) end;\nbegin\n  var G:",
+            "\nprocedure BeforeClose(); begin Sleep(0); end;\nbegin\n  var G:",
         )
         .replace("  var Failures:", "  BeforeClose();\n  var Failures:");
     let (program, errors) = fpas_parser::parse(&source);
@@ -159,13 +159,13 @@ fn task_group_exited_failure_cannot_be_resumed_or_force_returned() {
 fn task_group_debugger_cancellation_is_reported_as_cancelled() {
     let source = r#"program CancelOwnedChild;
 uses Std.Tasks, Std.Time, Std.Arrays;
-procedure Work(Token: CancellationToken); begin Sleep(1000) end;
+procedure Work(Token: CancellationToken); begin Sleep(1000); end;
 begin
   var G: TaskGroup := CreateTaskGroup();
   StartTaskInGroup(G, Work);
   var Failures: array of TaskFailure := CloseTaskGroup(G);
   if Length(Failures) <> 1 then panic('failure count');
-  if Failures[0].Kind <> TaskFailureKind.Cancelled then panic('cancellation kind')
+  if Failures[0].Kind <> TaskFailureKind.Cancelled then panic('cancellation kind');
 end."#;
     let mut session = stop_before_close(source);
     session.cancel_task(1).expect("cancel owned child");
@@ -183,10 +183,10 @@ fn task_group_child_close_is_rejected_and_collected_as_runtime_failure() {
 uses Std.Tasks, Std.Arrays;
 begin
   var G: TaskGroup := CreateTaskGroup();
-  StartTaskInGroup(G, procedure(Token: CancellationToken) begin CloseTaskGroup(G) end);
+  StartTaskInGroup(G, procedure(Token: CancellationToken) begin CloseTaskGroup(G); end);
   var Failures: array of TaskFailure := CloseTaskGroup(G);
   if Length(Failures) <> 1 then panic('failure count');
-  if Failures[0].Kind <> TaskFailureKind.RuntimeError then panic('runtime kind')
+  if Failures[0].Kind <> TaskFailureKind.RuntimeError then panic('runtime kind');
 end."#;
     let (program, errors) = fpas_parser::parse(source);
     assert!(errors.is_empty(), "{errors:?}");
@@ -205,11 +205,11 @@ end."#;
 fn task_group_explicit_wait_keeps_the_original_panic_diagnostic() {
     let source = r#"program ExplicitFailedWait;
 uses Std.Tasks;
-procedure Work(Token: CancellationToken); begin panic('original child failure') end;
+procedure Work(Token: CancellationToken); begin panic('original child failure'); end;
 begin
   var G: TaskGroup := CreateTaskGroup();
   var Child: task := StartTaskInGroup(G, Work);
-  Wait(Child)
+  Wait(Child);
 end."#;
     let (program, errors) = fpas_parser::parse(source);
     assert!(errors.is_empty(), "{errors:?}");
@@ -224,11 +224,11 @@ end."#;
 fn task_group_ignored_close_report_still_has_verified_record_metadata() {
     let source = r#"program IgnoreReport;
 uses Std.Tasks;
-procedure Work(Token: CancellationToken); begin panic('contained') end;
+procedure Work(Token: CancellationToken); begin panic('contained'); end;
 begin
   var G: TaskGroup := CreateTaskGroup();
   StartTaskInGroup(G, Work);
-  CloseTaskGroup(G)
+  CloseTaskGroup(G);
 end."#;
     let (program, errors) = fpas_parser::parse(source);
     assert!(errors.is_empty(), "{errors:?}");

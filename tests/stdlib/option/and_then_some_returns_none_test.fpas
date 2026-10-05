@@ -6,16 +6,16 @@ function PositiveOk(V: integer): option of string;
 begin
   if V > 0 then
   begin
-    return Some('ok')
-  end
+    return Some('ok');
+  end;
   else
   begin
-    return None
-  end
+    return None;
+  end;
 end;
 
 begin
   var O: option of integer := Some(-1);
   var M: option of string := AndThen(O, PositiveOk);
-  WriteLn(IsNone(M))
+  WriteLn(IsNone(M));
 end.

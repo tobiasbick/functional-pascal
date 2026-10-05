@@ -32,19 +32,19 @@ type
 // Reserves and stores one state in the hosted HTTP registry.
 function ReserveState(State: DecoderState): integer;
 begin
-  return 0
+  return 0;
 end;
 
 // Tests whether one hosted SSE-decoder state exists.
 function HasState(Slot: integer): boolean;
 begin
-  return false
+  return false;
 end;
 
 // Loads one state from the hosted HTTP registry.
 function LoadState(Slot: integer): DecoderState;
 begin
-  panic('internal SSE decoder state intrinsic was not lowered')
+  panic('internal SSE decoder state intrinsic was not lowered');
 end;
 
 // Replaces one state in the hosted HTTP registry.
@@ -61,10 +61,10 @@ begin
   var Slot: integer := Std.Http.Handles.SseDecoderSlot(Decoder);
   if (Slot < 1) or (not HasState(Slot)) then
   begin
-    return Error('SSE decoder handle is invalid')
+    return Error('SSE decoder handle is invalid');
   end;
 
-  return Ok(Slot)
+  return Ok(Slot);
 end;
 
 // Finds the next supported line ending and its byte width.
@@ -77,7 +77,7 @@ begin
   begin
     if Bytes[Index] = 10 then
     begin
-      return [Index, 1]
+      return [Index, 1];
     end;
 
     if Bytes[Index] = 13 then
@@ -86,27 +86,27 @@ begin
       begin
         if Final then
         begin
-          return [Index, 1]
+          return [Index, 1];
         end;
 
-        return [-1, 0]
+        return [-1, 0];
       end;
 
       if Bytes[Index + 1] = 10 then
       begin
-        return [Index, 2]
+        return [Index, 2];
       end;
 
-      return [Index, 1]
-    end
+      return [Index, 1];
+    end;
   end;
 
   if Final and (Std.Arrays.Length(Bytes) > 0) then
   begin
-    return [Std.Arrays.Length(Bytes), 0]
+    return [Std.Arrays.Length(Bytes), 0];
   end;
 
-  return [-1, 0]
+  return [-1, 0];
 end;
 
 // Appends the pending event without adding input bytes.
@@ -117,17 +117,17 @@ begin
     mutable var EventType: string := State.EventType;
     if EventType = '' then
     begin
-      EventType := 'message'
+      EventType := 'message';
     end;
 
     Std.Arrays.Push(Events, record
       EventType := EventType;
       Data := Std.Str.Substring(State.Data, 0, Std.Str.Length(State.Data) - 1);
       Id := State.LastEventId;
-    end)
+    end);
   end;
 
-  return Events
+  return Events;
 end;
 
 // Consumes complete SSE lines and returns updated state plus emitted events.
@@ -144,7 +144,7 @@ begin
     State.EventBytes := (State.EventBytes + EndValue[0]) + EndValue[1];
     if State.EventBytes > State.Maximum then
     begin
-      return Error('SSE event exceeds MaxEventBytes')
+      return Error('SSE event exceeds MaxEventBytes');
     end;
 
     State.Buffer := Std.Arrays.Slice(State.Buffer, EndValue[0] + EndValue[1], (Std.Arrays.Length(State.Buffer) - EndValue[0]) -
@@ -157,8 +157,8 @@ begin
           Events := EmitEvent(State, Events);
           State.Data := '';
           State.EventType := '';
-          State.EventBytes := 0
-        end
+          State.EventBytes := 0;
+        end;
         else if not Std.Str.StartsWith(Line, ':') then
         begin
           mutable var Name: string := Line;
@@ -170,36 +170,36 @@ begin
             Value := Std.Str.Substring(Line, Colon + 1, (Std.Str.Length(Line) - Colon) - 1);
             if Std.Str.StartsWith(Value, ' ') then
             begin
-              Value := Std.Str.Substring(Value, 1, Std.Str.Length(Value) - 1)
-            end
+              Value := Std.Str.Substring(Value, 1, Std.Str.Length(Value) - 1);
+            end;
           end;
 
           if Name = 'data' then
           begin
-            State.Data := (State.Data + Value) + #10
-          end
+            State.Data := (State.Data + Value) + #10;
+          end;
           else if Name = 'event' then
           begin
-            State.EventType := Value
-          end
+            State.EventType := Value;
+          end;
           else if (Name = 'id') and (not Std.Str.Contains(Value, #0)) then
           begin
-            State.LastEventId := Value
-          end
-        end
+            State.LastEventId := Value;
+          end;
+        end;
       end;
       Error(Message):
       begin
-        return Error('SSE line is not valid UTF-8: ' + Message)
-      end
+        return Error('SSE line is not valid UTF-8: ' + Message);
+      end;
     end;
 
-    EndValue := LineEnd(State.Buffer, Final)
+    EndValue := LineEnd(State.Buffer, Final);
   end;
 
   if State.EventBytes + Std.Arrays.Length(State.Buffer) > State.Maximum then
   begin
-    return Error('SSE event exceeds MaxEventBytes')
+    return Error('SSE event exceeds MaxEventBytes');
   end;
 
   if Final then
@@ -208,14 +208,14 @@ begin
     State.Data := '';
     State.EventType := '';
     State.EventBytes := 0;
-    State.Finished := true
+    State.Finished := true;
   end;
   var Output: DecoderProcess := record
     State := State;
     Events := Events;
   end;
 
-  return Ok(Output)
+  return Ok(Output);
 end;
 
 // Discards all retained input after an error and prevents further decoding.
@@ -227,7 +227,7 @@ begin
   State.LastEventId := '';
   State.EventBytes := 0;
   State.Finished := true;
-  return State
+  return State;
 end;
 
 // Creates an incremental decoder with a bounded event buffer.
@@ -238,7 +238,7 @@ public function Create(MaxEventBytes: integer): result of Std.Http.Types.SseDeco
 begin
   if MaxEventBytes < 1 then
   begin
-    return Error('SSE MaxEventBytes must be positive')
+    return Error('SSE MaxEventBytes must be positive');
   end;
   var State: DecoderState := record
     Buffer := [];
@@ -250,7 +250,7 @@ begin
     Finished := false;
   end;
   var Slot: integer := ReserveState(State);
-  return Ok(Std.Http.Handles.NewSseDecoder(Slot))
+  return Ok(Std.Http.Handles.NewSseDecoder(Slot));
 end;
 
 // Feeds one byte fragment and returns every complete decoded event.
@@ -266,7 +266,7 @@ begin
       mutable var State: DecoderState := LoadState(Index);
       if State.Finished then
       begin
-        return Error('SSE decoder is already finished')
+        return Error('SSE decoder is already finished');
       end;
       mutable var Events: array of SseEvent := [];
       mutable var Offset: integer := 0;
@@ -277,13 +277,13 @@ begin
         mutable var Count: integer := Std.Arrays.Length(Bytes) - Offset;
         if Count > 1024 then
         begin
-          Count := 1024
+          Count := 1024;
         end;
 
         // One lookahead byte lets Process resolve a trailing CR or reject overflow.
         if Count > Available then
         begin
-          Count := Available + 1
+          Count := Available + 1;
         end;
 
         State.Buffer := Std.Arrays.Concat(State.Buffer, Std.Arrays.Slice(Bytes, Offset, Count));
@@ -293,27 +293,27 @@ begin
             State := Output.State;
             for Item: SseEvent in Output.Events do
             begin
-              Std.Arrays.Push(Events, Item)
-            end
+              Std.Arrays.Push(Events, Item);
+            end;
           end;
           Error(Message):
           begin
             StoreState(Index, FailedState(State));
-            return Error(Message)
-          end
+            return Error(Message);
+          end;
         end;
 
-        Offset := Offset + Count
+        Offset := Offset + Count;
       end;
 
       StoreState(Index, State);
-      return Ok(Events)
+      return Ok(Events);
     end;
     Error(Message):
     begin
-      return Error(Message)
-    end
-  end
+      return Error(Message);
+    end;
+  end;
 end;
 
 // Flushes the final SSE line and prevents further input.
@@ -328,25 +328,25 @@ begin
       var State: DecoderState := LoadState(Index);
       if State.Finished then
       begin
-        return Error('SSE decoder is already finished')
+        return Error('SSE decoder is already finished');
       end;
 
       case Process(State, true) of
         Ok(Output):
         begin
           StoreState(Index, Output.State);
-          return Ok(Output.Events)
+          return Ok(Output.Events);
         end;
         Error(Message):
         begin
           StoreState(Index, FailedState(State));
-          return Error(Message)
-        end
-      end
+          return Error(Message);
+        end;
+      end;
     end;
     Error(Message):
     begin
-      return Error(Message)
-    end
-  end
+      return Error(Message);
+    end;
+  end;
 end;

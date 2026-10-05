@@ -28,5 +28,5 @@ begin
   State.Dirty := true;
   State.Overlay := NotesOverlay.Help;
   State := NotesPersistCurrent(State);
-  AssertTrue(State.Overlay = NotesOverlay.Help)
+  AssertTrue(State.Overlay = NotesOverlay.Help);
 end.

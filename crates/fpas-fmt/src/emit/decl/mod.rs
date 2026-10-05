@@ -70,7 +70,7 @@ type
     Y: integer;
     function Sum(Self: Point): integer;
     begin
-      return Self.X + Self.Y
+      return Self.X + Self.Y;
     end;
   end;
 begin
@@ -80,7 +80,7 @@ end.",
             formatted.contains("X: integer;\n    Y: integer;\n\n    function Sum"),
             "formatted:\n{formatted}"
         );
-        assert!(formatted.contains("return Self.X + Self.Y"));
+        assert!(formatted.contains("return Self.X + Self.Y;"));
         assert!(formatted.contains("end;\n  end;\n"));
     }
 
@@ -96,7 +96,7 @@ end.",
     #[test]
     fn unit_function_visibility() {
         let formatted = format_unit_decls(
-            "unit MyApp.Utils; public function Clamp(Value: integer; Min: integer; Max: integer): integer; begin if Value < Min then begin return Min end else begin return Value end end; function Hidden(): integer; begin return 0 end;",
+            "unit MyApp.Utils; public function Clamp(Value: integer; Min: integer; Max: integer): integer; begin if Value < Min then begin return Min; end; else begin return Value; end; end; function Hidden(): integer; begin return 0; end;",
         );
         assert!(formatted.contains("public function Clamp"));
         assert!(formatted.contains("\nfunction Hidden"));

@@ -21,7 +21,7 @@ public type
       return record
         Name := Name;
         Value := Value;
-      end
+      end;
     end;
   end;
   // One HTTP request with transport limits shared by buffered and streaming sends.
@@ -59,7 +59,7 @@ public type
         MaxHeaderBytes := 65536;
         MaxResponseBytes := 16777216;
         MaxRedirects := 5;
-      end
+      end;
     end;
 
     // Creates a GET request with default transport limits.
@@ -68,7 +68,7 @@ public type
     // - `Url`: Absolute HTTP or HTTPS URL.
     public static function Get(Url: string): Request;
     begin
-      return Request.Create('GET', Url)
+      return Request.Create('GET', Url);
     end;
 
     // Creates a POST request with default transport limits.
@@ -77,7 +77,7 @@ public type
     // - `Url`: Absolute HTTP or HTTPS URL.
     public static function Post(Url: string): Request;
     begin
-      return Request.Create('POST', Url)
+      return Request.Create('POST', Url);
     end;
 
     // Creates a PUT request with default transport limits.
@@ -86,7 +86,7 @@ public type
     // - `Url`: Absolute HTTP or HTTPS URL.
     public static function Put(Url: string): Request;
     begin
-      return Request.Create('PUT', Url)
+      return Request.Create('PUT', Url);
     end;
 
     // Creates a PATCH request with default transport limits.
@@ -95,7 +95,7 @@ public type
     // - `Url`: Absolute HTTP or HTTPS URL.
     public static function Patch(Url: string): Request;
     begin
-      return Request.Create('PATCH', Url)
+      return Request.Create('PATCH', Url);
     end;
 
     // Creates a DELETE request with default transport limits.
@@ -104,7 +104,7 @@ public type
     // - `Url`: Absolute HTTP or HTTPS URL.
     public static function Delete(Url: string): Request;
     begin
-      return Request.Create('DELETE', Url)
+      return Request.Create('DELETE', Url);
     end;
 
     // Creates a HEAD request with default transport limits.
@@ -113,7 +113,7 @@ public type
     // - `Url`: Absolute HTTP or HTTPS URL.
     public static function Head(Url: string): Request;
     begin
-      return Request.Create('HEAD', Url)
+      return Request.Create('HEAD', Url);
     end;
 
     // Creates an OPTIONS request with default transport limits.
@@ -122,7 +122,7 @@ public type
     // - `Url`: Absolute HTTP or HTTPS URL.
     public static function Options(Url: string): Request;
     begin
-      return Request.Create('OPTIONS', Url)
+      return Request.Create('OPTIONS', Url);
     end;
   end;
   // One complete non-streaming HTTP response.
@@ -194,7 +194,7 @@ public type
         ReasonPhrase := ReasonPhrase;
         Headers := [];
         Body := [];
-      end
+      end;
     end;
   end;
   // Limits and concurrency used by the HTTP server loop.
@@ -219,7 +219,7 @@ public type
         ConnectionTimeoutMillis := 30000;
         MaxConcurrentRequests := 8;
         MaxRequests := 0;
-      end
+      end;
     end;
   end;
   // Maps one accepted request to its complete response.

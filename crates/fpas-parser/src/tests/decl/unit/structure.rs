@@ -9,7 +9,7 @@ uses Std.Math;
 
 function Double(X: integer): integer;
 begin
-  return X * 2
+  return X * 2;
 end;
 ",
     );

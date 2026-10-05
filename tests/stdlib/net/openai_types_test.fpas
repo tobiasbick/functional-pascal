@@ -14,10 +14,10 @@ begin
   case Options.MaxTokens of
     Some(Value):
     begin
-      Fail('unexpected max tokens')
+      Fail('unexpected max tokens');
     end;
     None:
     begin
-    end
-  end
+    end;
+  end;
 end.

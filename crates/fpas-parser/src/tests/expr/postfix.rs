@@ -122,7 +122,7 @@ fn missing_identifier_after_dot_recovers() {
 
 #[test]
 fn missing_rbracket_recovers() {
-    let (_program, errors) = parse_with_errors("program T; begin return Foo()[0 end.");
+    let (_program, errors) = parse_with_errors("program T; begin return Foo()[0; end.");
     assert!(
         !errors.is_empty(),
         "expected parser diagnostic for missing `]`"

@@ -56,18 +56,18 @@ fn parser_and_semantic_errors_publish_and_a_fixed_version_clears_them() {
     let transcript = run_script(&[
         TranscriptStep::Message(initialize(1)),
         TranscriptStep::Message(initialized()),
-        TranscriptStep::Message(open(uri, 1, "program Broken;\nbegin\n  if then\nend.\n")),
+        TranscriptStep::Message(open(uri, 1, "program Broken;\nbegin\n  if then;\nend.\n")),
         TranscriptStep::Wait(ANALYSIS_WAIT),
         TranscriptStep::Message(change(
             uri,
             2,
-            "program Semantic;\nbegin\n  var Value: integer := 'wrong'\nend.\n",
+            "program Semantic;\nbegin\n  var Value: integer := 'wrong';\nend.\n",
         )),
         TranscriptStep::Wait(ANALYSIS_WAIT),
         TranscriptStep::Message(change(
             uri,
             3,
-            "program Fixed;\nbegin\n  var Value: integer := 1\nend.\n",
+            "program Fixed;\nbegin\n  var Value: integer := 1;\nend.\n",
         )),
         TranscriptStep::Wait(ANALYSIS_WAIT),
         TranscriptStep::Message(shutdown(2)),
@@ -125,16 +125,16 @@ fn rapid_changes_publish_only_the_latest_document_version() {
     let transcript = run_script(&[
         TranscriptStep::Message(initialize(1)),
         TranscriptStep::Message(initialized()),
-        TranscriptStep::Message(open(uri, 1, "program First;\nbegin\n  if then\nend.\n")),
+        TranscriptStep::Message(open(uri, 1, "program First;\nbegin\n  if then;\nend.\n")),
         TranscriptStep::Message(change(
             uri,
             2,
-            "program Second;\nbegin\n  var Value: integer := 'wrong'\nend.\n",
+            "program Second;\nbegin\n  var Value: integer := 'wrong';\nend.\n",
         )),
         TranscriptStep::Message(change(
             uri,
             3,
-            "program Latest;\nbegin\n  var Value: integer := 1\nend.\n",
+            "program Latest;\nbegin\n  var Value: integer := 1;\nend.\n",
         )),
         TranscriptStep::Wait(ANALYSIS_WAIT),
         TranscriptStep::Message(shutdown(2)),
@@ -200,10 +200,10 @@ include = ["src/**/*.fpas"]
     );
     temp.write(
         "src/main.fpas",
-        "program App;\n\nuses Demo.Math;\n\nbegin\n  var Value: integer := Answer()\nend.\n",
+        "program App;\n\nuses Demo.Math;\n\nbegin\n  var Value: integer := Answer();\nend.\n",
     );
     let unit_source =
-        "unit Demo.Math;\n\npublic function Answer(): integer;\nbegin\n  return 'wrong'\nend;\n";
+        "unit Demo.Math;\n\npublic function Answer(): integer;\nbegin\n  return 'wrong';\nend;\n";
     temp.write("src/math.fpas", unit_source);
     let root_uri = temp.uri(".");
     let unit_uri = temp.uri("src/math.fpas");
@@ -249,9 +249,9 @@ include = ["src/**/*.fpas"]
 "#,
     );
     let valid =
-        "program App;\n\nuses Demo.Math;\n\nbegin\n  var Value: integer := Answer()\nend.\n";
+        "program App;\n\nuses Demo.Math;\n\nbegin\n  var Value: integer := Answer();\nend.\n";
     let unit_source =
-        "unit Demo.Math;\n\npublic function Answer(): integer;\nbegin\n  return 42\nend;\n";
+        "unit Demo.Math;\n\npublic function Answer(): integer;\nbegin\n  return 42;\nend;\n";
     let main = temp.write("src/main.fpas", valid);
     let unit = temp.write("src/math.fpas", unit_source);
     let root_uri = temp.uri(".");
@@ -269,7 +269,7 @@ include = ["src/**/*.fpas"]
         TranscriptStep::Message(change(
             &main_uri,
             2,
-            "program Broken;\nbegin\n  if then\nend.\n",
+            "program Broken;\nbegin\n  if then;\nend.\n",
         )),
         TranscriptStep::Wait(ANALYSIS_WAIT),
         TranscriptStep::Action(Box::new(move || {
@@ -412,7 +412,7 @@ include = ["main.fpas"]
 "#,
     );
     let source =
-        "program External;\n\nuses Std.Tui;\n\nbegin\n  var Palette: TuiPalette := 1\nend.\n";
+        "program External;\n\nuses Std.Tui;\n\nbegin\n  var Palette: TuiPalette := 1;\nend.\n";
     temp.write("external/main.fpas", source);
     let root_uri = temp.uri("external");
     let standard_library_uri = temp.uri("bundle");
@@ -452,7 +452,7 @@ fn close_during_debounce_cancels_analysis_and_clears_diagnostics() {
     let transcript = run_script(&[
         TranscriptStep::Message(initialize(1)),
         TranscriptStep::Message(initialized()),
-        TranscriptStep::Message(open(uri, 1, "program Closed;\nbegin\n  if then\nend.\n")),
+        TranscriptStep::Message(open(uri, 1, "program Closed;\nbegin\n  if then;\nend.\n")),
         TranscriptStep::Message(close(uri)),
         TranscriptStep::Wait(ANALYSIS_WAIT),
         TranscriptStep::Message(shutdown(2)),

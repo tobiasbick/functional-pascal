@@ -61,7 +61,7 @@ fn apply_readln_script_runs_readln_test_program() {
 program T;
 uses Std.Console, Std.Test;
 begin
-  AssertTrue(ReadLn() = 'Alice')
+  AssertTrue(ReadLn() = 'Alice');
 end.";
     let (program, _) = parse(source);
     let executable = compile(&program).expect("compile");
@@ -88,7 +88,7 @@ uses Std.Console, Std.Test;
 begin
   AssertEquals(ReadLn(), 'first');
   AssertEquals(ReadLn(), 'second');
-  AssertEquals(ReadLn(), 'third')
+  AssertEquals(ReadLn(), 'third');
 end.";
     let (program, _) = parse(source);
     let executable = compile(&program).expect("compile");

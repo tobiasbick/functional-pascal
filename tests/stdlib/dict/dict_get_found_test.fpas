@@ -6,5 +6,5 @@ begin
   var D: dict of string to integer := ['Alice': 30, 'Bob': 25];
   var R: option of integer := Std.Dictionaries.Get(D, 'Alice');
   WriteLn(IsSome(R));
-  WriteLn(Unwrap(R))
+  WriteLn(Unwrap(R));
 end.

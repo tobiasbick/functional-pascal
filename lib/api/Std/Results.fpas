@@ -11,7 +11,7 @@ unit Std.Results;
 // - `F`: Callback invoked by the higher-order operation.
 public function AndThen(R: result of T, E; F: function(V: T): result of U, E): result of U, E;
 begin
-  panic('Intrinsic API declaration')
+  panic('Intrinsic API declaration');
 end;
 
 // True if Error.
@@ -20,7 +20,7 @@ end;
 // - `R`: Input value used by `IsError`.
 public function IsError(R: result of T, E): boolean;
 begin
-  panic('Intrinsic API declaration')
+  panic('Intrinsic API declaration');
 end;
 
 // True if Ok.
@@ -29,7 +29,7 @@ end;
 // - `R`: Input value used by `IsOk`.
 public function IsOk(R: result of T, E): boolean;
 begin
-  panic('Intrinsic API declaration')
+  panic('Intrinsic API declaration');
 end;
 
 // Transform Ok value.
@@ -39,7 +39,7 @@ end;
 // - `F`: Callback invoked by the higher-order operation.
 public function Map(R: result of T, E; F: function(V: T): U): result of U, E;
 begin
-  panic('Intrinsic API declaration')
+  panic('Intrinsic API declaration');
 end;
 
 // Recover from Error.
@@ -49,7 +49,7 @@ end;
 // - `F`: Callback invoked by the higher-order operation.
 public function OrElse(R: result of T, E; F: function(Err: E): result of T, F): result of T, F;
 begin
-  panic('Intrinsic API declaration')
+  panic('Intrinsic API declaration');
 end;
 
 // Panics if Error.
@@ -58,7 +58,7 @@ end;
 // - `R`: Input value used by `Unwrap`.
 public function Unwrap(R: result of T, E): T;
 begin
-  panic('Intrinsic API declaration')
+  panic('Intrinsic API declaration');
 end;
 
 // Returns Default if Error.
@@ -68,5 +68,5 @@ end;
 // - `Default`: Value consumed or returned by the operation.
 public function UnwrapOr(R: result of T, E; Default: T): T;
 begin
-  panic('Intrinsic API declaration')
+  panic('Intrinsic API declaration');
 end;

@@ -178,12 +178,12 @@ uses Std.Console, Std.Tasks;
 
 function Seven(): integer;
 begin
-  return 7
+  return 7;
 end;
 
 function Nine(): integer;
 begin
-  return 9
+  return 9;
 end;
 
 function Work(): integer;
@@ -191,12 +191,12 @@ begin
   var Backup: task := go Seven();
   mutable var Current: task := go Nine();
   var Marker: integer := 0;
-  return Wait(Current)
+  return Wait(Current);
 end;
 
 begin
   var Pending: task := go Work();
-  WriteLn(Wait(Pending))
+  WriteLn(Wait(Pending));
 end.
 "#;
     let mut server = server_for(TASK_SOURCE);

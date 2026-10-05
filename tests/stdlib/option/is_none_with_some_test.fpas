@@ -4,5 +4,5 @@ uses Std.Console, Std.Options;
 
 begin
   var O: option of integer := Some(7);
-  WriteLn(IsNone(O))
+  WriteLn(IsNone(O));
 end.

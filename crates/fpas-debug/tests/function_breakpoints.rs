@@ -16,12 +16,12 @@ fn make_server() -> JsonlServer {
 
 function Helper(Value: integer): integer;
 begin
-  return Value + 1
+  return Value + 1;
 end;
 
 begin
   var First: integer := Helper(1);
-  var Second: integer := Helper(First)
+  var Second: integer := Helper(First);
 end.
 "#;
     let (program, diagnostics) = fpas_parser::parse(source);

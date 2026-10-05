@@ -6,5 +6,5 @@ begin
   AssertTrue(Std.Results.IsError(NoteParse('plain text')));
   AssertTrue(Std.Results.IsError(NoteParse(('+++' + #10) + 'format = 1')));
   AssertTrue(Std.Results.IsError(NoteParse((((((('+++' + #10) + 'format = 2') + #10) + 'id = ''wrong-version''') + #10) + '+++') +
-                                           #10)))
+                                           #10)));
 end.

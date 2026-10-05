@@ -26,13 +26,13 @@ begin
     for X: integer := 0 to 6 do
     begin
       AssertTrue(Row.Samples[X].IsInside = Expected[X].IsInside);
-      AssertTrue(Row.Samples[X].EscapeValue = Expected[X].EscapeValue)
-    end
+      AssertTrue(Row.Samples[X].EscapeValue = Expected[X].EscapeValue);
+    end;
   end;
 
   StopRender(Job);
   for Found: boolean in Seen do
   begin
-    AssertTrue(Found)
-  end
+    AssertTrue(Found);
+  end;
 end.

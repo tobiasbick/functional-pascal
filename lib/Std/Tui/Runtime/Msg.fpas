@@ -99,7 +99,7 @@ public type
 // - `Action`: Application action associated with the control or emitted message.
 public function TuiMsgAction(Source: TuiControlId; Action: TuiAction): TuiMsg;
 begin
-  return TuiMsg.Action(Source, Action)
+  return TuiMsg.Action(Source, Action);
 end;
 
 // Creates a source-aware controlled-input change message.
@@ -111,7 +111,7 @@ end;
 // - `Caret`: Zero-based character index of the caret.
 public function TuiMsgTextChanged(Source: TuiControlId; Action: TuiAction; Text: string; Caret: integer): TuiMsg;
 begin
-  return TuiMsg.TextChanged(Source, Action, Text, Caret)
+  return TuiMsg.TextChanged(Source, Action, Text, Caret);
 end;
 
 // Creates a source-aware controlled multiline text-area change message.
@@ -130,7 +130,7 @@ public function TuiMsgTextAreaChanged(
   Offset: TuiPoint
 ): TuiMsg;
 begin
-  return TuiMsg.TextAreaChanged(Source, Action, Text, Caret, Offset)
+  return TuiMsg.TextAreaChanged(Source, Action, Text, Caret, Offset);
 end;
 
 // Creates a source-aware controlled check-box change message.
@@ -141,7 +141,7 @@ end;
 // - `Checked`: Proposed checked state.
 public function TuiMsgCheckChanged(Source: TuiControlId; Action: TuiAction; Checked: boolean): TuiMsg;
 begin
-  return TuiMsg.CheckChanged(Source, Action, Checked)
+  return TuiMsg.CheckChanged(Source, Action, Checked);
 end;
 
 // Creates a source-aware controlled list selection-change message.
@@ -152,7 +152,7 @@ end;
 // - `Selected`: Selected item index.
 public function TuiMsgSelectionChanged(Source: TuiControlId; Action: TuiAction; Selected: integer): TuiMsg;
 begin
-  return TuiMsg.SelectionChanged(Source, Action, Selected)
+  return TuiMsg.SelectionChanged(Source, Action, Selected);
 end;
 
 // Creates a source-aware controlled scroll-offset change message.
@@ -163,5 +163,5 @@ end;
 // - `Offset`: Scroll offset or position applied by the operation.
 public function TuiMsgScrollChanged(Source: TuiControlId; Action: TuiAction; Offset: TuiPoint): TuiMsg;
 begin
-  return TuiMsg.ScrollChanged(Source, Action, Offset)
+  return TuiMsg.ScrollChanged(Source, Action, Offset);
 end;

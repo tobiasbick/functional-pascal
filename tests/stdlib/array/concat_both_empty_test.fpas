@@ -4,5 +4,5 @@ uses Std.Console, Std.Arrays;
 
 begin
   var C: array of integer := Concat([], []);
-  WriteLn(Length(C))
+  WriteLn(Length(C));
 end.

@@ -6,19 +6,19 @@ public function Clamp(Value: integer; Min: integer; Max: integer): integer;
 begin
   if Value < Min then
   begin
-    return Min
-  end
+    return Min;
+  end;
   else if Value > Max then
   begin
-    return Max
-  end
+    return Max;
+  end;
   else
   begin
-    return Value
-  end
+    return Value;
+  end;
 end;
 
 function IsBlank(S: string): boolean;
 begin
-  return Length(Trim(S)) = 0
+  return Length(Trim(S)) = 0;
 end;

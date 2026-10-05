@@ -6,7 +6,7 @@ Returns how many characters are in `S` (scalar count).
 
 ```pascal
 var N: integer := Length('café');
-WriteLn(N)
+WriteLn(N);
 ```
 
 ---
@@ -16,7 +16,7 @@ WriteLn(N)
 Returns a new string with letters uppercased (Unicode-aware where the runtime supports it).
 
 ```pascal
-WriteLn(ToUpper('ab'))
+WriteLn(ToUpper('ab'));
 ```
 
 ---
@@ -26,7 +26,7 @@ WriteLn(ToUpper('ab'))
 Returns a new string with letters lowercased.
 
 ```pascal
-WriteLn(ToLower('AB'))
+WriteLn(ToLower('AB'));
 ```
 
 ---
@@ -36,7 +36,7 @@ WriteLn(ToLower('AB'))
 Strips leading and trailing whitespace.
 
 ```pascal
-WriteLn(Trim('  x  '))
+WriteLn(Trim('  x  '));
 ```
 
 ---
@@ -46,7 +46,7 @@ WriteLn(Trim('  x  '))
 Strips leading whitespace only.
 
 ```pascal
-WriteLn(TrimLeft('  hi  '))  // 'hi  '
+WriteLn(TrimLeft('  hi  '));  // 'hi  '
 ```
 
 ---
@@ -56,7 +56,7 @@ WriteLn(TrimLeft('  hi  '))  // 'hi  '
 Strips trailing whitespace only.
 
 ```pascal
-WriteLn(TrimRight('  hi  '))  // '  hi'
+WriteLn(TrimRight('  hi  '));  // '  hi'
 ```
 
 ## See also

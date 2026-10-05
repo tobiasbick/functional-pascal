@@ -4,7 +4,7 @@ uses Std.Arrays, Std.Math, Std.Tasks, Std.Test;
 
 function Add(X: integer; Y: integer): integer;
 begin
-  return X + Y
+  return X + Y;
 end;
 
 begin
@@ -15,5 +15,5 @@ begin
   var Job: task := go (20).Add(22);
   AssertEquals(42, Wait(Job));
   var IntrinsicTask: task := go (-2).Abs();
-  AssertEquals(2, Wait(IntrinsicTask))
+  AssertEquals(2, Wait(IntrinsicTask));
 end.

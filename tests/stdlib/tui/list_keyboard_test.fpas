@@ -18,7 +18,7 @@ begin
     ctrl := false;
     alt := false;
     meta := false;
-  end
+  end;
 end;
 
 function ViewList(State: ListModel): TuiElement;
@@ -27,7 +27,7 @@ begin
                                                                                   TuiElementBuilders.MakePanel('Host', [
                                                                                                                          TuiElementBuilders.MakeList(TuiControlId.Create(1), ['Alpha', 'Beta', 'Gamma'], State.Selected, TuiAction.Create(5))
                                                                                                                        ])
-                                                                                ])
+                                                                                ]);
 end;
 
 function UpdateList(State: ListModel; Msg: TuiMsg; Cmd: TuiCmdOutput): ListModel;
@@ -42,13 +42,13 @@ begin
         Focus := State.Focus;
         Selected := Selected;
         Changes := Std.Arrays.Concat(State.Changes, [Selected]);
-      end
-    end
+      end;
+    end;
     else
     begin
-      return State
-    end
-  end
+      return State;
+    end;
+  end;
 end;
 
 begin
@@ -70,5 +70,5 @@ begin
   Model := App.RunIterations(Model, UpdateList, ViewList, 1, 0);
   AssertEquals(0, Model.Selected);
   AssertEquals(3, Std.Arrays.Length(Model.Changes));
-  App.Close()
+  App.Close();
 end.

@@ -24,15 +24,15 @@ function DefaultPort(Scheme: string): result of integer, string;
 begin
   if Scheme = 'http' then
   begin
-    return Ok(80)
+    return Ok(80);
   end;
 
   if Scheme = 'https' then
   begin
-    return Ok(443)
+    return Ok(443);
   end;
 
-  return Error('Unsupported URI scheme: ' + Scheme)
+  return Error('Unsupported URI scheme: ' + Scheme);
 end;
 
 // Parses and validates a decimal TCP port.
@@ -46,16 +46,16 @@ begin
     begin
       if (Port >= 1) and (Port <= 65535) then
       begin
-        return Ok(Port)
+        return Ok(Port);
       end;
 
-      return Error('URI port must be in 1..65535')
+      return Error('URI port must be in 1..65535');
     end;
     Error(Message):
     begin
-      return Error('Invalid URI port: ' + Message)
-    end
-  end
+      return Error('Invalid URI port: ' + Message);
+    end;
+  end;
 end;
 
 // Parses one authority and constructs the final URI value.
@@ -68,12 +68,12 @@ function BuildUri(Scheme: string; Authority: string; Path: string): result of Ur
 begin
   if Authority = '' then
   begin
-    return Error('URI host must not be empty')
+    return Error('URI host must not be empty');
   end;
 
   if Std.Str.Contains(Authority, '@') then
   begin
-    return Error('URI user information is not supported')
+    return Error('URI user information is not supported');
   end;
   var SchemePort: integer := try DefaultPort(Scheme);
   mutable var HasPort: boolean := false;
@@ -84,7 +84,7 @@ begin
     var Closing: integer := Std.Str.IndexOf(Authority, ']');
     if Closing < 0 then
     begin
-      return Error('IPv6 URI host is missing closing bracket')
+      return Error('IPv6 URI host is missing closing bracket');
     end;
 
     Host := Std.Str.Substring(Authority, 1, Closing - 1);
@@ -94,13 +94,13 @@ begin
     begin
       if not Std.Str.StartsWith(Remainder, ':') then
       begin
-        return Error('Unexpected text after IPv6 URI host')
+        return Error('Unexpected text after IPv6 URI host');
       end;
 
       HasPort := true;
-      PortText := Std.Str.Substring(Remainder, 1, Std.Str.Length(Remainder) - 1)
-    end
-  end
+      PortText := Std.Str.Substring(Remainder, 1, Std.Str.Length(Remainder) - 1);
+    end;
+  end;
   else
   begin
     var Colon: integer := Std.Str.LastIndexOf(Authority, ':');
@@ -108,18 +108,18 @@ begin
     begin
       Host := Std.Str.Substring(Authority, 0, Colon);
       HasPort := true;
-      PortText := Std.Str.Substring(Authority, Colon + 1, (Std.Str.Length(Authority) - Colon) - 1)
-    end
+      PortText := Std.Str.Substring(Authority, Colon + 1, (Std.Str.Length(Authority) - Colon) - 1);
+    end;
   end;
 
   if Host = '' then
   begin
-    return Error('URI host must not be empty')
+    return Error('URI host must not be empty');
   end;
   mutable var Port: integer := SchemePort;
   if HasPort then
   begin
-    Port := try ParsePort(PortText)
+    Port := try ParsePort(PortText);
   end;
 
   return Ok(record
@@ -127,7 +127,7 @@ begin
     Host := Host;
     Port := Port;
     Path := Path;
-  end)
+  end);
 end;
 
 // Parses an absolute HTTP or HTTPS URI.
@@ -139,7 +139,7 @@ begin
   var SchemeEnd: integer := Std.Str.IndexOf(Text, '://');
   if SchemeEnd <= 0 then
   begin
-    return Error('URI must be absolute and include ://')
+    return Error('URI must be absolute and include ://');
   end;
   var Scheme: string := Std.Str.ToLower(Std.Str.Substring(Text, 0, SchemeEnd));
   mutable var Rest: string := Std.Str.Substring(Text, SchemeEnd + 3, (Std.Str.Length(Text) - SchemeEnd) -
@@ -147,13 +147,13 @@ begin
   var FragmentStart: integer := Std.Str.IndexOf(Rest, '#');
   if FragmentStart >= 0 then
   begin
-    Rest := Std.Str.Substring(Rest, 0, FragmentStart)
+    Rest := Std.Str.Substring(Rest, 0, FragmentStart);
   end;
   mutable var PathStart: integer := Std.Str.IndexOf(Rest, '/');
   var QueryStart: integer := Std.Str.IndexOf(Rest, '?');
   if (PathStart < 0) or ((QueryStart >= 0) and (QueryStart < PathStart)) then
   begin
-    PathStart := QueryStart
+    PathStart := QueryStart;
   end;
   mutable var Authority: string := Rest;
   mutable var Path: string := '/';
@@ -163,9 +163,9 @@ begin
     Path := Std.Str.Substring(Rest, PathStart, Std.Str.Length(Rest) - PathStart);
     if Std.Str.StartsWith(Path, '?') then
     begin
-      Path := '/' + Path
-    end
+      Path := '/' + Path;
+    end;
   end;
 
-  return BuildUri(Scheme, Authority, Path)
+  return BuildUri(Scheme, Authority, Path);
 end;

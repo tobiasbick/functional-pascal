@@ -13,7 +13,7 @@ fn reserved_block_keywords_are_rejected_in_declarations_with_rename_hints() {
         for source in [
             format!("program {keyword}; begin end."),
             format!("unit {keyword};"),
-            format!("program P; begin var {keyword}: integer := 1 end."),
+            format!("program P; begin var {keyword}: integer := 1; end."),
             format!("program P; const {keyword}: integer := 1; begin end."),
             format!("program P; var {keyword}: integer := 1; begin end."),
             format!("program P; mutable var {keyword}: integer := 1; begin end."),
@@ -45,10 +45,10 @@ fn reserved_block_keywords_are_rejected_in_declarations_with_rename_hints() {
 fn qualified_reserved_names_have_the_same_rename_hint() {
     for keyword in RESERVED {
         for source in [
-            format!("program P; begin Value.{keyword}() end."),
+            format!("program P; begin Value.{keyword}(); end."),
             format!("program P; uses App.{keyword}; begin end."),
-            format!("program P; begin var Value: App.{keyword} := 1 end."),
-            format!("program P; begin case Value of E.{keyword}: WriteLn('value') end end."),
+            format!("program P; begin var Value: App.{keyword} := 1; end."),
+            format!("program P; begin case Value of E.{keyword}: WriteLn('value'); end; end."),
         ] {
             let (_, diagnostics) = parse_with_errors(&source);
             assert!(
@@ -72,9 +72,9 @@ fn qualified_reserved_names_have_the_same_rename_hint() {
 fn reserved_names_in_statements_and_expressions_have_rename_hints() {
     for keyword in RESERVED {
         for source in [
-            format!("program P; begin {keyword} := 1 end."),
-            format!("program P; begin Consume({keyword}) end."),
-            format!("program P; begin var Values: array of integer := [{keyword}] end."),
+            format!("program P; begin {keyword} := 1; end."),
+            format!("program P; begin Consume({keyword}); end."),
+            format!("program P; begin var Values: array of integer := [{keyword}]; end."),
         ] {
             let (_, diagnostics) = parse_with_errors(&source);
             assert!(
@@ -94,7 +94,7 @@ fn reserved_names_in_statements_and_expressions_have_rename_hints() {
 
 #[test]
 fn keyword_prefixes_strings_and_comments_remain_valid() {
-    let source = "program P; begin var NullValue: integer := 1; var WhenValue: integer := 2; var ElsifValue: string := 'elsif when null'; // ELSIF WHEN NULL\nConsume(NullValue, WhenValue, ElsifValue) end.";
+    let source = "program P; begin var NullValue: integer := 1; var WhenValue: integer := 2; var ElsifValue: string := 'elsif when null'; // ELSIF WHEN NULL\nConsume(NullValue, WhenValue, ElsifValue); end.";
     let (_, diagnostics) = parse_with_errors(source);
     assert!(diagnostics.is_empty(), "{diagnostics:#?}");
 }
@@ -120,7 +120,7 @@ fn old_json_null_name_suggests_null_value() {
 #[test]
 fn recovery_retains_the_statement_after_a_reserved_name() {
     let (program, diagnostics) =
-        parse_with_errors("program P; begin null := 1; WriteLn('after') end.");
+        parse_with_errors("program P; begin null := 1; WriteLn('after'); end.");
     assert!(!diagnostics.is_empty());
     assert!(
         matches!(program.body.last(), Some(crate::Stmt::Call { .. })),

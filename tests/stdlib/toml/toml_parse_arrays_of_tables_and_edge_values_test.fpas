@@ -14,34 +14,34 @@ begin
           case Std.Options.Unwrap(Std.Dictionaries.Get(Fields, 'empty')) of
             TomlValue.ArrayValue(Items):
             begin
-              AssertEquals(0, Std.Arrays.Length(Items))
-            end
+              AssertEquals(0, Std.Arrays.Length(Items));
+            end;
             else
             begin
-              Fail('Expected empty array')
-            end
+              Fail('Expected empty array');
+            end;
           end;
 
           case Std.Options.Unwrap(Std.Dictionaries.Get(Fields, 'special')) of
             TomlValue.Float(Number):
             begin
-              AssertTrue(Number <> Number)
-            end
+              AssertTrue(Number <> Number);
+            end;
             else
             begin
-              Fail('Expected float nan')
-            end
+              Fail('Expected float nan');
+            end;
           end;
 
           case Std.Options.Unwrap(Std.Dictionaries.Get(Fields, 'point')) of
             TomlValue.Table(Point):
             begin
-              AssertEquals(2, Std.Dictionaries.Length(Point))
-            end
+              AssertEquals(2, Std.Dictionaries.Length(Point));
+            end;
             else
             begin
-              Fail('Expected point table')
-            end
+              Fail('Expected point table');
+            end;
           end;
 
           case Std.Options.Unwrap(Std.Dictionaries.Get(Fields, 'products')) of
@@ -54,18 +54,18 @@ begin
                   case Std.Options.Unwrap(Std.Dictionaries.Get(Product, 'name')) of
                     TomlValue.String(Name):
                     begin
-                      AssertEquals('Hammer', Name)
-                    end
+                      AssertEquals('Hammer', Name);
+                    end;
                     else
                     begin
-                      Fail('Expected product name string')
-                    end
-                  end
-                end
+                      Fail('Expected product name string');
+                    end;
+                  end;
+                end;
                 else
                 begin
-                  Fail('Expected first product table')
-                end
+                  Fail('Expected first product table');
+                end;
               end;
 
               case Products[1] of
@@ -74,35 +74,35 @@ begin
                   case Std.Options.Unwrap(Std.Dictionaries.Get(Product, 'name')) of
                     TomlValue.String(Name):
                     begin
-                      AssertEquals('Nail', Name)
-                    end
+                      AssertEquals('Nail', Name);
+                    end;
                     else
                     begin
-                      Fail('Expected product name string')
-                    end
-                  end
-                end
+                      Fail('Expected product name string');
+                    end;
+                  end;
+                end;
                 else
                 begin
-                  Fail('Expected second product table')
-                end
-              end
-            end
+                  Fail('Expected second product table');
+                end;
+              end;
+            end;
             else
             begin
-              Fail('Expected products array')
-            end
-          end
-        end
+              Fail('Expected products array');
+            end;
+          end;
+        end;
         else
         begin
-          Fail('Expected TOML table')
-        end
-      end
+          Fail('Expected TOML table');
+        end;
+      end;
     end;
     Error(Message):
     begin
-      Fail(Message)
-    end
-  end
+      Fail(Message);
+    end;
+  end;
 end.

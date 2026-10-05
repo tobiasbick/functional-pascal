@@ -14,11 +14,11 @@ begin
     var Code: integer := Std.Str.Ord(Std.Str.CharAt(Value, Index));
     if ((Code < 32) and (Code <> 9)) or (Code = 127) then
     begin
-      return false
-    end
+      return false;
+    end;
   end;
 
-  return true
+  return true;
 end;
 
 // Parses validated HTTP fields after the first start-line in a text block.
@@ -35,23 +35,23 @@ begin
     var Colon: integer := Std.Str.IndexOf(Lines[Index], ':');
     if Colon <= 0 then
     begin
-      return Error((('Invalid HTTP ' + MessageKind) + ' header: ') + Lines[Index])
+      return Error((('Invalid HTTP ' + MessageKind) + ' header: ') + Lines[Index]);
     end;
     var Name: string := Std.Str.Substring(Lines[Index], 0, Colon);
     var Value: string := Std.Str.Trim(Std.Str.Substring(Lines[Index], Colon + 1, (Std.Str.Length(Lines[Index]) - Colon) -
                                                                                  1));
     if not Std.Http.Method.IsValidToken(Name) then
     begin
-      return Error((('Invalid HTTP ' + MessageKind) + ' header name: ') + Name)
+      return Error((('Invalid HTTP ' + MessageKind) + ' header name: ') + Name);
     end;
 
     if not IsValidValue(Value) then
     begin
-      return Error(('HTTP ' + MessageKind) + ' header contains an invalid control character')
+      return Error(('HTTP ' + MessageKind) + ' header contains an invalid control character');
     end;
 
-    Std.Arrays.Push(Headers, Header.Create(Name, Value))
+    Std.Arrays.Push(Headers, Header.Create(Name, Value));
   end;
 
-  return Ok(Headers)
+  return Ok(Headers);
 end;

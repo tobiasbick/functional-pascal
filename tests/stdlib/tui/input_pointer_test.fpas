@@ -19,7 +19,7 @@ begin
                                                                                                         TuiElementBuilders.MakeInput(TuiControlId.Create(1), State.FirstText, State.FirstCaret, TuiAction.Create(11)),
                                                                                                         TuiElementBuilders.MakeInput(TuiControlId.Create(2), State.SecondText, State.SecondCaret, TuiAction.Create(22))
                                                                                                       ])
-                                                                      ])
+                                                                      ]);
 end;
 
 function UpdateInput(State: InputPointerModel; Msg: TuiMsg; Cmd: TuiCmdOutput): InputPointerModel;
@@ -37,7 +37,7 @@ begin
           SecondCaret := State.SecondCaret;
           LastSource := Source.Value;
           LastAction := Action.Value;
-        end
+        end;
       end;
 
       return record
@@ -47,19 +47,19 @@ begin
         SecondCaret := Caret;
         LastSource := Source.Value;
         LastAction := Action.Value;
-      end
-    end
+      end;
+    end;
     else
     begin
-      return State
-    end
-  end
+      return State;
+    end;
+  end;
 end;
 
 function Click(App: TuiApplication; State: InputPointerModel; X: integer; Y: integer): InputPointerModel;
 begin
   App.InjectPointerForTest(TuiPointerEvent.Create(TuiPointerAction.Down, TuiPointerButton.Left, TuiPoint.Create(X, Y)));
-  return App.RunIterations(State, UpdateInput, ViewInput, 2, 0)
+  return App.RunIterations(State, UpdateInput, ViewInput, 2, 0);
 end;
 
 begin
@@ -98,5 +98,5 @@ begin
   AssertEquals(1, Model.FirstCaret);
   AssertEquals(1, Model.LastSource);
   AssertEquals(11, Model.LastAction);
-  App.Close()
+  App.Close();
 end.

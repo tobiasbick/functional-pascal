@@ -48,7 +48,7 @@ public type
         Alt := Alt;
         Meta := Meta;
         Display := Display;
-      end
+      end;
     end;
 
     // Reports whether a console key event matches this gesture.
@@ -61,14 +61,14 @@ public type
       if ((((Self.Kind <> Key.kind) or (Self.Shift <> Key.shift)) or (Self.Ctrl <> Key.ctrl)) or (Self.Alt <> Key.alt)) or
          (Self.Meta <> Key.meta) then
       begin
-        return false
+        return false;
       end;
 
       if Self.Kind = Std.Console.KeyKind.Character then
       begin
-        return Std.Str.ToLower(Self.Character) = Std.Str.ToLower(Key.ch)
+        return Std.Str.ToLower(Self.Character) = Std.Str.ToLower(Key.ch);
       end;
 
-      return true
+      return true;
     end;
   end;

@@ -3,5 +3,5 @@ program T;
 uses Std.Console, Std.Str;
 
 begin
-  WriteLn(Std.Str.Delete('Hello', 0, 2))
+  WriteLn(Std.Str.Delete('Hello', 0, 2));
 end.

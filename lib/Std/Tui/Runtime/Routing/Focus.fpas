@@ -13,50 +13,50 @@ function TuiRouteFrameMatchesNode(
 begin
   if Frame.EntryAt(Index).ParentIndex <> ParentIndex then
   begin
-    panic('Tui routing received a frame for a different element tree')
+    panic('Tui routing received a frame for a different element tree');
   end;
   mutable var Next: integer := Index + 1;
   mutable var Descendants: array of TuiElement := [];
   case Node of
     TuiElement.Scroll(Id, Offset, ChangeAction, ScrollChildren):
     begin
-      Descendants := ScrollChildren
+      Descendants := ScrollChildren;
     end;
     TuiElement.Row(RowChildren, Spacing):
     begin
-      Descendants := RowChildren
+      Descendants := RowChildren;
     end;
     TuiElement.Column(ColumnChildren, Spacing):
     begin
-      Descendants := ColumnChildren
+      Descendants := ColumnChildren;
     end;
     TuiElement.Layout(Settings, LayoutChildren):
     begin
-      Descendants := LayoutChildren
+      Descendants := LayoutChildren;
     end;
     TuiElement.Panel(Title, PanelChildren):
     begin
-      Descendants := PanelChildren
+      Descendants := PanelChildren;
     end;
     TuiElement.Overlay(Title, OverlayChildren):
     begin
-      Descendants := OverlayChildren
+      Descendants := OverlayChildren;
     end;
     TuiElement.Desktop(Focused, DesktopChildren):
     begin
-      Descendants := DesktopChildren
-    end
+      Descendants := DesktopChildren;
+    end;
     else
     begin
-    end
+    end;
   end;
 
   for ChildIndex: integer := 0 to Std.Arrays.Length(Descendants) - 1 do
   begin
-    Next := TuiRouteFrameMatchesNode(Frame, Descendants[ChildIndex], Next, Index)
+    Next := TuiRouteFrameMatchesNode(Frame, Descendants[ChildIndex], Next, Index);
   end;
 
-  return Next
+  return Next;
 end;
 
 // Panics when the arranged frame does not match the previous painted tree.
@@ -68,13 +68,13 @@ public procedure TuiRouteRequireMatchingFrame(Frame: TuiArrangedFrame; Root: Tui
 begin
   if Frame.Count() = 0 then
   begin
-    panic('Tui routing requires a successfully painted frame')
+    panic('Tui routing requires a successfully painted frame');
   end;
 
   if TuiRouteFrameMatchesNode(Frame, Root, 0, -1) <> Frame.Count() then
   begin
-    panic('Tui routing received a frame for a different element tree')
-  end
+    panic('Tui routing received a frame for a different element tree');
+  end;
 end;
 
 // Returns focusable control ids in the active modal or full tree order.
@@ -89,42 +89,42 @@ begin
     begin
       if Button.Enabled then
       begin
-        return [Button.Id]
-      end
+        return [Button.Id];
+      end;
       else
       begin
-        return []
-      end
+        return [];
+      end;
     end;
     TuiElement.Input(Input):
     begin
-      return [Input.Id]
+      return [Input.Id];
     end;
     TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction):
     begin
-      return [Id]
+      return [Id];
     end;
     TuiElement.CheckBox(Id, Text, Checked, ChangeAction):
     begin
-      return [Id]
+      return [Id];
     end;
     TuiElement.List(Id, Items, Selected, ChangeAction):
     begin
-      return [Id]
+      return [Id];
     end;
     TuiElement.Menu(Id, Nodes, State, ChangeAction):
     begin
-      return [Id]
+      return [Id];
     end;
     TuiElement.Scroll(Id, Offset, ChangeAction, Children):
     begin
       mutable var Controls: array of TuiControlId := [Id];
       for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
       begin
-        Controls := Std.Arrays.Concat(Controls, TuiFocusableControls(Children[Index]))
+        Controls := Std.Arrays.Concat(Controls, TuiFocusableControls(Children[Index]));
       end;
 
-      return Controls
+      return Controls;
     end;
     TuiElement.MenuBar(Items):
     begin
@@ -133,11 +133,11 @@ begin
       begin
         if Items[Index].Enabled then
         begin
-          Controls := Std.Arrays.Concat(Controls, [Items[Index].Id])
-        end
+          Controls := Std.Arrays.Concat(Controls, [Items[Index].Id]);
+        end;
       end;
 
-      return Controls
+      return Controls;
     end;
     TuiElement.StatusLine(Items):
     begin
@@ -149,36 +149,36 @@ begin
           begin
             if Enabled then
             begin
-              Controls := Std.Arrays.Concat(Controls, [Id])
-            end
-          end
+              Controls := Std.Arrays.Concat(Controls, [Id]);
+            end;
+          end;
           else
           begin
-          end
-        end
+          end;
+        end;
       end;
 
-      return Controls
+      return Controls;
     end;
     TuiElement.Row(RowChildren, Spacing):
     begin
-      Descendants := RowChildren
+      Descendants := RowChildren;
     end;
     TuiElement.Column(ColumnChildren, Spacing):
     begin
-      Descendants := ColumnChildren
+      Descendants := ColumnChildren;
     end;
     TuiElement.Layout(Settings, LayoutChildren):
     begin
-      Descendants := LayoutChildren
+      Descendants := LayoutChildren;
     end;
     TuiElement.Panel(Title, PanelChildren):
     begin
-      Descendants := PanelChildren
+      Descendants := PanelChildren;
     end;
     TuiElement.Overlay(Title, OverlayChildren):
     begin
-      Descendants := OverlayChildren
+      Descendants := OverlayChildren;
     end;
     TuiElement.Desktop(Focused, Children):
     begin
@@ -188,41 +188,41 @@ begin
         case Children[Index] of
           TuiElement.Overlay(Title, OverlayChildren):
           begin
-            LastOverlay := Index
-          end
+            LastOverlay := Index;
+          end;
           else
           begin
-          end
-        end
+          end;
+        end;
       end;
 
       if LastOverlay >= 0 then
       begin
-        return TuiFocusableControls(Children[LastOverlay])
-      end
+        return TuiFocusableControls(Children[LastOverlay]);
+      end;
       else
       begin
         mutable var Controls: array of TuiControlId := [];
         for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
         begin
-          Controls := Std.Arrays.Concat(Controls, TuiFocusableControls(Children[Index]))
+          Controls := Std.Arrays.Concat(Controls, TuiFocusableControls(Children[Index]));
         end;
 
-        return Controls
-      end
-    end
+        return Controls;
+      end;
+    end;
     else
     begin
-      return []
-    end
+      return [];
+    end;
   end;
   mutable var Controls: array of TuiControlId := [];
   for Index: integer := 0 to Std.Arrays.Length(Descendants) - 1 do
   begin
-    Controls := Std.Arrays.Concat(Controls, TuiFocusableControls(Descendants[Index]))
+    Controls := Std.Arrays.Concat(Controls, TuiFocusableControls(Descendants[Index]));
   end;
 
-  return Controls
+  return Controls;
 end;
 
 // Reads the desktop focus id, or `None` when the root is not a desktop.
@@ -234,13 +234,13 @@ begin
   case Root of
     TuiElement.Desktop(Focused, Children):
     begin
-      return Focused
-    end
+      return Focused;
+    end;
     else
     begin
-      return None
-    end
-  end
+      return None;
+    end;
+  end;
 end;
 
 // Returns the focusable-list index of a control id, or `-1` when absent.
@@ -254,11 +254,11 @@ begin
   begin
     if Controls[Index].Value = Id.Value then
     begin
-      return Index
-    end
+      return Index;
+    end;
   end;
 
-  return -1
+  return -1;
 end;
 
 // Returns whether two control ids refer to the same identity.
@@ -268,7 +268,7 @@ end;
 // - `Right`: Right input value or edge.
 public function TuiSameControlId(Left: TuiControlId; Right: TuiControlId): boolean;
 begin
-  return Left.Value = Right.Value
+  return Left.Value = Right.Value;
 end;
 
 // Returns whether the option id matches the target control.
@@ -281,11 +281,11 @@ begin
   case Focused of
     Some(Id):
     begin
-      return TuiSameControlId(Id, Target)
+      return TuiSameControlId(Id, Target);
     end;
     None:
     begin
-      return false
-    end
-  end
+      return false;
+    end;
+  end;
 end;

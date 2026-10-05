@@ -14,16 +14,16 @@ program RegisterTaskArgumentLoop;
 uses Std.Arrays, Std.Tasks;
 function Worker(Value: integer): integer;
 begin
-  return Value + 1
+  return Value + 1;
 end;
 begin
   mutable var Tasks: array of task := [];
   for Index: integer := 1 to 8 do
   begin
-    Push(Tasks, go Worker(Index))
+    Push(Tasks, go Worker(Index));
   end;
   WaitAll(Tasks);
-  if Length(Tasks) <> 8 then panic('task loop count mismatch')
+  if Length(Tasks) <> 8 then panic('task loop count mismatch');
 end.",
     );
 }
@@ -37,12 +37,12 @@ uses Std.Console, Std.Tasks;
 
 function Add(A: integer; B: integer): integer;
 begin
-  return A + B
+  return A + B;
 end;
 
 begin
   var T: task := go Add(20, 22);
-  Std.Console.WriteLn(Std.Tasks.Wait(T))
+  Std.Console.WriteLn(Std.Tasks.Wait(T));
 end.",
     );
     assert_eq!(execution.value, fpas_bytecode::Value::Unit);
@@ -57,11 +57,11 @@ uses Std.Console;
 
 procedure Work();
 begin
-  Std.Console.WriteLn('worker')
+  Std.Console.WriteLn('worker');
 end;
 
 begin
-  go Work()
+  go Work();
 end.",
     );
 }
@@ -78,18 +78,18 @@ begin
   mutable var I: integer := 0;
   while I < Count do
     I := I + 1;
-  return I
+  return I;
 end;
 
 function Work(): integer;
 begin
   var Values: array of integer := [40, 2];
-  return Burn(700) - 700 + Values[0] + Values[1]
+  return Burn(700) - 700 + Values[0] + Values[1];
 end;
 
 begin
   var T: task := go Work();
-  if Std.Tasks.Wait(T) <> 42 then panic('task state was not restored')
+  if Std.Tasks.Wait(T) <> 42 then panic('task state was not restored');
 end.",
     );
 }
@@ -104,12 +104,12 @@ uses Std.Tasks, Std.Time;
 function Work(Value: integer): integer;
 begin
   Std.Time.Sleep(1);
-  return Value
+  return Value;
 end;
 
 begin
   var A: task := go Work(42);
-  Std.Tasks.Wait(A)
+  Std.Tasks.Wait(A);
 end.",
     );
 }
@@ -134,10 +134,10 @@ begin
     Ok(Connection):
     begin
       Std.Net.Close(Connection);
-      return 'accepted'
+      return 'accepted';
     end;
-    Error(Message): return Message
-  end
+    Error(Message): return Message;
+  end;
 end;
 
 begin
@@ -151,10 +151,10 @@ begin
       if not Std.Tasks.Cancel(Source) then panic('first cancellation did not change state');
       if Std.Tasks.Wait(Waiting) <> 'Network accept cancelled' then
         panic('accept did not report cancellation');
-      Std.Net.CloseListener(ListenerValue)
+      Std.Net.CloseListener(ListenerValue);
     end;
-    Error(Message): panic(Message)
-  end
+    Error(Message): panic(Message);
+  end;
 end."
     );
 
@@ -170,7 +170,7 @@ uses Std.Tasks;
 
 function Work(Value: integer): integer;
 begin
-  return Value
+  return Value;
 end;
 
 begin
@@ -178,7 +178,7 @@ begin
   var B: task := go Work(22);
   Std.Tasks.WaitAll([A, B]);
   Std.Tasks.Wait(A);
-  Std.Tasks.Wait(B)
+  Std.Tasks.Wait(B);
 end.",
     );
 }
@@ -195,14 +195,14 @@ begin
   return function(): integer
   begin
     Value := Value + 1;
-    return Value
-  end
+    return Value;
+  end;
 end;
 
 begin
   var Work: function(): integer := Make();
   var T: task := go Work();
-  Std.Tasks.Wait(T)
+  Std.Tasks.Wait(T);
 end.";
     let error = run_program(source).expect_err("runtime must reject task-bound closure");
     assert!(error.message.contains("task-bound"));
@@ -219,21 +219,21 @@ function Produce(Messages: channel of integer): boolean;
 begin
   case Send(Messages, 20) of
     Ok(_): begin end;
-    Error(Message): panic(Message)
+    Error(Message): panic(Message);
   end;
   case Send(Messages, 22) of
     Ok(_): begin end;
-    Error(Message): panic(Message)
+    Error(Message): panic(Message);
   end;
-  return CloseChannel(Messages)
+  return CloseChannel(Messages);
 end;
 
 function Take(Messages: channel of integer): integer;
 begin
   case Receive(Messages) of
     Ok(Value): return Value;
-    Error(Message): panic(Message)
-  end
+    Error(Message): panic(Message);
+  end;
 end;
 
 begin
@@ -245,9 +245,9 @@ begin
   case Receive(Messages) of
     Ok(_): panic('closed channel produced an extra value');
     Error(Message):
-      if Message <> 'Channel is closed' then panic(Message)
+      if Message <> 'Channel is closed' then panic(Message);
   end;
-  if CloseChannel(Messages) then panic('channel close was not idempotent')
+  if CloseChannel(Messages) then panic('channel close was not idempotent');
 end.",
     );
 }
@@ -261,19 +261,19 @@ uses Std.Tasks;
 
 function MakeChannel(): channel of integer;
 begin
-  return CreateChannel(1)
+  return CreateChannel(1);
 end;
 
 function CloseChannelArgument(Messages: channel of integer): boolean;
 begin
-  return CloseChannel(Messages)
+  return CloseChannel(Messages);
 end;
 
 begin
   if not CloseChannelArgument(CreateChannel(1)) then
     panic('direct channel argument was not typed');
   var Messages: channel of integer := MakeChannel();
-  if not CloseChannel(Messages) then panic('returned channel was not typed')
+  if not CloseChannel(Messages) then panic('returned channel was not typed');
 end.",
     );
 }
@@ -291,36 +291,36 @@ begin
     Ok(MaybeValue):
       case MaybeValue of
         Some(_): panic('empty channel produced a value');
-        None: begin end
+        None: begin end;
       end;
-    Error(Message): panic(Message)
+    Error(Message): panic(Message);
   end;
   case TrySend(Messages, 1) of
     Ok(Sent): if not Sent then panic('first try-send did not send');
-    Error(Message): panic(Message)
+    Error(Message): panic(Message);
   end;
   case TrySend(Messages, 2) of
     Ok(Sent): if Sent then panic('full channel accepted a value');
-    Error(Message): panic(Message)
+    Error(Message): panic(Message);
   end;
   case ReceiveWithTimeout(Messages, 0) of
     Ok(Value): if Value <> 1 then panic('timeout receive changed FIFO order');
-    Error(Message): panic(Message)
+    Error(Message): panic(Message);
   end;
   case ReceiveWithTimeout(Messages, 1) of
     Ok(_): panic('empty channel did not time out');
     Error(Message):
-      if Message <> 'Channel receive timed out' then panic(Message)
+      if Message <> 'Channel receive timed out' then panic(Message);
   end;
   case Send(Messages, 3) of
     Ok(_): begin end;
-    Error(Message): panic(Message)
+    Error(Message): panic(Message);
   end;
   case SendWithTimeout(Messages, 4, 1) of
     Ok(_): panic('full channel did not time out');
     Error(Message):
-      if Message <> 'Channel send timed out' then panic(Message)
-  end
+      if Message <> 'Channel send timed out' then panic(Message);
+  end;
 end.",
     );
 }
@@ -333,7 +333,7 @@ program InvalidChannelTimeout;
 uses Std.Tasks;
 begin
   var Messages: channel of integer := CreateChannel(1);
-  ReceiveWithTimeout(Messages, -1)
+  ReceiveWithTimeout(Messages, -1);
 end.",
     )
     .expect_err("negative channel timeout must fail");
@@ -354,8 +354,8 @@ function BlockedSend(
 begin
   case SendWithCancellation(Messages, 2, Token) of
     Ok(_): return 'sent';
-    Error(Message): return Message
-  end
+    Error(Message): return Message;
+  end;
 end;
 
 function BlockedReceive(
@@ -365,15 +365,15 @@ function BlockedReceive(
 begin
   case ReceiveWithCancellation(Messages, Token) of
     Ok(_): return 'received';
-    Error(Message): return Message
-  end
+    Error(Message): return Message;
+  end;
 end;
 
 begin
   var Full: channel of integer := CreateChannel(1);
   case Send(Full, 1) of
     Ok(_): begin end;
-    Error(Message): panic(Message)
+    Error(Message): panic(Message);
   end;
   var SendSource: CancellationSource := CreateCancellationSource();
   var Sending: task := go BlockedSend(Full, GetCancellationToken(SendSource));
@@ -387,7 +387,7 @@ begin
   Sleep(20);
   Cancel(ReceiveSource);
   if Wait(Receiving) <> 'Channel receive was cancelled' then
-    panic('receive cancellation mismatch')
+    panic('receive cancellation mismatch');
 end.",
     );
 }

@@ -8,7 +8,7 @@ uses Std.Console, Std.Args;
 begin
   WriteLn(ParamCount());
   if ParamCount() > 0 then
-    WriteLn(ParamStr(0))
+    WriteLn(ParamStr(0));
 end.
 ```
 
@@ -43,7 +43,7 @@ The input file name and the `fpas` executable name are not included. Only values
 Returns the number of program arguments supplied after the CLI separator.
 
 ```pascal
-WriteLn(ParamCount())
+WriteLn(ParamCount());
 ```
 
 ---
@@ -56,7 +56,7 @@ Runtime error if `Index` is negative or greater than or equal to `ParamCount()`.
 
 ```pascal
 if ParamCount() > 0 then
-  WriteLn(ParamStr(0))
+  WriteLn(ParamStr(0));
 ```
 
 ---

@@ -70,8 +70,8 @@ procedure PrintEvents(Events: array of SseEvent);
 begin
   for Index: integer := 0 to Std.Arrays.Length(Events) - 1 do
   begin
-    WriteLn((Events[Index].EventType + ':') + Events[Index].Data)
-  end
+    WriteLn((Events[Index].EventType + ':') + Events[Index].Data);
+  end;
 end;
 
 begin
@@ -90,29 +90,29 @@ begin
               begin
                 if Std.Arrays.Length(Bytes) = 0 then
                 begin
-                  Reading := false
-                end
+                  Reading := false;
+                end;
                 else
                 begin
                   case FeedSse(Decoder, Bytes) of
                     Ok(Events): PrintEvents(Events);
-                    Error(Message): panic(Message)
-                  end
-                end
+                    Error(Message): panic(Message);
+                  end;
+                end;
               end;
-              Error(Message): panic(Message)
-            end
+              Error(Message): panic(Message);
+            end;
           end;
           case FinishSse(Decoder) of
             Ok(Events): PrintEvents(Events);
-            Error(Message): panic(Message)
-          end
+            Error(Message): panic(Message);
+          end;
         end;
-        Error(Message): panic(Message)
-      end
+        Error(Message): panic(Message);
+      end;
     end;
-    Error(Message): panic(Message)
-  end
+    Error(Message): panic(Message);
+  end;
 end.
 "#
         ),
@@ -171,10 +171,10 @@ begin
         begin
           if Std.Arrays.Length(Bytes) <> 3 then
           begin
-            panic('unexpected first body fragment')
-          end
+            panic('unexpected first body fragment');
+          end;
         end;
-        Error(Message): panic(Message)
+        Error(Message): panic(Message);
       end;
       case ReadStream(ResponseValue.Body, 8) of
         Ok(_): panic('truncated Content-Length was accepted');
@@ -182,14 +182,14 @@ begin
         begin
           if not Std.Str.Contains(Message, 'shorter than Content-Length') then
           begin
-            panic(Message)
-          end
-        end
+            panic(Message);
+          end;
+        end;
       end;
-      WriteLn('ok')
+      WriteLn('ok');
     end;
-    Error(Message): panic(Message)
-  end
+    Error(Message): panic(Message);
+  end;
 end.
 "#
         ),

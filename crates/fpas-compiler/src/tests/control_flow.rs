@@ -17,9 +17,9 @@ begin
   for Key: string in Values do
   begin
     WriteLn(IntToStr(Values[Key]));
-    Sum := Sum + Values[Key]
+    Sum := Sum + Values[Key];
   end;
-  if Sum <> 15 then panic('for-in mismatch')
+  if Sum <> 15 then panic('for-in mismatch');
 end.",
     );
 }
@@ -39,7 +39,7 @@ begin
   S := S + 'cd';
   B := (B and not false) xor false;
   if (I <> 10) or (R <> 1.75) or (S <> 'abcd') or (not B) then
-    panic('scalar mismatch')
+    panic('scalar mismatch');
 end.",
     );
     assert_eq!(execution.value, fpas_bytecode::Value::Unit);
@@ -61,14 +61,14 @@ begin
     begin
       if J = 2 then continue;
       Sum := Sum + I * J;
-      if Sum > 40 then break
-    end
+      if Sum > 40 then break;
+    end;
   end;
   repeat
     Sum := Sum - 1;
-    if Sum = 30 then break
+    if Sum = 30 then break;
   until Sum < 0;
-  if Sum <> 30 then panic('loop mismatch')
+  if Sum <> 30 then panic('loop mismatch');
 end.",
     );
 }
@@ -85,23 +85,23 @@ begin
     Candidate if Candidate < 0: Score := 99;
     1..3: Score := 1;
     5 if I > 5: Score := 2;
-    5: Score := 3
+    5: Score := 3;
   else
-    Score := 4
+    Score := 4;
   end;
   var S: string := 'beta';
   case S of
     'alpha': Score := 10;
-    'beta': Score := Score + 4
+    'beta': Score := Score + 4;
   else
-    Score := 20
+    Score := 20;
   end;
   var Flag: boolean := true;
   case Flag of
     false: Score := 100;
-    true: Score := Score + 5
+    true: Score := Score + 5;
   end;
-  if Score <> 12 then panic('case mismatch')
+  if Score <> 12 then panic('case mismatch');
 end.",
     );
 }
@@ -118,7 +118,7 @@ begin
   var Shifted: integer := (1 shl 5) shr 2;
   if (X <> -9223372036854775807 - 1) or (Bits <> 10) or (Shifted <> 8) then
     panic('integer mismatch');
-  if not (2 < 2.5) then panic('mixed comparison mismatch')
+  if not (2 < 2.5) then panic('mixed comparison mismatch');
 end.",
     );
 }

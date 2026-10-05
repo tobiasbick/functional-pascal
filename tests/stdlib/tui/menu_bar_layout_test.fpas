@@ -8,5 +8,5 @@ begin
                                                                                 TuiMenuItem.Disabled(TuiControlId.Create(2), 'Save', TuiAction.Create(20))
                                                                               ]), TuiMeasureSpec.Unbounded());
   AssertEquals(12, Measured.Preferred.Width);
-  AssertEquals(1, Measured.Preferred.Height)
+  AssertEquals(1, Measured.Preferred.Height);
 end.

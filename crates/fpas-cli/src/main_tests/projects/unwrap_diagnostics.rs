@@ -28,7 +28,7 @@ begin
     TuiColor.FromRgb(1, 2, 3), TuiColor.FromRgb(4, 5, 6));
   var Style: {container} := {constructor}(Base);
   var Red: integer := Std.{namespace}.{function}(Style{fallback}).Background.Red;
-  AssertEquals(4, Red)
+  AssertEquals(4, Red);
 end."
                     ),
                 );

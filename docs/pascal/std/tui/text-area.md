@@ -10,7 +10,7 @@ TuiElementBuilders.MakeTextArea(
   Caret,
   Offset,
   ChangeAction
-)
+);
 ```
 
 `Id` and `ChangeAction` must be positive typed identities. `Caret` is a
@@ -23,7 +23,7 @@ zero-based `Std.Str` character index in the inclusive range
 Keyboard and pointer routing propose the entire next value:
 
 ```pascal
-TuiMsg.TextAreaChanged(Source, Action, Text, Caret, Offset)
+TuiMsg.TextAreaChanged(Source, Action, Text, Caret, Offset);
 ```
 
 Use `TuiMsgTextAreaChanged` to construct the same message explicitly. An
@@ -36,8 +36,8 @@ begin
     Text := Text;
     Caret := Caret;
     Offset := Offset;
-  end
-end
+  end;
+end;
 ```
 
 The host stores no editable text, caret, or scroll state between frames.

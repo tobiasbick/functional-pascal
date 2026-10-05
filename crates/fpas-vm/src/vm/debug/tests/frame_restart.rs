@@ -14,12 +14,12 @@ function Branch(Value: integer): integer;
 begin
   mutable var Local: integer := Value + 10;
   WriteLn('effect');
-  return Local
+  return Local;
 end;
 
 begin
   var Answer: integer := Branch(1);
-  WriteLn(Answer)
+  WriteLn(Answer);
 end.
 "#;
 
@@ -136,17 +136,17 @@ uses Std.Console;
 
 function Leaf(Value: integer): integer;
 begin
-  return Value + 1
+  return Value + 1;
 end;
 
 function Branch(Value: integer): integer;
 begin
   var Local: integer := Value + 10;
-  return Leaf(Local)
+  return Leaf(Local);
 end;
 
 begin
-  WriteLn(Branch(1))
+  WriteLn(Branch(1));
 end.
 "#;
     let mut session = session(SOURCE);
@@ -188,22 +188,22 @@ function Outer(Start: integer): integer;
   begin
     Counter := Counter + 1;
     WriteLn(Counter);
-    return Counter
+    return Counter;
   end;
 begin
   mutable var Counter: integer := Start;
-  return Inner()
+  return Inner();
 end;
 
 begin
-  WriteLn(Outer(5))
+  WriteLn(Outer(5));
 end.
 "#;
     let mut session = session(SOURCE);
     let breakpoint = session
         .set_breakpoint(SourceBreakpoint {
             source: "<memory>".to_string(),
-            line: line(SOURCE, "return Counter"),
+            line: line(SOURCE, "return Counter;"),
             column: None,
         })
         .expect("capture breakpoint");
@@ -252,19 +252,19 @@ uses Std.Tasks;
 
 function Work(): integer;
 begin
-  return 7
+  return 7;
 end;
 
 begin
   var Pending: task := go Work();
-  Wait(Pending)
+  Wait(Pending);
 end.
 "#;
     let mut session = session(SOURCE);
     session
         .set_breakpoint(SourceBreakpoint {
             source: "<memory>".to_string(),
-            line: line(SOURCE, "return 7"),
+            line: line(SOURCE, "return 7;"),
             column: None,
         })
         .expect("child breakpoint");

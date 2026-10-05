@@ -7,7 +7,7 @@ fn qualified_const_access_from_user_unit() {
     support::write_program_project_file(&project_file, "src/main.fpas", &["src/*.fpas"]);
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Config, Std.Console;\nbegin\n  WriteLn(App.Config.MaxVal)\nend.\n",
+        "program Main;\nuses App.Config, Std.Console;\nbegin\n  WriteLn(App.Config.MaxVal);\nend.\n",
     );
     write_text(
         &cwd.join("src/config.fpas"),
@@ -29,11 +29,11 @@ fn case_insensitive_qualified_call() {
     support::write_program_project_file(&project_file, "src/main.fpas", &["src/*.fpas"]);
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Lib, Std.Console;\nbegin\n  WriteLn(app.lib.GetValue())\nend.\n",
+        "program Main;\nuses App.Lib, Std.Console;\nbegin\n  WriteLn(app.lib.GetValue());\nend.\n",
     );
     write_text(
         &cwd.join("src/lib.fpas"),
-        "unit App.Lib;\npublic function GetValue(): integer;\nbegin\n  return 44\nend;\n",
+        "unit App.Lib;\npublic function GetValue(): integer;\nbegin\n  return 44;\nend;\n",
     );
 
     let (exit_code, stdout_output, stderr_output) =
@@ -51,11 +51,11 @@ fn qualified_name_call_to_user_unit_function() {
     support::write_program_project_file(&project_file, "src/main.fpas", &["src/*.fpas"]);
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Lib, Std.Console;\nbegin\n  WriteLn(App.Lib.GetValue())\nend.\n",
+        "program Main;\nuses App.Lib, Std.Console;\nbegin\n  WriteLn(App.Lib.GetValue());\nend.\n",
     );
     write_text(
         &cwd.join("src/lib.fpas"),
-        "unit App.Lib;\npublic function GetValue(): integer;\nbegin\n  return 77\nend;\n",
+        "unit App.Lib;\npublic function GetValue(): integer;\nbegin\n  return 77;\nend;\n",
     );
 
     let (exit_code, stdout_output, stderr_output) =
@@ -78,13 +78,13 @@ program Main;
 uses App.Lib, Std.Console;
 begin
   WriteLn(GetValue());
-  WriteLn(App.Lib.GetValue())
+  WriteLn(App.Lib.GetValue());
 end.
 ",
     );
     write_text(
         &cwd.join("src/lib.fpas"),
-        "unit App.Lib;\npublic function GetValue(): integer;\nbegin\n  return 55\nend;\n",
+        "unit App.Lib;\npublic function GetValue(): integer;\nbegin\n  return 55;\nend;\n",
     );
 
     let (exit_code, stdout_output, stderr_output) =
@@ -102,19 +102,19 @@ fn deep_transitive_chain_four_levels() {
     support::write_program_project_file(&project_file, "src/main.fpas", &["src/*.fpas"]);
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.A, Std.Console;\nbegin\n  WriteLn(CallA())\nend.\n",
+        "program Main;\nuses App.A, Std.Console;\nbegin\n  WriteLn(CallA());\nend.\n",
     );
     write_text(
         &cwd.join("src/a.fpas"),
-        "unit App.A;\nuses App.B;\npublic function CallA(): integer;\nbegin\n  return CallB() + 1\nend;\n",
+        "unit App.A;\nuses App.B;\npublic function CallA(): integer;\nbegin\n  return CallB() + 1;\nend;\n",
     );
     write_text(
         &cwd.join("src/b.fpas"),
-        "unit App.B;\nuses App.C;\npublic function CallB(): integer;\nbegin\n  return CallC() + 10\nend;\n",
+        "unit App.B;\nuses App.C;\npublic function CallB(): integer;\nbegin\n  return CallC() + 10;\nend;\n",
     );
     write_text(
         &cwd.join("src/c.fpas"),
-        "unit App.C;\npublic function CallC(): integer;\nbegin\n  return 100\nend;\n",
+        "unit App.C;\npublic function CallC(): integer;\nbegin\n  return 100;\nend;\n",
     );
 
     let (exit_code, stdout_output, stderr_output) =

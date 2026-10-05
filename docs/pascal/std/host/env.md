@@ -7,7 +7,7 @@ program Example;
 uses Std.Console, Std.Env, Std.Options;
 begin
   if Exists('PATH') then
-    WriteLn(Std.Options.Unwrap(Get('PATH')))
+    WriteLn(Std.Options.Unwrap(Get('PATH')));
 end.
 ```
 
@@ -40,7 +40,7 @@ Returns the environment variable named `Name`, or `None` when it is missing.
 ```pascal
 var Home: Option of string := Get('HOME');
 if Std.Options.IsSome(Home) then
-  WriteLn(Std.Options.Unwrap(Home))
+  WriteLn(Std.Options.Unwrap(Home));
 ```
 
 ---
@@ -51,7 +51,7 @@ Returns `true` when the process environment contains `Name`.
 
 ```pascal
 if Exists('PATH') then
-  WriteLn('PATH is available')
+  WriteLn('PATH is available');
 ```
 
 ---

@@ -24,7 +24,7 @@ fn record_events_default_to_private_and_accept_public() {
 fn record_event_parses() {
     let p = parse_ok(
         "program T; type Button = record \
-         function ReadOnClick(Self: Button): Option of procedure(); begin return None end; \
+         function ReadOnClick(Self: Button): Option of procedure(); begin return None; end; \
          procedure WriteOnClick(Self: Button; H: Option of procedure()); begin end; \
          event OnClick: procedure() read ReadOnClick write WriteOnClick; \
          end; begin end.",
@@ -46,7 +46,7 @@ fn record_event_parses() {
 
 #[test]
 fn nil_literal_parses() {
-    let (_, errors) = parse_with_errors("program T; begin X := nil end.");
+    let (_, errors) = parse_with_errors("program T; begin X := nil; end.");
     assert!(
         errors.is_empty()
             || errors
@@ -87,7 +87,7 @@ fn event_without_accessors_is_rejected() {
 fn event_with_only_read_is_rejected() {
     let (_, errors) = parse_with_errors(
         "program T; type Button = record \
-         function ReadOnClick(Self: Button): Option of procedure(); begin return None end; \
+         function ReadOnClick(Self: Button): Option of procedure(); begin return None; end; \
          event OnClick: procedure() read ReadOnClick; \
          end; begin end.",
     );

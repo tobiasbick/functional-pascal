@@ -27,7 +27,7 @@ public type
         Surface := Surface;
         Clip := Bounds.Intersect(SurfaceBounds);
         Origin := TuiPoint.Create(0, 0);
-      end
+      end;
     end;
 
     // Creates a canvas with an explicit surface origin and local clip rectangle.
@@ -42,7 +42,7 @@ public type
         Surface := Surface;
         Clip := Clip;
         Origin := Origin;
-      end
+      end;
     end;
 
     // Returns a nested canvas for `LocalBounds` in this canvas's local coordinates.
@@ -55,7 +55,7 @@ public type
       var Visible: TuiRect := LocalBounds.Intersect(Self.Clip);
       var ChildClip: TuiRect := TuiRect.Create(Visible.X - LocalBounds.X, Visible.Y - LocalBounds.Y, Visible.Width, Visible.Height);
       return TuiCanvas.CreateLocal(Self.Surface, TuiPoint.Create(Self.Origin.X + LocalBounds.X, Self.Origin.Y +
-                                                                                                LocalBounds.Y), ChildClip)
+                                                                                                LocalBounds.Y), ChildClip);
     end;
 
     // Paints one cell in local coordinates; clipped and wide-glyph aware.
@@ -68,16 +68,16 @@ public type
     begin
       if not Self.Clip.Contains(Position) then
       begin
-        return
+        return;
       end;
       var CellWidth: integer := Cell.Width();
       if (CellWidth = 2) and not Self.Clip.Contains(TuiPoint.Create(Position.X + 1, Position.Y)) then
       begin
         Self.Surface.PutCell(TuiPoint.Create(Self.Origin.X + Position.X, Self.Origin.Y + Position.Y), TuiCell.Create(' ', TuiStyleRole.Normal));
-        return
+        return;
       end;
 
-      Self.Surface.PutCell(TuiPoint.Create(Self.Origin.X + Position.X, Self.Origin.Y + Position.Y), Cell)
+      Self.Surface.PutCell(TuiPoint.Create(Self.Origin.X + Position.X, Self.Origin.Y + Position.Y), Cell);
     end;
 
     // Paints one glyph with the normal role.
@@ -89,7 +89,7 @@ public type
     // - `Glyph`: Single renderable grapheme.
     public procedure PutGlyph(Self: TuiCanvas; X: integer; Y: integer; Glyph: string);
     begin
-      Self.PutCell(TuiPoint.Create(X, Y), TuiCell.Create(Glyph, TuiStyleRole.Normal))
+      Self.PutCell(TuiPoint.Create(X, Y), TuiCell.Create(Glyph, TuiStyleRole.Normal));
     end;
 
     // Fills the visible intersection with a one-column cell.
@@ -103,11 +103,11 @@ public type
       var CellWidth: integer := Cell.Width();
       if CellWidth <> 1 then
       begin
-        panic('Tui canvas FillRect requires a one-column cell')
+        panic('Tui canvas FillRect requires a one-column cell');
       end;
       var Visible: TuiRect := Bounds.Intersect(Self.Clip);
       TuiSurfaceFillRect(Self.Surface, TuiRect.Create(Self.Origin.X + Visible.X, Self.Origin.Y +
-                                                                                 Visible.Y, Visible.Width, Visible.Height), Cell)
+                                                                                 Visible.Y, Visible.Width, Visible.Height), Cell);
     end;
 
     // Draws one logical line of text; stops before a newline.
@@ -127,8 +127,8 @@ public type
         var Code: integer := Std.Str.Ord(Std.Str.CharAt(Text, Index));
         if (Code <> 10) and ((Code < 32) or (Code > 126)) then
         begin
-          AsciiOnly := false
-        end
+          AsciiOnly := false;
+        end;
       end;
 
       if AsciiOnly then
@@ -138,29 +138,29 @@ public type
           var Glyph: string := Std.Str.CharAt(Text, Index);
           if Glyph = Std.Str.Chr(10) then
           begin
-            return
+            return;
           end;
 
           Self.PutCell(TuiPoint.Create(X, Position.Y), TuiCell.Create(Glyph, Role));
-          X := X + 1
+          X := X + 1;
         end;
 
-        return
+        return;
       end;
 
       for Glyph: string in Std.Console.SplitGraphemes(Text) do
       begin
         if Glyph = Std.Str.Chr(10) then
         begin
-          return
+          return;
         end;
         var GlyphWidth: integer := Std.Console.DisplayWidth(Glyph);
         if GlyphWidth > 0 then
         begin
           Self.PutCell(TuiPoint.Create(X, Position.Y), TuiCell.Create(Glyph, Role));
-          X := X + GlyphWidth
-        end
-      end
+          X := X + GlyphWidth;
+        end;
+      end;
     end;
 
     // Draws a horizontal box-drawing line.
@@ -182,8 +182,8 @@ public type
       var Cell: TuiCell := TuiCell.Create('─', Role);
       for Offset: integer := 0 to Width - 1 do
       begin
-        Self.PutCell(TuiPoint.Create(X + Offset, Y), Cell)
-      end
+        Self.PutCell(TuiPoint.Create(X + Offset, Y), Cell);
+      end;
     end;
 
     // Draws a vertical box-drawing line.
@@ -205,8 +205,8 @@ public type
       var Cell: TuiCell := TuiCell.Create('│', Role);
       for Offset: integer := 0 to Height - 1 do
       begin
-        Self.PutCell(TuiPoint.Create(X, Y + Offset), Cell)
-      end
+        Self.PutCell(TuiPoint.Create(X, Y + Offset), Cell);
+      end;
     end;
 
     // Draws a box frame using Unicode box-drawing glyphs.
@@ -219,7 +219,7 @@ public type
     begin
       if Bounds.IsEmpty() then
       begin
-        return
+        return;
       end;
 
       if Bounds.Width = 1 then
@@ -228,10 +228,10 @@ public type
         Self.PutCell(TuiPoint.Create(Bounds.X, Bounds.Y), TuiCell.Create('╭', Role));
         if Bounds.Height > 1 then
         begin
-          Self.PutCell(TuiPoint.Create(Bounds.X, Bounds.Bottom() - 1), TuiCell.Create('╰', Role))
+          Self.PutCell(TuiPoint.Create(Bounds.X, Bounds.Bottom() - 1), TuiCell.Create('╰', Role));
         end;
 
-        return
+        return;
       end;
 
       if Bounds.Height = 1 then
@@ -239,7 +239,7 @@ public type
         Self.DrawHorizontalLine(Bounds.X, Bounds.Y, Bounds.Width, Role);
         Self.PutCell(TuiPoint.Create(Bounds.X, Bounds.Y), TuiCell.Create('╭', Role));
         Self.PutCell(TuiPoint.Create(Bounds.Right() - 1, Bounds.Y), TuiCell.Create('╮', Role));
-        return
+        return;
       end;
 
       Self.DrawHorizontalLine(Bounds.X, Bounds.Y, Bounds.Width, Role);
@@ -249,7 +249,7 @@ public type
       Self.PutCell(TuiPoint.Create(Bounds.X, Bounds.Y), TuiCell.Create('╭', Role));
       Self.PutCell(TuiPoint.Create(Bounds.Right() - 1, Bounds.Y), TuiCell.Create('╮', Role));
       Self.PutCell(TuiPoint.Create(Bounds.X, Bounds.Bottom() - 1), TuiCell.Create('╰', Role));
-      Self.PutCell(TuiPoint.Create(Bounds.Right() - 1, Bounds.Bottom() - 1), TuiCell.Create('╯', Role))
+      Self.PutCell(TuiPoint.Create(Bounds.Right() - 1, Bounds.Bottom() - 1), TuiCell.Create('╯', Role));
     end;
   end;
 
@@ -258,31 +258,31 @@ public procedure TuiCanvasPutCells(Canvas: TuiCanvas; Position: TuiPoint; Cells:
 begin
   if (Position.Y < Canvas.Clip.Y) or (Position.Y >= Canvas.Clip.Bottom()) then
   begin
-    return
+    return;
   end;
   mutable var SourceX: integer := 0;
   mutable var TargetX: integer := Position.X;
   if TargetX < Canvas.Clip.X then
   begin
     SourceX := Canvas.Clip.X - TargetX;
-    TargetX := Canvas.Clip.X
+    TargetX := Canvas.Clip.X;
   end;
   mutable var Count: integer := Std.Arrays.Length(Cells) - SourceX;
   if Count > Canvas.Clip.Right() - TargetX then
   begin
-    Count := Canvas.Clip.Right() - TargetX
+    Count := Canvas.Clip.Right() - TargetX;
   end;
 
   if Count <= 0 then
   begin
-    return
+    return;
   end;
   mutable var Values: array of TuiCell := Std.Arrays.Slice(Cells, SourceX, Count);
   if (TargetX + Count = Canvas.Clip.Right()) and (Values[Count - 1].Columns = 2) then
   begin
-    Values[Count - 1] := TuiCell.Create(' ', TuiStyleRole.Normal)
+    Values[Count - 1] := TuiCell.Create(' ', TuiStyleRole.Normal);
   end;
 
   TuiSurfacePutCells(Canvas.Surface, TuiPoint.Create(Canvas.Origin.X + TargetX, Canvas.Origin.Y +
-                                                                                Position.Y), Values)
+                                                                                Position.Y), Values);
 end;

@@ -11,13 +11,13 @@ begin
   begin
     if Std.Fs.IsDir(Directory) then
     begin
-      return Ok(true)
+      return Ok(true);
     end;
 
-    return Error('Notes path exists but is not a directory: ' + Directory)
+    return Error('Notes path exists but is not a directory: ' + Directory);
   end;
 
-  return Std.Fs.CreateDir(Directory)
+  return Std.Fs.CreateDir(Directory);
 end;
 
 // Resolves a note's existing or identity-derived `.note` path.
@@ -25,32 +25,32 @@ public function NoteFilePath(Directory: string; NoteValue: Note): string;
 begin
   if NoteValue.Path <> '' then
   begin
-    return NoteValue.Path
+    return NoteValue.Path;
   end;
 
-  return Std.Path.Join([Directory, NoteValue.Id + '.note'])
+  return Std.Path.Join([Directory, NoteValue.Id + '.note']);
 end;
 
 // Sorts pinned notes first, then by descending timestamp; ties keep input order.
 public function NotesSort(Notes: array of Note): array of Note;
 begin
-  return Notes.NotesOrdered()
+  return Notes.NotesOrdered();
 end;
 
 function AppendEscapedPattern(Acc: string; Character: string): string;
 begin
   if (((Character = '[') or (Character = ']')) or (Character = '*')) or (Character = '?') then
   begin
-    return ((Acc + '[') + Character) + ']'
+    return ((Acc + '[') + Character) + ']';
   end;
 
-  return Acc + Character
+  return Acc + Character;
 end;
 
 // Escapes only the literal directory; the final note-file pattern stays active.
 function NoteDirectoryPattern(Directory: string): string;
 begin
-  return Std.Path.Join([Std.Str.Reduce(Directory, '', AppendEscapedPattern), '*.note'])
+  return Std.Path.Join([Std.Str.Reduce(Directory, '', AppendEscapedPattern), '*.note']);
 end;
 
 // Loads valid notes and preserves invalid files as visible issues.
@@ -75,30 +75,30 @@ begin
             Std.Arrays.Push(Notes, Loaded);
             if Std.Dictionaries.ContainsKey(IdCounts, Loaded.Id) then
             begin
-              IdCounts[Loaded.Id] := IdCounts[Loaded.Id] + 1
-            end
+              IdCounts[Loaded.Id] := IdCounts[Loaded.Id] + 1;
+            end;
             else
             begin
-              IdCounts[Loaded.Id] := 1
-            end
+              IdCounts[Loaded.Id] := 1;
+            end;
           end;
           Error(Message):
           begin
             Std.Arrays.Push(Issues, record
               Path := Path;
               Message := Message;
-            end)
-          end
-        end
+            end);
+          end;
+        end;
       end;
       Error(Message):
       begin
         Std.Arrays.Push(Issues, record
           Path := Path;
           Message := Message;
-        end)
-      end
-    end
+        end);
+      end;
+    end;
   end;
   mutable var Unique: array of Note := [];
   for Loaded: Note in Notes do
@@ -108,25 +108,25 @@ begin
       Std.Arrays.Push(Issues, record
         Path := Loaded.Path;
         Message := ('Duplicate note ID: ' + Loaded.Id) + '. Give each file a unique ID before editing.';
-      end)
-    end
+      end);
+    end;
     else
     begin
-      Std.Arrays.Push(Unique, Loaded)
-    end
+      Std.Arrays.Push(Unique, Loaded);
+    end;
   end;
 
   return Ok(record
     Notes := NotesSort(Unique);
     Issues := Issues;
-  end)
+  end);
 end;
 
 // Atomically writes one note to its stable file path.
 public function NotesSave(Directory: string; NoteValue: Note): result of boolean, string;
 begin
   var DirectoryReady: boolean := try NotesEnsureDirectory(Directory);
-  return Std.Fs.WriteTextAtomic(NoteFilePath(Directory, NoteValue), NoteStringify(NoteValue))
+  return Std.Fs.WriteTextAtomic(NoteFilePath(Directory, NoteValue), NoteStringify(NoteValue));
 end;
 
 // Generates an unused timestamp-and-random identity in one directory.
@@ -134,14 +134,14 @@ public function NotesCreateId(Directory: string; TimestampMillis: integer): stri
 begin
   mutable var Candidate: string := '';
   repeat
-    Candidate := (IntToStr(TimestampMillis) + '-') + IntToStr(Std.Random.RandomInt(100000, 999999))
+    Candidate := (IntToStr(TimestampMillis) + '-') + IntToStr(Std.Random.RandomInt(100000, 999999));
   until not Std.Fs.Exists(Std.Path.Join([Directory, Candidate + '.note']));
-  return Candidate
+  return Candidate;
 end;
 
 // Creates an in-memory draft with a new identity and current timestamp.
 public function NotesCreateDraft(Directory: string): Note;
 begin
   var Now: integer := Std.Time.TimestampMillis();
-  return NoteCreate(NotesCreateId(Directory, Now), Now)
+  return NoteCreate(NotesCreateId(Directory, Now), Now);
 end;

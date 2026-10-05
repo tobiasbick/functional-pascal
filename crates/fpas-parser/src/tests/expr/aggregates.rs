@@ -72,7 +72,7 @@ fn record_update() {
 
 #[test]
 fn empty_record_update_is_rejected() {
-    let (_, errors) = parse_with_errors("program T; begin return P with end end.");
+    let (_, errors) = parse_with_errors("program T; begin return P with end; end.");
     let diagnostic = errors.iter().find_map(|error| match error {
         ParseDiagnostic::Parser(diagnostic) if diagnostic.code == PARSE_EMPTY_RECORD_UPDATE => {
             Some(diagnostic)
@@ -114,7 +114,7 @@ fn record_update_rejects_malformed_field_initializers() {
         "P with X := 1 Y := 2; end",
         "P with X := 1;",
     ] {
-        let program = format!("program T; begin return {source} end.");
+        let program = format!("program T; begin return {source}; end.");
         let (_, errors) = parse_with_errors(&program);
         assert!(!errors.is_empty(), "accepted malformed update: {source}");
     }

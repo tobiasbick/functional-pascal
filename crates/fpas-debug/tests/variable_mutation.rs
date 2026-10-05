@@ -15,7 +15,7 @@ use fpas_vm::{
 use serde_json::{Value, json};
 
 fn server() -> JsonlServer {
-    let source = "program Main;\n\nfunction Twice(Value: integer): integer;\nbegin\n  return Value * 2\nend;\n\nbegin\n  mutable var X: integer := 1;\n  var Fixed: integer := 2;\n  X := X + Fixed\nend.";
+    let source = "program Main;\n\nfunction Twice(Value: integer): integer;\nbegin\n  return Value * 2;\nend;\n\nbegin\n  mutable var X: integer := 1;\n  var Fixed: integer := 2;\n  X := X + Fixed;\nend.";
     let (program, diagnostics) = fpas_parser::parse(source);
     assert!(diagnostics.is_empty(), "parse diagnostics: {diagnostics:?}");
     let executable = fpas_compiler::compile(&program).expect("compile mutation fixture");
@@ -187,7 +187,7 @@ begin
     end];
   end;
   mutable var Scores: dict of string to integer := ['Ada': 2, 'Grace': 5];
-  var Marker: integer := 0
+  var Marker: integer := 0;
 end.
 "#,
     );
@@ -323,12 +323,12 @@ program ParameterMutation;
 
 function ReadBack(mutable Value: integer): integer;
 begin
-  return Value
+  return Value;
 end;
 
 begin
   var OutputValue: integer := ReadBack(1);
-  var Marker: integer := OutputValue
+  var Marker: integer := OutputValue;
 end.
 "#,
     );
@@ -376,14 +376,14 @@ begin
   mutable var Value: integer := 0;
   return function(): integer begin
     Value := Value + 1;
-    return Value
-  end
+    return Value;
+  end;
 end;
 
 begin
   var Next: function(): integer := Counter();
   var First: integer := Next();
-  var Marker: integer := First
+  var Marker: integer := First;
 end.
 "#,
     );
@@ -437,12 +437,12 @@ program DictionaryParameterMutation;
 function ReadAdded(mutable Scores: dict of string to integer): integer;
 begin
   var Marker: integer := Scores['Seed'];
-  return Scores['Added'] + Marker
+  return Scores['Added'] + Marker;
 end;
 
 begin
   var OutputValue: integer := ReadAdded(['Seed': 1]);
-  var Marker: integer := OutputValue
+  var Marker: integer := OutputValue;
 end.
 "#,
     );
@@ -496,14 +496,14 @@ begin
   mutable var Scores: dict of string to integer := ['Seed': 1];
   return function(): integer begin
     var Marker: integer := Scores['Seed'];
-    return Scores['Added'] + Marker
-  end
+    return Scores['Added'] + Marker;
+  end;
 end;
 
 begin
   var ReadValue: function(): integer := Reader();
   var OutputValue: integer := ReadValue();
-  var Marker: integer := OutputValue
+  var Marker: integer := OutputValue;
 end.
 "#,
     );
@@ -560,17 +560,17 @@ uses Std.Console;
 function Forever(): integer;
 begin
   while true do begin end;
-  return 0
+  return 0;
 end;
 
 procedure Emit();
 begin
-  WriteLn('not live')
+  WriteLn('not live');
 end;
 
 begin
   mutable var Scores: dict of string to integer := ['Seed': 1];
-  var Marker: integer := Scores['Seed']
+  var Marker: integer := Scores['Seed'];
 end.
 "#,
     );
@@ -672,17 +672,17 @@ uses Std.Console;
 
 function ChooseIndex(): integer;
 begin
-  return 1
+  return 1;
 end;
 
 procedure Emit();
 begin
-  WriteLn('not live')
+  WriteLn('not live');
 end;
 
 begin
   mutable var Items: array of integer := [1, 2];
-  var Marker: integer := Items[0]
+  var Marker: integer := Items[0];
 end.
 "#,
     );

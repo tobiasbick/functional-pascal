@@ -37,7 +37,7 @@ fn base_source(private_body: &str, offset: i64) -> String {
          function Hidden(Value: integer): integer;
          begin {private_body} end;
          public function AddOffset(Value: integer): integer;
-         begin return Value + Offset end;"
+         begin return Value + Offset; end;"
     )
 }
 
@@ -63,19 +63,19 @@ include = ["src/**/*.fpas"]
 "#,
         );
         let base = root.join("src/base.fpas");
-        write(&base, &base_source("return Value", 1));
+        write(&base, &base_source("return Value;", 1));
         write(
             &root.join("src/consumer.fpas"),
             "unit Demo.Consumer;
              uses Demo.Base;
              public function Run(): integer;
-             begin return AddOffset(41) end;",
+             begin return AddOffset(41); end;",
         );
         write(
             &root.join("src/main.fpas"),
             "program Demo;
              uses Demo.Consumer, Std.Console;
-             begin Std.Console.WriteLn(Run()) end.",
+             begin Std.Console.WriteLn(Run()); end.",
         );
         Self {
             root,
@@ -137,13 +137,13 @@ fn cold_warm_and_interface_invalidation_rebuild_the_minimum_units() {
     assert_eq!(warm.counters().relinked, 1);
     assert_output(warm, "42");
 
-    write(&fixture.base, &base_source("return Value + 100", 1));
+    write(&fixture.base, &base_source("return Value + 100;", 1));
     let private_change = fixture.build().expect("private implementation rebuild");
     assert_eq!(private_change.counters().compiled, 1);
     assert_eq!(private_change.counters().sidecar_reused, 1);
     assert_output(private_change, "42");
 
-    write(&fixture.base, &base_source("return Value + 100", 2));
+    write(&fixture.base, &base_source("return Value + 100;", 2));
     let public_change = fixture.build().expect("public interface rebuild");
     assert_eq!(public_change.counters().compiled, 2);
     assert_eq!(public_change.counters().sidecar_reused, 0);
@@ -250,7 +250,7 @@ include = ["main.fpas"]
         &root.join("app/main.fpas"),
         "program Demo;
          uses Demo.Consumer, Std.Console;
-         begin Std.Console.WriteLn(Run()) end.",
+         begin Std.Console.WriteLn(Run()); end.",
     );
     write(
         &root.join("lib/lib.fpasprj"),
@@ -269,14 +269,14 @@ units = ["Demo.Base", "Demo.Consumer"]
         &root.join("lib/base.fpas"),
         "unit Demo.Base;
          public function AddOne(Value: integer): integer;
-         begin return Value + 1 end;",
+         begin return Value + 1; end;",
     );
     write(
         &root.join("lib/consumer.fpas"),
         "unit Demo.Consumer;
          uses Demo.Base;
          public function Run(): integer;
-         begin return AddOne(41) end;",
+         begin return AddOne(41); end;",
     );
 
     let project = load_project(&app_manifest).expect("workspace program project");
@@ -319,7 +319,7 @@ include = ["src/**/*.fpas"]
         &root.join("src/main.fpas"),
         "program Demo;
          uses Demo.Values, Std.Console;
-         begin Std.Console.WriteLn(Demo.Values.State.Ready) end.",
+         begin Std.Console.WriteLn(Demo.Values.State.Ready); end.",
     );
 
     let project = load_project(&manifest).expect("enum project loading");
@@ -347,7 +347,7 @@ fn failed_rebuild_preserves_previous_valid_sidecar() {
         &fixture.base,
         "unit Demo.Base;
          function AddOffset(Value: integer): integer;
-         begin return 'wrong' end;",
+         begin return 'wrong'; end;",
     );
     assert!(fixture.build().is_err());
     assert_eq!(
@@ -470,7 +470,7 @@ fn source_changed_after_graph_creation_is_rejected_without_relabelling_sidecar()
     let graph = build_unit_graph(&project.source_files, &project.link_meta).expect("unit graph");
     let selection = resolve_library_units(&graph).expect("library units");
 
-    write(&fixture.base, &base_source("return Value + 100", 2));
+    write(&fixture.base, &base_source("return Value + 100;", 2));
     let error = build_library_units(&graph, &selection, &BuildOptions::default())
         .err()
         .expect("stale graph must fail");

@@ -13,13 +13,13 @@ begin
                                                                         TuiElementBuilders.MakePanel('Host', [
                                                                                                                TuiElementBuilders.MakeCheckBox(TuiControlId.Create(1), 'Flag', State.Checked, TuiAction.Create(9))
                                                                                                              ])
-                                                                      ])
+                                                                      ]);
 end;
 
 function UpdateCheck(State: CheckModel; Msg: TuiMsg; Cmd: TuiCmdOutput): CheckModel;
 begin
   Cmd.Set(TuiCmd.NoCommand);
-  return State
+  return State;
 end;
 
 begin
@@ -41,5 +41,5 @@ begin
   AssertEquals(12, App.SurfaceSnapshot().Width);
   AssertEquals(4, App.SurfaceSnapshot().Height);
   AssertTrue(Std.Str.Contains(App.SurfaceSnapshot().LineAt(1), 'Fla'));
-  App.Close()
+  App.Close();
 end.

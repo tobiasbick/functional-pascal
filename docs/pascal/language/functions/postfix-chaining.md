@@ -34,7 +34,7 @@ suffixes that follow a completed primary become postfix operations:
 Factory.Create().Value
 Factory.Create().Transform(2).Value
 Factory.Create()[0]
-(Factory.Create()).Value
+(Factory.Create()).Value;
 ```
 
 ## Calls after an expression
@@ -51,7 +51,7 @@ a statement. The procedure runs and its `Unit` result is discarded:
 
 ```pascal
 TuiContainer.AsView(Container).Destroy()
-Factory.Create().Configure().Start()
+Factory.Create().Configure().Start();
 ```
 
 Every earlier step must still produce a value. A procedure cannot appear in the

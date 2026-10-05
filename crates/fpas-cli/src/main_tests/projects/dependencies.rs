@@ -14,7 +14,7 @@ fn run_cli_executes_program_with_library_project_dependency() {
     write_library_fpasprj(&lib_project, &["src/**/*.fpas"]);
     write_text(
         &lib_dir.join("src/math.fpas"),
-        "unit Calc.Math;\npublic function Mul(A: integer; B: integer): integer;\nbegin\n  return A * B\nend;\n",
+        "unit Calc.Math;\npublic function Mul(A: integer; B: integer): integer;\nbegin\n  return A * B;\nend;\n",
     );
 
     write_program_fpasprj_with_deps(
@@ -25,7 +25,7 @@ fn run_cli_executes_program_with_library_project_dependency() {
     );
     write_text(
         &app_dir.join("src/main.fpas"),
-        "program Calc;\nuses Calc.Math, Std.Console;\nbegin\n  WriteLn(Mul(6, 7))\nend.\n",
+        "program Calc;\nuses Calc.Math, Std.Console;\nbegin\n  WriteLn(Mul(6, 7));\nend.\n",
     );
 
     let (exit_code, stdout_output, stderr_output) =
@@ -63,17 +63,17 @@ public type
       return record
         X := X;
         Y := Y;
-      end
+      end;
     end;
 
     public static procedure Print(Value: PointImpl);
     begin
-      Std.Console.WriteLn(Value.Sum())
+      Std.Console.WriteLn(Value.Sum());
     end;
 
     public function Sum(Self: PointImpl): integer;
     begin
-      return Self.X + Self.Y
+      return Self.X + Self.Y;
     end;
   end;
 ",
@@ -103,7 +103,7 @@ program App;
 uses Geom.Api;
 begin
   var P: Point := Point.Create(3, 4);
-  Point.Print(P)
+  Point.Print(P);
 end.
 ",
     );

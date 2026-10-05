@@ -24,10 +24,10 @@ function TuiCmdOutputRequire(Slot: integer): integer;
 begin
   if (Slot < 1) or (Slot > Std.Arrays.Length(TuiCommandValues)) then
   begin
-    panic('Tui command output handle is invalid')
+    panic('Tui command output handle is invalid');
   end;
 
-  return Slot
+  return Slot;
 end;
 
 public type
@@ -45,7 +45,7 @@ public type
       TuiCommandTickDelays := Std.Arrays.Concat(TuiCommandTickDelays, [-1]);
       return record
         Slot := Std.Arrays.Length(TuiCommandValues);
-      end
+      end;
     end;
 
     // Resets the output before one Update call.
@@ -58,7 +58,7 @@ public type
       TuiCommandValues[Slot - 1] := TuiCmd.NoCommand;
       TuiCommandPalettes[Slot - 1] := None;
       TuiCommandBackground[Slot - 1] := [];
-      TuiCommandTickDelays[Slot - 1] := -1
+      TuiCommandTickDelays[Slot - 1] := -1;
     end;
 
     // Asks the interactive host for one `TuiMsg.Tick` after DelayMilliseconds.
@@ -68,10 +68,10 @@ public type
       var Slot: integer := TuiCmdOutputRequire(Self.Slot);
       if DelayMilliseconds < 0 then
       begin
-        panic('Tui tick delay must not be negative')
+        panic('Tui tick delay must not be negative');
       end;
 
-      TuiCommandTickDelays[Slot - 1] := DelayMilliseconds
+      TuiCommandTickDelays[Slot - 1] := DelayMilliseconds;
     end;
 
     // Returns the tick delay requested by the current Update call, if any.
@@ -81,10 +81,10 @@ public type
       var Delay: integer := TuiCommandTickDelays[Slot - 1];
       if Delay < 0 then
       begin
-        return None
+        return None;
       end;
 
-      return Some(Delay)
+      return Some(Delay);
     end;
 
     // Starts one operation after Update returns. The host owns it until completion or shutdown.
@@ -93,11 +93,11 @@ public type
       var Slot: integer := TuiCmdOutputRequire(Self.Slot);
       if Id < 1 then
       begin
-        panic('Tui background id must be positive')
+        panic('Tui background id must be positive');
       end;
       mutable var Commands: array of TuiBackgroundCommand := TuiCommandBackground[Slot - 1];
       Std.Arrays.Push(Commands, TuiBackgroundCommand.Start(Id, Work));
-      TuiCommandBackground[Slot - 1] := Commands
+      TuiCommandBackground[Slot - 1] := Commands;
     end;
 
     // Requests cancellation and starts the latest replacement after the previous operation ends.
@@ -106,11 +106,11 @@ public type
       var Slot: integer := TuiCmdOutputRequire(Self.Slot);
       if Id < 1 then
       begin
-        panic('Tui subscription id must be positive')
+        panic('Tui subscription id must be positive');
       end;
       mutable var Commands: array of TuiBackgroundCommand := TuiCommandBackground[Slot - 1];
       Std.Arrays.Push(Commands, TuiBackgroundCommand.ReplaceSubscription(Id, Work));
-      TuiCommandBackground[Slot - 1] := Commands
+      TuiCommandBackground[Slot - 1] := Commands;
     end;
 
     // Requests cancellation after Update returns; the host joins it when complete or at shutdown.
@@ -119,11 +119,11 @@ public type
       var Slot: integer := TuiCmdOutputRequire(Self.Slot);
       if Id < 1 then
       begin
-        panic('Tui subscription id must be positive')
+        panic('Tui subscription id must be positive');
       end;
       mutable var Commands: array of TuiBackgroundCommand := TuiCommandBackground[Slot - 1];
       Std.Arrays.Push(Commands, TuiBackgroundCommand.CancelSubscription(Id));
-      TuiCommandBackground[Slot - 1] := Commands
+      TuiCommandBackground[Slot - 1] := Commands;
     end;
 
     // Sets the command returned by the current Update call.
@@ -135,7 +135,7 @@ public type
     begin
       var Slot: integer := TuiCmdOutputRequire(Self.Slot);
       TuiCommandValues[Slot - 1] := Value;
-      TuiCommandPalettes[Slot - 1] := None
+      TuiCommandPalettes[Slot - 1] := None;
     end;
 
     // Requests an immediate palette change after Update returns.
@@ -147,7 +147,7 @@ public type
     begin
       var Slot: integer := TuiCmdOutputRequire(Self.Slot);
       TuiCommandValues[Slot - 1] := TuiCmd.SetPalette;
-      TuiCommandPalettes[Slot - 1] := Some(Palette)
+      TuiCommandPalettes[Slot - 1] := Some(Palette);
     end;
 
     // Reads the command after Update returns.
@@ -157,7 +157,7 @@ public type
     public function Command(Self: TuiCmdOutput): TuiCmd;
     begin
       var Slot: integer := TuiCmdOutputRequire(Self.Slot);
-      return TuiCommandValues[Slot - 1]
+      return TuiCommandValues[Slot - 1];
     end;
 
     // Returns the palette attached to a SetPalette command.
@@ -167,13 +167,13 @@ public type
     public function ReadPalette(Self: TuiCmdOutput): option of TuiPalette;
     begin
       var Slot: integer := TuiCmdOutputRequire(Self.Slot);
-      return TuiCommandPalettes[Slot - 1]
+      return TuiCommandPalettes[Slot - 1];
     end;
 
     // Returns background commands emitted by the current Update call.
     public function ReadBackground(Self: TuiCmdOutput): array of TuiBackgroundCommand;
     begin
       var Slot: integer := TuiCmdOutputRequire(Self.Slot);
-      return TuiCommandBackground[Slot - 1]
+      return TuiCommandBackground[Slot - 1];
     end;
   end;

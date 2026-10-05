@@ -47,7 +47,7 @@ public type
         Ctrl := false;
         Alt := false;
         Meta := false;
-      end
+      end;
     end;
 
     // Creates a pointer event with explicit modifiers.
@@ -78,6 +78,6 @@ public type
         Ctrl := Ctrl;
         Alt := Alt;
         Meta := Meta;
-      end
+      end;
     end;
   end;

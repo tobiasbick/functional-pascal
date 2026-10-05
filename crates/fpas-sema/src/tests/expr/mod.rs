@@ -170,7 +170,7 @@ fn equality_type_mismatch() {
 #[test]
 fn analyze_with_types_records_canonical_standard_intrinsic_calls() {
     let (program, parse_errors) = fpas_parser::parse(
-        "program T; uses Std.Str, Std.Console; begin Std.Console.WriteLn(Std.Str.Length('abc')) end.",
+        "program T; uses Std.Str, Std.Console; begin Std.Console.WriteLn(Std.Str.Length('abc')); end.",
     );
     assert!(parse_errors.is_empty(), "{parse_errors:#?}");
     let metadata = analyze_with_types(&program);
@@ -191,7 +191,7 @@ fn analyze_with_types_records_canonical_standard_intrinsic_calls() {
 #[test]
 fn analyze_with_types_canonicalizes_short_standard_intrinsic_calls() {
     let (program, parse_errors) =
-        fpas_parser::parse("program T; uses Std.Console; begin WriteLn('hello') end.");
+        fpas_parser::parse("program T; uses Std.Console; begin WriteLn('hello'); end.");
     assert!(parse_errors.is_empty(), "{parse_errors:#?}");
     let metadata = analyze_with_types(&program);
     assert!(metadata.errors.is_empty(), "{:?}", metadata.errors);
@@ -355,7 +355,7 @@ fn empty_array() {
 
 #[test]
 fn undefined_variable() {
-    check_errors("program T; begin return Foo end.");
+    check_errors("program T; begin return Foo; end.");
 }
 
 // ── Function call ───────────────────────────────────────────────
@@ -365,8 +365,8 @@ fn call_function() {
     check_ok(
         "program T; \
          function Add(A: integer; B: integer): integer; \
-         begin return A + B end; \
-         begin var X: integer := Add(1, 2) end.",
+         begin return A + B; end; \
+         begin var X: integer := Add(1, 2); end.",
     );
 }
 
@@ -375,7 +375,7 @@ fn call_wrong_arg_count() {
     check_errors(
         "program T; \
          function Add(A: integer; B: integer): integer; \
-         begin return A + B end; \
-         begin var X: integer := Add(1) end.",
+         begin return A + B; end; \
+         begin var X: integer := Add(1); end.",
     );
 }

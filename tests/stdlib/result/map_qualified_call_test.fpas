@@ -4,11 +4,11 @@ uses Std.Console, Std.Results, Std.Conv;
 
 function ToStr(V: integer): string;
 begin
-  return IntToStr(V)
+  return IntToStr(V);
 end;
 
 begin
   var R: result of integer, string := Ok(5);
   var M: result of string, string := Std.Results.Map(R, ToStr);
-  WriteLn(Unwrap(M))
+  WriteLn(Unwrap(M));
 end.

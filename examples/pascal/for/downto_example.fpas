@@ -8,8 +8,8 @@ begin
   mutable var Sum: integer := 0;
   for I: integer := 5 downto 1 do
   begin
-    Sum := Sum + I
+    Sum := Sum + I;
   end;
 
-  WriteLn('sum: ', IntToStr(Sum))
+  WriteLn('sum: ', IntToStr(Sum));
 end.

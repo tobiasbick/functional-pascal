@@ -9,5 +9,5 @@ uses
 begin
   var Inbox: channel of MandelbrotRenderFrame := CreateChannel(8);
   var Initial: MandelbrotModel := NewMandelbrotModel(Inbox, ScreenWidth(), ScreenHeight());
-  TuiApplication.RunWithBackground(Initial, Inbox, UpdateMandelbrot, UpdateMandelbrotFrame, ViewMandelbrot)
+  TuiApplication.RunWithBackground(Initial, Inbox, UpdateMandelbrot, UpdateMandelbrotFrame, ViewMandelbrot);
 end.

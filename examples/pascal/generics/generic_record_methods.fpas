@@ -10,19 +10,19 @@ type
 
     function Map<R>(Self: Box; F: function(X: integer): R): R;
     begin
-      return F(Self.Value)
+      return F(Self.Value);
     end;
   end;
   Accumulator = record
     function EchoNumeric<T: Numeric>(Self: Accumulator; Extra: T): T;
     begin
-      return Extra
+      return Extra;
     end;
   end;
 
 function ToText(X: integer): string;
 begin
-  return 'value=' + IntToStr(X)
+  return 'value=' + IntToStr(X);
 end;
 
 begin
@@ -34,5 +34,5 @@ begin
   var A: Accumulator := record end;
 
   WriteLn('numeric int: ', IntToStr(A.EchoNumeric(21)));
-  WriteLn('numeric real ok: ', A.EchoNumeric(1.5) > 1.0)
+  WriteLn('numeric real ok: ', A.EchoNumeric(1.5) > 1.0);
 end.

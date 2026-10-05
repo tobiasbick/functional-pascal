@@ -8,5 +8,5 @@ begin
   D['B'] := 3;
   WriteLn(D['A']);
   WriteLn(D['B']);
-  WriteLn(Std.Dictionaries.Length(D))
+  WriteLn(Std.Dictionaries.Length(D));
 end.

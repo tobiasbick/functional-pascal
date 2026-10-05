@@ -27,13 +27,13 @@ export async function verifyBreakpointPolicies(
     "  while Counter < 4 do",
     "  begin",
     "    Counter := Counter + 1;",
-    "    WriteLn(Counter)",
-    "  end",
+    "    WriteLn(Counter);",
+    "  end;",
     "end.",
     ""
   ];
   const sourcePath = await writeSource(workspaceRoot, "policies", lines);
-  const line = lines.indexOf("    WriteLn(Counter)");
+  const line = lines.indexOf("    WriteLn(Counter);");
   try {
     await verifyExactHit(workspaceRoot, sourcePath, line, received, sent);
     await verifyLogpoint(workspaceRoot, sourcePath, line, received, sent);

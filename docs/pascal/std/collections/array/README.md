@@ -7,7 +7,7 @@ program Example;
 uses Std.Console, Std.Arrays;
 begin
   var A: array of integer := [1, 2, 3];
-  WriteLn(Length(A))
+  WriteLn(Length(A));
 end.
 ```
 

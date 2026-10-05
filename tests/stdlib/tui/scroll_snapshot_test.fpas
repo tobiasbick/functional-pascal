@@ -15,7 +15,7 @@ begin
                                                                                                                                                                                                  TuiElementBuilders.MakeLabel('Second'),
                                                                                                                                                                                                  TuiElementBuilders.MakeLabel('Third')
                                                                                                                                                                                                ]))
-                                                                      ])
+                                                                      ]);
 end;
 
 function UpdateScroll(State: ScrollModel; Msg: TuiMsg; Cmd: TuiCmdOutput): ScrollModel;
@@ -26,13 +26,13 @@ begin
     begin
       return record
         Offset := Offset;
-      end
-    end
+      end;
+    end;
     else
     begin
-      return State
-    end
-  end
+      return State;
+    end;
+  end;
 end;
 
 begin
@@ -47,5 +47,5 @@ begin
   Model := App.RunIterations(Model, UpdateScroll, ViewScroll, 1, 0);
   AssertTrue(Std.Str.Contains(App.SurfaceSnapshot().LineAt(0), 'Second'));
   AssertFalse(Std.Str.Contains(App.SurfaceSnapshot().LineAt(0), 'First'));
-  App.Close()
+  App.Close();
 end.

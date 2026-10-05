@@ -112,14 +112,14 @@ begin
             Ok(_):
             begin
             end;
-            Error(Message): panic(Message)
+            Error(Message): panic(Message);
           end;
           case ReadRequest(Connection, 4096, 1024) of
             Ok(RequestValue):
             begin
               if (RequestValue.Method <> 'GET') or (RequestValue.Target <> '/hello?name=fpas') then
               begin
-                panic('unexpected request')
+                panic('unexpected request');
               end;
               mutable var ResponseValue: ServerResponse := ServerResponse.Create(200, 'OK');
               ResponseValue.Headers := [Header.Create('Content-Type', 'text/plain')];
@@ -128,27 +128,27 @@ begin
                 Ok(_):
                 begin
                 end;
-                Error(Message): panic(Message)
-              end
+                Error(Message): panic(Message);
+              end;
             end;
-            Error(Message): panic(Message)
+            Error(Message): panic(Message);
           end;
           case Close(Connection) of
             Ok(_):
             begin
             end;
-            Error(Message): panic(Message)
-          end
+            Error(Message): panic(Message);
+          end;
         end;
-        Error(Message): panic(Message)
+        Error(Message): panic(Message);
       end;
       case CloseListener(ListenerValue) of
         Ok(_): WriteLn('served');
-        Error(Message): panic(Message)
-      end
+        Error(Message): panic(Message);
+      end;
     end;
-    Error(Message): panic(Message)
-  end
+    Error(Message): panic(Message);
+  end;
 end.
 "#
         ),
@@ -188,7 +188,7 @@ begin
             Ok(_):
             begin
             end;
-            Error(Message): panic(Message)
+            Error(Message): panic(Message);
           end;
           case ReadRequest(Connection, 4096, 1024) of
             Ok(RequestValue):
@@ -202,32 +202,32 @@ begin
                     Ok(_):
                     begin
                     end;
-                    Error(Message): panic(Message)
-                  end
+                    Error(Message): panic(Message);
+                  end;
                 end;
-                Error(Message): panic(Message)
-              end
+                Error(Message): panic(Message);
+              end;
             end;
-            Error(Message): panic(Message)
+            Error(Message): panic(Message);
           end;
           case Close(Connection) of
             Ok(_):
             begin
             end;
-            Error(Message): panic(Message)
-          end
+            Error(Message): panic(Message);
+          end;
         end;
-        Error(Message): panic(Message)
+        Error(Message): panic(Message);
       end;
       case CloseListener(ListenerValue) of
         Ok(_):
         begin
         end;
-        Error(Message): panic(Message)
-      end
+        Error(Message): panic(Message);
+      end;
     end;
-    Error(Message): panic(Message)
-  end
+    Error(Message): panic(Message);
+  end;
 end.
 "#
         ),
@@ -272,7 +272,7 @@ begin
             begin
               if not Std.Str.Contains(Message, 'both Transfer-Encoding and Content-Length') then
               begin
-                panic(Message)
+                panic(Message);
               end;
               mutable var ResponseValue: ServerResponse := ServerResponse.Create(400, 'Bad Request');
               ResponseValue.Body := Std.Net.Utf8.Encode('rejected');
@@ -280,28 +280,28 @@ begin
                 Ok(_):
                 begin
                 end;
-                Error(WriteMessage): panic(WriteMessage)
-              end
-            end
+                Error(WriteMessage): panic(WriteMessage);
+              end;
+            end;
           end;
           case Close(Connection) of
             Ok(_):
             begin
             end;
-            Error(Message): panic(Message)
-          end
+            Error(Message): panic(Message);
+          end;
         end;
-        Error(Message): panic(Message)
+        Error(Message): panic(Message);
       end;
       case CloseListener(ListenerValue) of
         Ok(_):
         begin
         end;
-        Error(Message): panic(Message)
-      end
+        Error(Message): panic(Message);
+      end;
     end;
-    Error(Message): panic(Message)
-  end
+    Error(Message): panic(Message);
+  end;
 end.
 "#
         ),
@@ -342,7 +342,7 @@ begin
             begin
               if not Std.Str.Contains(Message, 'MaxBodyBytes') then
               begin
-                panic(Message)
+                panic(Message);
               end;
               mutable var ResponseValue: ServerResponse := ServerResponse.Create(413, 'Content Too Large');
               ResponseValue.Body := Std.Net.Utf8.Encode('too large');
@@ -350,28 +350,28 @@ begin
                 Ok(_):
                 begin
                 end;
-                Error(WriteMessage): panic(WriteMessage)
-              end
-            end
+                Error(WriteMessage): panic(WriteMessage);
+              end;
+            end;
           end;
           case Close(Connection) of
             Ok(_):
             begin
             end;
-            Error(Message): panic(Message)
-          end
+            Error(Message): panic(Message);
+          end;
         end;
-        Error(Message): panic(Message)
+        Error(Message): panic(Message);
       end;
       case CloseListener(ListenerValue) of
         Ok(_):
         begin
         end;
-        Error(Message): panic(Message)
-      end
+        Error(Message): panic(Message);
+      end;
     end;
-    Error(Message): panic(Message)
-  end
+    Error(Message): panic(Message);
+  end;
 end.
 "#
         ),

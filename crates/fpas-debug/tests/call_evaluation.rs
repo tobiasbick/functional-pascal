@@ -37,15 +37,15 @@ type
     Value: integer;
     static function Create(Value: integer): Counter;
     begin
-      return record Value := Value; end
+      return record Value := Value; end;
     end;
     function Double(Self: Counter): integer;
     begin
-      return Self.Value * 2
+      return Self.Value * 2;
     end;
     function ReadNumber(Self: Counter): integer;
     begin
-      return Self.Value
+      return Self.Value;
     end;
     property Number: integer read ReadNumber;
   end;
@@ -95,7 +95,7 @@ uses Std.Console;
 function Noisy(): integer;
 begin
   Std.Console.WriteLn('leak');
-  return 1
+  return 1;
 end;
 begin
 end.";
@@ -130,11 +130,11 @@ mutable var Counter: integer := 5;
 function Increment(): integer;
 begin
   Counter := Counter + 1;
-  return Counter
+  return Counter;
 end;
 begin
   mutable var Anchor: integer := Counter;
-  Anchor := Anchor + 1
+  Anchor := Anchor + 1;
 end.";
     let mut session = DebugSession::new(compile(source)).expect("debug session");
     let breakpoint = session
@@ -172,10 +172,10 @@ begin
   var AddBase: function(Value: integer): integer :=
     function(Value: integer): integer
     begin
-      return Base + Value
+      return Base + Value;
     end;
   mutable var Marker: integer := 0;
-  Marker := Marker + 1
+  Marker := Marker + 1;
 end.";
     let mut session = DebugSession::new(compile(source)).expect("debug session");
     let breakpoint = session
@@ -209,7 +209,7 @@ program DebugLimits;
 function Forever(): integer;
 begin
   while true do begin end;
-  return 0
+  return 0;
 end;
 begin
 end.";

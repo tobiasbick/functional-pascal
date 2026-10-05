@@ -9,25 +9,25 @@ begin
     case FeedSse(Decoder, Std.Net.Utf8.Encode(('data: more' + #10) + #10)) of
       Ok(_):
       begin
-        Fail('feed after error')
+        Fail('feed after error');
       end;
       Error(Message):
       begin
-        AssertTrue(Std.Str.Contains(Message, 'finished'))
-      end
+        AssertTrue(Std.Str.Contains(Message, 'finished'));
+      end;
     end;
 
     case FinishSse(Decoder) of
       Ok(_):
       begin
-        Fail('finish after error')
+        Fail('finish after error');
       end;
       Error(Message):
       begin
-        AssertTrue(Std.Str.Contains(Message, 'finished'))
-      end
-    end
-  end
+        AssertTrue(Std.Str.Contains(Message, 'finished'));
+      end;
+    end;
+  end;
 end;
 
 begin
@@ -35,11 +35,11 @@ begin
   case FeedSse(Limited, Std.Net.Utf8.Encode(Std.Str.RepeatStr('x', 100000))) of
     Ok(_):
     begin
-      Fail('oversized fragment')
+      Fail('oversized fragment');
     end;
     Error(_):
     begin
-    end
+    end;
   end;
 
   Terminal(Limited);
@@ -48,11 +48,11 @@ begin
   case FinishSse(Invalid) of
     Ok(_):
     begin
-      Fail('invalid final UTF-8')
+      Fail('invalid final UTF-8');
     end;
     Error(_):
     begin
-    end
+    end;
   end;
 
   Terminal(Invalid);
@@ -64,5 +64,5 @@ begin
   var Split: SseDecoder := Unwrap(CreateSseDecoder(9));
   AssertEquals(0, Std.Arrays.Length(Unwrap(FeedSse(Split, Std.Net.Utf8.Encode('data:x' + #13)))));
   AssertEquals(1, Std.Arrays.Length(Unwrap(FeedSse(Split, [10, 10]))));
-  AssertEquals(0, Std.Arrays.Length(Unwrap(FinishSse(Split))))
+  AssertEquals(0, Std.Arrays.Length(Unwrap(FinishSse(Split))));
 end.

@@ -16,7 +16,7 @@ public type
       return record
         Re := 0.0;
         Im := 0.0;
-      end
+      end;
     end;
 
     public static function Create(Re: real; Im: real): Complex;
@@ -24,7 +24,7 @@ public type
       return record
         Re := Re;
         Im := Im;
-      end
+      end;
     end;
 
     public function Sq(Self: Complex): Complex;
@@ -32,7 +32,7 @@ public type
       return record
         Re := Self.Re * Self.Re - Self.Im * Self.Im;
         Im := (2.0 * Self.Re) * Self.Im;
-      end
+      end;
     end;
 
     public function Add(Self: Complex; Other: Complex): Complex;
@@ -40,12 +40,12 @@ public type
       return record
         Re := Self.Re + Other.Re;
         Im := Self.Im + Other.Im;
-      end
+      end;
     end;
 
     public function MagSq(Self: Complex): real;
     begin
-      return Self.Re * Self.Re + Self.Im * Self.Im
+      return Self.Re * Self.Re + Self.Im * Self.Im;
     end;
   end;
   PixelSample = record
@@ -76,13 +76,13 @@ begin
     return record
       IsInside := true;
       EscapeValue := 0.0;
-    end
+    end;
   end;
   var MagnitudeSq: real := Max(Z.MagSq(), 4.0);
   return record
     IsInside := false;
     EscapeValue := (IntToReal(Iterations) + 1.0) - (Log(Log(MagnitudeSq) * 0.5) / Log(2.0));
-  end
+  end;
 end;
 
 function Iterate(C: Complex; MaxIter: integer): PixelSample;
@@ -92,10 +92,10 @@ begin
   while (N < MaxIter) and (Z.MagSq() <= 256.0) do
   begin
     Z := Z.Sq().Add(C);
-    N := N + 1
+    N := N + 1;
   end;
 
-  return FinishSample(Z, N, MaxIter)
+  return FinishSample(Z, N, MaxIter);
 end;
 
 function IterateCancellable(
@@ -111,17 +111,17 @@ begin
   begin
     if IsCancellationRequested(HostToken) or IsCancellationRequested(WorkerToken) then
     begin
-      break
+      break;
     end;
     var ChunkEnd: integer := Min(N + 128, MaxIter);
     while (N < ChunkEnd) and (Z.MagSq() <= 256.0) do
     begin
       Z := Z.Sq().Add(C);
-      N := N + 1
-    end
+      N := N + 1;
+    end;
   end;
 
-  return FinishSample(Z, N, MaxIter)
+  return FinishSample(Z, N, MaxIter);
 end;
 
 // Computes one row without cancellation for reference rendering and tests.
@@ -143,10 +143,10 @@ begin
   for Px: integer := 0 to Width - 1 do
   begin
     var Cx: real := XMin + (Px / IntToReal(WidthRange)) * (XMax - XMin);
-    Std.Arrays.Push(Row, Iterate(Complex.Create(Cx, Cy), MaxIter))
+    Std.Arrays.Push(Row, Iterate(Complex.Create(Cx, Cy), MaxIter));
   end;
 
-  return Row
+  return Row;
 end;
 
 function ComputeRowCancellable(
@@ -173,23 +173,23 @@ begin
     begin
       // Let the Console reader run even when every pool worker is rendering.
       Sleep(0);
-      NextYield := MonotonicMillis() + 8
+      NextYield := MonotonicMillis() + 8;
     end;
 
     if IsCancellationRequested(HostToken) or IsCancellationRequested(WorkerToken) then
     begin
-      return []
+      return [];
     end;
     var Cx: real := XMin + (Px / IntToReal(WidthRange)) * (XMax - XMin);
-    Std.Arrays.Push(Row, IterateCancellable(Complex.Create(Cx, Cy), MaxIter, HostToken, WorkerToken))
+    Std.Arrays.Push(Row, IterateCancellable(Complex.Create(Cx, Cy), MaxIter, HostToken, WorkerToken));
   end;
 
   if IsCancellationRequested(HostToken) or IsCancellationRequested(WorkerToken) then
   begin
-    return []
+    return [];
   end;
 
-  return Row
+  return Row;
 end;
 
 function EscapeGlyph(EscapeValue: real): string;
@@ -197,7 +197,7 @@ begin
   var Ramp: string := ' ░▒▓█';
   var Count: integer := Std.Str.Length(Ramp);
   var Index: integer := Clamp(Trunc(Frac(EscapeValue * 0.08) * IntToReal(Count)), 0, Count - 1);
-  return Std.Str.CharAt(Ramp, Index)
+  return Std.Str.CharAt(Ramp, Index);
 end;
 
 function RenderCell(Sample: PixelSample; Palette: PaletteKind): TuiCell;
@@ -206,10 +206,10 @@ begin
   if Sample.IsInside then
   begin
     var Shade: TuiColor := InsideColor();
-    return TuiCell.Styled(' ', TuiStyle.FromColors(Shade, Shade))
+    return TuiCell.Styled(' ', TuiStyle.FromColors(Shade, Shade));
   end;
 
-  return TuiCell.Styled(EscapeGlyph(Sample.EscapeValue), TuiStyle.FromColors(EscapeColor(Palette, Sample.EscapeValue), Background))
+  return TuiCell.Styled(EscapeGlyph(Sample.EscapeValue), TuiStyle.FromColors(EscapeColor(Palette, Sample.EscapeValue), Background));
 end;
 
 function RenderSamples(Samples: array of PixelSample; Palette: PaletteKind): array of TuiCell;
@@ -217,15 +217,15 @@ begin
   mutable var Cells: array of TuiCell := [];
   for Sample: PixelSample in Samples do
   begin
-    Std.Arrays.Push(Cells, RenderCell(Sample, Palette))
+    Std.Arrays.Push(Cells, RenderCell(Sample, Palette));
   end;
 
-  return Cells
+  return Cells;
 end;
 
 function RenderRowCells(Request: MandelbrotRenderRequest; Py: integer): array of TuiCell;
 begin
-  return RenderSamples(ComputeRow(Py, Request.Width, Request.Height, Request.XMin, Request.XMax, Request.YMin, Request.YMax, Request.MaxIter), Request.Palette)
+  return RenderSamples(ComputeRow(Py, Request.Width, Request.Height, Request.XMin, Request.XMax, Request.YMin, Request.YMax, Request.MaxIter), Request.Palette);
 end;
 
 function RenderRowCellsCancellable(
@@ -235,7 +235,7 @@ function RenderRowCellsCancellable(
   WorkerToken: CancellationToken
 ): array of TuiCell;
 begin
-  return RenderSamples(ComputeRowCancellable(Py, Request.Width, Request.Height, Request.XMin, Request.XMax, Request.YMin, Request.YMax, Request.MaxIter, HostToken, WorkerToken), Request.Palette)
+  return RenderSamples(ComputeRowCancellable(Py, Request.Width, Request.Height, Request.XMin, Request.XMax, Request.YMin, Request.YMax, Request.MaxIter, HostToken, WorkerToken), Request.Palette);
 end;
 
 // Computes a flat row-major grid synchronously as a reference implementation.
@@ -265,10 +265,10 @@ begin
   for Py: integer := 0 to Height - 1 do
   begin
     var Row: array of TuiCell := RenderRowCells(Request, Py);
-    Cells := Std.Arrays.Concat(Cells, Row)
+    Cells := Std.Arrays.Concat(Cells, Row);
   end;
 
-  return TuiCellGrid.Create(Width, Height, Cells)
+  return TuiCellGrid.Create(Width, Height, Cells);
 end;
 
 // Runs one task per row on the VM pool and publishes one complete image.
@@ -284,24 +284,24 @@ begin
   begin
     if IsCancellationRequested(HostToken) then
     begin
-      break
+      break;
     end;
 
     Std.Arrays.Push(Tasks, StartTaskInGroup(Group, function(WorkerToken: CancellationToken): array of TuiCell begin
-      return RenderRowCellsCancellable(Request, Py, HostToken, WorkerToken)
-    end))
+      return RenderRowCellsCancellable(Request, Py, HostToken, WorkerToken);
+    end));
   end;
   mutable var Cells: array of TuiCell := [];
   for Py: integer := 0 to Std.Arrays.Length(Tasks) - 1 do
   begin
     if IsError(WaitAnyWithCancellation([Tasks[Py]], HostToken)) then
     begin
-      break
+      break;
     end;
     var Row: array of TuiCell := Wait(Tasks[Py]);
     if IsCancellationRequested(HostToken) then
     begin
-      break
+      break;
     end;
 
     Cells := Std.Arrays.Concat(Cells, Row);
@@ -312,18 +312,18 @@ begin
         Cells := Cells;
       end, HostToken)) then
       begin
-        break
-      end
-    end
+        break;
+      end;
+    end;
   end;
   var Failures: array of TaskFailure := CloseTaskGroup(Group);
   for Failure: TaskFailure in Failures do
   begin
     if Failure.Kind <> TaskFailureKind.Cancelled then
     begin
-      return Error(Failure.Message)
-    end
+      return Error(Failure.Message);
+    end;
   end;
 
-  return Ok(true)
+  return Ok(true);
 end;

@@ -7,6 +7,6 @@ begin
   WriteLn('for Name in Ages (insertion order):');
   for Name: string in Ages do
   begin
-    WriteLn('  ', Name, ' -> ', IntToStr(Ages[Name]))
-  end
+    WriteLn('  ', Name, ' -> ', IntToStr(Ages[Name]));
+  end;
 end.

@@ -14,13 +14,13 @@ begin
     case ReceiveWithCancellation(Gate, Token) of
       Ok(_):
       begin
-        return Error('expected returned error')
+        return Error('expected returned error');
       end;
       Error(Message):
       begin
-        return Error('probe cancelled pending work')
-      end
-    end
+        return Error('probe cancelled pending work');
+      end;
+    end;
   end);
   AssertTrue(Std.Results.Unwrap(ReceiveWithTimeout(Ready, 10000)));
   AssertTrue(IsNone(TryCloseCompletedTaskGroup(Returned)));
@@ -29,7 +29,7 @@ begin
   while IsNone(ReturnedFailures) do
   begin
     Sleep(1);
-    ReturnedFailures := TryCloseCompletedTaskGroup(Returned)
+    ReturnedFailures := TryCloseCompletedTaskGroup(Returned);
   end;
   var ReturnedReport: array of TaskFailure := Std.Options.Unwrap(ReturnedFailures);
   AssertEquals(1, Std.Arrays.Length(ReturnedReport));
@@ -39,14 +39,14 @@ begin
   var Panicked: TaskGroup := CreateTaskGroup();
   StartTaskInGroup(Panicked, procedure(Token: CancellationToken) begin
     Send(PanicReady, true);
-    panic('expected panic report')
+    panic('expected panic report');
   end);
   AssertTrue(Std.Results.Unwrap(ReceiveWithTimeout(PanicReady, 10000)));
   mutable var PanicFailures: option of array of TaskFailure := None;
   while IsNone(PanicFailures) do
   begin
     Sleep(1);
-    PanicFailures := TryCloseCompletedTaskGroup(Panicked)
+    PanicFailures := TryCloseCompletedTaskGroup(Panicked);
   end;
   var PanicReport: array of TaskFailure := Std.Options.Unwrap(PanicFailures);
   AssertEquals(1, Std.Arrays.Length(PanicReport));
@@ -54,5 +54,5 @@ begin
   AssertEquals('panic: expected panic report', PanicReport[0].Message);
   CloseChannel(Gate);
   CloseChannel(Ready);
-  CloseChannel(PanicReady)
+  CloseChannel(PanicReady);
 end.

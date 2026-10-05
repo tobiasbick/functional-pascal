@@ -17,11 +17,11 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Lib, Std.Console;\nbegin\n  WriteLn(Secret())\nend.\n",
+        "program Main;\nuses App.Lib, Std.Console;\nbegin\n  WriteLn(Secret());\nend.\n",
     );
     write_text(
         &cwd.join("src/lib.fpas"),
-        "unit App.Lib;\n\nfunction Secret(): integer;\nbegin\n  return 42\nend;\n",
+        "unit App.Lib;\n\nfunction Secret(): integer;\nbegin\n  return 42;\nend;\n",
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);
@@ -51,11 +51,11 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Lib, Std.Console;\nbegin\n  WriteLn(App.Lib.Secret())\nend.\n",
+        "program Main;\nuses App.Lib, Std.Console;\nbegin\n  WriteLn(App.Lib.Secret());\nend.\n",
     );
     write_text(
         &cwd.join("src/lib.fpas"),
-        "unit App.Lib;\n\nfunction Secret(): integer;\nbegin\n  return 42\nend;\n",
+        "unit App.Lib;\n\nfunction Secret(): integer;\nbegin\n  return 42;\nend;\n",
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);
@@ -85,7 +85,7 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Lib, Std.Console;\nbegin\n  WriteLn(Secret)\nend.\n",
+        "program Main;\nuses App.Lib, Std.Console;\nbegin\n  WriteLn(Secret);\nend.\n",
     );
     write_text(
         &cwd.join("src/lib.fpas"),
@@ -119,7 +119,7 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Lib;\nbegin\n  DoSecret()\nend.\n",
+        "program Main;\nuses App.Lib;\nbegin\n  DoSecret();\nend.\n",
     );
     write_text(
         &cwd.join("src/lib.fpas"),
@@ -249,7 +249,7 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Lib, Std.Console;\nbegin\n  WriteLn(Secret)\nend.\n",
+        "program Main;\nuses App.Lib, Std.Console;\nbegin\n  WriteLn(Secret);\nend.\n",
     );
     write_text(
         &cwd.join("src/lib.fpas"),
@@ -283,7 +283,7 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Lib, Std.Console;\nbegin\n  WriteLn(Counter)\nend.\n",
+        "program Main;\nuses App.Lib, Std.Console;\nbegin\n  WriteLn(Counter);\nend.\n",
     );
     write_text(
         &cwd.join("src/lib.fpas"),
@@ -317,7 +317,7 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Lib, Std.Console;\nbegin\n  WriteLn(App.Lib.Secret)\nend.\n",
+        "program Main;\nuses App.Lib, Std.Console;\nbegin\n  WriteLn(App.Lib.Secret);\nend.\n",
     );
     write_text(
         &cwd.join("src/lib.fpas"),
@@ -351,7 +351,7 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Lib, Std.Console;\nbegin\n  WriteLn(App.Lib.Secret)\nend.\n",
+        "program Main;\nuses App.Lib, Std.Console;\nbegin\n  WriteLn(App.Lib.Secret);\nend.\n",
     );
     write_text(
         &cwd.join("src/lib.fpas"),
@@ -385,7 +385,7 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Lib;\nbegin\n  App.Lib.DoSecret()\nend.\n",
+        "program Main;\nuses App.Lib;\nbegin\n  App.Lib.DoSecret();\nend.\n",
     );
     write_text(
         &cwd.join("src/lib.fpas"),

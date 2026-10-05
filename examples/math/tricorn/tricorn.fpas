@@ -8,22 +8,22 @@ begin
   case Value of
     1:
     begin
-      return PaletteKind.DeepOcean
+      return PaletteKind.DeepOcean;
     end;
     2:
     begin
-      return PaletteKind.Ember
-    end
+      return PaletteKind.Ember;
+    end;
     else
     begin
-      return PaletteKind.Aurora
-    end
-  end
+      return PaletteKind.Aurora;
+    end;
+  end;
 end;
 
 function Label(Value: integer): string;
 begin
-  return PaletteName(Palette(Value))
+  return PaletteName(Palette(Value));
 end;
 
 procedure Draw(
@@ -37,7 +37,7 @@ procedure Draw(
   Value: integer
 );
 begin
-  Render(XMin, XMax, YMin, YMax, Width, Height, MaxIter, Palette(Value))
+  Render(XMin, XMax, YMin, YMax, Width, Height, MaxIter, Palette(Value));
 end;
 
 begin
@@ -49,5 +49,5 @@ begin
     Palette := 3;
   end;
 
-  RunExplorer('Functional Pascal Tricorn', Initial, Draw, Label)
+  RunExplorer('Functional Pascal Tricorn', Initial, Draw, Label);
 end.

@@ -13,11 +13,11 @@ begin
   begin
     if Bytes[Index] = 10 then
     begin
-      return Index
-    end
+      return Index;
+    end;
   end;
 
-  return -1
+  return -1;
 end;
 
 // Reads byte fragments until the client sends an LF delimiter.
@@ -35,34 +35,34 @@ begin
       begin
         if Std.Arrays.Length(Part) = 0 then
         begin
-          panic('TCP connection closed before the LF delimiter')
+          panic('TCP connection closed before the LF delimiter');
         end;
 
         Bytes := Std.Arrays.Concat(Bytes, Part);
-        LineEnd := LineFeedIndex(Bytes)
+        LineEnd := LineFeedIndex(Bytes);
       end;
       Error(Message):
       begin
-        panic(Message)
-      end
-    end
+        panic(Message);
+      end;
+    end;
   end;
 
   if LineEnd + 1 <> Std.Arrays.Length(Bytes) then
   begin
-    panic('TCP echo server accepts exactly one LF-delimited request per connection')
+    panic('TCP echo server accepts exactly one LF-delimited request per connection');
   end;
   var TextBytes: array of integer := Std.Arrays.Slice(Bytes, 0, LineEnd);
   case Std.Net.Utf8.Decode(TextBytes) of
     Ok(Text):
     begin
-      return Text
+      return Text;
     end;
     Error(Message):
     begin
-      panic(Message)
-    end
-  end
+      panic(Message);
+    end;
+  end;
 end;
 
 // Writes every byte even when the transport reports a partial write.
@@ -82,28 +82,28 @@ begin
       begin
         if Count <= 0 then
         begin
-          panic('TCP connection stopped while writing')
+          panic('TCP connection stopped while writing');
         end;
 
-        Offset := Offset + Count
+        Offset := Offset + Count;
       end;
       Error(Message):
       begin
-        panic(Message)
-      end
-    end
-  end
+        panic(Message);
+      end;
+    end;
+  end;
 end;
 
 begin
   mutable var Port: integer := 18081;
   if ParamCount() = 1 then
   begin
-    Port := StrToInt(ParamStr(0))
-  end
+    Port := StrToInt(ParamStr(0));
+  end;
   else if ParamCount() <> 0 then
   begin
-    panic('usage: tcp_echo_server.fpas -- [PORT]')
+    panic('usage: tcp_echo_server.fpas -- [PORT]');
   end;
 
   case Listen('127.0.0.1', Port) of
@@ -119,8 +119,8 @@ begin
             end;
             Error(Message):
             begin
-              panic(Message)
-            end
+              panic(Message);
+            end;
           end;
           var Text: string := ReadLine(ConnectionValue);
           WriteAll(ConnectionValue, Std.Net.Utf8.Encode('Echo: ' + Text));
@@ -130,30 +130,30 @@ begin
             end;
             Error(Message):
             begin
-              panic(Message)
-            end
-          end
+              panic(Message);
+            end;
+          end;
         end;
         Error(Message):
         begin
-          panic(Message)
-        end
+          panic(Message);
+        end;
       end;
 
       case CloseListener(ListenerValue) of
         Ok(_):
         begin
-          WriteLn('TCP echo server stopped')
+          WriteLn('TCP echo server stopped');
         end;
         Error(Message):
         begin
-          panic(Message)
-        end
-      end
+          panic(Message);
+        end;
+      end;
     end;
     Error(Message):
     begin
-      panic(Message)
-    end
-  end
+      panic(Message);
+    end;
+  end;
 end.

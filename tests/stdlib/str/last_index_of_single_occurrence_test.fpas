@@ -3,5 +3,5 @@ program T;
 uses Std.Console, Std.Str;
 
 begin
-  WriteLn(LastIndexOf('hello', 'ell'))
+  WriteLn(LastIndexOf('hello', 'ell'));
 end.

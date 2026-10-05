@@ -25,7 +25,7 @@ export async function verifyDebuggerTransport(
     "uses Std.Console;",
     "",
     "begin",
-    "  WriteLn('hello-raw')",
+    "  WriteLn('hello-raw');",
     "end.",
     ""
   ];

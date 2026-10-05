@@ -21,51 +21,51 @@ begin
               case Std.Options.Unwrap(Std.Dictionaries.Get(Project, 'name')) of
                 TomlValue.String(Name):
                 begin
-                  AssertEquals('demo', Name)
-                end
+                  AssertEquals('demo', Name);
+                end;
                 else
                 begin
-                  Fail('Expected project name string')
-                end
+                  Fail('Expected project name string');
+                end;
               end;
 
               case Std.Options.Unwrap(Std.Dictionaries.Get(Project, 'released')) of
                 TomlValue.Datetime(Date):
                 begin
-                  AssertEquals('2026-07-14', Date)
-                end
+                  AssertEquals('2026-07-14', Date);
+                end;
                 else
                 begin
-                  Fail('Expected project released datetime')
-                end
-              end
-            end
+                  Fail('Expected project released datetime');
+                end;
+              end;
+            end;
             else
             begin
-              Fail('Expected project table')
-            end
+              Fail('Expected project table');
+            end;
           end;
 
           case Std.Options.Unwrap(Std.Dictionaries.Get(Fields, 'targets')) of
             TomlValue.ArrayValue(Targets):
             begin
-              AssertEquals(2, Std.Arrays.Length(Targets))
-            end
+              AssertEquals(2, Std.Arrays.Length(Targets));
+            end;
             else
             begin
-              Fail('Expected targets array')
-            end
-          end
-        end
+              Fail('Expected targets array');
+            end;
+          end;
+        end;
         else
         begin
-          Fail('Expected TOML table')
-        end
-      end
+          Fail('Expected TOML table');
+        end;
+      end;
     end;
     Error(Message):
     begin
-      Fail(Message)
-    end
-  end
+      Fail(Message);
+    end;
+  end;
 end.

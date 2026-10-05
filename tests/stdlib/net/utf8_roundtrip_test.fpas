@@ -10,22 +10,22 @@ begin
   case Decode(Bytes) of
     Ok(Decoded):
     begin
-      AssertEquals(Text, Decoded)
+      AssertEquals(Text, Decoded);
     end;
     Error(Message):
     begin
-      Fail(Message)
-    end
+      Fail(Message);
+    end;
   end;
 
   case Decode([240, 40, 140, 188]) of
     Ok(Decoded):
     begin
-      Fail('invalid UTF-8 decoded as ' + Decoded)
+      Fail('invalid UTF-8 decoded as ' + Decoded);
     end;
     Error(Message):
     begin
-      AssertTrue(Std.Str.Contains(Message, 'continuation'))
-    end
-  end
+      AssertTrue(Std.Str.Contains(Message, 'continuation'));
+    end;
+  end;
 end.

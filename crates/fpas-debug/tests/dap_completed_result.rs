@@ -14,12 +14,12 @@ uses Std.Console, Std.Tasks;
 
 function Work(): integer;
 begin
-  return 7
+  return 7;
 end;
 
 begin
   var Pending: task := go Work();
-  WriteLn(Wait(Pending))
+  WriteLn(Wait(Pending));
 end.
 "#;
 

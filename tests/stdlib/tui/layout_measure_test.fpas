@@ -58,5 +58,5 @@ begin
   AssertEquals(1, Constrained.Minimum.Height);
   var Undersized: TuiLayoutFit := TuiLayoutFit.Create(WindowSize.Minimum, TuiSize.Create(4, 2));
   AssertFalse(Undersized.Fits());
-  AssertTrue(Undersized.Overflow.Width > 0)
+  AssertTrue(Undersized.Overflow.Width > 0);
 end.

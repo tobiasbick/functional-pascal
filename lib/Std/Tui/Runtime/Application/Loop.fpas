@@ -13,8 +13,8 @@ begin
   TuiAppTrees[ApplicationId - 1] := Tree;
   if Present then
   begin
-    TuiFlushSurface(TuiAppSurfaces[ApplicationId - 1], TuiAppPalettes[ApplicationId - 1])
-  end
+    TuiFlushSurface(TuiAppSurfaces[ApplicationId - 1], TuiAppPalettes[ApplicationId - 1]);
+  end;
 end;
 
 function TuiLoopApplyFramework<TModel>(
@@ -27,7 +27,7 @@ begin
   TuiAppApplyResizeIfNeeded(ApplicationId, Msg);
   var Cmd: TuiCmdOutput := TuiAppCommands[ApplicationId - 1];
   Cmd.Reset();
-  return Update(Model, Msg, Cmd)
+  return Update(Model, Msg, Cmd);
 end;
 
 function TuiLoopApplyApplication<TModel, TMessage>(
@@ -39,7 +39,7 @@ function TuiLoopApplyApplication<TModel, TMessage>(
 begin
   var Cmd: TuiCmdOutput := TuiAppCommands[ApplicationId - 1];
   Cmd.Reset();
-  return UpdateApplication(Model, Message, Cmd)
+  return UpdateApplication(Model, Message, Cmd);
 end;
 
 function TuiLoopFinishUpdate<TModel>(
@@ -52,23 +52,23 @@ begin
   var Cmd: TuiCmdOutput := TuiAppCommands[ApplicationId - 1];
   if TuiAppApplyCommand(ApplicationId, Cmd) then
   begin
-    return true
+    return true;
   end;
 
   TuiLoopRender(ApplicationId, View(Model), Present);
-  return false
+  return false;
 end;
 
 procedure TuiLoopClose(ApplicationId: integer);
 begin
-  TuiAppRaiseShutdownFailure(TuiAppCloseApplication(ApplicationId))
+  TuiAppRaiseShutdownFailure(TuiAppCloseApplication(ApplicationId));
 end;
 
 procedure TuiLoopCloseWithInbox<TMessage>(ApplicationId: integer; Inbox: channel of TMessage);
 begin
   var Failures: array of TuiMsg := TuiAppCloseApplication(ApplicationId);
   CloseChannel(Inbox);
-  TuiAppRaiseShutdownFailure(Failures)
+  TuiAppRaiseShutdownFailure(Failures);
 end;
 
 // Runs a deterministic bounded headless loop with an optional typed inbox.
@@ -87,25 +87,25 @@ begin
   TuiAppRequireOpen(ApplicationId);
   if IterationCount < 0 then
   begin
-    panic('Tui iteration count must not be negative')
+    panic('Tui iteration count must not be negative');
   end;
 
   if DeltaMilliseconds < 0 then
   begin
-    panic('Tui tick delta must not be negative')
+    panic('Tui tick delta must not be negative');
   end;
   mutable var Model: TModel := InitialModel;
   TuiLoopRender(ApplicationId, View(Model), false);
   if BackgroundEnabled then
   begin
-    TuiAppStart(ApplicationId)
+    TuiAppStart(ApplicationId);
   end;
   mutable var Remaining: integer := IterationCount;
   while Remaining > 0 do
   begin
     if not TuiAppOpen[ApplicationId - 1] then
     begin
-      return Model
+      return Model;
     end;
 
     TuiAppPushMessages(ApplicationId, TuiBackgroundReap(ApplicationId));
@@ -114,8 +114,8 @@ begin
       TuiAppRouteInput(ApplicationId, TuiAppPopInput(ApplicationId));
       if TuiAppMessageCount(ApplicationId) = 0 then
       begin
-        continue
-      end
+        continue;
+      end;
     end;
 
     if TuiAppMessageCount(ApplicationId) > 0 then
@@ -126,16 +126,16 @@ begin
       begin
         if BackgroundEnabled then
         begin
-          TuiLoopCloseWithInbox(ApplicationId, Inbox)
-        end
+          TuiLoopCloseWithInbox(ApplicationId, Inbox);
+        end;
         else
         begin
-          TuiLoopClose(ApplicationId)
+          TuiLoopClose(ApplicationId);
         end;
 
-        return Model
-      end
-    end
+        return Model;
+      end;
+    end;
     else if BackgroundEnabled then
     begin
       case Std.Results.Unwrap(TryReceive(Inbox)) of
@@ -146,8 +146,8 @@ begin
           if TuiLoopFinishUpdate(ApplicationId, Model, View, false) then
           begin
             TuiLoopCloseWithInbox(ApplicationId, Inbox);
-            return Model
-          end
+            return Model;
+          end;
         end;
         None:
         begin
@@ -158,11 +158,11 @@ begin
           if TuiLoopFinishUpdate(ApplicationId, Model, View, false) then
           begin
             TuiLoopCloseWithInbox(ApplicationId, Inbox);
-            return Model
-          end
-        end
-      end
-    end
+            return Model;
+          end;
+        end;
+      end;
+    end;
     else
     begin
       Remaining := Remaining - 1;
@@ -172,12 +172,12 @@ begin
       if TuiLoopFinishUpdate(ApplicationId, Model, View, false) then
       begin
         TuiLoopClose(ApplicationId);
-        return Model
-      end
-    end
+        return Model;
+      end;
+    end;
   end;
 
-  return Model
+  return Model;
 end;
 
 // Runs the interactive loop, selecting fairly between Console and application messages.
@@ -195,13 +195,13 @@ begin
   var ConsoleInputs: channel of TuiHostInput := CreateChannel(32);
   var InputGroup: TaskGroup := CreateTaskGroup();
   StartTaskInGroup(InputGroup, function(Token: CancellationToken): result of boolean, string begin
-    return TuiConsoleInputPump(Token, ConsoleInputs)
+    return TuiConsoleInputPump(Token, ConsoleInputs);
   end);
   mutable var Model: TModel := InitialModel;
   TuiLoopRender(ApplicationId, View(Model), true);
   if BackgroundEnabled then
   begin
-    TuiAppStart(ApplicationId)
+    TuiAppStart(ApplicationId);
   end;
   mutable var PreferApplication: boolean := false;
   while TuiAppOpen[ApplicationId - 1] do
@@ -216,30 +216,30 @@ begin
         CloseChannel(ConsoleInputs);
         if BackgroundEnabled then
         begin
-          TuiLoopCloseWithInbox(ApplicationId, Inbox)
-        end
+          TuiLoopCloseWithInbox(ApplicationId, Inbox);
+        end;
         else
         begin
-          TuiLoopClose(ApplicationId)
+          TuiLoopClose(ApplicationId);
         end;
 
-        return Model
+        return Model;
       end;
 
-      continue
+      continue;
     end;
 
     if TuiAppInputCount(ApplicationId) > 0 then
     begin
       TuiAppRouteInput(ApplicationId, TuiAppPopInput(ApplicationId));
-      continue
+      continue;
     end;
     // A due tick is queued like any framework message; a pending one bounds the wait below.
     var TickWait: integer := TuiAppTickWait(ApplicationId);
     if TickWait = 0 then
     begin
       TuiAppPushMessages(ApplicationId, [TuiAppTakeTick(ApplicationId)]);
-      continue
+      continue;
     end;
     mutable var ConsoleInput: option of TuiHostInput := None;
     mutable var ApplicationInput: option of TMessage := None;
@@ -248,12 +248,12 @@ begin
       case Outcome of
         Ok(Input):
         begin
-          ConsoleInput := Some(Input)
+          ConsoleInput := Some(Input);
         end;
         Error(Message):
         begin
-        end
-      end
+        end;
+      end;
     end);
     if BackgroundEnabled then
     begin
@@ -261,37 +261,37 @@ begin
         case Outcome of
           Ok(Message):
           begin
-            ApplicationInput := Some(Message)
+            ApplicationInput := Some(Message);
           end;
           Error(Failure):
           begin
-          end
-        end
+          end;
+        end;
       end);
       if PreferApplication then
       begin
         Std.Arrays.Push(Cases, ApplicationCase);
-        Std.Arrays.Push(Cases, ConsoleCase)
-      end
+        Std.Arrays.Push(Cases, ConsoleCase);
+      end;
       else
       begin
         Std.Arrays.Push(Cases, ConsoleCase);
-        Std.Arrays.Push(Cases, ApplicationCase)
-      end
-    end
+        Std.Arrays.Push(Cases, ApplicationCase);
+      end;
+    end;
     else
     begin
-      Std.Arrays.Push(Cases, ConsoleCase)
+      Std.Arrays.Push(Cases, ConsoleCase);
     end;
 
     if TuiBackgroundHasWork(ApplicationId) then
     begin
-      Std.Arrays.Push(Cases, TimerCase(50, procedure() begin end))
+      Std.Arrays.Push(Cases, TimerCase(50, procedure() begin end));
     end;
 
     if TickWait > 0 then
     begin
-      Std.Arrays.Push(Cases, TimerCase(TickWait, procedure() begin end))
+      Std.Arrays.Push(Cases, TimerCase(TickWait, procedure() begin end));
     end;
 
     Select(Cases);
@@ -299,11 +299,11 @@ begin
     case ConsoleInput of
       Some(Input):
       begin
-        TuiAppRouteInput(ApplicationId, Input)
+        TuiAppRouteInput(ApplicationId, Input);
       end;
       None:
       begin
-      end
+      end;
     end;
 
     case ApplicationInput of
@@ -315,25 +315,25 @@ begin
           CloseTaskGroup(InputGroup);
           CloseChannel(ConsoleInputs);
           TuiLoopCloseWithInbox(ApplicationId, Inbox);
-          return Model
-        end
+          return Model;
+        end;
       end;
       None:
       begin
-      end
-    end
+      end;
+    end;
   end;
 
   CloseTaskGroup(InputGroup);
   CloseChannel(ConsoleInputs);
   if BackgroundEnabled then
   begin
-    TuiLoopCloseWithInbox(ApplicationId, Inbox)
-  end
+    TuiLoopCloseWithInbox(ApplicationId, Inbox);
+  end;
   else
   begin
-    TuiLoopClose(ApplicationId)
+    TuiLoopClose(ApplicationId);
   end;
 
-  return Model
+  return Model;
 end;

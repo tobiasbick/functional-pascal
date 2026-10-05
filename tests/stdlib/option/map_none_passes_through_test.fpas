@@ -4,11 +4,11 @@ uses Std.Console, Std.Options;
 
 function AlwaysOk(V: integer): string;
 begin
-  return 'ok'
+  return 'ok';
 end;
 
 begin
   var O: option of integer := None;
   var M: option of string := Map(O, AlwaysOk);
-  WriteLn(IsNone(M))
+  WriteLn(IsNone(M));
 end.

@@ -11,7 +11,7 @@ type
 
 function ViewQuit(State: QuitModel): TuiElement;
 begin
-  return TuiElementBuilders.MakeLabel(State.LabelText)
+  return TuiElementBuilders.MakeLabel(State.LabelText);
 end;
 
 function UpdateQuit(State: QuitModel; Msg: TuiMsg; Cmd: TuiCmdOutput): QuitModel;
@@ -25,7 +25,7 @@ begin
         LabelText := 'SHOULD NOT PAINT';
         Quit := true;
         Updates := State.Updates + 1;
-      end
+      end;
     end;
     TuiMsg.QuitRequested:
     begin
@@ -34,7 +34,7 @@ begin
         LabelText := 'SHOULD NOT PAINT';
         Quit := true;
         Updates := State.Updates + 1;
-      end
+      end;
     end;
     TuiMsg.Tick(Delta):
     begin
@@ -42,17 +42,17 @@ begin
         LabelText := 'after-tick';
         Quit := false;
         Updates := State.Updates + 1;
-      end
-    end
+      end;
+    end;
     else
     begin
       return record
         LabelText := State.LabelText;
         Quit := State.Quit;
         Updates := State.Updates + 1;
-      end
-    end
-  end
+      end;
+    end;
+  end;
 end;
 
 begin
@@ -73,5 +73,5 @@ begin
   AssertTrue(Std.Str.Contains(App.SurfaceSnapshot().LineAt(0), 'before'));
   AssertFalse(Std.Str.Contains(App.SurfaceSnapshot().LineAt(0), 'SHOULD NOT PAINT'));
   AssertFalse(Std.Str.Contains(App.SurfaceSnapshot().LineAt(0), 'after-tick'));
-  App.Close()
+  App.Close();
 end.

@@ -3,5 +3,5 @@ program T;
 uses Std.Console, Std.Str;
 
 begin
-  WriteLn(Ord('0'))
+  WriteLn(Ord('0'));
 end.

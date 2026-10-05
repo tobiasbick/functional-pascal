@@ -25,12 +25,12 @@ public type
 
 function Square(V: real): real;
 begin
-  return V * V
+  return V * V;
 end;
 
 public function Distance(A: Point; B: Point): real;
 begin
-  return Sqrt(Square(B.X - A.X) + Square(B.Y - A.Y))
+  return Sqrt(Square(B.X - A.X) + Square(B.Y - A.Y));
 end;
 ```
 

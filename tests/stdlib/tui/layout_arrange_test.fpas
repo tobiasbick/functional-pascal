@@ -6,13 +6,13 @@ function Paint(Tree: TuiElement; Size: TuiSize): TuiSurfaceSnapshot;
 begin
   var App: TuiApplication := TuiApplication.OpenForTest(Size);
   App.RunIterations(Tree, function(State: TuiElement; Msg: TuiMsg; Cmd: TuiCmdOutput): TuiElement begin
-    return State
+    return State;
   end, function(State: TuiElement): TuiElement begin
-    return State
+    return State;
   end, 0, 0);
   var Snapshot: TuiSurfaceSnapshot := App.SurfaceSnapshot();
   App.Close();
-  return Snapshot
+  return Snapshot;
 end;
 
 begin
@@ -53,5 +53,5 @@ begin
                                                                                                                         TuiElementBuilders.MakeLabel('IJK')
                                                                                                                       ], 1)
                                                                                    ]), TuiSize.Create(5, 1));
-  AssertEquals('A', Undersized.CellAt(0, 0).Glyph)
+  AssertEquals('A', Undersized.CellAt(0, 0).Glyph);
 end.

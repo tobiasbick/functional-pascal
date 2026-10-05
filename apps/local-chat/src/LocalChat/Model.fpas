@@ -29,7 +29,7 @@ public type
       return record
         Role := ChatRole.User;
         Text := Text;
-      end
+      end;
     end;
 
     // Creates an assistant entry.
@@ -41,7 +41,7 @@ public type
       return record
         Role := ChatRole.Assistant;
         Text := Text;
-      end
+      end;
     end;
 
     // Creates a failed-request entry.
@@ -53,7 +53,7 @@ public type
       return record
         Role := ChatRole.Failure;
         Text := Text;
-      end
+      end;
     end;
   end;
   // Complete immutable state supplied to the Local Chat MVU view.
@@ -95,7 +95,7 @@ begin
     Status := 'Ready';
     Width := Width;
     Height := Height;
-  end
+  end;
 end;
 
 // Wraps text at grapheme boundaries for a cell-width limit.
@@ -107,7 +107,7 @@ function WrapText(Text: string; MaximumWidth: integer): string;
 begin
   if MaximumWidth <= 0 then
   begin
-    return ''
+    return '';
   end;
   mutable var Wrapped: string := '';
   mutable var LineWidth: integer := 0;
@@ -117,23 +117,23 @@ begin
     if Grapheme = NewLine then
     begin
       Wrapped := Wrapped + NewLine;
-      LineWidth := 0
-    end
+      LineWidth := 0;
+    end;
     else
     begin
       var GraphemeWidth: integer := Std.Console.DisplayWidth(Grapheme);
       if (LineWidth > 0) and (LineWidth + GraphemeWidth > MaximumWidth) then
       begin
         Wrapped := Wrapped + NewLine;
-        LineWidth := 0
+        LineWidth := 0;
       end;
 
       Wrapped := Wrapped + Grapheme;
-      LineWidth := LineWidth + GraphemeWidth
-    end
+      LineWidth := LineWidth + GraphemeWidth;
+    end;
   end;
 
-  return Wrapped
+  return Wrapped;
 end;
 
 // Returns the transcript label for one chat role.
@@ -145,17 +145,17 @@ begin
   case Role of
     ChatRole.User:
     begin
-      return 'YOU'
+      return 'YOU';
     end;
     ChatRole.Assistant:
     begin
-      return 'ASSISTANT'
+      return 'ASSISTANT';
     end;
     ChatRole.Failure:
     begin
-      return 'ERROR'
-    end
-  end
+      return 'ERROR';
+    end;
+  end;
 end;
 
 // Builds the width-bounded transcript displayed by the read-only transcript area.
@@ -166,12 +166,12 @@ public function LocalChatTranscript(State: LocalChatModel): string;
 begin
   if Std.Arrays.Length(State.Entries) = 0 then
   begin
-    return ('No messages yet.' + Std.Str.Chr(10)) + 'Type below and press Enter.'
+    return ('No messages yet.' + Std.Str.Chr(10)) + 'Type below and press Enter.';
   end;
   mutable var MaximumWidth: integer := State.Width - 6;
   if MaximumWidth < 1 then
   begin
-    MaximumWidth := 1
+    MaximumWidth := 1;
   end;
   mutable var Transcript: string := '';
   var NewLine: string := Std.Str.Chr(10);
@@ -179,14 +179,14 @@ begin
   begin
     if Transcript <> '' then
     begin
-      Transcript := (Transcript + NewLine) + NewLine
+      Transcript := (Transcript + NewLine) + NewLine;
     end;
 
     Transcript := ((Transcript + RoleLabel(State.Entries[Index].Role)) + NewLine) +
-                  WrapText(State.Entries[Index].Text, MaximumWidth)
+                  WrapText(State.Entries[Index].Text, MaximumWidth);
   end;
 
-  return Transcript
+  return Transcript;
 end;
 
 // Moves the transcript caret and viewport to the latest visible entry.
@@ -201,15 +201,15 @@ begin
   mutable var VisibleLines: integer := Next.Height - 7;
   if VisibleLines < 1 then
   begin
-    VisibleLines := 1
+    VisibleLines := 1;
   end;
   var LineCount: integer := Std.Arrays.Length(Std.Str.Split(Transcript, Std.Str.Chr(10)));
   mutable var OffsetY: integer := LineCount - VisibleLines;
   if OffsetY < 0 then
   begin
-    OffsetY := 0
+    OffsetY := 0;
   end;
 
   Next.TranscriptOffset := TuiPoint.Create(0, OffsetY);
-  return Next
+  return Next;
 end;

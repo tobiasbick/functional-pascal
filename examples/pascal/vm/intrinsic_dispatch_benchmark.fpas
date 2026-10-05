@@ -22,21 +22,21 @@ begin
   begin
     Total := Total + Std.Arrays.Length(Values);
     Total := Total + Std.Str.Length(Text);
-    Total := Total + Std.Dictionaries.Length(Entries)
+    Total := Total + Std.Dictionaries.Length(Entries);
   end;
 
-  return Total
+  return Total;
 end;
 
 begin
   if (ParamCount() < 1) or (ParamCount() > 2) then
   begin
-    panic('usage: intrinsic_dispatch_benchmark.fpas -- ITERATIONS [MAX_MILLIS]')
+    panic('usage: intrinsic_dispatch_benchmark.fpas -- ITERATIONS [MAX_MILLIS]');
   end;
   var Iterations: integer := StrToInt(ParamStr(0));
   if Iterations < 1 then
   begin
-    panic('ITERATIONS must be positive')
+    panic('ITERATIONS must be positive');
   end;
   mutable var MaxMillis: integer := 0;
   if ParamCount() = 2 then
@@ -44,8 +44,8 @@ begin
     MaxMillis := StrToInt(ParamStr(1));
     if MaxMillis < 1 then
     begin
-      panic('MAX_MILLIS must be positive')
-    end
+      panic('MAX_MILLIS must be positive');
+    end;
   end;
   var Values: array of integer := [1, 2, 3];
   var Text: string := 'dispatch';
@@ -58,24 +58,24 @@ begin
   mutable var OpsPerSecond: integer := 0;
   if Elapsed > 0 then
   begin
-    OpsPerSecond := (Calls * 1000) div Elapsed
+    OpsPerSecond := (Calls * 1000) div Elapsed;
   end;
 
   WriteLn(('iterations: ' + IntToStr(Iterations)) + ', calls per iteration: 3');
   WriteLn(('elapsed: ' + IntToStr(Elapsed)) + ' ms');
   if Elapsed > 0 then
   begin
-    WriteLn(('throughput: ' + IntToStr(OpsPerSecond)) + ' intrinsic calls/s')
-  end
+    WriteLn(('throughput: ' + IntToStr(OpsPerSecond)) + ' intrinsic calls/s');
+  end;
   else
   begin
-    WriteLn('throughput: unavailable (elapsed time is 0 ms)')
+    WriteLn('throughput: unavailable (elapsed time is 0 ms)');
   end;
 
   WriteLn('dispatch total: ' + IntToStr(Total));
   if (MaxMillis > 0) and (Elapsed > MaxMillis) then
   begin
     panic(((('intrinsic-dispatch benchmark regression: ' + IntToStr(Elapsed)) + ' ms exceeds limit ') + IntToStr(MaxMillis)) +
-          ' ms')
-  end
+          ' ms');
+  end;
 end.

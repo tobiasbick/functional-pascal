@@ -11,9 +11,9 @@ fn selection_send_rejects_task_bound_values() {
 uses Std.Tasks;
 begin
   mutable var Count: integer := 0;
-  var Work: procedure() := procedure() begin Count := Count + 1 end;
+  var Work: procedure() := procedure() begin Count := Count + 1; end;
   var Q: channel of procedure() := CreateChannel(1);
-  SendCase(Q, Work, procedure(R: result of boolean, string) begin end)
+  SendCase(Q, Work, procedure(R: result of boolean, string) begin end);
 end."#,
     );
     assert!(
@@ -30,7 +30,7 @@ fn selection_cases_reject_wrong_payload_callback_and_control_types() {
         "ReceiveCase(Q, procedure(R: result of string, string) begin end)",
         "SendCase(Q, 'wrong', procedure(R: result of boolean, string) begin end)",
         "SendCase(Q, 1, procedure(R: result of integer, string) begin end)",
-        "TimerCase(0, function(): integer begin return 1 end)",
+        "TimerCase(0, function(): integer begin return 1; end)",
         "TimerCase('wrong', procedure() begin end)",
         "TaskCase(1, procedure() begin end)",
         "CancellationCase(CreateCancellationSource(), procedure() begin end)",
@@ -38,7 +38,7 @@ fn selection_cases_reject_wrong_payload_callback_and_control_types() {
         "CloseWaitCase(CreateCancellationSource())",
     ] {
         let source = format!(
-            "program T; uses Std.Tasks; begin var Q: channel of integer := CreateChannel(1); {call} end."
+            "program T; uses Std.Tasks; begin var Q: channel of integer := CreateChannel(1); {call}; end."
         );
         assert!(
             !check_errors(&source).is_empty(),
@@ -55,21 +55,22 @@ fn controlled_wait_any_checks_control_types_and_arity() {
         "WaitAnyWithTimeout(Tasks)",
         "WaitAnyWithCancellation([1, 2], GetCancellationToken(CreateCancellationSource()))",
     ] {
-        let source =
-            format!("program T; uses Std.Tasks; begin var Tasks: array of task := []; {call} end.");
+        let source = format!(
+            "program T; uses Std.Tasks; begin var Tasks: array of task := []; {call}; end."
+        );
         assert!(!check_errors(&source).is_empty(), "{call}");
     }
 }
 
 #[test]
 fn wait_any_rejects_non_task_arrays_and_reports_its_own_arity() {
-    let errors = check_errors("program T; uses Std.Tasks; begin WaitAny([1, 2]) end.");
+    let errors = check_errors("program T; uses Std.Tasks; begin WaitAny([1, 2]); end.");
     assert!(
         errors
             .iter()
             .any(|error| error.message.contains("expected `array of task`"))
     );
-    let errors = check_errors("program T; uses Std.Tasks; begin WaitAny() end.");
+    let errors = check_errors("program T; uses Std.Tasks; begin WaitAny(); end.");
     assert!(errors.iter().any(|error| error.message.contains("WaitAny")));
 }
 
@@ -84,7 +85,7 @@ begin
   Std.Net.ReceiveBytesWithCancellation(ConnectionValue, 1, Std.Tasks.CreateCancellationSource());
   Std.Net.SendBytesWithCancellation(ConnectionValue, [1], Std.Tasks.CreateCancellationSource());
   Std.Net.ConnectWithCancellation('unused.invalid', 1, 1000, Std.Tasks.CreateCancellationSource());
-  Std.Net.ConnectTlsWithCancellation('unused.invalid', 1, 1000, Std.Tasks.CreateCancellationSource())
+  Std.Net.ConnectTlsWithCancellation('unused.invalid', 1, 1000, Std.Tasks.CreateCancellationSource());
 end;
 begin
 end.",
@@ -112,7 +113,7 @@ end;
 
 begin
   var Tsk: task := go LogAnswer();
-  Std.Tasks.Wait(Tsk)
+  Std.Tasks.Wait(Tsk);
 end.",
     );
 }
@@ -123,7 +124,7 @@ fn go_requires_a_call_expression() {
         "\
 program T;
 begin
-  var Tsk: task := go 1
+  var Tsk: task := go 1;
 end.",
     );
 
@@ -147,12 +148,12 @@ uses Std.Tasks;
 
 function Answer(): integer;
 begin
-  return 42
+  return 42;
 end;
 
 begin
   var Tsk: task := go Answer();
-  var Value: integer := Std.Tasks.Wait(Tsk)
+  var Value: integer := Std.Tasks.Wait(Tsk);
 end.",
     );
 }
@@ -166,12 +167,12 @@ uses Std.Tasks;
 
 function Answer(): integer;
 begin
-  return 42
+  return 42;
 end;
 
 begin
   var Tsk: task := go Answer();
-  var Value: string := Std.Tasks.Wait(Tsk)
+  var Value: string := Std.Tasks.Wait(Tsk);
 end.",
     );
 
@@ -194,9 +195,9 @@ begin
   var Inc: procedure() :=
     procedure()
     begin
-      Count := Count + 1
+      Count := Count + 1;
     end;
-  go Inc()
+  go Inc();
 end.",
     );
 
@@ -219,7 +220,7 @@ begin
   var Messages: channel of integer := CreateChannel(1);
   var Sent: result of boolean, string := Send(Messages, 42);
   var Received: result of integer, string := Receive(Messages);
-  CloseChannel(Messages)
+  CloseChannel(Messages);
 end.",
     );
 }
@@ -232,7 +233,7 @@ program T;
 uses Std.Tasks;
 begin
   var Messages: channel of integer := CreateChannel(1);
-  Send(Messages, 'wrong')
+  Send(Messages, 'wrong');
 end.",
     );
 
@@ -255,7 +256,7 @@ begin
   var Pending: result of option of integer, string := TryReceive(Messages);
   TrySend(Messages, 'wrong');
   SendWithTimeout(Messages, 1, 'soon');
-  ReceiveWithTimeout(Messages, 'soon')
+  ReceiveWithTimeout(Messages, 'soon');
 end.",
     );
 
@@ -277,9 +278,9 @@ program T;
 uses Std.Tasks;
 begin
   mutable var Count: integer := 0;
-  var Work: procedure() := procedure() begin Count := Count + 1 end;
+  var Work: procedure() := procedure() begin Count := Count + 1; end;
   var Queue: channel of procedure() := CreateChannel(1);
-  Send(Queue, Work)
+  Send(Queue, Work);
 end.",
     );
 
@@ -302,7 +303,7 @@ type WorkBox = record
 end;
 begin
   mutable var Count: integer := 0;
-  var Work: procedure() := procedure() begin Count := Count + 1 end;
+  var Work: procedure() := procedure() begin Count := Count + 1; end;
   var ArrayQueue: channel of array of procedure() := CreateChannel(1);
   var RecordQueue: channel of WorkBox := CreateChannel(1);
   var ResultQueue: channel of result of procedure(), string := CreateChannel(1);
@@ -310,7 +311,7 @@ begin
   Send(ArrayQueue, [Work]);
   Send(RecordQueue, record Work := Work; end);
   Send(ResultQueue, Ok(Work));
-  Send(OptionQueue, Some(Work))
+  Send(OptionQueue, Some(Work));
 end.",
     );
 
@@ -336,12 +337,12 @@ type WorkBox = record
 end;
 begin
   mutable var Count: integer := 0;
-  var Work: procedure() := procedure() begin Count := Count + 1 end;
+  var Work: procedure() := procedure() begin Count := Count + 1; end;
   var Boxed: WorkBox := record Work := Work; Safe := 7; end;
   var WorkQueue: channel of procedure() := CreateChannel(1);
   var SafeQueue: channel of integer := CreateChannel(1);
   Send(WorkQueue, Boxed.Work);
-  Send(SafeQueue, Boxed.Safe)
+  Send(SafeQueue, Boxed.Safe);
 end.",
     );
 
@@ -362,20 +363,20 @@ fn typed_task_parameters_wait_for_their_declared_result_type() {
 uses Std.Tasks;
 function Seven(): integer;
 begin
-  return 7
+  return 7;
 end;
 function Doubled(Job: task of integer): integer;
 begin
-  return Wait(Job) * 2
+  return Wait(Job) * 2;
 end;
 function First(Jobs: array of task of integer): integer;
 begin
-  return Wait(Jobs[WaitAny(Jobs)])
+  return Wait(Jobs[WaitAny(Jobs)]);
 end;
 begin
   var Job: task of integer := go Seven();
   var Inferred: task := go Seven();
-  var Total: integer := Doubled(Job) + First([Inferred])
+  var Total: integer := Doubled(Job) + First([Inferred]);
 end."#,
     );
 }
@@ -383,9 +384,9 @@ end."#,
 #[test]
 fn typed_tasks_reject_a_different_result_type() {
     for source in [
-        "program T; uses Std.Tasks; function Seven(): integer; begin return 7 end; begin var Job: task of string := go Seven() end.",
-        "program T; uses Std.Tasks; function Seven(): integer; begin return 7 end; function Name(Job: task of string): string; begin return Wait(Job) end; begin var Job: task := go Seven(); var Text: string := Name(Job) end.",
-        "program T; uses Std.Tasks; function Count(Job: task of integer): string; begin return Wait(Job) end; begin end.",
+        "program T; uses Std.Tasks; function Seven(): integer; begin return 7; end; begin var Job: task of string := go Seven(); end.",
+        "program T; uses Std.Tasks; function Seven(): integer; begin return 7; end; function Name(Job: task of string): string; begin return Wait(Job); end; begin var Job: task := go Seven(); var Text: string := Name(Job); end.",
+        "program T; uses Std.Tasks; function Count(Job: task of integer): string; begin return Wait(Job); end; begin end.",
     ] {
         assert!(!check_errors(source).is_empty(), "{source}");
     }

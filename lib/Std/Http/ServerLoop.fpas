@@ -11,30 +11,30 @@ function ValidateOptions(Options: ServerOptions): result of boolean, string;
 begin
   if Options.MaxHeaderBytes < 1 then
   begin
-    return Error('HTTP server MaxHeaderBytes must be positive')
+    return Error('HTTP server MaxHeaderBytes must be positive');
   end;
 
   if Options.MaxBodyBytes < 0 then
   begin
-    return Error('HTTP server MaxBodyBytes must not be negative')
+    return Error('HTTP server MaxBodyBytes must not be negative');
   end;
 
   if Options.ConnectionTimeoutMillis < 1 then
   begin
-    return Error('HTTP server ConnectionTimeoutMillis must be positive')
+    return Error('HTTP server ConnectionTimeoutMillis must be positive');
   end;
 
   if Options.MaxConcurrentRequests < 1 then
   begin
-    return Error('HTTP server MaxConcurrentRequests must be positive')
+    return Error('HTTP server MaxConcurrentRequests must be positive');
   end;
 
   if Options.MaxRequests < 0 then
   begin
-    return Error('HTTP server MaxRequests must not be negative')
+    return Error('HTTP server MaxRequests must not be negative');
   end;
 
-  return Ok(true)
+  return Ok(true);
 end;
 
 // Closes a connection while deliberately ignoring close errors.
@@ -49,8 +49,8 @@ begin
     end;
     Error(_):
     begin
-    end
-  end
+    end;
+  end;
 end;
 
 // Attempts to write an empty 400 response without propagating failures.
@@ -66,8 +66,8 @@ begin
     end;
     Error(_):
     begin
-    end
-  end
+    end;
+  end;
 end;
 
 // Serves and closes one accepted connection.
@@ -89,8 +89,8 @@ begin
     Error(_):
     begin
       CloseQuietly(Connection);
-      return false
-    end
+      return false;
+    end;
   end;
   mutable var RequestValue: ServerRequest := record
     Method := '';
@@ -102,29 +102,29 @@ begin
   case Std.Http.Server.ReadRequest(Connection, Options.MaxHeaderBytes, Options.MaxBodyBytes) of
     Ok(Value):
     begin
-      RequestValue := Value
+      RequestValue := Value;
     end;
     Error(_):
     begin
       WriteBadRequestQuietly(Connection);
       CloseQuietly(Connection);
-      return false
-    end
+      return false;
+    end;
   end;
   var ResponseValue: ServerResponse := Handler(RequestValue);
   mutable var Succeeded: boolean := false;
   case Std.Http.Server.WriteResponse(Connection, ResponseValue) of
     Ok(_):
     begin
-      Succeeded := true
+      Succeeded := true;
     end;
     Error(_):
     begin
-    end
+    end;
   end;
 
   CloseQuietly(Connection);
-  return Succeeded
+  return Succeeded;
 end;
 
 // Reports whether the current batch may accept another connection.
@@ -136,7 +136,7 @@ end;
 function HasCapacity(Options: ServerOptions; Accepted: integer; BatchLength: integer): boolean;
 begin
   return (BatchLength < Options.MaxConcurrentRequests) and
-         ((Options.MaxRequests = 0) or (Accepted < Options.MaxRequests))
+         ((Options.MaxRequests = 0) or (Accepted < Options.MaxRequests));
 end;
 
 // Accepts requests in bounded concurrent batches and dispatches each one to Handler.
@@ -153,8 +153,8 @@ begin
     end;
     Error(Message):
     begin
-      return Error(Message)
-    end
+      return Error(Message);
+    end;
   end;
   mutable var Accepted: integer := 0;
   while (Options.MaxRequests = 0) or (Accepted < Options.MaxRequests) do
@@ -166,18 +166,18 @@ begin
         Ok(Connection):
         begin
           Std.Arrays.Push(Tasks, go ServeConnection(Connection, Options, Handler));
-          Accepted := Accepted + 1
+          Accepted := Accepted + 1;
         end;
         Error(Message):
         begin
           Std.Tasks.WaitAll(Tasks);
-          return Error(Message)
-        end
-      end
+          return Error(Message);
+        end;
+      end;
     end;
 
-    Std.Tasks.WaitAll(Tasks)
+    Std.Tasks.WaitAll(Tasks);
   end;
 
-  return Ok(true)
+  return Ok(true);
 end;

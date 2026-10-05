@@ -7,12 +7,12 @@ begin
   case Std.Net.Utf8.Decode(Bytes) of
     Ok(_):
     begin
-      Fail('invalid encoding accepted')
+      Fail('invalid encoding accepted');
     end;
     Error(_):
     begin
-    end
-  end
+    end;
+  end;
 end;
 
 begin
@@ -32,7 +32,7 @@ begin
                         Std.Str.RepeatStr('x' + Std.Str.Chr(769), 2048)
                       ] do
   begin
-    AssertEquals(Text, Unwrap(Std.Net.Utf8.Decode(Std.Net.Utf8.Encode(Text))))
+    AssertEquals(Text, Unwrap(Std.Net.Utf8.Decode(Std.Net.Utf8.Encode(Text))));
   end;
 
   Invalid([-1]);
@@ -49,5 +49,5 @@ begin
   Invalid([240, 128, 128, 128]);
   Invalid([240, 144, 128]);
   Invalid([244, 144, 128, 128]);
-  Invalid([245, 128, 128, 128])
+  Invalid([245, 128, 128, 128]);
 end.

@@ -30,7 +30,7 @@ mutable var
   Count: integer := 0;
 
 begin
-  Count := Count + 1  // Valid mutable assignment
+  Count := Count + 1;  // Valid mutable assignment
 end.
 ```
 
@@ -39,7 +39,7 @@ Inline mutable variables use the same syntax:
 ```pascal
 begin
   mutable var Count: integer := 0;
-  Count := Count + 1
+  Count := Count + 1;
 end.
 ```
 

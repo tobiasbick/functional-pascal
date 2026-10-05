@@ -9,7 +9,7 @@ fn unreachable_unit_is_not_linked() {
     // This unit is valid but never imported — it should not affect the program
     write_text(
         &cwd.join("src/unused.fpas"),
-        "unit App.Unused;\nfunction Unused(): integer;\nbegin\n  return 999\nend;\n",
+        "unit App.Unused;\nfunction Unused(): integer;\nbegin\n  return 999;\nend;\n",
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);
@@ -35,7 +35,7 @@ unit App.Internal;
 
 function Secret(): integer;
 begin
-  return 0
+  return 0;
 end;
 ",
     );
@@ -53,7 +53,7 @@ fn calling_private_symbol_from_only_private_unit_fails() {
     support::write_program_project_file(&project_file, "src/main.fpas", &["src/*.fpas"]);
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Internal, Std.Console;\nbegin\n  WriteLn(Secret())\nend.\n",
+        "program Main;\nuses App.Internal, Std.Console;\nbegin\n  WriteLn(Secret());\nend.\n",
     );
     write_text(
         &cwd.join("src/internal.fpas"),
@@ -62,7 +62,7 @@ unit App.Internal;
 
 function Secret(): integer;
 begin
-  return 42
+  return 42;
 end;
 ",
     );
@@ -89,7 +89,7 @@ fn unused_import_does_not_cause_error() {
     );
     write_text(
         &cwd.join("src/lib.fpas"),
-        "unit App.Lib;\nfunction Foo(): integer;\nbegin\n  return 1\nend;\n",
+        "unit App.Lib;\nfunction Foo(): integer;\nbegin\n  return 1;\nend;\n",
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);

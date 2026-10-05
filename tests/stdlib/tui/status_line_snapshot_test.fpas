@@ -15,13 +15,13 @@ begin
                                                                                                             TuiStatusItemBuilders.MakeCommand(TuiControlId.Create(1), 'Open', TuiAction.Create(10)),
                                                                                                             TuiStatusItemBuilders.MakeDisabledCommand(TuiControlId.Create(2), 'Quit', TuiAction.Create(20))
                                                                                                           ])
-                                                                      ])
+                                                                      ]);
 end;
 
 function UpdateStatus(State: StatusModel; Msg: TuiMsg; Cmd: TuiCmdOutput): StatusModel;
 begin
   Cmd.Set(TuiCmd.NoCommand);
-  return State
+  return State;
 end;
 
 begin
@@ -37,5 +37,5 @@ begin
   AssertTrue(Surface.CellAt(14, 0).Role = TuiStyleRole.StatusSelected);
   AssertTrue(Surface.CellAt(19, 0).Role = TuiStyleRole.StatusDisabled);
   AssertTrue(Surface.CellAt(23, 0).Role = TuiStyleRole.StatusNormal);
-  App.Close()
+  App.Close();
 end.

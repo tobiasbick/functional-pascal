@@ -4,7 +4,7 @@ uses Std.Arrays, Std.Tasks, Std.Test, Std.Time;
 
 procedure Sleeper();
 begin
-  Sleep(50)
+  Sleep(50);
 end;
 
 begin
@@ -12,11 +12,11 @@ begin
   var Started: integer := MonotonicMillis();
   for I: integer := 1 to 8 do
   begin
-    Push(Tasks, go Sleeper())
+    Push(Tasks, go Sleeper());
   end;
 
   WaitAll(Tasks);
   var Elapsed: integer := ElapsedMillis(Started);
   AssertTrue(Elapsed >= 40);
-  AssertTrue(Elapsed < 1000)
+  AssertTrue(Elapsed < 1000);
 end.

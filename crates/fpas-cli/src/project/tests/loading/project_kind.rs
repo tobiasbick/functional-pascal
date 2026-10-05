@@ -179,7 +179,7 @@ include = ["*.fpas"]
     write_text(&dir.join("helper.fpas"), "unit Tests.Helper;\n");
     write_text(
         &dir.join("smoke_test.fpas"),
-        "program Smoke;\nuses Std.Test;\nbegin AssertTrue(true) end.",
+        "program Smoke;\nuses Std.Test;\nbegin AssertTrue(true); end.",
     );
 
     let loaded = load_project_ok(&project_file);
@@ -218,7 +218,7 @@ include = ["*.fpas"]
     );
     write_text(
         &dir.join("smoke_test.fpas"),
-        "program Smoke;\nuses Std.Test;\nbegin AssertTrue(true) end.",
+        "program Smoke;\nuses Std.Test;\nbegin AssertTrue(true); end.",
     );
 
     let error = load_project_error(&project_file, "test project must reject main");

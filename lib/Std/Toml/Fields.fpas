@@ -11,7 +11,7 @@ uses Std.Arrays, Std.Dictionaries, Std.Toml;
 // - `Expectation`: Required TOML kind, such as `a string`.
 function MismatchError(Name: string; Expectation: string): string;
 begin
-  return (('field ' + Name) + ' must be ') + Expectation
+  return (('field ' + Name) + ' must be ') + Expectation;
 end;
 
 // Parses one TOML document and returns its root table.
@@ -23,13 +23,13 @@ begin
   case try Std.Toml.Parse(Text) of
     TomlValue.Table(Fields):
     begin
-      return Ok(Fields)
-    end
+      return Ok(Fields);
+    end;
     else
     begin
-      return Error('TOML root must be a table')
-    end
-  end
+      return Error('TOML root must be a table');
+    end;
+  end;
 end;
 
 // Returns one present key of any TOML kind.
@@ -42,13 +42,13 @@ begin
   case Std.Dictionaries.Get(Fields, Name) of
     Some(Value):
     begin
-      return Ok(Value)
+      return Ok(Value);
     end;
     None:
     begin
-      return Error('missing field ' + Name)
-    end
-  end
+      return Error('missing field ' + Name);
+    end;
+  end;
 end;
 
 // Returns one required string key.
@@ -61,13 +61,13 @@ begin
   case try Field(Fields, Name) of
     TomlValue.String(Value):
     begin
-      return Ok(Value)
-    end
+      return Ok(Value);
+    end;
     else
     begin
-      return Error(MismatchError(Name, 'a string'))
-    end
-  end
+      return Error(MismatchError(Name, 'a string'));
+    end;
+  end;
 end;
 
 // Returns one required integer key; floats are rejected.
@@ -80,13 +80,13 @@ begin
   case try Field(Fields, Name) of
     TomlValue.Integer(Value):
     begin
-      return Ok(Value)
-    end
+      return Ok(Value);
+    end;
     else
     begin
-      return Error(MismatchError(Name, 'an integer'))
-    end
-  end
+      return Error(MismatchError(Name, 'an integer'));
+    end;
+  end;
 end;
 
 // Returns one required float key; integers are rejected.
@@ -99,13 +99,13 @@ begin
   case try Field(Fields, Name) of
     TomlValue.Float(Value):
     begin
-      return Ok(Value)
-    end
+      return Ok(Value);
+    end;
     else
     begin
-      return Error(MismatchError(Name, 'a float'))
-    end
-  end
+      return Error(MismatchError(Name, 'a float'));
+    end;
+  end;
 end;
 
 // Returns one required boolean key.
@@ -118,13 +118,13 @@ begin
   case try Field(Fields, Name) of
     TomlValue.Boolean(Value):
     begin
-      return Ok(Value)
-    end
+      return Ok(Value);
+    end;
     else
     begin
-      return Error(MismatchError(Name, 'a boolean'))
-    end
-  end
+      return Error(MismatchError(Name, 'a boolean'));
+    end;
+  end;
 end;
 
 // Returns one required nested table key.
@@ -137,13 +137,13 @@ begin
   case try Field(Fields, Name) of
     TomlValue.Table(Value):
     begin
-      return Ok(Value)
-    end
+      return Ok(Value);
+    end;
     else
     begin
-      return Error(MismatchError(Name, 'a table'))
-    end
-  end
+      return Error(MismatchError(Name, 'a table'));
+    end;
+  end;
 end;
 
 // Returns one required array key without checking element kinds.
@@ -156,13 +156,13 @@ begin
   case try Field(Fields, Name) of
     TomlValue.ArrayValue(Items):
     begin
-      return Ok(Items)
-    end
+      return Ok(Items);
+    end;
     else
     begin
-      return Error(MismatchError(Name, 'an array'))
-    end
-  end
+      return Error(MismatchError(Name, 'an array'));
+    end;
+  end;
 end;
 
 // Returns one required array key whose elements must all be strings.
@@ -178,16 +178,16 @@ begin
     case Item of
       TomlValue.String(Value):
       begin
-        Std.Arrays.Push(Values, Value)
-      end
+        Std.Arrays.Push(Values, Value);
+      end;
       else
       begin
-        return Error(MismatchError(Name, 'an array of strings'))
-      end
-    end
+        return Error(MismatchError(Name, 'an array of strings'));
+      end;
+    end;
   end;
 
-  return Ok(Values)
+  return Ok(Values);
 end;
 
 // Rejects the first key whose name is not listed in `Allowed`; missing keys are not checked.
@@ -201,9 +201,9 @@ begin
   begin
     if not Std.Arrays.Contains(Allowed, Name) then
     begin
-      return Error('unexpected field ' + Name)
-    end
+      return Error('unexpected field ' + Name);
+    end;
   end;
 
-  return Ok(true)
+  return Ok(true);
 end;

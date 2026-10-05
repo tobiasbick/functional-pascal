@@ -8,13 +8,13 @@ begin
     Ok(_):
     begin
       Fail('expected an error result');
-      return ''
+      return '';
     end;
     Error(Message):
     begin
-      return Message
-    end
-  end
+      return Message;
+    end;
+  end;
 end;
 
 begin
@@ -41,5 +41,5 @@ begin
                                                                                                 'a',
                                                                                                 'b'
                                                                                               ])));
-  AssertTrue(IsError(ParseTable('a = ')))
+  AssertTrue(IsError(ParseTable('a = ')));
 end.

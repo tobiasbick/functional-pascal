@@ -17,12 +17,12 @@ uses Std.Console;
 function Fail(): integer;
 begin
   panic('boom');
-  return 1
+  return 1;
 end;
 
 begin
   var Value: integer := Fail();
-  WriteLn(Value)
+  WriteLn(Value);
 end.
 "#;
 

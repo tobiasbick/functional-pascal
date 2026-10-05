@@ -18,14 +18,14 @@ begin
     ctrl := false;
     alt := false;
     meta := false;
-  end
+  end;
 end;
 
 function ViewTextArea(State: TextAreaModel): TuiElement;
 begin
   return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(1)), [
                                                                         TuiElementBuilders.MakeTextArea(TuiControlId.Create(1), State.Text, State.Caret, State.Offset, TuiAction.Create(9))
-                                                                      ])
+                                                                      ]);
 end;
 
 function UpdateTextArea(State: TextAreaModel; Msg: TuiMsg; Cmd: TuiCmdOutput): TextAreaModel;
@@ -40,19 +40,19 @@ begin
         Text := Text;
         Caret := Caret;
         Offset := Offset;
-      end
-    end
+      end;
+    end;
     else
     begin
-      return State
-    end
-  end
+      return State;
+    end;
+  end;
 end;
 
 function Press(App: TuiApplication; State: TextAreaModel; Kind: TuiKeyKind; Character: string): TextAreaModel;
 begin
   App.InjectKeyForTest(MakeKey(Kind, Character));
-  return App.RunIterations(State, UpdateTextArea, ViewTextArea, 1, 0)
+  return App.RunIterations(State, UpdateTextArea, ViewTextArea, 1, 0);
 end;
 
 // Reference the original scalar-prefix contract only for short correctness fixtures.
@@ -62,11 +62,11 @@ begin
   begin
     if Std.Console.DisplayWidth(Std.Str.Substring(Line, 0, I + 1)) > Column then
     begin
-      return I
-    end
+      return I;
+    end;
   end;
 
-  return Std.Str.Length(Line)
+  return Std.Str.Length(Line);
 end;
 
 begin
@@ -90,9 +90,9 @@ begin
         Offset := TuiPoint.Create(3, 0);
       end;
       var Moved: TextAreaModel := Press(App, State, TuiKeyKind.Down, '');
-      AssertEquals(7 + Expected(Line, Column), Moved.Caret)
-    end
+      AssertEquals(7 + Expected(Line, Column), Moved.Caret);
+    end;
   end;
 
-  App.Close()
+  App.Close();
 end.

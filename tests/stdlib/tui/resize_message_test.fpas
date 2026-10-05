@@ -19,7 +19,7 @@ begin
     ResizeHeight := State.ResizeHeight;
     HostWidthAtResize := State.HostWidthAtResize;
     HostHeightAtResize := State.HostHeightAtResize;
-  end
+  end;
 end;
 
 begin
@@ -44,10 +44,10 @@ begin
       begin
         if Delta = 1 then
         begin
-          return PushEvent(State, 'tick-1')
+          return PushEvent(State, 'tick-1');
         end;
 
-        return PushEvent(State, 'tick-2')
+        return PushEvent(State, 'tick-2');
       end;
       TuiMsg.Resize(Size):
       begin
@@ -58,15 +58,15 @@ begin
           ResizeHeight := Size.Height;
           HostWidthAtResize := Snapshot.Width;
           HostHeightAtResize := Snapshot.Height;
-        end
-      end
+        end;
+      end;
       else
       begin
-        return State
-      end
-    end
+        return State;
+      end;
+    end;
   end, function(State: ResizeModel): TuiElement begin
-    return TuiElementBuilders.MakeLabel('resize')
+    return TuiElementBuilders.MakeLabel('resize');
   end, 3, 0);
   AssertEquals(3, Std.Arrays.Length(Model.Events));
   AssertEquals('tick-1', Model.Events[0]);
@@ -80,5 +80,5 @@ begin
   AssertEquals(10, App.SurfaceSnapshot().Height);
   App.Close();
   var Probe: TuiWorkingSurface := TuiWorkingSurface.Create(TuiSize.Create(1, 1));
-  AssertEquals(2, Probe.Slot)
+  AssertEquals(2, Probe.Slot);
 end.

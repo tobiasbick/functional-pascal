@@ -23,7 +23,7 @@ begin
   Inside := Loaded.Notes[0];
   Inside.Title := 'edited';
   AssertTrue(Unwrap(NotesSave(Directory, Inside)));
-  AssertEquals(Before, Unwrap(Std.Fs.ReadText(NoteFilePath(Adjacent, Outside))))
+  AssertEquals(Before, Unwrap(Std.Fs.ReadText(NoteFilePath(Adjacent, Outside))));
 end;
 
 begin
@@ -57,5 +57,5 @@ begin
   State := NotesUpdate(State, TuiMsgAction(TuiControlId.Create(23), TuiAction.Create(13)), Cmd);
   AssertEquals(-1, State.Selected);
   AssertEquals(FirstText, Unwrap(Std.Fs.ReadText(First.Path)));
-  AssertEquals(SecondText, Unwrap(Std.Fs.ReadText(Second.Path)))
+  AssertEquals(SecondText, Unwrap(Std.Fs.ReadText(Second.Path)));
 end.

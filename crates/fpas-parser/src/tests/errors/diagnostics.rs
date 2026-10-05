@@ -75,7 +75,7 @@ fn expected_expression_has_correct_code() {
 fn missing_trailing_call_argument_preserves_closing_parenthesis() {
     use fpas_diagnostics::codes::{PARSE_EXPECTED_EXPRESSION, PARSE_EXPECTED_TOKEN};
 
-    let (_, errors) = parse_with_errors("program T; begin Foo(1,) end.");
+    let (_, errors) = parse_with_errors("program T; begin Foo(1,); end.");
     let parser_errors = errors
         .iter()
         .filter_map(ParseDiagnostic::as_parser_error)

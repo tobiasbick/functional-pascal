@@ -4,10 +4,10 @@ function TuiMarginsRequireNonNegative(Value: integer; Name: string): integer;
 begin
   if Value < 0 then
   begin
-    panic(('Tui layout margin ' + Name) + ' must not be negative')
+    panic(('Tui layout margin ' + Name) + ' must not be negative');
   end;
 
-  return Value
+  return Value;
 end;
 
 public type
@@ -36,7 +36,7 @@ public type
         Top := TuiMarginsRequireNonNegative(Top, 'top');
         Right := TuiMarginsRequireNonNegative(Right, 'right');
         Bottom := TuiMarginsRequireNonNegative(Bottom, 'bottom');
-      end
+      end;
     end;
 
     // Creates equal margins on every side.
@@ -45,7 +45,7 @@ public type
     // - `Value`: Value used to create or update the result.
     public static function Uniform(Value: integer): TuiMargins;
     begin
-      return TuiMargins.Create(Value, Value, Value, Value)
+      return TuiMargins.Create(Value, Value, Value, Value);
     end;
 
     // Creates symmetric horizontal and vertical margins.
@@ -55,7 +55,7 @@ public type
     // - `Vertical`: Vertical policy, alignment, or extent.
     public static function Symmetric(Horizontal: integer; Vertical: integer): TuiMargins;
     begin
-      return TuiMargins.Create(Horizontal, Vertical, Horizontal, Vertical)
+      return TuiMargins.Create(Horizontal, Vertical, Horizontal, Vertical);
     end;
 
     // Returns left plus right.
@@ -64,7 +64,7 @@ public type
     // - `Self`: Receiver value operated on by the method.
     public function Horizontal(Self: TuiMargins): integer;
     begin
-      return Self.Left + Self.Right
+      return Self.Left + Self.Right;
     end;
 
     // Returns top plus bottom.
@@ -73,6 +73,6 @@ public type
     // - `Self`: Receiver value operated on by the method.
     public function Vertical(Self: TuiMargins): integer;
     begin
-      return Self.Top + Self.Bottom
+      return Self.Top + Self.Bottom;
     end;
   end;

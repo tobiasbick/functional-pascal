@@ -6,7 +6,7 @@
 
 ```pascal
 if Contains('abc', 'b') then
-  WriteLn('yes')
+  WriteLn('yes');
 ```
 
 ---
@@ -16,7 +16,7 @@ if Contains('abc', 'b') then
 `true` if `S` begins with `Pre`.
 
 ```pascal
-WriteLn(StartsWith('abc', 'ab'))
+WriteLn(StartsWith('abc', 'ab'));
 ```
 
 ---
@@ -26,7 +26,7 @@ WriteLn(StartsWith('abc', 'ab'))
 `true` if `S` ends with `Suf`.
 
 ```pascal
-WriteLn(EndsWith('abc', 'bc'))
+WriteLn(EndsWith('abc', 'bc'));
 ```
 
 ---
@@ -36,7 +36,7 @@ WriteLn(EndsWith('abc', 'bc'))
 Copies `Len` characters starting at `Start`. **Bounds are checked at runtime**; invalid ranges produce a runtime error.
 
 ```pascal
-WriteLn(Substring('Hello', 0, 3))
+WriteLn(Substring('Hello', 0, 3));
 ```
 
 ---
@@ -47,7 +47,7 @@ Returns the **first** character index of `Sub` in `S`, or **`-1`** if not found.
 
 ```pascal
 WriteLn(IndexOf('aba', 'a'));
-WriteLn(IndexOf('aba', 'z'))
+WriteLn(IndexOf('aba', 'z'));
 ```
 
 ---
@@ -58,7 +58,7 @@ Returns the **last** character index of `Sub` in `S`, or **`-1`** if not found.
 
 ```pascal
 WriteLn(LastIndexOf('abcabc', 'abc'))  // 3
-WriteLn(LastIndexOf('abc', 'z'))       // -1
+WriteLn(LastIndexOf('abc', 'z'));       // -1
 ```
 
 ## See also

@@ -3,5 +3,5 @@ program T;
 uses Std.Console, Std.Math;
 
 begin
-  WriteLn(Trunc(-3.7))
+  WriteLn(Trunc(-3.7));
 end.

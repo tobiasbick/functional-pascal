@@ -171,7 +171,7 @@ async function verifyPositiveScopes(grammar) {
     "keyword.operator.fpas"
   );
   assertScope(
-    tokenAt(fixture, "return Value.X + Value.Y", "+"),
+    tokenAt(fixture, "return Value.X + Value.Y;", "+"),
     "keyword.operator.fpas"
   );
   assertScope(

@@ -15,17 +15,17 @@ begin
   case L of
     Light.Red:
     begin
-      return 'Stop'
+      return 'Stop';
     end;
     Light.Yellow:
     begin
-      return 'Caution'
+      return 'Caution';
     end;
     Light.Green:
     begin
-      return 'Go'
-    end
-  end
+      return 'Go';
+    end;
+  end;
 end;
 
 function SafeLookup(Items: array of integer; Target: integer): option of integer;
@@ -34,11 +34,11 @@ begin
   begin
     if Items[I] = Target then
     begin
-      return Some(I)
-    end
+      return Some(I);
+    end;
   end;
 
-  return None
+  return None;
 end;
 
 begin
@@ -51,12 +51,12 @@ begin
   case Idx of
     Some(I):
     begin
-      WriteLn('Found at index ' + IntToStr(I))
+      WriteLn('Found at index ' + IntToStr(I));
     end;
     None:
     begin
-      WriteLn('Not found')
-    end
+      WriteLn('Not found');
+    end;
   end;
 
   WriteLn('--- Result exhaustiveness ---');
@@ -64,11 +64,11 @@ begin
   case R of
     Ok(V):
     begin
-      WriteLn('Value: ' + IntToStr(V))
+      WriteLn('Value: ' + IntToStr(V));
     end;
     Error(E):
     begin
-      WriteLn('Error: ' + E)
-    end
-  end
+      WriteLn('Error: ' + E);
+    end;
+  end;
 end.

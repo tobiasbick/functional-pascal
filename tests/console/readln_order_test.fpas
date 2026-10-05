@@ -8,5 +8,5 @@ begin
   PushReadLn('third');
   AssertEquals('first', ReadLn());
   AssertEquals('second', ReadLn());
-  AssertEquals('third', ReadLn())
+  AssertEquals('third', ReadLn());
 end.

@@ -34,14 +34,14 @@ export async function verifyCellCapturingRoutineAssignment(
     "",
     "function Identity(Value: integer): integer;",
     "begin",
-    "  return Value",
+    "  return Value;",
     "end;",
     "",
     "function Mutating(): Handler;",
     "  function AddCell(Value: integer): integer;",
     "  begin",
     "    Cell := Cell + 1;",
-    "    return Value + Cell",
+    "    return Value + Cell;",
     "  end;",
     "begin",
     "  mutable var Cell: integer := 1;",
@@ -52,17 +52,17 @@ export async function verifyCellCapturingRoutineAssignment(
     "  Cell := Cell + 10;",
     "  WriteLn(Current(0));",
     "  WriteLn(Original(0));",
-    "  return Current",
+    "  return Current;",
     "end;",
     "",
     "begin",
     "  var Output: Handler := Mutating();",
-    "  WriteLn(Output(0))",
+    "  WriteLn(Output(0));",
     "end.",
     ""
   ];
   const sourcePath = await writeSource(workspaceRoot, "cell-capturing-routine-assignment", lines);
-  const cellStopLine = lines.findIndex((line) => line.includes("var CellStop: integer := 0"));
+  const cellStopLine = lines.findIndex((line) => line.includes("var CellStop: integer := 0;"));
   assert.ok(cellStopLine >= 0, "compact program includes CellStop");
   const breakpoint = new vscode.SourceBreakpoint(
     new vscode.Location(vscode.Uri.file(sourcePath), new vscode.Position(cellStopLine, 0)),

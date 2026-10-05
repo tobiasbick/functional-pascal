@@ -73,15 +73,15 @@ begin
       WriteLn(ResponseValue.StatusCode);
       case BodyText(ResponseValue) of
         Ok(Text): WriteLn(Text);
-        Error(Message): panic(Message)
+        Error(Message): panic(Message);
       end;
       case HeaderValue(ResponseValue, 'content-type') of
         Some(Value): WriteLn(Value);
-        None: panic('missing content type')
-      end
+        None: panic('missing content type');
+      end;
     end;
-    Error(Message): panic(Message)
-  end
+    Error(Message): panic(Message);
+  end;
 end.
 "#
         ),
@@ -160,19 +160,19 @@ begin
     begin
       if ResponseValue.StatusCode <> 200 then
       begin
-        panic('unexpected HTTP status')
+        panic('unexpected HTTP status');
       end;
 
       if Std.Arrays.Length(ResponseValue.Body) <> ExpectedBodyLength then
       begin
-        panic('unexpected HTTP body length')
-      end
+        panic('unexpected HTTP body length');
+      end;
     end;
     Error(Message):
     begin
-      panic(Message)
-    end
-  end
+      panic(Message);
+    end;
+  end;
 end;
 
 begin
@@ -188,17 +188,17 @@ begin
   case Send(Request.Create('BAD@METHOD', BaseUrl + '/invalid')) of
     Ok(ResponseValue):
     begin
-      panic('invalid HTTP method was accepted')
+      panic('invalid HTTP method was accepted');
     end;
     Error(Message):
     begin
       if not Std.Str.Contains(Message, 'RFC 9110 token') then
       begin
-        panic(Message)
-      end
-    end
+        panic(Message);
+      end;
+    end;
   end;
-  WriteLn('ok')
+  WriteLn('ok');
 end.
 "#
         ),
@@ -282,8 +282,8 @@ begin
     Options
   ) of
     Ok(Content): WriteLn(Content);
-    Error(Message): panic(Message)
-  end
+    Error(Message): panic(Message);
+  end;
 end.
 "#
         ),

@@ -20,7 +20,7 @@ fn loose_file_analysis_is_cached_and_formats_the_snapshot() {
     let temp = TempDirectory::new("analysis-loose");
     let path = temp.write(
         "loose.fpas",
-        "program Loose; begin var Value: integer := 1 end.",
+        "program Loose; begin var Value: integer := 1; end.",
     );
     let mut service = LanguageService::new(WorkspaceContext::loose(temp.path()));
 
@@ -36,7 +36,7 @@ fn loose_file_analysis_is_cached_and_formats_the_snapshot() {
     assert!(diagnostics_for_document(&first).is_empty());
     assert_eq!(
         format_document(first.snapshot()).as_deref(),
-        Some("program Loose;\n\nbegin\n  var Value: integer := 1\nend.\n")
+        Some("program Loose;\n\nbegin\n  var Value: integer := 1;\nend.\n")
     );
 }
 
@@ -82,7 +82,7 @@ fn open_unit_overlay_invalidates_cached_project_analysis_and_disk_is_unchanged()
         .open_document(
             &unit,
             1,
-            "unit Demo.Math;\n\npublic function Answer(): integer;\nbegin\n  return 'wrong'\nend;\n",
+            "unit Demo.Math;\n\npublic function Answer(): integer;\nbegin\n  return 'wrong';\nend;\n",
         )
         .expect("overlay opened");
     let invalid = service
@@ -101,7 +101,7 @@ fn open_unit_overlay_invalidates_cached_project_analysis_and_disk_is_unchanged()
         .apply_full_text(
             &unit,
             2,
-            "unit Demo.Math;\n\npublic function Answer(): integer;\nbegin\n  return 7\nend;\n",
+            "unit Demo.Math;\n\npublic function Answer(): integer;\nbegin\n  return 7;\nend;\n",
         )
         .expect("newer overlay applied");
     let fixed = service
@@ -136,7 +136,7 @@ fn reopened_editor_version_cannot_reuse_analysis_from_an_older_document_lifetime
         .open_document(
             &path,
             1,
-            "program Reopened;\nbegin\n  var Broken: integer := 'text'\nend.\n",
+            "program Reopened;\nbegin\n  var Broken: integer := 'text';\nend.\n",
         )
         .expect("second editor lifetime reuses client version");
     let reopened = service
@@ -153,7 +153,7 @@ fn malformed_source_returns_parse_diagnostics_without_semantic_failure() {
     let temp = TempDirectory::new("analysis-malformed");
     let path = temp.write(
         "malformed.fpas",
-        "program Broken;\nbegin\n  if then\nend.\n",
+        "program Broken;\nbegin\n  if then;\nend.\n",
     );
     let mut service = LanguageService::new(WorkspaceContext::loose(temp.path()));
 
@@ -171,11 +171,11 @@ fn workspace_symbol_index_preserves_same_short_name_from_two_units() {
     let temp = TempDirectory::new("analysis-symbols");
     let first_path = temp.write(
         "first.fpas",
-        "unit Demo.First;\n\npublic function Create(): integer;\nbegin\n  return 1\nend;\n",
+        "unit Demo.First;\n\npublic function Create(): integer;\nbegin\n  return 1;\nend;\n",
     );
     let second_path = temp.write(
         "second.fpas",
-        "unit Demo.Second;\n\npublic function Create(): integer;\nbegin\n  return 2\nend;\n",
+        "unit Demo.Second;\n\npublic function Create(): integer;\nbegin\n  return 2;\nend;\n",
     );
     let mut store = DocumentStore::new();
     let first = store.snapshot(&first_path).expect("first snapshot");
@@ -214,7 +214,7 @@ include = ["src/**/*.fpas"]
     );
     temp.write(
         "lib/src/math.fpas",
-        "unit Demo.Math;\n\npublic function Answer(): integer;\nbegin\n  return 42\nend;\n",
+        "unit Demo.Math;\n\npublic function Answer(): integer;\nbegin\n  return 42;\nend;\n",
     );
     temp.write(
         "app/app.fpasprj",
@@ -232,7 +232,7 @@ include = ["src/**/*.fpas"]
     );
     let main = temp.write(
         "app/src/main.fpas",
-        "program App;\n\nuses Demo.Math;\n\nbegin\n  var Value: integer := Answer()\nend.\n",
+        "program App;\n\nuses Demo.Math;\n\nbegin\n  var Value: integer := Answer();\nend.\n",
     );
     let mut service = LanguageService::load(&workspace);
 
@@ -282,7 +282,7 @@ fn diagnostic_analysis_stays_current_when_a_sibling_source_vanishes() {
     std::fs::remove_file(&unit).expect("remove sibling");
     service
         .documents_mut()
-        .apply_full_text(&main, 2, "program Broken;\nbegin\n  if then\nend.\n")
+        .apply_full_text(&main, 2, "program Broken;\nbegin\n  if then;\nend.\n")
         .expect("change open main");
     let failed = service
         .analyze_document_diagnostics(&main)
@@ -305,14 +305,14 @@ fn diagnostic_analysis_stays_current_when_a_sibling_source_vanishes() {
 
     temp.write(
         "src/math.fpas",
-        "unit Demo.Math;\n\npublic function Answer(): integer;\nbegin\n  return 42\nend;\n",
+        "unit Demo.Math;\n\npublic function Answer(): integer;\nbegin\n  return 42;\nend;\n",
     );
     service
         .documents_mut()
         .apply_full_text(
             &main,
             3,
-            "program App;\n\nuses Demo.Math;\n\nbegin\n  var Value: integer := Answer()\nend.\n",
+            "program App;\n\nuses Demo.Math;\n\nbegin\n  var Value: integer := Answer();\nend.\n",
         )
         .expect("restore main");
     let restored = service

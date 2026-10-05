@@ -31,5 +31,5 @@ begin
   AssertEquals(14, Std.Console.DisplayWidth(Items[0]));
   AssertTrue(Std.Str.Contains(Items[0], '👩‍💻'));
   AssertTrue(Std.Str.EndsWith(Items[0], '…'));
-  AssertEquals('', NotesListItems([Newer], '', 0)[0])
+  AssertEquals('', NotesListItems([Newer], '', 0)[0]);
 end.

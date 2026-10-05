@@ -24,11 +24,11 @@ end;
 function Add(Value: integer): integer;
 begin
   var Local: integer := Value;
-  return Local
+  return Local;
 end;
 
 begin
-  mutable var Current: integer := 1
+  mutable var Current: integer := 1;
 end.
 "#;
     let path = temp.write("symbols.fpas", source);
@@ -69,13 +69,13 @@ var Value: integer := 1;
 function ReadValue(Value: integer): integer;
 begin
   var Other: integer := Value;
-  return Other
+  return Other;
 end;
 
 begin
   // Value in a comment
   var Text: string := 'Value';
-  var Output: integer := ReadValue(Value)
+  var Output: integer := ReadValue(Value);
 end.
 "#;
     let path = temp.write("local.fpas", source);
@@ -133,12 +133,12 @@ end;
 // Returns the project answer.
 public function Answer(): integer;
 begin
-  return 42
+  return 42;
 end;
 
 function Hidden(): integer;
 begin
-  return 0
+  return 0;
 end;
 "#;
     std::fs::write(&unit, unit_source).expect("replace unit fixture");
@@ -151,7 +151,7 @@ begin
   var B: integer := Demo.Math.Answer();
   var P: Point := record X := 0; end;
   var C: integer := P.X;
-  var D: integer := Hidden()
+  var D: integer := Hidden();
 end.
 "#;
     std::fs::write(&main, main_source).expect("replace main fixture");
@@ -320,11 +320,11 @@ include = ["src/**/*.fpas"]
     );
     temp.write(
         "src/first.fpas",
-        "unit Demo.First;\n\npublic function Create(): integer;\nbegin\n  return 1\nend;\n",
+        "unit Demo.First;\n\npublic function Create(): integer;\nbegin\n  return 1;\nend;\n",
     );
     temp.write(
         "src/second.fpas",
-        "unit Demo.Second;\n\npublic function Create(): integer;\nbegin\n  return 2\nend;\n",
+        "unit Demo.Second;\n\npublic function Create(): integer;\nbegin\n  return 2;\nend;\n",
     );
     let mut service = LanguageService::load(&manifest);
     let source = std::fs::read_to_string(&main).expect("main source");
@@ -359,11 +359,11 @@ include = ["src/**/*.fpas"]
     );
     temp.write(
         "lib/src/public.fpas",
-        "unit Demo.Exported;\n\npublic function Visible(): integer;\nbegin return 1 end;\n",
+        "unit Demo.Exported;\n\npublic function Visible(): integer;\nbegin return 1; end;\n",
     );
     temp.write(
         "lib/src/internal.fpas",
-        "unit Demo.Internal;\n\npublic function Hidden(): integer;\nbegin return 2 end;\n",
+        "unit Demo.Internal;\n\npublic function Hidden(): integer;\nbegin return 2; end;\n",
     );
     let manifest = temp.write(
         "app/app.fpasprj",
@@ -381,7 +381,7 @@ include = ["src/**/*.fpas"]
     );
     let main = temp.write(
         "app/src/main.fpas",
-        "program App;\n\nuses Demo.Internal;\n\nbegin\n  var Value: integer := Hidden()\nend.\n",
+        "program App;\n\nuses Demo.Internal;\n\nbegin\n  var Value: integer := Hidden();\nend.\n",
     );
     let mut service = LanguageService::load(&manifest);
     let source = std::fs::read_to_string(&main).expect("main source");

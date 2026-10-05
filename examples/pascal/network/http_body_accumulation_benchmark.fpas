@@ -6,14 +6,14 @@ uses Std.Args, Std.Arrays, Std.Console, Std.Conv, Std.Http, Std.Results, Std.Tim
 begin
   if ParamCount() <> 3 then
   begin
-    panic('expected ITERATIONS SIZE URL')
+    panic('expected ITERATIONS SIZE URL');
   end;
   var Iterations: integer := StrToInt(ParamStr(0));
   var Size: integer := StrToInt(ParamStr(1));
   var Url: string := ParamStr(2);
   if (Iterations < 1) or (Size < 1) then
   begin
-    panic('arguments must be positive')
+    panic('arguments must be positive');
   end;
   var Started: integer := MonotonicMillis();
   for Iteration: integer := 1 to Iterations do
@@ -21,14 +21,14 @@ begin
     var ResponseValue: Response := Std.Results.Unwrap(Send(Request.Get(Url)));
     if Std.Arrays.Length(ResponseValue.Body) <> Size * 128 then
     begin
-      panic('body length')
+      panic('body length');
     end;
 
     if ResponseValue.Body[Size * 128 - 1] <> 65 then
     begin
-      panic('body data')
-    end
+      panic('body data');
+    end;
   end;
 
-  WriteLn(('elapsed: ' + IntToStr(ElapsedMillis(Started))) + ' ms')
+  WriteLn(('elapsed: ' + IntToStr(ElapsedMillis(Started))) + ' ms');
 end.

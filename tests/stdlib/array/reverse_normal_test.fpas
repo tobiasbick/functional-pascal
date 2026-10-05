@@ -7,5 +7,5 @@ begin
   var R: array of integer := Reverse(A);
   WriteLn(R[0]);
   WriteLn(R[1]);
-  WriteLn(R[2])
+  WriteLn(R[2]);
 end.

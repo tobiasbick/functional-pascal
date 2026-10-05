@@ -15,7 +15,7 @@ public procedure TuiPaintPanel(Canvas: TuiCanvas; Bounds: TuiRect; Title: string
 begin
   if Bounds.IsEmpty() then
   begin
-    return
+    return;
   end;
 
   Canvas.FillRect(Bounds, TuiCell.Create(' ', TuiStyleRole.Normal));
@@ -23,6 +23,6 @@ begin
   if (Title <> '') and (Bounds.Width > 6) then
   begin
     Canvas.Child(TuiRect.Create(Bounds.X + 2, Bounds.Y, Bounds.Width - 4, 1))
-      .WriteText(TuiPoint.Create(0, 0), (' ' + Title) + ' ', TuiStyleRole.Title)
-  end
+      .WriteText(TuiPoint.Create(0, 0), (' ' + Title) + ' ', TuiStyleRole.Title);
+  end;
 end;

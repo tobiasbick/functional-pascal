@@ -6,7 +6,7 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`case_stmt`, `case
 
 | Topic | Description |
 |-------|-------------|
-| [Syntax](syntax.md) | Arm shape and separators |
+| [Syntax](syntax.md) | Arm shape and terminators |
 | [Scalar labels](scalar-labels.md) | Values, commas, `else`, block arms |
 | [Ranges](ranges.md) | `a..b` labels |
 | [Enum patterns](enum-patterns.md) | Plain and data-carrying enums |

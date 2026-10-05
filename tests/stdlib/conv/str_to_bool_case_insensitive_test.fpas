@@ -4,5 +4,5 @@ uses Std.Console, Std.Conv;
 
 begin
   WriteLn(StrToBool('True'));
-  WriteLn(StrToBool('FALSE'))
+  WriteLn(StrToBool('FALSE'));
 end.

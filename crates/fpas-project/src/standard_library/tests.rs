@@ -36,7 +36,7 @@ include = ["Std/**/*.fpas"]
     let program = dir.join("main.fpas");
     write_text(
         &program,
-        "program Main;\nuses Std.Sample;\nbegin\n  var Answer: integer := Value\nend.\n",
+        "program Main;\nuses Std.Sample;\nbegin\n  var Answer: integer := Value;\nend.\n",
     );
 
     let library = load_standard_library(&dir).expect("standard library must load");
@@ -78,7 +78,7 @@ include = ["Std/**/*.fpas"]
     let program = dir.join("main.fpas");
     write_text(
         &program,
-        "program Main;\nuses Std.Sample;\nbegin\n  var Answer: integer := Value\nend.\n",
+        "program Main;\nuses Std.Sample;\nbegin\n  var Answer: integer := Value;\nend.\n",
     );
 
     let library = load_standard_library(&dir).expect("standard library must load");

@@ -17,7 +17,7 @@ begin
     ctrl := false;
     alt := false;
     meta := false;
-  end
+  end;
 end;
 
 function ViewStatus(State: StatusModel): TuiElement;
@@ -28,7 +28,7 @@ begin
                                                                                                                       TuiStatusItemBuilders.MakeDisabledCommand(TuiControlId.Create(2), 'Save', TuiAction.Create(20)),
                                                                                                                       TuiStatusItemBuilders.MakeCommand(TuiControlId.Create(3), 'Quit', TuiAction.Create(30))
                                                                                                                     ])
-                                                                                ])
+                                                                                ]);
 end;
 
 function UpdateStatus(State: StatusModel; Msg: TuiMsg; Cmd: TuiCmdOutput): StatusModel;
@@ -43,26 +43,26 @@ begin
           return record
             Focus := Id.Value;
             Actions := State.Actions;
-          end
+          end;
         end;
         None:
         begin
-          return State
-        end
-      end
+          return State;
+        end;
+      end;
     end;
     TuiMsg.Action(Source, Action):
     begin
       return record
         Focus := State.Focus;
         Actions := Std.Arrays.Concat(State.Actions, [Action.Value]);
-      end
-    end
+      end;
+    end;
     else
     begin
-      return State
-    end
-  end
+      return State;
+    end;
+  end;
 end;
 
 begin
@@ -80,5 +80,5 @@ begin
   App.InjectKeyForTest(MakeKey(TuiKeyKind.Tab));
   Model := App.RunIterations(Model, UpdateStatus, ViewStatus, 1, 0);
   AssertEquals(3, Model.Focus);
-  App.Close()
+  App.Close();
 end.

@@ -23,7 +23,7 @@ TuiElement.Layout(Settings, Children)
 TuiElement.Spacer(Value)
 TuiElement.Panel(Title, Children)
 TuiElement.Overlay(Title, Children)
-TuiElement.Desktop(Focused, Children)
+TuiElement.Desktop(Focused, Children);
 ```
 
 `MakeRow` and `MakeColumn` use spacing `0`; use `MakeRowSpaced` and

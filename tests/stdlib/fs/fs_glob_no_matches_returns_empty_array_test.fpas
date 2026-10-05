@@ -6,11 +6,11 @@ begin
   case Glob(ScratchDir() + '/no-match/**/*.fpas') of
     Ok(Paths):
     begin
-      AssertEquals(0, Std.Arrays.Length(Paths))
+      AssertEquals(0, Std.Arrays.Length(Paths));
     end;
     Error(Message):
     begin
-      Fail(Message)
-    end
-  end
+      Fail(Message);
+    end;
+  end;
 end.

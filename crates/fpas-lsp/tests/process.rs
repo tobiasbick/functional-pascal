@@ -241,7 +241,7 @@ fn cancelling_an_active_reference_scan_keeps_the_server_responsive() {
         "scan.fpasprj",
         "[project]\nname = \"scan\"\nkind = \"library\"\n\n[sources]\ninclude = [\"src/**/*.fpas\"]\n",
     );
-    let core = "unit Demo.Core;\n\npublic function Answer(): integer;\nbegin return 42 end;\n";
+    let core = "unit Demo.Core;\n\npublic function Answer(): integer;\nbegin return 42; end;\n";
     temp.write("src/core.fpas", core);
     for index in 0..120 {
         let calls = (0..60)

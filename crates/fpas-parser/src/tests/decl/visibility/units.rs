@@ -8,7 +8,7 @@ fn unit_declarations_default_to_private() {
          var State: integer := 2;
          mutable var Counter: integer := 3;
          type InternalId = integer;
-         function Helper(): integer; begin return 1 end;
+         function Helper(): integer; begin return 1; end;
          procedure Reset(); begin end;",
     );
 
@@ -28,7 +28,7 @@ fn public_applies_to_every_supported_declaration_kind() {
          public var State: integer := 2;
          public mutable var Counter: integer := 3;
          public type PublicId = integer;
-         public function ReadValue(): integer; begin return Answer end;
+         public function ReadValue(): integer; begin return Answer; end;
          public procedure Reset(); begin end;",
     );
 
@@ -63,7 +63,7 @@ fn private_can_be_used_as_an_identifier() {
         "unit MyApp.Core;
          function private(): integer;
          begin
-           return 1
+           return 1;
          end;",
     );
 

@@ -16,13 +16,13 @@ begin
       return record
         Values := State.Values;
         Starts := State.Starts + 1;
-      end
-    end
+      end;
+    end;
     else
     begin
-      return State
-    end
-  end
+      return State;
+    end;
+  end;
 end;
 
 function UpdateApplication(State: InjectionModel; Message: integer; Cmd: TuiCmdOutput): InjectionModel;
@@ -30,12 +30,12 @@ begin
   return record
     Values := Std.Arrays.Concat(State.Values, [Message]);
     Starts := State.Starts;
-  end
+  end;
 end;
 
 function View(State: InjectionModel): TuiElement;
 begin
-  return TuiElementBuilders.MakeLabel('background')
+  return TuiElementBuilders.MakeLabel('background');
 end;
 
 begin
@@ -53,5 +53,5 @@ begin
   AssertEquals(4, Model.Values[0]);
   AssertEquals(7, Model.Values[1]);
   App.CloseWithBackground(Inbox);
-  AssertTrue(IsError(TrySend(Inbox, 11)))
+  AssertTrue(IsError(TrySend(Inbox, 11)));
 end.

@@ -19,12 +19,12 @@ function Work(): integer;
 begin
   mutable var Value: integer := 40;
   Value := Value + 2;
-  return Value
+  return Value;
 end;
 
 begin
   var Pending: task := go Work();
-  WriteLn(Wait(Pending))
+  WriteLn(Wait(Pending));
 end.
 "#;
 
@@ -131,12 +131,12 @@ uses Std.Tasks;
 
 procedure Explode();
 begin
-  panic('child boom')
+  panic('child boom');
 end;
 
 begin
   var Pending: task := go Explode();
-  Wait(Pending)
+  Wait(Pending);
 end.
 "#;
     let (program, diagnostics) = fpas_parser::parse(FAILURE);

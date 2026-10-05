@@ -132,7 +132,7 @@ public function TuiMsgAction(
   Action: Std.Tui.Ids.Action.TuiAction
 ): Std.Tui.Runtime.Msg.TuiMsg;
 begin
-  return Std.Tui.Runtime.Msg.TuiMsgAction(Source, Action)
+  return Std.Tui.Runtime.Msg.TuiMsgAction(Source, Action);
 end;
 
 // Measures one element under the given constraints.
@@ -145,7 +145,7 @@ public function TuiMeasure(
   Spec: Std.Tui.Layout.MeasureSpec.TuiMeasureSpec
 ): Std.Tui.Layout.MeasureResult.TuiMeasureResult;
 begin
-  return Std.Tui.Layout.Measure.TuiMeasure(Node, Spec)
+  return Std.Tui.Layout.Measure.TuiMeasure(Node, Spec);
 end;
 
 // Creates a source-aware controlled-input change message.
@@ -162,7 +162,7 @@ public function TuiMsgTextChanged(
   Caret: integer
 ): Std.Tui.Runtime.Msg.TuiMsg;
 begin
-  return Std.Tui.Runtime.Msg.TuiMsgTextChanged(Source, Action, Text, Caret)
+  return Std.Tui.Runtime.Msg.TuiMsgTextChanged(Source, Action, Text, Caret);
 end;
 
 // Creates a source-aware controlled multiline text-area change message.
@@ -181,7 +181,7 @@ public function TuiMsgTextAreaChanged(
   Offset: Std.Tui.Geometry.Point.TuiPoint
 ): Std.Tui.Runtime.Msg.TuiMsg;
 begin
-  return Std.Tui.Runtime.Msg.TuiMsgTextAreaChanged(Source, Action, Text, Caret, Offset)
+  return Std.Tui.Runtime.Msg.TuiMsgTextAreaChanged(Source, Action, Text, Caret, Offset);
 end;
 
 // Creates a source-aware controlled check-box change message.
@@ -196,7 +196,7 @@ public function TuiMsgCheckChanged(
   Checked: boolean
 ): Std.Tui.Runtime.Msg.TuiMsg;
 begin
-  return Std.Tui.Runtime.Msg.TuiMsgCheckChanged(Source, Action, Checked)
+  return Std.Tui.Runtime.Msg.TuiMsgCheckChanged(Source, Action, Checked);
 end;
 
 // Creates a source-aware controlled list selection-change message.
@@ -211,7 +211,7 @@ public function TuiMsgSelectionChanged(
   Selected: integer
 ): Std.Tui.Runtime.Msg.TuiMsg;
 begin
-  return Std.Tui.Runtime.Msg.TuiMsgSelectionChanged(Source, Action, Selected)
+  return Std.Tui.Runtime.Msg.TuiMsgSelectionChanged(Source, Action, Selected);
 end;
 
 // Creates a source-aware controlled scroll-offset change message.
@@ -226,7 +226,7 @@ public function TuiMsgScrollChanged(
   Offset: Std.Tui.Geometry.Point.TuiPoint
 ): Std.Tui.Runtime.Msg.TuiMsg;
 begin
-  return Std.Tui.Runtime.Msg.TuiMsgScrollChanged(Source, Action, Offset)
+  return Std.Tui.Runtime.Msg.TuiMsgScrollChanged(Source, Action, Offset);
 end;
 
 // Returns the first focusable control in the active modal or full tree.
@@ -235,7 +235,7 @@ end;
 // - `Root`: Root of the element tree.
 public function TuiFocusFirst(Root: Std.Tui.Elements.Element.TuiElement): option of Std.Tui.Ids.ControlId.TuiControlId;
 begin
-  return Std.Tui.Runtime.Helpers.TuiFocusFirst(Root)
+  return Std.Tui.Runtime.Helpers.TuiFocusFirst(Root);
 end;
 
 // Keeps a preferred focus id when still valid; otherwise selects the first focusable id.
@@ -248,7 +248,7 @@ public function TuiFocusResolve(
   Preferred: option of Std.Tui.Ids.ControlId.TuiControlId
 ): option of Std.Tui.Ids.ControlId.TuiControlId;
 begin
-  return Std.Tui.Runtime.Helpers.TuiFocusResolve(Root, Preferred)
+  return Std.Tui.Runtime.Helpers.TuiFocusResolve(Root, Preferred);
 end;
 
 // Reports whether a root's unconstrained minimum fits an available terminal size.
@@ -261,7 +261,7 @@ public function TuiLayoutFitFor(
   Available: Std.Tui.Geometry.Size.TuiSize
 ): Std.Tui.Layout.LayoutFit.TuiLayoutFit;
 begin
-  return Std.Tui.Runtime.Helpers.TuiLayoutFitFor(Root, Available)
+  return Std.Tui.Runtime.Helpers.TuiLayoutFitFor(Root, Available);
 end;
 
 // Clears a working surface and paints the terminal-too-small notice.
@@ -270,5 +270,5 @@ end;
 // - `Surface`: Working surface affected by the operation.
 public procedure TuiPaintTooSmallOverlay(Surface: Std.Tui.Rendering.Surface.TuiWorkingSurface);
 begin
-  Std.Tui.Rendering.Paint.TuiPaintTooSmallOverlay(Surface)
+  Std.Tui.Rendering.Paint.TuiPaintTooSmallOverlay(Surface);
 end;

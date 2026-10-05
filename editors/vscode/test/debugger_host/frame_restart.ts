@@ -28,16 +28,16 @@ export async function verifyFrameRestart(
     "begin",
     "  mutable var Local: integer := Value + 10;",
     "  WriteLn('effect');",
-    "  return Local",
+    "  return Local;",
     "end;",
     "",
     "begin",
-    "  WriteLn(Branch(1))",
+    "  WriteLn(Branch(1));",
     "end.",
     ""
   ];
   const sourcePath = await writeSource(workspaceRoot, "frame-restart", lines);
-  const breakpointLine = lines.indexOf("  return Local");
+  const breakpointLine = lines.indexOf("  return Local;");
   const breakpoint = new vscode.SourceBreakpoint(
     new vscode.Location(vscode.Uri.file(sourcePath), new vscode.Position(breakpointLine, 2))
   );

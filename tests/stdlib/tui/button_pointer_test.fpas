@@ -12,7 +12,7 @@ function ViewButton(State: ButtonPointerModel): TuiElement;
 begin
   return TuiElementBuilders.MakeDesktop(None, [
                                                 TuiElementBuilders.MakeButtonWithMnemonic(TuiControlId.Create(1), 'Go', 'G', TuiAction.Create(10))
-                                              ])
+                                              ]);
 end;
 
 function UpdateButton(State: ButtonPointerModel; Msg: TuiMsg; Cmd: TuiCmdOutput): ButtonPointerModel;
@@ -24,25 +24,25 @@ begin
       return record
         Actions := State.Actions + 1;
         PointerEvents := State.PointerEvents;
-      end
+      end;
     end;
     TuiMsg.Pointer(Pointer):
     begin
       return record
         Actions := State.Actions;
         PointerEvents := State.PointerEvents + 1;
-      end
-    end
+      end;
+    end;
     else
     begin
-      return State
-    end
-  end
+      return State;
+    end;
+  end;
 end;
 
 function Pointer(Action: TuiPointerAction; Position: TuiPoint): TuiPointerEvent;
 begin
-  return TuiPointerEvent.Create(Action, TuiPointerButton.Left, Position)
+  return TuiPointerEvent.Create(Action, TuiPointerButton.Left, Position);
 end;
 
 begin
@@ -77,5 +77,5 @@ begin
   App.InjectPointerForTest(Pointer(TuiPointerAction.Up, Inside));
   Model := App.RunIterations(Model, UpdateButton, ViewButton, 1, 0);
   AssertEquals(1, Model.Actions);
-  App.Close()
+  App.Close();
 end.

@@ -3,5 +3,5 @@ program T;
 uses Std.Console, Std.Math;
 
 begin
-  WriteLn(Log(1.0))
+  WriteLn(Log(1.0));
 end.

@@ -40,13 +40,13 @@ export async function verifyUninitializedAssignment(
     "  WriteLn(GlobalCount);",
     "  if Flag then",
     "  begin",
-    "    WriteLn(1)",
-    "  end",
+    "    WriteLn(1);",
+    "  end;",
     "  else",
     "  begin",
-    "    WriteLn(0)",
+    "    WriteLn(0);",
     "  end;",
-    "  WriteLn(Frozen)",
+    "  WriteLn(Frozen);",
     "end.",
     ""
   ];

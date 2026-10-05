@@ -49,5 +49,5 @@ begin
   AssertEquals('*', Std.Options.Unwrap(FillSurface.TryCellAt(TuiPoint.Create(1, 0))).Glyph);
   AssertEquals('*', Std.Options.Unwrap(FillSurface.TryCellAt(TuiPoint.Create(2, 0))).Glyph);
   AssertEquals('*', Std.Options.Unwrap(FillSurface.TryCellAt(TuiPoint.Create(3, 0))).Glyph);
-  AssertEquals('*', Std.Options.Unwrap(FillSurface.TryCellAt(TuiPoint.Create(4, 0))).Glyph)
+  AssertEquals('*', Std.Options.Unwrap(FillSurface.TryCellAt(TuiPoint.Create(4, 0))).Glyph);
 end.

@@ -8,5 +8,5 @@ program AssertFailDemo;
 uses Std.Test;
 
 begin
-  AssertEquals(4, 2 + 3)
+  AssertEquals(4, 2 + 3);
 end.

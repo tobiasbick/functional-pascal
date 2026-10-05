@@ -21,7 +21,7 @@ begin
   WriteLn(Numbers[1]);
   WriteLn(Numbers[2]);
   WriteLn(Text);
-  WriteLn(Fixed[0])
+  WriteLn(Fixed[0]);
 end.
 "#;
 

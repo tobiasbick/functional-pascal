@@ -29,7 +29,7 @@ export async function verifySemanticTools(
   );
   const sourcePath = path.join(fixtureRoot, "src", "main.fpas");
   const source =
-    "program SemanticHost;\n\nuses Semantic.Core;\n\nbegin\n  var Music: string := '𝄞' + ExistingText;\n  var Value: integer := UniqueValue()\nend.\n";
+    "program SemanticHost;\n\nuses Semantic.Core;\n\nbegin\n  var Music: string := '𝄞' + ExistingText;\n  var Value: integer := UniqueValue();\nend.\n";
   let document: vscode.TextDocument | undefined;
   try {
     await fs.mkdir(path.dirname(sourcePath), { recursive: true });
@@ -43,7 +43,7 @@ export async function verifySemanticTools(
     );
     await fs.writeFile(
       path.join(fixtureRoot, "src", "importable.fpas"),
-      "unit Semantic.Importable;\n\npublic function UniqueValue(): integer;\nbegin\n  return 42\nend;\n"
+      "unit Semantic.Importable;\n\npublic function UniqueValue(): integer;\nbegin\n  return 42;\nend;\n"
     );
     await fs.writeFile(sourcePath, source);
 

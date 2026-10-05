@@ -13,26 +13,26 @@ function RunCalls(Iterations: integer): integer;
 begin
   mutable var Count: integer := 0;
   var Increment: procedure() := procedure() begin
-    Count := Count + 1
+    Count := Count + 1;
   end;
 
   for Index: integer := 1 to Iterations do
   begin
-    Increment()
+    Increment();
   end;
 
-  return Count
+  return Count;
 end;
 
 begin
   if (ParamCount() < 1) or (ParamCount() > 2) then
   begin
-    panic('usage: mutable_capture_benchmark.fpas -- ITERATIONS [MAX_MILLIS]')
+    panic('usage: mutable_capture_benchmark.fpas -- ITERATIONS [MAX_MILLIS]');
   end;
   var Iterations: integer := StrToInt(ParamStr(0));
   if Iterations < 1 then
   begin
-    panic('ITERATIONS must be positive')
+    panic('ITERATIONS must be positive');
   end;
   mutable var MaxMillis: integer := 0;
   if ParamCount() = 2 then
@@ -40,8 +40,8 @@ begin
     MaxMillis := StrToInt(ParamStr(1));
     if MaxMillis < 1 then
     begin
-      panic('MAX_MILLIS must be positive')
-    end
+      panic('MAX_MILLIS must be positive');
+    end;
   end;
   mutable var Value: integer := RunCalls(WarmupIterations);
   var Started: integer := MonotonicMillis();
@@ -50,24 +50,24 @@ begin
   mutable var OpsPerSecond: integer := 0;
   if Elapsed > 0 then
   begin
-    OpsPerSecond := (Iterations * 1000) div Elapsed
+    OpsPerSecond := (Iterations * 1000) div Elapsed;
   end;
 
   WriteLn('iterations: ' + IntToStr(Iterations));
   WriteLn(('elapsed: ' + IntToStr(Elapsed)) + ' ms');
   if Elapsed > 0 then
   begin
-    WriteLn(('throughput: ' + IntToStr(OpsPerSecond)) + ' captured updates/s')
-  end
+    WriteLn(('throughput: ' + IntToStr(OpsPerSecond)) + ' captured updates/s');
+  end;
   else
   begin
-    WriteLn('throughput: unavailable (elapsed time is 0 ms)')
+    WriteLn('throughput: unavailable (elapsed time is 0 ms)');
   end;
 
   WriteLn('final value: ' + IntToStr(Value));
   if (MaxMillis > 0) and (Elapsed > MaxMillis) then
   begin
     panic(((('mutable-capture benchmark regression: ' + IntToStr(Elapsed)) + ' ms exceeds limit ') + IntToStr(MaxMillis)) +
-          ' ms')
-  end
+          ' ms');
+  end;
 end.

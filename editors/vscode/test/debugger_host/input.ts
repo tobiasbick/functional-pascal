@@ -38,7 +38,7 @@ export async function verifyDebuggerInput(
     "",
     "begin",
     "  WriteLn(ReadLn());",
-    "  WriteLn(ReadLn())",
+    "  WriteLn(ReadLn());",
     "end.",
     ""
   ];

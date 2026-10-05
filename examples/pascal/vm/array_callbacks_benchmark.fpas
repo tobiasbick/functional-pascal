@@ -13,17 +13,17 @@ const
 
 function Double(Value: integer): integer;
 begin
-  return Value * 2
+  return Value * 2;
 end;
 
 function IsEven(Value: integer): boolean;
 begin
-  return Value mod 2 = 0
+  return Value mod 2 = 0;
 end;
 
 function Sum(Acc: integer; Value: integer): integer;
 begin
-  return Acc + Value
+  return Acc + Value;
 end;
 
 function MakeValues(): array of integer;
@@ -31,10 +31,10 @@ begin
   mutable var Values: array of integer := [];
   for Index: integer := 1 to ArraySize do
   begin
-    Std.Arrays.Push(Values, Index)
+    Std.Arrays.Push(Values, Index);
   end;
 
-  return Values
+  return Values;
 end;
 
 function RunCallbacks(Values: array of integer; Iterations: integer): integer;
@@ -44,21 +44,21 @@ begin
   begin
     var Mapped: array of integer := Std.Arrays.Map(Values, Double);
     var Filtered: array of integer := Std.Arrays.Filter(Mapped, IsEven);
-    Total := Total + Std.Arrays.Reduce(Filtered, 0, Sum)
+    Total := Total + Std.Arrays.Reduce(Filtered, 0, Sum);
   end;
 
-  return Total
+  return Total;
 end;
 
 begin
   if (ParamCount() < 1) or (ParamCount() > 2) then
   begin
-    panic('usage: array_callbacks_benchmark.fpas -- ITERATIONS [MAX_MILLIS]')
+    panic('usage: array_callbacks_benchmark.fpas -- ITERATIONS [MAX_MILLIS]');
   end;
   var Iterations: integer := StrToInt(ParamStr(0));
   if Iterations < 1 then
   begin
-    panic('ITERATIONS must be positive')
+    panic('ITERATIONS must be positive');
   end;
   mutable var MaxMillis: integer := 0;
   if ParamCount() = 2 then
@@ -66,8 +66,8 @@ begin
     MaxMillis := StrToInt(ParamStr(1));
     if MaxMillis < 1 then
     begin
-      panic('MAX_MILLIS must be positive')
-    end
+      panic('MAX_MILLIS must be positive');
+    end;
   end;
   var Values: array of integer := MakeValues();
   mutable var Total: integer := RunCallbacks(Values, WarmupIterations);
@@ -78,24 +78,24 @@ begin
   mutable var OpsPerSecond: integer := 0;
   if Elapsed > 0 then
   begin
-    OpsPerSecond := (Callbacks * 1000) div Elapsed
+    OpsPerSecond := (Callbacks * 1000) div Elapsed;
   end;
 
   WriteLn((('iterations: ' + IntToStr(Iterations)) + ', callbacks: ') + IntToStr(Callbacks));
   WriteLn(('elapsed: ' + IntToStr(Elapsed)) + ' ms');
   if Elapsed > 0 then
   begin
-    WriteLn(('throughput: ' + IntToStr(OpsPerSecond)) + ' callbacks/s')
-  end
+    WriteLn(('throughput: ' + IntToStr(OpsPerSecond)) + ' callbacks/s');
+  end;
   else
   begin
-    WriteLn('throughput: unavailable (elapsed time is 0 ms)')
+    WriteLn('throughput: unavailable (elapsed time is 0 ms)');
   end;
 
   WriteLn('checksum: ' + IntToStr(Total));
   if (MaxMillis > 0) and (Elapsed > MaxMillis) then
   begin
     panic(((('array-callbacks benchmark regression: ' + IntToStr(Elapsed)) + ' ms exceeds limit ') + IntToStr(MaxMillis)) +
-          ' ms')
-  end
+          ' ms');
+  end;
 end.

@@ -45,7 +45,7 @@ uses , Std.Console;
 
 function Answer(): integer;
 begin
-  return 42
+  return 42;
 end;
 ",
     );
@@ -69,7 +69,7 @@ fn unit_with_missing_uses_identifier_before_declaration_keeps_following_declarat
 unit MyApp.Core;
 uses function Answer(): integer;
 begin
-  return 42
+  return 42;
 end;
 ",
     );

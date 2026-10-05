@@ -33,19 +33,19 @@ public type
     public event Changed: procedure() read ReadChanged write WriteChanged;
     public function Add<T>(Self: Counter; Amount: T): integer;
     begin
-      return Self.Value
+      return Self.Value;
     end;
   end;
 
 public function Identity<T>(Input: T): T;
 begin
   var Local: T := Input;
-  return Local
+  return Local;
 end;
 
 public procedure Notify(MessageText: string);
 begin
-  mutable var CopyText: string := MessageText
+  mutable var CopyText: string := MessageText;
 end;
 "#;
     let path = temp.write("sample.fpas", source);
@@ -104,11 +104,11 @@ var Value: integer := 1;
 
 function ReadValue(Value: integer): integer;
 begin
-  return Value
+  return Value;
 end;
 
 begin
-  var Broken: integer := ReadValue(Value
+  var Broken: integer := ReadValue(Value;
 end.
 "#;
     let path = temp.write("shadowing.fpas", source);
@@ -187,7 +187,7 @@ fn unknown_type_action_adds_one_canonical_unambiguous_import() {
         "unit Actions.Types;\n\npublic type UniqueType = integer;\n",
     );
     let source =
-        "program Actions;\n\nuses Actions.Core;\n\nbegin\n  var Value: UniqueType := 1\nend.\n";
+        "program Actions;\n\nuses Actions.Core;\n\nbegin\n  var Value: UniqueType := 1;\nend.\n";
     let main = temp.write("src/main.fpas", source);
     let mut service = LanguageService::load(&manifest);
     let analysis = service.analyze_document(&main).expect("project analysis");
@@ -261,11 +261,11 @@ fn import_action_rejects_ambiguous_public_declarations() {
     let fixture = import_fixture("SharedValue");
     fixture.temp.write(
         "src/second.fpas",
-        "unit Actions.Second;\n\npublic function SharedValue(): integer;\nbegin\n  return 2\nend;\n",
+        "unit Actions.Second;\n\npublic function SharedValue(): integer;\nbegin\n  return 2;\nend;\n",
     );
     fixture.temp.write(
         "src/first.fpas",
-        "unit Actions.First;\n\npublic function SharedValue(): integer;\nbegin\n  return 1\nend;\n",
+        "unit Actions.First;\n\npublic function SharedValue(): integer;\nbegin\n  return 1;\nend;\n",
     );
     let mut ambiguous_service = LanguageService::load(&fixture.manifest);
     let ambiguous_analysis = ambiguous_service
@@ -318,7 +318,7 @@ fn import_action_rejects_an_inaccessible_private_declaration() {
 #[test]
 fn explanatory_parser_help_does_not_become_a_code_action() {
     let temp = TempDirectory::new("semantic-explanatory-help");
-    let source = "program Broken;\n\nbegin\n  var Value integer := 1\nend.\n";
+    let source = "program Broken;\n\nbegin\n  var Value integer := 1;\nend.\n";
     let path = temp.write("broken.fpas", source);
     let mut service = LanguageService::new(WorkspaceContext::loose(temp.path()));
     let analysis = service
@@ -357,14 +357,14 @@ fn import_fixture(name: &str) -> ImportFixture {
     );
     temp.write(
         "src/core.fpas",
-        "unit Actions.Core;\n\npublic function Existing(): integer;\nbegin\n  return 1\nend;\n",
+        "unit Actions.Core;\n\npublic function Existing(): integer;\nbegin\n  return 1;\nend;\n",
     );
     temp.write(
         "src/importable.fpas",
-        "unit Actions.Importable;\n\npublic function UniqueValue(): integer;\nbegin\n  return 42\nend;\n\nfunction PrivateValue(): integer;\nbegin\n  return 0\nend;\n",
+        "unit Actions.Importable;\n\npublic function UniqueValue(): integer;\nbegin\n  return 42;\nend;\n\nfunction PrivateValue(): integer;\nbegin\n  return 0;\nend;\n",
     );
     let source = format!(
-        "program Actions;\n\nuses Actions.Core;\n\nbegin\n  var Value: integer := {name}()\nend.\n"
+        "program Actions;\n\nuses Actions.Core;\n\nbegin\n  var Value: integer := {name}();\nend.\n"
     );
     let main = temp.write("src/main.fpas", &source);
     ImportFixture {

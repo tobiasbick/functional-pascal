@@ -36,7 +36,7 @@ export async function verifyForcedReturn(
     "function Leaf(Value: integer): integer;",
     "begin",
     "  WriteLn('leaf');",
-    "  return Value + 1",
+    "  return Value + 1;",
     "end;",
     "",
     "function Branch(Value: integer): integer;",
@@ -44,12 +44,12 @@ export async function verifyForcedReturn(
     "  var Local: integer := Value + 10;",
     "  var Nested: integer := Leaf(Local);",
     "  WriteLn('branch');",
-    "  return Nested",
+    "  return Nested;",
     "end;",
     "",
     "begin",
     "  var Answer: integer := Branch(1);",
-    "  WriteLn(Answer)",
+    "  WriteLn(Answer);",
     "end.",
     ""
   ];
@@ -163,12 +163,12 @@ export async function verifyForcedReturn(
       "function Fail(): integer;",
       "begin",
       "  panic('boom');",
-      "  return 1",
+      "  return 1;",
       "end;",
       "",
       "begin",
       "  var Value: integer := Fail();",
-      "  WriteLn(Value)",
+      "  WriteLn(Value);",
       "end.",
       ""
     ]);

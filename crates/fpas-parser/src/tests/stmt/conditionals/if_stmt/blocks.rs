@@ -7,8 +7,8 @@ fn if_then_with_block() {
          if X > 10 then \
          begin \
            Y := 1; \
-           Z := 2 \
-         end \
+           Z := 2; \
+         end; \
          end.",
     );
     match &stmts[0] {
@@ -29,12 +29,12 @@ fn if_then_else_with_blocks() {
         "program T; begin \
          if X > 10 then \
          begin \
-           Y := 1 \
-         end \
+           Y := 1; \
+         end; \
          else \
          begin \
-           Y := 2 \
-         end \
+           Y := 2; \
+         end; \
          end.",
     );
     match &stmts[0] {

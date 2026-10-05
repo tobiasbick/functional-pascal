@@ -21,7 +21,7 @@ var Value: Cell := record
   foreground := RgbColor(255, 128, 0);
   background := Ansi256Color(17);
 end;
-PutCell(1, 1, Value)
+PutCell(1, 1, Value);
 ```
 
 Unlike the stateful text-color procedures below, these are values attached to cells. All three

@@ -8,5 +8,5 @@ uses Std.Console;
 // - `Glyph`: Single renderable grapheme.
 public function TuiGlyphWidth(Glyph: string): integer;
 begin
-  return Std.Console.GraphemeWidth(Glyph)
+  return Std.Console.GraphemeWidth(Glyph);
 end;

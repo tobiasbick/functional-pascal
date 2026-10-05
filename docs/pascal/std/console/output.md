@@ -11,7 +11,7 @@
 ```pascal
 WriteText('count=');
 WriteText(42);
-WriteLn('')
+WriteLn('');
 ```
 
 ---
@@ -25,7 +25,7 @@ WriteLn('')
 ```pascal
 WriteLn('Hello, World!');
 WriteLn(1, ' ', true);
-WriteLn
+WriteLn;
 ```
 
 ---

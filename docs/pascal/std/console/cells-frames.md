@@ -107,7 +107,7 @@ var Cells: array of Cell := [
   record glyph := 'A'; foreground := CrtColor(White); background := CrtColor(Black); end,
   record glyph := '中'; foreground := RgbColor(80, 200, 255); background := CrtColor(Black); end
 ];
-WriteCells(1, 1, Cells)
+WriteCells(1, 1, Cells);
 ```
 
 `GetCell` returns:
@@ -131,7 +131,7 @@ FillRect(
   record glyph := ' '; foreground := CrtColor(LightGray); background := CrtColor(Black); end
 );
 WriteCells(1, 1, Cells);
-Present()
+Present();
 ```
 
 Frames may nest. Each `BeginFrame` requires a matching `Present`; an inner `Present` only decreases
@@ -155,7 +155,7 @@ FillRect(
   record x := 10; y := 4; width := 24; height := 5; end,
   record glyph := ' '; foreground := CrtColor(White); background := Ansi256Color(24); end
 );
-RestoreRegion(Underlay)
+RestoreRegion(Underlay);
 ```
 
 `RestoreRegion` restores the captured cells and consumes the handle. `DiscardRegion` consumes it

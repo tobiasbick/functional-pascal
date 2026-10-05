@@ -67,7 +67,7 @@ fn missing_uses_identifier_before_begin_keeps_program_body() {
 #[test]
 fn missing_uses_identifier_before_declaration_keeps_following_declaration() {
     let (program, errs) = parse_with_errors(
-        "program T; uses function Answer(): integer; begin return 42 end; begin end.",
+        "program T; uses function Answer(): integer; begin return 42; end; begin end.",
     );
     assert!(!errs.is_empty());
     assert_eq!(program.uses.len(), 1);

@@ -17,11 +17,11 @@ fn folder_catalog_refreshes_dependencies_and_is_open_order_independent() {
     let manifest = temp.write("app/app.fpasprj", app_manifest(false));
     let consumer = temp.write(
         "app/src/main.fpas",
-        "program App;\n\nuses Demo.Core;\n\nbegin\n  var Value: integer := Answer()\nend.\n",
+        "program App;\n\nuses Demo.Core;\n\nbegin\n  var Value: integer := Answer();\nend.\n",
     );
     let unrelated = temp.write(
         "unrelated/src/main.fpas",
-        "program Unrelated;\n\nfunction Answer(): integer;\nbegin\n  return 7\nend;\n\nbegin\n  var Value: integer := Answer()\nend.\n",
+        "program Unrelated;\n\nfunction Answer(): integer;\nbegin\n  return 7;\nend;\n\nbegin\n  var Value: integer := Answer();\nend.\n",
     );
     temp.write(
         "unrelated/unrelated.fpasprj",
@@ -148,14 +148,14 @@ fn source_create_and_delete_refresh_project_analysis() {
     temp.write("app/app.fpasprj", app_manifest(true));
     let main = temp.write(
         "app/src/main.fpas",
-        "program App;\n\nuses Demo.Core;\n\nbegin var Value: integer := Answer() end.\n",
+        "program App;\n\nuses Demo.Core;\n\nbegin var Value: integer := Answer(); end.\n",
     );
     let mut service = LanguageService::load(temp.path());
     assert!(service.analyze_document(&main).is_err());
 
     let core = temp.write(
         "core/src/core.fpas",
-        "unit Demo.Core;\n\npublic function Answer(): integer;\nbegin return 42 end;\n",
+        "unit Demo.Core;\n\npublic function Answer(): integer;\nbegin return 42; end;\n",
     );
     service
         .refresh_paths(std::slice::from_ref(&core), &CancellationToken::new())
@@ -181,13 +181,13 @@ fn export_changes_refresh_consumer_navigation() {
     let core_manifest_path = temp.write("core/core.fpasprj", &core_manifest("Demo.Core"));
     let declaration = temp.write(
         "core/src/core.fpas",
-        "unit Demo.Core;\n\npublic function Answer(): integer;\nbegin return 42 end;\n",
+        "unit Demo.Core;\n\npublic function Answer(): integer;\nbegin return 42; end;\n",
     );
     temp.write("core/src/other.fpas", "unit Demo.Other;\n");
     temp.write("app/app.fpasprj", app_manifest(true));
     temp.write(
         "app/src/main.fpas",
-        "program App;\n\nuses Demo.Core;\n\nbegin var Value: integer := Answer() end.\n",
+        "program App;\n\nuses Demo.Core;\n\nbegin var Value: integer := Answer(); end.\n",
     );
     let offset = std::fs::read_to_string(&declaration)
         .expect("core source")
@@ -245,7 +245,7 @@ include = ["src/**/*.fpas"]
     );
     temp.write(
         "core/src/core.fpas",
-        "unit Demo.Core;\n\npublic function Answer(): integer;\nbegin\n  return 42\nend;\n",
+        "unit Demo.Core;\n\npublic function Answer(): integer;\nbegin\n  return 42;\nend;\n",
     )
 }
 

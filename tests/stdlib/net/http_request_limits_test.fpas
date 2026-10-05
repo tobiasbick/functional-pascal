@@ -11,5 +11,5 @@ begin
   RequestValue.MaxHeaderBytes := 1024;
   RequestValue.MaxRedirects := 0;
   AssertEquals(1024, RequestValue.MaxHeaderBytes);
-  AssertEquals(0, RequestValue.MaxRedirects)
+  AssertEquals(0, RequestValue.MaxRedirects);
 end.

@@ -40,7 +40,7 @@ begin
   WriteLn(Original.Position.X);
   WriteLn(Original.Position.Y);
   WriteLn(Original.Points[0].X);
-  WriteLn(Original.Points[0].Y)
+  WriteLn(Original.Points[0].Y);
 end.",
     );
     let (exit_code, stdout, stderr) =

@@ -15,42 +15,42 @@ begin
     begin
       return record
         Ticks := State.Ticks + 1;
-      end
+      end;
     end;
     TuiMsg.MenuChanged(MenuSource, MenuAction, MenuState):
     begin
       Cmd.Set(TuiCmd.Quit);
-      return State
+      return State;
     end;
     TuiMsg.QuitRequested:
     begin
       Cmd.Set(TuiCmd.Quit);
-      return State
-    end
+      return State;
+    end;
     else
     begin
-      return State
-    end
-  end
+      return State;
+    end;
+  end;
 end;
 
 function ViewDemo(State: DemoModel): TuiElement;
 begin
-  return TuiElementBuilders.MakeLabel('interactive')
+  return TuiElementBuilders.MakeLabel('interactive');
 end;
 
 function UpdateBackground(State: DemoModel; Message: integer; Cmd: TuiCmdOutput): DemoModel;
 begin
   return record
     Ticks := State.Ticks + Message;
-  end
+  end;
 end;
 
 function RunSignatureOnly(): DemoModel;
 begin
   return TuiApplication.Run(record
     Ticks := 0;
-  end, UpdateDemo, ViewDemo)
+  end, UpdateDemo, ViewDemo);
 end;
 
 function RunBackgroundSignatureOnly(): DemoModel;
@@ -58,9 +58,9 @@ begin
   var Inbox: channel of integer := CreateChannel(4);
   return TuiApplication.RunWithBackground(record
     Ticks := 0;
-  end, Inbox, UpdateDemo, UpdateBackground, ViewDemo)
+  end, Inbox, UpdateDemo, UpdateBackground, ViewDemo);
 end;
 
 begin
-  AssertTrue(true)
+  AssertTrue(true);
 end.

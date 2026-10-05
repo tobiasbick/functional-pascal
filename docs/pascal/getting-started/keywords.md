@@ -51,7 +51,7 @@ Keywords and identifiers are case-insensitive:
 PROGRAM KeywordDemo;
 
 BEGIN
-  writeln('same keywords, different casing')
+  writeln('same keywords, different casing');
 END.
 ```
 

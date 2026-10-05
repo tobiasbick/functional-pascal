@@ -8,10 +8,10 @@ begin
   begin
     if not IsDir(Path) then
     begin
-      Fail(('Expected directory: ') + Path)
+      Fail(('Expected directory: ') + Path);
     end;
 
-    return
+    return;
   end;
 
   case CreateDir(Path) of
@@ -20,9 +20,9 @@ begin
     end;
     Error(Message):
     begin
-      Fail(Message)
-    end
-  end
+      Fail(Message);
+    end;
+  end;
 end;
 
 begin
@@ -36,8 +36,8 @@ begin
     end;
     Error(Message):
     begin
-      Fail(Message)
-    end
+      Fail(Message);
+    end;
   end;
 
   case WriteText(Root + '/src/ui/menu.fpas', '') of
@@ -46,8 +46,8 @@ begin
     end;
     Error(Message):
     begin
-      Fail(Message)
-    end
+      Fail(Message);
+    end;
   end;
 
   case Glob(Root + '/src/**/*.fpas') of
@@ -55,11 +55,11 @@ begin
     begin
       AssertEquals(2, Std.Arrays.Length(Paths));
       AssertEquals(Root + '/src/main.fpas', Paths[0]);
-      AssertEquals(Root + '/src/ui/menu.fpas', Paths[1])
+      AssertEquals(Root + '/src/ui/menu.fpas', Paths[1]);
     end;
     Error(Message):
     begin
-      Fail(Message)
-    end
-  end
+      Fail(Message);
+    end;
+  end;
 end.

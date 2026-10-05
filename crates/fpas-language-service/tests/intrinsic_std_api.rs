@@ -26,7 +26,7 @@ fn intrinsic_std_fixture(source: &str) -> (TempDirectory, std::path::PathBuf, La
 #[test]
 fn intrinsic_std_hover_includes_markdown_and_parameter_documentation() {
     let source =
-        "program IntrinsicHover;\n\nuses Std.Fs;\n\nbegin\n  ReadText('notes.txt')\nend.\n";
+        "program IntrinsicHover;\n\nuses Std.Fs;\n\nbegin\n  ReadText('notes.txt');\nend.\n";
     let (_temp, path, mut service) = intrinsic_std_fixture(source);
     let offset = source.find("ReadText").expect("ReadText call");
 
@@ -46,9 +46,9 @@ fn intrinsic_std_hover_includes_markdown_and_parameter_documentation() {
 
 #[test]
 fn intrinsic_std_completion_resolves_lazy_markdown_documentation() {
-    let source = "program IntrinsicCompletion;\n\nuses Std.Fs;\n\nbegin\n  Read\nend.\n";
+    let source = "program IntrinsicCompletion;\n\nuses Std.Fs;\n\nbegin\n  Read;\nend.\n";
     let (_temp, path, mut service) = intrinsic_std_fixture(source);
-    let offset = source.find("Read\n").expect("Read prefix") + "Read".len();
+    let offset = source.find("Read;\n").expect("Read prefix") + "Read".len();
 
     let candidate = service
         .completions(&path, offset)
@@ -76,7 +76,7 @@ fn intrinsic_std_completion_resolves_lazy_markdown_documentation() {
 
 #[test]
 fn intrinsic_std_completion_offers_the_required_unit_import() {
-    let source = "program IntrinsicImport;\n\nbegin\n  WriteTextAtomic\nend.\n";
+    let source = "program IntrinsicImport;\n\nbegin\n  WriteTextAtomic;\nend.\n";
     let (_temp, path, mut service) = intrinsic_std_fixture(source);
     let offset = source
         .find("WriteTextAtomic")
@@ -103,7 +103,7 @@ fn intrinsic_std_completion_offers_the_required_unit_import() {
 
 #[test]
 fn intrinsic_std_definition_targets_the_editor_api_declaration() {
-    let source = "program IntrinsicDefinition;\n\nuses Std.Console;\n\nbegin\n  var Value: Color := CrtColor(1)\nend.\n";
+    let source = "program IntrinsicDefinition;\n\nuses Std.Console;\n\nbegin\n  var Value: Color := CrtColor(1);\nend.\n";
     let (_temp, path, mut service) = intrinsic_std_fixture(source);
     let offset = source.find("Color :=").expect("Color type");
 
@@ -124,7 +124,7 @@ fn intrinsic_std_definition_targets_the_editor_api_declaration() {
 
 #[test]
 fn receiver_call_completion_filters_imported_collection_routines() {
-    let source = "program FluentCompletion;\nuses Std.Arrays, Std.Dictionaries;\nbegin\n  var Items: array of integer := [1];\n  var N: integer := Items.Len\nend.\n";
+    let source = "program FluentCompletion;\nuses Std.Arrays, Std.Dictionaries;\nbegin\n  var Items: array of integer := [1];\n  var N: integer := Items.Len;\nend.\n";
     let (_temp, path, mut service) = intrinsic_std_fixture(source);
     let offset = source.find("Items.Len").expect("receiver call") + "Items.Len".len();
     let candidates = service
@@ -147,7 +147,7 @@ fn receiver_call_completion_filters_imported_collection_routines() {
 
 #[test]
 fn receiver_completion_on_returned_and_parenthesized_arrays() {
-    let source = "program FluentResults;\nuses Std.Arrays;\nfunction MakeValues(): array of integer; begin return [1] end;\nbegin\n  var Items: array of integer := [2];\n  var A: integer := MakeValues().Len;\n  var B: integer := (Items).Len\nend.\n";
+    let source = "program FluentResults;\nuses Std.Arrays;\nfunction MakeValues(): array of integer; begin return [1]; end;\nbegin\n  var Items: array of integer := [2];\n  var A: integer := MakeValues().Len;\n  var B: integer := (Items).Len;\nend.\n";
     let (_temp, path, mut service) = intrinsic_std_fixture(source);
     for needle in ["MakeValues().Len", "(Items).Len"] {
         let offset = source.find(needle).expect("receiver") + needle.len();
@@ -166,7 +166,7 @@ fn receiver_completion_on_returned_and_parenthesized_arrays() {
 
 #[test]
 fn receiver_call_definition_and_signature_use_selected_array_routine() {
-    let source = "program FluentNavigation;\nuses Std.Arrays, Std.Dictionaries;\nbegin\n  var Items: array of integer := [1, 2];\n  var N: integer := Items.Slice(0, 1).Length()\nend.\n";
+    let source = "program FluentNavigation;\nuses Std.Arrays, Std.Dictionaries;\nbegin\n  var Items: array of integer := [1, 2];\n  var N: integer := Items.Slice(0, 1).Length();\nend.\n";
     let (_temp, path, mut service) = intrinsic_std_fixture(source);
     let offset = source.find("Length()").expect("fluent name");
     let definitions = service
@@ -193,7 +193,7 @@ fn receiver_call_definition_and_signature_use_selected_array_routine() {
 #[test]
 fn intrinsic_std_editor_api_declarations_cannot_be_renamed() {
     let source =
-        "program IntrinsicRename;\n\nuses Std.Fs;\n\nbegin\n  ReadText('notes.txt')\nend.\n";
+        "program IntrinsicRename;\n\nuses Std.Fs;\n\nbegin\n  ReadText('notes.txt');\nend.\n";
     let (_temp, path, mut service) = intrinsic_std_fixture(source);
     let offset = source.find("ReadText").expect("ReadText call");
 
@@ -212,7 +212,7 @@ fn intrinsic_std_editor_api_declarations_cannot_be_renamed() {
 
 #[test]
 fn intrinsic_std_signature_help_uses_declared_parameters() {
-    let source = "program IntrinsicSignature;\n\nuses Std.Fs;\n\nbegin\n  WriteText('notes.txt', 'hello')\nend.\n";
+    let source = "program IntrinsicSignature;\n\nuses Std.Fs;\n\nbegin\n  WriteText('notes.txt', 'hello');\nend.\n";
     let (_temp, path, mut service) = intrinsic_std_fixture(source);
     let offset = source.find(", 'hello'").expect("second argument") + 2;
 
@@ -241,7 +241,7 @@ fn intrinsic_std_signature_help_uses_declared_parameters() {
 
 #[test]
 fn intrinsic_std_enum_member_has_hover_and_definition() {
-    let source = "program IntrinsicEnum;\n\nuses Std.Json;\n\nbegin\n  var Value: JsonValue := JsonValue.ArrayValue([])\nend.\n";
+    let source = "program IntrinsicEnum;\n\nuses Std.Json;\n\nbegin\n  var Value: JsonValue := JsonValue.ArrayValue([]);\nend.\n";
     let (_temp, path, mut service) = intrinsic_std_fixture(source);
     let offset = source.rfind("Array").expect("Array variant");
 
@@ -271,7 +271,7 @@ fn intrinsic_std_enum_member_has_hover_and_definition() {
 
 #[test]
 fn intrinsic_std_enum_constructor_has_signature_help() {
-    let source = "program IntrinsicEnumSignature;\n\nuses Std.Json;\n\nbegin\n  var Value: JsonValue := JsonValue.ArrayValue([])\nend.\n";
+    let source = "program IntrinsicEnumSignature;\n\nuses Std.Json;\n\nbegin\n  var Value: JsonValue := JsonValue.ArrayValue([]);\nend.\n";
     let (_temp, path, mut service) = intrinsic_std_fixture(source);
     let offset = source.find("[]").expect("Array argument") + 1;
 
@@ -296,9 +296,9 @@ fn intrinsic_std_enum_constructor_has_signature_help() {
 #[test]
 fn intrinsic_std_keyword_enum_member_is_completed() {
     let source =
-        "program IntrinsicEnumCompletion;\n\nuses Std.Json;\n\nbegin\n  JsonValue.Arr\nend.\n";
+        "program IntrinsicEnumCompletion;\n\nuses Std.Json;\n\nbegin\n  JsonValue.Arr;\nend.\n";
     let (_temp, path, mut service) = intrinsic_std_fixture(source);
-    let offset = source.find("Arr\n").expect("Array prefix") + "Arr".len();
+    let offset = source.find("Arr;\n").expect("Array prefix") + "Arr".len();
 
     let candidates = service
         .completions(&path, offset)

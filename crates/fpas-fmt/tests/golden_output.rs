@@ -8,7 +8,7 @@ mod common;
 fn hello_minimal() {
     common::assert_golden(
         "hello_minimal",
-        "program Hello; begin WriteLn('Hello, World!') end.",
+        "program Hello; begin WriteLn('Hello, World!'); end.",
         include_str!("golden/hello_minimal.expected.fpas"),
     );
 }
@@ -17,7 +17,7 @@ fn hello_minimal() {
 fn hello_uses() {
     common::assert_golden(
         "hello_uses",
-        "program Hello; uses Std.Console; begin WriteLn('Hello, World!') end.",
+        "program Hello; uses Std.Console; begin WriteLn('Hello, World!'); end.",
         include_str!("golden/hello_uses.expected.fpas"),
     );
 }
@@ -26,7 +26,7 @@ fn hello_uses() {
 fn unit_clamp() {
     common::assert_golden(
         "unit_clamp",
-        "unit MyApp.Utils; uses Std.Math; public function Clamp(Value: integer; Min: integer; Max: integer): integer; begin if Value < Min then return Min else if Value > Max then return Max else return Value end; function IsBlank(S: string): boolean; begin return Length(Trim(S)) = 0 end;",
+        "unit MyApp.Utils; uses Std.Math; public function Clamp(Value: integer; Min: integer; Max: integer): integer; begin if Value < Min then return Min; else if Value > Max then return Max; else return Value; end; function IsBlank(S: string): boolean; begin return Length(Trim(S)) = 0; end;",
         include_str!("golden/unit_clamp.expected.fpas"),
     );
 }
@@ -35,7 +35,7 @@ fn unit_clamp() {
 fn record_member_visibility() {
     common::assert_golden(
         "record_visibility",
-        "unit Demo.Counter; public type Counter = record Value: integer; public Step: integer; function Hidden(Self: Counter): integer; begin return Self.Value end; public static function Create(): Counter; begin return record Value := 0; Step := 1; end end; public property Current: integer read Hidden; public event Changed: procedure() read ReadChanged write WriteChanged; end;",
+        "unit Demo.Counter; public type Counter = record Value: integer; public Step: integer; function Hidden(Self: Counter): integer; begin return Self.Value; end; public static function Create(): Counter; begin return record Value := 0; Step := 1; end; end; public property Current: integer read Hidden; public event Changed: procedure() read ReadChanged write WriteChanged; end;",
         include_str!("golden/record_visibility.expected.fpas"),
     );
 }
@@ -44,7 +44,7 @@ fn record_member_visibility() {
 fn long_uses() {
     common::assert_golden(
         "long_uses",
-        "program LongUses; uses Std.Console, Std.Conv, Std.Arrays, Std.Dictionaries, Std.Options, Std.Results, Std.String, MyApp.Very.Long.Namespace.One, MyApp.Very.Long.Namespace.Two; begin WriteLn('ok') end.",
+        "program LongUses; uses Std.Console, Std.Conv, Std.Arrays, Std.Dictionaries, Std.Options, Std.Results, Std.String, MyApp.Very.Long.Namespace.One, MyApp.Very.Long.Namespace.Two; begin WriteLn('ok'); end.",
         include_str!("golden/long_uses.expected.fpas"),
     );
 }
@@ -62,7 +62,7 @@ fn short_record_literal_is_multiline() {
 fn logical_block_spacing() {
     common::assert_golden(
         "logical_block_spacing",
-        "program T; type Point = record X: integer; Y: integer; end; begin var A: Point := record X := 3; Y := 4; end; var B: Point := record X := 10; Y := 20; end; var UpdatedB: Point := B with X := 11; end; A.Print(); if Ready then Save();\n// present result\nPresent(); if NeedsCount then Prepare(); var Count: integer := 1; WriteLn(Count); if Done then Finish() end.",
+        "program T; type Point = record X: integer; Y: integer; end; begin var A: Point := record X := 3; Y := 4; end; var B: Point := record X := 10; Y := 20; end; var UpdatedB: Point := B with X := 11; end; A.Print(); if Ready then Save();\n// present result\nPresent(); if NeedsCount then Prepare(); var Count: integer := 1; WriteLn(Count); if Done then Finish(); end.",
         include_str!("golden/logical_block_spacing.expected.fpas"),
     );
 }
@@ -72,7 +72,7 @@ fn wrapped_parenthesized_comparisons_preserve_full_expression() {
     common::assert_golden(
         "wrapped_parenthesized_comparisons",
         "program T; begin var InsideHorizontalBounds: boolean := (MouseEvent.mouse_x > ButtonBounds.x) and (MouseEvent.mouse_x <= ButtonBounds.x + ButtonBounds.width); end.",
-        "program T;\n\nbegin\n  var InsideHorizontalBounds: boolean := (MouseEvent.mouse_x > ButtonBounds.x) and\n                                         (MouseEvent.mouse_x <= ButtonBounds.x + ButtonBounds.width)\nend.\n",
+        "program T;\n\nbegin\n  var InsideHorizontalBounds: boolean := (MouseEvent.mouse_x > ButtonBounds.x) and\n                                         (MouseEvent.mouse_x <= ButtonBounds.x + ButtonBounds.width);\nend.\n",
     );
 }
 
@@ -89,7 +89,7 @@ fn comments_unit_declaration_docs() {
 fn comments_program_uses_begin_body_and_trailing() {
     common::assert_golden(
         "comments_program",
-        "program T;\n// before uses\nuses Std.Console;\n\n// before begin\nbegin\n  // setup\n  WriteLn('ok') // trail\nend. // tail",
+        "program T;\n// before uses\nuses Std.Console;\n\n// before begin\nbegin\n  // setup\n  WriteLn('ok'); // trail\nend. // tail",
         include_str!("golden/comments_program.expected.fpas"),
     );
 }
@@ -98,7 +98,7 @@ fn comments_program_uses_begin_body_and_trailing() {
 fn comments_before_begin_and_statement() {
     common::assert_golden(
         "comments_before_body",
-        "program T;\n// before begin\nbegin\n  // in body\n  WriteLn('ok')\nend.",
+        "program T;\n// before begin\nbegin\n  // in body\n  WriteLn('ok');\nend.",
         include_str!("golden/comments_before_body.expected.fpas"),
     );
 }
@@ -143,7 +143,7 @@ fn closure_literal_round_trips() {
     );
     common::assert_round_trip(
         "closure_multiline",
-        "program T;\nbegin\n  var Add: function(Value: integer): integer :=\n    function(Value: integer): integer\n    begin\n      return Value + 1\n    end\nend.",
+        "program T;\nbegin\n  var Add: function(Value: integer): integer :=\n    function(Value: integer): integer\n    begin\n      return Value + 1;\n    end;\nend.",
     );
 }
 

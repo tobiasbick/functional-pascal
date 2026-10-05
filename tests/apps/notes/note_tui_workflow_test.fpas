@@ -8,11 +8,11 @@ begin
   begin
     if Std.Str.Contains(Snapshot.LineAt(Row), Text) then
     begin
-      return true
-    end
+      return true;
+    end;
   end;
 
-  return false
+  return false;
 end;
 
 function MakeKey(Kind: TuiKeyKind): TuiKeyEvent;
@@ -24,7 +24,7 @@ begin
     ctrl := false;
     alt := false;
     meta := false;
-  end
+  end;
 end;
 
 function MakeCtrlKey(Character: string): TuiKeyEvent;
@@ -36,7 +36,7 @@ begin
     ctrl := true;
     alt := false;
     meta := false;
-  end
+  end;
 end;
 
 function MakeAltKey(Character: string): TuiKeyEvent;
@@ -48,7 +48,7 @@ begin
     ctrl := false;
     alt := true;
     meta := false;
-  end
+  end;
 end;
 
 begin
@@ -176,5 +176,5 @@ begin
   Model := App.RunIterations(Model, NotesUpdate, NotesView, 1, 0);
   AssertTrue(Model.Notes[0].Archived);
   AssertEquals(-1, Model.Selected);
-  App.Close()
+  App.Close();
 end.

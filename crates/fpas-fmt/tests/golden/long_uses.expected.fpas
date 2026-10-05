@@ -5,5 +5,5 @@ uses
   MyApp.Very.Long.Namespace.One, MyApp.Very.Long.Namespace.Two;
 
 begin
-  WriteLn('ok')
+  WriteLn('ok');
 end.

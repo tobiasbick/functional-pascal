@@ -21,43 +21,43 @@ pub const SOURCES: &[(&str, &str)] = &[
     ),
     (
         "hello_world",
-        "program Hello;\nuses\n  Std.Console;\nbegin\n  Std.Console.WriteLn('Hello, World!')\nend.",
+        "program Hello;\nuses\n  Std.Console;\nbegin\n  Std.Console.WriteLn('Hello, World!');\nend.",
     ),
     (
         "calculator",
-        "program Calculator;\nuses Std.Console;\n\ntype Op = enum\n  OpAdd;\n  OpSub;\n  OpMul;\n  OpDiv;\nend;\n\nfunction Calculate(A: integer; B: integer; Operation: Op): integer;\nbegin\n  case Operation of\n    OpAdd: return A + B;\n    OpSub: return A - B;\n    OpMul: return A * B;\n    OpDiv: return A div B\n  end\nend;\n\nbegin\n  var Answer: integer := Calculate(10, 3, OpAdd);\n  Std.Console.WriteLn(Answer)\nend.",
+        "program Calculator;\nuses Std.Console;\n\ntype Op = enum\n  OpAdd;\n  OpSub;\n  OpMul;\n  OpDiv;\nend;\n\nfunction Calculate(A: integer; B: integer; Operation: Op): integer;\nbegin\n  case Operation of\n    OpAdd: return A + B;\n    OpSub: return A - B;\n    OpMul: return A * B;\n    OpDiv: return A div B;\n  end;\nend;\n\nbegin\n  var Answer: integer := Calculate(10, 3, OpAdd);\n  Std.Console.WriteLn(Answer);\nend.",
     ),
     (
         "record_creation",
-        "program Geometry;\n\ntype Point = record\n  X: real;\n  Y: real;\nend;\n\nbegin\n  var P: Point := record X := 1.0; Y := 2.0; end;\n  var Sum: real := P.X + P.Y\nend.",
+        "program Geometry;\n\ntype Point = record\n  X: real;\n  Y: real;\nend;\n\nbegin\n  var P: Point := record X := 1.0; Y := 2.0; end;\n  var Sum: real := P.X + P.Y;\nend.",
     ),
     (
         "nested_loops",
-        "program T;\nbegin\n  for I: integer := 0 to 9 do\n    for J: integer := 0 to 9 do\n      begin\n        var X: integer := I * 10 + J;\n        if X mod 2 = 0 then\n          continue\n      end\nend.",
+        "program T;\nbegin\n  for I: integer := 0 to 9 do\n    for J: integer := 0 to 9 do\n      begin\n        var X: integer := I * 10 + J;\n        if X mod 2 = 0 then\n          continue;\n      end;\nend.",
     ),
     (
         "repeat_with_break",
-        "program T;\nbegin\n  mutable var X: integer := 0;\n  repeat\n    X := X + 1;\n    if X = 10 then break\n  until X = 100\nend.",
+        "program T;\nbegin\n  mutable var X: integer := 0;\n  repeat\n    X := X + 1;\n    if X = 10 then break;\n  until X = 100;\nend.",
     ),
     (
         "array_operations",
-        "program T;\nbegin\n  var Xs: array of integer := [1, 2, 3, 4, 5];\n  var First: integer := Xs[0];\n  var Last: integer := Xs[4]\nend.",
+        "program T;\nbegin\n  var Xs: array of integer := [1, 2, 3, 4, 5];\n  var First: integer := Xs[0];\n  var Last: integer := Xs[4];\nend.",
     ),
     (
         "fibonacci",
-        "program Fib;\nuses Std.Console;\n\nfunction Fibonacci(N: integer): integer;\nbegin\n  if N <= 1 then\n    return N\n  else\n    return Fibonacci(N - 1) + Fibonacci(N - 2)\nend;\n\nbegin\n  Std.Console.WriteLn(Fibonacci(10))\nend.",
+        "program Fib;\nuses Std.Console;\n\nfunction Fibonacci(N: integer): integer;\nbegin\n  if N <= 1 then\n    return N;\n  else\n    return Fibonacci(N - 1) + Fibonacci(N - 2);\nend;\n\nbegin\n  Std.Console.WriteLn(Fibonacci(10));\nend.",
     ),
     (
         "nested_mutual_recursion",
-        "program T;\n\nfunction IsEven(N: integer): boolean;\n  function IsOdd(X: integer): boolean;\n  begin\n    if X = 0 then return false\n    else return IsEven(X - 1)\n  end;\nbegin\n  if N = 0 then return true\n  else return IsOdd(N - 1)\nend;\n\nbegin\n  return\nend.",
+        "program T;\n\nfunction IsEven(N: integer): boolean;\n  function IsOdd(X: integer): boolean;\n  begin\n    if X = 0 then return false;\n    else return IsEven(X - 1);\n  end;\nbegin\n  if N = 0 then return true;\n  else return IsOdd(N - 1);\nend;\n\nbegin\n  return;\nend.",
     ),
     (
         "unit_clamp_compact",
-        "unit MyApp.Utils; uses Std.Math; function Clamp(Value: integer; Min: integer; Max: integer): integer; begin if Value < Min then return Min else if Value > Max then return Max else return Value end; function IsBlank(S: string): boolean; begin return Length(Trim(S)) = 0 end;",
+        "unit MyApp.Utils; uses Std.Math; function Clamp(Value: integer; Min: integer; Max: integer): integer; begin if Value < Min then return Min; else if Value > Max then return Max; else return Value; end; function IsBlank(S: string): boolean; begin return Length(Trim(S)) = 0; end;",
     ),
     (
         "unit_mixed_visibility",
-        "unit MyApp.Utils; public function Clamp(Value: integer): integer; begin return Value end; function Hidden(): integer; begin return 0 end;",
+        "unit MyApp.Utils; public function Clamp(Value: integer): integer; begin return Value; end; function Hidden(): integer; begin return 0; end;",
     ),
     (
         "enum_type",
@@ -65,38 +65,38 @@ pub const SOURCES: &[(&str, &str)] = &[
     ),
     (
         "record_with_method",
-        "program T; type Point = record X: integer; Y: integer; function Sum(Self: Point): integer; begin return Self.X + Self.Y end; end; begin end.",
+        "program T; type Point = record X: integer; Y: integer; function Sum(Self: Point): integer; begin return Self.X + Self.Y; end; end; begin end.",
     ),
     (
         "record_with_static_function",
-        "program T; type Point = record X: integer; Y: integer; static function Create(X: integer; Y: integer): Point; begin return record X := X; Y := Y; end end; end; begin end.",
+        "program T; type Point = record X: integer; Y: integer; static function Create(X: integer; Y: integer): Point; begin return record X := X; Y := Y; end; end; end; begin end.",
     ),
     (
         "record_with_static_procedure",
-        "program T; type Point = record X: integer; static procedure Print(Value: Point); begin Std.Console.WriteLn(Value.X) end; end; begin end.",
+        "program T; type Point = record X: integer; static procedure Print(Value: Point); begin Std.Console.WriteLn(Value.X); end; end; begin end.",
     ),
     (
         "nested_collection_literals",
-        "program T; begin var Values: array of dict of string to array of integer := [['a': [1, 2]], [:]] end.",
+        "program T; begin var Values: array of dict of string to array of integer := [['a': [1, 2]], [:]]; end.",
     ),
     (
         "nested_record_update",
-        "program T; type Point = record X: integer; Y: integer; end; type Pair = record First: Point; Second: Point; end; begin var P: Pair := record First := record X := 1; Y := 2; end; Second := record X := 3; Y := 4; end; end; var Q: Pair := P with First := P.First with X := 5; end; end end.",
+        "program T; type Point = record X: integer; Y: integer; end; type Pair = record First: Point; Second: Point; end; begin var P: Pair := record First := record X := 1; Y := 2; end; Second := record X := 3; Y := 4; end; end; var Q: Pair := P with First := P.First with X := 5; end; end; end.",
     ),
     (
         "nested_option_result",
-        "program T; begin var Value: result of option of array of integer, string := Ok(Some([])) end.",
+        "program T; begin var Value: result of option of array of integer, string := Ok(Some([])); end.",
     ),
     (
         "case_destructure_with_guard",
-        "program T; begin case Value of Some(Item) if Item > 0: return; None: return end end.",
+        "program T; begin case Value of Some(Item) if Item > 0: return; None: return; end; end.",
     ),
     (
         "postfix_call_chain",
-        "program T; begin return Factory.Create().Items[0].Value end.",
+        "program T; begin return Factory.Create().Items[0].Value; end.",
     ),
     (
         "procedure_literal",
-        "program T; begin var Action: procedure() := procedure() begin return end end.",
+        "program T; begin var Action: procedure() := procedure() begin return; end; end.",
     ),
 ];

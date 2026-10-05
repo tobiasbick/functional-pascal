@@ -4,7 +4,7 @@ uses Std.Test, Std.Tui;
 
 function View(Value: integer): TuiElement;
 begin
-  return TuiElementBuilders.MakeEmpty()
+  return TuiElementBuilders.MakeEmpty();
 end;
 
 function Update(Value: integer; Msg: TuiMsg; Cmd: TuiCmdOutput): integer;
@@ -13,13 +13,13 @@ begin
     TuiMsg.Tick(Delta):
     begin
       AssertEquals(Value + 1, Delta);
-      return Delta
-    end
+      return Delta;
+    end;
     else
     begin
-      return Value
-    end
-  end
+      return Value;
+    end;
+  end;
 end;
 
 begin
@@ -27,14 +27,14 @@ begin
   var Second: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(1, 1));
   for I: integer := 1 to 300 do
   begin
-    First.Inject(TuiMsg.Tick(I))
+    First.Inject(TuiMsg.Tick(I));
   end;
 
   Second.Inject(TuiMsg.Tick(1));
   AssertEquals(100, First.RunIterations(0, Update, View, 100, 0));
   for I: integer := 301 to 400 do
   begin
-    First.Inject(TuiMsg.Tick(I))
+    First.Inject(TuiMsg.Tick(I));
   end;
 
   AssertEquals(1, Second.RunIterations(0, Update, View, 1, 0));
@@ -45,5 +45,5 @@ begin
   First.Close();
   Second.Inject(TuiMsg.Tick(2));
   AssertEquals(2, Second.RunIterations(1, Update, View, 1, 0));
-  Second.Close()
+  Second.Close();
 end.

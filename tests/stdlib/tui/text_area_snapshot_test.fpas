@@ -12,18 +12,18 @@ begin
   mutable var Focus: option of TuiControlId := None;
   if State.Focused then
   begin
-    Focus := Some(TuiControlId.Create(1))
+    Focus := Some(TuiControlId.Create(1));
   end;
   var Text: string := (('012345' + Std.Str.Chr(10)) + 'alpha') + (Std.Str.Chr(10) + 'omega');
   return TuiElementBuilders.MakeDesktop(Focus, [
                                                  TuiElementBuilders.MakeTextArea(TuiControlId.Create(1), Text, 9, TuiPoint.Create(1, 1), TuiAction.Create(9))
-                                               ])
+                                               ]);
 end;
 
 function UpdateTextArea(State: SnapshotModel; Msg: TuiMsg; Cmd: TuiCmdOutput): SnapshotModel;
 begin
   Cmd.Set(TuiCmd.NoCommand);
-  return State
+  return State;
 end;
 
 begin
@@ -42,5 +42,5 @@ begin
   AssertEquals('lpha', Unfocused.LineAt(0));
   AssertEquals('mega', Unfocused.LineAt(1));
   AssertTrue(Unfocused.CellAt(1, 0).Role = TuiStyleRole.Normal);
-  App.Close()
+  App.Close();
 end.

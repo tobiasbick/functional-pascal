@@ -11,7 +11,7 @@ type
 
 function RenderGreeting(Value: Greeting): string;
 begin
-  return Value.Text + ' — it''s Functional Pascal'
+  return Value.Text + ' — it''s Functional Pascal';
 end;
 
 begin
@@ -19,5 +19,5 @@ begin
   var Message: Greeting := record Text := 'Grüße aus 東京 🙂'; Count := 1; end;
   // The record and function are intentionally used by the fixture.
   // Keep a line-comment token in the positive fixture.
-  WriteLn(RenderGreeting(Message))
+  WriteLn(RenderGreeting(Message));
 end.

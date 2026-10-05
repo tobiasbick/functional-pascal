@@ -105,11 +105,11 @@ function sourceWithValue(value: number): string[] {
     "",
     "function Value(): integer;",
     "begin",
-    `  return ${value}`,
+    `  return ${value};`,
     "end;",
     "",
     "begin",
-    "  WriteLn(Value())",
+    "  WriteLn(Value());",
     "end.",
     ""
   ];

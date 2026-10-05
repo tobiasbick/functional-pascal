@@ -36,7 +36,7 @@ end;
 // - `Right`: Second addend.
 public function Add(Left: integer; Right: integer): integer;
 begin
-  return Left + Right
+  return Left + Right;
 end;
 "#,
     );
@@ -47,7 +47,7 @@ end;
 // Returns a value from the importable unit.
 public function UniqueValue(): integer;
 begin
-  return 42
+  return 42;
 end;
 "#,
     );
@@ -60,7 +60,7 @@ begin
   var CounterValue: Counter := record Amount := 1; end;
   var MemberValue: integer := CounterValue.AmTail;
   var Total: integer := Add(1, Add(2, 3));
-  var Imported: integer := UniqueValue
+  var Imported: integer := UniqueValue;
 end.
 "#;
     temp.write("src/main.fpas", source);

@@ -15,12 +15,12 @@ type
     Base: integer;
     function Add(Self: Counter; Value: integer): integer;
     begin
-      return Self.Base + Value
+      return Self.Base + Value;
     end;
   end;
 begin
   var C: Counter := record Base := 10; end;
-  var AddTen: function(Value: integer): integer := C.Add
+  var AddTen: function(Value: integer): integer := C.Add;
 end.",
     );
 }
@@ -39,7 +39,7 @@ type
   end;
 begin
   var C: Counter := record Base := 1; end;
-  var Op: procedure() := C.Bump
+  var Op: procedure() := C.Bump;
 end.",
     );
 }
@@ -54,12 +54,12 @@ type
     X: integer;
     static function Origin(): Point;
     begin
-      return record X := 0; end
+      return record X := 0; end;
     end;
   end;
 begin
   var P: Point := Point.Origin();
-  var F: function(): Point := P.Origin
+  var F: function(): Point := P.Origin;
 end.",
     );
     assert!(
@@ -80,12 +80,12 @@ type
     Base: integer;
     procedure Inc(mutable Self: Counter);
     begin
-      Self.Base := Self.Base + 1
+      Self.Base := Self.Base + 1;
     end;
   end;
 begin
   var C: Counter := record Base := 0; end;
-  var Op: procedure() := C.Inc
+  var Op: procedure() := C.Inc;
 end.",
     );
     assert!(
@@ -106,12 +106,12 @@ type
     Base: integer;
     function Add(Self: Counter; Value: integer): integer;
     begin
-      return Self.Base + Value
+      return Self.Base + Value;
     end;
   end;
 begin
   var C: Counter := record Base := 10; end;
-  var AddTen: function(Value: integer): integer := C.Add
+  var AddTen: function(Value: integer): integer := C.Add;
 end.",
     );
     assert!(parse_errors.is_empty(), "{parse_errors:#?}");

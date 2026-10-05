@@ -12,13 +12,13 @@ begin
     WriteLn('Starting an attempt');
     if not Unwrap(Receive(Outcomes)) then
     begin
-      return Error('temporary failure')
+      return Error('temporary failure');
     end;
 
-    return Ok('Worker completed')
+    return Ok('Worker completed');
   end, 2, 10);
   // Wait retrieves the final result; intermediate failures remain inside the supervisor.
   WriteLn(Unwrap(Wait(Worker)));
   CloseTaskGroup(Workers);
-  CloseChannel(Outcomes)
+  CloseChannel(Outcomes);
 end.

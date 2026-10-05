@@ -7,7 +7,7 @@ Returns a new array where each element is the result of calling `F` on the corre
 ```pascal
 function Double(X: integer): integer;
 begin
-  return X * 2
+  return X * 2;
 end;
 
 var Nums: array of integer := [1, 2, 3];
@@ -23,7 +23,7 @@ Returns a new array containing only elements for which `F` returns `true`.
 ```pascal
 function IsEven(X: integer): boolean;
 begin
-  return X mod 2 = 0
+  return X mod 2 = 0;
 end;
 
 var Nums: array of integer := [1, 2, 3, 4, 5];
@@ -39,7 +39,7 @@ Folds elements left-to-right, starting from `Init`.
 ```pascal
 function Sum(Acc: integer; V: integer): integer;
 begin
-  return Acc + V
+  return Acc + V;
 end;
 
 var Nums: array of integer := [1, 2, 3, 4, 5];
@@ -55,7 +55,7 @@ Returns the **first** element for which `F` returns `true`, wrapped in `Some`. R
 ```pascal
 function IsAboveThree(X: integer): boolean;
 begin
-  return X > 3
+  return X > 3;
 end;
 
 var Nums: array of integer := [1, 2, 3, 4, 5];
@@ -72,7 +72,7 @@ Returns the **index** of the first element for which `F` returns `true`, or **`-
 ```pascal
 function IsAboveFifteen(X: integer): boolean;
 begin
-  return X > 15
+  return X > 15;
 end;
 
 var Idx: integer := FindIndex([10, 20, 30], IsAboveFifteen);
@@ -88,7 +88,7 @@ Returns `true` if **at least one** element satisfies `F`.
 ```pascal
 function IsNegative(X: integer): boolean;
 begin
-  return X < 0
+  return X < 0;
 end;
 
 var HasNeg: boolean := Any([1, -2, 3], IsNegative);
@@ -104,7 +104,7 @@ Returns `true` if **every** element satisfies `F`.
 ```pascal
 function IsPositive(X: integer): boolean;
 begin
-  return X > 0
+  return X > 0;
 end;
 
 var AllPos: boolean := All([1, 2, 3], IsPositive);

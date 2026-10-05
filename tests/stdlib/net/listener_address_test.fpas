@@ -26,14 +26,14 @@ begin
   case ListenerLocalAddress(First) of
     Ok(_):
     begin
-      panic('Closed listener returned an address')
+      panic('Closed listener returned an address');
     end;
     Error(_):
     begin
-    end
+    end;
   end;
 
-  return Ok(true)
+  return Ok(true);
 end;
 
 begin
@@ -43,7 +43,7 @@ begin
     end;
     Error(Message):
     begin
-      panic(Message)
-    end
-  end
+      panic(Message);
+    end;
+  end;
 end.

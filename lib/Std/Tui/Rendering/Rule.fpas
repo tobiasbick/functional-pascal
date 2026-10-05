@@ -14,13 +14,13 @@ public procedure TuiPaintRule(Canvas: TuiCanvas; Bounds: TuiRect; Text: string);
 begin
   if Bounds.IsEmpty() then
   begin
-    return
+    return;
   end;
 
   Canvas.DrawHorizontalLine(Bounds.X, Bounds.Y, Bounds.Width, TuiStyleRole.Rule);
   if (Text <> '') and (Bounds.Width > 4) then
   begin
     Canvas.Child(TuiRect.Create(Bounds.X + 2, Bounds.Y, Bounds.Width - 4, 1))
-      .WriteText(TuiPoint.Create(0, 0), (' ' + Text) + ' ', TuiStyleRole.Title)
-  end
+      .WriteText(TuiPoint.Create(0, 0), (' ' + Text) + ' ', TuiStyleRole.Title);
+  end;
 end;

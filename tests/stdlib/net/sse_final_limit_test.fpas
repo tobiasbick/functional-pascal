@@ -13,18 +13,18 @@ begin
   case FeedSse(Decoder, []) of
     Ok(_):
     begin
-      panic('finished decoder accepted input')
+      panic('finished decoder accepted input');
     end;
     Error(_):
     begin
-    end
-  end
+    end;
+  end;
 end;
 
 begin
   for Maximum: integer := 7 to 9 do
   begin
-    CheckFinal('data: x', Maximum, 'x')
+    CheckFinal('data: x', Maximum, 'x');
   end;
 
   CheckFinal('data: x' + #13, 8, 'x');
@@ -33,13 +33,13 @@ begin
   case FeedSse(Small, Std.Net.Utf8.Encode('data: x')) of
     Ok(_):
     begin
-      panic('oversized event accepted')
+      panic('oversized event accepted');
     end;
     Error(_):
     begin
-    end
+    end;
   end;
   var Empty: SseDecoder := Std.Results.Unwrap(CreateSseDecoder(1));
   var Events: array of SseEvent := Std.Results.Unwrap(FinishSse(Empty));
-  AssertEquals(0, Std.Arrays.Length(Events))
+  AssertEquals(0, Std.Arrays.Length(Events));
 end.

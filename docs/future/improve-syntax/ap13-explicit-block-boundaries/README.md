@@ -149,7 +149,9 @@ end with;
 
 ## Open decisions
 
-There are no open decisions for AP13.1. Task-scope decisions belong to AP26.
+There are no open decisions for AP13.1 or AP13.2. The single-statement-body
+transition rule is confirmed in [AP13.2](02-statement-terminators.md#confirmed-transition-rule).
+Task-scope decisions belong to AP26.
 
 ## Common requirements for every work package
 

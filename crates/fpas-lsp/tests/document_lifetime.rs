@@ -24,7 +24,7 @@ fn reopened_client_version_publishes_analysis_for_the_new_document_lifetime() {
         TranscriptStep::Message(open(
             uri,
             1,
-            "program Second;\nbegin\n  var Broken: integer := 'text'\nend.\n",
+            "program Second;\nbegin\n  var Broken: integer := 'text';\nend.\n",
         )),
         TranscriptStep::Wait(Duration::from_millis(260)),
         TranscriptStep::Message(shutdown(2)),

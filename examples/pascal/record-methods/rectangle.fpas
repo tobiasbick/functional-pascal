@@ -9,17 +9,17 @@ type
 
     function Area(Self: Rectangle): integer;
     begin
-      return Self.W * Self.H
+      return Self.W * Self.H;
     end;
 
     function Perimeter(Self: Rectangle): integer;
     begin
-      return 2 * (Self.W + Self.H)
+      return 2 * (Self.W + Self.H);
     end;
 
     function IsSquare(Self: Rectangle): boolean;
     begin
-      return Self.W = Self.H
+      return Self.W = Self.H;
     end;
 
     procedure Describe(Self: Rectangle);
@@ -27,11 +27,11 @@ type
       mutable var Kind: string := 'Rectangle';
       if Self.IsSquare() then
       begin
-        Kind := 'Square'
+        Kind := 'Square';
       end;
 
       WriteLn((((((((Kind + ' ') + IntToStr(Self.W)) + 'x') + IntToStr(Self.H)) + ' area=') + IntToStr(Self.Area())) + ' perimeter=') +
-              IntToStr(Self.Perimeter()))
+              IntToStr(Self.Perimeter()));
     end;
   end;
 
@@ -47,5 +47,5 @@ begin
     H := 4;
   end;
 
-  S.Describe()
+  S.Describe();
 end.

@@ -10,18 +10,18 @@ begin
     case Outcome of
       Ok(Text):
       begin
-        WriteLn(Text)
+        WriteLn(Text);
       end;
       Error(Reason):
       begin
-        WriteLn(Reason)
-      end
-    end
+        WriteLn(Reason);
+      end;
+    end;
   end);
   var Timeout: WaitCase := TimerCase(100, procedure() begin
-    WriteLn('no message before the deadline')
+    WriteLn('no message before the deadline');
   end);
   Select([Message, Timeout]);
   // Both cases are now consumed; a second selection needs new cases.
-  CloseChannel(Messages)
+  CloseChannel(Messages);
 end.

@@ -15,12 +15,12 @@ begin
   mutable var Focused: option of TuiControlId := None;
   if State.Focus > 0 then
   begin
-    Focused := Some(TuiControlId.Create(State.Focus))
+    Focused := Some(TuiControlId.Create(State.Focus));
   end;
 
   return TuiElementBuilders.MakeDesktop(Focused, [
                                                    TuiElementBuilders.MakeTextArea(TuiControlId.Create(1), State.Text, State.Caret, State.Offset, TuiAction.Create(9))
-                                                 ])
+                                                 ]);
 end;
 
 function UpdateTextArea(State: PointerModel; Msg: TuiMsg; Cmd: TuiCmdOutput): PointerModel;
@@ -37,13 +37,13 @@ begin
             Text := State.Text;
             Caret := State.Caret;
             Offset := State.Offset;
-          end
+          end;
         end;
         None:
         begin
-          return State
-        end
-      end
+          return State;
+        end;
+      end;
     end;
     TuiMsg.TextAreaChanged(Source, Action, Text, Caret, Offset):
     begin
@@ -54,13 +54,13 @@ begin
         Text := Text;
         Caret := Caret;
         Offset := Offset;
-      end
-    end
+      end;
+    end;
     else
     begin
-      return State
-    end
-  end
+      return State;
+    end;
+  end;
 end;
 
 function Click(
@@ -72,7 +72,7 @@ function Click(
 ): PointerModel;
 begin
   App.InjectPointerForTest(TuiPointerEvent.Create(TuiPointerAction.Down, TuiPointerButton.Left, TuiPoint.Create(X, Y)));
-  return App.RunIterations(State, UpdateTextArea, ViewTextArea, Iterations, 0)
+  return App.RunIterations(State, UpdateTextArea, ViewTextArea, Iterations, 0);
 end;
 
 begin
@@ -102,5 +102,5 @@ begin
   AssertEquals(12, Model.Caret);
   AssertEquals(2, Model.Offset.X);
   AssertEquals(1, Model.Offset.Y);
-  App.Close()
+  App.Close();
 end.

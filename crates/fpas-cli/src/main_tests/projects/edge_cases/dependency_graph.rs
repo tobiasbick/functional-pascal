@@ -7,19 +7,19 @@ fn diamond_dependency_graph() {
     support::write_program_project_file(&project_file, "src/main.fpas", &["src/*.fpas"]);
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.A, App.B, Std.Console;\nbegin\n  WriteLn(FromA() + FromB())\nend.\n",
+        "program Main;\nuses App.A, App.B, Std.Console;\nbegin\n  WriteLn(FromA() + FromB());\nend.\n",
     );
     write_text(
         &cwd.join("src/a.fpas"),
-        "unit App.A;\nuses App.Shared;\npublic function FromA(): integer;\nbegin\n  return Base() + 1\nend;\n",
+        "unit App.A;\nuses App.Shared;\npublic function FromA(): integer;\nbegin\n  return Base() + 1;\nend;\n",
     );
     write_text(
         &cwd.join("src/b.fpas"),
-        "unit App.B;\nuses App.Shared;\npublic function FromB(): integer;\nbegin\n  return Base() + 10\nend;\n",
+        "unit App.B;\nuses App.Shared;\npublic function FromB(): integer;\nbegin\n  return Base() + 10;\nend;\n",
     );
     write_text(
         &cwd.join("src/shared.fpas"),
-        "unit App.Shared;\npublic function Base(): integer;\nbegin\n  return 100\nend;\n",
+        "unit App.Shared;\npublic function Base(): integer;\nbegin\n  return 100;\nend;\n",
     );
 
     let (exit_code, stdout_output, stderr_output) =
@@ -89,17 +89,17 @@ members = ["common/lib.fpasprj", "left/lib.fpasprj", "right/lib.fpasprj", "app/a
         (
             "common",
             "",
-            "public function Value(): integer; begin return 1 end;",
+            "public function Value(): integer; begin return 1; end;",
         ),
         (
             "left",
             "workspace = [\"common\"]",
-            "uses Repro.common; public function LeftValue(): integer; begin return Value() end;",
+            "uses Repro.common; public function LeftValue(): integer; begin return Value(); end;",
         ),
         (
             "right",
             "workspace = [\"common\"]",
-            "uses Repro.common; public function RightValue(): integer; begin return Value() end;",
+            "uses Repro.common; public function RightValue(): integer; begin return Value(); end;",
         ),
     ] {
         write_text(
@@ -137,7 +137,7 @@ workspace = ["left", "right"]
     );
     write_text(
         &cwd.join("app/main.fpas"),
-        "program App; uses Repro.left, Repro.right, Std.Console; begin WriteLn(LeftValue() + RightValue()) end.",
+        "program App; uses Repro.left, Repro.right, Std.Console; begin WriteLn(LeftValue() + RightValue()); end.",
     );
     for (command, path) in [
         ("check", &workspace),

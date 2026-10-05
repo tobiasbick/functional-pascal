@@ -38,8 +38,8 @@ RequestValue.Headers := [Header.Create('Content-Type', 'application/json')];
 RequestValue.Body := Std.Net.Utf8.Encode('{"name":"example"}');
 case Send(RequestValue) of
   Ok(ResponseValue): WriteLn(ResponseValue.StatusCode);
-  Error(Message): panic(Message)
-end
+  Error(Message): panic(Message);
+end;
 ```
 
 Standard methods have short constructors:
@@ -47,7 +47,7 @@ Standard methods have short constructors:
 ```pascal
 var GetRequest: Request := Request.Get('http://127.0.0.1:8080/items');
 mutable var PutRequest: Request := Request.Put('http://127.0.0.1:8080/items/42');
-PutRequest.Body := Std.Net.Utf8.Encode('{"name":"updated"}')
+PutRequest.Body := Std.Net.Utf8.Encode('{"name":"updated"}');
 ```
 
 Receiver calls can thread the request and the explicit `Result` through the
@@ -108,12 +108,12 @@ case OpenStream(Request.Get('https://example.test/events')) of
     begin
       case ReadStream(ResponseValue.Body, 4096) of
         Ok(Bytes): Reading := Std.Arrays.Length(Bytes) <> 0;
-        Error(Message): panic(Message)
-      end
-    end
+        Error(Message): panic(Message);
+      end;
+    end;
   end;
-  Error(Message): panic(Message)
-end
+  Error(Message): panic(Message);
+end;
 ```
 
 `MaxHeaderBytes` bounds each response head, while `MaxResponseBytes` bounds all bytes received for
@@ -209,7 +209,7 @@ function Handle(RequestValue: ServerRequest): ServerResponse;
 begin
   mutable var ResponseValue: ServerResponse := ServerResponse.Create(200, 'OK');
   ResponseValue.Body := Std.Net.Utf8.Encode('Path: ' + RequestValue.Target);
-  return ResponseValue
+  return ResponseValue;
 end;
 
 case Listen('127.0.0.1', 8080) of
@@ -252,11 +252,11 @@ case ListenTls('127.0.0.1', 8443, 'certificate.pem', 'private-key.pem', 10000) o
       Ok(_):
       begin
       end;
-      Error(Message): panic(Message)
-    end
+      Error(Message): panic(Message);
+    end;
   end;
-  Error(Message): panic(Message)
-end
+  Error(Message): panic(Message);
+end;
 ```
 
 The certificate chain and private key must be PEM files. The handshake timeout bounds clients that

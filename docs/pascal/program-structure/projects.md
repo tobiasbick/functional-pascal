@@ -205,7 +205,7 @@ unit MyApp.Math;
 
 public function Add(A: integer; B: integer): integer;
 begin
-  return A + B
+  return A + B;
 end;
 ```
 
@@ -245,7 +245,7 @@ unit Acme.Math;
 
 public function Add(A: integer; B: integer): integer;
 begin
-  return A + B
+  return A + B;
 end;
 ```
 

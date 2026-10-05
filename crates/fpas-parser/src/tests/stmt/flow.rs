@@ -6,7 +6,7 @@ use fpas_diagnostics::codes::PARSE_INVALID_STATEMENT_START;
 
 #[test]
 fn return_with_value() {
-    let stmts = body_stmts("program T; begin return 42 end.");
+    let stmts = body_stmts("program T; begin return 42; end.");
     match &stmts[0] {
         Stmt::Return(Some(expr), _) => {
             assert!(matches!(expr, Expr::Integer(42, _)));
@@ -17,7 +17,7 @@ fn return_with_value() {
 
 #[test]
 fn return_bare() {
-    let stmts = body_stmts("program T; begin return end.");
+    let stmts = body_stmts("program T; begin return; end.");
     match &stmts[0] {
         Stmt::Return(None, _) => {}
         _ => panic!("expected bare Return"),
@@ -26,19 +26,19 @@ fn return_bare() {
 
 #[test]
 fn panic_stmt() {
-    let stmts = body_stmts("program T; begin panic('error') end.");
+    let stmts = body_stmts("program T; begin panic('error'); end.");
     assert!(matches!(&stmts[0], Stmt::Panic(_, _)));
 }
 
 #[test]
 fn break_stmt() {
-    let stmts = body_stmts("program T; begin break end.");
+    let stmts = body_stmts("program T; begin break; end.");
     assert!(matches!(&stmts[0], Stmt::Break(_)));
 }
 
 #[test]
 fn continue_stmt() {
-    let stmts = body_stmts("program T; begin continue end.");
+    let stmts = body_stmts("program T; begin continue; end.");
     assert!(matches!(&stmts[0], Stmt::Continue(_)));
 }
 

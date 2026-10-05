@@ -14,8 +14,8 @@ function ReadUntilCancelled(ConnectionValue: Std.Net.Connection;
 begin
   case Std.Net.ReceiveBytesWithCancellation(ConnectionValue, 1, Token) of
     Ok(Data): return 'received';
-    Error(Message): return Message
-  end
+    Error(Message): return Message;
+  end;
 end;
 
 begin
@@ -32,11 +32,11 @@ begin
         panic('read did not report cancellation');
       case Std.Net.Close(ConnectionValue) of
         Ok(Closed): if not Closed then panic('close failed');
-        Error(Message): panic(Message)
-      end
+        Error(Message): panic(Message);
+      end;
     end;
-    Error(Message): panic(Message)
-  end
+    Error(Message): panic(Message);
+  end;
 end."
     ));
 }

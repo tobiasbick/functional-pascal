@@ -18,7 +18,7 @@ begin
   if Std.Arrays.Length(Emptied.Names) <> 1 then panic('names changed');
   if Std.Arrays.Length(Full.Items) <> 3 then panic('base mutated');
   var Refilled: Bag := Emptied with Items := [4]; end;
-  if Refilled.Items[0] <> 4 then panic('refill')
+  if Refilled.Items[0] <> 4 then panic('refill');
 end.
 "#,
     );
@@ -61,7 +61,7 @@ begin
   if Reset.Origin.X + Reset.Origin.Y <> 15 then panic('record literal');
   if not Std.Options.IsNone(Reset.Label) then panic('none');
   if Std.Arrays.Length(Reset.Grid[0]) <> 0 then panic('nested empty array');
-  if Std.Arrays.Length(Reset.Scores['b']) <> 0 then panic('empty dictionary value')
+  if Std.Arrays.Length(Reset.Scores['b']) <> 0 then panic('empty dictionary value');
 end.
 "#,
     );
@@ -91,7 +91,7 @@ begin
   if Std.Dictionaries.Length(Std.Results.Unwrap(Updated.Lookup)) <> 0 then
     panic('result payload');
   if Std.Arrays.Length(Std.Options.Unwrap(Original.Values)) <> 1 then
-    panic('base mutated')
+    panic('base mutated');
 end.
 "#,
     );

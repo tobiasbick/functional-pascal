@@ -17,7 +17,7 @@ begin
     ctrl := false;
     alt := false;
     meta := false;
-  end
+  end;
 end;
 
 function PushEvent(State: FifoModel; InputEvent: string; CmdWasNoCommand: boolean): FifoModel;
@@ -25,7 +25,7 @@ begin
   return record
     Events := Std.Arrays.Concat(State.Events, [InputEvent]);
     SeenCmdWasNoCommand := State.SeenCmdWasNoCommand and CmdWasNoCommand;
-  end
+  end;
 end;
 
 function ViewFifo(State: FifoModel): TuiElement;
@@ -34,7 +34,7 @@ begin
                                                                         TuiElementBuilders.MakePanel('Host', [
                                                                                                                TuiElementBuilders.MakeButton(TuiControlId.Create(1), 'Go', TuiAction.Create(7))
                                                                                                              ])
-                                                                      ])
+                                                                      ]);
 end;
 
 function UpdateFifo(State: FifoModel; Msg: TuiMsg; Cmd: TuiCmdOutput): FifoModel;
@@ -44,25 +44,25 @@ begin
   case Msg of
     TuiMsg.Tick(Delta):
     begin
-      return PushEvent(State, 'tick', ResetOk)
+      return PushEvent(State, 'tick', ResetOk);
     end;
     TuiMsg.Action(Source, Action):
     begin
-      return PushEvent(State, 'action', ResetOk)
+      return PushEvent(State, 'action', ResetOk);
     end;
     TuiMsg.FocusChanged(Previous, Current):
     begin
-      return PushEvent(State, 'focus', ResetOk)
+      return PushEvent(State, 'focus', ResetOk);
     end;
     TuiMsg.Key(Key):
     begin
-      return PushEvent(State, 'key', ResetOk)
-    end
+      return PushEvent(State, 'key', ResetOk);
+    end;
     else
     begin
-      return State
-    end
-  end
+      return State;
+    end;
+  end;
 end;
 
 begin
@@ -91,5 +91,5 @@ begin
   AssertEquals(5, Std.Arrays.Length(Model.Events));
   AssertEquals('tick', Model.Events[4]);
   AssertTrue(Model.SeenCmdWasNoCommand);
-  App.Close()
+  App.Close();
 end.

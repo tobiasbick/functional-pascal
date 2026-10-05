@@ -25,7 +25,7 @@ begin
   var Batch: Std.Tui.TuiCanvas := Std.Tui.TuiCanvas.CreateLocal(Actual, Origin, Clip);
   for X: integer := 0 to Std.Arrays.Length(Cells) - 1 do
   begin
-    Reference.PutCell(TuiPoint.Create(StartX + X, 0), Cells[X])
+    Reference.PutCell(TuiPoint.Create(StartX + X, 0), Cells[X]);
   end;
 
   TuiCanvasPutCells(Batch, TuiPoint.Create(StartX, 0), Cells);
@@ -36,8 +36,8 @@ begin
     AssertTrue(Std.Options.IsNone(Expected.TryCellAt(Point)) =
                Std.Options.IsNone(Actual.TryCellAt(Point)));
     AssertEquals(Expected.Snapshot().CellAt(X, 0).Glyph, Actual.Snapshot().CellAt(X, 0).Glyph);
-    AssertTrue(Expected.Snapshot().CellAt(X, 0).Role = Actual.Snapshot().CellAt(X, 0).Role)
-  end
+    AssertTrue(Expected.Snapshot().CellAt(X, 0).Role = Actual.Snapshot().CellAt(X, 0).Role);
+  end;
 end;
 
 begin
@@ -56,9 +56,9 @@ begin
           CompareRow(Expected, Actual, StartX, ClipX, ClipWidth, OriginX, []);
           CompareRow(Expected, Actual, StartX, ClipX, ClipWidth, OriginX, [Wide]);
           CompareRow(Expected, Actual, StartX, ClipX, ClipWidth, OriginX, [Narrow, Wide]);
-          CompareRow(Expected, Actual, StartX, ClipX, ClipWidth, OriginX, [Wide, Narrow, Wide])
-        end
-      end
-    end
-  end
+          CompareRow(Expected, Actual, StartX, ClipX, ClipWidth, OriginX, [Wide, Narrow, Wide]);
+        end;
+      end;
+    end;
+  end;
 end.

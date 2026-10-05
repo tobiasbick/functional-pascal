@@ -13,13 +13,13 @@ mutable var Count: integer := 0;
 var Increment: procedure() :=
   procedure()
   begin
-    Count := Count + 1
+    Count := Count + 1;
   end;
 
 var AddBase: function(Value: integer): integer :=
   function(Value: integer): integer
   begin
-    return Count + Value
+    return Count + Value;
   end;
 ```
 
@@ -51,8 +51,8 @@ begin
   return function(): integer
   begin
     Value := Value + 1;
-    return Value
-  end
+    return Value;
+  end;
 end;
 ```
 
@@ -68,10 +68,10 @@ when it is used as a first-class value (assigned, returned, or passed):
 function MakeAdder(Base: integer): function(Value: integer): integer;
   function Add(Value: integer): integer;
   begin
-    return Base + Value
+    return Base + Value;
   end;
 begin
-  return Add
+  return Add;
 end;
 ```
 
@@ -102,7 +102,7 @@ var N: integer := 3;
 var Work: function(): integer :=
   function(): integer
   begin
-    return N * 2
+    return N * 2;
   end;
 var Handle: task := go Work();
 
@@ -111,7 +111,7 @@ mutable var Count: integer := 0;
 var Inc: procedure() :=
   procedure()
   begin
-    Count := Count + 1
+    Count := Count + 1;
   end;
 go Inc();  // Compile-time error
 
@@ -119,7 +119,7 @@ go Inc();  // Compile-time error
 var Outer: procedure() :=
   procedure()
   begin
-    Inc()
+    Inc();
   end;
 go Outer();  // Compile-time error — Outer captures task-bound Inc
 ```

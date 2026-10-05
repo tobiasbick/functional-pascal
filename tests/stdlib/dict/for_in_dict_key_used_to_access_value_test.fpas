@@ -6,6 +6,6 @@ begin
   var D: dict of string to integer := ['x': 10, 'y': 20];
   for K: string in D do
   begin
-    WriteLn((K + '=') + IntToStr(D[K]))
-  end
+    WriteLn((K + '=') + IntToStr(D[K]));
+  end;
 end.

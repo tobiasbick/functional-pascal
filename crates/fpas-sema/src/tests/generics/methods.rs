@@ -16,7 +16,7 @@ fn generic_function_method_on_plain_record() {
          type Box = record
            Value: integer;
            function Map<R>(Self: Box; F: function(X: integer): R): R;
-           begin return F(Self.Value) end;
+           begin return F(Self.Value); end;
          end;
          begin end.",
     );
@@ -29,7 +29,7 @@ fn generic_procedure_method_on_plain_record() {
          type Wrapper = record
            Value: integer;
            procedure Apply<T>(Self: Wrapper; F: function(X: integer): T);
-           begin var _ : T := F(Self.Value) end;
+           begin var _ : T := F(Self.Value); end;
          end;
          begin end.",
     );
@@ -43,8 +43,8 @@ fn generic_method_with_comparable_constraint() {
            Value: integer;
            function MaxWith<T: Comparable>(Self: Container; Other: T): T;
            begin
-             if Self.Value > 0 then return Other
-             else return Other
+             if Self.Value > 0 then return Other;
+             else return Other;
            end;
          end;
          begin end.",
@@ -58,7 +58,7 @@ fn generic_method_with_numeric_constraint() {
          type Accumulator = record
            Base: integer;
            function Add<T: Numeric>(Self: Accumulator; Extra: T): T;
-           begin return Extra end;
+           begin return Extra; end;
          end;
          begin end.",
     );
@@ -72,7 +72,7 @@ fn generic_method_multiple_type_params() {
            First: integer;
            Second: string;
            function Swap<A, B>(Self: Pair; X: A; Y: B): A;
-           begin return X end;
+           begin return X; end;
          end;
          begin end.",
     );
@@ -85,10 +85,10 @@ fn generic_method_called_with_inferred_type() {
          type Box = record
            Value: integer;
            function Map<R>(Self: Box; F: function(X: integer): R): R;
-           begin return F(Self.Value) end;
+           begin return F(Self.Value); end;
          end;
          function Stringify(X: integer): string;
-         begin return 'x' end;
+         begin return 'x'; end;
          var B: Box := record Value := 42; end;
          var S: string := B.Map(Stringify);
          begin end.",
@@ -102,12 +102,12 @@ fn two_records_each_with_independent_generic_methods() {
          type Box = record
            Value: integer;
            function Map<R>(Self: Box; F: function(X: integer): R): R;
-           begin return F(Self.Value) end;
+           begin return F(Self.Value); end;
          end;
          type Cell = record
            Value: string;
            function Into<R>(Self: Cell; F: function(X: string): R): R;
-           begin return F(Self.Value) end;
+           begin return F(Self.Value); end;
          end;
          begin end.",
     );
@@ -122,7 +122,7 @@ fn generic_method_body_can_declare_local_of_generic_type_and_return_direct_call(
            function Wrap<R>(Self: Holder; F: function(X: integer): R): R;
            begin
              var Local: R := F(Self.Value);
-             return F(Self.Value)
+             return F(Self.Value);
            end;
          end;
          begin end.",
@@ -138,7 +138,7 @@ fn generic_method_body_returning_local_generic_variable_reproducer() {
            function Wrap<R>(Self: Holder; F: function(X: integer): R): R;
            begin
              var Local: R := F(Self.Value);
-             return Local
+             return Local;
            end;
          end;
          begin end.",
@@ -156,7 +156,7 @@ fn generic_method_constraint_violation_at_call_site() {
          type Box = record
            Value: integer;
            function AddTwo<T: Numeric>(Self: Box; X: T): T;
-           begin return X end;
+           begin return X; end;
          end;
          var B: Box := record Value := 1; end;
          var S: string := B.AddTwo('hello');
@@ -175,7 +175,7 @@ fn generic_method_missing_self_param_is_rejected() {
          type Box = record
            Value: integer;
            function Bad<R>(X: integer): R;
-           begin return X end;
+           begin return X; end;
          end;
          begin end.",
     );
@@ -197,7 +197,7 @@ fn generic_method_type_param_shadows_outer_name_is_ok() {
          type Container = record
            Value: integer;
            function Pick<T>(Self: Container; Other: T): T;
-           begin return Other end;
+           begin return Other; end;
          end;
          begin end.",
     );
@@ -211,7 +211,7 @@ fn generic_method_with_no_type_params_still_valid() {
          type Counter = record
            Value: integer;
            function Incr(Self: Counter): integer;
-           begin return Self.Value + 1 end;
+           begin return Self.Value + 1; end;
          end;
          begin end.",
     );
@@ -223,7 +223,7 @@ fn generic_method_return_type_is_generic_param() {
         "program T;
          type Identity = record
            function Id<T>(Self: Identity; X: T): T;
-           begin return X end;
+           begin return X; end;
          end;
          begin end.",
     );

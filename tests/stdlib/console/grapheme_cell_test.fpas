@@ -16,5 +16,5 @@ begin
   end;
 
   PutCell(1, 1, Value);
-  AssertEquals('é', Std.Options.Unwrap(GetCell(1, 1)).glyph)
+  AssertEquals('é', Std.Options.Unwrap(GetCell(1, 1)).glyph);
 end.

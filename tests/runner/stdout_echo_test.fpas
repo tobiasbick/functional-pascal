@@ -4,5 +4,5 @@ uses Std.Console, Std.Test;
 
 begin
   WriteLn('Hello');
-  WriteLn('World')
+  WriteLn('World');
 end.

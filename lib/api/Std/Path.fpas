@@ -10,7 +10,7 @@ unit Std.Path;
 // - `Path`: File or directory path processed by the operation.
 public function BaseName(Path: string): string;
 begin
-  panic('Intrinsic API declaration')
+  panic('Intrinsic API declaration');
 end;
 
 // Returns the parent path without the final component.
@@ -19,7 +19,7 @@ end;
 // - `Path`: File or directory path processed by the operation.
 public function DirName(Path: string): string;
 begin
-  panic('Intrinsic API declaration')
+  panic('Intrinsic API declaration');
 end;
 
 // Returns the final extension without a leading dot.
@@ -28,7 +28,7 @@ end;
 // - `Path`: File or directory path processed by the operation.
 public function Extension(Path: string): string;
 begin
-  panic('Intrinsic API declaration')
+  panic('Intrinsic API declaration');
 end;
 
 // Joins segments with the platform path separator.
@@ -37,7 +37,7 @@ end;
 // - `Segments`: Values combined in their existing order.
 public function Join(Segments: array of string): string;
 begin
-  panic('Intrinsic API declaration')
+  panic('Intrinsic API declaration');
 end;
 
 // Normalizes separators and `.` / `..` components.
@@ -46,5 +46,5 @@ end;
 // - `Path`: File or directory path processed by the operation.
 public function Normalize(Path: string): string;
 begin
-  panic('Intrinsic API declaration')
+  panic('Intrinsic API declaration');
 end;

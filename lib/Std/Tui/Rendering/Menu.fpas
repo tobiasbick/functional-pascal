@@ -10,13 +10,13 @@ begin
   case Value of
     Some(Current):
     begin
-      return Current.Value = Id.Value
+      return Current.Value = Id.Value;
     end;
     None:
     begin
-      return false
-    end
-  end
+      return false;
+    end;
+  end;
 end;
 
 procedure TuiPaintMenuLabel(
@@ -38,12 +38,12 @@ begin
        (Std.Str.ToLower(Glyph) = Std.Str.ToLower(Mnemonic)) then
     begin
       GlyphRole := MnemonicRole;
-      MnemonicPainted := true
+      MnemonicPainted := true;
     end;
 
     Canvas.WriteText(TuiPoint.Create(X, Position.Y), Glyph, GlyphRole);
-    X := X + Std.Console.DisplayWidth(Glyph)
-  end
+    X := X + Std.Console.DisplayWidth(Glyph);
+  end;
 end;
 
 // Paints the one-line root menu bar.
@@ -67,11 +67,11 @@ begin
   case State.Active of
     Some(Active):
     begin
-      ActiveRoot := TuiMenuRootOf(Nodes, Active)
+      ActiveRoot := TuiMenuRootOf(Nodes, Active);
     end;
     None:
     begin
-    end
+    end;
   end;
   mutable var X: integer := Bounds.X;
   for Index: integer := 0 to Std.Arrays.Length(Nodes) - 1 do
@@ -90,28 +90,28 @@ begin
            ((Focused and not State.Open) and (X = Bounds.X)) then
         begin
           Role := TuiStyleRole.MenuSelected;
-          Canvas.FillRect(TuiRect.Create(X, Bounds.Y, Width, 1), TuiCell.Create(' ', Role))
+          Canvas.FillRect(TuiRect.Create(X, Bounds.Y, Width, 1), TuiCell.Create(' ', Role));
         end;
 
         if not TuiMenuNodeSelectable(Nodes[Index]) then
         begin
-          Role := TuiStyleRole.MenuDisabled
+          Role := TuiStyleRole.MenuDisabled;
         end;
         mutable var MnemonicRole: TuiStyleRole := TuiStyleRole.MenuShortcut;
         if Role = TuiStyleRole.MenuSelected then
         begin
-          MnemonicRole := TuiStyleRole.MenuSelectedShortcut
-        end
+          MnemonicRole := TuiStyleRole.MenuSelectedShortcut;
+        end;
         else if Role = TuiStyleRole.MenuDisabled then
         begin
-          MnemonicRole := TuiStyleRole.MenuDisabled
+          MnemonicRole := TuiStyleRole.MenuDisabled;
         end;
 
         TuiPaintMenuLabel(Canvas, TuiPoint.Create(X + 1, Bounds.Y), Text, TuiMenuNodeMnemonic(Nodes[Index]), Role, MnemonicRole);
-        X := X + Width
-      end
-    end
-  end
+        X := X + Width;
+      end;
+    end;
+  end;
 end;
 
 procedure TuiPaintMenuPopupEntry(
@@ -130,21 +130,21 @@ begin
   if TuiMenuIdMatches(State.Active, Id) then
   begin
     Role := TuiStyleRole.MenuSelected;
-    Canvas.FillRect(TuiRect.Create(Bounds.X + 1, Y, Bounds.Width - 2, 1), TuiCell.Create(' ', Role))
+    Canvas.FillRect(TuiRect.Create(Bounds.X + 1, Y, Bounds.Width - 2, 1), TuiCell.Create(' ', Role));
   end;
 
   if not Enabled then
   begin
-    Role := TuiStyleRole.MenuDisabled
+    Role := TuiStyleRole.MenuDisabled;
   end;
   mutable var MnemonicRole: TuiStyleRole := TuiStyleRole.MenuShortcut;
   if Role = TuiStyleRole.MenuSelected then
   begin
-    MnemonicRole := TuiStyleRole.MenuSelectedShortcut
-  end
+    MnemonicRole := TuiStyleRole.MenuSelectedShortcut;
+  end;
   else if Role = TuiStyleRole.MenuDisabled then
   begin
-    MnemonicRole := TuiStyleRole.MenuDisabled
+    MnemonicRole := TuiStyleRole.MenuDisabled;
   end;
 
   TuiPaintMenuLabel(Canvas, TuiPoint.Create(Bounds.X + 2, Y), Text, Mnemonic, Role, MnemonicRole);
@@ -152,17 +152,17 @@ begin
     Some(Gesture):
     begin
       Canvas.WriteText(TuiPoint.Create((Bounds.Right() - 2) -
-                                       Std.Console.DisplayWidth(Gesture.Display), Y), Gesture.Display, Role)
+                                       Std.Console.DisplayWidth(Gesture.Display), Y), Gesture.Display, Role);
     end;
     None:
     begin
-    end
+    end;
   end;
 
   if TuiMenuNodeIsSubmenu(Node) then
   begin
-    Canvas.WriteText(TuiPoint.Create(Bounds.Right() - 2, Y), '▶', Role)
-  end
+    Canvas.WriteText(TuiPoint.Create(Bounds.Right() - 2, Y), '▶', Role);
+  end;
 end;
 
 procedure TuiPaintMenuPopup(
@@ -184,21 +184,21 @@ begin
       case Nodes[Index] of
         TuiMenuNode.Separator(Id, Parent):
         begin
-          Canvas.DrawHorizontalLine(Bounds.X + 1, Y, Bounds.Width - 2, TuiStyleRole.MenuNormal)
+          Canvas.DrawHorizontalLine(Bounds.X + 1, Y, Bounds.Width - 2, TuiStyleRole.MenuNormal);
         end;
         TuiMenuNode.Command(Id, Parent, Text, Mnemonic, Action, Enabled, Shortcut):
         begin
-          TuiPaintMenuPopupEntry(Canvas, Bounds, Y, Nodes[Index], Id, Text, Mnemonic, Enabled, State)
+          TuiPaintMenuPopupEntry(Canvas, Bounds, Y, Nodes[Index], Id, Text, Mnemonic, Enabled, State);
         end;
         TuiMenuNode.Submenu(Id, Parent, Text, Mnemonic, Enabled):
         begin
-          TuiPaintMenuPopupEntry(Canvas, Bounds, Y, Nodes[Index], Id, Text, Mnemonic, Enabled, State)
-        end
+          TuiPaintMenuPopupEntry(Canvas, Bounds, Y, Nodes[Index], Id, Text, Mnemonic, Enabled, State);
+        end;
       end;
 
-      Row := Row + 1
-    end
-  end
+      Row := Row + 1;
+    end;
+  end;
 end;
 
 // Paints all open menu popups over the completed desktop frame.
@@ -220,6 +220,6 @@ begin
   var Popups: array of TuiMenuPopup := TuiMenuPopupGeometry(Nodes, State, BarBounds, TerminalBounds);
   for Index: integer := 0 to Std.Arrays.Length(Popups) - 1 do
   begin
-    TuiPaintMenuPopup(Canvas, Popups[Index], Nodes, State)
-  end
+    TuiPaintMenuPopup(Canvas, Popups[Index], Nodes, State);
+  end;
 end;

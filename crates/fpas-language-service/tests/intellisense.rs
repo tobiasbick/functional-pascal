@@ -26,7 +26,7 @@ end;
 begin
   var Music: string := '𝄞';
   var Value: Counter := record Amount := 1; Secret := 2; end;
-  var ResultValue: integer := Value.AmTail
+  var ResultValue: integer := Value.AmTail;
 end.
 "#;
     let path = temp.write("complete.fpas", source);
@@ -69,7 +69,7 @@ begin
   var Value: Counter := record Amount := 1; end;
   // Value.Am
   var Text: string := 'Value.Am';
-  Value.Am
+  Value.Am;
 end.
 "#;
     let path = temp.write("recovery.fpas", source);
@@ -108,7 +108,7 @@ var Value: string := 'global';
 
 function ReadValue(Value: integer): integer;
 begin
-  va
+  va;
 end;
 
 begin
@@ -116,7 +116,7 @@ end.
 "#;
     let path = temp.write("scope.fpas", source);
     let mut service = LanguageService::new(WorkspaceContext::loose(temp.path()));
-    let cursor = source.find("  va\n").expect("keyword prefix") + "  va".len();
+    let cursor = source.find("  va;\n").expect("keyword prefix") + "  va".len();
 
     let candidates = service
         .completions(&path, cursor)
@@ -148,17 +148,17 @@ fn completion_includes_public_declarations_from_workspace_dependencies() {
     );
     temp.write(
         "lib/src/library.fpas",
-        "unit Completion.Library;\n\npublic function GreetingFor(Name: string): string;\nbegin\n  return Name\nend;\n",
+        "unit Completion.Library;\n\npublic function GreetingFor(Name: string): string;\nbegin\n  return Name;\nend;\n",
     );
     temp.write(
         "lib/src/hidden.fpas",
-        "unit Completion.Hidden;\n\npublic function HiddenDependencyValue(): integer;\nbegin\n  return 1\nend;\n",
+        "unit Completion.Hidden;\n\npublic function HiddenDependencyValue(): integer;\nbegin\n  return 1;\nend;\n",
     );
     temp.write(
         "app/app.fpasprj",
         "[project]\nname = \"completion-app\"\nkind = \"program\"\nmain = \"src/main.fpas\"\n\n[dependencies]\nworkspace = [\"completion-lib\"]\n\n[sources]\ninclude = [\"src/**/*.fpas\"]\n",
     );
-    let source = "program CompletionApp;\n\nuses Completion.Library;\n\nbegin\n  GreetingFor('workspace')\nend.\n";
+    let source = "program CompletionApp;\n\nuses Completion.Library;\n\nbegin\n  GreetingFor('workspace');\nend.\n";
     let path = temp.write("app/src/main.fpas", source);
     let mut service = LanguageService::new(WorkspaceContext::load(temp.path()));
     let cursor = source.find("GreetingFor").expect("call");
@@ -202,21 +202,21 @@ fn auto_import_is_offered_only_for_one_public_declaration_and_preserves_formatti
     );
     temp.write(
         "src/core.fpas",
-        "unit Demo.Core;\n\npublic function Existing(): integer;\nbegin\n  return 1\nend;\n",
+        "unit Demo.Core;\n\npublic function Existing(): integer;\nbegin\n  return 1;\nend;\n",
     );
     temp.write(
         "src/importable.fpas",
-        "unit Demo.Importable;\n\n// Returns the unique imported value.\npublic function UniqueValue(): integer;\nbegin\n  return 2\nend;\n\nfunction HiddenValue(): integer;\nbegin\n  return 3\nend;\n",
+        "unit Demo.Importable;\n\n// Returns the unique imported value.\npublic function UniqueValue(): integer;\nbegin\n  return 2;\nend;\n\nfunction HiddenValue(): integer;\nbegin\n  return 3;\nend;\n",
     );
     temp.write(
         "src/first.fpas",
-        "unit Demo.First;\n\npublic function SharedValue(): integer;\nbegin\n  return 1\nend;\n",
+        "unit Demo.First;\n\npublic function SharedValue(): integer;\nbegin\n  return 1;\nend;\n",
     );
     temp.write(
         "src/second.fpas",
-        "unit Demo.Second;\n\npublic function SharedValue(): integer;\nbegin\n  return 2\nend;\n",
+        "unit Demo.Second;\n\npublic function SharedValue(): integer;\nbegin\n  return 2;\nend;\n",
     );
-    let source = "program AutoImport;\n\nuses Demo.Core;\n\nbegin\n  var Value: integer := UniqueValue\nend.\n";
+    let source = "program AutoImport;\n\nuses Demo.Core;\n\nbegin\n  var Value: integer := UniqueValue;\nend.\n";
     let main = temp.write("src/main.fpas", source);
     let mut service = LanguageService::load(&manifest);
     let cursor = source.find("UniqueValue").expect("unresolved name") + "UniqueValue".len();
@@ -288,7 +288,7 @@ fn signature_help_tracks_nested_multiline_generic_method_and_callable_value_argu
 type Counter = record
   public function Add(Self: Counter; Amount: integer; LabelText: string): integer;
   begin
-    return Amount
+    return Amount;
   end;
 end;
 
@@ -298,12 +298,12 @@ end;
 
 function Sum(Left: integer; Right: integer): integer;
 begin
-  return Left + Right
+  return Left + Right;
 end;
 
 function Identity<T>(Value: T): T;
 begin
-  return Value
+  return Value;
 end;
 
 procedure Outer();
@@ -311,7 +311,7 @@ procedure Outer();
   begin
   end;
 begin
-  Inner(1, true)
+  Inner(1, true);
 end;
 
 begin
@@ -323,7 +323,7 @@ begin
     'two');
   var C: integer := Callback(1, 2);
   var D: integer := Identity(1);
-  var E: Shape := Shape.Circle(2.0, true)
+  var E: Shape := Shape.Circle(2.0, true);
 end.
 "#;
     let path = temp.write("signatures.fpas", source);

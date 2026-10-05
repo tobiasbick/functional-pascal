@@ -4,5 +4,5 @@ uses Std.Console, Std.Str;
 
 begin
   var Empty: array of string := [];
-  WriteLn(Join(Empty, ','))
+  WriteLn(Join(Empty, ','));
 end.

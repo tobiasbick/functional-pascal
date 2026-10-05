@@ -12,7 +12,7 @@ These share one **line-oriented** buffer: typed text and test “stdin” lines 
 
 ```pascal
 var Line: string := ReadLn();
-WriteLn(Line)
+WriteLn(Line);
 ```
 
 ---
@@ -25,7 +25,7 @@ WriteLn(Line)
 
 ```pascal
 var C: string := ReadText();
-WriteLn(C)
+WriteLn(C);
 ```
 
 ---

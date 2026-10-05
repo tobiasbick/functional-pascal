@@ -14,13 +14,13 @@ begin
                                                                     TuiCell.Create('F', TuiStyleRole.Normal),
                                                                     TuiCell.Create('中', TuiStyleRole.Accent),
                                                                     TuiCell.Create('H', TuiStyleRole.Normal)
-                                                                  ]))
+                                                                  ]));
 end;
 
 function UpdateGrid(State: integer; Msg: TuiMsg; Cmd: TuiCmdOutput): integer;
 begin
   Cmd.Set(TuiCmd.NoCommand);
-  return State
+  return State;
 end;
 
 begin
@@ -34,5 +34,5 @@ begin
   AssertEquals('E', Snapshot.CellAt(0, 1).Glyph);
   AssertEquals('F', Snapshot.CellAt(1, 1).Glyph);
   AssertEquals(' ', Snapshot.CellAt(2, 1).Glyph);
-  App.Close()
+  App.Close();
 end.

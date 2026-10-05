@@ -5,7 +5,7 @@ fn assign_mutable() {
     check_ok(
         "program T; \
          mutable var X: integer := 0; \
-         begin X := 1 end.",
+         begin X := 1; end.",
     );
 }
 
@@ -14,7 +14,7 @@ fn assign_immutable_error() {
     check_errors(
         "program T; \
          var X: integer := 0; \
-         begin X := 1 end.",
+         begin X := 1; end.",
     );
 }
 
@@ -23,18 +23,18 @@ fn assign_type_mismatch() {
     check_errors(
         "program T; \
          mutable var X: integer := 0; \
-         begin X := true end.",
+         begin X := true; end.",
     );
 }
 
 #[test]
 fn assign_undefined_error() {
-    check_errors("program T; begin Y := 1 end.");
+    check_errors("program T; begin Y := 1; end.");
 }
 
 #[test]
 fn member_assign_undefined_receiver_reports_once() {
-    let errors = check_errors("program T; begin B.OnClick := 1 end.");
+    let errors = check_errors("program T; begin B.OnClick := 1; end.");
     let unknown = errors
         .iter()
         .filter(|error| error.code == fpas_diagnostics::codes::SEMA_UNKNOWN_NAME)
@@ -51,7 +51,7 @@ fn assign_to_array_element_ok() {
         "program T; \
          begin \
          mutable var A: array of integer := [1, 2, 3]; \
-         A[0] := 99 \
+         A[0] := 99; \
          end.",
     );
 }

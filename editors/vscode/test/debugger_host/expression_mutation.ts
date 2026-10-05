@@ -55,7 +55,7 @@ export async function verifyExpressionMutation(
     "  mutable var Items: array of integer := [6, 7];",
     "  mutable var Scores: dict of string to integer := ['Ada': 8];",
     "  var StopMarker: integer := Fixed;",
-    "  WriteLn(Scalar + Origin.X + Items[1] + Scores['Ada'] + GlobalValue)",
+    "  WriteLn(Scalar + Origin.X + Items[1] + Scores['Ada'] + GlobalValue);",
     "end.",
     ""
   ];

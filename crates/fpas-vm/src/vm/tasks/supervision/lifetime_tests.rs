@@ -20,8 +20,8 @@ fn image(outcome: &str) -> Arc<VerifiedExecutable> {
            StartSupervisedTask(Group, function(Token: CancellationToken): result of integer, string
            begin
              if Captured.Number <> 42 then panic('capture changed');
-             return {outcome}
-           end, 2, 0)
+             return {outcome};
+           end, 2, 0);
          end."
     ));
     assert!(errors.is_empty(), "{errors:?}");

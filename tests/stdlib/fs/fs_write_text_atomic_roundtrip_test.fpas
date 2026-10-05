@@ -10,8 +10,8 @@ begin
     end;
     Error(Message):
     begin
-      Fail(Message)
-    end
+      Fail(Message);
+    end;
   end;
 
   case WriteTextAtomic(Path, 'new') of
@@ -20,18 +20,18 @@ begin
     end;
     Error(Message):
     begin
-      Fail(Message)
-    end
+      Fail(Message);
+    end;
   end;
 
   case ReadText(Path) of
     Ok(Text):
     begin
-      AssertEquals('new', Text)
+      AssertEquals('new', Text);
     end;
     Error(Message):
     begin
-      Fail(Message)
-    end
-  end
+      Fail(Message);
+    end;
+  end;
 end.

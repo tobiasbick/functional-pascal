@@ -13,7 +13,7 @@ begin
                                                                         TuiElementBuilders.MakePanel('Host', [
                                                                                                                TuiElementBuilders.MakeList(TuiControlId.Create(1), ['Alpha', 'Beta', 'Gamma'], State.Selected, TuiAction.Create(5))
                                                                                                              ])
-                                                                      ])
+                                                                      ]);
 end;
 
 function UpdateList(State: ListModel; Msg: TuiMsg; Cmd: TuiCmdOutput): ListModel;
@@ -24,13 +24,13 @@ begin
     begin
       return record
         Selected := Selected;
-      end
-    end
+      end;
+    end;
     else
     begin
-      return State
-    end
-  end
+      return State;
+    end;
+  end;
 end;
 
 begin
@@ -43,5 +43,5 @@ begin
   AssertTrue(Std.Str.Contains(App.SurfaceSnapshot().LineAt(1), '  Alpha'));
   AssertTrue(Std.Str.Contains(App.SurfaceSnapshot().LineAt(2), '> Beta'));
   AssertTrue(Std.Str.Contains(App.SurfaceSnapshot().LineAt(3), '  Gamma'));
-  App.Close()
+  App.Close();
 end.

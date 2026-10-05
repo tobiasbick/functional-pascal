@@ -25,22 +25,22 @@ begin
   case BodyText(ResponseValue) of
     Ok(Text):
     begin
-      AssertEquals('{"ok":true}', Text)
+      AssertEquals('{"ok":true}', Text);
     end;
     Error(Message):
     begin
-      Fail(Message)
-    end
+      Fail(Message);
+    end;
   end;
 
   case HeaderValue(ResponseValue, 'content-type') of
     Some(Value):
     begin
-      AssertEquals('application/json', Value)
+      AssertEquals('application/json', Value);
     end;
     None:
     begin
-      Fail('header lookup failed')
-    end
-  end
+      Fail('header lookup failed');
+    end;
+  end;
 end.

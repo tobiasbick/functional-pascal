@@ -11,17 +11,17 @@ begin
         begin
           AssertEquals(0, Output.ExitCode);
           AssertTrue(Contains(Output.Stdout, 'fpas'));
-          AssertEquals('', Output.Stderr)
+          AssertEquals('', Output.Stderr);
         end;
         Error(Message):
         begin
-          Fail(Message)
-        end
-      end
+          Fail(Message);
+        end;
+      end;
     end;
     Error(Message):
     begin
-      Fail(Message)
-    end
-  end
+      Fail(Message);
+    end;
+  end;
 end.

@@ -9,7 +9,7 @@ uses Std.Tasks, Std.Time;
 function Work(Value: integer): integer;
 begin
   Sleep(10);
-  return Value
+  return Value;
 end;
 begin
   var A: task := go Work(11);
@@ -20,7 +20,7 @@ begin
   if WaitAny([B, A]) <> 0 then panic('order');
   if Wait(B) <> 22 then panic('consumed B');
   if WaitAny([B, A]) <> 0 then panic('consumed identity');
-  if Wait(A) <> 11 then panic('consumed A')
+  if Wait(A) <> 11 then panic('consumed A');
 end."#;
     let (program, diagnostics) = fpas_parser::parse(source);
     assert!(diagnostics.is_empty(), "{diagnostics:?}");

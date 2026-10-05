@@ -10,14 +10,14 @@ function Count(N: integer): integer;
 begin
   if N = 0 then
   begin
-    return 0
+    return 0;
   end;
 
-  return Count(N - 1)
+  return Count(N - 1);
 end;
 
 begin
-  WriteLn(Count(3))
+  WriteLn(Count(3));
 end.
 ";
 

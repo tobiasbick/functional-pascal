@@ -14,5 +14,5 @@ begin
   Model.Dirty := true;
   var Cmd: TuiCmdOutput := TuiCmdOutput.Create();
   Model := NotesUpdate(Model, TuiMsgSelectionChanged(TuiControlId.Create(2), TuiAction.Create(2), 0), Cmd);
-  AssertEquals('target', Model.Notes[Model.Selected].Id)
+  AssertEquals('target', Model.Notes[Model.Selected].Id);
 end.

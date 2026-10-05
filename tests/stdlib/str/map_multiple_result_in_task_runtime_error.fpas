@@ -4,15 +4,15 @@ uses Std.Str, Std.Tasks;
 
 function Expand(C: string): string;
 begin
-  return 'ab'
+  return 'ab';
 end;
 
 function Work(): string;
 begin
-  return Map('x', Expand)
+  return Map('x', Expand);
 end;
 
 begin
   var Job: task := go Work();
-  var Mapped: string := Wait(Job)
+  var Mapped: string := Wait(Job);
 end.

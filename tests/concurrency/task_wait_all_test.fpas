@@ -4,7 +4,7 @@ uses Std.Console, Std.Tasks;
 
 function Double(X: integer): integer;
 begin
-  return X * 2
+  return X * 2;
 end;
 
 begin
@@ -13,5 +13,5 @@ begin
   var T3: task := go Double(3);
   var Results: array of task := [T1, T2, T3];
   Std.Tasks.WaitAll(Results);
-  WriteLn('done')
+  WriteLn('done');
 end.

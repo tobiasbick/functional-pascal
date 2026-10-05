@@ -13,7 +13,7 @@ uses Std.Console, Std.Tasks;
 
 function Worker(): integer;
 begin
-  return 42
+  return 42;
 end;
 
 begin

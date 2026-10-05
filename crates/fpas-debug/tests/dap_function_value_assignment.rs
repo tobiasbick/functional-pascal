@@ -360,7 +360,7 @@ fn dap_and_jsonl_function_assignment_results_and_errors_match() {
         jsonl_failure[0]["error"]["help"]
     );
 
-    let closure = "function(Value: integer): integer begin return Value end";
+    let closure = "function(Value: integer): integer begin return Value; end";
     let dap_closure = send(
         &mut dap,
         &mut dap_seq,

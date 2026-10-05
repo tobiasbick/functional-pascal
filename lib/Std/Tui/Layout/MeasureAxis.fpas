@@ -25,10 +25,10 @@ public type
     begin
       if Left < Right then
       begin
-        return Left
+        return Left;
       end;
 
-      return Right
+      return Right;
     end;
 
     // Returns the greater of two extents.
@@ -40,10 +40,10 @@ public type
     begin
       if Left > Right then
       begin
-        return Left
+        return Left;
       end;
 
-      return Right
+      return Right;
     end;
 
     // Adds two extents and rejects overflow.
@@ -55,10 +55,10 @@ public type
     begin
       if Left > TuiMeasureAxisIntegerMax - Right then
       begin
-        panic('Tui layout measurement overflows integer extents')
+        panic('Tui layout measurement overflows integer extents');
       end;
 
-      return Left + Right
+      return Left + Right;
     end;
 
     // Constrains preferred and maximum extents by an axis constraint.
@@ -80,13 +80,13 @@ public type
         return record
           Preferred := Preferred;
           Maximum := Maximum;
-        end
+        end;
       end;
       var ConstrainedPreferred: integer := TuiMeasureAxis.Max(Minimum, TuiMeasureAxis.Min(Preferred, Constraint.Limit));
       var ConstrainedMaximum: integer := TuiMeasureAxis.Max(ConstrainedPreferred, TuiMeasureAxis.Min(Maximum, Constraint.Limit));
       return record
         Preferred := ConstrainedPreferred;
         Maximum := ConstrainedMaximum;
-      end
+      end;
     end;
   end;

@@ -8,17 +8,17 @@ mutable var
 function Visit(Value: integer): integer;
 begin
   Visits.Push(Value);
-  return Value
+  return Value;
 end;
 
 function Add(Left: integer; Right: integer): integer;
 begin
-  return Left + Right
+  return Left + Right;
 end;
 
 begin
   AssertEquals(3, (Visit(1)).Add(Visit(2)));
   AssertEquals(2, Visits.Length());
   AssertEquals(1, Visits[0]);
-  AssertEquals(2, Visits[1])
+  AssertEquals(2, Visits[1]);
 end.

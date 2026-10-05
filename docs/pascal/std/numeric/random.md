@@ -7,7 +7,7 @@ program Example;
 uses Std.Console, Std.Random;
 begin
   SetSeed(42);
-  WriteLn(RandomInt(1, 6))
+  WriteLn(RandomInt(1, 6));
 end.
 ```
 
@@ -35,7 +35,7 @@ Calling `Random` or `RandomInt` before either seeding procedure automatically in
 Returns a pseudo-random real number in `[0.0, 1.0)`.
 
 ```pascal
-var R: real := Random()
+var R: real := Random();
 ```
 
 ## `function RandomInt(Lo: integer; Hi: integer): integer`
@@ -43,7 +43,7 @@ var R: real := Random()
 Returns an unbiased pseudo-random integer in `[Lo, Hi]`, including either bound. The full `integer` range is supported. A runtime error occurs when `Lo > Hi`.
 
 ```pascal
-var Die: integer := RandomInt(1, 6)
+var Die: integer := RandomInt(1, 6);
 ```
 
 ## `procedure Randomize()`
@@ -51,7 +51,7 @@ var Die: integer := RandomInt(1, 6)
 Replaces the current VM's pseudo-random state with a seed supplied by the operating system. A runtime error occurs if that source is unavailable; the runtime never substitutes a predictable seed.
 
 ```pascal
-Randomize()
+Randomize();
 ```
 
 ## `procedure SetSeed(Seed: integer)`
@@ -62,7 +62,7 @@ Replaces the current VM's pseudo-random state with the repeatable sequence selec
 SetSeed(17);
 var First: integer := RandomInt(1, 100);
 SetSeed(17);
-var Repeated: integer := RandomInt(1, 100)
+var Repeated: integer := RandomInt(1, 100);
 ```
 
 ## Implementation (contributors)

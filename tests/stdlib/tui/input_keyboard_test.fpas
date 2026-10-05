@@ -19,7 +19,7 @@ begin
     ctrl := Ctrl;
     alt := false;
     meta := false;
-  end
+  end;
 end;
 
 function ViewInput(State: InputKeyboardModel): TuiElement;
@@ -30,10 +30,10 @@ begin
     Input := TuiElementBuilders.MakeHistoryInput(TuiControlId.Create(1), State.Text, State.Caret, 'Command', [
                                                                                                                'first',
                                                                                                                'second'
-                                                                                                             ], 'draft', TuiAction.Create(1))
+                                                                                                             ], 'draft', TuiAction.Create(1));
   end;
 
-  return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(1)), [Input])
+  return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(1)), [Input]);
 end;
 
 function UpdateInput(State: InputKeyboardModel; Msg: TuiMsg; Cmd: TuiCmdOutput): InputKeyboardModel;
@@ -47,7 +47,7 @@ begin
         Caret := Caret;
         UseHistory := State.UseHistory;
         KeyHits := State.KeyHits;
-      end
+      end;
     end;
     TuiMsg.Key(Key):
     begin
@@ -56,19 +56,19 @@ begin
         Caret := State.Caret;
         UseHistory := State.UseHistory;
         KeyHits := State.KeyHits + 1;
-      end
-    end
+      end;
+    end;
     else
     begin
-      return State
-    end
-  end
+      return State;
+    end;
+  end;
 end;
 
 function Press(App: TuiApplication; State: InputKeyboardModel; Kind: TuiKeyKind; Ctrl: boolean): InputKeyboardModel;
 begin
   App.InjectKeyForTest(MakeKey(Kind, Ctrl));
-  return App.RunIterations(State, UpdateInput, ViewInput, 1, 0)
+  return App.RunIterations(State, UpdateInput, ViewInput, 1, 0);
 end;
 
 begin
@@ -122,5 +122,5 @@ begin
   Model := Press(App, Model, TuiKeyKind.Down, false);
   AssertEquals('draft', Model.Text);
   AssertEquals(0, Model.KeyHits);
-  App.Close()
+  App.Close();
 end.

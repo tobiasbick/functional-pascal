@@ -16,7 +16,7 @@ begin
     ctrl := false;
     alt := false;
     meta := false;
-  end
+  end;
 end;
 
 function UpdateDemo(State: DemoModel; Msg: TuiMsg; Cmd: TuiCmdOutput): DemoModel;
@@ -30,19 +30,19 @@ begin
         begin
           return record
             Focus := Id.Value;
-          end
+          end;
         end;
         None:
         begin
-          return State
-        end
-      end
-    end
+          return State;
+        end;
+      end;
+    end;
     else
     begin
-      return State
-    end
-  end
+      return State;
+    end;
+  end;
 end;
 
 function ViewDemo(State: DemoModel): TuiElement;
@@ -55,7 +55,7 @@ begin
                                                                                                                               TuiElementBuilders.MakeButton(TuiControlId.Create(2), 'Yes', TuiAction.Create(2)),
                                                                                                                               TuiElementBuilders.MakeButton(TuiControlId.Create(3), 'No', TuiAction.Create(3))
                                                                                                                             ])
-                                                                                ])
+                                                                                ]);
 end;
 
 begin
@@ -71,5 +71,5 @@ begin
   App.InjectKeyForTest(Key(TuiKeyKind.Tab));
   Model := App.RunIterations(Model, UpdateDemo, ViewDemo, 1, 0);
   AssertEquals(2, Model.Focus);
-  App.Close()
+  App.Close();
 end.

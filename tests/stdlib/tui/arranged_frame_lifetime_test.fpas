@@ -11,7 +11,7 @@ begin
     ctrl := false;
     alt := false;
     meta := false;
-  end
+  end;
 end;
 
 begin
@@ -26,23 +26,23 @@ begin
           Some(Id):
           begin
             Focus := Id.Value;
-            return State
+            return State;
           end;
           None:
           begin
-            return State
-          end
-        end
+            return State;
+          end;
+        end;
       end;
       TuiMsg.Action(Source, Action):
       begin
-        return State + Action.Value
-      end
+        return State + Action.Value;
+      end;
       else
       begin
-        return State
-      end
-    end
+        return State;
+      end;
+    end;
   end, function(State: integer): TuiElement begin
     return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(Focus)), [
                                                                               TuiElementBuilders.MakePanel('Host', [
@@ -51,7 +51,7 @@ begin
                                                                                                                                                   TuiElementBuilders.MakeButton(TuiControlId.Create(2), 'Two', TuiAction.Create(2))
                                                                                                                                                 ])
                                                                                                                    ])
-                                                                            ])
+                                                                            ]);
   end, 0, 0);
   AssertEquals(0, Model);
   AssertEquals(1, Focus);
@@ -64,23 +64,23 @@ begin
           Some(Id):
           begin
             Focus := Id.Value;
-            return State
+            return State;
           end;
           None:
           begin
-            return State
-          end
-        end
+            return State;
+          end;
+        end;
       end;
       TuiMsg.Action(Source, Action):
       begin
-        return State + Action.Value
-      end
+        return State + Action.Value;
+      end;
       else
       begin
-        return State
-      end
-    end
+        return State;
+      end;
+    end;
   end, function(State: integer): TuiElement begin
     return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(Focus)), [
                                                                               TuiElementBuilders.MakePanel('Host', [
@@ -89,7 +89,7 @@ begin
                                                                                                                                                   TuiElementBuilders.MakeButton(TuiControlId.Create(2), 'Two', TuiAction.Create(2))
                                                                                                                                                 ])
                                                                                                                    ])
-                                                                            ])
+                                                                            ]);
   end, 1, 0);
   AssertEquals(2, Focus);
   App.InjectKeyForTest(MakeKey(TuiKeyKind.Enter, ''));
@@ -101,23 +101,23 @@ begin
           Some(Id):
           begin
             Focus := Id.Value;
-            return State
+            return State;
           end;
           None:
           begin
-            return State
-          end
-        end
+            return State;
+          end;
+        end;
       end;
       TuiMsg.Action(Source, Action):
       begin
-        return State + Action.Value
-      end
+        return State + Action.Value;
+      end;
       else
       begin
-        return State
-      end
-    end
+        return State;
+      end;
+    end;
   end, function(State: integer): TuiElement begin
     return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(Focus)), [
                                                                               TuiElementBuilders.MakePanel('Host', [
@@ -126,8 +126,8 @@ begin
                                                                                                                                                   TuiElementBuilders.MakeButton(TuiControlId.Create(2), 'Two', TuiAction.Create(2))
                                                                                                                                                 ])
                                                                                                                    ])
-                                                                            ])
+                                                                            ]);
   end, 1, 0);
   AssertEquals(2, Model);
-  App.Close()
+  App.Close();
 end.

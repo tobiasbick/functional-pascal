@@ -3,5 +3,5 @@ program T;
 uses Std.Console;
 
 begin
-  WriteLn('val=', 42, ' ok=', true)
+  WriteLn('val=', 42, ' ok=', true);
 end.

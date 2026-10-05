@@ -5,7 +5,7 @@ use fpas_diagnostics::codes::PARSE_INVALID_CALL_OR_ASSIGNMENT_FORM;
 
 #[test]
 fn call_no_args() {
-    let stmts = body_stmts("program T; begin Foo() end.");
+    let stmts = body_stmts("program T; begin Foo(); end.");
     match &stmts[0] {
         Stmt::Call { args, .. } => {
             assert!(args.is_empty());
@@ -16,7 +16,7 @@ fn call_no_args() {
 
 #[test]
 fn call_with_args() {
-    let stmts = body_stmts("program T; begin WriteLn('hello', 42) end.");
+    let stmts = body_stmts("program T; begin WriteLn('hello', 42); end.");
     match &stmts[0] {
         Stmt::Call { args, .. } => {
             assert_eq!(args.len(), 2);
@@ -27,7 +27,7 @@ fn call_with_args() {
 
 #[test]
 fn qualified_call() {
-    let stmts = body_stmts("program T; begin Std.Console.WriteLn('hello') end.");
+    let stmts = body_stmts("program T; begin Std.Console.WriteLn('hello'); end.");
     match &stmts[0] {
         Stmt::Call { designator, .. } => {
             assert_eq!(designator.parts.len(), 3);
@@ -38,7 +38,7 @@ fn qualified_call() {
 
 #[test]
 fn bare_zero_argument_call_requires_parentheses() {
-    let (_, errors) = parse_with_errors("program T; begin Foo end.");
+    let (_, errors) = parse_with_errors("program T; begin Foo; end.");
     let diagnostic = errors.iter().find_map(|error| match error {
         ParseDiagnostic::Parser(diagnostic)
             if diagnostic.code == PARSE_INVALID_CALL_OR_ASSIGNMENT_FORM =>
@@ -59,7 +59,7 @@ fn bare_zero_argument_call_requires_parentheses() {
 
 #[test]
 fn bare_qualified_zero_argument_call_requires_parentheses() {
-    let (_, errors) = parse_with_errors("program T; begin Std.Console.Clear end.");
+    let (_, errors) = parse_with_errors("program T; begin Std.Console.Clear; end.");
 
     assert!(
         errors.iter().any(|error| matches!(
@@ -73,7 +73,7 @@ fn bare_qualified_zero_argument_call_requires_parentheses() {
 
 #[test]
 fn postfix_method_chain_is_expression_statement() {
-    let stmts = body_stmts("program T; begin Factory.Create().Destroy() end.");
+    let stmts = body_stmts("program T; begin Factory.Create().Destroy(); end.");
     match &stmts[0] {
         Stmt::Expression {
             expr: Expr::Postfix { operations, .. },
@@ -91,7 +91,7 @@ fn postfix_method_chain_is_expression_statement() {
 
 #[test]
 fn parenthesized_postfix_method_chain_is_expression_statement() {
-    let stmts = body_stmts("program T; begin (Factory.Create()).Destroy() end.");
+    let stmts = body_stmts("program T; begin (Factory.Create()).Destroy(); end.");
     assert!(matches!(
         &stmts[0],
         Stmt::Expression {

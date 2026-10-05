@@ -40,7 +40,7 @@ enums with data.
 WriteLn(2 in [1, 2, 3]);
 WriteLn('Alice' in ['Alice': 30]);
 WriteLn('a' in 'pascal');
-WriteLn('asc' in 'pascal')
+WriteLn('asc' in 'pascal');
 ```
 
 ## Operator precedence
@@ -85,8 +85,8 @@ Accessing an out-of-bounds index is a **runtime error**. The index must be an `i
 mutable var I: integer := 0;
 while I < Std.Str.Length(S) do begin
   WriteLn(S[I]);
-  I := I + 1
-end
+  I := I + 1;
+end;
 ```
 
 ## String concatenation

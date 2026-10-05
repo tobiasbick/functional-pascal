@@ -9,7 +9,7 @@ uses
 
 function TuiIgnoreApplicationMessage<TModel>(State: TModel; Message: boolean; Cmd: TuiCmdOutput): TModel;
 begin
-  return State
+  return State;
 end;
 
 public type
@@ -24,7 +24,7 @@ public type
     // - `Size`: Size in terminal cells.
     public static function OpenForTest(Size: TuiSize): TuiApplication;
     begin
-      return TuiApplication.OpenForTestWithPalette(Size, TuiPalette.Default())
+      return TuiApplication.OpenForTestWithPalette(Size, TuiPalette.Default());
     end;
 
     // Opens a headless application with a caller-defined palette.
@@ -36,7 +36,7 @@ public type
     begin
       return record
         Id := TuiAppOpenApplication(Size, Palette, false);
-      end
+      end;
     end;
 
     // Closes the host and discards all pending input and messages.
@@ -45,7 +45,7 @@ public type
     // - `Self`: Receiver value operated on by the method.
     public procedure Close(Self: TuiApplication);
     begin
-      TuiAppRaiseShutdownFailure(TuiAppCloseApplication(Self.Id))
+      TuiAppRaiseShutdownFailure(TuiAppCloseApplication(Self.Id));
     end;
 
     // Closes owned work before closing the application message inbox.
@@ -53,7 +53,7 @@ public type
     begin
       var Failures: array of TuiMsg := TuiAppCloseApplication(Self.Id);
       CloseChannel(Inbox);
-      TuiAppRaiseShutdownFailure(Failures)
+      TuiAppRaiseShutdownFailure(Failures);
     end;
 
     // Injects an already constructed framework message in FIFO order.
@@ -64,7 +64,7 @@ public type
     public procedure Inject(Self: TuiApplication; Msg: TuiMsg);
     begin
       var ApplicationId: integer := TuiAppRequireOpen(Self.Id);
-      TuiAppPushInput(ApplicationId, TuiHostInput.Message(Msg))
+      TuiAppPushInput(ApplicationId, TuiHostInput.Message(Msg));
     end;
 
     // Injects a key that will be routed through focus and controlled elements.
@@ -75,7 +75,7 @@ public type
     public procedure InjectKeyForTest(Self: TuiApplication; Key: Std.Console.KeyEvent);
     begin
       var ApplicationId: integer := TuiAppRequireOpen(Self.Id);
-      TuiAppPushInput(ApplicationId, TuiHostInput.Key(Key))
+      TuiAppPushInput(ApplicationId, TuiHostInput.Key(Key));
     end;
 
     // Injects a pointer event in zero-based application coordinates.
@@ -86,7 +86,7 @@ public type
     public procedure InjectPointerForTest(Self: TuiApplication; Pointer: TuiPointerEvent);
     begin
       var ApplicationId: integer := TuiAppRequireOpen(Self.Id);
-      TuiAppPushInput(ApplicationId, TuiHostInput.Pointer(Pointer))
+      TuiAppPushInput(ApplicationId, TuiHostInput.Pointer(Pointer));
     end;
 
     // Injects a resize that updates host size before the Resize message reaches Update.
@@ -97,7 +97,7 @@ public type
     public procedure InjectResizeForTest(Self: TuiApplication; Size: TuiSize);
     begin
       var ApplicationId: integer := TuiAppRequireOpen(Self.Id);
-      TuiAppPushInput(ApplicationId, TuiHostInput.Resize(Size))
+      TuiAppPushInput(ApplicationId, TuiHostInput.Resize(Size));
     end;
 
     // Tries to inject one application-defined message without waiting for queue capacity.
@@ -108,7 +108,7 @@ public type
 ): result of boolean, string;
     begin
       TuiAppRequireOpen(Self.Id);
-      return TrySend(Inbox, Message)
+      return TrySend(Inbox, Message);
     end;
 
     // Returns an explicit immutable copy of the last painted surface.
@@ -118,7 +118,7 @@ public type
     public function SurfaceSnapshot(Self: TuiApplication): TuiSurfaceSnapshot;
     begin
       var ApplicationId: integer := TuiAppRequireHandle(Self.Id);
-      return TuiAppSurfaces[ApplicationId - 1].Snapshot()
+      return TuiAppSurfaces[ApplicationId - 1].Snapshot();
     end;
 
     // Returns the application's current palette.
@@ -128,7 +128,7 @@ public type
     public function Palette(Self: TuiApplication): TuiPalette;
     begin
       var ApplicationId: integer := TuiAppRequireHandle(Self.Id);
-      return TuiAppPalettes[ApplicationId - 1]
+      return TuiAppPalettes[ApplicationId - 1];
     end;
 
     // Runs a deterministic number of message-processing iterations.
@@ -155,7 +155,7 @@ public type
       var Inbox: channel of boolean := CreateChannel(1);
       var Model: TModel := TuiRunHeadless(Self.Id, InitialModel, Inbox, Update, TuiIgnoreApplicationMessage, View, IterationCount, DeltaMilliseconds, false);
       CloseChannel(Inbox);
-      return Model
+      return Model;
     end;
 
     // Runs deterministic framework and application-defined message iterations.
@@ -170,7 +170,7 @@ public type
   DeltaMilliseconds: integer
 ): TModel;
     begin
-      return TuiRunHeadless(Self.Id, InitialModel, Inbox, Update, UpdateApplication, View, IterationCount, DeltaMilliseconds, true)
+      return TuiRunHeadless(Self.Id, InitialModel, Inbox, Update, UpdateApplication, View, IterationCount, DeltaMilliseconds, true);
     end;
 
     // Runs one interactive Tui application until Update returns `TuiCmd.Quit`.
@@ -188,7 +188,7 @@ public type
   View: function(State: TModel): TuiElement
 ): TModel;
     begin
-      return TuiApplication.RunWithPalette(InitialModel, Update, View, TuiPalette.Default())
+      return TuiApplication.RunWithPalette(InitialModel, Update, View, TuiPalette.Default());
     end;
 
     // Runs one interactive Tui application with a caller-defined initial palette.
@@ -213,12 +213,12 @@ public type
       mutable var Height: integer := ScreenHeight();
       if Width < 1 then
       begin
-        Width := 1
+        Width := 1;
       end;
 
       if Height < 1 then
       begin
-        Height := 1
+        Height := 1;
       end;
       var Size: TuiSize := TuiSize.Create(Width, Height);
       var App: TuiApplication := record
@@ -227,7 +227,7 @@ public type
       var Inbox: channel of boolean := CreateChannel(1);
       var Model: TModel := TuiRunInteractive(App.Id, InitialModel, Inbox, Update, TuiIgnoreApplicationMessage, View, false);
       CloseChannel(Inbox);
-      return Model
+      return Model;
     end;
 
     // Runs one interactive application with a bounded typed background inbox.
@@ -239,7 +239,7 @@ public type
   View: function(State: TModel): TuiElement
 ): TModel;
     begin
-      return TuiApplication.RunWithBackgroundAndPalette(InitialModel, Inbox, Update, UpdateApplication, View, TuiPalette.Default())
+      return TuiApplication.RunWithBackgroundAndPalette(InitialModel, Inbox, Update, UpdateApplication, View, TuiPalette.Default());
     end;
 
     // Runs one interactive background-enabled application with a caller-defined palette.
@@ -257,17 +257,17 @@ public type
       mutable var Height: integer := ScreenHeight();
       if Width < 1 then
       begin
-        Width := 1
+        Width := 1;
       end;
 
       if Height < 1 then
       begin
-        Height := 1
+        Height := 1;
       end;
       var App: TuiApplication := record
         Id := TuiAppOpenApplication(TuiSize.Create(Width, Height), Palette, true);
       end;
 
-      return TuiRunInteractive(App.Id, InitialModel, Inbox, Update, UpdateApplication, View, true)
+      return TuiRunInteractive(App.Id, InitialModel, Inbox, Update, UpdateApplication, View, true);
     end;
   end;

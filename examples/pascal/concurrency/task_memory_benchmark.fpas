@@ -13,18 +13,18 @@ const
 
 procedure Worker();
 begin
-  Sleep(SleepMillis)
+  Sleep(SleepMillis);
 end;
 
 begin
   if ParamCount() <> 1 then
   begin
-    panic('usage: task_memory_benchmark.fpas -- TASK_COUNT')
+    panic('usage: task_memory_benchmark.fpas -- TASK_COUNT');
   end;
   var TaskCount: integer := StrToInt(ParamStr(0));
   if TaskCount < 1 then
   begin
-    panic('TASK_COUNT must be positive')
+    panic('TASK_COUNT must be positive');
   end;
 
   WriteLn(('spawning ' + IntToStr(TaskCount)) + ' tasks');
@@ -35,11 +35,11 @@ begin
     Push(Tasks, go Worker());
     if I mod ProgressEvery = 0 then
     begin
-      WriteLn('spawned ' + IntToStr(I))
-    end
+      WriteLn('spawned ' + IntToStr(I));
+    end;
   end;
 
   WriteLn('all tasks spawned; waiting');
   WaitAll(Tasks);
-  WriteLn(('completed in ' + IntToStr(ElapsedMillis(Started))) + ' ms')
+  WriteLn(('completed in ' + IntToStr(ElapsedMillis(Started))) + ' ms');
 end.

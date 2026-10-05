@@ -37,7 +37,7 @@ fn bare_std_uses_rejected() {
 fn std_uses_case_insensitive() {
     let (exit_code, stdout_output, stderr_output) = support::run_source_and_capture_output(
         "std_case.fpas",
-        "program Test;\nuses std.console;\nbegin\n  WriteLn(42)\nend.\n",
+        "program Test;\nuses std.console;\nbegin\n  WriteLn(42);\nend.\n",
     );
 
     assert_eq!(exit_code, 0, "stderr: {stderr_output}");
@@ -76,7 +76,7 @@ include = ["src/*.fpas"]
     write_text(&cwd.join("src/main.fpas"), "program Main;\nbegin\nend.\n");
     write_text(
         &cwd.join("src/mylib.fpas"),
-        "unit sTd.MyLib;\nfunction Foo(): integer;\nbegin\n  return 1\nend;\n",
+        "unit sTd.MyLib;\nfunction Foo(): integer;\nbegin\n  return 1;\nend;\n",
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);

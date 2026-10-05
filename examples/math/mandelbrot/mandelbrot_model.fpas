@@ -20,37 +20,37 @@ public type
         SpanY := 2.4;
         MaxIter := 160;
         Palette := PaletteKind.DeepOcean;
-      end
+      end;
     end;
 
     public function SpanX(Self: ExplorerState; Width: integer; Height: integer): real;
     begin
-      return (Self.SpanY * (IntToReal(Max(Width, 1)) / IntToReal(Max(Height, 1)))) * 0.5
+      return (Self.SpanY * (IntToReal(Max(Width, 1)) / IntToReal(Max(Height, 1)))) * 0.5;
     end;
 
     public function XMin(Self: ExplorerState; Width: integer; Height: integer): real;
     begin
-      return Self.CenterX - (Self.SpanX(Width, Height) * 0.5)
+      return Self.CenterX - (Self.SpanX(Width, Height) * 0.5);
     end;
 
     public function XMax(Self: ExplorerState; Width: integer; Height: integer): real;
     begin
-      return Self.CenterX + (Self.SpanX(Width, Height) * 0.5)
+      return Self.CenterX + (Self.SpanX(Width, Height) * 0.5);
     end;
 
     public function YMin(Self: ExplorerState): real;
     begin
-      return Self.CenterY - (Self.SpanY * 0.5)
+      return Self.CenterY - (Self.SpanY * 0.5);
     end;
 
     public function YMax(Self: ExplorerState): real;
     begin
-      return Self.CenterY + (Self.SpanY * 0.5)
+      return Self.CenterY + (Self.SpanY * 0.5);
     end;
 
     public function GetZoom(Self: ExplorerState): real;
     begin
-      return 2.4 / Self.SpanY
+      return 2.4 / Self.SpanY;
     end;
 
     public property Zoom: real read GetZoom;
@@ -69,19 +69,19 @@ public type
 
 public function GridWidth(TerminalWidth: integer): integer;
 begin
-  return Max(TerminalWidth - 2, 1)
+  return Max(TerminalWidth - 2, 1);
 end;
 
 public function GridHeight(TerminalHeight: integer): integer;
 begin
-  return Max(TerminalHeight - 6, 1)
+  return Max(TerminalHeight - 6, 1);
 end;
 
 function BlankGrid(Width: integer; Height: integer): TuiCellGrid;
 begin
   var Black: TuiColor := TuiColor.FromRgb(0, 0, 0);
   var Blank: TuiCell := TuiCell.Styled(' ', TuiStyle.FromColors(Black, Black));
-  return TuiCellGrid.Create(Width, Height, Std.Arrays.Fill(Blank, Width * Height))
+  return TuiCellGrid.Create(Width, Height, Std.Arrays.Fill(Blank, Width * Height));
 end;
 
 public function CreateMandelbrotModel(
@@ -107,7 +107,7 @@ begin
     RowsRendered := 0;
     FailureMessage := '';
     Inbox := Inbox;
-  end
+  end;
 end;
 
 // Creates the initial blank model; TuiMsg.Started schedules its first render.
@@ -117,7 +117,7 @@ public function NewMandelbrotModel(
   TerminalHeight: integer
 ): MandelbrotModel;
 begin
-  return CreateMandelbrotModel(ExplorerState.Default(), TerminalWidth, TerminalHeight, false, 1, Inbox)
+  return CreateMandelbrotModel(ExplorerState.Default(), TerminalWidth, TerminalHeight, false, 1, Inbox);
 end;
 
 public function MandelbrotRequest(State: MandelbrotModel): MandelbrotRenderRequest;
@@ -132,5 +132,5 @@ begin
     Height := State.Grid.Height;
     MaxIter := State.Explorer.MaxIter;
     Palette := State.Explorer.Palette;
-  end
+  end;
 end;

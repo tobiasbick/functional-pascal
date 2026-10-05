@@ -16,61 +16,61 @@ begin
   case Msg of
     TuiMsg.Tick(Delta):
     begin
-      return State + 1
+      return State + 1;
     end;
     TuiMsg.Key(Key):
     begin
-      return State
+      return State;
     end;
     TuiMsg.Pointer(Pointer):
     begin
-      return State
+      return State;
     end;
     TuiMsg.Resize(Size):
     begin
-      return State
+      return State;
     end;
     TuiMsg.FocusChanged(Previous, Current):
     begin
-      return State
+      return State;
     end;
     TuiMsg.Action(Source, Action):
     begin
-      return State
+      return State;
     end;
     TuiMsg.TextChanged(Source, Action, Text, Caret):
     begin
-      return State
+      return State;
     end;
     TuiMsg.TextAreaChanged(Source, Action, Text, Caret, TextAreaOffset):
     begin
-      return State
+      return State;
     end;
     TuiMsg.CheckChanged(Source, Action, Checked):
     begin
-      return State
+      return State;
     end;
     TuiMsg.SelectionChanged(Source, Action, Selected):
     begin
-      return State
+      return State;
     end;
     TuiMsg.ScrollChanged(Source, Action, Offset):
     begin
-      return State
+      return State;
     end;
     TuiMsg.MenuChanged(MenuSource, MenuAction, MenuState):
     begin
-      return State
+      return State;
     end;
     TuiMsg.QuitRequested:
     begin
-      return State
-    end
+      return State;
+    end;
     else
     begin
-      return State
-    end
-  end
+      return State;
+    end;
+  end;
 end;
 
 function ViewBenchmark(State: integer): TuiElement;
@@ -80,28 +80,28 @@ begin
                                                ];
   for Index: integer := 2 to 32 do
   begin
-    Std.Arrays.Push(Children, TuiElementBuilders.MakeLabel('row'))
+    Std.Arrays.Push(Children, TuiElementBuilders.MakeLabel('row'));
   end;
   var SharedAction: TuiAction := TuiAction.Create(100);
   for Index: integer := 1 to 8 do
   begin
-    Std.Arrays.Push(Children, TuiElementBuilders.MakeButton(TuiControlId.Create(Index), 'action', SharedAction))
+    Std.Arrays.Push(Children, TuiElementBuilders.MakeButton(TuiControlId.Create(Index), 'action', SharedAction));
   end;
 
   return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(1)), [
                                                                         TuiElementBuilders.MakePanel('Headless benchmark', [TuiElementBuilders.MakeColumn(Children)])
-                                                                      ])
+                                                                      ]);
 end;
 
 begin
   if (ParamCount() < 1) or (ParamCount() > 2) then
   begin
-    panic('usage: headless_render_benchmark.fpas -- ITERATIONS [MAX_MILLIS]')
+    panic('usage: headless_render_benchmark.fpas -- ITERATIONS [MAX_MILLIS]');
   end;
   var Iterations: integer := StrToInt(ParamStr(0));
   if Iterations < 1 then
   begin
-    panic('ITERATIONS must be positive')
+    panic('ITERATIONS must be positive');
   end;
   mutable var MaxMillis: integer := 0;
   if ParamCount() = 2 then
@@ -109,8 +109,8 @@ begin
     MaxMillis := StrToInt(ParamStr(1));
     if MaxMillis < 1 then
     begin
-      panic('MAX_MILLIS must be positive')
-    end
+      panic('MAX_MILLIS must be positive');
+    end;
   end;
   mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(120, 40));
   mutable var Model: integer := App.RunIterations(0, UpdateBenchmark, ViewBenchmark, WarmupIterations, DeltaMillis);
@@ -121,24 +121,24 @@ begin
   mutable var FramesPerSecond: integer := 0;
   if Elapsed > 0 then
   begin
-    FramesPerSecond := (Iterations * 1000) div Elapsed
+    FramesPerSecond := (Iterations * 1000) div Elapsed;
   end;
 
   WriteLn((('iterations: ' + IntToStr(Iterations)) + ', warm-up: ') + IntToStr(WarmupIterations));
   WriteLn(('elapsed: ' + IntToStr(Elapsed)) + ' ms');
   if Elapsed > 0 then
   begin
-    WriteLn(('throughput: ' + IntToStr(FramesPerSecond)) + ' frames/s')
-  end
+    WriteLn(('throughput: ' + IntToStr(FramesPerSecond)) + ' frames/s');
+  end;
   else
   begin
-    WriteLn('throughput: unavailable (elapsed time is 0 ms)')
+    WriteLn('throughput: unavailable (elapsed time is 0 ms)');
   end;
 
   WriteLn('final state: ' + IntToStr(Model));
   if (MaxMillis > 0) and (Elapsed > MaxMillis) then
   begin
     panic(((('TUI benchmark regression: ' + IntToStr(Elapsed)) + ' ms exceeds limit ') + IntToStr(MaxMillis)) +
-          ' ms')
-  end
+          ' ms');
+  end;
 end.

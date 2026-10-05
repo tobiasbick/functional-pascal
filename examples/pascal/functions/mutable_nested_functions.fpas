@@ -8,14 +8,14 @@ procedure ClampToRange(mutable Value: integer; Min: integer; Max: integer);
 begin
   if Value < Min then
   begin
-    Value := Min
-  end
+    Value := Min;
+  end;
   else if Value > Max then
   begin
-    Value := Max
+    Value := Max;
   end;
 
-  WriteLn('clamped local: ', IntToStr(Value))
+  WriteLn('clamped local: ', IntToStr(Value));
 end;
 
 function IsEven(N: integer): boolean;
@@ -23,27 +23,27 @@ function IsOdd(X: integer): boolean;
 begin
   if X = 0 then
   begin
-    return false
-  end
+    return false;
+  end;
   else
   begin
-    return IsEven(X - 1)
-  end
+    return IsEven(X - 1);
+  end;
 end;
 begin
   if N = 0 then
   begin
-    return true
-  end
+    return true;
+  end;
   else
   begin
-    return IsOdd(N - 1)
-  end
+    return IsOdd(N - 1);
+  end;
 end;
 
 begin
   var Original: integer := 15;
   ClampToRange(Original, 0, 10);
   WriteLn('caller unchanged: ', IntToStr(Original));
-  WriteLn('is even 8: ', IsEven(8))
+  WriteLn('is even 8: ', IsEven(8));
 end.

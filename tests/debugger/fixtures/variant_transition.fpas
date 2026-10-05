@@ -25,21 +25,21 @@ begin
   case Item of
     Choice.Empty:
     begin
-      return 0
+      return 0;
     end;
     Choice.Count(Value):
     begin
-      return Value
+      return Value;
     end;
     Choice.Pair(Left, Right):
     begin
-      return Left + Right
+      return Left + Right;
     end;
     Choice.Nested(Item):
     begin
-      return Item.X + Item.Y
-    end
-  end
+      return Item.X + Item.Y;
+    end;
+  end;
 end;
 
 begin
@@ -72,56 +72,56 @@ begin
   case Outcome of
     Ok(Value):
     begin
-      WriteLn(Value)
+      WriteLn(Value);
     end;
     Error(Message):
     begin
-      WriteLn(Message)
-    end
+      WriteLn(Message);
+    end;
   end;
 
   case Failed of
     Ok(Value):
     begin
-      WriteLn(Value)
+      WriteLn(Value);
     end;
     Error(Message):
     begin
-      WriteLn(Message)
-    end
+      WriteLn(Message);
+    end;
   end;
 
   case Optional of
     Some(Value):
     begin
-      WriteLn(Value)
+      WriteLn(Value);
     end;
     None:
     begin
-      WriteLn(0)
-    end
+      WriteLn(0);
+    end;
   end;
 
   case Missing of
     Some(Value):
     begin
-      WriteLn(Value)
+      WriteLn(Value);
     end;
     None:
     begin
-      WriteLn(0)
-    end
+      WriteLn(0);
+    end;
   end;
 
   case Packed of
     Ok(Value):
     begin
-      WriteLn(Value[1])
+      WriteLn(Value[1]);
     end;
     Error(Message):
     begin
-      WriteLn(Message)
-    end
+      WriteLn(Message);
+    end;
   end;
 
   case NestedResult of
@@ -130,23 +130,23 @@ begin
       case Inner of
         Ok(Value):
         begin
-          WriteLn(Value)
+          WriteLn(Value);
         end;
         Error(Message):
         begin
-          WriteLn(Message)
-        end
-      end
+          WriteLn(Message);
+        end;
+      end;
     end;
     None:
     begin
-      WriteLn(0)
-    end
+      WriteLn(0);
+    end;
   end;
 
   WriteLn(ChoiceValue(PackedHolder.Item));
   WriteLn(ChoiceValue(Items[0]));
   WriteLn(ChoiceValue(Scores['blue']));
   WriteLn(ChoiceValue(GlobalChoice));
-  WriteLn(ChoiceValue(Fixed))
+  WriteLn(ChoiceValue(Fixed));
 end.

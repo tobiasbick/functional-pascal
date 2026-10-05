@@ -23,14 +23,14 @@ begin
       Y := Current.Y;
       X := Current.X + 1;
     end);
-  end
+  end;
 end;
 begin
   var Initial: Point := record X := 1; Y := 7; end;
   var Outcome: State := Moved(Initial);
   case Outcome.Player of
-    Position.At(Value): WriteLn(Value.X, ',', Value.Y)
-  end
+    Position.At(Value): WriteLn(Value.X, ',', Value.Y);
+  end;
 end.",
     );
     for command in ["check", "run"] {
@@ -66,7 +66,7 @@ type
   Position = enum At(Value: Point); end;
 begin
   var Other: Size := record X := 1; Y := 2; end;
-  var Value: Position := Position.At({argument})
+  var Value: Position := Position.At({argument});
 end."
             ),
         );
@@ -111,9 +111,9 @@ begin
   case Value of
     Message.ErrorMessage(Code):
     begin
-      return Stringify(JsonValue.String(Code))
-    end
-  end
+      return Stringify(JsonValue.String(Code));
+    end;
+  end;
 end;",
     );
     write_text(
@@ -121,7 +121,7 @@ end;",
         "program JsonLibraryRepro;
 uses Repro.Json, Std.Console;
 begin
-  WriteLn(Encode(Message.ErrorMessage('code')))
+  WriteLn(Encode(Message.ErrorMessage('code')));
 end.",
     );
 

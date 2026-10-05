@@ -10,13 +10,13 @@ uses Std.Console;
 function Fibonacci(N: integer): integer;
 begin
   if N <= 1 then
-    return N
+    return N;
   else
-    return Fibonacci(N - 1) + Fibonacci(N - 2)
+    return Fibonacci(N - 1) + Fibonacci(N - 2);
 end;
 
 begin
-  Std.Console.WriteLn(Fibonacci(10))
+  Std.Console.WriteLn(Fibonacci(10));
 end.",
     );
     assert_eq!(p.name, "Fib");
@@ -33,16 +33,16 @@ program T;
 function IsEven(N: integer): boolean;
   function IsOdd(X: integer): boolean;
   begin
-    if X = 0 then return false
-    else return IsEven(X - 1)
+    if X = 0 then return false;
+    else return IsEven(X - 1);
   end;
 begin
-  if N = 0 then return true
-  else return IsOdd(N - 1)
+  if N = 0 then return true;
+  else return IsOdd(N - 1);
 end;
 
 begin
-  return
+  return;
 end.",
     );
     assert_eq!(p.declarations.len(), 1);

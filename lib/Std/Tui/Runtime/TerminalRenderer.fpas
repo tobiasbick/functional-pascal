@@ -9,17 +9,17 @@ begin
   case Color.Kind of
     TuiColorKind.Crt:
     begin
-      return CrtColor(Color.Index)
+      return CrtColor(Color.Index);
     end;
     TuiColorKind.Ansi256:
     begin
-      return Ansi256Color(Color.Index)
+      return Ansi256Color(Color.Index);
     end;
     TuiColorKind.Rgb:
     begin
-      return RgbColor(Color.Red, Color.Green, Color.Blue)
-    end
-  end
+      return RgbColor(Color.Red, Color.Green, Color.Blue);
+    end;
+  end;
 end;
 
 function TuiCellToConsole(Cell: TuiCell; Palette: TuiPalette): Std.Console.Cell;
@@ -28,18 +28,18 @@ begin
   case Cell.ConcreteStyle of
     Some(Concrete):
     begin
-      Style := Concrete
+      Style := Concrete;
     end;
     None:
     begin
-    end
+    end;
   end;
 
   return record
     glyph := Cell.Glyph;
     foreground := TuiColorToConsole(Style.Foreground);
     background := TuiColorToConsole(Style.Background);
-  end
+  end;
 end;
 
 function TuiTerminalDamageRow(Damage: TuiSurfaceDamage; Palette: TuiPalette): array of Std.Console.Cell;
@@ -47,10 +47,10 @@ begin
   mutable var Row: array of Std.Console.Cell := [];
   for Cell: TuiCell in Damage.Cells do
   begin
-    Std.Arrays.Push(Row, TuiCellToConsole(Cell, Palette))
+    Std.Arrays.Push(Row, TuiCellToConsole(Cell, Palette));
   end;
 
-  return Row
+  return Row;
 end;
 
 // Flushes the current working surface through the Console frame API.
@@ -66,7 +66,7 @@ begin
   var Damage: array of TuiSurfaceDamage := TuiSurfaceTakeTerminalDamage(Surface);
   if Std.Arrays.Length(Damage) = 0 then
   begin
-    return
+    return;
   end;
 
   BeginFrame();
@@ -75,9 +75,9 @@ begin
     var Row: array of Std.Console.Cell := TuiTerminalDamageRow(Item, Palette);
     if Std.Arrays.Length(Row) > 0 then
     begin
-      WriteCells(Item.FirstX + 1, Item.Y + 1, Row)
-    end
+      WriteCells(Item.FirstX + 1, Item.Y + 1, Row);
+    end;
   end;
 
-  Present()
+  Present();
 end;

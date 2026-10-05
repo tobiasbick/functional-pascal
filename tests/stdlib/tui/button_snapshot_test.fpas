@@ -12,13 +12,13 @@ begin
                                                                                                                                                   TuiElementBuilders.MakeDisabledButton(TuiControlId.Create(3), 'Stop', 'S', TuiAction.Create(3))
                                                                                                                                                 ])
                                                                                                                 ])
-                                                                      ])
+                                                                      ]);
 end;
 
 function UpdateButtons(State: integer; Msg: TuiMsg; Cmd: TuiCmdOutput): integer;
 begin
   Cmd.Set(TuiCmd.NoCommand);
-  return State
+  return State;
 end;
 
 begin
@@ -31,5 +31,5 @@ begin
   AssertTrue(Surface.CellAt(GoX, 1).Role = TuiStyleRole.ButtonSelectedShortcut);
   AssertTrue(Surface.CellAt(OkX, 2).Role = TuiStyleRole.ButtonDefaultShortcut);
   AssertTrue(Surface.CellAt(StopX, 3).Role = TuiStyleRole.ButtonDisabled);
-  App.Close()
+  App.Close();
 end.

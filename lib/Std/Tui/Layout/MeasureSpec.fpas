@@ -20,13 +20,13 @@ public type
       return record
         Width := Width;
         Height := Height;
-      end
+      end;
     end;
 
     // Both axes unbounded.
     public static function Unbounded(): TuiMeasureSpec;
     begin
-      return TuiMeasureSpec.Create(TuiMeasureConstraint.Unbounded(), TuiMeasureConstraint.Unbounded())
+      return TuiMeasureSpec.Create(TuiMeasureConstraint.Unbounded(), TuiMeasureConstraint.Unbounded());
     end;
 
     // Both axes capped by the given size.
@@ -35,6 +35,6 @@ public type
     // - `Size`: Size in terminal cells.
     public static function AtMost(Size: TuiSize): TuiMeasureSpec;
     begin
-      return TuiMeasureSpec.Create(TuiMeasureConstraint.AtMost(Size.Width), TuiMeasureConstraint.AtMost(Size.Height))
+      return TuiMeasureSpec.Create(TuiMeasureConstraint.AtMost(Size.Width), TuiMeasureConstraint.AtMost(Size.Height));
     end;
   end;

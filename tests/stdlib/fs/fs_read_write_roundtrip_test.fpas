@@ -10,8 +10,8 @@ begin
     end;
     Error(Message):
     begin
-      Fail(Message)
-    end
+      Fail(Message);
+    end;
   end;
 
   AssertTrue(Exists(Path));
@@ -19,11 +19,11 @@ begin
   case ReadText(Path) of
     Ok(Text):
     begin
-      AssertEquals('hello fs', Text)
+      AssertEquals('hello fs', Text);
     end;
     Error(Message):
     begin
-      Fail(Message)
-    end
-  end
+      Fail(Message);
+    end;
+  end;
 end.

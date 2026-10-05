@@ -8,12 +8,12 @@ type
 
     function GetBase(Self: Counter): integer;
     begin
-      return Self.Base
+      return Self.Base;
     end;
 
     procedure SetBase(Self: Counter; Value: integer);
     begin
-      WriteLn('Setter received: ' + IntToStr(Value))
+      WriteLn('Setter received: ' + IntToStr(Value));
     end;
 
     property Value: integer read GetBase write SetBase;
@@ -27,5 +27,5 @@ begin
   WriteLn('Stored value: ' + IntToStr(C.Value));
   // The setter receives Self by value, so this records the request but does not mutate C.
   C.Value := 20;
-  WriteLn('Stored value after setter: ' + IntToStr(C.Value))
+  WriteLn('Stored value after setter: ' + IntToStr(C.Value));
 end.

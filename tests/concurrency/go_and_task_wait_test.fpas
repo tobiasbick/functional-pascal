@@ -4,10 +4,10 @@ uses Std.Tasks, Std.Test;
 
 function Worker(): integer;
 begin
-  return 42
+  return 42;
 end;
 
 begin
   var T: task := go Worker();
-  AssertEquals(42, Std.Tasks.Wait(T))
+  AssertEquals(42, Std.Tasks.Wait(T));
 end.

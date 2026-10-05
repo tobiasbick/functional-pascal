@@ -87,7 +87,7 @@ fn init_project_creates_formatted_checkable_scaffold() {
     assert!(cwd.join("my-app/my-app.fpasprj").is_file());
     assert_eq!(
         fs::read_to_string(cwd.join("my-app/src/main.fpas")).expect("read generated program"),
-        "program MyApp;\n\nuses Std.Console;\n\nbegin\n  WriteLn('Hello from my-app')\nend.\n"
+        "program MyApp;\n\nuses Std.Console;\n\nbegin\n  WriteLn('Hello from my-app');\nend.\n"
     );
     assert_cli_succeeds(&cwd, &["check", "my-app/my-app.fpasprj"]);
     assert_cli_succeeds(&cwd, &["fmt", "--check", "my-app/my-app.fpasprj"]);

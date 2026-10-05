@@ -21,7 +21,7 @@ mutable var
 // Allocates idle button-capture state for one application.
 public procedure TuiButtonCaptureOpen();
 begin
-  TuiButtonPressStates := Std.Arrays.Concat(TuiButtonPressStates, [TuiButtonPressState.Idle])
+  TuiButtonPressStates := Std.Arrays.Concat(TuiButtonPressStates, [TuiButtonPressState.Idle]);
 end;
 
 // Clears button-capture state for one application.
@@ -30,7 +30,7 @@ end;
 // - `ApplicationId`: Identifier of the application-owned routing state.
 public procedure TuiButtonCaptureClose(ApplicationId: integer);
 begin
-  TuiButtonPressStates[ApplicationId - 1] := TuiButtonPressState.Idle
+  TuiButtonPressStates[ApplicationId - 1] := TuiButtonPressState.Idle;
 end;
 
 // Returns the current button-capture state for one application.
@@ -39,7 +39,7 @@ end;
 // - `ApplicationId`: Identifier of the application-owned routing state.
 public function TuiButtonCaptureGet(ApplicationId: integer): TuiButtonPressState;
 begin
-  return TuiButtonPressStates[ApplicationId - 1]
+  return TuiButtonPressStates[ApplicationId - 1];
 end;
 
 // Releases button capture for one application.
@@ -48,7 +48,7 @@ end;
 // - `ApplicationId`: Identifier of the application-owned routing state.
 public procedure TuiButtonCaptureRelease(ApplicationId: integer);
 begin
-  TuiButtonPressStates[ApplicationId - 1] := TuiButtonPressState.Idle
+  TuiButtonPressStates[ApplicationId - 1] := TuiButtonPressState.Idle;
 end;
 
 // Captures one button and records whether the pointer remains inside it.
@@ -59,7 +59,7 @@ end;
 // - `Inside`: Whether the pointer remains inside the captured control.
 public procedure TuiButtonCaptureSet(ApplicationId: integer; Button: TuiButtonSpec; Inside: boolean);
 begin
-  TuiButtonPressStates[ApplicationId - 1] := TuiButtonPressState.Captured(Button, Inside)
+  TuiButtonPressStates[ApplicationId - 1] := TuiButtonPressState.Captured(Button, Inside);
 end;
 
 // Returns the button painted pressed while capture remains inside it.
@@ -71,15 +71,15 @@ begin
   case TuiButtonPressStates[ApplicationId - 1] of
     TuiButtonPressState.Captured(Button, Inside) if Inside:
     begin
-      return Some(Button.Id)
+      return Some(Button.Id);
     end;
     TuiButtonPressState.Idle:
     begin
-      return None
+      return None;
     end;
     TuiButtonPressState.Captured(Button, Inside):
     begin
-      return None
-    end
-  end
+      return None;
+    end;
+  end;
 end;

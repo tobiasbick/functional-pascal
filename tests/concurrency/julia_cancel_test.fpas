@@ -28,6 +28,6 @@ begin
     AssertEquals(0, Row.Y);
     AssertEquals(1, Length(Row.Samples));
     AssertTrue(Row.Samples[0].IsInside);
-    StopRender(Fresh)
-  end
+    StopRender(Fresh);
+  end;
 end.

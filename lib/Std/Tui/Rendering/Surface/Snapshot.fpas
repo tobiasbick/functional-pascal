@@ -22,10 +22,10 @@ public type
     begin
       if (((X < 0) or (X >= Self.Width)) or (Y < 0)) or (Y >= Self.Height) then
       begin
-        panic('Tui snapshot position is outside the surface')
+        panic('Tui snapshot position is outside the surface');
       end;
 
-      return Self.Cells[(Y * Self.Width) + X]
+      return Self.Cells[(Y * Self.Width) + X];
     end;
 
     // Returns one complete row as text.
@@ -37,14 +37,14 @@ public type
     begin
       if (Y < 0) or (Y >= Self.Height) then
       begin
-        panic('Tui snapshot row is outside the surface')
+        panic('Tui snapshot row is outside the surface');
       end;
       mutable var Line: string := '';
       for X: integer := 0 to Self.Width - 1 do
       begin
-        Line := Line + Self.CellAt(X, Y).Glyph
+        Line := Line + Self.CellAt(X, Y).Glyph;
       end;
 
-      return Line
+      return Line;
     end;
   end;

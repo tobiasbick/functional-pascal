@@ -39,7 +39,7 @@ uses Std.Tui, Std.Tui.Runtime.TerminalRenderer;
 
 begin
   var Surface: TuiWorkingSurface := TuiWorkingSurface.Create(TuiSize.Create(4, 2));
-  TuiFlushSurface(Surface, TuiPalette.Default())
+  TuiFlushSurface(Surface, TuiPalette.Default());
 end.
 "#,
     );
@@ -53,7 +53,7 @@ uses Std.Tui, Std.Tui.Runtime.TerminalRenderer;
 begin
   var Surface: TuiWorkingSurface := TuiWorkingSurface.Create(TuiSize.Create(4, 2));
   TuiFlushSurface(Surface, TuiPalette.Default());
-  TuiFlushSurface(Surface, TuiPalette.Default())
+  TuiFlushSurface(Surface, TuiPalette.Default());
 end.
 "#,
     );
@@ -68,7 +68,7 @@ begin
   var Surface: TuiWorkingSurface := TuiWorkingSurface.Create(TuiSize.Create(4, 2));
   TuiFlushSurface(Surface, TuiPalette.Default());
   Surface.PutGlyph(1, 0, 'X');
-  TuiFlushSurface(Surface, TuiPalette.Default())
+  TuiFlushSurface(Surface, TuiPalette.Default());
 end.
 "#,
     );
@@ -87,7 +87,7 @@ begin
   Surface.PutGlyph(2, 0, 'X');
   TuiFlushSurface(Surface, TuiPalette.Default());
   AssertEquals(' ', Std.Options.Unwrap(GetCell(2, 1)).glyph);
-  AssertEquals('X', Std.Options.Unwrap(GetCell(3, 1)).glyph)
+  AssertEquals('X', Std.Options.Unwrap(GetCell(3, 1)).glyph);
 end.
 "#,
     );
@@ -144,23 +144,23 @@ begin
     begin
       Cmd.SetPalette(TuiPalette.Default()
                        .WithRole(TuiStyleRole.Normal, TuiStyle.FromColors(TuiColor.FromRgb(1, 2, 3), TuiColor.FromRgb(4, 5, 6))));
-      return State + 1
+      return State + 1;
     end;
     TuiMsg.QuitRequested:
     begin
       Cmd.Set(TuiCmd.Quit);
-      return State
-    end
+      return State;
+    end;
     else
     begin
-      return State
-    end
-  end
+      return State;
+    end;
+  end;
 end;
 
 function ViewTheme(State: integer): TuiElement;
 begin
-  return TuiElementBuilders.MakeLabel('theme')
+  return TuiElementBuilders.MakeLabel('theme');
 end;
 
 begin
@@ -174,7 +174,7 @@ begin
   AssertEquals(3, Painted.foreground.blue);
   AssertEquals(4, Painted.background.red);
   AssertEquals(5, Painted.background.green);
-  AssertEquals(6, Painted.background.blue)
+  AssertEquals(6, Painted.background.blue);
 end.
 "#,
     );
@@ -224,18 +224,18 @@ begin
         ResizeCount := State.ResizeCount + 1;
         Width := Size.Width;
         Height := Size.Height;
-      end
-    end
+      end;
+    end;
     else
     begin
-      return State
-    end
-  end
+      return State;
+    end;
+  end;
 end;
 
 function View(State: Model): TuiElement;
 begin
-  return TuiElementBuilders.MakeLabel('resize')
+  return TuiElementBuilders.MakeLabel('resize');
 end;
 
 begin
@@ -246,7 +246,7 @@ begin
   end, Update, View);
   WriteLn(Final.ResizeCount);
   WriteLn(Final.Width);
-  WriteLn(Final.Height)
+  WriteLn(Final.Height);
 end.
 "#,
     );
@@ -285,28 +285,28 @@ begin
   case Msg of
     TuiMsg.Tick(Delta):
     begin
-      return record Ticks := State.Ticks + 1; end
+      return record Ticks := State.Ticks + 1; end;
     end;
     TuiMsg.QuitRequested:
     begin
       Cmd.Set(TuiCmd.Quit);
-      return State
-    end
+      return State;
+    end;
   else
   begin
-    return State
-  end
-  end
+    return State;
+  end;
+  end;
 end;
 
 function View(State: Model): TuiElement;
 begin
-  return TuiElementBuilders.MakeLabel('idle')
+  return TuiElementBuilders.MakeLabel('idle');
 end;
 
 begin
   var Final: Model := TuiApplication.Run(record Ticks := 0; end, Update, View);
-  WriteLn(Final.Ticks)
+  WriteLn(Final.Ticks);
 end.
 "#,
     );
@@ -357,19 +357,19 @@ begin
     begin
       var Target: channel of integer := State.Inbox;
       Cmd.StartBackground(1, function(Token: CancellationToken): result of boolean, string begin
-        return SendWithCancellation(Target, 42, Token)
+        return SendWithCancellation(Target, 42, Token);
       end);
-      return State
+      return State;
     end;
     TuiMsg.BackgroundFailed(Id, Kind, Message, Code, Line, Column):
     begin
-      panic(Message)
-    end
+      panic(Message);
+    end;
     else
     begin
-      return State
-    end
-  end
+      return State;
+    end;
+  end;
 end;
 
 function UpdateApplication(State: Model; Message: integer; Cmd: TuiCmdOutput): Model;
@@ -378,12 +378,12 @@ begin
   return record
     Inbox := State.Inbox;
     Value := Message;
-  end
+  end;
 end;
 
 function View(State: Model): TuiElement;
 begin
-  return TuiElementBuilders.MakeLabel('value')
+  return TuiElementBuilders.MakeLabel('value');
 end;
 
 begin
@@ -392,7 +392,7 @@ begin
     Inbox := Inbox;
     Value := 0;
   end, Inbox, Update, UpdateApplication, View);
-  WriteLn(Final.Value)
+  WriteLn(Final.Value);
 end.
 "#,
     );

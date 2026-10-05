@@ -34,15 +34,15 @@ export async function verifyDebuggerEvaluation(
     "    Y: integer;",
     "    static function Create(X: integer; Y: integer): Point;",
     "    begin",
-    "      return record X := X; Y := Y; end",
+    "      return record X := X; Y := Y; end;",
     "    end;",
     "    function Sum(Self: Point): integer;",
     "    begin",
-    "      return Self.X + Self.Y",
+    "      return Self.X + Self.Y;",
     "    end;",
     "    function ReadFirst(Self: Point): integer;",
     "    begin",
-    "      return Self.X",
+    "      return Self.X;",
     "    end;",
     "    property First: integer read ReadFirst;",
     "  end;",
@@ -53,12 +53,12 @@ export async function verifyDebuggerEvaluation(
     "    Y := 4;",
     "  end;",
     "  var Offset: integer := 2;",
-    "  WriteLn(Offset)",
+    "  WriteLn(Offset);",
     "end.",
     ""
   ];
   const sourcePath = await writeSource(workspaceRoot, "evaluation", lines);
-  const line = lines.indexOf("  WriteLn(Offset)");
+  const line = lines.indexOf("  WriteLn(Offset);");
   const breakpoint = new vscode.SourceBreakpoint(
     new vscode.Location(vscode.Uri.file(sourcePath), new vscode.Position(line, 2))
   );

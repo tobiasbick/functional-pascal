@@ -15,7 +15,7 @@ type
     Value: integer;
     function GetValue(Self: Box): integer;
     begin
-      return Self.Value
+      return Self.Value;
     end;
     procedure SetValue(Self: Box; V: integer);
     begin
@@ -25,7 +25,7 @@ type
 begin
   var B: Box := record Value := 1; end;
   var X: integer := B.ValueProp;
-  B.ValueProp := 2
+  B.ValueProp := 2;
 end.",
     );
 }
@@ -45,7 +45,7 @@ type
   end;
 begin
   var H: Handle := record Id := 1; end;
-  H.Label := 'ok'
+  H.Label := 'ok';
 end.",
     );
 }
@@ -64,7 +64,7 @@ type
   end;
 begin
   var B: Box := record end;
-  var S: string := B.Password
+  var S: string := B.Password;
 end.",
     );
     assert!(
@@ -82,13 +82,13 @@ type
   Box = record
     function GetWidth(Self: Box): integer;
     begin
-      return 0
+      return 0;
     end;
     property Width: integer read GetWidth;
   end;
 begin
   var B: Box := record end;
-  B.Width := 1
+  B.Width := 1;
 end.",
     );
     assert!(
@@ -107,7 +107,7 @@ type
     Text: string;
     function GetText(Self: Box): string;
     begin
-      return Self.Text
+      return Self.Text;
     end;
     property Text: string read GetText;
   end;
@@ -152,13 +152,13 @@ type
   Box = record
     function GetWidth(Self: Box): integer;
     begin
-      return 0
+      return 0;
     end;
     property Width: integer read GetWidth;
   end;
 begin
   var B: Box := record end;
-  var W: integer := B.Width
+  var W: integer := B.Width;
 end.";
     let (program, parse_errors) = fpas_parser::parse(src);
     assert!(parse_errors.is_empty(), "{parse_errors:#?}");
@@ -188,7 +188,7 @@ type
   Box = record
     function GetValue(mutable Self: Box): integer;
     begin
-      return 0
+      return 0;
     end;
     procedure SetValue(Self: Box; mutable Value: integer);
     begin
@@ -221,7 +221,7 @@ type
   Box = record
     function GetValue<T>(Self: Box): integer;
     begin
-      return 0
+      return 0;
     end;
     property Value: integer read GetValue;
   end;
@@ -245,12 +245,12 @@ type
   Box = record
     function GetValue(Self: Box): integer;
     begin
-      return 0
+      return 0;
     end;
     property Value: integer read GetValue;
   end;
 begin
-  var B: Box := record Value := 1; end
+  var B: Box := record Value := 1; end;
 end.",
     );
     assert!(
@@ -270,13 +270,13 @@ type
   Box = record
     function GetValue(Self: Box): integer;
     begin
-      return 0
+      return 0;
     end;
     property Value: integer read GetValue;
   end;
 begin
   var B: Box := record end;
-  var C: Box := B with Value := 1; end
+  var C: Box := B with Value := 1; end;
 end.",
     );
     assert!(

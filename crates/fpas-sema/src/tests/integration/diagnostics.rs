@@ -7,7 +7,7 @@ fn unknown_name_has_correct_code_location_help() {
         "\
 program T;
 begin
-  Foo()
+  Foo();
 end.",
     );
     let e = errs
@@ -53,7 +53,7 @@ fn type_mismatch_has_correct_code() {
         "\
 program T;
 begin
-  var N: integer := 'hello'
+  var N: integer := 'hello';
 end.",
     );
     assert!(

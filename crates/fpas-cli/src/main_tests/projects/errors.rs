@@ -58,15 +58,15 @@ fn run_cli_reports_ambiguous_user_imports() {
     support::write_program_project_file(&project_file, "src/main.fpas", &["src/*.fpas"]);
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Math, App.Advanced;\nbegin\n  Add(1, 2)\nend.\n",
+        "program Main;\nuses App.Math, App.Advanced;\nbegin\n  Add(1, 2);\nend.\n",
     );
     write_text(
         &cwd.join("src/math.fpas"),
-        "unit App.Math;\npublic function Add(A: integer; B: integer): integer;\nbegin\n  return A + B\nend;\n",
+        "unit App.Math;\npublic function Add(A: integer; B: integer): integer;\nbegin\n  return A + B;\nend;\n",
     );
     write_text(
         &cwd.join("src/advanced.fpas"),
-        "unit App.Advanced;\npublic function Add(A: integer; B: integer): integer;\nbegin\n  return A - B\nend;\n",
+        "unit App.Advanced;\npublic function Add(A: integer; B: integer): integer;\nbegin\n  return A - B;\nend;\n",
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);
@@ -87,7 +87,7 @@ fn run_cli_reports_unit_sema_errors_with_the_unit_path() {
     );
     write_text(
         &cwd.join("src/util.fpas"),
-        "unit App.Util;\npublic function Broken(): integer;\nbegin\n  return Missing\nend;\n",
+        "unit App.Util;\npublic function Broken(): integer;\nbegin\n  return Missing;\nend;\n",
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);
@@ -107,11 +107,11 @@ fn run_cli_reports_unit_runtime_errors_with_the_unit_path() {
     support::write_program_project_file(&project_file, "src/main.fpas", &["src/*.fpas"]);
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Util;\nbegin\n  Trigger()\nend.\n",
+        "program Main;\nuses App.Util;\nbegin\n  Trigger();\nend.\n",
     );
     write_text(
         &cwd.join("src/util.fpas"),
-        "unit App.Util;\npublic procedure Trigger();\nbegin\n  var X: integer := 1 div 0\nend;\n",
+        "unit App.Util;\npublic procedure Trigger();\nbegin\n  var X: integer := 1 div 0;\nend;\n",
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);
@@ -129,16 +129,16 @@ fn run_cli_reports_runtime_errors_of_units_linked_out_of_graph_order() {
     support::write_program_project_file(&project_file, "src/main.fpas", &["src/*.fpas"]);
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Util;\nbegin\n  Trigger()\nend.\n",
+        "program Main;\nuses App.Util;\nbegin\n  Trigger();\nend.\n",
     );
     // `util.fpas` precedes `zeta.fpas` in the unit graph, but the linker emits App.Zeta first.
     write_text(
         &cwd.join("src/util.fpas"),
-        "unit App.Util;\nuses App.Zeta;\npublic procedure Trigger();\nbegin\n  if Seven() = 7 then panic('util failure')\nend;\n",
+        "unit App.Util;\nuses App.Zeta;\npublic procedure Trigger();\nbegin\n  if Seven() = 7 then panic('util failure');\nend;\n",
     );
     write_text(
         &cwd.join("src/zeta.fpas"),
-        "unit App.Zeta;\npublic function Seven(): integer;\nbegin\n  return 7\nend;\n",
+        "unit App.Zeta;\npublic function Seven(): integer;\nbegin\n  return 7;\nend;\n",
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);

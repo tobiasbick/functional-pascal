@@ -267,18 +267,18 @@ begin
   case Optional of
     Some(Value):
     begin
-      return Value
+      return Value;
     end;
     None:
     begin
-      return 0
-    end
-  end
+      return 0;
+    end;
+  end;
 end;
 
 begin
   var Pending: task := go Work();
-  WriteLn(Wait(Pending))
+  WriteLn(Wait(Pending));
 end.
 "#;
     let (program, diagnostics) = fpas_parser::parse(TASK_SOURCE);

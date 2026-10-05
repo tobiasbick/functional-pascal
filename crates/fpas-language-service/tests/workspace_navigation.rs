@@ -21,11 +21,11 @@ fn workspace_symbols_filter_rank_limit_and_preserve_equal_names() {
     );
     temp.write(
         "src/first.fpas",
-        "unit Demo.First;\n\npublic function Create(): integer; begin return 1 end;\nfunction LocalCreate(): integer; begin return 2 end;\n",
+        "unit Demo.First;\n\npublic function Create(): integer; begin return 1; end;\nfunction LocalCreate(): integer; begin return 2; end;\n",
     );
     temp.write(
         "src/second.fpas",
-        "unit Demo.Second;\n\npublic function Create(): integer; begin return 3 end;\n",
+        "unit Demo.Second;\n\npublic function Create(): integer; begin return 3; end;\n",
     );
     let mut service = LanguageService::load(&manifest);
 
@@ -95,12 +95,12 @@ function ReadValue(Value: integer): integer;
 begin
   // Value is ignored
   var Text: string := 'Value';
-  return Value
+  return Value;
 end;
 
 begin
   Value := Value + 1;
-  Pair.Item := Value
+  Pair.Item := Value;
 end.
 "#;
     let path = temp.write("highlights.fpas", source);
@@ -160,7 +160,7 @@ type Secret = Point;
 
 public function Echo(Value: Point): Point;
 begin
-  return Value
+  return Value;
 end;
 "#,
     );
@@ -174,7 +174,7 @@ begin
   var PointValue: Point := HolderValue.Item;
   var SelectedValue: Point := HolderValue.Selected;
   var ResultValue: Point := Demo.Types.Echo(PointValue);
-  var HiddenValue: Secret := PointValue
+  var HiddenValue: Secret := PointValue;
 end.
 "#;
     let main = temp.write("src/main.fpas", main_source);
@@ -271,14 +271,14 @@ function ReadValue(Value: integer): integer;
 begin
   if Value > 0 then
   begin
-    return Value
-  end
+    return Value;
+  end;
   else
-    return 0
+    return 0;
 end;
 
 begin
-  var ResultValue: integer := ReadValue(1)
+  var ResultValue: integer := ReadValue(1);
 end.
 "#;
     let path = temp.write("select.fpas", source);
@@ -313,7 +313,7 @@ fn workspace_symbol_kinds_remain_editor_facing() {
     let temp = TempDirectory::new("workspace-symbol-kind");
     let path = temp.write(
         "kind.fpas",
-        "program Kinds; begin var Value: integer := 1 end.",
+        "program Kinds; begin var Value: integer := 1; end.",
     );
     let mut service = LanguageService::new(WorkspaceContext::loose(temp.path()));
     service
@@ -321,7 +321,7 @@ fn workspace_symbol_kinds_remain_editor_facing() {
         .open_document(
             &path,
             1,
-            "program Kinds; begin var Value: integer := 1 end.",
+            "program Kinds; begin var Value: integer := 1; end.",
         )
         .expect("open loose document");
 

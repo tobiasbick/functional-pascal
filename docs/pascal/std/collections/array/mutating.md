@@ -8,7 +8,7 @@ Appends `Value` to the end of **`A`** (mutates `A`).
 mutable var A: array of integer := [1, 2];
 Push(A, 3);
 A.Push(4);
-WriteLn(Length(A))
+WriteLn(Length(A));
 ```
 
 ---
@@ -22,7 +22,7 @@ mutable var A: array of integer := [1, 2, 3];
 var Last: integer := Pop(A);
 var Next: integer := A.Pop();
 WriteLn(Last);
-WriteLn(Length(A))
+WriteLn(Length(A));
 ```
 
 For a directly stored local array, `Pop` reuses uniquely owned storage. If another

@@ -18,7 +18,7 @@ fn errors_for(declarations: &str, condition: &str) -> Vec<crate::SemaError> {
     check_errors(&format!(
         "{TYPES}{declarations}
 begin
-  var Same: boolean := {condition}
+  var Same: boolean := {condition};
 end."
     ))
 }
@@ -43,7 +43,7 @@ fn records_and_payload_enums_with_comparable_fields_support_equality() {
         check_ok(&format!(
             "{TYPES}{declarations}
 begin
-  var Same: boolean := {condition}
+  var Same: boolean := {condition};
 end."
         ));
     }
@@ -55,7 +55,7 @@ fn aggregates_with_non_comparable_fields_reject_equality() {
         ("var B: Bag := record Items := []; end;", "B = B"),
         ("var H: Holder := Holder.Empty;", "H = Holder.Empty"),
         (
-            "var C: Callback := record Run := function(): integer begin return 1 end; end;",
+            "var C: Callback := record Run := function(): integer begin return 1; end; end;",
             "C <> C",
         ),
     ] {

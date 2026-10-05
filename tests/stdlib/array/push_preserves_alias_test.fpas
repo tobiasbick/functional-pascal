@@ -9,5 +9,5 @@ begin
   AssertEquals(1, Length(Original));
   AssertEquals(1, Original[0]);
   AssertEquals(2, Length(Updated));
-  AssertEquals(2, Updated[1])
+  AssertEquals(2, Updated[1]);
 end.

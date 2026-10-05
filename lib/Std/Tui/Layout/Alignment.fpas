@@ -29,30 +29,30 @@ public type
       return record
         Horizontal := Horizontal;
         Vertical := Vertical;
-      end
+      end;
     end;
 
     // Leading on both axes.
     public static function Leading(): TuiAlignment;
     begin
-      return TuiAlignment.Create(TuiAlignmentKind.Leading, TuiAlignmentKind.Leading)
+      return TuiAlignment.Create(TuiAlignmentKind.Leading, TuiAlignmentKind.Leading);
     end;
 
     // Centered on both axes.
     public static function Center(): TuiAlignment;
     begin
-      return TuiAlignment.Create(TuiAlignmentKind.Center, TuiAlignmentKind.Center)
+      return TuiAlignment.Create(TuiAlignmentKind.Center, TuiAlignmentKind.Center);
     end;
 
     // Trailing on both axes.
     public static function Trailing(): TuiAlignment;
     begin
-      return TuiAlignment.Create(TuiAlignmentKind.Trailing, TuiAlignmentKind.Trailing)
+      return TuiAlignment.Create(TuiAlignmentKind.Trailing, TuiAlignmentKind.Trailing);
     end;
 
     // Fill on both axes.
     public static function Fill(): TuiAlignment;
     begin
-      return TuiAlignment.Create(TuiAlignmentKind.Fill, TuiAlignmentKind.Fill)
+      return TuiAlignment.Create(TuiAlignmentKind.Fill, TuiAlignmentKind.Fill);
     end;
   end;

@@ -9,11 +9,11 @@ begin
   case Get('PATH') of
     Some(_):
     begin
-      WriteLn('PATH lookup: some')
+      WriteLn('PATH lookup: some');
     end;
     None:
     begin
-      WriteLn('PATH lookup: none')
-    end
-  end
+      WriteLn('PATH lookup: none');
+    end;
+  end;
 end.

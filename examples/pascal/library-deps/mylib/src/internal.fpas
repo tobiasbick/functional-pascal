@@ -2,5 +2,5 @@ unit MyLib.Internal;
 
 public function Scale(X: integer): integer;
 begin
-  return X + X
+  return X + X;
 end;

@@ -3,5 +3,5 @@ program T;
 uses Std.Console, Std.Math;
 
 begin
-  WriteLn(ArcSin(2.0))
+  WriteLn(ArcSin(2.0));
 end.

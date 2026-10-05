@@ -13,13 +13,13 @@ begin
                                                                                                          TuiMenuItem.Create(TuiControlId.Create(1), 'Open', TuiAction.Create(10)),
                                                                                                          TuiMenuItem.Disabled(TuiControlId.Create(2), 'Save', TuiAction.Create(20))
                                                                                                        ])
-                                                                      ])
+                                                                      ]);
 end;
 
 function UpdateMenu(State: MenuModel; Msg: TuiMsg; Cmd: TuiCmdOutput): MenuModel;
 begin
   Cmd.Set(TuiCmd.NoCommand);
-  return State
+  return State;
 end;
 
 begin
@@ -32,5 +32,5 @@ begin
   AssertTrue(Surface.CellAt(0, 0).Role = TuiStyleRole.MenuSelected);
   AssertTrue(Surface.CellAt(7, 0).Role = TuiStyleRole.MenuDisabled);
   AssertTrue(Surface.CellAt(19, 0).Role = TuiStyleRole.MenuNormal);
-  App.Close()
+  App.Close();
 end.

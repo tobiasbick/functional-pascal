@@ -11,7 +11,7 @@ type
 
 function MakePointer(Action: TuiPointerAction; X: integer; Y: integer): TuiPointerEvent;
 begin
-  return TuiPointerEvent.Create(Action, TuiPointerButton.Left, TuiPoint.Create(X, Y))
+  return TuiPointerEvent.Create(Action, TuiPointerButton.Left, TuiPoint.Create(X, Y));
 end;
 
 function FindGlyph(Snapshot: TuiSurfaceSnapshot; Glyph: string): TuiPoint;
@@ -22,11 +22,11 @@ begin
     var Index: integer := Std.Str.IndexOf(Line, Glyph);
     if Index >= 0 then
     begin
-      return TuiPoint.Create(Index, Y)
-    end
+      return TuiPoint.Create(Index, Y);
+    end;
   end;
 
-  panic('glyph not found in snapshot')
+  panic('glyph not found in snapshot');
 end;
 
 function ViewRoute(State: RouteModel): TuiElement;
@@ -39,7 +39,7 @@ begin
                                                                                                                                                          TuiElementBuilders.MakeInput(TuiControlId.Create(2), 'ab', 2, TuiAction.Create(22))
                                                                                                                                                        ])
                                                                                                                        ])
-                                                                                ])
+                                                                                ]);
 end;
 
 function ViewOverlap(State: RouteModel): TuiElement;
@@ -51,7 +51,7 @@ begin
                                                                                   TuiElementBuilders.MakePanel('Top', [
                                                                                                                         TuiElementBuilders.MakeButton(TuiControlId.Create(3), 'Front', TuiAction.Create(33))
                                                                                                                       ])
-                                                                                ])
+                                                                                ]);
 end;
 
 function UpdateRoute(State: RouteModel; Msg: TuiMsg; Cmd: TuiCmdOutput): RouteModel;
@@ -67,26 +67,26 @@ begin
             Focus := Id.Value;
             Actions := State.Actions;
             PointerHits := State.PointerHits;
-          end
+          end;
         end;
         None:
         begin
-          return State
-        end
-      end
+          return State;
+        end;
+      end;
     end;
     TuiMsg.Action(Source, Action):
     begin
       if Action.Value = 33 then
       begin
-        AssertEquals(3, State.Focus)
+        AssertEquals(3, State.Focus);
       end;
 
       return record
         Focus := State.Focus;
         Actions := Std.Arrays.Concat(State.Actions, [Action.Value]);
         PointerHits := State.PointerHits;
-      end
+      end;
     end;
     TuiMsg.Pointer(Pointer):
     begin
@@ -94,13 +94,13 @@ begin
         Focus := State.Focus;
         Actions := State.Actions;
         PointerHits := State.PointerHits + 1;
-      end
-    end
+      end;
+    end;
     else
     begin
-      return State
-    end
-  end
+      return State;
+    end;
+  end;
 end;
 
 begin
@@ -155,5 +155,5 @@ begin
   Overlap.InjectPointerForTest(MakePointer(TuiPointerAction.Down, 19, FrontAt.Y));
   Model := Overlap.RunIterations(Model, UpdateRoute, ViewOverlap, 1, 0);
   AssertEquals(2, Model.PointerHits);
-  Overlap.Close()
+  Overlap.Close();
 end.

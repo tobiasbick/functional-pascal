@@ -9,5 +9,5 @@ begin
   WriteLn('repeatable d6: ', IntToStr(RandomInt(1, 6)));
   Randomize();
   WriteLn('random real: ', RealToStr(Random()));
-  WriteLn('d6: ', IntToStr(RandomInt(1, 6)))
+  WriteLn('d6: ', IntToStr(RandomInt(1, 6)));
 end.

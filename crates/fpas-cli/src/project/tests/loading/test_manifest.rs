@@ -19,7 +19,7 @@ script = "alpha.script.toml"
     );
     write_text(
         &dir.join("alpha_test.fpas"),
-        "program A;\nuses Std.Test;\nbegin AssertTrue(true) end.",
+        "program A;\nuses Std.Test;\nbegin AssertTrue(true); end.",
     );
     write_text(
         &dir.join("alpha.script.toml"),

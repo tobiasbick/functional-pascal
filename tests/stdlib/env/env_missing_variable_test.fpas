@@ -7,10 +7,10 @@ begin
   case Get('__FPAS_ENV_TEST_MISSING_903B5CF4__') of
     Some(_):
     begin
-      Fail('expected None for missing environment variable')
+      Fail('expected None for missing environment variable');
     end;
     None:
     begin
-    end
-  end
+    end;
+  end;
 end.

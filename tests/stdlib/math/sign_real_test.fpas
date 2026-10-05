@@ -3,5 +3,5 @@ program T;
 uses Std.Console, Std.Math;
 
 begin
-  WriteLn(Sign(-3.14))
+  WriteLn(Sign(-3.14));
 end.

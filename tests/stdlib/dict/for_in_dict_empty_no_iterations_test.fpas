@@ -7,8 +7,8 @@ begin
   mutable var Count: integer := 0;
   for K: string in D do
   begin
-    Count := Count + 1
+    Count := Count + 1;
   end;
 
-  WriteLn(Count)
+  WriteLn(Count);
 end.

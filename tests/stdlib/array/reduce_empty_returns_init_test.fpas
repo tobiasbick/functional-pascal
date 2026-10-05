@@ -4,11 +4,11 @@ uses Std.Console, Std.Arrays;
 
 function AddAcc(Acc: integer; V: integer): integer;
 begin
-  return Acc + V
+  return Acc + V;
 end;
 
 begin
   var A: array of integer := [];
   var Val: integer := Reduce(A, 99, AddAcc);
-  WriteLn(Val)
+  WriteLn(Val);
 end.

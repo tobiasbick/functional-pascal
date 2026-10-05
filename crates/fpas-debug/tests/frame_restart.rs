@@ -16,11 +16,11 @@ function Branch(Value: integer): integer;
 begin
   mutable var Local: integer := Value + 10;
   WriteLn('effect');
-  return Local
+  return Local;
 end;
 
 begin
-  WriteLn(Branch(1))
+  WriteLn(Branch(1));
 end.
 "#;
 

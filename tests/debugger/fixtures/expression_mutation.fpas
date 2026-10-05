@@ -23,5 +23,5 @@ begin
   mutable var Scores: dict of string to integer := ['blue': 20];
   WriteLn(GlobalValue);
   WriteLn(State.Items[Index].Value);
-  WriteLn(Scores['blue'])
+  WriteLn(Scores['blue']);
 end.

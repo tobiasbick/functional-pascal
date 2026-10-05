@@ -8,17 +8,17 @@ begin
   begin
     WriteLn('Usage: fpas run examples/openai-chat/openai-chat.fpasprj -- <base-url> <model>');
     WriteLn('Example: ... -- http://127.0.0.1:8080/v1 local-model');
-    return
+    return;
   end;
   mutable var ClientValue: Client := Client.Create(ParamStr(0), ParamStr(1));
   case Std.Env.Get('OPENAI_API_KEY') of
     Some(Value):
     begin
-      ClientValue.ApiKey := Some(Value)
+      ClientValue.ApiKey := Some(Value);
     end;
     None:
     begin
-    end
+    end;
   end;
   mutable var Messages: array of ChatMessage := [];
   var Options: ChatOptions := ChatOptions.Default();
@@ -29,7 +29,7 @@ begin
     var Prompt: string := ReadLn();
     if Prompt = '/exit' then
     begin
-      break
+      break;
     end;
 
     if Prompt <> '' then
@@ -41,13 +41,13 @@ begin
         begin
           WriteLn('assistant> ' + Content);
           Std.Arrays.Push(Messages, ChatMessage.User(Prompt));
-          Std.Arrays.Push(Messages, ChatMessage.Assistant(Content))
+          Std.Arrays.Push(Messages, ChatMessage.Assistant(Content));
         end;
         Error(Message):
         begin
-          WriteLn('error> ' + Message)
-        end
-      end
-    end
-  end
+          WriteLn('error> ' + Message);
+        end;
+      end;
+    end;
+  end;
 end.

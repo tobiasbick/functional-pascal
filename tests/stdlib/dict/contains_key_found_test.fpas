@@ -4,5 +4,5 @@ uses Std.Console, Std.Dictionaries;
 
 begin
   var D: dict of string to integer := ['Alice': 30];
-  WriteLn(Std.Dictionaries.ContainsKey(D, 'Alice'))
+  WriteLn(Std.Dictionaries.ContainsKey(D, 'Alice'));
 end.

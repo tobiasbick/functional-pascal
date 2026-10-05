@@ -3,5 +3,5 @@ program T;
 uses Std.Console, Std.Math;
 
 begin
-  WriteLn(Sqrt(0.0))
+  WriteLn(Sqrt(0.0));
 end.

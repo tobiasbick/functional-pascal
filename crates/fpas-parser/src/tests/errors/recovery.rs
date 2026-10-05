@@ -8,13 +8,13 @@ fn record_initializers_preserve_recovery_boundaries_without_repeating_errors() {
         "P with then end",
         "P with ) end",
     ] {
-        let source = format!("program P; begin var Value: integer := {expression} end.");
+        let source = format!("program P; begin var Value: integer := {expression}; end.");
         let (_, diagnostics) = parse_with_errors(&source);
         assert!(!diagnostics.is_empty(), "{source}");
         assert!(diagnostics.len() < 16, "{source}: {diagnostics:#?}");
     }
     for expression in ["record X := 1; end", "P with X := 1; end"] {
-        let source = format!("program P; begin var Value: integer := {expression} end.");
+        let source = format!("program P; begin var Value: integer := {expression}; end.");
         let (_, diagnostics) = parse_with_errors(&source);
         assert!(diagnostics.is_empty(), "{source}: {diagnostics:#?}");
     }
@@ -31,7 +31,7 @@ fn error_recovery_continues() {
 fn invalid_mutable_statement_reports_statement_start_and_recovers() {
     use fpas_diagnostics::codes::PARSE_INVALID_STATEMENT_START;
 
-    let (_, errs) = parse_with_errors("program T; begin mutable X := X - 10 end.");
+    let (_, errs) = parse_with_errors("program T; begin mutable X := X - 10; end.");
     let parse_errors = errs
         .iter()
         .filter_map(|err| match err {
@@ -50,7 +50,7 @@ fn invalid_mutable_statement_reports_statement_start_and_recovers() {
 
 #[test]
 fn invalid_mutable_statement_recovery_keeps_following_statement() {
-    let (program, errs) = parse_with_errors("program T; begin mutable X := X - 10; Y := 1 end.");
+    let (program, errs) = parse_with_errors("program T; begin mutable X := X - 10; Y := 1; end.");
     assert!(!errs.is_empty());
     assert_eq!(program.body.len(), 2);
     assert!(matches!(program.body[1], crate::Stmt::Assign { .. }));
@@ -59,7 +59,7 @@ fn invalid_mutable_statement_recovery_keeps_following_statement() {
 #[test]
 fn multiple_invalid_mutable_statements_recover_until_final_valid_statement() {
     let (program, errs) =
-        parse_with_errors("program T; begin mutable X := 1; mutable Y := 2; Z := 3 end.");
+        parse_with_errors("program T; begin mutable X := 1; mutable Y := 2; Z := 3; end.");
     assert!(!errs.is_empty());
     assert_eq!(program.body.len(), 3);
     assert!(matches!(program.body[0], crate::Stmt::Block(_, _)));
@@ -115,7 +115,7 @@ fn truncated_token_stream_without_eof_does_not_hang() {
 #[test]
 fn case_missing_semicolon_between_arms_keeps_following_arms() {
     let (program, errs) =
-        parse_with_errors("program T; begin case X of 1: A := 1 2: A := 2; 3: A := 3 end end.");
+        parse_with_errors("program T; begin case X of 1: A := 1 2: A := 2; 3: A := 3; end; end.");
     assert!(!errs.is_empty());
     match &program.body[0] {
         crate::Stmt::Case { arms, .. } => {
@@ -131,7 +131,7 @@ fn case_missing_semicolon_between_arms_keeps_following_arms() {
 #[test]
 fn trailing_semicolon_in_param_list_does_not_invent_extra_param() {
     let (program, errs) = parse_with_errors(
-        "program T; function F(X: integer;): integer; begin return X end; begin end.",
+        "program T; function F(X: integer;): integer; begin return X; end; begin end.",
     );
     assert!(!errs.is_empty());
     match &program.declarations[0] {
@@ -155,7 +155,7 @@ fn empty_declaration_sections_report_errors_and_recover() {
         "program T; mutable var begin end.",
         "program T; type begin end.",
         "program T; type E = enum end; begin end.",
-        "program T; begin case 1 of end end.",
+        "program T; begin case 1 of end; end.",
     ] {
         let (_, errors) = parse_with_errors(source);
         assert!(!errors.is_empty(), "expected parser error for `{source}`");
@@ -176,7 +176,7 @@ fn expression_recovery_keeps_record_end_and_following_statement() {
     use fpas_diagnostics::codes::PARSE_EXPECTED_EXPRESSION;
 
     let (program, errors) =
-        parse_with_errors("program T; begin X := record Field := end; Y := 1 end.");
+        parse_with_errors("program T; begin X := record Field := end; Y := 1; end.");
 
     assert!(errors.iter().any(|error| {
         error
@@ -192,7 +192,7 @@ fn invalid_top_level_static_keeps_recovered_routine() {
     use fpas_diagnostics::codes::PARSE_INVALID_STATIC_PLACEMENT;
 
     let (program, errors) = parse_with_errors(
-        "program T; static function Foo(): integer; begin return 1 end; begin end.",
+        "program T; static function Foo(): integer; begin return 1; end; begin end.",
     );
 
     assert!(errors.iter().any(|error| {

@@ -7,7 +7,7 @@ fn interface_backed_program_keeps_short_standard_intrinsic_dispatch() {
 program RegisterInterfaceIntrinsic;
 uses Std.Console;
 begin
-  WriteLn('hello')
+  WriteLn('hello');
 end.",
     );
     assert!(
@@ -33,7 +33,7 @@ fn object_retains_layouts_constructed_by_runtime_intrinsics() {
 program RuntimeLayouts;
 uses Std.Json;
 begin
-  var Parsed: result of JsonValue, string := Parse('null')
+  var Parsed: result of JsonValue, string := Parse('null');
 end.",
     );
     let object = crate::compile_program_object_with_support(&program, &[], &[])
@@ -62,7 +62,7 @@ begin
   var Origin: Point := record
     X := 1;
   end;
-  var Marker: integer := Origin.X
+  var Marker: integer := Origin.X;
 end.
 "#,
     );
@@ -95,7 +95,7 @@ begin
   Std.Test.AssertEquals('FPAS', Text);
   Std.Test.AssertEquals(9.0, Root);
   Std.Test.AssertEquals('42', Number);
-  Std.Test.AssertEquals('n=42 ok', Formatted)
+  Std.Test.AssertEquals('n=42 ok', Formatted);
 end.",
     );
     assert_eq!(execution.value, fpas_bytecode::Value::Unit);
@@ -108,7 +108,7 @@ fn intrinsic_selection_uses_one_verified_register_window_convention() {
 program RegisterIntrinsicShape;
 uses Std.Str;
 begin
-  if Std.Str.Length('abc') <> 3 then panic('bad')
+  if Std.Str.Length('abc') <> 3 then panic('bad');
 end.",
     );
     let metadata = fpas_sema::analyze_with_types(&program);
@@ -149,13 +149,13 @@ uses Std.Arrays, Std.Test;
 
 function Double(Value: integer): integer;
 begin
-  return Value * 2
+  return Value * 2;
 end;
 
 begin
   var Values: array of integer := Std.Arrays.Map([2, 3, 4], Double);
   Std.Test.AssertEquals(3, Std.Arrays.Length(Values));
-  Std.Test.AssertEquals(6, Values[1])
+  Std.Test.AssertEquals(6, Values[1]);
 end.",
     );
     assert_eq!(execution.value, fpas_bytecode::Value::Unit);
@@ -171,9 +171,9 @@ begin
   mutable var Total: integer := 0;
   for Index: integer := 1 to 3 do
   begin
-    Total := Total + Std.Str.Length('abc')
+    Total := Total + Std.Str.Length('abc');
   end;
-  Std.Test.AssertEquals(9, Total)
+  Std.Test.AssertEquals(9, Total);
 end.",
     );
 }
@@ -188,7 +188,7 @@ uses Std.Console, Std.Test;
 function SideEffect(): string;
 begin
   Std.Console.WriteText('B');
-  return 'C'
+  return 'C';
 end;
 
 begin
@@ -196,7 +196,7 @@ begin
   Std.Console.WriteLn('D', 42, true);
   Std.Console.WriteLn();
   Std.Test.AssertScreenLine('ABCD42true', 1);
-  Std.Test.AssertScreenLine('', 2)
+  Std.Test.AssertScreenLine('', 2);
 end.",
     );
     assert_eq!(execution.value, fpas_bytecode::Value::Unit);

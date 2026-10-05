@@ -8,11 +8,11 @@ begin
   case Run('fpas', ['--version']) of
     Ok(Code):
     begin
-      WriteLn('fpas --version exit: ', IntToStr(Code))
+      WriteLn('fpas --version exit: ', IntToStr(Code));
     end;
     Error(M):
     begin
-      WriteLn('run error: ', M)
-    end
-  end
+      WriteLn('run error: ', M);
+    end;
+  end;
 end.

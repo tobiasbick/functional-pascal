@@ -18,14 +18,14 @@ begin
     ctrl := false;
     alt := false;
     meta := false;
-  end
+  end;
 end;
 
 function ViewTextArea(State: TextAreaModel): TuiElement;
 begin
   return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(1)), [
                                                                         TuiElementBuilders.MakeTextArea(TuiControlId.Create(1), State.Text, State.Caret, State.Offset, TuiAction.Create(9))
-                                                                      ])
+                                                                      ]);
 end;
 
 function UpdateTextArea(State: TextAreaModel; Msg: TuiMsg; Cmd: TuiCmdOutput): TextAreaModel;
@@ -40,19 +40,19 @@ begin
         Text := Text;
         Caret := Caret;
         Offset := Offset;
-      end
-    end
+      end;
+    end;
     else
     begin
-      return State
-    end
-  end
+      return State;
+    end;
+  end;
 end;
 
 function Press(App: TuiApplication; State: TextAreaModel; Kind: TuiKeyKind; Character: string): TextAreaModel;
 begin
   App.InjectKeyForTest(MakeKey(Kind, Character));
-  return App.RunIterations(State, UpdateTextArea, ViewTextArea, 1, 0)
+  return App.RunIterations(State, UpdateTextArea, ViewTextArea, 1, 0);
 end;
 
 begin
@@ -63,7 +63,7 @@ begin
   if Mode = 'lines' then
   begin
     Text := Std.Str.RepeatStr('short' + #10, Size);
-    Caret := Std.Str.Length(Text) - 7
+    Caret := Std.Str.Length(Text) - 7;
   end;
   var Initial: TextAreaModel := record
     Text := Text;
@@ -77,10 +77,10 @@ begin
     var Moved: TextAreaModel := Press(App, Initial, TuiKeyKind.Down, '');
     if Moved.Caret <= Caret then
     begin
-      panic('caret did not move')
-    end
+      panic('caret did not move');
+    end;
   end;
 
   WriteLn(('elapsed: ' + IntToStr(ElapsedMillis(Started))) + ' ms');
-  App.Close()
+  App.Close();
 end.

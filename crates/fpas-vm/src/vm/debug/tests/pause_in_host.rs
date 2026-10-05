@@ -20,7 +20,7 @@ fn pause_does_not_wait_inside_missing_readln() {
 uses Std.Console;
 
 begin
-  WriteLn(ReadLn())
+  WriteLn(ReadLn());
 end.
 "#,
     );

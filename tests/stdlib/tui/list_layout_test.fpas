@@ -13,13 +13,13 @@ begin
                                                                         TuiElementBuilders.MakePanel('Host', [
                                                                                                                TuiElementBuilders.MakeList(TuiControlId.Create(1), ['Alpha', 'Beta', 'Gamma'], State.Selected, TuiAction.Create(5))
                                                                                                              ])
-                                                                      ])
+                                                                      ]);
 end;
 
 function UpdateList(State: ListModel; Msg: TuiMsg; Cmd: TuiCmdOutput): ListModel;
 begin
   Cmd.Set(TuiCmd.NoCommand);
-  return State
+  return State;
 end;
 
 begin
@@ -43,5 +43,5 @@ begin
   Model := App.RunIterations(Model, UpdateList, ViewList, 1, 0);
   AssertEquals(16, App.SurfaceSnapshot().Width);
   AssertTrue(Std.Str.Contains(App.SurfaceSnapshot().LineAt(1), 'Alpha'));
-  App.Close()
+  App.Close();
 end.

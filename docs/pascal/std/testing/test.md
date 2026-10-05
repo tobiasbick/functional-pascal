@@ -8,7 +8,7 @@ uses Std.Test;
 begin
   AssertEquals(4, 2 + 2);
   AssertTrue(1 + 1 = 2);
-  AssertFalse(1 = 2)
+  AssertFalse(1 = 2);
 end.
 ```
 

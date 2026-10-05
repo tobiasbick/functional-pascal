@@ -8,13 +8,13 @@ type
   Math = record
     static function Transform(Value: integer): integer;
     begin
-      return Value + 3
+      return Value + 3;
     end;
   end;
   Stats = record
     static function Transform(Value: integer): integer;
     begin
-      return Value + 4
+      return Value + 4;
     end;
   end;
   Counter = record
@@ -22,30 +22,30 @@ type
 
     function Add(Self: Counter; Value: integer): integer;
     begin
-      return Self.Base + Value
+      return Self.Base + Value;
     end;
   end;
 
 function AddOne(Value: integer): integer;
 begin
-  return Value + 1
+  return Value + 1;
 end;
 
 function AddTwo(Value: integer): integer;
 begin
-  return Value + 2
+  return Value + 2;
 end;
 
 function Answer(): integer;
 begin
-  return 42
+  return 42;
 end;
 
 function MakeAdder(Amount: integer): Handler;
 begin
   return function(Value: integer): integer begin
-    return Value + Amount
-  end
+    return Value + Amount;
+  end;
 end;
 
 begin
@@ -59,5 +59,5 @@ begin
   end;
   var StopMarker: integer := 0;
   WriteLn(Current(1));
-  WriteLn(Captured(1))
+  WriteLn(Captured(1));
 end.

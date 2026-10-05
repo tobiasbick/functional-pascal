@@ -4,7 +4,7 @@ uses Std.Tasks, Std.Console;
 
 function CheckConfiguration(Token: CancellationToken): result of boolean, string;
 begin
-  return Error('A required setting is missing')
+  return Error('A required setting is missing');
 end;
 
 begin
@@ -13,14 +13,14 @@ begin
   StartTaskInGroup(Workers, CheckConfiguration);
   StartTaskInGroup(Workers, procedure(Token: CancellationToken) begin
     var Stop: WaitCase := CancellationCase(Token, procedure() begin
-      WriteLn('Background worker stopped')
+      WriteLn('Background worker stopped');
     end);
-    Select([Stop])
+    Select([Stop]);
   end);
   // Close requests cooperative cancellation and waits for every registered worker.
   var Failures: array of TaskFailure := CloseTaskGroup(Workers);
   for Failure: TaskFailure in Failures do
   begin
-    WriteLn(Failure.Message)
-  end
+    WriteLn(Failure.Message);
+  end;
 end.

@@ -15,7 +15,7 @@ begin
   for I: integer := 0 to Length(Items) - 1 do
     if Items[I] = Target then
       return Some(I);
-  return None
+  return None;
 end;
 ```
 

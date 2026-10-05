@@ -11,7 +11,7 @@ mutable var
 public procedure TuiTerminalSessionAcquire();
 begin
   AcquireInteractiveTerminal();
-  TuiTerminalSessionOpen := true
+  TuiTerminalSessionOpen := true;
 end;
 
 // Releases the process terminal when this Tui host owns it.
@@ -19,9 +19,9 @@ public procedure TuiTerminalSessionRelease();
 begin
   if not TuiTerminalSessionOpen then
   begin
-    return
+    return;
   end;
 
   TuiTerminalSessionOpen := false;
-  ReleaseInteractiveTerminal()
+  ReleaseInteractiveTerminal();
 end;

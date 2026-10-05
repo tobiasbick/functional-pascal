@@ -10,13 +10,13 @@ unit Std.Time;
 // - `Start`: Zero-based starting position.
 public function ElapsedMillis(Start: integer): integer;
 begin
-  panic('Intrinsic API declaration')
+  panic('Intrinsic API declaration');
 end;
 
 // Monotonic milliseconds since runtime initialization.
 public function MonotonicMillis(): integer;
 begin
-  panic('Intrinsic API declaration')
+  panic('Intrinsic API declaration');
 end;
 
 // Wait for a non-negative millisecond count.
@@ -25,11 +25,11 @@ end;
 // - `Milliseconds`: Non-negative duration in milliseconds.
 public procedure Sleep(Milliseconds: integer);
 begin
-  panic('Intrinsic API declaration')
+  panic('Intrinsic API declaration');
 end;
 
 // UTC wall-clock milliseconds since the Unix epoch.
 public function TimestampMillis(): integer;
 begin
-  panic('Intrinsic API declaration')
+  panic('Intrinsic API declaration');
 end;

@@ -13,7 +13,7 @@ begin
     var Bytes: array of integer := try ReceiveBytesWithCancellation(Client, 4096, Token);
     if Length(Bytes) = 0 then
     begin
-      return Ok(true)
+      return Ok(true);
     end;
     mutable var Offset: integer := 0;
     while Offset < Length(Bytes) do
@@ -22,14 +22,14 @@ begin
                                                                                        Offset), Token);
       if Count <= 0 then
       begin
-        return Error('TCP write made no progress')
+        return Error('TCP write made no progress');
       end;
 
-      Offset := Offset + Count
-    end
+      Offset := Offset + Count;
+    end;
   end;
 
-  return Ok(true)
+  return Ok(true);
 end;
 
 begin
@@ -37,22 +37,22 @@ begin
   mutable var LifetimeMillis: integer := 10000;
   if ParamCount() > 2 then
   begin
-    panic('usage: tcp_parallel_echo_server.fpas -- [PORT [LIFETIME_MS]]')
+    panic('usage: tcp_parallel_echo_server.fpas -- [PORT [LIFETIME_MS]]');
   end;
 
   if ParamCount() >= 1 then
   begin
-    Port := StrToInt(ParamStr(0))
+    Port := StrToInt(ParamStr(0));
   end;
 
   if ParamCount() = 2 then
   begin
-    LifetimeMillis := StrToInt(ParamStr(1))
+    LifetimeMillis := StrToInt(ParamStr(1));
   end;
 
   if (LifetimeMillis < 1) or (LifetimeMillis > 300000) then
   begin
-    panic('LIFETIME_MS must be 1..300000')
+    panic('LIFETIME_MS must be 1..300000');
   end;
   var ListenerValue: Listener := Unwrap(Listen('127.0.0.1', Port));
   var Life: ServerLifetime := Unwrap(CreateLifetime(1000, true));
@@ -75,36 +75,36 @@ begin
               begin
                 if not IsCancellationRequested(Token) then
                 begin
-                  WriteLn(Message)
-                end
+                  WriteLn(Message);
+                end;
               end;
               Ok(_):
               begin
-              end
-            end
+              end;
+            end;
           end;
           Error(Message):
           begin
             if IsCancellationRequested(Token) then
             begin
-              return Ok(true)
+              return Ok(true);
             end;
 
             RequestStop(Life);
-            return Error(Message)
-          end
-        end
+            return Error(Message);
+          end;
+        end;
       end;
 
-      return Ok(true)
-    end)
+      return Ok(true);
+    end);
   end;
 
   WriteLn('Parallel TCP echo ready');
   var Started: integer := MonotonicMillis();
   while IsReady(Life) and (ElapsedMillis(Started) < LifetimeMillis) do
   begin
-    Sleep(10)
+    Sleep(10);
   end;
 
   RequestStop(Life);
@@ -112,31 +112,31 @@ begin
   case CloseTaskGroupWithTimeout(Workers, RemainingMillis(Life)) of
     Ok(Reports):
     begin
-      Failures := Reports
+      Failures := Reports;
     end;
     Error(Message):
     begin
       WriteLn(Message);
       // The independent host watchdog remains armed even if diagnostic output blocks.
-      panic('Server shutdown incomplete; process escalation remains armed')
-    end
+      panic('Server shutdown incomplete; process escalation remains armed');
+    end;
   end;
 
   for Failure: TaskFailure in Failures do
   begin
-    WriteLn(Failure.Message)
+    WriteLn(Failure.Message);
   end;
 
   for Message: string in ShutdownErrors(Life) do
   begin
-    WriteLn(Message)
+    WriteLn(Message);
   end;
 
   Unwrap(FinishShutdown(Life));
   if Length(Failures) <> 0 then
   begin
-    panic('TCP worker failed')
+    panic('TCP worker failed');
   end;
 
-  WriteLn('Parallel TCP echo stopped')
+  WriteLn('Parallel TCP echo stopped');
 end.

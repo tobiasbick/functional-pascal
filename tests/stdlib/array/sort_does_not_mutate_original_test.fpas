@@ -6,5 +6,5 @@ begin
   var A: array of integer := [3, 1, 2];
   var B: array of integer := Sort(A);
   WriteLn(A[0]);
-  WriteLn(B[0])
+  WriteLn(B[0]);
 end.

@@ -47,5 +47,5 @@ begin
   var Thin: TuiRect := TuiRect.Create(0, 0, 1, 1).Inset();
   AssertTrue(Thin.IsEmpty());
   var EmptyInset: TuiRect := TuiRect.Create(4, 5, 0, 2).Inset();
-  AssertTrue(EmptyInset.IsEmpty())
+  AssertTrue(EmptyInset.IsEmpty());
 end.

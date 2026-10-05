@@ -6,10 +6,10 @@ function TuiLayoutFitOverflow(Minimum: integer; Available: integer): integer;
 begin
   if Minimum > Available then
   begin
-    return Minimum - Available
+    return Minimum - Available;
   end;
 
-  return 0
+  return 0;
 end;
 
 public type
@@ -33,7 +33,7 @@ public type
         Minimum := Minimum;
         Available := Available;
         Overflow := TuiSize.Create(TuiLayoutFitOverflow(Minimum.Width, Available.Width), TuiLayoutFitOverflow(Minimum.Height, Available.Height));
-      end
+      end;
     end;
 
     // Returns whether neither axis overflows.
@@ -42,6 +42,6 @@ public type
     // - `Self`: Receiver value operated on by the method.
     public function Fits(Self: TuiLayoutFit): boolean;
     begin
-      return (Self.Overflow.Width = 0) and (Self.Overflow.Height = 0)
+      return (Self.Overflow.Width = 0) and (Self.Overflow.Height = 0);
     end;
   end;

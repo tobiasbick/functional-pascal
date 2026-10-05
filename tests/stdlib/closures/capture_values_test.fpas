@@ -7,8 +7,8 @@ begin
   mutable var Value: integer := 0;
   return function(): integer begin
     Value := Value + 1;
-    return Value
-  end
+    return Value;
+  end;
 end;
 
 begin
@@ -17,15 +17,15 @@ begin
   AssertEquals('2', IntToStr(Next()));
   mutable var Count: integer := 0;
   var Inc: procedure() := procedure() begin
-    Count := Count + 1
+    Count := Count + 1;
   end;
 
   Inc();
   AssertEquals('1', IntToStr(Count));
   var Base: integer := 10;
   var Add: function(Value: integer): integer := function(Value: integer): integer begin
-    return Base + Value
+    return Base + Value;
   end;
 
-  AssertEquals('15', IntToStr(Add(5)))
+  AssertEquals('15', IntToStr(Add(5)));
 end.

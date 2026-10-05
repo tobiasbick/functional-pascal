@@ -37,7 +37,7 @@ fn record_update_requires_separator_between_fields() {
         "record_update_missing_separator.fpas",
         "program T; type Point = record X: integer; Y: integer; end; \
          begin var P: Point := record X := 1; Y := 2; end; \
-         var Q: Point := P with X := 3 Y := 4; end end.",
+         var Q: Point := P with X := 3 Y := 4; end; end.",
     );
     assert_ne!(exit_code, 0, "malformed record update was accepted");
     assert!(stderr.contains("Expected `;`"), "{stderr}");

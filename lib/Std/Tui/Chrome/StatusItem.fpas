@@ -33,7 +33,7 @@ public type
     // - `Text`: Text processed or displayed by the operation.
     public static function MakeHint(Text: string): TuiStatusItem;
     begin
-      return TuiStatusItem.Hint(Text)
+      return TuiStatusItem.Hint(Text);
     end;
 
     // Creates a display-only shortcut and description pair.
@@ -43,7 +43,7 @@ public type
     // - `Text`: Text processed or displayed by the operation.
     public static function MakeKeyHint(KeyText: string; Text: string): TuiStatusItem;
     begin
-      return TuiStatusItem.KeyHint(KeyText, Text)
+      return TuiStatusItem.KeyHint(KeyText, Text);
     end;
 
     // Creates an enabled status-line command.
@@ -54,7 +54,7 @@ public type
     // - `Action`: Application action associated with the control or emitted message.
     public static function MakeCommand(Id: TuiControlId; Text: string; Action: TuiAction): TuiStatusItem;
     begin
-      return TuiStatusItem.Command(Id, Text, Action, true)
+      return TuiStatusItem.Command(Id, Text, Action, true);
     end;
 
     // Creates a disabled status-line command.
@@ -65,6 +65,6 @@ public type
     // - `Action`: Application action associated with the control or emitted message.
     public static function MakeDisabledCommand(Id: TuiControlId; Text: string; Action: TuiAction): TuiStatusItem;
     begin
-      return TuiStatusItem.Command(Id, Text, Action, false)
+      return TuiStatusItem.Command(Id, Text, Action, false);
     end;
   end;

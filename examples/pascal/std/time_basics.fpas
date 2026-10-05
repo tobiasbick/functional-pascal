@@ -8,5 +8,5 @@ begin
   var Start: integer := MonotonicMillis();
   Sleep(25);
   WriteLn('elapsed ms: ', IntToStr(ElapsedMillis(Start)));
-  WriteLn('timestamp ms: ', IntToStr(TimestampMillis()))
+  WriteLn('timestamp ms: ', IntToStr(TimestampMillis()));
 end.

@@ -9,5 +9,5 @@ begin
   AssertFalse(Exists(Path));
   AssertTrue(Std.Results.IsError(DeleteFile(Path)));
   AssertTrue(Std.Results.IsError(DeleteFile(ScratchDir())));
-  AssertTrue(IsDir(ScratchDir()))
+  AssertTrue(IsDir(ScratchDir()));
 end.

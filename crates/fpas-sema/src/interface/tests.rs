@@ -24,7 +24,7 @@ fn unit_interface_exports_public_symbols_and_qualified_types() {
          const Secret: integer := 7;
          public type Point = record public X: integer; public Y: integer; end;
          public function GetX(P: Point): integer;
-         begin return P.X end;",
+         begin return P.X; end;",
     );
 
     let analysis = analyze_unit(&unit, &[]).expect("unit analysis must succeed");
@@ -69,7 +69,7 @@ fn consumer_analysis_uses_interface_without_dependency_ast() {
         "unit Demo.Api;
          public type State = enum Idle; Ready; end;
          public function Next(Value: integer): integer;
-         begin return Value + 1 end;",
+         begin return Value + 1; end;",
     );
     let dependency_analysis =
         analyze_unit(&dependency, &[]).expect("dependency analysis must succeed");
@@ -85,7 +85,7 @@ fn consumer_analysis_uses_interface_without_dependency_ast() {
          public function Run(Value: integer): integer;
          begin
            var Current: State := State.Ready;
-           return Next(Value)
+           return Next(Value);
          end;",
     );
     let consumer_analysis = analyze_unit(
@@ -159,16 +159,16 @@ fn private_body_changes_do_not_change_interface_digest() {
     let left = parse_unit(
         "unit Demo.Stable;
          public function PublicValue(X: integer): integer;
-         begin return X end;
+         begin return X; end;
          function Hidden(): integer;
-         begin return 1 end;",
+         begin return 1; end;",
     );
     let right = parse_unit(
         "unit Demo.Stable;
          public function PublicValue(X: integer): integer;
-         begin return X + 99 end;
+         begin return X + 99; end;
          function Hidden(): integer;
-         begin return 2 end;",
+         begin return 2; end;",
     );
     let left_interface = analyze_unit(&left, &[])
         .expect("left analysis")
@@ -189,12 +189,12 @@ fn imported_name_ambiguity_is_reported_only_when_short_name_is_used() {
     let first = parse_unit(
         "unit Demo.First;
          public function Value(): integer;
-         begin return 1 end;",
+         begin return 1; end;",
     );
     let second = parse_unit(
         "unit Demo.Second;
          public function Value(): integer;
-         begin return 2 end;",
+         begin return 2; end;",
     );
     let interfaces = [
         analyze_unit(&first, &[])
@@ -211,7 +211,7 @@ fn imported_name_ambiguity_is_reported_only_when_short_name_is_used() {
         "unit Demo.Qualified;
          uses Demo.First, Demo.Second;
          public function Run(): integer;
-         begin return Demo.First.Value() + Demo.Second.Value() end;",
+         begin return Demo.First.Value() + Demo.Second.Value(); end;",
     );
     let qualified_analysis = analyze_unit(&qualified, &interfaces).expect("qualified analysis");
     assert!(
@@ -224,7 +224,7 @@ fn imported_name_ambiguity_is_reported_only_when_short_name_is_used() {
         "unit Demo.Ambiguous;
          uses Demo.First, Demo.Second;
          public function Run(): integer;
-         begin return Value() end;",
+         begin return Value(); end;",
     );
     let ambiguous_analysis = analyze_unit(&ambiguous, &interfaces).expect("ambiguous analysis");
     assert_eq!(ambiguous_analysis.metadata.errors.len(), 1);
@@ -261,7 +261,7 @@ fn imported_enum_type_qualified_short_variant_is_ambiguous() {
         "unit Demo.Qualified;
          uses Demo.First, Demo.Second;
          public function Run(): Demo.First.Color;
-         begin return Demo.First.Color.Red end;",
+         begin return Demo.First.Color.Red; end;",
     );
     let qualified_analysis = analyze_unit(&qualified, &interfaces).expect("qualified analysis");
     assert!(
@@ -274,7 +274,7 @@ fn imported_enum_type_qualified_short_variant_is_ambiguous() {
         "unit Demo.Ambiguous;
          uses Demo.First, Demo.Second;
          public function Run(): Demo.First.Color;
-         begin return Color.Red end;",
+         begin return Color.Red; end;",
     );
     let ambiguous_analysis = analyze_unit(&ambiguous, &interfaces).expect("ambiguous analysis");
     assert!(

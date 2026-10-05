@@ -16,7 +16,7 @@ begin
   var Count: integer := Std.Str.Length(Ramp);
   var Phase: real := Frac(EscapeValue * 0.08);
   var Index: integer := Clamp(Trunc(Phase * IntToReal(Count)), 0, Count - 1);
-  return CharAt(Ramp, Index)
+  return CharAt(Ramp, Index);
 end;
 
 function RenderCell(Sample: PixelSample; Palette: PaletteKind): Cell;
@@ -28,14 +28,14 @@ begin
       glyph := ' ';
       foreground := CellShade;
       background := CellShade;
-    end
+    end;
   end;
 
   return record
     glyph := EscapeGlyph(Sample.EscapeValue);
     foreground := EscapeColor(Palette, Sample.EscapeValue);
     background := RgbColor(0, 0, 0);
-  end
+  end;
 end;
 
 procedure DrawRow(Row: array of PixelSample; Width: integer; Y: integer; Palette: PaletteKind);
@@ -44,20 +44,20 @@ begin
   mutable var DrawWidth: integer := Width;
   if DrawWidth > CurrentWidth then
   begin
-    DrawWidth := CurrentWidth
+    DrawWidth := CurrentWidth;
   end;
 
   if DrawWidth < 1 then
   begin
-    return
+    return;
   end;
   mutable var Cells: array of Cell := [];
   for Px: integer := 0 to DrawWidth - 1 do
   begin
-    Push(Cells, RenderCell(Row[Px], Palette))
+    Push(Cells, RenderCell(Row[Px], Palette));
   end;
 
-  WriteCells(1, Y, Cells)
+  WriteCells(1, Y, Cells);
 end;
 
 public type
@@ -94,7 +94,7 @@ begin
         var Samples: array of PixelSample := ComputeRow(Py, Width, Height, XMin, XMax, YMin, YMax, MaxIter, Jr, Ji, Token);
         if IsCancellationRequested(Token) then
         begin
-          return
+          return;
         end;
         var Row: RenderRow := record
           Y := Py;
@@ -103,12 +103,12 @@ begin
 
         if IsError(SendWithCancellation(Rows, Row, Token)) then
         begin
-          return
+          return;
         end;
 
-        Py := Py + 4
-      end
-    end)
+        Py := Py + 4;
+      end;
+    end);
   end;
 
   return record
@@ -116,7 +116,7 @@ begin
     Rows := Rows;
     Width := Width;
     Palette := Palette;
-  end
+  end;
 end;
 
 // Draw a bounded batch on the terminal-owning task without waiting for workers.
@@ -129,15 +129,15 @@ begin
       begin
         if (Row.Y + 1) <= Max(ScreenHeight() - 3, 1) then
         begin
-          DrawRow(Row.Samples, Job.Width, Row.Y + 1, Job.Palette)
-        end
+          DrawRow(Row.Samples, Job.Width, Row.Y + 1, Job.Palette);
+        end;
       end;
       None:
       begin
-        return
-      end
-    end
-  end
+        return;
+      end;
+    end;
+  end;
 end;
 
 // Cancel CPU work and blocked sends before releasing the old queue.
@@ -148,6 +148,6 @@ begin
   CloseChannel(Job.Rows);
   if Std.Arrays.Length(Failures) <> 0 then
   begin
-    panic(Failures[0].Message)
-  end
+    panic(Failures[0].Message);
+  end;
 end;

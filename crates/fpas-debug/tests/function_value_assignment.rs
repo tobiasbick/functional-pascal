@@ -215,7 +215,7 @@ fn jsonl_function_values_copy_atomically_and_continue() {
         ("Current", "MakeAdder(1)", "variable_value_type"),
         (
             "Current",
-            "function(Value: integer): integer begin return Value end",
+            "function(Value: integer): integer begin return Value; end",
             "unsupported_expression",
         ),
         ("Current", "1", "variable_value_type"),
@@ -268,12 +268,12 @@ type
 
 function AddOne(Value: integer): integer;
 begin
-  return Value + 1
+  return Value + 1;
 end;
 
 function AddTwo(Value: integer): integer;
 begin
-  return Value + 2
+  return Value + 2;
 end;
 
 function Work(): integer;
@@ -281,12 +281,12 @@ begin
   mutable var Current: Handler := AddOne;
   var Backup: Handler := AddTwo;
   var Marker: integer := 0;
-  return Current(1)
+  return Current(1);
 end;
 
 begin
   var Pending: task := go Work();
-  WriteLn(Wait(Pending))
+  WriteLn(Wait(Pending));
 end.
 "#;
     let (program, diagnostics) = fpas_parser::parse(TASK_SOURCE);

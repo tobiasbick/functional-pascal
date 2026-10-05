@@ -20,19 +20,19 @@ begin
   A.Print();
   if Ready then
   begin
-    Save()
+    Save();
   end;
 
   // present result
   Present();
   if NeedsCount then
   begin
-    Prepare()
+    Prepare();
   end;
   var Count: integer := 1;
   WriteLn(Count);
   if Done then
   begin
-    Finish()
-  end
+    Finish();
+  end;
 end.

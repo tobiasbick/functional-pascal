@@ -7,12 +7,12 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`type_params` on `
 ```pascal
 function Identity<T>(Value: T): T;
 begin
-  return Value
+  return Value;
 end;
 
 procedure PrintValue<T>(Value: T);
 begin
-  WriteLn(Value)
+  WriteLn(Value);
 end;
 ```
 
@@ -22,7 +22,7 @@ Type arguments are inferred from the call-site arguments:
 begin
   WriteLn(Identity(42));       // T = integer
   WriteLn(Identity('hello'));  // T = string
-  PrintValue(3.14)             // T = real
+  PrintValue(3.14);             // T = real
 end.
 ```
 
@@ -31,7 +31,7 @@ Multiple type parameters are separated by commas:
 ```pascal
 function First<A, B>(X: A; Y: B): A;
 begin
-  return X
+  return X;
 end;
 ```
 

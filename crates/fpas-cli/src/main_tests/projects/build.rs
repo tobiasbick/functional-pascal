@@ -51,7 +51,7 @@ include = ["src/**/*.fpas"]
 "#,
     );
     let main = cwd.join("src/main.fpas");
-    write_text(&main, "program Broken;\nbegin\n  MissingCall()\nend.\n");
+    write_text(&main, "program Broken;\nbegin\n  MissingCall();\nend.\n");
 
     let (exit_code, _, stderr) = support::run_cli_args_and_capture_output(
         &[
@@ -135,7 +135,7 @@ include = ["src/**/*.fpas"]
     );
     write_text(
         &cwd.join("libs/math/src/math.fpas"),
-        "unit Demo.Math;\npublic function Answer(): integer;\nbegin\n  return 42\nend;\n",
+        "unit Demo.Math;\npublic function Answer(): integer;\nbegin\n  return 42;\nend;\n",
     );
     write_text(
         &program_project,
@@ -153,7 +153,7 @@ include = ["src/**/*.fpas"]
     );
     write_text(
         &cwd.join("apps/hello/src/main.fpas"),
-        "program Hello;\nuses Demo.Math;\nbegin\n  Answer()\nend.\n",
+        "program Hello;\nuses Demo.Math;\nbegin\n  Answer();\nend.\n",
     );
 
     let (exit_code, stdout, stderr) = support::run_cli_args_and_capture_output(
@@ -190,11 +190,11 @@ include = ["**/*.fpas"]
     );
     write_text(
         &cwd.join("support.fpas"),
-        "unit Demo.Support;\npublic function Answer(): integer;\nbegin\n  return 42\nend;\n",
+        "unit Demo.Support;\npublic function Answer(): integer;\nbegin\n  return 42;\nend;\n",
     );
     write_text(
         &cwd.join("answer_test.fpas"),
-        "program AnswerTest;\nuses Demo.Support;\nbegin\n  Answer()\nend.\n",
+        "program AnswerTest;\nuses Demo.Support;\nbegin\n  Answer();\nend.\n",
     );
 
     let (exit_code, stdout, stderr) = support::run_cli_args_and_capture_output(

@@ -3,5 +3,5 @@ program T;
 uses Std.Console;
 
 begin
-  WriteLn(42)
+  WriteLn(42);
 end.

@@ -24,39 +24,39 @@ type
         Ji := 0.156;
         MaxIter := 96;
         Palette := PaletteKind.DeepOcean;
-      end
+      end;
     end;
 
     function SpanX(Self: ExplorerState; Width: integer; Height: integer): real;
     begin
       var SafeWidth: integer := Max(Width, 1);
       var SafeHeight: integer := Max(Height, 1);
-      return (Self.SpanY * (IntToReal(SafeWidth) / IntToReal(SafeHeight))) * 0.5
+      return (Self.SpanY * (IntToReal(SafeWidth) / IntToReal(SafeHeight))) * 0.5;
     end;
 
     function XMin(Self: ExplorerState; Width: integer; Height: integer): real;
     begin
-      return Self.CenterX - (Self.SpanX(Width, Height) * 0.5)
+      return Self.CenterX - (Self.SpanX(Width, Height) * 0.5);
     end;
 
     function XMax(Self: ExplorerState; Width: integer; Height: integer): real;
     begin
-      return Self.CenterX + (Self.SpanX(Width, Height) * 0.5)
+      return Self.CenterX + (Self.SpanX(Width, Height) * 0.5);
     end;
 
     function YMin(Self: ExplorerState): real;
     begin
-      return Self.CenterY - (Self.SpanY * 0.5)
+      return Self.CenterY - (Self.SpanY * 0.5);
     end;
 
     function YMax(Self: ExplorerState): real;
     begin
-      return Self.CenterY + (Self.SpanY * 0.5)
+      return Self.CenterY + (Self.SpanY * 0.5);
     end;
 
     function GetZoom(Self: ExplorerState): real;
     begin
-      return 2.4 / Self.SpanY
+      return 2.4 / Self.SpanY;
     end;
 
     property Zoom: real read GetZoom;
@@ -64,25 +64,25 @@ type
 
 function RenderWidth(): integer;
 begin
-  return Max(ScreenWidth(), 1)
+  return Max(ScreenWidth(), 1);
 end;
 
 function RenderHeight(): integer;
 begin
-  return Max(ScreenHeight() - 3, 1)
+  return Max(ScreenHeight() - 3, 1);
 end;
 
 function ViewportCX(State: ExplorerState; W: integer; H: integer; CellX: integer): real;
 begin
   var Wr: integer := Max(W - 1, 1);
   return State.XMin(W, H) +
-         (IntToReal(CellX - 1) / IntToReal(Wr)) * (State.XMax(W, H) - State.XMin(W, H))
+         (IntToReal(CellX - 1) / IntToReal(Wr)) * (State.XMax(W, H) - State.XMin(W, H));
 end;
 
 function ViewportCY(State: ExplorerState; W: integer; H: integer; CellY: integer): real;
 begin
   var Hr: integer := Max(H - 1, 1);
-  return State.YMax() - (IntToReal(CellY - 1) / IntToReal(Hr)) * (State.YMax() - State.YMin())
+  return State.YMax() - (IntToReal(CellY - 1) / IntToReal(Hr)) * (State.YMax() - State.YMin());
 end;
 
 procedure WriteHudText(Text: string; Width: integer);
@@ -92,9 +92,9 @@ begin
     var TextLength: integer := Min(Std.Str.Length(Text), Width);
     if TextLength > 0 then
     begin
-      WriteText(Substring(Text, 0, TextLength))
-    end
-  end
+      WriteText(Substring(Text, 0, TextLength));
+    end;
+  end;
 end;
 
 procedure DrawHud(S: ExplorerState; Width: integer; Height: integer);
@@ -114,18 +114,18 @@ begin
   begin
     GotoXY(1, 2);
     NormVideo();
-    WriteHudText(Format('size=%dx%d  c=(%f,%f)  jr=%f  ji=%f  zoom=%f  iter=%d  pal=%s', Width, Height, S.CenterX, S.CenterY, S.Jr, S.Ji, S.Zoom, S.MaxIter, PaletteName(S.Palette)), Width)
+    WriteHudText(Format('size=%dx%d  c=(%f,%f)  jr=%f  ji=%f  zoom=%f  iter=%d  pal=%s', Width, Height, S.CenterX, S.CenterY, S.Jr, S.Ji, S.Zoom, S.MaxIter, PaletteName(S.Palette)), Width);
   end;
 
   if ScreenHeight() >= 3 then
   begin
     GotoXY(1, 3);
     NormVideo();
-    WriteHudText('WASD=const  click  wheel  arrows  +/-  PgUp/Dn  1/2/3  R  Esc', Width)
+    WriteHudText('WASD=const  click  wheel  arrows  +/-  PgUp/Dn  1/2/3  R  Esc', Width);
   end;
 
   NormVideo();
-  Window(1, 1, Width, Height)
+  Window(1, 1, Width, Height);
 end;
 
 mutable var
@@ -138,7 +138,7 @@ mutable var
 
 procedure RequestRedraw();
 begin
-  NeedsRedraw := true
+  NeedsRedraw := true;
 end;
 
 procedure PaintFrame();
@@ -146,11 +146,11 @@ begin
   case ActiveRender of
     Some(Job):
     begin
-      StopRender(Job)
+      StopRender(Job);
     end;
     None:
     begin
-    end
+    end;
   end;
 
   RenderW := RenderWidth();
@@ -168,7 +168,7 @@ begin
   end);
   ActiveRender := Some(StartRender(State.XMin(RenderW, RenderH), State.XMax(RenderW, RenderH), State.YMin(), State.YMax(), RenderW, RenderH, State.MaxIter, State.Palette, State.Jr, State.Ji));
   DrawHud(State, RenderW, RenderH);
-  Present()
+  Present();
 end;
 
 function HandleKey(Key: KeyEvent): boolean;
@@ -178,44 +178,44 @@ begin
   if Key.kind = KeyKind.Escape then
   begin
     Quit := true;
-    return true
-  end
+    return true;
+  end;
   else if Key.kind = KeyKind.Left then
   begin
     State.CenterX := State.CenterX - StepX;
     RequestRedraw();
-    return true
-  end
+    return true;
+  end;
   else if Key.kind = KeyKind.Right then
   begin
     State.CenterX := State.CenterX + StepX;
     RequestRedraw();
-    return true
-  end
+    return true;
+  end;
   else if Key.kind = KeyKind.Up then
   begin
     State.CenterY := State.CenterY + StepY;
     RequestRedraw();
-    return true
-  end
+    return true;
+  end;
   else if Key.kind = KeyKind.Down then
   begin
     State.CenterY := State.CenterY - StepY;
     RequestRedraw();
-    return true
-  end
+    return true;
+  end;
   else if Key.kind = KeyKind.PageUp then
   begin
     State.MaxIter := Min(State.MaxIter + 32, 2048);
     RequestRedraw();
-    return true
-  end
+    return true;
+  end;
   else if Key.kind = KeyKind.PageDown then
   begin
     State.MaxIter := Max(State.MaxIter - 32, 32);
     RequestRedraw();
-    return true
-  end
+    return true;
+  end;
   else if Key.kind = KeyKind.Character then
   begin
     case Key.ch of
@@ -223,66 +223,66 @@ begin
       begin
         State.SpanY := Max(State.SpanY * 0.82, 0.000001);
         RequestRedraw();
-        return true
+        return true;
       end;
       '-':
       begin
         State.SpanY := Min(State.SpanY / 0.82, 3.5);
         RequestRedraw();
-        return true
+        return true;
       end;
       '1':
       begin
         State.Palette := PaletteKind.DeepOcean;
         RequestRedraw();
-        return true
+        return true;
       end;
       '2':
       begin
         State.Palette := PaletteKind.Ember;
         RequestRedraw();
-        return true
+        return true;
       end;
       '3':
       begin
         State.Palette := PaletteKind.Aurora;
         RequestRedraw();
-        return true
+        return true;
       end;
       'a', 'A':
       begin
         State.Jr := State.Jr - 0.02;
         RequestRedraw();
-        return true
+        return true;
       end;
       'd', 'D':
       begin
         State.Jr := State.Jr + 0.02;
         RequestRedraw();
-        return true
+        return true;
       end;
       'w', 'W':
       begin
         State.Ji := State.Ji + 0.02;
         RequestRedraw();
-        return true
+        return true;
       end;
       's', 'S':
       begin
         State.Ji := State.Ji - 0.02;
         RequestRedraw();
-        return true
+        return true;
       end;
       'r', 'R':
       begin
         State := ExplorerState.Default();
         RequestRedraw();
-        return true
-      end
-    end
+        return true;
+      end;
+    end;
   end;
 
-  return false
+  return false;
 end;
 
 procedure HandleMouse(InputEvent: ConsoleEvent);
@@ -292,27 +292,27 @@ begin
   if InputEvent.mouse_action = MouseAction.ScrollUp then
   begin
     State.SpanY := Max(State.SpanY * 0.88, 0.000001);
-    RequestRedraw()
-  end
+    RequestRedraw();
+  end;
   else if InputEvent.mouse_action = MouseAction.ScrollDown then
   begin
     State.SpanY := Min(State.SpanY / 0.88, 3.5);
-    RequestRedraw()
-  end
+    RequestRedraw();
+  end;
   else if InView and (InputEvent.mouse_action = MouseAction.Down) then
   begin
     if InputEvent.mouse_button = MouseButton.Left then
     begin
       State.CenterX := ViewportCX(State, RenderW, RenderH, InputEvent.mouse_x);
       State.CenterY := ViewportCY(State, RenderW, RenderH, InputEvent.mouse_y);
-      RequestRedraw()
-    end
+      RequestRedraw();
+    end;
     else if InputEvent.mouse_button = MouseButton.Middle then
     begin
       State := ExplorerState.Default();
-      RequestRedraw()
-    end
-  end
+      RequestRedraw();
+    end;
+  end;
 end;
 
 procedure HandleResize(Width: integer; Height: integer);
@@ -323,24 +323,24 @@ begin
   begin
     RenderW := NewW;
     RenderH := NewH;
-    RequestRedraw()
-  end
+    RequestRedraw();
+  end;
 end;
 
 procedure HandleEvent(E: ConsoleEvent);
 begin
   if E.kind = EventKind.Key then
   begin
-    HandleKey(E.key)
-  end
+    HandleKey(E.key);
+  end;
   else if E.kind = EventKind.Mouse then
   begin
-    HandleMouse(E)
-  end
+    HandleMouse(E);
+  end;
   else if E.kind = EventKind.Resize then
   begin
-    HandleResize(E.width, E.height)
-  end
+    HandleResize(E.width, E.height);
+  end;
 end;
 
 procedure ShutdownTerminal();
@@ -350,7 +350,7 @@ begin
   DisableFocus();
   DisableMouse();
   DisableRawMode();
-  LeaveAltScreen()
+  LeaveAltScreen();
 end;
 
 begin
@@ -368,7 +368,7 @@ begin
     if NeedsRedraw then
     begin
       PaintFrame();
-      NeedsRedraw := false
+      NeedsRedraw := false;
     end;
 
     case ActiveRender of
@@ -376,33 +376,33 @@ begin
       begin
         BeginFrame();
         PollRender(Job);
-        Present()
+        Present();
       end;
       None:
       begin
-      end
+      end;
     end;
 
     case ReadEventTimeout(16) of
       Some(E):
       begin
-        HandleEvent(E)
+        HandleEvent(E);
       end;
       None:
       begin
-      end
-    end
+      end;
+    end;
   end;
 
   case ActiveRender of
     Some(Job):
     begin
-      StopRender(Job)
+      StopRender(Job);
     end;
     None:
     begin
-    end
+    end;
   end;
 
-  ShutdownTerminal()
+  ShutdownTerminal();
 end.

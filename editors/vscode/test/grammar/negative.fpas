@@ -13,6 +13,6 @@ begin
   var endif: integer := 0;
   if gifted and (endif = 0) then
   begin
-    WriteLn(beginValue)
-  end
+    WriteLn(beginValue);
+  end;
 end.

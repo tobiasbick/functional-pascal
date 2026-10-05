@@ -38,7 +38,7 @@ Visual checklist:
 program Hello;
 
 begin
-  WriteLn('Hello, World!')
+  WriteLn('Hello, World!');
 end.
 ```
 
@@ -50,7 +50,7 @@ program Hello;
 uses Std.Console;
 
 begin
-  WriteLn('Hello, World!')
+  WriteLn('Hello, World!');
 end.
 ```
 
@@ -67,51 +67,51 @@ begin
   var X: integer := 5;
   if X > 0 then
   begin
-    WriteLn('positive')
-  end
+    WriteLn('positive');
+  end;
   else if X = 0 then
   begin
-    WriteLn('zero')
-  end
+    WriteLn('zero');
+  end;
   else
   begin
-    WriteLn('negative')
+    WriteLn('negative');
   end;
 
   case X of
     1:
     begin
-      WriteLn('one')
+      WriteLn('one');
     end;
     2, 3:
     begin
-      WriteLn('two or three')
+      WriteLn('two or three');
     end;
     10..20:
     begin
-      WriteLn('ten to twenty')
-    end
+      WriteLn('ten to twenty');
+    end;
   else
   begin
-    WriteLn('other')
-  end
+    WriteLn('other');
+  end;
   end;
 
   for I: integer := 1 to 3 do
   begin
-    WriteLn(IntToStr(I))
+    WriteLn(IntToStr(I));
   end;
 
   while X < 10 do
   begin
-    X := X + 1
+    X := X + 1;
   end;
 
   mutable var N: integer := 0;
   repeat
     WriteLn(IntToStr(N));
-    N := N + 1
-  until N >= 3
+    N := N + 1;
+  until N >= 3;
 end.
 ```
 
@@ -131,7 +131,7 @@ type
 
     function Sum(Self: Point): integer;
     begin
-      return Self.X + Self.Y
+      return Self.X + Self.Y;
     end;
 
     function Add(Self: Point; Other: Point): Point;
@@ -141,12 +141,12 @@ type
       return record
         X := RX;
         Y := RY;
-      end
+      end;
     end;
 
     procedure Print(Self: Point);
     begin
-      WriteLn('(' + IntToStr(Self.X) + ', ' + IntToStr(Self.Y) + ')')
+      WriteLn('(' + IntToStr(Self.X) + ', ' + IntToStr(Self.Y) + ')');
     end;
   end;
 
@@ -165,7 +165,7 @@ begin
   WriteLn('Sum of A: ' + IntToStr(A.Sum()));
   var C: Point := A.Add(B);
   WriteLn('A + B =');
-  C.Print()
+  C.Print();
 end.
 ```
 
@@ -182,21 +182,21 @@ function Clamp(Value: integer; Min: integer; Max: integer): integer;
 begin
   if Value < Min then
   begin
-    return Min
-  end
+    return Min;
+  end;
   else if Value > Max then
   begin
-    return Max
-  end
+    return Max;
+  end;
   else
   begin
-    return Value
-  end
+    return Value;
+  end;
 end;
 
 function IsBlank(S: string): boolean;
 begin
-  return Length(Trim(S)) = 0
+  return Length(Trim(S)) = 0;
 end;
 ```
 
@@ -210,11 +210,11 @@ uses Std.Math;
 function Clamp(Value: integer; Min: integer; Max: integer): integer;
 begin
   if Value < Min then
-    return Min
+    return Min;
   else if Value > Max then
-    return Max
+    return Max;
   else
-    return Value
+    return Value;
 end;
 ```
 </details>
@@ -314,11 +314,21 @@ Boolean and enum variant constructors in expressions: `Ok`, `Error`, `Some`, `No
 
 ## Semicolons
 
-Semicolons are **separators**, not terminators:
+Semicolons are **terminators**:
 
-- Between statements in a block: `;` after each statement except the last before `end`.
-- No semicolon immediately before `end`, `else`, or `until`.
-- Declarations in `type` blocks and unit/program headers: `;` between siblings; no trailing `;` before closing `end` of a nested block.
+- Every statement and declaration ends with `;`, including the last statement
+  before `end`, `else`, or `until`. The program's final `end.` keeps its period.
+- An `if`, `for`, or `while` with a single-statement body shares that body's
+  final `;`. The formatter wraps the body in `begin` ... `end;` and emits no
+  additional terminator after that closing `end;`.
+- Each branch is terminated before `else`, including a `begin` ... `end;` branch.
+- A `repeat` body's final statement ends with `;`, and `until Condition;`
+  terminates the loop.
+- Expressions have no terminator of their own. An anonymous routine body uses
+  terminated statements; its closing `end` is followed directly by the call's
+  `)` or by the enclosing statement's terminator.
+- Formal parameter lists keep `;` between parameters and have no trailing
+  separator before `)`.
 - `case` arm labels: `;` after each arm’s closing `end` (including the last arm before `else`); `else` branch follows [`language/control-flow/case-of-intro.md`](../language/control-flow/case-of-intro.md).
 - Fields inside a `record` type: `;` after **every** field, including the last field before `end`, a blank line, or methods (matches existing FPAS sources).
 - Preserve `public` on exported unit declarations and individual record
@@ -411,7 +421,7 @@ uses
   MyApp.Very.Long.Namespace.One, MyApp.Very.Long.Namespace.Two;
 
 begin
-  WriteLn('ok')
+  WriteLn('ok');
 end.
 ```
 
@@ -458,7 +468,8 @@ type
 ## Expressions (summary)
 
 - Parentheses: omit redundant parens where parser precedence is unambiguous; always emit parens present in `Expr::Paren`.
-- Function/procedure calls: `Name(arg1, arg2)` — commas in calls, semicolons only in declarations.
+- Function/procedure calls use commas between arguments: `Name(arg1, arg2)`.
+  A call used as a statement ends with `;`.
 
 ## Comments
 

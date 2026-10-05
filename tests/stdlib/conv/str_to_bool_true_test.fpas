@@ -3,5 +3,5 @@ program T;
 uses Std.Console, Std.Conv;
 
 begin
-  WriteLn(StrToBool('true'))
+  WriteLn(StrToBool('true'));
 end.

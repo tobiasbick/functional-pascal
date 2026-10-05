@@ -6,6 +6,6 @@ begin
   var D: dict of string to boolean := ['ok': true];
   for K: string in D do
   begin
-    WriteLn(K)
-  end
+    WriteLn(K);
+  end;
 end.

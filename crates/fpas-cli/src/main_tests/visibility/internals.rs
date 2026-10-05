@@ -17,7 +17,7 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Lib, Std.Console;\nbegin\n  WriteLn(GetValue())\nend.\n",
+        "program Main;\nuses App.Lib, Std.Console;\nbegin\n  WriteLn(GetValue());\nend.\n",
     );
     write_text(
         &cwd.join("src/lib.fpas"),
@@ -26,12 +26,12 @@ unit App.Lib;
 
 function Secret(): integer;
 begin
-  return 42
+  return 42;
 end;
 
 public function GetValue(): integer;
 begin
-  return Secret()
+  return Secret();
 end;
 ",
     );
@@ -62,7 +62,7 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Lib, Std.Console;\nbegin\n  WriteLn(PublicFn())\nend.\n",
+        "program Main;\nuses App.Lib, Std.Console;\nbegin\n  WriteLn(PublicFn());\nend.\n",
     );
     write_text(
         &cwd.join("src/lib.fpas"),
@@ -71,12 +71,12 @@ unit App.Lib;
 
 function Helper(): integer;
 begin
-  return 10
+  return 10;
 end;
 
 public function PublicFn(): integer;
 begin
-  return Helper() + 5
+  return Helper() + 5;
 end;
 ",
     );
@@ -105,7 +105,7 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Lib, Std.Console;\nbegin\n  WriteLn(GetSecret())\nend.\n",
+        "program Main;\nuses App.Lib, Std.Console;\nbegin\n  WriteLn(GetSecret());\nend.\n",
     );
     write_text(
         &cwd.join("src/lib.fpas"),
@@ -117,7 +117,7 @@ const
 
 public function GetSecret(): integer;
 begin
-  return SecretVal
+  return SecretVal;
 end;
 ",
     );
@@ -147,7 +147,7 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Lib, Std.Console;\nbegin\n  WriteLn(GetCounter())\nend.\n",
+        "program Main;\nuses App.Lib, Std.Console;\nbegin\n  WriteLn(GetCounter());\nend.\n",
     );
     write_text(
         &cwd.join("src/lib.fpas"),
@@ -161,7 +161,7 @@ public function GetCounter(): integer;
 begin
   if Counter < 0 then
     Counter := 42;
-  return Counter
+  return Counter;
 end;
 ",
     );
@@ -191,7 +191,7 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/main.fpas"),
-        "program Main;\nuses App.Caller, Std.Console;\nbegin\n  WriteLn(TryCall())\nend.\n",
+        "program Main;\nuses App.Caller, Std.Console;\nbegin\n  WriteLn(TryCall());\nend.\n",
     );
     write_text(
         &cwd.join("src/caller.fpas"),
@@ -201,7 +201,7 @@ uses App.Lib;
 
 public function TryCall(): integer;
 begin
-  return Secret()
+  return Secret();
 end;
 ",
     );
@@ -212,7 +212,7 @@ unit App.Lib;
 
 function Secret(): integer;
 begin
-  return 42
+  return 42;
 end;
 ",
     );
@@ -238,11 +238,11 @@ uses Std.Console;
 
 function private(): integer;
 begin
-  return 42
+  return 42;
 end;
 
 begin
-  WriteLn(private())
+  WriteLn(private());
 end.
 ",
     );
@@ -262,7 +262,7 @@ public var
   X: integer := 1;
 
 begin
-  WriteLn(X)
+  WriteLn(X);
 end.
 ",
     );

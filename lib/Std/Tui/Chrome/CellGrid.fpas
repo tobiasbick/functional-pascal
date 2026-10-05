@@ -22,18 +22,18 @@ public type
     begin
       if (Width < 0) or (Height < 0) then
       begin
-        panic('Tui cell grid dimensions must be non-negative')
+        panic('Tui cell grid dimensions must be non-negative');
       end;
 
       if Std.Arrays.Length(Cells) <> Width * Height then
       begin
-        panic('Tui cell grid length must equal width times height')
+        panic('Tui cell grid length must equal width times height');
       end;
 
       return record
         Width := Width;
         Height := Height;
         Cells := Cells;
-      end
+      end;
     end;
   end;

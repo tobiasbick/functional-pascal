@@ -85,11 +85,11 @@ begin
     begin
       case BodyText(ResponseValue) of
         Ok(Text): WriteLn(Text);
-        Error(Message): panic(Message)
-      end
+        Error(Message): panic(Message);
+      end;
     end;
-    Error(Message): panic(Message)
-  end
+    Error(Message): panic(Message);
+  end;
 end.
 "#
         ),
@@ -152,8 +152,8 @@ begin
   RequestValue.Body := Std.Net.Utf8.Encode('payload');
   case Send(RequestValue) of
     Ok(ResponseValue): WriteLn(ResponseValue.StatusCode);
-    Error(Message): panic(Message)
-  end
+    Error(Message): panic(Message);
+  end;
 end.
 "#
         ),
@@ -210,8 +210,8 @@ begin
     Ok(_): panic('oversized response head was accepted');
     Error(Message):
     begin
-      if not Std.Str.Contains(Message, 'MaxHeaderBytes') then panic(Message)
-    end
+      if not Std.Str.Contains(Message, 'MaxHeaderBytes') then panic(Message);
+    end;
   end;
   mutable var RedirectRequest: Request := Request.Get('http://127.0.0.1:{redirect_port}/');
   RedirectRequest.MaxRedirects := 0;
@@ -219,10 +219,10 @@ begin
     Ok(_): panic('redirect limit was ignored');
     Error(Message):
     begin
-      if not Std.Str.Contains(Message, 'MaxRedirects') then panic(Message)
-    end
+      if not Std.Str.Contains(Message, 'MaxRedirects') then panic(Message);
+    end;
   end;
-  WriteLn('ok')
+  WriteLn('ok');
 end.
 "#
         ),
@@ -288,9 +288,9 @@ begin
     Ok(_): panic('hostile HTTP response was accepted');
     Error(Message):
     begin
-      if not Std.Str.Contains(Message, Text) then panic(Message)
-    end
-  end
+      if not Std.Str.Contains(Message, Text) then panic(Message);
+    end;
+  end;
 end;
 
 begin
@@ -298,7 +298,7 @@ begin
   ExpectError('http://127.0.0.1:{port}/interim', 'too many informational responses');
   ExpectError('http://127.0.0.1:{port}/header', 'header name');
   ExpectError('http://127.0.0.1:{port}/status', 'exactly three digits');
-  WriteLn('ok')
+  WriteLn('ok');
 end.
 "#
         ),
@@ -340,15 +340,15 @@ begin
     Ok(_): panic('overflowing HTTP chunk size was accepted');
     Error(Message):
     begin
-      if not Std.Str.Contains(Message, 'exceeds the integer range') then panic(Message)
-    end
-  end
+      if not Std.Str.Contains(Message, 'exceeds the integer range') then panic(Message);
+    end;
+  end;
 end;
 
 begin
   ExpectOverflow('negative');
   ExpectOverflow('zero');
-  WriteLn('ok')
+  WriteLn('ok');
 end.
 "#
         ),

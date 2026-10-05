@@ -40,22 +40,22 @@ begin
     begin
       if Std.Arrays.Length(Buffer) >= MaxHeaderBytes then
       begin
-        return Error('HTTP response headers exceed MaxHeaderBytes')
+        return Error('HTTP response headers exceed MaxHeaderBytes');
       end;
       var ResponseAvailable: integer := MaxResponseBytes - BytesReceived;
       if ResponseAvailable < 1 then
       begin
-        return Error('HTTP response exceeds MaxResponseBytes')
+        return Error('HTTP response exceeds MaxResponseBytes');
       end;
       mutable var ReadMaximum: integer := MaxHeaderBytes - Std.Arrays.Length(Buffer);
       if ResponseAvailable < ReadMaximum then
       begin
-        ReadMaximum := ResponseAvailable
+        ReadMaximum := ResponseAvailable;
       end;
 
       if ReadMaximum > 65536 then
       begin
-        ReadMaximum := 65536
+        ReadMaximum := 65536;
       end;
 
       case Std.Net.ReceiveBytes(Connection, ReadMaximum) of
@@ -63,24 +63,24 @@ begin
         begin
           if Std.Arrays.Length(Bytes) = 0 then
           begin
-            return Error('HTTP response is missing the header terminator')
+            return Error('HTTP response is missing the header terminator');
           end;
 
           BytesReceived := BytesReceived + Std.Arrays.Length(Bytes);
-          Buffer := Std.Arrays.Concat(Buffer, Bytes)
+          Buffer := Std.Arrays.Concat(Buffer, Bytes);
         end;
         Error(Message):
         begin
-          return Error(Message)
-        end
+          return Error(Message);
+        end;
       end;
 
-      Separator := Std.Http.Wire.FindSeparator(Buffer, 0)
+      Separator := Std.Http.Wire.FindSeparator(Buffer, 0);
     end;
 
     if Separator + 4 > MaxHeaderBytes then
     begin
-      return Error('HTTP response headers exceed MaxHeaderBytes')
+      return Error('HTTP response headers exceed MaxHeaderBytes');
     end;
 
     case Std.Http.Wire.ParseResponseHead(Buffer) of
@@ -90,18 +90,18 @@ begin
         begin
           if Head.StatusCode = 101 then
           begin
-            return Error('HTTP 101 Switching Protocols is not supported')
+            return Error('HTTP 101 Switching Protocols is not supported');
           end;
 
           InterimResponses := InterimResponses + 1;
           if InterimResponses > MaxInterimResponses then
           begin
-            return Error('HTTP response contains too many informational responses')
+            return Error('HTTP response contains too many informational responses');
           end;
 
           Buffer := Std.Arrays.Slice(Buffer, Head.BodyOffset, Std.Arrays.Length(Buffer) -
-                                                              Head.BodyOffset)
-        end
+                                                              Head.BodyOffset);
+        end;
         else
         begin
           var Output: FinalHead := record
@@ -111,15 +111,15 @@ begin
             BytesReceived := BytesReceived;
           end;
 
-          return Ok(Output)
-        end
+          return Ok(Output);
+        end;
       end;
       Error(Message):
       begin
-        return Error(Message)
-      end
-    end
+        return Error(Message);
+      end;
+    end;
   end;
 
-  return Error('HTTP response head loop ended unexpectedly')
+  return Error('HTTP response head loop ended unexpectedly');
 end;

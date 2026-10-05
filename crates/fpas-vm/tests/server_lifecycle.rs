@@ -31,7 +31,7 @@ fn embedding_does_not_implicitly_authorize_process_control() {
       var Life: ServerLifetime := Unwrap(CreateLifetime(10, false));
       AssertTrue(IsError(ObserveSignals(Life)));
       RequestStop(Life); CloseTaskGroup(GetWorkGroup(Life));
-      AssertTrue(IsOk(FinishShutdown(Life))) end.",
+      AssertTrue(IsOk(FinishShutdown(Life))); end.",
     )
     .run()
     .unwrap();
@@ -42,7 +42,7 @@ fn stop_rejects_new_group_work() {
     let error = vm("program Test; uses Std.Server, Std.Results, Std.Tasks; begin
       var Life: ServerLifetime := Unwrap(CreateLifetime(10, false));
       RequestStop(Life);
-      StartTaskInGroup(GetWorkGroup(Life), function(Token: CancellationToken): boolean begin return true end)
+      StartTaskInGroup(GetWorkGroup(Life), function(Token: CancellationToken): boolean begin return true; end);
       end.").run().unwrap_err();
     assert!(
         error.message.contains("closing or cancelled"),
@@ -54,7 +54,7 @@ fn stop_rejects_new_group_work() {
 #[test]
 fn returning_without_explicit_cleanup_reports_incomplete_shutdown() {
     let error = vm("program Test; uses Std.Server, Std.Results; begin
-      Unwrap(CreateLifetime(0, false)) end.")
+      Unwrap(CreateLifetime(0, false)); end.")
     .run()
     .unwrap_err();
     assert!(
@@ -154,14 +154,14 @@ fn server_lifecycle_child() {
     };
     let body = if mode == "signals" {
         "AssertTrue(Unwrap(ObserveSignals(Life))); AssertTrue(not Unwrap(ObserveSignals(Life)));
-         RequestStop(Life); CloseTaskGroup(GetWorkGroup(Life)); AssertTrue(IsOk(FinishShutdown(Life)))"
+         RequestStop(Life); CloseTaskGroup(GetWorkGroup(Life)); AssertTrue(IsOk(FinishShutdown(Life)));"
     } else if mode == "clean" {
         "RequestStop(Life); CloseTaskGroup(GetWorkGroup(Life));
-         AssertTrue(IsOk(FinishShutdown(Life))); Sleep(200)"
+         AssertTrue(IsOk(FinishShutdown(Life))); Sleep(200);"
     } else if mode == "compute" {
-        "RequestStop(Life); while true do begin end"
+        "RequestStop(Life); while true do begin end;"
     } else {
-        "RequestStop(Life); WriteLn('output')"
+        "RequestStop(Life); WriteLn('output');"
     };
     let source = format!(
         "program Child; uses Std.Server, Std.Results, Std.Tasks, Std.Time, Std.Console, Std.Test;

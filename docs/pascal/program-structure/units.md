@@ -15,16 +15,16 @@ uses Std.Str;
 public function Clamp(Value: integer; Min: integer; Max: integer): integer;
 begin
   if Value < Min then
-    return Min
+    return Min;
   else if Value > Max then
-    return Max
+    return Max;
   else
-    return Value
+    return Value;
 end;
 
 public function IsBlank(S: string): boolean;
 begin
-  return Length(Trim(S)) = 0
+  return Length(Trim(S)) = 0;
 end;
 ```
 

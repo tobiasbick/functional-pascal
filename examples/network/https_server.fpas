@@ -12,18 +12,18 @@ begin
   mutable var ResponseValue: ServerResponse := ServerResponse.Create(200, 'OK');
   ResponseValue.Headers := [Header.Create('Content-Type', 'text/plain; charset=utf-8')];
   ResponseValue.Body := Std.Net.Utf8.Encode('Hello over HTTPS from FPAS');
-  return ResponseValue
+  return ResponseValue;
 end;
 
 begin
   if (ParamCount() < 2) or (ParamCount() > 3) then
   begin
-    panic('usage: https_server.fpas -- CERTIFICATE_PEM PRIVATE_KEY_PEM [PORT]')
+    panic('usage: https_server.fpas -- CERTIFICATE_PEM PRIVATE_KEY_PEM [PORT]');
   end;
   mutable var Port: integer := 18443;
   if ParamCount() = 3 then
   begin
-    Port := StrToInt(ParamStr(2))
+    Port := StrToInt(ParamStr(2));
   end;
 
   case ListenTls('127.0.0.1', Port, ParamStr(0), ParamStr(1), 10000) of
@@ -39,24 +39,24 @@ begin
         end;
         Error(Message):
         begin
-          panic(Message)
-        end
+          panic(Message);
+        end;
       end;
 
       case CloseListener(ListenerValue) of
         Ok(_):
         begin
-          WriteLn('HTTPS server handled 1 request')
+          WriteLn('HTTPS server handled 1 request');
         end;
         Error(Message):
         begin
-          panic(Message)
-        end
-      end
+          panic(Message);
+        end;
+      end;
     end;
     Error(Message):
     begin
-      panic(Message)
-    end
-  end
+      panic(Message);
+    end;
+  end;
 end.

@@ -11,7 +11,7 @@ unit Std.Test;
 // - `Actual`: Value consumed or returned by the operation.
 public procedure AssertEquals<T>(Expected: T; Actual: T);
 begin
-  panic('Intrinsic API declaration')
+  panic('Intrinsic API declaration');
 end;
 
 // Fail when `Cond` is true.
@@ -20,7 +20,7 @@ end;
 // - `Cond`: Boolean condition checked by the operation.
 public procedure AssertFalse(Cond: boolean);
 begin
-  panic('Intrinsic API declaration')
+  panic('Intrinsic API declaration');
 end;
 
 // Fail when one CRT cell differs (`Fg`/`Bg` are packed colors `0..=15`).
@@ -33,7 +33,7 @@ end;
 // - `Bg`: Color value used by the operation.
 public procedure AssertScreenCell(X: integer; Y: integer; Ch: string; Fg: integer; Bg: integer);
 begin
-  panic('Intrinsic API declaration')
+  panic('Intrinsic API declaration');
 end;
 
 // Fail when CRT row `Y` text differs (headless/TUI back buffer).
@@ -43,7 +43,7 @@ end;
 // - `Y`: Vertical coordinate.
 public procedure AssertScreenLine(Expected: string; Y: integer);
 begin
-  panic('Intrinsic API declaration')
+  panic('Intrinsic API declaration');
 end;
 
 // Fail when `Cond` is false.
@@ -52,7 +52,7 @@ end;
 // - `Cond`: Boolean condition checked by the operation.
 public procedure AssertTrue(Cond: boolean);
 begin
-  panic('Intrinsic API declaration')
+  panic('Intrinsic API declaration');
 end;
 
 // Unconditional failure.
@@ -61,7 +61,7 @@ end;
 // - `Msg`: Diagnostic message reported by the operation.
 public procedure Fail(Msg: string);
 begin
-  panic('Intrinsic API declaration')
+  panic('Intrinsic API declaration');
 end;
 
 // Queue one line for the next `Std.Console.ReadLn` (native tests).
@@ -70,13 +70,13 @@ end;
 // - `Line`: Input line queued for the next read.
 public procedure PushReadLn(Line: string);
 begin
-  panic('Intrinsic API declaration')
+  panic('Intrinsic API declaration');
 end;
 
 // Runner-owned empty directory for this test.
 public function ScratchDir(): string;
 begin
-  panic('Intrinsic API declaration')
+  panic('Intrinsic API declaration');
 end;
 
 // Mark the current test skipped; runner reports `SKIP` (exit `0` unless `fpas test --strict`).
@@ -85,5 +85,5 @@ end;
 // - `Msg`: Diagnostic message reported by the operation.
 public procedure Skip(Msg: string);
 begin
-  panic('Intrinsic API declaration')
+  panic('Intrinsic API declaration');
 end;

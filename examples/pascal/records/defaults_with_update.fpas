@@ -11,7 +11,7 @@ type
 
 function ShowConfig(Value: Config): string;
 begin
-  return (((Value.Host + ':') + IntToStr(Value.Port)) + ' retries=') + IntToStr(Value.Retries)
+  return (((Value.Host + ':') + IntToStr(Value.Port)) + ' retries=') + IntToStr(Value.Retries);
 end;
 
 begin
@@ -22,5 +22,5 @@ begin
   WriteLn('Default: ' + ShowConfig(DefaultConfig));
   WriteLn('Dev: ' + ShowConfig(DevConfig));
   WriteLn('Prod: ' + ShowConfig(ProdConfig));
-  WriteLn('Original still unchanged: ' + ShowConfig(DefaultConfig))
+  WriteLn('Original still unchanged: ' + ShowConfig(DefaultConfig));
 end.

@@ -5,5 +5,5 @@ uses Std.Str, Std.Test;
 begin
   AssertEquals('😀😀', FromChar('😀', 2));
   AssertEquals('aßc', SetCharAt('a😀c', 1, 'ß'));
-  AssertEquals(128512, Ord('😀'))
+  AssertEquals(128512, Ord('😀'));
 end.

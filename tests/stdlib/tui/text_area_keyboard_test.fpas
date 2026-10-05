@@ -18,14 +18,14 @@ begin
     ctrl := false;
     alt := false;
     meta := false;
-  end
+  end;
 end;
 
 function ViewTextArea(State: TextAreaModel): TuiElement;
 begin
   return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(1)), [
                                                                         TuiElementBuilders.MakeTextArea(TuiControlId.Create(1), State.Text, State.Caret, State.Offset, TuiAction.Create(9))
-                                                                      ])
+                                                                      ]);
 end;
 
 function ViewWindowedTextArea(State: TextAreaModel): TuiElement;
@@ -33,7 +33,7 @@ begin
   var Editor: TuiElement := TuiElementBuilders.MakeTextArea(TuiControlId.Create(1), State.Text, State.Caret, State.Offset, TuiAction.Create(9));
   return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(1)), [
                                                                         TuiElementBuilders.MakePanel('Editor', [Editor])
-                                                                      ])
+                                                                      ]);
 end;
 
 function UpdateTextArea(State: TextAreaModel; Msg: TuiMsg; Cmd: TuiCmdOutput): TextAreaModel;
@@ -48,19 +48,19 @@ begin
         Text := Text;
         Caret := Caret;
         Offset := Offset;
-      end
-    end
+      end;
+    end;
     else
     begin
-      return State
-    end
-  end
+      return State;
+    end;
+  end;
 end;
 
 function Press(App: TuiApplication; State: TextAreaModel; Kind: TuiKeyKind; Character: string): TextAreaModel;
 begin
   App.InjectKeyForTest(MakeKey(Kind, Character));
-  return App.RunIterations(State, UpdateTextArea, ViewTextArea, 1, 0)
+  return App.RunIterations(State, UpdateTextArea, ViewTextArea, 1, 0);
 end;
 
 function PressWindowed(
@@ -71,7 +71,7 @@ function PressWindowed(
 ): TextAreaModel;
 begin
   App.InjectKeyForTest(MakeKey(Kind, Character));
-  return App.RunIterations(State, UpdateTextArea, ViewWindowedTextArea, 1, 0)
+  return App.RunIterations(State, UpdateTextArea, ViewWindowedTextArea, 1, 0);
 end;
 
 begin
@@ -163,5 +163,5 @@ begin
   Model := PressWindowed(App, Model, TuiKeyKind.Enter, '');
   AssertEquals(0, Model.Offset.Y);
   AssertTrue(Std.Str.Contains(App.SurfaceSnapshot().LineAt(1), 'first'));
-  App.Close()
+  App.Close();
 end.

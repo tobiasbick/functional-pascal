@@ -8,13 +8,13 @@ uses Std.Console, Std.Tasks;
 
 function Compute(N: integer): integer;
 begin
-  return N * N
+  return N * N;
 end;
 
 begin
   var T1: task := go Compute(3);
   var T2: task := go Compute(4);
-  WriteLn(Wait(T1) + Wait(T2))
+  WriteLn(Wait(T1) + Wait(T2));
 end.
 ```
 

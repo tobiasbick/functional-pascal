@@ -24,7 +24,7 @@
     "body": [
       "function ${1:FunctionName}(${2:Value}: ${3:integer}): ${4:integer};",
       "begin",
-      "  return ${2:Value}",
+      "  return ${2:Value};",
       "end;"
     ],
     "description": "Declare a function"
@@ -59,7 +59,7 @@
       "if ${1:true} then",
       "begin",
       "  $0",
-      "end"
+      "end;"
     ],
     "description": "Insert an if statement"
   },
@@ -69,7 +69,7 @@
       "for ${1:I}: ${2:integer} := ${3:0} to ${4:10} do",
       "begin",
       "  $0",
-      "end"
+      "end;"
     ],
     "description": "Insert a for loop"
   },
@@ -79,7 +79,7 @@
       "while ${1:true} do",
       "begin",
       "  $0",
-      "end"
+      "end;"
     ],
     "description": "Insert a while loop"
   },
@@ -88,7 +88,7 @@
     "body": [
       "repeat",
       "  $0",
-      "until ${1:true}"
+      "until ${1:true};"
     ],
     "description": "Insert a repeat loop"
   },
@@ -97,8 +97,8 @@
     "body": [
       "case ${1:Value} of",
       "  ${2:0}:",
-      "    var ${3:Match}: ${4:integer} := ${1:Value}$0",
-      "end"
+      "    var ${3:Match}: ${4:integer} := ${1:Value};$0",
+      "end;"
     ],
     "description": "Insert a case statement"
   }

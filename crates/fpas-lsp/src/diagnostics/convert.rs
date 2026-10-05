@@ -127,7 +127,7 @@ mod tests {
 
     #[test]
     fn preserves_code_severity_utf16_range_and_help() {
-        let snapshot = snapshot("program Demo;\nbegin\n  var Text := '𝄞'\nend.\n");
+        let snapshot = snapshot("program Demo;\nbegin\n  var Text := '𝄞';\nend.\n");
         let offset = snapshot.source().find("'𝄞'").expect("string offset");
         let diagnostic = Diagnostic::warning(
             DiagnosticCode::new(1005),

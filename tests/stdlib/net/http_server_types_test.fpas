@@ -10,5 +10,5 @@ begin
   AssertEquals(201, ResponseValue.StatusCode);
   AssertEquals('Created', ResponseValue.ReasonPhrase);
   AssertEquals(1, Std.Arrays.Length(ResponseValue.Headers));
-  AssertEquals(2, Std.Arrays.Length(ResponseValue.Body))
+  AssertEquals(2, Std.Arrays.Length(ResponseValue.Body));
 end.

@@ -16,9 +16,9 @@ begin
       var Ready: channel of boolean := State.Ready;
       Cmd.StartBackground(19, function(Token: CancellationToken): result of boolean, string begin
         Send(Ready, true);
-        return Error('expected background failure')
+        return Error('expected background failure');
       end);
-      return State
+      return State;
     end;
     TuiMsg.BackgroundFailed(Id, Kind, Message, Code, Line, Column):
     begin
@@ -28,23 +28,23 @@ begin
       return record
         Ready := State.Ready;
         FailureSeen := true;
-      end
-    end
+      end;
+    end;
     else
     begin
-      return State
-    end
-  end
+      return State;
+    end;
+  end;
 end;
 
 function UpdateApplication(State: FailureModel; Message: integer; Cmd: TuiCmdOutput): FailureModel;
 begin
-  return State
+  return State;
 end;
 
 function View(State: FailureModel): TuiElement;
 begin
-  return TuiElementBuilders.MakeLabel('failure')
+  return TuiElementBuilders.MakeLabel('failure');
 end;
 
 begin
@@ -59,5 +59,5 @@ begin
   Model := App.RunBackgroundIterations(Model, Inbox, UpdateFramework, UpdateApplication, View, 1, 0);
   AssertTrue(Model.FailureSeen);
   App.CloseWithBackground(Inbox);
-  CloseChannel(Ready)
+  CloseChannel(Ready);
 end.

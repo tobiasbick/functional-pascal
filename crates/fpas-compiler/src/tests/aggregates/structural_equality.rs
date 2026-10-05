@@ -24,7 +24,7 @@ type
   end;
 procedure Check(Name: string; Value: boolean; Expected: boolean);
 begin
-  if Value <> Expected then panic('wrong: ' + Name)
+  if Value <> Expected then panic('wrong: ' + Name);
 end;
 begin
   var A: Point := record X := 1; Y := 2.0; end;
@@ -42,7 +42,7 @@ begin
   Check('same variant other payload', S1 = Shape.Circle(A, 4), false);
   Check('other variant', S1 = Shape.Square(3), false);
   Check('unit variant', Shape.Dot = Shape.Dot, true);
-  Check('unit vs payload', Shape.Dot <> S1, true)
+  Check('unit vs payload', Shape.Dot <> S1, true);
 end.
 "#,
     );

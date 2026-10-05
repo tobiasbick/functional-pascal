@@ -10,11 +10,11 @@ begin
     AssertEquals('D:\', Normalize('D:\demo\..'));
     AssertEquals('D:\demo', Normalize('D:\..\demo'));
     AssertEquals('D:demo', Normalize('D:projects\..\demo'));
-    AssertEquals('\demo', Normalize('\projects\..\demo'))
-  end
+    AssertEquals('\demo', Normalize('\projects\..\demo'));
+  end;
   else
   begin
     AssertEquals('/projects/demo', Normalize('/projects/./demo'));
-    AssertEquals('/', Normalize('/demo/../..'))
-  end
+    AssertEquals('/', Normalize('/demo/../..'));
+  end;
 end.

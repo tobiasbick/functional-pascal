@@ -7,11 +7,11 @@ begin
   case Node of
     TuiElement.Label(Text):
     begin
-      AssertEquals('hi', Text)
-    end
+      AssertEquals('hi', Text);
+    end;
     else
     begin
-      panic('expected label element')
-    end
-  end
+      panic('expected label element');
+    end;
+  end;
 end.

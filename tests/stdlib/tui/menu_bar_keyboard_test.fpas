@@ -17,7 +17,7 @@ begin
     ctrl := false;
     alt := false;
     meta := false;
-  end
+  end;
 end;
 
 function ViewMenu(State: MenuModel): TuiElement;
@@ -28,7 +28,7 @@ begin
                                                                                                                    TuiMenuItem.Disabled(TuiControlId.Create(2), 'Save', TuiAction.Create(20)),
                                                                                                                    TuiMenuItem.WithShortcut(TuiControlId.Create(3), 'Quit', TuiAction.Create(30), 'Ctrl+Q')
                                                                                                                  ])
-                                                                                ])
+                                                                                ]);
 end;
 
 function UpdateMenu(State: MenuModel; Msg: TuiMsg; Cmd: TuiCmdOutput): MenuModel;
@@ -43,26 +43,26 @@ begin
           return record
             Focus := Id.Value;
             Actions := State.Actions;
-          end
+          end;
         end;
         None:
         begin
-          return State
-        end
-      end
+          return State;
+        end;
+      end;
     end;
     TuiMsg.Action(Source, Action):
     begin
       return record
         Focus := State.Focus;
         Actions := Std.Arrays.Concat(State.Actions, [Action.Value]);
-      end
-    end
+      end;
+    end;
     else
     begin
-      return State
-    end
-  end
+      return State;
+    end;
+  end;
 end;
 
 begin
@@ -84,5 +84,5 @@ begin
   Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 1, 0);
   AssertEquals(2, Std.Arrays.Length(Model.Actions));
   AssertEquals(30, Model.Actions[1]);
-  App.Close()
+  App.Close();
 end.

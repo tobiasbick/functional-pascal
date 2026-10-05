@@ -3,11 +3,11 @@ use crate::analyze_with_types;
 #[test]
 fn shadowed_standard_names_do_not_produce_intrinsic_call_metadata() {
     for routine in [
-        "function Send(A: integer; B: integer; C: integer): integer; begin return A + B + C end;",
+        "function Send(A: integer; B: integer; C: integer): integer; begin return A + B + C; end;",
         "procedure Send(A: integer; B: integer; C: integer); begin end;",
     ] {
         let source = format!(
-            "program Shadow; uses Std.Tasks, Std.Console; {routine} begin Send(1, 2, 3); Std.Console.WriteLn('ok'); sEnD(1, 2, 3) end."
+            "program Shadow; uses Std.Tasks, Std.Console; {routine} begin Send(1, 2, 3); Std.Console.WriteLn('ok'); sEnD(1, 2, 3); end."
         );
         let (program, errors) = fpas_parser::parse(&source);
         assert!(errors.is_empty(), "{errors:?}");

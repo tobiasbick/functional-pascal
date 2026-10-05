@@ -26,7 +26,7 @@ These operations use a **text screen model** with a current cursor position, an 
 ```pascal
 Window(10, 5, 30, 15);
 GotoXY(1, 1);
-WriteLn('top-left of the window')
+WriteLn('top-left of the window');
 ```
 
 ### `function WhereX(): integer`

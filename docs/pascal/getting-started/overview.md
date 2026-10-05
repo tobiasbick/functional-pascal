@@ -18,7 +18,7 @@ program Greeting;
 uses Std.Console;
 
 begin
-  WriteLn('Hello, Functional Pascal')
+  WriteLn('Hello, Functional Pascal');
 end.
 ```
 

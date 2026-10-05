@@ -12,7 +12,7 @@ Keyboard input is **separate** from the `ReadText` / `ReadLn` buffer. Enabling r
 
 ```pascal
 var C: string := ReadKey();
-WriteLn(C)
+WriteLn(C);
 ```
 
 ---
@@ -28,8 +28,8 @@ Use it to avoid blocking when you want a polling loop.
 if KeyPressed() then
 begin
   var C: string := ReadKey();
-  WriteLn(C)
-end
+  WriteLn(C);
+end;
 ```
 
 ---
@@ -53,10 +53,10 @@ if KeyPressed() then
 begin
   var E: KeyEvent := ReadKeyEvent();
   if E.kind = KeyKind.Escape then
-    WriteLn('quit')
+    WriteLn('quit');
   else
-    WriteLn(E.ch)
-end
+    WriteLn(E.ch);
+end;
 ```
 
 ### `function EventPending(): boolean`

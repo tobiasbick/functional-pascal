@@ -72,7 +72,7 @@ const KEYWORDS: &[&str] = &[
 #[test]
 fn every_keyword_is_rejected_as_a_member_name() {
     for keyword in KEYWORDS {
-        let source = format!("program T; begin Value.{keyword}() end.");
+        let source = format!("program T; begin Value.{keyword}(); end.");
         let (_, errors) = parse_with_errors(&source);
         assert!(!errors.is_empty(), "`{keyword}` was accepted after `.`");
     }
@@ -81,7 +81,7 @@ fn every_keyword_is_rejected_as_a_member_name() {
 #[test]
 fn self_is_rejected_as_an_ordinary_parameter_name() {
     let (_, errors) = parse_with_errors(
-        "program T; function Identity(Self: integer): integer; begin return Self end; begin end.",
+        "program T; function Identity(Self: integer): integer; begin return Self; end; begin end.",
     );
     assert!(!errors.is_empty());
 }
@@ -89,7 +89,7 @@ fn self_is_rejected_as_an_ordinary_parameter_name() {
 #[test]
 fn self_is_rejected_as_a_static_method_parameter_name() {
     for declaration in [
-        "static function Create(Self: Point): Point; begin return Self end;",
+        "static function Create(Self: Point): Point; begin return Self; end;",
         "static procedure Reset(Self: Point); begin end;",
     ] {
         let source = format!("program T; type Point = record {declaration} end; begin end.");
@@ -101,7 +101,7 @@ fn self_is_rejected_as_a_static_method_parameter_name() {
 #[test]
 fn unknown_generic_constraint_is_rejected_by_the_parser() {
     let (_, errors) = parse_with_errors(
-        "program T; function Identity<T: Nonexistent>(Value: T): T; begin return Value end; begin end.",
+        "program T; function Identity<T: Nonexistent>(Value: T): T; begin return Value; end; begin end.",
     );
     assert!(!errors.is_empty());
 }

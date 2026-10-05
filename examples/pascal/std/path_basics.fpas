@@ -9,5 +9,5 @@ begin
   WriteLn('base: ', BaseName('dir/nested/file.txt'));
   WriteLn('dir: ', DirName('dir/nested/file.txt'));
   WriteLn('ext: ', Extension('archive.tar.gz'));
-  WriteLn('norm: ', Normalize('dir/nested/../file.txt'))
+  WriteLn('norm: ', Normalize('dir/nested/../file.txt'));
 end.

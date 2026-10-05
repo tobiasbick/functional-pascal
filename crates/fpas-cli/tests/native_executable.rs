@@ -45,7 +45,7 @@ include = ["src/**/*.fpas"]
     );
     write(
         &root.join("src/main.fpas"),
-        "program Main;\nuses Std.Console, Std.Args;\nbegin\n  WriteLn(ParamStr(0))\nend.\n",
+        "program Main;\nuses Std.Console, Std.Args;\nbegin\n  WriteLn(ParamStr(0));\nend.\n",
     );
 
     let fpas = env!("CARGO_BIN_EXE_fpas");
@@ -133,7 +133,7 @@ include = ["src/**/*.fpas"]
     );
     write(
         &root.join("apps/hello/src/main.fpas"),
-        "program Main;\nuses Std.Console;\nbegin\n  WriteLn('workspace bundle')\nend.\n",
+        "program Main;\nuses Std.Console;\nbegin\n  WriteLn('workspace bundle');\nend.\n",
     );
 
     let build = Command::new(env!("CARGO_BIN_EXE_fpas"))

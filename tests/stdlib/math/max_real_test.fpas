@@ -4,5 +4,5 @@ uses Std.Console, Std.Math;
 
 begin
   WriteLn(Max(3.5, 1.2));
-  WriteLn(Max(-0.5, 0.5))
+  WriteLn(Max(-0.5, 0.5));
 end.

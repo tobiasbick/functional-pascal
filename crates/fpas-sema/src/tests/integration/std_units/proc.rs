@@ -8,7 +8,7 @@ program T;
 uses Std.Proc;
 begin
   var Status: Result of integer, string := Run('tool', ['--help']);
-  var Qualified: Result of integer, string := Std.Proc.Run('tool', ['--version'])
+  var Qualified: Result of integer, string := Std.Proc.Run('tool', ['--version']);
 end.",
     );
 }
@@ -22,7 +22,7 @@ uses Std.Proc;
 begin
   var Executable: Result of string, string := CurrentExecutable();
   var Captured: Result of ProcessOutput, string :=
-    Std.Proc.RunCapture('tool', ['--version'])
+    Std.Proc.RunCapture('tool', ['--version']);
 end.",
     );
 }
@@ -34,7 +34,7 @@ fn proc_run_rejects_non_string_args_array() {
 program T;
 uses Std.Proc;
 begin
-    var Status: Result of integer, string := Run('tool', [1, 2, 3])
+    var Status: Result of integer, string := Run('tool', [1, 2, 3]);
 end.",
     );
 
@@ -51,7 +51,7 @@ fn proc_run_capture_rejects_non_string_args_array() {
 program T;
 uses Std.Proc;
 begin
-    var Captured: Result of ProcessOutput, string := RunCapture('tool', [1, 2, 3])
+    var Captured: Result of ProcessOutput, string := RunCapture('tool', [1, 2, 3]);
 end.",
     );
 

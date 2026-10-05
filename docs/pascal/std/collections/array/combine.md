@@ -6,7 +6,7 @@ Returns a **new** array containing all elements of `A` followed by all elements 
 
 ```pascal
 var C: array of integer := Concat([1, 2], [3, 4]);
-WriteLn(Length(C))  // 4
+WriteLn(Length(C));  // 4
 ```
 
 ---
@@ -18,7 +18,7 @@ Applies `F` to each element (producing an array), then flattens all results into
 ```pascal
 function ExpandPair(X: integer): array of integer;
 begin
-  return [X, X * 10]
+  return [X, X * 10];
 end;
 
 var Output: array of integer := FlatMap([1, 2, 3], ExpandPair);
@@ -33,7 +33,7 @@ Creates a new array containing `Count` copies of `Value`.
 
 ```pascal
 var Zeros: array of integer := Fill(0, 5);
-WriteLn(Length(Zeros))  // 5
+WriteLn(Length(Zeros));  // 5
 ```
 
 `Count` must be non-negative and at most **1_000_000**. Larger counts raise a runtime error instead of allocating unbounded memory.
@@ -47,7 +47,7 @@ Calls `F` for each element in `A`. Does not return a value.
 ```pascal
 procedure PrintValue(X: integer);
 begin
-  WriteLn(X)
+  WriteLn(X);
 end;
 
 ForEach([1, 2, 3], PrintValue);

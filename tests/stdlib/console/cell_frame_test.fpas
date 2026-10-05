@@ -8,7 +8,7 @@ begin
     glyph := Glyph;
     foreground := Foreground;
     background := Background;
-  end
+  end;
 end;
 
 begin
@@ -34,5 +34,5 @@ begin
   AssertTrue(Foreground.kind = ColorKind.Rgb);
   AssertEquals(10, Foreground.red);
   AssertTrue(Background.kind = ColorKind.Ansi256);
-  AssertEquals(42, Background.index)
+  AssertEquals(42, Background.index);
 end.

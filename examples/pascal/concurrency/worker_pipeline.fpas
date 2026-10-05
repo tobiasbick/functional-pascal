@@ -12,11 +12,11 @@ begin
     begin
       if IsError(SendWithCancellation(Jobs, Value, Token)) then
       begin
-        return
-      end
+        return;
+      end;
     end;
 
-    CloseChannel(Jobs)
+    CloseChannel(Jobs);
   end);
   for Worker: integer := 1 to 3 do
   begin
@@ -28,22 +28,22 @@ begin
           begin
             if IsError(SendWithCancellation(Results, Value * Value, Token)) then
             begin
-              return
-            end
+              return;
+            end;
           end;
           Error(_):
           begin
-            return
-          end
-        end
-      end
-    end)
+            return;
+          end;
+        end;
+      end;
+    end);
   end;
   // Collect while the producer runs: filling Jobs first could deadlock the pipeline.
   mutable var Total: integer := 0;
   for Index: integer := 1 to 12 do
   begin
-    Total := Total + Unwrap(Receive(Results))
+    Total := Total + Unwrap(Receive(Results));
   end;
 
   case CloseTaskGroupWithTimeout(Group, 1000) of
@@ -51,19 +51,19 @@ begin
     begin
       if Length(Failures) <> 0 then
       begin
-        panic('Worker failed')
-      end
+        panic('Worker failed');
+      end;
     end;
     Error(_):
     begin
       // A timeout retains ownership. Joining is still required, not a forced kill.
       if Length(CloseTaskGroup(Group)) <> 0 then
       begin
-        panic('Worker failed')
-      end
-    end
+        panic('Worker failed');
+      end;
+    end;
   end;
 
   CloseChannel(Results);
-  WriteLn(Total)
+  WriteLn(Total);
 end.

@@ -4,9 +4,9 @@ uses Std.Str;
 
 function Empty(C: string): string;
 begin
-  return ''
+  return '';
 end;
 
 begin
-  var Mapped: string := Map('abc', Empty)
+  var Mapped: string := Map('abc', Empty);
 end.

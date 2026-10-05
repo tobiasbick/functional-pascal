@@ -3,5 +3,5 @@ program T;
 uses Std.Console, Std.Math;
 
 begin
-  WriteLn(Max(3, 1.5))
+  WriteLn(Max(3, 1.5));
 end.

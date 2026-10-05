@@ -13,5 +13,5 @@ begin
   var Surface: TuiWorkingSurface := TuiWorkingSurface.Create(TuiSize.Create(24, 5));
   TuiPaintTooSmallOverlay(Surface);
   var Snapshot: TuiSurfaceSnapshot := Surface.Snapshot();
-  AssertTrue(Std.Str.Contains(Snapshot.LineAt(2), 'Terminal too small'))
+  AssertTrue(Std.Str.Contains(Snapshot.LineAt(2), 'Terminal too small'));
 end.

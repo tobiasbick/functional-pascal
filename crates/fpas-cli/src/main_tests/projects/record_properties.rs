@@ -15,7 +15,7 @@ fn run_cli_reads_and_writes_property_from_unit_global_record() {
 uses App.Data, Std.Console, Std.Conv;
 begin
   WriteLn(IntToStr(Global.Value));
-  Global.Value := 19
+  Global.Value := 19;
 end.",
     );
     write_text(
@@ -27,11 +27,11 @@ public type
     public Base: integer;
     public function GetValue(Self: Counter): integer;
     begin
-      return Self.Base
+      return Self.Base;
     end;
     public procedure SetValue(Self: Counter; Value: integer);
     begin
-      WriteLn('set:' + IntToStr(Value))
+      WriteLn('set:' + IntToStr(Value));
     end;
     public property Value: integer read GetValue write SetValue;
   end;

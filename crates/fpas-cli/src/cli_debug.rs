@@ -354,7 +354,7 @@ mod tests {
                     .as_path()
             )
         );
-        crate::test_support::write_text(&source_path, "program Main; begin var X := 1 end.\n");
+        crate::test_support::write_text(&source_path, "program Main; begin var X := 1; end.\n");
         let error = prepare_image(&image_path, Some(&root)).expect_err("stale source rejected");
         assert!(error.contains("is stale"));
         fs::remove_dir_all(root).expect("remove image temp directory");

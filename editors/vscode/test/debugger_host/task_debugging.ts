@@ -48,7 +48,7 @@ export async function verifyTaskDebugging(
     "begin",
     "  mutable var Value: integer := Start;",
     "  Value := Value + 1;",
-    "  return Value",
+    "  return Value;",
     "end;",
     "",
     "begin",
@@ -57,7 +57,7 @@ export async function verifyTaskDebugging(
     "  var Pending: array of task := [First, Second];",
     "  WaitAll(Pending);",
     "  WriteLn(Wait(First));",
-    "  WriteLn(Wait(Second))",
+    "  WriteLn(Wait(Second));",
     "end.",
     ""
   ];

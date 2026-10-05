@@ -34,7 +34,7 @@ fn same_record_declaration_and_alias_are_compatible() {
            var PointValue: Point := record X := 1; Y := 2; end; \
            var SameType: Point := PointValue; \
            var AliasValue: PointAlias := PointValue; \
-           var ContextualLiteral: PointAlias := record X := 3; Y := 4; end \
+           var ContextualLiteral: PointAlias := record X := 3; Y := 4; end; \
          end.",
     );
 }
@@ -47,7 +47,7 @@ fn distinct_public_record_declarations_are_incompatible_despite_equal_fields() {
          type Size = record X: integer; Y: integer; end; \
          begin \
            var SizeValue: Size := record X := 1; Y := 2; end; \
-           var PointValue: Point := SizeValue \
+           var PointValue: Point := SizeValue; \
          end.",
     );
 
@@ -67,7 +67,7 @@ fn distinct_private_records_are_incompatible_inside_their_owner_unit() {
          type Left = record Value: integer; end; \
          type Right = record Value: integer; end; \
          function Convert(Value: Right): Left; \
-         begin return Value end;",
+         begin return Value; end;",
     );
     let analysis = analyze_unit(&unit, &[]).expect("unit analysis must succeed");
 
@@ -97,9 +97,9 @@ fn imported_records_use_their_qualified_declaration_identity() {
         "unit Demo.Consumer; \
          uses Demo.First, Demo.Second; \
          public function Keep(Value: Demo.First.Value): Demo.First.Value; \
-         begin return Value end; \
+         begin return Value; end; \
          public function Reject(Value: Demo.Second.Value): Demo.First.Value; \
-         begin return Value end;",
+         begin return Value; end;",
     );
     let analysis = analyze_unit(&consumer, &interfaces).expect("consumer analysis must succeed");
 
@@ -126,11 +126,11 @@ fn anonymous_generic_binding_does_not_bridge_distinct_named_records() {
          type Left = record Value: integer; end; \
          type Right = record Value: integer; end; \
          function Pick<TValue>(A: TValue; B: TValue; C: TValue): TValue; \
-         begin return A end; \
+         begin return A; end; \
          begin \
            var LeftValue: Left := record Value := 1; end; \
            var RightValue: Right := record Value := 2; end; \
-           var ResultValue: Left := Pick(record Value := 0; end, LeftValue, RightValue) \
+           var ResultValue: Left := Pick(record Value := 0; end, LeftValue, RightValue); \
          end.",
     );
 

@@ -13,13 +13,13 @@ begin
   case BodyText(ResponseValue) of
     Ok(Text):
     begin
-      WriteLn((((LabelText + ' ') + IntToStr(ResponseValue.StatusCode)) + ': ') + Text)
+      WriteLn((((LabelText + ' ') + IntToStr(ResponseValue.StatusCode)) + ': ') + Text);
     end;
     Error(Message):
     begin
-      panic(Message)
-    end
-  end
+      panic(Message);
+    end;
+  end;
 end;
 
 // Sends one buffered request and prints its response.
@@ -32,13 +32,13 @@ begin
   case Send(RequestValue) of
     Ok(ResponseValue):
     begin
-      PrintBuffered(LabelText, ResponseValue)
+      PrintBuffered(LabelText, ResponseValue);
     end;
     Error(Message):
     begin
-      panic(Message)
-    end
-  end
+      panic(Message);
+    end;
+  end;
 end;
 
 // Reads an entire bounded response stream and validates its UTF-8 body.
@@ -56,41 +56,41 @@ begin
       begin
         if Std.Arrays.Length(Part) = 0 then
         begin
-          Reading := false
-        end
+          Reading := false;
+        end;
         else
         begin
-          Bytes := Std.Arrays.Concat(Bytes, Part)
-        end
+          Bytes := Std.Arrays.Concat(Bytes, Part);
+        end;
       end;
       Error(Message):
       begin
-        panic(Message)
-      end
-    end
+        panic(Message);
+      end;
+    end;
   end;
 
   case Std.Net.Utf8.Decode(Bytes) of
     Ok(Text):
     begin
-      return Text
+      return Text;
     end;
     Error(Message):
     begin
-      panic(Message)
-    end
-  end
+      panic(Message);
+    end;
+  end;
 end;
 
 begin
   mutable var Port: integer := 18080;
   if ParamCount() = 1 then
   begin
-    Port := StrToInt(ParamStr(0))
-  end
+    Port := StrToInt(ParamStr(0));
+  end;
   else if ParamCount() <> 0 then
   begin
-    panic('usage: http_client.fpas -- [PORT]')
+    panic('usage: http_client.fpas -- [PORT]');
   end;
   var BaseUrl: string := 'http://127.0.0.1:' + IntToStr(Port);
   RunBuffered('GET', Request.Get(BaseUrl + '/hello'));
@@ -102,11 +102,11 @@ begin
     Ok(ResponseValue):
     begin
       WriteLn((('STREAM ' + IntToStr(ResponseValue.StatusCode)) + ': ') +
-              ReadAll(ResponseValue.Body))
+              ReadAll(ResponseValue.Body));
     end;
     Error(Message):
     begin
-      panic(Message)
-    end
-  end
+      panic(Message);
+    end;
+  end;
 end.

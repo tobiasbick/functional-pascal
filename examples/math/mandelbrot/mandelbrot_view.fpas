@@ -10,7 +10,7 @@ begin
   mutable var Status: string := 'rendering';
   if State.RowsRendered = State.Grid.Height then
   begin
-    Status := 'ready'
+    Status := 'ready';
   end;
   var Detail: string := Format('center=(%f, %f)  zoom=%f  palette=%s  %s', State.Explorer.CenterX, State.Explorer.CenterY, State.Explorer.Zoom, PaletteName(State.Explorer.Palette), Status);
   mutable var MainChildren: array of TuiElement := [
@@ -22,7 +22,7 @@ begin
   if Std.Str.Length(State.FailureMessage) > 0 then
   begin
     Std.Arrays.Push(MainChildren, TuiElementBuilders.MakeRule('render failed: ' +
-                                                              State.FailureMessage))
+                                                              State.FailureMessage));
   end;
 
   Std.Arrays.Push(MainChildren, TuiElementBuilders.MakeStatusLine([
@@ -45,8 +45,8 @@ begin
                                                                                                                  TuiElementBuilders.MakeLabel('R or middle click: reset'),
                                                                                                                  TuiElementBuilders.MakeLabel('Esc: close this overlay')
                                                                                                                ], 1)
-                                                                         ]))
+                                                                         ]));
   end;
 
-  return TuiElementBuilders.MakeDesktop(None, Children)
+  return TuiElementBuilders.MakeDesktop(None, Children);
 end;

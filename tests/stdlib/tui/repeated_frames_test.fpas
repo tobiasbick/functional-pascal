@@ -8,13 +8,13 @@ begin
   case Msg of
     TuiMsg.Tick(Delta):
     begin
-      return State + 1
-    end
+      return State + 1;
+    end;
     else
     begin
-      return State
-    end
-  end
+      return State;
+    end;
+  end;
 end;
 
 function ViewFrames(State: integer): TuiElement;
@@ -22,17 +22,17 @@ begin
   mutable var Children: array of TuiElement := [];
   for Index: integer := 1 to 32 do
   begin
-    Std.Arrays.Push(Children, TuiElementBuilders.MakeLabel('row'))
+    Std.Arrays.Push(Children, TuiElementBuilders.MakeLabel('row'));
   end;
   var SharedAction: TuiAction := TuiAction.Create(100);
   for Index: integer := 1 to 8 do
   begin
-    Std.Arrays.Push(Children, TuiElementBuilders.MakeButton(TuiControlId.Create(Index), 'action', SharedAction))
+    Std.Arrays.Push(Children, TuiElementBuilders.MakeButton(TuiControlId.Create(Index), 'action', SharedAction));
   end;
 
   return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(1)), [
                                                                         TuiElementBuilders.MakePanel('Repeated frames', [TuiElementBuilders.MakeColumn(Children)])
-                                                                      ])
+                                                                      ]);
 end;
 
 begin
@@ -45,5 +45,5 @@ begin
   var LargeResult: integer := Large.RunIterations(0, UpdateFrames, ViewFrames, 100, 16);
   AssertEquals(100, LargeResult);
   AssertEquals(120, Large.SurfaceSnapshot().Width);
-  Large.Close()
+  Large.Close();
 end.

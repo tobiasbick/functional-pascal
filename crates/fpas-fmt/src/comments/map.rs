@@ -346,7 +346,7 @@ mod tests {
 
     #[test]
     fn preserves_comments_before_uses_begin_and_end_of_line() -> Result<(), String> {
-        let source = "program T;\n// before uses\nuses Std.Console;\n\n// before begin\nbegin\n  WriteLn('ok') // trail\nend. // tail";
+        let source = "program T;\n// before uses\nuses Std.Console;\n\n// before begin\nbegin\n  WriteLn('ok'); // trail\nend. // tail";
         let (unit, errors) = parse_compilation_unit(source);
         assert!(errors.is_empty(), "{errors:?}");
         let map = CommentMap::build(source, &unit).map_err(|error| error.to_string())?;
@@ -394,7 +394,7 @@ mod tests {
 
     #[test]
     fn preserves_line_comments_before_statements() {
-        let source = "program T; begin\n  // setup\n  WriteLn('ok')\nend.";
+        let source = "program T; begin\n  // setup\n  WriteLn('ok');\nend.";
         let (unit, errors) = parse_compilation_unit(source);
         assert!(errors.is_empty(), "{errors:?}");
         let formatted = crate::format_source(source, &unit).expect("matching source and AST");

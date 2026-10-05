@@ -17,7 +17,7 @@ begin
     ctrl := false;
     alt := Alt;
     meta := false;
-  end
+  end;
 end;
 
 function ViewButtons(State: ButtonKeyboardModel): TuiElement;
@@ -29,7 +29,7 @@ begin
                                                                                                                   TuiElementBuilders.MakeButtonWithMnemonic(TuiControlId.Create(3), 'Discard', 'D', TuiAction.Create(30)),
                                                                                                                   TuiElementBuilders.MakeDisabledButton(TuiControlId.Create(4), 'Cancel', 'C', TuiAction.Create(40))
                                                                                                                 ])
-                                                                                ])
+                                                                                ]);
 end;
 
 function UpdateButtons(State: ButtonKeyboardModel; Msg: TuiMsg; Cmd: TuiCmdOutput): ButtonKeyboardModel;
@@ -41,7 +41,7 @@ begin
       return record
         Focus := State.Focus;
         Actions := Std.Arrays.Concat(State.Actions, [Action.Value]);
-      end
+      end;
     end;
     TuiMsg.FocusChanged(Previous, Current):
     begin
@@ -51,19 +51,19 @@ begin
           return record
             Focus := Id.Value;
             Actions := State.Actions;
-          end
+          end;
         end;
         None:
         begin
-          return State
-        end
-      end
-    end
+          return State;
+        end;
+      end;
+    end;
     else
     begin
-      return State
-    end
-  end
+      return State;
+    end;
+  end;
 end;
 
 begin
@@ -104,5 +104,5 @@ begin
   App.InjectKeyForTest(MakeKey(TuiKeyKind.Right, '', false));
   Model := App.RunIterations(Model, UpdateButtons, ViewButtons, 1, 0);
   AssertEquals(3, Model.Focus);
-  App.Close()
+  App.Close();
 end.

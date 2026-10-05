@@ -13,10 +13,10 @@ function TuiMeasureConstraintRequireNonNegative(Value: integer): integer;
 begin
   if Value < 0 then
   begin
-    panic('Tui measure constraint limit must not be negative')
+    panic('Tui measure constraint limit must not be negative');
   end;
 
-  return Value
+  return Value;
 end;
 
 public type
@@ -33,7 +33,7 @@ public type
       return record
         Kind := TuiMeasureConstraintKind.Unbounded;
         Limit := 0;
-      end
+      end;
     end;
 
     // Creates a non-negative upper bound.
@@ -45,7 +45,7 @@ public type
       return record
         Kind := TuiMeasureConstraintKind.AtMost;
         Limit := TuiMeasureConstraintRequireNonNegative(Limit);
-      end
+      end;
     end;
 
     // Returns whether the constraint has an upper bound.
@@ -54,6 +54,6 @@ public type
     // - `Self`: Receiver value operated on by the method.
     public function IsBounded(Self: TuiMeasureConstraint): boolean;
     begin
-      return Self.Kind = TuiMeasureConstraintKind.AtMost
+      return Self.Kind = TuiMeasureConstraintKind.AtMost;
     end;
   end;

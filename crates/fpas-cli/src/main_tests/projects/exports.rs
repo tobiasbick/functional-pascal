@@ -23,11 +23,11 @@ include = ["src/**/*.fpas"]
     );
     write_text(
         &lib_dir.join("src/core.fpas"),
-        "unit MyLib.Core;\nuses MyLib.Internal;\nfunction Double(X: integer): integer;\nbegin\n  return Scale(X)\nend;\n",
+        "unit MyLib.Core;\nuses MyLib.Internal;\nfunction Double(X: integer): integer;\nbegin\n  return Scale(X);\nend;\n",
     );
     write_text(
         &lib_dir.join("src/internal.fpas"),
-        "unit MyLib.Internal;\nfunction Scale(X: integer): integer;\nbegin\n  return X + X\nend;\n",
+        "unit MyLib.Internal;\nfunction Scale(X: integer): integer;\nbegin\n  return X + X;\nend;\n",
     );
 
     let lib_dep = toml_path(&lib_project);
@@ -49,7 +49,7 @@ include = ["src/**/*.fpas"]
     );
     write_text(
         &app_dir.join("src/main.fpas"),
-        "program App;\nuses MyLib.Internal, Std.Console;\nbegin\n  WriteLn(Scale(3))\nend.\n",
+        "program App;\nuses MyLib.Internal, Std.Console;\nbegin\n  WriteLn(Scale(3));\nend.\n",
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_args_and_capture_output(
@@ -111,7 +111,7 @@ include = ["src/**/*.fpas"]
     );
     write_text(
         &lib_dir.join("src/outcome.fpas"),
-        "unit Sessions.Outcome;\nuses Std.Tasks;\npublic function Describe(Session: task of result of boolean, string): string;\nbegin\n  case Wait(Session) of\n    Ok(Done): begin return 'ok' end;\n    Error(Message): begin return Message end\n  end\nend;\n",
+        "unit Sessions.Outcome;\nuses Std.Tasks;\npublic function Describe(Session: task of result of boolean, string): string;\nbegin\n  case Wait(Session) of\n    Ok(Done): begin return 'ok'; end;\n    Error(Message): begin return Message; end;\n  end;\nend;\n",
     );
 
     let lib_dep = toml_path(&lib_project);
@@ -133,7 +133,7 @@ include = ["src/**/*.fpas"]
     );
     write_text(
         &app_dir.join("src/main.fpas"),
-        "program App;\nuses Sessions.Outcome, Std.Console, Std.Tasks;\nfunction Session(): result of boolean, string;\nbegin\n  return Error('session failed')\nend;\nbegin\n  var Job: task := go Session();\n  WriteLn(Describe(Job))\nend.\n",
+        "program App;\nuses Sessions.Outcome, Std.Console, Std.Tasks;\nfunction Session(): result of boolean, string;\nbegin\n  return Error('session failed');\nend;\nbegin\n  var Job: task := go Session();\n  WriteLn(Describe(Job));\nend.\n",
     );
 
     let (exit_code, stdout_output, stderr_output) =

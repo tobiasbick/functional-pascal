@@ -4,7 +4,7 @@ uses Std.Console, Std.Arrays;
 
 function Double(X: integer): integer;
 begin
-  return X * 2
+  return X * 2;
 end;
 
 begin
@@ -12,5 +12,5 @@ begin
   var Doubled: array of integer := Map(Nums, Double);
   WriteLn(Doubled[0]);
   WriteLn(Doubled[1]);
-  WriteLn(Doubled[2])
+  WriteLn(Doubled[2]);
 end.

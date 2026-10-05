@@ -6,13 +6,13 @@ procedure TuiMeasureResultRequireOrdered(Minimum: TuiSize; Preferred: TuiSize; M
 begin
   if (Minimum.Width > Preferred.Width) or (Minimum.Height > Preferred.Height) then
   begin
-    panic('Tui measure result minimum size must not exceed preferred size')
+    panic('Tui measure result minimum size must not exceed preferred size');
   end;
 
   if (Preferred.Width > Maximum.Width) or (Preferred.Height > Maximum.Height) then
   begin
-    panic('Tui measure result preferred size must not exceed maximum size')
-  end
+    panic('Tui measure result preferred size must not exceed maximum size');
+  end;
 end;
 
 public type
@@ -38,7 +38,7 @@ public type
         Minimum := Minimum;
         Preferred := Preferred;
         Maximum := Maximum;
-      end
+      end;
     end;
 
     // Creates a fixed measure where all three sizes match.
@@ -47,6 +47,6 @@ public type
     // - `Size`: Size in terminal cells.
     public static function Fixed(Size: TuiSize): TuiMeasureResult;
     begin
-      return TuiMeasureResult.Create(Size, Size, Size)
+      return TuiMeasureResult.Create(Size, Size, Size);
     end;
   end;

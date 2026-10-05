@@ -3,5 +3,5 @@ program T;
 uses Std.Console, Std.Str;
 
 begin
-  WriteLn(StartsWith('hello', 'hel'))
+  WriteLn(StartsWith('hello', 'hel'));
 end.

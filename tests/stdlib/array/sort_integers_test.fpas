@@ -7,5 +7,5 @@ begin
   var B: array of integer := Sort(A);
   WriteLn(B[0]);
   WriteLn(B[1]);
-  WriteLn(B[2])
+  WriteLn(B[2]);
 end.

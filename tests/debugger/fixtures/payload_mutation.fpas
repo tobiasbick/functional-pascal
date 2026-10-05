@@ -22,17 +22,17 @@ begin
   case Item of
     Choice.Count(Value):
     begin
-      return Value
+      return Value;
     end;
     Choice.Pair(Left, Right):
     begin
-      return Left + Right
+      return Left + Right;
     end;
     Choice.Nested(Item):
     begin
-      return Item.X + Item.Y
-    end
-  end
+      return Item.X + Item.Y;
+    end;
+  end;
 end;
 
 begin
@@ -62,46 +62,46 @@ begin
   case Outcome of
     Ok(Value):
     begin
-      WriteLn(Value)
+      WriteLn(Value);
     end;
     Error(Message):
     begin
-      WriteLn(Message)
-    end
+      WriteLn(Message);
+    end;
   end;
 
   case Failed of
     Ok(Value):
     begin
-      WriteLn(Value)
+      WriteLn(Value);
     end;
     Error(Message):
     begin
-      WriteLn(Message)
-    end
+      WriteLn(Message);
+    end;
   end;
 
   case Optional of
     Some(Value):
     begin
-      WriteLn(Value)
+      WriteLn(Value);
     end;
     None:
     begin
-      WriteLn(0)
-    end
+      WriteLn(0);
+    end;
   end;
 
   case Packed of
     Ok(Value):
     begin
       WriteLn(Value.Items[1]);
-      WriteLn(Value.Scores['blue'])
+      WriteLn(Value.Scores['blue']);
     end;
     Error(Message):
     begin
-      WriteLn(Message)
-    end
+      WriteLn(Message);
+    end;
   end;
 
   case NestedResult of
@@ -110,19 +110,19 @@ begin
       case Inner of
         Ok(Value):
         begin
-          WriteLn(Value)
+          WriteLn(Value);
         end;
         Error(Message):
         begin
-          WriteLn(Message)
-        end
-      end
+          WriteLn(Message);
+        end;
+      end;
     end;
     None:
     begin
-      WriteLn(0)
-    end
+      WriteLn(0);
+    end;
   end;
 
-  WriteLn(ChoiceValue(Fixed))
+  WriteLn(ChoiceValue(Fixed));
 end.

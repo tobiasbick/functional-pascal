@@ -4,5 +4,5 @@ uses Std.Console, Std.Options;
 
 begin
   var O: option of string := None;
-  WriteLn(UnwrapOr(O, 'default'))
+  WriteLn(UnwrapOr(O, 'default'));
 end.

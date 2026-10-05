@@ -14,19 +14,19 @@ begin
   case E of
     Expr.Num(Value):
     begin
-      return Value
+      return Value;
     end;
     Expr.Add(Left, Right):
     begin
-      return Eval(Left) + Eval(Right)
+      return Eval(Left) + Eval(Right);
     end;
     Expr.Mul(Left, Right):
     begin
-      return Eval(Left) * Eval(Right)
-    end
-  end
+      return Eval(Left) * Eval(Right);
+    end;
+  end;
 end;
 
 begin
-  AssertEquals(39, Eval(Expr.Mul(Expr.Add(Expr.Num(3), Expr.Num(10)), Expr.Num(3))))
+  AssertEquals(39, Eval(Expr.Mul(Expr.Add(Expr.Num(3), Expr.Num(10)), Expr.Num(3))));
 end.

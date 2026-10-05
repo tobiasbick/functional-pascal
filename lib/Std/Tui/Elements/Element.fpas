@@ -10,10 +10,10 @@ function TuiElementRequireNonNegativeSpacing(Value: integer): integer;
 begin
   if Value < 0 then
   begin
-    panic('Tui row and column spacing must not be negative')
+    panic('Tui row and column spacing must not be negative');
   end;
 
-  return Value
+  return Value;
 end;
 
 public type
@@ -149,7 +149,7 @@ public type
     // Creates an element that occupies no layout space.
     public static function MakeEmpty(): TuiElement;
     begin
-      return TuiElement.Empty
+      return TuiElement.Empty;
     end;
 
     // Creates a one-line text label.
@@ -158,7 +158,7 @@ public type
     // - `TextValue`: Text displayed by the created element.
     public static function MakeLabel(TextValue: string): TuiElement;
     begin
-      return TuiElement.Label(TextValue)
+      return TuiElement.Label(TextValue);
     end;
 
     // Creates a focusable button that emits the supplied action.
@@ -169,7 +169,7 @@ public type
     // - `Action`: Application action associated with the control or emitted message.
     public static function MakeButton(Id: TuiControlId; TextValue: string; Action: TuiAction): TuiElement;
     begin
-      return TuiElement.Button(TuiButtonSpec.Normal(Id, TextValue, '', Action))
+      return TuiElement.Button(TuiButtonSpec.Normal(Id, TextValue, '', Action));
     end;
 
     // Creates an enabled normal button with a keyboard mnemonic.
@@ -186,7 +186,7 @@ public type
   Action: TuiAction
 ): TuiElement;
     begin
-      return TuiElement.Button(TuiButtonSpec.Normal(Id, TextValue, Mnemonic, Action))
+      return TuiElement.Button(TuiButtonSpec.Normal(Id, TextValue, Mnemonic, Action));
     end;
 
     // Creates an enabled default button with a keyboard mnemonic.
@@ -198,7 +198,7 @@ public type
     // - `Action`: Application action associated with the control or emitted message.
     public static function MakeDefaultButton(Id: TuiControlId; TextValue: string; Mnemonic: string; Action: TuiAction): TuiElement;
     begin
-      return TuiElement.Button(TuiButtonSpec.DefaultButton(Id, TextValue, Mnemonic, Action))
+      return TuiElement.Button(TuiButtonSpec.DefaultButton(Id, TextValue, Mnemonic, Action));
     end;
 
     // Creates a disabled button with an optional display mnemonic.
@@ -215,7 +215,7 @@ public type
   Action: TuiAction
 ): TuiElement;
     begin
-      return TuiElement.Button(TuiButtonSpec.Disabled(Id, TextValue, Mnemonic, Action))
+      return TuiElement.Button(TuiButtonSpec.Disabled(Id, TextValue, Mnemonic, Action));
     end;
 
     // Creates a controlled one-line input.
@@ -232,7 +232,7 @@ public type
   ChangeAction: TuiAction
 ): TuiElement;
     begin
-      return TuiElement.Input(TuiInputSpec.Create(Id, TextValue, CaretValue, ChangeAction))
+      return TuiElement.Input(TuiInputSpec.Create(Id, TextValue, CaretValue, ChangeAction));
     end;
 
     // Creates a controlled one-line input with placeholder text.
@@ -251,7 +251,7 @@ public type
   ChangeAction: TuiAction
 ): TuiElement;
     begin
-      return TuiElement.Input(TuiInputSpec.WithHint(Id, TextValue, CaretValue, Hint, ChangeAction))
+      return TuiElement.Input(TuiInputSpec.WithHint(Id, TextValue, CaretValue, Hint, ChangeAction));
     end;
 
     // Creates a controlled input with oldest-to-newest Up/Down history.
@@ -274,7 +274,7 @@ public type
   ChangeAction: TuiAction
 ): TuiElement;
     begin
-      return TuiElement.Input(TuiInputSpec.WithHistory(Id, TextValue, CaretValue, Hint, History, HistoryDraft, ChangeAction))
+      return TuiElement.Input(TuiInputSpec.WithHistory(Id, TextValue, CaretValue, Hint, History, HistoryDraft, ChangeAction));
     end;
 
     // Creates a controlled multiline text area with model-owned caret and offset.
@@ -293,7 +293,7 @@ public type
   ChangeAction: TuiAction
 ): TuiElement;
     begin
-      return TuiElement.TextArea(Id, TextValue, CaretValue, OffsetValue, ChangeAction)
+      return TuiElement.TextArea(Id, TextValue, CaretValue, OffsetValue, ChangeAction);
     end;
 
     // Creates a controlled check box that proposes the inverted checked value.
@@ -310,7 +310,7 @@ public type
   ChangeAction: TuiAction
 ): TuiElement;
     begin
-      return TuiElement.CheckBox(Id, TextValue, Checked, ChangeAction)
+      return TuiElement.CheckBox(Id, TextValue, Checked, ChangeAction);
     end;
 
     // Creates a controlled list with model-owned selection.
@@ -327,7 +327,7 @@ public type
   ChangeAction: TuiAction
 ): TuiElement;
     begin
-      return TuiElement.List(Id, Items, Selected, ChangeAction)
+      return TuiElement.List(Id, Items, Selected, ChangeAction);
     end;
 
     // Creates a controlled single-child scroll viewport.
@@ -339,7 +339,7 @@ public type
     // - `Child`: Child element wrapped by the operation.
     public static function MakeScroll(Id: TuiControlId; Offset: TuiPoint; ChangeAction: TuiAction; Child: TuiElement): TuiElement;
     begin
-      return TuiElement.Scroll(Id, Offset, ChangeAction, [Child])
+      return TuiElement.Scroll(Id, Offset, ChangeAction, [Child]);
     end;
 
     // Creates a flat menu action bar.
@@ -348,7 +348,7 @@ public type
     // - `Items`: Ordered child or menu items.
     public static function MakeMenuBar(Items: array of TuiMenuItem): TuiElement;
     begin
-      return TuiElement.MenuBar(Items)
+      return TuiElement.MenuBar(Items);
     end;
 
     // Creates a controlled hierarchical menu from flat parent-linked nodes.
@@ -365,7 +365,7 @@ public type
   ChangeAction: TuiAction
 ): TuiElement;
     begin
-      return TuiElement.Menu(Id, Nodes, State, ChangeAction)
+      return TuiElement.Menu(Id, Nodes, State, ChangeAction);
     end;
 
     // Creates a status line of display and command items.
@@ -374,7 +374,7 @@ public type
     // - `Items`: Ordered child or menu items.
     public static function MakeStatusLine(Items: array of TuiStatusItem): TuiElement;
     begin
-      return TuiElement.StatusLine(Items)
+      return TuiElement.StatusLine(Items);
     end;
 
     // Creates a rectangular grid of terminal cells.
@@ -383,7 +383,7 @@ public type
     // - `Value`: Value used to create or update the result.
     public static function MakeCellGrid(Value: TuiCellGrid): TuiElement;
     begin
-      return TuiElement.CellGrid(Value)
+      return TuiElement.CellGrid(Value);
     end;
 
     // Creates a one-row separator with optional text.
@@ -392,7 +392,7 @@ public type
     // - `TextValue`: Text displayed by the created element.
     public static function MakeRule(TextValue: string): TuiElement;
     begin
-      return TuiElement.Rule(TextValue)
+      return TuiElement.Rule(TextValue);
     end;
 
     // Creates a compact bounded-value gauge.
@@ -403,7 +403,7 @@ public type
     // - `Maximum`: Maximum accepted value or extent.
     public static function MakeGauge(LabelText: string; Value: integer; Maximum: integer): TuiElement;
     begin
-      return TuiElement.Gauge(TuiGauge.Create(LabelText, Value, Maximum))
+      return TuiElement.Gauge(TuiGauge.Create(LabelText, Value, Maximum));
     end;
 
     // Creates a horizontal layout node with zero spacing.
@@ -412,7 +412,7 @@ public type
     // - `Items`: Ordered child or menu items.
     public static function MakeRow(Items: array of TuiElement): TuiElement;
     begin
-      return TuiElement.Row(Items, 0)
+      return TuiElement.Row(Items, 0);
     end;
 
     // Creates a horizontal layout node with validated spacing.
@@ -422,7 +422,7 @@ public type
     // - `Spacing`: Number of terminal cells between adjacent items.
     public static function MakeRowSpaced(Items: array of TuiElement; Spacing: integer): TuiElement;
     begin
-      return TuiElement.Row(Items, TuiElementRequireNonNegativeSpacing(Spacing))
+      return TuiElement.Row(Items, TuiElementRequireNonNegativeSpacing(Spacing));
     end;
 
     // Creates a vertical layout node with zero spacing.
@@ -431,7 +431,7 @@ public type
     // - `Items`: Ordered child or menu items.
     public static function MakeColumn(Items: array of TuiElement): TuiElement;
     begin
-      return TuiElement.Column(Items, 0)
+      return TuiElement.Column(Items, 0);
     end;
 
     // Creates a vertical layout node with validated spacing.
@@ -441,7 +441,7 @@ public type
     // - `Spacing`: Number of terminal cells between adjacent items.
     public static function MakeColumnSpaced(Items: array of TuiElement; Spacing: integer): TuiElement;
     begin
-      return TuiElement.Column(Items, TuiElementRequireNonNegativeSpacing(Spacing))
+      return TuiElement.Column(Items, TuiElementRequireNonNegativeSpacing(Spacing));
     end;
 
     // Creates a single-child layout wrapper with settings.
@@ -451,7 +451,7 @@ public type
     // - `Child`: Child element wrapped by the operation.
     public static function MakeLayout(Settings: TuiLayoutSettings; Child: TuiElement): TuiElement;
     begin
-      return TuiElement.Layout(Settings, [Child])
+      return TuiElement.Layout(Settings, [Child]);
     end;
 
     // Creates a fixed or expanding spacer element.
@@ -460,7 +460,7 @@ public type
     // - `Value`: Value used to create or update the result.
     public static function MakeSpacer(Value: TuiSpacer): TuiElement;
     begin
-      return TuiElement.Spacer(Value)
+      return TuiElement.Spacer(Value);
     end;
 
     // Creates an ordinary bordered content panel.
@@ -470,7 +470,7 @@ public type
     // - `Items`: Ordered child or menu items.
     public static function MakePanel(TitleValue: string; Items: array of TuiElement): TuiElement;
     begin
-      return TuiElement.Panel(TitleValue, Items)
+      return TuiElement.Panel(TitleValue, Items);
     end;
 
     // Creates a fixed centered modal overlay.
@@ -480,7 +480,7 @@ public type
     // - `Items`: Ordered child or menu items.
     public static function MakeOverlay(TitleValue: string; Items: array of TuiElement): TuiElement;
     begin
-      return TuiElement.Overlay(TitleValue, Items)
+      return TuiElement.Overlay(TitleValue, Items);
     end;
 
     // Creates the root element and declares the model-controlled focus.
@@ -490,6 +490,6 @@ public type
     // - `Items`: Ordered child or menu items.
     public static function MakeDesktop(Focused: option of TuiControlId; Items: array of TuiElement): TuiElement;
     begin
-      return TuiElement.Desktop(Focused, Items)
+      return TuiElement.Desktop(Focused, Items);
     end;
   end;

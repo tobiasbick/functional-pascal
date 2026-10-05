@@ -10,7 +10,7 @@ use serde_json::{Value, json};
 
 fn server() -> DapServer {
     let source =
-        "program Main; begin var Zero: integer := 0; var Value: integer := 1 div Zero end.";
+        "program Main; begin var Zero: integer := 0; var Value: integer := 1 div Zero; end.";
     let (program, diagnostics) = fpas_parser::parse(source);
     assert!(diagnostics.is_empty(), "{diagnostics:?}");
     let executable = fpas_compiler::compile(&program).expect("compile failure fixture");

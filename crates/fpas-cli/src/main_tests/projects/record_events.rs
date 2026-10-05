@@ -15,14 +15,14 @@ fn run_cli_assigns_and_owner_unit_raises_record_event() {
 uses App.Widget, Std.Console, Std.Conv;
 procedure Handle(Value: integer);
 begin
-  WriteLn(IntToStr(Value))
+  WriteLn(IntToStr(Value));
 end;
 begin
   var B: Button := Button.Make(14);
   B.OnClick := Handle;
   if Assigned(B.OnClick) then
     B.Click();
-  B.OnClick := nil
+  B.OnClick := nil;
 end.",
     );
     write_text(
@@ -34,21 +34,21 @@ public type
     public Id: integer;
     public function ReadOnClick(Self: Button): Option of procedure(Value: integer);
     begin
-      return Slot
+      return Slot;
     end;
     public procedure WriteOnClick(Self: Button; Handler: Option of procedure(Value: integer));
     begin
-      Slot := Handler
+      Slot := Handler;
     end;
     public event OnClick: procedure(Value: integer) read ReadOnClick write WriteOnClick;
     public procedure Click(Self: Button);
     begin
       if Assigned(Self.OnClick) then
-        Self.OnClick(Self.Id)
+        Self.OnClick(Self.Id);
     end;
     public static function Make(Id: integer): Button;
     begin
-      return record Id := Id; end
+      return record Id := Id; end;
     end;
   end;
 ",

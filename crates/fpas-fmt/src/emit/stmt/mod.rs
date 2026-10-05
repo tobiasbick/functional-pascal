@@ -20,35 +20,33 @@ pub(crate) fn format_block_stmts(stmts: &[Stmt]) -> String {
     emitter.finish()
 }
 
+/// Emits every statement with its terminator while preserving block spacing and comments.
 pub(crate) fn emit_stmts_in_block(emitter: &mut Emitter, stmts: &[Stmt], comments: &CommentMap) {
     for (index, stmt) in stmts.iter().enumerate() {
         if index > 0 && spacing::needs_blank_line(&stmts[index - 1], stmt) {
             emitter.blank_line();
         }
         emit_leading_comments(emitter, comments, stmt_start(stmt), false);
-        let is_last = index + 1 == stmts.len();
-        emit_stmt_in_block(emitter, stmt, is_last, comments);
+        emit_stmt_in_block(emitter, stmt, comments);
     }
 }
 
-fn emit_stmt_in_block(emitter: &mut Emitter, stmt: &Stmt, is_last: bool, comments: &CommentMap) {
+fn emit_stmt_in_block(emitter: &mut Emitter, stmt: &Stmt, comments: &CommentMap) {
     match stmt {
         Stmt::Block(stmts, ..) => {
             emitter.writeln("begin");
             emitter.with_indent(|inner| emit_stmts_in_block(inner, stmts, comments));
             emitter.writeln("end");
-            finish_stmt_after_newline(emitter, comments, stmt, is_last);
+            finish_stmt_after_newline(emitter, comments, stmt);
         }
-        Stmt::Var(var) => line::emit_var_stmt(emitter, "var", var, is_last, comments),
-        Stmt::MutableVar(var) => {
-            line::emit_var_stmt(emitter, "mutable var", var, is_last, comments)
-        }
+        Stmt::Var(var) => line::emit_var_stmt(emitter, "var", var, comments),
+        Stmt::MutableVar(var) => line::emit_var_stmt(emitter, "mutable var", var, comments),
         Stmt::Assign { target, value, .. } => {
             write_indented(emitter);
             emit_designator(emitter, target, comments);
             emitter.write(" := ");
             emit_expr(emitter, value, 0, comments);
-            finish_stmt_line(emitter, comments, stmt, is_last);
+            finish_stmt_line(emitter, comments, stmt);
         }
         Stmt::Return(expr, ..) => {
             write_indented(emitter);
@@ -57,44 +55,44 @@ fn emit_stmt_in_block(emitter: &mut Emitter, stmt: &Stmt, is_last: bool, comment
                 emitter.write(" ");
                 emit_expr(emitter, value, 0, comments);
             }
-            finish_stmt_line(emitter, comments, stmt, is_last);
+            finish_stmt_line(emitter, comments, stmt);
         }
         Stmt::Panic(expr, ..) => {
             write_indented(emitter);
             emitter.write("panic(");
             emit_expr(emitter, expr, 0, comments);
             emitter.write(")");
-            finish_stmt_line(emitter, comments, stmt, is_last);
+            finish_stmt_line(emitter, comments, stmt);
         }
         Stmt::If { .. } => {
             loops::emit_if(emitter, stmt, "", comments);
-            finish_stmt_after_newline(emitter, comments, stmt, is_last);
+            finish_stmt_after_newline(emitter, comments, stmt);
         }
         Stmt::Case { .. } => {
             loops::emit_case(emitter, stmt, comments);
-            finish_stmt_line(emitter, comments, stmt, is_last);
+            finish_stmt_line(emitter, comments, stmt);
         }
         Stmt::For { .. } | Stmt::ForIn { .. } => {
             loops::emit_for(emitter, stmt, comments);
-            finish_stmt_after_newline(emitter, comments, stmt, is_last);
+            finish_stmt_after_newline(emitter, comments, stmt);
         }
         Stmt::While { .. } => {
             loops::emit_while(emitter, stmt, comments);
-            finish_stmt_after_newline(emitter, comments, stmt, is_last);
+            finish_stmt_after_newline(emitter, comments, stmt);
         }
         Stmt::Repeat { .. } => {
             loops::emit_repeat(emitter, stmt, comments);
-            finish_stmt_line(emitter, comments, stmt, is_last);
+            finish_stmt_line(emitter, comments, stmt);
         }
         Stmt::Break(..) => {
             write_indented(emitter);
             emitter.write("break");
-            finish_stmt_line(emitter, comments, stmt, is_last);
+            finish_stmt_line(emitter, comments, stmt);
         }
         Stmt::Continue(..) => {
             write_indented(emitter);
             emitter.write("continue");
-            finish_stmt_line(emitter, comments, stmt, is_last);
+            finish_stmt_line(emitter, comments, stmt);
         }
         Stmt::Call {
             designator, args, ..
@@ -104,18 +102,18 @@ fn emit_stmt_in_block(emitter: &mut Emitter, stmt: &Stmt, is_last: bool, comment
             emitter.write("(");
             emit_arg_list(emitter, args, comments);
             emitter.write(")");
-            finish_stmt_line(emitter, comments, stmt, is_last);
+            finish_stmt_line(emitter, comments, stmt);
         }
         Stmt::Expression { expr, .. } => {
             write_indented(emitter);
             emit_expr(emitter, expr, 0, comments);
-            finish_stmt_line(emitter, comments, stmt, is_last);
+            finish_stmt_line(emitter, comments, stmt);
         }
         Stmt::Go { expr, .. } => {
             write_indented(emitter);
             emitter.write("go ");
             emit_expr(emitter, expr, 0, comments);
-            finish_stmt_line(emitter, comments, stmt, is_last);
+            finish_stmt_line(emitter, comments, stmt);
         }
     }
 }
@@ -135,9 +133,9 @@ mod tests {
     fn if_else_with_branch_blocks() {
         let formatted = format_body(
             "program T; begin
-  if X > 0 then WriteLn('positive')
-  else if X = 0 then WriteLn('zero')
-  else WriteLn('negative')
+  if X > 0 then WriteLn('positive');
+  else if X = 0 then WriteLn('zero');
+  else WriteLn('negative');
 end.",
         );
         assert!(formatted.contains("if X > 0 then\nbegin\n"));
@@ -151,13 +149,13 @@ end.",
             "program T; begin
   case Value of
     1: WriteLn('one');
-    2, 3: WriteLn('two or three')
+    2, 3: WriteLn('two or three');
   else
-    WriteLn('other')
+    WriteLn('other');
   end;
   for I: integer := 1 to 3 do WriteLn(I);
   while X < 10 do X := X + 1;
-  repeat WriteLn(N); N := N + 1 until N >= 3
+  repeat WriteLn(N); N := N + 1; until N >= 3;
 end.",
         );
         assert!(formatted.contains("case Value of\n"));
@@ -169,13 +167,12 @@ end.",
         assert!(formatted.contains("while X < 10 do\n"));
         assert!(formatted.contains("repeat\n"));
         assert!(!formatted.contains("repeat\nbegin\n"));
-        assert!(formatted.ends_with("until N >= 3\n"));
+        assert!(formatted.ends_with("until N >= 3;\n"));
     }
 
     #[test]
     fn case_else_with_block_body_is_idempotent() {
-        let source =
-            "program T; begin case X of 1: WriteLn('one') else begin WriteLn('other') end end end.";
+        let source = "program T; begin case X of 1: WriteLn('one'); else begin WriteLn('other'); end; end; end.";
         let formatted_once = format_body(source);
         let formatted_twice = format_body(&format!(
             "program T; begin {} end.",
@@ -197,7 +194,7 @@ end.",
             "program T; begin
   WriteLn('line1
 line2');
-  WriteLn('after')
+  WriteLn('after');
 end.",
         );
         assert!(
@@ -217,7 +214,7 @@ end.",
   var X: integer := 1;
   X := 2;
   WriteLn('hi');
-  return X
+  return X;
 end.",
         );
         assert_eq!(
@@ -225,15 +222,15 @@ end.",
             "var X: integer := 1;\n\
              X := 2;\n\
              WriteLn('hi');\n\
-             return X\n"
+             return X;\n"
         );
     }
 
     #[test]
     fn postfix_procedure_statement_round_trips() {
-        let source = "program T; begin Factory.Create().Transform().Destroy() end.";
+        let source = "program T; begin Factory.Create().Transform().Destroy(); end.";
         let formatted = format_body(source);
-        assert_eq!(formatted, "Factory.Create().Transform().Destroy()\n");
+        assert_eq!(formatted, "Factory.Create().Transform().Destroy();\n");
 
         let reparsed = format!("program T; begin {formatted} end.");
         let (_, errors) = fpas_parser::parse(&reparsed);

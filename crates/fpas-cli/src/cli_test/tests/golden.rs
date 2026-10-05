@@ -7,7 +7,7 @@ fn test_cli_compares_golden_stdout_sidecar() {
     let cwd = create_temp_dir("fpas-test-expect-stdout");
     write_text(
         &cwd.join("echo_test.fpas"),
-        "program E;\nuses Std.Console, Std.Test;\nbegin WriteLn('Hello'); WriteLn('World') end.",
+        "program E;\nuses Std.Console, Std.Test;\nbegin WriteLn('Hello'); WriteLn('World'); end.",
     );
     write_text(&cwd.join("echo_test.expect.stdout"), "Hello\nWorld\n");
 
@@ -44,7 +44,7 @@ fn test_cli_fails_on_stdout_mismatch() {
     let cwd = create_temp_dir("fpas-test-expect-stdout-fail");
     write_text(
         &cwd.join("echo_test.fpas"),
-        "program E;\nuses Std.Console, Std.Test;\nbegin WriteLn('Hi') end.",
+        "program E;\nuses Std.Console, Std.Test;\nbegin WriteLn('Hi'); end.",
     );
     write_text(&cwd.join("echo_test.expect.stdout"), "Hello\n");
 

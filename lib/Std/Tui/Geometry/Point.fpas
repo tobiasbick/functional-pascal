@@ -18,6 +18,6 @@ public type
       return record
         X := X;
         Y := Y;
-      end
+      end;
     end;
   end;

@@ -9,7 +9,7 @@ type
 
     function Sum(Self: Point): integer;
     begin
-      return Self.X + Self.Y
+      return Self.X + Self.Y;
     end;
 
     function Add(Self: Point; Other: Point): Point;
@@ -19,12 +19,12 @@ type
       return record
         X := RX;
         Y := RY;
-      end
+      end;
     end;
 
     procedure Print(Self: Point);
     begin
-      WriteLn(((('(' + IntToStr(Self.X)) + ', ') + IntToStr(Self.Y)) + ')')
+      WriteLn(((('(' + IntToStr(Self.X)) + ', ') + IntToStr(Self.Y)) + ')');
     end;
   end;
 
@@ -43,5 +43,5 @@ begin
   WriteLn('Sum of A: ' + IntToStr(A.Sum()));
   var C: Point := A.Add(B);
   WriteLn('A + B =');
-  C.Print()
+  C.Print();
 end.

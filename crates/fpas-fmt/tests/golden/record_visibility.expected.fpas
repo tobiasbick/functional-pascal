@@ -7,7 +7,7 @@ public type
 
     function Hidden(Self: Counter): integer;
     begin
-      return Self.Value
+      return Self.Value;
     end;
 
     public static function Create(): Counter;
@@ -15,7 +15,7 @@ public type
       return record
         Value := 0;
         Step := 1;
-      end
+      end;
     end;
 
     public property Current: integer read Hidden;

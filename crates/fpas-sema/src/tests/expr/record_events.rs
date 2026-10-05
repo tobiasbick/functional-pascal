@@ -12,7 +12,7 @@ type
     Id: integer;
     function ReadOnClick(Self: Button): Option of procedure(Sender: Button);
     begin
-      return None
+      return None;
     end;
     procedure WriteOnClick(Self: Button; Handler: Option of procedure(Sender: Button));
     begin
@@ -21,7 +21,7 @@ type
     procedure RaiseClick(Self: Button);
     begin
       if Assigned(Self.OnClick) then
-        Self.OnClick(Self)
+        Self.OnClick(Self);
     end;
   end;
 "
@@ -39,7 +39,7 @@ begin
   B.OnClick := Handle;
   if Assigned(B.OnClick) then
     B.RaiseClick();
-  B.OnClick := nil
+  B.OnClick := nil;
 end.",
         event_prelude()
     ));
@@ -51,7 +51,7 @@ fn bare_event_read_is_rejected() {
         "{}\
 begin
   var B: Button := record Id := 1; end;
-  var H: procedure(Sender: Button) := B.OnClick
+  var H: procedure(Sender: Button) := B.OnClick;
 end.",
         event_prelude()
     ));
@@ -65,7 +65,7 @@ end.",
 
 #[test]
 fn nil_outside_event_assignment_is_rejected() {
-    let errors = check_errors("program T; var X: integer := 0; begin X := nil end.");
+    let errors = check_errors("program T; var X: integer := 0; begin X := nil; end.");
     assert!(
         errors
             .iter()
@@ -83,7 +83,7 @@ type
   Button = record
     function ReadOnClick(Self: Button): procedure();
     begin
-      return procedure() begin end
+      return procedure() begin end;
     end;
     procedure WriteOnClick(Self: Button; Handler: procedure());
     begin
@@ -109,7 +109,7 @@ type
     OnClick: integer;
     function ReadOnClick(Self: Button): Option of procedure();
     begin
-      return None
+      return None;
     end;
     procedure WriteOnClick(Self: Button; Handler: Option of procedure());
     begin
@@ -136,7 +136,7 @@ type
   Button = record
     function ReadOnClick<T>(Self: Button): Option of procedure();
     begin
-      return None
+      return None;
     end;
     procedure WriteOnClick(Self: Button; mutable Handler: Option of procedure());
     begin
@@ -169,7 +169,7 @@ begin
 end;
 begin
   var B: Button := record Id := 1; OnClick := Handle; end;
-  var C: Button := B with OnClick := Handle; end
+  var C: Button := B with OnClick := Handle; end;
 end.",
         event_prelude()
     ));
@@ -193,7 +193,7 @@ fn event_raise_cannot_cross_task_boundary() {
         "{}\
 begin
   var B: Button := record Id := 1; end;
-  go B.OnClick(B)
+  go B.OnClick(B);
 end.",
         event_prelude()
     ));
@@ -211,7 +211,7 @@ fn parenthesized_nil_clears_event() {
         "{}\
 begin
   var B: Button := record Id := 1; end;
-  B.OnClick := (nil)
+  B.OnClick := (nil);
 end.",
         event_prelude()
     ));

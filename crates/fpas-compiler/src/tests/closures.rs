@@ -25,7 +25,7 @@ var F: procedure() := procedure()
 begin
 end;
 begin
-  F()
+  F();
 end.
 "#,
     );

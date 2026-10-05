@@ -8,7 +8,7 @@ uses Std.Fs, Std.Results, Std.Tasks;
 
 begin
   var ReadJob: task := go ReadText('input.txt');
-  var Text: string := Std.Results.Unwrap(Std.Tasks.Wait(ReadJob))
+  var Text: string := Std.Results.Unwrap(Std.Tasks.Wait(ReadJob));
 end.
 ```
 
@@ -70,7 +70,7 @@ Files larger than 64 MiB return `Error(message)` instead of loading into memory.
 ```pascal
 var Content: Result of string, string := ReadText('notes.txt');
 if Std.Results.IsOk(Content) then
-  WriteLn(Std.Results.Unwrap(Content))
+  WriteLn(Std.Results.Unwrap(Content));
 ```
 
 ---
@@ -81,7 +81,7 @@ Writes UTF-8 text to `Path`, creating or replacing the file.
 
 ```pascal
 if Std.Results.IsOk(WriteText('out.txt', 'hello')) then
-  WriteLn('written')
+  WriteLn('written');
 ```
 
 ---
@@ -98,8 +98,8 @@ file.
 ```pascal
 case WriteTextAtomic('note.note', EncodedNote) of
   Ok(Written): WriteLn('saved');
-  Error(Message): WriteLn(Message)
-end
+  Error(Message): WriteLn(Message);
+end;
 ```
 
 Publication uses the host's same-directory atomic replacement primitive on
@@ -114,7 +114,7 @@ Returns `true` when the host filesystem reports that `Path` exists.
 
 ```pascal
 if Exists('config.json') then
-  WriteLn('config is present')
+  WriteLn('config is present');
 ```
 
 ---
@@ -124,7 +124,7 @@ if Exists('config.json') then
 Returns `true` when `Path` exists and is a regular file.
 
 ```pascal
-WriteLn(IsFile('data.txt'))
+WriteLn(IsFile('data.txt'));
 ```
 
 ---
@@ -134,7 +134,7 @@ WriteLn(IsFile('data.txt'))
 Returns `true` when `Path` exists and is a directory.
 
 ```pascal
-WriteLn(IsDir('src'))
+WriteLn(IsDir('src'));
 ```
 
 ---
@@ -145,7 +145,7 @@ Creates a single directory at `Path`. Parent directories must already exist. An 
 
 ```pascal
 if Std.Results.IsOk(CreateDir('build/output')) then
-  WriteLn('directory created')
+  WriteLn('directory created');
 ```
 
 ---
@@ -157,8 +157,8 @@ Creates the directory at `Path` together with every missing parent directory and
 ```pascal
 case CreateDirAll('build/output/logs') of
   Ok(Created): WriteLn('directory ready');
-  Error(Message): WriteLn('cannot create directory: ' + Message)
-end
+  Error(Message): WriteLn('cannot create directory: ' + Message);
+end;
 ```
 
 ---
@@ -171,13 +171,13 @@ Expands `Pattern` against the host filesystem and returns every matching **file*
 case Glob('src/**/*.fpas') of
   Ok(Paths):
   begin
-    WriteLn(Std.Arrays.Length(Paths))
+    WriteLn(Std.Arrays.Length(Paths));
   end;
   Error(Message):
   begin
-    WriteLn(Message)
-  end
-end
+    WriteLn(Message);
+  end;
+end;
 ```
 
 Behavior:

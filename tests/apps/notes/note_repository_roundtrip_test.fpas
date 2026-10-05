@@ -14,8 +14,8 @@ begin
     end;
     Error(Message):
     begin
-      Fail(Message)
-    end
+      Fail(Message);
+    end;
   end;
 
   case NotesLoadDirectory(Directory) of
@@ -25,11 +25,11 @@ begin
       AssertEquals(0, Std.Arrays.Length(Loaded.Issues));
       AssertEquals(NoteValue.Id, Loaded.Notes[0].Id);
       AssertEquals(NoteValue.Title, Loaded.Notes[0].Title);
-      AssertEquals(NoteValue.Body, Loaded.Notes[0].Body)
+      AssertEquals(NoteValue.Body, Loaded.Notes[0].Body);
     end;
     Error(Message):
     begin
-      Fail(Message)
-    end
-  end
+      Fail(Message);
+    end;
+  end;
 end.

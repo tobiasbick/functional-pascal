@@ -31,19 +31,19 @@ begin
     if NextContinuations[X] then
     begin
       NextCells[X - 1] := Blank;
-      NextContinuations[X] := false
-    end
+      NextContinuations[X] := false;
+    end;
     else if NextCells[X].Columns = 2 then
     begin
       NextCells[X + 1] := Blank;
-      NextContinuations[X + 1] := false
+      NextContinuations[X + 1] := false;
     end;
 
     NextCells[X] := Blank;
     var Value: TuiCell := Values[Offset];
     if (Value.Columns = 2) and (X + 1 >= RightX) then
     begin
-      continue
+      continue;
     end;
 
     if Value.Columns = 2 then
@@ -51,26 +51,26 @@ begin
       if NextContinuations[X + 1] then
       begin
         NextCells[X] := Blank;
-        NextContinuations[X + 1] := false
-      end
+        NextContinuations[X + 1] := false;
+      end;
       else if NextCells[X + 1].Columns = 2 then
       begin
         NextCells[X + 2] := Blank;
-        NextContinuations[X + 2] := false
+        NextContinuations[X + 2] := false;
       end;
 
-      NextCells[X + 1] := Blank
+      NextCells[X + 1] := Blank;
     end;
 
     NextCells[X] := Value;
     if Value.Columns = 2 then
     begin
-      NextContinuations[X + 1] := true
-    end
+      NextContinuations[X + 1] := true;
+    end;
   end;
 
   return record
     Cells := NextCells;
     Continuations := NextContinuations;
-  end
+  end;
 end;

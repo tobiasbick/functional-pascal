@@ -19,7 +19,7 @@ const OUTPUT_SOURCE: &str = r#"program TransportOutput;
 uses Std.Console;
 
 begin
-  WriteLn('hello-raw')
+  WriteLn('hello-raw');
 end.
 "#;
 
@@ -29,7 +29,7 @@ uses Std.Console;
 
 begin
   WriteLn(ReadLn());
-  WriteLn(ReadLn())
+  WriteLn(ReadLn());
 end.
 "#;
 
@@ -47,13 +47,13 @@ begin
   WriteLn(InputEvent.key.ch);
   if KeyPressed() then
   begin
-    WriteLn('duplicate')
-  end
+    WriteLn('duplicate');
+  end;
   else
   begin
-    WriteLn('clean')
+    WriteLn('clean');
   end;
-  ReleaseInteractiveTerminal()
+  ReleaseInteractiveTerminal();
 end.
 "#;
 

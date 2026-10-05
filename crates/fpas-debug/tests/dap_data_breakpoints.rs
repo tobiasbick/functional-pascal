@@ -15,13 +15,13 @@ mutable var Flag: integer := 0;
 procedure Inner();
 begin
   mutable var Nested: integer := 1;
-  Nested := Nested + Flag
+  Nested := Nested + Flag;
 end;
 
 begin
   Flag := 1;
   Inner();
-  Flag := 2
+  Flag := 2;
 end.
 "#;
 

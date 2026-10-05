@@ -7,11 +7,11 @@ begin
   while Count < 3 do
   begin
     WriteLn('while step: ', IntToStr(Count));
-    Count := Count + 1
+    Count := Count + 1;
   end;
   mutable var Attempts: integer := 0;
   repeat
     WriteLn('repeat step: ', IntToStr(Attempts));
-    Attempts := Attempts + 1
-  until Attempts >= 3
+    Attempts := Attempts + 1;
+  until Attempts >= 3;
 end.

@@ -8,7 +8,7 @@ fn test_cli_reports_skipped_tests_without_strict() {
     let cwd = create_temp_dir("fpas-test-skip");
     write_text(
         &cwd.join("skip_test.fpas"),
-        "program S;\nuses Std.Test;\nbegin Skip('later') end.",
+        "program S;\nuses Std.Test;\nbegin Skip('later'); end.",
     );
 
     let mut stdout = Vec::new();
@@ -45,7 +45,7 @@ fn test_cli_reports_skipped_tests_with_timeout() {
     let cwd = create_temp_dir("fpas-test-skip-timeout");
     write_text(
         &cwd.join("skip_test.fpas"),
-        "program S;\nuses Std.Test;\nbegin Skip('later') end.",
+        "program S;\nuses Std.Test;\nbegin Skip('later'); end.",
     );
 
     let mut stdout = Vec::new();
@@ -82,7 +82,7 @@ fn test_cli_strict_fails_when_tests_are_skipped() {
     let cwd = create_temp_dir("fpas-test-strict-skip");
     write_text(
         &cwd.join("skip_test.fpas"),
-        "program S;\nuses Std.Test;\nbegin Skip('later') end.",
+        "program S;\nuses Std.Test;\nbegin Skip('later'); end.",
     );
 
     let mut stdout = Vec::new();

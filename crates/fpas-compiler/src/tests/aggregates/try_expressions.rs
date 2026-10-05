@@ -14,14 +14,14 @@ type
   Counter = record
     Base: integer;
     function Add(Self: Counter; X: integer; Y: integer): integer;
-    begin return Self.Base + X * 10 + Y end;
+    begin return Self.Base + X * 10 + Y; end;
     procedure WriteNumber(Self: Counter; Value: integer);
-    begin Written := Self.Base + Value end;
+    begin Written := Self.Base + Value; end;
     property Number: integer write WriteNumber;
     function ReadHandler(Self: Counter): Option of Binary;
-    begin return Handler end;
+    begin return Handler; end;
     procedure WriteHandler(Self: Counter; Value: Option of Binary);
-    begin Handler := Value end;
+    begin Handler := Value; end;
     event OnValue: function(X: integer; Y: integer): integer read ReadHandler write WriteHandler;
   end;
   Message = enum Move(X: integer; Y: integer); end;
@@ -31,17 +31,17 @@ function ReadValue(Value: integer; FailAt: integer): result of integer, string;
 begin
   Trace := Trace * 10 + Value;
   if Value = FailAt then return Error('expected');
-  return Ok(Value)
+  return Ok(Value);
 end;
 function Combine(X: integer; Y: integer): integer;
 begin
-  return X * 10 + Y
+  return X * 10 + Y;
 end;
 function ReadHandler(FailAt: integer): result of Binary, string;
 begin
   var X: integer := try ReadValue(1, FailAt);
   var Y: integer := try ReadValue(2, FailAt);
-  return Ok(Combine)
+  return Ok(Combine);
 end;
 function Probe(FailAt: integer): result of integer, string;
 begin
@@ -55,7 +55,7 @@ begin
   if Trace <> 1 then panic('evaluated after first error');
   Trace := 0;
   if Probe(2) <> Error('expected') then panic('second error');
-  if Trace <> 12 then panic('second error evaluation order')
+  if Trace <> 12 then panic('second error evaluation order');
 end.
 "#
     ));
@@ -64,143 +64,143 @@ end.
 #[test]
 fn enum_constructor_preserves_earlier_try_arguments() {
     check_expression(
-        "var Value: Message := Message.Move(try ReadValue(1, FailAt), try ReadValue(2, FailAt)); case Value of Message.Move(X, Y): return Ok(X * 10 + Y) end",
+        "var Value: Message := Message.Move(try ReadValue(1, FailAt), try ReadValue(2, FailAt)); case Value of Message.Move(X, Y): return Ok(X * 10 + Y); end;",
     );
 }
 
 #[test]
 fn direct_call_preserves_earlier_try_arguments() {
-    check_expression("return Ok(Combine(try ReadValue(1, FailAt), try ReadValue(2, FailAt)))");
+    check_expression("return Ok(Combine(try ReadValue(1, FailAt), try ReadValue(2, FailAt)));");
 }
 
 #[test]
 fn array_literal_preserves_earlier_try_elements() {
     check_expression(
-        "var Values: array of integer := [try ReadValue(1, FailAt), try ReadValue(2, FailAt)]; return Ok(Values[0] * 10 + Values[1])",
+        "var Values: array of integer := [try ReadValue(1, FailAt), try ReadValue(2, FailAt)]; return Ok(Values[0] * 10 + Values[1]);",
     );
 }
 
 #[test]
 fn dictionary_literal_preserves_try_key_across_try_value() {
     check_expression(
-        "var Values: dict of integer to integer := [try ReadValue(1, FailAt): try ReadValue(2, FailAt)]; return Ok(10 + Values[1])",
+        "var Values: dict of integer to integer := [try ReadValue(1, FailAt): try ReadValue(2, FailAt)]; return Ok(10 + Values[1]);",
     );
 }
 
 #[test]
 fn binary_expression_preserves_left_operand_across_try() {
-    check_expression("return Ok((try ReadValue(1, FailAt)) * 10 + (try ReadValue(2, FailAt)))");
+    check_expression("return Ok((try ReadValue(1, FailAt)) * 10 + (try ReadValue(2, FailAt)));");
 }
 
 #[test]
 fn record_update_preserves_base_and_fields_across_try() {
     check_expression(
-        "var Original: Pair := record First := 8; Second := 9; end; var Value: Pair := Original with First := try ReadValue(1, FailAt); Second := try ReadValue(2, FailAt); end; return Ok(Value.First * 10 + Value.Second)",
+        "var Original: Pair := record First := 8; Second := 9; end; var Value: Pair := Original with First := try ReadValue(1, FailAt); Second := try ReadValue(2, FailAt); end; return Ok(Value.First * 10 + Value.Second);",
     );
 }
 
 #[test]
 fn function_value_preserves_callee_across_try() {
     check_expression(
-        "var F: function(X: integer; Y: integer): integer := Combine; return Ok(F(try ReadValue(1, FailAt), try ReadValue(2, FailAt)))",
+        "var F: function(X: integer; Y: integer): integer := Combine; return Ok(F(try ReadValue(1, FailAt), try ReadValue(2, FailAt)));",
     );
 }
 
 #[test]
 fn task_spawn_preserves_callee_and_arguments_across_try() {
     check_expression(
-        "return Ok(Std.Tasks.Wait(go Combine(try ReadValue(1, FailAt), try ReadValue(2, FailAt))))",
+        "return Ok(Std.Tasks.Wait(go Combine(try ReadValue(1, FailAt), try ReadValue(2, FailAt))));",
     );
 }
 
 #[test]
 fn index_read_preserves_collection_across_try() {
     check_expression(
-        "var Values: array of integer := [0, 10]; return Ok(Values[try ReadValue(1, FailAt)] + (try ReadValue(2, FailAt)))",
+        "var Values: array of integer := [0, 10]; return Ok(Values[try ReadValue(1, FailAt)] + (try ReadValue(2, FailAt)));",
     );
 }
 
 #[test]
 fn nested_index_write_preserves_path_and_replacement_across_try() {
     check_expression(
-        "mutable var Values: array of array of integer := [[0, 0, 0], [0, 0, 0]]; Values[try ReadValue(1, FailAt)][try ReadValue(2, FailAt)] := 12; return Ok(Values[1][2])",
+        "mutable var Values: array of array of integer := [[0, 0, 0], [0, 0, 0]]; Values[try ReadValue(1, FailAt)][try ReadValue(2, FailAt)] := 12; return Ok(Values[1][2]);",
     );
 }
 
 #[test]
 fn global_index_write_preserves_path_and_replacement_across_try() {
     check_expression(
-        "Grid[try ReadValue(1, FailAt)][try ReadValue(2, FailAt)] := 12; return Ok(Grid[1][2])",
+        "Grid[try ReadValue(1, FailAt)][try ReadValue(2, FailAt)] := 12; return Ok(Grid[1][2]);",
     );
 }
 
 #[test]
 fn membership_preserves_value_across_try() {
     check_expression(
-        "if (try ReadValue(1, FailAt)) in [1, try ReadValue(2, FailAt)] then return Ok(12); return Ok(0)",
+        "if (try ReadValue(1, FailAt)) in [1, try ReadValue(2, FailAt)] then return Ok(12); return Ok(0);",
     );
 }
 
 #[test]
 fn counting_loop_preserves_start_across_try_bound() {
     check_expression(
-        "mutable var Total: integer := 0; for I: integer := try ReadValue(1, FailAt) to try ReadValue(2, FailAt) do Total := Total * 10 + I; return Ok(Total)",
+        "mutable var Total: integer := 0; for I: integer := try ReadValue(1, FailAt) to try ReadValue(2, FailAt) do Total := Total * 10 + I; return Ok(Total);",
     );
 }
 
 #[test]
 fn case_range_preserves_subject_and_lower_comparison_across_try() {
     check_expression(
-        "case 1 of (try ReadValue(1, FailAt))..(try ReadValue(2, FailAt)): return Ok(12) else return Ok(0) end",
+        "case 1 of (try ReadValue(1, FailAt))..(try ReadValue(2, FailAt)): return Ok(12); else return Ok(0); end;",
     );
 }
 
 #[test]
 fn case_label_preserves_subject_across_try() {
     check_expression(
-        "case 1 of (try ReadValue(1, FailAt)): return Ok(10 + (try ReadValue(2, FailAt))) else return Ok(0) end",
+        "case 1 of (try ReadValue(1, FailAt)): return Ok(10 + (try ReadValue(2, FailAt))); else return Ok(0); end;",
     );
 }
 
 #[test]
 fn method_preserves_receiver_and_arguments_across_try() {
     check_expression(
-        "var C: Counter := record Base := 0; end; return Ok(C.Add(try ReadValue(1, FailAt), try ReadValue(2, FailAt)))",
+        "var C: Counter := record Base := 0; end; return Ok(C.Add(try ReadValue(1, FailAt), try ReadValue(2, FailAt)));",
     );
 }
 
 #[test]
 fn postfix_method_preserves_receiver_across_try() {
     check_expression(
-        "var C: Counter := record Base := 0; end; return Ok((C).Add(try ReadValue(1, FailAt), try ReadValue(2, FailAt)))",
+        "var C: Counter := record Base := 0; end; return Ok((C).Add(try ReadValue(1, FailAt), try ReadValue(2, FailAt)));",
     );
 }
 
 #[test]
 fn property_write_preserves_receiver_across_try() {
     check_expression(
-        "var C: Counter := record Base := 0; end; C.Number := (try ReadValue(1, FailAt)) * 10 + (try ReadValue(2, FailAt)); return Ok(Written)",
+        "var C: Counter := record Base := 0; end; C.Number := (try ReadValue(1, FailAt)) * 10 + (try ReadValue(2, FailAt)); return Ok(Written);",
     );
 }
 
 #[test]
 fn event_raise_preserves_handler_and_arguments_across_try() {
     check_expression(
-        "var C: Counter := record Base := 0; end; C.OnValue := Combine; return Ok(C.OnValue(try ReadValue(1, FailAt), try ReadValue(2, FailAt)))",
+        "var C: Counter := record Base := 0; end; C.OnValue := Combine; return Ok(C.OnValue(try ReadValue(1, FailAt), try ReadValue(2, FailAt)));",
     );
 }
 
 #[test]
 fn event_write_preserves_receiver_across_try() {
     check_expression(
-        "var C: Counter := record Base := 0; end; C.OnValue := try ReadHandler(FailAt); return Ok(C.OnValue(1, 2))",
+        "var C: Counter := record Base := 0; end; C.OnValue := try ReadHandler(FailAt); return Ok(C.OnValue(1, 2));",
     );
 }
 
 #[test]
 fn record_field_write_preserves_parent_across_try_index() {
     check_expression(
-        "mutable var Value: Bucket := record Items := [0, 0]; end; Value.Items[try ReadValue(1, FailAt)] := 12; var Ignored: integer := try ReadValue(2, FailAt); return Ok(Value.Items[1])",
+        "mutable var Value: Bucket := record Items := [0, 0]; end; Value.Items[try ReadValue(1, FailAt)] := 12; var Ignored: integer := try ReadValue(2, FailAt); return Ok(Value.Items[1]);",
     );
 }
 
@@ -214,12 +214,12 @@ function ReadValue(Value: integer; FailAt: integer): Option of integer;
 begin
   Trace := Trace * 10 + Value;
   if Value = FailAt then return None;
-  return Some(Value)
+  return Some(Value);
 end;
 function Combine(X: integer; Y: integer): integer;
-begin return X * 10 + Y end;
+begin return X * 10 + Y; end;
 function Probe(FailAt: integer): Option of integer;
-begin return Some(Combine(try ReadValue(1, FailAt), try ReadValue(2, FailAt))) end;
+begin return Some(Combine(try ReadValue(1, FailAt), try ReadValue(2, FailAt))); end;
 begin
   if Probe(0) <> Some(12) then panic('success');
   if Trace <> 12 then panic('order');
@@ -228,7 +228,7 @@ begin
   if Trace <> 1 then panic('evaluated after none');
   Trace := 0;
   if Probe(2) <> None then panic('second none');
-  if Trace <> 12 then panic('second order')
+  if Trace <> 12 then panic('second order');
 end.
 "#,
     );
@@ -241,7 +241,7 @@ fn saved_operands_retain_snapshots_across_mutation_and_loop_iterations() {
 program Snapshots;
 mutable var Values: array of integer := [12, 99];
 function Change(): result of integer, string;
-begin Values := [77, 88]; return Ok(0) end;
+begin Values := [77, 88]; return Ok(0); end;
 function Probe(): result of integer, string;
 begin
   for I: integer := 1 to 3 do
@@ -250,13 +250,13 @@ begin
     if Values[try Change()] <> 12 then panic('collection snapshot');
     mutable var X: integer := I;
     var Update: function(): result of integer, string := function(): result of integer, string
-    begin X := 99; return Ok(10) end;
+    begin X := 99; return Ok(10); end;
     if X + (try Update()) <> I + 10 then panic('local snapshot');
-    if X <> 99 then panic('mutation missing')
+    if X <> 99 then panic('mutation missing');
   end;
-  return Ok(12)
+  return Ok(12);
 end;
-begin if Probe() <> Ok(12) then panic('result') end.
+begin if Probe() <> Ok(12) then panic('result'); end.
 "#,
     );
 }
@@ -270,25 +270,25 @@ function Tagged<T>(Value: result of T, string): result of T, string;
 begin
   case Value of
     Ok(Content): return Ok(Content);
-    Error(Message): return Error('tagged ' + Message)
-  end
+    Error(Message): return Error('tagged ' + Message);
+  end;
 end;
 function MakeInt(Fail: boolean): result of integer, string;
 begin
   if Fail then return Error('int');
-  return Ok(7)
+  return Ok(7);
 end;
 function MakeValues(): result of array of integer, string;
-begin return Ok([2, 3]) end;
+begin return Ok([2, 3]); end;
 function Probe(Fail: boolean): result of integer, string;
 begin
   var Values: array of integer := try Tagged(MakeValues());
   var Number: integer := try Tagged(MakeInt(Fail));
-  return Ok(Number * 10 + Values[0] + Values[1])
+  return Ok(Number * 10 + Values[0] + Values[1]);
 end;
 begin
   if Probe(false) <> Ok(75) then panic('generic payloads');
-  if Probe(true) <> Error('tagged int') then panic('generic error propagation')
+  if Probe(true) <> Error('tagged int') then panic('generic error propagation');
 end.
 "#,
     );
@@ -300,20 +300,20 @@ fn option_try_unwraps_generic_callee_to_concrete_payload() {
         r#"
 program GenericOptionTry;
 function Wrapped<T>(Value: Option of T): Option of T;
-begin return Value end;
+begin return Value; end;
 function Lookup(Present: boolean): Option of integer;
 begin
   if Present then return Some(40);
-  return None
+  return None;
 end;
 function Probe(Present: boolean): Option of integer;
 begin
   var Number: integer := try Wrapped(Lookup(Present));
-  return Some(Number + 2)
+  return Some(Number + 2);
 end;
 begin
   if Probe(true) <> Some(42) then panic('generic payload');
-  if Probe(false) <> None then panic('generic none')
+  if Probe(false) <> None then panic('generic none');
 end.
 "#,
     );

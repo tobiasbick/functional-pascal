@@ -8,7 +8,7 @@ program SendShadowRepro;
 uses Std.Console, Std.Conv, Std.Tasks;
 function Send(First: integer; Second: integer; Third: integer): integer;
 begin
-  return First + Second + Third
+  return First + Second + Third;
 end;
 begin
   if Send(1, 2, 3) <> 6 then panic('local Send was not selected');
@@ -17,9 +17,9 @@ begin
   Std.Tasks.Send(Queue, 42);
   case Receive(Queue) of
     Ok(Value): if Value <> 42 then panic('qualified channel Send');
-    Error(Message): panic(Message)
+    Error(Message): panic(Message);
   end;
-  CloseChannel(Queue)
+  CloseChannel(Queue);
 end.
 "#,
     );
@@ -34,14 +34,14 @@ uses Std.Tasks, Std.Console;
 mutable var Total: integer := 0;
 procedure Send(First: integer; Second: integer; Third: integer);
 begin
-  Total := First + Second + Third
+  Total := First + Second + Third;
 end;
 begin
   Send(1, 2, 3);
   if Total <> 6 then panic('local procedure');
   Std.Console.WriteLn('loaded another unit');
   sEnD(4, 5, 6);
-  if Total <> 15 then panic('local procedure replaced by the intrinsic')
+  if Total <> 15 then panic('local procedure replaced by the intrinsic');
 end.
 "#,
     );
@@ -55,19 +55,19 @@ program CallableShadowing;
 uses Std.Conv, Std.Tasks;
 function Apply(IntToStr: function(Value: integer): string): string;
 begin
-  return IntToStr(42)
+  return IntToStr(42);
 end;
 begin
   var Send: function(Value: integer): integer := function(Value: integer): integer
   begin
-    return Value + 1
+    return Value + 1;
   end;
   if Send(3) <> 4 then panic('local callable');
   if Apply(function(Value: integer): string
   begin
-    return 'local'
+    return 'local';
   end) <> 'local' then panic('callable parameter');
-  if Std.Conv.IntToStr(42) <> '42' then panic('qualified intrinsic')
+  if Std.Conv.IntToStr(42) <> '42' then panic('qualified intrinsic');
 end.
 "#,
     );
@@ -81,11 +81,11 @@ program SameArityShadowing;
 uses Std.Math;
 function Abs(Value: integer): integer;
 begin
-  return Value - 100
+  return Value - 100;
 end;
 begin
   if Abs(-2) <> -102 then panic('silent intrinsic substitution');
-  if Std.Math.Abs(-2) <> 2 then panic('qualified intrinsic')
+  if Std.Math.Abs(-2) <> 2 then panic('qualified intrinsic');
 end.
 "#,
     );

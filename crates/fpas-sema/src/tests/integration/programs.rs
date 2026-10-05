@@ -9,13 +9,13 @@ program Fib;
 function Fibonacci(N: integer): integer;
 begin
   if N <= 1 then
-    return N
+    return N;
   else
-    return Fibonacci(N - 1) + Fibonacci(N - 2)
+    return Fibonacci(N - 1) + Fibonacci(N - 2);
 end;
 
 begin
-  return
+  return;
 end.",
     );
 }
@@ -39,12 +39,12 @@ begin
     OpAdd: return A + B;
     OpSub: return A - B;
     OpMul: return A * B;
-    OpDiv: return A div B
-  end
+    OpDiv: return A div B;
+  end;
 end;
 
 begin
-  var Answer: integer := Calculate(10, 3, OpAdd)
+  var Answer: integer := Calculate(10, 3, OpAdd);
 end.",
     );
 }
@@ -61,7 +61,7 @@ type Point = record
 end;
 
 begin
-  var P: Point := record X := 1.0; Y := 2.0; end
+  var P: Point := record X := 1.0; Y := 2.0; end;
 end.",
     );
 }
@@ -76,8 +76,8 @@ begin
     for J: integer := 0 to 9 do
       begin
         if I = J then continue;
-        if I + J > 10 then break
-      end
+        if I + J > 10 then break;
+      end;
 end.",
     );
 }
@@ -91,16 +91,16 @@ program T;
 function IsEven(N: integer): boolean;
   function IsOdd(X: integer): boolean;
   begin
-    if X = 0 then return false
-    else return IsEven(X - 1)
+    if X = 0 then return false;
+    else return IsEven(X - 1);
   end;
 begin
-  if N = 0 then return true
-  else return IsOdd(N - 1)
+  if N = 0 then return true;
+  else return IsOdd(N - 1);
 end;
 
 begin
-  return
+  return;
 end.",
     );
 }
@@ -112,7 +112,7 @@ fn immutable_assignment_error() {
 program T;
 var X: integer := 42;
 begin
-  X := 100
+  X := 100;
 end.",
     );
 }
@@ -124,7 +124,7 @@ fn mixed_errors() {
 program T;
 begin
   break;
-  var X: integer := true
+  var X: integer := true;
 end.",
     );
     assert!(errs.len() >= 2);

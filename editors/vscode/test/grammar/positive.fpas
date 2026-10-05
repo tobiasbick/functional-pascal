@@ -11,7 +11,7 @@ type
 
 function Distance(Value: Point): real;
 begin
-  return Value.X + Value.Y
+  return Value.X + Value.Y;
 end;
 
 begin
@@ -21,6 +21,6 @@ begin
   var Mask: integer := 42;
   if Mask >= 1 then
   begin
-    Std.Console.WriteLn('It''s the origin')
-  end
+    Std.Console.WriteLn('It''s the origin');
+  end;
 end.

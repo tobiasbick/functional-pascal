@@ -26,11 +26,11 @@ program Example;
 uses Std.Console, Std.Tasks;
 function N(): integer;
 begin
-  return 7
+  return 7;
 end;
 begin
   var T: task := go N();
-  WriteLn(Wait(T))
+  WriteLn(Wait(T));
 end.
 ```
 
@@ -106,8 +106,8 @@ var Token: CancellationToken := GetCancellationToken(Source);
 Cancel(Source);
 if IsCancellationRequested(Token) then
 begin
-  WriteLn('stopping')
-end
+  WriteLn('stopping');
+end;
 ```
 
 Sources and tokens belong to the VM that created them. Ordinary source storage is released when
@@ -268,7 +268,7 @@ debugger failure recovery after its terminal report has been published.
 because capacity alone cannot infer `T`:
 
 ```pascal
-var Messages: channel of string := CreateChannel(16)
+var Messages: channel of string := CreateChannel(16);
 ```
 
 `Send` waits until space is available. `Receive` waits until a value is available. Successful sends
@@ -277,13 +277,13 @@ return `Ok(true)`; successful receives return `Ok(Value)`. Values are received i
 ```pascal
 case Send(Messages, 'ready') of
   Ok(_): begin end;
-  Error(Message): panic(Message)
+  Error(Message): panic(Message);
 end;
 
 case Receive(Messages) of
   Ok(Message): WriteLn(Message);
-  Error(Message): panic(Message)
-end
+  Error(Message): panic(Message);
+end;
 ```
 
 `CloseChannel` is idempotent: the first close returns `true`, and later closes return `false`.
@@ -319,7 +319,7 @@ Blocks until the spawned call completes, then returns its value. The task result
 
 ```pascal
 var T: task := go Square(6);
-WriteLn(Wait(T))
+WriteLn(Wait(T));
 ```
 
 **Hint:** If you need the result only once, assign `Wait(T)` to a variable and reuse that value.
@@ -336,7 +336,7 @@ var Tb: task := go Work(2);
 WaitAll([Ta, Tb]);
 // still valid:
 Wait(Ta);
-Wait(Tb)
+Wait(Tb);
 ```
 
 An empty array completes immediately.
@@ -364,7 +364,7 @@ var First: integer := WaitAny([Ta, Tb]);
 // Both results still belong to their task handles.
 WaitAll([Ta, Tb]);
 Wait(Ta);
-Wait(Tb)
+Wait(Tb);
 ```
 
 The main task waits without executing queued tasks; see [Waiting and execution](#waiting-and-execution).

@@ -271,18 +271,18 @@ begin
   case Optional of
     Some(Value):
     begin
-      return Value
+      return Value;
     end;
     None:
     begin
-      return 0
-    end
-  end
+      return 0;
+    end;
+  end;
 end;
 
 begin
   var Pending: task := go Work();
-  WriteLn(Wait(Pending))
+  WriteLn(Wait(Pending));
 end.
 "#;
     let (program, diagnostics) = fpas_parser::parse(TASK_SOURCE);
@@ -381,18 +381,18 @@ begin
   case Item of
     Choice.Count(Value):
     begin
-      return Value
+      return Value;
     end;
     Choice.Pair(Left, Right):
     begin
-      return Left + Right
-    end
-  end
+      return Left + Right;
+    end;
+  end;
 end;
 
 begin
   var OutputValue: integer := ReadChoice(Choice.Count(1));
-  var Marker: integer := OutputValue
+  var Marker: integer := OutputValue;
 end.
 "#,
     );
@@ -447,20 +447,20 @@ begin
     case Selected of
       Choice.Count(Value):
       begin
-        return Value
+        return Value;
       end;
       Choice.Pair(Left, Right):
       begin
-        return Left + Right
-      end
-    end
-  end
+        return Left + Right;
+      end;
+    end;
+  end;
 end;
 
 begin
   var Next: function(): integer := NextChoice();
   var First: integer := Next();
-  var Marker: integer := First
+  var Marker: integer := First;
 end.
 "#,
     );

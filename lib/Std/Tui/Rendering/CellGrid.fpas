@@ -17,17 +17,17 @@ begin
   mutable var Height: integer := Grid.Height;
   if Width > Bounds.Width then
   begin
-    Width := Bounds.Width
+    Width := Bounds.Width;
   end;
 
   if Height > Bounds.Height then
   begin
-    Height := Bounds.Height
+    Height := Bounds.Height;
   end;
 
   for Y: integer := 0 to Height - 1 do
   begin
     TuiCanvasPutCells(Canvas, TuiPoint.Create(Bounds.X, Bounds.Y + Y), Std.Arrays.Slice(Grid.Cells, Y *
-                                                                                                    Grid.Width, Width))
-  end
+                                                                                                    Grid.Width, Width));
+  end;
 end;

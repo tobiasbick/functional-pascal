@@ -9,7 +9,7 @@ use fpas_parser::parse_compilation_unit;
 
 #[test]
 fn control_characters_emit_pascal_character_codes_idempotently() {
-    let source = "program T; begin var S: string := 'A'#0#9#13#10'B''é' end.";
+    let source = "program T; begin var S: string := 'A'#0#9#13#10'B''é'; end.";
     let (unit, diagnostics) = parse_compilation_unit(source);
     assert!(diagnostics.is_empty(), "source must parse: {diagnostics:?}");
 

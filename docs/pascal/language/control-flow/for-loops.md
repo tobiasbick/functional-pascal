@@ -2,6 +2,9 @@
 
 Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`for_stmt`).
 
+The body is one terminated statement. Its final `;` also terminates the loop;
+an explicit `begin ... end;` body groups multiple terminated statements.
+
 ## Counting up
 
 ```pascal

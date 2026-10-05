@@ -18,16 +18,16 @@ begin
     Value := Value - 0.125;
     if Value < 0.0 then
     begin
-      Value := 1.25
-    end
+      Value := 1.25;
+    end;
   end;
 
   if Value > 0.0 then
   begin
-    return 1
+    return 1;
   end;
 
-  return 0
+  return 0;
 end;
 
 function RunBoolean(Iterations: integer): integer;
@@ -40,16 +40,16 @@ begin
     Right := not Right;
     if Left = Right then
     begin
-      Left := not Left
-    end
+      Left := not Left;
+    end;
   end;
 
   if Left then
   begin
-    return 1
+    return 1;
   end;
 
-  return 0
+  return 0;
 end;
 
 function RunString(Iterations: integer): integer;
@@ -61,43 +61,43 @@ begin
   begin
     if (Left = 'alpha') and (Left <> Right) then
     begin
-      Count := Count + 1
-    end
+      Count := Count + 1;
+    end;
   end;
 
-  return Count
+  return Count;
 end;
 
 function RunWork(Iterations: integer; Mode: string): integer;
 begin
   if Mode = 'real' then
   begin
-    return RunReal(Iterations)
+    return RunReal(Iterations);
   end;
 
   if Mode = 'boolean' then
   begin
-    return RunBoolean(Iterations)
+    return RunBoolean(Iterations);
   end;
 
   if Mode = 'string' then
   begin
-    return RunString(Iterations)
+    return RunString(Iterations);
   end;
 
-  panic('mode must be real, boolean, or string')
+  panic('mode must be real, boolean, or string');
 end;
 
 begin
   if ParamCount() <> 2 then
   begin
-    panic('usage: typed_scalar_benchmark.fpas -- ITERATIONS real|boolean|string')
+    panic('usage: typed_scalar_benchmark.fpas -- ITERATIONS real|boolean|string');
   end;
   var Iterations: integer := StrToInt(ParamStr(0));
   var Mode: string := ParamStr(1);
   if Iterations < 1 then
   begin
-    panic('ITERATIONS must be positive')
+    panic('ITERATIONS must be positive');
   end;
   var Warmup: integer := RunWork(WarmupIterations, Mode);
   var Started: integer := MonotonicMillis();
@@ -105,10 +105,10 @@ begin
   var Elapsed: integer := ElapsedMillis(Started);
   if Warmup < 0 then
   begin
-    panic('invalid warmup checksum')
+    panic('invalid warmup checksum');
   end;
 
   WriteLn((('mode: ' + Mode) + ', iterations: ') + IntToStr(Iterations));
   WriteLn(('elapsed: ' + IntToStr(Elapsed)) + ' ms');
-  WriteLn('checksum: ' + IntToStr(Checksum))
+  WriteLn('checksum: ' + IntToStr(Checksum));
 end.

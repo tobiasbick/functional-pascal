@@ -11,7 +11,7 @@ type
 
 function MakePointer(X: integer; Y: integer): TuiPointerEvent;
 begin
-  return TuiPointerEvent.Create(TuiPointerAction.Down, TuiPointerButton.Left, TuiPoint.Create(X, Y))
+  return TuiPointerEvent.Create(TuiPointerAction.Down, TuiPointerButton.Left, TuiPoint.Create(X, Y));
 end;
 
 function FindGlyph(Snapshot: TuiSurfaceSnapshot; Glyph: string): TuiPoint;
@@ -22,11 +22,11 @@ begin
     var Index: integer := Std.Str.IndexOf(Line, Glyph);
     if Index >= 0 then
     begin
-      return TuiPoint.Create(Index, Y)
-    end
+      return TuiPoint.Create(Index, Y);
+    end;
   end;
 
-  panic('glyph not found in snapshot')
+  panic('glyph not found in snapshot');
 end;
 
 function ViewCheck(State: CheckModel): TuiElement;
@@ -38,7 +38,7 @@ begin
                                                                                                                                                          TuiElementBuilders.MakeCheckBox(TuiControlId.Create(1), 'Flag', State.Checked, TuiAction.Create(9))
                                                                                                                                                        ])
                                                                                                                        ])
-                                                                                ])
+                                                                                ]);
 end;
 
 function UpdateCheck(State: CheckModel; Msg: TuiMsg; Cmd: TuiCmdOutput): CheckModel;
@@ -54,13 +54,13 @@ begin
             Focus := Id.Value;
             Checked := State.Checked;
             Changes := State.Changes;
-          end
+          end;
         end;
         None:
         begin
-          return State
-        end
-      end
+          return State;
+        end;
+      end;
     end;
     TuiMsg.CheckChanged(Source, Action, Checked):
     begin
@@ -70,13 +70,13 @@ begin
         Focus := State.Focus;
         Checked := Checked;
         Changes := Std.Arrays.Concat(State.Changes, [Checked]);
-      end
-    end
+      end;
+    end;
     else
     begin
-      return State
-    end
-  end
+      return State;
+    end;
+  end;
 end;
 
 begin
@@ -95,5 +95,5 @@ begin
   AssertTrue(Model.Checked);
   AssertEquals(1, Std.Arrays.Length(Model.Changes));
   AssertTrue(Model.Changes[0]);
-  App.Close()
+  App.Close();
 end.

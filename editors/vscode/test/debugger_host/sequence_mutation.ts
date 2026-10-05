@@ -58,7 +58,7 @@ export async function verifySequenceMutation(
     "  WriteLn(Numbers[0]);",
     "  WriteLn(Numbers[1]);",
     "  WriteLn(Numbers[2]);",
-    "  WriteLn(Text)",
+    "  WriteLn(Text);",
     "end.",
     ""
   ];

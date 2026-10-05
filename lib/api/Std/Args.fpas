@@ -7,7 +7,7 @@ unit Std.Args;
 // Number of program arguments after `--`.
 public function ParamCount(): integer;
 begin
-  panic('Intrinsic API declaration')
+  panic('Intrinsic API declaration');
 end;
 
 // 0-based argument lookup.
@@ -16,5 +16,5 @@ end;
 // - `Index`: Zero-based index unless the operation documents another base.
 public function ParamStr(Index: integer): string;
 begin
-  panic('Intrinsic API declaration')
+  panic('Intrinsic API declaration');
 end;

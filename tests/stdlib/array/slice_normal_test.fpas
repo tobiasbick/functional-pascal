@@ -7,5 +7,5 @@ begin
   var C: array of integer := Slice(A, 1, 2);
   WriteLn(Length(C));
   WriteLn(C[0]);
-  WriteLn(C[1])
+  WriteLn(C[1]);
 end.

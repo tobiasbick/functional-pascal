@@ -4,5 +4,5 @@ uses Std.Console, Std.Arrays;
 
 begin
   var A: array of integer := [1, 2, 3];
-  WriteLn(Contains(A, 2))
+  WriteLn(Contains(A, 2));
 end.

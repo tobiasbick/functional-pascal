@@ -5,5 +5,5 @@ uses Std.Console, Std.Dictionaries;
 begin
   var D: dict of string to integer := ['A': 1];
   var D2: dict of string to integer := Std.Dictionaries.Remove(D, 'Z');
-  WriteLn(Std.Dictionaries.Length(D2))
+  WriteLn(Std.Dictionaries.Length(D2));
 end.

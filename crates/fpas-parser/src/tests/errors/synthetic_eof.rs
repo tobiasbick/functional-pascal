@@ -4,10 +4,10 @@ use fpas_lexer::{Token, lex_with_source_id};
 #[test]
 fn synthetic_eof_matches_lexer_position_after_unicode_and_line_endings() {
     for source in [
-        "program T; begin 'é'",
-        "program T; begin 'a\nb'",
-        "program T; begin 'a\r\nb'",
-        "program T; begin 'a\rb'",
+        "program T; begin 'é';",
+        "program T; begin 'a\nb';",
+        "program T; begin 'a\r\nb';",
+        "program T; begin 'a\rb';",
     ] {
         let (mut tokens, _, lex_errors) = lex_with_source_id(source, 17);
         assert!(

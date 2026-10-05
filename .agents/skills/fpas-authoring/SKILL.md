@@ -50,7 +50,7 @@ program MyApp;
 uses Std.Console;
 
 begin
-  WriteLn('Hello')
+  WriteLn('Hello');
 end.
 ```
 
@@ -62,11 +62,11 @@ unit MyApp.Bounds;
 public function Clamp(Value: integer; Min: integer; Max: integer): integer;
 begin
   if Value < Min then
-    return Min
+    return Min;
   else if Value > Max then
-    return Max
+    return Max;
   else
-    return Value
+    return Value;
 end;
 ```
 
@@ -78,7 +78,7 @@ program AbsNegativeTest;
 uses Std.Math, Std.Test;
 
 begin
-  AssertEquals(7, Abs(-7))
+  AssertEquals(7, Abs(-7));
 end.
 ```
 
@@ -94,7 +94,7 @@ Do **not** assume Delphi/Free Pascal:
 |----------------------|------|
 | `FuncName := value` return | `return value` only |
 | `var x: Integer` mutable by default | `var` immutable; use `mutable var` to reassign |
-| `WriteLn('x');` required before every `end` | semicolons **separate** statements; no trailing `;` before `end` / `else` / `until` |
+| Omitting `;` on the last statement in a block | terminate every statement with `;`, also before `end`, `else`, and `until`; the program ends with `end.` |
 | `uses Unit1, Unit2 in interface` | single `uses` clause; no Delphi `interface`/`implementation` split |
 | untyped lambda shorthand | use an anonymous `function` / `procedure` expression with explicit parameter and result types; use a named nested routine for implicit recursion |
 | `begin`/`end.` optional on programs | formatter inserts them — match [`fmt-style.md`](../../../docs/pascal/tools/fmt-style.md) |

@@ -4,5 +4,5 @@ uses Std.Console;
 
 begin
   var D: dict of string to integer := ['Alice': 30];
-  WriteLn(D['Alice'])
+  WriteLn(D['Alice']);
 end.

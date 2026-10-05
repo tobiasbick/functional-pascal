@@ -16,18 +16,18 @@ uses Std.Tasks, Std.Time;
 function Child(): integer;
 begin
   Sleep(1);
-  return 9
+  return 9;
 end;
 function Parent(): integer;
 begin
   var T: task := go Child();
   if WaitAny([T]) <> 0 then panic('child index');
-  return Wait(T)
+  return Wait(T);
 end;
 begin
   var T: task := go Parent();
   if WaitAny([T]) <> 0 then panic('parent index');
-  if Wait(T) <> 9 then panic('result')
+  if Wait(T) <> 9 then panic('result');
 end."#,
     );
     assert!(errors.is_empty(), "{errors:?}");

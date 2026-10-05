@@ -20,52 +20,52 @@ begin
     mutable var GlyphRole: TuiStyleRole := Role;
     if (Button.Mnemonic <> '') and (Std.Str.ToLower(Glyph) = Std.Str.ToLower(Button.Mnemonic)) then
     begin
-      GlyphRole := ShortcutRole
+      GlyphRole := ShortcutRole;
     end;
 
     Canvas.WriteText(TuiPoint.Create(X, Position.Y), Glyph, GlyphRole);
-    X := X + Std.Console.DisplayWidth(Glyph)
-  end
+    X := X + Std.Console.DisplayWidth(Glyph);
+  end;
 end;
 
 function TuiButtonRole(Button: TuiButtonSpec; Focused: boolean): TuiStyleRole;
 begin
   if not Button.Enabled then
   begin
-    return TuiStyleRole.ButtonDisabled
+    return TuiStyleRole.ButtonDisabled;
   end;
 
   if Focused then
   begin
-    return TuiStyleRole.ButtonSelected
+    return TuiStyleRole.ButtonSelected;
   end;
 
   if Button.Default then
   begin
-    return TuiStyleRole.ButtonDefault
+    return TuiStyleRole.ButtonDefault;
   end;
 
-  return TuiStyleRole.ButtonNormal
+  return TuiStyleRole.ButtonNormal;
 end;
 
 function TuiButtonShortcutRole(Button: TuiButtonSpec; Focused: boolean): TuiStyleRole;
 begin
   if not Button.Enabled then
   begin
-    return TuiStyleRole.ButtonDisabled
+    return TuiStyleRole.ButtonDisabled;
   end;
 
   if Focused then
   begin
-    return TuiStyleRole.ButtonSelectedShortcut
+    return TuiStyleRole.ButtonSelectedShortcut;
   end;
 
   if Button.Default then
   begin
-    return TuiStyleRole.ButtonDefaultShortcut
+    return TuiStyleRole.ButtonDefaultShortcut;
   end;
 
-  return TuiStyleRole.ButtonShortcut
+  return TuiStyleRole.ButtonShortcut;
 end;
 
 // Paints a compact one-row button.
@@ -86,7 +86,7 @@ public procedure TuiPaintButton(
 begin
   if Bounds.IsEmpty() then
   begin
-    return
+    return;
   end;
   mutable var Role: TuiStyleRole := TuiButtonRole(Button, Focused);
   mutable var ShortcutRole: TuiStyleRole := TuiButtonShortcutRole(Button, Focused);
@@ -95,19 +95,19 @@ begin
   mutable var TextX: integer := Bounds.X + ((ContentWidth - TextWidth) div 2);
   if TextX < Bounds.X + 1 then
   begin
-    TextX := Bounds.X + 1
+    TextX := Bounds.X + 1;
   end;
 
   if Pressed and Button.Enabled then
   begin
     Role := TuiStyleRole.ButtonSelected;
-    ShortcutRole := TuiStyleRole.ButtonSelectedShortcut
+    ShortcutRole := TuiStyleRole.ButtonSelectedShortcut;
   end;
 
   Canvas.FillRect(Bounds, TuiCell.Create(' ', Role));
   TuiPaintButtonText(Canvas, TuiPoint.Create(TextX, Bounds.Y), Button, Role, ShortcutRole);
   if ((Button.Enabled and Button.Default) and not Focused) and not Pressed then
   begin
-    Canvas.WriteText(TuiPoint.Create(Bounds.X + 1, Bounds.Y), '•', Role)
-  end
+    Canvas.WriteText(TuiPoint.Create(Bounds.X + 1, Bounds.Y), '•', Role);
+  end;
 end;

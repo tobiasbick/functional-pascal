@@ -4,17 +4,17 @@ uses Std.Console, Std.Arrays, Std.Conv;
 
 function Identity<T>(Value: T): T;
 begin
-  return Value
+  return Value;
 end;
 
 function Wrap<T>(Value: T): array of T;
 begin
-  return [Value]
+  return [Value];
 end;
 
 function FirstElement<T>(Items: array of T): T;
 begin
-  return Items[0]
+  return Items[0];
 end;
 
 begin
@@ -25,5 +25,5 @@ begin
   WriteLn('Wrapped length: ', IntToStr(Std.Arrays.Length(Numbers)));
   WriteLn('First wrapped value: ', FirstElement(Numbers));
   var Words: array of string := ['red', 'green', 'blue'];
-  WriteLn('First word: ', FirstElement(Words))
+  WriteLn('First word: ', FirstElement(Words));
 end.

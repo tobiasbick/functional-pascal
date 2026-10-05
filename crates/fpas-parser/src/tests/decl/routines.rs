@@ -18,7 +18,7 @@ fn function_with_body() {
         "program T; \
          function Add(A: integer; B: integer): integer; \
          begin \
-           return A + B \
+           return A + B; \
          end; \
          begin end.",
     );
@@ -42,7 +42,7 @@ fn procedure_declaration() {
         "program T; \
          procedure Greet(Name: string); \
          begin \
-           Std.Console.WriteLn(Name) \
+           Std.Console.WriteLn(Name); \
          end; \
          begin end.",
     );
@@ -61,7 +61,7 @@ fn mutable_param() {
         "program T; \
          procedure Inc(mutable X: integer); \
          begin \
-           X := X + 1 \
+           X := X + 1; \
          end; \
          begin end.",
     );
@@ -79,8 +79,8 @@ fn nested_function() {
         "program T; \
          function Outer(): integer; \
            function Inner(): integer; \
-           begin return 1 end; \
-         begin return Inner() end; \
+           begin return 1; end; \
+         begin return Inner(); end; \
          begin end.",
     );
     match &p.declarations[0] {

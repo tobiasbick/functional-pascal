@@ -8,7 +8,7 @@ uses Std.Console, Std.Dictionaries;
 begin
   var Ages: dict of string to integer := ['Alice': 30, 'Bob': 25];
   WriteLn(Length(Ages));
-  WriteLn(ContainsKey(Ages, 'Alice'))
+  WriteLn(ContainsKey(Ages, 'Alice'));
 end.
 ```
 
@@ -53,7 +53,7 @@ Returns the number of key-value pairs in the dict.
 ```pascal
 var D: dict of string to integer := ['A': 1, 'B': 2];
 WriteLn(Std.Dictionaries.Length(D));  // 2
-WriteLn(Std.Dictionaries.Length([:]))  // 0
+WriteLn(Std.Dictionaries.Length([:]));  // 0
 ```
 
 ### `ContainsKey`
@@ -67,7 +67,7 @@ Returns `true` if the dict contains the given key, `false` otherwise.
 ```pascal
 var D: dict of string to integer := ['Alice': 30];
 WriteLn(Std.Dictionaries.ContainsKey(D, 'Alice'));    // true
-WriteLn(Std.Dictionaries.ContainsKey(D, 'Bob'))       // false
+WriteLn(Std.Dictionaries.ContainsKey(D, 'Bob'));       // false
 ```
 
 ### `Keys`
@@ -80,7 +80,7 @@ Returns an array of all keys in insertion order.
 
 ```pascal
 var D: dict of string to integer := ['Alice': 30, 'Bob': 25];
-WriteLn(Std.Dictionaries.Keys(D))  // [Alice, Bob]
+WriteLn(Std.Dictionaries.Keys(D));  // [Alice, Bob]
 ```
 
 ### `Values`
@@ -93,7 +93,7 @@ Returns an array of all values in insertion order.
 
 ```pascal
 var D: dict of string to integer := ['Alice': 30, 'Bob': 25];
-WriteLn(Std.Dictionaries.Values(D))  // [30, 25]
+WriteLn(Std.Dictionaries.Values(D));  // [30, 25]
 ```
 
 ### `Remove`
@@ -107,7 +107,7 @@ Returns a new dict without the given key. If the key does not exist, the origina
 ```pascal
 var D: dict of string to integer := ['A': 1, 'B': 2, 'C': 3];
 var D2: dict of string to integer := Std.Dictionaries.Remove(D, 'B');
-WriteLn(D2)  // {A: 1, C: 3}
+WriteLn(D2);  // {A: 1, C: 3}
 ```
 
 ---
@@ -158,7 +158,7 @@ Transforms every value in `D` by applying `F` to it. Keys are preserved; the res
 ```pascal
 function DoublePrice(V: real): real;
 begin
-  return V * 2.0
+  return V * 2.0;
 end;
 
 var Prices: dict of string to real := ['Apple': 1.0, 'Banana': 0.5];
@@ -179,7 +179,7 @@ Returns a new dict containing only the entries for which `F(K, V)` returns `true
 ```pascal
 function IsPassingScore(K: string; V: integer): boolean;
 begin
-  return V >= 60
+  return V >= 60;
 end;
 
 var Scores: dict of string to integer := ['Alice': 90, 'Bob': 55, 'Carol': 80];
@@ -200,7 +200,7 @@ Visits entries in insertion order. Each callback receives the current accumulato
 ```pascal
 function Describe(Acc: string; Key: string; Value: integer): string;
 begin
-  return Acc + Key + ':' + Std.Conv.IntToStr(Value) + ';'
+  return Acc + Key + ':' + Std.Conv.IntToStr(Value) + ';';
 end;
 
 var Scores: dict of string to integer := ['Alice': 90, 'Bob': 55];
@@ -227,7 +227,7 @@ Indexing uses bracket syntax (same as arrays):
 var Age: integer := D['Alice'];       // read
 mutable var M: dict of string to integer := ['A': 1];
 M['A'] := 2;                          // update existing key
-M['B'] := 3                           // insert new key
+M['B'] := 3;                           // insert new key
 ```
 
 Accessing a non-existent key raises a runtime error. Use `Std.Dictionaries.ContainsKey` to check first.

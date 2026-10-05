@@ -33,12 +33,12 @@ function Work(): integer;
 begin
   mutable var Value: integer := 40;
   Value := Value + 2;
-  return Value
+  return Value;
 end;
 
 begin
   var Pending: task := go Work();
-  Wait(Pending)
+  Wait(Pending);
 end.
 "#;
     let (program, diagnostics) = fpas_parser::parse(SOURCE);

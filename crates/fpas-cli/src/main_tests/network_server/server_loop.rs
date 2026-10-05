@@ -16,7 +16,7 @@ function Handle(RequestValue: ServerRequest): ServerResponse;
 begin
   mutable var ResponseValue: ServerResponse := ServerResponse.Create(200, 'OK');
   ResponseValue.Body := Std.Net.Utf8.Encode(RequestValue.Target);
-  return ResponseValue
+  return ResponseValue;
 end;
 
 begin
@@ -30,15 +30,15 @@ begin
         Ok(_):
         begin
         end;
-        Error(Message): panic(Message)
+        Error(Message): panic(Message);
       end;
       case CloseListener(ListenerValue) of
         Ok(_): WriteLn('served');
-        Error(Message): panic(Message)
-      end
+        Error(Message): panic(Message);
+      end;
     end;
-    Error(Message): panic(Message)
-  end
+    Error(Message): panic(Message);
+  end;
 end.
 "#
         ),
@@ -79,7 +79,7 @@ uses Std.Http, Std.Net;
 
 function Handle(_RequestValue: ServerRequest): ServerResponse;
 begin
-  return ServerResponse.Create(204, 'No Content')
+  return ServerResponse.Create(204, 'No Content');
 end;
 
 begin
@@ -93,17 +93,17 @@ begin
         Ok(_):
         begin
         end;
-        Error(Message): panic(Message)
+        Error(Message): panic(Message);
       end;
       case CloseListener(ListenerValue) of
         Ok(_):
         begin
         end;
-        Error(Message): panic(Message)
-      end
+        Error(Message): panic(Message);
+      end;
     end;
-    Error(Message): panic(Message)
-  end
+    Error(Message): panic(Message);
+  end;
 end.
 "#
         ),
@@ -141,7 +141,7 @@ uses Std.Console, Std.Http, Std.Net, Std.Str;
 
 function Handle(_RequestValue: ServerRequest): ServerResponse;
 begin
-  return ServerResponse.Create(204, 'No Content')
+  return ServerResponse.Create(204, 'No Content');
 end;
 
 begin
@@ -156,17 +156,17 @@ begin
         begin
           if not Std.Str.Contains(Message, 'MaxConcurrentRequests') then
           begin
-            panic(Message)
-          end
-        end
+            panic(Message);
+          end;
+        end;
       end;
       case CloseListener(ListenerValue) of
         Ok(_): WriteLn('rejected');
-        Error(Message): panic(Message)
-      end
+        Error(Message): panic(Message);
+      end;
     end;
-    Error(Message): panic(Message)
-  end
+    Error(Message): panic(Message);
+  end;
 end.
 "#
         ),

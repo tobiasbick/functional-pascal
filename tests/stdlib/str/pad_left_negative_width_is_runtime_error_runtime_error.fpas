@@ -3,5 +3,5 @@ program T;
 uses Std.Console, Std.Str;
 
 begin
-  WriteLn(PadLeft('a', -1, '.'))
+  WriteLn(PadLeft('a', -1, '.'));
 end.

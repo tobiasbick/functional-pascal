@@ -6,7 +6,7 @@ Elementary math: constant `Pi`, roots, powers, trig, rounding, log, and polymorp
 program Example;
 uses Std.Console, Std.Math;
 begin
-  WriteLn(Sqrt(16.0))
+  WriteLn(Sqrt(16.0));
 end.
 ```
 
@@ -64,7 +64,7 @@ result is non-finite or outside the signed 64-bit integer range. In particular,
 
 ```pascal
 var R: real := Pi;
-WriteLn(Round(R))
+WriteLn(Round(R));
 ```
 
 ---
@@ -74,7 +74,7 @@ WriteLn(Round(R))
 Square root. **Runtime error** if `R` is negative.
 
 ```pascal
-WriteLn(Sqrt(16.0))
+WriteLn(Sqrt(16.0));
 ```
 
 ---
@@ -84,7 +84,7 @@ WriteLn(Sqrt(16.0))
 Raises `Base` to `Exp`.
 
 ```pascal
-WriteLn(Pow(2.0, 3.0))
+WriteLn(Pow(2.0, 3.0));
 ```
 
 ---
@@ -94,7 +94,7 @@ WriteLn(Pow(2.0, 3.0))
 Greatest integer ≤ `R`.
 
 ```pascal
-WriteLn(Floor(2.9))
+WriteLn(Floor(2.9));
 ```
 
 ---
@@ -104,7 +104,7 @@ WriteLn(Floor(2.9))
 Smallest integer ≥ `R`.
 
 ```pascal
-WriteLn(Ceil(2.1))
+WriteLn(Ceil(2.1));
 ```
 
 ---
@@ -114,7 +114,7 @@ WriteLn(Ceil(2.1))
 Nearest integer (implementation-defined tie-breaking for half values follows the runtime).
 
 ```pascal
-WriteLn(Round(Pi))
+WriteLn(Round(Pi));
 ```
 
 ---
@@ -125,7 +125,7 @@ Trigonometric functions; angle in **radians**.
 
 ```pascal
 WriteLn(Sin(0.0));
-WriteLn(Cos(0.0))
+WriteLn(Cos(0.0));
 ```
 
 ---
@@ -135,7 +135,7 @@ WriteLn(Cos(0.0))
 Natural logarithm. **Runtime error** if `R ≤ 0`.
 
 ```pascal
-WriteLn(Log(2.718281828459045))
+WriteLn(Log(2.718281828459045));
 ```
 
 ---
@@ -146,7 +146,7 @@ Absolute value. `N` may be `integer` or `real`; the result has the **same** kind
 
 ```pascal
 WriteLn(Abs(-7));
-WriteLn(Abs(-1.5))
+WriteLn(Abs(-1.5));
 ```
 
 ---
@@ -157,7 +157,7 @@ WriteLn(Abs(-1.5))
 
 ```pascal
 WriteLn(Min(3, 9));
-WriteLn(Max(3, 9))
+WriteLn(Max(3, 9));
 ```
 
 ---
@@ -167,7 +167,7 @@ WriteLn(Max(3, 9))
 Tangent of `R` (radians).
 
 ```pascal
-WriteLn(Tan(0.0))
+WriteLn(Tan(0.0));
 ```
 
 ---
@@ -177,7 +177,7 @@ WriteLn(Tan(0.0))
 Inverse sine (arc sine). **Runtime error** if `R` is outside `[-1, 1]`.
 
 ```pascal
-WriteLn(ArcSin(1.0))  // Pi/2
+WriteLn(ArcSin(1.0));  // Pi/2
 ```
 
 ---
@@ -187,7 +187,7 @@ WriteLn(ArcSin(1.0))  // Pi/2
 Inverse cosine. **Runtime error** if `R` is outside `[-1, 1]`.
 
 ```pascal
-WriteLn(ArcCos(1.0))  // 0.0
+WriteLn(ArcCos(1.0));  // 0.0
 ```
 
 ---
@@ -197,7 +197,7 @@ WriteLn(ArcCos(1.0))  // 0.0
 Inverse tangent (classic Pascal `ArcTan`).
 
 ```pascal
-WriteLn(ArcTan(1.0))  // Pi/4
+WriteLn(ArcTan(1.0));  // Pi/4
 ```
 
 ---
@@ -207,7 +207,7 @@ WriteLn(ArcTan(1.0))  // Pi/4
 Two-argument arctangent — angle of the vector `(X, Y)` in the correct quadrant. Result in `(-Pi, Pi]`.
 
 ```pascal
-WriteLn(ArcTan2(1.0, 1.0))  // Pi/4
+WriteLn(ArcTan2(1.0, 1.0));  // Pi/4
 ```
 
 ---
@@ -217,7 +217,7 @@ WriteLn(ArcTan2(1.0, 1.0))  // Pi/4
 Returns e^R. Inverse of `Log`.
 
 ```pascal
-WriteLn(Exp(1.0))  // ~2.718
+WriteLn(Exp(1.0));  // ~2.718
 ```
 
 ---
@@ -227,7 +227,7 @@ WriteLn(Exp(1.0))  // ~2.718
 Base-10 logarithm. **Runtime error** if `R ≤ 0`.
 
 ```pascal
-WriteLn(Log10(100.0))  // 2.0
+WriteLn(Log10(100.0));  // 2.0
 ```
 
 ---
@@ -237,7 +237,7 @@ WriteLn(Log10(100.0))  // 2.0
 Base-2 logarithm. **Runtime error** if `R ≤ 0`.
 
 ```pascal
-WriteLn(Log2(8.0))  // 3.0
+WriteLn(Log2(8.0));  // 3.0
 ```
 
 ---
@@ -248,7 +248,7 @@ Truncates toward zero (classic Pascal `Trunc`). Unlike `Floor`, `Trunc(-3.7)` yi
 
 ```pascal
 WriteLn(Trunc(3.9));    // 3
-WriteLn(Trunc(-3.7))    // -3
+WriteLn(Trunc(-3.7));    // -3
 ```
 
 ---
@@ -259,7 +259,7 @@ Fractional part: `Frac(R) = R - Trunc(R)`.
 
 ```pascal
 WriteLn(Frac(3.14))   // 0.14
-WriteLn(Frac(-3.14))  // -0.14
+WriteLn(Frac(-3.14));  // -0.14
 ```
 
 ---
@@ -271,7 +271,7 @@ Returns `-1`, `0`, or `1` depending on the sign of `N`. `N` may be `integer` or 
 ```pascal
 WriteLn(Sign(-42));   // -1
 WriteLn(Sign(0));     // 0
-WriteLn(Sign(3.14))   // 1
+WriteLn(Sign(3.14));   // 1
 ```
 
 ---
@@ -283,7 +283,7 @@ Returns `V` constrained to `[Lo, Hi]`. All three arguments must be the same nume
 ```pascal
 WriteLn(Clamp(150, 0, 100));     // 100
 WriteLn(Clamp(-5, 0, 100));      // 0
-WriteLn(Clamp(1.5, 0.0, 1.0))   // 1.0
+WriteLn(Clamp(1.5, 0.0, 1.0));   // 1.0
 ```
 
 ---

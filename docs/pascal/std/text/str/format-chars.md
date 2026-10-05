@@ -6,7 +6,7 @@
 
 ```pascal
 WriteLn(IsNumeric('42'));
-WriteLn(IsNumeric('nope'))
+WriteLn(IsNumeric('nope'));
 ```
 
 ---
@@ -18,7 +18,7 @@ Builds a string of `Count` copies of `C`. `C` must contain exactly one Unicode s
 Positive `Count` must be at most **1_000_000**. Larger counts raise a runtime error.
 
 ```pascal
-WriteLn(FromChar('─', 40))
+WriteLn(FromChar('─', 40));
 ```
 
 ---
@@ -29,7 +29,7 @@ Returns the character at the 0-based `Index`. **Runtime error** if out of bounds
 
 ```pascal
 var C: string := CharAt('Hello', 0);
-WriteLn(C)  // H
+WriteLn(C);  // H
 ```
 
 ---
@@ -39,7 +39,7 @@ WriteLn(C)  // H
 Returns a **new** string that is identical to `S` except the character at `Index` is replaced with `C`. `C` must contain exactly one Unicode scalar value. **Runtime error** if `Index` is out of bounds or `C` is empty or contains multiple characters.
 
 ```pascal
-WriteLn(SetCharAt('Hello', 0, 'J'))  // Jello
+WriteLn(SetCharAt('Hello', 0, 'J'));  // Jello
 ```
 
 ---
@@ -49,7 +49,7 @@ WriteLn(SetCharAt('Hello', 0, 'J'))  // Jello
 Returns the Unicode codepoint (integer value) of `C`. `C` must contain exactly one Unicode scalar value; empty or multi-character strings are runtime errors.
 
 ```pascal
-WriteLn(Ord('A'))  // 65
+WriteLn(Ord('A'));  // 65
 ```
 
 ---
@@ -59,7 +59,7 @@ WriteLn(Ord('A'))  // 65
 Returns the character with Unicode codepoint `N`. **Runtime error** if `N` is not a valid Unicode scalar value.
 
 ```pascal
-WriteLn(Chr(65))  // A
+WriteLn(Chr(65));  // A
 ```
 
 ---

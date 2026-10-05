@@ -45,7 +45,7 @@ impl Drop for Fixture {
 
 #[test]
 fn root_build_and_check_preserve_multiple_compiler_diagnostics() {
-    let source = "program Demo; begin var A: integer := 'x'; var B: boolean := 42 end.";
+    let source = "program Demo; begin var A: integer := 'x'; var B: boolean := 42; end.";
     let (program, parse_errors) = fpas_parser::parse(source);
     assert!(parse_errors.is_empty());
     let expected = fpas_compiler::compile_program_object_with_support(&program, &[], &[])
@@ -173,7 +173,7 @@ fn artifact_parser_retains_every_diagnostic_and_expectation_detail() {
 #[test]
 fn artifact_compiler_errors_keep_the_supplied_main_path() {
     let fixture = Fixture::new();
-    let source = "program Demo; begin var X: integer := 'bad' end.";
+    let source = "program Demo; begin var X: integer := 'bad'; end.";
     let main = fixture.write("main.fpas", source);
     let graph =
         build_unit_graph_for_program(&main, &[], &ProjectLinkMeta::default()).expect("graph");

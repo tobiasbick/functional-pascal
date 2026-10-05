@@ -15,11 +15,11 @@ begin
     var Index: integer := Std.Str.IndexOf(Snapshot.LineAt(Y), Glyph);
     if Index >= 0 then
     begin
-      return TuiPoint.Create(Index, Y)
-    end
+      return TuiPoint.Create(Index, Y);
+    end;
   end;
 
-  panic('glyph not found in snapshot')
+  panic('glyph not found in snapshot');
 end;
 
 function ViewStatus(State: StatusModel): TuiElement;
@@ -30,7 +30,7 @@ begin
                                                                                                                       TuiStatusItemBuilders.MakeCommand(TuiControlId.Create(1), 'Save', TuiAction.Create(10)),
                                                                                                                       TuiStatusItemBuilders.MakeDisabledCommand(TuiControlId.Create(2), 'Quit', TuiAction.Create(20))
                                                                                                                     ])
-                                                                                ])
+                                                                                ]);
 end;
 
 function UpdateStatus(State: StatusModel; Msg: TuiMsg; Cmd: TuiCmdOutput): StatusModel;
@@ -45,26 +45,26 @@ begin
           return record
             Focus := Id.Value;
             Actions := State.Actions;
-          end
+          end;
         end;
         None:
         begin
-          return State
-        end
-      end
+          return State;
+        end;
+      end;
     end;
     TuiMsg.Action(Source, Action):
     begin
       return record
         Focus := State.Focus;
         Actions := Std.Arrays.Concat(State.Actions, [Action.Value]);
-      end
-    end
+      end;
+    end;
     else
     begin
-      return State
-    end
-  end
+      return State;
+    end;
+  end;
 end;
 
 begin
@@ -84,5 +84,5 @@ begin
   App.InjectPointerForTest(TuiPointerEvent.Create(TuiPointerAction.Down, TuiPointerButton.Left, QuitAt));
   Model := App.RunIterations(Model, UpdateStatus, ViewStatus, 1, 0);
   AssertEquals(1, Std.Arrays.Length(Model.Actions));
-  App.Close()
+  App.Close();
 end.

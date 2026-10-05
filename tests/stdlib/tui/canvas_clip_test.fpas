@@ -28,5 +28,5 @@ begin
   Root.WriteText(TuiPoint.Create(0, 3), ('Hi' + Std.Str.Chr(10)) + 'No', TuiStyleRole.Title);
   AssertEquals('H', Std.Options.Unwrap(Surface.TryCellAt(TuiPoint.Create(0, 3))).Glyph);
   AssertEquals('i', Std.Options.Unwrap(Surface.TryCellAt(TuiPoint.Create(1, 3))).Glyph);
-  AssertEquals(' ', Std.Options.Unwrap(Surface.TryCellAt(TuiPoint.Create(2, 3))).Glyph)
+  AssertEquals(' ', Std.Options.Unwrap(Surface.TryCellAt(TuiPoint.Create(2, 3))).Glyph);
 end.

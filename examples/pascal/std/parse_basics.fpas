@@ -8,33 +8,33 @@ begin
   case TryInt(' +1_024 ') of
     Ok(N):
     begin
-      WriteLn('try int: ', IntToStr(N))
+      WriteLn('try int: ', IntToStr(N));
     end;
     Error(M):
     begin
-      WriteLn('try int error: ', M)
-    end
+      WriteLn('try int error: ', M);
+    end;
   end;
 
   case TryReal('1_024.0e-2') of
     Ok(R):
     begin
-      WriteLn('try real: ', RealToStr(R))
+      WriteLn('try real: ', RealToStr(R));
     end;
     Error(M):
     begin
-      WriteLn('try real error: ', M)
-    end
+      WriteLn('try real error: ', M);
+    end;
   end;
 
   case TryBool(' FALSE ') of
     Ok(B):
     begin
-      WriteLn('try bool: ', BoolToStr(B))
+      WriteLn('try bool: ', BoolToStr(B));
     end;
     Error(M):
     begin
-      WriteLn('try bool error: ', M)
-    end
-  end
+      WriteLn('try bool error: ', M);
+    end;
+  end;
 end.

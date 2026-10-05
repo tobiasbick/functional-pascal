@@ -24,7 +24,7 @@ include = ["Std/**/*.fpas"]
     let program = cwd.join("main.fpas");
     write_text(
         &program,
-        "program Main;\nuses Std.Console, Std.Version;\nbegin\n  WriteLn(CompilerVersion)\nend.\n",
+        "program Main;\nuses Std.Console, Std.Version;\nbegin\n  WriteLn(CompilerVersion);\nend.\n",
     );
 
     let (exit, stdout, stderr) = support::run_cli_args_and_capture_output(
@@ -66,7 +66,7 @@ include = ["Std/**/*.fpas"]
     let test = cwd.join("version_test.fpas");
     write_text(
         &test,
-        "program VersionTest;\nuses Std.Test, Std.Version;\nbegin\n  AssertEquals('test-override', LibraryVersion)\nend.\n",
+        "program VersionTest;\nuses Std.Test, Std.Version;\nbegin\n  AssertEquals('test-override', LibraryVersion);\nend.\n",
     );
 
     let (exit, _stdout, stderr) = support::run_cli_args_and_capture_output(
@@ -92,7 +92,7 @@ fn source_standard_library_is_copied_beside_the_cli_binary() {
     let program = root.join("target/test-std-version.fpas");
     write_text(
         &program,
-        "program Main;\nuses Std.Console, Std.Version;\nbegin\n  WriteLn(LibraryVersion)\nend.\n",
+        "program Main;\nuses Std.Console, Std.Version;\nbegin\n  WriteLn(LibraryVersion);\nend.\n",
     );
 
     let (exit, stdout, stderr) = support::run_cli_args_and_capture_output(

@@ -14,12 +14,12 @@ begin
   case Styled.ConcreteStyle of
     Some(Concrete):
     begin
-      AssertEquals(20, Concrete.Foreground.Green)
+      AssertEquals(20, Concrete.Foreground.Green);
     end;
     None:
     begin
-      panic('expected concrete cell style')
-    end
+      panic('expected concrete cell style');
+    end;
   end;
   var Palette: TuiPalette := TuiPalette.Default();
   AssertTrue(Palette.ForRole(TuiStyleRole.Normal).Foreground.Kind = TuiColorKind.Rgb);
@@ -32,5 +32,5 @@ begin
   var Custom: TuiStyle := TuiStyle.FromColors(TuiColor.FromRgb(1, 2, 3), RgbValue);
   var Updated: TuiPalette := Palette.WithRole(TuiStyleRole.Warning, Custom);
   AssertEquals(2, Updated.ForRole(TuiStyleRole.Warning).Foreground.Green);
-  AssertEquals(210, Palette.ForRole(TuiStyleRole.Warning).Foreground.Red)
+  AssertEquals(210, Palette.ForRole(TuiStyleRole.Warning).Foreground.Red);
 end.

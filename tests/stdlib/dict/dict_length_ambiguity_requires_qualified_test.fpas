@@ -4,5 +4,5 @@ uses Std.Console, Std.Dictionaries, Std.Arrays;
 
 begin
   var D: dict of string to integer := ['X': 1];
-  WriteLn(Std.Dictionaries.Length(D))
+  WriteLn(Std.Dictionaries.Length(D));
 end.

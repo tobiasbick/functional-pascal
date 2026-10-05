@@ -20,10 +20,10 @@ function TuiFrameRequire(Slot: integer): integer;
 begin
   if (Slot < 1) or (Slot > Std.Arrays.Length(TuiFrameEntries)) then
   begin
-    panic('Tui arranged frame handle is invalid')
+    panic('Tui arranged frame handle is invalid');
   end;
 
-  return Slot
+  return Slot;
 end;
 
 public type
@@ -39,7 +39,7 @@ public type
       TuiFrameEntries := Std.Arrays.Concat(TuiFrameEntries, [Empty]);
       return record
         Slot := Std.Arrays.Length(TuiFrameEntries);
-      end
+      end;
     end;
 
     // Clears all entries before a fresh arrange pass.
@@ -50,7 +50,7 @@ public type
     begin
       var Slot: integer := TuiFrameRequire(Self.Slot);
       mutable var Empty: array of TuiArrangedEntry := [];
-      TuiFrameEntries[Slot - 1] := Empty
+      TuiFrameEntries[Slot - 1] := Empty;
     end;
 
     // Appends one preorder entry and returns its index.
@@ -72,7 +72,7 @@ public type
         Clip := Clip;
       end);
       TuiFrameEntries[Slot - 1] := Entries;
-      return Index
+      return Index;
     end;
 
     // Drop the shared slot handle before Push so copy-on-write stays unique.
@@ -84,7 +84,7 @@ public type
     public procedure ReplaceEntries(Self: TuiArrangedFrame; Entries: array of TuiArrangedEntry);
     begin
       var Slot: integer := TuiFrameRequire(Self.Slot);
-      TuiFrameEntries[Slot - 1] := Entries
+      TuiFrameEntries[Slot - 1] := Entries;
     end;
 
     // Returns the number of arranged entries.
@@ -94,7 +94,7 @@ public type
     public function Count(Self: TuiArrangedFrame): integer;
     begin
       var Slot: integer := TuiFrameRequire(Self.Slot);
-      return Std.Arrays.Length(TuiFrameEntries[Slot - 1])
+      return Std.Arrays.Length(TuiFrameEntries[Slot - 1]);
     end;
 
     // Returns one arranged entry by preorder index.
@@ -108,9 +108,9 @@ public type
       var Entries: array of TuiArrangedEntry := TuiFrameEntries[Slot - 1];
       if (Index < 0) or (Index >= Std.Arrays.Length(Entries)) then
       begin
-        panic('Tui arranged frame index is out of range')
+        panic('Tui arranged frame index is out of range');
       end;
 
-      return Entries[Index]
+      return Entries[Index];
     end;
   end;

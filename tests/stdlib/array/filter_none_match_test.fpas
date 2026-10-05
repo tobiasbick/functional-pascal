@@ -4,11 +4,11 @@ uses Std.Console, Std.Arrays;
 
 function IsEven(X: integer): boolean;
 begin
-  return X mod 2 = 0
+  return X mod 2 = 0;
 end;
 
 begin
   var Nums: array of integer := [1, 3, 5];
   var Evens: array of integer := Filter(Nums, IsEven);
-  WriteLn(Length(Evens))
+  WriteLn(Length(Evens));
 end.

@@ -10,7 +10,7 @@ type
 
 function MakePointer(X: integer; Y: integer): TuiPointerEvent;
 begin
-  return TuiPointerEvent.Create(TuiPointerAction.Down, TuiPointerButton.Left, TuiPoint.Create(X, Y))
+  return TuiPointerEvent.Create(TuiPointerAction.Down, TuiPointerButton.Left, TuiPoint.Create(X, Y));
 end;
 
 function FindGlyph(Snapshot: TuiSurfaceSnapshot; Glyph: string): TuiPoint;
@@ -21,11 +21,11 @@ begin
     var Index: integer := Std.Str.IndexOf(Line, Glyph);
     if Index >= 0 then
     begin
-      return TuiPoint.Create(Index, Y)
-    end
+      return TuiPoint.Create(Index, Y);
+    end;
   end;
 
-  panic('glyph not found in snapshot')
+  panic('glyph not found in snapshot');
 end;
 
 function ViewList(State: ListModel): TuiElement;
@@ -34,7 +34,7 @@ begin
                                                                                   TuiElementBuilders.MakePanel('Host', [
                                                                                                                          TuiElementBuilders.MakeList(TuiControlId.Create(1), ['Alpha', 'Beta', 'Gamma'], State.Selected, TuiAction.Create(5))
                                                                                                                        ])
-                                                                                ])
+                                                                                ]);
 end;
 
 function UpdateList(State: ListModel; Msg: TuiMsg; Cmd: TuiCmdOutput): ListModel;
@@ -49,26 +49,26 @@ begin
           return record
             Focus := Id.Value;
             Selected := State.Selected;
-          end
+          end;
         end;
         None:
         begin
-          return State
-        end
-      end
+          return State;
+        end;
+      end;
     end;
     TuiMsg.SelectionChanged(Source, Action, Selected):
     begin
       return record
         Focus := State.Focus;
         Selected := Selected;
-      end
-    end
+      end;
+    end;
     else
     begin
-      return State
-    end
-  end
+      return State;
+    end;
+  end;
 end;
 
 begin
@@ -83,5 +83,5 @@ begin
   App.InjectPointerForTest(MakePointer(BetaAt.X, BetaAt.Y));
   Model := App.RunIterations(Model, UpdateList, ViewList, 1, 0);
   AssertEquals(1, Model.Selected);
-  App.Close()
+  App.Close();
 end.

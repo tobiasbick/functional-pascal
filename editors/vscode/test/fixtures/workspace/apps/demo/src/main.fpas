@@ -3,5 +3,5 @@ program EditorDemo;
 uses Editor.Greetings, Std.Console;
 
 begin
-  WriteLn(GreetingFor('workspace'))
+  WriteLn(GreetingFor('workspace'));
 end.

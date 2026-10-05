@@ -13,7 +13,7 @@ public const
 
 function TuiMeasureLeafLabel(Text: string): TuiMeasureResult;
 begin
-  return TuiMeasureResult.Fixed(TuiSize.Create(Std.Console.DisplayWidth(Text), 1))
+  return TuiMeasureResult.Fixed(TuiSize.Create(Std.Console.DisplayWidth(Text), 1));
 end;
 
 function TuiMeasureLeafMenu(Nodes: array of TuiMenuNode): TuiMeasureResult;
@@ -27,35 +27,35 @@ begin
       end;
       None:
       begin
-        Width := (Width + Std.Console.DisplayWidth(TuiMenuNodeText(Nodes[Index]))) + 2
-      end
-    end
+        Width := (Width + Std.Console.DisplayWidth(TuiMenuNodeText(Nodes[Index]))) + 2;
+      end;
+    end;
   end;
 
-  return TuiMeasureResult.Fixed(TuiSize.Create(Width, 1))
+  return TuiMeasureResult.Fixed(TuiSize.Create(Width, 1));
 end;
 
 function TuiMeasureLeafButton(Text: string): TuiMeasureResult;
 begin
-  return TuiMeasureResult.Fixed(TuiSize.Create(Std.Console.DisplayWidth(Text) + 4, 1))
+  return TuiMeasureResult.Fixed(TuiSize.Create(Std.Console.DisplayWidth(Text) + 4, 1));
 end;
 
 function TuiMeasureLeafInput(Text: string; Hint: string): TuiMeasureResult;
 begin
   var ContentWidth: integer := TuiMeasureAxis.Max(Std.Console.DisplayWidth(Text), Std.Console.DisplayWidth(Hint));
   var Preferred: integer := TuiMeasureAxis.Max(ContentWidth + 2, 10);
-  return TuiMeasureResult.Create(TuiSize.Create(10, 1), TuiSize.Create(Preferred, 1), TuiSize.Create(Preferred, 1))
+  return TuiMeasureResult.Create(TuiSize.Create(10, 1), TuiSize.Create(Preferred, 1), TuiSize.Create(Preferred, 1));
 end;
 
 function TuiMeasureLeafTextArea(Text: string): TuiMeasureResult;
 begin
   var Content: TuiSize := TuiTextAreaContentSize(Text);
-  return TuiMeasureResult.Create(TuiSize.Create(1, 1), Content, TuiSize.Create(TuiMeasureExpandingMaximum, TuiMeasureExpandingMaximum))
+  return TuiMeasureResult.Create(TuiSize.Create(1, 1), Content, TuiSize.Create(TuiMeasureExpandingMaximum, TuiMeasureExpandingMaximum));
 end;
 
 function TuiMeasureLeafCheckBox(Text: string): TuiMeasureResult;
 begin
-  return TuiMeasureResult.Fixed(TuiSize.Create(Std.Console.DisplayWidth(Text) + 4, 1))
+  return TuiMeasureResult.Fixed(TuiSize.Create(Std.Console.DisplayWidth(Text) + 4, 1));
 end;
 
 function TuiMeasureLeafList(Items: array of string): TuiMeasureResult;
@@ -63,11 +63,11 @@ begin
   mutable var Width: integer := 2;
   for Index: integer := 0 to Std.Arrays.Length(Items) - 1 do
   begin
-    Width := TuiMeasureAxis.Max(Width, Std.Console.DisplayWidth(Items[Index]) + 2)
+    Width := TuiMeasureAxis.Max(Width, Std.Console.DisplayWidth(Items[Index]) + 2);
   end;
   var Count: integer := Std.Arrays.Length(Items);
   var Height: integer := TuiMeasureAxis.Max(Count, 1);
-  return TuiMeasureResult.Fixed(TuiSize.Create(Width, Height))
+  return TuiMeasureResult.Fixed(TuiSize.Create(Width, Height));
 end;
 
 function TuiMeasureLeafMenuBar(Items: array of TuiMenuItem): TuiMeasureResult;
@@ -75,10 +75,10 @@ begin
   mutable var Width: integer := 0;
   for Index: integer := 0 to Std.Arrays.Length(Items) - 1 do
   begin
-    Width := (Width + Std.Console.DisplayWidth(Items[Index].Text)) + 2
+    Width := (Width + Std.Console.DisplayWidth(Items[Index].Text)) + 2;
   end;
 
-  return TuiMeasureResult.Fixed(TuiSize.Create(Width, 1))
+  return TuiMeasureResult.Fixed(TuiSize.Create(Width, 1));
 end;
 
 function TuiMeasureLeafStatusLine(Items: array of TuiStatusItem): TuiMeasureResult;
@@ -88,26 +88,26 @@ begin
   begin
     if Index > 0 then
     begin
-      Width := Width + 1
+      Width := Width + 1;
     end;
 
     case Items[Index] of
       TuiStatusItem.Hint(Text):
       begin
-        Width := Width + Std.Console.DisplayWidth(Text)
+        Width := Width + Std.Console.DisplayWidth(Text);
       end;
       TuiStatusItem.Command(Id, Text, Action, Enabled):
       begin
-        Width := Width + Std.Console.DisplayWidth(Text)
+        Width := Width + Std.Console.DisplayWidth(Text);
       end;
       TuiStatusItem.KeyHint(KeyText, Text):
       begin
-        Width := ((Width + Std.Console.DisplayWidth(KeyText)) + Std.Console.DisplayWidth(Text)) + 1
-      end
-    end
+        Width := ((Width + Std.Console.DisplayWidth(KeyText)) + Std.Console.DisplayWidth(Text)) + 1;
+      end;
+    end;
   end;
 
-  return TuiMeasureResult.Fixed(TuiSize.Create(Width, 1))
+  return TuiMeasureResult.Fixed(TuiSize.Create(Width, 1));
 end;
 
 function TuiMeasureSpacerValue(Value: TuiSpacer; Horizontal: boolean): TuiMeasureResult;
@@ -116,18 +116,18 @@ begin
   begin
     if Value.Kind = TuiSpacerKind.Expanding then
     begin
-      return TuiMeasureResult.Create(TuiSize.Create(Value.MinimumExtent, 0), TuiSize.Create(Value.MinimumExtent, 0), TuiSize.Create(TuiMeasureExpandingMaximum, 0))
+      return TuiMeasureResult.Create(TuiSize.Create(Value.MinimumExtent, 0), TuiSize.Create(Value.MinimumExtent, 0), TuiSize.Create(TuiMeasureExpandingMaximum, 0));
     end;
 
-    return TuiMeasureResult.Fixed(TuiSize.Create(Value.MinimumExtent, 0))
+    return TuiMeasureResult.Fixed(TuiSize.Create(Value.MinimumExtent, 0));
   end;
 
   if Value.Kind = TuiSpacerKind.Expanding then
   begin
-    return TuiMeasureResult.Create(TuiSize.Create(0, Value.MinimumExtent), TuiSize.Create(0, Value.MinimumExtent), TuiSize.Create(0, TuiMeasureExpandingMaximum))
+    return TuiMeasureResult.Create(TuiSize.Create(0, Value.MinimumExtent), TuiSize.Create(0, Value.MinimumExtent), TuiSize.Create(0, TuiMeasureExpandingMaximum));
   end;
 
-  return TuiMeasureResult.Fixed(TuiSize.Create(0, Value.MinimumExtent))
+  return TuiMeasureResult.Fixed(TuiSize.Create(0, Value.MinimumExtent));
 end;
 
 function TuiMeasureApplyPolicy(Hint: TuiMeasureResult; Policy: TuiSizePolicy; Spec: TuiMeasureSpec): TuiMeasureResult;
@@ -141,47 +141,47 @@ begin
   if Policy.Horizontal = TuiSizePolicyKind.Fixed then
   begin
     MinimumWidth := PreferredWidth;
-    MaximumWidth := PreferredWidth
+    MaximumWidth := PreferredWidth;
   end;
 
   if Policy.Horizontal = TuiSizePolicyKind.Minimum then
   begin
-    MinimumWidth := PreferredWidth
+    MinimumWidth := PreferredWidth;
   end;
 
   if Policy.Horizontal = TuiSizePolicyKind.Maximum then
   begin
-    MaximumWidth := PreferredWidth
+    MaximumWidth := PreferredWidth;
   end;
 
   if Policy.Horizontal = TuiSizePolicyKind.Expanding then
   begin
-    MaximumWidth := TuiMeasureExpandingMaximum
+    MaximumWidth := TuiMeasureExpandingMaximum;
   end;
 
   if Policy.Vertical = TuiSizePolicyKind.Fixed then
   begin
     MinimumHeight := PreferredHeight;
-    MaximumHeight := PreferredHeight
+    MaximumHeight := PreferredHeight;
   end;
 
   if Policy.Vertical = TuiSizePolicyKind.Minimum then
   begin
-    MinimumHeight := PreferredHeight
+    MinimumHeight := PreferredHeight;
   end;
 
   if Policy.Vertical = TuiSizePolicyKind.Maximum then
   begin
-    MaximumHeight := PreferredHeight
+    MaximumHeight := PreferredHeight;
   end;
 
   if Policy.Vertical = TuiSizePolicyKind.Expanding then
   begin
-    MaximumHeight := TuiMeasureExpandingMaximum
+    MaximumHeight := TuiMeasureExpandingMaximum;
   end;
   var Width: TuiMeasureAxisResult := TuiMeasureAxis.Apply(MinimumWidth, PreferredWidth, MaximumWidth, Spec.Width);
   var Height: TuiMeasureAxisResult := TuiMeasureAxis.Apply(MinimumHeight, PreferredHeight, MaximumHeight, Spec.Height);
-  return TuiMeasureResult.Create(TuiSize.Create(MinimumWidth, MinimumHeight), TuiSize.Create(Width.Preferred, Height.Preferred), TuiSize.Create(Width.Maximum, Height.Maximum))
+  return TuiMeasureResult.Create(TuiSize.Create(MinimumWidth, MinimumHeight), TuiSize.Create(Width.Preferred, Height.Preferred), TuiSize.Create(Width.Maximum, Height.Maximum));
 end;
 
 function TuiMeasureChildParticipates(Node: TuiElement): boolean;
@@ -189,13 +189,13 @@ begin
   case Node of
     TuiElement.Empty:
     begin
-      return false
-    end
+      return false;
+    end;
     else
     begin
-      return true
-    end
-  end
+      return true;
+    end;
+  end;
 end;
 
 // Measures one element under the given constraints.
@@ -208,31 +208,31 @@ begin
   case Node of
     TuiElement.Empty:
     begin
-      return TuiMeasureResult.Fixed(TuiSize.Create(0, 0))
+      return TuiMeasureResult.Fixed(TuiSize.Create(0, 0));
     end;
     TuiElement.Label(Text):
     begin
-      return TuiMeasureApplyPolicy(TuiMeasureLeafLabel(Text), TuiSizePolicy.Preferred(), Spec)
+      return TuiMeasureApplyPolicy(TuiMeasureLeafLabel(Text), TuiSizePolicy.Preferred(), Spec);
     end;
     TuiElement.Button(Button):
     begin
-      return TuiMeasureApplyPolicy(TuiMeasureLeafButton(Button.Text), TuiSizePolicy.Preferred(), Spec)
+      return TuiMeasureApplyPolicy(TuiMeasureLeafButton(Button.Text), TuiSizePolicy.Preferred(), Spec);
     end;
     TuiElement.Input(Input):
     begin
-      return TuiMeasureApplyPolicy(TuiMeasureLeafInput(Input.Text, Input.Hint), TuiSizePolicy.Preferred(), Spec)
+      return TuiMeasureApplyPolicy(TuiMeasureLeafInput(Input.Text, Input.Hint), TuiSizePolicy.Preferred(), Spec);
     end;
     TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction):
     begin
-      return TuiMeasureApplyPolicy(TuiMeasureLeafTextArea(Text), TuiSizePolicy.Expanding(), Spec)
+      return TuiMeasureApplyPolicy(TuiMeasureLeafTextArea(Text), TuiSizePolicy.Expanding(), Spec);
     end;
     TuiElement.CheckBox(Id, Text, Checked, ChangeAction):
     begin
-      return TuiMeasureApplyPolicy(TuiMeasureLeafCheckBox(Text), TuiSizePolicy.Preferred(), Spec)
+      return TuiMeasureApplyPolicy(TuiMeasureLeafCheckBox(Text), TuiSizePolicy.Preferred(), Spec);
     end;
     TuiElement.List(Id, Items, Selected, ChangeAction):
     begin
-      return TuiMeasureApplyPolicy(TuiMeasureLeafList(Items), TuiSizePolicy.Preferred(), Spec)
+      return TuiMeasureApplyPolicy(TuiMeasureLeafList(Items), TuiSizePolicy.Preferred(), Spec);
     end;
     TuiElement.Scroll(Id, Offset, ChangeAction, Children):
     begin
@@ -240,41 +240,41 @@ begin
       begin
         var Child: TuiMeasureResult := TuiMeasure(Children[0], TuiMeasureSpec.Unbounded());
         var Preferred: TuiSize := TuiSize.Create(TuiMeasureAxis.Max(1, Child.Preferred.Width), TuiMeasureAxis.Max(1, Child.Preferred.Height));
-        return TuiMeasureApplyPolicy(TuiMeasureResult.Create(TuiSize.Create(1, 1), Preferred, TuiSize.Create(TuiMeasureExpandingMaximum, TuiMeasureExpandingMaximum)), TuiSizePolicy.Expanding(), Spec)
+        return TuiMeasureApplyPolicy(TuiMeasureResult.Create(TuiSize.Create(1, 1), Preferred, TuiSize.Create(TuiMeasureExpandingMaximum, TuiMeasureExpandingMaximum)), TuiSizePolicy.Expanding(), Spec);
       end;
 
-      return TuiMeasureResult.Fixed(TuiSize.Create(0, 0))
+      return TuiMeasureResult.Fixed(TuiSize.Create(0, 0));
     end;
     TuiElement.MenuBar(Items):
     begin
-      return TuiMeasureApplyPolicy(TuiMeasureLeafMenuBar(Items), TuiSizePolicy.Preferred(), Spec)
+      return TuiMeasureApplyPolicy(TuiMeasureLeafMenuBar(Items), TuiSizePolicy.Preferred(), Spec);
     end;
     TuiElement.Menu(Id, Nodes, State, ChangeAction):
     begin
-      return TuiMeasureApplyPolicy(TuiMeasureLeafMenu(Nodes), TuiSizePolicy.Preferred(), Spec)
+      return TuiMeasureApplyPolicy(TuiMeasureLeafMenu(Nodes), TuiSizePolicy.Preferred(), Spec);
     end;
     TuiElement.StatusLine(Items):
     begin
-      return TuiMeasureApplyPolicy(TuiMeasureLeafStatusLine(Items), TuiSizePolicy.Preferred(), Spec)
+      return TuiMeasureApplyPolicy(TuiMeasureLeafStatusLine(Items), TuiSizePolicy.Preferred(), Spec);
     end;
     TuiElement.CellGrid(Grid):
     begin
-      return TuiMeasureApplyPolicy(TuiMeasureResult.Fixed(TuiSize.Create(Grid.Width, Grid.Height)), TuiSizePolicy.Preferred(), Spec)
+      return TuiMeasureApplyPolicy(TuiMeasureResult.Fixed(TuiSize.Create(Grid.Width, Grid.Height)), TuiSizePolicy.Preferred(), Spec);
     end;
     TuiElement.Rule(Text):
     begin
       var MinimumWidth: integer := Std.Console.DisplayWidth(Text) + 4;
-      return TuiMeasureApplyPolicy(TuiMeasureResult.Create(TuiSize.Create(MinimumWidth, 1), TuiSize.Create(MinimumWidth, 1), TuiSize.Create(TuiMeasureExpandingMaximum, 1)), TuiSizePolicy.Create(TuiSizePolicyKind.Expanding, TuiSizePolicyKind.Fixed), Spec)
+      return TuiMeasureApplyPolicy(TuiMeasureResult.Create(TuiSize.Create(MinimumWidth, 1), TuiSize.Create(MinimumWidth, 1), TuiSize.Create(TuiMeasureExpandingMaximum, 1)), TuiSizePolicy.Create(TuiSizePolicyKind.Expanding, TuiSizePolicyKind.Fixed), Spec);
     end;
     TuiElement.Gauge(Gauge):
     begin
       var MinimumWidth: integer := Std.Console.DisplayWidth(Gauge.LabelText) + 10;
       return TuiMeasureApplyPolicy(TuiMeasureResult.Create(TuiSize.Create(MinimumWidth, 1), TuiSize.Create(MinimumWidth +
-                                                                                                           8, 1), TuiSize.Create(TuiMeasureExpandingMaximum, 1)), TuiSizePolicy.Create(TuiSizePolicyKind.Expanding, TuiSizePolicyKind.Fixed), Spec)
+                                                                                                           8, 1), TuiSize.Create(TuiMeasureExpandingMaximum, 1)), TuiSizePolicy.Create(TuiSizePolicyKind.Expanding, TuiSizePolicyKind.Fixed), Spec);
     end;
     TuiElement.Spacer(Value):
     begin
-      return TuiMeasureApplyPolicy(TuiMeasureSpacerValue(Value, true), TuiSizePolicy.Preferred(), Spec)
+      return TuiMeasureApplyPolicy(TuiMeasureSpacerValue(Value, true), TuiSizePolicy.Preferred(), Spec);
     end;
     TuiElement.Row(Children, Spacing):
     begin
@@ -294,7 +294,7 @@ begin
           begin
             MinimumMain := TuiMeasureAxis.Add(MinimumMain, Spacing);
             PreferredMain := TuiMeasureAxis.Add(PreferredMain, Spacing);
-            MaximumMain := TuiMeasureAxis.Add(MaximumMain, Spacing)
+            MaximumMain := TuiMeasureAxis.Add(MaximumMain, Spacing);
           end;
 
           MinimumMain := TuiMeasureAxis.Add(MinimumMain, Measured.Minimum.Width);
@@ -303,11 +303,11 @@ begin
           MinimumCross := TuiMeasureAxis.Max(MinimumCross, Measured.Minimum.Height);
           PreferredCross := TuiMeasureAxis.Max(PreferredCross, Measured.Preferred.Height);
           MaximumCross := TuiMeasureAxis.Max(MaximumCross, Measured.Maximum.Height);
-          VisibleCount := VisibleCount + 1
-        end
+          VisibleCount := VisibleCount + 1;
+        end;
       end;
 
-      return TuiMeasureApplyPolicy(TuiMeasureResult.Create(TuiSize.Create(MinimumMain, MinimumCross), TuiSize.Create(PreferredMain, PreferredCross), TuiSize.Create(MaximumMain, MaximumCross)), TuiSizePolicy.Preferred(), Spec)
+      return TuiMeasureApplyPolicy(TuiMeasureResult.Create(TuiSize.Create(MinimumMain, MinimumCross), TuiSize.Create(PreferredMain, PreferredCross), TuiSize.Create(MaximumMain, MaximumCross)), TuiSizePolicy.Preferred(), Spec);
     end;
     TuiElement.Column(Children, Spacing):
     begin
@@ -327,7 +327,7 @@ begin
           begin
             MinimumMain := TuiMeasureAxis.Add(MinimumMain, Spacing);
             PreferredMain := TuiMeasureAxis.Add(PreferredMain, Spacing);
-            MaximumMain := TuiMeasureAxis.Add(MaximumMain, Spacing)
+            MaximumMain := TuiMeasureAxis.Add(MaximumMain, Spacing);
           end;
 
           MinimumMain := TuiMeasureAxis.Add(MinimumMain, Measured.Minimum.Height);
@@ -336,18 +336,18 @@ begin
           MinimumCross := TuiMeasureAxis.Max(MinimumCross, Measured.Minimum.Width);
           PreferredCross := TuiMeasureAxis.Max(PreferredCross, Measured.Preferred.Width);
           MaximumCross := TuiMeasureAxis.Max(MaximumCross, Measured.Maximum.Width);
-          VisibleCount := VisibleCount + 1
-        end
+          VisibleCount := VisibleCount + 1;
+        end;
       end;
 
-      return TuiMeasureApplyPolicy(TuiMeasureResult.Create(TuiSize.Create(MinimumCross, MinimumMain), TuiSize.Create(PreferredCross, PreferredMain), TuiSize.Create(MaximumCross, MaximumMain)), TuiSizePolicy.Preferred(), Spec)
+      return TuiMeasureApplyPolicy(TuiMeasureResult.Create(TuiSize.Create(MinimumCross, MinimumMain), TuiSize.Create(PreferredCross, PreferredMain), TuiSize.Create(MaximumCross, MaximumMain)), TuiSizePolicy.Preferred(), Spec);
     end;
     TuiElement.Layout(Settings, Children):
     begin
       mutable var Child: TuiMeasureResult := TuiMeasureResult.Fixed(TuiSize.Create(0, 0));
       if (Std.Arrays.Length(Children) = 1) and TuiMeasureChildParticipates(Children[0]) then
       begin
-        Child := TuiMeasure(Children[0], Spec)
+        Child := TuiMeasure(Children[0], Spec);
       end;
       mutable var Hint: TuiMeasureResult := TuiMeasureResult.Create(TuiSize.Create(Child.Minimum.Width +
                                                                                    Settings.Margins.Horizontal(), Child.Minimum.Height +
@@ -360,24 +360,24 @@ begin
       case Settings.Width of
         Some(Width):
         begin
-          Hint := TuiMeasureResult.Create(TuiSize.Create(Width, Hint.Minimum.Height), TuiSize.Create(Width, Hint.Preferred.Height), TuiSize.Create(Width, Hint.Maximum.Height))
+          Hint := TuiMeasureResult.Create(TuiSize.Create(Width, Hint.Minimum.Height), TuiSize.Create(Width, Hint.Preferred.Height), TuiSize.Create(Width, Hint.Maximum.Height));
         end;
         None:
         begin
-        end
+        end;
       end;
 
       case Settings.Height of
         Some(Height):
         begin
-          Hint := TuiMeasureResult.Create(TuiSize.Create(Hint.Minimum.Width, Height), TuiSize.Create(Hint.Preferred.Width, Height), TuiSize.Create(Hint.Maximum.Width, Height))
+          Hint := TuiMeasureResult.Create(TuiSize.Create(Hint.Minimum.Width, Height), TuiSize.Create(Hint.Preferred.Width, Height), TuiSize.Create(Hint.Maximum.Width, Height));
         end;
         None:
         begin
-        end
+        end;
       end;
 
-      return Hint
+      return Hint;
     end;
     TuiElement.Panel(Title, Children), TuiElement.Overlay(Title, Children):
     begin
@@ -397,8 +397,8 @@ begin
           ContentMaxW := TuiMeasureAxis.Max(ContentMaxW, Measured.Maximum.Width);
           ContentMinH := TuiMeasureAxis.Add(ContentMinH, Measured.Minimum.Height);
           ContentPrefH := TuiMeasureAxis.Add(ContentPrefH, Measured.Preferred.Height);
-          ContentMaxH := TuiMeasureAxis.Add(ContentMaxH, Measured.Maximum.Height)
-        end
+          ContentMaxH := TuiMeasureAxis.Add(ContentMaxH, Measured.Maximum.Height);
+        end;
       end;
       var TitleWidth: integer := Std.Console.DisplayWidth(Title) + 6;
       var Hint: TuiMeasureResult := TuiMeasureResult.Create(TuiSize.Create(TuiMeasureAxis.Max(ContentMinW +
@@ -408,7 +408,7 @@ begin
                                                                                                                                                                     2), TuiSize.Create(TuiMeasureAxis.Max(ContentMaxW +
                                                                                                                                                                                                           2, TitleWidth), ContentMaxH +
                                                                                                                                                                                                                           2));
-      return TuiMeasureApplyPolicy(Hint, TuiSizePolicy.Preferred(), Spec)
+      return TuiMeasureApplyPolicy(Hint, TuiSizePolicy.Preferred(), Spec);
     end;
     TuiElement.Desktop(Focused, Children):
     begin
@@ -428,13 +428,13 @@ begin
           MaximumWidth := TuiMeasureAxis.Max(MaximumWidth, Measured.Maximum.Width);
           MinimumHeight := TuiMeasureAxis.Max(MinimumHeight, Measured.Minimum.Height);
           PreferredHeight := TuiMeasureAxis.Max(PreferredHeight, Measured.Preferred.Height);
-          MaximumHeight := TuiMeasureAxis.Max(MaximumHeight, Measured.Maximum.Height)
-        end
+          MaximumHeight := TuiMeasureAxis.Max(MaximumHeight, Measured.Maximum.Height);
+        end;
       end;
 
-      return TuiMeasureApplyPolicy(TuiMeasureResult.Create(TuiSize.Create(MinimumWidth, MinimumHeight), TuiSize.Create(PreferredWidth, PreferredHeight), TuiSize.Create(MaximumWidth, MaximumHeight)), TuiSizePolicy.Preferred(), Spec)
-    end
-  end
+      return TuiMeasureApplyPolicy(TuiMeasureResult.Create(TuiSize.Create(MinimumWidth, MinimumHeight), TuiSize.Create(PreferredWidth, PreferredHeight), TuiSize.Create(MaximumWidth, MaximumHeight)), TuiSizePolicy.Preferred(), Spec);
+    end;
+  end;
 end;
 
 // Returns the unconstrained preferred size of an element subtree.
@@ -443,5 +443,5 @@ end;
 // - `Node`: Element or menu node processed by the operation.
 public function TuiMeasureElement(Node: TuiElement): TuiSize;
 begin
-  return TuiMeasure(Node, TuiMeasureSpec.Unbounded()).Preferred
+  return TuiMeasure(Node, TuiMeasureSpec.Unbounded()).Preferred;
 end;

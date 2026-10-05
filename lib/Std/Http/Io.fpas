@@ -7,8 +7,8 @@ uses Std.Arrays, Std.Net;
 public function JoinChunks(Chunks: array of array of integer): array of integer;
 begin
   return Std.Arrays.FlatMap(Chunks, function(Chunk: array of integer): array of integer begin
-    return Chunk
-  end)
+    return Chunk;
+  end);
 end;
 
 // Reads within the remaining response budget, probing only for EOF at its boundary.
@@ -16,17 +16,17 @@ public function ReadResponseBytes(Connection: Std.Net.Connection; Available: int
 begin
   if Available < 0 then
   begin
-    return Error('HTTP response exceeds MaxResponseBytes')
+    return Error('HTTP response exceeds MaxResponseBytes');
   end;
   mutable var Count: integer := Available;
   if Count > 65536 then
   begin
-    Count := 65536
+    Count := 65536;
   end;
 
   if Count = 0 then
   begin
-    Count := 1
+    Count := 1;
   end;
 
   case Std.Net.ReceiveBytes(Connection, Count) of
@@ -34,16 +34,16 @@ begin
     begin
       if Std.Arrays.Length(Bytes) > Available then
       begin
-        return Error('HTTP response exceeds MaxResponseBytes')
+        return Error('HTTP response exceeds MaxResponseBytes');
       end;
 
-      return Ok(Bytes)
+      return Ok(Bytes);
     end;
     Error(Message):
     begin
-      return Error(Message)
-    end
-  end
+      return Error(Message);
+    end;
+  end;
 end;
 
 // Writes every byte or reports when the connection stops making progress.
@@ -59,7 +59,7 @@ begin
     mutable var Count: integer := Std.Arrays.Length(Bytes) - Offset;
     if Count > 1048576 then
     begin
-      Count := 1048576
+      Count := 1048576;
     end;
     var Remaining: array of integer := Std.Arrays.Slice(Bytes, Offset, Count);
     case Std.Net.SendBytes(Connection, Remaining) of
@@ -67,17 +67,17 @@ begin
       begin
         if Count <= 0 then
         begin
-          return Error('Network connection stopped while writing HTTP bytes')
+          return Error('Network connection stopped while writing HTTP bytes');
         end;
 
-        Offset := Offset + Count
+        Offset := Offset + Count;
       end;
       Error(Message):
       begin
-        return Error(Message)
-      end
-    end
+        return Error(Message);
+      end;
+    end;
   end;
 
-  return Ok(true)
+  return Ok(true);
 end;

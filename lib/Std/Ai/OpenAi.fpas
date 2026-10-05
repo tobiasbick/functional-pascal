@@ -23,5 +23,5 @@ public function Complete(
   Options: Std.Ai.OpenAi.Types.ChatOptions
 ): result of string, string;
 begin
-  return Std.Ai.OpenAi.Client.Complete(ClientValue, Messages, Options)
+  return Std.Ai.OpenAi.Client.Complete(ClientValue, Messages, Options);
 end;

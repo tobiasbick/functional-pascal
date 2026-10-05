@@ -10,5 +10,5 @@ uses LocalChat.Config, Std.Ai.OpenAi;
 public function LocalChatRequest(Prompt: string): result of string, string;
 begin
   var ClientValue: Client := Client.Create(LocalChatBaseUrl, LocalChatModelName);
-  return Complete(ClientValue, [ChatMessage.User(Prompt)], ChatOptions.Default())
+  return Complete(ClientValue, [ChatMessage.User(Prompt)], ChatOptions.Default());
 end;

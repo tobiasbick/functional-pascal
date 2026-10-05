@@ -8,5 +8,5 @@ begin
   AssertTrue(Std.Results.IsError(Parse('[{"x":1,"x":2}]')));
   AssertTrue(Std.Results.IsError(Parse('{"x":1,"\u0078":2}')));
   AssertTrue(Std.Results.IsOk(Parse('[{"x":1},{"x":2}]')));
-  AssertTrue(Std.Results.IsOk(Parse('{"x":1,"X":2}')))
+  AssertTrue(Std.Results.IsOk(Parse('{"x":1,"X":2}')));
 end.

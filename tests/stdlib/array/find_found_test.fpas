@@ -4,12 +4,12 @@ uses Std.Console, Std.Arrays, Std.Options;
 
 function IsGreaterThanThree(X: integer): boolean;
 begin
-  return X > 3
+  return X > 3;
 end;
 
 begin
   var A: array of integer := [1, 2, 3, 4, 5];
   var R: option of integer := Find(A, IsGreaterThanThree);
   WriteLn(IsSome(R));
-  WriteLn(Unwrap(R))
+  WriteLn(Unwrap(R));
 end.

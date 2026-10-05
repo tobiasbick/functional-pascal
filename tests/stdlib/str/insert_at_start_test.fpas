@@ -3,5 +3,5 @@ program T;
 uses Std.Console, Std.Str;
 
 begin
-  WriteLn(Std.Str.Insert('world', 0, 'Hello '))
+  WriteLn(Std.Str.Insert('world', 0, 'Hello '));
 end.

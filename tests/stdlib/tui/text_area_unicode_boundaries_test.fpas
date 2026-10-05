@@ -12,13 +12,13 @@ function View(State: Model): TuiElement;
 begin
   return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(1)), [
                                                                         TuiElementBuilders.MakeTextArea(TuiControlId.Create(1), State.Text, State.Caret, TuiPoint.Create(0, 0), TuiAction.Create(1))
-                                                                      ])
+                                                                      ]);
 end;
 
 function Update(State: Model; Msg: TuiMsg; Cmd: TuiCmdOutput): Model;
 begin
   Cmd.Set(TuiCmd.NoCommand);
-  return State
+  return State;
 end;
 
 procedure CheckCaret(App: TuiApplication; Text: string; Caret: integer; X: integer; Y: integer);
@@ -27,7 +27,7 @@ begin
     Text := Text;
     Caret := Caret;
   end, Update, View, 0, 0);
-  AssertTrue(App.SurfaceSnapshot().CellAt(X, Y).Role = TuiStyleRole.Focused)
+  AssertTrue(App.SurfaceSnapshot().CellAt(X, Y).Role = TuiStyleRole.Focused);
 end;
 
 begin
@@ -42,5 +42,5 @@ begin
   CheckCaret(App, Text, 6, 1, 2);
   CheckCaret(App, Text, 7, 0, 3);
   CheckCaret(App, '', 0, 0, 0);
-  App.Close()
+  App.Close();
 end.

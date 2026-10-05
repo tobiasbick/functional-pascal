@@ -16,45 +16,45 @@ begin
           case Unwrap(NameValue) of
             JsonValue.String(Name):
             begin
-              WriteLn(Name)
-            end
+              WriteLn(Name);
+            end;
             else
             begin
-              WriteLn('bad-name')
-            end
+              WriteLn('bad-name');
+            end;
           end;
 
           case Unwrap(ScoresValue) of
             JsonValue.ArrayValue(Scores):
             begin
-              WriteLn(IntToStr(Std.Arrays.Length(Scores)))
-            end
+              WriteLn(IntToStr(Std.Arrays.Length(Scores)));
+            end;
             else
             begin
-              WriteLn('bad-scores')
-            end
+              WriteLn('bad-scores');
+            end;
           end;
 
           case Unwrap(ActiveValue) of
             JsonValue.Bool(Active):
             begin
-              WriteLn(Active)
-            end
+              WriteLn(Active);
+            end;
             else
             begin
-              WriteLn('bad-active')
-            end
-          end
-        end
+              WriteLn('bad-active');
+            end;
+          end;
+        end;
         else
         begin
-          WriteLn('not-object')
-        end
-      end
+          WriteLn('not-object');
+        end;
+      end;
     end;
     Error(E):
     begin
-      WriteLn('error: ' + E)
-    end
-  end
+      WriteLn('error: ' + E);
+    end;
+  end;
 end.

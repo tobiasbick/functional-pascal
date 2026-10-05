@@ -14,67 +14,67 @@ begin
           case Std.Options.Unwrap(Std.Dictionaries.Get(Fields, 'title')) of
             TomlValue.String(Text):
             begin
-              AssertEquals('TOML', Text)
-            end
+              AssertEquals('TOML', Text);
+            end;
             else
             begin
-              Fail('Expected string title')
-            end
+              Fail('Expected string title');
+            end;
           end;
 
           case Std.Options.Unwrap(Std.Dictionaries.Get(Fields, 'integer')) of
             TomlValue.Integer(Number):
             begin
-              AssertEquals(-42, Number)
-            end
+              AssertEquals(-42, Number);
+            end;
             else
             begin
-              Fail('Expected integer value')
-            end
+              Fail('Expected integer value');
+            end;
           end;
 
           case Std.Options.Unwrap(Std.Dictionaries.Get(Fields, 'float')) of
             TomlValue.Float(Number):
             begin
-              AssertEquals(1.5, Number)
-            end
+              AssertEquals(1.5, Number);
+            end;
             else
             begin
-              Fail('Expected float value')
-            end
+              Fail('Expected float value');
+            end;
           end;
 
           case Std.Options.Unwrap(Std.Dictionaries.Get(Fields, 'enabled')) of
             TomlValue.Boolean(Enabled):
             begin
-              AssertTrue(Enabled)
-            end
+              AssertTrue(Enabled);
+            end;
             else
             begin
-              Fail('Expected boolean value')
-            end
+              Fail('Expected boolean value');
+            end;
           end;
 
           case Std.Options.Unwrap(Std.Dictionaries.Get(Fields, 'when')) of
             TomlValue.Datetime(Timestamp):
             begin
-              AssertEquals('1979-05-27T07:32:00Z', Timestamp)
-            end
+              AssertEquals('1979-05-27T07:32:00Z', Timestamp);
+            end;
             else
             begin
-              Fail('Expected datetime value')
-            end
+              Fail('Expected datetime value');
+            end;
           end;
 
           case Std.Options.Unwrap(Std.Dictionaries.Get(Fields, 'items')) of
             TomlValue.ArrayValue(Items):
             begin
-              AssertEquals(2, Std.Arrays.Length(Items))
-            end
+              AssertEquals(2, Std.Arrays.Length(Items));
+            end;
             else
             begin
-              Fail('Expected array value')
-            end
+              Fail('Expected array value');
+            end;
           end;
 
           case Std.Options.Unwrap(Std.Dictionaries.Get(Fields, 'nested')) of
@@ -83,29 +83,29 @@ begin
               case Std.Options.Unwrap(Std.Dictionaries.Get(Nested, 'value')) of
                 TomlValue.String(Text):
                 begin
-                  AssertEquals('ok', Text)
-                end
+                  AssertEquals('ok', Text);
+                end;
                 else
                 begin
-                  Fail('Expected nested string value')
-                end
-              end
-            end
+                  Fail('Expected nested string value');
+                end;
+              end;
+            end;
             else
             begin
-              Fail('Expected nested table')
-            end
-          end
-        end
+              Fail('Expected nested table');
+            end;
+          end;
+        end;
         else
         begin
-          Fail('Expected TOML table')
-        end
-      end
+          Fail('Expected TOML table');
+        end;
+      end;
     end;
     Error(Message):
     begin
-      Fail(Message)
-    end
-  end
+      Fail(Message);
+    end;
+  end;
 end.

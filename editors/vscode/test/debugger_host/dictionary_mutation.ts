@@ -54,7 +54,7 @@ export async function verifyDictionaryMutation(
     "  mutable var Scores: dict of string to integer := ['Ada': 1, 'Grace': 2];",
     "  var StopMarker: integer := 0;",
     "  WriteLn(Scores['Hopper']);",
-    "  WriteLn(Scores['Bob'])",
+    "  WriteLn(Scores['Bob']);",
     "end.",
     ""
   ];

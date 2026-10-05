@@ -6,5 +6,5 @@ begin
   mutable var A: array of integer := [];
   Push(A, 42);
   WriteLn(Length(A));
-  WriteLn(A[0])
+  WriteLn(A[0]);
 end.

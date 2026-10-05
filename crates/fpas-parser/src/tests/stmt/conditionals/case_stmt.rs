@@ -5,7 +5,7 @@ use fpas_diagnostics::codes::PARSE_EXPECTED_TOKEN;
 
 #[test]
 fn case_basic() {
-    let stmts = body_stmts("program T; begin case X of 1: A := 1; 2: A := 2 end end.");
+    let stmts = body_stmts("program T; begin case X of 1: A := 1; 2: A := 2; end; end.");
     match &stmts[0] {
         Stmt::Case {
             arms, else_body, ..
@@ -19,7 +19,7 @@ fn case_basic() {
 
 #[test]
 fn case_with_range() {
-    let stmts = body_stmts("program T; begin case X of 0..9: A := 1 end end.");
+    let stmts = body_stmts("program T; begin case X of 0..9: A := 1; end; end.");
     match &stmts[0] {
         Stmt::Case { arms, .. } => match &arms[0].labels[0] {
             CaseLabel::Value { end, .. } => assert!(end.is_some()),
@@ -31,7 +31,7 @@ fn case_with_range() {
 
 #[test]
 fn case_with_else() {
-    let stmts = body_stmts("program T; begin case X of 1: A := 1 else A := 0 end end.");
+    let stmts = body_stmts("program T; begin case X of 1: A := 1; else A := 0; end; end.");
     match &stmts[0] {
         Stmt::Case { else_body, .. } => {
             assert!(else_body.is_some());
@@ -42,7 +42,7 @@ fn case_with_else() {
 
 #[test]
 fn case_with_only_else_is_rejected_and_keeps_else_body_for_recovery() {
-    let (program, errors) = parse_with_errors("program T; begin case X of else A := 0 end end.");
+    let (program, errors) = parse_with_errors("program T; begin case X of else A := 0; end; end.");
     assert!(
         errors.iter().any(|error| error
             .as_parser_error()
@@ -63,7 +63,7 @@ fn case_with_only_else_is_rejected_and_keeps_else_body_for_recovery() {
 
 #[test]
 fn case_multiple_labels() {
-    let stmts = body_stmts("program T; begin case X of 1, 2, 3: A := 1 end end.");
+    let stmts = body_stmts("program T; begin case X of 1, 2, 3: A := 1; end; end.");
     match &stmts[0] {
         Stmt::Case { arms, .. } => {
             assert_eq!(arms[0].labels.len(), 3);
@@ -75,7 +75,7 @@ fn case_multiple_labels() {
 #[test]
 fn case_with_guard_and_enum_pattern() {
     let stmts =
-        body_stmts("program T; begin case S of Shape.Circle(R) if R > 10.0: A := 1 end end.");
+        body_stmts("program T; begin case S of Shape.Circle(R) if R > 10.0: A := 1; end; end.");
     match &stmts[0] {
         Stmt::Case { arms, .. } => {
             assert!(arms[0].guard.is_some());
@@ -97,7 +97,7 @@ fn case_with_guard_and_enum_pattern() {
 
 #[test]
 fn case_with_destructure_pattern() {
-    let stmts = body_stmts("program T; begin case R of Ok(V): A := 1; Error(E): A := 2 end end.");
+    let stmts = body_stmts("program T; begin case R of Ok(V): A := 1; Error(E): A := 2; end; end.");
     match &stmts[0] {
         Stmt::Case { arms, .. } => match &arms[0].labels[0] {
             CaseLabel::Destructure {

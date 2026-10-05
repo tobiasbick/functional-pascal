@@ -5,7 +5,7 @@ use fpas_diagnostics::codes::PARSE_INVALID_STATIC_PLACEMENT;
 fn record_with_function_method() {
     let p = parse_ok(
         "program T; type Num = record V: integer; \
-         function Double(Self: Num): integer; begin return Self.V * 2 end; \
+         function Double(Self: Num): integer; begin return Self.V * 2; end; \
          end; begin end.",
     );
     match &p.declarations[0] {
@@ -26,9 +26,9 @@ fn unit_record_routines_preserve_per_member_visibility() {
     let unit = parse_unit_ok(
         "unit Demo.Types; \
          type Counter = record \
-           function Hidden(Self: Counter): integer; begin return 1 end; \
+           function Hidden(Self: Counter): integer; begin return 1; end; \
            public procedure Reset(Self: Counter); begin end; \
-           static function CreateHidden(): Counter; begin return record end end; \
+           static function CreateHidden(): Counter; begin return record end; end; \
            public static procedure Clear(); begin end; \
          end;",
     );
@@ -50,7 +50,7 @@ fn public_record_routine_is_rejected_in_program_files() {
     let (_, errors) = parse_with_errors(
         "program T; \
          type Counter = record \
-           public function Hidden(Self: Counter): integer; begin return 1 end; \
+           public function Hidden(Self: Counter): integer; begin return 1; end; \
          end; \
          begin end.",
     );
@@ -67,7 +67,7 @@ fn public_record_routine_is_rejected_in_program_files() {
 fn record_with_procedure_method() {
     let p = parse_ok(
         "program T; type Greeter = record Name: string; \
-         procedure SayHello(Self: Greeter); begin Std.Console.WriteLn('hi') end; \
+         procedure SayHello(Self: Greeter); begin Std.Console.WriteLn('hi'); end; \
          end; begin end.",
     );
     match &p.declarations[0] {
@@ -86,8 +86,8 @@ fn record_with_procedure_method() {
 fn record_with_multiple_methods() {
     let p = parse_ok(
         "program T; type Rect = record W: integer; H: integer; \
-         function Area(Self: Rect): integer; begin return Self.W * Self.H end; \
-         procedure Print(Self: Rect); begin Std.Console.WriteLn(Self.W) end; \
+         function Area(Self: Rect): integer; begin return Self.W * Self.H; end; \
+         procedure Print(Self: Rect); begin Std.Console.WriteLn(Self.W); end; \
          end; begin end.",
     );
     match &p.declarations[0] {
@@ -109,7 +109,7 @@ fn record_with_generic_function_method() {
     let p = parse_ok(
         "program T; type Box = record Value: integer; \
          function Map<R>(Self: Box; F: function(X: integer): R): R; \
-         begin return F(Self.Value) end; \
+         begin return F(Self.Value); end; \
          end; begin end.",
     );
     match &p.declarations[0] {
@@ -133,7 +133,7 @@ fn record_with_static_function() {
     let p = parse_ok(
         "program T; type Point = record X: integer; Y: integer; \
          static function Create(X: integer; Y: integer): Point; \
-         begin return record X := X; Y := Y; end end; \
+         begin return record X := X; Y := Y; end; end; \
          end; begin end.",
     );
     match &p.declarations[0] {
@@ -160,8 +160,8 @@ fn record_static_and_instance_methods_together() {
     let p = parse_ok(
         "program T; type Point = record X: integer; Y: integer; \
          static function Origin(): Point; \
-         begin return record X := 0; Y := 0; end end; \
-         function Sum(Self: Point): integer; begin return Self.X + Self.Y end; \
+         begin return record X := 0; Y := 0; end; end; \
+         function Sum(Self: Point): integer; begin return Self.X + Self.Y; end; \
          end; begin end.",
     );
     match &p.declarations[0] {
@@ -202,7 +202,7 @@ fn record_with_static_procedure() {
 #[test]
 fn static_at_program_level_is_rejected() {
     let (_p, errs) = parse_with_errors(
-        "program T; static function Foo(): integer; begin return 1 end; begin end.",
+        "program T; static function Foo(): integer; begin return 1; end; begin end.",
     );
     let parse_err = errs.iter().find_map(ParseDiagnostic::as_parser_error);
     let d = parse_err.expect("expected parser diagnostic");

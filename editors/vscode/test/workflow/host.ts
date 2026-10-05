@@ -53,7 +53,7 @@ export async function verifyWorkflowHost(
     );
     await fs.writeFile(
       mainPath,
-      "program Workflow; begin var Value:integer:=MissingCall() end."
+      "program Workflow; begin var Value:integer:=MissingCall(); end."
     );
     await fs.writeFile(
       testsManifest,
@@ -61,27 +61,27 @@ export async function verifyWorkflowHost(
     );
     await fs.writeFile(
       testPaths.pass,
-      "program PassTest;\n\nuses Std.Test;\n\nbegin\n  AssertTrue(true)\nend.\n"
+      "program PassTest;\n\nuses Std.Test;\n\nbegin\n  AssertTrue(true);\nend.\n"
     );
     await fs.writeFile(
       testPaths.fail,
-      "program FailTest;\n\nuses Std.Test;\n\nbegin\n  AssertTrue(false)\nend.\n"
+      "program FailTest;\n\nuses Std.Test;\n\nbegin\n  AssertTrue(false);\nend.\n"
     );
     await fs.writeFile(
       testPaths.skip,
-      "program SkipTest;\n\nuses Std.Test;\n\nbegin\n  Skip('host fixture')\nend.\n"
+      "program SkipTest;\n\nuses Std.Test;\n\nbegin\n  Skip('host fixture');\nend.\n"
     );
     await fs.writeFile(
       testPaths.compile,
-      "program CompileTest;\n\nbegin\n  var Value: MissingType := 1\nend.\n"
+      "program CompileTest;\n\nbegin\n  var Value: MissingType := 1;\nend.\n"
     );
     await fs.writeFile(
       testPaths.runtime,
-      "program RuntimeTest;\n\nbegin\n  panic('host fixture')\nend.\n"
+      "program RuntimeTest;\n\nbegin\n  panic('host fixture');\nend.\n"
     );
     await fs.writeFile(
       testPaths.timeout,
-      "program TimeoutTest;\n\nbegin\n  mutable var Value: integer := 0;\n  while true do\n  begin\n    Value := Value + 1\n  end\nend.\n"
+      "program TimeoutTest;\n\nbegin\n  mutable var Value: integer := 0;\n  while true do\n  begin\n    Value := Value + 1;\n  end;\nend.\n"
     );
     await fs.writeFile(invalidManifest, "not valid toml");
 
@@ -111,7 +111,7 @@ export async function verifyWorkflowHost(
     await vscode.commands.executeCommand(FORMAT_COMMAND, programUri);
     assert.equal(
       await fs.readFile(mainPath, "utf8"),
-      "program Workflow;\n\nbegin\n  var Value: integer := MissingCall()\nend.\n"
+      "program Workflow;\n\nbegin\n  var Value: integer := MissingCall();\nend.\n"
     );
 
     const terminalsBefore = vscode.window.terminals.length;

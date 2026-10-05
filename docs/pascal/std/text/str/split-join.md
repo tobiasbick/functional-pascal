@@ -11,7 +11,7 @@ program SplitDemo;
 uses Std.Console, Std.Str, Std.Arrays;
 begin
   var Parts: array of string := Split('x,y', ',');
-  WriteLn(Std.Arrays.Length(Parts))
+  WriteLn(Std.Arrays.Length(Parts));
 end.
 ```
 
@@ -24,7 +24,7 @@ end.
 Concatenates every element of `Parts`, inserting `Delim` between elements.
 
 ```pascal
-WriteLn(Join(['x', 'y'], ':'))
+WriteLn(Join(['x', 'y'], ':'));
 ```
 
 ---

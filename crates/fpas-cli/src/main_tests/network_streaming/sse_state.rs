@@ -37,7 +37,7 @@ begin
   var Index: integer := Std.Http.Handles.SseDecoderSlot(Decoder);
   var State: DecoderState := LoadState(Index);
   return Std.Arrays.Length(State.Buffer) + Std.Str.Length(State.Data) +
-    Std.Str.Length(State.EventType) + Std.Str.Length(State.LastEventId) + State.EventBytes
+    Std.Str.Length(State.EventType) + Std.Str.Length(State.LastEventId) + State.EventBytes;
 end;
 "#,
     );
@@ -47,7 +47,7 @@ end;
     source.push_str(
         r#"
 public function ReviewRetained(Decoder: SseDecoder): integer;
-begin return Std.Http.Sse.ReviewRetained(Decoder) end;
+begin return Std.Http.Sse.ReviewRetained(Decoder); end;
 "#,
     );
     write_text(&api, &source);
@@ -61,15 +61,15 @@ begin
   Unwrap(FeedSse(Decoder, Std.Net.Utf8.Encode('id:old' + #10 + 'data:x' + #10)));
   AssertTrue(ReviewRetained(Decoder) > 0);
   case FeedSse(Decoder, Std.Net.Utf8.Encode(Std.Str.RepeatStr('x', 100000))) of
-    Ok(_): Fail('expected size failure'); Error(_): begin end
+    Ok(_): Fail('expected size failure'); Error(_): begin end;
   end;
   AssertEquals(0, ReviewRetained(Decoder));
   var FinalDecoder: SseDecoder := Unwrap(CreateSseDecoder(32));
   Unwrap(FeedSse(FinalDecoder, [255]));
   case FinishSse(FinalDecoder) of
-    Ok(_): Fail('expected UTF-8 failure'); Error(_): begin end
+    Ok(_): Fail('expected UTF-8 failure'); Error(_): begin end;
   end;
-  AssertEquals(0, ReviewRetained(FinalDecoder))
+  AssertEquals(0, ReviewRetained(FinalDecoder));
 end.
 "#,
     );

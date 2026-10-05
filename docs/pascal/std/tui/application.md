@@ -20,8 +20,8 @@ Set a command explicitly when needed:
 TuiMsg.QuitRequested:
 begin
   Cmd.Set(TuiCmd.Quit);
-  return State
-end
+  return State;
+end;
 ```
 
 `TuiCmdOutput` is a host-owned output capability. The host resets it to
@@ -47,7 +47,7 @@ function UpdateApplication(
 var Inbox: channel of AppMessage := CreateChannel(32);
 var Final: AppModel := TuiApplication.RunWithBackground(
   Initial, Inbox, Update, UpdateApplication, View
-)
+);
 ```
 
 `RunWithBackgroundAndPalette` adds the same palette argument as `RunWithPalette`. The host takes
@@ -62,8 +62,8 @@ The initial frame is rendered before the background-enabled host delivers `TuiMs
 ```pascal
 TuiMsg.Started:
 begin
-  Cmd.StartBackground(1, LoadData)
-end
+  Cmd.StartBackground(1, LoadData);
+end;
 ```
 
 The fixed work signature is:
@@ -87,7 +87,7 @@ Completed successful operations are reaped silently. A returned `Error`, panic, 
 delivered on the main application thread as:
 
 ```pascal
-TuiMsg.BackgroundFailed(Id, Kind, Message, Code, Line, Column)
+TuiMsg.BackgroundFailed(Id, Kind, Message, Code, Line, Column);
 ```
 
 `Kind` is a `TaskFailureKind`. Cancellation caused by replacement, explicit subscription
@@ -160,9 +160,9 @@ begin
   Next.Animation := Advance(State.Animation, Elapsed);
   if Next.Animation.Running then
   begin
-    Cmd.RequestTick(40)
-  end
-end
+    Cmd.RequestTick(40);
+  end;
+end;
 ```
 
 Headless runs keep their deterministic time steps: `RunIterations` and

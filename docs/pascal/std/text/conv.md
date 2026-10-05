@@ -6,7 +6,7 @@ Explicit conversions between text and numbers (and simple numeric widens). Use t
 program Example;
 uses Std.Console, Std.Conv;
 begin
-  WriteLn(IntToStr(42))
+  WriteLn(IntToStr(42));
 end.
 ```
 
@@ -40,7 +40,7 @@ Requires `uses Std.Conv;`.
 Decimal string representation of `N`.
 
 ```pascal
-WriteLn(IntToStr(42))
+WriteLn(IntToStr(42));
 ```
 
 ---
@@ -50,7 +50,7 @@ WriteLn(IntToStr(42))
 Parses an integer. Surrounding **whitespace is ignored**. **Runtime error** if the text is not a valid integer.
 
 ```pascal
-WriteLn(StrToInt('  -7  '))
+WriteLn(StrToInt('  -7  '));
 ```
 
 ---
@@ -61,7 +61,7 @@ Converts integer to `real` (exact for integers in the representable range).
 
 ```pascal
 var X: real := IntToReal(3);
-WriteLn(X)
+WriteLn(X);
 ```
 
 ---
@@ -71,7 +71,7 @@ WriteLn(X)
 Returns a string representation of `R` (format follows the runtime).
 
 ```pascal
-WriteLn(RealToStr(1.5))
+WriteLn(RealToStr(1.5));
 ```
 
 ---
@@ -81,7 +81,7 @@ WriteLn(RealToStr(1.5))
 Parses a floating-point value. Surrounding **whitespace is ignored**. **Runtime error** if invalid.
 
 ```pascal
-WriteLn(StrToReal('2.25'))
+WriteLn(StrToReal('2.25'));
 ```
 
 ---
@@ -92,7 +92,7 @@ Returns `'true'` or `'false'`.
 
 ```pascal
 WriteLn(BoolToStr(true))   // true
-WriteLn(BoolToStr(false))  // false
+WriteLn(BoolToStr(false));  // false
 ```
 
 ---
@@ -103,7 +103,7 @@ Parses `'true'` or `'false'` (case-insensitive). **Runtime error** if `S` is nei
 
 ```pascal
 WriteLn(StrToBool('True'));    // true
-WriteLn(StrToBool('FALSE'))    // false
+WriteLn(StrToBool('FALSE'));    // false
 ```
 
 ---
@@ -116,7 +116,7 @@ Returns `N` as an uppercase hexadecimal string, zero-padded to at least `Digits`
 
 ```pascal
 WriteLn(IntToHex(255, 2));    // FF
-WriteLn(IntToHex(255, 4))     // 00FF
+WriteLn(IntToHex(255, 4));     // 00FF
 ```
 
 ---
@@ -128,7 +128,7 @@ Parses a hexadecimal string. Accepts optional `$` or `0x` prefix. **Runtime erro
 ```pascal
 WriteLn(HexToInt('FF'));     // 255
 WriteLn(HexToInt('$FF'));    // 255
-WriteLn(HexToInt('0xFF'))    // 255
+WriteLn(HexToInt('0xFF'));    // 255
 ```
 
 ---

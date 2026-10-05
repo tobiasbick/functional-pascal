@@ -6,8 +6,8 @@ fn case_ordinal_valid() {
         "program T; begin \
          case 1 of \
            1: return; \
-           2: return \
-         end \
+           2: return; \
+         end; \
          end.",
     );
 }
@@ -22,8 +22,8 @@ fn case_data_enum_rejects_foreign_root_variant() {
            var S: Shape := Shape.Point; \
            case S of \
              Other.Square(Size): return; \
-             Shape.Point: return \
-           end \
+             Shape.Point: return; \
+           end; \
          end.",
     );
     assert!(
@@ -45,8 +45,8 @@ fn case_data_enum_rejects_foreign_nested_variant() {
            var V: Outer := Outer.Empty; \
            case V of \
              Outer.Wrap(Other.B(X)): return; \
-             Outer.Empty: return \
-           end \
+             Outer.Empty: return; \
+           end; \
          end.",
     );
     assert!(
@@ -66,8 +66,8 @@ fn case_data_enum_pattern_literal_must_match_field_type() {
            var S: Shape := Shape.Point; \
            case S of \
              Shape.Circle('big'): return; \
-             Shape.Point: return \
-           end \
+             Shape.Point: return; \
+           end; \
          end.",
     );
     assert!(
@@ -86,8 +86,8 @@ fn case_option_rejects_result_patterns() {
            var O: Option of integer := None; \
            case O of \
              Ok(V): return; \
-             None: return \
-           end \
+             None: return; \
+           end; \
          end.",
     );
     assert!(
@@ -105,8 +105,8 @@ fn case_result_multi_label_shared_binding_valid() {
          begin \
            var R: Result of string, string := Ok('hello'); \
            case R of \
-             Ok(Msg), Error(Msg): WriteLn(Msg) \
-           end \
+             Ok(Msg), Error(Msg): WriteLn(Msg); \
+           end; \
          end.",
     );
 }
@@ -118,8 +118,8 @@ fn case_result_multi_label_binding_names_are_case_insensitive() {
          begin \
            var R: Result of string, string := Ok('hello'); \
            case R of \
-             Ok(Message), Error(message): WriteLn(Message) \
-           end \
+             Ok(Message), Error(message): WriteLn(Message); \
+           end; \
          end.",
     );
 }
@@ -132,8 +132,8 @@ fn case_result_multi_label_checks_shared_body_once() {
            var R: Result of string, string := Ok('hello'); \
            case R of \
              Ok(Message), Error(message): \
-               var Invalid: integer := 'not an integer' \
-           end \
+               var Invalid: integer := 'not an integer'; \
+           end; \
          end.",
     );
     let body_errors = errors
@@ -153,8 +153,8 @@ fn case_result_multi_label_rejects_incompatible_binding_types() {
          begin \
            var R: Result of integer, string := Ok(1); \
            case R of \
-             Ok(Value), Error(Value): return \
-           end \
+             Ok(Value), Error(Value): return; \
+           end; \
          end.",
     );
     assert!(
@@ -173,8 +173,8 @@ fn case_result_multi_label_rejects_different_binding_names() {
          begin \
            var R: Result of string, string := Ok('value'); \
            case R of \
-             Ok(Value), Error(Message): return \
-           end \
+             Ok(Value), Error(Message): return; \
+           end; \
          end.",
     );
     assert!(
@@ -194,8 +194,8 @@ fn case_data_enum_pattern_rejects_duplicate_binding_names() {
          begin \
            var P: Pair := Pair.Values(1, 2); \
            case P of \
-             Pair.Values(Value, value): return \
-           end \
+             Pair.Values(Value, value): return; \
+           end; \
          end.",
     );
     assert!(

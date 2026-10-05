@@ -7,7 +7,7 @@ fn hello_world() {
 program Hello;
 uses Std.Console;
 begin
-  Std.Console.WriteLn('Hello, World!')
+  Std.Console.WriteLn('Hello, World!');
 end.",
     );
 }
@@ -64,7 +64,7 @@ begin
   var X: integer := WhereX();
   var Y: integer := WhereY();
   WriteLn(X);
-  WriteLn(Y)
+  WriteLn(Y);
 end.",
     );
 }
@@ -90,7 +90,7 @@ begin
   EnableFocus();
   DisableFocus();
   EnablePaste();
-  DisablePaste()
+  DisablePaste();
 end.",
     );
 }
@@ -102,7 +102,7 @@ fn std_console_read_key_event_wrong_arg_count() {
 program T;
 uses Std.Console;
 begin
-  Std.Console.ReadKeyEvent(1)
+  Std.Console.ReadKeyEvent(1);
 end.",
     );
     assert!(
@@ -119,7 +119,7 @@ fn std_console_read_key_event_wrong_arg_in_expr() {
 program T;
 uses Std.Console;
 begin
-  var E: Std.Console.KeyEvent := Std.Console.ReadKeyEvent(0)
+  var E: Std.Console.KeyEvent := Std.Console.ReadKeyEvent(0);
 end.",
     );
     assert!(
@@ -137,7 +137,7 @@ program T;
 uses Std.Console;
 begin
   var E: Std.Console.KeyEvent := Std.Console.ReadKeyEvent();
-  Std.Console.WriteLn(E.not_a_field)
+  Std.Console.WriteLn(E.not_a_field);
 end.",
     );
     assert!(
@@ -154,7 +154,7 @@ program T;
 uses Std.Console;
 begin
   var E: Std.Console.KeyEvent := Std.Console.ReadKeyEvent();
-  Std.Console.WriteLn(E.kind = Std.Console.KeyKind.NotAKind)
+  Std.Console.WriteLn(E.kind = Std.Console.KeyKind.NotAKind);
 end.",
     );
     assert!(
@@ -170,7 +170,7 @@ fn std_console_fully_qualified_call_requires_uses_clause() {
         "\
 program T;
 begin
-  Std.Console.WriteLn('x')
+  Std.Console.WriteLn('x');
 end.",
     );
     assert_eq!(errs.len(), 1, "{errs:#?}");
@@ -185,7 +185,7 @@ end.",
 program T;
 uses Std.Console;
 begin
-  Std.Console.WriteLn('x')
+  Std.Console.WriteLn('x');
 end.",
     );
 }
@@ -196,7 +196,7 @@ fn std_console_short_name_requires_uses() {
         "\
 program T;
 begin
-  WriteLn('x')
+  WriteLn('x');
 end.",
     );
     assert!(
@@ -217,7 +217,7 @@ fn uses_std_console_case_insensitive() {
 program T;
 uses std.console;
 begin
-  Std.Console.WriteLn('ok')
+  Std.Console.WriteLn('ok');
 end.",
     );
 }

@@ -10,7 +10,7 @@ begin
 end;
 begin
   var T: task := go Work();
-  WaitAnyWithTimeout([T], -1)
+  WaitAnyWithTimeout([T], -1);
 end."#,
     )
     .expect_err("negative timeout");
@@ -24,7 +24,7 @@ fn controlled_wait_any_preserves_worker_failure() {
         "WithCancellation([T], GetCancellationToken(CreateCancellationSource()))",
     ] {
         let source = format!(
-            "program Failure; uses Std.Tasks; procedure Work(); begin panic('original failure') end; begin var T: task := go Work(); WaitAny{control} end."
+            "program Failure; uses Std.Tasks; procedure Work(); begin panic('original failure'); end; begin var T: task := go Work(); WaitAny{control}; end."
         );
         let error = run_program(&source).expect_err("task failure");
         assert_eq!(error.code, fpas_diagnostics::codes::RUNTIME_PROGRAM_PANIC);
@@ -34,7 +34,7 @@ fn controlled_wait_any_preserves_worker_failure() {
 
 #[test]
 fn wait_any_rejects_an_empty_task_array() {
-    let error = run_program("program EmptyWaitAny; uses Std.Tasks; begin var Tasks: array of task := []; WaitAny(Tasks) end.").expect_err("empty list");
+    let error = run_program("program EmptyWaitAny; uses Std.Tasks; begin var Tasks: array of task := []; WaitAny(Tasks); end.").expect_err("empty list");
     assert_eq!(error.code, fpas_diagnostics::codes::RUNTIME_INVALID_TASK);
     assert!(error.message.contains("between 1 and 1048576"));
 }
@@ -46,11 +46,11 @@ fn wait_any_preserves_worker_failure_diagnostic() {
 uses Std.Tasks;
 procedure Work();
 begin
-  panic('original worker failure')
+  panic('original worker failure');
 end;
 begin
   var T: task := go Work();
-  WaitAny([T])
+  WaitAny([T]);
 end."#,
     )
     .expect_err("worker failure");
@@ -65,7 +65,7 @@ fn wait_any_preserves_results_and_array_order() {
 uses Std.Tasks;
 function Work(Value: integer): integer;
 begin
-  return Value
+  return Value;
 end;
 begin
   var A: task := go Work(11);
@@ -74,7 +74,7 @@ begin
   if WaitAny([B, A, B]) <> 0 then panic('wrong index');
   if Wait(B) <> 22 then panic('result consumed');
   if WaitAny([B, A]) <> 0 then panic('consumed completion lost');
-  if Wait(A) <> 11 then panic('losing result consumed')
+  if Wait(A) <> 11 then panic('losing result consumed');
 end."#,
     );
 }
@@ -87,18 +87,18 @@ uses Std.Tasks, Std.Time;
 function Work(): integer;
 begin
   Sleep(1);
-  return 7
+  return 7;
 end;
 function Parent(): integer;
 begin
   var Child: task := go Work();
   if WaitAny([Child]) <> 0 then panic('index');
-  return Wait(Child)
+  return Wait(Child);
 end;
 begin
   var ParentTask: task := go Parent();
   if WaitAny([ParentTask]) <> 0 then panic('parent index');
-  if Wait(ParentTask) <> 7 then panic('value')
+  if Wait(ParentTask) <> 7 then panic('value');
 end."#,
     );
 }

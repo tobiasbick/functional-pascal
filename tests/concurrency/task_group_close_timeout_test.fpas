@@ -13,21 +13,21 @@ begin
     Unwrap(Receive(Gate));
     if not IsCancellationRequested(Stop) then
     begin
-      panic('missing cancellation')
+      panic('missing cancellation');
     end;
 
-    return Error('retained worker failure')
+    return Error('retained worker failure');
   end);
   var First: result of array of TaskFailure, string := CloseTaskGroupWithTimeout(Group, 2);
   case First of
     Error(Message):
     begin
-      AssertEquals('Task group close timed out', Message)
+      AssertEquals('Task group close timed out', Message);
     end;
     Ok(Reports):
     begin
-      panic('worker has not been released')
-    end
+      panic('worker has not been released');
+    end;
   end;
 
   AssertTrue(IsCancellationRequested(Token));
@@ -38,5 +38,5 @@ begin
   AssertTrue(Reports[0].Kind = TaskFailureKind.ReturnedError);
   AssertEquals('retained worker failure', Reports[0].Message);
   AssertEquals(0, Length(CloseTaskGroup(Group)));
-  CloseChannel(Gate)
+  CloseChannel(Gate);
 end.

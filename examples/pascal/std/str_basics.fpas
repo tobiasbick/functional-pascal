@@ -8,20 +8,20 @@ function ReplaceStar(C: string): string;
 begin
   if C = '*' then
   begin
-    return '★'
+    return '★';
   end;
 
-  return C
+  return C;
 end;
 
 function KeepLetter(C: string): boolean;
 begin
-  return C <> ' '
+  return C <> ' ';
 end;
 
 function Count(Acc: integer; C: string): integer;
 begin
-  return Acc + 1
+  return Acc + 1;
 end;
 
 begin
@@ -38,5 +38,5 @@ begin
   WriteLn('pad: ', PadLeft('7', 4, '0'));
   WriteLn('map: ', Map('a*b', ReplaceStar));
   WriteLn('filter: ', Filter('a b', KeepLetter));
-  WriteLn('reduce: ', IntToStr(Reduce('a😀b', 0, Count)))
+  WriteLn('reduce: ', IntToStr(Reduce('a😀b', 0, Count)));
 end.

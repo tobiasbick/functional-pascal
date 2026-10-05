@@ -7,11 +7,11 @@ fn test_cli_runs_matching_tests_in_directory() {
     let cwd = create_temp_dir("fpas-test-dir");
     write_text(
         &cwd.join("pass_test.fpas"),
-        "program P;\nuses Std.Test;\nbegin AssertTrue(true) end.",
+        "program P;\nuses Std.Test;\nbegin AssertTrue(true); end.",
     );
     write_text(
         &cwd.join("fail_test.fpas"),
-        "program F;\nuses Std.Test;\nbegin AssertTrue(false) end.",
+        "program F;\nuses Std.Test;\nbegin AssertTrue(false); end.",
     );
     write_text(&cwd.join("helper.fpas"), "unit H;\nprocedure X; begin end;");
 
@@ -50,7 +50,7 @@ fn test_cli_list_only_prints_paths_without_running() {
     let cwd = create_temp_dir("fpas-test-list");
     write_text(
         &cwd.join("one_test.fpas"),
-        "program O;\nuses Std.Test;\nbegin AssertTrue(false) end.",
+        "program O;\nuses Std.Test;\nbegin AssertTrue(false); end.",
     );
 
     let mut stdout = Vec::new();
@@ -89,7 +89,7 @@ fn test_cli_list_only_fails_when_stdout_cannot_be_written() {
     let cwd = create_temp_dir("fpas-test-list-write-failure");
     write_text(
         &cwd.join("one_test.fpas"),
-        "program O;\nuses Std.Test;\nbegin AssertTrue(true) end.",
+        "program O;\nuses Std.Test;\nbegin AssertTrue(true); end.",
     );
     for mut stdout in [FailingWriter::immediately(), FailingWriter::after(8)] {
         let mut stderr = Vec::new();
@@ -129,11 +129,11 @@ fn test_cli_filter_runs_matching_tests_only() {
     let cwd = create_temp_dir("fpas-test-filter");
     write_text(
         &cwd.join("menu_test.fpas"),
-        "program M;\nuses Std.Test;\nbegin AssertTrue(true) end.",
+        "program M;\nuses Std.Test;\nbegin AssertTrue(true); end.",
     );
     write_text(
         &cwd.join("other_test.fpas"),
-        "program O;\nuses Std.Test;\nbegin AssertTrue(false) end.",
+        "program O;\nuses Std.Test;\nbegin AssertTrue(false); end.",
     );
 
     let mut stdout = Vec::new();
@@ -169,11 +169,11 @@ fn test_cli_jobs_runs_tests_in_parallel_mode() {
     let cwd = create_temp_dir("fpas-test-jobs");
     write_text(
         &cwd.join("one_test.fpas"),
-        "program O;\nuses Std.Test;\nbegin AssertTrue(true) end.",
+        "program O;\nuses Std.Test;\nbegin AssertTrue(true); end.",
     );
     write_text(
         &cwd.join("two_test.fpas"),
-        "program T;\nuses Std.Test;\nbegin AssertEquals(2, 1 + 1) end.",
+        "program T;\nuses Std.Test;\nbegin AssertEquals(2, 1 + 1); end.",
     );
 
     let mut stdout = Vec::new();
@@ -209,15 +209,15 @@ fn test_cli_fail_fast_records_not_run_tests() {
     let cwd = create_temp_dir("fpas-test-fail-fast");
     write_text(
         &cwd.join("aaa_pass_test.fpas"),
-        "program P;\nuses Std.Test;\nbegin AssertTrue(true) end.",
+        "program P;\nuses Std.Test;\nbegin AssertTrue(true); end.",
     );
     write_text(
         &cwd.join("bbb_fail_test.fpas"),
-        "program F;\nuses Std.Test;\nbegin AssertTrue(false) end.",
+        "program F;\nuses Std.Test;\nbegin AssertTrue(false); end.",
     );
     write_text(
         &cwd.join("ccc_later_test.fpas"),
-        "program L;\nuses Std.Test;\nbegin AssertTrue(true) end.",
+        "program L;\nuses Std.Test;\nbegin AssertTrue(true); end.",
     );
 
     let mut stdout = Vec::new();
@@ -262,11 +262,11 @@ fn parallel_fail_fast_stops_after_a_link_context_error() {
     );
     write_text(
         &broken_dir.join("broken_test.fpas"),
-        "program Broken; uses Std.Test; begin AssertTrue(true) end.",
+        "program Broken; uses Std.Test; begin AssertTrue(true); end.",
     );
     write_text(
         &cwd.join("zzz_later_test.fpas"),
-        "program Later; uses Std.Test; begin AssertTrue(true) end.",
+        "program Later; uses Std.Test; begin AssertTrue(true); end.",
     );
 
     let mut stdout = Vec::new();

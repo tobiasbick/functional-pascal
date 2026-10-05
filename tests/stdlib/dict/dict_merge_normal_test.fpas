@@ -8,5 +8,5 @@ begin
   var M: dict of string to integer := Std.Dictionaries.Merge(A, B);
   WriteLn(Std.Dictionaries.Length(M));
   WriteLn(M['A']);
-  WriteLn(M['C'])
+  WriteLn(M['C']);
 end.

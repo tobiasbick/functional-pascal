@@ -54,7 +54,7 @@ begin
   if not Streaming then
   begin
     var ResponseValue: Response := try Send(RequestValue);
-    return Ok(Std.Arrays.Length(ResponseValue.Body))
+    return Ok(Std.Arrays.Length(ResponseValue.Body));
   end;
   var ResponseValue: StreamResponse := try OpenStream(RequestValue);
   mutable var Count: integer := 0;
@@ -63,9 +63,9 @@ begin
   begin
     var Bytes: array of integer := try ReadStream(ResponseValue.Body, 2);
     Count := Count + Std.Arrays.Length(Bytes);
-    Reading := Std.Arrays.Length(Bytes) > 0
+    Reading := Std.Arrays.Length(Bytes) > 0;
   end;
-  return Ok(Count)
+  return Ok(Count);
 end;
 begin
   for BodyIndex: integer := 0 to 1 do
@@ -79,10 +79,10 @@ begin
         RequestValue.TimeoutMillis := 1000;
         var Received: result of integer, string := Fetch(RequestValue, Streaming);
         AssertEquals(Delta >= 0, Std.Results.IsOk(Received));
-        if Delta >= 0 then AssertEquals(BodyIndex * 3, Std.Results.Unwrap(Received))
-      end
-    end
-  end
+        if Delta >= 0 then AssertEquals(BodyIndex * 3, Std.Results.Unwrap(Received));
+      end;
+    end;
+  end;
 end.
 "#,
             head_len = head.len()

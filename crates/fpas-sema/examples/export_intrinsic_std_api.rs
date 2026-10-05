@@ -352,7 +352,7 @@ fn render_routine(
     };
     let _ = writeln!(output, "{indent}public {static_prefix}{declaration};");
     let _ = writeln!(output, "{indent}begin");
-    let _ = writeln!(output, "{indent}  panic('Intrinsic API declaration')");
+    let _ = writeln!(output, "{indent}  panic('Intrinsic API declaration');");
     let _ = writeln!(output, "{indent}end;");
 }
 

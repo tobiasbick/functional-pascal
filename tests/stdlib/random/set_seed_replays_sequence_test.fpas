@@ -13,5 +13,5 @@ begin
   SetSeed(-17);
   AssertEquals(FirstInteger, RandomInt(-1000000, 1000000));
   AssertEquals(FirstReal, Random());
-  AssertEquals(SecondInteger, RandomInt(-1000000, 1000000))
+  AssertEquals(SecondInteger, RandomInt(-1000000, 1000000));
 end.

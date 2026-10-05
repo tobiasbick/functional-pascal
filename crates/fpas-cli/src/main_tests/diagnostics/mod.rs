@@ -30,7 +30,10 @@ fn cli_renders_parse_stage_output() {
 fn check_rejects_case_without_an_arm_and_accepts_case_with_an_arm() {
     let cwd = create_temp_dir("check-case-arm");
     let invalid = cwd.join("missing_arm.fpas");
-    write_text(&invalid, "program T; begin case 1 of else return end end.");
+    write_text(
+        &invalid,
+        "program T; begin case 1 of else return; end; end.",
+    );
     let (exit_code, _, stderr) = support::run_cli_args_and_capture_output(
         &[
             String::from("check"),
@@ -47,7 +50,7 @@ fn check_rejects_case_without_an_arm_and_accepts_case_with_an_arm() {
     let valid = cwd.join("with_arm.fpas");
     write_text(
         &valid,
-        "program T; begin case 1 of 1: return else return end end.",
+        "program T; begin case 1 of 1: return; else return; end; end.",
     );
     let (exit_code, _, stderr) = support::run_cli_args_and_capture_output(
         &[String::from("check"), valid.to_string_lossy().into_owned()],

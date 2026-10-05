@@ -12,7 +12,7 @@ type
 
 function MakePointer(Action: TuiPointerAction; X: integer; Y: integer): TuiPointerEvent;
 begin
-  return TuiPointerEvent.Create(Action, TuiPointerButton.Left, TuiPoint.Create(X, Y))
+  return TuiPointerEvent.Create(Action, TuiPointerButton.Left, TuiPoint.Create(X, Y));
 end;
 
 function MakeKey(Kind: TuiKeyKind; Character: string): TuiKeyEvent;
@@ -24,7 +24,7 @@ begin
     ctrl := false;
     alt := false;
     meta := false;
-  end
+  end;
 end;
 
 function FindGlyph(Snapshot: TuiSurfaceSnapshot; Glyph: string): TuiPoint;
@@ -35,11 +35,11 @@ begin
     var Index: integer := Std.Str.IndexOf(Line, Glyph);
     if Index >= 0 then
     begin
-      return TuiPoint.Create(Index, Y)
-    end
+      return TuiPoint.Create(Index, Y);
+    end;
   end;
 
-  panic('glyph not found in snapshot')
+  panic('glyph not found in snapshot');
 end;
 
 function ViewModal(State: ModalModel): TuiElement;
@@ -52,7 +52,7 @@ begin
                                                                                         TuiElementBuilders.MakeButton(TuiControlId.Create(3), 'Yes', TuiAction.Create(30)),
                                                                                         TuiElementBuilders.MakeButton(TuiControlId.Create(4), 'No', TuiAction.Create(40))
                                                                                       ])
-                                                         ])
+                                                         ]);
   end;
 
   return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(State.Focus)), [
@@ -60,7 +60,7 @@ begin
                                                                                                                          TuiElementBuilders.MakeButton(TuiControlId.Create(1), 'Save', TuiAction.Create(10))
                                                                                                                        ]),
                                                                                   Overlay
-                                                                                ])
+                                                                                ]);
 end;
 
 function UpdateModal(State: ModalModel; Msg: TuiMsg; Cmd: TuiCmdOutput): ModalModel;
@@ -77,13 +77,13 @@ begin
             ConfirmOpen := State.ConfirmOpen;
             Actions := State.Actions;
             PointerHits := State.PointerHits;
-          end
+          end;
         end;
         None:
         begin
-          return State
-        end
-      end
+          return State;
+        end;
+      end;
     end;
     TuiMsg.Action(Source, Action):
     begin
@@ -94,7 +94,7 @@ begin
           ConfirmOpen := true;
           Actions := Std.Arrays.Concat(State.Actions, [Action.Value]);
           PointerHits := State.PointerHits;
-        end
+        end;
       end;
 
       return record
@@ -102,7 +102,7 @@ begin
         ConfirmOpen := false;
         Actions := Std.Arrays.Concat(State.Actions, [Action.Value]);
         PointerHits := State.PointerHits;
-      end
+      end;
     end;
     TuiMsg.Pointer(Pointer):
     begin
@@ -111,13 +111,13 @@ begin
         ConfirmOpen := State.ConfirmOpen;
         Actions := State.Actions;
         PointerHits := State.PointerHits + 1;
-      end
-    end
+      end;
+    end;
     else
     begin
-      return State
-    end
-  end
+      return State;
+    end;
+  end;
 end;
 
 begin
@@ -160,5 +160,5 @@ begin
   App.InjectKeyForTest(MakeKey(TuiKeyKind.Tab, ''));
   Model := App.RunIterations(Model, UpdateModal, ViewModal, 1, 0);
   AssertEquals(1, Model.Focus);
-  App.Close()
+  App.Close();
 end.

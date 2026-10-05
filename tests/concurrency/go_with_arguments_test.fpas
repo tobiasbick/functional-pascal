@@ -4,10 +4,10 @@ uses Std.Tasks, Std.Test;
 
 function Add(A: integer; B: integer): integer;
 begin
-  return A + B
+  return A + B;
 end;
 
 begin
   var T: task := go Add(10, 32);
-  AssertEquals(42, Std.Tasks.Wait(T))
+  AssertEquals(42, Std.Tasks.Wait(T));
 end.

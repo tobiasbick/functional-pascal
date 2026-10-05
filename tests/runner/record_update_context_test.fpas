@@ -24,5 +24,5 @@ begin
   AssertEquals(0, Std.Arrays.Length(Std.Options.Unwrap(Updated.MaybeItems)));
   AssertEquals(0, Std.Dictionaries.Length(Std.Results.Unwrap(Updated.Lookup)));
   AssertEquals(2, Std.Arrays.Length(Original.Items));
-  AssertEquals(1, Std.Dictionaries.Length(Original.Tags))
+  AssertEquals(1, Std.Dictionaries.Length(Original.Tags));
 end.

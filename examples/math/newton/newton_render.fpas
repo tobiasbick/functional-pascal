@@ -14,7 +14,7 @@ type
       return record
         Re := Re;
         Im := Im;
-      end
+      end;
     end;
 
     public function Add(Self: Complex; Other: Complex): Complex;
@@ -22,7 +22,7 @@ type
       return record
         Re := Self.Re + Other.Re;
         Im := Self.Im + Other.Im;
-      end
+      end;
     end;
 
     public function Sub(Self: Complex; Other: Complex): Complex;
@@ -30,7 +30,7 @@ type
       return record
         Re := Self.Re - Other.Re;
         Im := Self.Im - Other.Im;
-      end
+      end;
     end;
 
     public function Mul(Self: Complex; Other: Complex): Complex;
@@ -38,7 +38,7 @@ type
       return record
         Re := Self.Re * Other.Re - Self.Im * Other.Im;
         Im := Self.Re * Other.Im + Self.Im * Other.Re;
-      end
+      end;
     end;
 
     public function Scale(Self: Complex; Factor: real): Complex;
@@ -46,12 +46,12 @@ type
       return record
         Re := Self.Re * Factor;
         Im := Self.Im * Factor;
-      end
+      end;
     end;
 
     public function Sq(Self: Complex): Complex;
     begin
-      return Self.Mul(Self)
+      return Self.Mul(Self);
     end;
 
     public function Inv(Self: Complex): Complex;
@@ -60,12 +60,12 @@ type
       return record
         Re := Self.Re / Den;
         Im := - Self.Im / Den;
-      end
+      end;
     end;
 
     public function MagSq(Self: Complex): real;
     begin
-      return Self.Re * Self.Re + Self.Im * Self.Im
+      return Self.Re * Self.Re + Self.Im * Self.Im;
     end;
   end;
   PixelSample = record
@@ -83,16 +83,16 @@ begin
   var D3: real := Z.Sub(R3).MagSq();
   if (D1 <= D2) and (D1 <= D3) then
   begin
-    return 1
-  end
+    return 1;
+  end;
   else if D2 <= D3 then
   begin
-    return 2
-  end
+    return 2;
+  end;
   else
   begin
-    return 3
-  end
+    return 3;
+  end;
 end;
 
 function Iterate(Z0: Complex; MaxIter: integer): PixelSample;
@@ -108,7 +108,7 @@ begin
       return record
         Root := 0;
         Shade := 0.0;
-      end
+      end;
     end;
     var Next: Complex := Z.Scale(2.0 / 3.0).Add(Z2.Inv().Scale(1.0 / 3.0));
     if Next.Sub(Z).MagSq() < Tolerance then
@@ -117,17 +117,17 @@ begin
       return record
         Root := ClosestRoot(Next);
         Shade := Shade;
-      end
+      end;
     end;
 
     Z := Next;
-    N := N + 1
+    N := N + 1;
   end;
 
   return record
     Root := ClosestRoot(Z);
     Shade := 0.25;
-  end
+  end;
 end;
 
 function ComputeRow(
@@ -145,12 +145,12 @@ begin
   mutable var HeightRange: integer := Height - 1;
   if WidthRange < 1 then
   begin
-    WidthRange := 1
+    WidthRange := 1;
   end;
 
   if HeightRange < 1 then
   begin
-    HeightRange := 1
+    HeightRange := 1;
   end;
   var Wr: real := IntToReal(WidthRange);
   var Hr: real := IntToReal(HeightRange);
@@ -159,10 +159,10 @@ begin
   for Px: integer := 0 to Width - 1 do
   begin
     var cx: real := XMin + (Px / Wr) * (XMax - XMin);
-    Push(Row, Iterate(Complex.Create(cx, cy), MaxIter))
+    Push(Row, Iterate(Complex.Create(cx, cy), MaxIter));
   end;
 
-  return Row
+  return Row;
 end;
 
 function ShadeGlyph(Shade: real): string;
@@ -170,7 +170,7 @@ begin
   var Ramp: string := ' ░▒▓█';
   var Count: integer := Std.Str.Length(Ramp);
   var Index: integer := Clamp(Trunc(Shade * IntToReal(Count)), 0, Count - 1);
-  return CharAt(Ramp, Index)
+  return CharAt(Ramp, Index);
 end;
 
 function RenderCell(Sample: PixelSample): Cell;
@@ -182,14 +182,14 @@ begin
       glyph := ' ';
       foreground := CellShade;
       background := CellShade;
-    end
+    end;
   end;
   var Fg: Color := RootColor(Sample.Root, Sample.Shade);
   return record
     glyph := ShadeGlyph(Sample.Shade);
     foreground := Fg;
     background := RgbColor(0, 0, 0);
-  end
+  end;
 end;
 
 procedure DrawRow(Row: array of PixelSample; Width: integer; Y: integer);
@@ -198,20 +198,20 @@ begin
   mutable var DrawWidth: integer := Width;
   if DrawWidth > CurrentWidth then
   begin
-    DrawWidth := CurrentWidth
+    DrawWidth := CurrentWidth;
   end;
 
   if DrawWidth < 1 then
   begin
-    return
+    return;
   end;
   mutable var Cells: array of Cell := [];
   for Px: integer := 0 to DrawWidth - 1 do
   begin
-    Push(Cells, RenderCell(Row[Px]))
+    Push(Cells, RenderCell(Row[Px]));
   end;
 
-  WriteCells(1, Y, Cells)
+  WriteCells(1, Y, Cells);
 end;
 
 public procedure Render(
@@ -227,7 +227,7 @@ begin
   mutable var Tasks: array of task := [];
   for Py: integer := 0 to Height - 1 do
   begin
-    Push(Tasks, go ComputeRow(Py, Width, Height, XMin, XMax, YMin, YMax, MaxIter))
+    Push(Tasks, go ComputeRow(Py, Width, Height, XMin, XMax, YMin, YMax, MaxIter));
   end;
 
   for Py: integer := 0 to Height - 1 do
@@ -235,7 +235,7 @@ begin
     var Row: array of PixelSample := Wait(Tasks[Py]);
     if (Py + 1) <= Max(ScreenHeight() - 2, 1) then
     begin
-      DrawRow(Row, Width, Py + 1)
-    end
-  end
+      DrawRow(Row, Width, Py + 1);
+    end;
+  end;
 end;

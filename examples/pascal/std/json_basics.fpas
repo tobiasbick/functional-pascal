@@ -15,36 +15,36 @@ begin
           case Unwrap(NameValue) of
             JsonValue.String(Name):
             begin
-              WriteLn('name = ' + Name)
-            end
+              WriteLn('name = ' + Name);
+            end;
             else
             begin
-              WriteLn('missing name')
-            end
+              WriteLn('missing name');
+            end;
           end;
 
           case Unwrap(ScoresValue) of
             JsonValue.ArrayValue(Scores):
             begin
-              WriteLn('scores = ' + IntToStr(Std.Arrays.Length(Scores)))
-            end
+              WriteLn('scores = ' + IntToStr(Std.Arrays.Length(Scores)));
+            end;
             else
             begin
-              WriteLn('missing scores')
-            end
+              WriteLn('missing scores');
+            end;
           end;
 
-          WriteLn(Stringify(Value))
-        end
+          WriteLn(Stringify(Value));
+        end;
         else
         begin
-          WriteLn('expected object')
-        end
-      end
+          WriteLn('expected object');
+        end;
+      end;
     end;
     Error(Message):
     begin
-      WriteLn('JSON error: ' + Message)
-    end
-  end
+      WriteLn('JSON error: ' + Message);
+    end;
+  end;
 end.

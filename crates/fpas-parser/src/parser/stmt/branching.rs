@@ -4,14 +4,17 @@ use fpas_diagnostics::codes::PARSE_EXPECTED_TOKEN;
 use fpas_lexer::Token;
 
 impl Parser {
+    /// Parses terminated branches with nearest-unmatched-`if` ownership.
+    ///
+    /// **Documentation:** `docs/pascal/language/control-flow/if-then-else.md`
     pub(super) fn parse_if_stmt(&mut self) -> Stmt {
         let start = self.current_span();
         self.advance();
         let condition = self.parse_expression();
         self.expect(&Token::Then);
-        let then_branch = Box::new(self.parse_statement());
+        let then_branch = Box::new(self.parse_terminated_statement());
         let else_branch = if self.eat(&Token::Else) {
-            Some(Box::new(self.parse_statement()))
+            Some(Box::new(self.parse_terminated_statement()))
         } else {
             None
         };
@@ -19,10 +22,13 @@ impl Parser {
             condition,
             then_branch,
             else_branch,
-            span: self.span_from(start),
+            span: self.span_before_terminator(start),
         }
     }
 
+    /// Parses case arms whose statement bodies each consume their terminator.
+    ///
+    /// **Documentation:** `docs/pascal/language/control-flow/case-of-intro.md`
     pub(super) fn parse_case_stmt(&mut self) -> Stmt {
         let start = self.current_span();
         self.advance();
@@ -34,32 +40,15 @@ impl Parser {
             self.error_with_code(
                 PARSE_EXPECTED_TOKEN,
                 "Expected at least one case arm",
-                "Add a case arm such as `1: Value := 1` after `of`.",
+                "Add a case arm such as `1: Value := 1;` after `of`.",
                 self.current_span(),
             );
         }
         while !self.is_case_arm_end() {
             arms.push(self.parse_case_arm());
-            if self.eat(&Token::Semicolon) {
-                if self.is_case_arm_end() {
-                    break;
-                }
-                continue;
-            }
             if self.is_case_arm_end() {
                 break;
             }
-            let span = self.current_span();
-            self.error_with_code(
-                PARSE_EXPECTED_TOKEN,
-                &format!(
-                    "Expected `;` between case arms, found `{}`",
-                    super::super::token_display(self.current_token()),
-                ),
-                "Insert `;` after the case arm body.",
-                span,
-            );
-            // Keep parsing further arms when the next token can start a label.
             if self.can_start_expression() {
                 continue;
             }
@@ -68,7 +57,6 @@ impl Parser {
 
         let else_body = if self.eat(&Token::Else) {
             let body = self.parse_statement_list();
-            self.eat(&Token::Semicolon);
             Some(body)
         } else {
             None
@@ -96,12 +84,12 @@ impl Parser {
             None
         };
         self.expect(&Token::Colon);
-        let body = self.parse_statement();
+        let body = self.parse_terminated_statement();
         CaseArm {
             labels,
             guard,
             body,
-            span: self.span_from(start),
+            span: self.span_before_terminator(start),
         }
     }
 

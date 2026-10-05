@@ -8,20 +8,20 @@ function TuiPointerButtonFromConsole(Button: Std.Console.MouseButton): TuiPointe
 begin
   if Button = Std.Console.MouseButton.Left then
   begin
-    return TuiPointerButton.Left
+    return TuiPointerButton.Left;
   end;
 
   if Button = Std.Console.MouseButton.Right then
   begin
-    return TuiPointerButton.Right
+    return TuiPointerButton.Right;
   end;
 
   if Button = Std.Console.MouseButton.Middle then
   begin
-    return TuiPointerButton.Middle
+    return TuiPointerButton.Middle;
   end;
 
-  return TuiPointerButton.NoButton
+  return TuiPointerButton.NoButton;
 end;
 
 // Converts one Console event to Tui host input, discarding unsupported event kinds.
@@ -33,34 +33,34 @@ begin
   case InputEvent.kind of
     Std.Console.EventKind.Key:
     begin
-      return Some(TuiHostInput.Key(InputEvent.key))
+      return Some(TuiHostInput.Key(InputEvent.key));
     end;
     Std.Console.EventKind.Mouse:
     begin
       return Some(TuiHostInput.Pointer(TuiPointerEvent.WithModifiers(InputEvent.mouse_action, TuiPointerButtonFromConsole(InputEvent.mouse_button), TuiPoint.Create(InputEvent.mouse_x -
                                                                                                                                                                     1, InputEvent.mouse_y -
-                                                                                                                                                                       1), InputEvent.shift, InputEvent.ctrl, InputEvent.alt, InputEvent.meta)))
+                                                                                                                                                                       1), InputEvent.shift, InputEvent.ctrl, InputEvent.alt, InputEvent.meta)));
     end;
     Std.Console.EventKind.Resize:
     begin
       if (InputEvent.width <= 0) or (InputEvent.height <= 0) then
       begin
-        return None
+        return None;
       end;
 
-      return Some(TuiHostInput.Resize(TuiSize.Create(InputEvent.width, InputEvent.height)))
+      return Some(TuiHostInput.Resize(TuiSize.Create(InputEvent.width, InputEvent.height)));
     end;
     Std.Console.EventKind.Paste, Std.Console.EventKind.FocusGained, Std.Console.EventKind.FocusLost:
     begin
-      return None
-    end
-  end
+      return None;
+    end;
+  end;
 end;
 
 // Blocks for one Console event and maps it to supported Tui host input.
 public function TuiReadConsoleHostInput(): option of TuiHostInput;
 begin
-  return TuiConsoleEventToHostInput(ReadEvent())
+  return TuiConsoleEventToHostInput(ReadEvent());
 end;
 
 // Waits for one Console event up to the given duration.
@@ -72,11 +72,11 @@ begin
   case ReadEventTimeout(TimeoutMillis) of
     Some(InputEvent):
     begin
-      return TuiConsoleEventToHostInput(InputEvent)
+      return TuiConsoleEventToHostInput(InputEvent);
     end;
     None:
     begin
-      return None
-    end
-  end
+      return None;
+    end;
+  end;
 end;

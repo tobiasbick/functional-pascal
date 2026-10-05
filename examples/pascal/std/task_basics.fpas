@@ -6,7 +6,7 @@ uses Std.Console, Std.Conv, Std.Tasks, Std.Arrays;
 
 function Square(N: integer): integer;
 begin
-  return N * N
+  return N * N;
 end;
 
 begin
@@ -20,5 +20,5 @@ begin
   var Ta: task := go Square(2);
   var Tb: task := go Square(3);
   WaitAll([Ta, Tb]);
-  WriteLn('after waitall: ', IntToStr(Wait(Ta) + Wait(Tb)))
+  WriteLn('after waitall: ', IntToStr(Wait(Ta) + Wait(Tb)));
 end.

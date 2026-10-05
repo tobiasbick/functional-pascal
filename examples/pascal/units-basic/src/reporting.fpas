@@ -7,10 +7,10 @@ uses App.Math, Std.Conv;
 public function DescribeClamp(Value: integer): string;
 begin
   var Clamped: integer := Clamp(Value, 0, 100);
-  return (('input=' + IntToStr(Value)) + ', clamped=') + IntToStr(Clamped)
+  return (('input=' + IntToStr(Value)) + ', clamped=') + IntToStr(Clamped);
 end;
 
 public function DescribeScaled(Value: integer; Factor: integer): string;
 begin
-  return 'scaled=' + IntToStr(Scale(Value, Factor))
+  return 'scaled=' + IntToStr(Scale(Value, Factor));
 end;

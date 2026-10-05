@@ -219,18 +219,18 @@ function Outer(Value: integer): integer;
     function Inner(): integer;
     begin
       var Hidden: integer := 999;
-      return Hidden
+      return Hidden;
     end;
   begin
     var MidLocal: integer := Value + 1;
-    return Inner()
+    return Inner();
   end;
 begin
-  return Mid()
+  return Mid();
 end;
 
 begin
-  var Nested: integer := Outer(1)
+  var Nested: integer := Outer(1);
 end.
 "#;
     let (program, diagnostics) = fpas_parser::parse(SOURCE);

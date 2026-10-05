@@ -4,11 +4,11 @@ uses Std.Console, Std.Arrays;
 
 function IsGreaterThanHundred(X: integer): boolean;
 begin
-  return X > 100
+  return X > 100;
 end;
 
 begin
   var A: array of integer := [1, 2, 3];
   var Idx: integer := FindIndex(A, IsGreaterThanHundred);
-  WriteLn(Idx)
+  WriteLn(Idx);
 end.

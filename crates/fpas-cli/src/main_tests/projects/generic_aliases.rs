@@ -25,15 +25,15 @@ public type
   Model = Repro.Model.Model;
 public function NewModel(): Model;
 begin
-  return record Value := 0; end
+  return record Value := 0; end;
 end;
 public function Update(State: Model; Msg: TuiMsg; Cmd: TuiCmdOutput): Model;
 begin
-  return State
+  return State;
 end;
 public function View(State: Model): TuiElement;
 begin
-  return TuiElementBuilders.MakeLabel('value')
+  return TuiElementBuilders.MakeLabel('value');
 end;",
     );
     write_text(
@@ -45,7 +45,7 @@ begin
   mutable var State: Model := NewModel();
   State := App.RunIterations(State, Update, View, 0, 0);
   AssertEquals(0, State.Value);
-  App.Close()
+  App.Close();
 end.",
     );
     let root = Path::new(env!("CARGO_MANIFEST_DIR"))

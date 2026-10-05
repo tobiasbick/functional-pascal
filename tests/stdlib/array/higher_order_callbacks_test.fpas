@@ -4,17 +4,17 @@ uses Std.Arrays, Std.Test;
 
 function Double(Value: integer): integer;
 begin
-  return Value * 2
+  return Value * 2;
 end;
 
 function IsAboveFour(Value: integer): boolean;
 begin
-  return Value > 4
+  return Value > 4;
 end;
 
 function Sum(Accumulator: integer; Value: integer): integer;
 begin
-  return Accumulator + Value
+  return Accumulator + Value;
 end;
 
 begin
@@ -28,5 +28,5 @@ begin
   AssertEquals(6, Filtered[0]);
   AssertEquals(8, Filtered[1]);
   AssertEquals(14, Reduce(Filtered, 0, Sum));
-  AssertEquals(20, Reduce(Mapped, 0, Sum))
+  AssertEquals(20, Reduce(Mapped, 0, Sum));
 end.

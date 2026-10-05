@@ -8,7 +8,7 @@ begin
     glyph := Glyph;
     foreground := Foreground;
     background := CrtColor(Black);
-  end
+  end;
 end;
 
 begin
@@ -28,5 +28,5 @@ begin
   Present();
   var WideCell: Cell := Unwrap(GetCell(2, 1));
   AssertEquals('中', WideCell.glyph);
-  AssertTrue(IsNone(GetCell(3, 1)))
+  AssertTrue(IsNone(GetCell(3, 1)));
 end.

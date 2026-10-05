@@ -101,7 +101,7 @@ mod tests {
 
     #[test]
     fn format_source_preserves_end_of_line_comments() {
-        let source = "program T; begin\n  WriteLn('ok') // trail\nend.";
+        let source = "program T; begin\n  WriteLn('ok'); // trail\nend.";
         let (unit, errors) = parse_compilation_unit(source);
         assert!(errors.is_empty(), "{errors:?}");
         let formatted = format_source(source, &unit).expect("matching source and AST");

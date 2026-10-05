@@ -11,8 +11,8 @@ begin
   var Parsed: result of TomlValue, string := Parse('[project]' + Chr(10) + 'name = ''demo''');
   case Parsed of
     Ok(Value): WriteLn(Stringify(Value));
-    Error(Message): WriteLn(Message)
-  end
+    Error(Message): WriteLn(Message);
+  end;
 end.
 ```
 
@@ -65,8 +65,8 @@ var Parsed: result of TomlValue, string := Parse(
 );
 case Parsed of
   Ok(TomlValue.Table(Fields)): WriteLn('parsed');
-  Error(Message): WriteLn('TOML error: ' + Message)
-end
+  Error(Message): WriteLn('TOML error: ' + Message);
+end;
 ```
 
 ## `Stringify`

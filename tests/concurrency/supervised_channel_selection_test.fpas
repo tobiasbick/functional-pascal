@@ -12,7 +12,7 @@ begin
     mutable var Seen: array of integer := [];
     for Item: integer := 0 to 255 do
     begin
-      Push(Seen, 0)
+      Push(Seen, 0);
     end;
 
     for Producer: integer := 0 to 7 do
@@ -23,7 +23,7 @@ begin
       Push(Children, StartSupervisedTask(Group, function(WorkerToken: CancellationToken): result of integer, string begin
         if not Unwrap(Receive(Attempts)) then
         begin
-          return Error('transient startup failure')
+          return Error('transient startup failure');
         end;
 
         CloseChannel(Attempts);
@@ -31,16 +31,16 @@ begin
         begin
           Select([
                    SendCase(Output, Producer * 32 + Item, procedure(Outcome: result of boolean, string) begin
-                     AssertTrue(Unwrap(Outcome))
+                     AssertTrue(Unwrap(Outcome));
                    end),
                    CancellationCase(WorkerToken, procedure() begin
-                     panic('producer cancelled before drain')
+                     panic('producer cancelled before drain');
                    end)
-                 ])
+                 ]);
         end;
 
-        return Ok(Producer)
-      end, 1, 1))
+        return Ok(Producer);
+      end, 1, 1));
     end;
 
     for Item: integer := 0 to 255 do
@@ -49,15 +49,15 @@ begin
                                ReceiveCase(Output, procedure(Outcome: result of integer, string) begin
                                  var Number: integer := Unwrap(Outcome);
                                  AssertTrue((Number >= 0) and (Number < 256));
-                                 Seen[Number] := Seen[Number] + 1
+                                 Seen[Number] := Seen[Number] + 1;
                                end),
                                TimerCase(10000, procedure() begin
-                                 panic('producer drain timed out')
+                                 panic('producer drain timed out');
                                end),
                                CancellationCase(Token, procedure() begin
-                                 panic('consumer cancelled before drain')
+                                 panic('consumer cancelled before drain');
                                end)
-                             ]))
+                             ]));
     end;
 
     WaitAll(Children);
@@ -65,19 +65,19 @@ begin
     AssertEquals(0, Length(CloseTaskGroup(Group)));
     for Count: integer in Seen do
     begin
-      AssertEquals(1, Count)
+      AssertEquals(1, Count);
     end;
 
     case Unwrap(TryReceive(Output)) of
       Some(_):
       begin
-        panic('duplicate delivery after drain')
+        panic('duplicate delivery after drain');
       end;
       None:
       begin
-      end
+      end;
     end;
 
-    CloseChannel(Output)
-  end
+    CloseChannel(Output);
+  end;
 end.

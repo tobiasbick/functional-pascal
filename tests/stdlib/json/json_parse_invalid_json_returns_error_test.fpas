@@ -7,11 +7,11 @@ begin
   case R of
     Ok(V):
     begin
-      WriteLn(Stringify(V))
+      WriteLn(Stringify(V));
     end;
     Error(E):
     begin
-      WriteLn('error')
-    end
-  end
+      WriteLn('error');
+    end;
+  end;
 end.

@@ -10,7 +10,7 @@ uses Std.Arrays, Std.Http.Types, Std.Str;
 // - `Expected`: Expected field name.
 public function IsName(Name: string; Expected: string): boolean;
 begin
-  return Std.Str.ToLower(Name) = Std.Str.ToLower(Expected)
+  return Std.Str.ToLower(Name) = Std.Str.ToLower(Expected);
 end;
 
 // Returns the first value for a case-insensitive field name.
@@ -24,11 +24,11 @@ begin
   begin
     if IsName(Headers[Index].Name, Name) then
     begin
-      return Some(Headers[Index].Value)
-    end
+      return Some(Headers[Index].Value);
+    end;
   end;
 
-  return None
+  return None;
 end;
 
 // Reports whether text contains carriage-return or line-feed characters.
@@ -37,5 +37,5 @@ end;
 // - `Text`: Text to inspect before writing it into an HTTP head.
 public function ContainsUnsafeText(Text: string): boolean;
 begin
-  return Std.Str.Contains(Text, #13) or Std.Str.Contains(Text, #10)
+  return Std.Str.Contains(Text, #13) or Std.Str.Contains(Text, #10);
 end;

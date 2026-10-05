@@ -7,5 +7,5 @@ begin
   var B: dict of string to integer := ['X': 1];
   var M: dict of string to integer := Std.Dictionaries.Merge(A, B);
   WriteLn(Std.Dictionaries.Length(M));
-  WriteLn(M['X'])
+  WriteLn(M['X']);
 end.

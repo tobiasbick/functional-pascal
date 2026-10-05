@@ -14,7 +14,7 @@ public const
 // - `N`: Input value used by `Abs`.
 public function Abs<T>(N: T): T;
 begin
-  panic('Intrinsic API declaration')
+  panic('Intrinsic API declaration');
 end;
 
 // Inverse cosine.
@@ -23,7 +23,7 @@ end;
 // - `R`: `real` input value used by `ArcCos`.
 public function ArcCos(R: real): real;
 begin
-  panic('Intrinsic API declaration')
+  panic('Intrinsic API declaration');
 end;
 
 // Inverse sine.
@@ -32,7 +32,7 @@ end;
 // - `R`: `real` input value used by `ArcSin`.
 public function ArcSin(R: real): real;
 begin
-  panic('Intrinsic API declaration')
+  panic('Intrinsic API declaration');
 end;
 
 // Inverse tangent.
@@ -41,7 +41,7 @@ end;
 // - `R`: `real` input value used by `ArcTan`.
 public function ArcTan(R: real): real;
 begin
-  panic('Intrinsic API declaration')
+  panic('Intrinsic API declaration');
 end;
 
 // Two-argument arctangent.
@@ -51,7 +51,7 @@ end;
 // - `X`: Horizontal coordinate.
 public function ArcTan2(Y: real; X: real): real;
 begin
-  panic('Intrinsic API declaration')
+  panic('Intrinsic API declaration');
 end;
 
 // Toward +∞.
@@ -60,7 +60,7 @@ end;
 // - `R`: `real` input value used by `Ceil`.
 public function Ceil(R: real): integer;
 begin
-  panic('Intrinsic API declaration')
+  panic('Intrinsic API declaration');
 end;
 
 // Restrict to range (`integer` or `real`).
@@ -71,7 +71,7 @@ end;
 // - `Hi`: Input value used by `Clamp`.
 public function Clamp<T>(V: T; Lo: T; Hi: T): T;
 begin
-  panic('Intrinsic API declaration')
+  panic('Intrinsic API declaration');
 end;
 
 // Radians.
@@ -80,7 +80,7 @@ end;
 // - `R`: `real` input value used by `Cos`.
 public function Cos(R: real): real;
 begin
-  panic('Intrinsic API declaration')
+  panic('Intrinsic API declaration');
 end;
 
 // E^R.
@@ -89,7 +89,7 @@ end;
 // - `R`: `real` input value used by `Exp`.
 public function Exp(R: real): real;
 begin
-  panic('Intrinsic API declaration')
+  panic('Intrinsic API declaration');
 end;
 
 // Toward −∞.
@@ -98,7 +98,7 @@ end;
 // - `R`: `real` input value used by `Floor`.
 public function Floor(R: real): integer;
 begin
-  panic('Intrinsic API declaration')
+  panic('Intrinsic API declaration');
 end;
 
 // Fractional part.
@@ -107,7 +107,7 @@ end;
 // - `R`: `real` input value used by `Frac`.
 public function Frac(R: real): real;
 begin
-  panic('Intrinsic API declaration')
+  panic('Intrinsic API declaration');
 end;
 
 // Natural log; error if `R ≤ 0`.
@@ -116,7 +116,7 @@ end;
 // - `R`: `real` input value used by `Log`.
 public function Log(R: real): real;
 begin
-  panic('Intrinsic API declaration')
+  panic('Intrinsic API declaration');
 end;
 
 // Base-10 logarithm.
@@ -125,7 +125,7 @@ end;
 // - `R`: `real` input value used by `Log10`.
 public function Log10(R: real): real;
 begin
-  panic('Intrinsic API declaration')
+  panic('Intrinsic API declaration');
 end;
 
 // Base-2 logarithm.
@@ -134,7 +134,7 @@ end;
 // - `R`: `real` input value used by `Log2`.
 public function Log2(R: real): real;
 begin
-  panic('Intrinsic API declaration')
+  panic('Intrinsic API declaration');
 end;
 
 // Both `integer` or both `real`.
@@ -144,7 +144,7 @@ end;
 // - `B`: Input value used by `Max`.
 public function Max<T>(A: T; B: T): T;
 begin
-  panic('Intrinsic API declaration')
+  panic('Intrinsic API declaration');
 end;
 
 // Both `integer` or both `real`.
@@ -154,7 +154,7 @@ end;
 // - `B`: Input value used by `Min`.
 public function Min<T>(A: T; B: T): T;
 begin
-  panic('Intrinsic API declaration')
+  panic('Intrinsic API declaration');
 end;
 
 // Power.
@@ -164,7 +164,7 @@ end;
 // - `Exp`: `real` input value used by `Pow`.
 public function Pow(Base: real; Exp: real): real;
 begin
-  panic('Intrinsic API declaration')
+  panic('Intrinsic API declaration');
 end;
 
 // Nearest.
@@ -173,7 +173,7 @@ end;
 // - `R`: `real` input value used by `Round`.
 public function Round(R: real): integer;
 begin
-  panic('Intrinsic API declaration')
+  panic('Intrinsic API declaration');
 end;
 
 // `-1`, `0`, or `1` (`integer` or `real` input).
@@ -182,7 +182,7 @@ end;
 // - `N`: Input value used by `Sign`.
 public function Sign<T>(N: T): integer;
 begin
-  panic('Intrinsic API declaration')
+  panic('Intrinsic API declaration');
 end;
 
 // Radians.
@@ -191,7 +191,7 @@ end;
 // - `R`: `real` input value used by `Sin`.
 public function Sin(R: real): real;
 begin
-  panic('Intrinsic API declaration')
+  panic('Intrinsic API declaration');
 end;
 
 // Error if `R < 0`.
@@ -200,7 +200,7 @@ end;
 // - `R`: `real` input value used by `Sqrt`.
 public function Sqrt(R: real): real;
 begin
-  panic('Intrinsic API declaration')
+  panic('Intrinsic API declaration');
 end;
 
 // Tangent (radians).
@@ -209,7 +209,7 @@ end;
 // - `R`: `real` input value used by `Tan`.
 public function Tan(R: real): real;
 begin
-  panic('Intrinsic API declaration')
+  panic('Intrinsic API declaration');
 end;
 
 // Truncate toward zero.
@@ -218,5 +218,5 @@ end;
 // - `R`: `real` input value used by `Trunc`.
 public function Trunc(R: real): integer;
 begin
-  panic('Intrinsic API declaration')
+  panic('Intrinsic API declaration');
 end;

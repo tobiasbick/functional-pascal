@@ -19,17 +19,17 @@ begin
       var Token: Std.Tasks.CancellationToken := Std.Tasks.GetCancellationToken(Source);
       case Std.Net.SendBytesWithCancellation(ConnectionValue, [42, 43], Token) of
         Ok(Count): if Count <> 2 then panic('wrong write count');
-        Error(Message): panic(Message)
+        Error(Message): panic(Message);
       end;
       Std.Tasks.Cancel(Source);
       case Std.Net.SendBytesWithCancellation(ConnectionValue, [99], Token) of
         Ok(Count): panic('cancelled write succeeded');
-        Error(Message): if Message <> 'Network write cancelled' then panic(Message)
+        Error(Message): if Message <> 'Network write cancelled' then panic(Message);
       end;
-      Std.Net.Close(ConnectionValue)
+      Std.Net.Close(ConnectionValue);
     end;
-    Error(Message): panic(Message)
-  end
+    Error(Message): panic(Message);
+  end;
 end."
     ));
     let (mut peer, _) = listener.accept().expect("accept");

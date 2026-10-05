@@ -22,7 +22,7 @@ export async function verifyRuntimeFailureFilters(
     "",
     "begin",
     "  var Zero: integer := 0;",
-    "  var Value: integer := 1 div Zero",
+    "  var Value: integer := 1 div Zero;",
     "end.",
     ""
   ]);

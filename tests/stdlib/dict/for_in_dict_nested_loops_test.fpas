@@ -9,7 +9,7 @@ begin
   begin
     for Ki: string in Inner do
     begin
-      WriteLn(Ko + Ki)
-    end
-  end
+      WriteLn(Ko + Ki);
+    end;
+  end;
 end.

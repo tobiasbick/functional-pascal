@@ -4,10 +4,10 @@ uses Std.Console, Std.Arrays;
 
 function EmptyArray(X: integer): array of integer;
 begin
-  return []
+  return [];
 end;
 
 begin
   var R: array of integer := FlatMap([1, 2, 3], EmptyArray);
-  WriteLn(Length(R))
+  WriteLn(Length(R));
 end.

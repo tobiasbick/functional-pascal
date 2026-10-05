@@ -6,7 +6,7 @@ Cryptographically secure randomness supplied directly by the operating system. T
 program Example;
 uses Std.Arrays, Std.Crypto, Std.Results;
 begin
-  var Token: array of integer := Unwrap(RandomBytes(32))
+  var Token: array of integer := Unwrap(RandomBytes(32));
 end.
 ```
 
@@ -30,8 +30,8 @@ Returns exactly `Count` bytes. Each byte is represented by an `integer` in `0..2
 ```pascal
 case RandomBytes(32) of
   Ok(Bytes): WriteLn(Std.Arrays.Length(Bytes));
-  Error(Message): panic(Message)
-end
+  Error(Message): panic(Message);
+end;
 ```
 
 ## `RandomInt`
@@ -41,8 +41,8 @@ Returns a uniformly sampled integer in the inclusive range `[Lo, Hi]`. Equal bou
 ```pascal
 case RandomInt(100000, 999999) of
   Ok(Code): WriteLn(Code);
-  Error(Message): panic(Message)
-end
+  Error(Message): panic(Message);
+end;
 ```
 
 ## Security boundary

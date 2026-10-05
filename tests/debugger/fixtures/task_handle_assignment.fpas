@@ -4,17 +4,17 @@ uses Std.Console, Std.Tasks;
 
 function Seven(): integer;
 begin
-  return 7
+  return 7;
 end;
 
 function Nine(): integer;
 begin
-  return 9
+  return 9;
 end;
 
 function Label(): string;
 begin
-  return 'nope'
+  return 'nope';
 end;
 
 begin
@@ -24,5 +24,5 @@ begin
   var Wrong: task := go Label();
   mutable var StopMarker: integer := 0;
   StopMarker := StopMarker + 1;
-  WriteLn(Wait(Current))
+  WriteLn(Wait(Current));
 end.

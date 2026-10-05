@@ -4,6 +4,9 @@ use fpas_diagnostics::codes::PARSE_EXPECTED_TO_OR_DOWNTO;
 use fpas_lexer::Token;
 
 impl Parser {
+    /// Parses counting and collection loops with a terminated single-statement body.
+    ///
+    /// **Documentation:** `docs/pascal/language/control-flow/for-loops.md`
     pub(super) fn parse_for_stmt(&mut self) -> Stmt {
         let start = self.current_span();
         self.advance();
@@ -17,13 +20,13 @@ impl Parser {
         if self.eat(&Token::In) {
             let iterable = self.parse_expression();
             self.expect(&Token::Do);
-            let body = Box::new(self.parse_statement());
+            let body = Box::new(self.parse_terminated_statement());
             return Stmt::ForIn {
                 var_name,
                 var_type,
                 iterable,
                 body,
-                span: self.span_from(start),
+                span: self.span_before_terminator(start),
             };
         }
 
@@ -49,7 +52,7 @@ impl Parser {
 
         let end_expr = self.parse_expression();
         self.expect(&Token::Do);
-        let body = Box::new(self.parse_statement());
+        let body = Box::new(self.parse_terminated_statement());
 
         Stmt::For {
             var_name,
@@ -58,23 +61,29 @@ impl Parser {
             direction,
             end: end_expr,
             body,
-            span: self.span_from(start),
+            span: self.span_before_terminator(start),
         }
     }
 
+    /// Parses a while loop sharing its body's terminator.
+    ///
+    /// **Documentation:** `docs/pascal/language/control-flow/while-repeat.md`
     pub(super) fn parse_while_stmt(&mut self) -> Stmt {
         let start = self.current_span();
         self.advance();
         let condition = self.parse_expression();
         self.expect(&Token::Do);
-        let body = Box::new(self.parse_statement());
+        let body = Box::new(self.parse_terminated_statement());
         Stmt::While {
             condition,
             body,
-            span: self.span_from(start),
+            span: self.span_before_terminator(start),
         }
     }
 
+    /// Parses a terminated statement list before the repeat loop's condition.
+    ///
+    /// **Documentation:** `docs/pascal/language/control-flow/while-repeat.md`
     pub(super) fn parse_repeat_stmt(&mut self) -> Stmt {
         let start = self.current_span();
         self.advance();

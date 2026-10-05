@@ -3,5 +3,5 @@ program T;
 uses Std.Console, Std.Arrays;
 
 begin
-  WriteLn(IndexOf([10, 20, 30], 20))
+  WriteLn(IndexOf([10, 20, 30], 20));
 end.

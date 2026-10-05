@@ -30,7 +30,7 @@ public type
         Action := Action;
         Enabled := true;
         Shortcut := '';
-      end
+      end;
     end;
 
     // Creates a disabled menu item without a shortcut hint.
@@ -47,7 +47,7 @@ public type
         Action := Action;
         Enabled := false;
         Shortcut := '';
-      end
+      end;
     end;
 
     // Creates an enabled menu item with a display-only shortcut hint.
@@ -65,6 +65,6 @@ public type
         Action := Action;
         Enabled := true;
         Shortcut := Shortcut;
-      end
+      end;
     end;
   end;

@@ -7,10 +7,10 @@ function Before(Left: Note; Right: Note): boolean;
 begin
   if Left.Pinned <> Right.Pinned then
   begin
-    return Left.Pinned
+    return Left.Pinned;
   end;
 
-  return Left.UpdatedMillis > Right.UpdatedMillis
+  return Left.UpdatedMillis > Right.UpdatedMillis;
 end;
 
 // Merge-sorts notes without rebuilding the output for every inserted item.
@@ -19,7 +19,7 @@ begin
   var Count: integer := Notes.Length();
   if Count < 2 then
   begin
-    return Notes
+    return Notes;
   end;
   var Middle: integer := Count div 2;
   var Left: array of Note := NotesOrdered(Notes.Slice(0, Middle));
@@ -32,26 +32,26 @@ begin
     if Before(Right[R], Left[L]) then
     begin
       Output.Push(Right[R]);
-      R := R + 1
-    end
+      R := R + 1;
+    end;
     else
     begin
       Output.Push(Left[L]);
-      L := L + 1
-    end
+      L := L + 1;
+    end;
   end;
 
   while L < Left.Length() do
   begin
     Output.Push(Left[L]);
-    L := L + 1
+    L := L + 1;
   end;
 
   while R < Right.Length() do
   begin
     Output.Push(Right[R]);
-    R := R + 1
+    R := R + 1;
   end;
 
-  return Output
+  return Output;
 end;

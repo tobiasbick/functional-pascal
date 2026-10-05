@@ -8,7 +8,7 @@ program Hello;
 uses
   Std.Console;
 begin
-  Std.Console.WriteLn('Hello, World!')
+  Std.Console.WriteLn('Hello, World!');
 end.",
     );
     assert_eq!(p.name, "Hello");
@@ -38,13 +38,13 @@ begin
     OpAdd: return A + B;
     OpSub: return A - B;
     OpMul: return A * B;
-    OpDiv: return A div B
-  end
+    OpDiv: return A div B;
+  end;
 end;
 
 begin
   var Answer: integer := Calculate(10, 3, OpAdd);
-  Std.Console.WriteLn(Answer)
+  Std.Console.WriteLn(Answer);
 end.",
     );
     assert_eq!(p.name, "Calculator");

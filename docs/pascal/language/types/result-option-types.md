@@ -18,12 +18,12 @@ Use `case` destructuring to handle both forms:
 ```pascal
 case Success of
   Ok(Value): WriteLn(IntToStr(Value));
-  Error(Message): WriteLn(Message)
+  Error(Message): WriteLn(Message);
 end;
 
 case Present of
   Some(Value): WriteLn(IntToStr(Value));
-  None: WriteLn('empty')
+  None: WriteLn('empty');
 end;
 ```
 

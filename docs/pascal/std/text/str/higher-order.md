@@ -14,7 +14,7 @@ Calls `F` once per scalar and returns the mapped scalars in order. Every callbac
 function ReplaceStar(C: string): string;
 begin
   if C = '*' then return '★';
-  return C
+  return C;
 end;
 
 var ResultText: string := Std.Str.Map('a*b', ReplaceStar);  // 'a★b'
@@ -27,7 +27,7 @@ Calls `F` once per scalar and retains those for which it returns `true`, preserv
 ```pascal
 function NotSpace(C: string): boolean;
 begin
-  return C <> ' '
+  return C <> ' ';
 end;
 
 var Compact: string := Std.Str.Filter('a b c', NotSpace);  // 'abc'
@@ -41,7 +41,7 @@ Starts with `Init` and passes the current accumulator and scalar to `F` in left-
 function CountNonSpaces(Acc: integer; C: string): integer;
 begin
   if C = ' ' then return Acc;
-  return Acc + 1
+  return Acc + 1;
 end;
 
 var Count: integer := Std.Str.Reduce('a b c', 0, CountNonSpaces);  // 3

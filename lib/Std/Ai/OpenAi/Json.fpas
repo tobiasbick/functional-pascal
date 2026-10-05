@@ -14,30 +14,30 @@ begin
   mutable var MessageValues: array of JsonValue := [];
   for Index: integer := 0 to Std.Arrays.Length(Messages) - 1 do
   begin
-    Std.Arrays.Push(MessageValues, JsonValue.Object(['role': JsonValue.String(Messages[Index].Role), 'content': JsonValue.String(Messages[Index].Content)]))
+    Std.Arrays.Push(MessageValues, JsonValue.Object(['role': JsonValue.String(Messages[Index].Role), 'content': JsonValue.String(Messages[Index].Content)]));
   end;
   mutable var Fields: dict of string to JsonValue := ['model': JsonValue.String(Model), 'messages': JsonValue.ArrayValue(MessageValues), 'stream': JsonValue.Bool(false)];
   case Options.Temperature of
     Some(Value):
     begin
-      Fields['temperature'] := JsonValue.Number(Value)
+      Fields['temperature'] := JsonValue.Number(Value);
     end;
     None:
     begin
-    end
+    end;
   end;
 
   case Options.MaxTokens of
     Some(Value):
     begin
-      Fields['max_tokens'] := JsonValue.Number(Std.Conv.IntToReal(Value))
+      Fields['max_tokens'] := JsonValue.Number(Std.Conv.IntToReal(Value));
     end;
     None:
     begin
-    end
+    end;
   end;
 
-  return Std.Json.Stringify(JsonValue.Object(Fields))
+  return Std.Json.Stringify(JsonValue.Object(Fields));
 end;
 
 // Returns a required object field or an actionable error.
@@ -50,13 +50,13 @@ begin
   case Std.Dictionaries.Get(Fields, Name) of
     Some(Value):
     begin
-      return Ok(Value)
+      return Ok(Value);
     end;
     None:
     begin
-      return Error('OpenAI-compatible response is missing field ' + Name)
-    end
-  end
+      return Error('OpenAI-compatible response is missing field ' + Name);
+    end;
+  end;
 end;
 
 // Decodes the first assistant content value from a completion response.
@@ -79,7 +79,7 @@ begin
                 begin
                   if Std.Arrays.Length(Choices) = 0 then
                   begin
-                    return Error('OpenAI-compatible response contains no choices')
+                    return Error('OpenAI-compatible response contains no choices');
                   end;
 
                   case Choices[0] of
@@ -97,59 +97,59 @@ begin
                                   case ContentValue of
                                     JsonValue.String(Content):
                                     begin
-                                      return Ok(Content)
-                                    end
+                                      return Ok(Content);
+                                    end;
                                     else
                                     begin
-                                      return Error('OpenAI-compatible message content is not text')
-                                    end
-                                  end
+                                      return Error('OpenAI-compatible message content is not text');
+                                    end;
+                                  end;
                                 end;
                                 Error(Message):
                                 begin
-                                  return Error(Message)
-                                end
-                              end
-                            end
+                                  return Error(Message);
+                                end;
+                              end;
+                            end;
                             else
                             begin
-                              return Error('OpenAI-compatible choice message is not an object')
-                            end
-                          end
+                              return Error('OpenAI-compatible choice message is not an object');
+                            end;
+                          end;
                         end;
                         Error(Message):
                         begin
-                          return Error(Message)
-                        end
-                      end
-                    end
+                          return Error(Message);
+                        end;
+                      end;
+                    end;
                     else
                     begin
-                      return Error('OpenAI-compatible choice is not an object')
-                    end
-                  end
-                end
+                      return Error('OpenAI-compatible choice is not an object');
+                    end;
+                  end;
+                end;
                 else
                 begin
-                  return Error('OpenAI-compatible choices field is not an array')
-                end
-              end
+                  return Error('OpenAI-compatible choices field is not an array');
+                end;
+              end;
             end;
             Error(Message):
             begin
-              return Error(Message)
-            end
-          end
-        end
+              return Error(Message);
+            end;
+          end;
+        end;
         else
         begin
-          return Error('OpenAI-compatible response root is not an object')
-        end
-      end
+          return Error('OpenAI-compatible response root is not an object');
+        end;
+      end;
     end;
     Error(Message):
     begin
-      return Error('Invalid OpenAI-compatible JSON response: ' + Message)
-    end
-  end
+      return Error('Invalid OpenAI-compatible JSON response: ' + Message);
+    end;
+  end;
 end;

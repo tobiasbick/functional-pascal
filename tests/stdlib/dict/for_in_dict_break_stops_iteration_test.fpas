@@ -8,9 +8,9 @@ begin
   begin
     if K = 'B' then
     begin
-      break
+      break;
     end;
 
-    WriteLn(K)
-  end
+    WriteLn(K);
+  end;
 end.

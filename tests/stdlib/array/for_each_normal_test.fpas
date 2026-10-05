@@ -4,9 +4,9 @@ uses Std.Console, Std.Arrays;
 
 procedure PrintValue(X: integer);
 begin
-  WriteLn(X)
+  WriteLn(X);
 end;
 
 begin
-  ForEach([10, 20, 30], PrintValue)
+  ForEach([10, 20, 30], PrintValue);
 end.

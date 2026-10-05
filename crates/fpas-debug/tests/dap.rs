@@ -137,7 +137,7 @@ fn supported_lifecycle_and_unsupported_request_are_explicit() {
     serve(
         Cursor::new(input),
         &mut output,
-        server("program Main; begin var X: integer := 1 end."),
+        server("program Main; begin var X: integer := 1; end."),
     )
     .expect("serve DAP transcript");
     let mut reader = BufReader::new(output.as_slice());
@@ -269,7 +269,7 @@ fn disconnect_drops_an_input_that_stays_open() {
 
 #[test]
 fn inspection_source_and_step_requests_use_the_shared_session() {
-    let source = "program Main; begin mutable var X: integer := 1; X := X + 1 end.";
+    let source = "program Main; begin mutable var X: integer := 1; X := X + 1; end.";
     let mut adapter = server(source);
     let initialized = adapter.handle(request(1, "initialize", json!({})));
     assert!(
@@ -328,7 +328,7 @@ fn inspection_source_and_step_requests_use_the_shared_session() {
 
 #[test]
 fn jsonl_and_dap_report_equivalent_entry_stack() {
-    let source = "program Main; begin var X: integer := 1 end.";
+    let source = "program Main; begin var X: integer := 1; end.";
     let mut jsonl = JsonlServer::new(target(source)).expect("JSONL server");
     let _ = jsonl.handle_line(&jsonl_request(1, "initialize", json!({})));
     let _ = jsonl.handle_line(&jsonl_request(2, "launch", json!({"stop_on_entry":true})));
@@ -408,7 +408,7 @@ fn variable_pairs(variables: &Value) -> Vec<(String, String)> {
 #[test]
 fn every_step_request_is_accepted_from_a_stable_stop() {
     for command in ["stepIn", "next", "stepOut"] {
-        let mut adapter = server("program Main; begin var X: integer := 1 end.");
+        let mut adapter = server("program Main; begin var X: integer := 1; end.");
         let _ = adapter.handle(request(1, "initialize", json!({})));
         let _ = adapter.handle(request(2, "launch", json!({"stopOnEntry":true})));
         let _ = adapter.handle(request(3, "configurationDone", json!({})));
@@ -441,7 +441,7 @@ fn live_pause_and_disconnect_cancel_owned_execution() {
     serve(
         Cursor::new(input),
         &mut output,
-        server("program Main; begin while true do begin end end."),
+        server("program Main; begin while true do begin end; end."),
     )
     .expect("serve pause transcript");
     let mut reader = BufReader::new(output.as_slice());
@@ -468,8 +468,9 @@ fn live_pause_and_disconnect_cancel_owned_execution() {
 
 #[test]
 fn runtime_failure_is_inspectable_then_continue_terminates() {
-    let mut adapter =
-        server("program Main; begin var Zero: integer := 0; var Value: integer := 1 div Zero end.");
+    let mut adapter = server(
+        "program Main; begin var Zero: integer := 0; var Value: integer := 1 div Zero; end.",
+    );
     let _ = adapter.handle(request(1, "initialize", json!({})));
     let _ = adapter.handle(request(2, "launch", json!({"stopOnEntry":false})));
     let _ = adapter.handle(request(3, "configurationDone", json!({})));
@@ -497,7 +498,7 @@ fn runtime_failure_is_inspectable_then_continue_terminates() {
 #[test]
 fn evaluate_contexts_share_frame_results_and_controlled_calls() {
     let mut adapter = server(
-        "program Main; function Double(X: integer): integer; begin return X * 2 end; begin var X: integer := 1 end.",
+        "program Main; function Double(X: integer): integer; begin return X * 2; end; begin var X: integer := 1; end.",
     );
     let initialized = adapter.handle(request(1, "initialize", json!({})));
     assert_eq!(initialized[0]["body"]["supportsEvaluateForHovers"], true);
@@ -562,7 +563,7 @@ fn evaluate_contexts_share_frame_results_and_controlled_calls() {
 
 #[test]
 fn cancel_and_disconnect_reach_active_call_evaluation() {
-    let source = "program Main; function Loop(X: integer): integer; begin mutable var I: integer := X; while I < 1000000000 do I := I + 1; return I end; begin var X: integer := 1 end.";
+    let source = "program Main; function Loop(X: integer): integer; begin mutable var I: integer := X; while I < 1000000000 do I := I + 1; return I; end; begin var X: integer := 1; end.";
     let mut adapter = server(source);
     let initialized = adapter.handle(request(1, "initialize", json!({})));
     assert_eq!(initialized[0]["body"]["supportsCancelRequest"], true);
@@ -630,8 +631,8 @@ fn dap_hit_conditions_and_logpoints_match_jsonl_policy() {
                     mutable var I: integer := 0;\n\
                     while I < 5 do\n\
                     begin\n\
-                      I := I + 1\n\
-                    end\n\
+                      I := I + 1;\n\
+                    end;\n\
                   end.";
     let mut hit_adapter = server(source);
     let _ = hit_adapter.handle(request(1, "initialize", json!({})));
@@ -680,7 +681,7 @@ fn dap_hit_conditions_and_logpoints_match_jsonl_policy() {
 
 #[test]
 fn mixed_source_breakpoints_report_each_location_and_clear_without_leaks() {
-    let source = "program Main;\nbegin\n  mutable var X: integer := 1;\n  X := X + 1\nend.";
+    let source = "program Main;\nbegin\n  mutable var X: integer := 1;\n  X := X + 1;\nend.";
     let mut adapter = server(source);
     let _ = adapter.handle(request(1, "initialize", json!({})));
     let _ = adapter.handle(request(2, "launch", json!({})));
@@ -743,7 +744,7 @@ fn source_lookup_uses_original_alias_without_exposing_it() {
 
 #[test]
 fn breakpoint_lookup_uses_windows_original_alias_and_returns_portable_path() {
-    let source = "program Main;\nbegin\n  var X: integer := 1\nend.";
+    let source = "program Main;\nbegin\n  var X: integer := 1;\nend.";
     let mut adapter = DapServer::new(target_with_sources(
         source,
         vec![DebugSourceContent {

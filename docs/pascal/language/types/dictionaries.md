@@ -19,7 +19,7 @@ mutable var
 
 begin
   Counts['A'] := 2;
-  Counts['B'] := 3
+  Counts['B'] := 3;
 end.
 ```
 

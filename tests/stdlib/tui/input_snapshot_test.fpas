@@ -13,13 +13,13 @@ function ViewInput(State: InputSnapshotModel): TuiElement;
 begin
   return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(1)), [
                                                                         TuiElementBuilders.MakeInputWithHint(TuiControlId.Create(1), State.Text, State.Caret, State.Hint, TuiAction.Create(1))
-                                                                      ])
+                                                                      ]);
 end;
 
 function UpdateInput(State: InputSnapshotModel; Msg: TuiMsg; Cmd: TuiCmdOutput): InputSnapshotModel;
 begin
   Cmd.Set(TuiCmd.NoCommand);
-  return State
+  return State;
 end;
 
 begin
@@ -58,5 +58,5 @@ begin
   AssertTrue(LeftSurface.CellAt(0, 0).Role = TuiStyleRole.InputScroll);
   AssertTrue(LeftSurface.CellAt(8, 0).Role = TuiStyleRole.InputCursor);
   AssertTrue(Std.Str.Contains(LeftSurface.LineAt(0), 'efghijk'));
-  App.Close()
+  App.Close();
 end.

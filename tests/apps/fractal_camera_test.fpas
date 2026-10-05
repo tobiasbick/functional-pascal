@@ -17,5 +17,5 @@ begin
   AssertTrue(Abs(Camera.YMin() + 1.95) < 0.000001);
   AssertTrue(Abs(Camera.YMax() - 0.85) < 0.000001);
   AssertTrue(Abs(Camera.Zoom - 1.0) < 0.000001);
-  AssertTrue(Camera.SpanX(0, 0) > 0.0)
+  AssertTrue(Camera.SpanX(0, 0) > 0.0);
 end.

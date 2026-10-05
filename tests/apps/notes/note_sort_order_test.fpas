@@ -12,5 +12,5 @@ begin
   AssertEquals('pinned', Sorted[0].Id);
   AssertEquals('newest', Sorted[1].Id);
   AssertEquals('first', Sorted[2].Id);
-  AssertEquals('second', Sorted[3].Id)
+  AssertEquals('second', Sorted[3].Id);
 end.

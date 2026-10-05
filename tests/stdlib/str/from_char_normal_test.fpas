@@ -3,5 +3,5 @@ program T;
 uses Std.Console, Std.Str;
 
 begin
-  WriteLn(FromChar('x', 4))
+  WriteLn(FromChar('x', 4));
 end.

@@ -21,7 +21,7 @@ mutable var
   Items: array of integer := [1, 2];
 
 begin
-  Push(Items, 3)  // [1, 2, 3]
+  Push(Items, 3);  // [1, 2, 3]
 end.
 ```
 

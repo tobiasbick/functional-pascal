@@ -33,12 +33,12 @@ mutable var Shared: integer := 0;
 
 procedure Writer();
 begin
-  Shared := 1
+  Shared := 1;
 end;
 
 begin
   var Pending: task := go Writer();
-  Wait(Pending)
+  Wait(Pending);
 end.
 "#;
     let (program, diagnostics) = fpas_parser::parse(SOURCE);

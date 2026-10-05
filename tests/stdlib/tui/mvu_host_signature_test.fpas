@@ -16,28 +16,28 @@ begin
     begin
       return record
         Value := State.Value + 1;
-      end
+      end;
     end;
     TuiMsg.MenuChanged(MenuSource, MenuAction, MenuState):
     begin
       Cmd.Set(TuiCmd.Quit);
-      return State
+      return State;
     end;
     TuiMsg.QuitRequested:
     begin
       Cmd.Set(TuiCmd.Quit);
-      return State
-    end
+      return State;
+    end;
     else
     begin
-      return State
-    end
-  end
+      return State;
+    end;
+  end;
 end;
 
 function ViewCounter(State: CounterModel): TuiElement;
 begin
-  return TuiElementBuilders.MakeLabel('count')
+  return TuiElementBuilders.MakeLabel('count');
 end;
 
 begin
@@ -46,5 +46,5 @@ begin
     Value := 0;
   end, UpdateCounter, ViewCounter, 3, 16);
   AssertEquals(3, FinalModel.Value);
-  App.Close()
+  App.Close();
 end.

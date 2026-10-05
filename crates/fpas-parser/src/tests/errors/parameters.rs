@@ -5,14 +5,14 @@ use fpas_diagnostics::codes::PARSE_INVALID_PARAMETER_SEPARATOR;
 
 fn routine_sources(params: &str) -> Vec<String> {
     vec![
-        format!("program P; function Add({params}): integer; begin return 1 end; begin end."),
+        format!("program P; function Add({params}): integer; begin return 1; end; begin end."),
         format!("program P; procedure Print({params}); begin end; begin end."),
         format!(
-            "unit U; type R = record function Add({params}): integer; begin return 1 end; end;"
+            "unit U; type R = record function Add({params}): integer; begin return 1; end; end;"
         ),
         format!("unit U; type R = record procedure Print({params}); begin end; end;"),
-        format!("program P; begin Consume(function({params}): integer begin return 1 end) end."),
-        format!("program P; begin Consume(procedure({params}) begin end) end."),
+        format!("program P; begin Consume(function({params}): integer begin return 1; end); end."),
+        format!("program P; begin Consume(procedure({params}) begin end); end."),
         format!("unit U; type F = function({params}): integer;"),
         format!("unit U; type F = procedure({params});"),
     ]
@@ -67,7 +67,7 @@ fn canonical_parameters_and_commas_inside_types_remain_valid() {
 
 #[test]
 fn recovery_keeps_the_body_following_declarations_and_call_arguments() {
-    let source = "program P; procedure First(A, B: function(X: integer): integer); begin end; procedure Second(); begin end; begin Second() end.";
+    let source = "program P; procedure First(A, B: function(X: integer): integer); begin end; procedure Second(); begin end; begin Second(); end.";
     let (unit, diagnostics) = parse_compilation_unit_with_errors(source);
     let errors = diagnostics
         .iter()
@@ -80,7 +80,7 @@ fn recovery_keeps_the_body_following_declarations_and_call_arguments() {
     };
     assert_eq!(program.declarations.len(), 2);
     assert_eq!(program.body.len(), 1);
-    let (_, diagnostics) = parse_with_errors("program P; begin Add(1, 2) end.");
+    let (_, diagnostics) = parse_with_errors("program P; begin Add(1, 2); end.");
     assert!(diagnostics.is_empty(), "{diagnostics:#?}");
 }
 

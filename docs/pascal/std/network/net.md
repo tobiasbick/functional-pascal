@@ -89,7 +89,7 @@ begin
   var Address: NetworkAddress := try ListenerLocalAddress(Server);
   // Address.Host is '127.0.0.1'; Address.Port is the assigned nonzero port.
   var Closed: boolean := try CloseListener(Server);
-  return Ok(Address)
+  return Ok(Address);
 end;
 ```
 

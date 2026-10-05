@@ -20,11 +20,11 @@ begin
     if Generation = 0 then
     begin
       // Deliberately defer cooperation to prove that the host remains responsive.
-      Receive(Gate)
+      Receive(Gate);
     end;
 
-    return Ok(true)
-  end)
+    return Ok(true);
+  end);
 end;
 
 function Update(State: Model; Msg: TuiMsg; Cmd: TuiCmdOutput): Model;
@@ -32,7 +32,7 @@ begin
   case Msg of
     TuiMsg.Started:
     begin
-      Replace(State, Cmd)
+      Replace(State, Cmd);
     end;
     TuiMsg.Tick(Delta):
     begin
@@ -41,30 +41,30 @@ begin
         mutable var Next: Model := State;
         Next.Generation := State.Generation + 1;
         Replace(Next, Cmd);
-        return Next
-      end
-    end
+        return Next;
+      end;
+    end;
     else
     begin
-    end
+    end;
   end;
 
-  return State
+  return State;
 end;
 
 function UpdateMessage(State: Model; Message: integer; Cmd: TuiCmdOutput): Model;
 begin
-  return State
+  return State;
 end;
 
 function View(State: Model): TuiElement;
 begin
   if State.Generation = 3 then
   begin
-    TrySend(State.Painted, 3)
+    TrySend(State.Painted, 3);
   end;
 
-  return TuiElementBuilders.MakeLabel('responsive')
+  return TuiElementBuilders.MakeLabel('responsive');
 end;
 
 function ReleaseAfterPaint(Painted: channel of integer; Gate: channel of boolean): boolean;
@@ -72,7 +72,7 @@ begin
   // A timeout releases the gate even on the old blocking implementation.
   var Paint: result of integer, string := ReceiveWithTimeout(Painted, 3000);
   Send(Gate, true);
-  return IsOk(Paint)
+  return IsOk(Paint);
 end;
 
 begin
@@ -93,7 +93,7 @@ begin
   begin
     App.Inject(TuiMsg.Tick(1));
     State := App.RunBackgroundIterations(State, Inbox, Update, UpdateMessage, View, 1, 0);
-    AssertEquals(Index, State.Generation)
+    AssertEquals(Index, State.Generation);
   end;
 
   AssertTrue(Wait(Observer));
@@ -102,7 +102,7 @@ begin
   while IsError(Replacement) and (MonotonicMillis() < Deadline) do
   begin
     State := App.RunBackgroundIterations(State, Inbox, Update, UpdateMessage, View, 1, 0);
-    Replacement := ReceiveWithTimeout(Started, 1)
+    Replacement := ReceiveWithTimeout(Started, 1);
   end;
 
   AssertEquals(3, Unwrap(Replacement));
@@ -110,5 +110,5 @@ begin
   App.CloseWithBackground(Inbox);
   CloseChannel(Gate);
   CloseChannel(Started);
-  CloseChannel(Painted)
+  CloseChannel(Painted);
 end.

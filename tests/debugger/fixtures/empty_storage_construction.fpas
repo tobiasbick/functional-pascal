@@ -27,7 +27,7 @@ type
 
 function Identity(): integer;
 begin
-  return 1
+  return 1;
 end;
 
 function MakeInitialState(): Holder;
@@ -43,7 +43,7 @@ begin
     Item := Choice.Count(5);
     Outcome := Ok(6);
     Optional := Some(7);
-  end
+  end;
 end;
 
 mutable var
@@ -53,7 +53,7 @@ mutable var
 function Next(): integer;
 begin
   Tick := Tick + 1;
-  return Tick
+  return Tick;
 end;
 
 begin
@@ -75,5 +75,5 @@ begin
   var StopMarker: integer := 0;
   WriteLn(State.Count);
   WriteLn(State.Nested.X);
-  WriteLn(GlobalState.Count)
+  WriteLn(GlobalState.Count);
 end.

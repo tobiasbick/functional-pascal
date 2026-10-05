@@ -42,7 +42,7 @@ fn private_record_function_result_is_rejected() {
         "unit Demo.ReturnValue;
          type Hidden = record Value: integer; end;
          public function Make(): Hidden;
-         begin return record Value := 1; end end;",
+         begin return record Value := 1; end; end;",
         "Make",
         "Hidden",
     );

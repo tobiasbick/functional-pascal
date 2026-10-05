@@ -10,7 +10,7 @@ begin
   AssertEquals(Expected.Index, Actual.Index);
   AssertEquals(Expected.Red, Actual.Red);
   AssertEquals(Expected.Green, Actual.Green);
-  AssertEquals(Expected.Blue, Actual.Blue)
+  AssertEquals(Expected.Blue, Actual.Blue);
 end;
 
 procedure AssertCellEquals(Expected: TuiCell; Actual: TuiCell);
@@ -29,19 +29,19 @@ begin
           AssertTrue(ExpectedStyle.Bold = ActualStyle.Bold);
           AssertTrue(ExpectedStyle.Dim = ActualStyle.Dim);
           AssertTrue(ExpectedStyle.Underline = ActualStyle.Underline);
-          AssertTrue(ExpectedStyle.Inverse = ActualStyle.Inverse)
+          AssertTrue(ExpectedStyle.Inverse = ActualStyle.Inverse);
         end;
         None:
         begin
-          Fail('expected a concrete Mandelbrot cell style')
-        end
-      end
+          Fail('expected a concrete Mandelbrot cell style');
+        end;
+      end;
     end;
     None:
     begin
-      AssertTrue(IsNone(Actual.ConcreteStyle))
-    end
-  end
+      AssertTrue(IsNone(Actual.ConcreteStyle));
+    end;
+  end;
 end;
 
 function MakeKey(Kind: TuiKeyKind; Character: string): TuiKeyEvent;
@@ -53,7 +53,7 @@ begin
     ctrl := false;
     alt := false;
     meta := false;
-  end
+  end;
 end;
 
 begin
@@ -79,7 +79,7 @@ begin
   var Expected: TuiCellGrid := RenderGrid(Request.XMin, Request.XMax, Request.YMin, Request.YMax, Request.Width, Request.Height, Request.MaxIter, Request.Palette);
   for CellIndex: integer := 0 to Std.Arrays.Length(Expected.Cells) - 1 do
   begin
-    AssertCellEquals(Expected.Cells[CellIndex], Model.Grid.Cells[CellIndex])
+    AssertCellEquals(Expected.Cells[CellIndex], Model.Grid.Cells[CellIndex]);
   end;
 
   Cmd.Reset();
@@ -91,7 +91,7 @@ begin
   AssertEquals(OldGeneration + 1, Model.Generation);
   for CellIndex: integer := 0 to Std.Arrays.Length(Expected.Cells) - 1 do
   begin
-    AssertCellEquals(Expected.Cells[CellIndex], Model.Grid.Cells[CellIndex])
+    AssertCellEquals(Expected.Cells[CellIndex], Model.Grid.Cells[CellIndex]);
   end;
 
   AssertEquals(0, Model.RowsRendered);
@@ -119,5 +119,5 @@ begin
   AssertEquals(Frame.Generation, Std.Results.Unwrap(Receive(CancelInbox)).Generation);
   AssertTrue(IsError(ReceiveWithTimeout(CancelInbox, 0)));
   CloseChannel(Inbox);
-  CloseChannel(CancelInbox)
+  CloseChannel(CancelInbox);
 end.

@@ -3,5 +3,5 @@ program T;
 uses Std.Console, Std.Conv;
 
 begin
-  WriteLn(StrToReal('2.25'))
+  WriteLn(StrToReal('2.25'));
 end.

@@ -32,7 +32,7 @@ public type
         Dim := false;
         Underline := false;
         Inverse := false;
-      end
+      end;
     end;
 
     // Creates a style with colors and explicit text attributes.
@@ -60,6 +60,6 @@ public type
         Dim := Dim;
         Underline := Underline;
         Inverse := Inverse;
-      end
+      end;
     end;
   end;

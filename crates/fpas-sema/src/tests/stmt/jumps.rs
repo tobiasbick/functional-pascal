@@ -4,28 +4,28 @@ use super::super::{check_errors, check_ok};
 fn break_inside_loop() {
     check_ok(
         "program T; begin \
-         while true do break \
+         while true do break; \
          end.",
     );
 }
 
 #[test]
 fn break_outside_loop() {
-    check_errors("program T; begin break end.");
+    check_errors("program T; begin break; end.");
 }
 
 #[test]
 fn continue_inside_loop() {
     check_ok(
         "program T; begin \
-         while true do continue \
+         while true do continue; \
          end.",
     );
 }
 
 #[test]
 fn continue_outside_loop() {
-    check_errors("program T; begin continue end.");
+    check_errors("program T; begin continue; end.");
 }
 
 #[test]
@@ -33,7 +33,7 @@ fn break_in_nested_loop() {
     check_ok(
         "program T; begin \
          while true do \
-           while true do break \
+           while true do break; \
          end.",
     );
 }
@@ -42,7 +42,7 @@ fn break_in_nested_loop() {
 fn break_in_if_outside_loop() {
     check_errors(
         "program T; begin \
-         if true then break \
+         if true then break; \
          end.",
     );
 }
@@ -51,7 +51,7 @@ fn break_in_if_outside_loop() {
 fn continue_in_if_outside_loop() {
     check_errors(
         "program T; begin \
-         if true then continue \
+         if true then continue; \
          end.",
     );
 }
@@ -61,8 +61,8 @@ fn break_in_function_body_not_in_loop() {
     check_errors(
         "program T; \
          function Foo(): integer; \
-         begin break; return 0 end; \
-         begin Foo() end.",
+         begin break; return 0; end; \
+         begin Foo(); end.",
     );
 }
 
@@ -71,8 +71,8 @@ fn continue_in_function_body_not_in_loop() {
     check_errors(
         "program T; \
          procedure Bar(); \
-         begin continue end; \
-         begin Bar() end.",
+         begin continue; end; \
+         begin Bar(); end.",
     );
 }
 
@@ -80,7 +80,7 @@ fn continue_in_function_body_not_in_loop() {
 fn break_inside_for_loop() {
     check_ok(
         "program T; begin \
-         for I: integer := 1 to 5 do break \
+         for I: integer := 1 to 5 do break; \
          end.",
     );
 }
@@ -89,7 +89,7 @@ fn break_inside_for_loop() {
 fn continue_inside_for_loop() {
     check_ok(
         "program T; begin \
-         for I: integer := 1 to 5 do continue \
+         for I: integer := 1 to 5 do continue; \
          end.",
     );
 }
@@ -98,7 +98,7 @@ fn continue_inside_for_loop() {
 fn break_inside_repeat_loop() {
     check_ok(
         "program T; begin \
-         repeat break until true \
+         repeat break; until true; \
          end.",
     );
 }
@@ -107,7 +107,7 @@ fn break_inside_repeat_loop() {
 fn continue_inside_repeat_loop() {
     check_ok(
         "program T; begin \
-         repeat continue until true \
+         repeat continue; until true; \
          end.",
     );
 }
@@ -118,7 +118,7 @@ fn break_in_nested_if_inside_loop() {
         "program T; begin \
          while true do \
            if true then \
-             if true then break \
+             if true then break; \
          end.",
     );
 }
@@ -129,7 +129,7 @@ fn continue_in_nested_if_inside_loop() {
         "program T; begin \
          for I: integer := 1 to 5 do \
            if true then \
-             if true then continue \
+             if true then continue; \
          end.",
     );
 }

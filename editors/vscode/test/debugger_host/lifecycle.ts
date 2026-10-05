@@ -49,7 +49,7 @@ export async function verifyDebuggerLifecycle(
     "begin",
     "  if Value <= 1 then",
     "    return 1;",
-    "  return Value * Factorial(Value - 1)",
+    "  return Value * Factorial(Value - 1);",
     "end;",
     "",
     "begin",
@@ -59,7 +59,7 @@ export async function verifyDebuggerLifecycle(
     "  end;",
     "  mutable var Computed: integer := Factorial(4);",
     "  Computed := Computed + Origin.X;",
-    "  WriteLn(Computed)",
+    "  WriteLn(Computed);",
     "end.",
     ""
   ];
@@ -71,7 +71,7 @@ export async function verifyDebuggerLifecycle(
 
   try {
     const breakpointLine = sourceLines.indexOf(
-      "  return Value * Factorial(Value - 1)"
+      "  return Value * Factorial(Value - 1);"
     );
     assert.ok(breakpointLine >= 0, "breakpoint source line exists");
     const editor = await vscode.window.showTextDocument(

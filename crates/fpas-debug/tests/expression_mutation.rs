@@ -27,7 +27,7 @@ mutable var
 
 function ChooseIndex(): integer;
 begin
-  return 1
+  return 1;
 end;
 
 begin
@@ -53,7 +53,7 @@ begin
   WriteLn(Counter);
   WriteLn(State.Items[1].Value);
   WriteLn(Scores['blue']);
-  WriteLn(Text)
+  WriteLn(Text);
 end.
 "#;
 

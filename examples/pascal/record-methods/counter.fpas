@@ -13,7 +13,7 @@ type
       return record
         Value := NewValue;
         Step := Self.Step;
-      end
+      end;
     end;
 
     function Reset(Self: Counter): Counter;
@@ -21,12 +21,12 @@ type
       return record
         Value := 0;
         Step := Self.Step;
-      end
+      end;
     end;
 
     procedure Show(Self: Counter);
     begin
-      WriteLn('Counter: ' + IntToStr(Self.Value))
+      WriteLn('Counter: ' + IntToStr(Self.Value));
     end;
   end;
 
@@ -39,5 +39,5 @@ begin
   C.Show();
   WriteLn('Counter: ' + IntToStr(C.Increment().Increment().Increment().Value));
   var Cleared: Counter := C.Increment().Increment().Reset();
-  Cleared.Show()
+  Cleared.Show();
 end.

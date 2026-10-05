@@ -3,5 +3,5 @@ program T;
 uses Std.Console, Std.Str;
 
 begin
-  WriteLn(Replace('hello', 'xyz', '!'))
+  WriteLn(Replace('hello', 'xyz', '!'));
 end.

@@ -44,7 +44,7 @@ fn lifecycle_is_machine_readable_and_deterministic() {
     serve_script(
         script.as_bytes(),
         &mut output,
-        server("program Main; begin var X: integer := 1 end."),
+        server("program Main; begin var X: integer := 1; end."),
     )
     .expect("serve script");
     let records = String::from_utf8(output).expect("UTF-8 records");
@@ -89,7 +89,7 @@ fn invalid_state_and_unsupported_commands_are_explicit() {
 fn instruction_and_timeout_limits_are_reported() {
     let cases = [
         (
-            "program Main; begin while true do begin end end.",
+            "program Main; begin while true do begin end; end.",
             DebugExecutionLimits {
                 max_instructions: 2,
                 ..DebugExecutionLimits::default()
@@ -97,7 +97,7 @@ fn instruction_and_timeout_limits_are_reported() {
             "instruction_limit",
         ),
         (
-            "program Main; begin while true do begin end end.",
+            "program Main; begin while true do begin end; end.",
             DebugExecutionLimits {
                 timeout: Duration::ZERO,
                 ..DebugExecutionLimits::default()
@@ -172,7 +172,7 @@ fn broken_protocol_writer_is_returned_as_transport_failure() {
 #[test]
 fn evaluate_parses_one_read_only_expression_and_reports_stable_errors() {
     let mut server = server(
-        "program Main; function Double(X: integer): integer; begin return X * 2 end; begin var X: integer := 1 end.",
+        "program Main; function Double(X: integer): integer; begin return X * 2; end; begin var X: integer := 1; end.",
     );
     let _ = server.handle_line(&request(1, "initialize", json!({"version":2})));
     let _ = server.handle_line(&request(2, "launch", json!({"stop_on_entry":true})));
@@ -306,22 +306,22 @@ fn conditions_and_logpoints_use_detached_controlled_calls() {
                   function Matches(Value: integer): boolean;\n\
                   begin\n\
                     Probe := Probe + 1;\n\
-                    return Value = 2\n\
+                    return Value = 2;\n\
                   end;\n\
                   function Render(Value: integer): integer;\n\
                   begin\n\
-                    return Value + 10\n\
+                    return Value + 10;\n\
                   end;\n\
                   begin\n\
                     mutable var I: integer := 0;\n\
                     while I < 3 do\n\
                     begin\n\
-                      I := I + 1\n\
-                    end\n\
+                      I := I + 1;\n\
+                    end;\n\
                   end.";
     let line = source
         .lines()
-        .position(|line| line.trim() == "I := I + 1")
+        .position(|line| line.trim() == "I := I + 1;")
         .map(|line| line + 1)
         .expect("loop line");
 
@@ -389,8 +389,8 @@ fn loop_server() -> JsonlServer {
            mutable var I: integer := 0;\n\
            while I < 5 do\n\
            begin\n\
-             I := I + 1\n\
-           end\n\
+             I := I + 1;\n\
+           end;\n\
          end.",
     )
 }

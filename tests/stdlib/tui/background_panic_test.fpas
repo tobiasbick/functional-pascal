@@ -16,9 +16,9 @@ begin
       var Ready: channel of boolean := State.Ready;
       Cmd.StartBackground(23, function(Token: CancellationToken): result of boolean, string begin
         Send(Ready, true);
-        panic('expected Tui worker panic')
+        panic('expected Tui worker panic');
       end);
-      return State
+      return State;
     end;
     TuiMsg.BackgroundFailed(Id, Kind, Message, Code, Line, Column):
     begin
@@ -28,23 +28,23 @@ begin
       return record
         Ready := State.Ready;
         FailureSeen := true;
-      end
-    end
+      end;
+    end;
     else
     begin
-      return State
-    end
-  end
+      return State;
+    end;
+  end;
 end;
 
 function UpdateApplication(State: PanicModel; Message: integer; Cmd: TuiCmdOutput): PanicModel;
 begin
-  return State
+  return State;
 end;
 
 function View(State: PanicModel): TuiElement;
 begin
-  return TuiElementBuilders.MakeLabel('panic')
+  return TuiElementBuilders.MakeLabel('panic');
 end;
 
 begin
@@ -59,9 +59,9 @@ begin
   while not Model.FailureSeen do
   begin
     Sleep(1);
-    Model := App.RunBackgroundIterations(Model, Inbox, UpdateFramework, UpdateApplication, View, 1, 0)
+    Model := App.RunBackgroundIterations(Model, Inbox, UpdateFramework, UpdateApplication, View, 1, 0);
   end;
 
   App.CloseWithBackground(Inbox);
-  CloseChannel(Ready)
+  CloseChannel(Ready);
 end.

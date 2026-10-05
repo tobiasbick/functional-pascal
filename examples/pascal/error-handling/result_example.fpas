@@ -6,18 +6,18 @@ function Divide(A: integer; B: integer): result of integer, string;
 begin
   if B = 0 then
   begin
-    return Error('Division by zero')
-  end
+    return Error('Division by zero');
+  end;
   else
   begin
-    return Ok(A div B)
-  end
+    return Ok(A div B);
+  end;
 end;
 
 function Stringify(A: integer; B: integer): result of string, string;
 begin
   var Quotient: integer := try Divide(A, B);
-  return Ok((((IntToStr(A) + ' / ') + IntToStr(B)) + ' = ') + IntToStr(Quotient))
+  return Ok((((IntToStr(A) + ' / ') + IntToStr(B)) + ' = ') + IntToStr(Quotient));
 end;
 
 begin
@@ -30,44 +30,44 @@ begin
   case Divide(42, 6) of
     Ok(V):
     begin
-      WriteLn('42 / 6 = ', V)
+      WriteLn('42 / 6 = ', V);
     end;
     Error(E):
     begin
-      WriteLn('Error: ', E)
-    end
+      WriteLn('Error: ', E);
+    end;
   end;
 
   case Divide(7, 0) of
     Ok(V):
     begin
-      WriteLn('7 / 0 = ', V)
+      WriteLn('7 / 0 = ', V);
     end;
     Error(E):
     begin
-      WriteLn('Error: ', E)
-    end
+      WriteLn('Error: ', E);
+    end;
   end;
 
   case Stringify(100, 4) of
     Ok(S):
     begin
-      WriteLn(S)
+      WriteLn(S);
     end;
     Error(E):
     begin
-      WriteLn('Failed: ', E)
-    end
+      WriteLn('Failed: ', E);
+    end;
   end;
 
   case Stringify(100, 0) of
     Ok(S):
     begin
-      WriteLn(S)
+      WriteLn(S);
     end;
     Error(E):
     begin
-      WriteLn('Failed: ', E)
-    end
-  end
+      WriteLn('Failed: ', E);
+    end;
+  end;
 end.

@@ -20,11 +20,11 @@ var Source: integer := 1;
 function ReadValue(): integer;
 begin
   var Captured: integer := 2;
-  return Source
+  return Source;
 end;
 
 begin
-  var Result: integer := ReadValue()
+  var Result: integer := ReadValue();
 end.
 "#;
     let path = temp.write("global.fpas", source);
@@ -55,11 +55,11 @@ var Outer: integer := 1;
 function ReadValue(): integer;
 begin
   var Local: integer := 2;
-  return Local + Outer
+  return Local + Outer;
 end;
 
 begin
-  var Result: integer := ReadValue()
+  var Result: integer := ReadValue();
 end.
 "#;
     let path = temp.write("local.fpas", source);
@@ -88,17 +88,17 @@ fn rename_allows_disjoint_local_names_and_the_edited_source_resolves() {
 function First(): integer;
 begin
   var Source: integer := 1;
-  return Source
+  return Source;
 end;
 
 function Second(): integer;
 begin
   var Target: integer := 2;
-  return Target
+  return Target;
 end;
 
 begin
-  var Result: integer := First() + Second()
+  var Result: integer := First() + Second();
 end.
 "#;
     let path = temp.write("disjoint.fpas", source);

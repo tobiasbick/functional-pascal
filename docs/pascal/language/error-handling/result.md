@@ -13,9 +13,9 @@ var E: Result of integer, string := Error('not found');
 function Divide(A: integer; B: integer): Result of integer, string;
 begin
   if B = 0 then
-    return Error('Division by zero')
+    return Error('Division by zero');
   else
-    return Ok(A div B)
+    return Ok(A div B);
 end;
 ```
 

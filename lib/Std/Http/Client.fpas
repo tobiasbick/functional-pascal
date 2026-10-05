@@ -14,15 +14,15 @@ function OpenConnection(UriValue: Uri; TimeoutMillis: integer): result of Std.Ne
 begin
   if UriValue.Scheme = 'http' then
   begin
-    return Std.Net.Connect(UriValue.Host, UriValue.Port, TimeoutMillis)
+    return Std.Net.Connect(UriValue.Host, UriValue.Port, TimeoutMillis);
   end;
 
   if UriValue.Scheme = 'https' then
   begin
-    return Std.Net.ConnectTls(UriValue.Host, UriValue.Port, TimeoutMillis)
+    return Std.Net.ConnectTls(UriValue.Host, UriValue.Port, TimeoutMillis);
   end;
 
-  return Error('Std.Http supports only http:// and https:// URLs')
+  return Error('Std.Http supports only http:// and https:// URLs');
 end;
 
 // Closes a connection while deliberately ignoring close errors.
@@ -37,8 +37,8 @@ begin
     end;
     Error(_):
     begin
-    end
-  end
+    end;
+  end;
 end;
 
 // Sends one request without applying redirect policy.
@@ -58,14 +58,14 @@ begin
           if not Configured then
           begin
             CloseQuietly(Connection);
-            return Error('Network timeout configuration failed')
-          end
+            return Error('Network timeout configuration failed');
+          end;
         end;
         Error(Message):
         begin
           CloseQuietly(Connection);
-          return Error(Message)
-        end
+          return Error(Message);
+        end;
       end;
 
       case Std.Http.Io.WriteAll(Connection, Encoded) of
@@ -75,8 +75,8 @@ begin
         Error(Message):
         begin
           CloseQuietly(Connection);
-          return Error(Message)
-        end
+          return Error(Message);
+        end;
       end;
 
       case Std.Http.Head.ReadFinal(Connection, RequestValue.MaxHeaderBytes, RequestValue.MaxResponseBytes) of
@@ -90,26 +90,26 @@ begin
                 ReasonPhrase := FinalHead.Head.ReasonPhrase;
                 Headers := FinalHead.Head.Headers;
                 Body := Body;
-              end)
+              end);
             end;
             Error(Message):
             begin
-              return Error(Message)
-            end
-          end
+              return Error(Message);
+            end;
+          end;
         end;
         Error(Message):
         begin
           CloseQuietly(Connection);
-          return Error(Message)
-        end
-      end
+          return Error(Message);
+        end;
+      end;
     end;
     Error(Message):
     begin
-      return Error(Message)
-    end
-  end
+      return Error(Message);
+    end;
+  end;
 end;
 
 // Opens the final response body after following bounded HTTP redirects.
@@ -120,17 +120,17 @@ public function OpenStream(RequestValue: Request): result of StreamResponse, str
 begin
   if RequestValue.MaxHeaderBytes < 1 then
   begin
-    return Error('HTTP MaxHeaderBytes must be positive')
+    return Error('HTTP MaxHeaderBytes must be positive');
   end;
 
   if RequestValue.MaxResponseBytes < 1 then
   begin
-    return Error('HTTP MaxResponseBytes must be positive')
+    return Error('HTTP MaxResponseBytes must be positive');
   end;
 
   if RequestValue.MaxRedirects < 0 then
   begin
-    return Error('HTTP MaxRedirects must not be negative')
+    return Error('HTTP MaxRedirects must not be negative');
   end;
   mutable var Current: Request := RequestValue;
   mutable var Redirects: integer := 0;
@@ -152,16 +152,16 @@ begin
                   end;
                   Error(_):
                   begin
-                  end
+                  end;
                 end;
 
-                return Error('HTTP redirect count exceeds MaxRedirects')
+                return Error('HTTP redirect count exceeds MaxRedirects');
               end;
               mutable var Next: Request := Current;
               case Std.Http.Redirect.NextRequest(Current, ResponseValue.StatusCode, Location) of
                 Ok(Value):
                 begin
-                  Next := Value
+                  Next := Value;
                 end;
                 Error(Message):
                 begin
@@ -171,11 +171,11 @@ begin
                     end;
                     Error(_):
                     begin
-                    end
+                    end;
                   end;
 
-                  return Error(Message)
-                end
+                  return Error(Message);
+                end;
               end;
 
               case Std.Http.Stream.CloseBody(ResponseValue.Body) of
@@ -184,31 +184,31 @@ begin
                 end;
                 Error(_):
                 begin
-                end
+                end;
               end;
 
               Current := Next;
-              Redirects := Redirects + 1
+              Redirects := Redirects + 1;
             end;
             None:
             begin
-              return Ok(ResponseValue)
-            end
-          end
-        end
+              return Ok(ResponseValue);
+            end;
+          end;
+        end;
         else
         begin
-          return Ok(ResponseValue)
-        end
+          return Ok(ResponseValue);
+        end;
       end;
       Error(Message):
       begin
-        return Error(Message)
-      end
-    end
+        return Error(Message);
+      end;
+    end;
   end;
 
-  return Error('HTTP redirect loop ended unexpectedly')
+  return Error('HTTP redirect loop ended unexpectedly');
 end;
 
 // Sends one request, follows bounded redirects, and buffers the final body.
@@ -233,10 +233,10 @@ begin
                 ReasonPhrase := StreamResponseValue.ReasonPhrase;
                 Headers := StreamResponseValue.Headers;
                 Body := Std.Http.Io.JoinChunks(Chunks);
-              end)
+              end);
             end;
 
-            Std.Arrays.Push(Chunks, Bytes)
+            Std.Arrays.Push(Chunks, Bytes);
           end;
           Error(Message):
           begin
@@ -246,19 +246,19 @@ begin
               end;
               Error(_):
               begin
-              end
+              end;
             end;
 
-            return Error(Message)
-          end
-        end
+            return Error(Message);
+          end;
+        end;
       end;
 
-      return Error('HTTP response stream ended unexpectedly')
+      return Error('HTTP response stream ended unexpectedly');
     end;
     Error(Message):
     begin
-      return Error(Message)
-    end
-  end
+      return Error(Message);
+    end;
+  end;
 end;

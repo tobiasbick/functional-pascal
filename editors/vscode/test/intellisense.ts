@@ -31,7 +31,7 @@ export async function verifyIntelliSense(extensionPath: string): Promise<void> {
     "  var CounterValue: Counter := record Amount := 1; end;",
     "  var Member: integer := CounterValue.Amount;",
     "  var Sum: integer := Add(1, 2);",
-    "  var Imported: integer := UniqueHostValue()",
+    "  var Imported: integer := UniqueHostValue();",
     "end.",
     ""
   ].join("\n");
@@ -54,7 +54,7 @@ export async function verifyIntelliSense(extensionPath: string): Promise<void> {
         "",
         "public function Add(Left: integer; Right: integer): integer;",
         "begin",
-        "  return Left + Right",
+        "  return Left + Right;",
         "end;",
         ""
       ].join("\n")
@@ -67,7 +67,7 @@ export async function verifyIntelliSense(extensionPath: string): Promise<void> {
         "// Returns the stable IntelliSense fixture value.",
         "public function UniqueHostValue(): integer;",
         "begin",
-        "  return 42",
+        "  return 42;",
         "end;",
         ""
       ].join("\n")
@@ -141,7 +141,7 @@ function verifySnippetContribution(extensionPath: string): void {
 async function verifySnippetCompletion(fixtureRoot: string): Promise<void> {
   const snippetPath = path.join(fixtureRoot, "src", "snippet.fpas");
   const source =
-    "program SnippetHost;\n\nbegin\n  if true then\n  begin\n  end\nend.\n";
+    "program SnippetHost;\n\nbegin\n  if true then\n  begin\n  end;\nend.\n";
   await fs.writeFile(snippetPath, source);
   const document = await vscode.workspace.openTextDocument(snippetPath);
   await vscode.window.showTextDocument(document);

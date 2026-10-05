@@ -140,7 +140,7 @@ fn jsonl_record_captures_queued_input_without_replay() {
     let source = r#"program CaptureInput;
 uses Std.Console;
 begin
-  WriteLn(ReadLn())
+  WriteLn(ReadLn());
 end.
 "#;
     let (program, diagnostics) = fpas_parser::parse(source);
@@ -191,7 +191,7 @@ const RANDOM_ASSIGN: &str = r#"program QuietRandom;
 uses Std.Random;
 begin
   mutable var X: integer := 0;
-  X := RandomInt(1, 1)
+  X := RandomInt(1, 1);
 end.
 "#;
 

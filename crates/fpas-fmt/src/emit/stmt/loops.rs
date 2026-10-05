@@ -1,4 +1,6 @@
 //! Control-flow statements (`if`, `case`, loops).
+//!
+//! **Documentation:** `docs/pascal/tools/fmt-style.md#semicolons`
 
 use fpas_parser::{CaseArm, CaseLabel, DestructureVariant, ForDirection, Stmt};
 
@@ -9,6 +11,7 @@ use super::super::expr::emit_expr;
 use super::super::types::emit_type_expr;
 use super::line::write_indented;
 
+/// Emits an if statement with terminated branches.
 pub(super) fn emit_if(emitter: &mut Emitter, stmt: &Stmt, prefix: &str, comments: &CommentMap) {
     let Stmt::If {
         condition,
@@ -25,7 +28,7 @@ pub(super) fn emit_if(emitter: &mut Emitter, stmt: &Stmt, prefix: &str, comments
     emitter.write("if ");
     emit_expr(emitter, condition, 0, comments);
     emitter.write(" then\n");
-    emit_wrapped_branch(emitter, then_branch, comments);
+    emit_wrapped_branch_with_semicolon(emitter, then_branch, else_branch.is_some(), comments);
 
     match else_branch {
         Some(else_branch) if matches!(else_branch.as_ref(), Stmt::If { .. }) => {
@@ -40,10 +43,12 @@ pub(super) fn emit_if(emitter: &mut Emitter, stmt: &Stmt, prefix: &str, comments
     }
 }
 
+/// Wraps a branch body in a compound statement whose caller emits its terminator.
 pub(super) fn emit_wrapped_branch(emitter: &mut Emitter, branch: &Stmt, comments: &CommentMap) {
     emit_wrapped_branch_with_semicolon(emitter, branch, false, comments);
 }
 
+/// Wraps a branch body and optionally emits the compound statement's terminator.
 pub(super) fn emit_wrapped_branch_with_semicolon(
     emitter: &mut Emitter,
     branch: &Stmt,
@@ -58,7 +63,7 @@ pub(super) fn emit_wrapped_branch_with_semicolon(
         Stmt::Block(stmts, ..) => super::emit_stmts_in_block(inner, stmts, comments),
         other => {
             emit_leading_comments(inner, comments, stmt_start(other), false);
-            super::emit_stmt_in_block(inner, other, true, comments);
+            super::emit_stmt_in_block(inner, other, comments);
         }
     });
     write_indented(emitter);
@@ -69,6 +74,7 @@ pub(super) fn emit_wrapped_branch_with_semicolon(
     emitter.write("\n");
 }
 
+/// Emits a case statement with terminated arm bodies.
 pub(super) fn emit_case(emitter: &mut Emitter, stmt: &Stmt, comments: &CommentMap) {
     let Stmt::Case {
         expr,
@@ -86,19 +92,18 @@ pub(super) fn emit_case(emitter: &mut Emitter, stmt: &Stmt, comments: &CommentMa
     emitter.write(" of\n");
 
     emitter.with_indent(|inner| {
-        for (index, arm) in arms.iter().enumerate() {
-            let is_last_arm = index + 1 == arms.len();
-            emit_case_arm(inner, arm, is_last_arm, comments);
+        for arm in arms {
+            emit_case_arm(inner, arm, comments);
         }
 
         if let Some(else_stmts) = else_body {
             inner.writeln("else");
             if else_stmts.len() == 1 {
-                emit_wrapped_branch_with_semicolon(inner, &else_stmts[0], false, comments);
+                emit_wrapped_branch_with_semicolon(inner, &else_stmts[0], true, comments);
             } else {
                 inner.writeln("begin");
                 inner.with_indent(|body| super::emit_stmts_in_block(body, else_stmts, comments));
-                inner.writeln("end");
+                inner.writeln("end;");
             }
         }
     });
@@ -107,12 +112,8 @@ pub(super) fn emit_case(emitter: &mut Emitter, stmt: &Stmt, comments: &CommentMa
     emitter.write("end");
 }
 
-pub(super) fn emit_case_arm(
-    emitter: &mut Emitter,
-    arm: &CaseArm,
-    is_last_arm: bool,
-    comments: &CommentMap,
-) {
+/// Emits a case arm with a terminated compound statement body.
+pub(super) fn emit_case_arm(emitter: &mut Emitter, arm: &CaseArm, comments: &CommentMap) {
     write_indented(emitter);
     emit_case_labels(emitter, &arm.labels, comments);
     if let Some(guard) = &arm.guard {
@@ -120,7 +121,7 @@ pub(super) fn emit_case_arm(
         emit_expr(emitter, guard, 0, comments);
     }
     emitter.write(":\n");
-    emit_wrapped_branch_with_semicolon(emitter, &arm.body, !is_last_arm, comments);
+    emit_wrapped_branch_with_semicolon(emitter, &arm.body, true, comments);
 }
 
 pub(super) fn emit_case_labels(emitter: &mut Emitter, labels: &[CaseLabel], comments: &CommentMap) {
@@ -225,6 +226,7 @@ pub(super) fn emit_while(emitter: &mut Emitter, stmt: &Stmt, comments: &CommentM
     emit_wrapped_branch(emitter, body, comments);
 }
 
+/// Emits terminated repeat-body statements before the until condition.
 pub(super) fn emit_repeat(emitter: &mut Emitter, stmt: &Stmt, comments: &CommentMap) {
     let Stmt::Repeat {
         body, condition, ..

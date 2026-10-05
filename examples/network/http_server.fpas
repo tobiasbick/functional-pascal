@@ -14,7 +14,7 @@ begin
   mutable var ResponseValue: ServerResponse := ServerResponse.Create(StatusCode, ReasonPhrase);
   ResponseValue.Headers := [Header.Create('Content-Type', 'text/plain; charset=utf-8')];
   ResponseValue.Body := Std.Net.Utf8.Encode(Text);
-  return ResponseValue
+  return ResponseValue;
 end;
 
 // Routes the three requests issued by `http_client.fpas`.
@@ -25,7 +25,7 @@ function Handle(RequestValue: ServerRequest): ServerResponse;
 begin
   if (RequestValue.Method = 'GET') and (RequestValue.Target = '/hello') then
   begin
-    return TextResponse(200, 'OK', 'Hello from FPAS')
+    return TextResponse(200, 'OK', 'Hello from FPAS');
   end;
 
   if (RequestValue.Method = 'POST') and (RequestValue.Target = '/echo') then
@@ -33,32 +33,32 @@ begin
     case Std.Net.Utf8.Decode(RequestValue.Body) of
       Ok(Text):
       begin
-        return TextResponse(200, 'OK', 'Echo: ' + Text)
+        return TextResponse(200, 'OK', 'Echo: ' + Text);
       end;
       Error(Message):
       begin
-        return TextResponse(400, 'Bad Request', Message)
-      end
-    end
+        return TextResponse(400, 'Bad Request', Message);
+      end;
+    end;
   end;
 
   if (RequestValue.Method = 'GET') and (RequestValue.Target = '/stream') then
   begin
-    return TextResponse(200, 'OK', 'streamed in small reads')
+    return TextResponse(200, 'OK', 'streamed in small reads');
   end;
 
-  return TextResponse(404, 'Not Found', 'No route for ' + RequestValue.Target)
+  return TextResponse(404, 'Not Found', 'No route for ' + RequestValue.Target);
 end;
 
 begin
   mutable var Port: integer := 18080;
   if ParamCount() = 1 then
   begin
-    Port := StrToInt(ParamStr(0))
-  end
+    Port := StrToInt(ParamStr(0));
+  end;
   else if ParamCount() <> 0 then
   begin
-    panic('usage: http_server.fpas -- [PORT]')
+    panic('usage: http_server.fpas -- [PORT]');
   end;
 
   case Listen('127.0.0.1', Port) of
@@ -71,12 +71,12 @@ begin
       case Serve(ListenerValue, Options, Handle) of
         Ok(_):
         begin
-          WriteLn('HTTP server handled 3 requests')
+          WriteLn('HTTP server handled 3 requests');
         end;
         Error(Message):
         begin
-          panic(Message)
-        end
+          panic(Message);
+        end;
       end;
 
       case CloseListener(ListenerValue) of
@@ -85,13 +85,13 @@ begin
         end;
         Error(Message):
         begin
-          panic(Message)
-        end
-      end
+          panic(Message);
+        end;
+      end;
     end;
     Error(Message):
     begin
-      panic(Message)
-    end
-  end
+      panic(Message);
+    end;
+  end;
 end.

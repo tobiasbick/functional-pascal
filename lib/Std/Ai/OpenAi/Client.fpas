@@ -11,10 +11,10 @@ function CompletionUrl(BaseUrl: string): string;
 begin
   if Std.Str.EndsWith(BaseUrl, '/') then
   begin
-    return BaseUrl + 'chat/completions'
+    return BaseUrl + 'chat/completions';
   end;
 
-  return BaseUrl + '/chat/completions'
+  return BaseUrl + '/chat/completions';
 end;
 
 // Validates, sends, and decodes one non-streaming chat completion.
@@ -27,17 +27,17 @@ public function Complete(ClientValue: Client; Messages: array of ChatMessage; Op
 begin
   if ClientValue.BaseUrl = '' then
   begin
-    return Error('OpenAI-compatible BaseUrl must not be empty')
+    return Error('OpenAI-compatible BaseUrl must not be empty');
   end;
 
   if ClientValue.Model = '' then
   begin
-    return Error('OpenAI-compatible model name must not be empty')
+    return Error('OpenAI-compatible model name must not be empty');
   end;
 
   if Std.Arrays.Length(Messages) = 0 then
   begin
-    return Error('OpenAI-compatible chat requires at least one message')
+    return Error('OpenAI-compatible chat requires at least one message');
   end;
   mutable var Headers: array of Header := [
                                             Header.Create('Content-Type', 'application/json'),
@@ -48,12 +48,12 @@ begin
     begin
       if Value <> '' then
       begin
-        Std.Arrays.Push(Headers, Header.Create('Authorization', 'Bearer ' + Value))
-      end
+        Std.Arrays.Push(Headers, Header.Create('Authorization', 'Bearer ' + Value));
+      end;
     end;
     None:
     begin
-    end
+    end;
   end;
   mutable var RequestValue: Request := Request.Create('POST', CompletionUrl(ClientValue.BaseUrl));
   RequestValue.Headers := Headers;
@@ -69,20 +69,20 @@ begin
           if (ResponseValue.StatusCode < 200) or (ResponseValue.StatusCode >= 300) then
           begin
             return Error((('OpenAI-compatible endpoint returned HTTP ' + Std.Conv.IntToStr(ResponseValue.StatusCode)) + ': ') +
-                         Text)
+                         Text);
           end;
 
-          return Std.Ai.OpenAi.Json.DecodeResponse(Text)
+          return Std.Ai.OpenAi.Json.DecodeResponse(Text);
         end;
         Error(Message):
         begin
-          return Error('OpenAI-compatible response body is not UTF-8: ' + Message)
-        end
-      end
+          return Error('OpenAI-compatible response body is not UTF-8: ' + Message);
+        end;
+      end;
     end;
     Error(Message):
     begin
-      return Error(Message)
-    end
-  end
+      return Error(Message);
+    end;
+  end;
 end;

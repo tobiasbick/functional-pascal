@@ -13,9 +13,9 @@ are allowed.
 function Clamp(Value: integer; Min: integer; Max: integer): integer;
 begin
   if Value < Min then
-    return Min
+    return Min;
   else if Value > Max then
-    return Max
+    return Max;
   else
     return Value;
 end;

@@ -4,9 +4,9 @@ uses Std.Str;
 
 function Expand(C: string): string;
 begin
-  return 'ab'
+  return 'ab';
 end;
 
 begin
-  var Mapped: string := Map('😀', Expand)
+  var Mapped: string := Map('😀', Expand);
 end.

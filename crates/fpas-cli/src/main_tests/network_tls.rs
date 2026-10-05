@@ -48,17 +48,17 @@ begin
   case Send(Request.Get('https://localhost:{port}/')) of
     Ok(ResponseValue):
     begin
-      panic('untrusted HTTPS server was accepted')
+      panic('untrusted HTTPS server was accepted');
     end;
     Error(Message):
     begin
       if not Std.Str.Contains(Message, 'TLS handshake failed') then
       begin
-        panic(Message)
-      end
-    end
+        panic(Message);
+      end;
+    end;
   end;
-  WriteLn('ok')
+  WriteLn('ok');
 end.
 "#
         ),

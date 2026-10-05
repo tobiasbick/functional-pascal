@@ -4,5 +4,5 @@ uses Std.Console;
 
 begin
   WriteLn(true);
-  WriteLn(false)
+  WriteLn(false);
 end.

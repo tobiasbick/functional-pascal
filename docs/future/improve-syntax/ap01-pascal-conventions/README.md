@@ -1,0 +1,40 @@
+# AP01: Pascal conventions
+
+Status: agreed direction. Effort: small. Completion is tracked in the
+[central README](../README.md); the process is in
+[development-process.md](../development-process.md).
+
+## Goal
+
+Give the whole plan one consistent, Pascal-oriented reference style so that
+later packages and their examples use the same spellings. Proposed spellings
+are drafts, not current-language examples.
+
+## Decisions
+
+- Retain case-insensitivity and Pascal's routine, record, case, and block words.
+- Keep `array of T` and use `of` for every type application, including
+  user-defined generic types (AP24). Do not introduce `Array<T>`, `Option<T>`,
+  or other angle-bracket type applications.
+- Where Pascal or Delphi has an established spelling for a planned concept
+  (subranges, distinct types, `var` parameters), use it unless a recorded
+  decision says otherwise. Recorded exceptions: `distinct` (AP19, Q12).
+- A formatter change is not required for this package.
+
+## Dependencies
+
+None. AP05, AP11, and AP13 depend on this package.
+
+## Order
+
+AP01.1 establishes the reference examples; AP01.2 checks the plan against them.
+
+## Work packages
+
+- [ ] [AP01.1: Reference examples](01-reference-examples.md)
+- [ ] [AP01.2: Plan spelling review](02-plan-spelling-review.md)
+
+## Acceptance
+
+The reference examples state a consistent Pascal-oriented form without
+presenting unresolved grammar as implemented behavior.

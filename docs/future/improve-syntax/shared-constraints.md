@@ -1,7 +1,12 @@
 # Shared constraints and regression checks
 
-See the [steering document](README.md) for package completion and language gates.
-This document supplies checks, not a second implementation backlog.
+See the [steering document](README.md) for package completion and language
+gates, and [development-process.md](development-process.md) for the required
+checks per work package. This document supplies cross-package checks, not a
+second implementation backlog.
+
+The regression checks below are applied when a package is marked complete, in
+addition to the verification list of each of its work packages.
 
 ## Per-package regression checks
 
@@ -11,6 +16,7 @@ This document supplies checks, not a second implementation backlog.
 | Mutation | Local parameter copy versus caller variable | Only explicitly authorized caller mutation escapes |
 | Enums | Add a closed-enum variant | Missing cases identified explicitly |
 | Imports | Introduce a colliding helper | Qualified calls retain their target |
+| Dot calls | Declare a free function named like a standard operation | The dot call keeps its catalog or member target |
 | Booleans | `X > 0 and Y > 0`; `A and B or C` | First parses as two comparisons; second asks for parentheses |
 | Discard | Unused `Result` from a cleanup call | Rejected without `discard`; accepted with it |
 | Blocks | Nested conditionals and endings | Unambiguous branch ownership and useful recovery |
@@ -28,18 +34,22 @@ Do not invent native test syntax for these tests.
 |---------|----------------------|--------------|
 | Bindings | Immutable name versus mutable/shared value | Deep immutability of handles |
 | Constants | Computed initialization versus compile-time constant | Compile-time-only contexts |
-| Parameters | Read-only parameter versus `var` caller mutation | None; see AP17 |
+| Parameters | Read-only parameter versus `var` caller mutation | See [AP17](ap17-visible-caller-mutation/README.md) |
 | Patterns | Explicit binding versus literal/constant comparison | Shadowing and constructor lookup |
-| Types | One `of` application form for built-in and user generic types | None; see AP24 |
-| Arguments | Fully positional versus fully named | None; see AP09 |
-| Records | Typed structural construction versus factory | None; see AP10 |
-| Domain types | Subrange restriction versus distinct identity | Decided in AP18 and AP19 (Q10–Q13) |
-| Contracts | Contract violation versus expected domain error (`Result`) | Decided in AP23 (Q15–Q17) |
-| Scopes | Owned child task versus detached work | Decided in AP26 (Q19–Q20) |
+| Types | One `of` application form for built-in and user generic types | None; see [AP24](ap24-generic-data-structures/README.md) |
+| Arguments | Fully positional versus fully named | None; see [AP09](ap09-named-arguments/README.md) |
+| Records | Typed structural construction versus factory | None; see [AP10](ap10-typed-record-construction/README.md) |
+| Domain types | Subrange restriction versus distinct identity | Decided in [AP18](ap18-subrange-types/README.md) and [AP19](ap19-distinct-domain-types/README.md) (Q10–Q13) |
+| Contracts | Contract violation versus expected domain error (`Result`) | Decided in [AP23](ap23-preconditions-and-postconditions/README.md) (Q15–Q17) |
+| Scopes | Owned child task versus detached work | Decided in [AP26](ap26-structured-task-scopes/README.md) (Q19–Q20) |
 
 ## Integrated target example
 
-This uncompiled draft combines AP13, AP20, AP21, AP24, and AP25.
+This uncompiled draft combines [AP13](ap13-explicit-block-boundaries/README.md),
+[AP20](ap20-nested-patterns-and-explicit-bindings/README.md),
+[AP21](ap21-decision-expressions/README.md),
+[AP24](ap24-generic-data-structures/README.md), and
+[AP25](ap25-conservative-purity/README.md).
 It is not a request to implement them in one pass. Settle their rules first.
 
 ```pascal
@@ -59,9 +69,9 @@ begin
 end function;
 ```
 
-There is no automatic receiver shortcut, extra lambda syntax, or closed-enum
-catch-all. Statement and block endings follow the agreed AP13 rules; the
-`case` expression syntax follows AP21.
+There is no automatic free-function receiver lookup, extra lambda syntax, or
+closed-enum catch-all. Statement and block endings follow the agreed AP13
+rules; the `case` expression syntax follows AP21.
 
 ## Design inspiration, not API commitments
 

@@ -18,7 +18,7 @@ end program;
 
 Import with `uses Std.Arrays as Arrays;`. Access every exported member through `Arrays`, for example `Arrays.Length(...)`. Imports open no short names.
 
-Explicit aliases keep names from different units distinct. Imported routines use alias-qualified calls; receiver-call lookup applies only to routines declared locally.
+Explicit aliases keep names from different units distinct. Imported routines use alias-qualified calls.
 
 ---
 

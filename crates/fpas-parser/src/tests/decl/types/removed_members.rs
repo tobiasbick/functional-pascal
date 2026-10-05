@@ -90,3 +90,15 @@ fn callable_fields_and_optional_handlers_are_stored_fields() {
     ));
     assert!(record.fields[1].default_value.is_some());
 }
+
+#[test]
+fn removed_member_headers_without_bodies_report_one_error_each() {
+    let source = "program P; type Box = record Value: integer; function Get(): integer; static procedure Reset(A: integer; B: integer); property Count: integer read Get; end record; begin null; end program;";
+    let (_, errors) = parse_compilation_unit_with_errors(source);
+    assert_eq!(errors.len(), 3, "{errors:#?}");
+    assert!(errors.iter().all(|error| {
+        error
+            .as_parser_error()
+            .is_some_and(|diagnostic| diagnostic.message.contains("Records contain stored fields"))
+    }));
+}

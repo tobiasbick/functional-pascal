@@ -19,7 +19,7 @@ end program;
 
 Import with `uses Std.Options as Options;`. Access every exported member through `Options`, for example `Options.Unwrap(...)`. Imports open no short names.
 
-Explicit aliases keep names from different units distinct. Imported routines use alias-qualified calls; receiver-call lookup applies only to routines declared locally.
+Explicit aliases keep names from different units distinct. Imported routines use alias-qualified calls.
 
 `Unwrap` and `UnwrapOr` require a `Option of (T)` as their first argument. Passing the wrong container type produces a compile-time type error (`F2006`); use `Std.Results` for the other container type.
 

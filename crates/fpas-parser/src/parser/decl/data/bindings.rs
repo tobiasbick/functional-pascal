@@ -61,7 +61,26 @@ impl Parser {
             }
             None
         };
-        self.expect(&Token::ColonAssign);
+        if !self.eat(&Token::ColonAssign) {
+            self.error_with_code(
+                PARSE_EXPECTED_TOKEN,
+                "Every binding requires an initializer",
+                &format!(
+                    "Write `{} {name}: integer := 0;`; a binding's type comes only from its annotation or initializer.",
+                    if mutable { "var" } else { "const" }
+                ),
+                self.current_span(),
+            );
+            if self.check(&Token::Semicolon) {
+                return BindingDef {
+                    name,
+                    type_expr,
+                    value: crate::ast::Expr::Error(self.current_span()),
+                    visibility,
+                    span: self.span_from(start),
+                };
+            }
+        }
         let value = self.parse_expression();
         BindingDef {
             name,

@@ -222,3 +222,34 @@ fn canonical_patterns_reject_payloadless_calls_and_top_level_catchalls() {
         );
     }
 }
+
+#[test]
+fn plain_pattern_identifiers_teach_explicit_bindings() {
+    let errors = check_errors(
+        r#"program Main;
+        type Choice = enum Present(Value: integer); Missing; end enum;
+        const Item: Choice := Choice.Missing;
+        begin
+          case Item of
+            when Choice.Present(Value): null;
+            when Choice.Missing: null;
+          end case;
+        end program;"#,
+    );
+    assert!(
+        errors.iter().any(
+            |error| error.message == "Pattern name `Value` is not a known constant"
+                && error
+                    .help
+                    .as_deref()
+                    .is_some_and(|help| help.contains("`const Value`"))
+        ),
+        "{errors:#?}"
+    );
+    assert!(
+        !errors
+            .iter()
+            .any(|error| error.message.contains("Undefined identifier")),
+        "{errors:#?}"
+    );
+}

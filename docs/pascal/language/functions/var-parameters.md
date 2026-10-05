@@ -26,8 +26,8 @@ The obsolete `mutable Value: Type` formal parameter is rejected with that hint.
 A var argument names a mutable local or global, a forwarded var parameter, or a
 stored field/array element/existing dictionary entry rooted in that storage.
 Imported roots use their declared alias, which preserves the root's permissions. Immutable
-bindings, value parameters, loop variables, temporaries, computed properties and
-string elements cannot supply writable caller storage.
+bindings, value parameters, loop variables, temporaries and string elements
+cannot supply writable caller storage.
 
 The selected storage type must match the formal type without a value conversion.
 An integer root cannot satisfy `var Value: real`. Callable types preserve each

@@ -64,3 +64,16 @@ fn bare_builtin_variants_are_rejected_with_qualified_hints_in_values_and_pattern
         }
     }
 }
+
+#[test]
+fn bare_builtin_pattern_payloads_still_parse_without_cascades() {
+    let (_, errors) = crate::parse(
+        "program T; begin case Value of when Some(const V) if V > 0: null; when None: null; when Error(_): null; end case; end program;",
+    );
+    assert_eq!(errors.len(), 3, "{errors:#?}");
+    assert!(errors.iter().all(|error| {
+        error
+            .as_parser_error()
+            .is_some_and(|error| error.message == "Builtin variant requires its type qualifier")
+    }));
+}

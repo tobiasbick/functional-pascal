@@ -26,7 +26,7 @@ end program;
 
 Import with `uses Std.Dictionaries as Dictionaries;`. Access every exported member through `Dictionaries`, for example `Dictionaries.Length(...)`. Imports open no short names.
 
-Explicit aliases keep names from different units distinct. Imported routines use alias-qualified calls; receiver-call lookup applies only to routines declared locally.
+Explicit aliases keep names from different units distinct. Imported routines use alias-qualified calls.
 
 ---
 

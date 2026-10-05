@@ -164,3 +164,26 @@ fn generic_record_functions_and_factory_values_keep_concrete_results() {
       end program;",
     );
 }
+
+#[test]
+fn receiver_style_routine_calls_teach_ordinary_arguments() {
+    let errors = check_errors(
+        "program T; function Twice(X: integer): integer; begin return X * 2; end function;
+        type Box = record Value: integer; end record;
+        const N: integer := 3;
+        const B: Box := Box(Value := 1);
+        const A: integer := N.Twice();
+        const C: integer := B.Twice();
+        begin null; end program;",
+    );
+    let hinted = errors
+        .iter()
+        .filter(|error| {
+            error
+                .help
+                .as_deref()
+                .is_some_and(|help| help.contains("`Twice(Value)`"))
+        })
+        .count();
+    assert_eq!(hinted, 2, "{errors:#?}");
+}

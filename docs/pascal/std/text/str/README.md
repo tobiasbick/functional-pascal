@@ -17,7 +17,7 @@ end program;
 
 Import with `uses Std.Str as Str;`. Access every exported member through `Str`, for example `Str.Trim(...)`. Imports open no short names.
 
-Explicit aliases keep names from different units distinct. Imported routines use alias-qualified calls; receiver-call lookup applies only to routines declared locally.
+Explicit aliases keep names from different units distinct. Imported routines use alias-qualified calls.
 
 ## Quick reference
 

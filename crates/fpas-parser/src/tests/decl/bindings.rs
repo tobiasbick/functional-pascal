@@ -60,3 +60,33 @@ fn obsolete_mutable_binding_syntax_has_a_migration_hint() {
         );
     }
 }
+
+#[test]
+fn bindings_without_initializers_report_one_teaching_error() {
+    for (source, example) in [
+        (
+            "program T; var G: integer; begin null; end program;",
+            "var G: integer := 0;",
+        ),
+        (
+            "program T; begin var X; end program;",
+            "var X: integer := 0;",
+        ),
+        (
+            "program T; begin const Y: string; end program;",
+            "const Y: integer := 0;",
+        ),
+    ] {
+        let (_, errors) = parse_with_errors(source);
+        assert_eq!(errors.len(), 1, "{source}: {errors:#?}");
+        let diagnostic = errors[0].as_diagnostic();
+        assert_eq!(diagnostic.message, "Every binding requires an initializer");
+        assert!(
+            diagnostic
+                .help
+                .as_deref()
+                .is_some_and(|help| help.contains(example)),
+            "{source}: {errors:#?}"
+        );
+    }
+}

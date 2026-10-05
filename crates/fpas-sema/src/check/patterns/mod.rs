@@ -9,7 +9,7 @@ mod variants;
 use super::Checker;
 use crate::scope::canonical_symbol_name;
 use crate::types::Ty;
-use fpas_diagnostics::codes::{SEMA_DUPLICATE_DECLARATION, SEMA_TYPE_MISMATCH};
+use fpas_diagnostics::codes::{SEMA_DUPLICATE_DECLARATION, SEMA_TYPE_MISMATCH, SEMA_UNKNOWN_NAME};
 use fpas_parser::Pattern;
 use std::collections::{HashMap, HashSet};
 
@@ -140,6 +140,22 @@ impl Checker {
                     {
                         info.variant = Some(variant);
                     }
+                    return;
+                }
+                if let fpas_parser::Expr::Designator(designator) = start
+                    && end.is_none()
+                    && let [fpas_parser::DesignatorPart::Ident(name, _)] =
+                        designator.parts.as_slice()
+                    && self.scopes.lookup(name).is_none()
+                {
+                    self.error_with_code(
+                        SEMA_UNKNOWN_NAME,
+                        format!("Pattern name `{name}` is not a known constant"),
+                        format!(
+                            "A plain identifier never introduces a binding. Write `const {name}` to bind the matched value, or `_` to ignore it."
+                        ),
+                        *span,
+                    );
                     return;
                 }
                 let value_ty = self.check_expr_with_expected(start, &ty);

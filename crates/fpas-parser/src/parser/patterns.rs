@@ -4,6 +4,7 @@
 
 use super::Parser;
 use crate::ast::{Designator, DesignatorPart, Pattern};
+use fpas_diagnostics::codes::PARSE_EXPECTED_EXPRESSION;
 use fpas_lexer::Token;
 
 impl Parser {
@@ -29,6 +30,9 @@ impl Parser {
         }
         if self.at_pattern_variant() {
             let mut parts = Vec::new();
+            if let Some(owner) = self.recover_unqualified_builtin_pattern() {
+                parts.push(DesignatorPart::Ident(owner.into(), start));
+            }
             loop {
                 let span = self.current_span();
                 let name = match self.current_token() {
@@ -80,8 +84,31 @@ impl Parser {
         }
     }
 
+    // Reports a bare builtin variant and returns its implied owner so payload patterns still parse.
+    fn recover_unqualified_builtin_pattern(&mut self) -> Option<&'static str> {
+        let owner = match self.current_token() {
+            Token::Some | Token::None => "Option",
+            Token::Ok | Token::Error => "Result",
+            _ => return None,
+        };
+        self.error_with_code(
+            PARSE_EXPECTED_EXPRESSION,
+            "Builtin variant requires its type qualifier",
+            if owner == "Option" {
+                "Write `Option.Some(const Value)` or `Option.None`."
+            } else {
+                "Write `Result.Ok(const Value)` or `Result.Error(const Message)`."
+            },
+            self.current_span(),
+        );
+        Some(owner)
+    }
+
     fn at_pattern_variant(&self) -> bool {
-        if matches!(self.current_token(), Token::OptionKw | Token::Result) {
+        if matches!(
+            self.current_token(),
+            Token::OptionKw | Token::Result | Token::Some | Token::None | Token::Ok | Token::Error
+        ) {
             return true;
         }
         let mut position = self.pos;

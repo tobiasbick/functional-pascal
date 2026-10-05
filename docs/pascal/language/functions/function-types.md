@@ -45,11 +45,6 @@ outer bindings, capture mutable cells or start tasks. Immutable outer data and
 pure callables can be read and captured. A panic or nontermination does not
 violate purity.
 
-Reading a computed property calls its ordinary getter and is therefore rejected
-inside a pure function or a record default initializer.
-Property setters and event accessors are ordinary calls as well, including
-`Assigned`, handler assignment and event invocation.
-
 A pure function can be assigned to an ordinary function type. The destination
 then exposes only an ordinary callable; its original guarantee cannot be recovered
 by assigning it back to a pure type. Purity is explicit, never inferred from a

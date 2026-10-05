@@ -2,13 +2,13 @@ use super::toks;
 use crate::Token;
 
 #[test]
-fn all_64_keywords() {
+fn all_reserved_keywords() {
     let input = "program unit uses const var mutable function procedure begin end return \
-                 if then else case of for to downto in in do while \
+                 if then else elsif case when of for to downto in in do while \
                  repeat until and or not xor div mod shl shr \
                  true false type record enum array channel task panic break continue \
                  public result option ok error some none try \
-                 go dict with static property event read write comparable numeric printable self nil";
+                 go dict with static property event read write comparable numeric printable self nil null";
     let tokens = toks(input);
     assert_eq!(
         tokens,
@@ -27,7 +27,9 @@ fn all_64_keywords() {
             Token::If,
             Token::Then,
             Token::Else,
+            Token::Elsif,
             Token::Case,
+            Token::When,
             Token::Of,
             Token::For,
             Token::To,
@@ -78,8 +80,71 @@ fn all_64_keywords() {
             Token::Printable,
             Token::SelfKw,
             Token::Nil,
+            Token::Null,
         ]
     );
+}
+
+#[test]
+fn block_keywords_are_reserved_in_every_ascii_letter_case() {
+    for (keyword, expected) in [
+        ("elsif", Token::Elsif),
+        ("when", Token::When),
+        ("null", Token::Null),
+    ] {
+        for uppercase_mask in 0..(1 << keyword.len()) {
+            let spelling = keyword
+                .bytes()
+                .enumerate()
+                .map(|(index, byte)| {
+                    char::from(if uppercase_mask & (1 << index) == 0 {
+                        byte
+                    } else {
+                        byte.to_ascii_uppercase()
+                    })
+                })
+                .collect::<String>();
+            assert_eq!(toks(&spelling), vec![expected.clone()], "{spelling}");
+        }
+    }
+}
+
+#[test]
+fn block_keyword_prefixes_and_suffixes_are_identifiers() {
+    for keyword in ["elsif", "when", "null"] {
+        for identifier in [
+            format!("{keyword}Value"),
+            format!("{keyword}_value"),
+            format!("value{keyword}"),
+        ] {
+            assert_eq!(toks(&identifier), vec![Token::Ident(identifier)]);
+        }
+    }
+}
+
+#[test]
+fn block_keywords_inside_strings_and_comments_are_preserved() {
+    let source = "'elsif WHEN NuLl' // elsif WHEN NuLl\n'null' // ELSIF when null\nelsif when null";
+    assert_eq!(
+        toks(source),
+        vec![
+            Token::Str("elsif WHEN NuLl".into()),
+            Token::Str("null".into()),
+            Token::Elsif,
+            Token::When,
+            Token::Null
+        ]
+    );
+}
+
+#[test]
+fn block_keyword_spans_preserve_source_casing() {
+    let source = "ElSiF WhEn NuLl";
+    let (tokens, errors) = crate::lex(source);
+    assert!(errors.is_empty(), "{errors:?}");
+    for (token, spelling) in tokens.iter().zip(["ElSiF", "WhEn", "NuLl"]) {
+        assert_eq!(token.span.text(source), Some(spelling));
+    }
 }
 
 #[test]

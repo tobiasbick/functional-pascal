@@ -17,7 +17,9 @@ fn keyword_token(raw: &str) -> Option<Token> {
         s if s.eq_ignore_ascii_case("if") => Some(Token::If),
         s if s.eq_ignore_ascii_case("then") => Some(Token::Then),
         s if s.eq_ignore_ascii_case("else") => Some(Token::Else),
+        s if s.eq_ignore_ascii_case("elsif") => Some(Token::Elsif),
         s if s.eq_ignore_ascii_case("case") => Some(Token::Case),
+        s if s.eq_ignore_ascii_case("when") => Some(Token::When),
         s if s.eq_ignore_ascii_case("of") => Some(Token::Of),
         s if s.eq_ignore_ascii_case("for") => Some(Token::For),
         s if s.eq_ignore_ascii_case("to") => Some(Token::To),
@@ -67,6 +69,7 @@ fn keyword_token(raw: &str) -> Option<Token> {
         s if s.eq_ignore_ascii_case("printable") => Some(Token::Printable),
         s if s.eq_ignore_ascii_case("self") => Some(Token::SelfKw),
         s if s.eq_ignore_ascii_case("nil") => Some(Token::Nil),
+        s if s.eq_ignore_ascii_case("null") => Some(Token::Null),
         _ => None,
     }
 }

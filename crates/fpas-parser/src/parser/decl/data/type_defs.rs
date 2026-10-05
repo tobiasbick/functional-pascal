@@ -14,15 +14,16 @@ impl Parser {
     ) -> Vec<Decl> {
         self.advance();
         let mut defs = Vec::new();
-        if !matches!(self.current_token(), Token::Ident(_)) {
+        if !self.can_start_declaration_definition() {
             self.error_with_code(
                 PARSE_EXPECTED_IDENTIFIER,
                 "Expected a type declaration after `type`",
-                "Add a declaration such as `type Count = integer;`.",
+                self.reserved_identifier_hint()
+                    .unwrap_or("Add a declaration such as `type Count = integer;`."),
                 self.current_span(),
             );
         }
-        while let Token::Ident(_) = self.current_token() {
+        while self.can_start_declaration_definition() {
             defs.push(Decl::TypeDef(
                 self.parse_type_def(visibility, allow_member_visibility),
             ));
@@ -32,9 +33,7 @@ impl Parser {
 
     fn parse_type_def(&mut self, visibility: Visibility, allow_member_visibility: bool) -> TypeDef {
         let start = self.current_span();
-        let (name, _) = self
-            .expect_ident()
-            .unwrap_or_else(|| self.error_ident(start));
+        let (name, _) = self.expect_ident_or_error(start);
         if self.check(&Token::Less) {
             let span = self.current_span();
             self.error_with_code(

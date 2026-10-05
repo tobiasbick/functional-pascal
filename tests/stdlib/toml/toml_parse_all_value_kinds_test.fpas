@@ -56,9 +56,9 @@ begin
           end;
 
           case Std.Options.Unwrap(Std.Dictionaries.Get(Fields, 'when')) of
-            TomlValue.Datetime(When):
+            TomlValue.Datetime(Timestamp):
             begin
-              AssertEquals('1979-05-27T07:32:00Z', When)
+              AssertEquals('1979-05-27T07:32:00Z', Timestamp)
             end
             else
             begin

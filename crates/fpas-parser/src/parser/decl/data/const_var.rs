@@ -7,15 +7,16 @@ impl Parser {
     pub(in super::super) fn parse_const_block(&mut self, visibility: Visibility) -> Vec<Decl> {
         self.advance();
         let mut defs = Vec::new();
-        if !self.at_declaration_name() {
+        if !self.can_start_declaration_definition() {
             self.error_with_code(
                 PARSE_EXPECTED_IDENTIFIER,
                 "Expected a constant declaration after `const`",
-                "Add a declaration such as `const X: integer := 1;`.",
+                self.reserved_identifier_hint()
+                    .unwrap_or("Add a declaration such as `const X: integer := 1;`."),
                 self.current_span(),
             );
         }
-        while let Token::Ident(_) = self.current_token() {
+        while self.can_start_declaration_definition() {
             defs.push(Decl::Const(self.parse_const_def(visibility)));
         }
         defs
@@ -44,7 +45,7 @@ impl Parser {
         }
         self.advance();
         let mut defs = Vec::new();
-        if !self.at_declaration_name() {
+        if !self.can_start_declaration_definition() {
             let (kind, example) = if mutable {
                 ("mutable variable", "mutable var X: integer := 1;")
             } else {
@@ -53,11 +54,12 @@ impl Parser {
             self.error_with_code(
                 PARSE_EXPECTED_IDENTIFIER,
                 &format!("Expected a {kind} declaration after the section keyword"),
-                &format!("Add a declaration such as `{example}`."),
+                self.reserved_identifier_hint()
+                    .unwrap_or(&format!("Add a declaration such as `{example}`.")),
                 self.current_span(),
             );
         }
-        while let Token::Ident(_) = self.current_token() {
+        while self.can_start_declaration_definition() {
             let var_def = self.parse_var_def(visibility);
             if mutable {
                 defs.push(Decl::MutableVar(var_def));
@@ -68,8 +70,9 @@ impl Parser {
         defs
     }
 
-    fn at_declaration_name(&self) -> bool {
-        matches!(self.current_token(), Token::Ident(_))
+    /// Includes reserved block keywords so identifier recovery retains the rest of the definition.
+    pub(super) fn can_start_declaration_definition(&self) -> bool {
+        matches!(self.current_token(), Token::Ident(_)) || self.reserved_identifier_hint().is_some()
     }
 
     pub(in crate::parser) fn parse_typed_init_fields(

@@ -1,0 +1,13 @@
+// Reserved-word highlighting fixture, including invalid syntax.
+program ReservedKeywordHighlighting;
+
+begin
+  elsif ELSIF ElSiF
+  when WHEN WhEn
+  null NULL NuLl
+  var NullValue: string := 'elsif WHEN NuLl';
+  var WhenValue: integer := 1;
+  var ElsifValue: integer := 2;
+  var JsonText: string := '{"value":null}';
+  // ELSIF WHEN NULL
+end.

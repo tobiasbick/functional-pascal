@@ -95,7 +95,9 @@ impl Parser {
                         "Expected expression, found `{}`",
                         super::super::token_display(self.current_token()),
                     ),
-                    "An expression (value, variable, or function call) is required here.",
+                    self.reserved_identifier_hint().unwrap_or(
+                        "An expression (value, variable, or function call) is required here.",
+                    ),
                     span,
                 );
                 if !self.is_expression_recovery_boundary() {

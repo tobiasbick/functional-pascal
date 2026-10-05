@@ -78,7 +78,7 @@ line_comment    = '//' { (* any character except CR or LF *) } ;
 (* A contiguous standalone comment block immediately before a       *)
 (* declaration is Markdown documentation; this is a tooling rule.    *)
 
-(* ---- Keywords (64, case-insensitive) --------------------------- *)
+(* ---- Keywords (case-insensitive) ------------------------------- *)
 
 keyword         = 'program'   | 'unit'      | 'uses'      | 'const'
                 | 'var'       | 'mutable'   | 'function'  | 'procedure'
@@ -96,7 +96,8 @@ keyword         = 'program'   | 'unit'      | 'uses'      | 'const'
                 | 'go'        | 'dict'      | 'with'      | 'static' | 'property'
                 | 'event'     | 'read'      | 'write'     | 'comparable'
                 | 'numeric'   | 'printable' | 'self'      | 'nil'
-                | 'channel'   | 'task' ;
+                | 'channel'   | 'task'
+                | 'elsif'     | 'when'      | 'null' ;
 
 (* ---- Symbols --------------------------------------------------- *)
 

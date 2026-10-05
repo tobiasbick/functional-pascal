@@ -8,7 +8,7 @@ begin
     Ok(V):
     begin
       case V of
-        JsonValue.Null:
+        JsonValue.NullValue:
         begin
           WriteLn('null')
         end

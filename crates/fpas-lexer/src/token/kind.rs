@@ -23,7 +23,7 @@ documented_token_enum! {
 /// Lexical token produced by the Functional Pascal lexer.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Token {
-    // Keywords (64)
+    // Keywords
     Program,
     Unit,
     Uses,
@@ -38,7 +38,11 @@ pub enum Token {
     If,
     Then,
     Else,
+    /// Reserved keyword `elsif`; unavailable as an identifier.
+    Elsif,
     Case,
+    /// Reserved keyword `when`; unavailable as an identifier.
+    When,
     Of,
     For,
     To,
@@ -105,6 +109,8 @@ pub enum Token {
     Printable,
     /// Names the receiver parameter and expression inside an instance record method.
     SelfKw,
+    /// Reserved keyword `null`; unavailable as an identifier.
+    Null,
     /// Clears an event handler: `Button.OnClick := nil`.
     ///
     /// **Documentation:** `docs/pascal/language/types/record-events.md`

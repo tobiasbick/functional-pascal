@@ -44,7 +44,6 @@ their packages and remain open; the reference examples do not settle them.
 
 | Package | Remaining decision or specification |
 |---------|-------------------------------------|
-| [AP13](../ap13-explicit-block-boundaries/README.md#open-decisions) | Choose the replacement for `JsonValue.Null` before reserving `null`. |
 | [AP06](../ap06-dot-call-targets/README.md#open-decisions), [AP12](../ap12-callable-expressions/README.md#open-decisions) | Define the dot-call catalog, imports, conflicts, and mutation form; accept or reject callable-expression targets and their evaluation order. |
 | [AP17](../ap17-visible-caller-mutation/README.md#open-decisions), [AP17.1](../ap17-visible-caller-mutation/01-var-parameters.md#implementation) | Decide `var` parameters on function types and effects retained after a failed caller-mutating call. |
 | [AP19](../ap19-distinct-domain-types/README.md#open-decisions) | Define constraints, dictionary keys, and case labels for distinct types. |
@@ -54,6 +53,9 @@ their packages and remain open; the reference examples do not settle them.
 
 The AP02 numbering gate was resolved on 2026-10-05: the user confirmed Q01's
 `FPnxxx` scheme. See [AP02's resolved decisions](../ap02-structured-diagnostics/README.md#resolved-decisions).
+
+AP13's JSON variant name is confirmed as `JsonValue.NullValue`. See
+[AP13's reserved keyword names](../ap13-explicit-block-boundaries/README.md#reserved-keyword-names).
 
 ## Delivery and integration
 

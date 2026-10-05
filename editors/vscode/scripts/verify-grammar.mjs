@@ -253,12 +253,45 @@ async function verifyEdgeScopes(grammar) {
   );
 }
 
+async function verifyReservedKeywordScopes(grammar) {
+  const fixture = await tokenizeFixture(grammar, "reserved_keywords.fpas");
+  for (const spellings of [
+    ["elsif", "ELSIF", "ElSiF"],
+    ["when", "WHEN", "WhEn"],
+    ["null", "NULL", "NuLl"]
+  ]) {
+    for (const spelling of spellings) {
+      assertScope(
+        tokenAt(fixture, spellings.join(" "), spelling),
+        "keyword.control.fpas"
+      );
+    }
+  }
+  for (const identifier of ["NullValue", "WhenValue", "ElsifValue"]) {
+    assertNoKeywordScope(tokenAt(fixture, `var ${identifier}`, identifier));
+  }
+  for (const keyword of ["elsif", "WHEN", "NuLl"]) {
+    const token = tokenAt(fixture, "'elsif WHEN NuLl'", keyword);
+    assertScope(token, "string.quoted.single.fpas");
+    assertNoKeywordScope(token);
+  }
+  for (const keyword of ["ELSIF", "WHEN", "NULL"]) {
+    const token = tokenAt(fixture, "// ELSIF WHEN NULL", keyword);
+    assertScope(token, "comment.line.double-slash.fpas");
+    assertNoKeywordScope(token);
+  }
+  const jsonNull = tokenAt(fixture, "'{\"value\":null}'", "null");
+  assertScope(jsonNull, "string.quoted.single.fpas");
+  assertNoKeywordScope(jsonNull);
+}
+
 /** Loads the grammar and verifies positive, negative, and edge-case scopes. */
 export async function verifyGrammar() {
   const grammar = await createGrammar();
   await verifyPositiveScopes(grammar);
   await verifyNegativeScopes(grammar);
   await verifyEdgeScopes(grammar);
+  await verifyReservedKeywordScopes(grammar);
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {

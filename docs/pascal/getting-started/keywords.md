@@ -19,6 +19,7 @@ none      try       public    go
 dict      with      static    property
 event     read      write     comparable
 numeric   printable self      nil
+elsif     when      null
 ```
 
 Every word in the table is fully reserved, including after `.` in a qualified name or
@@ -30,6 +31,11 @@ expression of an instance record method.
 `private` is not a keyword. Unit declarations and record members without
 `public` are private by default, so `private` remains available as an ordinary
 identifier.
+
+The reserved words `elsif`, `when`, and `null` also cannot be used as names.
+An identifier error suggests a replacement such as `Timestamp` or `NullValue`;
+the JSON null constructor is `JsonValue.NullValue`. Longer identifiers such as
+`WhenValue` remain valid. Keywords inside strings and comments retain their text.
 
 Reserved words cannot be used as declarations or member names, even after a
 qualifier. Public APIs must therefore use an identifier-safe spelling such as `EndKey`

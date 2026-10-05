@@ -160,13 +160,32 @@ impl Parser {
                     "Expected identifier, found `{}`",
                     super::token_display(self.current_token())
                 ),
-                "An identifier (name) is required here.",
+                self.reserved_identifier_hint()
+                    .unwrap_or("An identifier (name) is required here."),
                 span,
             );
             return None;
         };
         let span = self.advance().span;
         Some((name, span))
+    }
+
+    /// Returns an actionable rename hint for a reserved block keyword used as a name.
+    ///
+    /// **Documentation:** `docs/pascal/getting-started/keywords.md`
+    pub(crate) fn reserved_identifier_hint(&self) -> Option<&'static str> {
+        match self.current_token() {
+            Token::Elsif => Some(
+                "`elsif` is a reserved keyword. Rename the identifier, for example to `ElsifValue`.",
+            ),
+            Token::When => Some(
+                "`when` is a reserved keyword. Rename the identifier, for example to `Timestamp`.",
+            ),
+            Token::Null => Some(
+                "`null` is a reserved keyword. Rename the identifier, for example to `NullValue`; use `JsonValue.NullValue` for JSON null.",
+            ),
+            _ => None,
+        }
     }
 
     /// True when the current token can start an identifier designator.

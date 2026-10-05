@@ -132,7 +132,8 @@ impl Parser {
                 "Unexpected token `{}` at start of statement",
                 super::token_display(self.current_token())
             ),
-            "Expected a statement: var, if, while, for, begin, return, etc.",
+            self.reserved_identifier_hint()
+                .unwrap_or("Expected a statement: var, if, while, for, begin, return, etc."),
             span,
         );
         while !self.at_end() && !self.check(&Token::Semicolon) && !self.is_stmt_list_end() {

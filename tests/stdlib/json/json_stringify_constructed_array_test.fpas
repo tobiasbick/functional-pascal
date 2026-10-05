@@ -5,7 +5,7 @@ uses Std.Console, Std.Json;
 begin
   var V: JsonValue := JsonValue.ArrayValue([
                                              JsonValue.Bool(true),
-                                             JsonValue.Null,
+                                             JsonValue.NullValue,
                                              JsonValue.String('hi'),
                                              JsonValue.Number(1.5)
                                            ]);

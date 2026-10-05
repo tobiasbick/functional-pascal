@@ -103,6 +103,9 @@ Do **not** assume Delphi/Free Pascal:
 Other habits:
 
 - Case-insensitive keywords and identifiers.
+- `elsif`, `when`, and `null` are reserved names. Use an identifier such as
+  `Timestamp` for a local binding and `JsonValue.NullValue` for JSON null;
+  strings and JSON/TOML data keep their original text.
 - Strings use single quotes: `'Hello'`, escape with doubled quote: `'It''s'`.
 - `Std.*` units require explicit `uses` — listing a file in `.fpasprj` does not import it.
 - Qualify ambiguous short names (`Length`, `Map`, `Unwrap`, …) with the unit: `Std.Str.Length`, `Std.Array.Length`.

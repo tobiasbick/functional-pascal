@@ -7,8 +7,8 @@ public type
 
   // JSON tree representation.
   JsonValue = enum
-    // `Null` enum member.
-    Null;
+    // `NullValue` enum member.
+    NullValue;
     // `Bool` enum member.
     //
     // Parameters:

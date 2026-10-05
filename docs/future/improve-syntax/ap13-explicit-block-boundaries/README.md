@@ -17,6 +17,11 @@ sources, docs, and tests use the new syntax.
 
 ## Decisions
 
+### Reserved keyword names
+
+The JSON null variant is `JsonValue.NullValue`. This confirmed API spelling
+allows `null` to be reserved as a keyword while JSON text remains unchanged.
+
 ### Statement endings and closers
 
 - Every statement and declaration ends with `;`, including the last one before
@@ -144,9 +149,7 @@ end with;
 
 ## Open decisions
 
-- **Replacement name for `JsonValue.Null`.** Reserving `null` makes the
-  existing `Std.Json` variant `Null` invalid. Its new name is a public API
-  change and needs the user's agreement before AP13.1.
+There are no open decisions for AP13.1. Task-scope decisions belong to AP26.
 
 ## Common requirements for every work package
 

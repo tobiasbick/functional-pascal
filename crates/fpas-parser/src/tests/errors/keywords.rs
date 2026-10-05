@@ -15,7 +15,9 @@ const KEYWORDS: &[&str] = &[
     "if",
     "then",
     "else",
+    "elsif",
     "case",
+    "when",
     "of",
     "for",
     "to",
@@ -64,6 +66,7 @@ const KEYWORDS: &[&str] = &[
     "printable",
     "self",
     "nil",
+    "null",
 ];
 
 #[test]

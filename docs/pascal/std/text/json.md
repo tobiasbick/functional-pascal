@@ -35,7 +35,7 @@ After `uses Std.Json;` use short names (`JsonValue`, `Parse`, `Stringify`) or qu
 
 ```pascal
 type JsonValue = enum
-  Null;
+  NullValue;
   Bool(Value: boolean);
   Number(Value: real);
   String(Value: string);
@@ -44,7 +44,9 @@ type JsonValue = enum
 end;
 ```
 
-JSON `null` maps to `JsonValue.Null`. Objects use `dict of string to JsonValue`. Arrays use `array of JsonValue`.
+JSON `null` maps to `JsonValue.NullValue`. The constructor has no fields and
+serializes back to the JSON text `null`. Objects use `dict of string to JsonValue`.
+Arrays use `array of JsonValue`.
 
 ---
 
@@ -84,7 +86,7 @@ real value.
 ```pascal
 var Value: JsonValue := JsonValue.ArrayValue([
   JsonValue.Bool(true),
-  JsonValue.Null,
+  JsonValue.NullValue,
   JsonValue.String('hi'),
   JsonValue.Number(1.5)
 ]);

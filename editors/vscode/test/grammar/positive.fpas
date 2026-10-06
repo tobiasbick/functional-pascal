@@ -22,5 +22,5 @@ begin
   if Mask >= 1 then
   begin
     Std.Console.WriteLn('It''s the origin');
-  end;
+  end; end if;
 end.

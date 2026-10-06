@@ -159,9 +159,8 @@ TuiMsg.Tick(Elapsed):
 begin
   Next.Animation := Advance(State.Animation, Elapsed);
   if Next.Animation.Running then
-  begin
     Cmd.RequestTick(40);
-  end;
+  end if;
 end;
 ```
 

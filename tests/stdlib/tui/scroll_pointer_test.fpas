@@ -29,9 +29,10 @@ function ViewScroll(State: ScrollModel): TuiElement;
 begin
   mutable var Focused: option of TuiControlId := None;
   if State.Focus > 0 then
-  begin
-    Focused := Some(TuiControlId.Create(State.Focus));
-  end;
+    begin
+      Focused := Some(TuiControlId.Create(State.Focus));
+    end;
+  end if;
 
   return TuiElementBuilders.MakeDesktop(Focused, [
                                                    TuiElementBuilders.MakeScroll(TuiControlId.Create(1), State.Offset, TuiAction.Create(7), TuiElementBuilders.MakeColumn([

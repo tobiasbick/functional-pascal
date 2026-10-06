@@ -5,9 +5,10 @@ uses Std.Tui.Geometry.Rect, Std.Tui.Layout.Alignment, Std.Tui.Layout.MeasureResu
 function TuiAlignmentBoundsMin(Left: integer; Right: integer): integer;
 begin
   if Left < Right then
-  begin
-    return Left;
-  end;
+    begin
+      return Left;
+    end;
+  end if;
 
   return Right;
 end function;
@@ -15,9 +16,10 @@ end function;
 function TuiAlignmentBoundsMax(Left: integer; Right: integer): integer;
 begin
   if Left > Right then
-  begin
-    return Left;
-  end;
+    begin
+      return Left;
+    end;
+  end if;
 
   return Right;
 end function;
@@ -32,15 +34,17 @@ function TuiAlignmentBoundsExtent(
 begin
   mutable var Extent: integer := Preferred;
   if Alignment = TuiAlignmentKind.Fill then
-  begin
-    Extent := TuiAlignmentBoundsMin(Available, Maximum);
-  end;
+    begin
+      Extent := TuiAlignmentBoundsMin(Available, Maximum);
+    end;
+  end if;
 
   Extent := TuiAlignmentBoundsMax(Minimum, Extent);
   if Available >= Minimum then
-  begin
-    Extent := TuiAlignmentBoundsMin(Extent, Available);
-  end;
+    begin
+      Extent := TuiAlignmentBoundsMin(Extent, Available);
+    end;
+  end if;
 
   return Extent;
 end function;

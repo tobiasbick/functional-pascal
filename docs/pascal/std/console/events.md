@@ -18,6 +18,7 @@ another event follows the burst, it remains next in FIFO order. Test-injected
 var E: ConsoleEvent := ReadEvent();
 if E.kind = EventKind.Resize then
   WriteLn(E.width, 'x', E.height);
+end if;
 ```
 
 ### `function ReadEventTimeout(Milliseconds: integer): Option of ConsoleEvent`

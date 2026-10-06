@@ -24,7 +24,7 @@ type
   end enum;
 procedure Check(Name: string; Value: boolean; Expected: boolean);
 begin
-  if Value <> Expected then panic('wrong: ' + Name);
+  if Value <> Expected then panic('wrong: ' + Name); end if;
 end procedure;
 begin
   var A: Point := record X := 1; Y := 2.0; end;

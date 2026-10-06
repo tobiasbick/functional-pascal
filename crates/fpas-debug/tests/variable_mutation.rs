@@ -559,7 +559,7 @@ uses Std.Console;
 
 function Forever(): integer;
 begin
-  while true do begin end;
+  while true do begin null; end; end while;
   return 0;
 end function;
 

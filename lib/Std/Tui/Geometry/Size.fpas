@@ -3,9 +3,10 @@ unit Std.Tui.Geometry.Size;
 function TuiSizeRequireNonNegative(Value: integer; Name: string): integer;
 begin
   if Value < 0 then
-  begin
-    panic(('Tui ' + Name) + ' must not be negative');
-  end;
+    begin
+      panic(('Tui ' + Name) + ' must not be negative');
+    end;
+  end if;
 
   return Value;
 end function;

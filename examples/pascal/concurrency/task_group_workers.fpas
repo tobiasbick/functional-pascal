@@ -20,7 +20,8 @@ begin
   // Close requests cooperative cancellation and waits for every registered worker.
   var Failures: array of TaskFailure := CloseTaskGroup(Workers);
   for Failure: TaskFailure in Failures do
-  begin
-    WriteLn(Failure.Message);
-  end;
+    begin
+      WriteLn(Failure.Message);
+    end;
+  end for;
 end.

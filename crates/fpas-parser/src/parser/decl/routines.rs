@@ -123,11 +123,11 @@ impl Parser {
     }
 
     fn parse_func_body(&mut self, kind: Token) -> FuncBody {
-        self.with_declaration_closer(kind.clone(), |parser| {
+        self.with_block_closer(kind.clone(), |parser| {
             let nested = parser.parse_nested_decls();
             parser.expect(&Token::Begin);
             let stmts = parser.parse_statement_list();
-            if parser.expect_declaration_end(&kind) {
+            if parser.expect_block_end(&kind) {
                 parser.expect_semi();
             }
             FuncBody::Block { nested, stmts }

@@ -32,8 +32,8 @@ begin
       Ok(_): begin end;
       Error(Message): begin
         if I = {} then
-        begin if not Std.Str.Contains(Message, 'MaxBodyBytes') then panic(Message); end;
-        else begin if not Std.Str.Contains(Message, 'Content-Length') then panic(Message); end;
+        begin if not Std.Str.Contains(Message, 'MaxBodyBytes') then panic(Message); end if; end;
+        else begin if not Std.Str.Contains(Message, 'Content-Length') then panic(Message); end if; end; end if;
         Text := 'rejected';
       end;
     end;
@@ -41,7 +41,7 @@ begin
     ResponseValue.Body := Std.Net.Utf8.Encode(Text);
     Unwrap(WriteResponse(ConnectionValue, ResponseValue));
     Unwrap(Close(ConnectionValue));
-  end;
+  end; end for;
   Unwrap(CloseListener(ListenerValue));
 end.
 "#,

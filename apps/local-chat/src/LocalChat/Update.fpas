@@ -35,11 +35,12 @@ function SendPrompt(State: LocalChatModel): LocalChatModel;
 begin
   var Prompt: string := Std.Str.Trim(State.Draft);
   if Prompt = '' then
-  begin
-    mutable var Empty: LocalChatModel := State;
-    Empty.Status := 'Enter a message first';
-    return Empty;
-  end;
+    begin
+      mutable var Empty: LocalChatModel := State;
+      Empty.Status := 'Enter a message first';
+      return Empty;
+    end;
+  end if;
   mutable var Next: LocalChatModel := AppendEntry(State, ChatEntry.User(Prompt));
   Next.Draft := '';
   Next.DraftCaret := 0;
@@ -84,43 +85,47 @@ begin
     TuiMsg.TextChanged(Source, Action, Text, Caret):
     begin
       if Action.Value = PromptChangedAction then
-      begin
-        mutable var Next: LocalChatModel := State;
-        Next.Draft := Text;
-        Next.DraftCaret := Caret;
-        Next.Status := 'Ready';
-        return Next;
-      end;
+        begin
+          mutable var Next: LocalChatModel := State;
+          Next.Draft := Text;
+          Next.DraftCaret := Caret;
+          Next.Status := 'Ready';
+          return Next;
+        end;
+      end if;
 
       return State;
     end;
     TuiMsg.TextAreaChanged(Source, Action, Text, Caret, Offset):
     begin
       if Action.Value = TranscriptChangedAction then
-      begin
-        mutable var Next: LocalChatModel := State;
-        Next.TranscriptCaret := Caret;
-        Next.TranscriptOffset := Offset;
-        return Next;
-      end;
+        begin
+          mutable var Next: LocalChatModel := State;
+          Next.TranscriptCaret := Caret;
+          Next.TranscriptOffset := Offset;
+          return Next;
+        end;
+      end if;
 
       return State;
     end;
     TuiMsg.Action(Source, Action):
     begin
       if Action.Value = SendAction then
-      begin
-        return SendPrompt(State);
-      end;
+        begin
+          return SendPrompt(State);
+        end;
+      end if;
 
       return State;
     end;
     TuiMsg.Key(Key):
     begin
       if IsQuitShortcut(Key) then
-      begin
-        Cmd.Set(TuiCmd.Quit);
-      end;
+        begin
+          Cmd.Set(TuiCmd.Quit);
+        end;
+      end if;
 
       return State;
     end;

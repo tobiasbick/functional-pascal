@@ -8,7 +8,7 @@ uses Std.Results, Std.Conv;
 function DoubleToString(V: integer): string;
 begin
   return IntToStr(V * 2);
-end;
+end function;
 
 var R: Result of integer, string := Ok(21);
 var M: Result of string, string := Map(R, DoubleToString);
@@ -20,9 +20,12 @@ uses Std.Options, Std.Conv;
 
 function PositiveToString(V: integer): Option of string;
 begin
-  if V > 0 then return Some(IntToStr(V));
-  else return None;
-end;
+  if V > 0 then
+    return Some(IntToStr(V));
+  else
+    return None;
+  end if;
+end function;
 
 var O: Option of integer := Some(5);
 var M: Option of string := AndThen(O, PositiveToString);

@@ -10,9 +10,9 @@ begin
   var Original: dict of string to integer := Values;
   Values['a'] := 9;
   Values['b'] := Values['a'] + 1;
-  if Original['a'] <> 1 then panic('alias changed');
-  if 'b' in Original then panic('alias gained key');
-  if Values['b'] <> 10 then panic('insert failed');
+  if Original['a'] <> 1 then panic('alias changed'); end if;
+  if 'b' in Original then panic('alias gained key'); end if;
+  if Values['b'] <> 10 then panic('insert failed'); end if;
 end.
 "#,
     );
@@ -39,10 +39,10 @@ begin
     return 9;
   end;
   Values[Index()] := Replacement();
-  if Order <> 12 then panic('evaluation order');
-  if (Values[0] <> 9) or (Values[1] <> 2) then panic('root snapshot');
+  if Order <> 12 then panic('evaluation order'); end if;
+  if (Values[0] <> 9) or (Values[1] <> 2) then panic('root snapshot'); end if;
   Values[1] := 4;
-  if Values[1] <> 4 then panic('captured direct index');
+  if Values[1] <> 4 then panic('captured direct index'); end if;
 end procedure;
 begin
   Check();
@@ -60,9 +60,9 @@ begin
   mutable var A: array of integer := [1];
   var Original: array of integer := A;
   Push(A, 2);
-  if Length(Original) <> 1 then panic('array alias changed');
-  if Length(A) <> 2 then panic('array push length mismatch');
-  if A[1] <> 2 then panic('array push value mismatch');
+  if Length(Original) <> 1 then panic('array alias changed'); end if;
+  if Length(A) <> 2 then panic('array push length mismatch'); end if;
+  if A[1] <> 2 then panic('array push value mismatch'); end if;
 end.";
     assert_succeeds(source);
 
@@ -86,20 +86,20 @@ mutable var Global: array of integer := [4, 5];
 begin
   mutable var A: array of integer := [1, 2];
   var Original: array of integer := A;
-  if Pop(A) <> 2 then panic('last value');
-  if Length(Original) <> 2 then panic('alias length');
-  if Original[1] <> 2 then panic('alias value');
-  if Pop(A) <> 1 then panic('first value');
-  if Length(A) <> 0 then panic('empty length');
-  if Pop(Global) <> 5 then panic('global value');
-  if Length(Global) <> 1 then panic('global length');
+  if Pop(A) <> 2 then panic('last value'); end if;
+  if Length(Original) <> 2 then panic('alias length'); end if;
+  if Original[1] <> 2 then panic('alias value'); end if;
+  if Pop(A) <> 1 then panic('first value'); end if;
+  if Length(A) <> 0 then panic('empty length'); end if;
+  if Pop(Global) <> 5 then panic('global value'); end if;
+  if Length(Global) <> 1 then panic('global length'); end if;
   mutable var Captured: array of integer := [7, 8];
   var Take: function(): integer := function(): integer
   begin
     return Pop(Captured);
   end;
-  if Take() <> 8 then panic('capture value');
-  if Length(Captured) <> 1 then panic('capture length');
+  if Take() <> 8 then panic('capture value'); end if;
+  if Length(Captured) <> 1 then panic('capture length'); end if;
 end."#;
     assert_succeeds(source);
     let executable = crate::compile(&super::super::parse_ok(source)).expect("compile");
@@ -120,8 +120,8 @@ begin
   mutable var Values: array of integer := [1, 2];
   var Original: array of integer := Values;
   Values[1] := 9;
-  if Original[1] <> 2 then panic('array alias changed');
-  if Values[1] <> 9 then panic('array value mismatch');
+  if Original[1] <> 2 then panic('array alias changed'); end if;
+  if Values[1] <> 9 then panic('array value mismatch'); end if;
 end.
 "#;
     assert_succeeds(source);

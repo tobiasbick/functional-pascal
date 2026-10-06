@@ -25,9 +25,10 @@ begin
   var Failures: array of TaskFailure := CloseTaskGroup(Group);
   CloseChannel(Release);
   if Length(Failures) <> 0 then
-  begin
-    panic('Cleanup failed');
-  end;
+    begin
+      panic('Cleanup failed');
+    end;
+  end if;
 
   WriteLn('Cleanup joined; ownership released');
 end.

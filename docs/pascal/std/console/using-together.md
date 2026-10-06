@@ -19,9 +19,10 @@ begin
   WriteLn('Press Escape or any printable key.');
   var Key: KeyEvent := ReadKeyEvent();
   if Key.kind = KeyKind.Escape then
-    WriteLn('escape')
+    WriteLn('escape');
   else
-    WriteLn(Key.ch)
+    WriteLn(Key.ch);
+  end if;
 end.
 ```
 

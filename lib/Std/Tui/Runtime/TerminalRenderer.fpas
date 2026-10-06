@@ -46,9 +46,10 @@ function TuiTerminalDamageRow(Damage: TuiSurfaceDamage; Palette: TuiPalette): ar
 begin
   mutable var Row: array of Std.Console.Cell := [];
   for Cell: TuiCell in Damage.Cells do
-  begin
-    Std.Arrays.Push(Row, TuiCellToConsole(Cell, Palette));
-  end;
+    begin
+      Std.Arrays.Push(Row, TuiCellToConsole(Cell, Palette));
+    end;
+  end for;
 
   return Row;
 end function;
@@ -65,19 +66,22 @@ public procedure TuiFlushSurface(Surface: TuiWorkingSurface; Palette: TuiPalette
 begin
   var Damage: array of TuiSurfaceDamage := TuiSurfaceTakeTerminalDamage(Surface);
   if Std.Arrays.Length(Damage) = 0 then
-  begin
-    return;
-  end;
+    begin
+      return;
+    end;
+  end if;
 
   BeginFrame();
   for Item: TuiSurfaceDamage in Damage do
-  begin
-    var Row: array of Std.Console.Cell := TuiTerminalDamageRow(Item, Palette);
-    if Std.Arrays.Length(Row) > 0 then
     begin
-      WriteCells(Item.FirstX + 1, Item.Y + 1, Row);
+      var Row: array of Std.Console.Cell := TuiTerminalDamageRow(Item, Palette);
+      if Std.Arrays.Length(Row) > 0 then
+        begin
+          WriteCells(Item.FirstX + 1, Item.Y + 1, Row);
+        end;
+      end if;
     end;
-  end;
+  end for;
 
   Present();
 end procedure;

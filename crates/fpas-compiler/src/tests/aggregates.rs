@@ -20,7 +20,7 @@ begin
 end function;
 procedure Draw(P: Point);
 begin
-  if (P.X <> 0) or (P.Y <> 2) then panic('argument defaults');
+  if (P.X <> 0) or (P.Y <> 2) then panic('argument defaults'); end if;
 end procedure;
 begin
   mutable var P: Point := record end;
@@ -32,7 +32,7 @@ begin
      (Points[0].X <> 3) or (Points[0].Y <> 0) or
      (Returned.X <> 4) or (Returned.Y <> 0) or
      (OriginPoint.X <> 0) or (OriginPoint.Y <> 0) then
-    panic('contextual record defaults');
+    panic('contextual record defaults'); end if;
 end.
 "#,
     );
@@ -51,7 +51,7 @@ begin
   Lookup['b'] := 7;
   Total := Total + Values[1] + Lookup['b'];
   if (Total <> 16) or not (8 in Values) or not ('b' in Lookup) then
-    panic('collection mismatch');
+    panic('collection mismatch'); end if;
 end.",
     );
 }
@@ -72,9 +72,9 @@ begin
   mutable var Items: array of Point := [Original, Updated];
   Items[0].Y := 7;
   if (Original.X <> 1) or (Original.Y <> 2) or (Updated.X <> 9) then
-    panic('record copy mismatch');
+    panic('record copy mismatch'); end if;
   if (Items[0].Y <> 7) or (Items[1].Y <> 2) then
-    panic('nested record mismatch');
+    panic('nested record mismatch'); end if;
 end.",
     )
     .expect("register record path must succeed");
@@ -96,7 +96,7 @@ begin
   var C: Option of integer := None;
   var D: Choice := Choice.Number(7);
   if (A <> Ok(5)) or (B <> Some(6)) or (C <> None) then
-    panic('variant mismatch');
+    panic('variant mismatch'); end if;
 end.",
     );
 }
@@ -114,7 +114,7 @@ type
 begin
   mutable var VALUE: Pair := record Left := 1; Right := 2; end;
   value.lEfT := VALUE.right;
-  if Value.Left <> 2 then panic('case mismatch');
+  if Value.Left <> 2 then panic('case mismatch'); end if;
 end.",
     )
     .expect("register record names must be case-insensitive");
@@ -136,10 +136,10 @@ begin
   return Some(Value + 1);
 end function;
 begin
-  if ResultValue(Ok(4)) <> Ok(5) then panic('result success');
-  if ResultValue(Error('bad')) <> Error('bad') then panic('result failure');
-  if OptionValue(Some(4)) <> Some(5) then panic('option success');
-  if OptionValue(None) <> None then panic('option failure');
+  if ResultValue(Ok(4)) <> Ok(5) then panic('result success'); end if;
+  if ResultValue(Error('bad')) <> Error('bad') then panic('result failure'); end if;
+  if OptionValue(Some(4)) <> Some(5) then panic('option success'); end if;
+  if OptionValue(None) <> None then panic('option failure'); end if;
 end.",
     );
 }
@@ -171,11 +171,11 @@ begin
   case Build(Ok(2)) of
     Ok(Value):
       if (Value.First <> 1) or (Value.Second <> 2) or (Value.Third <> 3) then
-        panic('record values');
+        panic('record values'); end if;
     Error(Message): panic('unexpected record error');
   end;
   if Build(Error('expected')) <> Error('expected') then
-    panic('record try propagation');
+    panic('record try propagation'); end if;
 end.",
     );
 }
@@ -207,7 +207,7 @@ begin
     Shape.Point: Sum := 99;
     Shape.Pair(A, B): Sum := Sum + A + B;
   end;
-  if Sum <> 18 then panic('pattern mismatch');
+  if Sum <> 18 then panic('pattern mismatch'); end if;
 end.",
     );
 }
@@ -233,7 +233,7 @@ begin
     State.Running: Number := 5;
     State.Done: Number := 9;
   end;
-  if Number <> 5 then panic('simple enum mismatch');
+  if Number <> 5 then panic('simple enum mismatch'); end if;
   case StateAlias.Running of
     State.Ready: Number := 99;
     State.Running: Number := Number + 1;
@@ -244,7 +244,7 @@ begin
     State.Running: Number := 99;
     State.Done: Number := Number + 1;
   end;
-  if Number <> 7 then panic('alias enum backing mismatch');
+  if Number <> 7 then panic('alias enum backing mismatch'); end if;
 end.",
     );
 }
@@ -294,19 +294,19 @@ end procedure;
 
 begin
   var C: Counter := record Value := 6; end;
-  if C.Double() <> 12 then panic('method mismatch');
-  if C.Number <> 6 then panic('property read mismatch');
+  if C.Double() <> 12 then panic('method mismatch'); end if;
+  if C.Number <> 6 then panic('property read mismatch'); end if;
   C.Number := 9;
-  if LastValue <> 9 then panic('property write mismatch');
+  if LastValue <> 9 then panic('property write mismatch'); end if;
 
   var B: Button := record end;
-  if Assigned(B.OnValue) then panic('unexpected handler');
+  if Assigned(B.OnValue) then panic('unexpected handler'); end if;
   B.OnValue := Remember;
-  if not Assigned(B.OnValue) then panic('missing handler');
+  if not Assigned(B.OnValue) then panic('missing handler'); end if;
   B.OnValue(17);
-  if LastValue <> 17 then panic('event raise mismatch');
+  if LastValue <> 17 then panic('event raise mismatch'); end if;
   B.OnValue := (nil);
-  if Assigned(B.OnValue) then panic('handler was not cleared');
+  if Assigned(B.OnValue) then panic('handler was not cleared'); end if;
 end.",
     );
 }
@@ -327,7 +327,7 @@ type
   end record;
 begin
   var C: Counter := record Value := 1; end;
-  if C.Number <> 1 then panic('property metadata fixture');
+  if C.Number <> 1 then panic('property metadata fixture'); end if;
 end.",
     );
     let executable = crate::compile(&program).expect("property metadata source should compile");
@@ -355,9 +355,9 @@ fn string_indexing_and_membership_execute() {
 program RegisterStringAggregateOps;
 begin
   var Text: string := 'Hällo';
-  if Text[1] <> 'ä' then panic('unicode string index mismatch');
-  if not ('äll' in Text) then panic('substring membership mismatch');
-  if not ('ä' in Text) then panic('character membership mismatch');
+  if Text[1] <> 'ä' then panic('unicode string index mismatch'); end if;
+  if not ('äll' in Text) then panic('substring membership mismatch'); end if;
+  if not ('ä' in Text) then panic('character membership mismatch'); end if;
 end.",
     );
 }
@@ -369,7 +369,7 @@ fn anonymous_record_shapes_use_positional_fields() {
 program RegisterAnonymousRecord;
 begin
   if (record Left := 3; Right := 4; end).Left <> 3 then
-    panic('anonymous record mismatch');
+    panic('anonymous record mismatch'); end if;
 end.",
     );
 }
@@ -391,10 +391,10 @@ begin
 end function;
 begin
   if (record First := Next(); Second := Next(); end).Second <> 2 then
-    panic('anonymous record initializer order');
+    panic('anonymous record initializer order'); end if;
   var Typed: Pair := record First := Next(); end;
   if (Typed.First <> 3) or (Typed.Second <> 7) or (Calls <> 3) then
-    panic('record initializer order');
+    panic('record initializer order'); end if;
 end.
 "#,
     );
@@ -419,10 +419,10 @@ begin
 end function;
 begin
   var P: Point := Identity(record X := 8; end);
-  if P.X <> 8 then panic('generic record mismatch');
+  if P.X <> 8 then panic('generic record mismatch'); end if;
   var C: Choice := Identity(Choice.Number(9));
   case C of
-    Choice.Number(Value): if Value <> 9 then panic('generic enum payload mismatch');
+    Choice.Number(Value): if Value <> 9 then panic('generic enum payload mismatch'); end if;
     Choice.Empty: panic('generic enum variant mismatch');
   end;
 end.",
@@ -457,8 +457,8 @@ begin
 end function;
 begin
   var B: Box := box.create(11);
-  if B.Map(Double) <> 22 then panic('generic method mismatch');
-  if Box.Create(7).Number <> 7 then panic('postfix property mismatch');
+  if B.Map(Double) <> 22 then panic('generic method mismatch'); end if;
+  if Box.Create(7).Number <> 7 then panic('postfix property mismatch'); end if;
 end.",
     );
 }
@@ -479,7 +479,7 @@ type
 begin
   var C: Counter := record Base := 10; end;
   var AddToCounter: function(Value: integer): integer := C.Add;
-  if AddToCounter(7) <> 17 then panic('bound method mismatch');
+  if AddToCounter(7) <> 17 then panic('bound method mismatch'); end if;
 end.",
     );
 }
@@ -516,7 +516,7 @@ begin
   var C: Counter := record Base := 12; end;
   var S: Source := record end;
   S.OnValue := C.Add;
-  if S.OnValue(8) <> 20 then panic('bound event mismatch');
+  if S.OnValue(8) <> 20 then panic('bound event mismatch'); end if;
 end.",
     );
 }
@@ -560,10 +560,10 @@ end function;
 begin
   var O: Outer := record Item := record Value := 17; end; end;
   O.Child.Number := BuildValue();
-  if (Step <> 123) or (Written <> 23) then panic('property write order mismatch');
+  if (Step <> 123) or (Written <> 23) then panic('property write order mismatch'); end if;
   Step := 0;
-  if O.Child.Number <> 17 then panic('property read mismatch');
-  if Step <> 14 then panic('property read order mismatch');
+  if O.Child.Number <> 17 then panic('property read mismatch'); end if;
+  if Step <> 14 then panic('property read order mismatch'); end if;
 end.",
     );
 }
@@ -578,8 +578,8 @@ mutable var Surface: array of array of integer := [[1, 2]];
 begin
   var Original: array of array of integer := Surface;
   Surface[0][1] := 9;
-  if Original[0][1] <> 2 then panic('global alias changed');
-  if Surface[0][1] <> 9 then panic('global path value mismatch');
+  if Original[0][1] <> 2 then panic('global alias changed'); end if;
+  if Surface[0][1] <> 9 then panic('global path value mismatch'); end if;
 end.";
     assert_succeeds(source);
 
@@ -603,8 +603,8 @@ begin
 end function;
 begin
   Surface[0][ChangeSurface()] := 9;
-  if Surface[0][0] <> 1 then panic('snapshot order changed');
-  if Surface[0][1] <> 9 then panic('snapshot update missing');
+  if Surface[0][0] <> 1 then panic('snapshot order changed'); end if;
+  if Surface[0][1] <> 9 then panic('snapshot update missing'); end if;
 end.",
     );
 }
@@ -618,8 +618,8 @@ mutable var Lookup: dict of string to dict of string to integer := ['outer': ['o
 begin
   var Original: dict of string to dict of string to integer := Lookup;
   Lookup['outer']['new'] := 2;
-  if 'new' in Original['outer'] then panic('dictionary alias changed');
-  if Lookup['outer']['new'] <> 2 then panic('dictionary path value mismatch');
+  if 'new' in Original['outer'] then panic('dictionary alias changed'); end if;
+  if Lookup['outer']['new'] <> 2 then panic('dictionary path value mismatch'); end if;
 end.",
     );
 }

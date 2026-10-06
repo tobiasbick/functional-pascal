@@ -28,11 +28,12 @@ begin
   AssertEquals(0, Model.RowsRendered);
   mutable var Attempts: integer := 0;
   while (Model.RowsRendered < Model.Grid.Height) and (Attempts < 500) do
-  begin
-    Sleep(1);
-    Model := App.RunBackgroundIterations(Model, Inbox, UpdateMandelbrot, UpdateMandelbrotFrame, ViewMandelbrot, 1, 0);
-    Attempts := Attempts + 1;
-  end;
+    begin
+      Sleep(1);
+      Model := App.RunBackgroundIterations(Model, Inbox, UpdateMandelbrot, UpdateMandelbrotFrame, ViewMandelbrot, 1, 0);
+      Attempts := Attempts + 1;
+    end;
+  end while;
 
   AssertEquals(Model.Grid.Height, Model.RowsRendered);
   App.CloseWithBackground(Inbox);

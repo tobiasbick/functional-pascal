@@ -106,32 +106,36 @@ end function;
 function WrapText(Text: string; MaximumWidth: integer): string;
 begin
   if MaximumWidth <= 0 then
-  begin
-    return '';
-  end;
+    begin
+      return '';
+    end;
+  end if;
   mutable var Wrapped: string := '';
   mutable var LineWidth: integer := 0;
   var NewLine: string := Std.Str.Chr(10);
   for Grapheme: string in Std.Console.SplitGraphemes(Text) do
-  begin
-    if Grapheme = NewLine then
     begin
-      Wrapped := Wrapped + NewLine;
-      LineWidth := 0;
-    end;
-    else
-    begin
-      var GraphemeWidth: integer := Std.Console.DisplayWidth(Grapheme);
-      if (LineWidth > 0) and (LineWidth + GraphemeWidth > MaximumWidth) then
-      begin
-        Wrapped := Wrapped + NewLine;
-        LineWidth := 0;
-      end;
+      if Grapheme = NewLine then
+        begin
+          Wrapped := Wrapped + NewLine;
+          LineWidth := 0;
+        end;
+      else
+        begin
+          var GraphemeWidth: integer := Std.Console.DisplayWidth(Grapheme);
+          if (LineWidth > 0) and (LineWidth + GraphemeWidth > MaximumWidth) then
+            begin
+              Wrapped := Wrapped + NewLine;
+              LineWidth := 0;
+            end;
+          end if;
 
-      Wrapped := Wrapped + Grapheme;
-      LineWidth := LineWidth + GraphemeWidth;
+          Wrapped := Wrapped + Grapheme;
+          LineWidth := LineWidth + GraphemeWidth;
+        end;
+      end if;
     end;
-  end;
+  end for;
 
   return Wrapped;
 end function;
@@ -165,26 +169,30 @@ end function;
 public function LocalChatTranscript(State: LocalChatModel): string;
 begin
   if Std.Arrays.Length(State.Entries) = 0 then
-  begin
-    return ('No messages yet.' + Std.Str.Chr(10)) + 'Type below and press Enter.';
-  end;
+    begin
+      return ('No messages yet.' + Std.Str.Chr(10)) + 'Type below and press Enter.';
+    end;
+  end if;
   mutable var MaximumWidth: integer := State.Width - 6;
   if MaximumWidth < 1 then
-  begin
-    MaximumWidth := 1;
-  end;
+    begin
+      MaximumWidth := 1;
+    end;
+  end if;
   mutable var Transcript: string := '';
   var NewLine: string := Std.Str.Chr(10);
   for Index: integer := 0 to Std.Arrays.Length(State.Entries) - 1 do
-  begin
-    if Transcript <> '' then
     begin
-      Transcript := (Transcript + NewLine) + NewLine;
-    end;
+      if Transcript <> '' then
+        begin
+          Transcript := (Transcript + NewLine) + NewLine;
+        end;
+      end if;
 
-    Transcript := ((Transcript + RoleLabel(State.Entries[Index].Role)) + NewLine) +
-                  WrapText(State.Entries[Index].Text, MaximumWidth);
-  end;
+      Transcript := ((Transcript + RoleLabel(State.Entries[Index].Role)) + NewLine) +
+                    WrapText(State.Entries[Index].Text, MaximumWidth);
+    end;
+  end for;
 
   return Transcript;
 end function;
@@ -200,15 +208,17 @@ begin
   Next.TranscriptCaret := Std.Str.Length(Transcript);
   mutable var VisibleLines: integer := Next.Height - 7;
   if VisibleLines < 1 then
-  begin
-    VisibleLines := 1;
-  end;
+    begin
+      VisibleLines := 1;
+    end;
+  end if;
   var LineCount: integer := Std.Arrays.Length(Std.Str.Split(Transcript, Std.Str.Chr(10)));
   mutable var OffsetY: integer := LineCount - VisibleLines;
   if OffsetY < 0 then
-  begin
-    OffsetY := 0;
-  end;
+    begin
+      OffsetY := 0;
+    end;
+  end if;
 
   Next.TranscriptOffset := TuiPoint.Create(0, OffsetY);
   return Next;

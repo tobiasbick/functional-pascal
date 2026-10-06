@@ -1,6 +1,6 @@
+mod block_closers;
 mod core;
 mod decl;
-mod declaration_closers;
 mod display;
 mod expr;
 mod nesting;
@@ -23,5 +23,5 @@ pub struct Parser {
     errors: Vec<ParseError>,
     nesting_depth: usize,
     nesting_limit_reached: bool,
-    declaration_closers: Vec<Token>,
+    block_closers: Vec<Token>,
 }

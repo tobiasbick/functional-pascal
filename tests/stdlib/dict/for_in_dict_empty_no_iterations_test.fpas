@@ -6,9 +6,10 @@ begin
   var D: dict of string to integer := [:];
   mutable var Count: integer := 0;
   for K: string in D do
-  begin
-    Count := Count + 1;
-  end;
+    begin
+      Count := Count + 1;
+    end;
+  end for;
 
   WriteLn(Count);
 end.

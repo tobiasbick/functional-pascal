@@ -18,57 +18,65 @@ function RunNumbers(Iterations: integer): integer;
 begin
   mutable var Value: integer := 0;
   for Index: integer := 1 to Iterations do
-  begin
-    Value := Advance(Value, 1);
-  end;
+    begin
+      Value := Advance(Value, 1);
+    end;
+  end for;
 
   return Value;
 end function;
 
 begin
   if (ParamCount() < 1) or (ParamCount() > 2) then
-  begin
-    panic('usage: dynamic_numeric_benchmark.fpas -- ITERATIONS [MAX_MILLIS]');
-  end;
+    begin
+      panic('usage: dynamic_numeric_benchmark.fpas -- ITERATIONS [MAX_MILLIS]');
+    end;
+  end if;
   var Iterations: integer := StrToInt(ParamStr(0));
   if Iterations < 1 then
-  begin
-    panic('ITERATIONS must be positive');
-  end;
+    begin
+      panic('ITERATIONS must be positive');
+    end;
+  end if;
   mutable var MaxMillis: integer := 0;
   if ParamCount() = 2 then
-  begin
-    MaxMillis := StrToInt(ParamStr(1));
-    if MaxMillis < 1 then
     begin
-      panic('MAX_MILLIS must be positive');
+      MaxMillis := StrToInt(ParamStr(1));
+      if MaxMillis < 1 then
+        begin
+          panic('MAX_MILLIS must be positive');
+        end;
+      end if;
     end;
-  end;
+  end if;
   mutable var Value: integer := RunNumbers(WarmupIterations);
   var Started: integer := MonotonicMillis();
   Value := RunNumbers(Iterations);
   var Elapsed: integer := ElapsedMillis(Started);
   mutable var OpsPerSecond: integer := 0;
   if Elapsed > 0 then
-  begin
-    OpsPerSecond := (Iterations * 1000) div Elapsed;
-  end;
+    begin
+      OpsPerSecond := (Iterations * 1000) div Elapsed;
+    end;
+  end if;
 
   WriteLn('iterations: ' + IntToStr(Iterations));
   WriteLn(('elapsed: ' + IntToStr(Elapsed)) + ' ms');
   if Elapsed > 0 then
-  begin
-    WriteLn(('throughput: ' + IntToStr(OpsPerSecond)) + ' dynamic numeric ops/s');
-  end;
+    begin
+      WriteLn(('throughput: ' + IntToStr(OpsPerSecond)) + ' dynamic numeric ops/s');
+    end;
   else
-  begin
-    WriteLn('throughput: unavailable (elapsed time is 0 ms)');
-  end;
+    begin
+      WriteLn('throughput: unavailable (elapsed time is 0 ms)');
+    end;
+  end if;
 
   WriteLn('final value: ' + IntToStr(Value));
   if (MaxMillis > 0) and (Elapsed > MaxMillis) then
-  begin
-    panic(((('dynamic-numeric benchmark regression: ' + IntToStr(Elapsed)) + ' ms exceeds limit ') + IntToStr(MaxMillis)) +
-          ' ms');
-  end;
+    begin
+      panic(((('dynamic-numeric benchmark regression: ' + IntToStr(Elapsed)) + ' ms exceeds limit ') + IntToStr(MaxMillis)) +
+            ' ms');
+    end;
+  end if;
 end.

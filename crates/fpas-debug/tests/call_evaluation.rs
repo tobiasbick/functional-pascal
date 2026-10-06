@@ -208,7 +208,7 @@ fn timeout_and_cooperative_cancellation_leave_the_session_stopped() {
 program DebugLimits;
 function Forever(): integer;
 begin
-  while true do begin end;
+  while true do begin null; end; end while;
   return 0;
 end function;
 begin

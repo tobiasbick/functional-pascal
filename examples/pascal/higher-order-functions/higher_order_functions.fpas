@@ -44,17 +44,19 @@ begin
   var Doubled: array of integer := Map(Nums, Double);
   WriteText('Map double: ');
   for V: integer in Doubled do
-  begin
-    WriteText(V, ' ');
-  end;
+    begin
+      WriteText(V, ' ');
+    end;
+  end for;
 
   WriteLn('');
   var Big: array of integer := Filter(Nums, IsGreaterThanThree);
   WriteText('Filter > 3: ');
   for V: integer in Big do
-  begin
-    WriteText(V, ' ');
-  end;
+    begin
+      WriteText(V, ' ');
+    end;
+  end for;
 
   WriteLn('');
   var Total: integer := Reduce(Nums, 0, Sum);
@@ -63,9 +65,10 @@ begin
   var LargeSquares: array of integer := Filter(Squared, IsGreaterThanTen);
   WriteText('Squares > 10: ');
   for V: integer in LargeSquares do
-  begin
-    WriteText(V, ' ');
-  end;
+    begin
+      WriteText(V, ' ');
+    end;
+  end for;
 
   WriteLn('');
 end.

@@ -83,10 +83,12 @@ Accessing an out-of-bounds index is a **runtime error**. The index must be an `i
 ```pascal
 // iterate over characters
 mutable var I: integer := 0;
-while I < Std.Str.Length(S) do begin
-  WriteLn(S[I]);
-  I := I + 1;
-end;
+while I < Std.Str.Length(S) do
+  begin
+    WriteLn(S[I]);
+    I := I + 1;
+  end;
+end while;
 ```
 
 ## String concatenation

@@ -1,0 +1,88 @@
+program ControlBlocksTest;
+
+uses Std.Test;
+
+mutable var
+  Evaluations: integer := 0;
+
+function Condition(Value: boolean): boolean;
+begin
+  Evaluations := Evaluations + 1;
+  return Value;
+end function;
+
+function Choose(): integer;
+begin
+  if Condition(false) then
+    return 0;
+  elsif Condition(true) then
+    return 42;
+  elsif Condition(true) then
+    return 99;
+  else
+    null;
+  end if;
+
+  return -1;
+end function;
+
+begin
+  AssertEquals(42, Choose());
+  AssertEquals(2, Evaluations);
+  mutable var Sum: integer := 0;
+  for I: integer := 1 to 5 do
+    if I = 2 then
+      continue;
+    end if;
+
+    if I = 5 then
+      break;
+    end if;
+
+    Sum := Sum + I;
+  end for;
+
+  AssertEquals(8, Sum);
+  for I: integer in [1, 2, 3] do
+    var Increment: integer := I;
+    Sum := Sum + Increment;
+  end for;
+
+  AssertEquals(14, Sum);
+  var Value: integer := 7;
+  if true then
+    var Value: integer := 8;
+    AssertEquals(8, Value);
+    begin
+      var Value: integer := 9;
+      AssertEquals(9, Value);
+    end;
+
+    AssertEquals(8, Value);
+  end if;
+
+  AssertEquals(7, Value);
+  mutable var Count: integer := 0;
+  while Count < 3 do
+    Count := Count + 1;
+    var Value: integer := Count;
+    AssertEquals(Count, Value);
+  end while;
+
+  AssertEquals(7, Value);
+  repeat
+    var Value: integer := 100;
+    Count := Count - 1;
+    continue;
+  until Count = 0;
+  AssertEquals(7, Value);
+  if false then
+    null;
+  else
+    if false then
+      AssertEquals(0, 1);
+    else
+      null;
+    end if;
+  end if;
+end.

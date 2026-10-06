@@ -9,9 +9,10 @@ uses
 function TuiElementRequireNonNegativeSpacing(Value: integer): integer;
 begin
   if Value < 0 then
-  begin
-    panic('Tui row and column spacing must not be negative');
-  end;
+    begin
+      panic('Tui row and column spacing must not be negative');
+    end;
+  end if;
 
   return Value;
 end function;

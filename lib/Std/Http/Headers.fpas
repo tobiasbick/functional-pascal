@@ -21,12 +21,14 @@ end function;
 public function Find(Headers: array of Header; Name: string): option of string;
 begin
   for Index: integer := 0 to Std.Arrays.Length(Headers) - 1 do
-  begin
-    if IsName(Headers[Index].Name, Name) then
     begin
-      return Some(Headers[Index].Value);
+      if IsName(Headers[Index].Name, Name) then
+        begin
+          return Some(Headers[Index].Value);
+        end;
+      end if;
     end;
-  end;
+  end for;
 
   return None;
 end function;

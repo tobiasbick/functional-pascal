@@ -69,7 +69,7 @@ fn record_enum_and_routine_eol_comments_remain_on_member_lines() {
 
 #[test]
 fn explicit_block_eol_comment_precedes_the_statement_separator() {
-    let source = "program T; begin if true then begin WriteLn('yes'); end; // block tail\nWriteLn('done'); end.";
+    let source = "program T; begin if true then begin WriteLn('yes'); end; // block tail\nend if; WriteLn('done'); end.";
     let formatted = format_idempotently(source);
 
     assert!(formatted.contains("end; // block tail\n"), "{formatted}");
@@ -88,11 +88,11 @@ fn cr_only_input_preserves_comment_line_ownership() {
 
 #[test]
 fn branch_comments_survive_single_and_explicit_block_bodies() {
-    let source = "program T; begin if true then // single branch\nWriteLn('single'); if false then\n// explicit block\nbegin WriteLn('block'); end; end.";
+    let source = "program T; begin if true then // single branch\nWriteLn('single'); end if; if false then\n// explicit block\nbegin WriteLn('block'); end; end if; end.";
     let formatted = format_idempotently(source);
 
     assert!(formatted.contains("// single branch\n    WriteLn('single')"));
-    assert!(formatted.contains("then\n  // explicit block\n  begin"));
+    assert!(formatted.contains("then\n    // explicit block\n    begin"));
 }
 
 #[test]

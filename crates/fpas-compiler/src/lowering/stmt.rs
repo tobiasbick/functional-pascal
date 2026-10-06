@@ -1,4 +1,6 @@
 //! Scalar declarations, assignments, blocks, returns, and panic lowering.
+//!
+//! **Documentation:** `docs/pascal/language/control-flow/README.md`.
 
 use fpas_ir::{Operation, Terminator};
 use fpas_parser::{DesignatorPart, Stmt, VarDef};
@@ -8,11 +10,13 @@ use crate::CompileError;
 use super::context::{LoweringContext, unsupported};
 
 impl LoweringContext {
+    /// Lowers a statement, retaining block scopes and emitting no operation for `null`.
     pub(super) fn lower_statement(&mut self, statement: &Stmt) -> Result<(), CompileError> {
         if self.is_terminated() {
             return Ok(());
         }
         match statement {
+            Stmt::Null(_) => Ok(()),
             Stmt::Block(statements, _) => {
                 self.begin_scope();
                 for statement in statements {

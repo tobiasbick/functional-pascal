@@ -194,7 +194,7 @@ impl CaptureCollector<'_> {
             | Stmt::Go { expr, .. } => {
                 self.collect_from_expr(expr);
             }
-            Stmt::Return(None, _) | Stmt::Break(_) | Stmt::Continue(_) => {}
+            Stmt::Return(None, _) | Stmt::Null(_) | Stmt::Break(_) | Stmt::Continue(_) => {}
             Stmt::If {
                 condition,
                 then_branch,

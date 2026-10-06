@@ -44,86 +44,99 @@ begin
   mutable var Parts: array of string := [];
   mutable var Index: integer := 0;
   while Index < Std.Arrays.Length(Bytes) do
-  begin
-    var First: integer := Bytes[Index];
-    if (First < 0) or (First > 255) then
     begin
-      return Invalid(Index, 'byte must be in 0..255');
-    end;
-    mutable var CodePoint: integer := 0;
-    mutable var Width: integer := 0;
-    if First <= 127 then
-    begin
-      CodePoint := First;
-      Width := 1;
-    end;
-    else if (First >= 194) and (First <= 223) then
-    begin
-      Width := 2;
-    end;
-    else if (First >= 224) and (First <= 239) then
-    begin
-      Width := 3;
-    end;
-    else if (First >= 240) and (First <= 244) then
-    begin
-      Width := 4;
-    end;
-    else
-    begin
-      return Invalid(Index, 'invalid leading byte');
-    end;
+      var First: integer := Bytes[Index];
+      if (First < 0) or (First > 255) then
+        begin
+          return Invalid(Index, 'byte must be in 0..255');
+        end;
+      end if;
+      mutable var CodePoint: integer := 0;
+      mutable var Width: integer := 0;
+      if First <= 127 then
+        begin
+          CodePoint := First;
+          Width := 1;
+        end;
+      elsif (First >= 194) and (First <= 223) then
+        begin
+          Width := 2;
+        end;
+      elsif (First >= 224) and (First <= 239) then
+        begin
+          Width := 3;
+        end;
+      elsif (First >= 240) and (First <= 244) then
+        begin
+          Width := 4;
+        end;
+      else
+        begin
+          return Invalid(Index, 'invalid leading byte');
+        end;
+      end if;
 
-    if Index + Width > Std.Arrays.Length(Bytes) then
-    begin
-      return Invalid(Index, 'truncated sequence');
+      if Index + Width > Std.Arrays.Length(Bytes) then
+        begin
+          return Invalid(Index, 'truncated sequence');
+        end;
+      end if;
+
+      if Width >= 2 then
+        begin
+          var Second: integer := Bytes[Index + 1];
+          if not IsContinuation(Second) then
+            begin
+              return Invalid(Index + 1, 'expected continuation byte');
+            end;
+          end if;
+
+          CodePoint := ((First - 192) * 64 + Second) - 128;
+        end;
+      end if;
+
+      if Width >= 3 then
+        begin
+          var Third: integer := Bytes[Index + 2];
+          if not IsContinuation(Third) then
+            begin
+              return Invalid(Index + 2, 'expected continuation byte');
+            end;
+          end if;
+
+          CodePoint := (((First - 224) * 4096 + (Bytes[Index + 1] - 128) * 64) + Third) - 128;
+          if (CodePoint < 2048) or ((CodePoint >= 55296) and (CodePoint <= 57343)) then
+            begin
+              return Invalid(Index, 'overlong or surrogate sequence');
+            end;
+          end if;
+        end;
+      end if;
+
+      if Width = 4 then
+        begin
+          var Fourth: integer := Bytes[Index + 3];
+          if not IsContinuation(Fourth) then
+            begin
+              return Invalid(Index + 3, 'expected continuation byte');
+            end;
+          end if;
+
+          CodePoint := ((((First - 240) * 262144 + (Bytes[Index + 1] - 128) * 4096) + (Bytes[Index +
+                                                                                             2] - 128) * 64) + Fourth) -
+                       128;
+          if (CodePoint < 65536) or (CodePoint > 1114111) then
+            begin
+              return Invalid(Index, 'overlong or out-of-range sequence');
+            end;
+          end if;
+        end;
+      end if;
+
+      Std.Arrays.Push(Parts, Std.Str.Chr(CodePoint));
+      Index := Index + Width;
     end;
-
-    if Width >= 2 then
-    begin
-      var Second: integer := Bytes[Index + 1];
-      if not IsContinuation(Second) then
-      begin
-        return Invalid(Index + 1, 'expected continuation byte');
-      end;
-
-      CodePoint := ((First - 192) * 64 + Second) - 128;
-    end;
-
-    if Width >= 3 then
-    begin
-      var Third: integer := Bytes[Index + 2];
-      if not IsContinuation(Third) then
-      begin
-        return Invalid(Index + 2, 'expected continuation byte');
-      end;
-
-      CodePoint := (((First - 224) * 4096 + (Bytes[Index + 1] - 128) * 64) + Third) - 128;
-      if (CodePoint < 2048) or ((CodePoint >= 55296) and (CodePoint <= 57343)) then
-      begin
-        return Invalid(Index, 'overlong or surrogate sequence');
-      end;
-    end;
-
-    if Width = 4 then
-    begin
-      var Fourth: integer := Bytes[Index + 3];
-      if not IsContinuation(Fourth) then
-      begin
-        return Invalid(Index + 3, 'expected continuation byte');
-      end;
-
-      CodePoint := ((((First - 240) * 262144 + (Bytes[Index + 1] - 128) * 4096) + (Bytes[Index + 2] - 128) * 64) + Fourth) -
-                   128;
-      if (CodePoint < 65536) or (CodePoint > 1114111) then
-      begin
-        return Invalid(Index, 'overlong or out-of-range sequence');
-      end;
-    end;
-
-    Std.Arrays.Push(Parts, Std.Str.Chr(CodePoint));
-    Index := Index + Width;
-  end;
+  end while;
 
   return Ok(Std.Str.Join(Parts, ''));
 end function;

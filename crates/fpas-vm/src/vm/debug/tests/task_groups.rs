@@ -27,14 +27,14 @@ begin
   var A: task := StartTaskInGroup(G, Ordinary);
   var B: task := StartTaskInGroup(G, Broken);
   var C: task := StartTaskInGroup(G, Successful);
-  if Wait(C) <> 42 then panic('child value');
+  if Wait(C) <> 42 then panic('child value'); end if;
   var Failures: array of TaskFailure := CloseTaskGroup(G);
-  if Length(Failures) <> 2 then panic('failure count');
-  if Failures[0].Kind <> TaskFailureKind.ReturnedError then panic('ordinary kind');
-  if Failures[0].Message <> 'ordinary' then panic('ordinary message');
-  if Failures[1].Kind <> TaskFailureKind.Panicked then panic('panic kind');
-  if Failures[1].Line <= 0 then panic('panic location');
-  if Length(CloseTaskGroup(G)) <> 0 then panic('repeat close');
+  if Length(Failures) <> 2 then panic('failure count'); end if;
+  if Failures[0].Kind <> TaskFailureKind.ReturnedError then panic('ordinary kind'); end if;
+  if Failures[0].Message <> 'ordinary' then panic('ordinary message'); end if;
+  if Failures[1].Kind <> TaskFailureKind.Panicked then panic('panic kind'); end if;
+  if Failures[1].Line <= 0 then panic('panic location'); end if;
+  if Length(CloseTaskGroup(G)) <> 0 then panic('repeat close'); end if;
 end."#;
 
 #[test]
@@ -164,8 +164,8 @@ begin
   var G: TaskGroup := CreateTaskGroup();
   StartTaskInGroup(G, Work);
   var Failures: array of TaskFailure := CloseTaskGroup(G);
-  if Length(Failures) <> 1 then panic('failure count');
-  if Failures[0].Kind <> TaskFailureKind.Cancelled then panic('cancellation kind');
+  if Length(Failures) <> 1 then panic('failure count'); end if;
+  if Failures[0].Kind <> TaskFailureKind.Cancelled then panic('cancellation kind'); end if;
 end."#;
     let mut session = stop_before_close(source);
     session.cancel_task(1).expect("cancel owned child");
@@ -185,8 +185,8 @@ begin
   var G: TaskGroup := CreateTaskGroup();
   StartTaskInGroup(G, procedure(Token: CancellationToken) begin CloseTaskGroup(G); end);
   var Failures: array of TaskFailure := CloseTaskGroup(G);
-  if Length(Failures) <> 1 then panic('failure count');
-  if Failures[0].Kind <> TaskFailureKind.RuntimeError then panic('runtime kind');
+  if Length(Failures) <> 1 then panic('failure count'); end if;
+  if Failures[0].Kind <> TaskFailureKind.RuntimeError then panic('runtime kind'); end if;
 end."#;
     let (program, errors) = fpas_parser::parse(source);
     assert!(errors.is_empty(), "{errors:?}");

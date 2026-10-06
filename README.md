@@ -135,6 +135,7 @@ standard-library demonstrations remain under `examples/`.
 
 ```pascal
 program Fibonacci;
+
 uses Std.Console;
 
 function Fib(N: integer): integer;
@@ -143,12 +144,14 @@ begin
     return N;
   else
     return Fib(N - 1) + Fib(N - 2);
+  end if;
 end function;
 
 begin
   WriteLn('Fibonacci sequence:');
   for I: integer := 0 to 9 do
     WriteLn(Fib(I));
+  end for;
 end.
 ```
 
@@ -205,20 +208,30 @@ end.
 
 ```pascal
 program OptionExample;
+
 uses Std.Console, Std.Arrays;
 
-function FindFirst(Items: array of integer; Min: integer): Option of integer;
+function FindFirst(Items: array of integer; Min: integer): option of integer;
 begin
   for I: integer := 0 to Length(Items) - 1 do
     if Items[I] >= Min then
       return Some(Items[I]);
+    end if;
+  end for;
+
   return None;
 end function;
 
 begin
   case FindFirst([3, 7, 15, 42], 10) of
-    Some(V): WriteLn('Found: ', V);
-    None:    WriteLn('Not found');
+    Some(V):
+    begin
+      WriteLn('Found: ', V);
+    end;
+    None:
+    begin
+      WriteLn('Not found');
+    end;
   end;
 end.
 ```

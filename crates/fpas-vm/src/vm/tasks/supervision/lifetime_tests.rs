@@ -19,7 +19,7 @@ fn image(outcome: &str) -> Arc<VerifiedExecutable> {
            var Group: TaskGroup := CreateTaskGroup();
            StartSupervisedTask(Group, function(Token: CancellationToken): result of integer, string
            begin
-             if Captured.Number <> 42 then panic('capture changed');
+             if Captured.Number <> 42 then panic('capture changed'); end if;
              return {outcome};
            end, 2, 0);
          end."

@@ -22,7 +22,7 @@ fn program_body_missing_terminator_keeps_following_statement() {
 fn statement_list_boundaries_require_terminators() {
     for source in [
         "program T; begin A := 1 end.",
-        "program T; begin if C then A := 1 else B := 2 end.",
+        "program T; begin if C then A := 1 else B := 2 end if; end.",
         "program T; begin repeat A := 1 until Done end.",
     ] {
         let (_, errors) = parse_with_errors(source);
@@ -36,7 +36,7 @@ fn statement_list_boundaries_require_terminators() {
 #[test]
 fn if_branch_blocks_missing_terminators_keep_following_statements() {
     let (program, errors) = parse_with_errors(
-        "program T; begin if C then begin A := 1 B := 2; end; else begin C := 3 D := 4; end; end.",
+        "program T; begin if C then begin A := 1 B := 2; end; else begin C := 3 D := 4; end; end if; end.",
     );
 
     let Stmt::If {
@@ -53,8 +53,8 @@ fn if_branch_blocks_missing_terminators_keep_following_statements() {
     let Stmt::Block(else_statements, _) = else_branch.as_ref() else {
         panic!("expected else block, got {else_branch:#?}");
     };
-    assert_eq!(then_statements.len(), 2);
-    assert_eq!(else_statements.len(), 2);
+    assert!(matches!(&then_statements[0], Stmt::Block(stmts, _) if stmts.len() == 2));
+    assert!(matches!(&else_statements[0], Stmt::Block(stmts, _) if stmts.len() == 2));
     assert_eq!(
         errors
             .iter()

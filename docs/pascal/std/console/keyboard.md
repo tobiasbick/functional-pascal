@@ -26,10 +26,11 @@ Use it to avoid blocking when you want a polling loop.
 
 ```pascal
 if KeyPressed() then
-begin
-  var C: string := ReadKey();
-  WriteLn(C);
-end;
+  begin
+    var C: string := ReadKey();
+    WriteLn(C);
+  end;
+end if;
 ```
 
 ---
@@ -50,13 +51,15 @@ end;
 
 ```pascal
 if KeyPressed() then
-begin
-  var E: KeyEvent := ReadKeyEvent();
-  if E.kind = KeyKind.Escape then
-    WriteLn('quit');
-  else
-    WriteLn(E.ch);
-end;
+  begin
+    var E: KeyEvent := ReadKeyEvent();
+    if E.kind = KeyKind.Escape then
+      WriteLn('quit');
+    else
+      WriteLn(E.ch);
+    end if;
+  end;
+end if;
 ```
 
 ### `function EventPending(): boolean`

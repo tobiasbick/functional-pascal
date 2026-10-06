@@ -29,16 +29,17 @@ begin
     TuiMsg.TextChanged(Source, Action, Text, Caret):
     begin
       if Source.Value = 1 then
-      begin
-        return record
-          FirstText := Text;
-          FirstCaret := Caret;
-          SecondText := State.SecondText;
-          SecondCaret := State.SecondCaret;
-          LastSource := Source.Value;
-          LastAction := Action.Value;
+        begin
+          return record
+            FirstText := Text;
+            FirstCaret := Caret;
+            SecondText := State.SecondText;
+            SecondCaret := State.SecondCaret;
+            LastSource := Source.Value;
+            LastAction := Action.Value;
+          end;
         end;
-      end;
+      end if;
 
       return record
         FirstText := State.FirstText;

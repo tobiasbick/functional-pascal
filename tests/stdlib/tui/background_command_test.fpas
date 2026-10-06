@@ -18,9 +18,10 @@ begin
       var Ready: channel of boolean := State.Ready;
       Cmd.StartBackground(7, function(Token: CancellationToken): result of boolean, string begin
         if IsError(SendWithCancellation(Target, 42, Token)) then
-        begin
-          return Ok(true);
-        end;
+          begin
+            return Ok(true);
+          end;
+        end if;
 
         Send(Ready, true);
         return Ok(true);

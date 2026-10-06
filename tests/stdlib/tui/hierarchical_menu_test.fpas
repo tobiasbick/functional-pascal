@@ -24,13 +24,15 @@ end function;
 function FindGlyph(Snapshot: TuiSurfaceSnapshot; Glyph: string): TuiPoint;
 begin
   for Y: integer := 0 to Snapshot.Height - 1 do
-  begin
-    var X: integer := Std.Str.IndexOf(Snapshot.LineAt(Y), Glyph);
-    if X >= 0 then
     begin
-      return TuiPoint.Create(X, Y);
+      var X: integer := Std.Str.IndexOf(Snapshot.LineAt(Y), Glyph);
+      if X >= 0 then
+        begin
+          return TuiPoint.Create(X, Y);
+        end;
+      end if;
     end;
-  end;
+  end for;
 
   panic('glyph not found in menu snapshot: ' + Glyph);
 end function;

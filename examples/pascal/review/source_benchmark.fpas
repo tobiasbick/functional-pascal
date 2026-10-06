@@ -30,56 +30,63 @@ begin
   var Text: string := Std.Str.RepeatStr(ParamStr(2), Size);
   mutable var Notes: array of Note := [];
   for I: integer := 1 to Size do
-  begin
-    Std.Arrays.Push(Notes, NoteCreate(IntToStr(I), I));
-  end;
+    begin
+      Std.Arrays.Push(Notes, NoteCreate(IntToStr(I), I));
+    end;
+  end for;
   var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(1, 1));
   mutable var Sum: integer := 0;
   var Started: integer := MonotonicMillis();
   for Pass: integer := 1 to 10 do
-  begin
-    if Mode = 'utf8' then
     begin
-      case Std.Net.Utf8.Decode(Std.Net.Utf8.Encode(Text)) of
-        Ok(Decoded):
+      if Mode = 'utf8' then
         begin
-          if Decoded <> Text then
-          begin
-            panic('roundtrip');
+          case Std.Net.Utf8.Decode(Std.Net.Utf8.Encode(Text)) of
+            Ok(Decoded):
+            begin
+              if Decoded <> Text then
+                begin
+                  panic('roundtrip');
+                end;
+              end if;
+            end;
+            Error(Message):
+            begin
+              panic(Message);
+            end;
           end;
         end;
-        Error(Message):
+      elsif Mode = 'notes' then
         begin
-          panic(Message);
+          var Sorted: array of Note := NotesSort(Notes);
+          if Sorted[0].UpdatedMillis <> Size then
+            begin
+              panic('sort');
+            end;
+          end if;
         end;
-      end;
-    end;
-    else if Mode = 'notes' then
-    begin
-      var Sorted: array of Note := NotesSort(Notes);
-      if Sorted[0].UpdatedMillis <> Size then
-      begin
-        panic('sort');
-      end;
-    end;
-    else if Mode = 'queue' then
-    begin
-      for I: integer := 1 to Size do
-      begin
-        App.Inject(TuiMsg.Tick(1));
-      end;
+      elsif Mode = 'queue' then
+        begin
+          for I: integer := 1 to Size do
+            begin
+              App.Inject(TuiMsg.Tick(1));
+            end;
+          end for;
 
-      Sum := App.RunIterations(0, Update, View, Size, 0);
-      if Sum <> Size then
-      begin
-        panic('queue');
-      end;
+          Sum := App.RunIterations(0, Update, View, Size, 0);
+          if Sum <> Size then
+            begin
+              panic('queue');
+            end;
+          end if;
+        end;
+      else
+        begin
+          panic('unknown mode');
+        end;
+      end if;
     end;
-    else
-    begin
-      panic('unknown mode');
-    end;
-  end;
+  end for;
 
   WriteLn(('elapsed: ' + IntToStr(ElapsedMillis(Started))) + ' ms');
   App.Close();

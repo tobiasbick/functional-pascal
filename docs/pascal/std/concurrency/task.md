@@ -105,9 +105,10 @@ var Source: CancellationSource := CreateCancellationSource();
 var Token: CancellationToken := GetCancellationToken(Source);
 Cancel(Source);
 if IsCancellationRequested(Token) then
-begin
-  WriteLn('stopping');
-end;
+  begin
+    WriteLn('stopping');
+  end;
+end if;
 ```
 
 Sources and tokens belong to the VM that created them. Ordinary source storage is released when

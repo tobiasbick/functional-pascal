@@ -241,7 +241,7 @@ fn test_cli_timeout_aborts_hanging_setup_hook() {
     );
     write_text(
         &cwd.join("fixture.fpas"),
-        "unit Tests.Fixture;\npublic procedure Setup();\nbegin\n  while 1 = 1 do\n  begin\n  end;\nend procedure;\nend unit;",
+        "unit Tests.Fixture;\npublic procedure Setup();\nbegin\n  while 1 = 1 do\n  begin null;\n  end; end while;\nend procedure;\nend unit;",
     );
     write_text(
         &cwd.join("demo_test.fpas"),
@@ -291,7 +291,7 @@ fn test_cli_reports_runtime_errors_of_units_linked_out_of_graph_order() {
         // `util.fpas` precedes `zeta.fpas` in the unit graph, but the linker emits App.Zeta first.
         write_text(
             &cwd.join("util.fpas"),
-            "unit App.Util;\nuses App.Zeta;\npublic procedure Trigger();\nbegin\n  if Seven() = 7 then panic('util failure');\nend procedure;\nend unit;\n",
+            "unit App.Util;\nuses App.Zeta;\npublic procedure Trigger();\nbegin\n  if Seven() = 7 then panic('util failure'); end if;\nend procedure;\nend unit;\n",
         );
         write_text(
             &cwd.join("zeta.fpas"),

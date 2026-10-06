@@ -26,16 +26,18 @@ begin
   var First: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(1, 1));
   var Second: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(1, 1));
   for I: integer := 1 to 300 do
-  begin
-    First.Inject(TuiMsg.Tick(I));
-  end;
+    begin
+      First.Inject(TuiMsg.Tick(I));
+    end;
+  end for;
 
   Second.Inject(TuiMsg.Tick(1));
   AssertEquals(100, First.RunIterations(0, Update, View, 100, 0));
   for I: integer := 301 to 400 do
-  begin
-    First.Inject(TuiMsg.Tick(I));
-  end;
+    begin
+      First.Inject(TuiMsg.Tick(I));
+    end;
+  end for;
 
   AssertEquals(1, Second.RunIterations(0, Update, View, 1, 0));
   AssertEquals(400, First.RunIterations(100, Update, View, 300, 0));

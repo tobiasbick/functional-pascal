@@ -15,9 +15,10 @@ public type
     public static function Create(Value: integer): TuiMenuNodeId;
     begin
       if Value <= 0 then
-      begin
-        panic('Tui menu node id must be positive');
-      end;
+        begin
+          panic('Tui menu node id must be positive');
+        end;
+      end if;
 
       return record
         Value := Value;

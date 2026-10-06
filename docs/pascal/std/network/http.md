@@ -105,14 +105,24 @@ case OpenStream(Request.Get('https://example.test/events')) of
   begin
     mutable var Reading: boolean := true;
     while Reading do
-    begin
-      case ReadStream(ResponseValue.Body, 4096) of
-        Ok(Bytes): Reading := Std.Arrays.Length(Bytes) <> 0;
-        Error(Message): panic(Message);
+      begin
+        case ReadStream(ResponseValue.Body, 4096) of
+          Ok(Bytes):
+          begin
+            Reading := Std.Arrays.Length(Bytes) <> 0;
+          end;
+          Error(Message):
+          begin
+            panic(Message);
+          end;
+        end;
       end;
-    end;
+    end while;
   end;
-  Error(Message): panic(Message);
+  Error(Message):
+  begin
+    panic(Message);
+  end;
 end;
 ```
 

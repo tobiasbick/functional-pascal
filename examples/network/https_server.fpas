@@ -17,14 +17,16 @@ end function;
 
 begin
   if (ParamCount() < 2) or (ParamCount() > 3) then
-  begin
-    panic('usage: https_server.fpas -- CERTIFICATE_PEM PRIVATE_KEY_PEM [PORT]');
-  end;
+    begin
+      panic('usage: https_server.fpas -- CERTIFICATE_PEM PRIVATE_KEY_PEM [PORT]');
+    end;
+  end if;
   mutable var Port: integer := 18443;
   if ParamCount() = 3 then
-  begin
-    Port := StrToInt(ParamStr(2));
-  end;
+    begin
+      Port := StrToInt(ParamStr(2));
+    end;
+  end if;
 
   case ListenTls('127.0.0.1', Port, ParamStr(0), ParamStr(1), 10000) of
     Ok(ListenerValue):

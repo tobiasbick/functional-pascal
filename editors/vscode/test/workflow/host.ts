@@ -81,7 +81,7 @@ export async function verifyWorkflowHost(
     );
     await fs.writeFile(
       testPaths.timeout,
-      "program TimeoutTest;\n\nbegin\n  mutable var Value: integer := 0;\n  while true do\n  begin\n    Value := Value + 1;\n  end;\nend.\n"
+      "program TimeoutTest;\n\nbegin\n  mutable var Value: integer := 0;\n  while true do\n  begin\n    Value := Value + 1;\n  end; end while;\nend.\n"
     );
     await fs.writeFile(invalidManifest, "not valid toml");
 

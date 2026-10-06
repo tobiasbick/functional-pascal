@@ -11,7 +11,7 @@ begin
   if N = 0 then
   begin
     return 0;
-  end;
+  end; end if;
 
   return Count(N - 1);
 end function;

@@ -50,7 +50,7 @@ fn missing_do_in_while() {
 
 #[test]
 fn while_missing_condition() {
-    let (_, errs) = parse_with_errors("program T; begin while do X := 1; end.");
+    let (_, errs) = parse_with_errors("program T; begin while do X := 1; end while; end.");
     assert!(!errs.is_empty());
 }
 

@@ -88,19 +88,21 @@ begin
   mutable var TagsText: string := '';
   mutable var TagsCaret: integer := 0;
   if Std.Arrays.Length(Loaded.Notes) > 0 then
-  begin
-    Selected := 0;
-    Focus := TitleControl;
-    Pane := NotesPane.Editor;
-    TitleCaret := Std.Str.Length(Loaded.Notes[0].Title);
-    TagsText := Std.Str.Join(Loaded.Notes[0].Tags, ', ');
-    TagsCaret := Std.Str.Length(TagsText);
-  end;
+    begin
+      Selected := 0;
+      Focus := TitleControl;
+      Pane := NotesPane.Editor;
+      TitleCaret := Std.Str.Length(Loaded.Notes[0].Title);
+      TagsText := Std.Str.Join(Loaded.Notes[0].Tags, ', ');
+      TagsCaret := Std.Str.Length(TagsText);
+    end;
+  end if;
 
   if Std.Arrays.Length(Loaded.Issues) > 0 then
-  begin
-    Status := IntToStr(Std.Arrays.Length(Loaded.Issues)) + ' invalid note file(s)';
-  end;
+    begin
+      Status := IntToStr(Std.Arrays.Length(Loaded.Issues)) + ' invalid note file(s)';
+    end;
+  end if;
 
   return record
     Directory := Directory;
@@ -137,13 +139,15 @@ begin
   mutable var Tags: array of string := [];
   var Parts: array of string := Std.Str.Split(Text, ',');
   for Index: integer := 0 to Std.Arrays.Length(Parts) - 1 do
-  begin
-    var Tag: string := Std.Str.Trim(Parts[Index]);
-    if (Tag <> '') and (not Std.Arrays.Contains(Tags, Tag)) then
     begin
-      Std.Arrays.Push(Tags, Tag);
+      var Tag: string := Std.Str.Trim(Parts[Index]);
+      if (Tag <> '') and (not Std.Arrays.Contains(Tags, Tag)) then
+        begin
+          Std.Arrays.Push(Tags, Tag);
+        end;
+      end if;
     end;
-  end;
+  end for;
 
   return Tags;
 end function;
@@ -153,14 +157,16 @@ public function NoteMatches(NoteValue: Note; Search: string): boolean;
 begin
   var Query: string := Std.Str.ToLower(Std.Str.Trim(Search));
   if Query = '' then
-  begin
-    return not NoteValue.Archived;
-  end;
+    begin
+      return not NoteValue.Archived;
+    end;
+  end if;
 
   if NoteValue.Archived then
-  begin
-    return false;
-  end;
+    begin
+      return false;
+    end;
+  end if;
 
   return (Std.Str.Contains(Std.Str.ToLower(NoteValue.Title), Query) or Std.Str.Contains(Std.Str.ToLower(NoteValue.Body), Query)) or
          Std.Str.Contains(Std.Str.ToLower(NoteTagsText(NoteValue)), Query);
@@ -171,12 +177,14 @@ public function NotesFilteredIndices(Notes: array of Note; Search: string): arra
 begin
   mutable var Indices: array of integer := [];
   for Index: integer := 0 to Std.Arrays.Length(Notes) - 1 do
-  begin
-    if NoteMatches(Notes[Index], Search) then
     begin
-      Std.Arrays.Push(Indices, Index);
+      if NoteMatches(Notes[Index], Search) then
+        begin
+          Std.Arrays.Push(Indices, Index);
+        end;
+      end if;
     end;
-  end;
+  end for;
 
   return Indices;
 end function;
@@ -184,33 +192,38 @@ end function;
 function ClipListText(Text: string; MaximumWidth: integer): string;
 begin
   if MaximumWidth <= 0 then
-  begin
-    return '';
-  end;
+    begin
+      return '';
+    end;
+  end if;
 
   if Std.Console.DisplayWidth(Text) <= MaximumWidth then
-  begin
-    return Text;
-  end;
+    begin
+      return Text;
+    end;
+  end if;
 
   if MaximumWidth = 1 then
-  begin
-    return '…';
-  end;
+    begin
+      return '…';
+    end;
+  end if;
   mutable var Clipped: string := '';
   mutable var Width: integer := 0;
   var ContentWidth: integer := MaximumWidth - 1;
   for Grapheme: string in Std.Console.SplitGraphemes(Text) do
-  begin
-    var GraphemeWidth: integer := Std.Console.DisplayWidth(Grapheme);
-    if Width + GraphemeWidth > ContentWidth then
     begin
-      return Clipped + '…';
-    end;
+      var GraphemeWidth: integer := Std.Console.DisplayWidth(Grapheme);
+      if Width + GraphemeWidth > ContentWidth then
+        begin
+          return Clipped + '…';
+        end;
+      end if;
 
-    Clipped := Clipped + Grapheme;
-    Width := Width + GraphemeWidth;
-  end;
+      Clipped := Clipped + Grapheme;
+      Width := Width + GraphemeWidth;
+    end;
+  end for;
 
   return Clipped;
 end function;
@@ -221,21 +234,24 @@ begin
   mutable var Items: array of string := [];
   var Indices: array of integer := NotesFilteredIndices(Notes, Search);
   for Index: integer := 0 to Std.Arrays.Length(Indices) - 1 do
-  begin
-    var NoteValue: Note := Notes[Indices[Index]];
-    mutable var Prefix: string := '  ';
-    if NoteValue.Pinned then
     begin
-      Prefix := '★ ';
-    end;
-    mutable var Tags: string := NoteTagsText(NoteValue);
-    if Tags <> '' then
-    begin
-      Tags := '  ·  ' + Tags;
-    end;
+      var NoteValue: Note := Notes[Indices[Index]];
+      mutable var Prefix: string := '  ';
+      if NoteValue.Pinned then
+        begin
+          Prefix := '★ ';
+        end;
+      end if;
+      mutable var Tags: string := NoteTagsText(NoteValue);
+      if Tags <> '' then
+        begin
+          Tags := '  ·  ' + Tags;
+        end;
+      end if;
 
-    Std.Arrays.Push(Items, ClipListText((Prefix + NoteValue.Title) + Tags, MaximumWidth));
-  end;
+      Std.Arrays.Push(Items, ClipListText((Prefix + NoteValue.Title) + Tags, MaximumWidth));
+    end;
+  end for;
 
   return Items;
 end function;

@@ -10,11 +10,12 @@ uses Std.Arrays, Std.Console, Std.Http, Std.Net.Utf8;
 procedure PrintEvents(Events: array of SseEvent);
 begin
   for Index: integer := 0 to Std.Arrays.Length(Events) - 1 do
-  begin
-    WriteLn('event: ' + Events[Index].EventType);
-    WriteLn('id: ' + Events[Index].Id);
-    WriteLn('data: ' + Events[Index].Data);
-  end;
+    begin
+      WriteLn('event: ' + Events[Index].EventType);
+      WriteLn('id: ' + Events[Index].Id);
+      WriteLn('data: ' + Events[Index].Data);
+    end;
+  end for;
 end procedure;
 
 begin

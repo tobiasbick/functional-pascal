@@ -121,8 +121,8 @@ token           = keyword | identifier | integer_literal
 (* PART 2 — SYNTACTIC GRAMMAR                                      *)
 (* ================================================================ *)
 
-(* Every statement ends with ';'. Single-body controls share it. *)
-(* A final ';' is required before 'end', 'else', or 'until'.      *)
+(* Every statement ends with ';', including named control endings. *)
+(* A final ';' is required before 'end', 'elsif', 'else', or 'until'. *)
 
 (* ---- 2.1 Program / Unit Structure ------------------------------ *)
 
@@ -316,14 +316,14 @@ nested_decl         = function_decl
 
 statement_list      = { statement } ;
 
-statement           = simple_statement ';'
-                    | if_stmt
-                    | for_stmt
-                    | for_in_stmt
-                    | while_stmt ;
+statement           = ( simple_statement | if_stmt | for_stmt
+                      | for_in_stmt | while_stmt ) ';' ;
 
-(* Single-body control statements share their last body's terminator. *)
+(* Branch and loop bodies are nonempty scoped statement lists. *)
+control_body        = statement { statement } ;
+
 simple_statement    = block
+                    | null_stmt
                     | var_stmt
                     | mutable_var_stmt
                     | assignment_stmt
@@ -338,6 +338,11 @@ simple_statement    = block
                     | postfix_expr_stmt ;
 
 block               = 'begin' statement_list 'end' ;
+null_stmt           = 'null' ;
+
+(* Plain blocks retain a nested scope and may be empty. A branch or *)
+(* loop body that does nothing is written as 'null;'. Conditions and *)
+(* loop bounds use the enclosing scope; body locals do not escape.  *)
 
 (* -- Inline variable declarations -- *)
 var_stmt            = 'var' identifier ':' type_expr ':=' expression ;
@@ -356,12 +361,13 @@ return_stmt         = 'return' [ expression ] ;
 panic_stmt          = 'panic' '(' expression ')' ;
 
 (* -- If / Then / Else -- *)
-if_stmt             = 'if' expression 'then' statement
-                      [ 'else' statement ] ;
+if_stmt             = 'if' expression 'then' control_body
+                      { 'elsif' expression 'then' control_body }
+                      [ 'else' control_body ] 'end' 'if' ;
 
-(* 'else if' is not a keyword — it is 'else' followed by another   *)
-(* if_stmt. The dangling-else ambiguity resolves by binding 'else'  *)
-(* to the nearest unmatched 'if'.                                   *)
+(* 'elsif' continues this conditional. 'else if' starts a nested    *)
+(* conditional with a separate 'end if;'. Named endings determine  *)
+(* branch ownership without nearest-unmatched-if inference.        *)
 
 (* -- Case / Of -- *)
 case_stmt           = 'case' expression 'of'
@@ -413,13 +419,13 @@ pattern_arg         = identifier ;                       (* binding only   *)
 (* -- For Loop -- *)
 for_stmt            = 'for' identifier ':' type_expr ':=' expression
                       ( 'to' | 'downto' ) expression
-                      'do' statement ;
+                      'do' control_body 'end' 'for' ;
 
 (* -- For-In Loop -- *)
 (* Works for both array-of-T (yields elements) and dict-of-K-to-V  *)
 (* (yields keys in insertion order). Loop variable is immutable.   *)
 for_in_stmt         = 'for' identifier ':' type_expr 'in' expression
-                      'do' statement ;
+                      'do' control_body 'end' 'for' ;
 
 (* 'in' is a keyword used by for-in loops and as the membership    *)
 (* comparison operator described in section 4.                     *)
@@ -428,10 +434,10 @@ for_in_stmt         = 'for' identifier ':' type_expr 'in' expression
 (* the loop body.                                                   *)
 
 (* -- While Loop -- *)
-while_stmt          = 'while' expression 'do' statement ;
+while_stmt          = 'while' expression 'do' control_body 'end' 'while' ;
 
 (* -- Repeat / Until -- *)
-repeat_stmt         = 'repeat' statement_list 'until' expression ;
+repeat_stmt         = 'repeat' control_body 'until' expression ;
 
 (* -- Break / Continue -- *)
 break_stmt          = 'break' ;

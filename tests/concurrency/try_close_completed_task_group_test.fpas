@@ -27,10 +27,11 @@ begin
   Send(Gate, true);
   mutable var ReturnedFailures: option of array of TaskFailure := None;
   while IsNone(ReturnedFailures) do
-  begin
-    Sleep(1);
-    ReturnedFailures := TryCloseCompletedTaskGroup(Returned);
-  end;
+    begin
+      Sleep(1);
+      ReturnedFailures := TryCloseCompletedTaskGroup(Returned);
+    end;
+  end while;
   var ReturnedReport: array of TaskFailure := Std.Options.Unwrap(ReturnedFailures);
   AssertEquals(1, Std.Arrays.Length(ReturnedReport));
   AssertTrue(ReturnedReport[0].Kind = TaskFailureKind.ReturnedError);
@@ -44,10 +45,11 @@ begin
   AssertTrue(Std.Results.Unwrap(ReceiveWithTimeout(PanicReady, 10000)));
   mutable var PanicFailures: option of array of TaskFailure := None;
   while IsNone(PanicFailures) do
-  begin
-    Sleep(1);
-    PanicFailures := TryCloseCompletedTaskGroup(Panicked);
-  end;
+    begin
+      Sleep(1);
+      PanicFailures := TryCloseCompletedTaskGroup(Panicked);
+    end;
+  end while;
   var PanicReport: array of TaskFailure := Std.Options.Unwrap(PanicFailures);
   AssertEquals(1, Std.Arrays.Length(PanicReport));
   AssertTrue(PanicReport[0].Kind = TaskFailureKind.Panicked);

@@ -33,9 +33,10 @@ public function TuiTextAreaLineText(Text: string; Line: integer): string;
 begin
   var Lines: array of string := Std.Str.Split(Text, Std.Str.Chr(10));
   if (Line < 0) or (Line >= Std.Arrays.Length(Lines)) then
-  begin
-    panic('Tui text area line must be within its text');
-  end;
+    begin
+      panic('Tui text area line must be within its text');
+    end;
+  end if;
 
   return Lines[Line];
 end function;
@@ -44,19 +45,22 @@ function TuiTextAreaLineStartAt(Lines: array of string; Line: integer): integer;
 begin
   mutable var Target: integer := Line;
   if Target < 0 then
-  begin
-    Target := 0;
-  end;
+    begin
+      Target := 0;
+    end;
+  end if;
 
   if Target >= Std.Arrays.Length(Lines) then
-  begin
-    Target := Std.Arrays.Length(Lines) - 1;
-  end;
+    begin
+      Target := Std.Arrays.Length(Lines) - 1;
+    end;
+  end if;
   mutable var Start: integer := 0;
   for Index: integer := 0 to Target - 1 do
-  begin
-    Start := (Start + Std.Str.Length(Lines[Index])) + 1;
-  end;
+    begin
+      Start := (Start + Std.Str.Length(Lines[Index])) + 1;
+    end;
+  end for;
 
   return Start;
 end function;
@@ -69,27 +73,30 @@ end function;
 public function TuiTextAreaLocate(Text: string; Caret: integer): TuiTextAreaPosition;
 begin
   if (Caret < 0) or (Caret > Std.Str.Length(Text)) then
-  begin
-    panic('Tui text area caret must be within its text');
-  end;
+    begin
+      panic('Tui text area caret must be within its text');
+    end;
+  end if;
   var Lines: array of string := Std.Str.Split(Text, Std.Str.Chr(10));
   mutable var LineStart: integer := 0;
   for Line: integer := 0 to Std.Arrays.Length(Lines) - 1 do
-  begin
-    var LineEnd: integer := LineStart + Std.Str.Length(Lines[Line]);
-    if Caret <= LineEnd then
     begin
-      var Prefix: string := Std.Str.Substring(Lines[Line], 0, Caret - LineStart);
-      return record
-        Line := Line;
-        LineStart := LineStart;
-        LineEnd := LineEnd;
-        DisplayColumn := Std.Console.DisplayWidth(Prefix);
-      end;
-    end;
+      var LineEnd: integer := LineStart + Std.Str.Length(Lines[Line]);
+      if Caret <= LineEnd then
+        begin
+          var Prefix: string := Std.Str.Substring(Lines[Line], 0, Caret - LineStart);
+          return record
+            Line := Line;
+            LineStart := LineStart;
+            LineEnd := LineEnd;
+            DisplayColumn := Std.Console.DisplayWidth(Prefix);
+          end;
+        end;
+      end if;
 
-    LineStart := LineEnd + 1;
-  end;
+      LineStart := LineEnd + 1;
+    end;
+  end for;
 
   panic('Tui text area caret must be within its text');
 end function;
@@ -104,39 +111,45 @@ public function TuiTextAreaCaretAtDisplayColumn(Text: string; Line: integer; Dis
 begin
   mutable var TargetColumn: integer := DisplayColumn;
   if TargetColumn < 0 then
-  begin
-    TargetColumn := 0;
-  end;
+    begin
+      TargetColumn := 0;
+    end;
+  end if;
   var Lines: array of string := Std.Str.Split(Text, Std.Str.Chr(10));
   if (Line < 0) or (Line >= Std.Arrays.Length(Lines)) then
-  begin
-    panic('Tui text area line must be within its text');
-  end;
+    begin
+      panic('Tui text area line must be within its text');
+    end;
+  end if;
   var Start: integer := TuiTextAreaLineStartAt(Lines, Line);
   var LineText: string := Lines[Line];
   mutable var Column: integer := 0;
   mutable var Characters: integer := 0;
   for Grapheme: string in Std.Console.SplitGraphemes(LineText) do
-  begin
-    var Width: integer := Std.Console.DisplayWidth(Grapheme);
-    // Console display width caps each cluster at two cells. Its final width may
-    // be narrower than a prefix (for example an emoji followed by VS15).
-    if Column + 2 > TargetColumn then
     begin
-      // Preserve scalar-index positions inside the crossing cluster, including emoji selectors.
-      for Index: integer := 0 to Std.Str.Length(Grapheme) - 1 do
-      begin
-        if Column + Std.Console.DisplayWidth(Std.Str.Substring(Grapheme, 0, Index + 1)) >
-           TargetColumn then
+      var Width: integer := Std.Console.DisplayWidth(Grapheme);
+      // Console display width caps each cluster at two cells. Its final width may
+      // be narrower than a prefix (for example an emoji followed by VS15).
+      if Column + 2 > TargetColumn then
         begin
-          return (Start + Characters) + Index;
+          // Preserve scalar-index positions inside the crossing cluster, including emoji selectors.
+          for Index: integer := 0 to Std.Str.Length(Grapheme) - 1 do
+            begin
+              if Column + Std.Console.DisplayWidth(Std.Str.Substring(Grapheme, 0, Index + 1)) >
+                 TargetColumn then
+                begin
+                  return (Start + Characters) + Index;
+                end;
+              end if;
+            end;
+          end for;
         end;
-      end;
-    end;
+      end if;
 
-    Column := Column + Width;
-    Characters := Characters + Std.Str.Length(Grapheme);
-  end;
+      Column := Column + Width;
+      Characters := Characters + Std.Str.Length(Grapheme);
+    end;
+  end for;
 
   return Start + Characters;
 end function;
@@ -150,13 +163,15 @@ begin
   var Lines: array of string := Std.Str.Split(Text, Std.Str.Chr(10));
   mutable var Width: integer := 1;
   for Index: integer := 0 to Std.Arrays.Length(Lines) - 1 do
-  begin
-    var LineWidth: integer := Std.Console.DisplayWidth(Lines[Index]);
-    if LineWidth > Width then
     begin
-      Width := LineWidth;
+      var LineWidth: integer := Std.Console.DisplayWidth(Lines[Index]);
+      if LineWidth > Width then
+        begin
+          Width := LineWidth;
+        end;
+      end if;
     end;
-  end;
+  end for;
 
   return TuiSize.Create(Width, Std.Arrays.Length(Lines));
 end function;
@@ -177,33 +192,38 @@ public function TuiTextAreaEnsureCaretVisible(
 begin
   mutable var Next: TuiPoint := Offset;
   if (Viewport.Width <= 0) and (Viewport.Height <= 0) then
-  begin
-    return Next;
-  end;
+    begin
+      return Next;
+    end;
+  end if;
   var Position: TuiTextAreaPosition := TuiTextAreaLocate(Text, Caret);
   if Viewport.Width > 0 then
-  begin
-    if Position.DisplayColumn < Next.X then
     begin
-      Next.X := Position.DisplayColumn;
+      if Position.DisplayColumn < Next.X then
+        begin
+          Next.X := Position.DisplayColumn;
+        end;
+      elsif Position.DisplayColumn >= Next.X + Viewport.Width then
+        begin
+          Next.X := (Position.DisplayColumn - Viewport.Width) + 1;
+        end;
+      end if;
     end;
-    else if Position.DisplayColumn >= Next.X + Viewport.Width then
-    begin
-      Next.X := (Position.DisplayColumn - Viewport.Width) + 1;
-    end;
-  end;
+  end if;
 
   if Viewport.Height > 0 then
-  begin
-    if Position.Line < Next.Y then
     begin
-      Next.Y := Position.Line;
+      if Position.Line < Next.Y then
+        begin
+          Next.Y := Position.Line;
+        end;
+      elsif Position.Line >= Next.Y + Viewport.Height then
+        begin
+          Next.Y := (Position.Line - Viewport.Height) + 1;
+        end;
+      end if;
     end;
-    else if Position.Line >= Next.Y + Viewport.Height then
-    begin
-      Next.Y := (Position.Line - Viewport.Height) + 1;
-    end;
-  end;
+  end if;
 
   return Next;
 end function;

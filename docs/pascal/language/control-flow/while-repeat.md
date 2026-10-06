@@ -4,18 +4,16 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`while_stmt`, `rep
 
 ## While loop
 
-The body is one terminated statement. Its final `;` also terminates the loop.
-Inside a compound body, every statement ends with `;` before `end;`.
+The body contains a nonempty list of statements and closes with `end while;`.
+Every body statement ends with `;`. Body-local declarations are unavailable
+in the condition and after the loop; the condition uses the enclosing scope.
 
 ```pascal
-mutable var
-  Count: integer := 0;
-
+mutable var Count: integer := 0;
 while Count < 10 do
-begin
   WriteLn(Count);
   Count := Count + 1;
-end;
+end while;
 ```
 
 ## Repeat-until loop
@@ -29,13 +27,15 @@ The body executes at least once. Every body statement ends with `;`, including
 the last one before `until`; the condition also ends with `;`:
 
 ```pascal
-mutable var
-  Input: string := '';
-
+mutable var Input: string := '';
 repeat
   Input := ReadLn();
 until Input = 'quit';
 ```
+
+Both loop forms require an explicit `null;` when their body has no action.
+For example, `repeat null; until Ready();` retains the condition's repeated
+evaluation without an empty statement list.
 
 ## See also
 

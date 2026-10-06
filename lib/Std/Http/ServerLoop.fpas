@@ -10,29 +10,34 @@ uses Std.Arrays, Std.Http.Server, Std.Http.Types, Std.Net, Std.Tasks;
 function ValidateOptions(Options: ServerOptions): result of boolean, string;
 begin
   if Options.MaxHeaderBytes < 1 then
-  begin
-    return Error('HTTP server MaxHeaderBytes must be positive');
-  end;
+    begin
+      return Error('HTTP server MaxHeaderBytes must be positive');
+    end;
+  end if;
 
   if Options.MaxBodyBytes < 0 then
-  begin
-    return Error('HTTP server MaxBodyBytes must not be negative');
-  end;
+    begin
+      return Error('HTTP server MaxBodyBytes must not be negative');
+    end;
+  end if;
 
   if Options.ConnectionTimeoutMillis < 1 then
-  begin
-    return Error('HTTP server ConnectionTimeoutMillis must be positive');
-  end;
+    begin
+      return Error('HTTP server ConnectionTimeoutMillis must be positive');
+    end;
+  end if;
 
   if Options.MaxConcurrentRequests < 1 then
-  begin
-    return Error('HTTP server MaxConcurrentRequests must be positive');
-  end;
+    begin
+      return Error('HTTP server MaxConcurrentRequests must be positive');
+    end;
+  end if;
 
   if Options.MaxRequests < 0 then
-  begin
-    return Error('HTTP server MaxRequests must not be negative');
-  end;
+    begin
+      return Error('HTTP server MaxRequests must not be negative');
+    end;
+  end if;
 
   return Ok(true);
 end function;
@@ -158,26 +163,28 @@ begin
   end;
   mutable var Accepted: integer := 0;
   while (Options.MaxRequests = 0) or (Accepted < Options.MaxRequests) do
-  begin
-    mutable var Tasks: array of task := [];
-    while HasCapacity(Options, Accepted, Std.Arrays.Length(Tasks)) do
     begin
-      case Std.Net.Accept(Listener) of
-        Ok(Connection):
+      mutable var Tasks: array of task := [];
+      while HasCapacity(Options, Accepted, Std.Arrays.Length(Tasks)) do
         begin
-          Std.Arrays.Push(Tasks, go ServeConnection(Connection, Options, Handler));
-          Accepted := Accepted + 1;
+          case Std.Net.Accept(Listener) of
+            Ok(Connection):
+            begin
+              Std.Arrays.Push(Tasks, go ServeConnection(Connection, Options, Handler));
+              Accepted := Accepted + 1;
+            end;
+            Error(Message):
+            begin
+              Std.Tasks.WaitAll(Tasks);
+              return Error(Message);
+            end;
+          end;
         end;
-        Error(Message):
-        begin
-          Std.Tasks.WaitAll(Tasks);
-          return Error(Message);
-        end;
-      end;
-    end;
+      end while;
 
-    Std.Tasks.WaitAll(Tasks);
-  end;
+      Std.Tasks.WaitAll(Tasks);
+    end;
+  end while;
 
   return Ok(true);
 end function;

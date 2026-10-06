@@ -9,58 +9,66 @@ begin
   var Group: TaskGroup := CreateTaskGroup();
   StartTaskInGroup(Group, procedure(Token: CancellationToken) begin
     for Value: integer := 1 to 12 do
-    begin
-      if IsError(SendWithCancellation(Jobs, Value, Token)) then
       begin
-        return;
+        if IsError(SendWithCancellation(Jobs, Value, Token)) then
+          begin
+            return;
+          end;
+        end if;
       end;
-    end;
+    end for;
 
     CloseChannel(Jobs);
   end);
   for Worker: integer := 1 to 3 do
-  begin
-    StartTaskInGroup(Group, procedure(Token: CancellationToken) begin
-      while not IsCancellationRequested(Token) do
-      begin
-        case ReceiveWithCancellation(Jobs, Token) of
-          Ok(Value):
+    begin
+      StartTaskInGroup(Group, procedure(Token: CancellationToken) begin
+        while not IsCancellationRequested(Token) do
           begin
-            if IsError(SendWithCancellation(Results, Value * Value, Token)) then
-            begin
-              return;
+            case ReceiveWithCancellation(Jobs, Token) of
+              Ok(Value):
+              begin
+                if IsError(SendWithCancellation(Results, Value * Value, Token)) then
+                  begin
+                    return;
+                  end;
+                end if;
+              end;
+              Error(_):
+              begin
+                return;
+              end;
             end;
           end;
-          Error(_):
-          begin
-            return;
-          end;
-        end;
-      end;
-    end);
-  end;
+        end while;
+      end);
+    end;
+  end for;
   // Collect while the producer runs: filling Jobs first could deadlock the pipeline.
   mutable var Total: integer := 0;
   for Index: integer := 1 to 12 do
-  begin
-    Total := Total + Unwrap(Receive(Results));
-  end;
+    begin
+      Total := Total + Unwrap(Receive(Results));
+    end;
+  end for;
 
   case CloseTaskGroupWithTimeout(Group, 1000) of
     Ok(Failures):
     begin
       if Length(Failures) <> 0 then
-      begin
-        panic('Worker failed');
-      end;
+        begin
+          panic('Worker failed');
+        end;
+      end if;
     end;
     Error(_):
     begin
       // A timeout retains ownership. Joining is still required, not a forced kill.
       if Length(CloseTaskGroup(Group)) <> 0 then
-      begin
-        panic('Worker failed');
-      end;
+        begin
+          panic('Worker failed');
+        end;
+      end if;
     end;
   end;
 

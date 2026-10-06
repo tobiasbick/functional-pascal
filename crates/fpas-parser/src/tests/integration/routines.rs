@@ -12,7 +12,7 @@ begin
   if N <= 1 then
     return N;
   else
-    return Fibonacci(N - 1) + Fibonacci(N - 2);
+    return Fibonacci(N - 1) + Fibonacci(N - 2); end if;
 end function;
 
 begin
@@ -34,11 +34,11 @@ function IsEven(N: integer): boolean;
   function IsOdd(X: integer): boolean;
   begin
     if X = 0 then return false;
-    else return IsEven(X - 1);
+    else return IsEven(X - 1); end if;
   end function;
 begin
   if N = 0 then return true;
-  else return IsOdd(N - 1);
+  else return IsOdd(N - 1); end if;
 end function;
 
 begin

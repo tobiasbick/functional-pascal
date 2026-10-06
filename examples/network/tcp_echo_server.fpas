@@ -10,12 +10,14 @@ uses Std.Args, Std.Arrays, Std.Conv, Std.Console, Std.Net, Std.Net.Utf8;
 function LineFeedIndex(Bytes: array of integer): integer;
 begin
   for Index: integer := 0 to Std.Arrays.Length(Bytes) - 1 do
-  begin
-    if Bytes[Index] = 10 then
     begin
-      return Index;
+      if Bytes[Index] = 10 then
+        begin
+          return Index;
+        end;
+      end if;
     end;
-  end;
+  end for;
 
   return -1;
 end function;
@@ -29,29 +31,32 @@ begin
   mutable var Bytes: array of integer := [];
   mutable var LineEnd: integer := -1;
   while LineEnd < 0 do
-  begin
-    case Std.Net.ReceiveBytes(ConnectionValue, 4096) of
-      Ok(Part):
-      begin
-        if Std.Arrays.Length(Part) = 0 then
+    begin
+      case Std.Net.ReceiveBytes(ConnectionValue, 4096) of
+        Ok(Part):
         begin
-          panic('TCP connection closed before the LF delimiter');
-        end;
+          if Std.Arrays.Length(Part) = 0 then
+            begin
+              panic('TCP connection closed before the LF delimiter');
+            end;
+          end if;
 
-        Bytes := Std.Arrays.Concat(Bytes, Part);
-        LineEnd := LineFeedIndex(Bytes);
-      end;
-      Error(Message):
-      begin
-        panic(Message);
+          Bytes := Std.Arrays.Concat(Bytes, Part);
+          LineEnd := LineFeedIndex(Bytes);
+        end;
+        Error(Message):
+        begin
+          panic(Message);
+        end;
       end;
     end;
-  end;
+  end while;
 
   if LineEnd + 1 <> Std.Arrays.Length(Bytes) then
-  begin
-    panic('TCP echo server accepts exactly one LF-delimited request per connection');
-  end;
+    begin
+      panic('TCP echo server accepts exactly one LF-delimited request per connection');
+    end;
+  end if;
   var TextBytes: array of integer := Std.Arrays.Slice(Bytes, 0, LineEnd);
   case Std.Net.Utf8.Decode(TextBytes) of
     Ok(Text):
@@ -74,37 +79,40 @@ procedure WriteAll(ConnectionValue: Connection; Bytes: array of integer);
 begin
   mutable var Offset: integer := 0;
   while Offset < Std.Arrays.Length(Bytes) do
-  begin
-    var Remaining: array of integer := Std.Arrays.Slice(Bytes, Offset, Std.Arrays.Length(Bytes) -
-                                                                       Offset);
-    case Std.Net.SendBytes(ConnectionValue, Remaining) of
-      Ok(Count):
-      begin
-        if Count <= 0 then
+    begin
+      var Remaining: array of integer := Std.Arrays.Slice(Bytes, Offset, Std.Arrays.Length(Bytes) -
+                                                                         Offset);
+      case Std.Net.SendBytes(ConnectionValue, Remaining) of
+        Ok(Count):
         begin
-          panic('TCP connection stopped while writing');
-        end;
+          if Count <= 0 then
+            begin
+              panic('TCP connection stopped while writing');
+            end;
+          end if;
 
-        Offset := Offset + Count;
-      end;
-      Error(Message):
-      begin
-        panic(Message);
+          Offset := Offset + Count;
+        end;
+        Error(Message):
+        begin
+          panic(Message);
+        end;
       end;
     end;
-  end;
+  end while;
 end procedure;
 
 begin
   mutable var Port: integer := 18081;
   if ParamCount() = 1 then
-  begin
-    Port := StrToInt(ParamStr(0));
-  end;
-  else if ParamCount() <> 0 then
-  begin
-    panic('usage: tcp_echo_server.fpas -- [PORT]');
-  end;
+    begin
+      Port := StrToInt(ParamStr(0));
+    end;
+  elsif ParamCount() <> 0 then
+    begin
+      panic('usage: tcp_echo_server.fpas -- [PORT]');
+    end;
+  end if;
 
   case Listen('127.0.0.1', Port) of
     Ok(ListenerValue):

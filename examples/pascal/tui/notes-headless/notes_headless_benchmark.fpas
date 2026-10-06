@@ -17,38 +17,44 @@ function BenchmarkNotes(): array of Note;
 begin
   mutable var Notes: array of Note := [];
   for Index: integer := 1 to NoteCount do
-  begin
-    mutable var NoteValue: Note := NoteCreate('benchmark-' + IntToStr(Index), 1700000000000 + Index);
-    NoteValue.Title := ('Performance note ' + IntToStr(Index)) + ' with a representative title';
-    NoteValue.Tags := ['performance', 'tui', 'benchmark'];
-    NoteValue.Pinned := (Index mod 7) = 0;
-    NoteValue.Body := ((('This is a representative note body for frame ' + IntToStr(Index)) + '.') + Std.Str.Chr(10)) +
-                      'It keeps the editor, list, metadata, and layout paths active.';
-    Std.Arrays.Push(Notes, NoteValue);
-  end;
+    begin
+      mutable var NoteValue: Note := NoteCreate('benchmark-' + IntToStr(Index), 1700000000000 +
+                                                                                Index);
+      NoteValue.Title := ('Performance note ' + IntToStr(Index)) + ' with a representative title';
+      NoteValue.Tags := ['performance', 'tui', 'benchmark'];
+      NoteValue.Pinned := (Index mod 7) = 0;
+      NoteValue.Body := ((('This is a representative note body for frame ' + IntToStr(Index)) + '.') + Std.Str.Chr(10)) +
+                        'It keeps the editor, list, metadata, and layout paths active.';
+      Std.Arrays.Push(Notes, NoteValue);
+    end;
+  end for;
 
   return Notes;
 end function;
 
 begin
   if (ParamCount() < 1) or (ParamCount() > 2) then
-  begin
-    panic('usage: notes-headless-benchmark.fpasprj -- ITERATIONS [MAX_MILLIS]');
-  end;
+    begin
+      panic('usage: notes-headless-benchmark.fpasprj -- ITERATIONS [MAX_MILLIS]');
+    end;
+  end if;
   var Iterations: integer := StrToInt(ParamStr(0));
   if Iterations < 1 then
-  begin
-    panic('ITERATIONS must be positive');
-  end;
+    begin
+      panic('ITERATIONS must be positive');
+    end;
+  end if;
   mutable var MaxMillis: integer := 0;
   if ParamCount() = 2 then
-  begin
-    MaxMillis := StrToInt(ParamStr(1));
-    if MaxMillis < 1 then
     begin
-      panic('MAX_MILLIS must be positive');
+      MaxMillis := StrToInt(ParamStr(1));
+      if MaxMillis < 1 then
+        begin
+          panic('MAX_MILLIS must be positive');
+        end;
+      end if;
     end;
-  end;
+  end if;
   var Loaded: NotesLoad := record
     Notes := BenchmarkNotes();
     Issues := [];
@@ -64,25 +70,28 @@ begin
   App.Close();
   mutable var FramesPerSecond: integer := 0;
   if Elapsed > 0 then
-  begin
-    FramesPerSecond := (Iterations * 1000) div Elapsed;
-  end;
+    begin
+      FramesPerSecond := (Iterations * 1000) div Elapsed;
+    end;
+  end if;
 
   WriteLn((('iterations: ' + IntToStr(Iterations)) + ', warm-up: ') + IntToStr(WarmupIterations));
   WriteLn(('elapsed: ' + IntToStr(Elapsed)) + ' ms');
   if Elapsed > 0 then
-  begin
-    WriteLn(('throughput: ' + IntToStr(FramesPerSecond)) + ' frames/s');
-  end;
+    begin
+      WriteLn(('throughput: ' + IntToStr(FramesPerSecond)) + ' frames/s');
+    end;
   else
-  begin
-    WriteLn('throughput: unavailable (elapsed time is 0 ms)');
-  end;
+    begin
+      WriteLn('throughput: unavailable (elapsed time is 0 ms)');
+    end;
+  end if;
 
   WriteLn('notes rendered: ' + IntToStr(Std.Arrays.Length(Model.Notes)));
   if (MaxMillis > 0) and (Elapsed > MaxMillis) then
-  begin
-    panic(((('Notes TUI benchmark regression: ' + IntToStr(Elapsed)) + ' ms exceeds limit ') + IntToStr(MaxMillis)) +
-          ' ms');
-  end;
+    begin
+      panic(((('Notes TUI benchmark regression: ' + IntToStr(Elapsed)) + ' ms exceeds limit ') + IntToStr(MaxMillis)) +
+            ' ms');
+    end;
+  end if;
 end.

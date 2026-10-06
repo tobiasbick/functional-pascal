@@ -41,8 +41,8 @@ begin
   AcquireInteractiveTerminal();
   WriteLn('terminal-ready');
   while not EventPending() do
-  begin
-  end;
+  begin null;
+  end; end while;
   var InputEvent: ConsoleEvent := ReadEvent();
   WriteLn(InputEvent.key.ch);
   if KeyPressed() then
@@ -52,7 +52,7 @@ begin
   else
   begin
     WriteLn('clean');
-  end;
+  end; end if;
   ReleaseInteractiveTerminal();
 end.
 "#;

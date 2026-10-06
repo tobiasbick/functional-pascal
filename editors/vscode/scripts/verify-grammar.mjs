@@ -312,10 +312,49 @@ async function verifyDeclarationClosers(grammar) {
   }
 }
 
+async function verifyControlBlocks(grammar) {
+  const fixture = await tokenizeFixture(grammar, "control_blocks.fpas");
+  const configuration = JSON.parse(await readFile(
+    path.join(extensionRoot, "language-configuration.json"), "utf8"
+  ));
+  const increase = new RegExp(configuration.indentationRules.increaseIndentPattern);
+  const decrease = new RegExp(configuration.indentationRules.decreaseIndentPattern);
+  for (const line of ["if true then", "elsif false then", "else",
+    "for I: integer := 1 to 2 do", "while false do", "repeat"]) {
+    assert.ok(increase.test(line), `${line} opens a body`);
+    assert.ok(increase.test(`${line.toUpperCase()} // body`));
+  }
+  for (const kind of ["if", "for", "while"]) {
+    const line = `end ${kind};`;
+    assertScope(tokenAt(fixture, line, "end"), "keyword.control.fpas");
+    assertScope(tokenAt(fixture, line, kind), "keyword.control.fpas");
+    assert.ok(decrease.test(line));
+    assert.ok(!increase.test(line));
+    assert.ok(!increase.test(line.toUpperCase()));
+  }
+  for (const line of ["elsif false then", "else", "until true;"]) {
+    assert.ok(decrease.test(line));
+    assert.ok(decrease.test(line.toUpperCase()));
+  }
+  assertScope(tokenAt(fixture, "elsif false then", "elsif"), "keyword.control.fpas");
+  assertScope(tokenAt(fixture, "null;", "null"), "keyword.control.fpas");
+  const snippets = JSON.parse(await readFile(
+    path.join(extensionRoot, "snippets", "fpas.json"), "utf8"
+  ));
+  for (const [name, kind] of [["If statement", "if"], ["For loop", "for"],
+    ["While loop", "while"]]) {
+    assert.equal(snippets[name].body.at(-1), `end ${kind};`);
+    assert.ok(!snippets[name].body.includes("begin"));
+    assert.ok(snippets[name].body.some((line) => line.includes("null;")));
+  }
+  assert.ok(snippets["Repeat loop"].body.some((line) => line.includes("null;")));
+}
+
 /** Loads the grammar and verifies positive, negative, and edge-case scopes. */
 export async function verifyGrammar() {
   const grammar = await createGrammar();
   await verifyDeclarationClosers(grammar);
+  await verifyControlBlocks(grammar);
   await verifyPositiveScopes(grammar);
   await verifyNegativeScopes(grammar);
   await verifyEdgeScopes(grammar);

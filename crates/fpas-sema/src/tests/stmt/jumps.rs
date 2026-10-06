@@ -5,7 +5,7 @@ fn break_inside_loop() {
     check_ok(
         "program T; begin \
          while true do break; \
-         end.",
+         end while; end.",
     );
 }
 
@@ -19,7 +19,7 @@ fn continue_inside_loop() {
     check_ok(
         "program T; begin \
          while true do continue; \
-         end.",
+         end while; end.",
     );
 }
 
@@ -34,7 +34,7 @@ fn break_in_nested_loop() {
         "program T; begin \
          while true do \
            while true do break; \
-         end.",
+         end while; end while; end.",
     );
 }
 
@@ -43,7 +43,7 @@ fn break_in_if_outside_loop() {
     check_errors(
         "program T; begin \
          if true then break; \
-         end.",
+         end if; end.",
     );
 }
 
@@ -52,7 +52,7 @@ fn continue_in_if_outside_loop() {
     check_errors(
         "program T; begin \
          if true then continue; \
-         end.",
+         end if; end.",
     );
 }
 
@@ -81,7 +81,7 @@ fn break_inside_for_loop() {
     check_ok(
         "program T; begin \
          for I: integer := 1 to 5 do break; \
-         end.",
+         end for; end.",
     );
 }
 
@@ -90,7 +90,7 @@ fn continue_inside_for_loop() {
     check_ok(
         "program T; begin \
          for I: integer := 1 to 5 do continue; \
-         end.",
+         end for; end.",
     );
 }
 
@@ -119,7 +119,7 @@ fn break_in_nested_if_inside_loop() {
          while true do \
            if true then \
              if true then break; \
-         end.",
+         end if; end if; end while; end.",
     );
 }
 
@@ -130,6 +130,6 @@ fn continue_in_nested_if_inside_loop() {
          for I: integer := 1 to 5 do \
            if true then \
              if true then continue; \
-         end.",
+         end if; end if; end for; end.",
     );
 }

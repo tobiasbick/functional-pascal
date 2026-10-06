@@ -26,9 +26,10 @@ type
     begin
       mutable var Kind: string := 'Rectangle';
       if Self.IsSquare() then
-      begin
-        Kind := 'Square';
-      end;
+        begin
+          Kind := 'Square';
+        end;
+      end if;
 
       WriteLn((((((((Kind + ' ') + IntToStr(Self.W)) + 'x') + IntToStr(Self.H)) + ' area=') + IntToStr(Self.Area())) + ' perimeter=') +
               IntToStr(Self.Perimeter()));

@@ -31,12 +31,14 @@ end function;
 function SafeLookup(Items: array of integer; Target: integer): option of integer;
 begin
   for I: integer := 0 to Length(Items) - 1 do
-  begin
-    if Items[I] = Target then
     begin
-      return Some(I);
+      if Items[I] = Target then
+        begin
+          return Some(I);
+        end;
+      end if;
     end;
-  end;
+  end for;
 
   return None;
 end function;

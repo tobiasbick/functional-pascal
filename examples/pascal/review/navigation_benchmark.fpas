@@ -61,10 +61,11 @@ begin
   mutable var Text: string := (Std.Str.RepeatStr('x', Size) + #10) + Std.Str.RepeatStr('x', Size);
   mutable var Caret: integer := Size;
   if Mode = 'lines' then
-  begin
-    Text := Std.Str.RepeatStr('short' + #10, Size);
-    Caret := Std.Str.Length(Text) - 7;
-  end;
+    begin
+      Text := Std.Str.RepeatStr('short' + #10, Size);
+      Caret := Std.Str.Length(Text) - 7;
+    end;
+  end if;
   var Initial: TextAreaModel := record
     Text := Text;
     Caret := Caret;
@@ -73,13 +74,15 @@ begin
   var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(20, 4));
   var Started: integer := MonotonicMillis();
   for Pass: integer := 1 to 10 do
-  begin
-    var Moved: TextAreaModel := Press(App, Initial, TuiKeyKind.Down, '');
-    if Moved.Caret <= Caret then
     begin
-      panic('caret did not move');
+      var Moved: TextAreaModel := Press(App, Initial, TuiKeyKind.Down, '');
+      if Moved.Caret <= Caret then
+        begin
+          panic('caret did not move');
+        end;
+      end if;
     end;
-  end;
+  end for;
 
   WriteLn(('elapsed: ' + IntToStr(ElapsedMillis(Started))) + ' ms');
   App.Close();

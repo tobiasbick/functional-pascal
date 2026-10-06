@@ -212,14 +212,16 @@ public type
       mutable var Width: integer := ScreenWidth();
       mutable var Height: integer := ScreenHeight();
       if Width < 1 then
-      begin
-        Width := 1;
-      end;
+        begin
+          Width := 1;
+        end;
+      end if;
 
       if Height < 1 then
-      begin
-        Height := 1;
-      end;
+        begin
+          Height := 1;
+        end;
+      end if;
       var Size: TuiSize := TuiSize.Create(Width, Height);
       var App: TuiApplication := record
         Id := TuiAppOpenApplication(Size, Palette, true);
@@ -256,14 +258,16 @@ public type
       mutable var Width: integer := ScreenWidth();
       mutable var Height: integer := ScreenHeight();
       if Width < 1 then
-      begin
-        Width := 1;
-      end;
+        begin
+          Width := 1;
+        end;
+      end if;
 
       if Height < 1 then
-      begin
-        Height := 1;
-      end;
+        begin
+          Height := 1;
+        end;
+      end if;
       var App: TuiApplication := record
         Id := TuiAppOpenApplication(TuiSize.Create(Width, Height), Palette, true);
       end;

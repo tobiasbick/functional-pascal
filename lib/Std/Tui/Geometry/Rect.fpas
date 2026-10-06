@@ -9,9 +9,10 @@ public const
 function TuiRectRequireNonNegative(Value: integer; Name: string): integer;
 begin
   if Value < 0 then
-  begin
-    panic(('Tui ' + Name) + ' must not be negative');
-  end;
+    begin
+      panic(('Tui ' + Name) + ' must not be negative');
+    end;
+  end if;
 
   return Value;
 end function;
@@ -19,9 +20,10 @@ end function;
 function TuiRectCheckedEdge(Origin: integer; Extent: integer; Name: string): integer;
 begin
   if Origin > TuiRectIntegerMax - Extent then
-  begin
-    panic(('Tui ' + Name) + ' edge overflows integer coordinates');
-  end;
+    begin
+      panic(('Tui ' + Name) + ' edge overflows integer coordinates');
+    end;
+  end if;
 
   return Origin + Extent;
 end function;
@@ -29,14 +31,16 @@ end function;
 function TuiRectExtentFromEdges(Origin: integer; Edge: integer; Name: string): integer;
 begin
   if Edge < Origin then
-  begin
-    panic(('Tui ' + Name) + ' edge precedes its origin');
-  end;
+    begin
+      panic(('Tui ' + Name) + ' edge precedes its origin');
+    end;
+  end if;
 
   if (Origin < 0) and (Edge > TuiRectIntegerMax + Origin) then
-  begin
-    panic(('Tui ' + Name) + ' extent overflows integer coordinates');
-  end;
+    begin
+      panic(('Tui ' + Name) + ' extent overflows integer coordinates');
+    end;
+  end if;
 
   return Edge - Origin;
 end function;
@@ -44,9 +48,10 @@ end function;
 function TuiRectMin(Left: integer; Right: integer): integer;
 begin
   if Left < Right then
-  begin
-    return Left;
-  end;
+    begin
+      return Left;
+    end;
+  end if;
 
   return Right;
 end function;
@@ -54,9 +59,10 @@ end function;
 function TuiRectMax(Left: integer; Right: integer): integer;
 begin
   if Left > Right then
-  begin
-    return Left;
-  end;
+    begin
+      return Left;
+    end;
+  end if;
 
   return Right;
 end function;
@@ -189,9 +195,10 @@ public type
       var Right: integer := TuiRectMin(Self.Right(), Other.Right());
       var Bottom: integer := TuiRectMin(Self.Bottom(), Other.Bottom());
       if (Right <= X) or (Bottom <= Y) then
-      begin
-        return TuiRect.Create(X, Y, 0, 0);
-      end;
+        begin
+          return TuiRect.Create(X, Y, 0, 0);
+        end;
+      end if;
 
       return TuiRect.Create(X, Y, Right - X, Bottom - Y);
     end function;
@@ -205,14 +212,16 @@ public type
       mutable var InnerWidth: integer := Self.Width - 2;
       mutable var InnerHeight: integer := Self.Height - 2;
       if InnerWidth < 0 then
-      begin
-        InnerWidth := 0;
-      end;
+        begin
+          InnerWidth := 0;
+        end;
+      end if;
 
       if InnerHeight < 0 then
-      begin
-        InnerHeight := 0;
-      end;
+        begin
+          InnerHeight := 0;
+        end;
+      end if;
 
       return TuiRect.Create(Self.X + 1, Self.Y + 1, InnerWidth, InnerHeight);
     end function;

@@ -161,11 +161,14 @@ mod tests {
     }
 
     #[test]
-    fn unit_clamp_expands_branch_blocks() {
-        let source = "unit MyApp.Utils; uses Std.Math; function Clamp(Value: integer; Min: integer; Max: integer): integer; begin if Value < Min then return Min; else if Value > Max then return Max; else return Value; end function; function IsBlank(S: string): boolean; begin return Length(Trim(S)) = 0; end function;\nend unit;";
+    fn unit_clamp_emits_named_conditional_ending() {
+        let source = "unit MyApp.Utils; uses Std.Math; function Clamp(Value: integer; Min: integer; Max: integer): integer; begin if Value < Min then return Min; elsif  Value > Max then return Max; else return Value; end if; end function; function IsBlank(S: string): boolean; begin return Length(Trim(S)) = 0; end function;\nend unit;";
         let formatted = parse_and_format(source);
         assert!(formatted.starts_with("unit MyApp.Utils;\n\nuses Std.Math;\n\n"));
-        assert!(formatted.contains("if Value < Min then\n  begin\n    return Min;\n  end;"));
+        assert!(
+            formatted.contains("if Value < Min then\n    return Min;\n  elsif Value > Max then")
+        );
+        assert!(formatted.contains("\n  end if;\nend function;"));
         assert!(formatted.contains("function IsBlank"));
     }
 

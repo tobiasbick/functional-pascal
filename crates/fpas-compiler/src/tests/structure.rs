@@ -6,8 +6,8 @@ fn identical_source_produces_deterministic_ir_and_bytecode() {
 program RegisterDeterministic;
 begin
   mutable var X: integer := 1;
-  if X = 1 then X := X + 2;
-  if X <> 3 then panic('bad');
+  if X = 1 then X := X + 2; end if;
+  if X <> 3 then panic('bad'); end if;
 end.";
     let program = parse_ok(source);
 
@@ -85,7 +85,7 @@ begin
   X := 3 + 4;
   X := 5 + 6;
   X := 7 + 8;
-  if X <> 15 then panic('bad');
+  if X <> 15 then panic('bad'); end if;
 end.",
     );
     let executable = crate::compile(&program).expect("compiler compilation should succeed");
@@ -100,7 +100,7 @@ fn every_emitted_register_operand_passes_verifier_admission() {
 program RegisterVerified;
 begin
   mutable var X: integer := 0;
-  while X < 10 do X := X + 1;
+  while X < 10 do X := X + 1; end while;
 end.",
     );
     let verified =
@@ -115,7 +115,7 @@ end.",
 #[test]
 fn integer_loops_emit_fused_comparison_and_for_loop() {
     let program = parse_ok(
-        "program FusedLoop; begin mutable var Total: integer := 0; for I: integer := 1 to 4 do Total := Total + I; if Total <> 10 then panic('wrong'); end.",
+        "program FusedLoop; begin mutable var Total: integer := 0; for I: integer := 1 to 4 do Total := Total + I; end for; if Total <> 10 then panic('wrong'); end if; end.",
     );
     let executable = crate::compile(&program).expect("loop compiles");
     let code = &executable.executable().code;
@@ -135,7 +135,7 @@ fn integer_loops_emit_fused_comparison_and_for_loop() {
 
 #[test]
 fn single_use_integer_literals_emit_immediate_operations() {
-    let source = "program ImmediateInteger; begin mutable var X: integer := 5; X := X + 7; X := X div 3; X := X + (-3); if X <> 1 then panic('wrong'); end.";
+    let source = "program ImmediateInteger; begin mutable var X: integer := 5; X := X + 7; X := X div 3; X := X + (-3); if X <> 1 then panic('wrong'); end if; end.";
     let program = parse_ok(source);
     let executable = crate::compile(&program).expect("immediate arithmetic compiles");
     let code = &executable.executable().code;
@@ -152,7 +152,7 @@ fn single_use_integer_literals_emit_immediate_operations() {
 
 #[test]
 fn string_ordering_uses_typed_opcodes() {
-    let source = "program StringOrdering; begin if not ('a' < 'b') then panic('less'); if not ('b' > 'a') then panic('greater'); if not ('a' <= 'a') then panic('less equal'); if not ('b' >= 'b') then panic('greater equal'); end.";
+    let source = "program StringOrdering; begin if not ('a' < 'b') then panic('less'); end if; if not ('b' > 'a') then panic('greater'); end if; if not ('a' <= 'a') then panic('less equal'); end if; if not ('b' >= 'b') then panic('greater equal'); end if; end.";
     let program = parse_ok(source);
     let executable = crate::compile(&program).expect("string ordering compiles");
     let code = &executable.executable().code;
@@ -169,7 +169,7 @@ fn string_ordering_uses_typed_opcodes() {
 
 #[test]
 fn string_append_reuses_dead_left_operands() {
-    let source = "program Append; begin mutable var S: string := ''; for I: integer := 1 to 3 do S := S + 'x'; var T: string := ('a' + S) + 'b'; if T <> 'axxxb' then panic('wrong'); end.";
+    let source = "program Append; begin mutable var S: string := ''; for I: integer := 1 to 3 do S := S + 'x'; end for; var T: string := ('a' + S) + 'b'; if T <> 'axxxb' then panic('wrong'); end if; end.";
     let program = parse_ok(source);
     let executable = crate::compile(&program).expect("string append compiles");
     let concatenations = executable
@@ -191,7 +191,7 @@ fn string_append_reuses_dead_left_operands() {
 
 #[test]
 fn record_self_update_moves_the_dead_temporary_and_keeps_aliases() {
-    let source = "program SelfUpdate; type P = record A: integer; end record; begin mutable var R: P := record A := 1; end; var Copy: P := R; R := R with A := 2; end; if (R.A <> 2) or (Copy.A <> 1) then panic('wrong'); end.";
+    let source = "program SelfUpdate; type P = record A: integer; end record; begin mutable var R: P := record A := 1; end; var Copy: P := R; R := R with A := 2; end; if (R.A <> 2) or (Copy.A <> 1) then panic('wrong'); end if; end.";
     let program = parse_ok(source);
     let executable = crate::compile(&program).expect("record update compiles");
     assert!(

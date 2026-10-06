@@ -159,7 +159,7 @@ fn server_lifecycle_child() {
         "RequestStop(Life); CloseTaskGroup(GetWorkGroup(Life));
          AssertTrue(IsOk(FinishShutdown(Life))); Sleep(200);"
     } else if mode == "compute" {
-        "RequestStop(Life); while true do begin end;"
+        "RequestStop(Life); while true do begin null; end; end while;"
     } else {
         "RequestStop(Life); WriteLn('output');"
     };

@@ -12,9 +12,10 @@ public type
 function TuiMeasureConstraintRequireNonNegative(Value: integer): integer;
 begin
   if Value < 0 then
-  begin
-    panic('Tui measure constraint limit must not be negative');
-  end;
+    begin
+      panic('Tui measure constraint limit must not be negative');
+    end;
+  end if;
 
   return Value;
 end function;

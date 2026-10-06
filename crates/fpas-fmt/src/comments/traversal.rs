@@ -46,6 +46,9 @@ pub(crate) fn collect(unit: &CompilationUnit, source: &str) -> CollectedAnchors 
                             | Token::Record
                             | Token::Enum
                             | Token::Unit
+                            | Token::If
+                            | Token::For
+                            | Token::While
                     ))
                 .then_some(EmissionAnchor {
                     start: pair[0].span.offset,
@@ -207,9 +210,10 @@ fn collect_stmt_contents(stmt: &Stmt, begins: &[usize], out: &mut CollectedAncho
             condition,
             then_branch,
             else_branch,
-            ..
+            span,
         } => {
             collect_expr(condition, begins, out);
+            collect_closer(*span, out);
             collect_branch_stmt(then_branch, begins, out);
             if let Some(branch) = else_branch {
                 collect_branch_stmt(branch, begins, out);
@@ -234,19 +238,33 @@ fn collect_stmt_contents(stmt: &Stmt, begins: &[usize], out: &mut CollectedAncho
             }
         }
         Stmt::For {
-            start, end, body, ..
+            start,
+            end,
+            body,
+            span,
+            ..
         } => {
+            collect_closer(*span, out);
             collect_expr(start, begins, out);
             collect_expr(end, begins, out);
             collect_branch_stmt(body, begins, out);
         }
-        Stmt::ForIn { iterable, body, .. } => {
+        Stmt::ForIn {
+            iterable,
+            body,
+            span,
+            ..
+        } => {
+            collect_closer(*span, out);
             collect_expr(iterable, begins, out);
             collect_branch_stmt(body, begins, out);
         }
         Stmt::While {
-            condition, body, ..
+            condition,
+            body,
+            span,
         } => {
+            collect_closer(*span, out);
             collect_expr(condition, begins, out);
             collect_branch_stmt(body, begins, out);
         }
@@ -265,7 +283,7 @@ fn collect_stmt_contents(stmt: &Stmt, begins: &[usize], out: &mut CollectedAncho
             }
         }
         Stmt::Expression { expr, .. } | Stmt::Go { expr, .. } => collect_expr(expr, begins, out),
-        Stmt::Break(_) | Stmt::Continue(_) => {}
+        Stmt::Null(_) | Stmt::Break(_) | Stmt::Continue(_) => {}
     }
 }
 

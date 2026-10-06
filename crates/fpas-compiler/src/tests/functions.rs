@@ -13,7 +13,7 @@ begin
 end function;
 begin
   if Add(20, 22) <> 42 then
-    panic('direct call mismatch');
+    panic('direct call mismatch'); end if;
 end.
 "#,
     );
@@ -27,12 +27,12 @@ program RecursiveCall;
 function Factorial(N: integer): integer;
 begin
   if N <= 1 then
-    return 1;
+    return 1; end if;
   return N * Factorial(N - 1);
 end function;
 begin
   if Factorial(5) <> 120 then
-    panic('recursion mismatch');
+    panic('recursion mismatch'); end if;
 end.
 "#,
     );
@@ -46,7 +46,7 @@ program ProcedureCall;
 procedure Validate(Value: integer);
 begin
   if Value <> 42 then
-    panic('procedure argument mismatch');
+    panic('procedure argument mismatch'); end if;
 end procedure;
 begin
   Validate(42);
@@ -70,7 +70,7 @@ begin
 end function;
 begin
   if Outer(21) <> 42 then
-    panic('nested call mismatch');
+    panic('nested call mismatch'); end if;
 end.
 "#,
     );
@@ -91,7 +91,7 @@ begin
 end function;
 begin
   if Apply(Double, 21) <> 42 then
-    panic('function value mismatch');
+    panic('function value mismatch'); end if;
 end.
 "#,
     );
@@ -105,7 +105,7 @@ program FirstClassProcedure;
 procedure Validate(Value: integer);
 begin
   if Value <> 42 then
-    panic('procedure callback mismatch');
+    panic('procedure callback mismatch'); end if;
 end procedure;
 procedure Invoke(Action: procedure(Value: integer); Value: integer);
 begin
@@ -130,7 +130,7 @@ begin
 end function;
 begin
   if Pack(10, 20, 30) <> 102030 then
-    panic('parameters did not shadow standard constants');
+    panic('parameters did not shadow standard constants'); end if;
 end.
 "#,
     );
@@ -151,7 +151,7 @@ type
 begin
   var Value: Channels := record Red := 10; Green := 20; Blue := 30; end;
   if Value.Red * 10000 + Value.Green * 100 + Value.Blue <> 102030 then
-    panic('record fields did not shadow standard constants');
+    panic('record fields did not shadow standard constants'); end if;
 end.
 "#,
     );

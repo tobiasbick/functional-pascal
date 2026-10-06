@@ -5,9 +5,10 @@ uses Std.Tui.Geometry.Size;
 function TuiLayoutFitOverflow(Minimum: integer; Available: integer): integer;
 begin
   if Minimum > Available then
-  begin
-    return Minimum - Available;
-  end;
+    begin
+      return Minimum - Available;
+    end;
+  end if;
 
   return 0;
 end function;

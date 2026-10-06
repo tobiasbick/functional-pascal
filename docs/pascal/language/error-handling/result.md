@@ -10,12 +10,13 @@ var E: Result of integer, string := Error('not found');
 ## Returning errors
 
 ```pascal
-function Divide(A: integer; B: integer): Result of integer, string;
+function Divide(A: integer; B: integer): result of integer, string;
 begin
   if B = 0 then
     return Error('Division by zero');
   else
     return Ok(A div B);
+  end if;
 end function;
 ```
 

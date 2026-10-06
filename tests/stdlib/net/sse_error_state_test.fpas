@@ -5,29 +5,30 @@ uses Std.Arrays, Std.Http, Std.Net.Utf8, Std.Results, Std.Str, Std.Test;
 procedure Terminal(Decoder: SseDecoder);
 begin
   for Pass: integer := 1 to 3 do
-  begin
-    case FeedSse(Decoder, Std.Net.Utf8.Encode(('data: more' + #10) + #10)) of
-      Ok(_):
-      begin
-        Fail('feed after error');
+    begin
+      case FeedSse(Decoder, Std.Net.Utf8.Encode(('data: more' + #10) + #10)) of
+        Ok(_):
+        begin
+          Fail('feed after error');
+        end;
+        Error(Message):
+        begin
+          AssertTrue(Std.Str.Contains(Message, 'finished'));
+        end;
       end;
-      Error(Message):
-      begin
-        AssertTrue(Std.Str.Contains(Message, 'finished'));
-      end;
-    end;
 
-    case FinishSse(Decoder) of
-      Ok(_):
-      begin
-        Fail('finish after error');
-      end;
-      Error(Message):
-      begin
-        AssertTrue(Std.Str.Contains(Message, 'finished'));
+      case FinishSse(Decoder) of
+        Ok(_):
+        begin
+          Fail('finish after error');
+        end;
+        Error(Message):
+        begin
+          AssertTrue(Std.Str.Contains(Message, 'finished'));
+        end;
       end;
     end;
-  end;
+  end for;
 end procedure;
 
 begin

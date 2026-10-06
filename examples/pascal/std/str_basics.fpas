@@ -7,9 +7,10 @@ uses Std.Console, Std.Conv, Std.Str;
 function ReplaceStar(C: string): string;
 begin
   if C = '*' then
-  begin
-    return '★';
-  end;
+    begin
+      return '★';
+    end;
+  end if;
 
   return C;
 end function;

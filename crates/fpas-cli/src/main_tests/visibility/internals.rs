@@ -160,7 +160,7 @@ mutable var
 public function GetCounter(): integer;
 begin
   if Counter < 0 then
-    Counter := 42;
+    Counter := 42; end if;
   return Counter;
 end function;
 end unit;\n",

@@ -18,26 +18,30 @@ end procedure;
 
 begin
   if ParamCount() <> 1 then
-  begin
-    panic('usage: task_memory_benchmark.fpas -- TASK_COUNT');
-  end;
+    begin
+      panic('usage: task_memory_benchmark.fpas -- TASK_COUNT');
+    end;
+  end if;
   var TaskCount: integer := StrToInt(ParamStr(0));
   if TaskCount < 1 then
-  begin
-    panic('TASK_COUNT must be positive');
-  end;
+    begin
+      panic('TASK_COUNT must be positive');
+    end;
+  end if;
 
   WriteLn(('spawning ' + IntToStr(TaskCount)) + ' tasks');
   var Started: integer := MonotonicMillis();
   mutable var Tasks: array of task := [];
   for I: integer := 1 to TaskCount do
-  begin
-    Push(Tasks, go Worker());
-    if I mod ProgressEvery = 0 then
     begin
-      WriteLn('spawned ' + IntToStr(I));
+      Push(Tasks, go Worker());
+      if I mod ProgressEvery = 0 then
+        begin
+          WriteLn('spawned ' + IntToStr(I));
+        end;
+      end if;
     end;
-  end;
+  end for;
 
   WriteLn('all tasks spawned; waiting');
   WaitAll(Tasks);

@@ -7,19 +7,22 @@ uses
 function TuiPointerButtonFromConsole(Button: Std.Console.MouseButton): TuiPointerButton;
 begin
   if Button = Std.Console.MouseButton.Left then
-  begin
-    return TuiPointerButton.Left;
-  end;
+    begin
+      return TuiPointerButton.Left;
+    end;
+  end if;
 
   if Button = Std.Console.MouseButton.Right then
-  begin
-    return TuiPointerButton.Right;
-  end;
+    begin
+      return TuiPointerButton.Right;
+    end;
+  end if;
 
   if Button = Std.Console.MouseButton.Middle then
-  begin
-    return TuiPointerButton.Middle;
-  end;
+    begin
+      return TuiPointerButton.Middle;
+    end;
+  end if;
 
   return TuiPointerButton.NoButton;
 end function;
@@ -44,9 +47,10 @@ begin
     Std.Console.EventKind.Resize:
     begin
       if (InputEvent.width <= 0) or (InputEvent.height <= 0) then
-      begin
-        return None;
-      end;
+        begin
+          return None;
+        end;
+      end if;
 
       return Some(TuiHostInput.Resize(TuiSize.Create(InputEvent.width, InputEvent.height)));
     end;

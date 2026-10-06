@@ -108,7 +108,7 @@ fn intrinsic_selection_uses_one_verified_register_window_convention() {
 program RegisterIntrinsicShape;
 uses Std.Str;
 begin
-  if Std.Str.Length('abc') <> 3 then panic('bad');
+  if Std.Str.Length('abc') <> 3 then panic('bad'); end if;
 end.",
     );
     let metadata = fpas_sema::analyze_with_types(&program);
@@ -172,7 +172,7 @@ begin
   for Index: integer := 1 to 3 do
   begin
     Total := Total + Std.Str.Length('abc');
-  end;
+  end; end for;
   Std.Test.AssertEquals(9, Total);
 end.",
     );

@@ -30,7 +30,7 @@ mutable var Trace: integer := 0;
 function ReadValue(Value: integer; FailAt: integer): result of integer, string;
 begin
   Trace := Trace * 10 + Value;
-  if Value = FailAt then return Error('expected');
+  if Value = FailAt then return Error('expected'); end if;
   return Ok(Value);
 end function;
 function Combine(X: integer; Y: integer): integer;
@@ -48,14 +48,14 @@ begin
   {body}
 end function;
 begin
-  if Probe(0) <> Ok(12) then panic('success value');
-  if Trace <> 12 then panic('success evaluation order');
+  if Probe(0) <> Ok(12) then panic('success value'); end if;
+  if Trace <> 12 then panic('success evaluation order'); end if;
   Trace := 0;
-  if Probe(1) <> Error('expected') then panic('first error');
-  if Trace <> 1 then panic('evaluated after first error');
+  if Probe(1) <> Error('expected') then panic('first error'); end if;
+  if Trace <> 1 then panic('evaluated after first error'); end if;
   Trace := 0;
-  if Probe(2) <> Error('expected') then panic('second error');
-  if Trace <> 12 then panic('second error evaluation order');
+  if Probe(2) <> Error('expected') then panic('second error'); end if;
+  if Trace <> 12 then panic('second error evaluation order'); end if;
 end.
 "#
     ));
@@ -137,14 +137,14 @@ fn global_index_write_preserves_path_and_replacement_across_try() {
 #[test]
 fn membership_preserves_value_across_try() {
     check_expression(
-        "if (try ReadValue(1, FailAt)) in [1, try ReadValue(2, FailAt)] then return Ok(12); return Ok(0);",
+        "if (try ReadValue(1, FailAt)) in [1, try ReadValue(2, FailAt)] then return Ok(12); end if; return Ok(0);",
     );
 }
 
 #[test]
 fn counting_loop_preserves_start_across_try_bound() {
     check_expression(
-        "mutable var Total: integer := 0; for I: integer := try ReadValue(1, FailAt) to try ReadValue(2, FailAt) do Total := Total * 10 + I; return Ok(Total);",
+        "mutable var Total: integer := 0; for I: integer := try ReadValue(1, FailAt) to try ReadValue(2, FailAt) do Total := Total * 10 + I; end for; return Ok(Total);",
     );
 }
 
@@ -213,7 +213,7 @@ mutable var Trace: integer := 0;
 function ReadValue(Value: integer; FailAt: integer): Option of integer;
 begin
   Trace := Trace * 10 + Value;
-  if Value = FailAt then return None;
+  if Value = FailAt then return None; end if;
   return Some(Value);
 end function;
 function Combine(X: integer; Y: integer): integer;
@@ -221,14 +221,14 @@ begin return X * 10 + Y; end function;
 function Probe(FailAt: integer): Option of integer;
 begin return Some(Combine(try ReadValue(1, FailAt), try ReadValue(2, FailAt))); end function;
 begin
-  if Probe(0) <> Some(12) then panic('success');
-  if Trace <> 12 then panic('order');
+  if Probe(0) <> Some(12) then panic('success'); end if;
+  if Trace <> 12 then panic('order'); end if;
   Trace := 0;
-  if Probe(1) <> None then panic('first none');
-  if Trace <> 1 then panic('evaluated after none');
+  if Probe(1) <> None then panic('first none'); end if;
+  if Trace <> 1 then panic('evaluated after none'); end if;
   Trace := 0;
-  if Probe(2) <> None then panic('second none');
-  if Trace <> 12 then panic('second order');
+  if Probe(2) <> None then panic('second none'); end if;
+  if Trace <> 12 then panic('second order'); end if;
 end.
 "#,
     );
@@ -247,16 +247,16 @@ begin
   for I: integer := 1 to 3 do
   begin
     Values := [12, 99];
-    if Values[try Change()] <> 12 then panic('collection snapshot');
+    if Values[try Change()] <> 12 then panic('collection snapshot'); end if;
     mutable var X: integer := I;
     var Update: function(): result of integer, string := function(): result of integer, string
     begin X := 99; return Ok(10); end;
-    if X + (try Update()) <> I + 10 then panic('local snapshot');
-    if X <> 99 then panic('mutation missing');
-  end;
+    if X + (try Update()) <> I + 10 then panic('local snapshot'); end if;
+    if X <> 99 then panic('mutation missing'); end if;
+  end; end for;
   return Ok(12);
 end function;
-begin if Probe() <> Ok(12) then panic('result'); end.
+begin if Probe() <> Ok(12) then panic('result'); end if; end.
 "#,
     );
 }
@@ -275,7 +275,7 @@ begin
 end function;
 function MakeInt(Fail: boolean): result of integer, string;
 begin
-  if Fail then return Error('int');
+  if Fail then return Error('int'); end if;
   return Ok(7);
 end function;
 function MakeValues(): result of array of integer, string;
@@ -287,8 +287,8 @@ begin
   return Ok(Number * 10 + Values[0] + Values[1]);
 end function;
 begin
-  if Probe(false) <> Ok(75) then panic('generic payloads');
-  if Probe(true) <> Error('tagged int') then panic('generic error propagation');
+  if Probe(false) <> Ok(75) then panic('generic payloads'); end if;
+  if Probe(true) <> Error('tagged int') then panic('generic error propagation'); end if;
 end.
 "#,
     );
@@ -303,7 +303,7 @@ function Wrapped<T>(Value: Option of T): Option of T;
 begin return Value; end function;
 function Lookup(Present: boolean): Option of integer;
 begin
-  if Present then return Some(40);
+  if Present then return Some(40); end if;
   return None;
 end function;
 function Probe(Present: boolean): Option of integer;
@@ -312,8 +312,8 @@ begin
   return Some(Number + 2);
 end function;
 begin
-  if Probe(true) <> Some(42) then panic('generic payload');
-  if Probe(false) <> None then panic('generic none');
+  if Probe(true) <> Some(42) then panic('generic payload'); end if;
+  if Probe(false) <> None then panic('generic none'); end if;
 end.
 "#,
     );

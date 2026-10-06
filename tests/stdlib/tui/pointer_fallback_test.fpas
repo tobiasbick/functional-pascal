@@ -42,9 +42,10 @@ begin
       TuiMsg.Tick(Delta):
       begin
         if Delta = 1 then
-        begin
-          return PushEvent(State, 'tick-1');
-        end;
+          begin
+            return PushEvent(State, 'tick-1');
+          end;
+        end if;
 
         return PushEvent(State, 'tick-2');
       end;

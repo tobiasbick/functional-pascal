@@ -7,13 +7,14 @@ uses Std.Console, Std.Conv;
 procedure ClampToRange(mutable Value: integer; Min: integer; Max: integer);
 begin
   if Value < Min then
-  begin
-    Value := Min;
-  end;
-  else if Value > Max then
-  begin
-    Value := Max;
-  end;
+    begin
+      Value := Min;
+    end;
+  elsif Value > Max then
+    begin
+      Value := Max;
+    end;
+  end if;
 
   WriteLn('clamped local: ', IntToStr(Value));
 end procedure;
@@ -22,23 +23,25 @@ function IsEven(N: integer): boolean;
 function IsOdd(X: integer): boolean;
 begin
   if X = 0 then
-  begin
-    return false;
-  end;
+    begin
+      return false;
+    end;
   else
-  begin
-    return IsEven(X - 1);
-  end;
+    begin
+      return IsEven(X - 1);
+    end;
+  end if;
 end function;
 begin
   if N = 0 then
-  begin
-    return true;
-  end;
+    begin
+      return true;
+    end;
   else
-  begin
-    return IsOdd(N - 1);
-  end;
+    begin
+      return IsOdd(N - 1);
+    end;
+  end if;
 end function;
 
 begin

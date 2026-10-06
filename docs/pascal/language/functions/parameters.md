@@ -14,10 +14,11 @@ function Clamp(Value: integer; Min: integer; Max: integer): integer;
 begin
   if Value < Min then
     return Min;
-  else if Value > Max then
+  elsif Value > Max then
     return Max;
   else
     return Value;
+  end if;
 end function;
 
 begin

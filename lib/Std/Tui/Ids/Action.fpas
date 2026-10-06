@@ -3,9 +3,10 @@ unit Std.Tui.Ids.Action;
 function TuiActionRequirePositive(Value: integer): integer;
 begin
   if Value <= 0 then
-  begin
-    panic('Tui action id must be positive');
-  end;
+    begin
+      panic('Tui action id must be positive');
+    end;
+  end if;
 
   return Value;
 end function;

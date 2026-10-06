@@ -3,9 +3,10 @@ unit Std.Tui.Layout.Margins;
 function TuiMarginsRequireNonNegative(Value: integer; Name: string): integer;
 begin
   if Value < 0 then
-  begin
-    panic(('Tui layout margin ' + Name) + ' must not be negative');
-  end;
+    begin
+      panic(('Tui layout margin ' + Name) + ' must not be negative');
+    end;
+  end if;
 
   return Value;
 end function;

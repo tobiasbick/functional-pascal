@@ -30,18 +30,20 @@ begin
     begin
       Next.Ticks := State.Ticks + 1;
       if (State.ShortestTick < 0) or (Elapsed < State.ShortestTick) then
-      begin
-        Next.ShortestTick := Elapsed;
-      end;
+        begin
+          Next.ShortestTick := Elapsed;
+        end;
+      end if;
 
       if Next.Ticks < 3 then
-      begin
-        Cmd.RequestTick(20);
-      end;
+        begin
+          Cmd.RequestTick(20);
+        end;
       else
-      begin
-        Cmd.Set(TuiCmd.Quit);
-      end;
+        begin
+          Cmd.Set(TuiCmd.Quit);
+        end;
+      end if;
     end;
     else
     begin

@@ -4,15 +4,18 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`break_stmt`, `con
 
 ```pascal
 for I: integer := 1 to 100 do
-begin
-  if I mod 2 = 0 then
-    continue;
+  begin
+    if I mod 2 = 0 then
+      continue;
+    end if;
 
-  if I > 50 then
-    break;
+    if I > 50 then
+      break;
+    end if;
 
-  WriteLn(I);
-end;
+    WriteLn(I);
+  end;
+end for;
 ```
 
 ## See also

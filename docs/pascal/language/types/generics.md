@@ -87,7 +87,11 @@ Type parameters can be constrained to require specific capabilities from the con
 ```pascal
 function Max<T: Comparable>(A: T; B: T): T;
 begin
-  if A > B then return A; else return B;
+  if A > B then
+    return A;
+  else
+    return B;
+  end if;
 end function;
 
 function Add<T: Numeric>(A: T; B: T): T;

@@ -49,14 +49,16 @@ end function;
 public function TuiAppCloseApplication(ApplicationId: integer): array of TuiMsg;
 begin
   if (ApplicationId < 1) or (ApplicationId > Std.Arrays.Length(TuiAppOpen)) then
-  begin
-    return [];
-  end;
+    begin
+      return [];
+    end;
+  end if;
 
   if not TuiAppOpen[ApplicationId - 1] then
-  begin
-    return [];
-  end;
+    begin
+      return [];
+    end;
+  end if;
   var BackgroundFailures: array of TuiMsg := TuiBackgroundCloseApplication(ApplicationId);
   TuiAppOpen[ApplicationId - 1] := false;
   TuiAppInputHead[ApplicationId - 1] := 0;
@@ -65,10 +67,11 @@ begin
   TuiAppMessages[ApplicationId - 1] := [];
   Std.Tui.Runtime.Routing.Pointer.TuiPointerRoutingClose(ApplicationId);
   if TuiAppInteractive[ApplicationId - 1] then
-  begin
-    TuiAppInteractive[ApplicationId - 1] := false;
-    TuiTerminalSessionRelease();
-  end;
+    begin
+      TuiAppInteractive[ApplicationId - 1] := false;
+      TuiTerminalSessionRelease();
+    end;
+  end if;
 
   return BackgroundFailures;
 end function;
@@ -77,9 +80,10 @@ end function;
 public procedure TuiAppRaiseShutdownFailure(Failures: array of TuiMsg);
 begin
   if Std.Arrays.Length(Failures) = 0 then
-  begin
-    return;
-  end;
+    begin
+      return;
+    end;
+  end if;
 
   case Failures[0] of
     TuiMsg.BackgroundFailed(IgnoredId, Kind, Message, Code, Line, Column):
@@ -96,9 +100,10 @@ end procedure;
 public function TuiAppRequireHandle(ApplicationId: integer): integer;
 begin
   if (ApplicationId < 1) or (ApplicationId > Std.Arrays.Length(TuiAppOpen)) then
-  begin
-    panic('Tui application handle is stale');
-  end;
+    begin
+      panic('Tui application handle is stale');
+    end;
+  end if;
 
   return ApplicationId;
 end function;
@@ -107,9 +112,10 @@ public function TuiAppRequireOpen(ApplicationId: integer): integer;
 begin
   TuiAppRequireHandle(ApplicationId);
   if not TuiAppOpen[ApplicationId - 1] then
-  begin
-    panic('Tui application is closed');
-  end;
+    begin
+      panic('Tui application is closed');
+    end;
+  end if;
 
   return ApplicationId;
 end function;
@@ -129,14 +135,15 @@ begin
   var Next: integer := Head + 1;
   var Count: integer := Std.Arrays.Length(TuiAppInputs[Slot]);
   if (Next = Count) or ((Next >= 64) and (Next >= Count div 2)) then
-  begin
-    TuiAppInputs[Slot] := Std.Arrays.Slice(TuiAppInputs[Slot], Next, Count - Next);
-    TuiAppInputHead[Slot] := 0;
-  end;
+    begin
+      TuiAppInputs[Slot] := Std.Arrays.Slice(TuiAppInputs[Slot], Next, Count - Next);
+      TuiAppInputHead[Slot] := 0;
+    end;
   else
-  begin
-    TuiAppInputHead[Slot] := Next;
-  end;
+    begin
+      TuiAppInputHead[Slot] := Next;
+    end;
+  end if;
 
   return Item;
 end function;
@@ -156,14 +163,15 @@ begin
   var Next: integer := Head + 1;
   var Count: integer := Std.Arrays.Length(TuiAppMessages[Slot]);
   if (Next = Count) or ((Next >= 64) and (Next >= Count div 2)) then
-  begin
-    TuiAppMessages[Slot] := Std.Arrays.Slice(TuiAppMessages[Slot], Next, Count - Next);
-    TuiAppMessageHead[Slot] := 0;
-  end;
+    begin
+      TuiAppMessages[Slot] := Std.Arrays.Slice(TuiAppMessages[Slot], Next, Count - Next);
+      TuiAppMessageHead[Slot] := 0;
+    end;
   else
-  begin
-    TuiAppMessageHead[Slot] := Next;
-  end;
+    begin
+      TuiAppMessageHead[Slot] := Next;
+    end;
+  end if;
 
   return Item;
 end function;
@@ -174,9 +182,10 @@ begin
   mutable var Queue: array of TuiMsg := TuiAppMessages[ApplicationId - 1];
   TuiAppMessages[ApplicationId - 1] := [];
   for Item: TuiMsg in Messages do
-  begin
-    Std.Arrays.Push(Queue, Item);
-  end;
+    begin
+      Std.Arrays.Push(Queue, Item);
+    end;
+  end for;
 
   TuiAppMessages[ApplicationId - 1] := Queue;
 end procedure;
@@ -195,10 +204,11 @@ public procedure TuiAppStart(ApplicationId: integer);
 begin
   TuiAppRequireOpen(ApplicationId);
   if not TuiAppStarted[ApplicationId - 1] then
-  begin
-    TuiAppStarted[ApplicationId - 1] := true;
-    TuiAppPushMessages(ApplicationId, [TuiMsg.Started]);
-  end;
+    begin
+      TuiAppStarted[ApplicationId - 1] := true;
+      TuiAppPushMessages(ApplicationId, [TuiMsg.Started]);
+    end;
+  end if;
 end procedure;
 
 public procedure TuiAppApplyResize(ApplicationId: integer; Size: TuiSize);
@@ -292,14 +302,16 @@ public function TuiAppTickWait(ApplicationId: integer): integer;
 begin
   var Due: integer := TuiAppTickDueAt[ApplicationId - 1];
   if Due < 0 then
-  begin
-    return -1;
-  end;
+    begin
+      return -1;
+    end;
+  end if;
   var Remaining: integer := Due - MonotonicMillis();
   if Remaining < 0 then
-  begin
-    return 0;
-  end;
+    begin
+      return 0;
+    end;
+  end if;
 
   return Remaining;
 end function;

@@ -39,6 +39,7 @@ begin
     return Left;
   else
     return Right;
+  end if;
 end function;
 ```
 

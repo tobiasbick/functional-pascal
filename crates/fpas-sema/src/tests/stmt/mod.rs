@@ -1,5 +1,6 @@
 mod assignment;
 mod concurrency;
+mod control_blocks;
 mod exhaustiveness;
 mod flow;
 mod for_loops;

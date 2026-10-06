@@ -14,11 +14,11 @@ type
 begin
   var Full: Bag := record Items := [1, 2, 3]; Names := ['a']; end;
   var Emptied: Bag := Full with Items := []; end;
-  if Std.Arrays.Length(Emptied.Items) <> 0 then panic('items not emptied');
-  if Std.Arrays.Length(Emptied.Names) <> 1 then panic('names changed');
-  if Std.Arrays.Length(Full.Items) <> 3 then panic('base mutated');
+  if Std.Arrays.Length(Emptied.Items) <> 0 then panic('items not emptied'); end if;
+  if Std.Arrays.Length(Emptied.Names) <> 1 then panic('names changed'); end if;
+  if Std.Arrays.Length(Full.Items) <> 3 then panic('base mutated'); end if;
   var Refilled: Bag := Emptied with Items := [4]; end;
-  if Refilled.Items[0] <> 4 then panic('refill');
+  if Refilled.Items[0] <> 4 then panic('refill'); end if;
 end.
 "#,
     );
@@ -57,11 +57,11 @@ begin
     Grid := [[]];
     Scores := ['b': []];
   end;
-  if Std.Dictionaries.Length(Reset.Tags) <> 0 then panic('empty dictionary');
-  if Reset.Origin.X + Reset.Origin.Y <> 15 then panic('record literal');
-  if not Std.Options.IsNone(Reset.Label) then panic('none');
-  if Std.Arrays.Length(Reset.Grid[0]) <> 0 then panic('nested empty array');
-  if Std.Arrays.Length(Reset.Scores['b']) <> 0 then panic('empty dictionary value');
+  if Std.Dictionaries.Length(Reset.Tags) <> 0 then panic('empty dictionary'); end if;
+  if Reset.Origin.X + Reset.Origin.Y <> 15 then panic('record literal'); end if;
+  if not Std.Options.IsNone(Reset.Label) then panic('none'); end if;
+  if Std.Arrays.Length(Reset.Grid[0]) <> 0 then panic('nested empty array'); end if;
+  if Std.Arrays.Length(Reset.Scores['b']) <> 0 then panic('empty dictionary value'); end if;
 end.
 "#,
     );
@@ -87,11 +87,11 @@ begin
     Lookup := Ok([:]);
   end;
   if Std.Arrays.Length(Std.Options.Unwrap(Updated.Values)) <> 0 then
-    panic('option payload');
+    panic('option payload'); end if;
   if Std.Dictionaries.Length(Std.Results.Unwrap(Updated.Lookup)) <> 0 then
-    panic('result payload');
+    panic('result payload'); end if;
   if Std.Arrays.Length(Std.Options.Unwrap(Original.Values)) <> 1 then
-    panic('base mutated');
+    panic('base mutated'); end if;
 end.
 "#,
     );

@@ -26,48 +26,54 @@ begin
   var Blank: TuiCell := TuiCell.Create(' ', TuiStyleRole.Normal);
   var RightX: integer := Std.Arrays.Length(Cells);
   for Offset: integer := 0 to Std.Arrays.Length(Values) - 1 do
-  begin
-    var X: integer := FirstX + Offset;
-    if NextContinuations[X] then
     begin
-      NextCells[X - 1] := Blank;
-      NextContinuations[X] := false;
-    end;
-    else if NextCells[X].Columns = 2 then
-    begin
-      NextCells[X + 1] := Blank;
-      NextContinuations[X + 1] := false;
-    end;
+      var X: integer := FirstX + Offset;
+      if NextContinuations[X] then
+        begin
+          NextCells[X - 1] := Blank;
+          NextContinuations[X] := false;
+        end;
+      elsif NextCells[X].Columns = 2 then
+        begin
+          NextCells[X + 1] := Blank;
+          NextContinuations[X + 1] := false;
+        end;
+      end if;
 
-    NextCells[X] := Blank;
-    var Value: TuiCell := Values[Offset];
-    if (Value.Columns = 2) and (X + 1 >= RightX) then
-    begin
-      continue;
-    end;
+      NextCells[X] := Blank;
+      var Value: TuiCell := Values[Offset];
+      if (Value.Columns = 2) and (X + 1 >= RightX) then
+        begin
+          continue;
+        end;
+      end if;
 
-    if Value.Columns = 2 then
-    begin
-      if NextContinuations[X + 1] then
-      begin
-        NextCells[X] := Blank;
-        NextContinuations[X + 1] := false;
-      end;
-      else if NextCells[X + 1].Columns = 2 then
-      begin
-        NextCells[X + 2] := Blank;
-        NextContinuations[X + 2] := false;
-      end;
+      if Value.Columns = 2 then
+        begin
+          if NextContinuations[X + 1] then
+            begin
+              NextCells[X] := Blank;
+              NextContinuations[X + 1] := false;
+            end;
+          elsif NextCells[X + 1].Columns = 2 then
+            begin
+              NextCells[X + 2] := Blank;
+              NextContinuations[X + 2] := false;
+            end;
+          end if;
 
-      NextCells[X + 1] := Blank;
-    end;
+          NextCells[X + 1] := Blank;
+        end;
+      end if;
 
-    NextCells[X] := Value;
-    if Value.Columns = 2 then
-    begin
-      NextContinuations[X + 1] := true;
+      NextCells[X] := Value;
+      if Value.Columns = 2 then
+        begin
+          NextContinuations[X + 1] := true;
+        end;
+      end if;
     end;
-  end;
+  end for;
 
   return record
     Cells := NextCells;

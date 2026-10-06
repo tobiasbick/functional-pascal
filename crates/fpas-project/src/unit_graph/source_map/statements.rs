@@ -5,8 +5,10 @@ use super::types::apply_type_expr_source_id;
 
 use fpas_parser::{CaseArm, CaseLabel, Stmt};
 
+/// Applies the source file identity to a statement and its nested syntax.
 pub(super) fn apply_stmt_source_id(stmt: &mut Stmt, source_id: u32) {
     match stmt {
+        Stmt::Null(span) => apply_span(span, source_id),
         Stmt::Block(stmts, span) => {
             for stmt in stmts {
                 apply_stmt_source_id(stmt, source_id);

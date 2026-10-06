@@ -11,12 +11,12 @@ begin
   return First + Second + Third;
 end function;
 begin
-  if Send(1, 2, 3) <> 6 then panic('local Send was not selected');
+  if Send(1, 2, 3) <> 6 then panic('local Send was not selected'); end if;
   WriteLn(IntToStr(Send(1, 2, 3)));
   var Queue: channel of integer := CreateChannel(1);
   Std.Tasks.Send(Queue, 42);
   case Receive(Queue) of
-    Ok(Value): if Value <> 42 then panic('qualified channel Send');
+    Ok(Value): if Value <> 42 then panic('qualified channel Send'); end if;
     Error(Message): panic(Message);
   end;
   CloseChannel(Queue);
@@ -38,10 +38,10 @@ begin
 end procedure;
 begin
   Send(1, 2, 3);
-  if Total <> 6 then panic('local procedure');
+  if Total <> 6 then panic('local procedure'); end if;
   Std.Console.WriteLn('loaded another unit');
   sEnD(4, 5, 6);
-  if Total <> 15 then panic('local procedure replaced by the intrinsic');
+  if Total <> 15 then panic('local procedure replaced by the intrinsic'); end if;
 end.
 "#,
     );
@@ -62,12 +62,12 @@ begin
   begin
     return Value + 1;
   end;
-  if Send(3) <> 4 then panic('local callable');
+  if Send(3) <> 4 then panic('local callable'); end if;
   if Apply(function(Value: integer): string
   begin
     return 'local';
-  end) <> 'local' then panic('callable parameter');
-  if Std.Conv.IntToStr(42) <> '42' then panic('qualified intrinsic');
+  end) <> 'local' then panic('callable parameter'); end if;
+  if Std.Conv.IntToStr(42) <> '42' then panic('qualified intrinsic'); end if;
 end.
 "#,
     );
@@ -84,8 +84,8 @@ begin
   return Value - 100;
 end function;
 begin
-  if Abs(-2) <> -102 then panic('silent intrinsic substitution');
-  if Std.Math.Abs(-2) <> 2 then panic('qualified intrinsic');
+  if Abs(-2) <> -102 then panic('silent intrinsic substitution'); end if;
+  if Std.Math.Abs(-2) <> 2 then panic('qualified intrinsic'); end if;
 end.
 "#,
     );

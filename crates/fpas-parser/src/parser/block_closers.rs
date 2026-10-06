@@ -1,7 +1,8 @@
-//! Named declaration endings and recovery at enclosing declaration boundaries.
+//! Named block endings and recovery at enclosing block boundaries.
 //!
 //! **Documentation:** `docs/pascal/language/functions/declarations.md`,
-//! `docs/pascal/program-structure/units.md` (from the repository root).
+//! `docs/pascal/program-structure/units.md`,
+//! `docs/pascal/language/control-flow/README.md` (from the repository root).
 
 use super::{Parser, token_display};
 use crate::error::parse_error;
@@ -9,23 +10,23 @@ use fpas_diagnostics::codes::PARSE_EXPECTED_TOKEN;
 use fpas_lexer::Token;
 
 impl Parser {
-    /// Parses a declaration while retaining its enclosing closer kinds for recovery.
-    pub(super) fn with_declaration_closer<T>(
+    /// Parses a construct while retaining its enclosing closer kinds for recovery.
+    pub(super) fn with_block_closer<T>(
         &mut self,
         kind: Token,
         parse: impl FnOnce(&mut Self) -> T,
     ) -> T {
-        self.declaration_closers.push(kind);
+        self.block_closers.push(kind);
         let result = parse(self);
-        self.declaration_closers.pop();
+        self.block_closers.pop();
         result
     }
 
-    /// Requires `end <kind>` and leaves the terminator to the owning declaration.
+    /// Requires `end <kind>` and leaves the terminator to the owning construct.
     ///
     /// Returns whether a closer was consumed. Enclosing named closers and the
     /// program's `end.` remain available to their owner when an inner closer is missing.
-    pub(super) fn expect_declaration_end(&mut self, kind: &Token) -> bool {
+    pub(super) fn expect_block_end(&mut self, kind: &Token) -> bool {
         if self.check(&Token::End) && self.peek_token() == kind {
             self.advance();
             self.advance();
@@ -43,7 +44,7 @@ impl Parser {
         } else {
             token_display(self.current_token()).into_owned()
         };
-        let mut hint = format!("Close this declaration with `{expected}`.");
+        let mut hint = format!("Close this construct with `{expected}`.");
         if kind == &Token::Unit && self.check(&Token::Begin) {
             hint.push_str(
                 " Unit files contain declarations only. Remove trailing statements or blocks.",
@@ -65,7 +66,7 @@ impl Parser {
             return false;
         }
         let enclosing = self
-            .declaration_closers
+            .block_closers
             .iter()
             .rev()
             .skip(1)
@@ -79,7 +80,14 @@ impl Parser {
         }
         if matches!(
             self.peek_token(),
-            Token::Function | Token::Procedure | Token::Record | Token::Enum | Token::Unit
+            Token::Function
+                | Token::Procedure
+                | Token::Record
+                | Token::Enum
+                | Token::Unit
+                | Token::If
+                | Token::For
+                | Token::While
         ) || self
             .tokens
             .get(self.pos + 2)
@@ -92,12 +100,12 @@ impl Parser {
         false
     }
 
-    /// Identifies a preserved outer ending after an inner declaration failed to close.
-    pub(super) fn at_enclosing_declaration_end(&self) -> bool {
+    /// Identifies a preserved outer ending after an inner construct failed to close.
+    pub(super) fn at_enclosing_block_end(&self) -> bool {
         self.check(&Token::End)
             && (self.peek_token() == &Token::Dot
                 || self
-                    .declaration_closers
+                    .block_closers
                     .iter()
                     .any(|kind| kind == self.peek_token()))
     }

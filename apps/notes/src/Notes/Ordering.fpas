@@ -6,9 +6,10 @@ uses Notes.Model, Std.Arrays;
 function Before(Left: Note; Right: Note): boolean;
 begin
   if Left.Pinned <> Right.Pinned then
-  begin
-    return Left.Pinned;
-  end;
+    begin
+      return Left.Pinned;
+    end;
+  end if;
 
   return Left.UpdatedMillis > Right.UpdatedMillis;
 end function;
@@ -18,9 +19,10 @@ public function NotesOrdered(Notes: array of Note): array of Note;
 begin
   var Count: integer := Notes.Length();
   if Count < 2 then
-  begin
-    return Notes;
-  end;
+    begin
+      return Notes;
+    end;
+  end if;
   var Middle: integer := Count div 2;
   var Left: array of Note := NotesOrdered(Notes.Slice(0, Middle));
   var Right: array of Note := NotesOrdered(Notes.Slice(Middle, Count - Middle));
@@ -28,30 +30,34 @@ begin
   mutable var L: integer := 0;
   mutable var R: integer := 0;
   while (L < Left.Length()) and (R < Right.Length()) do
-  begin
-    if Before(Right[R], Left[L]) then
     begin
-      Output.Push(Right[R]);
-      R := R + 1;
+      if Before(Right[R], Left[L]) then
+        begin
+          Output.Push(Right[R]);
+          R := R + 1;
+        end;
+      else
+        begin
+          Output.Push(Left[L]);
+          L := L + 1;
+        end;
+      end if;
     end;
-    else
+  end while;
+
+  while L < Left.Length() do
     begin
       Output.Push(Left[L]);
       L := L + 1;
     end;
-  end;
-
-  while L < Left.Length() do
-  begin
-    Output.Push(Left[L]);
-    L := L + 1;
-  end;
+  end while;
 
   while R < Right.Length() do
-  begin
-    Output.Push(Right[R]);
-    R := R + 1;
-  end;
+    begin
+      Output.Push(Right[R]);
+      R := R + 1;
+    end;
+  end while;
 
   return Output;
 end function;

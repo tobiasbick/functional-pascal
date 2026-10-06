@@ -14,16 +14,18 @@ uses
 public procedure TuiPaintPanel(Canvas: TuiCanvas; Bounds: TuiRect; Title: string);
 begin
   if Bounds.IsEmpty() then
-  begin
-    return;
-  end;
+    begin
+      return;
+    end;
+  end if;
 
   Canvas.FillRect(Bounds, TuiCell.Create(' ', TuiStyleRole.Normal));
   Canvas.DrawFrame(Bounds, TuiStyleRole.Frame);
   if (Title <> '') and (Bounds.Width > 6) then
-  begin
-    Canvas.Child(TuiRect.Create(Bounds.X + 2, Bounds.Y, Bounds.Width - 4, 1))
-      .WriteText(TuiPoint.Create(0, 0), (' ' + Title) + ' ', TuiStyleRole.Title);
-  end;
+    begin
+      Canvas.Child(TuiRect.Create(Bounds.X + 2, Bounds.Y, Bounds.Width - 4, 1))
+        .WriteText(TuiPoint.Create(0, 0), (' ' + Title) + ' ', TuiStyleRole.Title);
+    end;
+  end if;
 end procedure;
 end unit;

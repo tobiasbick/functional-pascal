@@ -93,7 +93,7 @@ fn collect_routine(span: Span, body: &FuncBody, begins: &[usize], out: &mut Coll
     collect_header(span.offset, header_boundary, out);
 }
 
-/// Associates the last named ending in a declaration span with its owner.
+/// Associates the last named ending in a block span with its owner.
 pub(super) fn collect_closer(span: Span, out: &mut CollectedAnchors) {
     let upper = out
         .named_ends

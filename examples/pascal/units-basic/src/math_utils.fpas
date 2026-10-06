@@ -5,17 +5,18 @@ unit App.Math;
 public function Clamp(Value: integer; Min: integer; Max: integer): integer;
 begin
   if Value < Min then
-  begin
-    return Min;
-  end;
-  else if Value > Max then
-  begin
-    return Max;
-  end;
+    begin
+      return Min;
+    end;
+  elsif Value > Max then
+    begin
+      return Max;
+    end;
   else
-  begin
-    return Value;
-  end;
+    begin
+      return Value;
+    end;
+  end if;
 end function;
 
 public function Scale(Value: integer; Factor: integer): integer;

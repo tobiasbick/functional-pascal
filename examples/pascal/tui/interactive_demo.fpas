@@ -24,18 +24,20 @@ begin
     TuiMsg.Action(Source, Action):
     begin
       if Action.Value = 2 then
-      begin
-        return record
-          Text := State.Text;
-          Caret := State.Caret;
-          Confirming := true;
+        begin
+          return record
+            Text := State.Text;
+            Caret := State.Caret;
+            Confirming := true;
+          end;
         end;
-      end;
+      end if;
 
       if Action.Value = 3 then
-      begin
-        Cmd.Set(TuiCmd.Quit);
-      end;
+        begin
+          Cmd.Set(TuiCmd.Quit);
+        end;
+      end if;
 
       return State;
     end;
@@ -95,12 +97,13 @@ begin
   mutable var Content: array of TuiElement := [Input, Confirm, Quit];
   mutable var Focused: option of TuiControlId := Some(TuiControlId.Create(1));
   if State.Confirming then
-  begin
-    Content := [
-                 TuiElementBuilders.MakeOverlay('Confirm', [TuiElementBuilders.MakeLabel(State.Text), Quit])
-               ];
-    Focused := Some(TuiControlId.Create(3));
-  end;
+    begin
+      Content := [
+                   TuiElementBuilders.MakeOverlay('Confirm', [TuiElementBuilders.MakeLabel(State.Text), Quit])
+                 ];
+      Focused := Some(TuiControlId.Create(3));
+    end;
+  end if;
 
   return TuiElementBuilders.MakeDesktop(Focused, [
                                                    TuiElementBuilders.MakeMenuBar([

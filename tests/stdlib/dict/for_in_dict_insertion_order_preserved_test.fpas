@@ -5,7 +5,8 @@ uses Std.Console, Std.Dictionaries;
 begin
   var D: dict of string to integer := ['C': 3, 'A': 1, 'B': 2];
   for K: string in D do
-  begin
-    WriteLn(K);
-  end;
+    begin
+      WriteLn(K);
+    end;
+  end for;
 end.

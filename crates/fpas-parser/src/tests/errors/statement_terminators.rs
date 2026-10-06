@@ -11,14 +11,17 @@ fn missing_final_terminators_are_diagnosed_at_each_boundary() {
             "program P; procedure F(); begin return end procedure; begin end.",
             "end",
         ),
-        ("program P; begin if C then A() else B(); end.", "else"),
-        ("program P; begin while C do A() end.", "end"),
         (
-            "program P; begin for I: integer := 1 to 2 do A() end.",
+            "program P; begin if C then A() else B(); end if; end.",
+            "else",
+        ),
+        ("program P; begin while C do A() end while; end.", "end"),
+        (
+            "program P; begin for I: integer := 1 to 2 do A() end for; end.",
             "end",
         ),
         (
-            "program P; begin for I: integer in Values do A() end.",
+            "program P; begin for I: integer in Values do A() end for; end.",
             "end",
         ),
         ("program P; begin repeat A() until C; end.", "until"),
@@ -28,7 +31,10 @@ fn missing_final_terminators_are_diagnosed_at_each_boundary() {
             "program P; begin case V of 1: A(); else B() end; end.",
             "end",
         ),
-        ("program P; begin if C then A(); else B() end.", "end"),
+        (
+            "program P; begin if C then A(); else B() end if; end.",
+            "end",
+        ),
         (
             "program P; begin Consume(function(): integer begin return 1 end); end.",
             "end",
@@ -57,13 +63,13 @@ fn missing_final_terminators_are_diagnosed_at_each_boundary() {
 #[test]
 fn single_statement_control_bodies_share_their_last_terminator() {
     for source in [
-        "program P; begin if C then A(); else B(); end.",
-        "program P; begin if C then A(); end.",
-        "program P; begin while C do A(); end.",
-        "program P; begin for I: integer := 1 to 2 do A(); end.",
-        "program P; begin for I: integer in Values do A(); end.",
-        "program P; begin if C then while D do A(); else B(); end.",
-        "program P; begin if C then begin if D then A(); end; else B(); end.",
+        "program P; begin if C then A(); else B(); end if; end.",
+        "program P; begin if C then A(); end if; end.",
+        "program P; begin while C do A(); end while; end.",
+        "program P; begin for I: integer := 1 to 2 do A(); end for; end.",
+        "program P; begin for I: integer in Values do A(); end for; end.",
+        "program P; begin if C then while D do A(); end while; else B(); end if; end.",
+        "program P; begin if C then begin if D then A(); end if; end; else B(); end if; end.",
         "program P; begin case V of 1: A(); 2: B(); else C(); end; end.",
         "program P; begin repeat A(); until C; end.",
     ] {
@@ -82,7 +88,7 @@ fn terminator_recovery_preserves_the_next_statement() {
 
 #[test]
 fn comments_do_not_replace_terminators_or_change_else_ownership() {
-    let source = "program P; begin if C then A(); // then\nelse B(); // else\nend.";
+    let source = "program P; begin if C then A(); // then\nelse B(); end if; // else\nend.";
     let (program, diagnostics) = parse_with_errors(source);
     assert!(diagnostics.is_empty(), "{diagnostics:#?}");
     assert!(matches!(
@@ -95,8 +101,9 @@ fn comments_do_not_replace_terminators_or_change_else_ownership() {
     let (_, diagnostics) = parse_with_errors("program P; begin A() // missing\nend.");
     assert_eq!(diagnostics.len(), 1, "{diagnostics:#?}");
 
-    let (program, diagnostics) =
-        parse_with_errors("program P; begin if C then if D then A(); else B(); end.");
+    let (program, diagnostics) = parse_with_errors(
+        "program P; begin if C then if D then A(); else B(); end if; end if; end.",
+    );
     assert!(diagnostics.is_empty(), "{diagnostics:#?}");
     let [
         crate::Stmt::If {
@@ -110,10 +117,7 @@ fn comments_do_not_replace_terminators_or_change_else_ownership() {
     };
     assert!(matches!(
         then_branch.as_ref(),
-        crate::Stmt::If {
-            else_branch: Some(_),
-            ..
-        }
+        crate::Stmt::Block(stmts, _) if matches!(&stmts[0], crate::Stmt::If { else_branch: Some(_), .. })
     ));
 }
 

@@ -15,27 +15,31 @@ end function;
 public function ReadResponseBytes(Connection: Std.Net.Connection; Available: integer): result of array of integer, string;
 begin
   if Available < 0 then
-  begin
-    return Error('HTTP response exceeds MaxResponseBytes');
-  end;
+    begin
+      return Error('HTTP response exceeds MaxResponseBytes');
+    end;
+  end if;
   mutable var Count: integer := Available;
   if Count > 65536 then
-  begin
-    Count := 65536;
-  end;
+    begin
+      Count := 65536;
+    end;
+  end if;
 
   if Count = 0 then
-  begin
-    Count := 1;
-  end;
+    begin
+      Count := 1;
+    end;
+  end if;
 
   case Std.Net.ReceiveBytes(Connection, Count) of
     Ok(Bytes):
     begin
       if Std.Arrays.Length(Bytes) > Available then
-      begin
-        return Error('HTTP response exceeds MaxResponseBytes');
-      end;
+        begin
+          return Error('HTTP response exceeds MaxResponseBytes');
+        end;
+      end if;
 
       return Ok(Bytes);
     end;
@@ -55,29 +59,32 @@ public function WriteAll(Connection: Std.Net.Connection; Bytes: array of integer
 begin
   mutable var Offset: integer := 0;
   while Offset < Std.Arrays.Length(Bytes) do
-  begin
-    mutable var Count: integer := Std.Arrays.Length(Bytes) - Offset;
-    if Count > 1048576 then
     begin
-      Count := 1048576;
-    end;
-    var Remaining: array of integer := Std.Arrays.Slice(Bytes, Offset, Count);
-    case Std.Net.SendBytes(Connection, Remaining) of
-      Ok(Count):
-      begin
-        if Count <= 0 then
+      mutable var Count: integer := Std.Arrays.Length(Bytes) - Offset;
+      if Count > 1048576 then
         begin
-          return Error('Network connection stopped while writing HTTP bytes');
+          Count := 1048576;
         end;
+      end if;
+      var Remaining: array of integer := Std.Arrays.Slice(Bytes, Offset, Count);
+      case Std.Net.SendBytes(Connection, Remaining) of
+        Ok(Count):
+        begin
+          if Count <= 0 then
+            begin
+              return Error('Network connection stopped while writing HTTP bytes');
+            end;
+          end if;
 
-        Offset := Offset + Count;
-      end;
-      Error(Message):
-      begin
-        return Error(Message);
+          Offset := Offset + Count;
+        end;
+        Error(Message):
+        begin
+          return Error(Message);
+        end;
       end;
     end;
-  end;
+  end while;
 
   return Ok(true);
 end function;

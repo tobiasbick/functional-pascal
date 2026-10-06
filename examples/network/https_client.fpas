@@ -5,9 +5,10 @@ uses Std.Args, Std.Conv, Std.Console, Std.Http;
 
 begin
   if ParamCount() <> 1 then
-  begin
-    panic('usage: https_client.fpas -- URL');
-  end;
+    begin
+      panic('usage: https_client.fpas -- URL');
+    end;
+  end if;
 
   case Send(Request.Get(ParamStr(0))) of
     Ok(ResponseValue):

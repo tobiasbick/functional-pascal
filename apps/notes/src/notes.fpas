@@ -7,9 +7,10 @@ uses
 function NotesDirectory(): string;
 begin
   if Std.Args.ParamCount() > 0 then
-  begin
-    return Std.Args.ParamStr(0);
-  end;
+    begin
+      return Std.Args.ParamStr(0);
+    end;
+  end if;
 
   return 'notes';
 end function;

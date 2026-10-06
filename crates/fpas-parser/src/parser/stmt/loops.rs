@@ -4,10 +4,14 @@ use fpas_diagnostics::codes::PARSE_EXPECTED_TO_OR_DOWNTO;
 use fpas_lexer::Token;
 
 impl Parser {
-    /// Parses counting and collection loops with a terminated single-statement body.
+    /// Parses counting and collection loops with scoped bodies and `end for`.
     ///
     /// **Documentation:** `docs/pascal/language/control-flow/for-loops.md`
     pub(super) fn parse_for_stmt(&mut self) -> Stmt {
+        self.with_block_closer(Token::For, Self::parse_for_stmt_inner)
+    }
+
+    fn parse_for_stmt_inner(&mut self) -> Stmt {
         let start = self.current_span();
         self.advance();
         let (var_name, _) = self
@@ -19,14 +23,15 @@ impl Parser {
         // For-in: `for X: T in Expr do ...`
         if self.eat(&Token::In) {
             let iterable = self.parse_expression();
-            self.expect(&Token::Do);
-            let body = Box::new(self.parse_terminated_statement());
+            let body_start = self.expect(&Token::Do).unwrap_or(self.current_span());
+            let body = Box::new(self.parse_control_body(body_start));
+            self.expect_block_end(&Token::For);
             return Stmt::ForIn {
                 var_name,
                 var_type,
                 iterable,
                 body,
-                span: self.span_before_terminator(start),
+                span: self.span_from(start),
             };
         }
 
@@ -51,8 +56,9 @@ impl Parser {
         };
 
         let end_expr = self.parse_expression();
-        self.expect(&Token::Do);
-        let body = Box::new(self.parse_terminated_statement());
+        let body_start = self.expect(&Token::Do).unwrap_or(self.current_span());
+        let body = Box::new(self.parse_control_body(body_start));
+        self.expect_block_end(&Token::For);
 
         Stmt::For {
             var_name,
@@ -61,23 +67,28 @@ impl Parser {
             direction,
             end: end_expr,
             body,
-            span: self.span_before_terminator(start),
+            span: self.span_from(start),
         }
     }
 
-    /// Parses a while loop sharing its body's terminator.
+    /// Parses a while loop with a scoped body and `end while`.
     ///
     /// **Documentation:** `docs/pascal/language/control-flow/while-repeat.md`
     pub(super) fn parse_while_stmt(&mut self) -> Stmt {
+        self.with_block_closer(Token::While, Self::parse_while_stmt_inner)
+    }
+
+    fn parse_while_stmt_inner(&mut self) -> Stmt {
         let start = self.current_span();
         self.advance();
         let condition = self.parse_expression();
-        self.expect(&Token::Do);
-        let body = Box::new(self.parse_terminated_statement());
+        let body_start = self.expect(&Token::Do).unwrap_or(self.current_span());
+        let body = Box::new(self.parse_control_body(body_start));
+        self.expect_block_end(&Token::While);
         Stmt::While {
             condition,
             body,
-            span: self.span_before_terminator(start),
+            span: self.span_from(start),
         }
     }
 
@@ -88,6 +99,7 @@ impl Parser {
         let start = self.current_span();
         self.advance();
         let body = self.parse_statement_list();
+        self.require_control_statements(&body);
         self.expect(&Token::Until);
         let condition = self.parse_expression();
         Stmt::Repeat {

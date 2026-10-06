@@ -2,25 +2,24 @@
 
 Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`for_stmt`).
 
-The body is one terminated statement. Its final `;` also terminates the loop;
-an explicit `begin ... end;` body groups multiple terminated statements.
+The body contains a nonempty list of terminated statements, closed by
+`end for;`. Body-local declarations are visible only inside the loop.
+Use `null;` when an iteration intentionally performs no action.
 
 ## Counting up
 
 ```pascal
 for I: integer := 1 to 10 do
-begin
   WriteLn(I);
-end;
+end for;
 ```
 
 ## Counting down
 
 ```pascal
 for I: integer := 10 downto 1 do
-begin
   WriteLn(I);
-end;
+end for;
 ```
 
 ## Implementation (contributors)

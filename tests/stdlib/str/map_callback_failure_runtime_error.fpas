@@ -5,14 +5,16 @@ uses Std.Str;
 function FailOnSecond(C: string): string;
 begin
   if C = 'b' then
-  begin
-    panic('string callback failed on second scalar');
-  end;
+    begin
+      panic('string callback failed on second scalar');
+    end;
+  end if;
 
   if C = 'c' then
-  begin
-    panic('string callback advanced after failure');
-  end;
+    begin
+      panic('string callback advanced after failure');
+    end;
+  end if;
 
   return C;
 end function;

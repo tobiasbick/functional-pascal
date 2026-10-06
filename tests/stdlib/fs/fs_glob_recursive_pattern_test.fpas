@@ -5,14 +5,16 @@ uses Std.Arrays, Std.Fs, Std.Test;
 procedure EnsureDir(Path: string);
 begin
   if Exists(Path) then
-  begin
-    if not IsDir(Path) then
     begin
-      Fail(('Expected directory: ') + Path);
-    end;
+      if not IsDir(Path) then
+        begin
+          Fail(('Expected directory: ') + Path);
+        end;
+      end if;
 
-    return;
-  end;
+      return;
+    end;
+  end if;
 
   case CreateDir(Path) of
     Ok(_):

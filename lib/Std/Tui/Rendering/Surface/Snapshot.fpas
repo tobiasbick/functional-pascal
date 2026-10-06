@@ -21,9 +21,10 @@ public type
     public function CellAt(Self: TuiSurfaceSnapshot; X: integer; Y: integer): TuiCell;
     begin
       if (((X < 0) or (X >= Self.Width)) or (Y < 0)) or (Y >= Self.Height) then
-      begin
-        panic('Tui snapshot position is outside the surface');
-      end;
+        begin
+          panic('Tui snapshot position is outside the surface');
+        end;
+      end if;
 
       return Self.Cells[(Y * Self.Width) + X];
     end function;
@@ -36,14 +37,16 @@ public type
     public function LineAt(Self: TuiSurfaceSnapshot; Y: integer): string;
     begin
       if (Y < 0) or (Y >= Self.Height) then
-      begin
-        panic('Tui snapshot row is outside the surface');
-      end;
+        begin
+          panic('Tui snapshot row is outside the surface');
+        end;
+      end if;
       mutable var Line: string := '';
       for X: integer := 0 to Self.Width - 1 do
-      begin
-        Line := Line + Self.CellAt(X, Y).Glyph;
-      end;
+        begin
+          Line := Line + Self.CellAt(X, Y).Glyph;
+        end;
+      end for;
 
       return Line;
     end function;

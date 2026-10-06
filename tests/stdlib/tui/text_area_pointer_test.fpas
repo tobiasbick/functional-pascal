@@ -14,9 +14,10 @@ function ViewTextArea(State: PointerModel): TuiElement;
 begin
   mutable var Focused: option of TuiControlId := None;
   if State.Focus > 0 then
-  begin
-    Focused := Some(TuiControlId.Create(State.Focus));
-  end;
+    begin
+      Focused := Some(TuiControlId.Create(State.Focus));
+    end;
+  end if;
 
   return TuiElementBuilders.MakeDesktop(Focused, [
                                                    TuiElementBuilders.MakeTextArea(TuiControlId.Create(1), State.Text, State.Caret, State.Offset, TuiAction.Create(9))

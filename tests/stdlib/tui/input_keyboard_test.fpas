@@ -26,12 +26,13 @@ function ViewInput(State: InputKeyboardModel): TuiElement;
 begin
   mutable var Input: TuiElement := TuiElementBuilders.MakeInputWithHint(TuiControlId.Create(1), State.Text, State.Caret, 'Command', TuiAction.Create(1));
   if State.UseHistory then
-  begin
-    Input := TuiElementBuilders.MakeHistoryInput(TuiControlId.Create(1), State.Text, State.Caret, 'Command', [
-                                                                                                               'first',
-                                                                                                               'second'
-                                                                                                             ], 'draft', TuiAction.Create(1));
-  end;
+    begin
+      Input := TuiElementBuilders.MakeHistoryInput(TuiControlId.Create(1), State.Text, State.Caret, 'Command', [
+                                                                                                                 'first',
+                                                                                                                 'second'
+                                                                                                               ], 'draft', TuiAction.Create(1));
+    end;
+  end if;
 
   return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(1)), [Input]);
 end function;

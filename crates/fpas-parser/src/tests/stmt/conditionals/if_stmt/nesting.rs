@@ -7,7 +7,7 @@ fn nested_if_in_then_branch() {
          if A then \
            if B then X := 1; \
            else X := 2; \
-         end.",
+         end if; end if; end.",
     );
     match &stmts[0] {
         Stmt::If {
@@ -17,10 +17,7 @@ fn nested_if_in_then_branch() {
         } => {
             assert!(matches!(
                 then_branch.as_ref(),
-                Stmt::If {
-                    else_branch: Some(_),
-                    ..
-                }
+                Stmt::Block(stmts, _) if matches!(&stmts[0], Stmt::If { else_branch: Some(_), .. })
             ));
         }
         _ => panic!("expected nested If"),
@@ -32,11 +29,11 @@ fn deeply_chained_else_if() {
     let stmts = body_stmts(
         "program T; begin \
          if X = 1 then A := 1; \
-         else if X = 2 then A := 2; \
-         else if X = 3 then A := 3; \
-         else if X = 4 then A := 4; \
+         elsif  X = 2 then A := 2; \
+         elsif  X = 3 then A := 3; \
+         elsif  X = 4 then A := 4; \
          else A := 0; \
-         end.",
+         end if; end.",
     );
 
     let mut current = &stmts[0];

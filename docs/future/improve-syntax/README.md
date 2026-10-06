@@ -43,8 +43,8 @@ against the checkout before implementing each work package.
 
 ## Package status
 
-AP01 and AP02 are complete on `codex/syntax-changes-2`. AP13.1 through AP13.3
-are also complete; AP13.4 through AP13.6 remain open. Checkboxes track completed
+AP01 and AP02 are complete on `codex/syntax-changes-2`. AP13.1 through AP13.4
+are also complete; AP13.5 and AP13.6 remain open. Checkboxes track completed
 delivery in the working branch, as defined by the
 [status-tracking rule](development-process.md#status-tracking).
 

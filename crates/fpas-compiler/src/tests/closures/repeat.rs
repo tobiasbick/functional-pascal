@@ -15,11 +15,11 @@ begin
   repeat
     Count := Count + 1;
   until Evaluate(function(): boolean begin return Count = 3; end);
-  if Count <> 3 then panic('repeat capture mismatch');
+  if Count <> 3 then panic('repeat capture mismatch'); end if;
   repeat
     Count := Count + 1;
   until Evaluate(function(): boolean begin return true; end);
-  if Count <> 4 then panic('repeat closure mismatch');
+  if Count <> 4 then panic('repeat closure mismatch'); end if;
 end procedure;
 begin
   Check();

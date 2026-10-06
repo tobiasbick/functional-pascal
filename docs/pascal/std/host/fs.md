@@ -68,9 +68,10 @@ Reads the entire file at `Path` as UTF-8 text.
 Files larger than 64 MiB return `Error(message)` instead of loading into memory.
 
 ```pascal
-var Content: Result of string, string := ReadText('notes.txt');
+var Content: result of string, string := ReadText('notes.txt');
 if Std.Results.IsOk(Content) then
   WriteLn(Std.Results.Unwrap(Content));
+end if;
 ```
 
 ---
@@ -82,6 +83,7 @@ Writes UTF-8 text to `Path`, creating or replacing the file.
 ```pascal
 if Std.Results.IsOk(WriteText('out.txt', 'hello')) then
   WriteLn('written');
+end if;
 ```
 
 ---
@@ -115,6 +117,7 @@ Returns `true` when the host filesystem reports that `Path` exists.
 ```pascal
 if Exists('config.json') then
   WriteLn('config is present');
+end if;
 ```
 
 ---
@@ -146,6 +149,7 @@ Creates a single directory at `Path`. Parent directories must already exist. An 
 ```pascal
 if Std.Results.IsOk(CreateDir('build/output')) then
   WriteLn('directory created');
+end if;
 ```
 
 ---

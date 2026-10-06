@@ -15,12 +15,12 @@ begin
   var A: task := go Work(11);
   var B: task := go Work(22);
   var Winner: integer := WaitAny([A, B]);
-  if (Winner < 0) or (Winner > 1) then panic('index');
+  if (Winner < 0) or (Winner > 1) then panic('index'); end if;
   WaitAll([A, B]);
-  if WaitAny([B, A]) <> 0 then panic('order');
-  if Wait(B) <> 22 then panic('consumed B');
-  if WaitAny([B, A]) <> 0 then panic('consumed identity');
-  if Wait(A) <> 11 then panic('consumed A');
+  if WaitAny([B, A]) <> 0 then panic('order'); end if;
+  if Wait(B) <> 22 then panic('consumed B'); end if;
+  if WaitAny([B, A]) <> 0 then panic('consumed identity'); end if;
+  if Wait(A) <> 11 then panic('consumed A'); end if;
 end."#;
     let (program, diagnostics) = fpas_parser::parse(source);
     assert!(diagnostics.is_empty(), "{diagnostics:?}");

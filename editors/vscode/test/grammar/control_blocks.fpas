@@ -1,0 +1,19 @@
+program ControlHighlighting;
+
+begin
+  if true then
+    null;
+  elsif false then
+    null;
+  else
+    null;
+  end if;
+
+  for I: integer := 1 to 2 do
+    null;
+  end for;
+
+  while false do
+    null;
+  end while;
+end.

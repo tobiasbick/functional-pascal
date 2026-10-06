@@ -7,9 +7,10 @@ uses Std.Console, Std.Conv;
 begin
   mutable var Sum: integer := 0;
   for I: integer := 5 downto 1 do
-  begin
-    Sum := Sum + I;
-  end;
+    begin
+      Sum := Sum + I;
+    end;
+  end for;
 
   WriteLn('sum: ', IntToStr(Sum));
 end.

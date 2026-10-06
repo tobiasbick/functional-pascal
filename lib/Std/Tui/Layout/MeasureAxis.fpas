@@ -24,9 +24,10 @@ public type
     public static function Min(Left: integer; Right: integer): integer;
     begin
       if Left < Right then
-      begin
-        return Left;
-      end;
+        begin
+          return Left;
+        end;
+      end if;
 
       return Right;
     end function;
@@ -39,9 +40,10 @@ public type
     public static function Max(Left: integer; Right: integer): integer;
     begin
       if Left > Right then
-      begin
-        return Left;
-      end;
+        begin
+          return Left;
+        end;
+      end if;
 
       return Right;
     end function;
@@ -54,9 +56,10 @@ public type
     public static function Add(Left: integer; Right: integer): integer;
     begin
       if Left > TuiMeasureAxisIntegerMax - Right then
-      begin
-        panic('Tui layout measurement overflows integer extents');
-      end;
+        begin
+          panic('Tui layout measurement overflows integer extents');
+        end;
+      end if;
 
       return Left + Right;
     end function;
@@ -76,12 +79,13 @@ public type
 ): TuiMeasureAxisResult;
     begin
       if not Constraint.IsBounded() then
-      begin
-        return record
-          Preferred := Preferred;
-          Maximum := Maximum;
+        begin
+          return record
+            Preferred := Preferred;
+            Maximum := Maximum;
+          end;
         end;
-      end;
+      end if;
       var ConstrainedPreferred: integer := TuiMeasureAxis.Max(Minimum, TuiMeasureAxis.Min(Preferred, Constraint.Limit));
       var ConstrainedMaximum: integer := TuiMeasureAxis.Max(ConstrainedPreferred, TuiMeasureAxis.Min(Maximum, Constraint.Limit));
       return record

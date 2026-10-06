@@ -7,12 +7,14 @@ uses
 function NoteIndexById(Notes: array of Note; Id: string): integer;
 begin
   for Index: integer := 0 to Std.Arrays.Length(Notes) - 1 do
-  begin
-    if Notes[Index].Id = Id then
     begin
-      return Index;
+      if Notes[Index].Id = Id then
+        begin
+          return Index;
+        end;
+      end if;
     end;
-  end;
+  end for;
 
   return -1;
 end function;
@@ -35,18 +37,19 @@ begin
   Next.BodyCaret := 0;
   Next.BodyOffset := TuiPoint.Create(0, 0);
   if (Selected >= 0) and (Selected < Std.Arrays.Length(State.Notes)) then
-  begin
-    var NoteValue: Note := State.Notes[Selected];
-    Next.TitleCaret := Std.Str.Length(NoteValue.Title);
-    Next.TagsText := NoteTagsText(NoteValue);
-    Next.TagsCaret := Std.Str.Length(Next.TagsText);
-  end;
+    begin
+      var NoteValue: Note := State.Notes[Selected];
+      Next.TitleCaret := Std.Str.Length(NoteValue.Title);
+      Next.TagsText := NoteTagsText(NoteValue);
+      Next.TagsCaret := Std.Str.Length(Next.TagsText);
+    end;
   else
-  begin
-    Next.TitleCaret := 0;
-    Next.TagsText := '';
-    Next.TagsCaret := 0;
-  end;
+    begin
+      Next.TitleCaret := 0;
+      Next.TagsText := '';
+      Next.TagsCaret := 0;
+    end;
+  end if;
 
   return Next;
 end function;
@@ -55,9 +58,10 @@ end function;
 public function NotesPersistCurrent(State: NotesModel): NotesModel;
 begin
   if (not State.Dirty) or (not NotesHasSelection(State)) then
-  begin
-    return State;
-  end;
+    begin
+      return State;
+    end;
+  end if;
   mutable var Next: NotesModel := State;
   mutable var NoteValue: Note := Next.Notes[Next.Selected];
   NoteValue.UpdatedMillis := Std.Time.TimestampMillis();
@@ -70,10 +74,11 @@ begin
       Next.Dirty := false;
       Next.Status := 'Saved ' + NoteValue.Title;
       if Next.Overlay = NotesOverlay.SaveFailure then
-      begin
-        Next.Overlay := NotesOverlay.Closed;
-        Next.ErrorMessage := '';
-      end;
+        begin
+          Next.Overlay := NotesOverlay.Closed;
+          Next.ErrorMessage := '';
+        end;
+      end if;
 
       return Next;
     end;
@@ -91,12 +96,14 @@ function SelectedFilteredPosition(State: NotesModel): integer;
 begin
   var Indices: array of integer := NotesFilteredIndices(State.Notes, State.Search);
   for Index: integer := 0 to Std.Arrays.Length(Indices) - 1 do
-  begin
-    if Indices[Index] = State.Selected then
     begin
-      return Index;
+      if Indices[Index] = State.Selected then
+        begin
+          return Index;
+        end;
+      end if;
     end;
-  end;
+  end for;
 
   return -1;
 end function;
@@ -105,15 +112,17 @@ function SelectFiltered(State: NotesModel; Position: integer): NotesModel;
 begin
   var Indices: array of integer := NotesFilteredIndices(State.Notes, State.Search);
   if (Position < 0) or (Position >= Std.Arrays.Length(Indices)) then
-  begin
-    return State;
-  end;
+    begin
+      return State;
+    end;
+  end if;
   var TargetId: string := State.Notes[Indices[Position]].Id;
   var Saved: NotesModel := NotesPersistCurrent(State);
   if Saved.Dirty or (Saved.Overlay = NotesOverlay.SaveFailure) then
-  begin
-    return Saved;
-  end;
+    begin
+      return Saved;
+    end;
+  end if;
   mutable var Next: NotesModel := WithEditorFields(Saved, NoteIndexById(Saved.Notes, TargetId));
   Next.Pane := NotesPane.List;
   Next.Focus := ListControl;
@@ -124,9 +133,10 @@ function CreateNote(State: NotesModel): NotesModel;
 begin
   var Saved: NotesModel := NotesPersistCurrent(State);
   if Saved.Dirty or (Saved.Overlay = NotesOverlay.SaveFailure) then
-  begin
-    return Saved;
-  end;
+    begin
+      return Saved;
+    end;
+  end if;
   mutable var Next: NotesModel := Saved;
   mutable var Draft: Note := NotesCreateDraft(Next.Directory);
   Draft.Path := NoteFilePath(Next.Directory, Draft);
@@ -156,9 +166,10 @@ end function;
 function TogglePin(State: NotesModel): NotesModel;
 begin
   if not NotesHasSelection(State) then
-  begin
-    return State;
-  end;
+    begin
+      return State;
+    end;
+  end if;
   mutable var Next: NotesModel := State;
   mutable var NoteValue: Note := Next.Notes[Next.Selected];
   NoteValue.Pinned := not NoteValue.Pinned;
@@ -172,13 +183,14 @@ function SelectFirstVisible(State: NotesModel): NotesModel;
 begin
   var Indices: array of integer := NotesFilteredIndices(State.Notes, State.Search);
   if Std.Arrays.Length(Indices) = 0 then
-  begin
-    mutable var Empty: NotesModel := State;
-    Empty.Selected := -1;
-    Empty.Pane := NotesPane.List;
-    Empty.Focus := ListControl;
-    return Empty;
-  end;
+    begin
+      mutable var Empty: NotesModel := State;
+      Empty.Selected := -1;
+      Empty.Pane := NotesPane.List;
+      Empty.Focus := ListControl;
+      return Empty;
+    end;
+  end if;
 
   return WithEditorFields(State, Indices[0]);
 end function;
@@ -186,9 +198,10 @@ end function;
 function ArchiveNote(State: NotesModel): NotesModel;
 begin
   if not NotesHasSelection(State) then
-  begin
-    return State;
-  end;
+    begin
+      return State;
+    end;
+  end if;
   mutable var Next: NotesModel := State;
   mutable var NoteValue: Note := Next.Notes[Next.Selected];
   NoteValue.Archived := true;
@@ -196,9 +209,10 @@ begin
   Next.Dirty := true;
   Next := NotesPersistCurrent(Next);
   if Next.Dirty or (Next.Overlay = NotesOverlay.SaveFailure) then
-  begin
-    return Next;
-  end;
+    begin
+      return Next;
+    end;
+  end if;
 
   Next.Status := 'Note archived';
   return SelectFirstVisible(Next);
@@ -207,63 +221,73 @@ end function;
 function HandleAction(State: NotesModel; Action: integer; Cmd: TuiCmdOutput): NotesModel;
 begin
   if Action = NewNoteAction then
-  begin
-    return CreateNote(State);
-  end;
+    begin
+      return CreateNote(State);
+    end;
+  end if;
 
   if Action = SaveNoteAction then
-  begin
-    return NotesPersistCurrent(State);
-  end;
+    begin
+      return NotesPersistCurrent(State);
+    end;
+  end if;
 
   if Action = TogglePinAction then
-  begin
-    return TogglePin(State);
-  end;
+    begin
+      return TogglePin(State);
+    end;
+  end if;
 
   if Action = ArchiveNoteAction then
-  begin
-    return ArchiveNote(State);
-  end;
+    begin
+      return ArchiveNote(State);
+    end;
+  end if;
 
   if Action = CommandsAction then
-  begin
-    mutable var Next: NotesModel := State;
-    Next.Overlay := NotesOverlay.Commands;
-    return Next;
-  end;
+    begin
+      mutable var Next: NotesModel := State;
+      Next.Overlay := NotesOverlay.Commands;
+      return Next;
+    end;
+  end if;
 
   if Action = HelpAction then
-  begin
-    mutable var Next: NotesModel := State;
-    Next.Overlay := NotesOverlay.Help;
-    return Next;
-  end;
+    begin
+      mutable var Next: NotesModel := State;
+      Next.Overlay := NotesOverlay.Help;
+      return Next;
+    end;
+  end if;
 
   if Action = CloseOverlayAction then
-  begin
-    mutable var Next: NotesModel := State;
-    Next.Overlay := NotesOverlay.Closed;
-    Next.ErrorMessage := '';
-    return Next;
-  end;
+    begin
+      mutable var Next: NotesModel := State;
+      Next.Overlay := NotesOverlay.Closed;
+      Next.ErrorMessage := '';
+      return Next;
+    end;
+  end if;
 
   if Action = SaveAndQuitAction then
-  begin
-    var Saved: NotesModel := NotesPersistCurrent(State);
-    if not Saved.Dirty and (Saved.Overlay <> NotesOverlay.SaveFailure) then
     begin
-      Cmd.Set(TuiCmd.Quit);
-    end;
+      var Saved: NotesModel := NotesPersistCurrent(State);
+      if not Saved.Dirty and (Saved.Overlay <> NotesOverlay.SaveFailure) then
+        begin
+          Cmd.Set(TuiCmd.Quit);
+        end;
+      end if;
 
-    return Saved;
-  end;
+      return Saved;
+    end;
+  end if;
 
   if Action = DiscardAndQuitAction then
-  begin
-    Cmd.Set(TuiCmd.Quit);
-    return State;
-  end;
+    begin
+      Cmd.Set(TuiCmd.Quit);
+      return State;
+    end;
+  end if;
 
   return State;
 end function;
@@ -271,11 +295,12 @@ end function;
 function RequestQuit(State: NotesModel; Cmd: TuiCmdOutput): NotesModel;
 begin
   if State.Dirty then
-  begin
-    mutable var Next: NotesModel := State;
-    Next.Overlay := NotesOverlay.QuitConfirmation;
-    return Next;
-  end;
+    begin
+      mutable var Next: NotesModel := State;
+      Next.Overlay := NotesOverlay.QuitConfirmation;
+      return Next;
+    end;
+  end if;
 
   Cmd.Set(TuiCmd.Quit);
   return State;
@@ -284,34 +309,38 @@ end function;
 function HandleShortcut(State: NotesModel; Key: TuiKeyEvent; Cmd: TuiCmdOutput): NotesModel;
 begin
   if Key.kind = Std.Console.KeyKind.F1 then
-  begin
-    return HandleAction(State, HelpAction, Cmd);
-  end;
+    begin
+      return HandleAction(State, HelpAction, Cmd);
+    end;
+  end if;
 
   if ((Key.kind = Std.Console.KeyKind.Enter) and (State.Focus = ListControl)) and
      NotesHasSelection(State) then
-  begin
-    mutable var Next: NotesModel := State;
-    Next.Focus := BodyControl;
-    Next.Pane := NotesPane.Editor;
-    return Next;
-  end;
+    begin
+      mutable var Next: NotesModel := State;
+      Next.Focus := BodyControl;
+      Next.Pane := NotesPane.Editor;
+      return Next;
+    end;
+  end if;
 
   if (((Key.kind = Std.Console.KeyKind.Character) and Key.alt) and (not Key.ctrl)) and
      (not Key.meta) then
-  begin
-    case Key.ch of
-      'x', 'X':
-      begin
-        return RequestQuit(State, Cmd);
+    begin
+      case Key.ch of
+        'x', 'X':
+        begin
+          return RequestQuit(State, Cmd);
+        end;
       end;
     end;
-  end;
+  end if;
 
   if (Key.kind <> Std.Console.KeyKind.Character) or (not Key.ctrl) then
-  begin
-    return State;
-  end;
+    begin
+      return State;
+    end;
+  end if;
 
   case Key.ch of
     'n', 'N':
@@ -398,9 +427,10 @@ begin
     TuiMsg.SelectionChanged(Source, Action, Selected):
     begin
       if Action.Value = SelectionChangedAction then
-      begin
-        return SelectFiltered(State, Selected);
-      end;
+        begin
+          return SelectFiltered(State, Selected);
+        end;
+      end if;
 
       return State;
     end;
@@ -411,9 +441,10 @@ begin
     TuiMsg.QuitRequested:
     begin
       if State.Overlay <> NotesOverlay.Closed then
-      begin
-        return HandleAction(State, CloseOverlayAction, Cmd);
-      end;
+        begin
+          return HandleAction(State, CloseOverlayAction, Cmd);
+        end;
+      end if;
 
       return State;
     end;

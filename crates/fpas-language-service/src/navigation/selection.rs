@@ -178,6 +178,7 @@ fn collect_statements(statements: &[Stmt], offset: usize, spans: &mut Vec<Source
             | Stmt::Assign { .. }
             | Stmt::Return(_, _)
             | Stmt::Panic(_, _)
+            | Stmt::Null(_)
             | Stmt::Break(_)
             | Stmt::Continue(_)
             | Stmt::Call { .. }

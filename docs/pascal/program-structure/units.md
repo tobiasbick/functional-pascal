@@ -10,16 +10,18 @@ A unit file starts with a `unit` declaration followed by declarations (functions
 
 ```pascal
 unit MyApp.Utils;
+
 uses Std.Str;
 
 public function Clamp(Value: integer; Min: integer; Max: integer): integer;
 begin
   if Value < Min then
     return Min;
-  else if Value > Max then
+  elsif Value > Max then
     return Max;
   else
     return Value;
+  end if;
 end function;
 
 public function IsBlank(S: string): boolean;

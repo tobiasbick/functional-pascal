@@ -29,9 +29,9 @@ begin
       Std.Time.Sleep(30);
       Std.Tasks.Cancel(Source);
       if Std.Tasks.Wait(Waiting) <> 'Network read cancelled' then
-        panic('read did not report cancellation');
+        panic('read did not report cancellation'); end if;
       case Std.Net.Close(ConnectionValue) of
-        Ok(Closed): if not Closed then panic('close failed');
+        Ok(Closed): if not Closed then panic('close failed'); end if;
         Error(Message): panic(Message);
       end;
     end;

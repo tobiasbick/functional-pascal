@@ -4,28 +4,6 @@ use fpas_diagnostics::codes::PARSE_EXPECTED_TOKEN;
 use fpas_lexer::Token;
 
 impl Parser {
-    /// Parses terminated branches with nearest-unmatched-`if` ownership.
-    ///
-    /// **Documentation:** `docs/pascal/language/control-flow/if-then-else.md`
-    pub(super) fn parse_if_stmt(&mut self) -> Stmt {
-        let start = self.current_span();
-        self.advance();
-        let condition = self.parse_expression();
-        self.expect(&Token::Then);
-        let then_branch = Box::new(self.parse_terminated_statement());
-        let else_branch = if self.eat(&Token::Else) {
-            Some(Box::new(self.parse_terminated_statement()))
-        } else {
-            None
-        };
-        Stmt::If {
-            condition,
-            then_branch,
-            else_branch,
-            span: self.span_before_terminator(start),
-        }
-    }
-
     /// Parses case arms whose statement bodies each consume their terminator.
     ///
     /// **Documentation:** `docs/pascal/language/control-flow/case-of-intro.md`

@@ -48,7 +48,7 @@ impl Parser {
         self.expect(&Token::Equal);
         let body = self.parse_type_body(allow_member_visibility);
         if !matches!(body, TypeBody::Record(_) | TypeBody::Enum(_))
-            || !self.at_enclosing_declaration_end()
+            || !self.at_enclosing_block_end()
         {
             self.expect_semi();
         }
@@ -69,7 +69,7 @@ impl Parser {
     }
 
     fn parse_enum_type(&mut self) -> EnumType {
-        self.with_declaration_closer(Token::Enum, Self::parse_enum_type_inner)
+        self.with_block_closer(Token::Enum, Self::parse_enum_type_inner)
     }
 
     fn parse_enum_type_inner(&mut self) -> EnumType {
@@ -87,7 +87,7 @@ impl Parser {
         while !self.check(&Token::End) && !self.at_end() {
             members.push(self.parse_enum_member());
         }
-        self.expect_declaration_end(&Token::Enum);
+        self.expect_block_end(&Token::Enum);
         EnumType {
             members,
             span: self.span_from(start),

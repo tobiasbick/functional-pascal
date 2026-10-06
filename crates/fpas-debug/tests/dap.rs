@@ -441,7 +441,7 @@ fn live_pause_and_disconnect_cancel_owned_execution() {
     serve(
         Cursor::new(input),
         &mut output,
-        server("program Main; begin while true do begin end; end."),
+        server("program Main; begin while true do begin null; end; end while; end."),
     )
     .expect("serve pause transcript");
     let mut reader = BufReader::new(output.as_slice());
@@ -563,7 +563,7 @@ fn evaluate_contexts_share_frame_results_and_controlled_calls() {
 
 #[test]
 fn cancel_and_disconnect_reach_active_call_evaluation() {
-    let source = "program Main; function Loop(X: integer): integer; begin mutable var I: integer := X; while I < 1000000000 do I := I + 1; return I; end function; begin var X: integer := 1; end.";
+    let source = "program Main; function Loop(X: integer): integer; begin mutable var I: integer := X; while I < 1000000000 do I := I + 1; end while; return I; end function; begin var X: integer := 1; end.";
     let mut adapter = server(source);
     let initialized = adapter.handle(request(1, "initialize", json!({})));
     assert_eq!(initialized[0]["body"]["supportsCancelRequest"], true);
@@ -632,7 +632,7 @@ fn dap_hit_conditions_and_logpoints_match_jsonl_policy() {
                     while I < 5 do\n\
                     begin\n\
                       I := I + 1;\n\
-                    end;\n\
+                    end; end while;\n\
                   end.";
     let mut hit_adapter = server(source);
     let _ = hit_adapter.handle(request(1, "initialize", json!({})));

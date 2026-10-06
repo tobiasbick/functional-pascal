@@ -5,7 +5,8 @@ uses Std.Console, Std.Dictionaries, Std.Conv;
 begin
   var D: dict of string to integer := ['x': 10, 'y': 20];
   for K: string in D do
-  begin
-    WriteLn((K + '=') + IntToStr(D[K]));
-  end;
+    begin
+      WriteLn((K + '=') + IntToStr(D[K]));
+    end;
+  end for;
 end.

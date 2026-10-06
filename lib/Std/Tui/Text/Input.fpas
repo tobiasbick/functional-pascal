@@ -20,9 +20,10 @@ public type
 function TuiInputWidth(Text: string; Start: integer; EndIndex: integer): integer;
 begin
   if EndIndex <= Start then
-  begin
-    return 0;
-  end;
+    begin
+      return 0;
+    end;
+  end if;
 
   return Std.Console.DisplayWidth(Std.Str.Substring(Text, Start, EndIndex - Start));
 end function;
@@ -37,39 +38,44 @@ public function TuiInputViewportFor(Text: string; Caret: integer; Width: integer
 begin
   mutable var Start: integer := 0;
   if Width <= 0 then
-  begin
-    return record
-      Start := Caret;
-      EndIndex := Caret;
-      LeftClipped := Caret > 0;
-      RightClipped := Caret < Std.Str.Length(Text);
-      CaretColumn := 0;
+    begin
+      return record
+        Start := Caret;
+        EndIndex := Caret;
+        LeftClipped := Caret > 0;
+        RightClipped := Caret < Std.Str.Length(Text);
+        CaretColumn := 0;
+      end;
     end;
-  end;
+  end if;
 
   while Start < Caret do
-  begin
-    if TuiInputWidth(Text, Start, Caret) >= Width then
     begin
-      Start := Start + 1;
+      if TuiInputWidth(Text, Start, Caret) >= Width then
+        begin
+          Start := Start + 1;
+        end;
+      else
+        begin
+          break;
+        end;
+      end if;
     end;
-    else
-    begin
-      break;
-    end;
-  end;
+  end while;
   mutable var EndIndex: integer := Start;
   while EndIndex < Std.Str.Length(Text) do
-  begin
-    if TuiInputWidth(Text, Start, EndIndex + 1) <= Width then
     begin
-      EndIndex := EndIndex + 1;
+      if TuiInputWidth(Text, Start, EndIndex + 1) <= Width then
+        begin
+          EndIndex := EndIndex + 1;
+        end;
+      else
+        begin
+          break;
+        end;
+      end if;
     end;
-    else
-    begin
-      break;
-    end;
-  end;
+  end while;
 
   return record
     Start := Start;
@@ -89,20 +95,23 @@ end function;
 public function TuiInputCaretAtColumn(Text: string; Viewport: TuiInputViewport; Column: integer): integer;
 begin
   if Column <= 0 then
-  begin
-    return Viewport.Start;
-  end;
+    begin
+      return Viewport.Start;
+    end;
+  end if;
   mutable var Width: integer := 0;
   for Index: integer := Viewport.Start to Viewport.EndIndex - 1 do
-  begin
-    var GlyphWidth: integer := Std.Console.DisplayWidth(Std.Str.CharAt(Text, Index));
-    if Column < Width + GlyphWidth then
     begin
-      return Index;
-    end;
+      var GlyphWidth: integer := Std.Console.DisplayWidth(Std.Str.CharAt(Text, Index));
+      if Column < Width + GlyphWidth then
+        begin
+          return Index;
+        end;
+      end if;
 
-    Width := Width + GlyphWidth;
-  end;
+      Width := Width + GlyphWidth;
+    end;
+  end for;
 
   return Viewport.EndIndex;
 end function;

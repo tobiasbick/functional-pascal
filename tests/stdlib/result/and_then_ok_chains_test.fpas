@@ -5,13 +5,14 @@ uses Std.Console, Std.Results, Std.Conv;
 function PositiveToStr(V: integer): result of string, string;
 begin
   if V > 0 then
-  begin
-    return Ok(IntToStr(V));
-  end;
+    begin
+      return Ok(IntToStr(V));
+    end;
   else
-  begin
-    return Error('non-positive');
-  end;
+    begin
+      return Error('non-positive');
+    end;
+  end if;
 end function;
 
 begin

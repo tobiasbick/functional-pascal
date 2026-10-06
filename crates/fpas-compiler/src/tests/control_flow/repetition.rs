@@ -11,11 +11,11 @@ fn repeat_condition_uses_the_outer_binding_after_fallthrough_and_continue() {
               mutable var Count: integer := 0;
               repeat
                 Count := Count + 1;
-                if Count > 1 then panic('until used a body-local binding');
+                if Count > 1 then panic('until used a body-local binding'); end if;
                 var Done: boolean := false{tail};
               until Done;
-              if not Done then panic('outer binding was changed');
-              if Count <> 1 then panic('repeat did not execute exactly once');
+              if not Done then panic('outer binding was changed'); end if;
+              if Count <> 1 then panic('repeat did not execute exactly once'); end if;
             end."
         ));
     }
@@ -28,7 +28,7 @@ fn repeat_body_shadow_can_have_a_different_type_from_the_condition() {
           var Done: boolean := true;
           repeat
             var Done: integer := 7;
-            if Done <> 7 then panic('body did not use its own local');
+            if Done <> 7 then panic('body did not use its own local'); end if;
           until Done;
         end.",
     );

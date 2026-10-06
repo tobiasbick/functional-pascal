@@ -18,10 +18,11 @@ begin
   Cmd.ReplaceSubscription(1, function(Token: CancellationToken): result of boolean, string begin
     Send(Started, Generation);
     if Generation = 0 then
-    begin
-      // Deliberately defer cooperation to prove that the host remains responsive.
-      Receive(Gate);
-    end;
+      begin
+        // Deliberately defer cooperation to prove that the host remains responsive.
+        Receive(Gate);
+      end;
+    end if;
 
     return Ok(true);
   end);
@@ -37,12 +38,13 @@ begin
     TuiMsg.Tick(Delta):
     begin
       if Delta > 0 then
-      begin
-        mutable var Next: Model := State;
-        Next.Generation := State.Generation + 1;
-        Replace(Next, Cmd);
-        return Next;
-      end;
+        begin
+          mutable var Next: Model := State;
+          Next.Generation := State.Generation + 1;
+          Replace(Next, Cmd);
+          return Next;
+        end;
+      end if;
     end;
     else
     begin
@@ -60,9 +62,10 @@ end function;
 function View(State: Model): TuiElement;
 begin
   if State.Generation = 3 then
-  begin
-    TrySend(State.Painted, 3);
-  end;
+    begin
+      TrySend(State.Painted, 3);
+    end;
+  end if;
 
   return TuiElementBuilders.MakeLabel('responsive');
 end function;
@@ -90,20 +93,22 @@ begin
   AssertEquals(0, Unwrap(ReceiveWithTimeout(Started, 5000)));
   var Observer: task := go ReleaseAfterPaint(Painted, Gate);
   for Index: integer := 1 to 3 do
-  begin
-    App.Inject(TuiMsg.Tick(1));
-    State := App.RunBackgroundIterations(State, Inbox, Update, UpdateMessage, View, 1, 0);
-    AssertEquals(Index, State.Generation);
-  end;
+    begin
+      App.Inject(TuiMsg.Tick(1));
+      State := App.RunBackgroundIterations(State, Inbox, Update, UpdateMessage, View, 1, 0);
+      AssertEquals(Index, State.Generation);
+    end;
+  end for;
 
   AssertTrue(Wait(Observer));
   mutable var Replacement: result of integer, string := ReceiveWithTimeout(Started, 0);
   var Deadline: integer := MonotonicMillis() + 5000;
   while IsError(Replacement) and (MonotonicMillis() < Deadline) do
-  begin
-    State := App.RunBackgroundIterations(State, Inbox, Update, UpdateMessage, View, 1, 0);
-    Replacement := ReceiveWithTimeout(Started, 1);
-  end;
+    begin
+      State := App.RunBackgroundIterations(State, Inbox, Update, UpdateMessage, View, 1, 0);
+      Replacement := ReceiveWithTimeout(Started, 1);
+    end;
+  end while;
 
   AssertEquals(3, Unwrap(Replacement));
   AssertTrue(IsError(ReceiveWithTimeout(Started, 0)));

@@ -10,9 +10,10 @@ uses Std.Ai.OpenAi.Json, Std.Ai.OpenAi.Types, Std.Arrays, Std.Conv, Std.Http, St
 function CompletionUrl(BaseUrl: string): string;
 begin
   if Std.Str.EndsWith(BaseUrl, '/') then
-  begin
-    return BaseUrl + 'chat/completions';
-  end;
+    begin
+      return BaseUrl + 'chat/completions';
+    end;
+  end if;
 
   return BaseUrl + '/chat/completions';
 end function;
@@ -26,19 +27,22 @@ end function;
 public function Complete(ClientValue: Client; Messages: array of ChatMessage; Options: ChatOptions): result of string, string;
 begin
   if ClientValue.BaseUrl = '' then
-  begin
-    return Error('OpenAI-compatible BaseUrl must not be empty');
-  end;
+    begin
+      return Error('OpenAI-compatible BaseUrl must not be empty');
+    end;
+  end if;
 
   if ClientValue.Model = '' then
-  begin
-    return Error('OpenAI-compatible model name must not be empty');
-  end;
+    begin
+      return Error('OpenAI-compatible model name must not be empty');
+    end;
+  end if;
 
   if Std.Arrays.Length(Messages) = 0 then
-  begin
-    return Error('OpenAI-compatible chat requires at least one message');
-  end;
+    begin
+      return Error('OpenAI-compatible chat requires at least one message');
+    end;
+  end if;
   mutable var Headers: array of Header := [
                                             Header.Create('Content-Type', 'application/json'),
                                             Header.Create('Accept', 'application/json')
@@ -47,9 +51,10 @@ begin
     Some(Value):
     begin
       if Value <> '' then
-      begin
-        Std.Arrays.Push(Headers, Header.Create('Authorization', 'Bearer ' + Value));
-      end;
+        begin
+          Std.Arrays.Push(Headers, Header.Create('Authorization', 'Bearer ' + Value));
+        end;
+      end if;
     end;
     None:
     begin
@@ -67,10 +72,11 @@ begin
         Ok(Text):
         begin
           if (ResponseValue.StatusCode < 200) or (ResponseValue.StatusCode >= 300) then
-          begin
-            return Error((('OpenAI-compatible endpoint returned HTTP ' + Std.Conv.IntToStr(ResponseValue.StatusCode)) + ': ') +
-                         Text);
-          end;
+            begin
+              return Error((('OpenAI-compatible endpoint returned HTTP ' + Std.Conv.IntToStr(ResponseValue.StatusCode)) + ': ') +
+                           Text);
+            end;
+          end if;
 
           return Std.Ai.OpenAi.Json.DecodeResponse(Text);
         end;

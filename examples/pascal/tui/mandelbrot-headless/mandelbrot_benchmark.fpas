@@ -38,20 +38,23 @@ begin
                                                                                                                                                                                      Height));
   mutable var Count: integer := 0;
   while Count < Width * Height do
-  begin
-    var Message: MandelbrotRenderFrame := Unwrap(ReceiveWithTimeout(Inbox, 30000));
-    Count := Count + Std.Arrays.Length(Message.Cells);
-    if Paint then
     begin
-      Grid := TuiCellGrid.Create(Width, Height, Message.Cells);
-      Grid := App.RunIterations(Grid, Update, View, 1, 0);
+      var Message: MandelbrotRenderFrame := Unwrap(ReceiveWithTimeout(Inbox, 30000));
+      Count := Count + Std.Arrays.Length(Message.Cells);
+      if Paint then
+        begin
+          Grid := TuiCellGrid.Create(Width, Height, Message.Cells);
+          Grid := App.RunIterations(Grid, Update, View, 1, 0);
+        end;
+      end if;
     end;
-  end;
+  end while;
 
   if not IsOk(Wait(Worker)) then
-  begin
-    panic('render failed');
-  end;
+    begin
+      panic('render failed');
+    end;
+  end if;
 
   App.Close();
   CloseChannel(Inbox);
@@ -62,20 +65,23 @@ begin
   var Iterations: integer := StrToInt(ParamStr(0));
   var Paint: boolean := ParamStr(1) = 'paint';
   if Iterations < 1 then
-  begin
-    panic('iterations must be positive');
-  end;
+    begin
+      panic('iterations must be positive');
+    end;
+  end if;
   mutable var Checksum: integer := RenderOnce(Paint);
   var Started: integer := MonotonicMillis();
   for Iteration: integer := 1 to Iterations do
-  begin
-    Checksum := Checksum + RenderOnce(Paint);
-  end;
+    begin
+      Checksum := Checksum + RenderOnce(Paint);
+    end;
+  end for;
   var Elapsed: integer := ElapsedMillis(Started);
   if Checksum <> ((Iterations + 1) * 152) * 35 then
-  begin
-    panic('incomplete render');
-  end;
+    begin
+      panic('incomplete render');
+    end;
+  end if;
 
   WriteLn(('elapsed: ' + IntToStr(Elapsed)) + ' ms');
   WriteLn('checksum: ' + IntToStr(Checksum));

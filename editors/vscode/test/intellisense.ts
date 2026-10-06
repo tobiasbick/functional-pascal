@@ -143,7 +143,7 @@ function verifySnippetContribution(extensionPath: string): void {
 async function verifySnippetCompletion(fixtureRoot: string): Promise<void> {
   const snippetPath = path.join(fixtureRoot, "src", "snippet.fpas");
   const source =
-    "program SnippetHost;\n\nbegin\n  if true then\n  begin\n  end;\nend.\n";
+    "program SnippetHost;\n\nbegin\n  if true then\n  begin null;\n  end; end if;\nend.\n";
   await fs.writeFile(snippetPath, source);
   const document = await vscode.workspace.openTextDocument(snippetPath);
   await vscode.window.showTextDocument(document);

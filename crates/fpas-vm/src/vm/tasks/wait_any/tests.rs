@@ -21,13 +21,13 @@ end function;
 function Parent(): integer;
 begin
   var T: task := go Child();
-  if WaitAny([T]) <> 0 then panic('child index');
+  if WaitAny([T]) <> 0 then panic('child index'); end if;
   return Wait(T);
 end function;
 begin
   var T: task := go Parent();
-  if WaitAny([T]) <> 0 then panic('parent index');
-  if Wait(T) <> 9 then panic('result');
+  if WaitAny([T]) <> 0 then panic('parent index'); end if;
+  if Wait(T) <> 9 then panic('result'); end if;
 end."#,
     );
     assert!(errors.is_empty(), "{errors:?}");

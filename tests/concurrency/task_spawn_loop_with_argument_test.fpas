@@ -10,15 +10,17 @@ end function;
 begin
   mutable var Tasks: array of task := [];
   for Index: integer := 1 to 8 do
-  begin
-    Push(Tasks, go Worker(Index));
-  end;
+    begin
+      Push(Tasks, go Worker(Index));
+    end;
+  end for;
 
   WaitAll(Tasks);
   AssertEquals(8, Length(Tasks));
   for Index: integer := 0 to Length(Tasks) - 1 do
-  begin
-    var WorkerResult: integer := Std.Tasks.Wait(Tasks[Index]);
-    AssertEquals(Index + 2, WorkerResult);
-  end;
+    begin
+      var WorkerResult: integer := Std.Tasks.Wait(Tasks[Index]);
+      AssertEquals(Index + 2, WorkerResult);
+    end;
+  end for;
 end.

@@ -67,15 +67,18 @@ public type
     public procedure PutCell(Self: TuiCanvas; Position: TuiPoint; Cell: TuiCell);
     begin
       if not Self.Clip.Contains(Position) then
-      begin
-        return;
-      end;
+        begin
+          return;
+        end;
+      end if;
       var CellWidth: integer := Cell.Width();
       if (CellWidth = 2) and not Self.Clip.Contains(TuiPoint.Create(Position.X + 1, Position.Y)) then
-      begin
-        Self.Surface.PutCell(TuiPoint.Create(Self.Origin.X + Position.X, Self.Origin.Y + Position.Y), TuiCell.Create(' ', TuiStyleRole.Normal));
-        return;
-      end;
+        begin
+          Self.Surface.PutCell(TuiPoint.Create(Self.Origin.X + Position.X, Self.Origin.Y +
+                                                                           Position.Y), TuiCell.Create(' ', TuiStyleRole.Normal));
+          return;
+        end;
+      end if;
 
       Self.Surface.PutCell(TuiPoint.Create(Self.Origin.X + Position.X, Self.Origin.Y + Position.Y), Cell);
     end procedure;
@@ -102,9 +105,10 @@ public type
     begin
       var CellWidth: integer := Cell.Width();
       if CellWidth <> 1 then
-      begin
-        panic('Tui canvas FillRect requires a one-column cell');
-      end;
+        begin
+          panic('Tui canvas FillRect requires a one-column cell');
+        end;
+      end if;
       var Visible: TuiRect := Bounds.Intersect(Self.Clip);
       TuiSurfaceFillRect(Self.Surface, TuiRect.Create(Self.Origin.X + Visible.X, Self.Origin.Y +
                                                                                  Visible.Y, Visible.Width, Visible.Height), Cell);
@@ -123,44 +127,52 @@ public type
       mutable var AsciiOnly: boolean := true;
       var TextLength: integer := Std.Str.Length(Text);
       for Index: integer := 0 to TextLength - 1 do
-      begin
-        var Code: integer := Std.Str.Ord(Std.Str.CharAt(Text, Index));
-        if (Code <> 10) and ((Code < 32) or (Code > 126)) then
         begin
-          AsciiOnly := false;
+          var Code: integer := Std.Str.Ord(Std.Str.CharAt(Text, Index));
+          if (Code <> 10) and ((Code < 32) or (Code > 126)) then
+            begin
+              AsciiOnly := false;
+            end;
+          end if;
         end;
-      end;
+      end for;
 
       if AsciiOnly then
-      begin
-        for Index: integer := 0 to TextLength - 1 do
         begin
-          var Glyph: string := Std.Str.CharAt(Text, Index);
-          if Glyph = Std.Str.Chr(10) then
-          begin
-            return;
-          end;
+          for Index: integer := 0 to TextLength - 1 do
+            begin
+              var Glyph: string := Std.Str.CharAt(Text, Index);
+              if Glyph = Std.Str.Chr(10) then
+                begin
+                  return;
+                end;
+              end if;
 
-          Self.PutCell(TuiPoint.Create(X, Position.Y), TuiCell.Create(Glyph, Role));
-          X := X + 1;
-        end;
+              Self.PutCell(TuiPoint.Create(X, Position.Y), TuiCell.Create(Glyph, Role));
+              X := X + 1;
+            end;
+          end for;
 
-        return;
-      end;
-
-      for Glyph: string in Std.Console.SplitGraphemes(Text) do
-      begin
-        if Glyph = Std.Str.Chr(10) then
-        begin
           return;
         end;
-        var GlyphWidth: integer := Std.Console.DisplayWidth(Glyph);
-        if GlyphWidth > 0 then
+      end if;
+
+      for Glyph: string in Std.Console.SplitGraphemes(Text) do
         begin
-          Self.PutCell(TuiPoint.Create(X, Position.Y), TuiCell.Create(Glyph, Role));
-          X := X + GlyphWidth;
+          if Glyph = Std.Str.Chr(10) then
+            begin
+              return;
+            end;
+          end if;
+          var GlyphWidth: integer := Std.Console.DisplayWidth(Glyph);
+          if GlyphWidth > 0 then
+            begin
+              Self.PutCell(TuiPoint.Create(X, Position.Y), TuiCell.Create(Glyph, Role));
+              X := X + GlyphWidth;
+            end;
+          end if;
         end;
-      end;
+      end for;
     end procedure;
 
     // Draws a horizontal box-drawing line.
@@ -181,9 +193,10 @@ public type
     begin
       var Cell: TuiCell := TuiCell.Create('─', Role);
       for Offset: integer := 0 to Width - 1 do
-      begin
-        Self.PutCell(TuiPoint.Create(X + Offset, Y), Cell);
-      end;
+        begin
+          Self.PutCell(TuiPoint.Create(X + Offset, Y), Cell);
+        end;
+      end for;
     end procedure;
 
     // Draws a vertical box-drawing line.
@@ -204,9 +217,10 @@ public type
     begin
       var Cell: TuiCell := TuiCell.Create('│', Role);
       for Offset: integer := 0 to Height - 1 do
-      begin
-        Self.PutCell(TuiPoint.Create(X, Y + Offset), Cell);
-      end;
+        begin
+          Self.PutCell(TuiPoint.Create(X, Y + Offset), Cell);
+        end;
+      end for;
     end procedure;
 
     // Draws a box frame using Unicode box-drawing glyphs.
@@ -218,29 +232,33 @@ public type
     public procedure DrawFrame(Self: TuiCanvas; Bounds: TuiRect; Role: TuiStyleRole);
     begin
       if Bounds.IsEmpty() then
-      begin
-        return;
-      end;
+        begin
+          return;
+        end;
+      end if;
 
       if Bounds.Width = 1 then
-      begin
-        Self.DrawVerticalLine(Bounds.X, Bounds.Y, Bounds.Height, Role);
-        Self.PutCell(TuiPoint.Create(Bounds.X, Bounds.Y), TuiCell.Create('╭', Role));
-        if Bounds.Height > 1 then
         begin
-          Self.PutCell(TuiPoint.Create(Bounds.X, Bounds.Bottom() - 1), TuiCell.Create('╰', Role));
-        end;
+          Self.DrawVerticalLine(Bounds.X, Bounds.Y, Bounds.Height, Role);
+          Self.PutCell(TuiPoint.Create(Bounds.X, Bounds.Y), TuiCell.Create('╭', Role));
+          if Bounds.Height > 1 then
+            begin
+              Self.PutCell(TuiPoint.Create(Bounds.X, Bounds.Bottom() - 1), TuiCell.Create('╰', Role));
+            end;
+          end if;
 
-        return;
-      end;
+          return;
+        end;
+      end if;
 
       if Bounds.Height = 1 then
-      begin
-        Self.DrawHorizontalLine(Bounds.X, Bounds.Y, Bounds.Width, Role);
-        Self.PutCell(TuiPoint.Create(Bounds.X, Bounds.Y), TuiCell.Create('╭', Role));
-        Self.PutCell(TuiPoint.Create(Bounds.Right() - 1, Bounds.Y), TuiCell.Create('╮', Role));
-        return;
-      end;
+        begin
+          Self.DrawHorizontalLine(Bounds.X, Bounds.Y, Bounds.Width, Role);
+          Self.PutCell(TuiPoint.Create(Bounds.X, Bounds.Y), TuiCell.Create('╭', Role));
+          Self.PutCell(TuiPoint.Create(Bounds.Right() - 1, Bounds.Y), TuiCell.Create('╮', Role));
+          return;
+        end;
+      end if;
 
       Self.DrawHorizontalLine(Bounds.X, Bounds.Y, Bounds.Width, Role);
       Self.DrawHorizontalLine(Bounds.X, Bounds.Bottom() - 1, Bounds.Width, Role);
@@ -257,31 +275,36 @@ public type
 public procedure TuiCanvasPutCells(Canvas: TuiCanvas; Position: TuiPoint; Cells: array of TuiCell);
 begin
   if (Position.Y < Canvas.Clip.Y) or (Position.Y >= Canvas.Clip.Bottom()) then
-  begin
-    return;
-  end;
+    begin
+      return;
+    end;
+  end if;
   mutable var SourceX: integer := 0;
   mutable var TargetX: integer := Position.X;
   if TargetX < Canvas.Clip.X then
-  begin
-    SourceX := Canvas.Clip.X - TargetX;
-    TargetX := Canvas.Clip.X;
-  end;
+    begin
+      SourceX := Canvas.Clip.X - TargetX;
+      TargetX := Canvas.Clip.X;
+    end;
+  end if;
   mutable var Count: integer := Std.Arrays.Length(Cells) - SourceX;
   if Count > Canvas.Clip.Right() - TargetX then
-  begin
-    Count := Canvas.Clip.Right() - TargetX;
-  end;
+    begin
+      Count := Canvas.Clip.Right() - TargetX;
+    end;
+  end if;
 
   if Count <= 0 then
-  begin
-    return;
-  end;
+    begin
+      return;
+    end;
+  end if;
   mutable var Values: array of TuiCell := Std.Arrays.Slice(Cells, SourceX, Count);
   if (TargetX + Count = Canvas.Clip.Right()) and (Values[Count - 1].Columns = 2) then
-  begin
-    Values[Count - 1] := TuiCell.Create(' ', TuiStyleRole.Normal);
-  end;
+    begin
+      Values[Count - 1] := TuiCell.Create(' ', TuiStyleRole.Normal);
+    end;
+  end if;
 
   TuiSurfacePutCells(Canvas.Surface, TuiPoint.Create(Canvas.Origin.X + TargetX, Canvas.Origin.Y +
                                                                                 Position.Y), Values);

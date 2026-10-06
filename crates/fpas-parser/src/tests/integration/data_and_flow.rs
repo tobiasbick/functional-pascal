@@ -31,14 +31,16 @@ begin
       begin
         var X: integer := I * 10 + J;
         if X mod 2 = 0 then
-          continue;
-      end;
+          continue; end if;
+      end; end for; end for;
 end.",
     );
     assert_eq!(p.body.len(), 1);
     match &p.body[0] {
         Stmt::For { body, .. } => {
-            assert!(matches!(body.as_ref(), Stmt::For { .. }));
+            assert!(
+                matches!(body.as_ref(), Stmt::Block(stmts, _) if matches!(&stmts[0], Stmt::For { .. }))
+            );
         }
         _ => panic!("expected nested For"),
     }
@@ -53,7 +55,7 @@ begin
   mutable var X: integer := 0;
   repeat
     X := X + 1;
-    if X = 10 then break;
+    if X = 10 then break; end if;
   until X = 100;
 end.",
     );

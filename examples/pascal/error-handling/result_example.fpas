@@ -5,13 +5,14 @@ uses Std.Console, Std.Conv, Std.Results;
 function Divide(A: integer; B: integer): result of integer, string;
 begin
   if B = 0 then
-  begin
-    return Error('Division by zero');
-  end;
+    begin
+      return Error('Division by zero');
+    end;
   else
-  begin
-    return Ok(A div B);
-  end;
+    begin
+      return Ok(A div B);
+    end;
+  end if;
 end function;
 
 function Stringify(A: integer; B: integer): result of string, string;

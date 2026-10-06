@@ -59,9 +59,8 @@
     "prefix": "if",
     "body": [
       "if ${1:true} then",
-      "begin",
-      "  $0",
-      "end;"
+      "  ${0:null;}",
+      "end if;"
     ],
     "description": "Insert an if statement"
   },
@@ -69,9 +68,8 @@
     "prefix": "for",
     "body": [
       "for ${1:I}: ${2:integer} := ${3:0} to ${4:10} do",
-      "begin",
-      "  $0",
-      "end;"
+      "  ${0:null;}",
+      "end for;"
     ],
     "description": "Insert a for loop"
   },
@@ -79,9 +77,8 @@
     "prefix": "while",
     "body": [
       "while ${1:true} do",
-      "begin",
-      "  $0",
-      "end;"
+      "  ${0:null;}",
+      "end while;"
     ],
     "description": "Insert a while loop"
   },
@@ -89,7 +86,7 @@
     "prefix": "repeat",
     "body": [
       "repeat",
-      "  $0",
+      "  ${0:null;}",
       "until ${1:true};"
     ],
     "description": "Insert a repeat loop"

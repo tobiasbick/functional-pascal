@@ -28,11 +28,12 @@ begin
   end);
   AssertTrue(Unwrap(Receive(Ready)));
   if RequestFirst then
-  begin
-    AssertTrue(CancelTaskGroup(Group));
-    AssertFalse(CancelTaskGroup(Group));
-    AssertTrue(IsCancellationRequested(GetTaskGroupToken(Group)));
-  end;
+    begin
+      AssertTrue(CancelTaskGroup(Group));
+      AssertFalse(CancelTaskGroup(Group));
+      AssertTrue(IsCancellationRequested(GetTaskGroupToken(Group)));
+    end;
+  end if;
 
   AssertEquals(0, Length(CloseTaskGroup(Group)));
   // Close must not return before the grandchild's final side effect.

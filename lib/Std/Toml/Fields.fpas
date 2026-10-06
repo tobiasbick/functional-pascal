@@ -174,18 +174,19 @@ public function StringArrayField(Fields: dict of string to TomlValue; Name: stri
 begin
   mutable var Values: array of string := [];
   for Item: TomlValue in try ArrayField(Fields, Name) do
-  begin
-    case Item of
-      TomlValue.String(Value):
-      begin
-        Std.Arrays.Push(Values, Value);
-      end;
-      else
-      begin
-        return Error(MismatchError(Name, 'an array of strings'));
+    begin
+      case Item of
+        TomlValue.String(Value):
+        begin
+          Std.Arrays.Push(Values, Value);
+        end;
+        else
+        begin
+          return Error(MismatchError(Name, 'an array of strings'));
+        end;
       end;
     end;
-  end;
+  end for;
 
   return Ok(Values);
 end function;
@@ -198,12 +199,14 @@ end function;
 public function RequireOnlyFields(Fields: dict of string to TomlValue; Allowed: array of string): result of boolean, string;
 begin
   for Name: string in Std.Dictionaries.Keys(Fields) do
-  begin
-    if not Std.Arrays.Contains(Allowed, Name) then
     begin
-      return Error('unexpected field ' + Name);
+      if not Std.Arrays.Contains(Allowed, Name) then
+        begin
+          return Error('unexpected field ' + Name);
+        end;
+      end if;
     end;
-  end;
+  end for;
 
   return Ok(true);
 end function;

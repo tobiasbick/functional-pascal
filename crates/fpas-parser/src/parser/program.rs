@@ -79,7 +79,7 @@ impl Parser {
     }
 
     fn parse_unit_ast(&mut self) -> Unit {
-        self.with_declaration_closer(Token::Unit, Self::parse_unit_ast_inner)
+        self.with_block_closer(Token::Unit, Self::parse_unit_ast_inner)
     }
 
     fn parse_unit_ast_inner(&mut self) -> Unit {
@@ -91,7 +91,7 @@ impl Parser {
 
         let (uses, declarations) = self.parse_uses_and_declarations(true);
 
-        if self.expect_declaration_end(&Token::Unit) {
+        if self.expect_block_end(&Token::Unit) {
             self.expect_semi();
         }
 

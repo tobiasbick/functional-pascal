@@ -8,12 +8,12 @@ fn if_missing_then() {
 
 #[test]
 fn if_missing_condition() {
-    let (_, errs) = parse_with_errors("program T; begin if then Y := 1; end.");
+    let (_, errs) = parse_with_errors("program T; begin if then Y := 1; end if; end.");
     assert!(!errs.is_empty(), "expected error for missing condition");
 }
 
 #[test]
 fn if_empty_then_branch() {
-    let (_, errs) = parse_with_errors("program T; begin if X then; else Y := 1; end.");
+    let (_, errs) = parse_with_errors("program T; begin if X then; else Y := 1; end if; end.");
     assert!(!errs.is_empty(), "expected error for empty then-branch");
 }

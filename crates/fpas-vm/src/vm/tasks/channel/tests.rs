@@ -40,15 +40,15 @@ begin
   var Events: channel of integer := CreateChannel(1);
   mutable var Started: integer := TimestampMillis();
   var Outcome: result of integer, string := ReceiveWithTimeout(Events, 100);
-  if TimestampMillis() - Started > 1000 then panic('timed receive ran a blocking task inline');
-  if Std.Results.IsOk(Outcome) then panic('nothing was sent');
+  if TimestampMillis() - Started > 1000 then panic('timed receive ran a blocking task inline'); end if;
+  if Std.Results.IsOk(Outcome) then panic('nothing was sent'); end if;
   Started := TimestampMillis();
   var Full: boolean := Std.Results.Unwrap(SendWithTimeout(Events, 1, 100));
   var Blocked: result of boolean, string := SendWithTimeout(Events, 2, 100);
-  if TimestampMillis() - Started > 1000 then panic('timed send ran a blocking task inline');
-  if Std.Results.IsOk(Blocked) then panic('the channel was full');
-  if not Wait(First) then panic('first');
-  if not Wait(Second) then panic('second');
+  if TimestampMillis() - Started > 1000 then panic('timed send ran a blocking task inline'); end if;
+  if Std.Results.IsOk(Blocked) then panic('the channel was full'); end if;
+  if not Wait(First) then panic('first'); end if;
+  if not Wait(Second) then panic('second'); end if;
 end."#,
     );
 }
@@ -67,7 +67,7 @@ begin
     var Value: integer := Std.Results.Unwrap(Receive(Requests));
     var Sent: boolean := Std.Results.Unwrap(Send(Replies, Value * 2));
     Count := Count + 1;
-  end;
+  end; end for;
   return Count;
 end function;
 begin
@@ -77,9 +77,9 @@ begin
   for Index: integer := 1 to 50 do
   begin
     var Sent: boolean := Std.Results.Unwrap(Send(Requests, Index));
-    if Std.Results.Unwrap(Receive(Replies)) <> Index * 2 then panic('reply');
-  end;
-  if Wait(Worker) <> 50 then panic('count');
+    if Std.Results.Unwrap(Receive(Replies)) <> Index * 2 then panic('reply'); end if;
+  end; end for;
+  if Wait(Worker) <> 50 then panic('count'); end if;
 end."#,
     );
 }
@@ -140,12 +140,12 @@ begin
   var ReaderTask: task := go Reader(ReaderListener, Token);
   var QuickTask: task := go Quick();
   var Started: integer := TimestampMillis();
-  if Wait(QuickTask) <> 7 then panic('quick');
+  if Wait(QuickTask) <> 7 then panic('quick'); end if;
   var Sent: integer := Std.Results.Unwrap(SendBytes(ReaderClient, [42]));
-  if not Wait(ReaderTask) then panic('the reader did not receive the byte sent after the wait');
-  if TimestampMillis() - Started > 4000 then panic('the wait ran the reader inline');
-  if not Wait(First) then panic('first');
-  if not Wait(Second) then panic('second');
+  if not Wait(ReaderTask) then panic('the reader did not receive the byte sent after the wait'); end if;
+  if TimestampMillis() - Started > 4000 then panic('the wait ran the reader inline'); end if;
+  if not Wait(First) then panic('first'); end if;
+  if not Wait(Second) then panic('second'); end if;
 end."#,
         2,
     );

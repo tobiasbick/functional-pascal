@@ -78,22 +78,25 @@ begin
     TuiMsg.Action(Source, Action):
     begin
       if Action.Value = SaveActionValue then
-      begin
-        AssertEquals(SaveControlValue, Source.Value);
-        return EditorState(State, State.Name, State.NameCaret, YesControlValue, true, State.Saved, State.Quit);
-      end;
+        begin
+          AssertEquals(SaveControlValue, Source.Value);
+          return EditorState(State, State.Name, State.NameCaret, YesControlValue, true, State.Saved, State.Quit);
+        end;
+      end if;
 
       if Action.Value = ConfirmYesActionValue then
-      begin
-        AssertEquals(YesControlValue, Source.Value);
-        return EditorState(State, State.Name, State.NameCaret, SaveControlValue, false, true, State.Quit);
-      end;
+        begin
+          AssertEquals(YesControlValue, Source.Value);
+          return EditorState(State, State.Name, State.NameCaret, SaveControlValue, false, true, State.Quit);
+        end;
+      end if;
 
       if Action.Value = ConfirmNoActionValue then
-      begin
-        AssertEquals(NoControlValue, Source.Value);
-        return EditorState(State, State.Name, State.NameCaret, SaveControlValue, false, State.Saved, State.Quit);
-      end;
+        begin
+          AssertEquals(NoControlValue, Source.Value);
+          return EditorState(State, State.Name, State.NameCaret, SaveControlValue, false, State.Saved, State.Quit);
+        end;
+      end if;
 
       return State;
     end;
@@ -140,15 +143,16 @@ function ViewEditor(State: EditorModel): TuiElement;
 begin
   mutable var Overlay: TuiElement := TuiElementBuilders.MakeEmpty();
   if State.ConfirmOpen then
-  begin
-    Overlay := TuiElementBuilders.MakeOverlay('Confirm', [
-                                                           TuiElementBuilders.MakeLabel('Save changes?'),
-                                                           TuiElementBuilders.MakeRow([
-                                                                                        TuiElementBuilders.MakeButton(TuiControlId.Create(YesControlValue), 'Yes', TuiAction.Create(ConfirmYesActionValue)),
-                                                                                        TuiElementBuilders.MakeButton(TuiControlId.Create(NoControlValue), 'No', TuiAction.Create(ConfirmNoActionValue))
-                                                                                      ])
-                                                         ]);
-  end;
+    begin
+      Overlay := TuiElementBuilders.MakeOverlay('Confirm', [
+                                                             TuiElementBuilders.MakeLabel('Save changes?'),
+                                                             TuiElementBuilders.MakeRow([
+                                                                                          TuiElementBuilders.MakeButton(TuiControlId.Create(YesControlValue), 'Yes', TuiAction.Create(ConfirmYesActionValue)),
+                                                                                          TuiElementBuilders.MakeButton(TuiControlId.Create(NoControlValue), 'No', TuiAction.Create(ConfirmNoActionValue))
+                                                                                        ])
+                                                           ]);
+    end;
+  end if;
 
   return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(State.Focused)), [
                                                                                     TuiElementBuilders.MakePanel('Editor', [

@@ -10,29 +10,32 @@ uses Std.Str;
 public function IsValidToken(Method: string): boolean;
 begin
   if Method = '' then
-  begin
-    return false;
-  end;
+    begin
+      return false;
+    end;
+  end if;
 
   for Index: integer := 0 to Std.Str.Length(Method) - 1 do
-  begin
-    var Code: integer := Std.Str.Ord(Std.Str.CharAt(Method, Index));
-    if (((Code >= 48) and (Code <= 57)) or ((Code >= 65) and (Code <= 90))) or
-       ((Code >= 97) and (Code <= 122)) then
     begin
-      continue;
-    end;
+      var Code: integer := Std.Str.Ord(Std.Str.CharAt(Method, Index));
+      if (((Code >= 48) and (Code <= 57)) or ((Code >= 65) and (Code <= 90))) or
+         ((Code >= 97) and (Code <= 122)) then
+        begin
+          continue;
+        end;
+      end if;
 
-    case Code of
-      33, 35, 36, 37, 38, 39, 42, 43, 45, 46, 94, 95, 96, 124, 126:
-      begin
-      end;
-      else
-      begin
-        return false;
+      case Code of
+        33, 35, 36, 37, 38, 39, 42, 43, 45, 46, 94, 95, 96, 124, 126:
+        begin
+        end;
+        else
+        begin
+          return false;
+        end;
       end;
     end;
-  end;
+  end for;
 
   return true;
 end function;

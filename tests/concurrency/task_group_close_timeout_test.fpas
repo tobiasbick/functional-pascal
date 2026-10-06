@@ -12,9 +12,10 @@ begin
   var Child: task := StartTaskInGroup(Group, function(Stop: CancellationToken): result of integer, string begin
     Unwrap(Receive(Gate));
     if not IsCancellationRequested(Stop) then
-    begin
-      panic('missing cancellation');
-    end;
+      begin
+        panic('missing cancellation');
+      end;
+    end if;
 
     return Error('retained worker failure');
   end);

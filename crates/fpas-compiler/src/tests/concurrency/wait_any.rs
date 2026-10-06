@@ -71,10 +71,10 @@ begin
   var A: task := go Work(11);
   var B: task := go Work(22);
   WaitAll([A, B]);
-  if WaitAny([B, A, B]) <> 0 then panic('wrong index');
-  if Wait(B) <> 22 then panic('result consumed');
-  if WaitAny([B, A]) <> 0 then panic('consumed completion lost');
-  if Wait(A) <> 11 then panic('losing result consumed');
+  if WaitAny([B, A, B]) <> 0 then panic('wrong index'); end if;
+  if Wait(B) <> 22 then panic('result consumed'); end if;
+  if WaitAny([B, A]) <> 0 then panic('consumed completion lost'); end if;
+  if Wait(A) <> 11 then panic('losing result consumed'); end if;
 end."#,
     );
 }
@@ -92,13 +92,13 @@ end function;
 function Parent(): integer;
 begin
   var Child: task := go Work();
-  if WaitAny([Child]) <> 0 then panic('index');
+  if WaitAny([Child]) <> 0 then panic('index'); end if;
   return Wait(Child);
 end function;
 begin
   var ParentTask: task := go Parent();
-  if WaitAny([ParentTask]) <> 0 then panic('parent index');
-  if Wait(ParentTask) <> 7 then panic('value');
+  if WaitAny([ParentTask]) <> 0 then panic('parent index'); end if;
+  if Wait(ParentTask) <> 7 then panic('value'); end if;
 end."#,
     );
 }

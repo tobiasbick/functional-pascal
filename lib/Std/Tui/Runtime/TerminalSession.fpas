@@ -18,9 +18,10 @@ end procedure;
 public procedure TuiTerminalSessionRelease();
 begin
   if not TuiTerminalSessionOpen then
-  begin
-    return;
-  end;
+    begin
+      return;
+    end;
+  end if;
 
   TuiTerminalSessionOpen := false;
   ReleaseInteractiveTerminal();

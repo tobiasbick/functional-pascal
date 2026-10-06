@@ -18,13 +18,13 @@ begin
       var Source: Std.Tasks.CancellationSource := Std.Tasks.CreateCancellationSource();
       var Token: Std.Tasks.CancellationToken := Std.Tasks.GetCancellationToken(Source);
       case Std.Net.SendBytesWithCancellation(ConnectionValue, [42, 43], Token) of
-        Ok(Count): if Count <> 2 then panic('wrong write count');
+        Ok(Count): if Count <> 2 then panic('wrong write count'); end if;
         Error(Message): panic(Message);
       end;
       Std.Tasks.Cancel(Source);
       case Std.Net.SendBytesWithCancellation(ConnectionValue, [99], Token) of
         Ok(Count): panic('cancelled write succeeded');
-        Error(Message): if Message <> 'Network write cancelled' then panic(Message);
+        Error(Message): if Message <> 'Network write cancelled' then panic(Message); end if;
       end;
       Std.Net.Close(ConnectionValue);
     end;

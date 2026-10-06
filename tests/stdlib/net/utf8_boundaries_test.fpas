@@ -31,9 +31,10 @@ begin
                         'e' + Std.Str.Chr(769),
                         Std.Str.RepeatStr('x' + Std.Str.Chr(769), 2048)
                       ] do
-  begin
-    AssertEquals(Text, Unwrap(Std.Net.Utf8.Decode(Std.Net.Utf8.Encode(Text))));
-  end;
+    begin
+      AssertEquals(Text, Unwrap(Std.Net.Utf8.Decode(Std.Net.Utf8.Encode(Text))));
+    end;
+  end for;
 
   Invalid([-1]);
   Invalid([256]);

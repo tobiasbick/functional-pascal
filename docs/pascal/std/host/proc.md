@@ -86,9 +86,10 @@ Combine a process call in `go` with `Std.Tasks.Wait` for task-based workflows.
 Starts `Command` with `Args`, waits for the process to exit, and returns `Ok(exitCode)`.
 
 ```pascal
-var Status: Result of integer, string := Run('fpas', ['--version']);
+var Status: result of integer, string := Run('fpas', ['--version']);
 if Std.Results.IsError(Status) then
   WriteLn(Std.Results.UnwrapOr(Status, -1));
+end if;
 ```
 
 If the process cannot be started, returns `Error(message)`. If the host reports that the process ended without an exit code, returns `Error('process terminated without an exit code')`.

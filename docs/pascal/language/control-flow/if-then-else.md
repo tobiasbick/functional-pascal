@@ -2,33 +2,51 @@
 
 Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`if_stmt`).
 
-Terminate each branch with `;`, including the branch before `else`. With a
-single-statement body, the last branch's terminator also ends the `if`
-statement. `else` binds to the nearest unmatched `if`; use an explicit block
-to make a branch containing a nested conditional unambiguous.
+Each branch contains one or more statements. Every statement ends with `;`,
+including the last before `elsif`, `else`, or `end if;`. The named ending
+closes the whole conditional. Conditions are evaluated in order, and only
+the first matching branch runs. An `else` branch is optional.
 
 ```pascal
 if X > 0 then
   WriteLn('positive');
-else if X = 0 then
+elsif X = 0 then
   WriteLn('zero');
 else
   WriteLn('negative');
+end if;
 ```
 
-With blocks:
+Multiple statements need no compound wrapper:
 
 ```pascal
 if X > 10 then
-begin
   WriteLn('large');
   X := X - 10;
-end;
 else
-begin
   WriteLn('small');
-end;
+end if;
 ```
+
+Every branch has its own local scope. Its declarations are unavailable in
+other branches, later `elsif` conditions, or after the conditional. A plain
+`begin ... end;` inside a branch adds a nested scope.
+
+`elsif` continues the existing conditional. `else if` starts a nested
+conditional and requires two matching endings:
+
+```pascal
+if Outer then
+  null;
+else
+  if Inner then
+    null;
+  end if;
+end if;
+```
+
+An empty branch is an error; write `null;` to state that no action is needed.
+The formatter preserves nested conditionals and explicit scoping blocks.
 
 ## See also
 

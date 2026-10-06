@@ -25,7 +25,7 @@ fn generic_body_rejects_type_parameter_as_boolean_condition() {
         "program T;
          function F<T>(X: T): T;
          begin
-           if X then return X;
+           if X then return X; end if;
            return X;
          end function;
          begin end.",

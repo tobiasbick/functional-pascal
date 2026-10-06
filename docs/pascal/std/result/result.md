@@ -106,16 +106,20 @@ var M: Result of string, string := Map(R, DoubleToString);
 Calls `F` with the `Ok` value. `F` returns a new `Result`, enabling chained fallible operations. If `R` is `Error`, returns it unchanged.
 
 ```pascal
-function PositiveToResult(V: integer): Result of string, string;
+function PositiveToResult(V: integer): result of string, string;
 begin
-  if V > 0 then return Ok(IntToStr(V));
-  else return Error('non-positive');
+  if V > 0 then
+    return Ok(IntToStr(V));
+  else
+    return Error('non-positive');
+  end if;
 end function;
 
-var R: Result of integer, string := Ok(10);
-var M: Result of string, string := AndThen(R, PositiveToResult);
-// M = Ok('10')
-```
+var
+  R: result of integer, string := Ok(10);
+  M: result of string, string := AndThen(R, PositiveToResult);
+
+// M = Ok('10')```
 
 ---
 

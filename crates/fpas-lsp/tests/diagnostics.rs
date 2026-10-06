@@ -56,7 +56,11 @@ fn parser_and_semantic_errors_publish_and_a_fixed_version_clears_them() {
     let transcript = run_script(&[
         TranscriptStep::Message(initialize(1)),
         TranscriptStep::Message(initialized()),
-        TranscriptStep::Message(open(uri, 1, "program Broken;\nbegin\n  if then;\nend.\n")),
+        TranscriptStep::Message(open(
+            uri,
+            1,
+            "program Broken;\nbegin\n  if then; end if;\nend.\n",
+        )),
         TranscriptStep::Wait(ANALYSIS_WAIT),
         TranscriptStep::Message(change(
             uri,
@@ -125,7 +129,11 @@ fn rapid_changes_publish_only_the_latest_document_version() {
     let transcript = run_script(&[
         TranscriptStep::Message(initialize(1)),
         TranscriptStep::Message(initialized()),
-        TranscriptStep::Message(open(uri, 1, "program First;\nbegin\n  if then;\nend.\n")),
+        TranscriptStep::Message(open(
+            uri,
+            1,
+            "program First;\nbegin\n  if then; end if;\nend.\n",
+        )),
         TranscriptStep::Message(change(
             uri,
             2,
@@ -267,7 +275,7 @@ include = ["src/**/*.fpas"]
         TranscriptStep::Message(change(
             &main_uri,
             2,
-            "program Broken;\nbegin\n  if then;\nend.\n",
+            "program Broken;\nbegin\n  if then; end if;\nend.\n",
         )),
         TranscriptStep::Wait(ANALYSIS_WAIT),
         TranscriptStep::Action(Box::new(move || {
@@ -452,7 +460,11 @@ fn close_during_debounce_cancels_analysis_and_clears_diagnostics() {
     let transcript = run_script(&[
         TranscriptStep::Message(initialize(1)),
         TranscriptStep::Message(initialized()),
-        TranscriptStep::Message(open(uri, 1, "program Closed;\nbegin\n  if then;\nend.\n")),
+        TranscriptStep::Message(open(
+            uri,
+            1,
+            "program Closed;\nbegin\n  if then; end if;\nend.\n",
+        )),
         TranscriptStep::Message(close(uri)),
         TranscriptStep::Wait(ANALYSIS_WAIT),
         TranscriptStep::Message(shutdown(2)),

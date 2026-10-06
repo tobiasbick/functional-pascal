@@ -5,14 +5,16 @@ uses Std.Tui.Geometry.Size;
 procedure TuiMeasureResultRequireOrdered(Minimum: TuiSize; Preferred: TuiSize; Maximum: TuiSize);
 begin
   if (Minimum.Width > Preferred.Width) or (Minimum.Height > Preferred.Height) then
-  begin
-    panic('Tui measure result minimum size must not exceed preferred size');
-  end;
+    begin
+      panic('Tui measure result minimum size must not exceed preferred size');
+    end;
+  end if;
 
   if (Preferred.Width > Maximum.Width) or (Preferred.Height > Maximum.Height) then
-  begin
-    panic('Tui measure result preferred size must not exceed maximum size');
-  end;
+    begin
+      panic('Tui measure result preferred size must not exceed maximum size');
+    end;
+  end if;
 end procedure;
 
 public type

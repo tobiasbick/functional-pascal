@@ -18,15 +18,20 @@ impl Parser {
         statements
     }
 
-    /// Parses one terminated statement; single-body control statements share the body's terminator.
+    /// Parses one terminated statement, including the terminator after each named ending.
     pub(super) fn parse_terminated_statement(&mut self) -> Stmt {
+        let errors_before = self.errors.len();
         let statement = self.parse_statement();
-        if !matches!(
-            statement,
-            Stmt::If { .. } | Stmt::For { .. } | Stmt::ForIn { .. } | Stmt::While { .. }
-        ) {
-            self.expect_statement_terminator();
+        if self.errors.len() > errors_before
+            && matches!(
+                statement,
+                Stmt::If { .. } | Stmt::For { .. } | Stmt::ForIn { .. } | Stmt::While { .. }
+            )
+            && self.is_stmt_list_end()
+        {
+            return statement;
         }
+        self.expect_statement_terminator();
         statement
     }
 
@@ -68,11 +73,14 @@ impl Parser {
                 | Token::Const
                 | Token::Public
                 | Token::Static
-        ) || matches!(self.current_token(), Token::Function | Token::Procedure)
-            && matches!(self.peek_token(), Token::Ident(_))
+        ) || self.check(&Token::Elsif)
+            && self.peek_token() != &Token::ColonAssign
+            && self.block_closers.contains(&Token::If)
+            || matches!(self.current_token(), Token::Function | Token::Procedure)
+                && matches!(self.peek_token(), Token::Ident(_))
     }
 
-    /// Keeps a shared body terminator outside the enclosing node's source span.
+    /// Keeps the last case-arm terminator outside the arm's source span.
     pub(super) fn span_before_terminator(&self, start: Span) -> Span {
         let mut span = self.span_from(start);
         if self.pos > 0

@@ -1,6 +1,8 @@
 mod basic;
 mod branching;
 mod concurrency;
+mod conditionals;
+mod control_bodies;
 mod loops;
 mod terminators;
 
@@ -17,6 +19,10 @@ impl Parser {
     fn parse_statement_inner(&mut self) -> Stmt {
         match self.current_token() {
             Token::Begin => self.parse_block(),
+            Token::Null if self.peek_token() == &Token::ColonAssign => {
+                self.parse_invalid_statement_start()
+            }
+            Token::Null => Stmt::Null(self.advance().span),
             Token::Var => self.parse_var_stmt(false),
             Token::Mutable if self.is_mutable_var_start() => self.parse_var_stmt(true),
             Token::Mutable => self.parse_invalid_statement_start(),
@@ -48,6 +54,7 @@ impl Parser {
         matches!(
             self.current_token(),
             Token::Begin
+                | Token::Null
                 | Token::Var
                 | Token::Mutable
                 | Token::Return

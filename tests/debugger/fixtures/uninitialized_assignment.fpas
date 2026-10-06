@@ -22,13 +22,14 @@ begin
   WriteLn(Count);
   WriteLn(GlobalCount);
   if Flag then
-  begin
-    WriteLn(1);
-  end;
+    begin
+      WriteLn(1);
+    end;
   else
-  begin
-    WriteLn(0);
-  end;
+    begin
+      WriteLn(0);
+    end;
+  end if;
 
   WriteLn(Origin.X);
   WriteLn(Frozen);

@@ -14,12 +14,12 @@ begin
   var Child: task := StartSupervisedTask(Group, Work, 1023, 0);
   case Wait(Child) of
     Ok(_): panic('forced error lost');
-    Error(Message): if Message <> 'forced' then panic('wrong forced error');
+    Error(Message): if Message <> 'forced' then panic('wrong forced error'); end if;
   end;
   var Failures: array of TaskFailure := CloseTaskGroup(Group);
-  if Length(Failures) <> 1 then panic('wrong report count');
-  if Failures[0].Kind <> TaskFailureKind.ReturnedError then panic('wrong report kind');
-  if Failures[0].Message <> 'forced' then panic('wrong report message');
+  if Length(Failures) <> 1 then panic('wrong report count'); end if;
+  if Failures[0].Kind <> TaskFailureKind.ReturnedError then panic('wrong report kind'); end if;
+  if Failures[0].Message <> 'forced' then panic('wrong report message'); end if;
 end."#,
     );
     assert!(errors.is_empty(), "{errors:?}");

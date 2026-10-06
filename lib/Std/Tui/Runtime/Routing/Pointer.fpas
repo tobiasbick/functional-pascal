@@ -10,9 +10,10 @@ uses
 function TuiRoutePointerFocusMessages(Previous: option of TuiControlId; Target: TuiControlId): array of TuiMsg;
 begin
   if TuiFocusMatches(Previous, Target) then
-  begin
-    return [];
-  end;
+    begin
+      return [];
+    end;
+  end if;
 
   return [TuiMsg.FocusChanged(Previous, Some(Target))];
 end function;
@@ -104,16 +105,18 @@ begin
     begin
       var Inside: boolean := TuiPointerInsideCapturedButton(Root, Frame, PointerPosition, Button);
       if PointerAction = Std.Console.MouseAction.Up then
-      begin
-        if Inside then
         begin
-          return TuiIdlePointerResult(ApplicationId, [TuiMsg.Action(Button.Id, Button.Action)]);
-        end;
+          if Inside then
+            begin
+              return TuiIdlePointerResult(ApplicationId, [TuiMsg.Action(Button.Id, Button.Action)]);
+            end;
+          end if;
 
-        return TuiIdlePointerResult(ApplicationId, [
-                                                     TuiMsg.Pointer(TuiPointerEvent.WithModifiers(PointerAction, PointerButton, PointerPosition, PointerShift, PointerCtrl, PointerAlt, PointerMeta))
-                                                   ]);
-      end;
+          return TuiIdlePointerResult(ApplicationId, [
+                                                       TuiMsg.Pointer(TuiPointerEvent.WithModifiers(PointerAction, PointerButton, PointerPosition, PointerShift, PointerCtrl, PointerAlt, PointerMeta))
+                                                     ]);
+        end;
+      end if;
 
       return TuiCapturedPointerResult(ApplicationId, [
                                                        TuiMsg.Pointer(TuiPointerEvent.WithModifiers(PointerAction, PointerButton, PointerPosition, PointerShift, PointerCtrl, PointerAlt, PointerMeta))
@@ -126,25 +129,27 @@ begin
   var MenuPointer: boolean := (PointerAction = Std.Console.MouseAction.Move) or
                               ((PointerAction = Std.Console.MouseAction.Down) and (PointerButton = TuiPointerButton.Left));
   if MenuPointer then
-  begin
-    case TuiRouteMenuPointer(Root, Frame, PointerPosition, PointerAction =
-                                                           Std.Console.MouseAction.Down) of
-      Some(Messages):
-      begin
-        return TuiIdlePointerResult(ApplicationId, Messages);
-      end;
-      None:
-      begin
+    begin
+      case TuiRouteMenuPointer(Root, Frame, PointerPosition, PointerAction =
+                                                             Std.Console.MouseAction.Down) of
+        Some(Messages):
+        begin
+          return TuiIdlePointerResult(ApplicationId, Messages);
+        end;
+        None:
+        begin
+        end;
       end;
     end;
-  end;
+  end if;
 
   if (PointerAction <> Std.Console.MouseAction.Down) or (PointerButton <> TuiPointerButton.Left) then
-  begin
-    return TuiIdlePointerResult(ApplicationId, [
-                                                 TuiMsg.Pointer(TuiPointerEvent.WithModifiers(PointerAction, PointerButton, PointerPosition, PointerShift, PointerCtrl, PointerAlt, PointerMeta))
-                                               ]);
-  end;
+    begin
+      return TuiIdlePointerResult(ApplicationId, [
+                                                   TuiMsg.Pointer(TuiPointerEvent.WithModifiers(PointerAction, PointerButton, PointerPosition, PointerShift, PointerCtrl, PointerAlt, PointerMeta))
+                                                 ]);
+    end;
+  end if;
   var Previous: option of TuiControlId := TuiRootFocus(Root);
   case TuiPointerHitAt(Frame, Root, PointerPosition) of
     TuiPointerHit.Miss:
@@ -192,16 +197,18 @@ begin
     begin
       var FocusMessages: array of TuiMsg := TuiRoutePointerFocusMessages(Previous, Id);
       if Proposed = CurrentSelected then
-      begin
-        if Std.Arrays.Length(FocusMessages) = 0 then
         begin
-          return TuiIdlePointerResult(ApplicationId, [
-                                                       TuiMsg.Pointer(TuiPointerEvent.WithModifiers(PointerAction, PointerButton, PointerPosition, PointerShift, PointerCtrl, PointerAlt, PointerMeta))
-                                                     ]);
-        end;
+          if Std.Arrays.Length(FocusMessages) = 0 then
+            begin
+              return TuiIdlePointerResult(ApplicationId, [
+                                                           TuiMsg.Pointer(TuiPointerEvent.WithModifiers(PointerAction, PointerButton, PointerPosition, PointerShift, PointerCtrl, PointerAlt, PointerMeta))
+                                                         ]);
+            end;
+          end if;
 
-        return TuiIdlePointerResult(ApplicationId, FocusMessages);
-      end;
+          return TuiIdlePointerResult(ApplicationId, FocusMessages);
+        end;
+      end if;
 
       return TuiIdlePointerResult(ApplicationId, Std.Arrays.Concat(FocusMessages, [
                                                                                     TuiMsg.SelectionChanged(Id, Action, Proposed)
@@ -211,11 +218,12 @@ begin
     begin
       var FocusMessages: array of TuiMsg := TuiRoutePointerFocusMessages(Previous, Id);
       if Std.Arrays.Length(FocusMessages) = 0 then
-      begin
-        return TuiIdlePointerResult(ApplicationId, [
-                                                     TuiMsg.Pointer(TuiPointerEvent.WithModifiers(PointerAction, PointerButton, PointerPosition, PointerShift, PointerCtrl, PointerAlt, PointerMeta))
-                                                   ]);
-      end;
+        begin
+          return TuiIdlePointerResult(ApplicationId, [
+                                                       TuiMsg.Pointer(TuiPointerEvent.WithModifiers(PointerAction, PointerButton, PointerPosition, PointerShift, PointerCtrl, PointerAlt, PointerMeta))
+                                                     ]);
+        end;
+      end if;
 
       return TuiIdlePointerResult(ApplicationId, FocusMessages);
     end;

@@ -14,5 +14,5 @@ begin
   if gifted and (endif = 0) then
   begin
     WriteLn(beginValue);
-  end;
+  end; end if;
 end.

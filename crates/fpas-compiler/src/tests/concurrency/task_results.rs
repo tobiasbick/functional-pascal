@@ -5,14 +5,14 @@ use super::*;
 #[test]
 fn wait_preserves_integer_before_procedure_task_results() {
     assert_succeeds(
-        "program Reversed; uses Std.Tasks; function Number(): integer; begin return 7; end function; procedure Work(); begin end procedure; begin if Wait(go Number()) <> 7 then panic('wrong result'); Wait(go Work()); end.",
+        "program Reversed; uses Std.Tasks; function Number(): integer; begin return 7; end function; procedure Work(); begin end procedure; begin if Wait(go Number()) <> 7 then panic('wrong result'); end if; Wait(go Work()); end.",
     );
 }
 
 #[test]
 fn wait_preserves_mixed_direct_spawn_results() {
     assert_succeeds(
-        "program MixedDirect; uses Std.Tasks; function Number(): integer; begin return 7; end function; procedure Work(); begin end procedure; begin Wait(go Work()); if Wait(go Number()) <> 7 then panic('wrong result'); end.",
+        "program MixedDirect; uses Std.Tasks; function Number(): integer; begin return 7; end function; procedure Work(); begin end procedure; begin Wait(go Work()); if Wait(go Number()) <> 7 then panic('wrong result'); end if; end.",
     );
 }
 
@@ -32,7 +32,7 @@ begin
   var A: task := go Number();
   var B: task := go Work();
   Wait(B);
-  if Wait(A) <> 7 then panic('wrong task result');
+  if Wait(A) <> 7 then panic('wrong task result'); end if;
 end."#,
     );
 }
@@ -55,8 +55,8 @@ begin
   for Index: integer := 1 to 3 do
   begin
     Wait(go Work());
-    if Index < 1 then panic('wrong loop branch');
-  end;
+    if Index < 1 then panic('wrong loop branch'); end if;
+  end; end for;
 end procedure;
 function WaitForNumber(): integer;
 begin
@@ -64,7 +64,7 @@ begin
 end function;
 begin
   WaitForWork();
-  if WaitForNumber() <> 7 then panic('wrong task result');
+  if WaitForNumber() <> 7 then panic('wrong task result'); end if;
 end."#,
     );
 }
@@ -72,7 +72,7 @@ end."#,
 #[test]
 fn wait_signature_merges_unit_and_value_without_erasing_call_types() {
     let ast = parse_ok(
-        "program MixedSignature; uses Std.Tasks; function Number(): integer; begin return 7; end function; procedure Work(); begin end procedure; begin Wait(go Work()); if Wait(go Number()) <> 7 then panic('wrong result'); end.",
+        "program MixedSignature; uses Std.Tasks; function Number(): integer; begin return 7; end function; procedure Work(); begin end procedure; begin Wait(go Work()); if Wait(go Number()) <> 7 then panic('wrong result'); end if; end.",
     );
     let ir = crate::lower(&ast).expect("mixed task result IR");
     let wait = fpas_ir::IntrinsicId::new(u32::from(u16::from(fpas_bytecode::Intrinsic::Task(

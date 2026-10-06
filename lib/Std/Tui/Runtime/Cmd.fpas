@@ -23,9 +23,10 @@ mutable var
 function TuiCmdOutputRequire(Slot: integer): integer;
 begin
   if (Slot < 1) or (Slot > Std.Arrays.Length(TuiCommandValues)) then
-  begin
-    panic('Tui command output handle is invalid');
-  end;
+    begin
+      panic('Tui command output handle is invalid');
+    end;
+  end if;
 
   return Slot;
 end function;
@@ -67,9 +68,10 @@ public type
     begin
       var Slot: integer := TuiCmdOutputRequire(Self.Slot);
       if DelayMilliseconds < 0 then
-      begin
-        panic('Tui tick delay must not be negative');
-      end;
+        begin
+          panic('Tui tick delay must not be negative');
+        end;
+      end if;
 
       TuiCommandTickDelays[Slot - 1] := DelayMilliseconds;
     end procedure;
@@ -80,9 +82,10 @@ public type
       var Slot: integer := TuiCmdOutputRequire(Self.Slot);
       var Delay: integer := TuiCommandTickDelays[Slot - 1];
       if Delay < 0 then
-      begin
-        return None;
-      end;
+        begin
+          return None;
+        end;
+      end if;
 
       return Some(Delay);
     end function;
@@ -92,9 +95,10 @@ public type
     begin
       var Slot: integer := TuiCmdOutputRequire(Self.Slot);
       if Id < 1 then
-      begin
-        panic('Tui background id must be positive');
-      end;
+        begin
+          panic('Tui background id must be positive');
+        end;
+      end if;
       mutable var Commands: array of TuiBackgroundCommand := TuiCommandBackground[Slot - 1];
       Std.Arrays.Push(Commands, TuiBackgroundCommand.Start(Id, Work));
       TuiCommandBackground[Slot - 1] := Commands;
@@ -105,9 +109,10 @@ public type
     begin
       var Slot: integer := TuiCmdOutputRequire(Self.Slot);
       if Id < 1 then
-      begin
-        panic('Tui subscription id must be positive');
-      end;
+        begin
+          panic('Tui subscription id must be positive');
+        end;
+      end if;
       mutable var Commands: array of TuiBackgroundCommand := TuiCommandBackground[Slot - 1];
       Std.Arrays.Push(Commands, TuiBackgroundCommand.ReplaceSubscription(Id, Work));
       TuiCommandBackground[Slot - 1] := Commands;
@@ -118,9 +123,10 @@ public type
     begin
       var Slot: integer := TuiCmdOutputRequire(Self.Slot);
       if Id < 1 then
-      begin
-        panic('Tui subscription id must be positive');
-      end;
+        begin
+          panic('Tui subscription id must be positive');
+        end;
+      end if;
       mutable var Commands: array of TuiBackgroundCommand := TuiCommandBackground[Slot - 1];
       Std.Arrays.Push(Commands, TuiBackgroundCommand.CancelSubscription(Id));
       TuiCommandBackground[Slot - 1] := Commands;

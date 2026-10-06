@@ -11,7 +11,7 @@ begin
   if N <= 1 then
     return N;
   else
-    return Fibonacci(N - 1) + Fibonacci(N - 2);
+    return Fibonacci(N - 1) + Fibonacci(N - 2); end if;
 end function;
 
 begin
@@ -75,9 +75,9 @@ begin
   for I: integer := 0 to 9 do
     for J: integer := 0 to 9 do
       begin
-        if I = J then continue;
-        if I + J > 10 then break;
-      end;
+        if I = J then continue; end if;
+        if I + J > 10 then break; end if;
+      end; end for; end for;
 end.",
     );
 }
@@ -92,11 +92,11 @@ function IsEven(N: integer): boolean;
   function IsOdd(X: integer): boolean;
   begin
     if X = 0 then return false;
-    else return IsEven(X - 1);
+    else return IsEven(X - 1); end if;
   end function;
 begin
   if N = 0 then return true;
-  else return IsOdd(N - 1);
+  else return IsOdd(N - 1); end if;
 end function;
 
 begin

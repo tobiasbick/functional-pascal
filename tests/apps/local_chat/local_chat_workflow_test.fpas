@@ -13,12 +13,14 @@ uses
 function ScreenContains(Snapshot: TuiSurfaceSnapshot; Text: string): boolean;
 begin
   for Row: integer := 0 to Snapshot.Height - 1 do
-  begin
-    if Std.Str.Contains(Snapshot.LineAt(Row), Text) then
     begin
-      return true;
+      if Std.Str.Contains(Snapshot.LineAt(Row), Text) then
+        begin
+          return true;
+        end;
+      end if;
     end;
-  end;
+  end for;
 
   return false;
 end function;

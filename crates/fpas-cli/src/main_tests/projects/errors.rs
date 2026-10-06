@@ -140,7 +140,7 @@ fn run_cli_reports_runtime_errors_of_units_linked_out_of_graph_order() {
     // `util.fpas` precedes `zeta.fpas` in the unit graph, but the linker emits App.Zeta first.
     write_text(
         &cwd.join("src/util.fpas"),
-        "unit App.Util;\nuses App.Zeta;\npublic procedure Trigger();\nbegin\n  if Seven() = 7 then panic('util failure');\nend procedure;\nend unit;\n",
+        "unit App.Util;\nuses App.Zeta;\npublic procedure Trigger();\nbegin\n  if Seven() = 7 then panic('util failure'); end if;\nend procedure;\nend unit;\n",
     );
     write_text(
         &cwd.join("src/zeta.fpas"),

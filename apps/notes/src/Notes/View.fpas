@@ -11,14 +11,16 @@ function SidebarWidth(State: NotesModel): integer;
 begin
   var Width: integer := State.Width div 3;
   if Width < 32 then
-  begin
-    return 32;
-  end;
+    begin
+      return 32;
+    end;
+  end if;
 
   if Width > 52 then
-  begin
-    return 52;
-  end;
+    begin
+      return 52;
+    end;
+  end if;
 
   return Width;
 end function;
@@ -26,9 +28,10 @@ end function;
 function ListPaneWidth(State: NotesModel): integer;
 begin
   if State.Width < 65 then
-  begin
-    return State.Width;
-  end;
+    begin
+      return State.Width;
+    end;
+  end if;
 
   return SidebarWidth(State);
 end function;
@@ -44,14 +47,16 @@ begin
   mutable var Dirty: string := '';
   mutable var Issues: string := '';
   if State.Dirty then
-  begin
-    Dirty := '  ● unsaved';
-  end;
+    begin
+      Dirty := '  ● unsaved';
+    end;
+  end if;
 
   if Std.Arrays.Length(State.Issues) > 0 then
-  begin
-    Issues := ('  ·  ' + IntToStr(Std.Arrays.Length(State.Issues))) + ' invalid';
-  end;
+    begin
+      Issues := ('  ·  ' + IntToStr(Std.Arrays.Length(State.Issues))) + ' invalid';
+    end;
+  end if;
 
   return TuiElementBuilders.MakeRule(((((' NOTES  ·  ' + IntToStr(Std.Arrays.Length(NotesFilteredIndices(State.Notes, '')))) + ' active') + Issues) + Dirty) +
                                      '  ·  Ctrl+K commands ');
@@ -80,18 +85,20 @@ end function;
 function EditorPane(State: NotesModel): TuiElement;
 begin
   if (State.Selected < 0) or (State.Selected >= Std.Arrays.Length(State.Notes)) then
-  begin
-    return EmptyEditor();
-  end;
+    begin
+      return EmptyEditor();
+    end;
+  end if;
   var NoteValue: Note := State.Notes[State.Selected];
   var Title: TuiElement := TuiElementBuilders.MakeInputWithHint(TuiControlId.Create(TitleControl), NoteValue.Title, State.TitleCaret, 'Note title', TuiAction.Create(TitleChangedAction));
   var Tags: TuiElement := TuiElementBuilders.MakeInputWithHint(TuiControlId.Create(TagsControl), State.TagsText, State.TagsCaret, 'tags, separated, by commas', TuiAction.Create(TagsChangedAction));
   var Body: TuiElement := TuiElementBuilders.MakeTextArea(TuiControlId.Create(BodyControl), NoteValue.Body, State.BodyCaret, State.BodyOffset, TuiAction.Create(BodyChangedAction));
   mutable var Pin: string := '';
   if NoteValue.Pinned then
-  begin
-    Pin := ' ★';
-  end;
+    begin
+      Pin := ' ★';
+    end;
+  end if;
 
   return TuiElementBuilders.MakePanel('Editor' + Pin, [
                                                         Title,
@@ -104,14 +111,16 @@ end function;
 function MainContent(State: NotesModel): TuiElement;
 begin
   if State.Width < 65 then
-  begin
-    if State.Pane = NotesPane.List then
     begin
-      return ListPane(State);
-    end;
+      if State.Pane = NotesPane.List then
+        begin
+          return ListPane(State);
+        end;
+      end if;
 
-    return EditorPane(State);
-  end;
+      return EditorPane(State);
+    end;
+  end if;
 
   return TuiElementBuilders.MakeRow([
                                       FixedWidthExpanding(ListPane(State), SidebarWidth(State)),
@@ -139,11 +148,12 @@ begin
   mutable var Pin: TuiElement := TuiElementBuilders.MakeDisabledButton(TuiControlId.Create(TogglePinControl), 'Toggle pin', '', TuiAction.Create(TogglePinAction));
   mutable var Archive: TuiElement := TuiElementBuilders.MakeDisabledButton(TuiControlId.Create(ArchiveNoteControl), 'Archive note', '', TuiAction.Create(ArchiveNoteAction));
   if HasNote then
-  begin
-    Save := TuiElementBuilders.MakeButton(TuiControlId.Create(SaveNoteControl), 'Save note', TuiAction.Create(SaveNoteAction));
-    Pin := TuiElementBuilders.MakeButton(TuiControlId.Create(TogglePinControl), 'Toggle pin', TuiAction.Create(TogglePinAction));
-    Archive := TuiElementBuilders.MakeButton(TuiControlId.Create(ArchiveNoteControl), 'Archive note', TuiAction.Create(ArchiveNoteAction));
-  end;
+    begin
+      Save := TuiElementBuilders.MakeButton(TuiControlId.Create(SaveNoteControl), 'Save note', TuiAction.Create(SaveNoteAction));
+      Pin := TuiElementBuilders.MakeButton(TuiControlId.Create(TogglePinControl), 'Toggle pin', TuiAction.Create(TogglePinAction));
+      Archive := TuiElementBuilders.MakeButton(TuiControlId.Create(ArchiveNoteControl), 'Archive note', TuiAction.Create(ArchiveNoteAction));
+    end;
+  end if;
 
   return TuiElementBuilders.MakeOverlay('Commands', [
                                                       TuiElementBuilders.MakeLabel('Quick actions'),
@@ -221,45 +231,53 @@ end function;
 function MainFocus(State: NotesModel): integer;
 begin
   if State.Width < 65 then
-  begin
-    if State.Pane = NotesPane.List then
+    begin
+      if State.Pane = NotesPane.List then
+        begin
+          if (State.Focus = SearchControl) or (State.Focus = ListControl) then
+            begin
+              return State.Focus;
+            end;
+          end if;
+
+          return SearchControl;
+        end;
+      end if;
+
+      if (State.Selected >= 0) and (State.Selected < Std.Arrays.Length(State.Notes)) then
+        begin
+          if (State.Focus >= TitleControl) and (State.Focus <= BodyControl) then
+            begin
+              return State.Focus;
+            end;
+          end if;
+
+          return BodyControl;
+        end;
+      end if;
+    end;
+  else
     begin
       if (State.Focus = SearchControl) or (State.Focus = ListControl) then
-      begin
-        return State.Focus;
-      end;
+        begin
+          return State.Focus;
+        end;
+      end if;
 
-      return SearchControl;
-    end;
+      if ((State.Selected >= 0) and (State.Selected < Std.Arrays.Length(State.Notes))) and
+         ((State.Focus >= TitleControl) and (State.Focus <= BodyControl)) then
+        begin
+          return State.Focus;
+        end;
+      end if;
 
-    if (State.Selected >= 0) and (State.Selected < Std.Arrays.Length(State.Notes)) then
-    begin
-      if (State.Focus >= TitleControl) and (State.Focus <= BodyControl) then
-      begin
-        return State.Focus;
-      end;
-
-      return BodyControl;
+      if (State.Selected >= 0) and (State.Selected < Std.Arrays.Length(State.Notes)) then
+        begin
+          return BodyControl;
+        end;
+      end if;
     end;
-  end;
-  else
-  begin
-    if (State.Focus = SearchControl) or (State.Focus = ListControl) then
-    begin
-      return State.Focus;
-    end;
-
-    if ((State.Selected >= 0) and (State.Selected < Std.Arrays.Length(State.Notes))) and
-       ((State.Focus >= TitleControl) and (State.Focus <= BodyControl)) then
-    begin
-      return State.Focus;
-    end;
-
-    if (State.Selected >= 0) and (State.Selected < Std.Arrays.Length(State.Notes)) then
-    begin
-      return BodyControl;
-    end;
-  end;
+  end if;
 
   return SearchControl;
 end function;
@@ -271,15 +289,17 @@ begin
     begin
       if ((State.Focus = NewNoteControl) or (State.Focus = HelpControl)) or
          (State.Focus = CommandsCloseControl) then
-      begin
-        return State.Focus;
-      end;
+        begin
+          return State.Focus;
+        end;
+      end if;
 
       if ((State.Selected >= 0) and (State.Selected < Std.Arrays.Length(State.Notes))) and
          ((State.Focus >= SaveNoteControl) and (State.Focus <= ArchiveNoteControl)) then
-      begin
-        return State.Focus;
-      end;
+        begin
+          return State.Focus;
+        end;
+      end if;
 
       return NewNoteControl;
     end;
@@ -290,9 +310,10 @@ begin
     NotesOverlay.QuitConfirmation:
     begin
       if (State.Focus >= SaveAndQuitControl) and (State.Focus <= CancelQuitControl) then
-      begin
-        return State.Focus;
-      end;
+        begin
+          return State.Focus;
+        end;
+      end if;
 
       return SaveAndQuitControl;
     end;
@@ -311,21 +332,23 @@ end function;
 public function NotesView(State: NotesModel): TuiElement;
 begin
   if (State.Width < 50) or (State.Height < 14) then
-  begin
-    return TuiElementBuilders.MakeDesktop(None, [
-                                                  TuiElementBuilders.MakePanel('Notes', [
-                                                                                          TuiElementBuilders.MakeLabel('Terminal too small'),
-                                                                                          TuiElementBuilders.MakeLabel('Use at least 50 × 14 cells.')
-                                                                                        ])
-                                                ]);
-  end;
+    begin
+      return TuiElementBuilders.MakeDesktop(None, [
+                                                    TuiElementBuilders.MakePanel('Notes', [
+                                                                                            TuiElementBuilders.MakeLabel('Terminal too small'),
+                                                                                            TuiElementBuilders.MakeLabel('Use at least 50 × 14 cells.')
+                                                                                          ])
+                                                  ]);
+    end;
+  end if;
   mutable var Children: array of TuiElement := [
                                                  TuiElementBuilders.MakeColumn([Header(State), Expanding(MainContent(State), 1), Status(State)])
                                                ];
   if State.Overlay <> NotesOverlay.Closed then
-  begin
-    Std.Arrays.Push(Children, Overlay(State));
-  end;
+    begin
+      Std.Arrays.Push(Children, Overlay(State));
+    end;
+  end if;
 
   return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(OverlayFocus(State))), Children);
 end function;

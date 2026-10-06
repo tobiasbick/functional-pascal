@@ -11,9 +11,10 @@ begin
   mutable var Tasks: array of task := [];
   var Started: integer := MonotonicMillis();
   for I: integer := 1 to 8 do
-  begin
-    Push(Tasks, go Sleeper());
-  end;
+    begin
+      Push(Tasks, go Sleeper());
+    end;
+  end for;
 
   WaitAll(Tasks);
   var Elapsed: integer := ElapsedMillis(Started);

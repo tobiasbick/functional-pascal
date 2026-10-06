@@ -5,12 +5,14 @@ uses Std.Console, Std.Conv, Std.Arrays, Std.Options;
 function FindFirst(Items: array of integer; Min: integer): option of integer;
 begin
   for I: integer := 0 to Length(Items) - 1 do
-  begin
-    if Items[I] >= Min then
     begin
-      return Some(Items[I]);
+      if Items[I] >= Min then
+        begin
+          return Some(Items[I]);
+        end;
+      end if;
     end;
-  end;
+  end for;
 
   return None;
 end function;

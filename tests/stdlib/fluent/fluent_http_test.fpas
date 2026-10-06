@@ -11,10 +11,11 @@ function Handle(RequestValue: ServerRequest): ServerResponse;
 begin
   mutable var ResponseValue: ServerResponse := ServerResponse.Create(200, 'OK');
   if (RequestValue.Method <> 'GET') or (RequestValue.Target <> '/fluent') then
-  begin
-    ResponseValue.Body := Std.Net.Utf8.Encode('unexpected request');
-    return ResponseValue;
-  end;
+    begin
+      ResponseValue.Body := Std.Net.Utf8.Encode('unexpected request');
+      return ResponseValue;
+    end;
+  end if;
 
   ResponseValue.Body := Std.Net.Utf8.Encode('hello fluent');
   return ResponseValue;

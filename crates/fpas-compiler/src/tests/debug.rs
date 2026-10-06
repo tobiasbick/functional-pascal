@@ -22,7 +22,7 @@ type Counter = record
 end record;
 begin
   var C: Counter := record Base := 2; end;
-  if C.Add(3) <> 5 then panic('wrong');
+  if C.Add(3) <> 5 then panic('wrong'); end if;
 end.
 "#,
     );
@@ -48,7 +48,7 @@ begin
   begin
     var Nested: integer := Value + Offset;
     if Nested < 0 then
-      panic('unreachable');
+      panic('unreachable'); end if;
   end;
   return Value + Offset;
 end function;
@@ -56,7 +56,7 @@ end function;
 begin
   var Answer: integer := Add(41);
   if Answer <> 42 then
-    panic('wrong answer');
+    panic('wrong answer'); end if;
 end.
 "#,
     );
@@ -128,7 +128,7 @@ end function;
 begin
   var Next: function(): integer := Counter();
   for Index: integer := 1 to 2 do
-    Next();
+    Next(); end for;
 end.
 "#,
     );
@@ -230,9 +230,9 @@ begin
   var Value: integer := 1;
   begin
     var Value: integer := 2; var Other: integer := Value + 1;
-    if Other <> 3 then panic('wrong inner value');
+    if Other <> 3 then panic('wrong inner value'); end if;
   end;
-  if Value <> 1 then panic('wrong outer value');
+  if Value <> 1 then panic('wrong outer value'); end if;
 end.
 "#,
     );

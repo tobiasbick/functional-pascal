@@ -16,19 +16,22 @@ begin
   mutable var Width: integer := Grid.Width;
   mutable var Height: integer := Grid.Height;
   if Width > Bounds.Width then
-  begin
-    Width := Bounds.Width;
-  end;
+    begin
+      Width := Bounds.Width;
+    end;
+  end if;
 
   if Height > Bounds.Height then
-  begin
-    Height := Bounds.Height;
-  end;
+    begin
+      Height := Bounds.Height;
+    end;
+  end if;
 
   for Y: integer := 0 to Height - 1 do
-  begin
-    TuiCanvasPutCells(Canvas, TuiPoint.Create(Bounds.X, Bounds.Y + Y), Std.Arrays.Slice(Grid.Cells, Y *
-                                                                                                    Grid.Width, Width));
-  end;
+    begin
+      TuiCanvasPutCells(Canvas, TuiPoint.Create(Bounds.X, Bounds.Y + Y), Std.Arrays.Slice(Grid.Cells, Y *
+                                                                                                      Grid.Width, Width));
+    end;
+  end for;
 end procedure;
 end unit;

@@ -9,6 +9,7 @@ impl Stmt {
             Self::Block(_, span)
             | Self::Return(_, span)
             | Self::Panic(_, span)
+            | Self::Null(span)
             | Self::Break(span)
             | Self::Continue(span) => *span,
             Self::Var(value) | Self::MutableVar(value) => value.span,
@@ -29,8 +30,10 @@ impl Stmt {
 /// Parsed statement.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Stmt {
-    /// Compound `begin ... end` statement and its source span.
+    /// Scoped statement list, explicit (`begin ... end`) or implicit in a control body.
     Block(Vec<Stmt>, Span),
+    /// Explicit `null` statement that performs no action.
+    Null(Span),
     /// Immutable local variable declaration.
     Var(VarDef),
     /// Mutable local variable declaration.
@@ -52,9 +55,9 @@ pub enum Stmt {
     If {
         /// Boolean condition that selects a branch.
         condition: Expr,
-        /// Statement executed when the condition is true.
+        /// Scoped statement list executed when the condition is true.
         then_branch: Box<Stmt>,
-        /// Statement executed when the condition is false, when present.
+        /// Scoped `else` list, or another conditional representing an `elsif` clause.
         else_branch: Option<Box<Stmt>>,
         /// Source span of the complete conditional.
         span: Span,
@@ -82,7 +85,7 @@ pub enum Stmt {
         direction: ForDirection,
         /// Inclusive final value of the loop variable.
         end: Expr,
-        /// Statement executed for each value.
+        /// Scoped statement list executed for each value.
         body: Box<Stmt>,
         /// Source span of the complete loop.
         span: Span,
@@ -95,7 +98,7 @@ pub enum Stmt {
         var_type: TypeExpr,
         /// Expression that supplies the iterated values.
         iterable: Expr,
-        /// Statement executed for each value.
+        /// Scoped statement list executed for each value.
         body: Box<Stmt>,
         /// Source span of the complete loop.
         span: Span,
@@ -104,7 +107,7 @@ pub enum Stmt {
     While {
         /// Condition evaluated before each iteration.
         condition: Expr,
-        /// Statement executed while the condition is true.
+        /// Scoped statement list executed while the condition is true.
         body: Box<Stmt>,
         /// Source span of the complete loop.
         span: Span,

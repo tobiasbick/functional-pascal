@@ -85,13 +85,14 @@ begin
   mutable var Current: Handler := Identity;
   var WalkStop: integer := 0;
   if N = 0 then
-  begin
-    return Current(0);
-  end;
+    begin
+      return Current(0);
+    end;
   else
-  begin
-    return Walk(N - 1);
-  end;
+    begin
+      return Walk(N - 1);
+    end;
+  end if;
 end function;
 
 function Shadow(): Handler;

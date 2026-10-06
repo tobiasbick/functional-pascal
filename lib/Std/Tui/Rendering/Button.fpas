@@ -15,35 +15,40 @@ procedure TuiPaintButtonText(
 begin
   mutable var X: integer := Position.X;
   for Index: integer := 0 to Std.Str.Length(Button.Text) - 1 do
-  begin
-    var Glyph: string := Std.Str.CharAt(Button.Text, Index);
-    mutable var GlyphRole: TuiStyleRole := Role;
-    if (Button.Mnemonic <> '') and (Std.Str.ToLower(Glyph) = Std.Str.ToLower(Button.Mnemonic)) then
     begin
-      GlyphRole := ShortcutRole;
-    end;
+      var Glyph: string := Std.Str.CharAt(Button.Text, Index);
+      mutable var GlyphRole: TuiStyleRole := Role;
+      if (Button.Mnemonic <> '') and (Std.Str.ToLower(Glyph) = Std.Str.ToLower(Button.Mnemonic)) then
+        begin
+          GlyphRole := ShortcutRole;
+        end;
+      end if;
 
-    Canvas.WriteText(TuiPoint.Create(X, Position.Y), Glyph, GlyphRole);
-    X := X + Std.Console.DisplayWidth(Glyph);
-  end;
+      Canvas.WriteText(TuiPoint.Create(X, Position.Y), Glyph, GlyphRole);
+      X := X + Std.Console.DisplayWidth(Glyph);
+    end;
+  end for;
 end procedure;
 
 function TuiButtonRole(Button: TuiButtonSpec; Focused: boolean): TuiStyleRole;
 begin
   if not Button.Enabled then
-  begin
-    return TuiStyleRole.ButtonDisabled;
-  end;
+    begin
+      return TuiStyleRole.ButtonDisabled;
+    end;
+  end if;
 
   if Focused then
-  begin
-    return TuiStyleRole.ButtonSelected;
-  end;
+    begin
+      return TuiStyleRole.ButtonSelected;
+    end;
+  end if;
 
   if Button.Default then
-  begin
-    return TuiStyleRole.ButtonDefault;
-  end;
+    begin
+      return TuiStyleRole.ButtonDefault;
+    end;
+  end if;
 
   return TuiStyleRole.ButtonNormal;
 end function;
@@ -51,19 +56,22 @@ end function;
 function TuiButtonShortcutRole(Button: TuiButtonSpec; Focused: boolean): TuiStyleRole;
 begin
   if not Button.Enabled then
-  begin
-    return TuiStyleRole.ButtonDisabled;
-  end;
+    begin
+      return TuiStyleRole.ButtonDisabled;
+    end;
+  end if;
 
   if Focused then
-  begin
-    return TuiStyleRole.ButtonSelectedShortcut;
-  end;
+    begin
+      return TuiStyleRole.ButtonSelectedShortcut;
+    end;
+  end if;
 
   if Button.Default then
-  begin
-    return TuiStyleRole.ButtonDefaultShortcut;
-  end;
+    begin
+      return TuiStyleRole.ButtonDefaultShortcut;
+    end;
+  end if;
 
   return TuiStyleRole.ButtonShortcut;
 end function;
@@ -85,30 +93,34 @@ public procedure TuiPaintButton(
 );
 begin
   if Bounds.IsEmpty() then
-  begin
-    return;
-  end;
+    begin
+      return;
+    end;
+  end if;
   mutable var Role: TuiStyleRole := TuiButtonRole(Button, Focused);
   mutable var ShortcutRole: TuiStyleRole := TuiButtonShortcutRole(Button, Focused);
   var ContentWidth: integer := Bounds.Width;
   var TextWidth: integer := Std.Console.DisplayWidth(Button.Text);
   mutable var TextX: integer := Bounds.X + ((ContentWidth - TextWidth) div 2);
   if TextX < Bounds.X + 1 then
-  begin
-    TextX := Bounds.X + 1;
-  end;
+    begin
+      TextX := Bounds.X + 1;
+    end;
+  end if;
 
   if Pressed and Button.Enabled then
-  begin
-    Role := TuiStyleRole.ButtonSelected;
-    ShortcutRole := TuiStyleRole.ButtonSelectedShortcut;
-  end;
+    begin
+      Role := TuiStyleRole.ButtonSelected;
+      ShortcutRole := TuiStyleRole.ButtonSelectedShortcut;
+    end;
+  end if;
 
   Canvas.FillRect(Bounds, TuiCell.Create(' ', Role));
   TuiPaintButtonText(Canvas, TuiPoint.Create(TextX, Bounds.Y), Button, Role, ShortcutRole);
   if ((Button.Enabled and Button.Default) and not Focused) and not Pressed then
-  begin
-    Canvas.WriteText(TuiPoint.Create(Bounds.X + 1, Bounds.Y), '•', Role);
-  end;
+    begin
+      Canvas.WriteText(TuiPoint.Create(Bounds.X + 1, Bounds.Y), '•', Role);
+    end;
+  end if;
 end procedure;
 end unit;

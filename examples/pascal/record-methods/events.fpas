@@ -24,13 +24,14 @@ type
     procedure Click(Self: Button);
     begin
       if Assigned(Self.OnClick) then
-      begin
-        Self.OnClick(Self.Id);
-      end;
+        begin
+          Self.OnClick(Self.Id);
+        end;
       else
-      begin
-        WriteLn('no handler');
-      end;
+        begin
+          WriteLn('no handler');
+        end;
+      end if;
     end procedure;
 
     event OnClick: ClickHandler read ReadOnClick write WriteOnClick;

@@ -28,7 +28,9 @@ Visual checklist:
 - Every **program** ends with `begin` … `end.` (period on `end`)
 - Every **function** / **procedure** / **method** body: `begin` … `end function;` or `end procedure;`
 - Every **unit** ends with `end unit;` after its declarations
-- Every **`if` / `else`**, **`for` / `while`**, **`case` arm**: extra nested `begin` … `end` (even for a single statement)
+- Every **`if` / `elsif` / `else`** and **`for` / `while`** body is a statement list,
+  indented one level and closed by `end if;`, `end for;`, or `end while;`
+- **`case` arms** still get an explicit `begin` … `end` wrapper
 - **`repeat` … `until`**: no extra `begin` / `end` around the body
 - Inside `begin` … `end`, one blank line separates completed `end;` blocks from the next
   non-variable statement
@@ -57,7 +59,7 @@ end.
 
 ### Program — control flow (`if`, `case`, `for`, `while`, `repeat`)
 
-Same file **after** fmt (input might use `if x then WriteLn(...)` without branch blocks; output does not):
+Same file **after** fmt. Explicit scoping blocks from the source are retained:
 
 ```pascal
 program ControlFlowDemo;
@@ -67,17 +69,18 @@ uses Std.Console, Std.Conv;
 begin
   var X: integer := 5;
   if X > 0 then
-  begin
-    WriteLn('positive');
-  end;
-  else if X = 0 then
-  begin
-    WriteLn('zero');
-  end;
+    begin
+      WriteLn('positive');
+    end;
+  elsif X = 0 then
+    begin
+      WriteLn('zero');
+    end;
   else
-  begin
-    WriteLn('negative');
-  end;
+    begin
+      WriteLn('negative');
+    end;
+  end if;
 
   case X of
     1:
@@ -92,22 +95,23 @@ begin
     begin
       WriteLn('ten to twenty');
     end;
-  else
-  begin
-    WriteLn('other');
-  end;
+    else
+    begin
+      WriteLn('other');
+    end;
   end;
 
   for I: integer := 1 to 3 do
-  begin
-    WriteLn(IntToStr(I));
-  end;
+    begin
+      WriteLn(IntToStr(I));
+    end;
+  end for;
 
   while X < 10 do
-  begin
-    X := X + 1;
-  end;
-
+    begin
+      X := X + 1;
+    end;
+  end while;
   mutable var N: integer := 0;
   repeat
     WriteLn(IntToStr(N));
@@ -170,9 +174,10 @@ begin
 end.
 ```
 
-### Unit — `Clamp` (`if` branches always get `begin` / `end`)
+### Unit — `Clamp` (named conditional ending)
 
-The language allows the compact form (see [`program-structure/units.md`](../program-structure/units.md)); **`fpas fmt` does not emit it.** Golden unit file:
+Branch statements are indented directly under their clause (see
+[`program-structure/units.md`](../program-structure/units.md)). Golden unit file:
 
 ```pascal
 unit MyApp.Utils;
@@ -182,17 +187,12 @@ uses Std.Math;
 function Clamp(Value: integer; Min: integer; Max: integer): integer;
 begin
   if Value < Min then
-  begin
     return Min;
-  end;
-  else if Value > Max then
-  begin
+  elsif Value > Max then
     return Max;
-  end;
   else
-  begin
     return Value;
-  end;
+  end if;
 end function;
 
 function IsBlank(S: string): boolean;
@@ -207,16 +207,18 @@ end unit;
 
 ```pascal
 unit MyApp.Utils;
+
 uses Std.Math;
 
 function Clamp(Value: integer; Min: integer; Max: integer): integer;
 begin
   if Value < Min then
     return Min;
-  else if Value > Max then
+  elsif Value > Max then
     return Max;
   else
     return Value;
+  end if;
 end function;
 end unit;
 ```
@@ -260,22 +262,26 @@ end unit;
 
 ## Blocks (`begin` / `end`)
 
-The language allows a **single statement** without `begin` / `end` after `then`, `else`, `do`, and `case` labels ([`language/control-flow/README.md`](../language/control-flow/README.md)). The formatter **always** emits an explicit `begin` / `end` wrapper anyway. We are not changing the language — only canonical output.
+An `if`, `for`, or `while` contains scoped statement lists. The formatter
+indents each body one level without adding `begin` / `end`. Explicit compound
+statements remain as nested scopes. `elsif` continues the same conditional;
+an `if` inside an `else` list keeps its separate ending. Empty control bodies
+are rejected by the parser and must be written as `null;`.
 
 | Construct | Formatter output |
 |-----------|------------------|
-| `if` / `else if` / `else` branch | `begin` … `end` around the branch body |
-| `for` … `do` body | `begin` … `end` |
-| `while` … `do` body | `begin` … `end` |
+| `if` / `elsif` / `else` | indented branch lists and one `end if;` |
+| `for` … `do` | indented statement list and `end for;` |
+| `while` … `do` | indented statement list and `end while;` |
+| explicit compound statement | `begin` … `end;`, preserving its nested scope |
 | `case` arm body | `begin` … `end` (label, then block on following lines) |
 | `case` `else` branch | `begin` … `end` |
 | named `function` / `procedure` body | `begin` … `end function;` / `end procedure;` |
-| program `begin` … `end.` | already required — unchanged |
-| `repeat` … `until` | **no** extra wrapper — statement list stays directly under `repeat` |
+| program body | `begin` … `end.` |
+| `repeat` … `until` | statement list directly under `repeat` |
 | `record` / `enum` type | `record` … `end record;` / `enum` … `end enum;` |
 | record literal | `record` … `end` |
 | unit | declarations followed by `end unit;` |
-| nested named `function` / `procedure` body | `begin` … `end function;` / `end procedure;` |
 
 ## Blank lines
 
@@ -288,18 +294,18 @@ The formatter **inserts and removes** blank lines to match these rules. User-pla
 | `uses ...;` | **exactly one** |
 | `type` block (after the final declaration terminator) | **exactly one** before the next top-level section (`begin` in programs, or `function` / `procedure` / … in units) |
 | last field in a `record` type (before methods) | **exactly one** before the first method |
-| sibling statement whose formatted output ends in `end;` | **exactly one**, unless the next sibling is `var` or `mutable var` |
+| sibling statement ending in `end;` or a named control ending | **exactly one**, unless the next sibling is `var` or `mutable var` |
 | last statement before `end` / `end.` | none |
 
 This statement-spacing rule applies only between sibling statements. It never inserts a blank line
-before structural continuations or closers such as `else`, `until`, `end`, or `end.`, and it does not
+before structural continuations or closers such as `elsif`, `else`, `until`, `end`, or `end.`, and it does not
 separate `case` arms. Leading comments stay attached to the following statement after the blank line.
 
 ---
 
 ## Keywords and builtins
 
-Emit lowercase keywords: `program`, `unit`, `uses`, `begin`, `end`, `function`, `procedure`, `var`, `mutable`, `const`, `type`, `if`, `then`, `else`, `case`, `of`, `for`, `to`, `downto`, `in`, `do`, `while`, `repeat`, `until`, `return`, `panic`, `break`, `continue`, `and`, `or`, `not`, `xor`, `div`, `mod`, `shl`, `shr`, `public`, `record`, `enum`, `array`, `channel`, `dict`, `result`, `option`, `ok`, `error`, `some`, `none`, `try`, `go`, `with`, `static`, `property`, `event`, `read`, `write`, `comparable`, `numeric`, `printable`, `self`, `nil`, `true`, `false`.
+Emit lowercase keywords: `program`, `unit`, `uses`, `begin`, `end`, `function`, `procedure`, `var`, `mutable`, `const`, `type`, `if`, `then`, `elsif`, `else`, `null`, `case`, `of`, `for`, `to`, `downto`, `in`, `do`, `while`, `repeat`, `until`, `return`, `panic`, `break`, `continue`, `and`, `or`, `not`, `xor`, `div`, `mod`, `shl`, `shr`, `public`, `record`, `enum`, `array`, `channel`, `dict`, `result`, `option`, `ok`, `error`, `some`, `none`, `try`, `go`, `with`, `static`, `property`, `event`, `read`, `write`, `comparable`, `numeric`, `printable`, `self`, `nil`, `true`, `false`.
 
 Boolean and enum variant constructors in expressions: `Ok`, `Error`, `Some`, `None` (Pascal-style mixed case for std-like variants).
 
@@ -326,10 +332,10 @@ Semicolons are **terminators**:
 - Named declarations have one matching ending: `end function;`, `end procedure;`,
   `end record;`, `end enum;`, or `end unit;`. The ending contains the declaration
   terminator; no additional `;` follows it.
-- An `if`, `for`, or `while` with a single-statement body shares that body's
-  final `;`. The formatter wraps the body in `begin` ... `end;` and emits no
-  additional terminator after that closing `end;`.
-- Each branch is terminated before `else`, including a `begin` ... `end;` branch.
+- Control statements end with `end if;`, `end for;`, or `end while;`. Each body
+  statement has its own `;`, including the last before the named ending.
+- Each conditional branch is terminated before `elsif` or `else`. A scoped
+  `begin` ... `end;` closes only that compound statement.
 - A `repeat` body's final statement ends with `;`, and `until Condition;`
   terminates the loop.
 - Expressions have no terminator of their own. An anonymous routine body uses
@@ -508,7 +514,7 @@ The formatter **normalizes** valid input. These changes are deliberate (not bugs
 | Any `//` comment with [`format_source`](../../../crates/fpas-fmt/src/lib.rs) | Preserved (text may be normalized; placement follows anchor rules in [Comments](#comments)) |
 | Keyword casing (`PROGRAM`, `Begin`, `WRITELN`) | Lowercase keywords; identifiers keep source spelling |
 | Hex integers (`$FF`) or digit separators (`1_000`) | Decimal literals only |
-| Optional single-statement branches (`if x then return y`) | Always `begin` … `end` around branch bodies |
+| Branch and loop statement lists | Bodies indented one level, with named endings and no inserted compound wrapper |
 | User-placed blank lines | Only the fixed rules in [Blank lines](#blank-lines) |
 | `uses` on same line as header | Header blank line + `uses` on its own line |
 | Extra parentheses from parse tree | May differ where precedence makes them redundant |

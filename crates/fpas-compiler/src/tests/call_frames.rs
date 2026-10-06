@@ -16,14 +16,14 @@ fn opcodes(source: &str) -> Vec<Opcode> {
 
 #[test]
 fn tail_recursion_runs_deeper_than_the_call_stack_limit() {
-    let source = "program Deep; function Count(N: integer; Acc: integer): integer; begin if N = 0 then return Acc; return Count(N - 1, Acc + 1); end function; begin if Count(100000, 0) <> 100000 then panic('wrong'); end.";
+    let source = "program Deep; function Count(N: integer; Acc: integer): integer; begin if N = 0 then return Acc; end if; return Count(N - 1, Acc + 1); end function; begin if Count(100000, 0) <> 100000 then panic('wrong'); end if; end.";
     assert!(opcodes(source).contains(&Opcode::TailCall));
     assert_succeeds(source);
 }
 
 #[test]
 fn non_tail_recursion_still_reports_the_call_stack_limit() {
-    let source = "program Deep; function Count(N: integer): integer; begin if N = 0 then return 0; return 1 + Count(N - 1); end function; begin if Count(100000) <> 100000 then panic('wrong'); end.";
+    let source = "program Deep; function Count(N: integer): integer; begin if N = 0 then return 0; end if; return 1 + Count(N - 1); end function; begin if Count(100000) <> 100000 then panic('wrong'); end if; end.";
     let error = run_program(source).expect_err("non-tail recursion must overflow");
     assert!(
         error.message.contains("Call stack overflow"),
@@ -60,17 +60,17 @@ begin
   var Keep: integer := 7;
   var Original: array of integer := [1, 2];
   var Grown: array of integer := Grow(Original, 3);
-  if Combine(1, 2, 3) + Combine(4, 5, 6) <> 579 then panic('arguments');
-  if Keep <> 7 then panic('caller register');
-  if Std.Arrays.Length(Original) <> 2 then panic('caller array changed');
-  if Std.Arrays.Length(Grown) <> 3 then panic('callee array');
+  if Combine(1, 2, 3) + Combine(4, 5, 6) <> 579 then panic('arguments'); end if;
+  if Keep <> 7 then panic('caller register'); end if;
+  if Std.Arrays.Length(Original) <> 2 then panic('caller array changed'); end if;
+  if Std.Arrays.Length(Grown) <> 3 then panic('callee array'); end if;
 end.";
     assert_succeeds(source);
 }
 
 #[test]
 fn tail_calls_through_function_values_reuse_the_frame() {
-    let source = "program ValueTail; function Countdown(N: integer): integer; begin if N = 0 then return 0; var Next: function(N: integer): integer := Countdown; return Next(N - 1); end function; begin if Countdown(100000) <> 0 then panic('wrong'); end.";
+    let source = "program ValueTail; function Countdown(N: integer): integer; begin if N = 0 then return 0; end if; var Next: function(N: integer): integer := Countdown; return Next(N - 1); end function; begin if Countdown(100000) <> 0 then panic('wrong'); end if; end.";
     assert!(opcodes(source).contains(&Opcode::TailCallValue));
     assert_succeeds(source);
 }

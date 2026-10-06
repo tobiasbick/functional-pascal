@@ -8,10 +8,11 @@ begin
     begin
       AssertEquals(32, Length(Bytes));
       for Index: integer := 0 to Length(Bytes) - 1 do
-      begin
-        AssertTrue(Bytes[Index] >= 0);
-        AssertTrue(Bytes[Index] <= 255);
-      end;
+        begin
+          AssertTrue(Bytes[Index] >= 0);
+          AssertTrue(Bytes[Index] <= 255);
+        end;
+      end for;
     end;
     Error(Message):
     begin

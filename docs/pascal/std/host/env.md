@@ -4,10 +4,13 @@ Process environment access for hosted FPAS programs. This page is the full API f
 
 ```pascal
 program Example;
+
 uses Std.Console, Std.Env, Std.Options;
+
 begin
   if Exists('PATH') then
     WriteLn(Std.Options.Unwrap(Get('PATH')));
+  end if;
 end.
 ```
 
@@ -38,9 +41,10 @@ Environment lookup is process-wide and effectful because it reads host process s
 Returns the environment variable named `Name`, or `None` when it is missing.
 
 ```pascal
-var Home: Option of string := Get('HOME');
+var Home: option of string := Get('HOME');
 if Std.Options.IsSome(Home) then
   WriteLn(Std.Options.Unwrap(Home));
+end if;
 ```
 
 ---
@@ -52,6 +56,7 @@ Returns `true` when the process environment contains `Name`.
 ```pascal
 if Exists('PATH') then
   WriteLn('PATH is available');
+end if;
 ```
 
 ---

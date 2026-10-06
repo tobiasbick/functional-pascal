@@ -12,25 +12,27 @@ procedure WriteAll(ConnectionValue: Connection; Bytes: array of integer);
 begin
   mutable var Offset: integer := 0;
   while Offset < Std.Arrays.Length(Bytes) do
-  begin
-    var Remaining: array of integer := Std.Arrays.Slice(Bytes, Offset, Std.Arrays.Length(Bytes) -
-                                                                       Offset);
-    case Std.Net.SendBytes(ConnectionValue, Remaining) of
-      Ok(Count):
-      begin
-        if Count <= 0 then
+    begin
+      var Remaining: array of integer := Std.Arrays.Slice(Bytes, Offset, Std.Arrays.Length(Bytes) -
+                                                                         Offset);
+      case Std.Net.SendBytes(ConnectionValue, Remaining) of
+        Ok(Count):
         begin
-          panic('TCP connection stopped while writing');
-        end;
+          if Count <= 0 then
+            begin
+              panic('TCP connection stopped while writing');
+            end;
+          end if;
 
-        Offset := Offset + Count;
-      end;
-      Error(Message):
-      begin
-        panic(Message);
+          Offset := Offset + Count;
+        end;
+        Error(Message):
+        begin
+          panic(Message);
+        end;
       end;
     end;
-  end;
+  end while;
 end procedure;
 
 // Reads response fragments until the server closes its side of the connection.
@@ -42,25 +44,27 @@ begin
   mutable var Bytes: array of integer := [];
   mutable var Reading: boolean := true;
   while Reading do
-  begin
-    case Std.Net.ReceiveBytes(ConnectionValue, 4096) of
-      Ok(Part):
-      begin
-        if Std.Arrays.Length(Part) = 0 then
+    begin
+      case Std.Net.ReceiveBytes(ConnectionValue, 4096) of
+        Ok(Part):
         begin
-          Reading := false;
+          if Std.Arrays.Length(Part) = 0 then
+            begin
+              Reading := false;
+            end;
+          else
+            begin
+              Bytes := Std.Arrays.Concat(Bytes, Part);
+            end;
+          end if;
         end;
-        else
+        Error(Message):
         begin
-          Bytes := Std.Arrays.Concat(Bytes, Part);
+          panic(Message);
         end;
-      end;
-      Error(Message):
-      begin
-        panic(Message);
       end;
     end;
-  end;
+  end while;
 
   case Std.Net.Utf8.Decode(Bytes) of
     Ok(Text):
@@ -77,13 +81,14 @@ end function;
 begin
   mutable var Port: integer := 18081;
   if ParamCount() = 1 then
-  begin
-    Port := StrToInt(ParamStr(0));
-  end;
-  else if ParamCount() <> 0 then
-  begin
-    panic('usage: tcp_echo_client.fpas -- [PORT]');
-  end;
+    begin
+      Port := StrToInt(ParamStr(0));
+    end;
+  elsif ParamCount() <> 0 then
+    begin
+      panic('usage: tcp_echo_client.fpas -- [PORT]');
+    end;
+  end if;
 
   case Connect('127.0.0.1', Port, 5000) of
     Ok(ConnectionValue):

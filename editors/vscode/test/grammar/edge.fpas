@@ -8,3 +8,4 @@ begin
   if true then
   begin
     Text := 'unfinished
+ end if;

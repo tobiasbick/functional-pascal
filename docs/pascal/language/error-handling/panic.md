@@ -17,6 +17,8 @@ function DivideChecked(A: integer; B: integer): integer;
 begin
   if B = 0 then
     panic('Division by zero');
+  end if;
+
   return A div B;
 end function;
 ```

@@ -153,7 +153,7 @@ fn malformed_source_returns_parse_diagnostics_without_semantic_failure() {
     let temp = TempDirectory::new("analysis-malformed");
     let path = temp.write(
         "malformed.fpas",
-        "program Broken;\nbegin\n  if then;\nend.\n",
+        "program Broken;\nbegin\n  if then; end if;\nend.\n",
     );
     let mut service = LanguageService::new(WorkspaceContext::loose(temp.path()));
 
@@ -286,7 +286,11 @@ fn diagnostic_analysis_stays_current_when_a_sibling_source_vanishes() {
     std::fs::remove_file(&unit).expect("remove sibling");
     service
         .documents_mut()
-        .apply_full_text(&main, 2, "program Broken;\nbegin\n  if then;\nend.\n")
+        .apply_full_text(
+            &main,
+            2,
+            "program Broken;\nbegin\n  if then; end if;\nend.\n",
+        )
         .expect("change open main");
     let failed = service
         .analyze_document_diagnostics(&main)

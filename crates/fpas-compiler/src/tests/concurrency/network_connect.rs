@@ -18,11 +18,11 @@ begin
   Std.Tasks.Cancel(Source);
   case Std.Net.ConnectWithCancellation('unused.invalid', 1, 1000, Token) of
     Ok(ConnectionValue): panic('cancelled TCP connect succeeded');
-    Error(Message): if Message <> 'Network connect cancelled' then panic(Message);
+    Error(Message): if Message <> 'Network connect cancelled' then panic(Message); end if;
   end;
   case Std.Net.ConnectTlsWithCancellation('unused.invalid', 1, 1000, Token) of
     Ok(ConnectionValue): panic('cancelled TLS connect succeeded');
-    Error(Message): if Message <> 'Network connect cancelled' then panic(Message);
+    Error(Message): if Message <> 'Network connect cancelled' then panic(Message); end if;
   end;
 end."
     ));

@@ -5,9 +5,10 @@ uses Std.Dictionaries;
 function FailOnSecond(Acc: integer; Key: string; Value: integer): integer;
 begin
   if Key = 'B' then
-  begin
-    panic('dictionary callback failed');
-  end;
+    begin
+      panic('dictionary callback failed');
+    end;
+  end if;
 
   return Acc + Value;
 end function;

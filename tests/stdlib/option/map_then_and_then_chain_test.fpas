@@ -10,13 +10,14 @@ end function;
 function PositiveToStr(V: integer): option of string;
 begin
   if V > 0 then
-  begin
-    return Some(IntToStr(V));
-  end;
+    begin
+      return Some(IntToStr(V));
+    end;
   else
-  begin
-    return None;
-  end;
+    begin
+      return None;
+    end;
+  end if;
 end function;
 
 begin

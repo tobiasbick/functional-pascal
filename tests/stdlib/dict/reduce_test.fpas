@@ -21,9 +21,10 @@ begin
   mutable var Current: dict of string to integer := ['A': 1, 'B': 2];
   var Visit: function(Acc: string; Key: string; Value: integer): string := function(Acc: string; Key: string; Value: integer): string begin
     if Key = 'A' then
-    begin
-      Current['C'] := 3;
-    end;
+      begin
+        Current['C'] := 3;
+      end;
+    end if;
 
     return (Acc + Key) + IntToStr(Value);
   end;

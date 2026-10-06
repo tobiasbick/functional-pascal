@@ -18,9 +18,10 @@ function RunTasks(Iterations: integer): integer;
 begin
   mutable var Tasks: array of task := [];
   for Index: integer := 1 to Iterations do
-  begin
-    Std.Arrays.Push(Tasks, go Worker(Index));
-  end;
+    begin
+      Std.Arrays.Push(Tasks, go Worker(Index));
+    end;
+  end for;
 
   WaitAll(Tasks);
   return Std.Arrays.Length(Tasks);
@@ -28,48 +29,55 @@ end function;
 
 begin
   if (ParamCount() < 1) or (ParamCount() > 2) then
-  begin
-    panic('usage: task_spawn_wait_benchmark.fpas -- ITERATIONS [MAX_MILLIS]');
-  end;
+    begin
+      panic('usage: task_spawn_wait_benchmark.fpas -- ITERATIONS [MAX_MILLIS]');
+    end;
+  end if;
   var Iterations: integer := StrToInt(ParamStr(0));
   if Iterations < 1 then
-  begin
-    panic('ITERATIONS must be positive');
-  end;
+    begin
+      panic('ITERATIONS must be positive');
+    end;
+  end if;
   mutable var MaxMillis: integer := 0;
   if ParamCount() = 2 then
-  begin
-    MaxMillis := StrToInt(ParamStr(1));
-    if MaxMillis < 1 then
     begin
-      panic('MAX_MILLIS must be positive');
+      MaxMillis := StrToInt(ParamStr(1));
+      if MaxMillis < 1 then
+        begin
+          panic('MAX_MILLIS must be positive');
+        end;
+      end if;
     end;
-  end;
+  end if;
   mutable var Completed: integer := RunTasks(WarmupIterations);
   var Started: integer := MonotonicMillis();
   Completed := RunTasks(Iterations);
   var Elapsed: integer := ElapsedMillis(Started);
   mutable var OpsPerSecond: integer := 0;
   if Elapsed > 0 then
-  begin
-    OpsPerSecond := (Iterations * 1000) div Elapsed;
-  end;
+    begin
+      OpsPerSecond := (Iterations * 1000) div Elapsed;
+    end;
+  end if;
 
   WriteLn('iterations: ' + IntToStr(Iterations));
   WriteLn(('elapsed: ' + IntToStr(Elapsed)) + ' ms');
   if Elapsed > 0 then
-  begin
-    WriteLn(('throughput: ' + IntToStr(OpsPerSecond)) + ' tasks/s');
-  end;
+    begin
+      WriteLn(('throughput: ' + IntToStr(OpsPerSecond)) + ' tasks/s');
+    end;
   else
-  begin
-    WriteLn('throughput: unavailable (elapsed time is 0 ms)');
-  end;
+    begin
+      WriteLn('throughput: unavailable (elapsed time is 0 ms)');
+    end;
+  end if;
 
   WriteLn('completed: ' + IntToStr(Completed));
   if (MaxMillis > 0) and (Elapsed > MaxMillis) then
-  begin
-    panic(((('task-spawn-wait benchmark regression: ' + IntToStr(Elapsed)) + ' ms exceeds limit ') + IntToStr(MaxMillis)) +
-          ' ms');
-  end;
+    begin
+      panic(((('task-spawn-wait benchmark regression: ' + IntToStr(Elapsed)) + ' ms exceeds limit ') + IntToStr(MaxMillis)) +
+            ' ms');
+    end;
+  end if;
 end.

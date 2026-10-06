@@ -75,14 +75,15 @@ end function;
 public function LocalChatView(State: LocalChatModel): TuiElement;
 begin
   if (State.Width < 50) or (State.Height < 14) then
-  begin
-    return TuiElementBuilders.MakeDesktop(None, [
-                                                  TuiElementBuilders.MakePanel('Local Chat', [
-                                                                                               TuiElementBuilders.MakeLabel('Terminal too small'),
-                                                                                               TuiElementBuilders.MakeLabel('Use at least 50 × 14 cells.')
-                                                                                             ])
-                                                ]);
-  end;
+    begin
+      return TuiElementBuilders.MakeDesktop(None, [
+                                                    TuiElementBuilders.MakePanel('Local Chat', [
+                                                                                                 TuiElementBuilders.MakeLabel('Terminal too small'),
+                                                                                                 TuiElementBuilders.MakeLabel('Use at least 50 × 14 cells.')
+                                                                                               ])
+                                                  ]);
+    end;
+  end if;
 
   return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(State.Focus)), [
                                                                                   TuiElementBuilders.MakeColumn([

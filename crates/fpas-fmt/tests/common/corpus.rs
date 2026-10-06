@@ -33,11 +33,11 @@ pub const SOURCES: &[(&str, &str)] = &[
     ),
     (
         "nested_loops",
-        "program T;\nbegin\n  for I: integer := 0 to 9 do\n    for J: integer := 0 to 9 do\n      begin\n        var X: integer := I * 10 + J;\n        if X mod 2 = 0 then\n          continue;\n      end;\nend.",
+        "program T;\nbegin\n  for I: integer := 0 to 9 do\n    for J: integer := 0 to 9 do\n      begin\n        var X: integer := I * 10 + J;\n        if X mod 2 = 0 then\n          continue; end if;\n      end; end for; end for;\nend.",
     ),
     (
         "repeat_with_break",
-        "program T;\nbegin\n  mutable var X: integer := 0;\n  repeat\n    X := X + 1;\n    if X = 10 then break;\n  until X = 100;\nend.",
+        "program T;\nbegin\n  mutable var X: integer := 0;\n  repeat\n    X := X + 1;\n    if X = 10 then break; end if;\n  until X = 100;\nend.",
     ),
     (
         "array_operations",
@@ -45,15 +45,15 @@ pub const SOURCES: &[(&str, &str)] = &[
     ),
     (
         "fibonacci",
-        "program Fib;\nuses Std.Console;\n\nfunction Fibonacci(N: integer): integer;\nbegin\n  if N <= 1 then\n    return N;\n  else\n    return Fibonacci(N - 1) + Fibonacci(N - 2);\nend function;\n\nbegin\n  Std.Console.WriteLn(Fibonacci(10));\nend.",
+        "program Fib;\nuses Std.Console;\n\nfunction Fibonacci(N: integer): integer;\nbegin\n  if N <= 1 then\n    return N;\n  else\n    return Fibonacci(N - 1) + Fibonacci(N - 2); end if;\nend function;\n\nbegin\n  Std.Console.WriteLn(Fibonacci(10));\nend.",
     ),
     (
         "nested_mutual_recursion",
-        "program T;\n\nfunction IsEven(N: integer): boolean;\n  function IsOdd(X: integer): boolean;\n  begin\n    if X = 0 then return false;\n    else return IsEven(X - 1);\n  end function;\nbegin\n  if N = 0 then return true;\n  else return IsOdd(N - 1);\nend function;\n\nbegin\n  return;\nend.",
+        "program T;\n\nfunction IsEven(N: integer): boolean;\n  function IsOdd(X: integer): boolean;\n  begin\n    if X = 0 then return false;\n    else return IsEven(X - 1); end if;\n  end function;\nbegin\n  if N = 0 then return true;\n  else return IsOdd(N - 1); end if;\nend function;\n\nbegin\n  return;\nend.",
     ),
     (
         "unit_clamp_compact",
-        "unit MyApp.Utils; uses Std.Math; function Clamp(Value: integer; Min: integer; Max: integer): integer; begin if Value < Min then return Min; else if Value > Max then return Max; else return Value; end function; function IsBlank(S: string): boolean; begin return Length(Trim(S)) = 0; end function;\nend unit;",
+        "unit MyApp.Utils; uses Std.Math; function Clamp(Value: integer; Min: integer; Max: integer): integer; begin if Value < Min then return Min; elsif  Value > Max then return Max; else return Value; end if; end function; function IsBlank(S: string): boolean; begin return Length(Trim(S)) = 0; end function;\nend unit;",
     ),
     (
         "unit_mixed_visibility",

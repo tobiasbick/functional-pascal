@@ -59,12 +59,14 @@ end function;
 function Expected(Line: string; Column: integer): integer;
 begin
   for I: integer := 0 to Std.Str.Length(Line) - 1 do
-  begin
-    if Std.Console.DisplayWidth(Std.Str.Substring(Line, 0, I + 1)) > Column then
     begin
-      return I;
+      if Std.Console.DisplayWidth(Std.Str.Substring(Line, 0, I + 1)) > Column then
+        begin
+          return I;
+        end;
+      end if;
     end;
-  end;
+  end for;
 
   return Std.Str.Length(Line);
 end function;
@@ -81,18 +83,20 @@ begin
                         Std.Str.Chr(769) + 'a',
                         '🇩🇪x'
                       ] do
-  begin
-    for Column: integer := 0 to 6 do
     begin
-      var State: TextAreaModel := record
-        Text := (('xxxxxx' + #10) + Line) + #10;
-        Caret := Column;
-        Offset := TuiPoint.Create(3, 0);
-      end;
-      var Moved: TextAreaModel := Press(App, State, TuiKeyKind.Down, '');
-      AssertEquals(7 + Expected(Line, Column), Moved.Caret);
+      for Column: integer := 0 to 6 do
+        begin
+          var State: TextAreaModel := record
+            Text := (('xxxxxx' + #10) + Line) + #10;
+            Caret := Column;
+            Offset := TuiPoint.Create(3, 0);
+          end;
+          var Moved: TextAreaModel := Press(App, State, TuiKeyKind.Down, '');
+          AssertEquals(7 + Expected(Line, Column), Moved.Caret);
+        end;
+      end for;
     end;
-  end;
+  end for;
 
   App.Close();
 end.

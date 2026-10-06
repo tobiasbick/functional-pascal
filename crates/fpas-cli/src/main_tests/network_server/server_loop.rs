@@ -157,7 +157,7 @@ begin
           if not Std.Str.Contains(Message, 'MaxConcurrentRequests') then
           begin
             panic(Message);
-          end;
+          end; end if;
         end;
       end;
       case CloseListener(ListenerValue) of

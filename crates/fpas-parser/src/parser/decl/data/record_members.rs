@@ -10,7 +10,7 @@ use fpas_lexer::Token;
 impl Parser {
     /// Parses a record declaration with its matching `end record` ending.
     pub(super) fn parse_record_type(&mut self, allow_member_visibility: bool) -> RecordType {
-        self.with_declaration_closer(Token::Record, |parser| {
+        self.with_block_closer(Token::Record, |parser| {
             parser.parse_record_type_inner(allow_member_visibility)
         })
     }
@@ -49,7 +49,7 @@ impl Parser {
                 _ => fields.push(self.parse_field_def(visibility)),
             }
         }
-        self.expect_declaration_end(&Token::Record);
+        self.expect_block_end(&Token::Record);
         RecordType {
             fields,
             methods,

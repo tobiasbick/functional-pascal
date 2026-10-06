@@ -2,17 +2,17 @@ use super::super::{check_errors, check_ok};
 
 #[test]
 fn while_boolean_condition() {
-    check_ok("program T; begin while true do return; end.");
+    check_ok("program T; begin while true do return; end while; end.");
 }
 
 #[test]
 fn while_non_boolean_condition() {
-    check_errors("program T; begin while 42 do return; end.");
+    check_errors("program T; begin while 42 do return; end while; end.");
 }
 
 #[test]
 fn while_string_condition() {
-    check_errors("program T; begin while 'yes' do return; end.");
+    check_errors("program T; begin while 'yes' do return; end while; end.");
 }
 
 #[test]
@@ -20,7 +20,7 @@ fn while_comparison_condition() {
     check_ok(
         "program T; \
          var X: integer := 5; \
-         begin while X > 0 do return; end.",
+         begin while X > 0 do return; end while; end.",
     );
 }
 
@@ -29,23 +29,23 @@ fn while_complex_boolean_condition() {
     check_ok(
         "program T; \
          var X: integer := 5; \
-         begin while (X > 0) and (X < 10) do return; end.",
+         begin while (X > 0) and (X < 10) do return; end while; end.",
     );
 }
 
 #[test]
 fn while_real_condition() {
-    check_errors("program T; begin while 3.14 do return; end.");
+    check_errors("program T; begin while 3.14 do return; end while; end.");
 }
 
 #[test]
 fn while_char_condition() {
-    check_errors("program T; begin while 'A' do return; end.");
+    check_errors("program T; begin while 'A' do return; end while; end.");
 }
 
 #[test]
 fn while_false_literal() {
-    check_ok("program T; begin while false do return; end.");
+    check_ok("program T; begin while false do return; end while; end.");
 }
 
 #[test]
@@ -53,7 +53,7 @@ fn while_not_expression_condition() {
     check_ok(
         "program T; \
          var Done: boolean := false; \
-         begin while not Done do return; end.",
+         begin while not Done do return; end while; end.",
     );
 }
 

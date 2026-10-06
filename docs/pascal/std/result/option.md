@@ -106,16 +106,20 @@ var M: Option of string := Map(O, TripleToString);
 Calls `F` with the `Some` value. `F` returns a new `Option`, enabling chained lookups. If `O` is `None`, returns `None`.
 
 ```pascal
-function PositiveToOptionString(V: integer): Option of string;
+function PositiveToOptionString(V: integer): option of string;
 begin
-  if V > 0 then return Some(IntToStr(V));
-  else return None;
+  if V > 0 then
+    return Some(IntToStr(V));
+  else
+    return None;
+  end if;
 end function;
 
-var O: Option of integer := Some(5);
-var M: Option of string := AndThen(O, PositiveToOptionString);
-// M = Some('5')
-```
+var
+  O: option of integer := Some(5);
+  M: option of string := AndThen(O, PositiveToOptionString);
+
+// M = Some('5')```
 
 ---
 

@@ -19,9 +19,10 @@ begin
   Cmd.ReplaceSubscription(1, function(Token: CancellationToken): result of boolean, string begin
     Send(Started, Generation);
     if IsError(ReceiveWithCancellation(Gate, Token)) then
-    begin
-      Send(Stopped, Generation);
-    end;
+      begin
+        Send(Stopped, Generation);
+      end;
+    end if;
 
     return Ok(true);
   end);
@@ -38,9 +39,10 @@ begin
     TuiMsg.Tick(Delta):
     begin
       if Delta = 0 then
-      begin
-        return State;
-      end;
+        begin
+          return State;
+        end;
+      end if;
       var Next: SubscriptionModel := record
         Gate := State.Gate;
         Started := State.Started;

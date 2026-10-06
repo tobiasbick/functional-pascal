@@ -29,7 +29,7 @@ fn terminated_branches_and_loops_keep_their_execution_and_format_idempotently() 
     let path = cwd.join("control.fpas");
     write_text(
         &path,
-        "program P; uses Std.Console; begin mutable var X: integer := 0; if true then WriteLn('then'); else WriteLn('else'); while X < 2 do X := X + 1; repeat X := X - 1; until X = 0; WriteLn(X); end.",
+        "program P; uses Std.Console; begin mutable var X: integer := 0; if true then WriteLn('then'); else WriteLn('else'); end if; while X < 2 do X := X + 1; end while; repeat X := X - 1; until X = 0; WriteLn(X); end.",
     );
     let args = ["run".into(), path.to_string_lossy().into_owned()];
     let (code, before, stderr) = run_cli_args_and_capture_output(&args, &cwd);

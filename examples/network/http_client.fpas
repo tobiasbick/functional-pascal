@@ -50,25 +50,27 @@ begin
   mutable var Bytes: array of integer := [];
   mutable var Reading: boolean := true;
   while Reading do
-  begin
-    case ReadStream(StreamValue, 5) of
-      Ok(Part):
-      begin
-        if Std.Arrays.Length(Part) = 0 then
+    begin
+      case ReadStream(StreamValue, 5) of
+        Ok(Part):
         begin
-          Reading := false;
+          if Std.Arrays.Length(Part) = 0 then
+            begin
+              Reading := false;
+            end;
+          else
+            begin
+              Bytes := Std.Arrays.Concat(Bytes, Part);
+            end;
+          end if;
         end;
-        else
+        Error(Message):
         begin
-          Bytes := Std.Arrays.Concat(Bytes, Part);
+          panic(Message);
         end;
-      end;
-      Error(Message):
-      begin
-        panic(Message);
       end;
     end;
-  end;
+  end while;
 
   case Std.Net.Utf8.Decode(Bytes) of
     Ok(Text):
@@ -85,13 +87,14 @@ end function;
 begin
   mutable var Port: integer := 18080;
   if ParamCount() = 1 then
-  begin
-    Port := StrToInt(ParamStr(0));
-  end;
-  else if ParamCount() <> 0 then
-  begin
-    panic('usage: http_client.fpas -- [PORT]');
-  end;
+    begin
+      Port := StrToInt(ParamStr(0));
+    end;
+  elsif ParamCount() <> 0 then
+    begin
+      panic('usage: http_client.fpas -- [PORT]');
+    end;
+  end if;
   var BaseUrl: string := 'http://127.0.0.1:' + IntToStr(Port);
   RunBuffered('GET', Request.Get(BaseUrl + '/hello'));
   mutable var PostRequest: Request := Request.Post(BaseUrl + '/echo');

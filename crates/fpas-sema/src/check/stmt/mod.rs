@@ -1,3 +1,7 @@
+//! Scoped statement checking, including implicit branch and loop bodies.
+//!
+//! **Documentation:** `docs/pascal/language/control-flow/README.md`.
+
 mod assignment;
 mod calls;
 mod control_flow;
@@ -8,8 +12,10 @@ use super::Checker;
 use fpas_parser::*;
 
 impl Checker {
+    /// Checks a statement and confines each scoped list's declarations to that list.
     pub(crate) fn check_stmt(&mut self, stmt: &Stmt) {
         match stmt {
+            Stmt::Null(_) => {}
             Stmt::Block(stmts, _) => {
                 self.scopes.push_scope();
                 for stmt in stmts {

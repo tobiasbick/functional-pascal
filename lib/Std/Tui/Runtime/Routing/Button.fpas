@@ -11,9 +11,10 @@ begin
     begin
       if Button.Enabled and
          ((RequireDefault and Button.Default) or ((Mnemonic <> '') and (Std.Str.ToLower(Button.Mnemonic) = Std.Str.ToLower(Mnemonic)))) then
-      begin
-        return Some(Button);
-      end;
+        begin
+          return Some(Button);
+        end;
+      end if;
 
       return None;
     end;
@@ -21,137 +22,146 @@ begin
     begin
       mutable var ModalIndex: integer := -1;
       for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
-      begin
-        case Children[Index] of
-          TuiElement.Overlay(Title, OverlayChildren):
-          begin
-            ModalIndex := Index;
-          end;
-          else
-          begin
+        begin
+          case Children[Index] of
+            TuiElement.Overlay(Title, OverlayChildren):
+            begin
+              ModalIndex := Index;
+            end;
+            else
+            begin
+            end;
           end;
         end;
-      end;
+      end for;
 
       if ModalIndex >= 0 then
-      begin
-        return TuiButtonFind(Children[ModalIndex], RequireDefault, Mnemonic);
-      end;
+        begin
+          return TuiButtonFind(Children[ModalIndex], RequireDefault, Mnemonic);
+        end;
+      end if;
 
       for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
-      begin
-        case TuiButtonFind(Children[Index], RequireDefault, Mnemonic) of
-          Some(Button):
-          begin
-            return Some(Button);
-          end;
-          None:
-          begin
+        begin
+          case TuiButtonFind(Children[Index], RequireDefault, Mnemonic) of
+            Some(Button):
+            begin
+              return Some(Button);
+            end;
+            None:
+            begin
+            end;
           end;
         end;
-      end;
+      end for;
 
       return None;
     end;
     TuiElement.Scroll(Id, Offset, ChangeAction, Children):
     begin
       for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
-      begin
-        case TuiButtonFind(Children[Index], RequireDefault, Mnemonic) of
-          Some(Button):
-          begin
-            return Some(Button);
-          end;
-          None:
-          begin
+        begin
+          case TuiButtonFind(Children[Index], RequireDefault, Mnemonic) of
+            Some(Button):
+            begin
+              return Some(Button);
+            end;
+            None:
+            begin
+            end;
           end;
         end;
-      end;
+      end for;
 
       return None;
     end;
     TuiElement.Row(Children, Spacing):
     begin
       for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
-      begin
-        case TuiButtonFind(Children[Index], RequireDefault, Mnemonic) of
-          Some(Button):
-          begin
-            return Some(Button);
-          end;
-          None:
-          begin
+        begin
+          case TuiButtonFind(Children[Index], RequireDefault, Mnemonic) of
+            Some(Button):
+            begin
+              return Some(Button);
+            end;
+            None:
+            begin
+            end;
           end;
         end;
-      end;
+      end for;
 
       return None;
     end;
     TuiElement.Column(Children, Spacing):
     begin
       for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
-      begin
-        case TuiButtonFind(Children[Index], RequireDefault, Mnemonic) of
-          Some(Button):
-          begin
-            return Some(Button);
-          end;
-          None:
-          begin
+        begin
+          case TuiButtonFind(Children[Index], RequireDefault, Mnemonic) of
+            Some(Button):
+            begin
+              return Some(Button);
+            end;
+            None:
+            begin
+            end;
           end;
         end;
-      end;
+      end for;
 
       return None;
     end;
     TuiElement.Layout(Settings, Children):
     begin
       for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
-      begin
-        case TuiButtonFind(Children[Index], RequireDefault, Mnemonic) of
-          Some(Button):
-          begin
-            return Some(Button);
-          end;
-          None:
-          begin
+        begin
+          case TuiButtonFind(Children[Index], RequireDefault, Mnemonic) of
+            Some(Button):
+            begin
+              return Some(Button);
+            end;
+            None:
+            begin
+            end;
           end;
         end;
-      end;
+      end for;
 
       return None;
     end;
     TuiElement.Panel(Title, Children):
     begin
       for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
-      begin
-        case TuiButtonFind(Children[Index], RequireDefault, Mnemonic) of
-          Some(Button):
-          begin
-            return Some(Button);
-          end;
-          None:
-          begin
+        begin
+          case TuiButtonFind(Children[Index], RequireDefault, Mnemonic) of
+            Some(Button):
+            begin
+              return Some(Button);
+            end;
+            None:
+            begin
+            end;
           end;
         end;
-      end;
+      end for;
 
       return None;
     end;
     TuiElement.Overlay(Title, Children):
     begin
       for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
-      begin
-        case TuiButtonFind(Children[Index], RequireDefault, Mnemonic) of
-          Some(Button):
-          begin
-            return Some(Button);
-          end;
-          None:
-          begin
+        begin
+          case TuiButtonFind(Children[Index], RequireDefault, Mnemonic) of
+            Some(Button):
+            begin
+              return Some(Button);
+            end;
+            None:
+            begin
+            end;
           end;
         end;
-      end;
+      end for;
 
       return None;
     end;
@@ -179,9 +189,10 @@ end function;
 public function TuiFindMnemonicButton(Root: TuiElement; Mnemonic: string): option of TuiButtonSpec;
 begin
   if Mnemonic = '' then
-  begin
-    return None;
-  end;
+    begin
+      return None;
+    end;
+  end if;
 
   return TuiButtonFind(Root, false, Mnemonic);
 end function;
@@ -194,9 +205,10 @@ end function;
 public function TuiRouteButtonMnemonicKey(Root: TuiElement; Key: Std.Console.KeyEvent): option of array of TuiMsg;
 begin
   if (Key.kind <> Std.Console.KeyKind.Character) or not Key.alt then
-  begin
-    return None;
-  end;
+    begin
+      return None;
+    end;
+  end if;
 
   case TuiFindMnemonicButton(Root, Key.ch) of
     Some(Button):
@@ -223,15 +235,17 @@ public function TuiRouteFocusedButtonKey(
 ): option of TuiMsg;
 begin
   if Button.Id.Value <> Target.Value then
-  begin
-    return None;
-  end;
+    begin
+      return None;
+    end;
+  end if;
 
   if Button.Enabled and
      ((Key.kind = Std.Console.KeyKind.Enter) or (Key.kind = Std.Console.KeyKind.Space)) then
-  begin
-    return Some(TuiMsg.Action(Button.Id, Button.Action));
-  end;
+    begin
+      return Some(TuiMsg.Action(Button.Id, Button.Action));
+    end;
+  end if;
 
   return None;
 end function;

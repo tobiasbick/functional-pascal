@@ -7,7 +7,8 @@ uses Std.Console, Std.Conv, Std.Args;
 begin
   WriteLn('param count: ', IntToStr(ParamCount()));
   for I: integer := 0 to ParamCount() - 1 do
-  begin
-    WriteLn('  [', IntToStr(I), '] ', ParamStr(I));
-  end;
+    begin
+      WriteLn('  [', IntToStr(I), '] ', ParamStr(I));
+    end;
+  end for;
 end.

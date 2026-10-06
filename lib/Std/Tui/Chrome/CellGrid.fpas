@@ -21,14 +21,16 @@ public type
     public static function Create(Width: integer; Height: integer; Cells: array of TuiCell): TuiCellGrid;
     begin
       if (Width < 0) or (Height < 0) then
-      begin
-        panic('Tui cell grid dimensions must be non-negative');
-      end;
+        begin
+          panic('Tui cell grid dimensions must be non-negative');
+        end;
+      end if;
 
       if Std.Arrays.Length(Cells) <> Width * Height then
-      begin
-        panic('Tui cell grid length must equal width times height');
-      end;
+        begin
+          panic('Tui cell grid length must equal width times height');
+        end;
+      end if;
 
       return record
         Width := Width;

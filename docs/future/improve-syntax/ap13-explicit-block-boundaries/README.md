@@ -1,6 +1,6 @@
 # AP13: Explicit block boundaries
 
-Status: partially complete (AP13.1–AP13.3); agreed direction (Q08, Q09).
+Status: partially complete (AP13.1–AP13.4); agreed direction (Q08, Q09).
 Effort: large. Completion is tracked in
 the [central README](../README.md); the process is in
 [development-process.md](../development-process.md).
@@ -150,7 +150,7 @@ end with;
 
 ## Open decisions
 
-There are no open decisions for AP13.1, AP13.2, or AP13.3. The single-statement-body
+There are no open decisions for AP13.1 through AP13.4. The single-statement-body
 transition rule is confirmed in [AP13.2](02-statement-terminators.md#confirmed-transition-rule).
 Task-scope decisions belong to AP26.
 
@@ -192,17 +192,16 @@ follows AP13.3 so anonymous routines match named routines.
 - [x] [AP13.1: Reserve elsif, when, and null](01-reserve-block-keywords.md)
 - [x] [AP13.2: Statement and declaration terminators](02-statement-terminators.md)
 - [x] [AP13.3: Named closers for declarations](03-declaration-closers.md)
-- [ ] [AP13.4: Conditional, loop, and scoping blocks](04-conditional-and-loop-blocks.md)
+- [x] [AP13.4: Conditional, loop, and scoping blocks](04-conditional-and-loop-blocks.md)
 - [ ] [AP13.5: Case arms](05-case-arms.md)
 - [ ] [AP13.6: Expression closers](06-expression-closers.md)
 
 ## Delivery
 
-AP13.1 through AP13.3 are implemented and verified on `codex/syntax-changes-2`.
-Their Result sections record the delivered scope; AP13.3 also records the
-known pre-existing workspace test failures. Conditional and loop blocks,
-case arms, and expression closers remain in AP13.4 through AP13.6, so the
-overall package remains open.
+AP13.1 through AP13.4 are implemented and verified on `codex/syntax-changes-2`.
+Their Result sections record the delivered scope and the known pre-existing
+workspace test failures. Case arms and expression closers remain in AP13.5
+and AP13.6, so the overall package remains open.
 
 ## Acceptance
 

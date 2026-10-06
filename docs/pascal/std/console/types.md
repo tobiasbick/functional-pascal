@@ -52,15 +52,18 @@ end record;
 
 ```pascal
 program Demo;
+
 uses Std.Console;
+
 begin
   var E: KeyEvent := ReadKeyEvent();
   if E.kind = KeyKind.Escape then
     WriteLn('escape');
-  else if E.kind = KeyKind.Character then
+  elsif E.kind = KeyKind.Character then
     WriteLn(E.ch);
   else
     WriteLn('other');
+  end if;
 end.
 ```
 
@@ -114,6 +117,7 @@ The language represents the underlying ordinal as an integer index in the **fixe
 var K: KeyKind := KeyKind.Space;
 if K = KeyKind.F1 then
   WriteLn('F1');
+end if;
 ```
 
 ---

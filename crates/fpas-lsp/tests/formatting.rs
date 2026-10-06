@@ -80,7 +80,7 @@ fn malformed_unsaved_input_returns_no_destructive_edit() {
     let transcript = run(&[
         initialize(1),
         initialized(),
-        open(uri, 1, "program Broken;\nbegin\n  if then;\nend.\n"),
+        open(uri, 1, "program Broken;\nbegin\n  if then; end if;\nend.\n"),
         formatting_request(2, uri),
         shutdown(3),
         exit(),

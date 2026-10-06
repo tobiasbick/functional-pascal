@@ -55,7 +55,7 @@ begin
       if not Std.Str.Contains(Message, 'TLS handshake failed') then
       begin
         panic(Message);
-      end;
+      end; end if;
     end;
   end;
   WriteLn('ok');

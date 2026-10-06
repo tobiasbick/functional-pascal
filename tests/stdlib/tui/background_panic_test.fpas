@@ -57,10 +57,11 @@ begin
   end, Inbox, UpdateFramework, UpdateApplication, View, 1, 0);
   AssertTrue(Unwrap(ReceiveWithTimeout(Ready, 10000)));
   while not Model.FailureSeen do
-  begin
-    Sleep(1);
-    Model := App.RunBackgroundIterations(Model, Inbox, UpdateFramework, UpdateApplication, View, 1, 0);
-  end;
+    begin
+      Sleep(1);
+      Model := App.RunBackgroundIterations(Model, Inbox, UpdateFramework, UpdateApplication, View, 1, 0);
+    end;
+  end while;
 
   App.CloseWithBackground(Inbox);
   CloseChannel(Ready);

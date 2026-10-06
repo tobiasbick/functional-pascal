@@ -275,7 +275,7 @@ begin
     return Value;
   end;
   else
-    return 0;
+    return 0; end if;
 end function;
 
 begin

@@ -8,7 +8,7 @@ fn test_cli_timeout_aborts_infinite_loop() {
     let cwd = create_temp_dir("fpas-test-timeout");
     write_text(
         &cwd.join("hang_test.fpas"),
-        "program H;\nbegin\n  while 1 = 1 do\n  begin\n  end;\nend.",
+        "program H;\nbegin\n  while 1 = 1 do\n  begin null;\n  end; end while;\nend.",
     );
 
     let mut stdout = Vec::new();

@@ -22,10 +22,11 @@ begin
       Cmd.ReplaceSubscription(1, function(Token: CancellationToken): result of boolean, string begin
         Send(Ready, true);
         if FailOld then
-        begin
-          Receive(Gate);
-          return Error('old source failed');
-        end;
+          begin
+            Receive(Gate);
+            return Error('old source failed');
+          end;
+        end if;
 
         ReceiveWithCancellation(Gate, Token);
         return Ok(true);
@@ -34,17 +35,18 @@ begin
     TuiMsg.Tick(Delta):
     begin
       if Delta = 1 then
-      begin
-        var Started: channel of boolean := State.Started;
-        Cmd.ReplaceSubscription(1, function(Token: CancellationToken): result of boolean, string begin
-          Send(Started, true);
-          return Ok(true);
-        end);
-      end;
-      else if Delta = 2 then
-      begin
-        Cmd.CancelSubscription(1);
-      end;
+        begin
+          var Started: channel of boolean := State.Started;
+          Cmd.ReplaceSubscription(1, function(Token: CancellationToken): result of boolean, string begin
+            Send(Started, true);
+            return Ok(true);
+          end);
+        end;
+      elsif Delta = 2 then
+        begin
+          Cmd.CancelSubscription(1);
+        end;
+      end if;
     end;
     TuiMsg.BackgroundFailed(Id, Kind, Message, Code, Line, Column):
     begin
@@ -93,10 +95,11 @@ begin
   Send(Gate, true);
   var Deadline: integer := MonotonicMillis() + 5000;
   while (State.Failures = 0) and (MonotonicMillis() < Deadline) do
-  begin
-    State := App.RunBackgroundIterations(State, Inbox, Update, UpdateMessage, View, 1, 0);
-    Sleep(1);
-  end;
+    begin
+      State := App.RunBackgroundIterations(State, Inbox, Update, UpdateMessage, View, 1, 0);
+      Sleep(1);
+    end;
+  end while;
 
   AssertEquals(1, State.Failures);
   AssertTrue(IsError(ReceiveWithTimeout(Started, 0)));

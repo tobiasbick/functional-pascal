@@ -3,9 +3,10 @@ unit Std.Tui.Ids.ControlId;
 function TuiControlIdRequirePositive(Value: integer): integer;
 begin
   if Value <= 0 then
-  begin
-    panic('Tui control id must be positive');
-  end;
+    begin
+      panic('Tui control id must be positive');
+    end;
+  end if;
 
   return Value;
 end function;

@@ -27,7 +27,8 @@ and plain `begin ... end;` compound statements with their own scope (Q08).
 
 ## Affected areas
 
-- `crates/fpas-parser/src/parser/stmt/branching.rs`, `stmt/loops.rs`.
+- `crates/fpas-parser/src/parser/block_closers.rs`, `stmt/conditionals.rs`,
+  `stmt/control_bodies.rs`, `stmt/loops.rs`.
 - `crates/fpas-sema/src/check/stmt/` (scopes).
 - `crates/fpas-fmt/src/emit/stmt/`; editor snippets and indentation.
 
@@ -48,3 +49,24 @@ ownership exactly.
   `null;`, plain blocks inside branches and loops, local declaration
   visibility and rejection outside the block.
 - Execution tests for condition evaluation order and returns through `elsif`.
+
+## Result
+
+Implemented locally on `codex/syntax-changes-2`. Conditional, counting,
+collection, and while bodies are nonempty scoped statement lists with their
+matching named endings. `elsif` shares its conditional's ending; an explicit
+`else if` retains its own ending. Empty control bodies require `null;`.
+Plain compound statements retain their additional scope, and repeat loops
+retain `until` with the condition evaluated in the enclosing scope.
+
+Parser, semantic analysis, compiler, formatter, diagnostics, current
+documentation, FPAS authoring guidance, editor snippets and indentation,
+repository sources, embedded fixtures, and benchmark generators are migrated.
+Case arms and expression closers remain in AP13.5 and AP13.6.
+
+Focused parser, scope, formatter, CLI, execution, and editor regressions pass.
+The FPAS suite passes 459 tests with one intended skip; all 22 example/app
+projects pass. Workspace build and formatting checks pass. The workspace
+suite passes 3,416 tests after correcting the migrated debugger fixture's
+line number; the remaining VM socket-timeout-resolution failure also occurs
+on the unchanged AP13.2 baseline and is independent of this delivery.

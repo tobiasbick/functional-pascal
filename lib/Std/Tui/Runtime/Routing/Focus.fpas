@@ -12,9 +12,10 @@ function TuiRouteFrameMatchesNode(
 ): integer;
 begin
   if Frame.EntryAt(Index).ParentIndex <> ParentIndex then
-  begin
-    panic('Tui routing received a frame for a different element tree');
-  end;
+    begin
+      panic('Tui routing received a frame for a different element tree');
+    end;
+  end if;
   mutable var Next: integer := Index + 1;
   mutable var Descendants: array of TuiElement := [];
   case Node of
@@ -52,9 +53,10 @@ begin
   end;
 
   for ChildIndex: integer := 0 to Std.Arrays.Length(Descendants) - 1 do
-  begin
-    Next := TuiRouteFrameMatchesNode(Frame, Descendants[ChildIndex], Next, Index);
-  end;
+    begin
+      Next := TuiRouteFrameMatchesNode(Frame, Descendants[ChildIndex], Next, Index);
+    end;
+  end for;
 
   return Next;
 end function;
@@ -67,14 +69,16 @@ end function;
 public procedure TuiRouteRequireMatchingFrame(Frame: TuiArrangedFrame; Root: TuiElement);
 begin
   if Frame.Count() = 0 then
-  begin
-    panic('Tui routing requires a successfully painted frame');
-  end;
+    begin
+      panic('Tui routing requires a successfully painted frame');
+    end;
+  end if;
 
   if TuiRouteFrameMatchesNode(Frame, Root, 0, -1) <> Frame.Count() then
-  begin
-    panic('Tui routing received a frame for a different element tree');
-  end;
+    begin
+      panic('Tui routing received a frame for a different element tree');
+    end;
+  end if;
 end procedure;
 
 // Returns focusable control ids in the active modal or full tree order.
@@ -88,13 +92,14 @@ begin
     TuiElement.Button(Button):
     begin
       if Button.Enabled then
-      begin
-        return [Button.Id];
-      end;
+        begin
+          return [Button.Id];
+        end;
       else
-      begin
-        return [];
-      end;
+        begin
+          return [];
+        end;
+      end if;
     end;
     TuiElement.Input(Input):
     begin
@@ -120,9 +125,10 @@ begin
     begin
       mutable var Controls: array of TuiControlId := [Id];
       for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
-      begin
-        Controls := Std.Arrays.Concat(Controls, TuiFocusableControls(Children[Index]));
-      end;
+        begin
+          Controls := Std.Arrays.Concat(Controls, TuiFocusableControls(Children[Index]));
+        end;
+      end for;
 
       return Controls;
     end;
@@ -130,12 +136,14 @@ begin
     begin
       mutable var Controls: array of TuiControlId := [];
       for Index: integer := 0 to Std.Arrays.Length(Items) - 1 do
-      begin
-        if Items[Index].Enabled then
         begin
-          Controls := Std.Arrays.Concat(Controls, [Items[Index].Id]);
+          if Items[Index].Enabled then
+            begin
+              Controls := Std.Arrays.Concat(Controls, [Items[Index].Id]);
+            end;
+          end if;
         end;
-      end;
+      end for;
 
       return Controls;
     end;
@@ -143,20 +151,22 @@ begin
     begin
       mutable var Controls: array of TuiControlId := [];
       for Index: integer := 0 to Std.Arrays.Length(Items) - 1 do
-      begin
-        case Items[Index] of
-          TuiStatusItem.Command(Id, Text, Action, Enabled):
-          begin
-            if Enabled then
+        begin
+          case Items[Index] of
+            TuiStatusItem.Command(Id, Text, Action, Enabled):
             begin
-              Controls := Std.Arrays.Concat(Controls, [Id]);
+              if Enabled then
+                begin
+                  Controls := Std.Arrays.Concat(Controls, [Id]);
+                end;
+              end if;
+            end;
+            else
+            begin
             end;
           end;
-          else
-          begin
-          end;
         end;
-      end;
+      end for;
 
       return Controls;
     end;
@@ -184,32 +194,35 @@ begin
     begin
       mutable var LastOverlay: integer := -1;
       for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
-      begin
-        case Children[Index] of
-          TuiElement.Overlay(Title, OverlayChildren):
-          begin
-            LastOverlay := Index;
-          end;
-          else
-          begin
+        begin
+          case Children[Index] of
+            TuiElement.Overlay(Title, OverlayChildren):
+            begin
+              LastOverlay := Index;
+            end;
+            else
+            begin
+            end;
           end;
         end;
-      end;
+      end for;
 
       if LastOverlay >= 0 then
-      begin
-        return TuiFocusableControls(Children[LastOverlay]);
-      end;
-      else
-      begin
-        mutable var Controls: array of TuiControlId := [];
-        for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
         begin
-          Controls := Std.Arrays.Concat(Controls, TuiFocusableControls(Children[Index]));
+          return TuiFocusableControls(Children[LastOverlay]);
         end;
+      else
+        begin
+          mutable var Controls: array of TuiControlId := [];
+          for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
+            begin
+              Controls := Std.Arrays.Concat(Controls, TuiFocusableControls(Children[Index]));
+            end;
+          end for;
 
-        return Controls;
-      end;
+          return Controls;
+        end;
+      end if;
     end;
     else
     begin
@@ -218,9 +231,10 @@ begin
   end;
   mutable var Controls: array of TuiControlId := [];
   for Index: integer := 0 to Std.Arrays.Length(Descendants) - 1 do
-  begin
-    Controls := Std.Arrays.Concat(Controls, TuiFocusableControls(Descendants[Index]));
-  end;
+    begin
+      Controls := Std.Arrays.Concat(Controls, TuiFocusableControls(Descendants[Index]));
+    end;
+  end for;
 
   return Controls;
 end function;
@@ -251,12 +265,14 @@ end function;
 public function TuiControlIndex(Controls: array of TuiControlId; Id: TuiControlId): integer;
 begin
   for Index: integer := 0 to Std.Arrays.Length(Controls) - 1 do
-  begin
-    if Controls[Index].Value = Id.Value then
     begin
-      return Index;
+      if Controls[Index].Value = Id.Value then
+        begin
+          return Index;
+        end;
+      end if;
     end;
-  end;
+  end for;
 
   return -1;
 end function;

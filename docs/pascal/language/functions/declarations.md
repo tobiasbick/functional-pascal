@@ -53,6 +53,8 @@ procedure LogIfPositive(mutable Count: integer; Value: integer);
 begin
   if Value <= 0 then
     return;
+  end if;
+
   Count := Count + 1;
   WriteLn('logged ', Value);
 end procedure;

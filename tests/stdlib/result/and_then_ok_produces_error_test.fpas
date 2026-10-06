@@ -5,13 +5,14 @@ uses Std.Console, Std.Results;
 function PositiveOk(V: integer): result of string, string;
 begin
   if V > 0 then
-  begin
-    return Ok('ok');
-  end;
+    begin
+      return Ok('ok');
+    end;
   else
-  begin
-    return Error('non-positive');
-  end;
+    begin
+      return Error('non-positive');
+    end;
+  end if;
 end function;
 
 begin

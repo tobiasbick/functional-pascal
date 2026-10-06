@@ -32,10 +32,11 @@ end procedure;
 
 begin
   for Scheme: string in ['ftp', 'file', 'ws'] do
-  begin
-    Rejected(Scheme + '://127.0.0.1');
-    Rejected(Scheme + '://127.0.0.1:80');
-  end;
+    begin
+      Rejected(Scheme + '://127.0.0.1');
+      Rejected(Scheme + '://127.0.0.1:80');
+    end;
+  end for;
 
   for Port: string in [
                         '',
@@ -50,10 +51,11 @@ begin
                         '65536',
                         '9223372036854775808'
                       ] do
-  begin
-    Rejected('http://host:' + Port);
-    Rejected('https://[::1]:' + Port);
-  end;
+    begin
+      Rejected('http://host:' + Port);
+      Rejected('https://[::1]:' + Port);
+    end;
+  end for;
 
   Accepted('HTTP://host', 'http', 80);
   Accepted('HTTPS://[::1]', 'https', 443);

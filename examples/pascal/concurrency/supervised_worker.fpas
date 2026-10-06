@@ -11,9 +11,10 @@ begin
   var Worker: task := StartSupervisedTask(Workers, function(Token: CancellationToken): result of string, string begin
     WriteLn('Starting an attempt');
     if not Unwrap(Receive(Outcomes)) then
-    begin
-      return Error('temporary failure');
-    end;
+      begin
+        return Error('temporary failure');
+      end;
+    end if;
 
     return Ok('Worker completed');
   end, 2, 10);

@@ -63,10 +63,11 @@ public function Clamp(Value: integer; Min: integer; Max: integer): integer;
 begin
   if Value < Min then
     return Min;
-  else if Value > Max then
+  elsif Value > Max then
     return Max;
   else
     return Value;
+  end if;
 end function;
 end unit;
 ```
@@ -107,6 +108,11 @@ Other habits:
 - Named routines and methods end with `end function;` or `end procedure;`.
   Record and enum declarations end with `end record;` and `end enum;`.
   Every unit ends with `end unit;`; programs keep `end.`.
+- `if` ends with `end if;`; `for` and `for-in` with `end for;`; `while` with
+  `end while;`. Bodies are nonempty statement lists with local scopes. Write
+  `null;` for no action. `elsif` continues a chain; `else if` starts a nested
+  conditional with its own ending. Explicit `begin ... end;` blocks retain
+  their additional scope; `repeat` keeps `until Condition;`.
 - `elsif`, `when`, and `null` are reserved names. Use an identifier such as
   `Timestamp` for a local binding and `JsonValue.NullValue` for JSON null;
   strings and JSON/TOML data keep their original text.

@@ -140,7 +140,7 @@ impl<'a> ClosureRegistry<'a> {
                     self.visit_expression(argument, owner, metadata, types)?;
                 }
             }
-            Stmt::Break(_) | Stmt::Continue(_) => {}
+            Stmt::Null(_) | Stmt::Break(_) | Stmt::Continue(_) => {}
         }
         Ok(())
     }

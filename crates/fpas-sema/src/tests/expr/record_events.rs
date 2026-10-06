@@ -21,7 +21,7 @@ type
     procedure RaiseClick(Self: Button);
     begin
       if Assigned(Self.OnClick) then
-        Self.OnClick(Self);
+        Self.OnClick(Self); end if;
     end procedure;
   end record;
 "
@@ -38,7 +38,7 @@ begin
   var B: Button := record Id := 1; end;
   B.OnClick := Handle;
   if Assigned(B.OnClick) then
-    B.RaiseClick();
+    B.RaiseClick(); end if;
   B.OnClick := nil;
 end.",
         event_prelude()

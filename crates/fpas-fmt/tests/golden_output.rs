@@ -26,7 +26,7 @@ fn hello_uses() {
 fn unit_clamp() {
     common::assert_golden(
         "unit_clamp",
-        "unit MyApp.Utils; uses Std.Math; public function Clamp(Value: integer; Min: integer; Max: integer): integer; begin if Value < Min then return Min; else if Value > Max then return Max; else return Value; end function; function IsBlank(S: string): boolean; begin return Length(Trim(S)) = 0; end function;\nend unit;",
+        "unit MyApp.Utils; uses Std.Math; public function Clamp(Value: integer; Min: integer; Max: integer): integer; begin if Value < Min then return Min; elsif  Value > Max then return Max; else return Value; end if; end function; function IsBlank(S: string): boolean; begin return Length(Trim(S)) = 0; end function;\nend unit;",
         include_str!("golden/unit_clamp.expected.fpas"),
     );
 }
@@ -62,7 +62,7 @@ fn short_record_literal_is_multiline() {
 fn logical_block_spacing() {
     common::assert_golden(
         "logical_block_spacing",
-        "program T; type Point = record X: integer; Y: integer; end record; begin var A: Point := record X := 3; Y := 4; end; var B: Point := record X := 10; Y := 20; end; var UpdatedB: Point := B with X := 11; end; A.Print(); if Ready then Save();\n// present result\nPresent(); if NeedsCount then Prepare(); var Count: integer := 1; WriteLn(Count); if Done then Finish(); end.",
+        "program T; type Point = record X: integer; Y: integer; end record; begin var A: Point := record X := 3; Y := 4; end; var B: Point := record X := 10; Y := 20; end; var UpdatedB: Point := B with X := 11; end; A.Print(); if Ready then Save(); end if;\n// present result\nPresent(); if NeedsCount then Prepare(); end if; var Count: integer := 1; WriteLn(Count); if Done then Finish(); end if; end.",
         include_str!("golden/logical_block_spacing.expected.fpas"),
     );
 }

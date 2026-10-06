@@ -44,7 +44,7 @@ fn generic_method_with_comparable_constraint() {
            function MaxWith<T: Comparable>(Self: Container; Other: T): T;
            begin
              if Self.Value > 0 then return Other;
-             else return Other;
+             else return Other; end if;
            end function;
          end record;
          begin end.",

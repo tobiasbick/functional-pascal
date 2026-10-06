@@ -46,7 +46,7 @@ end function;
 begin
   var AddForty: function(Value: integer): integer := MakeAdder(40);
   if AddForty(2) <> 42 then
-    panic('immutable closure mismatch');
+    panic('immutable closure mismatch'); end if;
 end.
 "#,
     );
@@ -70,7 +70,7 @@ begin
   var Next: function(): integer := MakeCounter();
   Next();
   if Next() <> 42 then
-    panic('mutable closure mismatch');
+    panic('mutable closure mismatch'); end if;
 end.
 "#,
     );
@@ -92,7 +92,7 @@ end function;
 begin
   var AddForty: function(Value: integer): integer := MakeAdder(40);
   if AddForty(2) <> 42 then
-    panic('named nested closure mismatch');
+    panic('named nested closure mismatch'); end if;
 end.
 "#,
     );

@@ -161,12 +161,12 @@ begin
       if ResponseValue.StatusCode <> 200 then
       begin
         panic('unexpected HTTP status');
-      end;
+      end; end if;
 
       if Std.Arrays.Length(ResponseValue.Body) <> ExpectedBodyLength then
       begin
         panic('unexpected HTTP body length');
-      end;
+      end; end if;
     end;
     Error(Message):
     begin
@@ -195,7 +195,7 @@ begin
       if not Std.Str.Contains(Message, 'RFC 9110 token') then
       begin
         panic(Message);
-      end;
+      end; end if;
     end;
   end;
   WriteLn('ok');

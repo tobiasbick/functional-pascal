@@ -4,11 +4,14 @@ Process argument access for hosted FPAS programs. This page is the full API for 
 
 ```pascal
 program Example;
+
 uses Std.Console, Std.Args;
+
 begin
   WriteLn(ParamCount());
   if ParamCount() > 0 then
     WriteLn(ParamStr(0));
+  end if;
 end.
 ```
 
@@ -57,6 +60,7 @@ Runtime error if `Index` is negative or greater than or equal to `ParamCount()`.
 ```pascal
 if ParamCount() > 0 then
   WriteLn(ParamStr(0));
+end if;
 ```
 
 ---

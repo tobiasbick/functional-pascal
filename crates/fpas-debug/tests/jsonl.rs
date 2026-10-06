@@ -89,7 +89,7 @@ fn invalid_state_and_unsupported_commands_are_explicit() {
 fn instruction_and_timeout_limits_are_reported() {
     let cases = [
         (
-            "program Main; begin while true do begin end; end.",
+            "program Main; begin while true do begin null; end; end while; end.",
             DebugExecutionLimits {
                 max_instructions: 2,
                 ..DebugExecutionLimits::default()
@@ -97,7 +97,7 @@ fn instruction_and_timeout_limits_are_reported() {
             "instruction_limit",
         ),
         (
-            "program Main; begin while true do begin end; end.",
+            "program Main; begin while true do begin null; end; end while; end.",
             DebugExecutionLimits {
                 timeout: Duration::ZERO,
                 ..DebugExecutionLimits::default()
@@ -317,7 +317,7 @@ fn conditions_and_logpoints_use_detached_controlled_calls() {
                     while I < 3 do\n\
                     begin\n\
                       I := I + 1;\n\
-                    end;\n\
+                    end; end while;\n\
                   end.";
     let line = source
         .lines()
@@ -390,7 +390,7 @@ fn loop_server() -> JsonlServer {
            while I < 5 do\n\
            begin\n\
              I := I + 1;\n\
-           end;\n\
+           end; end while;\n\
          end.",
     )
 }

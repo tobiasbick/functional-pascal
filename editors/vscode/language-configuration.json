@@ -54,8 +54,8 @@
   ],
   "wordPattern": "[A-Za-z_][A-Za-z0-9_]*",
   "indentationRules": {
-    "increaseIndentPattern": "^(?!\\s*[Ee][Nn][Dd]\\b).*\\b([Bb][Ee][Gg][Ii][Nn]|[Rr][Ee][Cc][Oo][Rr][Dd]|[Ee][Nn][Uu][Mm]|[Rr][Ee][Pp][Ee][Aa][Tt])\\b\\s*(?://.*)?$",
-    "decreaseIndentPattern": "^\\s*([Ee][Nn][Dd]\\b|[Uu][Nn][Tt][Ii][Ll]\\b|[Ee][Ll][Ss][Ee]\\b)"
+    "increaseIndentPattern": "^(?!\\s*[Ee][Nn][Dd]\\b).*\\b([Bb][Ee][Gg][Ii][Nn]|[Rr][Ee][Cc][Oo][Rr][Dd]|[Ee][Nn][Uu][Mm]|[Rr][Ee][Pp][Ee][Aa][Tt]|[Tt][Hh][Ee][Nn]|[Dd][Oo]|[Ee][Ll][Ss][Ee])\\b\\s*(?://.*)?$",
+    "decreaseIndentPattern": "^\\s*([Ee][Nn][Dd]\\b|[Uu][Nn][Tt][Ii][Ll]\\b|[Ee][Ll][Ss][Ee]\\b|[Ee][Ll][Ss][Ii][Ff]\\b)"
   },
   "folding": {
     "markers": {

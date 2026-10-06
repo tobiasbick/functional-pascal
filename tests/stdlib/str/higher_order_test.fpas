@@ -5,9 +5,10 @@ uses Std.Str, Std.Test;
 function ReplaceFace(C: string): string;
 begin
   if C = '😀' then
-  begin
-    return 'ß';
-  end;
+    begin
+      return 'ß';
+    end;
+  end if;
 
   return C;
 end function;

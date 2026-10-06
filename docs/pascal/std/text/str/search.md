@@ -7,6 +7,7 @@
 ```pascal
 if Contains('abc', 'b') then
   WriteLn('yes');
+end if;
 ```
 
 ---

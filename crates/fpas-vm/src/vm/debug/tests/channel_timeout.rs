@@ -12,7 +12,7 @@ begin
   case ReceiveWithTimeout(Messages, 25) of
     Ok(_): panic('empty channel did not time out');
     Error(Message):
-      if Message <> 'Channel receive timed out' then panic(Message);
+      if Message <> 'Channel receive timed out' then panic(Message); end if;
   end;
   case Send(Messages, 1) of
     Ok(_): begin end;
@@ -21,7 +21,7 @@ begin
   case SendWithTimeout(Messages, 2, 25) of
     Ok(_): panic('full channel did not time out');
     Error(Message):
-      if Message <> 'Channel send timed out' then panic(Message);
+      if Message <> 'Channel send timed out' then panic(Message); end if;
   end;
 end.
 "#;

@@ -71,7 +71,7 @@ begin
   for Index: integer := 0 to Std.Arrays.Length(Events) - 1 do
   begin
     WriteLn((Events[Index].EventType + ':') + Events[Index].Data);
-  end;
+  end; end for;
 end procedure;
 
 begin
@@ -98,11 +98,11 @@ begin
                     Ok(Events): PrintEvents(Events);
                     Error(Message): panic(Message);
                   end;
-                end;
+                end; end if;
               end;
               Error(Message): panic(Message);
             end;
-          end;
+          end; end while;
           case FinishSse(Decoder) of
             Ok(Events): PrintEvents(Events);
             Error(Message): panic(Message);
@@ -172,7 +172,7 @@ begin
           if Std.Arrays.Length(Bytes) <> 3 then
           begin
             panic('unexpected first body fragment');
-          end;
+          end; end if;
         end;
         Error(Message): panic(Message);
       end;
@@ -183,7 +183,7 @@ begin
           if not Std.Str.Contains(Message, 'shorter than Content-Length') then
           begin
             panic(Message);
-          end;
+          end; end if;
         end;
       end;
       WriteLn('ok');

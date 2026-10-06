@@ -12,14 +12,14 @@ program RegisterForIn;
 uses Std.Console, Std.Conv, Std.Dictionaries;
 begin
   mutable var Sum: integer := 0;
-  for Value: integer in [1, 2, 3] do Sum := Sum + Value;
+  for Value: integer in [1, 2, 3] do Sum := Sum + Value; end for;
   var Values: dict of string to integer := ['a': 4, 'b': 5];
   for Key: string in Values do
   begin
     WriteLn(IntToStr(Values[Key]));
     Sum := Sum + Values[Key];
-  end;
-  if Sum <> 15 then panic('for-in mismatch');
+  end; end for;
+  if Sum <> 15 then panic('for-in mismatch'); end if;
 end.",
     );
 }
@@ -39,7 +39,7 @@ begin
   S := S + 'cd';
   B := (B and not false) xor false;
   if (I <> 10) or (R <> 1.75) or (S <> 'abcd') or (not B) then
-    panic('scalar mismatch');
+    panic('scalar mismatch'); end if;
 end.",
     );
     assert_eq!(execution.value, fpas_bytecode::Value::Unit);
@@ -56,19 +56,19 @@ begin
   while I < 4 do
   begin
     I := I + 1;
-    if I = 2 then continue;
+    if I = 2 then continue; end if;
     for J: integer := 3 downto 1 do
     begin
-      if J = 2 then continue;
+      if J = 2 then continue; end if;
       Sum := Sum + I * J;
-      if Sum > 40 then break;
-    end;
-  end;
+      if Sum > 40 then break; end if;
+    end; end for;
+  end; end while;
   repeat
     Sum := Sum - 1;
-    if Sum = 30 then break;
+    if Sum = 30 then break; end if;
   until Sum < 0;
-  if Sum <> 30 then panic('loop mismatch');
+  if Sum <> 30 then panic('loop mismatch'); end if;
 end.",
     );
 }
@@ -101,7 +101,7 @@ begin
     false: Score := 100;
     true: Score := Score + 5;
   end;
-  if Score <> 12 then panic('case mismatch');
+  if Score <> 12 then panic('case mismatch'); end if;
 end.",
     );
 }
@@ -117,8 +117,8 @@ begin
   var Bits: integer := (12 and 10) or (3 xor 1);
   var Shifted: integer := (1 shl 5) shr 2;
   if (X <> -9223372036854775807 - 1) or (Bits <> 10) or (Shifted <> 8) then
-    panic('integer mismatch');
-  if not (2 < 2.5) then panic('mixed comparison mismatch');
+    panic('integer mismatch'); end if;
+  if not (2 < 2.5) then panic('mixed comparison mismatch'); end if;
 end.",
     );
 }

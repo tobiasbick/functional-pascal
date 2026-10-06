@@ -30,14 +30,16 @@ end function;
 function FindGlyph(Snapshot: TuiSurfaceSnapshot; Glyph: string): TuiPoint;
 begin
   for Y: integer := 0 to Snapshot.Height - 1 do
-  begin
-    var Line: string := Snapshot.LineAt(Y);
-    var Index: integer := Std.Str.IndexOf(Line, Glyph);
-    if Index >= 0 then
     begin
-      return TuiPoint.Create(Index, Y);
+      var Line: string := Snapshot.LineAt(Y);
+      var Index: integer := Std.Str.IndexOf(Line, Glyph);
+      if Index >= 0 then
+        begin
+          return TuiPoint.Create(Index, Y);
+        end;
+      end if;
     end;
-  end;
+  end for;
 
   panic('glyph not found in snapshot');
 end function;
@@ -46,14 +48,15 @@ function ViewModal(State: ModalModel): TuiElement;
 begin
   mutable var Overlay: TuiElement := TuiElementBuilders.MakeEmpty();
   if State.ConfirmOpen then
-  begin
-    Overlay := TuiElementBuilders.MakeOverlay('Confirm', [
-                                                           TuiElementBuilders.MakeRow([
-                                                                                        TuiElementBuilders.MakeButton(TuiControlId.Create(3), 'Yes', TuiAction.Create(30)),
-                                                                                        TuiElementBuilders.MakeButton(TuiControlId.Create(4), 'No', TuiAction.Create(40))
-                                                                                      ])
-                                                         ]);
-  end;
+    begin
+      Overlay := TuiElementBuilders.MakeOverlay('Confirm', [
+                                                             TuiElementBuilders.MakeRow([
+                                                                                          TuiElementBuilders.MakeButton(TuiControlId.Create(3), 'Yes', TuiAction.Create(30)),
+                                                                                          TuiElementBuilders.MakeButton(TuiControlId.Create(4), 'No', TuiAction.Create(40))
+                                                                                        ])
+                                                           ]);
+    end;
+  end if;
 
   return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(State.Focus)), [
                                                                                   TuiElementBuilders.MakePanel('Host', [
@@ -88,14 +91,15 @@ begin
     TuiMsg.Action(Source, Action):
     begin
       if Action.Value = 10 then
-      begin
-        return record
-          Focus := 3;
-          ConfirmOpen := true;
-          Actions := Std.Arrays.Concat(State.Actions, [Action.Value]);
-          PointerHits := State.PointerHits;
+        begin
+          return record
+            Focus := 3;
+            ConfirmOpen := true;
+            Actions := Std.Arrays.Concat(State.Actions, [Action.Value]);
+            PointerHits := State.PointerHits;
+          end;
         end;
-      end;
+      end if;
 
       return record
         Focus := 1;

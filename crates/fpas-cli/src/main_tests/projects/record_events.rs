@@ -21,7 +21,7 @@ begin
   var B: Button := Button.Make(14);
   B.OnClick := Handle;
   if Assigned(B.OnClick) then
-    B.Click();
+    B.Click(); end if;
   B.OnClick := nil;
 end.",
     );
@@ -44,7 +44,7 @@ public type
     public procedure Click(Self: Button);
     begin
       if Assigned(Self.OnClick) then
-        Self.OnClick(Self.Id);
+        Self.OnClick(Self.Id); end if;
     end procedure;
     public static function Make(Id: integer): Button;
     begin

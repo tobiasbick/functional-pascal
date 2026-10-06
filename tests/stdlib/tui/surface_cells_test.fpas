@@ -38,11 +38,12 @@ begin
   AssertEquals('X', Std.Options.Unwrap(Other.TryCellAt(TuiPoint.Create(0, 0))).Glyph);
   var SurfaceSlot: integer := Surface.Slot;
   for ResizeIndex: integer := 1 to 64 do
-  begin
-    Surface.Resize(TuiSize.Create(3 + (ResizeIndex mod 5), 2 + (ResizeIndex mod 3)));
-    AssertEquals(SurfaceSlot, Surface.Slot);
-    AssertEquals(' ', Std.Options.Unwrap(Surface.TryCellAt(TuiPoint.Create(0, 0))).Glyph);
-  end;
+    begin
+      Surface.Resize(TuiSize.Create(3 + (ResizeIndex mod 5), 2 + (ResizeIndex mod 3)));
+      AssertEquals(SurfaceSlot, Surface.Slot);
+      AssertEquals(' ', Std.Options.Unwrap(Surface.TryCellAt(TuiPoint.Create(0, 0))).Glyph);
+    end;
+  end for;
 
   AssertEquals(7, Surface.Size().Width);
   AssertEquals(3, Surface.Size().Height);

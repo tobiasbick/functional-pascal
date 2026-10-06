@@ -17,36 +17,41 @@ end function;
 
 begin
   if ParamCount() <> 2 then
-  begin
-    panic('expected ITERATIONS SIZE');
-  end;
+    begin
+      panic('expected ITERATIONS SIZE');
+    end;
+  end if;
   var Iterations: integer := StrToInt(ParamStr(0));
   var Size: integer := StrToInt(ParamStr(1));
   if (Iterations < 1) or (Size < 1) then
-  begin
-    panic('arguments must be positive');
-  end;
+    begin
+      panic('arguments must be positive');
+    end;
+  end if;
   var Text: string := Std.Str.RepeatStr('é', Size);
   var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(80, 24));
   App.RunIterations(Text, Update, View, 0, 0);
   var Started: integer := MonotonicMillis();
   for Iteration: integer := 1 to Iterations do
-  begin
-    App.RunIterations(Text, Update, View, 0, 0);
-  end;
+    begin
+      App.RunIterations(Text, Update, View, 0, 0);
+    end;
+  end for;
 
   WriteLn(('elapsed: ' + IntToStr(ElapsedMillis(Started))) + ' ms');
   mutable var Visible: integer := Size;
   if Visible > 80 then
-  begin
-    Visible := 80;
-  end;
+    begin
+      Visible := 80;
+    end;
+  end if;
 
   if Std.Str.Substring(App.SurfaceSnapshot().LineAt(0), 0, Visible) <>
      Std.Str.RepeatStr('é', Visible) then
-  begin
-    panic('rendered text');
-  end;
+    begin
+      panic('rendered text');
+    end;
+  end if;
 
   App.Close();
 end.

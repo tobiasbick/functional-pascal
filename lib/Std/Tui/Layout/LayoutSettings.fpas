@@ -5,9 +5,10 @@ uses Std.Tui.Layout.Alignment, Std.Tui.Layout.Margins, Std.Tui.Layout.SizePolicy
 function TuiLayoutSettingsRequireNonNegativeStretch(Value: integer): integer;
 begin
   if Value < 0 then
-  begin
-    panic('Tui layout stretch must not be negative');
-  end;
+    begin
+      panic('Tui layout stretch must not be negative');
+    end;
+  end if;
 
   return Value;
 end function;
@@ -60,9 +61,10 @@ public type
     public function WithFixedWidth(Self: TuiLayoutSettings; Width: integer): TuiLayoutSettings;
     begin
       if Width < 0 then
-      begin
-        panic('Tui fixed layout width must not be negative');
-      end;
+        begin
+          panic('Tui fixed layout width must not be negative');
+        end;
+      end if;
 
       return record
         Margins := Self.Margins;
@@ -82,9 +84,10 @@ public type
     public function WithFixedHeight(Self: TuiLayoutSettings; Height: integer): TuiLayoutSettings;
     begin
       if Height < 0 then
-      begin
-        panic('Tui fixed layout height must not be negative');
-      end;
+        begin
+          panic('Tui fixed layout height must not be negative');
+        end;
+      end if;
 
       return record
         Margins := Self.Margins;

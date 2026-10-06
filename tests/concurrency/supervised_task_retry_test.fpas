@@ -11,14 +11,16 @@ begin
   var Child: task := StartSupervisedTask(Group, function(Token: CancellationToken): result of integer, string begin
     var Attempt: integer := Unwrap(Receive(Attempts));
     if Attempt = 0 then
-    begin
-      return Error('retryable error');
-    end;
+      begin
+        return Error('retryable error');
+      end;
+    end if;
 
     if Attempt = 1 then
-    begin
-      panic('retryable panic');
-    end;
+      begin
+        panic('retryable panic');
+      end;
+    end if;
 
     return Ok(42);
   end, 2, 1);

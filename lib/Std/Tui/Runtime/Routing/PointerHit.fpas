@@ -65,17 +65,18 @@ function TuiPointerModalChildIndex(Children: array of TuiElement): integer;
 begin
   mutable var LastOverlay: integer := -1;
   for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
-  begin
-    case Children[Index] of
-      TuiElement.Overlay(Title, OverlayChildren):
-      begin
-        LastOverlay := Index;
-      end;
-      else
-      begin
+    begin
+      case Children[Index] of
+        TuiElement.Overlay(Title, OverlayChildren):
+        begin
+          LastOverlay := Index;
+        end;
+        else
+        begin
+        end;
       end;
     end;
-  end;
+  end for;
 
   return LastOverlay;
 end function;
@@ -95,62 +96,71 @@ begin
     begin
       mutable var ActiveWidth: integer := Entry.Bounds.Width - 1;
       if ActiveWidth < 0 then
-      begin
-        ActiveWidth := 0;
-      end;
+        begin
+          ActiveWidth := 0;
+        end;
+      end if;
       var ActiveBounds: TuiRect := TuiRect.Create(Entry.Bounds.X, Entry.Bounds.Y, ActiveWidth, 1);
       if (Button.Enabled and AllowHits) and Entry.Clip.Intersect(ActiveBounds).Contains(Point) then
-      begin
-        TuiPointerBestHit := TuiPointerHit.ElementButton(Button);
-      end;
+        begin
+          TuiPointerBestHit := TuiPointerHit.ElementButton(Button);
+        end;
+      end if;
     end;
     TuiElement.Input(Input):
     begin
       if AllowHits and Entry.Clip.Contains(Point) then
-      begin
-        TuiPointerBestHit := TuiPointerHit.Input(Input, Entry.Bounds);
-      end;
+        begin
+          TuiPointerBestHit := TuiPointerHit.Input(Input, Entry.Bounds);
+        end;
+      end if;
     end;
     TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction):
     begin
       if AllowHits and Entry.Clip.Contains(Point) then
-      begin
-        TuiPointerBestHit := TuiPointerHit.TextArea(Id, ChangeAction, Text, Offset, Entry.Bounds);
-      end;
+        begin
+          TuiPointerBestHit := TuiPointerHit.TextArea(Id, ChangeAction, Text, Offset, Entry.Bounds);
+        end;
+      end if;
     end;
     TuiElement.CheckBox(Id, Text, Checked, ChangeAction):
     begin
       if AllowHits and Entry.Clip.Contains(Point) then
-      begin
-        TuiPointerBestHit := TuiPointerHit.CheckBox(Id, ChangeAction, Checked);
-      end;
+        begin
+          TuiPointerBestHit := TuiPointerHit.CheckBox(Id, ChangeAction, Checked);
+        end;
+      end if;
     end;
     TuiElement.List(Id, Items, Selected, ChangeAction):
     begin
       if AllowHits and Entry.Clip.Contains(Point) then
-      begin
-        var Row: integer := Point.Y - Entry.Bounds.Y;
-        if (Row >= 0) and (Row < Std.Arrays.Length(Items)) then
         begin
-          TuiPointerBestHit := TuiPointerHit.List(Id, ChangeAction, Selected, Row);
+          var Row: integer := Point.Y - Entry.Bounds.Y;
+          if (Row >= 0) and (Row < Std.Arrays.Length(Items)) then
+            begin
+              TuiPointerBestHit := TuiPointerHit.List(Id, ChangeAction, Selected, Row);
+            end;
+          end if;
         end;
-      end;
+      end if;
     end;
     TuiElement.MenuBar(Items):
     begin
       mutable var Cursor: integer := Entry.Bounds.X;
       for ItemIndex: integer := 0 to Std.Arrays.Length(Items) - 1 do
-      begin
-        var Width: integer := Std.Console.DisplayWidth(Items[ItemIndex].Text) + 2;
-        var ItemBounds: TuiRect := TuiRect.Create(Cursor, Entry.Bounds.Y, Width, 1);
-        if (AllowHits and Items[ItemIndex].Enabled) and
-           Entry.Clip.Intersect(ItemBounds).Contains(Point) then
         begin
-          TuiPointerBestHit := TuiPointerHit.ImmediateButton(Items[ItemIndex].Id, Items[ItemIndex].Action);
-        end;
+          var Width: integer := Std.Console.DisplayWidth(Items[ItemIndex].Text) + 2;
+          var ItemBounds: TuiRect := TuiRect.Create(Cursor, Entry.Bounds.Y, Width, 1);
+          if (AllowHits and Items[ItemIndex].Enabled) and
+             Entry.Clip.Intersect(ItemBounds).Contains(Point) then
+            begin
+              TuiPointerBestHit := TuiPointerHit.ImmediateButton(Items[ItemIndex].Id, Items[ItemIndex].Action);
+            end;
+          end if;
 
-        Cursor := Cursor + Width;
-      end;
+          Cursor := Cursor + Width;
+        end;
+      end for;
     end;
     TuiElement.Menu(Id, Nodes, State, ChangeAction):
     begin
@@ -159,97 +169,109 @@ begin
     begin
       mutable var Cursor: integer := Entry.Bounds.X;
       for ItemIndex: integer := 0 to Std.Arrays.Length(Items) - 1 do
-      begin
-        if ItemIndex > 0 then
         begin
-          Cursor := Cursor + 1;
-        end;
-
-        case Items[ItemIndex] of
-          TuiStatusItem.Hint(Text):
-          begin
-            Cursor := Cursor + Std.Console.DisplayWidth(Text);
-          end;
-          TuiStatusItem.KeyHint(KeyText, Text):
-          begin
-            Cursor := ((Cursor + Std.Console.DisplayWidth(KeyText)) + Std.Console.DisplayWidth(Text)) +
-                      1;
-          end;
-          TuiStatusItem.Command(Id, Text, Action, Enabled):
-          begin
-            var Width: integer := Std.Console.DisplayWidth(Text);
-            var ItemBounds: TuiRect := TuiRect.Create(Cursor, Entry.Bounds.Y, Width, 1);
-            if (AllowHits and Enabled) and Entry.Clip.Intersect(ItemBounds).Contains(Point) then
+          if ItemIndex > 0 then
             begin
-              TuiPointerBestHit := TuiPointerHit.ImmediateButton(Id, Action);
+              Cursor := Cursor + 1;
             end;
+          end if;
 
-            Cursor := Cursor + Width;
+          case Items[ItemIndex] of
+            TuiStatusItem.Hint(Text):
+            begin
+              Cursor := Cursor + Std.Console.DisplayWidth(Text);
+            end;
+            TuiStatusItem.KeyHint(KeyText, Text):
+            begin
+              Cursor := ((Cursor + Std.Console.DisplayWidth(KeyText)) + Std.Console.DisplayWidth(Text)) +
+                        1;
+            end;
+            TuiStatusItem.Command(Id, Text, Action, Enabled):
+            begin
+              var Width: integer := Std.Console.DisplayWidth(Text);
+              var ItemBounds: TuiRect := TuiRect.Create(Cursor, Entry.Bounds.Y, Width, 1);
+              if (AllowHits and Enabled) and Entry.Clip.Intersect(ItemBounds).Contains(Point) then
+                begin
+                  TuiPointerBestHit := TuiPointerHit.ImmediateButton(Id, Action);
+                end;
+              end if;
+
+              Cursor := Cursor + Width;
+            end;
           end;
         end;
-      end;
+      end for;
     end;
     TuiElement.Scroll(Id, Offset, ChangeAction, Children):
     begin
       var ScrollAllowsHits: boolean := AllowHits and Entry.Clip.Contains(Point);
       if ScrollAllowsHits then
-      begin
-        TuiPointerBestHit := TuiPointerHit.Scroll(Id);
-      end;
+        begin
+          TuiPointerBestHit := TuiPointerHit.Scroll(Id);
+        end;
+      end if;
 
       for ChildIndex: integer := 0 to Std.Arrays.Length(Children) - 1 do
-      begin
-        Next := TuiPointerHitWalk(Frame, Children[ChildIndex], Next, Point, ScrollAllowsHits);
-      end;
+        begin
+          Next := TuiPointerHitWalk(Frame, Children[ChildIndex], Next, Point, ScrollAllowsHits);
+        end;
+      end for;
     end;
     TuiElement.Row(Children, Spacing):
     begin
       for ChildIndex: integer := 0 to Std.Arrays.Length(Children) - 1 do
-      begin
-        Next := TuiPointerHitWalk(Frame, Children[ChildIndex], Next, Point, AllowHits);
-      end;
+        begin
+          Next := TuiPointerHitWalk(Frame, Children[ChildIndex], Next, Point, AllowHits);
+        end;
+      end for;
     end;
     TuiElement.Column(Children, Spacing):
     begin
       for ChildIndex: integer := 0 to Std.Arrays.Length(Children) - 1 do
-      begin
-        Next := TuiPointerHitWalk(Frame, Children[ChildIndex], Next, Point, AllowHits);
-      end;
+        begin
+          Next := TuiPointerHitWalk(Frame, Children[ChildIndex], Next, Point, AllowHits);
+        end;
+      end for;
     end;
     TuiElement.Layout(Settings, Children):
     begin
       for ChildIndex: integer := 0 to Std.Arrays.Length(Children) - 1 do
-      begin
-        Next := TuiPointerHitWalk(Frame, Children[ChildIndex], Next, Point, AllowHits);
-      end;
+        begin
+          Next := TuiPointerHitWalk(Frame, Children[ChildIndex], Next, Point, AllowHits);
+        end;
+      end for;
     end;
     TuiElement.Panel(Title, Children):
     begin
       for ChildIndex: integer := 0 to Std.Arrays.Length(Children) - 1 do
-      begin
-        Next := TuiPointerHitWalk(Frame, Children[ChildIndex], Next, Point, AllowHits);
-      end;
+        begin
+          Next := TuiPointerHitWalk(Frame, Children[ChildIndex], Next, Point, AllowHits);
+        end;
+      end for;
     end;
     TuiElement.Overlay(Title, Children):
     begin
       for ChildIndex: integer := 0 to Std.Arrays.Length(Children) - 1 do
-      begin
-        Next := TuiPointerHitWalk(Frame, Children[ChildIndex], Next, Point, AllowHits);
-      end;
+        begin
+          Next := TuiPointerHitWalk(Frame, Children[ChildIndex], Next, Point, AllowHits);
+        end;
+      end for;
     end;
     TuiElement.Desktop(Focused, Children):
     begin
       var ModalIndex: integer := TuiPointerModalChildIndex(Children);
       for ChildIndex: integer := 0 to Std.Arrays.Length(Children) - 1 do
-      begin
-        mutable var ChildAllow: boolean := AllowHits;
-        if ModalIndex >= 0 then
         begin
-          ChildAllow := AllowHits and (ChildIndex = ModalIndex);
-        end;
+          mutable var ChildAllow: boolean := AllowHits;
+          if ModalIndex >= 0 then
+            begin
+              ChildAllow := AllowHits and (ChildIndex = ModalIndex);
+            end;
+          end if;
 
-        Next := TuiPointerHitWalk(Frame, Children[ChildIndex], Next, Point, ChildAllow);
-      end;
+          Next := TuiPointerHitWalk(Frame, Children[ChildIndex], Next, Point, ChildAllow);
+        end;
+      end for;
     end;
     else
     begin
@@ -269,9 +291,10 @@ public function TuiPointerHitAt(Frame: TuiArrangedFrame; Root: TuiElement; Point
 begin
   TuiPointerBestHit := TuiPointerHit.Miss;
   if TuiPointerHitWalk(Frame, Root, 0, Point, true) <> Frame.Count() then
-  begin
-    panic('Tui pointer routing did not consume the complete arranged frame');
-  end;
+    begin
+      panic('Tui pointer routing did not consume the complete arranged frame');
+    end;
+  end if;
 
   return TuiPointerBestHit;
 end function;

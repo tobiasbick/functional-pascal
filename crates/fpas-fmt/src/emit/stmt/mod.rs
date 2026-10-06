@@ -1,5 +1,7 @@
 //! Statement and block emission.
 
+mod case;
+mod conditionals;
 mod line;
 mod loops;
 mod spacing;
@@ -39,6 +41,11 @@ fn emit_stmt_in_block(emitter: &mut Emitter, stmt: &Stmt, comments: &CommentMap)
             emitter.writeln("end");
             finish_stmt_after_newline(emitter, comments, stmt);
         }
+        Stmt::Null(_) => {
+            write_indented(emitter);
+            emitter.write("null");
+            finish_stmt_line(emitter, comments, stmt);
+        }
         Stmt::Var(var) => line::emit_var_stmt(emitter, "var", var, comments),
         Stmt::MutableVar(var) => line::emit_var_stmt(emitter, "mutable var", var, comments),
         Stmt::Assign { target, value, .. } => {
@@ -65,11 +72,11 @@ fn emit_stmt_in_block(emitter: &mut Emitter, stmt: &Stmt, comments: &CommentMap)
             finish_stmt_line(emitter, comments, stmt);
         }
         Stmt::If { .. } => {
-            loops::emit_if(emitter, stmt, "", comments);
+            conditionals::emit_if(emitter, stmt, comments);
             finish_stmt_after_newline(emitter, comments, stmt);
         }
         Stmt::Case { .. } => {
-            loops::emit_case(emitter, stmt, comments);
+            case::emit_case(emitter, stmt, comments);
             finish_stmt_line(emitter, comments, stmt);
         }
         Stmt::For { .. } | Stmt::ForIn { .. } => {
@@ -130,17 +137,17 @@ mod tests {
     }
 
     #[test]
-    fn if_else_with_branch_blocks() {
+    fn if_elsif_with_statement_lists() {
         let formatted = format_body(
             "program T; begin
   if X > 0 then WriteLn('positive');
-  else if X = 0 then WriteLn('zero');
-  else WriteLn('negative');
+  elsif  X = 0 then WriteLn('zero');
+  else WriteLn('negative'); end if;
 end.",
         );
-        assert!(formatted.contains("if X > 0 then\nbegin\n"));
-        assert!(formatted.contains("else if X = 0 then\nbegin\n"));
-        assert!(formatted.contains("else\nbegin\n"));
+        assert!(formatted.contains("if X > 0 then\n  WriteLn"));
+        assert!(formatted.contains("elsif X = 0 then\n  WriteLn"));
+        assert!(formatted.contains("else\n  WriteLn"));
     }
 
     #[test]
@@ -153,8 +160,8 @@ end.",
   else
     WriteLn('other');
   end;
-  for I: integer := 1 to 3 do WriteLn(I);
-  while X < 10 do X := X + 1;
+  for I: integer := 1 to 3 do WriteLn(I); end for;
+  while X < 10 do X := X + 1; end while;
   repeat WriteLn(N); N := N + 1; until N >= 3;
 end.",
         );

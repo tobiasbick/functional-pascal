@@ -78,9 +78,10 @@ begin
   AssertEquals(Request.Height, Model.RowsRendered);
   var Expected: TuiCellGrid := RenderGrid(Request.XMin, Request.XMax, Request.YMin, Request.YMax, Request.Width, Request.Height, Request.MaxIter, Request.Palette);
   for CellIndex: integer := 0 to Std.Arrays.Length(Expected.Cells) - 1 do
-  begin
-    AssertCellEquals(Expected.Cells[CellIndex], Model.Grid.Cells[CellIndex]);
-  end;
+    begin
+      AssertCellEquals(Expected.Cells[CellIndex], Model.Grid.Cells[CellIndex]);
+    end;
+  end for;
 
   Cmd.Reset();
   Model := UpdateMandelbrot(Model, TuiMsg.Started, Cmd);
@@ -90,9 +91,10 @@ begin
   Model := UpdateMandelbrot(Model, TuiMsg.Key(MakeKey(TuiKeyKind.Left, '')), Cmd);
   AssertEquals(OldGeneration + 1, Model.Generation);
   for CellIndex: integer := 0 to Std.Arrays.Length(Expected.Cells) - 1 do
-  begin
-    AssertCellEquals(Expected.Cells[CellIndex], Model.Grid.Cells[CellIndex]);
-  end;
+    begin
+      AssertCellEquals(Expected.Cells[CellIndex], Model.Grid.Cells[CellIndex]);
+    end;
+  end for;
 
   AssertEquals(0, Model.RowsRendered);
   AssertEquals(1, Std.Arrays.Length(Cmd.ReadBackground()));

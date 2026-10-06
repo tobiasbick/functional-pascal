@@ -29,9 +29,10 @@ begin
   mutable var Next: MandelbrotModel := CreateMandelbrotModel(Explorer, TerminalWidth, TerminalHeight, State.HelpOpen, State.Generation +
                                                                                                                       1, State.Inbox);
   if (Next.Grid.Width = State.Grid.Width) and (Next.Grid.Height = State.Grid.Height) then
-  begin
-    Next.Grid := State.Grid;
-  end;
+    begin
+      Next.Grid := State.Grid;
+    end;
+  end if;
 
   QueueRender(Next, Cmd);
   return Next;
@@ -86,79 +87,81 @@ begin
   var StepX: real := Explorer.SpanX(State.Grid.Width, State.Grid.Height) * 0.14;
   var StepY: real := Explorer.SpanY * 0.14;
   if Key.kind = Std.Console.KeyKind.Left then
-  begin
-    Explorer.CenterX := Explorer.CenterX - StepX;
-    Changed := true;
-  end;
-  else if Key.kind = Std.Console.KeyKind.Right then
-  begin
-    Explorer.CenterX := Explorer.CenterX + StepX;
-    Changed := true;
-  end;
-  else if Key.kind = Std.Console.KeyKind.Up then
-  begin
-    Explorer.CenterY := Explorer.CenterY + StepY;
-    Changed := true;
-  end;
-  else if Key.kind = Std.Console.KeyKind.Down then
-  begin
-    Explorer.CenterY := Explorer.CenterY - StepY;
-    Changed := true;
-  end;
-  else if Key.kind = Std.Console.KeyKind.PageUp then
-  begin
-    Explorer.MaxIter := Min(Explorer.MaxIter + 32, 2048);
-    Changed := true;
-  end;
-  else if Key.kind = Std.Console.KeyKind.PageDown then
-  begin
-    Explorer.MaxIter := Max(Explorer.MaxIter - 32, 32);
-    Changed := true;
-  end;
-  else if Key.kind = Std.Console.KeyKind.Character then
-  begin
-    case Key.ch of
-      '+', '=':
-      begin
-        Explorer.SpanY := Max(Explorer.SpanY * 0.82, 0.000001);
-        Changed := true;
-      end;
-      '-':
-      begin
-        Explorer.SpanY := Min(Explorer.SpanY / 0.82, 3.5);
-        Changed := true;
-      end;
-      '1':
-      begin
-        Explorer.Palette := PaletteKind.DeepOcean;
-        Changed := true;
-      end;
-      '2':
-      begin
-        Explorer.Palette := PaletteKind.Ember;
-        Changed := true;
-      end;
-      '3':
-      begin
-        Explorer.Palette := PaletteKind.Aurora;
-        Changed := true;
-      end;
-      'r', 'R':
-      begin
-        Explorer := ExplorerState.Default();
-        Changed := true;
-      end;
-      'h', 'H':
-      begin
-        return ToggleHelp(State);
+    begin
+      Explorer.CenterX := Explorer.CenterX - StepX;
+      Changed := true;
+    end;
+  elsif Key.kind = Std.Console.KeyKind.Right then
+    begin
+      Explorer.CenterX := Explorer.CenterX + StepX;
+      Changed := true;
+    end;
+  elsif Key.kind = Std.Console.KeyKind.Up then
+    begin
+      Explorer.CenterY := Explorer.CenterY + StepY;
+      Changed := true;
+    end;
+  elsif Key.kind = Std.Console.KeyKind.Down then
+    begin
+      Explorer.CenterY := Explorer.CenterY - StepY;
+      Changed := true;
+    end;
+  elsif Key.kind = Std.Console.KeyKind.PageUp then
+    begin
+      Explorer.MaxIter := Min(Explorer.MaxIter + 32, 2048);
+      Changed := true;
+    end;
+  elsif Key.kind = Std.Console.KeyKind.PageDown then
+    begin
+      Explorer.MaxIter := Max(Explorer.MaxIter - 32, 32);
+      Changed := true;
+    end;
+  elsif Key.kind = Std.Console.KeyKind.Character then
+    begin
+      case Key.ch of
+        '+', '=':
+        begin
+          Explorer.SpanY := Max(Explorer.SpanY * 0.82, 0.000001);
+          Changed := true;
+        end;
+        '-':
+        begin
+          Explorer.SpanY := Min(Explorer.SpanY / 0.82, 3.5);
+          Changed := true;
+        end;
+        '1':
+        begin
+          Explorer.Palette := PaletteKind.DeepOcean;
+          Changed := true;
+        end;
+        '2':
+        begin
+          Explorer.Palette := PaletteKind.Ember;
+          Changed := true;
+        end;
+        '3':
+        begin
+          Explorer.Palette := PaletteKind.Aurora;
+          Changed := true;
+        end;
+        'r', 'R':
+        begin
+          Explorer := ExplorerState.Default();
+          Changed := true;
+        end;
+        'h', 'H':
+        begin
+          return ToggleHelp(State);
+        end;
       end;
     end;
-  end;
+  end if;
 
   if Changed then
-  begin
-    return RestartRender(State, Explorer, State.TerminalWidth, State.TerminalHeight, Cmd);
-  end;
+    begin
+      return RestartRender(State, Explorer, State.TerminalWidth, State.TerminalHeight, Cmd);
+    end;
+  end if;
 
   return State;
 end function;
@@ -168,36 +171,39 @@ begin
   mutable var Explorer: ExplorerState := State.Explorer;
   mutable var Changed: boolean := false;
   if Pointer.Action = Std.Console.MouseAction.ScrollUp then
-  begin
-    Explorer.SpanY := Max(Explorer.SpanY * 0.88, 0.000001);
-    Changed := true;
-  end;
-  else if Pointer.Action = Std.Console.MouseAction.ScrollDown then
-  begin
-    Explorer.SpanY := Min(Explorer.SpanY / 0.88, 3.5);
-    Changed := true;
-  end;
-  else if ((((Pointer.Action = Std.Console.MouseAction.Down) and (Pointer.Position.X >= 1)) and (Pointer.Position.X <= State.Grid.Width)) and (Pointer.Position.Y >= 1)) and
-          (Pointer.Position.Y <= State.Grid.Height) then
-  begin
-    if Pointer.Button = TuiPointerButton.Left then
     begin
-      Explorer.CenterX := ViewportX(Explorer, State.Grid.Width, State.Grid.Height, Pointer.Position.X -
-                                                                                   1);
-      Explorer.CenterY := ViewportY(Explorer, State.Grid.Height, Pointer.Position.Y - 1);
+      Explorer.SpanY := Max(Explorer.SpanY * 0.88, 0.000001);
       Changed := true;
     end;
-    else if Pointer.Button = TuiPointerButton.Middle then
+  elsif Pointer.Action = Std.Console.MouseAction.ScrollDown then
     begin
-      Explorer := ExplorerState.Default();
+      Explorer.SpanY := Min(Explorer.SpanY / 0.88, 3.5);
       Changed := true;
     end;
-  end;
+  elsif ((((Pointer.Action = Std.Console.MouseAction.Down) and (Pointer.Position.X >= 1)) and (Pointer.Position.X <= State.Grid.Width)) and (Pointer.Position.Y >= 1)) and
+        (Pointer.Position.Y <= State.Grid.Height) then
+    begin
+      if Pointer.Button = TuiPointerButton.Left then
+        begin
+          Explorer.CenterX := ViewportX(Explorer, State.Grid.Width, State.Grid.Height, Pointer.Position.X -
+                                                                                       1);
+          Explorer.CenterY := ViewportY(Explorer, State.Grid.Height, Pointer.Position.Y - 1);
+          Changed := true;
+        end;
+      elsif Pointer.Button = TuiPointerButton.Middle then
+        begin
+          Explorer := ExplorerState.Default();
+          Changed := true;
+        end;
+      end if;
+    end;
+  end if;
 
   if Changed then
-  begin
-    return RestartRender(State, Explorer, State.TerminalWidth, State.TerminalHeight, Cmd);
-  end;
+    begin
+      return RestartRender(State, Explorer, State.TerminalWidth, State.TerminalHeight, Cmd);
+    end;
+  end if;
 
   return State;
 end function;
@@ -223,27 +229,30 @@ begin
     TuiMsg.Resize(Size):
     begin
       if (Size.Width = State.TerminalWidth) and (Size.Height = State.TerminalHeight) then
-      begin
-        return State;
-      end;
+        begin
+          return State;
+        end;
+      end if;
 
       return RestartRender(State, State.Explorer, Size.Width, Size.Height, Cmd);
     end;
     TuiMsg.BackgroundFailed(Id, Kind, Message, Code, Line, Column):
     begin
       if Id = RenderSubscriptionId then
-      begin
-        return WithFailure(State, Message);
-      end;
+        begin
+          return WithFailure(State, Message);
+        end;
+      end if;
 
       return State;
     end;
     TuiMsg.QuitRequested:
     begin
       if State.HelpOpen then
-      begin
-        return ToggleHelp(State);
-      end;
+        begin
+          return ToggleHelp(State);
+        end;
+      end if;
 
       Cmd.Set(TuiCmd.Quit);
       return State;
@@ -265,9 +274,10 @@ begin
   Cmd.Set(TuiCmd.NoCommand);
   if (Message.Generation <> State.Generation) or
      (Std.Arrays.Length(Message.Cells) <> State.Grid.Width * State.Grid.Height) then
-  begin
-    return State;
-  end;
+    begin
+      return State;
+    end;
+  end if;
   mutable var Next: MandelbrotModel := State;
   Next.Grid := TuiCellGrid.Create(State.Grid.Width, State.Grid.Height, Message.Cells);
   Next.RowsRendered := State.Grid.Height;

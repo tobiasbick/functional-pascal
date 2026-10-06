@@ -42,38 +42,41 @@ begin
   Canvas.FillRect(Bounds, TuiCell.Create(' ', TuiStyleRole.StatusNormal));
   mutable var X: integer := Bounds.X;
   for Index: integer := 0 to Std.Arrays.Length(Items) - 1 do
-  begin
-    if Index > 0 then
     begin
-      X := TuiStatusWrite(Canvas, X, Bounds.Y, ' ', TuiStyleRole.StatusNormal);
-    end;
-
-    case Items[Index] of
-      TuiStatusItem.Hint(Text):
-      begin
-        X := TuiStatusWrite(Canvas, X, Bounds.Y, Text, TuiStyleRole.StatusNormal);
-      end;
-      TuiStatusItem.KeyHint(KeyText, Text):
-      begin
-        X := TuiStatusWrite(Canvas, X, Bounds.Y, KeyText, TuiStyleRole.StatusShortcut);
-        X := TuiStatusWrite(Canvas, X, Bounds.Y, ' ', TuiStyleRole.StatusNormal);
-        X := TuiStatusWrite(Canvas, X, Bounds.Y, Text, TuiStyleRole.StatusNormal);
-      end;
-      TuiStatusItem.Command(Id, Text, Action, Enabled):
-      begin
-        mutable var Role: TuiStyleRole := TuiStyleRole.StatusNormal;
-        if not Enabled then
+      if Index > 0 then
         begin
-          Role := TuiStyleRole.StatusDisabled;
+          X := TuiStatusWrite(Canvas, X, Bounds.Y, ' ', TuiStyleRole.StatusNormal);
         end;
-        else if TuiStatusFocused(Focused, Id) then
-        begin
-          Role := TuiStyleRole.StatusSelected;
-        end;
+      end if;
 
-        X := TuiStatusWrite(Canvas, X, Bounds.Y, Text, Role);
+      case Items[Index] of
+        TuiStatusItem.Hint(Text):
+        begin
+          X := TuiStatusWrite(Canvas, X, Bounds.Y, Text, TuiStyleRole.StatusNormal);
+        end;
+        TuiStatusItem.KeyHint(KeyText, Text):
+        begin
+          X := TuiStatusWrite(Canvas, X, Bounds.Y, KeyText, TuiStyleRole.StatusShortcut);
+          X := TuiStatusWrite(Canvas, X, Bounds.Y, ' ', TuiStyleRole.StatusNormal);
+          X := TuiStatusWrite(Canvas, X, Bounds.Y, Text, TuiStyleRole.StatusNormal);
+        end;
+        TuiStatusItem.Command(Id, Text, Action, Enabled):
+        begin
+          mutable var Role: TuiStyleRole := TuiStyleRole.StatusNormal;
+          if not Enabled then
+            begin
+              Role := TuiStyleRole.StatusDisabled;
+            end;
+          elsif TuiStatusFocused(Focused, Id) then
+            begin
+              Role := TuiStyleRole.StatusSelected;
+            end;
+          end if;
+
+          X := TuiStatusWrite(Canvas, X, Bounds.Y, Text, Role);
+        end;
       end;
     end;
-  end;
+  end for;
 end procedure;
 end unit;

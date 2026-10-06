@@ -9,25 +9,29 @@ function Echo(Client: Connection; Token: CancellationToken): result of boolean, 
 begin
   var Configured: boolean := try SetTimeout(Client, 5000);
   while not IsCancellationRequested(Token) do
-  begin
-    var Bytes: array of integer := try ReceiveBytesWithCancellation(Client, 4096, Token);
-    if Length(Bytes) = 0 then
     begin
-      return Ok(true);
-    end;
-    mutable var Offset: integer := 0;
-    while Offset < Length(Bytes) do
-    begin
-      var Count: integer := try SendBytesWithCancellation(Client, Slice(Bytes, Offset, Length(Bytes) -
-                                                                                       Offset), Token);
-      if Count <= 0 then
-      begin
-        return Error('TCP write made no progress');
-      end;
+      var Bytes: array of integer := try ReceiveBytesWithCancellation(Client, 4096, Token);
+      if Length(Bytes) = 0 then
+        begin
+          return Ok(true);
+        end;
+      end if;
+      mutable var Offset: integer := 0;
+      while Offset < Length(Bytes) do
+        begin
+          var Count: integer := try SendBytesWithCancellation(Client, Slice(Bytes, Offset, Length(Bytes) -
+                                                                                           Offset), Token);
+          if Count <= 0 then
+            begin
+              return Error('TCP write made no progress');
+            end;
+          end if;
 
-      Offset := Offset + Count;
+          Offset := Offset + Count;
+        end;
+      end while;
     end;
-  end;
+  end while;
 
   return Ok(true);
 end function;
@@ -36,76 +40,85 @@ begin
   mutable var Port: integer := 18082;
   mutable var LifetimeMillis: integer := 10000;
   if ParamCount() > 2 then
-  begin
-    panic('usage: tcp_parallel_echo_server.fpas -- [PORT [LIFETIME_MS]]');
-  end;
+    begin
+      panic('usage: tcp_parallel_echo_server.fpas -- [PORT [LIFETIME_MS]]');
+    end;
+  end if;
 
   if ParamCount() >= 1 then
-  begin
-    Port := StrToInt(ParamStr(0));
-  end;
+    begin
+      Port := StrToInt(ParamStr(0));
+    end;
+  end if;
 
   if ParamCount() = 2 then
-  begin
-    LifetimeMillis := StrToInt(ParamStr(1));
-  end;
+    begin
+      LifetimeMillis := StrToInt(ParamStr(1));
+    end;
+  end if;
 
   if (LifetimeMillis < 1) or (LifetimeMillis > 300000) then
-  begin
-    panic('LIFETIME_MS must be 1..300000');
-  end;
+    begin
+      panic('LIFETIME_MS must be 1..300000');
+    end;
+  end if;
   var ListenerValue: Listener := Unwrap(Listen('127.0.0.1', Port));
   var Life: ServerLifetime := Unwrap(CreateLifetime(1000, true));
   Unwrap(OwnListener(Life, ListenerValue));
   Unwrap(ObserveSignals(Life));
   var Workers: TaskGroup := GetWorkGroup(Life);
   for Index: integer := 1 to 4 do
-  begin
-    StartTaskInGroup(Workers, function(Token: CancellationToken): result of boolean, string begin
-      while not IsCancellationRequested(Token) do
-      begin
-        case AcceptWithCancellation(ListenerValue, Token) of
-          Ok(Client):
+    begin
+      StartTaskInGroup(Workers, function(Token: CancellationToken): result of boolean, string begin
+        while not IsCancellationRequested(Token) do
           begin
-            var Outcome: result of boolean, string := Echo(Client, Token);
-            // Close even on read/write failure. One failed client does not stop admission.
-            var Closed: boolean := try Close(Client);
-            case Outcome of
-              Error(Message):
+            case AcceptWithCancellation(ListenerValue, Token) of
+              Ok(Client):
               begin
-                if not IsCancellationRequested(Token) then
-                begin
-                  WriteLn(Message);
+                var Outcome: result of boolean, string := Echo(Client, Token);
+                // Close even on read/write failure. One failed client does not stop admission.
+                var Closed: boolean := try Close(Client);
+                case Outcome of
+                  Error(Message):
+                  begin
+                    if not IsCancellationRequested(Token) then
+                      begin
+                        WriteLn(Message);
+                      end;
+                    end if;
+                  end;
+                  Ok(_):
+                  begin
+                  end;
                 end;
               end;
-              Ok(_):
+              Error(Message):
               begin
+                if IsCancellationRequested(Token) then
+                  begin
+                    return Ok(true);
+                  end;
+                end if;
+
+                RequestStop(Life);
+                return Error(Message);
               end;
             end;
           end;
-          Error(Message):
-          begin
-            if IsCancellationRequested(Token) then
-            begin
-              return Ok(true);
-            end;
+        end while;
 
-            RequestStop(Life);
-            return Error(Message);
-          end;
-        end;
-      end;
-
-      return Ok(true);
-    end);
-  end;
+        return Ok(true);
+      end);
+    end;
+  end for;
 
   WriteLn('Parallel TCP echo ready');
   var Started: integer := MonotonicMillis();
   while IsReady(Life) and (ElapsedMillis(Started) < LifetimeMillis) do
-  begin
-    Sleep(10);
-  end;
+    begin
+      Sleep(10);
+    end;
+  end while;
 
   RequestStop(Life);
   mutable var Failures: array of TaskFailure := [];
@@ -123,20 +136,23 @@ begin
   end;
 
   for Failure: TaskFailure in Failures do
-  begin
-    WriteLn(Failure.Message);
-  end;
+    begin
+      WriteLn(Failure.Message);
+    end;
+  end for;
 
   for Message: string in ShutdownErrors(Life) do
-  begin
-    WriteLn(Message);
-  end;
+    begin
+      WriteLn(Message);
+    end;
+  end for;
 
   Unwrap(FinishShutdown(Life));
   if Length(Failures) <> 0 then
-  begin
-    panic('TCP worker failed');
-  end;
+    begin
+      panic('TCP worker failed');
+    end;
+  end if;
 
   WriteLn('Parallel TCP echo stopped');
 end.

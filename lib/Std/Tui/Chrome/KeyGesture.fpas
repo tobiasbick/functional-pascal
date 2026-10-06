@@ -60,14 +60,16 @@ public type
     begin
       if ((((Self.Kind <> Key.kind) or (Self.Shift <> Key.shift)) or (Self.Ctrl <> Key.ctrl)) or (Self.Alt <> Key.alt)) or
          (Self.Meta <> Key.meta) then
-      begin
-        return false;
-      end;
+        begin
+          return false;
+        end;
+      end if;
 
       if Self.Kind = Std.Console.KeyKind.Character then
-      begin
-        return Std.Str.ToLower(Self.Character) = Std.Str.ToLower(Key.ch);
-      end;
+        begin
+          return Std.Str.ToLower(Self.Character) = Std.Str.ToLower(Key.ch);
+        end;
+      end if;
 
       return true;
     end function;

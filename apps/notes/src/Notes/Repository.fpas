@@ -8,14 +8,16 @@ uses
 public function NotesEnsureDirectory(Directory: string): result of boolean, string;
 begin
   if Std.Fs.Exists(Directory) then
-  begin
-    if Std.Fs.IsDir(Directory) then
     begin
-      return Ok(true);
-    end;
+      if Std.Fs.IsDir(Directory) then
+        begin
+          return Ok(true);
+        end;
+      end if;
 
-    return Error('Notes path exists but is not a directory: ' + Directory);
-  end;
+      return Error('Notes path exists but is not a directory: ' + Directory);
+    end;
+  end if;
 
   return Std.Fs.CreateDir(Directory);
 end function;
@@ -24,9 +26,10 @@ end function;
 public function NoteFilePath(Directory: string; NoteValue: Note): string;
 begin
   if NoteValue.Path <> '' then
-  begin
-    return NoteValue.Path;
-  end;
+    begin
+      return NoteValue.Path;
+    end;
+  end if;
 
   return Std.Path.Join([Directory, NoteValue.Id + '.note']);
 end function;
@@ -40,9 +43,10 @@ end function;
 function AppendEscapedPattern(Acc: string; Character: string): string;
 begin
   if (((Character = '[') or (Character = ']')) or (Character = '*')) or (Character = '?') then
-  begin
-    return ((Acc + '[') + Character) + ']';
-  end;
+    begin
+      return ((Acc + '[') + Character) + ']';
+    end;
+  end if;
 
   return Acc + Character;
 end function;
@@ -62,59 +66,63 @@ begin
   mutable var IdCounts: dict of string to integer := [:];
   mutable var Issues: array of NoteIssue := [];
   for Index: integer := 0 to Std.Arrays.Length(Paths) - 1 do
-  begin
-    var Path: string := Paths[Index];
-    case Std.Fs.ReadText(Path) of
-      Ok(Text):
-      begin
-        case NoteParse(Text) of
-          Ok(NoteValue):
-          begin
-            mutable var Loaded: Note := NoteValue;
-            Loaded.Path := Path;
-            Std.Arrays.Push(Notes, Loaded);
-            if Std.Dictionaries.ContainsKey(IdCounts, Loaded.Id) then
+    begin
+      var Path: string := Paths[Index];
+      case Std.Fs.ReadText(Path) of
+        Ok(Text):
+        begin
+          case NoteParse(Text) of
+            Ok(NoteValue):
             begin
-              IdCounts[Loaded.Id] := IdCounts[Loaded.Id] + 1;
+              mutable var Loaded: Note := NoteValue;
+              Loaded.Path := Path;
+              Std.Arrays.Push(Notes, Loaded);
+              if Std.Dictionaries.ContainsKey(IdCounts, Loaded.Id) then
+                begin
+                  IdCounts[Loaded.Id] := IdCounts[Loaded.Id] + 1;
+                end;
+              else
+                begin
+                  IdCounts[Loaded.Id] := 1;
+                end;
+              end if;
             end;
-            else
+            Error(Message):
             begin
-              IdCounts[Loaded.Id] := 1;
+              Std.Arrays.Push(Issues, record
+                Path := Path;
+                Message := Message;
+              end);
             end;
-          end;
-          Error(Message):
-          begin
-            Std.Arrays.Push(Issues, record
-              Path := Path;
-              Message := Message;
-            end);
           end;
         end;
-      end;
-      Error(Message):
-      begin
-        Std.Arrays.Push(Issues, record
-          Path := Path;
-          Message := Message;
-        end);
+        Error(Message):
+        begin
+          Std.Arrays.Push(Issues, record
+            Path := Path;
+            Message := Message;
+          end);
+        end;
       end;
     end;
-  end;
+  end for;
   mutable var Unique: array of Note := [];
   for Loaded: Note in Notes do
-  begin
-    if IdCounts[Loaded.Id] > 1 then
     begin
-      Std.Arrays.Push(Issues, record
-        Path := Loaded.Path;
-        Message := ('Duplicate note ID: ' + Loaded.Id) + '. Give each file a unique ID before editing.';
-      end);
+      if IdCounts[Loaded.Id] > 1 then
+        begin
+          Std.Arrays.Push(Issues, record
+            Path := Loaded.Path;
+            Message := ('Duplicate note ID: ' + Loaded.Id) + '. Give each file a unique ID before editing.';
+          end);
+        end;
+      else
+        begin
+          Std.Arrays.Push(Unique, Loaded);
+        end;
+      end if;
     end;
-    else
-    begin
-      Std.Arrays.Push(Unique, Loaded);
-    end;
-  end;
+  end for;
 
   return Ok(record
     Notes := NotesSort(Unique);

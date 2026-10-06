@@ -23,9 +23,10 @@ end procedure;
 
 begin
   for Maximum: integer := 7 to 9 do
-  begin
-    CheckFinal('data: x', Maximum, 'x');
-  end;
+    begin
+      CheckFinal('data: x', Maximum, 'x');
+    end;
+  end for;
 
   CheckFinal('data: x' + #13, 8, 'x');
   CheckFinal('data: x' + #10, 8, 'x');

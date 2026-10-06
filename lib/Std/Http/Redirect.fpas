@@ -11,15 +11,17 @@ function Authority(UriValue: Uri): string;
 begin
   mutable var Host: string := UriValue.Host;
   if Std.Str.Contains(Host, ':') then
-  begin
-    Host := ('[' + Host) + ']';
-  end;
+    begin
+      Host := ('[' + Host) + ']';
+    end;
+  end if;
 
   if ((UriValue.Scheme = 'http') and (UriValue.Port = 80)) or
      ((UriValue.Scheme = 'https') and (UriValue.Port = 443)) then
-  begin
-    return Host;
-  end;
+    begin
+      return Host;
+    end;
+  end if;
 
   return (Host + ':') + Std.Conv.IntToStr(UriValue.Port);
 end function;
@@ -41,9 +43,10 @@ function WithoutFragment(Text: string): string;
 begin
   var Fragment: integer := Std.Str.IndexOf(Text, '#');
   if Fragment < 0 then
-  begin
-    return Text;
-  end;
+    begin
+      return Text;
+    end;
+  end if;
 
   return Std.Str.Substring(Text, 0, Fragment);
 end function;
@@ -56,9 +59,10 @@ function PathWithoutQuery(Path: string): string;
 begin
   var Query: integer := Std.Str.IndexOf(Path, '?');
   if Query < 0 then
-  begin
-    return Path;
-  end;
+    begin
+      return Path;
+    end;
+  end if;
 
   return Std.Str.Substring(Path, 0, Query);
 end function;
@@ -73,33 +77,38 @@ begin
   mutable var Query: string := '';
   var QueryStart: integer := Std.Str.IndexOf(PathAndQuery, '?');
   if QueryStart >= 0 then
-  begin
-    Path := Std.Str.Substring(PathAndQuery, 0, QueryStart);
-    Query := Std.Str.Substring(PathAndQuery, QueryStart, Std.Str.Length(PathAndQuery) - QueryStart);
-  end;
+    begin
+      Path := Std.Str.Substring(PathAndQuery, 0, QueryStart);
+      Query := Std.Str.Substring(PathAndQuery, QueryStart, Std.Str.Length(PathAndQuery) - QueryStart);
+    end;
+  end if;
   var Parts: array of string := Std.Str.Split(Path, '/');
   mutable var Segments: array of string := [];
   // The first empty segment belongs to the absolute root. All others are significant.
   for Index: integer := 1 to Std.Arrays.Length(Parts) - 1 do
-  begin
-    var Part: string := Parts[Index];
-    if Part = '..' then
     begin
-      if Std.Arrays.Length(Segments) > 0 then
-      begin
-        Segments := Std.Arrays.Slice(Segments, 0, Std.Arrays.Length(Segments) - 1);
-      end;
-    end;
-    else if Part <> '.' then
-    begin
-      Std.Arrays.Push(Segments, Part);
-    end;
+      var Part: string := Parts[Index];
+      if Part = '..' then
+        begin
+          if Std.Arrays.Length(Segments) > 0 then
+            begin
+              Segments := Std.Arrays.Slice(Segments, 0, Std.Arrays.Length(Segments) - 1);
+            end;
+          end if;
+        end;
+      elsif Part <> '.' then
+        begin
+          Std.Arrays.Push(Segments, Part);
+        end;
+      end if;
 
-    if ((Part = '.') or (Part = '..')) and (Index = Std.Arrays.Length(Parts) - 1) then
-    begin
-      Std.Arrays.Push(Segments, '');
+      if ((Part = '.') or (Part = '..')) and (Index = Std.Arrays.Length(Parts) - 1) then
+        begin
+          Std.Arrays.Push(Segments, '');
+        end;
+      end if;
     end;
-  end;
+  end for;
   var Output: string := '/' + Std.Str.Join(Segments, '/');
   return Output + Query;
 end function;
@@ -112,51 +121,55 @@ end function;
 function Resolve(Base: Uri; Location: string): result of string, string;
 begin
   if Std.Http.Headers.ContainsUnsafeText(Location) then
-  begin
-    return Error('HTTP redirect Location contains CR or LF');
-  end;
+    begin
+      return Error('HTTP redirect Location contains CR or LF');
+    end;
+  end if;
   var Reference: string := WithoutFragment(Std.Str.Trim(Location));
   mutable var Target: string := '';
   if Reference = '' then
-  begin
-    Target := Origin(Base) + Base.Path;
-  end;
-  else if Std.Str.Contains(Reference, '://') then
-  begin
-    Target := Reference;
-  end;
-  else if Std.Str.StartsWith(Reference, '//') then
-  begin
-    Target := (Base.Scheme + ':') + Reference;
-  end;
-  else if Std.Str.StartsWith(Reference, '/') then
-  begin
-    Target := Origin(Base) + NormalizePath(Reference);
-  end;
-  else if Std.Str.StartsWith(Reference, '?') then
-  begin
-    Target := (Origin(Base) + PathWithoutQuery(Base.Path)) + Reference;
-  end;
-  else
-  begin
-    var BasePath: string := PathWithoutQuery(Base.Path);
-    var LastSlash: integer := Std.Str.LastIndexOf(BasePath, '/');
-    mutable var Directory: string := '/';
-    if LastSlash >= 0 then
     begin
-      Directory := Std.Str.Substring(BasePath, 0, LastSlash + 1);
+      Target := Origin(Base) + Base.Path;
     end;
+  elsif Std.Str.Contains(Reference, '://') then
+    begin
+      Target := Reference;
+    end;
+  elsif Std.Str.StartsWith(Reference, '//') then
+    begin
+      Target := (Base.Scheme + ':') + Reference;
+    end;
+  elsif Std.Str.StartsWith(Reference, '/') then
+    begin
+      Target := Origin(Base) + NormalizePath(Reference);
+    end;
+  elsif Std.Str.StartsWith(Reference, '?') then
+    begin
+      Target := (Origin(Base) + PathWithoutQuery(Base.Path)) + Reference;
+    end;
+  else
+    begin
+      var BasePath: string := PathWithoutQuery(Base.Path);
+      var LastSlash: integer := Std.Str.LastIndexOf(BasePath, '/');
+      mutable var Directory: string := '/';
+      if LastSlash >= 0 then
+        begin
+          Directory := Std.Str.Substring(BasePath, 0, LastSlash + 1);
+        end;
+      end if;
 
-    Target := Origin(Base) + NormalizePath(Directory + Reference);
-  end;
+      Target := Origin(Base) + NormalizePath(Directory + Reference);
+    end;
+  end if;
 
   case Std.Net.Uri.Parse(Target) of
     Ok(Parsed):
     begin
       if Std.Str.Contains(Reference, '://') or Std.Str.StartsWith(Reference, '//') then
-      begin
-        return Ok(Origin(Parsed) + NormalizePath(Parsed.Path));
-      end;
+        begin
+          return Ok(Origin(Parsed) + NormalizePath(Parsed.Path));
+        end;
+      end if;
 
       return Ok(Target);
     end;
@@ -188,22 +201,25 @@ function FilterHeaders(Headers: array of Header; CrossOrigin: boolean; DropBody:
 begin
   mutable var Output: array of Header := [];
   for Index: integer := 0 to Std.Arrays.Length(Headers) - 1 do
-  begin
-    var Name: string := Headers[Index].Name;
-    if CrossOrigin and
-       ((Std.Http.Headers.IsName(Name, 'Authorization') or Std.Http.Headers.IsName(Name, 'Proxy-Authorization')) or Std.Http.Headers.IsName(Name, 'Cookie')) then
     begin
-      continue;
-    end;
+      var Name: string := Headers[Index].Name;
+      if CrossOrigin and
+         ((Std.Http.Headers.IsName(Name, 'Authorization') or Std.Http.Headers.IsName(Name, 'Proxy-Authorization')) or Std.Http.Headers.IsName(Name, 'Cookie')) then
+        begin
+          continue;
+        end;
+      end if;
 
-    if DropBody and
-       (Std.Http.Headers.IsName(Name, 'Content-Type') or Std.Http.Headers.IsName(Name, 'Content-Encoding')) then
-    begin
-      continue;
-    end;
+      if DropBody and
+         (Std.Http.Headers.IsName(Name, 'Content-Type') or Std.Http.Headers.IsName(Name, 'Content-Encoding')) then
+        begin
+          continue;
+        end;
+      end if;
 
-    Std.Arrays.Push(Output, Headers[Index]);
-  end;
+      Std.Arrays.Push(Output, Headers[Index]);
+    end;
+  end for;
 
   return Output;
 end function;
@@ -271,10 +287,11 @@ begin
   Output.Url := Target;
   Output.Headers := FilterHeaders(Current.Headers, not SameOrigin(Base, TargetUri), DropBody);
   if DropBody then
-  begin
-    Output.Method := 'GET';
-    Output.Body := [];
-  end;
+    begin
+      Output.Method := 'GET';
+      Output.Body := [];
+    end;
+  end if;
 
   return Ok(Output);
 end function;

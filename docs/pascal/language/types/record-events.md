@@ -31,7 +31,7 @@ type
     procedure WriteOnClick(Self: Button; Handler: Option of ClickHandler);
 
     event OnClick: ClickHandler read ReadOnClick write WriteOnClick;
-  end procedure;
+  end record;
 ```
 
 Rules:
@@ -80,7 +80,9 @@ Rules:
 
 ```pascal
 if Assigned(B.OnClick) then
-  …
+  // The handler is installed.
+  null;
+end if;
 ```
 
 It evaluates the getter once and returns whether the result is `Some`. Reading an event
@@ -94,6 +96,7 @@ test a visible event but cannot raise it.
 ```pascal
 if Assigned(B.OnClick) then
   B.OnClick(B);
+end if;
 ```
 
 Invocation evaluates the getter once, unwraps the handler, and calls it synchronously.

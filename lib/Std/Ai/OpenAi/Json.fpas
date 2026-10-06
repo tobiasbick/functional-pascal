@@ -13,9 +13,10 @@ public function EncodeRequest(Model: string; Messages: array of ChatMessage; Opt
 begin
   mutable var MessageValues: array of JsonValue := [];
   for Index: integer := 0 to Std.Arrays.Length(Messages) - 1 do
-  begin
-    Std.Arrays.Push(MessageValues, JsonValue.Object(['role': JsonValue.String(Messages[Index].Role), 'content': JsonValue.String(Messages[Index].Content)]));
-  end;
+    begin
+      Std.Arrays.Push(MessageValues, JsonValue.Object(['role': JsonValue.String(Messages[Index].Role), 'content': JsonValue.String(Messages[Index].Content)]));
+    end;
+  end for;
   mutable var Fields: dict of string to JsonValue := ['model': JsonValue.String(Model), 'messages': JsonValue.ArrayValue(MessageValues), 'stream': JsonValue.Bool(false)];
   case Options.Temperature of
     Some(Value):
@@ -78,9 +79,10 @@ begin
                 JsonValue.ArrayValue(Choices):
                 begin
                   if Std.Arrays.Length(Choices) = 0 then
-                  begin
-                    return Error('OpenAI-compatible response contains no choices');
-                  end;
+                    begin
+                      return Error('OpenAI-compatible response contains no choices');
+                    end;
+                  end if;
 
                   case Choices[0] of
                     JsonValue.Object(ChoiceFields):

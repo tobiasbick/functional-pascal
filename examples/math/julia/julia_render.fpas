@@ -22,14 +22,15 @@ end function;
 function RenderCell(Sample: PixelSample; Palette: PaletteKind): Cell;
 begin
   if Sample.IsInside then
-  begin
-    var CellShade: Color := InsideColor();
-    return record
-      glyph := ' ';
-      foreground := CellShade;
-      background := CellShade;
+    begin
+      var CellShade: Color := InsideColor();
+      return record
+        glyph := ' ';
+        foreground := CellShade;
+        background := CellShade;
+      end;
     end;
-  end;
+  end if;
 
   return record
     glyph := EscapeGlyph(Sample.EscapeValue);
@@ -43,19 +44,22 @@ begin
   var CurrentWidth: integer := ScreenWidth();
   mutable var DrawWidth: integer := Width;
   if DrawWidth > CurrentWidth then
-  begin
-    DrawWidth := CurrentWidth;
-  end;
+    begin
+      DrawWidth := CurrentWidth;
+    end;
+  end if;
 
   if DrawWidth < 1 then
-  begin
-    return;
-  end;
+    begin
+      return;
+    end;
+  end if;
   mutable var Cells: array of Cell := [];
   for Px: integer := 0 to DrawWidth - 1 do
-  begin
-    Push(Cells, RenderCell(Row[Px], Palette));
-  end;
+    begin
+      Push(Cells, RenderCell(Row[Px], Palette));
+    end;
+  end for;
 
   WriteCells(1, Y, Cells);
 end procedure;
@@ -86,30 +90,34 @@ begin
   var Group: TaskGroup := CreateTaskGroup();
   var Rows: channel of RenderRow := CreateChannel(4);
   for Worker: integer := 0 to 3 do
-  begin
-    StartTaskInGroup(Group, procedure(Token: CancellationToken) begin
-      mutable var Py: integer := Worker;
-      while (Py < Height) and not IsCancellationRequested(Token) do
-      begin
-        var Samples: array of PixelSample := ComputeRow(Py, Width, Height, XMin, XMax, YMin, YMax, MaxIter, Jr, Ji, Token);
-        if IsCancellationRequested(Token) then
-        begin
-          return;
-        end;
-        var Row: RenderRow := record
-          Y := Py;
-          Samples := Samples;
-        end;
+    begin
+      StartTaskInGroup(Group, procedure(Token: CancellationToken) begin
+        mutable var Py: integer := Worker;
+        while (Py < Height) and not IsCancellationRequested(Token) do
+          begin
+            var Samples: array of PixelSample := ComputeRow(Py, Width, Height, XMin, XMax, YMin, YMax, MaxIter, Jr, Ji, Token);
+            if IsCancellationRequested(Token) then
+              begin
+                return;
+              end;
+            end if;
+            var Row: RenderRow := record
+              Y := Py;
+              Samples := Samples;
+            end;
 
-        if IsError(SendWithCancellation(Rows, Row, Token)) then
-        begin
-          return;
-        end;
+            if IsError(SendWithCancellation(Rows, Row, Token)) then
+              begin
+                return;
+              end;
+            end if;
 
-        Py := Py + 4;
-      end;
-    end);
-  end;
+            Py := Py + 4;
+          end;
+        end while;
+      end);
+    end;
+  end for;
 
   return record
     Group := Group;
@@ -123,21 +131,23 @@ end function;
 public procedure PollRender(Job: RenderJob);
 begin
   for Index: integer := 1 to 4 do
-  begin
-    case Std.Results.Unwrap(TryReceive(Job.Rows)) of
-      Some(Row):
-      begin
-        if (Row.Y + 1) <= Max(ScreenHeight() - 3, 1) then
+    begin
+      case Std.Results.Unwrap(TryReceive(Job.Rows)) of
+        Some(Row):
         begin
-          DrawRow(Row.Samples, Job.Width, Row.Y + 1, Job.Palette);
+          if (Row.Y + 1) <= Max(ScreenHeight() - 3, 1) then
+            begin
+              DrawRow(Row.Samples, Job.Width, Row.Y + 1, Job.Palette);
+            end;
+          end if;
+        end;
+        None:
+        begin
+          return;
         end;
       end;
-      None:
-      begin
-        return;
-      end;
     end;
-  end;
+  end for;
 end procedure;
 
 // Cancel CPU work and blocked sends before releasing the old queue.
@@ -147,8 +157,9 @@ begin
   var Failures: array of TaskFailure := CloseTaskGroup(Job.Group);
   CloseChannel(Job.Rows);
   if Std.Arrays.Length(Failures) <> 0 then
-  begin
-    panic(Failures[0].Message);
-  end;
+    begin
+      panic(Failures[0].Message);
+    end;
+  end if;
 end procedure;
 end unit;

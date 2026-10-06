@@ -13,9 +13,10 @@ public function TuiFocusFirst(Root: TuiElement): option of TuiControlId;
 begin
   var Controls: array of TuiControlId := TuiFocusableControls(Root);
   if Std.Arrays.Length(Controls) = 0 then
-  begin
-    return None;
-  end;
+    begin
+      return None;
+    end;
+  end if;
 
   return Some(Controls[0]);
 end function;
@@ -29,17 +30,19 @@ public function TuiFocusResolve(Root: TuiElement; Preferred: option of TuiContro
 begin
   var Controls: array of TuiControlId := TuiFocusableControls(Root);
   if Std.Arrays.Length(Controls) = 0 then
-  begin
-    return None;
-  end;
+    begin
+      return None;
+    end;
+  end if;
 
   case Preferred of
     Some(Id):
     begin
       if TuiControlIndex(Controls, Id) >= 0 then
-      begin
-        return Preferred;
-      end;
+        begin
+          return Preferred;
+        end;
+      end if;
     end;
     None:
     begin

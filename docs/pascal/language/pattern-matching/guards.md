@@ -9,11 +9,17 @@ function Classify(N: integer): string;
 begin
   case N of
     0:
+    begin
       return 'zero';
+    end;
     N if N > 0:
+    begin
       return 'positive';
+    end;
     N if N < 0:
+    begin
       return 'negative';
+    end;
   end;
 end function;
 ```
@@ -23,15 +29,25 @@ Guards work with all label types — values, ranges, destructuring, and enum pat
 ```pascal
 case S of
   Shape.Circle(R) if R > 10.0:
+  begin
     WriteLn('Large circle');
+  end;
   Shape.Circle(R):
+  begin
     WriteLn('Small circle');
+  end;
   Shape.Rectangle(W, H) if W = H:
+  begin
     WriteLn('Square');
+  end;
   Shape.Rectangle(W, H):
+  begin
     WriteLn('Rectangle');
+  end;
   Shape.Point:
+  begin
     WriteLn('Point');
+  end;
 end;
 ```
 
@@ -45,11 +61,17 @@ In scalar `case` arms, a single bare identifier with a guard introduces a bindin
 ```pascal
 case Value of
   N if N > 0:
+  begin
     WriteLn('positive');
+  end;
   N if N < 0:
+  begin
     WriteLn('negative');
-else
-  WriteLn('zero');
+  end;
+  else
+  begin
+    WriteLn('zero');
+  end;
 end;
 ```
 

@@ -9,7 +9,7 @@ fn if_then_with_block() {
            Y := 1; \
            Z := 2; \
          end; \
-         end.",
+         end if; end.",
     );
     match &stmts[0] {
         Stmt::If {
@@ -35,7 +35,7 @@ fn if_then_else_with_blocks() {
          begin \
            Y := 2; \
          end; \
-         end.",
+         end if; end.",
     );
     match &stmts[0] {
         Stmt::If {

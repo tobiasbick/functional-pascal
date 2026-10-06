@@ -15,71 +15,82 @@ uses
 public procedure TuiPaintInput(Canvas: TuiCanvas; Bounds: TuiRect; Input: TuiInputSpec; Focused: boolean);
 begin
   if Bounds.IsEmpty() then
-  begin
-    return;
-  end;
+    begin
+      return;
+    end;
+  end if;
   mutable var Role: TuiStyleRole := TuiStyleRole.InputNormal;
   if Focused then
-  begin
-    Role := TuiStyleRole.InputFocused;
-  end;
+    begin
+      Role := TuiStyleRole.InputFocused;
+    end;
+  end if;
 
   Canvas.FillRect(Bounds, TuiCell.Create(' ', Role));
   if Bounds.Width <= 2 then
-  begin
-    if Focused then
     begin
-      Canvas.WriteText(TuiPoint.Create(Bounds.X, Bounds.Y), ' ', TuiStyleRole.InputCursor);
-    end;
+      if Focused then
+        begin
+          Canvas.WriteText(TuiPoint.Create(Bounds.X, Bounds.Y), ' ', TuiStyleRole.InputCursor);
+        end;
+      end if;
 
-    return;
-  end;
+      return;
+    end;
+  end if;
   var ContentWidth: integer := Bounds.Width - 2;
   var Viewport: TuiInputViewport := TuiInputViewportFor(Input.Text, Input.Caret, ContentWidth);
   if Input.Text = '' then
-  begin
-    mutable var HintX: integer := Bounds.X + 1;
-    mutable var HintWidth: integer := ContentWidth;
-    if Focused and (HintWidth > 1) then
     begin
-      HintX := HintX + 1;
-      HintWidth := HintWidth - 1;
-    end;
+      mutable var HintX: integer := Bounds.X + 1;
+      mutable var HintWidth: integer := ContentWidth;
+      if Focused and (HintWidth > 1) then
+        begin
+          HintX := HintX + 1;
+          HintWidth := HintWidth - 1;
+        end;
+      end if;
 
-    Canvas.Child(TuiRect.Create(HintX, Bounds.Y, HintWidth, 1))
-      .WriteText(TuiPoint.Create(0, 0), Input.Hint, TuiStyleRole.InputHint);
-  end;
+      Canvas.Child(TuiRect.Create(HintX, Bounds.Y, HintWidth, 1))
+        .WriteText(TuiPoint.Create(0, 0), Input.Hint, TuiStyleRole.InputHint);
+    end;
   else
-  begin
-    Canvas.Child(TuiRect.Create(Bounds.X + 1, Bounds.Y, ContentWidth, 1))
-      .WriteText(TuiPoint.Create(0, 0), Std.Str.Substring(Input.Text, Viewport.Start, Viewport.EndIndex -
-                                                                                      Viewport.Start), Role);
-  end;
+    begin
+      Canvas.Child(TuiRect.Create(Bounds.X + 1, Bounds.Y, ContentWidth, 1))
+        .WriteText(TuiPoint.Create(0, 0), Std.Str.Substring(Input.Text, Viewport.Start, Viewport.EndIndex -
+                                                                                        Viewport.Start), Role);
+    end;
+  end if;
 
   if Viewport.LeftClipped then
-  begin
-    Canvas.WriteText(TuiPoint.Create(Bounds.X, Bounds.Y), '◄', TuiStyleRole.InputScroll);
-  end;
+    begin
+      Canvas.WriteText(TuiPoint.Create(Bounds.X, Bounds.Y), '◄', TuiStyleRole.InputScroll);
+    end;
+  end if;
 
   if Viewport.RightClipped then
-  begin
-    Canvas.WriteText(TuiPoint.Create(Bounds.Right() - 1, Bounds.Y), '►', TuiStyleRole.InputScroll);
-  end;
+    begin
+      Canvas.WriteText(TuiPoint.Create(Bounds.Right() - 1, Bounds.Y), '►', TuiStyleRole.InputScroll);
+    end;
+  end if;
 
   if Focused then
-  begin
-    mutable var CursorX: integer := (Bounds.X + 1) + Viewport.CaretColumn;
-    if CursorX >= Bounds.Right() - 1 then
     begin
-      CursorX := Bounds.Right() - 2;
-    end;
-    mutable var CursorGlyph: string := ' ';
-    if Input.Caret < Std.Str.Length(Input.Text) then
-    begin
-      CursorGlyph := Std.Str.CharAt(Input.Text, Input.Caret);
-    end;
+      mutable var CursorX: integer := (Bounds.X + 1) + Viewport.CaretColumn;
+      if CursorX >= Bounds.Right() - 1 then
+        begin
+          CursorX := Bounds.Right() - 2;
+        end;
+      end if;
+      mutable var CursorGlyph: string := ' ';
+      if Input.Caret < Std.Str.Length(Input.Text) then
+        begin
+          CursorGlyph := Std.Str.CharAt(Input.Text, Input.Caret);
+        end;
+      end if;
 
-    Canvas.WriteText(TuiPoint.Create(CursorX, Bounds.Y), CursorGlyph, TuiStyleRole.InputCursor);
-  end;
+      Canvas.WriteText(TuiPoint.Create(CursorX, Bounds.Y), CursorGlyph, TuiStyleRole.InputCursor);
+    end;
+  end if;
 end procedure;
 end unit;

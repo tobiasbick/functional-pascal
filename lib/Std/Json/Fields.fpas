@@ -123,14 +123,16 @@ public function IntegerField(Fields: dict of string to JsonValue; Name: string):
 begin
   var Value: real := try NumberField(Fields, Name);
   if (Value < IntegerLowerBound) or (Value >= IntegerUpperBound) then
-  begin
-    return Error(('field ' + Name) + ' is outside the integer range');
-  end;
+    begin
+      return Error(('field ' + Name) + ' is outside the integer range');
+    end;
+  end if;
   var IntegerValue: integer := Trunc(Value);
   if Std.Conv.IntToReal(IntegerValue) <> Value then
-  begin
-    return Error(MismatchError(Name, 'an integer'));
-  end;
+    begin
+      return Error(MismatchError(Name, 'an integer'));
+    end;
+  end if;
 
   return Ok(IntegerValue);
 end function;
@@ -182,18 +184,19 @@ public function StringArrayField(Fields: dict of string to JsonValue; Name: stri
 begin
   mutable var Values: array of string := [];
   for Item: JsonValue in try ArrayField(Fields, Name) do
-  begin
-    case Item of
-      JsonValue.String(Value):
-      begin
-        Std.Arrays.Push(Values, Value);
-      end;
-      else
-      begin
-        return Error(MismatchError(Name, 'an array of strings'));
+    begin
+      case Item of
+        JsonValue.String(Value):
+        begin
+          Std.Arrays.Push(Values, Value);
+        end;
+        else
+        begin
+          return Error(MismatchError(Name, 'an array of strings'));
+        end;
       end;
     end;
-  end;
+  end for;
 
   return Ok(Values);
 end function;
@@ -206,12 +209,14 @@ end function;
 public function RequireOnlyFields(Fields: dict of string to JsonValue; Allowed: array of string): result of boolean, string;
 begin
   for Name: string in Std.Dictionaries.Keys(Fields) do
-  begin
-    if not Std.Arrays.Contains(Allowed, Name) then
     begin
-      return Error('unexpected field ' + Name);
+      if not Std.Arrays.Contains(Allowed, Name) then
+        begin
+          return Error('unexpected field ' + Name);
+        end;
+      end if;
     end;
-  end;
+  end for;
 
   return Ok(true);
 end function;

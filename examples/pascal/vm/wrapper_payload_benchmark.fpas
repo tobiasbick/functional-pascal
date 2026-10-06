@@ -13,34 +13,39 @@ function RunWrappers(Iterations: integer): integer;
 begin
   mutable var Total: integer := 0;
   for Index: integer := 1 to Iterations do
-  begin
-    var ResultValue: result of integer, string := Ok(Index);
-    var OptionValue: option of integer := Some(Std.Results.Unwrap(ResultValue));
-    Total := Total + Std.Options.Unwrap(OptionValue);
-  end;
+    begin
+      var ResultValue: result of integer, string := Ok(Index);
+      var OptionValue: option of integer := Some(Std.Results.Unwrap(ResultValue));
+      Total := Total + Std.Options.Unwrap(OptionValue);
+    end;
+  end for;
 
   return Total;
 end function;
 
 begin
   if (ParamCount() < 1) or (ParamCount() > 2) then
-  begin
-    panic('usage: wrapper_payload_benchmark.fpas -- ITERATIONS [MAX_MILLIS]');
-  end;
+    begin
+      panic('usage: wrapper_payload_benchmark.fpas -- ITERATIONS [MAX_MILLIS]');
+    end;
+  end if;
   var Iterations: integer := StrToInt(ParamStr(0));
   if Iterations < 1 then
-  begin
-    panic('ITERATIONS must be positive');
-  end;
+    begin
+      panic('ITERATIONS must be positive');
+    end;
+  end if;
   mutable var MaxMillis: integer := 0;
   if ParamCount() = 2 then
-  begin
-    MaxMillis := StrToInt(ParamStr(1));
-    if MaxMillis < 1 then
     begin
-      panic('MAX_MILLIS must be positive');
+      MaxMillis := StrToInt(ParamStr(1));
+      if MaxMillis < 1 then
+        begin
+          panic('MAX_MILLIS must be positive');
+        end;
+      end if;
     end;
-  end;
+  end if;
   mutable var Total: integer := RunWrappers(WarmupIterations);
   var Started: integer := MonotonicMillis();
   Total := RunWrappers(Iterations);
@@ -48,25 +53,28 @@ begin
   var Wrappers: integer := Iterations * 2;
   mutable var OpsPerSecond: integer := 0;
   if Elapsed > 0 then
-  begin
-    OpsPerSecond := (Wrappers * 1000) div Elapsed;
-  end;
+    begin
+      OpsPerSecond := (Wrappers * 1000) div Elapsed;
+    end;
+  end if;
 
   WriteLn((('iterations: ' + IntToStr(Iterations)) + ', wrappers: ') + IntToStr(Wrappers));
   WriteLn(('elapsed: ' + IntToStr(Elapsed)) + ' ms');
   if Elapsed > 0 then
-  begin
-    WriteLn(('throughput: ' + IntToStr(OpsPerSecond)) + ' wrappers/s');
-  end;
+    begin
+      WriteLn(('throughput: ' + IntToStr(OpsPerSecond)) + ' wrappers/s');
+    end;
   else
-  begin
-    WriteLn('throughput: unavailable (elapsed time is 0 ms)');
-  end;
+    begin
+      WriteLn('throughput: unavailable (elapsed time is 0 ms)');
+    end;
+  end if;
 
   WriteLn('checksum: ' + IntToStr(Total));
   if (MaxMillis > 0) and (Elapsed > MaxMillis) then
-  begin
-    panic(((('wrapper-payload benchmark regression: ' + IntToStr(Elapsed)) + ' ms exceeds limit ') + IntToStr(MaxMillis)) +
-          ' ms');
-  end;
+    begin
+      panic(((('wrapper-payload benchmark regression: ' + IntToStr(Elapsed)) + ' ms exceeds limit ') + IntToStr(MaxMillis)) +
+            ' ms');
+    end;
+  end if;
 end.

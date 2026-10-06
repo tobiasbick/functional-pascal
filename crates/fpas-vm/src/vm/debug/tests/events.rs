@@ -31,7 +31,7 @@ uses Std.Console;
 begin
   WriteLn('before');
   if EventPending() then
-    WriteLn('got-event');
+    WriteLn('got-event'); end if;
 end.
 "#,
     );
@@ -57,7 +57,7 @@ uses Std.Console;
 
 begin
   if EventPending() then
-    WriteLn('got-event');
+    WriteLn('got-event'); end if;
 end.
 "#,
     );

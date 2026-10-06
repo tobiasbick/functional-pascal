@@ -120,7 +120,7 @@ begin
               if (RequestValue.Method <> 'GET') or (RequestValue.Target <> '/hello?name=fpas') then
               begin
                 panic('unexpected request');
-              end;
+              end; end if;
               mutable var ResponseValue: ServerResponse := ServerResponse.Create(200, 'OK');
               ResponseValue.Headers := [Header.Create('Content-Type', 'text/plain')];
               ResponseValue.Body := Std.Net.Utf8.Encode('hello from fpas');
@@ -273,7 +273,7 @@ begin
               if not Std.Str.Contains(Message, 'both Transfer-Encoding and Content-Length') then
               begin
                 panic(Message);
-              end;
+              end; end if;
               mutable var ResponseValue: ServerResponse := ServerResponse.Create(400, 'Bad Request');
               ResponseValue.Body := Std.Net.Utf8.Encode('rejected');
               case WriteResponse(Connection, ResponseValue) of
@@ -343,7 +343,7 @@ begin
               if not Std.Str.Contains(Message, 'MaxBodyBytes') then
               begin
                 panic(Message);
-              end;
+              end; end if;
               mutable var ResponseValue: ServerResponse := ServerResponse.Create(413, 'Content Too Large');
               ResponseValue.Body := Std.Net.Utf8.Encode('too large');
               case WriteResponse(Connection, ResponseValue) of

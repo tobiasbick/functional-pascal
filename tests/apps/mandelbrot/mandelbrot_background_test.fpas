@@ -113,13 +113,13 @@ begin
   end;
   var CancelToken: CancellationToken := GetCancellationToken(CancelSource);
   // Fill the output queue so publication must wait until cancellation.
-  Send(CancelInbox, Frame);
+  discard Send(CancelInbox, Frame);
   var Background: task := go RunBackgroundRender(CancelRequest, CancelInbox, CancelToken);
   AssertTrue(IsError(WaitAnyWithTimeout([Background], 1)));
   AssertTrue(Cancel(CancelSource));
   AssertTrue(IsOk(Wait(Background)));
   AssertEquals(Frame.Generation, Std.Results.Unwrap(Receive(CancelInbox)).Generation);
   AssertTrue(IsError(ReceiveWithTimeout(CancelInbox, 0)));
-  CloseChannel(Inbox);
-  CloseChannel(CancelInbox);
+  discard CloseChannel(Inbox);
+  discard CloseChannel(CancelInbox);
 end.

@@ -10,7 +10,7 @@ begin
 end procedure;
 begin
   var T: task := go Work();
-  WaitAnyWithTimeout([T], -1);
+  discard WaitAnyWithTimeout([T], -1);
 end."#,
     )
     .expect_err("negative timeout");
@@ -24,7 +24,7 @@ fn controlled_wait_any_preserves_worker_failure() {
         "WithCancellation([T], GetCancellationToken(CreateCancellationSource()))",
     ] {
         let source = format!(
-            "program Failure; uses Std.Tasks; procedure Work(); begin panic('original failure'); end procedure; begin var T: task := go Work(); WaitAny{control}; end."
+            "program Failure; uses Std.Tasks; procedure Work(); begin panic('original failure'); end procedure; begin var T: task := go Work(); discard WaitAny{control}; end."
         );
         let error = run_program(&source).expect_err("task failure");
         assert_eq!(error.code, fpas_diagnostics::codes::RUNTIME_PROGRAM_PANIC);
@@ -34,7 +34,7 @@ fn controlled_wait_any_preserves_worker_failure() {
 
 #[test]
 fn wait_any_rejects_an_empty_task_array() {
-    let error = run_program("program EmptyWaitAny; uses Std.Tasks; begin var Tasks: array of task := []; WaitAny(Tasks); end.").expect_err("empty list");
+    let error = run_program("program EmptyWaitAny; uses Std.Tasks; begin var Tasks: array of task := []; discard WaitAny(Tasks); end.").expect_err("empty list");
     assert_eq!(error.code, fpas_diagnostics::codes::RUNTIME_INVALID_TASK);
     assert!(error.message.contains("between 1 and 1048576"));
 }
@@ -50,7 +50,7 @@ begin
 end procedure;
 begin
   var T: task := go Work();
-  WaitAny([T]);
+  discard WaitAny([T]);
 end."#,
     )
     .expect_err("worker failure");

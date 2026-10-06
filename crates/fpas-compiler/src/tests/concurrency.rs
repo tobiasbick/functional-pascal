@@ -109,7 +109,7 @@ end function;
 
 begin
   var A: task := go Work(42);
-  Std.Tasks.Wait(A);
+  discard Std.Tasks.Wait(A);
 end.",
     );
 }
@@ -133,7 +133,7 @@ begin
   case Std.Net.AcceptWithCancellation(ListenerValue, Token) of
     when Ok(Connection):
     begin
-      Std.Net.Close(Connection);
+      discard Std.Net.Close(Connection);
       return 'accepted';
     end;
     when Error(Message): return Message;
@@ -151,7 +151,7 @@ begin
       if not Std.Tasks.Cancel(Source) then panic('first cancellation did not change state'); end if;
       if Std.Tasks.Wait(Waiting) <> 'Network accept cancelled' then
         panic('accept did not report cancellation'); end if;
-      Std.Net.CloseListener(ListenerValue);
+      discard Std.Net.CloseListener(ListenerValue);
     end;
     when Error(Message): panic(Message);
   end case;
@@ -177,8 +177,8 @@ begin
   var A: task := go Work(20);
   var B: task := go Work(22);
   Std.Tasks.WaitAll([A, B]);
-  Std.Tasks.Wait(A);
-  Std.Tasks.Wait(B);
+  discard Std.Tasks.Wait(A);
+  discard Std.Tasks.Wait(B);
 end.",
     );
 }
@@ -202,7 +202,7 @@ end function;
 begin
   var Work: function(): integer := Make();
   var T: task := go Work();
-  Std.Tasks.Wait(T);
+  discard Std.Tasks.Wait(T);
 end.";
     let error = run_program(source).expect_err("runtime must reject task-bound closure");
     assert!(error.message.contains("task-bound"));
@@ -333,7 +333,7 @@ program InvalidChannelTimeout;
 uses Std.Tasks;
 begin
   var Messages: channel of integer := CreateChannel(1);
-  ReceiveWithTimeout(Messages, -1);
+  discard ReceiveWithTimeout(Messages, -1);
 end.",
     )
     .expect_err("negative channel timeout must fail");
@@ -378,14 +378,14 @@ begin
   var SendSource: CancellationSource := CreateCancellationSource();
   var Sending: task := go BlockedSend(Full, GetCancellationToken(SendSource));
   Sleep(20);
-  Cancel(SendSource);
+  discard Cancel(SendSource);
   if Wait(Sending) <> 'Channel send was cancelled' then panic('send cancellation mismatch'); end if;
 
   var Empty: channel of integer := CreateChannel(1);
   var ReceiveSource: CancellationSource := CreateCancellationSource();
   var Receiving: task := go BlockedReceive(Empty, GetCancellationToken(ReceiveSource));
   Sleep(20);
-  Cancel(ReceiveSource);
+  discard Cancel(ReceiveSource);
   if Wait(Receiving) <> 'Channel receive was cancelled' then
     panic('receive cancellation mismatch'); end if;
 end.",

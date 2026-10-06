@@ -103,7 +103,7 @@ operations observe tokens while their interruptible network phases are pending.
 ```pascal
 var Source: CancellationSource := CreateCancellationSource();
 var Token: CancellationToken := GetCancellationToken(Source);
-Cancel(Source);
+discard Cancel(Source);
 if IsCancellationRequested(Token) then
   begin
     WriteLn('stopping');

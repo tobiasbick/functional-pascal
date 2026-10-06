@@ -26,7 +26,7 @@ begin
   for I: integer := 1 to {} do
   begin
     var ConnectionValue: Connection := Unwrap(Accept(ListenerValue));
-    Unwrap(SetTimeout(ConnectionValue, 2000));
+    discard Unwrap(SetTimeout(ConnectionValue, 2000));
     mutable var Text: string := 'accepted';
     case ReadRequest(ConnectionValue, 4096, 16) of
       when Ok(_): begin end;
@@ -39,10 +39,10 @@ begin
     end case;
     mutable var ResponseValue: ServerResponse := ServerResponse.Create(200, 'OK');
     ResponseValue.Body := Std.Net.Utf8.Encode(Text);
-    Unwrap(WriteResponse(ConnectionValue, ResponseValue));
-    Unwrap(Close(ConnectionValue));
+    discard Unwrap(WriteResponse(ConnectionValue, ResponseValue));
+    discard Unwrap(Close(ConnectionValue));
   end; end for;
-  Unwrap(CloseListener(ListenerValue));
+  discard Unwrap(CloseListener(ListenerValue));
 end.
 "#,
             cases.len(),

@@ -17,7 +17,7 @@ fn image(outcome: &str) -> Arc<VerifiedExecutable> {
          begin
            var Captured: Payload := record Number := 42; end;
            var Group: TaskGroup := CreateTaskGroup();
-           StartSupervisedTask(Group, function(Token: CancellationToken): result of integer, string
+           var WorkerTask: task := StartSupervisedTask(Group, function(Token: CancellationToken): result of integer, string
            begin
              if Captured.Number <> 42 then panic('capture changed'); end if;
              return {outcome};

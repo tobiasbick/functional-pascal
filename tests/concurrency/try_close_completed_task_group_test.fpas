@@ -9,8 +9,8 @@ begin
   var Gate: channel of boolean := CreateChannel(1);
   var Ready: channel of boolean := CreateChannel(1);
   var Returned: TaskGroup := CreateTaskGroup();
-  StartTaskInGroup(Returned, function(Token: CancellationToken): result of boolean, string begin
-    Send(Ready, true);
+  var ReturnedTask: task := StartTaskInGroup(Returned, function(Token: CancellationToken): result of boolean, string begin
+    discard Send(Ready, true);
     case ReceiveWithCancellation(Gate, Token) of
       when Ok(_):
         begin
@@ -24,7 +24,7 @@ begin
   end function);
   AssertTrue(Std.Results.Unwrap(ReceiveWithTimeout(Ready, 10000)));
   AssertTrue(IsNone(TryCloseCompletedTaskGroup(Returned)));
-  Send(Gate, true);
+  discard Send(Gate, true);
   mutable var ReturnedFailures: option of array of TaskFailure := None;
   while IsNone(ReturnedFailures) do
     begin
@@ -38,8 +38,8 @@ begin
   AssertEquals('expected returned error', ReturnedReport[0].Message);
   var PanicReady: channel of boolean := CreateChannel(1);
   var Panicked: TaskGroup := CreateTaskGroup();
-  StartTaskInGroup(Panicked, procedure(Token: CancellationToken) begin
-    Send(PanicReady, true);
+  var PanickedTask: task := StartTaskInGroup(Panicked, procedure(Token: CancellationToken) begin
+    discard Send(PanicReady, true);
     panic('expected panic report');
   end procedure);
   AssertTrue(Std.Results.Unwrap(ReceiveWithTimeout(PanicReady, 10000)));
@@ -54,7 +54,7 @@ begin
   AssertEquals(1, Std.Arrays.Length(PanicReport));
   AssertTrue(PanicReport[0].Kind = TaskFailureKind.Panicked);
   AssertEquals('panic: expected panic report', PanicReport[0].Message);
-  CloseChannel(Gate);
-  CloseChannel(Ready);
-  CloseChannel(PanicReady);
+  discard CloseChannel(Gate);
+  discard CloseChannel(Ready);
+  discard CloseChannel(PanicReady);
 end.

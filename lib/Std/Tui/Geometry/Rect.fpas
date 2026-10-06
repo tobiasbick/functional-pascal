@@ -88,10 +88,10 @@ public type
     // - `Height`: Height in terminal cells.
     public static function Create(X: integer; Y: integer; Width: integer; Height: integer): TuiRect;
     begin
-      TuiRectRequireNonNegative(Width, 'width');
-      TuiRectRequireNonNegative(Height, 'height');
-      TuiRectCheckedEdge(X, Width, 'right');
-      TuiRectCheckedEdge(Y, Height, 'bottom');
+      discard TuiRectRequireNonNegative(Width, 'width');
+      discard TuiRectRequireNonNegative(Height, 'height');
+      discard TuiRectCheckedEdge(X, Width, 'right');
+      discard TuiRectCheckedEdge(Y, Height, 'bottom');
       return record
         X := X;
         Y := Y;

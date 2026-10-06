@@ -69,7 +69,7 @@ end procedure;
 procedure TuiLoopCloseWithInbox<TMessage>(ApplicationId: integer; Inbox: channel of TMessage);
 begin
   var Failures: array of TuiMsg := TuiAppCloseApplication(ApplicationId);
-  CloseChannel(Inbox);
+  discard CloseChannel(Inbox);
   TuiAppRaiseShutdownFailure(Failures);
 end procedure;
 
@@ -86,7 +86,7 @@ public function TuiRunHeadless<TModel, TMessage>(
   BackgroundEnabled: boolean
 ): TModel;
 begin
-  TuiAppRequireOpen(ApplicationId);
+  discard TuiAppRequireOpen(ApplicationId);
   if IterationCount < 0 then
     begin
       panic('Tui iteration count must not be negative');
@@ -206,10 +206,10 @@ public function TuiRunInteractive<TModel, TMessage>(
   BackgroundEnabled: boolean
 ): TModel;
 begin
-  TuiAppRequireOpen(ApplicationId);
+  discard TuiAppRequireOpen(ApplicationId);
   var ConsoleInputs: channel of TuiHostInput := CreateChannel(32);
   var InputGroup: TaskGroup := CreateTaskGroup();
-  StartTaskInGroup(InputGroup, function(Token: CancellationToken): result of boolean, string begin
+  var InputTask: task := StartTaskInGroup(InputGroup, function(Token: CancellationToken): result of boolean, string begin
     return TuiConsoleInputPump(Token, ConsoleInputs);
   end function);
   mutable var Model: TModel := InitialModel;
@@ -228,8 +228,8 @@ begin
           Model := TuiLoopApplyFramework(ApplicationId, Model, TuiAppPopMessage(ApplicationId), Update);
           if TuiLoopFinishUpdate(ApplicationId, Model, View, true) then
             begin
-              CloseTaskGroup(InputGroup);
-              CloseChannel(ConsoleInputs);
+              discard CloseTaskGroup(InputGroup);
+              discard CloseChannel(ConsoleInputs);
               if BackgroundEnabled then
                 begin
                   TuiLoopCloseWithInbox(ApplicationId, Inbox);
@@ -319,7 +319,7 @@ begin
         end;
       end if;
 
-      Select(Cases);
+      discard Select(Cases);
       PreferApplication := not PreferApplication;
       case ConsoleInput of
         when Some(Input):
@@ -337,8 +337,8 @@ begin
             Model := TuiLoopApplyApplication(ApplicationId, Model, Message, UpdateApplication);
             if TuiLoopFinishUpdate(ApplicationId, Model, View, true) then
               begin
-                CloseTaskGroup(InputGroup);
-                CloseChannel(ConsoleInputs);
+                discard CloseTaskGroup(InputGroup);
+                discard CloseChannel(ConsoleInputs);
                 TuiLoopCloseWithInbox(ApplicationId, Inbox);
                 return Model;
               end;
@@ -351,8 +351,8 @@ begin
     end;
   end while;
 
-  CloseTaskGroup(InputGroup);
-  CloseChannel(ConsoleInputs);
+  discard CloseTaskGroup(InputGroup);
+  discard CloseChannel(ConsoleInputs);
   if BackgroundEnabled then
     begin
       TuiLoopCloseWithInbox(ApplicationId, Inbox);

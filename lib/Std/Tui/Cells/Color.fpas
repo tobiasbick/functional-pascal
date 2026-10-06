@@ -42,7 +42,7 @@ public type
     // - `Index`: Zero-based index used by the operation.
     public static function FromCrt(Index: integer): TuiColor;
     begin
-      TuiColorRequireRange(Index, 0, 15, 'CRT color index');
+      discard TuiColorRequireRange(Index, 0, 15, 'CRT color index');
       return record
         Kind := TuiColorKind.Crt;
         Index := Index;
@@ -58,7 +58,7 @@ public type
     // - `Index`: Zero-based index used by the operation.
     public static function FromAnsi256(Index: integer): TuiColor;
     begin
-      TuiColorRequireRange(Index, 0, 255, 'ANSI-256 color index');
+      discard TuiColorRequireRange(Index, 0, 255, 'ANSI-256 color index');
       return record
         Kind := TuiColorKind.Ansi256;
         Index := Index;
@@ -80,9 +80,9 @@ public type
       if (((Red < 0) or (Red > 255)) or ((Green < 0) or (Green > 255))) or
          ((Blue < 0) or (Blue > 255)) then
         begin
-          TuiColorRequireRange(Red, 0, 255, 'red channel');
-          TuiColorRequireRange(Green, 0, 255, 'green channel');
-          TuiColorRequireRange(Blue, 0, 255, 'blue channel');
+          discard TuiColorRequireRange(Red, 0, 255, 'red channel');
+          discard TuiColorRequireRange(Green, 0, 255, 'green channel');
+          discard TuiColorRequireRange(Blue, 0, 255, 'blue channel');
         end;
       end if;
 

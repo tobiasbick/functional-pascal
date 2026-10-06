@@ -57,7 +57,7 @@ begin
   end if;
 
   App.Close();
-  CloseChannel(Inbox);
+  discard CloseChannel(Inbox);
   return Count;
 end function;
 

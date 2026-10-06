@@ -88,7 +88,7 @@ impl Checker {
                 designator,
                 args,
                 span,
-            } => self.check_call_stmt(designator, args, *span),
+            } => self.check_unused_call_stmt(designator, args, *span),
 
             Stmt::Expression { expr, span } => self.check_postfix_statement(expr, *span),
 

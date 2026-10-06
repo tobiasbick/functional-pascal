@@ -20,15 +20,15 @@ begin
         var Ready: channel of boolean := State.Ready;
         var FailOld: boolean := State.FailOld;
         Cmd.ReplaceSubscription(1, function(Token: CancellationToken): result of boolean, string begin
-          Send(Ready, true);
+          discard Send(Ready, true);
           if FailOld then
             begin
-              Receive(Gate);
+              discard Receive(Gate);
               return Error('old source failed');
             end;
           end if;
 
-          ReceiveWithCancellation(Gate, Token);
+          discard ReceiveWithCancellation(Gate, Token);
           return Ok(true);
         end function);
       end;
@@ -38,7 +38,7 @@ begin
           begin
             var Started: channel of boolean := State.Started;
             Cmd.ReplaceSubscription(1, function(Token: CancellationToken): result of boolean, string begin
-              Send(Started, true);
+              discard Send(Started, true);
               return Ok(true);
             end function);
           end;
@@ -92,7 +92,7 @@ begin
   App.Inject(TuiMsg.Tick(1));
   App.Inject(TuiMsg.Tick(2));
   State := App.RunBackgroundIterations(State, Inbox, Update, UpdateMessage, View, 2, 0);
-  Send(Gate, true);
+  discard Send(Gate, true);
   var Deadline: integer := MonotonicMillis() + 5000;
   while (State.Failures = 0) and (MonotonicMillis() < Deadline) do
     begin
@@ -113,7 +113,7 @@ begin
   State := SecondApp.RunBackgroundIterations(State, SecondInbox, Update, UpdateMessage, View, 1, 0);
   SecondApp.CloseWithBackground(SecondInbox);
   AssertTrue(IsError(ReceiveWithTimeout(Started, 0)));
-  CloseChannel(Gate);
-  CloseChannel(Ready);
-  CloseChannel(Started);
+  discard CloseChannel(Gate);
+  discard CloseChannel(Ready);
+  discard CloseChannel(Started);
 end.

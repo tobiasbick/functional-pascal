@@ -29,24 +29,10 @@ impl Checker {
                 }
             }
             Expr::Designator(designator) => self.designator_discard_info(designator),
-            Expr::Call { designator, .. } => {
-                let target = self
-                    .method_calls
-                    .get(&key)
-                    .map(|target| target.qualified_name())
-                    .or_else(|| {
-                        self.fluent_calls
-                            .get(&key)
-                            .map(|target| target.name.as_str())
-                    });
-                let result = target
-                    .map(|name| self.scopes.discard_info(name).result)
-                    .unwrap_or_else(|| self.designator_discard_info(designator).result);
-                DiscardInfo {
-                    value: result,
-                    ..Default::default()
-                }
-            }
+            Expr::Call { designator, .. } => DiscardInfo {
+                value: self.call_result_is_task_free(key, designator, &ty),
+                ..Default::default()
+            },
             Expr::Closure(_) => self
                 .closure_infos
                 .get(&key)
@@ -118,6 +104,36 @@ impl Checker {
             TaskSafety::Forbidden(_) => false,
         };
         self.discard_exprs.insert(key, info);
+    }
+
+    /// Uses the same result and capture proofs for call expressions and statement hints.
+    pub(crate) fn call_result_is_task_free(
+        &self,
+        key: usize,
+        designator: &Designator,
+        ty: &Ty,
+    ) -> bool {
+        match self.task_safety(ty) {
+            TaskSafety::Safe => true,
+            TaskSafety::Forbidden(_) => false,
+            TaskSafety::Captures => {
+                if matches!(self.resolve_visible_type(ty), Ty::Channel(_)) {
+                    return false;
+                }
+                let target = self
+                    .method_calls
+                    .get(&key)
+                    .map(|target| target.qualified_name())
+                    .or_else(|| {
+                        self.fluent_calls
+                            .get(&key)
+                            .map(|target| target.name.as_str())
+                    });
+                target
+                    .map(|name| self.scopes.discard_info(name).result)
+                    .unwrap_or_else(|| self.designator_discard_info(designator).result)
+            }
+        }
     }
 
     fn record_literal_is_task_free(&self, fields: &[FieldInit], ty: &Ty) -> bool {

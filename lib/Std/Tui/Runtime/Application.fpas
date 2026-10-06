@@ -52,7 +52,7 @@ public type
     public procedure CloseWithBackground<TMessage>(Self: TuiApplication; Inbox: channel of TMessage);
     begin
       var Failures: array of TuiMsg := TuiAppCloseApplication(Self.Id);
-      CloseChannel(Inbox);
+      discard CloseChannel(Inbox);
       TuiAppRaiseShutdownFailure(Failures);
     end procedure;
 
@@ -107,7 +107,7 @@ public type
   Message: TMessage
 ): result of boolean, string;
     begin
-      TuiAppRequireOpen(Self.Id);
+      discard TuiAppRequireOpen(Self.Id);
       return TrySend(Inbox, Message);
     end function;
 
@@ -154,7 +154,7 @@ public type
     begin
       var Inbox: channel of boolean := CreateChannel(1);
       var Model: TModel := TuiRunHeadless(Self.Id, InitialModel, Inbox, Update, TuiIgnoreApplicationMessage, View, IterationCount, DeltaMilliseconds, false);
-      CloseChannel(Inbox);
+      discard CloseChannel(Inbox);
       return Model;
     end function;
 
@@ -228,7 +228,7 @@ public type
       end;
       var Inbox: channel of boolean := CreateChannel(1);
       var Model: TModel := TuiRunInteractive(App.Id, InitialModel, Inbox, Update, TuiIgnoreApplicationMessage, View, false);
-      CloseChannel(Inbox);
+      discard CloseChannel(Inbox);
       return Model;
     end function;
 

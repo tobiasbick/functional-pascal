@@ -25,7 +25,7 @@ end function;
 
 begin
   var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(3, 2));
-  App.RunIterations(0, UpdateGrid, ViewGrid, 0, 0);
+  discard App.RunIterations(0, UpdateGrid, ViewGrid, 0, 0);
   var Snapshot: TuiSurfaceSnapshot := App.SurfaceSnapshot();
   AssertEquals('A', Snapshot.CellAt(0, 0).Glyph);
   AssertEquals('B', Snapshot.CellAt(1, 0).Glyph);

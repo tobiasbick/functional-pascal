@@ -215,7 +215,7 @@ fn generic_function_numeric_constraint_allows_arithmetic() {
         "program T; \
          function Add<T: Numeric>(A: T; B: T): T; \
          begin return A + B; end function; \
-         begin Add(1, 2); end.",
+         begin discard Add(1, 2); end.",
     );
 }
 
@@ -225,7 +225,7 @@ fn generic_function_numeric_constraint_allows_negate() {
         "program T; \
          function Neg<T: Numeric>(X: T): T; \
          begin return -X; end function; \
-         begin Neg(5); end.",
+         begin discard Neg(5); end.",
     );
 }
 
@@ -235,7 +235,7 @@ fn generic_function_comparable_constraint_allows_lt() {
         "program T; \
          function IsLess<T: Comparable>(A: T; B: T): boolean; \
          begin return A < B; end function; \
-         begin IsLess(1, 2); end.",
+         begin discard IsLess(1, 2); end.",
     );
 }
 
@@ -245,7 +245,7 @@ fn generic_function_unconstrained_rejects_arithmetic() {
         "program T; \
          function Add<T>(A: T; B: T): T; \
          begin return A + B; end function; \
-         begin Add(1, 2); end.",
+         begin discard Add(1, 2); end.",
     );
     assert!(
         errors

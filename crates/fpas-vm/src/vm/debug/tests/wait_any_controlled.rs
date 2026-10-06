@@ -12,7 +12,7 @@ end function;
 function CancelLater(Source: CancellationSource): integer;
 begin
   Sleep(1);
-  Cancel(Source);
+  discard Cancel(Source);
   return 0;
 end function;
 begin
@@ -78,7 +78,7 @@ begin
     when Error(Message): panic(Message);
   end case;
   var Source: CancellationSource := CreateCancellationSource();
-  Cancel(Source);
+  discard Cancel(Source);
   case WaitAnyWithCancellation([T], GetCancellationToken(Source)) of
     when Ok(_): panic('pre-cancellation lost');
     when Error(Message): if Message <> 'Task wait was cancelled' then panic(Message); end if;

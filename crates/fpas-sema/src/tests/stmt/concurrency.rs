@@ -220,7 +220,7 @@ begin
   var Messages: channel of integer := CreateChannel(1);
   var Sent: result of boolean, string := Send(Messages, 42);
   var Received: result of integer, string := Receive(Messages);
-  CloseChannel(Messages);
+  discard CloseChannel(Messages);
 end.",
     );
 }
@@ -342,7 +342,7 @@ begin
   var WorkQueue: channel of procedure() := CreateChannel(1);
   var SafeQueue: channel of integer := CreateChannel(1);
   Send(WorkQueue, Boxed.Work);
-  Send(SafeQueue, Boxed.Safe);
+  discard Send(SafeQueue, Boxed.Safe);
 end.",
     );
 

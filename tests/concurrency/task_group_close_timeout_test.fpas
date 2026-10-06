@@ -10,7 +10,7 @@ begin
   var Token: CancellationToken := GetTaskGroupToken(Group);
   var Gate: channel of integer := CreateChannel(1);
   var Child: task := StartTaskInGroup(Group, function(Stop: CancellationToken): result of integer, string begin
-    Unwrap(Receive(Gate));
+    discard Unwrap(Receive(Gate));
     if not IsCancellationRequested(Stop) then
       begin
         panic('missing cancellation');
@@ -33,11 +33,11 @@ begin
 
   AssertTrue(IsCancellationRequested(Token));
   AssertTrue(IsError(CloseTaskGroupWithTimeout(Group, 0)));
-  Unwrap(Send(Gate, 1));
+  discard Unwrap(Send(Gate, 1));
   var Reports: array of TaskFailure := Unwrap(CloseTaskGroupWithTimeout(Group, 1000));
   AssertEquals(1, Length(Reports));
   AssertTrue(Reports[0].Kind = TaskFailureKind.ReturnedError);
   AssertEquals('retained worker failure', Reports[0].Message);
   AssertEquals(0, Length(CloseTaskGroup(Group)));
-  CloseChannel(Gate);
+  discard CloseChannel(Gate);
 end.

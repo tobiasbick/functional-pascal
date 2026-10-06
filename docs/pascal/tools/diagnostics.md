@@ -266,6 +266,7 @@ Call arguments still use commas; commas inside types such as
 | FP3019 | Private type in public signature | Public routine returns a private unit type | Export that type or keep the routine non-public. |
 | FP3020 | Discard requires a value | `discard Work();` when `Work` is a procedure | Call the procedure directly. |
 | FP3021 | Unsafe discard | A task handle, task-containing aggregate, or callable with unverified captures | Retain and consume handles; use task-free captures or constraints. For a direct `discard go Worker();`, use `go Worker();`. |
+| FP3022 | Unused function result | `Compute();` or a postfix chain ending in a function | Consume the value or use `discard` when permitted. For `Result`, handle with `case` or propagate with `try` while consuming the success value. |
 
 Ordinary declaration, assignment, return and argument type compatibility checks
 supply type names in `expected` and `found` for FP3006. Other uses of that code

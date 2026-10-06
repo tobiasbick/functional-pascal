@@ -22,12 +22,12 @@ begin
   case Std.Net.Connect('127.0.0.1', {port}, 1000) of
     when Ok(ConnectionValue):
     begin
-      Std.Net.SetTimeout(ConnectionValue, 1000);
+      discard Std.Net.SetTimeout(ConnectionValue, 1000);
       var Source: Std.Tasks.CancellationSource := Std.Tasks.CreateCancellationSource();
       var Token: Std.Tasks.CancellationToken := Std.Tasks.GetCancellationToken(Source);
       var Waiting: task := go ReadUntilCancelled(ConnectionValue, Token);
       Std.Time.Sleep(30);
-      Std.Tasks.Cancel(Source);
+      discard Std.Tasks.Cancel(Source);
       if Std.Tasks.Wait(Waiting) <> 'Network read cancelled' then
         panic('read did not report cancellation'); end if;
       case Std.Net.Close(ConnectionValue) of

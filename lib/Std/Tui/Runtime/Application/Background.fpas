@@ -106,7 +106,7 @@ begin
     end;
   end if;
   var Group: TaskGroup := CreateTaskGroup();
-  StartTaskInGroup(Group, Work);
+  var WorkerTask: task := StartTaskInGroup(Group, Work);
   Std.Arrays.Push(Items, record
     Id := Id;
     Subscription := Subscription;
@@ -124,7 +124,7 @@ procedure TuiBackgroundRequestStop(
 );
 begin
   mutable var Items: array of TuiOwnedWork := TuiBackgroundWorkItems[ApplicationId - 1];
-  CancelTaskGroup(Items[Index].Group);
+  discard CancelTaskGroup(Items[Index].Group);
   Items[Index].Cancelling := true;
   Items[Index].Replacement := Replacement;
   TuiBackgroundWorkItems[ApplicationId - 1] := Items;
@@ -140,7 +140,7 @@ end procedure;
 // Requests cancellation without joining on the UI path; replacement admission is deferred to reap.
 public function TuiBackgroundApply(ApplicationId: integer; Commands: array of TuiBackgroundCommand): array of TuiMsg;
 begin
-  TuiBackgroundRequireOpen(ApplicationId);
+  discard TuiBackgroundRequireOpen(ApplicationId);
   for Command: TuiBackgroundCommand in Commands do
     begin
       case Command of
@@ -180,14 +180,14 @@ end function;
 // Reports whether an application currently owns any operation.
 public function TuiBackgroundHasWork(ApplicationId: integer): boolean;
 begin
-  TuiBackgroundRequireOpen(ApplicationId);
+  discard TuiBackgroundRequireOpen(ApplicationId);
   return Std.Arrays.Length(TuiBackgroundWorkItems[ApplicationId - 1]) > 0;
 end function;
 
 // Collects completed groups and starts only the latest pending replacement after its predecessor ends.
 public function TuiBackgroundReap(ApplicationId: integer): array of TuiMsg;
 begin
-  TuiBackgroundRequireOpen(ApplicationId);
+  discard TuiBackgroundRequireOpen(ApplicationId);
   mutable var Messages: array of TuiMsg := [];
   mutable var Index: integer := Std.Arrays.Length(TuiBackgroundWorkItems[ApplicationId - 1]) - 1;
   while Index >= 0 do

@@ -21,12 +21,12 @@ begin
         when Ok(Count): if Count <> 2 then panic('wrong write count'); end if;
         when Error(Message): panic(Message);
       end case;
-      Std.Tasks.Cancel(Source);
+      discard Std.Tasks.Cancel(Source);
       case Std.Net.SendBytesWithCancellation(ConnectionValue, [99], Token) of
         when Ok(Count): panic('cancelled write succeeded');
         when Error(Message): if Message <> 'Network write cancelled' then panic(Message); end if;
       end case;
-      Std.Net.Close(ConnectionValue);
+      discard Std.Net.Close(ConnectionValue);
     end;
     when Error(Message): panic(Message);
   end case;

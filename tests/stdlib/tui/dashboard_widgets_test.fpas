@@ -25,7 +25,7 @@ end function;
 
 begin
   mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 4));
-  App.RunIterations(0, UpdateDashboard, ViewDashboard, 0, 0);
+  discard App.RunIterations(0, UpdateDashboard, ViewDashboard, 0, 0);
   var Snapshot: TuiSurfaceSnapshot := App.SurfaceSnapshot();
   AssertEquals('A', Snapshot.CellAt(0, 0).Glyph);
   case Snapshot.CellAt(0, 0).ConcreteStyle of

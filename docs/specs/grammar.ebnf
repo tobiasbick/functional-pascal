@@ -462,12 +462,13 @@ continue_stmt       = 'continue' ;
 go_call             = designator '(' [ arg_list ] ')' ;
 go_stmt             = 'go' go_call ;
 
-(* -- Procedure / Function Call (statement position) -- *)
+(* -- Procedure Call (statement position) -- *)
+(* Function results must be consumed or explicitly discarded. *)
 call_stmt           = designator '(' [ arg_list ] ')' ;
 
 (* A postfix expression may be used as a statement when semantic analysis *)
-(* confirms that its final suffix is a method call. Final procedure calls  *)
-(* are valid because their Unit result is discarded.                      *)
+(* confirms that its final suffix is a procedure call. Function results    *)
+(* require consumption or explicit discard.                               *)
 postfix_expr_stmt   = primary_atom postfix_suffix { postfix_suffix } ;
 
 (* ---- 2.7 Expressions ------------------------------------------ *)

@@ -19,5 +19,5 @@ end function;
 
 begin
   mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(20, 4));
-  App.RunIterations(0, Update, View, 0, 0);
+  discard App.RunIterations(0, Update, View, 0, 0);
 end.

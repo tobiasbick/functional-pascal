@@ -139,6 +139,9 @@ define_codes!(SEMA_ALLOCATED_CODES => {
     /// Explicit discard could lose a task handle or unverified callable captures.
     /// Documentation: `docs/pascal/language/functions/discard.md`.
     SEMA_UNSAFE_DISCARD = 3021;
+    /// A function result in statement position is neither consumed nor explicitly discarded.
+    /// Documentation: `docs/pascal/language/functions/discard.md`.
+    SEMA_UNUSED_FUNCTION_RESULT = 3022;
 });
 
 define_codes!(COMPILE_ALLOCATED_CODES => {

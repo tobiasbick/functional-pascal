@@ -47,17 +47,23 @@ See [receiver calls](fluent-calls.md). Static record functions stay callable
 only through a type designator (`Point.Create(...)`).
 
 Procedures may appear only as the final call of a postfix chain used as
-a statement. The procedure runs and its `Unit` result is discarded:
+a statement. The procedure runs without producing a value:
 
 ```pascal
-TuiContainer.AsView(Container).Destroy()
+TuiContainer.AsView(Container).Destroy();
 Factory.Create().Configure().Start();
 ```
 
 Every earlier step must still produce a value. A procedure cannot appear in the
 middle of a chain, and a postfix statement cannot end in a field or index. A
-final method function is also valid; its result is discarded just like an
-ordinary function call used as a statement.
+final function result must be consumed, just like an ordinary function result.
+Use [explicit discard](discard.md) when deliberately ignoring a permitted
+result:
+
+```pascal
+discard Factory.Create().Compute();
+var Value: integer := Factory.Create().Compute();
+```
 
 ## Indexing
 

@@ -244,7 +244,7 @@ fn check_cli_validates_directory_program_with_sibling_unit_without_sidecars() {
     );
     write_text(
         &cwd.join("main.fpas"),
-        "program Main;\nuses Demo.Math;\nbegin\n  Answer();\nend.\n",
+        "program Main;\nuses Demo.Math;\nbegin\n  discard Answer();\nend.\n",
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_args_and_capture_output(
@@ -298,11 +298,11 @@ fn check_cli_validates_multiple_programs_against_shared_units() {
     );
     write_text(
         &cwd.join("first.fpas"),
-        "program First;\nuses Demo.Shared;\nbegin\n  Value();\nend.\n",
+        "program First;\nuses Demo.Shared;\nbegin\n  discard Value();\nend.\n",
     );
     write_text(
         &cwd.join("second.fpas"),
-        "program Second;\nuses Demo.Shared;\nbegin\n  Value();\nend.\n",
+        "program Second;\nuses Demo.Shared;\nbegin\n  discard Value();\nend.\n",
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_args_and_capture_output(

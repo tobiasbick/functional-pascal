@@ -64,12 +64,12 @@ begin
   end if;
   var ListenerValue: Listener := Unwrap(Listen('127.0.0.1', Port));
   var Life: ServerLifetime := Unwrap(CreateLifetime(1000, true));
-  Unwrap(OwnListener(Life, ListenerValue));
-  Unwrap(ObserveSignals(Life));
+  discard Unwrap(OwnListener(Life, ListenerValue));
+  discard Unwrap(ObserveSignals(Life));
   var Workers: TaskGroup := GetWorkGroup(Life);
   for Index: integer := 1 to 4 do
     begin
-      StartTaskInGroup(Workers, function(Token: CancellationToken): result of boolean, string begin
+      var ConnectionTask: task := StartTaskInGroup(Workers, function(Token: CancellationToken): result of boolean, string begin
         while not IsCancellationRequested(Token) do
           begin
             case AcceptWithCancellation(ListenerValue, Token) of
@@ -100,7 +100,7 @@ begin
                     end;
                   end if;
 
-                  RequestStop(Life);
+                  discard RequestStop(Life);
                   return Error(Message);
                 end;
             end case;
@@ -120,7 +120,7 @@ begin
     end;
   end while;
 
-  RequestStop(Life);
+  discard RequestStop(Life);
   mutable var Failures: array of TaskFailure := [];
   case CloseTaskGroupWithTimeout(Workers, RemainingMillis(Life)) of
     when Ok(Reports):
@@ -147,7 +147,7 @@ begin
     end;
   end for;
 
-  Unwrap(FinishShutdown(Life));
+  discard Unwrap(FinishShutdown(Life));
   if Length(Failures) <> 0 then
     begin
       panic('TCP worker failed');

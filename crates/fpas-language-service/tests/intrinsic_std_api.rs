@@ -25,8 +25,7 @@ fn intrinsic_std_fixture(source: &str) -> (TempDirectory, std::path::PathBuf, La
 
 #[test]
 fn intrinsic_std_hover_includes_markdown_and_parameter_documentation() {
-    let source =
-        "program IntrinsicHover;\n\nuses Std.Fs;\n\nbegin\n  ReadText('notes.txt');\nend.\n";
+    let source = "program IntrinsicHover;\n\nuses Std.Fs;\n\nbegin\n  discard ReadText('notes.txt');\nend.\n";
     let (_temp, path, mut service) = intrinsic_std_fixture(source);
     let offset = source.find("ReadText").expect("ReadText call");
 
@@ -192,8 +191,7 @@ fn receiver_call_definition_and_signature_use_selected_array_routine() {
 
 #[test]
 fn intrinsic_std_editor_api_declarations_cannot_be_renamed() {
-    let source =
-        "program IntrinsicRename;\n\nuses Std.Fs;\n\nbegin\n  ReadText('notes.txt');\nend.\n";
+    let source = "program IntrinsicRename;\n\nuses Std.Fs;\n\nbegin\n  discard ReadText('notes.txt');\nend.\n";
     let (_temp, path, mut service) = intrinsic_std_fixture(source);
     let offset = source.find("ReadText").expect("ReadText call");
 
@@ -212,7 +210,7 @@ fn intrinsic_std_editor_api_declarations_cannot_be_renamed() {
 
 #[test]
 fn intrinsic_std_signature_help_uses_declared_parameters() {
-    let source = "program IntrinsicSignature;\n\nuses Std.Fs;\n\nbegin\n  WriteText('notes.txt', 'hello');\nend.\n";
+    let source = "program IntrinsicSignature;\n\nuses Std.Fs;\n\nbegin\n  discard WriteText('notes.txt', 'hello');\nend.\n";
     let (_temp, path, mut service) = intrinsic_std_fixture(source);
     let offset = source.find(", 'hello'").expect("second argument") + 2;
 

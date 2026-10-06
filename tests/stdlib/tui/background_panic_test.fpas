@@ -15,7 +15,7 @@ begin
       begin
         var Ready: channel of boolean := State.Ready;
         Cmd.StartBackground(23, function(Token: CancellationToken): result of boolean, string begin
-          Send(Ready, true);
+          discard Send(Ready, true);
           panic('expected Tui worker panic');
         end function);
         return State;
@@ -64,5 +64,5 @@ begin
   end while;
 
   App.CloseWithBackground(Inbox);
-  CloseChannel(Ready);
+  discard CloseChannel(Ready);
 end.

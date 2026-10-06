@@ -273,7 +273,7 @@ procedure HandleEvent(E: ConsoleEvent);
 begin
   if E.kind = EventKind.Key then
     begin
-      HandleKey(E.key);
+      discard HandleKey(E.key);
     end;
   elsif E.kind = EventKind.Mouse then
     begin

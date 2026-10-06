@@ -5,7 +5,7 @@ uses Std.Str, Std.Test, Std.Tui;
 function Paint(Tree: TuiElement; Size: TuiSize): TuiSurfaceSnapshot;
 begin
   var App: TuiApplication := TuiApplication.OpenForTest(Size);
-  App.RunIterations(Tree, function(State: TuiElement; Msg: TuiMsg; Cmd: TuiCmdOutput): TuiElement begin
+  var PaintedTree: TuiElement := App.RunIterations(Tree, function(State: TuiElement; Msg: TuiMsg; Cmd: TuiCmdOutput): TuiElement begin
     return State;
   end function, function(State: TuiElement): TuiElement begin
     return State;

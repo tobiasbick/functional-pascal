@@ -9,8 +9,8 @@ begin
   var Empty: channel of integer := CreateChannel(1);
   var Finished: channel of boolean := CreateChannel(1);
   // Discard both handles: group ownership must retain the child and grandchild.
-  StartTaskInGroup(Group, procedure(Token: CancellationToken) begin
-    StartTaskInGroup(Group, procedure(ChildToken: CancellationToken) begin
+  var ParentTask: task := StartTaskInGroup(Group, procedure(Token: CancellationToken) begin
+    var ChildTask: task := StartTaskInGroup(Group, procedure(ChildToken: CancellationToken) begin
       case ReceiveWithCancellation(Empty, ChildToken) of
         when Ok(_):
           begin
@@ -22,9 +22,9 @@ begin
           end;
       end case;
 
-      Send(Finished, true);
+      discard Send(Finished, true);
     end procedure);
-    Send(Ready, true);
+    discard Send(Ready, true);
   end procedure);
   AssertTrue(Unwrap(Receive(Ready)));
   if RequestFirst then
@@ -39,9 +39,9 @@ begin
   // Close must not return before the grandchild's final side effect.
   AssertTrue(Unwrap(Receive(Finished)));
   AssertEquals(0, Length(CloseTaskGroup(Group)));
-  CloseChannel(Ready);
-  CloseChannel(Empty);
-  CloseChannel(Finished);
+  discard CloseChannel(Ready);
+  discard CloseChannel(Empty);
+  discard CloseChannel(Finished);
 end procedure;
 
 begin

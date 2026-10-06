@@ -19,8 +19,8 @@ begin
       for Producer: integer := 0 to 7 do
         begin
           var Attempts: channel of boolean := CreateChannel(2);
-          Send(Attempts, false);
-          Send(Attempts, true);
+          discard Send(Attempts, false);
+          discard Send(Attempts, true);
           Push(Children, StartSupervisedTask(Group, function(WorkerToken: CancellationToken): result of integer, string begin
             if not Unwrap(Receive(Attempts)) then
               begin
@@ -28,17 +28,17 @@ begin
               end;
             end if;
 
-            CloseChannel(Attempts);
+            discard CloseChannel(Attempts);
             for Item: integer := 0 to 31 do
               begin
-                Select([
-                         SendCase(Output, Producer * 32 + Item, procedure(Outcome: result of boolean, string) begin
-                           AssertTrue(Unwrap(Outcome));
-                         end procedure),
-                         CancellationCase(WorkerToken, procedure() begin
-                           panic('producer cancelled before drain');
-                         end procedure)
-                       ]);
+                discard Select([
+                                 SendCase(Output, Producer * 32 + Item, procedure(Outcome: result of boolean, string) begin
+                                   AssertTrue(Unwrap(Outcome));
+                                 end procedure),
+                                 CancellationCase(WorkerToken, procedure() begin
+                                   panic('producer cancelled before drain');
+                                 end procedure)
+                               ]);
               end;
             end for;
 
@@ -84,7 +84,7 @@ begin
           end;
       end case;
 
-      CloseChannel(Output);
+      discard CloseChannel(Output);
     end;
   end for;
 end.

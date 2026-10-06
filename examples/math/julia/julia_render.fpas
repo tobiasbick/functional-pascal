@@ -91,7 +91,7 @@ begin
   var Rows: channel of RenderRow := CreateChannel(4);
   for Worker: integer := 0 to 3 do
     begin
-      StartTaskInGroup(Group, procedure(Token: CancellationToken) begin
+      var WorkerTask: task := StartTaskInGroup(Group, procedure(Token: CancellationToken) begin
         mutable var Py: integer := Worker;
         while (Py < Height) and not IsCancellationRequested(Token) do
           begin
@@ -155,7 +155,7 @@ end procedure;
 public procedure StopRender(Job: RenderJob);
 begin
   var Failures: array of TaskFailure := CloseTaskGroup(Job.Group);
-  CloseChannel(Job.Rows);
+  discard CloseChannel(Job.Rows);
   if Std.Arrays.Length(Failures) <> 0 then
     begin
       panic(Failures[0].Message);

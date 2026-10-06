@@ -307,6 +307,6 @@ end function;
 // - `Root`: Root of the element tree.
 public procedure TuiElementValidate(Root: TuiElement);
 begin
-  TuiElementValidateAndCollect(Root);
+  discard TuiElementValidateAndCollect(Root);
 end procedure;
 end unit;

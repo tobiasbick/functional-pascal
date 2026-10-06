@@ -7,7 +7,7 @@ begin
   var Jobs: channel of integer := CreateChannel(2);
   var Results: channel of integer := CreateChannel(2);
   var Group: TaskGroup := CreateTaskGroup();
-  StartTaskInGroup(Group, procedure(Token: CancellationToken) begin
+  var ProducerTask: task := StartTaskInGroup(Group, procedure(Token: CancellationToken) begin
     for Value: integer := 1 to 12 do
       begin
         if IsError(SendWithCancellation(Jobs, Value, Token)) then
@@ -18,11 +18,11 @@ begin
       end;
     end for;
 
-    CloseChannel(Jobs);
+    discard CloseChannel(Jobs);
   end procedure);
   for Worker: integer := 1 to 3 do
     begin
-      StartTaskInGroup(Group, procedure(Token: CancellationToken) begin
+      var WorkerTask: task := StartTaskInGroup(Group, procedure(Token: CancellationToken) begin
         while not IsCancellationRequested(Token) do
           begin
             case ReceiveWithCancellation(Jobs, Token) of
@@ -72,6 +72,6 @@ begin
       end;
   end case;
 
-  CloseChannel(Results);
+  discard CloseChannel(Results);
   WriteLn(Total);
 end.

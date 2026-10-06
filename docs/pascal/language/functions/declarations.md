@@ -35,6 +35,11 @@ begin
 end function;
 ```
 
+Consume every function result by assigning, returning, passing, or inspecting
+it. To ignore a permitted result deliberately, write `discard Add(1, 2);`.
+A plain `Add(1, 2);` statement is an error. See [discarding values](discard.md)
+for task-handle and callable-capture restrictions.
+
 ## Procedures
 
 A procedure performs an action but returns no value:

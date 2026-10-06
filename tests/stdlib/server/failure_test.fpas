@@ -25,10 +25,10 @@ begin
     return Error('session failed');
   end function);
   var Listener: Std.Net.Listener := Unwrap(BindListener());
-  OwnListener(Life, Listener);
+  discard OwnListener(Life, Listener);
   // Deliberate ownership misuse: cleanup must preserve this failure.
-  CloseListener(Listener);
-  RequestStop(Life);
+  discard CloseListener(Listener);
+  discard RequestStop(Life);
   var Failures: array of TaskFailure := CloseTaskGroup(Group);
   AssertEquals(1, Std.Arrays.Length(Failures));
   AssertEquals('session failed', Failures[0].Message);

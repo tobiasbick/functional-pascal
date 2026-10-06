@@ -73,7 +73,7 @@ begin
   Wait(A);
   var N: integer := Wait(B);
   var R: result of integer, string := Wait(C);
-  CloseTaskGroup(G);
+  discard CloseTaskGroup(G);
 end."#,
     );
 }

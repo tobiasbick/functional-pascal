@@ -14,8 +14,23 @@ and runtime failures still occur. Discarding a function or procedure value
 does not invoke it. A procedure call produces no value and cannot be used
 as the operand; call the procedure directly.
 
-Function calls may also appear as statements. Explicit discard records the
-intent to ignore their result.
+Every function result must be consumed: assign it, return it, pass it to another
+call, inspect it with `case`, or explicitly discard it. A function call used as
+a statement without `discard` is an error (`FP3022`), including the final
+function call of a postfix chain. Procedure calls and `go` statements remain
+valid standalone statements.
+
+```pascal
+var Value: integer := Compute();
+discard Compute();
+discard Factory.Create().Compute();
+```
+
+An unused `Result` is also an error. Handle its branches with `case`, or use
+`try` to propagate failure while consuming the success value. Explicit discard
+deliberately ignores both branches. For results containing task handles or
+unverified callable captures, retain and consume the value; the unused-result
+diagnostic does not recommend an invalid discard.
 
 Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`discard_stmt`).
 

@@ -4,6 +4,7 @@
 
 mod expressions;
 mod types;
+mod unused_results;
 
 use super::Checker;
 use crate::types::Ty;

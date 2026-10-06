@@ -5,7 +5,7 @@ uses Std.Str, Std.Test, Std.Tui;
 begin
   var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(20, 8));
   var Model: integer := 0;
-  App.RunIterations(Model, function(State: integer; Msg: TuiMsg; Cmd: TuiCmdOutput): integer begin
+  discard App.RunIterations(Model, function(State: integer; Msg: TuiMsg; Cmd: TuiCmdOutput): integer begin
     return State;
   end function, function(State: integer): TuiElement begin
     return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(1)), [
@@ -25,7 +25,7 @@ begin
   AssertTrue(Std.Str.Contains(Snapshot.LineAt(3), 'ab'));
   App.Close();
   var Wide: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(40, 10));
-  Wide.RunIterations(0, function(State: integer; Msg: TuiMsg; Cmd: TuiCmdOutput): integer begin
+  discard Wide.RunIterations(0, function(State: integer; Msg: TuiMsg; Cmd: TuiCmdOutput): integer begin
     return State;
   end function, function(State: integer): TuiElement begin
     return TuiElementBuilders.MakeDesktop(None, [

@@ -21,7 +21,7 @@ end function;
 
 begin
   var Pending: task := go Work();
-  Wait(Pending);
+  discard Wait(Pending);
 end.
 "#;
 

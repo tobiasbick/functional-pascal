@@ -1,6 +1,6 @@
 # AP04: Discarded function values
 
-Status: partially implemented (AP04.1 complete; AP04.2 open). Effort: small.
+Status: implemented (AP04.1 and AP04.2 complete). Effort: small.
 Completion is tracked in the
 [central README](../README.md); the process is in
 [development-process.md](../development-process.md).
@@ -58,7 +58,7 @@ AP04.1 adds `discard`; AP04.2 requires consumption and migrates callers.
 ## Work packages
 
 - [x] [AP04.1: Discard statement](01-discard-statement.md)
-- [ ] [AP04.2: Require consumed function results](02-require-consumed-results.md)
+- [x] [AP04.2: Require consumed function results](02-require-consumed-results.md)
 
 ## Acceptance
 

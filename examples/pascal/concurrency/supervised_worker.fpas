@@ -6,8 +6,8 @@ begin
   var Workers: TaskGroup := CreateTaskGroup();
   // This queue models a transient failure followed by a successful operation.
   var Outcomes: channel of boolean := CreateChannel(2);
-  Send(Outcomes, false);
-  Send(Outcomes, true);
+  discard Send(Outcomes, false);
+  discard Send(Outcomes, true);
   var Worker: task := StartSupervisedTask(Workers, function(Token: CancellationToken): result of string, string begin
     WriteLn('Starting an attempt');
     if not Unwrap(Receive(Outcomes)) then
@@ -20,6 +20,6 @@ begin
   end function, 2, 10);
   // Wait retrieves the final result; intermediate failures remain inside the supervisor.
   WriteLn(Unwrap(Wait(Worker)));
-  CloseTaskGroup(Workers);
-  CloseChannel(Outcomes);
+  discard CloseTaskGroup(Workers);
+  discard CloseChannel(Outcomes);
 end.

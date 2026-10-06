@@ -62,7 +62,7 @@ fn break_in_function_body_not_in_loop() {
         "program T; \
          function Foo(): integer; \
          begin break; return 0; end function; \
-         begin Foo(); end.",
+         begin discard Foo(); end.",
     );
 }
 

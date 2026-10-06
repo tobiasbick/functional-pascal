@@ -5,9 +5,9 @@ uses Std.Tasks, Std.Arrays, Std.Results, Std.Test;
 begin
   var Group: TaskGroup := CreateTaskGroup();
   var Attempts: channel of integer := CreateChannel(3);
-  Send(Attempts, 0);
-  Send(Attempts, 1);
-  Send(Attempts, 2);
+  discard Send(Attempts, 0);
+  discard Send(Attempts, 1);
+  discard Send(Attempts, 2);
   var Child: task := StartSupervisedTask(Group, function(Token: CancellationToken): result of integer, string begin
     var Attempt: integer := Unwrap(Receive(Attempts));
     if Attempt = 0 then
@@ -27,5 +27,5 @@ begin
   AssertEquals(0, WaitAny([Child]));
   AssertEquals(42, Unwrap(Wait(Child)));
   AssertEquals(0, Length(CloseTaskGroup(Group)));
-  CloseChannel(Attempts);
+  discard CloseChannel(Attempts);
 end.

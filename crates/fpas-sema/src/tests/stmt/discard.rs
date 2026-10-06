@@ -2,12 +2,12 @@ use super::super::{check_errors, check_ok};
 use fpas_diagnostics::codes::{SEMA_DISCARD_REQUIRES_VALUE, SEMA_UNSAFE_DISCARD};
 
 #[test]
-fn discard_accepts_ordinary_values_and_preserves_unused_calls() {
+fn discard_accepts_ordinary_values_and_explicitly_ignored_calls() {
     check_ok(
         "program T;
       function Value(): result of integer, string; begin return Ok(1); end function;
       begin discard 42; discard 'hello'; discard Value(); discard Some(1);
-      discard [1, 2]; discard ['key': 1]; Value(); end.",
+      discard [1, 2]; discard ['key': 1]; discard Value(); end.",
     );
 }
 

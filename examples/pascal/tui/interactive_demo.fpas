@@ -13,6 +13,10 @@ function UpdateDemo(State: DemoModel; Msg: TuiMsg; Cmd: TuiCmdOutput): DemoModel
 begin
   Cmd.Set(TuiCmd.NoCommand);
   case Msg of
+    when TuiMsg.Started:
+      begin
+        return State;
+      end;
     when TuiMsg.TextChanged(Source, Action, Text, Caret):
       begin
         return record
@@ -86,6 +90,10 @@ begin
       begin
         return State;
       end;
+    when TuiMsg.BackgroundFailed(Id, Kind, Message, Code, Line, Column):
+      begin
+        return State;
+      end;
   end case;
 end function;
 
@@ -115,7 +123,7 @@ begin
 end function;
 
 begin
-  TuiApplication.Run(record
+  discard TuiApplication.Run(record
     Text := '';
     Caret := 0;
     Confirming := false;

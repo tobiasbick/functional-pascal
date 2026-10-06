@@ -31,7 +31,7 @@ begin
   AssertEquals(0, Std.Arrays.Length(CloseTaskGroup(GetWorkGroup(Life))));
   AssertTrue(Unwrap(FinishShutdown(Life)));
   AssertEquals(0, Std.Arrays.Length(ShutdownErrors(Life)));
-  RequestStop(Other);
-  CloseTaskGroup(GetWorkGroup(Other));
+  discard RequestStop(Other);
+  discard CloseTaskGroup(GetWorkGroup(Other));
   AssertTrue(Unwrap(FinishShutdown(Other)));
 end.

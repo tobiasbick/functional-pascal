@@ -173,4 +173,4 @@ Mutable storage containing callables is conservatively treated as having
 unknown captures, including after assignments. Scalar mutable captures remain
 provably task-free when their declared type excludes task handles.
 
-AP04.2 remains responsible for requiring consumption of function results.
+AP04.2 requires consumption of function results.

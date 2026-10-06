@@ -12,10 +12,10 @@ begin
   var Source: Std.Tasks.CancellationSource := Std.Tasks.CreateCancellationSource();
   var Token: Std.Tasks.CancellationToken := Std.Tasks.GetCancellationToken(Source);
   case Std.Net.ConnectWithCancellation('127.0.0.1', {port}, 1000, Token) of
-    when Ok(ConnectionValue): Std.Net.Close(ConnectionValue);
+    when Ok(ConnectionValue): discard Std.Net.Close(ConnectionValue);
     when Error(Message): panic(Message);
   end case;
-  Std.Tasks.Cancel(Source);
+  discard Std.Tasks.Cancel(Source);
   case Std.Net.ConnectWithCancellation('unused.invalid', 1, 1000, Token) of
     when Ok(ConnectionValue): panic('cancelled TCP connect succeeded');
     when Error(Message): if Message <> 'Network connect cancelled' then panic(Message); end if;

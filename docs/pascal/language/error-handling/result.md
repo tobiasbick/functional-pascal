@@ -36,6 +36,15 @@ end case;
 
 The binding variable (`V`, `E`) is scoped to its arm body.
 
+## Consuming results
+
+A function returning `Result` cannot be called as a standalone statement.
+Handle the branches with `case`, or use [try](try.md) while consuming the
+success value. If ignoring success and failure is intentional, write
+`discard Divide(10, 0);`. This evaluates the call without unwrapping it.
+Results containing task handles or unverified callable captures cannot be
+discarded; see [discarding values](../functions/discard.md).
+
 ## See also
 
 - [Types — Result and Option](../types/result-option-types.md)

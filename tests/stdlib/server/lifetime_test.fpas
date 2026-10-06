@@ -23,10 +23,10 @@ begin
   AssertTrue(IsError(FinishShutdown(Life)));
   AssertTrue(not RequestStop(Life));
   AssertEquals(0, RemainingMillis(Life));
-  Send(Gate, true);
+  discard Send(Gate, true);
   AssertEquals(0, Std.Arrays.Length(CloseTaskGroup(Group)));
   AssertTrue(Std.Results.Unwrap(FinishShutdown(Life)));
   AssertTrue(Std.Results.Unwrap(FinishShutdown(Life)));
   AssertEquals(0, Std.Arrays.Length(ShutdownErrors(Life)));
-  CloseChannel(Gate);
+  discard CloseChannel(Gate);
 end.

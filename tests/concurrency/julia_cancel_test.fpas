@@ -7,7 +7,7 @@ begin
     begin
       // More rows than queue capacity; deliberately leave the result queue undrained.
       var Old: RenderJob := StartRender(-1.0, 1.0, -1.0, 1.0, 8, 100, 2048, PaletteKind.DeepOcean, 0.0, 0.0);
-      Unwrap(ReceiveWithTimeout(Old.Rows, 5000));
+      discard Unwrap(ReceiveWithTimeout(Old.Rows, 5000));
       var Token: CancellationToken := GetTaskGroupToken(Old.Group);
       var Filler: RenderRow := record
         Y := 0;
@@ -20,7 +20,7 @@ begin
         end;
       end while;
 
-      CancelTaskGroup(Old.Group);
+      discard CancelTaskGroup(Old.Group);
       AssertTrue(IsCancellationRequested(Token));
       // A cancelled CPU row returns no partial result to publish.
       AssertEquals(0, Length(ComputeRow(0, 8, 1, -1.0, 1.0, -1.0, 1.0, 2048, 0.0, 0.0, Token)));

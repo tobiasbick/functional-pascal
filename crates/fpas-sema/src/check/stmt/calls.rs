@@ -10,7 +10,12 @@ use fpas_parser::{Designator, Expr};
 
 impl Checker {
     /// Checks calls in statement position, including procedure operands rejected by discard.
-    pub(crate) fn check_call_stmt(&mut self, designator: &Designator, args: &[Expr], span: Span) {
+    pub(crate) fn check_call_stmt(
+        &mut self,
+        designator: &Designator,
+        args: &[Expr],
+        span: Span,
+    ) -> Ty {
         let name = Self::resolve_designator_name(designator);
         self.ensure_fq_std_unit_loaded(&name);
 
@@ -19,7 +24,7 @@ impl Checker {
             let ty = symbol.ty.clone();
             if self.reject_instance_method_through_type(designator, span) {
                 self.check_args_only(args);
-                return;
+                return Ty::Error;
             }
 
             let dispatch = self.builtin_std_dispatch_name(&name);
@@ -28,18 +33,17 @@ impl Checker {
                     .insert(crate::designator_lookup_key(designator), dispatch.clone());
             }
             if kind == SymbolKind::BuiltinStd {
-                let _ = crate::std_registry::check_builtin_std_call(self, &dispatch, args, span);
-                return;
+                return crate::std_registry::check_builtin_std_call(self, &dispatch, args, span);
             }
 
             match ty {
                 Ty::Procedure(proc_ty) => {
                     self.check_procedure_call_args(&name, &proc_ty, args, span);
-                    return;
+                    return Ty::Unit;
                 }
                 Ty::Function(func_ty) => {
-                    self.check_function_call_args(&name, &func_ty, args, span);
-                    return;
+                    let inferred = self.check_function_call_args(&name, &func_ty, args, span);
+                    return Self::substitute_type_params(&func_ty.return_type, &inferred);
                 }
                 _ => {
                     self.error_with_code(
@@ -49,35 +53,31 @@ impl Checker {
                         span,
                     );
                     self.check_args_only(args);
-                    return;
+                    return Ty::Error;
                 }
             }
         }
 
         if !self.designator_has_unit_prefix(designator) {
             let previous_error_count = self.errors.len();
-            if self
-                .try_check_method_call_like(MethodCallSite::Statement, designator, args, span)
-                .is_some()
+            if let Some(ty) =
+                self.try_check_method_call_like(MethodCallSite::Statement, designator, args, span)
             {
-                return;
+                return ty;
             }
             if self.errors.len() != previous_error_count {
                 self.check_args_only(args);
-                return;
+                return Ty::Error;
             }
 
-            if self
-                .try_check_fluent_designator(
-                    crate::designator_lookup_key(designator),
-                    designator,
-                    args,
-                    span,
-                    true,
-                )
-                .is_some()
-            {
-                return;
+            if let Some(ty) = self.try_check_fluent_designator(
+                crate::designator_lookup_key(designator),
+                designator,
+                args,
+                span,
+                true,
+            ) {
+                return ty;
             }
         }
 
@@ -98,5 +98,6 @@ impl Checker {
 
         self.error_with_code(code, message, hint, span);
         self.check_args_only(args);
+        Ty::Error
     }
 }

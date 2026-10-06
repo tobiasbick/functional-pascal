@@ -153,7 +153,7 @@ include = ["src/**/*.fpas"]
     );
     write_text(
         &cwd.join("apps/hello/src/main.fpas"),
-        "program Hello;\nuses Demo.Math;\nbegin\n  Answer();\nend.\n",
+        "program Hello;\nuses Demo.Math;\nbegin\n  discard Answer();\nend.\n",
     );
 
     let (exit_code, stdout, stderr) = support::run_cli_args_and_capture_output(
@@ -194,7 +194,7 @@ include = ["**/*.fpas"]
     );
     write_text(
         &cwd.join("answer_test.fpas"),
-        "program AnswerTest;\nuses Demo.Support;\nbegin\n  Answer();\nend.\n",
+        "program AnswerTest;\nuses Demo.Support;\nbegin\n  discard Answer();\nend.\n",
     );
 
     let (exit_code, stdout, stderr) = support::run_cli_args_and_capture_output(

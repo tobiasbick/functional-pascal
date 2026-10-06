@@ -23,7 +23,7 @@ begin
             end;
           end if;
 
-          Send(Ready, true);
+          discard Send(Ready, true);
           return Ok(true);
         end function);
         return State;
@@ -62,5 +62,5 @@ begin
   Model := App.RunBackgroundIterations(Model, Inbox, UpdateFramework, UpdateApplication, View, 1, 0);
   AssertEquals(42, Model.Value);
   App.CloseWithBackground(Inbox);
-  CloseChannel(Ready);
+  discard CloseChannel(Ready);
 end.

@@ -1,6 +1,7 @@
 use super::*;
 
 mod json;
+mod unused_results;
 
 #[test]
 fn cli_renders_lex_stage_output() {

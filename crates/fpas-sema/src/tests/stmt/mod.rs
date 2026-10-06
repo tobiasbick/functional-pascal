@@ -9,4 +9,5 @@ mod for_loops;
 mod if_stmt;
 mod jumps;
 mod misc;
+mod unused_results;
 mod while_repeat;

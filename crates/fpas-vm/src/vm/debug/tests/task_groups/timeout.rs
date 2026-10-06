@@ -50,17 +50,17 @@ begin
   var Release: channel of boolean := CreateChannel(1);
   var Child: task := StartTaskInGroup(Group, function(Token: CancellationToken): integer
   begin
-    Send(Ready, true);
+    discard Send(Ready, true);
     while IsNone(Std.Results.Unwrap(TryReceive(Release))) do begin null; end; end while;
     if not IsCancellationRequested(Token) then panic('cancellation was not retained'); end if;
     return 42;
   end function);
   while IsNone(Std.Results.Unwrap(TryReceive(Ready))) do begin null; end; end while;
   if not IsError(CloseTaskGroupWithTimeout(Group, 2)) then panic('running worker was lost'); end if;
-  Send(Release, true);
+  discard Send(Release, true);
   if Wait(Child) <> 42 then panic('worker could not finish after timeout'); end if;
   if Length(CloseTaskGroup(Group)) <> 0 then panic('close failed'); end if;
-  CloseChannel(Ready); CloseChannel(Release);
+  discard CloseChannel(Ready); discard CloseChannel(Release);
 end."#,
     );
     assert!(errors.is_empty(), "{errors:?}");
@@ -92,14 +92,14 @@ begin
     var Child: task := StartTaskInGroup(Inner, function(Stop: CancellationToken): integer
       begin return Unwrap(Receive(Gate)); end function);
     if not IsError(CloseTaskGroupWithTimeout(Inner, 2)) then panic('premature close'); end if;
-    Unwrap(Send(Ready, true));
+    discard Unwrap(Send(Ready, true));
     if Wait(Child) <> 42 then panic('child result was lost'); end if;
     if Length(Unwrap(CloseTaskGroupWithTimeout(Inner, 1000))) <> 0 then panic('inner failures'); end if;
   end procedure);
-  Unwrap(Receive(Ready));
-  Unwrap(Send(Gate, 42));
+  discard Unwrap(Receive(Ready));
+  discard Unwrap(Send(Gate, 42));
   if Length(Unwrap(CloseTaskGroupWithTimeout(Outer, 1000))) <> 0 then panic('outer failures'); end if;
-  CloseChannel(Ready); CloseChannel(Gate);
+  discard CloseChannel(Ready); discard CloseChannel(Gate);
 end."#,
     );
 }

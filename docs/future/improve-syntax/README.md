@@ -61,7 +61,7 @@ package are listed in each work package file.
 | [x] | [AP01: Pascal conventions](ap01-pascal-conventions/README.md) | Small | None | Agreed direction |
 | [x] | [AP02: Structured diagnostics](ap02-structured-diagnostics/README.md) | Small | None | Agreed direction (Q01) |
 | [ ] | [AP03: Explicit closed-enum cases](ap03-explicit-closed-enum-cases/README.md) | Small | AP02, AP20 | Agreed direction |
-| [ ] | [AP04: Discarded function values](ap04-discarded-function-values/README.md) | Small | AP02 | AP04.1 complete; AP04.2 open |
+| [x] | [AP04: Discarded function values](ap04-discarded-function-values/README.md) | Small | AP02 | Complete |
 | [ ] | [AP05: Qualified imports](ap05-qualified-imports/README.md) | Medium | AP01, AP02 | Agreed direction (Q04) |
 | [ ] | [AP06: Fixed dot-call targets](ap06-dot-call-targets/README.md) | Medium | None | Agreed direction (Q05, revised); native type operations |
 | [x] | [AP07: Boolean rules](ap07-boolean-rules/README.md) | Medium | AP02 | Complete (Q02, Q03) |

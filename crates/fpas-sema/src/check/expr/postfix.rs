@@ -24,7 +24,7 @@ impl Checker {
 
     /// Type-check a postfix chain used as a statement.
     ///
-    /// The final method may be a procedure because its `Unit` result is discarded.
+    /// The final call must be a procedure; function results require consumption.
     /// **Documentation:** `docs/pascal/language/functions/postfix-chaining.md`
     pub(crate) fn check_postfix_statement(&mut self, expr: &Expr, span: Span) {
         let Expr::Postfix {
@@ -50,7 +50,14 @@ impl Checker {
             self.check_postfix_chain(base, operations, false);
             return;
         }
-        self.check_postfix_chain(base, operations, true);
+        let previous_error_count = self.errors.len();
+        let ty = self.check_postfix_chain(base, operations, true);
+        self.expr_types
+            .insert(Self::expr_lookup_key(expr), ty.clone());
+        self.record_discard_info(expr);
+        if self.errors.len() == previous_error_count {
+            self.check_unused_result(&ty, self.discard_info(expr).value, span);
+        }
     }
 
     /// Check a postfix call that is spawned by `go`.

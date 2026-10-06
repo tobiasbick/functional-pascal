@@ -24,7 +24,7 @@ begin
         mutable var Initial: NotesModel := NotesModelCreate(Directory, Loaded);
         Initial.Width := Std.Console.ScreenWidth();
         Initial.Height := Std.Console.ScreenHeight();
-        TuiApplication.RunWithPalette(Initial, NotesUpdate, NotesView, NotesPalette());
+        discard TuiApplication.RunWithPalette(Initial, NotesUpdate, NotesView, NotesPalette());
       end;
     when Error(Message):
       begin

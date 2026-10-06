@@ -5,7 +5,7 @@ uses Std.Tasks, Std.Console, Std.Results;
 
 begin
   var Messages: channel of string := CreateChannel(4);
-  Send(Messages, 'hello from the queue');
+  discard Send(Messages, 'hello from the queue');
   var Message: WaitCase := ReceiveCase(Messages, procedure(Outcome: result of string, string) begin
     case Outcome of
       when Ok(Text):
@@ -21,7 +21,7 @@ begin
   var Timeout: WaitCase := TimerCase(100, procedure() begin
     WriteLn('no message before the deadline');
   end procedure);
-  Select([Message, Timeout]);
+  discard Select([Message, Timeout]);
   // Both cases are now consumed; a second selection needs new cases.
-  CloseChannel(Messages);
+  discard CloseChannel(Messages);
 end.

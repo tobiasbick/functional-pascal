@@ -10,12 +10,12 @@ end function;
 begin
   var Workers: TaskGroup := CreateTaskGroup();
   // Keep the group even when individual task handles are not needed.
-  StartTaskInGroup(Workers, CheckConfiguration);
-  StartTaskInGroup(Workers, procedure(Token: CancellationToken) begin
+  var ConfigurationTask: task := StartTaskInGroup(Workers, CheckConfiguration);
+  var WorkerTask: task := StartTaskInGroup(Workers, procedure(Token: CancellationToken) begin
     var Stop: WaitCase := CancellationCase(Token, procedure() begin
       WriteLn('Background worker stopped');
     end procedure);
-    Select([Stop]);
+    discard Select([Stop]);
   end procedure);
   // Close requests cooperative cancellation and waits for every registered worker.
   var Failures: array of TaskFailure := CloseTaskGroup(Workers);

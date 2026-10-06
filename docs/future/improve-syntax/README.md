@@ -59,7 +59,7 @@ package are listed in each work package file.
 | [ ] | [AP03: Explicit closed-enum cases](ap03-explicit-closed-enum-cases/README.md) | Small | AP02, AP20 | Agreed direction |
 | [ ] | [AP04: Discarded function values](ap04-discarded-function-values/README.md) | Small | AP02 | Agreed direction |
 | [ ] | [AP05: Qualified imports](ap05-qualified-imports/README.md) | Medium | AP01, AP02 | Agreed direction (Q04) |
-| [ ] | [AP06: Fixed dot-call targets](ap06-dot-call-targets/README.md) | Medium | AP05 | Agreed direction (Q05, revised) |
+| [ ] | [AP06: Fixed dot-call targets](ap06-dot-call-targets/README.md) | Medium | None | Agreed direction (Q05, revised); native type operations |
 | [ ] | [AP07: Boolean rules](ap07-boolean-rules/README.md) | Medium | AP02 | Agreed direction (Q02, Q03) |
 | — | [AP08: Comma-separated parameter lists](ap08-comma-separated-parameter-lists/README.md) | — | — | Rejected; closed (Q06) |
 | [ ] | [AP09: Named arguments](ap09-named-arguments/README.md) | Medium | AP02 | Agreed direction |
@@ -99,7 +99,7 @@ and transfer conditions are recorded in the owning package README.
 | AP03 | AP03.1 migrate catch-alls; AP03.2 reject catch-alls |
 | AP04 | AP04.1 discard statement; AP04.2 require consumed results |
 | AP05 | AP05.1 import aliases; AP05.2 alias-aware tooling |
-| AP06 | AP06.1 catalog and rules decision; AP06.2 migrate non-catalog calls; AP06.3 fixed dot resolution |
+| AP06 | AP06.1 complete catalog and remaining forms; AP06.2 prepare consumer migration; AP06.3 native type operations and removal of duplicate call forms |
 | AP07 | AP07.1 short-circuit evaluation; AP07.2 `Std.Bits`; AP07.3 logical precedence; AP07.4 boolean-only operators |
 | AP09 | AP09.1 routine arguments; AP09.2 variant constructors |
 | AP10 | AP10.1 typed construction; AP10.2 migrate literals; AP10.3 remove literals |
@@ -140,8 +140,10 @@ package taken from its own file:
 6. AP20, then AP03 and AP15; AP21 and AP24.
 7. AP18, AP19, and AP23.
 8. AP26, then AP25 after its reassessment.
-9. AP05, AP06, and AP12 once their open decisions are settled. AP06.1 is a
-   decision work package and can be prepared at any time.
+9. AP05 and AP06 can proceed independently; AP06 native operations require
+   no imports. Complete AP06 once its remaining names, factory forms,
+   conflicts, and mutation marking are settled, then AP12 after its decision.
+   AP06.1 is a decision work package and can be prepared at any time.
 
 AP27 is optional and follows AP22. AP28 is retained as editor/LSP work outside
 this language plan, for transfer after AP13 and AP24. AP29 is rejected.

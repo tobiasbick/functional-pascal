@@ -28,7 +28,9 @@ fully qualified name always works ([grammar](../../../specs/grammar.ebnf),
 
 - AP01 (reference style), AP02 (diagnostic codes).
 
-AP06 and AP19 depend on this package.
+AP19 depends on this package. AP06's native built-in type operations are
+available without imports and do not depend on AP05; other units continue
+to follow this import model.
 
 ## Order
 

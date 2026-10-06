@@ -17,6 +17,8 @@ addition to the verification list of each of its work packages.
 | Enums | Add a closed-enum variant | Missing cases identified explicitly |
 | Imports | Introduce a colliding helper | Qualified calls retain their target |
 | Dot calls | Declare a free function named like a standard operation | The dot call keeps its catalog or member target |
+| Native type operations | Use the complete built-in catalog without imports | Operations remain available; the five former helper units provide no parallel public API |
+| Operation preservation | Compare the former type-helper API with the catalog | Every distinct operation survives; only verified synonymous forms share one canonical replacement |
 | Booleans | `X > 0 and Y > 0`; `A and B or C` | First parses as two comparisons; second asks for parentheses |
 | Discard | Unused `Result` from a cleanup call | Rejected without `discard`; accepted with it |
 | Blocks | Nested conditionals and endings | Unambiguous branch ownership and useful recovery |

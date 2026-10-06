@@ -24,8 +24,9 @@ caller-visible change during migration.
   turns local reassignment into caller mutation. This removal is delivered by
   the shared keyword switch in
   [AP16.3](../ap16-immutable-and-mutable-bindings/03-keyword-switch.md).
-- Intrinsics that change a caller variable follow the same rule, for example
-  `Push(var Items, 3)`.
+- Intrinsics that change a caller variable follow the same explicit `var`
+  rule. Built-in operations such as array `Push` and `Pop` use AP06's one
+  native type-operation form; AP06.1 records how the receiver is marked.
 - A closure cannot capture a `var` parameter, and a `var` argument cannot be
   passed to a `go` call; the reference must not outlive the call.
 - A `var` parameter may be forwarded as a `var` argument to another routine,
@@ -48,9 +49,10 @@ Swap(var A[I], var A[J]);   // error: both arguments refer to 'A'
 - Whether function types may declare `var` parameters (for example
   `function(var Value: integer): integer`), so that function values can mutate
   a caller variable. Decide before AP17.1.
-- Whether caller-mutating operations keep a dot form (for example
-  `Items.Push(3)`) and how `var` is marked there is decided in
+- How `var` is marked on a caller-mutating operation's receiver is decided in
   [AP06.1](../ap06-dot-call-targets/01-catalog-and-rules-decision.md).
+  Preservation of `Push` and `Pop` as native array operations with one public
+  form is already agreed; there is no parallel ordinary-call form.
 
 ## Dependencies
 

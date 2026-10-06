@@ -44,7 +44,7 @@ their packages and remain open; the reference examples do not settle them.
 
 | Package | Remaining decision or specification |
 |---------|-------------------------------------|
-| [AP06](../ap06-dot-call-targets/README.md#open-decisions), [AP12](../ap12-callable-expressions/README.md#open-decisions) | Define the dot-call catalog, imports, conflicts, and mutation form; accept or reject callable-expression targets and their evaluation order. |
+| [AP06](../ap06-dot-call-targets/README.md#open-decisions), [AP12](../ap12-callable-expressions/README.md#open-decisions) | Settle extended catalog names, type-qualified factories, conflicts, and receiver mutation marking; native type operations and automatic availability are agreed. Accept or reject callable-expression targets and their evaluation order. |
 | [AP17](../ap17-visible-caller-mutation/README.md#open-decisions), [AP17.1](../ap17-visible-caller-mutation/01-var-parameters.md#implementation) | Decide `var` parameters on function types and effects retained after a failed caller-mutating call. |
 | [AP19](../ap19-distinct-domain-types/README.md#open-decisions) | Define constraints, dictionary keys, and case labels for distinct types. |
 | [AP22](../ap22-limited-local-inference/README.md#open-decisions) | Decide the eligible literal forms and whether enum constructors qualify for local inference. |

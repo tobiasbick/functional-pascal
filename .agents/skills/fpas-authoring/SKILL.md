@@ -1,170 +1,65 @@
 ---
 name: fpas-authoring
-description: >
-  Guides creating and editing Functional Pascal `.fpas` source files in this repository. Use when
-  writing or fixing programs, units, demos, regression tests, `uses` imports, formatting, or file
-  placement under `examples/`, `tests/`, or `apps/`. Also use when the user asks how to write FPAS,
-  Pascal dialect pitfalls, `fpas fmt`, or where a source file belongs.
+description: Write, fix, or format Functional Pascal .fpas sources, including programs, units, examples, and regression tests.
 ---
 
 # FPAS authoring
 
-Project-local guide for writing `.fpas` files. This is **not** the language spec — link to `docs/pascal/` for semantics you do not know.
+Use the current [language reference](../../../docs/pascal/README.md) and nearby
+working sources. Repository placement and shared completion checks live in
+[AGENTS.md](../../../AGENTS.md).
 
-## Required reads
+## Read for the task
 
-Before non-trivial edits:
+| Task | Reference |
+|------|-----------|
+| Programs, units, imports, visibility | [Units](../../../docs/pascal/program-structure/units.md) |
+| Bindings and expressions | [Basics](../../../docs/pascal/language/basics/README.md) |
+| Routines, parameters, closures | [Functions](../../../docs/pascal/language/functions/README.md) |
+| Branches and loops | [Control flow](../../../docs/pascal/language/control-flow/README.md) |
+| Standard-library calls | [Std reference](../../../docs/pascal/std/README.md) |
+| Assertions, scripted input, golden output | [Test runner](../../../docs/pascal/std/testing/test.md) |
 
-1. [`docs/pascal/README.md`](../../../docs/pascal/README.md) — spec index
-2. [`docs/pascal/tools/fmt-style.md`](../../../docs/pascal/tools/fmt-style.md) — formatter output rules
-3. [`.agents/skills/fpas-projects/SKILL.md`](../fpas-projects/SKILL.md) — when the file needs a `.fpasprj` or workspace entry
-4. [`.agents/skills/fpas-change-checklist/SKILL.md`](../fpas-change-checklist/SKILL.md) — after behavior changes (docs, tests, verify)
+Read the pages relevant to the change. For exact productions, consult
+[grammar.ebnf](../../../docs/specs/grammar.ebnf).
 
-Workflow calibration: [references/examples.md](references/examples.md).
+## Source workflow
 
-## Where files go
+1. Inspect the owning manifest and neighboring sources before choosing a program
+   or unit. Use [fpas-projects](../fpas-projects/SKILL.md) when manifests or
+   dependencies need editing.
+2. Reuse a working pattern: [hello world](../../../docs/pascal/getting-started/hello-world.md),
+   [assertion test](../../../tests/stdlib/str/higher_order_test.fpas), or
+   [headless TUI test](../../../tests/stdlib/tui/mvu_host_signature_test.fpas).
+3. For a new regression test, confirm that
+   [tests/suite.fpasprj](../../../tests/suite.fpasprj) includes its path.
 
-| Goal | Location | Entry shape |
-|------|----------|-------------|
-| Runnable demo / tutorial | `examples/` | `program` — never `*_test.fpas` here |
-| Regression / integration test | `tests/<theme>/` | `program` named `*_test.fpas` |
-| App source | `apps/<name>/src/` | `program` or `unit` per project |
-| Shared library code | library `.fpasprj` `src/` | `unit` only |
+## Syntax to keep explicit
 
-`Std.Tui` tests group under `tests/stdlib/tui/`. Bundle all regression tests via [`tests/suite.fpasprj`](../../../tests/suite.fpasprj).
+- Bindings use `var` for immutable values and `mutable var` for reassignment.
+- Import every referenced unit with `uses`, including fully qualified `Std.*`
+  calls. Qualify ambiguous short names with the current unit name from its handbook.
+- Functions return with `return`. Consume function results or use an allowed
+  explicit [discard](../../../docs/pascal/language/functions/discard.md).
+- Statements end with `;`. Use each construct's named closer, such as
+  `end function;`, `end if;`, and `end unit;`; programs end with `end.`.
+  Expression closers receive their terminator from the enclosing statement.
+- Unit declarations and record members are private by default; `public` exports
+  an individual declaration or member in a unit.
+- Strings use single quotes and doubled quotes for escaping. Source comments use
+  `//`; adjacent standalone blocks provide [Markdown documentation](../../../docs/pascal/language/basics/comments.md).
 
-## Decision workflow
+## Verify sources
 
-1. **Single-file scratch?** → `program` file; run with `fpas run path.fpas` or `fpas check path.fpas`.
-2. **Multi-file app or library?** → follow `fpas-projects` skill; add units + `.fpasprj`.
-3. **Assert runtime behavior?** → `*_test.fpas` under `tests/` with `uses Std.Test`.
-4. **Teach a feature?** → `examples/` demo; keep it short and runnable.
-
-## Minimal skeletons
-
-### Program (demo or app entry)
-
-```pascal
-program MyApp;
-
-uses Std.Console;
-
-begin
-  WriteLn('Hello');
-end.
-```
-
-### Unit (shared code)
-
-```pascal
-unit MyApp.Bounds;
-
-public function Clamp(Value: integer; Min: integer; Max: integer): integer;
-begin
-  if Value < Min then
-    return Min;
-  elsif Value > Max then
-    return Max;
-  else
-    return Value;
-  end if;
-end function;
-end unit;
-```
-
-### Regression test
-
-```pascal
-program AbsNegativeTest;
-
-uses Std.Math, Std.Test;
-
-begin
-  AssertEquals(7, Abs(-7));
-end.
-```
-
-Test entry files must be `program`, not bare `unit`. Spec: [`docs/pascal/std/testing/test.md`](../../../docs/pascal/std/testing/test.md).
-
-Filesystem scratch for FPAS tests/demos: write under `.temp-data/` at the repository root (gitignored). Never leave fixtures in `crates/`, beside `tests/`, or as bare `_fpas_*` files in the cwd.
-
-## FPAS rules models often get wrong
-
-Do **not** assume Delphi/Free Pascal:
-
-| Wrong (other Pascal) | FPAS |
-|----------------------|------|
-| `FuncName := value` return | `return value` only |
-| `var x: Integer` mutable by default | `var` immutable; use `mutable var` to reassign |
-| Omitting `;` on the last statement in a block | terminate every statement with `;`, also before `end`, `else`, and `until`; the program ends with `end.` |
-| `uses Unit1, Unit2 in interface` | single `uses` clause; no Delphi `interface`/`implementation` split |
-| untyped lambda shorthand | use an anonymous `function` / `procedure` expression with explicit parameter and result types; use a named nested routine for implicit recursion |
-| `begin`/`end.` optional on programs | formatter inserts them — match [`fmt-style.md`](../../../docs/pascal/tools/fmt-style.md) |
-| `{...}`, `(*...*)`, or a separate doc-comment delimiter | `//` is the only comment syntax; an adjacent standalone block is Markdown documentation |
-
-Other habits:
-
-- Case-insensitive keywords and identifiers.
-- Named routines and methods end with `end function;` or `end procedure;`.
-  Record and enum declarations end with `end record;` and `end enum;`.
-  Every unit ends with `end unit;`; programs keep `end.`.
-- Anonymous routines are expressions ending in `end function` / `end procedure`;
-  record updates end in `end with`. Expressions have no own final `;`: arguments
-  continue with `,` or `)`, while the enclosing statement or declaration supplies
-  its terminator. Body statements and record-update fields still require `;`.
-- `if` ends with `end if;`; `for` and `for-in` with `end for;`; `while` with
-  `end while;`. Bodies are nonempty statement lists with local scopes. Write
-  `null;` for no action. `elsif` continues a chain; `else if` starts a nested
-  conditional with its own ending. Explicit `begin ... end;` blocks retain
-  their additional scope; `repeat` keeps `until Condition;`.
-- `elsif`, `when`, and `null` are reserved names. Use an identifier such as
-  `Timestamp` for a local binding and `JsonValue.NullValue` for JSON null;
-  strings and JSON/TOML data keep their original text.
-- A `case` arm starts with `when Labels [if Guard]:` and contains a nonempty
-  statement list. Its optional `else` arm also has its own local scope.
-  End the statement with `end case;`; write `null;` for an arm with no action.
-  Pattern bindings keep their current spelling, such as `Some(Value)`.
-- Strings use single quotes: `'Hello'`, escape with doubled quote: `'It''s'`.
-- `Std.*` units require explicit `uses` — listing a file in `.fpasprj` does not import it.
-- Qualify ambiguous short names (`Length`, `Map`, `Unwrap`, …) with the unit: `Std.Str.Length`, `Std.Array.Length`.
-- Unit declarations and record members are private by default. Write `public`
-  directly before each exported declaration or member. `public` is valid in
-  **units** only, not `program` files; `private` is an ordinary identifier.
-
-Canonical syntax reference: [`docs/specs/grammar.ebnf`](../../../docs/specs/grammar.ebnf). Language topics: [`docs/pascal/language/`](../../../docs/pascal/language/).
-
-## Formatting
-
-After editing `.fpas` under `examples/`, `tests/`, or `apps/`:
+Use [formatter output](../../../docs/pascal/tools/fmt-style.md) as the style authority:
 
 ```text
 fpas fmt <paths>
 fpas fmt --check <paths>
+fpas check <file-or-project>
+fpas test <test-path>
 ```
 
-Or batch format:
-
-```text
-scripts/format-fpas-sources.sh
-scripts/format-fpas-sources.ps1
-```
-
-Golden style rules: [`docs/pascal/tools/fmt-style.md`](../../../docs/pascal/tools/fmt-style.md). Prefer formatter output over hand-aligned spacing.
-
-## Canonical repo examples
-
-Copy patterns from real files instead of inventing syntax:
-
-| Pattern | Repo file |
-|---------|-----------|
-| Hello world | [`docs/pascal/getting-started/hello-world.md`](../../../docs/pascal/getting-started/hello-world.md) |
-| Stdlib assertion test | `tests/stdlib/math/abs_negative_integer_test.fpas` |
-| Headless TUI test | `tests/stdlib/tui/mvu_host_signature_test.fpas` |
-| Unit + `uses` | [`docs/pascal/program-structure/units.md`](../../../docs/pascal/program-structure/units.md) |
-| Library + program | `examples/pascal/monorepo/` |
-
-## When done
-
-- Behavior or API changed → `fpas-change-checklist`
-- New test → add path to `tests/suite.fpasprj` when outside existing `include` globs
-- Project manifest changed → `fpas-projects` + `fpas check`
+Check interactive programs without launching them in batch validation. Use
+scripted or headless tests for their runtime behavior. After FPAS regression-test
+changes, run the repository suite as required by AGENTS.md.

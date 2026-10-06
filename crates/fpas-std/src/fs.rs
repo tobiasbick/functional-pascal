@@ -4,6 +4,7 @@
 //!
 //! **Documentation:** `docs/pascal/std/host/fs.md` (from the repository root).
 
+mod directory;
 mod glob;
 mod publication;
 mod read;
@@ -64,6 +65,10 @@ pub(crate) fn run(
         Intrinsic::Fs(FsIntrinsic::CreateDirAll) => {
             let path = pop_string(pop_value(call, location)?, location)?;
             call.push(result_bool(fs::create_dir_all(path)));
+        }
+        Intrinsic::Fs(FsIntrinsic::ReadDir) => {
+            let path = pop_string(pop_value(call, location)?, location)?;
+            call.push(result_string_array(directory::read_dir_paths(&path)));
         }
         Intrinsic::Fs(FsIntrinsic::Glob) => {
             let pattern = pop_string(pop_value(call, location)?, location)?;

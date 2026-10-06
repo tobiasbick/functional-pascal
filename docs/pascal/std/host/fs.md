@@ -26,7 +26,7 @@ Text reads and writes use UTF-8.
 
 ## Importing and names
 
-After `uses Std.Fs;` use **`ReadText`**, **`WriteText`**, **`WriteTextAtomic`**, **`DeleteFile`**, **`Exists`**, **`IsFile`**, **`IsDir`**, **`CreateDir`**, **`CreateDirAll`**, **`Glob`**, or the fully qualified forms such as **`Std.Fs.ReadText`**.
+After `uses Std.Fs;` use **`ReadText`**, **`WriteText`**, **`WriteTextAtomic`**, **`DeleteFile`**, **`Exists`**, **`IsFile`**, **`IsDir`**, **`CreateDir`**, **`CreateDirAll`**, **`Glob`**, **`ReadDir`**, or the fully qualified forms such as **`Std.Fs.ReadText`**.
 
 ---
 
@@ -50,6 +50,7 @@ Requires `uses Std.Fs;`.
 | function | `CreateDir(Path: string): Result of boolean, string` | creates one directory, returns `Ok(true)` |
 | function | `CreateDirAll(Path: string): Result of boolean, string` | creates a directory and missing parents; an existing directory is `Ok(true)` |
 | function | `Glob(Pattern: string): Result of array of string, string` | expands a glob pattern to matching file paths |
+| function | `ReadDir(Path: string): Result of array of string, string` | sorted immediate entries, including files and directories |
 
 Fallible operations return `Error(message)` with a host error string instead of raising a runtime panic.
 
@@ -203,6 +204,18 @@ Platform notes: `Glob` follows the host OS filesystem and the Rust `glob` crate.
 
 ---
 
+## `function ReadDir(Path: string): Result of array of string, string`
+
+Returns all immediate entry paths, including files, empty directories, and links,
+in stable lexical order with `/` separators. Relative inputs produce relative
+entry paths. The operation does not recurse or follow child directory links.
+An empty directory returns `Ok([])`. Missing directories, file paths, read errors,
+and non-UTF-8 entry paths return `Error(message)` rather than an empty result.
+A call is limited to 1,000,000 entries. `Glob` retains its file-only behavior.
+The call blocks its executing thread and may be run in a `go` task.
+
+---
+
 ## Implementation (contributors)
 
 | Concern | Location |
@@ -210,6 +223,7 @@ Platform notes: `Glob` follows the host OS filesystem and the Rust `glob` crate.
 | Runtime dispatch | [`fs.rs`](../../../../crates/fpas-std/src/fs.rs) |
 | Atomic publication | [`fs/publication.rs`](../../../../crates/fpas-std/src/fs/publication.rs) |
 | Bounded reads | [`fs/read.rs`](../../../../crates/fpas-std/src/fs/read.rs) |
+| Directory enumeration | [`fs/directory.rs`](../../../../crates/fpas-std/src/fs/directory.rs) |
 | Glob expansion | [`fs/glob.rs`](../../../../crates/fpas-std/src/fs/glob.rs) |
 | Compiler intrinsic catalog | [`intrinsic_catalog.rs`](../../../../crates/fpas-compiler/src/intrinsic_catalog.rs) |
 | Registration | [`std_registry/loaded/fs.rs`](../../../../crates/fpas-sema/src/std_registry/loaded/fs.rs) |

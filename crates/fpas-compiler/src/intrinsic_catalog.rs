@@ -119,6 +119,7 @@ pub(crate) fn resolve(name: &str, first_argument: Option<&Ty>) -> Option<Intrins
                 CreateDir,
                 CreateDirAll,
                 Glob,
+                ReadDir,
             ]
         ),
         "Json" => family!(member, Json, JsonIntrinsic, [Parse, Stringify]),

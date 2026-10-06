@@ -3,6 +3,27 @@
 use super::*;
 
 #[test]
+fn standard_intrinsic_tasks_preserve_result_and_qualified_dispatch() {
+    assert_succeeds(
+        "program IntrinsicTasks; uses Std.Tasks, Std.Str, Std.Math; begin if Wait(go Std.Str.Length('abc')) <> 3 then panic('qualified result'); end if; if Wait(go Abs(-7)) <> 7 then panic('short result'); end if; if Wait(go Std.Str.Format('%d:%s', 4, 'x')) <> '4:x' then panic('variadic result'); end if; end.",
+    );
+}
+
+#[test]
+fn intrinsic_procedure_tasks_support_empty_and_variadic_output() {
+    assert_succeeds(
+        "program IntrinsicProcedures; uses Std.Tasks, Std.Console; begin Wait(go WriteLn()); Wait(go Std.Console.WriteLn('value:', 7)); end.",
+    );
+}
+
+#[test]
+fn source_routine_shadowing_does_not_become_an_intrinsic_task() {
+    assert_succeeds(
+        "program ShadowTask; uses Std.Tasks; function Abs(Value: integer): integer; begin return Value + 10; end function; begin if Wait(go Abs(-7)) <> 3 then panic('shadowed task'); end if; end.",
+    );
+}
+
+#[test]
 fn wait_preserves_integer_before_procedure_task_results() {
     assert_succeeds(
         "program Reversed; uses Std.Tasks; function Number(): integer; begin return 7; end function; procedure Work(); begin end procedure; begin if Wait(go Number()) <> 7 then panic('wrong result'); end if; Wait(go Work()); end.",

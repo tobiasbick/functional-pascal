@@ -107,6 +107,11 @@ impl Checker {
                 match self.resolve_call_target(inner, designator, args, *call_span, true) {
                     CallResolution::Symbol { kind, ty } => {
                         let name = Self::resolve_designator_name(designator);
+                        let dispatch = self.builtin_std_dispatch_name(&name);
+                        if dispatch.starts_with("Std.") {
+                            self.intrinsic_calls
+                                .insert(Self::expr_lookup_key(inner), dispatch);
+                        }
                         self.check_known_go_call_symbol(&name, kind, ty, args, *call_span)
                     }
                     CallResolution::MethodResult(ty) => ty,

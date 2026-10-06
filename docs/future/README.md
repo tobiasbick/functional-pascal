@@ -19,6 +19,8 @@ Current implemented behavior belongs under `docs/pascal/`, not here.
 
 - [Hardware information](hardware-information.md): access to CPU parallelism, RAM, and related
   hardware information; recorded as an idea only.
+- [Graphics and 3D rendering](graphics.md): runtime, standard-library, build, and language gaps
+  for windowing and GPU rendering; recorded as an idea only.
 
 ## Architecture records and development intake
 

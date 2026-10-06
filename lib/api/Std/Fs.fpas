@@ -67,6 +67,15 @@ begin
   panic('Intrinsic API declaration');
 end function;
 
+// Sorted immediate entries, including files and directories.
+//
+// Parameters:
+// - `Path`: File or directory path processed by the operation.
+public function ReadDir(Path: string): result of array of string, string;
+begin
+  panic('Intrinsic API declaration');
+end function;
+
 // Reads UTF-8 text.
 //
 // Parameters:

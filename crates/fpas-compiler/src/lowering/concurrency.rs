@@ -78,6 +78,25 @@ impl LoweringContext {
         else {
             return Err(unsupported(span, "invalid task expression"));
         };
+        let call_key = fpas_sema::expr_lookup_key(expression);
+        if let Some(name) = self.intrinsic_calls.get(&call_key).cloned() {
+            let result_ty = self
+                .expr_types
+                .get(&call_key)
+                .cloned()
+                .ok_or_else(|| unsupported(span, "intrinsic task result type"))?;
+            return self.lower_resolved_go(
+                call_key,
+                None,
+                args,
+                GoTarget {
+                    name: &name,
+                    result_ty: &result_ty,
+                },
+                span,
+                retain_result,
+            );
+        }
         if let Some(result_ty) = self
             .member_value_calls
             .get(&fpas_sema::expr_lookup_key(expression))

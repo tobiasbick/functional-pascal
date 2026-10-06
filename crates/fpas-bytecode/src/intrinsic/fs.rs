@@ -43,6 +43,10 @@ pub enum FsIntrinsic {
     ///
     /// **Documentation:** `docs/pascal/std/host/fs.md`
     Glob = 343,
+    /// `Std.Fs.ReadDir(Path)` - list immediate files and directories in stable order.
+    ///
+    /// **Documentation:** `docs/pascal/std/host/fs.md`
+    ReadDir = 620,
     /// `Std.Fs.WriteTextAtomic(Path, Text)` - durably replace a UTF-8 text file.
     ///
     /// **Documentation:** `docs/pascal/std/host/fs.md`

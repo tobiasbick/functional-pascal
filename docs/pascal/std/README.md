@@ -29,16 +29,18 @@ public; its private implementation units cannot be imported by applications. Use
 `fpas test --std-lib <directory> …` to replace the complete source standard library for that
 invocation.
 
-Each unit page is a **self-contained handbook**: importing and short vs qualified names, a **quick reference** table, then routines and types with parameters, behavior, edge cases, and examples.
+Each unit page is a **self-contained handbook**: importing and short vs qualified
+names, a **quick reference** table, then routines and types with parameters,
+behavior, edge cases, and examples. Link implementation locations under
+`## Implementation (contributors)` and related pages under `## See also`.
 
 Intrinsic units implemented by the compiler, VM, or Rust runtime also expose
 generated editor declarations under [`lib/api/Std/`](../../../lib/api/Std/).
 They use the same `//` Markdown documentation as ordinary FPAS source and give
 the language server concrete targets for hover, completion, signature help,
 **Go to Definition**, and **Go to Type Definition**. These declarations are
-not compiled and do not implement runtime behavior. Regenerate them after an
-intrinsic API or handbook change with
-`cargo run -p fpas-sema --example export_intrinsic_std_api`.
+not compiled and do not implement runtime behavior. Their maintenance is covered
+under [Shared implementation touchpoints](#shared-implementation-touchpoints).
 
 ## Areas
 
@@ -87,12 +89,28 @@ Language rules: [Error handling](../language/error-handling/README.md).
 
 ## Shared implementation touchpoints
 
-When changing a `Std.*` API, update docs and:
+When changing a `Std.*` API, update its handbook and every applicable layer:
 
-- Intrinsic opcodes: [`crates/fpas-bytecode/src/intrinsic/mod.rs`](../../../crates/fpas-bytecode/src/intrinsic/mod.rs)
-- Intrinsic dispatch: [`crates/fpas-std/src/intrinsics.rs`](../../../crates/fpas-std/src/intrinsics.rs)
-- Types and `uses` registration: [`crates/fpas-sema/src/std_registry/`](../../../crates/fpas-sema/src/std_registry/mod.rs)
-- Generated intrinsic editor declarations: [`lib/api/Std/`](../../../lib/api/Std/)
+| Concern | Location |
+|---------|----------|
+| Intrinsic unit and symbol names | [`fpas-std/src/std_units/`](../../../crates/fpas-std/src/std_units/mod.rs) |
+| Types, signatures, and `uses` registration | [`fpas-sema/src/std_registry/`](../../../crates/fpas-sema/src/std_registry/mod.rs) |
+| Compiler catalog and lowering | [`intrinsic_catalog.rs`](../../../crates/fpas-compiler/src/intrinsic_catalog.rs), [`lowering/calls.rs`](../../../crates/fpas-compiler/src/lowering/calls.rs), [`selection/intrinsics.rs`](../../../crates/fpas-compiler/src/bytecode/selection/intrinsics.rs) |
+| Intrinsic IDs and metadata | [`fpas-bytecode/src/intrinsic/`](../../../crates/fpas-bytecode/src/intrinsic/mod.rs) |
+| Runtime dispatch and execution | [`fpas-std/src/intrinsics.rs`](../../../crates/fpas-std/src/intrinsics.rs), [`fpas-vm/src/vm/`](../../../crates/fpas-vm/src/vm/) |
+| Source standard-library API | [`lib/Std/`](../../../lib/Std/), [`lib/stdlib.fpasprj`](../../../lib/stdlib.fpasprj) |
+| Regression coverage | Owning crate tests and [`tests/stdlib/`](../../../tests/stdlib/) or the relevant runner, console, concurrency, or app tests |
+
+Source units such as `Std.Tui` expose their API directly in `lib/Std/`.
+Console, network, and test hosts live under
+[`fpas-vm/src/vm/hosted/`](../../../crates/fpas-vm/src/vm/hosted/).
+
+Regenerate the intrinsic editor declarations under
+[`lib/api/Std/`](../../../lib/api/Std/) after an intrinsic API or handbook change:
+
+```text
+cargo run -p fpas-sema --example export_intrinsic_std_api
+```
 
 ## See also
 

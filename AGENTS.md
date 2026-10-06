@@ -37,15 +37,14 @@ When asked to implement or modify behavior:
 4. Implement surgically. Match the surrounding style and touch only what the task requires.
 5. Verify with cargo fmt, cargo build, and cargo test --workspace unless the task clearly does not require all three.
 6. When editing `.fpas` under `examples/`, `tests/`, or `apps/`, run `scripts/format-fpas-sources.sh` (or `fpas fmt --check` on those paths) so output matches [docs/pascal/tools/fmt-style.md](docs/pascal/tools/fmt-style.md).
-7. Before finishing, apply [Definition of done](#definition-of-done). For behavior or API changes, read the project skill [`.agents/skills/fpas-change-checklist/SKILL.md`](.agents/skills/fpas-change-checklist/SKILL.md).
+7. Before finishing, apply [Definition of done](#definition-of-done). For `Std.*` changes, read the [implementation touchpoints](docs/pascal/std/README.md#shared-implementation-touchpoints).
 
 ### Agent skills (FPAS)
 
 | Skill | When |
 | --- | --- |
 | [`fpas-authoring`](.agents/skills/fpas-authoring/SKILL.md) | Writing or editing `.fpas` sources, formatting, file placement |
-| [`fpas-projects`](.agents/skills/fpas-projects/SKILL.md) | `.fpasprj`, `.fpasworkspace`, CLI, test bundles |
-| [`fpas-change-checklist`](.agents/skills/fpas-change-checklist/SKILL.md) | Docs, tests, verify before finishing a behavior change |
+| [`fpas-projects`](.agents/skills/fpas-projects/SKILL.md) | Project/workspace manifests, dependencies, exports, test bundles |
 | [`fpas-bench`](.agents/skills/fpas-bench/SKILL.md) | Perf benches: save/compare/record, `docs/bench/history.md` |
 
 ## Definition of done
@@ -55,10 +54,12 @@ Every implementation or behavior change is incomplete until docs and tests are c
 Before marking work complete:
 
 1. **Classify the change** — language spec, `Std.*` API, CLI/tooling, refactor-only, or docs-only.
-2. **Update or confirm docs** — if observable behavior changed, update the matching page under `docs/pascal/` (see skill checklist). Refactor-only: state docs unchanged.
+2. **Update or confirm docs** — if observable behavior changed, update the matching page under `docs/pascal/`. Refactor-only: state docs unchanged.
 3. **Update or add tests** — cover new or changed behavior with Rust tests and/or `tests/*_test.fpas` as appropriate. Refactor-only: existing tests must still pass.
 4. **Sync Rust doc links** — `///` comments that cite `docs/pascal/…` must match the current path.
-5. **Verify** — `cargo fmt`, `cargo build`, `cargo test --workspace`; for FPAS tests also `fpas test tests/` or targeted tests when relevant.
+5. **Verify** — for Rust changes, run `cargo fmt`, `cargo build`, and `cargo test --workspace`;
+   for FPAS tests also run `fpas test tests/` or targeted tests when relevant.
+   For docs-only changes, validate links, commands, and examples; for skills, also validate frontmatter.
 6. **Report briefly** — in the summary, list docs touched (or "unchanged") and tests added/run (or "existing suite only").
 
 Do not describe unimplemented behavior in `docs/pascal/`. Plans belong in `docs/future/` only.

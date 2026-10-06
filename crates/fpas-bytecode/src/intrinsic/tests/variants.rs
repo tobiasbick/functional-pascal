@@ -44,6 +44,7 @@ pub(super) const ALL_INTRINSICS: &[Intrinsic] = &[
     Intrinsic::Fs(FsIntrinsic::CreateDir),
     Intrinsic::Fs(FsIntrinsic::CreateDirAll),
     Intrinsic::Fs(FsIntrinsic::Glob),
+    Intrinsic::Fs(FsIntrinsic::ReadDir),
     Intrinsic::Time(TimeIntrinsic::TimestampMillis),
     Intrinsic::Time(TimeIntrinsic::MonotonicMillis),
     Intrinsic::Time(TimeIntrinsic::ElapsedMillis),

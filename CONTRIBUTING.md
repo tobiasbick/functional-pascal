@@ -62,8 +62,8 @@ When validating examples, use the curated allowlists in
 - Keep PRs focused and reviewable.
 - Match surrounding style; do not drive-by refactor unrelated code.
 - Behavior or API changes should update docs and tests in the same change when
-  user-visible behavior changes. See
-  [`.agents/skills/fpas-change-checklist/SKILL.md`](.agents/skills/fpas-change-checklist/SKILL.md).
+  user-visible behavior changes. See the
+  [Definition of done](AGENTS.md#definition-of-done).
 
 ## Yes, your LLM may commit here
 

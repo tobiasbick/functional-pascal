@@ -51,6 +51,7 @@ struct Scope {
 
 #[derive(Debug)]
 struct ScopedSymbol {
+    discard: fpas_unit::interface::DiscardInfo,
     original_name: String,
     symbol: Symbol,
     declaration: Option<Span>,
@@ -68,6 +69,7 @@ impl Scope {
 #[derive(Debug)]
 pub struct ScopeStack {
     scopes: Vec<Scope>,
+    imported_discard: HashMap<String, fpas_unit::interface::DiscardInfo>,
     /// Current loop depth (for break/continue validation).
     pub loop_depth: u32,
     /// Current function context (for return validation).
@@ -89,6 +91,7 @@ impl ScopeStack {
     pub fn new() -> Self {
         Self {
             scopes: vec![Scope::new()],
+            imported_discard: HashMap::new(),
             loop_depth: 0,
             function_ctx: None,
         }
@@ -150,6 +153,7 @@ impl ScopeStack {
         scope.symbols.insert(
             canonical_name,
             ScopedSymbol {
+                discard: Default::default(),
                 original_name: name.to_string(),
                 symbol,
                 declaration,
@@ -201,6 +205,50 @@ impl ScopeStack {
     /// Look up a symbol by name, searching from innermost to outermost scope.
     pub fn lookup(&self, name: &str) -> Option<&Symbol> {
         self.lookup_with_scope(name).map(|(_, symbol)| symbol)
+    }
+
+    /// Resolves a stored type identity without mistaking a shadowing value for its declaration.
+    pub(crate) fn lookup_type(&self, name: &str) -> Option<&Symbol> {
+        let canonical = canonical_symbol_name(name);
+        self.scopes
+            .iter()
+            .rev()
+            .filter_map(|scope| scope.symbols.get(&canonical))
+            .find(|entry| entry.symbol.kind == SymbolKind::Type)
+            .map(|entry| &entry.symbol)
+    }
+
+    /// Looks up static value and result guarantees at the same lexical binding as its type.
+    pub(crate) fn discard_info(&self, name: &str) -> fpas_unit::interface::DiscardInfo {
+        let canonical = canonical_symbol_name(name);
+        self.scopes
+            .iter()
+            .rev()
+            .find_map(|scope| scope.symbols.get(&canonical))
+            .map(|entry| entry.discard)
+            .or_else(|| self.imported_discard.get(&canonical).copied())
+            .unwrap_or_default()
+    }
+
+    /// Installs guarantees for qualified record members from a unit interface.
+    pub(crate) fn set_imported_discard_info(
+        &mut self,
+        name: &str,
+        info: fpas_unit::interface::DiscardInfo,
+    ) {
+        self.imported_discard
+            .insert(canonical_symbol_name(name), info);
+    }
+
+    /// Attaches static capture guarantees to an existing binding.
+    pub(crate) fn set_discard_info(&mut self, name: &str, info: fpas_unit::interface::DiscardInfo) {
+        let canonical = canonical_symbol_name(name);
+        for scope in self.scopes.iter_mut().rev() {
+            if let Some(entry) = scope.symbols.get_mut(&canonical) {
+                entry.discard = info;
+                break;
+            }
+        }
     }
 
     /// Look up the original stored spelling for a symbol name.

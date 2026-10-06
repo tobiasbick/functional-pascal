@@ -6,7 +6,7 @@ mod symbols;
 mod types;
 
 pub use codec::{InterfaceFormatError, decode_interface, encode_interface};
-pub use symbols::{ConstantValue, InterfaceSymbol, SymbolKind, UnitInterface};
+pub use symbols::{ConstantValue, DiscardInfo, InterfaceSymbol, SymbolKind, UnitInterface};
 pub use types::{
     CallableType, EnumType, EnumVariant, EventType, FieldType, GenericParameter, InterfaceType,
     MethodType, ParameterType, PropertyType, RecordType, TypeConstraint,

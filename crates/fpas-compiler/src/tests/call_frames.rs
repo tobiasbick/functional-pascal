@@ -41,7 +41,7 @@ fn unit_tail_calls_return_to_the_original_caller() {
 
 #[test]
 fn value_returning_callees_are_not_tail_called_from_procedures() {
-    let source = "program Mixed; function Value(N: integer): integer; begin return N; end function; procedure Discard(N: integer); begin Value(N); end procedure; begin Discard(1); var Done: boolean := true; end.";
+    let source = "program Mixed; function Value(N: integer): integer; begin return N; end function; procedure IgnoreResult(N: integer); begin Value(N); end procedure; begin IgnoreResult(1); var Done: boolean := true; end.";
     assert!(!opcodes(source).contains(&Opcode::TailCall));
     assert_succeeds(source);
 }

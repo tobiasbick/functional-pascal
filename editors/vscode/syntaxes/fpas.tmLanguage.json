@@ -230,7 +230,7 @@
         },
         {
           "name": "keyword.control.fpas",
-          "match": "(?i:\\b(begin|end|return|if|then|else|elsif|case|when|of|for|to|downto|in|do|while|repeat|until|panic|break|continue|try|go|with|null)\\b)"
+          "match": "(?i:\\b(begin|end|return|discard|if|then|else|elsif|case|when|of|for|to|downto|in|do|while|repeat|until|panic|break|continue|try|go|with|null)\\b)"
         },
         {
           "name": "keyword.operator.word.fpas",

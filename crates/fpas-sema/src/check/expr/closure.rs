@@ -36,6 +36,18 @@ impl Checker {
             return_ty.clone(),
             body,
         );
+        let result = self
+            .routine_discard_results
+            .get(&synthetic_name)
+            .copied()
+            .unwrap_or(false);
+        self.discard_exprs.insert(
+            key,
+            fpas_unit::interface::DiscardInfo {
+                value: false,
+                result,
+            },
+        );
         let info = closure_info_from_captures(synthetic_name, captures);
         if info.task_bound {
             self.mark_expr_task_bound(key);

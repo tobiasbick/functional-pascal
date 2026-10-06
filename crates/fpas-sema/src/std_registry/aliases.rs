@@ -81,7 +81,9 @@ pub fn register_short_aliases(checker: &mut Checker) {
                     .short_builtin_redirect
                     .insert(short_key.clone(), qualified.clone());
             }
+            let discard = checker.scopes.discard_info(qualified);
             if checker.scopes.define_in_root(&short, sym.clone()) {
+                checker.scopes.set_discard_info(&short, discard);
                 if from_std {
                     checker.std_short_alias_keys.insert(short_key);
                 } else {

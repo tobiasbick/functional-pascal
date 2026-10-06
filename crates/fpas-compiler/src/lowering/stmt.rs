@@ -109,7 +109,9 @@ impl LoweringContext {
                 let _ = self.lower_call(designator, args, result, *span, call_key)?;
                 Ok(())
             }
-            Stmt::Expression { expr, .. } => self.lower_expression(expr).map(|_| ()),
+            Stmt::Expression { expr, .. } | Stmt::Discard { expr, .. } => {
+                self.lower_expression(expr).map(|_| ())
+            }
             Stmt::Go { expr, span } => self.lower_go(expr, *span, false).map(|_| ()),
         }
     }

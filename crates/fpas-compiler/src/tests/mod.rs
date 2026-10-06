@@ -23,6 +23,7 @@ mod concurrency;
 mod control_flow;
 mod debug;
 mod diagnostics;
+mod discard;
 mod functions;
 mod intrinsics;
 mod optimization;

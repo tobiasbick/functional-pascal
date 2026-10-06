@@ -133,6 +133,12 @@ define_codes!(SEMA_ALLOCATED_CODES => {
     ///
     /// **Documentation:** `docs/pascal/program-structure/visibility.md`
     SEMA_PRIVATE_TYPE_IN_PUBLIC_SIGNATURE = 3019;
+    /// Explicit discard requires a value rather than a procedure result.
+    /// Documentation: `docs/pascal/language/functions/discard.md`.
+    SEMA_DISCARD_REQUIRES_VALUE = 3020;
+    /// Explicit discard could lose a task handle or unverified callable captures.
+    /// Documentation: `docs/pascal/language/functions/discard.md`.
+    SEMA_UNSAFE_DISCARD = 3021;
 });
 
 define_codes!(COMPILE_ALLOCATED_CODES => {

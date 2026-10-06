@@ -22,6 +22,7 @@ impl Stmt {
             | Self::Repeat { span, .. }
             | Self::Call { span, .. }
             | Self::Expression { span, .. }
+            | Self::Discard { span, .. }
             | Self::Go { span, .. } => *span,
         }
     }
@@ -34,6 +35,15 @@ pub enum Stmt {
     Block(Vec<Stmt>, Span),
     /// Explicit `null` statement that performs no action.
     Null(Span),
+    /// Explicitly evaluates and ignores a non-task value.
+    ///
+    /// **Documentation:** `docs/pascal/language/functions/discard.md`
+    Discard {
+        /// Expression evaluated exactly once.
+        expr: Expr,
+        /// Source span of the complete statement.
+        span: Span,
+    },
     /// Immutable local variable declaration.
     Var(VarDef),
     /// Mutable local variable declaration.

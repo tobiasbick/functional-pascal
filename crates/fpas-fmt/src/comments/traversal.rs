@@ -298,7 +298,9 @@ fn collect_stmt_contents(stmt: &Stmt, begins: &[usize], out: &mut CollectedAncho
                 collect_expr(arg, begins, out);
             }
         }
-        Stmt::Expression { expr, .. } | Stmt::Go { expr, .. } => collect_expr(expr, begins, out),
+        Stmt::Expression { expr, .. } | Stmt::Go { expr, .. } | Stmt::Discard { expr, .. } => {
+            collect_expr(expr, begins, out)
+        }
         Stmt::Null(_) | Stmt::Break(_) | Stmt::Continue(_) => {}
     }
 }

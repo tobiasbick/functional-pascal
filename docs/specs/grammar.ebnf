@@ -328,6 +328,7 @@ simple_statement    = block
                     | mutable_var_stmt
                     | assignment_stmt
                     | return_stmt
+                    | discard_stmt
                     | panic_stmt
                     | case_stmt
                     | repeat_stmt
@@ -356,6 +357,10 @@ return_stmt         = 'return' [ expression ] ;
 
 (* In functions, 'return expr' sets the return value and exits.     *)
 (* In procedures, bare 'return' exits without a value.              *)
+
+(* -- Discard -- *)
+(* Documentation: docs/pascal/language/functions/discard.md *)
+discard_stmt        = 'discard' expression ;
 
 (* -- Panic -- *)
 panic_stmt          = 'panic' '(' expression ')' ;

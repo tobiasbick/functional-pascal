@@ -65,6 +65,13 @@ impl Checker {
                         &format!("default value for field `{}`", field_def.name),
                         field_def.span,
                     );
+                    self.record_default_discard.insert(
+                        (
+                            td.name.to_ascii_lowercase(),
+                            field_def.name.to_ascii_lowercase(),
+                        ),
+                        self.discard_info(default_expr).value,
+                    );
                     (field_def.name.clone(), Some(default_expr.clone()))
                 } else {
                     (field_def.name.clone(), None)

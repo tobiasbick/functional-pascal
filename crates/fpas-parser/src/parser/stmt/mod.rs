@@ -19,7 +19,7 @@ impl Parser {
     fn parse_statement_inner(&mut self) -> Stmt {
         match self.current_token() {
             Token::Begin => self.parse_block(),
-            Token::Null if self.peek_token() == &Token::ColonAssign => {
+            Token::Null | Token::Discard if self.peek_token() == &Token::ColonAssign => {
                 self.parse_invalid_statement_start()
             }
             Token::Null => Stmt::Null(self.advance().span),
@@ -27,6 +27,14 @@ impl Parser {
             Token::Mutable if self.is_mutable_var_start() => self.parse_var_stmt(true),
             Token::Mutable => self.parse_invalid_statement_start(),
             Token::Return => self.parse_return_stmt(),
+            Token::Discard => {
+                let start = self.advance().span;
+                let expr = self.parse_expression();
+                Stmt::Discard {
+                    expr,
+                    span: self.span_from(start),
+                }
+            }
             Token::Panic => self.parse_panic_stmt(),
             Token::If => self.parse_if_stmt(),
             Token::Case => self.parse_case_stmt(),
@@ -58,6 +66,7 @@ impl Parser {
                 | Token::Var
                 | Token::Mutable
                 | Token::Return
+                | Token::Discard
                 | Token::Panic
                 | Token::If
                 | Token::Case

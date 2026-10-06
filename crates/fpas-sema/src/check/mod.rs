@@ -2,6 +2,7 @@ mod calls;
 pub(crate) mod closures;
 mod context;
 mod decl;
+mod discard;
 mod entry;
 mod expr;
 mod name_resolution;

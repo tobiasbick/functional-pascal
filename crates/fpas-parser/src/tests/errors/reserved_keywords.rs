@@ -4,7 +4,8 @@ use super::*;
 use fpas_diagnostics::codes::PARSE_EXPECTED_IDENTIFIER;
 
 const RESERVED: &[&str] = &[
-    "elsif", "when", "null", "ELSIF", "WHEN", "NULL", "ElSiF", "WhEn", "NuLl",
+    "discard", "DISCARD", "DiScArD", "elsif", "when", "null", "ELSIF", "WHEN", "NULL", "ElSiF",
+    "WhEn", "NuLl",
 ];
 
 #[test]

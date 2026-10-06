@@ -137,6 +137,7 @@ impl Checker {
         body: &FuncBody,
     ) -> Vec<CaptureBinding> {
         let FuncBody::Block { nested, stmts } = body;
+        self.discard_results.push(true);
 
         self.scopes.push_scope();
         let routine_scope_index = self.scopes.scope_count() - 1;
@@ -168,6 +169,7 @@ impl Checker {
                 },
                 source.span,
             );
+            self.record_binding_discard_info(&p.name, &p.ty, p.mutable, None);
         }
 
         let prev_ctx = self.scopes.function_ctx.take();
@@ -193,7 +195,7 @@ impl Checker {
             self.check_stmt(stmt);
         }
 
-        let captures = collect_captures(
+        let mut captures = collect_captures(
             &self.scopes,
             routine_scope_index,
             body,
@@ -201,8 +203,19 @@ impl Checker {
             &self.nested_routine_captures,
         );
 
+        self.complete_capture_discard_info(&mut captures);
         self.scopes.function_ctx = prev_ctx;
         self.scopes.pop_scope();
+        let result = self.discard_results.pop().unwrap_or(false);
+        self.routine_discard_results
+            .insert(name.to_string(), result);
+        self.scopes.set_discard_info(
+            name,
+            fpas_unit::interface::DiscardInfo {
+                value: captures.iter().all(|capture| capture.task_free),
+                result,
+            },
+        );
         captures
     }
 
@@ -224,7 +237,7 @@ impl Checker {
             let defined = self.scopes.define_with_declaration(
                 &variable.name,
                 Symbol {
-                    ty,
+                    ty: ty.clone(),
                     mutable,
                     kind: SymbolKind::Var,
                     task_bound: false,
@@ -232,6 +245,7 @@ impl Checker {
                 variable.span,
             );
             if defined {
+                self.record_binding_discard_info(&variable.name, &ty, mutable, None);
                 names.push(variable.name.clone());
             }
         }

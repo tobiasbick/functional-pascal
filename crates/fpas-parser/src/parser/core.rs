@@ -176,6 +176,9 @@ impl Parser {
     /// **Documentation:** `docs/pascal/getting-started/keywords.md`
     pub(crate) fn reserved_identifier_hint(&self) -> Option<&'static str> {
         match self.current_token() {
+            Token::Discard => Some(
+                "`discard` is a reserved keyword. Rename the identifier, for example to `IgnoredValue`.",
+            ),
             Token::Elsif => Some(
                 "`elsif` is a reserved keyword. Rename the identifier, for example to `ElsifValue`.",
             ),

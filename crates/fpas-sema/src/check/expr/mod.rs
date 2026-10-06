@@ -92,6 +92,7 @@ impl Checker {
         let key = Self::expr_lookup_key(expr);
         self.expr_types.insert(key, ty.clone());
         self.propagate_task_bound_expr(expr, key);
+        self.record_discard_info(expr);
         ty
     }
 

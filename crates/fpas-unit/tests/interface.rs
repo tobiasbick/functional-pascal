@@ -17,6 +17,7 @@ fn sample_interface() -> UnitInterface {
         unit_name: "Demo.Api".to_string(),
         symbols: vec![
             InterfaceSymbol {
+                discard: Default::default(),
                 name: "Transform".to_string(),
                 qualified_name: "Demo.Api.Transform".to_string(),
                 ty: InterfaceType::Function(CallableType {
@@ -43,6 +44,7 @@ fn sample_interface() -> UnitInterface {
                 kind: SymbolKind::Function,
             },
             InterfaceSymbol {
+                discard: Default::default(),
                 name: "State".to_string(),
                 qualified_name: "Demo.Api.State".to_string(),
                 ty: InterfaceType::Enum(Box::new(EnumType {
@@ -67,12 +69,14 @@ fn sample_interface() -> UnitInterface {
                 kind: SymbolKind::Type,
             },
             InterfaceSymbol {
+                discard: Default::default(),
                 name: "Limit".to_string(),
                 qualified_name: "Demo.Api.Limit".to_string(),
                 ty: InterfaceType::Integer,
                 kind: SymbolKind::Constant(Some(ConstantValue::Integer(10))),
             },
             InterfaceSymbol {
+                discard: Default::default(),
                 name: "Counter".to_string(),
                 qualified_name: "Demo.Api.Counter".to_string(),
                 ty: InterfaceType::Record(Box::new(RecordType {
@@ -86,6 +90,7 @@ fn sample_interface() -> UnitInterface {
                     }],
                     methods: Vec::new(),
                     static_routines: vec![MethodType {
+                        discard: Default::default(),
                         name: "CreateHidden".to_string(),
                         callable: CallableType {
                             type_parameters: Vec::new(),
@@ -111,6 +116,28 @@ fn semantic_interface_round_trip_preserves_every_shape() {
     let bytes = encode_interface(&expected).expect("interface encoding");
     let decoded = decode_interface(&bytes).expect("interface decoding");
     assert_eq!(decoded, expected);
+}
+
+#[test]
+fn missing_capture_information_is_not_a_task_freedom_guarantee() {
+    let mut expected = sample_interface();
+    expected.symbols[0].discard = fpas_unit::interface::DiscardInfo {
+        value: true,
+        result: true,
+    };
+    let mut payload = serde_json::to_value(&expected).expect("interface JSON");
+    payload["symbols"][0]
+        .as_object_mut()
+        .expect("symbol object")
+        .remove("discard");
+    let bytes = serde_json::to_vec(&payload).expect("interface bytes");
+    let decoded = decode_interface(&bytes).expect("missing proof is conservative");
+    let symbol = decoded
+        .symbols
+        .iter()
+        .find(|symbol| symbol.name == "Transform")
+        .expect("export");
+    assert_eq!(symbol.discard, Default::default());
 }
 
 #[test]

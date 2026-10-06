@@ -3,7 +3,7 @@ use crate::Token;
 
 #[test]
 fn all_reserved_keywords() {
-    let input = "program unit uses const var mutable function procedure begin end return \
+    let input = "program unit uses const var mutable function procedure begin end return discard \
                  if then else elsif case when of for to downto in in do while \
                  repeat until and or not xor div mod \
                  true false type record enum array channel task panic break continue \
@@ -24,6 +24,7 @@ fn all_reserved_keywords() {
             Token::Begin,
             Token::End,
             Token::Return,
+            Token::Discard,
             Token::If,
             Token::Then,
             Token::Else,
@@ -89,6 +90,7 @@ fn block_keywords_are_reserved_in_every_ascii_letter_case() {
         ("elsif", Token::Elsif),
         ("when", Token::When),
         ("null", Token::Null),
+        ("discard", Token::Discard),
     ] {
         for uppercase_mask in 0..(1 << keyword.len()) {
             let spelling = keyword

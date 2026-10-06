@@ -74,7 +74,7 @@ impl<'a> ClosureRegistry<'a> {
             Stmt::Panic(value, _) | Stmt::Expression { expr: value, .. } => {
                 self.visit_expression(value, owner, metadata, types)?;
             }
-            Stmt::Go { expr, .. } => {
+            Stmt::Go { expr, .. } | Stmt::Discard { expr, .. } => {
                 self.register_intrinsic_task(expr, owner, metadata, types)?;
                 self.visit_expression(expr, owner, metadata, types)?;
             }

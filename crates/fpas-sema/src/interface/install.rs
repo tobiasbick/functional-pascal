@@ -58,6 +58,16 @@ impl check::Checker {
                 let symbol = interface_symbol_to_sema(exported)?;
                 self.scopes
                     .define_in_root(&exported.qualified_name, symbol.clone());
+                self.scopes
+                    .set_discard_info(&exported.qualified_name, exported.discard);
+                if let artifact::InterfaceType::Record(record) = &exported.ty {
+                    for method in record.methods.iter().chain(record.static_routines.iter()) {
+                        self.scopes.set_imported_discard_info(
+                            &format!("{}.{}", record.name, method.name),
+                            method.discard,
+                        );
+                    }
+                }
                 self.install_imported_record_defaults(exported);
                 self.imported_candidates
                     .entry(canonical_symbol_name(&exported.name))

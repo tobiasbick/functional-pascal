@@ -264,6 +264,8 @@ Call arguments still use commas; commas inside types such as
 | FP3017 | Private record member | Access another unit's non-public record field | Export the field with `public` or use its public API. |
 | FP3018 | Enum backing overflow | Implicit variant after backing value `9223372036854775807` | Assign a smaller unused explicit backing value. |
 | FP3019 | Private type in public signature | Public routine returns a private unit type | Export that type or keep the routine non-public. |
+| FP3020 | Discard requires a value | `discard Work();` when `Work` is a procedure | Call the procedure directly. |
+| FP3021 | Unsafe discard | A task handle, task-containing aggregate, or callable with unverified captures | Retain and consume handles; use task-free captures or constraints. For a direct `discard go Worker();`, use `go Worker();`. |
 
 Ordinary declaration, assignment, return and argument type compatibility checks
 supply type names in `expected` and `found` for FP3006. Other uses of that code

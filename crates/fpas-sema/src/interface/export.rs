@@ -42,8 +42,20 @@ impl check::Checker {
                 ty_to_interface_reference(&symbol.ty)?
             };
             apply_declared_metadata(declaration, &mut ty)?;
+            if let artifact::InterfaceType::Record(record) = &mut ty {
+                for method in record
+                    .methods
+                    .iter_mut()
+                    .chain(record.static_routines.iter_mut())
+                {
+                    method.discard = self
+                        .scopes
+                        .discard_info(&format!("{}.{}", record.name, method.name));
+                }
+            }
             qualify_owned_type(&mut ty, &unit_name, &own_types);
             symbols.push(artifact::InterfaceSymbol {
+                discard: self.scopes.discard_info(name),
                 name: name.to_string(),
                 qualified_name: format!("{unit_name}.{name}"),
                 ty,

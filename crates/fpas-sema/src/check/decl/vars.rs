@@ -7,6 +7,7 @@ use fpas_diagnostics::codes::{
 use fpas_parser::{Expr, FieldInit, VarDef};
 
 impl Checker {
+    /// Checks an initializer and preserves its type and static capture guarantees.
     pub(crate) fn check_var_def(&mut self, v: &VarDef, mutable: bool) {
         let declared_ty = self.resolve_type_expr(&v.type_expr);
 
@@ -26,7 +27,7 @@ impl Checker {
         if !self.scopes.define_with_declaration(
             &v.name,
             Symbol {
-                ty: stored_ty,
+                ty: stored_ty.clone(),
                 mutable,
                 kind: SymbolKind::Var,
                 task_bound,
@@ -40,6 +41,7 @@ impl Checker {
                 v.span,
             );
         }
+        self.record_binding_discard_info(&v.name, &stored_ty, mutable, Some(&v.value));
     }
 
     fn validate_typed_record_literal_fields(
@@ -186,6 +188,7 @@ impl Checker {
                 let key = Self::expr_lookup_key(expr);
                 self.expr_types.insert(key, Ty::Record(record_ty.clone()));
                 self.propagate_task_bound_expr(expr, key);
+                self.record_discard_info(expr);
                 Some(Ty::Record(record_ty.clone()))
             }
             (Expr::ArrayLiteral(elements, _), Ty::Array(element_ty)) => {
@@ -204,6 +207,7 @@ impl Checker {
                     let key = Self::expr_lookup_key(expr);
                     self.expr_types.insert(key, resolved.clone());
                     self.propagate_task_bound_expr(expr, key);
+                    self.record_discard_info(expr);
                     Some(resolved)
                 } else {
                     None

@@ -2,6 +2,18 @@
 
 use super::InterfaceType;
 
+/// Static task-freedom guarantees for a stored value and its callable result.
+///
+/// Missing interface information conservatively provides neither guarantee.
+/// **Documentation:** `docs/pascal/language/functions/discard.md`
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub struct DiscardInfo {
+    /// The value's reachable captures are statically free of task handles.
+    pub value: bool,
+    /// Invoking the value returns a value with task-free captures.
+    pub result: bool,
+}
+
 /// Compile-time value needed by a consuming unit.
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum ConstantValue {
@@ -48,6 +60,9 @@ pub enum SymbolKind {
 /// One public symbol exported by a source unit.
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct InterfaceSymbol {
+    /// Compile-time task-freedom guarantees, independent of the callable signature.
+    #[serde(default)]
+    pub discard: DiscardInfo,
     /// Public spelling used for a short import.
     pub name: String,
     /// Canonical fully qualified definition name.

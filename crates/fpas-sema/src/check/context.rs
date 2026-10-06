@@ -231,6 +231,9 @@ pub struct AnalysisMetadata {
 }
 
 pub struct Checker {
+    pub(crate) discard_exprs: HashMap<usize, fpas_unit::interface::DiscardInfo>,
+    pub(crate) discard_results: Vec<bool>,
+    pub(crate) routine_discard_results: HashMap<String, bool>,
     pub(crate) scopes: ScopeStack,
     pub(crate) errors: Vec<SemaError>,
     pub(crate) expr_types: ExprTypeMap,
@@ -267,6 +270,8 @@ pub struct Checker {
     pub(crate) source_short_candidates: HashMap<String, Vec<(String, crate::scope::Symbol)>>,
     /// Named record type → ordered (field_name, optional_default_expr) pairs.
     pub(crate) record_defaults: RecordDefaultsMap,
+    /// Canonical record and field names → task-freedom of their checked default values.
+    pub(crate) record_default_discard: HashMap<(String, String), bool>,
     /// `case` label expressions that bind the scrutinee for a guarded scalar arm.
     pub(crate) scalar_case_bindings: ScalarCaseBindingMap,
     /// Closure expression identity → capture / capability metadata.
@@ -308,8 +313,12 @@ pub struct Checker {
 }
 
 impl Checker {
+    /// Creates an empty semantic checker and its expression-analysis tables.
     pub fn new() -> Self {
         Self {
+            discard_exprs: HashMap::new(),
+            discard_results: Vec::new(),
+            routine_discard_results: HashMap::new(),
             scopes: ScopeStack::new(),
             errors: Vec::new(),
             expr_types: ExprTypeMap::new(),
@@ -329,6 +338,7 @@ impl Checker {
             source_short_alias_keys: HashSet::new(),
             source_short_candidates: HashMap::new(),
             record_defaults: RecordDefaultsMap::new(),
+            record_default_discard: HashMap::new(),
             scalar_case_bindings: ScalarCaseBindingMap::new(),
             closure_infos: ClosureInfoMap::new(),
             nested_routine_captures: NestedRoutineCaptureMap::new(),

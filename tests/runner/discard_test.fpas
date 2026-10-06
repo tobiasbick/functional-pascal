@@ -1,0 +1,29 @@
+program DiscardTest;
+
+uses Std.Test;
+
+mutable var
+  Calls: integer := 0;
+
+function Produce(): result of integer, string;
+begin
+  Calls := Calls + 1;
+  return Error('ignored result');
+end function;
+
+function Identity<T>(Value: T): T;
+begin
+  return Value;
+end function;
+
+begin
+  discard Produce();
+  discard Identity(42);
+  discard Some('unused');
+  discard function(): integer begin
+    Calls := Calls + 10;
+    return 1;
+  end function;
+
+  AssertEquals(1, Calls);
+end.

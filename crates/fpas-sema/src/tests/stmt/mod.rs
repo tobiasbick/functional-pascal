@@ -2,6 +2,7 @@ mod assignment;
 mod case_blocks;
 mod concurrency;
 mod control_blocks;
+mod discard;
 mod exhaustiveness;
 mod flow;
 mod for_loops;

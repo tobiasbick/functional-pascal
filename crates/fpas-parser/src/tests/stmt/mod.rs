@@ -6,6 +6,7 @@ mod blocks;
 mod calls;
 mod concurrency;
 mod conditionals;
+mod discard;
 mod flow;
 mod loops;
 mod var_defs;

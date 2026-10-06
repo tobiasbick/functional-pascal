@@ -143,6 +143,6 @@ fn statements_write(statements: &[Stmt], span: SourceSpan) -> bool {
         | Stmt::Continue(_)
         | Stmt::Call { .. }
         | Stmt::Expression { .. }
-        | Stmt::Go { .. } => false,
+        | Stmt::Go { .. } | Stmt::Discard { .. } => false,
     })
 }

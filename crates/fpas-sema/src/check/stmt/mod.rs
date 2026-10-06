@@ -16,6 +16,7 @@ impl Checker {
     pub(crate) fn check_stmt(&mut self, stmt: &Stmt) {
         match stmt {
             Stmt::Null(_) => {}
+            Stmt::Discard { expr, span } => self.check_discard(expr, *span),
             Stmt::Block(stmts, _) => {
                 self.scopes.push_scope();
                 for stmt in stmts {

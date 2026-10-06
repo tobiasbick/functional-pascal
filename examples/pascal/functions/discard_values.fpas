@@ -1,0 +1,18 @@
+program DiscardValues;
+
+uses Std.Console;
+
+function Report(): result of integer, string;
+begin
+  WriteLn('Report was evaluated once.');
+  return Error('deliberately ignored');
+end function;
+
+begin
+  discard Report();
+  discard Some('unused');
+  // Discarding a callable value does not invoke it.
+  discard procedure() begin
+    WriteLn('This callable was not invoked.');
+  end procedure;
+end.

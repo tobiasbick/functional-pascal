@@ -14,6 +14,7 @@ fn keyword_token(raw: &str) -> Option<Token> {
         s if s.eq_ignore_ascii_case("begin") => Some(Token::Begin),
         s if s.eq_ignore_ascii_case("end") => Some(Token::End),
         s if s.eq_ignore_ascii_case("return") => Some(Token::Return),
+        s if s.eq_ignore_ascii_case("discard") => Some(Token::Discard),
         s if s.eq_ignore_ascii_case("if") => Some(Token::If),
         s if s.eq_ignore_ascii_case("then") => Some(Token::Then),
         s if s.eq_ignore_ascii_case("else") => Some(Token::Else),

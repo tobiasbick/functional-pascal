@@ -183,7 +183,8 @@ fn collect_statements(statements: &[Stmt], offset: usize, spans: &mut Vec<Source
             | Stmt::Continue(_)
             | Stmt::Call { .. }
             | Stmt::Expression { .. }
-            | Stmt::Go { .. } => {}
+            | Stmt::Go { .. }
+            | Stmt::Discard { .. } => {}
         }
     }
 }

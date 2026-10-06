@@ -9,7 +9,8 @@ use fpas_lexer::Span;
 use fpas_parser::{Designator, Expr};
 
 impl Checker {
-    pub(super) fn check_call_stmt(&mut self, designator: &Designator, args: &[Expr], span: Span) {
+    /// Checks calls in statement position, including procedure operands rejected by discard.
+    pub(crate) fn check_call_stmt(&mut self, designator: &Designator, args: &[Expr], span: Span) {
         let name = Self::resolve_designator_name(designator);
         self.ensure_fq_std_unit_loaded(&name);
 

@@ -58,6 +58,9 @@ pub struct FieldType {
 /// An instance method and its callable signature.
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct MethodType {
+    /// Static capture guarantees for this method and its result.
+    #[serde(default)]
+    pub discard: super::DiscardInfo,
     /// Source spelling of the method.
     pub name: String,
     /// Callable signature including the explicit `Self` parameter used internally.

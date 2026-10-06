@@ -4,6 +4,7 @@ use fpas_unit::interface::{InterfaceType, SymbolKind};
 use super::analyze_unit;
 
 mod aliases;
+mod discard;
 mod public_signatures;
 mod short_names;
 

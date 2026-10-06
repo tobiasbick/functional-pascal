@@ -14,6 +14,7 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`function_decl`, `
 | [Nested functions](nested.md) | Local helpers and mutual recursion |
 | [Capturing closures](closures.md) | Anonymous callables with lexical environments |
 | [Generic routines](generic-routines.md) | Type parameters on routines |
+| [Discarding values](discard.md) | Explicit discard and static task-handle restrictions |
 | [Early return](early-return.md) | `return` exits immediately |
 | [Postfix chaining](postfix-chaining.md) | `.Field`, `[Index]`, and `.Method(args)` on expression results |
 | [Receiver calls](fluent-calls.md) | Call a visible routine with the receiver as its first argument |

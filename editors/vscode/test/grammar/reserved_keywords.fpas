@@ -5,6 +5,7 @@ begin
   elsif ELSIF ElSiF
   when WHEN WhEn
   null NULL NuLl
+  discard DISCARD DiScArD
   var NullValue: string := 'elsif WHEN NuLl';
   var WhenValue: integer := 1;
   var ElsifValue: integer := 2;

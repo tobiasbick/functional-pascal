@@ -313,7 +313,7 @@ separate `case` arms. Leading comments stay attached to the following statement 
 
 ## Keywords and builtins
 
-Emit lowercase keywords: `program`, `unit`, `uses`, `begin`, `end`, `function`, `procedure`, `var`, `mutable`, `const`, `type`, `if`, `then`, `elsif`, `else`, `null`, `case`, `when`, `of`, `for`, `to`, `downto`, `in`, `do`, `while`, `repeat`, `until`, `return`, `panic`, `break`, `continue`, `and`, `or`, `not`, `xor`, `div`, `mod`, `public`, `record`, `enum`, `array`, `channel`, `dict`, `result`, `option`, `ok`, `error`, `some`, `none`, `try`, `go`, `with`, `static`, `property`, `event`, `read`, `write`, `comparable`, `numeric`, `printable`, `self`, `nil`, `true`, `false`.
+Emit lowercase keywords: `program`, `unit`, `uses`, `begin`, `end`, `function`, `procedure`, `var`, `mutable`, `const`, `type`, `if`, `then`, `elsif`, `else`, `null`, `case`, `when`, `of`, `for`, `to`, `downto`, `in`, `do`, `while`, `repeat`, `until`, `return`, `discard`, `panic`, `break`, `continue`, `and`, `or`, `not`, `xor`, `div`, `mod`, `public`, `record`, `enum`, `array`, `channel`, `dict`, `result`, `option`, `ok`, `error`, `some`, `none`, `try`, `go`, `with`, `static`, `property`, `event`, `read`, `write`, `comparable`, `numeric`, `printable`, `self`, `nil`, `true`, `false`.
 
 Boolean and enum variant constructors in expressions: `Ok`, `Error`, `Some`, `None` (Pascal-style mixed case for std-like variants).
 

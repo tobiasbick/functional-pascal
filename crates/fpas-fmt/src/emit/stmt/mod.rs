@@ -46,6 +46,12 @@ fn emit_stmt_in_block(emitter: &mut Emitter, stmt: &Stmt, comments: &CommentMap)
             emitter.write("null");
             finish_stmt_line(emitter, comments, stmt);
         }
+        Stmt::Discard { expr, .. } => {
+            write_indented(emitter);
+            emitter.write("discard ");
+            emit_expr(emitter, expr, 0, comments);
+            finish_stmt_line(emitter, comments, stmt);
+        }
         Stmt::Var(var) => line::emit_var_stmt(emitter, "var", var, comments),
         Stmt::MutableVar(var) => line::emit_var_stmt(emitter, "mutable var", var, comments),
         Stmt::Assign { target, value, .. } => {

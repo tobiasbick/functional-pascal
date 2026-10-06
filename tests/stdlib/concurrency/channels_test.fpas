@@ -5,26 +5,26 @@ uses Std.Tasks, Std.Test;
 function SendValues(Messages: channel of integer): boolean;
 begin
   case Send(Messages, 10) of
-    Ok(Sent):
-    begin
-      AssertTrue(Sent);
-    end;
-    Error(Message):
-    begin
-      Fail(Message);
-    end;
-  end;
+    when Ok(Sent):
+      begin
+        AssertTrue(Sent);
+      end;
+    when Error(Message):
+      begin
+        Fail(Message);
+      end;
+  end case;
 
   case Send(Messages, 20) of
-    Ok(Sent):
-    begin
-      AssertTrue(Sent);
-    end;
-    Error(Message):
-    begin
-      Fail(Message);
-    end;
-  end;
+    when Ok(Sent):
+      begin
+        AssertTrue(Sent);
+      end;
+    when Error(Message):
+      begin
+        Fail(Message);
+      end;
+  end case;
 
   return CloseChannel(Messages);
 end function;
@@ -32,16 +32,16 @@ end function;
 function ReceiveValue(Messages: channel of integer): integer;
 begin
   case Receive(Messages) of
-    Ok(Value):
-    begin
-      return Value;
-    end;
-    Error(Message):
-    begin
-      Fail(Message);
-      return 0;
-    end;
-  end;
+    when Ok(Value):
+      begin
+        return Value;
+      end;
+    when Error(Message):
+      begin
+        Fail(Message);
+        return 0;
+      end;
+  end case;
 end function;
 
 begin
@@ -51,15 +51,15 @@ begin
   AssertEquals(20, ReceiveValue(Messages));
   AssertTrue(Wait(Producer));
   case Receive(Messages) of
-    Ok(_):
-    begin
-      Fail('closed channel returned an extra value');
-    end;
-    Error(Message):
-    begin
-      AssertEquals('Channel is closed', Message);
-    end;
-  end;
+    when Ok(_):
+      begin
+        Fail('closed channel returned an extra value');
+      end;
+    when Error(Message):
+      begin
+        AssertEquals('Channel is closed', Message);
+      end;
+  end case;
 
   AssertFalse(CloseChannel(Messages));
 end.

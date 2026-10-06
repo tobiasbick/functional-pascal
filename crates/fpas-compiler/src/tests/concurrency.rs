@@ -131,18 +131,18 @@ function WaitForCancellation(
 ): string;
 begin
   case Std.Net.AcceptWithCancellation(ListenerValue, Token) of
-    Ok(Connection):
+    when Ok(Connection):
     begin
       Std.Net.Close(Connection);
       return 'accepted';
     end;
-    Error(Message): return Message;
-  end;
+    when Error(Message): return Message;
+  end case;
 end function;
 
 begin
   case Std.Net.Listen('127.0.0.1', {port}) of
-    Ok(ListenerValue):
+    when Ok(ListenerValue):
     begin
       var Source: Std.Tasks.CancellationSource := Std.Tasks.CreateCancellationSource();
       var Token: Std.Tasks.CancellationToken := Std.Tasks.GetCancellationToken(Source);
@@ -153,8 +153,8 @@ begin
         panic('accept did not report cancellation'); end if;
       Std.Net.CloseListener(ListenerValue);
     end;
-    Error(Message): panic(Message);
-  end;
+    when Error(Message): panic(Message);
+  end case;
 end."
     );
 
@@ -218,22 +218,22 @@ uses Std.Tasks;
 function Produce(Messages: channel of integer): boolean;
 begin
   case Send(Messages, 20) of
-    Ok(_): begin end;
-    Error(Message): panic(Message);
-  end;
+    when Ok(_): begin end;
+    when Error(Message): panic(Message);
+  end case;
   case Send(Messages, 22) of
-    Ok(_): begin end;
-    Error(Message): panic(Message);
-  end;
+    when Ok(_): begin end;
+    when Error(Message): panic(Message);
+  end case;
   return CloseChannel(Messages);
 end function;
 
 function Take(Messages: channel of integer): integer;
 begin
   case Receive(Messages) of
-    Ok(Value): return Value;
-    Error(Message): panic(Message);
-  end;
+    when Ok(Value): return Value;
+    when Error(Message): panic(Message);
+  end case;
 end function;
 
 begin
@@ -243,10 +243,10 @@ begin
   if Take(Messages) <> 22 then panic('second channel value was not FIFO'); end if;
   if not Wait(Producer) then panic('channel close was not first'); end if;
   case Receive(Messages) of
-    Ok(_): panic('closed channel produced an extra value');
-    Error(Message):
+    when Ok(_): panic('closed channel produced an extra value');
+    when Error(Message):
       if Message <> 'Channel is closed' then panic(Message); end if;
-  end;
+  end case;
   if CloseChannel(Messages) then panic('channel close was not idempotent'); end if;
 end.",
     );
@@ -288,39 +288,39 @@ uses Std.Tasks;
 begin
   var Messages: channel of integer := CreateChannel(1);
   case TryReceive(Messages) of
-    Ok(MaybeValue):
+    when Ok(MaybeValue):
       case MaybeValue of
-        Some(_): panic('empty channel produced a value');
-        None: begin end;
-      end;
-    Error(Message): panic(Message);
-  end;
+        when Some(_): panic('empty channel produced a value');
+        when None: begin end;
+      end case;
+    when Error(Message): panic(Message);
+  end case;
   case TrySend(Messages, 1) of
-    Ok(Sent): if not Sent then panic('first try-send did not send'); end if;
-    Error(Message): panic(Message);
-  end;
+    when Ok(Sent): if not Sent then panic('first try-send did not send'); end if;
+    when Error(Message): panic(Message);
+  end case;
   case TrySend(Messages, 2) of
-    Ok(Sent): if Sent then panic('full channel accepted a value'); end if;
-    Error(Message): panic(Message);
-  end;
+    when Ok(Sent): if Sent then panic('full channel accepted a value'); end if;
+    when Error(Message): panic(Message);
+  end case;
   case ReceiveWithTimeout(Messages, 0) of
-    Ok(Value): if Value <> 1 then panic('timeout receive changed FIFO order'); end if;
-    Error(Message): panic(Message);
-  end;
+    when Ok(Value): if Value <> 1 then panic('timeout receive changed FIFO order'); end if;
+    when Error(Message): panic(Message);
+  end case;
   case ReceiveWithTimeout(Messages, 1) of
-    Ok(_): panic('empty channel did not time out');
-    Error(Message):
+    when Ok(_): panic('empty channel did not time out');
+    when Error(Message):
       if Message <> 'Channel receive timed out' then panic(Message); end if;
-  end;
+  end case;
   case Send(Messages, 3) of
-    Ok(_): begin end;
-    Error(Message): panic(Message);
-  end;
+    when Ok(_): begin end;
+    when Error(Message): panic(Message);
+  end case;
   case SendWithTimeout(Messages, 4, 1) of
-    Ok(_): panic('full channel did not time out');
-    Error(Message):
+    when Ok(_): panic('full channel did not time out');
+    when Error(Message):
       if Message <> 'Channel send timed out' then panic(Message); end if;
-  end;
+  end case;
 end.",
     );
 }
@@ -353,9 +353,9 @@ function BlockedSend(
 ): string;
 begin
   case SendWithCancellation(Messages, 2, Token) of
-    Ok(_): return 'sent';
-    Error(Message): return Message;
-  end;
+    when Ok(_): return 'sent';
+    when Error(Message): return Message;
+  end case;
 end function;
 
 function BlockedReceive(
@@ -364,17 +364,17 @@ function BlockedReceive(
 ): string;
 begin
   case ReceiveWithCancellation(Messages, Token) of
-    Ok(_): return 'received';
-    Error(Message): return Message;
-  end;
+    when Ok(_): return 'received';
+    when Error(Message): return Message;
+  end case;
 end function;
 
 begin
   var Full: channel of integer := CreateChannel(1);
   case Send(Full, 1) of
-    Ok(_): begin end;
-    Error(Message): panic(Message);
-  end;
+    when Ok(_): begin end;
+    when Error(Message): panic(Message);
+  end case;
   var SendSource: CancellationSource := CreateCancellationSource();
   var Sending: task := go BlockedSend(Full, GetCancellationToken(SendSource));
   Sleep(20);

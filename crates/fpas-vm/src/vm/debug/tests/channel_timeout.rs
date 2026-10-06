@@ -10,19 +10,19 @@ uses Std.Tasks;
 begin
   var Messages: channel of integer := CreateChannel(1);
   case ReceiveWithTimeout(Messages, 25) of
-    Ok(_): panic('empty channel did not time out');
-    Error(Message):
+    when Ok(_): panic('empty channel did not time out');
+    when Error(Message):
       if Message <> 'Channel receive timed out' then panic(Message); end if;
-  end;
+  end case;
   case Send(Messages, 1) of
-    Ok(_): begin end;
-    Error(Message): panic(Message);
-  end;
+    when Ok(_): begin end;
+    when Error(Message): panic(Message);
+  end case;
   case SendWithTimeout(Messages, 2, 25) of
-    Ok(_): panic('full channel did not time out');
-    Error(Message):
+    when Ok(_): panic('full channel did not time out');
+    when Error(Message):
       if Message <> 'Channel send timed out' then panic(Message); end if;
-  end;
+  end case;
 end.
 "#;
     let (program, diagnostics) = fpas_parser::parse(SOURCE);

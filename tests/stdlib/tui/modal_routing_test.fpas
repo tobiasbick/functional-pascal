@@ -70,58 +70,58 @@ function UpdateModal(State: ModalModel; Msg: TuiMsg; Cmd: TuiCmdOutput): ModalMo
 begin
   Cmd.Set(TuiCmd.NoCommand);
   case Msg of
-    TuiMsg.FocusChanged(Previous, Current):
-    begin
-      case Current of
-        Some(Id):
-        begin
-          return record
-            Focus := Id.Value;
-            ConfirmOpen := State.ConfirmOpen;
-            Actions := State.Actions;
-            PointerHits := State.PointerHits;
-          end;
-        end;
-        None:
-        begin
-          return State;
-        end;
+    when TuiMsg.FocusChanged(Previous, Current):
+      begin
+        case Current of
+          when Some(Id):
+            begin
+              return record
+                Focus := Id.Value;
+                ConfirmOpen := State.ConfirmOpen;
+                Actions := State.Actions;
+                PointerHits := State.PointerHits;
+              end;
+            end;
+          when None:
+            begin
+              return State;
+            end;
+        end case;
       end;
-    end;
-    TuiMsg.Action(Source, Action):
-    begin
-      if Action.Value = 10 then
-        begin
-          return record
-            Focus := 3;
-            ConfirmOpen := true;
-            Actions := Std.Arrays.Concat(State.Actions, [Action.Value]);
-            PointerHits := State.PointerHits;
+    when TuiMsg.Action(Source, Action):
+      begin
+        if Action.Value = 10 then
+          begin
+            return record
+              Focus := 3;
+              ConfirmOpen := true;
+              Actions := Std.Arrays.Concat(State.Actions, [Action.Value]);
+              PointerHits := State.PointerHits;
+            end;
           end;
-        end;
-      end if;
+        end if;
 
-      return record
-        Focus := 1;
-        ConfirmOpen := false;
-        Actions := Std.Arrays.Concat(State.Actions, [Action.Value]);
-        PointerHits := State.PointerHits;
+        return record
+          Focus := 1;
+          ConfirmOpen := false;
+          Actions := Std.Arrays.Concat(State.Actions, [Action.Value]);
+          PointerHits := State.PointerHits;
+        end;
       end;
-    end;
-    TuiMsg.Pointer(Pointer):
-    begin
-      return record
-        Focus := State.Focus;
-        ConfirmOpen := State.ConfirmOpen;
-        Actions := State.Actions;
-        PointerHits := State.PointerHits + 1;
+    when TuiMsg.Pointer(Pointer):
+      begin
+        return record
+          Focus := State.Focus;
+          ConfirmOpen := State.ConfirmOpen;
+          Actions := State.Actions;
+          PointerHits := State.PointerHits + 1;
+        end;
       end;
-    end;
     else
-    begin
-      return State;
-    end;
-  end;
+      begin
+        return State;
+      end;
+  end case;
 end function;
 
 begin

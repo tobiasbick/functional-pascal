@@ -11,7 +11,7 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`case_stmt`, `case
 | [Ranges](ranges.md) | `a..b` labels |
 | [Enum patterns](enum-patterns.md) | Plain and data-carrying enums |
 | [Result and Option patterns](result-option-patterns.md) | `Ok` / `Error` / `Some` / `None` |
-| [Guards](guards.md) | `label if cond:` and scalar bindings |
+| [Guards](guards.md) | `when Label if Condition:` and scalar bindings |
 | [Exhaustiveness](exhaustiveness.md) | Compile-time coverage rules |
 
 ## See also

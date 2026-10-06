@@ -76,17 +76,17 @@ end procedure;
 
 begin
   case OpenStream(Request.Get('http://127.0.0.1:{port}/events')) of
-    Ok(ResponseValue):
+    when Ok(ResponseValue):
     begin
       WriteLn(ResponseValue.StatusCode);
       case CreateSseDecoder(4096) of
-        Ok(Decoder):
+        when Ok(Decoder):
         begin
           mutable var Reading: boolean := true;
           while Reading do
           begin
             case ReadStream(ResponseValue.Body, 3) of
-              Ok(Bytes):
+              when Ok(Bytes):
               begin
                 if Std.Arrays.Length(Bytes) = 0 then
                 begin
@@ -95,24 +95,24 @@ begin
                 else
                 begin
                   case FeedSse(Decoder, Bytes) of
-                    Ok(Events): PrintEvents(Events);
-                    Error(Message): panic(Message);
-                  end;
+                    when Ok(Events): PrintEvents(Events);
+                    when Error(Message): panic(Message);
+                  end case;
                 end; end if;
               end;
-              Error(Message): panic(Message);
-            end;
+              when Error(Message): panic(Message);
+            end case;
           end; end while;
           case FinishSse(Decoder) of
-            Ok(Events): PrintEvents(Events);
-            Error(Message): panic(Message);
-          end;
+            when Ok(Events): PrintEvents(Events);
+            when Error(Message): panic(Message);
+          end case;
         end;
-        Error(Message): panic(Message);
-      end;
+        when Error(Message): panic(Message);
+      end case;
     end;
-    Error(Message): panic(Message);
-  end;
+    when Error(Message): panic(Message);
+  end case;
 end.
 "#
         ),
@@ -164,32 +164,32 @@ uses Std.Arrays, Std.Console, Std.Http, Std.Str;
 
 begin
   case OpenStream(Request.Get('http://127.0.0.1:{port}/truncated')) of
-    Ok(ResponseValue):
+    when Ok(ResponseValue):
     begin
       case ReadStream(ResponseValue.Body, 8) of
-        Ok(Bytes):
+        when Ok(Bytes):
         begin
           if Std.Arrays.Length(Bytes) <> 3 then
           begin
             panic('unexpected first body fragment');
           end; end if;
         end;
-        Error(Message): panic(Message);
-      end;
+        when Error(Message): panic(Message);
+      end case;
       case ReadStream(ResponseValue.Body, 8) of
-        Ok(_): panic('truncated Content-Length was accepted');
-        Error(Message):
+        when Ok(_): panic('truncated Content-Length was accepted');
+        when Error(Message):
         begin
           if not Std.Str.Contains(Message, 'shorter than Content-Length') then
           begin
             panic(Message);
           end; end if;
         end;
-      end;
+      end case;
       WriteLn('ok');
     end;
-    Error(Message): panic(Message);
-  end;
+    when Error(Message): panic(Message);
+  end case;
 end.
 "#
         ),

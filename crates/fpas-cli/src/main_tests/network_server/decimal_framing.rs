@@ -29,14 +29,14 @@ begin
     Unwrap(SetTimeout(ConnectionValue, 2000));
     mutable var Text: string := 'accepted';
     case ReadRequest(ConnectionValue, 4096, 16) of
-      Ok(_): begin end;
-      Error(Message): begin
+      when Ok(_): begin end;
+      when Error(Message): begin
         if I = {} then
         begin if not Std.Str.Contains(Message, 'MaxBodyBytes') then panic(Message); end if; end;
         else begin if not Std.Str.Contains(Message, 'Content-Length') then panic(Message); end if; end; end if;
         Text := 'rejected';
       end;
-    end;
+    end case;
     mutable var ResponseValue: ServerResponse := ServerResponse.Create(200, 'OK');
     ResponseValue.Body := Std.Net.Utf8.Encode(Text);
     Unwrap(WriteResponse(ConnectionValue, ResponseValue));

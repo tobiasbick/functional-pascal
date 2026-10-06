@@ -5,29 +5,29 @@ uses Std.Net.Uri, Std.Test;
 procedure Rejected(Text: string);
 begin
   case Std.Net.Uri.Parse(Text) of
-    Ok(_):
-    begin
-      Fail('accepted ' + Text);
-    end;
-    Error(_):
-    begin
-    end;
-  end;
+    when Ok(_):
+      begin
+        Fail('accepted ' + Text);
+      end;
+    when Error(_):
+      begin
+      end;
+  end case;
 end procedure;
 
 procedure Accepted(Text: string; Scheme: string; Port: integer);
 begin
   case Std.Net.Uri.Parse(Text) of
-    Ok(Value):
-    begin
-      AssertEquals(Scheme, Value.Scheme);
-      AssertEquals(Port, Value.Port);
-    end;
-    Error(Message):
-    begin
-      Fail(Message);
-    end;
-  end;
+    when Ok(Value):
+      begin
+        AssertEquals(Scheme, Value.Scheme);
+        AssertEquals(Port, Value.Port);
+      end;
+    when Error(Message):
+      begin
+        Fail(Message);
+      end;
+  end case;
 end procedure;
 
 begin

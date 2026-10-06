@@ -149,31 +149,31 @@ begin
       elsif BackgroundEnabled then
         begin
           case Std.Results.Unwrap(TryReceive(Inbox)) of
-            Some(Message):
-            begin
-              Remaining := Remaining - 1;
-              Model := TuiLoopApplyApplication(ApplicationId, Model, Message, UpdateApplication);
-              if TuiLoopFinishUpdate(ApplicationId, Model, View, false) then
-                begin
-                  TuiLoopCloseWithInbox(ApplicationId, Inbox);
-                  return Model;
-                end;
-              end if;
-            end;
-            None:
-            begin
-              Remaining := Remaining - 1;
-              // The deterministic tick also answers a pending tick request.
-              TuiAppClearTick(ApplicationId);
-              Model := TuiLoopApplyFramework(ApplicationId, Model, TuiMsg.Tick(DeltaMilliseconds), Update);
-              if TuiLoopFinishUpdate(ApplicationId, Model, View, false) then
-                begin
-                  TuiLoopCloseWithInbox(ApplicationId, Inbox);
-                  return Model;
-                end;
-              end if;
-            end;
-          end;
+            when Some(Message):
+              begin
+                Remaining := Remaining - 1;
+                Model := TuiLoopApplyApplication(ApplicationId, Model, Message, UpdateApplication);
+                if TuiLoopFinishUpdate(ApplicationId, Model, View, false) then
+                  begin
+                    TuiLoopCloseWithInbox(ApplicationId, Inbox);
+                    return Model;
+                  end;
+                end if;
+              end;
+            when None:
+              begin
+                Remaining := Remaining - 1;
+                // The deterministic tick also answers a pending tick request.
+                TuiAppClearTick(ApplicationId);
+                Model := TuiLoopApplyFramework(ApplicationId, Model, TuiMsg.Tick(DeltaMilliseconds), Update);
+                if TuiLoopFinishUpdate(ApplicationId, Model, View, false) then
+                  begin
+                    TuiLoopCloseWithInbox(ApplicationId, Inbox);
+                    return Model;
+                  end;
+                end if;
+              end;
+          end case;
         end;
       else
         begin
@@ -267,27 +267,27 @@ begin
       mutable var Cases: array of WaitCase := [];
       var ConsoleCase: WaitCase := ReceiveCase(ConsoleInputs, procedure(Outcome: result of TuiHostInput, string) begin
         case Outcome of
-          Ok(Input):
-          begin
-            ConsoleInput := Some(Input);
-          end;
-          Error(Message):
-          begin
-          end;
-        end;
+          when Ok(Input):
+            begin
+              ConsoleInput := Some(Input);
+            end;
+          when Error(Message):
+            begin
+            end;
+        end case;
       end);
       if BackgroundEnabled then
         begin
           var ApplicationCase: WaitCase := ReceiveCase(Inbox, procedure(Outcome: result of TMessage, string) begin
             case Outcome of
-              Ok(Message):
-              begin
-                ApplicationInput := Some(Message);
-              end;
-              Error(Failure):
-              begin
-              end;
-            end;
+              when Ok(Message):
+                begin
+                  ApplicationInput := Some(Message);
+                end;
+              when Error(Failure):
+                begin
+                end;
+            end case;
           end);
           if PreferApplication then
             begin
@@ -322,32 +322,32 @@ begin
       Select(Cases);
       PreferApplication := not PreferApplication;
       case ConsoleInput of
-        Some(Input):
-        begin
-          TuiAppRouteInput(ApplicationId, Input);
-        end;
-        None:
-        begin
-        end;
-      end;
+        when Some(Input):
+          begin
+            TuiAppRouteInput(ApplicationId, Input);
+          end;
+        when None:
+          begin
+          end;
+      end case;
 
       case ApplicationInput of
-        Some(Message):
-        begin
-          Model := TuiLoopApplyApplication(ApplicationId, Model, Message, UpdateApplication);
-          if TuiLoopFinishUpdate(ApplicationId, Model, View, true) then
-            begin
-              CloseTaskGroup(InputGroup);
-              CloseChannel(ConsoleInputs);
-              TuiLoopCloseWithInbox(ApplicationId, Inbox);
-              return Model;
-            end;
-          end if;
-        end;
-        None:
-        begin
-        end;
-      end;
+        when Some(Message):
+          begin
+            Model := TuiLoopApplyApplication(ApplicationId, Model, Message, UpdateApplication);
+            if TuiLoopFinishUpdate(ApplicationId, Model, View, true) then
+              begin
+                CloseTaskGroup(InputGroup);
+                CloseChannel(ConsoleInputs);
+                TuiLoopCloseWithInbox(ApplicationId, Inbox);
+                return Model;
+              end;
+            end if;
+          end;
+        when None:
+          begin
+          end;
+      end case;
     end;
   end while;
 

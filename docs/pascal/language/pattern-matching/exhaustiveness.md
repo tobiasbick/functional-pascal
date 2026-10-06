@@ -13,30 +13,37 @@ type
   end enum;
 
 // ERROR: non-exhaustive match — missing Light.Yellow
+
 case L of
-  Light.Red:   WriteLn('Stop');
-  Light.Green: WriteLn('Go');
-end;
+  when Light.Red:
+    WriteLn('Stop');
+  when Light.Green:
+    WriteLn('Go');
+end case;
 ```
 
 Fix by covering all variants:
 
 ```pascal
 case L of
-  Light.Red:    WriteLn('Stop');
-  Light.Yellow: WriteLn('Caution');
-  Light.Green:  WriteLn('Go');
-end;
+  when Light.Red:
+    WriteLn('Stop');
+  when Light.Yellow:
+    WriteLn('Caution');
+  when Light.Green:
+    WriteLn('Go');
+end case;
 ```
 
 Or by adding `else`:
 
 ```pascal
 case L of
-  Light.Red: WriteLn('Stop');
-else
-  WriteLn('Proceed with caution');
-end;
+  when Light.Red:
+    WriteLn('Stop');
+  else
+    WriteLn('Proceed with caution');
+end case;
 ```
 
 ## Result and Option exhaustiveness
@@ -46,14 +53,17 @@ end;
 ```pascal
 // ERROR: non-exhaustive — missing Error
 case R of
-  Ok(V): WriteLn(IntToStr(V));
-end;
+  when Ok(V):
+    WriteLn(IntToStr(V));
+end case;
 
 // OK: both variants covered
 case R of
-  Ok(V):  WriteLn(IntToStr(V));
-  Error(E): WriteLn('Error: ' + E);
-end;
+  when Ok(V):
+    WriteLn(IntToStr(V));
+  when Error(E):
+    WriteLn('Error: ' + E);
+end case;
 ```
 
 ## Rules
@@ -62,7 +72,7 @@ end;
 - `Result`: both `Ok` and `Error` must appear on unguarded arms, or `else` must be present.
 - `Option`: both `Some` and `None` must appear on unguarded arms, or `else` must be present.
 - Scalar types (`integer`, `string`, `string`, `boolean`): `else` is recommended but not required.
-- Guard clauses do not count toward exhaustiveness — `Shape.Circle(R) if R > 0` does not cover variant `Circle`; add an unguarded `Shape.Circle(R)` arm or `else`.
+- Guard clauses do not count toward exhaustiveness — `when Shape.Circle(R) if R > 0:` does not cover variant `Circle`; add an unguarded `when Shape.Circle(R):` arm or `else`.
 
 ## See also
 

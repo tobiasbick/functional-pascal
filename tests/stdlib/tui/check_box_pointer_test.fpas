@@ -47,38 +47,38 @@ function UpdateCheck(State: CheckModel; Msg: TuiMsg; Cmd: TuiCmdOutput): CheckMo
 begin
   Cmd.Set(TuiCmd.NoCommand);
   case Msg of
-    TuiMsg.FocusChanged(Previous, Current):
-    begin
-      case Current of
-        Some(Id):
-        begin
-          return record
-            Focus := Id.Value;
-            Checked := State.Checked;
-            Changes := State.Changes;
-          end;
-        end;
-        None:
-        begin
-          return State;
+    when TuiMsg.FocusChanged(Previous, Current):
+      begin
+        case Current of
+          when Some(Id):
+            begin
+              return record
+                Focus := Id.Value;
+                Checked := State.Checked;
+                Changes := State.Changes;
+              end;
+            end;
+          when None:
+            begin
+              return State;
+            end;
+        end case;
+      end;
+    when TuiMsg.CheckChanged(Source, Action, Checked):
+      begin
+        AssertEquals(1, Source.Value);
+        AssertEquals(9, Action.Value);
+        return record
+          Focus := State.Focus;
+          Checked := Checked;
+          Changes := Std.Arrays.Concat(State.Changes, [Checked]);
         end;
       end;
-    end;
-    TuiMsg.CheckChanged(Source, Action, Checked):
-    begin
-      AssertEquals(1, Source.Value);
-      AssertEquals(9, Action.Value);
-      return record
-        Focus := State.Focus;
-        Checked := Checked;
-        Changes := Std.Arrays.Concat(State.Changes, [Checked]);
-      end;
-    end;
     else
-    begin
-      return State;
-    end;
-  end;
+      begin
+        return State;
+      end;
+  end case;
 end function;
 
 begin

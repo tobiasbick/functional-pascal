@@ -11,15 +11,15 @@ uses Std.Args, Std.Arrays, Std.Conv, Std.Console, Std.Http, Std.Net.Utf8;
 procedure PrintBuffered(LabelText: string; ResponseValue: Response);
 begin
   case BodyText(ResponseValue) of
-    Ok(Text):
-    begin
-      WriteLn((((LabelText + ' ') + IntToStr(ResponseValue.StatusCode)) + ': ') + Text);
-    end;
-    Error(Message):
-    begin
-      panic(Message);
-    end;
-  end;
+    when Ok(Text):
+      begin
+        WriteLn((((LabelText + ' ') + IntToStr(ResponseValue.StatusCode)) + ': ') + Text);
+      end;
+    when Error(Message):
+      begin
+        panic(Message);
+      end;
+  end case;
 end procedure;
 
 // Sends one buffered request and prints its response.
@@ -30,15 +30,15 @@ end procedure;
 procedure RunBuffered(LabelText: string; RequestValue: Request);
 begin
   case Send(RequestValue) of
-    Ok(ResponseValue):
-    begin
-      PrintBuffered(LabelText, ResponseValue);
-    end;
-    Error(Message):
-    begin
-      panic(Message);
-    end;
-  end;
+    when Ok(ResponseValue):
+      begin
+        PrintBuffered(LabelText, ResponseValue);
+      end;
+    when Error(Message):
+      begin
+        panic(Message);
+      end;
+  end case;
 end procedure;
 
 // Reads an entire bounded response stream and validates its UTF-8 body.
@@ -52,36 +52,36 @@ begin
   while Reading do
     begin
       case ReadStream(StreamValue, 5) of
-        Ok(Part):
-        begin
-          if Std.Arrays.Length(Part) = 0 then
-            begin
-              Reading := false;
-            end;
-          else
-            begin
-              Bytes := Std.Arrays.Concat(Bytes, Part);
-            end;
-          end if;
-        end;
-        Error(Message):
-        begin
-          panic(Message);
-        end;
-      end;
+        when Ok(Part):
+          begin
+            if Std.Arrays.Length(Part) = 0 then
+              begin
+                Reading := false;
+              end;
+            else
+              begin
+                Bytes := Std.Arrays.Concat(Bytes, Part);
+              end;
+            end if;
+          end;
+        when Error(Message):
+          begin
+            panic(Message);
+          end;
+      end case;
     end;
   end while;
 
   case Std.Net.Utf8.Decode(Bytes) of
-    Ok(Text):
-    begin
-      return Text;
-    end;
-    Error(Message):
-    begin
-      panic(Message);
-    end;
-  end;
+    when Ok(Text):
+      begin
+        return Text;
+      end;
+    when Error(Message):
+      begin
+        panic(Message);
+      end;
+  end case;
 end function;
 
 begin
@@ -102,14 +102,14 @@ begin
   PostRequest.Body := Std.Net.Utf8.Encode('hello from client');
   RunBuffered('POST', PostRequest);
   case OpenStream(Request.Get(BaseUrl + '/stream')) of
-    Ok(ResponseValue):
-    begin
-      WriteLn((('STREAM ' + IntToStr(ResponseValue.StatusCode)) + ': ') +
-              ReadAll(ResponseValue.Body));
-    end;
-    Error(Message):
-    begin
-      panic(Message);
-    end;
-  end;
+    when Ok(ResponseValue):
+      begin
+        WriteLn((('STREAM ' + IntToStr(ResponseValue.StatusCode)) + ': ') +
+                ReadAll(ResponseValue.Body));
+      end;
+    when Error(Message):
+      begin
+        panic(Message);
+      end;
+  end case;
 end.

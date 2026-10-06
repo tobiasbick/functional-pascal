@@ -5,15 +5,15 @@ uses Std.Arrays, Std.Conv, Std.Http, Std.Net.Utf8, Std.Tasks, Std.Test;
 function CreateDecoder(Index: integer): SseDecoder;
 begin
   case CreateSseDecoder(1024) of
-    Ok(Decoder):
-    begin
-      return Decoder;
-    end;
-    Error(Message):
-    begin
-      panic((('decoder ' + IntToStr(Index)) + ' failed: ') + Message);
-    end;
-  end;
+    when Ok(Decoder):
+      begin
+        return Decoder;
+      end;
+    when Error(Message):
+      begin
+        panic((('decoder ' + IntToStr(Index)) + ' failed: ') + Message);
+      end;
+  end case;
 end function;
 
 begin
@@ -36,26 +36,26 @@ begin
     begin
       var Expected: string := IntToStr(Index);
       case FeedSse(Decoders[Index], Std.Net.Utf8.Encode((('data: ' + Expected) + #10) + #10)) of
-        Ok(Events):
-        begin
-          AssertEquals(1, Length(Events));
-          AssertEquals(Expected, Events[0].Data);
-        end;
-        Error(Message):
-        begin
-          panic(Message);
-        end;
-      end;
+        when Ok(Events):
+          begin
+            AssertEquals(1, Length(Events));
+            AssertEquals(Expected, Events[0].Data);
+          end;
+        when Error(Message):
+          begin
+            panic(Message);
+          end;
+      end case;
 
       case FinishSse(Decoders[Index]) of
-        Ok(_):
-        begin
-        end;
-        Error(Message):
-        begin
-          panic(Message);
-        end;
-      end;
+        when Ok(_):
+          begin
+          end;
+        when Error(Message):
+          begin
+            panic(Message);
+          end;
+      end case;
     end;
   end for;
 end.

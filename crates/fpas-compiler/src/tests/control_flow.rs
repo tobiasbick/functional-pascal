@@ -82,25 +82,25 @@ begin
   mutable var Score: integer := 0;
   var I: integer := 5;
   case I of
-    Candidate if Candidate < 0: Score := 99;
-    1..3: Score := 1;
-    5 if I > 5: Score := 2;
-    5: Score := 3;
+    when Candidate if Candidate < 0: Score := 99;
+    when 1..3: Score := 1;
+    when 5 if I > 5: Score := 2;
+    when 5: Score := 3;
   else
     Score := 4;
-  end;
+  end case;
   var S: string := 'beta';
   case S of
-    'alpha': Score := 10;
-    'beta': Score := Score + 4;
+    when 'alpha': Score := 10;
+    when 'beta': Score := Score + 4;
   else
     Score := 20;
-  end;
+  end case;
   var Flag: boolean := true;
   case Flag of
-    false: Score := 100;
-    true: Score := Score + 5;
-  end;
+    when false: Score := 100;
+    when true: Score := Score + 5;
+  end case;
   if Score <> 12 then panic('case mismatch'); end if;
 end.",
     );

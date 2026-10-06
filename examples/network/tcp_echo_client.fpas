@@ -16,21 +16,21 @@ begin
       var Remaining: array of integer := Std.Arrays.Slice(Bytes, Offset, Std.Arrays.Length(Bytes) -
                                                                          Offset);
       case Std.Net.SendBytes(ConnectionValue, Remaining) of
-        Ok(Count):
-        begin
-          if Count <= 0 then
-            begin
-              panic('TCP connection stopped while writing');
-            end;
-          end if;
+        when Ok(Count):
+          begin
+            if Count <= 0 then
+              begin
+                panic('TCP connection stopped while writing');
+              end;
+            end if;
 
-          Offset := Offset + Count;
-        end;
-        Error(Message):
-        begin
-          panic(Message);
-        end;
-      end;
+            Offset := Offset + Count;
+          end;
+        when Error(Message):
+          begin
+            panic(Message);
+          end;
+      end case;
     end;
   end while;
 end procedure;
@@ -46,36 +46,36 @@ begin
   while Reading do
     begin
       case Std.Net.ReceiveBytes(ConnectionValue, 4096) of
-        Ok(Part):
-        begin
-          if Std.Arrays.Length(Part) = 0 then
-            begin
-              Reading := false;
-            end;
-          else
-            begin
-              Bytes := Std.Arrays.Concat(Bytes, Part);
-            end;
-          end if;
-        end;
-        Error(Message):
-        begin
-          panic(Message);
-        end;
-      end;
+        when Ok(Part):
+          begin
+            if Std.Arrays.Length(Part) = 0 then
+              begin
+                Reading := false;
+              end;
+            else
+              begin
+                Bytes := Std.Arrays.Concat(Bytes, Part);
+              end;
+            end if;
+          end;
+        when Error(Message):
+          begin
+            panic(Message);
+          end;
+      end case;
     end;
   end while;
 
   case Std.Net.Utf8.Decode(Bytes) of
-    Ok(Text):
-    begin
-      return Text;
-    end;
-    Error(Message):
-    begin
-      panic(Message);
-    end;
-  end;
+    when Ok(Text):
+      begin
+        return Text;
+      end;
+    when Error(Message):
+      begin
+        panic(Message);
+      end;
+  end case;
 end function;
 
 begin
@@ -91,33 +91,33 @@ begin
   end if;
 
   case Connect('127.0.0.1', Port, 5000) of
-    Ok(ConnectionValue):
-    begin
-      case SetTimeout(ConnectionValue, 5000) of
-        Ok(_):
-        begin
-        end;
-        Error(Message):
-        begin
-          panic(Message);
-        end;
-      end;
+    when Ok(ConnectionValue):
+      begin
+        case SetTimeout(ConnectionValue, 5000) of
+          when Ok(_):
+            begin
+            end;
+          when Error(Message):
+            begin
+              panic(Message);
+            end;
+        end case;
 
-      WriteAll(ConnectionValue, Std.Net.Utf8.Encode('hello over TCP' + #10));
-      WriteLn(ReadToEnd(ConnectionValue));
-      case Close(ConnectionValue) of
-        Ok(_):
-        begin
-        end;
-        Error(Message):
-        begin
-          panic(Message);
-        end;
+        WriteAll(ConnectionValue, Std.Net.Utf8.Encode('hello over TCP' + #10));
+        WriteLn(ReadToEnd(ConnectionValue));
+        case Close(ConnectionValue) of
+          when Ok(_):
+            begin
+            end;
+          when Error(Message):
+            begin
+              panic(Message);
+            end;
+        end case;
       end;
-    end;
-    Error(Message):
-    begin
-      panic(Message);
-    end;
-  end;
+    when Error(Message):
+      begin
+        panic(Message);
+      end;
+  end case;
 end.

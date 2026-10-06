@@ -12,15 +12,15 @@ begin
   AssertEquals('X', Styled.Glyph);
   AssertEquals(1, Styled.Width());
   case Styled.ConcreteStyle of
-    Some(Concrete):
-    begin
-      AssertEquals(20, Concrete.Foreground.Green);
-    end;
-    None:
-    begin
-      panic('expected concrete cell style');
-    end;
-  end;
+    when Some(Concrete):
+      begin
+        AssertEquals(20, Concrete.Foreground.Green);
+      end;
+    when None:
+      begin
+        panic('expected concrete cell style');
+      end;
+  end case;
   var Palette: TuiPalette := TuiPalette.Default();
   AssertTrue(Palette.ForRole(TuiStyleRole.Normal).Foreground.Kind = TuiColorKind.Rgb);
   AssertEquals(201, Palette.ForRole(TuiStyleRole.Normal).Foreground.Red);

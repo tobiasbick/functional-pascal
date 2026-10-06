@@ -25,11 +25,13 @@ end function;
 Use `case of` with destructuring to handle both branches:
 
 ```pascal
-var R: Result of integer, string := Divide(10, 0);
+var R: result of integer, string := Divide(10, 0);
 case R of
-  Ok(V):  WriteLn('Value: ' + IntToStr(V));
-  Error(E): WriteLn('Error: ' + E);
-end;
+  when Ok(V):
+    WriteLn('Value: ' + IntToStr(V));
+  when Error(E):
+    WriteLn('Error: ' + E);
+end case;
 ```
 
 The binding variable (`V`, `E`) is scoped to its arm body.

@@ -159,6 +159,7 @@ end.
 
 ```pascal
 program PatternMatching;
+
 uses Std.Console;
 
 type
@@ -171,10 +172,13 @@ type
 function TrafficAdvice(L: Light): string;
 begin
   case L of
-    Light.Red:    return 'Stop';
-    Light.Yellow: return 'Caution';
-    Light.Green:  return 'Go';
-  end;
+    when Light.Red:
+      return 'Stop';
+    when Light.Yellow:
+      return 'Caution';
+    when Light.Green:
+      return 'Go';
+  end case;
 end function;
 
 begin
@@ -224,15 +228,15 @@ end function;
 
 begin
   case FindFirst([3, 7, 15, 42], 10) of
-    Some(V):
-    begin
-      WriteLn('Found: ', V);
-    end;
-    None:
-    begin
-      WriteLn('Not found');
-    end;
-  end;
+    when Some(V):
+      begin
+        WriteLn('Found: ', V);
+      end;
+    when None:
+      begin
+        WriteLn('Not found');
+      end;
+  end case;
 end.
 ```
 

@@ -17,14 +17,14 @@ begin
   end if;
 
   case CreateDir(Path) of
-    Ok(_):
-    begin
-    end;
-    Error(Message):
-    begin
-      Fail(Message);
-    end;
-  end;
+    when Ok(_):
+      begin
+      end;
+    when Error(Message):
+      begin
+        Fail(Message);
+      end;
+  end case;
 end procedure;
 
 begin
@@ -33,35 +33,35 @@ begin
   EnsureDir(Root + '/src');
   EnsureDir(Root + '/src/ui');
   case WriteText(Root + '/src/main.fpas', '') of
-    Ok(_):
-    begin
-    end;
-    Error(Message):
-    begin
-      Fail(Message);
-    end;
-  end;
+    when Ok(_):
+      begin
+      end;
+    when Error(Message):
+      begin
+        Fail(Message);
+      end;
+  end case;
 
   case WriteText(Root + '/src/ui/menu.fpas', '') of
-    Ok(_):
-    begin
-    end;
-    Error(Message):
-    begin
-      Fail(Message);
-    end;
-  end;
+    when Ok(_):
+      begin
+      end;
+    when Error(Message):
+      begin
+        Fail(Message);
+      end;
+  end case;
 
   case Glob(Root + '/src/**/*.fpas') of
-    Ok(Paths):
-    begin
-      AssertEquals(2, Std.Arrays.Length(Paths));
-      AssertEquals(Root + '/src/main.fpas', Paths[0]);
-      AssertEquals(Root + '/src/ui/menu.fpas', Paths[1]);
-    end;
-    Error(Message):
-    begin
-      Fail(Message);
-    end;
-  end;
+    when Ok(Paths):
+      begin
+        AssertEquals(2, Std.Arrays.Length(Paths));
+        AssertEquals(Root + '/src/main.fpas', Paths[0]);
+        AssertEquals(Root + '/src/ui/menu.fpas', Paths[1]);
+      end;
+    when Error(Message):
+      begin
+        Fail(Message);
+      end;
+  end case;
 end.

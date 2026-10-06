@@ -10,62 +10,62 @@ begin
   var Encoded: string := Stringify(Source);
   var Parsed: result of TomlValue, string := Parse(Encoded);
   case Parsed of
-    Ok(Value):
-    begin
-      case Value of
-        TomlValue.Table(Fields):
-        begin
-          case Std.Options.Unwrap(Std.Dictionaries.Get(Fields, 'project')) of
-            TomlValue.Table(Project):
+    when Ok(Value):
+      begin
+        case Value of
+          when TomlValue.Table(Fields):
             begin
-              case Std.Options.Unwrap(Std.Dictionaries.Get(Project, 'name')) of
-                TomlValue.String(Name):
-                begin
-                  AssertEquals('demo', Name);
-                end;
-                else
-                begin
-                  Fail('Expected project name string');
-                end;
-              end;
+              case Std.Options.Unwrap(Std.Dictionaries.Get(Fields, 'project')) of
+                when TomlValue.Table(Project):
+                  begin
+                    case Std.Options.Unwrap(Std.Dictionaries.Get(Project, 'name')) of
+                      when TomlValue.String(Name):
+                        begin
+                          AssertEquals('demo', Name);
+                        end;
+                      else
+                        begin
+                          Fail('Expected project name string');
+                        end;
+                    end case;
 
-              case Std.Options.Unwrap(Std.Dictionaries.Get(Project, 'released')) of
-                TomlValue.Datetime(Date):
-                begin
-                  AssertEquals('2026-07-14', Date);
-                end;
+                    case Std.Options.Unwrap(Std.Dictionaries.Get(Project, 'released')) of
+                      when TomlValue.Datetime(Date):
+                        begin
+                          AssertEquals('2026-07-14', Date);
+                        end;
+                      else
+                        begin
+                          Fail('Expected project released datetime');
+                        end;
+                    end case;
+                  end;
                 else
-                begin
-                  Fail('Expected project released datetime');
-                end;
-              end;
-            end;
-            else
-            begin
-              Fail('Expected project table');
-            end;
-          end;
+                  begin
+                    Fail('Expected project table');
+                  end;
+              end case;
 
-          case Std.Options.Unwrap(Std.Dictionaries.Get(Fields, 'targets')) of
-            TomlValue.ArrayValue(Targets):
-            begin
-              AssertEquals(2, Std.Arrays.Length(Targets));
+              case Std.Options.Unwrap(Std.Dictionaries.Get(Fields, 'targets')) of
+                when TomlValue.ArrayValue(Targets):
+                  begin
+                    AssertEquals(2, Std.Arrays.Length(Targets));
+                  end;
+                else
+                  begin
+                    Fail('Expected targets array');
+                  end;
+              end case;
             end;
-            else
+          else
             begin
-              Fail('Expected targets array');
+              Fail('Expected TOML table');
             end;
-          end;
-        end;
-        else
-        begin
-          Fail('Expected TOML table');
-        end;
+        end case;
       end;
-    end;
-    Error(Message):
-    begin
-      Fail(Message);
-    end;
-  end;
+    when Error(Message):
+      begin
+        Fail(Message);
+      end;
+  end case;
 end.

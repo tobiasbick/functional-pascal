@@ -33,21 +33,21 @@ begin
   end if;
 
   case Std.Net.ReceiveBytes(Connection, Count) of
-    Ok(Bytes):
-    begin
-      if Std.Arrays.Length(Bytes) > Available then
-        begin
-          return Error('HTTP response exceeds MaxResponseBytes');
-        end;
-      end if;
+    when Ok(Bytes):
+      begin
+        if Std.Arrays.Length(Bytes) > Available then
+          begin
+            return Error('HTTP response exceeds MaxResponseBytes');
+          end;
+        end if;
 
-      return Ok(Bytes);
-    end;
-    Error(Message):
-    begin
-      return Error(Message);
-    end;
-  end;
+        return Ok(Bytes);
+      end;
+    when Error(Message):
+      begin
+        return Error(Message);
+      end;
+  end case;
 end function;
 
 // Writes every byte or reports when the connection stops making progress.
@@ -68,21 +68,21 @@ begin
       end if;
       var Remaining: array of integer := Std.Arrays.Slice(Bytes, Offset, Count);
       case Std.Net.SendBytes(Connection, Remaining) of
-        Ok(Count):
-        begin
-          if Count <= 0 then
-            begin
-              return Error('Network connection stopped while writing HTTP bytes');
-            end;
-          end if;
+        when Ok(Count):
+          begin
+            if Count <= 0 then
+              begin
+                return Error('Network connection stopped while writing HTTP bytes');
+              end;
+            end if;
 
-          Offset := Offset + Count;
-        end;
-        Error(Message):
-        begin
-          return Error(Message);
-        end;
-      end;
+            Offset := Offset + Count;
+          end;
+        when Error(Message):
+          begin
+            return Error(Message);
+          end;
+      end case;
     end;
   end while;
 

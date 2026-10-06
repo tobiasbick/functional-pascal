@@ -44,21 +44,21 @@ end function;
 function ParsePort(Text: string): result of integer, string;
 begin
   case Std.Net.Decimal.Parse(Text, 65535) of
-    Ok(Port):
-    begin
-      if (Port >= 1) and (Port <= 65535) then
-        begin
-          return Ok(Port);
-        end;
-      end if;
+    when Ok(Port):
+      begin
+        if (Port >= 1) and (Port <= 65535) then
+          begin
+            return Ok(Port);
+          end;
+        end if;
 
-      return Error('URI port must be in 1..65535');
-    end;
-    Error(Message):
-    begin
-      return Error('Invalid URI port: ' + Message);
-    end;
-  end;
+        return Error('URI port must be in 1..65535');
+      end;
+    when Error(Message):
+      begin
+        return Error('Invalid URI port: ' + Message);
+      end;
+  end case;
 end function;
 
 // Parses one authority and constructs the final URI value.

@@ -155,7 +155,7 @@ at most one tick is pending per application. Input, application messages, and
 paint continue while a tick is pending. A negative delay is a runtime error.
 
 ```pascal
-TuiMsg.Tick(Elapsed):
+when TuiMsg.Tick(Elapsed):
 begin
   Next.Animation := Advance(State.Animation, Elapsed);
   if Next.Animation.Running then

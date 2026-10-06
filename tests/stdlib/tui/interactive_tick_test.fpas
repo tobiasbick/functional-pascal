@@ -16,39 +16,39 @@ function Update(State: TickModel; Msg: TuiMsg; Cmd: TuiCmdOutput): TickModel;
 begin
   mutable var Next: TickModel := State;
   case Msg of
-    TuiMsg.Started:
-    begin
-      // A far request that the background message below replaces.
-      Cmd.RequestTick(600000);
-      Next.Started := MonotonicMillis();
-      var Inbox: channel of integer := State.Inbox;
-      Cmd.StartBackground(1, function(Token: CancellationToken): result of boolean, string begin
-        return SendWithCancellation(Inbox, 1, Token);
-      end);
-    end;
-    TuiMsg.Tick(Elapsed):
-    begin
-      Next.Ticks := State.Ticks + 1;
-      if (State.ShortestTick < 0) or (Elapsed < State.ShortestTick) then
-        begin
-          Next.ShortestTick := Elapsed;
-        end;
-      end if;
+    when TuiMsg.Started:
+      begin
+        // A far request that the background message below replaces.
+        Cmd.RequestTick(600000);
+        Next.Started := MonotonicMillis();
+        var Inbox: channel of integer := State.Inbox;
+        Cmd.StartBackground(1, function(Token: CancellationToken): result of boolean, string begin
+          return SendWithCancellation(Inbox, 1, Token);
+        end);
+      end;
+    when TuiMsg.Tick(Elapsed):
+      begin
+        Next.Ticks := State.Ticks + 1;
+        if (State.ShortestTick < 0) or (Elapsed < State.ShortestTick) then
+          begin
+            Next.ShortestTick := Elapsed;
+          end;
+        end if;
 
-      if Next.Ticks < 3 then
-        begin
-          Cmd.RequestTick(20);
-        end;
-      else
-        begin
-          Cmd.Set(TuiCmd.Quit);
-        end;
-      end if;
-    end;
+        if Next.Ticks < 3 then
+          begin
+            Cmd.RequestTick(20);
+          end;
+        else
+          begin
+            Cmd.Set(TuiCmd.Quit);
+          end;
+        end if;
+      end;
     else
-    begin
-    end;
-  end;
+      begin
+      end;
+  end case;
 
   return Next;
 end function;

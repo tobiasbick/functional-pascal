@@ -30,7 +30,8 @@ Visual checklist:
 - Every **unit** ends with `end unit;` after its declarations
 - Every **`if` / `elsif` / `else`** and **`for` / `while`** body is a statement list,
   indented one level and closed by `end if;`, `end for;`, or `end while;`
-- **`case` arms** still get an explicit `begin` … `end` wrapper
+- **`case` arms** start with `when`, hold statement lists indented one level
+  under the arm header, and share `end case;` with the optional `else` arm
 - **`repeat` … `until`**: no extra `begin` / `end` around the body
 - Inside `begin` … `end`, one blank line separates completed `end;` blocks from the next
   non-variable statement
@@ -83,23 +84,23 @@ begin
   end if;
 
   case X of
-    1:
-    begin
-      WriteLn('one');
-    end;
-    2, 3:
-    begin
-      WriteLn('two or three');
-    end;
-    10..20:
-    begin
-      WriteLn('ten to twenty');
-    end;
+    when 1:
+      begin
+        WriteLn('one');
+      end;
+    when 2, 3:
+      begin
+        WriteLn('two or three');
+      end;
+    when 10..20:
+      begin
+        WriteLn('ten to twenty');
+      end;
     else
-    begin
-      WriteLn('other');
-    end;
-  end;
+      begin
+        WriteLn('other');
+      end;
+  end case;
 
   for I: integer := 1 to 3 do
     begin
@@ -256,13 +257,15 @@ end unit;
 
 - **2 spaces** per block level. No tabs.
 - `begin` / `end` bodies indent one level.
-- `case` arms: label on its own line; `begin` / `end` body indented one level under the label.
+- `case` arms: `when Labels [if Guard]:` on its own line; body statements
+  indented one level under the header. `else` aligns with `when`; `end case;`
+  aligns with `case`.
 - `record` / `enum` type bodies indent one level.
 - Continuation lines for long `uses` lists: wrap with 2-space indent from the line start (see [Line width](#line-width-v2)).
 
 ## Blocks (`begin` / `end`)
 
-An `if`, `for`, or `while` contains scoped statement lists. The formatter
+An `if`, `case`, `for`, or `while` contains scoped statement lists. The formatter
 indents each body one level without adding `begin` / `end`. Explicit compound
 statements remain as nested scopes. `elsif` continues the same conditional;
 an `if` inside an `else` list keeps its separate ending. Empty control bodies
@@ -274,8 +277,9 @@ are rejected by the parser and must be written as `null;`.
 | `for` … `do` | indented statement list and `end for;` |
 | `while` … `do` | indented statement list and `end while;` |
 | explicit compound statement | `begin` … `end;`, preserving its nested scope |
-| `case` arm body | `begin` … `end` (label, then block on following lines) |
-| `case` `else` branch | `begin` … `end` |
+| `case` arm body | `when` header, then an indented statement list |
+| `case` `else` branch | `else`, then an indented statement list |
+| `case` statement | arm lists followed by `end case;` |
 | named `function` / `procedure` body | `begin` … `end function;` / `end procedure;` |
 | program body | `begin` … `end.` |
 | `repeat` … `until` | statement list directly under `repeat` |
@@ -298,14 +302,14 @@ The formatter **inserts and removes** blank lines to match these rules. User-pla
 | last statement before `end` / `end.` | none |
 
 This statement-spacing rule applies only between sibling statements. It never inserts a blank line
-before structural continuations or closers such as `elsif`, `else`, `until`, `end`, or `end.`, and it does not
+before structural continuations or closers such as `elsif`, `when`, `else`, `until`, `end`, or `end.`, and it does not
 separate `case` arms. Leading comments stay attached to the following statement after the blank line.
 
 ---
 
 ## Keywords and builtins
 
-Emit lowercase keywords: `program`, `unit`, `uses`, `begin`, `end`, `function`, `procedure`, `var`, `mutable`, `const`, `type`, `if`, `then`, `elsif`, `else`, `null`, `case`, `of`, `for`, `to`, `downto`, `in`, `do`, `while`, `repeat`, `until`, `return`, `panic`, `break`, `continue`, `and`, `or`, `not`, `xor`, `div`, `mod`, `shl`, `shr`, `public`, `record`, `enum`, `array`, `channel`, `dict`, `result`, `option`, `ok`, `error`, `some`, `none`, `try`, `go`, `with`, `static`, `property`, `event`, `read`, `write`, `comparable`, `numeric`, `printable`, `self`, `nil`, `true`, `false`.
+Emit lowercase keywords: `program`, `unit`, `uses`, `begin`, `end`, `function`, `procedure`, `var`, `mutable`, `const`, `type`, `if`, `then`, `elsif`, `else`, `null`, `case`, `when`, `of`, `for`, `to`, `downto`, `in`, `do`, `while`, `repeat`, `until`, `return`, `panic`, `break`, `continue`, `and`, `or`, `not`, `xor`, `div`, `mod`, `shl`, `shr`, `public`, `record`, `enum`, `array`, `channel`, `dict`, `result`, `option`, `ok`, `error`, `some`, `none`, `try`, `go`, `with`, `static`, `property`, `event`, `read`, `write`, `comparable`, `numeric`, `printable`, `self`, `nil`, `true`, `false`.
 
 Boolean and enum variant constructors in expressions: `Ok`, `Error`, `Some`, `None` (Pascal-style mixed case for std-like variants).
 
@@ -332,7 +336,7 @@ Semicolons are **terminators**:
 - Named declarations have one matching ending: `end function;`, `end procedure;`,
   `end record;`, `end enum;`, or `end unit;`. The ending contains the declaration
   terminator; no additional `;` follows it.
-- Control statements end with `end if;`, `end for;`, or `end while;`. Each body
+- Control statements end with `end if;`, `end case;`, `end for;`, or `end while;`. Each body
   statement has its own `;`, including the last before the named ending.
 - Each conditional branch is terminated before `elsif` or `else`. A scoped
   `begin` ... `end;` closes only that compound statement.
@@ -343,7 +347,9 @@ Semicolons are **terminators**:
   `)` or by the enclosing statement's terminator.
 - Formal parameter lists keep `;` between parameters and have no trailing
   separator before `)`.
-- `case` arm labels: `;` after each arm’s closing `end` (including the last arm before `else`); `else` branch follows [`language/control-flow/case-of-intro.md`](../language/control-flow/case-of-intro.md).
+- `case` arms: every body statement ends with `;`, including the last one
+  before `when`, `else`, or `end case`. Arm headers have no terminating `;`.
+  The `else` arm follows [`language/control-flow/case-of-intro.md`](../language/control-flow/case-of-intro.md).
 - Fields inside a `record` type: `;` after **every** field, including the last field before `end record`, a blank line, or methods (matches existing FPAS sources).
 - Preserve `public` on exported unit declarations and individual record
   members. Private declarations and members have no modifier. A routine

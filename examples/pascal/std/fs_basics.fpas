@@ -12,39 +12,39 @@ begin
   if not Exists(Scratch) then
     begin
       case CreateDir(Scratch) of
-        Ok(_):
-        begin
-        end;
-        Error(M):
-        begin
-          WriteLn('create scratch error: ', M);
-          return;
-        end;
-      end;
+        when Ok(_):
+          begin
+          end;
+        when Error(M):
+          begin
+            WriteLn('create scratch error: ', M);
+            return;
+          end;
+      end case;
     end;
   end if;
 
   case Std.Fs.WriteText(DemoPath, 'hello from Std.Fs') of
-    Ok(_):
-    begin
-      WriteLn('write: ok');
-    end;
-    Error(M):
-    begin
-      WriteLn('write error: ', M);
-    end;
-  end;
+    when Ok(_):
+      begin
+        WriteLn('write: ok');
+      end;
+    when Error(M):
+      begin
+        WriteLn('write error: ', M);
+      end;
+  end case;
 
   case Std.Fs.ReadText(DemoPath) of
-    Ok(Text):
-    begin
-      WriteLn('read: ', Text);
-    end;
-    Error(M):
-    begin
-      WriteLn('read error: ', M);
-    end;
-  end;
+    when Ok(Text):
+      begin
+        WriteLn('read: ', Text);
+      end;
+    when Error(M):
+      begin
+        WriteLn('read error: ', M);
+      end;
+  end case;
 
   WriteLn('exists: ', Exists(DemoPath));
   WriteLn('isFile: ', IsFile(DemoPath));

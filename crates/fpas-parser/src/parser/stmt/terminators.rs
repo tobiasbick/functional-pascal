@@ -25,7 +25,11 @@ impl Parser {
         if self.errors.len() > errors_before
             && matches!(
                 statement,
-                Stmt::If { .. } | Stmt::For { .. } | Stmt::ForIn { .. } | Stmt::While { .. }
+                Stmt::If { .. }
+                    | Stmt::Case { .. }
+                    | Stmt::For { .. }
+                    | Stmt::ForIn { .. }
+                    | Stmt::While { .. }
             )
             && self.is_stmt_list_end()
         {
@@ -76,6 +80,9 @@ impl Parser {
         ) || self.check(&Token::Elsif)
             && self.peek_token() != &Token::ColonAssign
             && self.block_closers.contains(&Token::If)
+            || self.check(&Token::When)
+                && self.peek_token() != &Token::ColonAssign
+                && self.block_closers.contains(&Token::Case)
             || matches!(self.current_token(), Token::Function | Token::Procedure)
                 && matches!(self.peek_token(), Token::Ident(_))
     }

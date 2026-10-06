@@ -12,15 +12,15 @@ begin
   StartTaskInGroup(Group, procedure(Token: CancellationToken) begin
     StartTaskInGroup(Group, procedure(ChildToken: CancellationToken) begin
       case ReceiveWithCancellation(Empty, ChildToken) of
-        Ok(_):
-        begin
-          panic('empty channel unexpectedly delivered');
-        end;
-        Error(_):
-        begin
-          AssertTrue(IsCancellationRequested(ChildToken));
-        end;
-      end;
+        when Ok(_):
+          begin
+            panic('empty channel unexpectedly delivered');
+          end;
+        when Error(_):
+          begin
+            AssertTrue(IsCancellationRequested(ChildToken));
+          end;
+      end case;
 
       Send(Finished, true);
     end);

@@ -41,29 +41,29 @@ function UpdateInput(State: InputKeyboardModel; Msg: TuiMsg; Cmd: TuiCmdOutput):
 begin
   Cmd.Set(TuiCmd.NoCommand);
   case Msg of
-    TuiMsg.TextChanged(Source, Action, Text, Caret):
-    begin
-      return record
-        Text := Text;
-        Caret := Caret;
-        UseHistory := State.UseHistory;
-        KeyHits := State.KeyHits;
+    when TuiMsg.TextChanged(Source, Action, Text, Caret):
+      begin
+        return record
+          Text := Text;
+          Caret := Caret;
+          UseHistory := State.UseHistory;
+          KeyHits := State.KeyHits;
+        end;
       end;
-    end;
-    TuiMsg.Key(Key):
-    begin
-      return record
-        Text := State.Text;
-        Caret := State.Caret;
-        UseHistory := State.UseHistory;
-        KeyHits := State.KeyHits + 1;
+    when TuiMsg.Key(Key):
+      begin
+        return record
+          Text := State.Text;
+          Caret := State.Caret;
+          UseHistory := State.UseHistory;
+          KeyHits := State.KeyHits + 1;
+        end;
       end;
-    end;
     else
-    begin
-      return State;
-    end;
-  end;
+      begin
+        return State;
+      end;
+  end case;
 end function;
 
 function Press(App: TuiApplication; State: InputKeyboardModel; Kind: TuiKeyKind; Ctrl: boolean): InputKeyboardModel;

@@ -20,29 +20,29 @@ begin
   mutable var Focus: integer := 1;
   Model := App.RunIterations(Model, function(State: integer; Msg: TuiMsg; Cmd: TuiCmdOutput): integer begin
     case Msg of
-      TuiMsg.FocusChanged(Previous, Current):
-      begin
-        case Current of
-          Some(Id):
-          begin
-            Focus := Id.Value;
-            return State;
-          end;
-          None:
-          begin
-            return State;
-          end;
+      when TuiMsg.FocusChanged(Previous, Current):
+        begin
+          case Current of
+            when Some(Id):
+              begin
+                Focus := Id.Value;
+                return State;
+              end;
+            when None:
+              begin
+                return State;
+              end;
+          end case;
         end;
-      end;
-      TuiMsg.Action(Source, Action):
-      begin
-        return State + Action.Value;
-      end;
+      when TuiMsg.Action(Source, Action):
+        begin
+          return State + Action.Value;
+        end;
       else
-      begin
-        return State;
-      end;
-    end;
+        begin
+          return State;
+        end;
+    end case;
   end, function(State: integer): TuiElement begin
     return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(Focus)), [
                                                                               TuiElementBuilders.MakePanel('Host', [
@@ -58,29 +58,29 @@ begin
   App.InjectKeyForTest(MakeKey(TuiKeyKind.Tab, ''));
   Model := App.RunIterations(Model, function(State: integer; Msg: TuiMsg; Cmd: TuiCmdOutput): integer begin
     case Msg of
-      TuiMsg.FocusChanged(Previous, Current):
-      begin
-        case Current of
-          Some(Id):
-          begin
-            Focus := Id.Value;
-            return State;
-          end;
-          None:
-          begin
-            return State;
-          end;
+      when TuiMsg.FocusChanged(Previous, Current):
+        begin
+          case Current of
+            when Some(Id):
+              begin
+                Focus := Id.Value;
+                return State;
+              end;
+            when None:
+              begin
+                return State;
+              end;
+          end case;
         end;
-      end;
-      TuiMsg.Action(Source, Action):
-      begin
-        return State + Action.Value;
-      end;
+      when TuiMsg.Action(Source, Action):
+        begin
+          return State + Action.Value;
+        end;
       else
-      begin
-        return State;
-      end;
-    end;
+        begin
+          return State;
+        end;
+    end case;
   end, function(State: integer): TuiElement begin
     return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(Focus)), [
                                                                               TuiElementBuilders.MakePanel('Host', [
@@ -95,29 +95,29 @@ begin
   App.InjectKeyForTest(MakeKey(TuiKeyKind.Enter, ''));
   Model := App.RunIterations(Model, function(State: integer; Msg: TuiMsg; Cmd: TuiCmdOutput): integer begin
     case Msg of
-      TuiMsg.FocusChanged(Previous, Current):
-      begin
-        case Current of
-          Some(Id):
-          begin
-            Focus := Id.Value;
-            return State;
-          end;
-          None:
-          begin
-            return State;
-          end;
+      when TuiMsg.FocusChanged(Previous, Current):
+        begin
+          case Current of
+            when Some(Id):
+              begin
+                Focus := Id.Value;
+                return State;
+              end;
+            when None:
+              begin
+                return State;
+              end;
+          end case;
         end;
-      end;
-      TuiMsg.Action(Source, Action):
-      begin
-        return State + Action.Value;
-      end;
+      when TuiMsg.Action(Source, Action):
+        begin
+          return State + Action.Value;
+        end;
       else
-      begin
-        return State;
-      end;
-    end;
+        begin
+          return State;
+        end;
+    end case;
   end, function(State: integer): TuiElement begin
     return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(Focus)), [
                                                                               TuiElementBuilders.MakePanel('Host', [

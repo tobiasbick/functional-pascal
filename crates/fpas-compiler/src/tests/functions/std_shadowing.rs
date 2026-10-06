@@ -16,9 +16,9 @@ begin
   var Queue: channel of integer := CreateChannel(1);
   Std.Tasks.Send(Queue, 42);
   case Receive(Queue) of
-    Ok(Value): if Value <> 42 then panic('qualified channel Send'); end if;
-    Error(Message): panic(Message);
-  end;
+    when Ok(Value): if Value <> 42 then panic('qualified channel Send'); end if;
+    when Error(Message): panic(Message);
+  end case;
   CloseChannel(Queue);
 end.
 "#,

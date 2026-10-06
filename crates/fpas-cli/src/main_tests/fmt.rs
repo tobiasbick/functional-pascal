@@ -2,6 +2,7 @@ use super::support::run_cli_args_and_capture_output;
 use super::{create_temp_dir, write_text};
 use crate::cli_fmt::EXIT_WOULD_CHANGE;
 use std::fs;
+mod case_blocks;
 mod control_blocks;
 mod declaration_closers;
 mod terminators;

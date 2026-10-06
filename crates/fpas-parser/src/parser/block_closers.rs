@@ -86,6 +86,7 @@ impl Parser {
                 | Token::Enum
                 | Token::Unit
                 | Token::If
+                | Token::Case
                 | Token::For
                 | Token::While
         ) || self

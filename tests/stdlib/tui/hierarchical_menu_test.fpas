@@ -40,15 +40,15 @@ end function;
 procedure AssertActive(Menu: TuiMenuState; Expected: integer);
 begin
   case Menu.Active of
-    Some(Id):
-    begin
-      AssertEquals(Expected, Id.Value);
-    end;
-    None:
-    begin
-      Fail('Expected an active menu node.');
-    end;
-  end;
+    when Some(Id):
+      begin
+        AssertEquals(Expected, Id.Value);
+      end;
+    when None:
+      begin
+        Fail('Expected an active menu node.');
+      end;
+  end case;
 end procedure;
 
 function MenuNodes(): array of TuiMenuNode;
@@ -77,44 +77,44 @@ function UpdateMenu(State: MenuModel; Msg: TuiMsg; Cmd: TuiCmdOutput): MenuModel
 begin
   Cmd.Set(TuiCmd.NoCommand);
   case Msg of
-    TuiMsg.FocusChanged(Previous, Current):
-    begin
-      case Current of
-        Some(Id):
-        begin
-          return record
-            Focus := Id.Value;
-            Menu := State.Menu;
-            Actions := State.Actions;
-          end;
+    when TuiMsg.FocusChanged(Previous, Current):
+      begin
+        case Current of
+          when Some(Id):
+            begin
+              return record
+                Focus := Id.Value;
+                Menu := State.Menu;
+                Actions := State.Actions;
+              end;
+            end;
+          when None:
+            begin
+              return State;
+            end;
+        end case;
+      end;
+    when TuiMsg.MenuChanged(Source, Action, Menu):
+      begin
+        return record
+          Focus := State.Focus;
+          Menu := Menu;
+          Actions := State.Actions;
         end;
-        None:
-        begin
-          return State;
+      end;
+    when TuiMsg.Action(Source, Action):
+      begin
+        return record
+          Focus := State.Focus;
+          Menu := State.Menu;
+          Actions := Std.Arrays.Concat(State.Actions, [Action.Value]);
         end;
       end;
-    end;
-    TuiMsg.MenuChanged(Source, Action, Menu):
-    begin
-      return record
-        Focus := State.Focus;
-        Menu := Menu;
-        Actions := State.Actions;
-      end;
-    end;
-    TuiMsg.Action(Source, Action):
-    begin
-      return record
-        Focus := State.Focus;
-        Menu := State.Menu;
-        Actions := Std.Arrays.Concat(State.Actions, [Action.Value]);
-      end;
-    end;
     else
-    begin
-      return State;
-    end;
-  end;
+      begin
+        return State;
+      end;
+  end case;
 end function;
 
 begin

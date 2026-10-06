@@ -28,40 +28,40 @@ function UpdateTextArea(State: PointerModel; Msg: TuiMsg; Cmd: TuiCmdOutput): Po
 begin
   Cmd.Set(TuiCmd.NoCommand);
   case Msg of
-    TuiMsg.FocusChanged(Previous, Current):
-    begin
-      case Current of
-        Some(Id):
-        begin
-          return record
-            Focus := Id.Value;
-            Text := State.Text;
-            Caret := State.Caret;
-            Offset := State.Offset;
-          end;
-        end;
-        None:
-        begin
-          return State;
+    when TuiMsg.FocusChanged(Previous, Current):
+      begin
+        case Current of
+          when Some(Id):
+            begin
+              return record
+                Focus := Id.Value;
+                Text := State.Text;
+                Caret := State.Caret;
+                Offset := State.Offset;
+              end;
+            end;
+          when None:
+            begin
+              return State;
+            end;
+        end case;
+      end;
+    when TuiMsg.TextAreaChanged(Source, Action, Text, Caret, Offset):
+      begin
+        AssertEquals(1, Source.Value);
+        AssertEquals(9, Action.Value);
+        return record
+          Focus := State.Focus;
+          Text := Text;
+          Caret := Caret;
+          Offset := Offset;
         end;
       end;
-    end;
-    TuiMsg.TextAreaChanged(Source, Action, Text, Caret, Offset):
-    begin
-      AssertEquals(1, Source.Value);
-      AssertEquals(9, Action.Value);
-      return record
-        Focus := State.Focus;
-        Text := Text;
-        Caret := Caret;
-        Offset := Offset;
-      end;
-    end;
     else
-    begin
-      return State;
-    end;
-  end;
+      begin
+        return State;
+      end;
+  end case;
 end function;
 
 function Click(

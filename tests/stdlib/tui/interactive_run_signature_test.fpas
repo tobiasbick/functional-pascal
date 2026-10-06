@@ -11,27 +11,27 @@ function UpdateDemo(State: DemoModel; Msg: TuiMsg; Cmd: TuiCmdOutput): DemoModel
 begin
   Cmd.Set(TuiCmd.NoCommand);
   case Msg of
-    TuiMsg.Tick(Delta):
-    begin
-      return record
-        Ticks := State.Ticks + 1;
+    when TuiMsg.Tick(Delta):
+      begin
+        return record
+          Ticks := State.Ticks + 1;
+        end;
       end;
-    end;
-    TuiMsg.MenuChanged(MenuSource, MenuAction, MenuState):
-    begin
-      Cmd.Set(TuiCmd.Quit);
-      return State;
-    end;
-    TuiMsg.QuitRequested:
-    begin
-      Cmd.Set(TuiCmd.Quit);
-      return State;
-    end;
+    when TuiMsg.MenuChanged(MenuSource, MenuAction, MenuState):
+      begin
+        Cmd.Set(TuiCmd.Quit);
+        return State;
+      end;
+    when TuiMsg.QuitRequested:
+      begin
+        Cmd.Set(TuiCmd.Quit);
+        return State;
+      end;
     else
-    begin
-      return State;
-    end;
-  end;
+      begin
+        return State;
+      end;
+  end case;
 end function;
 
 function ViewDemo(State: DemoModel): TuiElement;

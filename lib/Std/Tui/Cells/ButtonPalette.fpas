@@ -59,39 +59,39 @@ public type
     public function ForRole(Self: TuiButtonPalette; Role: TuiStyleRole): TuiStyle;
     begin
       case Role of
-        TuiStyleRole.ButtonNormal:
-        begin
-          return Self.Normal;
-        end;
-        TuiStyleRole.ButtonDefault:
-        begin
-          return Self.Default;
-        end;
-        TuiStyleRole.ButtonSelected:
-        begin
-          return Self.Selected;
-        end;
-        TuiStyleRole.ButtonDisabled:
-        begin
-          return Self.Disabled;
-        end;
-        TuiStyleRole.ButtonShortcut:
-        begin
-          return Self.Shortcut;
-        end;
-        TuiStyleRole.ButtonDefaultShortcut:
-        begin
-          return Self.DefaultShortcut;
-        end;
-        TuiStyleRole.ButtonSelectedShortcut:
-        begin
-          return Self.SelectedShortcut;
-        end;
+        when TuiStyleRole.ButtonNormal:
+          begin
+            return Self.Normal;
+          end;
+        when TuiStyleRole.ButtonDefault:
+          begin
+            return Self.Default;
+          end;
+        when TuiStyleRole.ButtonSelected:
+          begin
+            return Self.Selected;
+          end;
+        when TuiStyleRole.ButtonDisabled:
+          begin
+            return Self.Disabled;
+          end;
+        when TuiStyleRole.ButtonShortcut:
+          begin
+            return Self.Shortcut;
+          end;
+        when TuiStyleRole.ButtonDefaultShortcut:
+          begin
+            return Self.DefaultShortcut;
+          end;
+        when TuiStyleRole.ButtonSelectedShortcut:
+          begin
+            return Self.SelectedShortcut;
+          end;
         else
-        begin
-          panic('Tui button palette requires a button style role');
-        end;
-      end;
+          begin
+            panic('Tui button palette requires a button style role');
+          end;
+      end case;
     end function;
 
     // Returns a copy with one button role replaced.
@@ -104,39 +104,39 @@ public type
     begin
       mutable var Updated: TuiButtonPalette := Self;
       case Role of
-        TuiStyleRole.ButtonNormal:
-        begin
-          Updated.Normal := Style;
-        end;
-        TuiStyleRole.ButtonDefault:
-        begin
-          Updated.Default := Style;
-        end;
-        TuiStyleRole.ButtonSelected:
-        begin
-          Updated.Selected := Style;
-        end;
-        TuiStyleRole.ButtonDisabled:
-        begin
-          Updated.Disabled := Style;
-        end;
-        TuiStyleRole.ButtonShortcut:
-        begin
-          Updated.Shortcut := Style;
-        end;
-        TuiStyleRole.ButtonDefaultShortcut:
-        begin
-          Updated.DefaultShortcut := Style;
-        end;
-        TuiStyleRole.ButtonSelectedShortcut:
-        begin
-          Updated.SelectedShortcut := Style;
-        end;
+        when TuiStyleRole.ButtonNormal:
+          begin
+            Updated.Normal := Style;
+          end;
+        when TuiStyleRole.ButtonDefault:
+          begin
+            Updated.Default := Style;
+          end;
+        when TuiStyleRole.ButtonSelected:
+          begin
+            Updated.Selected := Style;
+          end;
+        when TuiStyleRole.ButtonDisabled:
+          begin
+            Updated.Disabled := Style;
+          end;
+        when TuiStyleRole.ButtonShortcut:
+          begin
+            Updated.Shortcut := Style;
+          end;
+        when TuiStyleRole.ButtonDefaultShortcut:
+          begin
+            Updated.DefaultShortcut := Style;
+          end;
+        when TuiStyleRole.ButtonSelectedShortcut:
+          begin
+            Updated.SelectedShortcut := Style;
+          end;
         else
-        begin
-          panic('Tui button palette requires a button style role');
-        end;
-      end;
+          begin
+            panic('Tui button palette requires a button style role');
+          end;
+      end case;
 
       return Updated;
     end function;

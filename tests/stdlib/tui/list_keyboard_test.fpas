@@ -34,21 +34,21 @@ function UpdateList(State: ListModel; Msg: TuiMsg; Cmd: TuiCmdOutput): ListModel
 begin
   Cmd.Set(TuiCmd.NoCommand);
   case Msg of
-    TuiMsg.SelectionChanged(Source, Action, Selected):
-    begin
-      AssertEquals(1, Source.Value);
-      AssertEquals(5, Action.Value);
-      return record
-        Focus := State.Focus;
-        Selected := Selected;
-        Changes := Std.Arrays.Concat(State.Changes, [Selected]);
+    when TuiMsg.SelectionChanged(Source, Action, Selected):
+      begin
+        AssertEquals(1, Source.Value);
+        AssertEquals(5, Action.Value);
+        return record
+          Focus := State.Focus;
+          Selected := Selected;
+          Changes := Std.Arrays.Concat(State.Changes, [Selected]);
+        end;
       end;
-    end;
     else
-    begin
-      return State;
-    end;
-  end;
+      begin
+        return State;
+      end;
+  end case;
 end function;
 
 begin

@@ -11,17 +11,17 @@ type
 function Update(State: InteractiveModel; Msg: TuiMsg; Cmd: TuiCmdOutput): InteractiveModel;
 begin
   case Msg of
-    TuiMsg.Started:
-    begin
-      var Inbox: channel of integer := State.Inbox;
-      Cmd.StartBackground(1, function(Token: CancellationToken): result of boolean, string begin
-        return SendWithCancellation(Inbox, 42, Token);
-      end);
-    end;
+    when TuiMsg.Started:
+      begin
+        var Inbox: channel of integer := State.Inbox;
+        Cmd.StartBackground(1, function(Token: CancellationToken): result of boolean, string begin
+          return SendWithCancellation(Inbox, 42, Token);
+        end);
+      end;
     else
-    begin
-    end;
-  end;
+      begin
+      end;
+  end case;
 
   return State;
 end function;

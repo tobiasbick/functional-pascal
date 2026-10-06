@@ -35,18 +35,19 @@ deadline reaches zero.
 ```pascal
 uses Std.Console, Std.Options;
 
+
 EnableRawMode();
-var MaybeEvent: Option of ConsoleEvent := ReadEventTimeout(100);
+var MaybeEvent: option of ConsoleEvent := ReadEventTimeout(100);
 case MaybeEvent of
-  Some(E):
-  begin
-    WriteLn(E.kind)
-  end;
-  None:
-  begin
-    WriteLn('timeout')
-  end
-end
+  when Some(E):
+    begin
+      WriteLn(E.kind);
+    end;
+  when None:
+    begin
+      WriteLn('timeout');
+    end;
+end case;
 ```
 
 ### `function PollEvent(): Option of ConsoleEvent`
@@ -62,18 +63,19 @@ returned by the same call.
 ```pascal
 uses Std.Console, Std.Options;
 
+
 EnableRawMode();
-var MaybeE: Option of ConsoleEvent := PollEvent();
+var MaybeE: option of ConsoleEvent := PollEvent();
 case MaybeE of
-  Some(E):
-  begin
-    WriteLn('got event')
-  end;
-  None:
-  begin
-    WriteLn('nothing pending')
-  end
-end
+  when Some(E):
+    begin
+      WriteLn('got event');
+    end;
+  when None:
+    begin
+      WriteLn('nothing pending');
+    end;
+end case;
 ```
 
 ### `procedure DisableRawMode()`

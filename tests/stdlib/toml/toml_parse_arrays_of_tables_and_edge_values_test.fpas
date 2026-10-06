@@ -6,103 +6,103 @@ begin
   var Parsed: result of TomlValue, string := Parse(((((((((((((('empty = []' + Chr(10)) + 'special = nan') + Chr(10)) + 'point.x = 1') + Chr(10)) + 'point.y = 2') + Chr(10)) + '[[products]]') + Chr(10)) + 'name = ''Hammer''') + Chr(10)) + '[[products]]') + Chr(10)) +
                                                    'name = ''Nail''');
   case Parsed of
-    Ok(Value):
-    begin
-      case Value of
-        TomlValue.Table(Fields):
-        begin
-          case Std.Options.Unwrap(Std.Dictionaries.Get(Fields, 'empty')) of
-            TomlValue.ArrayValue(Items):
+    when Ok(Value):
+      begin
+        case Value of
+          when TomlValue.Table(Fields):
             begin
-              AssertEquals(0, Std.Arrays.Length(Items));
-            end;
-            else
-            begin
-              Fail('Expected empty array');
-            end;
-          end;
-
-          case Std.Options.Unwrap(Std.Dictionaries.Get(Fields, 'special')) of
-            TomlValue.Float(Number):
-            begin
-              AssertTrue(Number <> Number);
-            end;
-            else
-            begin
-              Fail('Expected float nan');
-            end;
-          end;
-
-          case Std.Options.Unwrap(Std.Dictionaries.Get(Fields, 'point')) of
-            TomlValue.Table(Point):
-            begin
-              AssertEquals(2, Std.Dictionaries.Length(Point));
-            end;
-            else
-            begin
-              Fail('Expected point table');
-            end;
-          end;
-
-          case Std.Options.Unwrap(Std.Dictionaries.Get(Fields, 'products')) of
-            TomlValue.ArrayValue(Products):
-            begin
-              AssertEquals(2, Std.Arrays.Length(Products));
-              case Products[0] of
-                TomlValue.Table(Product):
-                begin
-                  case Std.Options.Unwrap(Std.Dictionaries.Get(Product, 'name')) of
-                    TomlValue.String(Name):
-                    begin
-                      AssertEquals('Hammer', Name);
-                    end;
-                    else
-                    begin
-                      Fail('Expected product name string');
-                    end;
+              case Std.Options.Unwrap(Std.Dictionaries.Get(Fields, 'empty')) of
+                when TomlValue.ArrayValue(Items):
+                  begin
+                    AssertEquals(0, Std.Arrays.Length(Items));
                   end;
-                end;
                 else
-                begin
-                  Fail('Expected first product table');
-                end;
-              end;
-
-              case Products[1] of
-                TomlValue.Table(Product):
-                begin
-                  case Std.Options.Unwrap(Std.Dictionaries.Get(Product, 'name')) of
-                    TomlValue.String(Name):
-                    begin
-                      AssertEquals('Nail', Name);
-                    end;
-                    else
-                    begin
-                      Fail('Expected product name string');
-                    end;
+                  begin
+                    Fail('Expected empty array');
                   end;
-                end;
+              end case;
+
+              case Std.Options.Unwrap(Std.Dictionaries.Get(Fields, 'special')) of
+                when TomlValue.Float(Number):
+                  begin
+                    AssertTrue(Number <> Number);
+                  end;
                 else
-                begin
-                  Fail('Expected second product table');
-                end;
-              end;
+                  begin
+                    Fail('Expected float nan');
+                  end;
+              end case;
+
+              case Std.Options.Unwrap(Std.Dictionaries.Get(Fields, 'point')) of
+                when TomlValue.Table(Point):
+                  begin
+                    AssertEquals(2, Std.Dictionaries.Length(Point));
+                  end;
+                else
+                  begin
+                    Fail('Expected point table');
+                  end;
+              end case;
+
+              case Std.Options.Unwrap(Std.Dictionaries.Get(Fields, 'products')) of
+                when TomlValue.ArrayValue(Products):
+                  begin
+                    AssertEquals(2, Std.Arrays.Length(Products));
+                    case Products[0] of
+                      when TomlValue.Table(Product):
+                        begin
+                          case Std.Options.Unwrap(Std.Dictionaries.Get(Product, 'name')) of
+                            when TomlValue.String(Name):
+                              begin
+                                AssertEquals('Hammer', Name);
+                              end;
+                            else
+                              begin
+                                Fail('Expected product name string');
+                              end;
+                          end case;
+                        end;
+                      else
+                        begin
+                          Fail('Expected first product table');
+                        end;
+                    end case;
+
+                    case Products[1] of
+                      when TomlValue.Table(Product):
+                        begin
+                          case Std.Options.Unwrap(Std.Dictionaries.Get(Product, 'name')) of
+                            when TomlValue.String(Name):
+                              begin
+                                AssertEquals('Nail', Name);
+                              end;
+                            else
+                              begin
+                                Fail('Expected product name string');
+                              end;
+                          end case;
+                        end;
+                      else
+                        begin
+                          Fail('Expected second product table');
+                        end;
+                    end case;
+                  end;
+                else
+                  begin
+                    Fail('Expected products array');
+                  end;
+              end case;
             end;
-            else
+          else
             begin
-              Fail('Expected products array');
+              Fail('Expected TOML table');
             end;
-          end;
-        end;
-        else
-        begin
-          Fail('Expected TOML table');
-        end;
+        end case;
       end;
-    end;
-    Error(Message):
-    begin
-      Fail(Message);
-    end;
-  end;
+    when Error(Message):
+      begin
+        Fail(Message);
+      end;
+  end case;
 end.

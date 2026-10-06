@@ -73,37 +73,37 @@ begin
         while not IsCancellationRequested(Token) do
           begin
             case AcceptWithCancellation(ListenerValue, Token) of
-              Ok(Client):
-              begin
-                var Outcome: result of boolean, string := Echo(Client, Token);
-                // Close even on read/write failure. One failed client does not stop admission.
-                var Closed: boolean := try Close(Client);
-                case Outcome of
-                  Error(Message):
-                  begin
-                    if not IsCancellationRequested(Token) then
+              when Ok(Client):
+                begin
+                  var Outcome: result of boolean, string := Echo(Client, Token);
+                  // Close even on read/write failure. One failed client does not stop admission.
+                  var Closed: boolean := try Close(Client);
+                  case Outcome of
+                    when Error(Message):
                       begin
-                        WriteLn(Message);
+                        if not IsCancellationRequested(Token) then
+                          begin
+                            WriteLn(Message);
+                          end;
+                        end if;
                       end;
-                    end if;
-                  end;
-                  Ok(_):
-                  begin
-                  end;
+                    when Ok(_):
+                      begin
+                      end;
+                  end case;
                 end;
-              end;
-              Error(Message):
-              begin
-                if IsCancellationRequested(Token) then
-                  begin
-                    return Ok(true);
-                  end;
-                end if;
+              when Error(Message):
+                begin
+                  if IsCancellationRequested(Token) then
+                    begin
+                      return Ok(true);
+                    end;
+                  end if;
 
-                RequestStop(Life);
-                return Error(Message);
-              end;
-            end;
+                  RequestStop(Life);
+                  return Error(Message);
+                end;
+            end case;
           end;
         end while;
 
@@ -123,17 +123,17 @@ begin
   RequestStop(Life);
   mutable var Failures: array of TaskFailure := [];
   case CloseTaskGroupWithTimeout(Workers, RemainingMillis(Life)) of
-    Ok(Reports):
-    begin
-      Failures := Reports;
-    end;
-    Error(Message):
-    begin
-      WriteLn(Message);
-      // The independent host watchdog remains armed even if diagnostic output blocks.
-      panic('Server shutdown incomplete; process escalation remains armed');
-    end;
-  end;
+    when Ok(Reports):
+      begin
+        Failures := Reports;
+      end;
+    when Error(Message):
+      begin
+        WriteLn(Message);
+        // The independent host watchdog remains armed even if diagnostic output blocks.
+        panic('Server shutdown incomplete; process escalation remains armed');
+      end;
+  end case;
 
   for Failure: TaskFailure in Failures do
     begin

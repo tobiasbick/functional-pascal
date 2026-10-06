@@ -35,34 +35,34 @@ function UpdateStatus(State: StatusModel; Msg: TuiMsg; Cmd: TuiCmdOutput): Statu
 begin
   Cmd.Set(TuiCmd.NoCommand);
   case Msg of
-    TuiMsg.FocusChanged(Previous, Current):
-    begin
-      case Current of
-        Some(Id):
-        begin
-          return record
-            Focus := Id.Value;
-            Actions := State.Actions;
-          end;
-        end;
-        None:
-        begin
-          return State;
+    when TuiMsg.FocusChanged(Previous, Current):
+      begin
+        case Current of
+          when Some(Id):
+            begin
+              return record
+                Focus := Id.Value;
+                Actions := State.Actions;
+              end;
+            end;
+          when None:
+            begin
+              return State;
+            end;
+        end case;
+      end;
+    when TuiMsg.Action(Source, Action):
+      begin
+        return record
+          Focus := State.Focus;
+          Actions := Std.Arrays.Concat(State.Actions, [Action.Value]);
         end;
       end;
-    end;
-    TuiMsg.Action(Source, Action):
-    begin
-      return record
-        Focus := State.Focus;
-        Actions := Std.Arrays.Concat(State.Actions, [Action.Value]);
-      end;
-    end;
     else
-    begin
-      return State;
-    end;
-  end;
+      begin
+        return State;
+      end;
+  end case;
 end function;
 
 begin

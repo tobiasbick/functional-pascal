@@ -29,8 +29,8 @@ begin
   var Initial: Point := record X := 1; Y := 7; end;
   var Outcome: State := Moved(Initial);
   case Outcome.Player of
-    Position.At(Value): WriteLn(Value.X, ',', Value.Y);
-  end;
+    when Position.At(Value): WriteLn(Value.X, ',', Value.Y);
+  end case;
 end.",
     );
     for command in ["check", "run"] {
@@ -109,11 +109,11 @@ public type
 public function Encode(Value: Message): string;
 begin
   case Value of
-    Message.ErrorMessage(Code):
+    when Message.ErrorMessage(Code):
     begin
       return Stringify(JsonValue.String(Code));
     end;
-  end;
+  end case;
 end function;\nend unit;",
     );
     write_text(

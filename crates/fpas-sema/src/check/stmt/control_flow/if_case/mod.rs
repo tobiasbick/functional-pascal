@@ -53,6 +53,7 @@ impl Checker {
         }
     }
 
+    /// Checks existing labels and guards, with a separate scope for every case body.
     pub(in super::super) fn check_case_stmt(
         &mut self,
         expr: &Expr,
@@ -130,9 +131,11 @@ impl Checker {
         }
 
         if let Some(else_body) = else_body {
+            self.scopes.push_scope();
             for stmt in else_body {
                 self.check_stmt(stmt);
             }
+            self.scopes.pop_scope();
         }
 
         if else_body.is_none() {

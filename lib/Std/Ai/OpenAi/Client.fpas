@@ -48,48 +48,48 @@ begin
                                             Header.Create('Accept', 'application/json')
                                           ];
   case ClientValue.ApiKey of
-    Some(Value):
-    begin
-      if Value <> '' then
-        begin
-          Std.Arrays.Push(Headers, Header.Create('Authorization', 'Bearer ' + Value));
-        end;
-      end if;
-    end;
-    None:
-    begin
-    end;
-  end;
+    when Some(Value):
+      begin
+        if Value <> '' then
+          begin
+            Std.Arrays.Push(Headers, Header.Create('Authorization', 'Bearer ' + Value));
+          end;
+        end if;
+      end;
+    when None:
+      begin
+      end;
+  end case;
   mutable var RequestValue: Request := Request.Create('POST', CompletionUrl(ClientValue.BaseUrl));
   RequestValue.Headers := Headers;
   RequestValue.Body := Std.Net.Utf8.Encode(Std.Ai.OpenAi.Json.EncodeRequest(ClientValue.Model, Messages, Options));
   RequestValue.TimeoutMillis := ClientValue.TimeoutMillis;
   RequestValue.MaxResponseBytes := ClientValue.MaxResponseBytes;
   case Std.Http.Send(RequestValue) of
-    Ok(ResponseValue):
-    begin
-      case Std.Http.BodyText(ResponseValue) of
-        Ok(Text):
-        begin
-          if (ResponseValue.StatusCode < 200) or (ResponseValue.StatusCode >= 300) then
+    when Ok(ResponseValue):
+      begin
+        case Std.Http.BodyText(ResponseValue) of
+          when Ok(Text):
             begin
-              return Error((('OpenAI-compatible endpoint returned HTTP ' + Std.Conv.IntToStr(ResponseValue.StatusCode)) + ': ') +
-                           Text);
-            end;
-          end if;
+              if (ResponseValue.StatusCode < 200) or (ResponseValue.StatusCode >= 300) then
+                begin
+                  return Error((('OpenAI-compatible endpoint returned HTTP ' + Std.Conv.IntToStr(ResponseValue.StatusCode)) + ': ') +
+                               Text);
+                end;
+              end if;
 
-          return Std.Ai.OpenAi.Json.DecodeResponse(Text);
-        end;
-        Error(Message):
-        begin
-          return Error('OpenAI-compatible response body is not UTF-8: ' + Message);
-        end;
+              return Std.Ai.OpenAi.Json.DecodeResponse(Text);
+            end;
+          when Error(Message):
+            begin
+              return Error('OpenAI-compatible response body is not UTF-8: ' + Message);
+            end;
+        end case;
       end;
-    end;
-    Error(Message):
-    begin
-      return Error(Message);
-    end;
-  end;
+    when Error(Message):
+      begin
+        return Error(Message);
+      end;
+  end case;
 end function;
 end unit;

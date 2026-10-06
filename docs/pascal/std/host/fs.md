@@ -99,9 +99,11 @@ file.
 
 ```pascal
 case WriteTextAtomic('note.note', EncodedNote) of
-  Ok(Written): WriteLn('saved');
-  Error(Message): WriteLn(Message);
-end;
+  when Ok(Written):
+    WriteLn('saved');
+  when Error(Message):
+    WriteLn(Message);
+end case;
 ```
 
 Publication uses the host's same-directory atomic replacement primitive on
@@ -160,9 +162,11 @@ Creates the directory at `Path` together with every missing parent directory and
 
 ```pascal
 case CreateDirAll('build/output/logs') of
-  Ok(Created): WriteLn('directory ready');
-  Error(Message): WriteLn('cannot create directory: ' + Message);
-end;
+  when Ok(Created):
+    WriteLn('directory ready');
+  when Error(Message):
+    WriteLn('cannot create directory: ' + Message);
+end case;
 ```
 
 ---
@@ -173,15 +177,15 @@ Expands `Pattern` against the host filesystem and returns every matching **file*
 
 ```pascal
 case Glob('src/**/*.fpas') of
-  Ok(Paths):
-  begin
-    WriteLn(Std.Arrays.Length(Paths));
-  end;
-  Error(Message):
-  begin
-    WriteLn(Message);
-  end;
-end;
+  when Ok(Paths):
+    begin
+      WriteLn(Std.Arrays.Length(Paths));
+    end;
+  when Error(Message):
+    begin
+      WriteLn(Message);
+    end;
+end case;
 ```
 
 Behavior:

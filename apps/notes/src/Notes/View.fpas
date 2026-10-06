@@ -205,27 +205,27 @@ end function;
 function Overlay(State: NotesModel): TuiElement;
 begin
   case State.Overlay of
-    NotesOverlay.Commands:
-    begin
-      return CommandOverlay(State);
-    end;
-    NotesOverlay.Help:
-    begin
-      return HelpOverlay();
-    end;
-    NotesOverlay.QuitConfirmation:
-    begin
-      return QuitOverlay();
-    end;
-    NotesOverlay.SaveFailure:
-    begin
-      return ErrorOverlay(State);
-    end;
-    NotesOverlay.Closed:
-    begin
-      return TuiElementBuilders.MakeEmpty();
-    end;
-  end;
+    when NotesOverlay.Commands:
+      begin
+        return CommandOverlay(State);
+      end;
+    when NotesOverlay.Help:
+      begin
+        return HelpOverlay();
+      end;
+    when NotesOverlay.QuitConfirmation:
+      begin
+        return QuitOverlay();
+      end;
+    when NotesOverlay.SaveFailure:
+      begin
+        return ErrorOverlay(State);
+      end;
+    when NotesOverlay.Closed:
+      begin
+        return TuiElementBuilders.MakeEmpty();
+      end;
+  end case;
 end function;
 
 function MainFocus(State: NotesModel): integer;
@@ -285,47 +285,47 @@ end function;
 function OverlayFocus(State: NotesModel): integer;
 begin
   case State.Overlay of
-    NotesOverlay.Commands:
-    begin
-      if ((State.Focus = NewNoteControl) or (State.Focus = HelpControl)) or
-         (State.Focus = CommandsCloseControl) then
-        begin
-          return State.Focus;
-        end;
-      end if;
+    when NotesOverlay.Commands:
+      begin
+        if ((State.Focus = NewNoteControl) or (State.Focus = HelpControl)) or
+           (State.Focus = CommandsCloseControl) then
+          begin
+            return State.Focus;
+          end;
+        end if;
 
-      if ((State.Selected >= 0) and (State.Selected < Std.Arrays.Length(State.Notes))) and
-         ((State.Focus >= SaveNoteControl) and (State.Focus <= ArchiveNoteControl)) then
-        begin
-          return State.Focus;
-        end;
-      end if;
+        if ((State.Selected >= 0) and (State.Selected < Std.Arrays.Length(State.Notes))) and
+           ((State.Focus >= SaveNoteControl) and (State.Focus <= ArchiveNoteControl)) then
+          begin
+            return State.Focus;
+          end;
+        end if;
 
-      return NewNoteControl;
-    end;
-    NotesOverlay.Help:
-    begin
-      return HelpCloseControl;
-    end;
-    NotesOverlay.QuitConfirmation:
-    begin
-      if (State.Focus >= SaveAndQuitControl) and (State.Focus <= CancelQuitControl) then
-        begin
-          return State.Focus;
-        end;
-      end if;
+        return NewNoteControl;
+      end;
+    when NotesOverlay.Help:
+      begin
+        return HelpCloseControl;
+      end;
+    when NotesOverlay.QuitConfirmation:
+      begin
+        if (State.Focus >= SaveAndQuitControl) and (State.Focus <= CancelQuitControl) then
+          begin
+            return State.Focus;
+          end;
+        end if;
 
-      return SaveAndQuitControl;
-    end;
-    NotesOverlay.SaveFailure:
-    begin
-      return ErrorCloseControl;
-    end;
-    NotesOverlay.Closed:
-    begin
-      return MainFocus(State);
-    end;
-  end;
+        return SaveAndQuitControl;
+      end;
+    when NotesOverlay.SaveFailure:
+      begin
+        return ErrorCloseControl;
+      end;
+    when NotesOverlay.Closed:
+      begin
+        return MainFocus(State);
+      end;
+  end case;
 end function;
 
 // Builds the responsive Notes element tree for one model state.

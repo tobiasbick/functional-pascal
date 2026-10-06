@@ -26,9 +26,12 @@ fn missing_final_terminators_are_diagnosed_at_each_boundary() {
         ),
         ("program P; begin repeat A() until C; end.", "until"),
         ("program P; begin repeat A(); until C end.", "end"),
-        ("program P; begin case V of 1: A() end; end.", "end"),
         (
-            "program P; begin case V of 1: A(); else B() end; end.",
+            "program P; begin case V of when 1: A() end case; end.",
+            "end",
+        ),
+        (
+            "program P; begin case V of when 1: A(); else B() end case; end.",
             "end",
         ),
         (
@@ -61,7 +64,7 @@ fn missing_final_terminators_are_diagnosed_at_each_boundary() {
 }
 
 #[test]
-fn single_statement_control_bodies_share_their_last_terminator() {
+fn control_bodies_and_their_endings_have_separate_terminators() {
     for source in [
         "program P; begin if C then A(); else B(); end if; end.",
         "program P; begin if C then A(); end if; end.",
@@ -70,7 +73,7 @@ fn single_statement_control_bodies_share_their_last_terminator() {
         "program P; begin for I: integer in Values do A(); end for; end.",
         "program P; begin if C then while D do A(); end while; else B(); end if; end.",
         "program P; begin if C then begin if D then A(); end if; end; else B(); end if; end.",
-        "program P; begin case V of 1: A(); 2: B(); else C(); end; end.",
+        "program P; begin case V of when 1: A(); when 2: B(); else C(); end case; end.",
         "program P; begin repeat A(); until C; end.",
     ] {
         let (_, diagnostics) = parse_with_errors(source);

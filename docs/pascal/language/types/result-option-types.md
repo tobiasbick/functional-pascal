@@ -17,14 +17,18 @@ Use `case` destructuring to handle both forms:
 
 ```pascal
 case Success of
-  Ok(Value): WriteLn(IntToStr(Value));
-  Error(Message): WriteLn(Message);
-end;
+  when Ok(Value):
+    WriteLn(IntToStr(Value));
+  when Error(Message):
+    WriteLn(Message);
+end case;
 
 case Present of
-  Some(Value): WriteLn(IntToStr(Value));
-  None: WriteLn('empty');
-end;
+  when Some(Value):
+    WriteLn(IntToStr(Value));
+  when None:
+    WriteLn('empty');
+end case;
 ```
 
 Use `try` to propagate `Error(...)` and `None` automatically from functions that return

@@ -31,33 +31,33 @@ end procedure;
 function UpdateFramework(State: SubscriptionModel; Msg: TuiMsg; Cmd: TuiCmdOutput): SubscriptionModel;
 begin
   case Msg of
-    TuiMsg.Started:
-    begin
-      ReplaceWorker(State, Cmd);
-      return State;
-    end;
-    TuiMsg.Tick(Delta):
-    begin
-      if Delta = 0 then
-        begin
-          return State;
-        end;
-      end if;
-      var Next: SubscriptionModel := record
-        Gate := State.Gate;
-        Started := State.Started;
-        Stopped := State.Stopped;
-        Generation := State.Generation + 1;
+    when TuiMsg.Started:
+      begin
+        ReplaceWorker(State, Cmd);
+        return State;
       end;
+    when TuiMsg.Tick(Delta):
+      begin
+        if Delta = 0 then
+          begin
+            return State;
+          end;
+        end if;
+        var Next: SubscriptionModel := record
+          Gate := State.Gate;
+          Started := State.Started;
+          Stopped := State.Stopped;
+          Generation := State.Generation + 1;
+        end;
 
-      ReplaceWorker(Next, Cmd);
-      return Next;
-    end;
+        ReplaceWorker(Next, Cmd);
+        return Next;
+      end;
     else
-    begin
-      return State;
-    end;
-  end;
+      begin
+        return State;
+      end;
+  end case;
 end function;
 
 function UpdateApplication(State: SubscriptionModel; Message: integer; Cmd: TuiCmdOutput): SubscriptionModel;

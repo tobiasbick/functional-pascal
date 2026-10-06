@@ -5,13 +5,13 @@ uses Std.Console, Std.Json;
 begin
   var R: result of JsonValue, string := Parse('[false,null,"x"]');
   case R of
-    Ok(V):
-    begin
-      WriteLn(Stringify(V));
-    end;
-    Error(E):
-    begin
-      WriteLn('error: ' + E);
-    end;
-  end;
+    when Ok(V):
+      begin
+        WriteLn(Stringify(V));
+      end;
+    when Error(E):
+      begin
+        WriteLn('error: ' + E);
+      end;
+  end case;
 end.

@@ -12,19 +12,19 @@ type
 function Eval(E: Expr): integer;
 begin
   case E of
-    Expr.Num(Value):
-    begin
-      return Value;
-    end;
-    Expr.Add(Left, Right):
-    begin
-      return Eval(Left) + Eval(Right);
-    end;
-    Expr.Mul(Left, Right):
-    begin
-      return Eval(Left) * Eval(Right);
-    end;
-  end;
+    when Expr.Num(Value):
+      begin
+        return Value;
+      end;
+    when Expr.Add(Left, Right):
+      begin
+        return Eval(Left) + Eval(Right);
+      end;
+    when Expr.Mul(Left, Right):
+      begin
+        return Eval(Left) * Eval(Right);
+      end;
+  end case;
 end function;
 
 begin

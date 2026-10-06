@@ -148,14 +148,14 @@ end procedure;
 procedure PaintFrame();
 begin
   case ActiveRender of
-    Some(Job):
-    begin
-      StopRender(Job);
-    end;
-    None:
-    begin
-    end;
-  end;
+    when Some(Job):
+      begin
+        StopRender(Job);
+      end;
+    when None:
+      begin
+      end;
+  end case;
 
   RenderW := RenderWidth();
   RenderH := RenderHeight();
@@ -223,67 +223,67 @@ begin
   elsif Key.kind = KeyKind.Character then
     begin
       case Key.ch of
-        '+', '=':
-        begin
-          State.SpanY := Max(State.SpanY * 0.82, 0.000001);
-          RequestRedraw();
-          return true;
-        end;
-        '-':
-        begin
-          State.SpanY := Min(State.SpanY / 0.82, 3.5);
-          RequestRedraw();
-          return true;
-        end;
-        '1':
-        begin
-          State.Palette := PaletteKind.DeepOcean;
-          RequestRedraw();
-          return true;
-        end;
-        '2':
-        begin
-          State.Palette := PaletteKind.Ember;
-          RequestRedraw();
-          return true;
-        end;
-        '3':
-        begin
-          State.Palette := PaletteKind.Aurora;
-          RequestRedraw();
-          return true;
-        end;
-        'a', 'A':
-        begin
-          State.Jr := State.Jr - 0.02;
-          RequestRedraw();
-          return true;
-        end;
-        'd', 'D':
-        begin
-          State.Jr := State.Jr + 0.02;
-          RequestRedraw();
-          return true;
-        end;
-        'w', 'W':
-        begin
-          State.Ji := State.Ji + 0.02;
-          RequestRedraw();
-          return true;
-        end;
-        's', 'S':
-        begin
-          State.Ji := State.Ji - 0.02;
-          RequestRedraw();
-          return true;
-        end;
-        'r', 'R':
-        begin
-          State := ExplorerState.Default();
-          RequestRedraw();
-          return true;
-        end;
-      end;
+        when '+', '=':
+          begin
+            State.SpanY := Max(State.SpanY * 0.82, 0.000001);
+            RequestRedraw();
+            return true;
+          end;
+        when '-':
+          begin
+            State.SpanY := Min(State.SpanY / 0.82, 3.5);
+            RequestRedraw();
+            return true;
+          end;
+        when '1':
+          begin
+            State.Palette := PaletteKind.DeepOcean;
+            RequestRedraw();
+            return true;
+          end;
+        when '2':
+          begin
+            State.Palette := PaletteKind.Ember;
+            RequestRedraw();
+            return true;
+          end;
+        when '3':
+          begin
+            State.Palette := PaletteKind.Aurora;
+            RequestRedraw();
+            return true;
+          end;
+        when 'a', 'A':
+          begin
+            State.Jr := State.Jr - 0.02;
+            RequestRedraw();
+            return true;
+          end;
+        when 'd', 'D':
+          begin
+            State.Jr := State.Jr + 0.02;
+            RequestRedraw();
+            return true;
+          end;
+        when 'w', 'W':
+          begin
+            State.Ji := State.Ji + 0.02;
+            RequestRedraw();
+            return true;
+          end;
+        when 's', 'S':
+          begin
+            State.Ji := State.Ji - 0.02;
+            RequestRedraw();
+            return true;
+          end;
+        when 'r', 'R':
+          begin
+            State := ExplorerState.Default();
+            RequestRedraw();
+            return true;
+          end;
+      end case;
     end;
   end if;
 
@@ -382,38 +382,38 @@ begin
       end if;
 
       case ActiveRender of
-        Some(Job):
-        begin
-          BeginFrame();
-          PollRender(Job);
-          Present();
-        end;
-        None:
-        begin
-        end;
-      end;
+        when Some(Job):
+          begin
+            BeginFrame();
+            PollRender(Job);
+            Present();
+          end;
+        when None:
+          begin
+          end;
+      end case;
 
       case ReadEventTimeout(16) of
-        Some(E):
-        begin
-          HandleEvent(E);
-        end;
-        None:
-        begin
-        end;
-      end;
+        when Some(E):
+          begin
+            HandleEvent(E);
+          end;
+        when None:
+          begin
+          end;
+      end case;
     end;
   end while;
 
   case ActiveRender of
-    Some(Job):
-    begin
-      StopRender(Job);
-    end;
-    None:
-    begin
-    end;
-  end;
+    when Some(Job):
+      begin
+        StopRender(Job);
+      end;
+    when None:
+      begin
+      end;
+  end case;
 
   ShutdownTerminal();
 end.

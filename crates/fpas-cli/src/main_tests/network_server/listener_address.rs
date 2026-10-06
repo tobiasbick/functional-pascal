@@ -25,16 +25,16 @@ begin
   var ClientClosed: boolean := try Close(Client);
   var ServerClosed: boolean := try CloseListener(Server);
   case ListenerLocalAddress(Server) of
-    Ok(_): panic('Closed TLS listener returned an address');
-    Error(_): begin end;
-  end;
+    when Ok(_): panic('Closed TLS listener returned an address');
+    when Error(_): begin end;
+  end case;
   return Ok(true);
 end function;
 begin
   case ExerciseListener() of
-    Ok(_): begin end;
-    Error(Message): panic(Message);
-  end;
+    when Ok(_): begin end;
+    when Error(Message): panic(Message);
+  end case;
 end."
             .replace(
                 "cert.pem",

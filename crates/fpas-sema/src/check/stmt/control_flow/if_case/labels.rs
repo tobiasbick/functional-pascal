@@ -71,7 +71,7 @@ impl Checker {
                 self.error_with_code(
                     SEMA_NON_BOOLEAN_CONDITION,
                     "Guard clause must be a boolean expression",
-                    "case Label if <boolean>: ...",
+                    "when Label if <boolean>: ...",
                     span,
                 );
             }
@@ -124,7 +124,7 @@ impl Checker {
                 self.error_with_code(
                     SEMA_TYPE_MISMATCH,
                     "Nested enum patterns are not supported; use single-level destructuring only",
-                    "Replace the nested pattern with a binding name, then use a guard clause: `Outer.Wrap(Inner) if ...:`.",
+                    "Replace the nested pattern with a binding name, then use a guard clause: `when Outer.Wrap(Inner) if ...:`.",
                     expr.span(),
                 );
                 Vec::new()
@@ -153,7 +153,7 @@ impl Checker {
                 self.error_with_code(
                     SEMA_TYPE_MISMATCH,
                     "Literal matching inside enum patterns is not supported; use a guard clause instead",
-                    "Replace the literal with a binding `X` and add a guard: `Variant(X) if X = 0:`.",
+                    "Replace the literal with a binding `X` and add a guard: `when Variant(X) if X = 0:`.",
                     expr.span(),
                 );
                 Vec::new()

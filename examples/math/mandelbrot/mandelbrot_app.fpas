@@ -119,41 +119,41 @@ begin
   elsif Key.kind = Std.Console.KeyKind.Character then
     begin
       case Key.ch of
-        '+', '=':
-        begin
-          Explorer.SpanY := Max(Explorer.SpanY * 0.82, 0.000001);
-          Changed := true;
-        end;
-        '-':
-        begin
-          Explorer.SpanY := Min(Explorer.SpanY / 0.82, 3.5);
-          Changed := true;
-        end;
-        '1':
-        begin
-          Explorer.Palette := PaletteKind.DeepOcean;
-          Changed := true;
-        end;
-        '2':
-        begin
-          Explorer.Palette := PaletteKind.Ember;
-          Changed := true;
-        end;
-        '3':
-        begin
-          Explorer.Palette := PaletteKind.Aurora;
-          Changed := true;
-        end;
-        'r', 'R':
-        begin
-          Explorer := ExplorerState.Default();
-          Changed := true;
-        end;
-        'h', 'H':
-        begin
-          return ToggleHelp(State);
-        end;
-      end;
+        when '+', '=':
+          begin
+            Explorer.SpanY := Max(Explorer.SpanY * 0.82, 0.000001);
+            Changed := true;
+          end;
+        when '-':
+          begin
+            Explorer.SpanY := Min(Explorer.SpanY / 0.82, 3.5);
+            Changed := true;
+          end;
+        when '1':
+          begin
+            Explorer.Palette := PaletteKind.DeepOcean;
+            Changed := true;
+          end;
+        when '2':
+          begin
+            Explorer.Palette := PaletteKind.Ember;
+            Changed := true;
+          end;
+        when '3':
+          begin
+            Explorer.Palette := PaletteKind.Aurora;
+            Changed := true;
+          end;
+        when 'r', 'R':
+          begin
+            Explorer := ExplorerState.Default();
+            Changed := true;
+          end;
+        when 'h', 'H':
+          begin
+            return ToggleHelp(State);
+          end;
+      end case;
     end;
   end if;
 
@@ -213,55 +213,55 @@ public function UpdateMandelbrot(State: MandelbrotModel; Msg: TuiMsg; Cmd: TuiCm
 begin
   Cmd.Set(TuiCmd.NoCommand);
   case Msg of
-    TuiMsg.Started:
-    begin
-      QueueRender(State, Cmd);
-      return State;
-    end;
-    TuiMsg.Key(Key):
-    begin
-      return UpdateKey(State, Key, Cmd);
-    end;
-    TuiMsg.Pointer(Pointer):
-    begin
-      return UpdatePointer(State, Pointer, Cmd);
-    end;
-    TuiMsg.Resize(Size):
-    begin
-      if (Size.Width = State.TerminalWidth) and (Size.Height = State.TerminalHeight) then
-        begin
-          return State;
-        end;
-      end if;
+    when TuiMsg.Started:
+      begin
+        QueueRender(State, Cmd);
+        return State;
+      end;
+    when TuiMsg.Key(Key):
+      begin
+        return UpdateKey(State, Key, Cmd);
+      end;
+    when TuiMsg.Pointer(Pointer):
+      begin
+        return UpdatePointer(State, Pointer, Cmd);
+      end;
+    when TuiMsg.Resize(Size):
+      begin
+        if (Size.Width = State.TerminalWidth) and (Size.Height = State.TerminalHeight) then
+          begin
+            return State;
+          end;
+        end if;
 
-      return RestartRender(State, State.Explorer, Size.Width, Size.Height, Cmd);
-    end;
-    TuiMsg.BackgroundFailed(Id, Kind, Message, Code, Line, Column):
-    begin
-      if Id = RenderSubscriptionId then
-        begin
-          return WithFailure(State, Message);
-        end;
-      end if;
+        return RestartRender(State, State.Explorer, Size.Width, Size.Height, Cmd);
+      end;
+    when TuiMsg.BackgroundFailed(Id, Kind, Message, Code, Line, Column):
+      begin
+        if Id = RenderSubscriptionId then
+          begin
+            return WithFailure(State, Message);
+          end;
+        end if;
 
-      return State;
-    end;
-    TuiMsg.QuitRequested:
-    begin
-      if State.HelpOpen then
-        begin
-          return ToggleHelp(State);
-        end;
-      end if;
+        return State;
+      end;
+    when TuiMsg.QuitRequested:
+      begin
+        if State.HelpOpen then
+          begin
+            return ToggleHelp(State);
+          end;
+        end if;
 
-      Cmd.Set(TuiCmd.Quit);
-      return State;
-    end;
+        Cmd.Set(TuiCmd.Quit);
+        return State;
+      end;
     else
-    begin
-      return State;
-    end;
-  end;
+      begin
+        return State;
+      end;
+  end case;
 end function;
 
 // Replaces the displayed image only after a complete current-generation render.

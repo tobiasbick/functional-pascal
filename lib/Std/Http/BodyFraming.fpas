@@ -34,22 +34,22 @@ begin
       if Std.Http.Headers.IsName(Headers[Index].Name, 'Content-Length') then
         begin
           case Std.Net.Decimal.Parse(Headers[Index].Value, 9223372036854775807) of
-            Ok(Length):
-            begin
-              if (ContentLengthCount > 0) and (Length <> ContentLength) then
-                begin
-                  return Error('HTTP message contains conflicting Content-Length headers');
-                end;
-              end if;
+            when Ok(Length):
+              begin
+                if (ContentLengthCount > 0) and (Length <> ContentLength) then
+                  begin
+                    return Error('HTTP message contains conflicting Content-Length headers');
+                  end;
+                end if;
 
-              ContentLength := Length;
-              ContentLengthCount := ContentLengthCount + 1;
-            end;
-            Error(Message):
-            begin
-              return Error('Invalid HTTP Content-Length: ' + Message);
-            end;
-          end;
+                ContentLength := Length;
+                ContentLengthCount := ContentLengthCount + 1;
+              end;
+            when Error(Message):
+              begin
+                return Error('Invalid HTTP Content-Length: ' + Message);
+              end;
+          end case;
         end;
       end if;
     end;

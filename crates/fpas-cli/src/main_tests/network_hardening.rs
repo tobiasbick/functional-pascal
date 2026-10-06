@@ -81,15 +81,15 @@ uses Std.Console, Std.Http;
 
 begin
   case Send(Request.Get('http://127.0.0.1:{port}/start')) of
-    Ok(ResponseValue):
+    when Ok(ResponseValue):
     begin
       case BodyText(ResponseValue) of
-        Ok(Text): WriteLn(Text);
-        Error(Message): panic(Message);
-      end;
+        when Ok(Text): WriteLn(Text);
+        when Error(Message): panic(Message);
+      end case;
     end;
-    Error(Message): panic(Message);
-  end;
+    when Error(Message): panic(Message);
+  end case;
 end.
 "#
         ),
@@ -151,9 +151,9 @@ begin
   ];
   RequestValue.Body := Std.Net.Utf8.Encode('payload');
   case Send(RequestValue) of
-    Ok(ResponseValue): WriteLn(ResponseValue.StatusCode);
-    Error(Message): panic(Message);
-  end;
+    when Ok(ResponseValue): WriteLn(ResponseValue.StatusCode);
+    when Error(Message): panic(Message);
+  end case;
 end.
 "#
         ),
@@ -207,21 +207,21 @@ begin
   mutable var HeaderRequest: Request := Request.Get('http://127.0.0.1:{header_port}/');
   HeaderRequest.MaxHeaderBytes := 48;
   case Send(HeaderRequest) of
-    Ok(_): panic('oversized response head was accepted');
-    Error(Message):
+    when Ok(_): panic('oversized response head was accepted');
+    when Error(Message):
     begin
       if not Std.Str.Contains(Message, 'MaxHeaderBytes') then panic(Message); end if;
     end;
-  end;
+  end case;
   mutable var RedirectRequest: Request := Request.Get('http://127.0.0.1:{redirect_port}/');
   RedirectRequest.MaxRedirects := 0;
   case Send(RedirectRequest) of
-    Ok(_): panic('redirect limit was ignored');
-    Error(Message):
+    when Ok(_): panic('redirect limit was ignored');
+    when Error(Message):
     begin
       if not Std.Str.Contains(Message, 'MaxRedirects') then panic(Message); end if;
     end;
-  end;
+  end case;
   WriteLn('ok');
 end.
 "#
@@ -285,12 +285,12 @@ uses Std.Console, Std.Http, Std.Str;
 procedure ExpectError(Url: string; Text: string);
 begin
   case Send(Request.Get(Url)) of
-    Ok(_): panic('hostile HTTP response was accepted');
-    Error(Message):
+    when Ok(_): panic('hostile HTTP response was accepted');
+    when Error(Message):
     begin
       if not Std.Str.Contains(Message, Text) then panic(Message); end if;
     end;
-  end;
+  end case;
 end procedure;
 
 begin
@@ -337,12 +337,12 @@ uses Std.Console, Std.Http, Std.Str;
 procedure ExpectOverflow(Path: string);
 begin
   case Send(Request.Get('http://127.0.0.1:{port}/' + Path)) of
-    Ok(_): panic('overflowing HTTP chunk size was accepted');
-    Error(Message):
+    when Ok(_): panic('overflowing HTTP chunk size was accepted');
+    when Error(Message):
     begin
       if not Std.Str.Contains(Message, 'exceeds the integer range') then panic(Message); end if;
     end;
-  end;
+  end case;
 end procedure;
 
 begin

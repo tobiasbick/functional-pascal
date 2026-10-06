@@ -4,12 +4,15 @@
 
 ```pascal
 case Value of
-  1: WriteLn('one');
-  2: WriteLn('two');
-  3: WriteLn('three');
-else
-  WriteLn('other');
-end;
+  when 1:
+    WriteLn('one');
+  when 2:
+    WriteLn('two');
+  when 3:
+    WriteLn('three');
+  else
+    WriteLn('other');
+end case;
 ```
 
 ## Multiple values
@@ -18,13 +21,15 @@ Separate multiple values with commas. Every label in the list shares the same ar
 
 ```pascal
 case Day of
-  'Monday':    WriteLn('Start of week');
-  'Friday':    WriteLn('Almost weekend');
-  'Saturday',
-  'Sunday':    WriteLn('Weekend');
-else
-  WriteLn('Midweek');
-end;
+  when 'Monday':
+    WriteLn('Start of week');
+  when 'Friday':
+    WriteLn('Almost weekend');
+  when 'Saturday', 'Sunday':
+    WriteLn('Weekend');
+  else
+    WriteLn('Midweek');
+end case;
 ```
 
 ## Else branch
@@ -33,28 +38,28 @@ Use `else` to handle all remaining cases:
 
 ```pascal
 case L of
-  Light.Red:  WriteLn('Stop');
-else
-  WriteLn('Proceed with caution');
-end;
+  when Light.Red:
+    WriteLn('Stop');
+  else
+    WriteLn('Proceed with caution');
+end case;
 ```
 
 ## Block arms
 
-Use `begin..end` when a case arm needs multiple statements:
+An arm holds multiple statements directly. Use an explicit `begin ... end;`
+only when those statements need an additional nested scope:
 
 ```pascal
 case Command of
-  'help':
-    begin
-      WriteLn('Available commands:');
-      WriteLn('  help, quit, run');
-    end;
-  'quit':
+  when 'help':
+    WriteLn('Available commands:');
+    WriteLn('  help, quit, run');
+  when 'quit':
     WriteLn('Goodbye');
-else
-  WriteLn('Unknown command');
-end;
+  else
+    WriteLn('Unknown command');
+end case;
 ```
 
 ## See also

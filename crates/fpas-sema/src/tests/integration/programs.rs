@@ -36,11 +36,11 @@ end enum;
 function Calculate(A: integer; B: integer; Operation: Op): integer;
 begin
   case Operation of
-    OpAdd: return A + B;
-    OpSub: return A - B;
-    OpMul: return A * B;
-    OpDiv: return A div B;
-  end;
+    when OpAdd: return A + B;
+    when OpSub: return A - B;
+    when OpMul: return A * B;
+    when OpDiv: return A div B;
+  end case;
 end function;
 
 begin

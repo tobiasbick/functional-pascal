@@ -8,15 +8,15 @@ uses
 function TuiStatusFocused(Focused: option of TuiControlId; Id: TuiControlId): boolean;
 begin
   case Focused of
-    Some(Value):
-    begin
-      return Value.Value = Id.Value;
-    end;
-    None:
-    begin
-      return false;
-    end;
-  end;
+    when Some(Value):
+      begin
+        return Value.Value = Id.Value;
+      end;
+    when None:
+      begin
+        return false;
+      end;
+  end case;
 end function;
 
 function TuiStatusWrite(Canvas: TuiCanvas; X: integer; Y: integer; Text: string; Role: TuiStyleRole): integer;
@@ -50,32 +50,32 @@ begin
       end if;
 
       case Items[Index] of
-        TuiStatusItem.Hint(Text):
-        begin
-          X := TuiStatusWrite(Canvas, X, Bounds.Y, Text, TuiStyleRole.StatusNormal);
-        end;
-        TuiStatusItem.KeyHint(KeyText, Text):
-        begin
-          X := TuiStatusWrite(Canvas, X, Bounds.Y, KeyText, TuiStyleRole.StatusShortcut);
-          X := TuiStatusWrite(Canvas, X, Bounds.Y, ' ', TuiStyleRole.StatusNormal);
-          X := TuiStatusWrite(Canvas, X, Bounds.Y, Text, TuiStyleRole.StatusNormal);
-        end;
-        TuiStatusItem.Command(Id, Text, Action, Enabled):
-        begin
-          mutable var Role: TuiStyleRole := TuiStyleRole.StatusNormal;
-          if not Enabled then
-            begin
-              Role := TuiStyleRole.StatusDisabled;
-            end;
-          elsif TuiStatusFocused(Focused, Id) then
-            begin
-              Role := TuiStyleRole.StatusSelected;
-            end;
-          end if;
+        when TuiStatusItem.Hint(Text):
+          begin
+            X := TuiStatusWrite(Canvas, X, Bounds.Y, Text, TuiStyleRole.StatusNormal);
+          end;
+        when TuiStatusItem.KeyHint(KeyText, Text):
+          begin
+            X := TuiStatusWrite(Canvas, X, Bounds.Y, KeyText, TuiStyleRole.StatusShortcut);
+            X := TuiStatusWrite(Canvas, X, Bounds.Y, ' ', TuiStyleRole.StatusNormal);
+            X := TuiStatusWrite(Canvas, X, Bounds.Y, Text, TuiStyleRole.StatusNormal);
+          end;
+        when TuiStatusItem.Command(Id, Text, Action, Enabled):
+          begin
+            mutable var Role: TuiStyleRole := TuiStyleRole.StatusNormal;
+            if not Enabled then
+              begin
+                Role := TuiStyleRole.StatusDisabled;
+              end;
+            elsif TuiStatusFocused(Focused, Id) then
+              begin
+                Role := TuiStyleRole.StatusSelected;
+              end;
+            end if;
 
-          X := TuiStatusWrite(Canvas, X, Bounds.Y, Text, Role);
-        end;
-      end;
+            X := TuiStatusWrite(Canvas, X, Bounds.Y, Text, Role);
+          end;
+      end case;
     end;
   end for;
 end procedure;

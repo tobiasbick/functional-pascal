@@ -21,24 +21,24 @@ end function;
 
 begin
   case Listen('127.0.0.1', {port}) of
-    Ok(ListenerValue):
+    when Ok(ListenerValue):
     begin
       mutable var Options: ServerOptions := ServerOptions.Create();
       Options.MaxConcurrentRequests := 2;
       Options.MaxRequests := 2;
       case Serve(ListenerValue, Options, Handle) of
-        Ok(_):
+        when Ok(_):
         begin
         end;
-        Error(Message): panic(Message);
-      end;
+        when Error(Message): panic(Message);
+      end case;
       case CloseListener(ListenerValue) of
-        Ok(_): WriteLn('served');
-        Error(Message): panic(Message);
-      end;
+        when Ok(_): WriteLn('served');
+        when Error(Message): panic(Message);
+      end case;
     end;
-    Error(Message): panic(Message);
-  end;
+    when Error(Message): panic(Message);
+  end case;
 end.
 "#
         ),
@@ -84,26 +84,26 @@ end function;
 
 begin
   case Listen('127.0.0.1', {port}) of
-    Ok(ListenerValue):
+    when Ok(ListenerValue):
     begin
       mutable var Options: ServerOptions := ServerOptions.Create();
       Options.MaxConcurrentRequests := 2;
       Options.MaxRequests := 2;
       case Serve(ListenerValue, Options, Handle) of
-        Ok(_):
+        when Ok(_):
         begin
         end;
-        Error(Message): panic(Message);
-      end;
+        when Error(Message): panic(Message);
+      end case;
       case CloseListener(ListenerValue) of
-        Ok(_):
+        when Ok(_):
         begin
         end;
-        Error(Message): panic(Message);
-      end;
+        when Error(Message): panic(Message);
+      end case;
     end;
-    Error(Message): panic(Message);
-  end;
+    when Error(Message): panic(Message);
+  end case;
 end.
 "#
         ),
@@ -146,27 +146,27 @@ end function;
 
 begin
   case Listen('127.0.0.1', {port}) of
-    Ok(ListenerValue):
+    when Ok(ListenerValue):
     begin
       mutable var Options: ServerOptions := ServerOptions.Create();
       Options.MaxConcurrentRequests := 0;
       case Serve(ListenerValue, Options, Handle) of
-        Ok(_): panic('invalid server options were accepted');
-        Error(Message):
+        when Ok(_): panic('invalid server options were accepted');
+        when Error(Message):
         begin
           if not Std.Str.Contains(Message, 'MaxConcurrentRequests') then
           begin
             panic(Message);
           end; end if;
         end;
-      end;
+      end case;
       case CloseListener(ListenerValue) of
-        Ok(_): WriteLn('rejected');
-        Error(Message): panic(Message);
-      end;
+        when Ok(_): WriteLn('rejected');
+        when Error(Message): panic(Message);
+      end case;
     end;
-    Error(Message): panic(Message);
-  end;
+    when Error(Message): panic(Message);
+  end case;
 end.
 "#
         ),

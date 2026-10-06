@@ -111,7 +111,7 @@ include = ["src/**/*.fpas"]
     );
     write_text(
         &lib_dir.join("src/outcome.fpas"),
-        "unit Sessions.Outcome;\nuses Std.Tasks;\npublic function Describe(Session: task of result of boolean, string): string;\nbegin\n  case Wait(Session) of\n    Ok(Done): begin return 'ok'; end;\n    Error(Message): begin return Message; end;\n  end;\nend function;\nend unit;\n",
+        "unit Sessions.Outcome;\nuses Std.Tasks;\npublic function Describe(Session: task of result of boolean, string): string;\nbegin\n  case Wait(Session) of\n    when Ok(Done): begin return 'ok'; end;\n    when Error(Message): begin return Message; end;\n  end case;\nend function;\nend unit;\n",
     );
 
     let lib_dep = toml_path(&lib_project);

@@ -9,27 +9,27 @@ begin
   NoteValue.Tags := ['storage'];
   NoteValue.Body := 'Saved atomically';
   case NotesSave(Directory, NoteValue) of
-    Ok(Written):
-    begin
-    end;
-    Error(Message):
-    begin
-      Fail(Message);
-    end;
-  end;
+    when Ok(Written):
+      begin
+      end;
+    when Error(Message):
+      begin
+        Fail(Message);
+      end;
+  end case;
 
   case NotesLoadDirectory(Directory) of
-    Ok(Loaded):
-    begin
-      AssertEquals(1, Std.Arrays.Length(Loaded.Notes));
-      AssertEquals(0, Std.Arrays.Length(Loaded.Issues));
-      AssertEquals(NoteValue.Id, Loaded.Notes[0].Id);
-      AssertEquals(NoteValue.Title, Loaded.Notes[0].Title);
-      AssertEquals(NoteValue.Body, Loaded.Notes[0].Body);
-    end;
-    Error(Message):
-    begin
-      Fail(Message);
-    end;
-  end;
+    when Ok(Loaded):
+      begin
+        AssertEquals(1, Std.Arrays.Length(Loaded.Notes));
+        AssertEquals(0, Std.Arrays.Length(Loaded.Issues));
+        AssertEquals(NoteValue.Id, Loaded.Notes[0].Id);
+        AssertEquals(NoteValue.Title, Loaded.Notes[0].Title);
+        AssertEquals(NoteValue.Body, Loaded.Notes[0].Body);
+      end;
+    when Error(Message):
+      begin
+        Fail(Message);
+      end;
+  end case;
 end.

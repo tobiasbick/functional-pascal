@@ -5,9 +5,9 @@ fn case_ordinal_valid() {
     check_ok(
         "program T; begin \
          case 1 of \
-           1: return; \
+           when 1: return; when \
            2: return; \
-         end; \
+         end case; \
          end.",
     );
 }
@@ -21,9 +21,9 @@ fn case_data_enum_rejects_foreign_root_variant() {
          begin \
            var S: Shape := Shape.Point; \
            case S of \
-             Other.Square(Size): return; \
-             Shape.Point: return; \
-           end; \
+             when Other.Square(Size): return; \
+             when Shape.Point: return; \
+           end case; \
          end.",
     );
     assert!(
@@ -44,9 +44,9 @@ fn case_data_enum_rejects_foreign_nested_variant() {
          begin \
            var V: Outer := Outer.Empty; \
            case V of \
-             Outer.Wrap(Other.B(X)): return; \
-             Outer.Empty: return; \
-           end; \
+             when Outer.Wrap(Other.B(X)): return; \
+             when Outer.Empty: return; \
+           end case; \
          end.",
     );
     assert!(
@@ -65,9 +65,9 @@ fn case_data_enum_pattern_literal_must_match_field_type() {
          begin \
            var S: Shape := Shape.Point; \
            case S of \
-             Shape.Circle('big'): return; \
-             Shape.Point: return; \
-           end; \
+             when Shape.Circle('big'): return; \
+             when Shape.Point: return; \
+           end case; \
          end.",
     );
     assert!(
@@ -85,9 +85,9 @@ fn case_option_rejects_result_patterns() {
          begin \
            var O: Option of integer := None; \
            case O of \
-             Ok(V): return; \
+             when Ok(V): return; when \
              None: return; \
-           end; \
+           end case; \
          end.",
     );
     assert!(
@@ -105,8 +105,8 @@ fn case_result_multi_label_shared_binding_valid() {
          begin \
            var R: Result of string, string := Ok('hello'); \
            case R of \
-             Ok(Msg), Error(Msg): WriteLn(Msg); \
-           end; \
+             when Ok(Msg), Error(Msg): WriteLn(Msg); \
+           end case; \
          end.",
     );
 }
@@ -118,8 +118,8 @@ fn case_result_multi_label_binding_names_are_case_insensitive() {
          begin \
            var R: Result of string, string := Ok('hello'); \
            case R of \
-             Ok(Message), Error(message): WriteLn(Message); \
-           end; \
+             when Ok(Message), Error(message): WriteLn(Message); \
+           end case; \
          end.",
     );
 }
@@ -131,9 +131,9 @@ fn case_result_multi_label_checks_shared_body_once() {
          begin \
            var R: Result of string, string := Ok('hello'); \
            case R of \
-             Ok(Message), Error(message): \
+             when Ok(Message), Error(message): \
                var Invalid: integer := 'not an integer'; \
-           end; \
+           end case; \
          end.",
     );
     let body_errors = errors
@@ -153,8 +153,8 @@ fn case_result_multi_label_rejects_incompatible_binding_types() {
          begin \
            var R: Result of integer, string := Ok(1); \
            case R of \
-             Ok(Value), Error(Value): return; \
-           end; \
+             when Ok(Value), Error(Value): return; \
+           end case; \
          end.",
     );
     assert!(
@@ -173,8 +173,8 @@ fn case_result_multi_label_rejects_different_binding_names() {
          begin \
            var R: Result of string, string := Ok('value'); \
            case R of \
-             Ok(Value), Error(Message): return; \
-           end; \
+             when Ok(Value), Error(Message): return; \
+           end case; \
          end.",
     );
     assert!(
@@ -194,8 +194,8 @@ fn case_data_enum_pattern_rejects_duplicate_binding_names() {
          begin \
            var P: Pair := Pair.Values(1, 2); \
            case P of \
-             Pair.Values(Value, value): return; \
-           end; \
+             when Pair.Values(Value, value): return; \
+           end case; \
          end.",
     );
     assert!(

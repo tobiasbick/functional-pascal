@@ -7,26 +7,26 @@ begin
   for Pass: integer := 1 to 3 do
     begin
       case FeedSse(Decoder, Std.Net.Utf8.Encode(('data: more' + #10) + #10)) of
-        Ok(_):
-        begin
-          Fail('feed after error');
-        end;
-        Error(Message):
-        begin
-          AssertTrue(Std.Str.Contains(Message, 'finished'));
-        end;
-      end;
+        when Ok(_):
+          begin
+            Fail('feed after error');
+          end;
+        when Error(Message):
+          begin
+            AssertTrue(Std.Str.Contains(Message, 'finished'));
+          end;
+      end case;
 
       case FinishSse(Decoder) of
-        Ok(_):
-        begin
-          Fail('finish after error');
-        end;
-        Error(Message):
-        begin
-          AssertTrue(Std.Str.Contains(Message, 'finished'));
-        end;
-      end;
+        when Ok(_):
+          begin
+            Fail('finish after error');
+          end;
+        when Error(Message):
+          begin
+            AssertTrue(Std.Str.Contains(Message, 'finished'));
+          end;
+      end case;
     end;
   end for;
 end procedure;
@@ -34,27 +34,27 @@ end procedure;
 begin
   var Limited: SseDecoder := Unwrap(CreateSseDecoder(8));
   case FeedSse(Limited, Std.Net.Utf8.Encode(Std.Str.RepeatStr('x', 100000))) of
-    Ok(_):
-    begin
-      Fail('oversized fragment');
-    end;
-    Error(_):
-    begin
-    end;
-  end;
+    when Ok(_):
+      begin
+        Fail('oversized fragment');
+      end;
+    when Error(_):
+      begin
+      end;
+  end case;
 
   Terminal(Limited);
   var Invalid: SseDecoder := Unwrap(CreateSseDecoder(16));
   AssertEquals(0, Std.Arrays.Length(Unwrap(FeedSse(Invalid, [255]))));
   case FinishSse(Invalid) of
-    Ok(_):
-    begin
-      Fail('invalid final UTF-8');
-    end;
-    Error(_):
-    begin
-    end;
-  end;
+    when Ok(_):
+      begin
+        Fail('invalid final UTF-8');
+      end;
+    when Error(_):
+      begin
+      end;
+  end case;
 
   Terminal(Invalid);
   var Many: SseDecoder := Unwrap(CreateSseDecoder(9));

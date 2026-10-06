@@ -33,22 +33,22 @@ begin
   while LineEnd < 0 do
     begin
       case Std.Net.ReceiveBytes(ConnectionValue, 4096) of
-        Ok(Part):
-        begin
-          if Std.Arrays.Length(Part) = 0 then
-            begin
-              panic('TCP connection closed before the LF delimiter');
-            end;
-          end if;
+        when Ok(Part):
+          begin
+            if Std.Arrays.Length(Part) = 0 then
+              begin
+                panic('TCP connection closed before the LF delimiter');
+              end;
+            end if;
 
-          Bytes := Std.Arrays.Concat(Bytes, Part);
-          LineEnd := LineFeedIndex(Bytes);
-        end;
-        Error(Message):
-        begin
-          panic(Message);
-        end;
-      end;
+            Bytes := Std.Arrays.Concat(Bytes, Part);
+            LineEnd := LineFeedIndex(Bytes);
+          end;
+        when Error(Message):
+          begin
+            panic(Message);
+          end;
+      end case;
     end;
   end while;
 
@@ -59,15 +59,15 @@ begin
   end if;
   var TextBytes: array of integer := Std.Arrays.Slice(Bytes, 0, LineEnd);
   case Std.Net.Utf8.Decode(TextBytes) of
-    Ok(Text):
-    begin
-      return Text;
-    end;
-    Error(Message):
-    begin
-      panic(Message);
-    end;
-  end;
+    when Ok(Text):
+      begin
+        return Text;
+      end;
+    when Error(Message):
+      begin
+        panic(Message);
+      end;
+  end case;
 end function;
 
 // Writes every byte even when the transport reports a partial write.
@@ -83,21 +83,21 @@ begin
       var Remaining: array of integer := Std.Arrays.Slice(Bytes, Offset, Std.Arrays.Length(Bytes) -
                                                                          Offset);
       case Std.Net.SendBytes(ConnectionValue, Remaining) of
-        Ok(Count):
-        begin
-          if Count <= 0 then
-            begin
-              panic('TCP connection stopped while writing');
-            end;
-          end if;
+        when Ok(Count):
+          begin
+            if Count <= 0 then
+              begin
+                panic('TCP connection stopped while writing');
+              end;
+            end if;
 
-          Offset := Offset + Count;
-        end;
-        Error(Message):
-        begin
-          panic(Message);
-        end;
-      end;
+            Offset := Offset + Count;
+          end;
+        when Error(Message):
+          begin
+            panic(Message);
+          end;
+      end case;
     end;
   end while;
 end procedure;
@@ -115,53 +115,53 @@ begin
   end if;
 
   case Listen('127.0.0.1', Port) of
-    Ok(ListenerValue):
-    begin
-      WriteLn('TCP echo server listening on 127.0.0.1:' + IntToStr(Port));
-      case Accept(ListenerValue) of
-        Ok(ConnectionValue):
-        begin
-          case SetTimeout(ConnectionValue, 5000) of
-            Ok(_):
+    when Ok(ListenerValue):
+      begin
+        WriteLn('TCP echo server listening on 127.0.0.1:' + IntToStr(Port));
+        case Accept(ListenerValue) of
+          when Ok(ConnectionValue):
             begin
+              case SetTimeout(ConnectionValue, 5000) of
+                when Ok(_):
+                  begin
+                  end;
+                when Error(Message):
+                  begin
+                    panic(Message);
+                  end;
+              end case;
+              var Text: string := ReadLine(ConnectionValue);
+              WriteAll(ConnectionValue, Std.Net.Utf8.Encode('Echo: ' + Text));
+              case Close(ConnectionValue) of
+                when Ok(_):
+                  begin
+                  end;
+                when Error(Message):
+                  begin
+                    panic(Message);
+                  end;
+              end case;
             end;
-            Error(Message):
+          when Error(Message):
             begin
               panic(Message);
             end;
-          end;
-          var Text: string := ReadLine(ConnectionValue);
-          WriteAll(ConnectionValue, Std.Net.Utf8.Encode('Echo: ' + Text));
-          case Close(ConnectionValue) of
-            Ok(_):
-            begin
-            end;
-            Error(Message):
-            begin
-              panic(Message);
-            end;
-          end;
-        end;
-        Error(Message):
-        begin
-          panic(Message);
-        end;
-      end;
+        end case;
 
-      case CloseListener(ListenerValue) of
-        Ok(_):
-        begin
-          WriteLn('TCP echo server stopped');
-        end;
-        Error(Message):
-        begin
-          panic(Message);
-        end;
+        case CloseListener(ListenerValue) of
+          when Ok(_):
+            begin
+              WriteLn('TCP echo server stopped');
+            end;
+          when Error(Message):
+            begin
+              panic(Message);
+            end;
+        end case;
       end;
-    end;
-    Error(Message):
-    begin
-      panic(Message);
-    end;
-  end;
+    when Error(Message):
+      begin
+        panic(Message);
+      end;
+  end case;
 end.

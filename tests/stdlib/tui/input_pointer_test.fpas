@@ -26,35 +26,35 @@ function UpdateInput(State: InputPointerModel; Msg: TuiMsg; Cmd: TuiCmdOutput): 
 begin
   Cmd.Set(TuiCmd.NoCommand);
   case Msg of
-    TuiMsg.TextChanged(Source, Action, Text, Caret):
-    begin
-      if Source.Value = 1 then
-        begin
-          return record
-            FirstText := Text;
-            FirstCaret := Caret;
-            SecondText := State.SecondText;
-            SecondCaret := State.SecondCaret;
-            LastSource := Source.Value;
-            LastAction := Action.Value;
+    when TuiMsg.TextChanged(Source, Action, Text, Caret):
+      begin
+        if Source.Value = 1 then
+          begin
+            return record
+              FirstText := Text;
+              FirstCaret := Caret;
+              SecondText := State.SecondText;
+              SecondCaret := State.SecondCaret;
+              LastSource := Source.Value;
+              LastAction := Action.Value;
+            end;
           end;
-        end;
-      end if;
+        end if;
 
-      return record
-        FirstText := State.FirstText;
-        FirstCaret := State.FirstCaret;
-        SecondText := Text;
-        SecondCaret := Caret;
-        LastSource := Source.Value;
-        LastAction := Action.Value;
+        return record
+          FirstText := State.FirstText;
+          FirstCaret := State.FirstCaret;
+          SecondText := Text;
+          SecondCaret := Caret;
+          LastSource := Source.Value;
+          LastAction := Action.Value;
+        end;
       end;
-    end;
     else
-    begin
-      return State;
-    end;
-  end;
+      begin
+        return State;
+      end;
+  end case;
 end function;
 
 function Click(App: TuiApplication; State: InputPointerModel; X: integer; Y: integer): InputPointerModel;

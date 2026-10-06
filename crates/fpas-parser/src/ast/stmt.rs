@@ -170,7 +170,7 @@ pub struct CaseArm {
     pub labels: Vec<CaseLabel>,
     /// Optional condition evaluated after a label matches.
     pub guard: Option<Expr>,
-    /// Statement executed when a label and the optional guard match.
+    /// Scoped statement list executed when a label and the optional guard match.
     pub body: Stmt,
     /// Source span of the complete case arm.
     pub span: Span,

@@ -11,30 +11,30 @@ type
 function UpdateFramework(State: FailureModel; Msg: TuiMsg; Cmd: TuiCmdOutput): FailureModel;
 begin
   case Msg of
-    TuiMsg.Started:
-    begin
-      var Ready: channel of boolean := State.Ready;
-      Cmd.StartBackground(19, function(Token: CancellationToken): result of boolean, string begin
-        Send(Ready, true);
-        return Error('expected background failure');
-      end);
-      return State;
-    end;
-    TuiMsg.BackgroundFailed(Id, Kind, Message, Code, Line, Column):
-    begin
-      AssertEquals(19, Id);
-      AssertTrue(Kind = TaskFailureKind.ReturnedError);
-      AssertEquals('expected background failure', Message);
-      return record
-        Ready := State.Ready;
-        FailureSeen := true;
+    when TuiMsg.Started:
+      begin
+        var Ready: channel of boolean := State.Ready;
+        Cmd.StartBackground(19, function(Token: CancellationToken): result of boolean, string begin
+          Send(Ready, true);
+          return Error('expected background failure');
+        end);
+        return State;
       end;
-    end;
+    when TuiMsg.BackgroundFailed(Id, Kind, Message, Code, Line, Column):
+      begin
+        AssertEquals(19, Id);
+        AssertTrue(Kind = TaskFailureKind.ReturnedError);
+        AssertEquals('expected background failure', Message);
+        return record
+          Ready := State.Ready;
+          FailureSeen := true;
+        end;
+      end;
     else
-    begin
-      return State;
-    end;
-  end;
+      begin
+        return State;
+      end;
+  end case;
 end function;
 
 function UpdateApplication(State: FailureModel; Message: integer; Cmd: TuiCmdOutput): FailureModel;

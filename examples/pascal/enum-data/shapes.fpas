@@ -12,37 +12,37 @@ type
 function Area(S: Shape): real;
 begin
   case S of
-    Shape.Circle(R):
-    begin
-      return (Pi * R) * R;
-    end;
-    Shape.Rectangle(W, H):
-    begin
-      return W * H;
-    end;
-    Shape.Point:
-    begin
-      return 0.0;
-    end;
-  end;
+    when Shape.Circle(R):
+      begin
+        return (Pi * R) * R;
+      end;
+    when Shape.Rectangle(W, H):
+      begin
+        return W * H;
+      end;
+    when Shape.Point:
+      begin
+        return 0.0;
+      end;
+  end case;
 end function;
 
 function Describe(S: Shape): string;
 begin
   case S of
-    Shape.Circle(R):
-    begin
-      return 'Circle with radius ' + RealToStr(R);
-    end;
-    Shape.Rectangle(W, H):
-    begin
-      return (('Rectangle ' + RealToStr(W)) + ' x ') + RealToStr(H);
-    end;
-    Shape.Point:
-    begin
-      return 'Point';
-    end;
-  end;
+    when Shape.Circle(R):
+      begin
+        return 'Circle with radius ' + RealToStr(R);
+      end;
+    when Shape.Rectangle(W, H):
+      begin
+        return (('Rectangle ' + RealToStr(W)) + ' x ') + RealToStr(H);
+      end;
+    when Shape.Point:
+      begin
+        return 'Point';
+      end;
+  end case;
 end function;
 
 begin

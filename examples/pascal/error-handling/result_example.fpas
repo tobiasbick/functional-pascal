@@ -29,46 +29,46 @@ begin
   WriteLn('IsError: ', IsError(R2));
   WriteLn('UnwrapOr: ', UnwrapOr(R2, -1));
   case Divide(42, 6) of
-    Ok(V):
-    begin
-      WriteLn('42 / 6 = ', V);
-    end;
-    Error(E):
-    begin
-      WriteLn('Error: ', E);
-    end;
-  end;
+    when Ok(V):
+      begin
+        WriteLn('42 / 6 = ', V);
+      end;
+    when Error(E):
+      begin
+        WriteLn('Error: ', E);
+      end;
+  end case;
 
   case Divide(7, 0) of
-    Ok(V):
-    begin
-      WriteLn('7 / 0 = ', V);
-    end;
-    Error(E):
-    begin
-      WriteLn('Error: ', E);
-    end;
-  end;
+    when Ok(V):
+      begin
+        WriteLn('7 / 0 = ', V);
+      end;
+    when Error(E):
+      begin
+        WriteLn('Error: ', E);
+      end;
+  end case;
 
   case Stringify(100, 4) of
-    Ok(S):
-    begin
-      WriteLn(S);
-    end;
-    Error(E):
-    begin
-      WriteLn('Failed: ', E);
-    end;
-  end;
+    when Ok(S):
+      begin
+        WriteLn(S);
+      end;
+    when Error(E):
+      begin
+        WriteLn('Failed: ', E);
+      end;
+  end case;
 
   case Stringify(100, 0) of
-    Ok(S):
-    begin
-      WriteLn(S);
-    end;
-    Error(E):
-    begin
-      WriteLn('Failed: ', E);
-    end;
-  end;
+    when Ok(S):
+      begin
+        WriteLn(S);
+      end;
+    when Error(E):
+      begin
+        WriteLn('Failed: ', E);
+      end;
+  end case;
 end.

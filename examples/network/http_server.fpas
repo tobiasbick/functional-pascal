@@ -32,15 +32,15 @@ begin
   if (RequestValue.Method = 'POST') and (RequestValue.Target = '/echo') then
     begin
       case Std.Net.Utf8.Decode(RequestValue.Body) of
-        Ok(Text):
-        begin
-          return TextResponse(200, 'OK', 'Echo: ' + Text);
-        end;
-        Error(Message):
-        begin
-          return TextResponse(400, 'Bad Request', Message);
-        end;
-      end;
+        when Ok(Text):
+          begin
+            return TextResponse(200, 'OK', 'Echo: ' + Text);
+          end;
+        when Error(Message):
+          begin
+            return TextResponse(400, 'Bad Request', Message);
+          end;
+      end case;
     end;
   end if;
 
@@ -66,36 +66,36 @@ begin
   end if;
 
   case Listen('127.0.0.1', Port) of
-    Ok(ListenerValue):
-    begin
-      WriteLn('HTTP server listening on http://127.0.0.1:' + IntToStr(Port));
-      mutable var Options: ServerOptions := ServerOptions.Create();
-      Options.MaxConcurrentRequests := 1;
-      Options.MaxRequests := 3;
-      case Serve(ListenerValue, Options, Handle) of
-        Ok(_):
-        begin
-          WriteLn('HTTP server handled 3 requests');
-        end;
-        Error(Message):
-        begin
-          panic(Message);
-        end;
-      end;
+    when Ok(ListenerValue):
+      begin
+        WriteLn('HTTP server listening on http://127.0.0.1:' + IntToStr(Port));
+        mutable var Options: ServerOptions := ServerOptions.Create();
+        Options.MaxConcurrentRequests := 1;
+        Options.MaxRequests := 3;
+        case Serve(ListenerValue, Options, Handle) of
+          when Ok(_):
+            begin
+              WriteLn('HTTP server handled 3 requests');
+            end;
+          when Error(Message):
+            begin
+              panic(Message);
+            end;
+        end case;
 
-      case CloseListener(ListenerValue) of
-        Ok(_):
-        begin
-        end;
-        Error(Message):
-        begin
-          panic(Message);
-        end;
+        case CloseListener(ListenerValue) of
+          when Ok(_):
+            begin
+            end;
+          when Error(Message):
+            begin
+              panic(Message);
+            end;
+        end case;
       end;
-    end;
-    Error(Message):
-    begin
-      panic(Message);
-    end;
-  end;
+    when Error(Message):
+      begin
+        panic(Message);
+      end;
+  end case;
 end.

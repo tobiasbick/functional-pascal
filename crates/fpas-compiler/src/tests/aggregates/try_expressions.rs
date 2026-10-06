@@ -64,7 +64,7 @@ end.
 #[test]
 fn enum_constructor_preserves_earlier_try_arguments() {
     check_expression(
-        "var Value: Message := Message.Move(try ReadValue(1, FailAt), try ReadValue(2, FailAt)); case Value of Message.Move(X, Y): return Ok(X * 10 + Y); end;",
+        "var Value: Message := Message.Move(try ReadValue(1, FailAt), try ReadValue(2, FailAt)); case Value of when Message.Move(X, Y): return Ok(X * 10 + Y); end case;",
     );
 }
 
@@ -151,14 +151,14 @@ fn counting_loop_preserves_start_across_try_bound() {
 #[test]
 fn case_range_preserves_subject_and_lower_comparison_across_try() {
     check_expression(
-        "case 1 of (try ReadValue(1, FailAt))..(try ReadValue(2, FailAt)): return Ok(12); else return Ok(0); end;",
+        "case 1 of when (try ReadValue(1, FailAt))..(try ReadValue(2, FailAt)): return Ok(12); else return Ok(0); end case;",
     );
 }
 
 #[test]
 fn case_label_preserves_subject_across_try() {
     check_expression(
-        "case 1 of (try ReadValue(1, FailAt)): return Ok(10 + (try ReadValue(2, FailAt))); else return Ok(0); end;",
+        "case 1 of when (try ReadValue(1, FailAt)): return Ok(10 + (try ReadValue(2, FailAt))); else return Ok(0); end case;",
     );
 }
 
@@ -269,9 +269,9 @@ program GenericResultTry;
 function Tagged<T>(Value: result of T, string): result of T, string;
 begin
   case Value of
-    Ok(Content): return Ok(Content);
-    Error(Message): return Error('tagged ' + Message);
-  end;
+    when Ok(Content): return Ok(Content);
+    when Error(Message): return Error('tagged ' + Message);
+  end case;
 end function;
 function MakeInt(Fail: boolean): result of integer, string;
 begin

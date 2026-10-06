@@ -16,19 +16,19 @@ end function;
 function DayKind(Day: string): string;
 begin
   case Day of
-    'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday':
-    begin
-      return 'Weekday';
-    end;
-    'Saturday', 'Sunday':
-    begin
-      return 'Weekend';
-    end;
+    when 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday':
+      begin
+        return 'Weekday';
+      end;
+    when 'Saturday', 'Sunday':
+      begin
+        return 'Weekend';
+      end;
     else
-    begin
-      panic('Invalid day: ' + Day);
-    end;
-  end;
+      begin
+        panic('Invalid day: ' + Day);
+      end;
+  end case;
 end function;
 
 begin

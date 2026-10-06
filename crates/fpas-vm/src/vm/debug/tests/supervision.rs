@@ -162,7 +162,7 @@ begin
   begin Send(Attempts, 1); end, 1023, 60000);
   Wait(Child);
   if Unwrap(Receive(Attempts)) <> 1 then panic('missing attempt'); end if;
-  case Unwrap(TryReceive(Attempts)) of Some(_): panic('success retried'); None: begin end; end;
+  case Unwrap(TryReceive(Attempts)) of when Some(_): panic('success retried'); when None: begin end; end case;
   if Length(CloseTaskGroup(G)) <> 0 then panic('successful procedure reported failure'); end if;
   CloseChannel(Attempts);
 end."#,
@@ -227,9 +227,9 @@ begin
   var Child: task := StartSupervisedTask(G, function(Token: CancellationToken): result of integer, string
   begin Send(Attempts, 1); return Error('last failure'); end, 2, 0);
   case Wait(Child) of
-    Ok(_): panic('unexpected success');
-    Error(Message): if Message <> 'last failure' then panic('wrong final error'); end if;
-  end;
+    when Ok(_): panic('unexpected success');
+    when Error(Message): if Message <> 'last failure' then panic('wrong final error'); end if;
+  end case;
   var Failures: array of TaskFailure := CloseTaskGroup(G);
   if Length(Failures) <> 1 then panic('attempts became children'); end if;
   if Failures[0].Kind <> TaskFailureKind.ReturnedError then panic('wrong failure kind'); end if;
@@ -308,7 +308,7 @@ begin
   var G: TaskGroup := CreateTaskGroup();
   var Child: task := StartSupervisedTask(G, function(Token: CancellationToken): result of integer, string
   begin return Error('cancelled'); end, 0, 60000);
-  case Wait(Child) of Ok(_): panic('unexpected success'); Error(_): begin end; end;
+  case Wait(Child) of when Ok(_): panic('unexpected success'); when Error(_): begin end; end case;
   var Failures: array of TaskFailure := CloseTaskGroup(G);
   if Length(Failures) <> 1 then panic('failure count'); end if;
   if Failures[0].Kind <> TaskFailureKind.ReturnedError then panic('message guessed cancellation'); end if;

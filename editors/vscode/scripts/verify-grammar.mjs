@@ -350,11 +350,42 @@ async function verifyControlBlocks(grammar) {
   assert.ok(snippets["Repeat loop"].body.some((line) => line.includes("null;")));
 }
 
+async function verifyCaseBlocks(grammar) {
+  const fixture = await tokenizeFixture(grammar, "case_blocks.fpas");
+  const configuration = JSON.parse(await readFile(
+    path.join(extensionRoot, "language-configuration.json"), "utf8"
+  ));
+  const increase = new RegExp(configuration.indentationRules.increaseIndentPattern);
+  const decrease = new RegExp(configuration.indentationRules.decreaseIndentPattern);
+  for (const line of ["case Some(1) of", "when Some(Value) if Value > 0:", "when 0, 1:"]) {
+    assert.ok(increase.test(line), `${line} opens a body`);
+    assert.ok(increase.test(`${line.toUpperCase()} // body`));
+  }
+  for (const line of ["when Some(Value):", "when None:", "else", "end case;"]) {
+    assert.ok(decrease.test(line), `${line} decreases indentation`);
+    assert.ok(decrease.test(line.toUpperCase()));
+  }
+  assert.ok(!increase.test("end case;"));
+  assert.ok(!increase.test("END CASE; // ending"));
+  assertScope(tokenAt(fixture, "when Some(Value) if Value > 0:", "when"), "keyword.control.fpas");
+  assertScope(tokenAt(fixture, "end case;", "end"), "keyword.control.fpas");
+  assertScope(tokenAt(fixture, "end case;", "case"), "keyword.control.fpas");
+  const snippets = JSON.parse(await readFile(
+    path.join(extensionRoot, "snippets", "fpas.json"), "utf8"
+  ));
+  const body = snippets["Case statement"].body;
+  assert.equal(body.at(-1), "end case;");
+  assert.ok(body[1].trimStart().startsWith("when "));
+  assert.ok(body.some((line) => line.includes("null;")));
+  assert.ok(!body.includes("begin"));
+}
+
 /** Loads the grammar and verifies positive, negative, and edge-case scopes. */
 export async function verifyGrammar() {
   const grammar = await createGrammar();
   await verifyDeclarationClosers(grammar);
   await verifyControlBlocks(grammar);
+  await verifyCaseBlocks(grammar);
   await verifyPositiveScopes(grammar);
   await verifyNegativeScopes(grammar);
   await verifyEdgeScopes(grammar);

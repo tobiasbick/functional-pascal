@@ -277,14 +277,19 @@ return `Ok(true)`; successful receives return `Ok(Value)`. Values are received i
 
 ```pascal
 case Send(Messages, 'ready') of
-  Ok(_): begin end;
-  Error(Message): panic(Message);
-end;
+  when Ok(_):
+    begin
+    end;
+  when Error(Message):
+    panic(Message);
+end case;
 
 case Receive(Messages) of
-  Ok(Message): WriteLn(Message);
-  Error(Message): panic(Message);
-end;
+  when Ok(Message):
+    WriteLn(Message);
+  when Error(Message):
+    panic(Message);
+end case;
 ```
 
 `CloseChannel` is idempotent: the first close returns `true`, and later closes return `false`.

@@ -5,13 +5,13 @@ uses Std.Tui, Std.Test;
 begin
   var Node: TuiElement := TuiElementBuilders.MakeLabel('hi');
   case Node of
-    TuiElement.Label(Text):
-    begin
-      AssertEquals('hi', Text);
-    end;
+    when TuiElement.Label(Text):
+      begin
+        AssertEquals('hi', Text);
+      end;
     else
-    begin
-      panic('expected label element');
-    end;
-  end;
+      begin
+        panic('expected label element');
+      end;
+  end case;
 end.

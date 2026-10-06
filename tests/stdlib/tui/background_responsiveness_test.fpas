@@ -31,25 +31,25 @@ end procedure;
 function Update(State: Model; Msg: TuiMsg; Cmd: TuiCmdOutput): Model;
 begin
   case Msg of
-    TuiMsg.Started:
-    begin
-      Replace(State, Cmd);
-    end;
-    TuiMsg.Tick(Delta):
-    begin
-      if Delta > 0 then
-        begin
-          mutable var Next: Model := State;
-          Next.Generation := State.Generation + 1;
-          Replace(Next, Cmd);
-          return Next;
-        end;
-      end if;
-    end;
+    when TuiMsg.Started:
+      begin
+        Replace(State, Cmd);
+      end;
+    when TuiMsg.Tick(Delta):
+      begin
+        if Delta > 0 then
+          begin
+            mutable var Next: Model := State;
+            Next.Generation := State.Generation + 1;
+            Replace(Next, Cmd);
+            return Next;
+          end;
+        end if;
+      end;
     else
-    begin
-    end;
-  end;
+      begin
+      end;
+  end case;
 
   return State;
 end function;

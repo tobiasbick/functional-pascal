@@ -28,38 +28,38 @@ end function;
 begin
   var Tree: TuiElement := ViewTree(0);
   case Tree of
-    TuiElement.Desktop(Focused, DesktopChildren):
-    begin
-      AssertEquals(2, Std.Arrays.Length(DesktopChildren));
-      case DesktopChildren[0] of
-        TuiElement.Panel(Title, PanelChildren):
-        begin
-          AssertEquals('Dashboard', Title);
-          AssertEquals(1, Std.Arrays.Length(PanelChildren));
-        end;
-        else
-        begin
-          panic('expected panel element');
-        end;
-      end;
+    when TuiElement.Desktop(Focused, DesktopChildren):
+      begin
+        AssertEquals(2, Std.Arrays.Length(DesktopChildren));
+        case DesktopChildren[0] of
+          when TuiElement.Panel(Title, PanelChildren):
+            begin
+              AssertEquals('Dashboard', Title);
+              AssertEquals(1, Std.Arrays.Length(PanelChildren));
+            end;
+          else
+            begin
+              panic('expected panel element');
+            end;
+        end case;
 
-      case DesktopChildren[1] of
-        TuiElement.Overlay(Title, OverlayChildren):
-        begin
-          AssertEquals('Confirm', Title);
-          AssertEquals(1, Std.Arrays.Length(OverlayChildren));
-        end;
-        else
-        begin
-          panic('expected overlay element');
-        end;
+        case DesktopChildren[1] of
+          when TuiElement.Overlay(Title, OverlayChildren):
+            begin
+              AssertEquals('Confirm', Title);
+              AssertEquals(1, Std.Arrays.Length(OverlayChildren));
+            end;
+          else
+            begin
+              panic('expected overlay element');
+            end;
+        end case;
       end;
-    end;
     else
-    begin
-      panic('expected desktop element');
-    end;
-  end;
+      begin
+        panic('expected desktop element');
+      end;
+  end case;
   mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(30, 10));
   AssertEquals(0, App.RunIterations(0, UpdateTree, ViewTree, 0, 0));
   App.Close();

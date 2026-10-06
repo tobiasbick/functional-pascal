@@ -34,15 +34,15 @@ end function;
 function TuiArrangeChildParticipates(Node: TuiElement): boolean;
 begin
   case Node of
-    TuiElement.Empty:
-    begin
-      return false;
-    end;
+    when TuiElement.Empty:
+      begin
+        return false;
+      end;
     else
-    begin
-      return true;
-    end;
-  end;
+      begin
+        return true;
+      end;
+  end case;
 end function;
 
 function TuiArrangeMainPreferred(Measured: TuiMeasureResult; Horizontal: boolean): integer;
@@ -70,79 +70,79 @@ end function;
 function TuiArrangeGrowthWeight(Node: TuiElement; Horizontal: boolean): integer;
 begin
   case Node of
-    TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction):
-    begin
-      return 1;
-    end;
-    TuiElement.Spacer(Value):
-    begin
-      if Value.Kind = TuiSpacerKind.Expanding then
-        begin
-          return 1;
-        end;
-      end if;
-
-      return 0;
-    end;
-    TuiElement.Layout(Settings, Children):
-    begin
-      if Horizontal then
-        begin
-          case Settings.Width of
-            Some(Width):
-            begin
-              return 0;
-            end;
-            None:
-            begin
-            end;
+    when TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction):
+      begin
+        return 1;
+      end;
+    when TuiElement.Spacer(Value):
+      begin
+        if Value.Kind = TuiSpacerKind.Expanding then
+          begin
+            return 1;
           end;
-        end;
-      else
-        begin
-          case Settings.Height of
-            Some(Height):
-            begin
-              return 0;
-            end;
-            None:
-            begin
-            end;
+        end if;
+
+        return 0;
+      end;
+    when TuiElement.Layout(Settings, Children):
+      begin
+        if Horizontal then
+          begin
+            case Settings.Width of
+              when Some(Width):
+                begin
+                  return 0;
+                end;
+              when None:
+                begin
+                end;
+            end case;
           end;
-        end;
-      end if;
+        else
+          begin
+            case Settings.Height of
+              when Some(Height):
+                begin
+                  return 0;
+                end;
+              when None:
+                begin
+                end;
+            end case;
+          end;
+        end if;
 
-      if Settings.Stretch > 0 then
-        begin
-          return Settings.Stretch;
-        end;
-      end if;
+        if Settings.Stretch > 0 then
+          begin
+            return Settings.Stretch;
+          end;
+        end if;
 
-      if Horizontal then
-        begin
-          if Settings.SizePolicy.Horizontal = TuiSizePolicyKind.Expanding then
-            begin
-              return 1;
-            end;
-          end if;
+        if Horizontal then
+          begin
+            if Settings.SizePolicy.Horizontal = TuiSizePolicyKind.Expanding then
+              begin
+                return 1;
+              end;
+            end if;
 
-          return 0;
-        end;
-      end if;
+            return 0;
+          end;
+        end if;
 
-      if Settings.SizePolicy.Vertical = TuiSizePolicyKind.Expanding then
-        begin
-          return 1;
-        end;
-      end if;
+        if Settings.SizePolicy.Vertical = TuiSizePolicyKind.Expanding then
+          begin
+            return 1;
+          end;
+        end if;
 
-      return 0;
-    end;
+        return 0;
+      end;
     else
-    begin
-      return 0;
-    end;
-  end;
+      begin
+        return 0;
+      end;
+  end case;
 end function;
 
 function TuiArrangeContentRect(Outer: TuiRect; Margins: TuiMargins): TuiRect;
@@ -367,81 +367,81 @@ begin
   var Clip: TuiRect := NodeBounds.Intersect(ParentClip);
   var SelfIndex: integer := TuiArrangePushEntry(ParentIndex, NodeBounds, Clip);
   case Node of
-    TuiElement.Row(Children, Spacing):
-    begin
-      ArrangeRowColumn(true, Children, Spacing, NodeBounds, Clip, SelfIndex);
-    end;
-    TuiElement.Column(Children, Spacing):
-    begin
-      ArrangeRowColumn(false, Children, Spacing, NodeBounds, Clip, SelfIndex);
-    end;
-    TuiElement.Layout(Settings, Children):
-    begin
-      var Content: TuiRect := TuiArrangeContentRect(NodeBounds, Settings.Margins);
-      if Std.Arrays.Length(Children) = 1 then
-        begin
-          var Available: TuiSize := TuiSize.Create(Content.Width, Content.Height);
-          var Measured: TuiMeasureResult := TuiArrangeLayoutChildMeasure(TuiMeasure(Children[0], TuiMeasureSpec.AtMost(Available)), Settings.SizePolicy, Available);
-          ArrangeNode(Children[0], TuiAlignmentBounds.Resolve(Measured, Settings.Alignment, Content), Clip, SelfIndex);
-        end;
-      end if;
-    end;
-    TuiElement.Scroll(Id, Offset, ChangeAction, Children):
-    begin
-      if Std.Arrays.Length(Children) = 1 then
-        begin
-          var Content: TuiSize := TuiMeasure(Children[0], TuiMeasureSpec.Unbounded()).Preferred;
-          mutable var MaximumX: integer := Content.Width - NodeBounds.Width;
-          mutable var MaximumY: integer := Content.Height - NodeBounds.Height;
-          if MaximumX < 0 then
-            begin
-              MaximumX := 0;
-            end;
-          end if;
-
-          if MaximumY < 0 then
-            begin
-              MaximumY := 0;
-            end;
-          end if;
-          var EffectiveX: integer := TuiArrangeClamp(Offset.X, MaximumX);
-          var EffectiveY: integer := TuiArrangeClamp(Offset.Y, MaximumY);
-          ArrangeNode(Children[0], TuiRect.Create(NodeBounds.X - EffectiveX, NodeBounds.Y -
-                                                                             EffectiveY, Content.Width, Content.Height), Clip, SelfIndex);
-        end;
-      end if;
-    end;
-    TuiElement.Panel(Title, Children), TuiElement.Overlay(Title, Children):
-    begin
-      ArrangeRowColumn(false, Children, 0, NodeBounds.Inset(), Clip, SelfIndex);
-    end;
-    TuiElement.Desktop(Focused, Children):
-    begin
-      var Spec: TuiMeasureSpec := TuiMeasureSpec.AtMost(TuiSize.Create(NodeBounds.Width, NodeBounds.Height));
-      for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
-        begin
-          case Children[Index] of
-            TuiElement.Overlay(Title, OverlayChildren):
-            begin
-              var Measured: TuiMeasureResult := TuiMeasure(Children[Index], Spec);
-              var Width: integer := TuiArrangeMin(Measured.Preferred.Width, NodeBounds.Width);
-              var Height: integer := TuiArrangeMin(Measured.Preferred.Height, NodeBounds.Height);
-              var X: integer := NodeBounds.X + ((NodeBounds.Width - Width) div 2);
-              var Y: integer := NodeBounds.Y + ((NodeBounds.Height - Height) div 2);
-              ArrangeNode(Children[Index], TuiRect.Create(X, Y, Width, Height), Clip, SelfIndex);
-            end;
-            else
-            begin
-              ArrangeNode(Children[Index], NodeBounds, Clip, SelfIndex);
-            end;
+    when TuiElement.Row(Children, Spacing):
+      begin
+        ArrangeRowColumn(true, Children, Spacing, NodeBounds, Clip, SelfIndex);
+      end;
+    when TuiElement.Column(Children, Spacing):
+      begin
+        ArrangeRowColumn(false, Children, Spacing, NodeBounds, Clip, SelfIndex);
+      end;
+    when TuiElement.Layout(Settings, Children):
+      begin
+        var Content: TuiRect := TuiArrangeContentRect(NodeBounds, Settings.Margins);
+        if Std.Arrays.Length(Children) = 1 then
+          begin
+            var Available: TuiSize := TuiSize.Create(Content.Width, Content.Height);
+            var Measured: TuiMeasureResult := TuiArrangeLayoutChildMeasure(TuiMeasure(Children[0], TuiMeasureSpec.AtMost(Available)), Settings.SizePolicy, Available);
+            ArrangeNode(Children[0], TuiAlignmentBounds.Resolve(Measured, Settings.Alignment, Content), Clip, SelfIndex);
           end;
-        end;
-      end for;
-    end;
+        end if;
+      end;
+    when TuiElement.Scroll(Id, Offset, ChangeAction, Children):
+      begin
+        if Std.Arrays.Length(Children) = 1 then
+          begin
+            var Content: TuiSize := TuiMeasure(Children[0], TuiMeasureSpec.Unbounded()).Preferred;
+            mutable var MaximumX: integer := Content.Width - NodeBounds.Width;
+            mutable var MaximumY: integer := Content.Height - NodeBounds.Height;
+            if MaximumX < 0 then
+              begin
+                MaximumX := 0;
+              end;
+            end if;
+
+            if MaximumY < 0 then
+              begin
+                MaximumY := 0;
+              end;
+            end if;
+            var EffectiveX: integer := TuiArrangeClamp(Offset.X, MaximumX);
+            var EffectiveY: integer := TuiArrangeClamp(Offset.Y, MaximumY);
+            ArrangeNode(Children[0], TuiRect.Create(NodeBounds.X - EffectiveX, NodeBounds.Y -
+                                                                               EffectiveY, Content.Width, Content.Height), Clip, SelfIndex);
+          end;
+        end if;
+      end;
+    when TuiElement.Panel(Title, Children), TuiElement.Overlay(Title, Children):
+      begin
+        ArrangeRowColumn(false, Children, 0, NodeBounds.Inset(), Clip, SelfIndex);
+      end;
+    when TuiElement.Desktop(Focused, Children):
+      begin
+        var Spec: TuiMeasureSpec := TuiMeasureSpec.AtMost(TuiSize.Create(NodeBounds.Width, NodeBounds.Height));
+        for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
+          begin
+            case Children[Index] of
+              when TuiElement.Overlay(Title, OverlayChildren):
+                begin
+                  var Measured: TuiMeasureResult := TuiMeasure(Children[Index], Spec);
+                  var Width: integer := TuiArrangeMin(Measured.Preferred.Width, NodeBounds.Width);
+                  var Height: integer := TuiArrangeMin(Measured.Preferred.Height, NodeBounds.Height);
+                  var X: integer := NodeBounds.X + ((NodeBounds.Width - Width) div 2);
+                  var Y: integer := NodeBounds.Y + ((NodeBounds.Height - Height) div 2);
+                  ArrangeNode(Children[Index], TuiRect.Create(X, Y, Width, Height), Clip, SelfIndex);
+                end;
+              else
+                begin
+                  ArrangeNode(Children[Index], NodeBounds, Clip, SelfIndex);
+                end;
+            end case;
+          end;
+        end for;
+      end;
     else
-    begin
-    end;
-  end;
+      begin
+      end;
+  end case;
 end procedure;
 begin
   TuiArrangeBuilding := [];

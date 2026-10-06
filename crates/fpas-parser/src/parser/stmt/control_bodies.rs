@@ -1,4 +1,4 @@
-//! Scoped statement-list bodies for conditionals and loops.
+//! Scoped statement-list bodies for conditionals, case arms, and loops.
 //!
 //! **Documentation:** `docs/pascal/language/control-flow/README.md`.
 
@@ -16,7 +16,7 @@ impl Parser {
         Stmt::Block(statements, self.span_from(start))
     }
 
-    /// Rejects an empty branch or loop body with the canonical no-op spelling.
+    /// Rejects an empty branch, case arm, or loop body with the canonical no-op spelling.
     pub(super) fn require_control_statements(&mut self, statements: &[Stmt]) {
         if statements.is_empty() && !self.nesting_limit_reached {
             let found = super::super::token_display(self.current_token());
@@ -24,7 +24,7 @@ impl Parser {
                 parse_error(
                     PARSE_EXPECTED_TOKEN,
                     format!("Expected a statement in this body, found `{found}`"),
-                    "Write `null;` when this branch or loop intentionally does nothing.",
+                    "Write `null;` when this branch, case arm, or loop intentionally does nothing.",
                     self.current_span(),
                 )
                 .with_expected_found("statement", found),

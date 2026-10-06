@@ -7,33 +7,33 @@ uses
 function TuiColorToConsole(Color: TuiColor): Std.Console.Color;
 begin
   case Color.Kind of
-    TuiColorKind.Crt:
-    begin
-      return CrtColor(Color.Index);
-    end;
-    TuiColorKind.Ansi256:
-    begin
-      return Ansi256Color(Color.Index);
-    end;
-    TuiColorKind.Rgb:
-    begin
-      return RgbColor(Color.Red, Color.Green, Color.Blue);
-    end;
-  end;
+    when TuiColorKind.Crt:
+      begin
+        return CrtColor(Color.Index);
+      end;
+    when TuiColorKind.Ansi256:
+      begin
+        return Ansi256Color(Color.Index);
+      end;
+    when TuiColorKind.Rgb:
+      begin
+        return RgbColor(Color.Red, Color.Green, Color.Blue);
+      end;
+  end case;
 end function;
 
 function TuiCellToConsole(Cell: TuiCell; Palette: TuiPalette): Std.Console.Cell;
 begin
   mutable var Style: TuiStyle := Palette.ForRole(Cell.Role);
   case Cell.ConcreteStyle of
-    Some(Concrete):
-    begin
-      Style := Concrete;
-    end;
-    None:
-    begin
-    end;
-  end;
+    when Some(Concrete):
+      begin
+        Style := Concrete;
+      end;
+    when None:
+      begin
+      end;
+  end case;
 
   return record
     glyph := Cell.Glyph;

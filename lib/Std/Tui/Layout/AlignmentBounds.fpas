@@ -52,23 +52,23 @@ end function;
 function TuiAlignmentBoundsOffset(Available: integer; Extent: integer; Alignment: TuiAlignmentKind): integer;
 begin
   case Alignment of
-    TuiAlignmentKind.Leading:
-    begin
-      return 0;
-    end;
-    TuiAlignmentKind.Center:
-    begin
-      return (Available - Extent) div 2;
-    end;
-    TuiAlignmentKind.Trailing:
-    begin
-      return Available - Extent;
-    end;
-    TuiAlignmentKind.Fill:
-    begin
-      return 0;
-    end;
-  end;
+    when TuiAlignmentKind.Leading:
+      begin
+        return 0;
+      end;
+    when TuiAlignmentKind.Center:
+      begin
+        return (Available - Extent) div 2;
+      end;
+    when TuiAlignmentKind.Trailing:
+      begin
+        return Available - Extent;
+      end;
+    when TuiAlignmentKind.Fill:
+      begin
+        return 0;
+      end;
+  end case;
 
   return 0;
 end function;

@@ -11,15 +11,15 @@ begin
     Unwrap(Receive(Release));
   end);
   case CloseTaskGroupWithTimeout(Group, 0) of
-    Error(Message):
-    begin
-      WriteLn(Message);
-    end;
-    Ok(_):
-    begin
-      panic('Cleanup gate was not released');
-    end;
-  end;
+    when Error(Message):
+      begin
+        WriteLn(Message);
+      end;
+    when Ok(_):
+      begin
+        panic('Cleanup gate was not released');
+      end;
+  end case;
 
   Unwrap(Send(Release, 1));
   var Failures: array of TaskFailure := CloseTaskGroup(Group);

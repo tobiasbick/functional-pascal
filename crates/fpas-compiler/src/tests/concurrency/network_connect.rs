@@ -12,18 +12,18 @@ begin
   var Source: Std.Tasks.CancellationSource := Std.Tasks.CreateCancellationSource();
   var Token: Std.Tasks.CancellationToken := Std.Tasks.GetCancellationToken(Source);
   case Std.Net.ConnectWithCancellation('127.0.0.1', {port}, 1000, Token) of
-    Ok(ConnectionValue): Std.Net.Close(ConnectionValue);
-    Error(Message): panic(Message);
-  end;
+    when Ok(ConnectionValue): Std.Net.Close(ConnectionValue);
+    when Error(Message): panic(Message);
+  end case;
   Std.Tasks.Cancel(Source);
   case Std.Net.ConnectWithCancellation('unused.invalid', 1, 1000, Token) of
-    Ok(ConnectionValue): panic('cancelled TCP connect succeeded');
-    Error(Message): if Message <> 'Network connect cancelled' then panic(Message); end if;
-  end;
+    when Ok(ConnectionValue): panic('cancelled TCP connect succeeded');
+    when Error(Message): if Message <> 'Network connect cancelled' then panic(Message); end if;
+  end case;
   case Std.Net.ConnectTlsWithCancellation('unused.invalid', 1, 1000, Token) of
-    Ok(ConnectionValue): panic('cancelled TLS connect succeeded');
-    Error(Message): if Message <> 'Network connect cancelled' then panic(Message); end if;
-  end;
+    when Ok(ConnectionValue): panic('cancelled TLS connect succeeded');
+    when Error(Message): if Message <> 'Network connect cancelled' then panic(Message); end if;
+  end case;
 end."
     ));
 }

@@ -133,19 +133,19 @@ begin
   for Index: integer := 1 to 4 do
     begin
       case Std.Results.Unwrap(TryReceive(Job.Rows)) of
-        Some(Row):
-        begin
-          if (Row.Y + 1) <= Max(ScreenHeight() - 3, 1) then
-            begin
-              DrawRow(Row.Samples, Job.Width, Row.Y + 1, Job.Palette);
-            end;
-          end if;
-        end;
-        None:
-        begin
-          return;
-        end;
-      end;
+        when Some(Row):
+          begin
+            if (Row.Y + 1) <= Max(ScreenHeight() - 3, 1) then
+              begin
+                DrawRow(Row.Samples, Job.Width, Row.Y + 1, Job.Palette);
+              end;
+            end if;
+          end;
+        when None:
+          begin
+            return;
+          end;
+      end case;
     end;
   end for;
 end procedure;

@@ -104,15 +104,15 @@ begin
   var Client: Connection := Std.Results.Unwrap(Accept(ListenerValue));
   var Configured: boolean := Std.Results.Unwrap(SetTimeout(Client, 5000));
   case ReceiveBytesWithCancellation(Client, 1, Token) of
-    Ok(Bytes):
+    when Ok(Bytes):
     begin
       return Bytes.Length() = 1;
     end;
-    Error(Message):
+    when Error(Message):
     begin
       return false;
     end;
-  end;
+  end case;
 end function;
 function Quick(): integer;
 begin

@@ -75,9 +75,9 @@ begin
   for Base: string in [{paths}] do
   begin
     case Send(Request.Get('http://127.0.0.1:{port}' + Base)) of
-      Ok(_): begin end;
-      Error(Message): panic(Message);
-    end;
+      when Ok(_): begin end;
+      when Error(Message): panic(Message);
+    end case;
   end; end for;
 end.
 "#
@@ -121,11 +121,11 @@ begin
   for I: integer := 1 to {} do
   begin
     case Send(Request.Get('http://127.0.0.1:{port}/')) of
-      Ok(_): panic('invalid Content-Length accepted');
-      Error(Message): begin
+      when Ok(_): panic('invalid Content-Length accepted');
+      when Error(Message): begin
         if not Std.Str.Contains(Message, 'Content-Length') then panic(Message); end if;
       end;
-    end;
+    end case;
   end; end for;
 end.
 "#,

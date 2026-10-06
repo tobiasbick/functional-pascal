@@ -23,6 +23,7 @@ pub(crate) struct CollectedAnchors {
     pub closers: BTreeMap<usize, usize>,
     semicolons: Vec<EmissionAnchor>,
     pub named_ends: Vec<EmissionAnchor>,
+    else_keywords: Vec<usize>,
 }
 
 /// Collects every AST and keyword anchor required to preserve source comments.
@@ -47,6 +48,7 @@ pub(crate) fn collect(unit: &CompilationUnit, source: &str) -> CollectedAnchors 
                             | Token::Enum
                             | Token::Unit
                             | Token::If
+                            | Token::Case
                             | Token::For
                             | Token::While
                     ))
@@ -55,6 +57,11 @@ pub(crate) fn collect(unit: &CompilationUnit, source: &str) -> CollectedAnchors 
                     end: span_end(pair[1].span),
                 })
             })
+            .collect(),
+        else_keywords: tokens
+            .iter()
+            .filter(|token| token.token == Token::Else)
+            .map(|token| token.span.offset)
             .collect(),
         semicolons: tokens
             .iter()
@@ -223,18 +230,26 @@ fn collect_stmt_contents(stmt: &Stmt, begins: &[usize], out: &mut CollectedAncho
             expr,
             arms,
             else_body,
-            ..
+            span,
         } => {
+            collect_closer(*span, out);
             collect_expr(expr, begins, out);
             for arm in arms {
                 collect_case_arm(arm, begins, out);
             }
             if let Some(stmts) = else_body {
-                if let [stmt] = stmts.as_slice() {
-                    collect_branch_stmt(stmt, begins, out);
-                } else {
-                    collect_stmts(stmts, begins, out);
+                let lower = arms.last().map_or(span.offset, |arm| span_end(arm.span));
+                let upper = stmts.first().map_or(span_end(*span), stmt_start);
+                if let Some(anchor) = out
+                    .else_keywords
+                    .iter()
+                    .copied()
+                    .find(|offset| *offset >= lower && *offset < upper)
+                {
+                    out.bodies.insert(span.offset, anchor);
+                    out.leading.push(anchor);
                 }
+                collect_stmts(stmts, begins, out);
             }
         }
         Stmt::For {
@@ -288,6 +303,7 @@ fn collect_stmt_contents(stmt: &Stmt, begins: &[usize], out: &mut CollectedAncho
 }
 
 fn collect_case_arm(arm: &CaseArm, begins: &[usize], out: &mut CollectedAnchors) {
+    out.leading.push(arm.span.offset);
     push_span(arm.span, out);
     for label in &arm.labels {
         if let CaseLabel::Value { start, end, .. } = label {

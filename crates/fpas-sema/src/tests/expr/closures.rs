@@ -74,8 +74,8 @@ begin
     procedure()
     begin
       case N of
-        M if M > 0: return;
-      end;
+        when M if M > 0: return;
+      end case;
     end;
   go F();
 end.",

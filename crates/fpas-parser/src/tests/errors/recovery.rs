@@ -114,8 +114,9 @@ fn truncated_token_stream_without_eof_does_not_hang() {
 
 #[test]
 fn case_missing_semicolon_between_arms_keeps_following_arms() {
-    let (program, errs) =
-        parse_with_errors("program T; begin case X of 1: A := 1 2: A := 2; 3: A := 3; end; end.");
+    let (program, errs) = parse_with_errors(
+        "program T; begin case X of when 1: A := 1 when 2: A := 2; when 3: A := 3; end case; end.",
+    );
     assert!(!errs.is_empty());
     match &program.body[0] {
         crate::Stmt::Case { arms, .. } => {
@@ -155,7 +156,7 @@ fn empty_declaration_sections_report_errors_and_recover() {
         "program T; mutable var begin end.",
         "program T; type begin end.",
         "program T; type E = enum end enum; begin end.",
-        "program T; begin case 1 of end; end.",
+        "program T; begin case 1 of end case; end.",
     ] {
         let (_, errors) = parse_with_errors(source);
         assert!(!errors.is_empty(), "expected parser error for `{source}`");

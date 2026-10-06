@@ -26,19 +26,19 @@ begin
         while not IsCancellationRequested(Token) do
           begin
             case ReceiveWithCancellation(Jobs, Token) of
-              Ok(Value):
-              begin
-                if IsError(SendWithCancellation(Results, Value * Value, Token)) then
-                  begin
-                    return;
-                  end;
-                end if;
-              end;
-              Error(_):
-              begin
-                return;
-              end;
-            end;
+              when Ok(Value):
+                begin
+                  if IsError(SendWithCancellation(Results, Value * Value, Token)) then
+                    begin
+                      return;
+                    end;
+                  end if;
+                end;
+              when Error(_):
+                begin
+                  return;
+                end;
+            end case;
           end;
         end while;
       end);
@@ -53,24 +53,24 @@ begin
   end for;
 
   case CloseTaskGroupWithTimeout(Group, 1000) of
-    Ok(Failures):
-    begin
-      if Length(Failures) <> 0 then
-        begin
-          panic('Worker failed');
-        end;
-      end if;
-    end;
-    Error(_):
-    begin
-      // A timeout retains ownership. Joining is still required, not a forced kill.
-      if Length(CloseTaskGroup(Group)) <> 0 then
-        begin
-          panic('Worker failed');
-        end;
-      end if;
-    end;
-  end;
+    when Ok(Failures):
+      begin
+        if Length(Failures) <> 0 then
+          begin
+            panic('Worker failed');
+          end;
+        end if;
+      end;
+    when Error(_):
+      begin
+        // A timeout retains ownership. Joining is still required, not a forced kill.
+        if Length(CloseTaskGroup(Group)) <> 0 then
+          begin
+            panic('Worker failed');
+          end;
+        end if;
+      end;
+  end case;
 
   CloseChannel(Results);
   WriteLn(Total);

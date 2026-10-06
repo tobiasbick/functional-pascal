@@ -25,11 +25,13 @@ end function;
 ## Handling with case
 
 ```pascal
-var Idx: Option of integer := FindIndex([10, 20, 30], 20);
+var Idx: option of integer := FindIndex([10, 20, 30], 20);
 case Idx of
-  Some(I): WriteLn('Found at ' + IntToStr(I));
-  None:    WriteLn('Not found');
-end;
+  when Some(I):
+    WriteLn('Found at ' + IntToStr(I));
+  when None:
+    WriteLn('Not found');
+end case;
 ```
 
 ## See also

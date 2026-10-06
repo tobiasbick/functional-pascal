@@ -10,19 +10,19 @@ uses
 public function TuiMenuNodeIdOf(Node: TuiMenuNode): TuiMenuNodeId;
 begin
   case Node of
-    TuiMenuNode.Command(Id, Parent, Text, Mnemonic, Action, Enabled, Shortcut):
-    begin
-      return Id;
-    end;
-    TuiMenuNode.Submenu(Id, Parent, Text, Mnemonic, Enabled):
-    begin
-      return Id;
-    end;
-    TuiMenuNode.Separator(Id, Parent):
-    begin
-      return Id;
-    end;
-  end;
+    when TuiMenuNode.Command(Id, Parent, Text, Mnemonic, Action, Enabled, Shortcut):
+      begin
+        return Id;
+      end;
+    when TuiMenuNode.Submenu(Id, Parent, Text, Mnemonic, Enabled):
+      begin
+        return Id;
+      end;
+    when TuiMenuNode.Separator(Id, Parent):
+      begin
+        return Id;
+      end;
+  end case;
 end function;
 
 // Returns a menu node's parent.
@@ -32,19 +32,19 @@ end function;
 public function TuiMenuNodeParent(Node: TuiMenuNode): option of TuiMenuNodeId;
 begin
   case Node of
-    TuiMenuNode.Command(Id, Parent, Text, Mnemonic, Action, Enabled, Shortcut):
-    begin
-      return Parent;
-    end;
-    TuiMenuNode.Submenu(Id, Parent, Text, Mnemonic, Enabled):
-    begin
-      return Parent;
-    end;
-    TuiMenuNode.Separator(Id, Parent):
-    begin
-      return Parent;
-    end;
-  end;
+    when TuiMenuNode.Command(Id, Parent, Text, Mnemonic, Action, Enabled, Shortcut):
+      begin
+        return Parent;
+      end;
+    when TuiMenuNode.Submenu(Id, Parent, Text, Mnemonic, Enabled):
+      begin
+        return Parent;
+      end;
+    when TuiMenuNode.Separator(Id, Parent):
+      begin
+        return Parent;
+      end;
+  end case;
 end function;
 
 // Returns a menu node's label, or an empty string for a separator.
@@ -54,19 +54,19 @@ end function;
 public function TuiMenuNodeText(Node: TuiMenuNode): string;
 begin
   case Node of
-    TuiMenuNode.Command(Id, Parent, Text, Mnemonic, Action, Enabled, Shortcut):
-    begin
-      return Text;
-    end;
-    TuiMenuNode.Submenu(Id, Parent, Text, Mnemonic, Enabled):
-    begin
-      return Text;
-    end;
-    TuiMenuNode.Separator(Id, Parent):
-    begin
-      return '';
-    end;
-  end;
+    when TuiMenuNode.Command(Id, Parent, Text, Mnemonic, Action, Enabled, Shortcut):
+      begin
+        return Text;
+      end;
+    when TuiMenuNode.Submenu(Id, Parent, Text, Mnemonic, Enabled):
+      begin
+        return Text;
+      end;
+    when TuiMenuNode.Separator(Id, Parent):
+      begin
+        return '';
+      end;
+  end case;
 end function;
 
 // Returns a menu node's mnemonic, or an empty string for a separator.
@@ -76,19 +76,19 @@ end function;
 public function TuiMenuNodeMnemonic(Node: TuiMenuNode): string;
 begin
   case Node of
-    TuiMenuNode.Command(Id, Parent, Text, Mnemonic, Action, Enabled, Shortcut):
-    begin
-      return Mnemonic;
-    end;
-    TuiMenuNode.Submenu(Id, Parent, Text, Mnemonic, Enabled):
-    begin
-      return Mnemonic;
-    end;
-    TuiMenuNode.Separator(Id, Parent):
-    begin
-      return '';
-    end;
-  end;
+    when TuiMenuNode.Command(Id, Parent, Text, Mnemonic, Action, Enabled, Shortcut):
+      begin
+        return Mnemonic;
+      end;
+    when TuiMenuNode.Submenu(Id, Parent, Text, Mnemonic, Enabled):
+      begin
+        return Mnemonic;
+      end;
+    when TuiMenuNode.Separator(Id, Parent):
+      begin
+        return '';
+      end;
+  end case;
 end function;
 
 // Reports whether a node can be selected.
@@ -98,19 +98,19 @@ end function;
 public function TuiMenuNodeSelectable(Node: TuiMenuNode): boolean;
 begin
   case Node of
-    TuiMenuNode.Command(Id, Parent, Text, Mnemonic, Action, Enabled, Shortcut):
-    begin
-      return Enabled;
-    end;
-    TuiMenuNode.Submenu(Id, Parent, Text, Mnemonic, Enabled):
-    begin
-      return Enabled;
-    end;
-    TuiMenuNode.Separator(Id, Parent):
-    begin
-      return false;
-    end;
-  end;
+    when TuiMenuNode.Command(Id, Parent, Text, Mnemonic, Action, Enabled, Shortcut):
+      begin
+        return Enabled;
+      end;
+    when TuiMenuNode.Submenu(Id, Parent, Text, Mnemonic, Enabled):
+      begin
+        return Enabled;
+      end;
+    when TuiMenuNode.Separator(Id, Parent):
+      begin
+        return false;
+      end;
+  end case;
 end function;
 
 // Reports whether a node opens a child menu.
@@ -120,19 +120,19 @@ end function;
 public function TuiMenuNodeIsSubmenu(Node: TuiMenuNode): boolean;
 begin
   case Node of
-    TuiMenuNode.Submenu(Id, Parent, Text, Mnemonic, Enabled):
-    begin
-      return true;
-    end;
-    TuiMenuNode.Command(Id, Parent, Text, Mnemonic, Action, Enabled, Shortcut):
-    begin
-      return false;
-    end;
-    TuiMenuNode.Separator(Id, Parent):
-    begin
-      return false;
-    end;
-  end;
+    when TuiMenuNode.Submenu(Id, Parent, Text, Mnemonic, Enabled):
+      begin
+        return true;
+      end;
+    when TuiMenuNode.Command(Id, Parent, Text, Mnemonic, Action, Enabled, Shortcut):
+      begin
+        return false;
+      end;
+    when TuiMenuNode.Separator(Id, Parent):
+      begin
+        return false;
+      end;
+  end case;
 end function;
 
 // Returns a command action when the node is a command.
@@ -142,19 +142,19 @@ end function;
 public function TuiMenuNodeAction(Node: TuiMenuNode): option of TuiAction;
 begin
   case Node of
-    TuiMenuNode.Command(Id, Parent, Text, Mnemonic, Action, Enabled, Shortcut):
-    begin
-      return Some(Action);
-    end;
-    TuiMenuNode.Submenu(Id, Parent, Text, Mnemonic, Enabled):
-    begin
-      return None;
-    end;
-    TuiMenuNode.Separator(Id, Parent):
-    begin
-      return None;
-    end;
-  end;
+    when TuiMenuNode.Command(Id, Parent, Text, Mnemonic, Action, Enabled, Shortcut):
+      begin
+        return Some(Action);
+      end;
+    when TuiMenuNode.Submenu(Id, Parent, Text, Mnemonic, Enabled):
+      begin
+        return None;
+      end;
+    when TuiMenuNode.Separator(Id, Parent):
+      begin
+        return None;
+      end;
+  end case;
 end function;
 
 // Returns a command shortcut when present.
@@ -164,19 +164,19 @@ end function;
 public function TuiMenuNodeShortcut(Node: TuiMenuNode): option of TuiKeyGesture;
 begin
   case Node of
-    TuiMenuNode.Command(Id, Parent, Text, Mnemonic, Action, Enabled, Shortcut):
-    begin
-      return Shortcut;
-    end;
-    TuiMenuNode.Submenu(Id, Parent, Text, Mnemonic, Enabled):
-    begin
-      return None;
-    end;
-    TuiMenuNode.Separator(Id, Parent):
-    begin
-      return None;
-    end;
-  end;
+    when TuiMenuNode.Command(Id, Parent, Text, Mnemonic, Action, Enabled, Shortcut):
+      begin
+        return Shortcut;
+      end;
+    when TuiMenuNode.Submenu(Id, Parent, Text, Mnemonic, Enabled):
+      begin
+        return None;
+      end;
+    when TuiMenuNode.Separator(Id, Parent):
+      begin
+        return None;
+      end;
+  end case;
 end function;
 
 // Finds a node index by identity, or returns `-1`.
@@ -207,33 +207,33 @@ end function;
 public function TuiMenuHasParent(Node: TuiMenuNode; Parent: option of TuiMenuNodeId): boolean;
 begin
   case TuiMenuNodeParent(Node) of
-    Some(NodeParent):
-    begin
-      case Parent of
-        Some(Expected):
-        begin
-          return NodeParent.Value = Expected.Value;
-        end;
-        None:
-        begin
-          return false;
-        end;
+    when Some(NodeParent):
+      begin
+        case Parent of
+          when Some(Expected):
+            begin
+              return NodeParent.Value = Expected.Value;
+            end;
+          when None:
+            begin
+              return false;
+            end;
+        end case;
       end;
-    end;
-    None:
-    begin
-      case Parent of
-        Some(Expected):
-        begin
-          return false;
-        end;
-        None:
-        begin
-          return true;
-        end;
+    when None:
+      begin
+        case Parent of
+          when Some(Expected):
+            begin
+              return false;
+            end;
+          when None:
+            begin
+              return true;
+            end;
+        end case;
       end;
-    end;
-  end;
+  end case;
 end function;
 
 // Returns the first selectable child of a parent.
@@ -336,15 +336,15 @@ begin
       end if;
 
       case TuiMenuNodeParent(Nodes[Index]) of
-        Some(Parent):
-        begin
-          Current := Parent;
-        end;
-        None:
-        begin
-          return Some(Current);
-        end;
-      end;
+        when Some(Parent):
+          begin
+            Current := Parent;
+          end;
+        when None:
+          begin
+            return Some(Current);
+          end;
+      end case;
     end;
   end while;
 

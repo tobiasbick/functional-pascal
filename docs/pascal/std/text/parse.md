@@ -67,9 +67,11 @@ WriteLn(UnwrapOr(R, true));                    // false
 
 ```pascal
 case TryInt(Input) of
-  Ok(N): WriteLn(N);
-  Error(Message): WriteLn(Message);
-end;
+  when Ok(N):
+    WriteLn(N);
+  when Error(Message):
+    WriteLn(Message);
+end case;
 ```
 
 ## Implementation (contributors)

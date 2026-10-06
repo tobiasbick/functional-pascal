@@ -206,25 +206,25 @@ begin
   elsif Key.kind = KeyKind.Character then
     begin
       case Key.ch of
-        '+', '=':
-        begin
-          State.SpanY := Max(State.SpanY * 0.82, 0.000001);
-          RequestRedraw();
-          return true;
-        end;
-        '-':
-        begin
-          State.SpanY := Min(State.SpanY / 0.82, 6.0);
-          RequestRedraw();
-          return true;
-        end;
-        'r', 'R':
-        begin
-          State := ExplorerState.Default();
-          RequestRedraw();
-          return true;
-        end;
-      end;
+        when '+', '=':
+          begin
+            State.SpanY := Max(State.SpanY * 0.82, 0.000001);
+            RequestRedraw();
+            return true;
+          end;
+        when '-':
+          begin
+            State.SpanY := Min(State.SpanY / 0.82, 6.0);
+            RequestRedraw();
+            return true;
+          end;
+        when 'r', 'R':
+          begin
+            State := ExplorerState.Default();
+            RequestRedraw();
+            return true;
+          end;
+      end case;
     end;
   end if;
 
@@ -323,14 +323,14 @@ begin
       end if;
 
       case ReadEventTimeout(16) of
-        Some(E):
-        begin
-          HandleEvent(E);
-        end;
-        None:
-        begin
-        end;
-      end;
+        when Some(E):
+          begin
+            HandleEvent(E);
+          end;
+        when None:
+          begin
+          end;
+      end case;
     end;
   end while;
 

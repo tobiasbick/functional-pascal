@@ -158,9 +158,9 @@ fn enum_data_case_destructure_valid() {
          begin \
            var S: Shape := Shape.Circle(1.0); \
            case S of \
-             Shape.Circle(R): WriteLn(R); \
+             when Shape.Circle(R): WriteLn(R); when \
              Shape.Dot: WriteLn('dot'); \
-           end; \
+           end case; \
          end.",
     );
 }

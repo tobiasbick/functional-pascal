@@ -1,4 +1,5 @@
 mod assignment;
+mod case_blocks;
 mod concurrency;
 mod control_blocks;
 mod exhaustiveness;

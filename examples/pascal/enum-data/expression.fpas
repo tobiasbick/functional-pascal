@@ -13,37 +13,37 @@ type
 function Eval(E: Expr): integer;
 begin
   case E of
-    Expr.Num(V):
-    begin
-      return V;
-    end;
-    Expr.Add(L, R):
-    begin
-      return Eval(L) + Eval(R);
-    end;
-    Expr.Mul(L, R):
-    begin
-      return Eval(L) * Eval(R);
-    end;
-  end;
+    when Expr.Num(V):
+      begin
+        return V;
+      end;
+    when Expr.Add(L, R):
+      begin
+        return Eval(L) + Eval(R);
+      end;
+    when Expr.Mul(L, R):
+      begin
+        return Eval(L) * Eval(R);
+      end;
+  end case;
 end function;
 
 function Show(E: Expr): string;
 begin
   case E of
-    Expr.Num(V):
-    begin
-      return IntToStr(V);
-    end;
-    Expr.Add(L, R):
-    begin
-      return ((('(' + Show(L)) + ' + ') + Show(R)) + ')';
-    end;
-    Expr.Mul(L, R):
-    begin
-      return ((('(' + Show(L)) + ' * ') + Show(R)) + ')';
-    end;
-  end;
+    when Expr.Num(V):
+      begin
+        return IntToStr(V);
+      end;
+    when Expr.Add(L, R):
+      begin
+        return ((('(' + Show(L)) + ' + ') + Show(R)) + ')';
+      end;
+    when Expr.Mul(L, R):
+      begin
+        return ((('(' + Show(L)) + ' * ') + Show(R)) + ')';
+      end;
+  end case;
 end function;
 
 begin

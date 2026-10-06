@@ -161,53 +161,53 @@ begin
       State.Buffer := Std.Arrays.Slice(State.Buffer, EndValue[0] + EndValue[1], (Std.Arrays.Length(State.Buffer) - EndValue[0]) -
                                                                                 EndValue[1]);
       case Std.Net.Utf8.Decode(LineBytes) of
-        Ok(Line):
-        begin
-          if Line = '' then
-            begin
-              Events := EmitEvent(State, Events);
-              State.Data := '';
-              State.EventType := '';
-              State.EventBytes := 0;
-            end;
-          elsif not Std.Str.StartsWith(Line, ':') then
-            begin
-              mutable var Name: string := Line;
-              mutable var Value: string := '';
-              var Colon: integer := Std.Str.IndexOf(Line, ':');
-              if Colon >= 0 then
-                begin
-                  Name := Std.Str.Substring(Line, 0, Colon);
-                  Value := Std.Str.Substring(Line, Colon + 1, (Std.Str.Length(Line) - Colon) - 1);
-                  if Std.Str.StartsWith(Value, ' ') then
-                    begin
-                      Value := Std.Str.Substring(Value, 1, Std.Str.Length(Value) - 1);
-                    end;
-                  end if;
-                end;
-              end if;
+        when Ok(Line):
+          begin
+            if Line = '' then
+              begin
+                Events := EmitEvent(State, Events);
+                State.Data := '';
+                State.EventType := '';
+                State.EventBytes := 0;
+              end;
+            elsif not Std.Str.StartsWith(Line, ':') then
+              begin
+                mutable var Name: string := Line;
+                mutable var Value: string := '';
+                var Colon: integer := Std.Str.IndexOf(Line, ':');
+                if Colon >= 0 then
+                  begin
+                    Name := Std.Str.Substring(Line, 0, Colon);
+                    Value := Std.Str.Substring(Line, Colon + 1, (Std.Str.Length(Line) - Colon) - 1);
+                    if Std.Str.StartsWith(Value, ' ') then
+                      begin
+                        Value := Std.Str.Substring(Value, 1, Std.Str.Length(Value) - 1);
+                      end;
+                    end if;
+                  end;
+                end if;
 
-              if Name = 'data' then
-                begin
-                  State.Data := (State.Data + Value) + #10;
-                end;
-              elsif Name = 'event' then
-                begin
-                  State.EventType := Value;
-                end;
-              elsif (Name = 'id') and (not Std.Str.Contains(Value, #0)) then
-                begin
-                  State.LastEventId := Value;
-                end;
-              end if;
-            end;
-          end if;
-        end;
-        Error(Message):
-        begin
-          return Error('SSE line is not valid UTF-8: ' + Message);
-        end;
-      end;
+                if Name = 'data' then
+                  begin
+                    State.Data := (State.Data + Value) + #10;
+                  end;
+                elsif Name = 'event' then
+                  begin
+                    State.EventType := Value;
+                  end;
+                elsif (Name = 'id') and (not Std.Str.Contains(Value, #0)) then
+                  begin
+                    State.LastEventId := Value;
+                  end;
+                end if;
+              end;
+            end if;
+          end;
+        when Error(Message):
+          begin
+            return Error('SSE line is not valid UTF-8: ' + Message);
+          end;
+      end case;
 
       EndValue := LineEnd(State.Buffer, Final);
     end;
@@ -280,64 +280,64 @@ end function;
 public function Feed(Decoder: Std.Http.Types.SseDecoder; Bytes: array of integer): result of array of SseEvent, string;
 begin
   case DecoderIndex(Decoder) of
-    Ok(Index):
-    begin
-      mutable var State: DecoderState := LoadState(Index);
-      if State.Finished then
-        begin
-          return Error('SSE decoder is already finished');
-        end;
-      end if;
-      mutable var Events: array of SseEvent := [];
-      mutable var Offset: integer := 0;
-      while Offset < Std.Arrays.Length(Bytes) do
-        begin
-          var Available: integer := (State.Maximum - State.EventBytes) -
-                                    Std.Arrays.Length(State.Buffer);
-          mutable var Count: integer := Std.Arrays.Length(Bytes) - Offset;
-          if Count > 1024 then
-            begin
-              Count := 1024;
-            end;
-          end if;
-
-          // One lookahead byte lets Process resolve a trailing CR or reject overflow.
-          if Count > Available then
-            begin
-              Count := Available + 1;
-            end;
-          end if;
-
-          State.Buffer := Std.Arrays.Concat(State.Buffer, Std.Arrays.Slice(Bytes, Offset, Count));
-          case Process(State, false) of
-            Ok(Output):
-            begin
-              State := Output.State;
-              for Item: SseEvent in Output.Events do
-                begin
-                  Std.Arrays.Push(Events, Item);
-                end;
-              end for;
-            end;
-            Error(Message):
-            begin
-              StoreState(Index, FailedState(State));
-              return Error(Message);
-            end;
+    when Ok(Index):
+      begin
+        mutable var State: DecoderState := LoadState(Index);
+        if State.Finished then
+          begin
+            return Error('SSE decoder is already finished');
           end;
+        end if;
+        mutable var Events: array of SseEvent := [];
+        mutable var Offset: integer := 0;
+        while Offset < Std.Arrays.Length(Bytes) do
+          begin
+            var Available: integer := (State.Maximum - State.EventBytes) -
+                                      Std.Arrays.Length(State.Buffer);
+            mutable var Count: integer := Std.Arrays.Length(Bytes) - Offset;
+            if Count > 1024 then
+              begin
+                Count := 1024;
+              end;
+            end if;
 
-          Offset := Offset + Count;
-        end;
-      end while;
+            // One lookahead byte lets Process resolve a trailing CR or reject overflow.
+            if Count > Available then
+              begin
+                Count := Available + 1;
+              end;
+            end if;
 
-      StoreState(Index, State);
-      return Ok(Events);
-    end;
-    Error(Message):
-    begin
-      return Error(Message);
-    end;
-  end;
+            State.Buffer := Std.Arrays.Concat(State.Buffer, Std.Arrays.Slice(Bytes, Offset, Count));
+            case Process(State, false) of
+              when Ok(Output):
+                begin
+                  State := Output.State;
+                  for Item: SseEvent in Output.Events do
+                    begin
+                      Std.Arrays.Push(Events, Item);
+                    end;
+                  end for;
+                end;
+              when Error(Message):
+                begin
+                  StoreState(Index, FailedState(State));
+                  return Error(Message);
+                end;
+            end case;
+
+            Offset := Offset + Count;
+          end;
+        end while;
+
+        StoreState(Index, State);
+        return Ok(Events);
+      end;
+    when Error(Message):
+      begin
+        return Error(Message);
+      end;
+  end case;
 end function;
 
 // Flushes the final SSE line and prevents further input.
@@ -347,32 +347,32 @@ end function;
 public function Finish(Decoder: Std.Http.Types.SseDecoder): result of array of SseEvent, string;
 begin
   case DecoderIndex(Decoder) of
-    Ok(Index):
-    begin
-      var State: DecoderState := LoadState(Index);
-      if State.Finished then
-        begin
-          return Error('SSE decoder is already finished');
-        end;
-      end if;
+    when Ok(Index):
+      begin
+        var State: DecoderState := LoadState(Index);
+        if State.Finished then
+          begin
+            return Error('SSE decoder is already finished');
+          end;
+        end if;
 
-      case Process(State, true) of
-        Ok(Output):
-        begin
-          StoreState(Index, Output.State);
-          return Ok(Output.Events);
-        end;
-        Error(Message):
-        begin
-          StoreState(Index, FailedState(State));
-          return Error(Message);
-        end;
+        case Process(State, true) of
+          when Ok(Output):
+            begin
+              StoreState(Index, Output.State);
+              return Ok(Output.Events);
+            end;
+          when Error(Message):
+            begin
+              StoreState(Index, FailedState(State));
+              return Error(Message);
+            end;
+        end case;
       end;
-    end;
-    Error(Message):
-    begin
-      return Error(Message);
-    end;
-  end;
+    when Error(Message):
+      begin
+        return Error(Message);
+      end;
+  end case;
 end function;
 end unit;

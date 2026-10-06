@@ -5,16 +5,16 @@ uses Std.Arrays, Std.Dictionaries, Std.Json, Std.Json.Fields, Std.Results, Std.T
 function ErrorText<T>(Value: result of T, string): string;
 begin
   case Value of
-    Ok(_):
-    begin
-      Fail('expected an error result');
-      return '';
-    end;
-    Error(Message):
-    begin
-      return Message;
-    end;
-  end;
+    when Ok(_):
+      begin
+        Fail('expected an error result');
+        return '';
+      end;
+    when Error(Message):
+      begin
+        return Message;
+      end;
+  end case;
 end function;
 
 begin

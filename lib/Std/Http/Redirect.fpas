@@ -163,21 +163,21 @@ begin
   end if;
 
   case Std.Net.Uri.Parse(Target) of
-    Ok(Parsed):
-    begin
-      if Std.Str.Contains(Reference, '://') or Std.Str.StartsWith(Reference, '//') then
-        begin
-          return Ok(Origin(Parsed) + NormalizePath(Parsed.Path));
-        end;
-      end if;
+    when Ok(Parsed):
+      begin
+        if Std.Str.Contains(Reference, '://') or Std.Str.StartsWith(Reference, '//') then
+          begin
+            return Ok(Origin(Parsed) + NormalizePath(Parsed.Path));
+          end;
+        end if;
 
-      return Ok(Target);
-    end;
-    Error(Message):
-    begin
-      return Error('Invalid HTTP redirect Location: ' + Message);
-    end;
-  end;
+        return Ok(Target);
+      end;
+    when Error(Message):
+      begin
+        return Error('Invalid HTTP redirect Location: ' + Message);
+      end;
+  end case;
 end function;
 
 // Reports whether two URIs have the same scheme, host, and port.
@@ -250,37 +250,37 @@ begin
   end;
 
   case Std.Net.Uri.Parse(Current.Url) of
-    Ok(Value):
-    begin
-      Base := Value;
-    end;
-    Error(Message):
-    begin
-      return Error(Message);
-    end;
-  end;
+    when Ok(Value):
+      begin
+        Base := Value;
+      end;
+    when Error(Message):
+      begin
+        return Error(Message);
+      end;
+  end case;
   mutable var Target: string := '';
   case Resolve(Base, Location) of
-    Ok(Value):
-    begin
-      Target := Value;
-    end;
-    Error(Message):
-    begin
-      return Error(Message);
-    end;
-  end;
+    when Ok(Value):
+      begin
+        Target := Value;
+      end;
+    when Error(Message):
+      begin
+        return Error(Message);
+      end;
+  end case;
   mutable var TargetUri: Uri := Base;
   case Std.Net.Uri.Parse(Target) of
-    Ok(Value):
-    begin
-      TargetUri := Value;
-    end;
-    Error(Message):
-    begin
-      return Error(Message);
-    end;
-  end;
+    when Ok(Value):
+      begin
+        TargetUri := Value;
+      end;
+    when Error(Message):
+      begin
+        return Error(Message);
+      end;
+  end case;
   var DropBody: boolean := ((StatusCode = 303) and (Current.Method <> 'HEAD')) or
                            (((StatusCode = 301) or (StatusCode = 302)) and (Current.Method = 'POST'));
   mutable var Output: Request := Current;

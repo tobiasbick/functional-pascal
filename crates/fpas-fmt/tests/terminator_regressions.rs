@@ -38,7 +38,7 @@ fn nested_control_bodies_format_without_duplicate_terminators() {
     for source in [
         "program P; begin if C then while D do A(); end while; else B(); end if; end.",
         "program P; begin for I: integer in Values do if C then A(); else B(); end if; end for; end.",
-        "program P; begin case V of 1: A(); else B(); end; end.",
+        "program P; begin case V of when 1: A(); else B(); end case; end.",
     ] {
         common::assert_round_trip("single body", source);
         let (unit, _) = parse_compilation_unit(source);

@@ -49,13 +49,13 @@ end function;
 procedure CloseQuietly(Connection: Std.Net.Connection);
 begin
   case Std.Net.Close(Connection) of
-    Ok(_):
-    begin
-    end;
-    Error(_):
-    begin
-    end;
-  end;
+    when Ok(_):
+      begin
+      end;
+    when Error(_):
+      begin
+      end;
+  end case;
 end procedure;
 
 // Attempts to write an empty 400 response without propagating failures.
@@ -66,13 +66,13 @@ procedure WriteBadRequestQuietly(Connection: Std.Net.Connection);
 begin
   var ResponseValue: ServerResponse := ServerResponse.Create(400, 'Bad Request');
   case Std.Http.Server.WriteResponse(Connection, ResponseValue) of
-    Ok(_):
-    begin
-    end;
-    Error(_):
-    begin
-    end;
-  end;
+    when Ok(_):
+      begin
+      end;
+    when Error(_):
+      begin
+      end;
+  end case;
 end procedure;
 
 // Serves and closes one accepted connection.
@@ -88,15 +88,15 @@ function ServeConnection(
 ): boolean;
 begin
   case Std.Net.SetTimeout(Connection, Options.ConnectionTimeoutMillis) of
-    Ok(_):
-    begin
-    end;
-    Error(_):
-    begin
-      CloseQuietly(Connection);
-      return false;
-    end;
-  end;
+    when Ok(_):
+      begin
+      end;
+    when Error(_):
+      begin
+        CloseQuietly(Connection);
+        return false;
+      end;
+  end case;
   mutable var RequestValue: ServerRequest := record
     Method := '';
     Target := '';
@@ -105,28 +105,28 @@ begin
   end;
 
   case Std.Http.Server.ReadRequest(Connection, Options.MaxHeaderBytes, Options.MaxBodyBytes) of
-    Ok(Value):
-    begin
-      RequestValue := Value;
-    end;
-    Error(_):
-    begin
-      WriteBadRequestQuietly(Connection);
-      CloseQuietly(Connection);
-      return false;
-    end;
-  end;
+    when Ok(Value):
+      begin
+        RequestValue := Value;
+      end;
+    when Error(_):
+      begin
+        WriteBadRequestQuietly(Connection);
+        CloseQuietly(Connection);
+        return false;
+      end;
+  end case;
   var ResponseValue: ServerResponse := Handler(RequestValue);
   mutable var Succeeded: boolean := false;
   case Std.Http.Server.WriteResponse(Connection, ResponseValue) of
-    Ok(_):
-    begin
-      Succeeded := true;
-    end;
-    Error(_):
-    begin
-    end;
-  end;
+    when Ok(_):
+      begin
+        Succeeded := true;
+      end;
+    when Error(_):
+      begin
+      end;
+  end case;
 
   CloseQuietly(Connection);
   return Succeeded;
@@ -153,14 +153,14 @@ end function;
 public function Serve(Listener: Std.Net.Listener; Options: ServerOptions; Handler: RequestHandler): result of boolean, string;
 begin
   case ValidateOptions(Options) of
-    Ok(_):
-    begin
-    end;
-    Error(Message):
-    begin
-      return Error(Message);
-    end;
-  end;
+    when Ok(_):
+      begin
+      end;
+    when Error(Message):
+      begin
+        return Error(Message);
+      end;
+  end case;
   mutable var Accepted: integer := 0;
   while (Options.MaxRequests = 0) or (Accepted < Options.MaxRequests) do
     begin
@@ -168,17 +168,17 @@ begin
       while HasCapacity(Options, Accepted, Std.Arrays.Length(Tasks)) do
         begin
           case Std.Net.Accept(Listener) of
-            Ok(Connection):
-            begin
-              Std.Arrays.Push(Tasks, go ServeConnection(Connection, Options, Handler));
-              Accepted := Accepted + 1;
-            end;
-            Error(Message):
-            begin
-              Std.Tasks.WaitAll(Tasks);
-              return Error(Message);
-            end;
-          end;
+            when Ok(Connection):
+              begin
+                Std.Arrays.Push(Tasks, go ServeConnection(Connection, Options, Handler));
+                Accepted := Accepted + 1;
+              end;
+            when Error(Message):
+              begin
+                Std.Tasks.WaitAll(Tasks);
+                return Error(Message);
+              end;
+          end case;
         end;
       end while;
 

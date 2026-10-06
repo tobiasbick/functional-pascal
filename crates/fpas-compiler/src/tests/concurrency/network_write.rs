@@ -13,23 +13,23 @@ program CancellableWrite;
 uses Std.Net, Std.Tasks;
 begin
   case Std.Net.Connect('127.0.0.1', {port}, 1000) of
-    Ok(ConnectionValue):
+    when Ok(ConnectionValue):
     begin
       var Source: Std.Tasks.CancellationSource := Std.Tasks.CreateCancellationSource();
       var Token: Std.Tasks.CancellationToken := Std.Tasks.GetCancellationToken(Source);
       case Std.Net.SendBytesWithCancellation(ConnectionValue, [42, 43], Token) of
-        Ok(Count): if Count <> 2 then panic('wrong write count'); end if;
-        Error(Message): panic(Message);
-      end;
+        when Ok(Count): if Count <> 2 then panic('wrong write count'); end if;
+        when Error(Message): panic(Message);
+      end case;
       Std.Tasks.Cancel(Source);
       case Std.Net.SendBytesWithCancellation(ConnectionValue, [99], Token) of
-        Ok(Count): panic('cancelled write succeeded');
-        Error(Message): if Message <> 'Network write cancelled' then panic(Message); end if;
-      end;
+        when Ok(Count): panic('cancelled write succeeded');
+        when Error(Message): if Message <> 'Network write cancelled' then panic(Message); end if;
+      end case;
       Std.Net.Close(ConnectionValue);
     end;
-    Error(Message): panic(Message);
-  end;
+    when Error(Message): panic(Message);
+  end case;
 end."
     ));
     let (mut peer, _) = listener.accept().expect("accept");

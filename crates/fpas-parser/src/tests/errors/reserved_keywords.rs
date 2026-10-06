@@ -48,7 +48,9 @@ fn qualified_reserved_names_have_the_same_rename_hint() {
             format!("program P; begin Value.{keyword}(); end."),
             format!("program P; uses App.{keyword}; begin end."),
             format!("program P; begin var Value: App.{keyword} := 1; end."),
-            format!("program P; begin case Value of E.{keyword}: WriteLn('value'); end; end."),
+            format!(
+                "program P; begin case Value of when E.{keyword}: WriteLn('value'); end case; end."
+            ),
         ] {
             let (_, diagnostics) = parse_with_errors(&source);
             assert!(

@@ -6,15 +6,15 @@ function UpdateFrames(State: integer; Msg: TuiMsg; Cmd: TuiCmdOutput): integer;
 begin
   Cmd.Set(TuiCmd.NoCommand);
   case Msg of
-    TuiMsg.Tick(Delta):
-    begin
-      return State + 1;
-    end;
+    when TuiMsg.Tick(Delta):
+      begin
+        return State + 1;
+      end;
     else
-    begin
-      return State;
-    end;
-  end;
+      begin
+        return State;
+      end;
+  end case;
 end function;
 
 function ViewFrames(State: integer): TuiElement;

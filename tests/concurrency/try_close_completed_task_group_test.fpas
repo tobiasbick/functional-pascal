@@ -12,15 +12,15 @@ begin
   StartTaskInGroup(Returned, function(Token: CancellationToken): result of boolean, string begin
     Send(Ready, true);
     case ReceiveWithCancellation(Gate, Token) of
-      Ok(_):
-      begin
-        return Error('expected returned error');
-      end;
-      Error(Message):
-      begin
-        return Error('probe cancelled pending work');
-      end;
-    end;
+      when Ok(_):
+        begin
+          return Error('expected returned error');
+        end;
+      when Error(Message):
+        begin
+          return Error('probe cancelled pending work');
+        end;
+    end case;
   end);
   AssertTrue(Std.Results.Unwrap(ReceiveWithTimeout(Ready, 10000)));
   AssertTrue(IsNone(TryCloseCompletedTaskGroup(Returned)));

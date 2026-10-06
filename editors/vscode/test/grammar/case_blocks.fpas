@@ -1,0 +1,17 @@
+program CaseBlocks;
+
+begin
+  case Some(1) of
+    when Some(Value) if Value > 0:
+      null;
+    when Some(Value):
+      case Value of
+        when 0, 1:
+          null;
+        else
+          null;
+      end case;
+    when None:
+      null;
+  end case;
+end.

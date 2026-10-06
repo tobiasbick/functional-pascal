@@ -28,33 +28,33 @@ end function;
 function TuiSurfaceConcreteStyleEqual(Left: option of TuiStyle; Right: option of TuiStyle): boolean;
 begin
   case Left of
-    Some(LeftStyle):
-    begin
-      case Right of
-        Some(RightStyle):
-        begin
-          return TuiSurfaceStyleEqual(LeftStyle, RightStyle);
-        end;
-        None:
-        begin
-          return false;
-        end;
+    when Some(LeftStyle):
+      begin
+        case Right of
+          when Some(RightStyle):
+            begin
+              return TuiSurfaceStyleEqual(LeftStyle, RightStyle);
+            end;
+          when None:
+            begin
+              return false;
+            end;
+        end case;
       end;
-    end;
-    None:
-    begin
-      case Right of
-        Some(RightStyle):
-        begin
-          return false;
-        end;
-        None:
-        begin
-          return true;
-        end;
+    when None:
+      begin
+        case Right of
+          when Some(RightStyle):
+            begin
+              return false;
+            end;
+          when None:
+            begin
+              return true;
+            end;
+        end case;
       end;
-    end;
-  end;
+  end case;
 end function;
 
 // Returns whether one working cell differs from its presented counterpart.

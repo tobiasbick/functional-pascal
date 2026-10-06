@@ -86,7 +86,7 @@ impl CommentMap {
         self.uses_anchor
     }
 
-    /// Byte offset of the `begin` keyword belonging to a program, routine, or closure owner.
+    /// Byte offset of the body keyword for a program, routine, closure, or case catch-all.
     #[must_use]
     pub fn body_anchor(&self, owner_start: usize) -> Option<usize> {
         self.body_anchors.get(&owner_start).copied()

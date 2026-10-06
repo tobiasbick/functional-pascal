@@ -34,13 +34,13 @@ end function;
 procedure CloseQuietly(Connection: Std.Net.Connection);
 begin
   case Std.Net.Close(Connection) of
-    Ok(_):
-    begin
-    end;
-    Error(_):
-    begin
-    end;
-  end;
+    when Ok(_):
+      begin
+      end;
+    when Error(_):
+      begin
+      end;
+  end case;
 end procedure;
 
 // Sends one request without applying redirect policy.
@@ -52,67 +52,67 @@ begin
   var UriValue: Uri := try Std.Net.Uri.Parse(RequestValue.Url);
   var Encoded: array of integer := try Std.Http.Wire.EncodeRequest(RequestValue, UriValue);
   case OpenConnection(UriValue, RequestValue.TimeoutMillis) of
-    Ok(Connection):
-    begin
-      case Std.Net.SetTimeout(Connection, RequestValue.TimeoutMillis) of
-        Ok(Configured):
-        begin
-          if not Configured then
+    when Ok(Connection):
+      begin
+        case Std.Net.SetTimeout(Connection, RequestValue.TimeoutMillis) of
+          when Ok(Configured):
+            begin
+              if not Configured then
+                begin
+                  CloseQuietly(Connection);
+                  return Error('Network timeout configuration failed');
+                end;
+              end if;
+            end;
+          when Error(Message):
             begin
               CloseQuietly(Connection);
-              return Error('Network timeout configuration failed');
-            end;
-          end if;
-        end;
-        Error(Message):
-        begin
-          CloseQuietly(Connection);
-          return Error(Message);
-        end;
-      end;
-
-      case Std.Http.Io.WriteAll(Connection, Encoded) of
-        Ok(Written):
-        begin
-        end;
-        Error(Message):
-        begin
-          CloseQuietly(Connection);
-          return Error(Message);
-        end;
-      end;
-
-      case Std.Http.Head.ReadFinal(Connection, RequestValue.MaxHeaderBytes, RequestValue.MaxResponseBytes) of
-        Ok(FinalHead):
-        begin
-          case Std.Http.Stream.CreateBody(Connection, FinalHead.InitialBody, FinalHead.Head.Headers, Std.Http.Wire.ResponseHasBody(RequestValue.Method, FinalHead.Head.StatusCode), FinalHead.BytesReceived, RequestValue.MaxResponseBytes) of
-            Ok(Body):
-            begin
-              return Ok(record
-                StatusCode := FinalHead.Head.StatusCode;
-                ReasonPhrase := FinalHead.Head.ReasonPhrase;
-                Headers := FinalHead.Head.Headers;
-                Body := Body;
-              end);
-            end;
-            Error(Message):
-            begin
               return Error(Message);
             end;
-          end;
-        end;
-        Error(Message):
-        begin
-          CloseQuietly(Connection);
-          return Error(Message);
-        end;
+        end case;
+
+        case Std.Http.Io.WriteAll(Connection, Encoded) of
+          when Ok(Written):
+            begin
+            end;
+          when Error(Message):
+            begin
+              CloseQuietly(Connection);
+              return Error(Message);
+            end;
+        end case;
+
+        case Std.Http.Head.ReadFinal(Connection, RequestValue.MaxHeaderBytes, RequestValue.MaxResponseBytes) of
+          when Ok(FinalHead):
+            begin
+              case Std.Http.Stream.CreateBody(Connection, FinalHead.InitialBody, FinalHead.Head.Headers, Std.Http.Wire.ResponseHasBody(RequestValue.Method, FinalHead.Head.StatusCode), FinalHead.BytesReceived, RequestValue.MaxResponseBytes) of
+                when Ok(Body):
+                  begin
+                    return Ok(record
+                      StatusCode := FinalHead.Head.StatusCode;
+                      ReasonPhrase := FinalHead.Head.ReasonPhrase;
+                      Headers := FinalHead.Head.Headers;
+                      Body := Body;
+                    end);
+                  end;
+                when Error(Message):
+                  begin
+                    return Error(Message);
+                  end;
+              end case;
+            end;
+          when Error(Message):
+            begin
+              CloseQuietly(Connection);
+              return Error(Message);
+            end;
+        end case;
       end;
-    end;
-    Error(Message):
-    begin
-      return Error(Message);
-    end;
-  end;
+    when Error(Message):
+      begin
+        return Error(Message);
+      end;
+  end case;
 end function;
 
 // Opens the final response body after following bounded HTTP redirects.
@@ -143,77 +143,77 @@ begin
   while true do
     begin
       case OpenOnce(Current) of
-        Ok(ResponseValue):
-        begin
-          if Std.Http.Redirect.IsStatus(ResponseValue.StatusCode) then
-            begin
-              case Std.Http.Headers.Find(ResponseValue.Headers, 'Location') of
-                Some(Location):
-                begin
-                  if Redirects >= RequestValue.MaxRedirects then
+        when Ok(ResponseValue):
+          begin
+            if Std.Http.Redirect.IsStatus(ResponseValue.StatusCode) then
+              begin
+                case Std.Http.Headers.Find(ResponseValue.Headers, 'Location') of
+                  when Some(Location):
                     begin
+                      if Redirects >= RequestValue.MaxRedirects then
+                        begin
+                          case Std.Http.Stream.CloseBody(ResponseValue.Body) of
+                            when Ok(_):
+                              begin
+                              end;
+                            when Error(_):
+                              begin
+                              end;
+                          end case;
+
+                          return Error('HTTP redirect count exceeds MaxRedirects');
+                        end;
+                      end if;
+                      mutable var Next: Request := Current;
+                      case Std.Http.Redirect.NextRequest(Current, ResponseValue.StatusCode, Location) of
+                        when Ok(Value):
+                          begin
+                            Next := Value;
+                          end;
+                        when Error(Message):
+                          begin
+                            case Std.Http.Stream.CloseBody(ResponseValue.Body) of
+                              when Ok(_):
+                                begin
+                                end;
+                              when Error(_):
+                                begin
+                                end;
+                            end case;
+
+                            return Error(Message);
+                          end;
+                      end case;
+
                       case Std.Http.Stream.CloseBody(ResponseValue.Body) of
-                        Ok(_):
-                        begin
-                        end;
-                        Error(_):
-                        begin
-                        end;
-                      end;
+                        when Ok(_):
+                          begin
+                          end;
+                        when Error(_):
+                          begin
+                          end;
+                      end case;
 
-                      return Error('HTTP redirect count exceeds MaxRedirects');
+                      Current := Next;
+                      Redirects := Redirects + 1;
                     end;
-                  end if;
-                  mutable var Next: Request := Current;
-                  case Std.Http.Redirect.NextRequest(Current, ResponseValue.StatusCode, Location) of
-                    Ok(Value):
+                  when None:
                     begin
-                      Next := Value;
+                      return Ok(ResponseValue);
                     end;
-                    Error(Message):
-                    begin
-                      case Std.Http.Stream.CloseBody(ResponseValue.Body) of
-                        Ok(_):
-                        begin
-                        end;
-                        Error(_):
-                        begin
-                        end;
-                      end;
-
-                      return Error(Message);
-                    end;
-                  end;
-
-                  case Std.Http.Stream.CloseBody(ResponseValue.Body) of
-                    Ok(_):
-                    begin
-                    end;
-                    Error(_):
-                    begin
-                    end;
-                  end;
-
-                  Current := Next;
-                  Redirects := Redirects + 1;
-                end;
-                None:
-                begin
-                  return Ok(ResponseValue);
-                end;
+                end case;
               end;
-            end;
-          else
-            begin
-              return Ok(ResponseValue);
-            end;
-          end if;
-        end;
-        Error(Message):
-        begin
-          return Error(Message);
-        end;
-      end;
+            else
+              begin
+                return Ok(ResponseValue);
+              end;
+            end if;
+          end;
+        when Error(Message):
+          begin
+            return Error(Message);
+          end;
+      end case;
     end;
   end while;
 
@@ -227,50 +227,50 @@ end function;
 public function Send(RequestValue: Request): result of Response, string;
 begin
   case OpenStream(RequestValue) of
-    Ok(StreamResponseValue):
-    begin
-      mutable var Chunks: array of array of integer := [];
-      while true do
-        begin
-          case Std.Http.Stream.ReadBody(StreamResponseValue.Body, 65536) of
-            Ok(Bytes):
-            begin
-              if Std.Arrays.Length(Bytes) = 0 then
+    when Ok(StreamResponseValue):
+      begin
+        mutable var Chunks: array of array of integer := [];
+        while true do
+          begin
+            case Std.Http.Stream.ReadBody(StreamResponseValue.Body, 65536) of
+              when Ok(Bytes):
                 begin
-                  return Ok(record
-                    StatusCode := StreamResponseValue.StatusCode;
-                    ReasonPhrase := StreamResponseValue.ReasonPhrase;
-                    Headers := StreamResponseValue.Headers;
-                    Body := Std.Http.Io.JoinChunks(Chunks);
-                  end);
-                end;
-              end if;
+                  if Std.Arrays.Length(Bytes) = 0 then
+                    begin
+                      return Ok(record
+                        StatusCode := StreamResponseValue.StatusCode;
+                        ReasonPhrase := StreamResponseValue.ReasonPhrase;
+                        Headers := StreamResponseValue.Headers;
+                        Body := Std.Http.Io.JoinChunks(Chunks);
+                      end);
+                    end;
+                  end if;
 
-              Std.Arrays.Push(Chunks, Bytes);
-            end;
-            Error(Message):
-            begin
-              case Std.Http.Stream.CloseBody(StreamResponseValue.Body) of
-                Ok(_):
-                begin
+                  Std.Arrays.Push(Chunks, Bytes);
                 end;
-                Error(_):
+              when Error(Message):
                 begin
-                end;
-              end;
+                  case Std.Http.Stream.CloseBody(StreamResponseValue.Body) of
+                    when Ok(_):
+                      begin
+                      end;
+                    when Error(_):
+                      begin
+                      end;
+                  end case;
 
-              return Error(Message);
-            end;
+                  return Error(Message);
+                end;
+            end case;
           end;
-        end;
-      end while;
+        end while;
 
-      return Error('HTTP response stream ended unexpectedly');
-    end;
-    Error(Message):
-    begin
-      return Error(Message);
-    end;
-  end;
+        return Error('HTTP response stream ended unexpectedly');
+      end;
+    when Error(Message):
+      begin
+        return Error(Message);
+      end;
+  end case;
 end function;
 end unit;

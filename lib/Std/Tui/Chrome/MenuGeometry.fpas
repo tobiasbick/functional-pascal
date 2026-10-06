@@ -18,20 +18,20 @@ begin
   for Index: integer := 0 to Std.Arrays.Length(Nodes) - 1 do
     begin
       case TuiMenuNodeParent(Nodes[Index]) of
-        Some(Parent):
-        begin
-        end;
-        None:
-        begin
-          if TuiMenuNodeIdOf(Nodes[Index]).Value = Target.Value then
-            begin
-              return X;
-            end;
-          end if;
+        when Some(Parent):
+          begin
+          end;
+        when None:
+          begin
+            if TuiMenuNodeIdOf(Nodes[Index]).Value = Target.Value then
+              begin
+                return X;
+              end;
+            end if;
 
-          X := (X + Std.Console.DisplayWidth(TuiMenuNodeText(Nodes[Index]))) + 2;
-        end;
-      end;
+            X := (X + Std.Console.DisplayWidth(TuiMenuNodeText(Nodes[Index]))) + 2;
+          end;
+      end case;
     end;
   end for;
 
@@ -71,14 +71,14 @@ begin
           Height := Height + 1;
           mutable var ContentWidth: integer := Std.Console.DisplayWidth(TuiMenuNodeText(Nodes[Index]));
           case TuiMenuNodeShortcut(Nodes[Index]) of
-            Some(Shortcut):
-            begin
-              ContentWidth := (ContentWidth + Std.Console.DisplayWidth(Shortcut.Display)) + 2;
-            end;
-            None:
-            begin
-            end;
-          end;
+            when Some(Shortcut):
+              begin
+                ContentWidth := (ContentWidth + Std.Console.DisplayWidth(Shortcut.Display)) + 2;
+              end;
+            when None:
+              begin
+              end;
+          end case;
 
           if TuiMenuNodeIsSubmenu(Nodes[Index]) then
             begin
@@ -110,46 +110,46 @@ begin
   end if;
 
   case State.Active of
-    Some(Active):
-    begin
-      mutable var Current: TuiMenuNodeId := Active;
-      mutable var CurrentIndex: integer := TuiMenuFind(Nodes, Current);
-      if not TuiMenuNodeIsSubmenu(Nodes[CurrentIndex]) then
-        begin
-          case TuiMenuNodeParent(Nodes[CurrentIndex]) of
-            Some(Parent):
-            begin
-              Current := Parent;
-            end;
-            None:
-            begin
-            end;
+    when Some(Active):
+      begin
+        mutable var Current: TuiMenuNodeId := Active;
+        mutable var CurrentIndex: integer := TuiMenuFind(Nodes, Current);
+        if not TuiMenuNodeIsSubmenu(Nodes[CurrentIndex]) then
+          begin
+            case TuiMenuNodeParent(Nodes[CurrentIndex]) of
+              when Some(Parent):
+                begin
+                  Current := Parent;
+                end;
+              when None:
+                begin
+                end;
+            end case;
           end;
-        end;
-      end if;
-      mutable var Remaining: integer := Std.Arrays.Length(Nodes) + 1;
-      while Remaining > 0 do
-        begin
-          Remaining := Remaining - 1;
-          Std.Arrays.Push(Reversed, Current);
-          CurrentIndex := TuiMenuFind(Nodes, Current);
-          case TuiMenuNodeParent(Nodes[CurrentIndex]) of
-            Some(Parent):
-            begin
-              Current := Parent;
-            end;
-            None:
-            begin
-              Remaining := 0;
-            end;
+        end if;
+        mutable var Remaining: integer := Std.Arrays.Length(Nodes) + 1;
+        while Remaining > 0 do
+          begin
+            Remaining := Remaining - 1;
+            Std.Arrays.Push(Reversed, Current);
+            CurrentIndex := TuiMenuFind(Nodes, Current);
+            case TuiMenuNodeParent(Nodes[CurrentIndex]) of
+              when Some(Parent):
+                begin
+                  Current := Parent;
+                end;
+              when None:
+                begin
+                  Remaining := 0;
+                end;
+            end case;
           end;
-        end;
-      end while;
-    end;
-    None:
-    begin
-    end;
-  end;
+        end while;
+      end;
+    when None:
+      begin
+      end;
+  end case;
   mutable var Index: integer := Std.Arrays.Length(Reversed) - 1;
   while Index >= 0 do
     begin

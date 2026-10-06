@@ -14,11 +14,15 @@ type
 function DirectionName(D: Direction): string;
 begin
   case D of
-    Direction.North: return 'North';
-    Direction.South: return 'South';
-    Direction.East:  return 'East';
-    Direction.West:  return 'West';
-  end;
+    when Direction.North:
+      return 'North';
+    when Direction.South:
+      return 'South';
+    when Direction.East:
+      return 'East';
+    when Direction.West:
+      return 'West';
+  end case;
 end function;
 ```
 
@@ -26,13 +30,13 @@ Enum patterns bind variant fields positionally with plain identifiers only:
 
 ```pascal
 case S of
-  Shape.Circle(R):
+  when Shape.Circle(R):
     WriteLn('Circle');
-  Shape.Rectangle(W, H):
+  when Shape.Rectangle(W, H):
     WriteLn('Rectangle');
-  Shape.Point:
+  when Shape.Point:
     WriteLn('Point');
-end;
+end case;
 ```
 
 Rules:

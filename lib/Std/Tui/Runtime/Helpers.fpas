@@ -36,18 +36,18 @@ begin
   end if;
 
   case Preferred of
-    Some(Id):
-    begin
-      if TuiControlIndex(Controls, Id) >= 0 then
-        begin
-          return Preferred;
-        end;
-      end if;
-    end;
-    None:
-    begin
-    end;
-  end;
+    when Some(Id):
+      begin
+        if TuiControlIndex(Controls, Id) >= 0 then
+          begin
+            return Preferred;
+          end;
+        end if;
+      end;
+    when None:
+      begin
+      end;
+  end case;
 
   return Some(Controls[0]);
 end function;

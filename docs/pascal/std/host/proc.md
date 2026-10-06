@@ -4,17 +4,19 @@ Blocking host process execution for FPAS programs. This page is the full API for
 
 ```pascal
 program Example;
+
 uses Std.Console, Std.Proc;
 
 begin
   case Std.Proc.RunCapture('fpas', ['--version']) of
-    Ok(Output):
-    begin
-      WriteLn(Output.Stdout);
-      WriteLn('exit code: ', Output.ExitCode);
-    end;
-    Error(Message): WriteLn(Message);
-  end;
+    when Ok(Output):
+      begin
+        WriteLn(Output.Stdout);
+        WriteLn('exit code: ', Output.ExitCode);
+      end;
+    when Error(Message):
+      WriteLn(Message);
+  end case;
 end.
 ```
 
@@ -109,13 +111,14 @@ terminal.
 
 ```pascal
 case RunCapture('fpas', ['check', 'main.fpas']) of
-  Ok(Output):
-  begin
-    WriteLn(Output.Stdout);
-    WriteLn(Output.Stderr);
-  end;
-  Error(Message): WriteLn(Message);
-end;
+  when Ok(Output):
+    begin
+      WriteLn(Output.Stdout);
+      WriteLn(Output.Stderr);
+    end;
+  when Error(Message):
+    WriteLn(Message);
+end case;
 ```
 
 A non-zero exit code is a completed process and therefore remains `Ok`; inspect

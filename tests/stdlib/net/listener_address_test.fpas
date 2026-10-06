@@ -24,26 +24,26 @@ begin
   var FirstClosed: boolean := try CloseListener(First);
   var SecondClosed: boolean := try CloseListener(Second);
   case ListenerLocalAddress(First) of
-    Ok(_):
-    begin
-      panic('Closed listener returned an address');
-    end;
-    Error(_):
-    begin
-    end;
-  end;
+    when Ok(_):
+      begin
+        panic('Closed listener returned an address');
+      end;
+    when Error(_):
+      begin
+      end;
+  end case;
 
   return Ok(true);
 end function;
 
 begin
   case ExerciseListener() of
-    Ok(_):
-    begin
-    end;
-    Error(Message):
-    begin
-      panic(Message);
-    end;
-  end;
+    when Ok(_):
+      begin
+      end;
+    when Error(Message):
+      begin
+        panic(Message);
+      end;
+  end case;
 end.

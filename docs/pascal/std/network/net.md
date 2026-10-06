@@ -5,13 +5,16 @@ Hosted blocking TCP/TLS listeners and connections with explicit timeouts and byt
 ```pascal
 uses Std.Net;
 
+
 case Connect('127.0.0.1', 8080, 5000) of
-  Ok(Connection):
-  begin
-    // Use ReceiveBytes, SendBytes, SetTimeout, and Close.
-  end;
-  Error(Message): panic(Message)
-end
+  when Ok(Connection):
+    begin
+      // Use ReceiveBytes, SendBytes, SetTimeout, and Close.
+      null;
+    end;
+  when Error(Message):
+    panic(Message);
+end case;
 ```
 
 ## Quick reference

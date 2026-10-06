@@ -21,15 +21,15 @@ end function;
 public function ParseTable(Text: string): result of dict of string to TomlValue, string;
 begin
   case try Std.Toml.Parse(Text) of
-    TomlValue.Table(Fields):
-    begin
-      return Ok(Fields);
-    end;
+    when TomlValue.Table(Fields):
+      begin
+        return Ok(Fields);
+      end;
     else
-    begin
-      return Error('TOML root must be a table');
-    end;
-  end;
+      begin
+        return Error('TOML root must be a table');
+      end;
+  end case;
 end function;
 
 // Returns one present key of any TOML kind.
@@ -40,15 +40,15 @@ end function;
 public function Field(Fields: dict of string to TomlValue; Name: string): result of TomlValue, string;
 begin
   case Std.Dictionaries.Get(Fields, Name) of
-    Some(Value):
-    begin
-      return Ok(Value);
-    end;
-    None:
-    begin
-      return Error('missing field ' + Name);
-    end;
-  end;
+    when Some(Value):
+      begin
+        return Ok(Value);
+      end;
+    when None:
+      begin
+        return Error('missing field ' + Name);
+      end;
+  end case;
 end function;
 
 // Returns one required string key.
@@ -59,15 +59,15 @@ end function;
 public function StringField(Fields: dict of string to TomlValue; Name: string): result of string, string;
 begin
   case try Field(Fields, Name) of
-    TomlValue.String(Value):
-    begin
-      return Ok(Value);
-    end;
+    when TomlValue.String(Value):
+      begin
+        return Ok(Value);
+      end;
     else
-    begin
-      return Error(MismatchError(Name, 'a string'));
-    end;
-  end;
+      begin
+        return Error(MismatchError(Name, 'a string'));
+      end;
+  end case;
 end function;
 
 // Returns one required integer key; floats are rejected.
@@ -78,15 +78,15 @@ end function;
 public function IntegerField(Fields: dict of string to TomlValue; Name: string): result of integer, string;
 begin
   case try Field(Fields, Name) of
-    TomlValue.Integer(Value):
-    begin
-      return Ok(Value);
-    end;
+    when TomlValue.Integer(Value):
+      begin
+        return Ok(Value);
+      end;
     else
-    begin
-      return Error(MismatchError(Name, 'an integer'));
-    end;
-  end;
+      begin
+        return Error(MismatchError(Name, 'an integer'));
+      end;
+  end case;
 end function;
 
 // Returns one required float key; integers are rejected.
@@ -97,15 +97,15 @@ end function;
 public function FloatField(Fields: dict of string to TomlValue; Name: string): result of real, string;
 begin
   case try Field(Fields, Name) of
-    TomlValue.Float(Value):
-    begin
-      return Ok(Value);
-    end;
+    when TomlValue.Float(Value):
+      begin
+        return Ok(Value);
+      end;
     else
-    begin
-      return Error(MismatchError(Name, 'a float'));
-    end;
-  end;
+      begin
+        return Error(MismatchError(Name, 'a float'));
+      end;
+  end case;
 end function;
 
 // Returns one required boolean key.
@@ -116,15 +116,15 @@ end function;
 public function BooleanField(Fields: dict of string to TomlValue; Name: string): result of boolean, string;
 begin
   case try Field(Fields, Name) of
-    TomlValue.Boolean(Value):
-    begin
-      return Ok(Value);
-    end;
+    when TomlValue.Boolean(Value):
+      begin
+        return Ok(Value);
+      end;
     else
-    begin
-      return Error(MismatchError(Name, 'a boolean'));
-    end;
-  end;
+      begin
+        return Error(MismatchError(Name, 'a boolean'));
+      end;
+  end case;
 end function;
 
 // Returns one required nested table key.
@@ -135,15 +135,15 @@ end function;
 public function TableField(Fields: dict of string to TomlValue; Name: string): result of dict of string to TomlValue, string;
 begin
   case try Field(Fields, Name) of
-    TomlValue.Table(Value):
-    begin
-      return Ok(Value);
-    end;
+    when TomlValue.Table(Value):
+      begin
+        return Ok(Value);
+      end;
     else
-    begin
-      return Error(MismatchError(Name, 'a table'));
-    end;
-  end;
+      begin
+        return Error(MismatchError(Name, 'a table'));
+      end;
+  end case;
 end function;
 
 // Returns one required array key without checking element kinds.
@@ -154,15 +154,15 @@ end function;
 public function ArrayField(Fields: dict of string to TomlValue; Name: string): result of array of TomlValue, string;
 begin
   case try Field(Fields, Name) of
-    TomlValue.ArrayValue(Items):
-    begin
-      return Ok(Items);
-    end;
+    when TomlValue.ArrayValue(Items):
+      begin
+        return Ok(Items);
+      end;
     else
-    begin
-      return Error(MismatchError(Name, 'an array'));
-    end;
-  end;
+      begin
+        return Error(MismatchError(Name, 'an array'));
+      end;
+  end case;
 end function;
 
 // Returns one required array key whose elements must all be strings.
@@ -176,15 +176,15 @@ begin
   for Item: TomlValue in try ArrayField(Fields, Name) do
     begin
       case Item of
-        TomlValue.String(Value):
-        begin
-          Std.Arrays.Push(Values, Value);
-        end;
+        when TomlValue.String(Value):
+          begin
+            Std.Arrays.Push(Values, Value);
+          end;
         else
-        begin
-          return Error(MismatchError(Name, 'an array of strings'));
-        end;
-      end;
+          begin
+            return Error(MismatchError(Name, 'an array of strings'));
+          end;
+      end case;
     end;
   end for;
 

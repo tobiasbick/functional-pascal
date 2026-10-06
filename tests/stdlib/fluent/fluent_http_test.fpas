@@ -38,13 +38,13 @@ end function;
 
 begin
   case ExerciseHttp() of
-    Ok(Succeeded):
-    begin
-      AssertTrue(Succeeded);
-    end;
-    Error(Message):
-    begin
-      Fail(Message);
-    end;
-  end;
+    when Ok(Succeeded):
+      begin
+        AssertTrue(Succeeded);
+      end;
+    when Error(Message):
+      begin
+        Fail(Message);
+      end;
+  end case;
 end.

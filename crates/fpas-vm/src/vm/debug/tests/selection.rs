@@ -53,9 +53,9 @@ begin
   var Closed: WaitCase := ReceiveCase(Q, procedure(R: result of integer, string)
   begin
     case R of
-      Ok(_): panic('closed channel delivered');
-      Error(Message): if Message <> 'Channel is closed' then panic(Message); end if;
-    end;
+      when Ok(_): panic('closed channel delivered');
+      when Error(Message): if Message <> 'Channel is closed' then panic(Message); end if;
+    end case;
   end);
   CloseChannel(Q);
   if Select([Closed]) <> 0 then panic('closed index'); end if;

@@ -65,14 +65,14 @@ begin
   Unwrap(FeedSse(Decoder, Std.Net.Utf8.Encode('id:old' + #10 + 'data:x' + #10)));
   AssertTrue(ReviewRetained(Decoder) > 0);
   case FeedSse(Decoder, Std.Net.Utf8.Encode(Std.Str.RepeatStr('x', 100000))) of
-    Ok(_): Fail('expected size failure'); Error(_): begin end;
-  end;
+    when Ok(_): Fail('expected size failure'); when Error(_): begin end;
+  end case;
   AssertEquals(0, ReviewRetained(Decoder));
   var FinalDecoder: SseDecoder := Unwrap(CreateSseDecoder(32));
   Unwrap(FeedSse(FinalDecoder, [255]));
   case FinishSse(FinalDecoder) of
-    Ok(_): Fail('expected UTF-8 failure'); Error(_): begin end;
-  end;
+    when Ok(_): Fail('expected UTF-8 failure'); when Error(_): begin end;
+  end case;
   AssertEquals(0, ReviewRetained(FinalDecoder));
 end.
 "#,

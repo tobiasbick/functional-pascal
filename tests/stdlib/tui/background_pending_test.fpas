@@ -14,53 +14,53 @@ type
 function Update(State: PendingModel; Msg: TuiMsg; Cmd: TuiCmdOutput): PendingModel;
 begin
   case Msg of
-    TuiMsg.Started:
-    begin
-      var Gate: channel of boolean := State.Gate;
-      var Ready: channel of boolean := State.Ready;
-      var FailOld: boolean := State.FailOld;
-      Cmd.ReplaceSubscription(1, function(Token: CancellationToken): result of boolean, string begin
-        Send(Ready, true);
-        if FailOld then
+    when TuiMsg.Started:
+      begin
+        var Gate: channel of boolean := State.Gate;
+        var Ready: channel of boolean := State.Ready;
+        var FailOld: boolean := State.FailOld;
+        Cmd.ReplaceSubscription(1, function(Token: CancellationToken): result of boolean, string begin
+          Send(Ready, true);
+          if FailOld then
+            begin
+              Receive(Gate);
+              return Error('old source failed');
+            end;
+          end if;
+
+          ReceiveWithCancellation(Gate, Token);
+          return Ok(true);
+        end);
+      end;
+    when TuiMsg.Tick(Delta):
+      begin
+        if Delta = 1 then
           begin
-            Receive(Gate);
-            return Error('old source failed');
+            var Started: channel of boolean := State.Started;
+            Cmd.ReplaceSubscription(1, function(Token: CancellationToken): result of boolean, string begin
+              Send(Started, true);
+              return Ok(true);
+            end);
+          end;
+        elsif Delta = 2 then
+          begin
+            Cmd.CancelSubscription(1);
           end;
         end if;
-
-        ReceiveWithCancellation(Gate, Token);
-        return Ok(true);
-      end);
-    end;
-    TuiMsg.Tick(Delta):
-    begin
-      if Delta = 1 then
-        begin
-          var Started: channel of boolean := State.Started;
-          Cmd.ReplaceSubscription(1, function(Token: CancellationToken): result of boolean, string begin
-            Send(Started, true);
-            return Ok(true);
-          end);
-        end;
-      elsif Delta = 2 then
-        begin
-          Cmd.CancelSubscription(1);
-        end;
-      end if;
-    end;
-    TuiMsg.BackgroundFailed(Id, Kind, Message, Code, Line, Column):
-    begin
-      AssertEquals(1, Id);
-      AssertTrue(Kind = TaskFailureKind.ReturnedError);
-      AssertEquals('old source failed', Message);
-      mutable var Next: PendingModel := State;
-      Next.Failures := State.Failures + 1;
-      return Next;
-    end;
+      end;
+    when TuiMsg.BackgroundFailed(Id, Kind, Message, Code, Line, Column):
+      begin
+        AssertEquals(1, Id);
+        AssertTrue(Kind = TaskFailureKind.ReturnedError);
+        AssertEquals('old source failed', Message);
+        mutable var Next: PendingModel := State;
+        Next.Failures := State.Failures + 1;
+        return Next;
+      end;
     else
-    begin
-    end;
-  end;
+      begin
+      end;
+  end case;
 
   return State;
 end function;

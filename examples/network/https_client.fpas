@@ -11,23 +11,23 @@ begin
   end if;
 
   case Send(Request.Get(ParamStr(0))) of
-    Ok(ResponseValue):
-    begin
-      WriteLn('HTTPS status: ' + IntToStr(ResponseValue.StatusCode));
-      case BodyText(ResponseValue) of
-        Ok(Text):
-        begin
-          WriteLn(Text);
-        end;
-        Error(Message):
-        begin
-          panic(Message);
-        end;
+    when Ok(ResponseValue):
+      begin
+        WriteLn('HTTPS status: ' + IntToStr(ResponseValue.StatusCode));
+        case BodyText(ResponseValue) of
+          when Ok(Text):
+            begin
+              WriteLn(Text);
+            end;
+          when Error(Message):
+            begin
+              panic(Message);
+            end;
+        end case;
       end;
-    end;
-    Error(Message):
-    begin
-      panic(Message);
-    end;
-  end;
+    when Error(Message):
+      begin
+        panic(Message);
+      end;
+  end case;
 end.

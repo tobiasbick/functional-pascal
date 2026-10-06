@@ -5,56 +5,56 @@ uses Std.Console, Std.Json, Std.Dictionaries, Std.Options, Std.Conv, Std.Arrays;
 begin
   var R: result of JsonValue, string := Parse('{"name":"Ada","scores":[1,2],"active":true}');
   case R of
-    Ok(V):
-    begin
-      case V of
-        JsonValue.Object(Fields):
-        begin
-          var NameValue: option of JsonValue := Std.Dictionaries.Get(Fields, 'name');
-          var ScoresValue: option of JsonValue := Std.Dictionaries.Get(Fields, 'scores');
-          var ActiveValue: option of JsonValue := Std.Dictionaries.Get(Fields, 'active');
-          case Unwrap(NameValue) of
-            JsonValue.String(Name):
+    when Ok(V):
+      begin
+        case V of
+          when JsonValue.Object(Fields):
             begin
-              WriteLn(Name);
-            end;
-            else
-            begin
-              WriteLn('bad-name');
-            end;
-          end;
+              var NameValue: option of JsonValue := Std.Dictionaries.Get(Fields, 'name');
+              var ScoresValue: option of JsonValue := Std.Dictionaries.Get(Fields, 'scores');
+              var ActiveValue: option of JsonValue := Std.Dictionaries.Get(Fields, 'active');
+              case Unwrap(NameValue) of
+                when JsonValue.String(Name):
+                  begin
+                    WriteLn(Name);
+                  end;
+                else
+                  begin
+                    WriteLn('bad-name');
+                  end;
+              end case;
 
-          case Unwrap(ScoresValue) of
-            JsonValue.ArrayValue(Scores):
-            begin
-              WriteLn(IntToStr(Std.Arrays.Length(Scores)));
-            end;
-            else
-            begin
-              WriteLn('bad-scores');
-            end;
-          end;
+              case Unwrap(ScoresValue) of
+                when JsonValue.ArrayValue(Scores):
+                  begin
+                    WriteLn(IntToStr(Std.Arrays.Length(Scores)));
+                  end;
+                else
+                  begin
+                    WriteLn('bad-scores');
+                  end;
+              end case;
 
-          case Unwrap(ActiveValue) of
-            JsonValue.Bool(Active):
-            begin
-              WriteLn(Active);
+              case Unwrap(ActiveValue) of
+                when JsonValue.Bool(Active):
+                  begin
+                    WriteLn(Active);
+                  end;
+                else
+                  begin
+                    WriteLn('bad-active');
+                  end;
+              end case;
             end;
-            else
+          else
             begin
-              WriteLn('bad-active');
+              WriteLn('not-object');
             end;
-          end;
-        end;
-        else
-        begin
-          WriteLn('not-object');
-        end;
+        end case;
       end;
-    end;
-    Error(E):
-    begin
-      WriteLn('error: ' + E);
-    end;
-  end;
+    when Error(E):
+      begin
+        WriteLn('error: ' + E);
+      end;
+  end case;
 end.

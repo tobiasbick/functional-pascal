@@ -1,4 +1,6 @@
 //! Result, Option, and data-enum variant case lowering.
+//!
+//! **Documentation:** `docs/pascal/language/pattern-matching/README.md`.
 
 use fpas_ir::{Constant, Operation, Terminator};
 use fpas_parser::{CaseArm, CaseLabel, DesignatorPart, DestructureVariant, Expr, Stmt};
@@ -12,6 +14,7 @@ type PatternBinding = (String, fpas_ir::TypeId, Operation);
 type VariantPattern = (fpas_ir::ValueId, Vec<PatternBinding>);
 
 impl LoweringContext {
+    /// Lowers variant cases with scoped pattern bindings and catch-all declarations.
     pub(in crate::lowering) fn lower_variant_case(
         &mut self,
         case_value: fpas_ir::ValueId,
@@ -69,7 +72,9 @@ impl LoweringContext {
             }
         }
         if let Some(statements) = else_body {
+            self.begin_scope();
             self.lower_statements(statements)?;
+            self.end_scope();
             if !self.is_terminated() {
                 self.jump(merge)?;
                 has_merge = true;

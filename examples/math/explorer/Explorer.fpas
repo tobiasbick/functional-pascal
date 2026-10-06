@@ -181,43 +181,43 @@ begin
   elsif Key.kind = KeyKind.Character then
     begin
       case Key.ch of
-        '+', '=':
-        begin
-          State.SpanY := Max(State.SpanY * 0.82, 0.000001);
-          RequestRedraw();
-          return true;
-        end;
-        '-':
-        begin
-          State.SpanY := Min(State.SpanY / 0.82, 4.0);
-          RequestRedraw();
-          return true;
-        end;
-        '1':
-        begin
-          State.Palette := 1;
-          RequestRedraw();
-          return true;
-        end;
-        '2':
-        begin
-          State.Palette := 2;
-          RequestRedraw();
-          return true;
-        end;
-        '3':
-        begin
-          State.Palette := 3;
-          RequestRedraw();
-          return true;
-        end;
-        'r', 'R':
-        begin
-          State := ResetCamera;
-          RequestRedraw();
-          return true;
-        end;
-      end;
+        when '+', '=':
+          begin
+            State.SpanY := Max(State.SpanY * 0.82, 0.000001);
+            RequestRedraw();
+            return true;
+          end;
+        when '-':
+          begin
+            State.SpanY := Min(State.SpanY / 0.82, 4.0);
+            RequestRedraw();
+            return true;
+          end;
+        when '1':
+          begin
+            State.Palette := 1;
+            RequestRedraw();
+            return true;
+          end;
+        when '2':
+          begin
+            State.Palette := 2;
+            RequestRedraw();
+            return true;
+          end;
+        when '3':
+          begin
+            State.Palette := 3;
+            RequestRedraw();
+            return true;
+          end;
+        when 'r', 'R':
+          begin
+            State := ResetCamera;
+            RequestRedraw();
+            return true;
+          end;
+      end case;
     end;
   end if;
 
@@ -335,14 +335,14 @@ begin
       end if;
 
       case ReadEventTimeout(16) of
-        Some(E):
-        begin
-          HandleEvent(E);
-        end;
-        None:
-        begin
-        end;
-      end;
+        when Some(E):
+          begin
+            HandleEvent(E);
+          end;
+        when None:
+          begin
+          end;
+      end case;
     end;
   end while;
 

@@ -39,31 +39,31 @@ begin
   Model := App.RunIterations(Model, function(State: PointerModel; Msg: TuiMsg; Cmd: TuiCmdOutput): PointerModel begin
     Cmd.Set(TuiCmd.NoCommand);
     case Msg of
-      TuiMsg.Tick(Delta):
-      begin
-        if Delta = 1 then
-          begin
-            return PushEvent(State, 'tick-1');
-          end;
-        end if;
+      when TuiMsg.Tick(Delta):
+        begin
+          if Delta = 1 then
+            begin
+              return PushEvent(State, 'tick-1');
+            end;
+          end if;
 
-        return PushEvent(State, 'tick-2');
-      end;
-      TuiMsg.Pointer(InputEvent):
-      begin
-        return record
-          Events := Std.Arrays.Concat(State.Events, ['pointer']);
-          X := InputEvent.Position.X;
-          Y := InputEvent.Position.Y;
-          Action := InputEvent.Action;
-          Button := InputEvent.Button;
+          return PushEvent(State, 'tick-2');
         end;
-      end;
+      when TuiMsg.Pointer(InputEvent):
+        begin
+          return record
+            Events := Std.Arrays.Concat(State.Events, ['pointer']);
+            X := InputEvent.Position.X;
+            Y := InputEvent.Position.Y;
+            Action := InputEvent.Action;
+            Button := InputEvent.Button;
+          end;
+        end;
       else
-      begin
-        return State;
-      end;
-    end;
+        begin
+          return State;
+        end;
+    end case;
   end, function(State: PointerModel): TuiElement begin
     return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(1)), [
                                                                           TuiElementBuilders.MakePanel('Host', [

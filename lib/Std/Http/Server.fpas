@@ -28,21 +28,21 @@ begin
       end if;
 
       case Std.Net.ReceiveBytes(Connection, ReadMaximum) of
-        Ok(Chunk):
-        begin
-          if Std.Arrays.Length(Chunk) = 0 then
-            begin
-              return Error('HTTP request is missing the header terminator');
-            end;
-          end if;
+        when Ok(Chunk):
+          begin
+            if Std.Arrays.Length(Chunk) = 0 then
+              begin
+                return Error('HTTP request is missing the header terminator');
+              end;
+            end if;
 
-          Bytes := Std.Arrays.Concat(Bytes, Chunk);
-        end;
-        Error(Message):
-        begin
-          return Error(Message);
-        end;
-      end;
+            Bytes := Std.Arrays.Concat(Bytes, Chunk);
+          end;
+        when Error(Message):
+          begin
+            return Error(Message);
+          end;
+      end case;
     end;
   end while;
 
@@ -131,22 +131,22 @@ begin
       end if;
 
       case Std.Net.ReceiveBytes(Connection, ReadMaximum) of
-        Ok(Chunk):
-        begin
-          if Std.Arrays.Length(Chunk) = 0 then
-            begin
-              return Error('HTTP request body is shorter than Content-Length');
-            end;
-          end if;
+        when Ok(Chunk):
+          begin
+            if Std.Arrays.Length(Chunk) = 0 then
+              begin
+                return Error('HTTP request body is shorter than Content-Length');
+              end;
+            end if;
 
-          Std.Arrays.Push(Chunks, Chunk);
-          Received := Received + Std.Arrays.Length(Chunk);
-        end;
-        Error(Message):
-        begin
-          return Error(Message);
-        end;
-      end;
+            Std.Arrays.Push(Chunks, Chunk);
+            Received := Received + Std.Arrays.Length(Chunk);
+          end;
+        when Error(Message):
+          begin
+            return Error(Message);
+          end;
+      end case;
     end;
   end while;
 
@@ -174,28 +174,28 @@ begin
   end if;
   mutable var Bytes: array of integer := [];
   case ReadHead(Connection, MaxHeaderBytes) of
-    Ok(Value):
-    begin
-      Bytes := Value;
-    end;
-    Error(Message):
-    begin
-      return Error(Message);
-    end;
-  end;
+    when Ok(Value):
+      begin
+        Bytes := Value;
+      end;
+    when Error(Message):
+      begin
+        return Error(Message);
+      end;
+  end case;
   var Separator: integer := Std.Http.Wire.FindSeparator(Bytes, 0);
   var HeadBytes: array of integer := Std.Arrays.Slice(Bytes, 0, Separator);
   mutable var HeadText: string := '';
   case Std.Net.Utf8.Decode(HeadBytes) of
-    Ok(Value):
-    begin
-      HeadText := Value;
-    end;
-    Error(Message):
-    begin
-      return Error('HTTP request headers are not valid UTF-8: ' + Message);
-    end;
-  end;
+    when Ok(Value):
+      begin
+        HeadText := Value;
+      end;
+    when Error(Message):
+      begin
+        return Error('HTTP request headers are not valid UTF-8: ' + Message);
+      end;
+  end case;
   var Lines: array of string := Std.Str.Split(HeadText, #13 + #10);
   if Std.Arrays.Length(Lines) = 0 then
     begin
@@ -204,26 +204,26 @@ begin
   end if;
   mutable var RequestLine: array of string := [];
   case ParseRequestLine(Lines[0]) of
-    Ok(Value):
-    begin
-      RequestLine := Value;
-    end;
-    Error(Message):
-    begin
-      return Error(Message);
-    end;
-  end;
+    when Ok(Value):
+      begin
+        RequestLine := Value;
+      end;
+    when Error(Message):
+      begin
+        return Error(Message);
+      end;
+  end case;
   mutable var Headers: array of Header := [];
   case Std.Http.Fields.Parse(HeadText, 'request') of
-    Ok(Value):
-    begin
-      Headers := Value;
-    end;
-    Error(Message):
-    begin
-      return Error(Message);
-    end;
-  end;
+    when Ok(Value):
+      begin
+        Headers := Value;
+      end;
+    when Error(Message):
+      begin
+        return Error(Message);
+      end;
+  end case;
 
   if (RequestLine[2] = 'HTTP/1.1') and (HeaderCount(Headers, 'Host') <> 1) then
     begin
@@ -234,41 +234,41 @@ begin
   if RequestLine[2] = 'HTTP/1.1' then
     begin
       case Std.Http.Headers.Find(Headers, 'Host') of
-        Some(Value):
-        begin
-          if Std.Str.Trim(Value) = '' then
-            begin
-              return Error('HTTP/1.1 Host header must not be empty');
-            end;
-          end if;
-        end;
-        None:
-        begin
-        end;
-      end;
+        when Some(Value):
+          begin
+            if Std.Str.Trim(Value) = '' then
+              begin
+                return Error('HTTP/1.1 Host header must not be empty');
+              end;
+            end if;
+          end;
+        when None:
+          begin
+          end;
+      end case;
     end;
   end if;
   mutable var BodyLength: integer := 0;
   case Std.Http.BodyFraming.Select(Headers) of
-    Ok(Framing):
-    begin
-      if Framing.Mode = 2 then
-        begin
-          return Error('HTTP server does not support chunked request bodies');
-        end;
-      end if;
+    when Ok(Framing):
+      begin
+        if Framing.Mode = 2 then
+          begin
+            return Error('HTTP server does not support chunked request bodies');
+          end;
+        end if;
 
-      if Framing.Mode = 1 then
-        begin
-          BodyLength := Framing.Remaining;
-        end;
-      end if;
-    end;
-    Error(Message):
-    begin
-      return Error(Message);
-    end;
-  end;
+        if Framing.Mode = 1 then
+          begin
+            BodyLength := Framing.Remaining;
+          end;
+        end if;
+      end;
+    when Error(Message):
+      begin
+        return Error(Message);
+      end;
+  end case;
 
   if BodyLength > MaxBodyBytes then
     begin
@@ -279,15 +279,15 @@ begin
                                                                               4);
   mutable var Body: array of integer := [];
   case ReadBody(Connection, InitialBody, BodyLength) of
-    Ok(Value):
-    begin
-      Body := Value;
-    end;
-    Error(Message):
-    begin
-      return Error(Message);
-    end;
-  end;
+    when Ok(Value):
+      begin
+        Body := Value;
+      end;
+    when Error(Message):
+      begin
+        return Error(Message);
+      end;
+  end case;
   var Output: ServerRequest := record
     Method := RequestLine[0];
     Target := RequestLine[1];
@@ -353,14 +353,14 @@ end function;
 public function WriteResponse(Connection: Std.Net.Connection; ResponseValue: ServerResponse): result of boolean, string;
 begin
   case EncodeResponse(ResponseValue) of
-    Ok(Bytes):
-    begin
-      return Std.Http.Io.WriteAll(Connection, Bytes);
-    end;
-    Error(Message):
-    begin
-      return Error(Message);
-    end;
-  end;
+    when Ok(Bytes):
+      begin
+        return Std.Http.Io.WriteAll(Connection, Bytes);
+      end;
+    when Error(Message):
+      begin
+        return Error(Message);
+      end;
+  end case;
 end function;
 end unit;

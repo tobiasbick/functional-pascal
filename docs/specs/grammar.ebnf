@@ -122,7 +122,7 @@ token           = keyword | identifier | integer_literal
 (* ================================================================ *)
 
 (* Every statement ends with ';', including named control endings. *)
-(* A final ';' is required before 'end', 'elsif', 'else', or 'until'. *)
+(* A final ';' is required before 'end', 'elsif', 'when', 'else', or 'until'. *)
 
 (* ---- 2.1 Program / Unit Structure ------------------------------ *)
 
@@ -372,10 +372,10 @@ if_stmt             = 'if' expression 'then' control_body
 (* -- Case / Of -- *)
 case_stmt           = 'case' expression 'of'
                       case_arm { case_arm }
-                      [ 'else' statement_list ]
-                      'end' ;
+                      [ 'else' control_body ]
+                      'end' 'case' ;
 
-case_arm            = case_label_list [ 'if' expression ] ':' statement ;
+case_arm            = 'when' case_label_list [ 'if' expression ] ':' control_body ;
 case_label_list     = case_label { ',' case_label } ;
 case_label          = destructure_label                  (* Result/Option  *)
                     | enum_pattern                       (* enum with data *)
@@ -397,7 +397,7 @@ pattern_arg         = identifier ;                       (* binding only   *)
 (* string, boolean, or enum literals. Ranges use '..'.              *)
 (*                                                                  *)
 (* Semantic disambiguation for guarded scalar bindings: in a scalar  *)
-(* case arm, `Name if <boolean>:` binds the scrutinee to `Name`     *)
+(* case arm, `when Name if <boolean>:` binds the scrutinee to `Name` *)
 (* when the arm has exactly one bare identifier label and `Name`    *)
 (* does not resolve to a compile-time constant or enum member.      *)
 (* This shorthand is not valid for ranges or comma-separated label  *)
@@ -411,6 +411,10 @@ pattern_arg         = identifier ;                       (* binding only   *)
 (* guard expression may reference bindings introduced by the label. *)
 (* Guards do NOT count toward exhaustiveness: a guarded arm for a   *)
 (* variant does not satisfy coverage of that variant.               *)
+(* Each arm, including 'else', has a local scope. Body statements    *)
+(* require ';' and cannot be empty; write 'null;' for no action.     *)
+(* Bindings are visible in the guard and the selected body. Body    *)
+(* locals are not visible in a guard, another arm, or after 'case'.  *)
 (*                                                                  *)
 (* Exhaustiveness: for enum, Result, and Option types, every        *)
 (* variant must be covered or an 'else' branch must be present.     *)

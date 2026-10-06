@@ -6,13 +6,13 @@ uses Std.Console, Std.Conv, Std.Proc, Std.Results;
 
 begin
   case Run('fpas', ['--version']) of
-    Ok(Code):
-    begin
-      WriteLn('fpas --version exit: ', IntToStr(Code));
-    end;
-    Error(M):
-    begin
-      WriteLn('run error: ', M);
-    end;
-  end;
+    when Ok(Code):
+      begin
+        WriteLn('fpas --version exit: ', IntToStr(Code));
+      end;
+    when Error(M):
+      begin
+        WriteLn('run error: ', M);
+      end;
+  end case;
 end.

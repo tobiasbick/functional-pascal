@@ -13,15 +13,15 @@ end function;
 function Update(Value: integer; Msg: TuiMsg; Cmd: TuiCmdOutput): integer;
 begin
   case Msg of
-    TuiMsg.Tick(Delta):
-    begin
-      return Value + Delta;
-    end;
+    when TuiMsg.Tick(Delta):
+      begin
+        return Value + Delta;
+      end;
     else
-    begin
-      return Value;
-    end;
-  end;
+      begin
+        return Value;
+      end;
+  end case;
 end function;
 
 begin
@@ -42,19 +42,19 @@ begin
       if Mode = 'utf8' then
         begin
           case Std.Net.Utf8.Decode(Std.Net.Utf8.Encode(Text)) of
-            Ok(Decoded):
-            begin
-              if Decoded <> Text then
-                begin
-                  panic('roundtrip');
-                end;
-              end if;
-            end;
-            Error(Message):
-            begin
-              panic(Message);
-            end;
-          end;
+            when Ok(Decoded):
+              begin
+                if Decoded <> Text then
+                  begin
+                    panic('roundtrip');
+                  end;
+                end if;
+              end;
+            when Error(Message):
+              begin
+                panic(Message);
+              end;
+          end case;
         end;
       elsif Mode = 'notes' then
         begin

@@ -6,12 +6,17 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`case_label` — r
 
 ```pascal
 case Score of
-  0..59:    Grade := 'F';
-  60..69:   Grade := 'D';
-  70..79:   Grade := 'C';
-  80..89:   Grade := 'B';
-  90..100:  Grade := 'A';
-end;
+  when 0..59:
+    Grade := 'F';
+  when 60..69:
+    Grade := 'D';
+  when 70..79:
+    Grade := 'C';
+  when 80..89:
+    Grade := 'B';
+  when 90..100:
+    Grade := 'A';
+end case;
 ```
 
 ## See also

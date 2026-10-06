@@ -193,26 +193,26 @@ begin
       var LineBytes: array of integer := Std.Arrays.Slice(Bytes, Position, LineEnd - Position);
       mutable var Line: string := '';
       case Std.Net.Utf8.Decode(LineBytes) of
-        Ok(Value):
-        begin
-          Line := Value;
-        end;
-        Error(Message):
-        begin
-          return Error('HTTP chunk size is not ASCII: ' + Message);
-        end;
-      end;
+        when Ok(Value):
+          begin
+            Line := Value;
+          end;
+        when Error(Message):
+          begin
+            return Error('HTTP chunk size is not ASCII: ' + Message);
+          end;
+      end case;
       mutable var Size: integer := 0;
       case ParseChunkSize(Line) of
-        Ok(Value):
-        begin
-          Size := Value;
-        end;
-        Error(Message):
-        begin
-          return Error(Message);
-        end;
-      end;
+        when Ok(Value):
+          begin
+            Size := Value;
+          end;
+        when Error(Message):
+          begin
+            return Error(Message);
+          end;
+      end case;
 
       Position := LineEnd + 2;
       if Size = 0 then
@@ -274,33 +274,33 @@ begin
   end if;
 
   case Std.Http.BodyFraming.Select(Headers) of
-    Ok(Framing):
-    begin
-      if Framing.Mode = 2 then
-        begin
-          return DecodeChunked(Bytes);
-        end;
-      end if;
+    when Ok(Framing):
+      begin
+        if Framing.Mode = 2 then
+          begin
+            return DecodeChunked(Bytes);
+          end;
+        end if;
 
-      if Framing.Mode = 1 then
-        begin
-          if Std.Arrays.Length(Bytes) < Framing.Remaining then
-            begin
-              return Error('HTTP response body is shorter than Content-Length');
-            end;
-          end if;
+        if Framing.Mode = 1 then
+          begin
+            if Std.Arrays.Length(Bytes) < Framing.Remaining then
+              begin
+                return Error('HTTP response body is shorter than Content-Length');
+              end;
+            end if;
 
-          return Ok(Std.Arrays.Slice(Bytes, 0, Framing.Remaining));
-        end;
-      end if;
+            return Ok(Std.Arrays.Slice(Bytes, 0, Framing.Remaining));
+          end;
+        end if;
 
-      return Ok(Bytes);
-    end;
-    Error(Message):
-    begin
-      return Error(Message);
-    end;
-  end;
+        return Ok(Bytes);
+      end;
+    when Error(Message):
+      begin
+        return Error(Message);
+      end;
+  end case;
 end function;
 
 // Parses one complete response head and returns its body offset.
@@ -318,15 +318,15 @@ begin
   var HeaderBytes: array of integer := Std.Arrays.Slice(Bytes, 0, Separator);
   mutable var HeaderText: string := '';
   case Std.Net.Utf8.Decode(HeaderBytes) of
-    Ok(Value):
-    begin
-      HeaderText := Value;
-    end;
-    Error(Message):
-    begin
-      return Error('HTTP response headers are not valid UTF-8: ' + Message);
-    end;
-  end;
+    when Ok(Value):
+      begin
+        HeaderText := Value;
+      end;
+    when Error(Message):
+      begin
+        return Error('HTTP response headers are not valid UTF-8: ' + Message);
+      end;
+  end case;
   var Lines: array of string := Std.Str.Split(HeaderText, #13 + #10);
   if Std.Arrays.Length(Lines) = 0 then
     begin
@@ -335,15 +335,15 @@ begin
   end if;
   mutable var Status: array of string := [];
   case ParseStatus(Lines[0]) of
-    Ok(Value):
-    begin
-      Status := Value;
-    end;
-    Error(Message):
-    begin
-      return Error(Message);
-    end;
-  end;
+    when Ok(Value):
+      begin
+        Status := Value;
+      end;
+    when Error(Message):
+      begin
+        return Error(Message);
+      end;
+  end case;
   mutable var StatusCode: integer := 0;
   if not IsStatusCode(Status[0]) then
     begin
@@ -352,26 +352,26 @@ begin
   end if;
 
   case Std.Parse.TryInt(Status[0]) of
-    Ok(Value):
-    begin
-      StatusCode := Value;
-    end;
-    Error(Message):
-    begin
-      return Error('Invalid HTTP status code: ' + Message);
-    end;
-  end;
+    when Ok(Value):
+      begin
+        StatusCode := Value;
+      end;
+    when Error(Message):
+      begin
+        return Error('Invalid HTTP status code: ' + Message);
+      end;
+  end case;
   mutable var Headers: array of Header := [];
   case Std.Http.Fields.Parse(HeaderText, 'response') of
-    Ok(Value):
-    begin
-      Headers := Value;
-    end;
-    Error(Message):
-    begin
-      return Error(Message);
-    end;
-  end;
+    when Ok(Value):
+      begin
+        Headers := Value;
+      end;
+    when Error(Message):
+      begin
+        return Error(Message);
+      end;
+  end case;
 
   return Ok(record
     StatusCode := StatusCode;
@@ -389,31 +389,31 @@ end function;
 public function ParseResponse(Bytes: array of integer; RequestMethod: string): result of Response, string;
 begin
   case ParseResponseHead(Bytes) of
-    Ok(Head):
-    begin
-      var RawBody: array of integer := Std.Arrays.Slice(Bytes, Head.BodyOffset, Std.Arrays.Length(Bytes) -
-                                                                                Head.BodyOffset);
-      case ResponseBody(Head.Headers, RawBody, ResponseHasBody(RequestMethod, Head.StatusCode)) of
-        Ok(Body):
-        begin
-          return Ok(record
-            StatusCode := Head.StatusCode;
-            ReasonPhrase := Head.ReasonPhrase;
-            Headers := Head.Headers;
-            Body := Body;
-          end);
-        end;
-        Error(Message):
-        begin
-          return Error(Message);
-        end;
+    when Ok(Head):
+      begin
+        var RawBody: array of integer := Std.Arrays.Slice(Bytes, Head.BodyOffset, Std.Arrays.Length(Bytes) -
+                                                                                  Head.BodyOffset);
+        case ResponseBody(Head.Headers, RawBody, ResponseHasBody(RequestMethod, Head.StatusCode)) of
+          when Ok(Body):
+            begin
+              return Ok(record
+                StatusCode := Head.StatusCode;
+                ReasonPhrase := Head.ReasonPhrase;
+                Headers := Head.Headers;
+                Body := Body;
+              end);
+            end;
+          when Error(Message):
+            begin
+              return Error(Message);
+            end;
+        end case;
       end;
-    end;
-    Error(Message):
-    begin
-      return Error(Message);
-    end;
-  end;
+    when Error(Message):
+      begin
+        return Error(Message);
+      end;
+  end case;
 end function;
 
 // Formats the Host field value for a parsed URI.

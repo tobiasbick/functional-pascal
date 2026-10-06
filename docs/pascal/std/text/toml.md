@@ -8,11 +8,13 @@ program Example;
 uses Std.Console, Std.Str, Std.Toml;
 
 begin
-  var Parsed: result of TomlValue, string := Parse('[project]' + Chr(10) + 'name = ''demo''');
+  var Parsed: result of TomlValue, string := Parse(('[project]' + Chr(10)) + 'name = ''demo''');
   case Parsed of
-    Ok(Value): WriteLn(Stringify(Value));
-    Error(Message): WriteLn(Message);
-  end;
+    when Ok(Value):
+      WriteLn(Stringify(Value));
+    when Error(Message):
+      WriteLn(Message);
+  end case;
 end.
 ```
 
@@ -57,16 +59,19 @@ Parses a TOML document. Valid input returns `Ok(TomlValue)`; syntax errors retur
 All TOML 1.0 value kinds are represented: strings, signed 64-bit integers, floating-point values (including `inf` and `nan`), booleans, date/time values, arrays, tables, inline tables, and arrays of tables.
 
 ```pascal
-var Parsed: result of TomlValue, string := Parse(
-  'title = ''example''' + Chr(10) +
-  'enabled = true' + Chr(10) +
-  '[server]' + Chr(10) +
-  'port = 8080'
-);
+var Parsed: result of TomlValue, string := Parse(((((('title = ''example''' + Chr(10)) + 'enabled = true') + Chr(10)) + '[server]') + Chr(10)) +
+                                                 'port = 8080');
 case Parsed of
-  Ok(TomlValue.Table(Fields)): WriteLn('parsed');
-  Error(Message): WriteLn('TOML error: ' + Message);
-end;
+  when Ok(Value):
+    case Value of
+      when TomlValue.Table(Fields):
+        WriteLn('parsed');
+      else
+        null;
+    end case;
+  when Error(Message):
+    WriteLn('TOML error: ' + Message);
+end case;
 ```
 
 ## `Stringify`

@@ -25,7 +25,7 @@ pub const SOURCES: &[(&str, &str)] = &[
     ),
     (
         "calculator",
-        "program Calculator;\nuses Std.Console;\n\ntype Op = enum\n  OpAdd;\n  OpSub;\n  OpMul;\n  OpDiv;\nend enum;\n\nfunction Calculate(A: integer; B: integer; Operation: Op): integer;\nbegin\n  case Operation of\n    OpAdd: return A + B;\n    OpSub: return A - B;\n    OpMul: return A * B;\n    OpDiv: return A div B;\n  end;\nend function;\n\nbegin\n  var Answer: integer := Calculate(10, 3, OpAdd);\n  Std.Console.WriteLn(Answer);\nend.",
+        "program Calculator;\nuses Std.Console;\n\ntype Op = enum\n  OpAdd;\n  OpSub;\n  OpMul;\n  OpDiv;\nend enum;\n\nfunction Calculate(A: integer; B: integer; Operation: Op): integer;\nbegin\n  case Operation of\n    when OpAdd: return A + B;\n    when OpSub: return A - B;\n    when OpMul: return A * B;\n    when OpDiv: return A div B;\n  end case;\nend function;\n\nbegin\n  var Answer: integer := Calculate(10, 3, OpAdd);\n  Std.Console.WriteLn(Answer);\nend.",
     ),
     (
         "record_creation",
@@ -89,7 +89,7 @@ pub const SOURCES: &[(&str, &str)] = &[
     ),
     (
         "case_destructure_with_guard",
-        "program T; begin case Value of Some(Item) if Item > 0: return; None: return; end; end.",
+        "program T; begin case Value of when Some(Item) if Item > 0: return; when None: return; end case; end.",
     ),
     (
         "postfix_call_chain",

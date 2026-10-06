@@ -265,15 +265,15 @@ begin
   mutable var Optional: Option of integer := Some(1);
   var Marker: integer := 0;
   case Optional of
-    Some(Value):
+    when Some(Value):
     begin
       return Value;
     end;
-    None:
+    when None:
     begin
       return 0;
     end;
-  end;
+  end case;
 end function;
 
 begin

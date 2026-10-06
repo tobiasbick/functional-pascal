@@ -63,22 +63,22 @@ begin
           end if;
 
           case Std.Net.ReceiveBytes(Connection, ReadMaximum) of
-            Ok(Bytes):
-            begin
-              if Std.Arrays.Length(Bytes) = 0 then
-                begin
-                  return Error('HTTP response is missing the header terminator');
-                end;
-              end if;
+            when Ok(Bytes):
+              begin
+                if Std.Arrays.Length(Bytes) = 0 then
+                  begin
+                    return Error('HTTP response is missing the header terminator');
+                  end;
+                end if;
 
-              BytesReceived := BytesReceived + Std.Arrays.Length(Bytes);
-              Buffer := Std.Arrays.Concat(Buffer, Bytes);
-            end;
-            Error(Message):
-            begin
-              return Error(Message);
-            end;
-          end;
+                BytesReceived := BytesReceived + Std.Arrays.Length(Bytes);
+                Buffer := Std.Arrays.Concat(Buffer, Bytes);
+              end;
+            when Error(Message):
+              begin
+                return Error(Message);
+              end;
+          end case;
 
           Separator := Std.Http.Wire.FindSeparator(Buffer, 0);
         end;
@@ -91,44 +91,44 @@ begin
       end if;
 
       case Std.Http.Wire.ParseResponseHead(Buffer) of
-        Ok(Head):
-        begin
-          if (Head.StatusCode >= 100) and (Head.StatusCode < 200) then
-            begin
-              if Head.StatusCode = 101 then
-                begin
-                  return Error('HTTP 101 Switching Protocols is not supported');
-                end;
-              end if;
+        when Ok(Head):
+          begin
+            if (Head.StatusCode >= 100) and (Head.StatusCode < 200) then
+              begin
+                if Head.StatusCode = 101 then
+                  begin
+                    return Error('HTTP 101 Switching Protocols is not supported');
+                  end;
+                end if;
 
-              InterimResponses := InterimResponses + 1;
-              if InterimResponses > MaxInterimResponses then
-                begin
-                  return Error('HTTP response contains too many informational responses');
-                end;
-              end if;
+                InterimResponses := InterimResponses + 1;
+                if InterimResponses > MaxInterimResponses then
+                  begin
+                    return Error('HTTP response contains too many informational responses');
+                  end;
+                end if;
 
-              Buffer := Std.Arrays.Slice(Buffer, Head.BodyOffset, Std.Arrays.Length(Buffer) -
-                                                                  Head.BodyOffset);
-            end;
-          else
-            begin
-              var Output: FinalHead := record
-                Head := Head;
-                InitialBody := Std.Arrays.Slice(Buffer, Head.BodyOffset, Std.Arrays.Length(Buffer) -
-                                                                         Head.BodyOffset);
-                BytesReceived := BytesReceived;
+                Buffer := Std.Arrays.Slice(Buffer, Head.BodyOffset, Std.Arrays.Length(Buffer) -
+                                                                    Head.BodyOffset);
               end;
+            else
+              begin
+                var Output: FinalHead := record
+                  Head := Head;
+                  InitialBody := Std.Arrays.Slice(Buffer, Head.BodyOffset, Std.Arrays.Length(Buffer) -
+                                                                           Head.BodyOffset);
+                  BytesReceived := BytesReceived;
+                end;
 
-              return Ok(Output);
-            end;
-          end if;
-        end;
-        Error(Message):
-        begin
-          return Error(Message);
-        end;
-      end;
+                return Ok(Output);
+              end;
+            end if;
+          end;
+        when Error(Message):
+          begin
+            return Error(Message);
+          end;
+      end case;
     end;
   end while;
 

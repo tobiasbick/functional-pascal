@@ -21,167 +21,167 @@ public type
 function TuiFindRouteMenu(Node: TuiElement): option of TuiRouteMenu;
 begin
   case Node of
-    TuiElement.Menu(Id, Nodes, State, ChangeAction):
-    begin
-      return Some(record
-        Id := Id;
-        Nodes := Nodes;
-        State := State;
-        ChangeAction := ChangeAction;
-      end);
-    end;
-    TuiElement.Desktop(Focused, Children):
-    begin
-      mutable var LastOverlay: integer := -1;
-      for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
-        begin
-          case Children[Index] of
-            TuiElement.Overlay(Title, OverlayChildren):
-            begin
-              LastOverlay := Index;
-            end;
-            else
-            begin
-            end;
+    when TuiElement.Menu(Id, Nodes, State, ChangeAction):
+      begin
+        return Some(record
+          Id := Id;
+          Nodes := Nodes;
+          State := State;
+          ChangeAction := ChangeAction;
+        end);
+      end;
+    when TuiElement.Desktop(Focused, Children):
+      begin
+        mutable var LastOverlay: integer := -1;
+        for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
+          begin
+            case Children[Index] of
+              when TuiElement.Overlay(Title, OverlayChildren):
+                begin
+                  LastOverlay := Index;
+                end;
+              else
+                begin
+                end;
+            end case;
           end;
-        end;
-      end for;
+        end for;
 
-      if LastOverlay >= 0 then
-        begin
-          return TuiFindRouteMenu(Children[LastOverlay]);
-        end;
-      end if;
-
-      for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
-        begin
-          case TuiFindRouteMenu(Children[Index]) of
-            Some(Menu):
-            begin
-              return Some(Menu);
-            end;
-            None:
-            begin
-            end;
+        if LastOverlay >= 0 then
+          begin
+            return TuiFindRouteMenu(Children[LastOverlay]);
           end;
-        end;
-      end for;
+        end if;
 
-      return None;
-    end;
-    TuiElement.Scroll(Id, Offset, ChangeAction, Children):
-    begin
-      for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
-        begin
-          case TuiFindRouteMenu(Children[Index]) of
-            Some(Menu):
-            begin
-              return Some(Menu);
-            end;
-            None:
-            begin
-            end;
+        for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
+          begin
+            case TuiFindRouteMenu(Children[Index]) of
+              when Some(Menu):
+                begin
+                  return Some(Menu);
+                end;
+              when None:
+                begin
+                end;
+            end case;
           end;
-        end;
-      end for;
+        end for;
 
-      return None;
-    end;
-    TuiElement.Row(Children, Spacing):
-    begin
-      for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
-        begin
-          case TuiFindRouteMenu(Children[Index]) of
-            Some(Menu):
-            begin
-              return Some(Menu);
-            end;
-            None:
-            begin
-            end;
+        return None;
+      end;
+    when TuiElement.Scroll(Id, Offset, ChangeAction, Children):
+      begin
+        for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
+          begin
+            case TuiFindRouteMenu(Children[Index]) of
+              when Some(Menu):
+                begin
+                  return Some(Menu);
+                end;
+              when None:
+                begin
+                end;
+            end case;
           end;
-        end;
-      end for;
+        end for;
 
-      return None;
-    end;
-    TuiElement.Column(Children, Spacing):
-    begin
-      for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
-        begin
-          case TuiFindRouteMenu(Children[Index]) of
-            Some(Menu):
-            begin
-              return Some(Menu);
-            end;
-            None:
-            begin
-            end;
+        return None;
+      end;
+    when TuiElement.Row(Children, Spacing):
+      begin
+        for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
+          begin
+            case TuiFindRouteMenu(Children[Index]) of
+              when Some(Menu):
+                begin
+                  return Some(Menu);
+                end;
+              when None:
+                begin
+                end;
+            end case;
           end;
-        end;
-      end for;
+        end for;
 
-      return None;
-    end;
-    TuiElement.Layout(Settings, Children):
-    begin
-      for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
-        begin
-          case TuiFindRouteMenu(Children[Index]) of
-            Some(Menu):
-            begin
-              return Some(Menu);
-            end;
-            None:
-            begin
-            end;
+        return None;
+      end;
+    when TuiElement.Column(Children, Spacing):
+      begin
+        for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
+          begin
+            case TuiFindRouteMenu(Children[Index]) of
+              when Some(Menu):
+                begin
+                  return Some(Menu);
+                end;
+              when None:
+                begin
+                end;
+            end case;
           end;
-        end;
-      end for;
+        end for;
 
-      return None;
-    end;
-    TuiElement.Panel(Title, Children):
-    begin
-      for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
-        begin
-          case TuiFindRouteMenu(Children[Index]) of
-            Some(Menu):
-            begin
-              return Some(Menu);
-            end;
-            None:
-            begin
-            end;
+        return None;
+      end;
+    when TuiElement.Layout(Settings, Children):
+      begin
+        for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
+          begin
+            case TuiFindRouteMenu(Children[Index]) of
+              when Some(Menu):
+                begin
+                  return Some(Menu);
+                end;
+              when None:
+                begin
+                end;
+            end case;
           end;
-        end;
-      end for;
+        end for;
 
-      return None;
-    end;
-    TuiElement.Overlay(Title, Children):
-    begin
-      for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
-        begin
-          case TuiFindRouteMenu(Children[Index]) of
-            Some(Menu):
-            begin
-              return Some(Menu);
-            end;
-            None:
-            begin
-            end;
+        return None;
+      end;
+    when TuiElement.Panel(Title, Children):
+      begin
+        for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
+          begin
+            case TuiFindRouteMenu(Children[Index]) of
+              when Some(Menu):
+                begin
+                  return Some(Menu);
+                end;
+              when None:
+                begin
+                end;
+            end case;
           end;
-        end;
-      end for;
+        end for;
 
-      return None;
-    end;
+        return None;
+      end;
+    when TuiElement.Overlay(Title, Children):
+      begin
+        for Index: integer := 0 to Std.Arrays.Length(Children) - 1 do
+          begin
+            case TuiFindRouteMenu(Children[Index]) of
+              when Some(Menu):
+                begin
+                  return Some(Menu);
+                end;
+              when None:
+                begin
+                end;
+            end case;
+          end;
+        end for;
+
+        return None;
+      end;
     else
-    begin
-      return None;
-    end;
-  end;
+      begin
+        return None;
+      end;
+  end case;
 end function;
 
 function TuiMenuChange(Menu: TuiRouteMenu; State: TuiMenuState): TuiMsg;
@@ -192,43 +192,43 @@ end function;
 function TuiMenuOpenFirst(Menu: TuiRouteMenu; Previous: option of TuiControlId): array of TuiMsg;
 begin
   case TuiMenuFirstSelectable(Menu.Nodes, None) of
-    Some(First):
-    begin
-      mutable var Messages: array of TuiMsg := [];
-      if not TuiFocusMatches(Previous, Menu.Id) then
-        begin
-          Std.Arrays.Push(Messages, TuiMsg.FocusChanged(Previous, Some(Menu.Id)));
-        end;
-      end if;
+    when Some(First):
+      begin
+        mutable var Messages: array of TuiMsg := [];
+        if not TuiFocusMatches(Previous, Menu.Id) then
+          begin
+            Std.Arrays.Push(Messages, TuiMsg.FocusChanged(Previous, Some(Menu.Id)));
+          end;
+        end if;
 
-      Std.Arrays.Push(Messages, TuiMenuChange(Menu, TuiMenuState.OpenAt(First)));
-      return Messages;
-    end;
-    None:
-    begin
-      return [];
-    end;
-  end;
+        Std.Arrays.Push(Messages, TuiMenuChange(Menu, TuiMenuState.OpenAt(First)));
+        return Messages;
+      end;
+    when None:
+      begin
+        return [];
+      end;
+  end case;
 end function;
 
 function TuiMenuCommandMessages(Menu: TuiRouteMenu; Node: TuiMenuNode): array of TuiMsg;
 begin
   case TuiMenuNodeAction(Node) of
-    Some(Action):
-    begin
-      if Menu.State.Open then
-        begin
-          return [TuiMenuChange(Menu, TuiMenuState.Closed()), TuiMsg.Action(Menu.Id, Action)];
-        end;
-      end if;
+    when Some(Action):
+      begin
+        if Menu.State.Open then
+          begin
+            return [TuiMenuChange(Menu, TuiMenuState.Closed()), TuiMsg.Action(Menu.Id, Action)];
+          end;
+        end if;
 
-      return [TuiMsg.Action(Menu.Id, Action)];
-    end;
-    None:
-    begin
-      return [];
-    end;
-  end;
+        return [TuiMsg.Action(Menu.Id, Action)];
+      end;
+    when None:
+      begin
+        return [];
+      end;
+  end case;
 end function;
 
 function TuiMenuShortcut(Menu: TuiRouteMenu; Key: Std.Console.KeyEvent): option of array of TuiMsg;
@@ -238,18 +238,18 @@ begin
       if TuiMenuNodeSelectable(Menu.Nodes[Index]) then
         begin
           case TuiMenuNodeShortcut(Menu.Nodes[Index]) of
-            Some(Shortcut):
-            begin
-              if Shortcut.Matches(Key) then
-                begin
-                  return Some(TuiMenuCommandMessages(Menu, Menu.Nodes[Index]));
-                end;
-              end if;
-            end;
-            None:
-            begin
-            end;
-          end;
+            when Some(Shortcut):
+              begin
+                if Shortcut.Matches(Key) then
+                  begin
+                    return Some(TuiMenuCommandMessages(Menu, Menu.Nodes[Index]));
+                  end;
+                end if;
+              end;
+            when None:
+              begin
+              end;
+          end case;
         end;
       end if;
     end;
@@ -301,157 +301,158 @@ begin
   end if;
 
   case Menu.State.Active of
-    Some(Active):
-    begin
-      var ActiveIndex: integer := TuiMenuFind(Menu.Nodes, Active);
-      var Parent: option of TuiMenuNodeId := TuiMenuNodeParent(Menu.Nodes[ActiveIndex]);
-      case TuiMenuMnemonic(Menu, Key, Parent) of
-        Some(Messages):
-        begin
-          return Some(Messages);
-        end;
-        None:
-        begin
-        end;
-      end;
-
-      if (Key.kind = Std.Console.KeyKind.Enter) or (Key.kind = Std.Console.KeyKind.Space) then
-        begin
-          if TuiMenuNodeIsSubmenu(Menu.Nodes[ActiveIndex]) then
+    when Some(Active):
+      begin
+        var ActiveIndex: integer := TuiMenuFind(Menu.Nodes, Active);
+        var Parent: option of TuiMenuNodeId := TuiMenuNodeParent(Menu.Nodes[ActiveIndex]);
+        case TuiMenuMnemonic(Menu, Key, Parent) of
+          when Some(Messages):
             begin
-              case TuiMenuFirstSelectable(Menu.Nodes, Some(Active)) of
-                Some(Child):
+              return Some(Messages);
+            end;
+          when None:
+            begin
+            end;
+        end case;
+
+        if (Key.kind = Std.Console.KeyKind.Enter) or (Key.kind = Std.Console.KeyKind.Space) then
+          begin
+            if TuiMenuNodeIsSubmenu(Menu.Nodes[ActiveIndex]) then
+              begin
+                case TuiMenuFirstSelectable(Menu.Nodes, Some(Active)) of
+                  when Some(Child):
+                    begin
+                      return Some([TuiMenuChange(Menu, TuiMenuState.OpenAt(Child))]);
+                    end;
+                  when None:
+                    begin
+                      return Some([]);
+                    end;
+                end case;
+              end;
+            end if;
+
+            return Some(TuiMenuCommandMessages(Menu, Menu.Nodes[ActiveIndex]));
+          end;
+        end if;
+
+        if (Key.kind = Std.Console.KeyKind.Down) or (Key.kind = Std.Console.KeyKind.Up) then
+          begin
+            if (Key.kind = Std.Console.KeyKind.Down) and
+               TuiMenuNodeIsSubmenu(Menu.Nodes[ActiveIndex]) then
+              begin
+                case TuiMenuFirstSelectable(Menu.Nodes, Some(Active)) of
+                  when Some(Child):
+                    begin
+                      return Some([TuiMenuChange(Menu, TuiMenuState.OpenAt(Child))]);
+                    end;
+                  when None:
+                    begin
+                    end;
+                end case;
+              end;
+            end if;
+            mutable var Direction: integer := -1;
+            if Key.kind = Std.Console.KeyKind.Down then
+              begin
+                Direction := 1;
+              end;
+            end if;
+
+            case TuiMenuNextSelectable(Menu.Nodes, Active, Direction) of
+              when Some(Next):
                 begin
-                  return Some([TuiMenuChange(Menu, TuiMenuState.OpenAt(Child))]);
+                  return Some([TuiMenuChange(Menu, TuiMenuState.OpenAt(Next))]);
                 end;
-                None:
+              when None:
                 begin
                   return Some([]);
                 end;
-              end;
-            end;
-          end if;
-
-          return Some(TuiMenuCommandMessages(Menu, Menu.Nodes[ActiveIndex]));
-        end;
-      end if;
-
-      if (Key.kind = Std.Console.KeyKind.Down) or (Key.kind = Std.Console.KeyKind.Up) then
-        begin
-          if (Key.kind = Std.Console.KeyKind.Down) and TuiMenuNodeIsSubmenu(Menu.Nodes[ActiveIndex]) then
-            begin
-              case TuiMenuFirstSelectable(Menu.Nodes, Some(Active)) of
-                Some(Child):
-                begin
-                  return Some([TuiMenuChange(Menu, TuiMenuState.OpenAt(Child))]);
-                end;
-                None:
-                begin
-                end;
-              end;
-            end;
-          end if;
-          mutable var Direction: integer := -1;
-          if Key.kind = Std.Console.KeyKind.Down then
-            begin
-              Direction := 1;
-            end;
-          end if;
-
-          case TuiMenuNextSelectable(Menu.Nodes, Active, Direction) of
-            Some(Next):
-            begin
-              return Some([TuiMenuChange(Menu, TuiMenuState.OpenAt(Next))]);
-            end;
-            None:
-            begin
-              return Some([]);
-            end;
+            end case;
           end;
-        end;
-      end if;
+        end if;
 
-      if Key.kind = Std.Console.KeyKind.Right then
-        begin
-          if TuiMenuNodeIsSubmenu(Menu.Nodes[ActiveIndex]) then
-            begin
-              case TuiMenuFirstSelectable(Menu.Nodes, Some(Active)) of
-                Some(Child):
-                begin
-                  return Some([TuiMenuChange(Menu, TuiMenuState.OpenAt(Child))]);
-                end;
-                None:
-                begin
-                end;
-              end;
-            end;
-          end if;
-
-          case TuiMenuRootOf(Menu.Nodes, Active) of
-            Some(Root):
-            begin
-              case TuiMenuNextSelectable(Menu.Nodes, Root, 1) of
-                Some(NextRoot):
-                begin
-                  return Some([TuiMenuChange(Menu, TuiMenuState.OpenAt(NextRoot))]);
-                end;
-                None:
-                begin
-                end;
-              end;
-            end;
-            None:
-            begin
-            end;
-          end;
-        end;
-      end if;
-
-      if Key.kind = Std.Console.KeyKind.Left then
-        begin
-          case Parent of
-            Some(ParentId):
-            begin
-              var ParentIndex: integer := TuiMenuFind(Menu.Nodes, ParentId);
-              case TuiMenuNodeParent(Menu.Nodes[ParentIndex]) of
-                Some(GrandParent):
-                begin
-                  return Some([TuiMenuChange(Menu, TuiMenuState.OpenAt(ParentId))]);
-                end;
-                None:
-                begin
-                  case TuiMenuNextSelectable(Menu.Nodes, ParentId, -1) of
-                    Some(NextRoot):
+        if Key.kind = Std.Console.KeyKind.Right then
+          begin
+            if TuiMenuNodeIsSubmenu(Menu.Nodes[ActiveIndex]) then
+              begin
+                case TuiMenuFirstSelectable(Menu.Nodes, Some(Active)) of
+                  when Some(Child):
                     begin
-                      return Some([TuiMenuChange(Menu, TuiMenuState.OpenAt(NextRoot))]);
+                      return Some([TuiMenuChange(Menu, TuiMenuState.OpenAt(Child))]);
                     end;
-                    None:
+                  when None:
                     begin
                     end;
-                  end;
-                end;
+                end case;
               end;
-            end;
-            None:
-            begin
-              case TuiMenuNextSelectable(Menu.Nodes, Active, -1) of
-                Some(NextRoot):
+            end if;
+
+            case TuiMenuRootOf(Menu.Nodes, Active) of
+              when Some(Root):
                 begin
-                  return Some([TuiMenuChange(Menu, TuiMenuState.OpenAt(NextRoot))]);
+                  case TuiMenuNextSelectable(Menu.Nodes, Root, 1) of
+                    when Some(NextRoot):
+                      begin
+                        return Some([TuiMenuChange(Menu, TuiMenuState.OpenAt(NextRoot))]);
+                      end;
+                    when None:
+                      begin
+                      end;
+                  end case;
                 end;
-                None:
+              when None:
                 begin
                 end;
-              end;
-            end;
+            end case;
           end;
-        end;
-      end if;
-    end;
-    None:
-    begin
-    end;
-  end;
+        end if;
+
+        if Key.kind = Std.Console.KeyKind.Left then
+          begin
+            case Parent of
+              when Some(ParentId):
+                begin
+                  var ParentIndex: integer := TuiMenuFind(Menu.Nodes, ParentId);
+                  case TuiMenuNodeParent(Menu.Nodes[ParentIndex]) of
+                    when Some(GrandParent):
+                      begin
+                        return Some([TuiMenuChange(Menu, TuiMenuState.OpenAt(ParentId))]);
+                      end;
+                    when None:
+                      begin
+                        case TuiMenuNextSelectable(Menu.Nodes, ParentId, -1) of
+                          when Some(NextRoot):
+                            begin
+                              return Some([TuiMenuChange(Menu, TuiMenuState.OpenAt(NextRoot))]);
+                            end;
+                          when None:
+                            begin
+                            end;
+                        end case;
+                      end;
+                  end case;
+                end;
+              when None:
+                begin
+                  case TuiMenuNextSelectable(Menu.Nodes, Active, -1) of
+                    when Some(NextRoot):
+                      begin
+                        return Some([TuiMenuChange(Menu, TuiMenuState.OpenAt(NextRoot))]);
+                      end;
+                    when None:
+                      begin
+                      end;
+                  end case;
+                end;
+            end case;
+          end;
+        end if;
+      end;
+    when None:
+      begin
+      end;
+  end case;
 
   return None;
 end function;
@@ -464,64 +465,64 @@ end function;
 public function TuiRouteMenuKey(Root: TuiElement; Key: Std.Console.KeyEvent): option of array of TuiMsg;
 begin
   case TuiFindRouteMenu(Root) of
-    Some(Menu):
-    begin
-      case TuiMenuShortcut(Menu, Key) of
-        Some(Messages):
-        begin
-          return Some(Messages);
-        end;
-        None:
-        begin
-        end;
-      end;
-
-      if Menu.State.Open then
-        begin
-          return TuiMenuRouteOpen(Menu, Key);
-        end;
-      end if;
-
-      if Key.kind = Std.Console.KeyKind.F10 then
-        begin
-          return Some(TuiMenuOpenFirst(Menu, TuiRootFocus(Root)));
-        end;
-      end if;
-
-      if Key.alt then
-        begin
-          case TuiMenuMnemonic(Menu, Key, None) of
-            Some(Messages):
+    when Some(Menu):
+      begin
+        case TuiMenuShortcut(Menu, Key) of
+          when Some(Messages):
             begin
-              mutable var FocusMessages: array of TuiMsg := [];
-              if not TuiFocusMatches(TuiRootFocus(Root), Menu.Id) then
-                begin
-                  Std.Arrays.Push(FocusMessages, TuiMsg.FocusChanged(TuiRootFocus(Root), Some(Menu.Id)));
-                end;
-              end if;
-
-              return Some(Std.Arrays.Concat(FocusMessages, Messages));
+              return Some(Messages);
             end;
-            None:
+          when None:
             begin
             end;
+        end case;
+
+        if Menu.State.Open then
+          begin
+            return TuiMenuRouteOpen(Menu, Key);
           end;
-        end;
-      end if;
+        end if;
 
-      if TuiFocusMatches(TuiRootFocus(Root), Menu.Id) and
-         (((Key.kind = Std.Console.KeyKind.Enter) or (Key.kind = Std.Console.KeyKind.Space)) or (Key.kind = Std.Console.KeyKind.Down)) then
-        begin
-          return Some(TuiMenuOpenFirst(Menu, TuiRootFocus(Root)));
-        end;
-      end if;
+        if Key.kind = Std.Console.KeyKind.F10 then
+          begin
+            return Some(TuiMenuOpenFirst(Menu, TuiRootFocus(Root)));
+          end;
+        end if;
 
-      return None;
-    end;
-    None:
-    begin
-      return None;
-    end;
-  end;
+        if Key.alt then
+          begin
+            case TuiMenuMnemonic(Menu, Key, None) of
+              when Some(Messages):
+                begin
+                  mutable var FocusMessages: array of TuiMsg := [];
+                  if not TuiFocusMatches(TuiRootFocus(Root), Menu.Id) then
+                    begin
+                      Std.Arrays.Push(FocusMessages, TuiMsg.FocusChanged(TuiRootFocus(Root), Some(Menu.Id)));
+                    end;
+                  end if;
+
+                  return Some(Std.Arrays.Concat(FocusMessages, Messages));
+                end;
+              when None:
+                begin
+                end;
+            end case;
+          end;
+        end if;
+
+        if TuiFocusMatches(TuiRootFocus(Root), Menu.Id) and
+           (((Key.kind = Std.Console.KeyKind.Enter) or (Key.kind = Std.Console.KeyKind.Space)) or (Key.kind = Std.Console.KeyKind.Down)) then
+          begin
+            return Some(TuiMenuOpenFirst(Menu, TuiRootFocus(Root)));
+          end;
+        end if;
+
+        return None;
+      end;
+    when None:
+      begin
+        return None;
+      end;
+  end case;
 end function;
 end unit;

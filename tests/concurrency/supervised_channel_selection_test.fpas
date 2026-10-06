@@ -75,14 +75,14 @@ begin
       end for;
 
       case Unwrap(TryReceive(Output)) of
-        Some(_):
-        begin
-          panic('duplicate delivery after drain');
-        end;
-        None:
-        begin
-        end;
-      end;
+        when Some(_):
+          begin
+            panic('duplicate delivery after drain');
+          end;
+        when None:
+          begin
+          end;
+      end case;
 
       CloseChannel(Output);
     end;

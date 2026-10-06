@@ -30,15 +30,15 @@ begin
   for Cell: TuiCell in Cells do
     begin
       case Cell.ConcreteStyle of
-        Some(Style):
-        begin
-          Checksum := (Checksum + Style.Foreground.Red) + Style.Background.Green;
-        end;
-        None:
-        begin
-          panic('styled cell lost its style');
-        end;
-      end;
+        when Some(Style):
+          begin
+            Checksum := (Checksum + Style.Foreground.Red) + Style.Background.Green;
+          end;
+        when None:
+          begin
+            panic('styled cell lost its style');
+          end;
+      end case;
     end;
   end for;
 

@@ -13,19 +13,19 @@ type
 function Classify(N: integer): string;
 begin
   case N of
-    0:
-    begin
-      return 'zero';
-    end;
-    N if N > 0:
-    begin
-      return 'positive';
-    end;
-    N if N < 0:
-    begin
-      return 'negative';
-    end;
-  end;
+    when 0:
+      begin
+        return 'zero';
+      end;
+    when N if N > 0:
+      begin
+        return 'positive';
+      end;
+    when N if N < 0:
+      begin
+        return 'negative';
+      end;
+  end case;
 
   return 'unknown';
 end function;
@@ -33,27 +33,27 @@ end function;
 function DescribeShape(S: Shape): string;
 begin
   case S of
-    Shape.Circle(R) if R > 10.0:
-    begin
-      return ('Large circle (radius ' + RealToStr(R)) + ')';
-    end;
-    Shape.Circle(R):
-    begin
-      return ('Small circle (radius ' + RealToStr(R)) + ')';
-    end;
-    Shape.Rectangle(W, H) if W = H:
-    begin
-      return ('Square (' + RealToStr(W)) + ')';
-    end;
-    Shape.Rectangle(W, H):
-    begin
-      return ((('Rectangle (' + RealToStr(W)) + ' x ') + RealToStr(H)) + ')';
-    end;
-    Shape.Point:
-    begin
-      return 'Point';
-    end;
-  end;
+    when Shape.Circle(R) if R > 10.0:
+      begin
+        return ('Large circle (radius ' + RealToStr(R)) + ')';
+      end;
+    when Shape.Circle(R):
+      begin
+        return ('Small circle (radius ' + RealToStr(R)) + ')';
+      end;
+    when Shape.Rectangle(W, H) if W = H:
+      begin
+        return ('Square (' + RealToStr(W)) + ')';
+      end;
+    when Shape.Rectangle(W, H):
+      begin
+        return ((('Rectangle (' + RealToStr(W)) + ' x ') + RealToStr(H)) + ')';
+      end;
+    when Shape.Point:
+      begin
+        return 'Point';
+      end;
+  end case;
 end function;
 
 begin

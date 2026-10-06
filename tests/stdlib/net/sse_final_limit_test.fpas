@@ -11,14 +11,14 @@ begin
   AssertEquals(1, Std.Arrays.Length(Events));
   AssertEquals(Expected, Events[0].Data);
   case FeedSse(Decoder, []) of
-    Ok(_):
-    begin
-      panic('finished decoder accepted input');
-    end;
-    Error(_):
-    begin
-    end;
-  end;
+    when Ok(_):
+      begin
+        panic('finished decoder accepted input');
+      end;
+    when Error(_):
+      begin
+      end;
+  end case;
 end procedure;
 
 begin
@@ -32,14 +32,14 @@ begin
   CheckFinal('data: x' + #10, 8, 'x');
   var Small: SseDecoder := Std.Results.Unwrap(CreateSseDecoder(6));
   case FeedSse(Small, Std.Net.Utf8.Encode('data: x')) of
-    Ok(_):
-    begin
-      panic('oversized event accepted');
-    end;
-    Error(_):
-    begin
-    end;
-  end;
+    when Ok(_):
+      begin
+        panic('oversized event accepted');
+      end;
+    when Error(_):
+      begin
+      end;
+  end case;
   var Empty: SseDecoder := Std.Results.Unwrap(CreateSseDecoder(1));
   var Events: array of SseEvent := Std.Results.Unwrap(FinishSse(Empty));
   AssertEquals(0, Std.Arrays.Length(Events));

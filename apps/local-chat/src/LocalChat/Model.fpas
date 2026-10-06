@@ -147,19 +147,19 @@ end function;
 function RoleLabel(Role: ChatRole): string;
 begin
   case Role of
-    ChatRole.User:
-    begin
-      return 'YOU';
-    end;
-    ChatRole.Assistant:
-    begin
-      return 'ASSISTANT';
-    end;
-    ChatRole.Failure:
-    begin
-      return 'ERROR';
-    end;
-  end;
+    when ChatRole.User:
+      begin
+        return 'YOU';
+      end;
+    when ChatRole.Assistant:
+      begin
+        return 'ASSISTANT';
+      end;
+    when ChatRole.Failure:
+      begin
+        return 'ERROR';
+      end;
+  end case;
 end function;
 
 // Builds the width-bounded transcript displayed by the read-only transcript area.

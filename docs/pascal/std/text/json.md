@@ -4,13 +4,17 @@ JSON parsing and stringification with an explicit Functional Pascal value repres
 
 ```pascal
 program Example;
+
 uses Std.Console, Std.Json;
+
 begin
-  var R: Result of JsonValue, string := Parse('{"ok":true}');
+  var R: result of JsonValue, string := Parse('{"ok":true}');
   case R of
-    Ok(Value): WriteLn(Stringify(Value));
-    Error(Message): WriteLn(Message);
-  end;
+    when Ok(Value):
+      WriteLn(Stringify(Value));
+    when Error(Message):
+      WriteLn(Message);
+  end case;
 end.
 ```
 
@@ -63,11 +67,13 @@ Object members become dictionary entries in document order. Rejects duplicate ob
 Parses JSON text. Accepted JSON returns `Ok(JsonValue)`. Invalid JSON returns `Error(Message)` instead of aborting the program.
 
 ```pascal
-var R: Result of JsonValue, string := Std.Json.Parse('[1, true, null]');
+var R: result of JsonValue, string := Std.Json.Parse('[1, true, null]');
 case R of
-  Ok(Value): WriteLn(Std.Json.Stringify(Value));
-  Error(Message): WriteLn('JSON error: ' + Message);
-end;
+  when Ok(Value):
+    WriteLn(Std.Json.Stringify(Value));
+  when Error(Message):
+    WriteLn('JSON error: ' + Message);
+end case;
 ```
 
 ### `Stringify`

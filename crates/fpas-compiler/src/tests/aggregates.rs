@@ -169,11 +169,11 @@ begin
 end function;
 begin
   case Build(Ok(2)) of
-    Ok(Value):
+    when Ok(Value):
       if (Value.First <> 1) or (Value.Second <> 2) or (Value.Third <> 3) then
         panic('record values'); end if;
-    Error(Message): panic('unexpected record error');
-  end;
+    when Error(Message): panic('unexpected record error');
+  end case;
   if Build(Error('expected')) <> Error('expected') then
     panic('record try propagation'); end if;
 end.",
@@ -194,19 +194,19 @@ begin
   mutable var Sum: integer := 0;
   var ResultValue: Result of integer, string := Ok(3);
   case ResultValue of
-    Ok(Value): Sum := Sum + Value;
-    Error(Message): Sum := 99;
-  end;
+    when Ok(Value): Sum := Sum + Value;
+    when Error(Message): Sum := 99;
+  end case;
   var OptionValue: Option of integer := Some(4);
   case OptionValue of
-    Some(Value): Sum := Sum + Value;
-    None: Sum := 99;
-  end;
+    when Some(Value): Sum := Sum + Value;
+    when None: Sum := 99;
+  end case;
   var ShapeValue: Shape := Shape.Pair(5, 6);
   case ShapeValue of
-    Shape.Point: Sum := 99;
-    Shape.Pair(A, B): Sum := Sum + A + B;
-  end;
+    when Shape.Point: Sum := 99;
+    when Shape.Pair(A, B): Sum := Sum + A + B;
+  end case;
   if Sum <> 18 then panic('pattern mismatch'); end if;
 end.",
     );
@@ -229,21 +229,21 @@ begin
   var AliasValue: StateAlias := StateAlias.Done;
   mutable var Number: integer := 0;
   case Value of
-    State.Ready: Number := 4;
-    State.Running: Number := 5;
-    State.Done: Number := 9;
-  end;
+    when State.Ready: Number := 4;
+    when State.Running: Number := 5;
+    when State.Done: Number := 9;
+  end case;
   if Number <> 5 then panic('simple enum mismatch'); end if;
   case StateAlias.Running of
-    State.Ready: Number := 99;
-    State.Running: Number := Number + 1;
-    State.Done: Number := 99;
-  end;
+    when State.Ready: Number := 99;
+    when State.Running: Number := Number + 1;
+    when State.Done: Number := 99;
+  end case;
   case AliasValue of
-    State.Ready: Number := 99;
-    State.Running: Number := 99;
-    State.Done: Number := Number + 1;
-  end;
+    when State.Ready: Number := 99;
+    when State.Running: Number := 99;
+    when State.Done: Number := Number + 1;
+  end case;
   if Number <> 7 then panic('alias enum backing mismatch'); end if;
 end.",
     );
@@ -422,9 +422,9 @@ begin
   if P.X <> 8 then panic('generic record mismatch'); end if;
   var C: Choice := Identity(Choice.Number(9));
   case C of
-    Choice.Number(Value): if Value <> 9 then panic('generic enum payload mismatch'); end if;
-    Choice.Empty: panic('generic enum variant mismatch');
-  end;
+    when Choice.Number(Value): if Value <> 9 then panic('generic enum payload mismatch'); end if;
+    when Choice.Empty: panic('generic enum variant mismatch');
+  end case;
 end.",
     );
 }

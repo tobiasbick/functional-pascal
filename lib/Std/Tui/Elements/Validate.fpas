@@ -40,221 +40,222 @@ end procedure;
 function TuiElementChildren(Node: TuiElement): array of TuiElement;
 begin
   case Node of
-    TuiElement.Scroll(Id, Offset, ChangeAction, Children):
-    begin
-      return Children;
-    end;
-    TuiElement.Row(Children, Spacing):
-    begin
-      return Children;
-    end;
-    TuiElement.Column(Children, Spacing):
-    begin
-      return Children;
-    end;
-    TuiElement.Layout(Settings, Children):
-    begin
-      return Children;
-    end;
-    TuiElement.Panel(Title, Children):
-    begin
-      return Children;
-    end;
-    TuiElement.Overlay(Title, Children):
-    begin
-      return Children;
-    end;
-    TuiElement.Desktop(Focused, Children):
-    begin
-      return Children;
-    end;
+    when TuiElement.Scroll(Id, Offset, ChangeAction, Children):
+      begin
+        return Children;
+      end;
+    when TuiElement.Row(Children, Spacing):
+      begin
+        return Children;
+      end;
+    when TuiElement.Column(Children, Spacing):
+      begin
+        return Children;
+      end;
+    when TuiElement.Layout(Settings, Children):
+      begin
+        return Children;
+      end;
+    when TuiElement.Panel(Title, Children):
+      begin
+        return Children;
+      end;
+    when TuiElement.Overlay(Title, Children):
+      begin
+        return Children;
+      end;
+    when TuiElement.Desktop(Focused, Children):
+      begin
+        return Children;
+      end;
     else
-    begin
-      return [];
-    end;
-  end;
+      begin
+        return [];
+      end;
+  end case;
 end function;
 
 function TuiElementValidateAndCollect(Node: TuiElement): array of integer;
 begin
   mutable var Seen: array of integer := [];
   case Node of
-    TuiElement.Button(Button):
-    begin
-      TuiElementValidateControl(Button.Id);
-      TuiElementValidateAction(Button.Action);
-      if Std.Str.Length(Button.Mnemonic) > 1 then
-        begin
-          panic('Tui button mnemonic must be empty or one character');
-        end;
-      end if;
-
-      if (Button.Mnemonic <> '') and
-         not Std.Str.Contains(Std.Str.ToLower(Button.Text), Std.Str.ToLower(Button.Mnemonic)) then
-        begin
-          panic('Tui button mnemonic must occur in its text');
-        end;
-      end if;
-
-      Std.Arrays.Push(Seen, Button.Id.Value);
-    end;
-    TuiElement.Input(Input):
-    begin
-      TuiElementValidateControl(Input.Id);
-      TuiElementValidateAction(Input.ChangeAction);
-      if (Input.Caret < 0) or (Input.Caret > Std.Str.Length(Input.Text)) then
-        begin
-          panic('Tui input caret must be within its text');
-        end;
-      end if;
-
-      Std.Arrays.Push(Seen, Input.Id.Value);
-    end;
-    TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction):
-    begin
-      TuiElementValidateControl(Id);
-      TuiElementValidateAction(ChangeAction);
-      if (Caret < 0) or (Caret > Std.Str.Length(Text)) then
-        begin
-          panic('Tui text area caret must be within its text');
-        end;
-      end if;
-
-      if (Offset.X < 0) or (Offset.Y < 0) then
-        begin
-          panic('Tui text area offset must not be negative');
-        end;
-      end if;
-
-      Std.Arrays.Push(Seen, Id.Value);
-    end;
-    TuiElement.CheckBox(Id, Text, Checked, ChangeAction):
-    begin
-      TuiElementValidateControl(Id);
-      TuiElementValidateAction(ChangeAction);
-      Std.Arrays.Push(Seen, Id.Value);
-    end;
-    TuiElement.List(Id, Items, Selected, ChangeAction):
-    begin
-      TuiElementValidateControl(Id);
-      TuiElementValidateAction(ChangeAction);
-      var Count: integer := Std.Arrays.Length(Items);
-      if Count = 0 then
-        begin
-          if Selected <> -1 then
-            begin
-              panic('Tui empty list selection must be -1');
-            end;
-          end if;
-        end;
-      elsif (Selected < 0) or (Selected >= Count) then
-        begin
-          panic('Tui list selection must be within its items');
-        end;
-      end if;
-
-      Std.Arrays.Push(Seen, Id.Value);
-    end;
-    TuiElement.Scroll(Id, Offset, ChangeAction, Children):
-    begin
-      TuiElementValidateControl(Id);
-      TuiElementValidateAction(ChangeAction);
-      if (Offset.X < 0) or (Offset.Y < 0) then
-        begin
-          panic('Tui scroll offset must not be negative');
-        end;
-      end if;
-
-      if Std.Arrays.Length(Children) <> 1 then
-        begin
-          panic('Tui scroll wrappers require exactly one child');
-        end;
-      end if;
-
-      Std.Arrays.Push(Seen, Id.Value);
-    end;
-    TuiElement.MenuBar(Items):
-    begin
-      for Index: integer := 0 to Std.Arrays.Length(Items) - 1 do
-        begin
-          TuiElementValidateControl(Items[Index].Id);
-          TuiElementValidateAction(Items[Index].Action);
-          if TuiElementControlSeen(Seen, Items[Index].Id.Value) then
-            begin
-              panic('Tui control id must be unique in one tree: ' +
-                    Std.Conv.IntToStr(Items[Index].Id.Value));
-            end;
-          end if;
-
-          Std.Arrays.Push(Seen, Items[Index].Id.Value);
-        end;
-      end for;
-    end;
-    TuiElement.Menu(Id, Nodes, State, ChangeAction):
-    begin
-      TuiElementValidateControl(Id);
-      TuiElementValidateAction(ChangeAction);
-      TuiMenuValidate(Nodes, State);
-      Std.Arrays.Push(Seen, Id.Value);
-    end;
-    TuiElement.Gauge(Gauge):
-    begin
-      if Gauge.Maximum <= 0 then
-        begin
-          panic('Tui gauge maximum must be positive');
-        end;
-      end if;
-
-      if (Gauge.Value < 0) or (Gauge.Value > Gauge.Maximum) then
-        begin
-          panic('Tui gauge value must be between zero and its maximum');
-        end;
-      end if;
-    end;
-    TuiElement.StatusLine(Items):
-    begin
-      for Index: integer := 0 to Std.Arrays.Length(Items) - 1 do
-        begin
-          case Items[Index] of
-            TuiStatusItem.Command(Id, Text, Action, Enabled):
-            begin
-              TuiElementValidateControl(Id);
-              TuiElementValidateAction(Action);
-              if TuiElementControlSeen(Seen, Id.Value) then
-                begin
-                  panic('Tui control id must be unique in one tree: ' + Std.Conv.IntToStr(Id.Value));
-                end;
-              end if;
-
-              Std.Arrays.Push(Seen, Id.Value);
-            end;
-            else
-            begin
-            end;
+    when TuiElement.Button(Button):
+      begin
+        TuiElementValidateControl(Button.Id);
+        TuiElementValidateAction(Button.Action);
+        if Std.Str.Length(Button.Mnemonic) > 1 then
+          begin
+            panic('Tui button mnemonic must be empty or one character');
           end;
-        end;
-      end for;
-    end;
-    TuiElement.Row(Children, Spacing), TuiElement.Column(Children, Spacing):
-    begin
-      if Spacing < 0 then
-        begin
-          panic('Tui row and column spacing must not be negative');
-        end;
-      end if;
-    end;
-    TuiElement.Layout(Settings, Children):
-    begin
-      if Std.Arrays.Length(Children) <> 1 then
-        begin
-          panic('Tui layout wrappers require exactly one child');
-        end;
-      end if;
-    end;
+        end if;
+
+        if (Button.Mnemonic <> '') and
+           not Std.Str.Contains(Std.Str.ToLower(Button.Text), Std.Str.ToLower(Button.Mnemonic)) then
+          begin
+            panic('Tui button mnemonic must occur in its text');
+          end;
+        end if;
+
+        Std.Arrays.Push(Seen, Button.Id.Value);
+      end;
+    when TuiElement.Input(Input):
+      begin
+        TuiElementValidateControl(Input.Id);
+        TuiElementValidateAction(Input.ChangeAction);
+        if (Input.Caret < 0) or (Input.Caret > Std.Str.Length(Input.Text)) then
+          begin
+            panic('Tui input caret must be within its text');
+          end;
+        end if;
+
+        Std.Arrays.Push(Seen, Input.Id.Value);
+      end;
+    when TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction):
+      begin
+        TuiElementValidateControl(Id);
+        TuiElementValidateAction(ChangeAction);
+        if (Caret < 0) or (Caret > Std.Str.Length(Text)) then
+          begin
+            panic('Tui text area caret must be within its text');
+          end;
+        end if;
+
+        if (Offset.X < 0) or (Offset.Y < 0) then
+          begin
+            panic('Tui text area offset must not be negative');
+          end;
+        end if;
+
+        Std.Arrays.Push(Seen, Id.Value);
+      end;
+    when TuiElement.CheckBox(Id, Text, Checked, ChangeAction):
+      begin
+        TuiElementValidateControl(Id);
+        TuiElementValidateAction(ChangeAction);
+        Std.Arrays.Push(Seen, Id.Value);
+      end;
+    when TuiElement.List(Id, Items, Selected, ChangeAction):
+      begin
+        TuiElementValidateControl(Id);
+        TuiElementValidateAction(ChangeAction);
+        var Count: integer := Std.Arrays.Length(Items);
+        if Count = 0 then
+          begin
+            if Selected <> -1 then
+              begin
+                panic('Tui empty list selection must be -1');
+              end;
+            end if;
+          end;
+        elsif (Selected < 0) or (Selected >= Count) then
+          begin
+            panic('Tui list selection must be within its items');
+          end;
+        end if;
+
+        Std.Arrays.Push(Seen, Id.Value);
+      end;
+    when TuiElement.Scroll(Id, Offset, ChangeAction, Children):
+      begin
+        TuiElementValidateControl(Id);
+        TuiElementValidateAction(ChangeAction);
+        if (Offset.X < 0) or (Offset.Y < 0) then
+          begin
+            panic('Tui scroll offset must not be negative');
+          end;
+        end if;
+
+        if Std.Arrays.Length(Children) <> 1 then
+          begin
+            panic('Tui scroll wrappers require exactly one child');
+          end;
+        end if;
+
+        Std.Arrays.Push(Seen, Id.Value);
+      end;
+    when TuiElement.MenuBar(Items):
+      begin
+        for Index: integer := 0 to Std.Arrays.Length(Items) - 1 do
+          begin
+            TuiElementValidateControl(Items[Index].Id);
+            TuiElementValidateAction(Items[Index].Action);
+            if TuiElementControlSeen(Seen, Items[Index].Id.Value) then
+              begin
+                panic('Tui control id must be unique in one tree: ' +
+                      Std.Conv.IntToStr(Items[Index].Id.Value));
+              end;
+            end if;
+
+            Std.Arrays.Push(Seen, Items[Index].Id.Value);
+          end;
+        end for;
+      end;
+    when TuiElement.Menu(Id, Nodes, State, ChangeAction):
+      begin
+        TuiElementValidateControl(Id);
+        TuiElementValidateAction(ChangeAction);
+        TuiMenuValidate(Nodes, State);
+        Std.Arrays.Push(Seen, Id.Value);
+      end;
+    when TuiElement.Gauge(Gauge):
+      begin
+        if Gauge.Maximum <= 0 then
+          begin
+            panic('Tui gauge maximum must be positive');
+          end;
+        end if;
+
+        if (Gauge.Value < 0) or (Gauge.Value > Gauge.Maximum) then
+          begin
+            panic('Tui gauge value must be between zero and its maximum');
+          end;
+        end if;
+      end;
+    when TuiElement.StatusLine(Items):
+      begin
+        for Index: integer := 0 to Std.Arrays.Length(Items) - 1 do
+          begin
+            case Items[Index] of
+              when TuiStatusItem.Command(Id, Text, Action, Enabled):
+                begin
+                  TuiElementValidateControl(Id);
+                  TuiElementValidateAction(Action);
+                  if TuiElementControlSeen(Seen, Id.Value) then
+                    begin
+                      panic('Tui control id must be unique in one tree: ' +
+                            Std.Conv.IntToStr(Id.Value));
+                    end;
+                  end if;
+
+                  Std.Arrays.Push(Seen, Id.Value);
+                end;
+              else
+                begin
+                end;
+            end case;
+          end;
+        end for;
+      end;
+    when TuiElement.Row(Children, Spacing), TuiElement.Column(Children, Spacing):
+      begin
+        if Spacing < 0 then
+          begin
+            panic('Tui row and column spacing must not be negative');
+          end;
+        end if;
+      end;
+    when TuiElement.Layout(Settings, Children):
+      begin
+        if Std.Arrays.Length(Children) <> 1 then
+          begin
+            panic('Tui layout wrappers require exactly one child');
+          end;
+        end if;
+      end;
     else
-    begin
-    end;
-  end;
+      begin
+      end;
+  end case;
   var Children: array of TuiElement := TuiElementChildren(Node);
   for ChildIndex: integer := 0 to Std.Arrays.Length(Children) - 1 do
     begin
@@ -275,27 +276,27 @@ begin
   end for;
 
   case Node of
-    TuiElement.Desktop(Focused, DesktopChildren):
-    begin
-      case Focused of
-        Some(Id):
-        begin
-          if not TuiElementControlSeen(Seen, Id.Value) then
+    when TuiElement.Desktop(Focused, DesktopChildren):
+      begin
+        case Focused of
+          when Some(Id):
             begin
-              panic('Tui focused control id must exist in the rendered tree: ' +
-                    Std.Conv.IntToStr(Id.Value));
+              if not TuiElementControlSeen(Seen, Id.Value) then
+                begin
+                  panic('Tui focused control id must exist in the rendered tree: ' +
+                        Std.Conv.IntToStr(Id.Value));
+                end;
+              end if;
             end;
-          end if;
-        end;
-        None:
-        begin
-        end;
+          when None:
+            begin
+            end;
+        end case;
       end;
-    end;
     else
-    begin
-    end;
-  end;
+      begin
+      end;
+  end case;
 
   return Seen;
 end function;

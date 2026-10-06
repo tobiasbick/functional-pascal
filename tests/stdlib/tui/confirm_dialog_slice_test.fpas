@@ -46,97 +46,97 @@ function UpdateEditor(State: EditorModel; Msg: TuiMsg; Cmd: TuiCmdOutput): Edito
 begin
   Cmd.Set(TuiCmd.NoCommand);
   case Msg of
-    TuiMsg.Key(Key):
-    begin
-      return State;
-    end;
-    TuiMsg.Pointer(Pointer):
-    begin
-      return State;
-    end;
-    TuiMsg.Resize(Size):
-    begin
-      return State;
-    end;
-    TuiMsg.Tick(Delta):
-    begin
-      return State;
-    end;
-    TuiMsg.FocusChanged(Previous, Current):
-    begin
-      case Current of
-        Some(Id):
-        begin
-          return EditorState(State, State.Name, State.NameCaret, Id.Value, State.ConfirmOpen, State.Saved, State.Quit);
-        end;
-        None:
-        begin
-          return State;
-        end;
+    when TuiMsg.Key(Key):
+      begin
+        return State;
       end;
-    end;
-    TuiMsg.Action(Source, Action):
-    begin
-      if Action.Value = SaveActionValue then
-        begin
-          AssertEquals(SaveControlValue, Source.Value);
-          return EditorState(State, State.Name, State.NameCaret, YesControlValue, true, State.Saved, State.Quit);
-        end;
-      end if;
+    when TuiMsg.Pointer(Pointer):
+      begin
+        return State;
+      end;
+    when TuiMsg.Resize(Size):
+      begin
+        return State;
+      end;
+    when TuiMsg.Tick(Delta):
+      begin
+        return State;
+      end;
+    when TuiMsg.FocusChanged(Previous, Current):
+      begin
+        case Current of
+          when Some(Id):
+            begin
+              return EditorState(State, State.Name, State.NameCaret, Id.Value, State.ConfirmOpen, State.Saved, State.Quit);
+            end;
+          when None:
+            begin
+              return State;
+            end;
+        end case;
+      end;
+    when TuiMsg.Action(Source, Action):
+      begin
+        if Action.Value = SaveActionValue then
+          begin
+            AssertEquals(SaveControlValue, Source.Value);
+            return EditorState(State, State.Name, State.NameCaret, YesControlValue, true, State.Saved, State.Quit);
+          end;
+        end if;
 
-      if Action.Value = ConfirmYesActionValue then
-        begin
-          AssertEquals(YesControlValue, Source.Value);
-          return EditorState(State, State.Name, State.NameCaret, SaveControlValue, false, true, State.Quit);
-        end;
-      end if;
+        if Action.Value = ConfirmYesActionValue then
+          begin
+            AssertEquals(YesControlValue, Source.Value);
+            return EditorState(State, State.Name, State.NameCaret, SaveControlValue, false, true, State.Quit);
+          end;
+        end if;
 
-      if Action.Value = ConfirmNoActionValue then
-        begin
-          AssertEquals(NoControlValue, Source.Value);
-          return EditorState(State, State.Name, State.NameCaret, SaveControlValue, false, State.Saved, State.Quit);
-        end;
-      end if;
+        if Action.Value = ConfirmNoActionValue then
+          begin
+            AssertEquals(NoControlValue, Source.Value);
+            return EditorState(State, State.Name, State.NameCaret, SaveControlValue, false, State.Saved, State.Quit);
+          end;
+        end if;
 
-      return State;
-    end;
-    TuiMsg.TextChanged(Source, Action, Text, Caret):
-    begin
-      AssertEquals(NameControlValue, Source.Value);
-      AssertEquals(NameChangedActionValue, Action.Value);
-      return EditorState(State, Text, Caret, State.Focused, State.ConfirmOpen, State.Saved, State.Quit);
-    end;
-    TuiMsg.TextAreaChanged(Source, Action, Text, Caret, Offset):
-    begin
-      return State;
-    end;
-    TuiMsg.CheckChanged(Source, Action, Checked):
-    begin
-      return State;
-    end;
-    TuiMsg.SelectionChanged(Source, Action, Selected):
-    begin
-      return State;
-    end;
-    TuiMsg.ScrollChanged(Source, Action, Offset):
-    begin
-      return State;
-    end;
-    TuiMsg.MenuChanged(MenuSource, MenuAction, MenuState):
-    begin
-      Cmd.Set(TuiCmd.Quit);
-      return EditorState(State, 'SHOULD NOT PAINT', 0, State.Focused, State.ConfirmOpen, State.Saved, true);
-    end;
-    TuiMsg.QuitRequested:
-    begin
-      Cmd.Set(TuiCmd.Quit);
-      return EditorState(State, 'SHOULD NOT PAINT', 0, State.Focused, State.ConfirmOpen, State.Saved, true);
-    end;
+        return State;
+      end;
+    when TuiMsg.TextChanged(Source, Action, Text, Caret):
+      begin
+        AssertEquals(NameControlValue, Source.Value);
+        AssertEquals(NameChangedActionValue, Action.Value);
+        return EditorState(State, Text, Caret, State.Focused, State.ConfirmOpen, State.Saved, State.Quit);
+      end;
+    when TuiMsg.TextAreaChanged(Source, Action, Text, Caret, Offset):
+      begin
+        return State;
+      end;
+    when TuiMsg.CheckChanged(Source, Action, Checked):
+      begin
+        return State;
+      end;
+    when TuiMsg.SelectionChanged(Source, Action, Selected):
+      begin
+        return State;
+      end;
+    when TuiMsg.ScrollChanged(Source, Action, Offset):
+      begin
+        return State;
+      end;
+    when TuiMsg.MenuChanged(MenuSource, MenuAction, MenuState):
+      begin
+        Cmd.Set(TuiCmd.Quit);
+        return EditorState(State, 'SHOULD NOT PAINT', 0, State.Focused, State.ConfirmOpen, State.Saved, true);
+      end;
+    when TuiMsg.QuitRequested:
+      begin
+        Cmd.Set(TuiCmd.Quit);
+        return EditorState(State, 'SHOULD NOT PAINT', 0, State.Focused, State.ConfirmOpen, State.Saved, true);
+      end;
     else
-    begin
-      return State;
-    end;
-  end;
+      begin
+        return State;
+      end;
+  end case;
 end function;
 
 function ViewEditor(State: EditorModel): TuiElement;

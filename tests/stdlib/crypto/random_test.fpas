@@ -4,32 +4,32 @@ uses Std.Arrays, Std.Crypto, Std.Results, Std.Test;
 
 begin
   case RandomBytes(32) of
-    Ok(Bytes):
-    begin
-      AssertEquals(32, Length(Bytes));
-      for Index: integer := 0 to Length(Bytes) - 1 do
-        begin
-          AssertTrue(Bytes[Index] >= 0);
-          AssertTrue(Bytes[Index] <= 255);
-        end;
-      end for;
-    end;
-    Error(Message):
-    begin
-      Fail(Message);
-    end;
-  end;
+    when Ok(Bytes):
+      begin
+        AssertEquals(32, Length(Bytes));
+        for Index: integer := 0 to Length(Bytes) - 1 do
+          begin
+            AssertTrue(Bytes[Index] >= 0);
+            AssertTrue(Bytes[Index] <= 255);
+          end;
+        end for;
+      end;
+    when Error(Message):
+      begin
+        Fail(Message);
+      end;
+  end case;
 
   case RandomInt(7, 7) of
-    Ok(Value):
-    begin
-      AssertEquals(7, Value);
-    end;
-    Error(Message):
-    begin
-      Fail(Message);
-    end;
-  end;
+    when Ok(Value):
+      begin
+        AssertEquals(7, Value);
+      end;
+    when Error(Message):
+      begin
+        Fail(Message);
+      end;
+  end case;
 
   AssertTrue(Std.Results.IsError(RandomBytes(-1)));
   AssertTrue(Std.Results.IsError(RandomBytes(1048577)));

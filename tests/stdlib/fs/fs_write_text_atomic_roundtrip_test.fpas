@@ -5,33 +5,33 @@ uses Std.Fs, Std.Test;
 begin
   var Path: string := ScratchDir() + '/atomic-roundtrip.txt';
   case WriteText(Path, 'old') of
-    Ok(Written):
-    begin
-    end;
-    Error(Message):
-    begin
-      Fail(Message);
-    end;
-  end;
+    when Ok(Written):
+      begin
+      end;
+    when Error(Message):
+      begin
+        Fail(Message);
+      end;
+  end case;
 
   case WriteTextAtomic(Path, 'new') of
-    Ok(Written):
-    begin
-    end;
-    Error(Message):
-    begin
-      Fail(Message);
-    end;
-  end;
+    when Ok(Written):
+      begin
+      end;
+    when Error(Message):
+      begin
+        Fail(Message);
+      end;
+  end case;
 
   case ReadText(Path) of
-    Ok(Text):
-    begin
-      AssertEquals('new', Text);
-    end;
-    Error(Message):
-    begin
-      Fail(Message);
-    end;
-  end;
+    when Ok(Text):
+      begin
+        AssertEquals('new', Text);
+      end;
+    when Error(Message):
+      begin
+        Fail(Message);
+      end;
+  end case;
 end.

@@ -243,7 +243,9 @@ impl CaptureCollector<'_> {
                     self.pop_bound_scope();
                 }
                 if let Some(branch) = else_body {
+                    self.push_bound_scope();
                     self.collect_statement_list(branch);
+                    self.pop_bound_scope();
                 }
             }
             Stmt::For {

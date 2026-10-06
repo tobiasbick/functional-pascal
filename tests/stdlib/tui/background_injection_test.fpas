@@ -11,18 +11,18 @@ type
 function UpdateFramework(State: InjectionModel; Msg: TuiMsg; Cmd: TuiCmdOutput): InjectionModel;
 begin
   case Msg of
-    TuiMsg.Started:
-    begin
-      return record
-        Values := State.Values;
-        Starts := State.Starts + 1;
+    when TuiMsg.Started:
+      begin
+        return record
+          Values := State.Values;
+          Starts := State.Starts + 1;
+        end;
       end;
-    end;
     else
-    begin
-      return State;
-    end;
-  end;
+      begin
+        return State;
+      end;
+  end case;
 end function;
 
 function UpdateApplication(State: InjectionModel; Message: integer; Cmd: TuiCmdOutput): InjectionModel;

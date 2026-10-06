@@ -51,9 +51,9 @@ fn for_loop() {
 fn case_statement() {
     let src = "\
 case X of
-  0..9: WriteLn('digit');
-  10: WriteLn('ten')
-end";
+  when 0..9: WriteLn('digit');
+  when 10: WriteLn('ten');
+end case;";
 
     assert_eq!(
         toks(src),
@@ -61,6 +61,7 @@ end";
             Token::Case,
             Token::Ident("X".into()),
             Token::Of,
+            Token::When,
             Token::Integer(0),
             Token::DotDot,
             Token::Integer(9),
@@ -70,13 +71,17 @@ end";
             Token::Str("digit".into()),
             Token::RParen,
             Token::Semicolon,
+            Token::When,
             Token::Integer(10),
             Token::Colon,
             Token::Ident("WriteLn".into()),
             Token::LParen,
             Token::Str("ten".into()),
             Token::RParen,
+            Token::Semicolon,
             Token::End,
+            Token::Case,
+            Token::Semicolon,
         ]
     );
 }

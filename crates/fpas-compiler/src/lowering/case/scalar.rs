@@ -1,4 +1,6 @@
 //! Scalar case lowering with ordered labels, ranges, guards, and bindings.
+//!
+//! **Documentation:** `docs/pascal/language/control-flow/case-of-intro.md`.
 
 use fpas_ir::{BinaryOperation, Constant, Operation, Terminator};
 use fpas_parser::{CaseArm, CaseLabel, Expr, Stmt};
@@ -10,6 +12,7 @@ use super::super::context::{LoweringContext, target, unsupported};
 use super::super::types;
 
 impl LoweringContext {
+    /// Lowers scalar case arms in source order and confines catch-all locals to its body.
     pub(in crate::lowering) fn lower_case(
         &mut self,
         expression: &Expr,
@@ -92,7 +95,9 @@ impl LoweringContext {
         }
 
         if let Some(else_body) = else_body {
+            self.begin_scope();
             self.lower_statements(else_body)?;
+            self.end_scope();
         } else if exhaustive_enum && !self.is_terminated() {
             let message = self.emit_value(
                 Operation::Const(Constant::String(

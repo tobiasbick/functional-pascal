@@ -5,35 +5,35 @@ uses Std.Arrays, Std.Fs, Std.Test;
 begin
   var Prefix: string := ScratchDir() + '/glob-flat-';
   case WriteText(Prefix + 'b.txt', '') of
-    Ok(_):
-    begin
-    end;
-    Error(Message):
-    begin
-      Fail(Message);
-    end;
-  end;
+    when Ok(_):
+      begin
+      end;
+    when Error(Message):
+      begin
+        Fail(Message);
+      end;
+  end case;
 
   case WriteText(Prefix + 'a.txt', '') of
-    Ok(_):
-    begin
-    end;
-    Error(Message):
-    begin
-      Fail(Message);
-    end;
-  end;
+    when Ok(_):
+      begin
+      end;
+    when Error(Message):
+      begin
+        Fail(Message);
+      end;
+  end case;
 
   case Glob(Prefix + '*.txt') of
-    Ok(Paths):
-    begin
-      AssertEquals(2, Std.Arrays.Length(Paths));
-      AssertEquals(Prefix + 'a.txt', Paths[0]);
-      AssertEquals(Prefix + 'b.txt', Paths[1]);
-    end;
-    Error(Message):
-    begin
-      Fail(Message);
-    end;
-  end;
+    when Ok(Paths):
+      begin
+        AssertEquals(2, Std.Arrays.Length(Paths));
+        AssertEquals(Prefix + 'a.txt', Paths[0]);
+        AssertEquals(Prefix + 'b.txt', Paths[1]);
+      end;
+    when Error(Message):
+      begin
+        Fail(Message);
+      end;
+  end case;
 end.

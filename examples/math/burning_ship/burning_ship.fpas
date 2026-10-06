@@ -6,19 +6,19 @@ uses Fractal.Camera, Fractal.Explorer, BurningShip.Color, BurningShip.Render;
 function Palette(Value: integer): PaletteKind;
 begin
   case Value of
-    1:
-    begin
-      return PaletteKind.DeepOcean;
-    end;
-    2:
-    begin
-      return PaletteKind.Ember;
-    end;
+    when 1:
+      begin
+        return PaletteKind.DeepOcean;
+      end;
+    when 2:
+      begin
+        return PaletteKind.Ember;
+      end;
     else
-    begin
-      return PaletteKind.Aurora;
-    end;
-  end;
+      begin
+        return PaletteKind.Aurora;
+      end;
+  end case;
 end function;
 
 function Label(Value: integer): string;

@@ -40,32 +40,32 @@ begin
   Model := App.RunIterations(Model, function(State: ResizeModel; Msg: TuiMsg; Cmd: TuiCmdOutput): ResizeModel begin
     Cmd.Set(TuiCmd.NoCommand);
     case Msg of
-      TuiMsg.Tick(Delta):
-      begin
-        if Delta = 1 then
-          begin
-            return PushEvent(State, 'tick-1');
-          end;
-        end if;
+      when TuiMsg.Tick(Delta):
+        begin
+          if Delta = 1 then
+            begin
+              return PushEvent(State, 'tick-1');
+            end;
+          end if;
 
-        return PushEvent(State, 'tick-2');
-      end;
-      TuiMsg.Resize(Size):
-      begin
-        var Snapshot: TuiSurfaceSnapshot := App.SurfaceSnapshot();
-        return record
-          Events := Std.Arrays.Concat(State.Events, ['resize']);
-          ResizeWidth := Size.Width;
-          ResizeHeight := Size.Height;
-          HostWidthAtResize := Snapshot.Width;
-          HostHeightAtResize := Snapshot.Height;
+          return PushEvent(State, 'tick-2');
         end;
-      end;
+      when TuiMsg.Resize(Size):
+        begin
+          var Snapshot: TuiSurfaceSnapshot := App.SurfaceSnapshot();
+          return record
+            Events := Std.Arrays.Concat(State.Events, ['resize']);
+            ResizeWidth := Size.Width;
+            ResizeHeight := Size.Height;
+            HostWidthAtResize := Snapshot.Width;
+            HostHeightAtResize := Snapshot.Height;
+          end;
+        end;
       else
-      begin
-        return State;
-      end;
-    end;
+        begin
+          return State;
+        end;
+    end case;
   end, function(State: ResizeModel): TuiElement begin
     return TuiElementBuilders.MakeLabel('resize');
   end, 3, 0);

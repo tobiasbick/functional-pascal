@@ -69,41 +69,41 @@ begin
     begin
       var Path: string := Paths[Index];
       case Std.Fs.ReadText(Path) of
-        Ok(Text):
-        begin
-          case NoteParse(Text) of
-            Ok(NoteValue):
-            begin
-              mutable var Loaded: Note := NoteValue;
-              Loaded.Path := Path;
-              Std.Arrays.Push(Notes, Loaded);
-              if Std.Dictionaries.ContainsKey(IdCounts, Loaded.Id) then
+        when Ok(Text):
+          begin
+            case NoteParse(Text) of
+              when Ok(NoteValue):
                 begin
-                  IdCounts[Loaded.Id] := IdCounts[Loaded.Id] + 1;
+                  mutable var Loaded: Note := NoteValue;
+                  Loaded.Path := Path;
+                  Std.Arrays.Push(Notes, Loaded);
+                  if Std.Dictionaries.ContainsKey(IdCounts, Loaded.Id) then
+                    begin
+                      IdCounts[Loaded.Id] := IdCounts[Loaded.Id] + 1;
+                    end;
+                  else
+                    begin
+                      IdCounts[Loaded.Id] := 1;
+                    end;
+                  end if;
                 end;
-              else
+              when Error(Message):
                 begin
-                  IdCounts[Loaded.Id] := 1;
+                  Std.Arrays.Push(Issues, record
+                    Path := Path;
+                    Message := Message;
+                  end);
                 end;
-              end if;
-            end;
-            Error(Message):
-            begin
-              Std.Arrays.Push(Issues, record
-                Path := Path;
-                Message := Message;
-              end);
-            end;
+            end case;
           end;
-        end;
-        Error(Message):
-        begin
-          Std.Arrays.Push(Issues, record
-            Path := Path;
-            Message := Message;
-          end);
-        end;
-      end;
+        when Error(Message):
+          begin
+            Std.Arrays.Push(Issues, record
+              Path := Path;
+              Message := Message;
+            end);
+          end;
+      end case;
     end;
   end for;
   mutable var Unique: array of Note := [];

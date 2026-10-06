@@ -69,18 +69,18 @@ end procedure;
 public function TuiButtonCapturePressed(ApplicationId: integer): option of TuiControlId;
 begin
   case TuiButtonPressStates[ApplicationId - 1] of
-    TuiButtonPressState.Captured(Button, Inside) if Inside:
-    begin
-      return Some(Button.Id);
-    end;
-    TuiButtonPressState.Idle:
-    begin
-      return None;
-    end;
-    TuiButtonPressState.Captured(Button, Inside):
-    begin
-      return None;
-    end;
-  end;
+    when TuiButtonPressState.Captured(Button, Inside) if Inside:
+      begin
+        return Some(Button.Id);
+      end;
+    when TuiButtonPressState.Idle:
+      begin
+        return None;
+      end;
+    when TuiButtonPressState.Captured(Button, Inside):
+      begin
+        return None;
+      end;
+  end case;
 end function;
 end unit;

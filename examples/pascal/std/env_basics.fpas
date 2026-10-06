@@ -7,13 +7,13 @@ uses Std.Console, Std.Env, Std.Options;
 begin
   WriteLn('PATH set: ', Exists('PATH'));
   case Get('PATH') of
-    Some(_):
-    begin
-      WriteLn('PATH lookup: some');
-    end;
-    None:
-    begin
-      WriteLn('PATH lookup: none');
-    end;
-  end;
+    when Some(_):
+      begin
+        WriteLn('PATH lookup: some');
+      end;
+    when None:
+      begin
+        WriteLn('PATH lookup: none');
+      end;
+  end case;
 end.

@@ -88,8 +88,9 @@ fn repeat_missing_terminator_keeps_following_statement() {
 
 #[test]
 fn case_else_missing_terminator_keeps_following_statement() {
-    let (program, errors) =
-        parse_with_errors("program T; begin case X of 1: A := 1; else B := 2 C := 3; end; end.");
+    let (program, errors) = parse_with_errors(
+        "program T; begin case X of when 1: A := 1; else B := 2 C := 3; end case; end.",
+    );
 
     let Stmt::Case {
         else_body: Some(else_body),

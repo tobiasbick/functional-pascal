@@ -40,21 +40,21 @@ function UpdateTextArea(State: TextAreaModel; Msg: TuiMsg; Cmd: TuiCmdOutput): T
 begin
   Cmd.Set(TuiCmd.NoCommand);
   case Msg of
-    TuiMsg.TextAreaChanged(Source, Action, Text, Caret, Offset):
-    begin
-      AssertEquals(1, Source.Value);
-      AssertEquals(9, Action.Value);
-      return record
-        Text := Text;
-        Caret := Caret;
-        Offset := Offset;
+    when TuiMsg.TextAreaChanged(Source, Action, Text, Caret, Offset):
+      begin
+        AssertEquals(1, Source.Value);
+        AssertEquals(9, Action.Value);
+        return record
+          Text := Text;
+          Caret := Caret;
+          Offset := Offset;
+        end;
       end;
-    end;
     else
-    begin
-      return State;
-    end;
-  end;
+      begin
+        return State;
+      end;
+  end case;
 end function;
 
 function Press(App: TuiApplication; State: TextAreaModel; Kind: TuiKeyKind; Character: string): TextAreaModel;

@@ -30,38 +30,38 @@ begin
   mutable var Next: integer := Index + 1;
   mutable var Descendants: array of TuiElement := [];
   case Node of
-    TuiElement.Scroll(Id, Offset, ChangeAction, Children):
-    begin
-      Descendants := Children;
-    end;
-    TuiElement.Row(Children, Spacing):
-    begin
-      Descendants := Children;
-    end;
-    TuiElement.Column(Children, Spacing):
-    begin
-      Descendants := Children;
-    end;
-    TuiElement.Layout(Settings, Children):
-    begin
-      Descendants := Children;
-    end;
-    TuiElement.Panel(Title, Children):
-    begin
-      Descendants := Children;
-    end;
-    TuiElement.Overlay(Title, Children):
-    begin
-      Descendants := Children;
-    end;
-    TuiElement.Desktop(Focused, Children):
-    begin
-      Descendants := Children;
-    end;
+    when TuiElement.Scroll(Id, Offset, ChangeAction, Children):
+      begin
+        Descendants := Children;
+      end;
+    when TuiElement.Row(Children, Spacing):
+      begin
+        Descendants := Children;
+      end;
+    when TuiElement.Column(Children, Spacing):
+      begin
+        Descendants := Children;
+      end;
+    when TuiElement.Layout(Settings, Children):
+      begin
+        Descendants := Children;
+      end;
+    when TuiElement.Panel(Title, Children):
+      begin
+        Descendants := Children;
+      end;
+    when TuiElement.Overlay(Title, Children):
+      begin
+        Descendants := Children;
+      end;
+    when TuiElement.Desktop(Focused, Children):
+      begin
+        Descendants := Children;
+      end;
     else
-    begin
-    end;
-  end;
+      begin
+      end;
+  end case;
 
   for ChildIndex: integer := 0 to Std.Arrays.Length(Descendants) - 1 do
     begin
@@ -82,263 +82,264 @@ function TuiRouteTarget(
 begin
   mutable var Descendants: array of TuiElement := [];
   case Node of
-    TuiElement.Button(Button):
-    begin
-      return TuiRouteFocusedButtonKey(Button, Target, Key);
-    end;
-    TuiElement.Input(Input):
-    begin
-      return TuiRouteInputKey(Input, Target, Key);
-    end;
-    TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction):
-    begin
-      if Id.Value <> Target.Value then
-        begin
-          return None;
-        end;
-      end if;
+    when TuiElement.Button(Button):
+      begin
+        return TuiRouteFocusedButtonKey(Button, Target, Key);
+      end;
+    when TuiElement.Input(Input):
+      begin
+        return TuiRouteInputKey(Input, Target, Key);
+      end;
+    when TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction):
+      begin
+        if Id.Value <> Target.Value then
+          begin
+            return None;
+          end;
+        end if;
 
-      return TuiRouteTextAreaKey(Id, Text, Caret, Offset, ChangeAction, Frame.EntryAt(Index).Bounds, Key);
-    end;
-    TuiElement.CheckBox(Id, Text, Checked, ChangeAction):
-    begin
-      if Id.Value <> Target.Value then
-        begin
-          return None;
-        end;
-      end if;
+        return TuiRouteTextAreaKey(Id, Text, Caret, Offset, ChangeAction, Frame.EntryAt(Index)
+                                                                            .Bounds, Key);
+      end;
+    when TuiElement.CheckBox(Id, Text, Checked, ChangeAction):
+      begin
+        if Id.Value <> Target.Value then
+          begin
+            return None;
+          end;
+        end if;
 
-      if (Key.kind = Std.Console.KeyKind.Enter) or (Key.kind = Std.Console.KeyKind.Space) then
-        begin
-          return Some(TuiMsg.CheckChanged(Id, ChangeAction, not Checked));
-        end;
-      end if;
+        if (Key.kind = Std.Console.KeyKind.Enter) or (Key.kind = Std.Console.KeyKind.Space) then
+          begin
+            return Some(TuiMsg.CheckChanged(Id, ChangeAction, not Checked));
+          end;
+        end if;
 
-      return None;
-    end;
-    TuiElement.List(Id, Items, Selected, ChangeAction):
-    begin
-      if Id.Value <> Target.Value then
-        begin
-          return None;
-        end;
-      end if;
-      var Count: integer := Std.Arrays.Length(Items);
-      if Count = 0 then
-        begin
-          return None;
-        end;
-      end if;
-      mutable var NextSelected: integer := Selected;
-      if Key.kind = Std.Console.KeyKind.Up then
-        begin
-          NextSelected := Selected - 1;
-          if NextSelected < 0 then
-            begin
-              NextSelected := 0;
-            end;
-          end if;
-        end;
-      elsif Key.kind = Std.Console.KeyKind.Down then
-        begin
-          NextSelected := Selected + 1;
-          if NextSelected >= Count then
-            begin
-              NextSelected := Count - 1;
-            end;
-          end if;
-        end;
-      elsif Key.kind = Std.Console.KeyKind.Home then
-        begin
-          NextSelected := 0;
-        end;
-      elsif Key.kind = Std.Console.KeyKind.EndKey then
-        begin
-          NextSelected := Count - 1;
-        end;
-      else
-        begin
-          return None;
-        end;
-      end if;
+        return None;
+      end;
+    when TuiElement.List(Id, Items, Selected, ChangeAction):
+      begin
+        if Id.Value <> Target.Value then
+          begin
+            return None;
+          end;
+        end if;
+        var Count: integer := Std.Arrays.Length(Items);
+        if Count = 0 then
+          begin
+            return None;
+          end;
+        end if;
+        mutable var NextSelected: integer := Selected;
+        if Key.kind = Std.Console.KeyKind.Up then
+          begin
+            NextSelected := Selected - 1;
+            if NextSelected < 0 then
+              begin
+                NextSelected := 0;
+              end;
+            end if;
+          end;
+        elsif Key.kind = Std.Console.KeyKind.Down then
+          begin
+            NextSelected := Selected + 1;
+            if NextSelected >= Count then
+              begin
+                NextSelected := Count - 1;
+              end;
+            end if;
+          end;
+        elsif Key.kind = Std.Console.KeyKind.Home then
+          begin
+            NextSelected := 0;
+          end;
+        elsif Key.kind = Std.Console.KeyKind.EndKey then
+          begin
+            NextSelected := Count - 1;
+          end;
+        else
+          begin
+            return None;
+          end;
+        end if;
 
-      if NextSelected = Selected then
-        begin
-          return None;
-        end;
-      end if;
+        if NextSelected = Selected then
+          begin
+            return None;
+          end;
+        end if;
 
-      return Some(TuiMsg.SelectionChanged(Id, ChangeAction, NextSelected));
-    end;
-    TuiElement.MenuBar(Items):
-    begin
-      for ItemIndex: integer := 0 to Std.Arrays.Length(Items) - 1 do
-        begin
-          if (Items[ItemIndex].Id.Value = Target.Value) and Items[ItemIndex].Enabled then
-            begin
-              if (Key.kind = Std.Console.KeyKind.Enter) or (Key.kind = Std.Console.KeyKind.Space) then
+        return Some(TuiMsg.SelectionChanged(Id, ChangeAction, NextSelected));
+      end;
+    when TuiElement.MenuBar(Items):
+      begin
+        for ItemIndex: integer := 0 to Std.Arrays.Length(Items) - 1 do
+          begin
+            if (Items[ItemIndex].Id.Value = Target.Value) and Items[ItemIndex].Enabled then
+              begin
+                if (Key.kind = Std.Console.KeyKind.Enter) or (Key.kind = Std.Console.KeyKind.Space) then
+                  begin
+                    return Some(TuiMsg.Action(Items[ItemIndex].Id, Items[ItemIndex].Action));
+                  end;
+                end if;
+
+                return None;
+              end;
+            end if;
+          end;
+        end for;
+
+        return None;
+      end;
+    when TuiElement.Menu(Id, Nodes, State, ChangeAction):
+      begin
+        return None;
+      end;
+    when TuiElement.StatusLine(Items):
+      begin
+        for ItemIndex: integer := 0 to Std.Arrays.Length(Items) - 1 do
+          begin
+            case Items[ItemIndex] of
+              when TuiStatusItem.Command(Id, Text, Action, Enabled):
                 begin
-                  return Some(TuiMsg.Action(Items[ItemIndex].Id, Items[ItemIndex].Action));
-                end;
-              end if;
-
-              return None;
-            end;
-          end if;
-        end;
-      end for;
-
-      return None;
-    end;
-    TuiElement.Menu(Id, Nodes, State, ChangeAction):
-    begin
-      return None;
-    end;
-    TuiElement.StatusLine(Items):
-    begin
-      for ItemIndex: integer := 0 to Std.Arrays.Length(Items) - 1 do
-        begin
-          case Items[ItemIndex] of
-            TuiStatusItem.Command(Id, Text, Action, Enabled):
-            begin
-              if (Id.Value = Target.Value) and Enabled then
-                begin
-                  if (Key.kind = Std.Console.KeyKind.Enter) or
-                     (Key.kind = Std.Console.KeyKind.Space) then
+                  if (Id.Value = Target.Value) and Enabled then
                     begin
-                      return Some(TuiMsg.Action(Id, Action));
+                      if (Key.kind = Std.Console.KeyKind.Enter) or
+                         (Key.kind = Std.Console.KeyKind.Space) then
+                        begin
+                          return Some(TuiMsg.Action(Id, Action));
+                        end;
+                      end if;
+
+                      return None;
                     end;
                   end if;
-
-                  return None;
                 end;
-              end if;
-            end;
-            else
-            begin
-            end;
+              else
+                begin
+                end;
+            end case;
           end;
-        end;
-      end for;
+        end for;
 
-      return None;
-    end;
-    TuiElement.Scroll(Id, Offset, ChangeAction, Children):
-    begin
-      if Id.Value = Target.Value then
-        begin
-          mutable var Content: TuiSize := TuiSize.Create(0, 0);
-          if Std.Arrays.Length(Children) = 1 then
-            begin
-              Content := TuiMeasure(Children[0], TuiMeasureSpec.Unbounded()).Preferred;
-            end;
-          end if;
-          var Viewport: TuiArrangedEntry := Frame.EntryAt(Index);
-          mutable var MaximumX: integer := Content.Width - Viewport.Bounds.Width;
-          mutable var MaximumY: integer := Content.Height - Viewport.Bounds.Height;
-          if MaximumX < 0 then
-            begin
-              MaximumX := 0;
-            end;
-          end if;
+        return None;
+      end;
+    when TuiElement.Scroll(Id, Offset, ChangeAction, Children):
+      begin
+        if Id.Value = Target.Value then
+          begin
+            mutable var Content: TuiSize := TuiSize.Create(0, 0);
+            if Std.Arrays.Length(Children) = 1 then
+              begin
+                Content := TuiMeasure(Children[0], TuiMeasureSpec.Unbounded()).Preferred;
+              end;
+            end if;
+            var Viewport: TuiArrangedEntry := Frame.EntryAt(Index);
+            mutable var MaximumX: integer := Content.Width - Viewport.Bounds.Width;
+            mutable var MaximumY: integer := Content.Height - Viewport.Bounds.Height;
+            if MaximumX < 0 then
+              begin
+                MaximumX := 0;
+              end;
+            end if;
 
-          if MaximumY < 0 then
-            begin
-              MaximumY := 0;
-            end;
-          end if;
-          mutable var NextOffset: TuiPoint := Offset;
-          if Key.kind = Std.Console.KeyKind.Left then
-            begin
-              NextOffset.X := TuiScrollClamp(Offset.X - 1, MaximumX);
-            end;
-          elsif Key.kind = Std.Console.KeyKind.Right then
-            begin
-              NextOffset.X := TuiScrollClamp(Offset.X + 1, MaximumX);
-            end;
-          elsif Key.kind = Std.Console.KeyKind.Up then
-            begin
-              NextOffset.Y := TuiScrollClamp(Offset.Y - 1, MaximumY);
-            end;
-          elsif Key.kind = Std.Console.KeyKind.Down then
-            begin
-              NextOffset.Y := TuiScrollClamp(Offset.Y + 1, MaximumY);
-            end;
-          elsif Key.kind = Std.Console.KeyKind.PageUp then
-            begin
-              NextOffset.Y := TuiScrollClamp(Offset.Y - Viewport.Bounds.Height, MaximumY);
-            end;
-          elsif Key.kind = Std.Console.KeyKind.PageDown then
-            begin
-              NextOffset.Y := TuiScrollClamp(Offset.Y + Viewport.Bounds.Height, MaximumY);
-            end;
-          elsif Key.kind = Std.Console.KeyKind.Home then
-            begin
-              NextOffset.Y := 0;
-            end;
-          elsif Key.kind = Std.Console.KeyKind.EndKey then
-            begin
-              NextOffset.Y := MaximumY;
-            end;
-          else
-            begin
-              return None;
-            end;
-          end if;
+            if MaximumY < 0 then
+              begin
+                MaximumY := 0;
+              end;
+            end if;
+            mutable var NextOffset: TuiPoint := Offset;
+            if Key.kind = Std.Console.KeyKind.Left then
+              begin
+                NextOffset.X := TuiScrollClamp(Offset.X - 1, MaximumX);
+              end;
+            elsif Key.kind = Std.Console.KeyKind.Right then
+              begin
+                NextOffset.X := TuiScrollClamp(Offset.X + 1, MaximumX);
+              end;
+            elsif Key.kind = Std.Console.KeyKind.Up then
+              begin
+                NextOffset.Y := TuiScrollClamp(Offset.Y - 1, MaximumY);
+              end;
+            elsif Key.kind = Std.Console.KeyKind.Down then
+              begin
+                NextOffset.Y := TuiScrollClamp(Offset.Y + 1, MaximumY);
+              end;
+            elsif Key.kind = Std.Console.KeyKind.PageUp then
+              begin
+                NextOffset.Y := TuiScrollClamp(Offset.Y - Viewport.Bounds.Height, MaximumY);
+              end;
+            elsif Key.kind = Std.Console.KeyKind.PageDown then
+              begin
+                NextOffset.Y := TuiScrollClamp(Offset.Y + Viewport.Bounds.Height, MaximumY);
+              end;
+            elsif Key.kind = Std.Console.KeyKind.Home then
+              begin
+                NextOffset.Y := 0;
+              end;
+            elsif Key.kind = Std.Console.KeyKind.EndKey then
+              begin
+                NextOffset.Y := MaximumY;
+              end;
+            else
+              begin
+                return None;
+              end;
+            end if;
 
-          if (NextOffset.X = Offset.X) and (NextOffset.Y = Offset.Y) then
-            begin
-              return None;
-            end;
-          end if;
+            if (NextOffset.X = Offset.X) and (NextOffset.Y = Offset.Y) then
+              begin
+                return None;
+              end;
+            end if;
 
-          return Some(TuiMsg.ScrollChanged(Id, ChangeAction, NextOffset));
-        end;
-      end if;
+            return Some(TuiMsg.ScrollChanged(Id, ChangeAction, NextOffset));
+          end;
+        end if;
 
-      Descendants := Children;
-    end;
-    TuiElement.Row(Children, Spacing):
-    begin
-      Descendants := Children;
-    end;
-    TuiElement.Column(Children, Spacing):
-    begin
-      Descendants := Children;
-    end;
-    TuiElement.Layout(Settings, Children):
-    begin
-      Descendants := Children;
-    end;
-    TuiElement.Panel(Title, Children):
-    begin
-      Descendants := Children;
-    end;
-    TuiElement.Overlay(Title, Children):
-    begin
-      Descendants := Children;
-    end;
-    TuiElement.Desktop(Focused, Children):
-    begin
-      Descendants := Children;
-    end;
+        Descendants := Children;
+      end;
+    when TuiElement.Row(Children, Spacing):
+      begin
+        Descendants := Children;
+      end;
+    when TuiElement.Column(Children, Spacing):
+      begin
+        Descendants := Children;
+      end;
+    when TuiElement.Layout(Settings, Children):
+      begin
+        Descendants := Children;
+      end;
+    when TuiElement.Panel(Title, Children):
+      begin
+        Descendants := Children;
+      end;
+    when TuiElement.Overlay(Title, Children):
+      begin
+        Descendants := Children;
+      end;
+    when TuiElement.Desktop(Focused, Children):
+      begin
+        Descendants := Children;
+      end;
     else
-    begin
-      return None;
-    end;
-  end;
+      begin
+        return None;
+      end;
+  end case;
   mutable var Next: integer := Index + 1;
   for ChildIndex: integer := 0 to Std.Arrays.Length(Descendants) - 1 do
     begin
       case TuiRouteTarget(Frame, Descendants[ChildIndex], Next, Target, Key) of
-        Some(Msg):
-        begin
-          return Some(Msg);
-        end;
-        None:
-        begin
-        end;
-      end;
+        when Some(Msg):
+          begin
+            return Some(Msg);
+          end;
+        when None:
+          begin
+          end;
+      end case;
 
       Next := TuiRouteSubtreeEnd(Descendants[ChildIndex], Next);
     end;
@@ -357,14 +358,14 @@ public function TuiRouteKey(Root: TuiElement; Frame: TuiArrangedFrame; Key: Std.
 begin
   TuiRouteRequireMatchingFrame(Frame, Root);
   case TuiRouteMenuKey(Root, Key) of
-    Some(Messages):
-    begin
-      return Messages;
-    end;
-    None:
-    begin
-    end;
-  end;
+    when Some(Messages):
+      begin
+        return Messages;
+      end;
+    when None:
+      begin
+      end;
+  end case;
 
   if Key.kind = Std.Console.KeyKind.Escape then
     begin
@@ -373,14 +374,14 @@ begin
   end if;
 
   case TuiRouteButtonMnemonicKey(Root, Key) of
-    Some(Messages):
-    begin
-      return Messages;
-    end;
-    None:
-    begin
-    end;
-  end;
+    when Some(Messages):
+      begin
+        return Messages;
+      end;
+    when None:
+      begin
+      end;
+  end case;
   var Controls: array of TuiControlId := TuiFocusableControls(Root);
   if Std.Arrays.Length(Controls) = 0 then
     begin
@@ -390,14 +391,14 @@ begin
   var Previous: option of TuiControlId := TuiRootFocus(Root);
   mutable var CurrentIndex: integer := -1;
   case Previous of
-    Some(Id):
-    begin
-      CurrentIndex := TuiControlIndex(Controls, Id);
-    end;
-    None:
-    begin
-    end;
-  end;
+    when Some(Id):
+      begin
+        CurrentIndex := TuiControlIndex(Controls, Id);
+      end;
+    when None:
+      begin
+      end;
+  end case;
   mutable var Routed: array of TuiMsg := [];
   mutable var Target: TuiControlId := Controls[0];
   if CurrentIndex >= 0 then
@@ -415,14 +416,14 @@ begin
       if CurrentIndex >= 0 then
         begin
           case TuiRouteTarget(Frame, Root, 0, Target, Key) of
-            Some(Msg):
-            begin
-              return [Msg];
-            end;
-            None:
-            begin
-            end;
-          end;
+            when Some(Msg):
+              begin
+                return [Msg];
+              end;
+            when None:
+              begin
+              end;
+          end case;
         end;
       end if;
       mutable var NextIndex: integer := CurrentIndex + 1;
@@ -437,40 +438,40 @@ begin
   end if;
 
   case TuiRouteButtonFocusNavigation(Root, Previous, Key) of
-    Some(Messages):
-    begin
-      return Messages;
-    end;
-    None:
-    begin
-    end;
-  end;
+    when Some(Messages):
+      begin
+        return Messages;
+      end;
+    when None:
+      begin
+      end;
+  end case;
 
   case TuiRouteTarget(Frame, Root, 0, Target, Key) of
-    Some(Msg):
-    begin
-      Std.Arrays.Push(Routed, Msg);
-    end;
-    None:
-    begin
-      if Key.kind = Std.Console.KeyKind.Enter then
-        begin
-          case TuiRouteDefaultButtonEnter(Root) of
-            Some(Msg):
-            begin
-              Std.Arrays.Push(Routed, Msg);
-              return Routed;
-            end;
-            None:
-            begin
-            end;
+    when Some(Msg):
+      begin
+        Std.Arrays.Push(Routed, Msg);
+      end;
+    when None:
+      begin
+        if Key.kind = Std.Console.KeyKind.Enter then
+          begin
+            case TuiRouteDefaultButtonEnter(Root) of
+              when Some(Msg):
+                begin
+                  Std.Arrays.Push(Routed, Msg);
+                  return Routed;
+                end;
+              when None:
+                begin
+                end;
+            end case;
           end;
-        end;
-      end if;
+        end if;
 
-      Std.Arrays.Push(Routed, TuiMsg.Key(Key));
-    end;
-  end;
+        Std.Arrays.Push(Routed, TuiMsg.Key(Key));
+      end;
+  end case;
 
   return Routed;
 end function;

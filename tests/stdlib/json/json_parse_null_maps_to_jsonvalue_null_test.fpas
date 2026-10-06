@@ -5,22 +5,22 @@ uses Std.Console, Std.Json;
 begin
   var R: result of JsonValue, string := Parse('null');
   case R of
-    Ok(V):
-    begin
-      case V of
-        JsonValue.NullValue:
-        begin
-          WriteLn('null');
-        end;
-        else
-        begin
-          WriteLn('not-null');
-        end;
+    when Ok(V):
+      begin
+        case V of
+          when JsonValue.NullValue:
+            begin
+              WriteLn('null');
+            end;
+          else
+            begin
+              WriteLn('not-null');
+            end;
+        end case;
       end;
-    end;
-    Error(E):
-    begin
-      WriteLn('error: ' + E);
-    end;
-  end;
+    when Error(E):
+      begin
+        WriteLn('error: ' + E);
+      end;
+  end case;
 end.

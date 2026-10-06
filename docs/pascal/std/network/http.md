@@ -37,9 +37,11 @@ mutable var RequestValue: Request := Request.Create('POST', 'http://127.0.0.1:80
 RequestValue.Headers := [Header.Create('Content-Type', 'application/json')];
 RequestValue.Body := Std.Net.Utf8.Encode('{"name":"example"}');
 case Send(RequestValue) of
-  Ok(ResponseValue): WriteLn(ResponseValue.StatusCode);
-  Error(Message): panic(Message);
-end;
+  when Ok(ResponseValue):
+    WriteLn(ResponseValue.StatusCode);
+  when Error(Message):
+    panic(Message);
+end case;
 ```
 
 Standard methods have short constructors:
@@ -101,29 +103,29 @@ Independent streams may be opened and consumed by different tasks. Calls that mu
 
 ```pascal
 case OpenStream(Request.Get('https://example.test/events')) of
-  Ok(ResponseValue):
-  begin
-    mutable var Reading: boolean := true;
-    while Reading do
-      begin
-        case ReadStream(ResponseValue.Body, 4096) of
-          Ok(Bytes):
-          begin
-            Reading := Std.Arrays.Length(Bytes) <> 0;
-          end;
-          Error(Message):
-          begin
-            panic(Message);
-          end;
+  when Ok(ResponseValue):
+    begin
+      mutable var Reading: boolean := true;
+      while Reading do
+        begin
+          case ReadStream(ResponseValue.Body, 4096) of
+            when Ok(Bytes):
+              begin
+                Reading := Std.Arrays.Length(Bytes) <> 0;
+              end;
+            when Error(Message):
+              begin
+                panic(Message);
+              end;
+          end case;
         end;
-      end;
-    end while;
-  end;
-  Error(Message):
-  begin
-    panic(Message);
-  end;
-end;
+      end while;
+    end;
+  when Error(Message):
+    begin
+      panic(Message);
+    end;
+end case;
 ```
 
 `MaxHeaderBytes` bounds each response head, while `MaxResponseBytes` bounds all bytes received for
@@ -166,44 +168,53 @@ ambiguous framing, unsupported transfer codings, and truncated bodies are reject
 ```pascal
 uses Std.Http, Std.Net, Std.Net.Utf8;
 
+
 case Listen('127.0.0.1', 8080) of
-  Ok(ListenerValue):
-  begin
-    case Accept(ListenerValue) of
-      Ok(Connection):
-      begin
-        case SetTimeout(Connection, 30000) of
-          Ok(_):
+  when Ok(ListenerValue):
+    begin
+      case Accept(ListenerValue) of
+        when Ok(Connection):
           begin
+            case SetTimeout(Connection, 30000) of
+              when Ok(_):
+                begin
+                end;
+              when Error(Message):
+                panic(Message);
+            end case;
+
+            case ReadRequest(Connection, 65536, 1048576) of
+              when Ok(RequestValue):
+                begin
+                  mutable var ResponseValue: ServerResponse := ServerResponse.Create(200, 'OK');
+                  ResponseValue.Body := Std.Net.Utf8.Encode('Hello');
+                  case WriteResponse(Connection, ResponseValue) of
+                    when Ok(_):
+                      begin
+                      end;
+                    when Error(Message):
+                      panic(Message);
+                  end case;
+                end;
+              when Error(Message):
+                panic(Message);
+            end case;
+
+            case Close(Connection) of
+              when Ok(_):
+                begin
+                end;
+              when Error(Message):
+                panic(Message);
+            end case;
           end;
-          Error(Message): panic(Message)
-        end;
-        case ReadRequest(Connection, 65536, 1048576) of
-          Ok(RequestValue):
-          begin
-            mutable var ResponseValue: ServerResponse := ServerResponse.Create(200, 'OK');
-            ResponseValue.Body := Std.Net.Utf8.Encode('Hello');
-            case WriteResponse(Connection, ResponseValue) of
-              Ok(_):
-              begin
-              end;
-              Error(Message): panic(Message)
-            end
-          end;
-          Error(Message): panic(Message)
-        end;
-        case Close(Connection) of
-          Ok(_):
-          begin
-          end;
-          Error(Message): panic(Message)
-        end
-      end;
-      Error(Message): panic(Message)
-    end
-  end;
-  Error(Message): panic(Message)
-end
+        when Error(Message):
+          panic(Message);
+      end case;
+    end;
+  when Error(Message):
+    panic(Message);
+end case;
 ```
 
 `WriteResponse` emits HTTP/1.1 with managed `Content-Length` and `Connection: close` fields. It does
@@ -220,22 +231,25 @@ begin
   mutable var ResponseValue: ServerResponse := ServerResponse.Create(200, 'OK');
   ResponseValue.Body := Std.Net.Utf8.Encode('Path: ' + RequestValue.Target);
   return ResponseValue;
-end;
+end function;
+
 
 case Listen('127.0.0.1', 8080) of
-  Ok(ListenerValue):
-  begin
-    mutable var Options: ServerOptions := ServerOptions.Create();
-    Options.MaxConcurrentRequests := 16;
-    case Serve(ListenerValue, Options, Handle) of
-      Ok(_):
-      begin
-      end;
-      Error(Message): panic(Message)
-    end
-  end;
-  Error(Message): panic(Message)
-end
+  when Ok(ListenerValue):
+    begin
+      mutable var Options: ServerOptions := ServerOptions.Create();
+      Options.MaxConcurrentRequests := 16;
+      case Serve(ListenerValue, Options, Handle) of
+        when Ok(_):
+          begin
+          end;
+        when Error(Message):
+          panic(Message);
+      end case;
+    end;
+  when Error(Message):
+    panic(Message);
+end case;
 ```
 
 `ServerOptions.Create` defaults to a 64 KiB request-head limit, a 1 MiB request-body limit, a
@@ -255,18 +269,20 @@ remain unchanged:
 
 ```pascal
 case ListenTls('127.0.0.1', 8443, 'certificate.pem', 'private-key.pem', 10000) of
-  Ok(ListenerValue):
-  begin
-    mutable var Options: ServerOptions := ServerOptions.Create();
-    case Serve(ListenerValue, Options, Handle) of
-      Ok(_):
-      begin
-      end;
-      Error(Message): panic(Message);
+  when Ok(ListenerValue):
+    begin
+      mutable var Options: ServerOptions := ServerOptions.Create();
+      case Serve(ListenerValue, Options, Handle) of
+        when Ok(_):
+          begin
+          end;
+        when Error(Message):
+          panic(Message);
+      end case;
     end;
-  end;
-  Error(Message): panic(Message);
-end;
+  when Error(Message):
+    panic(Message);
+end case;
 ```
 
 The certificate chain and private key must be PEM files. The handshake timeout bounds clients that

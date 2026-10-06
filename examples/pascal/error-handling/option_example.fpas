@@ -32,46 +32,46 @@ begin
   WriteLn('IsNone: ', IsNone(Missing));
   WriteLn('UnwrapOr: ', UnwrapOr(Missing, 0));
   case FindFirst(Data, 40) of
-    Some(V):
-    begin
-      WriteLn('Found >= 40: ', V);
-    end;
-    None:
-    begin
-      WriteLn('Nothing >= 40');
-    end;
-  end;
+    when Some(V):
+      begin
+        WriteLn('Found >= 40: ', V);
+      end;
+    when None:
+      begin
+        WriteLn('Nothing >= 40');
+      end;
+  end case;
 
   case FindFirst(Data, 100) of
-    Some(V):
-    begin
-      WriteLn('Found >= 100: ', V);
-    end;
-    None:
-    begin
-      WriteLn('Nothing >= 100');
-    end;
-  end;
+    when Some(V):
+      begin
+        WriteLn('Found >= 100: ', V);
+      end;
+    when None:
+      begin
+        WriteLn('Nothing >= 100');
+      end;
+  end case;
 
   case DoubleFirst(Data, 10) of
-    Some(S):
-    begin
-      WriteLn(S);
-    end;
-    None:
-    begin
-      WriteLn('No match to double');
-    end;
-  end;
+    when Some(S):
+      begin
+        WriteLn(S);
+      end;
+    when None:
+      begin
+        WriteLn('No match to double');
+      end;
+  end case;
 
   case DoubleFirst(Data, 100) of
-    Some(S):
-    begin
-      WriteLn(S);
-    end;
-    None:
-    begin
-      WriteLn('No match to double');
-    end;
-  end;
+    when Some(S):
+      begin
+        WriteLn(S);
+      end;
+    when None:
+      begin
+        WriteLn('No match to double');
+      end;
+  end case;
 end.

@@ -80,13 +80,13 @@ Destructuring uses `case`:
 
 ```pascal
 case S of
-  Shape.Circle(R):
+  when Shape.Circle(R):
     WriteLn('Circle with radius ' + RealToStr(R));
-  Shape.Rectangle(W, H):
-    WriteLn('Rectangle ' + RealToStr(W) + 'x' + RealToStr(H));
-  Shape.Point:
+  when Shape.Rectangle(W, H):
+    WriteLn((('Rectangle ' + RealToStr(W)) + 'x') + RealToStr(H));
+  when Shape.Point:
     WriteLn('Point');
-end;
+end case;
 ```
 
 Values of an enum with data compare with `=` and `<>`: they are equal when they have the same

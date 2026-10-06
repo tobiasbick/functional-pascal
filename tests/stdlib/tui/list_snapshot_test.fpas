@@ -20,17 +20,17 @@ function UpdateList(State: ListModel; Msg: TuiMsg; Cmd: TuiCmdOutput): ListModel
 begin
   Cmd.Set(TuiCmd.NoCommand);
   case Msg of
-    TuiMsg.SelectionChanged(Source, Action, Selected):
-    begin
-      return record
-        Selected := Selected;
+    when TuiMsg.SelectionChanged(Source, Action, Selected):
+      begin
+        return record
+          Selected := Selected;
+        end;
       end;
-    end;
     else
-    begin
-      return State;
-    end;
-  end;
+      begin
+        return State;
+      end;
+  end case;
 end function;
 
 begin

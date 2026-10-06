@@ -144,33 +144,33 @@ begin
   for Command: TuiBackgroundCommand in Commands do
     begin
       case Command of
-        TuiBackgroundCommand.Start(Id, Work):
-        begin
-          TuiBackgroundStart(ApplicationId, Id, false, Work);
-        end;
-        TuiBackgroundCommand.ReplaceSubscription(Id, Work):
-        begin
-          var Existing: integer := TuiBackgroundFindSubscription(ApplicationId, Id);
-          if Existing >= 0 then
-            begin
-              TuiBackgroundRequestStop(ApplicationId, Existing, Some(Work));
-            end;
-          else
-            begin
-              TuiBackgroundStart(ApplicationId, Id, true, Work);
-            end;
-          end if;
-        end;
-        TuiBackgroundCommand.CancelSubscription(Id):
-        begin
-          var Existing: integer := TuiBackgroundFindSubscription(ApplicationId, Id);
-          if Existing >= 0 then
-            begin
-              TuiBackgroundRequestStop(ApplicationId, Existing, None);
-            end;
-          end if;
-        end;
-      end;
+        when TuiBackgroundCommand.Start(Id, Work):
+          begin
+            TuiBackgroundStart(ApplicationId, Id, false, Work);
+          end;
+        when TuiBackgroundCommand.ReplaceSubscription(Id, Work):
+          begin
+            var Existing: integer := TuiBackgroundFindSubscription(ApplicationId, Id);
+            if Existing >= 0 then
+              begin
+                TuiBackgroundRequestStop(ApplicationId, Existing, Some(Work));
+              end;
+            else
+              begin
+                TuiBackgroundStart(ApplicationId, Id, true, Work);
+              end;
+            end if;
+          end;
+        when TuiBackgroundCommand.CancelSubscription(Id):
+          begin
+            var Existing: integer := TuiBackgroundFindSubscription(ApplicationId, Id);
+            if Existing >= 0 then
+              begin
+                TuiBackgroundRequestStop(ApplicationId, Existing, None);
+              end;
+            end if;
+          end;
+      end case;
     end;
   end for;
 
@@ -194,24 +194,24 @@ begin
     begin
       var Item: TuiOwnedWork := TuiBackgroundWorkItems[ApplicationId - 1][Index];
       case TryCloseCompletedTaskGroup(Item.Group) of
-        Some(Failures):
-        begin
-          Messages := Std.Arrays.Concat(Messages, TuiBackgroundFailureMessages(Item.Id, Failures, not Item.Cancelling));
-          TuiBackgroundRemove(ApplicationId, Index);
-          case Item.Replacement of
-            Some(Work):
-            begin
-              TuiBackgroundStart(ApplicationId, Item.Id, true, Work);
-            end;
-            None:
-            begin
-            end;
+        when Some(Failures):
+          begin
+            Messages := Std.Arrays.Concat(Messages, TuiBackgroundFailureMessages(Item.Id, Failures, not Item.Cancelling));
+            TuiBackgroundRemove(ApplicationId, Index);
+            case Item.Replacement of
+              when Some(Work):
+                begin
+                  TuiBackgroundStart(ApplicationId, Item.Id, true, Work);
+                end;
+              when None:
+                begin
+                end;
+            end case;
           end;
-        end;
-        None:
-        begin
-        end;
-      end;
+        when None:
+          begin
+          end;
+      end case;
 
       Index := Index - 1;
     end;

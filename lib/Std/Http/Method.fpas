@@ -26,14 +26,14 @@ begin
       end if;
 
       case Code of
-        33, 35, 36, 37, 38, 39, 42, 43, 45, 46, 94, 95, 96, 124, 126:
-        begin
-        end;
+        when 33, 35, 36, 37, 38, 39, 42, 43, 45, 46, 94, 95, 96, 124, 126:
+          begin
+          end;
         else
-        begin
-          return false;
-        end;
-      end;
+          begin
+            return false;
+          end;
+      end case;
     end;
   end for;
 

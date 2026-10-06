@@ -6,35 +6,35 @@ uses Std.Console, Std.Parse, Std.Results, Std.Conv;
 
 begin
   case TryInt(' +1_024 ') of
-    Ok(N):
-    begin
-      WriteLn('try int: ', IntToStr(N));
-    end;
-    Error(M):
-    begin
-      WriteLn('try int error: ', M);
-    end;
-  end;
+    when Ok(N):
+      begin
+        WriteLn('try int: ', IntToStr(N));
+      end;
+    when Error(M):
+      begin
+        WriteLn('try int error: ', M);
+      end;
+  end case;
 
   case TryReal('1_024.0e-2') of
-    Ok(R):
-    begin
-      WriteLn('try real: ', RealToStr(R));
-    end;
-    Error(M):
-    begin
-      WriteLn('try real error: ', M);
-    end;
-  end;
+    when Ok(R):
+      begin
+        WriteLn('try real: ', RealToStr(R));
+      end;
+    when Error(M):
+      begin
+        WriteLn('try real error: ', M);
+      end;
+  end case;
 
   case TryBool(' FALSE ') of
-    Ok(B):
-    begin
-      WriteLn('try bool: ', BoolToStr(B));
-    end;
-    Error(M):
-    begin
-      WriteLn('try bool error: ', M);
-    end;
-  end;
+    when Ok(B):
+      begin
+        WriteLn('try bool: ', BoolToStr(B));
+      end;
+    when Error(M):
+      begin
+        WriteLn('try bool error: ', M);
+      end;
+  end case;
 end.

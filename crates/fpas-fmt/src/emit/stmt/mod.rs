@@ -77,7 +77,7 @@ fn emit_stmt_in_block(emitter: &mut Emitter, stmt: &Stmt, comments: &CommentMap)
         }
         Stmt::Case { .. } => {
             case::emit_case(emitter, stmt, comments);
-            finish_stmt_line(emitter, comments, stmt);
+            finish_stmt_after_newline(emitter, comments, stmt);
         }
         Stmt::For { .. } | Stmt::ForIn { .. } => {
             loops::emit_for(emitter, stmt, comments);
@@ -155,11 +155,11 @@ end.",
         let formatted = format_body(
             "program T; begin
   case Value of
-    1: WriteLn('one');
-    2, 3: WriteLn('two or three');
+    when 1: WriteLn('one');
+    when 2, 3: WriteLn('two or three');
   else
     WriteLn('other');
-  end;
+  end case;
   for I: integer := 1 to 3 do WriteLn(I); end for;
   while X < 10 do X := X + 1; end while;
   repeat WriteLn(N); N := N + 1; until N >= 3;
@@ -168,7 +168,7 @@ end.",
         assert!(formatted.contains("case Value of\n"));
         assert!(formatted.contains("1:\n"));
         assert!(formatted.contains("WriteLn('one')"));
-        assert!(formatted.contains("end;\n"));
+        assert!(formatted.contains("end case;\n"));
         assert!(formatted.contains("2, 3:\n"));
         assert!(formatted.contains("for I: integer := 1 to 3 do\n"));
         assert!(formatted.contains("while X < 10 do\n"));
@@ -179,7 +179,7 @@ end.",
 
     #[test]
     fn case_else_with_block_body_is_idempotent() {
-        let source = "program T; begin case X of 1: WriteLn('one'); else begin WriteLn('other'); end; end; end.";
+        let source = "program T; begin case X of when 1: WriteLn('one'); else begin WriteLn('other'); end; end case; end.";
         let formatted_once = format_body(source);
         let formatted_twice = format_body(&format!(
             "program T; begin {} end.",

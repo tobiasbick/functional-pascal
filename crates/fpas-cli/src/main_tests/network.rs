@@ -68,20 +68,20 @@ begin
   RequestValue.Headers := [Header.Create('X-Test', 'yes')];
   RequestValue.Body := Std.Net.Utf8.Encode('ping');
   case Send(RequestValue) of
-    Ok(ResponseValue):
+    when Ok(ResponseValue):
     begin
       WriteLn(ResponseValue.StatusCode);
       case BodyText(ResponseValue) of
-        Ok(Text): WriteLn(Text);
-        Error(Message): panic(Message);
-      end;
+        when Ok(Text): WriteLn(Text);
+        when Error(Message): panic(Message);
+      end case;
       case HeaderValue(ResponseValue, 'content-type') of
-        Some(Value): WriteLn(Value);
-        None: panic('missing content type');
-      end;
+        when Some(Value): WriteLn(Value);
+        when None: panic('missing content type');
+      end case;
     end;
-    Error(Message): panic(Message);
-  end;
+    when Error(Message): panic(Message);
+  end case;
 end.
 "#
         ),
@@ -156,7 +156,7 @@ uses Std.Arrays, Std.Console, Std.Http, Std.Str;
 procedure Expect(RequestValue: Request; ExpectedBodyLength: integer);
 begin
   case Send(RequestValue) of
-    Ok(ResponseValue):
+    when Ok(ResponseValue):
     begin
       if ResponseValue.StatusCode <> 200 then
       begin
@@ -168,11 +168,11 @@ begin
         panic('unexpected HTTP body length');
       end; end if;
     end;
-    Error(Message):
+    when Error(Message):
     begin
       panic(Message);
     end;
-  end;
+  end case;
 end procedure;
 
 begin
@@ -186,18 +186,18 @@ begin
   Expect(Request.Options(BaseUrl + '/options'), 2);
   Expect(Request.Create('PROPFIND', BaseUrl + '/webdav'), 2);
   case Send(Request.Create('BAD@METHOD', BaseUrl + '/invalid')) of
-    Ok(ResponseValue):
+    when Ok(ResponseValue):
     begin
       panic('invalid HTTP method was accepted');
     end;
-    Error(Message):
+    when Error(Message):
     begin
       if not Std.Str.Contains(Message, 'RFC 9110 token') then
       begin
         panic(Message);
       end; end if;
     end;
-  end;
+  end case;
   WriteLn('ok');
 end.
 "#
@@ -281,9 +281,9 @@ begin
     [ChatMessage.System('Be concise'), ChatMessage.User('Hello locally')],
     Options
   ) of
-    Ok(Content): WriteLn(Content);
-    Error(Message): panic(Message);
-  end;
+    when Ok(Content): WriteLn(Content);
+    when Error(Message): panic(Message);
+  end case;
 end.
 "#
         ),

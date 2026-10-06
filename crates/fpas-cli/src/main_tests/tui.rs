@@ -140,13 +140,13 @@ uses Std.Console, Std.Options, Std.Test, Std.Tui;
 function UpdateTheme(State: integer; Msg: TuiMsg; Cmd: TuiCmdOutput): integer;
 begin
   case Msg of
-    TuiMsg.Resize(Size):
+    when TuiMsg.Resize(Size):
     begin
       Cmd.SetPalette(TuiPalette.Default()
                        .WithRole(TuiStyleRole.Normal, TuiStyle.FromColors(TuiColor.FromRgb(1, 2, 3), TuiColor.FromRgb(4, 5, 6))));
       return State + 1;
     end;
-    TuiMsg.QuitRequested:
+    when TuiMsg.QuitRequested:
     begin
       Cmd.Set(TuiCmd.Quit);
       return State;
@@ -155,7 +155,7 @@ begin
     begin
       return State;
     end;
-  end;
+  end case;
 end function;
 
 function ViewTheme(State: integer): TuiElement;
@@ -217,7 +217,7 @@ type
 function Update(State: Model; Msg: TuiMsg; Cmd: TuiCmdOutput): Model;
 begin
   case Msg of
-    TuiMsg.Resize(Size):
+    when TuiMsg.Resize(Size):
     begin
       Cmd.Set(TuiCmd.Quit);
       return record
@@ -230,7 +230,7 @@ begin
     begin
       return State;
     end;
-  end;
+  end case;
 end function;
 
 function View(State: Model): TuiElement;
@@ -283,11 +283,11 @@ type
 function Update(State: Model; Msg: TuiMsg; Cmd: TuiCmdOutput): Model;
 begin
   case Msg of
-    TuiMsg.Tick(Delta):
+    when TuiMsg.Tick(Delta):
     begin
       return record Ticks := State.Ticks + 1; end;
     end;
-    TuiMsg.QuitRequested:
+    when TuiMsg.QuitRequested:
     begin
       Cmd.Set(TuiCmd.Quit);
       return State;
@@ -296,7 +296,7 @@ begin
   begin
     return State;
   end;
-  end;
+  end case;
 end function;
 
 function View(State: Model): TuiElement;
@@ -353,7 +353,7 @@ type
 function Update(State: Model; Msg: TuiMsg; Cmd: TuiCmdOutput): Model;
 begin
   case Msg of
-    TuiMsg.Started:
+    when TuiMsg.Started:
     begin
       var Target: channel of integer := State.Inbox;
       Cmd.StartBackground(1, function(Token: CancellationToken): result of boolean, string begin
@@ -361,7 +361,7 @@ begin
       end);
       return State;
     end;
-    TuiMsg.BackgroundFailed(Id, Kind, Message, Code, Line, Column):
+    when TuiMsg.BackgroundFailed(Id, Kind, Message, Code, Line, Column):
     begin
       panic(Message);
     end;
@@ -369,7 +369,7 @@ begin
     begin
       return State;
     end;
-  end;
+  end case;
 end function;
 
 function UpdateApplication(State: Model; Message: integer; Cmd: TuiCmdOutput): Model;

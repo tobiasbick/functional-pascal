@@ -5,14 +5,14 @@ uses Std.Net.Utf8, Std.Results, Std.Str, Std.Test;
 procedure Invalid(Bytes: array of integer);
 begin
   case Std.Net.Utf8.Decode(Bytes) of
-    Ok(_):
-    begin
-      Fail('invalid encoding accepted');
-    end;
-    Error(_):
-    begin
-    end;
-  end;
+    when Ok(_):
+      begin
+        Fail('invalid encoding accepted');
+      end;
+    when Error(_):
+      begin
+      end;
+  end case;
 end procedure;
 
 begin

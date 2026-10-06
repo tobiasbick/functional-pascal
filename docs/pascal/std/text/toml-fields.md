@@ -17,10 +17,12 @@ begin
 end function;
 
 begin
-  case ReadPort('host = ''localhost''' + Chr(10) + 'port = 8080') of
-    Ok(Port): WriteLn(Port);
-    Error(Message): WriteLn('invalid configuration: ' + Message);
-  end;
+  case ReadPort(('host = ''localhost''' + Chr(10)) + 'port = 8080') of
+    when Ok(Port):
+      WriteLn(Port);
+    when Error(Message):
+      WriteLn('invalid configuration: ' + Message);
+  end case;
 end.
 ```
 

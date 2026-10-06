@@ -12,12 +12,12 @@ begin
   AssertEquals('Hello', MessageValue.Content);
   var Options: ChatOptions := ChatOptions.Default();
   case Options.MaxTokens of
-    Some(Value):
-    begin
-      Fail('unexpected max tokens');
-    end;
-    None:
-    begin
-    end;
-  end;
+    when Some(Value):
+      begin
+        Fail('unexpected max tokens');
+      end;
+    when None:
+      begin
+      end;
+  end case;
 end.

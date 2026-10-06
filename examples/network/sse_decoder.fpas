@@ -20,45 +20,45 @@ end procedure;
 
 begin
   case CreateSseDecoder(1024) of
-    Ok(Decoder):
-    begin
-      case FeedSse(Decoder, Std.Net.Utf8.Encode(((('id: 42' + #10) + 'event: greeting') + #10) +
-                                                'data: hel')) of
-        Ok(Events):
-        begin
-          PrintEvents(Events);
-        end;
-        Error(Message):
-        begin
-          panic(Message);
-        end;
-      end;
+    when Ok(Decoder):
+      begin
+        case FeedSse(Decoder, Std.Net.Utf8.Encode(((('id: 42' + #10) + 'event: greeting') + #10) +
+                                                  'data: hel')) of
+          when Ok(Events):
+            begin
+              PrintEvents(Events);
+            end;
+          when Error(Message):
+            begin
+              panic(Message);
+            end;
+        end case;
 
-      case FeedSse(Decoder, Std.Net.Utf8.Encode(('lo from FPAS' + #10) + #10)) of
-        Ok(Events):
-        begin
-          PrintEvents(Events);
-        end;
-        Error(Message):
-        begin
-          panic(Message);
-        end;
-      end;
+        case FeedSse(Decoder, Std.Net.Utf8.Encode(('lo from FPAS' + #10) + #10)) of
+          when Ok(Events):
+            begin
+              PrintEvents(Events);
+            end;
+          when Error(Message):
+            begin
+              panic(Message);
+            end;
+        end case;
 
-      case FinishSse(Decoder) of
-        Ok(Events):
-        begin
-          PrintEvents(Events);
-        end;
-        Error(Message):
-        begin
-          panic(Message);
-        end;
+        case FinishSse(Decoder) of
+          when Ok(Events):
+            begin
+              PrintEvents(Events);
+            end;
+          when Error(Message):
+            begin
+              panic(Message);
+            end;
+        end case;
       end;
-    end;
-    Error(Message):
-    begin
-      panic(Message);
-    end;
-  end;
+    when Error(Message):
+      begin
+        panic(Message);
+      end;
+  end case;
 end.

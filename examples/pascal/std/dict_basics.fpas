@@ -26,15 +26,15 @@ begin
   var Merged: dict of string to integer := Merge(Scores, ['Bob': 88, 'Dan': 70]);
   WriteLn('merged Bob: ', IntToStr(Merged['Bob']));
   case Get(Merged, 'Eve') of
-    Some(V):
-    begin
-      WriteLn('unexpected Eve: ', IntToStr(V));
-    end;
-    None:
-    begin
-      WriteLn('get missing: none (ok)');
-    end;
-  end;
+    when Some(V):
+      begin
+        WriteLn('unexpected Eve: ', IntToStr(V));
+      end;
+    when None:
+      begin
+        WriteLn('get missing: none (ok)');
+      end;
+  end case;
   var Doubled: dict of string to integer := Std.Dictionaries.Map(Merged, DoubleScore);
   WriteLn('map Ada doubled: ', IntToStr(Doubled['Ada']));
   var Top: dict of string to integer := Std.Dictionaries.Filter(Merged, IsHighScore);

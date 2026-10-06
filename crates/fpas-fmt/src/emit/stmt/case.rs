@@ -1,4 +1,4 @@
-//! Case statement and compound arm emission.
+//! Named case endings and scoped arm-list emission.
 //!
 //! **Documentation:** `docs/pascal/language/control-flow/case-of-intro.md`.
 
@@ -8,33 +8,7 @@ use super::line::write_indented;
 use crate::comments::{CommentMap, emit_leading_comments, stmt_start};
 use fpas_parser::{CaseArm, CaseLabel, DestructureVariant, Stmt};
 
-/// Wraps a branch body and optionally emits the compound statement's terminator.
-pub(super) fn emit_wrapped_branch_with_semicolon(
-    emitter: &mut Emitter,
-    branch: &Stmt,
-    semicolon_after_end: bool,
-    comments: &CommentMap,
-) {
-    if matches!(branch, Stmt::Block(..)) {
-        emit_leading_comments(emitter, comments, stmt_start(branch), false);
-    }
-    emitter.writeln("begin");
-    emitter.with_indent(|inner| match branch {
-        Stmt::Block(stmts, ..) => super::emit_stmts_in_block(inner, stmts, comments),
-        other => {
-            emit_leading_comments(inner, comments, stmt_start(other), false);
-            super::emit_stmt_in_block(inner, other, comments);
-        }
-    });
-    write_indented(emitter);
-    emitter.write("end");
-    if semicolon_after_end {
-        emitter.write(";");
-    }
-    emitter.write("\n");
-}
-
-/// Emits a case statement with terminated arm bodies.
+/// Emits `when` arms, an optional scoped catch-all, and `end case`.
 pub(super) fn emit_case(emitter: &mut Emitter, stmt: &Stmt, comments: &CommentMap) {
     let Stmt::Case {
         expr,
@@ -57,34 +31,33 @@ pub(super) fn emit_case(emitter: &mut Emitter, stmt: &Stmt, comments: &CommentMa
         }
 
         if let Some(else_stmts) = else_body {
-            inner.writeln("else");
-            if else_stmts.len() == 1 {
-                emit_wrapped_branch_with_semicolon(inner, &else_stmts[0], true, comments);
-            } else {
-                inner.writeln("begin");
-                inner.with_indent(|body| super::emit_stmts_in_block(body, else_stmts, comments));
-                inner.writeln("end;");
+            if let Some(anchor) = comments.body_anchor(stmt_start(stmt)) {
+                emit_leading_comments(inner, comments, anchor, false);
             }
+            inner.writeln("else");
+            inner.with_indent(|body| super::emit_stmts_in_block(body, else_stmts, comments));
         }
     });
 
-    write_indented(emitter);
-    emitter.write("end");
+    super::conditionals::emit_control_end(emitter, stmt, "end case", comments);
 }
 
-/// Emits a case arm with a terminated compound statement body.
+/// Emits a case arm header and its indented statements, preserving explicit inner blocks.
 pub(super) fn emit_case_arm(emitter: &mut Emitter, arm: &CaseArm, comments: &CommentMap) {
+    emit_leading_comments(emitter, comments, arm.span.offset, false);
     write_indented(emitter);
+    emitter.write("when ");
     emit_case_labels(emitter, &arm.labels, comments);
     if let Some(guard) = &arm.guard {
         emitter.write(" if ");
         emit_expr(emitter, guard, 0, comments);
     }
     emitter.write(":\n");
-    emit_wrapped_branch_with_semicolon(emitter, &arm.body, true, comments);
+    super::conditionals::emit_control_body(emitter, &arm.body, comments);
 }
 
-pub(super) fn emit_case_labels(emitter: &mut Emitter, labels: &[CaseLabel], comments: &CommentMap) {
+/// Emits labels separated by commas in one arm header.
+fn emit_case_labels(emitter: &mut Emitter, labels: &[CaseLabel], comments: &CommentMap) {
     for (index, label) in labels.iter().enumerate() {
         if index > 0 {
             emitter.write(", ");
@@ -93,7 +66,7 @@ pub(super) fn emit_case_labels(emitter: &mut Emitter, labels: &[CaseLabel], comm
     }
 }
 
-pub(super) fn emit_case_label(emitter: &mut Emitter, label: &CaseLabel, comments: &CommentMap) {
+fn emit_case_label(emitter: &mut Emitter, label: &CaseLabel, comments: &CommentMap) {
     match label {
         CaseLabel::Value { start, end, .. } => {
             emit_expr(emitter, start, 0, comments);

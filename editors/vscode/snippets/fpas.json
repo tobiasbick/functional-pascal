@@ -95,9 +95,9 @@
     "prefix": "case",
     "body": [
       "case ${1:Value} of",
-      "  ${2:0}:",
-      "    var ${3:Match}: ${4:integer} := ${1:Value};$0",
-      "end;"
+      "  when ${2:0}:",
+      "    ${0:null;}",
+      "end case;"
     ],
     "description": "Insert a case statement"
   }

@@ -18,9 +18,11 @@ end function;
 
 begin
   case ReadPort('{"host":"localhost","port":8080}') of
-    Ok(Port): WriteLn(Port);
-    Error(Message): WriteLn('invalid configuration: ' + Message);
-  end;
+    when Ok(Port):
+      WriteLn(Port);
+    when Error(Message):
+      WriteLn('invalid configuration: ' + Message);
+  end case;
 end.
 ```
 

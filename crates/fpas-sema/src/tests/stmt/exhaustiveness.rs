@@ -8,9 +8,9 @@ fn case_enum_missing_variant_is_non_exhaustive() {
          begin \
            var L: Light := Light.Red; \
            case L of \
-             Light.Red: return; \
+             when Light.Red: return; when \
              Light.Green: return; \
-           end; \
+           end case; \
          end.",
     );
     assert!(
@@ -29,10 +29,10 @@ fn case_enum_else_branch_skips_exhaustiveness_check() {
          begin \
            var L: Light := Light.Red; \
            case L of \
-             Light.Red: return; \
+             when Light.Red: return; \
            else \
              return; \
-           end; \
+           end case; \
          end.",
     );
 }
@@ -44,8 +44,8 @@ fn case_result_missing_variant_is_non_exhaustive() {
          begin \
            var R: Result of integer, string := Ok(1); \
            case R of \
-             Ok(V): return; \
-           end; \
+             when Ok(V): return; \
+           end case; \
          end.",
     );
     assert!(
@@ -64,8 +64,8 @@ fn case_data_enum_missing_variant_is_non_exhaustive() {
          begin \
            var S: Shape := Shape.Point; \
            case S of \
-             Shape.Circle(R): return; \
-           end; \
+             when Shape.Circle(R): return; \
+           end case; \
          end.",
     );
     assert!(
@@ -84,12 +84,12 @@ fn case_on_recursive_enum_binding_is_checked_for_exhaustiveness() {
          begin \
            var T: Tree := Tree.Leaf; \
            case T of \
-             Tree.Node(L, R): \
-               case L of \
+             when Tree.Node(L, R): \
+               case L of when \
                  Tree.Node(A, B): return; \
-               end; \
+               end case; when \
              Tree.Leaf: return; \
-           end; \
+           end case; \
          end.",
     );
     assert!(
@@ -109,8 +109,8 @@ fn shadowed_variant_name_does_not_count_toward_exhaustiveness() {
            var C: Color := Color.Red; \
            var Red: Color := Color.Blue; \
            case C of \
-             Red, Color.Green, Color.Blue: return; \
-           end; \
+             when Red, Color.Green, Color.Blue: return; \
+           end case; \
          end.",
     );
 
@@ -130,8 +130,8 @@ fn qualified_enum_variants_still_satisfy_exhaustiveness() {
          begin \
            var C: Color := Color.Red; \
            case C of \
-             Color.Red, Color.Green, Color.Blue: return; \
-           end; \
+             when Color.Red, Color.Green, Color.Blue: return; \
+           end case; \
          end.",
     );
 }

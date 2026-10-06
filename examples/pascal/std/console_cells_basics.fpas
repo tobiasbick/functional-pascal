@@ -36,13 +36,13 @@ begin
   RestoreRegion(Underlay);
   Present();
   case ReadBack of
-    Some(Value):
-    begin
-      WriteLn('ReadText back: ' + Value.glyph);
-    end;
-    None:
-    begin
-      WriteLn('No cell');
-    end;
-  end;
+    when Some(Value):
+      begin
+        WriteLn('ReadText back: ' + Value.glyph);
+      end;
+    when None:
+      begin
+        WriteLn('No cell');
+      end;
+  end case;
 end.

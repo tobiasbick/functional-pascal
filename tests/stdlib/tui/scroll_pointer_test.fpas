@@ -48,34 +48,34 @@ function UpdateScroll(State: ScrollModel; Msg: TuiMsg; Cmd: TuiCmdOutput): Scrol
 begin
   Cmd.Set(TuiCmd.NoCommand);
   case Msg of
-    TuiMsg.FocusChanged(Previous, Current):
-    begin
-      case Current of
-        Some(Id):
-        begin
-          return record
-            Focus := Id.Value;
-            Offset := State.Offset;
-          end;
-        end;
-        None:
-        begin
-          return State;
+    when TuiMsg.FocusChanged(Previous, Current):
+      begin
+        case Current of
+          when Some(Id):
+            begin
+              return record
+                Focus := Id.Value;
+                Offset := State.Offset;
+              end;
+            end;
+          when None:
+            begin
+              return State;
+            end;
+        end case;
+      end;
+    when TuiMsg.ScrollChanged(Source, Action, Offset):
+      begin
+        return record
+          Focus := State.Focus;
+          Offset := Offset;
         end;
       end;
-    end;
-    TuiMsg.ScrollChanged(Source, Action, Offset):
-    begin
-      return record
-        Focus := State.Focus;
-        Offset := Offset;
-      end;
-    end;
     else
-    begin
-      return State;
-    end;
-  end;
+      begin
+        return State;
+      end;
+  end case;
 end function;
 
 begin

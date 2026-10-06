@@ -67,29 +67,29 @@ begin
   NoteValue.UpdatedMillis := Std.Time.TimestampMillis();
   NoteValue.Path := NoteFilePath(Next.Directory, NoteValue);
   case NotesSave(Next.Directory, NoteValue) of
-    Ok(Written):
-    begin
-      Next := NotesWithNote(Next, Next.Selected, NoteValue);
-      Next := ResortSelected(Next, NoteValue.Id);
-      Next.Dirty := false;
-      Next.Status := 'Saved ' + NoteValue.Title;
-      if Next.Overlay = NotesOverlay.SaveFailure then
-        begin
-          Next.Overlay := NotesOverlay.Closed;
-          Next.ErrorMessage := '';
-        end;
-      end if;
+    when Ok(Written):
+      begin
+        Next := NotesWithNote(Next, Next.Selected, NoteValue);
+        Next := ResortSelected(Next, NoteValue.Id);
+        Next.Dirty := false;
+        Next.Status := 'Saved ' + NoteValue.Title;
+        if Next.Overlay = NotesOverlay.SaveFailure then
+          begin
+            Next.Overlay := NotesOverlay.Closed;
+            Next.ErrorMessage := '';
+          end;
+        end if;
 
-      return Next;
-    end;
-    Error(Message):
-    begin
-      Next.Overlay := NotesOverlay.SaveFailure;
-      Next.ErrorMessage := Message;
-      Next.Status := 'Save failed';
-      return Next;
-    end;
-  end;
+        return Next;
+      end;
+    when Error(Message):
+      begin
+        Next.Overlay := NotesOverlay.SaveFailure;
+        Next.ErrorMessage := Message;
+        Next.Status := 'Save failed';
+        return Next;
+      end;
+  end case;
 end function;
 
 function SelectedFilteredPosition(State: NotesModel): integer;
@@ -141,26 +141,26 @@ begin
   mutable var Draft: Note := NotesCreateDraft(Next.Directory);
   Draft.Path := NoteFilePath(Next.Directory, Draft);
   case NotesSave(Next.Directory, Draft) of
-    Ok(Written):
-    begin
-      mutable var Notes: array of Note := Next.Notes;
-      Std.Arrays.Push(Notes, Draft);
-      Next.Notes := Notes;
-      Next := ResortSelected(Next, Draft.Id);
-      Next := WithEditorFields(Next, Next.Selected);
-      Next.TitleCaret := Std.Str.Length(Draft.Title);
-      Next.Focus := TitleControl;
-      Next.Status := 'Created a new note';
-      return Next;
-    end;
-    Error(Message):
-    begin
-      Next.Overlay := NotesOverlay.SaveFailure;
-      Next.ErrorMessage := Message;
-      Next.Status := 'Could not create note';
-      return Next;
-    end;
-  end;
+    when Ok(Written):
+      begin
+        mutable var Notes: array of Note := Next.Notes;
+        Std.Arrays.Push(Notes, Draft);
+        Next.Notes := Notes;
+        Next := ResortSelected(Next, Draft.Id);
+        Next := WithEditorFields(Next, Next.Selected);
+        Next.TitleCaret := Std.Str.Length(Draft.Title);
+        Next.Focus := TitleControl;
+        Next.Status := 'Created a new note';
+        return Next;
+      end;
+    when Error(Message):
+      begin
+        Next.Overlay := NotesOverlay.SaveFailure;
+        Next.ErrorMessage := Message;
+        Next.Status := 'Could not create note';
+        return Next;
+      end;
+  end case;
 end function;
 
 function TogglePin(State: NotesModel): NotesModel;
@@ -328,11 +328,11 @@ begin
      (not Key.meta) then
     begin
       case Key.ch of
-        'x', 'X':
-        begin
-          return RequestQuit(State, Cmd);
-        end;
-      end;
+        when 'x', 'X':
+          begin
+            return RequestQuit(State, Cmd);
+          end;
+      end case;
     end;
   end if;
 
@@ -343,44 +343,44 @@ begin
   end if;
 
   case Key.ch of
-    'n', 'N':
-    begin
-      return HandleAction(State, NewNoteAction, Cmd);
-    end;
-    's', 'S':
-    begin
-      return HandleAction(State, SaveNoteAction, Cmd);
-    end;
-    'f', 'F':
-    begin
-      mutable var Next: NotesModel := State;
-      Next.Focus := SearchControl;
-      Next.Pane := NotesPane.List;
-      return Next;
-    end;
-    'k', 'K':
-    begin
-      return HandleAction(State, CommandsAction, Cmd);
-    end;
-    'p', 'P':
-    begin
-      return HandleAction(State, TogglePinAction, Cmd);
-    end;
-    '1':
-    begin
-      mutable var Next: NotesModel := State;
-      Next.Focus := SearchControl;
-      Next.Pane := NotesPane.List;
-      return Next;
-    end;
-    '2':
-    begin
-      mutable var Next: NotesModel := State;
-      Next.Focus := BodyControl;
-      Next.Pane := NotesPane.Editor;
-      return Next;
-    end;
-  end;
+    when 'n', 'N':
+      begin
+        return HandleAction(State, NewNoteAction, Cmd);
+      end;
+    when 's', 'S':
+      begin
+        return HandleAction(State, SaveNoteAction, Cmd);
+      end;
+    when 'f', 'F':
+      begin
+        mutable var Next: NotesModel := State;
+        Next.Focus := SearchControl;
+        Next.Pane := NotesPane.List;
+        return Next;
+      end;
+    when 'k', 'K':
+      begin
+        return HandleAction(State, CommandsAction, Cmd);
+      end;
+    when 'p', 'P':
+      begin
+        return HandleAction(State, TogglePinAction, Cmd);
+      end;
+    when '1':
+      begin
+        mutable var Next: NotesModel := State;
+        Next.Focus := SearchControl;
+        Next.Pane := NotesPane.List;
+        return Next;
+      end;
+    when '2':
+      begin
+        mutable var Next: NotesModel := State;
+        Next.Focus := BodyControl;
+        Next.Pane := NotesPane.Editor;
+        return Next;
+      end;
+  end case;
 
   return State;
 end function;
@@ -390,89 +390,89 @@ public function NotesUpdate(State: NotesModel; Msg: TuiMsg; Cmd: TuiCmdOutput): 
 begin
   Cmd.Set(TuiCmd.NoCommand);
   case Msg of
-    TuiMsg.Key(Key):
-    begin
-      return HandleShortcut(State, Key, Cmd);
-    end;
-    TuiMsg.Resize(Size):
-    begin
-      mutable var Next: NotesModel := State;
-      Next.Width := Size.Width;
-      Next.Height := Size.Height;
-      return Next;
-    end;
-    TuiMsg.FocusChanged(Previous, Current):
-    begin
-      case Current of
-        Some(CurrentId):
-        begin
-          mutable var Next: NotesModel := State;
-          Next.Focus := CurrentId.Value;
-          return Next;
-        end;
-        None:
-        begin
-          return State;
-        end;
+    when TuiMsg.Key(Key):
+      begin
+        return HandleShortcut(State, Key, Cmd);
       end;
-    end;
-    TuiMsg.TextChanged(Source, Action, Text, Caret):
-    begin
-      return NotesEditText(State, Action.Value, Text, Caret);
-    end;
-    TuiMsg.TextAreaChanged(Source, Action, Text, Caret, Offset):
-    begin
-      return NotesEditBody(State, Action.Value, Text, Caret, Offset);
-    end;
-    TuiMsg.SelectionChanged(Source, Action, Selected):
-    begin
-      if Action.Value = SelectionChangedAction then
-        begin
-          return SelectFiltered(State, Selected);
-        end;
-      end if;
+    when TuiMsg.Resize(Size):
+      begin
+        mutable var Next: NotesModel := State;
+        Next.Width := Size.Width;
+        Next.Height := Size.Height;
+        return Next;
+      end;
+    when TuiMsg.FocusChanged(Previous, Current):
+      begin
+        case Current of
+          when Some(CurrentId):
+            begin
+              mutable var Next: NotesModel := State;
+              Next.Focus := CurrentId.Value;
+              return Next;
+            end;
+          when None:
+            begin
+              return State;
+            end;
+        end case;
+      end;
+    when TuiMsg.TextChanged(Source, Action, Text, Caret):
+      begin
+        return NotesEditText(State, Action.Value, Text, Caret);
+      end;
+    when TuiMsg.TextAreaChanged(Source, Action, Text, Caret, Offset):
+      begin
+        return NotesEditBody(State, Action.Value, Text, Caret, Offset);
+      end;
+    when TuiMsg.SelectionChanged(Source, Action, Selected):
+      begin
+        if Action.Value = SelectionChangedAction then
+          begin
+            return SelectFiltered(State, Selected);
+          end;
+        end if;
 
-      return State;
-    end;
-    TuiMsg.Action(Source, Action):
-    begin
-      return HandleAction(State, Action.Value, Cmd);
-    end;
-    TuiMsg.QuitRequested:
-    begin
-      if State.Overlay <> NotesOverlay.Closed then
-        begin
-          return HandleAction(State, CloseOverlayAction, Cmd);
-        end;
-      end if;
+        return State;
+      end;
+    when TuiMsg.Action(Source, Action):
+      begin
+        return HandleAction(State, Action.Value, Cmd);
+      end;
+    when TuiMsg.QuitRequested:
+      begin
+        if State.Overlay <> NotesOverlay.Closed then
+          begin
+            return HandleAction(State, CloseOverlayAction, Cmd);
+          end;
+        end if;
 
-      return State;
-    end;
-    TuiMsg.Pointer(Pointer):
-    begin
-      return State;
-    end;
-    TuiMsg.Tick(Delta):
-    begin
-      return State;
-    end;
-    TuiMsg.CheckChanged(CheckSource, CheckAction, Checked):
-    begin
-      return State;
-    end;
-    TuiMsg.ScrollChanged(ScrollSource, ScrollAction, ScrollOffset):
-    begin
-      return State;
-    end;
-    TuiMsg.MenuChanged(MenuSource, MenuAction, MenuState):
-    begin
-      return State;
-    end;
+        return State;
+      end;
+    when TuiMsg.Pointer(Pointer):
+      begin
+        return State;
+      end;
+    when TuiMsg.Tick(Delta):
+      begin
+        return State;
+      end;
+    when TuiMsg.CheckChanged(CheckSource, CheckAction, Checked):
+      begin
+        return State;
+      end;
+    when TuiMsg.ScrollChanged(ScrollSource, ScrollAction, ScrollOffset):
+      begin
+        return State;
+      end;
+    when TuiMsg.MenuChanged(MenuSource, MenuAction, MenuState):
+      begin
+        return State;
+      end;
     else
-    begin
-      return State;
-    end;
-  end;
+      begin
+        return State;
+      end;
+  end case;
 end function;
 
 // Maps the source note selection to its position in the filtered list.

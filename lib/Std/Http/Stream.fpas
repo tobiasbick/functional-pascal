@@ -54,13 +54,13 @@ begin
   if State.Open then
     begin
       case Std.Net.Close(State.Connection) of
-        Ok(_):
-        begin
-        end;
-        Error(_):
-        begin
-        end;
-      end;
+        when Ok(_):
+          begin
+          end;
+        when Error(_):
+          begin
+          end;
+      end case;
 
       State.Open := false;
     end;
@@ -84,25 +84,25 @@ begin
   end if;
 
   case Std.Http.Io.ReadResponseBytes(State.Connection, State.Maximum - State.BytesReceived) of
-    Ok(Bytes):
-    begin
-      if Std.Arrays.Length(Bytes) = 0 then
-        begin
-          return Ok(false);
-        end;
-      end if;
+    when Ok(Bytes):
+      begin
+        if Std.Arrays.Length(Bytes) = 0 then
+          begin
+            return Ok(false);
+          end;
+        end if;
 
-      State.BytesReceived := State.BytesReceived + Std.Arrays.Length(Bytes);
-      State.Buffer := Std.Arrays.Concat(State.Buffer, Bytes);
-      StoreState(Index, State);
-      return Ok(true);
-    end;
-    Error(Message):
-    begin
-      CloseAt(Index);
-      return Error(Message);
-    end;
-  end;
+        State.BytesReceived := State.BytesReceived + Std.Arrays.Length(Bytes);
+        State.Buffer := Std.Arrays.Concat(State.Buffer, Bytes);
+        StoreState(Index, State);
+        return Ok(true);
+      end;
+    when Error(Message):
+      begin
+        CloseAt(Index);
+        return Error(Message);
+      end;
+  end case;
 end function;
 
 // Reads until the buffer contains a requested number of bytes or reaches EOF.
@@ -115,19 +115,19 @@ begin
   while Std.Arrays.Length(LoadState(Index).Buffer) < Count do
     begin
       case ReadNetwork(Index) of
-        Ok(ReadMore):
-        begin
-          if not ReadMore then
-            begin
-              return Ok(false);
-            end;
-          end if;
-        end;
-        Error(Message):
-        begin
-          return Error(Message);
-        end;
-      end;
+        when Ok(ReadMore):
+          begin
+            if not ReadMore then
+              begin
+                return Ok(false);
+              end;
+            end if;
+          end;
+        when Error(Message):
+          begin
+            return Error(Message);
+          end;
+      end case;
     end;
   end while;
 
@@ -171,20 +171,20 @@ begin
   if Std.Arrays.Length(LoadState(Index).Buffer) = 0 then
     begin
       case ReadNetwork(Index) of
-        Ok(ReadMore):
-        begin
-          if not ReadMore then
-            begin
-              CloseAt(Index);
-              return Error('HTTP response body is shorter than Content-Length');
-            end;
-          end if;
-        end;
-        Error(Message):
-        begin
-          return Error(Message);
-        end;
-      end;
+        when Ok(ReadMore):
+          begin
+            if not ReadMore then
+              begin
+                CloseAt(Index);
+                return Error('HTTP response body is shorter than Content-Length');
+              end;
+            end if;
+          end;
+        when Error(Message):
+          begin
+            return Error(Message);
+          end;
+      end case;
     end;
   end if;
   mutable var Count: integer := Maximum;
@@ -216,20 +216,20 @@ begin
   if Std.Arrays.Length(LoadState(Index).Buffer) = 0 then
     begin
       case ReadNetwork(Index) of
-        Ok(ReadMore):
-        begin
-          if not ReadMore then
-            begin
-              CloseAt(Index);
-              return Ok([]);
-            end;
-          end if;
-        end;
-        Error(Message):
-        begin
-          return Error(Message);
-        end;
-      end;
+        when Ok(ReadMore):
+          begin
+            if not ReadMore then
+              begin
+                CloseAt(Index);
+                return Ok([]);
+              end;
+            end if;
+          end;
+        when Error(Message):
+          begin
+            return Error(Message);
+          end;
+      end case;
     end;
   end if;
 
@@ -246,20 +246,20 @@ begin
   while LineEnd < 0 do
     begin
       case ReadNetwork(Index) of
-        Ok(ReadMore):
-        begin
-          if not ReadMore then
-            begin
-              CloseAt(Index);
-              return Error('HTTP chunk size line is incomplete');
-            end;
-          end if;
-        end;
-        Error(Message):
-        begin
-          return Error(Message);
-        end;
-      end;
+        when Ok(ReadMore):
+          begin
+            if not ReadMore then
+              begin
+                CloseAt(Index);
+                return Error('HTTP chunk size line is incomplete');
+              end;
+            end if;
+          end;
+        when Error(Message):
+          begin
+            return Error(Message);
+          end;
+      end case;
 
       LineEnd := Std.Http.Wire.FindLineEnd(LoadState(Index).Buffer, 0);
     end;
@@ -270,15 +270,15 @@ begin
                                                               2);
   StoreState(Index, State);
   case Std.Net.Utf8.Decode(LineBytes) of
-    Ok(Line):
-    begin
-      return Std.Http.Wire.ParseChunkSize(Line);
-    end;
-    Error(Message):
-    begin
-      return Error('HTTP chunk size is not ASCII: ' + Message);
-    end;
-  end;
+    when Ok(Line):
+      begin
+        return Std.Http.Wire.ParseChunkSize(Line);
+      end;
+    when Error(Message):
+      begin
+        return Error('HTTP chunk size is not ASCII: ' + Message);
+      end;
+  end case;
 end function;
 
 // Reads one decoded fragment from a chunked body.
@@ -295,20 +295,20 @@ begin
           if Std.Arrays.Length(LoadState(Index).Buffer) = 0 then
             begin
               case ReadNetwork(Index) of
-                Ok(ReadMore):
-                begin
-                  if not ReadMore then
-                    begin
-                      CloseAt(Index);
-                      return Error('HTTP chunk body is incomplete');
-                    end;
-                  end if;
-                end;
-                Error(Message):
-                begin
-                  return Error(Message);
-                end;
-              end;
+                when Ok(ReadMore):
+                  begin
+                    if not ReadMore then
+                      begin
+                        CloseAt(Index);
+                        return Error('HTTP chunk body is incomplete');
+                      end;
+                    end if;
+                  end;
+                when Error(Message):
+                  begin
+                    return Error(Message);
+                  end;
+              end case;
             end;
           end if;
           mutable var Count: integer := Maximum;
@@ -334,20 +334,20 @@ begin
       if LoadState(Index).NeedChunkTerminator then
         begin
           case EnsureBytes(Index, 2) of
-            Ok(Complete):
-            begin
-              if not Complete then
-                begin
-                  CloseAt(Index);
-                  return Error('HTTP chunk is missing its trailing CRLF');
-                end;
-              end if;
-            end;
-            Error(Message):
-            begin
-              return Error(Message);
-            end;
-          end;
+            when Ok(Complete):
+              begin
+                if not Complete then
+                  begin
+                    CloseAt(Index);
+                    return Error('HTTP chunk is missing its trailing CRLF');
+                  end;
+                end if;
+              end;
+            when Error(Message):
+              begin
+                return Error(Message);
+              end;
+          end case;
           mutable var TerminatorState: StreamState := LoadState(Index);
           if (TerminatorState.Buffer[0] <> 13) or (TerminatorState.Buffer[1] <> 10) then
             begin
@@ -364,31 +364,31 @@ begin
       end if;
 
       case ReadChunkSize(Index) of
-        Ok(Size):
-        begin
-          if Size = 0 then
-            begin
-              CloseAt(Index);
-              return Ok([]);
-            end;
-          end if;
+        when Ok(Size):
+          begin
+            if Size = 0 then
+              begin
+                CloseAt(Index);
+                return Ok([]);
+              end;
+            end if;
 
-          if Size > LoadState(Index).Maximum then
-            begin
-              CloseAt(Index);
-              return Error('HTTP chunk exceeds MaxResponseBytes');
-            end;
-          end if;
-          mutable var SizeState: StreamState := LoadState(Index);
-          SizeState.ChunkRemaining := Size;
-          StoreState(Index, SizeState);
-        end;
-        Error(Message):
-        begin
-          CloseAt(Index);
-          return Error(Message);
-        end;
-      end;
+            if Size > LoadState(Index).Maximum then
+              begin
+                CloseAt(Index);
+                return Error('HTTP chunk exceeds MaxResponseBytes');
+              end;
+            end if;
+            mutable var SizeState: StreamState := LoadState(Index);
+            SizeState.ChunkRemaining := Size;
+            StoreState(Index, SizeState);
+          end;
+        when Error(Message):
+          begin
+            CloseAt(Index);
+            return Error(Message);
+          end;
+      end case;
     end;
   end while;
 
@@ -418,25 +418,25 @@ begin
   if HasBody then
     begin
       case Std.Http.BodyFraming.Select(Headers) of
-        Ok(Value):
-        begin
-          Mode := Value.Mode;
-          Remaining := Value.Remaining;
-        end;
-        Error(Message):
-        begin
-          case Std.Net.Close(Connection) of
-            Ok(_):
-            begin
-            end;
-            Error(_):
-            begin
-            end;
+        when Ok(Value):
+          begin
+            Mode := Value.Mode;
+            Remaining := Value.Remaining;
           end;
+        when Error(Message):
+          begin
+            case Std.Net.Close(Connection) of
+              when Ok(_):
+                begin
+                end;
+              when Error(_):
+                begin
+                end;
+            end case;
 
-          return Error(Message);
-        end;
-      end;
+            return Error(Message);
+          end;
+      end case;
     end;
   end if;
   var State: StreamState := record
@@ -475,33 +475,33 @@ begin
   end if;
 
   case StateIndex(StreamValue) of
-    Ok(Index):
-    begin
-      if LoadState(Index).Finished then
-        begin
-          return Ok([]);
-        end;
-      end if;
+    when Ok(Index):
+      begin
+        if LoadState(Index).Finished then
+          begin
+            return Ok([]);
+          end;
+        end if;
 
-      if LoadState(Index).Mode = 1 then
-        begin
-          return ReadFixed(Index, MaxBytes);
-        end;
-      end if;
+        if LoadState(Index).Mode = 1 then
+          begin
+            return ReadFixed(Index, MaxBytes);
+          end;
+        end if;
 
-      if LoadState(Index).Mode = 2 then
-        begin
-          return ReadChunked(Index, MaxBytes);
-        end;
-      end if;
+        if LoadState(Index).Mode = 2 then
+          begin
+            return ReadChunked(Index, MaxBytes);
+          end;
+        end if;
 
-      return ReadUntilClose(Index, MaxBytes);
-    end;
-    Error(Message):
-    begin
-      return Error(Message);
-    end;
-  end;
+        return ReadUntilClose(Index, MaxBytes);
+      end;
+    when Error(Message):
+      begin
+        return Error(Message);
+      end;
+  end case;
 end function;
 
 // Closes a body stream before end of stream.
@@ -511,15 +511,15 @@ end function;
 public function CloseBody(StreamValue: Std.Http.Types.BodyStream): result of boolean, string;
 begin
   case StateIndex(StreamValue) of
-    Ok(Index):
-    begin
-      CloseAt(Index);
-      return Ok(true);
-    end;
-    Error(Message):
-    begin
-      return Error(Message);
-    end;
-  end;
+    when Ok(Index):
+      begin
+        CloseAt(Index);
+        return Ok(true);
+      end;
+    when Error(Message):
+      begin
+        return Error(Message);
+      end;
+  end case;
 end function;
 end unit;

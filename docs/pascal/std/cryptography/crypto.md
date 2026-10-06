@@ -29,9 +29,11 @@ Returns exactly `Count` bytes. Each byte is represented by an `integer` in `0..2
 
 ```pascal
 case RandomBytes(32) of
-  Ok(Bytes): WriteLn(Std.Arrays.Length(Bytes));
-  Error(Message): panic(Message);
-end;
+  when Ok(Bytes):
+    WriteLn(Std.Arrays.Length(Bytes));
+  when Error(Message):
+    panic(Message);
+end case;
 ```
 
 ## `RandomInt`
@@ -40,9 +42,11 @@ Returns a uniformly sampled integer in the inclusive range `[Lo, Hi]`. Equal bou
 
 ```pascal
 case RandomInt(100000, 999999) of
-  Ok(Code): WriteLn(Code);
-  Error(Message): panic(Message);
-end;
+  when Ok(Code):
+    WriteLn(Code);
+  when Error(Message):
+    panic(Message);
+end case;
 ```
 
 ## Security boundary
@@ -61,4 +65,4 @@ The unit supplies random material; it does not yet supply hashing, password hash
 
 - [`Std.Random`](../numeric/random.md)
 - [Cryptography index](README.md)
-- [Future cryptography work](../../../../future/networked-applications/cryptography.md)
+- [Future cryptography work](../../../future/networked-applications/cryptography.md)

@@ -19,29 +19,29 @@ begin
   AssertTrue(Expected.Role = Actual.Role);
   AssertEquals(Expected.Columns, Actual.Columns);
   case Expected.ConcreteStyle of
-    Some(ExpectedStyle):
-    begin
-      case Actual.ConcreteStyle of
-        Some(ActualStyle):
-        begin
-          AssertColorEquals(ExpectedStyle.Foreground, ActualStyle.Foreground);
-          AssertColorEquals(ExpectedStyle.Background, ActualStyle.Background);
-          AssertTrue(ExpectedStyle.Bold = ActualStyle.Bold);
-          AssertTrue(ExpectedStyle.Dim = ActualStyle.Dim);
-          AssertTrue(ExpectedStyle.Underline = ActualStyle.Underline);
-          AssertTrue(ExpectedStyle.Inverse = ActualStyle.Inverse);
-        end;
-        None:
-        begin
-          Fail('expected a concrete Mandelbrot cell style');
-        end;
+    when Some(ExpectedStyle):
+      begin
+        case Actual.ConcreteStyle of
+          when Some(ActualStyle):
+            begin
+              AssertColorEquals(ExpectedStyle.Foreground, ActualStyle.Foreground);
+              AssertColorEquals(ExpectedStyle.Background, ActualStyle.Background);
+              AssertTrue(ExpectedStyle.Bold = ActualStyle.Bold);
+              AssertTrue(ExpectedStyle.Dim = ActualStyle.Dim);
+              AssertTrue(ExpectedStyle.Underline = ActualStyle.Underline);
+              AssertTrue(ExpectedStyle.Inverse = ActualStyle.Inverse);
+            end;
+          when None:
+            begin
+              Fail('expected a concrete Mandelbrot cell style');
+            end;
+        end case;
       end;
-    end;
-    None:
-    begin
-      AssertTrue(IsNone(Actual.ConcreteStyle));
-    end;
-  end;
+    when None:
+      begin
+        AssertTrue(IsNone(Actual.ConcreteStyle));
+      end;
+  end case;
 end procedure;
 
 function MakeKey(Kind: TuiKeyKind; Character: string): TuiKeyEvent;

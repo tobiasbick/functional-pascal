@@ -21,18 +21,18 @@ function UpdateCheck(State: CheckModel; Msg: TuiMsg; Cmd: TuiCmdOutput): CheckMo
 begin
   Cmd.Set(TuiCmd.NoCommand);
   case Msg of
-    TuiMsg.CheckChanged(Source, Action, Checked):
-    begin
-      return record
-        Focus := State.Focus;
-        Checked := Checked;
+    when TuiMsg.CheckChanged(Source, Action, Checked):
+      begin
+        return record
+          Focus := State.Focus;
+          Checked := Checked;
+        end;
       end;
-    end;
     else
-    begin
-      return State;
-    end;
-  end;
+      begin
+        return State;
+      end;
+  end case;
 end function;
 
 begin

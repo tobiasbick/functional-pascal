@@ -297,15 +297,15 @@ begin
   mutable var Optional: Option of integer := None;
   var Marker: integer := 0;
   case Optional of
-    Some(Value):
+    when Some(Value):
     begin
       return Value;
     end;
-    None:
+    when None:
     begin
       return 0;
     end;
-  end;
+  end case;
 end function;
 
 begin
@@ -410,15 +410,15 @@ function ReadChoice(mutable Item: Choice): integer;
 begin
   var Marker: integer := 0;
   case Item of
-    Choice.Empty:
+    when Choice.Empty:
     begin
       return 0;
     end;
-    Choice.Count(Value):
+    when Choice.Count(Value):
     begin
       return Value;
     end;
-  end;
+  end case;
 end function;
 
 begin
@@ -473,15 +473,15 @@ begin
   mutable var Selected: Choice := Choice.Empty;
   return function(): integer begin
     case Selected of
-      Choice.Empty:
+      when Choice.Empty:
       begin
         return 0;
       end;
-      Choice.Count(Value):
+      when Choice.Count(Value):
       begin
         return Value;
       end;
-    end;
+    end case;
   end;
 end function;
 

@@ -19,25 +19,25 @@ function UpdateButton(State: ButtonPointerModel; Msg: TuiMsg; Cmd: TuiCmdOutput)
 begin
   Cmd.Set(TuiCmd.NoCommand);
   case Msg of
-    TuiMsg.Action(Source, Action):
-    begin
-      return record
-        Actions := State.Actions + 1;
-        PointerEvents := State.PointerEvents;
+    when TuiMsg.Action(Source, Action):
+      begin
+        return record
+          Actions := State.Actions + 1;
+          PointerEvents := State.PointerEvents;
+        end;
       end;
-    end;
-    TuiMsg.Pointer(Pointer):
-    begin
-      return record
-        Actions := State.Actions;
-        PointerEvents := State.PointerEvents + 1;
+    when TuiMsg.Pointer(Pointer):
+      begin
+        return record
+          Actions := State.Actions;
+          PointerEvents := State.PointerEvents + 1;
+        end;
       end;
-    end;
     else
-    begin
-      return State;
-    end;
-  end;
+      begin
+        return State;
+      end;
+  end case;
 end function;
 
 function Pointer(Action: TuiPointerAction; Position: TuiPoint): TuiPointerEvent;

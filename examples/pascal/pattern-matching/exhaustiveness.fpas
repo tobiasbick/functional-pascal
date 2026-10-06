@@ -13,19 +13,19 @@ type
 function TrafficAdvice(L: Light): string;
 begin
   case L of
-    Light.Red:
-    begin
-      return 'Stop';
-    end;
-    Light.Yellow:
-    begin
-      return 'Caution';
-    end;
-    Light.Green:
-    begin
-      return 'Go';
-    end;
-  end;
+    when Light.Red:
+      begin
+        return 'Stop';
+      end;
+    when Light.Yellow:
+      begin
+        return 'Caution';
+      end;
+    when Light.Green:
+      begin
+        return 'Go';
+      end;
+  end case;
 end function;
 
 function SafeLookup(Items: array of integer; Target: integer): option of integer;
@@ -51,26 +51,26 @@ begin
   WriteLn('--- Option exhaustiveness ---');
   var Idx: option of integer := SafeLookup([10, 20, 30], 20);
   case Idx of
-    Some(I):
-    begin
-      WriteLn('Found at index ' + IntToStr(I));
-    end;
-    None:
-    begin
-      WriteLn('Not found');
-    end;
-  end;
+    when Some(I):
+      begin
+        WriteLn('Found at index ' + IntToStr(I));
+      end;
+    when None:
+      begin
+        WriteLn('Not found');
+      end;
+  end case;
 
   WriteLn('--- Result exhaustiveness ---');
   var R: result of integer, string := Ok(42);
   case R of
-    Ok(V):
-    begin
-      WriteLn('Value: ' + IntToStr(V));
-    end;
-    Error(E):
-    begin
-      WriteLn('Error: ' + E);
-    end;
-  end;
+    when Ok(V):
+      begin
+        WriteLn('Value: ' + IntToStr(V));
+      end;
+    when Error(E):
+      begin
+        WriteLn('Error: ' + E);
+      end;
+  end case;
 end.

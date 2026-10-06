@@ -15,7 +15,7 @@ begin
     X := 10;
     Y := 20;
   end;
-  var UpdatedB: Point := B with X := 11; end;
+  var UpdatedB: Point := B with X := 11; end with;
 
   A.Print();
   if Ready then

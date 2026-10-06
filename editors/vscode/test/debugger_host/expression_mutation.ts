@@ -93,7 +93,7 @@ export async function verifyExpressionMutation(
     const aggregate = await setExpression(
       session,
       "Origin",
-      "Origin with X := 20; end",
+      "Origin with X := 20; end with",
       true
     );
     assert.equal(aggregate.type, "Point");
@@ -169,7 +169,7 @@ async function setExpression(
     value,
     frameId
   }) as SetExpressionResult;
-  assert.equal(result.value, value === "Origin with X := 20; end" ? "Point {...}" : value);
+  assert.equal(result.value, value === "Origin with X := 20; end with" ? "Point {...}" : value);
   return result;
 }
 

@@ -7,11 +7,16 @@ use crate::ast::*;
 use fpas_lexer::Token;
 
 impl Parser {
-    /// Parse `function(…) : T begin … end` or `procedure(…) begin … end` as an expression.
+    /// Parses an anonymous routine expression with its matching named ending.
     ///
     /// The keyword has not been consumed yet. Distinguishes from named declarations by
     /// requiring `(` immediately after `function` / `procedure`.
     pub(super) fn parse_closure_expr(&mut self) -> Expr {
+        let kind = self.current_token().clone();
+        self.with_block_closer(kind, Self::parse_closure_expr_inner)
+    }
+
+    fn parse_closure_expr_inner(&mut self) -> Expr {
         let start = self.current_span();
         let is_function = self.check(&Token::Function);
         self.advance(); // function | procedure
@@ -27,7 +32,12 @@ impl Parser {
             None
         };
 
-        let body = self.parse_closure_body();
+        let kind = if is_function {
+            Token::Function
+        } else {
+            Token::Procedure
+        };
+        let body = self.parse_closure_body(&kind);
         Expr::Closure(Box::new(ClosureExpr {
             is_function,
             params,
@@ -37,12 +47,11 @@ impl Parser {
         }))
     }
 
-    /// Closure body ends with `end` and does not consume a trailing semicolon.
-    fn parse_closure_body(&mut self) -> FuncBody {
+    fn parse_closure_body(&mut self, kind: &Token) -> FuncBody {
         let nested = self.parse_nested_decls();
         self.expect(&Token::Begin);
         let stmts = self.parse_statement_list();
-        self.expect(&Token::End);
+        self.expect_expression_end(kind);
         FuncBody::Block { nested, stmts }
     }
 

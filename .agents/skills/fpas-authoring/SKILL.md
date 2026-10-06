@@ -108,6 +108,10 @@ Other habits:
 - Named routines and methods end with `end function;` or `end procedure;`.
   Record and enum declarations end with `end record;` and `end enum;`.
   Every unit ends with `end unit;`; programs keep `end.`.
+- Anonymous routines are expressions ending in `end function` / `end procedure`;
+  record updates end in `end with`. Expressions have no own final `;`: arguments
+  continue with `,` or `)`, while the enclosing statement or declaration supplies
+  its terminator. Body statements and record-update fields still require `;`.
 - `if` ends with `end if;`; `for` and `for-in` with `end for;`; `while` with
   `end while;`. Bodies are nonempty statement lists with local scopes. Write
   `null;` for no action. `elsif` continues a chain; `else if` starts a nested

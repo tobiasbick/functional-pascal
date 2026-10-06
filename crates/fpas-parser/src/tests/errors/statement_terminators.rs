@@ -39,7 +39,7 @@ fn missing_final_terminators_are_diagnosed_at_each_boundary() {
             "end",
         ),
         (
-            "program P; begin Consume(function(): integer begin return 1 end); end.",
+            "program P; begin Consume(function(): integer begin return 1 end function); end.",
             "end",
         ),
     ] {

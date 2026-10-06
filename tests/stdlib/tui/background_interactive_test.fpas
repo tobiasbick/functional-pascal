@@ -16,7 +16,7 @@ begin
         var Inbox: channel of integer := State.Inbox;
         Cmd.StartBackground(1, function(Token: CancellationToken): result of boolean, string begin
           return SendWithCancellation(Inbox, 42, Token);
-        end);
+        end function);
       end;
     else
       begin

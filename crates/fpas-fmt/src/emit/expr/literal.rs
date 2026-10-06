@@ -1,4 +1,6 @@
 //! Literals, aggregates, and formatting helpers.
+//!
+//! **Documentation:** `docs/pascal/tools/fmt-style.md`.
 
 use fpas_parser::{Expr, FieldInit};
 
@@ -8,6 +10,7 @@ use crate::style::INDENT_WIDTH;
 use super::super::Emitter;
 use super::super::wrap::{exceeds_width, measure_emit, text_width};
 
+/// Emits literal fields with their own indentation and comment anchors.
 pub(super) fn emit_record_fields(
     emitter: &mut Emitter,
     fields: &[FieldInit],
@@ -21,25 +24,21 @@ pub(super) fn emit_record_fields(
     }
 
     let base_column = emitter.indent_level() * INDENT_WIDTH;
-    let field_column = base_column + INDENT_WIDTH;
     emitter.write("record\n");
-    for (index, field) in fields.iter().enumerate() {
-        if index > 0 {
-            emitter.write("\n");
+    emitter.with_indent(|inner| {
+        for field in fields {
+            crate::comments::emit_leading_comments(inner, comments, field.span.offset, false);
+            inner.write_current_indent();
+            inner.write(&field.name);
+            inner.write(" := ");
+            super::emit_expr_impl(inner, &field.value, 0, false, comments);
+            inner.write(";");
+            crate::comments::emit_trailing_comments(inner, comments, field.span.offset);
+            if !inner.ends_with_newline() {
+                inner.write_line_end();
+            }
         }
-        write_to_column(emitter, field_column);
-        emitter.write(&field.name);
-        emitter.write(" := ");
-        if matches!(&field.value, Expr::RecordLiteral { .. }) {
-            emitter.with_indent(|inner| {
-                super::emit_expr_impl(inner, &field.value, 0, false, comments);
-            });
-        } else {
-            super::emit_expr_impl(emitter, &field.value, 0, false, comments);
-        }
-        emitter.write(";");
-    }
-    emitter.write("\n");
+    });
     write_to_column(emitter, base_column);
     emitter.write("end");
 }

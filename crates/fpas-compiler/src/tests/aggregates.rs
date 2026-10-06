@@ -68,7 +68,7 @@ type
   end record;
 begin
   var Original: Point := record X := 1; end;
-  var Updated: Point := Original with X := 9; end;
+  var Updated: Point := Original with X := 9; end with;
   mutable var Items: array of Point := [Original, Updated];
   Items[0].Y := 7;
   if (Original.X <> 1) or (Original.Y <> 2) or (Updated.X <> 9) then

@@ -211,7 +211,7 @@ begin
   var InputGroup: TaskGroup := CreateTaskGroup();
   StartTaskInGroup(InputGroup, function(Token: CancellationToken): result of boolean, string begin
     return TuiConsoleInputPump(Token, ConsoleInputs);
-  end);
+  end function);
   mutable var Model: TModel := InitialModel;
   TuiLoopRender(ApplicationId, View(Model), true);
   if BackgroundEnabled then
@@ -275,7 +275,7 @@ begin
             begin
             end;
         end case;
-      end);
+      end procedure);
       if BackgroundEnabled then
         begin
           var ApplicationCase: WaitCase := ReceiveCase(Inbox, procedure(Outcome: result of TMessage, string) begin
@@ -288,7 +288,7 @@ begin
                 begin
                 end;
             end case;
-          end);
+          end procedure);
           if PreferApplication then
             begin
               Std.Arrays.Push(Cases, ApplicationCase);
@@ -309,13 +309,13 @@ begin
 
       if TuiBackgroundHasWork(ApplicationId) then
         begin
-          Std.Arrays.Push(Cases, TimerCase(50, procedure() begin end));
+          Std.Arrays.Push(Cases, TimerCase(50, procedure() begin end procedure));
         end;
       end if;
 
       if TickWait > 0 then
         begin
-          Std.Arrays.Push(Cases, TimerCase(TickWait, procedure() begin end));
+          Std.Arrays.Push(Cases, TimerCase(TickWait, procedure() begin end procedure));
         end;
       end if;
 

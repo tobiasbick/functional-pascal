@@ -83,7 +83,7 @@ type
   Button = record
     function ReadOnClick(Self: Button): procedure();
     begin
-      return procedure() begin end;
+      return procedure() begin end procedure;
     end function;
     procedure WriteOnClick(Self: Button; Handler: procedure());
     begin
@@ -169,7 +169,7 @@ begin
 end procedure;
 begin
   var B: Button := record Id := 1; OnClick := Handle; end;
-  var C: Button := B with OnClick := Handle; end;
+  var C: Button := B with OnClick := Handle; end with;
 end.",
         event_prelude()
     ));

@@ -19,7 +19,7 @@ begin
     end for;
 
     CloseChannel(Jobs);
-  end);
+  end procedure);
   for Worker: integer := 1 to 3 do
     begin
       StartTaskInGroup(Group, procedure(Token: CancellationToken) begin
@@ -41,7 +41,7 @@ begin
             end case;
           end;
         end while;
-      end);
+      end procedure);
     end;
   end for;
   // Collect while the producer runs: filling Jobs first could deadlock the pipeline.

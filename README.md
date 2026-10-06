@@ -190,6 +190,7 @@ end.
 
 ```pascal
 program HigherOrderFunctions;
+
 uses Std.Console;
 
 function Double(X: integer): integer;

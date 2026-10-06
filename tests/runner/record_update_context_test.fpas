@@ -17,7 +17,7 @@ begin
     MaybeItems := Some([3]);
     Lookup := Ok(['old': 2]);
   end;
-  var Updated: Holder := Original with Items := []; Tags := [:]; MaybeItems := Some([]); Lookup := Ok([:]); end;
+  var Updated: Holder := Original with Items := []; Tags := [:]; MaybeItems := Some([]); Lookup := Ok([:]); end with;
 
   AssertEquals(0, Std.Arrays.Length(Updated.Items));
   AssertEquals(0, Std.Dictionaries.Length(Updated.Tags));

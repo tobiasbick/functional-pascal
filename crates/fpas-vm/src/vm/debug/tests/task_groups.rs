@@ -120,7 +120,7 @@ fn stop_before_close(source: &str) -> DebugSession {
 fn task_group_exited_failure_cannot_be_resumed_or_force_returned() {
     let source = SOURCE.replace(
         "  var Failures:",
-        "  Select([TimerCase(5, procedure() begin end)]);\n  var Failures:",
+        "  Select([TimerCase(5, procedure() begin end procedure)]);\n  var Failures:",
     );
     let mut session = stop_before_close(&source);
     let events = session.take_task_events();
@@ -183,7 +183,7 @@ fn task_group_child_close_is_rejected_and_collected_as_runtime_failure() {
 uses Std.Tasks, Std.Arrays;
 begin
   var G: TaskGroup := CreateTaskGroup();
-  StartTaskInGroup(G, procedure(Token: CancellationToken) begin CloseTaskGroup(G); end);
+  StartTaskInGroup(G, procedure(Token: CancellationToken) begin CloseTaskGroup(G); end procedure);
   var Failures: array of TaskFailure := CloseTaskGroup(G);
   if Length(Failures) <> 1 then panic('failure count'); end if;
   if Failures[0].Kind <> TaskFailureKind.RuntimeError then panic('runtime kind'); end if;

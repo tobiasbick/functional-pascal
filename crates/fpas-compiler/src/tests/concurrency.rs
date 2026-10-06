@@ -196,7 +196,7 @@ begin
   begin
     Value := Value + 1;
     return Value;
-  end;
+  end function;
 end function;
 
 begin

@@ -64,13 +64,13 @@ begin
           return State;
         end;
     end case;
-  end, function(State: PointerModel): TuiElement begin
+  end function, function(State: PointerModel): TuiElement begin
     return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(1)), [
                                                                           TuiElementBuilders.MakePanel('Host', [
                                                                                                                  TuiElementBuilders.MakeButton(TuiControlId.Create(1), 'Go', TuiAction.Create(1))
                                                                                                                ])
                                                                         ]);
-  end, 3, 0);
+  end function, 3, 0);
   AssertEquals(3, Std.Arrays.Length(Model.Events));
   AssertEquals('tick-1', Model.Events[0]);
   AssertEquals('pointer', Model.Events[1]);

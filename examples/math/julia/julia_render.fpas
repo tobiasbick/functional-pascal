@@ -115,7 +115,7 @@ begin
             Py := Py + 4;
           end;
         end while;
-      end);
+      end procedure);
     end;
   end for;
 

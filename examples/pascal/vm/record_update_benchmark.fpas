@@ -28,7 +28,7 @@ begin
 
   for Index: integer := 1 to Iterations do
     begin
-      State := State with A := State.A + 1; C := State.C + State.B; end;
+      State := State with A := State.A + 1; C := State.C + State.B; end with;
     end;
   end for;
 

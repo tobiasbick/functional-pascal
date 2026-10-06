@@ -108,7 +108,7 @@ begin
         end while;
 
         return Ok(true);
-      end);
+      end function);
     end;
   end for;
 

@@ -43,8 +43,8 @@ against the checkout before implementing each work package.
 
 ## Package status
 
-AP01 and AP02 are complete on `codex/syntax-changes-2`. AP13.1 through AP13.5
-are also complete; AP13.6 remains open. Checkboxes track completed
+AP01, AP02, and AP13 are complete on `codex/syntax-changes-2`. Every AP13
+work package, AP13.1 through AP13.6, is complete. Checkboxes track completed
 delivery in the working branch, as defined by the
 [status-tracking rule](development-process.md#status-tracking).
 
@@ -66,7 +66,7 @@ package are listed in each work package file.
 | [ ] | [AP10: Typed record construction](ap10-typed-record-construction/README.md) | Medium | AP09 | Agreed direction |
 | [ ] | [AP11: Individual declarations](ap11-individual-declarations/README.md) | Medium | AP01 | Agreed direction (Q07) |
 | [ ] | [AP12: Callable expressions](ap12-callable-expressions/README.md) | Medium | AP06 | Proposal |
-| [ ] | [AP13: Explicit block boundaries](ap13-explicit-block-boundaries/README.md) | Large | AP01, AP02 | Agreed direction (Q08, Q09) |
+| [x] | [AP13: Explicit block boundaries](ap13-explicit-block-boundaries/README.md) | Large | AP01, AP02 | Agreed direction (Q08, Q09) |
 | [ ] | [AP14: Remove computed properties](ap14-remove-computed-properties/README.md) | Small | AP06 | Agreed direction |
 | [ ] | [AP15: Remove event declarations](ap15-remove-event-declarations/README.md) | Small | AP20 | Agreed direction |
 | [ ] | [AP16: Immutable and mutable bindings](ap16-immutable-and-mutable-bindings/README.md) | Large | AP11 | Agreed direction |

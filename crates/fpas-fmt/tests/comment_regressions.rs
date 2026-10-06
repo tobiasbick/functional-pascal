@@ -36,7 +36,7 @@ fn nested_routine_body_comments_use_structural_owners() {
 
 #[test]
 fn closure_comments_survive_expression_emission() {
-    let source = "program T;\nbegin\n  var Handler: procedure() := procedure()\n  // closure body\n  begin\n    // setup\n    WriteLn('ok'); // closure trail\n  end;\n  Handler();\nend.";
+    let source = "program T;\nbegin\n  var Handler: procedure() := procedure()\n  // closure body\n  begin\n    // setup\n    WriteLn('ok'); // closure trail\n  end procedure;\n  Handler();\nend.";
     let formatted = format_idempotently(source);
 
     for comment in ["// closure body", "// setup", "// closure trail"] {

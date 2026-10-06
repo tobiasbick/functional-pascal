@@ -17,7 +17,7 @@ begin
         Cmd.StartBackground(19, function(Token: CancellationToken): result of boolean, string begin
           Send(Ready, true);
           return Error('expected background failure');
-        end);
+        end function);
         return State;
       end;
     when TuiMsg.BackgroundFailed(Id, Kind, Message, Code, Line, Column):

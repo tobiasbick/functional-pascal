@@ -14,7 +14,7 @@ begin
   mutable var Count: integer := 0;
   var Increment: procedure() := procedure() begin
     Count := Count + 1;
-  end;
+  end procedure;
 
   for Index: integer := 1 to Iterations do
     begin

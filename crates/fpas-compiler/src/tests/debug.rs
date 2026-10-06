@@ -122,7 +122,7 @@ begin
   return function(): integer begin
     Value := Value + 1;
     return Value;
-  end;
+  end function;
 end function;
 
 begin

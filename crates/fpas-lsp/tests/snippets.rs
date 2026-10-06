@@ -72,6 +72,9 @@ fn wrap_snippet(name: &str, source: &str) -> String {
         "Function declaration" | "Procedure declaration" | "Record type" | "Mutable variable" => {
             format!("program SnippetHost;\n\n{source}\n\nbegin\nend.")
         }
+        "Anonymous function" | "Anonymous procedure" | "Record update" => {
+            format!("program SnippetHost;\n\nbegin\n  Apply({source});\nend.")
+        }
         _ => format!("program SnippetHost;\n\nbegin\n{source}\nend."),
     }
 }

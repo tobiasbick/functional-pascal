@@ -13,11 +13,11 @@ type
   end record;
 begin
   var Full: Bag := record Items := [1, 2, 3]; Names := ['a']; end;
-  var Emptied: Bag := Full with Items := []; end;
+  var Emptied: Bag := Full with Items := []; end with;
   if Std.Arrays.Length(Emptied.Items) <> 0 then panic('items not emptied'); end if;
   if Std.Arrays.Length(Emptied.Names) <> 1 then panic('names changed'); end if;
   if Std.Arrays.Length(Full.Items) <> 3 then panic('base mutated'); end if;
-  var Refilled: Bag := Emptied with Items := [4]; end;
+  var Refilled: Bag := Emptied with Items := [4]; end with;
   if Refilled.Items[0] <> 4 then panic('refill'); end if;
 end.
 "#,
@@ -56,7 +56,7 @@ begin
     Label := None;
     Grid := [[]];
     Scores := ['b': []];
-  end;
+  end with;
   if Std.Dictionaries.Length(Reset.Tags) <> 0 then panic('empty dictionary'); end if;
   if Reset.Origin.X + Reset.Origin.Y <> 15 then panic('record literal'); end if;
   if not Std.Options.IsNone(Reset.Label) then panic('none'); end if;
@@ -85,7 +85,7 @@ begin
   var Updated: Holder := Original with
     Values := Some([]);
     Lookup := Ok([:]);
-  end;
+  end with;
   if Std.Arrays.Length(Std.Options.Unwrap(Updated.Values)) <> 0 then
     panic('option payload'); end if;
   if Std.Dictionaries.Length(Std.Results.Unwrap(Updated.Lookup)) <> 0 then

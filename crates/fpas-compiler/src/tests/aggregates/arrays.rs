@@ -32,12 +32,12 @@ begin
     Order := Order * 10 + 2;
     Values := [7, 8];
     return 0;
-  end;
+  end function;
   var Replacement: function(): integer := function(): integer
   begin
     Order := Order * 10 + 1;
     return 9;
-  end;
+  end function;
   Values[Index()] := Replacement();
   if Order <> 12 then panic('evaluation order'); end if;
   if (Values[0] <> 9) or (Values[1] <> 2) then panic('root snapshot'); end if;
@@ -97,7 +97,7 @@ begin
   var Take: function(): integer := function(): integer
   begin
     return Pop(Captured);
-  end;
+  end function;
   if Take() <> 8 then panic('capture value'); end if;
   if Length(Captured) <> 1 then panic('capture length'); end if;
 end."#;

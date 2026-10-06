@@ -215,7 +215,7 @@ fn jsonl_function_values_copy_atomically_and_continue() {
         ("Current", "MakeAdder(1)", "variable_value_type"),
         (
             "Current",
-            "function(Value: integer): integer begin return Value; end",
+            "function(Value: integer): integer begin return Value; end function",
             "unsupported_expression",
         ),
         ("Current", "1", "variable_value_type"),

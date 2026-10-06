@@ -15,7 +15,7 @@ begin
   var Inbox: channel of MandelbrotRenderFrame := State.Inbox;
   Cmd.ReplaceSubscription(RenderSubscriptionId, function(Token: CancellationToken): result of boolean, string begin
     return RunBackgroundRender(Request, Inbox, Token);
-  end);
+  end function);
 end procedure;
 
 function RestartRender(

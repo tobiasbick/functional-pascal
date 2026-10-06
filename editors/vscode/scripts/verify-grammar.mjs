@@ -380,12 +380,41 @@ async function verifyCaseBlocks(grammar) {
   assert.ok(!body.includes("begin"));
 }
 
+async function verifyExpressionClosers(grammar) {
+  const fixture = await tokenizeFixture(grammar, "expression_closers.fpas");
+  const configuration = JSON.parse(await readFile(
+    path.join(extensionRoot, "language-configuration.json"), "utf8"
+  ));
+  const increase = new RegExp(configuration.indentationRules.increaseIndentPattern);
+  const decrease = new RegExp(configuration.indentationRules.decreaseIndentPattern);
+  for (const kind of ["function", "procedure", "with"]) {
+    const line = `end ${kind}`;
+    assertScope(tokenAt(fixture, line, "end"), "keyword.control.fpas");
+    assertScope(tokenAt(fixture, line, kind), kind === "with"
+      ? "keyword.control.fpas" : "keyword.declaration.fpas");
+    for (const spelling of [line, `${line}, Other`, `${line});`, line.toUpperCase()]) {
+      assert.ok(decrease.test(spelling), `${spelling} decreases indentation`);
+      assert.ok(!increase.test(spelling), `${spelling} does not open a body`);
+    }
+  }
+  assert.ok(increase.test("var Moved: Point := Original with"));
+  assert.ok(increase.test("ORIGINAL WITH // overrides"));
+  const snippets = JSON.parse(await readFile(
+    path.join(extensionRoot, "snippets", "fpas.json"), "utf8"
+  ));
+  for (const [name, kind] of [["Anonymous function", "function"],
+    ["Anonymous procedure", "procedure"], ["Record update", "with"]]) {
+    assert.equal(snippets[name].body.at(-1), `end ${kind}`);
+  }
+}
+
 /** Loads the grammar and verifies positive, negative, and edge-case scopes. */
 export async function verifyGrammar() {
   const grammar = await createGrammar();
   await verifyDeclarationClosers(grammar);
   await verifyControlBlocks(grammar);
   await verifyCaseBlocks(grammar);
+  await verifyExpressionClosers(grammar);
   await verifyPositiveScopes(grammar);
   await verifyNegativeScopes(grammar);
   await verifyEdgeScopes(grammar);

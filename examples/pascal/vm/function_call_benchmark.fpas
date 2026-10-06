@@ -18,7 +18,7 @@ function MakeAdder(Amount: integer): function(Value: integer): integer;
 begin
   return function(Value: integer): integer begin
     return Value + Amount;
-  end;
+  end function;
 end function;
 
 function RunCalls(Iterations: integer): integer;

@@ -5,6 +5,7 @@ use std::fs;
 mod case_blocks;
 mod control_blocks;
 mod declaration_closers;
+mod expression_closers;
 mod terminators;
 #[cfg(unix)]
 use std::os::unix::ffi::OsStringExt;

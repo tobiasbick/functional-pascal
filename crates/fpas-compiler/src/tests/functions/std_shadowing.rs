@@ -61,12 +61,12 @@ begin
   var Send: function(Value: integer): integer := function(Value: integer): integer
   begin
     return Value + 1;
-  end;
+  end function;
   if Send(3) <> 4 then panic('local callable'); end if;
   if Apply(function(Value: integer): string
   begin
     return 'local';
-  end) <> 'local' then panic('callable parameter'); end if;
+  end function) <> 'local' then panic('callable parameter'); end if;
   if Std.Conv.IntToStr(42) <> '42' then panic('qualified intrinsic'); end if;
 end.
 "#,

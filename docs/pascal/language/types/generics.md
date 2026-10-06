@@ -47,8 +47,10 @@ begin
 end function;
 
 var
-  B: Box := record Value := 42; end;
-  S: string := B.Map(ToText);   // R inferred as string
+  B: Box := record
+    Value := 42;
+  end;
+  S: string := B.Map(ToText); // R inferred as string
 ```
 
 Method-level type parameters may also use constraints:

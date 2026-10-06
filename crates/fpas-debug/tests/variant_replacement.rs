@@ -454,7 +454,7 @@ begin
         return Left + Right;
       end;
     end case;
-  end;
+  end function;
 end function;
 
 begin

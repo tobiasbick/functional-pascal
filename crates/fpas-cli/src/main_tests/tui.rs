@@ -358,7 +358,7 @@ begin
       var Target: channel of integer := State.Inbox;
       Cmd.StartBackground(1, function(Token: CancellationToken): result of boolean, string begin
         return SendWithCancellation(Target, 42, Token);
-      end);
+      end function);
       return State;
     end;
     when TuiMsg.BackgroundFailed(Id, Kind, Message, Code, Line, Column):

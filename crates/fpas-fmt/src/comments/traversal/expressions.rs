@@ -2,8 +2,13 @@
 
 use fpas_parser::{Designator, DesignatorPart, Expr, FuncBody, PostfixOperation};
 
-use super::{CollectedAnchors, collect_body, collect_decls, collect_stmts};
+use super::{
+    CollectedAnchors, collect_body, collect_closer, collect_decls, collect_stmts, push_span,
+};
+use crate::comments::anchors::span_end;
+use fpas_lexer::Span;
 
+/// Collects expression bodies and named endings without taking their owner's terminator.
 pub(super) fn collect_expr(expr: &Expr, begins: &[usize], out: &mut CollectedAnchors) {
     match expr {
         Expr::Designator(designator) => collect_designator(designator, begins, out),
@@ -39,12 +44,17 @@ pub(super) fn collect_expr(expr: &Expr, begins: &[usize], out: &mut CollectedAnc
         }
         Expr::RecordLiteral { fields, .. } => {
             for field in fields {
+                out.leading.push(field.span.offset);
+                push_span(field.span, out);
                 collect_expr(&field.value, begins, out);
             }
         }
-        Expr::RecordUpdate { base, fields, .. } => {
+        Expr::RecordUpdate { base, fields, span } => {
+            collect_expression_closer(*span, out);
             collect_expr(base, begins, out);
             for field in fields {
+                out.leading.push(field.span.offset);
+                push_span(field.span, out);
                 collect_expr(&field.value, begins, out);
             }
         }
@@ -65,6 +75,7 @@ pub(super) fn collect_expr(expr: &Expr, begins: &[usize], out: &mut CollectedAnc
             }
         }
         Expr::Closure(closure) => {
+            collect_expression_closer(closure.span, out);
             let FuncBody::Block { nested, stmts } = &closure.body;
             collect_decls(nested, begins, out);
             collect_stmts(stmts, begins, out);
@@ -87,6 +98,25 @@ pub(super) fn collect_expr(expr: &Expr, begins: &[usize], out: &mut CollectedAnc
     }
 }
 
+fn collect_expression_closer(span: Span, out: &mut CollectedAnchors) {
+    collect_closer(span, out);
+    // A statement or declaration ending here owns comments after its semicolon.
+    if out
+        .emission
+        .iter()
+        .any(|anchor| anchor.end == span_end(span))
+    {
+        return;
+    }
+    if let Some(&start) = out.closers.get(&span.offset) {
+        out.emission.push(crate::comments::anchors::EmissionAnchor {
+            start,
+            end: span_end(span),
+        });
+    }
+}
+
+/// Collects expressions nested inside designator index operations.
 pub(super) fn collect_designator(
     designator: &Designator,
     begins: &[usize],

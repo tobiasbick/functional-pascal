@@ -11,7 +11,7 @@ use super::super::decl::emit_decl;
 use super::super::stmt::emit_stmts_in_block;
 use super::super::types::{emit_formal_params_in_parens, emit_type_expr};
 
-/// Emit `function(…) : T begin … end` or `procedure(…) begin … end`.
+/// Emits an anonymous routine with its named ending and no expression terminator.
 pub(super) fn emit_closure(
     emitter: &mut Emitter,
     is_function: bool,
@@ -31,13 +31,19 @@ pub(super) fn emit_closure(
     } else {
         emit_formal_params_in_parens(emitter, "procedure(", params, "");
     }
-    emit_closure_body(emitter, owner_start, body, comments);
+    let ending = if is_function {
+        "end function"
+    } else {
+        "end procedure"
+    };
+    emit_closure_body(emitter, owner_start, body, ending, comments);
 }
 
 fn emit_closure_body(
     emitter: &mut Emitter,
     owner_start: usize,
     body: &FuncBody,
+    ending: &str,
     comments: &CommentMap,
 ) {
     let FuncBody::Block { nested, stmts } = body;
@@ -59,12 +65,16 @@ fn emit_closure_body(
         emitter.write_current_indent();
     }
     emitter.write("begin");
-    if stmts.is_empty() && nested.is_empty() {
-        emitter.write(" end");
+    let closer = comments.closer_anchor(owner_start);
+    let has_closer_comments = closer.is_some_and(|anchor| {
+        !comments.leading_at(anchor).is_empty() || !comments.trailing_at(anchor).is_empty()
+    });
+    if stmts.is_empty() && nested.is_empty() && !has_closer_comments {
+        emitter.write(" ");
+        emitter.write(ending);
         return;
     }
     emitter.write("\n");
     emitter.with_indent(|inner| emit_stmts_in_block(inner, stmts, comments));
-    emitter.write_current_indent();
-    emitter.write("end");
+    super::emit_expression_end(emitter, closer, ending, comments);
 }

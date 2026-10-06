@@ -10,7 +10,7 @@ begin
   var Gate: channel of boolean := CreateChannel(1);
   var Worker: task := StartTaskInGroup(Group, function(Token: CancellationToken): boolean begin
     return Std.Results.Unwrap(Receive(Gate));
-  end);
+  end function);
   AssertTrue(IsReady(Life));
   AssertTrue(not IsCancellationRequested(GetStopToken(Life)));
   AssertTrue(IsError(FinishShutdown(Life)));

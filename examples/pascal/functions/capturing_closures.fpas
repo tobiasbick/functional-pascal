@@ -8,7 +8,7 @@ begin
   return function(): integer begin
     Value := Value + 1;
     return Value;
-  end;
+  end function;
 end function;
 
 function MakeAdder(Base: integer): function(Value: integer): integer;
@@ -26,7 +26,7 @@ begin
   mutable var Count: integer := 0;
   var Increment: procedure() := procedure() begin
     Count := Count + 1;
-  end;
+  end procedure;
 
   Increment();
   Increment();

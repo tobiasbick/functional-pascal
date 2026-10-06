@@ -8,7 +8,7 @@ const PREFIX: &str = "program T; type Point = record X: integer; end record; beg
 #[test]
 fn record_update_rejects_non_record_base() {
     let errors = check_errors(
-        "program T; begin var X: integer := 1; var Y: integer := X with Value := 2; end; end.",
+        "program T; begin var X: integer := 1; var Y: integer := X with Value := 2; end with; end.",
     );
     assert!(
         errors.iter().any(|error| error.code == SEMA_TYPE_MISMATCH),
@@ -19,8 +19,8 @@ fn record_update_rejects_non_record_base() {
 #[test]
 fn record_update_rejects_unknown_and_wrongly_typed_fields() {
     for (update, expected_code) in [
-        ("P with Missing := 2; end", SEMA_UNKNOWN_NAME),
-        ("P with X := 'wrong'; end", SEMA_TYPE_MISMATCH),
+        ("P with Missing := 2; end with", SEMA_UNKNOWN_NAME),
+        ("P with X := 'wrong'; end with", SEMA_TYPE_MISMATCH),
     ] {
         let source = format!("{PREFIX} var Q: Point := {update}; end.");
         let errors = check_errors(&source);
@@ -56,7 +56,7 @@ fn imported_update_errors(update: &str) -> Vec<SemaError> {
     let consumer = parse_unit(&format!(
         "unit Demo.Consumer; uses Demo.Types;
          public function Change(Original: Holder; Other: OtherPoint): Holder;
-         begin return Original with {update}; end; end function;\nend unit;"
+         begin return Original with {update}; end with; end function;\nend unit;"
     ));
     analyze_unit(&consumer, &[interface])
         .expect("consumer analysis")

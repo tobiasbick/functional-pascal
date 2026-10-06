@@ -492,14 +492,14 @@ unary_expr          = 'not' unary_expr
                     | 'try' unary_expr                   (* error propagation *)
                     | primary_expr [ record_update ] ;
 
-record_update       = 'with' field_init { field_init } 'end' ;
+record_update       = 'with' field_init { field_init } 'end' 'with' ;
 
 (* record_update is a postfix operator that produces a new record   *)
 (* value identical to the base except for the overridden fields.    *)
-(* At least one field_init is required. `Value with end` is invalid. *)
+(* At least one field_init is required. `Value with end with` is invalid. *)
 (* The base expression must have a record type. Unknown or wrong-   *)
 (* typed field overrides are compile-time errors.                   *)
-(* Example: P with X := 10; end — produces a copy of P with X = 10 *)
+(* Example: P with X := 10; end with — produces a copy of P with X = 10 *)
 
 (* primary_atom is a complete call/designator/literal. After it, optional       *)
 (* postfix suffixes allow chaining on the result: `.Field`, `[Index]`,         *)
@@ -528,9 +528,13 @@ primary_atom        = integer_literal
 (* Anonymous function/procedure expression. Parameter and result types are required. *)
 (* Documentation: docs/pascal/language/functions/closures.md *)
 closure_expr        = 'function' '(' [ param_list ] ')' ':' type_expr
-                        [ nested_decl { nested_decl } ] 'begin' statement_list 'end'
+                        [ nested_decl { nested_decl } ] 'begin' statement_list 'end' 'function'
                     | 'procedure' '(' [ param_list ] ')'
-                        [ nested_decl { nested_decl } ] 'begin' statement_list 'end' ;
+                        [ nested_decl { nested_decl } ] 'begin' statement_list 'end' 'procedure' ;
+
+(* Expression closers have no terminating ';' of their own. An enclosing *)
+(* statement, declaration, or field_init supplies its terminator.        *)
+(* Arguments end directly before ',' or ')' after their named closer.    *)
 
 postfix_suffix      = '.' identifier [ call_args ]
                     | '[' expression ']' ;

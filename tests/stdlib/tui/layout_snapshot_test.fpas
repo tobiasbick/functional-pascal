@@ -7,7 +7,7 @@ begin
   var Model: integer := 0;
   App.RunIterations(Model, function(State: integer; Msg: TuiMsg; Cmd: TuiCmdOutput): integer begin
     return State;
-  end, function(State: integer): TuiElement begin
+  end function, function(State: integer): TuiElement begin
     return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(1)), [
                                                                           TuiElementBuilders.MakePanel('Win', [
                                                                                                                 TuiElementBuilders.MakeColumn([
@@ -17,7 +17,7 @@ begin
                                                                                                                                               ])
                                                                                                               ])
                                                                         ]);
-  end, 0, 0);
+  end function, 0, 0);
   var Snapshot: TuiSurfaceSnapshot := App.SurfaceSnapshot();
   AssertTrue(Std.Str.Contains(Snapshot.LineAt(0), 'Win'));
   AssertTrue(Std.Str.Contains(Snapshot.LineAt(1), 'Hello'));
@@ -27,11 +27,11 @@ begin
   var Wide: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(40, 10));
   Wide.RunIterations(0, function(State: integer; Msg: TuiMsg; Cmd: TuiCmdOutput): integer begin
     return State;
-  end, function(State: integer): TuiElement begin
+  end function, function(State: integer): TuiElement begin
     return TuiElementBuilders.MakeDesktop(None, [
                                                   TuiElementBuilders.MakeOverlay('Dlg', [TuiElementBuilders.MakeLabel('Body')])
                                                 ]);
-  end, 0, 0);
+  end function, 0, 0);
   var Overlay: TuiSurfaceSnapshot := Wide.SurfaceSnapshot();
   AssertEquals(18, Std.Str.IndexOf(Overlay.LineAt(3), 'Dlg'));
   AssertEquals(16, Std.Str.IndexOf(Overlay.LineAt(4), 'Body'));

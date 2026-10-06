@@ -1,6 +1,6 @@
 # AP13: Explicit block boundaries
 
-Status: partially complete (AP13.1–AP13.5); agreed direction (Q08, Q09).
+Status: complete (AP13.1–AP13.6); agreed direction (Q08, Q09).
 Effort: large. Completion is tracked in
 the [central README](../README.md); the process is in
 [development-process.md](../development-process.md).
@@ -150,7 +150,7 @@ end with;
 
 ## Open decisions
 
-There are no open decisions for AP13.1 through AP13.5. The single-statement-body
+There are no open decisions for AP13.1 through AP13.6. The single-statement-body
 transition rule is confirmed in [AP13.2](02-statement-terminators.md#confirmed-transition-rule).
 Task-scope decisions belong to AP26.
 
@@ -194,14 +194,16 @@ follows AP13.3 so anonymous routines match named routines.
 - [x] [AP13.3: Named closers for declarations](03-declaration-closers.md)
 - [x] [AP13.4: Conditional, loop, and scoping blocks](04-conditional-and-loop-blocks.md)
 - [x] [AP13.5: Case arms](05-case-arms.md)
-- [ ] [AP13.6: Expression closers](06-expression-closers.md)
+- [x] [AP13.6: Expression closers](06-expression-closers.md)
 
 ## Delivery
 
-AP13.1 through AP13.5 are implemented and verified on `codex/syntax-changes-2`.
+AP13.1 through AP13.6 are implemented and verified on `codex/syntax-changes-2`.
 Their Result sections record the delivered scope and the known pre-existing
-workspace test failures. Expression closers remain in AP13.6, so the overall
-package remains open.
+workspace check failures. The overall package is complete. Current declaration,
+statement, and expression endings, retained compound scopes, and terminator
+ownership are covered by the package regressions and repository suites.
+Decision expressions and task scopes remain owned by AP21 and AP26 respectively.
 
 ## Acceptance
 

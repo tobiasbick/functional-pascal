@@ -14,9 +14,9 @@ begin
 end function;
 
 begin
-  var R: integer := Apply(Double, 5);  // 10
+  var R: integer := Apply(Double, 5); // 10
   var Op: function(X: integer): integer := Double;
-  WriteLn(Op(7));                      // 14
+  WriteLn(Op(7)); // 14
 end.
 ```
 
@@ -36,10 +36,12 @@ type
   end record;
 
 begin
-  var C: Counter := record Base := 10; end;
+  var C: Counter := record
+    Base := 10;
+  end;
   var AddTen: function(Value: integer): integer := C.Add;
-  WriteLn(AddTen(5));           // 15
-  WriteLn(Apply(AddTen, 7));    // 17
+  WriteLn(AddTen(5)); // 15
+  WriteLn(Apply(AddTen, 7)); // 17
 end.
 ```
 

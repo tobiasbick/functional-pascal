@@ -17,10 +17,10 @@ begin
           WriteLn(Reason);
         end;
     end case;
-  end);
+  end procedure);
   var Timeout: WaitCase := TimerCase(100, procedure() begin
     WriteLn('no message before the deadline');
-  end);
+  end procedure);
   Select([Message, Timeout]);
   // Both cases are now consumed; a second selection needs new cases.
   CloseChannel(Messages);

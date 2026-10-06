@@ -100,5 +100,34 @@
       "end case;"
     ],
     "description": "Insert a case statement"
+  },
+  "Anonymous function": {
+    "prefix": "function expression",
+    "body": [
+      "function(${1:Value}: ${2:integer}): ${3:integer}",
+      "begin",
+      "  return ${1:Value};",
+      "end function"
+    ],
+    "description": "Insert an anonymous function expression"
+  },
+  "Anonymous procedure": {
+    "prefix": "procedure expression",
+    "body": [
+      "procedure(${1:Value}: ${2:integer})",
+      "begin",
+      "  ${0:null;}",
+      "end procedure"
+    ],
+    "description": "Insert an anonymous procedure expression"
+  },
+  "Record update": {
+    "prefix": "with",
+    "body": [
+      "${1:Value} with",
+      "  ${2:Field} := ${3:NewValue};",
+      "end with"
+    ],
+    "description": "Insert a record-update expression"
   }
 }

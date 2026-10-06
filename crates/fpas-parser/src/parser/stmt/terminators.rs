@@ -64,10 +64,13 @@ impl Parser {
     }
 
     /// Recognizes enclosing boundaries without consuming them during recovery.
-    pub(super) fn is_stmt_list_end(&self) -> bool {
+    pub(in crate::parser) fn is_stmt_list_end(&self) -> bool {
         matches!(
             self.current_token(),
             Token::End
+                | Token::RParen
+                | Token::RBracket
+                | Token::Comma
                 | Token::Else
                 | Token::Until
                 | Token::Eof

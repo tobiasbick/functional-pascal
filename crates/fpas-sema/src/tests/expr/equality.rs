@@ -55,7 +55,7 @@ fn aggregates_with_non_comparable_fields_reject_equality() {
         ("var B: Bag := record Items := []; end;", "B = B"),
         ("var H: Holder := Holder.Empty;", "H = Holder.Empty"),
         (
-            "var C: Callback := record Run := function(): integer begin return 1; end; end;",
+            "var C: Callback := record Run := function(): integer begin return 1; end function; end;",
             "C <> C",
         ),
     ] {

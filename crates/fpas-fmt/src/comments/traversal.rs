@@ -51,6 +51,7 @@ pub(crate) fn collect(unit: &CompilationUnit, source: &str) -> CollectedAnchors 
                             | Token::Case
                             | Token::For
                             | Token::While
+                            | Token::With
                     ))
                 .then_some(EmissionAnchor {
                     start: pair[0].span.offset,

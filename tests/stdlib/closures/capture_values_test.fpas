@@ -8,7 +8,7 @@ begin
   return function(): integer begin
     Value := Value + 1;
     return Value;
-  end;
+  end function;
 end function;
 
 begin
@@ -18,14 +18,14 @@ begin
   mutable var Count: integer := 0;
   var Inc: procedure() := procedure() begin
     Count := Count + 1;
-  end;
+  end procedure;
 
   Inc();
   AssertEquals('1', IntToStr(Count));
   var Base: integer := 10;
   var Add: function(Value: integer): integer := function(Value: integer): integer begin
     return Base + Value;
-  end;
+  end function;
 
   AssertEquals('15', IntToStr(Add(5)));
 end.

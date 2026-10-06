@@ -23,7 +23,7 @@ fn program_level_closure_initializer_is_discovered_before_lowering() {
 program ClosureInit;
 var F: procedure() := procedure()
 begin
-end;
+end procedure;
 begin
   F();
 end.
@@ -41,7 +41,7 @@ begin
   return function(Value: integer): integer
   begin
     return Base + Value;
-  end;
+  end function;
 end function;
 begin
   var AddForty: function(Value: integer): integer := MakeAdder(40);
@@ -64,7 +64,7 @@ begin
   begin
     Count := Count + 1;
     return Count;
-  end;
+  end function;
 end function;
 begin
   var Next: function(): integer := MakeCounter();

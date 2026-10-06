@@ -11,9 +11,9 @@ fn selection_send_rejects_task_bound_values() {
 uses Std.Tasks;
 begin
   mutable var Count: integer := 0;
-  var Work: procedure() := procedure() begin Count := Count + 1; end;
+  var Work: procedure() := procedure() begin Count := Count + 1; end procedure;
   var Q: channel of procedure() := CreateChannel(1);
-  SendCase(Q, Work, procedure(R: result of boolean, string) begin end);
+  SendCase(Q, Work, procedure(R: result of boolean, string) begin end procedure);
 end."#,
     );
     assert!(
@@ -27,13 +27,13 @@ end."#,
 #[test]
 fn selection_cases_reject_wrong_payload_callback_and_control_types() {
     for call in [
-        "ReceiveCase(Q, procedure(R: result of string, string) begin end)",
-        "SendCase(Q, 'wrong', procedure(R: result of boolean, string) begin end)",
-        "SendCase(Q, 1, procedure(R: result of integer, string) begin end)",
-        "TimerCase(0, function(): integer begin return 1; end)",
-        "TimerCase('wrong', procedure() begin end)",
-        "TaskCase(1, procedure() begin end)",
-        "CancellationCase(CreateCancellationSource(), procedure() begin end)",
+        "ReceiveCase(Q, procedure(R: result of string, string) begin end procedure)",
+        "SendCase(Q, 'wrong', procedure(R: result of boolean, string) begin end procedure)",
+        "SendCase(Q, 1, procedure(R: result of integer, string) begin end procedure)",
+        "TimerCase(0, function(): integer begin return 1; end function)",
+        "TimerCase('wrong', procedure() begin end procedure)",
+        "TaskCase(1, procedure() begin end procedure)",
+        "CancellationCase(CreateCancellationSource(), procedure() begin end procedure)",
         "Select([1])",
         "CloseWaitCase(CreateCancellationSource())",
     ] {
@@ -196,7 +196,7 @@ begin
     procedure()
     begin
       Count := Count + 1;
-    end;
+    end procedure;
   go Inc();
 end.",
     );
@@ -278,7 +278,7 @@ program T;
 uses Std.Tasks;
 begin
   mutable var Count: integer := 0;
-  var Work: procedure() := procedure() begin Count := Count + 1; end;
+  var Work: procedure() := procedure() begin Count := Count + 1; end procedure;
   var Queue: channel of procedure() := CreateChannel(1);
   Send(Queue, Work);
 end.",
@@ -303,7 +303,7 @@ type WorkBox = record
 end record;
 begin
   mutable var Count: integer := 0;
-  var Work: procedure() := procedure() begin Count := Count + 1; end;
+  var Work: procedure() := procedure() begin Count := Count + 1; end procedure;
   var ArrayQueue: channel of array of procedure() := CreateChannel(1);
   var RecordQueue: channel of WorkBox := CreateChannel(1);
   var ResultQueue: channel of result of procedure(), string := CreateChannel(1);
@@ -337,7 +337,7 @@ type WorkBox = record
 end record;
 begin
   mutable var Count: integer := 0;
-  var Work: procedure() := procedure() begin Count := Count + 1; end;
+  var Work: procedure() := procedure() begin Count := Count + 1; end procedure;
   var Boxed: WorkBox := record Work := Work; Safe := 7; end;
   var WorkQueue: channel of procedure() := CreateChannel(1);
   var SafeQueue: channel of integer := CreateChannel(1);

@@ -25,7 +25,7 @@ begin
 
           Send(Ready, true);
           return Ok(true);
-        end);
+        end function);
         return State;
       end;
     else

@@ -29,14 +29,14 @@ end procedure;
 begin
   var A: Point := record X := 1; Y := 2.0; end;
   var B: Point := record X := 1; Y := 2.0; end;
-  var C: Point := A with Y := 2.5; end;
+  var C: Point := A with Y := 2.5; end with;
   Check('same fields', A = B, true);
   Check('updated field', A = C, false);
   Check('not equal', A <> C, true);
   var Box1: Box := record Corner := A; Label := 'a'; Tag := Some(B); end;
   var Box2: Box := record Corner := B; Label := 'a'; Tag := Some(A); end;
   Check('nested', Box1 = Box2, true);
-  Check('nested differs', Box1 = (Box2 with Tag := None; end), false);
+  Check('nested differs', Box1 = (Box2 with Tag := None; end with), false);
   var S1: Shape := Shape.Circle(A, 3);
   Check('same variant payload', S1 = Shape.Circle(B, 3), true);
   Check('same variant other payload', S1 = Shape.Circle(A, 4), false);

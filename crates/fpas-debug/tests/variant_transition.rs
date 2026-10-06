@@ -482,7 +482,7 @@ begin
         return Value;
       end;
     end case;
-  end;
+  end function;
 end function;
 
 begin

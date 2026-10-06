@@ -21,12 +21,12 @@ fn group_operations_reject_wrong_handles_and_worker_signatures() {
         "StartSupervisedTask(G, Work, true, 0)",
         "StartSupervisedTask(G, Work, 1, 'bad')",
         "StartSupervisedTask(G, Work, 1)",
-        "StartSupervisedTask(G, procedure() begin end, 1, 0)",
-        "StartTaskInGroup(G, procedure() begin end)",
-        "StartTaskInGroup(G, procedure(T: integer) begin end)",
-        "StartTaskInGroup(G, procedure(T: CancellationSource) begin end)",
-        "StartTaskInGroup(G, procedure(T: CancellationToken; Extra: integer) begin end)",
-        "StartTaskInGroup(G, function(T: CancellationToken): result of integer, integer begin return Error(1); end)",
+        "StartSupervisedTask(G, procedure() begin end procedure, 1, 0)",
+        "StartTaskInGroup(G, procedure() begin end procedure)",
+        "StartTaskInGroup(G, procedure(T: integer) begin end procedure)",
+        "StartTaskInGroup(G, procedure(T: CancellationSource) begin end procedure)",
+        "StartTaskInGroup(G, procedure(T: CancellationToken; Extra: integer) begin end procedure)",
+        "StartTaskInGroup(G, function(T: CancellationToken): result of integer, integer begin return Error(1); end function)",
     ] {
         let source = format!(
             "program T; uses Std.Tasks; procedure Work(Token: CancellationToken); begin end procedure; begin var G: TaskGroup := CreateTaskGroup(); {call}; end."
@@ -46,7 +46,7 @@ uses Std.Tasks;
 begin
   mutable var Count: integer := 0;
   var G: TaskGroup := CreateTaskGroup();
-  StartTaskInGroup(G, procedure(Token: CancellationToken) begin Count := Count + 1; end);
+  StartTaskInGroup(G, procedure(Token: CancellationToken) begin Count := Count + 1; end procedure);
 end."#,
     );
     assert!(

@@ -18,7 +18,7 @@ begin
     end if;
 
     return Error('retained worker failure');
-  end);
+  end function);
   var First: result of array of TaskFailure, string := CloseTaskGroupWithTimeout(Group, 2);
   case First of
     when Error(Message):

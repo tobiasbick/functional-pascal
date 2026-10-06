@@ -68,5 +68,5 @@ the workspace suite and corrected lexer fixture rerun, 3,434 Rust tests pass.
 The remaining VM socket-timeout-resolution failure also reproduces on the
 unchanged AP13.2 baseline and is independent of this delivery.
 
-Expression closers remain in AP13.6. Closed-enum catch-all restrictions and
+Expression closers are delivered by AP13.6. Closed-enum catch-all restrictions and
 explicit pattern-binding syntax remain in AP03 and AP20 respectively.

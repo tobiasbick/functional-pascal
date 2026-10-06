@@ -66,9 +66,9 @@ begin
           return State;
         end;
     end case;
-  end, function(State: ResizeModel): TuiElement begin
+  end function, function(State: ResizeModel): TuiElement begin
     return TuiElementBuilders.MakeLabel('resize');
-  end, 3, 0);
+  end function, 3, 0);
   AssertEquals(3, Std.Arrays.Length(Model.Events));
   AssertEquals('tick-1', Model.Events[0]);
   AssertEquals('resize', Model.Events[1]);

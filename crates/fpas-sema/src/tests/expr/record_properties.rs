@@ -276,7 +276,7 @@ type
   end record;
 begin
   var B: Box := record end;
-  var C: Box := B with Value := 1; end;
+  var C: Box := B with Value := 1; end with;
 end.",
     );
     assert!(

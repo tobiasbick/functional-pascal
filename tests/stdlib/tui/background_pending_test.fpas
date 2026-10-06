@@ -30,7 +30,7 @@ begin
 
           ReceiveWithCancellation(Gate, Token);
           return Ok(true);
-        end);
+        end function);
       end;
     when TuiMsg.Tick(Delta):
       begin
@@ -40,7 +40,7 @@ begin
             Cmd.ReplaceSubscription(1, function(Token: CancellationToken): result of boolean, string begin
               Send(Started, true);
               return Ok(true);
-            end);
+            end function);
           end;
         elsif Delta = 2 then
           begin

@@ -21,7 +21,7 @@ begin
           return Error('probe cancelled pending work');
         end;
     end case;
-  end);
+  end function);
   AssertTrue(Std.Results.Unwrap(ReceiveWithTimeout(Ready, 10000)));
   AssertTrue(IsNone(TryCloseCompletedTaskGroup(Returned)));
   Send(Gate, true);
@@ -41,7 +41,7 @@ begin
   StartTaskInGroup(Panicked, procedure(Token: CancellationToken) begin
     Send(PanicReady, true);
     panic('expected panic report');
-  end);
+  end procedure);
   AssertTrue(Std.Results.Unwrap(ReceiveWithTimeout(PanicReady, 10000)));
   mutable var PanicFailures: option of array of TaskFailure := None;
   while IsNone(PanicFailures) do

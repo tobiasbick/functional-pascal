@@ -8,7 +8,7 @@ public function JoinChunks(Chunks: array of array of integer): array of integer;
 begin
   return Std.Arrays.FlatMap(Chunks, function(Chunk: array of integer): array of integer begin
     return Chunk;
-  end);
+  end function);
 end function;
 
 // Reads within the remaining response budget, probing only for EOF at its boundary.

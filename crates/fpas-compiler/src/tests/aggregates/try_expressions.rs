@@ -95,7 +95,7 @@ fn binary_expression_preserves_left_operand_across_try() {
 #[test]
 fn record_update_preserves_base_and_fields_across_try() {
     check_expression(
-        "var Original: Pair := record First := 8; Second := 9; end; var Value: Pair := Original with First := try ReadValue(1, FailAt); Second := try ReadValue(2, FailAt); end; return Ok(Value.First * 10 + Value.Second);",
+        "var Original: Pair := record First := 8; Second := 9; end; var Value: Pair := Original with First := try ReadValue(1, FailAt); Second := try ReadValue(2, FailAt); end with; return Ok(Value.First * 10 + Value.Second);",
     );
 }
 
@@ -250,7 +250,7 @@ begin
     if Values[try Change()] <> 12 then panic('collection snapshot'); end if;
     mutable var X: integer := I;
     var Update: function(): result of integer, string := function(): result of integer, string
-    begin X := 99; return Ok(10); end;
+    begin X := 99; return Ok(10); end function;
     if X + (try Update()) <> I + 10 then panic('local snapshot'); end if;
     if X <> 99 then panic('mutation missing'); end if;
   end; end for;

@@ -21,7 +21,7 @@ pub(crate) fn check_map(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
         s::STD_ARRAY_MAP,
         2,
         args,
-        "Example: Std.Arrays.Map(Arr, function(X: integer): integer begin return X * 2 end).",
+        "Example: Std.Arrays.Map(Arr, function(X: integer): integer begin return X * 2 end function).",
         span,
     ) {
         return Ty::Error;
@@ -60,7 +60,7 @@ pub(crate) fn check_filter(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
         s::STD_ARRAY_FILTER,
         2,
         args,
-        "Example: Std.Arrays.Filter(Arr, function(X: integer): boolean begin return X > 0 end).",
+        "Example: Std.Arrays.Filter(Arr, function(X: integer): boolean begin return X > 0 end function).",
         span,
     ) {
         return Ty::Error;
@@ -101,7 +101,7 @@ pub(crate) fn check_reduce(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
         s::STD_ARRAY_REDUCE,
         3,
         args,
-        "Example: Std.Arrays.Reduce(Arr, 0, function(Acc: integer; V: integer): integer begin return Acc + V end).",
+        "Example: Std.Arrays.Reduce(Arr, 0, function(Acc: integer; V: integer): integer begin return Acc + V end function).",
         span,
     ) {
         return Ty::Error;
@@ -144,7 +144,7 @@ pub(crate) fn check_flat_map(c: &mut Checker, args: &[&Expr], span: Span) -> Ty 
         s::STD_ARRAY_FLAT_MAP,
         2,
         args,
-        "Example: Std.Arrays.FlatMap(Arr, function(X: integer): array of integer begin ... end).",
+        "Example: Std.Arrays.FlatMap(Arr, function(X: integer): array of integer begin ... end function).",
         span,
     ) {
         return Ty::Error;

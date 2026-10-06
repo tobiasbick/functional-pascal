@@ -45,7 +45,7 @@ function MakeAdder(Amount: integer): Handler;
 begin
   return function(Value: integer): integer begin
     return Value + Amount;
-  end;
+  end function;
 end function;
 
 begin

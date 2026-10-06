@@ -235,7 +235,7 @@ fn validator_accepts_the_complete_read_only_category_matrix() {
         "Choice.Pair(1, 2)",
         "cHoIcE.pAiR(1, 2)",
         "try Work()",
-        "Point with X := 2; end",
+        "Point with X := 2; end with",
     ];
     for source in expressions {
         assert!(
@@ -275,7 +275,7 @@ fn validator_rejects_every_effectful_or_constructing_category() {
     let expressions = [
         "nil",
         "go Work()",
-        "function(): integer begin return 1; end",
+        "function(): integer begin return 1; end function",
     ];
     for source in expressions {
         let error = parse_debug_expression(source, DebugEvaluationLimits::default())

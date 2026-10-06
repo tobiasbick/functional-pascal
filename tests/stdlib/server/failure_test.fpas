@@ -23,7 +23,7 @@ begin
   var Group: TaskGroup := GetWorkGroup(Life);
   var Worker: task := StartTaskInGroup(Group, function(Token: CancellationToken): result of boolean, string begin
     return Error('session failed');
-  end);
+  end function);
   var Listener: Std.Net.Listener := Unwrap(BindListener());
   OwnListener(Life, Listener);
   // Deliberate ownership misuse: cleanup must preserve this failure.

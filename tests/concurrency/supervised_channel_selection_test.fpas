@@ -34,16 +34,16 @@ begin
                 Select([
                          SendCase(Output, Producer * 32 + Item, procedure(Outcome: result of boolean, string) begin
                            AssertTrue(Unwrap(Outcome));
-                         end),
+                         end procedure),
                          CancellationCase(WorkerToken, procedure() begin
                            panic('producer cancelled before drain');
-                         end)
+                         end procedure)
                        ]);
               end;
             end for;
 
             return Ok(Producer);
-          end, 1, 1));
+          end function, 1, 1));
         end;
       end for;
 
@@ -54,13 +54,13 @@ begin
                                      var Number: integer := Unwrap(Outcome);
                                      AssertTrue((Number >= 0) and (Number < 256));
                                      Seen[Number] := Seen[Number] + 1;
-                                   end),
+                                   end procedure),
                                    TimerCase(10000, procedure() begin
                                      panic('producer drain timed out');
-                                   end),
+                                   end procedure),
                                    CancellationCase(Token, procedure() begin
                                      panic('consumer cancelled before drain');
-                                   end)
+                                   end procedure)
                                  ]));
         end;
       end for;

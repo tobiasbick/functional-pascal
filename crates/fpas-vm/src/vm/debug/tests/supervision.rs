@@ -77,10 +77,10 @@ begin
   begin
     if Unwrap(Receive(Attempts)) then return Ok(42); end if;
     var Child: task := StartTaskInGroup(Group, procedure(ChildToken: CancellationToken)
-      begin Sleep(2); panic('owned child panic'); end);
-    Select([TaskCase(Child, procedure() begin panic('failed task selected'); end)]);
+      begin Sleep(2); panic('owned child panic'); end procedure);
+    Select([TaskCase(Child, procedure() begin panic('failed task selected'); end procedure)]);
     return Error('unreachable');
-  end, 1, 1);
+  end function, 1, 1);
   if Unwrap(Wait(Parent)) <> 42 then panic('resume failure was not retried'); end if;
   var Failures: array of TaskFailure := CloseTaskGroup(Group);
   if Length(Failures) <> 1 then panic('wrong group failure count'); end if;
@@ -102,12 +102,12 @@ begin
   var Child: task := StartTaskInGroup(Group, procedure(Token: CancellationToken)
   begin
     for Item: integer := 1 to 2 do
-      Select([SendCase(Queue, Item, procedure(Outcome: result of boolean, string) begin end)]); end for;
-  end);
+      Select([SendCase(Queue, Item, procedure(Outcome: result of boolean, string) begin end procedure)]); end for;
+  end procedure);
   mutable var Total: integer := 0;
   for Item: integer := 1 to 2 do
     Select([ReceiveCase(Queue, procedure(Outcome: result of integer, string)
-      begin Total := Total + Unwrap(Outcome); end)]); end for;
+      begin Total := Total + Unwrap(Outcome); end procedure)]); end for;
   Wait(Child);
   if Total <> 3 then panic('delivery lost'); end if;
   if Length(CloseTaskGroup(Group)) <> 0 then panic('worker failed'); end if;
@@ -136,12 +136,12 @@ begin
   var Parent: task := StartSupervisedTask(G, function(Token: CancellationToken): result of integer, string
   begin
     var Child: task := StartTaskInGroup(G, function(ChildToken: CancellationToken): integer
-    begin Sleep(1); return 42; end);
+    begin Sleep(1); return 42; end function);
     var Answer: integer := Wait(Child);
     if not Unwrap(Receive(Steps)) then return Error('retry parent'); end if;
     return Ok(Answer);
-  end, 1, 1);
-  Select([TaskCase(Parent, procedure() begin end)]);
+  end function, 1, 1);
+  Select([TaskCase(Parent, procedure() begin end procedure)]);
   if Unwrap(Wait(Parent)) <> 42 then panic('nested result lost'); end if;
   if Length(CloseTaskGroup(G)) <> 0 then panic('transient attempt reported failure'); end if;
   CloseChannel(Steps);
@@ -159,7 +159,7 @@ begin
   var G: TaskGroup := CreateTaskGroup();
   var Attempts: channel of integer := CreateChannel(2);
   var Child: task := StartSupervisedTask(G, procedure(Token: CancellationToken)
-  begin Send(Attempts, 1); end, 1023, 60000);
+  begin Send(Attempts, 1); end procedure, 1023, 60000);
   Wait(Child);
   if Unwrap(Receive(Attempts)) <> 1 then panic('missing attempt'); end if;
   case Unwrap(TryReceive(Attempts)) of when Some(_): panic('success retried'); when None: begin end; end case;
@@ -177,7 +177,7 @@ uses Std.Tasks, Std.Arrays;
 begin
   var G: TaskGroup := CreateTaskGroup();
   var Child: task := StartSupervisedTask(G, function(Token: CancellationToken): integer
-  begin CancelTaskGroup(G); return 42; end, 1023, 60000);
+  begin CancelTaskGroup(G); return 42; end function, 1023, 60000);
   if Wait(Child) <> 42 then panic('successful value lost'); end if;
   if Length(CloseTaskGroup(G)) <> 0 then panic('success replaced with cancellation'); end if;
 end."#,
@@ -203,9 +203,9 @@ begin
     if Step = 0 then return Error('retryable'); end if;
     if Step = 1 then panic('retryable panic'); end if;
     return Ok(42);
-  end, 2, 1);
+  end function, 2, 1);
   mutable var Seen: boolean := false;
-  var Ready: WaitCase := TaskCase(Child, procedure() begin Seen := true; end);
+  var Ready: WaitCase := TaskCase(Child, procedure() begin Seen := true; end procedure);
   if Select([Ready]) <> 0 then panic('completion index'); end if;
   if not Seen then panic('missing completion'); end if;
   if Unwrap(Wait(Child)) <> 42 then panic('result lost'); end if;
@@ -225,7 +225,7 @@ begin
   var G: TaskGroup := CreateTaskGroup();
   var Attempts: channel of integer := CreateChannel(3);
   var Child: task := StartSupervisedTask(G, function(Token: CancellationToken): result of integer, string
-  begin Send(Attempts, 1); return Error('last failure'); end, 2, 0);
+  begin Send(Attempts, 1); return Error('last failure'); end function, 2, 0);
   case Wait(Child) of
     when Ok(_): panic('unexpected success');
     when Error(Message): if Message <> 'last failure' then panic('wrong final error'); end if;
@@ -248,7 +248,7 @@ begin
   var G: TaskGroup := CreateTaskGroup();
   var Attempts: channel of integer := CreateChannel(1);
   StartSupervisedTask(G, procedure(Token: CancellationToken)
-  begin Send(Attempts, 1); panic('last panic'); end, 2, 1);
+  begin Send(Attempts, 1); panic('last panic'); end procedure, 2, 1);
   for I: integer := 1 to 3 do Unwrap(Receive(Attempts)); end for;
   var Failures: array of TaskFailure := CloseTaskGroup(G);
   if Length(Failures) <> 1 then panic('failure count'); end if;
@@ -268,9 +268,9 @@ begin
   var G: TaskGroup := CreateTaskGroup();
   var Attempts: channel of boolean := CreateChannel(1);
   StartSupervisedTask(G, function(Token: CancellationToken): result of integer, string
-  begin Send(Attempts, true); return Error('retry later'); end, 3, 60000);
+  begin Send(Attempts, true); return Error('retry later'); end function, 3, 60000);
   Unwrap(Receive(Attempts));
-  Select([TimerCase(2, procedure() begin end)]);
+  Select([TimerCase(2, procedure() begin end procedure)]);
   CancelTaskGroup(G);
   var Failures: array of TaskFailure := CloseTaskGroup(G);
   if Length(Failures) <> 1 then panic('failure count'); end if;
@@ -289,7 +289,7 @@ begin
   var G: TaskGroup := CreateTaskGroup();
   var Started: channel of boolean := CreateChannel(1);
   StartSupervisedTask(G, procedure(Token: CancellationToken)
-  begin Send(Started, true); CloseTaskGroup(G); end, 3, 60000);
+  begin Send(Started, true); CloseTaskGroup(G); end procedure, 3, 60000);
   Unwrap(Receive(Started));
   var Failures: array of TaskFailure := CloseTaskGroup(G);
   if Length(Failures) <> 1 then panic('failure count'); end if;
@@ -307,7 +307,7 @@ uses Std.Tasks, Std.Arrays;
 begin
   var G: TaskGroup := CreateTaskGroup();
   var Child: task := StartSupervisedTask(G, function(Token: CancellationToken): result of integer, string
-  begin return Error('cancelled'); end, 0, 60000);
+  begin return Error('cancelled'); end function, 0, 60000);
   case Wait(Child) of when Ok(_): panic('unexpected success'); when Error(_): begin end; end case;
   var Failures: array of TaskFailure := CloseTaskGroup(G);
   if Length(Failures) <> 1 then panic('failure count'); end if;

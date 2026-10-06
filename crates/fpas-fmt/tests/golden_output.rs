@@ -62,7 +62,7 @@ fn short_record_literal_is_multiline() {
 fn logical_block_spacing() {
     common::assert_golden(
         "logical_block_spacing",
-        "program T; type Point = record X: integer; Y: integer; end record; begin var A: Point := record X := 3; Y := 4; end; var B: Point := record X := 10; Y := 20; end; var UpdatedB: Point := B with X := 11; end; A.Print(); if Ready then Save(); end if;\n// present result\nPresent(); if NeedsCount then Prepare(); end if; var Count: integer := 1; WriteLn(Count); if Done then Finish(); end if; end.",
+        "program T; type Point = record X: integer; Y: integer; end record; begin var A: Point := record X := 3; Y := 4; end; var B: Point := record X := 10; Y := 20; end; var UpdatedB: Point := B with X := 11; end with; A.Print(); if Ready then Save(); end if;\n// present result\nPresent(); if NeedsCount then Prepare(); end if; var Count: integer := 1; WriteLn(Count); if Done then Finish(); end if; end.",
         include_str!("golden/logical_block_spacing.expected.fpas"),
     );
 }
@@ -139,11 +139,11 @@ fn postfix_chaining_wraps_long_chain() {
 fn closure_literal_round_trips() {
     common::assert_round_trip(
         "closure_compact",
-        "program T; begin var F: procedure() := procedure() begin end; end.",
+        "program T; begin var F: procedure() := procedure() begin end procedure; end.",
     );
     common::assert_round_trip(
         "closure_multiline",
-        "program T;\nbegin\n  var Add: function(Value: integer): integer :=\n    function(Value: integer): integer\n    begin\n      return Value + 1;\n    end;\nend.",
+        "program T;\nbegin\n  var Add: function(Value: integer): integer :=\n    function(Value: integer): integer\n    begin\n      return Value + 1;\n    end function;\nend.",
     );
 }
 

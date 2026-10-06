@@ -21,7 +21,7 @@ pub(crate) fn check_find(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
         s::STD_ARRAY_FIND,
         2,
         args,
-        "Example: Std.Arrays.Find(Arr, function(X: integer): boolean begin return X > 0 end).",
+        "Example: Std.Arrays.Find(Arr, function(X: integer): boolean begin return X > 0 end function).",
         span,
     ) {
         return Ty::Error;
@@ -61,7 +61,7 @@ pub(crate) fn check_find_index(c: &mut Checker, args: &[&Expr], span: Span) -> T
         s::STD_ARRAY_FIND_INDEX,
         2,
         args,
-        "Example: Std.Arrays.FindIndex(Arr, function(X: integer): boolean begin return X > 0 end).",
+        "Example: Std.Arrays.FindIndex(Arr, function(X: integer): boolean begin return X > 0 end function).",
         span,
     ) {
         return Ty::Error;
@@ -104,7 +104,7 @@ pub(crate) fn check_any(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
         s::STD_ARRAY_ANY,
         2,
         args,
-        "Example: Std.Arrays.Any(Arr, function(X: integer): boolean begin return X > 0 end).",
+        "Example: Std.Arrays.Any(Arr, function(X: integer): boolean begin return X > 0 end function).",
         span,
     ) {
         return Ty::Error;
@@ -144,7 +144,7 @@ pub(crate) fn check_all(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
         s::STD_ARRAY_ALL,
         2,
         args,
-        "Example: Std.Arrays.All(Arr, function(X: integer): boolean begin return X > 0 end).",
+        "Example: Std.Arrays.All(Arr, function(X: integer): boolean begin return X > 0 end function).",
         span,
     ) {
         return Ty::Error;
@@ -184,7 +184,7 @@ pub(crate) fn check_for_each(c: &mut Checker, args: &[&Expr], span: Span) -> Ty 
         s::STD_ARRAY_FOR_EACH,
         2,
         args,
-        "Example: Std.Arrays.ForEach(Arr, procedure(X: integer) begin ... end).",
+        "Example: Std.Arrays.ForEach(Arr, procedure(X: integer) begin ... end procedure).",
         span,
     ) {
         return Ty::Error;

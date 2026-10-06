@@ -24,7 +24,7 @@ begin
         var Inbox: channel of integer := State.Inbox;
         Cmd.StartBackground(1, function(Token: CancellationToken): result of boolean, string begin
           return SendWithCancellation(Inbox, 1, Token);
-        end);
+        end function);
       end;
     when TuiMsg.Tick(Elapsed):
       begin
@@ -56,7 +56,7 @@ end function;
 function UpdateMessage(State: TickModel; Message: integer; Cmd: TuiCmdOutput): TickModel;
 begin
   Cmd.RequestTick(20);
-  return State with Replaced := true; end;
+  return State with Replaced := true; end with;
 end function;
 
 function View(State: TickModel): TuiElement;

@@ -17,7 +17,7 @@ begin
         Cmd.StartBackground(23, function(Token: CancellationToken): result of boolean, string begin
           Send(Ready, true);
           panic('expected Tui worker panic');
-        end);
+        end function);
         return State;
       end;
     when TuiMsg.BackgroundFailed(Id, Kind, Message, Code, Line, Column):

@@ -15,8 +15,10 @@ fn routine_sources(params: &str) -> Vec<String> {
         format!(
             "unit U; type R = record procedure Print({params}); begin end procedure; end record;\nend unit;"
         ),
-        format!("program P; begin Consume(function({params}): integer begin return 1; end); end."),
-        format!("program P; begin Consume(procedure({params}) begin end); end."),
+        format!(
+            "program P; begin Consume(function({params}): integer begin return 1; end function); end."
+        ),
+        format!("program P; begin Consume(procedure({params}) begin end procedure); end."),
         format!("unit U; type F = function({params}): integer;\nend unit;"),
         format!("unit U; type F = procedure({params});\nend unit;"),
     ]

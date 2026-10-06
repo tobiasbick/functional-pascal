@@ -23,7 +23,7 @@ begin
     end if;
 
     return Ok(42);
-  end, 2, 1);
+  end function, 2, 1);
   AssertEquals(0, WaitAny([Child]));
   AssertEquals(42, Unwrap(Wait(Child)));
   AssertEquals(0, Length(CloseTaskGroup(Group)));

@@ -4,7 +4,7 @@ use crate::tests::parse_with_errors;
 
 #[test]
 fn procedure_literal_assignment() {
-    match parse_expr("procedure()\n  begin\n    WriteLn(1);\n  end") {
+    match parse_expr("procedure()\n  begin\n    WriteLn(1);\n  end procedure") {
         Expr::Closure(closure) => {
             assert!(!closure.is_function);
             assert!(closure.params.is_empty());
@@ -16,7 +16,9 @@ fn procedure_literal_assignment() {
 
 #[test]
 fn function_literal_assignment() {
-    match parse_expr("function(Value: integer): integer\n  begin\n    return Value + 1;\n  end") {
+    match parse_expr(
+        "function(Value: integer): integer\n  begin\n    return Value + 1;\n  end function",
+    ) {
         Expr::Closure(closure) => {
             assert!(closure.is_function);
             assert_eq!(closure.params.len(), 1);
@@ -36,7 +38,7 @@ begin
   return function(): integer
   begin
     return 1;
-  end;
+  end function;
 end function;
 begin
 end.",
@@ -58,6 +60,6 @@ end.",
 #[test]
 fn missing_begin_recovers() {
     let (_program, errors) =
-        parse_with_errors("program T; begin var F: procedure() := procedure() end; end.");
+        parse_with_errors("program T; begin var F: procedure() := procedure() end procedure; end.");
     assert!(!errors.is_empty());
 }

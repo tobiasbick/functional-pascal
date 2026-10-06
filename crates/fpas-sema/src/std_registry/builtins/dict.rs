@@ -268,7 +268,7 @@ fn check_dict_map(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
                 s::STD_DICT_MAP,
                 args.len()
             ),
-            "Example: Std.Dictionaries.Map(D, function(V: integer): integer begin return V * 2 end).",
+            "Example: Std.Dictionaries.Map(D, function(V: integer): integer begin return V * 2 end function).",
             span,
         );
         return Ty::Error;
@@ -332,7 +332,7 @@ fn check_dict_filter(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
                 s::STD_DICT_FILTER,
                 args.len()
             ),
-            "Example: Std.Dictionaries.Filter(D, function(K: string; V: integer): boolean begin return V > 1 end).",
+            "Example: Std.Dictionaries.Filter(D, function(K: string; V: integer): boolean begin return V > 1 end function).",
             span,
         );
         return Ty::Error;

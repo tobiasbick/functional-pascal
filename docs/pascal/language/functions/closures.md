@@ -4,23 +4,34 @@ Anonymous `function` / `procedure` expressions create callable values that own a
 managed lexical environment. The value uses the existing function or procedure type
 whose signature matches the closure.
 
-Parameter and result annotations are mandatory. The final `end` belongs to the
-expression; surrounding syntax supplies any separator.
+Parameter and result annotations are mandatory. Anonymous functions close with
+`end function`; anonymous procedures close with `end procedure`. Their body
+statements require `;`, including the final statement before the named ending.
+An empty routine body remains valid.
+
+The expression has no terminating `;` of its own. An enclosing declaration,
+assignment, or `return` statement supplies its terminator. As a call argument,
+the named ending is followed by `,` or `)` without an intervening `;`:
 
 ```pascal
-mutable var Count: integer := 0;
+Apply(function(Value: integer): integer begin
+  return Value * 2;
+end function);
+```
 
-var Increment: procedure() :=
-  procedure()
-  begin
+Here the `;` after `)` terminates the call statement.
+
+```pascal
+mutable var
+  Count: integer := 0;
+
+var
+  Increment: procedure() := procedure() begin
     Count := Count + 1;
-  end;
-
-var AddBase: function(Value: integer): integer :=
-  function(Value: integer): integer
-  begin
+  end procedure;
+  AddBase: function(Value: integer): integer := function(Value: integer): integer begin
     return Count + Value;
-  end;
+  end function;
 ```
 
 Closures may be stored in variables and records, passed as arguments, returned from
@@ -48,11 +59,10 @@ the same cell. The cell survives until the final closure that references it is r
 function Counter(): function(): integer;
 begin
   mutable var Value: integer := 0;
-  return function(): integer
-  begin
+  return function(): integer begin
     Value := Value + 1;
     return Value;
-  end;
+  end function;
 end function;
 ```
 
@@ -66,10 +76,10 @@ when it is used as a first-class value (assigned, returned, or passed):
 
 ```pascal
 function MakeAdder(Base: integer): function(Value: integer): integer;
-  function Add(Value: integer): integer;
-  begin
-    return Base + Value;
-  end function;
+function Add(Value: integer): integer;
+begin
+  return Base + Value;
+end function;
 begin
   return Add;
 end function;
@@ -99,29 +109,23 @@ also makes the outer closure task-bound (the mutable cells are still reachable).
 ```pascal
 // Accepted: immutable capture
 var N: integer := 3;
-var Work: function(): integer :=
-  function(): integer
-  begin
-    return N * 2;
-  end;
+var Work: function(): integer := function(): integer begin
+  return N * 2;
+end function;
 var Handle: task := go Work();
-
 // Rejected: mutable capture
 mutable var Count: integer := 0;
-var Inc: procedure() :=
-  procedure()
-  begin
-    Count := Count + 1;
-  end;
-go Inc();  // Compile-time error
+var Inc: procedure() := procedure() begin
+  Count := Count + 1;
+end procedure;
 
+go Inc(); // Compile-time error
 // Rejected: nested task-bound capture
-var Outer: procedure() :=
-  procedure()
-  begin
-    Inc();
-  end;
-go Outer();  // Compile-time error — Outer captures task-bound Inc
+var Outer: procedure() := procedure() begin
+  Inc();
+end procedure;
+
+go Outer(); // Compile-time error — Outer captures task-bound Inc
 ```
 
 ## Panic and cleanup

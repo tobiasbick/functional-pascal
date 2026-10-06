@@ -107,7 +107,7 @@ begin
   return function(): string begin
     var Marker: string := Text;
     return Text;
-  end;
+  end function;
 end function;
 
 begin

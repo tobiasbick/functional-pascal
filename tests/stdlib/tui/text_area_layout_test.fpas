@@ -7,9 +7,9 @@ begin
   var App: TuiApplication := TuiApplication.OpenForTest(Size);
   App.RunIterations(Tree, function(State: TuiElement; Msg: TuiMsg; Cmd: TuiCmdOutput): TuiElement begin
     return State;
-  end, function(State: TuiElement): TuiElement begin
+  end function, function(State: TuiElement): TuiElement begin
     return State;
-  end, 0, 0);
+  end function, 0, 0);
   var Snapshot: TuiSurfaceSnapshot := App.SurfaceSnapshot();
   App.Close();
   return Snapshot;

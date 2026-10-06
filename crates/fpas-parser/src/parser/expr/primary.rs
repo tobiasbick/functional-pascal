@@ -1,9 +1,10 @@
 use super::super::Parser;
 use crate::ast::*;
-use fpas_diagnostics::codes::{PARSE_EMPTY_RECORD_UPDATE, PARSE_EXPECTED_EXPRESSION};
+use fpas_diagnostics::codes::PARSE_EXPECTED_EXPRESSION;
 use fpas_lexer::Token;
 
 impl Parser {
+    /// Parses a primary atom and its existing postfix suffixes.
     pub(in crate::parser) fn parse_primary(&mut self) -> Expr {
         let start = self.current_span();
         let atom = self.parse_primary_atom();
@@ -158,68 +159,5 @@ impl Parser {
         }
         self.expect(&Token::RBracket);
         Expr::ArrayLiteral(elements, self.span_from(start))
-    }
-
-    fn parse_record_literal(&mut self) -> Expr {
-        let start = self.current_span();
-        self.advance();
-        let fields = self.parse_field_init_list();
-        Expr::RecordLiteral {
-            fields,
-            span: self.span_from(start),
-        }
-    }
-
-    /// Parse `Field := Value;` initializers until `end`, then consume `end`.
-    ///
-    /// Shared by record literals and record update expressions.
-    fn parse_field_init_list(&mut self) -> Vec<FieldInit> {
-        let mut fields = Vec::new();
-        while !self.check(&Token::End) && !self.at_end() {
-            let field_position = self.pos;
-            let field_start = self.current_span();
-            let (name, _) = self
-                .expect_ident()
-                .unwrap_or_else(|| self.error_ident(field_start));
-            self.expect(&Token::ColonAssign);
-            let value = self.parse_expression();
-            self.expect_semi();
-            fields.push(FieldInit {
-                name,
-                value,
-                span: self.span_from(field_start),
-            });
-            // Missing expressions can leave a parent delimiter untouched. Let
-            // the caller recover instead of repeating diagnostics at that token.
-            if self.pos == field_position {
-                break;
-            }
-        }
-        self.expect(&Token::End);
-        fields
-    }
-
-    /// Parse a record update expression: `base with Field := Value; … end`.
-    ///
-    /// The `with` token has already been peeked but **not consumed** when this is called.
-    /// Consumes `with`, the field overrides, and `end`.
-    ///
-    /// **Documentation:** `docs/pascal/language/types/record-update.md`
-    pub(super) fn parse_record_update(&mut self, base: Expr, start: fpas_lexer::Span) -> Expr {
-        self.advance(); // consume `with`
-        if self.check(&Token::End) {
-            self.error_with_code(
-                PARSE_EMPTY_RECORD_UPDATE,
-                "Record update requires at least one field assignment",
-                "Add a field assignment, for example `Value with X := 1; end`, or use the original value directly.",
-                self.current_span(),
-            );
-        }
-        let fields = self.parse_field_init_list();
-        Expr::RecordUpdate {
-            base: Box::new(base),
-            fields,
-            span: self.span_from(start),
-        }
     }
 }

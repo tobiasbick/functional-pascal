@@ -62,7 +62,7 @@ retain `until` with the condition evaluated in the enclosing scope.
 Parser, semantic analysis, compiler, formatter, diagnostics, current
 documentation, FPAS authoring guidance, editor snippets and indentation,
 repository sources, embedded fixtures, and benchmark generators are migrated.
-Case arms and expression closers remain in AP13.5 and AP13.6.
+Case arms and expression closers are delivered by AP13.5 and AP13.6.
 
 Focused parser, scope, formatter, CLI, execution, and editor regressions pass.
 The FPAS suite passes 459 tests with one intended skip; all 22 example/app

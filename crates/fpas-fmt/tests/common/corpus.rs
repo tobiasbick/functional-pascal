@@ -81,7 +81,7 @@ pub const SOURCES: &[(&str, &str)] = &[
     ),
     (
         "nested_record_update",
-        "program T; type Point = record X: integer; Y: integer; end record; type Pair = record First: Point; Second: Point; end record; begin var P: Pair := record First := record X := 1; Y := 2; end; Second := record X := 3; Y := 4; end; end; var Q: Pair := P with First := P.First with X := 5; end; end; end.",
+        "program T; type Point = record X: integer; Y: integer; end record; type Pair = record First: Point; Second: Point; end record; begin var P: Pair := record First := record X := 1; Y := 2; end; Second := record X := 3; Y := 4; end; end; var Q: Pair := P with First := P.First with X := 5; end with; end with; end.",
     ),
     (
         "nested_option_result",
@@ -97,6 +97,6 @@ pub const SOURCES: &[(&str, &str)] = &[
     ),
     (
         "procedure_literal",
-        "program T; begin var Action: procedure() := procedure() begin return; end; end.",
+        "program T; begin var Action: procedure() := procedure() begin return; end procedure; end.",
     ),
 ];

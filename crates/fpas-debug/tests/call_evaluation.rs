@@ -173,7 +173,7 @@ begin
     function(Value: integer): integer
     begin
       return Base + Value;
-    end;
+    end function;
   mutable var Marker: integer := 0;
   Marker := Marker + 1;
 end.";

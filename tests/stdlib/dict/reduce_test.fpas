@@ -27,7 +27,7 @@ begin
     end if;
 
     return (Acc + Key) + IntToStr(Value);
-  end;
+  end function;
 
   AssertEquals('A1B2', Reduce(Current, '', Visit));
   AssertEquals(3, Length(Current));

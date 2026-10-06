@@ -228,7 +228,7 @@ bugs rather than adding a workaround to the program.
 | FP2007 | Invalid visibility | `program P; public const N: integer := 1; begin end.` | Remove `public` in a program. |
 | FP2008 | Invalid static placement | Top-level `static function F(): integer;` | Top-level `function F(): integer;` |
 | FP2009 | Nesting limit | Thousands of nested parentheses around `1` | Split the expression into shallow local bindings. |
-| FP2010 | Empty record update | `P with end` | `P with X := 1; end` |
+| FP2010 | Empty record update | `P with end with` | `P with X := 1; end with` |
 | FP2011 | Event accessor order | `event E: procedure() write Add read Get;` | `event E: procedure() read Get write Add;` |
 | FP2012 | Empty enum data list | `type E = enum A(); end;` | `type E = enum A; end;` |
 | FP2013 | Trailing enum field separator | `type E = enum A(X: integer;); end;` | `type E = enum A(X: integer); end;` |
@@ -247,7 +247,7 @@ Call arguments still use commas; commas inside types such as
 |---|---|---|---|
 | FP3001 | Unknown type | `var N: Missing := 1;` | `var N: integer := 1;` |
 | FP3002 | Duplicate declaration | Two `const N: integer := 1;` in one scope | Keep one declaration or give them different names. |
-| FP3003 | Unknown name | `Missing()` without a declaration | Declare `procedure Missing(); begin end;`. |
+| FP3003 | Unknown name | `Missing()` without a declaration | Declare `procedure Missing(); begin end procedure;`. |
 | FP3004 | Ambiguous imported name | `Length(Value)` with conflicting imported Length routines | `Std.Str.Length(Value)` for a string. |
 | FP3005 | Immutable assignment | `var N: integer := 1;` followed by `N := 2` | Declare `mutable var N: integer := 1;`. |
 | FP3006 | Type mismatch | `var N: integer := 'hello';` | `var N: integer := 1;` |

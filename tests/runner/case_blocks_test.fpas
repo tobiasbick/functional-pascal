@@ -52,7 +52,7 @@ begin
     end case;
 
     return Value;
-  end;
+  end function;
 end function;
 
 function MakeVariantReader(): function(): integer;
@@ -68,7 +68,7 @@ begin
     end case;
 
     return Value;
-  end;
+  end function;
 end function;
 
 begin

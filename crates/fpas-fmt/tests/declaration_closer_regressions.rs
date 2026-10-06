@@ -52,18 +52,19 @@ fn empty_unit_keeps_header_and_closer_comments_separate() {
 }
 
 #[test]
-fn declaration_endings_do_not_change_expression_or_scoping_endings() {
+fn declaration_and_expression_endings_preserve_plain_scoping_blocks() {
     let formatted = format(
         "program T; type R = record X: integer; end record;
         function F(): integer; begin begin return 1; end; end function;
         begin var A: R := record X := 1; end;
-        var B: R := A with X := 2; end;
-        var C: function(): integer := function(): integer begin return 3; end;
+        var B: R := A with X := 2; end with;
+        var C: function(): integer := function(): integer begin return 3; end function;
         end.",
     );
-    assert_eq!(formatted.matches("end function;").count(), 1);
+    assert_eq!(formatted.matches("end function;").count(), 2);
     assert_eq!(formatted.matches("end record;").count(), 1);
-    assert!(!formatted.contains("end with"));
+    assert!(formatted.contains("end with;"));
+    assert!(formatted.contains("return 1;\n  end;"), "{formatted}");
     assert!(formatted.ends_with("end.\n"));
 }
 

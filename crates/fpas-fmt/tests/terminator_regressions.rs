@@ -24,7 +24,7 @@ fn formatter_emits_all_terminators_and_preserves_comments() {
 
 #[test]
 fn anonymous_routine_body_is_terminated_inside_an_argument() {
-    let source = "program P; begin Consume(function(): integer begin return 1; end); end.";
+    let source = "program P; begin Consume(function(): integer begin return 1; end function); end.";
     common::assert_round_trip("anonymous routine body", source);
     let (unit, diagnostics) = parse_compilation_unit(source);
     assert!(diagnostics.is_empty(), "{diagnostics:#?}");

@@ -14,9 +14,9 @@ begin
   StartTaskInGroup(Workers, procedure(Token: CancellationToken) begin
     var Stop: WaitCase := CancellationCase(Token, procedure() begin
       WriteLn('Background worker stopped');
-    end);
+    end procedure);
     Select([Stop]);
-  end);
+  end procedure);
   // Close requests cooperative cancellation and waits for every registered worker.
   var Failures: array of TaskFailure := CloseTaskGroup(Workers);
   for Failure: TaskFailure in Failures do

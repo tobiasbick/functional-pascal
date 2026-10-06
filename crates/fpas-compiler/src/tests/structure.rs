@@ -191,7 +191,7 @@ fn string_append_reuses_dead_left_operands() {
 
 #[test]
 fn record_self_update_moves_the_dead_temporary_and_keeps_aliases() {
-    let source = "program SelfUpdate; type P = record A: integer; end record; begin mutable var R: P := record A := 1; end; var Copy: P := R; R := R with A := 2; end; if (R.A <> 2) or (Copy.A <> 1) then panic('wrong'); end if; end.";
+    let source = "program SelfUpdate; type P = record A: integer; end record; begin mutable var R: P := record A := 1; end; var Copy: P := R; R := R with A := 2; end with; if (R.A <> 2) or (Copy.A <> 1) then panic('wrong'); end if; end.";
     let program = parse_ok(source);
     let executable = crate::compile(&program).expect("record update compiles");
     assert!(

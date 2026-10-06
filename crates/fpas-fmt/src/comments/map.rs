@@ -98,7 +98,7 @@ impl CommentMap {
         self.header_anchors.get(&owner_start).copied()
     }
 
-    /// Byte offset of the named ending belonging to a declaration owner.
+    /// Byte offset of the named ending belonging to a declaration, statement, or expression.
     #[must_use]
     pub fn closer_anchor(&self, owner_start: usize) -> Option<usize> {
         self.closer_anchors.get(&owner_start).copied()

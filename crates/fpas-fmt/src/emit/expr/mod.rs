@@ -4,6 +4,7 @@ mod binary;
 mod closure;
 mod literal;
 mod postfix;
+mod record_update;
 
 use fpas_parser::{Designator, DesignatorPart, Expr, UnaryOp};
 
@@ -13,8 +14,7 @@ use super::Emitter;
 use super::wrap::{exceeds_width, measure_emit, text_width};
 use binary::{binary_op_spaced, binary_prec, emit_binary_with_break};
 use literal::{
-    emit_array_literal, emit_record_field_inits, emit_record_fields, format_real, format_string,
-    needs_space_after_negate, record_literal_end,
+    emit_array_literal, emit_record_fields, format_real, format_string, needs_space_after_negate,
 };
 use postfix::emit_postfix;
 
@@ -26,10 +26,12 @@ pub(crate) fn format_expr(expr: &Expr) -> String {
     emitter.finish()
 }
 
+/// Emits an expression, leaving any terminator to its statement or declaration owner.
 pub(crate) fn emit_expr(emitter: &mut Emitter, expr: &Expr, min_prec: u8, comments: &CommentMap) {
     emit_expr_impl(emitter, expr, min_prec, min_prec == 0, comments);
 }
 
+/// Emits an expression at the requested precedence and wrapping mode.
 pub(super) fn emit_expr_impl(
     emitter: &mut Emitter,
     expr: &Expr,
@@ -123,11 +125,8 @@ pub(super) fn emit_expr_impl(
             emitter.write("]");
         }
         Expr::RecordLiteral { fields, .. } => emit_record_fields(emitter, fields, comments),
-        Expr::RecordUpdate { base, fields, .. } => {
-            emit_expr(emitter, base, 0, comments);
-            emitter.write(" with ");
-            emit_record_field_inits(emitter, fields, comments);
-            emitter.write(record_literal_end(fields));
+        Expr::RecordUpdate { base, fields, span } => {
+            record_update::emit_record_update(emitter, base, fields, span.offset, comments);
         }
         Expr::ResultOk(inner, ..) => {
             emitter.write("Ok(");
@@ -167,6 +166,25 @@ pub(super) fn emit_expr_impl(
             comments,
         ),
         Expr::Error(..) => emitter.write("<error>"),
+    }
+}
+
+fn emit_expression_end(
+    emitter: &mut Emitter,
+    anchor: Option<usize>,
+    ending: &str,
+    comments: &CommentMap,
+) {
+    if let Some(anchor) = anchor {
+        crate::comments::emit_leading_comments(emitter, comments, anchor, false);
+    }
+    emitter.write_current_indent();
+    emitter.write(ending);
+    if let Some(anchor) = anchor {
+        crate::comments::emit_trailing_comments(emitter, comments, anchor);
+        if emitter.ends_with_newline() {
+            emitter.write_current_indent();
+        }
     }
 }
 
@@ -309,9 +327,9 @@ mod tests {
     #[test]
     fn nonempty_record_update_formats_field_assignment() {
         let formatted = expr_from_body(
-            "program T; type Point = record X: integer; end record; begin var Value: Point := Base with X := 1; end; end.",
+            "program T; type Point = record X: integer; end record; begin var Value: Point := Base with X := 1; end with; end.",
         );
-        assert_eq!(formatted, "Base with X := 1; end");
+        assert_eq!(formatted, "Base with X := 1; end with");
     }
 
     #[test]

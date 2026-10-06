@@ -42,7 +42,7 @@ fn stop_rejects_new_group_work() {
     let error = vm("program Test; uses Std.Server, Std.Results, Std.Tasks; begin
       var Life: ServerLifetime := Unwrap(CreateLifetime(10, false));
       RequestStop(Life);
-      StartTaskInGroup(GetWorkGroup(Life), function(Token: CancellationToken): boolean begin return true; end);
+      StartTaskInGroup(GetWorkGroup(Life), function(Token: CancellationToken): boolean begin return true; end function);
       end.").run().unwrap_err();
     assert!(
         error.message.contains("closing or cancelled"),

@@ -2,7 +2,9 @@
 //!
 //! **Documentation:** `docs/pascal/language/functions/declarations.md`,
 //! `docs/pascal/program-structure/units.md`,
-//! `docs/pascal/language/control-flow/README.md` (from the repository root).
+//! `docs/pascal/language/control-flow/README.md`,
+//! `docs/pascal/language/functions/closures.md`, and
+//! `docs/pascal/language/types/record-update.md` (from the repository root).
 
 use super::{Parser, token_display};
 use crate::error::parse_error;
@@ -27,19 +29,28 @@ impl Parser {
     /// Returns whether a closer was consumed. Enclosing named closers and the
     /// program's `end.` remain available to their owner when an inner closer is missing.
     pub(super) fn expect_block_end(&mut self, kind: &Token) -> bool {
+        self.expect_named_end(kind, ";")
+    }
+
+    /// Requires an expression's named ending without suggesting its own terminator.
+    pub(super) fn expect_expression_end(&mut self, kind: &Token) -> bool {
+        self.expect_named_end(kind, "")
+    }
+
+    fn expect_named_end(&mut self, kind: &Token, suffix: &str) -> bool {
         if self.check(&Token::End) && self.peek_token() == kind {
             self.advance();
             self.advance();
             return true;
         }
 
-        let expected = format!("end {};", token_display(kind));
+        let expected = format!("end {}{suffix}", token_display(kind));
         let found = if self.check(&Token::End) {
             match self.peek_token() {
                 Token::Semicolon => "end;".to_owned(),
                 Token::Dot => "end.".to_owned(),
                 Token::Eof => "end".to_owned(),
-                token => format!("end {};", token_display(token)),
+                token => format!("end {}{suffix}", token_display(token)),
             }
         } else {
             token_display(self.current_token()).into_owned()
@@ -74,7 +85,13 @@ impl Parser {
         if enclosing {
             return false;
         }
-        if matches!(self.peek_token(), Token::Semicolon | Token::Eof) {
+        if matches!(self.peek_token(), Token::Semicolon | Token::Eof)
+            || suffix.is_empty()
+                && matches!(
+                    self.peek_token(),
+                    Token::RParen | Token::RBracket | Token::Comma
+                )
+        {
             self.advance();
             return true;
         }
@@ -89,6 +106,7 @@ impl Parser {
                 | Token::Case
                 | Token::For
                 | Token::While
+                | Token::With
         ) || self
             .tokens
             .get(self.pos + 2)

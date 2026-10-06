@@ -32,7 +32,7 @@ begin
   var Changed: Holder := Original with
     Position := record X := 3; Y := 4; end;
     Points := [record X := 7; Y := 8; end];
-  end;
+  end with;
   WriteLn(Changed.Position.X);
   WriteLn(Changed.Position.Y);
   WriteLn(Changed.Points[0].X);

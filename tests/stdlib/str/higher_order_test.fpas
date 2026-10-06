@@ -41,7 +41,7 @@ begin
   var Observe: function(C: string): string := function(C: string): string begin
     Calls := Calls + 1;
     return C;
-  end;
+  end function;
 
   AssertEquals('', Map('', Observe));
   AssertEquals('', Filter('', KeepBase));

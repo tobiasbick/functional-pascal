@@ -20,7 +20,7 @@ type
     function ReadValue(Self: Counter): integer;
     public static function Create(): Counter;
     public function Current(Self: Counter): integer;
-  end function;
+  end record;
 ```
 
 The declaring unit may call `ReadValue`; importing units cannot. `Create` and

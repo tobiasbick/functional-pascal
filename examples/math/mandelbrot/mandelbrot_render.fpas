@@ -303,7 +303,7 @@ begin
 
       Std.Arrays.Push(Tasks, StartTaskInGroup(Group, function(WorkerToken: CancellationToken): array of TuiCell begin
         return RenderRowCellsCancellable(Request, Py, HostToken, WorkerToken);
-      end));
+      end function));
     end;
   end for;
   mutable var Cells: array of TuiCell := [];

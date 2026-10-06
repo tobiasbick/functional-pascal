@@ -54,7 +54,7 @@ From highest to lowest binding strength:
 | 3 | `+`, `-`, `or`, `xor` |
 | 4 | `=`, `<>`, `<`, `>`, `<=`, `>=`, `in` |
 
-Record update (`expr with Field := Value; … end`) binds tighter than binary operators because it is postfix on the primary expression.
+Record update (`expr with Field := Value; … end with`) binds tighter than binary operators because it is postfix on the primary expression.
 
 ## Logical / bitwise
 

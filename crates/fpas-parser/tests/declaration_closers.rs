@@ -39,14 +39,14 @@ fn declaration_keywords_are_case_insensitive() {
 }
 
 #[test]
-fn program_and_expression_closers_keep_their_current_forms() {
+fn program_closer_and_anonymous_expression_terminator_ownership_are_distinct() {
     parse_ok(
         "program Demo; type Handler = function(): integer;
         function F(): integer; begin begin return 1; end; end function;
         begin var Callback: Handler := function(): integer
             function Nested(): integer; begin return 2; end function;
-            begin return Nested(); end;
-        var Value: integer := Apply(procedure() begin return; end);
+            begin return Nested(); end function;
+        var Value: integer := Apply(procedure() begin return; end procedure);
         end.",
     );
 }

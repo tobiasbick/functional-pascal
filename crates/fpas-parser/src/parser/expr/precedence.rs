@@ -140,7 +140,7 @@ impl Parser {
         }
 
         let expr = self.parse_primary();
-        // Postfix record update: `base with Field := Value; … end`
+        // Postfix record update: `base with Field := Value; … end with`.
         if self.check(&Token::With) {
             self.parse_record_update(expr, start)
         } else {

@@ -61,7 +61,7 @@ fn dict_literal() {
 
 #[test]
 fn record_update() {
-    match parse_expr("P with X := 1; end") {
+    match parse_expr("P with X := 1; end with") {
         Expr::RecordUpdate { fields, .. } => {
             assert_eq!(fields.len(), 1);
             assert_eq!(fields[0].name, "X");
@@ -72,7 +72,7 @@ fn record_update() {
 
 #[test]
 fn empty_record_update_is_rejected() {
-    let (_, errors) = parse_with_errors("program T; begin return P with end; end.");
+    let (_, errors) = parse_with_errors("program T; begin return P with end with; end.");
     let diagnostic = errors.iter().find_map(|error| match error {
         ParseDiagnostic::Parser(diagnostic) if diagnostic.code == PARSE_EMPTY_RECORD_UPDATE => {
             Some(diagnostic)
@@ -85,7 +85,7 @@ fn empty_record_update_is_rejected() {
     assert_eq!(
         diagnostic.help.as_deref(),
         Some(
-            "Add a field assignment, for example `Value with X := 1; end`, or use the original value directly."
+            "Add a field assignment, for example `Value with X := 1; end with`, or use the original value directly."
         )
     );
 }
@@ -93,11 +93,11 @@ fn empty_record_update_is_rejected() {
 #[test]
 fn record_update_accepts_nested_contextual_literals_and_parenthesized_chaining() {
     for source in [
-        "P with Items := []; end",
-        "P with Tags := [:]; end",
-        "P with Child := record X := 1; end; end",
-        "P with Child := Q with X := 1; end; end",
-        "(P with X := 1; end) with Y := 2; end",
+        "P with Items := []; end with",
+        "P with Tags := [:]; end with",
+        "P with Child := record X := 1; end; end with",
+        "P with Child := Q with X := 1; end with; end with",
+        "(P with X := 1; end with) with Y := 2; end with",
     ] {
         assert!(
             matches!(parse_expr(source), Expr::RecordUpdate { .. }),
@@ -109,9 +109,9 @@ fn record_update_accepts_nested_contextual_literals_and_parenthesized_chaining()
 #[test]
 fn record_update_rejects_malformed_field_initializers() {
     for source in [
-        "P with X = 1; end",
-        "P with X := ; end",
-        "P with X := 1 Y := 2; end",
+        "P with X = 1; end with",
+        "P with X := ; end with",
+        "P with X := 1 Y := 2; end with",
         "P with X := 1;",
     ] {
         let program = format!("program T; begin return {source}; end.");

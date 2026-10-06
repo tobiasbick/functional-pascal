@@ -34,7 +34,7 @@ fn multiline_record_and_closure_array_elements_have_single_line_breaks() {
     assert!(!record_formatted.contains("\n\n  ]"), "{record_formatted}");
     common::assert_round_trip("record array", &record_formatted);
 
-    let closure_source = "program T; begin var Values: array of procedure() := [procedure() begin WriteLn('first'); end, procedure() begin WriteLn('second'); end]; end.";
+    let closure_source = "program T; begin var Values: array of procedure() := [procedure() begin WriteLn('first'); end procedure, procedure() begin WriteLn('second'); end procedure]; end.";
     let closure_formatted = format(closure_source);
     let closure_array = closure_formatted
         .split_once(":= [")

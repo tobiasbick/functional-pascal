@@ -119,7 +119,8 @@ var
   O: option of integer := Some(5);
   M: option of string := AndThen(O, PositiveToOptionString);
 
-// M = Some('5')```
+// M = Some('5')
+```
 
 ---
 

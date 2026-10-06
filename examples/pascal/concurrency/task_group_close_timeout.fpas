@@ -9,7 +9,7 @@ begin
   StartTaskInGroup(Group, procedure(Token: CancellationToken) begin
     // Intentionally not cancellable: the owner must release this cleanup gate.
     Unwrap(Receive(Release));
-  end);
+  end procedure);
   case CloseTaskGroupWithTimeout(Group, 0) of
     when Error(Message):
       begin

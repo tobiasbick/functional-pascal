@@ -1,0 +1,14 @@
+program ExpressionClosers;
+
+begin
+  Apply(function(Value: integer): integer
+  begin
+    return Value;
+  end function, procedure()
+  begin
+    null;
+  end procedure);
+  var Moved: Point := Original with
+    X := 1;
+  end with;
+end.

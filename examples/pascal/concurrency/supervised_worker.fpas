@@ -17,7 +17,7 @@ begin
     end if;
 
     return Ok('Worker completed');
-  end, 2, 10);
+  end function, 2, 10);
   // Wait retrieves the final result; intermediate failures remain inside the supervisor.
   WriteLn(Unwrap(Wait(Worker)));
   CloseTaskGroup(Workers);

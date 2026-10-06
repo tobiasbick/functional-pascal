@@ -119,7 +119,8 @@ var
   R: result of integer, string := Ok(10);
   M: result of string, string := AndThen(R, PositiveToResult);
 
-// M = Ok('10')```
+// M = Ok('10')
+```
 
 ---
 

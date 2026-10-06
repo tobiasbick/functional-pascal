@@ -125,7 +125,7 @@ fn check_result_map(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
         c.error_with_code(
             SEMA_WRONG_ARGUMENT_COUNT,
             format!("`{}` expects 2 arguments, got {}", s::STD_RESULT_MAP, args.len()),
-            "Example: Std.Results.Map(R, function(V: integer): string begin return IntToStr(V) end).",
+            "Example: Std.Results.Map(R, function(V: integer): string begin return IntToStr(V) end function).",
             span,
         );
         return Ty::Error;
@@ -167,7 +167,7 @@ fn check_result_and_then(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
         c.error_with_code(
             SEMA_WRONG_ARGUMENT_COUNT,
             format!("`{}` expects 2 arguments, got {}", s::STD_RESULT_AND_THEN, args.len()),
-            "Example: Std.Results.AndThen(R, function(V: integer): Result of string, string begin return Ok(IntToStr(V)) end).",
+            "Example: Std.Results.AndThen(R, function(V: integer): Result of string, string begin return Ok(IntToStr(V)) end function).",
             span,
         );
         return Ty::Error;
@@ -209,7 +209,7 @@ fn check_result_or_else(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
         c.error_with_code(
             SEMA_WRONG_ARGUMENT_COUNT,
             format!("`{}` expects 2 arguments, got {}", s::STD_RESULT_OR_ELSE, args.len()),
-            "Example: Std.Results.OrElse(R, function(E: string): Result of integer, string begin return Ok(0) end).",
+            "Example: Std.Results.OrElse(R, function(E: string): Result of integer, string begin return Ok(0) end function).",
             span,
         );
         return Ty::Error;
@@ -251,7 +251,7 @@ fn check_option_map(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
         c.error_with_code(
             SEMA_WRONG_ARGUMENT_COUNT,
             format!("`{}` expects 2 arguments, got {}", s::STD_OPTION_MAP, args.len()),
-            "Example: Std.Options.Map(O, function(V: integer): string begin return IntToStr(V) end).",
+            "Example: Std.Options.Map(O, function(V: integer): string begin return IntToStr(V) end function).",
             span,
         );
         return Ty::Error;
@@ -287,7 +287,7 @@ fn check_option_and_then(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
         c.error_with_code(
             SEMA_WRONG_ARGUMENT_COUNT,
             format!("`{}` expects 2 arguments, got {}", s::STD_OPTION_AND_THEN, args.len()),
-            "Example: Std.Options.AndThen(O, function(V: integer): Option of string begin return Some(IntToStr(V)) end).",
+            "Example: Std.Options.AndThen(O, function(V: integer): Option of string begin return Some(IntToStr(V)) end function).",
             span,
         );
         return Ty::Error;
@@ -329,7 +329,7 @@ fn check_option_or_else(c: &mut Checker, args: &[&Expr], span: Span) -> Ty {
         c.error_with_code(
             SEMA_WRONG_ARGUMENT_COUNT,
             format!("`{}` expects 2 arguments, got {}", s::STD_OPTION_OR_ELSE, args.len()),
-            "Example: Std.Options.OrElse(O, function(): Option of integer begin return Some(0) end).",
+            "Example: Std.Options.OrElse(O, function(): Option of integer begin return Some(0) end function).",
             span,
         );
         return Ty::Error;

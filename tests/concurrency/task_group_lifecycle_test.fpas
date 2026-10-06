@@ -23,9 +23,9 @@ begin
       end case;
 
       Send(Finished, true);
-    end);
+    end procedure);
     Send(Ready, true);
-  end);
+  end procedure);
   AssertTrue(Unwrap(Receive(Ready)));
   if RequestFirst then
     begin

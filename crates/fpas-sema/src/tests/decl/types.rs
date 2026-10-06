@@ -313,7 +313,7 @@ fn record_update_rejects_exact_duplicate_fields() {
         "program T; \
          type Point = record X: integer; Y: integer; end record; \
          var P: Point := record X := 1; Y := 2; end; \
-         var Q: Point := P with X := 3; X := 4; end; \
+         var Q: Point := P with X := 3; X := 4; end with; \
          begin end.",
     );
     assert_eq!(errors.len(), 1, "unexpected diagnostics: {errors:#?}");
@@ -325,7 +325,7 @@ fn record_update_rejects_case_only_duplicate_fields() {
         "program T; \
          type Point = record X: integer; Y: integer; end record; \
          var P: Point := record X := 1; Y := 2; end; \
-         var Q: Point := P with X := 3; x := 4; end; \
+         var Q: Point := P with X := 3; x := 4; end with; \
          begin end.",
     );
     assert_eq!(errors.len(), 1, "unexpected diagnostics: {errors:#?}");

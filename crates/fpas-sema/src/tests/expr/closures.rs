@@ -13,9 +13,9 @@ begin
       function(Count: integer): integer
       begin
         return Count;
-      end;
+      end function;
     return Invoke(5);
-  end;
+  end function;
 end function;
 begin
 end.",
@@ -46,7 +46,7 @@ begin
       var Copy: integer := Count;
     end;
     return 0;
-  end;
+  end function;
 end function;
 begin
 end.",
@@ -76,7 +76,7 @@ begin
       case N of
         when M if M > 0: return;
       end case;
-    end;
+    end procedure;
   go F();
 end.",
     );
@@ -109,12 +109,12 @@ begin
     procedure()
     begin
       Count := Count + 1;
-    end;
+    end procedure;
   var Outer: procedure() :=
     procedure()
     begin
       Inc();
-    end;
+    end procedure;
   go Outer();
 end.",
     );

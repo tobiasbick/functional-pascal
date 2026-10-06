@@ -49,7 +49,7 @@ Implemented locally on `codex/syntax-changes-2`. Named declarations require
 their matching closers, and units require `end unit;`. Repository sources,
 embedded fixtures, generators, templates, editor support, and current
 documentation are migrated. Anonymous routines and record-update expression
-closers remain in AP13.6. Delivery and applicable verification are complete
+closers are delivered by AP13.6. Delivery and applicable verification are complete
 on the working branch.
 
 Parser, formatter, CLI, editor, FPAS suite, and example/app project checks

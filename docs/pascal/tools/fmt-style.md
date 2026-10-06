@@ -27,6 +27,8 @@ Visual checklist:
 - `program` / `unit` header → **one blank line** → `uses` (if any) → **one blank line** → rest
 - Every **program** ends with `begin` … `end.` (period on `end`)
 - Every **function** / **procedure** / **method** body: `begin` … `end function;` or `end procedure;`
+- Anonymous routine expressions use `end function` / `end procedure`, and record
+  updates use `end with`; their enclosing syntax owns any final terminator
 - Every **unit** ends with `end unit;` after its declarations
 - Every **`if` / `elsif` / `else`** and **`for` / `while`** body is a statement list,
   indented one level and closed by `end if;`, `end for;`, or `end while;`
@@ -281,6 +283,8 @@ are rejected by the parser and must be written as `null;`.
 | `case` `else` branch | `else`, then an indented statement list |
 | `case` statement | arm lists followed by `end case;` |
 | named `function` / `procedure` body | `begin` … `end function;` / `end procedure;` |
+| anonymous `function` / `procedure` expression | `begin` … `end function` / `end procedure`, without its own terminator |
+| record update expression | `Base with Field := Value; end with`, without its own terminator |
 | program body | `begin` … `end.` |
 | `repeat` … `until` | statement list directly under `repeat` |
 | `record` / `enum` type | `record` … `end record;` / `enum` … `end enum;` |
@@ -343,8 +347,10 @@ Semicolons are **terminators**:
 - A `repeat` body's final statement ends with `;`, and `until Condition;`
   terminates the loop.
 - Expressions have no terminator of their own. An anonymous routine body uses
-  terminated statements; its closing `end` is followed directly by the call's
-  `)` or by the enclosing statement's terminator.
+  terminated statements and closes with `end function` or `end procedure`;
+  record updates close with `end with`. In arguments, the named ending is
+  followed by `,` or `)` without `;`. An enclosing statement or declaration
+  supplies its own terminator. Record-update fields retain every `;`.
 - Formal parameter lists keep `;` between parameters and have no trailing
   separator before `)`.
 - `case` arms: every body statement ends with `;`, including the last one
@@ -356,6 +362,12 @@ Semicolons are **terminators**:
   modifier appears before `static`.
 
 ## Spacing
+
+Record updates keep compact field assignments when there are no attached
+comments. With comments, fields are indented one level below `with`, and
+`end with` returns to the expression's enclosing indentation. Comments before,
+inside, and after a named expression ending are preserved. An empty anonymous
+routine stays compact unless comments require separate lines.
 
 - One space after keywords that introduce a clause: `if cond then`, `for i := 1 to 10 do`, `while cond do`.
 - No space before `:` in type annotations (`name: integer`).

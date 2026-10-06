@@ -118,6 +118,7 @@ macro_rules! std_symbol {
 
 mod args;
 mod array;
+mod bits;
 mod console;
 mod conv;
 mod crypto;
@@ -142,6 +143,7 @@ mod toml;
 
 pub use args::*;
 pub use array::*;
+pub use bits::*;
 pub use console::*;
 pub use conv::*;
 pub use crypto::*;

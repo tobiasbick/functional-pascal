@@ -4,6 +4,7 @@
 //! `docs/pascal/language/error-handling/README.md`, and
 //! `docs/pascal/language/types/channels.md` (from the repository root).
 
+mod boolean;
 mod bound_method;
 mod calls;
 mod closure;

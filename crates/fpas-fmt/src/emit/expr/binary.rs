@@ -5,7 +5,9 @@ use fpas_parser::{BinaryOp, Expr};
 use crate::comments::CommentMap;
 
 use super::super::Emitter;
+use super::precedence::operand_prec;
 
+/// Breaks a binary expression while retaining its required operand parentheses.
 pub(super) fn emit_binary_with_break(
     emitter: &mut Emitter,
     expr: &Expr,
@@ -19,32 +21,24 @@ pub(super) fn emit_binary_with_break(
         super::emit_expr_impl(emitter, expr, 0, false, comments);
         return;
     };
-    let prec = binary_prec(*op);
-    super::emit_expr_impl(emitter, left, prec + 1, false, comments);
+    super::emit_expr_impl(
+        emitter,
+        left,
+        operand_prec(*op, left, false),
+        false,
+        comments,
+    );
     let op_token = binary_op_spaced(*op).trim();
     emitter.write(" ");
     emitter.write(op_token);
     emitter.newline_to_column(base_column);
-    super::emit_expr_impl(emitter, right, prec, false, comments);
-}
-pub(super) fn binary_prec(op: BinaryOp) -> u8 {
-    match op {
-        BinaryOp::Mul
-        | BinaryOp::RealDiv
-        | BinaryOp::IntDiv
-        | BinaryOp::Mod
-        | BinaryOp::And
-        | BinaryOp::Shl
-        | BinaryOp::Shr => 3,
-        BinaryOp::Add | BinaryOp::Sub | BinaryOp::Or | BinaryOp::Xor => 2,
-        BinaryOp::Eq
-        | BinaryOp::NotEq
-        | BinaryOp::Lt
-        | BinaryOp::Gt
-        | BinaryOp::LtEq
-        | BinaryOp::GtEq
-        | BinaryOp::In => 1,
-    }
+    super::emit_expr_impl(
+        emitter,
+        right,
+        operand_prec(*op, right, true),
+        false,
+        comments,
+    );
 }
 
 pub(super) fn binary_op_spaced(op: BinaryOp) -> &'static str {
@@ -54,8 +48,6 @@ pub(super) fn binary_op_spaced(op: BinaryOp) -> &'static str {
         BinaryOp::IntDiv => " div ",
         BinaryOp::Mod => " mod ",
         BinaryOp::And => " and ",
-        BinaryOp::Shl => " shl ",
-        BinaryOp::Shr => " shr ",
         BinaryOp::Add => " + ",
         BinaryOp::Sub => " - ",
         BinaryOp::Or => " or ",

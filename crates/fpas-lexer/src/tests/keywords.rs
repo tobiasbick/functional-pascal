@@ -5,7 +5,7 @@ use crate::Token;
 fn all_reserved_keywords() {
     let input = "program unit uses const var mutable function procedure begin end return \
                  if then else elsif case when of for to downto in in do while \
-                 repeat until and or not xor div mod shl shr \
+                 repeat until and or not xor div mod \
                  true false type record enum array channel task panic break continue \
                  public result option ok error some none try \
                  go dict with static property event read write comparable numeric printable self nil null";
@@ -46,8 +46,6 @@ fn all_reserved_keywords() {
             Token::Xor,
             Token::Div,
             Token::Mod,
-            Token::Shl,
-            Token::Shr,
             Token::True,
             Token::False,
             Token::Type,
@@ -219,4 +217,28 @@ fn keywords_surrounded_by_symbols() {
         vec![Token::LParen, Token::Begin, Token::RParen]
     );
     assert_eq!(toks("not="), vec![Token::Not, Token::Equal]);
+}
+
+#[test]
+fn retired_shift_names_are_identifiers_in_every_ascii_letter_case() {
+    for name in ["shl", "shr"] {
+        for mask in 0..8 {
+            let spelling = name
+                .bytes()
+                .enumerate()
+                .map(|(index, byte)| {
+                    char::from(if mask & (1 << index) == 0 {
+                        byte
+                    } else {
+                        byte.to_ascii_uppercase()
+                    })
+                })
+                .collect::<String>();
+            assert_eq!(
+                toks(&spelling),
+                vec![Token::Ident(spelling.clone())],
+                "{spelling}"
+            );
+        }
+    }
 }

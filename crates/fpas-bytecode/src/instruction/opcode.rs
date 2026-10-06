@@ -71,16 +71,6 @@ pub enum Opcode {
     /// Concatenate strings. Auxiliary 1 marks the left register as dead after this instruction,
     /// so its buffer may be reused for the result.
     ConcatString = 25,
-    /// Shift an integer left.
-    ShiftLeftInteger = 26,
-    /// Shift an integer right.
-    ShiftRightInteger = 27,
-    /// Apply integer bitwise AND.
-    BitAndInteger = 28,
-    /// Apply integer bitwise OR.
-    BitOrInteger = 29,
-    /// Apply integer bitwise XOR.
-    BitXorInteger = 30,
     /// Test integer equality.
     EqualInteger = 31,
     /// Test integer inequality.
@@ -244,7 +234,7 @@ pub enum Opcode {
 
 impl Opcode {
     /// Exhaustive opcode inventory used by format and verifier tests.
-    pub const ALL: [Self; 107] = [
+    pub const ALL: [Self; 102] = [
         Self::LoadConstant,
         Self::LoadUnit,
         Self::Move,
@@ -271,11 +261,6 @@ impl Opcode {
         Self::LessEqualDynamic,
         Self::GreaterEqualDynamic,
         Self::ConcatString,
-        Self::ShiftLeftInteger,
-        Self::ShiftRightInteger,
-        Self::BitAndInteger,
-        Self::BitOrInteger,
-        Self::BitXorInteger,
         Self::EqualInteger,
         Self::NotEqualInteger,
         Self::LessInteger,

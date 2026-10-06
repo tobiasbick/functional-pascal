@@ -33,8 +33,6 @@ const KEYWORDS: &[&str] = &[
     "xor",
     "div",
     "mod",
-    "shl",
-    "shr",
     "true",
     "false",
     "type",

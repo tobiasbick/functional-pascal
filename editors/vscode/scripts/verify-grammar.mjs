@@ -188,6 +188,8 @@ async function verifyNegativeScopes(grammar) {
   );
   assertNoKeywordScope(tokenAt(fixture, "gifted: boolean", "gifted"));
   assertNoKeywordScope(tokenAt(fixture, "endif: integer", "endif"));
+  assertNoKeywordScope(tokenAt(fixture, "var shl", "shl"));
+  assertNoKeywordScope(tokenAt(fixture, "var SHR", "SHR"));
   const constantName = tokenAt(
     fixture,
     "RecordCount: integer := 1",

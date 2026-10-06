@@ -4,6 +4,9 @@
 //! operation that would raise a runtime error (division or modulo by zero, integer overflow in
 //! `div`, `mod`, or negation, real division by zero) is left in place so the error still occurs.
 //! A folded instruction keeps its index, so debugger sequence points stay valid.
+//! Boolean short-circuiting is already lowered to branches before this pass; folding an
+//! instruction never evaluates it or moves it out of its guarded block.
+//! Documentation: `docs/pascal/language/basics/operators.md#evaluation-order`.
 
 use std::collections::BTreeMap;
 
@@ -49,9 +52,6 @@ fn fold_binary(operation: BinaryOperation, left: &Constant, right: &Constant) ->
         (Op::MultiplyInteger, Integer(left), Integer(right)) => Integer(left.wrapping_mul(*right)),
         (Op::DivideInteger, Integer(left), Integer(right)) => Integer(left.checked_div(*right)?),
         (Op::RemainderInteger, Integer(left), Integer(right)) => Integer(left.checked_rem(*right)?),
-        (Op::BitAndInteger, Integer(left), Integer(right)) => Integer(left & right),
-        (Op::BitOrInteger, Integer(left), Integer(right)) => Integer(left | right),
-        (Op::BitXorInteger, Integer(left), Integer(right)) => Integer(left ^ right),
         (Op::LessThanInteger, Integer(left), Integer(right)) => Boolean(left < right),
         (Op::GreaterThanInteger, Integer(left), Integer(right)) => Boolean(left > right),
         (Op::LessEqualInteger, Integer(left), Integer(right)) => Boolean(left <= right),

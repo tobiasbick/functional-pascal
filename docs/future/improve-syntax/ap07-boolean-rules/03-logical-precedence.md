@@ -8,6 +8,14 @@ Implement the Q03 precedence table: comparisons above `not`, `not` above the
 binary logical operators, same-operator logical chains only, and
 non-associative comparisons.
 
+## Work package boundaries
+
+- Integer bit and shift operator removal belongs to AP07.4. The completed
+  grammar has no infix shifts; integer bit operations use `Std.Bits`.
+- The Q03 table reserves comparison-level precedence for `is`; AP20.3
+  introduces its keyword, pattern syntax, and semantics. AP07.3 does not
+  introduce the pattern test.
+
 ## Prerequisites
 
 None. AP07.1 is recommended first so that migrated expressions are tested with
@@ -25,7 +33,8 @@ the final evaluation rule.
 
 - `crates/fpas-parser/src/parser/expr/precedence.rs`.
 - `crates/fpas-fmt/src/emit/expr/`.
-- `crates/fpas-vm/src/vm/debug/` expression translation.
+- `crates/fpas-debug/src/evaluation/` shared expression parsing and watch
+  regressions.
 
 ## Migration
 
@@ -44,3 +53,19 @@ the final evaluation rule.
 - Parser tests for every precedence boundary, all mixed logical pairs,
   parentheses, `not` placement, and comparison chains.
 - Formatter round trip; FPAS suite unchanged.
+
+## Implementation result
+
+- Logical chains and negation have a dedicated parser module. Mixed chains
+  report the offending operator and show both parenthesized alternatives;
+  comparison-chain recovery retains the following statement.
+- The formatter preserves mixed logical groups, nested comparisons, and
+  negated operands, including generated ASTs without explicit parentheses
+  and expressions wrapped across lines.
+- Debugger evaluation already uses the shared expression parser. No separate
+  VM translation or precedence implementation is needed; watch regressions
+  verify grouping and parse-error propagation through the protocol.
+- An audit using the previous parser's AST covered repository FPAS sources,
+  embedded fixtures, current documentation examples, and source generators.
+  Existing logical expressions already preserve their grouping under the new
+  table. No semantic source migration or latent regrouping bug was found.

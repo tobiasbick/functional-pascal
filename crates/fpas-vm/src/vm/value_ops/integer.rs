@@ -1,10 +1,13 @@
-//! Integer arithmetic, bitwise, shift, and comparison primitives.
+//! Integer arithmetic and comparison primitives.
+//!
+//! Operator semantics: `docs/pascal/language/basics/operators.md`.
 
 use fpas_bytecode::Value;
 
 use super::{BinaryOperation, UnaryOperation, ValueOperationError};
 
 #[inline]
+/// Applies numeric negation to an integer.
 pub(super) fn unary(operation: UnaryOperation, value: i64) -> Result<Value, ValueOperationError> {
     match operation {
         UnaryOperation::Negate => value.checked_neg().map(Value::Integer).ok_or_else(|| {
@@ -18,6 +21,7 @@ pub(super) fn unary(operation: UnaryOperation, value: i64) -> Result<Value, Valu
 }
 
 #[inline]
+/// Applies integer arithmetic or comparisons to two integer values.
 pub(super) fn binary(
     operation: BinaryOperation,
     left: i64,
@@ -29,17 +33,17 @@ pub(super) fn binary(
         BinaryOperation::Multiply => Ok(Value::Integer(left.wrapping_mul(right))),
         BinaryOperation::IntegerDivide => integer_divide(left, right),
         BinaryOperation::Modulo => modulo(left, right),
-        BinaryOperation::And => Ok(Value::Integer(left & right)),
-        BinaryOperation::Or => Ok(Value::Integer(left | right)),
-        BinaryOperation::Xor => Ok(Value::Integer(left ^ right)),
-        BinaryOperation::ShiftLeft | BinaryOperation::ShiftRight => shift(operation, left, right),
         BinaryOperation::Equal => Ok(Value::Boolean(left == right)),
         BinaryOperation::NotEqual => Ok(Value::Boolean(left != right)),
         BinaryOperation::Less => Ok(Value::Boolean(left < right)),
         BinaryOperation::LessEqual => Ok(Value::Boolean(left <= right)),
         BinaryOperation::Greater => Ok(Value::Boolean(left > right)),
         BinaryOperation::GreaterEqual => Ok(Value::Boolean(left >= right)),
-        BinaryOperation::RealDivide | BinaryOperation::In => {
+        BinaryOperation::RealDivide
+        | BinaryOperation::In
+        | BinaryOperation::And
+        | BinaryOperation::Or
+        | BinaryOperation::Xor => {
             unreachable!("non-integer operation routed to integer value operations")
         }
     }
@@ -73,25 +77,4 @@ fn modulo(left: i64, right: i64) -> Result<Value, ValueOperationError> {
             "Avoid applying `mod` with the minimum integer value and `-1`.",
         )
     })
-}
-
-fn shift(
-    operation: BinaryOperation,
-    value: i64,
-    amount: i64,
-) -> Result<Value, ValueOperationError> {
-    let amount = u32::try_from(amount)
-        .ok()
-        .filter(|amount| *amount < 64)
-        .ok_or_else(|| {
-            ValueOperationError::domain(
-                format!("Shift amount {amount} is out of range (0..63)"),
-                "Use a shift amount between 0 and 63 inclusive.",
-            )
-        })?;
-    Ok(Value::Integer(match operation {
-        BinaryOperation::ShiftLeft => value.wrapping_shl(amount),
-        BinaryOperation::ShiftRight => value.wrapping_shr(amount),
-        _ => unreachable!("shift operation checked by caller"),
-    }))
 }

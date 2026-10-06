@@ -15,8 +15,6 @@ fn binary_op_symbol(op: BinaryOp) -> &'static str {
         BinaryOp::And => "and",
         BinaryOp::Or => "or",
         BinaryOp::Xor => "xor",
-        BinaryOp::Shl => "shl",
-        BinaryOp::Shr => "shr",
         BinaryOp::Eq => "=",
         BinaryOp::NotEq => "<>",
         BinaryOp::Lt => "<",
@@ -28,6 +26,7 @@ fn binary_op_symbol(op: BinaryOp) -> &'static str {
 }
 
 impl Checker {
+    /// Checks arithmetic negation or Boolean-only logical negation.
     pub(super) fn check_unary_expr(&mut self, op: UnaryOp, operand: &Expr, span: Span) -> Ty {
         let operand_ty = self.check_expr(operand);
 
@@ -45,24 +44,11 @@ impl Checker {
                     Ty::Error
                 }
             }
-            UnaryOp::Not => {
-                if operand_ty.compatible_with(&Ty::Boolean)
-                    || operand_ty.compatible_with(&Ty::Integer)
-                {
-                    operand_ty
-                } else {
-                    self.error_with_code(
-                        SEMA_TYPE_MISMATCH,
-                        "`not` requires a boolean or integer operand",
-                        "Use boolean or integer values.",
-                        span,
-                    );
-                    Ty::Error
-                }
-            }
+            UnaryOp::Not => self.check_boolean_not(&operand_ty, span),
         }
     }
 
+    /// Checks binary operands with resolved visible types and Boolean-only logical operators.
     pub(super) fn check_binary_expr(
         &mut self,
         op: BinaryOp,
@@ -109,7 +95,7 @@ impl Checker {
                 }
             }
 
-            BinaryOp::IntDiv | BinaryOp::Mod | BinaryOp::Shl | BinaryOp::Shr => {
+            BinaryOp::IntDiv | BinaryOp::Mod => {
                 if *left == Ty::Integer && *right == Ty::Integer {
                     Ty::Integer
                 } else {
@@ -127,22 +113,7 @@ impl Checker {
             }
 
             BinaryOp::And | BinaryOp::Or | BinaryOp::Xor => {
-                if *left == Ty::Boolean && *right == Ty::Boolean {
-                    Ty::Boolean
-                } else if *left == Ty::Integer && *right == Ty::Integer {
-                    Ty::Integer
-                } else {
-                    self.error_with_code(
-                        SEMA_TYPE_MISMATCH,
-                        format!(
-                            "Operator `{}` requires boolean or integer operands",
-                            binary_op_symbol(op)
-                        ),
-                        "Both sides must be the same type (boolean or integer).",
-                        span,
-                    );
-                    Ty::Error
-                }
+                self.check_boolean_binary(op, left, right, span)
             }
 
             BinaryOp::Eq | BinaryOp::NotEq => {

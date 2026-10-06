@@ -10,7 +10,7 @@ then      else      case      of
 for       to        downto    in
 do        while     repeat    until
 and       or        not       xor
-div       mod       shl       shr
+div       mod
 true      false     type      record
 enum      array     channel   task
 panic     break     continue  result
@@ -59,3 +59,6 @@ END.
 
 - [Overview](overview.md)
 - [Basics](../language/basics/README.md)
+
+`shl` and `shr` are ordinary identifiers. Integer bit operations use
+[Std.Bits](../std/numeric/bits.md); logical operators require boolean operands.

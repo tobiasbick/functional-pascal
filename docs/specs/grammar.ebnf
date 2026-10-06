@@ -87,7 +87,7 @@ keyword         = 'program'   | 'unit'      | 'uses'      | 'const'
                 | 'for'       | 'to'        | 'downto'    | 'in'
                 | 'do'        | 'while'     | 'repeat'    | 'until'
                 | 'and'       | 'or'        | 'not'       | 'xor'
-                | 'div'       | 'mod'       | 'shl'       | 'shr'
+                | 'div'       | 'mod'
                 | 'true'      | 'false'     | 'type'      | 'record'
                 | 'enum'      | 'array'     | 'panic'
                 | 'break'     | 'continue'  | 'result'    | 'option'
@@ -467,14 +467,25 @@ postfix_expr_stmt   = primary_atom postfix_suffix { postfix_suffix } ;
 
 (* ---- 2.7 Expressions ------------------------------------------ *)
 
-(* Operator precedence (highest → lowest), classical Pascal:        *)
+(* Operator precedence (highest → lowest):                          *)
 (*                                                                  *)
-(*   1. not, unary -                   prefix                       *)
-(*   2. *  /  div  mod  and  shl  shr  multiplicative               *)
-(*   3. +  -  or  xor                  additive                     *)
-(*   4. =  <>  <  >  <=  >=  in       comparison                   *)
+(*   1. call, index, field, with ... end with   postfix              *)
+(*   2. unary -, try                           prefix               *)
+(*   3. *  /  div  mod                          multiplicative       *)
+(*   4. +  -                                   additive             *)
+(*   5. =  <>  <  >  <=  >=  in                 non-associative      *)
+(*   6. not                                    prefix               *)
+(*   7. and, or, xor                           same-operator chains *)
 
-expression          = comparison_expr ;
+expression          = logical_expr ;
+
+(* Logical operators require boolean operands.                         *)
+(* A logical chain contains one operator kind. Parentheses allow mixing. *)
+logical_expr        = not_expr [ and_tail | or_tail | xor_tail ] ;
+and_tail            = 'and' not_expr { 'and' not_expr } ;
+or_tail             = 'or' not_expr { 'or' not_expr } ;
+xor_tail            = 'xor' not_expr { 'xor' not_expr } ;
+not_expr            = 'not' not_expr | comparison_expr ;
 
 comparison_expr     = additive_expr [ comparison_op additive_expr ] ;
 comparison_op       = '=' | '<>' | '<' | '>' | '<=' | '>=' | 'in' ;
@@ -482,13 +493,12 @@ comparison_op       = '=' | '<>' | '<' | '>' | '<=' | '>=' | 'in' ;
 (* `in` tests membership: value in array, key in dict, or substring in string. *)
 
 additive_expr       = mult_expr { additive_op mult_expr } ;
-additive_op         = '+' | '-' | 'or' | 'xor' ;
+additive_op         = '+' | '-' ;
 
 mult_expr           = unary_expr { mult_op unary_expr } ;
-mult_op             = '*' | '/' | 'div' | 'mod' | 'and' | 'shl' | 'shr' ;
+mult_op             = '*' | '/' | 'div' | 'mod' ;
 
-unary_expr          = 'not' unary_expr
-                    | '-' unary_expr
+unary_expr          = '-' unary_expr
                     | 'try' unary_expr                   (* error propagation *)
                     | primary_expr [ record_update ] ;
 

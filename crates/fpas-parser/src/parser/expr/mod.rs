@@ -1,8 +1,10 @@
 mod closure;
+mod logical;
 mod postfix;
 mod precedence;
 mod primary;
 mod records;
+mod retired_shifts;
 
 use super::Parser;
 use crate::ast::*;
@@ -31,8 +33,12 @@ impl Parser {
         (expression, self.errors)
     }
 
+    /// Parses the operator table in `docs/pascal/language/basics/operators.md`.
     pub(crate) fn parse_expression(&mut self) -> Expr {
-        self.with_nesting(Self::parse_comparison)
+        self.with_nesting(|parser| {
+            let expression = parser.parse_logical();
+            parser.reject_retired_shifts(expression)
+        })
     }
 
     pub(crate) fn parse_designator(&mut self) -> Designator {

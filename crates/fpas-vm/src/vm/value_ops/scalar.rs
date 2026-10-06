@@ -1,9 +1,12 @@
-//! Scalar arithmetic, Boolean, bitwise, and shift operations.
+//! Scalar arithmetic and Boolean operations.
+//!
+//! Operator semantics: `docs/pascal/language/basics/operators.md`.
 
 use fpas_bytecode::{SharedStr, Value};
 
 use super::{BinaryOperation, UnaryOperation, ValueOperationError};
 
+/// Applies numeric or Boolean negation with runtime type checks.
 pub(super) fn unary(
     operation: UnaryOperation,
     value: &Value,
@@ -21,11 +24,16 @@ pub(super) fn unary(
         )),
         (UnaryOperation::Not, actual) => Err(ValueOperationError::type_mismatch(
             format!("Cannot apply `not` to value of type {}", actual.type_name()),
-            "Apply `not` only to a Boolean value.",
+            if matches!(actual, Value::Integer(_)) {
+                "Use `Std.Bits.BitNot(Value)` and import `uses Std.Bits;` for integer bits."
+            } else {
+                "Apply `not` only to a Boolean value."
+            },
         )),
     }
 }
 
+/// Applies arithmetic or Boolean operators with runtime type checks.
 pub(super) fn binary(
     operation: BinaryOperation,
     left: &Value,
@@ -39,9 +47,8 @@ pub(super) fn binary(
         BinaryOperation::IntegerDivide => integer_divide(left, right),
         BinaryOperation::Modulo => modulo(left, right),
         BinaryOperation::And | BinaryOperation::Or | BinaryOperation::Xor => {
-            boolean_or_bitwise(operation, left, right)
+            boolean(operation, left, right)
         }
-        BinaryOperation::ShiftLeft | BinaryOperation::ShiftRight => shift(operation, left, right),
         _ => unreachable!("comparison operation routed to scalar value operations"),
     }
 }
@@ -101,7 +108,7 @@ fn modulo(left: &Value, right: &Value) -> Result<Value, ValueOperationError> {
     super::integer::binary(BinaryOperation::Modulo, *left, *right)
 }
 
-fn boolean_or_bitwise(
+fn boolean(
     operation: BinaryOperation,
     left: &Value,
     right: &Value,
@@ -113,29 +120,28 @@ fn boolean_or_bitwise(
             BinaryOperation::Xor => *left ^ *right,
             _ => unreachable!("Boolean operation checked by caller"),
         })),
-        (Value::Integer(left), Value::Integer(right)) => {
-            super::integer::binary(operation, *left, *right)
-        }
         _ => Err(ValueOperationError::type_mismatch(
             format!(
-                "Operator requires two Boolean or two integer operands, got {} and {}",
+                "Operator requires two Boolean operands, got {} and {}",
                 left.type_name(),
                 right.type_name()
             ),
-            "Use matching Boolean or integer operands.",
+            if matches!((left, right), (Value::Integer(_), Value::Integer(_))) {
+                let function = match operation {
+                    BinaryOperation::And => "BitAnd",
+                    BinaryOperation::Or => "BitOr",
+                    BinaryOperation::Xor => "BitXor",
+                    _ => unreachable!("Boolean operation checked by caller"),
+                };
+                format!(
+                    "Use `Std.Bits.{function}(Left, Right)` and import `uses Std.Bits;` for integer bits."
+                )
+            } else {
+                "Use two Boolean operands; compare numeric values explicitly, such as `Count > 0`."
+                    .to_string()
+            },
         )),
     }
-}
-
-fn shift(
-    operation: BinaryOperation,
-    left: &Value,
-    right: &Value,
-) -> Result<Value, ValueOperationError> {
-    let (Value::Integer(value), Value::Integer(amount)) = (left, right) else {
-        return Err(integer_type_error("shift", left, right));
-    };
-    super::integer::binary(operation, *value, *amount)
 }
 
 fn numeric(value: &Value) -> Option<f64> {

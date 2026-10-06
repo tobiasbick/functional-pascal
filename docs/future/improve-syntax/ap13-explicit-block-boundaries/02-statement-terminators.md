@@ -29,6 +29,8 @@ Until named control-flow closers are introduced by AP13.4, `if`, `for`, and
 terminates the enclosing control statement; no second `;` is added. Each
 branch is terminated before `else`. Existing nearest-unmatched-`if` ownership
 is preserved; explicit compound statements disambiguate nested branches.
+The completed AP13.4 package replaces this transition with statement-list
+bodies and named control-flow closers.
 
 ## Affected areas
 
@@ -57,13 +59,13 @@ merged parser accepts only the new form.
 Implemented locally on `codex/syntax-changes-2` after the local AP02 and
 AP13.1 changes. Statements require terminators at every list boundary,
 including before `else` and `until`; declarations retain their required
-terminators. Single-statement control bodies use the confirmed transition
-rule above. The program keeps `end.`, and expression closers have no
-terminator of their own.
+terminators. The single-statement control-body transition is superseded by
+AP13.4, which supplies statement-list bodies and named closers. The program
+keeps `end.`, and expression closers have no terminator of their own.
 
 Repository sources, embedded fixtures, source generators, formatter goldens,
 CLI templates, editor snippets, and documentation examples are migrated.
 Conversion used temporary parser-guided tools under the ignored
 `.temp-data/` directory; the parser has no legacy acceptance mode.
-Named closers belong to the later work packages. Delivery and applicable
+Named closers are delivered by AP13.3 through AP13.6. Delivery and applicable
 verification for statement terminators are complete on the working branch.

@@ -29,13 +29,7 @@ fn typed_scalar_families_execute_with_aliasing_destinations() {
         abc(Opcode::DivideInteger, 9, 8, 0),
         abc(Opcode::RemainderInteger, 10, 8, 1),
         abc(Opcode::NegateInteger, 11, 1, 0),
-        abx(Opcode::LoadConstant, 12, 1),
-        abc(Opcode::ShiftLeftInteger, 13, 1, 12),
-        abc(Opcode::ShiftRightInteger, 14, 13, 12),
-        abc(Opcode::BitAndInteger, 15, 0, 1),
-        abc(Opcode::BitOrInteger, 16, 0, 1),
-        abc(Opcode::BitXorInteger, 17, 0, 1),
-        abc(Opcode::EqualInteger, 18, 1, 14),
+        abc(Opcode::EqualInteger, 18, 1, 1),
         abc(Opcode::LessInteger, 19, 1, 0),
         abc(Opcode::GreaterEqualInteger, 20, 0, 1),
         abc(Opcode::AddReal, 2, 2, 3),
@@ -82,7 +76,6 @@ fn typed_scalar_families_execute_with_aliasing_destinations() {
     assert_eq!(registers[9], Value::Integer(7));
     assert_eq!(registers[10], Value::Integer(0));
     assert_eq!(registers[11], Value::Integer(-7));
-    assert_eq!(registers[14], Value::Integer(7));
     assert_eq!(registers[18], Value::Boolean(true));
     assert_eq!(registers[19], Value::Boolean(true));
     assert_eq!(registers[20], Value::Boolean(true));
@@ -106,7 +99,7 @@ fn typed_scalar_families_execute_with_aliasing_destinations() {
             .iter()
             .all(|value| value == &Value::Boolean(true))
     );
-    assert_eq!(count, 51);
+    assert_eq!(count, 45);
 }
 
 #[test]

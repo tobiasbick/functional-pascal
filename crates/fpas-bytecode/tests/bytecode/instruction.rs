@@ -48,12 +48,12 @@ fn every_opcode_round_trips_through_its_declared_form() {
 }
 
 #[test]
-fn opcode_inventory_is_exhaustive_and_contiguous() {
+fn opcode_inventory_is_exhaustive() {
     let decoded: Vec<_> = (u8::MIN..=u8::MAX)
         .filter_map(|raw| Opcode::try_from(raw).ok())
         .collect();
     assert_eq!(decoded, Opcode::ALL);
-    assert_eq!(Opcode::ALL.len(), 107);
+    assert_eq!(Opcode::ALL.len(), 102);
 }
 
 #[test]
@@ -94,4 +94,15 @@ fn register_sentinel_and_index_conversion_are_checked() {
         Register::try_from_index(usize::from(u16::MAX) - 1).expect("largest register must fit"),
         Register::MAX
     );
+}
+
+#[test]
+fn removed_integer_bit_opcode_ids_are_rejected_without_reassignment() {
+    for raw in 26..=30 {
+        assert_eq!(
+            Instruction::from_word(u64::from(raw)).opcode(),
+            Err(InstructionError::UnknownOpcode(raw))
+        );
+    }
+    assert_eq!(Opcode::EqualInteger as u8, 31);
 }

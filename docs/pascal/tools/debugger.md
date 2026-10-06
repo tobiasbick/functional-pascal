@@ -93,8 +93,8 @@ briefly visible for lifecycle reporting but have no fabricated inspectable
 stack.
 
 Evaluation is available only at a stable stop. It accepts FPAS literals,
-visible names, parentheses, unary `-` and `not`, arithmetic, Boolean/bitwise,
-shift, comparison and `in` operators, stored record/enum fields, and read-only
+visible names, parentheses, unary `-` and `not`, arithmetic, Boolean,
+comparison and `in` operators, stored record/enum fields, and read-only
 array, dictionary, or string indexes. It also accepts controlled calls,
 readable properties, instance and static record methods, array/dictionary/record/Result/Option construction, fully qualified enum
 constructors, record updates, and `try`. Names are ASCII
@@ -103,6 +103,12 @@ Visible first-class function values and closures may be called when their
 captures can be detached safely. Aggregate results can be expanded like
 ordinary variables and expire on resume. `go`, newly entered closure syntax,
 statements, declarations, and assignments inside `evaluate` remain rejected.
+
+Watch expressions use the same [operator precedence](../language/basics/operators.md#operator-precedence)
+as program expressions. For example, `not Count > 0` negates the comparison,
+and `Count > 0 and Count < 10` compares before combining the results.
+Mixed logical operators require parentheses; comparison chains such as
+`A < B < C` are rejected before evaluation.
 
 `setVariable`, DAP `setExpression`, JSONL `variable.set`, and JSONL
 `expression.set` are separate stopped-state operations. Handle-based mutation
@@ -371,6 +377,18 @@ the original control-flow graph from function entry, not safe interior jumps.
 Temporary registers are reused, so a same-function sequence-point destination
 cannot be shown to preserve initialization, operand types, or lexical state.
 Use stepping, a source breakpoint, or frame restart instead.
+
+Watch expressions, breakpoint conditions, and logpoint interpolations evaluate
+Boolean `and` and `or` with left-to-right
+[short-circuit evaluation](../language/basics/operators.md#evaluation-order).
+Skipped operands perform no calls, consume no runtime evaluation operations,
+and raise no runtime errors, including errors from `try`. Boolean `xor` and
+binary `Std.Bits` functions evaluate both arguments. The complete expression
+still has to pass parsing, validation, and source-size limits. Logical operators
+require Boolean values. Known non-Boolean operands are rejected during
+validation, including a literal in a skipped branch such as `false and 1`;
+resolved values are checked when evaluated. Integer bit operations use
+[Std.Bits](../std/numeric/bits.md) functions imported by the debugged program.
 
 Every call runs in a separate detached sandbox. Arguments, receivers, globals,
 aggregates, and closure cells are deep-cloned while preserving sharing and

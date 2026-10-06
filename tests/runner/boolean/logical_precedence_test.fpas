@@ -1,0 +1,26 @@
+program LogicalPrecedenceTest;
+
+uses Std.Test;
+
+function TryComparison(): option of boolean;
+begin
+  return Some(try Some(2) + 1 = 3);
+end function;
+
+begin
+  var Count: integer := 2;
+  AssertFalse(not Count > 0);
+  AssertTrue(not Count = 3);
+  AssertFalse(not Count in [1, 2, 3]);
+  AssertTrue(1 < Count and Count < 3 and Count = 2);
+  AssertTrue(Count < 1 or Count > 1 or Count = 0);
+  AssertFalse(Count = 2 xor Count = 3 xor Count < 3);
+  AssertTrue(not false and true);
+  AssertTrue(not not Count > 0);
+  AssertTrue((not false) = true);
+  AssertFalse((true or false) and false);
+  AssertTrue(true or (false and false));
+  AssertFalse(false and 1 div 0 > 0);
+  AssertTrue(true or 1 div 0 > 0);
+  AssertTrue(TryComparison() = Some(true));
+end.

@@ -163,7 +163,16 @@ fn out_of_range_shift_is_a_numeric_domain_error() {
         vec![
             abx(Opcode::LoadConstant, 0, 0),
             abx(Opcode::LoadConstant, 1, 1),
-            abc(Opcode::ShiftLeftInteger, 2, 0, 1),
+            fpas_bytecode::Instruction::abc(
+                Opcode::Intrinsic,
+                2,
+                u16::from(fpas_bytecode::Intrinsic::Bits(
+                    fpas_bytecode::BitsIntrinsic::ShiftLeft,
+                )),
+                0,
+                2,
+            )
+            .expect("shift intrinsic"),
             return_unit(),
         ],
         vec![Constant::Integer(1), Constant::Integer(64)],

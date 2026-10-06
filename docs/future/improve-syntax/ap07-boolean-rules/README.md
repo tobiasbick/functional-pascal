@@ -1,6 +1,6 @@
 # AP07: Boolean rules
 
-Status: agreed direction (Q02, Q03). Effort: medium. Completion is tracked in
+Status: complete (Q02, Q03). Effort: medium. Completion is tracked in
 the [central README](../README.md); the process is in
 [development-process.md](../development-process.md).
 
@@ -10,8 +10,11 @@ Evaluation order and precedence are unambiguous and covered by boundary tests;
 mixed logical operators require parentheses; migration does not silently change
 meaning.
 
-Current behavior: `and` binds like `*` and `or`/`xor` like `+`, above the
-comparisons, so `X > 0 and Y > 0` is parsed as `X > (0 and Y) > 0`
+Current behavior: comparisons bind above `not`, and `not` above logical
+chains. Same-operator chains are valid; mixed logical operators require
+parentheses. Logical operators accept only boolean operands; `and` and `or`
+short-circuit and `xor` evaluates both operands. Integer bit operations use
+`Std.Bits` functions, and `shl`/`shr` are ordinary identifiers
 ([operators](../../../pascal/language/basics/operators.md)).
 
 ## Decisions
@@ -28,6 +31,11 @@ comparisons, so `X > 0 and Y > 0` is parsed as `X > (0 and Y) > 0`
   `BitAnd`, `BitOr`, `BitXor`, `BitNot`, `ShiftLeft`, `ShiftRight`; `shl` and
   `shr` are no longer keywords. Integer operands of `and`, `or`, `xor`, or
   `not` are diagnosed with the matching function name.
+- Shift functions preserve the signed 64-bit shift semantics: counts `0..63`,
+  runtime errors outside that range, arithmetic right shift retaining the
+  sign, and left shift discarding high bits without an overflow error. The
+  exact rules and examples are agreed in
+  [AP07.2](02-std-bits-unit.md#shift-decisions-agreed).
 - `and` and `or` evaluate left to right with short-circuit evaluation.
 
 ```pascal
@@ -73,10 +81,10 @@ parallel with AP07.2. AP07.4 needs `Std.Bits` from AP07.2.
 
 ## Work packages
 
-- [ ] [AP07.1: Short-circuit evaluation](01-short-circuit-evaluation.md)
-- [ ] [AP07.2: Std.Bits unit](02-std-bits-unit.md)
-- [ ] [AP07.3: Logical precedence and mixing rules](03-logical-precedence.md)
-- [ ] [AP07.4: Boolean-only logical operators](04-boolean-only-operators.md)
+- [x] [AP07.1: Short-circuit evaluation](01-short-circuit-evaluation.md)
+- [x] [AP07.2: Std.Bits unit](02-std-bits-unit.md)
+- [x] [AP07.3: Logical precedence and mixing rules](03-logical-precedence.md)
+- [x] [AP07.4: Boolean-only logical operators](04-boolean-only-operators.md)
 
 ## Acceptance
 
@@ -86,8 +94,10 @@ meaning.
 
 ## Reference
 
-The reference branch `codex/syntax-changes` found that the compiler lowers
-`and`, `or`, and `xor` eagerly (both operands) and that the parser already
-rejects chained comparisons. It added branch-based lowering in a new
-`fpas-compiler/src/lowering/expr/boolean.rs` and found no repository source
-that needed regrouping. Recheck both findings on `main`.
+The reference branch `codex/syntax-changes` identified eager Boolean lowering
+and already rejected chained comparisons. The completed package on
+`codex/syntax-changes-2` uses branch-based `and`/`or` lowering in
+`crates/fpas-compiler/src/lowering/expr/boolean.rs`, retains eager Boolean
+`xor`, and rejects comparison chains. The AP07.3 AST audit found no existing
+logical expression requiring regrouping; AP07.4 migrates integer operator
+fixtures to `Std.Bits`.

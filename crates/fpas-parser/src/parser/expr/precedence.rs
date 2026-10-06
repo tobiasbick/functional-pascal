@@ -1,9 +1,14 @@
+//! Arithmetic and non-associative comparisons, above logical operators.
+//!
+//! Documentation: `docs/pascal/language/basics/operators.md#operator-precedence`.
+
 use super::super::Parser;
 use crate::ast::*;
 use fpas_diagnostics::codes::PARSE_EXPECTED_EXPRESSION;
 use fpas_lexer::Token;
 
 impl Parser {
+    /// Parses at most one comparison, more tightly than `not` and logical chains.
     pub(super) fn parse_comparison(&mut self) -> Expr {
         let start = self.current_span();
         let left = self.parse_additive();
@@ -44,7 +49,7 @@ impl Parser {
         self.error_with_code(
             PARSE_EXPECTED_EXPRESSION,
             "Chained comparison operators are not allowed",
-            "Use at most one comparison operator per expression (for example `(A = B) and (C = D)`).",
+            "Separate comparisons with `and`, for example `A < B and B < C` instead of `A < B < C`.",
             span,
         );
         while self.is_comparison_token() {
@@ -53,6 +58,7 @@ impl Parser {
         }
     }
 
+    /// Parses left-associative addition and subtraction.
     pub(super) fn parse_additive(&mut self) -> Expr {
         let start = self.current_span();
         let mut left = self.parse_multiplicative();
@@ -61,8 +67,6 @@ impl Parser {
             let op = match self.current_token() {
                 Token::Plus => BinaryOp::Add,
                 Token::Minus => BinaryOp::Sub,
-                Token::Or => BinaryOp::Or,
-                Token::Xor => BinaryOp::Xor,
                 _ => break,
             };
             self.advance();
@@ -78,6 +82,7 @@ impl Parser {
         left
     }
 
+    /// Parses multiplication, division, and remainder.
     pub(super) fn parse_multiplicative(&mut self) -> Expr {
         let start = self.current_span();
         let mut left = self.parse_unary();
@@ -88,9 +93,6 @@ impl Parser {
                 Token::Slash => BinaryOp::RealDiv,
                 Token::Div => BinaryOp::IntDiv,
                 Token::Mod => BinaryOp::Mod,
-                Token::And => BinaryOp::And,
-                Token::Shl => BinaryOp::Shl,
-                Token::Shr => BinaryOp::Shr,
                 _ => break,
             };
             self.advance();
@@ -106,22 +108,13 @@ impl Parser {
         left
     }
 
+    /// Parses arithmetic negation and `try` above arithmetic binary operators.
     pub(super) fn parse_unary(&mut self) -> Expr {
         self.with_nesting(Self::parse_unary_inner)
     }
 
     fn parse_unary_inner(&mut self) -> Expr {
         let start = self.current_span();
-
-        if self.check(&Token::Not) {
-            self.advance();
-            let operand = self.parse_unary();
-            return Expr::UnaryOp {
-                op: UnaryOp::Not,
-                operand: Box::new(operand),
-                span: self.span_from(start),
-            };
-        }
 
         if self.check(&Token::Minus) {
             self.advance();

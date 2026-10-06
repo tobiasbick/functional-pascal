@@ -107,10 +107,6 @@ pub enum BinaryOperation {
     Or,
     /// `xor`.
     Xor,
-    /// `shl`.
-    ShiftLeft,
-    /// `shr`.
-    ShiftRight,
     /// `=`.
     Equal,
     /// `<>`.

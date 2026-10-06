@@ -234,7 +234,7 @@
         },
         {
           "name": "keyword.operator.word.fpas",
-          "match": "(?i:\\b(and|or|not|xor|div|mod|shl|shr)\\b)"
+          "match": "(?i:\\b(and|or|not|xor|div|mod)\\b)"
         },
         {
           "name": "storage.type.composite.fpas",

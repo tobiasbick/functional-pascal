@@ -11,6 +11,8 @@ begin
   var gifted: boolean := true;
   // while repeat until
   var endif: integer := 0;
+  var shl: integer := 1;
+  var SHR: integer := 2;
   if gifted and (endif = 0) then
   begin
     WriteLn(beginValue);

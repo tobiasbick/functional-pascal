@@ -4,6 +4,7 @@ mod binary;
 mod closure;
 mod literal;
 mod postfix;
+mod precedence;
 mod record_update;
 
 use fpas_parser::{Designator, DesignatorPart, Expr, UnaryOp};
@@ -12,11 +13,12 @@ use crate::comments::CommentMap;
 
 use super::Emitter;
 use super::wrap::{exceeds_width, measure_emit, text_width};
-use binary::{binary_op_spaced, binary_prec, emit_binary_with_break};
+use binary::{binary_op_spaced, emit_binary_with_break};
 use literal::{
     emit_array_literal, emit_record_fields, format_real, format_string, needs_space_after_negate,
 };
 use postfix::emit_postfix;
+use precedence::{PREFIX_PREC, binary_prec, operand_prec, unary_prec};
 
 /// Formats an expression.
 #[must_use]
@@ -67,7 +69,7 @@ pub(super) fn emit_expr_impl(
             emitter.write(")");
         }
         Expr::UnaryOp { op, operand, .. } => {
-            let prec = 4;
+            let prec = unary_prec(*op);
             if prec < min_prec {
                 emitter.write("(");
                 emit_expr_impl(emitter, expr, 0, false, comments);
@@ -98,9 +100,21 @@ pub(super) fn emit_expr_impl(
                 emitter.write(")");
                 return;
             }
-            emit_expr_impl(emitter, left, prec + 1, false, comments);
+            emit_expr_impl(
+                emitter,
+                left,
+                operand_prec(*op, left, false),
+                false,
+                comments,
+            );
             emitter.write(binary_op_spaced(*op));
-            emit_expr_impl(emitter, right, prec, false, comments);
+            emit_expr_impl(
+                emitter,
+                right,
+                operand_prec(*op, right, true),
+                false,
+                comments,
+            );
         }
         Expr::Paren(inner, ..) => {
             emitter.write("(");
@@ -147,7 +161,7 @@ pub(super) fn emit_expr_impl(
         Expr::Nil(..) => emitter.write("nil"),
         Expr::Try(inner, ..) => {
             emitter.write("try ");
-            emit_expr(emitter, inner, 4, comments);
+            emit_expr(emitter, inner, PREFIX_PREC, comments);
         }
         Expr::Go(inner, ..) => {
             emitter.write("go ");

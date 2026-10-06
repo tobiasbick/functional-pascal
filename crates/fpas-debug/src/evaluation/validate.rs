@@ -5,6 +5,7 @@ use fpas_vm::{DebugBinaryOperation, DebugEvaluationLimits, DebugExpression, Debu
 
 use super::parse::EvaluationParseError;
 
+/// Lowers a bounded read-only expression and checks known logical operand types.
 pub(super) fn validate_expression(
     expression: &Expr,
     limits: DebugEvaluationLimits,
@@ -29,20 +30,28 @@ fn lower(
         Expr::Str(value, _) => Ok(DebugExpression::String(value.clone())),
         Expr::Bool(value, _) => Ok(DebugExpression::Boolean(*value)),
         Expr::Designator(designator) => lower_designator(designator, depth, limits, budget),
-        Expr::UnaryOp { op, operand, .. } => Ok(DebugExpression::Unary {
-            operation: match op {
-                UnaryOp::Not => DebugUnaryOperation::Not,
-                UnaryOp::Negate => DebugUnaryOperation::Negate,
-            },
-            operand: Box::new(lower(operand, depth + 1, limits, budget)?),
-        }),
+        Expr::UnaryOp { op, operand, .. } => {
+            let lowered = DebugExpression::Unary {
+                operation: match op {
+                    UnaryOp::Not => DebugUnaryOperation::Not,
+                    UnaryOp::Negate => DebugUnaryOperation::Negate,
+                },
+                operand: Box::new(lower(operand, depth + 1, limits, budget)?),
+            };
+            super::boolean::validate(expression, &lowered)?;
+            Ok(lowered)
+        }
         Expr::BinaryOp {
             op, left, right, ..
-        } => Ok(DebugExpression::Binary {
-            operation: lower_binary(*op),
-            left: Box::new(lower(left, depth + 1, limits, budget)?),
-            right: Box::new(lower(right, depth + 1, limits, budget)?),
-        }),
+        } => {
+            let lowered = DebugExpression::Binary {
+                operation: lower_binary(*op),
+                left: Box::new(lower(left, depth + 1, limits, budget)?),
+                right: Box::new(lower(right, depth + 1, limits, budget)?),
+            };
+            super::boolean::validate(expression, &lowered)?;
+            Ok(lowered)
+        }
         Expr::Paren(inner, _) => lower(inner, depth + 1, limits, budget),
         Expr::Postfix {
             base, operations, ..
@@ -231,8 +240,6 @@ fn lower_binary(operation: BinaryOp) -> DebugBinaryOperation {
         BinaryOp::IntDiv => DebugBinaryOperation::IntegerDivide,
         BinaryOp::Mod => DebugBinaryOperation::Modulo,
         BinaryOp::And => DebugBinaryOperation::And,
-        BinaryOp::Shl => DebugBinaryOperation::ShiftLeft,
-        BinaryOp::Shr => DebugBinaryOperation::ShiftRight,
         BinaryOp::Add => DebugBinaryOperation::Add,
         BinaryOp::Sub => DebugBinaryOperation::Subtract,
         BinaryOp::Or => DebugBinaryOperation::Or,

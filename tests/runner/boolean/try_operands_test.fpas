@@ -1,0 +1,77 @@
+program TryOperandsTest;
+
+uses Std.Test;
+
+mutable var
+  Trace: integer := 0;
+
+function ReadResult(Value: boolean; Fail: boolean; Digit: integer): result of boolean, string;
+begin
+  Trace := Trace * 10 + Digit;
+  if Fail then
+    return Error('expected');
+  end if;
+
+  return Ok(Value);
+end function;
+
+function ProbeResult(Left: boolean; IsAnd: boolean; FailLeft: boolean; FailRight: boolean): result of boolean, string;
+begin
+  if IsAnd then
+    return Ok((try ReadResult(Left, FailLeft, 1)) and (try ReadResult(true, FailRight, 2)));
+  end if;
+
+  return Ok((try ReadResult(Left, FailLeft, 1)) or (try ReadResult(false, FailRight, 2)));
+end function;
+
+function ReadOption(Value: boolean; Fail: boolean): option of boolean;
+begin
+  Trace := Trace + 1;
+  if Fail then
+    return None;
+  end if;
+
+  return Some(Value);
+end function;
+
+function ProbeOption(Left: boolean; IsAnd: boolean; Fail: boolean): option of boolean;
+begin
+  if IsAnd then
+    return Some(Left and (try ReadOption(true, Fail)));
+  end if;
+
+  return Some(Left or (try ReadOption(false, Fail)));
+end function;
+
+begin
+  AssertTrue(ProbeResult(false, true, false, true) = Ok(false));
+  AssertEquals(1, Trace);
+  Trace := 0;
+  AssertTrue(ProbeResult(true, false, false, true) = Ok(true));
+  AssertEquals(1, Trace);
+  Trace := 0;
+  AssertTrue(ProbeResult(true, true, false, false) = Ok(true));
+  AssertEquals(12, Trace);
+  Trace := 0;
+  AssertTrue(ProbeResult(false, false, false, false) = Ok(false));
+  AssertEquals(12, Trace);
+  Trace := 0;
+  AssertTrue(ProbeResult(true, true, false, true) = Error('expected'));
+  AssertEquals(12, Trace);
+  Trace := 0;
+  AssertTrue(ProbeResult(false, false, false, true) = Error('expected'));
+  AssertEquals(12, Trace);
+  Trace := 0;
+  AssertTrue(ProbeResult(true, true, true, false) = Error('expected'));
+  AssertEquals(1, Trace);
+  Trace := 0;
+  AssertTrue(ProbeOption(false, true, true) = Some(false));
+  AssertTrue(ProbeOption(true, false, true) = Some(true));
+  AssertEquals(0, Trace);
+  AssertTrue(ProbeOption(true, true, false) = Some(true));
+  AssertTrue(ProbeOption(false, false, false) = Some(false));
+  AssertEquals(2, Trace);
+  AssertTrue(ProbeOption(true, true, true) = None);
+  AssertTrue(ProbeOption(false, false, true) = None);
+  AssertEquals(4, Trace);
+end.

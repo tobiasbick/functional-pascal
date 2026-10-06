@@ -175,9 +175,17 @@ pub(super) fn format_real(value: f64) -> String {
     format!("{text}.0")
 }
 
+/// Omits spacing before literals and the explicit or required parentheses of an operand.
 pub(super) fn needs_space_after_negate(operand: &Expr) -> bool {
     !matches!(
         operand,
-        Expr::Integer(..) | Expr::Real(..) | Expr::Paren(..)
+        Expr::Integer(..)
+            | Expr::Real(..)
+            | Expr::Paren(..)
+            | Expr::BinaryOp { .. }
+            | Expr::UnaryOp {
+                op: fpas_parser::UnaryOp::Not,
+                ..
+            }
     )
 }

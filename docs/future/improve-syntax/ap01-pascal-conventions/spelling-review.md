@@ -17,7 +17,7 @@ process, and every package README and work package under this plan.
 | Record construction | AP10's target construction is named-field-only; enum constructors follow AP09, while patterns remain positional. |
 | Pattern bindings | AP20 uses `const Name` and `_` for payload fields; AP03's closed-enum coverage has no `else` escape. |
 | Recorded exceptions | AP19's `distinct` (Q12), AP13's named boundaries (Q08/Q09), and AP23's `requires`/`ensures` (Q15/Q16) remain linked to their recorded decisions. |
-| Draft versus current syntax | Current forms and superseded forms in inventories, migration instructions, diagnostics, and reference-branch notes are identified as such; they are not rewritten into claims about current implementation. |
+| Draft versus current syntax | The reference identifies completed AP13 endings, branches, and no-op statements as current forms. Unimplemented bindings, construction, patterns, and domain types retain their owning package and draft status. Superseded forms in inventories, migration instructions, diagnostics, and reference-branch notes remain identified as such. |
 
 ## Corrections
 

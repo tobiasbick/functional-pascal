@@ -43,10 +43,14 @@ against the checkout before implementing each work package.
 
 ## Package status
 
-AP01, AP02, and AP13 are complete on `codex/syntax-changes-2`. Every AP13
-work package, AP13.1 through AP13.6, is complete. Checkboxes track completed
-delivery in the working branch, as defined by the
+AP01, AP02, AP07, and AP13 are complete on `codex/syntax-changes-2`, including
+all of their work packages. Checkboxes track completed delivery in the working
+branch, as defined by the
 [status-tracking rule](development-process.md#status-tracking).
+
+[AP07: Boolean rules](ap07-boolean-rules/README.md) is complete: short-circuit
+evaluation, `Std.Bits`, explicit logical grouping, and boolean-only operators
+are implemented.
 
 Effort estimates are preliminary, based on the design rather than a code audit.
 Dependencies name the packages a package needs; the real prerequisites per work
@@ -60,7 +64,7 @@ package are listed in each work package file.
 | [ ] | [AP04: Discarded function values](ap04-discarded-function-values/README.md) | Small | AP02 | Agreed direction |
 | [ ] | [AP05: Qualified imports](ap05-qualified-imports/README.md) | Medium | AP01, AP02 | Agreed direction (Q04) |
 | [ ] | [AP06: Fixed dot-call targets](ap06-dot-call-targets/README.md) | Medium | None | Agreed direction (Q05, revised); native type operations |
-| [ ] | [AP07: Boolean rules](ap07-boolean-rules/README.md) | Medium | AP02 | Agreed direction (Q02, Q03) |
+| [x] | [AP07: Boolean rules](ap07-boolean-rules/README.md) | Medium | AP02 | Complete (Q02, Q03) |
 | — | [AP08: Comma-separated parameter lists](ap08-comma-separated-parameter-lists/README.md) | — | — | Rejected; closed (Q06) |
 | [ ] | [AP09: Named arguments](ap09-named-arguments/README.md) | Medium | AP02 | Agreed direction |
 | [ ] | [AP10: Typed record construction](ap10-typed-record-construction/README.md) | Medium | AP09 | Agreed direction |

@@ -1,0 +1,50 @@
+program ShortCircuitTest;
+
+uses Std.Bits, Std.Test;
+
+mutable var
+  Trace: integer := 0;
+
+function Mark(Value: boolean; Digit: integer): boolean;
+begin
+  Trace := Trace * 10 + Digit;
+  return Value;
+end function;
+
+function MarkInteger(Value: integer; Digit: integer): integer;
+begin
+  Trace := Trace * 10 + Digit;
+  return Value;
+end function;
+
+begin
+  AssertFalse(Mark(false, 1) and Mark(true, 2));
+  AssertEquals(1, Trace);
+  Trace := 0;
+  AssertTrue(Mark(true, 1) or Mark(false, 2));
+  AssertEquals(1, Trace);
+  Trace := 0;
+  AssertFalse(Mark(true, 1) and Mark(false, 2));
+  AssertEquals(12, Trace);
+  Trace := 0;
+  AssertTrue(Mark(false, 1) or Mark(true, 2));
+  AssertEquals(12, Trace);
+  Trace := 0;
+  AssertTrue(Mark(false, 1) xor Mark(true, 2));
+  AssertEquals(12, Trace);
+  Trace := 0;
+  AssertFalse((Mark(true, 1) and Mark(false, 2)) and Mark(true, 3));
+  AssertEquals(12, Trace);
+  Trace := 0;
+  AssertTrue((Mark(false, 1) or Mark(true, 2)) or Mark(false, 3));
+  AssertEquals(12, Trace);
+  Trace := 0;
+  AssertTrue((Mark(false, 1) and Mark(true, 2)) or Mark(true, 3));
+  AssertEquals(13, Trace);
+  Trace := 0;
+  AssertEquals(0, BitAnd(MarkInteger(0, 1), MarkInteger(7, 2)));
+  AssertEquals(12, Trace);
+  Trace := 0;
+  AssertEquals(-1, BitOr(MarkInteger(-1, 1), MarkInteger(7, 2)));
+  AssertEquals(12, Trace);
+end.

@@ -50,7 +50,7 @@ intrinsic API or handbook change with
 | AI clients | [ai/](ai/README.md) | OpenAI-compatible chat completions |
 | Text | [text/](text/README.md) | Str, Conv, Parse, Json, Json.Fields, Toml, Toml.Fields |
 | Collections | [collections/](collections/README.md) | Array, Dict |
-| Numeric | [numeric/](numeric/README.md) | Math, Random |
+| Numeric | [numeric/](numeric/README.md) | Math, Bits, Random |
 | Cryptography | [cryptography/](cryptography/README.md) | Operating-system random bytes and secure integers |
 | Result / Option | [result/](result/README.md) | Result, Option helpers |
 | Concurrency | [concurrency/](concurrency/README.md) | Task (bounded channels, cooperative cancellation, task waits, typed `Select` cases, task groups, supervision) |

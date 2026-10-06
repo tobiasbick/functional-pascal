@@ -1,5 +1,7 @@
 use super::*;
 
+mod bits;
+
 #[test]
 fn interface_backed_program_keeps_short_standard_intrinsic_dispatch() {
     let program = parse_ok(

@@ -47,11 +47,6 @@ pub(super) fn validate_abc(
         | Opcode::GreaterDynamic
         | Opcode::LessEqualDynamic
         | Opcode::GreaterEqualDynamic
-        | Opcode::ShiftLeftInteger
-        | Opcode::ShiftRightInteger
-        | Opcode::BitAndInteger
-        | Opcode::BitOrInteger
-        | Opcode::BitXorInteger
         | Opcode::EqualInteger
         | Opcode::NotEqualInteger
         | Opcode::LessInteger

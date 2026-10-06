@@ -1,9 +1,11 @@
 # Pascal-oriented reference style
 
-This is the reference for [AP01](README.md). All ten examples are uncompiled
-drafts of the planned language. Each example distinguishes forms supported by
-the current handbook from changes owned by another package. A draft does not
-approve an open decision or claim that the current compiler accepts it.
+This is the reference for [AP01](README.md). The ten reference examples
+distinguish implemented forms from changes owned by open packages. Examples
+that combine planned forms remain uncompiled drafts; the unit example uses
+only implemented forms. A draft does not approve an open decision or claim
+that the current compiler accepts it. AP13 statement endings, block closers,
+`elsif`, `when`, and `null;` are implemented.
 
 ## Writing rules
 
@@ -39,11 +41,10 @@ approve an open decision or claim that the current compiler accepts it.
 ## 1. Program, bindings, and assignment
 
 Current forms: the program heading and final `end.`, explicit types,
-initializers, and `:=` assignment
+initializers, `:=` assignment, and the required semicolon before `end.` (AP13.2)
 ([variables](../../../pascal/language/basics/variables.md)).
 
-Draft forms: mutable `var` and the preferred immutable `const` form (AP16),
-and the required semicolon before `end.` (AP13.2).
+Draft forms: mutable `var` and the preferred immutable `const` form (AP16).
 
 ```pascal
 program Counting;
@@ -59,11 +60,10 @@ end.
 ## 2. Unit and public routine
 
 Current forms: units, explicit `public` visibility, routine headings,
-semicolon-separated parameters, `begin`, and `return`
-([grammar](../../../specs/grammar.ebnf), `unit` and `function_heading`).
-
-Draft forms: the required final body semicolon (AP13.2), `end function;`,
-and `end unit;` (AP13.3).
+semicolon-separated parameters, `begin`, `return`, the final body semicolon,
+`end function;`, and `end unit;` (AP13.2 and AP13.3;
+[grammar](../../../specs/grammar.ebnf), `unit` and `function_heading`).
+The example uses only implemented forms.
 
 ```pascal
 unit Arithmetic;
@@ -79,14 +79,15 @@ end unit;
 ## 3. Records, enums, and construction
 
 Current forms: record fields and defaults, enum payload declarations, and
-positional variant construction
-([records](../../../pascal/language/types/records.md),
+positional variant construction, named type closers, and the main-body
+terminator (AP13;
+[records](../../../pascal/language/types/records.md),
 [enums](../../../pascal/language/types/enums.md)). Payload declarations also
 separate individually typed parameters with `;`.
 
-Draft forms: enforcing one keyword per declaration (AP11), named type closers
-and the main-body terminator (AP13), computed `const` bindings (AP16), named
-record construction (AP10), and named variant arguments (AP09.2).
+Draft forms: enforcing one keyword per declaration (AP11), computed `const`
+bindings (AP16), named record construction (AP10), and named variant
+arguments (AP09.2).
 
 ```pascal
 program Shapes;
@@ -110,17 +111,18 @@ begin
 end.
 ```
 
-The `null;` no-op statement belongs to AP13.4. `Point` fields are accessible
-within this program; construction across units follows AP10's visibility rule.
+The `null;` no-op statement is implemented by AP13.4. `Point` fields are
+accessible within this program; construction across units follows AP10's
+visibility rule.
 
 ## 4. Ordinary calls and visible caller mutation
 
 Current forms: explicit parameter and result types, positional calls, and
-assignment ([parameters](../../../pascal/language/functions/parameters.md)).
+assignment, statement terminators, and routine closers (AP13;
+[parameters](../../../pascal/language/functions/parameters.md)).
 
-Draft forms: required statement terminators and routine closers (AP13), mutable
-`var` bindings (AP16), `var` parameters and arguments (AP17.1), and the fully
-named call (AP09 and AP17.2).
+Draft forms: mutable `var` bindings (AP16), `var` parameters and arguments
+(AP17.1), and the fully named call (AP09 and AP17.2).
 
 ```pascal
 program Calls;
@@ -150,13 +152,13 @@ This example does not decide AP17's open rules for function types or failure.
 
 ## 5. Conditional branches and a plain scoping block
 
-Current forms: comparisons, assignment, and explicit local declarations
-([grammar](../../../specs/grammar.ebnf), `if_stmt` and `block`).
+Current forms: comparisons, assignment, explicit local declarations,
+statement-list branches, `elsif`, `null;`, `end if;`, and the retained plain
+block's local scope (AP13.1, AP13.2, and AP13.4;
+[grammar](../../../specs/grammar.ebnf), `if_stmt` and `block`).
 
-Draft forms: statement-list branches, `elsif`, `null;`, `end if;`, and the
-retained plain block's local scope (AP13.1, AP13.2, and AP13.4); binding keywords
-follow AP16. The `end;` closes only the plain block; `end if;` closes the
-conditional.
+Draft forms: binding keywords follow AP16. The `end;` closes only the plain
+block; `end if;` closes the conditional.
 
 ```pascal
 program Branches;
@@ -180,12 +182,12 @@ end.
 
 ## 6. Loops
 
-Current forms: counted `for` headings, `while` conditions, and
-`repeat ... until` ([grammar](../../../specs/grammar.ebnf), `for_stmt`,
+Current forms: counted `for` headings, `while` conditions, `repeat ... until`,
+statement terminators, statement-list bodies, and `end for;` / `end while;`
+(AP13.2 and AP13.4; [grammar](../../../specs/grammar.ebnf), `for_stmt`,
 `while_stmt`, and `repeat_stmt`).
 
-Draft forms: mutable `var` (AP16), statement terminators (AP13.2), statement-list
-bodies and `end for;` / `end while;` (AP13.4). The `for` variable is immutable
+Draft forms: mutable `var` (AP16). The `for` variable is immutable
 per iteration under AP16.3; it has no binding keyword. `repeat` keeps `until`.
 
 ```pascal
@@ -210,13 +212,13 @@ end.
 
 ## 7. Case arms and explicit pattern bindings
 
-Current forms: enum payloads, qualified variants, and `case ... of`
-([enums](../../../pascal/language/types/enums.md)).
+Current forms: enum payloads, qualified variants, `case ... of`, declaration
+closers and statement terminators, `when` arms, and `null;` (AP13;
+[enums](../../../pascal/language/types/enums.md)).
 
-Draft forms: declaration closers and statement terminators (AP13), computed
-`const` and mutable `var` (AP16), `when` arms and `null;` (AP13.5), `const` in
-payload patterns (AP20.1), and explicit coverage without `else` for the closed
-enum (AP03).
+Draft forms: computed `const` and mutable `var` (AP16), `const` in payload
+patterns (AP20.1), and mandatory explicit coverage without `else` for the
+closed enum (AP03).
 
 ```pascal
 program Matching;
@@ -242,13 +244,14 @@ end.
 ## 8. Generic types and generic routines
 
 Current forms: `array of T`, `Option of T`, `dict of K to V`, and generic
-routine declarations with inferred call-site type arguments
-([grammar](../../../specs/grammar.ebnf), `type_expr`;
+routine declarations with inferred call-site type arguments, statement
+terminators, and named closers (AP13;
+[grammar](../../../specs/grammar.ebnf), `type_expr`;
 [generic routines](../../../pascal/language/functions/generic-routines.md)).
 
 Draft forms: parenthesized multi-argument type applications and user-defined
 generic records/enums (AP24), named record construction (AP10), computed
-`const` (AP16), and statement terminators and named closers (AP13).
+`const` (AP16).
 
 ```pascal
 program Generics;
@@ -286,11 +289,11 @@ changes from today's `Result of integer, string` in AP24.1.
 ## 9. Anonymous routine as an argument
 
 Current forms: function types, annotated anonymous routines, passing them as
-arguments, and positional calls through function parameters
-([closures](../../../pascal/language/functions/closures.md)).
+arguments, positional calls through function parameters, named routine and
+expression closers, body terminators, and `null;` (AP13.2 through AP13.6;
+[closures](../../../pascal/language/functions/closures.md)).
 
-Draft forms: computed `const` (AP16), named routine and expression closers,
-required body terminators, and `null;` (AP13.2, AP13.3, AP13.4, and AP13.6).
+Draft forms: computed `const` (AP16).
 
 ```pascal
 program Callbacks;
@@ -320,12 +323,13 @@ consumed, and the function-valued parameter is called positionally (AP09).
 
 ## 10. Subranges and the recorded distinct-type exception
 
-Current forms: type aliases, primitive types, and integer literals
-([grammar](../../../specs/grammar.ebnf), `type_def` and `integer_literal`).
+Current forms: type aliases, primitive types, integer literals, the main-body
+terminator, and `null;` (AP13; [grammar](../../../specs/grammar.ebnf),
+`type_def` and `integer_literal`).
 
 Draft forms: integer subrange declarations and checked conversion (AP18, Q10
 and Q11), `distinct` declarations and explicit construction (AP19, Q12 and
-Q13), computed `const` (AP16), and the main-body terminator and `null;` (AP13).
+Q13), and computed `const` (AP16).
 
 ```pascal
 program DomainTypes;

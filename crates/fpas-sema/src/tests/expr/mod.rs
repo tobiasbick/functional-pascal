@@ -1,6 +1,7 @@
 use super::{check_errors, check_ok};
 use crate::analyze_with_types;
 
+mod boolean;
 mod bound_methods;
 mod closures;
 mod equality;
@@ -126,8 +127,8 @@ fn or_booleans() {
 }
 
 #[test]
-fn and_integers_bitwise() {
-    check_ok("program T; var X: integer := 5 and 3; begin end.");
+fn bit_and_integers() {
+    check_ok("program T; uses Std.Bits; var X: integer := BitAnd(5, 3); begin end.");
 }
 
 #[test]
@@ -260,23 +261,23 @@ fn equality_records_with_comparable_fields_are_valid() {
 // ── Shift ───────────────────────────────────────────────────────
 
 #[test]
-fn shl_valid() {
-    check_ok("program T; var X: integer := 1 shl 4; begin end.");
+fn shift_left_valid() {
+    check_ok("program T; uses Std.Bits; var X: integer := ShiftLeft(1, 4); begin end.");
 }
 
 #[test]
-fn shr_valid() {
-    check_ok("program T; var X: integer := 16 shr 4; begin end.");
+fn shift_right_valid() {
+    check_ok("program T; uses Std.Bits; var X: integer := ShiftRight(16, 4); begin end.");
 }
 
 #[test]
-fn shl_with_real_error() {
-    check_errors("program T; var X: integer := 1 shl 2.0; begin end.");
+fn shift_left_with_real_error() {
+    check_errors("program T; uses Std.Bits; var X: integer := ShiftLeft(1, 2.0); begin end.");
 }
 
 #[test]
-fn shr_with_real_error() {
-    check_errors("program T; var X: integer := 16 shr 1.5; begin end.");
+fn shift_right_with_real_error() {
+    check_errors("program T; uses Std.Bits; var X: integer := ShiftRight(16, 1.5); begin end.");
 }
 
 #[test]
@@ -290,8 +291,8 @@ fn xor_booleans() {
 }
 
 #[test]
-fn xor_integers_bitwise() {
-    check_ok("program T; var X: integer := 5 xor 3; begin end.");
+fn bit_xor_integers() {
+    check_ok("program T; uses Std.Bits; var X: integer := BitXor(5, 3); begin end.");
 }
 
 #[test]
@@ -315,8 +316,8 @@ fn not_string_error() {
 }
 
 #[test]
-fn not_integer_bitwise() {
-    check_ok("program T; var X: integer := not 0; begin end.");
+fn bit_not_integer() {
+    check_ok("program T; uses Std.Bits; var X: integer := BitNot(0); begin end.");
 }
 
 #[test]

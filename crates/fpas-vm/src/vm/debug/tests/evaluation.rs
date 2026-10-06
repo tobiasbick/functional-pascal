@@ -1,6 +1,8 @@
 use super::*;
 use fpas_bytecode::Value;
 
+mod boolean;
+
 #[test]
 fn evaluation_resolves_shadowed_frame_values_and_globals() {
     let mut session = DebugSession::new(inspection_executable()).expect("debug session");

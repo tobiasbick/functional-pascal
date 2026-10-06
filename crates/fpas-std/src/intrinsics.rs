@@ -6,6 +6,7 @@
 //! directly routes standard-owned families to exactly one implementation module.
 
 use crate::array;
+use crate::bits;
 use crate::conv;
 use crate::dict;
 use crate::env;
@@ -45,6 +46,7 @@ fn dispatch_intrinsic(
         Intrinsic::Conv(_) => conv::run(intrinsic, call, location),
         Intrinsic::Parse(_) => parse::run(intrinsic, call, location),
         Intrinsic::Math(_) => math::run(intrinsic, call, location),
+        Intrinsic::Bits(_) => bits::run(intrinsic, call, location),
         Intrinsic::Array(_) => array::run(intrinsic, call, location),
         Intrinsic::Dict(_) => dict::run(intrinsic, call, location),
         Intrinsic::Env(_) => env::run(intrinsic, call, location),

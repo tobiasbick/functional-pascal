@@ -42,11 +42,6 @@ impl Selector<'_> {
             BinaryOperation::AndBoolean => Some(Opcode::AndBoolean),
             BinaryOperation::OrBoolean => Some(Opcode::OrBoolean),
             BinaryOperation::ConcatString => Some(Opcode::ConcatString),
-            BinaryOperation::ShiftLeftInteger => Some(Opcode::ShiftLeftInteger),
-            BinaryOperation::ShiftRightInteger => Some(Opcode::ShiftRightInteger),
-            BinaryOperation::BitAndInteger => Some(Opcode::BitAndInteger),
-            BinaryOperation::BitOrInteger => Some(Opcode::BitOrInteger),
-            BinaryOperation::BitXorInteger => Some(Opcode::BitXorInteger),
             BinaryOperation::Equal | BinaryOperation::NotEqual => None,
         };
         if let Some(opcode) = direct {

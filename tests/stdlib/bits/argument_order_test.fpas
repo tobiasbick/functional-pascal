@@ -1,0 +1,32 @@
+program BitArgumentOrderTest;
+
+uses Std.Bits, Std.Test;
+
+mutable var
+  Trace: integer := 0;
+
+function Mark(Value: integer; Digit: integer): integer;
+begin
+  Trace := Trace * 10 + Digit;
+  return Value;
+end function;
+
+begin
+  AssertEquals(0, BitAnd(Mark(0, 1), Mark(7, 2)));
+  AssertEquals(12, Trace);
+  Trace := 0;
+  AssertEquals(-1, BitOr(Mark(-1, 1), Mark(7, 2)));
+  AssertEquals(12, Trace);
+  Trace := 0;
+  AssertEquals(6, BitXor(Mark(12, 1), Mark(10, 2)));
+  AssertEquals(12, Trace);
+  Trace := 0;
+  AssertEquals(-13, BitNot(Mark(12, 1)));
+  AssertEquals(1, Trace);
+  Trace := 0;
+  AssertEquals(4, ShiftLeft(Mark(1, 1), Mark(2, 2)));
+  AssertEquals(12, Trace);
+  Trace := 0;
+  AssertEquals(-4, ShiftRight(Mark(-8, 1), Mark(1, 2)));
+  AssertEquals(12, Trace);
+end.

@@ -1,5 +1,6 @@
 //! Scalar expression lowering with source-order evaluation.
 
+mod boolean;
 mod designators;
 
 use fpas_ir::{BinaryOperation as IrBinary, Constant, Operation, UnaryOperation, ValueId};
@@ -109,7 +110,6 @@ impl LoweringContext {
     ) -> Result<ValueId, CompileError> {
         let operand_ty = self.expression_type(operand)?;
         let value = self.lower_expression(operand)?;
-        let result_ty = self.expression_ir_type(operand)?;
         match (operation, operand_ty) {
             (UnaryOp::Negate, Ty::Integer) => self.emit_value(
                 Operation::Unary {
@@ -143,14 +143,6 @@ impl LoweringContext {
                 types::BOOLEAN,
                 span,
             ),
-            (UnaryOp::Not, Ty::Integer) => {
-                let mask = self.emit_value(
-                    Operation::Const(Constant::Integer(-1)),
-                    types::INTEGER,
-                    span,
-                )?;
-                self.emit_binary(IrBinary::BitXorInteger, value, mask, result_ty, span)
-            }
             _ => Err(unsupported(span, "unary operand type")),
         }
     }
@@ -227,21 +219,8 @@ impl LoweringContext {
             BinaryOp::Mod => {
                 self.lower_direct_binary(IrBinary::RemainderInteger, left, right, result_ty, span)
             }
-            BinaryOp::Shl | BinaryOp::Shr => self.lower_direct_binary(
-                if operation == BinaryOp::Shl {
-                    IrBinary::ShiftLeftInteger
-                } else {
-                    IrBinary::ShiftRightInteger
-                },
-                left,
-                right,
-                result_ty,
-                span,
-            ),
             BinaryOp::And | BinaryOp::Or | BinaryOp::Xor => {
-                let ir = boolean_or_bitwise_operation(operation, &left_ty)
-                    .ok_or_else(|| unsupported(span, "boolean or bitwise operation"))?;
-                self.lower_direct_binary(ir, left, right, result_ty, span)
+                self.lower_boolean(operation, left, right, result_ty, span)
             }
             BinaryOp::Eq | BinaryOp::NotEq => self.lower_numeric_comparison(
                 if operation == BinaryOp::Eq {
@@ -444,18 +423,6 @@ impl LoweringContext {
             result_ty,
             span,
         )
-    }
-}
-
-fn boolean_or_bitwise_operation(operation: BinaryOp, left_ty: &Ty) -> Option<IrBinary> {
-    match (operation, left_ty) {
-        (BinaryOp::And, Ty::Boolean) => Some(IrBinary::AndBoolean),
-        (BinaryOp::Or, Ty::Boolean) => Some(IrBinary::OrBoolean),
-        (BinaryOp::Xor, Ty::Boolean) => Some(IrBinary::NotEqual),
-        (BinaryOp::And, _) => Some(IrBinary::BitAndInteger),
-        (BinaryOp::Or, _) => Some(IrBinary::BitOrInteger),
-        (BinaryOp::Xor, _) => Some(IrBinary::BitXorInteger),
-        _ => None,
     }
 }
 

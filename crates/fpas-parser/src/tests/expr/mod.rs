@@ -5,10 +5,12 @@ mod aggregates;
 mod calls;
 mod closures;
 mod designators;
+mod logical;
 mod operators;
 mod postfix;
 mod precedence;
 mod primitives;
+mod retired_shifts;
 mod standalone;
 
 fn parse_expr(expr_src: &str) -> Expr {

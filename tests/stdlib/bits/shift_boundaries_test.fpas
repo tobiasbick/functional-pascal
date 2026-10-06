@@ -1,0 +1,20 @@
+program ShiftBoundariesTest;
+
+uses Std.Bits, Std.Test;
+
+begin
+  var Minimum: integer := -9223372036854775807 - 1;
+  var Maximum: integer := 9223372036854775807;
+  AssertEquals(7, ShiftLeft(7, 0));
+  AssertEquals(-8, ShiftRight(-8, 0));
+  AssertEquals(Minimum, ShiftLeft(Minimum, 0));
+  AssertEquals(Maximum, ShiftRight(Maximum, 0));
+  AssertEquals(-4, ShiftRight(-8, 1));
+  AssertEquals(-1, ShiftRight(-1, 63));
+  AssertEquals(-1, ShiftRight(Minimum, 63));
+  AssertEquals(0, ShiftRight(Maximum, 63));
+  AssertEquals(Minimum, ShiftLeft(1, 63));
+  AssertEquals(Minimum, ShiftLeft(-1, 63));
+  AssertEquals(0, ShiftLeft(Minimum, 1));
+  AssertEquals(-2, ShiftLeft(Maximum, 1));
+end.

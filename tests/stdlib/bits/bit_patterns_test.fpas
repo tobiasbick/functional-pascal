@@ -1,0 +1,21 @@
+program BitPatternsTest;
+
+uses Std.Bits, Std.Test;
+
+begin
+  AssertEquals(8, BitAnd(12, 10));
+  AssertEquals(14, BitOr(12, 10));
+  AssertEquals(6, BitXor(12, 10));
+  AssertEquals(-13, BitNot(12));
+  AssertEquals(-1, BitNot(0));
+  AssertEquals(0, BitNot(-1));
+  var Minimum: integer := -9223372036854775807 - 1;
+  var Maximum: integer := 9223372036854775807;
+  AssertEquals(0, BitAnd(Minimum, Maximum));
+  AssertEquals(-1, BitOr(Minimum, Maximum));
+  AssertEquals(Maximum, BitXor(Minimum, -1));
+  AssertEquals(Maximum, BitNot(Minimum));
+  AssertEquals(0, Std.Bits.BitAnd(-8, 3));
+  AssertEquals(-5, Std.Bits.BitOr(-8, 3));
+  AssertEquals(-5, Std.Bits.BitXor(-8, 3));
+end.

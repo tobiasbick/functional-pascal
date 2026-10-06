@@ -47,25 +47,96 @@ WriteLn('asc' in 'pascal');
 
 From highest to lowest binding strength:
 
-| Level | Operators |
-| ----- | --------- |
-| 1 | `not`, unary `-`, `try` |
-| 2 | `*`, `/`, `div`, `mod`, `and`, `shl`, `shr` |
-| 3 | `+`, `-`, `or`, `xor` |
-| 4 | `=`, `<>`, `<`, `>`, `<=`, `>=`, `in` |
+| Level | Operators | Grouping |
+| ----- | --------- | -------- |
+| 1 | Postfix call, index, field, `with ... end with` | |
+| 2 | Unary `-`, `try` | Prefix |
+| 3 | `*`, `/`, `div`, `mod` | Left to right |
+| 4 | `+`, `-` | Left to right |
+| 5 | `=`, `<>`, `<`, `>`, `<=`, `>=`, `in` | Non-associative |
+| 6 | `not` | Prefix |
+| 7 | `and`, `or`, `xor` | Same-operator chains only, left to right |
 
-Record update (`expr with Field := Value; … end with`) binds tighter than binary operators because it is postfix on the primary expression.
+Comparisons bind more tightly than `not`. Thus `not Count > 0` means
+`not (Count > 0)`, and `not Done and Ready` means `(not Done) and Ready`.
+Repeated negation is allowed: `not not Ready` means `not (not Ready)`.
+To use a negated value inside a comparison or arithmetic expression, put it
+in parentheses: `(not Done) = Ready`. Unary `-` and `try` keep their higher
+priority: `not try GetFlag()` negates the unwrapped result.
 
-## Logical / bitwise
+Chains of one logical operator are valid, such as `A and B and C` or
+`A xor B xor C`. Different logical operators require explicit parentheses:
+`A and B or C` is a syntax error; write `(A and B) or C` or `A and (B or C)`
+to select the intended grouping. There is no implicit priority between
+`and`, `or`, and `xor`.
 
-| Operator | Description                          | Example         |
-|----------|--------------------------------------|------------------|
-| `and`    | Logical AND / bitwise AND on integer | `A and B`       |
-| `or`     | Logical OR / bitwise OR on integer   | `A or B`        |
-| `not`    | Logical NOT / bitwise NOT on integer | `not A`         |
-| `xor`    | Logical XOR / bitwise XOR on integer | `A xor B`       |
-| `shl`    | Shift left (integer)                 | `A shl 2`       |
-| `shr`    | Shift right (integer)                | `A shr 1`       |
+Comparison chains such as `A < B < C` are syntax errors. Write
+`A < B and B < C` instead. Each comparison evaluates its own operands, so
+a call used for `B` may run twice; store its result first when one call is
+intended. Parentheses permit a comparison result as an operand, for example
+`(A < B) = Expected`.
+
+Record update (`expr with Field := Value; … end with`) is postfix on the primary
+expression. Parentheses override the table in programs and debugger expressions.
+
+## Logical operators
+
+| Operator | Description | Example |
+|----------|-------------|---------|
+| `and` | Logical AND | `Ready and Valid` |
+| `or` | Logical OR | `Ready or Valid` |
+| `not` | Logical NOT | `not Ready` |
+| `xor` | Logical XOR | `Ready xor Valid` |
+
+All operands and results are `boolean`. There is no implicit conversion from
+numbers to booleans: compare explicitly, for example `Count > 0 and Ready`.
+This also applies to an operand skipped by short-circuit evaluation;
+`false and 1` is a type error.
+
+## Integer bit operations
+
+Import `uses Std.Bits;` and call the named integer functions:
+
+| Operation | Function |
+|-----------|----------|
+| Bitwise AND | `BitAnd(Left, Right)` |
+| Bitwise OR | `BitOr(Left, Right)` |
+| Bitwise XOR | `BitXor(Left, Right)` |
+| Bitwise complement | `BitNot(Value)` |
+| Shift left | `ShiftLeft(Value, Count)` |
+| Arithmetic shift right | `ShiftRight(Value, Count)` |
+
+The functions operate on signed 64-bit integers. Shift counts must be `0..63`;
+see [Std.Bits](../../std/numeric/bits.md) for results and runtime errors.
+An integer operand of a logical operator receives a type error with a matching
+`Std.Bits` hint. Both operands of a binary logical operator must be boolean;
+a mixed boolean/integer expression receives a Boolean operand hint.
+
+`shl` and `shr` are ordinary identifiers, so they may name variables, functions,
+or record members. Infix uses such as `Value shl Count` are syntax errors with
+a `Std.Bits.ShiftLeft(Value, Count)` hint; `shr` points to `ShiftRight`.
+
+## Evaluation order
+
+Binary operands are evaluated from left to right. Boolean `and` and `or` use
+short-circuit evaluation: `false and Right` returns `false` without evaluating
+`Right`; `true or Right` returns `true` without evaluating `Right`. Otherwise,
+the right operand is evaluated and determines the result. Each needed operand
+is evaluated exactly once.
+
+An operand that is skipped performs no calls or other side effects, raises no
+runtime errors, and does not propagate an error or `None` through `try`. It must
+still be syntactically valid and pass normal compile-time type checking.
+
+```pascal
+var Denominator: integer := 0;
+var NonzeroQuotient: boolean := (Denominator <> 0) and (10 div Denominator > 0);
+// NonzeroQuotient is false; division is skipped.
+```
+
+Boolean `xor` evaluates both operands. Calls to binary `Std.Bits` functions
+always evaluate both arguments, including `BitAnd(0, Right)` and `BitOr(-1, Right)`.
+Debugger watch expressions follow these same evaluation rules.
 
 ## String indexing
 
@@ -100,5 +171,6 @@ var
 
 ## See also
 
+- [Std.Bits — named integer bit operations](../../std/numeric/bits.md)
 - [Record update](../types/record-update.md)
 - [Error handling — `try`](../error-handling/try.md)

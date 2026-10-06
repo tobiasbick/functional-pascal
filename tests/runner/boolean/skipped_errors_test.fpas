@@ -1,0 +1,19 @@
+program SkippedErrorsTest;
+
+uses Std.Test;
+
+function UnexpectedCall(): boolean;
+begin
+  panic('the right operand must be skipped');
+  return true;
+end function;
+
+begin
+  AssertFalse(false and UnexpectedCall());
+  AssertTrue(true or UnexpectedCall());
+  AssertFalse(false and (1 div 0 > 0));
+  AssertTrue(true or (1 div 0 > 0));
+  var Values: array of integer := [];
+  AssertFalse(false and (Values[0] = 1));
+  AssertTrue(true or (Values[0] = 1));
+end.

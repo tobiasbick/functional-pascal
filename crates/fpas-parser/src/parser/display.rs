@@ -35,8 +35,6 @@ pub(super) fn token_display(t: &Token) -> Cow<'static, str> {
         Token::Xor => "xor".into(),
         Token::Div => "div".into(),
         Token::Mod => "mod".into(),
-        Token::Shl => "shl".into(),
-        Token::Shr => "shr".into(),
         Token::True => "true".into(),
         Token::False => "false".into(),
         Token::Type => "type".into(),

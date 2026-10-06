@@ -1,15 +1,18 @@
 //! Immutable IR walker with explicit operation and traversal budgets.
+//!
+//! Boolean evaluation: `docs/pascal/language/basics/operators.md#evaluation-order`.
 
 use std::collections::HashSet;
 use std::sync::{Arc, TryLockError};
 
 use fpas_bytecode::Value;
 
-use super::model::{DebugCallTarget, DebugEvaluationLimits, DebugExpression};
+use super::model::{DebugBinaryOperation, DebugCallTarget, DebugEvaluationLimits, DebugExpression};
 use super::qualified;
 use crate::vm::debug::types::{DebugErrorKind, DebugSessionError};
 use crate::vm::value_ops::{self, ValueOperationError, ValueOperationErrorKind};
 
+/// Evaluates only the operands needed by Boolean short-circuit operations.
 pub(super) fn evaluate(
     expression: &DebugExpression,
     depth: usize,
@@ -65,6 +68,13 @@ fn evaluate_with_qualified_fallback(
             right,
         } => {
             let left = evaluate(left, depth + 1, limits, budget, resolve, invoke)?;
+            if matches!(
+                (operation, &left),
+                (DebugBinaryOperation::And, Value::Boolean(false))
+                    | (DebugBinaryOperation::Or, Value::Boolean(true))
+            ) {
+                return Ok(left);
+            }
             let right = evaluate(right, depth + 1, limits, budget, resolve, invoke)?;
             value_ops::binary(*operation, &left, &right).map_err(operation_error)?
         }

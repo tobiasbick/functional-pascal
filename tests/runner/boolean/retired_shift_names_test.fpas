@@ -1,0 +1,37 @@
+program RetiredShiftNamesTest;
+
+uses Std.Bits, Std.Test;
+
+type
+  Values = record
+    shl: integer;
+    shr: integer;
+  end record;
+
+function shl(Value: integer): integer;
+begin
+  return Value + 1;
+end function;
+
+function shr(Value: integer): integer;
+begin
+  return Value - 1;
+end function;
+
+function Add(shl: integer; shr: integer): integer;
+begin
+  return SHL + SHR;
+end function;
+
+begin
+  var Pair: Values := record
+    shl := 4;
+    shr := 2;
+  end;
+
+  AssertEquals(4, ShL(3));
+  AssertEquals(2, SHR(3));
+  AssertEquals(6, Add(Pair.SHL, Pair.Shr));
+  AssertEquals(8, ShiftLeft(Pair.shl, 1));
+  AssertEquals(1, ShiftRight(Pair.shr, 1));
+end.

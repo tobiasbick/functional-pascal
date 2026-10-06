@@ -97,21 +97,6 @@ impl Worker {
             Opcode::GreaterEqualDynamic => {
                 self.execute_value_binary(instruction.abc(), BinaryOperation::GreaterEqual)?
             }
-            Opcode::ShiftLeftInteger => {
-                self.execute_integer_binary(instruction.abc(), BinaryOperation::ShiftLeft)?
-            }
-            Opcode::ShiftRightInteger => {
-                self.execute_integer_binary(instruction.abc(), BinaryOperation::ShiftRight)?
-            }
-            Opcode::BitAndInteger => {
-                self.execute_integer_binary(instruction.abc(), BinaryOperation::And)?
-            }
-            Opcode::BitOrInteger => {
-                self.execute_integer_binary(instruction.abc(), BinaryOperation::Or)?
-            }
-            Opcode::BitXorInteger => {
-                self.execute_integer_binary(instruction.abc(), BinaryOperation::Xor)?
-            }
             Opcode::EqualInteger => {
                 self.execute_integer_binary(instruction.abc(), BinaryOperation::Equal)?
             }

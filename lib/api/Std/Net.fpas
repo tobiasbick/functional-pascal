@@ -9,17 +9,17 @@ public type
   Connection = record
     // Compiler-owned storage for this opaque handle.
     _IntrinsicHandle: integer;
-  end;
+  end record;
   // Opaque VM-owned TCP or TLS listener.
   Listener = record
     // Compiler-owned storage for this opaque handle.
     _IntrinsicHandle: integer;
-  end;
+  end record;
   // Record with `Host: string` and `Port: integer`.
   NetworkAddress = record
     public Host: string;
     public Port: integer;
-  end;
+  end record;
 
 // Blocks until one client connects.
 //
@@ -28,7 +28,7 @@ public type
 public function Accept(Listener: Std.Net.Listener): result of Std.Net.Connection, string;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Blocks until one client connects or cancellation is requested.
 //
@@ -38,7 +38,7 @@ end;
 public function AcceptWithCancellation(Listener: Std.Net.Listener; Token: Std.Tasks.CancellationToken): result of Std.Net.Connection, string;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Invalidates the handle.
 //
@@ -47,7 +47,7 @@ end;
 public function Close(Connection: Std.Net.Connection): result of boolean, string;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Invalidates the listener handle.
 //
@@ -56,7 +56,7 @@ end;
 public function CloseListener(Listener: Std.Net.Listener): result of boolean, string;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Resolves and connects.
 //
@@ -67,7 +67,7 @@ end;
 public function Connect(Host: string; Port: integer; TimeoutMillis: integer): result of Std.Net.Connection, string;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Resolves, connects, and completes a verified TLS handshake.
 //
@@ -78,7 +78,7 @@ end;
 public function ConnectTls(Host: string; Port: integer; TimeoutMillis: integer): result of Std.Net.Connection, string;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Also observes cancellation during TLS handshake I/O.
 //
@@ -95,7 +95,7 @@ public function ConnectTlsWithCancellation(
 ): result of Std.Net.Connection, string;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Cancellable TCP attempts; OS DNS checked on return.
 //
@@ -112,7 +112,7 @@ public function ConnectWithCancellation(
 ): result of Std.Net.Connection, string;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Binds one TCP listener.
 //
@@ -122,7 +122,7 @@ end;
 public function Listen(Host: string; Port: integer): result of Std.Net.Listener, string;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Loads PEM credentials and binds one TLS listener.
 //
@@ -141,7 +141,7 @@ public function ListenTls(
 ): result of Std.Net.Listener, string;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Returns the bound numeric IP address and port.
 //
@@ -150,7 +150,7 @@ end;
 public function ListenerLocalAddress(Listener: Std.Net.Listener): result of Std.Net.NetworkAddress, string;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Empty array means EOF.
 //
@@ -160,7 +160,7 @@ end;
 public function ReceiveBytes(Connection: Std.Net.Connection; MaxBytes: integer): result of array of integer, string;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Reads a chunk or reports cancellation; leaves the connection open.
 //
@@ -175,7 +175,7 @@ public function ReceiveBytesWithCancellation(
 ): result of array of integer, string;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Returns bytes written; partial writes are possible.
 //
@@ -185,7 +185,7 @@ end;
 public function SendBytes(Connection: Std.Net.Connection; Data: array of integer): result of integer, string;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Returns accepted bytes or reports cancellation before progress.
 //
@@ -200,7 +200,7 @@ public function SendBytesWithCancellation(
 ): result of integer, string;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Sets read/write timeout; zero disables it.
 //
@@ -210,4 +210,5 @@ end;
 public function SetTimeout(Connection: Std.Net.Connection; TimeoutMillis: integer): result of boolean, string;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
+end unit;

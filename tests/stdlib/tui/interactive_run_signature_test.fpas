@@ -5,7 +5,7 @@ uses Std.Tasks, Std.Test, Std.Tui;
 type
   DemoModel = record
     Ticks: integer;
-  end;
+  end record;
 
 function UpdateDemo(State: DemoModel; Msg: TuiMsg; Cmd: TuiCmdOutput): DemoModel;
 begin
@@ -32,26 +32,26 @@ begin
       return State;
     end;
   end;
-end;
+end function;
 
 function ViewDemo(State: DemoModel): TuiElement;
 begin
   return TuiElementBuilders.MakeLabel('interactive');
-end;
+end function;
 
 function UpdateBackground(State: DemoModel; Message: integer; Cmd: TuiCmdOutput): DemoModel;
 begin
   return record
     Ticks := State.Ticks + Message;
   end;
-end;
+end function;
 
 function RunSignatureOnly(): DemoModel;
 begin
   return TuiApplication.Run(record
     Ticks := 0;
   end, UpdateDemo, ViewDemo);
-end;
+end function;
 
 function RunBackgroundSignatureOnly(): DemoModel;
 begin
@@ -59,7 +59,7 @@ begin
   return TuiApplication.RunWithBackground(record
     Ticks := 0;
   end, Inbox, UpdateDemo, UpdateBackground, ViewDemo);
-end;
+end function;
 
 begin
   AssertTrue(true);

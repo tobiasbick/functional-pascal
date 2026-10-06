@@ -5,7 +5,7 @@ uses Std.Test;
 function Double(X: integer): integer;
 begin
   return X * 2;
-end;
+end function;
 
 begin
   AssertEquals(4, Double(2));

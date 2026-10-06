@@ -22,7 +22,7 @@ begin
   end;
 
   return (Host + ':') + Std.Conv.IntToStr(UriValue.Port);
-end;
+end function;
 
 // Formats the scheme and authority portion of a URI.
 //
@@ -31,7 +31,7 @@ end;
 function Origin(UriValue: Uri): string;
 begin
   return ((UriValue.Scheme + '://') + Authority(UriValue));
-end;
+end function;
 
 // Removes a fragment from a URI reference.
 //
@@ -46,7 +46,7 @@ begin
   end;
 
   return Std.Str.Substring(Text, 0, Fragment);
-end;
+end function;
 
 // Removes the query from a path-and-query value.
 //
@@ -61,7 +61,7 @@ begin
   end;
 
   return Std.Str.Substring(Path, 0, Query);
-end;
+end function;
 
 // Resolves dot segments in an absolute path while preserving its query.
 //
@@ -102,7 +102,7 @@ begin
   end;
   var Output: string := '/' + Std.Str.Join(Segments, '/');
   return Output + Query;
-end;
+end function;
 
 // Resolves a redirect location against an absolute base URI.
 //
@@ -165,7 +165,7 @@ begin
       return Error('Invalid HTTP redirect Location: ' + Message);
     end;
   end;
-end;
+end function;
 
 // Reports whether two URIs have the same scheme, host, and port.
 //
@@ -176,7 +176,7 @@ function SameOrigin(Left: Uri; Right: Uri): boolean;
 begin
   return ((Std.Str.ToLower(Left.Scheme) = Std.Str.ToLower(Right.Scheme)) and (Std.Str.ToLower(Left.Host) = Std.Str.ToLower(Right.Host))) and
          (Left.Port = Right.Port);
-end;
+end function;
 
 // Removes sensitive or entity fields required by redirect policy.
 //
@@ -206,7 +206,7 @@ begin
   end;
 
   return Output;
-end;
+end function;
 
 // Reports whether a status code uses the automatic redirect policy.
 //
@@ -216,7 +216,7 @@ public function IsStatus(StatusCode: integer): boolean;
 begin
   return (((StatusCode = 301) or (StatusCode = 302)) or (StatusCode = 303)) or
          ((StatusCode = 307) or (StatusCode = 308));
-end;
+end function;
 
 // Builds the next request from one redirect response.
 //
@@ -277,4 +277,5 @@ begin
   end;
 
   return Ok(Output);
-end;
+end function;
+end unit;

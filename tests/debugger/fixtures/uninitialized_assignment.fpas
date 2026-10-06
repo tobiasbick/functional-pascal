@@ -6,7 +6,7 @@ type
   Point = record
     X: integer;
     Y: integer;
-  end;
+  end record;
 
 mutable var
   GlobalCount: integer := 99;

@@ -9,15 +9,15 @@ type
     function GetBase(Self: Counter): integer;
     begin
       return Self.Base;
-    end;
+    end function;
 
     procedure SetBase(Self: Counter; Value: integer);
     begin
       WriteLn('Setter received: ' + IntToStr(Value));
-    end;
+    end procedure;
 
     property Value: integer read GetBase write SetBase;
-  end;
+  end record;
 
 begin
   var C: Counter := record

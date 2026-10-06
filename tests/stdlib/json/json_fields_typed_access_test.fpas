@@ -15,7 +15,7 @@ begin
       return Message;
     end;
   end;
-end;
+end function;
 
 begin
   var Fields: dict of string to JsonValue := Unwrap(ParseObject('{"s":"x","b":true,"n":2.5,"i":-7,"big":1e300,"o":{"k":1},"rows":["a","b"],"mixed":["a",1]}'));

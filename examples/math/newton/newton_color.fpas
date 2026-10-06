@@ -23,9 +23,10 @@ begin
   begin
     return RgbColor(0, 0, 0);
   end;
-end;
+end function;
 
 public function InsideColor(): Color;
 begin
   return RgbColor(0, 0, 0);
-end;
+end function;
+end unit;

@@ -5,12 +5,12 @@ uses Std.Str, Std.Tasks;
 function Expand(C: string): string;
 begin
   return 'ab';
-end;
+end function;
 
 function Work(): string;
 begin
   return Map('x', Expand);
-end;
+end function;
 
 begin
   var Job: task := go Work();

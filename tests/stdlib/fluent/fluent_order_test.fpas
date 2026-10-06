@@ -9,12 +9,12 @@ function Visit(Value: integer): integer;
 begin
   Visits.Push(Value);
   return Value;
-end;
+end function;
 
 function Add(Left: integer; Right: integer): integer;
 begin
   return Left + Right;
-end;
+end function;
 
 begin
   AssertEquals(3, (Visit(1)).Add(Visit(2)));

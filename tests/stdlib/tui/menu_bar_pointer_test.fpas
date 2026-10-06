@@ -6,7 +6,7 @@ type
   MenuModel = record
     Focus: integer;
     Actions: array of integer;
-  end;
+  end record;
 
 function FindGlyph(Snapshot: TuiSurfaceSnapshot; Glyph: string): TuiPoint;
 begin
@@ -20,7 +20,7 @@ begin
   end;
 
   panic('glyph not found in snapshot');
-end;
+end function;
 
 function ViewMenu(State: MenuModel): TuiElement;
 begin
@@ -31,7 +31,7 @@ begin
                                                                                                                    TuiMenuItem.Create(TuiControlId.Create(3), 'Quit', TuiAction.Create(30))
                                                                                                                  ])
                                                                                 ]);
-end;
+end function;
 
 function UpdateMenu(State: MenuModel; Msg: TuiMsg; Cmd: TuiCmdOutput): MenuModel;
 begin
@@ -65,7 +65,7 @@ begin
       return State;
     end;
   end;
-end;
+end function;
 
 begin
   mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 4));

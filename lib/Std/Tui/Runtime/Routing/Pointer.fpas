@@ -15,13 +15,13 @@ begin
   end;
 
   return [TuiMsg.FocusChanged(Previous, Some(Target))];
-end;
+end function;
 
 function TuiIdlePointerResult(ApplicationId: integer; Messages: array of TuiMsg): array of TuiMsg;
 begin
   TuiButtonCaptureRelease(ApplicationId);
   return Messages;
-end;
+end function;
 
 function TuiCapturedPointerResult(
   ApplicationId: integer;
@@ -32,7 +32,7 @@ function TuiCapturedPointerResult(
 begin
   TuiButtonCaptureSet(ApplicationId, Button, Inside);
   return Messages;
-end;
+end function;
 
 function TuiPointerInsideCapturedButton(
   Root: TuiElement;
@@ -51,13 +51,13 @@ begin
       return false;
     end;
   end;
-end;
+end function;
 
 // Allocates idle pointer-button state for one application.
 public procedure TuiPointerRoutingOpen();
 begin
   TuiButtonCaptureOpen();
-end;
+end procedure;
 
 // Clears pointer-button state for one application.
 //
@@ -66,7 +66,7 @@ end;
 public procedure TuiPointerRoutingClose(ApplicationId: integer);
 begin
   TuiButtonCaptureClose(ApplicationId);
-end;
+end procedure;
 
 // Returns the button painted pressed for one application.
 //
@@ -75,7 +75,7 @@ end;
 public function TuiPointerRoutingPressed(ApplicationId: integer): option of TuiControlId;
 begin
   return TuiButtonCapturePressed(ApplicationId);
-end;
+end function;
 
 // Routes one pointer event and advances application-owned button capture.
 //
@@ -220,4 +220,5 @@ begin
       return TuiIdlePointerResult(ApplicationId, FocusMessages);
     end;
   end;
-end;
+end function;
+end unit;

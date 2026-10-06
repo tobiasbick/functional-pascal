@@ -159,7 +159,7 @@ fn all_four_commands_preserve_source_failures_in_text_and_json() {
         ("program P begin end.", "FP2001"),
         ("program P; begin var N: integer := 'hello'; end.", "FP3006"),
         (
-            "program P; procedure Print(A, B: integer); begin end; begin end.",
+            "program P; procedure Print(A, B: integer); begin end procedure; begin end.",
             "FP2014",
         ),
         (
@@ -240,7 +240,7 @@ fn real_process_records_keep_imported_paths_multiple_errors_and_absent_positions
     );
     write(
         &root.join("src/bad.fpas"),
-        "unit App.Bad public procedure P(); begin @ end;",
+        "unit App.Bad public procedure P(); begin @ end procedure;",
     );
     for command in ["check", "build", "run"] {
         let output = command_output(&root, command, "app.fpasprj", true);

@@ -11,7 +11,7 @@ public type
     public Bounds: TuiRect;
     // Clipping rectangle in surface coordinates.
     public Clip: TuiRect;
-  end;
+  end record;
 
 mutable var
   TuiFrameEntries: array of array of TuiArrangedEntry := [];
@@ -24,7 +24,7 @@ begin
   end;
 
   return Slot;
-end;
+end function;
 
 public type
   // Host-owned arranged-frame index for one painted tree.
@@ -40,7 +40,7 @@ public type
       return record
         Slot := Std.Arrays.Length(TuiFrameEntries);
       end;
-    end;
+    end function;
 
     // Clears all entries before a fresh arrange pass.
     //
@@ -51,7 +51,7 @@ public type
       var Slot: integer := TuiFrameRequire(Self.Slot);
       mutable var Empty: array of TuiArrangedEntry := [];
       TuiFrameEntries[Slot - 1] := Empty;
-    end;
+    end procedure;
 
     // Appends one preorder entry and returns its index.
     //
@@ -73,7 +73,7 @@ public type
       end);
       TuiFrameEntries[Slot - 1] := Entries;
       return Index;
-    end;
+    end function;
 
     // Drop the shared slot handle before Push so copy-on-write stays unique.
     // Replaces every entry atomically after a successful arrange pass.
@@ -85,7 +85,7 @@ public type
     begin
       var Slot: integer := TuiFrameRequire(Self.Slot);
       TuiFrameEntries[Slot - 1] := Entries;
-    end;
+    end procedure;
 
     // Returns the number of arranged entries.
     //
@@ -95,7 +95,7 @@ public type
     begin
       var Slot: integer := TuiFrameRequire(Self.Slot);
       return Std.Arrays.Length(TuiFrameEntries[Slot - 1]);
-    end;
+    end function;
 
     // Returns one arranged entry by preorder index.
     //
@@ -112,5 +112,6 @@ public type
       end;
 
       return Entries[Index];
-    end;
-  end;
+    end function;
+  end record;
+end unit;

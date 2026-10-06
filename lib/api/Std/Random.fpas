@@ -8,7 +8,7 @@ unit Std.Random;
 public function Random(): real;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Unbiased pseudo-random value in inclusive `[Lo, Hi]`.
 //
@@ -18,13 +18,13 @@ end;
 public function RandomInt(Lo: integer; Hi: integer): integer;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Replace the VM-local state with an operating-system seed.
 public procedure Randomize();
 begin
   panic('Intrinsic API declaration');
-end;
+end procedure;
 
 // Start a repeatable VM-local sequence.
 //
@@ -33,4 +33,5 @@ end;
 public procedure SetSeed(Seed: integer);
 begin
   panic('Intrinsic API declaration');
-end;
+end procedure;
+end unit;

@@ -11,15 +11,15 @@ fn diamond_dependency_graph() {
     );
     write_text(
         &cwd.join("src/a.fpas"),
-        "unit App.A;\nuses App.Shared;\npublic function FromA(): integer;\nbegin\n  return Base() + 1;\nend;\n",
+        "unit App.A;\nuses App.Shared;\npublic function FromA(): integer;\nbegin\n  return Base() + 1;\nend function;\nend unit;\n",
     );
     write_text(
         &cwd.join("src/b.fpas"),
-        "unit App.B;\nuses App.Shared;\npublic function FromB(): integer;\nbegin\n  return Base() + 10;\nend;\n",
+        "unit App.B;\nuses App.Shared;\npublic function FromB(): integer;\nbegin\n  return Base() + 10;\nend function;\nend unit;\n",
     );
     write_text(
         &cwd.join("src/shared.fpas"),
-        "unit App.Shared;\npublic function Base(): integer;\nbegin\n  return 100;\nend;\n",
+        "unit App.Shared;\npublic function Base(): integer;\nbegin\n  return 100;\nend function;\nend unit;\n",
     );
 
     let (exit_code, stdout_output, stderr_output) =
@@ -39,9 +39,18 @@ fn three_unit_cyclic_dependency() {
         &cwd.join("src/main.fpas"),
         "program Main;\nuses App.A;\nbegin\nend.\n",
     );
-    write_text(&cwd.join("src/a.fpas"), "unit App.A;\nuses App.B;\n");
-    write_text(&cwd.join("src/b.fpas"), "unit App.B;\nuses App.C;\n");
-    write_text(&cwd.join("src/c.fpas"), "unit App.C;\nuses App.A;\n");
+    write_text(
+        &cwd.join("src/a.fpas"),
+        "unit App.A;\nuses App.B;\nend unit;\n",
+    );
+    write_text(
+        &cwd.join("src/b.fpas"),
+        "unit App.B;\nuses App.C;\nend unit;\n",
+    );
+    write_text(
+        &cwd.join("src/c.fpas"),
+        "unit App.C;\nuses App.A;\nend unit;\n",
+    );
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);
     fs::remove_dir_all(&cwd).expect("temp directory must be removed");
@@ -62,7 +71,10 @@ fn self_import_reports_cycle() {
         &cwd.join("src/main.fpas"),
         "program Main;\nuses App.A;\nbegin\nend.\n",
     );
-    write_text(&cwd.join("src/a.fpas"), "unit App.A;\nuses App.A;\n");
+    write_text(
+        &cwd.join("src/a.fpas"),
+        "unit App.A;\nuses App.A;\nend unit;\n",
+    );
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);
     fs::remove_dir_all(&cwd).expect("temp directory must be removed");
@@ -89,17 +101,17 @@ members = ["common/lib.fpasprj", "left/lib.fpasprj", "right/lib.fpasprj", "app/a
         (
             "common",
             "",
-            "public function Value(): integer; begin return 1; end;",
+            "public function Value(): integer; begin return 1; end function;",
         ),
         (
             "left",
             "workspace = [\"common\"]",
-            "uses Repro.common; public function LeftValue(): integer; begin return Value(); end;",
+            "uses Repro.common; public function LeftValue(): integer; begin return Value(); end function;",
         ),
         (
             "right",
             "workspace = [\"common\"]",
-            "uses Repro.common; public function RightValue(): integer; begin return Value(); end;",
+            "uses Repro.common; public function RightValue(): integer; begin return Value(); end function;",
         ),
     ] {
         write_text(
@@ -119,7 +131,7 @@ units = ["Repro.{name}"]
         );
         write_text(
             &cwd.join(name).join("src/unit.fpas"),
-            &format!("unit Repro.{name}; {body}"),
+            &format!("unit Repro.{name}; {body}\nend unit;"),
         );
     }
     let project = cwd.join("app/app.fpasprj");

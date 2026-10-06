@@ -41,7 +41,7 @@ type TomlValue = enum
   Datetime(Value: string);
   ArrayValue(Items: array of TomlValue);
   Table(Fields: dict of string to TomlValue);
-end;
+end enum;
 ```
 
 `Datetime` preserves the TOML date, time, local date-time, or offset date-time spelling returned by the parser. Its `Value` must be a valid TOML date/time string when passed to `Stringify`.

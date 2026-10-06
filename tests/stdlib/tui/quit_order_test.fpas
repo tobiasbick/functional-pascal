@@ -7,12 +7,12 @@ type
     LabelText: string;
     Quit: boolean;
     Updates: integer;
-  end;
+  end record;
 
 function ViewQuit(State: QuitModel): TuiElement;
 begin
   return TuiElementBuilders.MakeLabel(State.LabelText);
-end;
+end function;
 
 function UpdateQuit(State: QuitModel; Msg: TuiMsg; Cmd: TuiCmdOutput): QuitModel;
 begin
@@ -53,7 +53,7 @@ begin
       end;
     end;
   end;
-end;
+end function;
 
 begin
   mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(20, 4));

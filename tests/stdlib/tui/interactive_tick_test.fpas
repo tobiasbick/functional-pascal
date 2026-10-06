@@ -10,7 +10,7 @@ type
     ShortestTick: integer;
     Started: integer;
     Replaced: boolean;
-  end;
+  end record;
 
 function Update(State: TickModel; Msg: TuiMsg; Cmd: TuiCmdOutput): TickModel;
 begin
@@ -49,18 +49,18 @@ begin
   end;
 
   return Next;
-end;
+end function;
 
 function UpdateMessage(State: TickModel; Message: integer; Cmd: TuiCmdOutput): TickModel;
 begin
   Cmd.RequestTick(20);
   return State with Replaced := true; end;
-end;
+end function;
 
 function View(State: TickModel): TuiElement;
 begin
   return TuiElementBuilders.MakeLabel('ticks');
-end;
+end function;
 
 begin
   var Inbox: channel of integer := CreateChannel(1);

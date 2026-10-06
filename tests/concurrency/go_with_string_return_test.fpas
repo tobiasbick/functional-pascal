@@ -5,7 +5,7 @@ uses Std.Tasks, Std.Test;
 function Greet(): string;
 begin
   return 'hello';
-end;
+end function;
 
 begin
   var T: task := go Greet();

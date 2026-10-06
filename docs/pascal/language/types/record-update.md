@@ -13,7 +13,7 @@ At least one field assignment is required. An empty update such as
 
 ```pascal
 type
-  Point = record X: integer; Y: integer; end;
+  Point = record X: integer; Y: integer; end record;
 
 var
   P: Point := record X := 1; Y := 2; end;
@@ -40,7 +40,7 @@ var
 function Origin(): Point;
 begin
   return record X := 0; Y := 0; end;
-end;
+end function;
 
 var
   T: Point := Origin() with X := 42; end;

@@ -66,5 +66,6 @@ uncompiled planning drafts; the applicable checks are spelling review,
 relative links and anchors, Markdown fences, and whitespace.
 
 The user's selected working branch replaces the process's default branch per
-work package for this delivery. The completion checkboxes remain open until
-merge, as required by [status tracking](../development-process.md#status-tracking).
+work package for this delivery. Both work packages are complete under
+[status tracking](../development-process.md#status-tracking); their checkboxes
+describe completed delivery on that branch.

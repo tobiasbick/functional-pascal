@@ -31,7 +31,7 @@ public type
         Enabled := true;
         Shortcut := '';
       end;
-    end;
+    end function;
 
     // Creates a disabled menu item without a shortcut hint.
     //
@@ -48,7 +48,7 @@ public type
         Enabled := false;
         Shortcut := '';
       end;
-    end;
+    end function;
 
     // Creates an enabled menu item with a display-only shortcut hint.
     //
@@ -66,5 +66,6 @@ public type
         Enabled := true;
         Shortcut := Shortcut;
       end;
-    end;
-  end;
+    end function;
+  end record;
+end unit;

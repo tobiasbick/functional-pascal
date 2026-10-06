@@ -6,7 +6,7 @@ uses Std.Tui, Std.Test;
 type
   CounterModel = record
     Value: integer;
-  end;
+  end record;
 
 function UpdateCounter(State: CounterModel; Msg: TuiMsg; Cmd: TuiCmdOutput): CounterModel;
 begin
@@ -33,12 +33,12 @@ begin
       return State;
     end;
   end;
-end;
+end function;
 
 function ViewCounter(State: CounterModel): TuiElement;
 begin
   return TuiElementBuilders.MakeLabel('count');
-end;
+end function;
 
 begin
   mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(40, 12));

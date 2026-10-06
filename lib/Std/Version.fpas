@@ -5,3 +5,4 @@ public const
   CompilerVersion: string := '0.0.1';
   // Version of the Functional Pascal standard library.
   LibraryVersion: string := '0.0.1';
+end unit;

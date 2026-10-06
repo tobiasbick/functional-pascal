@@ -62,7 +62,7 @@ public type
     public glyph: string;
     public foreground: Std.Console.Color;
     public background: Std.Console.Color;
-  end;
+  end record;
   // Cell color record.
   Color = record
     public kind: Std.Console.ColorKind;
@@ -70,7 +70,7 @@ public type
     public red: integer;
     public green: integer;
     public blue: integer;
-  end;
+  end record;
   // Enum: `Crt`, `Ansi256`, `Rgb`.
   ColorKind = enum
     // `Crt` enum member.
@@ -79,7 +79,7 @@ public type
     Ansi256;
     // `Rgb` enum member.
     Rgb;
-  end;
+  end enum;
   // Record.
   ConsoleEvent = record
     public kind: Std.Console.EventKind;
@@ -95,7 +95,7 @@ public type
     public ctrl: boolean;
     public alt: boolean;
     public meta: boolean;
-  end;
+  end record;
   // Enum.
   EventKind = enum
     // `Key` enum member.
@@ -110,7 +110,7 @@ public type
     FocusGained;
     // `FocusLost` enum member.
     FocusLost;
-  end;
+  end enum;
   // Record.
   KeyEvent = record
     public kind: Std.Console.KeyKind;
@@ -119,7 +119,7 @@ public type
     public ctrl: boolean;
     public alt: boolean;
     public meta: boolean;
-  end;
+  end record;
   // Enum.
   KeyKind = enum
     // `Unknown` enum member.
@@ -180,7 +180,7 @@ public type
     F12;
     // `Character` enum member.
     Character;
-  end;
+  end enum;
   // Enum.
   MouseAction = enum
     // `Unknown` enum member.
@@ -201,7 +201,7 @@ public type
     ScrollLeft;
     // `ScrollRight` enum member.
     ScrollRight;
-  end;
+  end enum;
   // Enum.
   MouseButton = enum
     // `None` enum member.
@@ -211,25 +211,25 @@ public type
     Right;
     // `Middle` enum member.
     Middle;
-  end;
+  end enum;
   // Absolute 1-based cell rectangle.
   Rect = record
     public x: integer;
     public y: integer;
     public width: integer;
     public height: integer;
-  end;
+  end record;
   // Opaque one-shot saved-region handle.
   SavedRegion = record
     // Compiler-owned storage for this opaque handle.
     _IntrinsicHandle: integer;
-  end;
+  end record;
 
 // Transactional exclusive fullscreen terminal ownership.
 public procedure AcquireInteractiveTerminal();
 begin
   panic('Intrinsic API declaration');
-end;
+end procedure;
 
 // Construct a 256-color cell value.
 //
@@ -238,31 +238,31 @@ end;
 public function Ansi256Color(Index: integer): Std.Console.Color;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Enable CRT mode.
 public procedure AssignCrt();
 begin
   panic('Intrinsic API declaration');
-end;
+end procedure;
 
 // Begin or nest a deferred screen frame.
 public procedure BeginFrame();
 begin
   panic('Intrinsic API declaration');
-end;
+end procedure;
 
 // Clear from cursor to the right edge of the active window.
 public procedure ClrEol();
 begin
   panic('Intrinsic API declaration');
-end;
+end procedure;
 
 // Clear only the active console window.
 public procedure ClrScr();
 begin
   panic('Intrinsic API declaration');
-end;
+end procedure;
 
 // Construct a 16-color cell value.
 //
@@ -271,31 +271,31 @@ end;
 public function CrtColor(Index: integer): Std.Console.Color;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Show cursor using block style.
 public procedure CursorBig();
 begin
   panic('Intrinsic API declaration');
-end;
+end procedure;
 
 // Hide the terminal cursor.
 public procedure CursorOff();
 begin
   panic('Intrinsic API declaration');
-end;
+end procedure;
 
 // Show the terminal cursor.
 public procedure CursorOn();
 begin
   panic('Intrinsic API declaration');
-end;
+end procedure;
 
 // Delete line at cursor row inside active window.
 public procedure DelLine();
 begin
   panic('Intrinsic API declaration');
-end;
+end procedure;
 
 // Sleep for a non-negative integer number of milliseconds.
 //
@@ -304,31 +304,31 @@ end;
 public procedure Delay(Milliseconds: integer);
 begin
   panic('Intrinsic API declaration');
-end;
+end procedure;
 
 // Disable focus reporting.
 public procedure DisableFocus();
 begin
   panic('Intrinsic API declaration');
-end;
+end procedure;
 
 // Disable mouse reporting.
 public procedure DisableMouse();
 begin
   panic('Intrinsic API declaration');
-end;
+end procedure;
 
 // Disable bracketed paste reporting.
 public procedure DisablePaste();
 begin
   panic('Intrinsic API declaration');
-end;
+end procedure;
 
 // Explicitly disable terminal raw mode.
 public procedure DisableRawMode();
 begin
   panic('Intrinsic API declaration');
-end;
+end procedure;
 
 // Consume a saved region without restoring.
 //
@@ -337,7 +337,7 @@ end;
 public procedure DiscardRegion(Region: Std.Console.SavedRegion);
 begin
   panic('Intrinsic API declaration');
-end;
+end procedure;
 
 // Unicode terminal-column width.
 //
@@ -346,43 +346,43 @@ end;
 public function DisplayWidth(Text: string): integer;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Enable focus gained/lost reporting.
 public procedure EnableFocus();
 begin
   panic('Intrinsic API declaration');
-end;
+end procedure;
 
 // Enable mouse reporting.
 public procedure EnableMouse();
 begin
   panic('Intrinsic API declaration');
-end;
+end procedure;
 
 // Enable bracketed paste reporting.
 public procedure EnablePaste();
 begin
   panic('Intrinsic API declaration');
-end;
+end procedure;
 
 // Explicitly enable terminal raw mode.
 public procedure EnableRawMode();
 begin
   panic('Intrinsic API declaration');
-end;
+end procedure;
 
 // Switch to the alternate terminal screen.
 public procedure EnterAltScreen();
 begin
   panic('Intrinsic API declaration');
-end;
+end procedure;
 
 // True if `ReadEvent()` has data waiting.
 public function EventPending(): boolean;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Fill a clipped absolute rectangle.
 //
@@ -392,7 +392,7 @@ end;
 public procedure FillRect(Bounds: Std.Console.Rect; Value: Std.Console.Cell);
 begin
   panic('Intrinsic API declaration');
-end;
+end procedure;
 
 // Read a cell; `None` outside the screen or on a wide continuation.
 //
@@ -402,7 +402,7 @@ end;
 public function GetCell(X: integer; Y: integer): option of Std.Console.Cell;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // 1-based coordinates inside the active window.
 //
@@ -412,7 +412,7 @@ end;
 public procedure GotoXY(X: integer; Y: integer);
 begin
   panic('Intrinsic API declaration');
-end;
+end procedure;
 
 // Validate and measure one renderable grapheme.
 //
@@ -421,67 +421,67 @@ end;
 public function GraphemeWidth(Glyph: string): integer;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Set bright foreground intensity bit.
 public procedure HighVideo();
 begin
   panic('Intrinsic API declaration');
-end;
+end procedure;
 
 // Insert blank line at cursor row inside active window.
 public procedure InsLine();
 begin
   panic('Intrinsic API declaration');
-end;
+end procedure;
 
 // True if `ReadKey` or `ReadKeyEvent` has data waiting.
 public function KeyPressed(): boolean;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Last value passed to `TextMode`.
 public function LastMode(): integer;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Leave the alternate terminal screen.
 public procedure LeaveAltScreen();
 begin
   panic('Intrinsic API declaration');
-end;
+end procedure;
 
 // Clear bright foreground intensity bit.
 public procedure LowVideo();
 begin
   panic('Intrinsic API declaration');
-end;
+end procedure;
 
 // Stop active tone state (no-op).
 public procedure NoSound();
 begin
   panic('Intrinsic API declaration');
-end;
+end procedure;
 
 // Reset attributes to light-gray on black.
 public procedure NormVideo();
 begin
   panic('Intrinsic API declaration');
-end;
+end procedure;
 
 // Non-blocking check; queued events are available without raw mode.
 public function PollEvent(): option of Std.Console.ConsoleEvent;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Complete a frame level; outermost call flushes.
 public procedure Present();
 begin
   panic('Intrinsic API declaration');
-end;
+end procedure;
 
 // Paint one cell at absolute 1-based coordinates.
 //
@@ -492,13 +492,13 @@ end;
 public procedure PutCell(X: integer; Y: integer; Value: Std.Console.Cell);
 begin
   panic('Intrinsic API declaration');
-end;
+end procedure;
 
 // Unified terminal event for keyboard, mouse, resize, paste, and focus.
 public function ReadEvent(): Std.Console.ConsoleEvent;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Wait up to N ms for an event; raw mode is required only for live terminal input.
 //
@@ -507,37 +507,37 @@ end;
 public function ReadEventTimeout(Milliseconds: integer): option of Std.Console.ConsoleEvent;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Key-by-key, separate from `ReadKeyEvent`.
 public function ReadKey(): string;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Structured key + modifiers.
 public function ReadKeyEvent(): Std.Console.KeyEvent;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Line input.
 public function ReadLn(): string;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Same buffer as `ReadLn`.
 public function ReadText(): string;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Restore modes owned by acquire; idempotent.
 public procedure ReleaseInteractiveTerminal();
 begin
   panic('Intrinsic API declaration');
-end;
+end procedure;
 
 // Restore and consume a saved region.
 //
@@ -546,7 +546,7 @@ end;
 public procedure RestoreRegion(Region: Std.Console.SavedRegion);
 begin
   panic('Intrinsic API declaration');
-end;
+end procedure;
 
 // Construct a truecolor cell value.
 //
@@ -557,7 +557,7 @@ end;
 public function RgbColor(Red: integer; Green: integer; Blue: integer): Std.Console.Color;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Capture a clipped region in a one-shot handle.
 //
@@ -566,19 +566,19 @@ end;
 public function SaveRegion(Bounds: Std.Console.Rect): Std.Console.SavedRegion;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Current console screen height.
 public function ScreenHeight(): integer;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Current console screen width.
 public function ScreenWidth(): integer;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Set packed text attribute `0..255`.
 //
@@ -587,7 +587,7 @@ end;
 public procedure SetTextAttr(Attr: integer);
 begin
   panic('Intrinsic API declaration');
-end;
+end procedure;
 
 // Emit one terminal bell for positive `Hz`.
 //
@@ -596,7 +596,7 @@ end;
 public procedure Sound(Hz: integer);
 begin
   panic('Intrinsic API declaration');
-end;
+end procedure;
 
 // Split text into extended grapheme clusters.
 //
@@ -605,13 +605,13 @@ end;
 public function SplitGraphemes(Text: string): array of string;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Packed text attribute (`Background * 16 + Foreground`).
 public function TextAttr(): integer;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Set background color for subsequent writes.
 //
@@ -620,7 +620,7 @@ end;
 public procedure TextBackground(Color: integer);
 begin
   panic('Intrinsic API declaration');
-end;
+end procedure;
 
 // Set bg to 256-color palette index (0–255), outside packed `TextAttr` state.
 //
@@ -629,7 +629,7 @@ end;
 public procedure TextBackground256(Index: integer);
 begin
   panic('Intrinsic API declaration');
-end;
+end procedure;
 
 // Set bg to 24-bit truecolor (0–255 per channel), outside packed `TextAttr` state.
 //
@@ -640,7 +640,7 @@ end;
 public procedure TextBackgroundRGB(R: integer; G: integer; B: integer);
 begin
   panic('Intrinsic API declaration');
-end;
+end procedure;
 
 // Set foreground color for subsequent writes.
 //
@@ -649,7 +649,7 @@ end;
 public procedure TextColor(Color: integer);
 begin
   panic('Intrinsic API declaration');
-end;
+end procedure;
 
 // Set fg to 256-color palette index (0–255), outside packed `TextAttr` state.
 //
@@ -658,7 +658,7 @@ end;
 public procedure TextColor256(Index: integer);
 begin
   panic('Intrinsic API declaration');
-end;
+end procedure;
 
 // Set fg to 24-bit truecolor (0–255 per channel), outside packed `TextAttr` state.
 //
@@ -669,7 +669,7 @@ end;
 public procedure TextColorRGB(R: integer; G: integer; B: integer);
 begin
   panic('Intrinsic API declaration');
-end;
+end procedure;
 
 // Reset CRT state and store the mode value.
 //
@@ -678,31 +678,31 @@ end;
 public procedure TextMode(Mode: integer);
 begin
   panic('Intrinsic API declaration');
-end;
+end procedure;
 
 // Current 1-based cursor column inside the active window.
 public function WhereX(): integer;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Current 1-based cursor row inside the active window.
 public function WhereY(): integer;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Packed lower-right corner of the active window (low byte `X`, high byte `Y`).
 public function WindMax(): integer;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Packed upper-left corner of the active window (low byte `X`, high byte `Y`).
 public function WindMin(): integer;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Set the active console window (screen-relative).
 //
@@ -714,7 +714,7 @@ end;
 public procedure Window(X1: integer; Y1: integer; X2: integer; Y2: integer);
 begin
   panic('Intrinsic API declaration');
-end;
+end procedure;
 
 // Paint a cell array from left to right.
 //
@@ -725,16 +725,17 @@ end;
 public procedure WriteCells(X: integer; Y: integer; Values: array of Std.Console.Cell);
 begin
   panic('Intrinsic API declaration');
-end;
+end procedure;
 
 // Variadic.
 public procedure WriteLn();
 begin
   panic('Intrinsic API declaration');
-end;
+end procedure;
 
 // Variadic.
 public procedure WriteText();
 begin
   panic('Intrinsic API declaration');
-end;
+end procedure;
+end unit;

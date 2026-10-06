@@ -49,7 +49,7 @@ public type
         Meta := Meta;
         Display := Display;
       end;
-    end;
+    end function;
 
     // Reports whether a console key event matches this gesture.
     //
@@ -70,5 +70,6 @@ public type
       end;
 
       return true;
-    end;
-  end;
+    end function;
+  end record;
+end unit;

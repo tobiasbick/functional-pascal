@@ -9,7 +9,7 @@ type
     ResizeHeight: integer;
     HostWidthAtResize: integer;
     HostHeightAtResize: integer;
-  end;
+  end record;
 
 function PushEvent(State: ResizeModel; InputEvent: string): ResizeModel;
 begin
@@ -20,7 +20,7 @@ begin
     HostWidthAtResize := State.HostWidthAtResize;
     HostHeightAtResize := State.HostHeightAtResize;
   end;
-end;
+end function;
 
 begin
   mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(20, 6));

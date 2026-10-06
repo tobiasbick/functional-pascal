@@ -8,7 +8,7 @@ type
     Caret: integer;
     UseHistory: boolean;
     KeyHits: integer;
-  end;
+  end record;
 
 function MakeKey(Kind: TuiKeyKind; Ctrl: boolean): TuiKeyEvent;
 begin
@@ -20,7 +20,7 @@ begin
     alt := false;
     meta := false;
   end;
-end;
+end function;
 
 function ViewInput(State: InputKeyboardModel): TuiElement;
 begin
@@ -34,7 +34,7 @@ begin
   end;
 
   return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(1)), [Input]);
-end;
+end function;
 
 function UpdateInput(State: InputKeyboardModel; Msg: TuiMsg; Cmd: TuiCmdOutput): InputKeyboardModel;
 begin
@@ -63,13 +63,13 @@ begin
       return State;
     end;
   end;
-end;
+end function;
 
 function Press(App: TuiApplication; State: InputKeyboardModel; Kind: TuiKeyKind; Ctrl: boolean): InputKeyboardModel;
 begin
   App.InjectKeyForTest(MakeKey(Kind, Ctrl));
   return App.RunIterations(State, UpdateInput, ViewInput, 1, 0);
-end;
+end function;
 
 begin
   mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(20, 2));

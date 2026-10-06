@@ -17,13 +17,13 @@ begin
                                                                                           ]),
                                                 TuiElementBuilders.MakeOverlay('Confirm', [TuiElementBuilders.MakeLabel('Continue?')])
                                               ]);
-end;
+end function;
 
 function UpdateTree(State: integer; Msg: TuiMsg; Cmd: TuiCmdOutput): integer;
 begin
   Cmd.Set(TuiCmd.NoCommand);
   return State;
-end;
+end function;
 
 begin
   var Tree: TuiElement := ViewTree(0);

@@ -133,7 +133,7 @@ public function TuiMsgAction(
 ): Std.Tui.Runtime.Msg.TuiMsg;
 begin
   return Std.Tui.Runtime.Msg.TuiMsgAction(Source, Action);
-end;
+end function;
 
 // Measures one element under the given constraints.
 //
@@ -146,7 +146,7 @@ public function TuiMeasure(
 ): Std.Tui.Layout.MeasureResult.TuiMeasureResult;
 begin
   return Std.Tui.Layout.Measure.TuiMeasure(Node, Spec);
-end;
+end function;
 
 // Creates a source-aware controlled-input change message.
 //
@@ -163,7 +163,7 @@ public function TuiMsgTextChanged(
 ): Std.Tui.Runtime.Msg.TuiMsg;
 begin
   return Std.Tui.Runtime.Msg.TuiMsgTextChanged(Source, Action, Text, Caret);
-end;
+end function;
 
 // Creates a source-aware controlled multiline text-area change message.
 //
@@ -182,7 +182,7 @@ public function TuiMsgTextAreaChanged(
 ): Std.Tui.Runtime.Msg.TuiMsg;
 begin
   return Std.Tui.Runtime.Msg.TuiMsgTextAreaChanged(Source, Action, Text, Caret, Offset);
-end;
+end function;
 
 // Creates a source-aware controlled check-box change message.
 //
@@ -197,7 +197,7 @@ public function TuiMsgCheckChanged(
 ): Std.Tui.Runtime.Msg.TuiMsg;
 begin
   return Std.Tui.Runtime.Msg.TuiMsgCheckChanged(Source, Action, Checked);
-end;
+end function;
 
 // Creates a source-aware controlled list selection-change message.
 //
@@ -212,7 +212,7 @@ public function TuiMsgSelectionChanged(
 ): Std.Tui.Runtime.Msg.TuiMsg;
 begin
   return Std.Tui.Runtime.Msg.TuiMsgSelectionChanged(Source, Action, Selected);
-end;
+end function;
 
 // Creates a source-aware controlled scroll-offset change message.
 //
@@ -227,7 +227,7 @@ public function TuiMsgScrollChanged(
 ): Std.Tui.Runtime.Msg.TuiMsg;
 begin
   return Std.Tui.Runtime.Msg.TuiMsgScrollChanged(Source, Action, Offset);
-end;
+end function;
 
 // Returns the first focusable control in the active modal or full tree.
 //
@@ -236,7 +236,7 @@ end;
 public function TuiFocusFirst(Root: Std.Tui.Elements.Element.TuiElement): option of Std.Tui.Ids.ControlId.TuiControlId;
 begin
   return Std.Tui.Runtime.Helpers.TuiFocusFirst(Root);
-end;
+end function;
 
 // Keeps a preferred focus id when still valid; otherwise selects the first focusable id.
 //
@@ -249,7 +249,7 @@ public function TuiFocusResolve(
 ): option of Std.Tui.Ids.ControlId.TuiControlId;
 begin
   return Std.Tui.Runtime.Helpers.TuiFocusResolve(Root, Preferred);
-end;
+end function;
 
 // Reports whether a root's unconstrained minimum fits an available terminal size.
 //
@@ -262,7 +262,7 @@ public function TuiLayoutFitFor(
 ): Std.Tui.Layout.LayoutFit.TuiLayoutFit;
 begin
   return Std.Tui.Runtime.Helpers.TuiLayoutFitFor(Root, Available);
-end;
+end function;
 
 // Clears a working surface and paints the terminal-too-small notice.
 //
@@ -271,4 +271,5 @@ end;
 public procedure TuiPaintTooSmallOverlay(Surface: Std.Tui.Rendering.Surface.TuiWorkingSurface);
 begin
   Std.Tui.Rendering.Paint.TuiPaintTooSmallOverlay(Surface);
-end;
+end procedure;
+end unit;

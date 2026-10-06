@@ -6,18 +6,18 @@ function SleepAndDouble(Value: integer): integer;
 begin
   Sleep(25);
   return Value * 2;
-end;
+end function;
 
 function MapValue(): integer;
 begin
   var Values: array of integer := Map([21], SleepAndDouble);
   return Values[0];
-end;
+end function;
 
 function PeerValue(): integer;
 begin
   return 7;
-end;
+end function;
 
 begin
   var Mapper: task := go MapValue();

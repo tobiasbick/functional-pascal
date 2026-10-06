@@ -72,7 +72,7 @@ begin
   begin
     WriteLn((Events[Index].EventType + ':') + Events[Index].Data);
   end;
-end;
+end procedure;
 
 begin
   case OpenStream(Request.Get('http://127.0.0.1:{port}/events')) of

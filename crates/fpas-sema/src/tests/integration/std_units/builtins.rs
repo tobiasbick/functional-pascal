@@ -174,7 +174,7 @@ uses Std.Arrays;
 function WrongReturn(X: integer): integer;
 begin
   return X;
-end;
+end function;
 begin
   var V: Option of integer := Std.Arrays.Find([1, 2, 3], WrongReturn);
 end.",
@@ -195,7 +195,7 @@ uses Std.Arrays;
 function NotAProcedure(X: integer): integer;
 begin
   return X;
-end;
+end function;
 begin
   Std.Arrays.ForEach([1, 2, 3], NotAProcedure);
 end.",

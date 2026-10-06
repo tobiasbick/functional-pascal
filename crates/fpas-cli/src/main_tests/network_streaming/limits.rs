@@ -66,7 +66,7 @@ begin
     Reading := Std.Arrays.Length(Bytes) > 0;
   end;
   return Ok(Count);
-end;
+end function;
 begin
   for BodyIndex: integer := 0 to 1 do
   begin

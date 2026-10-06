@@ -8,7 +8,7 @@ type
     Tags: dict of string to integer;
     MaybeItems: option of array of integer;
     Lookup: result of dict of string to integer, string;
-  end;
+  end record;
 
 begin
   var Original: Holder := record

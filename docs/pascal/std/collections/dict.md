@@ -159,7 +159,7 @@ Transforms every value in `D` by applying `F` to it. Keys are preserved; the res
 function DoublePrice(V: real): real;
 begin
   return V * 2.0;
-end;
+end function;
 
 var Prices: dict of string to real := ['Apple': 1.0, 'Banana': 0.5];
 var Doubled: dict of string to real := Std.Dictionaries.Map(Prices, DoublePrice);
@@ -180,7 +180,7 @@ Returns a new dict containing only the entries for which `F(K, V)` returns `true
 function IsPassingScore(K: string; V: integer): boolean;
 begin
   return V >= 60;
-end;
+end function;
 
 var Scores: dict of string to integer := ['Alice': 90, 'Bob': 55, 'Carol': 80];
 var Passing: dict of string to integer := Std.Dictionaries.Filter(Scores, IsPassingScore);
@@ -201,7 +201,7 @@ Visits entries in insertion order. Each callback receives the current accumulato
 function Describe(Acc: string; Key: string; Value: integer): string;
 begin
   return Acc + Key + ':' + Std.Conv.IntToStr(Value) + ';';
-end;
+end function;
 
 var Scores: dict of string to integer := ['Alice': 90, 'Bob': 55];
 var Text: string := Std.Dictionaries.Reduce(Scores, '', Describe);

@@ -12,7 +12,7 @@ const
 function Worker(Value: integer): integer;
 begin
   return Value + 1;
-end;
+end function;
 
 function RunTasks(Iterations: integer): integer;
 begin
@@ -24,7 +24,7 @@ begin
 
   WaitAll(Tasks);
   return Std.Arrays.Length(Tasks);
-end;
+end function;
 
 begin
   if (ParamCount() < 1) or (ParamCount() > 2) then

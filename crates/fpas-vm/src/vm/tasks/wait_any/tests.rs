@@ -17,13 +17,13 @@ function Child(): integer;
 begin
   Sleep(1);
   return 9;
-end;
+end function;
 function Parent(): integer;
 begin
   var T: task := go Child();
   if WaitAny([T]) <> 0 then panic('child index');
   return Wait(T);
-end;
+end function;
 begin
   var T: task := go Parent();
   if WaitAny([T]) <> 0 then panic('parent index');

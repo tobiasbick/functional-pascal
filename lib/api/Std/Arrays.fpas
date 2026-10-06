@@ -12,7 +12,7 @@ unit Std.Arrays;
 public function All(A: array of T; F: function(X: T): boolean): boolean;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // `true` if any satisfies `F`.
 //
@@ -22,7 +22,7 @@ end;
 public function Any(A: array of T; F: function(X: T): boolean): boolean;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Concatenate two arrays.
 //
@@ -32,7 +32,7 @@ end;
 public function Concat(A: array of T; B: array of T): array of T;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Membership.
 //
@@ -42,7 +42,7 @@ end;
 public function Contains(A: array of T; Value: T): boolean;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Array of `Count` copies.
 //
@@ -52,7 +52,7 @@ end;
 public function Fill(Value: T; Count: integer): array of T;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Keep matching elements.
 //
@@ -62,7 +62,7 @@ end;
 public function Filter(A: array of T; F: function(X: T): boolean): array of T;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // First match or `None`.
 //
@@ -72,7 +72,7 @@ end;
 public function Find(A: array of T; F: function(X: T): boolean): option of T;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Index of first match or `-1`.
 //
@@ -82,7 +82,7 @@ end;
 public function FindIndex(A: array of T; F: function(X: T): boolean): integer;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Map then flatten.
 //
@@ -92,7 +92,7 @@ end;
 public function FlatMap(A: array of T; F: function(X: T): array of U): array of U;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Call `F` for each element.
 //
@@ -102,7 +102,7 @@ end;
 public procedure ForEach(A: array of T; F: procedure(X: T));
 begin
   panic('Intrinsic API declaration');
-end;
+end procedure;
 
 // First index or `-1`.
 //
@@ -112,7 +112,7 @@ end;
 public function IndexOf(A: array of T; Value: T): integer;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Element count.
 //
@@ -121,7 +121,7 @@ end;
 public function Length(A: array of T): integer;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Transform each element.
 //
@@ -131,7 +131,7 @@ end;
 public function Map(A: array of T; F: function(X: T): U): array of U;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Remove last.
 //
@@ -140,7 +140,7 @@ end;
 public function Pop(mutable A: array of T): T;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Append in place.
 //
@@ -150,7 +150,7 @@ end;
 public procedure Push(mutable A: array of T; Value: T);
 begin
   panic('Intrinsic API declaration');
-end;
+end procedure;
 
 // Fold to single value.
 //
@@ -161,7 +161,7 @@ end;
 public function Reduce(A: array of T; Init: U; F: function(Acc: U; V: T): U): U;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // New reversed array.
 //
@@ -170,7 +170,7 @@ end;
 public function Reverse(A: array of T): array of T;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Sub-range; bounds checked.
 //
@@ -181,7 +181,7 @@ end;
 public function Slice(A: array of T; Start: integer; Len: integer): array of T;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // New sorted array.
 //
@@ -190,4 +190,5 @@ end;
 public function Sort(A: array of T): array of T;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
+end unit;

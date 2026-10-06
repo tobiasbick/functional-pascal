@@ -28,7 +28,7 @@ begin
   end;
 
   return 0;
-end;
+end function;
 
 function RunBoolean(Iterations: integer): integer;
 begin
@@ -50,7 +50,7 @@ begin
   end;
 
   return 0;
-end;
+end function;
 
 function RunString(Iterations: integer): integer;
 begin
@@ -66,7 +66,7 @@ begin
   end;
 
   return Count;
-end;
+end function;
 
 function RunWork(Iterations: integer; Mode: string): integer;
 begin
@@ -86,7 +86,7 @@ begin
   end;
 
   panic('mode must be real, boolean, or string');
-end;
+end function;
 
 begin
   if ParamCount() <> 2 then

@@ -10,7 +10,7 @@ function Work(Value: integer): integer;
 begin
   Sleep(10);
   return Value;
-end;
+end function;
 begin
   var A: task := go Work(11);
   var B: task := go Work(22);

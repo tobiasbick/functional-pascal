@@ -5,4 +5,5 @@ uses MyLib.Internal;
 public function Double(X: integer): integer;
 begin
   return Scale(X);
-end;
+end function;
+end unit;

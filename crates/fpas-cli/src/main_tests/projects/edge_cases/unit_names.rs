@@ -11,11 +11,11 @@ fn duplicate_unit_names_in_different_files_rejected() {
     );
     write_text(
         &cwd.join("src/lib1.fpas"),
-        "unit App.Lib;\npublic function Foo(): integer;\nbegin\n  return 1;\nend;\n",
+        "unit App.Lib;\npublic function Foo(): integer;\nbegin\n  return 1;\nend function;\nend unit;\n",
     );
     write_text(
         &cwd.join("src/lib2.fpas"),
-        "unit App.Lib;\npublic function Bar(): integer;\nbegin\n  return 2;\nend;\n",
+        "unit App.Lib;\npublic function Bar(): integer;\nbegin\n  return 2;\nend function;\nend unit;\n",
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);
@@ -39,7 +39,7 @@ fn duplicate_uses_entries_are_harmless() {
     );
     write_text(
         &cwd.join("src/lib.fpas"),
-        "unit App.Lib;\npublic function GetVal(): integer;\nbegin\n  return 7;\nend;\n",
+        "unit App.Lib;\npublic function GetVal(): integer;\nbegin\n  return 7;\nend function;\nend unit;\n",
     );
 
     let (exit_code, stdout_output, stderr_output) =
@@ -61,7 +61,7 @@ fn single_segment_unit_name_compiles() {
     );
     write_text(
         &cwd.join("src/utils.fpas"),
-        "unit Utils;\npublic function GetNum(): integer;\nbegin\n  return 42;\nend;\n",
+        "unit Utils;\npublic function GetNum(): integer;\nbegin\n  return 42;\nend function;\nend unit;\n",
     );
 
     let (exit_code, stdout_output, stderr_output) =
@@ -81,7 +81,7 @@ fn empty_unit_compiles_successfully() {
         &cwd.join("src/main.fpas"),
         "program Main;\nuses App.Empty;\nbegin\nend.\n",
     );
-    write_text(&cwd.join("src/empty.fpas"), "unit App.Empty;\n");
+    write_text(&cwd.join("src/empty.fpas"), "unit App.Empty;\nend unit;\n");
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);
     fs::remove_dir_all(&cwd).expect("temp directory must be removed");
@@ -101,7 +101,7 @@ fn unit_name_resolved_case_insensitively() {
     );
     write_text(
         &cwd.join("src/lib.fpas"),
-        "unit App.Lib;\npublic function GetValue(): integer;\nbegin\n  return 33;\nend;\n",
+        "unit App.Lib;\npublic function GetValue(): integer;\nbegin\n  return 33;\nend function;\nend unit;\n",
     );
 
     let (exit_code, stdout_output, stderr_output) =
@@ -123,7 +123,7 @@ fn unit_name_is_resolved_from_declaration_not_file_path() {
     );
     write_text(
         &cwd.join("src/nested/mismatched_name.fpas"),
-        "unit App.Tools;\npublic function GetValue(): integer;\nbegin\n  return 17;\nend;\n",
+        "unit App.Tools;\npublic function GetValue(): integer;\nbegin\n  return 17;\nend function;\nend unit;\n",
     );
 
     let (exit_code, stdout_output, stderr_output) =

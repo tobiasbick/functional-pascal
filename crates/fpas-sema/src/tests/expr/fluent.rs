@@ -35,10 +35,10 @@ fn imported_call_errors(
 fn imported_source_routines_filter_only_by_receiver() {
     let interfaces = [
         interface_for(
-            "unit Demo.First; public function Choose(Value: integer; Text: string): integer; begin return 1; end;",
+            "unit Demo.First; public function Choose(Value: integer; Text: string): integer; begin return 1; end function;\nend unit;",
         ),
         interface_for(
-            "unit Demo.Second; public function Choose(Value: string; Other: integer): integer; begin return 2; end;",
+            "unit Demo.Second; public function Choose(Value: string; Other: integer): integer; begin return 2; end function;\nend unit;",
         ),
     ];
     let errors = imported_call_errors(
@@ -52,10 +52,10 @@ fn imported_source_routines_filter_only_by_receiver() {
 fn trailing_arguments_do_not_break_imported_receiver_tie() {
     let interfaces = [
         interface_for(
-            "unit Demo.First; public function Choose(Value: integer; Text: string): integer; begin return 1; end;",
+            "unit Demo.First; public function Choose(Value: integer; Text: string): integer; begin return 1; end function;\nend unit;",
         ),
         interface_for(
-            "unit Demo.Second; public function Choose(Value: integer; Other: integer): integer; begin return 2; end;",
+            "unit Demo.Second; public function Choose(Value: integer; Other: integer): integer; begin return 2; end function;\nend unit;",
         ),
     ];
     let errors = imported_call_errors(
@@ -89,7 +89,7 @@ fn imported_intrinsics_select_by_receiver_type() {
 fn lexical_function_shadows_imports_even_when_incompatible() {
     let errors = check_errors(
         "program T; uses Std.Arrays; \
-         function Length(S: string): integer; begin return 0; end; \
+         function Length(S: string): integer; begin return 0; end function; \
          begin var A: array of integer := [1]; var N: integer := A.Length(); end.",
     );
     assert!(
@@ -119,8 +119,8 @@ fn noncallable_local_shadows_matching_import() {
 fn trailing_arguments_do_not_reselect_a_shadowed_callable() {
     let errors = check_errors(
         "program T; uses Std.Arrays; \
-         function Map(A: array of integer; X: integer): integer; begin return X; end; \
-         function Double(X: integer): integer; begin return X * 2; end; \
+         function Map(A: array of integer; X: integer): integer; begin return X; end function; \
+         function Double(X: integer): integer; begin return X * 2; end function; \
          begin var A: array of integer := [1]; \
          var B: array of integer := A.Map(Double); end.",
     );
@@ -135,8 +135,8 @@ fn trailing_arguments_do_not_reselect_a_shadowed_callable() {
 #[test]
 fn record_field_blocks_free_call_fallback() {
     let errors = check_errors(
-        "program T; type Item = record Value: integer; end; \
-         function Value(X: Item): integer; begin return 2; end; \
+        "program T; type Item = record Value: integer; end record; \
+         function Value(X: Item): integer; begin return 2; end function; \
          begin var I: Item := record Value := 1; end; \
          var N: integer := I.Value(); end.",
     );
@@ -151,11 +151,11 @@ fn record_field_blocks_free_call_fallback() {
 #[test]
 fn constrained_generic_receiver_matches_only_valid_type() {
     check_ok(
-        "program T; function Identity<T: Numeric>(X: T): T; begin return X; end; \
+        "program T; function Identity<T: Numeric>(X: T): T; begin return X; end function; \
          begin var N: integer := (2).Identity(); end.",
     );
     let errors = check_errors(
-        "program T; function Identity<T: Numeric>(X: T): T; begin return X; end; \
+        "program T; function Identity<T: Numeric>(X: T): T; begin return X; end function; \
          begin var S: string := ('x').Identity(); end.",
     );
     assert!(
@@ -183,11 +183,11 @@ fn array_mutation_rejects_parenthesized_receiver() {
 #[test]
 fn procedure_must_end_a_statement_chain() {
     check_ok(
-        "program T; procedure Consume(X: integer); begin end; \
+        "program T; procedure Consume(X: integer); begin end procedure; \
          begin (2).Consume(); end.",
     );
     let errors = check_errors(
-        "program T; procedure Consume(X: integer); begin end; \
+        "program T; procedure Consume(X: integer); begin end procedure; \
          begin var N: integer := (2).Consume(); end.",
     );
     assert!(

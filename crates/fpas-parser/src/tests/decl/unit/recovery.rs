@@ -7,7 +7,7 @@ fn unit_rejects_top_level_begin_block() {
 unit MyApp.Core;
 begin
 end.
-",
+end unit;\n",
     );
 
     let parser_error = errors.iter().find_map(|diagnostic| match diagnostic {
@@ -26,7 +26,7 @@ end.
 
 #[test]
 fn unit_name_missing_segment_after_dot_keeps_placeholder_part() {
-    let (unit, errors) = parse_compilation_unit_with_errors("unit MyApp.;");
+    let (unit, errors) = parse_compilation_unit_with_errors("unit MyApp.;\nend unit;");
     assert!(!errors.is_empty());
 
     let CompilationUnit::Unit(unit) = unit else {
@@ -46,8 +46,8 @@ uses , Std.Console;
 function Answer(): integer;
 begin
   return 42;
-end;
-",
+end function;
+end unit;\n",
     );
     assert!(!errors.is_empty());
 
@@ -70,8 +70,8 @@ unit MyApp.Core;
 uses function Answer(): integer;
 begin
   return 42;
-end;
-",
+end function;
+end unit;\n",
     );
     assert!(!errors.is_empty());
 

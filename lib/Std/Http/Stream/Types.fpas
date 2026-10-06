@@ -26,4 +26,5 @@ public type
     public Finished: boolean;
     // Whether the backing connection remains available.
     public Open: boolean;
-  end;
+  end record;
+end unit;

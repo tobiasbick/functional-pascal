@@ -271,7 +271,7 @@ async function verifyExternalProjectChanges(): Promise<void> {
       '[project]\nname = "watch-core"\nkind = "library"\n\n[sources]\ninclude = ["src/**/*.fpas"]\n'
     );
     const declarationSource =
-      "unit Watch.Core;\n\npublic function WatchedValue(): integer;\nbegin return 42; end;\n";
+      "unit Watch.Core;\n\npublic function WatchedValue(): integer;\nbegin return 42; end function;\nend unit;\n";
     await fs.writeFile(coreSource, declarationSource);
     await fs.writeFile(
       appManifest,
@@ -322,7 +322,7 @@ async function verifyWorkspaceNavigation(): Promise<void> {
     );
     await fs.writeFile(
       coreSource,
-      "unit Navigation.Core;\n\npublic type HostPoint = record\n  public X: integer;\nend;\n"
+      "unit Navigation.Core;\n\npublic type HostPoint = record\n  public X: integer;\nend record;\nend unit;\n"
     );
     await fs.writeFile(
       path.join(fixtureRoot, "app", "app.fpasprj"),

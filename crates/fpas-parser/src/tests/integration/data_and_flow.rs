@@ -9,7 +9,7 @@ program Geometry;
 type Point = record
   X: real;
   Y: real;
-end;
+end record;
 
 begin
   var P: Point := record X := 1.0; Y := 2.0; end;

@@ -18,7 +18,7 @@ function Fail(): integer;
 begin
   panic('boom');
   return 1;
-end;
+end function;
 
 begin
   var Value: integer := Fail();
@@ -245,12 +245,12 @@ function Work(): integer;
 begin
   Sleep(30000);
   return 1;
-end;
+end function;
 
 function Compute(Value: integer): integer;
 begin
   return Value + 1;
-end;
+end function;
 
 begin
   var Pending: task := go Work();

@@ -5,7 +5,7 @@ uses Std.Console, Std.Options;
 function AlwaysSomeOk(V: integer): option of string;
 begin
   return Some('ok');
-end;
+end function;
 
 begin
   var O: option of integer := None;

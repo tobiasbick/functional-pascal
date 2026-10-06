@@ -8,7 +8,7 @@ begin
   end;
 
   return Value;
-end;
+end function;
 
 public type
   // Non-negative outer margins around a laid-out child.
@@ -37,7 +37,7 @@ public type
         Right := TuiMarginsRequireNonNegative(Right, 'right');
         Bottom := TuiMarginsRequireNonNegative(Bottom, 'bottom');
       end;
-    end;
+    end function;
 
     // Creates equal margins on every side.
     //
@@ -46,7 +46,7 @@ public type
     public static function Uniform(Value: integer): TuiMargins;
     begin
       return TuiMargins.Create(Value, Value, Value, Value);
-    end;
+    end function;
 
     // Creates symmetric horizontal and vertical margins.
     //
@@ -56,7 +56,7 @@ public type
     public static function Symmetric(Horizontal: integer; Vertical: integer): TuiMargins;
     begin
       return TuiMargins.Create(Horizontal, Vertical, Horizontal, Vertical);
-    end;
+    end function;
 
     // Returns left plus right.
     //
@@ -65,7 +65,7 @@ public type
     public function Horizontal(Self: TuiMargins): integer;
     begin
       return Self.Left + Self.Right;
-    end;
+    end function;
 
     // Returns top plus bottom.
     //
@@ -74,5 +74,6 @@ public type
     public function Vertical(Self: TuiMargins): integer;
     begin
       return Self.Top + Self.Bottom;
-    end;
-  end;
+    end function;
+  end record;
+end unit;

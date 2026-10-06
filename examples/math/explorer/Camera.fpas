@@ -23,38 +23,39 @@ public type
       var SafeWidth: integer := Max(Width, 1);
       var SafeHeight: integer := Max(Height, 1);
       return (Self.SpanY * (IntToReal(SafeWidth) / IntToReal(SafeHeight))) * 0.5;
-    end;
+    end function;
 
     // Left viewport boundary.
     public function XMin(Self: ExplorerCamera; Width: integer; Height: integer): real;
     begin
       return Self.CenterX - (Self.SpanX(Width, Height) * 0.5);
-    end;
+    end function;
 
     // Right viewport boundary.
     public function XMax(Self: ExplorerCamera; Width: integer; Height: integer): real;
     begin
       return Self.CenterX + (Self.SpanX(Width, Height) * 0.5);
-    end;
+    end function;
 
     // Bottom viewport boundary.
     public function YMin(Self: ExplorerCamera): real;
     begin
       return Self.CenterY - (Self.SpanY * 0.5);
-    end;
+    end function;
 
     // Top viewport boundary.
     public function YMax(Self: ExplorerCamera): real;
     begin
       return Self.CenterY + (Self.SpanY * 0.5);
-    end;
+    end function;
 
     // Zoom relative to the initial vertical span.
     public function GetZoom(Self: ExplorerCamera): real;
     begin
       return 2.8 / Self.SpanY;
-    end;
+    end function;
 
     // Current relative zoom factor.
     public property Zoom: real read GetZoom;
-  end;
+  end record;
+end unit;

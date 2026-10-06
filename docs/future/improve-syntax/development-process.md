@@ -22,8 +22,15 @@ directory, in addition to the repository rules in [AGENTS.md](../../../AGENTS.md
   A package's Done cell becomes `[x]` only when every work package in its
   checklist is done.
 - Each package README holds the only checklist of its work packages. A work
-  package checkbox becomes `[x]` only when the work package is merged with its
-  implementation, migration, documentation, and passing checks.
+  package checkbox becomes `[x]` when its implementation, migration,
+  documentation, and applicable verification are complete in the working
+  branch. For decision work packages, the recorded decision is the delivery.
+  Known pre-existing check failures must be reported with evidence that they
+  are independent of the work package; failures caused by the delivery keep
+  its checkbox open.
+- Completion checkboxes describe delivered work, not commit or merge status.
+  Git and the pull request track integration separately; uncommitted delivery
+  may be marked complete once the applicable verification is complete.
 - Rejected packages use `—` in the Done column and keep their recorded
   decision. Work transferred to another plan also uses `—`; its README records
   the destination and transfer conditions. Neither has work packages.
@@ -49,16 +56,22 @@ directory, in addition to the repository rules in [AGENTS.md](../../../AGENTS.md
 5. Merge only after the complete delivery: implementation, migration of every
    repository consumer, current documentation, tests, and all required checks
    (see below).
-6. The same pull request marks the work package as done in its package README.
-   If it is the last open work package, the same pull request also marks the
-   package as done in the central README.
+6. Mark the work package as done in its package README when delivery is
+   complete, and include that update in the pull request. If it is the last
+   open work package, also mark the package as done in the central README.
+
+When the user selects an integration branch for several work packages, use
+that branch instead of the default branch-per-work-package workflow. Completed
+prerequisites on the selected branch may be used before they are merged into
+`main`.
 
 A package is complete only when all of its work packages are complete.
 
 ## Dependencies
 
 Dependencies in these documents are real prerequisites: a work package needs
-the named behavior, rule, or migration to exist on `main`. Packages and work
+the named behavior, rule, or migration to exist on `main`, or on the user's
+selected integration branch. Packages and work
 packages without a dependency may proceed in any order; do not serialize them
 artificially. Equally, do not split work that only yields a consistent state
 together (for example, removing a syntax form and migrating its last users).

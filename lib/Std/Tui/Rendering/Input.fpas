@@ -81,4 +81,5 @@ begin
 
     Canvas.WriteText(TuiPoint.Create(CursorX, Bounds.Y), CursorGlyph, TuiStyleRole.InputCursor);
   end;
-end;
+end procedure;
+end unit;

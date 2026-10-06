@@ -12,7 +12,7 @@ public procedure TuiTerminalSessionAcquire();
 begin
   AcquireInteractiveTerminal();
   TuiTerminalSessionOpen := true;
-end;
+end procedure;
 
 // Releases the process terminal when this Tui host owns it.
 public procedure TuiTerminalSessionRelease();
@@ -24,4 +24,5 @@ begin
 
   TuiTerminalSessionOpen := false;
   ReleaseInteractiveTerminal();
-end;
+end procedure;
+end unit;

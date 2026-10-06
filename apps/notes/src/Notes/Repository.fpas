@@ -18,7 +18,7 @@ begin
   end;
 
   return Std.Fs.CreateDir(Directory);
-end;
+end function;
 
 // Resolves a note's existing or identity-derived `.note` path.
 public function NoteFilePath(Directory: string; NoteValue: Note): string;
@@ -29,13 +29,13 @@ begin
   end;
 
   return Std.Path.Join([Directory, NoteValue.Id + '.note']);
-end;
+end function;
 
 // Sorts pinned notes first, then by descending timestamp; ties keep input order.
 public function NotesSort(Notes: array of Note): array of Note;
 begin
   return Notes.NotesOrdered();
-end;
+end function;
 
 function AppendEscapedPattern(Acc: string; Character: string): string;
 begin
@@ -45,13 +45,13 @@ begin
   end;
 
   return Acc + Character;
-end;
+end function;
 
 // Escapes only the literal directory; the final note-file pattern stays active.
 function NoteDirectoryPattern(Directory: string): string;
 begin
   return Std.Path.Join([Std.Str.Reduce(Directory, '', AppendEscapedPattern), '*.note']);
-end;
+end function;
 
 // Loads valid notes and preserves invalid files as visible issues.
 public function NotesLoadDirectory(Directory: string): result of NotesLoad, string;
@@ -120,14 +120,14 @@ begin
     Notes := NotesSort(Unique);
     Issues := Issues;
   end);
-end;
+end function;
 
 // Atomically writes one note to its stable file path.
 public function NotesSave(Directory: string; NoteValue: Note): result of boolean, string;
 begin
   var DirectoryReady: boolean := try NotesEnsureDirectory(Directory);
   return Std.Fs.WriteTextAtomic(NoteFilePath(Directory, NoteValue), NoteStringify(NoteValue));
-end;
+end function;
 
 // Generates an unused timestamp-and-random identity in one directory.
 public function NotesCreateId(Directory: string; TimestampMillis: integer): string;
@@ -137,11 +137,12 @@ begin
     Candidate := (IntToStr(TimestampMillis) + '-') + IntToStr(Std.Random.RandomInt(100000, 999999));
   until not Std.Fs.Exists(Std.Path.Join([Directory, Candidate + '.note']));
   return Candidate;
-end;
+end function;
 
 // Creates an in-memory draft with a new identity and current timestamp.
 public function NotesCreateDraft(Directory: string): Note;
 begin
   var Now: integer := Std.Time.TimestampMillis();
   return NoteCreate(NotesCreateId(Directory, Now), Now);
-end;
+end function;
+end unit;

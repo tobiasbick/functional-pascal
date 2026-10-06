@@ -109,7 +109,7 @@ begin
       return [];
     end;
   end;
-end;
+end function;
 
 // Routes an unmodified arrow key between enabled buttons in the active modal or full tree.
 //
@@ -177,4 +177,5 @@ begin
   end;
 
   return Some([TuiMsg.FocusChanged(Previous, Some(Controls[NextIndex]))]);
-end;
+end function;
+end unit;

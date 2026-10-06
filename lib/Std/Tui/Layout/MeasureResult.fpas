@@ -13,7 +13,7 @@ begin
   begin
     panic('Tui measure result preferred size must not exceed maximum size');
   end;
-end;
+end procedure;
 
 public type
   // Minimum, preferred, and maximum extents for one element.
@@ -39,7 +39,7 @@ public type
         Preferred := Preferred;
         Maximum := Maximum;
       end;
-    end;
+    end function;
 
     // Creates a fixed measure where all three sizes match.
     //
@@ -48,5 +48,6 @@ public type
     public static function Fixed(Size: TuiSize): TuiMeasureResult;
     begin
       return TuiMeasureResult.Create(Size, Size, Size);
-    end;
-  end;
+    end function;
+  end record;
+end unit;

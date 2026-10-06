@@ -27,7 +27,7 @@ fn completion_resolve_auto_import_and_signature_help_use_utf16_ranges() {
 
 public type Counter = record
   public Amount: integer;
-end;
+end record;
 
 // Adds two integers.
 //
@@ -37,7 +37,8 @@ end;
 public function Add(Left: integer; Right: integer): integer;
 begin
   return Left + Right;
-end;
+end function;
+end unit;
 "#,
     );
     let importable = temp.write(
@@ -48,7 +49,8 @@ end;
 public function UniqueValue(): integer;
 begin
   return 42;
-end;
+end function;
+end unit;
 "#,
     );
     let source = r#"program IntelliSense;
@@ -74,7 +76,7 @@ end.
     let member_cursor = source.find("AmTail").expect("member fragment") + 2;
     let import_cursor = source.find("UniqueValue").expect("auto import") + "UniqueValue".len();
     let nested_cursor = source.find("Add(2, 3)").expect("nested call") + "Add(2, ".len();
-    let stale_source = "unit Demo.Importable;\n";
+    let stale_source = "unit Demo.Importable;\nend unit;\n";
     let stale_uri = import_uri.clone();
     let transcript = run_script(&[
         TranscriptStep::Message(initialize_with_root(1, Some(&root_uri))),

@@ -7,7 +7,7 @@ type
     Focus: integer;
     Menu: TuiMenuState;
     Actions: array of integer;
-  end;
+  end record;
 
 function MakeKey(Kind: TuiKeyKind; Character: string; Ctrl: boolean; Alt: boolean): TuiKeyEvent;
 begin
@@ -19,7 +19,7 @@ begin
     alt := Alt;
     meta := false;
   end;
-end;
+end function;
 
 function FindGlyph(Snapshot: TuiSurfaceSnapshot; Glyph: string): TuiPoint;
 begin
@@ -33,7 +33,7 @@ begin
   end;
 
   panic('glyph not found in menu snapshot: ' + Glyph);
-end;
+end function;
 
 procedure AssertActive(Menu: TuiMenuState; Expected: integer);
 begin
@@ -47,7 +47,7 @@ begin
       Fail('Expected an active menu node.');
     end;
   end;
-end;
+end procedure;
 
 function MenuNodes(): array of TuiMenuNode;
 begin
@@ -62,14 +62,14 @@ begin
            TuiMenuNodeBuilders.Submenu(ThemeId, Some(OptionsId), 'Theme', 'T'),
            TuiMenuNodeBuilders.Command(TuiMenuNodeId.Create(6), Some(ThemeId), 'Dark', 'D', TuiAction.Create(20))
          ];
-end;
+end function;
 
 function ViewMenu(State: MenuModel): TuiElement;
 begin
   return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(State.Focus)), [
                                                                                   TuiElementBuilders.MakeMenu(TuiControlId.Create(100), MenuNodes(), State.Menu, TuiAction.Create(101))
                                                                                 ]);
-end;
+end function;
 
 function UpdateMenu(State: MenuModel; Msg: TuiMsg; Cmd: TuiCmdOutput): MenuModel;
 begin
@@ -113,7 +113,7 @@ begin
       return State;
     end;
   end;
-end;
+end function;
 
 begin
   mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(40, 10));

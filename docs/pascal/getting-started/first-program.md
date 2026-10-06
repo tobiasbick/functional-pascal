@@ -11,7 +11,7 @@ uses
 function Greet(Name: string): string;
 begin
   return 'Hello, ' + Name + '!';
-end;
+end function;
 
 begin
   var Message: string := Greet('Pascal');
@@ -41,7 +41,7 @@ var
 function Add(A: integer; B: integer): integer;
 begin
   return A + B;
-end;
+end function;
 
 // main block
 begin

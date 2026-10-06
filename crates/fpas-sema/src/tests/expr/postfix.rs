@@ -4,8 +4,8 @@ use super::{check_errors, check_ok};
 fn field_type_on_returned_record() {
     check_ok(
         "program T; \
-         type Point = record X: integer; Y: integer; end; \
-         function Make(): Point; begin return record X := 1; Y := 2; end; end; \
+         type Point = record X: integer; Y: integer; end record; \
+         function Make(): Point; begin return record X := 1; Y := 2; end; end function; \
          var V: integer := Make().X; \
          begin end.",
     );
@@ -15,7 +15,7 @@ fn field_type_on_returned_record() {
 fn index_result_for_returned_array() {
     check_ok(
         "program T; \
-         function Make(): array of integer; begin return [10, 20, 30]; end; \
+         function Make(): array of integer; begin return [10, 20, 30]; end function; \
          var V: integer := Make()[1]; \
          begin end.",
     );
@@ -25,7 +25,7 @@ fn index_result_for_returned_array() {
 fn index_result_for_returned_dict() {
     check_ok(
         "program T; \
-         function Make(): dict of string to integer; begin return ['a': 1]; end; \
+         function Make(): dict of string to integer; begin return ['a': 1]; end function; \
          var V: integer := Make()['a']; \
          begin end.",
     );
@@ -35,7 +35,7 @@ fn index_result_for_returned_dict() {
 fn index_result_for_returned_string() {
     check_ok(
         "program T; \
-         function Make(): string; begin return 'ab'; end; \
+         function Make(): string; begin return 'ab'; end function; \
          var V: string := Make()[0]; \
          begin end.",
     );
@@ -48,11 +48,11 @@ fn instance_method_argument_and_return_propagation() {
          type Num = record \
            V: integer; \
            function Scale(Self: Num; Factor: integer): Num; \
-           begin return record V := Self.V * Factor; end; end; \
+           begin return record V := Self.V * Factor; end; end function; \
            function Next(Self: Num): Num; \
-           begin return record V := Self.V + 1; end; end; \
-         end; \
-         function Create(): Num; begin return record V := 2; end; end; \
+           begin return record V := Self.V + 1; end; end function; \
+         end record; \
+         function Create(): Num; begin return record V := 2; end; end function; \
          var Out: integer := Create().Scale(3).Next().V; \
          begin end.",
     );
@@ -62,9 +62,9 @@ fn instance_method_argument_and_return_propagation() {
 fn type_alias_on_intermediate_record() {
     check_ok(
         "program T; \
-         type Point = record X: integer; Y: integer; end; \
+         type Point = record X: integer; Y: integer; end record; \
          type Alias = Point; \
-         function Make(): Alias; begin return record X := 4; Y := 5; end; end; \
+         function Make(): Alias; begin return record X := 4; Y := 5; end; end function; \
          var V: integer := Make().Y; \
          begin end.",
     );
@@ -74,8 +74,8 @@ fn type_alias_on_intermediate_record() {
 fn unknown_field_on_postfix() {
     let errors = check_errors(
         "program T; \
-         type Point = record X: integer; end; \
-         function Make(): Point; begin return record X := 1; end; end; \
+         type Point = record X: integer; end record; \
+         function Make(): Point; begin return record X := 1; end; end function; \
          var V: integer := Make().Missing; \
          begin end.",
     );
@@ -91,8 +91,8 @@ fn unknown_field_on_postfix() {
 fn invalid_suffix_does_not_cascade_into_later_suffixes() {
     let errors = check_errors(
         "program T; \
-         type Point = record X: integer; end; \
-         function Make(): Point; begin return record X := 1; end; end; \
+         type Point = record X: integer; end record; \
+         function Make(): Point; begin return record X := 1; end; end function; \
          var V: integer := Make().Missing.Another; \
          begin end.",
     );
@@ -109,8 +109,8 @@ fn invalid_suffix_does_not_cascade_into_later_suffixes() {
 fn unknown_method_on_postfix() {
     let errors = check_errors(
         "program T; \
-         type Point = record X: integer; end; \
-         function Make(): Point; begin return record X := 1; end; end; \
+         type Point = record X: integer; end record; \
+         function Make(): Point; begin return record X := 1; end; end function; \
          var V: integer := Make().Missing(); \
          begin end.",
     );
@@ -126,7 +126,7 @@ fn unknown_method_on_postfix() {
 fn non_record_member_access() {
     let errors = check_errors(
         "program T; \
-         function Make(): integer; begin return 1; end; \
+         function Make(): integer; begin return 1; end function; \
          var V: integer := Make().X; \
          begin end.",
     );
@@ -142,7 +142,7 @@ fn non_record_member_access() {
 fn wrong_index_type_on_returned_array() {
     let errors = check_errors(
         "program T; \
-         function Make(): array of integer; begin return [1]; end; \
+         function Make(): array of integer; begin return [1]; end function; \
          var V: integer := Make()['x']; \
          begin end.",
     );
@@ -158,8 +158,8 @@ fn wrong_index_type_on_returned_array() {
 fn non_indexable_receiver() {
     let errors = check_errors(
         "program T; \
-         type Point = record X: integer; end; \
-         function Make(): Point; begin return record X := 1; end; end; \
+         type Point = record X: integer; end record; \
+         function Make(): Point; begin return record X := 1; end; end function; \
          var V: integer := Make()[0]; \
          begin end.",
     );
@@ -176,9 +176,9 @@ fn static_function_through_returned_value() {
          type Point = record \
            X: integer; \
            static function Create(X: integer): Point; \
-           begin return record X := X; end; end; \
-         end; \
-         function Make(): Point; begin return Point.Create(1); end; \
+           begin return record X := X; end; end function; \
+         end record; \
+         function Make(): Point; begin return Point.Create(1); end function; \
          var V: Point := Make().Create(2); \
          begin end.",
     );
@@ -196,9 +196,9 @@ fn procedure_method_in_expression() {
         "program T; \
          type Point = record \
            X: integer; \
-           procedure Touch(Self: Point); begin end; \
-         end; \
-         function Make(): Point; begin return record X := 1; end; end; \
+           procedure Touch(Self: Point); begin end procedure; \
+         end record; \
+         function Make(): Point; begin return record X := 1; end; end function; \
          var V: integer := Make().Touch(); \
          begin end.",
     );
@@ -216,9 +216,9 @@ fn procedure_method_may_finish_postfix_statement() {
         "program T; \
          type Point = record \
            X: integer; \
-           procedure Touch(Self: Point); begin end; \
-           static function Create(): Point; begin return record X := 1; end; end; \
-         end; \
+           procedure Touch(Self: Point); begin end procedure; \
+           static function Create(): Point; begin return record X := 1; end; end function; \
+         end record; \
          begin Point.Create().Touch(); end.",
     );
 }
@@ -229,10 +229,10 @@ fn procedure_method_may_not_continue_postfix_statement() {
         "program T; \
          type Point = record \
            X: integer; \
-           procedure Touch(Self: Point); begin end; \
-           function Next(Self: Point): Point; begin return Self; end; \
-           static function Create(): Point; begin return record X := 1; end; end; \
-         end; \
+           procedure Touch(Self: Point); begin end procedure; \
+           function Next(Self: Point): Point; begin return Self; end function; \
+           static function Create(): Point; begin return record X := 1; end; end function; \
+         end record; \
          begin Point.Create().Touch().Next(); end.",
     );
     assert!(
@@ -248,8 +248,8 @@ fn postfix_value_may_not_be_used_as_statement() {
     let errors = check_errors(
         "program T; \
          type Point = record X: integer; \
-           static function Create(): Point; begin return record X := 1; end; end; \
-         end; \
+           static function Create(): Point; begin return record X := 1; end; end function; \
+         end record; \
          begin Point.Create().X; end.",
     );
     assert!(
@@ -267,10 +267,10 @@ fn generic_instance_function_in_chain() {
          type Box = record \
            Value: integer; \
            function Map<T>(Self: Box; Fn: function(X: integer): T): T; \
-           begin return Fn(Self.Value); end; \
-         end; \
-         function Create(): Box; begin return record Value := 7; end; end; \
-         function Identity(N: integer): integer; begin return N; end; \
+           begin return Fn(Self.Value); end function; \
+         end record; \
+         function Create(): Box; begin return record Value := 7; end; end function; \
+         function Identity(N: integer): integer; begin return N; end function; \
          var V: integer := Create().Map(Identity); \
          begin end.",
     );
@@ -280,14 +280,14 @@ fn generic_instance_function_in_chain() {
 fn generic_instance_function_result_continues_chain() {
     check_ok(
         "program T; \
-         type Value = record Number: integer; end; \
+         type Value = record Number: integer; end record; \
          type Box = record \
            Number: integer; \
            function Map<T>(Self: Box; Fn: function(X: integer): T): T; \
-           begin return Fn(Self.Number); end; \
-         end; \
-         function Create(): Box; begin return record Number := 7; end; end; \
-         function Wrap(N: integer): Value; begin return record Number := N; end; end; \
+           begin return Fn(Self.Number); end function; \
+         end record; \
+         function Create(): Box; begin return record Number := 7; end; end function; \
+         function Wrap(N: integer): Value; begin return record Number := N; end; end function; \
          var V: integer := Create().Map(Wrap).Number; \
          begin end.",
     );
@@ -297,9 +297,9 @@ fn generic_instance_function_result_continues_chain() {
 fn generic_free_function_result_continues_chain() {
     check_ok(
         "program T; \
-         type Value = record Number: integer; end; \
-         function Identity<T>(Input: T): T; begin return Input; end; \
-         function Create(): Value; begin return record Number := 9; end; end; \
+         type Value = record Number: integer; end record; \
+         function Identity<T>(Input: T): T; begin return Input; end function; \
+         function Create(): Value; begin return record Number := 9; end; end function; \
          var V: integer := Identity(Create()).Number; \
          begin end.",
     );
@@ -309,11 +309,11 @@ fn generic_free_function_result_continues_chain() {
 fn generic_static_function_result_continues_chain() {
     check_ok(
         "program T; \
-         type Value = record Number: integer; end; \
+         type Value = record Number: integer; end record; \
          type Factory = record \
-           static function Identity<T>(Input: T): T; begin return Input; end; \
-         end; \
-         function Create(): Value; begin return record Number := 11; end; end; \
+           static function Identity<T>(Input: T): T; begin return Input; end function; \
+         end record; \
+         function Create(): Value; begin return record Number := 11; end; end function; \
          var V: integer := Factory.Identity(Create()).Number; \
          begin end.",
     );

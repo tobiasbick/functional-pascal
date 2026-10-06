@@ -7,7 +7,7 @@ fn record_type_and_construction() {
 type Point = record
   X: real;
   Y: real;
-end;
+end record;
 var P: Point := record X := 0.0; Y := 5.0 end;";
 
     assert_eq!(
@@ -26,6 +26,7 @@ var P: Point := record X := 0.0; Y := 5.0 end;";
             Token::Ident("real".into()),
             Token::Semicolon,
             Token::End,
+            Token::Record,
             Token::Semicolon,
             Token::Var,
             Token::Ident("P".into()),

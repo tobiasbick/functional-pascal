@@ -4,7 +4,7 @@ type
   Point = record
     X: integer;
     Y: integer;
-  end;
+  end record;
 
 begin
   var A: Point := record

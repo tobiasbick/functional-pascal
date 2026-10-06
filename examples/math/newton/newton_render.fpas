@@ -15,7 +15,7 @@ type
         Re := Re;
         Im := Im;
       end;
-    end;
+    end function;
 
     public function Add(Self: Complex; Other: Complex): Complex;
     begin
@@ -23,7 +23,7 @@ type
         Re := Self.Re + Other.Re;
         Im := Self.Im + Other.Im;
       end;
-    end;
+    end function;
 
     public function Sub(Self: Complex; Other: Complex): Complex;
     begin
@@ -31,7 +31,7 @@ type
         Re := Self.Re - Other.Re;
         Im := Self.Im - Other.Im;
       end;
-    end;
+    end function;
 
     public function Mul(Self: Complex; Other: Complex): Complex;
     begin
@@ -39,7 +39,7 @@ type
         Re := Self.Re * Other.Re - Self.Im * Other.Im;
         Im := Self.Re * Other.Im + Self.Im * Other.Re;
       end;
-    end;
+    end function;
 
     public function Scale(Self: Complex; Factor: real): Complex;
     begin
@@ -47,12 +47,12 @@ type
         Re := Self.Re * Factor;
         Im := Self.Im * Factor;
       end;
-    end;
+    end function;
 
     public function Sq(Self: Complex): Complex;
     begin
       return Self.Mul(Self);
-    end;
+    end function;
 
     public function Inv(Self: Complex): Complex;
     begin
@@ -61,17 +61,17 @@ type
         Re := Self.Re / Den;
         Im := - Self.Im / Den;
       end;
-    end;
+    end function;
 
     public function MagSq(Self: Complex): real;
     begin
       return Self.Re * Self.Re + Self.Im * Self.Im;
-    end;
-  end;
+    end function;
+  end record;
   PixelSample = record
     public Root: integer;
     public Shade: real;
-  end;
+  end record;
 
 function ClosestRoot(Z: Complex): integer;
 begin
@@ -93,7 +93,7 @@ begin
   begin
     return 3;
   end;
-end;
+end function;
 
 function Iterate(Z0: Complex; MaxIter: integer): PixelSample;
 begin
@@ -128,7 +128,7 @@ begin
     Root := ClosestRoot(Z);
     Shade := 0.25;
   end;
-end;
+end function;
 
 function ComputeRow(
   Py: integer;
@@ -163,7 +163,7 @@ begin
   end;
 
   return Row;
-end;
+end function;
 
 function ShadeGlyph(Shade: real): string;
 begin
@@ -171,7 +171,7 @@ begin
   var Count: integer := Std.Str.Length(Ramp);
   var Index: integer := Clamp(Trunc(Shade * IntToReal(Count)), 0, Count - 1);
   return CharAt(Ramp, Index);
-end;
+end function;
 
 function RenderCell(Sample: PixelSample): Cell;
 begin
@@ -190,7 +190,7 @@ begin
     foreground := Fg;
     background := RgbColor(0, 0, 0);
   end;
-end;
+end function;
 
 procedure DrawRow(Row: array of PixelSample; Width: integer; Y: integer);
 begin
@@ -212,7 +212,7 @@ begin
   end;
 
   WriteCells(1, Y, Cells);
-end;
+end procedure;
 
 public procedure Render(
   XMin: real;
@@ -238,4 +238,5 @@ begin
       DrawRow(Row, Width, Py + 1);
     end;
   end;
-end;
+end procedure;
+end unit;

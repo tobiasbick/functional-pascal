@@ -142,11 +142,11 @@ fn run_cli_executes_multi_file_project_end_to_end() {
     );
     write_text(
         &cwd.join("src/util.fpas"),
-        "unit App.Util;\nuses App.Math;\npublic function Double(X: integer): integer;\nbegin\n  return Add(X, X);\nend;\n",
+        "unit App.Util;\nuses App.Math;\npublic function Double(X: integer): integer;\nbegin\n  return Add(X, X);\nend function;\nend unit;\n",
     );
     write_text(
         &cwd.join("src/math.fpas"),
-        "unit App.Math;\npublic function Add(A: integer; B: integer): integer;\nbegin\n  return A + B;\nend;\n",
+        "unit App.Math;\npublic function Add(A: integer; B: integer): integer;\nbegin\n  return A + B;\nend function;\nend unit;\n",
     );
 
     let (exit_code, stdout_output, stderr_output) =
@@ -169,7 +169,7 @@ fn run_cli_shares_constants_via_unit_instead_of_include() {
     );
     write_text(
         &cwd.join("src/parts.fpas"),
-        "unit App.Parts;\n\npublic const\n  Message: string := 'Hello from unit';\n",
+        "unit App.Parts;\n\npublic const\n  Message: string := 'Hello from unit';\nend unit;\n",
     );
 
     let (exit_code, stdout_output, stderr_output) =

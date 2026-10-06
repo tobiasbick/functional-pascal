@@ -14,7 +14,7 @@ fn run_cli_executes_program_with_library_project_dependency() {
     write_library_fpasprj(&lib_project, &["src/**/*.fpas"]);
     write_text(
         &lib_dir.join("src/math.fpas"),
-        "unit Calc.Math;\npublic function Mul(A: integer; B: integer): integer;\nbegin\n  return A * B;\nend;\n",
+        "unit Calc.Math;\npublic function Mul(A: integer; B: integer): integer;\nbegin\n  return A * B;\nend function;\nend unit;\n",
     );
 
     write_program_fpasprj_with_deps(
@@ -64,19 +64,19 @@ public type
         X := X;
         Y := Y;
       end;
-    end;
+    end function;
 
     public static procedure Print(Value: PointImpl);
     begin
       Std.Console.WriteLn(Value.Sum());
-    end;
+    end procedure;
 
     public function Sum(Self: PointImpl): integer;
     begin
       return Self.X + Self.Y;
-    end;
-  end;
-",
+    end function;
+  end record;
+end unit;\n",
     );
     write_text(
         &lib_dir.join("src/api.fpas"),
@@ -87,7 +87,7 @@ uses Geom.Internal;
 
 public type
   Point = PointImpl;
-",
+end unit;\n",
     );
 
     write_program_fpasprj_with_deps(

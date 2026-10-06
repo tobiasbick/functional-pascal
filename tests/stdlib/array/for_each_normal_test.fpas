@@ -5,7 +5,7 @@ uses Std.Console, Std.Arrays;
 procedure PrintValue(X: integer);
 begin
   WriteLn(X);
-end;
+end procedure;
 
 begin
   ForEach([10, 20, 30], PrintValue);

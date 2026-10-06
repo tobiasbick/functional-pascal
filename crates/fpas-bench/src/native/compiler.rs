@@ -8,7 +8,7 @@ pub(super) fn run(iterations: usize, branches: usize) -> Result<(), String> {
     let mut source =
         String::from("program BranchBenchmark; begin mutable var Value: integer := 0;\n");
     for _ in 0..branches {
-        source.push_str("if Value mod 2 = 0 then Value := Value + 1 else Value := Value + 2;\n");
+        source.push_str("if Value mod 2 = 0 then Value := Value + 1; else Value := Value + 2;\n");
     }
     source.push_str("end.\n");
     let (program, errors) = fpas_parser::parse(&source);

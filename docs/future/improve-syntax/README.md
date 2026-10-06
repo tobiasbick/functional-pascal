@@ -43,9 +43,10 @@ against the checkout before implementing each work package.
 
 ## Package status
 
-AP01 and AP02 are delivered locally on `codex/syntax-changes-2`; their package
-READMEs record the results. Their merge completion checkboxes remain open under
-the [status-tracking rule](development-process.md#status-tracking).
+AP01 and AP02 are complete on `codex/syntax-changes-2`. AP13.1 through AP13.3
+are also complete; AP13.4 through AP13.6 remain open. Checkboxes track completed
+delivery in the working branch, as defined by the
+[status-tracking rule](development-process.md#status-tracking).
 
 Effort estimates are preliminary, based on the design rather than a code audit.
 Dependencies name the packages a package needs; the real prerequisites per work
@@ -53,8 +54,8 @@ package are listed in each work package file.
 
 | Done | Package | Effort | Depends on | Direction |
 |------|---------|--------|------------|-----------|
-| [ ] | [AP01: Pascal conventions](ap01-pascal-conventions/README.md) | Small | None | Agreed direction |
-| [ ] | [AP02: Structured diagnostics](ap02-structured-diagnostics/README.md) | Small | None | Agreed direction (Q01) |
+| [x] | [AP01: Pascal conventions](ap01-pascal-conventions/README.md) | Small | None | Agreed direction |
+| [x] | [AP02: Structured diagnostics](ap02-structured-diagnostics/README.md) | Small | None | Agreed direction (Q01) |
 | [ ] | [AP03: Explicit closed-enum cases](ap03-explicit-closed-enum-cases/README.md) | Small | AP02, AP20 | Agreed direction |
 | [ ] | [AP04: Discarded function values](ap04-discarded-function-values/README.md) | Small | AP02 | Agreed direction |
 | [ ] | [AP05: Qualified imports](ap05-qualified-imports/README.md) | Medium | AP01, AP02 | Agreed direction (Q04) |

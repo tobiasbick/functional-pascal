@@ -33,4 +33,5 @@ begin
   Canvas.DrawHorizontalLine(BarX, Bounds.Y, BarWidth, TuiStyleRole.GaugeTrack);
   Canvas.DrawHorizontalLine(BarX, Bounds.Y, FillWidth, TuiStyleRole.GaugeFill);
   Canvas.WriteText(TuiPoint.Create(Bounds.Right() - PercentWidth, Bounds.Y), PercentText, TuiStyleRole.Accent);
-end;
+end procedure;
+end unit;

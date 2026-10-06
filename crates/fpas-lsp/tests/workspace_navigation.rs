@@ -20,11 +20,11 @@ fn phase09_navigation_capabilities_and_utf16_results_are_exposed() {
     );
     temp.write(
         "src/types.fpas",
-        "unit Demo.Types;\n\npublic type Point = record public X: integer; end;\npublic function Create(): Point; begin return record X := 1; end; end;\n",
+        "unit Demo.Types;\n\npublic type Point = record public X: integer; end record;\npublic function Create(): Point; begin return record X := 1; end; end function;\nend unit;\n",
     );
     temp.write(
         "src/other.fpas",
-        "unit Demo.Other;\n\npublic function Create(): integer; begin return 2; end;\n",
+        "unit Demo.Other;\n\npublic function Create(): integer; begin return 2; end function;\nend unit;\n",
     );
     let source = "program Nav;\n\nuses Demo.Types, Demo.Other;\n\nmutable var Value: integer := 1;\n\nbegin\n  var Music: string := '𝄞'; Value := Value + 1;\n  var Item: Point := Demo.Types.Create();\nend.\n";
     temp.write("src/main.fpas", source);

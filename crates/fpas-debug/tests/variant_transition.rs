@@ -306,7 +306,7 @@ begin
       return 0;
     end;
   end;
-end;
+end function;
 
 begin
   var Pending: task := go Work();
@@ -404,7 +404,7 @@ type
   Choice = enum
     Empty;
     Count(Value: integer);
-  end;
+  end enum;
 
 function ReadChoice(mutable Item: Choice): integer;
 begin
@@ -419,7 +419,7 @@ begin
       return Value;
     end;
   end;
-end;
+end function;
 
 begin
   var OutputValue: integer := ReadChoice(Choice.Empty);
@@ -466,7 +466,7 @@ type
   Choice = enum
     Empty;
     Count(Value: integer);
-  end;
+  end enum;
 
 function NextChoice(): function(): integer;
 begin
@@ -483,7 +483,7 @@ begin
       end;
     end;
   end;
-end;
+end function;
 
 begin
   var Next: function(): integer := NextChoice();
@@ -534,11 +534,11 @@ program TransitionCollision;
 type
   Payload = record
     Value: integer;
-  end;
+  end record;
   Choice = enum
     Holder(Count: Payload);
     Count(Value: integer);
-  end;
+  end enum;
 
 begin
   var Initial: Payload := record

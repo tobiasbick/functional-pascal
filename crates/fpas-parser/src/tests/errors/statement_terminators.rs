@@ -8,7 +8,7 @@ fn missing_final_terminators_are_diagnosed_at_each_boundary() {
     for (source, boundary) in [
         ("program P; begin WriteLn('x') end.", "end"),
         (
-            "program P; procedure F(); begin return end; begin end.",
+            "program P; procedure F(); begin return end procedure; begin end.",
             "end",
         ),
         ("program P; begin if C then A() else B(); end.", "else"),
@@ -130,9 +130,9 @@ fn declarations_keep_their_required_terminators() {
     for source in [
         "program P; const X: integer := 1 begin end.",
         "program P; type X = integer begin end.",
-        "program P; procedure F(); begin end begin end.",
-        "program P; type R = record X: integer end; begin end.",
-        "program P; type E = enum A end; begin end.",
+        "program P; procedure F(); begin end procedure begin end.",
+        "program P; type R = record X: integer end record; begin end.",
+        "program P; type E = enum A end enum; begin end.",
     ] {
         let (_, diagnostics) = parse_with_errors(source);
         assert!(

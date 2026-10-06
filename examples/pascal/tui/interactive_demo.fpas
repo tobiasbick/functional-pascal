@@ -7,7 +7,7 @@ type
     Text: string;
     Caret: integer;
     Confirming: boolean;
-  end;
+  end record;
 
 function UpdateDemo(State: DemoModel; Msg: TuiMsg; Cmd: TuiCmdOutput): DemoModel;
 begin
@@ -85,7 +85,7 @@ begin
       return State;
     end;
   end;
-end;
+end function;
 
 function ViewDemo(State: DemoModel): TuiElement;
 begin
@@ -109,7 +109,7 @@ begin
                                                    TuiElementBuilders.MakePanel('Tui interactive demo', Content),
                                                    TuiElementBuilders.MakeStatusLine([TuiStatusItemBuilders.MakeHint('Type, confirm, then quit')])
                                                  ]);
-end;
+end function;
 
 begin
   TuiApplication.Run(record

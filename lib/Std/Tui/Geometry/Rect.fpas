@@ -14,7 +14,7 @@ begin
   end;
 
   return Value;
-end;
+end function;
 
 function TuiRectCheckedEdge(Origin: integer; Extent: integer; Name: string): integer;
 begin
@@ -24,7 +24,7 @@ begin
   end;
 
   return Origin + Extent;
-end;
+end function;
 
 function TuiRectExtentFromEdges(Origin: integer; Edge: integer; Name: string): integer;
 begin
@@ -39,7 +39,7 @@ begin
   end;
 
   return Edge - Origin;
-end;
+end function;
 
 function TuiRectMin(Left: integer; Right: integer): integer;
 begin
@@ -49,7 +49,7 @@ begin
   end;
 
   return Right;
-end;
+end function;
 
 function TuiRectMax(Left: integer; Right: integer): integer;
 begin
@@ -59,7 +59,7 @@ begin
   end;
 
   return Right;
-end;
+end function;
 
 public type
   // Zero-based half-open terminal-cell rectangle (`right = x + width`).
@@ -92,7 +92,7 @@ public type
         Width := Width;
         Height := Height;
       end;
-    end;
+    end function;
 
     // Creates a rectangle from exclusive edges.
     //
@@ -106,7 +106,7 @@ public type
       var Width: integer := TuiRectExtentFromEdges(Left, Right, 'right');
       var Height: integer := TuiRectExtentFromEdges(Top, Bottom, 'bottom');
       return TuiRect.Create(Left, Top, Width, Height);
-    end;
+    end function;
 
     // Creates a rectangle from a point and size.
     //
@@ -116,7 +116,7 @@ public type
     public static function FromPointSize(Position: TuiPoint; Size: TuiSize): TuiRect;
     begin
       return TuiRect.Create(Position.X, Position.Y, Size.Width, Size.Height);
-    end;
+    end function;
 
     // Creates a rectangle from exclusive corners.
     //
@@ -126,7 +126,7 @@ public type
     public static function FromCorners(TopLeft: TuiPoint; BottomRight: TuiPoint): TuiRect;
     begin
       return TuiRect.FromEdges(TopLeft.X, TopLeft.Y, BottomRight.X, BottomRight.Y);
-    end;
+    end function;
 
     // Returns the first column after the rectangle.
     //
@@ -135,7 +135,7 @@ public type
     public function Right(Self: TuiRect): integer;
     begin
       return TuiRectCheckedEdge(Self.X, Self.Width, 'right');
-    end;
+    end function;
 
     // Returns the first row after the rectangle.
     //
@@ -144,7 +144,7 @@ public type
     public function Bottom(Self: TuiRect): integer;
     begin
       return TuiRectCheckedEdge(Self.Y, Self.Height, 'bottom');
-    end;
+    end function;
 
     // Returns whether the rectangle has no drawable cells.
     //
@@ -153,7 +153,7 @@ public type
     public function IsEmpty(Self: TuiRect): boolean;
     begin
       return (Self.Width = 0) or (Self.Height = 0);
-    end;
+    end function;
 
     // Returns whether the half-open rectangle contains the point.
     //
@@ -164,7 +164,7 @@ public type
     begin
       return (((Point.X >= Self.X) and (Point.X < Self.Right())) and (Point.Y >= Self.Y)) and
              (Point.Y < Self.Bottom());
-    end;
+    end function;
 
     // Returns whether two rectangles share any cell.
     //
@@ -175,7 +175,7 @@ public type
     begin
       return (((Self.X < Other.Right()) and (Other.X < Self.Right())) and (Self.Y < Other.Bottom())) and
              (Other.Y < Self.Bottom());
-    end;
+    end function;
 
     // Returns the overlapping rectangle, or an empty rectangle at the clamped origin.
     //
@@ -194,7 +194,7 @@ public type
       end;
 
       return TuiRect.Create(X, Y, Right - X, Bottom - Y);
-    end;
+    end function;
 
     // Returns a rectangle inset by one cell on every side.
     //
@@ -215,8 +215,8 @@ public type
       end;
 
       return TuiRect.Create(Self.X + 1, Self.Y + 1, InnerWidth, InnerHeight);
-    end;
-  end;
+    end function;
+  end record;
 
 // Creates a full-surface rectangle at the origin.
 //
@@ -225,4 +225,5 @@ public type
 public function TuiRectForSize(Size: TuiSize): TuiRect;
 begin
   return TuiRect.Create(0, 0, Size.Width, Size.Height);
-end;
+end function;
+end unit;

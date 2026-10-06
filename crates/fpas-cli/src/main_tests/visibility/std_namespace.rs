@@ -76,7 +76,7 @@ include = ["src/*.fpas"]
     write_text(&cwd.join("src/main.fpas"), "program Main;\nbegin\nend.\n");
     write_text(
         &cwd.join("src/mylib.fpas"),
-        "unit sTd.MyLib;\nfunction Foo(): integer;\nbegin\n  return 1;\nend;\n",
+        "unit sTd.MyLib;\nfunction Foo(): integer;\nbegin\n  return 1;\nend function;\nend unit;\n",
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);

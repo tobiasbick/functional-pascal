@@ -13,7 +13,7 @@ begin
   var Snapshot: TuiSurfaceSnapshot := App.SurfaceSnapshot();
   App.Close();
   return Snapshot;
-end;
+end function;
 
 begin
   var Row: TuiSurfaceSnapshot := Paint(TuiElementBuilders.MakeDesktop(None, [

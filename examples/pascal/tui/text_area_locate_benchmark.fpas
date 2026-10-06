@@ -8,12 +8,12 @@ begin
   return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(1)), [
                                                                         TuiElementBuilders.MakeTextArea(TuiControlId.Create(1), Text, Std.Str.Length(Text), TuiPoint.Create(0, 0), TuiAction.Create(1))
                                                                       ]);
-end;
+end function;
 
 function Update(Text: string; Msg: TuiMsg; Cmd: TuiCmdOutput): string;
 begin
   return Text;
-end;
+end function;
 
 begin
   if ParamCount() <> 2 then

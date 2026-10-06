@@ -16,7 +16,7 @@ uses Std.Console;
 type
   Row = record
     Scores: dict of string to integer;
-  end;
+  end record;
 
 mutable var
   GlobalScores: dict of string to integer := ['Root': 7];

@@ -14,7 +14,7 @@ begin
   end;
 
   return Count(N - 1);
-end;
+end function;
 
 begin
   WriteLn(Count(3));

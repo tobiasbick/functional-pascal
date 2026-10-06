@@ -8,7 +8,7 @@ fn record_events_default_to_private_and_accept_public() {
          type Counter = record \
            event Hidden: procedure() read GetHidden write SetHidden; \
            public event Changed: procedure() read GetChanged write SetChanged; \
-         end;",
+         end record;\nend unit;",
     );
     let Decl::TypeDef(type_def) = &unit.declarations[0] else {
         panic!("expected type");
@@ -24,10 +24,10 @@ fn record_events_default_to_private_and_accept_public() {
 fn record_event_parses() {
     let p = parse_ok(
         "program T; type Button = record \
-         function ReadOnClick(Self: Button): Option of procedure(); begin return None; end; \
-         procedure WriteOnClick(Self: Button; H: Option of procedure()); begin end; \
+         function ReadOnClick(Self: Button): Option of procedure(); begin return None; end function; \
+         procedure WriteOnClick(Self: Button; H: Option of procedure()); begin end procedure; \
          event OnClick: procedure() read ReadOnClick write WriteOnClick; \
-         end; begin end.",
+         end record; begin end.",
     );
     match &p.declarations[0] {
         Decl::TypeDef(td) => match &td.body {
@@ -62,7 +62,7 @@ fn event_without_accessors_is_rejected() {
     let (program, errors) = parse_with_errors(
         "program T; type Button = record \
          event OnClick: procedure(); \
-         end; begin end.",
+         end record; begin end.",
     );
     assert!(
         errors
@@ -87,9 +87,9 @@ fn event_without_accessors_is_rejected() {
 fn event_with_only_read_is_rejected() {
     let (_, errors) = parse_with_errors(
         "program T; type Button = record \
-         function ReadOnClick(Self: Button): Option of procedure(); begin return None; end; \
+         function ReadOnClick(Self: Button): Option of procedure(); begin return None; end function; \
          event OnClick: procedure() read ReadOnClick; \
-         end; begin end.",
+         end record; begin end.",
     );
     assert!(
         errors
@@ -104,9 +104,9 @@ fn event_with_only_read_is_rejected() {
 fn event_with_only_write_is_rejected() {
     let (_, errors) = parse_with_errors(
         "program T; type Button = record \
-         procedure WriteOnClick(Self: Button; H: Option of procedure()); begin end; \
+         procedure WriteOnClick(Self: Button; H: Option of procedure()); begin end procedure; \
          event OnClick: procedure() write WriteOnClick; \
-         end; begin end.",
+         end record; begin end.",
     );
     assert!(
         errors
@@ -122,7 +122,7 @@ fn event_write_before_read_is_rejected() {
     let (_, errors) = parse_with_errors(
         "program T; type Button = record \
          event OnClick: procedure() write WriteOnClick read ReadOnClick; \
-         end; begin end.",
+         end record; begin end.",
     );
     let diagnostic = errors.iter().find_map(|error| match error {
         ParseDiagnostic::Parser(diagnostic)

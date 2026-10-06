@@ -9,16 +9,16 @@ function Name [<T>] ( [ params ] ) : RetType ;
   // nested function | nested procedure
 begin
   ...
-end;
+end function;
 
 procedure Name [<T>] ( [ params ] ) ;
   // nested function | nested procedure
 begin
   ...
-end;
+end procedure;
 ```
 
-- The header ends with `;` before the body. The body ends with `end;` (including top-level declarations in a program or unit).
+- The header ends with `;` before the body. A function body ends with `end function;`, and a procedure body ends with `end procedure;`. Methods and nested routines use the same matching endings.
 - Use `()` when there are no parameters: `function Pi(): real;`.
 - Parameter lists use `;` between parameters; call sites use `,`.
 - Calls always include parentheses, including calls without arguments: `Pi()` or
@@ -32,7 +32,7 @@ A function returns a value using `return`:
 function Add(A: integer; B: integer): integer;
 begin
   return A + B;
-end;
+end function;
 ```
 
 ## Procedures
@@ -43,7 +43,7 @@ A procedure performs an action but returns no value:
 procedure SayHello(Name: string);
 begin
   WriteLn('Hello, ' + Name + '!');
-end;
+end procedure;
 ```
 
 Procedures use bare `return` to exit early without a value:
@@ -55,7 +55,7 @@ begin
     return;
   Count := Count + 1;
   WriteLn('logged ', Value);
-end;
+end procedure;
 ```
 
 ## See also

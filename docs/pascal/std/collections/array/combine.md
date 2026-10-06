@@ -19,7 +19,7 @@ Applies `F` to each element (producing an array), then flattens all results into
 function ExpandPair(X: integer): array of integer;
 begin
   return [X, X * 10];
-end;
+end function;
 
 var Output: array of integer := FlatMap([1, 2, 3], ExpandPair);
 // [1, 10, 2, 20, 3, 30]
@@ -48,7 +48,7 @@ Calls `F` for each element in `A`. Does not return a value.
 procedure PrintValue(X: integer);
 begin
   WriteLn(X);
-end;
+end procedure;
 
 ForEach([1, 2, 3], PrintValue);
 ```

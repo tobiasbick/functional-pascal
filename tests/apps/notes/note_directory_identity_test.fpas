@@ -24,7 +24,7 @@ begin
   Inside.Title := 'edited';
   AssertTrue(Unwrap(NotesSave(Directory, Inside)));
   AssertEquals(Before, Unwrap(Std.Fs.ReadText(NoteFilePath(Adjacent, Outside))));
-end;
+end procedure;
 
 begin
   CheckDirectory('set[1]', 'set1');

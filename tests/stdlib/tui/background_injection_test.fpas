@@ -6,7 +6,7 @@ type
   InjectionModel = record
     Values: array of integer;
     Starts: integer;
-  end;
+  end record;
 
 function UpdateFramework(State: InjectionModel; Msg: TuiMsg; Cmd: TuiCmdOutput): InjectionModel;
 begin
@@ -23,7 +23,7 @@ begin
       return State;
     end;
   end;
-end;
+end function;
 
 function UpdateApplication(State: InjectionModel; Message: integer; Cmd: TuiCmdOutput): InjectionModel;
 begin
@@ -31,12 +31,12 @@ begin
     Values := Std.Arrays.Concat(State.Values, [Message]);
     Starts := State.Starts;
   end;
-end;
+end function;
 
 function View(State: InjectionModel): TuiElement;
 begin
   return TuiElementBuilders.MakeLabel('background');
-end;
+end function;
 
 begin
   var Inbox: channel of integer := CreateChannel(2);

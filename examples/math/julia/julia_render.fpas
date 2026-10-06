@@ -8,7 +8,7 @@ public type
   RenderRow = record
     public Y: integer;
     public Samples: array of PixelSample;
-  end;
+  end record;
 
 function EscapeGlyph(EscapeValue: real): string;
 begin
@@ -17,7 +17,7 @@ begin
   var Phase: real := Frac(EscapeValue * 0.08);
   var Index: integer := Clamp(Trunc(Phase * IntToReal(Count)), 0, Count - 1);
   return CharAt(Ramp, Index);
-end;
+end function;
 
 function RenderCell(Sample: PixelSample; Palette: PaletteKind): Cell;
 begin
@@ -36,7 +36,7 @@ begin
     foreground := EscapeColor(Palette, Sample.EscapeValue);
     background := RgbColor(0, 0, 0);
   end;
-end;
+end function;
 
 procedure DrawRow(Row: array of PixelSample; Width: integer; Y: integer; Palette: PaletteKind);
 begin
@@ -58,7 +58,7 @@ begin
   end;
 
   WriteCells(1, Y, Cells);
-end;
+end procedure;
 
 public type
   // A render owns four workers and at most four queued rows.
@@ -67,7 +67,7 @@ public type
     public Rows: channel of RenderRow;
     public Width: integer;
     public Palette: PaletteKind;
-  end;
+  end record;
 
 // Start a bounded render. Each worker owns every fourth row.
 public function StartRender(
@@ -117,7 +117,7 @@ begin
     Width := Width;
     Palette := Palette;
   end;
-end;
+end function;
 
 // Draw a bounded batch on the terminal-owning task without waiting for workers.
 public procedure PollRender(Job: RenderJob);
@@ -138,7 +138,7 @@ begin
       end;
     end;
   end;
-end;
+end procedure;
 
 // Cancel CPU work and blocked sends before releasing the old queue.
 // Joining first prevents old rows from appearing in a replacement render.
@@ -150,4 +150,5 @@ begin
   begin
     panic(Failures[0].Message);
   end;
-end;
+end procedure;
+end unit;

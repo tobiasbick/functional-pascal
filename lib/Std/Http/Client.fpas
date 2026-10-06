@@ -23,7 +23,7 @@ begin
   end;
 
   return Error('Std.Http supports only http:// and https:// URLs');
-end;
+end function;
 
 // Closes a connection while deliberately ignoring close errors.
 //
@@ -39,7 +39,7 @@ begin
     begin
     end;
   end;
-end;
+end procedure;
 
 // Sends one request without applying redirect policy.
 //
@@ -110,7 +110,7 @@ begin
       return Error(Message);
     end;
   end;
-end;
+end function;
 
 // Opens the final response body after following bounded HTTP redirects.
 //
@@ -209,7 +209,7 @@ begin
   end;
 
   return Error('HTTP redirect loop ended unexpectedly');
-end;
+end function;
 
 // Sends one request, follows bounded redirects, and buffers the final body.
 //
@@ -261,4 +261,5 @@ begin
       return Error(Message);
     end;
   end;
-end;
+end function;
+end unit;

@@ -14,7 +14,7 @@ fn server() -> DapServer {
 function Helper(Value: integer): integer;
 begin
   return Value + 1;
-end;
+end function;
 
 begin
   var First: integer := Helper(1);

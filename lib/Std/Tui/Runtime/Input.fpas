@@ -25,4 +25,5 @@ public type
     // Parameters:
     // - `Size`: Size in terminal cells.
     Resize(Size: TuiSize);
-  end;
+  end enum;
+end unit;

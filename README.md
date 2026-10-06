@@ -143,7 +143,7 @@ begin
     return N;
   else
     return Fib(N - 1) + Fib(N - 2);
-end;
+end function;
 
 begin
   WriteLn('Fibonacci sequence:');
@@ -163,7 +163,7 @@ type
     Red;
     Yellow;
     Green;
-  end;
+  end enum;
 
 function TrafficAdvice(L: Light): string;
 begin
@@ -172,7 +172,7 @@ begin
     Light.Yellow: return 'Caution';
     Light.Green:  return 'Go';
   end;
-end;
+end function;
 
 begin
   WriteLn(TrafficAdvice(Light.Red));
@@ -188,12 +188,12 @@ uses Std.Console;
 function Double(X: integer): integer;
 begin
   return X * 2;
-end;
+end function;
 
 function Apply(F: function(X: integer): integer; Value: integer): integer;
 begin
   return F(Value);
-end;
+end function;
 
 begin
   var Op: function(X: integer): integer := Double;
@@ -213,7 +213,7 @@ begin
     if Items[I] >= Min then
       return Some(Items[I]);
   return None;
-end;
+end function;
 
 begin
   case FindFirst([3, 7, 15, 42], 10) of

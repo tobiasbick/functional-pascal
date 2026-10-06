@@ -5,35 +5,35 @@ uses Std.Dictionaries, Std.Str, Std.Tasks, Std.Test;
 function Identity(C: string): string;
 begin
   return C;
-end;
+end function;
 
 function KeepFace(C: string): boolean;
 begin
   return C = '😀';
-end;
+end function;
 
 function Count(Acc: integer; C: string): integer;
 begin
   return Acc + 1;
-end;
+end function;
 
 function Sum(Acc: integer; Key: string; Value: integer): integer;
 begin
   return Acc + Value;
-end;
+end function;
 
 function StringWork(): integer;
 begin
   AssertEquals('a😀b', Std.Str.Map('a😀b', Identity));
   AssertEquals('😀', Std.Str.Filter('a😀b', KeepFace));
   return Std.Str.Reduce('a😀b', 0, Count);
-end;
+end function;
 
 function DictionaryWork(): integer;
 begin
   var Values: dict of string to integer := ['A': 2, 'B': 4];
   return Std.Dictionaries.Reduce(Values, 1, Sum);
-end;
+end function;
 
 begin
   var StringTask: task := go StringWork();

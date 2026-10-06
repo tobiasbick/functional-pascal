@@ -26,7 +26,7 @@ begin
   end;
 
   return Total;
-end;
+end function;
 
 begin
   if (ParamCount() < 1) or (ParamCount() > 2) then

@@ -17,8 +17,8 @@ include = ["*.fpas"]
     write_text(
         &cwd.join("types.fpas"),
         "unit Demo.Types;
-public type Point = record public X: integer; public Y: integer; end;
-public type Holder = record public Position: Point; public Points: array of Point; end;",
+public type Point = record public X: integer; public Y: integer; end record;
+public type Holder = record public Position: Point; public Points: array of Point; end record;\nend unit;",
     );
     write_text(
         &cwd.join("main.fpas"),

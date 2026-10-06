@@ -16,7 +16,7 @@ include = ["src/**/*.fpas"]
 "#,
     );
     write_text(&dir.join("src/main.txt"), "not-pascal");
-    write_text(&dir.join("src/util.fpas"), "unit App.Util;");
+    write_text(&dir.join("src/util.fpas"), "unit App.Util;\nend unit;");
 
     let error = load_project_error(&project_file, "main extension must be validated");
     fs::remove_dir_all(&dir).expect("temp directory must be removed");
@@ -38,8 +38,8 @@ main = "src/main.fpas"
 include = ["src/**/*.fpas"]
 "#,
     );
-    write_text(&dir.join("src/main.fpas"), "unit App.Main;");
-    write_text(&dir.join("src/util.fpas"), "unit App.Util;");
+    write_text(&dir.join("src/main.fpas"), "unit App.Main;\nend unit;");
+    write_text(&dir.join("src/util.fpas"), "unit App.Util;\nend unit;");
 
     let error = load_project_error(&project_file, "main must be a program file");
     fs::remove_dir_all(&dir).expect("temp directory must be removed");
@@ -136,7 +136,7 @@ main = "src/nonexistent.fpas"
 include = ["src/**/*.fpas"]
 "#,
     );
-    write_text(&dir.join("src/util.fpas"), "unit App.Util;");
+    write_text(&dir.join("src/util.fpas"), "unit App.Util;\nend unit;");
 
     let error = load_project_error(&project_file, "missing main file must fail");
     fs::remove_dir_all(&dir).expect("temp directory must be removed");
@@ -184,8 +184,8 @@ include = ["src/*.fpas"]
 "#,
     );
     write_text(&dir.join("src/main.fpas"), "program Main;\nbegin\nend.\n");
-    write_text(&dir.join("src/a.fpas"), "unit App.Utils;");
-    write_text(&dir.join("src/b.fpas"), "unit app.utils;");
+    write_text(&dir.join("src/a.fpas"), "unit App.Utils;\nend unit;");
+    write_text(&dir.join("src/b.fpas"), "unit app.utils;\nend unit;");
 
     let error = load_project_error(&project_file, "duplicate unit names must fail");
     fs::remove_dir_all(&dir).expect("temp directory must be removed");
@@ -282,7 +282,7 @@ main = ""
 include = ["src/**/*.fpas"]
 "#,
     );
-    write_text(&dir.join("src/util.fpas"), "unit App.Util;");
+    write_text(&dir.join("src/util.fpas"), "unit App.Util;\nend unit;");
 
     let error = load_project_error(&project_file, "empty main path must fail");
     fs::remove_dir_all(&dir).expect("temp directory must be removed");
@@ -307,7 +307,7 @@ main = "   "
 include = ["src/**/*.fpas"]
 "#,
     );
-    write_text(&dir.join("src/util.fpas"), "unit App.Util;");
+    write_text(&dir.join("src/util.fpas"), "unit App.Util;\nend unit;");
 
     let error = load_project_error(&project_file, "whitespace-only main path must fail");
     fs::remove_dir_all(&dir).expect("temp directory must be removed");
@@ -356,7 +356,10 @@ include = ["src/*.fpas"]
 "#,
     );
     write_text(&dir.join("src/main.fpas"), "program Main;\nbegin\nend.\n");
-    write_text(&dir.join("src/std_unit.fpas"), "unit Std.Helpers;");
+    write_text(
+        &dir.join("src/std_unit.fpas"),
+        "unit Std.Helpers;\nend unit;",
+    );
 
     let error = load_project_error(&project_file, "reserved Std namespace must fail");
     fs::remove_dir_all(&dir).expect("temp directory must be removed");

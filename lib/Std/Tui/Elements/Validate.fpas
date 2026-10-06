@@ -15,7 +15,7 @@ begin
   end;
 
   return false;
-end;
+end function;
 
 procedure TuiElementValidateControl(Id: TuiControlId);
 begin
@@ -23,7 +23,7 @@ begin
   begin
     panic('Tui interactive elements require a positive control id');
   end;
-end;
+end procedure;
 
 procedure TuiElementValidateAction(Action: TuiAction);
 begin
@@ -31,7 +31,7 @@ begin
   begin
     panic('Tui interactive elements require a positive action id');
   end;
-end;
+end procedure;
 
 function TuiElementChildren(Node: TuiElement): array of TuiElement;
 begin
@@ -69,7 +69,7 @@ begin
       return [];
     end;
   end;
-end;
+end function;
 
 function TuiElementValidateAndCollect(Node: TuiElement): array of integer;
 begin
@@ -272,7 +272,7 @@ begin
   end;
 
   return Seen;
-end;
+end function;
 
 // Validates one complete Tui view tree before layout or routing.
 //
@@ -281,4 +281,5 @@ end;
 public procedure TuiElementValidate(Root: TuiElement);
 begin
   TuiElementValidateAndCollect(Root);
-end;
+end procedure;
+end unit;

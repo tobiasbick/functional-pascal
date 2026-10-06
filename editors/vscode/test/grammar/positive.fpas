@@ -7,12 +7,12 @@ type
   Point = record
     X: integer;
     Y: real;
-  end;
+  end record;
 
 function Distance(Value: Point): real;
 begin
   return Value.X + Value.Y;
-end;
+end function;
 
 begin
   // Origin value.

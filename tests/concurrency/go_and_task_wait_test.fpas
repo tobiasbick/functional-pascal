@@ -5,7 +5,7 @@ uses Std.Tasks, Std.Test;
 function Worker(): integer;
 begin
   return 42;
-end;
+end function;
 
 begin
   var T: task := go Worker();

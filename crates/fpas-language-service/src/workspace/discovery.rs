@@ -315,7 +315,8 @@ mod tests {
         std::fs::create_dir_all(&child).expect("source directory");
         let source = child.join("loose.fpas");
         std::fs::write(&source, "program Loose; begin end.").expect("loose source");
-        std::fs::write(base.join("other.fpas"), "unit Other;").expect("unrelated source");
+        std::fs::write(base.join("other.fpas"), "unit Other;\nend unit;")
+            .expect("unrelated source");
         std::fs::write(base.join("other.fpasprj"), "[project]\nname = \"other\"\nkind = \"library\"\n\n[sources]\ninclude = [\"other.fpas\"]\n")
             .expect("unrelated project");
 

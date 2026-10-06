@@ -2,8 +2,9 @@
 
 Delivery: local implementation on `codex/syntax-changes-2`.
 The six work packages are implemented together because the shared record,
-transport and its consumers need to remain consistent. Merge completion is
-tracked separately under the [development process](../development-process.md).
+transport and its consumers need to remain consistent. Delivery completion is
+tracked in the [package checklist](README.md#work-packages); integration follows
+the [development process](../development-process.md).
 
 ## Scope and reuse
 

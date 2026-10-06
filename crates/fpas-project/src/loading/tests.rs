@@ -30,8 +30,11 @@ fn export_and_unit_validation_parse_each_library_source_once()
         &manifest,
         "[project]\nname = \"library\"\nkind = \"library\"\n\n[exports]\nunits = [\"Demo.Api\"]\n\n[sources]\ninclude = [\"src/**/*.fpas\"]\n",
     )?;
-    write(&dir.join("src/api.fpas"), "unit Demo.Api;\n")?;
-    write(&dir.join("src/internal.fpas"), "unit Demo.Internal;\n")?;
+    write(&dir.join("src/api.fpas"), "unit Demo.Api;\nend unit;\n")?;
+    write(
+        &dir.join("src/internal.fpas"),
+        "unit Demo.Internal;\nend unit;\n",
+    )?;
     let mut cache = ParsedSourceCache::new();
 
     let own = load_own_project(&manifest, &mut cache)?;
@@ -52,7 +55,7 @@ fn main_and_unit_validation_share_one_parse_cache() -> Result<(), Box<dyn std::e
         "[project]\nname = \"program\"\nkind = \"program\"\nmain = \"src/main.fpas\"\n\n[sources]\ninclude = [\"src/**/*.fpas\"]\n",
     )?;
     write(&dir.join("src/main.fpas"), "program Demo;\nbegin\nend.\n")?;
-    write(&dir.join("src/core.fpas"), "unit Demo.Core;\n")?;
+    write(&dir.join("src/core.fpas"), "unit Demo.Core;\nend unit;\n")?;
     let mut cache = ParsedSourceCache::new();
 
     let own = load_own_project(&manifest, &mut cache)?;

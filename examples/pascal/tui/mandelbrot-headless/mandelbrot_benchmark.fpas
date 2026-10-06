@@ -8,12 +8,12 @@ uses
 function Update(Grid: TuiCellGrid; Msg: TuiMsg; Cmd: TuiCmdOutput): TuiCellGrid;
 begin
   return Grid;
-end;
+end function;
 
 function View(Grid: TuiCellGrid): TuiElement;
 begin
   return TuiElementBuilders.MakeCellGrid(Grid);
-end;
+end function;
 
 function RenderOnce(Paint: boolean): integer;
 begin
@@ -56,7 +56,7 @@ begin
   App.Close();
   CloseChannel(Inbox);
   return Count;
-end;
+end function;
 
 begin
   var Iterations: integer := StrToInt(ParamStr(0));

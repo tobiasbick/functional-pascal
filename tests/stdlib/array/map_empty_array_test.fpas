@@ -5,7 +5,7 @@ uses Std.Console, Std.Arrays;
 function AddOne(X: integer): integer;
 begin
   return X + 1;
-end;
+end function;
 
 begin
   var A: array of integer := [];

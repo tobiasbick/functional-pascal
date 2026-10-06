@@ -12,7 +12,7 @@ begin
   begin
     return Error('non-positive');
   end;
-end;
+end function;
 
 begin
   var R: result of integer, string := Ok(10);

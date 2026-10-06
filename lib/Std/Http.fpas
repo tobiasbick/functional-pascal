@@ -36,7 +36,7 @@ public type
 public function Send(RequestValue: Std.Http.Types.Request): result of Std.Http.Types.Response, string;
 begin
   return Std.Http.Client.Send(RequestValue);
-end;
+end function;
 
 // Sends one HTTP/1.1 request, follows bounded redirects, and returns the final response stream.
 //
@@ -45,7 +45,7 @@ end;
 public function OpenStream(RequestValue: Std.Http.Types.Request): result of Std.Http.Types.StreamResponse, string;
 begin
   return Std.Http.Client.OpenStream(RequestValue);
-end;
+end function;
 
 // Reads at most MaxBytes decoded body bytes. An empty array means end of stream.
 //
@@ -55,7 +55,7 @@ end;
 public function ReadStream(StreamValue: Std.Http.Types.BodyStream; MaxBytes: integer): result of array of integer, string;
 begin
   return Std.Http.Stream.ReadBody(StreamValue, MaxBytes);
-end;
+end function;
 
 // Closes a streaming response body before end of stream.
 //
@@ -64,7 +64,7 @@ end;
 public function CloseStream(StreamValue: Std.Http.Types.BodyStream): result of boolean, string;
 begin
   return Std.Http.Stream.CloseBody(StreamValue);
-end;
+end function;
 
 // Reads one bounded HTTP/1.x request from a connected client.
 //
@@ -75,7 +75,7 @@ end;
 public function ReadRequest(Connection: Std.Net.Connection; MaxHeaderBytes: integer; MaxBodyBytes: integer): result of Std.Http.Types.ServerRequest, string;
 begin
   return Std.Http.Server.ReadRequest(Connection, MaxHeaderBytes, MaxBodyBytes);
-end;
+end function;
 
 // Writes one complete HTTP/1.1 response without closing the connection.
 //
@@ -85,7 +85,7 @@ end;
 public function WriteResponse(Connection: Std.Net.Connection; ResponseValue: Std.Http.Types.ServerResponse): result of boolean, string;
 begin
   return Std.Http.Server.WriteResponse(Connection, ResponseValue);
-end;
+end function;
 
 // Accepts requests in bounded concurrent batches and dispatches each one to Handler.
 //
@@ -100,7 +100,7 @@ public function Serve(
 ): result of boolean, string;
 begin
   return Std.Http.ServerLoop.Serve(Listener, Options, Handler);
-end;
+end function;
 
 // Creates an incremental Server-Sent Events decoder with one bounded event buffer.
 //
@@ -109,7 +109,7 @@ end;
 public function CreateSseDecoder(MaxEventBytes: integer): result of Std.Http.Types.SseDecoder, string;
 begin
   return Std.Http.Sse.Create(MaxEventBytes);
-end;
+end function;
 
 // Feeds one byte fragment and returns every complete event decoded from it.
 //
@@ -119,7 +119,7 @@ end;
 public function FeedSse(Decoder: Std.Http.Types.SseDecoder; Bytes: array of integer): result of array of Std.Http.Types.SseEvent, string;
 begin
   return Std.Http.Sse.Feed(Decoder, Bytes);
-end;
+end function;
 
 // Flushes the final SSE line and prevents further input.
 //
@@ -128,7 +128,7 @@ end;
 public function FinishSse(Decoder: Std.Http.Types.SseDecoder): result of array of Std.Http.Types.SseEvent, string;
 begin
   return Std.Http.Sse.Finish(Decoder);
-end;
+end function;
 
 // Finds the first response header with a case-insensitive name.
 //
@@ -138,7 +138,7 @@ end;
 public function HeaderValue(ResponseValue: Std.Http.Types.Response; Name: string): option of string;
 begin
   return Std.Http.Headers.Find(ResponseValue.Headers, Name);
-end;
+end function;
 
 // Decodes a response body as validated UTF-8 text.
 //
@@ -147,4 +147,5 @@ end;
 public function BodyText(ResponseValue: Std.Http.Types.Response): result of string, string;
 begin
   return Std.Net.Utf8.Decode(ResponseValue.Body);
-end;
+end function;
+end unit;

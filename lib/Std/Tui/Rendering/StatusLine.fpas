@@ -17,13 +17,13 @@ begin
       return false;
     end;
   end;
-end;
+end function;
 
 function TuiStatusWrite(Canvas: TuiCanvas; X: integer; Y: integer; Text: string; Role: TuiStyleRole): integer;
 begin
   Canvas.WriteText(TuiPoint.Create(X, Y), Text, Role);
   return X + Std.Console.DisplayWidth(Text);
-end;
+end function;
 
 // Paints one complete status row, including its unused background cells.
 //
@@ -75,4 +75,5 @@ begin
       end;
     end;
   end;
-end;
+end procedure;
+end unit;

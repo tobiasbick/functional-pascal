@@ -11,19 +11,19 @@ type
     function Map<R>(Self: Box; F: function(X: integer): R): R;
     begin
       return F(Self.Value);
-    end;
-  end;
+    end function;
+  end record;
   Accumulator = record
     function EchoNumeric<T: Numeric>(Self: Accumulator; Extra: T): T;
     begin
       return Extra;
-    end;
-  end;
+    end function;
+  end record;
 
 function ToText(X: integer): string;
 begin
   return 'value=' + IntToStr(X);
-end;
+end function;
 
 begin
   var B: Box := record

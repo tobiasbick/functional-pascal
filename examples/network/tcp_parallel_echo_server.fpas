@@ -30,7 +30,7 @@ begin
   end;
 
   return Ok(true);
-end;
+end function;
 
 begin
   mutable var Port: integer := 18082;

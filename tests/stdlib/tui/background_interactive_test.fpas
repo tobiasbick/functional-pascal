@@ -6,7 +6,7 @@ type
   InteractiveModel = record
     Inbox: channel of integer;
     Received: integer;
-  end;
+  end record;
 
 function Update(State: InteractiveModel; Msg: TuiMsg; Cmd: TuiCmdOutput): InteractiveModel;
 begin
@@ -24,7 +24,7 @@ begin
   end;
 
   return State;
-end;
+end function;
 
 function UpdateMessage(State: InteractiveModel; Message: integer; Cmd: TuiCmdOutput): InteractiveModel;
 begin
@@ -32,12 +32,12 @@ begin
   mutable var Next: InteractiveModel := State;
   Next.Received := Message;
   return Next;
-end;
+end function;
 
 function View(State: InteractiveModel): TuiElement;
 begin
   return TuiElementBuilders.MakeLabel('background wakeup');
-end;
+end function;
 
 begin
   var Inbox: channel of integer := CreateChannel(1);

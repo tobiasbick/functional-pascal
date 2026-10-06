@@ -5,7 +5,7 @@ uses Std.Str;
 function Expand(C: string): string;
 begin
   return 'ab';
-end;
+end function;
 
 begin
   var Mapped: string := Map('😀', Expand);

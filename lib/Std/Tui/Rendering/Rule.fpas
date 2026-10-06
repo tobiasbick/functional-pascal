@@ -23,4 +23,5 @@ begin
     Canvas.Child(TuiRect.Create(Bounds.X + 2, Bounds.Y, Bounds.Width - 4, 1))
       .WriteText(TuiPoint.Create(0, 0), (' ' + Text) + ' ', TuiStyleRole.Title);
   end;
-end;
+end procedure;
+end unit;

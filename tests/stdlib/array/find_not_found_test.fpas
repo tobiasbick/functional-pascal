@@ -5,7 +5,7 @@ uses Std.Console, Std.Arrays, Std.Options;
 function IsGreaterThanTen(X: integer): boolean;
 begin
   return X > 10;
-end;
+end function;
 
 begin
   var A: array of integer := [1, 2, 3];

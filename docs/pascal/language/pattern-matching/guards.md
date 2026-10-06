@@ -15,7 +15,7 @@ begin
     N if N < 0:
       return 'negative';
   end;
-end;
+end function;
 ```
 
 Guards work with all label types — values, ranges, destructuring, and enum patterns:

@@ -10,43 +10,43 @@ mutable var Grid: array of array of integer := [[0, 0, 0], [0, 0, 0]];
 mutable var Handler: Option of function(X: integer; Y: integer): integer := None;
 type
   Binary = function(X: integer; Y: integer): integer;
-  Bucket = record Items: array of integer; end;
+  Bucket = record Items: array of integer; end record;
   Counter = record
     Base: integer;
     function Add(Self: Counter; X: integer; Y: integer): integer;
-    begin return Self.Base + X * 10 + Y; end;
+    begin return Self.Base + X * 10 + Y; end function;
     procedure WriteNumber(Self: Counter; Value: integer);
-    begin Written := Self.Base + Value; end;
+    begin Written := Self.Base + Value; end procedure;
     property Number: integer write WriteNumber;
     function ReadHandler(Self: Counter): Option of Binary;
-    begin return Handler; end;
+    begin return Handler; end function;
     procedure WriteHandler(Self: Counter; Value: Option of Binary);
-    begin Handler := Value; end;
+    begin Handler := Value; end procedure;
     event OnValue: function(X: integer; Y: integer): integer read ReadHandler write WriteHandler;
-  end;
-  Message = enum Move(X: integer; Y: integer); end;
-  Pair = record First: integer; Second: integer; end;
+  end record;
+  Message = enum Move(X: integer; Y: integer); end enum;
+  Pair = record First: integer; Second: integer; end record;
 mutable var Trace: integer := 0;
 function ReadValue(Value: integer; FailAt: integer): result of integer, string;
 begin
   Trace := Trace * 10 + Value;
   if Value = FailAt then return Error('expected');
   return Ok(Value);
-end;
+end function;
 function Combine(X: integer; Y: integer): integer;
 begin
   return X * 10 + Y;
-end;
+end function;
 function ReadHandler(FailAt: integer): result of Binary, string;
 begin
   var X: integer := try ReadValue(1, FailAt);
   var Y: integer := try ReadValue(2, FailAt);
   return Ok(Combine);
-end;
+end function;
 function Probe(FailAt: integer): result of integer, string;
 begin
   {body}
-end;
+end function;
 begin
   if Probe(0) <> Ok(12) then panic('success value');
   if Trace <> 12 then panic('success evaluation order');
@@ -215,11 +215,11 @@ begin
   Trace := Trace * 10 + Value;
   if Value = FailAt then return None;
   return Some(Value);
-end;
+end function;
 function Combine(X: integer; Y: integer): integer;
-begin return X * 10 + Y; end;
+begin return X * 10 + Y; end function;
 function Probe(FailAt: integer): Option of integer;
-begin return Some(Combine(try ReadValue(1, FailAt), try ReadValue(2, FailAt))); end;
+begin return Some(Combine(try ReadValue(1, FailAt), try ReadValue(2, FailAt))); end function;
 begin
   if Probe(0) <> Some(12) then panic('success');
   if Trace <> 12 then panic('order');
@@ -241,7 +241,7 @@ fn saved_operands_retain_snapshots_across_mutation_and_loop_iterations() {
 program Snapshots;
 mutable var Values: array of integer := [12, 99];
 function Change(): result of integer, string;
-begin Values := [77, 88]; return Ok(0); end;
+begin Values := [77, 88]; return Ok(0); end function;
 function Probe(): result of integer, string;
 begin
   for I: integer := 1 to 3 do
@@ -255,7 +255,7 @@ begin
     if X <> 99 then panic('mutation missing');
   end;
   return Ok(12);
-end;
+end function;
 begin if Probe() <> Ok(12) then panic('result'); end.
 "#,
     );
@@ -272,20 +272,20 @@ begin
     Ok(Content): return Ok(Content);
     Error(Message): return Error('tagged ' + Message);
   end;
-end;
+end function;
 function MakeInt(Fail: boolean): result of integer, string;
 begin
   if Fail then return Error('int');
   return Ok(7);
-end;
+end function;
 function MakeValues(): result of array of integer, string;
-begin return Ok([2, 3]); end;
+begin return Ok([2, 3]); end function;
 function Probe(Fail: boolean): result of integer, string;
 begin
   var Values: array of integer := try Tagged(MakeValues());
   var Number: integer := try Tagged(MakeInt(Fail));
   return Ok(Number * 10 + Values[0] + Values[1]);
-end;
+end function;
 begin
   if Probe(false) <> Ok(75) then panic('generic payloads');
   if Probe(true) <> Error('tagged int') then panic('generic error propagation');
@@ -300,17 +300,17 @@ fn option_try_unwraps_generic_callee_to_concrete_payload() {
         r#"
 program GenericOptionTry;
 function Wrapped<T>(Value: Option of T): Option of T;
-begin return Value; end;
+begin return Value; end function;
 function Lookup(Present: boolean): Option of integer;
 begin
   if Present then return Some(40);
   return None;
-end;
+end function;
 function Probe(Present: boolean): Option of integer;
 begin
   var Number: integer := try Wrapped(Lookup(Present));
   return Some(Number + 2);
-end;
+end function;
 begin
   if Probe(true) <> Some(42) then panic('generic payload');
   if Probe(false) <> None then panic('generic none');

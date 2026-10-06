@@ -5,7 +5,7 @@ uses Std.Console, Std.Arrays;
 function Wrap(X: integer): array of integer;
 begin
   return [X];
-end;
+end function;
 
 begin
   var R: array of integer := FlatMap([], Wrap);

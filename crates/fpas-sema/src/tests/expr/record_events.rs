@@ -13,17 +13,17 @@ type
     function ReadOnClick(Self: Button): Option of procedure(Sender: Button);
     begin
       return None;
-    end;
+    end function;
     procedure WriteOnClick(Self: Button; Handler: Option of procedure(Sender: Button));
     begin
-    end;
+    end procedure;
     event OnClick: procedure(Sender: Button) read ReadOnClick write WriteOnClick;
     procedure RaiseClick(Self: Button);
     begin
       if Assigned(Self.OnClick) then
         Self.OnClick(Self);
-    end;
-  end;
+    end procedure;
+  end record;
 "
 }
 
@@ -33,7 +33,7 @@ fn event_assign_assigned_and_raise_ok() {
         "{}\
 procedure Handle(Sender: Button);
 begin
-end;
+end procedure;
 begin
   var B: Button := record Id := 1; end;
   B.OnClick := Handle;
@@ -84,12 +84,12 @@ type
     function ReadOnClick(Self: Button): procedure();
     begin
       return procedure() begin end;
-    end;
+    end function;
     procedure WriteOnClick(Self: Button; Handler: procedure());
     begin
-    end;
+    end procedure;
     event OnClick: procedure() read ReadOnClick write WriteOnClick;
-  end;
+  end record;
 begin
 end.",
     );
@@ -110,12 +110,12 @@ type
     function ReadOnClick(Self: Button): Option of procedure();
     begin
       return None;
-    end;
+    end function;
     procedure WriteOnClick(Self: Button; Handler: Option of procedure());
     begin
-    end;
+    end procedure;
     event OnClick: procedure() read ReadOnClick write WriteOnClick;
-  end;
+  end record;
 begin
 end.",
     );
@@ -137,12 +137,12 @@ type
     function ReadOnClick<T>(Self: Button): Option of procedure();
     begin
       return None;
-    end;
+    end function;
     procedure WriteOnClick(Self: Button; mutable Handler: Option of procedure());
     begin
-    end;
+    end procedure;
     event OnClick: procedure() read ReadOnClick write WriteOnClick;
-  end;
+  end record;
 begin
 end.",
     );
@@ -166,7 +166,7 @@ fn event_cannot_be_initialized_or_updated_as_a_field() {
         "{}\
 procedure Handle(Sender: Button);
 begin
-end;
+end procedure;
 begin
   var B: Button := record Id := 1; OnClick := Handle; end;
   var C: Button := B with OnClick := Handle; end;

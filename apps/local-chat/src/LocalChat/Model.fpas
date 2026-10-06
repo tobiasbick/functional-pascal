@@ -12,7 +12,7 @@ public type
     Assistant;
     // Error returned while processing a request.
     Failure;
-  end;
+  end enum;
   // One entry retained for display during the current process.
   ChatEntry = record
     // Origin used to label the entry.
@@ -30,7 +30,7 @@ public type
         Role := ChatRole.User;
         Text := Text;
       end;
-    end;
+    end function;
 
     // Creates an assistant entry.
     //
@@ -42,7 +42,7 @@ public type
         Role := ChatRole.Assistant;
         Text := Text;
       end;
-    end;
+    end function;
 
     // Creates a failed-request entry.
     //
@@ -54,8 +54,8 @@ public type
         Role := ChatRole.Failure;
         Text := Text;
       end;
-    end;
-  end;
+    end function;
+  end record;
   // Complete immutable state supplied to the Local Chat MVU view.
   LocalChatModel = record
     // Conversation entries in display order.
@@ -76,7 +76,7 @@ public type
     public Width: integer;
     // Current terminal height in cells.
     public Height: integer;
-  end;
+  end record;
 
 // Creates an empty Local Chat model for the supplied terminal size.
 //
@@ -96,7 +96,7 @@ begin
     Width := Width;
     Height := Height;
   end;
-end;
+end function;
 
 // Wraps text at grapheme boundaries for a cell-width limit.
 //
@@ -134,7 +134,7 @@ begin
   end;
 
   return Wrapped;
-end;
+end function;
 
 // Returns the transcript label for one chat role.
 //
@@ -156,7 +156,7 @@ begin
       return 'ERROR';
     end;
   end;
-end;
+end function;
 
 // Builds the width-bounded transcript displayed by the read-only transcript area.
 //
@@ -187,7 +187,7 @@ begin
   end;
 
   return Transcript;
-end;
+end function;
 
 // Moves the transcript caret and viewport to the latest visible entry.
 //
@@ -212,4 +212,5 @@ begin
 
   Next.TranscriptOffset := TuiPoint.Create(0, OffsetY);
   return Next;
-end;
+end function;
+end unit;

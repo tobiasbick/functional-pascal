@@ -38,7 +38,7 @@ begin
   end;
 
   return Std.Json.Stringify(JsonValue.Object(Fields));
-end;
+end function;
 
 // Returns a required object field or an actionable error.
 //
@@ -57,7 +57,7 @@ begin
       return Error('OpenAI-compatible response is missing field ' + Name);
     end;
   end;
-end;
+end function;
 
 // Decodes the first assistant content value from a completion response.
 //
@@ -152,4 +152,5 @@ begin
       return Error('Invalid OpenAI-compatible JSON response: ' + Message);
     end;
   end;
-end;
+end function;
+end unit;

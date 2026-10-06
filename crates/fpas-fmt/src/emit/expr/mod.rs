@@ -276,7 +276,7 @@ mod tests {
         );
         assert_eq!(
             expr_from_body(
-                "program T; type Point = record X: integer; Y: integer; end; begin var X: Point := record X := 1; Y := 2; end; end."
+                "program T; type Point = record X: integer; Y: integer; end record; begin var X: Point := record X := 1; Y := 2; end; end."
             ),
             "record\n  X := 1;\n  Y := 2;\nend"
         );
@@ -293,7 +293,7 @@ mod tests {
     #[test]
     fn nonempty_record_literal_is_multiline() {
         let formatted = expr_from_body(
-            "program T; type Point = record X: integer; end; begin var Value: Point := record X := 1; end; end.",
+            "program T; type Point = record X: integer; end record; begin var Value: Point := record X := 1; end; end.",
         );
         assert_eq!(formatted, "record\n  X := 1;\nend");
     }
@@ -301,7 +301,7 @@ mod tests {
     #[test]
     fn empty_record_literal_has_one_space() {
         let formatted = expr_from_body(
-            "program T; type Empty = record end; begin var Value: Empty := record  end; end.",
+            "program T; type Empty = record end record; begin var Value: Empty := record  end; end.",
         );
         assert_eq!(formatted, "record end");
     }
@@ -309,7 +309,7 @@ mod tests {
     #[test]
     fn nonempty_record_update_formats_field_assignment() {
         let formatted = expr_from_body(
-            "program T; type Point = record X: integer; end; begin var Value: Point := Base with X := 1; end; end.",
+            "program T; type Point = record X: integer; end record; begin var Value: Point := Base with X := 1; end; end.",
         );
         assert_eq!(formatted, "Base with X := 1; end");
     }
@@ -317,7 +317,7 @@ mod tests {
     #[test]
     fn nested_record_literal_indents_from_its_field() {
         let formatted = expr_from_body(
-            "program T; type Inner = record X: integer; end; Outer = record Item: Inner; end; begin var Value: Outer := record Item := record X := 1; end; end; end.",
+            "program T; type Inner = record X: integer; end record; Outer = record Item: Inner; end record; begin var Value: Outer := record Item := record X := 1; end; end; end.",
         );
         assert_eq!(
             formatted,
@@ -328,7 +328,7 @@ mod tests {
     #[test]
     fn record_literal_inside_array_continues_from_the_opening_line() {
         let formatted = expr_from_body(
-            "program T; type Item = record Value: integer; end; Box = record Items: array of Item; end; begin var Value: Box := record Items := [record Value := 10; end]; end; end.",
+            "program T; type Item = record Value: integer; end record; Box = record Items: array of Item; end record; begin var Value: Box := record Items := [record Value := 10; end]; end; end.",
         );
         assert_eq!(
             formatted,

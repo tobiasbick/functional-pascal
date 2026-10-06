@@ -11,7 +11,7 @@ unit Std.Crypto;
 public function RandomBytes(Count: integer): result of array of integer, string;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Unbiased secure value in inclusive `[Lo, Hi]`.
 //
@@ -21,4 +21,5 @@ end;
 public function RandomInt(Lo: integer; Hi: integer): result of integer, string;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
+end unit;

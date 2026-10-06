@@ -12,7 +12,7 @@ begin
     return N;
   else
     return Fibonacci(N - 1) + Fibonacci(N - 2);
-end;
+end function;
 
 begin
   return;
@@ -31,7 +31,7 @@ type Op = enum
   OpSub;
   OpMul;
   OpDiv;
-end;
+end enum;
 
 function Calculate(A: integer; B: integer; Operation: Op): integer;
 begin
@@ -41,7 +41,7 @@ begin
     OpMul: return A * B;
     OpDiv: return A div B;
   end;
-end;
+end function;
 
 begin
   var Answer: integer := Calculate(10, 3, OpAdd);
@@ -58,7 +58,7 @@ program Geometry;
 type Point = record
   X: real;
   Y: real;
-end;
+end record;
 
 begin
   var P: Point := record X := 1.0; Y := 2.0; end;
@@ -93,11 +93,11 @@ function IsEven(N: integer): boolean;
   begin
     if X = 0 then return false;
     else return IsEven(X - 1);
-  end;
+  end function;
 begin
   if N = 0 then return true;
   else return IsOdd(N - 1);
-end;
+end function;
 
 begin
   return;

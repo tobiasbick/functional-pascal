@@ -15,7 +15,7 @@ public const
 public function Abs<T>(N: T): T;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Inverse cosine.
 //
@@ -24,7 +24,7 @@ end;
 public function ArcCos(R: real): real;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Inverse sine.
 //
@@ -33,7 +33,7 @@ end;
 public function ArcSin(R: real): real;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Inverse tangent.
 //
@@ -42,7 +42,7 @@ end;
 public function ArcTan(R: real): real;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Two-argument arctangent.
 //
@@ -52,7 +52,7 @@ end;
 public function ArcTan2(Y: real; X: real): real;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Toward +∞.
 //
@@ -61,7 +61,7 @@ end;
 public function Ceil(R: real): integer;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Restrict to range (`integer` or `real`).
 //
@@ -72,7 +72,7 @@ end;
 public function Clamp<T>(V: T; Lo: T; Hi: T): T;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Radians.
 //
@@ -81,7 +81,7 @@ end;
 public function Cos(R: real): real;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // E^R.
 //
@@ -90,7 +90,7 @@ end;
 public function Exp(R: real): real;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Toward −∞.
 //
@@ -99,7 +99,7 @@ end;
 public function Floor(R: real): integer;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Fractional part.
 //
@@ -108,7 +108,7 @@ end;
 public function Frac(R: real): real;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Natural log; error if `R ≤ 0`.
 //
@@ -117,7 +117,7 @@ end;
 public function Log(R: real): real;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Base-10 logarithm.
 //
@@ -126,7 +126,7 @@ end;
 public function Log10(R: real): real;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Base-2 logarithm.
 //
@@ -135,7 +135,7 @@ end;
 public function Log2(R: real): real;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Both `integer` or both `real`.
 //
@@ -145,7 +145,7 @@ end;
 public function Max<T>(A: T; B: T): T;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Both `integer` or both `real`.
 //
@@ -155,7 +155,7 @@ end;
 public function Min<T>(A: T; B: T): T;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Power.
 //
@@ -165,7 +165,7 @@ end;
 public function Pow(Base: real; Exp: real): real;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Nearest.
 //
@@ -174,7 +174,7 @@ end;
 public function Round(R: real): integer;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // `-1`, `0`, or `1` (`integer` or `real` input).
 //
@@ -183,7 +183,7 @@ end;
 public function Sign<T>(N: T): integer;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Radians.
 //
@@ -192,7 +192,7 @@ end;
 public function Sin(R: real): real;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Error if `R < 0`.
 //
@@ -201,7 +201,7 @@ end;
 public function Sqrt(R: real): real;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Tangent (radians).
 //
@@ -210,7 +210,7 @@ end;
 public function Tan(R: real): real;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Truncate toward zero.
 //
@@ -219,4 +219,5 @@ end;
 public function Trunc(R: real): integer;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
+end unit;

@@ -16,7 +16,7 @@ public type
     public State: TuiMenuState;
     // Action emitted when the controlled value changes.
     public ChangeAction: TuiAction;
-  end;
+  end record;
 
 function TuiFindRouteMenu(Node: TuiElement): option of TuiRouteMenu;
 begin
@@ -173,12 +173,12 @@ begin
       return None;
     end;
   end;
-end;
+end function;
 
 function TuiMenuChange(Menu: TuiRouteMenu; State: TuiMenuState): TuiMsg;
 begin
   return TuiMsg.MenuChanged(Menu.Id, Menu.ChangeAction, State);
-end;
+end function;
 
 function TuiMenuOpenFirst(Menu: TuiRouteMenu; Previous: option of TuiControlId): array of TuiMsg;
 begin
@@ -199,7 +199,7 @@ begin
       return [];
     end;
   end;
-end;
+end function;
 
 function TuiMenuCommandMessages(Menu: TuiRouteMenu; Node: TuiMenuNode): array of TuiMsg;
 begin
@@ -218,7 +218,7 @@ begin
       return [];
     end;
   end;
-end;
+end function;
 
 function TuiMenuShortcut(Menu: TuiRouteMenu; Key: Std.Console.KeyEvent): option of array of TuiMsg;
 begin
@@ -242,7 +242,7 @@ begin
   end;
 
   return None;
-end;
+end function;
 
 function TuiMenuMnemonic(
   Menu: TuiRouteMenu;
@@ -270,7 +270,7 @@ begin
   end;
 
   return None;
-end;
+end function;
 
 function TuiMenuRouteOpen(Menu: TuiRouteMenu; Key: Std.Console.KeyEvent): option of array of TuiMsg;
 begin
@@ -425,7 +425,7 @@ begin
   end;
 
   return None;
-end;
+end function;
 
 // Routes menu shortcuts, F10, mnemonics, and open-menu navigation.
 //
@@ -489,4 +489,5 @@ begin
       return None;
     end;
   end;
-end;
+end function;
+end unit;

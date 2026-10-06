@@ -88,7 +88,7 @@ fn imported_unit_diagnostics_keep_the_unit_path_and_nonzero_source_id() {
     let fixture = Fixture::new();
     let unit = fixture.write(
         "broken.fpas",
-        "unit Broken; public const Number: integer := 'bad';",
+        "unit Broken; public const Number: integer := 'bad';\nend unit;",
     );
     let graph = build_unit_graph_for_program(
         &fixture.0.join("main.fpas"),
@@ -230,7 +230,7 @@ fn project_read_errors_keep_their_path_without_a_source_span_in_build_errors() {
 #[test]
 fn snapshot_parser_records_survive_conversion_to_build_errors() {
     let fixture = Fixture::new();
-    let unit = fixture.write("demo.fpas", "unit Demo;");
+    let unit = fixture.write("demo.fpas", "unit Demo;\nend unit;");
     let graph = build_unit_graph_for_program(
         &fixture.0.join("main.fpas"),
         std::slice::from_ref(&unit),

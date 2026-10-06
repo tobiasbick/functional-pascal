@@ -16,7 +16,7 @@ begin
   end;
 
   WriteLn('clamped local: ', IntToStr(Value));
-end;
+end procedure;
 
 function IsEven(N: integer): boolean;
 function IsOdd(X: integer): boolean;
@@ -29,7 +29,7 @@ begin
   begin
     return IsEven(X - 1);
   end;
-end;
+end function;
 begin
   if N = 0 then
   begin
@@ -39,7 +39,7 @@ begin
   begin
     return IsOdd(N - 1);
   end;
-end;
+end function;
 
 begin
   var Original: integer := 15;

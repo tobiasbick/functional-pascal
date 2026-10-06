@@ -18,7 +18,7 @@ begin
   if B = 0 then
     panic('Division by zero');
   return A div B;
-end;
+end function;
 ```
 
 ## When to use panic vs Result

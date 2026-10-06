@@ -19,13 +19,13 @@ fn document_symbols_cover_roots_types_routines_parameters_members_and_variables(
 type Point = record
   public X: integer;
   property LabelText: string read GetLabel;
-end;
+end record;
 
 function Add(Value: integer): integer;
 begin
   var Local: integer := Value;
   return Local;
-end;
+end function;
 
 begin
   mutable var Current: integer := 1;
@@ -70,7 +70,7 @@ function ReadValue(Value: integer): integer;
 begin
   var Other: integer := Value;
   return Other;
-end;
+end function;
 
 begin
   // Value in a comment
@@ -128,18 +128,19 @@ fn project_navigation_respects_imports_visibility_members_and_unsaved_changes() 
 public type Point = record
   public X: integer;
   Secret: integer;
-end;
+end record;
 
 // Returns the project answer.
 public function Answer(): integer;
 begin
   return 42;
-end;
+end function;
 
 function Hidden(): integer;
 begin
   return 0;
-end;
+end function;
+end unit;
 "#;
     std::fs::write(&unit, unit_source).expect("replace unit fixture");
     let main_source = r#"program App;
@@ -320,11 +321,11 @@ include = ["src/**/*.fpas"]
     );
     temp.write(
         "src/first.fpas",
-        "unit Demo.First;\n\npublic function Create(): integer;\nbegin\n  return 1;\nend;\n",
+        "unit Demo.First;\n\npublic function Create(): integer;\nbegin\n  return 1;\nend function;\nend unit;\n",
     );
     temp.write(
         "src/second.fpas",
-        "unit Demo.Second;\n\npublic function Create(): integer;\nbegin\n  return 2;\nend;\n",
+        "unit Demo.Second;\n\npublic function Create(): integer;\nbegin\n  return 2;\nend function;\nend unit;\n",
     );
     let mut service = LanguageService::load(&manifest);
     let source = std::fs::read_to_string(&main).expect("main source");
@@ -359,11 +360,11 @@ include = ["src/**/*.fpas"]
     );
     temp.write(
         "lib/src/public.fpas",
-        "unit Demo.Exported;\n\npublic function Visible(): integer;\nbegin return 1; end;\n",
+        "unit Demo.Exported;\n\npublic function Visible(): integer;\nbegin return 1; end function;\nend unit;\n",
     );
     temp.write(
         "lib/src/internal.fpas",
-        "unit Demo.Internal;\n\npublic function Hidden(): integer;\nbegin return 2; end;\n",
+        "unit Demo.Internal;\n\npublic function Hidden(): integer;\nbegin return 2; end function;\nend unit;\n",
     );
     let manifest = temp.write(
         "app/app.fpasprj",

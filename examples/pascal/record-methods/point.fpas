@@ -10,7 +10,7 @@ type
     function Sum(Self: Point): integer;
     begin
       return Self.X + Self.Y;
-    end;
+    end function;
 
     function Add(Self: Point; Other: Point): Point;
     begin
@@ -20,13 +20,13 @@ type
         X := RX;
         Y := RY;
       end;
-    end;
+    end function;
 
     procedure Print(Self: Point);
     begin
       WriteLn(((('(' + IntToStr(Self.X)) + ', ') + IntToStr(Self.Y)) + ')');
-    end;
-  end;
+    end procedure;
+  end record;
 
 begin
   var A: Point := record

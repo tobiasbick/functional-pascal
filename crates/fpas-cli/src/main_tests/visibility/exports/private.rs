@@ -21,7 +21,7 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/lib.fpas"),
-        "unit App.Lib;\n\nfunction Secret(): integer;\nbegin\n  return 42;\nend;\n",
+        "unit App.Lib;\n\nfunction Secret(): integer;\nbegin\n  return 42;\nend function;\nend unit;\n",
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);
@@ -55,7 +55,7 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/lib.fpas"),
-        "unit App.Lib;\n\nfunction Secret(): integer;\nbegin\n  return 42;\nend;\n",
+        "unit App.Lib;\n\nfunction Secret(): integer;\nbegin\n  return 42;\nend function;\nend unit;\n",
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);
@@ -89,7 +89,7 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/lib.fpas"),
-        "unit App.Lib;\n\nconst\n  Secret: integer := 42;\n",
+        "unit App.Lib;\n\nconst\n  Secret: integer := 42;\nend unit;\n",
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);
@@ -123,7 +123,7 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/lib.fpas"),
-        "unit App.Lib;\n\nprocedure DoSecret();\nbegin\nend;\n",
+        "unit App.Lib;\n\nprocedure DoSecret();\nbegin\nend procedure;\nend unit;\n",
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);
@@ -170,8 +170,8 @@ type
   SecretPoint = record
     X: integer;
     Y: integer;
-  end;
-",
+  end record;
+end unit;\n",
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);
@@ -218,8 +218,8 @@ type
   SecretPoint = record
     X: integer;
     Y: integer;
-  end;
-",
+  end record;
+end unit;\n",
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);
@@ -253,7 +253,7 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/lib.fpas"),
-        "unit App.Lib;\n\nvar\n  Secret: integer := 42;\n",
+        "unit App.Lib;\n\nvar\n  Secret: integer := 42;\nend unit;\n",
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);
@@ -287,7 +287,7 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/lib.fpas"),
-        "unit App.Lib;\n\nmutable var\n  Counter: integer := 0;\n",
+        "unit App.Lib;\n\nmutable var\n  Counter: integer := 0;\nend unit;\n",
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);
@@ -321,7 +321,7 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/lib.fpas"),
-        "unit App.Lib;\n\nvar\n  Secret: integer := 42;\n",
+        "unit App.Lib;\n\nvar\n  Secret: integer := 42;\nend unit;\n",
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);
@@ -355,7 +355,7 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/lib.fpas"),
-        "unit App.Lib;\n\nconst\n  Secret: integer := 42;\n",
+        "unit App.Lib;\n\nconst\n  Secret: integer := 42;\nend unit;\n",
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);
@@ -389,7 +389,7 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/lib.fpas"),
-        "unit App.Lib;\n\nprocedure DoSecret();\nbegin\nend;\n",
+        "unit App.Lib;\n\nprocedure DoSecret();\nbegin\nend procedure;\nend unit;\n",
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);

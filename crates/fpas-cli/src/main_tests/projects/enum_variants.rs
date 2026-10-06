@@ -13,9 +13,9 @@ fn enum_payload_infers_nested_anonymous_record_type() {
         "program NestedRecordEnumConstructor;
 uses Std.Console;
 type
-  Point = record X: integer; Y: integer; end;
-  Position = enum At(Value: Point); end;
-  State = record Player: Position; end;
+  Point = record X: integer; Y: integer; end record;
+  Position = enum At(Value: Point); end enum;
+  State = record Player: Position; end record;
 function Moved(Current: Point): State;
 begin
   return record
@@ -24,7 +24,7 @@ begin
       X := Current.X + 1;
     end);
   end;
-end;
+end function;
 begin
   var Initial: Point := record X := 1; Y := 7; end;
   var Outcome: State := Moved(Initial);
@@ -61,9 +61,9 @@ fn enum_record_payload_rejects_incompatible_arguments() {
             &format!(
                 "program InvalidEnumRecordPayload;
 type
-  Point = record X: integer; Y: integer; end;
-  Size = record X: integer; Y: integer; end;
-  Position = enum At(Value: Point); end;
+  Point = record X: integer; Y: integer; end record;
+  Size = record X: integer; Y: integer; end record;
+  Position = enum At(Value: Point); end enum;
 begin
   var Other: Size := record X := 1; Y := 2; end;
   var Value: Position := Position.At({argument});
@@ -105,7 +105,7 @@ uses Std.Json;
 public type
   Message = enum
     ErrorMessage(Code: string);
-  end;
+  end enum;
 public function Encode(Value: Message): string;
 begin
   case Value of
@@ -114,7 +114,7 @@ begin
       return Stringify(JsonValue.String(Code));
     end;
   end;
-end;",
+end function;\nend unit;",
     );
     write_text(
         &cwd.join("main.fpas"),

@@ -8,7 +8,14 @@ use fpas_diagnostics::codes::{
 use fpas_lexer::Token;
 
 impl Parser {
+    /// Parses a record declaration with its matching `end record` ending.
     pub(super) fn parse_record_type(&mut self, allow_member_visibility: bool) -> RecordType {
+        self.with_declaration_closer(Token::Record, |parser| {
+            parser.parse_record_type_inner(allow_member_visibility)
+        })
+    }
+
+    fn parse_record_type_inner(&mut self, allow_member_visibility: bool) -> RecordType {
         let start = self.current_span();
         self.advance();
         let mut fields = Vec::new();
@@ -42,7 +49,7 @@ impl Parser {
                 _ => fields.push(self.parse_field_def(visibility)),
             }
         }
-        self.expect(&Token::End);
+        self.expect_declaration_end(&Token::Record);
         RecordType {
             fields,
             methods,

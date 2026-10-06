@@ -498,7 +498,7 @@ fn runtime_failure_is_inspectable_then_continue_terminates() {
 #[test]
 fn evaluate_contexts_share_frame_results_and_controlled_calls() {
     let mut adapter = server(
-        "program Main; function Double(X: integer): integer; begin return X * 2; end; begin var X: integer := 1; end.",
+        "program Main; function Double(X: integer): integer; begin return X * 2; end function; begin var X: integer := 1; end.",
     );
     let initialized = adapter.handle(request(1, "initialize", json!({})));
     assert_eq!(initialized[0]["body"]["supportsEvaluateForHovers"], true);
@@ -563,7 +563,7 @@ fn evaluate_contexts_share_frame_results_and_controlled_calls() {
 
 #[test]
 fn cancel_and_disconnect_reach_active_call_evaluation() {
-    let source = "program Main; function Loop(X: integer): integer; begin mutable var I: integer := X; while I < 1000000000 do I := I + 1; return I; end; begin var X: integer := 1; end.";
+    let source = "program Main; function Loop(X: integer): integer; begin mutable var I: integer := X; while I < 1000000000 do I := I + 1; return I; end function; begin var X: integer := 1; end.";
     let mut adapter = server(source);
     let initialized = adapter.handle(request(1, "initialize", json!({})));
     assert_eq!(initialized[0]["body"]["supportsCancelRequest"], true);

@@ -26,7 +26,7 @@ public type
       end;
 
       return Self.Cells[(Y * Self.Width) + X];
-    end;
+    end function;
 
     // Returns one complete row as text.
     //
@@ -46,5 +46,6 @@ public type
       end;
 
       return Line;
-    end;
-  end;
+    end function;
+  end record;
+end unit;

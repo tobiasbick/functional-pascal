@@ -19,12 +19,12 @@ begin
       return PaletteKind.Aurora;
     end;
   end;
-end;
+end function;
 
 function Label(Value: integer): string;
 begin
   return PaletteName(Palette(Value));
-end;
+end function;
 
 procedure Draw(
   XMin: real;
@@ -38,7 +38,7 @@ procedure Draw(
 );
 begin
   Render(XMin, XMax, YMin, YMax, Width, Height, MaxIter, Palette(Value));
-end;
+end procedure;
 
 begin
   var Initial: ExplorerCamera := record

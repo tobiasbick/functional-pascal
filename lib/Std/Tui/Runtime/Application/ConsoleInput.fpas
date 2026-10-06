@@ -14,7 +14,7 @@ function TuiConsoleInputSend(
 ): boolean;
 begin
   return IsError(SendWithCancellation(Output, Input, Token));
-end;
+end function;
 
 function TuiConsoleInputSettleResize(
   Token: CancellationToken;
@@ -53,7 +53,7 @@ begin
   end;
 
   return true;
-end;
+end function;
 
 // Pumps Console input while collapsing a resize burst after a quiet period.
 //
@@ -94,4 +94,5 @@ begin
   end;
 
   return Ok(true);
-end;
+end function;
+end unit;

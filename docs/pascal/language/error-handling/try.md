@@ -9,7 +9,7 @@ function Process(A: integer; B: integer): Result of string, string;
 begin
   var Quotient: integer := try Divide(A, B);
   return Ok(IntToStr(Quotient));
-end;
+end function;
 ```
 
 `try` also works with `Option`:
@@ -19,7 +19,7 @@ function FirstPositive(Items: array of integer): Option of integer;
 begin
   var Idx: integer := try FindIndex(Items, 1);
   return Some(Items[Idx]);
-end;
+end function;
 ```
 
 ## See also

@@ -15,7 +15,7 @@ type
         Re := 0.0;
         Im := 0.0;
       end;
-    end;
+    end function;
 
     public static function Create(Re: real; Im: real): Complex;
     begin
@@ -23,7 +23,7 @@ type
         Re := Re;
         Im := Im;
       end;
-    end;
+    end function;
 
     public function AbsComponents(Self: Complex): Complex;
     begin
@@ -31,7 +31,7 @@ type
         Re := Abs(Self.Re);
         Im := Abs(Self.Im);
       end;
-    end;
+    end function;
 
     public function Sq(Self: Complex): Complex;
     begin
@@ -39,7 +39,7 @@ type
         Re := Self.Re * Self.Re - Self.Im * Self.Im;
         Im := (2.0 * Self.Re) * Self.Im;
       end;
-    end;
+    end function;
 
     public function Add(Self: Complex; Other: Complex): Complex;
     begin
@@ -47,17 +47,17 @@ type
         Re := Self.Re + Other.Re;
         Im := Self.Im + Other.Im;
       end;
-    end;
+    end function;
 
     public function MagSq(Self: Complex): real;
     begin
       return Self.Re * Self.Re + Self.Im * Self.Im;
-    end;
-  end;
+    end function;
+  end record;
   PixelSample = record
     public IsInside: boolean;
     public EscapeValue: real;
-  end;
+  end record;
 
 function Iterate(C: Complex; MaxIter: integer): PixelSample;
 begin
@@ -83,7 +83,7 @@ begin
     IsInside := false;
     EscapeValue := Smooth;
   end;
-end;
+end function;
 
 function ComputeRow(
   Py: integer;
@@ -118,7 +118,7 @@ begin
   end;
 
   return Row;
-end;
+end function;
 
 function EscapeGlyph(EscapeValue: real): string;
 begin
@@ -127,7 +127,7 @@ begin
   var Phase: real := Frac(EscapeValue * 0.08);
   var Index: integer := Clamp(Trunc(Phase * IntToReal(Count)), 0, Count - 1);
   return CharAt(Ramp, Index);
-end;
+end function;
 
 function RenderCell(Sample: PixelSample; Palette: PaletteKind): Cell;
 begin
@@ -146,7 +146,7 @@ begin
     foreground := EscapeColor(Palette, Sample.EscapeValue);
     background := RgbColor(0, 0, 0);
   end;
-end;
+end function;
 
 procedure DrawRow(Row: array of PixelSample; Width: integer; Y: integer; Palette: PaletteKind);
 begin
@@ -168,7 +168,7 @@ begin
   end;
 
   WriteCells(1, Y, Cells);
-end;
+end procedure;
 
 public procedure Render(
   XMin: real;
@@ -195,4 +195,5 @@ begin
       DrawRow(Row, Width, Py + 1, Palette);
     end;
   end;
-end;
+end procedure;
+end unit;

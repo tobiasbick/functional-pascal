@@ -19,7 +19,7 @@ begin
   end;
 
   return true;
-end;
+end function;
 
 // Parses validated HTTP fields after the first start-line in a text block.
 //
@@ -54,4 +54,5 @@ begin
   end;
 
   return Ok(Headers);
-end;
+end function;
+end unit;

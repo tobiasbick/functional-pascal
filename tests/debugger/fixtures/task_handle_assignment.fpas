@@ -5,17 +5,17 @@ uses Std.Console, Std.Tasks;
 function Seven(): integer;
 begin
   return 7;
-end;
+end function;
 
 function Nine(): integer;
 begin
   return 9;
-end;
+end function;
 
 function Label(): string;
 begin
   return 'nope';
-end;
+end function;
 
 begin
   var Pending: task := go Seven();

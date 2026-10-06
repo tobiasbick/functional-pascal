@@ -193,7 +193,7 @@ fn callback_panic_keeps_the_committed_send_and_losing_captures_are_already_relea
         r#"program CallbackFailure;
 uses Std.Tasks;
 procedure FailSelected(Outcome: result of boolean, string);
-begin panic('selected callback failed'); end;
+begin panic('selected callback failed'); end procedure;
 begin FailSelected(Ok(true)); end."#,
     );
     assert!(errors.is_empty(), "{errors:?}");

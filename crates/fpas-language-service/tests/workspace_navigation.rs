@@ -21,11 +21,11 @@ fn workspace_symbols_filter_rank_limit_and_preserve_equal_names() {
     );
     temp.write(
         "src/first.fpas",
-        "unit Demo.First;\n\npublic function Create(): integer; begin return 1; end;\nfunction LocalCreate(): integer; begin return 2; end;\n",
+        "unit Demo.First;\n\npublic function Create(): integer; begin return 1; end function;\nfunction LocalCreate(): integer; begin return 2; end function;\nend unit;\n",
     );
     temp.write(
         "src/second.fpas",
-        "unit Demo.Second;\n\npublic function Create(): integer; begin return 3; end;\n",
+        "unit Demo.Second;\n\npublic function Create(): integer; begin return 3; end function;\nend unit;\n",
     );
     let mut service = LanguageService::load(&manifest);
 
@@ -86,7 +86,7 @@ fn document_highlights_respect_shadowing_and_classify_writes() {
 
 type Holder = record
   public Item: integer;
-end;
+end record;
 
 mutable var Value: integer := 1;
 mutable var Pair: Holder := record Item := Value; end;
@@ -96,7 +96,7 @@ begin
   // Value is ignored
   var Text: string := 'Value';
   return Value;
-end;
+end function;
 
 begin
   Value := Value + 1;
@@ -147,21 +147,22 @@ fn type_definition_follows_imported_aliases_members_parameters_and_results() {
 
 public type Point = record
   public X: integer;
-end;
+end record;
 
 public type PointAlias = Point;
 
 public type Holder = record
   public Item: Point;
   public property Selected: Point read Item;
-end;
+end record;
 
 type Secret = Point;
 
 public function Echo(Value: Point): Point;
 begin
   return Value;
-end;
+end function;
+end unit;
 "#,
     );
     let main_source = r#"program TypesApp;
@@ -275,7 +276,7 @@ begin
   end;
   else
     return 0;
-end;
+end function;
 
 begin
   var ResultValue: integer := ReadValue(1);

@@ -5,7 +5,7 @@ uses Std.Arrays;
 function Identity(V: integer): integer;
 begin
   return V;
-end;
+end function;
 
 begin
   var X: integer := FlatMap([1, 2], Identity);

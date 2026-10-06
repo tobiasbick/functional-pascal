@@ -179,12 +179,12 @@ uses Std.Console, Std.Tasks;
 function Seven(): integer;
 begin
   return 7;
-end;
+end function;
 
 function Nine(): integer;
 begin
   return 9;
-end;
+end function;
 
 function Work(): integer;
 begin
@@ -192,7 +192,7 @@ begin
   mutable var Current: task := go Nine();
   var Marker: integer := 0;
   return Wait(Current);
-end;
+end function;
 
 begin
   var Pending: task := go Work();

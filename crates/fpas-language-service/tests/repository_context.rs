@@ -53,7 +53,7 @@ include = ["Std/**/*.fpas"]
         );
         temp.write(
             format!("{root}/Std/Shared.fpas"),
-            "unit Std.Shared;\n\npublic type SharedValue = integer;\n",
+            "unit Std.Shared;\n\npublic type SharedValue = integer;\nend unit;\n",
         );
     }
     let source = temp.join("repository/lib/Std/Shared.fpas");
@@ -236,7 +236,7 @@ include = ["src/**/*.fpas"]
     );
     let core = temp.write(
         "repository/core/src/api.fpas",
-        "unit Demo.Api;\n\npublic function Answer(): integer;\nbegin\n  return 42;\nend;\n",
+        "unit Demo.Api;\n\npublic function Answer(): integer;\nbegin\n  return 42;\nend function;\nend unit;\n",
     );
     temp.write(
         "repository/app/app.fpasprj",
@@ -292,7 +292,10 @@ include = ["shared.fpas"]
             ),
         );
     }
-    let source = temp.write("repository/shared/shared.fpas", "unit Demo.Shared;\n");
+    let source = temp.write(
+        "repository/shared/shared.fpas",
+        "unit Demo.Shared;\nend unit;\n",
+    );
     let mut service = LanguageService::load(&temp.join("repository"));
 
     let error = service
@@ -355,6 +358,6 @@ include = ["src/**/*.fpas"]
     );
     temp.write(
         format!("{root}/src/{source_name}"),
-        &format!("unit {unit};\n"),
+        &format!("unit {unit};\nend unit;\n"),
     )
 }

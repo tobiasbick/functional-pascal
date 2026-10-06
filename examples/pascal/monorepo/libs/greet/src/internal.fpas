@@ -3,4 +3,5 @@ unit Demo.Greet.Internal;
 public function GreetingText(): string;
 begin
   return 'Hello from library project';
-end;
+end function;
+end unit;

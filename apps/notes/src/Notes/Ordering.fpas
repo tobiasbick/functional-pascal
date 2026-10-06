@@ -11,7 +11,7 @@ begin
   end;
 
   return Left.UpdatedMillis > Right.UpdatedMillis;
-end;
+end function;
 
 // Merge-sorts notes without rebuilding the output for every inserted item.
 public function NotesOrdered(Notes: array of Note): array of Note;
@@ -54,4 +54,5 @@ begin
   end;
 
   return Output;
-end;
+end function;
+end unit;

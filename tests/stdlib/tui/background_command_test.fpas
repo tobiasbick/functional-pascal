@@ -7,7 +7,7 @@ type
     Inbox: channel of integer;
     Ready: channel of boolean;
     Value: integer;
-  end;
+  end record;
 
 function UpdateFramework(State: CommandModel; Msg: TuiMsg; Cmd: TuiCmdOutput): CommandModel;
 begin
@@ -32,7 +32,7 @@ begin
       return State;
     end;
   end;
-end;
+end function;
 
 function UpdateApplication(State: CommandModel; Message: integer; Cmd: TuiCmdOutput): CommandModel;
 begin
@@ -41,12 +41,12 @@ begin
     Ready := State.Ready;
     Value := Message;
   end;
-end;
+end function;
 
 function View(State: CommandModel): TuiElement;
 begin
   return TuiElementBuilders.MakeLabel('command');
-end;
+end function;
 
 begin
   var Inbox: channel of integer := CreateChannel(1);

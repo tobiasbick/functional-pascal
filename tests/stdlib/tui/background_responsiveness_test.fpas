@@ -8,7 +8,7 @@ type
     Gate: channel of boolean;
     Started: channel of integer;
     Painted: channel of integer;
-  end;
+  end record;
 
 procedure Replace(State: Model; Cmd: TuiCmdOutput);
 begin
@@ -25,7 +25,7 @@ begin
 
     return Ok(true);
   end);
-end;
+end procedure;
 
 function Update(State: Model; Msg: TuiMsg; Cmd: TuiCmdOutput): Model;
 begin
@@ -50,12 +50,12 @@ begin
   end;
 
   return State;
-end;
+end function;
 
 function UpdateMessage(State: Model; Message: integer; Cmd: TuiCmdOutput): Model;
 begin
   return State;
-end;
+end function;
 
 function View(State: Model): TuiElement;
 begin
@@ -65,7 +65,7 @@ begin
   end;
 
   return TuiElementBuilders.MakeLabel('responsive');
-end;
+end function;
 
 function ReleaseAfterPaint(Painted: channel of integer; Gate: channel of boolean): boolean;
 begin
@@ -73,7 +73,7 @@ begin
   var Paint: result of integer, string := ReceiveWithTimeout(Painted, 3000);
   Send(Gate, true);
   return IsOk(Paint);
-end;
+end function;
 
 begin
   var Inbox: channel of integer := CreateChannel(1);

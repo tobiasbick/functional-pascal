@@ -17,7 +17,7 @@ begin
   end;
 
   return Values[0] + Values[Std.Arrays.Length(Values) - 1];
-end;
+end function;
 
 begin
   if ParamCount() <> 2 then

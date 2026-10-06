@@ -9,7 +9,7 @@ uses Std.Console, Std.Conv, Std.Tasks;
 function Send(First: integer; Second: integer; Third: integer): integer;
 begin
   return First + Second + Third;
-end;
+end function;
 begin
   if Send(1, 2, 3) <> 6 then panic('local Send was not selected');
   WriteLn(IntToStr(Send(1, 2, 3)));
@@ -35,7 +35,7 @@ mutable var Total: integer := 0;
 procedure Send(First: integer; Second: integer; Third: integer);
 begin
   Total := First + Second + Third;
-end;
+end procedure;
 begin
   Send(1, 2, 3);
   if Total <> 6 then panic('local procedure');
@@ -56,7 +56,7 @@ uses Std.Conv, Std.Tasks;
 function Apply(IntToStr: function(Value: integer): string): string;
 begin
   return IntToStr(42);
-end;
+end function;
 begin
   var Send: function(Value: integer): integer := function(Value: integer): integer
   begin
@@ -82,7 +82,7 @@ uses Std.Math;
 function Abs(Value: integer): integer;
 begin
   return Value - 100;
-end;
+end function;
 begin
   if Abs(-2) <> -102 then panic('silent intrinsic substitution');
   if Std.Math.Abs(-2) <> 2 then panic('qualified intrinsic');

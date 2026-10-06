@@ -206,7 +206,8 @@ unit MyApp.Math;
 public function Add(A: integer; B: integer): integer;
 begin
   return A + B;
-end;
+end function;
+end unit;
 ```
 
 ## Example: program with a library dependency
@@ -246,7 +247,8 @@ unit Acme.Math;
 public function Add(A: integer; B: integer): integer;
 begin
   return A + B;
-end;
+end function;
+end unit;
 ```
 
 `apps/portal/portal.fpasprj`:

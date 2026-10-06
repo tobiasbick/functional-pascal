@@ -274,7 +274,7 @@ begin
       return 0;
     end;
   end;
-end;
+end function;
 
 begin
   var Pending: task := go Work();

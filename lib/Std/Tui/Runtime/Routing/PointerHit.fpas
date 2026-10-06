@@ -56,7 +56,7 @@ public type
     // Parameters:
     // - `Id`: Identifier carried by the variant.
     Scroll(Id: TuiControlId);
-  end;
+  end enum;
 
 mutable var
   TuiPointerBestHit: TuiPointerHit := TuiPointerHit.Miss;
@@ -78,7 +78,7 @@ begin
   end;
 
   return LastOverlay;
-end;
+end function;
 
 function TuiPointerHitWalk(
   Frame: TuiArrangedFrame;
@@ -257,7 +257,7 @@ begin
   end;
 
   return Next;
-end;
+end function;
 
 // Returns the deepest eligible hit at a point.
 //
@@ -274,4 +274,5 @@ begin
   end;
 
   return TuiPointerBestHit;
-end;
+end function;
+end unit;

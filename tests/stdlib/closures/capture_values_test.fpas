@@ -9,7 +9,7 @@ begin
     Value := Value + 1;
     return Value;
   end;
-end;
+end function;
 
 begin
   var Next: function(): integer := Counter();

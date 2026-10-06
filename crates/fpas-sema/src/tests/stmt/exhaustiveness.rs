@@ -4,7 +4,7 @@ use super::super::{check_errors, check_ok};
 fn case_enum_missing_variant_is_non_exhaustive() {
     let errors = check_errors(
         "program T; \
-         type Light = enum Red; Yellow; Green; end; \
+         type Light = enum Red; Yellow; Green; end enum; \
          begin \
            var L: Light := Light.Red; \
            case L of \
@@ -25,7 +25,7 @@ fn case_enum_missing_variant_is_non_exhaustive() {
 fn case_enum_else_branch_skips_exhaustiveness_check() {
     check_ok(
         "program T; \
-         type Light = enum Red; Yellow; Green; end; \
+         type Light = enum Red; Yellow; Green; end enum; \
          begin \
            var L: Light := Light.Red; \
            case L of \
@@ -60,7 +60,7 @@ fn case_result_missing_variant_is_non_exhaustive() {
 fn case_data_enum_missing_variant_is_non_exhaustive() {
     let errors = check_errors(
         "program T; \
-         type Shape = enum Circle(Radius: real); Point; end; \
+         type Shape = enum Circle(Radius: real); Point; end enum; \
          begin \
            var S: Shape := Shape.Point; \
            case S of \
@@ -80,7 +80,7 @@ fn case_data_enum_missing_variant_is_non_exhaustive() {
 fn case_on_recursive_enum_binding_is_checked_for_exhaustiveness() {
     let errors = check_errors(
         "program T; \
-         type Tree = enum Leaf; Node(Left: Tree; Right: Tree); end; \
+         type Tree = enum Leaf; Node(Left: Tree; Right: Tree); end enum; \
          begin \
            var T: Tree := Tree.Leaf; \
            case T of \
@@ -104,7 +104,7 @@ fn case_on_recursive_enum_binding_is_checked_for_exhaustiveness() {
 fn shadowed_variant_name_does_not_count_toward_exhaustiveness() {
     let errors = check_errors(
         "program T; \
-         type Color = enum Red; Green; Blue; end; \
+         type Color = enum Red; Green; Blue; end enum; \
          begin \
            var C: Color := Color.Red; \
            var Red: Color := Color.Blue; \
@@ -126,7 +126,7 @@ fn shadowed_variant_name_does_not_count_toward_exhaustiveness() {
 fn qualified_enum_variants_still_satisfy_exhaustiveness() {
     check_ok(
         "program T; \
-         type Color = enum Red; Green; Blue; end; \
+         type Color = enum Red; Green; Blue; end enum; \
          begin \
            var C: Color := Color.Red; \
            case C of \

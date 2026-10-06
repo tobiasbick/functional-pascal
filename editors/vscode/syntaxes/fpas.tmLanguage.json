@@ -49,7 +49,7 @@
           "name": "keyword.declaration.type.fpas"
         }
       },
-      "end": "^(?=(?i:(?:(?:public|static)\\s+)?(?:const|var|mutable|function|procedure|begin|type)\\b))",
+      "end": "^(?=(?i:(?:(?:public|static)\\s+)?(?:const|var|mutable|function|procedure|begin|type|end\\s+unit)\\b))",
       "patterns": [
         {
           "include": "#comments"
@@ -99,7 +99,7 @@
           "name": "storage.type.constant.fpas"
         }
       },
-      "end": "^(?=(?i:(?:(?:public|static)\\s+)?(?:const|var|mutable|function|procedure|begin|type)\\b))",
+      "end": "^(?=(?i:(?:(?:public|static)\\s+)?(?:const|var|mutable|function|procedure|begin|type|end\\s+unit)\\b))",
       "patterns": [
         {
           "include": "#comments"

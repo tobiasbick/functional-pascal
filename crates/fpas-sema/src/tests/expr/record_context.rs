@@ -5,15 +5,15 @@ program T;
 type Point = record
   X: integer := 0;
   Y: integer := 0;
-end;
+end record;
 const OriginPoint: Point := record X := 0; end;
 function Origin(): Point;
 begin
   return record X := 0; end;
-end;
+end function;
 procedure Draw(P: Point);
 begin
-end;
+end procedure;
 begin
   mutable var P: Point := record end;
   P := record X := 1; end;
@@ -31,7 +31,7 @@ fn record_literals_use_expected_types_in_all_contexts() {
 fn contextual_record_literal_still_requires_non_defaulted_fields() {
     let errors = check_errors(
         "program T; \
-         type Point = record X: integer; Y: integer := 0; end; \
+         type Point = record X: integer; Y: integer := 0; end record; \
          begin var P: Point := record Y := 1; end; end.",
     );
 

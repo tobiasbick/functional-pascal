@@ -132,6 +132,7 @@ fn render_unit(
     render_constants(&mut output, unit, &mut by_name, documentation)?;
     render_types(&mut output, unit, &mut by_name, documentation)?;
     render_routines(&mut output, unit, &by_name, documentation);
+    output.push_str("\nend unit;\n");
     Ok(output)
 }
 
@@ -241,7 +242,7 @@ fn render_enum(output: &mut String, _unit: &str, name: &str, value: &fpas_sema::
             let _ = writeln!(output, "    {}({fields}){separator}", variant.name);
         }
     }
-    output.push_str("  end;\n");
+    output.push_str("  end enum;\n");
 }
 
 fn is_source_identifier(name: &str) -> bool {
@@ -285,7 +286,7 @@ fn render_record(
             true,
         );
     }
-    output.push_str("  end;\n");
+    output.push_str("  end record;\n");
     Ok(())
 }
 
@@ -353,7 +354,12 @@ fn render_routine(
     let _ = writeln!(output, "{indent}public {static_prefix}{declaration};");
     let _ = writeln!(output, "{indent}begin");
     let _ = writeln!(output, "{indent}  panic('Intrinsic API declaration');");
-    let _ = writeln!(output, "{indent}end;");
+    let kind = if declaration.starts_with("procedure ") {
+        "procedure"
+    } else {
+        "function"
+    };
+    let _ = writeln!(output, "{indent}end {kind};");
 }
 
 fn fixed_declaration(name: &str, ty: &Ty, force_procedure: bool) -> String {

@@ -9,7 +9,7 @@ type
     Y: integer;
     Action: TuiPointerAction;
     Button: TuiPointerButton;
-  end;
+  end record;
 
 function PushEvent(State: PointerModel; InputEvent: string): PointerModel;
 begin
@@ -20,7 +20,7 @@ begin
     Action := State.Action;
     Button := State.Button;
   end;
-end;
+end function;
 
 begin
   mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 8));

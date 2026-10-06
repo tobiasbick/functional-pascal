@@ -27,13 +27,13 @@ unit App.Lib;
 function Secret(): integer;
 begin
   return 42;
-end;
+end function;
 
 public function GetValue(): integer;
 begin
   return Secret();
-end;
-",
+end function;
+end unit;\n",
     );
 
     let (exit_code, stdout_output, stderr_output) =
@@ -72,13 +72,13 @@ unit App.Lib;
 function Helper(): integer;
 begin
   return 10;
-end;
+end function;
 
 public function PublicFn(): integer;
 begin
   return Helper() + 5;
-end;
-",
+end function;
+end unit;\n",
     );
 
     let (exit_code, stdout_output, _) = support::run_cli_and_capture_output(&project_file, &cwd);
@@ -118,8 +118,8 @@ const
 public function GetSecret(): integer;
 begin
   return SecretVal;
-end;
-",
+end function;
+end unit;\n",
     );
 
     let (exit_code, stdout_output, stderr_output) =
@@ -162,8 +162,8 @@ begin
   if Counter < 0 then
     Counter := 42;
   return Counter;
-end;
-",
+end function;
+end unit;\n",
     );
 
     let (exit_code, stdout_output, stderr_output) =
@@ -202,8 +202,8 @@ uses App.Lib;
 public function TryCall(): integer;
 begin
   return Secret();
-end;
-",
+end function;
+end unit;\n",
     );
     write_text(
         &cwd.join("src/lib.fpas"),
@@ -213,8 +213,8 @@ unit App.Lib;
 function Secret(): integer;
 begin
   return 42;
-end;
-",
+end function;
+end unit;\n",
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);
@@ -239,7 +239,7 @@ uses Std.Console;
 function private(): integer;
 begin
   return 42;
-end;
+end function;
 
 begin
   WriteLn(private());

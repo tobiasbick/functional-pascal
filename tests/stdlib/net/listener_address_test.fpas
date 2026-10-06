@@ -34,7 +34,7 @@ begin
   end;
 
   return Ok(true);
-end;
+end function;
 
 begin
   case ExerciseListener() of

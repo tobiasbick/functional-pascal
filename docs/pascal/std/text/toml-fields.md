@@ -14,7 +14,7 @@ begin
   var Fields: dict of string to TomlValue := try ParseTable(Text);
   var Allowed: boolean := try RequireOnlyFields(Fields, ['host', 'port']);
   return IntegerField(Fields, 'port');
-end;
+end function;
 
 begin
   case ReadPort('host = ''localhost''' + Chr(10) + 'port = 8080') of

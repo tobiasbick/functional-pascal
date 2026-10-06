@@ -24,7 +24,7 @@ public type
     // - `Action`: Application action carried by the variant.
     // - `Enabled`: Whether the represented item is enabled.
     Command(Id: TuiControlId; Text: string; Action: TuiAction; Enabled: boolean);
-  end;
+  end enum;
   // Constructors for immutable status-line items.
   TuiStatusItemBuilders = record
     // Creates a display-only status hint.
@@ -34,7 +34,7 @@ public type
     public static function MakeHint(Text: string): TuiStatusItem;
     begin
       return TuiStatusItem.Hint(Text);
-    end;
+    end function;
 
     // Creates a display-only shortcut and description pair.
     //
@@ -44,7 +44,7 @@ public type
     public static function MakeKeyHint(KeyText: string; Text: string): TuiStatusItem;
     begin
       return TuiStatusItem.KeyHint(KeyText, Text);
-    end;
+    end function;
 
     // Creates an enabled status-line command.
     //
@@ -55,7 +55,7 @@ public type
     public static function MakeCommand(Id: TuiControlId; Text: string; Action: TuiAction): TuiStatusItem;
     begin
       return TuiStatusItem.Command(Id, Text, Action, true);
-    end;
+    end function;
 
     // Creates a disabled status-line command.
     //
@@ -66,5 +66,6 @@ public type
     public static function MakeDisabledCommand(Id: TuiControlId; Text: string; Action: TuiAction): TuiStatusItem;
     begin
       return TuiStatusItem.Command(Id, Text, Action, false);
-    end;
-  end;
+    end function;
+  end record;
+end unit;

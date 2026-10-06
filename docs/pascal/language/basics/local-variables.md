@@ -9,7 +9,7 @@ function FullName(First: string; Last: string): string;
 begin
   var Space: string := ' ';
   return First + Space + Last;
-end;
+end function;
 ```
 
 ## See also

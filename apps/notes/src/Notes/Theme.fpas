@@ -34,4 +34,5 @@ begin
   Palette.Inputs := Palette.Inputs.WithRole(TuiStyleRole.InputHint, TuiStyle.FromColors(Muted, Surface));
   Palette.Inputs := Palette.Inputs.WithRole(TuiStyleRole.InputCursor, TuiStyle.FromColors(Background, Accent));
   return Palette;
-end;
+end function;
+end unit;

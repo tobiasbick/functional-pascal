@@ -21,7 +21,7 @@ fn completion_reports_member_metadata_and_replaces_the_complete_identifier() {
 type Counter = record
   public Amount: integer;
   Secret: integer;
-end;
+end record;
 
 begin
   var Music: string := '𝄞';
@@ -63,7 +63,7 @@ fn completion_ignores_comments_and_strings_but_survives_recovered_source() {
 
 type Counter = record
   public Amount: integer;
-end;
+end record;
 
 begin
   var Value: Counter := record Amount := 1; end;
@@ -109,7 +109,7 @@ var Value: string := 'global';
 function ReadValue(Value: integer): integer;
 begin
   va;
-end;
+end function;
 
 begin
 end.
@@ -148,11 +148,11 @@ fn completion_includes_public_declarations_from_workspace_dependencies() {
     );
     temp.write(
         "lib/src/library.fpas",
-        "unit Completion.Library;\n\npublic function GreetingFor(Name: string): string;\nbegin\n  return Name;\nend;\n",
+        "unit Completion.Library;\n\npublic function GreetingFor(Name: string): string;\nbegin\n  return Name;\nend function;\nend unit;\n",
     );
     temp.write(
         "lib/src/hidden.fpas",
-        "unit Completion.Hidden;\n\npublic function HiddenDependencyValue(): integer;\nbegin\n  return 1;\nend;\n",
+        "unit Completion.Hidden;\n\npublic function HiddenDependencyValue(): integer;\nbegin\n  return 1;\nend function;\nend unit;\n",
     );
     temp.write(
         "app/app.fpasprj",
@@ -202,19 +202,19 @@ fn auto_import_is_offered_only_for_one_public_declaration_and_preserves_formatti
     );
     temp.write(
         "src/core.fpas",
-        "unit Demo.Core;\n\npublic function Existing(): integer;\nbegin\n  return 1;\nend;\n",
+        "unit Demo.Core;\n\npublic function Existing(): integer;\nbegin\n  return 1;\nend function;\nend unit;\n",
     );
     temp.write(
         "src/importable.fpas",
-        "unit Demo.Importable;\n\n// Returns the unique imported value.\npublic function UniqueValue(): integer;\nbegin\n  return 2;\nend;\n\nfunction HiddenValue(): integer;\nbegin\n  return 3;\nend;\n",
+        "unit Demo.Importable;\n\n// Returns the unique imported value.\npublic function UniqueValue(): integer;\nbegin\n  return 2;\nend function;\n\nfunction HiddenValue(): integer;\nbegin\n  return 3;\nend function;\nend unit;\n",
     );
     temp.write(
         "src/first.fpas",
-        "unit Demo.First;\n\npublic function SharedValue(): integer;\nbegin\n  return 1;\nend;\n",
+        "unit Demo.First;\n\npublic function SharedValue(): integer;\nbegin\n  return 1;\nend function;\nend unit;\n",
     );
     temp.write(
         "src/second.fpas",
-        "unit Demo.Second;\n\npublic function SharedValue(): integer;\nbegin\n  return 2;\nend;\n",
+        "unit Demo.Second;\n\npublic function SharedValue(): integer;\nbegin\n  return 2;\nend function;\nend unit;\n",
     );
     let source = "program AutoImport;\n\nuses Demo.Core;\n\nbegin\n  var Value: integer := UniqueValue;\nend.\n";
     let main = temp.write("src/main.fpas", source);
@@ -289,30 +289,30 @@ type Counter = record
   public function Add(Self: Counter; Amount: integer; LabelText: string): integer;
   begin
     return Amount;
-  end;
-end;
+  end function;
+end record;
 
 type Shape = enum
   Circle(Radius: real; Filled: boolean);
-end;
+end enum;
 
 function Sum(Left: integer; Right: integer): integer;
 begin
   return Left + Right;
-end;
+end function;
 
 function Identity<T>(Value: T): T;
 begin
   return Value;
-end;
+end function;
 
 procedure Outer();
   procedure Inner(Value: integer; Flag: boolean);
   begin
-  end;
+  end procedure;
 begin
   Inner(1, true);
-end;
+end procedure;
 
 begin
   var CounterValue: Counter := record end;

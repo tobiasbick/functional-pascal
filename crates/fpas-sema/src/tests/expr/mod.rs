@@ -253,7 +253,7 @@ fn analysis_metadata_exposes_all_named_results() {
 #[test]
 fn equality_records_with_comparable_fields_are_valid() {
     check_ok(
-        "program T; type Id = record Value: integer; end; var A: Id := record Value := 1; end; var B: Id := record Value := 1; end; var Same: boolean := A = B; begin end.",
+        "program T; type Id = record Value: integer; end record; var A: Id := record Value := 1; end; var B: Id := record Value := 1; end; var Same: boolean := A = B; begin end.",
     );
 }
 
@@ -365,7 +365,7 @@ fn call_function() {
     check_ok(
         "program T; \
          function Add(A: integer; B: integer): integer; \
-         begin return A + B; end; \
+         begin return A + B; end function; \
          begin var X: integer := Add(1, 2); end.",
     );
 }
@@ -375,7 +375,7 @@ fn call_wrong_arg_count() {
     check_errors(
         "program T; \
          function Add(A: integer; B: integer): integer; \
-         begin return A + B; end; \
+         begin return A + B; end function; \
          begin var X: integer := Add(1); end.",
     );
 }

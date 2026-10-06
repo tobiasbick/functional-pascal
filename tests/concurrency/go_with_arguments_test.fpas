@@ -5,7 +5,7 @@ uses Std.Tasks, Std.Test;
 function Add(A: integer; B: integer): integer;
 begin
   return A + B;
-end;
+end function;
 
 begin
   var T: task := go Add(10, 32);

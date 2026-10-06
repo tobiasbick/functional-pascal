@@ -5,13 +5,13 @@ use fpas_diagnostics::codes::SEMA_TYPE_MISMATCH;
 
 const TYPES: &str = "program T;
 type
-  Point = record X: integer; Y: real; end;
-  Named = record Point: Point; Name: string; Tag: option of Point; end;
-  Shape = enum Circle(Center: Point; Radius: integer); Dot; end;
-  Bag = record Items: array of integer; end;
-  Holder = enum Full(Values: array of integer); Empty; end;
-  Callback = record Run: function(): integer; end;
-  Tree = enum Leaf(Value: integer); Node(Left: option of Tree; Right: option of Tree); end;
+  Point = record X: integer; Y: real; end record;
+  Named = record Point: Point; Name: string; Tag: option of Point; end record;
+  Shape = enum Circle(Center: Point; Radius: integer); Dot; end enum;
+  Bag = record Items: array of integer; end record;
+  Holder = enum Full(Values: array of integer); Empty; end enum;
+  Callback = record Run: function(): integer; end record;
+  Tree = enum Leaf(Value: integer); Node(Left: option of Tree; Right: option of Tree); end enum;
 ";
 
 fn errors_for(declarations: &str, condition: &str) -> Vec<crate::SemaError> {

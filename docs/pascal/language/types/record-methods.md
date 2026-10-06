@@ -20,7 +20,7 @@ type
     function ReadValue(Self: Counter): integer;
     public static function Create(): Counter;
     public function Current(Self: Counter): integer;
-  end;
+  end function;
 ```
 
 The declaring unit may call `ReadValue`; importing units cannot. `Create` and
@@ -47,13 +47,13 @@ type
       var DX: real := Other.X - Self.X;
       var DY: real := Other.Y - Self.Y;
       return Sqrt(DX * DX + DY * DY);
-    end;
+    end function;
 
     procedure Print(Self: Point);
     begin
       WriteLn('(' + RealToStr(Self.X) + ', ' + RealToStr(Self.Y) + ')');
-    end;
-  end;
+    end procedure;
+  end record;
 ```
 
 Calling instance methods:
@@ -91,8 +91,8 @@ type
     function Add(Self: Counter; Value: integer): integer;
     begin
       return Self.Base + Value;
-    end;
-  end;
+    end function;
+  end record;
 
 var C: Counter := record Base := 10; end;
 var AddTen: function(Value: integer): integer := C.Add;
@@ -135,23 +135,23 @@ type
         X := X;
         Y := Y;
       end;
-    end;
+    end function;
 
     static function Origin(): Point;
     begin
       return Point.Create(0, 0);
-    end;
+    end function;
 
     static procedure Print(Value: Point);
     begin
       WriteLn('(' + IntToStr(Value.X) + ', ' + IntToStr(Value.Y) + ')');
-    end;
+    end procedure;
 
     function Sum(Self: Point): integer;
     begin
       return Self.X + Self.Y;
-    end;
-  end;
+    end function;
+  end record;
 ```
 
 ```pascal
@@ -200,7 +200,7 @@ Free-standing functions work equally well for operations on records:
 function PointToString(P: Point): string;
 begin
   return '(' + RealToStr(P.X) + ', ' + RealToStr(P.Y) + ')';
-end;
+end function;
 ```
 
 Method-level type parameters are documented in [Generics](generics.md#generic-record-methods).

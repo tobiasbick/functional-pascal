@@ -13,7 +13,7 @@ use crate::vm::worker::Worker;
 fn image(outcome: &str) -> Arc<VerifiedExecutable> {
     let (program, errors) = fpas_parser::parse(&format!(
         "program Captures; uses Std.Tasks;
-         type Payload = record Number: integer; end;
+         type Payload = record Number: integer; end record;
          begin
            var Captured: Payload := record Number := 42; end;
            var Group: TaskGroup := CreateTaskGroup();

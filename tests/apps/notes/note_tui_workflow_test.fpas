@@ -13,7 +13,7 @@ begin
   end;
 
   return false;
-end;
+end function;
 
 function MakeKey(Kind: TuiKeyKind): TuiKeyEvent;
 begin
@@ -25,7 +25,7 @@ begin
     alt := false;
     meta := false;
   end;
-end;
+end function;
 
 function MakeCtrlKey(Character: string): TuiKeyEvent;
 begin
@@ -37,7 +37,7 @@ begin
     alt := false;
     meta := false;
   end;
-end;
+end function;
 
 function MakeAltKey(Character: string): TuiKeyEvent;
 begin
@@ -49,7 +49,7 @@ begin
     alt := true;
     meta := false;
   end;
-end;
+end function;
 
 begin
   var Directory: string := ScratchDir() + '/notes';

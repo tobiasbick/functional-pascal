@@ -50,13 +50,14 @@ export async function verifyIntelliSense(extensionPath: string): Promise<void> {
         "public type",
         "  Counter = record",
         "    public Amount: integer;",
-        "  end;",
+        "  end record;",
         "",
         "public function Add(Left: integer; Right: integer): integer;",
         "begin",
         "  return Left + Right;",
-        "end;",
-        ""
+        "end function;",
+        "end unit;",
+        "",
       ].join("\n")
     );
     await fs.writeFile(
@@ -68,8 +69,9 @@ export async function verifyIntelliSense(extensionPath: string): Promise<void> {
         "public function UniqueHostValue(): integer;",
         "begin",
         "  return 42;",
-        "end;",
-        ""
+        "end function;",
+        "end unit;",
+        "",
       ].join("\n")
     );
     await fs.writeFile(sourcePath, source);

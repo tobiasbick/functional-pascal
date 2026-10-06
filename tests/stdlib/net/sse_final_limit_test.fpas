@@ -19,7 +19,7 @@ begin
     begin
     end;
   end;
-end;
+end procedure;
 
 begin
   for Maximum: integer := 7 to 9 do

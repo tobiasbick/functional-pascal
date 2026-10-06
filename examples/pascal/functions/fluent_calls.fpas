@@ -5,17 +5,17 @@ uses Std.Arrays, Std.Console, Std.Conv, Std.Str;
 function IsEven(Value: integer): boolean;
 begin
   return Value mod 2 = 0;
-end;
+end function;
 
 function Double(Value: integer): integer;
 begin
   return Value * 2;
-end;
+end function;
 
 function Sum(Acc: integer; Value: integer): integer;
 begin
   return Acc + Value;
-end;
+end function;
 
 begin
   var Values: array of integer := [1, 2, 3, 4];

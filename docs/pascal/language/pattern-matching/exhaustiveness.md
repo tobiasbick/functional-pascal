@@ -10,7 +10,7 @@ type
     Red;
     Yellow;
     Green;
-  end;
+  end enum;
 
 // ERROR: non-exhaustive match — missing Light.Yellow
 case L of

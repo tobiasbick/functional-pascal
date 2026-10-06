@@ -71,4 +71,5 @@ public type
     Warning;
     // Represents the `Accent` variant of `TuiStyleRole`.
     Accent;
-  end;
+  end enum;
+end unit;

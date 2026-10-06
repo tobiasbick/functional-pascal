@@ -15,7 +15,9 @@
     "body": [
       "unit ${1:UnitName};",
       "",
-      "$0"
+      "$0",
+      "",
+      "end unit;"
     ],
     "description": "Create a Functional Pascal unit"
   },
@@ -25,7 +27,7 @@
       "function ${1:FunctionName}(${2:Value}: ${3:integer}): ${4:integer};",
       "begin",
       "  return ${2:Value};",
-      "end;"
+      "end function;"
     ],
     "description": "Declare a function"
   },
@@ -35,7 +37,7 @@
       "procedure ${1:ProcedureName}(${2:Value}: ${3:integer});",
       "begin",
       "  $0",
-      "end;"
+      "end procedure;"
     ],
     "description": "Declare a procedure"
   },
@@ -44,7 +46,7 @@
     "body": [
       "type ${1:RecordName} = record",
       "  ${2:Value}: ${3:integer};",
-      "end;"
+      "end record;"
     ],
     "description": "Declare a record type"
   },

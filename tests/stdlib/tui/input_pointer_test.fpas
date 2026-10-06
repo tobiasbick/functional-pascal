@@ -10,7 +10,7 @@ type
     SecondCaret: integer;
     LastSource: integer;
     LastAction: integer;
-  end;
+  end record;
 
 function ViewInput(State: InputPointerModel): TuiElement;
 begin
@@ -20,7 +20,7 @@ begin
                                                                                                         TuiElementBuilders.MakeInput(TuiControlId.Create(2), State.SecondText, State.SecondCaret, TuiAction.Create(22))
                                                                                                       ])
                                                                       ]);
-end;
+end function;
 
 function UpdateInput(State: InputPointerModel; Msg: TuiMsg; Cmd: TuiCmdOutput): InputPointerModel;
 begin
@@ -54,13 +54,13 @@ begin
       return State;
     end;
   end;
-end;
+end function;
 
 function Click(App: TuiApplication; State: InputPointerModel; X: integer; Y: integer): InputPointerModel;
 begin
   App.InjectPointerForTest(TuiPointerEvent.Create(TuiPointerAction.Down, TuiPointerButton.Left, TuiPoint.Create(X, Y)));
   return App.RunIterations(State, UpdateInput, ViewInput, 2, 0);
-end;
+end function;
 
 begin
   mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(10, 2));

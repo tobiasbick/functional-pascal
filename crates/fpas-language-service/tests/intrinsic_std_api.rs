@@ -147,7 +147,7 @@ fn receiver_call_completion_filters_imported_collection_routines() {
 
 #[test]
 fn receiver_completion_on_returned_and_parenthesized_arrays() {
-    let source = "program FluentResults;\nuses Std.Arrays;\nfunction MakeValues(): array of integer; begin return [1]; end;\nbegin\n  var Items: array of integer := [2];\n  var A: integer := MakeValues().Len;\n  var B: integer := (Items).Len;\nend.\n";
+    let source = "program FluentResults;\nuses Std.Arrays;\nfunction MakeValues(): array of integer; begin return [1]; end function;\nbegin\n  var Items: array of integer := [2];\n  var A: integer := MakeValues().Len;\n  var B: integer := (Items).Len;\nend.\n";
     let (_temp, path, mut service) = intrinsic_std_fixture(source);
     for needle in ["MakeValues().Len", "(Items).Len"] {
         let offset = source.find(needle).expect("receiver") + needle.len();

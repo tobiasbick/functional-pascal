@@ -16,9 +16,10 @@ begin
   begin
     return Value;
   end;
-end;
+end function;
 
 function IsBlank(S: string): boolean;
 begin
   return Length(Trim(S)) = 0;
-end;
+end function;
+end unit;

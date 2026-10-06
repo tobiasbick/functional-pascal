@@ -278,7 +278,7 @@ begin
       return 0;
     end;
   end;
-end;
+end function;
 
 begin
   var Pending: task := go Work();
@@ -373,7 +373,7 @@ type
   Choice = enum
     Count(Value: integer);
     Pair(Left: integer; Right: integer);
-  end;
+  end enum;
 
 function ReadChoice(mutable Item: Choice): integer;
 begin
@@ -388,7 +388,7 @@ begin
       return Left + Right;
     end;
   end;
-end;
+end function;
 
 begin
   var OutputValue: integer := ReadChoice(Choice.Count(1));
@@ -438,7 +438,7 @@ type
   Choice = enum
     Count(Value: integer);
     Pair(Left: integer; Right: integer);
-  end;
+  end enum;
 
 function NextChoice(): function(): integer;
 begin
@@ -455,7 +455,7 @@ begin
       end;
     end;
   end;
-end;
+end function;
 
 begin
   var Next: function(): integer := NextChoice();

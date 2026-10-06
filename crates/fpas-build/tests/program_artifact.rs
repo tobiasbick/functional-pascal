@@ -30,9 +30,9 @@ fn base_source(hidden_body: &str) -> String {
     format!(
         "unit Demo.Base;
          function Hidden(Value: integer): integer;
-         begin {hidden_body} end;
+         begin {hidden_body} end function;
          public function AddOne(Value: integer): integer;
-         begin return Value + 1; end;"
+         begin return Value + 1; end function;\nend unit;"
     )
 }
 
@@ -68,7 +68,7 @@ include = ["src/**/*.fpas"]
             "unit Demo.Consumer;
              uses Demo.Base;
              public function Run(): integer;
-             begin return AddOne(41); end;",
+             begin return AddOne(41); end function;\nend unit;",
         );
         write(
             &main,
@@ -261,7 +261,7 @@ fn non_program_source_is_rejected_before_cached_artifact_lookup() {
     let fixture = Fixture::create();
     fixture.build().expect("initial build");
     let previous = fs::read(&fixture.artifact).expect("initial artifact");
-    let unit_source = b"unit Demo; public const Value: integer := 1;";
+    let unit_source = b"unit Demo; public const Value: integer := 1;\nend unit;";
 
     let error = fixture
         .build_source(unit_source)

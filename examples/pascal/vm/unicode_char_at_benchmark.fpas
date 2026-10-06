@@ -21,7 +21,7 @@ begin
   end;
 
   return Text;
-end;
+end function;
 
 function RunCharAt(Text: string; Iterations: integer): integer;
 begin
@@ -35,7 +35,7 @@ begin
   end;
 
   return Matches;
-end;
+end function;
 
 begin
   if (ParamCount() < 1) or (ParamCount() > 2) then

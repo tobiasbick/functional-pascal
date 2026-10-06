@@ -5,7 +5,7 @@ uses Std.Console, Std.Arrays;
 function EmptyArray(X: integer): array of integer;
 begin
   return [];
-end;
+end function;
 
 begin
   var R: array of integer := FlatMap([1, 2, 3], EmptyArray);

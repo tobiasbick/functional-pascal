@@ -27,7 +27,7 @@ begin
   var Ignored: result of array of integer, string := ReceiveBytesWithCancellation(Client, 1, Token);
   var Closed: boolean := Std.Results.Unwrap(Close(Client));
   return true;
-end;
+end function;
 begin
   var Source: CancellationSource := CreateCancellationSource();
   var Token: CancellationToken := GetCancellationToken(Source);
@@ -69,7 +69,7 @@ begin
     Count := Count + 1;
   end;
   return Count;
-end;
+end function;
 begin
   var Requests: channel of integer := CreateChannel(1);
   var Replies: channel of integer := CreateChannel(1);
@@ -98,7 +98,7 @@ begin
   var Configured: boolean := Std.Results.Unwrap(SetTimeout(Client, 1000));
   var Ignored: result of array of integer, string := ReceiveBytesWithCancellation(Client, 1, Token);
   return true;
-end;
+end function;
 function Reader(ListenerValue: Listener; Token: CancellationToken): boolean;
 begin
   var Client: Connection := Std.Results.Unwrap(Accept(ListenerValue));
@@ -113,19 +113,19 @@ begin
       return false;
     end;
   end;
-end;
+end function;
 function Quick(): integer;
 begin
   return 7;
-end;
+end function;
 function Open(): Listener;
 begin
   return Std.Results.Unwrap(Listen('127.0.0.1', 0));
-end;
+end function;
 function Join(ListenerValue: Listener): Connection;
 begin
   return Std.Results.Unwrap(Connect('127.0.0.1', Std.Results.Unwrap(ListenerLocalAddress(ListenerValue)).Port, 1000));
-end;
+end function;
 begin
   var Source: CancellationSource := CreateCancellationSource();
   var Token: CancellationToken := GetCancellationToken(Source);

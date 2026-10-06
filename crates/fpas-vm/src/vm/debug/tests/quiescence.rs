@@ -51,7 +51,7 @@ mutable var Shared: integer := 0;
 procedure Writer();
 begin
   Shared := 1;
-end;
+end procedure;
 
 begin
   var Pending: task := go Writer();

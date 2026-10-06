@@ -15,7 +15,7 @@ begin
   end;
 
   return -1;
-end;
+end function;
 
 function ResortSelected(State: NotesModel; SelectedId: string): NotesModel;
 begin
@@ -23,7 +23,7 @@ begin
   Next.Notes := NotesSort(State.Notes);
   Next.Selected := NoteIndexById(Next.Notes, SelectedId);
   return Next;
-end;
+end function;
 
 function WithEditorFields(State: NotesModel; Selected: integer): NotesModel;
 begin
@@ -49,7 +49,7 @@ begin
   end;
 
   return Next;
-end;
+end function;
 
 // Persists the selected dirty note and returns the resulting UI state.
 public function NotesPersistCurrent(State: NotesModel): NotesModel;
@@ -85,7 +85,7 @@ begin
       return Next;
     end;
   end;
-end;
+end function;
 
 function SelectedFilteredPosition(State: NotesModel): integer;
 begin
@@ -99,7 +99,7 @@ begin
   end;
 
   return -1;
-end;
+end function;
 
 function SelectFiltered(State: NotesModel; Position: integer): NotesModel;
 begin
@@ -118,7 +118,7 @@ begin
   Next.Pane := NotesPane.List;
   Next.Focus := ListControl;
   return Next;
-end;
+end function;
 
 function CreateNote(State: NotesModel): NotesModel;
 begin
@@ -151,7 +151,7 @@ begin
       return Next;
     end;
   end;
-end;
+end function;
 
 function TogglePin(State: NotesModel): NotesModel;
 begin
@@ -166,7 +166,7 @@ begin
   Next.Dirty := true;
   Next.Status := 'Pin changed';
   return NotesPersistCurrent(Next);
-end;
+end function;
 
 function SelectFirstVisible(State: NotesModel): NotesModel;
 begin
@@ -181,7 +181,7 @@ begin
   end;
 
   return WithEditorFields(State, Indices[0]);
-end;
+end function;
 
 function ArchiveNote(State: NotesModel): NotesModel;
 begin
@@ -202,7 +202,7 @@ begin
 
   Next.Status := 'Note archived';
   return SelectFirstVisible(Next);
-end;
+end function;
 
 function HandleAction(State: NotesModel; Action: integer; Cmd: TuiCmdOutput): NotesModel;
 begin
@@ -266,7 +266,7 @@ begin
   end;
 
   return State;
-end;
+end function;
 
 function RequestQuit(State: NotesModel; Cmd: TuiCmdOutput): NotesModel;
 begin
@@ -279,7 +279,7 @@ begin
 
   Cmd.Set(TuiCmd.Quit);
   return State;
-end;
+end function;
 
 function HandleShortcut(State: NotesModel; Key: TuiKeyEvent; Cmd: TuiCmdOutput): NotesModel;
 begin
@@ -354,7 +354,7 @@ begin
   end;
 
   return State;
-end;
+end function;
 
 // Applies one routed TUI message to the Notes application model.
 public function NotesUpdate(State: NotesModel; Msg: TuiMsg; Cmd: TuiCmdOutput): NotesModel;
@@ -442,10 +442,11 @@ begin
       return State;
     end;
   end;
-end;
+end function;
 
 // Maps the source note selection to its position in the filtered list.
 public function NotesSelectedFilteredPosition(State: NotesModel): integer;
 begin
   return SelectedFilteredPosition(State);
-end;
+end function;
+end unit;

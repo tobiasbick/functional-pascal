@@ -19,5 +19,6 @@ public type
         X := X;
         Y := Y;
       end;
-    end;
-  end;
+    end function;
+  end record;
+end unit;

@@ -16,8 +16,8 @@ type
     function Add(Self: Counter; Value: integer): integer;
     begin
       return Self.Base + Value;
-    end;
-  end;
+    end function;
+  end record;
 begin
   var C: Counter := record Base := 10; end;
   var AddTen: function(Value: integer): integer := C.Add;
@@ -35,8 +35,8 @@ type
     Base: integer;
     procedure Bump(Self: Counter);
     begin
-    end;
-  end;
+    end procedure;
+  end record;
 begin
   var C: Counter := record Base := 1; end;
   var Op: procedure() := C.Bump;
@@ -55,8 +55,8 @@ type
     static function Origin(): Point;
     begin
       return record X := 0; end;
-    end;
-  end;
+    end function;
+  end record;
 begin
   var P: Point := Point.Origin();
   var F: function(): Point := P.Origin;
@@ -81,8 +81,8 @@ type
     procedure Inc(mutable Self: Counter);
     begin
       Self.Base := Self.Base + 1;
-    end;
-  end;
+    end procedure;
+  end record;
 begin
   var C: Counter := record Base := 0; end;
   var Op: procedure() := C.Inc;
@@ -107,8 +107,8 @@ type
     function Add(Self: Counter; Value: integer): integer;
     begin
       return Self.Base + Value;
-    end;
-  end;
+    end function;
+  end record;
 begin
   var C: Counter := record Base := 10; end;
   var AddTen: function(Value: integer): integer := C.Add;

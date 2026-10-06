@@ -11,7 +11,7 @@ unit Std.Fs;
 public function CreateDir(Path: string): result of boolean, string;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Creates a directory and missing parents; an existing directory is `Ok(true)`.
 //
@@ -20,7 +20,7 @@ end;
 public function CreateDirAll(Path: string): result of boolean, string;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Removes one file entry, returns `Ok(true)`.
 //
@@ -29,7 +29,7 @@ end;
 public function DeleteFile(Path: string): result of boolean, string;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // `true` when the path exists.
 //
@@ -38,7 +38,7 @@ end;
 public function Exists(Path: string): boolean;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Expands a glob pattern to matching file paths.
 //
@@ -47,7 +47,7 @@ end;
 public function Glob(Pattern: string): result of array of string, string;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // `true` for a directory.
 //
@@ -56,7 +56,7 @@ end;
 public function IsDir(Path: string): boolean;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // `true` for a regular file.
 //
@@ -65,7 +65,7 @@ end;
 public function IsFile(Path: string): boolean;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Reads UTF-8 text.
 //
@@ -74,7 +74,7 @@ end;
 public function ReadText(Path: string): result of string, string;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Writes UTF-8 text, returns `Ok(true)`.
 //
@@ -84,7 +84,7 @@ end;
 public function WriteText(Path: string; Text: string): result of boolean, string;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Publishes complete UTF-8 text through a same-directory temporary file.
 //
@@ -94,4 +94,5 @@ end;
 public function WriteTextAtomic(Path: string; Text: string): result of boolean, string;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
+end unit;

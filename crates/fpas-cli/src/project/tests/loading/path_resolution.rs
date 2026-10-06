@@ -48,7 +48,7 @@ include = ["{util_path_text}"]
         ),
     );
     write_text(&dir.join("src/main.fpas"), "program Main;\nbegin\nend.\n");
-    write_text(&util_path, "unit App.Util;");
+    write_text(&util_path, "unit App.Util;\nend unit;");
 
     let loaded = load_project_ok(&project_file);
     fs::remove_dir_all(&dir).expect("temp directory must be removed");
@@ -74,7 +74,7 @@ include = ["src/[draft].fpas"]
 "#,
     );
     write_text(&dir.join("src/main.fpas"), "program Main;\nbegin\nend.\n");
-    write_text(&unit_path, "unit App.Draft;");
+    write_text(&unit_path, "unit App.Draft;\nend unit;");
 
     let loaded = load_project_ok(&project_file);
     fs::remove_dir_all(&dir).expect("temp directory must be removed");
@@ -97,7 +97,7 @@ main = "src"
 include = ["src/util.fpas"]
 "#,
     );
-    write_text(&dir.join("src/util.fpas"), "unit App.Util;");
+    write_text(&dir.join("src/util.fpas"), "unit App.Util;\nend unit;");
 
     let error = load_project_error(&project_file, "main directory must fail");
     fs::remove_dir_all(&dir).expect("temp directory must be removed");

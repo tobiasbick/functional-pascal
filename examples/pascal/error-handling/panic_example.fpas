@@ -10,7 +10,7 @@ begin
   end;
 
   return A div B;
-end;
+end function;
 
 function DayKind(Day: string): string;
 begin
@@ -28,7 +28,7 @@ begin
       panic('Invalid day: ' + Day);
     end;
   end;
-end;
+end function;
 
 begin
   WriteLn('10 / 3 = ', DivideChecked(10, 3));

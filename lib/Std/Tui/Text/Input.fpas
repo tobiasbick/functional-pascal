@@ -15,7 +15,7 @@ public type
     public RightClipped: boolean;
     // Zero-based terminal column of the caret.
     public CaretColumn: integer;
-  end;
+  end record;
 
 function TuiInputWidth(Text: string; Start: integer; EndIndex: integer): integer;
 begin
@@ -25,7 +25,7 @@ begin
   end;
 
   return Std.Console.DisplayWidth(Std.Str.Substring(Text, Start, EndIndex - Start));
-end;
+end function;
 
 // Derives the smallest viewport that keeps the controlled caret visible.
 //
@@ -78,7 +78,7 @@ begin
     RightClipped := EndIndex < Std.Str.Length(Text);
     CaretColumn := TuiInputWidth(Text, Start, Caret);
   end;
-end;
+end function;
 
 // Maps one content-relative terminal column to a text caret.
 //
@@ -105,4 +105,5 @@ begin
   end;
 
   return Viewport.EndIndex;
-end;
+end function;
+end unit;

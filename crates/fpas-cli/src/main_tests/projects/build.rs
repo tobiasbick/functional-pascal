@@ -90,7 +90,7 @@ include = ["src/**/*.fpas"]
     );
     write_text(
         &cwd.join("src/math.fpas"),
-        "unit Demo.Math;\npublic const Answer: integer := 42;\n",
+        "unit Demo.Math;\npublic const Answer: integer := 42;\nend unit;\n",
     );
 
     let (exit_code, stdout, stderr) = support::run_cli_args_and_capture_output(
@@ -135,7 +135,7 @@ include = ["src/**/*.fpas"]
     );
     write_text(
         &cwd.join("libs/math/src/math.fpas"),
-        "unit Demo.Math;\npublic function Answer(): integer;\nbegin\n  return 42;\nend;\n",
+        "unit Demo.Math;\npublic function Answer(): integer;\nbegin\n  return 42;\nend function;\nend unit;\n",
     );
     write_text(
         &program_project,
@@ -190,7 +190,7 @@ include = ["**/*.fpas"]
     );
     write_text(
         &cwd.join("support.fpas"),
-        "unit Demo.Support;\npublic function Answer(): integer;\nbegin\n  return 42;\nend;\n",
+        "unit Demo.Support;\npublic function Answer(): integer;\nbegin\n  return 42;\nend function;\nend unit;\n",
     );
     write_text(
         &cwd.join("answer_test.fpas"),
@@ -300,7 +300,7 @@ fn build_executable_rejects_non_program_project_before_runner_lookup() {
     let cwd = create_temp_dir("build-native-library");
     let project_file = cwd.join("library.fpasprj");
     support::write_library_project_file(&project_file, &["src/**/*.fpas"]);
-    write_text(&cwd.join("src/lib.fpas"), "unit Demo.Lib;\n");
+    write_text(&cwd.join("src/lib.fpas"), "unit Demo.Lib;\nend unit;\n");
 
     let (exit_code, _, stderr) = support::run_cli_args_and_capture_output(
         &[

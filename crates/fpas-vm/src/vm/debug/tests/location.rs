@@ -13,7 +13,7 @@ procedure Inner();
 begin
   mutable var Nested: integer := 1;
   Nested := Nested + Flag;
-end;
+end procedure;
 
 begin
   Flag := 1;

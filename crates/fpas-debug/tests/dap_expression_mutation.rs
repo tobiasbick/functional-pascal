@@ -14,7 +14,7 @@ const SOURCE: &str = r#"program DapExpressionMutation;
 type
   Box = record
     Value: integer;
-  end;
+  end record;
 
 mutable var
   GlobalValue: integer := 5;

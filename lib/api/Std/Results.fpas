@@ -12,7 +12,7 @@ unit Std.Results;
 public function AndThen(R: result of T, E; F: function(V: T): result of U, E): result of U, E;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // True if Error.
 //
@@ -21,7 +21,7 @@ end;
 public function IsError(R: result of T, E): boolean;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // True if Ok.
 //
@@ -30,7 +30,7 @@ end;
 public function IsOk(R: result of T, E): boolean;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Transform Ok value.
 //
@@ -40,7 +40,7 @@ end;
 public function Map(R: result of T, E; F: function(V: T): U): result of U, E;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Recover from Error.
 //
@@ -50,7 +50,7 @@ end;
 public function OrElse(R: result of T, E; F: function(Err: E): result of T, F): result of T, F;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Panics if Error.
 //
@@ -59,7 +59,7 @@ end;
 public function Unwrap(R: result of T, E): T;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Returns Default if Error.
 //
@@ -69,4 +69,5 @@ end;
 public function UnwrapOr(R: result of T, E; Default: T): T;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
+end unit;

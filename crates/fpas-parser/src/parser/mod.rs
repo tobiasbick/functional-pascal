@@ -1,5 +1,6 @@
 mod core;
 mod decl;
+mod declaration_closers;
 mod display;
 mod expr;
 mod nesting;
@@ -7,7 +8,7 @@ mod program;
 mod stmt;
 
 use crate::error::ParseError;
-use fpas_lexer::SpannedToken;
+use fpas_lexer::{SpannedToken, Token};
 
 use display::token_display;
 
@@ -22,4 +23,5 @@ pub struct Parser {
     errors: Vec<ParseError>,
     nesting_depth: usize,
     nesting_limit_reached: bool,
+    declaration_closers: Vec<Token>,
 }

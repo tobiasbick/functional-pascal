@@ -25,65 +25,65 @@ type
         MaxIter := 96;
         Palette := PaletteKind.DeepOcean;
       end;
-    end;
+    end function;
 
     function SpanX(Self: ExplorerState; Width: integer; Height: integer): real;
     begin
       var SafeWidth: integer := Max(Width, 1);
       var SafeHeight: integer := Max(Height, 1);
       return (Self.SpanY * (IntToReal(SafeWidth) / IntToReal(SafeHeight))) * 0.5;
-    end;
+    end function;
 
     function XMin(Self: ExplorerState; Width: integer; Height: integer): real;
     begin
       return Self.CenterX - (Self.SpanX(Width, Height) * 0.5);
-    end;
+    end function;
 
     function XMax(Self: ExplorerState; Width: integer; Height: integer): real;
     begin
       return Self.CenterX + (Self.SpanX(Width, Height) * 0.5);
-    end;
+    end function;
 
     function YMin(Self: ExplorerState): real;
     begin
       return Self.CenterY - (Self.SpanY * 0.5);
-    end;
+    end function;
 
     function YMax(Self: ExplorerState): real;
     begin
       return Self.CenterY + (Self.SpanY * 0.5);
-    end;
+    end function;
 
     function GetZoom(Self: ExplorerState): real;
     begin
       return 2.4 / Self.SpanY;
-    end;
+    end function;
 
     property Zoom: real read GetZoom;
-  end;
+  end record;
 
 function RenderWidth(): integer;
 begin
   return Max(ScreenWidth(), 1);
-end;
+end function;
 
 function RenderHeight(): integer;
 begin
   return Max(ScreenHeight() - 3, 1);
-end;
+end function;
 
 function ViewportCX(State: ExplorerState; W: integer; H: integer; CellX: integer): real;
 begin
   var Wr: integer := Max(W - 1, 1);
   return State.XMin(W, H) +
          (IntToReal(CellX - 1) / IntToReal(Wr)) * (State.XMax(W, H) - State.XMin(W, H));
-end;
+end function;
 
 function ViewportCY(State: ExplorerState; W: integer; H: integer; CellY: integer): real;
 begin
   var Hr: integer := Max(H - 1, 1);
   return State.YMax() - (IntToReal(CellY - 1) / IntToReal(Hr)) * (State.YMax() - State.YMin());
-end;
+end function;
 
 procedure WriteHudText(Text: string; Width: integer);
 begin
@@ -95,7 +95,7 @@ begin
       WriteText(Substring(Text, 0, TextLength));
     end;
   end;
-end;
+end procedure;
 
 procedure DrawHud(S: ExplorerState; Width: integer; Height: integer);
 begin
@@ -126,7 +126,7 @@ begin
 
   NormVideo();
   Window(1, 1, Width, Height);
-end;
+end procedure;
 
 mutable var
   State: ExplorerState := ExplorerState.Default();
@@ -139,7 +139,7 @@ mutable var
 procedure RequestRedraw();
 begin
   NeedsRedraw := true;
-end;
+end procedure;
 
 procedure PaintFrame();
 begin
@@ -169,7 +169,7 @@ begin
   ActiveRender := Some(StartRender(State.XMin(RenderW, RenderH), State.XMax(RenderW, RenderH), State.YMin(), State.YMax(), RenderW, RenderH, State.MaxIter, State.Palette, State.Jr, State.Ji));
   DrawHud(State, RenderW, RenderH);
   Present();
-end;
+end procedure;
 
 function HandleKey(Key: KeyEvent): boolean;
 begin
@@ -283,7 +283,7 @@ begin
   end;
 
   return false;
-end;
+end function;
 
 procedure HandleMouse(InputEvent: ConsoleEvent);
 begin
@@ -313,7 +313,7 @@ begin
       RequestRedraw();
     end;
   end;
-end;
+end procedure;
 
 procedure HandleResize(Width: integer; Height: integer);
 begin
@@ -325,7 +325,7 @@ begin
     RenderH := NewH;
     RequestRedraw();
   end;
-end;
+end procedure;
 
 procedure HandleEvent(E: ConsoleEvent);
 begin
@@ -341,7 +341,7 @@ begin
   begin
     HandleResize(E.width, E.height);
   end;
-end;
+end procedure;
 
 procedure ShutdownTerminal();
 begin
@@ -351,7 +351,7 @@ begin
   DisableMouse();
   DisableRawMode();
   LeaveAltScreen();
-end;
+end procedure;
 
 begin
   EnableRawMode();

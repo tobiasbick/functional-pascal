@@ -22,17 +22,17 @@ public type
 function TuiSurfaceBlank(): TuiCell;
 begin
   return TuiCell.Create(' ', TuiStyleRole.Normal);
-end;
+end function;
 
 function TuiSurfaceBlankRow(Width: integer): array of TuiCell;
 begin
   return Std.Arrays.Fill(TuiSurfaceBlank(), Width);
-end;
+end function;
 
 function TuiSurfaceBlankContinuationRow(Width: integer): array of boolean;
 begin
   return Std.Arrays.Fill(false, Width);
-end;
+end function;
 
 function TuiSurfaceRequire(Slot: integer): integer;
 begin
@@ -42,7 +42,7 @@ begin
   end;
 
   return Slot;
-end;
+end function;
 
 procedure TuiSurfaceClearGlyphAt(SlotIndex: integer; Y: integer; X: integer);
 begin
@@ -59,7 +59,7 @@ begin
   end;
 
   TuiSurfaceCells[SlotIndex][Y][X] := Blank;
-end;
+end procedure;
 
 procedure TuiSurfacePutCellAt(
   SlotIndex: integer;
@@ -87,7 +87,7 @@ begin
     TuiSurfaceCells[SlotIndex][Y][X + 1] := TuiSurfaceBlank();
     TuiSurfaceContinuations[SlotIndex][Y][X + 1] := true;
   end;
-end;
+end procedure;
 
 public type
   // Host-owned mutable working surface handle.
@@ -120,7 +120,7 @@ public type
       return record
         Slot := Std.Arrays.Length(TuiSurfaceSizes);
       end;
-    end;
+    end function;
 
     // Replaces the working grid while preserving this surface's storage slot.
     //
@@ -144,7 +144,7 @@ public type
       TuiSurfacePresentedCells[SlotIndex] := Rows;
       TuiSurfacePresentedContinuations[SlotIndex] := ContinuationRows;
       TuiSurfacePresentedReady[SlotIndex] := false;
-    end;
+    end procedure;
 
     // Returns the current surface size.
     //
@@ -154,7 +154,7 @@ public type
     begin
       var Slot: integer := TuiSurfaceRequire(Self.Slot);
       return TuiSurfaceSizes[Slot - 1];
-    end;
+    end function;
 
     // Returns whether the zero-based position lies inside the surface.
     //
@@ -166,7 +166,7 @@ public type
       var Size: TuiSize := Self.Size();
       return (((Position.X >= 0) and (Position.X < Size.Width)) and (Position.Y >= 0)) and
              (Position.Y < Size.Height);
-    end;
+    end function;
 
     // Returns the leading cell at a position, or `None` outside the grid or on a continuation.
     //
@@ -186,7 +186,7 @@ public type
       end;
 
       return Some(TuiSurfaceCells[Slot - 1][Position.Y][Position.X]);
-    end;
+    end function;
 
     // Clears the surface by sharing one blank row across every line.
     //
@@ -203,7 +203,7 @@ public type
         TuiSurfaceCells[Slot - 1][Y] := BlankRow;
         TuiSurfaceContinuations[Slot - 1][Y] := BlankContinuations;
       end;
-    end;
+    end procedure;
 
     // Paints one validated cell; out-of-bounds writes are ignored.
     //
@@ -219,7 +219,7 @@ public type
       end;
       var Slot: integer := TuiSurfaceRequire(Self.Slot);
       TuiSurfacePutCellAt(Slot - 1, Self.Size(), Position.X, Position.Y, Cell);
-    end;
+    end procedure;
 
     // Paints one glyph with the normal style role; out-of-bounds writes are ignored.
     //
@@ -231,7 +231,7 @@ public type
     public procedure PutGlyph(Self: TuiWorkingSurface; X: integer; Y: integer; Glyph: string);
     begin
       Self.PutCell(TuiPoint.Create(X, Y), TuiCell.Create(Glyph, TuiStyleRole.Normal));
-    end;
+    end procedure;
 
     // Copies the current leading glyphs for explicit test inspection.
     //
@@ -262,8 +262,8 @@ public type
         Height := Size.Height;
         Cells := Cells;
       end;
-    end;
-  end;
+    end function;
+  end record;
 
 // Fills one clipped surface rectangle with a one-column cell.
 //
@@ -305,7 +305,7 @@ begin
     TuiSurfaceCells[Slot - 1][Y] := Row.Cells;
     TuiSurfaceContinuations[Slot - 1][Y] := Row.Continuations;
   end;
-end;
+end procedure;
 
 // Returns changed terminal-cell runs and commits the current surface as the presented baseline.
 //
@@ -356,7 +356,7 @@ begin
 
   TuiSurfacePresentedReady[Slot - 1] := true;
   return Damage;
-end;
+end function;
 
 // Marks every terminal cell as damaged without changing the surface contents.
 //
@@ -366,7 +366,7 @@ public procedure TuiSurfaceInvalidateTerminal(Surface: TuiWorkingSurface);
 begin
   var Slot: integer := TuiSurfaceRequire(Surface.Slot);
   TuiSurfacePresentedReady[Slot - 1] := false;
-end;
+end procedure;
 
 // Paints consecutive cells with surface clipping and wide-glyph repair.
 public procedure TuiSurfacePutCells(
@@ -407,4 +407,5 @@ begin
                                                                                                               1][Position.Y], TargetX, Values);
   TuiSurfaceCells[Slot - 1][Position.Y] := Row.Cells;
   TuiSurfaceContinuations[Slot - 1][Position.Y] := Row.Continuations;
-end;
+end procedure;
+end unit;

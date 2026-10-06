@@ -30,7 +30,7 @@ type Op = enum
   OpSub;
   OpMul;
   OpDiv;
-end;
+end enum;
 
 function Calculate(A: integer; B: integer; Operation: Op): integer;
 begin
@@ -40,7 +40,7 @@ begin
     OpMul: return A * B;
     OpDiv: return A div B;
   end;
-end;
+end function;
 
 begin
   var Answer: integer := Calculate(10, 3, OpAdd);

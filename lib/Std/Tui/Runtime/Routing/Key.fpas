@@ -21,7 +21,7 @@ begin
   end;
 
   return Value;
-end;
+end function;
 
 function TuiRouteSubtreeEnd(Node: TuiElement; Index: integer): integer;
 begin
@@ -67,7 +67,7 @@ begin
   end;
 
   return Next;
-end;
+end function;
 
 function TuiRouteTarget(
   Frame: TuiArrangedFrame;
@@ -319,7 +319,7 @@ begin
   end;
 
   return None;
-end;
+end function;
 
 // Routes one key against the previous rendered tree into ordered framework messages.
 //
@@ -440,4 +440,5 @@ begin
   end;
 
   return Routed;
-end;
+end function;
+end unit;

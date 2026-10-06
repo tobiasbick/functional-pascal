@@ -17,7 +17,7 @@ begin
   mutable var ResponseValue: ServerResponse := ServerResponse.Create(200, 'OK');
   ResponseValue.Body := Std.Net.Utf8.Encode(RequestValue.Target);
   return ResponseValue;
-end;
+end function;
 
 begin
   case Listen('127.0.0.1', {port}) of
@@ -80,7 +80,7 @@ uses Std.Http, Std.Net;
 function Handle(_RequestValue: ServerRequest): ServerResponse;
 begin
   return ServerResponse.Create(204, 'No Content');
-end;
+end function;
 
 begin
   case Listen('127.0.0.1', {port}) of
@@ -142,7 +142,7 @@ uses Std.Console, Std.Http, Std.Net, Std.Str;
 function Handle(_RequestValue: ServerRequest): ServerResponse;
 begin
   return ServerResponse.Create(204, 'No Content');
-end;
+end function;
 
 begin
   case Listen('127.0.0.1', {port}) of

@@ -21,7 +21,7 @@ function ReadValue(): integer;
 begin
   var Captured: integer := 2;
   return Source;
-end;
+end function;
 
 begin
   var Result: integer := ReadValue();
@@ -56,7 +56,7 @@ function ReadValue(): integer;
 begin
   var Local: integer := 2;
   return Local + Outer;
-end;
+end function;
 
 begin
   var Result: integer := ReadValue();
@@ -89,13 +89,13 @@ function First(): integer;
 begin
   var Source: integer := 1;
   return Source;
-end;
+end function;
 
 function Second(): integer;
 begin
   var Target: integer := 2;
   return Target;
-end;
+end function;
 
 begin
   var Result: integer := First() + Second();

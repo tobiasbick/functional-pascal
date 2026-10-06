@@ -5,7 +5,7 @@ uses Std.Test, Std.Tui;
 function View(Value: integer): TuiElement;
 begin
   return TuiElementBuilders.MakeEmpty();
-end;
+end function;
 
 function Update(Value: integer; Msg: TuiMsg; Cmd: TuiCmdOutput): integer;
 begin
@@ -20,7 +20,7 @@ begin
       return Value;
     end;
   end;
-end;
+end function;
 
 begin
   var First: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(1, 1));

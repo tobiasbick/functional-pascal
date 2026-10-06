@@ -7,7 +7,7 @@ uses Notes.Actions, Notes.Model, Std.Arrays, Std.Conv, Std.Tui;
 public function NotesHasSelection(State: NotesModel): boolean;
 begin
   return (State.Selected >= 0) and (State.Selected < Std.Arrays.Length(State.Notes));
-end;
+end function;
 
 // Replaces one note while preserving the remaining model state.
 public function NotesWithNote(State: NotesModel; Index: integer; NoteValue: Note): NotesModel;
@@ -17,7 +17,7 @@ begin
   mutable var Next: NotesModel := State;
   Next.Notes := Notes;
   return Next;
-end;
+end function;
 
 function SameTags(Left: array of string; Right: array of string): boolean;
 begin
@@ -35,7 +35,7 @@ begin
   end;
 
   return true;
-end;
+end function;
 
 // Applies a single-line proposal, preserving clean state for caret-only changes.
 public function NotesEditText(State: NotesModel; Action: integer; Text: string; Caret: integer): NotesModel;
@@ -85,7 +85,7 @@ begin
   end;
 
   return Next;
-end;
+end function;
 
 // Applies body text, caret and viewport changes independently.
 public function NotesEditBody(
@@ -114,4 +114,5 @@ begin
   end;
 
   return Next;
-end;
+end function;
+end unit;

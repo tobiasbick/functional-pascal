@@ -7,7 +7,7 @@ public type
     Unbounded;
     // Represents the `AtMost` variant of `TuiMeasureConstraintKind`.
     AtMost;
-  end;
+  end enum;
 
 function TuiMeasureConstraintRequireNonNegative(Value: integer): integer;
 begin
@@ -17,7 +17,7 @@ begin
   end;
 
   return Value;
-end;
+end function;
 
 public type
   // One-axis measurement constraint.
@@ -34,7 +34,7 @@ public type
         Kind := TuiMeasureConstraintKind.Unbounded;
         Limit := 0;
       end;
-    end;
+    end function;
 
     // Creates a non-negative upper bound.
     //
@@ -46,7 +46,7 @@ public type
         Kind := TuiMeasureConstraintKind.AtMost;
         Limit := TuiMeasureConstraintRequireNonNegative(Limit);
       end;
-    end;
+    end function;
 
     // Returns whether the constraint has an upper bound.
     //
@@ -55,5 +55,6 @@ public type
     public function IsBounded(Self: TuiMeasureConstraint): boolean;
     begin
       return Self.Kind = TuiMeasureConstraintKind.AtMost;
-    end;
-  end;
+    end function;
+  end record;
+end unit;

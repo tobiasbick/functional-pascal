@@ -13,7 +13,7 @@ begin
   var Snapshot: TuiSurfaceSnapshot := App.SurfaceSnapshot();
   App.Close();
   return Snapshot;
-end;
+end function;
 
 begin
   var TextArea: TuiElement := TuiElementBuilders.MakeTextArea(TuiControlId.Create(1), ('abc' + Std.Str.Chr(10)) +

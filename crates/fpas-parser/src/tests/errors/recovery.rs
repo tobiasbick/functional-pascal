@@ -69,7 +69,7 @@ fn multiple_invalid_mutable_statements_recover_until_final_valid_statement() {
 
 #[test]
 fn invalid_record_field_start_recovers_without_hanging() {
-    let (_, errs) = parse_with_errors("program T; type R = record 123 end; begin end.");
+    let (_, errs) = parse_with_errors("program T; type R = record 123 end record; begin end.");
     assert!(!errs.is_empty());
 }
 
@@ -131,7 +131,7 @@ fn case_missing_semicolon_between_arms_keeps_following_arms() {
 #[test]
 fn trailing_semicolon_in_param_list_does_not_invent_extra_param() {
     let (program, errs) = parse_with_errors(
-        "program T; function F(X: integer;): integer; begin return X; end; begin end.",
+        "program T; function F(X: integer;): integer; begin return X; end function; begin end.",
     );
     assert!(!errs.is_empty());
     match &program.declarations[0] {
@@ -154,7 +154,7 @@ fn empty_declaration_sections_report_errors_and_recover() {
         "program T; var begin end.",
         "program T; mutable var begin end.",
         "program T; type begin end.",
-        "program T; type E = enum end; begin end.",
+        "program T; type E = enum end enum; begin end.",
         "program T; begin case 1 of end; end.",
     ] {
         let (_, errors) = parse_with_errors(source);
@@ -192,7 +192,7 @@ fn invalid_top_level_static_keeps_recovered_routine() {
     use fpas_diagnostics::codes::PARSE_INVALID_STATIC_PLACEMENT;
 
     let (program, errors) = parse_with_errors(
-        "program T; static function Foo(): integer; begin return 1; end; begin end.",
+        "program T; static function Foo(): integer; begin return 1; end function; begin end.",
     );
 
     assert!(errors.iter().any(|error| {

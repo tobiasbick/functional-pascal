@@ -5,7 +5,7 @@ uses Std.Console, Std.Tasks;
 function Double(X: integer): integer;
 begin
   return X * 2;
-end;
+end function;
 
 begin
   var T1: task := go Double(1);

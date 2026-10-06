@@ -9,7 +9,7 @@ begin
     foreground := Foreground;
     background := Background;
   end;
-end;
+end function;
 
 begin
   BeginFrame();

@@ -2,23 +2,23 @@ use super::{check_errors, check_ok};
 
 #[test]
 fn record_type_valid() {
-    check_ok("program T; type Point = record X: real; Y: real; end; begin end.");
+    check_ok("program T; type Point = record X: real; Y: real; end record; begin end.");
 }
 
 #[test]
 fn enum_type_valid() {
-    check_ok("program T; type Color = enum Red; Green; Blue; end; begin end.");
+    check_ok("program T; type Color = enum Red; Green; Blue; end enum; begin end.");
 }
 
 #[test]
 fn enum_allows_explicit_i64_max_as_the_last_backing_value() {
-    check_ok("program T; type Limit = enum Last = 9223372036854775807; end; begin end.");
+    check_ok("program T; type Limit = enum Last = 9223372036854775807; end enum; begin end.");
 }
 
 #[test]
 fn enum_rejects_implicit_backing_value_after_i64_max() {
     let errors = check_errors(
-        "program T; type Limit = enum Last = 9223372036854775807; Overflow; end; begin end.",
+        "program T; type Limit = enum Last = 9223372036854775807; Overflow; end enum; begin end.",
     );
 
     assert!(errors.iter().any(|error| {
@@ -30,13 +30,13 @@ fn enum_rejects_implicit_backing_value_after_i64_max() {
 #[test]
 fn enum_explicit_value_restarts_sequence_after_i64_max() {
     check_ok(
-        "program T; type Limit = enum Last = 9223372036854775807; Restart = 0; Next; end; begin end.",
+        "program T; type Limit = enum Last = 9223372036854775807; Restart = 0; Next; end enum; begin end.",
     );
 }
 
 #[test]
 fn enum_duplicate_member_rejected() {
-    let errors = check_errors("program T; type Color = enum Red; red; end; begin end.");
+    let errors = check_errors("program T; type Color = enum Red; red; end enum; begin end.");
     assert!(
         errors
             .iter()
@@ -49,7 +49,7 @@ fn enum_duplicate_member_rejected() {
 fn enum_members_in_scope() {
     check_ok(
         "program T; \
-         type Color = enum Red; Green; Blue; end; \
+         type Color = enum Red; Green; Blue; end enum; \
          var C: Color := Red; \
          begin end.",
     );
@@ -59,8 +59,8 @@ fn enum_members_in_scope() {
 fn enum_shared_variant_name_becomes_ambiguous_at_use_site() {
     let errors = check_errors(
         "program T; \
-         type Color = enum Red; Green; end; \
-         type Status = enum Red; Ready; end; \
+         type Color = enum Red; Green; end enum; \
+         type Status = enum Red; Ready; end enum; \
          begin \
            var C: Color := Red; \
          end.",
@@ -78,8 +78,8 @@ fn enum_shared_variant_name_becomes_ambiguous_at_use_site() {
 fn enum_shared_variant_name_does_not_error_when_qualified() {
     check_ok(
         "program T; \
-         type Color = enum Red; Green; end; \
-         type Status = enum Red; Ready; end; \
+         type Color = enum Red; Green; end enum; \
+         type Status = enum Red; Ready; end enum; \
          begin end.",
     );
 }
@@ -88,8 +88,8 @@ fn enum_shared_variant_name_does_not_error_when_qualified() {
 fn enum_qualified_variant_names_remain_unambiguous() {
     check_ok(
         "program T; \
-         type Color = enum Red; Green; end; \
-         type Status = enum Red; Ready; end; \
+         type Color = enum Red; Green; end enum; \
+         type Status = enum Red; Ready; end enum; \
          begin \
            var C: Color := Color.Red; \
            var S: Status := Status.Red; \
@@ -101,7 +101,7 @@ fn enum_qualified_variant_names_remain_unambiguous() {
 fn enum_data_type_valid() {
     check_ok(
         "program T; \
-         type Shape = enum Circle(Radius: real); Rectangle(W: real; H: real); end; \
+         type Shape = enum Circle(Radius: real); Rectangle(W: real; H: real); end enum; \
          begin end.",
     );
 }
@@ -110,7 +110,7 @@ fn enum_data_type_valid() {
 fn enum_data_duplicate_field_rejected() {
     let errors = check_errors(
         "program T; \
-         type Shape = enum Circle(Radius: real; radius: integer); end; \
+         type Shape = enum Circle(Radius: real; radius: integer); end enum; \
          begin end.",
     );
     assert!(
@@ -125,7 +125,7 @@ fn enum_data_duplicate_field_rejected() {
 fn enum_data_mixed_valid() {
     check_ok(
         "program T; \
-         type Token = enum Eof; Number(Value: integer); Word(Text: string); end; \
+         type Token = enum Eof; Number(Value: integer); Word(Text: string); end enum; \
          begin end.",
     );
 }
@@ -134,7 +134,7 @@ fn enum_data_mixed_valid() {
 fn enum_data_construct_valid() {
     check_ok(
         "program T; \
-         type Shape = enum Circle(Radius: real); end; \
+         type Shape = enum Circle(Radius: real); end enum; \
          var S: Shape := Shape.Circle(5.0); \
          begin end.",
     );
@@ -144,7 +144,7 @@ fn enum_data_construct_valid() {
 fn enum_data_fieldless_construct_valid() {
     check_ok(
         "program T; \
-         type Token = enum Eof; Number(Value: integer); end; \
+         type Token = enum Eof; Number(Value: integer); end enum; \
          var T: Token := Token.Eof; \
          begin end.",
     );
@@ -154,7 +154,7 @@ fn enum_data_fieldless_construct_valid() {
 fn enum_data_case_destructure_valid() {
     check_ok(
         "program T; uses Std.Console; \
-         type Shape = enum Circle(Radius: real); Dot; end; \
+         type Shape = enum Circle(Radius: real); Dot; end enum; \
          begin \
            var S: Shape := Shape.Circle(1.0); \
            case S of \
@@ -169,7 +169,7 @@ fn enum_data_case_destructure_valid() {
 fn enum_data_wrong_arg_count() {
     check_errors(
         "program T; \
-         type Shape = enum Circle(Radius: real); end; \
+         type Shape = enum Circle(Radius: real); end enum; \
          var S: Shape := Shape.Circle(1.0, 2.0); \
          begin end.",
     );
@@ -179,7 +179,7 @@ fn enum_data_wrong_arg_count() {
 fn enum_data_wrong_arg_type() {
     check_errors(
         "program T; \
-         type Shape = enum Circle(Radius: real); end; \
+         type Shape = enum Circle(Radius: real); end enum; \
          var S: Shape := Shape.Circle('text'); \
          begin end.",
     );
@@ -214,7 +214,7 @@ fn type_alias_names_are_case_insensitive() {
 fn enum_variant_is_available_through_type_alias() {
     check_ok(
         "program T; \
-         type Color = enum Red; Green; end; \
+         type Color = enum Red; Green; end enum; \
          type PaletteColor = Color; \
          var C: PaletteColor := PaletteColor.Green; \
          begin end.",
@@ -256,7 +256,7 @@ fn value_name_cannot_be_used_as_type() {
 fn record_literal_field_names_are_case_insensitive() {
     check_ok(
         "program T; \
-         type Point = record X: integer; Y: integer; end; \
+         type Point = record X: integer; Y: integer; end record; \
          var P: Point := record x := 1; y := 2; end; \
          begin end.",
     );
@@ -289,7 +289,7 @@ fn anonymous_record_literal_rejects_case_only_duplicate_fields() {
 fn typed_record_literal_rejects_exact_duplicate_fields() {
     let errors = duplicate_record_field_errors(
         "program T; \
-         type Point = record X: integer; Y: integer; end; \
+         type Point = record X: integer; Y: integer; end record; \
          var P: Point := record X := 1; X := 2; Y := 3; end; \
          begin end.",
     );
@@ -300,7 +300,7 @@ fn typed_record_literal_rejects_exact_duplicate_fields() {
 fn typed_record_literal_rejects_case_only_duplicate_fields() {
     let errors = duplicate_record_field_errors(
         "program T; \
-         type Point = record X: integer; Y: integer; end; \
+         type Point = record X: integer; Y: integer; end record; \
          var P: Point := record X := 1; x := 2; Y := 3; end; \
          begin end.",
     );
@@ -311,7 +311,7 @@ fn typed_record_literal_rejects_case_only_duplicate_fields() {
 fn record_update_rejects_exact_duplicate_fields() {
     let errors = duplicate_record_field_errors(
         "program T; \
-         type Point = record X: integer; Y: integer; end; \
+         type Point = record X: integer; Y: integer; end record; \
          var P: Point := record X := 1; Y := 2; end; \
          var Q: Point := P with X := 3; X := 4; end; \
          begin end.",
@@ -323,7 +323,7 @@ fn record_update_rejects_exact_duplicate_fields() {
 fn record_update_rejects_case_only_duplicate_fields() {
     let errors = duplicate_record_field_errors(
         "program T; \
-         type Point = record X: integer; Y: integer; end; \
+         type Point = record X: integer; Y: integer; end record; \
          var P: Point := record X := 1; Y := 2; end; \
          var Q: Point := P with X := 3; x := 4; end; \
          begin end.",
@@ -335,7 +335,7 @@ fn record_update_rejects_case_only_duplicate_fields() {
 fn record_duplicate_field_rejected() {
     let errors = check_errors(
         "program T; \
-         type Point = record X: integer; x: integer; end; \
+         type Point = record X: integer; x: integer; end record; \
          begin end.",
     );
     assert!(
@@ -353,8 +353,8 @@ fn record_method_valid() {
          type Point = record \
            X: integer; Y: integer; \
            function Sum(Self: Point): integer; \
-           begin return Self.X + Self.Y; end; \
-         end; \
+           begin return Self.X + Self.Y; end function; \
+         end record; \
          begin \
            var P: Point := record X := 3; Y := 7; end; \
            WriteLn(P.Sum()); \
@@ -369,8 +369,8 @@ fn record_method_names_are_case_insensitive() {
                  type Point = record \
                      X: integer; \
                      function Sum(Self: Point): integer; \
-                     begin return Self.X; end; \
-                 end; \
+                     begin return Self.X; end function; \
+                 end record; \
                  begin \
                      var P: Point := record X := 3; end; \
                      WriteLn(P.sum()); \
@@ -385,10 +385,10 @@ fn record_duplicate_method_rejected() {
          type Point = record \
            X: integer; \
            function Sum(Self: Point): integer; \
-           begin return Self.X; end; \
+           begin return Self.X; end function; \
            function sum(Self: Point): integer; \
-           begin return Self.X; end; \
-         end; \
+           begin return Self.X; end function; \
+         end record; \
          begin end.",
     );
     assert!(
@@ -406,8 +406,8 @@ fn static_record_function_valid() {
          type Point = record \
            X: integer; Y: integer; \
            static function Create(X: integer; Y: integer): Point; \
-           begin return record X := X; Y := Y; end; end; \
-         end; \
+           begin return record X := X; Y := Y; end; end function; \
+         end record; \
          begin \
            var P: Point := Point.Create(3, 4); \
            WriteLn(P.X); \
@@ -422,8 +422,8 @@ fn static_record_function_case_insensitive() {
          type Point = record \
            X: integer; Y: integer; \
            static function Create(X: integer; Y: integer): Point; \
-           begin return record X := X; Y := Y; end; end; \
-         end; \
+           begin return record X := X; Y := Y; end; end function; \
+         end record; \
          begin \
            var P: Point := point.create(1, 2); \
            WriteLn(P.X); \
@@ -438,8 +438,8 @@ fn static_record_function_via_alias() {
          type Point = record \
            X: integer; Y: integer; \
            static function Create(X: integer; Y: integer): Point; \
-           begin return record X := X; Y := Y; end; end; \
-         end; \
+           begin return record X := X; Y := Y; end; end function; \
+         end record; \
          type Alias = Point; \
          begin \
            var P: Alias := Alias.Create(5, 6); \
@@ -455,8 +455,8 @@ fn static_call_through_value_rejected() {
          type Point = record \
            X: integer; Y: integer; \
            static function Create(X: integer; Y: integer): Point; \
-           begin return record X := X; Y := Y; end; end; \
-         end; \
+           begin return record X := X; Y := Y; end; end function; \
+         end record; \
          begin \
            var P: Point := record X := 0; Y := 0; end; \
            var Q: Point := P.Create(1, 2); \
@@ -478,8 +478,8 @@ fn instance_call_through_type_rejected() {
          type Point = record \
            X: integer; Y: integer; \
            function Sum(Self: Point): integer; \
-           begin return Self.X + Self.Y; end; \
-         end; \
+           begin return Self.X + Self.Y; end function; \
+         end record; \
          begin \
            var P: Point := record X := 1; Y := 2; end; \
            var N: integer := Point.Sum(P); \
@@ -501,10 +501,10 @@ fn static_and_instance_duplicate_name_rejected() {
          type Point = record \
            X: integer; \
            static function Sum(X: integer): integer; \
-           begin return X; end; \
+           begin return X; end function; \
            function Sum(Self: Point): integer; \
-           begin return Self.X; end; \
-         end; \
+           begin return Self.X; end function; \
+         end record; \
          begin end.",
     );
     assert!(
@@ -522,10 +522,10 @@ fn static_overload_attempt_rejected() {
          type Point = record \
            X: integer; \
            static function Create(X: integer): Point; \
-           begin return record X := X; end; end; \
+           begin return record X := X; end; end function; \
            static function Create(X: integer; Y: integer): Point; \
-           begin return record X := X; end; end; \
-         end; \
+           begin return record X := X; end; end function; \
+         end record; \
          begin end.",
     );
     assert!(
@@ -543,8 +543,8 @@ fn static_generic_function_valid() {
          type Box = record \
            Value: integer; \
            static function Wrap<T>(V: T): T; \
-           begin return V; end; \
-         end; \
+           begin return V; end function; \
+         end record; \
          begin \
            WriteLn(Box.Wrap(42)); \
          end.",
@@ -557,8 +557,8 @@ fn static_record_procedure_valid() {
         "program T; uses Std.Console; \
          type Counter = record \
            static procedure Print(Value: integer); \
-           begin WriteLn(Value); end; \
-         end; \
+           begin WriteLn(Value); end procedure; \
+         end record; \
          begin \
            Counter.Print(4); \
          end.",
@@ -571,8 +571,8 @@ fn static_record_procedure_via_alias() {
         "program T; \
          type Counter = record \
            static procedure Reset(Value: integer); \
-           begin end; \
-         end; \
+           begin end procedure; \
+         end record; \
          type Alias = Counter; \
          begin \
            Alias.Reset(4); \
@@ -586,8 +586,8 @@ fn static_procedure_call_through_value_rejected() {
         "program T; \
          type Counter = record \
            Value: integer; \
-           static procedure Reset(); begin end; \
-         end; \
+           static procedure Reset(); begin end procedure; \
+         end record; \
          begin \
            var Value: Counter := record Value := 1; end; \
            Value.Reset(); \
@@ -607,8 +607,8 @@ fn static_procedure_cannot_be_used_as_expression() {
     let errors = check_errors(
         "program T; \
          type Counter = record \
-           static procedure Reset(); begin end; \
-         end; \
+           static procedure Reset(); begin end procedure; \
+         end record; \
          begin var Value: integer := Counter.Reset(); end.",
     );
     assert!(

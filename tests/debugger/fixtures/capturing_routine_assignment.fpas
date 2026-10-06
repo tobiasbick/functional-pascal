@@ -9,51 +9,51 @@ type
     static function Transform(Value: integer): integer;
     begin
       return Value + 5;
-    end;
-  end;
+    end function;
+  end record;
   Stats = record
     static function Transform(Value: integer): integer;
     begin
       return Value + 6;
-    end;
-  end;
+    end function;
+  end record;
 
 function Identity(Value: integer): integer;
 begin
   return Value;
-end;
+end function;
 
 procedure Noop();
 begin
-end;
+end procedure;
 
 function MakeAdder(Base: integer): Handler;
 function AddBase(Value: integer): integer;
 begin
   return Base + Value;
-end;
+end function;
 begin
   mutable var Current: Handler := Identity;
   var MakeStop: integer := 0;
   return Current;
-end;
+end function;
 
 function Combine(Left: integer; Right: integer): Handler;
 function AddBoth(Value: integer): integer;
 begin
   return (Value + Left * 10) + Right;
-end;
+end function;
 begin
   mutable var Current: Handler := Identity;
   var CombineStop: integer := 0;
   return Current;
-end;
+end function;
 
 function Outer(Offset: integer): integer;
 function AddOffset(Value: integer): integer;
 begin
   return Value + Offset;
-end;
+end function;
 begin
   mutable var Current: Handler := Identity;
   begin
@@ -61,13 +61,13 @@ begin
     var ShadowStop: integer := 0;
     return Current(1);
   end;
-end;
+end function;
 
 function Walk(N: integer; Acc: integer): integer;
 function AddAcc(Value: integer): integer;
 begin
   return Value + Acc;
-end;
+end function;
 begin
   mutable var Current: Handler := Identity;
   var WalkStop: integer := 0;
@@ -79,20 +79,20 @@ begin
   begin
     return Walk(N - 1, Acc + 10);
   end;
-end;
+end function;
 
 function Mutating(): Handler;
 function AddCell(Value: integer): integer;
 begin
   Cell := Cell + 1;
   return Value + Cell;
-end;
+end function;
 begin
   mutable var Cell: integer := 1;
   mutable var Current: Handler := Identity;
   var CellStop: integer := 0;
   return Current;
-end;
+end function;
 
 function OuterCell(): Handler;
 function Mid(): Handler;
@@ -100,53 +100,53 @@ function AddEnclosed(Value: integer): integer;
 begin
   Cell := Cell + 1;
   return Value + Cell;
-end;
+end function;
 begin
   var Keep: integer := Cell;
   mutable var Current: Handler := Identity;
   var EnclosingStop: integer := 0;
   return Current;
-end;
+end function;
 begin
   mutable var Cell: integer := 1;
   return Mid();
-end;
+end function;
 
 function LateInit(): integer;
 function AddLate(Value: integer): integer;
 begin
   return Value + Offset;
-end;
+end function;
 begin
   mutable var Current: Handler := Identity;
   var LateStop: integer := 0;
   var Offset: integer := 7;
   var LateReady: integer := 0;
   return Current(1);
-end;
+end function;
 
 function Worker(Base: integer): integer;
 function AddWorker(Value: integer): integer;
 begin
   return Base + Value;
-end;
+end function;
 begin
   mutable var Current: Handler := Identity;
   var WorkerStop: integer := 0;
   return Current(1);
-end;
+end function;
 
 function HoldTask(Pending: task): Handler;
 function IgnorePending(Value: integer): integer;
 begin
   var Keep: task := Pending;
   return Value;
-end;
+end function;
 begin
   mutable var Current: Handler := Identity;
   var TaskStop: integer := 0;
   return Current;
-end;
+end function;
 
 begin
   mutable var Current: Handler := Identity;

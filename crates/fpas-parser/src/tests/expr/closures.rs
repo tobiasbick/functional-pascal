@@ -37,7 +37,7 @@ begin
   begin
     return 1;
   end;
-end;
+end function;
 begin
 end.",
     );

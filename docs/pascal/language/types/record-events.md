@@ -31,7 +31,7 @@ type
     procedure WriteOnClick(Self: Button; Handler: Option of ClickHandler);
 
     event OnClick: ClickHandler read ReadOnClick write WriteOnClick;
-  end;
+  end procedure;
 ```
 
 Rules:

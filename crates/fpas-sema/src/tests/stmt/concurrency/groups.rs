@@ -29,7 +29,7 @@ fn group_operations_reject_wrong_handles_and_worker_signatures() {
         "StartTaskInGroup(G, function(T: CancellationToken): result of integer, integer begin return Error(1); end)",
     ] {
         let source = format!(
-            "program T; uses Std.Tasks; procedure Work(Token: CancellationToken); begin end; begin var G: TaskGroup := CreateTaskGroup(); {call}; end."
+            "program T; uses Std.Tasks; procedure Work(Token: CancellationToken); begin end procedure; begin var G: TaskGroup := CreateTaskGroup(); {call}; end."
         );
         assert!(
             !check_errors(&source).is_empty(),
@@ -62,9 +62,9 @@ fn group_worker_preserves_unit_value_and_result_task_types() {
     check_ok(
         r#"program T;
 uses Std.Tasks;
-procedure NoValue(Token: CancellationToken); begin end;
-function Number(Token: CancellationToken): integer; begin return 42; end;
-function Outcome(Token: CancellationToken): result of integer, string; begin return Error('failed'); end;
+procedure NoValue(Token: CancellationToken); begin end procedure;
+function Number(Token: CancellationToken): integer; begin return 42; end function;
+function Outcome(Token: CancellationToken): result of integer, string; begin return Error('failed'); end function;
 begin
   var G: TaskGroup := CreateTaskGroup();
   var A: task := StartTaskInGroup(G, NoValue);
@@ -83,7 +83,7 @@ fn group_worker_does_not_erase_its_result_type() {
     let errors = check_errors(
         r#"program T;
 uses Std.Tasks;
-function Work(Token: CancellationToken): integer; begin return 7; end;
+function Work(Token: CancellationToken): integer; begin return 7; end function;
 begin
   var G: TaskGroup := CreateTaskGroup();
   var Child: task := StartTaskInGroup(G, Work);

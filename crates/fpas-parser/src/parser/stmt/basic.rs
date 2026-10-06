@@ -4,11 +4,21 @@ use fpas_diagnostics::codes::PARSE_INVALID_CALL_OR_ASSIGNMENT_FORM;
 use fpas_lexer::Token;
 
 impl Parser {
+    /// Parses a scoped block while preserving an enclosing declaration ending.
     pub(super) fn parse_block(&mut self) -> Stmt {
         let start = self.current_span();
         self.advance();
         let stmts = self.parse_statement_list();
-        self.expect(&Token::End);
+        if self.at_enclosing_declaration_end() {
+            self.error_with_code(
+                fpas_diagnostics::codes::PARSE_EXPECTED_TOKEN,
+                "Expected `end;` before the enclosing declaration ending",
+                "Close this scoped `begin` block with `end;` before the named declaration ending.",
+                self.current_span(),
+            );
+        } else {
+            self.expect(&Token::End);
+        }
         Stmt::Block(stmts, self.span_from(start))
     }
 

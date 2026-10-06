@@ -41,7 +41,7 @@ type JsonValue = enum
   String(Value: string);
   ArrayValue(Items: array of JsonValue);
   Object(Fields: dict of string to JsonValue);
-end;
+end enum;
 ```
 
 JSON `null` maps to `JsonValue.NullValue`. The constructor has no fields and

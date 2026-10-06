@@ -7,12 +7,12 @@ type
     Host: string := 'localhost';
     Port: integer := 8080;
     Retries: integer := 3;
-  end;
+  end record;
 
 function ShowConfig(Value: Config): string;
 begin
   return (((Value.Host + ':') + IntToStr(Value.Port)) + ' retries=') + IntToStr(Value.Retries);
-end;
+end function;
 
 begin
   var DefaultConfig: Config := record end;

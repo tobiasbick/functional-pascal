@@ -82,7 +82,7 @@ fn open_unit_overlay_invalidates_cached_project_analysis_and_disk_is_unchanged()
         .open_document(
             &unit,
             1,
-            "unit Demo.Math;\n\npublic function Answer(): integer;\nbegin\n  return 'wrong';\nend;\n",
+            "unit Demo.Math;\n\npublic function Answer(): integer;\nbegin\n  return 'wrong';\nend function;\nend unit;\n",
         )
         .expect("overlay opened");
     let invalid = service
@@ -101,7 +101,7 @@ fn open_unit_overlay_invalidates_cached_project_analysis_and_disk_is_unchanged()
         .apply_full_text(
             &unit,
             2,
-            "unit Demo.Math;\n\npublic function Answer(): integer;\nbegin\n  return 7;\nend;\n",
+            "unit Demo.Math;\n\npublic function Answer(): integer;\nbegin\n  return 7;\nend function;\nend unit;\n",
         )
         .expect("newer overlay applied");
     let fixed = service
@@ -171,11 +171,11 @@ fn workspace_symbol_index_preserves_same_short_name_from_two_units() {
     let temp = TempDirectory::new("analysis-symbols");
     let first_path = temp.write(
         "first.fpas",
-        "unit Demo.First;\n\npublic function Create(): integer;\nbegin\n  return 1;\nend;\n",
+        "unit Demo.First;\n\npublic function Create(): integer;\nbegin\n  return 1;\nend function;\nend unit;\n",
     );
     let second_path = temp.write(
         "second.fpas",
-        "unit Demo.Second;\n\npublic function Create(): integer;\nbegin\n  return 2;\nend;\n",
+        "unit Demo.Second;\n\npublic function Create(): integer;\nbegin\n  return 2;\nend function;\nend unit;\n",
     );
     let mut store = DocumentStore::new();
     let first = store.snapshot(&first_path).expect("first snapshot");
@@ -214,7 +214,7 @@ include = ["src/**/*.fpas"]
     );
     temp.write(
         "lib/src/math.fpas",
-        "unit Demo.Math;\n\npublic function Answer(): integer;\nbegin\n  return 42;\nend;\n",
+        "unit Demo.Math;\n\npublic function Answer(): integer;\nbegin\n  return 42;\nend function;\nend unit;\n",
     );
     temp.write(
         "app/app.fpasprj",
@@ -251,7 +251,11 @@ fn malformed_project_unit_returns_structured_analysis_error_for_valid_main() {
     let mut service = LanguageService::load(&manifest);
     service
         .documents_mut()
-        .open_document(&unit, 1, "unit Demo.Math;\npublic function Answer(")
+        .open_document(
+            &unit,
+            1,
+            "unit Demo.Math;\npublic function Answer(\nend unit;",
+        )
         .expect("malformed unit overlay");
 
     let error = service
@@ -305,7 +309,7 @@ fn diagnostic_analysis_stays_current_when_a_sibling_source_vanishes() {
 
     temp.write(
         "src/math.fpas",
-        "unit Demo.Math;\n\npublic function Answer(): integer;\nbegin\n  return 42;\nend;\n",
+        "unit Demo.Math;\n\npublic function Answer(): integer;\nbegin\n  return 42;\nend function;\nend unit;\n",
     );
     service
         .documents_mut()

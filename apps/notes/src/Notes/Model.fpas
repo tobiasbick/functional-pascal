@@ -14,22 +14,22 @@ public type
     public Archived: boolean;
     public Body: string;
     public Path: string;
-  end;
+  end record;
   // One note file that could not be read or parsed.
   NoteIssue = record
     public Path: string;
     public Message: string;
-  end;
+  end record;
   // Complete result of loading one notes directory.
   NotesLoad = record
     public Notes: array of Note;
     public Issues: array of NoteIssue;
-  end;
+  end record;
   // Visible pane in a narrow terminal.
   NotesPane = enum
     List;
     Editor;
-  end;
+  end enum;
   // Active modal layer, if any.
   NotesOverlay = enum
     Closed;
@@ -37,7 +37,7 @@ public type
     Help;
     QuitConfirmation;
     SaveFailure;
-  end;
+  end enum;
   // Complete immutable application state supplied to the MVU view.
   NotesModel = record
     public Directory: string;
@@ -59,7 +59,7 @@ public type
     public ErrorMessage: string;
     public Width: integer;
     public Height: integer;
-  end;
+  end record;
 
 // Creates a new unsaved note with stable identity and timestamps.
 public function NoteCreate(Id: string; TimestampMillis: integer): Note;
@@ -75,7 +75,7 @@ begin
     Body := '';
     Path := '';
   end;
-end;
+end function;
 
 // Creates initial application state from a directory load result.
 public function NotesModelCreate(Directory: string; Loaded: NotesLoad): NotesModel;
@@ -123,13 +123,13 @@ begin
     Width := 100;
     Height := 30;
   end;
-end;
+end function;
 
 // Formats a note's tags for the controlled metadata input.
 public function NoteTagsText(NoteValue: Note): string;
 begin
   return Std.Str.Join(NoteValue.Tags, ', ');
-end;
+end function;
 
 // Parses, trims, and deduplicates comma-separated tags.
 public function NoteTagsFromText(Text: string): array of string;
@@ -146,7 +146,7 @@ begin
   end;
 
   return Tags;
-end;
+end function;
 
 // Reports whether an active note matches a case-insensitive query.
 public function NoteMatches(NoteValue: Note; Search: string): boolean;
@@ -164,7 +164,7 @@ begin
 
   return (Std.Str.Contains(Std.Str.ToLower(NoteValue.Title), Query) or Std.Str.Contains(Std.Str.ToLower(NoteValue.Body), Query)) or
          Std.Str.Contains(Std.Str.ToLower(NoteTagsText(NoteValue)), Query);
-end;
+end function;
 
 // Returns source-array indices for all visible filtered notes.
 public function NotesFilteredIndices(Notes: array of Note; Search: string): array of integer;
@@ -179,7 +179,7 @@ begin
   end;
 
   return Indices;
-end;
+end function;
 
 function ClipListText(Text: string; MaximumWidth: integer): string;
 begin
@@ -213,7 +213,7 @@ begin
   end;
 
   return Clipped;
-end;
+end function;
 
 // Builds width-bounded list labels for all visible filtered notes.
 public function NotesListItems(Notes: array of Note; Search: string; MaximumWidth: integer): array of string;
@@ -238,4 +238,5 @@ begin
   end;
 
   return Items;
-end;
+end function;
+end unit;

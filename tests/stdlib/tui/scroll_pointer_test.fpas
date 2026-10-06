@@ -6,12 +6,12 @@ type
   ScrollModel = record
     Focus: integer;
     Offset: TuiPoint;
-  end;
+  end record;
 
 function MakeDownPointer(X: integer; Y: integer): TuiPointerEvent;
 begin
   return TuiPointerEvent.Create(TuiPointerAction.Down, TuiPointerButton.Left, TuiPoint.Create(X, Y));
-end;
+end function;
 
 function MakeKey(Kind: TuiKeyKind): TuiKeyEvent;
 begin
@@ -23,7 +23,7 @@ begin
     alt := false;
     meta := false;
   end;
-end;
+end function;
 
 function ViewScroll(State: ScrollModel): TuiElement;
 begin
@@ -41,7 +41,7 @@ begin
                                                                                                                                                                             TuiElementBuilders.MakeLabel('Four')
                                                                                                                                                                           ]))
                                                  ]);
-end;
+end function;
 
 function UpdateScroll(State: ScrollModel; Msg: TuiMsg; Cmd: TuiCmdOutput): ScrollModel;
 begin
@@ -75,7 +75,7 @@ begin
       return State;
     end;
   end;
-end;
+end function;
 
 begin
   mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(12, 2));

@@ -35,7 +35,7 @@ fn run_file_expect_failure(rel_path: &str, stderr_contains: Option<&str>) {
 fn record_update_requires_separator_between_fields() {
     let (exit_code, _stdout, stderr) = support::run_source_and_capture_output(
         "record_update_missing_separator.fpas",
-        "program T; type Point = record X: integer; Y: integer; end; \
+        "program T; type Point = record X: integer; Y: integer; end record; \
          begin var P: Point := record X := 1; Y := 2; end; \
          var Q: Point := P with X := 3 Y := 4; end; end.",
     );

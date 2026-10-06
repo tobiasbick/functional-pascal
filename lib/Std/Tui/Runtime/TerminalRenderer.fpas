@@ -20,7 +20,7 @@ begin
       return RgbColor(Color.Red, Color.Green, Color.Blue);
     end;
   end;
-end;
+end function;
 
 function TuiCellToConsole(Cell: TuiCell; Palette: TuiPalette): Std.Console.Cell;
 begin
@@ -40,7 +40,7 @@ begin
     foreground := TuiColorToConsole(Style.Foreground);
     background := TuiColorToConsole(Style.Background);
   end;
-end;
+end function;
 
 function TuiTerminalDamageRow(Damage: TuiSurfaceDamage; Palette: TuiPalette): array of Std.Console.Cell;
 begin
@@ -51,7 +51,7 @@ begin
   end;
 
   return Row;
-end;
+end function;
 
 // Flushes the current working surface through the Console frame API.
 //
@@ -80,4 +80,5 @@ begin
   end;
 
   Present();
-end;
+end procedure;
+end unit;

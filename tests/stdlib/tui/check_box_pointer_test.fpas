@@ -7,12 +7,12 @@ type
     Focus: integer;
     Checked: boolean;
     Changes: array of boolean;
-  end;
+  end record;
 
 function MakePointer(X: integer; Y: integer): TuiPointerEvent;
 begin
   return TuiPointerEvent.Create(TuiPointerAction.Down, TuiPointerButton.Left, TuiPoint.Create(X, Y));
-end;
+end function;
 
 function FindGlyph(Snapshot: TuiSurfaceSnapshot; Glyph: string): TuiPoint;
 begin
@@ -27,7 +27,7 @@ begin
   end;
 
   panic('glyph not found in snapshot');
-end;
+end function;
 
 function ViewCheck(State: CheckModel): TuiElement;
 begin
@@ -39,7 +39,7 @@ begin
                                                                                                                                                        ])
                                                                                                                        ])
                                                                                 ]);
-end;
+end function;
 
 function UpdateCheck(State: CheckModel; Msg: TuiMsg; Cmd: TuiCmdOutput): CheckModel;
 begin
@@ -77,7 +77,7 @@ begin
       return State;
     end;
   end;
-end;
+end function;
 
 begin
   mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 8));

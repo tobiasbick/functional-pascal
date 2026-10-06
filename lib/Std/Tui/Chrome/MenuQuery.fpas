@@ -23,7 +23,7 @@ begin
       return Id;
     end;
   end;
-end;
+end function;
 
 // Returns a menu node's parent.
 //
@@ -45,7 +45,7 @@ begin
       return Parent;
     end;
   end;
-end;
+end function;
 
 // Returns a menu node's label, or an empty string for a separator.
 //
@@ -67,7 +67,7 @@ begin
       return '';
     end;
   end;
-end;
+end function;
 
 // Returns a menu node's mnemonic, or an empty string for a separator.
 //
@@ -89,7 +89,7 @@ begin
       return '';
     end;
   end;
-end;
+end function;
 
 // Reports whether a node can be selected.
 //
@@ -111,7 +111,7 @@ begin
       return false;
     end;
   end;
-end;
+end function;
 
 // Reports whether a node opens a child menu.
 //
@@ -133,7 +133,7 @@ begin
       return false;
     end;
   end;
-end;
+end function;
 
 // Returns a command action when the node is a command.
 //
@@ -155,7 +155,7 @@ begin
       return None;
     end;
   end;
-end;
+end function;
 
 // Returns a command shortcut when present.
 //
@@ -177,7 +177,7 @@ begin
       return None;
     end;
   end;
-end;
+end function;
 
 // Finds a node index by identity, or returns `-1`.
 //
@@ -195,7 +195,7 @@ begin
   end;
 
   return -1;
-end;
+end function;
 
 // Reports whether a node has the supplied parent.
 //
@@ -232,7 +232,7 @@ begin
       end;
     end;
   end;
-end;
+end function;
 
 // Returns the first selectable child of a parent.
 //
@@ -250,7 +250,7 @@ begin
   end;
 
   return None;
-end;
+end function;
 
 // Returns the next selectable sibling, wrapping in the requested direction.
 //
@@ -303,7 +303,7 @@ begin
   end;
 
   return Some(Siblings[Position]);
-end;
+end function;
 
 // Returns the root ancestor of one node.
 //
@@ -336,4 +336,5 @@ begin
   end;
 
   return None;
-end;
+end function;
+end unit;

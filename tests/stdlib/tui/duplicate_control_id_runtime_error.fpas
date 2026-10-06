@@ -5,7 +5,7 @@ uses Std.Tui;
 function Update(State: integer; Msg: TuiMsg; Cmd: TuiCmdOutput): integer;
 begin
   return State;
-end;
+end function;
 
 function View(State: integer): TuiElement;
 begin
@@ -15,7 +15,7 @@ begin
                                       TuiElementBuilders.MakeButton(Id, 'First', Action),
                                       TuiElementBuilders.MakeButton(Id, 'Second', Action)
                                     ]);
-end;
+end function;
 
 begin
   mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(20, 4));

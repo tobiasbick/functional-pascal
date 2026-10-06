@@ -18,7 +18,7 @@ begin
   end;
 
   return Some(Controls[0]);
-end;
+end function;
 
 // Returns `Preferred` when it is focusable in the active tree; otherwise the first focusable id.
 //
@@ -47,7 +47,7 @@ begin
   end;
 
   return Some(Controls[0]);
-end;
+end function;
 
 // Reports whether the root's unconstrained minimum fits the available terminal size.
 //
@@ -58,4 +58,5 @@ public function TuiLayoutFitFor(Root: TuiElement; Available: TuiSize): TuiLayout
 begin
   var Measured: TuiMeasureResult := TuiMeasure(Root, TuiMeasureSpec.Unbounded());
   return TuiLayoutFit.Create(Measured.Minimum, Available);
-end;
+end function;
+end unit;

@@ -10,7 +10,7 @@ public type
     public Mode: integer;
     // Bytes remaining for fixed-length framing.
     public Remaining: integer;
-  end;
+  end record;
 
 // Selects one unambiguous HTTP message-body framing mode.
 //
@@ -86,4 +86,5 @@ begin
     Mode := 3;
     Remaining := 0;
   end);
-end;
+end function;
+end unit;

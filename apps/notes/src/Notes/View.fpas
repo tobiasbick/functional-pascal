@@ -5,7 +5,7 @@ uses Notes.Actions, Notes.Model, Notes.Update, Std.Arrays, Std.Conv, Std.Options
 function Expanding(Child: TuiElement; Stretch: integer): TuiElement;
 begin
   return TuiElementBuilders.MakeLayout(TuiLayoutSettings.Create(TuiMargins.Uniform(0), TuiSizePolicy.Expanding(), TuiAlignment.Fill(), Stretch), Child);
-end;
+end function;
 
 function SidebarWidth(State: NotesModel): integer;
 begin
@@ -21,7 +21,7 @@ begin
   end;
 
   return Width;
-end;
+end function;
 
 function ListPaneWidth(State: NotesModel): integer;
 begin
@@ -31,13 +31,13 @@ begin
   end;
 
   return SidebarWidth(State);
-end;
+end function;
 
 function FixedWidthExpanding(Child: TuiElement; Width: integer): TuiElement;
 begin
   return TuiElementBuilders.MakeLayout(TuiLayoutSettings.Create(TuiMargins.Uniform(0), TuiSizePolicy.Create(TuiSizePolicyKind.Preferred, TuiSizePolicyKind.Expanding), TuiAlignment.Fill(), 0)
                                          .WithFixedWidth(Width), Child);
-end;
+end function;
 
 function Header(State: NotesModel): TuiElement;
 begin
@@ -55,7 +55,7 @@ begin
 
   return TuiElementBuilders.MakeRule(((((' NOTES  ·  ' + IntToStr(Std.Arrays.Length(NotesFilteredIndices(State.Notes, '')))) + ' active') + Issues) + Dirty) +
                                      '  ·  Ctrl+K commands ');
-end;
+end function;
 
 function ListPane(State: NotesModel): TuiElement;
 begin
@@ -67,7 +67,7 @@ begin
                                                  TuiElementBuilders.MakeRule(''),
                                                  Expanding(NotesList, 1)
                                                ]);
-end;
+end function;
 
 function EmptyEditor(): TuiElement;
 begin
@@ -75,7 +75,7 @@ begin
                                                   TuiElementBuilders.MakeLabel('No note selected'),
                                                   TuiElementBuilders.MakeLabel('Press Ctrl+N to create one.')
                                                 ]);
-end;
+end function;
 
 function EditorPane(State: NotesModel): TuiElement;
 begin
@@ -99,7 +99,7 @@ begin
                                                         TuiElementBuilders.MakeRule('Markdown'),
                                                         Expanding(Body, 1)
                                                       ]);
-end;
+end function;
 
 function MainContent(State: NotesModel): TuiElement;
 begin
@@ -117,7 +117,7 @@ begin
                                       FixedWidthExpanding(ListPane(State), SidebarWidth(State)),
                                       Expanding(EditorPane(State), 1)
                                     ]);
-end;
+end function;
 
 function Status(State: NotesModel): TuiElement;
 begin
@@ -129,7 +129,7 @@ begin
                                              TuiStatusItemBuilders.MakeKeyHint('Ctrl+1/2', 'panes'),
                                              TuiStatusItemBuilders.MakeKeyHint('F1', 'help')
                                            ]);
-end;
+end function;
 
 function CommandOverlay(State: NotesModel): TuiElement;
 begin
@@ -154,7 +154,7 @@ begin
                                                       TuiElementBuilders.MakeButton(TuiControlId.Create(HelpControl), 'Help', TuiAction.Create(HelpAction)),
                                                       TuiElementBuilders.MakeDefaultButton(TuiControlId.Create(CommandsCloseControl), 'Close', 'C', TuiAction.Create(CloseOverlayAction))
                                                     ]);
-end;
+end function;
 
 function HelpOverlay(): TuiElement;
 begin
@@ -172,7 +172,7 @@ begin
                                                            TuiElementBuilders.MakeLabel('Esc     Close an overlay'),
                                                            TuiElementBuilders.MakeDefaultButton(TuiControlId.Create(HelpCloseControl), 'Close', 'C', TuiAction.Create(CloseOverlayAction))
                                                          ]);
-end;
+end function;
 
 function QuitOverlay(): TuiElement;
 begin
@@ -182,7 +182,7 @@ begin
                                                              TuiElementBuilders.MakeButtonWithMnemonic(TuiControlId.Create(DiscardAndQuitControl), 'Discard', 'D', TuiAction.Create(DiscardAndQuitAction)),
                                                              TuiElementBuilders.MakeButtonWithMnemonic(TuiControlId.Create(CancelQuitControl), 'Cancel', 'C', TuiAction.Create(CloseOverlayAction))
                                                            ]);
-end;
+end function;
 
 function ErrorOverlay(State: NotesModel): TuiElement;
 begin
@@ -190,7 +190,7 @@ begin
                                                                  TuiElementBuilders.MakeLabel(State.ErrorMessage),
                                                                  TuiElementBuilders.MakeDefaultButton(TuiControlId.Create(ErrorCloseControl), 'Close', 'C', TuiAction.Create(CloseOverlayAction))
                                                                ]);
-end;
+end function;
 
 function Overlay(State: NotesModel): TuiElement;
 begin
@@ -216,7 +216,7 @@ begin
       return TuiElementBuilders.MakeEmpty();
     end;
   end;
-end;
+end function;
 
 function MainFocus(State: NotesModel): integer;
 begin
@@ -262,7 +262,7 @@ begin
   end;
 
   return SearchControl;
-end;
+end function;
 
 function OverlayFocus(State: NotesModel): integer;
 begin
@@ -305,7 +305,7 @@ begin
       return MainFocus(State);
     end;
   end;
-end;
+end function;
 
 // Builds the responsive Notes element tree for one model state.
 public function NotesView(State: NotesModel): TuiElement;
@@ -328,4 +328,5 @@ begin
   end;
 
   return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(OverlayFocus(State))), Children);
-end;
+end function;
+end unit;

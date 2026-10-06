@@ -14,17 +14,17 @@ const
 function Double(Value: integer): integer;
 begin
   return Value * 2;
-end;
+end function;
 
 function IsEven(Value: integer): boolean;
 begin
   return Value mod 2 = 0;
-end;
+end function;
 
 function Sum(Acc: integer; Value: integer): integer;
 begin
   return Acc + Value;
-end;
+end function;
 
 function MakeValues(): array of integer;
 begin
@@ -35,7 +35,7 @@ begin
   end;
 
   return Values;
-end;
+end function;
 
 function RunCallbacks(Values: array of integer; Iterations: integer): integer;
 begin
@@ -48,7 +48,7 @@ begin
   end;
 
   return Total;
-end;
+end function;
 
 begin
   if (ParamCount() < 1) or (ParamCount() > 2) then

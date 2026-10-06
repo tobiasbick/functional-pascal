@@ -7,4 +7,5 @@ uses Demo.Greet.Internal;
 public function Message(): string;
 begin
   return GreetingText();
-end;
+end function;
+end unit;

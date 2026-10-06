@@ -9,7 +9,7 @@ type
     Started: channel of boolean;
     FailOld: boolean;
     Failures: integer;
-  end;
+  end record;
 
 function Update(State: PendingModel; Msg: TuiMsg; Cmd: TuiCmdOutput): PendingModel;
 begin
@@ -61,17 +61,17 @@ begin
   end;
 
   return State;
-end;
+end function;
 
 function UpdateMessage(State: PendingModel; Message: integer; Cmd: TuiCmdOutput): PendingModel;
 begin
   return State;
-end;
+end function;
 
 function View(State: PendingModel): TuiElement;
 begin
   return TuiElementBuilders.MakeLabel('pending cancellation');
-end;
+end function;
 
 begin
   var Inbox: channel of integer := CreateChannel(1);

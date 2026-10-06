@@ -10,7 +10,7 @@ type
   Bag = record
     Items: array of integer;
     Names: array of string;
-  end;
+  end record;
 begin
   var Full: Bag := record Items := [1, 2, 3]; Names := ['a']; end;
   var Emptied: Bag := Full with Items := []; end;
@@ -34,14 +34,14 @@ type
   Point = record
     X: integer;
     Y: integer;
-  end;
+  end record;
   Holder = record
     Tags: dict of string to integer;
     Origin: Point;
     Label: option of string;
     Grid: array of array of integer;
     Scores: dict of string to array of integer;
-  end;
+  end record;
 begin
   var Full: Holder := record
     Tags := ['a': 1];
@@ -76,7 +76,7 @@ uses Std.Arrays, Std.Dictionaries, Std.Options, Std.Results;
 type Holder = record
   Values: option of array of integer;
   Lookup: result of dict of string to integer, string;
-end;
+end record;
 begin
   var Original: Holder := record
     Values := Some([1]);

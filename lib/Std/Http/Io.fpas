@@ -9,7 +9,7 @@ begin
   return Std.Arrays.FlatMap(Chunks, function(Chunk: array of integer): array of integer begin
     return Chunk;
   end);
-end;
+end function;
 
 // Reads within the remaining response budget, probing only for EOF at its boundary.
 public function ReadResponseBytes(Connection: Std.Net.Connection; Available: integer): result of array of integer, string;
@@ -44,7 +44,7 @@ begin
       return Error(Message);
     end;
   end;
-end;
+end function;
 
 // Writes every byte or reports when the connection stops making progress.
 //
@@ -80,4 +80,5 @@ begin
   end;
 
   return Ok(true);
-end;
+end function;
+end unit;

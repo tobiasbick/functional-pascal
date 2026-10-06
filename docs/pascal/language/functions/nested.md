@@ -8,11 +8,11 @@ function Hypotenuse(A: real; B: real): real;
   function Square(X: real): real;
   begin
     return X * X;
-  end;
+  end function;
 
 begin
   return Sqrt(Square(A) + Square(B));
-end;
+end function;
 ```
 
 ## Mutual recursion
@@ -27,13 +27,13 @@ function IsEven(N: integer): boolean;
       return false;
     else
       return IsEven(X - 1);
-  end;
+  end function;
 begin
   if N = 0 then
     return true;
   else
     return IsOdd(N - 1);
-end;
+end function;
 ```
 
 Nested routines that escape as first-class values capture their enclosing environment.

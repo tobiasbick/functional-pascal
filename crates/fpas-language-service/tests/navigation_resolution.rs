@@ -17,15 +17,15 @@ fn repeated_member_names_resolve_each_chain_component() {
 
 type Leaf = record
   public Value: integer;
-end;
+end record;
 
 type Branch = record
   public Child: Leaf;
-end;
+end record;
 
 type RootType = record
   public Child: Branch;
-end;
+end record;
 
 var Root: RootType;
 
@@ -80,11 +80,11 @@ fn hierarchical_unit_resolution_is_independent_of_source_and_uses_order() {
         let manifest = project_manifest(&temp);
         temp.write(
             a_path,
-            "unit A;\n\npublic function Other(): integer;\nbegin return 1; end;\n",
+            "unit A;\n\npublic function Other(): integer;\nbegin return 1; end function;\nend unit;\n",
         );
         let ab = temp.write(
             ab_path,
-            "unit A.B;\n\npublic function Target(): integer;\nbegin return 2; end;\n",
+            "unit A.B;\n\npublic function Target(): integer;\nbegin return 2; end function;\nend unit;\n",
         );
         let main_source = format!(
             "program App;\n\nuses {uses};\n\nbegin\n  var Value: integer := A.B.Target();\nend.\n"
@@ -107,9 +107,12 @@ fn genuinely_ambiguous_qualified_candidates_do_not_pick_source_order() {
     let manifest = project_manifest(&temp);
     temp.write(
         "src/a.fpas",
-        "unit A;\n\npublic type B = record\n  public C: integer;\nend;\n",
+        "unit A;\n\npublic type B = record\n  public C: integer;\nend record;\nend unit;\n",
     );
-    temp.write("src/ab.fpas", "unit A.B;\n\npublic var C: integer := 1;\n");
+    temp.write(
+        "src/ab.fpas",
+        "unit A.B;\n\npublic var C: integer := 1;\nend unit;\n",
+    );
     let main_source =
         "program App;\n\nuses A, A.B;\n\nbegin\n  var Value: integer := A.B.C;\nend.\n";
     let main = temp.write("src/main.fpas", main_source);

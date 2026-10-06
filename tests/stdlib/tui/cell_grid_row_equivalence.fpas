@@ -38,7 +38,7 @@ begin
     AssertEquals(Expected.Snapshot().CellAt(X, 0).Glyph, Actual.Snapshot().CellAt(X, 0).Glyph);
     AssertTrue(Expected.Snapshot().CellAt(X, 0).Role = Actual.Snapshot().CellAt(X, 0).Role);
   end;
-end;
+end procedure;
 
 begin
   var Expected: TuiWorkingSurface := TuiWorkingSurface.Create(TuiSize.Create(7, 1));

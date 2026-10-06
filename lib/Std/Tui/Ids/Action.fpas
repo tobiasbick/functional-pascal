@@ -8,7 +8,7 @@ begin
   end;
 
   return Value;
-end;
+end function;
 
 public type
   // Positive application-intent identity; duplicates across controls are allowed.
@@ -25,5 +25,6 @@ public type
       return record
         Value := TuiActionRequirePositive(Value);
       end;
-    end;
-  end;
+    end function;
+  end record;
+end unit;

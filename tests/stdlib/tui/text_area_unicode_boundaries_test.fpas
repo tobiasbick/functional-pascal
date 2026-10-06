@@ -6,20 +6,20 @@ type
   Model = record
     Text: string;
     Caret: integer;
-  end;
+  end record;
 
 function View(State: Model): TuiElement;
 begin
   return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(1)), [
                                                                         TuiElementBuilders.MakeTextArea(TuiControlId.Create(1), State.Text, State.Caret, TuiPoint.Create(0, 0), TuiAction.Create(1))
                                                                       ]);
-end;
+end function;
 
 function Update(State: Model; Msg: TuiMsg; Cmd: TuiCmdOutput): Model;
 begin
   Cmd.Set(TuiCmd.NoCommand);
   return State;
-end;
+end function;
 
 procedure CheckCaret(App: TuiApplication; Text: string; Caret: integer; X: integer; Y: integer);
 begin
@@ -28,7 +28,7 @@ begin
     Caret := Caret;
   end, Update, View, 0, 0);
   AssertTrue(App.SurfaceSnapshot().CellAt(X, Y).Role = TuiStyleRole.Focused);
-end;
+end procedure;
 
 begin
   var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(8, 4));

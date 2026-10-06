@@ -32,7 +32,7 @@ begin
   end;
 
   return Index;
-end;
+end function;
 
 function TuiInputNextWord(Text: string; Caret: integer): integer;
 begin
@@ -62,7 +62,7 @@ begin
   end;
 
   return Index;
-end;
+end function;
 
 function TuiInputHistoryIndex(Input: TuiInputSpec): integer;
 begin
@@ -80,7 +80,7 @@ begin
   end;
 
   return -1;
-end;
+end function;
 
 function TuiInputHistoryKey(Input: TuiInputSpec; Key: Std.Console.KeyEvent): option of TuiMsg;
 begin
@@ -123,7 +123,7 @@ begin
   end;
 
   return None;
-end;
+end function;
 
 // Routes one key when the supplied input owns focus.
 //
@@ -213,4 +213,5 @@ begin
   end;
 
   return None;
-end;
+end function;
+end unit;

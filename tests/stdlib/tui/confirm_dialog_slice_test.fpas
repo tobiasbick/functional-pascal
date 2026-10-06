@@ -20,7 +20,7 @@ type
     ConfirmOpen: boolean;
     Saved: boolean;
     Quit: boolean;
-  end;
+  end record;
 
 function EditorState(
   State: EditorModel;
@@ -40,7 +40,7 @@ begin
     Saved := Saved;
     Quit := Quit;
   end;
-end;
+end function;
 
 function UpdateEditor(State: EditorModel; Msg: TuiMsg; Cmd: TuiCmdOutput): EditorModel;
 begin
@@ -134,7 +134,7 @@ begin
       return State;
     end;
   end;
-end;
+end function;
 
 function ViewEditor(State: EditorModel): TuiElement;
 begin
@@ -160,7 +160,7 @@ begin
                                                                                                                            ]),
                                                                                     Overlay
                                                                                   ]);
-end;
+end function;
 
 function MakeKey(Kind: TuiKeyKind; Character: string): TuiKeyEvent;
 begin
@@ -172,7 +172,7 @@ begin
     alt := false;
     meta := false;
   end;
-end;
+end function;
 
 begin
   var Initial: EditorModel := record

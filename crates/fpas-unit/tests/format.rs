@@ -15,7 +15,7 @@ fn compiled_unit() -> CompiledUnit {
     CompiledUnit {
         identity: UnitIdentity {
             unit_name: "demo.core".to_string(),
-            source_hash: Digest::of(b"unit Demo.Core;"),
+            source_hash: Digest::of(b"unit Demo.Core;\nend unit;"),
             interface_hash: Digest::of(&interface),
             object_hash: Digest::of(&object),
             compiler_version: "0.0.1-test".to_string(),

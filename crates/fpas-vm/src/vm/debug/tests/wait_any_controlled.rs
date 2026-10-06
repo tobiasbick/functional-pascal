@@ -8,13 +8,13 @@ function Work(): integer;
 begin
   Sleep(30);
   return 7;
-end;
+end function;
 function CancelLater(Source: CancellationSource): integer;
 begin
   Sleep(1);
   Cancel(Source);
   return 0;
-end;
+end function;
 begin
   var T: task := go Work();
   case WaitAnyWithTimeout([T], 0) of
@@ -69,7 +69,7 @@ uses Std.Tasks;
 function Work(): integer;
 begin
   return 7;
-end;
+end function;
 begin
   var T: task := go Work();
   WaitAll([T]);

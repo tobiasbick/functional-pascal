@@ -22,9 +22,9 @@ fn unit_interface_exports_public_symbols_and_qualified_types() {
         "unit Demo.Types;
          public const Answer: integer := 42;
          const Secret: integer := 7;
-         public type Point = record public X: integer; public Y: integer; end;
+         public type Point = record public X: integer; public Y: integer; end record;
          public function GetX(P: Point): integer;
-         begin return P.X; end;",
+         begin return P.X; end function;\nend unit;",
     );
 
     let analysis = analyze_unit(&unit, &[]).expect("unit analysis must succeed");
@@ -67,9 +67,9 @@ fn unit_interface_exports_public_symbols_and_qualified_types() {
 fn consumer_analysis_uses_interface_without_dependency_ast() {
     let dependency = parse_unit(
         "unit Demo.Api;
-         public type State = enum Idle; Ready; end;
+         public type State = enum Idle; Ready; end enum;
          public function Next(Value: integer): integer;
-         begin return Value + 1; end;",
+         begin return Value + 1; end function;\nend unit;",
     );
     let dependency_analysis =
         analyze_unit(&dependency, &[]).expect("dependency analysis must succeed");
@@ -86,7 +86,7 @@ fn consumer_analysis_uses_interface_without_dependency_ast() {
          begin
            var Current: State := State.Ready;
            return Next(Value);
-         end;",
+         end function;\nend unit;",
     );
     let consumer_analysis = analyze_unit(
         &consumer,
@@ -104,7 +104,7 @@ fn consumer_analysis_uses_interface_without_dependency_ast() {
 fn enum_backing_values_survive_export_import_and_alias_export() {
     let dependency = parse_unit(
         "unit Demo.Values;
-         public type State = enum Idle = 7; Ready; Done = 20; end;",
+         public type State = enum Idle = 7; Ready; Done = 20; end enum;\nend unit;",
     );
     let dependency_interface = analyze_unit(&dependency, &[])
         .expect("dependency analysis must succeed")
@@ -130,7 +130,7 @@ fn enum_backing_values_survive_export_import_and_alias_export() {
     let consumer = parse_unit(
         "unit Demo.Aliases;
          uses Demo.Values;
-         public type StateAlias = State;",
+         public type StateAlias = State;\nend unit;",
     );
     let consumer_interface = analyze_unit(&consumer, &[dependency_interface])
         .expect("consumer analysis must succeed")
@@ -159,16 +159,16 @@ fn private_body_changes_do_not_change_interface_digest() {
     let left = parse_unit(
         "unit Demo.Stable;
          public function PublicValue(X: integer): integer;
-         begin return X; end;
+         begin return X; end function;
          function Hidden(): integer;
-         begin return 1; end;",
+         begin return 1; end function;\nend unit;",
     );
     let right = parse_unit(
         "unit Demo.Stable;
          public function PublicValue(X: integer): integer;
-         begin return X + 99; end;
+         begin return X + 99; end function;
          function Hidden(): integer;
-         begin return 2; end;",
+         begin return 2; end function;\nend unit;",
     );
     let left_interface = analyze_unit(&left, &[])
         .expect("left analysis")
@@ -189,12 +189,12 @@ fn imported_name_ambiguity_is_reported_only_when_short_name_is_used() {
     let first = parse_unit(
         "unit Demo.First;
          public function Value(): integer;
-         begin return 1; end;",
+         begin return 1; end function;\nend unit;",
     );
     let second = parse_unit(
         "unit Demo.Second;
          public function Value(): integer;
-         begin return 2; end;",
+         begin return 2; end function;\nend unit;",
     );
     let interfaces = [
         analyze_unit(&first, &[])
@@ -211,7 +211,7 @@ fn imported_name_ambiguity_is_reported_only_when_short_name_is_used() {
         "unit Demo.Qualified;
          uses Demo.First, Demo.Second;
          public function Run(): integer;
-         begin return Demo.First.Value() + Demo.Second.Value(); end;",
+         begin return Demo.First.Value() + Demo.Second.Value(); end function;\nend unit;",
     );
     let qualified_analysis = analyze_unit(&qualified, &interfaces).expect("qualified analysis");
     assert!(
@@ -224,7 +224,7 @@ fn imported_name_ambiguity_is_reported_only_when_short_name_is_used() {
         "unit Demo.Ambiguous;
          uses Demo.First, Demo.Second;
          public function Run(): integer;
-         begin return Value(); end;",
+         begin return Value(); end function;\nend unit;",
     );
     let ambiguous_analysis = analyze_unit(&ambiguous, &interfaces).expect("ambiguous analysis");
     assert_eq!(ambiguous_analysis.metadata.errors.len(), 1);
@@ -240,11 +240,11 @@ fn imported_name_ambiguity_is_reported_only_when_short_name_is_used() {
 fn imported_enum_type_qualified_short_variant_is_ambiguous() {
     let first = parse_unit(
         "unit Demo.First;
-         public type Color = enum Red; Blue; end;",
+         public type Color = enum Red; Blue; end enum;\nend unit;",
     );
     let second = parse_unit(
         "unit Demo.Second;
-         public type Color = enum Red; Green; end;",
+         public type Color = enum Red; Green; end enum;\nend unit;",
     );
     let interfaces = [
         analyze_unit(&first, &[])
@@ -261,7 +261,7 @@ fn imported_enum_type_qualified_short_variant_is_ambiguous() {
         "unit Demo.Qualified;
          uses Demo.First, Demo.Second;
          public function Run(): Demo.First.Color;
-         begin return Demo.First.Color.Red; end;",
+         begin return Demo.First.Color.Red; end function;\nend unit;",
     );
     let qualified_analysis = analyze_unit(&qualified, &interfaces).expect("qualified analysis");
     assert!(
@@ -274,7 +274,7 @@ fn imported_enum_type_qualified_short_variant_is_ambiguous() {
         "unit Demo.Ambiguous;
          uses Demo.First, Demo.Second;
          public function Run(): Demo.First.Color;
-         begin return Color.Red; end;",
+         begin return Color.Red; end function;\nend unit;",
     );
     let ambiguous_analysis = analyze_unit(&ambiguous, &interfaces).expect("ambiguous analysis");
     assert!(

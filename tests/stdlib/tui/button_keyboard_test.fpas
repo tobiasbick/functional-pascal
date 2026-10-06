@@ -6,7 +6,7 @@ type
   ButtonKeyboardModel = record
     Focus: integer;
     Actions: array of integer;
-  end;
+  end record;
 
 function MakeKey(Kind: TuiKeyKind; Character: string; Alt: boolean): TuiKeyEvent;
 begin
@@ -18,7 +18,7 @@ begin
     alt := Alt;
     meta := false;
   end;
-end;
+end function;
 
 function ViewButtons(State: ButtonKeyboardModel): TuiElement;
 begin
@@ -30,7 +30,7 @@ begin
                                                                                                                   TuiElementBuilders.MakeDisabledButton(TuiControlId.Create(4), 'Cancel', 'C', TuiAction.Create(40))
                                                                                                                 ])
                                                                                 ]);
-end;
+end function;
 
 function UpdateButtons(State: ButtonKeyboardModel; Msg: TuiMsg; Cmd: TuiCmdOutput): ButtonKeyboardModel;
 begin
@@ -64,7 +64,7 @@ begin
       return State;
     end;
   end;
-end;
+end function;
 
 begin
   var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(30, 10));

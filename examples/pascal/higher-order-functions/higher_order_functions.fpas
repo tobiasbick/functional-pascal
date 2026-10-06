@@ -7,34 +7,34 @@ uses Std.Console, Std.Arrays;
 function Square(X: integer): integer;
 begin
   return X * X;
-end;
+end function;
 
 function Double(X: integer): integer;
 begin
   return X * 2;
-end;
+end function;
 
 function IsGreaterThanThree(X: integer): boolean;
 begin
   return X > 3;
-end;
+end function;
 
 function IsGreaterThanTen(X: integer): boolean;
 begin
   return X > 10;
-end;
+end function;
 
 function Sum(Acc: integer; V: integer): integer;
 begin
   return Acc + V;
-end;
+end function;
 
 // Higher-order: accepts any integer->integer function
 
 function Apply(F: function(X: integer): integer; Value: integer): integer;
 begin
   return F(Value);
-end;
+end function;
 
 begin
   WriteLn('Apply(Square, 6) = ', Apply(Square, 6));

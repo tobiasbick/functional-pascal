@@ -9,24 +9,24 @@ uses
 function ReserveState(State: StreamState): integer;
 begin
   return 0;
-end;
+end function;
 
 // Tests whether one hosted body-stream state exists.
 function HasState(Slot: integer): boolean;
 begin
   return false;
-end;
+end function;
 
 // Loads one state from the hosted HTTP registry.
 function LoadState(Slot: integer): StreamState;
 begin
   panic('internal HTTP stream state intrinsic was not lowered');
-end;
+end function;
 
 // Replaces one state in the hosted HTTP registry.
 procedure StoreState(Slot: integer; State: StreamState);
 begin
-end;
+end procedure;
 
 // Resolves and validates an opaque body-stream handle.
 //
@@ -41,7 +41,7 @@ begin
   end;
 
   return Ok(Slot);
-end;
+end function;
 
 // Closes one indexed stream state and its backing connection.
 //
@@ -66,7 +66,7 @@ begin
 
   State.Finished := true;
   StoreState(Index, State);
-end;
+end procedure;
 
 // Reads another bounded fragment into an open stream buffer.
 //
@@ -99,7 +99,7 @@ begin
       return Error(Message);
     end;
   end;
-end;
+end function;
 
 // Reads until the buffer contains a requested number of bytes or reaches EOF.
 //
@@ -126,7 +126,7 @@ begin
   end;
 
   return Ok(true);
-end;
+end function;
 
 // Removes and returns at most a requested number of buffered bytes.
 //
@@ -145,7 +145,7 @@ begin
   State.Buffer := Std.Arrays.Slice(State.Buffer, Count, Std.Arrays.Length(State.Buffer) - Count);
   StoreState(Index, State);
   return Bytes;
-end;
+end function;
 
 // Reads one fragment from a fixed-length body.
 //
@@ -192,7 +192,7 @@ begin
   end;
 
   return Ok(Bytes);
-end;
+end function;
 
 // Reads one fragment from a connection-delimited body.
 //
@@ -220,7 +220,7 @@ begin
   end;
 
   return Ok(TakeBuffer(Index, Maximum));
-end;
+end function;
 
 // Reads and consumes the next chunk-size line.
 //
@@ -263,7 +263,7 @@ begin
       return Error('HTTP chunk size is not ASCII: ' + Message);
     end;
   end;
-end;
+end function;
 
 // Reads one decoded fragment from a chunked body.
 //
@@ -366,7 +366,7 @@ begin
   end;
 
   return Ok([]);
-end;
+end function;
 
 // Creates one body stream after the response head has been parsed.
 //
@@ -430,7 +430,7 @@ begin
   end;
 
   return Ok(Std.Http.Handles.NewBodyStream(Index));
-end;
+end function;
 
 // Reads at most MaxBytes decoded body bytes. An empty array means end of stream.
 //
@@ -469,7 +469,7 @@ begin
       return Error(Message);
     end;
   end;
-end;
+end function;
 
 // Closes a body stream before end of stream.
 //
@@ -488,4 +488,5 @@ begin
       return Error(Message);
     end;
   end;
-end;
+end function;
+end unit;

@@ -52,5 +52,5 @@ Update any current page that cites a code. The full reference follows in AP02.5.
 
 Delivered together with the remaining AP02 slices so code identity, transport
 and consumers agree. The producer inventory and FP4xxx subranges are recorded
-in the [implementation audit](implementation-audit.md). Merge status remains
-in the package checklist.
+in the [implementation audit](implementation-audit.md). Delivery completion is
+tracked in the package checklist.

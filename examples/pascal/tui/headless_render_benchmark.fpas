@@ -71,7 +71,7 @@ begin
       return State;
     end;
   end;
-end;
+end function;
 
 function ViewBenchmark(State: integer): TuiElement;
 begin
@@ -91,7 +91,7 @@ begin
   return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(1)), [
                                                                         TuiElementBuilders.MakePanel('Headless benchmark', [TuiElementBuilders.MakeColumn(Children)])
                                                                       ]);
-end;
+end function;
 
 begin
   if (ParamCount() < 1) or (ParamCount() > 2) then

@@ -269,12 +269,12 @@ type
 function AddOne(Value: integer): integer;
 begin
   return Value + 1;
-end;
+end function;
 
 function AddTwo(Value: integer): integer;
 begin
   return Value + 2;
-end;
+end function;
 
 function Work(): integer;
 begin
@@ -282,7 +282,7 @@ begin
   var Backup: Handler := AddTwo;
   var Marker: integer := 0;
   return Current(1);
-end;
+end function;
 
 begin
   var Pending: task := go Work();

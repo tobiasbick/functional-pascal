@@ -5,7 +5,7 @@ uses Std.Console, Std.Arrays;
 function IsGreaterThanHundred(X: integer): boolean;
 begin
   return X > 100;
-end;
+end function;
 
 begin
   var A: array of integer := [1, 2, 3];

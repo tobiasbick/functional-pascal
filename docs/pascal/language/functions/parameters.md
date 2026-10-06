@@ -18,7 +18,7 @@ begin
     return Max;
   else
     return Value;
-end;
+end function;
 
 begin
   var R: integer := Clamp(150, 0, 100);  // 100

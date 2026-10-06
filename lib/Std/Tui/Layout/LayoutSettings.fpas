@@ -10,7 +10,7 @@ begin
   end;
 
   return Value;
-end;
+end function;
 
 public type
   // Immutable layout inputs attached to a single-child layout wrapper.
@@ -50,7 +50,7 @@ public type
         Width := None;
         Height := None;
       end;
-    end;
+    end function;
 
     // Returns a copy constrained to one total width; negative widths panic.
     //
@@ -72,7 +72,7 @@ public type
         Width := Some(Width);
         Height := Self.Height;
       end;
-    end;
+    end function;
 
     // Returns a copy constrained to one total height; negative heights panic.
     //
@@ -94,11 +94,12 @@ public type
         Width := Self.Width;
         Height := Some(Height);
       end;
-    end;
+    end function;
 
     // Zero margins, preferred policy, fill alignment, and stretch zero.
     public static function Default(): TuiLayoutSettings;
     begin
       return TuiLayoutSettings.Create(TuiMargins.Uniform(0), TuiSizePolicy.Preferred(), TuiAlignment.Fill(), 0);
-    end;
-  end;
+    end function;
+  end record;
+end unit;

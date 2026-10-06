@@ -11,7 +11,7 @@ begin
       return I;
   end;
   return -1;
-end;
+end function;
 ```
 
 ## See also

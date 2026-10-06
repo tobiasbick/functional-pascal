@@ -10,7 +10,7 @@ uses
 function TuiIgnoreApplicationMessage<TModel>(State: TModel; Message: boolean; Cmd: TuiCmdOutput): TModel;
 begin
   return State;
-end;
+end function;
 
 public type
   // Headless Tui application host and deterministic message loop.
@@ -25,7 +25,7 @@ public type
     public static function OpenForTest(Size: TuiSize): TuiApplication;
     begin
       return TuiApplication.OpenForTestWithPalette(Size, TuiPalette.Default());
-    end;
+    end function;
 
     // Opens a headless application with a caller-defined palette.
     //
@@ -37,7 +37,7 @@ public type
       return record
         Id := TuiAppOpenApplication(Size, Palette, false);
       end;
-    end;
+    end function;
 
     // Closes the host and discards all pending input and messages.
     //
@@ -46,7 +46,7 @@ public type
     public procedure Close(Self: TuiApplication);
     begin
       TuiAppRaiseShutdownFailure(TuiAppCloseApplication(Self.Id));
-    end;
+    end procedure;
 
     // Closes owned work before closing the application message inbox.
     public procedure CloseWithBackground<TMessage>(Self: TuiApplication; Inbox: channel of TMessage);
@@ -54,7 +54,7 @@ public type
       var Failures: array of TuiMsg := TuiAppCloseApplication(Self.Id);
       CloseChannel(Inbox);
       TuiAppRaiseShutdownFailure(Failures);
-    end;
+    end procedure;
 
     // Injects an already constructed framework message in FIFO order.
     //
@@ -65,7 +65,7 @@ public type
     begin
       var ApplicationId: integer := TuiAppRequireOpen(Self.Id);
       TuiAppPushInput(ApplicationId, TuiHostInput.Message(Msg));
-    end;
+    end procedure;
 
     // Injects a key that will be routed through focus and controlled elements.
     //
@@ -76,7 +76,7 @@ public type
     begin
       var ApplicationId: integer := TuiAppRequireOpen(Self.Id);
       TuiAppPushInput(ApplicationId, TuiHostInput.Key(Key));
-    end;
+    end procedure;
 
     // Injects a pointer event in zero-based application coordinates.
     //
@@ -87,7 +87,7 @@ public type
     begin
       var ApplicationId: integer := TuiAppRequireOpen(Self.Id);
       TuiAppPushInput(ApplicationId, TuiHostInput.Pointer(Pointer));
-    end;
+    end procedure;
 
     // Injects a resize that updates host size before the Resize message reaches Update.
     //
@@ -98,7 +98,7 @@ public type
     begin
       var ApplicationId: integer := TuiAppRequireOpen(Self.Id);
       TuiAppPushInput(ApplicationId, TuiHostInput.Resize(Size));
-    end;
+    end procedure;
 
     // Tries to inject one application-defined message without waiting for queue capacity.
     public function InjectBackgroundForTest<TMessage>(
@@ -109,7 +109,7 @@ public type
     begin
       TuiAppRequireOpen(Self.Id);
       return TrySend(Inbox, Message);
-    end;
+    end function;
 
     // Returns an explicit immutable copy of the last painted surface.
     //
@@ -119,7 +119,7 @@ public type
     begin
       var ApplicationId: integer := TuiAppRequireHandle(Self.Id);
       return TuiAppSurfaces[ApplicationId - 1].Snapshot();
-    end;
+    end function;
 
     // Returns the application's current palette.
     //
@@ -129,7 +129,7 @@ public type
     begin
       var ApplicationId: integer := TuiAppRequireHandle(Self.Id);
       return TuiAppPalettes[ApplicationId - 1];
-    end;
+    end function;
 
     // Runs a deterministic number of message-processing iterations.
     //
@@ -156,7 +156,7 @@ public type
       var Model: TModel := TuiRunHeadless(Self.Id, InitialModel, Inbox, Update, TuiIgnoreApplicationMessage, View, IterationCount, DeltaMilliseconds, false);
       CloseChannel(Inbox);
       return Model;
-    end;
+    end function;
 
     // Runs deterministic framework and application-defined message iterations.
     public function RunBackgroundIterations<TModel, TMessage>(
@@ -171,7 +171,7 @@ public type
 ): TModel;
     begin
       return TuiRunHeadless(Self.Id, InitialModel, Inbox, Update, UpdateApplication, View, IterationCount, DeltaMilliseconds, true);
-    end;
+    end function;
 
     // Runs one interactive Tui application until Update returns `TuiCmd.Quit`.
     //
@@ -189,7 +189,7 @@ public type
 ): TModel;
     begin
       return TuiApplication.RunWithPalette(InitialModel, Update, View, TuiPalette.Default());
-    end;
+    end function;
 
     // Runs one interactive Tui application with a caller-defined initial palette.
     //
@@ -228,7 +228,7 @@ public type
       var Model: TModel := TuiRunInteractive(App.Id, InitialModel, Inbox, Update, TuiIgnoreApplicationMessage, View, false);
       CloseChannel(Inbox);
       return Model;
-    end;
+    end function;
 
     // Runs one interactive application with a bounded typed background inbox.
     public static function RunWithBackground<TModel, TMessage>(
@@ -240,7 +240,7 @@ public type
 ): TModel;
     begin
       return TuiApplication.RunWithBackgroundAndPalette(InitialModel, Inbox, Update, UpdateApplication, View, TuiPalette.Default());
-    end;
+    end function;
 
     // Runs one interactive background-enabled application with a caller-defined palette.
     public static function RunWithBackgroundAndPalette<TModel, TMessage>(
@@ -269,5 +269,6 @@ public type
       end;
 
       return TuiRunInteractive(App.Id, InitialModel, Inbox, Update, UpdateApplication, View, true);
-    end;
-  end;
+    end function;
+  end record;
+end unit;

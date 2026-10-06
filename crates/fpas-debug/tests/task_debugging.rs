@@ -20,7 +20,7 @@ begin
   mutable var Value: integer := 40;
   Value := Value + 2;
   return Value;
-end;
+end function;
 
 begin
   var Pending: task := go Work();
@@ -226,7 +226,7 @@ begin
   mutable var Scores: dict of string to integer := ['Seed': 1];
   var Marker: integer := Scores['Seed'];
   return Scores['Added'] + Marker;
-end;
+end function;
 
 begin
   var Pending: task := go Work();
@@ -281,11 +281,11 @@ function Work(Value: integer): integer;
 begin
   Sleep(1);
   return Value;
-end;
+end function;
 
 procedure Detached();
 begin
-end;
+end procedure;
 
 begin
   go Detached();
@@ -304,13 +304,13 @@ uses Std.Console, Std.Tasks;
 function Leaf(Value: integer): integer;
 begin
   return Value;
-end;
+end function;
 
 function Parent(): integer;
 begin
   var Child: task := go Leaf(41);
   return Wait(Child) + 1;
-end;
+end function;
 
 begin
   var Pending: task := go Parent();
@@ -361,7 +361,7 @@ uses Std.Tasks;
 procedure Explode();
 begin
   panic('child boom');
-end;
+end procedure;
 
 begin
   var Pending: task := go Explode();
@@ -376,7 +376,7 @@ procedure Later();
 begin
   Sleep(1000);
   WriteLn('too late');
-end;
+end procedure;
 
 begin
   go Later();

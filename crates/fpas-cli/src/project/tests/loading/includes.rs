@@ -136,8 +136,8 @@ include = ["src/math.fpas", "lib/*.fpas"]
         &dir.join("src/main.fpas"),
         "program Main;\nuses App.Math, App.Lib;\nbegin\nend.\n",
     );
-    write_text(&dir.join("src/math.fpas"), "unit App.Math;");
-    write_text(&dir.join("lib/helpers.fpas"), "unit App.Lib;");
+    write_text(&dir.join("src/math.fpas"), "unit App.Math;\nend unit;");
+    write_text(&dir.join("lib/helpers.fpas"), "unit App.Lib;\nend unit;");
 
     let loaded = load_project_ok(&project_file);
     fs::remove_dir_all(&dir).expect("temp directory must be removed");

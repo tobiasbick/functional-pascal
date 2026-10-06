@@ -19,7 +19,7 @@ include = ["Std/**/*.fpas"]
     );
     write_text(
         &library.join("Std/Version.fpas"),
-        "unit Std.Version;\npublic const\n  CompilerVersion: string := 'override';\n",
+        "unit Std.Version;\npublic const\n  CompilerVersion: string := 'override';\nend unit;\n",
     );
     let program = cwd.join("main.fpas");
     write_text(
@@ -61,7 +61,7 @@ include = ["Std/**/*.fpas"]
     );
     write_text(
         &library.join("Std/Version.fpas"),
-        "unit Std.Version;\npublic const\n  LibraryVersion: string := 'test-override';\n",
+        "unit Std.Version;\npublic const\n  LibraryVersion: string := 'test-override';\nend unit;\n",
     );
     let test = cwd.join("version_test.fpas");
     write_text(

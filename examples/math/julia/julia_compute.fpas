@@ -13,7 +13,7 @@ type
         Re := Re;
         Im := Im;
       end;
-    end;
+    end function;
 
     public function Sq(Self: Complex): Complex;
     begin
@@ -21,7 +21,7 @@ type
         Re := Self.Re * Self.Re - Self.Im * Self.Im;
         Im := (2.0 * Self.Re) * Self.Im;
       end;
-    end;
+    end function;
 
     public function Add(Self: Complex; Other: Complex): Complex;
     begin
@@ -29,19 +29,19 @@ type
         Re := Self.Re + Other.Re;
         Im := Self.Im + Other.Im;
       end;
-    end;
+    end function;
 
     public function MagSq(Self: Complex): real;
     begin
       return Self.Re * Self.Re + Self.Im * Self.Im;
-    end;
-  end;
+    end function;
+  end record;
 
 public type
   PixelSample = record
     public IsInside: boolean;
     public EscapeValue: real;
-  end;
+  end record;
 
 function Iterate(Z0: Complex; C: Complex; MaxIter: integer; Token: CancellationToken): PixelSample;
 begin
@@ -72,7 +72,7 @@ begin
     IsInside := false;
     EscapeValue := Smooth;
   end;
-end;
+end function;
 
 // Compute one row, returning an empty array when cancellation is observed.
 public function ComputeRow(
@@ -121,4 +121,5 @@ begin
   end;
 
   return Row;
-end;
+end function;
+end unit;

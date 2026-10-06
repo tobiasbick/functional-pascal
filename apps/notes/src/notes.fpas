@@ -12,7 +12,7 @@ begin
   end;
 
   return 'notes';
-end;
+end function;
 
 begin
   Std.Random.Randomize();

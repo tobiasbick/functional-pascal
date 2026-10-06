@@ -56,7 +56,7 @@ program DebugLayout;
 type
   Point = record
     X: integer;
-  end;
+  end record;
 
 begin
   var Origin: Point := record
@@ -150,7 +150,7 @@ uses Std.Arrays, Std.Test;
 function Double(Value: integer): integer;
 begin
   return Value * 2;
-end;
+end function;
 
 begin
   var Values: array of integer := Std.Arrays.Map([2, 3, 4], Double);
@@ -189,7 +189,7 @@ function SideEffect(): string;
 begin
   Std.Console.WriteText('B');
   return 'C';
-end;
+end function;
 
 begin
   Std.Console.WriteText('A', SideEffect());

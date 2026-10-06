@@ -27,7 +27,7 @@ uses Std.Console, Std.Tasks;
 function N(): integer;
 begin
   return 7;
-end;
+end function;
 begin
   var T: task := go N();
   WriteLn(Wait(T));

@@ -67,8 +67,11 @@ fn graph_records_unit_identity_origin_dependencies_and_source_path() {
     let manifest = write_project(
         &dir,
         &[
-            ("core.fpas", "unit Demo.Core;\n"),
-            ("feature.fpas", "unit Demo.Feature;\nuses Demo.Core;\n"),
+            ("core.fpas", "unit Demo.Core;\nend unit;\n"),
+            (
+                "feature.fpas",
+                "unit Demo.Feature;\nuses Demo.Core;\nend unit;\n",
+            ),
         ],
     );
     let loaded = load_project(&manifest).expect("project must load");
@@ -95,9 +98,12 @@ fn program_resolution_excludes_unreachable_units_and_orders_dependencies_first()
     let manifest = write_project(
         &dir,
         &[
-            ("base.fpas", "unit Demo.Base;\n"),
-            ("feature.fpas", "unit Demo.Feature;\nuses Demo.Base;\n"),
-            ("unused.fpas", "unit Demo.Unused;\n"),
+            ("base.fpas", "unit Demo.Base;\nend unit;\n"),
+            (
+                "feature.fpas",
+                "unit Demo.Feature;\nuses Demo.Base;\nend unit;\n",
+            ),
+            ("unused.fpas", "unit Demo.Unused;\nend unit;\n"),
         ],
     );
     let loaded = load_project(&manifest).expect("project must load");
@@ -122,9 +128,12 @@ fn library_resolution_includes_all_units_in_stable_dependency_order() {
     let manifest = write_project(
         &dir,
         &[
-            ("alpha.fpas", "unit Demo.Alpha;\n"),
-            ("beta.fpas", "unit Demo.Beta;\nuses Demo.Alpha;\n"),
-            ("unused.fpas", "unit Demo.Unused;\n"),
+            ("alpha.fpas", "unit Demo.Alpha;\nend unit;\n"),
+            (
+                "beta.fpas",
+                "unit Demo.Beta;\nuses Demo.Alpha;\nend unit;\n",
+            ),
+            ("unused.fpas", "unit Demo.Unused;\nend unit;\n"),
         ],
     );
     let loaded = load_project(&manifest).expect("project must load");
@@ -151,9 +160,9 @@ fn graph_resolution_reports_complete_unit_cycle() {
     let manifest = write_project(
         &dir,
         &[
-            ("a.fpas", "unit Demo.A;\nuses Demo.B;\n"),
-            ("b.fpas", "unit Demo.B;\nuses Demo.C;\n"),
-            ("c.fpas", "unit Demo.C;\nuses Demo.A;\n"),
+            ("a.fpas", "unit Demo.A;\nuses Demo.B;\nend unit;\n"),
+            ("b.fpas", "unit Demo.B;\nuses Demo.C;\nend unit;\n"),
+            ("c.fpas", "unit Demo.C;\nuses Demo.A;\nend unit;\n"),
         ],
     );
     let loaded = load_project(&manifest).expect("project must load");
@@ -191,8 +200,11 @@ units = ["Lib.Api"]
 include = ["src/**/*.fpas"]
 "#,
     );
-    write(&dir.join("lib/src/api.fpas"), "unit Lib.Api;\n");
-    write(&dir.join("lib/src/internal.fpas"), "unit Lib.Internal;\n");
+    write(&dir.join("lib/src/api.fpas"), "unit Lib.Api;\nend unit;\n");
+    write(
+        &dir.join("lib/src/internal.fpas"),
+        "unit Lib.Internal;\nend unit;\n",
+    );
     write(
         &application,
         r#"[project]
@@ -231,7 +243,10 @@ fn unknown_transitive_unit_diagnostic_names_owner_and_known_units() {
     let dir = temp_dir("unknown");
     let manifest = write_project(
         &dir,
-        &[("feature.fpas", "unit Demo.Feature;\nuses Demo.Missing;\n")],
+        &[(
+            "feature.fpas",
+            "unit Demo.Feature;\nuses Demo.Missing;\nend unit;\n",
+        )],
     );
     let loaded = load_project(&manifest).expect("project must load");
     let graph =

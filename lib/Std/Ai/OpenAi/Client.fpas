@@ -15,7 +15,7 @@ begin
   end;
 
   return BaseUrl + '/chat/completions';
-end;
+end function;
 
 // Validates, sends, and decodes one non-streaming chat completion.
 //
@@ -85,4 +85,5 @@ begin
       return Error(Message);
     end;
   end;
-end;
+end function;
+end unit;

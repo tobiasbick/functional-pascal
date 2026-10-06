@@ -35,7 +35,7 @@ begin
   end;
 
   return Ok(true);
-end;
+end function;
 
 // Closes a connection while deliberately ignoring close errors.
 //
@@ -51,7 +51,7 @@ begin
     begin
     end;
   end;
-end;
+end procedure;
 
 // Attempts to write an empty 400 response without propagating failures.
 //
@@ -68,7 +68,7 @@ begin
     begin
     end;
   end;
-end;
+end procedure;
 
 // Serves and closes one accepted connection.
 //
@@ -125,7 +125,7 @@ begin
 
   CloseQuietly(Connection);
   return Succeeded;
-end;
+end function;
 
 // Reports whether the current batch may accept another connection.
 //
@@ -137,7 +137,7 @@ function HasCapacity(Options: ServerOptions; Accepted: integer; BatchLength: int
 begin
   return (BatchLength < Options.MaxConcurrentRequests) and
          ((Options.MaxRequests = 0) or (Accepted < Options.MaxRequests));
-end;
+end function;
 
 // Accepts requests in bounded concurrent batches and dispatches each one to Handler.
 //
@@ -180,4 +180,5 @@ begin
   end;
 
   return Ok(true);
-end;
+end function;
+end unit;

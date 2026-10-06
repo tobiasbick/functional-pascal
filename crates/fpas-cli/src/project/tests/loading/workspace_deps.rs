@@ -29,7 +29,7 @@ include = ["src/**/*.fpas"]
     );
     write_text(
         &lib_project.parent().unwrap().join("src/greet.fpas"),
-        "unit Demo.Greet;\nconst Message: string := 'hi';\n",
+        "unit Demo.Greet;\nconst Message: string := 'hi';\nend unit;\n",
     );
 
     write_program_fpasprj_with_workspace_deps(
@@ -93,7 +93,7 @@ members = ["lib.fpasprj", "app.fpasprj"]
     write_library_fpasprj(&lib_project, &["src/**/*.fpas"]);
     write_text(
         &lib_project.parent().unwrap().join("src/lib.fpas"),
-        "unit Lib.Core;\n",
+        "unit Lib.Core;\nend unit;\n",
     );
 
     write_program_fpasprj_with_workspace_deps(

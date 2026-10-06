@@ -37,7 +37,7 @@ begin
   end;
 
   return Matches;
-end;
+end function;
 
 begin
   if ParamCount() <> 2 then

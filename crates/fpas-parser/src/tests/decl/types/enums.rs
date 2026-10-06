@@ -3,7 +3,7 @@ use fpas_diagnostics::codes::{PARSE_EMPTY_ENUM_FIELD_LIST, PARSE_TRAILING_ENUM_F
 
 #[test]
 fn enum_type() {
-    let p = parse_ok("program T; type Color = enum Red; Green; Blue; end; begin end.");
+    let p = parse_ok("program T; type Color = enum Red; Green; Blue; end enum; begin end.");
     match &p.declarations[0] {
         Decl::TypeDef(td) => match &td.body {
             TypeBody::Enum(e) => {
@@ -19,7 +19,7 @@ fn enum_type() {
 
 #[test]
 fn enum_with_values() {
-    let p = parse_ok("program T; type Suit = enum Hearts = 1; Diamonds = 2; end; begin end.");
+    let p = parse_ok("program T; type Suit = enum Hearts = 1; Diamonds = 2; end enum; begin end.");
     match &p.declarations[0] {
         Decl::TypeDef(td) => match &td.body {
             TypeBody::Enum(e) => {
@@ -35,7 +35,7 @@ fn enum_with_values() {
 #[test]
 fn enum_member_non_integer_value_uses_parser_code() {
     let (_, errors) =
-        parse_with_errors("program T; type Suit = enum Hearts = true; end; begin end.");
+        parse_with_errors("program T; type Suit = enum Hearts = true; end enum; begin end.");
     let error = errors
         .iter()
         .find_map(|diagnostic| match diagnostic {
@@ -55,7 +55,7 @@ fn enum_member_non_integer_value_uses_parser_code() {
 
 #[test]
 fn enum_data_single_field() {
-    let p = parse_ok("program T; type Wrapper = enum Val(X: integer); end; begin end.");
+    let p = parse_ok("program T; type Wrapper = enum Val(X: integer); end enum; begin end.");
     match &p.declarations[0] {
         Decl::TypeDef(td) => match &td.body {
             TypeBody::Enum(e) => {
@@ -74,7 +74,7 @@ fn enum_data_single_field() {
 #[test]
 fn enum_data_multiple_fields() {
     let p = parse_ok(
-        "program T; type Shape = enum Circle(Radius: real); Rect(W: real; H: real); end; begin end.",
+        "program T; type Shape = enum Circle(Radius: real); Rect(W: real; H: real); end enum; begin end.",
     );
     match &p.declarations[0] {
         Decl::TypeDef(td) => match &td.body {
@@ -93,7 +93,7 @@ fn enum_data_multiple_fields() {
 
 #[test]
 fn enum_data_mixed_simple_and_data_variants() {
-    let p = parse_ok("program T; type Token = enum Eof; Number(V: integer); end; begin end.");
+    let p = parse_ok("program T; type Token = enum Eof; Number(V: integer); end enum; begin end.");
     match &p.declarations[0] {
         Decl::TypeDef(td) => match &td.body {
             TypeBody::Enum(e) => {
@@ -109,7 +109,7 @@ fn enum_data_mixed_simple_and_data_variants() {
 
 #[test]
 fn enum_data_fieldless_has_no_backing_value() {
-    let p = parse_ok("program T; type Token = enum Eof; Number(V: integer); end; begin end.");
+    let p = parse_ok("program T; type Token = enum Eof; Number(V: integer); end enum; begin end.");
     match &p.declarations[0] {
         Decl::TypeDef(td) => match &td.body {
             TypeBody::Enum(e) => {
@@ -124,8 +124,9 @@ fn enum_data_fieldless_has_no_backing_value() {
 
 #[test]
 fn enum_variant_cannot_mix_fields_with_backing_value() {
-    let (_, errors) =
-        parse_with_errors("program T; type Shape = enum Circle(Radius: real) = 1; end; begin end.");
+    let (_, errors) = parse_with_errors(
+        "program T; type Shape = enum Circle(Radius: real) = 1; end enum; begin end.",
+    );
     assert!(
         !errors.is_empty(),
         "expected parser error when mixing enum fields with a backing value"
@@ -134,7 +135,7 @@ fn enum_variant_cannot_mix_fields_with_backing_value() {
 
 #[test]
 fn enum_empty_field_list_is_rejected() {
-    let (_, errors) = parse_with_errors("program T; type Token = enum Eof(); end; begin end.");
+    let (_, errors) = parse_with_errors("program T; type Token = enum Eof(); end enum; begin end.");
     let diagnostic = errors.iter().find_map(|error| match error {
         ParseDiagnostic::Parser(diagnostic) if diagnostic.code == PARSE_EMPTY_ENUM_FIELD_LIST => {
             Some(diagnostic)
@@ -154,7 +155,8 @@ fn enum_empty_field_list_is_rejected() {
 
 #[test]
 fn enum_empty_field_list_before_backing_value_is_rejected() {
-    let (_, errors) = parse_with_errors("program T; type Token = enum Eof() = 5; end; begin end.");
+    let (_, errors) =
+        parse_with_errors("program T; type Token = enum Eof() = 5; end enum; begin end.");
     assert!(
         errors.iter().any(|error| matches!(
             error,
@@ -168,7 +170,7 @@ fn enum_empty_field_list_before_backing_value_is_rejected() {
 #[test]
 fn enum_trailing_field_separator_is_rejected() {
     let (_, errors) = parse_with_errors(
-        "program T; type Shape = enum Rectangle(Width: real; Height: real;); end; begin end.",
+        "program T; type Shape = enum Rectangle(Width: real; Height: real;); end enum; begin end.",
     );
     let diagnostic = errors.iter().find_map(|error| match error {
         ParseDiagnostic::Parser(diagnostic)

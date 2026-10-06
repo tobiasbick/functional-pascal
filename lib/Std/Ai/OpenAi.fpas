@@ -24,4 +24,5 @@ public function Complete(
 ): result of string, string;
 begin
   return Std.Ai.OpenAi.Client.Complete(ClientValue, Messages, Options);
-end;
+end function;
+end unit;

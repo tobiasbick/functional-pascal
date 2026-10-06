@@ -8,7 +8,7 @@ public type
     function Hidden(Self: Counter): integer;
     begin
       return Self.Value;
-    end;
+    end function;
 
     public static function Create(): Counter;
     begin
@@ -16,9 +16,10 @@ public type
         Value := 0;
         Step := 1;
       end;
-    end;
+    end function;
 
     public property Current: integer read Hidden;
 
     public event Changed: procedure() read ReadChanged write WriteChanged;
-  end;
+  end record;
+end unit;

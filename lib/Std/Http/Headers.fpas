@@ -11,7 +11,7 @@ uses Std.Arrays, Std.Http.Types, Std.Str;
 public function IsName(Name: string; Expected: string): boolean;
 begin
   return Std.Str.ToLower(Name) = Std.Str.ToLower(Expected);
-end;
+end function;
 
 // Returns the first value for a case-insensitive field name.
 //
@@ -29,7 +29,7 @@ begin
   end;
 
   return None;
-end;
+end function;
 
 // Reports whether text contains carriage-return or line-feed characters.
 //
@@ -38,4 +38,5 @@ end;
 public function ContainsUnsafeText(Text: string): boolean;
 begin
   return Std.Str.Contains(Text, #13) or Std.Str.Contains(Text, #10);
-end;
+end function;
+end unit;

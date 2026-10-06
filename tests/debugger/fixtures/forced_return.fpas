@@ -5,20 +5,20 @@ uses Std.Console;
 function PlusOne(Value: integer): integer;
 begin
   return Value + 1;
-end;
+end function;
 
 function Compute(Value: integer): integer;
 begin
   var Offset: integer := 1;
   return Value + Offset;
-end;
+end function;
 
 function Leaf(Value: integer): integer;
 begin
   var Inner: integer := 999;
   WriteLn('leaf');
   return Value + 1;
-end;
+end function;
 
 function Branch(Value: integer): integer;
 begin
@@ -26,12 +26,12 @@ begin
   var Nested: integer := Leaf(Local);
   WriteLn('branch');
   return Nested;
-end;
+end function;
 
 procedure Announce(Message: string);
 begin
   WriteLn(Message);
-end;
+end procedure;
 
 begin
   var Nested: integer := Branch(1);

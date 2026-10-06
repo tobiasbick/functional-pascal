@@ -53,7 +53,7 @@ begin
     Value := Value + 1;
     return Value;
   end;
-end;
+end function;
 ```
 
 There is no capture-list syntax. Immutability is declared at the variable (or
@@ -69,10 +69,10 @@ function MakeAdder(Base: integer): function(Value: integer): integer;
   function Add(Value: integer): integer;
   begin
     return Base + Value;
-  end;
+  end function;
 begin
   return Add;
-end;
+end function;
 ```
 
 Non-escaping nested helpers that are only called by name while their parent frame is

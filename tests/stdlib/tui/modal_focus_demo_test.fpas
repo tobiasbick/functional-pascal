@@ -5,7 +5,7 @@ uses Std.Test, Std.Tui;
 type
   DemoModel = record
     Focus: integer;
-  end;
+  end record;
 
 function Key(Kind: TuiKeyKind): TuiKeyEvent;
 begin
@@ -17,7 +17,7 @@ begin
     alt := false;
     meta := false;
   end;
-end;
+end function;
 
 function UpdateDemo(State: DemoModel; Msg: TuiMsg; Cmd: TuiCmdOutput): DemoModel;
 begin
@@ -43,7 +43,7 @@ begin
       return State;
     end;
   end;
-end;
+end function;
 
 function ViewDemo(State: DemoModel): TuiElement;
 begin
@@ -56,7 +56,7 @@ begin
                                                                                                                               TuiElementBuilders.MakeButton(TuiControlId.Create(3), 'No', TuiAction.Create(3))
                                                                                                                             ])
                                                                                 ]);
-end;
+end function;
 
 begin
   mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(40, 12));

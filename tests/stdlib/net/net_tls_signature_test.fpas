@@ -7,13 +7,13 @@ uses Std.Net;
 function ConnectTlsSignatureOnly(): result of Connection, string;
 begin
   return ConnectTls('localhost', 443, 1000);
-end;
+end function;
 
 // Type-checks the certificate-configured TLS listener constructor.
 function ListenTlsSignatureOnly(): result of Listener, string;
 begin
   return ListenTls('127.0.0.1', 443, 'certificate.pem', 'private-key.pem', 1000);
-end;
+end function;
 
 begin
 end.

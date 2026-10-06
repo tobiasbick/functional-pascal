@@ -50,7 +50,7 @@ include = ["src/**/*.fpas"]
     );
     write(
         &lib_project.parent().unwrap().join("src/core.fpas"),
-        "unit MyLib.Core;\nconst Value: integer := 7;\n",
+        "unit MyLib.Core;\nconst Value: integer := 7;\nend unit;\n",
     );
 
     write(
@@ -165,8 +165,11 @@ exclude = ["src/generated/**/*.fpas"]
 "#,
     );
     write(&dir.join("src/main.fpas"), "program App;\nbegin\nend.\n");
-    write(&dir.join("src/generated/stub.fpas"), "unit App.Gen;\n");
-    write(&dir.join("src/live.fpas"), "unit App.Live;\n");
+    write(
+        &dir.join("src/generated/stub.fpas"),
+        "unit App.Gen;\nend unit;\n",
+    );
+    write(&dir.join("src/live.fpas"), "unit App.Live;\nend unit;\n");
 
     let loaded = load_project(&project).expect("project should load");
     fs::remove_dir_all(&dir).ok();
@@ -191,9 +194,9 @@ fn project_globs_keep_bracketed_root_literal_with_decoy_sibling() {
             "[project]\nname = \"app\"\nkind = \"program\"\nmain = \"main.fpas\"\n\n[sources]\ninclude = [\"*.fpas\"]\nexclude = [\"ignored*.fpas\"]\n",
         );
         write(&root.join("main.fpas"), "program App; begin end.\n");
-        write(&root.join("live.fpas"), "unit Live;\n");
-        write(&root.join("ignored.fpas"), "unit Ignored;\n");
-        write(&decoy.join("decoy.fpas"), "unit Decoy;\n");
+        write(&root.join("live.fpas"), "unit Live;\nend unit;\n");
+        write(&root.join("ignored.fpas"), "unit Ignored;\nend unit;\n");
+        write(&decoy.join("decoy.fpas"), "unit Decoy;\nend unit;\n");
 
         let loaded = load_project(&root.join("app.fpasprj")).expect("project should load");
         assert_eq!(loaded.source_files, vec![root.join("live.fpas")]);
@@ -211,7 +214,7 @@ fn source_exclusion_resolves_case_alias_once() {
         "[project]\nname = \"app\"\nkind = \"program\"\nmain = \"main.fpas\"\n\n[sources]\ninclude = [\"*.fpas\"]\nexclude = [\"LIVE.FPAS\"]\n",
     );
     write(&dir.join("main.fpas"), "program App; begin end.\n");
-    write(&dir.join("live.fpas"), "unit Live;\n");
+    write(&dir.join("live.fpas"), "unit Live;\nend unit;\n");
 
     let loaded = load_project(&manifest).expect("project should load");
     assert!(loaded.source_files.is_empty());
@@ -244,7 +247,7 @@ include = ["src/**/*.fpas"]
     );
     write(
         &lib.parent().unwrap().join("src/greet.fpas"),
-        "unit Demo.Greet;\n",
+        "unit Demo.Greet;\nend unit;\n",
     );
     write(
         &app,
@@ -285,7 +288,7 @@ fn workspace_dependency_names_use_unicode_case_folding() {
         &library,
         "[project]\nname = \"Straße Äpfel\"\nkind = \"library\"\n\n[sources]\ninclude = [\"library.fpas\"]\n",
     );
-    write(&dir.join("library.fpas"), "unit Demo.Library;\n");
+    write(&dir.join("library.fpas"), "unit Demo.Library;\nend unit;\n");
     write(
         &app,
         "[project]\nname = \"app\"\nkind = \"program\"\nmain = \"main.fpas\"\n\n[sources]\ninclude = [\"main.fpas\"]\n",
@@ -321,7 +324,7 @@ kind = "library"
 include = ["lib.fpas"]
 "#,
     );
-    write(&dir.join("lib.fpas"), "unit L.Core;\n");
+    write(&dir.join("lib.fpas"), "unit L.Core;\nend unit;\n");
     write(
         &dir.join("app.fpasprj"),
         r#"[project]
@@ -368,7 +371,7 @@ kind = "library"
 include = ["lib.fpas"]
 "#,
     );
-    write(&dir.join("lib.fpas"), "unit L.Core;\n");
+    write(&dir.join("lib.fpas"), "unit L.Core;\nend unit;\n");
 
     let error = discover_run_project_in_workspace(&workspace).expect_err("must fail");
     fs::remove_dir_all(&dir).ok();
@@ -394,7 +397,7 @@ units = ["Missing.Unit"]
 include = ["src/**/*.fpas"]
 "#,
     );
-    write(&dir.join("src/core.fpas"), "unit Lib.Core;\n");
+    write(&dir.join("src/core.fpas"), "unit Lib.Core;\nend unit;\n");
 
     let error = load_project(&project).expect_err("unknown export unit must fail");
     fs::remove_dir_all(&dir).ok();
@@ -428,10 +431,13 @@ units = ["Lib.Base"]
 include = ["src/**/*.fpas"]
 "#,
     );
-    write(&base_dir.join("src/base.fpas"), "unit Lib.Base;\n");
+    write(
+        &base_dir.join("src/base.fpas"),
+        "unit Lib.Base;\nend unit;\n",
+    );
     write(
         &base_dir.join("src/internal.fpas"),
-        "unit Lib.Base.Internal;\n",
+        "unit Lib.Base.Internal;\nend unit;\n",
     );
 
     write(
@@ -449,7 +455,7 @@ include = ["src/**/*.fpas"]
     );
     write(
         &util_dir.join("src/util.fpas"),
-        "unit Lib.Util;\nuses Lib.Base;\n",
+        "unit Lib.Util;\nuses Lib.Base;\nend unit;\n",
     );
 
     write(
@@ -522,7 +528,7 @@ include = ["src/**/*.fpas"]
         &dir.join("src/helper.fpas"),
         "program Helper;\nbegin\nend.\n",
     );
-    write(&dir.join("src/core.fpas"), "unit App.Core;\n");
+    write(&dir.join("src/core.fpas"), "unit App.Core;\nend unit;\n");
 
     let loaded = load_project(&project).expect("project should load");
     fs::remove_dir_all(&dir).ok();

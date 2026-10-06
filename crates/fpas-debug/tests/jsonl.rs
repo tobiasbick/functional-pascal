@@ -172,7 +172,7 @@ fn broken_protocol_writer_is_returned_as_transport_failure() {
 #[test]
 fn evaluate_parses_one_read_only_expression_and_reports_stable_errors() {
     let mut server = server(
-        "program Main; function Double(X: integer): integer; begin return X * 2; end; begin var X: integer := 1; end.",
+        "program Main; function Double(X: integer): integer; begin return X * 2; end function; begin var X: integer := 1; end.",
     );
     let _ = server.handle_line(&request(1, "initialize", json!({"version":2})));
     let _ = server.handle_line(&request(2, "launch", json!({"stop_on_entry":true})));
@@ -307,11 +307,11 @@ fn conditions_and_logpoints_use_detached_controlled_calls() {
                   begin\n\
                     Probe := Probe + 1;\n\
                     return Value = 2;\n\
-                  end;\n\
+                  end function;\n\
                   function Render(Value: integer): integer;\n\
                   begin\n\
                     return Value + 10;\n\
-                  end;\n\
+                  end function;\n\
                   begin\n\
                     mutable var I: integer := 0;\n\
                     while I < 3 do\n\

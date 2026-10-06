@@ -92,7 +92,7 @@ Transforms the `Some` value with `F`. If `O` is `None`, returns `None`.
 function TripleToString(V: integer): string;
 begin
   return IntToStr(V * 3);
-end;
+end function;
 
 var O: Option of integer := Some(7);
 var M: Option of string := Map(O, TripleToString);
@@ -110,7 +110,7 @@ function PositiveToOptionString(V: integer): Option of string;
 begin
   if V > 0 then return Some(IntToStr(V));
   else return None;
-end;
+end function;
 
 var O: Option of integer := Some(5);
 var M: Option of string := AndThen(O, PositiveToOptionString);
@@ -127,7 +127,7 @@ Calls `F` to provide a fallback when `O` is `None`. If `O` is `Some`, returns it
 function Fallback99(): Option of integer;
 begin
   return Some(99);
-end;
+end function;
 
 var O: Option of integer := None;
 var M: Option of integer := OrElse(O, Fallback99);

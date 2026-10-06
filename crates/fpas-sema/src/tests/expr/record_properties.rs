@@ -16,12 +16,12 @@ type
     function GetValue(Self: Box): integer;
     begin
       return Self.Value;
-    end;
+    end function;
     procedure SetValue(Self: Box; V: integer);
     begin
-    end;
+    end procedure;
     property ValueProp: integer read GetValue write SetValue;
-  end;
+  end record;
 begin
   var B: Box := record Value := 1; end;
   var X: integer := B.ValueProp;
@@ -40,9 +40,9 @@ type
     Id: integer;
     procedure SetLabel(Self: Handle; Value: string);
     begin
-    end;
+    end procedure;
     property Label: string write SetLabel;
-  end;
+  end record;
 begin
   var H: Handle := record Id := 1; end;
   H.Label := 'ok';
@@ -59,9 +59,9 @@ type
   Box = record
     procedure SetPassword(Self: Box; Value: string);
     begin
-    end;
+    end procedure;
     property Password: string write SetPassword;
-  end;
+  end record;
 begin
   var B: Box := record end;
   var S: string := B.Password;
@@ -83,9 +83,9 @@ type
     function GetWidth(Self: Box): integer;
     begin
       return 0;
-    end;
+    end function;
     property Width: integer read GetWidth;
-  end;
+  end record;
 begin
   var B: Box := record end;
   B.Width := 1;
@@ -108,9 +108,9 @@ type
     function GetText(Self: Box): string;
     begin
       return Self.Text;
-    end;
+    end function;
     property Text: string read GetText;
-  end;
+  end record;
 begin
 end.",
     );
@@ -129,7 +129,7 @@ program T;
 type
   Box = record
     property Width: integer;
-  end;
+  end record;
 begin
 end.";
     let (_program, parse_errors) = fpas_parser::parse(src);
@@ -153,9 +153,9 @@ type
     function GetWidth(Self: Box): integer;
     begin
       return 0;
-    end;
+    end function;
     property Width: integer read GetWidth;
-  end;
+  end record;
 begin
   var B: Box := record end;
   var W: integer := B.Width;
@@ -189,12 +189,12 @@ type
     function GetValue(mutable Self: Box): integer;
     begin
       return 0;
-    end;
+    end function;
     procedure SetValue(Self: Box; mutable Value: integer);
     begin
-    end;
+    end procedure;
     property Value: integer read GetValue write SetValue;
-  end;
+  end record;
 begin
 end.",
     );
@@ -222,9 +222,9 @@ type
     function GetValue<T>(Self: Box): integer;
     begin
       return 0;
-    end;
+    end function;
     property Value: integer read GetValue;
-  end;
+  end record;
 begin
 end.",
     );
@@ -246,9 +246,9 @@ type
     function GetValue(Self: Box): integer;
     begin
       return 0;
-    end;
+    end function;
     property Value: integer read GetValue;
-  end;
+  end record;
 begin
   var B: Box := record Value := 1; end;
 end.",
@@ -271,9 +271,9 @@ type
     function GetValue(Self: Box): integer;
     begin
       return 0;
-    end;
+    end function;
     property Value: integer read GetValue;
-  end;
+  end record;
 begin
   var B: Box := record end;
   var C: Box := B with Value := 1; end;

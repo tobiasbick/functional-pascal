@@ -7,16 +7,16 @@ type
   Action = procedure();
   Pack = record
     Item: Handler;
-  end;
+  end record;
 
 function Identity(Value: integer): integer;
 begin
   return Value;
-end;
+end function;
 
 procedure Noop();
 begin
-end;
+end procedure;
 
 mutable var
   Shared: Handler := Identity;
@@ -26,7 +26,7 @@ function AddCell(Value: integer): integer;
 begin
   Cell := Cell + 1;
   return Value + Cell;
-end;
+end function;
 begin
   mutable var Cell: integer := 1;
   var Original: Handler := AddCell;
@@ -41,20 +41,20 @@ begin
   WriteLn(Current(0));
   WriteLn(Original(0));
   return Current;
-end;
+end function;
 
 function Mix(Base: integer): Handler;
 function MixBoth(Value: integer): integer;
 begin
   Cell := Cell + 1;
   return (Value + Base) + Cell;
-end;
+end function;
 begin
   mutable var Cell: integer := 1;
   mutable var Current: Handler := Identity;
   var MixStop: integer := 0;
   return Current;
-end;
+end function;
 
 function OuterCell(): Handler;
 function Mid(): Handler;
@@ -62,24 +62,24 @@ function AddEnclosed(Value: integer): integer;
 begin
   Cell := Cell + 1;
   return Value + Cell;
-end;
+end function;
 begin
   var Original: Handler := AddEnclosed;
   mutable var Current: Handler := Identity;
   var EnclosingStop: integer := 0;
   return Current;
-end;
+end function;
 begin
   mutable var Cell: integer := 1;
   return Mid();
-end;
+end function;
 
 function Walk(N: integer): integer;
 function AddAcc(Value: integer): integer;
 begin
   Acc := Acc + 1;
   return Value + Acc;
-end;
+end function;
 begin
   mutable var Acc: integer := N;
   mutable var Current: Handler := Identity;
@@ -92,14 +92,14 @@ begin
   begin
     return Walk(N - 1);
   end;
-end;
+end function;
 
 function Shadow(): Handler;
 function AddOffset(Value: integer): integer;
 begin
   Offset := Offset + 1;
   return Value + Offset;
-end;
+end function;
 begin
   mutable var Offset: integer := 7;
   mutable var Current: Handler := Identity;
@@ -108,52 +108,52 @@ begin
     var ShadowStop: integer := 0;
     return Current;
   end;
-end;
+end function;
 
 function LateCell(): Handler;
 function AddLate(Value: integer): integer;
 begin
   Cell := Cell + 1;
   return Value + Cell;
-end;
+end function;
 begin
   mutable var Current: Handler := Identity;
   var LateStop: integer := 0;
   mutable var Cell: integer := 1;
   var LateReady: integer := 0;
   return Current;
-end;
+end function;
 
 function PendingDest(): Handler;
 function AddPending(Value: integer): integer;
 begin
   Cell := Cell + 1;
   return Value + Cell;
-end;
+end function;
 begin
   mutable var Cell: integer := 1;
   var PendingStop: integer := 0;
   mutable var Current: Handler := Identity;
   return Current;
-end;
+end function;
 
 procedure Apply(mutable Current: Handler);
 function AddParam(Value: integer): integer;
 begin
   Cell := Cell + 1;
   return Value + Cell;
-end;
+end function;
 begin
   mutable var Cell: integer := 1;
   var ParamStop: integer := 0;
-end;
+end procedure;
 
 function NestedBox(): integer;
 function AddBoxed(Value: integer): integer;
 begin
   Cell := Cell + 1;
   return Value + Cell;
-end;
+end function;
 begin
   mutable var Cell: integer := 1;
   mutable var Packed: Pack := record
@@ -161,18 +161,18 @@ begin
   end;
   var BoxStop: integer := 0;
   return 0;
-end;
+end function;
 
 function CaptureDest(): Handler;
 function AddCaptured(Value: integer): integer;
 begin
   Cell := Cell + 1;
   return Value + Cell;
-end;
+end function;
 function Touch(): integer;
 begin
   return Current(0);
-end;
+end function;
 begin
   mutable var Cell: integer := 1;
   mutable var Source: Handler := Identity;
@@ -180,13 +180,13 @@ begin
   var Keep: integer := Touch();
   var CaptureDestStop: integer := 0;
   return Current;
-end;
+end function;
 
 function SpawnProbe(): integer;
 procedure RunSpawn();
 begin
   Cell := Cell + 1;
-end;
+end procedure;
 begin
   mutable var Cell: integer := 1;
   mutable var Current: Action := Noop;
@@ -194,20 +194,20 @@ begin
   var Pending: task := go Current();
   Wait(Pending);
   return Cell;
-end;
+end function;
 
 function Worker(): Handler;
 function AddWorker(Value: integer): integer;
 begin
   Cell := Cell + 1;
   return Value + Cell;
-end;
+end function;
 begin
   mutable var Cell: integer := 8;
   mutable var Current: Handler := Identity;
   var WorkerStop: integer := 0;
   return Current;
-end;
+end function;
 
 begin
   mutable var Current: Handler := Identity;

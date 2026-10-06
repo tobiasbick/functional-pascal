@@ -137,7 +137,7 @@ program_heading     = 'program' identifier ';' ;
 
 unit                = unit_heading
                       [ uses_clause ]
-                      { unit_declaration } ;
+                      { unit_declaration } 'end' 'unit' ';' ;
 
 unit_heading        = 'unit' qualified_id ';' ;
 
@@ -226,7 +226,7 @@ formal_type_param   = [ 'mutable' ] identifier ':' type_expr ;
 
 record_type         = 'record'
                       { record_member }
-                      'end' ;
+                      'end' 'record' ;
 record_member       = [ public_modifier ]
                       ( field_def | record_method | record_property | record_event ) ;
 field_def           = identifier ':' type_expr [ ':=' expression ] ';' ;
@@ -240,11 +240,11 @@ record_method       = static_record_method | instance_record_method ;
 static_record_method = 'static' ( function_decl | procedure_decl ) ;
 instance_record_method = instance_function_decl | instance_procedure_decl ;
 instance_function_decl = instance_function_heading ';'
-                         { nested_decl } 'begin' statement_list 'end' ';' ;
+                         { nested_decl } 'begin' statement_list 'end' 'function' ';' ;
 instance_function_heading = 'function' identifier [ type_params ]
                             '(' [ instance_param_list ] ')' ':' type_expr ;
 instance_procedure_decl = instance_procedure_heading ';'
-                          { nested_decl } 'begin' statement_list 'end' ';' ;
+                          { nested_decl } 'begin' statement_list 'end' 'procedure' ';' ;
 instance_procedure_heading = 'procedure' identifier [ type_params ]
                              '(' [ instance_param_list ] ')' ;
 instance_param_list = instance_first_param { ';' param_group } ;
@@ -281,7 +281,7 @@ property_accessor   = 'read' identifier
 record_event        = 'event' identifier ':' type_expr
                       'read' identifier 'write' identifier ';' ;
 
-enum_type           = 'enum' enum_member { enum_member } 'end' ;
+enum_type           = 'enum' enum_member { enum_member } 'end' 'enum' ;
 enum_member         = identifier [ enum_fields | '=' integer_literal ] ';' ;
 enum_fields         = '(' enum_field { ';' enum_field } ')' ;
 enum_field          = identifier ':' type_expr ;
@@ -295,13 +295,13 @@ enum_field          = identifier ':' type_expr ;
 (* ---- 2.5 Functions & Procedures -------------------------------- *)
 
 function_decl       = function_heading ';'
-                      { nested_decl } 'begin' statement_list 'end' ';' ;
+                      { nested_decl } 'begin' statement_list 'end' 'function' ';' ;
 
 function_heading    = 'function' identifier [ type_params ]
                       '(' [ param_list ] ')' ':' type_expr ;
 
 procedure_decl      = procedure_heading ';'
-                      { nested_decl } 'begin' statement_list 'end' ';' ;
+                      { nested_decl } 'begin' statement_list 'end' 'procedure' ';' ;
 
 procedure_heading   = 'procedure' identifier [ type_params ]
                       '(' [ param_list ] ')' ;

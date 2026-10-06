@@ -43,7 +43,7 @@ fn function_declaration() {
 function Add(A: integer; B: integer): integer;
 begin
   return A + B
-end;";
+end function;";
 
     assert_eq!(
         toks(src),
@@ -68,6 +68,7 @@ end;";
             Token::Plus,
             Token::Ident("B".into()),
             Token::End,
+            Token::Function,
             Token::Semicolon,
         ]
     );

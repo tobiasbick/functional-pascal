@@ -12,16 +12,16 @@ program ContextualRecords;
 type Point = record
   X: integer := 0;
   Y: integer := 0;
-end;
+end record;
 const OriginPoint: Point := record X := 0; end;
 function Origin(): Point;
 begin
   return record X := 4; end;
-end;
+end function;
 procedure Draw(P: Point);
 begin
   if (P.X <> 0) or (P.Y <> 2) then panic('argument defaults');
-end;
+end procedure;
 begin
   mutable var P: Point := record end;
   P := record X := 1; end;
@@ -65,7 +65,7 @@ type
   Point = record
     X: integer;
     Y: integer := 2;
-  end;
+  end record;
 begin
   var Original: Point := record X := 1; end;
   var Updated: Point := Original with X := 9; end;
@@ -89,7 +89,7 @@ type
   Choice = enum
     Number(Value: integer);
     Empty;
-  end;
+  end enum;
 begin
   var A: Result of integer, string := Ok(5);
   var B: Option of integer := Some(6);
@@ -110,7 +110,7 @@ type
   Pair = record
     Left: integer;
     Right: integer;
-  end;
+  end record;
 begin
   mutable var VALUE: Pair := record Left := 1; Right := 2; end;
   value.lEfT := VALUE.right;
@@ -129,12 +129,12 @@ function ResultValue(Input: Result of integer, string): Result of integer, strin
 begin
   var Value: integer := try Input;
   return Ok(Value + 1);
-end;
+end function;
 function OptionValue(Input: Option of integer): Option of integer;
 begin
   var Value: integer := try Input;
   return Some(Value + 1);
-end;
+end function;
 begin
   if ResultValue(Ok(4)) <> Ok(5) then panic('result success');
   if ResultValue(Error('bad')) <> Error('bad') then panic('result failure');
@@ -154,11 +154,11 @@ type
     First: integer;
     Second: integer;
     Third: integer;
-  end;
+  end record;
 function ReadValue(Value: Result of integer, string): Result of integer, string;
 begin
   return Value;
-end;
+end function;
 function Build(Second: Result of integer, string): Result of Triple, string;
 begin
   return Ok(record
@@ -166,7 +166,7 @@ begin
     Second := try ReadValue(Second);
     Third := try ReadValue(Ok(3));
   end);
-end;
+end function;
 begin
   case Build(Ok(2)) of
     Ok(Value):
@@ -189,7 +189,7 @@ type
   Shape = enum
     Point;
     Pair(Left: integer; Right: integer);
-  end;
+  end enum;
 begin
   mutable var Sum: integer := 0;
   var ResultValue: Result of integer, string := Ok(3);
@@ -222,7 +222,7 @@ type
     Ready = 4;
     Running;
     Done = 9;
-  end;
+  end enum;
   StateAlias = State;
 begin
   var Value: State := state.rUnNiNg;
@@ -263,34 +263,34 @@ type
     function Double(Self: Counter): integer;
     begin
       return Self.Value * 2;
-    end;
+    end function;
     function ReadNumber(Self: Counter): integer;
     begin
       return Self.Value;
-    end;
+    end function;
     procedure WriteNumber(Self: Counter; Value: integer);
     begin
       LastValue := Value;
-    end;
+    end procedure;
     property Number: integer read ReadNumber write WriteNumber;
-  end;
+  end record;
 
   Button = record
     function ReadOnValue(Self: Button): Option of procedure(Value: integer);
     begin
       return Handler;
-    end;
+    end function;
     procedure WriteOnValue(Self: Button; Value: Option of procedure(Value: integer));
     begin
       Handler := Value;
-    end;
+    end procedure;
     event OnValue: procedure(Value: integer) read ReadOnValue write WriteOnValue;
-  end;
+  end record;
 
 procedure Remember(Value: integer);
 begin
   LastValue := Value;
-end;
+end procedure;
 
 begin
   var C: Counter := record Value := 6; end;
@@ -322,9 +322,9 @@ type
     function ReadNumber(Self: Counter): integer;
     begin
       return Self.Value;
-    end;
+    end function;
     property Number: integer read ReadNumber;
-  end;
+  end record;
 begin
   var C: Counter := record Value := 1; end;
   if C.Number <> 1 then panic('property metadata fixture');
@@ -382,13 +382,13 @@ program RecordInitializerOrder;
 type Pair = record
   First: integer;
   Second: integer := 7;
-end;
+end record;
 mutable var Calls: integer := 0;
 function Next(): integer;
 begin
   Calls := Calls + 1;
   return Calls;
-end;
+end function;
 begin
   if (record First := Next(); Second := Next(); end).Second <> 2 then
     panic('anonymous record initializer order');
@@ -408,15 +408,15 @@ program RegisterGenericAggregates;
 type
   Point = record
     X: integer;
-  end;
+  end record;
   Choice = enum
     Number(Value: integer);
     Empty;
-  end;
+  end enum;
 function Identity<T>(Value: T): T;
 begin
   return Value;
-end;
+end function;
 begin
   var P: Point := Identity(record X := 8; end);
   if P.X <> 8 then panic('generic record mismatch');
@@ -440,21 +440,21 @@ type
     static function Create(Value: integer): Box;
     begin
       return record Value := Value; end;
-    end;
+    end function;
     function ReadNumber(Self: Box): integer;
     begin
       return Self.Value;
-    end;
+    end function;
     property Number: integer read ReadNumber;
     function Map<T>(Self: Box; Transform: function(Value: integer): T): T;
     begin
       return Transform(Self.Value);
-    end;
-  end;
+    end function;
+  end record;
 function Double(Value: integer): integer;
 begin
   return Value * 2;
-end;
+end function;
 begin
   var B: Box := box.create(11);
   if B.Map(Double) <> 22 then panic('generic method mismatch');
@@ -474,8 +474,8 @@ type
     function Add(Self: Counter; Value: integer): integer;
     begin
       return Self.Base + Value;
-    end;
-  end;
+    end function;
+  end record;
 begin
   var C: Counter := record Base := 10; end;
   var AddToCounter: function(Value: integer): integer := C.Add;
@@ -496,22 +496,22 @@ type
     function Add(Self: Counter; Value: integer): integer;
     begin
       return Self.Base + Value;
-    end;
-  end;
+    end function;
+  end record;
   Source = record
     function ReadValue(Self: Source): Option of function(Value: integer): integer;
     begin
       return Handler;
-    end;
+    end function;
     procedure WriteValue(
       Self: Source;
       Value: Option of function(Value: integer): integer
     );
     begin
       Handler := Value;
-    end;
+    end procedure;
     event OnValue: function(Value: integer): integer read ReadValue write WriteValue;
-  end;
+  end record;
 begin
   var C: Counter := record Base := 12; end;
   var S: Source := record end;
@@ -535,28 +535,28 @@ type
     begin
       Step := Step * 10 + 4;
       return Self.Value;
-    end;
+    end function;
     procedure WriteNumber(Self: Inner; Value: integer);
     begin
       Step := Step * 10 + 3;
       Written := Value;
-    end;
+    end procedure;
     property Number: integer read ReadNumber write WriteNumber;
-  end;
+  end record;
   Outer = record
     Item: Inner;
     function ReadChild(Self: Outer): Inner;
     begin
       Step := Step * 10 + 1;
       return Self.Item;
-    end;
+    end function;
     property Child: Inner read ReadChild;
-  end;
+  end record;
 function BuildValue(): integer;
 begin
   Step := Step * 10 + 2;
   return 23;
-end;
+end function;
 begin
   var O: Outer := record Item := record Value := 17; end; end;
   O.Child.Number := BuildValue();
@@ -600,7 +600,7 @@ function ChangeSurface(): integer;
 begin
   Surface := [[3, 4]];
   return 1;
-end;
+end function;
 begin
   Surface[0][ChangeSurface()] := 9;
   if Surface[0][0] <> 1 then panic('snapshot order changed');

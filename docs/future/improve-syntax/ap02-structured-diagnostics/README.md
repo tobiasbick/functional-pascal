@@ -1,6 +1,6 @@
 # AP02: Structured diagnostics
 
-Status: agreed direction (Q01). Effort: small. Completion is tracked in the
+Status: complete (Q01). Effort: small. Completion is tracked in the
 [central README](../README.md); the process is in
 [development-process.md](../development-process.md).
 
@@ -55,12 +55,12 @@ documents the catalog. AP02.6 is independent of AP02.3–AP02.5.
 
 ## Work packages
 
-- [ ] [AP02.1: Diagnostic audit and code scheme](01-audit-and-code-scheme.md)
-- [ ] [AP02.2: Shared diagnostic record](02-shared-diagnostic-record.md)
-- [ ] [AP02.3: Project and build diagnostics](03-project-and-build-diagnostics.md)
-- [ ] [AP02.4: JSON diagnostic output](04-json-output.md)
-- [ ] [AP02.5: Diagnostics reference](05-diagnostics-reference.md)
-- [ ] [AP02.6: Parameter declaration diagnostics](06-parameter-declaration-diagnostics.md)
+- [x] [AP02.1: Diagnostic audit and code scheme](01-audit-and-code-scheme.md)
+- [x] [AP02.2: Shared diagnostic record](02-shared-diagnostic-record.md)
+- [x] [AP02.3: Project and build diagnostics](03-project-and-build-diagnostics.md)
+- [x] [AP02.4: JSON diagnostic output](04-json-output.md)
+- [x] [AP02.5: Diagnostics reference](05-diagnostics-reference.md)
+- [x] [AP02.6: Parameter declaration diagnostics](06-parameter-declaration-diagnostics.md)
 
 ## Acceptance
 
@@ -70,7 +70,7 @@ canonical spelling.
 
 ## Delivery
 
-All six slices are implemented locally on `codex/syntax-changes-2`. The
+All six slices are implemented and verified on `codex/syntax-changes-2`. The
 [implementation audit](implementation-audit.md) records the producer inventory,
-code mapping, file layout and verification. Completion checkboxes await merge
-under the [development process](../development-process.md#status-tracking).
+code mapping, file layout and verification. Completion checkboxes reflect
+this delivery under the [development process](../development-process.md#status-tracking).

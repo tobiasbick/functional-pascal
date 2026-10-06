@@ -25,7 +25,7 @@ begin
   end;
 
   return -1;
-end;
+end function;
 
 // Finds the next CRLF line ending.
 //
@@ -43,7 +43,7 @@ begin
   end;
 
   return -1;
-end;
+end function;
 
 // Parses a supported HTTP response status line.
 //
@@ -73,7 +73,7 @@ begin
               Std.Str.Trim(Std.Str.Substring(Remainder, SecondSpace + 1, (Std.Str.Length(Remainder) - SecondSpace) -
                                                                          1))
             ]);
-end;
+end function;
 
 // Reports whether text is exactly three decimal digits.
 //
@@ -96,7 +96,7 @@ begin
   end;
 
   return true;
-end;
+end function;
 
 // Converts one hexadecimal character to its value or minus one.
 //
@@ -116,7 +116,7 @@ begin
   end;
 
   return -1;
-end;
+end function;
 
 // Parses one hexadecimal chunk-size line and ignores extensions.
 //
@@ -155,7 +155,7 @@ begin
   end;
 
   return Ok(Size);
-end;
+end function;
 
 // Decodes one complete chunked body.
 //
@@ -218,7 +218,7 @@ begin
   end;
 
   return Error('HTTP chunked body is missing its final zero chunk');
-end;
+end function;
 
 // Reports whether response semantics permit a message body.
 //
@@ -234,7 +234,7 @@ begin
 
   return ((StatusCode < 100) or (StatusCode > 199)) and
          ((StatusCode <> 204) and (StatusCode <> 304));
-end;
+end function;
 
 // Applies selected framing to one complete raw response body.
 //
@@ -274,7 +274,7 @@ begin
       return Error(Message);
     end;
   end;
-end;
+end function;
 
 // Parses one complete response head and returns its body offset.
 //
@@ -349,7 +349,7 @@ begin
     Headers := Headers;
     BodyOffset := Separator + 4;
   end);
-end;
+end function;
 
 // Parses one complete buffered HTTP response.
 //
@@ -384,7 +384,7 @@ begin
       return Error(Message);
     end;
   end;
-end;
+end function;
 
 // Formats the Host field value for a parsed URI.
 //
@@ -409,7 +409,7 @@ begin
   end;
 
   return (Host + ':') + Std.Conv.IntToStr(UriValue.Port);
-end;
+end function;
 
 // Validates and serializes one HTTP/1.1 request.
 //
@@ -449,4 +449,5 @@ begin
 
   Head := (Head + #13) + #10;
   return Ok(Std.Arrays.Concat(Std.Net.Utf8.Encode(Head), RequestValue.Body));
-end;
+end function;
+end unit;

@@ -6,12 +6,12 @@ uses Fractal.Camera, Std.Console, Std.Conv, Std.Math, Std.Options, Std.Str;
 function RenderWidth(): integer;
 begin
   return Max(ScreenWidth(), 1);
-end;
+end function;
 
 function RenderHeight(): integer;
 begin
   return Max(ScreenHeight() - 3, 1);
-end;
+end function;
 
 // 1-based cell in the render viewport → complex plane (same mapping as row iteration)
 
@@ -20,13 +20,13 @@ begin
   var Wr: integer := Max(W - 1, 1);
   return State.XMin(W, H) +
          (IntToReal(CellX - 1) / IntToReal(Wr)) * (State.XMax(W, H) - State.XMin(W, H));
-end;
+end function;
 
 function ViewportCY(State: ExplorerCamera; W: integer; H: integer; CellY: integer): real;
 begin
   var Hr: integer := Max(H - 1, 1);
   return State.YMax() - (IntToReal(CellY - 1) / IntToReal(Hr)) * (State.YMax() - State.YMin());
-end;
+end function;
 
 procedure WriteHudText(Text: string; Width: integer);
 begin
@@ -38,7 +38,7 @@ begin
       WriteText(Substring(Text, 0, TextLength));
     end;
   end;
-end;
+end procedure;
 
 procedure DrawHud(
   S: ExplorerCamera;
@@ -75,7 +75,7 @@ begin
 
   NormVideo();
   Window(1, 1, Width, Height);
-end;
+end procedure;
 
 mutable var
   ResetCamera: ExplorerCamera := record
@@ -94,7 +94,7 @@ mutable var
 procedure RequestRedraw();
 begin
   NeedsRedraw := true;
-end;
+end procedure;
 
 procedure PaintFrame(
   Title: string;
@@ -127,7 +127,7 @@ begin
   RenderFrame(State.XMin(RenderW, RenderH), State.XMax(RenderW, RenderH), State.YMin(), State.YMax(), RenderW, RenderH, State.MaxIter, State.Palette);
   DrawHud(State, RenderW, RenderH, Title, PaletteLabel);
   Present();
-end;
+end procedure;
 
 function HandleKey(Key: KeyEvent): boolean;
 begin
@@ -217,7 +217,7 @@ begin
   end;
 
   return false;
-end;
+end function;
 
 procedure HandleMouse(InputEvent: ConsoleEvent);
 begin
@@ -247,7 +247,7 @@ begin
       RequestRedraw();
     end;
   end;
-end;
+end procedure;
 
 procedure HandleResize(Width: integer; Height: integer);
 begin
@@ -259,7 +259,7 @@ begin
     RenderH := NewH;
     RequestRedraw();
   end;
-end;
+end procedure;
 
 procedure HandleEvent(E: ConsoleEvent);
 begin
@@ -275,7 +275,7 @@ begin
   begin
     HandleResize(E.width, E.height);
   end;
-end;
+end procedure;
 
 procedure ShutdownTerminal();
 begin
@@ -285,7 +285,7 @@ begin
   DisableMouse();
   DisableRawMode();
   LeaveAltScreen();
-end;
+end procedure;
 
 // Runs one interactive explorer; renderer and palettes remain example-owned.
 public procedure RunExplorer(
@@ -336,4 +336,5 @@ begin
   end;
 
   ShutdownTerminal();
-end;
+end procedure;
+end unit;

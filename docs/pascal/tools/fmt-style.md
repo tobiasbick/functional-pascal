@@ -26,7 +26,8 @@ Visual checklist:
 
 - `program` / `unit` header → **one blank line** → `uses` (if any) → **one blank line** → rest
 - Every **program** ends with `begin` … `end.` (period on `end`)
-- Every **function** / **procedure** / **method** body: `begin` … `end`
+- Every **function** / **procedure** / **method** body: `begin` … `end function;` or `end procedure;`
+- Every **unit** ends with `end unit;` after its declarations
 - Every **`if` / `else`**, **`for` / `while`**, **`case` arm**: extra nested `begin` … `end` (even for a single statement)
 - **`repeat` … `until`**: no extra `begin` / `end` around the body
 - Inside `begin` … `end`, one blank line separates completed `end;` blocks from the next
@@ -132,7 +133,7 @@ type
     function Sum(Self: Point): integer;
     begin
       return Self.X + Self.Y;
-    end;
+    end function;
 
     function Add(Self: Point; Other: Point): Point;
     begin
@@ -142,13 +143,13 @@ type
         X := RX;
         Y := RY;
       end;
-    end;
+    end function;
 
     procedure Print(Self: Point);
     begin
       WriteLn('(' + IntToStr(Self.X) + ', ' + IntToStr(Self.Y) + ')');
-    end;
-  end;
+    end procedure;
+  end record;
 
 begin
   var A: Point := record
@@ -192,12 +193,13 @@ begin
   begin
     return Value;
   end;
-end;
+end function;
 
 function IsBlank(S: string): boolean;
 begin
   return Length(Trim(S)) = 0;
-end;
+end function;
+end unit;
 ```
 
 <details>
@@ -215,7 +217,8 @@ begin
     return Max;
   else
     return Value;
-end;
+end function;
+end unit;
 ```
 </details>
 
@@ -266,11 +269,13 @@ The language allows a **single statement** without `begin` / `end` after `then`,
 | `while` … `do` body | `begin` … `end` |
 | `case` arm body | `begin` … `end` (label, then block on following lines) |
 | `case` `else` branch | `begin` … `end` |
-| `function` / `procedure` body | already required — unchanged |
+| named `function` / `procedure` body | `begin` … `end function;` / `end procedure;` |
 | program `begin` … `end.` | already required — unchanged |
 | `repeat` … `until` | **no** extra wrapper — statement list stays directly under `repeat` |
-| `record` / `enum` type, record literals | `record` … `end` / `enum` … `end` — not `begin` |
-| nested `function` / `procedure` body | already required — unchanged |
+| `record` / `enum` type | `record` … `end record;` / `enum` … `end enum;` |
+| record literal | `record` … `end` |
+| unit | declarations followed by `end unit;` |
+| nested named `function` / `procedure` body | `begin` … `end function;` / `end procedure;` |
 
 ## Blank lines
 
@@ -281,7 +286,7 @@ The formatter **inserts and removes** blank lines to match these rules. User-pla
 | `program Name;` | **exactly one** |
 | `unit Qualified.Name;` | **exactly one** |
 | `uses ...;` | **exactly one** |
-| `type` block (after closing `end;` of the block) | **exactly one** before the next top-level section (`begin` in programs, or `function` / `procedure` / … in units) |
+| `type` block (after the final declaration terminator) | **exactly one** before the next top-level section (`begin` in programs, or `function` / `procedure` / … in units) |
 | last field in a `record` type (before methods) | **exactly one** before the first method |
 | sibling statement whose formatted output ends in `end;` | **exactly one**, unless the next sibling is `var` or `mutable var` |
 | last statement before `end` / `end.` | none |
@@ -318,6 +323,9 @@ Semicolons are **terminators**:
 
 - Every statement and declaration ends with `;`, including the last statement
   before `end`, `else`, or `until`. The program's final `end.` keeps its period.
+- Named declarations have one matching ending: `end function;`, `end procedure;`,
+  `end record;`, `end enum;`, or `end unit;`. The ending contains the declaration
+  terminator; no additional `;` follows it.
 - An `if`, `for`, or `while` with a single-statement body shares that body's
   final `;`. The formatter wraps the body in `begin` ... `end;` and emits no
   additional terminator after that closing `end;`.
@@ -330,7 +338,7 @@ Semicolons are **terminators**:
 - Formal parameter lists keep `;` between parameters and have no trailing
   separator before `)`.
 - `case` arm labels: `;` after each arm’s closing `end` (including the last arm before `else`); `else` branch follows [`language/control-flow/case-of-intro.md`](../language/control-flow/case-of-intro.md).
-- Fields inside a `record` type: `;` after **every** field, including the last field before `end`, a blank line, or methods (matches existing FPAS sources).
+- Fields inside a `record` type: `;` after **every** field, including the last field before `end record`, a blank line, or methods (matches existing FPAS sources).
 - Preserve `public` on exported unit declarations and individual record
   members. Private declarations and members have no modifier. A routine
   modifier appears before `static`.
@@ -356,7 +364,7 @@ Semicolons are **terminators**:
 type
   IdBox = record
     Value: integer;
-  end;
+  end record;
 ```
 
 ### Five fields
@@ -369,7 +377,7 @@ type
     Age: integer;
     Active: boolean;
     Score: real;
-  end;
+  end record;
 ```
 
 ### Fields with defaults
@@ -380,7 +388,7 @@ type
     Host: string := 'localhost';
     Port: integer := 8080;
     Retries: integer := 3;
-  end;
+  end record;
 ```
 
 ### Record literal (expression)
@@ -446,13 +454,13 @@ type
     Red;
     Green;
     Blue;
-  end;
+  end enum;
 
   Shape = enum
     Circle(Radius: real);
     Rectangle(Width: real; Height: real);
     Point;
-  end;
+  end enum;
 
   IntBox = Box of integer;
 ```

@@ -5,7 +5,7 @@ uses Std.Console, Std.Results, Std.Conv;
 function ToStr(V: integer): string;
 begin
   return IntToStr(V);
-end;
+end function;
 
 begin
   var R: result of integer, string := Ok(5);

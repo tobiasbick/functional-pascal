@@ -19,7 +19,7 @@ public type
     public ChangeAction: TuiAction;
     // Rectangle occupied by the value.
     public Bounds: TuiRect;
-  end;
+  end record;
 
 mutable var
   TuiPointerMenus: array of TuiPointerMenu := [];
@@ -119,7 +119,7 @@ begin
   end;
 
   return Next;
-end;
+end function;
 
 function TuiPointerMenuFocus(Root: TuiElement; Menu: TuiPointerMenu): array of TuiMsg;
 begin
@@ -130,7 +130,7 @@ begin
   end;
 
   return [TuiMsg.FocusChanged(Previous, Some(Menu.Id))];
-end;
+end function;
 
 function TuiPointerMenuHover(Menu: TuiPointerMenu; Id: TuiMenuNodeId): array of TuiMsg;
 begin
@@ -148,7 +148,7 @@ begin
   end;
 
   return [TuiMsg.MenuChanged(Menu.Id, Menu.ChangeAction, TuiMenuState.OpenAt(Id))];
-end;
+end function;
 
 function TuiPointerMenuBarHit(
   Root: TuiElement;
@@ -190,7 +190,7 @@ begin
   end;
 
   return Some([]);
-end;
+end function;
 
 function TuiPointerMenuPopupHit(
   Menu: TuiPointerMenu;
@@ -262,7 +262,7 @@ begin
   end;
 
   return None;
-end;
+end function;
 
 // Routes a left-button press or movement over one active hierarchical menu.
 //
@@ -324,4 +324,5 @@ begin
   end;
 
   return None;
-end;
+end function;
+end unit;

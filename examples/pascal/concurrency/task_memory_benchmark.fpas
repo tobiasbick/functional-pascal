@@ -14,7 +14,7 @@ const
 procedure Worker();
 begin
   Sleep(SleepMillis);
-end;
+end procedure;
 
 begin
   if ParamCount() <> 1 then

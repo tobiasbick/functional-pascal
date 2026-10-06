@@ -1,6 +1,6 @@
 # AP01: Pascal conventions
 
-Status: agreed direction. Effort: small. Completion is tracked in the
+Status: complete. Effort: small. Completion is tracked in the
 [central README](../README.md); the process is in
 [development-process.md](../development-process.md).
 
@@ -36,8 +36,8 @@ AP01.1 establishes the reference examples; AP01.2 checks the plan against them.
 
 ## Work packages
 
-- [ ] [AP01.1: Reference examples](01-reference-examples.md)
-- [ ] [AP01.2: Plan spelling review](02-plan-spelling-review.md)
+- [x] [AP01.1: Reference examples](01-reference-examples.md)
+- [x] [AP01.2: Plan spelling review](02-plan-spelling-review.md)
 
 ## Acceptance
 
@@ -49,5 +49,5 @@ presenting unresolved grammar as implemented behavior.
 The [reference style](reference-style.md) provides ten annotated draft examples.
 The [spelling review](spelling-review.md) records the plan-wide checks,
 corrections, and decisions left with the owning packages. Both work packages
-are delivered locally; their completion checkboxes await merge under the
+are complete on the working branch under the
 [development process](../development-process.md#status-tracking).

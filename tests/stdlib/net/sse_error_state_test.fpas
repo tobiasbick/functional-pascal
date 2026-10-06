@@ -28,7 +28,7 @@ begin
       end;
     end;
   end;
-end;
+end procedure;
 
 begin
   var Limited: SseDecoder := Unwrap(CreateSseDecoder(8));

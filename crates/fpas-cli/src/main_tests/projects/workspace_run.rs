@@ -26,7 +26,7 @@ include = ["src/**/*.fpas"]
     );
     write_text(
         &lib_project.parent().unwrap().join("src/greet.fpas"),
-        "unit Demo.Greet;\npublic const Message: string := 'from lib';\n",
+        "unit Demo.Greet;\npublic const Message: string := 'from lib';\nend unit;\n",
     );
 
     write_text(
@@ -152,7 +152,7 @@ kind = "library"
 include = ["lib.fpas"]
 "#,
     );
-    write_text(&cwd.join("lib.fpas"), "unit L.Core;\n");
+    write_text(&cwd.join("lib.fpas"), "unit L.Core;\nend unit;\n");
 
     let (exit_code, _, stderr_output) =
         support::run_cli_args_and_capture_output(&[String::from("run")], &cwd);

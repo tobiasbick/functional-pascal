@@ -13,7 +13,7 @@ public type
     ReplaceSubscription(Id: integer; Work: TuiBackgroundWork);
     // Requests cancellation and clears any pending replacement with the matching id.
     CancelSubscription(Id: integer);
-  end;
+  end enum;
 
 type
   TuiOwnedWork = record
@@ -22,7 +22,7 @@ type
     Group: TaskGroup;
     Cancelling: boolean;
     Replacement: option of TuiBackgroundWork;
-  end;
+  end record;
 
 mutable var
   TuiBackgroundOpen: array of boolean := [];
@@ -37,7 +37,7 @@ begin
   end;
 
   return ApplicationId;
-end;
+end function;
 
 procedure TuiBackgroundRemove(ApplicationId: integer; Index: integer);
 begin
@@ -45,7 +45,7 @@ begin
   TuiBackgroundWorkItems[ApplicationId - 1] := Std.Arrays.Concat(Std.Arrays.Slice(Items, 0, Index), Std.Arrays.Slice(Items, Index +
                                                                                                                             1, (Std.Arrays.Length(Items) - Index) -
                                                                                                                                1));
-end;
+end procedure;
 
 function TuiBackgroundFailureMessages(
   Id: integer;
@@ -63,7 +63,7 @@ begin
   end;
 
   return Messages;
-end;
+end function;
 
 function TuiBackgroundCloseAt(ApplicationId: integer; Index: integer; IncludeCancellation: boolean): array of TuiMsg;
 begin
@@ -71,7 +71,7 @@ begin
   var Messages: array of TuiMsg := TuiBackgroundFailureMessages(Item.Id, CloseTaskGroup(Item.Group), IncludeCancellation);
   TuiBackgroundRemove(ApplicationId, Index);
   return Messages;
-end;
+end function;
 
 function TuiBackgroundFindSubscription(ApplicationId: integer; Id: integer): integer;
 begin
@@ -85,7 +85,7 @@ begin
   end;
 
   return -1;
-end;
+end function;
 
 procedure TuiBackgroundStart(
   ApplicationId: integer;
@@ -109,7 +109,7 @@ begin
     Replacement := None;
   end);
   TuiBackgroundWorkItems[ApplicationId - 1] := Items;
-end;
+end procedure;
 
 procedure TuiBackgroundRequestStop(
   ApplicationId: integer;
@@ -122,14 +122,14 @@ begin
   Items[Index].Cancelling := true;
   Items[Index].Replacement := Replacement;
   TuiBackgroundWorkItems[ApplicationId - 1] := Items;
-end;
+end procedure;
 
 // Allocates the background ownership slot for a new application.
 public procedure TuiBackgroundOpenApplication();
 begin
   TuiBackgroundOpen := Std.Arrays.Concat(TuiBackgroundOpen, [true]);
   TuiBackgroundWorkItems := Std.Arrays.Concat(TuiBackgroundWorkItems, [[]]);
-end;
+end procedure;
 
 // Requests cancellation without joining on the UI path; replacement admission is deferred to reap.
 public function TuiBackgroundApply(ApplicationId: integer; Commands: array of TuiBackgroundCommand): array of TuiMsg;
@@ -166,14 +166,14 @@ begin
   end;
 
   return [];
-end;
+end function;
 
 // Reports whether an application currently owns any operation.
 public function TuiBackgroundHasWork(ApplicationId: integer): boolean;
 begin
   TuiBackgroundRequireOpen(ApplicationId);
   return Std.Arrays.Length(TuiBackgroundWorkItems[ApplicationId - 1]) > 0;
-end;
+end function;
 
 // Collects completed groups and starts only the latest pending replacement after its predecessor ends.
 public function TuiBackgroundReap(ApplicationId: integer): array of TuiMsg;
@@ -208,7 +208,7 @@ begin
   end;
 
   return Messages;
-end;
+end function;
 
 // Cancels and joins all owned work at shutdown without starting pending replacements.
 public function TuiBackgroundCloseApplication(ApplicationId: integer): array of TuiMsg;
@@ -228,4 +228,5 @@ begin
 
   TuiBackgroundOpen[ApplicationId - 1] := false;
   return Messages;
-end;
+end function;
+end unit;

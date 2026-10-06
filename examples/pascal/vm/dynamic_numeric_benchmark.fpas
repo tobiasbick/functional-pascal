@@ -12,7 +12,7 @@ const
 function Advance<T: Numeric>(Value: T; Step: T): T;
 begin
   return Value + Step;
-end;
+end function;
 
 function RunNumbers(Iterations: integer): integer;
 begin
@@ -23,7 +23,7 @@ begin
   end;
 
   return Value;
-end;
+end function;
 
 begin
   if (ParamCount() < 1) or (ParamCount() > 2) then

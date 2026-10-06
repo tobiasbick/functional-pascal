@@ -13,7 +13,7 @@ begin
   ResponseValue.Headers := [Header.Create('Content-Type', 'text/plain; charset=utf-8')];
   ResponseValue.Body := Std.Net.Utf8.Encode('Hello over HTTPS from FPAS');
   return ResponseValue;
-end;
+end function;
 
 begin
   if (ParamCount() < 2) or (ParamCount() > 3) then

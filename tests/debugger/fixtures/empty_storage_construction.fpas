@@ -6,12 +6,12 @@ type
   Point = record
     X: integer;
     Y: integer;
-  end;
+  end record;
   Choice = enum
     Empty;
     Count(Value: integer);
     Pair(Left: integer; Right: integer);
-  end;
+  end enum;
   Holder = record
     Count: integer;
     Nested: Point;
@@ -20,15 +20,15 @@ type
     Item: Choice;
     Outcome: result of integer, string;
     Optional: option of integer;
-  end;
+  end record;
   BoxFn = record
     Action: function(): integer;
-  end;
+  end record;
 
 function Identity(): integer;
 begin
   return 1;
-end;
+end function;
 
 function MakeInitialState(): Holder;
 begin
@@ -44,7 +44,7 @@ begin
     Outcome := Ok(6);
     Optional := Some(7);
   end;
-end;
+end function;
 
 mutable var
   Tick: integer := 0;
@@ -54,7 +54,7 @@ function Next(): integer;
 begin
   Tick := Tick + 1;
   return Tick;
-end;
+end function;
 
 begin
   mutable var Callback: function(): integer := Identity;

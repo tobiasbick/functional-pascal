@@ -8,7 +8,7 @@ Returns a new array where each element is the result of calling `F` on the corre
 function Double(X: integer): integer;
 begin
   return X * 2;
-end;
+end function;
 
 var Nums: array of integer := [1, 2, 3];
 var Doubled: array of integer := Map(Nums, Double);
@@ -24,7 +24,7 @@ Returns a new array containing only elements for which `F` returns `true`.
 function IsEven(X: integer): boolean;
 begin
   return X mod 2 = 0;
-end;
+end function;
 
 var Nums: array of integer := [1, 2, 3, 4, 5];
 var Evens: array of integer := Filter(Nums, IsEven);
@@ -40,7 +40,7 @@ Folds elements left-to-right, starting from `Init`.
 function Sum(Acc: integer; V: integer): integer;
 begin
   return Acc + V;
-end;
+end function;
 
 var Nums: array of integer := [1, 2, 3, 4, 5];
 var Total: integer := Reduce(Nums, 0, Sum);
@@ -56,7 +56,7 @@ Returns the **first** element for which `F` returns `true`, wrapped in `Some`. R
 function IsAboveThree(X: integer): boolean;
 begin
   return X > 3;
-end;
+end function;
 
 var Nums: array of integer := [1, 2, 3, 4, 5];
 var First: Option of integer := Find(Nums, IsAboveThree);
@@ -73,7 +73,7 @@ Returns the **index** of the first element for which `F` returns `true`, or **`-
 function IsAboveFifteen(X: integer): boolean;
 begin
   return X > 15;
-end;
+end function;
 
 var Idx: integer := FindIndex([10, 20, 30], IsAboveFifteen);
 WriteLn(Idx)  // 1
@@ -89,7 +89,7 @@ Returns `true` if **at least one** element satisfies `F`.
 function IsNegative(X: integer): boolean;
 begin
   return X < 0;
-end;
+end function;
 
 var HasNeg: boolean := Any([1, -2, 3], IsNegative);
 WriteLn(HasNeg)  // true
@@ -105,7 +105,7 @@ Returns `true` if **every** element satisfies `F`.
 function IsPositive(X: integer): boolean;
 begin
   return X > 0;
-end;
+end function;
 
 var AllPos: boolean := All([1, 2, 3], IsPositive);
 WriteLn(AllPos)  // true

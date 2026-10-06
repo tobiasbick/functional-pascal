@@ -173,7 +173,7 @@ begin
       panic(Message);
     end;
   end;
-end;
+end procedure;
 
 begin
   var BaseUrl: string := 'http://127.0.0.1:{port}';

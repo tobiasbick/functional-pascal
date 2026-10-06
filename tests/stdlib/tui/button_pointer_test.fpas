@@ -6,14 +6,14 @@ type
   ButtonPointerModel = record
     Actions: integer;
     PointerEvents: integer;
-  end;
+  end record;
 
 function ViewButton(State: ButtonPointerModel): TuiElement;
 begin
   return TuiElementBuilders.MakeDesktop(None, [
                                                 TuiElementBuilders.MakeButtonWithMnemonic(TuiControlId.Create(1), 'Go', 'G', TuiAction.Create(10))
                                               ]);
-end;
+end function;
 
 function UpdateButton(State: ButtonPointerModel; Msg: TuiMsg; Cmd: TuiCmdOutput): ButtonPointerModel;
 begin
@@ -38,12 +38,12 @@ begin
       return State;
     end;
   end;
-end;
+end function;
 
 function Pointer(Action: TuiPointerAction; Position: TuiPoint): TuiPointerEvent;
 begin
   return TuiPointerEvent.Create(Action, TuiPointerButton.Left, Position);
-end;
+end function;
 
 begin
   var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(16, 4));

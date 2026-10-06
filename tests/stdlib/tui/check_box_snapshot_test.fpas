@@ -6,7 +6,7 @@ type
   CheckModel = record
     Focus: integer;
     Checked: boolean;
-  end;
+  end record;
 
 function ViewCheck(State: CheckModel): TuiElement;
 begin
@@ -15,7 +15,7 @@ begin
                                                                                                                          TuiElementBuilders.MakeCheckBox(TuiControlId.Create(1), 'Flag', State.Checked, TuiAction.Create(9))
                                                                                                                        ])
                                                                                 ]);
-end;
+end function;
 
 function UpdateCheck(State: CheckModel; Msg: TuiMsg; Cmd: TuiCmdOutput): CheckModel;
 begin
@@ -33,7 +33,7 @@ begin
       return State;
     end;
   end;
-end;
+end function;
 
 begin
   mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 6));

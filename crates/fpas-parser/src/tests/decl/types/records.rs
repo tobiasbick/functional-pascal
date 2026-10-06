@@ -2,7 +2,7 @@ use super::*;
 
 #[test]
 fn record_type() {
-    let p = parse_ok("program T; type Point = record X: real; Y: real; end; begin end.");
+    let p = parse_ok("program T; type Point = record X: real; Y: real; end record; begin end.");
     match &p.declarations[0] {
         Decl::TypeDef(td) => {
             assert_eq!(td.name, "Point");
@@ -27,7 +27,7 @@ fn unit_record_fields_preserve_per_member_visibility() {
            Value: integer; \
            public Step: integer; \
            LabelText: string; \
-         end;",
+         end record;\nend unit;",
     );
     let Decl::TypeDef(type_def) = &unit.declarations[0] else {
         panic!("expected TypeDef");
@@ -45,7 +45,7 @@ fn unit_record_fields_preserve_per_member_visibility() {
 fn public_record_field_is_rejected_in_program_files() {
     let (program, errors) = parse_with_errors(
         "program T; \
-         type Counter = record public Value: integer; end; \
+         type Counter = record public Value: integer; end record; \
          begin end.",
     );
     let Decl::TypeDef(type_def) = &program.declarations[0] else {
@@ -66,8 +66,9 @@ fn public_record_field_is_rejected_in_program_files() {
 
 #[test]
 fn invalid_record_field_recovery_preserves_following_field() {
-    let (p, errors) =
-        parse_with_errors("program T; type Point = record X: real; 123; Y: real; end; begin end.");
+    let (p, errors) = parse_with_errors(
+        "program T; type Point = record X: real; 123; Y: real; end record; begin end.",
+    );
     assert!(!errors.is_empty());
     match &p.declarations[0] {
         Decl::TypeDef(td) => match &td.body {
@@ -86,8 +87,8 @@ fn invalid_record_field_recovery_preserves_following_field() {
 fn invalid_record_field_recovery_preserves_following_function_declaration() {
     let (p, errors) = parse_with_errors(
         "program T; \
-         type Point = record X: real; 123; end; \
-         function Answer(): integer; begin return 42; end; \
+         type Point = record X: real; 123; end record; \
+         function Answer(): integer; begin return 42; end function; \
          begin end.",
     );
     assert!(!errors.is_empty());

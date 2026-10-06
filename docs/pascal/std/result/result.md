@@ -92,7 +92,7 @@ Transforms the `Ok` value with `F`. If `R` is `Error`, returns it unchanged.
 function DoubleToString(V: integer): string;
 begin
   return IntToStr(V * 2);
-end;
+end function;
 
 var R: Result of integer, string := Ok(21);
 var M: Result of string, string := Map(R, DoubleToString);
@@ -110,7 +110,7 @@ function PositiveToResult(V: integer): Result of string, string;
 begin
   if V > 0 then return Ok(IntToStr(V));
   else return Error('non-positive');
-end;
+end function;
 
 var R: Result of integer, string := Ok(10);
 var M: Result of string, string := AndThen(R, PositiveToResult);
@@ -127,7 +127,7 @@ Calls `F` with the `Error` value to attempt recovery. If `R` is `Ok`, returns it
 function RecoverToZero(E: string): Result of integer, string;
 begin
   return Ok(0);
-end;
+end function;
 
 var R: Result of integer, string := Error('oops');
 var M: Result of integer, string := OrElse(R, RecoverToZero);

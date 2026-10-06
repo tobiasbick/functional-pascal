@@ -15,7 +15,7 @@ uses Std.Arrays, Std.Tasks;
 function Worker(Value: integer): integer;
 begin
   return Value + 1;
-end;
+end function;
 begin
   mutable var Tasks: array of task := [];
   for Index: integer := 1 to 8 do
@@ -38,7 +38,7 @@ uses Std.Console, Std.Tasks;
 function Add(A: integer; B: integer): integer;
 begin
   return A + B;
-end;
+end function;
 
 begin
   var T: task := go Add(20, 22);
@@ -58,7 +58,7 @@ uses Std.Console;
 procedure Work();
 begin
   Std.Console.WriteLn('worker');
-end;
+end procedure;
 
 begin
   go Work();
@@ -79,13 +79,13 @@ begin
   while I < Count do
     I := I + 1;
   return I;
-end;
+end function;
 
 function Work(): integer;
 begin
   var Values: array of integer := [40, 2];
   return Burn(700) - 700 + Values[0] + Values[1];
-end;
+end function;
 
 begin
   var T: task := go Work();
@@ -105,7 +105,7 @@ function Work(Value: integer): integer;
 begin
   Std.Time.Sleep(1);
   return Value;
-end;
+end function;
 
 begin
   var A: task := go Work(42);
@@ -138,7 +138,7 @@ begin
     end;
     Error(Message): return Message;
   end;
-end;
+end function;
 
 begin
   case Std.Net.Listen('127.0.0.1', {port}) of
@@ -171,7 +171,7 @@ uses Std.Tasks;
 function Work(Value: integer): integer;
 begin
   return Value;
-end;
+end function;
 
 begin
   var A: task := go Work(20);
@@ -197,7 +197,7 @@ begin
     Value := Value + 1;
     return Value;
   end;
-end;
+end function;
 
 begin
   var Work: function(): integer := Make();
@@ -226,7 +226,7 @@ begin
     Error(Message): panic(Message);
   end;
   return CloseChannel(Messages);
-end;
+end function;
 
 function Take(Messages: channel of integer): integer;
 begin
@@ -234,7 +234,7 @@ begin
     Ok(Value): return Value;
     Error(Message): panic(Message);
   end;
-end;
+end function;
 
 begin
   var Messages: channel of integer := CreateChannel(1);
@@ -262,12 +262,12 @@ uses Std.Tasks;
 function MakeChannel(): channel of integer;
 begin
   return CreateChannel(1);
-end;
+end function;
 
 function CloseChannelArgument(Messages: channel of integer): boolean;
 begin
   return CloseChannel(Messages);
-end;
+end function;
 
 begin
   if not CloseChannelArgument(CreateChannel(1)) then
@@ -356,7 +356,7 @@ begin
     Ok(_): return 'sent';
     Error(Message): return Message;
   end;
-end;
+end function;
 
 function BlockedReceive(
   Messages: channel of integer;
@@ -367,7 +367,7 @@ begin
     Ok(_): return 'received';
     Error(Message): return Message;
   end;
-end;
+end function;
 
 begin
   var Full: channel of integer := CreateChannel(1);

@@ -7,7 +7,7 @@ fn controlled_wait_any_rejects_negative_timeout() {
 uses Std.Tasks;
 procedure Work();
 begin
-end;
+end procedure;
 begin
   var T: task := go Work();
   WaitAnyWithTimeout([T], -1);
@@ -24,7 +24,7 @@ fn controlled_wait_any_preserves_worker_failure() {
         "WithCancellation([T], GetCancellationToken(CreateCancellationSource()))",
     ] {
         let source = format!(
-            "program Failure; uses Std.Tasks; procedure Work(); begin panic('original failure'); end; begin var T: task := go Work(); WaitAny{control}; end."
+            "program Failure; uses Std.Tasks; procedure Work(); begin panic('original failure'); end procedure; begin var T: task := go Work(); WaitAny{control}; end."
         );
         let error = run_program(&source).expect_err("task failure");
         assert_eq!(error.code, fpas_diagnostics::codes::RUNTIME_PROGRAM_PANIC);
@@ -47,7 +47,7 @@ uses Std.Tasks;
 procedure Work();
 begin
   panic('original worker failure');
-end;
+end procedure;
 begin
   var T: task := go Work();
   WaitAny([T]);
@@ -66,7 +66,7 @@ uses Std.Tasks;
 function Work(Value: integer): integer;
 begin
   return Value;
-end;
+end function;
 begin
   var A: task := go Work(11);
   var B: task := go Work(22);
@@ -88,13 +88,13 @@ function Work(): integer;
 begin
   Sleep(1);
   return 7;
-end;
+end function;
 function Parent(): integer;
 begin
   var Child: task := go Work();
   if WaitAny([Child]) <> 0 then panic('index');
   return Wait(Child);
-end;
+end function;
 begin
   var ParentTask: task := go Parent();
   if WaitAny([ParentTask]) <> 0 then panic('parent index');

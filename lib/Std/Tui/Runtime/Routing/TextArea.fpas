@@ -17,7 +17,7 @@ begin
   end;
 
   return Line;
-end;
+end function;
 
 // Routes one key into a complete controlled text-area state proposal.
 //
@@ -136,7 +136,7 @@ begin
   end;
 
   return Some(TuiMsg.TextAreaChanged(Id, ChangeAction, NextText, NextCaret, NextOffset));
-end;
+end function;
 
 // Routes a pointer position into a complete controlled text-area state proposal.
 //
@@ -161,4 +161,5 @@ begin
   var Caret: integer := TuiTextAreaCaretAtDisplayColumn(Text, Line, Column);
   var NextOffset: TuiPoint := TuiTextAreaEnsureCaretVisible(Text, Caret, Offset, TuiSize.Create(Viewport.Width, Viewport.Height));
   return TuiMsg.TextAreaChanged(Id, ChangeAction, Text, Caret, NextOffset);
-end;
+end function;
+end unit;

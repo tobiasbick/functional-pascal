@@ -5,10 +5,10 @@ uses Std.Console;
 type
   Box = record
     Value: integer;
-  end;
+  end record;
   Container = record
     Items: array of Box;
-  end;
+  end record;
 
 mutable var
   GlobalValue: integer := 5;

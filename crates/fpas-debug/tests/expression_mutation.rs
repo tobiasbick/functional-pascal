@@ -17,10 +17,10 @@ type
   Box = record
     Value: integer;
     Other: integer;
-  end;
+  end record;
   Container = record
     Items: array of Box;
-  end;
+  end record;
 
 mutable var
   GlobalValue: integer := 5;
@@ -28,7 +28,7 @@ mutable var
 function ChooseIndex(): integer;
 begin
   return 1;
-end;
+end function;
 
 begin
   mutable var Selected: integer := 0;

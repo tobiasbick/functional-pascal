@@ -9,7 +9,7 @@ public type
     public Cells: array of TuiCell;
     // Whether each column continues a wide glyph from its left neighbor.
     public Continuations: array of boolean;
-  end;
+  end record;
 
 // Writes consecutive cells into one row while preserving wide-glyph invariants.
 // The caller clips Values to the row and supplies matching continuation storage.
@@ -73,4 +73,5 @@ begin
     Cells := NextCells;
     Continuations := NextContinuations;
   end;
-end;
+end function;
+end unit;

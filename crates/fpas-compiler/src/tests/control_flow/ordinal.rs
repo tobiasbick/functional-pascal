@@ -49,7 +49,7 @@ fn boolean_counting_bound_can_shadow_an_outer_boolean() {
 fn simple_enum_counting_loops_keep_their_ordinal_values() {
     assert_succeeds(
         "program EnumBounds;
-        type Color = enum Red; Green; Blue; end;
+        type Color = enum Red; Green; Blue; end enum;
         begin
           mutable var Count: integer := 0;
           mutable var Greens: integer := 0;

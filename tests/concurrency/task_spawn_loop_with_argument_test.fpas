@@ -5,7 +5,7 @@ uses Std.Arrays, Std.Tasks, Std.Test;
 function Worker(Value: integer): integer;
 begin
   return Value + 1;
-end;
+end function;
 
 begin
   mutable var Tasks: array of task := [];

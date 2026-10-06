@@ -5,8 +5,8 @@ use fpas_diagnostics::codes::PARSE_INVALID_STATIC_PLACEMENT;
 fn record_with_function_method() {
     let p = parse_ok(
         "program T; type Num = record V: integer; \
-         function Double(Self: Num): integer; begin return Self.V * 2; end; \
-         end; begin end.",
+         function Double(Self: Num): integer; begin return Self.V * 2; end function; \
+         end record; begin end.",
     );
     match &p.declarations[0] {
         Decl::TypeDef(td) => match &td.body {
@@ -26,11 +26,11 @@ fn unit_record_routines_preserve_per_member_visibility() {
     let unit = parse_unit_ok(
         "unit Demo.Types; \
          type Counter = record \
-           function Hidden(Self: Counter): integer; begin return 1; end; \
-           public procedure Reset(Self: Counter); begin end; \
-           static function CreateHidden(): Counter; begin return record end; end; \
-           public static procedure Clear(); begin end; \
-         end;",
+           function Hidden(Self: Counter): integer; begin return 1; end function; \
+           public procedure Reset(Self: Counter); begin end procedure; \
+           static function CreateHidden(): Counter; begin return record end; end function; \
+           public static procedure Clear(); begin end procedure; \
+         end record;\nend unit;",
     );
     let Decl::TypeDef(type_def) = &unit.declarations[0] else {
         panic!("expected TypeDef");
@@ -50,8 +50,8 @@ fn public_record_routine_is_rejected_in_program_files() {
     let (_, errors) = parse_with_errors(
         "program T; \
          type Counter = record \
-           public function Hidden(Self: Counter): integer; begin return 1; end; \
-         end; \
+           public function Hidden(Self: Counter): integer; begin return 1; end function; \
+         end record; \
          begin end.",
     );
 
@@ -67,8 +67,8 @@ fn public_record_routine_is_rejected_in_program_files() {
 fn record_with_procedure_method() {
     let p = parse_ok(
         "program T; type Greeter = record Name: string; \
-         procedure SayHello(Self: Greeter); begin Std.Console.WriteLn('hi'); end; \
-         end; begin end.",
+         procedure SayHello(Self: Greeter); begin Std.Console.WriteLn('hi'); end procedure; \
+         end record; begin end.",
     );
     match &p.declarations[0] {
         Decl::TypeDef(td) => match &td.body {
@@ -86,9 +86,9 @@ fn record_with_procedure_method() {
 fn record_with_multiple_methods() {
     let p = parse_ok(
         "program T; type Rect = record W: integer; H: integer; \
-         function Area(Self: Rect): integer; begin return Self.W * Self.H; end; \
-         procedure Print(Self: Rect); begin Std.Console.WriteLn(Self.W); end; \
-         end; begin end.",
+         function Area(Self: Rect): integer; begin return Self.W * Self.H; end function; \
+         procedure Print(Self: Rect); begin Std.Console.WriteLn(Self.W); end procedure; \
+         end record; begin end.",
     );
     match &p.declarations[0] {
         Decl::TypeDef(td) => match &td.body {
@@ -109,8 +109,8 @@ fn record_with_generic_function_method() {
     let p = parse_ok(
         "program T; type Box = record Value: integer; \
          function Map<R>(Self: Box; F: function(X: integer): R): R; \
-         begin return F(Self.Value); end; \
-         end; begin end.",
+         begin return F(Self.Value); end function; \
+         end record; begin end.",
     );
     match &p.declarations[0] {
         Decl::TypeDef(td) => match &td.body {
@@ -133,8 +133,8 @@ fn record_with_static_function() {
     let p = parse_ok(
         "program T; type Point = record X: integer; Y: integer; \
          static function Create(X: integer; Y: integer): Point; \
-         begin return record X := X; Y := Y; end; end; \
-         end; begin end.",
+         begin return record X := X; Y := Y; end; end function; \
+         end record; begin end.",
     );
     match &p.declarations[0] {
         Decl::TypeDef(td) => match &td.body {
@@ -160,9 +160,9 @@ fn record_static_and_instance_methods_together() {
     let p = parse_ok(
         "program T; type Point = record X: integer; Y: integer; \
          static function Origin(): Point; \
-         begin return record X := 0; Y := 0; end; end; \
-         function Sum(Self: Point): integer; begin return Self.X + Self.Y; end; \
-         end; begin end.",
+         begin return record X := 0; Y := 0; end; end function; \
+         function Sum(Self: Point): integer; begin return Self.X + Self.Y; end function; \
+         end record; begin end.",
     );
     match &p.declarations[0] {
         Decl::TypeDef(td) => match &td.body {
@@ -181,8 +181,8 @@ fn record_static_and_instance_methods_together() {
 fn record_with_static_procedure() {
     let p = parse_ok(
         "program T; type Point = record X: integer; \
-         static procedure Reset(X: integer); begin end; \
-         end; begin end.",
+         static procedure Reset(X: integer); begin end procedure; \
+         end record; begin end.",
     );
     match &p.declarations[0] {
         Decl::TypeDef(td) => match &td.body {
@@ -202,7 +202,7 @@ fn record_with_static_procedure() {
 #[test]
 fn static_at_program_level_is_rejected() {
     let (_p, errs) = parse_with_errors(
-        "program T; static function Foo(): integer; begin return 1; end; begin end.",
+        "program T; static function Foo(): integer; begin return 1; end function; begin end.",
     );
     let parse_err = errs.iter().find_map(ParseDiagnostic::as_parser_error);
     let d = parse_err.expect("expected parser diagnostic");
@@ -218,7 +218,7 @@ fn static_at_program_level_is_rejected() {
 #[test]
 fn static_procedure_at_program_level_is_rejected() {
     let (_p, errs) =
-        parse_with_errors("program T; static procedure Reset(); begin end; begin end.");
+        parse_with_errors("program T; static procedure Reset(); begin end procedure; begin end.");
     let parse_err = errs.iter().find_map(ParseDiagnostic::as_parser_error);
     let d = parse_err.expect("expected parser diagnostic");
     assert_eq!(d.code, PARSE_INVALID_STATIC_PLACEMENT);
@@ -232,8 +232,9 @@ fn static_procedure_at_program_level_is_rejected() {
 
 #[test]
 fn static_without_function_in_record_is_rejected() {
-    let (_p, errs) =
-        parse_with_errors("program T; type Point = record X: integer; static; end; begin end.");
+    let (_p, errs) = parse_with_errors(
+        "program T; type Point = record X: integer; static; end record; begin end.",
+    );
     let parse_err = errs.iter().find_map(ParseDiagnostic::as_parser_error);
     let d = parse_err.expect("expected parser diagnostic");
     assert_eq!(d.code, PARSE_INVALID_STATIC_PLACEMENT);

@@ -16,7 +16,7 @@ begin
   Cmd.ReplaceSubscription(RenderSubscriptionId, function(Token: CancellationToken): result of boolean, string begin
     return RunBackgroundRender(Request, Inbox, Token);
   end);
-end;
+end procedure;
 
 function RestartRender(
   State: MandelbrotModel;
@@ -35,7 +35,7 @@ begin
 
   QueueRender(Next, Cmd);
   return Next;
-end;
+end function;
 
 function ToggleHelp(State: MandelbrotModel): MandelbrotModel;
 begin
@@ -50,7 +50,7 @@ begin
     FailureMessage := State.FailureMessage;
     Inbox := State.Inbox;
   end;
-end;
+end function;
 
 function WithFailure(State: MandelbrotModel; Message: string): MandelbrotModel;
 begin
@@ -65,19 +65,19 @@ begin
     FailureMessage := Message;
     Inbox := State.Inbox;
   end;
-end;
+end function;
 
 function ViewportX(State: ExplorerState; Width: integer; Height: integer; CellX: integer): real;
 begin
   return State.XMin(Width, Height) +
          (IntToReal(CellX) / IntToReal(Max(Width - 1, 1))) * (State.XMax(Width, Height) - State.XMin(Width, Height));
-end;
+end function;
 
 function ViewportY(State: ExplorerState; Height: integer; CellY: integer): real;
 begin
   return State.YMax() -
          (IntToReal(CellY) / IntToReal(Max(Height - 1, 1))) * (State.YMax() - State.YMin());
-end;
+end function;
 
 function UpdateKey(State: MandelbrotModel; Key: TuiKeyEvent; Cmd: TuiCmdOutput): MandelbrotModel;
 begin
@@ -161,7 +161,7 @@ begin
   end;
 
   return State;
-end;
+end function;
 
 function UpdatePointer(State: MandelbrotModel; Pointer: TuiPointerEvent; Cmd: TuiCmdOutput): MandelbrotModel;
 begin
@@ -200,7 +200,7 @@ begin
   end;
 
   return State;
-end;
+end function;
 
 // Handles framework input and owns the render subscription lifecycle.
 public function UpdateMandelbrot(State: MandelbrotModel; Msg: TuiMsg; Cmd: TuiCmdOutput): MandelbrotModel;
@@ -253,7 +253,7 @@ begin
       return State;
     end;
   end;
-end;
+end function;
 
 // Replaces the displayed image only after a complete current-generation render.
 public function UpdateMandelbrotFrame(
@@ -272,4 +272,5 @@ begin
   Next.Grid := TuiCellGrid.Create(State.Grid.Width, State.Grid.Height, Message.Cells);
   Next.RowsRendered := State.Grid.Height;
   return Next;
-end;
+end function;
+end unit;

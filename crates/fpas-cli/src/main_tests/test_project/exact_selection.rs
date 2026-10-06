@@ -12,7 +12,7 @@ fn exact_test_selection_preserves_nested_identity_and_project_linking() {
     );
     write_text(
         &cwd.join("support.fpas"),
-        "unit Shared; public function Value(): integer; begin return 42; end;",
+        "unit Shared; public function Value(): integer; begin return 42; end function;\nend unit;",
     );
     for file in [
         "a/same_test.fpas",

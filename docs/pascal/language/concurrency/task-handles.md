@@ -17,7 +17,7 @@ initializer. `task` is a reserved word, so it cannot name a variable, field, or 
 function Doubled(Job: task of integer): integer;
 begin
   return Wait(Job) * 2;
-end;
+end function;
 
 var Jobs: array of task of result of boolean, string := [go Connect(), go Serve()];
 ```

@@ -14,7 +14,7 @@ type
         Value := NewValue;
         Step := Self.Step;
       end;
-    end;
+    end function;
 
     function Reset(Self: Counter): Counter;
     begin
@@ -22,13 +22,13 @@ type
         Value := 0;
         Step := Self.Step;
       end;
-    end;
+    end function;
 
     procedure Show(Self: Counter);
     begin
       WriteLn('Counter: ' + IntToStr(Self.Value));
-    end;
-  end;
+    end procedure;
+  end record;
 
 begin
   var C: Counter := record

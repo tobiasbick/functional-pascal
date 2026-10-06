@@ -157,7 +157,7 @@ mod tests {
         );
         write_text(&first_test, "program First;\nbegin end.");
         write_text(&second_test, "program Second;\nbegin end.");
-        write_text(&helper, "unit Tests.Fixture;\n");
+        write_text(&helper, "unit Tests.Fixture;\nend unit;\n");
 
         let mut contexts = LinkContextCache::new(None);
         let context = contexts

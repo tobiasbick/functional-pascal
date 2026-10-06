@@ -31,7 +31,7 @@ begin
       end;
     end;
   end;
-end;
+end procedure;
 
 // Reads response fragments until the server closes its side of the connection.
 //
@@ -72,7 +72,7 @@ begin
       panic(Message);
     end;
   end;
-end;
+end function;
 
 begin
   mutable var Port: integer := 18081;

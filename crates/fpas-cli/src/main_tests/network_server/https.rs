@@ -31,7 +31,7 @@ begin
   mutable var ResponseValue: ServerResponse := ServerResponse.Create(200, 'OK');
   ResponseValue.Body := Std.Net.Utf8.Encode('secure ' + RequestValue.Target);
   return ResponseValue;
-end;
+end function;
 
 begin
   case ListenTls('127.0.0.1', {port}, '{certificate_source}', '{private_key_source}', 2000) of

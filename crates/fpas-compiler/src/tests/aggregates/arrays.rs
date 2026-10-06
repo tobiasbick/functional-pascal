@@ -43,7 +43,7 @@ begin
   if (Values[0] <> 9) or (Values[1] <> 2) then panic('root snapshot');
   Values[1] := 4;
   if Values[1] <> 4 then panic('captured direct index');
-end;
+end procedure;
 begin
   Check();
 end.

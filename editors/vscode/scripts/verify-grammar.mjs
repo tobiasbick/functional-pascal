@@ -285,9 +285,37 @@ async function verifyReservedKeywordScopes(grammar) {
   assertNoKeywordScope(jsonNull);
 }
 
+async function verifyDeclarationClosers(grammar) {
+  const fixture = await tokenizeFixture(grammar, "declaration_closers.fpas");
+  const configuration = JSON.parse(await readFile(
+    path.join(extensionRoot, "language-configuration.json"), "utf8"
+  ));
+  const increase = new RegExp(configuration.indentationRules.increaseIndentPattern);
+  const decrease = new RegExp(configuration.indentationRules.decreaseIndentPattern);
+  for (const kind of ["function", "procedure", "record", "enum", "unit"]) {
+    const line = `end ${kind};`;
+    assertScope(tokenAt(fixture, line, "end"), "keyword.control.fpas");
+    assertScope(tokenAt(fixture, line, kind),
+      kind === "record" || kind === "enum"
+        ? "storage.type.composite.fpas" : "keyword.declaration.fpas");
+    for (const spelling of [line, line.toUpperCase(), line.slice(0, -1)]) {
+      assert.ok(decrease.test(spelling), `${spelling} decreases indentation`);
+      assert.ok(!increase.test(spelling), `${spelling} does not open another block`);
+    }
+  }
+  const snippets = JSON.parse(await readFile(
+    path.join(extensionRoot, "snippets", "fpas.json"), "utf8"
+  ));
+  for (const [name, kind] of [["Function declaration", "function"],
+    ["Procedure declaration", "procedure"], ["Record type", "record"], ["Unit", "unit"]]) {
+    assert.equal(snippets[name].body.at(-1), `end ${kind};`);
+  }
+}
+
 /** Loads the grammar and verifies positive, negative, and edge-case scopes. */
 export async function verifyGrammar() {
   const grammar = await createGrammar();
+  await verifyDeclarationClosers(grammar);
   await verifyPositiveScopes(grammar);
   await verifyNegativeScopes(grammar);
   await verifyEdgeScopes(grammar);

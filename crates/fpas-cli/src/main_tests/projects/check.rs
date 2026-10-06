@@ -15,7 +15,7 @@ fn check_cli_validates_library_project() {
     write_library_fpasprj(&project_file, &["src/**/*.fpas"]);
     write_text(
         &cwd.join("src/math.fpas"),
-        "unit Lib.Math;\npublic function Double(X: integer): integer;\nbegin\n  return X + X;\nend;\n",
+        "unit Lib.Math;\npublic function Double(X: integer): integer;\nbegin\n  return X + X;\nend function;\nend unit;\n",
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_args_and_capture_output(
@@ -36,7 +36,7 @@ fn run_cli_still_rejects_library_projects() {
     let cwd = create_temp_dir("run-library-after-check");
     let project_file = cwd.join("lib.fpasprj");
     write_library_fpasprj(&project_file, &["src/**/*.fpas"]);
-    write_text(&cwd.join("src/util.fpas"), "unit Lib.Util;\n");
+    write_text(&cwd.join("src/util.fpas"), "unit Lib.Util;\nend unit;\n");
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);
     fs::remove_dir_all(&cwd).expect("temp directory must be removed");
@@ -62,7 +62,7 @@ members = ["libs/math.fpasprj", "apps/demo.fpasprj"]
     write_library_fpasprj(&lib_project, &["src/**/*.fpas"]);
     write_text(
         &lib_project.parent().unwrap().join("src/math.fpas"),
-        "unit Suite.Math;\npublic function Square(X: integer): integer;\nbegin\n  return X * X;\nend;\n",
+        "unit Suite.Math;\npublic function Square(X: integer): integer;\nbegin\n  return X * X;\nend function;\nend unit;\n",
     );
     let lib_dep = toml_path(&lib_project);
     write_program_fpasprj_with_deps(
@@ -99,7 +99,7 @@ members = ["lib.fpasprj", "app.fpasprj"]
 "#,
     );
     write_library_fpasprj(&lib_project, &["lib.fpas"]);
-    write_text(&cwd.join("lib.fpas"), "unit L.Core;\n");
+    write_text(&cwd.join("lib.fpas"), "unit L.Core;\nend unit;\n");
     write_program_fpasprj(&app_project, "main.fpas", &["main.fpas"]);
     write_text(&cwd.join("main.fpas"), "program App;\nbegin\nend.\n");
 
@@ -125,7 +125,7 @@ members = ["lib.fpasprj"]
 "#,
     );
     write_library_fpasprj(&lib_project, &["lib.fpas"]);
-    write_text(&cwd.join("lib.fpas"), "unit L.Core;\n");
+    write_text(&cwd.join("lib.fpas"), "unit L.Core;\nend unit;\n");
 
     let (exit_code, _, stderr_output) = support::run_cli_args_and_capture_output(
         &[
@@ -147,7 +147,7 @@ fn check_cli_fails_on_type_error_in_library_project() {
     write_library_fpasprj(&project_file, &["src/**/*.fpas"]);
     write_text(
         &cwd.join("src/math.fpas"),
-        "unit Lib.Math;\npublic function Bad(X: integer): string;\nbegin\n  return X + X;\nend;\n",
+        "unit Lib.Math;\npublic function Bad(X: integer): string;\nbegin\n  return X + X;\nend function;\nend unit;\n",
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_args_and_capture_output(
@@ -179,13 +179,13 @@ fn check_cli_validates_transitive_library_dependencies() {
     write_library_fpasprj(&base_project, &["src/**/*.fpas"]);
     write_text(
         &base_dir.join("src/base.fpas"),
-        "unit Lib.Base;\npublic const Tag: string := 'ok';\n",
+        "unit Lib.Base;\npublic const Tag: string := 'ok';\nend unit;\n",
     );
 
     write_library_fpasprj_with_deps(&util_project, &["src/**/*.fpas"], &["../base/base.fpasprj"]);
     write_text(
         &util_dir.join("src/util.fpas"),
-        "unit Lib.Util;\nuses Lib.Base;\npublic function Label(): string;\nbegin\n  return Tag;\nend;\n",
+        "unit Lib.Util;\nuses Lib.Base;\npublic function Label(): string;\nbegin\n  return Tag;\nend function;\nend unit;\n",
     );
 
     let util_dep = toml_path(&util_project);
@@ -240,7 +240,7 @@ fn check_cli_validates_directory_program_with_sibling_unit_without_sidecars() {
     let cwd = create_temp_dir("check-directory-shared-unit");
     write_text(
         &cwd.join("math.fpas"),
-        "unit Demo.Math;\npublic function Answer(): integer;\nbegin\n  return 42;\nend;\n",
+        "unit Demo.Math;\npublic function Answer(): integer;\nbegin\n  return 42;\nend function;\nend unit;\n",
     );
     write_text(
         &cwd.join("main.fpas"),
@@ -267,11 +267,11 @@ fn check_cli_validates_directory_containing_only_units() {
     let cwd = create_temp_dir("check-directory-units-only");
     write_text(
         &cwd.join("base.fpas"),
-        "unit Demo.Base;\npublic const Answer: integer := 42;\n",
+        "unit Demo.Base;\npublic const Answer: integer := 42;\nend unit;\n",
     );
     write_text(
         &cwd.join("derived.fpas"),
-        "unit Demo.Derived;\nuses Demo.Base;\npublic function Value(): integer;\nbegin\n  return Answer;\nend;\n",
+        "unit Demo.Derived;\nuses Demo.Base;\npublic function Value(): integer;\nbegin\n  return Answer;\nend function;\nend unit;\n",
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_args_and_capture_output(
@@ -294,7 +294,7 @@ fn check_cli_validates_multiple_programs_against_shared_units() {
     let cwd = create_temp_dir("check-directory-multiple-programs");
     write_text(
         &cwd.join("shared.fpas"),
-        "unit Demo.Shared;\npublic function Value(): integer;\nbegin\n  return 7;\nend;\n",
+        "unit Demo.Shared;\npublic function Value(): integer;\nbegin\n  return 7;\nend function;\nend unit;\n",
     );
     write_text(
         &cwd.join("first.fpas"),

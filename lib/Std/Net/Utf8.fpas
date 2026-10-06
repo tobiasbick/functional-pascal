@@ -7,14 +7,14 @@ uses Std.Arrays, Std.Conv, Std.Str;
 function EncodeBytes(Text: string): array of integer;
 begin
   panic('internal UTF-8 encode intrinsic was not lowered');
-end;
+end function;
 
 // Encodes one FPAS string as UTF-8 bytes in one pass.
 // See docs/pascal/std/network/utf8.md.
 public function Encode(Text: string): array of integer;
 begin
   return EncodeBytes(Text);
-end;
+end function;
 
 // Builds a byte-indexed UTF-8 validation error.
 //
@@ -24,7 +24,7 @@ end;
 function Invalid(Index: integer; Message: string): result of string, string;
 begin
   return Error((('Invalid UTF-8 at byte ' + Std.Conv.IntToStr(Index)) + ': ') + Message);
-end;
+end function;
 
 // Reports whether an integer is a UTF-8 continuation byte.
 //
@@ -33,7 +33,7 @@ end;
 function IsContinuation(ByteValue: integer): boolean;
 begin
   return (ByteValue >= 128) and (ByteValue <= 191);
-end;
+end function;
 
 // Decodes validated UTF-8 bytes into one FPAS string.
 //
@@ -126,4 +126,5 @@ begin
   end;
 
   return Ok(Std.Str.Join(Parts, ''));
-end;
+end function;
+end unit;

@@ -15,7 +15,7 @@ uses Std.Console, Std.Tasks;
 function Work(): integer;
 begin
   return 7;
-end;
+end function;
 
 begin
   var Pending: task := go Work();

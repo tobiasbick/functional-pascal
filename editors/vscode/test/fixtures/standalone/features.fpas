@@ -7,12 +7,12 @@ type
   Greeting = record
     Text: string;
     Count: integer;
-  end;
+  end record;
 
 function RenderGreeting(Value: Greeting): string;
 begin
   return Value.Text + ' — it''s Functional Pascal';
-end;
+end function;
 
 begin
   // Unicode text is valid inside a UTF-8 string.

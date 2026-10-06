@@ -7,7 +7,7 @@ type
     Focus: integer;
     Selected: integer;
     Changes: array of integer;
-  end;
+  end record;
 
 function MakeKey(Kind: TuiKeyKind): TuiKeyEvent;
 begin
@@ -19,7 +19,7 @@ begin
     alt := false;
     meta := false;
   end;
-end;
+end function;
 
 function ViewList(State: ListModel): TuiElement;
 begin
@@ -28,7 +28,7 @@ begin
                                                                                                                          TuiElementBuilders.MakeList(TuiControlId.Create(1), ['Alpha', 'Beta', 'Gamma'], State.Selected, TuiAction.Create(5))
                                                                                                                        ])
                                                                                 ]);
-end;
+end function;
 
 function UpdateList(State: ListModel; Msg: TuiMsg; Cmd: TuiCmdOutput): ListModel;
 begin
@@ -49,7 +49,7 @@ begin
       return State;
     end;
   end;
-end;
+end function;
 
 begin
   mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 8));

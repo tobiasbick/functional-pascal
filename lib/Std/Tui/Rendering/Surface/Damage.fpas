@@ -11,19 +11,19 @@ public type
     public FirstX: integer;
     // Row-major terminal cells.
     public Cells: array of TuiCell;
-  end;
+  end record;
 
 function TuiSurfaceColorEqual(Left: TuiColor; Right: TuiColor): boolean;
 begin
   return ((((Left.Kind = Right.Kind) and (Left.Index = Right.Index)) and (Left.Red = Right.Red)) and (Left.Green = Right.Green)) and
          (Left.Blue = Right.Blue);
-end;
+end function;
 
 function TuiSurfaceStyleEqual(Left: TuiStyle; Right: TuiStyle): boolean;
 begin
   return ((((TuiSurfaceColorEqual(Left.Foreground, Right.Foreground) and TuiSurfaceColorEqual(Left.Background, Right.Background)) and (Left.Bold = Right.Bold)) and (Left.Dim = Right.Dim)) and (Left.Underline = Right.Underline)) and
          (Left.Inverse = Right.Inverse);
-end;
+end function;
 
 function TuiSurfaceConcreteStyleEqual(Left: option of TuiStyle; Right: option of TuiStyle): boolean;
 begin
@@ -55,7 +55,7 @@ begin
       end;
     end;
   end;
-end;
+end function;
 
 // Returns whether one working cell differs from its presented counterpart.
 //
@@ -83,7 +83,7 @@ begin
 
   return ((CurrentCell.Glyph <> PresentedCell.Glyph) or (CurrentCell.Role <> PresentedCell.Role)) or
          not TuiSurfaceConcreteStyleEqual(CurrentCell.ConcreteStyle, PresentedCell.ConcreteStyle);
-end;
+end function;
 
 // Builds one terminal-damage range from a working-surface row.
 //
@@ -115,4 +115,5 @@ begin
     FirstX := FirstX;
     Cells := ChangedCells;
   end;
-end;
+end function;
+end unit;

@@ -61,7 +61,7 @@ fn break_in_function_body_not_in_loop() {
     check_errors(
         "program T; \
          function Foo(): integer; \
-         begin break; return 0; end; \
+         begin break; return 0; end function; \
          begin Foo(); end.",
     );
 }
@@ -71,7 +71,7 @@ fn continue_in_function_body_not_in_loop() {
     check_errors(
         "program T; \
          procedure Bar(); \
-         begin continue; end; \
+         begin continue; end procedure; \
          begin Bar(); end.",
     );
 }

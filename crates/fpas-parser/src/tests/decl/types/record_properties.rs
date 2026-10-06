@@ -7,7 +7,7 @@ fn record_properties_default_to_private_and_accept_public() {
          type Counter = record \
            property Hidden: integer read GetHidden; \
            public property Value: integer read GetValue; \
-         end;",
+         end record;\nend unit;",
     );
     let Decl::TypeDef(type_def) = &unit.declarations[0] else {
         panic!("expected type");
@@ -23,10 +23,10 @@ fn record_properties_default_to_private_and_accept_public() {
 fn record_read_write_property() {
     let p = parse_ok(
         "program T; type Button = record \
-         function GetText(Self: Button): string; begin return ''; end; \
-         procedure SetText(Self: Button; Value: string); begin end; \
+         function GetText(Self: Button): string; begin return ''; end function; \
+         procedure SetText(Self: Button; Value: string); begin end procedure; \
          property Text: string read GetText write SetText; \
-         end; begin end.",
+         end record; begin end.",
     );
     match &p.declarations[0] {
         Decl::TypeDef(td) => match &td.body {
@@ -47,9 +47,9 @@ fn record_read_write_property() {
 fn record_read_only_property() {
     let p = parse_ok(
         "program T; type Box = record \
-         function GetWidth(Self: Box): integer; begin return 0; end; \
+         function GetWidth(Self: Box): integer; begin return 0; end function; \
          property Width: integer read GetWidth; \
-         end; begin end.",
+         end record; begin end.",
     );
     match &p.declarations[0] {
         Decl::TypeDef(td) => match &td.body {
@@ -68,9 +68,9 @@ fn record_read_only_property() {
 fn record_write_only_property() {
     let p = parse_ok(
         "program T; type Box = record \
-         procedure SetPassword(Self: Box; Value: string); begin end; \
+         procedure SetPassword(Self: Box; Value: string); begin end procedure; \
          property Password: string write SetPassword; \
-         end; begin end.",
+         end record; begin end.",
     );
     match &p.declarations[0] {
         Decl::TypeDef(td) => match &td.body {
@@ -90,7 +90,7 @@ fn property_rejects_unknown_accessor_keyword() {
     let (_, errors) = parse_with_errors(
         "program T; type Box = record \
          property Width: integer foo GetWidth; \
-         end; begin end.",
+         end record; begin end.",
     );
     assert!(
         errors
@@ -106,7 +106,7 @@ fn property_without_accessors_is_rejected() {
     let (_, errors) = parse_with_errors(
         "program T; type Box = record \
          property Width: integer; \
-         end; begin end.",
+         end record; begin end.",
     );
     assert!(
         errors
@@ -121,10 +121,10 @@ fn property_without_accessors_is_rejected() {
 fn property_keeps_first_read_on_duplicate() {
     let (program, errors) = parse_with_errors(
         "program T; type Box = record \
-         function GetA(Self: Box): integer; begin return 0; end; \
-         function GetB(Self: Box): integer; begin return 1; end; \
+         function GetA(Self: Box): integer; begin return 0; end function; \
+         function GetB(Self: Box): integer; begin return 1; end function; \
          property Width: integer read GetA read GetB; \
-         end; begin end.",
+         end record; begin end.",
     );
     assert!(
         errors

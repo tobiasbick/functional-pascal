@@ -17,21 +17,21 @@ fn format_idempotently(source: &str) -> String {
 
 #[test]
 fn callable_body_comments_stay_with_each_begin() {
-    let source = "program T;\nprocedure First();\n// first body\nbegin\nend;\nprocedure Second();\n// second body\nbegin\nend;\n// main body\nbegin\nend.";
+    let source = "program T;\nprocedure First();\n// first body\nbegin\nend procedure;\nprocedure Second();\n// second body\nbegin\nend procedure;\n// main body\nbegin\nend.";
     let formatted = format_idempotently(source);
 
     assert!(formatted.contains("procedure First();\n// first body\nbegin"));
     assert!(formatted.contains("procedure Second();\n// second body\nbegin"));
-    assert!(formatted.contains("end;\n\n// main body\nbegin"));
+    assert!(formatted.contains("end procedure;\n\n// main body\nbegin"));
 }
 
 #[test]
 fn nested_routine_body_comments_use_structural_owners() {
-    let source = "unit Demo;\nprocedure Outer();\nprocedure Inner();\n// inner body\nbegin\nend;\n// outer body\nbegin\nend;";
+    let source = "unit Demo;\nprocedure Outer();\nprocedure Inner();\n// inner body\nbegin\nend procedure;\n// outer body\nbegin\nend procedure;\nend unit;";
     let formatted = format_idempotently(source);
 
     assert!(formatted.contains("procedure Inner();\n// inner body\nbegin"));
-    assert!(formatted.contains("end;\n// outer body\nbegin"));
+    assert!(formatted.contains("end procedure;\n// outer body\nbegin"));
 }
 
 #[test]
@@ -49,7 +49,7 @@ fn closure_comments_survive_expression_emission() {
 
 #[test]
 fn record_enum_and_routine_eol_comments_remain_on_member_lines() {
-    let source = "program T;\ntype Shape = enum\n  // leading member\n  Plain; // plain\n  Valued = 2; // valued\n  Circle(Radius: real); // payload\nend;\nCounter = record\n  Value: integer; // field\n  function ReadValue(Self: Counter): integer;\n  begin\n    return Self.Value;\n  end; // method\n  property Current: integer read ReadValue; // property\n  event Changed: procedure() read ReadChanged write WriteChanged; // event\nend;\nfunction Top(): integer;\nbegin\n  return 1;\nend; // top routine\nbegin\nend.";
+    let source = "program T;\ntype Shape = enum\n  // leading member\n  Plain; // plain\n  Valued = 2; // valued\n  Circle(Radius: real); // payload\nend enum;\nCounter = record\n  Value: integer; // field\n  function ReadValue(Self: Counter): integer;\n  begin\n    return Self.Value;\n  end function; // method\n  property Current: integer read ReadValue; // property\n  event Changed: procedure() read ReadChanged write WriteChanged; // event\nend record;\nfunction Top(): integer;\nbegin\n  return 1;\nend function; // top routine\nbegin\nend.";
     let formatted = format_idempotently(source);
 
     for line in [
@@ -57,10 +57,10 @@ fn record_enum_and_routine_eol_comments_remain_on_member_lines() {
         "Valued = 2; // valued",
         "Circle(Radius: real); // payload",
         "Value: integer; // field",
-        "end; // method",
+        "end function; // method",
         "property Current: integer read ReadValue; // property",
         "event Changed: procedure() read ReadChanged write WriteChanged; // event",
-        "end; // top routine",
+        "end function; // top routine",
     ] {
         assert!(formatted.contains(line), "missing `{line}`:\n{formatted}");
     }
@@ -97,14 +97,13 @@ fn branch_comments_survive_single_and_explicit_block_bodies() {
 
 #[test]
 fn compilation_and_routine_header_comments_stay_on_header_lines() {
-    let program_source = "program T; // program header\nprocedure Work(); // routine header\nbegin\nend; // routine end\nbegin\nend.";
+    let program_source = "program T; // program header\nprocedure Work(); // routine header\nbegin\nend procedure; // routine end\nbegin\nend.";
     let program = format_idempotently(program_source);
     assert!(program.contains("program T; // program header\n"));
     assert!(program.contains("procedure Work(); // routine header\n"));
-    assert!(program.contains("end; // routine end\n"));
+    assert!(program.contains("end procedure; // routine end\n"));
 
-    let unit_source =
-        "unit Demo; // unit header\nprocedure Work(); // unit routine header\nbegin\nend;";
+    let unit_source = "unit Demo; // unit header\nprocedure Work(); // unit routine header\nbegin\nend procedure;\nend unit;";
     let unit = format_idempotently(unit_source);
     assert!(unit.contains("unit Demo; // unit header\n"));
     assert!(unit.contains("procedure Work(); // unit routine header\n"));

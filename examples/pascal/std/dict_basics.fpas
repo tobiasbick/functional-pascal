@@ -7,17 +7,17 @@ uses Std.Console, Std.Conv, Std.Dictionaries, Std.Options, Std.Arrays;
 function DoubleScore(V: integer): integer;
 begin
   return V * 2;
-end;
+end function;
 
 function IsHighScore(K: string; V: integer): boolean;
 begin
   return V >= 90;
-end;
+end function;
 
 function SumScores(Acc: integer; Key: string; Value: integer): integer;
 begin
   return Acc + Value;
-end;
+end function;
 
 begin
   var Scores: dict of string to integer := ['Ada': 95, 'Bob': 72, 'Cara': 91];

@@ -12,7 +12,7 @@ unit Std.Test;
 public procedure AssertEquals<T>(Expected: T; Actual: T);
 begin
   panic('Intrinsic API declaration');
-end;
+end procedure;
 
 // Fail when `Cond` is true.
 //
@@ -21,7 +21,7 @@ end;
 public procedure AssertFalse(Cond: boolean);
 begin
   panic('Intrinsic API declaration');
-end;
+end procedure;
 
 // Fail when one CRT cell differs (`Fg`/`Bg` are packed colors `0..=15`).
 //
@@ -34,7 +34,7 @@ end;
 public procedure AssertScreenCell(X: integer; Y: integer; Ch: string; Fg: integer; Bg: integer);
 begin
   panic('Intrinsic API declaration');
-end;
+end procedure;
 
 // Fail when CRT row `Y` text differs (headless/TUI back buffer).
 //
@@ -44,7 +44,7 @@ end;
 public procedure AssertScreenLine(Expected: string; Y: integer);
 begin
   panic('Intrinsic API declaration');
-end;
+end procedure;
 
 // Fail when `Cond` is false.
 //
@@ -53,7 +53,7 @@ end;
 public procedure AssertTrue(Cond: boolean);
 begin
   panic('Intrinsic API declaration');
-end;
+end procedure;
 
 // Unconditional failure.
 //
@@ -62,7 +62,7 @@ end;
 public procedure Fail(Msg: string);
 begin
   panic('Intrinsic API declaration');
-end;
+end procedure;
 
 // Queue one line for the next `Std.Console.ReadLn` (native tests).
 //
@@ -71,13 +71,13 @@ end;
 public procedure PushReadLn(Line: string);
 begin
   panic('Intrinsic API declaration');
-end;
+end procedure;
 
 // Runner-owned empty directory for this test.
 public function ScratchDir(): string;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Mark the current test skipped; runner reports `SKIP` (exit `0` unless `fpas test --strict`).
 //
@@ -86,4 +86,5 @@ end;
 public procedure Skip(Msg: string);
 begin
   panic('Intrinsic API declaration');
-end;
+end procedure;
+end unit;

@@ -15,7 +15,7 @@ begin
   mutable var Local: integer := Value + 10;
   WriteLn('effect');
   return Local;
-end;
+end function;
 
 begin
   var Answer: integer := Branch(1);
@@ -137,13 +137,13 @@ uses Std.Console;
 function Leaf(Value: integer): integer;
 begin
   return Value + 1;
-end;
+end function;
 
 function Branch(Value: integer): integer;
 begin
   var Local: integer := Value + 10;
   return Leaf(Local);
-end;
+end function;
 
 begin
   WriteLn(Branch(1));
@@ -189,11 +189,11 @@ function Outer(Start: integer): integer;
     Counter := Counter + 1;
     WriteLn(Counter);
     return Counter;
-  end;
+  end function;
 begin
   mutable var Counter: integer := Start;
   return Inner();
-end;
+end function;
 
 begin
   WriteLn(Outer(5));
@@ -253,7 +253,7 @@ uses Std.Tasks;
 function Work(): integer;
 begin
   return 7;
-end;
+end function;
 
 begin
   var Pending: task := go Work();

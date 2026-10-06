@@ -69,6 +69,15 @@ fn emit_unit(emitter: &mut Emitter, unit: &Unit, comments: &CommentMap) {
     if !unit.declarations.is_empty() {
         emit_decls(emitter, &unit.declarations, comments);
     }
+    if let Some(anchor) = comments.closer_anchor(unit.span.offset) {
+        emit_leading_comments(emitter, comments, anchor, false);
+    }
+    emitter.write_current_indent();
+    emitter.write("end unit;");
+    emit_trailing_comments(emitter, comments, unit.span.offset);
+    if !emitter.ends_with_newline() {
+        emitter.write_line_end();
+    }
     emit_trailing_end_comments(emitter, comments);
 }
 
@@ -153,7 +162,7 @@ mod tests {
 
     #[test]
     fn unit_clamp_expands_branch_blocks() {
-        let source = "unit MyApp.Utils; uses Std.Math; function Clamp(Value: integer; Min: integer; Max: integer): integer; begin if Value < Min then return Min; else if Value > Max then return Max; else return Value; end; function IsBlank(S: string): boolean; begin return Length(Trim(S)) = 0; end;";
+        let source = "unit MyApp.Utils; uses Std.Math; function Clamp(Value: integer; Min: integer; Max: integer): integer; begin if Value < Min then return Min; else if Value > Max then return Max; else return Value; end function; function IsBlank(S: string): boolean; begin return Length(Trim(S)) = 0; end function;\nend unit;";
         let formatted = parse_and_format(source);
         assert!(formatted.starts_with("unit MyApp.Utils;\n\nuses Std.Math;\n\n"));
         assert!(formatted.contains("if Value < Min then\n  begin\n    return Min;\n  end;"));
@@ -163,10 +172,10 @@ mod tests {
     #[test]
     fn program_type_then_begin() {
         let formatted = parse_and_format(
-            "program T; type Point = record X: integer; Y: integer; end; begin var P: Point := record X := 1; Y := 2; end; end.",
+            "program T; type Point = record X: integer; Y: integer; end record; begin var P: Point := record X := 1; Y := 2; end; end.",
         );
         assert!(formatted.contains("type\n  Point = record\n"));
-        assert!(formatted.contains("end;\n\nbegin\n"));
+        assert!(formatted.contains("end record;\n\nbegin\n"));
     }
 
     #[test]
@@ -205,7 +214,7 @@ mod tests {
     #[test]
     fn unit_qualified_name() {
         let formatted = parse_and_format(
-            "unit App.Math; function Scale(Value: integer): integer; begin return Value * 2; end;",
+            "unit App.Math; function Scale(Value: integer): integer; begin return Value * 2; end function;\nend unit;",
         );
         assert!(formatted.starts_with("unit App.Math;\n\n"));
         assert!(formatted.contains("function Scale"));

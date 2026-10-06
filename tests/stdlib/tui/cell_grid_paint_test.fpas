@@ -15,13 +15,13 @@ begin
                                                                     TuiCell.Create('中', TuiStyleRole.Accent),
                                                                     TuiCell.Create('H', TuiStyleRole.Normal)
                                                                   ]));
-end;
+end function;
 
 function UpdateGrid(State: integer; Msg: TuiMsg; Cmd: TuiCmdOutput): integer;
 begin
   Cmd.Set(TuiCmd.NoCommand);
   return State;
-end;
+end function;
 
 begin
   var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(3, 2));

@@ -10,7 +10,7 @@ program DirectCall;
 function Add(A: integer; B: integer): integer;
 begin
   return A + B;
-end;
+end function;
 begin
   if Add(20, 22) <> 42 then
     panic('direct call mismatch');
@@ -29,7 +29,7 @@ begin
   if N <= 1 then
     return 1;
   return N * Factorial(N - 1);
-end;
+end function;
 begin
   if Factorial(5) <> 120 then
     panic('recursion mismatch');
@@ -47,7 +47,7 @@ procedure Validate(Value: integer);
 begin
   if Value <> 42 then
     panic('procedure argument mismatch');
-end;
+end procedure;
 begin
   Validate(42);
 end.
@@ -64,10 +64,10 @@ function Outer(Value: integer): integer;
   function Double(Input: integer): integer;
   begin
     return Input + Input;
-  end;
+  end function;
 begin
   return Double(Value);
-end;
+end function;
 begin
   if Outer(21) <> 42 then
     panic('nested call mismatch');
@@ -84,11 +84,11 @@ program FirstClassFunction;
 function Double(Value: integer): integer;
 begin
   return Value + Value;
-end;
+end function;
 function Apply(Action: function(Value: integer): integer; Value: integer): integer;
 begin
   return Action(Value);
-end;
+end function;
 begin
   if Apply(Double, 21) <> 42 then
     panic('function value mismatch');
@@ -106,11 +106,11 @@ procedure Validate(Value: integer);
 begin
   if Value <> 42 then
     panic('procedure callback mismatch');
-end;
+end procedure;
 procedure Invoke(Action: procedure(Value: integer); Value: integer);
 begin
   Action(Value);
-end;
+end procedure;
 begin
   Invoke(Validate, 42);
 end.
@@ -127,7 +127,7 @@ uses Std.Console;
 function Pack(Red: integer; Green: integer; Blue: integer): integer;
 begin
   return Red * 10000 + Green * 100 + Blue;
-end;
+end function;
 begin
   if Pack(10, 20, 30) <> 102030 then
     panic('parameters did not shadow standard constants');
@@ -147,7 +147,7 @@ type
     Red: integer;
     Green: integer;
     Blue: integer;
-  end;
+  end record;
 begin
   var Value: Channels := record Red := 10; Green := 20; Blue := 30; end;
   if Value.Red * 10000 + Value.Green * 100 + Value.Blue <> 102030 then

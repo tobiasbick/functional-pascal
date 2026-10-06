@@ -148,7 +148,7 @@ fn graph_parser_errors_keep_all_records() {
 #[test]
 fn snapshot_errors_keep_the_existing_graph_source_id() {
     let fixture = Fixture::new();
-    let unit = fixture.write("broken.fpas", "unit Broken;");
+    let unit = fixture.write("broken.fpas", "unit Broken;\nend unit;");
     let graph = build_unit_graph_for_program(
         &fixture.0.join("main.fpas"),
         std::slice::from_ref(&unit),
@@ -247,7 +247,7 @@ fn manifest_failures_have_distinct_project_codes() {
 #[test]
 fn dependency_and_workspace_failures_have_project_codes() {
     let fixture = Fixture::new();
-    fixture.write("unit.fpas", "unit Demo.A;\n");
+    fixture.write("unit.fpas", "unit Demo.A;\nend unit;\n");
     let first = fixture.write(
         "first.fpasprj",
         "[project]\nname = 'first'\nkind = 'library'\n[sources]\ninclude = ['unit.fpas']\n[dependencies]\nprojects = ['second.fpasprj']\n",
@@ -304,7 +304,7 @@ fn invalid_dependency_manifest_keeps_its_path_instead_of_the_root_manifest() {
 #[test]
 fn unknown_unit_import_is_located_at_its_uses_entry() {
     let fixture = Fixture::new();
-    let source = "unit Demo.A;\nuses Demo.Missing;\n";
+    let source = "unit Demo.A;\nuses Demo.Missing;\nend unit;\n";
     let unit = fixture.write("a.fpas", source);
     let graph = build_unit_graph(std::slice::from_ref(&unit), &ProjectLinkMeta::default())
         .expect("graph must build");
@@ -330,7 +330,7 @@ fn unknown_unit_import_is_located_at_its_uses_entry() {
 #[test]
 fn loading_warnings_are_coded_records_with_their_source_path() {
     let fixture = Fixture::new();
-    let unit = fixture.write("unit.fpas", "unit Demo.A;\n");
+    let unit = fixture.write("unit.fpas", "unit Demo.A;\nend unit;\n");
     fixture.write("tool.fpas", "program Tool;\nbegin\nend.\n");
     let manifest = fixture.write(
         "lib.fpasprj",

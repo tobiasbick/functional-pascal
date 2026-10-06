@@ -14,7 +14,7 @@ begin
       panic((('decoder ' + IntToStr(Index)) + ' failed: ') + Message);
     end;
   end;
-end;
+end function;
 
 begin
   mutable var Tasks: array of task := [];

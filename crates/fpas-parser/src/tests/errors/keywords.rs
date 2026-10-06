@@ -92,7 +92,7 @@ fn self_is_rejected_as_a_static_method_parameter_name() {
         "static function Create(Self: Point): Point; begin return Self; end;",
         "static procedure Reset(Self: Point); begin end;",
     ] {
-        let source = format!("program T; type Point = record {declaration} end; begin end.");
+        let source = format!("program T; type Point = record {declaration} end record; begin end.");
         let (_, errors) = parse_with_errors(&source);
         assert!(!errors.is_empty(), "static declaration accepted `Self`");
     }

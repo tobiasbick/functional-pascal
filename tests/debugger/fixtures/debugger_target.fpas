@@ -6,7 +6,7 @@ type
   Point = record
     X: integer;
     Y: integer;
-  end;
+  end record;
 
 function Factorial(Value: integer): integer;
 begin
@@ -16,7 +16,7 @@ begin
   end;
 
   return Value * Factorial(Value - 1);
-end;
+end function;
 
 function MakeCounter(Start: integer): function(): integer;
 begin
@@ -25,7 +25,7 @@ begin
     Current := Current + 1;
     return Current;
   end;
-end;
+end function;
 
 begin
   var Origin: Point := record

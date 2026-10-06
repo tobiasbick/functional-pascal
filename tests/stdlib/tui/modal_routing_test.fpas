@@ -8,12 +8,12 @@ type
     ConfirmOpen: boolean;
     Actions: array of integer;
     PointerHits: integer;
-  end;
+  end record;
 
 function MakePointer(Action: TuiPointerAction; X: integer; Y: integer): TuiPointerEvent;
 begin
   return TuiPointerEvent.Create(Action, TuiPointerButton.Left, TuiPoint.Create(X, Y));
-end;
+end function;
 
 function MakeKey(Kind: TuiKeyKind; Character: string): TuiKeyEvent;
 begin
@@ -25,7 +25,7 @@ begin
     alt := false;
     meta := false;
   end;
-end;
+end function;
 
 function FindGlyph(Snapshot: TuiSurfaceSnapshot; Glyph: string): TuiPoint;
 begin
@@ -40,7 +40,7 @@ begin
   end;
 
   panic('glyph not found in snapshot');
-end;
+end function;
 
 function ViewModal(State: ModalModel): TuiElement;
 begin
@@ -61,7 +61,7 @@ begin
                                                                                                                        ]),
                                                                                   Overlay
                                                                                 ]);
-end;
+end function;
 
 function UpdateModal(State: ModalModel; Msg: TuiMsg; Cmd: TuiCmdOutput): ModalModel;
 begin
@@ -118,7 +118,7 @@ begin
       return State;
     end;
   end;
-end;
+end function;
 
 begin
   mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(40, 12));

@@ -6,16 +6,16 @@ type
   Point = record
     X: integer;
     Y: integer;
-  end;
+  end record;
   Choice = enum
     Count(Value: integer);
     Pair(Left: integer; Right: integer);
     Nested(Item: Point);
-  end;
+  end enum;
   Box = record
     Items: array of integer;
     Scores: dict of string to integer;
-  end;
+  end record;
 
 function ChoiceValue(Item: Choice): integer;
 begin
@@ -33,7 +33,7 @@ begin
       return Item.X + Item.Y;
     end;
   end;
-end;
+end function;
 
 begin
   mutable var Origin: Point := record

@@ -2,6 +2,9 @@
 //!
 //! **Documentation:** [`docs/pascal/tools/fmt-style.md#comments`](../../../../docs/pascal/tools/fmt-style.md#comments)
 
+mod leading;
+use leading::prepare_leading;
+
 use std::collections::{BTreeMap, BTreeSet};
 
 use fpas_lexer::SourceComment;
@@ -22,6 +25,7 @@ pub struct CommentMap {
     uses_anchor: Option<usize>,
     body_anchors: BTreeMap<usize, usize>,
     header_anchors: BTreeMap<usize, usize>,
+    closer_anchors: BTreeMap<usize, usize>,
 }
 
 #[derive(Debug, Clone)]
@@ -49,10 +53,12 @@ impl CommentMap {
             &anchors.leading,
             &anchors.emission,
             &anchors.declarations,
+            &anchors.named_ends,
         )?;
         map.uses_anchor = uses_keyword_offset(source);
         map.body_anchors = anchors.bodies;
         map.header_anchors = anchors.headers;
+        map.closer_anchors = anchors.closers;
         Ok(map)
     }
 
@@ -92,6 +98,12 @@ impl CommentMap {
         self.header_anchors.get(&owner_start).copied()
     }
 
+    /// Byte offset of the named ending belonging to a declaration owner.
+    #[must_use]
+    pub fn closer_anchor(&self, owner_start: usize) -> Option<usize> {
+        self.closer_anchors.get(&owner_start).copied()
+    }
+
     /// Returns comments that trailed the compilation unit with no following anchor.
     #[must_use]
     pub fn trailing_end(&self) -> &[String] {
@@ -104,6 +116,7 @@ impl CommentMap {
         leading_anchors: &[usize],
         emission_anchors: &[super::anchors::EmissionAnchor],
         declaration_anchors: &BTreeSet<usize>,
+        named_ends: &[super::anchors::EmissionAnchor],
     ) -> Result<Self, FormatError> {
         let mut leading: BTreeMap<usize, Vec<PendingLeadingComment>> = BTreeMap::new();
         let mut trailing: BTreeMap<usize, Vec<(usize, String)>> = BTreeMap::new();
@@ -118,6 +131,21 @@ impl CommentMap {
                 .text(source)
                 .ok_or_else(|| invalid_comment_span(comment, source))?;
             let text = format_comment_text(text);
+            if let Some(closer) = named_ends
+                .iter()
+                .find(|closer| closer.start <= comment.span.offset && end_offset <= closer.end)
+            {
+                leading
+                    .entry(closer.start)
+                    .or_default()
+                    .push(PendingLeadingComment {
+                        start: comment.span.offset,
+                        end: end_offset,
+                        text,
+                    });
+                previous_trailing = None;
+                continue;
+            }
             let is_end_of_line = comment
                 .is_end_of_line(source)
                 .ok_or_else(|| invalid_comment_span(comment, source))?;
@@ -180,61 +208,9 @@ impl CommentMap {
             uses_anchor: None,
             body_anchors: BTreeMap::new(),
             header_anchors: BTreeMap::new(),
+            closer_anchors: BTreeMap::new(),
         })
     }
-}
-
-fn prepare_leading(
-    source: &str,
-    grouped: BTreeMap<usize, Vec<PendingLeadingComment>>,
-    declaration_anchors: &BTreeSet<usize>,
-) -> (BTreeMap<usize, Vec<LeadingComment>>, BTreeMap<usize, bool>) {
-    let mut leading = BTreeMap::new();
-    let mut blank_after = BTreeMap::new();
-    for (anchor, mut entries) in grouped {
-        entries.sort_by_key(|entry| entry.start);
-        let mut previous_end = None;
-        let prepared = entries
-            .iter()
-            .map(|entry| {
-                let blank_before = previous_end.is_some_and(|end| {
-                    logical_line_breaks(source.get(end..entry.start).unwrap_or_default()) > 1
-                });
-                previous_end = Some(entry.end);
-                LeadingComment {
-                    text: entry.text.clone(),
-                    blank_before,
-                }
-            })
-            .collect();
-        if declaration_anchors.contains(&anchor) {
-            let last_end = entries.last().map_or(anchor, |entry| entry.end);
-            blank_after.insert(
-                anchor,
-                logical_line_breaks(source.get(last_end..anchor).unwrap_or_default()) != 1,
-            );
-        }
-        leading.insert(anchor, prepared);
-    }
-    (leading, blank_after)
-}
-
-fn logical_line_breaks(text: &str) -> usize {
-    let mut count = 0;
-    let mut chars = text.chars().peekable();
-    while let Some(ch) = chars.next() {
-        match ch {
-            '\r' => {
-                count += 1;
-                if chars.peek() == Some(&'\n') {
-                    chars.next();
-                }
-            }
-            '\n' => count += 1,
-            _ => {}
-        }
-    }
-    count
 }
 
 fn next_leading_anchor(leading_anchors: &[usize], comment_end: usize) -> Option<usize> {
@@ -327,7 +303,7 @@ mod tests {
 
     #[test]
     fn attaches_line_comments_to_following_declarations() -> Result<(), String> {
-        let source = "// Unit doc.\nunit Demo;\n\n// field doc\nmutable var Count: integer := 0;\n";
+        let source = "// Unit doc.\nunit Demo;\n\n// field doc\nmutable var Count: integer := 0;\nend unit;\n";
         let (unit, errors) = parse_compilation_unit(source);
         assert!(errors.is_empty(), "{errors:?}");
         let map = CommentMap::build(source, &unit).map_err(|error| error.to_string())?;

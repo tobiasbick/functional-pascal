@@ -12,17 +12,17 @@ begin
   end;
 
   return C;
-end;
+end function;
 
 function KeepLetter(C: string): boolean;
 begin
   return C <> ' ';
-end;
+end function;
 
 function Count(Acc: integer; C: string): integer;
 begin
   return Acc + 1;
-end;
+end function;
 
 begin
   var S: string := '  Hello, World!  ';

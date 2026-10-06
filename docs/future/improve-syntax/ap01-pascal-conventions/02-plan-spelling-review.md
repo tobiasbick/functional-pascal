@@ -44,4 +44,4 @@ Planning documentation only.
 
 [Spelling review](spelling-review.md) covers all package and work package
 documents, records the corrections, and links the existing decision gates.
-Delivery is local; the completion checkbox awaits merge.
+Delivery and the applicable planning checks are complete on the working branch.

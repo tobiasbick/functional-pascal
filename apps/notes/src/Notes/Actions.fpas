@@ -62,3 +62,4 @@ public const
   SaveAndQuitAction: integer := 17;
   // Identifier for DiscardAndQuitAction.
   DiscardAndQuitAction: integer := 18;
+end unit;

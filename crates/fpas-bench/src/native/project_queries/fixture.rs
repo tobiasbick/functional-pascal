@@ -25,7 +25,7 @@ impl Fixture {
         let mut source = String::from("program ProjectQueries;\nuses Std.Str");
         for unit in 0..units {
             write!(source, ", Bench.U{unit}").map_err(|error| error.to_string())?;
-            std::fs::write(directory.join(format!("unit{unit}.fpas")), format!("unit Bench.U{unit};\npublic function Answer{unit}(): integer;\nbegin return {unit}; end;\n")).map_err(|error| error.to_string())?;
+            std::fs::write(directory.join(format!("unit{unit}.fpas")), format!("unit Bench.U{unit};\npublic function Answer{unit}(): integer;\nbegin return {unit}; end function;\nend unit;\n")).map_err(|error| error.to_string())?;
         }
         source.push_str(";\nbegin\nvar Count: integer := Std.Str.Length('é😀');\n");
         for unit in 0..units {

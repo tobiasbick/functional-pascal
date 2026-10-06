@@ -8,7 +8,7 @@ program RepeatClosures;
 function Evaluate(Predicate: function(): boolean): boolean;
 begin
   return Predicate();
-end;
+end function;
 procedure Check();
 begin
   mutable var Count: integer := 0;
@@ -20,7 +20,7 @@ begin
     Count := Count + 1;
   until Evaluate(function(): boolean begin return true; end);
   if Count <> 4 then panic('repeat closure mismatch');
-end;
+end procedure;
 begin
   Check();
 end.
@@ -38,12 +38,12 @@ type Predicate = record
   function Evaluate(Self: Predicate): boolean;
   begin
     return Self.Value;
-  end;
-end;
+  end function;
+end record;
 function Invoke(Check: function(): boolean): boolean;
 begin
   return Check();
-end;
+end function;
 begin
   var Check: Predicate := record Value := true; end;
   repeat

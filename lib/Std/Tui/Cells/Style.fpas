@@ -33,7 +33,7 @@ public type
         Underline := false;
         Inverse := false;
       end;
-    end;
+    end function;
 
     // Creates a style with colors and explicit text attributes.
     //
@@ -61,5 +61,6 @@ public type
         Underline := Underline;
         Inverse := Inverse;
       end;
-    end;
-  end;
+    end function;
+  end record;
+end unit;

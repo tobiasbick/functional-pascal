@@ -9,7 +9,7 @@ uses Std.Console, Std.Tasks;
 function Compute(N: integer): integer;
 begin
   return N * N;
-end;
+end function;
 
 begin
   var T1: task := go Compute(3);

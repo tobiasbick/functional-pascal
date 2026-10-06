@@ -20,7 +20,7 @@ begin
       panic(Message);
     end;
   end;
-end;
+end procedure;
 
 // Sends one buffered request and prints its response.
 //
@@ -39,7 +39,7 @@ begin
       panic(Message);
     end;
   end;
-end;
+end procedure;
 
 // Reads an entire bounded response stream and validates its UTF-8 body.
 //
@@ -80,7 +80,7 @@ begin
       panic(Message);
     end;
   end;
-end;
+end function;
 
 begin
   mutable var Port: integer := 18080;

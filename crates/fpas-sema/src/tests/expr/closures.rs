@@ -16,7 +16,7 @@ begin
       end;
     return Invoke(5);
   end;
-end;
+end function;
 begin
 end.",
     );
@@ -47,7 +47,7 @@ begin
     end;
     return 0;
   end;
-end;
+end function;
 begin
 end.",
     );

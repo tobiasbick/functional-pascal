@@ -86,7 +86,7 @@ begin
   Std.Net.SendBytesWithCancellation(ConnectionValue, [1], Std.Tasks.CreateCancellationSource());
   Std.Net.ConnectWithCancellation('unused.invalid', 1, 1000, Std.Tasks.CreateCancellationSource());
   Std.Net.ConnectTlsWithCancellation('unused.invalid', 1, 1000, Std.Tasks.CreateCancellationSource());
-end;
+end procedure;
 begin
 end.",
     );
@@ -109,7 +109,7 @@ uses Std.Tasks;
 
 procedure LogAnswer();
 begin
-end;
+end procedure;
 
 begin
   var Tsk: task := go LogAnswer();
@@ -149,7 +149,7 @@ uses Std.Tasks;
 function Answer(): integer;
 begin
   return 42;
-end;
+end function;
 
 begin
   var Tsk: task := go Answer();
@@ -168,7 +168,7 @@ uses Std.Tasks;
 function Answer(): integer;
 begin
   return 42;
-end;
+end function;
 
 begin
   var Tsk: task := go Answer();
@@ -300,7 +300,7 @@ program T;
 uses Std.Tasks;
 type WorkBox = record
   Work: procedure();
-end;
+end record;
 begin
   mutable var Count: integer := 0;
   var Work: procedure() := procedure() begin Count := Count + 1; end;
@@ -334,7 +334,7 @@ uses Std.Tasks;
 type WorkBox = record
   Work: procedure();
   Safe: integer;
-end;
+end record;
 begin
   mutable var Count: integer := 0;
   var Work: procedure() := procedure() begin Count := Count + 1; end;
@@ -364,15 +364,15 @@ uses Std.Tasks;
 function Seven(): integer;
 begin
   return 7;
-end;
+end function;
 function Doubled(Job: task of integer): integer;
 begin
   return Wait(Job) * 2;
-end;
+end function;
 function First(Jobs: array of task of integer): integer;
 begin
   return Wait(Jobs[WaitAny(Jobs)]);
-end;
+end function;
 begin
   var Job: task of integer := go Seven();
   var Inferred: task := go Seven();
@@ -384,9 +384,9 @@ end."#,
 #[test]
 fn typed_tasks_reject_a_different_result_type() {
     for source in [
-        "program T; uses Std.Tasks; function Seven(): integer; begin return 7; end; begin var Job: task of string := go Seven(); end.",
-        "program T; uses Std.Tasks; function Seven(): integer; begin return 7; end; function Name(Job: task of string): string; begin return Wait(Job); end; begin var Job: task := go Seven(); var Text: string := Name(Job); end.",
-        "program T; uses Std.Tasks; function Count(Job: task of integer): string; begin return Wait(Job); end; begin end.",
+        "program T; uses Std.Tasks; function Seven(): integer; begin return 7; end function; begin var Job: task of string := go Seven(); end.",
+        "program T; uses Std.Tasks; function Seven(): integer; begin return 7; end function; function Name(Job: task of string): string; begin return Wait(Job); end function; begin var Job: task := go Seven(); var Text: string := Name(Job); end.",
+        "program T; uses Std.Tasks; function Count(Job: task of integer): string; begin return Wait(Job); end function; begin end.",
     ] {
         assert!(!check_errors(source).is_empty(), "{source}");
     }

@@ -18,8 +18,8 @@ type Counter = record
   function Add(Self: Counter; Value: integer): integer;
   begin
     return Self.Base + Value;
-  end;
-end;
+  end function;
+end record;
 begin
   var C: Counter := record Base := 2; end;
   if C.Add(3) <> 5 then panic('wrong');
@@ -51,7 +51,7 @@ begin
       panic('unreachable');
   end;
   return Value + Offset;
-end;
+end function;
 
 begin
   var Answer: integer := Add(41);
@@ -123,7 +123,7 @@ begin
     Value := Value + 1;
     return Value;
   end;
-end;
+end function;
 
 begin
   var Next: function(): integer := Counter();
@@ -166,7 +166,7 @@ program DebugStructuredTypes;
 type
   Box = record
     Value: integer;
-  end;
+  end record;
 
 mutable var
   Scores: dict of string to integer := ['Ada': 1];
@@ -272,12 +272,12 @@ uses Std.Tasks;
 function Seven(): integer;
 begin
   return 7;
-end;
+end function;
 
 function Label(): string;
 begin
   return 'nope';
-end;
+end function;
 
 var GlobalCurrent: task := go Seven();
 var GlobalWrong: task := go Label();
@@ -346,33 +346,33 @@ function MakeAdder(Base: integer): Handler;
   function AddBase(Value: integer): integer;
   begin
     return Base + Value;
-  end;
+  end function;
 begin
   return AddBase;
-end;
+end function;
 
 function Outer(Offset: integer): integer;
   function AddOffset(Value: integer): integer;
   begin
     return Value + Offset;
-  end;
+  end function;
 begin
   begin
     var Offset: integer := 99;
     return AddOffset(1);
   end;
-end;
+end function;
 
 function Mutating(): Handler;
   function AddCell(Value: integer): integer;
   begin
     Cell := Cell + 1;
     return Value + Cell;
-  end;
+  end function;
 begin
   mutable var Cell: integer := 1;
   return AddCell;
-end;
+end function;
 
 function OuterCell(): Handler;
   function Mid(): Handler;
@@ -380,15 +380,15 @@ function OuterCell(): Handler;
     begin
       Cell := Cell + 1;
       return Value + Cell;
-    end;
+    end function;
   begin
     var Keep: integer := Cell;
     return AddEnclosed;
-  end;
+  end function;
 begin
   mutable var Cell: integer := 1;
   return Mid();
-end;
+end function;
 
 begin
   var First: Handler := MakeAdder(10);
@@ -472,19 +472,19 @@ function FactoryA(A: integer): Handler;
   function Apply(Value: integer): integer;
   begin
     return A + Value;
-  end;
+  end function;
 begin
   return Apply;
-end;
+end function;
 
 function FactoryB(B: integer): Handler;
   function Apply(Value: integer): integer;
   begin
     return B + Value;
-  end;
+  end function;
 begin
   return Apply;
-end;
+end function;
 
 begin
   var First: Handler := FactoryA(1);

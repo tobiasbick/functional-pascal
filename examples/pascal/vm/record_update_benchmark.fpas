@@ -15,7 +15,7 @@ type
     B: integer;
     C: integer;
     D: integer;
-  end;
+  end record;
 
 function RunUpdates(Iterations: integer): integer;
 begin
@@ -32,7 +32,7 @@ begin
   end;
 
   return ((State.A + State.B) + State.C) + State.D;
-end;
+end function;
 
 begin
   if (ParamCount() < 1) or (ParamCount() > 2) then

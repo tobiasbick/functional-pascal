@@ -11,21 +11,21 @@ type
   Point = record
     X: integer;
     Y: real;
-  end;
+  end record;
   Box = record
     Corner: Point;
     Label: string;
     Tag: option of Point;
-  end;
+  end record;
   Shape = enum
     Circle(Center: Point; Radius: integer);
     Square(Side: integer);
     Dot;
-  end;
+  end enum;
 procedure Check(Name: string; Value: boolean; Expected: boolean);
 begin
   if Value <> Expected then panic('wrong: ' + Name);
-end;
+end procedure;
 begin
   var A: Point := record X := 1; Y := 2.0; end;
   var B: Point := record X := 1; Y := 2.0; end;

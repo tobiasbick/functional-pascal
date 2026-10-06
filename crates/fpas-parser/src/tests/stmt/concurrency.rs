@@ -34,12 +34,12 @@ program T;
 function Worker(): integer;
 begin
   return 1;
-end;
+end function;
 
 function Spawn(): task;
 begin
   return go Worker();
-end;
+end function;
 
 begin
 end.",
@@ -60,7 +60,7 @@ end.",
 #[test]
 fn go_as_expression_in_var_decl() {
     let stmts = body_stmts(
-        "program T; function Work(): integer; begin return 1; end; begin var T: task := go Work(); end.",
+        "program T; function Work(): integer; begin return 1; end function; begin var T: task := go Work(); end.",
     );
 
     match &stmts[0] {

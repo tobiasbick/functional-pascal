@@ -27,10 +27,10 @@ public type
     public function Add(Self: Counter; Value: integer): integer;
     begin
       return Self.Base + Value;
-    end;
-  end;
+    end function;
+  end record;
 public var Global: Counter := record Base := 12; end;
-",
+end unit;\n",
     );
 
     let (exit_code, stdout_output, stderr_output) =

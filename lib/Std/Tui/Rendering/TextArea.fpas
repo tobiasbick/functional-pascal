@@ -52,4 +52,5 @@ begin
       Area.PutCell(TuiPoint.Create(CaretX, CaretY), TuiCell.Create('▏', FocusedRole));
     end;
   end;
-end;
+end procedure;
+end unit;

@@ -27,7 +27,7 @@ begin
   end;
 
   return CloseChannel(Messages);
-end;
+end function;
 
 function ReceiveValue(Messages: channel of integer): integer;
 begin
@@ -42,7 +42,7 @@ begin
       return 0;
     end;
   end;
-end;
+end function;
 
 begin
   var Messages: channel of integer := CreateChannel(1);

@@ -17,7 +17,7 @@ public type
         Re := 0.0;
         Im := 0.0;
       end;
-    end;
+    end function;
 
     public static function Create(Re: real; Im: real): Complex;
     begin
@@ -25,7 +25,7 @@ public type
         Re := Re;
         Im := Im;
       end;
-    end;
+    end function;
 
     public function Sq(Self: Complex): Complex;
     begin
@@ -33,7 +33,7 @@ public type
         Re := Self.Re * Self.Re - Self.Im * Self.Im;
         Im := (2.0 * Self.Re) * Self.Im;
       end;
-    end;
+    end function;
 
     public function Add(Self: Complex; Other: Complex): Complex;
     begin
@@ -41,17 +41,17 @@ public type
         Re := Self.Re + Other.Re;
         Im := Self.Im + Other.Im;
       end;
-    end;
+    end function;
 
     public function MagSq(Self: Complex): real;
     begin
       return Self.Re * Self.Re + Self.Im * Self.Im;
-    end;
-  end;
+    end function;
+  end record;
   PixelSample = record
     public IsInside: boolean;
     public EscapeValue: real;
-  end;
+  end record;
   MandelbrotRenderRequest = record
     public Generation: integer;
     public XMin: real;
@@ -62,12 +62,12 @@ public type
     public Height: integer;
     public MaxIter: integer;
     public Palette: PaletteKind;
-  end;
+  end record;
   MandelbrotRenderFrame = record
     // One complete row-major image belonging to a render generation.
     public Generation: integer;
     public Cells: array of TuiCell;
-  end;
+  end record;
 
 function FinishSample(Z: Complex; Iterations: integer; MaxIter: integer): PixelSample;
 begin
@@ -83,7 +83,7 @@ begin
     IsInside := false;
     EscapeValue := (IntToReal(Iterations) + 1.0) - (Log(Log(MagnitudeSq) * 0.5) / Log(2.0));
   end;
-end;
+end function;
 
 function Iterate(C: Complex; MaxIter: integer): PixelSample;
 begin
@@ -96,7 +96,7 @@ begin
   end;
 
   return FinishSample(Z, N, MaxIter);
-end;
+end function;
 
 function IterateCancellable(
   C: Complex;
@@ -122,7 +122,7 @@ begin
   end;
 
   return FinishSample(Z, N, MaxIter);
-end;
+end function;
 
 // Computes one row without cancellation for reference rendering and tests.
 public function ComputeRow(
@@ -147,7 +147,7 @@ begin
   end;
 
   return Row;
-end;
+end function;
 
 function ComputeRowCancellable(
   Py: integer;
@@ -190,7 +190,7 @@ begin
   end;
 
   return Row;
-end;
+end function;
 
 function EscapeGlyph(EscapeValue: real): string;
 begin
@@ -198,7 +198,7 @@ begin
   var Count: integer := Std.Str.Length(Ramp);
   var Index: integer := Clamp(Trunc(Frac(EscapeValue * 0.08) * IntToReal(Count)), 0, Count - 1);
   return Std.Str.CharAt(Ramp, Index);
-end;
+end function;
 
 function RenderCell(Sample: PixelSample; Palette: PaletteKind): TuiCell;
 begin
@@ -210,7 +210,7 @@ begin
   end;
 
   return TuiCell.Styled(EscapeGlyph(Sample.EscapeValue), TuiStyle.FromColors(EscapeColor(Palette, Sample.EscapeValue), Background));
-end;
+end function;
 
 function RenderSamples(Samples: array of PixelSample; Palette: PaletteKind): array of TuiCell;
 begin
@@ -221,12 +221,12 @@ begin
   end;
 
   return Cells;
-end;
+end function;
 
 function RenderRowCells(Request: MandelbrotRenderRequest; Py: integer): array of TuiCell;
 begin
   return RenderSamples(ComputeRow(Py, Request.Width, Request.Height, Request.XMin, Request.XMax, Request.YMin, Request.YMax, Request.MaxIter), Request.Palette);
-end;
+end function;
 
 function RenderRowCellsCancellable(
   Request: MandelbrotRenderRequest;
@@ -236,7 +236,7 @@ function RenderRowCellsCancellable(
 ): array of TuiCell;
 begin
   return RenderSamples(ComputeRowCancellable(Py, Request.Width, Request.Height, Request.XMin, Request.XMax, Request.YMin, Request.YMax, Request.MaxIter, HostToken, WorkerToken), Request.Palette);
-end;
+end function;
 
 // Computes a flat row-major grid synchronously as a reference implementation.
 public function RenderGrid(
@@ -269,7 +269,7 @@ begin
   end;
 
   return TuiCellGrid.Create(Width, Height, Cells);
-end;
+end function;
 
 // Runs one task per row on the VM pool and publishes one complete image.
 public function RunBackgroundRender(
@@ -326,4 +326,5 @@ begin
   end;
 
   return Ok(true);
-end;
+end function;
+end unit;

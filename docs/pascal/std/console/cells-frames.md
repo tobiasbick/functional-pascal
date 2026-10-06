@@ -15,27 +15,27 @@ type
     Crt;
     Ansi256;
     Rgb;
-  end;
+  end enum;
   Color = record
     kind: ColorKind;
     index: integer;
     red: integer;
     green: integer;
     blue: integer;
-  end;
+  end record;
   Cell = record
     glyph: string;
     foreground: Color;
     background: Color;
-  end;
+  end record;
   Rect = record
     x: integer;
     y: integer;
     width: integer;
     height: integer;
-  end;
+  end record;
   SavedRegion = record
-  end;
+  end record;
 ```
 
 | Symbol | Result | Purpose |

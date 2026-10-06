@@ -30,6 +30,7 @@ fn source_review_sse_failure_releases_retained_input() {
     copy_sources(&root.join("lib"), &library);
     let decoder = library.join("Std/Http/Sse.fpas");
     let mut source = fs::read_to_string(&decoder).expect("decoder source");
+    source.truncate(source.rfind("end unit;").expect("unit terminator"));
     source.push_str(
         r#"
 public function ReviewRetained(Decoder: Std.Http.Types.SseDecoder): integer;
@@ -38,16 +39,19 @@ begin
   var State: DecoderState := LoadState(Index);
   return Std.Arrays.Length(State.Buffer) + Std.Str.Length(State.Data) +
     Std.Str.Length(State.EventType) + Std.Str.Length(State.LastEventId) + State.EventBytes;
-end;
+end function;
+end unit;
 "#,
     );
     write_text(&decoder, &source);
     let api = library.join("Std/Http.fpas");
     let mut source = fs::read_to_string(&api).expect("HTTP API source");
+    source.truncate(source.rfind("end unit;").expect("unit terminator"));
     source.push_str(
         r#"
 public function ReviewRetained(Decoder: SseDecoder): integer;
-begin return Std.Http.Sse.ReviewRetained(Decoder); end;
+begin return Std.Http.Sse.ReviewRetained(Decoder); end function;
+end unit;
 "#,
     );
     write_text(&api, &source);

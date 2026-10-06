@@ -6,12 +6,12 @@ public type
   BodyStream = record
     // Private index into the streaming body registry.
     Slot: integer;
-  end;
+  end record;
   // Opaque incremental Server-Sent Events decoder.
   SseDecoder = record
     // Private index into the SSE decoder registry.
     Slot: integer;
-  end;
+  end record;
 
 // Creates an HTTP body handle for the streaming implementation.
 //
@@ -22,7 +22,7 @@ begin
   return record
     Slot := Slot;
   end;
-end;
+end function;
 
 // Returns the backing slot for an HTTP body handle.
 //
@@ -31,7 +31,7 @@ end;
 public function BodyStreamSlot(StreamValue: BodyStream): integer;
 begin
   return StreamValue.Slot;
-end;
+end function;
 
 // Creates an SSE decoder handle for the decoder implementation.
 //
@@ -42,7 +42,7 @@ begin
   return record
     Slot := Slot;
   end;
-end;
+end function;
 
 // Returns the backing slot for an SSE decoder handle.
 //
@@ -51,4 +51,5 @@ end;
 public function SseDecoderSlot(Decoder: SseDecoder): integer;
 begin
   return Decoder.Slot;
-end;
+end function;
+end unit;

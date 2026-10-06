@@ -9,7 +9,7 @@ public type
   ServerLifetime = record
     // Compiler-owned storage for this opaque handle.
     _IntrinsicHandle: integer;
-  end;
+  end record;
 
 // Creates a ready lifetime with its own task group and stop token.
 //
@@ -19,7 +19,7 @@ public type
 public function CreateLifetime(GraceMillis: integer; ForceExit: boolean): result of Std.Server.ServerLifetime, string;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Confirms caller-managed cleanup and disarms escalation after explicit group close.
 //
@@ -28,7 +28,7 @@ end;
 public function FinishShutdown(Lifetime: Std.Server.ServerLifetime): result of boolean, string;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Token notified by any lifecycle stop request.
 //
@@ -37,7 +37,7 @@ end;
 public function GetStopToken(Lifetime: Std.Server.ServerLifetime): Std.Tasks.CancellationToken;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Group for all admitted server workers; use `Std.Tasks.StartTaskInGroup`.
 //
@@ -46,7 +46,7 @@ end;
 public function GetWorkGroup(Lifetime: Std.Server.ServerLifetime): Std.Tasks.TaskGroup;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // True before shutdown begins; false once admission is sealed.
 //
@@ -55,7 +55,7 @@ end;
 public function IsReady(Lifetime: Std.Server.ServerLifetime): boolean;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Explicitly subscribes this lifetime to process stop signals.
 //
@@ -64,7 +64,7 @@ end;
 public function ObserveSignals(Lifetime: Std.Server.ServerLifetime): result of boolean, string;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Transfers TCP/TLS listener cleanup to this lifetime.
 //
@@ -74,7 +74,7 @@ end;
 public function OwnListener(Lifetime: Std.Server.ServerLifetime; Listener: Std.Net.Listener): result of boolean, string;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Remaining common grace budget, rounded up to milliseconds and clamped at zero.
 //
@@ -83,7 +83,7 @@ end;
 public function RemainingMillis(Lifetime: Std.Server.ServerLifetime): integer;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Starts shutdown once; later calls return false without extending the deadline.
 //
@@ -92,7 +92,7 @@ end;
 public function RequestStop(Lifetime: Std.Server.ServerLifetime): boolean;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Snapshot of retained listener-close failures, without consuming them.
 //
@@ -101,4 +101,5 @@ end;
 public function ShutdownErrors(Lifetime: Std.Server.ServerLifetime): array of string;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
+end unit;

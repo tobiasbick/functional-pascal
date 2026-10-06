@@ -28,7 +28,7 @@ public type
         Clip := Bounds.Intersect(SurfaceBounds);
         Origin := TuiPoint.Create(0, 0);
       end;
-    end;
+    end function;
 
     // Creates a canvas with an explicit surface origin and local clip rectangle.
     //
@@ -43,7 +43,7 @@ public type
         Clip := Clip;
         Origin := Origin;
       end;
-    end;
+    end function;
 
     // Returns a nested canvas for `LocalBounds` in this canvas's local coordinates.
     //
@@ -56,7 +56,7 @@ public type
       var ChildClip: TuiRect := TuiRect.Create(Visible.X - LocalBounds.X, Visible.Y - LocalBounds.Y, Visible.Width, Visible.Height);
       return TuiCanvas.CreateLocal(Self.Surface, TuiPoint.Create(Self.Origin.X + LocalBounds.X, Self.Origin.Y +
                                                                                                 LocalBounds.Y), ChildClip);
-    end;
+    end function;
 
     // Paints one cell in local coordinates; clipped and wide-glyph aware.
     //
@@ -78,7 +78,7 @@ public type
       end;
 
       Self.Surface.PutCell(TuiPoint.Create(Self.Origin.X + Position.X, Self.Origin.Y + Position.Y), Cell);
-    end;
+    end procedure;
 
     // Paints one glyph with the normal role.
     //
@@ -90,7 +90,7 @@ public type
     public procedure PutGlyph(Self: TuiCanvas; X: integer; Y: integer; Glyph: string);
     begin
       Self.PutCell(TuiPoint.Create(X, Y), TuiCell.Create(Glyph, TuiStyleRole.Normal));
-    end;
+    end procedure;
 
     // Fills the visible intersection with a one-column cell.
     //
@@ -108,7 +108,7 @@ public type
       var Visible: TuiRect := Bounds.Intersect(Self.Clip);
       TuiSurfaceFillRect(Self.Surface, TuiRect.Create(Self.Origin.X + Visible.X, Self.Origin.Y +
                                                                                  Visible.Y, Visible.Width, Visible.Height), Cell);
-    end;
+    end procedure;
 
     // Draws one logical line of text; stops before a newline.
     //
@@ -161,7 +161,7 @@ public type
           X := X + GlyphWidth;
         end;
       end;
-    end;
+    end procedure;
 
     // Draws a horizontal box-drawing line.
     //
@@ -184,7 +184,7 @@ public type
       begin
         Self.PutCell(TuiPoint.Create(X + Offset, Y), Cell);
       end;
-    end;
+    end procedure;
 
     // Draws a vertical box-drawing line.
     //
@@ -207,7 +207,7 @@ public type
       begin
         Self.PutCell(TuiPoint.Create(X, Y + Offset), Cell);
       end;
-    end;
+    end procedure;
 
     // Draws a box frame using Unicode box-drawing glyphs.
     //
@@ -250,8 +250,8 @@ public type
       Self.PutCell(TuiPoint.Create(Bounds.Right() - 1, Bounds.Y), TuiCell.Create('╮', Role));
       Self.PutCell(TuiPoint.Create(Bounds.X, Bounds.Bottom() - 1), TuiCell.Create('╰', Role));
       Self.PutCell(TuiPoint.Create(Bounds.Right() - 1, Bounds.Bottom() - 1), TuiCell.Create('╯', Role));
-    end;
-  end;
+    end procedure;
+  end record;
 
 // Paints consecutive cells in local coordinates with canvas clipping.
 public procedure TuiCanvasPutCells(Canvas: TuiCanvas; Position: TuiPoint; Cells: array of TuiCell);
@@ -285,4 +285,5 @@ begin
 
   TuiSurfacePutCells(Canvas.Surface, TuiPoint.Create(Canvas.Origin.X + TargetX, Canvas.Origin.Y +
                                                                                 Position.Y), Values);
-end;
+end procedure;
+end unit;

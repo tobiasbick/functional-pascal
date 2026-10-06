@@ -6,7 +6,7 @@ type
   FailureModel = record
     Ready: channel of boolean;
     FailureSeen: boolean;
-  end;
+  end record;
 
 function UpdateFramework(State: FailureModel; Msg: TuiMsg; Cmd: TuiCmdOutput): FailureModel;
 begin
@@ -35,17 +35,17 @@ begin
       return State;
     end;
   end;
-end;
+end function;
 
 function UpdateApplication(State: FailureModel; Message: integer; Cmd: TuiCmdOutput): FailureModel;
 begin
   return State;
-end;
+end function;
 
 function View(State: FailureModel): TuiElement;
 begin
   return TuiElementBuilders.MakeLabel('failure');
-end;
+end function;
 
 begin
   var Inbox: channel of integer := CreateChannel(1);

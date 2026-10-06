@@ -49,4 +49,5 @@ begin
   end;
 
   return TuiElementBuilders.MakeDesktop(None, Children);
-end;
+end function;
+end unit;

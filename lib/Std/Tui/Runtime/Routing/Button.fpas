@@ -160,7 +160,7 @@ begin
       return None;
     end;
   end;
-end;
+end function;
 
 // Returns the first enabled default button in the active modal or full tree.
 //
@@ -169,7 +169,7 @@ end;
 public function TuiFindDefaultButton(Root: TuiElement): option of TuiButtonSpec;
 begin
   return TuiButtonFind(Root, true, '');
-end;
+end function;
 
 // Returns the first enabled button matching an Alt mnemonic in the active modal or full tree.
 //
@@ -184,7 +184,7 @@ begin
   end;
 
   return TuiButtonFind(Root, false, Mnemonic);
-end;
+end function;
 
 // Routes one Alt mnemonic to an enabled button action.
 //
@@ -208,7 +208,7 @@ begin
       return None;
     end;
   end;
-end;
+end function;
 
 // Routes Enter or Space when an enabled button owns keyboard focus.
 //
@@ -234,7 +234,7 @@ begin
   end;
 
   return None;
-end;
+end function;
 
 // Returns the enabled default button action for Enter.
 //
@@ -252,4 +252,5 @@ begin
       return None;
     end;
   end;
-end;
+end function;
+end unit;

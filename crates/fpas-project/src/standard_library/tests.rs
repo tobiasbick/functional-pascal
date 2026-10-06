@@ -31,7 +31,7 @@ include = ["Std/**/*.fpas"]
     );
     write_text(
         &dir.join("Std/Sample.fpas"),
-        "unit Std.Sample;\nconst\n  Value: integer := 42;\n",
+        "unit Std.Sample;\nconst\n  Value: integer := 42;\nend unit;\n",
     );
     let program = dir.join("main.fpas");
     write_text(
@@ -73,7 +73,7 @@ include = ["Std/**/*.fpas"]
     let unit_path = dir.join("Std/Sample.fpas");
     write_text(
         &unit_path,
-        "unit Std.Sample;\nconst\n  Value: integer := 42;\n",
+        "unit Std.Sample;\nconst\n  Value: integer := 42;\nend unit;\n",
     );
     let program = dir.join("main.fpas");
     write_text(
@@ -111,7 +111,7 @@ include = ["Std/**/*.fpas"]
 "#,
     );
     let unit_path = dir.join("Std/Sample.fpas");
-    write_text(&unit_path, "unit Std.Sample;\n");
+    write_text(&unit_path, "unit Std.Sample;\nend unit;\n");
 
     let project = load_standard_library_project(&dir).expect("editable standard library must load");
     let origin = project.link_meta.origin_for_source(&unit_path);
@@ -140,8 +140,14 @@ units = ["Std.Exported"]
 include = ["Std/**/*.fpas"]
 "#,
     );
-    write_text(&dir.join("Std/Exported.fpas"), "unit Std.Exported;\n");
-    write_text(&dir.join("Std/Internal.fpas"), "unit Std.Internal;\n");
+    write_text(
+        &dir.join("Std/Exported.fpas"),
+        "unit Std.Exported;\nend unit;\n",
+    );
+    write_text(
+        &dir.join("Std/Internal.fpas"),
+        "unit Std.Internal;\nend unit;\n",
+    );
     let program = dir.join("main.fpas");
     write_text(&program, "program Main;\nuses Std.Internal;\nbegin\nend.\n");
 
@@ -181,7 +187,10 @@ kind = "library"
 include = ["Std/**/*.fpas"]
 "#,
     );
-    write_text(&dir.join("Std/Console.fpas"), "unit Std.Console;\n");
+    write_text(
+        &dir.join("Std/Console.fpas"),
+        "unit Std.Console;\nend unit;\n",
+    );
 
     let error = load_standard_library(&dir).expect_err("intrinsic collision must fail");
     remove_dir(&dir);
@@ -205,7 +214,7 @@ kind = "library"
 include = ["src/**/*.fpas"]
 "#,
     );
-    write_text(&dir.join("src/Other.fpas"), "unit Other;\n");
+    write_text(&dir.join("src/Other.fpas"), "unit Other;\nend unit;\n");
 
     let error = load_standard_library(&dir).expect_err("non-Std unit must fail");
     remove_dir(&dir);

@@ -291,7 +291,7 @@ begin
       if not Std.Str.Contains(Message, Text) then panic(Message);
     end;
   end;
-end;
+end procedure;
 
 begin
   ExpectError('http://127.0.0.1:{port}/framing', 'both Transfer-Encoding and Content-Length');
@@ -343,7 +343,7 @@ begin
       if not Std.Str.Contains(Message, 'exceeds the integer range') then panic(Message);
     end;
   end;
-end;
+end procedure;
 
 begin
   ExpectOverflow('negative');

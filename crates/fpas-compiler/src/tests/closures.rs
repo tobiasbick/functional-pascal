@@ -42,7 +42,7 @@ begin
   begin
     return Base + Value;
   end;
-end;
+end function;
 begin
   var AddForty: function(Value: integer): integer := MakeAdder(40);
   if AddForty(2) <> 42 then
@@ -65,7 +65,7 @@ begin
     Count := Count + 1;
     return Count;
   end;
-end;
+end function;
 begin
   var Next: function(): integer := MakeCounter();
   Next();
@@ -85,10 +85,10 @@ function MakeAdder(Base: integer): function(Value: integer): integer;
   function Add(Value: integer): integer;
   begin
     return Base + Value;
-  end;
+  end function;
 begin
   return Add;
-end;
+end function;
 begin
   var AddForty: function(Value: integer): integer := MakeAdder(40);
   if AddForty(2) <> 42 then

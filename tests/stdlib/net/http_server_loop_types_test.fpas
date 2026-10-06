@@ -10,7 +10,7 @@ uses Std.Http, Std.Test;
 function Handle(RequestValue: ServerRequest): ServerResponse;
 begin
   return ServerResponse.Create(200, RequestValue.Method);
-end;
+end function;
 
 begin
   var Options: ServerOptions := ServerOptions.Create();

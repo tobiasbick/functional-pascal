@@ -202,8 +202,7 @@ include = ["src/**/*.fpas"]
         "src/main.fpas",
         "program App;\n\nuses Demo.Math;\n\nbegin\n  var Value: integer := Answer();\nend.\n",
     );
-    let unit_source =
-        "unit Demo.Math;\n\npublic function Answer(): integer;\nbegin\n  return 'wrong';\nend;\n";
+    let unit_source = "unit Demo.Math;\n\npublic function Answer(): integer;\nbegin\n  return 'wrong';\nend function;\nend unit;\n";
     temp.write("src/math.fpas", unit_source);
     let root_uri = temp.uri(".");
     let unit_uri = temp.uri("src/math.fpas");
@@ -250,8 +249,7 @@ include = ["src/**/*.fpas"]
     );
     let valid =
         "program App;\n\nuses Demo.Math;\n\nbegin\n  var Value: integer := Answer();\nend.\n";
-    let unit_source =
-        "unit Demo.Math;\n\npublic function Answer(): integer;\nbegin\n  return 42;\nend;\n";
+    let unit_source = "unit Demo.Math;\n\npublic function Answer(): integer;\nbegin\n  return 42;\nend function;\nend unit;\n";
     let main = temp.write("src/main.fpas", valid);
     let unit = temp.write("src/math.fpas", unit_source);
     let root_uri = temp.uri(".");
@@ -320,7 +318,7 @@ include = ["Std/**/*.fpas"]
     );
     temp.write(
         "bundle/Std/Point.fpas",
-        "unit Std.Point;\n\npublic type Point = integer;\n",
+        "unit Std.Point;\n\npublic type Point = integer;\nend unit;\n",
     );
     temp.write(
         "repository/lib/stdlib.fpasprj",
@@ -338,7 +336,8 @@ include = ["Std/**/*.fpas"]
 
 public type Point = record
   public X: integer;
-end;
+end record;
+end unit;
 "#,
     );
     let facade_source = r#"unit Std.Facade;
@@ -346,6 +345,7 @@ end;
 uses Std.Point;
 
 public type FacadePoint = Std.Point.Point;
+end unit;
 "#;
     temp.write("repository/lib/Std/Facade.fpas", facade_source);
     let root_uri = temp.uri("repository");
@@ -398,7 +398,7 @@ include = ["Std/**/*.fpas"]
     );
     temp.write(
         "bundle/Std/Tui.fpas",
-        "unit Std.Tui;\n\npublic type TuiPalette = integer;\n",
+        "unit Std.Tui;\n\npublic type TuiPalette = integer;\nend unit;\n",
     );
     temp.write(
         "external/external.fpasprj",

@@ -10,7 +10,7 @@ begin
   end;
 
   return Right;
-end;
+end function;
 
 function TuiAlignmentBoundsMax(Left: integer; Right: integer): integer;
 begin
@@ -20,7 +20,7 @@ begin
   end;
 
   return Right;
-end;
+end function;
 
 function TuiAlignmentBoundsExtent(
   Minimum: integer;
@@ -43,7 +43,7 @@ begin
   end;
 
   return Extent;
-end;
+end function;
 
 function TuiAlignmentBoundsOffset(Available: integer; Extent: integer; Alignment: TuiAlignmentKind): integer;
 begin
@@ -67,7 +67,7 @@ begin
   end;
 
   return 0;
-end;
+end function;
 
 public type
   // Resolves one measured element into an aligned rectangle within an allocated area.
@@ -85,5 +85,6 @@ public type
       return TuiRect.Create(Area.X +
                             TuiAlignmentBoundsOffset(Area.Width, Width, Alignment.Horizontal), Area.Y +
                                                                                                TuiAlignmentBoundsOffset(Area.Height, Height, Alignment.Vertical), Width, Height);
-    end;
-  end;
+    end function;
+  end record;
+end unit;

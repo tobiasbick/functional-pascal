@@ -119,7 +119,7 @@ mod tests {
         let dir = create_temp_dir("fpas-hooks-discover");
         write_text(
             &dir.join("fixture.fpas"),
-            "unit Tests.Fixture;\nprocedure Setup();\nbegin end;\nprocedure Teardown();\nbegin end;",
+            "unit Tests.Fixture;\nprocedure Setup();\nbegin end procedure;\nprocedure Teardown();\nbegin end procedure;\nend unit;",
         );
         write_text(
             &dir.join("demo_test.fpas"),
@@ -143,11 +143,11 @@ mod tests {
         let dir = create_temp_dir("fpas-hooks-dup");
         write_text(
             &dir.join("a.fpas"),
-            "unit A.One;\nprocedure Setup();\nbegin end;",
+            "unit A.One;\nprocedure Setup();\nbegin end procedure;\nend unit;",
         );
         write_text(
             &dir.join("b.fpas"),
-            "unit B.Two;\nprocedure Setup();\nbegin end;",
+            "unit B.Two;\nprocedure Setup();\nbegin end procedure;\nend unit;",
         );
 
         let error = discover_test_hooks(&[dir.join("a.fpas"), dir.join("b.fpas")])

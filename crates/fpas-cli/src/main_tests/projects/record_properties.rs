@@ -28,15 +28,15 @@ public type
     public function GetValue(Self: Counter): integer;
     begin
       return Self.Base;
-    end;
+    end function;
     public procedure SetValue(Self: Counter; Value: integer);
     begin
       WriteLn('set:' + IntToStr(Value));
-    end;
+    end procedure;
     public property Value: integer read GetValue write SetValue;
-  end;
+  end record;
 public var Global: Counter := record Base := 12; end;
-",
+end unit;\n",
     );
 
     let (exit_code, stdout_output, stderr_output) =

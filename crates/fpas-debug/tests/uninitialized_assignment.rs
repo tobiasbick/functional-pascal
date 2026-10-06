@@ -196,7 +196,7 @@ begin
   mutable var Count: integer := 1;
   var Marker: integer := 0;
   return Count;
-end;
+end function;
 
 begin
   var Pending: task := go Work();

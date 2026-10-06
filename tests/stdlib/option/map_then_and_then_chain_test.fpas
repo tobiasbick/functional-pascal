@@ -5,7 +5,7 @@ uses Std.Console, Std.Options, Std.Conv;
 function Double(V: integer): integer;
 begin
   return V * 2;
-end;
+end function;
 
 function PositiveToStr(V: integer): option of string;
 begin
@@ -17,7 +17,7 @@ begin
   begin
     return None;
   end;
-end;
+end function;
 
 begin
   var O: option of integer := Some(5);

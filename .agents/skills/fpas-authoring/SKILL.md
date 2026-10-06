@@ -67,7 +67,8 @@ begin
     return Max;
   else
     return Value;
-end;
+end function;
+end unit;
 ```
 
 ### Regression test
@@ -103,6 +104,9 @@ Do **not** assume Delphi/Free Pascal:
 Other habits:
 
 - Case-insensitive keywords and identifiers.
+- Named routines and methods end with `end function;` or `end procedure;`.
+  Record and enum declarations end with `end record;` and `end enum;`.
+  Every unit ends with `end unit;`; programs keep `end.`.
 - `elsif`, `when`, and `null` are reserved names. Use an identifier such as
   `Timestamp` for a local binding and `JsonValue.NullValue` for JSON null;
   strings and JSON/TOML data keep their original text.

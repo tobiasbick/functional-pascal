@@ -21,7 +21,7 @@ begin
   end;
 
   return false;
-end;
+end function;
 
 // Creates the Alt+X key event used by the application quit shortcut.
 function QuitKey(): TuiKeyEvent;
@@ -34,7 +34,7 @@ begin
     alt := true;
     meta := false;
   end;
-end;
+end function;
 
 begin
   mutable var Model: LocalChatModel := LocalChatModelCreate(80, 24);

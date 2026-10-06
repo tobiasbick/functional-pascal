@@ -20,7 +20,7 @@ public type
         Role := Role;
         Content := Content;
       end;
-    end;
+    end function;
 
     // Creates a system instruction message.
     //
@@ -29,7 +29,7 @@ public type
     public static function System(Content: string): ChatMessage;
     begin
       return ChatMessage.Create('system', Content);
-    end;
+    end function;
 
     // Creates a user message.
     //
@@ -38,7 +38,7 @@ public type
     public static function User(Content: string): ChatMessage;
     begin
       return ChatMessage.Create('user', Content);
-    end;
+    end function;
 
     // Creates an assistant message.
     //
@@ -47,8 +47,8 @@ public type
     public static function Assistant(Content: string): ChatMessage;
     begin
       return ChatMessage.Create('assistant', Content);
-    end;
-  end;
+    end function;
+  end record;
   // Connection and model settings for an OpenAI-compatible endpoint.
   Client = record
     // Base API URL, normally ending in `/v1`.
@@ -76,8 +76,8 @@ public type
         TimeoutMillis := 120000;
         MaxResponseBytes := 16777216;
       end;
-    end;
-  end;
+    end function;
+  end record;
   // Optional generation controls sent with a chat completion.
   ChatOptions = record
     // Optional sampling temperature.
@@ -92,5 +92,6 @@ public type
         Temperature := None;
         MaxTokens := None;
       end;
-    end;
-  end;
+    end function;
+  end record;
+end unit;

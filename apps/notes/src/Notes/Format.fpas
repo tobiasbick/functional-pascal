@@ -9,7 +9,7 @@ const
 function MissingField(Name: string): string;
 begin
   return ('Missing required note field `' + Name) + '`';
-end;
+end function;
 
 function FieldString(Fields: dict of string to TomlValue; Name: string): result of string, string;
 begin
@@ -32,7 +32,7 @@ begin
       return Error(MissingField(Name));
     end;
   end;
-end;
+end function;
 
 function FieldInteger(Fields: dict of string to TomlValue; Name: string): result of integer, string;
 begin
@@ -55,7 +55,7 @@ begin
       return Error(MissingField(Name));
     end;
   end;
-end;
+end function;
 
 function FieldBoolean(Fields: dict of string to TomlValue; Name: string): result of boolean, string;
 begin
@@ -78,7 +78,7 @@ begin
       return Error(MissingField(Name));
     end;
   end;
-end;
+end function;
 
 function FieldTags(Fields: dict of string to TomlValue): result of array of string, string;
 begin
@@ -116,7 +116,7 @@ begin
       return Error(MissingField('tags'));
     end;
   end;
-end;
+end function;
 
 function ParseFields(Fields: dict of string to TomlValue; Body: string): result of Note, string;
 begin
@@ -149,7 +149,7 @@ begin
     Body := Body;
     Path := '';
   end);
-end;
+end function;
 
 // Parses one UTF-8 `.note` document with TOML frontmatter.
 public function NoteParse(Text: string): result of Note, string;
@@ -191,7 +191,7 @@ begin
       return Error('Invalid .note TOML header: ' + Message);
     end;
   end;
-end;
+end function;
 
 // Encodes one note as deterministic TOML frontmatter and Markdown body text.
 public function NoteStringify(NoteValue: Note): string;
@@ -205,4 +205,5 @@ begin
   var NewLine: string := Std.Str.Chr(10);
   return ((((('+++' + NewLine) + Std.Str.TrimRight(Std.Toml.Stringify(Header))) + NewLine) + '+++') + NewLine) +
          NoteValue.Body;
-end;
+end function;
+end unit;

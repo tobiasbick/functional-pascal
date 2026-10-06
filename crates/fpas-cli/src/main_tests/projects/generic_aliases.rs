@@ -15,7 +15,7 @@ fn generic_tui_callbacks_accept_a_public_model_alias() {
 public type
   Model = record
     public Value: integer;
-  end;",
+  end record;\nend unit;",
     );
     write_text(
         &cwd.join("src/facade.fpas"),
@@ -26,15 +26,15 @@ public type
 public function NewModel(): Model;
 begin
   return record Value := 0; end;
-end;
+end function;
 public function Update(State: Model; Msg: TuiMsg; Cmd: TuiCmdOutput): Model;
 begin
   return State;
-end;
+end function;
 public function View(State: Model): TuiElement;
 begin
   return TuiElementBuilders.MakeLabel('value');
-end;",
+end function;\nend unit;",
     );
     write_text(
         &cwd.join("src/main.fpas"),

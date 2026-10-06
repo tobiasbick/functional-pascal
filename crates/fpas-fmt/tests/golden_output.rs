@@ -26,7 +26,7 @@ fn hello_uses() {
 fn unit_clamp() {
     common::assert_golden(
         "unit_clamp",
-        "unit MyApp.Utils; uses Std.Math; public function Clamp(Value: integer; Min: integer; Max: integer): integer; begin if Value < Min then return Min; else if Value > Max then return Max; else return Value; end; function IsBlank(S: string): boolean; begin return Length(Trim(S)) = 0; end;",
+        "unit MyApp.Utils; uses Std.Math; public function Clamp(Value: integer; Min: integer; Max: integer): integer; begin if Value < Min then return Min; else if Value > Max then return Max; else return Value; end function; function IsBlank(S: string): boolean; begin return Length(Trim(S)) = 0; end function;\nend unit;",
         include_str!("golden/unit_clamp.expected.fpas"),
     );
 }
@@ -35,7 +35,7 @@ fn unit_clamp() {
 fn record_member_visibility() {
     common::assert_golden(
         "record_visibility",
-        "unit Demo.Counter; public type Counter = record Value: integer; public Step: integer; function Hidden(Self: Counter): integer; begin return Self.Value; end; public static function Create(): Counter; begin return record Value := 0; Step := 1; end; end; public property Current: integer read Hidden; public event Changed: procedure() read ReadChanged write WriteChanged; end;",
+        "unit Demo.Counter; public type Counter = record Value: integer; public Step: integer; function Hidden(Self: Counter): integer; begin return Self.Value; end function; public static function Create(): Counter; begin return record Value := 0; Step := 1; end; end function; public property Current: integer read Hidden; public event Changed: procedure() read ReadChanged write WriteChanged; end record;\nend unit;",
         include_str!("golden/record_visibility.expected.fpas"),
     );
 }
@@ -53,7 +53,7 @@ fn long_uses() {
 fn short_record_literal_is_multiline() {
     common::assert_golden(
         "short_record",
-        "program T; type Point = record X: integer; Y: integer; end; begin var A: Point := record X := 3; Y := 4; end; end.",
+        "program T; type Point = record X: integer; Y: integer; end record; begin var A: Point := record X := 3; Y := 4; end; end.",
         include_str!("golden/short_record.expected.fpas"),
     );
 }
@@ -62,7 +62,7 @@ fn short_record_literal_is_multiline() {
 fn logical_block_spacing() {
     common::assert_golden(
         "logical_block_spacing",
-        "program T; type Point = record X: integer; Y: integer; end; begin var A: Point := record X := 3; Y := 4; end; var B: Point := record X := 10; Y := 20; end; var UpdatedB: Point := B with X := 11; end; A.Print(); if Ready then Save();\n// present result\nPresent(); if NeedsCount then Prepare(); var Count: integer := 1; WriteLn(Count); if Done then Finish(); end.",
+        "program T; type Point = record X: integer; Y: integer; end record; begin var A: Point := record X := 3; Y := 4; end; var B: Point := record X := 10; Y := 20; end; var UpdatedB: Point := B with X := 11; end; A.Print(); if Ready then Save();\n// present result\nPresent(); if NeedsCount then Prepare(); var Count: integer := 1; WriteLn(Count); if Done then Finish(); end.",
         include_str!("golden/logical_block_spacing.expected.fpas"),
     );
 }
@@ -80,7 +80,7 @@ fn wrapped_parenthesized_comparisons_preserve_full_expression() {
 fn comments_unit_declaration_docs() {
     common::assert_golden(
         "comments_unit",
-        "// Unit doc.\nunit Demo;\n\n// field doc\nmutable var Count: integer := 0;\n",
+        "// Unit doc.\nunit Demo;\n\n// field doc\nmutable var Count: integer := 0;\nend unit;\n",
         include_str!("golden/comments_unit.expected.fpas"),
     );
 }

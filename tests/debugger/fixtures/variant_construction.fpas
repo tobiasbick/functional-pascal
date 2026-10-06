@@ -6,20 +6,20 @@ type
   Point = record
     X: integer;
     Y: integer;
-  end;
+  end record;
   Choice = enum
     Empty;
     Count(Value: integer);
     Pair(Left: integer; Right: integer);
     Nested(Item: Point);
-  end;
+  end enum;
   Holder = record
     Item: Choice;
-  end;
+  end record;
   Outer = enum
     First(Item: Choice);
     Second(Item: Choice);
-  end;
+  end enum;
 
 mutable var
   GlobalChoice: Choice := Choice.Empty;
@@ -45,13 +45,13 @@ begin
       return Item.X + Item.Y;
     end;
   end;
-end;
+end function;
 
 function Next(): integer;
 begin
   Tick := Tick + 1;
   return Tick;
-end;
+end function;
 
 function ResultValue(Item: result of integer, string): integer;
 begin
@@ -65,7 +65,7 @@ begin
       return -1;
     end;
   end;
-end;
+end function;
 
 function WrappedChoiceValue(Item: result of Choice, string): integer;
 begin
@@ -79,7 +79,7 @@ begin
       return -1;
     end;
   end;
-end;
+end function;
 
 function OuterChoiceValue(Item: Outer): integer;
 begin
@@ -89,7 +89,7 @@ begin
       return ChoiceValue(Value);
     end;
   end;
-end;
+end function;
 
 begin
   mutable var Origin: Point := record

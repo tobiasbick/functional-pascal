@@ -120,7 +120,7 @@ fn project_warnings_are_warning_records() {
         "[project]\nname = \"app\"\nkind = \"program\"\nmain = \"src/main.fpas\"\n\n[sources]\ninclude = [\"src/util.fpas\", \"src/*.fpas\"]\n",
     );
     write_text(&cwd.join("src/main.fpas"), "program Main;\nbegin\nend.\n");
-    write_text(&cwd.join("src/util.fpas"), "unit App.Util;\n");
+    write_text(&cwd.join("src/util.fpas"), "unit App.Util;\nend unit;\n");
 
     let (exit_code, _, stderr) = support::run_cli_args_and_capture_output(
         &args(&[

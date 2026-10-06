@@ -35,9 +35,9 @@ fn base_source(private_body: &str, offset: i64) -> String {
         "unit Demo.Base;
          public const Offset: integer := {offset};
          function Hidden(Value: integer): integer;
-         begin {private_body} end;
+         begin {private_body} end function;
          public function AddOffset(Value: integer): integer;
-         begin return Value + Offset; end;"
+         begin return Value + Offset; end function;\nend unit;"
     )
 }
 
@@ -69,7 +69,7 @@ include = ["src/**/*.fpas"]
             "unit Demo.Consumer;
              uses Demo.Base;
              public function Run(): integer;
-             begin return AddOffset(41); end;",
+             begin return AddOffset(41); end function;\nend unit;",
         );
         write(
             &root.join("src/main.fpas"),
@@ -269,14 +269,14 @@ units = ["Demo.Base", "Demo.Consumer"]
         &root.join("lib/base.fpas"),
         "unit Demo.Base;
          public function AddOne(Value: integer): integer;
-         begin return Value + 1; end;",
+         begin return Value + 1; end function;\nend unit;",
     );
     write(
         &root.join("lib/consumer.fpas"),
         "unit Demo.Consumer;
          uses Demo.Base;
          public function Run(): integer;
-         begin return AddOne(41); end;",
+         begin return AddOne(41); end function;\nend unit;",
     );
 
     let project = load_project(&app_manifest).expect("workspace program project");
@@ -313,7 +313,7 @@ include = ["src/**/*.fpas"]
     write(
         &root.join("src/values.fpas"),
         "unit Demo.Values;
-         public type State = enum Idle = 7; Ready; Done = 20; end;",
+         public type State = enum Idle = 7; Ready; Done = 20; end enum;\nend unit;",
     );
     write(
         &root.join("src/main.fpas"),
@@ -347,7 +347,7 @@ fn failed_rebuild_preserves_previous_valid_sidecar() {
         &fixture.base,
         "unit Demo.Base;
          function AddOffset(Value: integer): integer;
-         begin return 'wrong'; end;",
+         begin return 'wrong'; end function;\nend unit;",
     );
     assert!(fixture.build().is_err());
     assert_eq!(

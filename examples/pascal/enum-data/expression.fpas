@@ -8,7 +8,7 @@ type
     Num(Value: integer);
     Add(Left: Expr; Right: Expr);
     Mul(Left: Expr; Right: Expr);
-  end;
+  end enum;
 
 function Eval(E: Expr): integer;
 begin
@@ -26,7 +26,7 @@ begin
       return Eval(L) * Eval(R);
     end;
   end;
-end;
+end function;
 
 function Show(E: Expr): string;
 begin
@@ -44,7 +44,7 @@ begin
       return ((('(' + Show(L)) + ' * ') + Show(R)) + ')';
     end;
   end;
-end;
+end function;
 
 begin
   var E1: Expr := Expr.Num(42);

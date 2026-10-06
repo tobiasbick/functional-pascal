@@ -10,12 +10,15 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`record_type`, rec
 
 ## Declaring a record
 
+A record declaration ends with `end record;`. Its methods use `end function;` or
+`end procedure;` according to their declaration kind.
+
 ```pascal
 type
   Point = record
     X: real;
     Y: real;
-  end;
+  end record;
 ```
 
 ## Creating a record
@@ -43,12 +46,12 @@ type
   Point = record
     X: integer;
     Y: integer;
-  end;
+  end record;
 
   Size = record
     X: integer;
     Y: integer;
-  end;
+  end record;
 
   PointAlias = Point;
 
@@ -89,7 +92,8 @@ public type
   Counter = record
     Value: integer;
     public Step: integer;
-  end;
+  end record;
+end unit;
 ```
 
 Code in `MyApp.Counters` may read and write `Value`. Importing units may use
@@ -132,7 +136,7 @@ type
     Host: string := 'localhost';
     Port: integer := 8080;
     Debug: boolean := false;
-  end;
+  end record;
 ```
 
 Omitting defaulted fields:
@@ -158,7 +162,7 @@ type
     Id: integer;           // Required
     X: integer := 0;       // Optional
     Y: integer := 0;       // Optional
-  end;
+  end record;
 
 var
   V: Vertex := record Id := 7; end;  // X=0, Y=0 from defaults

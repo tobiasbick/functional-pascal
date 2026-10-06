@@ -43,7 +43,7 @@ begin
   end;
 
   return Ok(Bytes);
-end;
+end function;
 
 // Parses and validates an HTTP/1.0 or HTTP/1.1 request line.
 //
@@ -74,7 +74,7 @@ begin
   end;
 
   return Ok(Parts);
-end;
+end function;
 
 // Counts fields with a case-insensitive name.
 //
@@ -93,7 +93,7 @@ begin
   end;
 
   return Count;
-end;
+end function;
 
 // Reads exactly one Content-Length request body.
 //
@@ -137,7 +137,7 @@ begin
   end;
 
   return Ok(Std.Http.Io.JoinChunks(Chunks));
-end;
+end function;
 
 // Reads and validates one bounded HTTP/1.x request from a connected client.
 //
@@ -273,7 +273,7 @@ begin
   end;
 
   return Ok(Output);
-end;
+end function;
 
 // Validates and serializes one complete HTTP/1.1 response.
 //
@@ -315,7 +315,7 @@ begin
 
   Head := (Head + #13) + #10;
   return Ok(Std.Arrays.Concat(Std.Net.Utf8.Encode(Head), ResponseValue.Body));
-end;
+end function;
 
 // Writes one complete HTTP/1.1 response without closing the connection.
 //
@@ -334,4 +334,5 @@ begin
       return Error(Message);
     end;
   end;
-end;
+end function;
+end unit;

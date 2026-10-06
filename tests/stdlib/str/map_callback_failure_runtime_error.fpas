@@ -15,7 +15,7 @@ begin
   end;
 
   return C;
-end;
+end function;
 
 begin
   var Mapped: string := Map('abc', FailOnSecond);

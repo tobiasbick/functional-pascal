@@ -14,12 +14,12 @@ type
     function ReadOnClick(Self: Button): option of ClickHandler;
     begin
       return ClickSlot;
-    end;
+    end function;
 
     procedure WriteOnClick(Self: Button; Handler: option of ClickHandler);
     begin
       ClickSlot := Handler;
-    end;
+    end procedure;
 
     procedure Click(Self: Button);
     begin
@@ -31,15 +31,15 @@ type
       begin
         WriteLn('no handler');
       end;
-    end;
+    end procedure;
 
     event OnClick: ClickHandler read ReadOnClick write WriteOnClick;
-  end;
+  end record;
 
 procedure HandleClick(Sender: integer);
 begin
   WriteLn('clicked ' + IntToStr(Sender));
-end;
+end procedure;
 
 begin
   var B: Button := record

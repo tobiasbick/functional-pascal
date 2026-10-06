@@ -16,7 +16,7 @@ begin
     return Error('Division by zero');
   else
     return Ok(A div B);
-end;
+end function;
 ```
 
 ## Handling with case

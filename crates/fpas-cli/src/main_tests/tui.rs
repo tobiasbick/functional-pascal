@@ -156,12 +156,12 @@ begin
       return State;
     end;
   end;
-end;
+end function;
 
 function ViewTheme(State: integer): TuiElement;
 begin
   return TuiElementBuilders.MakeLabel('theme');
-end;
+end function;
 
 begin
   var Initial: TuiPalette := TuiPalette.Default()
@@ -212,7 +212,7 @@ type
     ResizeCount: integer;
     Width: integer;
     Height: integer;
-  end;
+  end record;
 
 function Update(State: Model; Msg: TuiMsg; Cmd: TuiCmdOutput): Model;
 begin
@@ -231,12 +231,12 @@ begin
       return State;
     end;
   end;
-end;
+end function;
 
 function View(State: Model): TuiElement;
 begin
   return TuiElementBuilders.MakeLabel('resize');
-end;
+end function;
 
 begin
   var Final: Model := TuiApplication.Run(record
@@ -278,7 +278,7 @@ uses Std.Console, Std.Tui;
 type
   Model = record
     Ticks: integer;
-  end;
+  end record;
 
 function Update(State: Model; Msg: TuiMsg; Cmd: TuiCmdOutput): Model;
 begin
@@ -297,12 +297,12 @@ begin
     return State;
   end;
   end;
-end;
+end function;
 
 function View(State: Model): TuiElement;
 begin
   return TuiElementBuilders.MakeLabel('idle');
-end;
+end function;
 
 begin
   var Final: Model := TuiApplication.Run(record Ticks := 0; end, Update, View);
@@ -348,7 +348,7 @@ type
   Model = record
     Inbox: channel of integer;
     Value: integer;
-  end;
+  end record;
 
 function Update(State: Model; Msg: TuiMsg; Cmd: TuiCmdOutput): Model;
 begin
@@ -370,7 +370,7 @@ begin
       return State;
     end;
   end;
-end;
+end function;
 
 function UpdateApplication(State: Model; Message: integer; Cmd: TuiCmdOutput): Model;
 begin
@@ -379,12 +379,12 @@ begin
     Inbox := State.Inbox;
     Value := Message;
   end;
-end;
+end function;
 
 function View(State: Model): TuiElement;
 begin
   return TuiElementBuilders.MakeLabel('value');
-end;
+end function;
 
 begin
   var Inbox: channel of integer := CreateChannel(1);

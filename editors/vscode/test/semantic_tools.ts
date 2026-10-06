@@ -39,11 +39,11 @@ export async function verifySemanticTools(
     );
     await fs.writeFile(
       path.join(fixtureRoot, "src", "core.fpas"),
-      "unit Semantic.Core;\n\npublic const ExistingText: string := 'ok';\n"
+      "unit Semantic.Core;\n\npublic const ExistingText: string := 'ok';\nend unit;\n"
     );
     await fs.writeFile(
       path.join(fixtureRoot, "src", "importable.fpas"),
-      "unit Semantic.Importable;\n\npublic function UniqueValue(): integer;\nbegin\n  return 42;\nend;\n"
+      "unit Semantic.Importable;\n\npublic function UniqueValue(): integer;\nbegin\n  return 42;\nend function;\nend unit;\n"
     );
     await fs.writeFile(sourcePath, source);
 

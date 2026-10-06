@@ -90,7 +90,7 @@ public type
     BackgroundFailed(Id: integer; Kind: TaskFailureKind; Message: string; Code: integer; Line: integer; Column: integer);
     // Represents the `QuitRequested` variant of `TuiMsg`.
     QuitRequested;
-  end;
+  end enum;
 
 // Creates a source-aware action message.
 //
@@ -100,7 +100,7 @@ public type
 public function TuiMsgAction(Source: TuiControlId; Action: TuiAction): TuiMsg;
 begin
   return TuiMsg.Action(Source, Action);
-end;
+end function;
 
 // Creates a source-aware controlled-input change message.
 //
@@ -112,7 +112,7 @@ end;
 public function TuiMsgTextChanged(Source: TuiControlId; Action: TuiAction; Text: string; Caret: integer): TuiMsg;
 begin
   return TuiMsg.TextChanged(Source, Action, Text, Caret);
-end;
+end function;
 
 // Creates a source-aware controlled multiline text-area change message.
 //
@@ -131,7 +131,7 @@ public function TuiMsgTextAreaChanged(
 ): TuiMsg;
 begin
   return TuiMsg.TextAreaChanged(Source, Action, Text, Caret, Offset);
-end;
+end function;
 
 // Creates a source-aware controlled check-box change message.
 //
@@ -142,7 +142,7 @@ end;
 public function TuiMsgCheckChanged(Source: TuiControlId; Action: TuiAction; Checked: boolean): TuiMsg;
 begin
   return TuiMsg.CheckChanged(Source, Action, Checked);
-end;
+end function;
 
 // Creates a source-aware controlled list selection-change message.
 //
@@ -153,7 +153,7 @@ end;
 public function TuiMsgSelectionChanged(Source: TuiControlId; Action: TuiAction; Selected: integer): TuiMsg;
 begin
   return TuiMsg.SelectionChanged(Source, Action, Selected);
-end;
+end function;
 
 // Creates a source-aware controlled scroll-offset change message.
 //
@@ -164,4 +164,5 @@ end;
 public function TuiMsgScrollChanged(Source: TuiControlId; Action: TuiAction; Offset: TuiPoint): TuiMsg;
 begin
   return TuiMsg.ScrollChanged(Source, Action, Offset);
-end;
+end function;
+end unit;

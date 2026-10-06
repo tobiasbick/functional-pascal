@@ -7,7 +7,7 @@ uses Std.Console, Std.Time;
 procedure LogLine(Message: string);
 begin
   WriteLn(Message);
-end;
+end procedure;
 
 begin
   go LogLine('from spawned task');

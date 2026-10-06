@@ -12,13 +12,13 @@ begin
   begin
     return Ok(A div B);
   end;
-end;
+end function;
 
 function Stringify(A: integer; B: integer): result of string, string;
 begin
   var Quotient: integer := try Divide(A, B);
   return Ok((((IntToStr(A) + ' / ') + IntToStr(B)) + ' = ') + IntToStr(Quotient));
-end;
+end function;
 
 begin
   var R1: result of integer, string := Divide(10, 3);

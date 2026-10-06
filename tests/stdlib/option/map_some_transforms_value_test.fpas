@@ -5,7 +5,7 @@ uses Std.Console, Std.Options, Std.Conv;
 function TripleToStr(V: integer): string;
 begin
   return IntToStr(V * 3);
-end;
+end function;
 
 begin
   var O: option of integer := Some(7);

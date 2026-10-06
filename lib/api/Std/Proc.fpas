@@ -10,13 +10,13 @@ public type
     public ExitCode: integer;
     public Stdout: string;
     public Stderr: string;
-  end;
+  end record;
 
 // Returns the absolute path of the running FPAS host executable.
 public function CurrentExecutable(): result of string, string;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Starts a process, waits for completion, and returns the exit code.
 //
@@ -26,7 +26,7 @@ end;
 public function Run(Command: string; Args: array of string): result of integer, string;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Starts a process and captures its exit code and output.
 //
@@ -36,4 +36,5 @@ end;
 public function RunCapture(Command: string; Args: array of string): result of Std.Proc.ProcessOutput, string;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
+end unit;

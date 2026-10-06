@@ -5,4 +5,5 @@ unit Editor.Greetings;
 public function GreetingFor(Name: string): string;
 begin
   return ('Hello, ' + Name) + '!';
-end;
+end function;
+end unit;

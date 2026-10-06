@@ -41,7 +41,7 @@ begin
   CloseChannel(Ready);
   CloseChannel(Empty);
   CloseChannel(Finished);
-end;
+end procedure;
 
 begin
   VerifyClose(false);

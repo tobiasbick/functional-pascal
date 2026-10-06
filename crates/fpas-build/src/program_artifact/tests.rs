@@ -94,14 +94,14 @@ fn changed_unit_is_rejected_by_final_snapshot_validation() {
     fs::write(&main, main_source).expect("main source");
     fs::write(
         &unit,
-        "unit Race.Work; public function Value(): integer; begin return 1; end;",
+        "unit Race.Work; public function Value(): integer; begin return 1; end function;\nend unit;",
     )
     .expect("old unit source");
     let graph = graph_for(&main, std::slice::from_ref(&unit));
 
     fs::write(
         &unit,
-        "unit Race.Work; public function Value(): integer; begin return 2; end;",
+        "unit Race.Work; public function Value(): integer; begin return 2; end function;\nend unit;",
     )
     .expect("new unit source");
 
@@ -127,12 +127,12 @@ fn reordered_source_ids_keep_correct_portable_path_bindings() {
     fs::write(&main, main_source).expect("main source");
     fs::write(
         &first,
-        "unit Race.First; public function Value(): integer; begin return 1; end;",
+        "unit Race.First; public function Value(): integer; begin return 1; end function;\nend unit;",
     )
     .expect("first unit source");
     fs::write(
         &second,
-        "unit Race.Second; public function Value(): integer; begin return 2; end;",
+        "unit Race.Second; public function Value(): integer; begin return 2; end function;\nend unit;",
     )
     .expect("second unit source");
 
@@ -211,7 +211,7 @@ fn changed_source_hash_rebuilds_the_program_image() {
     let unit = root.join("unit.fpas");
     let artifact = root.join("hash.fpascp");
     let main_source = b"program Sources; uses Race.Work; begin end.";
-    let initial_unit = b"unit Race.Work; public function Value(): integer; begin return 1; end;";
+    let initial_unit = b"unit Race.Work; public function Value(): integer; begin return 1; end function;\nend unit;";
     fs::write(&main, main_source).expect("main source");
     fs::write(&unit, initial_unit).expect("initial unit source");
     let source_paths = vec!["main.fpas".to_string(), "unit.fpas".to_string()];

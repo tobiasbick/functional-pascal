@@ -8,7 +8,7 @@ fn forcing_a_supervised_error_result_finishes_the_task_without_retrying() {
         r#"program ForcedSupervisor;
 uses Std.Tasks, Std.Arrays;
 function Work(Token: CancellationToken): result of integer, string;
-begin panic('worker body must not execute'); end;
+begin panic('worker body must not execute'); end function;
 begin
   var Group: TaskGroup := CreateTaskGroup();
   var Child: task := StartSupervisedTask(Group, Work, 1023, 0);

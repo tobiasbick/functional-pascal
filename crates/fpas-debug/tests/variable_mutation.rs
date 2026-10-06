@@ -15,7 +15,7 @@ use fpas_vm::{
 use serde_json::{Value, json};
 
 fn server() -> JsonlServer {
-    let source = "program Main;\n\nfunction Twice(Value: integer): integer;\nbegin\n  return Value * 2;\nend;\n\nbegin\n  mutable var X: integer := 1;\n  var Fixed: integer := 2;\n  X := X + Fixed;\nend.";
+    let source = "program Main;\n\nfunction Twice(Value: integer): integer;\nbegin\n  return Value * 2;\nend function;\n\nbegin\n  mutable var X: integer := 1;\n  var Fixed: integer := 2;\n  X := X + Fixed;\nend.";
     let (program, diagnostics) = fpas_parser::parse(source);
     assert!(diagnostics.is_empty(), "parse diagnostics: {diagnostics:?}");
     let executable = fpas_compiler::compile(&program).expect("compile mutation fixture");
@@ -170,10 +170,10 @@ type
   Box = record
     Value: integer;
     Other: integer;
-  end;
+  end record;
   Container = record
     Items: array of Box;
-  end;
+  end record;
 
 begin
   mutable var Item: Box := record
@@ -324,7 +324,7 @@ program ParameterMutation;
 function ReadBack(mutable Value: integer): integer;
 begin
   return Value;
-end;
+end function;
 
 begin
   var OutputValue: integer := ReadBack(1);
@@ -378,7 +378,7 @@ begin
     Value := Value + 1;
     return Value;
   end;
-end;
+end function;
 
 begin
   var Next: function(): integer := Counter();
@@ -438,7 +438,7 @@ function ReadAdded(mutable Scores: dict of string to integer): integer;
 begin
   var Marker: integer := Scores['Seed'];
   return Scores['Added'] + Marker;
-end;
+end function;
 
 begin
   var OutputValue: integer := ReadAdded(['Seed': 1]);
@@ -498,7 +498,7 @@ begin
     var Marker: integer := Scores['Seed'];
     return Scores['Added'] + Marker;
   end;
-end;
+end function;
 
 begin
   var ReadValue: function(): integer := Reader();
@@ -561,12 +561,12 @@ function Forever(): integer;
 begin
   while true do begin end;
   return 0;
-end;
+end function;
 
 procedure Emit();
 begin
   WriteLn('not live');
-end;
+end procedure;
 
 begin
   mutable var Scores: dict of string to integer := ['Seed': 1];
@@ -673,12 +673,12 @@ uses Std.Console;
 function ChooseIndex(): integer;
 begin
   return 1;
-end;
+end function;
 
 procedure Emit();
 begin
   WriteLn('not live');
-end;
+end procedure;
 
 begin
   mutable var Items: array of integer := [1, 2];

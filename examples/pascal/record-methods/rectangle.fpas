@@ -10,17 +10,17 @@ type
     function Area(Self: Rectangle): integer;
     begin
       return Self.W * Self.H;
-    end;
+    end function;
 
     function Perimeter(Self: Rectangle): integer;
     begin
       return 2 * (Self.W + Self.H);
-    end;
+    end function;
 
     function IsSquare(Self: Rectangle): boolean;
     begin
       return Self.W = Self.H;
-    end;
+    end function;
 
     procedure Describe(Self: Rectangle);
     begin
@@ -32,8 +32,8 @@ type
 
       WriteLn((((((((Kind + ' ') + IntToStr(Self.W)) + 'x') + IntToStr(Self.H)) + ' area=') + IntToStr(Self.Area())) + ' perimeter=') +
               IntToStr(Self.Perimeter()));
-    end;
-  end;
+    end procedure;
+  end record;
 
 begin
   var R: Rectangle := record

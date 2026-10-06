@@ -47,7 +47,11 @@ impl Parser {
         }
         self.expect(&Token::Equal);
         let body = self.parse_type_body(allow_member_visibility);
-        self.expect_semi();
+        if !matches!(body, TypeBody::Record(_) | TypeBody::Enum(_))
+            || !self.at_enclosing_declaration_end()
+        {
+            self.expect_semi();
+        }
         TypeDef {
             name,
             body,
@@ -65,6 +69,10 @@ impl Parser {
     }
 
     fn parse_enum_type(&mut self) -> EnumType {
+        self.with_declaration_closer(Token::Enum, Self::parse_enum_type_inner)
+    }
+
+    fn parse_enum_type_inner(&mut self) -> EnumType {
         let start = self.current_span();
         self.advance();
         let mut members = Vec::new();
@@ -72,14 +80,14 @@ impl Parser {
             self.error_with_code(
                 PARSE_EXPECTED_IDENTIFIER,
                 "Expected at least one enum member",
-                "Add a member such as `Red;` between `enum` and `end`.",
+                "Add a member such as `Red;` between `enum` and `end enum;`.",
                 self.current_span(),
             );
         }
         while !self.check(&Token::End) && !self.at_end() {
             members.push(self.parse_enum_member());
         }
-        self.expect(&Token::End);
+        self.expect_declaration_end(&Token::Enum);
         EnumType {
             members,
             span: self.span_from(start),

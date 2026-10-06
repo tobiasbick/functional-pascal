@@ -17,7 +17,7 @@ begin
       return false;
     end;
   end;
-end;
+end function;
 
 procedure TuiPaintMenuLabel(
   Canvas: TuiCanvas;
@@ -44,7 +44,7 @@ begin
     Canvas.WriteText(TuiPoint.Create(X, Position.Y), Glyph, GlyphRole);
     X := X + Std.Console.DisplayWidth(Glyph);
   end;
-end;
+end procedure;
 
 // Paints the one-line root menu bar.
 //
@@ -112,7 +112,7 @@ begin
       end;
     end;
   end;
-end;
+end procedure;
 
 procedure TuiPaintMenuPopupEntry(
   Canvas: TuiCanvas;
@@ -163,7 +163,7 @@ begin
   begin
     Canvas.WriteText(TuiPoint.Create(Bounds.Right() - 2, Y), '▶', Role);
   end;
-end;
+end procedure;
 
 procedure TuiPaintMenuPopup(
   Canvas: TuiCanvas;
@@ -199,7 +199,7 @@ begin
       Row := Row + 1;
     end;
   end;
-end;
+end procedure;
 
 // Paints all open menu popups over the completed desktop frame.
 //
@@ -222,4 +222,5 @@ begin
   begin
     TuiPaintMenuPopup(Canvas, Popups[Index], Nodes, State);
   end;
-end;
+end procedure;
+end unit;

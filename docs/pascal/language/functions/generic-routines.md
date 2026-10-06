@@ -8,12 +8,12 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`type_params` on `
 function Identity<T>(Value: T): T;
 begin
   return Value;
-end;
+end function;
 
 procedure PrintValue<T>(Value: T);
 begin
   WriteLn(Value);
-end;
+end procedure;
 ```
 
 Type arguments are inferred from the call-site arguments:
@@ -32,7 +32,7 @@ Multiple type parameters are separated by commas:
 function First<A, B>(X: A; Y: B): A;
 begin
   return X;
-end;
+end function;
 ```
 
 See [Generics](../types/generics.md) for constraints and method-level generics on record methods.

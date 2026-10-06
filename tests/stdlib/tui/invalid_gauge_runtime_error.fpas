@@ -6,12 +6,12 @@ function UpdateGauge(State: integer; Msg: TuiMsg; Cmd: TuiCmdOutput): integer;
 begin
   Cmd.Set(TuiCmd.NoCommand);
   return State;
-end;
+end function;
 
 function ViewGauge(State: integer): TuiElement;
 begin
   return TuiElementBuilders.MakeGauge('Invalid', 2, 1);
-end;
+end function;
 
 begin
   mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(20, 2));

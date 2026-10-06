@@ -9,7 +9,7 @@ type
     South;
     East;
     West;
-  end;
+  end enum;
 
 function DirectionName(D: Direction): string;
 begin
@@ -19,7 +19,7 @@ begin
     Direction.East:  return 'East';
     Direction.West:  return 'West';
   end;
-end;
+end function;
 ```
 
 Enum patterns bind variant fields positionally with plain identifiers only:

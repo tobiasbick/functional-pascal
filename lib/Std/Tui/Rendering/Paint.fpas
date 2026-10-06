@@ -20,7 +20,7 @@ begin
       return false;
     end;
   end;
-end;
+end function;
 
 procedure TuiPaintTextInBounds(Canvas: TuiCanvas; Bounds: TuiRect; Text: string; Role: TuiStyleRole);
 begin
@@ -30,7 +30,7 @@ begin
   end;
 
   Canvas.Child(Bounds).WriteText(TuiPoint.Create(0, 0), Text, Role);
-end;
+end procedure;
 
 // Paints one arranged node and returns the next unused frame index.
 function TuiPaintArranged(
@@ -191,7 +191,7 @@ begin
   end;
 
   return Next;
-end;
+end function;
 
 function TuiPaintMenuOverlays(
   Canvas: TuiCanvas;
@@ -280,7 +280,7 @@ begin
   end;
 
   return Next;
-end;
+end function;
 
 // Paints one complete frame using arranged geometry only (no measurement).
 //
@@ -308,7 +308,7 @@ begin
   begin
     panic('Tui menu overlay paint did not consume the complete arranged frame');
   end;
-end;
+end procedure;
 
 // Overwrites the surface with a terminal-too-small notice when layout overflows.
 //
@@ -336,4 +336,5 @@ begin
   end;
 
   Canvas.WriteText(TuiPoint.Create(X, Y), Message, TuiStyleRole.Warning);
-end;
+end procedure;
+end unit;

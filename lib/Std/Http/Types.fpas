@@ -22,8 +22,8 @@ public type
         Name := Name;
         Value := Value;
       end;
-    end;
-  end;
+    end function;
+  end record;
   // One HTTP request with transport limits shared by buffered and streaming sends.
   Request = record
     // HTTP method token.
@@ -60,7 +60,7 @@ public type
         MaxResponseBytes := 16777216;
         MaxRedirects := 5;
       end;
-    end;
+    end function;
 
     // Creates a GET request with default transport limits.
     //
@@ -69,7 +69,7 @@ public type
     public static function Get(Url: string): Request;
     begin
       return Request.Create('GET', Url);
-    end;
+    end function;
 
     // Creates a POST request with default transport limits.
     //
@@ -78,7 +78,7 @@ public type
     public static function Post(Url: string): Request;
     begin
       return Request.Create('POST', Url);
-    end;
+    end function;
 
     // Creates a PUT request with default transport limits.
     //
@@ -87,7 +87,7 @@ public type
     public static function Put(Url: string): Request;
     begin
       return Request.Create('PUT', Url);
-    end;
+    end function;
 
     // Creates a PATCH request with default transport limits.
     //
@@ -96,7 +96,7 @@ public type
     public static function Patch(Url: string): Request;
     begin
       return Request.Create('PATCH', Url);
-    end;
+    end function;
 
     // Creates a DELETE request with default transport limits.
     //
@@ -105,7 +105,7 @@ public type
     public static function Delete(Url: string): Request;
     begin
       return Request.Create('DELETE', Url);
-    end;
+    end function;
 
     // Creates a HEAD request with default transport limits.
     //
@@ -114,7 +114,7 @@ public type
     public static function Head(Url: string): Request;
     begin
       return Request.Create('HEAD', Url);
-    end;
+    end function;
 
     // Creates an OPTIONS request with default transport limits.
     //
@@ -123,8 +123,8 @@ public type
     public static function Options(Url: string): Request;
     begin
       return Request.Create('OPTIONS', Url);
-    end;
-  end;
+    end function;
+  end record;
   // One complete non-streaming HTTP response.
   Response = record
     // Three-digit HTTP status code.
@@ -135,7 +135,7 @@ public type
     public Headers: array of Header;
     // Complete decoded response-body bytes.
     public Body: array of integer;
-  end;
+  end record;
   // Opaque pull-based HTTP response body.
   BodyStream = Std.Http.Handles.BodyStream;
   // Status and headers returned before a streaming response body is consumed.
@@ -148,7 +148,7 @@ public type
     public Headers: array of Header;
     // Pull-based decoded response-body handle.
     public Body: BodyStream;
-  end;
+  end record;
   // Parsed response metadata used by the HTTP client modules.
   ResponseHead = record
     // Three-digit HTTP status code.
@@ -159,7 +159,7 @@ public type
     public Headers: array of Header;
     // Byte offset immediately after the response head.
     public BodyOffset: integer;
-  end;
+  end record;
   // One request accepted by the HTTP server helpers.
   ServerRequest = record
     // Validated HTTP method token.
@@ -170,7 +170,7 @@ public type
     public Headers: array of Header;
     // Complete request-body bytes.
     public Body: array of integer;
-  end;
+  end record;
   // One complete response written by the HTTP server helpers.
   ServerResponse = record
     // Three-digit HTTP status code.
@@ -195,8 +195,8 @@ public type
         Headers := [];
         Body := [];
       end;
-    end;
-  end;
+    end function;
+  end record;
   // Limits and concurrency used by the HTTP server loop.
   ServerOptions = record
     // Maximum request-head size in bytes.
@@ -220,8 +220,8 @@ public type
         MaxConcurrentRequests := 8;
         MaxRequests := 0;
       end;
-    end;
-  end;
+    end function;
+  end record;
   // Maps one accepted request to its complete response.
   //
   // Parameters:
@@ -235,6 +235,7 @@ public type
     public Data: string;
     // Most recent event identifier.
     public Id: string;
-  end;
+  end record;
   // Opaque incremental Server-Sent Events decoder.
   SseDecoder = Std.Http.Handles.SseDecoder;
+end unit;

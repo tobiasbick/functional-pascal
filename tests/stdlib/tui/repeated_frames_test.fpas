@@ -15,7 +15,7 @@ begin
       return State;
     end;
   end;
-end;
+end function;
 
 function ViewFrames(State: integer): TuiElement;
 begin
@@ -33,7 +33,7 @@ begin
   return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(1)), [
                                                                         TuiElementBuilders.MakePanel('Repeated frames', [TuiElementBuilders.MakeColumn(Children)])
                                                                       ]);
-end;
+end function;
 
 begin
   mutable var Small: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(40, 12));

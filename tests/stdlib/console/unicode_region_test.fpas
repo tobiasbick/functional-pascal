@@ -9,7 +9,7 @@ begin
     foreground := Foreground;
     background := CrtColor(Black);
   end;
-end;
+end function;
 
 begin
   AssertEquals(4, DisplayWidth('A中B'));

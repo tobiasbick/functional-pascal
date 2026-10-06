@@ -13,7 +13,7 @@ begin
     begin
     end;
   end;
-end;
+end procedure;
 
 procedure Accepted(Text: string; Scheme: string; Port: integer);
 begin
@@ -28,7 +28,7 @@ begin
       Fail(Message);
     end;
   end;
-end;
+end procedure;
 
 begin
   for Scheme: string in ['ftp', 'file', 'ws'] do

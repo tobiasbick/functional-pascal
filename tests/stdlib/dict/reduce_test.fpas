@@ -5,12 +5,12 @@ uses Std.Conv, Std.Dictionaries, Std.Test;
 function Describe(Acc: string; Key: string; Value: integer): string;
 begin
   return (((Acc + Key) + ':') + IntToStr(Value)) + ';';
-end;
+end function;
 
 function Sum(Acc: integer; Key: string; Value: integer): integer;
 begin
   return Acc + Value;
-end;
+end function;
 
 begin
   var Scores: dict of string to integer := ['Ada': 3, 'Bob': 5];

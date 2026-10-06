@@ -100,7 +100,7 @@ public type
         Warning := TuiStyle.FromColors(Warning, Background);
         Accent := AccentStyle;
       end;
-    end;
+    end function;
 
     // Resolves the concrete style for one semantic role.
     //
@@ -207,7 +207,7 @@ public type
           return Self.Accent;
         end;
       end;
-    end;
+    end function;
 
     // Returns a copy with one semantic role replaced.
     //
@@ -318,5 +318,6 @@ public type
       end;
 
       return Updated;
-    end;
-  end;
+    end function;
+  end record;
+end unit;

@@ -12,7 +12,7 @@ unit Std.Dictionaries;
 public function ContainsKey(D: dict of K to V; Key: K): boolean;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Keep matching entries.
 //
@@ -22,7 +22,7 @@ end;
 public function Filter(D: dict of K to V; F: function(K: K; V: V): boolean): dict of K to V;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Safe lookup; `None` if absent.
 //
@@ -32,7 +32,7 @@ end;
 public function Get(D: dict of K to V; Key: K): option of V;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // All keys in insertion order.
 //
@@ -41,7 +41,7 @@ end;
 public function Keys(D: dict of K to V): array of K;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Number of entries.
 //
@@ -50,7 +50,7 @@ end;
 public function Length(D: dict of K to V): integer;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Transform all values.
 //
@@ -60,7 +60,7 @@ end;
 public function Map(D: dict of K to V; F: function(V: V): V2): dict of K to V2;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Combined dict; `D2` wins on conflict.
 //
@@ -70,7 +70,7 @@ end;
 public function Merge(D1: dict of K to V; D2: dict of K to V): dict of K to V;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Fold entries in insertion order.
 //
@@ -81,7 +81,7 @@ end;
 public function Reduce(D: dict of K to V; Init: U; F: function(Acc: U; Key: K; Value: V): U): U;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // New dict without the given key.
 //
@@ -91,7 +91,7 @@ end;
 public function Remove(D: dict of K to V; Key: K): dict of K to V;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // All values in insertion order.
 //
@@ -100,4 +100,5 @@ end;
 public function Values(D: dict of K to V): array of V;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
+end unit;

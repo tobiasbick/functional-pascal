@@ -7,7 +7,7 @@ type
     Text: string;
     Caret: integer;
     Offset: TuiPoint;
-  end;
+  end record;
 
 function MakeKey(Kind: TuiKeyKind; Character: string): TuiKeyEvent;
 begin
@@ -19,14 +19,14 @@ begin
     alt := false;
     meta := false;
   end;
-end;
+end function;
 
 function ViewTextArea(State: TextAreaModel): TuiElement;
 begin
   return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(1)), [
                                                                         TuiElementBuilders.MakeTextArea(TuiControlId.Create(1), State.Text, State.Caret, State.Offset, TuiAction.Create(9))
                                                                       ]);
-end;
+end function;
 
 function UpdateTextArea(State: TextAreaModel; Msg: TuiMsg; Cmd: TuiCmdOutput): TextAreaModel;
 begin
@@ -47,13 +47,13 @@ begin
       return State;
     end;
   end;
-end;
+end function;
 
 function Press(App: TuiApplication; State: TextAreaModel; Kind: TuiKeyKind; Character: string): TextAreaModel;
 begin
   App.InjectKeyForTest(MakeKey(Kind, Character));
   return App.RunIterations(State, UpdateTextArea, ViewTextArea, 1, 0);
-end;
+end function;
 
 begin
   var Size: integer := StrToInt(ParamStr(0));

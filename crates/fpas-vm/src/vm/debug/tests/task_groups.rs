@@ -14,14 +14,14 @@ function Ordinary(Token: CancellationToken): result of integer, string;
 begin
   Sleep(1);
   return Error('ordinary');
-end;
+end function;
 procedure Broken(Token: CancellationToken);
 begin
   Sleep(2);
   panic('owned panic');
-end;
+end procedure;
 function Successful(Token: CancellationToken): integer;
-begin return 42; end;
+begin return 42; end function;
 begin
   var G: TaskGroup := CreateTaskGroup();
   var A: task := StartTaskInGroup(G, Ordinary);
@@ -97,7 +97,7 @@ fn stop_before_close(source: &str) -> DebugSession {
     let source = source
         .replace(
             "\nbegin\n  var G:",
-            "\nprocedure BeforeClose(); begin Sleep(0); end;\nbegin\n  var G:",
+            "\nprocedure BeforeClose(); begin Sleep(0); end procedure;\nbegin\n  var G:",
         )
         .replace("  var Failures:", "  BeforeClose();\n  var Failures:");
     let (program, errors) = fpas_parser::parse(&source);
@@ -159,7 +159,7 @@ fn task_group_exited_failure_cannot_be_resumed_or_force_returned() {
 fn task_group_debugger_cancellation_is_reported_as_cancelled() {
     let source = r#"program CancelOwnedChild;
 uses Std.Tasks, Std.Time, Std.Arrays;
-procedure Work(Token: CancellationToken); begin Sleep(1000); end;
+procedure Work(Token: CancellationToken); begin Sleep(1000); end procedure;
 begin
   var G: TaskGroup := CreateTaskGroup();
   StartTaskInGroup(G, Work);
@@ -205,7 +205,7 @@ end."#;
 fn task_group_explicit_wait_keeps_the_original_panic_diagnostic() {
     let source = r#"program ExplicitFailedWait;
 uses Std.Tasks;
-procedure Work(Token: CancellationToken); begin panic('original child failure'); end;
+procedure Work(Token: CancellationToken); begin panic('original child failure'); end procedure;
 begin
   var G: TaskGroup := CreateTaskGroup();
   var Child: task := StartTaskInGroup(G, Work);
@@ -224,7 +224,7 @@ end."#;
 fn task_group_ignored_close_report_still_has_verified_record_metadata() {
     let source = r#"program IgnoreReport;
 uses Std.Tasks;
-procedure Work(Token: CancellationToken); begin panic('contained'); end;
+procedure Work(Token: CancellationToken); begin panic('contained'); end procedure;
 begin
   var G: TaskGroup := CreateTaskGroup();
   StartTaskInGroup(G, Work);

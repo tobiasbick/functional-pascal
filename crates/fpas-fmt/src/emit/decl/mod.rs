@@ -2,6 +2,7 @@
 
 mod group;
 mod item;
+mod routines;
 
 use fpas_parser::Decl;
 
@@ -42,18 +43,19 @@ mod tests {
 
     #[test]
     fn record_one_field() {
-        let formatted =
-            format_program_decls("program T; type IdBox = record Value: integer; end; begin end.");
+        let formatted = format_program_decls(
+            "program T; type IdBox = record Value: integer; end record; begin end.",
+        );
         assert_eq!(
             formatted,
-            "type\n  IdBox = record\n    Value: integer;\n  end;\n"
+            "type\n  IdBox = record\n    Value: integer;\n  end record;\n"
         );
     }
 
     #[test]
     fn record_five_fields() {
         let formatted = format_program_decls(
-            "program T; type Person = record Id: integer; Name: string; Age: integer; Active: boolean; Score: real; end; begin end.",
+            "program T; type Person = record Id: integer; Name: string; Age: integer; Active: boolean; Score: real; end record; begin end.",
         );
         assert!(formatted.contains("Person = record\n"));
         assert!(formatted.contains("Id: integer;\n"));
@@ -71,8 +73,8 @@ type
     function Sum(Self: Point): integer;
     begin
       return Self.X + Self.Y;
-    end;
-  end;
+    end function;
+  end record;
 begin
 end.",
         );
@@ -81,22 +83,22 @@ end.",
             "formatted:\n{formatted}"
         );
         assert!(formatted.contains("return Self.X + Self.Y;"));
-        assert!(formatted.contains("end;\n  end;\n"));
+        assert!(formatted.contains("end function;\n  end record;\n"));
     }
 
     #[test]
     fn enum_and_alias() {
         let formatted = format_program_decls(
-            "program T; type Color = enum Red; Green; Blue; end; IntAlias = integer; begin end.",
+            "program T; type Color = enum Red; Green; Blue; end enum; IntAlias = integer; begin end.",
         );
-        assert!(formatted.contains("Color = enum\n    Red;\n    Green;\n    Blue;\n  end;\n"));
+        assert!(formatted.contains("Color = enum\n    Red;\n    Green;\n    Blue;\n  end enum;\n"));
         assert!(formatted.contains("IntAlias = integer;\n"));
     }
 
     #[test]
     fn unit_function_visibility() {
         let formatted = format_unit_decls(
-            "unit MyApp.Utils; public function Clamp(Value: integer; Min: integer; Max: integer): integer; begin if Value < Min then begin return Min; end; else begin return Value; end; end; function Hidden(): integer; begin return 0; end;",
+            "unit MyApp.Utils; public function Clamp(Value: integer; Min: integer; Max: integer): integer; begin if Value < Min then begin return Min; end; else begin return Value; end; end function; function Hidden(): integer; begin return 0; end function;\nend unit;",
         );
         assert!(formatted.contains("public function Clamp"));
         assert!(formatted.contains("\nfunction Hidden"));
@@ -105,7 +107,7 @@ end.",
     #[test]
     fn unit_default_private_vars_and_consts_are_block_grouped() {
         let formatted = format_unit_decls(
-            "unit U; mutable var A: integer := 1; mutable var B: integer := 2; const C: integer := 3; const D: integer := 4;",
+            "unit U; mutable var A: integer := 1; mutable var B: integer := 2; const C: integer := 3; const D: integer := 4;\nend unit;",
         );
         assert!(formatted.contains("mutable var\n  A: integer := 1;\n  B: integer := 2;\n"));
         assert!(formatted.contains("const\n  C: integer := 3;\n  D: integer := 4;\n"));
@@ -113,7 +115,9 @@ end.",
 
     #[test]
     fn unit_default_private_type_uses_type_block() {
-        let formatted = format_unit_decls("unit U; type Complex = record Re: real; Im: real; end;");
+        let formatted = format_unit_decls(
+            "unit U; type Complex = record Re: real; Im: real; end record;\nend unit;",
+        );
         assert!(
             formatted.contains("type\n  Complex = record\n"),
             "formatted:\n{formatted}"

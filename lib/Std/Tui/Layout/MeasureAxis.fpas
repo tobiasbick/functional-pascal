@@ -13,7 +13,7 @@ public type
     public Preferred: integer;
     // Maximum value or size.
     public Maximum: integer;
-  end;
+  end record;
   // Integer helpers for layout measurement.
   TuiMeasureAxis = record
     // Returns the lesser of two extents.
@@ -29,7 +29,7 @@ public type
       end;
 
       return Right;
-    end;
+    end function;
 
     // Returns the greater of two extents.
     //
@@ -44,7 +44,7 @@ public type
       end;
 
       return Right;
-    end;
+    end function;
 
     // Adds two extents and rejects overflow.
     //
@@ -59,7 +59,7 @@ public type
       end;
 
       return Left + Right;
-    end;
+    end function;
 
     // Constrains preferred and maximum extents by an axis constraint.
     //
@@ -88,5 +88,6 @@ public type
         Preferred := ConstrainedPreferred;
         Maximum := ConstrainedMaximum;
       end;
-    end;
-  end;
+    end function;
+  end record;
+end unit;

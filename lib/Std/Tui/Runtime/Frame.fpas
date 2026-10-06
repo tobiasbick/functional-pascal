@@ -22,4 +22,5 @@ begin
   TuiElementValidate(Root);
   TuiArrange(Frame, Root, TuiRectForSize(Surface.Size()));
   TuiPaintView(Surface, Frame, Root, Pressed);
-end;
+end procedure;
+end unit;

@@ -5,14 +5,14 @@ uses Std.Test, Std.Tui;
 function ViewTheme(State: integer): TuiElement;
 begin
   return TuiElementBuilders.MakeDesktop(None, [TuiElementBuilders.MakeLabel('theme')]);
-end;
+end function;
 
 function UpdateTheme(State: integer; Msg: TuiMsg; Cmd: TuiCmdOutput): integer;
 begin
   Cmd.SetPalette(TuiPalette.Default()
                    .WithRole(TuiStyleRole.Normal, TuiStyle.FromColors(TuiColor.FromRgb(1, 2, 3), TuiColor.FromRgb(4, 5, 6))));
   return State;
-end;
+end function;
 
 begin
   var Initial: TuiPalette := TuiPalette.Default()

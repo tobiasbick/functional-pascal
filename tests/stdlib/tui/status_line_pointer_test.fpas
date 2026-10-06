@@ -6,7 +6,7 @@ type
   StatusModel = record
     Focus: integer;
     Actions: array of integer;
-  end;
+  end record;
 
 function FindGlyph(Snapshot: TuiSurfaceSnapshot; Glyph: string): TuiPoint;
 begin
@@ -20,7 +20,7 @@ begin
   end;
 
   panic('glyph not found in snapshot');
-end;
+end function;
 
 function ViewStatus(State: StatusModel): TuiElement;
 begin
@@ -31,7 +31,7 @@ begin
                                                                                                                       TuiStatusItemBuilders.MakeDisabledCommand(TuiControlId.Create(2), 'Quit', TuiAction.Create(20))
                                                                                                                     ])
                                                                                 ]);
-end;
+end function;
 
 function UpdateStatus(State: StatusModel; Msg: TuiMsg; Cmd: TuiCmdOutput): StatusModel;
 begin
@@ -65,7 +65,7 @@ begin
       return State;
     end;
   end;
-end;
+end function;
 
 begin
   mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 4));

@@ -14,7 +14,7 @@ public type
     public Port: integer;
     // Origin-form path including an optional query.
     public Path: string;
-  end;
+  end record;
 
 // Returns the default port for a supported URI scheme.
 //
@@ -33,7 +33,7 @@ begin
   end;
 
   return Error('Unsupported URI scheme: ' + Scheme);
-end;
+end function;
 
 // Parses and validates a decimal TCP port.
 //
@@ -56,7 +56,7 @@ begin
       return Error('Invalid URI port: ' + Message);
     end;
   end;
-end;
+end function;
 
 // Parses one authority and constructs the final URI value.
 //
@@ -128,7 +128,7 @@ begin
     Port := Port;
     Path := Path;
   end);
-end;
+end function;
 
 // Parses an absolute HTTP or HTTPS URI.
 //
@@ -168,4 +168,5 @@ begin
   end;
 
   return BuildUri(Scheme, Authority, Path);
-end;
+end function;
+end unit;

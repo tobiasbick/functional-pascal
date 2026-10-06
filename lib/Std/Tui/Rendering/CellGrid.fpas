@@ -30,4 +30,5 @@ begin
     TuiCanvasPutCells(Canvas, TuiPoint.Create(Bounds.X, Bounds.Y + Y), Std.Arrays.Slice(Grid.Cells, Y *
                                                                                                     Grid.Width, Width));
   end;
-end;
+end procedure;
+end unit;

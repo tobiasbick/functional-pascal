@@ -9,25 +9,25 @@ type
     function Add(Self: Counter; Value: integer): integer;
     begin
       return Self.Base + Value;
-    end;
+    end function;
 
     procedure Show(Self: Counter);
     begin
       WriteLn('Base: ' + IntToStr(Self.Base));
-    end;
+    end procedure;
 
     static function Make(Base: integer): Counter;
     begin
       return record
         Base := Base;
       end;
-    end;
-  end;
+    end function;
+  end record;
 
 function Apply(F: function(Value: integer): integer; Value: integer): integer;
 begin
   return F(Value);
-end;
+end function;
 
 begin
   mutable var C: Counter := record

@@ -46,4 +46,5 @@ Planning documentation only. `docs/pascal/` stays unchanged.
 [Reference style](reference-style.md) supplies ten examples covering every
 requested construct. Each separates current forms from draft forms and names
 the owning packages. The examples retain explicit types and avoid deciding
-open grammar details. Delivery is local; the completion checkbox awaits merge.
+open grammar details. Delivery and the applicable planning checks are complete
+on the working branch.

@@ -11,7 +11,7 @@ public type
     Quit;
     // Represents the `SetPalette` variant of `TuiCmd`.
     SetPalette;
-  end;
+  end enum;
 
 mutable var
   TuiCommandValues: array of TuiCmd := [];
@@ -28,7 +28,7 @@ begin
   end;
 
   return Slot;
-end;
+end function;
 
 public type
   // Host-owned command output capability passed to Update.
@@ -46,7 +46,7 @@ public type
       return record
         Slot := Std.Arrays.Length(TuiCommandValues);
       end;
-    end;
+    end function;
 
     // Resets the output before one Update call.
     //
@@ -59,7 +59,7 @@ public type
       TuiCommandPalettes[Slot - 1] := None;
       TuiCommandBackground[Slot - 1] := [];
       TuiCommandTickDelays[Slot - 1] := -1;
-    end;
+    end procedure;
 
     // Asks the interactive host for one `TuiMsg.Tick` after DelayMilliseconds.
     // The latest request of an application replaces an earlier pending one.
@@ -72,7 +72,7 @@ public type
       end;
 
       TuiCommandTickDelays[Slot - 1] := DelayMilliseconds;
-    end;
+    end procedure;
 
     // Returns the tick delay requested by the current Update call, if any.
     public function ReadTickRequest(Self: TuiCmdOutput): option of integer;
@@ -85,7 +85,7 @@ public type
       end;
 
       return Some(Delay);
-    end;
+    end function;
 
     // Starts one operation after Update returns. The host owns it until completion or shutdown.
     public procedure StartBackground(Self: TuiCmdOutput; Id: integer; Work: TuiBackgroundWork);
@@ -98,7 +98,7 @@ public type
       mutable var Commands: array of TuiBackgroundCommand := TuiCommandBackground[Slot - 1];
       Std.Arrays.Push(Commands, TuiBackgroundCommand.Start(Id, Work));
       TuiCommandBackground[Slot - 1] := Commands;
-    end;
+    end procedure;
 
     // Requests cancellation and starts the latest replacement after the previous operation ends.
     public procedure ReplaceSubscription(Self: TuiCmdOutput; Id: integer; Work: TuiBackgroundWork);
@@ -111,7 +111,7 @@ public type
       mutable var Commands: array of TuiBackgroundCommand := TuiCommandBackground[Slot - 1];
       Std.Arrays.Push(Commands, TuiBackgroundCommand.ReplaceSubscription(Id, Work));
       TuiCommandBackground[Slot - 1] := Commands;
-    end;
+    end procedure;
 
     // Requests cancellation after Update returns; the host joins it when complete or at shutdown.
     public procedure CancelSubscription(Self: TuiCmdOutput; Id: integer);
@@ -124,7 +124,7 @@ public type
       mutable var Commands: array of TuiBackgroundCommand := TuiCommandBackground[Slot - 1];
       Std.Arrays.Push(Commands, TuiBackgroundCommand.CancelSubscription(Id));
       TuiCommandBackground[Slot - 1] := Commands;
-    end;
+    end procedure;
 
     // Sets the command returned by the current Update call.
     //
@@ -136,7 +136,7 @@ public type
       var Slot: integer := TuiCmdOutputRequire(Self.Slot);
       TuiCommandValues[Slot - 1] := Value;
       TuiCommandPalettes[Slot - 1] := None;
-    end;
+    end procedure;
 
     // Requests an immediate palette change after Update returns.
     //
@@ -148,7 +148,7 @@ public type
       var Slot: integer := TuiCmdOutputRequire(Self.Slot);
       TuiCommandValues[Slot - 1] := TuiCmd.SetPalette;
       TuiCommandPalettes[Slot - 1] := Some(Palette);
-    end;
+    end procedure;
 
     // Reads the command after Update returns.
     //
@@ -158,7 +158,7 @@ public type
     begin
       var Slot: integer := TuiCmdOutputRequire(Self.Slot);
       return TuiCommandValues[Slot - 1];
-    end;
+    end function;
 
     // Returns the palette attached to a SetPalette command.
     //
@@ -168,12 +168,13 @@ public type
     begin
       var Slot: integer := TuiCmdOutputRequire(Self.Slot);
       return TuiCommandPalettes[Slot - 1];
-    end;
+    end function;
 
     // Returns background commands emitted by the current Update call.
     public function ReadBackground(Self: TuiCmdOutput): array of TuiBackgroundCommand;
     begin
       var Slot: integer := TuiCmdOutputRequire(Self.Slot);
       return TuiCommandBackground[Slot - 1];
-    end;
-  end;
+    end function;
+  end record;
+end unit;

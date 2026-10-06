@@ -36,7 +36,7 @@ type KeyEvent = record
   ctrl: boolean;
   alt: boolean;
   meta: boolean
-end;
+end record;
 ```
 
 | Field | Type | Meaning |
@@ -139,7 +139,7 @@ type ConsoleEvent = record
   ctrl: boolean;
   alt: boolean;
   meta: boolean
-end;
+end record;
 ```
 
 `ConsoleEvent` is the low-level event container for later TUI-style code. Only the fields relevant to the current `kind` are populated:

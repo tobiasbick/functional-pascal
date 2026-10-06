@@ -35,5 +35,6 @@ public type
         Height := Height;
         Cells := Cells;
       end;
-    end;
-  end;
+    end function;
+  end record;
+end unit;

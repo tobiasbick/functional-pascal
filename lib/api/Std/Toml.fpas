@@ -42,7 +42,7 @@ public type
     // Parameters:
     // - `Fields`: `dict of string to Std.Toml.TomlValue` input value used by `Table`.
     Table(Fields: dict of string to Std.Toml.TomlValue);
-  end;
+  end enum;
 
 // Parses one TOML document.
 //
@@ -51,7 +51,7 @@ public type
 public function Parse(Text: string): result of Std.Toml.TomlValue, string;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Encodes a TOML value tree.
 //
@@ -60,4 +60,5 @@ end;
 public function Stringify(Value: Std.Toml.TomlValue): string;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
+end unit;

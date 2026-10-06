@@ -39,7 +39,7 @@ begin
     return Left;
   else
     return Right;
-end;
+end function;
 ```
 
 Tooling removes the indentation, the first `//`, and at most one following ASCII space from each

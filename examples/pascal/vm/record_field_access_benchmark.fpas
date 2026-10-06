@@ -13,7 +13,7 @@ type
   BenchmarkState = record
     Value: integer;
     Total: integer;
-  end;
+  end record;
 
 function RunAccess(Iterations: integer): integer;
 begin
@@ -29,7 +29,7 @@ begin
   end;
 
   return State.Total;
-end;
+end function;
 
 begin
   if (ParamCount() < 1) or (ParamCount() > 2) then

@@ -49,7 +49,7 @@ public type
         DefaultShortcut := DefaultShortcut;
         SelectedShortcut := SelectedShortcut;
       end;
-    end;
+    end function;
 
     // Resolves one button role.
     //
@@ -92,7 +92,7 @@ public type
           panic('Tui button palette requires a button style role');
         end;
       end;
-    end;
+    end function;
 
     // Returns a copy with one button role replaced.
     //
@@ -139,5 +139,6 @@ public type
       end;
 
       return Updated;
-    end;
-  end;
+    end function;
+  end record;
+end unit;

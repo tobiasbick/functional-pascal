@@ -15,7 +15,7 @@ begin
     WriteLn('id: ' + Events[Index].Id);
     WriteLn('data: ' + Events[Index].Data);
   end;
-end;
+end procedure;
 
 begin
   case CreateSseDecoder(1024) of

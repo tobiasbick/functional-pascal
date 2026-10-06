@@ -10,8 +10,8 @@ uses Std.Math;
 function Double(X: integer): integer;
 begin
   return X * 2;
-end;
-",
+end function;
+end unit;\n",
     );
 
     assert_eq!(unit.name.parts, vec!["MyApp", "Math"]);
@@ -27,7 +27,7 @@ fn unit_with_multiple_uses_comma_separated() {
         "\
 unit MyApp.Core;
 uses Std.Console, Std.Math, Std.Str;
-",
+end unit;\n",
     );
 
     assert_eq!(unit.uses.len(), 3);
@@ -49,8 +49,8 @@ type
   Pair = record
     A: integer;
     B: integer;
-  end;
-",
+  end record;
+end unit;\n",
     );
 
     assert_eq!(unit.declarations.len(), 2);

@@ -65,5 +65,5 @@ Repository sources, embedded fixtures, source generators, formatter goldens,
 CLI templates, editor snippets, and documentation examples are migrated.
 Conversion used temporary parser-guided tools under the ignored
 `.temp-data/` directory; the parser has no legacy acceptance mode.
-Named closers remain in the later work packages. The package checkbox
-remains open until the changes are merged.
+Named closers belong to the later work packages. Delivery and applicable
+verification for statement terminators are complete on the working branch.

@@ -27,7 +27,7 @@ type
     procedure SetText(Self: Button; Value: string);
 
     property Text: string read GetText write SetText;
-  end;
+  end procedure;
 ```
 
 Version 1 supports read-only, write-only, and read-write forms:

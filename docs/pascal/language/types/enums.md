@@ -6,13 +6,15 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`enum_type`, `enum
 
 ## Simple enum
 
+An enum declaration ends with `end enum;` after its final terminated member.
+
 ```pascal
 type
   Color = enum
     Red;
     Green;
     Blue;
-  end;
+  end enum;
 ```
 
 Using:
@@ -34,7 +36,7 @@ type
     Success = 200;
     NotFound = 404;
     InternalError = 500;
-  end;
+  end enum;
 ```
 
 Members without an explicit value start at `0` and continue with the previous member's value plus
@@ -49,7 +51,7 @@ type
     Last = 9223372036854775807;
     Restart = 0;
     Next; // backing value 1
-  end;
+  end enum;
 ```
 
 ## Enums with associated data
@@ -62,7 +64,7 @@ type
     Circle(Radius: real);
     Rectangle(Width: real; Height: real);
     Point;
-  end;
+  end enum;
 ```
 
 Variants with fields are constructed by calling the variant with positional arguments:

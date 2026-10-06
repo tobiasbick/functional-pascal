@@ -62,7 +62,7 @@ function ReadAdded(mutable Values: array of integer): integer;
 begin
   var Marker: integer := Values[0];
   return Values[1] + Marker;
-end;
+end function;
 
 begin
   var OutputValue: integer := ReadAdded([1]);
@@ -108,7 +108,7 @@ begin
     var Marker: string := Text;
     return Text;
   end;
-end;
+end function;
 
 begin
   var ReadValue: function(): string := Reader();
@@ -152,7 +152,7 @@ program NestedSequenceMutation;
 type
   Container = record
     Items: array of integer;
-  end;
+  end record;
 
 mutable var
   GlobalValues: array of integer := [4, 6];
@@ -237,12 +237,12 @@ function Forever(): integer;
 begin
   while true do begin end;
   return 0;
-end;
+end function;
 
 procedure Emit();
 begin
   WriteLn('not live');
-end;
+end procedure;
 
 begin
   mutable var Values: array of integer := [1];

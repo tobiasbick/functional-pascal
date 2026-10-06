@@ -43,7 +43,7 @@ begin
   TuiBackgroundOpenApplication();
   Std.Tui.Runtime.Routing.Pointer.TuiPointerRoutingOpen();
   return Std.Arrays.Length(TuiAppOpen);
-end;
+end function;
 
 // Cancels owned work, closes application state, and returns shutdown failures.
 public function TuiAppCloseApplication(ApplicationId: integer): array of TuiMsg;
@@ -71,7 +71,7 @@ begin
   end;
 
   return BackgroundFailures;
-end;
+end function;
 
 // Raises the first shutdown failure after application resources have been released.
 public procedure TuiAppRaiseShutdownFailure(Failures: array of TuiMsg);
@@ -91,7 +91,7 @@ begin
       panic('Tui background operation failed during shutdown');
     end;
   end;
-end;
+end procedure;
 
 public function TuiAppRequireHandle(ApplicationId: integer): integer;
 begin
@@ -101,7 +101,7 @@ begin
   end;
 
   return ApplicationId;
-end;
+end function;
 
 public function TuiAppRequireOpen(ApplicationId: integer): integer;
 begin
@@ -112,13 +112,13 @@ begin
   end;
 
   return ApplicationId;
-end;
+end function;
 
 // Returns the number of unread inputs for one application.
 public function TuiAppInputCount(ApplicationId: integer): integer;
 begin
   return Std.Arrays.Length(TuiAppInputs[ApplicationId - 1]) - TuiAppInputHead[ApplicationId - 1];
-end;
+end function;
 
 // Removes the next queued input, compacting only after at least half is consumed.
 public function TuiAppPopInput(ApplicationId: integer): TuiHostInput;
@@ -139,13 +139,13 @@ begin
   end;
 
   return Item;
-end;
+end function;
 
 // Returns the number of unread messages for one application.
 public function TuiAppMessageCount(ApplicationId: integer): integer;
 begin
   return Std.Arrays.Length(TuiAppMessages[ApplicationId - 1]) - TuiAppMessageHead[ApplicationId - 1];
-end;
+end function;
 
 // Removes the next queued message, compacting only after at least half is consumed.
 public function TuiAppPopMessage(ApplicationId: integer): TuiMsg;
@@ -166,7 +166,7 @@ begin
   end;
 
   return Item;
-end;
+end function;
 
 // Enqueues messages in their original order.
 public procedure TuiAppPushMessages(ApplicationId: integer; Messages: array of TuiMsg);
@@ -179,7 +179,7 @@ begin
   end;
 
   TuiAppMessages[ApplicationId - 1] := Queue;
-end;
+end procedure;
 
 // Enqueues one input for the application.
 public procedure TuiAppPushInput(ApplicationId: integer; Input: TuiHostInput);
@@ -188,7 +188,7 @@ begin
   TuiAppInputs[ApplicationId - 1] := [];
   Std.Arrays.Push(Queue, Input);
   TuiAppInputs[ApplicationId - 1] := Queue;
-end;
+end procedure;
 
 // Queues Started exactly once for a background-enabled host.
 public procedure TuiAppStart(ApplicationId: integer);
@@ -199,12 +199,12 @@ begin
     TuiAppStarted[ApplicationId - 1] := true;
     TuiAppPushMessages(ApplicationId, [TuiMsg.Started]);
   end;
-end;
+end procedure;
 
 public procedure TuiAppApplyResize(ApplicationId: integer; Size: TuiSize);
 begin
   TuiAppSurfaces[ApplicationId - 1].Resize(Size);
-end;
+end procedure;
 
 public procedure TuiAppRouteInput(ApplicationId: integer; Input: TuiHostInput);
 begin
@@ -229,7 +229,7 @@ begin
       TuiAppPushMessages(ApplicationId, [TuiMsg.Resize(Size)]);
     end;
   end;
-end;
+end procedure;
 
 public procedure TuiAppApplyResizeIfNeeded(ApplicationId: integer; Msg: TuiMsg);
 begin
@@ -242,7 +242,7 @@ begin
     begin
     end;
   end;
-end;
+end procedure;
 
 public function TuiAppApplyCommand(ApplicationId: integer; Output: TuiCmdOutput): boolean;
 begin
@@ -285,7 +285,7 @@ begin
 
   TuiAppPushMessages(ApplicationId, TuiBackgroundApply(ApplicationId, Output.ReadBackground()));
   return false;
-end;
+end function;
 
 // Returns milliseconds until the pending tick is due: 0 when due, -1 without a pending tick.
 public function TuiAppTickWait(ApplicationId: integer): integer;
@@ -302,17 +302,18 @@ begin
   end;
 
   return Remaining;
-end;
+end function;
 
 // Clears the pending tick and returns it with the milliseconds elapsed since its request.
 public function TuiAppTakeTick(ApplicationId: integer): TuiMsg;
 begin
   TuiAppTickDueAt[ApplicationId - 1] := -1;
   return TuiMsg.Tick(ElapsedMillis(TuiAppTickRequestedAt[ApplicationId - 1]));
-end;
+end function;
 
 // Discards a pending tick request; headless runs deliver their own deterministic ticks.
 public procedure TuiAppClearTick(ApplicationId: integer);
 begin
   TuiAppTickDueAt[ApplicationId - 1] := -1;
-end;
+end procedure;
+end unit;

@@ -79,6 +79,10 @@ impl Parser {
     }
 
     fn parse_unit_ast(&mut self) -> Unit {
+        self.with_declaration_closer(Token::Unit, Self::parse_unit_ast_inner)
+    }
+
+    fn parse_unit_ast_inner(&mut self) -> Unit {
         let start = self.current_span();
 
         self.expect(&Token::Unit);
@@ -87,10 +91,14 @@ impl Parser {
 
         let (uses, declarations) = self.parse_uses_and_declarations(true);
 
+        if self.expect_declaration_end(&Token::Unit) {
+            self.expect_semi();
+        }
+
         let span = self.span_from(start);
         self.reject_trailing_input(
-            "unit declarations",
-            "Unit files contain declarations only. Remove trailing statements or blocks.",
+            "unit terminator",
+            "Remove all tokens after the final `end unit;`. Unit files contain declarations only.",
         );
         Unit {
             name,

@@ -7,7 +7,7 @@ public type
     Fixed;
     // Represents the `Expanding` variant of `TuiSpacerKind`.
     Expanding;
-  end;
+  end enum;
   // Empty layout extent used between siblings.
   TuiSpacer = record
     // Variant kind represented by the value.
@@ -30,7 +30,7 @@ public type
         Kind := TuiSpacerKind.Fixed;
         MinimumExtent := Extent;
       end;
-    end;
+    end function;
 
     // Creates an expanding spacer with a non-negative minimum extent.
     //
@@ -47,5 +47,6 @@ public type
         Kind := TuiSpacerKind.Expanding;
         MinimumExtent := MinimumExtent;
       end;
-    end;
-  end;
+    end function;
+  end record;
+end unit;

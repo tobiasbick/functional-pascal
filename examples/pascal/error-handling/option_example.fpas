@@ -13,13 +13,13 @@ begin
   end;
 
   return None;
-end;
+end function;
 
 function DoubleFirst(Items: array of integer; Min: integer): option of string;
 begin
   var V: integer := try FindFirst(Items, Min);
   return Some((IntToStr(V) + ' x 2 = ') + IntToStr(V * 2));
-end;
+end function;
 
 begin
   var Data: array of integer := [3, 7, 15, 42, 8];

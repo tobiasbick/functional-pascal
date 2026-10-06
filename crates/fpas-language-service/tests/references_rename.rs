@@ -14,8 +14,7 @@ use support::{TempDirectory, write_program_project};
 fn references_find_cross_unit_uses_and_optionally_include_the_declaration() {
     let temp = TempDirectory::new("references-project");
     let (manifest, main, unit) = write_program_project(&temp);
-    let unit_source =
-        "unit Demo.Math;\n\npublic function Answer(): integer;\nbegin return 42; end;\n";
+    let unit_source = "unit Demo.Math;\n\npublic function Answer(): integer;\nbegin return 42; end function;\nend unit;\n";
     let main_source = "program App;\n\nuses Demo.Math;\n\nbegin\n  var A: integer := Answer();\n  var B: integer := Demo.Math.Answer();\n  var Text: string := 'Answer';\n  // Answer()\nend.\n";
     std::fs::write(&unit, unit_source).expect("write unit");
     std::fs::write(&main, main_source).expect("write program");
@@ -44,7 +43,7 @@ fn references_find_cross_unit_uses_and_optionally_include_the_declaration() {
 #[test]
 fn references_preserve_lexical_shadowing() {
     let temp = TempDirectory::new("references-shadowing");
-    let source = "program Local;\n\nvar Value: integer := 1;\n\nfunction ReadValue(Value: integer): integer;\nbegin\n  return Value;\nend;\n\nbegin\n  var Result: integer := Value;\nend.\n";
+    let source = "program Local;\n\nvar Value: integer := 1;\n\nfunction ReadValue(Value: integer): integer;\nbegin\n  return Value;\nend function;\n\nbegin\n  var Result: integer := Value;\nend.\n";
     let path = temp.write("local.fpas", source);
     let mut service = LanguageService::new(WorkspaceContext::loose(temp.path()));
     let parameter_use = source.find("return Value").expect("parameter reference") + 7;
@@ -54,17 +53,15 @@ fn references_preserve_lexical_shadowing() {
         .expect("shadowed references")
         .value;
     assert_eq!(references.len(), 2, "{references:?}");
-    assert!(references.iter().all(
-        |location| location.span.offset() < source.find("end;\n\nbegin").expect("routine end")
-    ));
+    assert!(references.iter().all(|location| location.span.offset()
+        < source.find("end function;\n\nbegin").expect("routine end")));
 }
 
 #[test]
 fn rename_produces_cross_unit_edits_for_declaration_and_uses() {
     let temp = TempDirectory::new("rename-project");
     let (manifest, main, unit) = write_program_project(&temp);
-    let unit_source =
-        "unit Demo.Math;\n\npublic function Answer(): integer;\nbegin return 42; end;\n";
+    let unit_source = "unit Demo.Math;\n\npublic function Answer(): integer;\nbegin return 42; end function;\nend unit;\n";
     let main_source = "program App;\n\nuses Demo.Math;\n\nbegin\n  var A: integer := Answer();\n  var B: integer := Demo.Math.Answer();\nend.\n";
     std::fs::write(&unit, unit_source).expect("write unit");
     std::fs::write(&main, main_source).expect("write program");
@@ -85,8 +82,7 @@ fn rename_produces_cross_unit_edits_for_declaration_and_uses() {
 fn reference_and_rename_spans_keep_the_snapshot_used_by_navigation() {
     let temp = TempDirectory::new("navigation-snapshot-binding");
     let (manifest, main, unit) = write_program_project(&temp);
-    let unit_source =
-        "unit Demo.Math;\n\npublic function Answer(): integer;\nbegin return 42; end;\n";
+    let unit_source = "unit Demo.Math;\n\npublic function Answer(): integer;\nbegin return 42; end function;\nend unit;\n";
     let main_source =
         "program App;\n\nuses Demo.Math;\n\nbegin var Value: integer := Answer(); end.\n";
     std::fs::write(&unit, unit_source).expect("write unit");
@@ -184,7 +180,7 @@ fn rename_rejects_compilation_units_and_dependencies_outside_the_editor_root() {
     );
     let unit = temp.write(
         "lib/src/math.fpas",
-        "unit Demo.Math;\n\npublic function Answer(): integer;\nbegin return 42; end;\n",
+        "unit Demo.Math;\n\npublic function Answer(): integer;\nbegin return 42; end function;\nend unit;\n",
     );
     let manifest = temp.write(
         "app/app.fpasprj",
@@ -218,8 +214,7 @@ fn rename_rejects_reverse_consumers_outside_the_editor_root() {
         "lib/lib.fpasprj",
         "[project]\nname = \"lib\"\nkind = \"library\"\n\n[sources]\ninclude = [\"src/**/*.fpas\"]\n",
     );
-    let unit_source =
-        "unit Demo.Math;\n\npublic function Answer(): integer;\nbegin return 42; end;\n";
+    let unit_source = "unit Demo.Math;\n\npublic function Answer(): integer;\nbegin return 42; end function;\nend unit;\n";
     let unit = temp.write("lib/src/math.fpas", unit_source);
     temp.write(
         "app/app.fpasprj",

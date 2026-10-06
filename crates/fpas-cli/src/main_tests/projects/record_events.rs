@@ -16,7 +16,7 @@ uses App.Widget, Std.Console, Std.Conv;
 procedure Handle(Value: integer);
 begin
   WriteLn(IntToStr(Value));
-end;
+end procedure;
 begin
   var B: Button := Button.Make(14);
   B.OnClick := Handle;
@@ -35,23 +35,23 @@ public type
     public function ReadOnClick(Self: Button): Option of procedure(Value: integer);
     begin
       return Slot;
-    end;
+    end function;
     public procedure WriteOnClick(Self: Button; Handler: Option of procedure(Value: integer));
     begin
       Slot := Handler;
-    end;
+    end procedure;
     public event OnClick: procedure(Value: integer) read ReadOnClick write WriteOnClick;
     public procedure Click(Self: Button);
     begin
       if Assigned(Self.OnClick) then
         Self.OnClick(Self.Id);
-    end;
+    end procedure;
     public static function Make(Id: integer): Button;
     begin
       return record Id := Id; end;
-    end;
-  end;
-",
+    end function;
+  end record;
+end unit;\n",
     );
 
     let (exit_code, stdout_output, stderr_output) =

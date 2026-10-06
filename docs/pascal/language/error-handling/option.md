@@ -16,7 +16,7 @@ begin
     if Items[I] = Target then
       return Some(I);
   return None;
-end;
+end function;
 ```
 
 ## Handling with case

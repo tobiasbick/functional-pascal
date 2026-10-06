@@ -7,12 +7,12 @@ type
     Focus: integer;
     Actions: array of integer;
     PointerHits: integer;
-  end;
+  end record;
 
 function MakePointer(Action: TuiPointerAction; X: integer; Y: integer): TuiPointerEvent;
 begin
   return TuiPointerEvent.Create(Action, TuiPointerButton.Left, TuiPoint.Create(X, Y));
-end;
+end function;
 
 function FindGlyph(Snapshot: TuiSurfaceSnapshot; Glyph: string): TuiPoint;
 begin
@@ -27,7 +27,7 @@ begin
   end;
 
   panic('glyph not found in snapshot');
-end;
+end function;
 
 function ViewRoute(State: RouteModel): TuiElement;
 begin
@@ -40,7 +40,7 @@ begin
                                                                                                                                                        ])
                                                                                                                        ])
                                                                                 ]);
-end;
+end function;
 
 function ViewOverlap(State: RouteModel): TuiElement;
 begin
@@ -52,7 +52,7 @@ begin
                                                                                                                         TuiElementBuilders.MakeButton(TuiControlId.Create(3), 'Front', TuiAction.Create(33))
                                                                                                                       ])
                                                                                 ]);
-end;
+end function;
 
 function UpdateRoute(State: RouteModel; Msg: TuiMsg; Cmd: TuiCmdOutput): RouteModel;
 begin
@@ -101,7 +101,7 @@ begin
       return State;
     end;
   end;
-end;
+end function;
 
 begin
   mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(20, 8));

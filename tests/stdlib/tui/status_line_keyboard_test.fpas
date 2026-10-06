@@ -6,7 +6,7 @@ type
   StatusModel = record
     Focus: integer;
     Actions: array of integer;
-  end;
+  end record;
 
 function MakeKey(Kind: TuiKeyKind): TuiKeyEvent;
 begin
@@ -18,7 +18,7 @@ begin
     alt := false;
     meta := false;
   end;
-end;
+end function;
 
 function ViewStatus(State: StatusModel): TuiElement;
 begin
@@ -29,7 +29,7 @@ begin
                                                                                                                       TuiStatusItemBuilders.MakeCommand(TuiControlId.Create(3), 'Quit', TuiAction.Create(30))
                                                                                                                     ])
                                                                                 ]);
-end;
+end function;
 
 function UpdateStatus(State: StatusModel; Msg: TuiMsg; Cmd: TuiCmdOutput): StatusModel;
 begin
@@ -63,7 +63,7 @@ begin
       return State;
     end;
   end;
-end;
+end function;
 
 begin
   mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 4));

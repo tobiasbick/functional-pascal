@@ -12,14 +12,14 @@ const
 function Increment(Value: integer): integer;
 begin
   return Value + 1;
-end;
+end function;
 
 function MakeAdder(Amount: integer): function(Value: integer): integer;
 begin
   return function(Value: integer): integer begin
     return Value + Amount;
   end;
-end;
+end function;
 
 function RunCalls(Iterations: integer): integer;
 begin
@@ -32,7 +32,7 @@ begin
   end;
 
   return Value;
-end;
+end function;
 
 begin
   if (ParamCount() < 1) or (ParamCount() > 2) then

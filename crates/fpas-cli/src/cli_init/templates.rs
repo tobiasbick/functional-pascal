@@ -51,7 +51,7 @@ pub(super) fn library(name: &str, unit: &str) -> TemplatePlan {
             file(
                 &format!("src/{}.fpas", source_stem(unit)),
                 format!(
-                    "unit {unit};\n\npublic function Message(): string;\nbegin\n  return 'Hello from {name}';\nend;\n"
+                    "unit {unit};\n\npublic function Message(): string;\nbegin\n  return 'Hello from {name}';\nend function;\nend unit;\n"
                 ),
             ),
         ],
@@ -82,7 +82,7 @@ pub(super) fn workspace(name: &str, identifier: &str) -> TemplatePlan {
             file(
                 &format!("libs/{library_name}/src/core.fpas"),
                 format!(
-                    "unit {unit};\n\npublic function Message(): string;\nbegin\n  return 'Hello from {name}';\nend;\n"
+                    "unit {unit};\n\npublic function Message(): string;\nbegin\n  return 'Hello from {name}';\nend function;\nend unit;\n"
                 ),
             ),
             file(

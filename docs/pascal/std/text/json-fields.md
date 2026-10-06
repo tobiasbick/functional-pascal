@@ -14,7 +14,7 @@ begin
   var Fields: dict of string to JsonValue := try ParseObject(Text);
   var Allowed: boolean := try RequireOnlyFields(Fields, ['host', 'port']);
   return IntegerField(Fields, 'port');
-end;
+end function;
 
 begin
   case ReadPort('{"host":"localhost","port":8080}') of

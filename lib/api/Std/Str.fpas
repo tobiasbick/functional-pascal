@@ -12,7 +12,7 @@ unit Std.Str;
 public function CharAt(S: string; Index: integer): string;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Character from codepoint.
 //
@@ -21,7 +21,7 @@ end;
 public function Chr(N: integer): string;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Substring test.
 //
@@ -31,7 +31,7 @@ end;
 public function Contains(S: string; Sub: string): boolean;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Remove `Len` chars.
 //
@@ -42,7 +42,7 @@ end;
 public function Delete(S: string; Index: integer; Len: integer): string;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Suffix test.
 //
@@ -52,7 +52,7 @@ end;
 public function EndsWith(S: string; Suf: string): boolean;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Keep selected Unicode scalars.
 //
@@ -62,7 +62,7 @@ end;
 public function Filter(S: string; F: function(C: string): boolean): string;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Printf-style string formatting.
 //
@@ -71,7 +71,7 @@ end;
 public function Format(Template: string): string;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Repeated one-scalar string.
 //
@@ -81,7 +81,7 @@ end;
 public function FromChar(C: string; N: integer): string;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // First index or `-1`.
 //
@@ -91,7 +91,7 @@ end;
 public function IndexOf(S: string; Sub: string): integer;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Insert `Sub` at index.
 //
@@ -102,7 +102,7 @@ end;
 public function Insert(S: string; Index: integer; Sub: string): string;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Parses as number?.
 //
@@ -111,7 +111,7 @@ end;
 public function IsNumeric(S: string): boolean;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Join with delimiter.
 //
@@ -121,7 +121,7 @@ end;
 public function Join(Parts: array of string; Delim: string): string;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Last index or `-1`.
 //
@@ -131,7 +131,7 @@ end;
 public function LastIndexOf(S: string; Sub: string): integer;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Character count.
 //
@@ -140,7 +140,7 @@ end;
 public function Length(S: string): integer;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Transform each Unicode scalar into one scalar.
 //
@@ -150,7 +150,7 @@ end;
 public function Map(S: string; F: function(C: string): string): string;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Codepoint of one-scalar string.
 //
@@ -159,7 +159,7 @@ end;
 public function Ord(C: string): integer;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Center-pad to `Width`.
 //
@@ -170,7 +170,7 @@ end;
 public function PadCenter(S: string; Width: integer; PadChar: string): string;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Left-pad to `Width`.
 //
@@ -181,7 +181,7 @@ end;
 public function PadLeft(S: string; Width: integer; PadChar: string): string;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Right-pad to `Width`.
 //
@@ -192,7 +192,7 @@ end;
 public function PadRight(S: string; Width: integer; PadChar: string): string;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Fold scalars left to right.
 //
@@ -203,7 +203,7 @@ end;
 public function Reduce(S: string; Init: U; F: function(Acc: U; C: string): U): U;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Repeat `S`; `Count <= 0` returns empty string.
 //
@@ -213,7 +213,7 @@ end;
 public function RepeatStr(S: string; N: integer): string;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Replace all.
 //
@@ -224,7 +224,7 @@ end;
 public function Replace(S: string; Old: string; New: string): string;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Reversed copy.
 //
@@ -233,7 +233,7 @@ end;
 public function Reverse(S: string): string;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Replace with one-scalar string.
 //
@@ -244,7 +244,7 @@ end;
 public function SetCharAt(S: string; Index: integer; C: string): string;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Split segments.
 //
@@ -254,7 +254,7 @@ end;
 public function Split(S: string; Delim: string): array of string;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Prefix test.
 //
@@ -264,7 +264,7 @@ end;
 public function StartsWith(S: string; Pre: string): boolean;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Slice by index.
 //
@@ -275,7 +275,7 @@ end;
 public function Substring(S: string; Start: integer; Len: integer): string;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Lowercased copy.
 //
@@ -284,7 +284,7 @@ end;
 public function ToLower(S: string): string;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Uppercased copy.
 //
@@ -293,7 +293,7 @@ end;
 public function ToUpper(S: string): string;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Trim whitespace.
 //
@@ -302,7 +302,7 @@ end;
 public function Trim(S: string): string;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Strip leading whitespace.
 //
@@ -311,7 +311,7 @@ end;
 public function TrimLeft(S: string): string;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Strip trailing whitespace.
 //
@@ -320,4 +320,5 @@ end;
 public function TrimRight(S: string): string;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
+end unit;

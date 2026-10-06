@@ -9,44 +9,44 @@ type
     static function Transform(Value: integer): integer;
     begin
       return Value + 3;
-    end;
-  end;
+    end function;
+  end record;
   Stats = record
     static function Transform(Value: integer): integer;
     begin
       return Value + 4;
-    end;
-  end;
+    end function;
+  end record;
   Counter = record
     Base: integer;
 
     function Add(Self: Counter; Value: integer): integer;
     begin
       return Self.Base + Value;
-    end;
-  end;
+    end function;
+  end record;
 
 function AddOne(Value: integer): integer;
 begin
   return Value + 1;
-end;
+end function;
 
 function AddTwo(Value: integer): integer;
 begin
   return Value + 2;
-end;
+end function;
 
 function Answer(): integer;
 begin
   return 42;
-end;
+end function;
 
 function MakeAdder(Amount: integer): Handler;
 begin
   return function(Value: integer): integer begin
     return Value + Amount;
   end;
-end;
+end function;
 
 begin
   mutable var Current: Handler := AddOne;

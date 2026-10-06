@@ -27,7 +27,7 @@ public type
         ConcreteStyle := None;
         Columns := TuiGlyphWidth(Glyph);
       end;
-    end;
+    end function;
 
     // Creates a cell with a concrete style that bypasses theme lookup.
     //
@@ -42,7 +42,7 @@ public type
         ConcreteStyle := Some(Style);
         Columns := TuiGlyphWidth(Glyph);
       end;
-    end;
+    end function;
 
     // Returns the terminal-column width of the cell glyph (`1` or `2`).
     //
@@ -51,5 +51,6 @@ public type
     public function Width(Self: TuiCell): integer;
     begin
       return Self.Columns;
-    end;
-  end;
+    end function;
+  end record;
+end unit;

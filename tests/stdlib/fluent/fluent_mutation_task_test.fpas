@@ -5,7 +5,7 @@ uses Std.Arrays, Std.Math, Std.Tasks, Std.Test;
 function Add(X: integer; Y: integer): integer;
 begin
   return X + Y;
-end;
+end function;
 
 begin
   mutable var Items: array of integer := [1, 2];

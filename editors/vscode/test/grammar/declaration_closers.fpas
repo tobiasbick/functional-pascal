@@ -1,0 +1,19 @@
+unit ClosingShowcase;
+
+type
+  Color = enum
+    Red;
+  end enum;
+  Point = record
+    Value: integer;
+    function ReadValue(Self: Point): integer;
+    begin
+      return Self.Value;
+    end function;
+    static procedure WriteValue();
+    begin
+      return;
+    end procedure;
+  end record;
+
+end unit;

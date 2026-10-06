@@ -16,8 +16,8 @@ fn case_ordinal_valid() {
 fn case_data_enum_rejects_foreign_root_variant() {
     let errors = check_errors(
         "program T; \
-         type Shape = enum Circle(Radius: real); Point; end; \
-         type Other = enum Square(Size: real); end; \
+         type Shape = enum Circle(Radius: real); Point; end enum; \
+         type Other = enum Square(Size: real); end enum; \
          begin \
            var S: Shape := Shape.Point; \
            case S of \
@@ -38,9 +38,9 @@ fn case_data_enum_rejects_foreign_root_variant() {
 fn case_data_enum_rejects_foreign_nested_variant() {
     let errors = check_errors(
         "program T; \
-         type Inner = enum A(X: integer); end; \
-         type Other = enum B(X: integer); end; \
-         type Outer = enum Wrap(Value: Inner); Empty; end; \
+         type Inner = enum A(X: integer); end enum; \
+         type Other = enum B(X: integer); end enum; \
+         type Outer = enum Wrap(Value: Inner); Empty; end enum; \
          begin \
            var V: Outer := Outer.Empty; \
            case V of \
@@ -61,7 +61,7 @@ fn case_data_enum_rejects_foreign_nested_variant() {
 fn case_data_enum_pattern_literal_must_match_field_type() {
     let errors = check_errors(
         "program T; \
-         type Shape = enum Circle(Radius: real); Point; end; \
+         type Shape = enum Circle(Radius: real); Point; end enum; \
          begin \
            var S: Shape := Shape.Point; \
            case S of \
@@ -190,7 +190,7 @@ fn case_result_multi_label_rejects_different_binding_names() {
 fn case_data_enum_pattern_rejects_duplicate_binding_names() {
     let errors = check_errors(
         "program T; \
-         type Pair = enum Values(Left: integer; Right: integer); end; \
+         type Pair = enum Values(Left: integer; Right: integer); end enum; \
          begin \
            var P: Pair := Pair.Values(1, 2); \
            case P of \

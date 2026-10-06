@@ -8,7 +8,7 @@ type
     Started: channel of integer;
     Stopped: channel of integer;
     Generation: integer;
-  end;
+  end record;
 
 procedure ReplaceWorker(State: SubscriptionModel; Cmd: TuiCmdOutput);
 begin
@@ -25,7 +25,7 @@ begin
 
     return Ok(true);
   end);
-end;
+end procedure;
 
 function UpdateFramework(State: SubscriptionModel; Msg: TuiMsg; Cmd: TuiCmdOutput): SubscriptionModel;
 begin
@@ -56,17 +56,17 @@ begin
       return State;
     end;
   end;
-end;
+end function;
 
 function UpdateApplication(State: SubscriptionModel; Message: integer; Cmd: TuiCmdOutput): SubscriptionModel;
 begin
   return State;
-end;
+end function;
 
 function View(State: SubscriptionModel): TuiElement;
 begin
   return TuiElementBuilders.MakeLabel('subscription');
-end;
+end function;
 
 begin
   var Inbox: channel of integer := CreateChannel(1);

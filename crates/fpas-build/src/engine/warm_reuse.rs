@@ -25,7 +25,7 @@ fn warm_many_import_build_avoids_direct_interface_copies() {
         };
         std::fs::write(
             root.join(format!("u{id}.fpas")),
-            format!("unit U{id}; {uses} public const Value{id}: integer := {id};"),
+            format!("unit U{id}; {uses} public const Value{id}: integer := {id};\nend unit;"),
         )
         .expect("unit source");
     }

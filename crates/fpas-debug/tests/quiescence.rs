@@ -20,7 +20,7 @@ begin
   mutable var Value: integer := 40;
   Value := Value + 2;
   return Value;
-end;
+end function;
 
 begin
   var Pending: task := go Work();
@@ -132,7 +132,7 @@ uses Std.Tasks;
 procedure Explode();
 begin
   panic('child boom');
-end;
+end procedure;
 
 begin
   var Pending: task := go Explode();

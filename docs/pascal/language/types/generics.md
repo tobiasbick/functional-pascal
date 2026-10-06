@@ -10,12 +10,12 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`type_params`, `ty
 function Identity<T>(Value: T): T;
 begin
   return Value;
-end;
+end function;
 
 procedure PrintValue<T>(Value: T);
 begin
   WriteLn(Value);
-end;
+end procedure;
 ```
 
 Type arguments are inferred from the call-site arguments — no explicit instantiation is needed:
@@ -38,13 +38,13 @@ type
     function Map<R>(Self: Box; F: function(X: integer): R): R;
     begin
       return F(Self.Value);
-    end;
-  end;
+    end function;
+  end record;
 
 function ToText(X: integer): string;
 begin
   return 'value=' + IntToStr(X);
-end;
+end function;
 
 var
   B: Box := record Value := 42; end;
@@ -59,8 +59,8 @@ type
     function Add<T: Numeric>(Self: Accumulator; Extra: T): T;
     begin
       return Extra;
-    end;
-  end;
+    end function;
+  end record;
 ```
 
 ## Implementation
@@ -88,12 +88,12 @@ Type parameters can be constrained to require specific capabilities from the con
 function Max<T: Comparable>(A: T; B: T): T;
 begin
   if A > B then return A; else return B;
-end;
+end function;
 
 function Add<T: Numeric>(A: T; B: T): T;
 begin
   return A + B;
-end;
+end function;
 ```
 
 Constraint violations at call sites are compile-time errors:

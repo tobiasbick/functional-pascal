@@ -6,12 +6,12 @@ Functions can be assigned to variables and passed as arguments:
 function Apply(F: function(X: integer): integer; Value: integer): integer;
 begin
   return F(Value);
-end;
+end function;
 
 function Double(X: integer): integer;
 begin
   return X * 2;
-end;
+end function;
 
 begin
   var R: integer := Apply(Double, 5);  // 10
@@ -32,8 +32,8 @@ type
     function Add(Self: Counter; Value: integer): integer;
     begin
       return Self.Base + Value;
-    end;
-  end;
+    end function;
+  end record;
 
 begin
   var C: Counter := record Base := 10; end;

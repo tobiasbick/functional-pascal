@@ -220,14 +220,14 @@ function Outer(Value: integer): integer;
     begin
       var Hidden: integer := 999;
       return Hidden;
-    end;
+    end function;
   begin
     var MidLocal: integer := Value + 1;
     return Inner();
-  end;
+  end function;
 begin
   return Mid();
-end;
+end function;
 
 begin
   var Nested: integer := Outer(1);

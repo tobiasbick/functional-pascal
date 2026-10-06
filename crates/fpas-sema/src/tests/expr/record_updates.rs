@@ -3,8 +3,7 @@ use crate::{SemaError, analyze_unit};
 use fpas_diagnostics::codes::{SEMA_TYPE_MISMATCH, SEMA_UNKNOWN_NAME};
 use fpas_parser::{CompilationUnit, Unit, parse_compilation_unit};
 
-const PREFIX: &str =
-    "program T; type Point = record X: integer; end; begin var P: Point := record X := 1; end;";
+const PREFIX: &str = "program T; type Point = record X: integer; end record; begin var P: Point := record X := 1; end;";
 
 #[test]
 fn record_update_rejects_non_record_base() {
@@ -44,12 +43,12 @@ fn parse_unit(source: &str) -> Unit {
 fn imported_update_errors(update: &str) -> Vec<SemaError> {
     let types = parse_unit(
         "unit Demo.Types;
-         public type Point = record public X: integer; public Y: integer; end;
-         public type OtherPoint = record public X: integer; public Y: integer; end;
+         public type Point = record public X: integer; public Y: integer; end record;
+         public type OtherPoint = record public X: integer; public Y: integer; end record;
          public type Holder = record
            public Position: Point;
            public Points: array of Point;
-         end;",
+         end record;\nend unit;",
     );
     let types_analysis = analyze_unit(&types, &[]).expect("type unit analysis");
     assert!(types_analysis.metadata.errors.is_empty());
@@ -57,7 +56,7 @@ fn imported_update_errors(update: &str) -> Vec<SemaError> {
     let consumer = parse_unit(&format!(
         "unit Demo.Consumer; uses Demo.Types;
          public function Change(Original: Holder; Other: OtherPoint): Holder;
-         begin return Original with {update}; end; end;"
+         begin return Original with {update}; end; end function;\nend unit;"
     ));
     analyze_unit(&consumer, &[interface])
         .expect("consumer analysis")

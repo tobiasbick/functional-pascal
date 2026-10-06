@@ -117,7 +117,7 @@ mod tests {
         );
         write_text(
             &helper,
-            "unit Suite.Helper;\npublic var Answer: integer := 42;\npublic function GetAnswer(): integer;\nbegin return Answer; end;\n",
+            "unit Suite.Helper;\npublic var Answer: integer := 42;\npublic function GetAnswer(): integer;\nbegin return Answer; end function;\nend unit;\n",
         );
         for (path, name) in [(&first, "First"), (&second, "Second")] {
             write_text(

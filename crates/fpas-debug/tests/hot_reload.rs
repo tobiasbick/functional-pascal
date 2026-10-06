@@ -20,7 +20,7 @@ fn server() -> JsonlServer {
 
 fn compile_reloadable(value: i64) -> fpas_bytecode::VerifiedExecutable {
     let source = format!(
-        "program HotReload;\nfunction Helper(): integer;\nbegin\n  return {value};\nend;\nbegin\nend."
+        "program HotReload;\nfunction Helper(): integer;\nbegin\n  return {value};\nend function;\nbegin\nend."
     );
     let (program, diagnostics) = fpas_parser::parse(&source);
     assert!(diagnostics.is_empty(), "parse diagnostics: {diagnostics:?}");
@@ -139,7 +139,7 @@ fn jsonl_incompatible_replace_is_rejected_before_the_image_changes() {
         .expect("entry frame");
 
     let (program, diagnostics) = fpas_parser::parse(
-        "program IncompatibleReload;\nfunction Extra(): integer;\nbegin\n  return 1;\nend;\nbegin\nend.",
+        "program IncompatibleReload;\nfunction Extra(): integer;\nbegin\n  return 1;\nend function;\nbegin\nend.",
     );
     assert!(diagnostics.is_empty(), "parse diagnostics: {diagnostics:?}");
     let candidate = fpas_compiler::compile(&program).expect("compile incompatible fixture");

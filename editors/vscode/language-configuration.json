@@ -54,7 +54,7 @@
   ],
   "wordPattern": "[A-Za-z_][A-Za-z0-9_]*",
   "indentationRules": {
-    "increaseIndentPattern": "^.*\\b([Bb][Ee][Gg][Ii][Nn]|[Rr][Ee][Cc][Oo][Rr][Dd]|[Ee][Nn][Uu][Mm]|[Rr][Ee][Pp][Ee][Aa][Tt])\\b\\s*(?://.*)?$",
+    "increaseIndentPattern": "^(?!\\s*[Ee][Nn][Dd]\\b).*\\b([Bb][Ee][Gg][Ii][Nn]|[Rr][Ee][Cc][Oo][Rr][Dd]|[Ee][Nn][Uu][Mm]|[Rr][Ee][Pp][Ee][Aa][Tt])\\b\\s*(?://.*)?$",
     "decreaseIndentPattern": "^\\s*([Ee][Nn][Dd]\\b|[Uu][Nn][Tt][Ii][Ll]\\b|[Ee][Ll][Ss][Ee]\\b)"
   },
   "folding": {

@@ -5,7 +5,7 @@ uses Std.Console, Std.Results;
 function ReplaceError(E: string): result of integer, string;
 begin
   return Error('second');
-end;
+end function;
 
 begin
   var R: result of integer, string := Error('first');

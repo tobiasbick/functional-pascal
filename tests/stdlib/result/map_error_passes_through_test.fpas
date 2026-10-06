@@ -5,7 +5,7 @@ uses Std.Console, Std.Results;
 function AlwaysOk(V: integer): string;
 begin
   return 'ok';
-end;
+end function;
 
 begin
   var R: result of integer, string := Error('fail');

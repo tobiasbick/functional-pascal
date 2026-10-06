@@ -5,37 +5,37 @@ uses Std.Arrays, Std.Dictionaries, Std.Json, Std.Options, Std.Results, Std.Str, 
 function IsEven(X: integer): boolean;
 begin
   return X mod 2 = 0;
-end;
+end function;
 
 function Double(X: integer): integer;
 begin
   return X * 2;
-end;
+end function;
 
 function Sum(Acc: integer; X: integer): integer;
 begin
   return Acc + X;
-end;
+end function;
 
 function AddEntry(Acc: integer; Key: string; Value: integer): integer;
 begin
   return Acc + Value;
-end;
+end function;
 
 function Upper(C: string): string;
 begin
   return Std.Str.ToUpper(C);
-end;
+end function;
 
 function MakeNumbers(): array of integer;
 begin
   return [1, 2];
-end;
+end function;
 
 function Apply(X: integer; Operation: function(Value: integer): integer): integer;
 begin
   return X.Operation();
-end;
+end function;
 
 begin
   var Numbers: array of integer := [1, 2, 3, 4];

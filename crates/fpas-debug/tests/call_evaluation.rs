@@ -38,20 +38,20 @@ type
     static function Create(Value: integer): Counter;
     begin
       return record Value := Value; end;
-    end;
+    end function;
     function Double(Self: Counter): integer;
     begin
       return Self.Value * 2;
-    end;
+    end function;
     function ReadNumber(Self: Counter): integer;
     begin
       return Self.Value;
-    end;
+    end function;
     property Number: integer read ReadNumber;
-  end;
+  end record;
 procedure Touch();
 begin
-end;
+end procedure;
 begin
 end.";
     let mut server = fpas_debug::jsonl::JsonlServer::new(fpas_debug::PreparedDebugTarget::new(
@@ -96,7 +96,7 @@ function Noisy(): integer;
 begin
   Std.Console.WriteLn('leak');
   return 1;
-end;
+end function;
 begin
 end.";
     let mut session = DebugSession::new(compile(source)).expect("debug session");
@@ -131,7 +131,7 @@ function Increment(): integer;
 begin
   Counter := Counter + 1;
   return Counter;
-end;
+end function;
 begin
   mutable var Anchor: integer := Counter;
   Anchor := Anchor + 1;
@@ -210,7 +210,7 @@ function Forever(): integer;
 begin
   while true do begin end;
   return 0;
-end;
+end function;
 begin
 end.";
     let mut timed = DebugSession::new(compile(source)).expect("timed session");

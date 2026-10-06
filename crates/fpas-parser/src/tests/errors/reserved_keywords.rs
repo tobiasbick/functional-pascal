@@ -12,15 +12,15 @@ fn reserved_block_keywords_are_rejected_in_declarations_with_rename_hints() {
     for keyword in RESERVED {
         for source in [
             format!("program {keyword}; begin end."),
-            format!("unit {keyword};"),
+            format!("unit {keyword};\nend unit;"),
             format!("program P; begin var {keyword}: integer := 1; end."),
             format!("program P; const {keyword}: integer := 1; begin end."),
             format!("program P; var {keyword}: integer := 1; begin end."),
             format!("program P; mutable var {keyword}: integer := 1; begin end."),
             format!("program P; type {keyword} = integer; begin end."),
-            format!("program P; procedure F({keyword}: integer); begin end; begin end."),
-            format!("program P; type R = record {keyword}: integer; end; begin end."),
-            format!("program P; type E = enum {keyword}; end; begin end."),
+            format!("program P; procedure F({keyword}: integer); begin end procedure; begin end."),
+            format!("program P; type R = record {keyword}: integer; end record; begin end."),
+            format!("program P; type E = enum {keyword}; end enum; begin end."),
         ] {
             let (_, diagnostics) = parse_compilation_unit_with_errors(&source);
             let error = diagnostics
@@ -134,15 +134,17 @@ fn reserved_names_inside_declaration_lists_preserve_following_definitions() {
     for keyword in RESERVED {
         for source in [
             format!(
-                "unit U; const First: integer := 1; {keyword}: integer := 2; Last: integer := 3;"
+                "unit U; const First: integer := 1; {keyword}: integer := 2; Last: integer := 3;\nend unit;"
             ),
             format!(
-                "unit U; var First: integer := 1; {keyword}: integer := 2; Last: integer := 3;"
+                "unit U; var First: integer := 1; {keyword}: integer := 2; Last: integer := 3;\nend unit;"
             ),
             format!(
-                "unit U; mutable var First: integer := 1; {keyword}: integer := 2; Last: integer := 3;"
+                "unit U; mutable var First: integer := 1; {keyword}: integer := 2; Last: integer := 3;\nend unit;"
             ),
-            format!("unit U; type First = integer; {keyword} = integer; Last = integer;"),
+            format!(
+                "unit U; type First = integer; {keyword} = integer; Last = integer;\nend unit;"
+            ),
         ] {
             let (unit, diagnostics) = parse_compilation_unit_with_errors(&source);
             let errors = diagnostics

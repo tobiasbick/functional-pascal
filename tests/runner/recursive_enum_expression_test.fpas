@@ -7,7 +7,7 @@ type
     Num(Value: integer);
     Add(Left: Expr; Right: Expr);
     Mul(Left: Expr; Right: Expr);
-  end;
+  end enum;
 
 function Eval(E: Expr): integer;
 begin
@@ -25,7 +25,7 @@ begin
       return Eval(Left) * Eval(Right);
     end;
   end;
-end;
+end function;
 
 begin
   AssertEquals(39, Eval(Expr.Mul(Expr.Add(Expr.Num(3), Expr.Num(10)), Expr.Num(3))));

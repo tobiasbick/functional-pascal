@@ -5,17 +5,17 @@ uses Std.Arrays, Std.Test;
 function Double(Value: integer): integer;
 begin
   return Value * 2;
-end;
+end function;
 
 function IsAboveFour(Value: integer): boolean;
 begin
   return Value > 4;
-end;
+end function;
 
 function Sum(Accumulator: integer; Value: integer): integer;
 begin
   return Accumulator + Value;
-end;
+end function;
 
 begin
   var Values: array of integer := [1, 2, 3, 4];

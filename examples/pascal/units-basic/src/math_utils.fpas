@@ -16,9 +16,10 @@ begin
   begin
     return Value;
   end;
-end;
+end function;
 
 public function Scale(Value: integer; Factor: integer): integer;
 begin
   return Value * Factor;
-end;
+end function;
+end unit;

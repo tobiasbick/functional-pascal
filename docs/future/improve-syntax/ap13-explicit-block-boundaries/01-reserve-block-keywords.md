@@ -52,4 +52,4 @@ the registry, runtime, generated API, tests, and documentation. The TOML test
 binding `When` is now `Timestamp`; JSON and TOML data text is unchanged.
 Editor highlighting and regression coverage are updated.
 
-The package checkbox remains open until the changes are merged.
+Delivery and applicable verification are complete on the working branch.

@@ -15,7 +15,7 @@ begin
   begin
     TuiFlushSurface(TuiAppSurfaces[ApplicationId - 1], TuiAppPalettes[ApplicationId - 1]);
   end;
-end;
+end procedure;
 
 function TuiLoopApplyFramework<TModel>(
   ApplicationId: integer;
@@ -28,7 +28,7 @@ begin
   var Cmd: TuiCmdOutput := TuiAppCommands[ApplicationId - 1];
   Cmd.Reset();
   return Update(Model, Msg, Cmd);
-end;
+end function;
 
 function TuiLoopApplyApplication<TModel, TMessage>(
   ApplicationId: integer;
@@ -40,7 +40,7 @@ begin
   var Cmd: TuiCmdOutput := TuiAppCommands[ApplicationId - 1];
   Cmd.Reset();
   return UpdateApplication(Model, Message, Cmd);
-end;
+end function;
 
 function TuiLoopFinishUpdate<TModel>(
   ApplicationId: integer;
@@ -57,19 +57,19 @@ begin
 
   TuiLoopRender(ApplicationId, View(Model), Present);
   return false;
-end;
+end function;
 
 procedure TuiLoopClose(ApplicationId: integer);
 begin
   TuiAppRaiseShutdownFailure(TuiAppCloseApplication(ApplicationId));
-end;
+end procedure;
 
 procedure TuiLoopCloseWithInbox<TMessage>(ApplicationId: integer; Inbox: channel of TMessage);
 begin
   var Failures: array of TuiMsg := TuiAppCloseApplication(ApplicationId);
   CloseChannel(Inbox);
   TuiAppRaiseShutdownFailure(Failures);
-end;
+end procedure;
 
 // Runs a deterministic bounded headless loop with an optional typed inbox.
 public function TuiRunHeadless<TModel, TMessage>(
@@ -178,7 +178,7 @@ begin
   end;
 
   return Model;
-end;
+end function;
 
 // Runs the interactive loop, selecting fairly between Console and application messages.
 public function TuiRunInteractive<TModel, TMessage>(
@@ -336,4 +336,5 @@ begin
   end;
 
   return Model;
-end;
+end function;
+end unit;

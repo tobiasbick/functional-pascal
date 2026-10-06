@@ -17,7 +17,7 @@ begin
   mutable var Value: integer := 40;
   Value := Value + 2;
   return Value;
-end;
+end function;
 
 begin
   var Pending: task := go Work();

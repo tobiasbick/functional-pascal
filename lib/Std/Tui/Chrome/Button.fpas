@@ -35,7 +35,7 @@ public type
         Default := false;
         Enabled := true;
       end;
-    end;
+    end function;
 
     // Creates an enabled default button.
     //
@@ -54,7 +54,7 @@ public type
         Default := true;
         Enabled := true;
       end;
-    end;
+    end function;
 
     // Creates a disabled normal button.
     //
@@ -73,5 +73,6 @@ public type
         Default := false;
         Enabled := false;
       end;
-    end;
-  end;
+    end function;
+  end record;
+end unit;

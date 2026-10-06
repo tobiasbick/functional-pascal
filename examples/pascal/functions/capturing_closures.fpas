@@ -9,16 +9,16 @@ begin
     Value := Value + 1;
     return Value;
   end;
-end;
+end function;
 
 function MakeAdder(Base: integer): function(Value: integer): integer;
 function Add(Value: integer): integer;
 begin
   return Base + Value;
-end;
+end function;
 begin
   return Add;
-end;
+end function;
 
 begin
   var Next: function(): integer := Counter();

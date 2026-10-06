@@ -6,12 +6,12 @@ type
   ListModel = record
     Focus: integer;
     Selected: integer;
-  end;
+  end record;
 
 function MakePointer(X: integer; Y: integer): TuiPointerEvent;
 begin
   return TuiPointerEvent.Create(TuiPointerAction.Down, TuiPointerButton.Left, TuiPoint.Create(X, Y));
-end;
+end function;
 
 function FindGlyph(Snapshot: TuiSurfaceSnapshot; Glyph: string): TuiPoint;
 begin
@@ -26,7 +26,7 @@ begin
   end;
 
   panic('glyph not found in snapshot');
-end;
+end function;
 
 function ViewList(State: ListModel): TuiElement;
 begin
@@ -35,7 +35,7 @@ begin
                                                                                                                          TuiElementBuilders.MakeList(TuiControlId.Create(1), ['Alpha', 'Beta', 'Gamma'], State.Selected, TuiAction.Create(5))
                                                                                                                        ])
                                                                                 ]);
-end;
+end function;
 
 function UpdateList(State: ListModel; Msg: TuiMsg; Cmd: TuiCmdOutput): ListModel;
 begin
@@ -69,7 +69,7 @@ begin
       return State;
     end;
   end;
-end;
+end function;
 
 begin
   mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 8));

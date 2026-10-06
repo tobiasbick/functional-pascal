@@ -10,7 +10,7 @@ begin
   end;
 
   return 0;
-end;
+end function;
 
 public type
   // Reports whether allocated bounds satisfy a measured minimum.
@@ -34,7 +34,7 @@ public type
         Available := Available;
         Overflow := TuiSize.Create(TuiLayoutFitOverflow(Minimum.Width, Available.Width), TuiLayoutFitOverflow(Minimum.Height, Available.Height));
       end;
-    end;
+    end function;
 
     // Returns whether neither axis overflows.
     //
@@ -43,5 +43,6 @@ public type
     public function Fits(Self: TuiLayoutFit): boolean;
     begin
       return (Self.Overflow.Width = 0) and (Self.Overflow.Height = 0);
-    end;
-  end;
+    end function;
+  end record;
+end unit;

@@ -13,7 +13,7 @@ public type
     // - `Button`: Button specification carried by the variant.
     // - `Inside`: Whether the pointer remains inside the captured control.
     Captured(Button: TuiButtonSpec; Inside: boolean);
-  end;
+  end enum;
 
 mutable var
   TuiButtonPressStates: array of TuiButtonPressState := [];
@@ -22,7 +22,7 @@ mutable var
 public procedure TuiButtonCaptureOpen();
 begin
   TuiButtonPressStates := Std.Arrays.Concat(TuiButtonPressStates, [TuiButtonPressState.Idle]);
-end;
+end procedure;
 
 // Clears button-capture state for one application.
 //
@@ -31,7 +31,7 @@ end;
 public procedure TuiButtonCaptureClose(ApplicationId: integer);
 begin
   TuiButtonPressStates[ApplicationId - 1] := TuiButtonPressState.Idle;
-end;
+end procedure;
 
 // Returns the current button-capture state for one application.
 //
@@ -40,7 +40,7 @@ end;
 public function TuiButtonCaptureGet(ApplicationId: integer): TuiButtonPressState;
 begin
   return TuiButtonPressStates[ApplicationId - 1];
-end;
+end function;
 
 // Releases button capture for one application.
 //
@@ -49,7 +49,7 @@ end;
 public procedure TuiButtonCaptureRelease(ApplicationId: integer);
 begin
   TuiButtonPressStates[ApplicationId - 1] := TuiButtonPressState.Idle;
-end;
+end procedure;
 
 // Captures one button and records whether the pointer remains inside it.
 //
@@ -60,7 +60,7 @@ end;
 public procedure TuiButtonCaptureSet(ApplicationId: integer; Button: TuiButtonSpec; Inside: boolean);
 begin
   TuiButtonPressStates[ApplicationId - 1] := TuiButtonPressState.Captured(Button, Inside);
-end;
+end procedure;
 
 // Returns the button painted pressed while capture remains inside it.
 //
@@ -82,4 +82,5 @@ begin
       return None;
     end;
   end;
-end;
+end function;
+end unit;

@@ -5,7 +5,7 @@ uses Std.Console, Std.Options;
 function AlwaysNone(): option of integer;
 begin
   return None;
-end;
+end function;
 
 begin
   var O: option of integer := None;

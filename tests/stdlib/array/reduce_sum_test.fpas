@@ -5,7 +5,7 @@ uses Std.Console, Std.Arrays;
 function AddAcc(Acc: integer; V: integer): integer;
 begin
   return Acc + V;
-end;
+end function;
 
 begin
   var Nums: array of integer := [1, 2, 3, 4, 5];

@@ -8,7 +8,7 @@ begin
   end;
 
   return Value;
-end;
+end function;
 
 public type
   // Non-negative terminal-cell extent.
@@ -31,7 +31,7 @@ public type
         Width := Width;
         Height := Height;
       end;
-    end;
+    end function;
 
     // Returns whether either extent is zero.
     //
@@ -40,5 +40,6 @@ public type
     public function IsEmpty(Self: TuiSize): boolean;
     begin
       return (Self.Width = 0) or (Self.Height = 0);
-    end;
-  end;
+    end function;
+  end record;
+end unit;

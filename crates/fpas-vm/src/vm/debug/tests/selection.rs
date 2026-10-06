@@ -9,12 +9,12 @@ begin
   Sleep(2);
   Send(Q, 123);
   return 1;
-end;
+end function;
 function Child(): integer;
 begin
   Sleep(2);
   return 7;
-end;
+end function;
 function Parent(): integer;
 begin
   var T: task := go Child();
@@ -27,7 +27,7 @@ begin
   end);
   if Select([C]) <> 0 then panic('task index');
   return Seen;
-end;
+end function;
 begin
   var T: task := go Parent();
   var Q: channel of integer := CreateChannel(1);
@@ -92,7 +92,7 @@ fn selection_rejects_a_case_moved_to_another_task() {
         r#"program WrongOwner;
 uses Std.Tasks;
 function Other(C: WaitCase): integer;
-begin return Select([C]); end;
+begin return Select([C]); end function;
 begin
   var C: WaitCase := TimerCase(0, procedure() begin end);
   var T: task := go Other(C);

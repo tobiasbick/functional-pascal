@@ -28,7 +28,7 @@ fn interface_for(source: &str) -> UnitInterface {
 fn same_record_declaration_and_alias_are_compatible() {
     check_ok(
         "program T; \
-         type Point = record X: integer; Y: integer; end; \
+         type Point = record X: integer; Y: integer; end record; \
          type PointAlias = Point; \
          begin \
            var PointValue: Point := record X := 1; Y := 2; end; \
@@ -43,8 +43,8 @@ fn same_record_declaration_and_alias_are_compatible() {
 fn distinct_public_record_declarations_are_incompatible_despite_equal_fields() {
     let errors = check_errors(
         "program T; \
-         type Point = record X: integer; Y: integer; end; \
-         type Size = record X: integer; Y: integer; end; \
+         type Point = record X: integer; Y: integer; end record; \
+         type Size = record X: integer; Y: integer; end record; \
          begin \
            var SizeValue: Size := record X := 1; Y := 2; end; \
            var PointValue: Point := SizeValue; \
@@ -64,10 +64,10 @@ fn distinct_public_record_declarations_are_incompatible_despite_equal_fields() {
 fn distinct_private_records_are_incompatible_inside_their_owner_unit() {
     let unit = parse_unit(
         "unit Demo.PrivateRecords; \
-         type Left = record Value: integer; end; \
-         type Right = record Value: integer; end; \
+         type Left = record Value: integer; end record; \
+         type Right = record Value: integer; end record; \
          function Convert(Value: Right): Left; \
-         begin return Value; end;",
+         begin return Value; end function;\nend unit;",
     );
     let analysis = analyze_unit(&unit, &[]).expect("unit analysis must succeed");
 
@@ -86,20 +86,20 @@ fn imported_records_use_their_qualified_declaration_identity() {
     let interfaces = [
         interface_for(
             "unit Demo.First; \
-             public type Value = record public Number: integer; end;",
+             public type Value = record public Number: integer; end record;\nend unit;",
         ),
         interface_for(
             "unit Demo.Second; \
-             public type Value = record public Number: integer; end;",
+             public type Value = record public Number: integer; end record;\nend unit;",
         ),
     ];
     let consumer = parse_unit(
         "unit Demo.Consumer; \
          uses Demo.First, Demo.Second; \
          public function Keep(Value: Demo.First.Value): Demo.First.Value; \
-         begin return Value; end; \
+         begin return Value; end function; \
          public function Reject(Value: Demo.Second.Value): Demo.First.Value; \
-         begin return Value; end;",
+         begin return Value; end function;\nend unit;",
     );
     let analysis = analyze_unit(&consumer, &interfaces).expect("consumer analysis must succeed");
 
@@ -123,10 +123,10 @@ fn imported_records_use_their_qualified_declaration_identity() {
 fn anonymous_generic_binding_does_not_bridge_distinct_named_records() {
     let errors = check_errors(
         "program T; \
-         type Left = record Value: integer; end; \
-         type Right = record Value: integer; end; \
+         type Left = record Value: integer; end record; \
+         type Right = record Value: integer; end record; \
          function Pick<TValue>(A: TValue; B: TValue; C: TValue): TValue; \
-         begin return A; end; \
+         begin return A; end function; \
          begin \
            var LeftValue: Left := record Value := 1; end; \
            var RightValue: Right := record Value := 2; end; \

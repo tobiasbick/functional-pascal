@@ -19,6 +19,7 @@ impl Parser {
             errors: Vec::new(),
             nesting_depth: 0,
             nesting_limit_reached: false,
+            declaration_closers: Vec::new(),
         }
     }
 

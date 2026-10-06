@@ -18,7 +18,7 @@ begin
   end;
 
   return Std.Arrays.Length(Values);
-end;
+end function;
 
 begin
   if (ParamCount() < 1) or (ParamCount() > 2) then

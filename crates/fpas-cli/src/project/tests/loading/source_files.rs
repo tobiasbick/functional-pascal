@@ -17,7 +17,7 @@ include = ["src/util.fpas", "src/*.fpas", "src/util.fpas"]
 "#,
     );
     write_text(&dir.join("src/main.fpas"), "program Main;\nbegin\nend.\n");
-    write_text(&dir.join("src/util.fpas"), "unit App.Util;");
+    write_text(&dir.join("src/util.fpas"), "unit App.Util;\nend unit;");
 
     let loaded = load_project_ok(&project_file);
     fs::remove_dir_all(&dir).expect("temp directory must be removed");
@@ -46,7 +46,7 @@ include = ["src/*.fpas"]
 "#,
     );
     write_text(&dir.join("src/main.fpas"), "program Main;\nbegin\nend.\n");
-    write_text(&dir.join("src/util.fpas"), "unit App.Util;");
+    write_text(&dir.join("src/util.fpas"), "unit App.Util;\nend unit;");
 
     let loaded = load_project_ok(&project_file);
     fs::remove_dir_all(&dir).expect("temp directory must be removed");
@@ -81,7 +81,7 @@ include = ["src/main.fpas", "{main_path_text}", "src/util.fpas"]
         ),
     );
     write_text(&main_path, "program Main;\nbegin\nend.\n");
-    write_text(&dir.join("src/util.fpas"), "unit App.Util;");
+    write_text(&dir.join("src/util.fpas"), "unit App.Util;\nend unit;");
 
     let loaded = load_project_ok(&project_file);
     fs::remove_dir_all(&dir).expect("temp directory must be removed");
@@ -140,7 +140,7 @@ include = ["src/*.fpas"]
 "#,
     );
     write_text(&dir.join("src/main.fpas"), "program Main;\nbegin\nend.\n");
-    write_text(&dir.join("src/util.fpas"), "unit App.Util;");
+    write_text(&dir.join("src/util.fpas"), "unit App.Util;\nend unit;");
     write_text(&dir.join("src/tool.fpas"), "program Tool;\nbegin\nend.\n");
 
     let loaded = load_project_ok(&project_file);
@@ -173,7 +173,7 @@ include = ["src/util.fpas", "./src/util.fpas", "src/../src/util.fpas", "{util_pa
         ),
     );
     write_text(&dir.join("src/main.fpas"), "program Main;\nbegin\nend.\n");
-    write_text(&util_path, "unit App.Util;");
+    write_text(&util_path, "unit App.Util;\nend unit;");
 
     let loaded = load_project_ok(&project_file);
     fs::remove_dir_all(&dir).expect("temp directory must be removed");

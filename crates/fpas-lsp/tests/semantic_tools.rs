@@ -22,11 +22,11 @@ fn semantic_tokens_and_quick_fixes_use_utf16_and_reject_stale_diagnostics() {
     );
     temp.write(
         "src/core.fpas",
-        "unit Actions.Core;\n\npublic const ExistingText: string := 'ok';\n\npublic function Existing(): integer;\nbegin\n  return 1;\nend;\n",
+        "unit Actions.Core;\n\npublic const ExistingText: string := 'ok';\n\npublic function Existing(): integer;\nbegin\n  return 1;\nend function;\nend unit;\n",
     );
     temp.write(
         "src/importable.fpas",
-        "unit Actions.Importable;\n\npublic function UniqueValue(): integer;\nbegin\n  return 42;\nend;\n",
+        "unit Actions.Importable;\n\npublic function UniqueValue(): integer;\nbegin\n  return 42;\nend function;\nend unit;\n",
     );
     let source = "program Actions;\n\nuses Actions.Core;\n\nbegin\n  var Music: string := '𝄞' + ExistingText;\n  var Value: integer := UniqueValue();\nend.\n";
     let main_path = temp.write("src/main.fpas", source);

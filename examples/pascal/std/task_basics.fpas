@@ -7,7 +7,7 @@ uses Std.Console, Std.Conv, Std.Tasks, Std.Arrays;
 function Square(N: integer): integer;
 begin
   return N * N;
-end;
+end function;
 
 begin
   var One: task := go Square(6);

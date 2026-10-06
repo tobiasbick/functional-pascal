@@ -16,7 +16,7 @@ public type
     public InitialBody: array of integer;
     // Total network bytes consumed so far.
     public BytesReceived: integer;
-  end;
+  end record;
 
 // Reads bounded response heads and skips supported informational responses.
 //
@@ -122,4 +122,5 @@ begin
   end;
 
   return Error('HTTP response head loop ended unexpectedly');
-end;
+end function;
+end unit;

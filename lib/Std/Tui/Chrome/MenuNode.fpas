@@ -22,8 +22,8 @@ public type
       return record
         Value := Value;
       end;
-    end;
-  end;
+    end function;
+  end record;
   // One flat menu node. Parent ids form the hierarchy without recursive arrays.
   TuiMenuNode = enum
     // Represents the `Command` variant of `TuiMenuNode`.
@@ -52,7 +52,7 @@ public type
     // - `Id`: Identifier carried by the variant.
     // - `Parent`: Optional parent menu-node identifier.
     Separator(Id: TuiMenuNodeId; Parent: option of TuiMenuNodeId);
-  end;
+  end enum;
   // Model-owned open and active state of a controlled menu.
   TuiMenuState = record
     // Whether the menu is open.
@@ -67,7 +67,7 @@ public type
         Open := false;
         Active := None;
       end;
-    end;
+    end function;
 
     // Creates an open menu state with one active node.
     //
@@ -79,8 +79,8 @@ public type
         Open := true;
         Active := Some(Id);
       end;
-    end;
-  end;
+    end function;
+  end record;
   // Named constructors for flat menu nodes.
   TuiMenuNodeBuilders = record
     // Creates an enabled submenu.
@@ -93,7 +93,7 @@ public type
     public static function Submenu(Id: TuiMenuNodeId; Parent: option of TuiMenuNodeId; Text: string; Mnemonic: string): TuiMenuNode;
     begin
       return TuiMenuNode.Submenu(Id, Parent, Text, Mnemonic, true);
-    end;
+    end function;
 
     // Creates an enabled command without a shortcut.
     //
@@ -112,7 +112,7 @@ public type
 ): TuiMenuNode;
     begin
       return TuiMenuNode.Command(Id, Parent, Text, Mnemonic, Action, true, None);
-    end;
+    end function;
 
     // Creates an enabled command with a structural shortcut.
     //
@@ -133,7 +133,7 @@ public type
 ): TuiMenuNode;
     begin
       return TuiMenuNode.Command(Id, Parent, Text, Mnemonic, Action, true, Some(Shortcut));
-    end;
+    end function;
 
     // Creates a disabled command.
     //
@@ -152,7 +152,7 @@ public type
 ): TuiMenuNode;
     begin
       return TuiMenuNode.Command(Id, Parent, Text, Mnemonic, Action, false, None);
-    end;
+    end function;
 
     // Creates a separator under one submenu.
     //
@@ -162,5 +162,6 @@ public type
     public static function Separator(Id: TuiMenuNodeId; Parent: TuiMenuNodeId): TuiMenuNode;
     begin
       return TuiMenuNode.Separator(Id, Some(Parent));
-    end;
-  end;
+    end function;
+  end record;
+end unit;

@@ -13,7 +13,7 @@ public type
     Right;
     // Represents the `Middle` variant of `TuiPointerButton`.
     Middle;
-  end;
+  end enum;
   // Normalized pointer action in zero-based application coordinates.
   TuiPointerEvent = record
     // Application action associated with the value.
@@ -48,7 +48,7 @@ public type
         Alt := false;
         Meta := false;
       end;
-    end;
+    end function;
 
     // Creates a pointer event with explicit modifiers.
     //
@@ -79,5 +79,6 @@ public type
         Alt := Alt;
         Meta := Meta;
       end;
-    end;
-  end;
+    end function;
+  end record;
+end unit;

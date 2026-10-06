@@ -21,15 +21,15 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/a.fpas"),
-        "unit App.A;\npublic function Compute(): integer;\nbegin\n  return 1;\nend;\n",
+        "unit App.A;\npublic function Compute(): integer;\nbegin\n  return 1;\nend function;\nend unit;\n",
     );
     write_text(
         &cwd.join("src/b.fpas"),
-        "unit App.B;\npublic function Compute(): integer;\nbegin\n  return 2;\nend;\n",
+        "unit App.B;\npublic function Compute(): integer;\nbegin\n  return 2;\nend function;\nend unit;\n",
     );
     write_text(
         &cwd.join("src/c.fpas"),
-        "unit App.C;\npublic function Compute(): integer;\nbegin\n  return 3;\nend;\n",
+        "unit App.C;\npublic function Compute(): integer;\nbegin\n  return 3;\nend function;\nend unit;\n",
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);
@@ -63,11 +63,11 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/x.fpas"),
-        "unit App.X;\npublic function Foo(): integer;\nbegin\n  return 1;\nend;\n",
+        "unit App.X;\npublic function Foo(): integer;\nbegin\n  return 1;\nend function;\nend unit;\n",
     );
     write_text(
         &cwd.join("src/y.fpas"),
-        "unit App.Y;\npublic function Foo(): integer;\nbegin\n  return 2;\nend;\n",
+        "unit App.Y;\npublic function Foo(): integer;\nbegin\n  return 2;\nend function;\nend unit;\n",
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);
@@ -101,11 +101,11 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/a.fpas"),
-        "unit App.A;\n\nfunction Compute(): integer;\nbegin\n  return 1;\nend;\n",
+        "unit App.A;\n\nfunction Compute(): integer;\nbegin\n  return 1;\nend function;\nend unit;\n",
     );
     write_text(
         &cwd.join("src/b.fpas"),
-        "unit App.B;\n\npublic function Compute(): integer;\nbegin\n  return 2;\nend;\n",
+        "unit App.B;\n\npublic function Compute(): integer;\nbegin\n  return 2;\nend function;\nend unit;\n",
     );
 
     let (exit_code, stdout_output, _) = support::run_cli_and_capture_output(&project_file, &cwd);
@@ -144,11 +144,11 @@ end.
     );
     write_text(
         &cwd.join("src/math.fpas"),
-        "unit App.Math;\npublic function Add(A: integer; B: integer): integer;\nbegin\n  return A + B;\nend;\n",
+        "unit App.Math;\npublic function Add(A: integer; B: integer): integer;\nbegin\n  return A + B;\nend function;\nend unit;\n",
     );
     write_text(
         &cwd.join("src/advanced.fpas"),
-        "unit App.Advanced;\npublic function Add(A: integer; B: integer): integer;\nbegin\n  return A * B;\nend;\n",
+        "unit App.Advanced;\npublic function Add(A: integer; B: integer): integer;\nbegin\n  return A * B;\nend function;\nend unit;\n",
     );
 
     let (exit_code, stdout_output, stderr_output) =
@@ -181,11 +181,11 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/math.fpas"),
-        "unit App.Math;\npublic function Add(A: integer; B: integer): integer;\nbegin\n  return A + B;\nend;\n",
+        "unit App.Math;\npublic function Add(A: integer; B: integer): integer;\nbegin\n  return A + B;\nend function;\nend unit;\n",
     );
     write_text(
         &cwd.join("src/advanced.fpas"),
-        "unit App.Advanced;\npublic function Add(A: integer; B: integer): integer;\nbegin\n  return A * B;\nend;\n",
+        "unit App.Advanced;\npublic function Add(A: integer; B: integer): integer;\nbegin\n  return A * B;\nend function;\nend unit;\n",
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);

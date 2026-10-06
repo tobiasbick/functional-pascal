@@ -8,7 +8,7 @@ unit Std.Args;
 public function ParamCount(): integer;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // 0-based argument lookup.
 //
@@ -17,4 +17,5 @@ end;
 public function ParamStr(Index: integer): string;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
+end unit;

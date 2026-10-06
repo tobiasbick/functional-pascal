@@ -12,7 +12,7 @@ unit Std.Options;
 public function AndThen(O: option of T; F: function(V: T): option of U): option of U;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // True if None.
 //
@@ -21,7 +21,7 @@ end;
 public function IsNone(O: option of T): boolean;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // True if Some.
 //
@@ -30,7 +30,7 @@ end;
 public function IsSome(O: option of T): boolean;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Transform Some value.
 //
@@ -40,7 +40,7 @@ end;
 public function Map(O: option of T; F: function(V: T): U): option of U;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Provide fallback.
 //
@@ -50,7 +50,7 @@ end;
 public function OrElse(O: option of T; F: function(): option of T): option of T;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Panics if None.
 //
@@ -59,7 +59,7 @@ end;
 public function Unwrap(O: option of T): T;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
 
 // Returns Default if None.
 //
@@ -69,4 +69,5 @@ end;
 public function UnwrapOr(O: option of T; Default: T): T;
 begin
   panic('Intrinsic API declaration');
-end;
+end function;
+end unit;

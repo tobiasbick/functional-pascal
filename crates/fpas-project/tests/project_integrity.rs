@@ -73,7 +73,10 @@ fn unknown_root_std_unit_is_rejected() {
 fn unknown_transitive_std_unit_is_rejected() {
     let dir = temp_dir("transitive-std");
     let source = dir.join("feature.fpas");
-    write(&source, "unit Demo.Feature;\nuses Std.DoesNotExist;\n");
+    write(
+        &source,
+        "unit Demo.Feature;\nuses Std.DoesNotExist;\nend unit;\n",
+    );
     let graph = build_unit_graph(&[source], &ProjectLinkMeta::default()).expect("graph");
     let root_uses = uses("program App;\nuses Demo.Feature;\nbegin\nend.\n");
 
@@ -113,7 +116,7 @@ fn source_defined_std_tui_resolves_from_standard_library() {
         &dir.join("stdlib.fpasprj"),
         "[project]\nname = \"stdlib\"\nkind = \"library\"\n\n[exports]\nunits = [\"Std.Tui\"]\n\n[sources]\ninclude = [\"Std/**/*.fpas\"]\n",
     );
-    write(&dir.join("Std/Tui.fpas"), "unit Std.Tui;\n");
+    write(&dir.join("Std/Tui.fpas"), "unit Std.Tui;\nend unit;\n");
     let standard_library = load_standard_library(&dir).expect("standard library");
     let graph =
         build_unit_graph_with_standard_library(&[], &ProjectLinkMeta::default(), &standard_library)
@@ -131,10 +134,10 @@ fn graph_dependencies_come_from_source_instead_of_matching_hash_sidecar() {
     let dir = temp_dir("sidecar");
     let feature = dir.join("feature.fpas");
     let real = dir.join("real.fpas");
-    let source = b"unit Demo.Feature;\nuses Demo.Real;\n";
+    let source = b"unit Demo.Feature;\nuses Demo.Real;\nend unit;\n";
     fs::create_dir_all(&dir).expect("fixture directory");
     fs::write(&feature, source).expect("feature source");
-    write(&real, "unit Demo.Real;\n");
+    write(&real, "unit Demo.Real;\nend unit;\n");
     let stale = CompiledUnit {
         identity: UnitIdentity {
             unit_name: "Demo.StaleOwner".to_string(),
@@ -167,7 +170,7 @@ fn lexical_aliases_preserve_library_exports() {
     let dir = temp_dir("alias-export");
     let source = dir.join("src/internal.fpas");
     let library = dir.join("lib/library.fpasprj");
-    write(&source, "unit Lib.Internal;\n");
+    write(&source, "unit Lib.Internal;\nend unit;\n");
     write(&library, "fixture");
     let source_alias = dir.join("src/../src/internal.fpas");
     let library_alias = dir.join("lib/../lib/library.fpasprj");
@@ -192,7 +195,7 @@ fn lexical_aliases_preserve_library_exports() {
 fn trusted_std_source_lookup_accepts_lexical_alias() {
     let dir = temp_dir("alias-std");
     let source = dir.join("Std/Source.fpas");
-    write(&source, "unit Std.Source;\n");
+    write(&source, "unit Std.Source;\nend unit;\n");
     let canonical = fs::canonicalize(&source).expect("canonical source");
     let mut link_meta = ProjectLinkMeta::default();
     link_meta
@@ -200,7 +203,7 @@ fn trusted_std_source_lookup_accepts_lexical_alias() {
         .insert(dir.join("Std/../Std/Source.fpas"));
 
     let graph = build_unit_graph_from_parsed_sources(
-        vec![(canonical, parsed_unit("unit Std.Source;\n"))],
+        vec![(canonical, parsed_unit("unit Std.Source;\nend unit;\n"))],
         &link_meta,
     )
     .expect("trusted parsed graph");
@@ -215,7 +218,7 @@ fn symlink_alias_preserves_library_origin() {
     let source = dir.join("src/internal.fpas");
     let alias = dir.join("alias.fpas");
     let library = dir.join("library.fpasprj");
-    write(&source, "unit Lib.Internal;\n");
+    write(&source, "unit Lib.Internal;\nend unit;\n");
     write(&library, "fixture");
     if create_file_symlink(&source, &alias).is_err() {
         fs::remove_dir_all(dir).ok();
@@ -274,7 +277,7 @@ fn load_project_by_basename_resolves_enclosing_workspace() {
         &dir.join("lib.fpasprj"),
         "[project]\nname = \"lib\"\nkind = \"library\"\n\n[sources]\ninclude = [\"lib.fpas\"]\n",
     );
-    write(&dir.join("lib.fpas"), "unit Lib.Core;\n");
+    write(&dir.join("lib.fpas"), "unit Lib.Core;\nend unit;\n");
 
     let status = Command::new(std::env::current_exe().expect("test executable"))
         .arg("--exact")

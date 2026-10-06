@@ -29,7 +29,7 @@ begin
     Error(_): begin end;
   end;
   return Ok(true);
-end;
+end function;
 begin
   case ExerciseListener() of
     Ok(_): begin end;

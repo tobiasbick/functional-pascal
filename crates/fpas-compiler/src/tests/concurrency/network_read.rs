@@ -16,7 +16,7 @@ begin
     Ok(Data): return 'received';
     Error(Message): return Message;
   end;
-end;
+end function;
 
 begin
   case Std.Net.Connect('127.0.0.1', {port}, 1000) of

@@ -12,7 +12,7 @@ begin
   begin
     return Fib(N - 1) + Fib(N - 2);
   end;
-end;
+end function;
 
 begin
   WriteLn('Fibonacci sequence:');

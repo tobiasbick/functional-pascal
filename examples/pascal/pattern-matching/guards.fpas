@@ -8,7 +8,7 @@ type
     Circle(Radius: real);
     Rectangle(Width: real; Height: real);
     Point;
-  end;
+  end enum;
 
 function Classify(N: integer): string;
 begin
@@ -28,7 +28,7 @@ begin
   end;
 
   return 'unknown';
-end;
+end function;
 
 function DescribeShape(S: Shape): string;
 begin
@@ -54,7 +54,7 @@ begin
       return 'Point';
     end;
   end;
-end;
+end function;
 
 begin
   WriteLn('--- Integer guards ---');

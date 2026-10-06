@@ -18,7 +18,7 @@ function Fail(): integer;
 begin
   panic('boom');
   return 1;
-end;
+end function;
 
 begin
   var Value: integer := Fail();

@@ -22,7 +22,7 @@ begin
   end;
 
   return TuiPointerButton.NoButton;
-end;
+end function;
 
 // Converts one Console event to Tui host input, discarding unsupported event kinds.
 //
@@ -55,13 +55,13 @@ begin
       return None;
     end;
   end;
-end;
+end function;
 
 // Blocks for one Console event and maps it to supported Tui host input.
 public function TuiReadConsoleHostInput(): option of TuiHostInput;
 begin
   return TuiConsoleEventToHostInput(ReadEvent());
-end;
+end function;
 
 // Waits for one Console event up to the given duration.
 //
@@ -79,4 +79,5 @@ begin
       return None;
     end;
   end;
-end;
+end function;
+end unit;

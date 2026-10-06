@@ -23,7 +23,7 @@ begin
       Fail(Message);
     end;
   end;
-end;
+end procedure;
 
 begin
   var Root: string := ScratchDir() + '/glob-tree';

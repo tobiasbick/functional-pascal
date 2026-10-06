@@ -14,7 +14,7 @@ begin
     alt := false;
     meta := false;
   end;
-end;
+end function;
 
 begin
   var Inbox: channel of MandelbrotRenderFrame := CreateChannel(4);

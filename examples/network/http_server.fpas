@@ -15,7 +15,7 @@ begin
   ResponseValue.Headers := [Header.Create('Content-Type', 'text/plain; charset=utf-8')];
   ResponseValue.Body := Std.Net.Utf8.Encode(Text);
   return ResponseValue;
-end;
+end function;
 
 // Routes the three requests issued by `http_client.fpas`.
 //
@@ -48,7 +48,7 @@ begin
   end;
 
   return TextResponse(404, 'Not Found', 'No route for ' + RequestValue.Target);
-end;
+end function;
 
 begin
   mutable var Port: integer := 18080;

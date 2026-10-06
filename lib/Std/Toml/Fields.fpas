@@ -12,7 +12,7 @@ uses Std.Arrays, Std.Dictionaries, Std.Toml;
 function MismatchError(Name: string; Expectation: string): string;
 begin
   return (('field ' + Name) + ' must be ') + Expectation;
-end;
+end function;
 
 // Parses one TOML document and returns its root table.
 //
@@ -30,7 +30,7 @@ begin
       return Error('TOML root must be a table');
     end;
   end;
-end;
+end function;
 
 // Returns one present key of any TOML kind.
 //
@@ -49,7 +49,7 @@ begin
       return Error('missing field ' + Name);
     end;
   end;
-end;
+end function;
 
 // Returns one required string key.
 //
@@ -68,7 +68,7 @@ begin
       return Error(MismatchError(Name, 'a string'));
     end;
   end;
-end;
+end function;
 
 // Returns one required integer key; floats are rejected.
 //
@@ -87,7 +87,7 @@ begin
       return Error(MismatchError(Name, 'an integer'));
     end;
   end;
-end;
+end function;
 
 // Returns one required float key; integers are rejected.
 //
@@ -106,7 +106,7 @@ begin
       return Error(MismatchError(Name, 'a float'));
     end;
   end;
-end;
+end function;
 
 // Returns one required boolean key.
 //
@@ -125,7 +125,7 @@ begin
       return Error(MismatchError(Name, 'a boolean'));
     end;
   end;
-end;
+end function;
 
 // Returns one required nested table key.
 //
@@ -144,7 +144,7 @@ begin
       return Error(MismatchError(Name, 'a table'));
     end;
   end;
-end;
+end function;
 
 // Returns one required array key without checking element kinds.
 //
@@ -163,7 +163,7 @@ begin
       return Error(MismatchError(Name, 'an array'));
     end;
   end;
-end;
+end function;
 
 // Returns one required array key whose elements must all be strings.
 //
@@ -188,7 +188,7 @@ begin
   end;
 
   return Ok(Values);
-end;
+end function;
 
 // Rejects the first key whose name is not listed in `Allowed`; missing keys are not checked.
 //
@@ -206,4 +206,5 @@ begin
   end;
 
   return Ok(true);
-end;
+end function;
+end unit;

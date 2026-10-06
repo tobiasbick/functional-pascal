@@ -13,13 +13,13 @@ begin
                                                                                                                                                 ])
                                                                                                                 ])
                                                                       ]);
-end;
+end function;
 
 function UpdateButtons(State: integer; Msg: TuiMsg; Cmd: TuiCmdOutput): integer;
 begin
   Cmd.Set(TuiCmd.NoCommand);
   return State;
-end;
+end function;
 
 begin
   var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 10));

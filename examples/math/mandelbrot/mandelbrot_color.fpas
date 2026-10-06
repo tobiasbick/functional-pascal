@@ -9,7 +9,7 @@ public type
     DeepOcean;
     Ember;
     Aurora;
-  end;
+  end enum;
 
 public function PaletteName(Kind: PaletteKind): string;
 begin
@@ -27,12 +27,12 @@ begin
       return 'Aurora';
     end;
   end;
-end;
+end function;
 
 function BandIndex(EscapeValue: real): integer;
 begin
   return Clamp(Trunc(Frac(EscapeValue * 0.08) * 12.0), 0, 11);
-end;
+end function;
 
 public function EscapeColor(Kind: PaletteKind; EscapeValue: real): TuiColor;
 begin
@@ -198,9 +198,10 @@ begin
       end;
     end;
   end;
-end;
+end function;
 
 public function InsideColor(): TuiColor;
 begin
   return TuiColor.FromRgb(0, 0, 0);
-end;
+end function;
+end unit;

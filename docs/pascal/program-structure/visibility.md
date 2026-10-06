@@ -21,17 +21,18 @@ public type
   Point = record
     public X: real;
     public Y: real;
-  end;
+  end record;
 
 function Square(V: real): real;
 begin
   return V * V;
-end;
+end function;
 
 public function Distance(A: Point; B: Point): real;
 begin
   return Sqrt(Square(B.X - A.X) + Square(B.Y - A.Y));
-end;
+end function;
+end unit;
 ```
 
 `Point` and `Distance` are public. `Square` is private because it has no

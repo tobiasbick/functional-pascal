@@ -13,7 +13,10 @@ fn test_cli_runs_matching_tests_in_directory() {
         &cwd.join("fail_test.fpas"),
         "program F;\nuses Std.Test;\nbegin AssertTrue(false); end.",
     );
-    write_text(&cwd.join("helper.fpas"), "unit H;\nprocedure X; begin end;");
+    write_text(
+        &cwd.join("helper.fpas"),
+        "unit H;\nprocedure X; begin end procedure;\nend unit;",
+    );
 
     let mut stdout = Vec::new();
     let mut stderr = Vec::new();

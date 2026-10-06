@@ -6,7 +6,7 @@ Formal syntax: [`grammar.ebnf`](../../specs/grammar.ebnf) (`unit`, `program`, `u
 
 ## Unit declaration
 
-A unit file starts with a `unit` declaration followed by declarations (functions, procedures, types, constants, `var`, and `mutable var`). There is no main block.
+A unit file starts with a `unit` declaration followed by declarations (functions, procedures, types, constants, `var`, and `mutable var`). Every unit ends with `end unit;` after its last declaration, including a unit with no declarations. There is no main block.
 
 ```pascal
 unit MyApp.Utils;
@@ -20,12 +20,13 @@ begin
     return Max;
   else
     return Value;
-end;
+end function;
 
 public function IsBlank(S: string): boolean;
 begin
   return Length(Trim(S)) = 0;
-end;
+end function;
+end unit;
 ```
 
 ## Program file

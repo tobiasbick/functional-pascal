@@ -42,12 +42,12 @@ fn counting_loop_bounds_are_evaluated_once_in_source_order() {
         begin
           Trace := Trace * 10 + 1;
           return 1;
-        end;
+        end function;
         function Finish(): integer;
         begin
           Trace := Trace * 10 + 2;
           return 3;
-        end;
+        end function;
         begin
           mutable var Count: integer := 0;
           for I: integer := Start() to Finish() do Count := Count + 1;

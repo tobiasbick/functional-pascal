@@ -9,7 +9,7 @@ public type
     Ansi256;
     // Represents the `Rgb` variant of `TuiColorKind`.
     Rgb;
-  end;
+  end enum;
 
 function TuiColorRequireRange(Value: integer; Minimum: integer; Maximum: integer; Name: string): integer;
 begin
@@ -19,7 +19,7 @@ begin
   end;
 
   return Value;
-end;
+end function;
 
 public type
   // Validated CRT, ANSI-256, or RGB color value.
@@ -49,7 +49,7 @@ public type
         Green := 0;
         Blue := 0;
       end;
-    end;
+    end function;
 
     // Creates an ANSI-256 color (`0..255`).
     //
@@ -65,7 +65,7 @@ public type
         Green := 0;
         Blue := 0;
       end;
-    end;
+    end function;
 
     // Creates an RGB color; each channel is `0..255`.
     //
@@ -91,5 +91,6 @@ public type
         Green := Green;
         Blue := Blue;
       end;
-    end;
-  end;
+    end function;
+  end record;
+end unit;

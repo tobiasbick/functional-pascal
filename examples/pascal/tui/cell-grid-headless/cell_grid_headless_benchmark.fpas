@@ -11,17 +11,17 @@ const
 function Update(Grid: TuiCellGrid; Msg: TuiMsg; Cmd: TuiCmdOutput): TuiCellGrid;
 begin
   return Grid;
-end;
+end function;
 
 function View(Grid: TuiCellGrid): TuiElement;
 begin
   return TuiElementBuilders.MakeCellGrid(Grid);
-end;
+end function;
 
 function PaintOnce(App: TuiApplication; Grid: TuiCellGrid): TuiCellGrid;
 begin
   return App.RunIterations(Grid, Update, View, 0, 0);
-end;
+end function;
 
 begin
   if ParamCount() <> 1 then

@@ -11,7 +11,7 @@ begin
   AssertEquals(Expected.Red, Actual.Red);
   AssertEquals(Expected.Green, Actual.Green);
   AssertEquals(Expected.Blue, Actual.Blue);
-end;
+end procedure;
 
 procedure AssertCellEquals(Expected: TuiCell; Actual: TuiCell);
 begin
@@ -42,7 +42,7 @@ begin
       AssertTrue(IsNone(Actual.ConcreteStyle));
     end;
   end;
-end;
+end procedure;
 
 function MakeKey(Kind: TuiKeyKind; Character: string): TuiKeyEvent;
 begin
@@ -54,7 +54,7 @@ begin
     alt := false;
     meta := false;
   end;
-end;
+end function;
 
 begin
   var Inbox: channel of MandelbrotRenderFrame := CreateChannel(16);

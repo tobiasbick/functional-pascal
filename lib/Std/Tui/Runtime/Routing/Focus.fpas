@@ -57,7 +57,7 @@ begin
   end;
 
   return Next;
-end;
+end function;
 
 // Panics when the arranged frame does not match the previous painted tree.
 //
@@ -75,7 +75,7 @@ begin
   begin
     panic('Tui routing received a frame for a different element tree');
   end;
-end;
+end procedure;
 
 // Returns focusable control ids in the active modal or full tree order.
 //
@@ -223,7 +223,7 @@ begin
   end;
 
   return Controls;
-end;
+end function;
 
 // Reads the desktop focus id, or `None` when the root is not a desktop.
 //
@@ -241,7 +241,7 @@ begin
       return None;
     end;
   end;
-end;
+end function;
 
 // Returns the focusable-list index of a control id, or `-1` when absent.
 //
@@ -259,7 +259,7 @@ begin
   end;
 
   return -1;
-end;
+end function;
 
 // Returns whether two control ids refer to the same identity.
 //
@@ -269,7 +269,7 @@ end;
 public function TuiSameControlId(Left: TuiControlId; Right: TuiControlId): boolean;
 begin
   return Left.Value = Right.Value;
-end;
+end function;
 
 // Returns whether the option id matches the target control.
 //
@@ -288,4 +288,5 @@ begin
       return false;
     end;
   end;
-end;
+end function;
+end unit;

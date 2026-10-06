@@ -6,7 +6,7 @@ By default, parameters are immutable inside the routine body. Prefix a parameter
 procedure Inc(mutable X: integer);
 begin
   X := X + 1;
-end;
+end procedure;
 ```
 
 `mutable` only affects the local binding — the caller's value is not changed. To observe changes in the caller, pass a reference type (array, record instance) and mutate its contents. See [Records — immutability](../types/records.md#immutability) for details.

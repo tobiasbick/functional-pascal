@@ -40,7 +40,7 @@ kind = "library"
 include = ["src/**/*.fpas"]
 "#,
     );
-    temp.write("valid/src/valid.fpas", "unit Demo.Valid;\n");
+    temp.write("valid/src/valid.fpas", "unit Demo.Valid;\nend unit;\n");
     let invalid_manifest = temp.write("invalid/invalid.fpasprj", "not toml");
     let workspace = temp.write(
         "suite.fpasworkspace",

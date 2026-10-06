@@ -64,7 +64,7 @@ include = ["src/**/*.fpas"]
     );
     let unit = temp.write(
         "src/math.fpas",
-        "unit Demo.Math;\n\npublic function Answer(): integer;\nbegin\n  return 42;\nend;\n",
+        "unit Demo.Math;\n\npublic function Answer(): integer;\nbegin\n  return 42;\nend function;\nend unit;\n",
     );
     (manifest, main, unit)
 }

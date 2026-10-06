@@ -58,8 +58,18 @@ impl Parser {
     pub(super) fn is_stmt_list_end(&self) -> bool {
         matches!(
             self.current_token(),
-            Token::End | Token::Else | Token::Until | Token::Eof
-        )
+            Token::End
+                | Token::Else
+                | Token::Until
+                | Token::Eof
+                | Token::Program
+                | Token::Unit
+                | Token::Type
+                | Token::Const
+                | Token::Public
+                | Token::Static
+        ) || matches!(self.current_token(), Token::Function | Token::Procedure)
+            && matches!(self.peek_token(), Token::Ident(_))
     }
 
     /// Keeps a shared body terminator outside the enclosing node's source span.

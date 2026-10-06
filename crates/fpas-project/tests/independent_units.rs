@@ -46,9 +46,9 @@ include = ["src/**/*.fpas"]
     write(
         &root.join("src/base.fpas"),
         "unit Demo.Base;
-         public type Point = record public X: integer := 1; end;
+         public type Point = record public X: integer := 1; end record;
          public function Make(X: integer): Point;
-         begin return record X := X; end; end;",
+         begin return record X := X; end; end function;\nend unit;",
     );
     write(
         &root.join("src/math.fpas"),
@@ -58,7 +58,7 @@ include = ["src/**/*.fpas"]
          begin
            var P: Point := Make(X);
            return P.X;
-         end;",
+         end function;\nend unit;",
     );
     write(
         &root.join("src/app.fpas"),
@@ -67,7 +67,7 @@ include = ["src/**/*.fpas"]
          public function Run(): integer;
          begin
            return Compute(7);
-         end;",
+         end function;\nend unit;",
     );
 
     let project = load_project(&manifest).expect("project load");

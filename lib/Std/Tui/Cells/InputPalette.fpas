@@ -39,7 +39,7 @@ public type
         Cursor := Cursor;
         Scroll := Scroll;
       end;
-    end;
+    end function;
 
     // Resolves one input role.
     //
@@ -74,7 +74,7 @@ public type
           panic('Tui input palette requires an input style role');
         end;
       end;
-    end;
+    end function;
 
     // Returns a copy with one input role replaced.
     //
@@ -113,5 +113,6 @@ public type
       end;
 
       return Updated;
-    end;
-  end;
+    end function;
+  end record;
+end unit;

@@ -8,7 +8,7 @@ begin
   end;
 
   return Value;
-end;
+end function;
 
 public type
   // Unique positive interactive-node identity within one rendered tree.
@@ -25,5 +25,6 @@ public type
       return record
         Value := TuiControlIdRequirePositive(Value);
       end;
-    end;
-  end;
+    end function;
+  end record;
+end unit;

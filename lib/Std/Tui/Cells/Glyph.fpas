@@ -9,4 +9,5 @@ uses Std.Console;
 public function TuiGlyphWidth(Glyph: string): integer;
 begin
   return Std.Console.GraphemeWidth(Glyph);
-end;
+end function;
+end unit;

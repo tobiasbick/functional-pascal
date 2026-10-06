@@ -15,13 +15,13 @@ begin
                                                                                 TuiElementBuilders.MakeGauge('Load', 3, 4)
                                                                               ])
                                               ]);
-end;
+end function;
 
 function UpdateDashboard(State: integer; Msg: TuiMsg; Cmd: TuiCmdOutput): integer;
 begin
   Cmd.Set(TuiCmd.NoCommand);
   return State;
-end;
+end function;
 
 begin
   mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 4));

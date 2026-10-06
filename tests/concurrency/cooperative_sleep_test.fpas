@@ -5,7 +5,7 @@ uses Std.Arrays, Std.Tasks, Std.Test, Std.Time;
 procedure Sleeper();
 begin
   Sleep(50);
-end;
+end procedure;
 
 begin
   mutable var Tasks: array of task := [];

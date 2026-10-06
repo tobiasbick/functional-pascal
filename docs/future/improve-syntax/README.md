@@ -43,9 +43,9 @@ against the checkout before implementing each work package.
 
 ## Package status
 
-AP01, AP02, AP07, and AP13 are complete on `codex/syntax-changes-2`, including
-all of their work packages. Checkboxes track completed delivery in the working
-branch, as defined by the
+AP01, AP02, AP04, AP07, and AP13 are complete on `codex/syntax-changes-2`,
+including all of their work packages. Checkboxes track completed delivery in
+the working branch, as defined by the
 [status-tracking rule](development-process.md#status-tracking).
 
 [AP07: Boolean rules](ap07-boolean-rules/README.md) is complete: short-circuit
